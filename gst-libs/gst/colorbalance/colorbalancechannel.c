@@ -60,8 +60,8 @@ gst_color_balance_channel_get_type (void)
     };
 
     gst_color_balance_channel_type =
-	g_type_register_static (G_TYPE_OBJECT,
-	"GstColorBalanceChannel", &color_balance_channel_info, 0);
+        g_type_register_static (G_TYPE_OBJECT,
+        "GstColorBalanceChannel", &color_balance_channel_info, 0);
   }
 
   return gst_color_balance_channel_type;
@@ -78,7 +78,7 @@ gst_color_balance_channel_class_init (GstColorBalanceChannelClass * klass)
       g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstColorBalanceChannelClass,
-	  value_changed),
+          value_changed),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   object_klass->dispose = gst_color_balance_channel_dispose;

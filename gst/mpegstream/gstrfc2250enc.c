@@ -53,14 +53,14 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) FALSE")
+        "mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) FALSE")
+        "mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) FALSE")
     );
 
 static void gst_rfc2250_enc_class_init (GstRFC2250EncClass * klass);
@@ -95,9 +95,10 @@ gst_rfc2250_enc_get_type (void)
       0,
       (GInstanceInitFunc) gst_rfc2250_enc_init,
     };
+
     rfc2250_enc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRFC2250Enc",
-	&rfc2250_enc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRFC2250Enc",
+        &rfc2250_enc_info, 0);
   }
   return rfc2250_enc_type;
 }
@@ -127,10 +128,10 @@ gst_rfc2250_enc_class_init (GstRFC2250EncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
       g_param_spec_uint ("bit_rate", "bit_rate", "bit_rate",
-	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+          0, G_MAXUINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MPEG2,
       g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
-	  FALSE, G_PARAM_READABLE));
+          FALSE, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_rfc2250_enc_get_property;
 
@@ -207,19 +208,19 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc * enc, GstBuffer * buffer)
       gint offset = 0;
 
       while (slice_length > 0) {
-	GstBuffer *outbuf;
-	GstBuffer *newbuf;
+        GstBuffer *outbuf;
+        GstBuffer *newbuf;
 
-	outbuf =
-	    gst_buffer_create_sub (buffer, offset, MIN (enc->remaining,
-		slice_length));
-	newbuf = gst_buffer_merge (enc->packet, outbuf);
-	slice_length -= GST_BUFFER_SIZE (outbuf);
-	offset += GST_BUFFER_SIZE (outbuf);
-	gst_buffer_unref (outbuf);
-	gst_buffer_unref (newbuf);
-	enc->packet = newbuf;
-	gst_rfc2250_enc_new_buffer (enc);
+        outbuf =
+            gst_buffer_create_sub (buffer, offset, MIN (enc->remaining,
+                slice_length));
+        newbuf = gst_buffer_merge (enc->packet, outbuf);
+        slice_length -= GST_BUFFER_SIZE (outbuf);
+        offset += GST_BUFFER_SIZE (outbuf);
+        gst_buffer_unref (outbuf);
+        gst_buffer_unref (newbuf);
+        enc->packet = newbuf;
+        gst_rfc2250_enc_new_buffer (enc);
       }
       gst_buffer_unref (buffer);
     }
@@ -246,35 +247,35 @@ gst_rfc2250_enc_loop (GstElement * element)
 
     switch (id) {
       case SEQUENCE_START_CODE:
-	gst_rfc2250_enc_new_buffer (enc);
-	enc->flags |= ENC_HAVE_SEQ;
-	break;
+        gst_rfc2250_enc_new_buffer (enc);
+        enc->flags |= ENC_HAVE_SEQ;
+        break;
       case GOP_START_CODE:
-	if (enc->flags & ENC_HAVE_DATA) {
-	  gst_rfc2250_enc_new_buffer (enc);
-	}
-	enc->flags |= ENC_HAVE_GOP;
-	break;
+        if (enc->flags & ENC_HAVE_DATA) {
+          gst_rfc2250_enc_new_buffer (enc);
+        }
+        enc->flags |= ENC_HAVE_GOP;
+        break;
       case PICTURE_START_CODE:
-	if (enc->flags & ENC_HAVE_DATA) {
-	  gst_rfc2250_enc_new_buffer (enc);
-	}
-	enc->flags |= ENC_HAVE_PIC;
-	break;
+        if (enc->flags & ENC_HAVE_DATA) {
+          gst_rfc2250_enc_new_buffer (enc);
+        }
+        enc->flags |= ENC_HAVE_PIC;
+        break;
       case EXT_START_CODE:
       case USER_START_CODE:
       case SEQUENCE_ERROR_START_CODE:
       case SEQUENCE_END_START_CODE:
-	break;
+        break;
       default:
-	/* do this here because of the long range */
-	if (id >= SLICE_MIN_START_CODE && id <= SLICE_MAX_START_CODE) {
-	  enc->flags |= ENC_HAVE_DATA;
-	  gst_rfc2250_enc_add_slice (enc, buffer);
-	  buffer = NULL;
-	  break;
-	}
-	break;
+        /* do this here because of the long range */
+        if (id >= SLICE_MIN_START_CODE && id <= SLICE_MAX_START_CODE) {
+          enc->flags |= ENC_HAVE_DATA;
+          gst_rfc2250_enc_add_slice (enc, buffer);
+          buffer = NULL;
+          break;
+        }
+        break;
 
     }
     if (buffer) {
@@ -301,15 +302,15 @@ gst_rfc2250_enc_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!rfc2250_enc->packetize) {
-	rfc2250_enc->packetize =
-	    gst_mpeg_packetize_new (rfc2250_enc->sinkpad,
-	    GST_MPEG_PACKETIZE_VIDEO);
+        rfc2250_enc->packetize =
+            gst_mpeg_packetize_new (rfc2250_enc->sinkpad,
+            GST_MPEG_PACKETIZE_VIDEO);
       }
       break;
     case GST_STATE_READY_TO_NULL:
       if (rfc2250_enc->packetize) {
-	gst_mpeg_packetize_destroy (rfc2250_enc->packetize);
-	rfc2250_enc->packetize = NULL;
+        gst_mpeg_packetize_destroy (rfc2250_enc->packetize);
+        rfc2250_enc->packetize = NULL;
       }
       break;
     default:
@@ -336,10 +337,10 @@ gst_rfc2250_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_MPEG2:
       if (rfc2250_enc->packetize)
-	g_value_set_boolean (value,
-	    GST_MPEG_PACKETIZE_IS_MPEG2 (rfc2250_enc->packetize));
+        g_value_set_boolean (value,
+            GST_MPEG_PACKETIZE_IS_MPEG2 (rfc2250_enc->packetize));
       else
-	g_value_set_boolean (value, FALSE);
+        g_value_set_boolean (value, FALSE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

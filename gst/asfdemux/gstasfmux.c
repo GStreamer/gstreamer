@@ -80,40 +80,40 @@ static GstStaticPadTemplate gst_asfmux_videosink_template =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-	"format = (fourcc) { YUY2, I420 }, "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-jpeg, "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-divx, "
-	"divxversion = (int) [ 3, 5 ], "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-xvid, "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-3ivx, "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-msmpeg, "
-	"msmpegversion = (int) [ 41, 43 ], "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/mpeg, "
-	"mpegversion = (int) 1,"
-	"systemstream = (boolean) false,"
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-h263, "
-	"width = (int) [ 1, MAX], "
-	"height = (int) [ 1, MAX]; "
-	"video/x-dv, "
-	"systemstream = (boolean) false,"
-	"width = (int) 720,"
-	"height = (int) { 576, 480 };"
-	"video/x-huffyuv, "
-	"width = (int) [ 1, MAX], " "height = (int) [ 1, MAX]")
+        "format = (fourcc) { YUY2, I420 }, "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-jpeg, "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-divx, "
+        "divxversion = (int) [ 3, 5 ], "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-xvid, "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-3ivx, "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-msmpeg, "
+        "msmpegversion = (int) [ 41, 43 ], "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/mpeg, "
+        "mpegversion = (int) 1,"
+        "systemstream = (boolean) false,"
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-h263, "
+        "width = (int) [ 1, MAX], "
+        "height = (int) [ 1, MAX]; "
+        "video/x-dv, "
+        "systemstream = (boolean) false,"
+        "width = (int) 720,"
+        "height = (int) { 576, 480 };"
+        "video/x-huffyuv, "
+        "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX]")
     );
 
 static GstStaticPadTemplate gst_asfmux_audiosink_template =
@@ -121,22 +121,22 @@ static GstStaticPadTemplate gst_asfmux_audiosink_template =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) LITTLE_ENDIAN, "
-	"signed = (boolean) { true, false }, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"rate = (int) [ 1000, 96000 ], "
-	"channels = (int) [ 1, 2]; "
-	"audio/mpeg, "
-	"mpegversion = (int) 1, "
-	"layer = (int) { 1, 3 }, "
-	"rate = (int) [ 1000, 96000 ], "
-	"channels = (int) [ 1, 2]; "
-	"audio/x-vorbis, "
-	"rate = (int) [ 1000, 96000 ], "
-	"channels = (int) [ 1, 2]; "
-	"audio/x-ac3, "
-	"rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2]")
+        "endianness = (int) LITTLE_ENDIAN, "
+        "signed = (boolean) { true, false }, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 1000, 96000 ], "
+        "channels = (int) [ 1, 2]; "
+        "audio/mpeg, "
+        "mpegversion = (int) 1, "
+        "layer = (int) { 1, 3 }, "
+        "rate = (int) [ 1000, 96000 ], "
+        "channels = (int) [ 1, 2]; "
+        "audio/x-vorbis, "
+        "rate = (int) [ 1000, 96000 ], "
+        "channels = (int) [ 1, 2]; "
+        "audio/x-ac3, "
+        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2]")
     );
 
 #define GST_ASF_PACKET_SIZE 3200
@@ -174,8 +174,9 @@ gst_asfmux_get_type (void)
       0,
       (GInstanceInitFunc) gst_asfmux_init,
     };
+
     asfmux_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstAsfMux", &asfmux_info, 0);
+        "GstAsfMux", &asfmux_info, 0);
   }
   return asfmux_type;
 }
@@ -283,7 +284,7 @@ gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
   stream->header.video.stream.height = h;
   stream->header.video.stream.unknown = 2;
   stream->header.video.stream.size = 40;
-  stream->bitrate = 0;		/* TODO */
+  stream->bitrate = 0;          /* TODO */
 
   mimetype = gst_structure_get_name (structure);
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
@@ -296,13 +297,13 @@ gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
     stream->header.video.format.tag = format;
     switch (format) {
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-	stream->header.video.format.depth = 16;
-	stream->header.video.format.planes = 1;
-	break;
+        stream->header.video.format.depth = 16;
+        stream->header.video.format.planes = 1;
+        break;
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-	stream->header.video.format.depth = 12;
-	stream->header.video.format.planes = 3;
-	break;
+        stream->header.video.format.depth = 12;
+        stream->header.video.format.planes = 3;
+        break;
     }
 
     goto done;
@@ -321,18 +322,18 @@ gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
 
       gst_structure_get_int (structure, "divxversion", &divxversion);
       switch (divxversion) {
-	case 3:
-	  stream->header.video.format.tag =
-	      GST_MAKE_FOURCC ('D', 'I', 'V', '3');
-	  break;
-	case 4:
-	  stream->header.video.format.tag =
-	      GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
-	  break;
-	case 5:
-	  stream->header.video.format.tag =
-	      GST_MAKE_FOURCC ('D', 'X', '5', '0');
-	  break;
+        case 3:
+          stream->header.video.format.tag =
+              GST_MAKE_FOURCC ('D', 'I', 'V', '3');
+          break;
+        case 4:
+          stream->header.video.format.tag =
+              GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
+          break;
+        case 5:
+          stream->header.video.format.tag =
+              GST_MAKE_FOURCC ('D', 'X', '5', '0');
+          break;
       }
     } else if (!strcmp (mimetype, "video/x-xvid")) {
       stream->header.video.format.tag = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
@@ -343,18 +344,18 @@ gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
 
       gst_structure_get_int (structure, "msmpegversion", &msmpegversion);
       switch (msmpegversion) {
-	case 41:
-	  stream->header.video.format.tag =
-	      GST_MAKE_FOURCC ('M', 'P', 'G', '4');
-	  break;
-	case 42:
-	  stream->header.video.format.tag =
-	      GST_MAKE_FOURCC ('M', 'P', '4', '2');
-	  break;
-	case 43:
-	  stream->header.video.format.tag =
-	      GST_MAKE_FOURCC ('M', 'P', '4', '3');
-	  break;
+        case 41:
+          stream->header.video.format.tag =
+              GST_MAKE_FOURCC ('M', 'P', 'G', '4');
+          break;
+        case 42:
+          stream->header.video.format.tag =
+              GST_MAKE_FOURCC ('M', 'P', '4', '2');
+          break;
+        case 43:
+          stream->header.video.format.tag =
+              GST_MAKE_FOURCC ('M', 'P', '4', '3');
+          break;
       }
     } else if (!strcmp (mimetype, "video/x-dv")) {
       stream->header.video.format.tag = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');
@@ -441,7 +442,7 @@ gst_asfmux_audsink_link (GstPad * pad, const GstCaps * caps)
     stream->header.audio.block_align /= 8;
     stream->header.audio.block_align *= stream->header.audio.channels;
     stream->header.audio.byte_rate = stream->header.audio.block_align *
-	stream->header.audio.sample_rate;
+        stream->header.audio.sample_rate;
     goto done;
   } else {
     stream->header.audio.codec_tag = 0;
@@ -451,13 +452,13 @@ gst_asfmux_audsink_link (GstPad * pad, const GstCaps * caps)
 
       gst_structure_get_int (structure, "layer", &layer);
       switch (layer) {
-	case 3:
-	  stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL3;
-	  break;
-	case 1:
-	case 2:
-	  stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL12;
-	  break;
+        case 3:
+          stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL3;
+          break;
+        case 1:
+        case 2:
+          stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL12;
+          break;
       }
     } else if (!strcmp (mimetype, "audio/x-vorbis")) {
       stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_VORBIS3;
@@ -606,7 +607,7 @@ static gboolean
 gst_asfmux_is_stream (GstAsfMux * asfmux)
 {
   /* this is for RTP */
-  return FALSE;			/*!gst_asfmux_can_seek (asfmux) */
+  return FALSE;                 /*!gst_asfmux_can_seek (asfmux) */
 }
 
 /* handle events (search) */
@@ -625,13 +626,13 @@ gst_asfmux_handle_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       /* is this allright? */
       for (n = 0; n < asfmux->num_outputs; n++) {
-	if (asfmux->output[n].pad == pad) {
-	  asfmux->output[n].eos = TRUE;
-	  break;
-	}
+        if (asfmux->output[n].pad == pad) {
+          asfmux->output[n].eos = TRUE;
+          break;
+        }
       }
       if (n == asfmux->num_outputs) {
-	g_warning ("Unknown pad for EOS!");
+        g_warning ("Unknown pad for EOS!");
       }
       break;
     default:
@@ -652,14 +653,14 @@ gst_asfmux_fill_queue (GstAsfMux * asfmux)
     GstAsfMuxStream *stream = &asfmux->output[n];
 
     while (stream->queue == NULL &&
-	stream->pad != NULL &&
-	stream->connected == TRUE &&
-	GST_PAD_IS_USABLE (stream->pad) && stream->eos == FALSE) {
+        stream->pad != NULL &&
+        stream->connected == TRUE &&
+        GST_PAD_IS_USABLE (stream->pad) && stream->eos == FALSE) {
       buffer = GST_BUFFER (gst_pad_pull (stream->pad));
       if (GST_IS_EVENT (buffer)) {
-	gst_asfmux_handle_event (stream->pad, GST_EVENT (buffer));
+        gst_asfmux_handle_event (stream->pad, GST_EVENT (buffer));
       } else {
-	stream->queue = buffer;
+        stream->queue = buffer;
       }
     }
   }
@@ -878,7 +879,7 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
   GST_BUFFER_SIZE (header) = 0;
   if (asfmux->packet != NULL) {
     duration = GST_BUFFER_DURATION (asfmux->packet) +
-	GST_BUFFER_TIMESTAMP (asfmux->packet);
+        GST_BUFFER_TIMESTAMP (asfmux->packet);
   } else {
     duration = 0;
   }
@@ -893,8 +894,8 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
   gst_asfmux_put_le64 (header, ~0);
   /* number of chunks in header */
   gst_asfmux_put_le32 (header, 3 + /*has_title + */ asfmux->num_outputs);
-  gst_asfmux_put_byte (header, 1);	/* ??? */
-  gst_asfmux_put_byte (header, 2);	/* ??? */
+  gst_asfmux_put_byte (header, 1);      /* ??? */
+  gst_asfmux_put_byte (header, 2);      /* ??? */
 
   /* file header */
   header_offset = GST_BUFFER_SIZE (header);
@@ -902,14 +903,14 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_UNDEFINED);
   gst_asfmux_put_le64 (header, file_size);
   gst_asfmux_put_time (header, 0);
-  gst_asfmux_put_le64 (header, asfmux->num_packets);	/* number of packets */
-  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000));	/* end time stamp (in 100ns units) */
-  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000));	/* duration (in 100ns units) */
-  gst_asfmux_put_le64 (header, 0);	/* start time stamp */
-  gst_asfmux_put_le32 (header, gst_asfmux_can_seek (asfmux) ? 0x02 : 0x01);	/* seekable or streamable */
-  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE);	/* packet size */
-  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE);	/* packet size */
-  gst_asfmux_put_le32 (header, bitrate);	/* Nominal data rate in bps */
+  gst_asfmux_put_le64 (header, asfmux->num_packets);    /* number of packets */
+  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000));     /* end time stamp (in 100ns units) */
+  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000));     /* duration (in 100ns units) */
+  gst_asfmux_put_le64 (header, 0);      /* start time stamp */
+  gst_asfmux_put_le32 (header, gst_asfmux_can_seek (asfmux) ? 0x02 : 0x01);     /* seekable or streamable */
+  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE);    /* packet size */
+  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE);    /* packet size */
+  gst_asfmux_put_le32 (header, bitrate);        /* Nominal data rate in bps */
   gst_asfmux_end_header (header, header_pos);
 
   /* unknown headers */
@@ -923,12 +924,12 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
 #if 0
   if (has_title) {
     header_pos =
-	gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_COMMENT);
+        gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_COMMENT);
     gst_asfmux_put_le16 (header, 2 * (strlen (title) + 1));
     gst_asfmux_put_le16 (header, 2 * (strlen (author) + 1));
     gst_asfmux_put_le16 (header, 2 * (strlen (copyright) + 1));
     gst_asfmux_put_le16 (header, 2 * (strlen (comment) + 1));
-    gst_asfmux_put_le16 (header, 0);	/* rating */
+    gst_asfmux_put_le16 (header, 0);    /* rating */
     gst_asfmux_put_string (header, title);
     gst_asfmux_put_string (header, author);
     gst_asfmux_put_string (header, copyright);
@@ -944,37 +945,37 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
 
     stream->seqnum = 0;
     header_pos =
-	gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_STREAM);
+        gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_STREAM);
 
     switch (stream->type) {
       case ASF_STREAM_AUDIO:
-	obj_size = 18;
-	gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_AUDIO);
-	gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
-	break;
+        obj_size = 18;
+        gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_AUDIO);
+        gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
+        break;
       case ASF_STREAM_VIDEO:
-	obj_size = 11 + 40;
-	gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_VIDEO);
-	gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
-	break;
+        obj_size = 11 + 40;
+        gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_VIDEO);
+        gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
+        break;
       default:
-	g_assert (0);
+        g_assert (0);
     }
 
-    gst_asfmux_put_le64 (header, 0);	/* offset */
-    gst_asfmux_put_le32 (header, obj_size);	/* wav header len */
-    gst_asfmux_put_le32 (header, 0);	/* additional data len */
-    gst_asfmux_put_le16 (header, n + 1);	/* stream number */
-    gst_asfmux_put_le32 (header, 0);	/* ??? */
+    gst_asfmux_put_le64 (header, 0);    /* offset */
+    gst_asfmux_put_le32 (header, obj_size);     /* wav header len */
+    gst_asfmux_put_le32 (header, 0);    /* additional data len */
+    gst_asfmux_put_le16 (header, n + 1);        /* stream number */
+    gst_asfmux_put_le32 (header, 0);    /* ??? */
 
     switch (stream->type) {
       case ASF_STREAM_AUDIO:
-	gst_asfmux_put_wav_header (header, &stream->header.audio);
-	break;
+        gst_asfmux_put_wav_header (header, &stream->header.audio);
+        break;
       case ASF_STREAM_VIDEO:
-	gst_asfmux_put_vid_header (header, &stream->header.video.stream);
-	gst_asfmux_put_bmp_header (header, &stream->header.video.format);
-	break;
+        gst_asfmux_put_vid_header (header, &stream->header.video.stream);
+        gst_asfmux_put_bmp_header (header, &stream->header.video.format);
+        break;
     }
 
     gst_asfmux_end_header (header, header_pos);
@@ -993,20 +994,20 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
     /* Isn't this wrong? This is UTF16! */
     gst_asfmux_put_le16 (header, strlen (codec) + 1);
     gst_asfmux_put_string (header, codec);
-    gst_asfmux_put_le16 (header, 0);	/* no parameters */
+    gst_asfmux_put_le16 (header, 0);    /* no parameters */
 
     /* id */
     switch (stream->type) {
       case ASF_STREAM_AUDIO:
-	gst_asfmux_put_le16 (header, 2);
-	gst_asfmux_put_le16 (header, stream->header.audio.codec_tag);
-	break;
+        gst_asfmux_put_le16 (header, 2);
+        gst_asfmux_put_le16 (header, stream->header.audio.codec_tag);
+        break;
       case ASF_STREAM_VIDEO:
-	gst_asfmux_put_le16 (header, 4);
-	gst_asfmux_put_le32 (header, stream->header.video.format.tag);
-	break;
+        gst_asfmux_put_le16 (header, 4);
+        gst_asfmux_put_le32 (header, stream->header.video.format.tag);
+        break;
       default:
-	g_assert (0);
+        g_assert (0);
     }
   }
   gst_asfmux_end_header (header, header_pos);
@@ -1034,9 +1035,9 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_DATA);
   gst_asfmux_put_le64 (header, data_size);
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_UNDEFINED);
-  gst_asfmux_put_le64 (header, asfmux->num_packets);	/* nb packets */
-  gst_asfmux_put_byte (header, 1);	/* ??? */
-  gst_asfmux_put_byte (header, 1);	/* ??? */
+  gst_asfmux_put_le64 (header, asfmux->num_packets);    /* nb packets */
+  gst_asfmux_put_byte (header, 1);      /* ??? */
+  gst_asfmux_put_byte (header, 1);      /* ??? */
 
   gst_pad_push (asfmux->srcpad, GST_DATA (header));
   asfmux->write_header = FALSE;
@@ -1050,7 +1051,7 @@ gst_asfmux_file_stop (GstAsfMux * asfmux)
     GstBuffer *footer = gst_buffer_new_and_alloc (16);
 
     GST_BUFFER_SIZE (footer) = 0;
-    gst_asfmux_put_chunk (footer, asfmux, 0x4524, 0, 0);	/* end of stream */
+    gst_asfmux_put_chunk (footer, asfmux, 0x4524, 0, 0);        /* end of stream */
     gst_pad_push (asfmux->srcpad, GST_DATA (footer));
   } else if (gst_asfmux_can_seek (asfmux)) {
     /* rewrite an updated header */
@@ -1063,7 +1064,7 @@ gst_asfmux_file_stop (GstAsfMux * asfmux)
     gst_pad_push (asfmux->srcpad, GST_DATA (event));
     gst_asfmux_file_start (asfmux, filesize, filesize - asfmux->data_offset);
     event =
-	gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, filesize);
+        gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, filesize);
     gst_pad_push (asfmux->srcpad, GST_DATA (event));
   }
 
@@ -1086,7 +1087,7 @@ gst_asfmux_packet_header (GstAsfMux * asfmux)
   gst_asfmux_put_byte (header, 0x82);
   gst_asfmux_put_le16 (header, 0);
 
-  flags = 0x01;			/* nb segments present */
+  flags = 0x01;                 /* nb segments present */
   if (padsize > 0) {
     if (padsize < 256) {
       flags |= 0x08;
@@ -1094,7 +1095,7 @@ gst_asfmux_packet_header (GstAsfMux * asfmux)
       flags |= 0x10;
     }
   }
-  gst_asfmux_put_byte (header, flags);	/* flags */
+  gst_asfmux_put_byte (header, flags);  /* flags */
   gst_asfmux_put_byte (header, 0x5d);
   if (flags & 0x10) {
     gst_asfmux_put_le16 (header, padsize - 2);
@@ -1122,12 +1123,12 @@ gst_asfmux_frame_header (GstAsfMux * asfmux,
   GST_BUFFER_DURATION (asfmux->packet) =
       time - GST_BUFFER_TIMESTAMP (asfmux->packet);
 
-  gst_asfmux_put_byte (asfmux->packet, (stream->index + 1) | 0x80);	//(key ? 0x80 : 0));
+  gst_asfmux_put_byte (asfmux->packet, (stream->index + 1) | 0x80);     //(key ? 0x80 : 0));
   gst_asfmux_put_byte (asfmux->packet, stream->seqnum);
   gst_asfmux_put_le32 (asfmux->packet, position);
   gst_asfmux_put_byte (asfmux->packet, 0x08);
   gst_asfmux_put_le32 (asfmux->packet, total);
-  gst_asfmux_put_le32 (asfmux->packet, time / (GST_SECOND / 1000));	/* time in ms */
+  gst_asfmux_put_le32 (asfmux->packet, time / (GST_SECOND / 1000));     /* time in ms */
   gst_asfmux_put_le16 (asfmux->packet, length);
 }
 
@@ -1148,7 +1149,7 @@ gst_asfmux_packet_flush (GstAsfMux * asfmux)
   header = gst_asfmux_packet_header (asfmux);
   header_size = GST_BUFFER_SIZE (header);
   if (!gst_asfmux_can_seek (asfmux)) {
-    header_size -= 12;		/* hack... bah */
+    header_size -= 12;          /* hack... bah */
   }
 
   /* Clear out the padding bytes */
@@ -1192,10 +1193,10 @@ gst_asfmux_write_buffer (GstAsfMux * asfmux,
 
     /* write frame header plus data in this packet */
     gst_asfmux_frame_header (asfmux, stream, position, to_write, size,
-	GST_BUFFER_TIMESTAMP (buffer),
-	GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_KEY_UNIT));
+        GST_BUFFER_TIMESTAMP (buffer),
+        GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_KEY_UNIT));
     gst_asfmux_frame_buffer (asfmux, GST_BUFFER_DATA (buffer) + position,
-	to_write);
+        to_write);
 
     position += to_write;
   }
@@ -1213,9 +1214,9 @@ gst_asfmux_do_one_buffer (GstAsfMux * asfmux)
   for (n = 0; n < asfmux->num_outputs; n++) {
     if (asfmux->output[n].queue != NULL) {
       if (chosen == -1 ||
-	  GST_BUFFER_TIMESTAMP (asfmux->output[n].queue) <
-	  GST_BUFFER_TIMESTAMP (asfmux->output[chosen].queue)) {
-	chosen = n;
+          GST_BUFFER_TIMESTAMP (asfmux->output[n].queue) <
+          GST_BUFFER_TIMESTAMP (asfmux->output[chosen].queue)) {
+        chosen = n;
       }
     }
   }
@@ -1275,7 +1276,7 @@ gst_asfmux_change_state (GstElement * element)
   switch (transition) {
     case GST_STATE_PAUSED_TO_PLAYING:
       for (n = 0; n < asfmux->num_outputs; n++) {
-	asfmux->output[n].eos = FALSE;
+        asfmux->output[n].eos = FALSE;
       }
       break;
   }

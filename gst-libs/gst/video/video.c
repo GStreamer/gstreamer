@@ -37,14 +37,14 @@ gst_video_frame_rate (GstPad * pad)
   caps = GST_PAD_CAPS (pad);
   if (caps == NULL) {
     g_warning ("gstvideo: failed to get caps of pad %s:%s",
-	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0.;
   }
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_double (structure, "framerate", &fps)) {
     g_warning ("gstvideo: failed to get framerate property of pad %s:%s",
-	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0.;
   }
 
@@ -69,7 +69,7 @@ gst_video_get_size (GstPad * pad, gint * width, gint * height)
 
   if (caps == NULL) {
     g_warning ("gstvideo: failed to get caps of pad %s:%s",
-	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return FALSE;
   }
 
@@ -79,7 +79,7 @@ gst_video_get_size (GstPad * pad, gint * width, gint * height)
 
   if (!ret) {
     g_warning ("gstvideo: failed to get size properties on pad %s:%s",
-	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return FALSE;
   }
 

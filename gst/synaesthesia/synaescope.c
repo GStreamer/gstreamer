@@ -53,7 +53,7 @@
 #define brTotTargetLow 5000
 #define brTotTargetHigh 15000
 
-static int autobrightness = 1;	/* Whether to use automatic brightness adjust */
+static int autobrightness = 1;  /* Whether to use automatic brightness adjust */
 static unsigned int brightFactor = 400;
 static unsigned char output[syn_width * syn_height * 2];
 static guint32 display[syn_width * syn_height];
@@ -66,7 +66,7 @@ static double fftout_r[FFT_BUFFER_SIZE];
 static double fftmult[FFT_BUFFER_SIZE / 2 + 1];
 static double corr_l[FFT_BUFFER_SIZE];
 static double corr_r[FFT_BUFFER_SIZE];
-static int clarity[FFT_BUFFER_SIZE];	/* Surround sound */
+static int clarity[FFT_BUFFER_SIZE];    /* Surround sound */
 static double cosTable[FFT_BUFFER_SIZE];
 static double negSinTable[FFT_BUFFER_SIZE];
 static int bitReverse[FFT_BUFFER_SIZE];
@@ -162,7 +162,7 @@ synaescope_coreGo (void)
     corr_l[i] = sqrt (aa = (x1 + x2) * (x1 + x2) + (y1 - y2) * (y1 - y2));
     corr_r[i] = sqrt (bb = (x1 - x2) * (x1 - x2) + (y1 + y2) * (y1 + y2));
     clarity[i] = (int) (
-	((x1 + x2) * (x1 - x2) + (y1 + y2) * (y1 - y2)) / (aa + bb) * 256);
+        ((x1 + x2) * (x1 - x2) + (y1 + y2) * (y1 - y2)) / (aa + bb) * 256);
   }
 
   /* Asger Alstrupt's optimized 32 bit fade */
@@ -173,16 +173,16 @@ synaescope_coreGo (void)
     /*Bytewize version was: *(ptr++) -= *ptr+(*ptr>>1)>>4; */
     if (*ptr) {
       if (*ptr & 0xf0f0f0f0) {
-	*ptr = *ptr - ((*ptr & 0xf0f0f0f0) >> 4) - ((*ptr & 0xe0e0e0e0) >> 5);
+        *ptr = *ptr - ((*ptr & 0xf0f0f0f0) >> 4) - ((*ptr & 0xe0e0e0e0) >> 5);
       } else {
-	*ptr = (*ptr * 14 >> 4) & 0x0f0f0f0f;
-	/*Should be 29/32 to be consistent. Who cares. This is totally */
-	/* hacked anyway.  */
-	/*unsigned char *subptr = (unsigned char*)(ptr++); */
-	/*subptr[0] = (int)subptr[0] * 29 / 32; */
-	/*subptr[1] = (int)subptr[0] * 29 / 32; */
-	/*subptr[2] = (int)subptr[0] * 29 / 32; */
-	/*subptr[3] = (int)subptr[0] * 29 / 32; */
+        *ptr = (*ptr * 14 >> 4) & 0x0f0f0f0f;
+        /*Should be 29/32 to be consistent. Who cares. This is totally */
+        /* hacked anyway.  */
+        /*unsigned char *subptr = (unsigned char*)(ptr++); */
+        /*subptr[0] = (int)subptr[0] * 29 / 32; */
+        /*subptr[1] = (int)subptr[0] * 29 / 32; */
+        /*subptr[2] = (int)subptr[0] * 29 / 32; */
+        /*subptr[3] = (int)subptr[0] * 29 / 32; */
       }
     }
     ptr++;
@@ -210,38 +210,38 @@ synaescope_coreGo (void)
       br1 = br * (clarity[i] + 128) >> 8;
       br2 = br * (128 - clarity[i]) >> 8;
       if (br1 < 0)
-	br1 = 0;
+        br1 = 0;
       else if (br1 > 255)
-	br1 = 255;
+        br1 = 255;
       if (br2 < 0)
-	br2 = 0;
+        br2 = 0;
       else if (br2 > 255)
-	br2 = 255;
+        br2 = 255;
       /*unsigned char *p = output+ h*2+(164-((i<<8)>>FFT_BUFFER_SIZE_LOG))*(syn_width*2);  */
 
       if (px < 30 || py < 30 || px > syn_width - 30 || py > syn_height - 30) {
-	addPixel (output, px, py, br1, br2);
-	for (j = 1; br1 > 0 || br2 > 0;
-	    j++, br1 = scaleDown[br1], br2 = scaleDown[br2]) {
-	  addPixel (output, px + j, py, br1, br2);
-	  addPixel (output, px, py + j, br1, br2);
-	  addPixel (output, px - j, py, br1, br2);
-	  addPixel (output, px, py - j, br1, br2);
-	}
+        addPixel (output, px, py, br1, br2);
+        for (j = 1; br1 > 0 || br2 > 0;
+            j++, br1 = scaleDown[br1], br2 = scaleDown[br2]) {
+          addPixel (output, px + j, py, br1, br2);
+          addPixel (output, px, py + j, br1, br2);
+          addPixel (output, px - j, py, br1, br2);
+          addPixel (output, px, py - j, br1, br2);
+        }
       } else {
-	unsigned char *p = output + px * 2 + py * syn_width * 2, *p1 = p, *p2 =
-	    p, *p3 = p, *p4 = p;
-	addPixelFast (p, br1, br2);
-	for (; br1 > 0 || br2 > 0; br1 = scaleDown[br1], br2 = scaleDown[br2]) {
-	  p1 += 2;
-	  addPixelFast (p1, br1, br2);
-	  p2 -= 2;
-	  addPixelFast (p2, br1, br2);
-	  p3 += syn_width * 2;
-	  addPixelFast (p3, br1, br2);
-	  p4 -= syn_width * 2;
-	  addPixelFast (p4, br1, br2);
-	}
+        unsigned char *p = output + px * 2 + py * syn_width * 2, *p1 = p, *p2 =
+            p, *p3 = p, *p4 = p;
+        addPixelFast (p, br1, br2);
+        for (; br1 > 0 || br2 > 0; br1 = scaleDown[br1], br2 = scaleDown[br2]) {
+          p1 += 2;
+          addPixelFast (p1, br1, br2);
+          p2 -= 2;
+          addPixelFast (p2, br1, br2);
+          p3 += syn_width * 2;
+          addPixelFast (p3, br1, br2);
+          p4 -= syn_width * 2;
+          addPixelFast (p4, br1, br2);
+        }
       }
     }
   }
@@ -253,16 +253,16 @@ synaescope_coreGo (void)
 
     if (brightMax != brightMin) {
       brTotTarget -= ((brTotTargetHigh - brTotTargetLow) *
-	  (brightFactor - brightMin)) / (brightMax - brightMin);
+          (brightFactor - brightMin)) / (brightMax - brightMin);
     }
     if (brtot < brTotTarget) {
       brightFactor += brightInc;
       if (brightFactor > brightMax)
-	brightFactor = brightMax;
+        brightFactor = brightMax;
     } else {
       brightFactor -= brightDec;
       if (brightFactor < brightMin)
-	brightFactor = brightMin;
+        brightFactor = brightMin;
     }
     /* printf("brtot: %ld\tbrightFactor: %d\tbrTotTarget: %d\n",
        brtot, brightFactor, brTotTarget); */
@@ -462,7 +462,7 @@ init_synaescope ()
     /* intensity - this helps correct for that. */
     mult *= log (i + 1) / log (2);
 
-    mult *= 3;			/* Adhoc parameter, looks about right for me. */
+    mult *= 3;                  /* Adhoc parameter, looks about right for me. */
 
     fftmult[i] = mult;
   }
@@ -496,14 +496,14 @@ synaes_fft (double *x, double *y)
       int i;
 
       for (i = j; i < FFT_BUFFER_SIZE; i += n1) {
-	int l = i + n2;
-	double xt = x[i] - x[l];
-	double yt = y[i] - y[l];
+        int l = i + n2;
+        double xt = x[i] - x[l];
+        double yt = y[i] - y[l];
 
-	x[i] = (x[i] + x[l]);
-	y[i] = (y[i] + y[l]);
-	x[l] = xt * c - yt * s;
-	y[l] = xt * s + yt * c;
+        x[i] = (x[i] + x[l]);
+        y[i] = (y[i] + y[l]);
+        x[l] = xt * c - yt * s;
+        y[l] = xt * s + yt * c;
       }
     }
   }

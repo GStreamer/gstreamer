@@ -36,12 +36,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
-	"channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate gst_lame_src_template =
@@ -49,10 +49,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-	"mpegversion = (int) 1, "
-	"layer = (int) 3, "
-	"rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
-	"channels = (int) [ 1, 2 ]")
+        "mpegversion = (int) 1, "
+        "layer = (int) 3, "
+        "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ]")
     );
 
 /********** Define useful types for non-programmatic interfaces **********/
@@ -69,6 +69,7 @@ gst_lame_mode_get_type (void)
     {4, "4", "Auto"},
     {0, NULL, NULL},
   };
+
   if (!lame_mode_type) {
     lame_mode_type = g_enum_register_static ("GstLameMode", lame_modes);
   }
@@ -93,6 +94,7 @@ gst_lame_quality_get_type (void)
     {9, "9", "9 - Worst"},
     {0, NULL, NULL},
   };
+
   if (!lame_quality_type) {
     lame_quality_type = g_enum_register_static ("GstLameQuality", lame_quality);
   }
@@ -110,6 +112,7 @@ gst_lame_padding_get_type (void)
     {2, "2", "Adjust Padding"},
     {0, NULL, NULL},
   };
+
   if (!lame_padding_type) {
     lame_padding_type = g_enum_register_static ("GstLamePadding", lame_padding);
   }
@@ -200,9 +203,9 @@ gst_lame_get_type (void)
     };
 
     gst_lame_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstLame", &gst_lame_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstLame", &gst_lame_info, 0);
     g_type_add_interface_static (gst_lame_type, GST_TYPE_TAG_SETTER,
-	&tag_setter_info);
+        &tag_setter_info);
 
   }
   return gst_lame_type;
@@ -233,104 +236,104 @@ gst_lame_class_init (GstLameClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
-	  8, 320, 128, G_PARAM_READWRITE));
+          8, 320, 128, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_COMPRESSION_RATIO, g_param_spec_float ("compression_ratio",
-	  "Compression Ratio",
-	  "choose bitrate to achive selected compression ratio", 1.0, 200.0,
-	  11.0, G_PARAM_READWRITE));
+          "Compression Ratio",
+          "choose bitrate to achive selected compression ratio", 1.0, 200.0,
+          11.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_enum ("quality", "Quality", "Encoding Quality",
-	  GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
+          GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Mode", "Encoding mode", GST_TYPE_LAME_MODE, 0,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORCE_MS,
       g_param_spec_boolean ("force_ms", "Force ms",
-	  "Force ms_stereo on all frames", TRUE, G_PARAM_READWRITE));
+          "Force ms_stereo on all frames", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREE_FORMAT,
       g_param_spec_boolean ("free_format", "Free format",
-	  "Produce a free format bitstream", TRUE, G_PARAM_READWRITE));
+          "Produce a free format bitstream", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COPYRIGHT,
       g_param_spec_boolean ("copyright", "Copyright", "Mark as copyright", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ORIGINAL,
       g_param_spec_boolean ("original", "Original", "Mark as non-original",
-	  TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_PROTECTION,
       g_param_spec_boolean ("error_protection", "Error protection",
-	  "Adds 16 bit checksum to every frame", TRUE, G_PARAM_READWRITE));
+          "Adds 16 bit checksum to every frame", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PADDING_TYPE,
       g_param_spec_enum ("padding_type", "Padding type", "Padding type",
-	  GST_TYPE_LAME_PADDING, 0, G_PARAM_READWRITE));
+          GST_TYPE_LAME_PADDING, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EXTENSION,
       g_param_spec_boolean ("extension", "Extension", "Extension", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STRICT_ISO,
       g_param_spec_boolean ("strict_iso", "Strict ISO",
-	  "Comply as much as possible to ISO MPEG spec", TRUE,
-	  G_PARAM_READWRITE));
+          "Comply as much as possible to ISO MPEG spec", TRUE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_DISABLE_RESERVOIR, g_param_spec_boolean ("disable_reservoir",
-	  "Disable reservoir", "Disable the bit reservoir", TRUE,
-	  G_PARAM_READWRITE));
+          "Disable reservoir", "Disable the bit reservoir", TRUE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
       g_param_spec_boolean ("vbr", "VBR", "Use variable bitrate", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MEAN_BITRATE,
       g_param_spec_int ("vbr_mean_bitrate", "VBR mean bitrate",
-	  "Specify mean bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Specify mean bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MIN_BITRATE,
       g_param_spec_int ("vbr_min_bitrate", "VBR min bitrate",
-	  "Specify min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Specify min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MAX_BITRATE,
       g_param_spec_int ("vbr_max_bitrate", "VBR max bitrate",
-	  "Specify max bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Specify max bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_HARD_MIN,
       g_param_spec_int ("vbr_hard_min", "VBR hard min",
-	  "Specify hard min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Specify hard min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_FREQ,
       g_param_spec_int ("lowpass_freq", "Lowpass freq",
-	  "frequency(kHz), lowpass filter cutoff above freq", 0, 50000, 0,
-	  G_PARAM_READWRITE));
+          "frequency(kHz), lowpass filter cutoff above freq", 0, 50000, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_WIDTH,
       g_param_spec_int ("lowpass_width", "Lowpass width",
-	  "frequency(kHz) - default 15% of lowpass freq", 0, G_MAXINT, 0,
-	  G_PARAM_READWRITE));
+          "frequency(kHz) - default 15% of lowpass freq", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_FREQ,
       g_param_spec_int ("highpass_freq", "Highpass freq",
-	  "frequency(kHz), highpass filter cutoff below freq", 0, 50000, 0,
-	  G_PARAM_READWRITE));
+          "frequency(kHz), highpass filter cutoff below freq", 0, 50000, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_WIDTH,
       g_param_spec_int ("highpass_width", "Highpass width",
-	  "frequency(kHz) - default 15% of highpass freq", 0, G_MAXINT, 0,
-	  G_PARAM_READWRITE));
+          "frequency(kHz) - default 15% of highpass freq", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_ONLY,
       g_param_spec_boolean ("ath_only", "ATH only",
-	  "Ignore GPSYCHO completely, use ATH only", TRUE, G_PARAM_READWRITE));
+          "Ignore GPSYCHO completely, use ATH only", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_SHORT,
       g_param_spec_boolean ("ath_short", "ATH short",
-	  "Ignore GPSYCHO for short blocks, use ATH only", TRUE,
-	  G_PARAM_READWRITE));
+          "Ignore GPSYCHO for short blocks, use ATH only", TRUE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_ATH,
       g_param_spec_boolean ("no_ath", "No ath",
-	  "turns ATH down to a flat noise floor", TRUE, G_PARAM_READWRITE));
+          "turns ATH down to a flat noise floor", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_LOWER,
       g_param_spec_int ("ath_lower", "ATH lower", "lowers ATH by x dB",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CWLIMIT,
       g_param_spec_int ("cwlimit", "Cwlimit",
-	  "Compute tonality up to freq (in kHz) default 8.8717", 0, 50000, 0,
-	  G_PARAM_READWRITE));
+          "Compute tonality up to freq (in kHz) default 8.8717", 0, 50000, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALLOW_DIFF_SHORT,
       g_param_spec_boolean ("allow_diff_short", "Allow diff short",
-	  "Allow diff short", TRUE, G_PARAM_READWRITE));
+          "Allow diff short", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_SHORT_BLOCKS,
       g_param_spec_boolean ("no_short_blocks", "No short blocks",
-	  "Do not use short blocks", TRUE, G_PARAM_READWRITE));
+          "Do not use short blocks", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EMPHASIS,
       g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
@@ -354,7 +357,7 @@ gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
 
   if (!gst_lame_setup (lame)) {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-	("could not initialize encoder (wrong parameters?)"));
+        ("could not initialize encoder (wrong parameters?)"));
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -480,16 +483,16 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       guint ivalue;
 
       if (!gst_tag_list_get_uint (list, tag, &ivalue)) {
-	GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
-	return;
+        GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+        return;
       }
       value = g_strdup_printf ("%u", ivalue);
       break;
     }
     case G_TYPE_STRING:
       if (!gst_tag_list_get_string (list, tag, &value)) {
-	GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
-	return;
+        GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+        return;
       };
       break;
     default:
@@ -757,27 +760,27 @@ gst_lame_chain (GstPad * pad, GstData * _data)
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
       case GST_EVENT_EOS:
-	eos = TRUE;
+        eos = TRUE;
       case GST_EVENT_FLUSH:
-	mp3_buffer_size = 7200;
-	mp3_data = g_malloc (mp3_buffer_size);
+        mp3_buffer_size = 7200;
+        mp3_data = g_malloc (mp3_buffer_size);
 
-	mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
-	gst_event_unref (GST_EVENT (buf));
-	break;
+        mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
+        gst_event_unref (GST_EVENT (buf));
+        break;
       case GST_EVENT_TAG:
-	if (lame->tags) {
-	  gst_tag_list_insert (lame->tags,
-	      gst_event_tag_get_list (GST_EVENT (buf)),
-	      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
-	} else {
-	  g_assert_not_reached ();
-	}
-	//      gst_pad_event_default (pad, GST_EVENT (buf));
-	break;
+        if (lame->tags) {
+          gst_tag_list_insert (lame->tags,
+              gst_event_tag_get_list (GST_EVENT (buf)),
+              gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
+        } else {
+          g_assert_not_reached ();
+        }
+        //      gst_pad_event_default (pad, GST_EVENT (buf));
+        break;
       default:
-	gst_pad_event_default (pad, GST_EVENT (buf));
-	break;
+        gst_pad_event_default (pad, GST_EVENT (buf));
+        break;
     }
   } else {
     gint64 duration;
@@ -785,37 +788,37 @@ gst_lame_chain (GstPad * pad, GstData * _data)
     if (!lame->initialized) {
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-	  ("encoder not initialized (input is not audio?)"));
+          ("encoder not initialized (input is not audio?)"));
       return;
     }
 
     /* allocate space for output */
     mp3_buffer_size =
-	((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
+        ((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
     mp3_data = g_malloc (mp3_buffer_size);
 
     if (lame->num_channels == 2) {
       mp3_size = lame_encode_buffer_interleaved (lame->lgf,
-	  (short int *) (GST_BUFFER_DATA (buf)),
-	  GST_BUFFER_SIZE (buf) / 4, mp3_data, mp3_buffer_size);
+          (short int *) (GST_BUFFER_DATA (buf)),
+          GST_BUFFER_SIZE (buf) / 4, mp3_data, mp3_buffer_size);
     } else {
       mp3_size = lame_encode_buffer (lame->lgf,
-	  (short int *) (GST_BUFFER_DATA (buf)),
-	  (short int *) (GST_BUFFER_DATA (buf)),
-	  GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
+          (short int *) (GST_BUFFER_DATA (buf)),
+          (short int *) (GST_BUFFER_DATA (buf)),
+          GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
     }
 
     GST_DEBUG ("encoded %d bytes of audio to %d bytes of mp3",
-	GST_BUFFER_SIZE (buf), mp3_size);
+        GST_BUFFER_SIZE (buf), mp3_size);
 
     duration = (GST_SECOND * GST_BUFFER_SIZE (buf) /
-	(2 * lame->samplerate * lame->num_channels));
+        (2 * lame->samplerate * lame->num_channels));
 
     if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
-	GST_BUFFER_DURATION (buf) != duration)
+        GST_BUFFER_DURATION (buf) != duration)
       GST_DEBUG ("mad: incoming buffer had incorrect duration %lld, "
-	  "outgoing buffer will have correct duration %lld",
-	  GST_BUFFER_DURATION (buf), duration);
+          "outgoing buffer will have correct duration %lld",
+          GST_BUFFER_DURATION (buf), duration);
 
     if (lame->last_ts == GST_CLOCK_TIME_NONE) {
       lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
@@ -908,7 +911,7 @@ gst_lame_setup (GstLame * lame)
     lame->initialized = TRUE;
     /* FIXME: it would be nice to print out the mode here */
     GST_INFO ("lame encoder initialized (%d kbit/s, %d Hz, %d channels)",
-	lame->bitrate, lame->samplerate, lame->num_channels);
+        lame->bitrate, lame->samplerate, lame->num_channels);
   }
 
   GST_DEBUG_OBJECT (lame, "done with setup");
@@ -933,8 +936,8 @@ gst_lame_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       if (lame->initialized) {
-	lame_close (lame->lgf);
-	lame->initialized = FALSE;
+        lame_close (lame->lgf);
+        lame->initialized = FALSE;
       }
       break;
     default:

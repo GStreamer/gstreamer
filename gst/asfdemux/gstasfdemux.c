@@ -23,7 +23,7 @@
 #endif
 #include <gst/riff/riff-ids.h>
 #include "gstasfdemux.h"
-#include "gstasfmux.h"		/* for the type registering */
+#include "gstasfmux.h"          /* for the type registering */
 #include "asfheaders.h"
 
 /* elementfactory information */
@@ -98,9 +98,10 @@ asf_demux_get_type (void)
       0,
       (GInstanceInitFunc) gst_asf_demux_init,
     };
+
     asf_demux_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstASFDemux",
-	&asf_demux_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstASFDemux",
+        &asf_demux_info, 0);
   }
   return asf_demux_type;
 }
@@ -123,7 +124,7 @@ gst_asf_demux_base_init (gpointer g_class)
     GST_MAKE_FOURCC ('M', 'P', '4', '3'),
     GST_MAKE_FOURCC ('D', 'I', 'V', '3'),
     GST_MAKE_FOURCC ('D', 'X', '5', '0'),
-    0				/* end */
+    0                           /* end */
   };
   gint aud_list[] = {
     GST_RIFF_WAVE_FORMAT_MPEGL3,
@@ -134,7 +135,7 @@ gst_asf_demux_base_init (gpointer g_class)
     GST_RIFF_WAVE_FORMAT_DIVX_WMAV1,
     GST_RIFF_WAVE_FORMAT_DIVX_WMAV2,
     GST_RIFF_WAVE_FORMAT_WMAV9,
-    -1				/* end */
+    -1                          /* end */
   };
 
   audcaps = gst_caps_new_empty ();
@@ -223,8 +224,8 @@ gst_asf_demux_send_event (GstElement * element, GstEvent * event)
        * failed on this pad */
       gst_event_ref (event);
       if (gst_asf_demux_handle_src_event (pad, event)) {
-	gst_event_unref (event);
-	return TRUE;
+        gst_event_unref (event);
+        return TRUE;
       }
     }
 
@@ -398,7 +399,7 @@ _read_obj_data (GstASFDemux * asf_demux, asf_obj_data * object)
   return (_read_guid (asf_demux, &object->file_id) &&
       _read_uint64 (asf_demux, &object->packets) &&
       _read_uint8 (asf_demux, &object->unknown1) &&
-	  /*_read_uint8 (asf_demux, &object->unknown2) && */
+          /*_read_uint8 (asf_demux, &object->unknown2) && */
       _read_uint8 (asf_demux, &object->correction));
 }
 
@@ -596,7 +597,7 @@ gst_asf_demux_process_segment (GstASFDemux * asf_demux,
     /* It's uncompressed with replic data */
     if (replic_size < 8) {
       GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, (NULL),
-	  ("The payload has replicated data but the size is less than 8"));
+          ("The payload has replicated data but the size is less than 8"));
       return FALSE;
     }
     _read_replicated_data (asf_demux, &replicated_data_header);
@@ -646,9 +647,9 @@ gst_asf_demux_process_segment (GstASFDemux * asf_demux,
       segment_info.segment_size = segment_info.chunk_size;
 
       if (segment_info.chunk_size > packet_info->size_left) {
-	GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, (NULL),
-	    ("Payload chunk overruns packet size."));
-	return FALSE;
+        GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, (NULL),
+            ("Payload chunk overruns packet size."));
+        return FALSE;
       }
 
       gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info);
@@ -712,13 +713,13 @@ gst_asf_demux_process_data (GstASFDemux * asf_demux, guint64 * obj_size)
     packet_info.multiple = flags & 0x01;
     sequence = _read_var_length (asf_demux, (flags >> 1) & 0x03, &rsize);
     packet_info.padsize =
-	_read_var_length (asf_demux, (flags >> 3) & 0x03, &rsize);
+        _read_var_length (asf_demux, (flags >> 3) & 0x03, &rsize);
     packet_length = _read_var_length (asf_demux, (flags >> 5) & 0x03, &rsize);
     if (packet_length == 0)
       packet_length = asf_demux->packet_size;
 
     GST_DEBUG ("Multiple = %u, Sequence = %u, Padsize = %u, Packet length = %u",
-	packet_info.multiple, sequence, packet_info.padsize, packet_length);
+        packet_info.multiple, sequence, packet_info.padsize, packet_length);
 
     /* Read the property flags */
     packet_info.replicsizetype = property & 0x03;
@@ -749,7 +750,7 @@ gst_asf_demux_process_data (GstASFDemux * asf_demux, guint64 * obj_size)
 
     for (segment = 0; segment < segments; segment++) {
       if (!gst_asf_demux_process_segment (asf_demux, &packet_info))
-	return FALSE;
+        return FALSE;
     }
 
     /* Skip the padding */
@@ -798,80 +799,80 @@ gst_asf_demux_process_stream (GstASFDemux * asf_demux, guint64 * obj_size)
       size = audio_object.size;
 
       GST_INFO ("Object is an audio stream with %u bytes of additional data.",
-	  size);
+          size);
 
       if (!gst_asf_demux_add_audio_stream (asf_demux, &audio_object, id))
-	return FALSE;
+        return FALSE;
 
       switch (correction) {
-	case ASF_CORRECTION_ON:
-	  GST_INFO ("Using error correction");
+        case ASF_CORRECTION_ON:
+          GST_INFO ("Using error correction");
 
-	  _read_stream_correction (asf_demux, &correction_object);
-	  asf_demux->span = correction_object.span;
+          _read_stream_correction (asf_demux, &correction_object);
+          asf_demux->span = correction_object.span;
 
-	  GST_DEBUG ("Descrambling: ps:%d cs:%d ds:%d s:%d sd:%d",
-	      correction_object.packet_size, correction_object.chunk_size,
-	      correction_object.data_size, (guint) correction_object.span,
-	      (guint) correction_object.silence_data);
+          GST_DEBUG ("Descrambling: ps:%d cs:%d ds:%d s:%d sd:%d",
+              correction_object.packet_size, correction_object.chunk_size,
+              correction_object.data_size, (guint) correction_object.span,
+              (guint) correction_object.silence_data);
 
-	  if (asf_demux->span > 1) {
-	    if (!correction_object.chunk_size
-		|| ((correction_object.packet_size /
-			correction_object.chunk_size) <= 1))
-	      /* Disable descrambling */
-	      asf_demux->span = 0;
-	  } else {
-	    /* Descambling is enabled */
-	    asf_demux->ds_packet_size = correction_object.packet_size;
-	    asf_demux->ds_chunk_size = correction_object.chunk_size;
-	  }
+          if (asf_demux->span > 1) {
+            if (!correction_object.chunk_size
+                || ((correction_object.packet_size /
+                        correction_object.chunk_size) <= 1))
+              /* Disable descrambling */
+              asf_demux->span = 0;
+          } else {
+            /* Descambling is enabled */
+            asf_demux->ds_packet_size = correction_object.packet_size;
+            asf_demux->ds_chunk_size = correction_object.chunk_size;
+          }
 
-	  /* Now skip the rest of the silence data */
-	  if (correction_object.data_size > 1)
-	    gst_bytestream_flush (asf_demux->bs,
-		correction_object.data_size - 1);
+          /* Now skip the rest of the silence data */
+          if (correction_object.data_size > 1)
+            gst_bytestream_flush (asf_demux->bs,
+                correction_object.data_size - 1);
 
-	  break;
-	case ASF_CORRECTION_OFF:
-	  GST_INFO ("Error correction off");
-	  gst_bytestream_flush (asf_demux->bs, object.stream_specific_size);
-	  break;
-	default:
-	  GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, (NULL),
-	      ("Audio stream using unknown error correction"));
-	  return FALSE;
+          break;
+        case ASF_CORRECTION_OFF:
+          GST_INFO ("Error correction off");
+          gst_bytestream_flush (asf_demux->bs, object.stream_specific_size);
+          break;
+        default:
+          GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, (NULL),
+              ("Audio stream using unknown error correction"));
+          return FALSE;
       }
 
       break;
     case ASF_STREAM_VIDEO:
       _read_stream_video (asf_demux, &video_object);
-      size = video_object.size - 40;	/* Byte order gets offset by single byte */
+      size = video_object.size - 40;    /* Byte order gets offset by single byte */
       GST_INFO ("Object is a video stream with %u bytes of additional data.",
-	  size);
+          size);
       _read_stream_video_format (asf_demux, &video_format_object);
 
       if (!gst_asf_demux_add_video_stream (asf_demux, &video_format_object, id))
-	return FALSE;
+        return FALSE;
 
       /* Read any additional information */
       if (size) {
-	got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
-	/* There is additional data */
-	while (got_bytes < size) {
-	  guint32 remaining;
-	  GstEvent *event;
+        got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
+        /* There is additional data */
+        while (got_bytes < size) {
+          guint32 remaining;
+          GstEvent *event;
 
-	  gst_bytestream_get_status (asf_demux->bs, &remaining, &event);
-	  gst_event_unref (event);
+          gst_bytestream_get_status (asf_demux->bs, &remaining, &event);
+          gst_event_unref (event);
 
-	  got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
-	}
+          got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
+        }
       }
       break;
     default:
       GST_ELEMENT_ERROR (asf_demux, STREAM, WRONG_TYPE, (NULL),
-	  ("unknown asf stream (id %08x)", (guint) stream_id));
+          ("unknown asf stream (id %08x)", (guint) stream_id));
       return FALSE;
   }
 
@@ -906,8 +907,8 @@ _read_object_header (GstASFDemux * asf_demux, guint32 * obj_id,
 
   if (*obj_id == ASF_OBJ_UNDEFINED) {
     GST_WARNING_OBJECT (asf_demux,
-	"Could not identify object (0x%08x/0x%08x/0x%08x/0x%08x) with size=%llu",
-	guid.v1, guid.v2, guid.v3, guid.v4, *obj_size);
+        "Could not identify object (0x%08x/0x%08x/0x%08x/0x%08x) with size=%llu",
+        guid.v1, guid.v2, guid.v3, guid.v4, *obj_size);
     return TRUE;
   }
 
@@ -923,9 +924,9 @@ gst_asf_demux_process_object (GstASFDemux * asf_demux)
 
   if (!_read_object_header (asf_demux, &obj_id, &obj_size)) {
     GST_DEBUG ("  *****  Error reading object at filepos %" G_GUINT64_FORMAT
-	" (EOS?)\n", /**filepos*/ gst_bytestream_tell (asf_demux->bs));
+        " (EOS?)\n", /**filepos*/ gst_bytestream_tell (asf_demux->bs));
     gst_asf_demux_handle_sink_event (asf_demux, gst_event_new (GST_EVENT_EOS),
-	0);
+        0);
     return FALSE;
   }
 
@@ -1019,8 +1020,8 @@ gst_asf_demux_descramble_segment (GstASFDemux * asf_demux,
     col = off % asf_demux->span;
     idx = row + col * asf_demux->ds_packet_size / asf_demux->ds_chunk_size;
     sub_buffer =
-	gst_buffer_create_sub (scrambled_buffer, idx * asf_demux->ds_chunk_size,
-	asf_demux->ds_chunk_size);
+        gst_buffer_create_sub (scrambled_buffer, idx * asf_demux->ds_chunk_size,
+        asf_demux->ds_chunk_size);
     if (!offset) {
       descrambled_buffer = sub_buffer;
     } else {
@@ -1048,7 +1049,7 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
   GstBuffer *buffer;
 
   if (!(stream =
-	  gst_asf_demux_get_stream (asf_demux, segment_info->stream_number)))
+          gst_asf_demux_get_stream (asf_demux, segment_info->stream_number)))
     return FALSE;
 
   GST_DEBUG ("Processing chunk of size %u (fo = %d)", segment_info->chunk_size,
@@ -1060,28 +1061,28 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
     asf_demux->pts = segment_info->frag_timestamp - asf_demux->preroll;
     got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
     GST_DEBUG ("BUFFER: Copied stream to buffer (%p - %d)", buffer,
-	GST_BUFFER_REFCOUNT_VALUE (buffer));
+        GST_BUFFER_REFCOUNT_VALUE (buffer));
     stream->payload = buffer;
   } else {
     GST_DEBUG
-	("segment_info->sequence = %d, stream->sequence = %d, segment_info->frag_offset = %d, stream->frag_offset = %d",
-	segment_info->sequence, stream->sequence, segment_info->frag_offset,
-	stream->frag_offset);
+        ("segment_info->sequence = %d, stream->sequence = %d, segment_info->frag_offset = %d, stream->frag_offset = %d",
+        segment_info->sequence, stream->sequence, segment_info->frag_offset,
+        stream->frag_offset);
     if (segment_info->sequence == stream->sequence
-	&& segment_info->frag_offset == stream->frag_offset) {
+        && segment_info->frag_offset == stream->frag_offset) {
       GstBuffer *new_buffer;
 
       /* continuing packet */
       GST_INFO ("A continuation packet");
       got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
       GST_DEBUG ("Copied stream to buffer (%p - %d)", buffer,
-	  GST_BUFFER_REFCOUNT_VALUE (buffer));
+          GST_BUFFER_REFCOUNT_VALUE (buffer));
       new_buffer = gst_buffer_merge (stream->payload, buffer);
       GST_DEBUG
-	  ("BUFFER: Merged new_buffer (%p - %d) from stream->payload(%p - %d) and buffer (%p - %d)",
-	  new_buffer, GST_BUFFER_REFCOUNT_VALUE (new_buffer), stream->payload,
-	  GST_BUFFER_REFCOUNT_VALUE (stream->payload), buffer,
-	  GST_BUFFER_REFCOUNT_VALUE (buffer));
+          ("BUFFER: Merged new_buffer (%p - %d) from stream->payload(%p - %d) and buffer (%p - %d)",
+          new_buffer, GST_BUFFER_REFCOUNT_VALUE (new_buffer), stream->payload,
+          GST_BUFFER_REFCOUNT_VALUE (stream->payload), buffer,
+          GST_BUFFER_REFCOUNT_VALUE (buffer));
       gst_buffer_unref (stream->payload);
       gst_buffer_unref (buffer);
       stream->payload = new_buffer;
@@ -1089,15 +1090,15 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
       /* cannot continue current packet: free it */
       stream->frag_offset = 0;
       if (segment_info->frag_offset != 0) {
-	/* cannot create new packet */
-	GST_DEBUG ("BUFFER: Freeing stream->payload (%p)", stream->payload);
-	gst_buffer_unref (stream->payload);
-	gst_bytestream_flush (bs, segment_info->chunk_size);
-	packet_info->size_left -= segment_info->chunk_size;
-	return TRUE;
+        /* cannot create new packet */
+        GST_DEBUG ("BUFFER: Freeing stream->payload (%p)", stream->payload);
+        gst_buffer_unref (stream->payload);
+        gst_bytestream_flush (bs, segment_info->chunk_size);
+        packet_info->size_left -= segment_info->chunk_size;
+        return TRUE;
       } else {
-	/* create new packet */
-	stream->sequence = segment_info->sequence;
+        /* create new packet */
+        stream->sequence = segment_info->sequence;
       }
     }
   }
@@ -1119,14 +1120,14 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
 
     if (GST_PAD_IS_USABLE (stream->pad)) {
       GST_DEBUG ("New buffer is at: %p size: %u",
-	  GST_BUFFER_DATA (stream->payload), GST_BUFFER_SIZE (stream->payload));
+          GST_BUFFER_DATA (stream->payload), GST_BUFFER_SIZE (stream->payload));
 
       GST_BUFFER_TIMESTAMP (stream->payload) =
-	  (GST_SECOND / 1000) * asf_demux->pts;
+          (GST_SECOND / 1000) * asf_demux->pts;
 
       /*!!! Should handle flush events here? */
       GST_DEBUG ("Sending strem %d of size %d", stream->id,
-	  segment_info->chunk_size);
+          segment_info->chunk_size);
 
       GST_INFO ("Pushing pad");
       gst_pad_push (stream->pad, GST_DATA (stream->payload));
@@ -1163,8 +1164,8 @@ gst_asf_demux_handle_sink_event (GstASFDemux * asf_demux,
       gint n;
 
       for (n = 0; n < asf_demux->num_streams; n++) {
-	stream = &asf_demux->stream[n];
-	gst_pad_push (stream->pad, GST_DATA (gst_event_ref (event)));
+        stream = &asf_demux->stream[n];
+        gst_pad_push (stream->pad, GST_DATA (gst_event_ref (event)));
       }
       gst_event_unref (event);
       gst_bytestream_flush (asf_demux->bs, remaining);
@@ -1178,17 +1179,17 @@ gst_asf_demux_handle_sink_event (GstASFDemux * asf_demux,
       GstEvent *discont;
 
       for (i = 0; i < asf_demux->num_streams; i++) {
-	asf_stream_context *stream = &asf_demux->stream[i];
+        asf_stream_context *stream = &asf_demux->stream[i];
 
-	if (GST_PAD_IS_USABLE (stream->pad)) {
-	  GST_DEBUG ("sending discont on %d %" G_GINT64_FORMAT " + %"
-	      G_GINT64_FORMAT " = %" G_GINT64_FORMAT, i, asf_demux->last_seek,
-	      stream->delay, asf_demux->last_seek + stream->delay);
-	  discont =
-	      gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-	      asf_demux->last_seek + stream->delay, NULL);
-	  gst_pad_push (stream->pad, GST_DATA (discont));
-	}
+        if (GST_PAD_IS_USABLE (stream->pad)) {
+          GST_DEBUG ("sending discont on %d %" G_GINT64_FORMAT " + %"
+              G_GINT64_FORMAT " = %" G_GINT64_FORMAT, i, asf_demux->last_seek,
+              stream->delay, asf_demux->last_seek + stream->delay);
+          discont =
+              gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+              asf_demux->last_seek + stream->delay, NULL);
+          gst_pad_push (stream->pad, GST_DATA (discont));
+        }
       }
       break;
     }
@@ -1230,6 +1231,7 @@ gst_asf_demux_get_src_formats (GstPad * pad)
     GST_FORMAT_TIME,
     0
   };
+
   return formats;
 }
 
@@ -1257,26 +1259,26 @@ gst_asf_demux_handle_src_query (GstPad * pad,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  *format = GST_FORMAT_TIME;
-	  /* fall through */
-	case GST_FORMAT_TIME:
-	  *value = (GST_SECOND / 1000) * asf_demux->pts;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fall through */
+        case GST_FORMAT_TIME:
+          *value = (GST_SECOND / 1000) * asf_demux->pts;
+          break;
+        default:
+          res = FALSE;
       }
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  *format = GST_FORMAT_TIME;
-	  /* fall through */
-	case GST_FORMAT_TIME:
-	  *value = (GST_SECOND / 1000) * asf_demux->timestamp;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fall through */
+        case GST_FORMAT_TIME:
+          *value = (GST_SECOND / 1000) * asf_demux->timestamp;
+          break;
+        default:
+          res = FALSE;
       }
     default:
       res = FALSE;
@@ -1317,10 +1319,10 @@ gst_asf_demux_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (asf_demux->bs);
       for (i = 0; i < GST_ASF_DEMUX_NUM_VIDEO_PADS; i++) {
-	asf_demux->video_PTS[i] = 0;
+        asf_demux->video_PTS[i] = 0;
       }
       for (i = 0; i < GST_ASF_DEMUX_NUM_AUDIO_PADS; i++) {
-	asf_demux->audio_PTS[i] = 0;
+        asf_demux->audio_PTS[i] = 0;
       }
       break;
     case GST_STATE_READY_TO_NULL:
@@ -1343,8 +1345,8 @@ gst_asf_demux_identify_guid (GstASFDemux * asf_demux,
   i = 0;
   while (guids[i].obj_id != ASF_OBJ_UNDEFINED) {
     if (guids[i].guid.v1 == guid->v1 &&
-	guids[i].guid.v2 == guid->v2 &&
-	guids[i].guid.v3 == guid->v3 && guids[i].guid.v4 == guid->v4) {
+        guids[i].guid.v2 == guid->v2 &&
+        guids[i].guid.v3 == guid->v3 && guids[i].guid.v4 == guid->v4) {
       return guids[i].obj_id;
     }
     i++;
@@ -1366,106 +1368,106 @@ gst_asf_demux_audio_caps (guint16 codec_id,
   flags2 = 0;
 
   switch (codec_id) {
-    case GST_RIFF_WAVE_FORMAT_MPEGL3:	/* mp3 */
+    case GST_RIFF_WAVE_FORMAT_MPEGL3:  /* mp3 */
       caps = gst_caps_from_string ("audio/mpeg, mpegversion = (int) 1, "
-	  "layer = (int) 3");
+          "layer = (int) 3");
       if (codec_name)
-	*codec_name = g_strdup ("MPEG 1 layer 3");
+        *codec_name = g_strdup ("MPEG 1 layer 3");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_MPEGL12:	/* mp1 or mp2 */
+    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
       caps = gst_caps_from_string ("audio/mpeg, mpegversion = (int) 1, "
-	  "layer = (int) 2");
+          "layer = (int) 2");
       if (codec_name)
-	*codec_name = g_strdup ("MPEG 1 layer 2");
+        *codec_name = g_strdup ("MPEG 1 layer 2");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_PCM:	/* PCM/wav */  {
+    case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM/wav */  {
       caps = gst_caps_from_string ("audio/x-raw-int, "
-	  "endianness = (int) LITTLE_ENDIAN,"
-	  "signed = (boolean) { true, false }, "
-	  "width = (int) { 8, 16 }, " "depth = (int) { 8, 16 }");
+          "endianness = (int) LITTLE_ENDIAN,"
+          "signed = (boolean) { true, false }, "
+          "width = (int) { 8, 16 }, " "depth = (int) { 8, 16 }");
 
       if (audio != NULL) {
-	gint ba = audio->block_align;
-	gint ch = audio->channels;
-	gint ws = audio->word_size;
+        gint ba = audio->block_align;
+        gint ch = audio->channels;
+        gint ws = audio->word_size;
 
-	gst_caps_set_simple (caps,
-	    "width", G_TYPE_INT, (int) (ba * 8 / ch),
-	    "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, (ws != 8), NULL);
+        gst_caps_set_simple (caps,
+            "width", G_TYPE_INT, (int) (ba * 8 / ch),
+            "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, (ws != 8), NULL);
       }
       if (codec_name)
-	*codec_name = g_strdup ("PCM WAV");
+        *codec_name = g_strdup ("PCM WAV");
     }
       break;
 
-    case GST_RIFF_WAVE_FORMAT_VORBIS1:	/* vorbis mode 1 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS2:	/* vorbis mode 2 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS3:	/* vorbis mode 3 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS:	/* vorbis mode 1+ */
-    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS:	/* vorbis mode 2+ */
-    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS:	/* vorbis mode 3+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* vorbis mode 1 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* vorbis mode 2 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* vorbis mode 3 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS:     /* vorbis mode 1+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS:     /* vorbis mode 2+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS:     /* vorbis mode 3+ */
       caps = gst_caps_from_string ("audio/x-vorbis");
       if (codec_name)
-	*codec_name = g_strdup ("Vorbis");
+        *codec_name = g_strdup ("Vorbis");
       break;
 
     case GST_RIFF_WAVE_FORMAT_A52:
       caps = gst_caps_from_string ("audio/x-ac3");
       if (codec_name)
-	*codec_name = g_strdup ("AC3");
+        *codec_name = g_strdup ("AC3");
       break;
 
     case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
       /* get flags1 and flags2 ripped from ffmpeg (wmadec.c) */
       if (audio && audio->size >= 4) {
-	flags1 = extradata[0] | (extradata[1] << 8);
-	flags2 = extradata[2] | (extradata[3] << 8);
+        flags1 = extradata[0] | (extradata[1] << 8);
+        flags2 = extradata[2] | (extradata[3] << 8);
       }
       caps = gst_caps_from_string ("audio/x-wma, "
-	  "wmaversion = (int) 1, "
-	  "flags1 = (int) [ MIN, MAX ], "
-	  "flags2 = (int) [ MIN, MAX ], "
-	  "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
+          "wmaversion = (int) 1, "
+          "flags1 = (int) [ MIN, MAX ], "
+          "flags2 = (int) [ MIN, MAX ], "
+          "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
       if (audio != NULL) {
-	gst_caps_set_simple (caps,
-	    "flags1", G_TYPE_INT, flags1,
-	    "flags2", G_TYPE_INT, flags2,
-	    "block_align", G_TYPE_INT, audio->block_align,
-	    "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
+        gst_caps_set_simple (caps,
+            "flags1", G_TYPE_INT, flags1,
+            "flags2", G_TYPE_INT, flags2,
+            "block_align", G_TYPE_INT, audio->block_align,
+            "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
       }
       if (codec_name)
-	*codec_name = g_strdup ("Microsoft WMA V1");
+        *codec_name = g_strdup ("Microsoft WMA V1");
       break;
 
     case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
       /* get flags1 and flags2 ripped from ffmpeg (wmadec.c) */
       if (audio && audio->size >= 6) {
-	flags1 = extradata[0] | (extradata[1] << 8) |
-	    (extradata[2] << 16) | (extradata[3] << 24);
-	flags2 = extradata[4] | (extradata[5] << 8);
+        flags1 = extradata[0] | (extradata[1] << 8) |
+            (extradata[2] << 16) | (extradata[3] << 24);
+        flags2 = extradata[4] | (extradata[5] << 8);
       }
       caps = gst_caps_from_string ("audio/x-wma, "
-	  "wmaversion = (int) 2, "
-	  "flags1 = (int) [ MIN, MAX ], "
-	  "flags2 = (int) [ MIN, MAX ], "
-	  "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
+          "wmaversion = (int) 2, "
+          "flags1 = (int) [ MIN, MAX ], "
+          "flags2 = (int) [ MIN, MAX ], "
+          "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
       if (audio != NULL) {
-	gst_caps_set_simple (caps,
-	    "flags1", G_TYPE_INT, flags1,
-	    "flags2", G_TYPE_INT, flags2,
-	    "block_align", G_TYPE_INT, audio->block_align,
-	    "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
+        gst_caps_set_simple (caps,
+            "flags1", G_TYPE_INT, flags1,
+            "flags2", G_TYPE_INT, flags2,
+            "block_align", G_TYPE_INT, audio->block_align,
+            "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
       }
       if (codec_name)
-	*codec_name = g_strdup ("Microsoft WMA V2");
+        *codec_name = g_strdup ("Microsoft WMA V2");
       break;
 
     case GST_RIFF_WAVE_FORMAT_WMAV9:
       caps = gst_caps_from_string ("audio/x-wma, " "wmaversion = (int) 9");
       if (codec_name)
-	*codec_name = g_strdup ("Microsoft WMA V9");
+        *codec_name = g_strdup ("Microsoft WMA V9");
       break;
 
     default:
@@ -1476,12 +1478,12 @@ gst_asf_demux_audio_caps (guint16 codec_id,
 
   if (audio != NULL) {
     gst_caps_set_simple (caps,
-	"rate", G_TYPE_INT, audio->sample_rate,
-	"channels", G_TYPE_INT, audio->channels, NULL);
+        "rate", G_TYPE_INT, audio->sample_rate,
+        "channels", G_TYPE_INT, audio->channels, NULL);
   } else {
     gst_caps_set_simple (caps,
-	"rate", GST_TYPE_INT_RANGE, 8000, 96000,
-	"channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+        "rate", GST_TYPE_INT_RANGE, 8000, 96000,
+        "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
   }
 
   return caps;
@@ -1513,14 +1515,14 @@ gst_asf_demux_add_audio_stream (GstASFDemux * asf_demux,
     guint8 *extradata;
 
     GST_WARNING_OBJECT (asf_demux,
-	"asfdemux: Audio header contains %d bytes of surplus data", size_left);
+        "asfdemux: Audio header contains %d bytes of surplus data", size_left);
     gst_bytestream_peek_bytes (asf_demux->bs, &extradata, size_left);
     caps = gst_asf_demux_audio_caps (audio->codec_tag, audio, extradata,
-	&codec_name);
+        &codec_name);
     gst_bytestream_flush (asf_demux->bs, size_left);
   } else {
     caps = gst_asf_demux_audio_caps (audio->codec_tag, audio, NULL,
-	&codec_name);
+        &codec_name);
   }
 
   /* Informing about that audio format we just added */
@@ -1554,109 +1556,109 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
   switch (codec_fcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
-	  "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Raw, uncompressed I420");
+        *codec_name = g_strdup ("Raw, uncompressed I420");
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
-	  "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Raw, uncompressed YUV 4:2:2");
+        *codec_name = g_strdup ("Raw, uncompressed YUV 4:2:2");
       break;
 
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'):
       caps = gst_caps_new_simple ("video/x-jpeg", NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Motion JPEG");
+        *codec_name = g_strdup ("Motion JPEG");
     case GST_MAKE_FOURCC ('J', 'P', 'E', 'G'):
       caps = gst_caps_new_simple ("video/x-jpeg", NULL);
       if (codec_name)
-	*codec_name = g_strdup ("JPEG Still Image");
+        *codec_name = g_strdup ("JPEG Still Image");
     case GST_MAKE_FOURCC ('P', 'I', 'X', 'L'):
     case GST_MAKE_FOURCC ('V', 'I', 'X', 'L'):
       caps = gst_caps_new_simple ("video/x-jpeg", NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Miro/Pinnacle Video XL");
+        *codec_name = g_strdup ("Miro/Pinnacle Video XL");
       break;
 
     case GST_MAKE_FOURCC ('D', 'V', 'S', 'D'):
     case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
       caps = gst_caps_new_simple ("video/x-dv",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Generic DV");
+        *codec_name = g_strdup ("Generic DV");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '1'):
       caps = gst_caps_new_simple ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, 1, NULL);
+          "wmvversion", G_TYPE_INT, 1, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Windows Media Video 7");
+        *codec_name = g_strdup ("Windows Media Video 7");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '2'):
       caps = gst_caps_new_simple ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, 2, NULL);
+          "wmvversion", G_TYPE_INT, 2, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Windows Media Video 8");
+        *codec_name = g_strdup ("Windows Media Video 8");
       break;
 
     case GST_MAKE_FOURCC ('M', 'P', 'G', '4'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 41, NULL);
+          "msmpegversion", G_TYPE_INT, 41, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Microsoft MPEG-4 4.1");
+        *codec_name = g_strdup ("Microsoft MPEG-4 4.1");
       break;
 
     case GST_MAKE_FOURCC ('M', 'P', '4', '2'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 42, NULL);
+          "msmpegversion", G_TYPE_INT, 42, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Microsoft MPEG-4 4.2");
+        *codec_name = g_strdup ("Microsoft MPEG-4 4.2");
       break;
 
     case GST_MAKE_FOURCC ('M', 'P', '4', '3'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 43, NULL);
+          "msmpegversion", G_TYPE_INT, 43, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("Microsoft MPEG-4 4.3");
+        *codec_name = g_strdup ("Microsoft MPEG-4 4.3");
       break;
 
     case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', '4'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', '5'):
       caps = gst_caps_new_simple ("video/x-divx",
-	  "divxversion", G_TYPE_INT, 3, NULL);
+          "divxversion", G_TYPE_INT, 3, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("DivX MPEG-4 Version 3");
+        *codec_name = g_strdup ("DivX MPEG-4 Version 3");
       break;
 
     case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
     case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
     case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
       caps = gst_caps_new_simple ("video/x-divx",
-	  "divxversion", G_TYPE_INT, 5, NULL);
+          "divxversion", G_TYPE_INT, 5, NULL);
       if (codec_name)
-	*codec_name = g_strdup ("DivX MPEG-4 Version 5");
+        *codec_name = g_strdup ("DivX MPEG-4 Version 5");
       break;
 
     default:
       GST_WARNING ("asfdemux: unknown video format " GST_FOURCC_FORMAT
-	  "(0x%08x)", GST_FOURCC_ARGS (codec_fcc), codec_fcc);
+          "(0x%08x)", GST_FOURCC_ARGS (codec_fcc), codec_fcc);
       return NULL;
       break;
   }
 
   if (video != NULL) {
     gst_caps_set_simple (caps,
-	"width", G_TYPE_INT, video->width,
-	"height", G_TYPE_INT, video->height,
-	"framerate", G_TYPE_DOUBLE, (double) 25, NULL);
+        "width", G_TYPE_INT, video->width,
+        "height", G_TYPE_INT, video->height,
+        "framerate", G_TYPE_DOUBLE, (double) 25, NULL);
   } else {
     gst_caps_set_simple (caps,
-	"width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	"height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	"framerate", GST_TYPE_DOUBLE_RANGE, 25.0, G_MAXDOUBLE, NULL);
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_DOUBLE_RANGE, 25.0, G_MAXDOUBLE, NULL);
   }
 
   return caps;
@@ -1735,9 +1737,9 @@ plugin_init (GstPlugin * plugin)
 
   /* create an elementfactory for the asf_demux element */
   if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY,
-	  GST_TYPE_ASF_DEMUX)
+          GST_TYPE_ASF_DEMUX)
       || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
-	  GST_TYPE_ASFMUX))
+          GST_TYPE_ASFMUX))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (asf_debug, "asfdemux", 0, "asf demuxer element");

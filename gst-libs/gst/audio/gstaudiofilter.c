@@ -73,8 +73,9 @@ gst_audiofilter_get_type (void)
       0,
       gst_audiofilter_init,
     };
+
     audiofilter_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstAudiofilter", &audiofilter_info, G_TYPE_FLAG_ABSTRACT);
+        "GstAudiofilter", &audiofilter_info, G_TYPE_FLAG_ABSTRACT);
   }
   return audiofilter_type;
 }
@@ -141,7 +142,7 @@ gst_audiofilter_link (GstPad * pad, const GstCaps * caps)
     ret = gst_structure_get_int (structure, "depth", &audiofilter->depth);
     ret &= gst_structure_get_int (structure, "width", &audiofilter->width);
     ret &=
-	gst_structure_get_int (structure, "channels", &audiofilter->channels);
+        gst_structure_get_int (structure, "channels", &audiofilter->channels);
   } else if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float")
       == 0) {
 
@@ -236,7 +237,7 @@ gst_audiofilter_chain (GstPad * pad, GstData * data)
       (audiofilter_class->filter) (audiofilter, outbuf, inbuf);
     } else {
       memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (inbuf),
-	  GST_BUFFER_SIZE (inbuf));
+          GST_BUFFER_SIZE (inbuf));
 
       (audiofilter_class->filter_inplace) (audiofilter, outbuf);
     }
@@ -290,11 +291,11 @@ gst_audiofilter_class_add_pad_templates (GstAudiofilterClass *
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-	  gst_caps_copy (caps)));
+          gst_caps_copy (caps)));
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-	  gst_caps_copy (caps)));
+          gst_caps_copy (caps)));
 }
 
 static gboolean

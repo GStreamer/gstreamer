@@ -53,7 +53,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) { 1, 2 }, " "systemstream = (boolean) TRUE")
+        "mpegversion = (int) { 1, 2 }, " "systemstream = (boolean) TRUE")
     );
 
 static GstStaticPadTemplate audio_factory =
@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("audio_%02d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/mpeg, "
-	"mpegversion = (int) 1, " "layer = (int) { 1, 2 }")
+        "mpegversion = (int) 1, " "layer = (int) { 1, 2 }")
     );
 
 static GstStaticPadTemplate video_src_factory =
@@ -69,7 +69,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%02d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) { 1, 2 }, " "systemstream = (boolean) FALSE")
+        "mpegversion = (int) { 1, 2 }, " "systemstream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate private1_factory =
@@ -90,11 +90,11 @@ GST_STATIC_PAD_TEMPLATE ("pcm_stream_%02d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BIG_ENDIAN, "
-	"signed = (boolean) TRUE, "
-	"width = (int) { 16, 20, 24 }, "
-	"depth = (int) { 16, 20, 24 }, "
-	"rate = (int) { 48000, 96000 }, " "channels = (int) [ 1, 8 ]")
+        "endianness = (int) BIG_ENDIAN, "
+        "signed = (boolean) TRUE, "
+        "width = (int) { 16, 20, 24 }, "
+        "depth = (int) { 16, 20, 24 }, "
+        "rate = (int) { 48000, 96000 }, " "channels = (int) [ 1, 8 ]")
     );
 
 static GstStaticPadTemplate subtitle_factory =
@@ -153,9 +153,10 @@ mpeg_demux_get_type (void)
       0,
       (GInstanceInitFunc) gst_mpeg_demux_init,
     };
+
     mpeg_demux_type =
-	g_type_register_static (GST_TYPE_MPEG_PARSE, "GstMPEGDemux",
-	&mpeg_demux_info, 0);
+        g_type_register_static (GST_TYPE_MPEG_PARSE, "GstMPEGDemux",
+        &mpeg_demux_info, 0);
   }
   return mpeg_demux_type;
 }
@@ -264,8 +265,8 @@ gst_mpeg_demux_send_data (GstMPEGParse * mpeg_parse, GstData * data,
 
     switch (GST_EVENT_TYPE (event)) {
       default:
-	gst_pad_event_default (mpeg_parse->sinkpad, event);
-	break;
+        gst_pad_event_default (mpeg_parse->sinkpad, event);
+        break;
     }
   }
 }
@@ -280,20 +281,20 @@ gst_mpeg_demux_handle_discont (GstMPEGParse * mpeg_parse)
 
   for (i = 0; i < NUM_VIDEO_STREAMS; i++) {
     if (mpeg_demux->video_stream[i] &&
-	GST_PAD_IS_USABLE (mpeg_demux->video_stream[i]->pad)) {
+        GST_PAD_IS_USABLE (mpeg_demux->video_stream[i]->pad)) {
       GstEvent *discont;
 
       discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-	  current_time, NULL);
+          current_time, NULL);
 
       gst_pad_push (mpeg_demux->video_stream[i]->pad, GST_DATA (discont));
     }
     if (mpeg_demux->audio_stream[i] &&
-	GST_PAD_IS_USABLE (mpeg_demux->audio_stream[i]->pad)) {
+        GST_PAD_IS_USABLE (mpeg_demux->audio_stream[i]->pad)) {
       GstEvent *discont;
 
       discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-	  current_time, NULL);
+          current_time, NULL);
 
       gst_pad_push (mpeg_demux->audio_stream[i]->pad, GST_DATA (discont));
     }
@@ -322,11 +323,11 @@ _demux_get_writer_id (GstIndex * index, GstPad * pad)
 
   if (!gst_index_get_writer_id (index, GST_OBJECT (pad), &id)) {
     GST_CAT_WARNING_OBJECT (GST_CAT_SEEK, index,
-	"can't get index id for %s:%s", GST_DEBUG_PAD_NAME (pad));
+        "can't get index id for %s:%s", GST_DEBUG_PAD_NAME (pad));
     return -1;
   } else {
     GST_CAT_LOG_OBJECT (GST_CAT_SEEK, index,
-	"got index id %d for %s:%s", id, GST_DEBUG_PAD_NAME (pad));
+        "got index id %d for %s:%s", id, GST_DEBUG_PAD_NAME (pad));
     return id;
   }
 }
@@ -377,14 +378,14 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 
       stream_id = *buf++;
       if (!(stream_id & 0x80)) {
-	GST_DEBUG ("error in system header length");
-	return FALSE;
+        GST_DEBUG ("error in system header length");
+        return FALSE;
       }
 
       /* check marker bits */
       if ((*buf & 0xC0) != 0xC0) {
-	GST_DEBUG ("expecting placeholder bit values '11' after stream id\n");
-	return FALSE;
+        GST_DEBUG ("expecting placeholder bit values '11' after stream id\n");
+        return FALSE;
       }
 
       STD_buffer_bound_scale = *buf & 0x20;
@@ -392,102 +393,102 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       STD_buffer_size_bound |= *buf++;
 
       if (STD_buffer_bound_scale == 0) {
-	buf_byte_size_bound = STD_buffer_size_bound * 128;
+        buf_byte_size_bound = STD_buffer_size_bound * 128;
       } else {
-	buf_byte_size_bound = STD_buffer_size_bound * 1024;
+        buf_byte_size_bound = STD_buffer_size_bound * 1024;
       }
 
       if (stream_id == 0xBD) {
-	/* private_stream_1 */
-	name = NULL;
-	outstream = NULL;
+        /* private_stream_1 */
+        name = NULL;
+        outstream = NULL;
       } else if (stream_id == 0xBF) {
-	/* private_stream_2 */
-	name = g_strdup_printf ("private_stream_2");
-	outstream = &mpeg_demux->private_2_stream;
-	newtemp = gst_static_pad_template_get (&private2_factory);
+        /* private_stream_2 */
+        name = g_strdup_printf ("private_stream_2");
+        outstream = &mpeg_demux->private_2_stream;
+        newtemp = gst_static_pad_template_get (&private2_factory);
       } else if (stream_id >= 0xC0 && stream_id < 0xE0) {
-	/* Audio */
-	name = g_strdup_printf ("audio_%02d", stream_id & 0x1F);
-	outstream = &mpeg_demux->audio_stream[stream_id & 0x1F];
-	newtemp = gst_static_pad_template_get (&audio_factory);
+        /* Audio */
+        name = g_strdup_printf ("audio_%02d", stream_id & 0x1F);
+        outstream = &mpeg_demux->audio_stream[stream_id & 0x1F];
+        newtemp = gst_static_pad_template_get (&audio_factory);
       } else if (stream_id >= 0xE0 && stream_id < 0xF0) {
-	/* Video */
-	name = g_strdup_printf ("video_%02d", stream_id & 0x0F);
-	outstream = &mpeg_demux->video_stream[stream_id & 0x0F];
-	newtemp = gst_static_pad_template_get (&video_src_factory);
-	if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
-	  caps = gst_caps_new_simple ("video/mpeg",
-	      "mpegversion", G_TYPE_INT, 1,
-	      "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-	} else {
-	  caps = gst_caps_new_simple ("video/mpeg",
-	      "mpegversion", G_TYPE_INT, 2,
-	      "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-	}
+        /* Video */
+        name = g_strdup_printf ("video_%02d", stream_id & 0x0F);
+        outstream = &mpeg_demux->video_stream[stream_id & 0x0F];
+        newtemp = gst_static_pad_template_get (&video_src_factory);
+        if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
+          caps = gst_caps_new_simple ("video/mpeg",
+              "mpegversion", G_TYPE_INT, 1,
+              "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+        } else {
+          caps = gst_caps_new_simple ("video/mpeg",
+              "mpegversion", G_TYPE_INT, 2,
+              "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+        }
       } else {
-	GST_DEBUG ("unknown stream id %d", stream_id);
+        GST_DEBUG ("unknown stream id %d", stream_id);
       }
 
       GST_DEBUG ("stream ID 0x%02X (%s)", stream_id, name);
       GST_DEBUG ("STD_buffer_bound_scale %d", STD_buffer_bound_scale);
       GST_DEBUG ("STD_buffer_size_bound %d or %d bytes",
-	  STD_buffer_size_bound, buf_byte_size_bound);
+          STD_buffer_size_bound, buf_byte_size_bound);
 
       /* create the pad and add it to self if it does not yet exist
        * this should trigger the NEW_PAD signal, which should be caught by
        * the app and used to attach to desired streams.
        */
       if (outstream && *outstream == NULL) {
-	GstPad **outpad;
+        GstPad **outpad;
 
-	*outstream = gst_mpeg_demux_new_stream ();
-	outpad = &((*outstream)->pad);
+        *outstream = gst_mpeg_demux_new_stream ();
+        outpad = &((*outstream)->pad);
 
-	*outpad = gst_pad_new_from_template (newtemp, name);
+        *outpad = gst_pad_new_from_template (newtemp, name);
 
-	gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
-	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
-	gst_pad_set_event_mask_function (*outpad,
-	    gst_mpeg_parse_get_src_event_masks);
-	gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
-	gst_pad_set_query_type_function (*outpad,
-	    gst_mpeg_parse_get_src_query_types);
-	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
-	if (caps && gst_caps_is_fixed (caps))
-	  gst_pad_use_explicit_caps (*outpad);
+        gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
+        gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
+        gst_pad_set_event_mask_function (*outpad,
+            gst_mpeg_parse_get_src_event_masks);
+        gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
+        gst_pad_set_query_type_function (*outpad,
+            gst_mpeg_parse_get_src_query_types);
+        gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
+        if (caps && gst_caps_is_fixed (caps))
+          gst_pad_use_explicit_caps (*outpad);
 
-	if (caps && gst_caps_is_fixed (caps))
-	  gst_pad_set_explicit_caps (*outpad, caps);
-	else if (caps)
-	  gst_caps_free (caps);
+        if (caps && gst_caps_is_fixed (caps))
+          gst_pad_set_explicit_caps (*outpad, caps);
+        else if (caps)
+          gst_caps_free (caps);
 
-	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
+        gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
-	gst_pad_set_element_private (*outpad, *outstream);
+        gst_pad_set_element_private (*outpad, *outstream);
 
-	(*outstream)->size_bound = buf_byte_size_bound;
-	mpeg_demux->total_size_bound += buf_byte_size_bound;
+        (*outstream)->size_bound = buf_byte_size_bound;
+        mpeg_demux->total_size_bound += buf_byte_size_bound;
 
-	if (mpeg_demux->index)
-	  (*outstream)->index_id =
-	      _demux_get_writer_id (mpeg_demux->index, *outpad);
+        if (mpeg_demux->index)
+          (*outstream)->index_id =
+              _demux_get_writer_id (mpeg_demux->index, *outpad);
 
-	if (GST_PAD_IS_USABLE (*outpad)) {
-	  GstEvent *event;
-	  gint64 time;
+        if (GST_PAD_IS_USABLE (*outpad)) {
+          GstEvent *event;
+          gint64 time;
 
-	  time = mpeg_parse->current_scr;
+          time = mpeg_parse->current_scr;
 
-	  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-	      MPEGTIME_TO_GSTTIME (time), NULL);
+          event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+              MPEGTIME_TO_GSTTIME (time), NULL);
 
-	  gst_pad_push (*outpad, GST_DATA (event));
-	}
+          gst_pad_push (*outpad, GST_DATA (event));
+        }
       } else {
-	/* we won't be needing this. */
-	if (name)
-	  g_free (name);
+        /* we won't be needing this. */
+        if (name)
+          g_free (name);
       }
 
       j++;
@@ -539,67 +540,67 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     /* stuffing bytes */
     switch (bits & 0xC0) {
       case 0xC0:
-	if (bits == 0xff) {
-	  GST_DEBUG ("have stuffing byte");
-	} else {
-	  GST_DEBUG ("expected stuffing byte");
-	}
-	headerlen++;
-	break;
+        if (bits == 0xff) {
+          GST_DEBUG ("have stuffing byte");
+        } else {
+          GST_DEBUG ("expected stuffing byte");
+        }
+        headerlen++;
+        break;
       case 0x40:
-	GST_DEBUG ("have STD");
+        GST_DEBUG ("have STD");
 
-	STD_buffer_bound_scale = bits & 0x20;
-	STD_buffer_size_bound = ((guint16) (bits & 0x1F)) << 8;
-	STD_buffer_size_bound |= *buf++;
+        STD_buffer_bound_scale = bits & 0x20;
+        STD_buffer_size_bound = ((guint16) (bits & 0x1F)) << 8;
+        STD_buffer_size_bound |= *buf++;
 
-	headerlen += 2;
-	break;
+        headerlen += 2;
+        break;
       case 0x00:
-	switch (bits & 0x30) {
-	  case 0x20:
-	    /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-	    pts = ((guint64) (bits & 0x0E)) << 29;
-	    pts |= ((guint64) * buf++) << 22;
-	    pts |= ((guint64) (*buf++ & 0xFE)) << 14;
-	    pts |= ((guint64) * buf++) << 7;
-	    pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
+        switch (bits & 0x30) {
+          case 0x20:
+            /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
+            pts = ((guint64) (bits & 0x0E)) << 29;
+            pts |= ((guint64) * buf++) << 22;
+            pts |= ((guint64) (*buf++ & 0xFE)) << 14;
+            pts |= ((guint64) * buf++) << 7;
+            pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
-	    GST_DEBUG ("PTS = %" G_GUINT64_FORMAT, pts);
-	    headerlen += 5;
-	    goto done;
-	  case 0x30:
-	    /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-	    pts = ((guint64) (bits & 0x0E)) << 29;
-	    pts |= ((guint64) * buf++) << 22;
-	    pts |= ((guint64) (*buf++ & 0xFE)) << 14;
-	    pts |= ((guint64) * buf++) << 7;
-	    pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
+            GST_DEBUG ("PTS = %" G_GUINT64_FORMAT, pts);
+            headerlen += 5;
+            goto done;
+          case 0x30:
+            /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
+            pts = ((guint64) (bits & 0x0E)) << 29;
+            pts |= ((guint64) * buf++) << 22;
+            pts |= ((guint64) (*buf++ & 0xFE)) << 14;
+            pts |= ((guint64) * buf++) << 7;
+            pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
-	    /* sync:4 ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-	    dts = ((guint64) (*buf++ & 0x0E)) << 29;
-	    dts |= ((guint64) * buf++) << 22;
-	    dts |= ((guint64) (*buf++ & 0xFE)) << 14;
-	    dts |= ((guint64) * buf++) << 7;
-	    dts |= ((guint64) (*buf++ & 0xFE)) >> 1;
+            /* sync:4 ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
+            dts = ((guint64) (*buf++ & 0x0E)) << 29;
+            dts |= ((guint64) * buf++) << 22;
+            dts |= ((guint64) (*buf++ & 0xFE)) << 14;
+            dts |= ((guint64) * buf++) << 7;
+            dts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
-	    GST_DEBUG ("PTS = %" G_GUINT64_FORMAT ", DTS = %" G_GUINT64_FORMAT,
-		pts, dts);
-	    headerlen += 10;
-	    goto done;
-	  case 0x00:
-	    GST_DEBUG ("have no pts/dts");
-	    GST_DEBUG ("got trailer bits %x", (bits & 0x0f));
-	    if ((bits & 0x0f) != 0xf) {
-	      GST_DEBUG ("not a valid packet time sequence");
-	      return FALSE;
-	    }
-	    headerlen++;
-	  default:
-	    goto done;
-	}
+            GST_DEBUG ("PTS = %" G_GUINT64_FORMAT ", DTS = %" G_GUINT64_FORMAT,
+                pts, dts);
+            headerlen += 10;
+            goto done;
+          case 0x00:
+            GST_DEBUG ("have no pts/dts");
+            GST_DEBUG ("got trailer bits %x", (bits & 0x0f));
+            if ((bits & 0x0f) != 0xf) {
+              GST_DEBUG ("not a valid packet time sequence");
+              return FALSE;
+            }
+            headerlen++;
+          default:
+            goto done;
+        }
       default:
-	goto done;
+        goto done;
     }
   } while (1);
   GST_DEBUG ("done with header loop");
@@ -618,7 +619,7 @@ done:
     if (ps_id_code >= 0x80 && ps_id_code <= 0x87) {
       /* make sure it's valid */
       GST_DEBUG ("0x%02X: we have a private_stream_1 (AC3) packet, track %d",
-	  id, ps_id_code - 0x80);
+          id, ps_id_code - 0x80);
       outstream = &mpeg_demux->private_1_stream[ps_id_code - 0x80];
       /* scrap first 4 bytes (so-called "mystery AC3 tag") */
       headerlen += 4;
@@ -659,9 +660,9 @@ done:
 
     if (mpeg_demux->index) {
       gst_index_add_association (mpeg_demux->index,
-	  (*outstream)->index_id, 0,
-	  GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
-	  GST_FORMAT_TIME, timestamp, 0);
+          (*outstream)->index_id, 0,
+          GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
+          GST_FORMAT_TIME, timestamp, 0);
     }
   } else {
     timestamp = GST_CLOCK_TIME_NONE;
@@ -678,7 +679,7 @@ done:
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + headerlen + 4;
 
     GST_DEBUG ("pushing buffer of len %d id %d, ts %" G_GINT64_FORMAT,
-	datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
+        datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
 
     gst_pad_push (outpad, GST_DATA (outbuf));
   }
@@ -779,7 +780,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 
     if (ps_id_code >= 0x80 && ps_id_code <= 0x87) {
       GST_DEBUG ("we have a private_stream_1 (AC3) packet, track %d",
-	  ps_id_code - 0x80);
+          ps_id_code - 0x80);
       outstream = &mpeg_demux->private_1_stream[ps_id_code - 0x80];
       /* scrap first 4 bytes (so-called "mystery AC3 tag") */
       headerlen += 4;
@@ -790,11 +791,11 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 
       /* Check for changes in the sample format. */
       if (*outstream != NULL &&
-	  basebuf[headerlen + 9] !=
-	  mpeg_demux->lpcm_sample_info[ps_id_code - 0xA0]) {
-	/* Change the pad caps. */
-	gst_mpeg_demux_lpcm_set_caps ((*outstream)->pad,
-	    basebuf[headerlen + 9]);
+          basebuf[headerlen + 9] !=
+          mpeg_demux->lpcm_sample_info[ps_id_code - 0xA0]) {
+        /* Change the pad caps. */
+        gst_mpeg_demux_lpcm_set_caps ((*outstream)->pad,
+            basebuf[headerlen + 9]);
       }
 
       /* Store the sample info. */
@@ -805,7 +806,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       datalen -= 7;
     } else if (ps_id_code >= 0x20 && ps_id_code <= 0x2F) {
       GST_DEBUG ("we have a subtitle_stream packet, track %d",
-	  ps_id_code - 0x20);
+          ps_id_code - 0x20);
       outstream = &mpeg_demux->subtitle_stream[ps_id_code - 0x20];
       headerlen += 1;
       datalen -= 1;
@@ -843,22 +844,22 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     if (id == 0xBD) {
       /* private_stream_1 */
       if (ps_id_code >= 0x80 && ps_id_code <= 0x87) {
-	/* Erase any DVD audio pads. */
-	gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0x80);
+        /* Erase any DVD audio pads. */
+        gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0x80);
 
-	name = g_strdup_printf ("private_stream_1_%d", ps_id_code - 0x80);
-	newtemp = gst_static_pad_template_get (&private1_factory);
+        name = g_strdup_printf ("private_stream_1_%d", ps_id_code - 0x80);
+        newtemp = gst_static_pad_template_get (&private1_factory);
       } else if (ps_id_code >= 0xA0 && ps_id_code <= 0xA7) {
-	/* Erase any DVD audio pads. */
-	gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0xA0);
+        /* Erase any DVD audio pads. */
+        gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0xA0);
 
-	name = g_strdup_printf ("pcm_stream_%d", ps_id_code - 0xA0);
-	newtemp = gst_static_pad_template_get (&pcm_factory);
+        name = g_strdup_printf ("pcm_stream_%d", ps_id_code - 0xA0);
+        newtemp = gst_static_pad_template_get (&pcm_factory);
       } else if (ps_id_code >= 0x20 && ps_id_code <= 0x2F) {
-	name = g_strdup_printf ("subtitle_stream_%d", ps_id_code - 0x20);
-	newtemp = gst_static_pad_template_get (&subtitle_factory);
+        name = g_strdup_printf ("subtitle_stream_%d", ps_id_code - 0x20);
+        newtemp = gst_static_pad_template_get (&subtitle_factory);
       } else {
-	name = g_strdup_printf ("unknown_stream_%d", ps_id_code);
+        name = g_strdup_printf ("unknown_stream_%d", ps_id_code);
       }
     } else if (id == 0xBF) {
       /* private_stream_2 */
@@ -873,13 +874,13 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       name = g_strdup_printf ("video_%02d", id - 0xE0);
       newtemp = gst_static_pad_template_get (&video_src_factory);
       if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
-	caps = gst_caps_new_simple ("video/mpeg",
-	    "mpegversion", G_TYPE_INT, 1,
-	    "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+        caps = gst_caps_new_simple ("video/mpeg",
+            "mpegversion", G_TYPE_INT, 1,
+            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       } else {
-	caps = gst_caps_new_simple ("video/mpeg",
-	    "mpegversion", G_TYPE_INT, 2,
-	    "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+        caps = gst_caps_new_simple ("video/mpeg",
+            "mpegversion", G_TYPE_INT, 2,
+            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       }
     } else {
       /* unknown */
@@ -898,25 +899,25 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
       gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
       gst_pad_set_event_mask_function (*outpad,
-	  gst_mpeg_parse_get_src_event_masks);
+          gst_mpeg_parse_get_src_event_masks);
       gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
       gst_pad_set_query_type_function (*outpad,
-	  gst_mpeg_parse_get_src_query_types);
+          gst_mpeg_parse_get_src_query_types);
       gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
       gst_pad_use_explicit_caps (*outpad);
 
       if (ps_id_code < 0xA0 || ps_id_code > 0xA7) {
-	gst_pad_set_explicit_caps (*outpad, caps);
+        gst_pad_set_explicit_caps (*outpad, caps);
       } else {
-	gst_mpeg_demux_lpcm_set_caps (*outpad,
-	    mpeg_demux->lpcm_sample_info[ps_id_code - 0xA0]);
+        gst_mpeg_demux_lpcm_set_caps (*outpad,
+            mpeg_demux->lpcm_sample_info[ps_id_code - 0xA0]);
       }
 
       gst_pad_set_element_private (*outpad, *outstream);
 
       if (mpeg_demux->index)
-	(*outstream)->index_id =
-	    _demux_get_writer_id (mpeg_demux->index, *outpad);
+        (*outstream)->index_id =
+            _demux_get_writer_id (mpeg_demux->index, *outpad);
     } else {
       g_warning ("cannot create pad %s, no template for %02x", name, id);
     }
@@ -935,10 +936,10 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       timestamp = MPEGTIME_TO_GSTTIME (pts);
 
       if (mpeg_demux->index) {
-	gst_index_add_association (mpeg_demux->index,
-	    (*outstream)->index_id, 0,
-	    GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
-	    GST_FORMAT_TIME, timestamp, 0);
+        gst_index_add_association (mpeg_demux->index,
+            (*outstream)->index_id, 0,
+            GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
+            GST_FORMAT_TIME, timestamp, 0);
       }
     } else {
       timestamp = GST_CLOCK_TIME_NONE;
@@ -1033,10 +1034,11 @@ const GstFormat *
 gst_mpeg_demux_get_src_formats (GstPad * pad)
 {
   static const GstFormat formats[] = {
-    GST_FORMAT_TIME,		/* we prefer seeking on time */
+    GST_FORMAT_TIME,            /* we prefer seeking on time */
     GST_FORMAT_BYTES,
     0
   };
+
   return formats;
 }
 
@@ -1052,19 +1054,19 @@ index_seek (GstPad * pad, GstEvent * event, gint64 * offset)
       GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event));
   if (!entry) {
     GST_CAT_WARNING (GST_CAT_SEEK, "%s:%s index %s %" G_GINT64_FORMAT
-	" -> failed",
-	GST_DEBUG_PAD_NAME (pad),
-	gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-	GST_EVENT_SEEK_OFFSET (event));
+        " -> failed",
+        GST_DEBUG_PAD_NAME (pad),
+        gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+        GST_EVENT_SEEK_OFFSET (event));
     return FALSE;
   }
 
   if (gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, offset)) {
     GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s index %s %" G_GINT64_FORMAT
-	" -> %" G_GINT64_FORMAT " bytes",
-	GST_DEBUG_PAD_NAME (pad),
-	gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-	GST_EVENT_SEEK_OFFSET (event), *offset);
+        " -> %" G_GINT64_FORMAT " bytes",
+        GST_DEBUG_PAD_NAME (pad),
+        gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+        GST_EVENT_SEEK_OFFSET (event), *offset);
     return TRUE;
   }
   return FALSE;
@@ -1087,12 +1089,12 @@ normal_seek (GstPad * pad, GstEvent * event, gint64 * offset)
     *offset = MAX (GST_EVENT_SEEK_OFFSET (event) - adjust, 0);
 
     GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s guestimate %" G_GINT64_FORMAT
-	" %s -> %" G_GINT64_FORMAT
-	" (total_size_bound = %" G_GINT64_FORMAT ")",
-	GST_DEBUG_PAD_NAME (pad),
-	GST_EVENT_SEEK_OFFSET (event),
-	gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-	*offset, mpeg_demux->total_size_bound);
+        " %s -> %" G_GINT64_FORMAT
+        " (total_size_bound = %" G_GINT64_FORMAT ")",
+        GST_DEBUG_PAD_NAME (pad),
+        GST_EVENT_SEEK_OFFSET (event),
+        gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+        *offset, mpeg_demux->total_size_bound);
   }
 
   return res;
@@ -1110,23 +1112,23 @@ gst_mpeg_demux_handle_src_event (GstPad * pad, GstEvent * event)
       guint64 desired_offset;
 
       if (mpeg_demux->index)
-	res = index_seek (pad, event, &desired_offset);
+        res = index_seek (pad, event, &desired_offset);
       if (!res)
-	res = normal_seek (pad, event, &desired_offset);
+        res = normal_seek (pad, event, &desired_offset);
 
       if (res) {
-	GstEvent *new_event;
+        GstEvent *new_event;
 
-	new_event =
-	    gst_event_new_seek (GST_EVENT_SEEK_TYPE (event), desired_offset);
-	res = gst_mpeg_parse_handle_src_event (pad, new_event);
+        new_event =
+            gst_event_new_seek (GST_EVENT_SEEK_TYPE (event), desired_offset);
+        res = gst_mpeg_parse_handle_src_event (pad, new_event);
       }
       gst_event_unref (event);
       break;
     }
     case GST_EVENT_NAVIGATION:
       return gst_pad_send_event (GST_PAD_PEER (GST_MPEG_PARSE (mpeg_demux)->
-	      sinkpad), event);
+              sinkpad), event);
       break;
     default:
       gst_event_unref (event);

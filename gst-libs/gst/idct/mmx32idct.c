@@ -117,15 +117,15 @@ qword ptr equ mword ptr */
 #endif
 #include <mmx.h>
     
-#define BITS_INV_ACC	4	/*; 4 or 5 for IEEE */
+#define BITS_INV_ACC	4       /*; 4 or 5 for IEEE */
     /* 5 yields higher accuracy, but lessens dynamic range on the input matrix */
 #define SHIFT_INV_ROW	(16 - BITS_INV_ACC)
-#define SHIFT_INV_COL	(1 + BITS_INV_ACC +14 )	/* changed from Intel's val) */
+#define SHIFT_INV_COL	(1 + BITS_INV_ACC +14 ) /* changed from Intel's val) */
 /*#define SHIFT_INV_COL	(1 + BITS_INV_ACC ) */
     
 #define RND_INV_ROW		(1 << (SHIFT_INV_ROW-1))
 #define RND_INV_COL		(1 << (SHIFT_INV_COL-1)) 
-#define RND_INV_CORR	(RND_INV_COL - 1)	/*; correction -1.0 and round */
+#define RND_INV_CORR	(RND_INV_COL - 1)       /*; correction -1.0 and round */
 /*#define RND_INV_ROW		(1024 * (6 - BITS_INV_ACC)) //; 1 << (SHIFT_INV_ROW-1) */
 /*#define RND_INV_COL		(16 * (BITS_INV_ACC - 3)) //; 1 << (SHIFT_INV_COL-1) */
     
@@ -158,12 +158,12 @@ const static long r_inv_row[2] = { RND_INV_ROW, RND_INV_ROW };
 /*const static short ocos_4_16[4] = {23170, 23170, 23170, 23170 }; //cos * (2<<15) + 0.5 */
     
 /*concatenated table, for forward DCT transformation */
-const static short tg_all_16[] = { 13036, 13036, 13036, 13036,	/* tg * (2<<16) + 0.5 */
-  27146, 27146, 27146, 27146,	/*tg * (2<<16) + 0.5 */
-  -21746, -21746, -21746, -21746,	/* tg * (2<<16) + 0.5 */
-  -19195, -19195, -19195, -19195,	/*cos * (2<<16) + 0.5 */
+const static short tg_all_16[] = { 13036, 13036, 13036, 13036, /* tg * (2<<16) + 0.5 */
+  27146, 27146, 27146, 27146,   /*tg * (2<<16) + 0.5 */
+  -21746, -21746, -21746, -21746,       /* tg * (2<<16) + 0.5 */
+  -19195, -19195, -19195, -19195,       /*cos * (2<<16) + 0.5 */
   23170, 23170, 23170, 23170
-};				/*cos * (2<<15) + 0.5 */
+};                              /*cos * (2<<15) + 0.5 */
 
 
 #define tg_1_16 (tg_all_16 + 0)
@@ -233,51 +233,51 @@ IF _MMX ; MMX code
 ;=============================================================================
 
 /*; Table for rows 0,4 - constants are multiplied by cos_4_16 */
-const short tab_i_04[] = { 16384, 16384, 16384, -16384,	/* ; movq-> w06 w04 w02 w00 */
-  21407, 8867, 8867, -21407,	/* w07 w05 w03 w01 */
-  16384, -16384, 16384, 16384,	/*; w14 w12 w10 w08 */
-  -8867, 21407, -21407, -8867,	/*; w15 w13 w11 w09 */
-  22725, 12873, 19266, -22725,	/*; w22 w20 w18 w16 */
-  19266, 4520, -4520, -12873,	/*; w23 w21 w19 w17 */
-  12873, 4520, 4520, 19266,	/*; w30 w28 w26 w24 */
+const short tab_i_04[] = { 16384, 16384, 16384, -16384,        /* ; movq-> w06 w04 w02 w00 */
+  21407, 8867, 8867, -21407,    /* w07 w05 w03 w01 */
+  16384, -16384, 16384, 16384,  /*; w14 w12 w10 w08 */
+  -8867, 21407, -21407, -8867,  /*; w15 w13 w11 w09 */
+  22725, 12873, 19266, -22725,  /*; w22 w20 w18 w16 */
+  19266, 4520, -4520, -12873,   /*; w23 w21 w19 w17 */
+  12873, 4520, 4520, 19266,     /*; w30 w28 w26 w24 */
   -22725, 19266, -12873, -22725
-};				/*w31 w29 w27 w25 */
+};                              /*w31 w29 w27 w25 */
 
 
 /*; Table for rows 1,7 - constants are multiplied by cos_1_16 */
-const short tab_i_17[] = { 22725, 22725, 22725, -22725,	/* ; movq-> w06 w04 w02 w00 */
-  29692, 12299, 12299, -29692,	/*      ; w07 w05 w03 w01 */
-  22725, -22725, 22725, 22725,	/*; w14 w12 w10 w08 */
-  -12299, 29692, -29692, -12299,	/*; w15 w13 w11 w09 */
-  31521, 17855, 26722, -31521,	/*; w22 w20 w18 w16 */
-  26722, 6270, -6270, -17855,	/*; w23 w21 w19 w17 */
-  17855, 6270, 6270, 26722,	/*; w30 w28 w26 w24 */
+const short tab_i_17[] = { 22725, 22725, 22725, -22725,        /* ; movq-> w06 w04 w02 w00 */
+  29692, 12299, 12299, -29692,  /*      ; w07 w05 w03 w01 */
+  22725, -22725, 22725, 22725,  /*; w14 w12 w10 w08 */
+  -12299, 29692, -29692, -12299,        /*; w15 w13 w11 w09 */
+  31521, 17855, 26722, -31521,  /*; w22 w20 w18 w16 */
+  26722, 6270, -6270, -17855,   /*; w23 w21 w19 w17 */
+  17855, 6270, 6270, 26722,     /*; w30 w28 w26 w24 */
   -31521, 26722, -17855, -31521
-};				/* w31 w29 w27 w25 */
+};                              /* w31 w29 w27 w25 */
 
 
 /*; Table for rows 2,6 - constants are multiplied by cos_2_16 */
-const short tab_i_26[] = { 21407, 21407, 21407, -21407,	/* ; movq-> w06 w04 w02 w00 */
-  27969, 11585, 11585, -27969,	/* ; w07 w05 w03 w01 */
-  21407, -21407, 21407, 21407,	/* ; w14 w12 w10 w08 */
-  -11585, 27969, -27969, -11585,	/*  ;w15 w13 w11 w09 */
-  29692, 16819, 25172, -29692,	/* ;w22 w20 w18 w16 */
-  25172, 5906, -5906, -16819,	/* ;w23 w21 w19 w17 */
-  16819, 5906, 5906, 25172,	/* ;w30 w28 w26 w24 */
+const short tab_i_26[] = { 21407, 21407, 21407, -21407,        /* ; movq-> w06 w04 w02 w00 */
+  27969, 11585, 11585, -27969,  /* ; w07 w05 w03 w01 */
+  21407, -21407, 21407, 21407,  /* ; w14 w12 w10 w08 */
+  -11585, 27969, -27969, -11585,        /*  ;w15 w13 w11 w09 */
+  29692, 16819, 25172, -29692,  /* ;w22 w20 w18 w16 */
+  25172, 5906, -5906, -16819,   /* ;w23 w21 w19 w17 */
+  16819, 5906, 5906, 25172,     /* ;w30 w28 w26 w24 */
   -29692, 25172, -16819, -29692
-};				/*  ;w31 w29 w27 w25 */
+};                              /*  ;w31 w29 w27 w25 */
 
 
 /*; Table for rows 3,5 - constants are multiplied by cos_3_16 */
-const short tab_i_35[] = { 19266, 19266, 19266, -19266,	/*; movq-> w06 w04 w02 w00 */
-  25172, 10426, 10426, -25172,	/*; w07 w05 w03 w01 */
-  19266, -19266, 19266, 19266,	/*; w14 w12 w10 w08 */
-  -10426, 25172, -25172, -10426,	/*; w15 w13 w11 w09 */
-  26722, 15137, 22654, -26722,	/*; w22 w20 w18 w16 */
-  22654, 5315, -5315, -15137,	/*; w23 w21 w19 w17 */
-  15137, 5315, 5315, 22654,	/*; w30 w28 w26 w24 */
+const short tab_i_35[] = { 19266, 19266, 19266, -19266,        /*; movq-> w06 w04 w02 w00 */
+  25172, 10426, 10426, -25172,  /*; w07 w05 w03 w01 */
+  19266, -19266, 19266, 19266,  /*; w14 w12 w10 w08 */
+  -10426, 25172, -25172, -10426,        /*; w15 w13 w11 w09 */
+  26722, 15137, 22654, -26722,  /*; w22 w20 w18 w16 */
+  22654, 5315, -5315, -15137,   /*; w23 w21 w19 w17 */
+  15137, 5315, 5315, 22654,     /*; w30 w28 w26 w24 */
   -26722, 22654, -15137, -26722
-};				/*; w31 w29 w27 w25 */
+};                              /*; w31 w29 w27 w25 */
 
 */
 /* CONCATENATED TABLE, rows 0,1,2,3,4,5,6,7 (in order ) */
@@ -286,109 +286,109 @@ const short tab_i_35[] = { 19266, 19266, 19266, -19266,	/*; movq-> w06 w04 w02 
 /* */
 static const short tab_i_01234567[] = { 
       /*row0, this row is required */
-      16384, 16384, 16384, -16384,	/* ; movq-> w06 w04 w02 w00 */
-  21407, 8867, 8867, -21407,	/* w07 w05 w03 w01 */
-  16384, -16384, 16384, 16384,	/*; w14 w12 w10 w08 */
-  -8867, 21407, -21407, -8867,	/*; w15 w13 w11 w09 */
-  22725, 12873, 19266, -22725,	/*; w22 w20 w18 w16 */
-  19266, 4520, -4520, -12873,	/*; w23 w21 w19 w17 */
-  12873, 4520, 4520, 19266,	/*; w30 w28 w26 w24 */
-  -22725, 19266, -12873, -22725,	/*w31 w29 w27 w25 */
+      16384, 16384, 16384, -16384,      /* ; movq-> w06 w04 w02 w00 */
+  21407, 8867, 8867, -21407,    /* w07 w05 w03 w01 */
+  16384, -16384, 16384, 16384,  /*; w14 w12 w10 w08 */
+  -8867, 21407, -21407, -8867,  /*; w15 w13 w11 w09 */
+  22725, 12873, 19266, -22725,  /*; w22 w20 w18 w16 */
+  19266, 4520, -4520, -12873,   /*; w23 w21 w19 w17 */
+  12873, 4520, 4520, 19266,     /*; w30 w28 w26 w24 */
+  -22725, 19266, -12873, -22725,        /*w31 w29 w27 w25 */
   
       /* the rest of these rows (1-7), aren't used ! */
       
       /*row1 */
-      22725, 22725, 22725, -22725,	/* ; movq-> w06 w04 w02 w00 */
-  29692, 12299, 12299, -29692,	/*      ; w07 w05 w03 w01 */
-  22725, -22725, 22725, 22725,	/*; w14 w12 w10 w08 */
-  -12299, 29692, -29692, -12299,	/*; w15 w13 w11 w09 */
-  31521, 17855, 26722, -31521,	/*; w22 w20 w18 w16 */
-  26722, 6270, -6270, -17855,	/*; w23 w21 w19 w17 */
-  17855, 6270, 6270, 26722,	/*; w30 w28 w26 w24 */
-  -31521, 26722, -17855, -31521,	/* w31 w29 w27 w25 */
+      22725, 22725, 22725, -22725,      /* ; movq-> w06 w04 w02 w00 */
+  29692, 12299, 12299, -29692,  /*      ; w07 w05 w03 w01 */
+  22725, -22725, 22725, 22725,  /*; w14 w12 w10 w08 */
+  -12299, 29692, -29692, -12299,        /*; w15 w13 w11 w09 */
+  31521, 17855, 26722, -31521,  /*; w22 w20 w18 w16 */
+  26722, 6270, -6270, -17855,   /*; w23 w21 w19 w17 */
+  17855, 6270, 6270, 26722,     /*; w30 w28 w26 w24 */
+  -31521, 26722, -17855, -31521,        /* w31 w29 w27 w25 */
   
       /*row2 */
-      21407, 21407, 21407, -21407,	/* ; movq-> w06 w04 w02 w00 */
-  27969, 11585, 11585, -27969,	/* ; w07 w05 w03 w01 */
-  21407, -21407, 21407, 21407,	/* ; w14 w12 w10 w08 */
-  -11585, 27969, -27969, -11585,	/*  ;w15 w13 w11 w09 */
-  29692, 16819, 25172, -29692,	/* ;w22 w20 w18 w16 */
-  25172, 5906, -5906, -16819,	/* ;w23 w21 w19 w17 */
-  16819, 5906, 5906, 25172,	/* ;w30 w28 w26 w24 */
-  -29692, 25172, -16819, -29692,	/*  ;w31 w29 w27 w25 */
+      21407, 21407, 21407, -21407,      /* ; movq-> w06 w04 w02 w00 */
+  27969, 11585, 11585, -27969,  /* ; w07 w05 w03 w01 */
+  21407, -21407, 21407, 21407,  /* ; w14 w12 w10 w08 */
+  -11585, 27969, -27969, -11585,        /*  ;w15 w13 w11 w09 */
+  29692, 16819, 25172, -29692,  /* ;w22 w20 w18 w16 */
+  25172, 5906, -5906, -16819,   /* ;w23 w21 w19 w17 */
+  16819, 5906, 5906, 25172,     /* ;w30 w28 w26 w24 */
+  -29692, 25172, -16819, -29692,        /*  ;w31 w29 w27 w25 */
   
       /*row3 */
-      19266, 19266, 19266, -19266,	/*; movq-> w06 w04 w02 w00 */
-  25172, 10426, 10426, -25172,	/*; w07 w05 w03 w01 */
-  19266, -19266, 19266, 19266,	/*; w14 w12 w10 w08 */
-  -10426, 25172, -25172, -10426,	/*; w15 w13 w11 w09 */
-  26722, 15137, 22654, -26722,	/*; w22 w20 w18 w16 */
-  22654, 5315, -5315, -15137,	/*; w23 w21 w19 w17 */
-  15137, 5315, 5315, 22654,	/*; w30 w28 w26 w24 */
-  -26722, 22654, -15137, -26722,	/*; w31 w29 w27 w25 */
+      19266, 19266, 19266, -19266,      /*; movq-> w06 w04 w02 w00 */
+  25172, 10426, 10426, -25172,  /*; w07 w05 w03 w01 */
+  19266, -19266, 19266, 19266,  /*; w14 w12 w10 w08 */
+  -10426, 25172, -25172, -10426,        /*; w15 w13 w11 w09 */
+  26722, 15137, 22654, -26722,  /*; w22 w20 w18 w16 */
+  22654, 5315, -5315, -15137,   /*; w23 w21 w19 w17 */
+  15137, 5315, 5315, 22654,     /*; w30 w28 w26 w24 */
+  -26722, 22654, -15137, -26722,        /*; w31 w29 w27 w25 */
   
       /*row4 */
-      16384, 16384, 16384, -16384,	/* ; movq-> w06 w04 w02 w00 */
-  21407, 8867, 8867, -21407,	/* w07 w05 w03 w01 */
-  16384, -16384, 16384, 16384,	/*; w14 w12 w10 w08 */
-  -8867, 21407, -21407, -8867,	/*; w15 w13 w11 w09 */
-  22725, 12873, 19266, -22725,	/*; w22 w20 w18 w16 */
-  19266, 4520, -4520, -12873,	/*; w23 w21 w19 w17 */
-  12873, 4520, 4520, 19266,	/*; w30 w28 w26 w24 */
-  -22725, 19266, -12873, -22725,	/*w31 w29 w27 w25 */
+      16384, 16384, 16384, -16384,      /* ; movq-> w06 w04 w02 w00 */
+  21407, 8867, 8867, -21407,    /* w07 w05 w03 w01 */
+  16384, -16384, 16384, 16384,  /*; w14 w12 w10 w08 */
+  -8867, 21407, -21407, -8867,  /*; w15 w13 w11 w09 */
+  22725, 12873, 19266, -22725,  /*; w22 w20 w18 w16 */
+  19266, 4520, -4520, -12873,   /*; w23 w21 w19 w17 */
+  12873, 4520, 4520, 19266,     /*; w30 w28 w26 w24 */
+  -22725, 19266, -12873, -22725,        /*w31 w29 w27 w25 */
   
       /*row5 */
-      19266, 19266, 19266, -19266,	/*; movq-> w06 w04 w02 w00 */
-  25172, 10426, 10426, -25172,	/*; w07 w05 w03 w01 */
-  19266, -19266, 19266, 19266,	/*; w14 w12 w10 w08 */
-  -10426, 25172, -25172, -10426,	/*; w15 w13 w11 w09 */
-  26722, 15137, 22654, -26722,	/*; w22 w20 w18 w16 */
-  22654, 5315, -5315, -15137,	/*; w23 w21 w19 w17 */
-  15137, 5315, 5315, 22654,	/*; w30 w28 w26 w24 */
-  -26722, 22654, -15137, -26722,	/*; w31 w29 w27 w25 */
+      19266, 19266, 19266, -19266,      /*; movq-> w06 w04 w02 w00 */
+  25172, 10426, 10426, -25172,  /*; w07 w05 w03 w01 */
+  19266, -19266, 19266, 19266,  /*; w14 w12 w10 w08 */
+  -10426, 25172, -25172, -10426,        /*; w15 w13 w11 w09 */
+  26722, 15137, 22654, -26722,  /*; w22 w20 w18 w16 */
+  22654, 5315, -5315, -15137,   /*; w23 w21 w19 w17 */
+  15137, 5315, 5315, 22654,     /*; w30 w28 w26 w24 */
+  -26722, 22654, -15137, -26722,        /*; w31 w29 w27 w25 */
   
       /*row6 */
-      21407, 21407, 21407, -21407,	/* ; movq-> w06 w04 w02 w00 */
-  27969, 11585, 11585, -27969,	/* ; w07 w05 w03 w01 */
-  21407, -21407, 21407, 21407,	/* ; w14 w12 w10 w08 */
-  -11585, 27969, -27969, -11585,	/*  ;w15 w13 w11 w09 */
-  29692, 16819, 25172, -29692,	/* ;w22 w20 w18 w16 */
-  25172, 5906, -5906, -16819,	/* ;w23 w21 w19 w17 */
-  16819, 5906, 5906, 25172,	/* ;w30 w28 w26 w24 */
-  -29692, 25172, -16819, -29692,	/*  ;w31 w29 w27 w25 */
+      21407, 21407, 21407, -21407,      /* ; movq-> w06 w04 w02 w00 */
+  27969, 11585, 11585, -27969,  /* ; w07 w05 w03 w01 */
+  21407, -21407, 21407, 21407,  /* ; w14 w12 w10 w08 */
+  -11585, 27969, -27969, -11585,        /*  ;w15 w13 w11 w09 */
+  29692, 16819, 25172, -29692,  /* ;w22 w20 w18 w16 */
+  25172, 5906, -5906, -16819,   /* ;w23 w21 w19 w17 */
+  16819, 5906, 5906, 25172,     /* ;w30 w28 w26 w24 */
+  -29692, 25172, -16819, -29692,        /*  ;w31 w29 w27 w25 */
   
       /*row7 */
-      22725, 22725, 22725, -22725,	/* ; movq-> w06 w04 w02 w00 */
-  29692, 12299, 12299, -29692,	/*      ; w07 w05 w03 w01 */
-  22725, -22725, 22725, 22725,	/*; w14 w12 w10 w08 */
-  -12299, 29692, -29692, -12299,	/*; w15 w13 w11 w09 */
-  31521, 17855, 26722, -31521,	/*; w22 w20 w18 w16 */
-  26722, 6270, -6270, -17855,	/*; w23 w21 w19 w17 */
-  17855, 6270, 6270, 26722,	/*; w30 w28 w26 w24 */
+      22725, 22725, 22725, -22725,      /* ; movq-> w06 w04 w02 w00 */
+  29692, 12299, 12299, -29692,  /*      ; w07 w05 w03 w01 */
+  22725, -22725, 22725, 22725,  /*; w14 w12 w10 w08 */
+  -12299, 29692, -29692, -12299,        /*; w15 w13 w11 w09 */
+  31521, 17855, 26722, -31521,  /*; w22 w20 w18 w16 */
+  26722, 6270, -6270, -17855,   /*; w23 w21 w19 w17 */
+  17855, 6270, 6270, 26722,     /*; w30 w28 w26 w24 */
   -31521, 26722, -17855, -31521
-};				/* w31 w29 w27 w25 */
+};                              /* w31 w29 w27 w25 */
 
 
-#define INP eax			/* pointer to (short *blk) */
-#define OUT ecx			/* pointer to output (temporary store space qwTemp[]) */
-#define TABLE ebx		/* pointer to tab_i_01234567[] */
+#define INP eax                 /* pointer to (short *blk) */
+#define OUT ecx                 /* pointer to output (temporary store space qwTemp[]) */
+#define TABLE ebx               /* pointer to tab_i_01234567[] */
 #define round_inv_row edx
 #define round_inv_col edx
     
-#define ROW_STRIDE 8		/* for 8x8 matrix transposer */
+#define ROW_STRIDE 8            /* for 8x8 matrix transposer */
     
 /* private variables and functions */
     
 /*temporary storage space, 8x8 of shorts */
-__inline static void idct_mmx32_rows (short *blk);	/* transform rows */
-__inline static void idct_mmx32_cols (short *blk);	/* transform "columns" */
+__inline static void idct_mmx32_rows (short *blk);     /* transform rows */
+__inline static void idct_mmx32_cols (short *blk);      /* transform "columns" */
 
-	/* the "column" transform actually transforms rows, it is */
-	/* identical to the row-transform except for the ROUNDING */
-	/* and SHIFTING coefficients. */
+        /* the "column" transform actually transforms rows, it is */
+        /* identical to the row-transform except for the ROUNDING */
+        /* and SHIFTING coefficients. */
 static void 
 idct_mmx32_rows (short *blk)
-{				/* transform all 8 rows of 8x8 iDCT block */
+{                               /* transform all 8 rows of 8x8 iDCT block */
   int x;
   short qwTemp[64];
   short *out = &qwTemp[0];
@@ -402,58 +402,58 @@ idct_mmx32_rows (short *blk)
       /* */
       /* 2) transpose the matrix (which was stored in qwTemp[]) */
       /*        qwTemp[] -> [8x8 matrix transpose] -> blk[] */
-      for (x = 0; x < 8; x++) {	/* transform one row per iteration */
-    movq_m2r (*(inptr), mm0);	/* 0 ; x3 x2 x1 x0 */
-    movq_m2r (*(inptr + 4), mm1);	/* 1 ; x7 x6 x5 x4 */
-    movq_r2r (mm0, mm2);	/* 2 ; x3 x2 x1 x0 */
-    movq_m2r (*(tab_i_01234567), mm3);	/* 3 ; w06 w04 w02 w00 */
-    punpcklwd_r2r (mm1, mm0);	/* x5 x1 x4 x0 */
+      for (x = 0; x < 8; x++) {        /* transform one row per iteration */
+    movq_m2r (*(inptr), mm0);   /* 0 ; x3 x2 x1 x0 */
+    movq_m2r (*(inptr + 4), mm1);      /* 1 ; x7 x6 x5 x4 */
+    movq_r2r (mm0, mm2);        /* 2 ; x3 x2 x1 x0 */
+    movq_m2r (*(tab_i_01234567), mm3); /* 3 ; w06 w04 w02 w00 */
+    punpcklwd_r2r (mm1, mm0);   /* x5 x1 x4 x0 */
     
-	/* ---------- */
-	movq_r2r (mm0, mm5);	/* 5 ; x5 x1 x4 x0 */
-    punpckldq_r2r (mm0, mm0);	/* x4 x0 x4 x0 */
-    movq_m2r (*(tab_i_01234567 + 4), mm4);	/* 4 ; w07 w05 w03 w01 */
-    punpckhwd_r2r (mm1, mm2);	/* 1 ; x7 x3 x6 x2 */
-    pmaddwd_r2r (mm0, mm3);	/* x4*w06+x0*w04 x4*w02+x0*w00 */
-    movq_r2r (mm2, mm6);	/* 6 ; x7 x3 x6 x2 */
-    movq_m2r (*(tab_i_01234567 + 16), mm1);	/* 1 ; w22 w20 w18 w16 */
-    punpckldq_r2r (mm2, mm2);	/* x6 x2 x6 x2 */
-    pmaddwd_r2r (mm2, mm4);	/* x6*w07+x2*w05 x6*w03+x2*w01 */
-    punpckhdq_r2r (mm5, mm5);	/* x5 x1 x5 x1 */
-    pmaddwd_m2r (*(tab_i_01234567 + 8), mm0);	/* x4*w14+x0*w12 x4*w10+x0*w08 */
-    punpckhdq_r2r (mm6, mm6);	/* x7 x3 x7 x3 */
-    movq_m2r (*(tab_i_01234567 + 20), mm7);	/* 7 ; w23 w21 w19 w17 */
-    pmaddwd_r2r (mm5, mm1);	/* x5*w22+x1*w20 x5*w18+x1*w16 */
-    paddd_m2r (*(r_inv_row), mm3);	/* +rounder */
-    pmaddwd_r2r (mm6, mm7);	/* x7*w23+x3*w21 x7*w19+x3*w17 */
-    pmaddwd_m2r (*(tab_i_01234567 + 12), mm2);	/* x6*w15+x2*w13 x6*w11+x2*w09 */
-    paddd_r2r (mm4, mm3);	/* 4 ; a1=sum(even1) a0=sum(even0) */
-    pmaddwd_m2r (*(tab_i_01234567 + 24), mm5);	/* x5*w30+x1*w28 x5*w26+x1*w24 */
-    movq_r2r (mm3, mm4);	/* 4 ; a1 a0 */
-    pmaddwd_m2r (*(tab_i_01234567 + 28), mm6);	/* x7*w31+x3*w29 x7*w27+x3*w25 */
-    paddd_r2r (mm7, mm1);	/* 7 ; b1=sum(odd1) b0=sum(odd0) */
-    paddd_m2r (*(r_inv_row), mm0);	/* +rounder */
-    psubd_r2r (mm1, mm3);	/* a1-b1 a0-b0 */
-    psrad_i2r (SHIFT_INV_ROW, mm3);	/* y6=a1-b1 y7=a0-b0 */
-    paddd_r2r (mm4, mm1);	/* 4 ; a1+b1 a0+b0 */
-    paddd_r2r (mm2, mm0);	/* 2 ; a3=sum(even3) a2=sum(even2) */
-    psrad_i2r (SHIFT_INV_ROW, mm1);	/* y1=a1+b1 y0=a0+b0 */
-    paddd_r2r (mm6, mm5);	/* 6 ; b3=sum(odd3) b2=sum(odd2) */
-    movq_r2r (mm0, mm4);	/* 4 ; a3 a2 */
-    paddd_r2r (mm5, mm0);	/* a3+b3 a2+b2 */
-    psubd_r2r (mm5, mm4);	/* 5 ; a3-b3 a2-b2 */
-    psrad_i2r (SHIFT_INV_ROW, mm4);	/* y4=a3-b3 y5=a2-b2 */
-    psrad_i2r (SHIFT_INV_ROW, mm0);	/* y3=a3+b3 y2=a2+b2 */
-    packssdw_r2r (mm3, mm4);	/* 3 ; y6 y7 y4 y5 */
-    packssdw_r2r (mm0, mm1);	/* 0 ; y3 y2 y1 y0 */
-    movq_r2r (mm4, mm7);	/* 7 ; y6 y7 y4 y5 */
-    psrld_i2r (16, mm4);	/* 0 y6 0 y4 */
-    movq_r2m (mm1, *(out));	/* 1 ; save y3 y2 y1 y0 */
-    pslld_i2r (16, mm7);	/* y7 0 y5 0 */
-    por_r2r (mm4, mm7);	/* 4 ; y7 y6 y5 y4 */
+        /* ---------- */
+        movq_r2r (mm0, mm5);    /* 5 ; x5 x1 x4 x0 */
+    punpckldq_r2r (mm0, mm0);   /* x4 x0 x4 x0 */
+    movq_m2r (*(tab_i_01234567 + 4), mm4);     /* 4 ; w07 w05 w03 w01 */
+    punpckhwd_r2r (mm1, mm2);   /* 1 ; x7 x3 x6 x2 */
+    pmaddwd_r2r (mm0, mm3);    /* x4*w06+x0*w04 x4*w02+x0*w00 */
+    movq_r2r (mm2, mm6);        /* 6 ; x7 x3 x6 x2 */
+    movq_m2r (*(tab_i_01234567 + 16), mm1);    /* 1 ; w22 w20 w18 w16 */
+    punpckldq_r2r (mm2, mm2);   /* x6 x2 x6 x2 */
+    pmaddwd_r2r (mm2, mm4);    /* x6*w07+x2*w05 x6*w03+x2*w01 */
+    punpckhdq_r2r (mm5, mm5);   /* x5 x1 x5 x1 */
+    pmaddwd_m2r (*(tab_i_01234567 + 8), mm0);  /* x4*w14+x0*w12 x4*w10+x0*w08 */
+    punpckhdq_r2r (mm6, mm6);   /* x7 x3 x7 x3 */
+    movq_m2r (*(tab_i_01234567 + 20), mm7);    /* 7 ; w23 w21 w19 w17 */
+    pmaddwd_r2r (mm5, mm1);     /* x5*w22+x1*w20 x5*w18+x1*w16 */
+    paddd_m2r (*(r_inv_row), mm3);     /* +rounder */
+    pmaddwd_r2r (mm6, mm7);     /* x7*w23+x3*w21 x7*w19+x3*w17 */
+    pmaddwd_m2r (*(tab_i_01234567 + 12), mm2); /* x6*w15+x2*w13 x6*w11+x2*w09 */
+    paddd_r2r (mm4, mm3);       /* 4 ; a1=sum(even1) a0=sum(even0) */
+    pmaddwd_m2r (*(tab_i_01234567 + 24), mm5); /* x5*w30+x1*w28 x5*w26+x1*w24 */
+    movq_r2r (mm3, mm4);        /* 4 ; a1 a0 */
+    pmaddwd_m2r (*(tab_i_01234567 + 28), mm6); /* x7*w31+x3*w29 x7*w27+x3*w25 */
+    paddd_r2r (mm7, mm1);       /* 7 ; b1=sum(odd1) b0=sum(odd0) */
+    paddd_m2r (*(r_inv_row), mm0);     /* +rounder */
+    psubd_r2r (mm1, mm3);       /* a1-b1 a0-b0 */
+    psrad_i2r (SHIFT_INV_ROW, mm3);    /* y6=a1-b1 y7=a0-b0 */
+    paddd_r2r (mm4, mm1);       /* 4 ; a1+b1 a0+b0 */
+    paddd_r2r (mm2, mm0);      /* 2 ; a3=sum(even3) a2=sum(even2) */
+    psrad_i2r (SHIFT_INV_ROW, mm1);     /* y1=a1+b1 y0=a0+b0 */
+    paddd_r2r (mm6, mm5);      /* 6 ; b3=sum(odd3) b2=sum(odd2) */
+    movq_r2r (mm0, mm4);        /* 4 ; a3 a2 */
+    paddd_r2r (mm5, mm0);      /* a3+b3 a2+b2 */
+    psubd_r2r (mm5, mm4);       /* 5 ; a3-b3 a2-b2 */
+    psrad_i2r (SHIFT_INV_ROW, mm4);    /* y4=a3-b3 y5=a2-b2 */
+    psrad_i2r (SHIFT_INV_ROW, mm0);     /* y3=a3+b3 y2=a2+b2 */
+    packssdw_r2r (mm3, mm4);   /* 3 ; y6 y7 y4 y5 */
+    packssdw_r2r (mm0, mm1);   /* 0 ; y3 y2 y1 y0 */
+    movq_r2r (mm4, mm7);        /* 7 ; y6 y7 y4 y5 */
+    psrld_i2r (16, mm4);       /* 0 y6 0 y4 */
+    movq_r2m (mm1, *(out));    /* 1 ; save y3 y2 y1 y0 */
+    pslld_i2r (16, mm7);        /* y7 0 y5 0 */
+    por_r2r (mm4, mm7);        /* 4 ; y7 y6 y5 y4 */
     
-	/* begin processing row 1 */
-	movq_r2m (mm7, *(out + 4));	/* 7 ; save y7 y6 y5 y4 */
+        /* begin processing row 1 */
+        movq_r2m (mm7, *(out + 4));     /* 7 ; save y7 y6 y5 y4 */
     inptr += 8;
     out += 8;
   }
@@ -477,31 +477,31 @@ idct_mmx32_rows (short *blk)
       out = &qwTemp[0];
   movq_m2r (*(out + ROW_STRIDE * 0), mm0);
   movq_m2r (*(out + ROW_STRIDE * 1), mm1);
-  movq_r2r (mm0, mm4);		/* mm4 = copy of row1[A B C D] */
+  movq_r2r (mm0, mm4);         /* mm4 = copy of row1[A B C D] */
   movq_m2r (*(out + ROW_STRIDE * 2), mm2);
-  punpcklwd_r2r (mm1, mm0);	/* mm0 = [ 0 4 1 5] */
+  punpcklwd_r2r (mm1, mm0);    /* mm0 = [ 0 4 1 5] */
   movq_m2r (*(out + ROW_STRIDE * 3), mm3);
-  punpckhwd_r2r (mm1, mm4);	/* mm4 = [ 2 6 3 7] */
+  punpckhwd_r2r (mm1, mm4);    /* mm4 = [ 2 6 3 7] */
   movq_r2r (mm2, mm6);
-  punpcklwd_r2r (mm3, mm2);	/* mm2 = [ 8 12 9 13] */
-  punpckhwd_r2r (mm3, mm6);	/* mm6 = 10 14 11 15] */
-  movq_r2r (mm0, mm1);		/* mm1 = [ 0 4 1 5] */
+  punpcklwd_r2r (mm3, mm2);    /* mm2 = [ 8 12 9 13] */
+  punpckhwd_r2r (mm3, mm6);    /* mm6 = 10 14 11 15] */
+  movq_r2r (mm0, mm1);          /* mm1 = [ 0 4 1 5] */
   inptr = blk;
-  punpckldq_r2r (mm2, mm0);	/* final result mm0 = row1 [0 4 8 12] */
-  movq_r2r (mm4, mm3);		/* mm3 = [ 2 6 3 7] */
-  punpckhdq_r2r (mm2, mm1);	/* mm1 = final result mm1 = row2 [1 5 9 13] */
-  movq_r2m (mm0, *(inptr + ROW_STRIDE * 0));	/* store row 1 */
-  punpckldq_r2r (mm6, mm4);	/* final result mm4 = row3 [2 6 10 14] */
+  punpckldq_r2r (mm2, mm0);   /* final result mm0 = row1 [0 4 8 12] */
+  movq_r2r (mm4, mm3);         /* mm3 = [ 2 6 3 7] */
+  punpckhdq_r2r (mm2, mm1);     /* mm1 = final result mm1 = row2 [1 5 9 13] */
+  movq_r2m (mm0, *(inptr + ROW_STRIDE * 0));   /* store row 1 */
+  punpckldq_r2r (mm6, mm4);     /* final result mm4 = row3 [2 6 10 14] */
   
 /* begin reading next quadrant (lower-right) */
       movq_m2r (*(out + ROW_STRIDE * 4 + 4), mm0);
-  punpckhdq_r2r (mm6, mm3);	/* final result mm3 = row4 [3 7 11 15] */
-  movq_r2m (mm4, *(inptr + ROW_STRIDE * 2));	/* store row 3 */
-  movq_r2r (mm0, mm4);		/* mm4 = copy of row1[A B C D] */
-  movq_r2m (mm1, *(inptr + ROW_STRIDE * 1));	/* store row 2 */
+  punpckhdq_r2r (mm6, mm3);    /* final result mm3 = row4 [3 7 11 15] */
+  movq_r2m (mm4, *(inptr + ROW_STRIDE * 2));   /* store row 3 */
+  movq_r2r (mm0, mm4);          /* mm4 = copy of row1[A B C D] */
+  movq_r2m (mm1, *(inptr + ROW_STRIDE * 1));   /* store row 2 */
   movq_m2r (*(out + ROW_STRIDE * 5 + 4), mm1);
-  movq_r2m (mm3, *(inptr + ROW_STRIDE * 3));	/* store row 4 */
-  punpcklwd_r2r (mm1, mm0);	/* mm0 = [ 0 4 1 5] */
+  movq_r2m (mm3, *(inptr + ROW_STRIDE * 3));  /* store row 4 */
+  punpcklwd_r2r (mm1, mm0);     /* mm0 = [ 0 4 1 5] */
   
       /* 2) transpose lower-right quadrant */
       
@@ -512,28 +512,28 @@ idct_mmx32_rows (short *blk)
       movq_m2r (*(out + ROW_STRIDE * 6 + 4), mm2);
   
 /*	 punpcklwd mm0, mm1; // mm0 = [ 0 4 1 5] */
-      punpckhwd_r2r (mm1, mm4);	/* mm4 = [ 2 6 3 7] */
+      punpckhwd_r2r (mm1, mm4); /* mm4 = [ 2 6 3 7] */
   movq_m2r (*(out + ROW_STRIDE * 7 + 4), mm3);
   movq_r2r (mm2, mm6);
-  punpcklwd_r2r (mm3, mm2);	/* mm2 = [ 8 12 9 13] */
-  movq_r2r (mm0, mm1);		/* mm1 = [ 0 4 1 5] */
-  punpckhwd_r2r (mm3, mm6);	/* mm6 = 10 14 11 15] */
-  movq_r2r (mm4, mm3);		/* mm3 = [ 2 6 3 7] */
-  punpckldq_r2r (mm2, mm0);	/* final result mm0 = row1 [0 4 8 12] */
-  punpckhdq_r2r (mm2, mm1);	/* mm1 = final result mm1 = row2 [1 5 9 13] */
-  ;				/* slot */
-  movq_r2m (mm0, *(inptr + ROW_STRIDE * 4 + 4));	/* store row 1 */
-  punpckldq_r2r (mm6, mm4);	/* final result mm4 = row3 [2 6 10 14] */
+  punpcklwd_r2r (mm3, mm2);   /* mm2 = [ 8 12 9 13] */
+  movq_r2r (mm0, mm1);          /* mm1 = [ 0 4 1 5] */
+  punpckhwd_r2r (mm3, mm6);    /* mm6 = 10 14 11 15] */
+  movq_r2r (mm4, mm3);          /* mm3 = [ 2 6 3 7] */
+  punpckldq_r2r (mm2, mm0);    /* final result mm0 = row1 [0 4 8 12] */
+  punpckhdq_r2r (mm2, mm1);    /* mm1 = final result mm1 = row2 [1 5 9 13] */
+  ;                             /* slot */
+  movq_r2m (mm0, *(inptr + ROW_STRIDE * 4 + 4));       /* store row 1 */
+  punpckldq_r2r (mm6, mm4);     /* final result mm4 = row3 [2 6 10 14] */
   movq_m2r (*(out + ROW_STRIDE * 4), mm0);
-  punpckhdq_r2r (mm6, mm3);	/* final result mm3 = row4 [3 7 11 15] */
-  movq_r2m (mm4, *(inptr + ROW_STRIDE * 6 + 4));	/* store row 3 */
-  movq_r2r (mm0, mm4);		/* mm4 = copy of row1[A B C D] */
-  movq_r2m (mm1, *(inptr + ROW_STRIDE * 5 + 4));	/* store row 2 */
-  ;				/* slot */
+  punpckhdq_r2r (mm6, mm3);    /* final result mm3 = row4 [3 7 11 15] */
+  movq_r2m (mm4, *(inptr + ROW_STRIDE * 6 + 4));       /* store row 3 */
+  movq_r2r (mm0, mm4);          /* mm4 = copy of row1[A B C D] */
+  movq_r2m (mm1, *(inptr + ROW_STRIDE * 5 + 4));       /* store row 2 */
+  ;                             /* slot */
   movq_m2r (*(out + ROW_STRIDE * 5), mm1);
-  ;				/* slot */
-  movq_r2m (mm3, *(inptr + ROW_STRIDE * 7 + 4));	/* store row 4 */
-  punpcklwd_r2r (mm1, mm0);	/* mm0 = [ 0 4 1 5] */
+  ;                            /* slot */
+  movq_r2m (mm3, *(inptr + ROW_STRIDE * 7 + 4));       /* store row 4 */
+  punpcklwd_r2r (mm1, mm0);     /* mm0 = [ 0 4 1 5] */
   
       /* 3) transpose lower-left */
 /*	movq mm0, qword ptr [OUT + ROW_STRIDE * 4 ] */
@@ -543,28 +543,28 @@ idct_mmx32_rows (short *blk)
       movq_m2r (*(out + ROW_STRIDE * 6), mm2);
   
 /*	 punpcklwd mm0, mm1; // mm0 = [ 0 4 1 5] */
-      punpckhwd_r2r (mm1, mm4);	/* mm4 = [ 2 6 3 7] */
+      punpckhwd_r2r (mm1, mm4); /* mm4 = [ 2 6 3 7] */
   movq_m2r (*(out + ROW_STRIDE * 7), mm3);
   movq_r2r (mm2, mm6);
-  punpcklwd_r2r (mm3, mm2);	/* mm2 = [ 8 12 9 13] */
-  movq_r2r (mm0, mm1);		/* mm1 = [ 0 4 1 5] */
-  punpckhwd_r2r (mm3, mm6);	/* mm6 = 10 14 11 15] */
-  movq_r2r (mm4, mm3);		/* mm3 = [ 2 6 3 7] */
-  punpckldq_r2r (mm2, mm0);	/* final result mm0 = row1 [0 4 8 12] */
-  punpckhdq_r2r (mm2, mm1);	/* mm1 = final result mm1 = row2 [1 5 9 13] */
-  ;				/*slot */
-  movq_r2m (mm0, *(inptr + ROW_STRIDE * 0 + 4));	/* store row 1 */
-  punpckldq_r2r (mm6, mm4);	/* final result mm4 = row3 [2 6 10 14] */
+  punpcklwd_r2r (mm3, mm2);   /* mm2 = [ 8 12 9 13] */
+  movq_r2r (mm0, mm1);          /* mm1 = [ 0 4 1 5] */
+  punpckhwd_r2r (mm3, mm6);    /* mm6 = 10 14 11 15] */
+  movq_r2r (mm4, mm3);          /* mm3 = [ 2 6 3 7] */
+  punpckldq_r2r (mm2, mm0);    /* final result mm0 = row1 [0 4 8 12] */
+  punpckhdq_r2r (mm2, mm1);    /* mm1 = final result mm1 = row2 [1 5 9 13] */
+  ;                             /*slot */
+  movq_r2m (mm0, *(inptr + ROW_STRIDE * 0 + 4));       /* store row 1 */
+  punpckldq_r2r (mm6, mm4);     /* final result mm4 = row3 [2 6 10 14] */
   
 /* begin reading next quadrant (upper-right) */
       movq_m2r (*(out + ROW_STRIDE * 0 + 4), mm0);
-  punpckhdq_r2r (mm6, mm3);	/* final result mm3 = row4 [3 7 11 15] */
-  movq_r2m (mm4, *(inptr + ROW_STRIDE * 2 + 4));	/* store row 3 */
-  movq_r2r (mm0, mm4);		/* mm4 = copy of row1[A B C D] */
-  movq_r2m (mm1, *(inptr + ROW_STRIDE * 1 + 4));	/* store row 2 */
+  punpckhdq_r2r (mm6, mm3);    /* final result mm3 = row4 [3 7 11 15] */
+  movq_r2m (mm4, *(inptr + ROW_STRIDE * 2 + 4));       /* store row 3 */
+  movq_r2r (mm0, mm4);          /* mm4 = copy of row1[A B C D] */
+  movq_r2m (mm1, *(inptr + ROW_STRIDE * 1 + 4));       /* store row 2 */
   movq_m2r (*(out + ROW_STRIDE * 1 + 4), mm1);
-  movq_r2m (mm3, *(inptr + ROW_STRIDE * 3 + 4));	/* store row 4 */
-  punpcklwd_r2r (mm1, mm0);	/* mm0 = [ 0 4 1 5] */
+  movq_r2m (mm3, *(inptr + ROW_STRIDE * 3 + 4));      /* store row 4 */
+  punpcklwd_r2r (mm1, mm0);     /* mm0 = [ 0 4 1 5] */
   
       /* 2) transpose lower-right quadrant */
       
@@ -575,28 +575,28 @@ idct_mmx32_rows (short *blk)
       movq_m2r (*(out + ROW_STRIDE * 2 + 4), mm2);
   
 /*	 punpcklwd mm0, mm1; // mm0 = [ 0 4 1 5] */
-      punpckhwd_r2r (mm1, mm4);	/* mm4 = [ 2 6 3 7] */
+      punpckhwd_r2r (mm1, mm4); /* mm4 = [ 2 6 3 7] */
   movq_m2r (*(out + ROW_STRIDE * 3 + 4), mm3);
   movq_r2r (mm2, mm6);
-  punpcklwd_r2r (mm3, mm2);	/* mm2 = [ 8 12 9 13] */
-  movq_r2r (mm0, mm1);		/* mm1 = [ 0 4 1 5] */
-  punpckhwd_r2r (mm3, mm6);	/* mm6 = 10 14 11 15] */
-  movq_r2r (mm4, mm3);		/* mm3 = [ 2 6 3 7] */
-  punpckldq_r2r (mm2, mm0);	/* final result mm0 = row1 [0 4 8 12] */
-  punpckhdq_r2r (mm2, mm1);	/* mm1 = final result mm1 = row2 [1 5 9 13] */
-  ;				/* slot */
-  movq_r2m (mm0, *(inptr + ROW_STRIDE * 4));	/* store row 1 */
-  punpckldq_r2r (mm6, mm4);	/* final result mm4 = row3 [2 6 10 14] */
-  movq_r2m (mm1, *(inptr + ROW_STRIDE * 5));	/* store row 2 */
-  punpckhdq_r2r (mm6, mm3);	/* final result mm3 = row4 [3 7 11 15] */
-  movq_r2m (mm4, *(inptr + ROW_STRIDE * 6));	/* store row 3 */
-  ;				/* slot */
-  movq_r2m (mm3, *(inptr + ROW_STRIDE * 7));	/* store row 4 */
-  ;				/* slot */
+  punpcklwd_r2r (mm3, mm2);   /* mm2 = [ 8 12 9 13] */
+  movq_r2r (mm0, mm1);          /* mm1 = [ 0 4 1 5] */
+  punpckhwd_r2r (mm3, mm6);    /* mm6 = 10 14 11 15] */
+  movq_r2r (mm4, mm3);          /* mm3 = [ 2 6 3 7] */
+  punpckldq_r2r (mm2, mm0);    /* final result mm0 = row1 [0 4 8 12] */
+  punpckhdq_r2r (mm2, mm1);    /* mm1 = final result mm1 = row2 [1 5 9 13] */
+  ;                             /* slot */
+  movq_r2m (mm0, *(inptr + ROW_STRIDE * 4));   /* store row 1 */
+  punpckldq_r2r (mm6, mm4);     /* final result mm4 = row3 [2 6 10 14] */
+  movq_r2m (mm1, *(inptr + ROW_STRIDE * 5));   /* store row 2 */
+  punpckhdq_r2r (mm6, mm3);     /* final result mm3 = row4 [3 7 11 15] */
+  movq_r2m (mm4, *(inptr + ROW_STRIDE * 6));   /* store row 3 */
+  ;                             /* slot */
+  movq_r2m (mm3, *(inptr + ROW_STRIDE * 7));   /* store row 4 */
+  ;                             /* slot */
 }
 static void 
 idct_mmx32_cols (short *blk)
-{				/* transform all 8 cols of 8x8 iDCT block */
+{                               /* transform all 8 cols of 8x8 iDCT block */
   int x;
   short *inptr = blk;
 
@@ -612,58 +612,58 @@ idct_mmx32_cols (short *blk)
       /* */
       /* 2) transpose the matrix (which was stored in qwTemp[]) */
       /*        qwTemp[] -> [8x8 matrix transpose] -> blk[] */
-      for (x = 0; x < 8; x++) {	/* transform one row per iteration */
-    movq_m2r (*(inptr), mm0);	/* 0 ; x3 x2 x1 x0 */
-    movq_m2r (*(inptr + 4), mm1);	/* 1 ; x7 x6 x5 x4 */
-    movq_r2r (mm0, mm2);	/* 2 ; x3 x2 x1 x0 */
-    movq_m2r (*(tab_i_01234567), mm3);	/* 3 ; w06 w04 w02 w00 */
-    punpcklwd_r2r (mm1, mm0);	/* x5 x1 x4 x0 */
+      for (x = 0; x < 8; x++) {       /* transform one row per iteration */
+    movq_m2r (*(inptr), mm0);  /* 0 ; x3 x2 x1 x0 */
+    movq_m2r (*(inptr + 4), mm1);      /* 1 ; x7 x6 x5 x4 */
+    movq_r2r (mm0, mm2);        /* 2 ; x3 x2 x1 x0 */
+    movq_m2r (*(tab_i_01234567), mm3); /* 3 ; w06 w04 w02 w00 */
+    punpcklwd_r2r (mm1, mm0);   /* x5 x1 x4 x0 */
     
 /* ---------- */
-	movq_r2r (mm0, mm5);	/* 5 ; x5 x1 x4 x0 */
-    punpckldq_r2r (mm0, mm0);	/* x4 x0 x4 x0 */
-    movq_m2r (*(tab_i_01234567 + 4), mm4);	/* 4 ; w07 w05 w03 w01 */
-    punpckhwd_r2r (mm1, mm2);	/* 1 ; x7 x3 x6 x2 */
-    pmaddwd_r2r (mm0, mm3);	/* x4*w06+x0*w04 x4*w02+x0*w00 */
-    movq_r2r (mm2, mm6);	/* 6 ; x7 x3 x6 x2 */
-    movq_m2r (*(tab_i_01234567 + 16), mm1);	/* 1 ; w22 w20 w18 w16 */
-    punpckldq_r2r (mm2, mm2);	/* x6 x2 x6 x2 */
-    pmaddwd_r2r (mm2, mm4);	/* x6*w07+x2*w05 x6*w03+x2*w01 */
-    punpckhdq_r2r (mm5, mm5);	/* x5 x1 x5 x1 */
-    pmaddwd_m2r (*(tab_i_01234567 + 8), mm0);	/* x4*w14+x0*w12 x4*w10+x0*w08 */
-    punpckhdq_r2r (mm6, mm6);	/* x7 x3 x7 x3 */
-    movq_m2r (*(tab_i_01234567 + 20), mm7);	/* 7 ; w23 w21 w19 w17 */
-    pmaddwd_r2r (mm5, mm1);	/* x5*w22+x1*w20 x5*w18+x1*w16 */
-    paddd_m2r (*(r_inv_col), mm3);	/* +rounder */
-    pmaddwd_r2r (mm6, mm7);	/* x7*w23+x3*w21 x7*w19+x3*w17 */
-    pmaddwd_m2r (*(tab_i_01234567 + 12), mm2);	/* x6*w15+x2*w13 x6*w11+x2*w09 */
-    paddd_r2r (mm4, mm3);	/* 4 ; a1=sum(even1) a0=sum(even0) */
-    pmaddwd_m2r (*(tab_i_01234567 + 24), mm5);	/* x5*w30+x1*w28 x5*w26+x1*w24 */
-    movq_r2r (mm3, mm4);	/* 4 ; a1 a0 */
-    pmaddwd_m2r (*(tab_i_01234567 + 28), mm6);	/* x7*w31+x3*w29 x7*w27+x3*w25 */
-    paddd_r2r (mm7, mm1);	/* 7 ; b1=sum(odd1) b0=sum(odd0) */
-    paddd_m2r (*(r_inv_col), mm0);	/* +rounder */
-    psubd_r2r (mm1, mm3);	/* a1-b1 a0-b0 */
-    psrad_i2r (SHIFT_INV_COL, mm3);	/* y6=a1-b1 y7=a0-b0 */
-    paddd_r2r (mm4, mm1);	/* 4 ; a1+b1 a0+b0 */
-    paddd_r2r (mm2, mm0);	/* 2 ; a3=sum(even3) a2=sum(even2) */
-    psrad_i2r (SHIFT_INV_COL, mm1);	/* y1=a1+b1 y0=a0+b0 */
-    paddd_r2r (mm6, mm5);	/* 6 ; b3=sum(odd3) b2=sum(odd2) */
-    movq_r2r (mm0, mm4);	/* 4 ; a3 a2 */
-    paddd_r2r (mm5, mm0);	/* a3+b3 a2+b2 */
-    psubd_r2r (mm5, mm4);	/* 5 ; a3-b3 a2-b2 */
-    psrad_i2r (SHIFT_INV_COL, mm4);	/* y4=a3-b3 y5=a2-b2 */
-    psrad_i2r (SHIFT_INV_COL, mm0);	/* y3=a3+b3 y2=a2+b2 */
-    packssdw_r2r (mm3, mm4);	/* 3 ; y6 y7 y4 y5 */
-    packssdw_r2r (mm0, mm1);	/* 0 ; y3 y2 y1 y0 */
-    movq_r2r (mm4, mm7);	/* 7 ; y6 y7 y4 y5 */
-    psrld_i2r (16, mm4);	/* 0 y6 0 y4 */
-    movq_r2m (mm1, *(inptr));	/* 1 ; save y3 y2 y1 y0 */
-    pslld_i2r (16, mm7);	/* y7 0 y5 0 */
-    por_r2r (mm4, mm7);	/* 4 ; y7 y6 y5 y4 */
+        movq_r2r (mm0, mm5);    /* 5 ; x5 x1 x4 x0 */
+    punpckldq_r2r (mm0, mm0);   /* x4 x0 x4 x0 */
+    movq_m2r (*(tab_i_01234567 + 4), mm4);     /* 4 ; w07 w05 w03 w01 */
+    punpckhwd_r2r (mm1, mm2);   /* 1 ; x7 x3 x6 x2 */
+    pmaddwd_r2r (mm0, mm3);    /* x4*w06+x0*w04 x4*w02+x0*w00 */
+    movq_r2r (mm2, mm6);        /* 6 ; x7 x3 x6 x2 */
+    movq_m2r (*(tab_i_01234567 + 16), mm1);    /* 1 ; w22 w20 w18 w16 */
+    punpckldq_r2r (mm2, mm2);   /* x6 x2 x6 x2 */
+    pmaddwd_r2r (mm2, mm4);    /* x6*w07+x2*w05 x6*w03+x2*w01 */
+    punpckhdq_r2r (mm5, mm5);   /* x5 x1 x5 x1 */
+    pmaddwd_m2r (*(tab_i_01234567 + 8), mm0);  /* x4*w14+x0*w12 x4*w10+x0*w08 */
+    punpckhdq_r2r (mm6, mm6);   /* x7 x3 x7 x3 */
+    movq_m2r (*(tab_i_01234567 + 20), mm7);    /* 7 ; w23 w21 w19 w17 */
+    pmaddwd_r2r (mm5, mm1);     /* x5*w22+x1*w20 x5*w18+x1*w16 */
+    paddd_m2r (*(r_inv_col), mm3);     /* +rounder */
+    pmaddwd_r2r (mm6, mm7);     /* x7*w23+x3*w21 x7*w19+x3*w17 */
+    pmaddwd_m2r (*(tab_i_01234567 + 12), mm2); /* x6*w15+x2*w13 x6*w11+x2*w09 */
+    paddd_r2r (mm4, mm3);       /* 4 ; a1=sum(even1) a0=sum(even0) */
+    pmaddwd_m2r (*(tab_i_01234567 + 24), mm5); /* x5*w30+x1*w28 x5*w26+x1*w24 */
+    movq_r2r (mm3, mm4);        /* 4 ; a1 a0 */
+    pmaddwd_m2r (*(tab_i_01234567 + 28), mm6); /* x7*w31+x3*w29 x7*w27+x3*w25 */
+    paddd_r2r (mm7, mm1);       /* 7 ; b1=sum(odd1) b0=sum(odd0) */
+    paddd_m2r (*(r_inv_col), mm0);     /* +rounder */
+    psubd_r2r (mm1, mm3);       /* a1-b1 a0-b0 */
+    psrad_i2r (SHIFT_INV_COL, mm3);    /* y6=a1-b1 y7=a0-b0 */
+    paddd_r2r (mm4, mm1);       /* 4 ; a1+b1 a0+b0 */
+    paddd_r2r (mm2, mm0);      /* 2 ; a3=sum(even3) a2=sum(even2) */
+    psrad_i2r (SHIFT_INV_COL, mm1);     /* y1=a1+b1 y0=a0+b0 */
+    paddd_r2r (mm6, mm5);      /* 6 ; b3=sum(odd3) b2=sum(odd2) */
+    movq_r2r (mm0, mm4);        /* 4 ; a3 a2 */
+    paddd_r2r (mm5, mm0);      /* a3+b3 a2+b2 */
+    psubd_r2r (mm5, mm4);       /* 5 ; a3-b3 a2-b2 */
+    psrad_i2r (SHIFT_INV_COL, mm4);   /* y4=a3-b3 y5=a2-b2 */
+    psrad_i2r (SHIFT_INV_COL, mm0);     /* y3=a3+b3 y2=a2+b2 */
+    packssdw_r2r (mm3, mm4);   /* 3 ; y6 y7 y4 y5 */
+    packssdw_r2r (mm0, mm1);   /* 0 ; y3 y2 y1 y0 */
+    movq_r2r (mm4, mm7);        /* 7 ; y6 y7 y4 y5 */
+    psrld_i2r (16, mm4);       /* 0 y6 0 y4 */
+    movq_r2m (mm1, *(inptr));  /* 1 ; save y3 y2 y1 y0 */
+    pslld_i2r (16, mm7);        /* y7 0 y5 0 */
+    por_r2r (mm4, mm7);        /* 4 ; y7 y6 y5 y4 */
     
-	/* begin processing row 1 */
-	movq_r2m (mm7, *(inptr + 4));	/* 7 ; save y7 y6 y5 y4 */
+        /* begin processing row 1 */
+        movq_r2m (mm7, *(inptr + 4));   /* 7 ; save y7 y6 y5 y4 */
     inptr += 8;
   }
   
@@ -679,10 +679,12 @@ gst_idct_mmx32_idct (short *blk)
 {
   
       /* 1) iDCT row transformation */
-      idct_mmx32_rows (blk);	/* 1) transform iDCT row, and transpose */
+      idct_mmx32_rows (blk);    /* 1) transform iDCT row, and transpose */
   
       /* 2) iDCT column transformation */
-      idct_mmx32_cols (blk);	/* 2) transform iDCT row, and transpose */
-  emms ();			/* restore processor state */
+      idct_mmx32_cols (blk);    /* 2) transform iDCT row, and transpose */
+  emms ();                     /* restore processor state */
   /* all done */
-} 
+}
+
+

@@ -55,9 +55,9 @@ gst_x_overlay_get_type (void)
     };
 
     gst_x_overlay_type = g_type_register_static (G_TYPE_INTERFACE,
-	"GstXOverlay", &gst_x_overlay_info, 0);
+        "GstXOverlay", &gst_x_overlay_info, 0);
     g_type_interface_add_prerequisite (gst_x_overlay_type,
-	GST_TYPE_IMPLEMENTS_INTERFACE);
+        GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_x_overlay_type;
@@ -76,16 +76,16 @@ gst_x_overlay_base_init (gpointer g_class)
 
   if (!initialized) {
     gst_x_overlay_signals[HAVE_XWINDOW_ID] =
-	g_signal_new ("have-xwindow-id",
-	GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
-	G_STRUCT_OFFSET (GstXOverlayClass, have_xwindow_id),
-	NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+        g_signal_new ("have-xwindow-id",
+        GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET (GstXOverlayClass, have_xwindow_id),
+        NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
     gst_x_overlay_signals[DESIRED_SIZE] =
-	g_signal_new ("desired-size-changed",
-	GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
-	G_STRUCT_OFFSET (GstXOverlayClass, desired_size),
-	NULL, NULL,
-	gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
+        g_signal_new ("desired-size-changed",
+        GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET (GstXOverlayClass, desired_size),
+        NULL, NULL,
+        gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
 
     initialized = TRUE;
   }
@@ -155,7 +155,7 @@ gst_x_overlay_get_desired_size (GstXOverlay * overlay, guint * width,
     /* this ensures that elements don't need to check width and height for NULL 
        but apps may use NULL */
     klass->get_desired_size (overlay, width ? width : &width_tmp,
-	height ? height : &height_tmp);
+        height ? height : &height_tmp);
   } else {
     if (width)
       *width = 0;

@@ -53,8 +53,9 @@ gst_mpeg_clock_get_type (void)
       (GInstanceInitFunc) gst_mpeg_clock_init,
       NULL
     };
+
     clock_type = g_type_register_static (GST_TYPE_SYSTEM_CLOCK, "GstMPEGClock",
-	&clock_info, 0);
+        &clock_info, 0);
   }
   return clock_type;
 }

@@ -123,7 +123,7 @@ test_res1 (void)
     f = AMP * test_func ((double) i / O_RATE);
     /*f = rint(AMP*test_func((double)i/O_RATE)); */
     fprintf (out, "%d %d %d %g %g\n", i,
-	o_buf[2 * i + 0], o_buf[2 * i + 1], f, o_buf[2 * i + 0] - f);
+        o_buf[2 * i + 0], o_buf[2 * i + 1], f, o_buf[2 * i + 0] - f);
   }
 
   sum10k = 0;
@@ -206,7 +206,7 @@ test_res3 (void)
   for (i = 0; i < 1000 * n; i++) {
     x = -50.0 + 0.1 / n * i;
     f1 = functable_sinc (NULL, t->scale * x) *
-	functable_window_std (NULL, t->scale2 * x);
+        functable_window_std (NULL, t->scale2 * x);
     f2 = functable_eval (t, x);
     fprintf (out, "%d %g %g %g\n", i, f1, f2, f2 - f1);
   }
@@ -224,7 +224,7 @@ sinc_poly (double x)
 
   return 1 - x2 * INV3FAC + x2 * x2 * INV5FAC - x2 * x2 * x2 * INV7FAC;
   /*+ x2 * x2 * x2 * x2 * INV9FAC */
-		/*- x2 * x2 * x2 * x2 * x2 * INV11FAC; */
+                /*- x2 * x2 * x2 * x2 * x2 * INV11FAC; */
 }
 
 void

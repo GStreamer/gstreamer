@@ -57,8 +57,8 @@ gst_x_window_listener_get_type (void)
     };
 
     x_window_listener_type =
-	g_type_register_static (G_TYPE_OBJECT,
-	"GstXWindowListener", &x_window_listener_info, 0);
+        g_type_register_static (G_TYPE_OBJECT,
+        "GstXWindowListener", &x_window_listener_info, 0);
   }
 
   return x_window_listener_type;
@@ -183,7 +183,7 @@ gst_xwin_refresh (gpointer data)
   if (!xwin->ov_move && xwin->ov_map &&
       xwin->ov_visibility == VisibilityUnobscured) {
     g_mutex_unlock (xwin->main_lock);
-    return FALSE;		/* skip */
+    return FALSE;               /* skip */
   }
 
   if (xwin->ov_map && xwin->ov_visibility != VisibilityFullyObscured) {
@@ -307,17 +307,17 @@ gst_xwin_window (GstXWindowListener * xwin)
 
     if (xwin->ov_conf) {
       xwin->set_window_func (xwin->private_data,
-	  xwin->x, xwin->y, xwin->w, xwin->h, xwin->clips, xwin->num_clips);
+          xwin->x, xwin->y, xwin->w, xwin->h, xwin->clips, xwin->num_clips);
 
       if (!xwin->ov_visible)
-	gst_xwin_set_overlay (xwin, TRUE);
+        gst_xwin_set_overlay (xwin, TRUE);
 
       g_mutex_lock (xwin->main_lock);
 
       if (xwin->ov_refresh_id)
-	g_source_remove (xwin->ov_refresh_id);
+        g_source_remove (xwin->ov_refresh_id);
       xwin->ov_refresh_id =
-	  g_timeout_add (200, (GSourceFunc) gst_xwin_refresh, (gpointer) xwin);
+          g_timeout_add (200, (GSourceFunc) gst_xwin_refresh, (gpointer) xwin);
 
       xwin->ov_conf = FALSE;
 
@@ -331,9 +331,9 @@ gst_xwin_window (GstXWindowListener * xwin)
       g_mutex_lock (xwin->main_lock);
 
       if (xwin->ov_refresh_id)
-	g_source_remove (xwin->ov_refresh_id);
+        g_source_remove (xwin->ov_refresh_id);
       xwin->ov_refresh_id =
-	  g_timeout_add (200, (GSourceFunc) gst_xwin_refresh, (gpointer) xwin);
+          g_timeout_add (200, (GSourceFunc) gst_xwin_refresh, (gpointer) xwin);
 
       xwin->ov_conf = FALSE;
 
@@ -355,7 +355,7 @@ gst_xwin_configure (GstXWindowListener * xwin)
    * in the main thread instead of here. */
   if (!xwin->ov_conf_id)
     xwin->ov_conf_id =
-	g_idle_add ((GSourceFunc) gst_rec_xoverlay_window, (gpointer) xwin);
+        g_idle_add ((GSourceFunc) gst_rec_xoverlay_window, (gpointer) xwin);
 #endif
 
   gst_xwin_window ((gpointer) xwin);
@@ -473,89 +473,89 @@ gst_xwin_thread (gpointer data)
       break;
 
     if ((event.type == ConfigureNotify &&
-	    event.xconfigure.window == xwin->xwindow_id) ||
-	(event.type == MapNotify &&
-	    event.xmap.window == xwin->xwindow_id) ||
-	(event.type == UnmapNotify &&
-	    event.xunmap.window == xwin->xwindow_id)) {
+            event.xconfigure.window == xwin->xwindow_id) ||
+        (event.type == MapNotify &&
+            event.xmap.window == xwin->xwindow_id) ||
+        (event.type == UnmapNotify &&
+            event.xunmap.window == xwin->xwindow_id)) {
       /* the 'parent' window, i.e. the widget provided by client */
       switch (event.type) {
-	case MapNotify:
-	  xwin->ov_map = TRUE;
-	  xwin->ov_conf = TRUE;
-	  gst_xwin_configure (xwin);
-	  break;
+        case MapNotify:
+          xwin->ov_map = TRUE;
+          xwin->ov_conf = TRUE;
+          gst_xwin_configure (xwin);
+          break;
 
-	case UnmapNotify:
-	  xwin->ov_map = FALSE;
-	  xwin->ov_conf = TRUE;
-	  gst_xwin_configure (xwin);
-	  break;
+        case UnmapNotify:
+          xwin->ov_map = FALSE;
+          xwin->ov_conf = TRUE;
+          gst_xwin_configure (xwin);
+          break;
 
-	case ConfigureNotify:
-	  gst_xwin_resize (xwin);
-	  break;
+        case ConfigureNotify:
+          gst_xwin_resize (xwin);
+          break;
 
-	default:
-	  /* nothing */
-	  break;
+        default:
+          /* nothing */
+          break;
       }
     } else if (event.xany.window == xwin->child) {
       /* our own private window */
       switch (event.type) {
-	case Expose:
-	  if (!event.xexpose.count) {
-	    if (xwin->ov_refresh) {
-	      xwin->ov_refresh = FALSE;
-	    } else {
-	      xwin->ov_conf = TRUE;
-	      gst_xwin_configure (xwin);
-	    }
-	  }
-	  break;
+        case Expose:
+          if (!event.xexpose.count) {
+            if (xwin->ov_refresh) {
+              xwin->ov_refresh = FALSE;
+            } else {
+              xwin->ov_conf = TRUE;
+              gst_xwin_configure (xwin);
+            }
+          }
+          break;
 
-	case VisibilityNotify:
-	  xwin->ov_visibility = event.xvisibility.state;
-	  if (xwin->ov_refresh) {
-	    if (event.xvisibility.state != VisibilityFullyObscured)
-	      xwin->ov_refresh = FALSE;
-	  } else {
-	    xwin->ov_conf = TRUE;
-	    gst_xwin_configure (xwin);
-	  }
-	  break;
+        case VisibilityNotify:
+          xwin->ov_visibility = event.xvisibility.state;
+          if (xwin->ov_refresh) {
+            if (event.xvisibility.state != VisibilityFullyObscured)
+              xwin->ov_refresh = FALSE;
+          } else {
+            xwin->ov_conf = TRUE;
+            gst_xwin_configure (xwin);
+          }
+          break;
 
-	default:
-	  /* nothing */
-	  break;
+        default:
+          /* nothing */
+          break;
       }
     } else {
       /* root window */
       switch (event.type) {
-	case MapNotify:
-	case UnmapNotify:
-	  /* are we still visible? */
-	  if (!xwin->ov_refresh) {
-	    XWindowAttributes attr;
-	    gboolean on;
+        case MapNotify:
+        case UnmapNotify:
+          /* are we still visible? */
+          if (!xwin->ov_refresh) {
+            XWindowAttributes attr;
+            gboolean on;
 
-	    XGetWindowAttributes (xwin->display, xwin->xwindow_id, &attr);
-	    on = (attr.map_state == IsViewable);
-	    xwin->ov_wmmap = on;
-	    xwin->ov_conf = TRUE;
-	    gst_xwin_configure (xwin);
-	  }
-	  break;
+            XGetWindowAttributes (xwin->display, xwin->xwindow_id, &attr);
+            on = (attr.map_state == IsViewable);
+            xwin->ov_wmmap = on;
+            xwin->ov_conf = TRUE;
+            gst_xwin_configure (xwin);
+          }
+          break;
 
-	case ConfigureNotify:
-	  if (!xwin->ov_refresh) {
-	    gst_xwin_resize (xwin);
-	  }
-	  break;
+        case ConfigureNotify:
+          if (!xwin->ov_refresh) {
+            gst_xwin_resize (xwin);
+          }
+          break;
 
-	default:
-	  /* nothing */
-	  break;
+        default:
+          /* nothing */
+          break;
       }
     }
   }

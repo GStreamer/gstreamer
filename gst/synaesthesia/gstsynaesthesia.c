@@ -135,8 +135,9 @@ gst_synaesthesia_get_type (void)
       0,
       (GInstanceInitFunc) gst_synaesthesia_init,
     };
+
     type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSynaesthesia", &info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSynaesthesia", &info, 0);
   }
   return type;
 }
@@ -167,13 +168,13 @@ gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
       g_param_spec_int ("width", "Width", "The Width",
-	  1, 2048, 320, G_PARAM_READWRITE));
+          1, 2048, 320, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
       g_param_spec_int ("height", "Height", "The height",
-	  1, 2048, 320, G_PARAM_READWRITE));
+          1, 2048, 320, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
       g_param_spec_float ("fps", "FPS", "Frames per second",
-	  0., G_MAXFLOAT, 25., G_PARAM_READWRITE));
+          0., G_MAXFLOAT, 25., G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_synaesthesia_set_property;
   gobject_class->get_property = gst_synaesthesia_get_property;
@@ -202,7 +203,7 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
   /* reset the initial video state */
   synaesthesia->width = 320;
   synaesthesia->height = 200;
-  synaesthesia->fps = 25.;	/* desired frame rate */
+  synaesthesia->fps = 25.;      /* desired frame rate */
 
 }
 
@@ -236,14 +237,14 @@ gst_synaesthesia_chain (GstPad * pad, GstData * _data)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
       {
-	gint64 value = 0;
+        gint64 value = 0;
 
-	gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
-	synaesthesia->next_time = value;
+        gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
+        synaesthesia->next_time = value;
       }
       default:
-	gst_pad_event_default (pad, event);
-	break;
+        gst_pad_event_default (pad, event);
+        break;
     }
     return;
   }
@@ -256,7 +257,7 @@ gst_synaesthesia_chain (GstPad * pad, GstData * _data)
   if (GST_BUFFER_TIMESTAMP (bufin) < synaesthesia->next_time
       || samples_in < 1024) {
     GST_DEBUG ("timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT,
-	GST_BUFFER_TIMESTAMP (bufin), synaesthesia->next_time);
+        GST_BUFFER_TIMESTAMP (bufin), synaesthesia->next_time);
     gst_buffer_unref (bufin);
     return;
   }

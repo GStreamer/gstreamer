@@ -107,8 +107,9 @@ gst_audiofilter_template_get_type (void)
       0,
       NULL,
     };
+
     audiofilter_template_type = g_type_register_static (GST_TYPE_AUDIOFILTER,
-	"GstAudiofilterTemplate", &audiofilter_template_info, 0);
+        "GstAudiofilterTemplate", &audiofilter_template_info, 0);
   }
   return audiofilter_template_type;
 }
@@ -147,8 +148,8 @@ gst_audiofilter_template_class_init (gpointer g_class, gpointer class_data)
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_AUDIOTEMPLATE_METHOD, GST_AUDIOTEMPLATE_METHOD_1,
-	  G_PARAM_READWRITE));
+          GST_TYPE_AUDIOTEMPLATE_METHOD, GST_AUDIOTEMPLATE_METHOD_1,
+          G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_audiofilter_template_set_property;

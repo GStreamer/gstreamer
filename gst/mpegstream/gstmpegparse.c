@@ -61,14 +61,14 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) TRUE")
+        "mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) TRUE")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) TRUE")
+        "mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) TRUE")
     );
 
 static void gst_mpeg_parse_class_init (GstMPEGParseClass * klass);
@@ -116,9 +116,10 @@ gst_mpeg_parse_get_type (void)
       0,
       (GInstanceInitFunc) gst_mpeg_parse_init,
     };
+
     mpeg_parse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMPEGParse",
-	&mpeg_parse_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMPEGParse",
+        &mpeg_parse_info, 0);
   }
   return mpeg_parse_type;
 }
@@ -144,11 +145,11 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize on the stream SCR",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DISCONT,
       g_param_spec_int ("max_discont", "Max Discont",
-	  "The maximun allowed SCR discontinuity", 0, G_MAXINT,
-	  DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
+          "The maximun allowed SCR discontinuity", 0, G_MAXINT,
+          DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
@@ -257,18 +258,18 @@ gst_mpeg_parse_send_data (GstMPEGParse * mpeg_parse, GstData * data,
 
     switch (GST_EVENT_TYPE (event)) {
       default:
-	gst_pad_event_default (mpeg_parse->sinkpad, event);
-	break;
+        gst_pad_event_default (mpeg_parse->sinkpad, event);
+        break;
     }
   } else {
     if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
       gst_pad_set_explicit_caps (mpeg_parse->srcpad,
-	  gst_caps_new_simple ("video/mpeg",
-	      "mpegversion", G_TYPE_INT, (mpeg2 ? 2 : 1),
-	      "systemstream", G_TYPE_BOOLEAN, TRUE,
-	      "parsed", G_TYPE_BOOLEAN, TRUE, NULL));
+          gst_caps_new_simple ("video/mpeg",
+              "mpegversion", G_TYPE_INT, (mpeg2 ? 2 : 1),
+              "systemstream", G_TYPE_BOOLEAN, TRUE,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL));
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;
@@ -325,8 +326,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     scr = (scr * 300 + scr_ext % 300) / 300;
 
     GST_DEBUG ("%" G_GINT64_FORMAT " %d, %08x %08x %" G_GINT64_FORMAT " diff: %"
-	G_GINT64_FORMAT, scr, scr_ext, scr1, scr2, mpeg_parse->bytes_since_scr,
-	scr - mpeg_parse->current_scr);
+        G_GINT64_FORMAT, scr, scr_ext, scr1, scr2, mpeg_parse->bytes_since_scr,
+        scr - mpeg_parse->current_scr);
 
     buf += 6;
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
@@ -365,8 +366,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   if (ABS ((gint64) mpeg_parse->next_scr - (gint64) (scr_adj)) >
       mpeg_parse->max_discont) {
     GST_DEBUG ("discontinuity detected; expected: %" G_GUINT64_FORMAT " got: %"
-	G_GUINT64_FORMAT " real:%" G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT,
-	mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
+        G_GUINT64_FORMAT " real:%" G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT,
+        mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
 
     mpeg_parse->adjust = mpeg_parse->next_scr - scr;
     scr = mpeg_parse->next_scr;
@@ -379,9 +380,9 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   if (mpeg_parse->index && GST_INDEX_IS_WRITABLE (mpeg_parse->index)) {
     /* update index if any */
     gst_index_add_association (mpeg_parse->index, mpeg_parse->index_id,
-	GST_ASSOCIATION_FLAG_KEY_UNIT,
-	GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
-	GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 0);
+        GST_ASSOCIATION_FLAG_KEY_UNIT,
+        GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
+        GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 0);
   }
 
   mpeg_parse->current_scr = scr;
@@ -420,31 +421,31 @@ gst_mpeg_parse_loop (GstElement * element)
 
     switch (id) {
       case 0xb9:
-	break;
+        break;
       case 0xba:
-	if (CLASS (mpeg_parse)->parse_packhead) {
-	  CLASS (mpeg_parse)->parse_packhead (mpeg_parse, buffer);
-	}
-	break;
+        if (CLASS (mpeg_parse)->parse_packhead) {
+          CLASS (mpeg_parse)->parse_packhead (mpeg_parse, buffer);
+        }
+        break;
       case 0xbb:
-	if (CLASS (mpeg_parse)->parse_syshead) {
-	  CLASS (mpeg_parse)->parse_syshead (mpeg_parse, buffer);
-	}
-	break;
+        if (CLASS (mpeg_parse)->parse_syshead) {
+          CLASS (mpeg_parse)->parse_syshead (mpeg_parse, buffer);
+        }
+        break;
       default:
-	if (mpeg2 && ((id < 0xBD) || (id > 0xFE))) {
-	  g_warning ("******** unknown id 0x%02X", id);
-	} else {
-	  if (mpeg2) {
-	    if (CLASS (mpeg_parse)->parse_pes) {
-	      CLASS (mpeg_parse)->parse_pes (mpeg_parse, buffer);
-	    }
-	  } else {
-	    if (CLASS (mpeg_parse)->parse_packet) {
-	      CLASS (mpeg_parse)->parse_packet (mpeg_parse, buffer);
-	    }
-	  }
-	}
+        if (mpeg2 && ((id < 0xBD) || (id > 0xFE))) {
+          g_warning ("******** unknown id 0x%02X", id);
+        } else {
+          if (mpeg2) {
+            if (CLASS (mpeg_parse)->parse_pes) {
+              CLASS (mpeg_parse)->parse_pes (mpeg_parse, buffer);
+            }
+          } else {
+            if (CLASS (mpeg_parse)->parse_packet) {
+              CLASS (mpeg_parse)->parse_packet (mpeg_parse, buffer);
+            }
+          }
+        }
     }
   }
 
@@ -455,14 +456,14 @@ gst_mpeg_parse_loop (GstElement * element)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG ("event: %d\n", GST_EVENT_TYPE (data));
+        GST_DEBUG ("event: %d\n", GST_EVENT_TYPE (data));
 
-	mpeg_parse->discont_pending = TRUE;
-	mpeg_parse->packetize->resync = TRUE;
-	gst_event_unref (event);
-	return;
+        mpeg_parse->discont_pending = TRUE;
+        mpeg_parse->packetize->resync = TRUE;
+        gst_event_unref (event);
+        return;
       default:
-	break;
+        break;
     }
     if (CLASS (mpeg_parse)->send_data)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
@@ -474,18 +475,18 @@ gst_mpeg_parse_loop (GstElement * element)
     /* we're not sending data as long as no new SCR was found */
     if (mpeg_parse->discont_pending) {
       if (!mpeg_parse->scr_pending) {
-	if (mpeg_parse->clock && mpeg_parse->sync) {
-	  gst_element_set_time (GST_ELEMENT (mpeg_parse),
-	      MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
-	}
-	if (CLASS (mpeg_parse)->handle_discont) {
-	  CLASS (mpeg_parse)->handle_discont (mpeg_parse);
-	}
-	mpeg_parse->discont_pending = FALSE;
+        if (mpeg_parse->clock && mpeg_parse->sync) {
+          gst_element_set_time (GST_ELEMENT (mpeg_parse),
+              MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
+        }
+        if (CLASS (mpeg_parse)->handle_discont) {
+          CLASS (mpeg_parse)->handle_discont (mpeg_parse);
+        }
+        mpeg_parse->discont_pending = FALSE;
       } else {
-	GST_DEBUG ("waiting for SCR");
-	gst_buffer_unref (GST_BUFFER (data));
-	return;
+        GST_DEBUG ("waiting for SCR");
+        gst_buffer_unref (GST_BUFFER (data));
+        return;
       }
     }
 
@@ -496,12 +497,12 @@ gst_mpeg_parse_loop (GstElement * element)
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
       if (gst_pad_try_set_caps (mpeg_parse->sinkpad,
-	      gst_caps_new_simple ("video/mpeg",
-		  "mpegversion", G_TYPE_INT, (mpeg2 ? 2 : 1),
-		  "systemstream", G_TYPE_BOOLEAN, TRUE,
-		  "parsed", G_TYPE_BOOLEAN, TRUE, NULL)) < 0) {
-	GST_ELEMENT_ERROR (mpeg_parse, CORE, NEGOTIATION, (NULL), (NULL));
-	return;
+              gst_caps_new_simple ("video/mpeg",
+                  "mpegversion", G_TYPE_INT, (mpeg2 ? 2 : 1),
+                  "systemstream", G_TYPE_BOOLEAN, TRUE,
+                  "parsed", G_TYPE_BOOLEAN, TRUE, NULL)) < 0) {
+        GST_ELEMENT_ERROR (mpeg_parse, CORE, NEGOTIATION, (NULL), (NULL));
+        return;
       }
     }
 
@@ -521,25 +522,25 @@ gst_mpeg_parse_loop (GstElement * element)
       br = mpeg_parse->mux_rate * 50;
 
       if (br) {
-	if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
-	  /* 
-	   * The mpeg spec says something like this, but that doesn't really work:
-	   *
-	   * mpeg_parse->next_scr = (scr * br + bss * CLOCK_FREQ) / (CLOCK_FREQ + br);
-	   */
-	  mpeg_parse->next_scr = scr + (bss * CLOCK_FREQ) / br;
-	} else {
-	  /* we are interpolating the scr here */
-	  mpeg_parse->next_scr = scr + (bss * CLOCK_FREQ) / br;
-	}
+        if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
+          /* 
+           * The mpeg spec says something like this, but that doesn't really work:
+           *
+           * mpeg_parse->next_scr = (scr * br + bss * CLOCK_FREQ) / (CLOCK_FREQ + br);
+           */
+          mpeg_parse->next_scr = scr + (bss * CLOCK_FREQ) / br;
+        } else {
+          /* we are interpolating the scr here */
+          mpeg_parse->next_scr = scr + (bss * CLOCK_FREQ) / br;
+        }
       } else {
-	/* no bitrate known */
-	mpeg_parse->next_scr = scr;
+        /* no bitrate known */
+        mpeg_parse->next_scr = scr;
       }
 
       GST_DEBUG ("size: %" G_GINT64_FORMAT ", total since SCR: %"
-	  G_GINT64_FORMAT ", next SCR: %" G_GINT64_FORMAT, size, bss,
-	  mpeg_parse->next_scr);
+          G_GINT64_FORMAT ", next SCR: %" G_GINT64_FORMAT, size, bss,
+          mpeg_parse->next_scr);
     }
   }
 }
@@ -552,6 +553,7 @@ gst_mpeg_parse_get_src_formats (GstPad * pad)
     GST_FORMAT_TIME,
     0
   };
+
   return formats;
 }
 
@@ -565,27 +567,27 @@ gst_mpeg_parse_convert_src (GstPad * pad, GstFormat src_format,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-	case GST_FORMAT_DEFAULT:
-	  *dest_format = GST_FORMAT_TIME;
-	case GST_FORMAT_TIME:
-	  if (mpeg_parse->mux_rate == 0)
-	    res = FALSE;
-	  else
-	    *dest_value = src_value * GST_SECOND / (mpeg_parse->mux_rate * 50);
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+          if (mpeg_parse->mux_rate == 0)
+            res = FALSE;
+          else
+            *dest_value = src_value * GST_SECOND / (mpeg_parse->mux_rate * 50);
+          break;
+        default:
+          res = FALSE;
       }
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-	case GST_FORMAT_DEFAULT:
-	  *dest_format = GST_FORMAT_BYTES;
-	case GST_FORMAT_BYTES:
-	  *dest_value = mpeg_parse->mux_rate * 50 * src_value / GST_SECOND;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+          *dest_value = mpeg_parse->mux_rate * 50 * src_value / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
       }
       break;
     default:
@@ -603,6 +605,7 @@ gst_mpeg_parse_get_src_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0
   };
+
   return types;
 }
 
@@ -619,29 +622,29 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  *format = GST_FORMAT_TIME;
-	  /* fallthrough */
-	default:
-	  src_format = GST_FORMAT_BYTES;
-	  if (!gst_pad_query (GST_PAD_PEER (mpeg_parse->sinkpad),
-		  GST_QUERY_TOTAL, &src_format, &src_value)) {
-	    res = FALSE;
-	  }
-	  break;
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fallthrough */
+        default:
+          src_format = GST_FORMAT_BYTES;
+          if (!gst_pad_query (GST_PAD_PEER (mpeg_parse->sinkpad),
+                  GST_QUERY_TOTAL, &src_format, &src_value)) {
+            res = FALSE;
+          }
+          break;
       }
       break;
     }
     case GST_QUERY_POSITION:
     {
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  *format = GST_FORMAT_TIME;
-	  /* fallthrough */
-	default:
-	  src_format = GST_FORMAT_TIME;
-	  src_value = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
-	  break;
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fallthrough */
+        default:
+          src_format = GST_FORMAT_TIME;
+          src_value = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
+          break;
       }
       break;
     }
@@ -664,6 +667,7 @@ gst_mpeg_parse_get_src_event_masks (GstPad * pad)
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
     {0,}
   };
+
   return masks;
 }
 
@@ -686,10 +690,10 @@ index_seek (GstPad * pad, GstEvent * event, guint64 * offset, gint64 * scr)
       *scr = GSTTIME_TO_MPEGTIME (time);
     }
     GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s index %s %" G_GINT64_FORMAT
-	" -> %" G_GINT64_FORMAT " bytes, scr=%" G_GINT64_FORMAT,
-	GST_DEBUG_PAD_NAME (pad),
-	gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-	GST_EVENT_SEEK_OFFSET (event), *offset, *scr);
+        " -> %" G_GINT64_FORMAT " bytes, scr=%" G_GINT64_FORMAT,
+        GST_DEBUG_PAD_NAME (pad),
+        gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+        GST_EVENT_SEEK_OFFSET (event), *offset, *scr);
     return TRUE;
   }
   return FALSE;
@@ -733,23 +737,23 @@ gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event)
 
       /* first to to use the index if we have one */
       if (mpeg_parse->index)
-	res = index_seek (pad, event, &desired_offset, &expected_scr);
+        res = index_seek (pad, event, &desired_offset, &expected_scr);
       /* nothing found, try fuzzy seek */
       if (!res)
-	res = normal_seek (pad, event, &desired_offset, &expected_scr);
+        res = normal_seek (pad, event, &desired_offset, &expected_scr);
 
       if (!res)
-	break;
+        break;
 
       GST_DEBUG ("sending seek to %" G_GINT64_FORMAT, desired_offset);
       if (gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset,
-	      GST_SEEK_METHOD_SET)) {
-	mpeg_parse->discont_pending = TRUE;
-	mpeg_parse->scr_pending = TRUE;
-	mpeg_parse->next_scr = expected_scr;
-	mpeg_parse->current_scr = -1;
-	mpeg_parse->adjust = 0;
-	res = TRUE;
+              GST_SEEK_METHOD_SET)) {
+        mpeg_parse->discont_pending = TRUE;
+        mpeg_parse->scr_pending = TRUE;
+        mpeg_parse->next_scr = expected_scr;
+        mpeg_parse->current_scr = -1;
+        mpeg_parse->adjust = 0;
+        res = TRUE;
       }
       break;
     }
@@ -768,9 +772,9 @@ gst_mpeg_parse_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       if (!mpeg_parse->packetize) {
-	mpeg_parse->packetize =
-	    gst_mpeg_packetize_new (mpeg_parse->sinkpad,
-	    GST_MPEG_PACKETIZE_SYSTEM);
+        mpeg_parse->packetize =
+            gst_mpeg_packetize_new (mpeg_parse->sinkpad,
+            GST_MPEG_PACKETIZE_SYSTEM);
       }
       /* initialize parser state */
       mpeg_parse->current_scr = 0;
@@ -785,8 +789,8 @@ gst_mpeg_parse_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (mpeg_parse->packetize) {
-	gst_mpeg_packetize_destroy (mpeg_parse->packetize);
-	mpeg_parse->packetize = NULL;
+        gst_mpeg_packetize_destroy (mpeg_parse->packetize);
+        mpeg_parse->packetize = NULL;
       }
       //gst_caps_replace (&mpeg_parse->streaminfo, NULL);
       break;

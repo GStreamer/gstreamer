@@ -47,7 +47,7 @@ main (gint argc, gchar * argv[])
   if (!pipeline) {
     if (error)
       g_print ("ERROR: pipeline could not be constructed: %s\n",
-	  error->message);
+          error->message);
     else
       g_print ("ERROR: pipeline could not be constructed\n");
     return -1;
@@ -80,18 +80,18 @@ main (gint argc, gchar * argv[])
     format = GST_FORMAT_BYTES;
     /* see how many bytes are genereated per 8 seconds (== bitrate) */
     gst_pad_convert (enc_src, GST_FORMAT_TIME, 8 * GST_SECOND,
-	&format, &bitrate_enc);
+        &format, &bitrate_enc);
 
     gst_pad_convert (dec_sink, GST_FORMAT_TIME, 8 * GST_SECOND,
-	&format, &bitrate_dec);
+        &format, &bitrate_dec);
 
     g_print ("[%2dm %.2ds] of [%2dm %.2ds], "
-	"src avg bitrate: %lld, dest avg birate: %lld, ratio [%02.2f]    \r",
-	(gint) (position / (GST_SECOND * 60)),
-	(gint) (position / (GST_SECOND)) % 60,
-	(gint) (duration / (GST_SECOND * 60)),
-	(gint) (duration / (GST_SECOND)) % 60,
-	bitrate_dec, bitrate_enc, (gfloat) bitrate_dec / bitrate_enc);
+        "src avg bitrate: %lld, dest avg birate: %lld, ratio [%02.2f]    \r",
+        (gint) (position / (GST_SECOND * 60)),
+        (gint) (position / (GST_SECOND)) % 60,
+        (gint) (duration / (GST_SECOND * 60)),
+        (gint) (duration / (GST_SECOND)) % 60,
+        bitrate_dec, bitrate_enc, (gfloat) bitrate_dec / bitrate_enc);
   }
 
   g_print ("\n");

@@ -161,9 +161,9 @@ parse_chunk (GstMPEGPacketize * packetize)
 
     if (offset == chunksize) {
       chunksize =
-	  gst_bytestream_peek_bytes (bs, (guint8 **) & buf, offset + 4096);
+          gst_bytestream_peek_bytes (bs, (guint8 **) & buf, offset + 4096);
       if (chunksize == 0)
-	return NULL;
+        return NULL;
       chunksize += offset;
     }
   }
@@ -206,7 +206,7 @@ find_start_code (GstMPEGPacketize * packetize)
 
       chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
       if (chunksize == 0)
-	return FALSE;
+        return FALSE;
 
       offset = 0;
     }
@@ -232,46 +232,46 @@ gst_mpeg_packetize_read (GstMPEGPacketize * packetize)
     else {
       GST_DEBUG ("packetize: have chunk 0x%02X", packetize->id);
       if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
-	if (packetize->resync) {
-	  if (packetize->id != PACK_START_CODE) {
-	    gst_bytestream_flush_fast (packetize->bs, 4);
-	    continue;
-	  }
+        if (packetize->resync) {
+          if (packetize->id != PACK_START_CODE) {
+            gst_bytestream_flush_fast (packetize->bs, 4);
+            continue;
+          }
 
-	  packetize->resync = FALSE;
-	}
-	switch (packetize->id) {
-	  case PACK_START_CODE:
-	    outbuf = parse_packhead (packetize);
-	    if (!outbuf)
-	      got_event = TRUE;
-	    break;
-	  case SYS_HEADER_START_CODE:
-	    outbuf = parse_generic (packetize);
-	    if (!outbuf)
-	      got_event = TRUE;
-	    break;
-	  case ISO11172_END_START_CODE:
-	    outbuf = parse_end (packetize);
-	    if (!outbuf)
-	      got_event = TRUE;
-	    break;
-	  default:
-	    if (packetize->MPEG2 && ((packetize->id < 0xBD)
-		    || (packetize->id > 0xFE))) {
-	      gst_bytestream_flush (packetize->bs, 4);
-	      g_warning ("packetize: ******** unknown id 0x%02X",
-		  packetize->id);
-	    } else {
-	      outbuf = parse_generic (packetize);
-	      if (!outbuf)
-		got_event = TRUE;
-	    }
-	}
+          packetize->resync = FALSE;
+        }
+        switch (packetize->id) {
+          case PACK_START_CODE:
+            outbuf = parse_packhead (packetize);
+            if (!outbuf)
+              got_event = TRUE;
+            break;
+          case SYS_HEADER_START_CODE:
+            outbuf = parse_generic (packetize);
+            if (!outbuf)
+              got_event = TRUE;
+            break;
+          case ISO11172_END_START_CODE:
+            outbuf = parse_end (packetize);
+            if (!outbuf)
+              got_event = TRUE;
+            break;
+          default:
+            if (packetize->MPEG2 && ((packetize->id < 0xBD)
+                    || (packetize->id > 0xFE))) {
+              gst_bytestream_flush (packetize->bs, 4);
+              g_warning ("packetize: ******** unknown id 0x%02X",
+                  packetize->id);
+            } else {
+              outbuf = parse_generic (packetize);
+              if (!outbuf)
+                got_event = TRUE;
+            }
+        }
       } else if (packetize->type == GST_MPEG_PACKETIZE_VIDEO) {
-	outbuf = parse_chunk (packetize);
+        outbuf = parse_chunk (packetize);
       } else {
-	g_assert_not_reached ();
+        g_assert_not_reached ();
       }
     }
 
@@ -284,10 +284,10 @@ gst_mpeg_packetize_read (GstMPEGPacketize * packetize)
       etype = event ? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
 
       switch (etype) {
-	case GST_EVENT_DISCONTINUOUS:
-	  GST_DEBUG ("packetize: discont\n");
-	  gst_bytestream_flush_fast (packetize->bs, remaining);
-	  break;
+        case GST_EVENT_DISCONTINUOUS:
+          GST_DEBUG ("packetize: discont\n");
+          gst_bytestream_flush_fast (packetize->bs, remaining);
+          break;
       }
 
       return GST_DATA (event);

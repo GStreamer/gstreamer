@@ -45,8 +45,8 @@ struct _GstPlayPrivate
 
   gint get_length_attempt;
 
-  gint tick_unblock_remaining;	/* how many msecs left
-				   to unblock due to seeking */
+  gint tick_unblock_remaining;  /* how many msecs left
+                                   to unblock due to seeking */
 
   guint tick_id;
   guint length_id;
@@ -171,7 +171,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
 
     /* Make sure we convert audio to the needed format */
     GST_PLAY_MAKE_OR_ERROR (audioconvert, "audioconvert", "audioconvert",
-	error);
+        error);
     g_hash_table_insert (play->priv->elements, "audioconvert", audioconvert);
 
     /* Duplicate audio signal to audio sink and visualization thread */
@@ -183,7 +183,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "tee", tee);
 
     gst_bin_add_many (GST_BIN (work_thread), source, autoplugger, audioconvert,
-	tee, NULL);
+        tee, NULL);
     if (!gst_element_link_many (source, autoplugger, audioconvert, tee, NULL))
       GST_PLAY_ERROR_RETURN (error, "Could not link source thread elements");
 
@@ -194,13 +194,13 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     identity_cs = gst_element_factory_make ("ffcolorspace", "identity_cs");
     if (!GST_IS_ELEMENT (identity_cs)) {
       identity_cs =
-	  gst_element_factory_make ("ffmpegcolorspace", "identity_cs");
+          gst_element_factory_make ("ffmpegcolorspace", "identity_cs");
       if (!GST_IS_ELEMENT (identity_cs)) {
-	identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
-	if (!GST_IS_ELEMENT (identity_cs)) {
-	  gst_play_error_plugin ("colorspace", error);
-	  return FALSE;
-	}
+        identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
+        if (!GST_IS_ELEMENT (identity_cs)) {
+          gst_play_error_plugin ("colorspace", error);
+          return FALSE;
+        }
       }
     }
     g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
@@ -232,11 +232,11 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     if (!GST_IS_ELEMENT (vis_cs)) {
       vis_cs = gst_element_factory_make ("ffmpegcolorspace", "vis_cs");
       if (!GST_IS_ELEMENT (vis_cs)) {
-	vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
-	if (!GST_IS_ELEMENT (vis_cs)) {
-	  gst_play_error_plugin ("colorspace", error);
-	  return FALSE;
-	}
+        vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
+        if (!GST_IS_ELEMENT (vis_cs)) {
+          gst_play_error_plugin ("colorspace", error);
+          return FALSE;
+        }
       }
     }
 
@@ -245,9 +245,9 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     gst_bin_add_many (GST_BIN (vis_bin), vis_queue, vis_element, vis_cs, NULL);
     if (!gst_element_link_many (vis_queue, vis_element, vis_cs, NULL))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link visualisation thread elements");
+          "Could not link visualisation thread elements");
     gst_element_add_ghost_pad (vis_bin, gst_element_get_pad (vis_cs, "src"),
-	"src");
+        "src");
   }
   /* Creating our video output bin */
   {
@@ -267,18 +267,18 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     if (!GST_IS_ELEMENT (video_cs)) {
       video_cs = gst_element_factory_make ("ffmpegcolorspace", "video_cs");
       if (!GST_IS_ELEMENT (video_cs)) {
-	video_cs = gst_element_factory_make ("colorspace", "video_cs");
-	if (!GST_IS_ELEMENT (video_cs)) {
-	  gst_play_error_plugin ("colorspace", error);
-	  return FALSE;
-	}
+        video_cs = gst_element_factory_make ("colorspace", "video_cs");
+        if (!GST_IS_ELEMENT (video_cs)) {
+          gst_play_error_plugin ("colorspace", error);
+          return FALSE;
+        }
       }
     }
     g_hash_table_insert (play->priv->elements, "video_cs", video_cs);
 
     /* Software colorbalance */
     GST_PLAY_MAKE_OR_ERROR (video_balance, "videobalance", "video_balance",
-	error);
+        error);
     g_hash_table_insert (play->priv->elements, "video_balance", video_balance);
 
     /* Colorspace conversion */
@@ -286,11 +286,11 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     if (!GST_IS_ELEMENT (balance_cs)) {
       balance_cs = gst_element_factory_make ("ffmpegcolorspace", "balance_cs");
       if (!GST_IS_ELEMENT (balance_cs)) {
-	balance_cs = gst_element_factory_make ("colorspace", "balance_cs");
-	if (!GST_IS_ELEMENT (balance_cs)) {
-	  gst_play_error_plugin ("colorspace", error);
-	  return FALSE;
-	}
+        balance_cs = gst_element_factory_make ("colorspace", "balance_cs");
+        if (!GST_IS_ELEMENT (balance_cs)) {
+          gst_play_error_plugin ("colorspace", error);
+          return FALSE;
+        }
       }
     }
     g_hash_table_insert (play->priv->elements, "balance_cs", balance_cs);
@@ -299,38 +299,38 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     GST_PLAY_MAKE_OR_ERROR (video_scaler, "videoscale", "video_scaler", error);
     g_hash_table_insert (play->priv->elements, "video_scaler", video_scaler);
     g_signal_connect (gst_element_get_pad (video_scaler, "src"), "fixate",
-	G_CALLBACK (gst_play_video_fixate), play);
+        G_CALLBACK (gst_play_video_fixate), play);
 
     /* Placeholder for future video sink bin */
     GST_PLAY_MAKE_OR_ERROR (video_sink, "fakesink", "video_sink", error);
     g_hash_table_insert (play->priv->elements, "video_sink", video_sink);
 
     gst_bin_add_many (GST_BIN (video_thread), video_queue, video_switch,
-	video_cs, video_balance, balance_cs, video_scaler, video_sink, NULL);
+        video_cs, video_balance, balance_cs, video_scaler, video_sink, NULL);
     /* break down linking so we can figure out what might be failing */
     if (!gst_element_link (video_queue, video_switch))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread (queue and switch)");
+          "Could not link video output thread (queue and switch)");
     if (!gst_element_link (video_switch, video_cs))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread (switch and cs)");
+          "Could not link video output thread (switch and cs)");
     if (!gst_element_link (video_cs, video_balance))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread (cs and balance)");
+          "Could not link video output thread (cs and balance)");
     if (!gst_element_link (video_balance, balance_cs))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread (balance and balance_cs)");
+          "Could not link video output thread (balance and balance_cs)");
     if (!gst_element_link (balance_cs, video_scaler))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread (balance_cs and scaler)");
+          "Could not link video output thread (balance_cs and scaler)");
     if (!gst_element_link (video_scaler, video_sink))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread (balance_cs and scaler)");
+          "Could not link video output thread (balance_cs and scaler)");
     gst_element_add_ghost_pad (video_thread, gst_element_get_pad (video_queue,
-	    "sink"), "sink");
+            "sink"), "sink");
     if (!gst_element_link (identity_cs, video_thread))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link video output thread elements");
+          "Could not link video output thread elements");
   }
   /* Creating our audio output bin 
      { queue ! fakesink } */
@@ -347,19 +347,19 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     GST_PLAY_MAKE_OR_ERROR (volume, "volume", "volume", error);
     g_hash_table_insert (play->priv->elements, "volume", volume);
     g_signal_connect (gst_element_get_pad (volume, "src"), "fixate",
-	G_CALLBACK (gst_play_audio_fixate), play);
+        G_CALLBACK (gst_play_audio_fixate), play);
 
     /* Placeholder for future audio sink bin */
     GST_PLAY_MAKE_OR_ERROR (audio_sink, "fakesink", "audio_sink", error);
     g_hash_table_insert (play->priv->elements, "audio_sink", audio_sink);
 
     gst_bin_add_many (GST_BIN (audio_thread), audio_queue, volume, audio_sink,
-	NULL);
+        NULL);
     if (!gst_element_link_many (audio_queue, volume, audio_sink, NULL))
       GST_PLAY_ERROR_RETURN (error,
-	  "Could not link audio output thread elements");
+          "Could not link audio output thread elements");
     gst_element_add_ghost_pad (audio_thread, gst_element_get_pad (audio_queue,
-	    "sink"), "sink");
+            "sink"), "sink");
     gst_pad_link (tee_pad2, gst_element_get_pad (audio_queue, "sink"));
   }
 
@@ -408,7 +408,7 @@ gst_play_tick_callback (GstPlay * play)
 
   if (q)
     g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
-	0, play->priv->time_nanos);
+        0, play->priv->time_nanos);
 
   if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
     return TRUE;
@@ -443,15 +443,15 @@ gst_play_get_length_callback (GstPlay * play)
   /* Audio first and then Video */
   if (GST_IS_ELEMENT (audio_sink_element))
     q = gst_element_query (audio_sink_element, GST_QUERY_TOTAL, &format,
-	&value);
+        &value);
   if ((!q) && (GST_IS_ELEMENT (video_sink_element)))
     q = gst_element_query (video_sink_element, GST_QUERY_TOTAL, &format,
-	&value);
+        &value);
 
   if (q) {
     play->priv->length_nanos = value;
     g_signal_emit (G_OBJECT (play), gst_play_signals[STREAM_LENGTH],
-	0, play->priv->length_nanos);
+        0, play->priv->length_nanos);
     play->priv->length_id = 0;
     return FALSE;
   }
@@ -487,7 +487,7 @@ gst_play_video_fixate (GstPad * pad, const GstCaps * caps, gpointer user_data)
     return newcaps;
   }
   if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-	  30.0)) {
+          30.0)) {
     return newcaps;
   }
 
@@ -545,7 +545,7 @@ gst_play_state_change (GstElement * element, GstElementState old,
     }
 
     play->priv->tick_id = g_timeout_add (TICK_INTERVAL_MSEC,
-	(GSourceFunc) gst_play_tick_callback, play);
+        (GSourceFunc) gst_play_tick_callback, play);
 
     play->priv->get_length_attempt = 0;
 
@@ -555,7 +555,7 @@ gst_play_state_change (GstElement * element, GstElementState old,
     }
 
     play->priv->length_id = g_timeout_add (TICK_INTERVAL_MSEC,
-	(GSourceFunc) gst_play_get_length_callback, play);
+        (GSourceFunc) gst_play_get_length_callback, play);
   } else {
     if (play->priv->tick_id) {
       g_source_remove (play->priv->tick_id);
@@ -632,7 +632,7 @@ gst_play_init (GstPlay * play)
 
   if (!gst_play_pipeline_setup (play, &play->priv->error)) {
     g_warning ("libgstplay: failed initializing pipeline, error: %s",
-	play->priv->error->message);
+        play->priv->error->message);
   }
 }
 
@@ -793,10 +793,10 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
     play->priv->tick_unblock_remaining = 500;
 
     s = gst_element_seek (video_seek_element, GST_FORMAT_TIME |
-	GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, time_nanos);
+        GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, time_nanos);
     if (!s) {
       s = gst_element_seek (audio_seek_element, GST_FORMAT_TIME |
-	  GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, time_nanos);
+          GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, time_nanos);
     }
 
     if (s) {
@@ -804,11 +804,11 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
       gboolean q = FALSE;
 
       q = gst_element_query (audio_sink_element, GST_QUERY_POSITION, &format,
-	  &(play->priv->time_nanos));
+          &(play->priv->time_nanos));
 
       if (q)
-	g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
-	    0, play->priv->time_nanos);
+        g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
+            0, play->priv->time_nanos);
     }
   }
 
@@ -907,10 +907,10 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
       GST_PLAY_SINK_TYPE_VIDEO);
   if (GST_IS_ELEMENT (video_sink_element)) {
     g_hash_table_replace (play->priv->elements, "video_sink_element",
-	video_sink_element);
+        video_sink_element);
     if (GST_IS_X_OVERLAY (video_sink_element)) {
       g_signal_connect (G_OBJECT (video_sink_element),
-	  "desired_size_changed", G_CALLBACK (gst_play_have_video_size), play);
+          "desired_size_changed", G_CALLBACK (gst_play_have_video_size), play);
     }
   }
 
@@ -966,7 +966,7 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
       GST_PLAY_SINK_TYPE_AUDIO);
   if (GST_IS_ELEMENT (audio_sink_element)) {
     g_hash_table_replace (play->priv->elements, "audio_sink_element",
-	audio_sink_element);
+        audio_sink_element);
   }
 
   gst_element_set_state (audio_sink, GST_STATE (GST_ELEMENT (play)));
@@ -1114,7 +1114,7 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
 
     /* Adding, linking */
     play->priv->handoff_hid = g_signal_connect (G_OBJECT (identity),
-	"handoff", G_CALLBACK (gst_play_identity_handoff), play);
+        "handoff", G_CALLBACK (gst_play_identity_handoff), play);
     gst_bin_add (GST_BIN (video_thread), vis_bin);
     gst_pad_link (tee_pad1, vis_queue_pad);
     gst_element_link (vis_bin, video_switch);
@@ -1168,64 +1168,64 @@ gst_play_get_sink_element (GstPlay * play,
     if (GST_IS_BIN (element)) {
       element = gst_play_get_sink_element (play, element, sink_type);
       if (GST_IS_ELEMENT (element))
-	return element;
+        return element;
     } else {
       pads = gst_element_get_pad_list (element);
       has_src = FALSE;
       has_correct_type = FALSE;
       while (pads) {
-	/* check for src pad */
-	if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC) {
-	  has_src = TRUE;
-	  break;
-	} else {
-	  /* If not a src pad checking caps */
-	  GstCaps *caps;
-	  GstStructure *structure;
-	  gboolean has_video_cap = FALSE;
-	  gboolean has_audio_cap = FALSE;
+        /* check for src pad */
+        if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC) {
+          has_src = TRUE;
+          break;
+        } else {
+          /* If not a src pad checking caps */
+          GstCaps *caps;
+          GstStructure *structure;
+          gboolean has_video_cap = FALSE;
+          gboolean has_audio_cap = FALSE;
 
-	  caps = gst_pad_get_caps (GST_PAD (pads->data));
-	  structure = gst_caps_get_structure (caps, 0);
+          caps = gst_pad_get_caps (GST_PAD (pads->data));
+          structure = gst_caps_get_structure (caps, 0);
 
-	  if (strcmp (gst_structure_get_name (structure),
-		  "audio/x-raw-int") == 0) {
-	    has_audio_cap = TRUE;
-	  }
+          if (strcmp (gst_structure_get_name (structure),
+                  "audio/x-raw-int") == 0) {
+            has_audio_cap = TRUE;
+          }
 
-	  if (strcmp (gst_structure_get_name (structure),
-		  "video/x-raw-yuv") == 0 ||
-	      strcmp (gst_structure_get_name (structure),
-		  "video/x-raw-rgb") == 0) {
-	    has_video_cap = TRUE;
-	  }
+          if (strcmp (gst_structure_get_name (structure),
+                  "video/x-raw-yuv") == 0 ||
+              strcmp (gst_structure_get_name (structure),
+                  "video/x-raw-rgb") == 0) {
+            has_video_cap = TRUE;
+          }
 
-	  gst_caps_free (caps);
+          gst_caps_free (caps);
 
-	  switch (sink_type) {
-	    case GST_PLAY_SINK_TYPE_AUDIO:
-	      if (has_audio_cap)
-		has_correct_type = TRUE;
-	      break;
-	    case GST_PLAY_SINK_TYPE_VIDEO:
-	      if (has_video_cap)
-		has_correct_type = TRUE;
-	      break;
-	    case GST_PLAY_SINK_TYPE_ANY:
-	      if ((has_video_cap) || (has_audio_cap))
-		has_correct_type = TRUE;
-	      break;
-	    default:
-	      has_correct_type = FALSE;
-	  }
-	}
+          switch (sink_type) {
+            case GST_PLAY_SINK_TYPE_AUDIO:
+              if (has_audio_cap)
+                has_correct_type = TRUE;
+              break;
+            case GST_PLAY_SINK_TYPE_VIDEO:
+              if (has_video_cap)
+                has_correct_type = TRUE;
+              break;
+            case GST_PLAY_SINK_TYPE_ANY:
+              if ((has_video_cap) || (has_audio_cap))
+                has_correct_type = TRUE;
+              break;
+            default:
+              has_correct_type = FALSE;
+          }
+        }
 
-	pads = g_list_next (pads);
+        pads = g_list_next (pads);
 
       }
 
       if ((!has_src) && (has_correct_type))
-	return element;
+        return element;
     }
 
     elements = g_list_next (elements);
@@ -1247,7 +1247,7 @@ gst_play_new (GError ** error)
       play->priv->error = NULL;
     } else {
       g_warning ("Error creating GstPlay object.\n%s",
-	  play->priv->error->message);
+          play->priv->error->message);
       g_error_free (play->priv->error);
     }
   }
@@ -1280,7 +1280,7 @@ gst_play_get_type (void)
     };
 
     play_type = g_type_register_static (GST_TYPE_PIPELINE, "GstPlay",
-	&play_info, 0);
+        &play_info, 0);
   }
 
   return play_type;
