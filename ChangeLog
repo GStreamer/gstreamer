@@ -1,3 +1,9 @@
+2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxdec.c: (gst_divxdec_init), (gst_divxdec_setup):
+	* ext/divx/gstdivxdec.h:
+	  Fix divx3 ("msmpeg4") playback using divxdec.
+
 2004-01-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/typefind/gsttypefindfunctions.c:
