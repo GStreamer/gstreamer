@@ -1,1 +1,3 @@
 usr/lib/gst/libgstelements.*
+usr/lib/gst/libgststaticautoplug.*
+usr/lib/gst/libgststaticautoplugrender.*

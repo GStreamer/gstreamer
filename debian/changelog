@@ -1,3 +1,20 @@
+gstreamer (0.1.1.20010320-1) unstable; urgency=low
+
+  * Latest CVS code
+  * enable main docs
+  * disable broken plugin docs with new option
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 20 Mar 2001 18:15:19 -0500
+
+gstreamer (0.1.1.20010315-1) unstable; urgency=low
+
+  * Latest CVS code
+  * Added man pages
+  * Split mpeg2dec to seperate plugin
+  * libgst Architectures updated to cothread supported archs
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 15 Mar 2001 20:17:19 -0500
+
 gstreamer (0.1.1-1) unstable; urgency=low
 
   * New upstream release

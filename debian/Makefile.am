@@ -5,23 +5,30 @@ EXTRA_DIST = \
 	control \
 	copyright \
 	gsteditor.files \
+	gsteditor.manpages \
 	gsteditor.menu \
 	gstmediaplay.files \
+	gstmediaplay.manpages \
 	gstmediaplay.menu \
+	gstreamer-alsa.files \
 	gstreamer-cdparanoia.files \
 	gstreamer-common.files \
 	gstreamer-doc.files \
 	gstreamer-elements.files \
 	gstreamer-esd.files \
 	gstreamer-lame.files \
+	gstreamer-mpeg2dec.files \
 	gstreamer-mpg123.files \
 	gstreamer-plugin-template.postinst \
 	gstreamer-plugin-template.prerm \
 	gstreamer-runtime.files \
+	gstreamer-runtime.manpages \
 	gstreamer-runtime.postinst \
 	gstreamer-tools.files \
+	gstreamer-tools.manpages \
 	gstreamer-vorbis.files \
 	libgst-dev.files \
+	libgst-dev.manpages \
 	libgst0.files \
 	libgst0.postinst \
 	libgsteditor-dev.files \

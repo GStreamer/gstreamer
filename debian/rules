@@ -7,7 +7,7 @@
 #export DH_VERBOSE=1
 
 # This is the debhelper compatability version to use.
-export DH_COMPAT=2
+export DH_COMPAT=3
 
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=cdparanoia common elements esd lame mpg123 vorbis
+PLUGINS=alsa cdparanoia common elements esd lame mpeg2dec mpg123 vorbis
 
 setup-links:
 	for i in $(PLUGINS); do \
@@ -36,7 +36,8 @@ configure-stamp:
 		--infodir=\$${prefix}/share/info \
 		--with-configdir=/etc/gstreamer \
 		--disable-plugin-srcdir \
-		--disable-docs-build
+		--enable-docs-build \
+		--disable-plugin-docs
 
 	touch configure-stamp
 
@@ -91,7 +92,7 @@ binary-indep: build install
 #	dh_installpam
 #	dh_installinit
 #	dh_installcron
-#	dh_installmanpages
+	dh_installman
 #	dh_installinfo
 #	dh_undocumented
 	dh_installchangelogs ChangeLog
@@ -124,7 +125,7 @@ binary-arch: build install setup-links
 #	dh_installpam
 #	dh_installinit
 #	dh_installcron
-#	dh_installmanpages
+	dh_installman
 #	dh_installinfo
 	dh_undocumented
 	dh_installchangelogs ChangeLog

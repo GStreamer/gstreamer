@@ -7,7 +7,7 @@ Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4.0), jade (>= 1.
 Standards-Version: 3.5.2.0
 
 Package: libgst0
-Architecture: any
+Architecture: [alpha arm i386 powerpc sparc]
 Section: libs
 Depends: ${shlibs:Depends}
 Suggests: gstreamer-elements, gstreamer-common
@@ -91,6 +91,13 @@ Suggests: gstreamer-common
 Description: GStreamer editor
  GStreamer editor
 
+Package: gstreamer-alsa
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: ALSA plugin for GStreamer
+ ALSA plugin for GStreamer
+
 Package: gstreamer-cdparanoia
 Architecture: any
 Section: libs
@@ -127,6 +134,13 @@ Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime
 Description: LAME plugin for GStreamer
  LAME plugin for GStreamer
+
+Package: gstreamer-mpeg2dec
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: mpeg2dec plugin for GStreamer
+ mpeg2dec plugin for GStreamer
 
 Package: gstreamer-mpg123
 Architecture: any

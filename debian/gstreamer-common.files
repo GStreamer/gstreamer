@@ -20,7 +20,6 @@ usr/lib/gst/libmpeg2parse.*
 usr/lib/gst/libac3dec.*
 usr/lib/gst/libac3parse.*
 usr/lib/gst/libmpeg2play.*
-usr/lib/gst/libmpeg2dec.*
 usr/lib/gst/libmpeg2enc.*
 usr/lib/gst/libmpeg2subt.*
 usr/lib/gst/libmp2videoparse.*
