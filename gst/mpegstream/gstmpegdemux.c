@@ -467,12 +467,13 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
 	if (caps && gst_caps_is_fixed (caps))
 	  gst_pad_use_explicit_caps (*outpad);
-        gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
 	if (caps && gst_caps_is_fixed (caps))
           gst_pad_set_explicit_caps (*outpad, caps);
 	else if (caps)
 	  gst_caps_free (caps);
+
+        gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
 	gst_pad_set_element_private (*outpad, *outstream);
 
