@@ -37,6 +37,10 @@ extern GSList *mainloops;
 extern void _pygst_main_quit(void);
 
 
+/* This is a timeout that gets added to the mainloop to handle SIGINT (Ctrl-C)
+ * Other signals get handled at some other point where transition from
+ * C -> Python is being made.
+ */
 static gboolean
 python_do_pending_calls(gpointer data)
 {
@@ -48,12 +52,11 @@ python_do_pending_calls(gpointer data)
 	 PyErr_SetNone(PyExc_KeyboardInterrupt);
 	 pyg_gil_state_release(state);
 	 quit = TRUE;
-    } 
-    
-	 
+    }
+
     if (quit && mainloops != NULL)
 	 _pygst_main_quit();
-    
+
     return TRUE;
 }
 
