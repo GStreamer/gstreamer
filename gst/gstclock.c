@@ -54,7 +54,7 @@ static GstObjectClass *parent_class = NULL;
 static GMutex *_gst_clock_mutex;
 static GCond  *_gst_clock_cond;
 
-static inline GstClockID
+static GstClockID
 gst_clock_entry_new (GstClock *clock, GstClockTime time, 
 		     GstClockTime interval, GstClockEntryType type)
 {
