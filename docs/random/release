@@ -123,7 +123,13 @@ TODO :
     GStreamer rocks.
   - Later on, if necessary, merge back latest release branch to current dev
     branch (if patches to source were made)
-    FIXME: add commands and guide for this
+    * change to a HEAD branch, make sure it's updated
+    * cvs diff -r RELEASE-0_3_4-30SECONDFRENCHMAN -R
+      gives a list of differences between head and release tag
+    * cvs update -j BRANCH-RELEASE-0_3_4
+      merges the difference made in that branch to the current source
+      this is what you want to use when merging back the branch
+      resolve conflicts and commit
 
 Some various random comments that might or might not make sense :
 
