@@ -1,3 +1,32 @@
+2004-07-22  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (update_scale), (main):
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
+	(gst_decode_bin_class_init), (gst_decode_bin_is_dynamic),
+	(gst_decode_bin_factory_filter), (compare_ranks), (print_feature),
+	(gst_decode_bin_init), (gst_decode_bin_dispose),
+	(find_compatibles), (close_pad_link), (try_to_link_1), (new_pad),
+	(no_more_pads), (close_link), (type_found),
+	(gst_decode_bin_set_property), (gst_decode_bin_get_property),
+	(plugin_init):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_type),
+	(gst_play_base_bin_class_init), (gst_play_base_bin_init),
+	(gst_play_base_bin_dispose), (queue_overrun),
+	(gen_preroll_element), (remove_prerolls), (unknown_type),
+	(no_more_pads), (new_stream), (setup_source),
+	(gst_play_base_bin_set_property), (gst_play_base_bin_get_property),
+	(play_base_eos), (gst_play_base_bin_change_state),
+	(gst_play_base_bin_add_element),
+	(gst_play_base_bin_remove_element),
+	(gst_play_base_bin_mute_stream), (gst_play_base_bin_link_stream),
+	(gst_play_base_bin_unlink_stream),
+	(gst_play_base_bin_get_streaminfo):
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	* gst/playback/gststreaminfo.h:
+	More playback updates, attempt to fix things after the state change
+	breakage.
+
 2004-07-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videoscale/videoscale.c: (gst_videoscale_planar411),
