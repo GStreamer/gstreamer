@@ -101,10 +101,10 @@ print_query_types (const GstQueryType * types)
   }
 }
 
+#ifndef GST_DISABLE_ENUMTYPES
 static void
 print_event_masks (const GstEventMask * masks)
 {
-#ifndef GST_DISABLE_ENUMTYPES
   GType event_type;
   GEnumClass *klass;
   GType event_flags;
@@ -148,11 +148,47 @@ print_event_masks (const GstEventMask * masks)
 
     masks++;
   }
+}
+#else
+static void
+print_event_masks (const GstEventMask * masks)
+{
+}
 #endif
+
+static char *
+get_rank_name (gint rank)
+{
+  switch (rank) {
+    case GST_RANK_NONE:
+      return "none";
+    case GST_RANK_MARGINAL:
+      return "marginal";
+    case GST_RANK_SECONDARY:
+      return "secondary";
+    case GST_RANK_PRIMARY:
+      return "primary";
+    default:
+      return "unknown";
+  }
 }
 
 static void
-output_hierarchy (GType type, gint level, gint * maxlevel)
+print_factory_details_info (GstElementFactory * factory)
+{
+  g_print ("Factory Details:\n");
+  g_print ("  Long name:\t%s\n", factory->details.longname);
+  g_print ("  Class:\t%s\n", factory->details.klass);
+  g_print ("  Description:\t%s\n", factory->details.description);
+  g_print ("  Author(s):\t%s\n", factory->details.author);
+  g_print ("  Rank:\t\t%s (%d)\n",
+      get_rank_name (GST_PLUGIN_FEATURE (factory)->rank),
+      GST_PLUGIN_FEATURE (factory)->rank);
+  g_print ("\n");
+}
+
+static void
+print_hierarchy (GType type, gint level, gint * maxlevel)
 {
   GType parent;
   gint i;
@@ -163,7 +199,7 @@ output_hierarchy (GType type, gint level, gint * maxlevel)
   level++;
 
   if (parent)
-    output_hierarchy (parent, level, maxlevel);
+    print_hierarchy (parent, level, maxlevel);
 
   for (i = 1; i < *maxlevel - level; i++)
     g_print ("      ");
@@ -177,7 +213,7 @@ output_hierarchy (GType type, gint level, gint * maxlevel)
 }
 
 static void
-print_element_properties (GstElement * element)
+print_element_properties_info (GstElement * element)
 {
   GParamSpec **property_specs;
   gint num_properties, i;
@@ -390,98 +426,60 @@ print_element_properties (GstElement * element)
     g_print ("  none\n");
 }
 
-static char *
-get_rank_name (gint rank)
+static void
+print_pad_templates_info (GstElementFactory * factory, GstElement * element)
 {
-  switch (rank) {
-    case GST_RANK_NONE:
-      return "none";
-    case GST_RANK_MARGINAL:
-      return "marginal";
-    case GST_RANK_SECONDARY:
-      return "secondary";
-    case GST_RANK_PRIMARY:
-      return "primary";
-    default:
-      return "unknown";
+  GstElementClass *gstelement_class;
+  const GList *pads;
+  GstPadTemplate *padtemplate;
+
+  g_print ("Pad Templates:\n");
+  if (!factory->numpadtemplates) {
+    g_print ("  none\n");
+    return;
+  }
+
+  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
+
+  pads = factory->padtemplates;
+  while (pads) {
+    padtemplate = (GstPadTemplate *) (pads->data);
+    pads = g_list_next (pads);
+
+    if (padtemplate->direction == GST_PAD_SRC)
+      g_print ("  SRC template: '%s'\n", padtemplate->name_template);
+    else if (padtemplate->direction == GST_PAD_SINK)
+      g_print ("  SINK template: '%s'\n", padtemplate->name_template);
+    else
+      g_print ("  UNKNOWN!!! template: '%s'\n", padtemplate->name_template);
+
+    if (padtemplate->presence == GST_PAD_ALWAYS)
+      g_print ("    Availability: Always\n");
+    else if (padtemplate->presence == GST_PAD_SOMETIMES)
+      g_print ("    Availability: Sometimes\n");
+    else if (padtemplate->presence == GST_PAD_REQUEST) {
+      g_print ("    Availability: On request\n");
+      g_print ("      Has request_new_pad() function: %s\n",
+          GST_DEBUG_FUNCPTR_NAME (gstelement_class->request_new_pad));
+    } else
+      g_print ("    Availability: UNKNOWN!!!\n");
+
+    if (padtemplate->caps) {
+      g_print ("    Capabilities:\n");
+      print_caps (padtemplate->caps, "      ");
+    }
+
+    g_print ("\n");
   }
 }
 
-static gint
-print_element_info (GstElementFactory * factory)
+static void
+print_element_flag_info (GstElement * element)
 {
-  GstElement *element;
-  GstObjectClass *gstobject_class;
-  GstElementClass *gstelement_class;
-  GstPad *pad;
-  GstRealPad *realpad;
-  GstPadTemplate *padtemplate;
-  GList *children;
-  GstElement *child;
-  gboolean have_flags;
-  gint maxlevel = 0;
-
-  element = gst_element_factory_create (factory, "element");
-  if (!element) {
-    g_print ("couldn't construct element for some reason\n");
-    return -1;
-  }
-
-  gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
-  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
-
-  g_print ("Factory Details:\n");
-  g_print ("  Long name:\t%s\n", factory->details.longname);
-  g_print ("  Class:\t%s\n", factory->details.klass);
-  g_print ("  Description:\t%s\n", factory->details.description);
-  g_print ("  Author(s):\t%s\n", factory->details.author);
-  g_print ("  Rank:\t\t%s (%d)\n",
-      get_rank_name (GST_PLUGIN_FEATURE (factory)->rank),
-      GST_PLUGIN_FEATURE (factory)->rank);
-  g_print ("\n");
-
-  output_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
-
-  g_print ("Pad Templates:\n");
-  if (factory->numpadtemplates) {
-    const GList *pads;
-
-    pads = factory->padtemplates;
-    while (pads) {
-      padtemplate = (GstPadTemplate *) (pads->data);
-      pads = g_list_next (pads);
-
-      if (padtemplate->direction == GST_PAD_SRC)
-        g_print ("  SRC template: '%s'\n", padtemplate->name_template);
-      else if (padtemplate->direction == GST_PAD_SINK)
-        g_print ("  SINK template: '%s'\n", padtemplate->name_template);
-      else
-        g_print ("  UNKNOWN!!! template: '%s'\n", padtemplate->name_template);
-
-      if (padtemplate->presence == GST_PAD_ALWAYS)
-        g_print ("    Availability: Always\n");
-      else if (padtemplate->presence == GST_PAD_SOMETIMES)
-        g_print ("    Availability: Sometimes\n");
-      else if (padtemplate->presence == GST_PAD_REQUEST) {
-        g_print ("    Availability: On request\n");
-        g_print ("      Has request_new_pad() function: %s\n",
-            GST_DEBUG_FUNCPTR_NAME (gstelement_class->request_new_pad));
-      } else
-        g_print ("    Availability: UNKNOWN!!!\n");
-
-      if (padtemplate->caps) {
-        g_print ("    Capabilities:\n");
-        print_caps (padtemplate->caps, "      ");
-      }
-
-      g_print ("\n");
-    }
-  } else
-    g_print ("  none\n");
-
-  have_flags = FALSE;
+  gboolean have_flags = FALSE;
 
   g_print ("\nElement Flags:\n");
+
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_COMPLEX)) {
     g_print ("  GST_ELEMENT_COMPLEX\n");
     have_flags = TRUE;
@@ -518,8 +516,16 @@ print_element_info (GstElementFactory * factory)
     if (!have_flags)
       g_print ("  no flags set\n");
   }
+}
 
+static void
+print_implementation_info (GstElement * element)
+{
+  GstObjectClass *gstobject_class;
+  GstElementClass *gstelement_class;
 
+  gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
+  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   g_print ("\nElement Implementation:\n");
 
@@ -537,14 +543,23 @@ print_element_info (GstElementFactory * factory)
   g_print ("  Has custom restore_thyself() function: %s\n",
       GST_DEBUG_FUNCPTR_NAME (gstobject_class->restore_thyself));
 #endif
+}
 
-  have_flags = FALSE;
+static void
+print_clocking_info (GstElement * element)
+{
+  if (!gst_element_requires_clock (element) &&
+      !(gst_element_provides_clock (element) &&
+          gst_element_get_clock (element))) {
+    g_print ("\nElement has no clocking capabilities.");
+    return;
+  }
 
   g_print ("\nClocking Interaction:\n");
   if (gst_element_requires_clock (element)) {
     g_print ("  element requires a clock\n");
-    have_flags = TRUE;
   }
+
   if (gst_element_provides_clock (element)) {
     GstClock *clock;
 
@@ -553,218 +568,259 @@ print_element_info (GstElementFactory * factory)
       g_print ("  element provides a clock: %s\n", GST_OBJECT_NAME (clock));
     else
       g_print ("  element is supposed to provide a clock but returned NULL\n");
-    have_flags = TRUE;
   }
-  if (!have_flags) {
-    g_print ("  none\n");
-  }
+}
+
 #ifndef GST_DISABLE_INDEX
-  g_print ("\nIndexing capabilities:\n");
+static void
+print_index_info (GstElement * element)
+{
   if (gst_element_is_indexable (element)) {
+    g_print ("\nIndexing capabilities:\n");
     g_print ("  element can do indexing\n");
   } else {
-    g_print ("  none\n");
+    g_print ("\nElement has no indexing capabilities.\n");
   }
+}
+#else
+static void
+print_index_info (GstElement * element)
+{
+}
 #endif
 
+static void
+print_pad_info (GstElement * element)
+{
+  const GList *pads;
+  GstPad *pad;
+  GstRealPad *realpad;
+
   g_print ("\nPads:\n");
-  if (element->numpads) {
-    const GList *pads;
 
-    pads = gst_element_get_pad_list (element);
-    while (pads) {
-      pad = GST_PAD (pads->data);
-      pads = g_list_next (pads);
-      realpad = GST_PAD_REALIZE (pad);
-
-      if (gst_pad_get_direction (pad) == GST_PAD_SRC)
-        g_print ("  SRC: '%s'", gst_pad_get_name (pad));
-      else if (gst_pad_get_direction (pad) == GST_PAD_SINK)
-        g_print ("  SINK: '%s'", gst_pad_get_name (pad));
-      else
-        g_print ("  UNKNOWN!!!: '%s'\n", gst_pad_get_name (pad));
-
-      if (GST_IS_GHOST_PAD (pad))
-        g_print (", ghost of real pad %s:%s\n", GST_DEBUG_PAD_NAME (realpad));
-      else
-        g_print ("\n");
-
-      g_print ("    Implementation:\n");
-      if (realpad->chainfunc)
-        g_print ("      Has chainfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-      if (realpad->getfunc)
-        g_print ("      Has getfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
-      if (realpad->formatsfunc != gst_pad_get_formats_default) {
-        g_print ("      Supports seeking/conversion/query formats:\n");
-        print_formats (gst_pad_get_formats (GST_PAD (realpad)));
-      }
-      if (realpad->convertfunc != gst_pad_convert_default)
-        g_print ("      Has custom convertfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->convertfunc));
-      if (realpad->eventfunc != gst_pad_event_default)
-        g_print ("      Has custom eventfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
-      if (realpad->eventmaskfunc != gst_pad_get_event_masks_default) {
-        g_print ("        Provides event masks:\n");
-        print_event_masks (gst_pad_get_event_masks (GST_PAD (realpad)));
-      }
-      if (realpad->queryfunc != gst_pad_query_default)
-        g_print ("      Has custom queryfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));
-      if (realpad->querytypefunc != gst_pad_get_query_types_default) {
-        g_print ("        Provides query types:\n");
-        print_query_types (gst_pad_get_query_types (GST_PAD (realpad)));
-      }
-
-      if (realpad->intlinkfunc != gst_pad_get_internal_links_default)
-        g_print ("      Has custom intconnfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->intlinkfunc));
-
-      if (realpad->bufferallocfunc)
-        g_print ("      Has bufferallocfunc(): %s\n",
-            GST_DEBUG_FUNCPTR_NAME (realpad->bufferallocfunc));
-
-      if (pad->padtemplate)
-        g_print ("    Pad Template: '%s'\n", pad->padtemplate->name_template);
-
-      if (realpad->caps) {
-        g_print ("    Capabilities:\n");
-        print_caps (realpad->caps, "      ");
-      }
-    }
-  } else
+  if (!element->numpads) {
     g_print ("  none\n");
-
-  print_element_properties (element);
-
-  /* Dynamic Parameters block */
-  {
-    GstDParamManager *dpman;
-    GParamSpec **specs;
-    gint x;
-
-    g_print ("\nDynamic Parameters:\n");
-    if ((dpman = gst_dpman_get_manager (element))) {
-      specs = gst_dpman_list_dparam_specs (dpman);
-      for (x = 0; specs[x] != NULL; x++) {
-        g_print ("  %-20.20s: ", g_param_spec_get_name (specs[x]));
-
-        switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
-          case G_TYPE_INT64:
-            g_print ("64 Bit Integer (Default %" G_GINT64_FORMAT ", Range %"
-                G_GINT64_FORMAT " -> %" G_GINT64_FORMAT ")",
-                ((GParamSpecInt64 *) specs[x])->default_value,
-                ((GParamSpecInt64 *) specs[x])->minimum,
-                ((GParamSpecInt64 *) specs[x])->maximum);
-            break;
-          case G_TYPE_INT:
-            g_print ("Integer (Default %d, Range %d -> %d)",
-                ((GParamSpecInt *) specs[x])->default_value,
-                ((GParamSpecInt *) specs[x])->minimum,
-                ((GParamSpecInt *) specs[x])->maximum);
-            break;
-          case G_TYPE_FLOAT:
-            g_print ("Float. Default: %-8.8s %15.7g\n", "",
-                ((GParamSpecFloat *) specs[x])->default_value);
-            g_print ("%-23.23s Range: %15.7g - %15.7g", "",
-                ((GParamSpecFloat *) specs[x])->minimum,
-                ((GParamSpecFloat *) specs[x])->maximum);
-            break;
-          case G_TYPE_DOUBLE:
-            g_print ("Double. Default: %-8.8s %15.7g\n", "",
-                ((GParamSpecDouble *) specs[x])->default_value);
-            g_print ("%-23.23s Range: %15.7g - %15.7g", "",
-                ((GParamSpecDouble *) specs[x])->minimum,
-                ((GParamSpecDouble *) specs[x])->maximum);
-            break;
-          default:
-            g_print ("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
-        }
-        g_print ("\n");
-      }
-      g_free (specs);
-    } else {
-      g_print ("  none\n");
-    }
+    return;
   }
 
+  pads = gst_element_get_pad_list (element);
+  while (pads) {
+    pad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
+    realpad = GST_PAD_REALIZE (pad);
+
+    if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+      g_print ("  SRC: '%s'", gst_pad_get_name (pad));
+    else if (gst_pad_get_direction (pad) == GST_PAD_SINK)
+      g_print ("  SINK: '%s'", gst_pad_get_name (pad));
+    else
+      g_print ("  UNKNOWN!!!: '%s'\n", gst_pad_get_name (pad));
+
+    if (GST_IS_GHOST_PAD (pad))
+      g_print (", ghost of real pad %s:%s\n", GST_DEBUG_PAD_NAME (realpad));
+    else
+      g_print ("\n");
+
+    g_print ("    Implementation:\n");
+    if (realpad->chainfunc)
+      g_print ("      Has chainfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
+    if (realpad->getfunc)
+      g_print ("      Has getfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
+    if (realpad->formatsfunc != gst_pad_get_formats_default) {
+      g_print ("      Supports seeking/conversion/query formats:\n");
+      print_formats (gst_pad_get_formats (GST_PAD (realpad)));
+    }
+    if (realpad->convertfunc != gst_pad_convert_default)
+      g_print ("      Has custom convertfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->convertfunc));
+    if (realpad->eventfunc != gst_pad_event_default)
+      g_print ("      Has custom eventfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
+    if (realpad->eventmaskfunc != gst_pad_get_event_masks_default) {
+      g_print ("        Provides event masks:\n");
+      print_event_masks (gst_pad_get_event_masks (GST_PAD (realpad)));
+    }
+    if (realpad->queryfunc != gst_pad_query_default)
+      g_print ("      Has custom queryfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));
+    if (realpad->querytypefunc != gst_pad_get_query_types_default) {
+      g_print ("        Provides query types:\n");
+      print_query_types (gst_pad_get_query_types (GST_PAD (realpad)));
+    }
+
+    if (realpad->intlinkfunc != gst_pad_get_internal_links_default)
+      g_print ("      Has custom intconnfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->intlinkfunc));
+
+    if (realpad->bufferallocfunc)
+      g_print ("      Has bufferallocfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->bufferallocfunc));
+
+    if (pad->padtemplate)
+      g_print ("    Pad Template: '%s'\n", pad->padtemplate->name_template);
+
+    if (realpad->caps) {
+      g_print ("    Capabilities:\n");
+      print_caps (realpad->caps, "      ");
+    }
+  }
+}
+
+static void
+print_dynamic_parameters_info (GstElement * element)
+{
+  GstDParamManager *dpman;
+  GParamSpec **specs = NULL;
+  gint x;
+
+  if ((dpman = gst_dpman_get_manager (element))) {
+    specs = gst_dpman_list_dparam_specs (dpman);
+  }
+
+  if (specs && specs[0] != NULL) {
+    g_print ("\nDynamic Parameters:\n");
+
+    for (x = 0; specs[x] != NULL; x++) {
+      g_print ("  %-20.20s: ", g_param_spec_get_name (specs[x]));
+
+      switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
+        case G_TYPE_INT64:
+          g_print ("64 Bit Integer (Default %" G_GINT64_FORMAT ", Range %"
+              G_GINT64_FORMAT " -> %" G_GINT64_FORMAT ")",
+              ((GParamSpecInt64 *) specs[x])->default_value,
+              ((GParamSpecInt64 *) specs[x])->minimum,
+              ((GParamSpecInt64 *) specs[x])->maximum);
+          break;
+        case G_TYPE_INT:
+          g_print ("Integer (Default %d, Range %d -> %d)",
+              ((GParamSpecInt *) specs[x])->default_value,
+              ((GParamSpecInt *) specs[x])->minimum,
+              ((GParamSpecInt *) specs[x])->maximum);
+          break;
+        case G_TYPE_FLOAT:
+          g_print ("Float. Default: %-8.8s %15.7g\n", "",
+              ((GParamSpecFloat *) specs[x])->default_value);
+          g_print ("%-23.23s Range: %15.7g - %15.7g", "",
+              ((GParamSpecFloat *) specs[x])->minimum,
+              ((GParamSpecFloat *) specs[x])->maximum);
+          break;
+        case G_TYPE_DOUBLE:
+          g_print ("Double. Default: %-8.8s %15.7g\n", "",
+              ((GParamSpecDouble *) specs[x])->default_value);
+          g_print ("%-23.23s Range: %15.7g - %15.7g", "",
+              ((GParamSpecDouble *) specs[x])->minimum,
+              ((GParamSpecDouble *) specs[x])->maximum);
+          break;
+        default:
+          g_print ("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
+      }
+      g_print ("\n");
+    }
+    g_free (specs);
+  }
+}
+
+#if 0
+static gint
+compare_signal_names (GSignalQuery * a, GSignalQuery * b)
+{
+  return strcmp (a->signal_name, b->signal_name);
+}
+#endif
+
+static void
+print_signal_info (GstElement * element)
+{
   /* Signals/Actions Block */
-  {
-    guint *signals;
-    guint nsignals;
-    gint i, k;
-    GSignalQuery *query;
-    GType type;
+  guint *signals;
+  guint nsignals;
+  gint i = 0, j, k;
+  GSignalQuery *query = NULL;
+  GType type;
+  GSList *found_signals, *l;
 
-    for (k = 0; k < 2; k++) {
-      gint counted = 0;
+  for (k = 0; k < 2; k++) {
+    found_signals = NULL;
+    for (type = G_OBJECT_TYPE (element); type; type = g_type_parent (type)) {
+      if (type == GST_TYPE_ELEMENT || type == GST_TYPE_OBJECT)
+        break;
 
+      if (type == GST_TYPE_BIN && G_OBJECT_TYPE (element) != GST_TYPE_BIN)
+        continue;
+
+      signals = g_signal_list_ids (type, &nsignals);
+      for (i = 0; i < nsignals; i++) {
+        query = g_new0 (GSignalQuery, 1);
+        g_signal_query (signals[i], query);
+
+        if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
+            (k == 1 && (query->signal_flags & G_SIGNAL_ACTION)))
+          found_signals = g_slist_append (found_signals, query);
+      }
+    }
+
+    if (found_signals) {
       if (k == 0)
         g_print ("\nElement Signals:\n");
       else
         g_print ("\nElement Actions:\n");
+    } else {
+      continue;
+    }
 
-      for (type = G_OBJECT_TYPE (element); type; type = g_type_parent (type)) {
-        signals = g_signal_list_ids (type, &nsignals);
+    for (l = found_signals; l; l = l->next) {
+      gchar *indent;
+      int indent_len;
 
-        for (i = 0; i < nsignals; i++) {
-          gint n_params;
-          GType return_type;
-          const GType *param_types;
-          gint j;
+      query = (GSignalQuery *) l->data;
+      indent_len = strlen (query->signal_name) +
+          strlen (g_type_name (query->return_type)) + 24;
 
-          query = g_new0 (GSignalQuery, 1);
-          g_signal_query (signals[i], query);
+      indent = g_new0 (gchar, indent_len + 1);
+      memset (indent, ' ', indent_len);
 
-          if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
-              (k == 1 && (query->signal_flags & G_SIGNAL_ACTION))) {
-            n_params = query->n_params;
-            return_type = query->return_type;
-            param_types = query->param_types;
+      g_print ("  \"%s\" :  %s user_function (%s* object",
+          query->signal_name,
+          g_type_name (query->return_type), g_type_name (type));
 
-            g_print ("  \"%s\" :\t %s user_function (%s* object",
-                query->signal_name, g_type_name (return_type),
-                g_type_name (type));
+      for (j = 0; j < query->n_params; j++)
+        g_print (",\n%s%s arg%d", indent,
+            g_type_name (query->param_types[j]), j);
 
-            for (j = 0; j < n_params; j++) {
-              g_print (",\n    \t\t\t\t%s arg%d", g_type_name (param_types[j]),
-                  j);
-            }
-            if (k == 0)
-              g_print (",\n    \t\t\t\tgpointer user_data);\n");
-            else
-              g_print (");\n");
+      if (k == 0)
+        g_print (",\n%sgpointer user_data);\n", indent);
+      else
+        g_print (");\n");
 
-            counted++;
-          }
+      g_free (indent);
+    }
 
-          g_free (query);
-        }
-      }
-      if (counted == 0)
-        g_print ("  none\n");
+    g_free (query);
+    if (found_signals) {
+      g_slist_foreach (found_signals, (GFunc) g_free, NULL);
+      g_slist_free (found_signals);
     }
   }
+}
 
-  /* for compound elements */
-  if (GST_IS_BIN (element)) {
+static void
+print_children_info (GstElement * element)
+{
+  GList *children;
+
+  if (!GST_IS_BIN (element))
+    return;
+
+  children = (GList *) gst_bin_get_list (GST_BIN (element));
+  if (children)
     g_print ("\nChildren:\n");
-    children = (GList *) gst_bin_get_list (GST_BIN (element));
-    if (!children)
-      g_print ("  none\n");
-    else {
-      while (children) {
-        child = GST_ELEMENT (children->data);
-        children = g_list_next (children);
 
-        g_print ("  %s\n", GST_ELEMENT_NAME (child));
-      }
-    }
+  while (children) {
+    g_print ("  %s\n", GST_ELEMENT_NAME (GST_ELEMENT (children->data)));
+    children = g_list_next (children);
   }
-
-  return 0;
 }
 
 static void
@@ -926,6 +982,42 @@ print_plugin_info (GstPlugin * plugin)
   g_print ("\n");
 }
 
+static int
+print_element_features (const gchar * element_name)
+{
+  GstPluginFeature *feature;
+
+  /* FIXME implement other pretty print function for these */
+  feature = gst_registry_pool_find_feature (element_name,
+      GST_TYPE_SCHEDULER_FACTORY);
+  if (feature) {
+    g_print ("%s: a scheduler\n", element_name);
+    return 0;
+  }
+#ifndef GST_DISABLE_INDEX
+  feature = gst_registry_pool_find_feature (element_name,
+      GST_TYPE_INDEX_FACTORY);
+  if (feature) {
+    g_print ("%s: an index\n", element_name);
+    return 0;
+  }
+#endif
+  feature = gst_registry_pool_find_feature (element_name,
+      GST_TYPE_TYPE_FIND_FACTORY);
+  if (feature) {
+    g_print ("%s: a typefind function\n", element_name);
+    return 0;
+  }
+#ifndef GST_DISABLE_URI
+  feature = gst_registry_pool_find_feature (element_name, GST_TYPE_URI_HANDLER);
+  if (feature) {
+    g_print ("%s: an uri handler\n", element_name);
+    return 0;
+  }
+#endif
+  return 0;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -933,11 +1025,6 @@ main (int argc, char *argv[])
   GstPlugin *plugin;
   gchar *so;
   struct poptOption options[] = {
-    {"gst-inspect-plugin", 'p', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL, 0,
-        N_("Show plugin details"), NULL},
-    {"gst-inspect-scheduler", 's', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-          0,
-        N_("Show scheduler details"), NULL},
     POPT_TABLEEND
   };
 
@@ -953,57 +1040,41 @@ main (int argc, char *argv[])
   /* if no arguments, print out list of elements */
   if (argc == 1) {
     print_element_list ();
-
     /* else we try to get a factory */
   } else {
-    /* first check for help */
-    if (strstr (argv[1], "-help")) {
-      g_print ("Usage: %s\t\t\tList all registered elements\n", argv[0]);
-      g_print ("       %s element-name\tShow element details\n", argv[0]);
-      g_print ("       %s plugin-name[.so]\tShow information about plugin\n",
-          argv[0]);
-      return 0;
-    }
-
     /* only search for a factory if there's not a '.so' */
     if (!strstr (argv[1], ".so")) {
       factory = gst_element_factory_find (argv[1]);
 
       /* if there's a factory, print out the info */
-      if (factory)
-        return print_element_info (factory);
-      else {
-        GstPluginFeature *feature;
+      if (factory) {
+        GstElement *element;
+        gint maxlevel = 0;
 
-        /* FIXME implement other pretty print function for these */
-        feature = gst_registry_pool_find_feature (argv[1],
-            GST_TYPE_SCHEDULER_FACTORY);
-        if (feature) {
-          g_print ("%s: a scheduler\n", argv[1]);
-          return 0;
+        element = gst_element_factory_create (factory, "element");
+        if (!element) {
+          g_print ("couldn't construct element for some reason\n");
+          return -1;
         }
-#ifndef GST_DISABLE_INDEX
-        feature = gst_registry_pool_find_feature (argv[1],
-            GST_TYPE_INDEX_FACTORY);
-        if (feature) {
-          g_print ("%s: an index\n", argv[1]);
-          return 0;
-        }
-#endif
-        feature = gst_registry_pool_find_feature (argv[1],
-            GST_TYPE_TYPE_FIND_FACTORY);
-        if (feature) {
-          g_print ("%s: a typefind function\n", argv[1]);
-          return 0;
-        }
-#ifndef GST_DISABLE_URI
-        feature = gst_registry_pool_find_feature (argv[1],
-            GST_TYPE_URI_HANDLER);
-        if (feature) {
-          g_print ("%s: an uri handler\n", argv[1]);
-          return 0;
-        }
-#endif
+
+        print_factory_details_info (factory);
+
+        print_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
+
+        print_pad_templates_info (factory, element);
+        print_element_flag_info (element);
+        print_implementation_info (element);
+        print_clocking_info (element);
+        print_index_info (element);
+        print_pad_info (element);
+        print_element_properties_info (element);
+        print_dynamic_parameters_info (element);
+        print_signal_info (element);
+        print_children_info (element);
+
+        return 0;
+      } else {
+        return print_element_features (argv[1]);
       }
     } else {
       /* strip the .so */
