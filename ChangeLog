@@ -1,3 +1,14 @@
+2005-01-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/README:
+    quick shell oneliner to find undocumented members
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gstscheduler.sgml:
+	* docs/gst/tmpl/gstthread.sgml:
+    more enumtypes cleanup
+	* gst/gsterror.h:
+    activated documentation comments, now someone needs to document the enums :(
+
 2005-01-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/manual.xml:

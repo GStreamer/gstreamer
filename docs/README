@@ -119,7 +119,10 @@ GTK-DOC NOTES
   - add all documented symbols to gstreamer-sections.txt in the proper section
     (default),<SUBSECTION Standard>,<SUBSECTION Private>
   - document at least the Short_Description in tmpl/.sgml
-  - signals: document them properly in tmpl/.sgml (or better in the c-source)
+  - document symbols where they are definied, so that when one changes the
+    definition, the chaces are good that docs are updated.
+    - document functions, signals in the .c files
+    - document structs, typedefs, enums in the .h files
 
 * checklist:
   - make sure *-sections.txt has a <TITLE> set for each <FILE>
@@ -134,6 +137,9 @@ GTK-DOC NOTES
     grep "_get_type" gstreamer-sections.txt | sort
     with the types in XXX.types to detect entries that
     are maybe missing
+  - gtk docs does not warns about empty member docs!, run
+    find . -name "*.[c,h]" -exec egrep -Hn "^ +\* +@.*: *$" {} \; | wc -l
+    in the project root to find them
 
 * what happens during a gtk-doc build ?
   - headers are scanned based on $(MODULE).types

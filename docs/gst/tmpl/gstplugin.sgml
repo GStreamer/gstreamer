@@ -56,7 +56,7 @@ The plugin loading errors
 
 @GST_PLUGIN_ERROR_MODULE: The plugin could not be loaded
 @GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
-@GST_PLUGIN_ERROR_NAME_MISMATCH: 
+@GST_PLUGIN_ERROR_NAME_MISMATCH: The plugin has already be loaded from a different file
 
 <!-- ##### STRUCT GstPlugin ##### -->
 <para>

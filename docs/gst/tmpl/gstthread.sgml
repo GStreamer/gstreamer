@@ -49,7 +49,7 @@ Flags about the current thread state
 
 @GST_THREAD_STATE_SPINNING: The thread is runnning
 @GST_THREAD_STATE_REAPING: The thread is ending
-@GST_THREAD_STATE_WAITING:
+@GST_THREAD_STATE_WAITING: The thread is waiting to be run again
 @GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
 
 <!-- ##### FUNCTION gst_thread_new ##### -->

@@ -62,6 +62,15 @@ $Id$
       - a slower version with higher precission that can be used for off-line
         rendering
 * new interfaces for audio applications
+  * GST_TYPE_MULTI_VOICE
+    - control interface for elements that support multiple voices (in one output-pad)
+    - API:
+      gulong number_of_voices;
+      void add_voice();
+      void remove_last_voice();
+      gulong get_number_of_voices();
+    - features
+      - plugin will initially have one voice and that one can not be deleted
   * GST_TYPE_MUSIC_GENERATOR
     - add hints so that application can use a element as an instrument
     - API:
