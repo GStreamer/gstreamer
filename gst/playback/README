@@ -57,6 +57,7 @@ playbin:
    TODO
    - reuse, refcounting, cleanup in READY state
    - be smarter about replugging the sinks instead of removing them and readding them.
+   - Do not crap out when the audio device is in use.
 
 
 general
@@ -65,4 +66,5 @@ general
    - playlist support. maybe use a playlist bin that streams the contents of the
      playlist on a pad, interleaved with new_media events. Also add a tuner 
      interface while we're at it.
+   - plug the many memleaks.
    
