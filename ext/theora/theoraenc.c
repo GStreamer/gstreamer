@@ -56,6 +56,8 @@ struct _GstTheoraEnc
   theora_info info;
   theora_comment comment;
 
+  gboolean center;
+
   gint video_bitrate;           /* bitrate target for Theora video */
   gint video_quality;           /* Theora quality selector 0 = low, 63 = high */
   gboolean quick;
@@ -66,7 +68,9 @@ struct _GstTheoraEnc
   gint keyframe_mindistance;
   gint noise_sensitivity;
 
+  gint info_width, info_height;
   gint width, height;
+  gint offset_x, offset_y;
   gdouble fps;
 
   guint packetno;
@@ -79,6 +83,11 @@ struct _GstTheoraEncClass
   GstElementClass parent_class;
 };
 
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_8(x) (((x) + 7) & ~7)
+
+#define THEORA_DEF_CENTER 		TRUE
 #define THEORA_DEF_BITRATE 		0
 #define THEORA_DEF_QUALITY 		16
 #define THEORA_DEF_QUICK		TRUE
@@ -92,6 +101,7 @@ struct _GstTheoraEncClass
 enum
 {
   ARG_0,
+  ARG_CENTER,
   ARG_BITRATE,
   ARG_QUALITY,
   ARG_QUICK,
@@ -160,6 +170,10 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   gobject_class->set_property = theora_enc_set_property;
   gobject_class->get_property = theora_enc_get_property;
 
+  g_object_class_install_property (gobject_class, ARG_CENTER,
+      g_param_spec_boolean ("center", "Center",
+          "Center image when sizes not multiple of 16", THEORA_DEF_CENTER,
+          (GParamFlags) G_PARAM_READWRITE));
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
@@ -167,7 +181,6 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality", "Video quality",
           0, 63, THEORA_DEF_QUALITY, (GParamFlags) G_PARAM_READWRITE));
-
   g_object_class_install_property (gobject_class, ARG_QUICK,
       g_param_spec_boolean ("quick", "Quick", "Quick encoding",
           THEORA_DEF_QUICK, (GParamFlags) G_PARAM_READWRITE));
@@ -235,6 +248,8 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   const GValue *par;
+  GValue fps = { 0 };
+  GValue framerate = { 0 };
 
   if (!gst_caps_is_fixed (caps))
     return GST_PAD_LINK_DELAYED;
@@ -244,24 +259,35 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_double (structure, "framerate", &enc->fps);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
-  /* Theora has a divisible-by-sixteen restriction for the encoded video size */
-  if ((enc->width & 0x0f) != 0 || (enc->height & 0x0f) != 0) {
-    GST_DEBUG ("width and height not a multiple of 16 in caps %" GST_PTR_FORMAT,
-        caps);
-    return GST_PAD_LINK_REFUSED;
-  }
-
   theora_info_init (&enc->info);
-  enc->info.width = enc->width;
-  enc->info.height = enc->height;
+  /* Theora has a divisible-by-sixteen restriction for the encoded video size but
+   * we can define a visible area using the frame_width/frame_height */
+  enc->info_width = enc->info.width = (enc->width + 15) & ~15;
+  enc->info_height = enc->info.height = (enc->height + 15) & ~15;
   enc->info.frame_width = enc->width;
   enc->info.frame_height = enc->height;
-  enc->info.offset_x = 0;
-  enc->info.offset_y = 0;
 
-  /* do some scaling, we really need fractions in structures... */
-  enc->info.fps_numerator = enc->fps * 10000000;
-  enc->info.fps_denominator = 10000000;
+  /* center image if needed */
+  if (enc->center) {
+    /* make sure offset is even, for easier decoding */
+    enc->offset_x = ROUND_UP_2 (enc->info_width - enc->width) / 2;
+    enc->offset_y = ROUND_UP_2 (enc->info_height - enc->height) / 2;
+  } else {
+    enc->offset_x = 0;
+    enc->offset_y = 0;
+  }
+  enc->info.offset_x = enc->offset_x;
+  enc->info.offset_y = enc->offset_y;
+
+  /* convert double to fraction for the framerate */
+  g_value_init (&fps, G_TYPE_DOUBLE);
+  g_value_init (&framerate, GST_TYPE_FRACTION);
+  g_value_set_double (&fps, enc->fps);
+  g_value_transform (&fps, &framerate);
+
+  enc->info.fps_numerator = gst_value_get_fraction_numerator (&framerate);
+  enc->info.fps_denominator = gst_value_get_fraction_denominator (&framerate);
+
   if (par) {
     enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
     enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);
@@ -437,38 +463,103 @@ theora_enc_chain (GstPad * pad, GstData * data)
 
   {
     yuv_buffer yuv;
+    gint res;
     gint y_size;
-    guchar *pixels;
-    gboolean first_packet = TRUE;
+    guint8 *pixels;
 
-    pixels = GST_BUFFER_DATA (buf);
+    yuv.y_width = enc->info_width;
+    yuv.y_height = enc->info_height;
+    yuv.y_stride = enc->info_width;
 
-    yuv.y_width = enc->width;
-    yuv.y_height = enc->height;
-    yuv.y_stride = enc->width;
-
-    yuv.uv_width = enc->width / 2;
-    yuv.uv_height = enc->height / 2;
+    yuv.uv_width = enc->info_width / 2;
+    yuv.uv_height = enc->info_height / 2;
     yuv.uv_stride = yuv.uv_width;
 
-    y_size = enc->width * enc->height;
+    y_size = enc->info_width * enc->info_height;
 
-    yuv.y = pixels;
-    yuv.u = pixels + y_size;
-    yuv.v = pixels + y_size * 5 / 4;
+    if (enc->width == enc->info_width && enc->height == enc->info_height) {
+      /* easy case, no cropping/conversion needed */
+      pixels = GST_BUFFER_DATA (buf);
 
-    theora_encode_YUVin (&enc->state, &yuv);
+      yuv.y = pixels;
+      yuv.u = yuv.y + y_size;
+      yuv.v = yuv.u + y_size / 4;
+    } else {
+      GstBuffer *newbuf;
+      gint i;
+      guint8 *dest_y, *src_y;
+      guint8 *dest_u, *src_u;
+      guint8 *dest_v, *src_v;
+      gint src_y_stride, src_uv_stride;
+      gint dst_y_stride, dst_uv_stride;
+      gint width, height;
+      gint cwidth, cheight;
+
+      /* source width/height */
+      width = enc->width;
+      height = enc->height;
+      /* soucre chroma width/height */
+      cwidth = width / 2;
+      cheight = height / 2;
+
+      /* source strides as defined in videotestsrc */
+      src_y_stride = ROUND_UP_4 (width);
+      src_uv_stride = ROUND_UP_8 (width) / 2;
+
+      /* destination strides from the real picture width */
+      dst_y_stride = enc->info_width;
+      dst_uv_stride = enc->info_width / 2;
+
+      newbuf = gst_pad_alloc_buffer (enc->srcpad,
+          GST_BUFFER_OFFSET_NONE, y_size * 3 / 2);
+
+      yuv.y = GST_BUFFER_DATA (newbuf);
+      yuv.u = yuv.y + y_size;
+      yuv.v = yuv.u + y_size / 4;
+
+      /* center if needed */
+      dest_y = yuv.y + enc->offset_x + enc->offset_y * dst_y_stride;
+      dest_u =
+          yuv.u + (enc->offset_x / 2) + (enc->offset_y / 2) * dst_uv_stride;
+      dest_v =
+          yuv.v + (enc->offset_x / 2) + (enc->offset_y / 2) * dst_uv_stride;
+
+      src_y = GST_BUFFER_DATA (buf);
+      src_u = src_y + src_y_stride * ROUND_UP_2 (height);
+      src_v = src_u + src_uv_stride * ROUND_UP_2 (height) / 2;
+
+      /* copy Y plane */
+      for (i = 0; i < height; i++) {
+        memcpy (dest_y, src_y, width);
+
+        dest_y += dst_y_stride;
+        src_y += src_y_stride;
+      }
+
+      /* copy UV planes */
+      for (i = 0; i < cheight; i++) {
+        memcpy (dest_u, src_u, cwidth);
+        memcpy (dest_v, src_v, cwidth);
+
+        dest_u += dst_uv_stride;
+        dest_v += dst_uv_stride;
+        src_u += src_uv_stride;
+        src_v += src_uv_stride;
+      }
+
+      gst_buffer_unref (buf);
+      buf = newbuf;
+    }
+
+    res = theora_encode_YUVin (&enc->state, &yuv);
     while (theora_encode_packetout (&enc->state, 0, &op)) {
       GstClockTime out_time;
 
-      if (first_packet) {
-        first_packet = FALSE;
-      }
       out_time = theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
       theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
     }
 
-    gst_data_unref (data);
+    gst_buffer_unref (buf);
   }
 }
 
@@ -510,6 +601,9 @@ theora_enc_set_property (GObject * object, guint prop_id,
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   switch (prop_id) {
+    case ARG_CENTER:
+      enc->center = g_value_get_boolean (value);
+      break;
     case ARG_BITRATE:
       enc->video_bitrate = g_value_get_int (value) * 1000;
       enc->video_quality = 0;
@@ -552,6 +646,9 @@ theora_enc_get_property (GObject * object, guint prop_id,
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   switch (prop_id) {
+    case ARG_CENTER:
+      g_value_set_boolean (value, enc->center);
+      break;
     case ARG_BITRATE:
       g_value_set_int (value, enc->video_bitrate / 1000);
       break;
