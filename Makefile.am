@@ -34,8 +34,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-@GST_MAJORMINOR@.pc
 
 EXTRA_DIST = gstreamer.spec.in \
-	     gstreamer-@GST_MAJORMINOR@.pc.in \
-	     gstreamer-@GST_MAJORMINOR@-uninstalled.pc.in \
+	     gstreamer.pc.in \
+	     gstreamer-uninstalled.pc.in \
 	     configure.ac autogen.sh depcomp \
 	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
 	     idiottest.mak common
