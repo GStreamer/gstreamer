@@ -501,7 +501,7 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
 
   if (newcaps) capslist = gst_caps_append(capslist, newcaps);
 
-  gst_pad_try_set_caps(srcpad, newcaps);
+  gst_pad_try_set_caps(srcpad, capslist);
 
   avi_demux->audio_pad[avi_demux->num_audio_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
@@ -553,7 +553,7 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
 
   if (newcaps) capslist = gst_caps_append(capslist, newcaps);
 
-  gst_pad_try_set_caps(srcpad, newcaps);
+  gst_pad_try_set_caps(srcpad, capslist);
 
   avi_demux->video_pad[avi_demux->num_video_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
