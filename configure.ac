@@ -75,11 +75,9 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
   AC_MSG_WARN(building experimental plugins)
-  USE_LIBMIKMOD="yes"
   USE_SMOOTHWAVE="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
-  USE_LIBMIKMOD="no"
   USE_SMOOTHWAVE="no"
 ])
 
@@ -567,13 +565,9 @@ GST_CHECK_FEATURE(SHOUT, [shout plugin], icecastsend, [
 ])
 
 dnl *** sidplay ***
-dnl FIXME : make this work
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plugin], sidplay, [
-  AC_LANG_PUSH(C++)
-  AC_CHECK_HEADER(sidplay/sidtune.h, SIDPLAY_LIBS="-lsidplay", )
-  AC_SUBST(SIDPLAY_LIBS)
-  AC_LANG_POP()
+  GST_PATH_SIDPLAY()
 ])
 
 dnl *** smoothwave ***
@@ -656,7 +650,7 @@ AC_ARG_ENABLE(debug,
   no)  USE_DEBUG=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
 esac], 
-[USE_DEBUG=no]) dnl Default value
+[USE_DEBUG=yes]) dnl Default value
 
 AC_ARG_ENABLE(DEBUG,
 [  --enable-DEBUG               compiles in a large number of debugging messages],
@@ -665,7 +659,7 @@ AC_ARG_ENABLE(DEBUG,
   no)  ENABLE_DEBUG=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-DEBUG) ;;
 esac], 
-[ENABLE_DEBUG=no]) dnl Default value
+[ENABLE_DEBUG=yes]) dnl Default value
 if test x$ENABLE_DEBUG = xyes; then
   AC_DEFINE(GST_DEBUG_ENABLED, 1, [Define if DEBUG statements should be compiled in])
 fi
@@ -888,7 +882,6 @@ AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
-AM_CONDITIONAL(HAVE_SIDPLAY,        test "x$have_sidplay" = "xyes")
 
 
 dnl ############################
