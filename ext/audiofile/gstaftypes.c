@@ -36,7 +36,9 @@ static long gst_aftypes_vf_tell   (AFvirtualfile *vfile);
 static GstCaps* gst_aftypes_type_find(GstBuffer *buf, gpointer private);
 
 static GstTypeDefinition aftype_definitions[] = {
-  { "aftypes audio/audiofile", "audio/audiofile", ".wav .aiff .aif .aifc", gst_aftypes_type_find },
+  { "aftypes audio/x-aiff", "audio/x-aiff", ".aiff .aif .aifc", gst_aftypes_type_find },
+  { "aftypes audio/x-wav", "audio/x-wav", ".wav", gst_aftypes_type_find },
+  { "aftypes audio/basic", "audio/basic", ".au .snd", gst_aftypes_type_find },
   { NULL, NULL, NULL, NULL },
 };
 
@@ -54,6 +56,7 @@ gst_aftypes_type_find(GstBuffer *buf, gpointer private)
   AFvirtualfile *vfile;
   AFfilehandle file;
   int file_format, format_version;
+  gchar *type;
 
   g_print("calling gst_aftypes_type_find\n");
 
@@ -80,8 +83,27 @@ gst_aftypes_type_find(GstBuffer *buf, gpointer private)
       file_format == AF_FILE_RAWDATA){
     return NULL;
   }
+  switch (file_format){
+    case AF_FILE_AIFF:
+    case AF_FILE_AIFFC:
+      type = "audio/x-aiff";
+      break;
+    case AF_FILE_WAVE:
+      type = "audio/x-wav";
+      break;
+    case AF_FILE_NEXTSND:
+      type = "audio/basic";
+      break;
+    default:
+      type=NULL;
+      break;
+  }
+  
+  if (type != NULL){
+    return gst_caps_new ("audiofile_type_find", type, NULL);
+  }
 
-  return gst_caps_new ("audiofile_type_find", "audio/audiofile", NULL);
+  return NULL;
 }
 
 static gboolean

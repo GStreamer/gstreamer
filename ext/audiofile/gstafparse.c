@@ -72,8 +72,18 @@ GST_PAD_TEMPLATE_FACTORY (afparse_sink_factory,
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "afparse_sink",
-    "audio/audiofile",
+    "afparse_sink_aiff",
+    "audio/x-aiff",
+    NULL
+  ),
+  GST_CAPS_NEW (
+    "afparse_sink_wav",
+    "audio/x-wav",
+    NULL
+  ),
+  GST_CAPS_NEW (
+    "afparse_sink_snd",
+    "audio/basic",
     NULL
   )
 )
