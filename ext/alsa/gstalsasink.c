@@ -327,7 +327,7 @@ static void
 gst_alsa_sink_loop (GstElement * element)
 {
   snd_pcm_sframes_t avail, avail2, copied, sample_diff, max_discont;
-  snd_pcm_uframes_t samplestamp, time_sample;
+  snd_pcm_uframes_t samplestamp, expected;
   gint i;
   guint bytes;                  /* per channel */
   GstAlsa *this = GST_ALSA (element);
@@ -371,12 +371,25 @@ sink_restart:
             gst_alsa_timestamp_to_samples (this,
             GST_BUFFER_TIMESTAMP (sink->buf[i]));
         max_discont = gst_alsa_timestamp_to_samples (this, this->max_discont);
-        time_sample =
-            gst_alsa_timestamp_to_samples (this,
-            gst_element_get_time (GST_ELEMENT (this)));
-        snd_pcm_delay (this->handle, &sample_diff);
-        /* actual diff = buffer samplestamp - played - to_play */
-        sample_diff = samplestamp - time_sample - sample_diff;
+        if (snd_pcm_delay (this->handle, &sample_diff) != 0) {
+          sample_diff = 0;
+        }
+        /* optimization: check if we're using our own clock
+         * This optimization is important because if we're using our own clock 
+         * gst_element_get_time calls snd_pcm_delay and the following code assumes
+         * that both calls return the same value. However they can be wildly 
+         * different, since snd_pcm_delay goes deep into the kernel.
+         */
+        if (gst_element_get_clock (GST_ELEMENT (this)) ==
+            GST_CLOCK (GST_ALSA (this)->clock)) {
+          expected = this->transmitted;
+        } else {
+          expected =
+              gst_alsa_timestamp_to_samples (this,
+              gst_element_get_time (GST_ELEMENT (this))) + sample_diff;
+          /* actual diff = buffer samplestamp - played - to_play */
+        }
+        sample_diff = samplestamp - expected;
 
         if ((!GST_BUFFER_TIMESTAMP_IS_VALID (sink->buf[i])) ||
             (-max_discont <= sample_diff && sample_diff <= max_discont)) {
@@ -394,8 +407,8 @@ sink_restart:
               samples * snd_pcm_format_physical_width (this->format->format) /
               8;
           GST_INFO_OBJECT (this,
-              "Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld",
-              size, MIN (bytes, sample_diff), time_sample, samplestamp);
+              "Allocating %d bytes (%ld samples) now to resync: sample %lu expected, but got %ld",
+              size, MIN (bytes, sample_diff), expected, samplestamp);
           sink->data[i] = g_try_malloc (size);
           if (!sink->data[i]) {
             GST_WARNING_OBJECT (this,
@@ -412,8 +425,8 @@ sink_restart:
         } else if (gst_alsa_samples_to_bytes (this,
                 -sample_diff) >= sink->buf[i]->size) {
           GST_INFO_OBJECT (this,
-              "Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld",
-              gst_alsa_bytes_to_samples (this, sink->buf[i]->size), time_sample,
+              "Skipping %lu samples to resync (complete buffer): sample %lu expected, but got %ld",
+              gst_alsa_bytes_to_samples (this, sink->buf[i]->size), expected,
               samplestamp);
           /* this buffer is way behind */
           gst_buffer_unref (sink->buf[i]);
@@ -423,8 +436,8 @@ sink_restart:
           gint difference = gst_alsa_samples_to_bytes (this, -samplestamp);
 
           GST_INFO_OBJECT (this,
-              "Skipping %lu samples to resync: sample %ld expected, but got %ld",
-              (gulong) - sample_diff, time_sample, samplestamp);
+              "Skipping %lu samples to resync: sample %lu expected, but got %ld",
+              (gulong) - sample_diff, expected, samplestamp);
           /* this buffer is only a bit behind */
           sink->size[i] = sink->buf[i]->size - difference;
           sink->data[i] = sink->buf[i]->data + difference;
@@ -514,10 +527,14 @@ gst_alsa_sink_get_time (GstAlsa * this)
 {
   snd_pcm_sframes_t delay;
 
-  if (snd_pcm_delay (this->handle, &delay) == 0 && this->format) {
-    return GST_SECOND * (GstClockTime) (this->transmitted >
-        delay ? this->transmitted - delay : 0) / this->format->rate;
-  } else {
+  if (!this->format)
+    return 0;
+  if (snd_pcm_delay (this->handle, &delay) != 0) {
+    return this->transmitted / this->format->rate;
+  }
+  if (this->transmitted <= delay) {
     return 0;
   }
+
+  return GST_SECOND * (this->transmitted - delay) / this->format->rate;
 }
