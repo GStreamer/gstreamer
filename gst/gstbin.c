@@ -576,8 +576,18 @@ gst_bin_pullsrc_wrapper (int argc,char *argv[])
     while (pads) {
       pad = GST_PAD (pads->data);
       if (pad->direction == GST_PAD_SRC) {
-        if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
-        (pad->pullfunc)(pad);
+        region_struct *region = cothread_get_data (element->threadstate, "region");
+        if (region) {
+	  //gst_src_push_region (GST_SRC (element), region->offset, region->size);
+          if (pad->pullregionfunc == NULL) 
+	    fprintf(stderr,"error, no pullregionfunc in \"%s\"\n", name);
+          (pad->pullregionfunc)(pad, region->offset, region->size);
+	}
+	else {
+          if (pad->pullfunc == NULL) 
+	    fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
+          (pad->pullfunc)(pad);
+	}
       }
       pads = g_list_next(pads);
     }
@@ -732,7 +742,7 @@ gst_bin_create_plan_func (GstBin *bin)
 	}
         if (!pad->pullfunc)
           pad->pullfunc = gst_bin_pullfunc_proxy;
-        if (!pad->pullfunc)
+        if (!pad->pullregionfunc)
           pad->pullregionfunc = gst_bin_pullregionfunc_proxy;
 
         /* we only worry about sink pads */

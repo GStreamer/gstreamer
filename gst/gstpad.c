@@ -246,6 +246,25 @@ gst_pad_set_pull_function (GstPad *pad,
 }
 
 /**
+ * gst_pad_set_pullregion_function:
+ * @pad: the pad to set the pull function for
+ * @pull: the pull function
+ *
+ * Set the given pull function for the pad
+ */
+void 
+gst_pad_set_pullregion_function (GstPad *pad,
+		           GstPadPullRegionFunction pull) 
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  g_print("gstpad: pad setting pullregion function\n");
+
+  pad->pullregionfunc = pull;
+}
+
+/**
  * gst_pad_set_chain_function:
  * @pad: the pad to set the chain function for
  * @chain: the chain function

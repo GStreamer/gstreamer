@@ -26,6 +26,7 @@
 typedef struct _GstCaps GstCaps;
 typedef gpointer GstCapsFactoryEntry;
 typedef GstCapsFactoryEntry GstCapsFactory[];
+typedef GstCapsFactory *GstCapsListFactory[];
 
 typedef enum {
    GST_CAPS_END_ID_NUM = 0,

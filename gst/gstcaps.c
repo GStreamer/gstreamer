@@ -57,6 +57,10 @@ gst_caps_create_entry (GstCapsFactory factory, gint *skipped)
     case GST_CAPS_LIST_ID:
       g_print("gstcaps: list not allowed in list\n");
       break;
+    case GST_CAPS_BOOL_ID:
+      entry->capstype = GST_CAPS_BOOL_ID_NUM;
+      entry->data.bool_data = GPOINTER_TO_INT (factory[i++]);
+      break;
     default:
       g_print("gstcaps: unknown caps id found\n");
       g_free (entry);
@@ -181,7 +185,7 @@ gst_caps_dump_entry_func (GstCapsEntry *entry)
 		      entry->data.int_range_data.max);
       break;
     case GST_CAPS_FOURCC_ID_NUM: 
-      g_print("gstcaps:    fourcc 0x%08x (%4.4s)\n", entry->data.fourcc_data, &entry->data.fourcc_data);
+      g_print("gstcaps:    fourcc 0x%08x (%4.4s)\n", entry->data.fourcc_data, (gchar *)&entry->data.fourcc_data);
       break;
     case GST_CAPS_BOOL_ID_NUM: 
       g_print("gstcaps:    boolean %d\n", entry->data.bool_data);
