@@ -25,7 +25,7 @@ bin_PROGRAMS = 	gstreamer-launch 	\
 		gstreamer-complete
 
 man_MANS = gstreamer-launch.1 gstreamer-register.1 gstreamer-inspect.1 \
-	gstreamer-complete.1 gstreamer-compprep.1
+	gstreamer-complete.1 gstreamer-compprep.1 gstreamer-guilaunch.1
 
 LDADD = $(GST_LIBS)
 CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" $(GLIB_CFLAGS) $(XML_CFLAGS)
