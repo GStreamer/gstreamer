@@ -821,9 +821,15 @@ print_signal_info (GstElement * element)
           query->signal_name,
           g_type_name (query->return_type), g_type_name (type));
 
-      for (j = 0; j < query->n_params; j++)
-        g_print (",\n%s%s%s arg%d", _name, indent,
-            g_type_name (query->param_types[j]), j);
+      for (j = 0; j < query->n_params; j++) {
+        if (G_TYPE_IS_FUNDAMENTAL (query->param_types[j])) {
+          g_print (",\n%s%s%s arg%d", _name, indent,
+              g_type_name (query->param_types[j]), j);
+        } else {
+          g_print (",\n%s%s%s* arg%d", _name, indent,
+              g_type_name (query->param_types[j]), j);
+        }
+      }
 
       if (k == 0)
         g_print (",\n%s%sgpointer user_data);\n", _name, indent);
