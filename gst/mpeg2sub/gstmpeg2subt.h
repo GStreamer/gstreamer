@@ -44,26 +44,59 @@ extern "C" {
 typedef struct _GstMpeg2Subt GstMpeg2Subt;
 typedef struct _GstMpeg2SubtClass GstMpeg2SubtClass;
 
+/* Hold premultimplied colour values */
+typedef struct YUVA_val {
+  guint16 Y;
+  guint16 U;
+  guint16 V;
+  guint16 A;
+} YUVA_val;
+
 struct _GstMpeg2Subt {
   GstElement element;
 
   GstPad *videopad,*subtitlepad,*srcpad;
 
-  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
-
-  gboolean have_title;
+  GstBuffer *partialbuf;	/* Collect together subtitle buffers until we have a full control sequence */
+  GstBuffer *hold_frame;	/* Hold back one frame of video */
+  GstBuffer *still_frame;
 
   guint16 packet_size;
   guint16 data_size;
 
   gint offset[2];
-  guchar color[5];
-  guchar trans[4];
 
-  guint duration;
+  YUVA_val palette_cache[4];
 
-  gint width, height;
+  /* 
+   * Store 1 line width of U, V and A respectively.
+   * Y is composited direct onto the frame.
+   */
+  guint16 *out_buffers[3];
+  guchar subtitle_index[4];
+  guchar menu_index[4];
+  guchar subtitle_alpha[4];
+  guchar menu_alpha[4];
 
+  guint32 current_clut[16];
+
+  gboolean have_title;
+  gboolean forced_display;
+
+  GstClockTime start_display_time;
+  GstClockTime end_display_time;
+  gint left, top, 
+      right, bottom;
+  gint clip_left, clip_top, 
+      clip_right, clip_bottom;
+
+  gint in_width, in_height;
+  gint current_button;
+
+  GstData *pending_video_buffer;
+  GstClockTime next_video_time;
+  GstData *pending_subtitle_buffer;
+  GstClockTime next_subtitle_time;
 };
 
 struct _GstMpeg2SubtClass {

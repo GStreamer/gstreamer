@@ -1,3 +1,60 @@
+2004-04-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_get_type), (gst_a52dec_init),
+	(gst_a52dec_push), (gst_a52dec_handle_event),
+	(gst_a52dec_update_streaminfo), (gst_a52dec_loop),
+	(gst_a52dec_change_state):
+	* ext/a52dec/gsta52dec.h:
+	  Use a debug category, Output timestamps correctly
+	  Emit tag info, Handle events, tell liba52dec about cpu
+	  capabilities so it can use MMX etc.
+	* ext/dv/gstdvdec.c: (gst_dvdec_loop), (gst_dvdec_change_state):
+	  Fix a crasher accessing invalid memory
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_init),
+	(dvdnavsrc_update_highlight), (dvdnavsrc_loop),
+	(dvdnavsrc_get_event_mask), (dvdnav_handle_navigation_event),
+	(dvdnavsrc_event), (dvdnavsrc_get_formats), (dvdnavsrc_convert),
+	(dvdnavsrc_query):
+	  Some support for byte-format seeking.
+	  Small fixes for still frames and menu button overlays
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_get_type),
+	(gst_mpeg2dec_alloc_buffer):
+	  Use a debug category. Adjust the report level of several items to
+	  LOG. Call mpeg2_custom_fbuf to mark our buffers as 'custom buffers'
+	  so it doesn't lose the GstBuffer pointer
+	* gst/debug/Makefile.am:
+	* gst/debug/gstdebug.c: (plugin_init):
+	* gst/debug/gstnavseek.c: (gst_navseek_get_type),
+	(gst_navseek_base_init), (gst_navseek_class_init),
+	(gst_navseek_init), (gst_navseek_seek),
+	(gst_navseek_handle_src_event), (gst_navseek_set_property),
+	(gst_navseek_get_property), (gst_navseek_chain),
+	(gst_navseek_plugin_init):
+	* gst/debug/gstnavseek.h:
+	  Add the navseek debug element for seeking back and forth in a 
+	  video stream using arrow keys.
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_get_type),
+	(gst_mpeg2subt_base_init), (gst_mpeg2subt_class_init),
+	(gst_mpeg2subt_init), (gst_mpeg2subt_finalize),
+	(gst_mpeg2subt_getcaps_video), (gst_mpeg2subt_link_video),
+	(gst_mpeg2subt_handle_video), (gst_mpeg2subt_src_event),
+	(gst_mpeg2subt_parse_header), (gst_get_nibble),
+	(gst_setup_palette), (gst_get_rle_code), (gst_draw_rle_line),
+	(gst_merge_uv_data), (gst_mpeg2subt_merge_title),
+	(gst_update_still_frame), (gst_mpeg2subt_handle_subtitle),
+	(gst_mpeg2subt_handle_dvd_event), (gst_mpeg2subt_loop):
+	* gst/mpeg2sub/gstmpeg2subt.h:
+	  Pretty much a complete rewrite. Now a loopbased element. May still
+	  require work to properly synchronise subtitle buffers.
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_private),
+	(gst_dvd_demux_send_subbuffer):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer):
+	  Don't attempt to create subbuffers of size 0
+	  Reduce a couple of error outputs to warnings.
+	* gst/y4m/gsty4mencode.c: (gst_y4mencode_sinkconnect),
+	(gst_y4mencode_chain):
+	Output the y4m frame header correctly.
+
 2004-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/adder/gstadder.c: (gst_adder_get_type), (gst_adder_loop):
