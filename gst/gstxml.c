@@ -383,7 +383,6 @@ gst_xml_make_element (xmlNodePtr cur, GstObject *parent)
 {
   xmlNodePtr children = cur->xmlChildrenNode;
   GstElement *element;
-  GstObjectClass *oclass;
   guchar *name = NULL;
   guchar *type = NULL;
 
