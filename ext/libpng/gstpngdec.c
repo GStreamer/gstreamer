@@ -47,8 +47,6 @@ static void gst_pngdec_init (GstPngDec * pngdec);
 
 static void gst_pngdec_chain (GstPad * pad, GstData * _data);
 
-static GstCaps *gst_pngdec_src_getcaps (GstPad * pad);
-
 static GstElementClass *parent_class = NULL;
 
 
@@ -93,7 +91,7 @@ static GstStaticPadTemplate gst_pngdec_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_BGR)
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -129,7 +127,6 @@ gst_pngdec_class_init (GstPngDecClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
-
 static GstPadLinkReturn
 gst_pngdec_sinklink (GstPad * pad, const GstCaps * caps)
 {
@@ -158,7 +155,7 @@ gst_pngdec_init (GstPngDec * pngdec)
   gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain);
   gst_pad_set_link_function (pngdec->sinkpad, gst_pngdec_sinklink);
 
-  gst_pad_set_getcaps_function (pngdec->srcpad, gst_pngdec_src_getcaps);
+  gst_pad_use_explicit_caps (pngdec->srcpad);
 
   pngdec->png = NULL;
   pngdec->info = NULL;
@@ -167,71 +164,6 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->width = -1;
   pngdec->height = -1;
   pngdec->fps = -1;
-}
-
-static GstCaps *
-gst_pngdec_src_getcaps (GstPad * pad)
-{
-  GstPngDec *pngdec;
-  GstCaps *caps;
-  gint i;
-  GstPadTemplate *templ;
-  GstCaps *inter;
-
-  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
-  templ = gst_static_pad_template_get (&gst_pngdec_src_pad_template);
-  caps = gst_caps_copy (gst_pad_template_get_caps (templ));
-
-  if (pngdec->color_type != -1) {
-    GstCaps *to_inter = NULL;
-
-    if (pngdec->info && pngdec->info->bit_depth != 8) {
-      GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
-          ("pngdec only supports 8 bit images for now"));
-      return NULL;
-    }
-
-    switch (pngdec->color_type) {
-      case PNG_COLOR_TYPE_RGB:
-        to_inter = gst_caps_new_simple ("video/x-raw-rgb",
-            "bpp", G_TYPE_INT, 24, NULL);
-        break;
-      case PNG_COLOR_TYPE_RGB_ALPHA:
-        to_inter = gst_caps_new_simple ("video/x-raw-rgb",
-            "bpp", G_TYPE_INT, 32, NULL);
-        break;
-      case PNG_COLOR_TYPE_GRAY:
-      case PNG_COLOR_TYPE_PALETTE:
-      case PNG_COLOR_TYPE_GRAY_ALPHA:
-      default:
-        GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
-            ("pngdec does not support grayscale or paletted data yet"));
-        break;
-    }
-    inter = gst_caps_intersect (caps, to_inter);
-    gst_caps_free (caps);
-    gst_caps_free (to_inter);
-    caps = inter;
-  }
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-
-    if (pngdec->width != -1) {
-      gst_structure_set (structure, "width", G_TYPE_INT, pngdec->width, NULL);
-    }
-
-    if (pngdec->height != -1) {
-      gst_structure_set (structure, "height", G_TYPE_INT, pngdec->height, NULL);
-    }
-
-    if (pngdec->fps != -1) {
-      gst_structure_set (structure,
-          "framerate", G_TYPE_DOUBLE, pngdec->fps, NULL);
-    }
-  }
-
-  return caps;
 }
 
 static void
@@ -316,14 +248,53 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
   png_get_IHDR (pngdec->png, pngdec->info, &width, &height,
       &depth, &color, NULL, NULL, NULL);
 
+  if (pngdec->info->bit_depth != 8) {
+    gst_buffer_unref (buf);
+    png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
+    GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("pngdec only supports 8 bit images for now"));
+    return;
+  }
+
   if (pngdec->width != width ||
       pngdec->height != height ||
       pngdec->color_type != pngdec->info->color_type) {
+    GstCaps *caps, *templ, *res;
+    gboolean ret;
+    gint bpp;
+
     pngdec->width = width;
     pngdec->height = height;
     pngdec->color_type = pngdec->info->color_type;
 
-    if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (pngdec->srcpad))) {
+    templ = gst_caps_copy (gst_pad_template_get_caps
+        (gst_static_pad_template_get (&gst_pngdec_src_pad_template)));
+
+    switch (pngdec->color_type) {
+      case PNG_COLOR_TYPE_RGB:
+        bpp = 24;
+        break;
+      case PNG_COLOR_TYPE_RGB_ALPHA:
+        bpp = 32;
+        break;
+      default:
+        GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
+            ("pngdec does not support grayscale or paletted data yet"));
+        return;
+    }
+
+    caps = gst_caps_new_simple ("video/x-raw-rgb",
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "bpp", G_TYPE_INT, bpp, "framerate", G_TYPE_DOUBLE, pngdec->fps, NULL);
+
+    res = gst_caps_intersect (templ, caps);
+    gst_caps_free (caps);
+    gst_caps_free (templ);
+    ret = gst_pad_set_explicit_caps (pngdec->srcpad, res);
+    gst_caps_free (res);
+
+    if (!ret) {
       gst_buffer_unref (buf);
       png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
       GST_ELEMENT_ERROR (pngdec, CORE, NEGOTIATION, (NULL), (NULL));

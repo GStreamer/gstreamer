@@ -1,3 +1,11 @@
+2005-02-08  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_init), (gst_pngdec_chain):
+	* ext/libpng/gstpngenc.c:
+	  Fix byte-order, use proper fixed caps. Fixes #164197.
+
 2005-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
@@ -37,7 +45,7 @@
 	(gst_mpeg_parse_get_rate), (gst_mpeg_parse_convert_src),
 	(gst_mpeg_parse_handle_src_query),
 	(gst_mpeg_parse_handle_src_event):
-          Use audio/x-dvd-lpcm for LPCM output.
+	  Use audio/x-dvd-lpcm for LPCM output.
 	  Add DTS output.
 
 2005-02-08  Gergely Nagy  <algernon@bonehunter.rulez.org>

@@ -76,7 +76,7 @@ static GstStaticPadTemplate pngenc_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_BGR)
     );
 
 static GstElementClass *parent_class = NULL;
