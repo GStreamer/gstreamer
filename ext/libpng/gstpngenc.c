@@ -22,6 +22,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include "gstpngenc.h"
+#include <gst/video/video.h>
 
 #define MAX_HEIGHT		4096
 
@@ -29,11 +30,8 @@
 GstElementDetails gst_pngenc_details = {
   "PNG encoder",
   "Codec/Image",
-  "LGPL",
   "Encode a video frame to a .png image",
-  VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",
-  "(C) 2000 Donald Graft",
 };
 
 
@@ -49,6 +47,7 @@ enum
   ARG_0
 };
 
+static void     gst_pngenc_base_init    (gpointer g_class);
 static void	gst_pngenc_class_init	(GstPngEncClass *klass);
 static void	gst_pngenc_init		(GstPngEnc *pngenc);
 
@@ -74,7 +73,8 @@ GType gst_pngenc_get_type (void)
 
   if (!pngenc_type) {
     static const GTypeInfo pngenc_info = {
-      sizeof (GstPngEncClass), NULL,
+      sizeof (GstPngEncClass),
+      gst_pngenc_base_init,
       NULL,
       (GClassInitFunc) gst_pngenc_class_init,
       NULL,
@@ -88,6 +88,50 @@ GType gst_pngenc_get_type (void)
 		                          &pngenc_info, 0);
   }
   return pngenc_type;
+}
+
+static GstCaps*
+png_caps_factory (void)
+{
+  return gst_caps_new ( "png_png",
+			"video/x-png",
+			gst_props_new (
+			  "width",     GST_PROPS_INT_RANGE (16, 4096),
+			  "height",    GST_PROPS_INT_RANGE (16, 4096),
+			  "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+			  NULL));
+}
+
+
+static GstCaps*
+raw_caps_factory (void)
+{ 
+  return gst_caps_new ( "png_raw", 
+  			"video/x-raw-rgb",
+			 GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24
+	              );
+}
+
+static void
+gst_pngenc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *png_caps;
+  
+  raw_caps = raw_caps_factory ();
+  png_caps = png_caps_factory ();
+
+  pngenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+					       GST_PAD_ALWAYS,
+					       raw_caps, NULL);
+  
+  pngenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+					      GST_PAD_ALWAYS,
+					      png_caps, NULL);
+  
+  gst_element_class_add_pad_template (element_class, pngenc_sink_template);
+  gst_element_class_add_pad_template (element_class, pngenc_src_template);
+  gst_element_class_set_details (element_class, &gst_pngenc_details);
 }
 
 static void
