@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <glib.h>
+#include <gmodule.h>
 #include <gst/gstmemchunk.h>
 
 
@@ -121,6 +122,24 @@ normal_free (gpointer chunk)
 }
 
 /*
+ * Normal (malloc/free) implementation
+ */
+
+void *(*_google_malloc) (gsize) = NULL;
+void (*_google_free) (void *) = NULL;
+static gpointer
+google_alloc (void)
+{
+  return _google_malloc (CHUNK_SIZE);
+}
+
+static void
+google_free (gpointer chunk)
+{
+  _google_free (chunk);
+}
+
+/*
  * The test
  */
 
@@ -179,6 +198,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   gdouble time;
+  GModule *google_lib;
 
   g_thread_init (NULL);
 
@@ -209,6 +229,23 @@ main (gint argc, gchar * argv[])
   g_print ("%fs (%fs/thread) - GstMemChunk\n", time, time / num_threads);
   time = run_test (normal_alloc, normal_free);
   g_print ("%fs (%fs/thread) - g_malloc/g_free\n", time, time / num_threads);
+
+  google_lib = g_module_open ("libtcmalloc.so", G_MODULE_BIND_LOCAL);
+  if (google_lib) {
+    gpointer sym;
+
+    g_module_symbol (google_lib, "malloc", &sym);
+    g_assert (sym);
+    _google_malloc = sym;
+    g_module_symbol (google_lib, "free", &sym);
+    g_assert (sym);
+    _google_free = sym;
+    time = run_test (google_alloc, google_free);
+    g_print ("%fs (%fs/thread) - google malloc/free\n", time,
+        time / num_threads);
+  } else {
+    g_print ("google malloc unavailable: %s\n", g_module_error ());
+  }
 
   /* g_mem_chunk_info (); */
   return 0;
