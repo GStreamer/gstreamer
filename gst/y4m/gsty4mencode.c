@@ -125,8 +125,8 @@ gst_lavencode_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  filter->width = gst_caps_get_int (caps, "width");
-  filter->height = gst_caps_get_int (caps, "height");
+  gst_caps_get_int (caps, "width", &filter->width);
+  gst_caps_get_int (caps, "height", &filter->height);
 
   return GST_PAD_CONNECT_OK;
 }
