@@ -24,8 +24,7 @@ uninstall-local: as-libtool-uninstall-local
 include $(top_srcdir)/common/as-libtool.mak
 
 # regression test
-check_PROGRAMS = dataprotocol-test
+TESTS = dataprotocol-test
 dataprotocol_test_SOURCES = dataprotocol-test.c dataprotocol.c
 dataprotocol_test_CFLAGS = $(GST_LIB_CFLAGS) -I$(top_srcdir)/libs
 dataprotocol_test_LDADD = $(GST_OBJ_LIBS)
-

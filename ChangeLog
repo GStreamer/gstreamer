@@ -1,6 +1,11 @@
 2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/dataprotocol/Makefile.am:
+          add to autotest
+
+2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/dataprotocol/Makefile.am:
 	* libs/gst/dataprotocol/dataprotocol.c:
 	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
 	(gst_dp_packet_from_event), (gst_dp_event_from_packet):
