@@ -1,6 +1,12 @@
 2004-12-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstvalue.c: (gst_value_deserialize_string):
+	  use deprecated g_value_set_string_take_ownership to keep compatible
+	  with glib 2.2
+
+2004-12-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstvalue.c: (gst_value_deserialize_string):
 	  revert last patch, only dom a g_utf8_validate now before accepting
 	  the string - caps parsing strips " from strings so we can't rely on
 	  them
