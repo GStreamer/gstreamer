@@ -1,5 +1,10 @@
 2004-08-11  David Schleef  <ds@schleef.org>
 
+	* gst/mpeg1sys/gstmpeg1systemencode.c: Oops, this was correct
+	before.
+
+2004-08-11  David Schleef  <ds@schleef.org>
+
 	* gst-libs/gst/video/videosink.h: Change copyright block to LGPL.
 
 2004-08-11  David Schleef  <ds@schleef.org>
