@@ -16,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/* Element-Checklist-Version: 5 */
 
 /* 2001/04/03 - Updated parseau to use caps nego
  *              Zaheer Merali <zaheer@grid9.net

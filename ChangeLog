@@ -1,3 +1,12 @@
+2004-01-22  David Schleef  <ds@schleef.org>
+
+	* gst/ac3parse/gstac3parse.c: update to checklist 5
+	* gst/adder/gstadder.c: rewrite negotiation.  update to checklist 5
+	* gst/audioconvert/gstaudioconvert.c: update to checklist 5
+	* gst/audioscale/gstaudioscale.c: same
+	* gst/auparse/gstauparse.c: same
+	* gst/avi/gstavidemux.c: same
+
 2004-01-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_sink_event):
