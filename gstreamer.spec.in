@@ -31,8 +31,10 @@ Prereq:		/sbin/ldconfig
 ### documentation requirements
 BuildRequires:  openjade
 BuildRequires:  python2
-BuildRequires:  docbook-style-dsssl docbook-dtd31-sgml
-BuildRequires:	transfig xfig
+BuildRequires:  docbook-style-dsssl
+BuildRequires:  docbook-utils
+BuildRequires:	transfig
+BuildRequires:  xfig
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -208,6 +210,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Mon Dec 01 2003 Thomas Vander Stichele <thomas at apestaart dot org>
+- changed documentation buildrequires
+
 * Sun Nov 09 2003 Christian Schaller <Uraeus@gnome.org>
 - Fix spec to handle new bytestream library 
 
