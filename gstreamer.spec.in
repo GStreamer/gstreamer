@@ -40,6 +40,13 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
+%package -n gstreamer-visualisation
+Summary: Gstreamer visualisations plugins
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-visualisation
+Various plugins for visual effects to use with audio. Included are Smoothwave, Spectrum and vumeter
 
 %package -n gstreamer-esd
 Summary: Gstreamer plugin for ESD sound output
@@ -210,8 +217,12 @@ Plugin for playback of the SUN au audio format.
 
 
 %changelog
+* Sar Jun 09 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Continue regrouping files with
+- Visualisation plugins bundled out togheter
+
 * Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Split the following plugins into separate RPMS
+- Split the package into separate RPMS, plutting most plugins out by themselves.
 
 * Fri Jun 01 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Updated with change suggestions from Dennis Bjorklund
@@ -284,17 +295,14 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/gst/libmulaw*
 %{prefix}/lib/gst/libpassthrough*
 %{prefix}/lib/gst/librtjpe*
-%{prefix}/lib/gst/libsmooth*
 %{prefix}/lib/gst/libstereo*
 %{prefix}/lib/gst/libsystem_*
 %{prefix}/lib/gst/libgstputbits*
 %{prefix}/lib/gst/libvideoscale*
 %{prefix}/lib/gst/libgstvideoscale*
 %{prefix}/lib/gst/libvol*
-%{prefix}/lib/gst/libvu*
 %{prefix}/lib/gst/libxvideosink*
 %{prefix}/lib/gst/libgstparsewav*
-%{prefix}/lib/gst/libgstspectrum*
 %{prefix}/lib/gst/libgststaticautoplug*
 %{prefix}/lib/gst/libgsttypes*
 %{prefix}/lib/gst/liblavencode*
@@ -311,6 +319,12 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/lib*.so
 %{prefix}/lib/pkgconfig/*
 %{prefix}/share/aclocal/*
+
+%files -n gstreamer-visualisation
+%defattr(-, root, root)
+%{prefix}/lib/gst/libsmooth*
+%{prefix}/lib/gst/libgstspectrum*
+%{prefix}/lib/gst/libvu*
 
 %files -n gstreamer-esd
 %defattr(-, root, root)
