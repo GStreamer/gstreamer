@@ -16,7 +16,7 @@ int main(int argc,char *argv[]) {
 
   // make a null-terminated version of argv
   argvn = g_new0(char *,argc);
-  memcpy(argvn,argv+1,sizeof(char*)*argc);
+  memcpy(argvn,argv+1,sizeof(char*)*(argc-1));
   // join the argvs together
   cmdline = g_strjoinv(" ",argvn);
   // free the null-terminated argv
