@@ -21,6 +21,9 @@
 #include <vorbisenc.h>
 #include <vorbisdec.h>
 
+extern GType vorbisfile_get_type(void);
+
+extern GstElementDetails vorbisfile_details;
 extern GstElementDetails vorbisenc_details;
 extern GstElementDetails vorbisdec_details;
 
@@ -95,7 +98,7 @@ vorbis_type_find (GstBuffer *buf, gpointer private)
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstElementFactory *enc, *dec;
+  GstElementFactory *enc, *dec, *file;
   GstTypeFactory *type;
   GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
 
@@ -144,6 +147,24 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (dec, dec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
+
+  /* create an elementfactory for the vorbisfile element */
+  file = gst_element_factory_new("vorbisfile", vorbisfile_get_type(),
+                               &vorbisfile_details);
+  g_return_val_if_fail(file != NULL, FALSE);
+ 
+  /* register sink pads */
+  gst_element_factory_add_pad_template (file, dec_sink_template);
+  /* register src pads */
+  gst_element_factory_add_pad_template (file, dec_src_template);
+  
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
+
+  /* this filter needs the bytestream package */
+  if (!gst_library_load ("gstbytestream")) {
+    gst_info ("vorbis:: could not load support library: 'gstbytestream'\n");
+    return FALSE;
+  }
 
   type = gst_type_factory_new (&vorbisdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
