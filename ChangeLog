@@ -1,5 +1,11 @@
 2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(mp3_type_frame_length_from_header):
+	  Fix header parsing - stolen from ffmpeg (thank you! :) ).
+
+2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/esd/esdsink.c: (gst_esdsink_init):
 	  Since we have static pad template caps, we don't need to negotiate;
 	  either the core errors out or we know the format.
