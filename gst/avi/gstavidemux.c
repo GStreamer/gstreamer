@@ -385,6 +385,20 @@ gst_avi_demux_dmlh (GstAviDemux *avi_demux)
   got_bytes = gst_bytestream_peek_bytes (bs, (guint8 **)&dmlh, sizeof (gst_riff_dmlh));
 }
 
+static void
+gst_avi_demux_strn (GstAviDemux *avi_demux, gint len)
+{
+  gchar *name;
+  GstByteStream  *bs = avi_demux->bs;
+  guint32 got_bytes;
+
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8 **)&name, len);
+  if (got_bytes != len)
+    return;
+
+  GST_DEBUG (0, "Stream name: \"%s\"", name);
+}
+
 static void 
 gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 {
@@ -1141,6 +1155,7 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
   gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
 
   type = event? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+  GST_DEBUG (0, "avidemux: event %p %d", event, type); 
 
   switch (type) {
     case GST_EVENT_EOS:
@@ -1315,6 +1330,9 @@ gst_avi_demux_loop (GstElement *element)
 	      break;
           }
           break;
+        case GST_RIFF_TAG_strn:
+	  gst_avi_demux_strn (avi_demux, chunk.size);
+          break;
         case GST_RIFF_TAG_dmlh:
           gst_avi_demux_dmlh (avi_demux);
           break;
@@ -1394,8 +1412,20 @@ gst_avi_demux_loop (GstElement *element)
       break;
   }
 
-  if (flush)
-    gst_bytestream_flush (avi_demux->bs, flush);
+  while (flush) {
+    gboolean res;
+    
+    res = gst_bytestream_flush (avi_demux->bs, flush);
+    if (!res) {
+      guint32 remaining;
+      GstEvent *event;
+
+      gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
+      gst_event_unref (event);
+    }
+    else
+      break;
+  }
 }
 
 static GstElementStateReturn
