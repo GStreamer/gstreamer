@@ -221,7 +221,7 @@ gst_tcpclientsrc_get (GstPad * pad)
       if (ret <= 0) {
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
             ("select failed: %s", g_strerror (errno)));
-        return NULL;
+        return GST_DATA (gst_event_new (GST_EVENT_EOS));
       }
 
       /* ask how much is available for reading on the socket */
@@ -229,7 +229,7 @@ gst_tcpclientsrc_get (GstPad * pad)
       if (ret < 0) {
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
             ("ioctl failed: %s", g_strerror (errno)));
-        return NULL;
+        return GST_DATA (gst_event_new (GST_EVENT_EOS));
       }
       GST_LOG_OBJECT (src, "ioctl says %d bytes available", readsize);
       buf = gst_buffer_new_and_alloc (readsize);
@@ -242,7 +242,7 @@ gst_tcpclientsrc_get (GstPad * pad)
         if (!(caps = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->sock_fd))) {
           GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
               ("Could not read caps through GDP"));
-          return NULL;
+          return GST_DATA (gst_event_new (GST_EVENT_EOS));
         }
         src->caps_received = TRUE;
         string = gst_caps_to_string (caps);
@@ -251,7 +251,7 @@ gst_tcpclientsrc_get (GstPad * pad)
 
         if (!gst_pad_try_set_caps (pad, caps)) {
           g_warning ("Could not set caps");
-          return NULL;
+          return GST_DATA (gst_event_new (GST_EVENT_EOS));
         }
       }
 
@@ -259,7 +259,7 @@ gst_tcpclientsrc_get (GstPad * pad)
       if (!(data = gst_tcp_gdp_read_header (GST_ELEMENT (src), src->sock_fd))) {
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
             ("Could not read data header through GDP"));
-        return NULL;
+        return GST_DATA (gst_event_new (GST_EVENT_EOS));
       }
       if (GST_IS_EVENT (data))
         return data;
@@ -280,7 +280,7 @@ gst_tcpclientsrc_get (GstPad * pad)
   if (ret < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     gst_buffer_unref (buf);
-    return NULL;
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
 
   /* if we read 0 bytes, and we're blocking, we hit eos */
@@ -334,7 +334,6 @@ gst_tcpclientsrc_get (GstPad * pad)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
   return GST_DATA (buf);
 }
-
 
 static void
 gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
