@@ -1340,7 +1340,7 @@ AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
   no) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
   *) GST_PACKAGE="${withval}" ;;
 esac], 
-[GST_PACKAGE="Gstreamer"]) dnl Default value
+[GST_PACKAGE="GStreamer"]) dnl Default value
 AC_MSG_NOTICE(Using $GST_PACKAGE as package name)
 AC_DEFINE_UNQUOTED(GST_PACKAGE, "$GST_PACKAGE", [package name in plugins])
 dnl package origin URL
