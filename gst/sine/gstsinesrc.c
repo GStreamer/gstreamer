@@ -72,6 +72,7 @@ GST_STATIC_PAD_TEMPLATE (
 static void 	    gst_sinesrc_class_init          (GstSineSrcClass *klass);
 static void 	    gst_sinesrc_base_init           (GstSineSrcClass *klass);
 static void 	    gst_sinesrc_init	            (GstSineSrc *src);
+static void	    gst_sinesrc_dispose		    (GObject *object);
 static void 	    gst_sinesrc_set_property        (GObject *object, 
 		                                     guint prop_id, 
 					             const GValue *value, 
@@ -161,6 +162,7 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
                                      
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
+  gobject_class->dispose = gst_sinesrc_dispose;
 
   gstelement_class->change_state = gst_sinesrc_change_state;
 }
@@ -213,6 +215,17 @@ gst_sinesrc_init (GstSineSrc *src)
   gst_sinesrc_populate_sinetable(src);
   gst_sinesrc_update_table_inc(src);
 
+}
+
+static void
+gst_sinesrc_dispose (GObject *object)
+{
+  GstSineSrc *sinesrc = GST_SINESRC (object);
+
+  g_free (sinesrc->table_data);
+  sinesrc->table_data = NULL;
+  
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static GstCaps *
