@@ -582,7 +582,7 @@ GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* \$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* $GST_LIBS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"

@@ -5,6 +5,7 @@ tests_pass = \
 	app_fixate \
 	intersection \
 	compatibility \
+	deserialize \
 	normalisation \
 	union \
 	string-conversions \
@@ -17,6 +18,7 @@ tests_pass = \
 	audioscale \
 	filtercaps \
 	eratosthenes \
+	renegotiate \
 	subtract \
 	sets \
 	simplify
@@ -33,6 +35,8 @@ intersection_LDADD = $(GST_LIBS)
 intersection_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 compatibility_LDADD = $(GST_LIBS) 
 compatibility_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
+deserialize_LDADD = $(GST_LIBS) 
+deserialize_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 normalisation_LDADD = $(GST_LIBS) 
 normalisation_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 union_LDADD = $(GST_LIBS) 
@@ -53,4 +57,6 @@ sets_LDADD = $(GST_LIBS)
 sets_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 simplify_LDADD = $(GST_LIBS) 
 simplify_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
+renegotiate_LDADD = $(GST_LIBS) 
+renegotiate_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 

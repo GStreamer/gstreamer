@@ -1,3 +1,12 @@
+2004-05-03  David Schleef  <ds@schleef.org>
+
+	* configure.ac:  Link plugins with libgstreamer and dependent
+	  libraries
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/caps_strings:
+	* testsuite/caps/deserialize.c: (main): Add a little test to slog
+	  through a file of caps strings and test each one
+
 2004-05-04  Benjamin Otte  <otte@gnome.org>
 
 	* libs/gst/bytestream/Makefile.am:
