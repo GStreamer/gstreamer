@@ -170,6 +170,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_IS_EVENT (buf)) {
     gst_pad_event_default (ident->sink, GST_EVENT (buf));
+    return;
   }
 
   if ((ident->src != NULL) && (GST_PAD_PEER (ident->src) != NULL)) {
