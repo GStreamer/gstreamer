@@ -1,8 +1,0 @@
-This is a collection of test programs of all sorts, ranging from the first
-version of GiST to the simple hard-disk recorder used in the Oct
-31, 1999 inaugural run of GStreamer in a 'real' environment.  Not all are
-included, because most are obsolete.  All the stuff you see in the first
-line of the Makefile.am (commented out) is both old and broken.
-
-One of these days test/ will turn back into a real test-suite for
-GStreamer, but for now it's my sandbox.
