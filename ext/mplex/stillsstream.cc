@@ -25,6 +25,7 @@
 
 #include "stillsstream.hh"
 #include "outputstream.hh"
+#include <cassert>
 
 void
 StillsStream::Init ()

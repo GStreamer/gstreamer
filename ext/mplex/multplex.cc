@@ -10,6 +10,7 @@
 
 #include "videostrm.hh"
 #include "outputstream.hh"
+#include <cassert>
 
 
 /******************************************************************* 

@@ -28,6 +28,7 @@
 
 #include "audiostrm.hh"
 #include "outputstream.hh"
+#include <cassert>
 
 
 

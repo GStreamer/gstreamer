@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include "systems.hh"
 #include "mplexconsts.hh"
+#include <cassert>
 
 uint8_t dummy_buf[8000];
 void
