@@ -343,7 +343,7 @@ static void gst_editor_element_realize(GstEditorElement *element) {
   /* create the title */
   element->title = gnome_canvas_item_new(element->group,
     gnome_canvas_text_get_type(),
-    "text",gst_element_get_name(GST_OBJECT(element->element)),
+    "text",gst_element_get_name(GST_ELEMENT(element->element)),
     "x",x1+1.0,"y",y1+1.0,"anchor",GTK_ANCHOR_NORTH_WEST,
     "font_gdk",gtk_widget_get_default_style()->font,
     NULL);
@@ -864,6 +864,7 @@ static void gst_editor_element_state_change(GstElement *element,
 
 //  g_print("gst_editor_element_state_change got state 0x%08x\n",state);
   // if it's an unset
+#ifdef OLD
   if (state & GST_STATE_MAX) {
     state = ~state;
     for (id=0;id<(sizeof(state)*8)-1;id++) {
@@ -882,6 +883,7 @@ static void gst_editor_element_state_change(GstElement *element,
       state /= 2;
     }
   }
+#endif
   gst_editor_element_set_state(editorelement,id,FALSE);
 }
 

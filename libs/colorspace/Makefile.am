@@ -4,7 +4,7 @@ filter_LTLIBRARIES = libgstcolorspace.la
 
 libgstcolorspace_la_SOURCES = gstcolorspace.c rgb2rgb.c yuv2rgb.c
 
-libgstcolorspaceincludedir = $(includedir)/gst/libs/gstcolorspace.h
+libgstcolorspaceincludedir = $(includedir)/gst/libs/gstcolorspace
 libgstcolorspaceinclude_HEADERS = gstcolorspace.h
 
 noinst_HEADERS = yuv2rgb.h

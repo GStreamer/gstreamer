@@ -8,6 +8,8 @@
 <!ENTITY BINS SYSTEM "bins.sgml">
 <!ENTITY BUFFERS SYSTEM "buffers.sgml">
 <!ENTITY STATES SYSTEM "states.sgml">
+
+<!ENTITY HELLOWORLD SYSTEM "helloworld.sgml">
 ]>
 
 
@@ -96,18 +98,14 @@
     <partintro>
       <para>
         With the basic concepts out of the way, you're ready to start building a
-        full-scale GStreamer application. This part of the book walks you through the
-        creation of a generic application skeleton: a source tree using
-        <application>automake</application> and
-        <application>autoconf</application>, argument parsing, session
-        management, internationalization, the main window, dialogs, toolbars, and
-        menubars. Many examples in Part 2 come from a simple application called
-        "GnomeHello"; the source code for this application is included in the
-        back of the book.  </para> <para> Of course the "meat" of the application
-        is up to you; but in Part 3 of the book we'll cover a range of library
-        features you can use to develop it.  
+        full-scale GStreamer application. 
+      </para>
+      <para>
+        We assume the reader is familiar with GTK+/GNOME programming.
       </para>
     </partintro>
+
+      &HELLOWORLD;
 
   </part>
 

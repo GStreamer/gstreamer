@@ -6,6 +6,9 @@ INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
 
 bin_PROGRAMS = gstplay
 
+gladedir = $(datadir)/gstplay
+glade_DATA = gstplay.glade play.xpm stop.xpm pause.xpm
+
 gstplay_SOURCES = \
 	gstplay.c \
 	mpeg1.c mpeg2.c avi.c\
@@ -14,9 +17,9 @@ gstplay_SOURCES = \
 
 noinst_HEADERS = codecs.h
 
-CFLAGS += -O2 -Wall
+CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
-gstplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome)
+gstplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) 
 gstplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome)
 
 gstplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \

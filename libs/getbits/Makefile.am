@@ -4,7 +4,7 @@ filter_LTLIBRARIES = libgstgetbits.la
 
 libgstgetbits_la_SOURCES = gstgetbits.c gstgetbits_inl.h 
 
-libgstgetbitsincludedir = $(includedir)/gst/libs/gstgetbits.h
+libgstgetbitsincludedir = $(includedir)/gst/libs/gstgetbits
 libgstgetbitsinclude_HEADERS = gstgetbits.h
 
 noinst_HEADERS = gstgetbits.h gstgetbits_inl.h

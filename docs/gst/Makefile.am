@@ -14,7 +14,7 @@ LDFLAGS = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la $(top_srcdir)/gst
 
 EXTRA_DIST=gstreamer.types.in
 
-HTML_DIR=$(datadir)/gstreamer/gst/html
+HTML_DIR=$(datadir)/gstreamer/html
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 

@@ -105,7 +105,7 @@ int main(int argc,char *argv[]) {
 
   xmlSaveFile("launch.xml",gst_xml_write(pipeline));
 
-  gst_element_set_state(pipeline,GST_STATE_RUNNING);
+  gst_element_set_state(pipeline,GST_STATE_READY);
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
 
   if (t)

@@ -19,6 +19,8 @@
 
 #include <gst/gstpipeline.h>
 
+#include "config.h"
+
 GstElementDetails gst_pipeline_details = {
   "Pipeline object",
   "Bin",

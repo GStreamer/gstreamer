@@ -324,18 +324,9 @@ GstElementStateReturn gst_element_change_state(GstElement *element) {
 //  g_print("gst_element_change_state(\"%s\",%d)\n",
 //          element->name,state);
 
-#ifdef OLDSTATE
-  /* deal with the inverted state */
-  //g_print("changing element state, was %08lx\n",GST_STATE(element));
-  if (state & GST_STATE_MAX)
-    GST_STATE_UNSET(element,~state);
-  else
-    GST_STATE_SET(element,state);
-//  g_print(", is now %08lx\n",GST_STATE(element));
-#else
   GST_STATE(element) = GST_STATE_PENDING(element);
   GST_STATE_PENDING(element) = GST_STATE_NONE_PENDING;
-#endif
+
   gtk_signal_emit(GTK_OBJECT(element),gst_element_signals[STATE_CHANGE],
                   GST_STATE(element));
   return TRUE;

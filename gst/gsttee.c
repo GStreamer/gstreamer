@@ -19,6 +19,7 @@
 
 #include <gsttee.h>
 
+#include "config.h"
 
 GstElementDetails gst_tee_details = {
   "Tee pipe fitting",

@@ -20,6 +20,8 @@
 #include <gst/gst.h>
 #include <gst/gstthread.h>
 
+#include "config.h"
+
 GstElementDetails gst_thread_details = {
   "Threaded container",
   "Bin",
@@ -162,60 +164,6 @@ GstElement *gst_thread_new(guchar *name) {
 }
 
 
-#ifdef OLD_STUFF
-static void gst_thread_prepare(GstThread *thread) {
-  GList *elements;
-  GstElement *element;
-  GList *pads;
-  GstPad *pad, *peer;
-  GstElement *outside;
-
-  GST_BIN(thread)->numentries = 0;
-
-  /* first we need to find all the entry points into the thread */
-  elements = GST_BIN(thread)->children;
-  while (elements) {
-    element = GST_ELEMENT(elements->data);
-    gst_info("gstthread: element \"%s\" found in thread\n",
-             gst_element_get_name(GST_ELEMENT(element)));
-    if (GST_IS_SRC(element)) {
-      gst_info("gstthread: element \"%s\" is a source entry point for the thread\n",
-               gst_element_get_name(GST_ELEMENT(element)));
-      GST_BIN(thread)->entries = g_list_prepend(GST_BIN(thread)->entries,element);
-      GST_BIN(thread)->numentries++;
-    } else {
-      /* go through the list of pads to see if there's a Connection */
-      pads = gst_element_get_pad_list(element);
-      while (pads) {
-        pad = GST_PAD(pads->data);
-        /* we only worry about sink pads */
-        if (gst_pad_get_direction(pad) == GST_PAD_SINK) {
-          /* get the pad's peer */
-          peer = gst_pad_get_peer(pad);
-          if (!peer) break;
-          /* get the parent of the peer of the pad */
-          outside = GST_ELEMENT(gst_pad_get_parent(peer));
-          if (!outside) break;
-          /* if it's a connection and it's not ours... */
-          if (GST_IS_CONNECTION(outside) &&
-              (gst_object_get_parent(GST_OBJECT(outside)) != GST_OBJECT(thread))) {
-            gst_info("gstthread: element \"%s\" is the external source Connection \
-for internal element \"%s\"\n",
-                    gst_element_get_name(GST_ELEMENT(outside)),
-                    gst_element_get_name(GST_ELEMENT(element)));
-            GST_BIN(thread)->entries = g_list_prepend(GST_BIN(thread)->entries,outside);
-            GST_BIN(thread)->numentries++;
-          }
-        }
-        pads = g_list_next(pads);
-      }
-    }
-    elements = g_list_next(elements);
-  }
-  gst_info("gstthread: have %d entries into thread\n",GST_BIN(thread)->numentries);
-}
-#endif
-
 
 static GstElementStateReturn gst_thread_change_state(GstElement *element) {
   GstThread *thread;
@@ -261,18 +209,6 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
       }
       return GST_STATE_SUCCESS;
       break;
-#if OLDSTATE
-    case ~GST_STATE_RUNNING:
-      // stop, reap, and join the thread
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
-      GST_FLAG_SET(thread,GST_THREAD_STATE_REAPING);
-      gst_thread_signal_thread(thread);
-      pthread_join(thread->thread_id,0);
-      // tear down the internal state
-      gst_info("gstthread: tearing down thread's iteration state\n");
-      // FIXME do stuff
-      break;
-#endif
     case GST_STATE_PLAYING:
       if (!stateset) return FALSE;
       gst_info("gstthread: starting thread \"%s\"\n",
@@ -323,41 +259,6 @@ void *gst_thread_main_loop(void *arg) {
 		  gst_element_get_name(GST_ELEMENT(thread)));
   return NULL;
 }
-
-#ifdef OLD_STUFF
-/**
- * gst_thread_iterate:
- * @thread: the thread to iterate
- *
- * do one iteration
- */
-void gst_thread_iterate(GstThread *thread) {
-  GList *entries;
-  GstElement *entry;
-
-  g_return_if_fail(thread != NULL);
-  g_return_if_fail(GST_IS_THREAD(thread));
-//  g_return_if_fail(GST_FLAG_IS_SET(thread,GST_STATE_RUNNING));
-  g_return_if_fail(thread->numentries > 0);
-
-  entries = thread->entries;
-
-  DEBUG("gstthread: %s: thread iterate\n", gst_element_get_name(GST_ELEMENT(thread)));
-
-  while (entries) {
-    entry = GST_ELEMENT(entries->data);
-    if (GST_IS_SRC(entry))
-      gst_src_push(GST_SRC(entry));
-    else if (GST_IS_CONNECTION(entry))
-      gst_connection_push(GST_CONNECTION(entry));
-    else
-      g_assert_not_reached();
-    entries = g_list_next(entries);
-  }
-  DEBUG("gstthread: %s: thread iterate done\n", gst_element_get_name(GST_ELEMENT(thread)));
-  //g_print(",");
-}
-#endif
 
 static void gst_thread_signal_thread(GstThread *thread) {
   g_mutex_lock(thread->lock);

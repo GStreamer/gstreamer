@@ -26,6 +26,8 @@
 
 #include "gsteditor.h"
 
+#include "config.h"
+
 extern gboolean _gst_plugin_spew;
 
 int main(int argc,char *argv[]) {

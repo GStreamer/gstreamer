@@ -4,7 +4,8 @@ filter_LTLIBRARIES = libgstriff.la
 
 libgstriff_la_SOURCES = gstriffparse.c gstriffencode.c gstriffutil.c
 
-noinst_HEADERS = gstriff.h
+libgstriffincludedir = $(includedir)/gst/libs/gstriff
+libgstriffinclude_HEADERS = gstriff.h
 
 CFLAGS += -Wall -O2  -fomit-frame-pointer -funroll-all-loops -finline-functions -ffast-math
 

@@ -35,25 +35,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#ifdef OLDSTATES
-typedef enum {
-  GST_STATE_COMPLETE    = (1 << 0),
-  GST_STATE_RUNNING     = (1 << 1),
-  GST_STATE_DISCOVERY   = (1 << 2),
-  GST_STATE_PREROLL     = (1 << 3),
-
-  GST_STATE_PLAYING	= (1 << 4),
-  GST_STATE_PAUSED	= (1 << 5),
-
-  GST_STATE_MAX		= (1 << 15),
-} GstElementState;
-
-typedef enum {
-  GST_STATE_FAILURE	= 0,
-  GST_STATE_SUCCESS	= 1,
-  GST_STATE_ASYNC	= 2,
-};
-#else
 typedef enum {
   GST_STATE_NONE_PENDING	= -1,
   GST_STATE_NULL	= 0,
@@ -67,7 +48,6 @@ typedef enum {
   GST_STATE_SUCCESS	= 1,
   GST_STATE_ASYNC	= 2,
 } GstElementStateReturn;
-#endif
 
 static inline char *_gst_print_statename(int state) {
   switch (state) {
@@ -83,21 +63,6 @@ static inline char *_gst_print_statename(int state) {
 
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
-
-#ifdef OLDSTATE
-#define GST_STATE_IS_SET(obj,flag)	(GST_STATE (obj) & (flag))
-#define GST_STATE_SET(obj,flag) \
-G_STMT_START{ (GST_STATE (obj) |= (flag)); \
-gst_info("GstElement: set '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
-_gst_print_statename(flag)); \
-}G_STMT_END
-#define GST_STATE_UNSET(obj,flag) \
-G_STMT_START{ (GST_STATE (obj) &= ~(flag)); \
-gst_info("GstElement: unset '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
-_gst_print_statename(flag)); \
-}G_STMT_END
-#endif
-
 
 #define GST_TYPE_ELEMENT \
   (gst_element_get_type())

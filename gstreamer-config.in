@@ -43,7 +43,7 @@ while test $# -gt 0; do
       ;;
     --cflags)
       if test $prefix -ef @builddir@ ; then
-        includes=-I@builddir@
+        includes=-I@builddir@ 
       elif test @includedir@ != /usr/include ; then
         includes=-I@includedir@
       fi
@@ -51,10 +51,10 @@ while test $# -gt 0; do
       ;;
     --libs)
       if test $prefix -ef @builddir@ ; then
-        echo @builddir@/lib@PACKAGE@.la
+        echo @builddir@/libgst.la
       else
         libdirs=-L@libdir@
-        echo $libdirs -l@PACKAGE@
+        echo $libdirs -lgst
       fi
       ;;
     *)

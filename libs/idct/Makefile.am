@@ -4,6 +4,9 @@ filter_LTLIBRARIES = libgstidct.la
 
 libgstidct_la_SOURCES = fastintidct.c floatidct.c gstidct.c intidct.c mmxidct.S mmx32idct.c
 
+libgstidctincludedir = $(includedir)/gst/libs/gstidct
+libgstidctinclude_HEADERS = gstidct.h
+
 bin_PROGRAMS = ieeetest
 
 ieeetest_SOURCES = ieeetest.c
@@ -11,7 +14,7 @@ ieeetest_LDADD = libgstidct.la $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst
 ieeetest_CFLAGS = $(shell gnome-config --cflags gnomeui) -g -Wall
 ieeetest_LDFLAGS = $(shell gnome-config --libs gnomeui) 
 
-noinst_HEADERS = gstidct.h
+noinst_HEADERS = dct.h
 
 CFLAGS += -Wall -O2 -funroll-all-loops -finline-functions -ffast-math
 

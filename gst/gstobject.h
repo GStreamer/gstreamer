@@ -24,7 +24,9 @@
 
 #include <gtk/gtk.h>
 #include <gst/gsttrace.h>
-#include "config.h"
+//#include "config.h"
+
+#undef HAVE_ATOMIC_H
 
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>

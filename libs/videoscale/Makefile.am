@@ -4,7 +4,7 @@ filter_LTLIBRARIES = libgstvideoscale.la
 
 libgstvideoscale_la_SOURCES = gstvideoscale.c 
 
-libgstvideoscaleincludedir = $(includedir)/gst/libs/gstvideoscale.h
+libgstvideoscaleincludedir = $(includedir)/gst/libs/gstvideoscale
 libgstvideoscaleinclude_HEADERS = gstvideoscale.h
 
 noinst_HEADERS = yuv2rgb.h

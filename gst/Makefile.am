@@ -60,9 +60,6 @@ libgstinclude_HEADERS =	\
 	cothreads.h
 
 CFLAGS += -O2 -Wall
-#if USE_DEBUG
-CFLAGS += -g
-#endif
 
 libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
 libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

@@ -26,6 +26,7 @@
 
 #include <gst/gstplugin.h>
 
+#include "config.h"
 
 /* list of loaded modules and its sequence number */
 GList *_gst_modules;

@@ -209,20 +209,6 @@ void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
     //g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
   }
 
-#ifdef OLD_STUFF
-  // if the chain function exists for the pad, call it directly
-  if (pad->chain)
-    (pad->chain)(pad->peer,buffer);
-  // else we're likely going to have to cothread it
-  else {
-    pad->peer->bufpen = buffer;
-    g_print("GstPad: would switch to a coroutine here...\n");
-    if (!GST_IS_ELEMENT(pad->peer->parent))
-      g_print("GstPad: eek, this isn't an element!\n");
-    if (GST_ELEMENT(pad->peer->parent)->threadstate != NULL)
-      cothread_switch(GST_ELEMENT(pad->peer->parent)->threadstate);
-  }
-#endif
 }
 
 /* gst_pad_pull() is given the sink pad */
@@ -259,31 +245,6 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 //    g_print("-- gst_pad_pull(): uh, nothing in pen and no handler\n");
     return NULL;
   }
-
-#ifdef OLD_STUFF
-  // if the pull function exists for the pad, call it directly
-  if (pad->pull) {
-    return (pad->pull)(pad->peer);
-  // else we're likely going to have to cothread it
-  } else if (pad->bufpen == NULL) {
-    g_print("no buffer available, will have to do something about it\n");
-    peerparent = GST_ELEMENT(pad->peer->parent);
-    // if they're a cothread too, we can just switch to them
-    if (peerparent->threadstate != NULL) {
-      cothread_switch(peerparent->threadstate);
-    // otherwise we have to switch to the main thread
-    } else {
-      state = cothread_main(GST_ELEMENT(pad->parent)->threadstate->ctx);
-      g_print("GstPad: switching to supposed 0th thread at %p\n",state);
-      cothread_switch(state);
-    }
-  } else {
-    g_print("GstPad: buffer available, pulling\n");
-    buf = pad->bufpen;
-    pad->bufpen = NULL;
-    return buf;
-  }
-#endif
 
   return NULL;
 }

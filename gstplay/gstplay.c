@@ -3,9 +3,7 @@
  * Glade will not overwrite this file.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 //#define DEBUG_ENABLED
 
@@ -83,7 +81,8 @@ static void frame_displayed(GstSrc *asrc)
 
 gboolean idle_func(gpointer data) {
   DEBUG("idle start %s\n",MUTEX_STATUS());
-  gst_src_push(GST_SRC(data));
+  //gst_src_push(GST_SRC(data));
+  gst_bin_iterate(GST_BIN(data));
   DEBUG("idle stop %s\n",MUTEX_STATUS());
   return TRUE;
 }
@@ -170,20 +169,21 @@ void change_state(GstPlayState new_state) {
       mute_audio(FALSE);
       statustext = "playing";
       update_status_area(status_area);
-      gtk_idle_add(idle_func,src);
+      gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
+      gtk_idle_add(idle_func, pipeline);
       state = GSTPLAY_PLAYING;
       update_buttons(0);
       break;
     case GSTPLAY_PAUSE:
       statustext = "paused";
       update_status_area(status_area);
-      if (state != GSTPLAY_STOPPED) gtk_idle_remove_by_data(src);
+      if (state != GSTPLAY_STOPPED) gtk_idle_remove_by_data(pipeline);
       mute_audio(TRUE);
       state = GSTPLAY_PAUSE;
       update_buttons(1);
       break;
     case GSTPLAY_STOPPED:
-      if (state != GSTPLAY_PAUSE) gtk_idle_remove_by_data(src);
+      if (state != GSTPLAY_PAUSE) gtk_idle_remove_by_data(pipeline);
       statustext = "stopped";
       update_status_area(status_area);
       mute_audio(TRUE);
@@ -232,14 +232,12 @@ static void have_type(GstSink *sink) {
   }
   else if (strstr(gsttype->mime, "mpeg1")) {
     mpeg1_setup_video_thread(gst_element_get_pad(src,"src"), video_render_queue, GST_ELEMENT(pipeline));
-    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
     gst_clock_reset(gst_clock_get_system());
     gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
                        GTK_SIGNAL_FUNC(frame_displayed),NULL);
   }
   else if (strstr(gsttype->mime, "mp3")) {
     mpeg1_setup_audio_thread(gst_element_get_pad(src,"src"), audio_render_queue, GST_ELEMENT(pipeline));
-    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
     gst_clock_reset(gst_clock_get_system());
   }
   else {
@@ -254,13 +252,14 @@ static void have_type(GstSink *sink) {
     gtk_signal_connect(GTK_OBJECT(parse),"pads_created",
                        GTK_SIGNAL_FUNC(gstplay_parse_pads_created),pipeline);
   }
+  gtk_object_set(GTK_OBJECT(src),"offset",0,NULL);
+
   g_print("setting to READY state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   g_print("setting to PLAYING state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   g_print("set to PLAYING state\n");
 
-  gtk_object_set(GTK_OBJECT(src),"offset",0,NULL);
 }
 
 gint start_from_file(guchar *filename) 
@@ -286,6 +285,8 @@ gint start_from_file(guchar *filename)
                   gst_element_get_pad(typefind,"sink"));
 
   g_print("setting to READY state\n");
+
+  gst_bin_create_plan(GST_BIN(pipeline));
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   state = GSTPLAY_STOPPED;
@@ -315,8 +316,9 @@ main (int argc, char *argv[])
   glade_gnome_init();
   gst_init(&argc,&argv);
 
+  g_print("using %s\n", DATADIR"gstplay.glade");
   /* load the interface */
-  xml = glade_xml_new("gstplay.glade", "gstplay");
+  xml = glade_xml_new(DATADIR "gstplay.glade", "gstplay");
   /* connect the signals in the interface */
 
   status_area = glade_xml_get_widget(xml, "status_area");

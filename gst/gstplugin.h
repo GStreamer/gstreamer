@@ -27,9 +27,6 @@
 #include <gst/gsttype.h>
 #include <gst/gstelement.h>
 
-#include "config.h"
-
-
 typedef struct _GstPlugin GstPlugin;
 typedef struct _GstPluginElement GstPluginElement;
 
