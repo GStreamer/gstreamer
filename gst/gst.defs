@@ -1600,6 +1600,13 @@
 )
 
 
+(define-function element_state_get_name
+  (c-name "gst_element_state_get_name")
+  (parameters
+    '("GstElementState" "state")
+  )
+  (return-type "const-gchar*")
+)
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstenumtypes.h
 

@@ -1,3 +1,7 @@
+2004-04-30  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.defs (element_state_get_name): Add.
+
 2004-04-21  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/runtests.py (tests): Run all tests in one TestSuite
