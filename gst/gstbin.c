@@ -223,7 +223,7 @@ gst_bin_use_clock (GstBin *bin, GstClock *clock)
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
-  return gst_bin_set_clock_func (GST_ELEMENT (bin), clock);
+  gst_bin_set_clock_func (GST_ELEMENT (bin), clock);
 }
 
 /**
