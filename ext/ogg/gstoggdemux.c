@@ -1387,11 +1387,6 @@ gst_ogg_demux_push (GstOggDemux * ogg, ogg_page * page)
         gint64 position, diff;
         gdouble ratio;
 
-        if (ogg->seek_try > 5) {
-          GST_DEBUG ("Seeking took too long, continuing with current page");
-          goto play;
-        }
-
         /* see if we reached the destination position when seeking */
         position = get_relative (ogg, cur, ogg_page_granulepos (page),
             GST_FORMAT_TIME);
@@ -1409,6 +1404,13 @@ gst_ogg_demux_push (GstOggDemux * ogg, ogg_page * page)
         if (diff < GST_SECOND) {
           GST_DEBUG ("Close enough (%" GST_TIME_FORMAT " seconds off)",
               GST_TIME_ARGS (diff));
+          goto play;
+        }
+
+        /* not too long */
+        if (ogg->seek_try > 5) {
+          GST_DEBUG ("Seeking took too long, continuing with current page");
+          ogg->seek_to = position;
           goto play;
         }
 
