@@ -244,14 +244,22 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
     case CODEC_ID_WMAV1:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_wma1",
                                   "audio/x-wma",
-                                    "wmaversion", GST_PROPS_INT (1)
+                                    "wmaversion",  GST_PROPS_INT (1),
+                                    "flags1",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                    "flags2",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                    "block_align", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                                    "bitrate",     GST_PROPS_INT_RANGE (0, G_MAXINT)
                                  );
       break;
 
     case CODEC_ID_WMAV2:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_wma2",
                                   "audio/x-wma",
-                                    "wmaversion", GST_PROPS_INT (2)
+                                    "wmaversion",  GST_PROPS_INT (2),
+                                    "flags1",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                    "flags2",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                    "block_align", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                                    "bitrate",     GST_PROPS_INT_RANGE (0, G_MAXINT)
                                  );
       break;
 
@@ -720,7 +728,28 @@ gst_ffmpeg_caps_to_smpfmt (GstCaps        *caps,
 				   GST_PROPS_INT_TYPE)) {
     gst_caps_get_int (caps, "rate", &context->sample_rate);
   }
+
+  if (gst_caps_has_property_typed (caps, "block_align",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "block_align", &context->block_align);
+  }
+
+  if (gst_caps_has_property_typed (caps, "bitrate",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "bitrate", &context->bit_rate);
+  }
+
+  if (gst_caps_has_property_typed (caps, "flags1",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "flags1", &context->wma_flags1);
+  }
+
+  if (gst_caps_has_property_typed (caps, "flags2",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "flags2", &context->wma_flags2);   
+  }
 }
+
 
 /* Convert a GstCaps (video/raw) to a FFMPEG PixFmt
  * and other video properties in a AVCodecContext.
