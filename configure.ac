@@ -78,47 +78,17 @@ AC_SUBST(plugindir)
 GST_PLUGIN_LDFLAGS='-module -avoid-version'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
-dnl *** FFMPEG ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_FFMPEG, true)
-GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
-  # only slurp in the case where we are in CVS mode;
-  # prerelease and release should get it disted
-  if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
-    AC_MSG_NOTICE(slurping FFmpeg CVS source)
-    dnl until someone fixes this... I guess this should be in ./autogen.sh
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-03-09 06:00 GMT,
-      if ! test -f gst-libs/ext/ffmpeg/ffmpeg/configure.ac; then
-        AC_MSG_NOTICE(setting up ffmpeg build system and applying patches)
-        CURDIR=`pwd`
-        cd gst-libs/ext/ffmpeg
-        for PATCH in matroska autotools disablemmx disableinstalllibs functions; do
-          patch -p0 -N -r rejects < patch/${PATCH}.diff > /dev/null || true
-        done
-        cd ffmpeg
-        chmod a+x ./autogen.sh
-        NOCONFIGURE=1 ./autogen.sh
-        cd $CURDIR
-      fi
-      HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-  else
-    AC_MSG_NOTICE(FFmpeg CVS code should be included already)
-    HAVE_FFMPEG=yes
-  fi
-  # we only bother with uninstalled (included) ffmpeg for now
-  AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
-                     [defined if we use uninstalled ffmpeg])
-])
-
 dnl Determine CPU
 GST_ARCH()
 
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
-if test "x$HAVE_FFMPEG" = "xyes"; then
-  ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffplay --disable-ffserver"
-  AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
-fi 
+
+AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
+                   [Defined if building against uninstalled FFmpeg source])
+ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffplay --disable-ffserver"
+AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg)
 
 AC_CONFIG_FILES(
 Makefile
@@ -127,6 +97,5 @@ ext/Makefile
 ext/ffmpeg/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
-gst-libs/ext/ffmpeg/Makefile
 )
 AC_OUTPUT

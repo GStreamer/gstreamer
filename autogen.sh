@@ -13,8 +13,12 @@ then
   cvs co common 
 fi
 
-# ensure that we have the dirs we put ext libs in to appease automake
-mkdir -p gst-libs/ext/ffmpeg/ffmpeg
+if test ! -d gst-libs/ext/ffmpeg; 
+then 
+  echo "+ getting ffmpeg from cvs"
+  cvs co mirror-ffmpeg 
+fi
+
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
@@ -83,6 +87,12 @@ if test -f disable; then
   done
 fi
 
+# now, run ffmpeg's autogen
+echo "+ running autogen.sh in gst-libs/ext/ffmpeg"
+cd gst-libs/ext/ffmpeg
+sh autogen.sh || exit 1
+cd ../../..
+
 test -n "$NOCONFIGURE" && {
   echo "+ skipping configure stage for package $package, as requested."
   echo "+ autogen.sh done."
@@ -100,4 +110,5 @@ echo
         exit 1
 }
 
+echo
 echo "Now type 'make' to compile $package."
