@@ -1,5 +1,14 @@
 2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (state_change), (setup_source),
+	(gst_play_base_bin_change_state):
+	  Handle the case where we failed to setup a clear pipeline. This
+	  will throw an error (or EOS, another nice case) and if you don't
+	  catch that, the app will wait for the signal forever (and thus
+	  hang).
+
+2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/gnomevfs/gstgnomevfssink.c:
 	(gst_gnomevfssink_uri_get_protocols):
 	* ext/gnomevfs/gstgnomevfssrc.c:
