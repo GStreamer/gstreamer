@@ -375,7 +375,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
   guint size;
   guint64 skipped;
 
-  for (try = 0; try < 2; try++) {
+  for (try = 0; try < 1 /* 2 */ ; try++) {
     guint64 start_off = (try == 0) ? 0 : length / 2;
 
     if (try != 0 && start_off == 0)
