@@ -1,5 +1,9 @@
 2004-05-03  Johan Dahlin  <johan@gnome.org>
 
+	* gst/common.h: Add some parenthesises
+
+	* gst/play.override: Include common.h
+
 	* configure.ac: Use different prefix for the new check of PyGtk so
 	we're not overwriting the good PYGTK_CFLAGS
 
