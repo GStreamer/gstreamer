@@ -19,7 +19,7 @@ class ArtsStereoSink_impl : virtual public ArtsStereoSink_skel,
   GstPad *sinkpad;
   GstPad *srcpad;
   unsigned long remainingsamples;
-  GstBuffer *inbuf;
+  GstData *inbuf;
   unsigned char *dataptr;
 
 public:
@@ -41,8 +41,8 @@ public:
       if (remainingsamples == 0) {
 //fprintf(stderr,"need to get a buffer\n");
 	if (inbuf) {
-	  gst_buffer_unref(inbuf);
-	  inbuf = 0;
+	  gst_data_unref(inbuf);
+	  inbuf = NULL;
 	}
 
 	// start by pulling a buffer from GStreamer
@@ -54,12 +54,12 @@ public:
           default:
             break;
           }
-          gst_pad_event_default (srcpad, (GstEvent*)inbuf);
+          gst_pad_event_default (srcpad, GST_EVENT(inbuf));
           inbuf = gst_pad_pull (sinkpad);
         }
 
-	dataptr = GST_BUFFER_DATA(inbuf);
-	remainingsamples = GST_BUFFER_SIZE(inbuf) / 4;
+	dataptr = GST_BUFFER_DATA(GST_BUFFER(inbuf));
+	remainingsamples = GST_BUFFER_SIZE(GST_BUFFER(inbuf)) / 4;
 //fprintf(stderr,"got a buffer with %d samples\n",remainingsamples);
       }
 
@@ -107,7 +107,7 @@ public:
     convert_stereo_2float_i16le(samples,inleft,inright,GST_BUFFER_DATA(outbuf));
 //s = (gint16 *)GST_BUFFER_DATA(outbuf);
 //fprintf(stderr,"samples in are %f and %f, out are %d and %d\n",inleft[0],inright[0],s[0],s[1]);
-    gst_pad_push(srcpad,outbuf);
+    gst_pad_push(srcpad,GST_DATA(outbuf));
     outbuf = NULL;
   }
 

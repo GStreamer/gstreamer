@@ -67,7 +67,7 @@ speed_sink_factory (void)
     template = gst_pad_template_new
       ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_append(gst_caps_new ("sink_int",  "audio/x-raw-int",
-                                    GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_PROPS),
+                                    GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
                       gst_caps_new ("sink_float", "audio/x-raw-float",
                                     GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS)),
       NULL);
@@ -86,7 +86,7 @@ speed_src_factory (void)
        gst_caps_append (gst_caps_new ("src_float", "audio/x-raw-float",
                                       GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS),
                         gst_caps_new ("src_int", "audio/x-raw-int",
-                                      GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_PROPS)),
+                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS)),
        NULL);
 
   return template;
