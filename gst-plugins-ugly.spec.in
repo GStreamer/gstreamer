@@ -160,6 +160,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmedian.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmixmatrix.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmonoscope.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmp1videoparse.so
@@ -208,7 +209,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
-%{_libdir}/gstreamer-%{majorminor}/libmixmatrix.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -219,7 +219,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
-@USE_SMOOTHWAVE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
+@USE_SMOOTHWAVE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
 @USE_MIKMOD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmikmod.so
 @USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
@@ -239,6 +239,8 @@ rm -rf $RPM_BUILD_ROOT
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximagesink.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
+# Docs
+%{_datadir}/locale
 
 %post 
 %{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
@@ -270,18 +272,15 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixertrack.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/navigation/navigation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalancechannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/propertyprobe/propertyprobe.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunerchannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunernorm.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/xoverlay/xoverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/xwindowlistener/xwindowlistener.h
 # library headers
