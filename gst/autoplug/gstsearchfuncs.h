@@ -40,6 +40,7 @@ struct _GstAutoplugNode {
 };
 
 /* helper functions */
+gboolean				gst_autoplag_caps_intersect		(GstCaps *src, GstCaps *sink);
 GstPadTemplate * 			gst_autoplug_can_connect_src            (GstElementFactory *fac, GstCaps *src);
 GstPadTemplate * 			gst_autoplug_can_connect_sink           (GstElementFactory *fac, GstCaps *sink);
 GstPadTemplate *                    	gst_autoplug_can_match                  (GstElementFactory *src, GstElementFactory *dest);

@@ -336,7 +336,7 @@ gst_spider_create_and_plug (GstSpider *spider, GstElement *src, GstElement *sink
       if ((GST_PADTEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PADTEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
       {
 	GstSpiderConnectSometimes *data = g_new (GstSpiderConnectSometimes, 1);
-        GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to connect element %s to %s\n", GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (element));
+        GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to connect element %s to %s\n", GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink));
 	data->spider = spider;
 	data->sink = sink;
 	data->signal_id = g_signal_connect (G_OBJECT (src), "new_pad", 

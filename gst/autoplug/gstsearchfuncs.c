@@ -38,6 +38,35 @@ g_list_free_list_and_elements (GList *list)
   }
   g_list_free (list);
 }
+/**
+ * gst_autoplug_can_connect_src:
+ * @src: caps of the source
+ * @sink: caps of the sink
+ *
+ * Checks if a factory's sink can connect to the given caps
+ *
+ * Return: TRUE, if both caps intersect.
+ */
+gboolean
+gst_autoplag_caps_intersect (GstCaps *src, GstCaps *sink)
+{
+  GstCaps *caps;
+
+  /* if there are no caps, we can connect */
+  if ((src == NULL) && (sink == NULL))
+    return TRUE;
+
+  /* get an interection */
+  caps = gst_caps_intersect (src, sink);
+  
+  /* if the caps can't connect, there is no intersection */
+  if (caps == NULL)
+    return FALSE;
+  
+  /* hurrah, we can connect, now remove the intersection */
+  gst_caps_unref (GST_OBJECT (caps));
+  return TRUE;
+}
 
 /**
  * gst_autoplug_can_connect_src:
@@ -57,7 +86,7 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
   
   while (templs)
   {
-    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_caps_check_compatibility(src, GST_PADTEMPLATE_CAPS (templs->data)))
+    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_autoplag_caps_intersect (src, GST_PADTEMPLATE_CAPS (templs->data)))
     {
       return GST_PADTEMPLATE (templs->data);
     }
@@ -84,7 +113,7 @@ gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
   
   while (templs)
   {
-    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (templs->data), sink))
+    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_autoplag_caps_intersect (GST_PADTEMPLATE_CAPS (templs->data), sink))
     {
       return GST_PADTEMPLATE (templs->data);
     }
@@ -110,7 +139,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-          if (gst_caps_check_compatibility (gst_padtemplate_get_caps (srctemp), 
+          if (gst_autoplag_caps_intersect (gst_padtemplate_get_caps (srctemp), 
               gst_padtemplate_get_caps (desttemp))) {
             GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
                        "factory \"%s\" can connect with factory \"%s\"\n", 
