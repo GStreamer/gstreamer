@@ -411,7 +411,7 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
   }
   */
 
-  avpicture_fill ((AVPicture*)&picture, data, PIX_FMT_YUV420P, ffmpegenc->in_width, ffmpegenc->in_height);
+  avpicture_fill ((AVPicture*)(void *)&picture, data, PIX_FMT_YUV420P, ffmpegenc->in_width, ffmpegenc->in_height);
   toencode = &picture;
 
   if (ffmpegenc->need_resample) {
@@ -419,12 +419,13 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
     guint8 *rdata;
 
     rdata = g_malloc ((rframe_size * 3)/2);
-    avpicture_fill ((AVPicture*)&rpicture, rdata, PIX_FMT_YUV420P, ffmpegenc->context->width, ffmpegenc->context->height);
+    avpicture_fill ((AVPicture*)(void *)&rpicture, rdata, PIX_FMT_YUV420P, ffmpegenc->context->width, ffmpegenc->context->height);
 
     free_res = TRUE;
     toencode = &rpicture;
     
-    img_resample (ffmpegenc->resample, (AVPicture*)&rpicture, (AVPicture*)&picture);
+    img_resample (ffmpegenc->resample, (AVPicture*)(void *)&rpicture,
+		    (AVPicture*)(void *)&picture);
   }
 
   outbuf = gst_buffer_new ();
