@@ -1,15 +1,15 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libafsink.la libafsrc.la
+plugin_LTLIBRARIES = libgstafsink.la libgstafsrc.la
 
-libafsink_la_SOURCES = gstafsink.c
-libafsink_la_CFLAGS = $(GST_CFLAGS) $(AUDIOFILE_CFLAGS)
-libafsink_la_LIBADD = $(AUDIOFILE_LIBS)
-libafsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstafsink_la_SOURCES = gstafsink.c
+libgstafsink_la_CFLAGS = $(GST_CFLAGS) $(AUDIOFILE_CFLAGS)
+libgstafsink_la_LIBADD = $(AUDIOFILE_LIBS)
+libgstafsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libafsrc_la_SOURCES = gstafsrc.c
-libafsrc_la_CFLAGS = $(GST_CFLAGS) $(AUDIOFILE_CFLAGS)
-libafsrc_la_LIBADD = $(AUDIOFILE_LIBS)
-libafsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstafsrc_la_SOURCES = gstafsrc.c
+libgstafsrc_la_CFLAGS = $(GST_CFLAGS) $(AUDIOFILE_CFLAGS)
+libgstafsrc_la_LIBADD = $(AUDIOFILE_LIBS)
+libgstafsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstafsink.h gstafsrc.h

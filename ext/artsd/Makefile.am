@@ -1,10 +1,10 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libartsdsink.la
+plugin_LTLIBRARIES = libgstartsdsink.la
 
-libartsdsink_la_SOURCES = gstartsdsink.c
-libartsdsink_la_CFLAGS = $(GST_CFLAGS) $(ARTSC_CFLAGS)
-libartsdsink_la_LIBADD = $(ARTSC_LIBS)
-libartsdsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstartsdsink_la_SOURCES = gstartsdsink.c
+libgstartsdsink_la_CFLAGS = $(GST_CFLAGS) $(ARTSC_CFLAGS)
+libgstartsdsink_la_LIBADD = $(ARTSC_LIBS)
+libgstartsdsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstartsdsink.h
