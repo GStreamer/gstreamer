@@ -12,7 +12,9 @@ the bin, making the bin itself look transparently like any other element,
 allowing for deep nesting of predefined sub-pipelines.
 </para>
 <para>
-A new GstBin is created with gst_bin_new()
+A new GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you want 
+to create a toplevel bin because a normal bin doesn't have a scheduler of its
+own.
 </para>
 <para>
 After the bin has been created you will typically add elements to it with

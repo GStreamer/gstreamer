@@ -9,9 +9,22 @@ Event definitions.
 The event classes are used to construct and query events.
 </para>
 
+<para>
+Events are usually created with gst_event_new() which takes the event type as an argument.
+properties specific to the event can be set afterwards with the provided macros. 
+The event is freed with gst_event_free().
+</para>
+<para>
+gst_event_new_seek() is a usually used to create a seek event and it takes the 
+needed parameters for a seek event. 
+</para>
+<para>
+gst_event_new_flush() creates a new flush event.
+</para>
+
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstPad
 </para>
 
 <!-- ##### ENUM GstEventType ##### -->
@@ -114,7 +127,7 @@ The event data structure.
 
 <!-- ##### MACRO gst_event_new_flush ##### -->
 <para>
-
+Create a new flush event.
 </para>
 
 

@@ -8,16 +8,17 @@ Basis for the GST object hierarchy.
 <para>
 GstObject provides a root for the object hierarchy tree filed in by the
 GST library.  It is currently a thin wrapper on top of
-<classname>GtkObject</classname>, but eventually will be replaced by a
-stripped down version of it.  This will remove all the X dependencies from
-the GST library, making it much more portably and generally useful.
+<classname>GObject</classname> but it can be compiled against GTK+ with
+a shim provided by the GStreamer library. It is an abstract class that is not
+very usable on its own.
 </para>
 
 <para>
-GstObject gives us basic refcounting and parenting functionality, though
-it is possible that we could use <classname>GtkObject</classname>'s
-equivalent functions.  I'll probably use what I have now until I strip
-down <classname>GtkObject</classname> to re-parent the hierarchy.
+GstObject gives us basic refcounting, parenting functionality and locking. 
+</para>
+<para>
+gst_object_set_name() and gst_object_get_name() are used to set/get the name of the 
+object.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

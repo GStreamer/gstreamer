@@ -261,10 +261,10 @@ GST_ERROR_OBJECT
 GstDebugHandler
 gst_default_debug_handler
 gst_default_error_handler
-gst_debug_print_stack_trace
 GstInfoHandler
 GstErrorHandler
 <SUBSECTION Standard>
+gst_debug_print_stack_trace
 GST_DEBUG_CHAR_MODE
 GST_DEBUG_ENABLED
 GST_DEBUG_ENABLE_CATEGORIES
@@ -307,10 +307,12 @@ gst_schedule_show
 <SUBSECTION Standard>
 GstSchedule
 GST_SCHEDULE
+GST_SCHEDULE_FAST
 GST_IS_SCHEDULE
 GST_TYPE_SCHEDULE
 gst_schedule_get_type
 GST_SCHEDULE_CLASS
+GST_SCHEDULE_CLASS_FAST
 GST_IS_SCHEDULE_CLASS
 </SECTION>
 
@@ -334,6 +336,8 @@ gst_bin_get_type
 GST_TYPE_BIN
 GST_BIN
 GST_BIN_CLASS
+GST_BIN_FAST
+GST_BIN_CLASS_FAST
 GST_IS_BIN
 GST_IS_BIN_CLASS
 gst_bin_details
@@ -584,8 +588,8 @@ gst_clock_current_diff
 
 <SECTION>
 <FILE>gstlog</FILE>
-gst_info
 <SUBSECTION Standard>
+gst_info
 GST_SHOW_INFO
 </SECTION>
 
@@ -701,7 +705,6 @@ gst_pad_negotiate_proxy
 gst_pad_renegotiate
 gst_pad_get_padtemplate
 gst_pad_get_padtemplate_caps
-gst_pad_event
 gst_pad_ghost_save_thyself
 gst_pad_peek
 gst_pad_select
@@ -821,7 +824,6 @@ GstPluginDesc
 GST_PLUGIN_DESC
 GST_PLUGIN_DESC_DYNAMIC
 GST_PLUGIN_DESC_STATIC
-gst_plugin_new
 gst_plugin_set_name
 gst_plugin_get_name
 gst_plugin_get_longname
@@ -841,7 +843,6 @@ gst_plugin_add_feature
 gst_plugin_get_feature_list
 gst_plugin_load_plugin
 gst_plugin_unload_all
-
 <SUBSECTION Standard>
 </SECTION>
 
@@ -896,6 +897,7 @@ gst_thread_details
 <SECTION>
 <FILE>gsttrace</FILE>
 <TITLE>GstTrace</TITLE>
+<SUBSECTION Standard>
 gst_trace_read_tsc
 GstTrace
 GstTraceEntry
@@ -909,7 +911,6 @@ gst_trace_get_remaining
 gst_trace_set_default
 TRACE_ENABLE
 gst_trace_add_entry
-<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>

@@ -255,7 +255,8 @@ circumstances.
 
 <!-- ##### MACRO gst_element_destroy ##### -->
 <para>
-
+Destroy the element. This is potentially dangerous, use gst_object_unref
+instead.
 </para>
 
 @element: the element to destroy

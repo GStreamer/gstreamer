@@ -60,12 +60,16 @@ to register callbacks for various events on the pads.
 <para>
 GstElements will use gst_pad_push() and gst_pad_pull() to push out or pull a buffer in. The
 gst_pad_pullregion() function can be used to request for a buffer with a specific offset (in
-time or in bytes).
+time or in bytes). gst_pad_select() and gst_pad_selectv() are use by plugins to wait on a set
+of pads for a new GstBuffer or GstEvent.
+</para>
+<para>
+To send an event on a pad, use gst_pad_send_event().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstCaps, #GstElement
+#GstCaps, #GstElement, #GstEvent
 </para>
 
 <!-- ##### MACRO GST_PAD_NAME ##### -->
@@ -640,18 +644,6 @@ Destroy the pad.
 </para>
 
 @pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_event ##### -->
-<para>
-
-</para>
-
-@pad: 
-@event: 
-@timestamp: 
-@data: 
 @Returns: 
 
 

@@ -293,13 +293,6 @@ Print out an error condition and abort the application.
 @string: 
 
 
-<!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### USER_FUNCTION GstInfoHandler ##### -->
 <para>
 

@@ -234,9 +234,7 @@ This function is used to copy the buffer contents.
 </para>
 
 @srcbuf: the src buffer
-@Returns: 
-<!-- # Unused Parameters # -->
-@dstbuf: the destination buffer
+@Returns: The copied buffer
 
 
 <!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
@@ -338,15 +336,6 @@ used when data in a stream has been skipped
 </para>
 
 @buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@count: 
 
 
 <!-- ##### FUNCTION gst_buffer_unref ##### -->

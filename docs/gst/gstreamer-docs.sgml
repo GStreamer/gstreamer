@@ -86,7 +86,6 @@ with some more specialized elements.</para>
     &GstScheduler;
     &GstThread;
     &GstTimeCache;
-    &GstTrace;
     &GstType;
     &GstTypeFactory;
     &GstTypeFind;

@@ -2806,6 +2806,27 @@ Flags for the GstSrc element
 </para>
 
 
+<!-- ##### STRUCT GstTrace ##### -->
+<para>
+
+</para>
+
+@filename: 
+@fd: 
+@buf: 
+@bufsize: 
+@bufoffset: 
+
+<!-- ##### STRUCT GstTraceEntry ##### -->
+<para>
+
+</para>
+
+@timestamp: 
+@sequence: 
+@data: 
+@message: 
+
 <!-- ##### ARG GstTypeFind:type ##### -->
 <para>
 Query the element for the current mime type
@@ -2914,6 +2935,12 @@ Is trigered whenever the state of an element changes
 <!-- ##### MACRO STACK_SIZE ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### MACRO TRACE_ENABLE ##### -->
+<para>
+must be defined to activate the tracing functionality.
 </para>
 
 
@@ -3928,6 +3955,14 @@ Is trigered whenever the state of an element changes
 @destroy: 
 @user_data: 
 
+<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@count: 
+
 <!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
 <para>
 
@@ -3994,6 +4029,12 @@ Is trigered whenever the state of an element changes
 </para>
 
 @connection: 
+
+<!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gst_disksrc_get_type ##### -->
 <para>
@@ -4317,6 +4358,14 @@ Is trigered whenever the state of an element changes
 @name: 
 @Returns: 
 
+<!-- ##### MACRO gst_info ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
 <!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
 <para>
 
@@ -4429,6 +4478,17 @@ Call the EOS function of the pad
 </para>
 
 @pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@timestamp: 
+@data: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_pad_get_caps_by_name ##### -->
@@ -4671,6 +4731,16 @@ Call the EOS function of the pad
 
 @mime: 
 
+<!-- ##### FUNCTION gst_plugin_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@major: 
+@minor: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_props_register ##### -->
 <para>
 
@@ -4836,6 +4906,81 @@ Call the EOS function of the pad
 </para>
 
 @arg: 
+
+<!-- ##### MACRO gst_trace_add_entry ##### -->
+<para>
+
+</para>
+
+@trace: 
+@seq: 
+@data: 
+@msg: 
+
+<!-- ##### FUNCTION gst_trace_destroy ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_trace_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### MACRO gst_trace_get_offset ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### MACRO gst_trace_get_remaining ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### MACRO gst_trace_get_size ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_trace_new ##### -->
+<para>
+
+</para>
+
+@filename: 
+@size: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_trace_read_tsc ##### -->
+<para>
+
+</para>
+
+@dst: 
+
+<!-- ##### FUNCTION gst_trace_set_default ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_trace_text_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
 
 <!-- ##### FUNCTION gst_type_add_sink ##### -->
 <para>

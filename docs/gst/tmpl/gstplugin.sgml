@@ -17,10 +17,6 @@ and will create a new #GstPlugin. It will then call the #GstPluginInitFunc funct
 that was provided in the plugin_desc.
 </para>
 <para>
-Optionally a new plugin is created with gst_plugin_new(). this function will return a handle
-to the GstPlugin or NULL if the plugin could not be created.
-</para>
-<para>
 Once you have a handle to a #GstPlugin, you can add any object that subclasses #GstPluginFeature.
 </para>
 <para>
@@ -28,8 +24,10 @@ use gst_plugin_find(), gst_plugin_get_list() and gst_plugin_get_feature_list()
 to query the plugin repository.
 </para>
 <para>
-Plugins are always automaticlly loaded  so you don't need to call gst_plugin_load() explicitly 
-to bring it into memory. 
+Usually plugins are always automaticlly loaded so you don't need to call gst_plugin_load() explicitly 
+to bring it into memory. There are options to statically link plugins to an app or even
+use GStreamer without a plugin repository in which case gst_plugin_load() can be needed 
+to bring the plugin into memory.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -103,17 +101,6 @@ A macro used to define a statically linked plugin.
 @minor: The minor version of GStreamer this plugin was compiled against.
 @name: The name of the plugin.
 @init: The init function of this plugin.
-
-
-<!-- ##### FUNCTION gst_plugin_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@major: 
-@minor: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_plugin_set_name ##### -->

@@ -50,7 +50,7 @@ structure from a chained list.
 <para>
 To get the properties of a caps structure the functions 
 gst_caps_get_boolean(), gst_caps_get_fourcc_int(), gst_caps_get_int(),
-gst_caps_get_string(), which all take a property name as an argument.
+gst_caps_get_string(), gst_caps_get_float(), which all take a property name as an argument.
 </para>
 <para>
 The properties of the caps structure can be modified with gst_caps_set, which
@@ -68,6 +68,34 @@ takes a list of key value pairs in the #GstProps syntax as shown by this example
 <para>
 before modifying a GstCaps, it is a good idea to make a copy if it first with
 gst_caps_copy_on_write(). This will copy the GstCaps if the refcount is &gt;1.
+</para>
+<para>
+If you need a unique instance of a GstCaps you can use the convenient 
+GST_CAPS_FACTORY() macro as shown below. 
+<programlisting>
+  GST_CAPS_FACTORY (my_caps,
+    GST_CAPS_NEW (
+      "caps1",
+      "audio/raw",
+        "format",   GST_PROPS_STRING ("float"),
+        "channels", GST_PROPS_INT (5)
+    ),
+    GST_CAPS_NEW (
+      "caps2",
+      "audio/raw",
+        "format",   GST_PROPS_STRING ("int"),
+        "channels", GST_PROPS_INT (5)
+    )
+  )
+
+  void
+  some_function (void)
+  {
+    GstCaps *caps = GST_CAPS_GET (my_caps);
+
+    ...
+  }
+</programlisting>
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
