@@ -244,6 +244,8 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
 #define GST_TAG_PERFORMER		"performer"
 #define GST_TAG_DURATION		"duration"
 #define GST_TAG_CODEC			"codec"
+#define GST_TAG_VIDEO_CODEC		"video-codec"
+#define GST_TAG_AUDIO_CODEC		"audio-codec"
 #define GST_TAG_BITRATE			"bitrate"
 #define GST_TAG_NOMINAL_BITRATE		"nominal-bitrate"
 #define GST_TAG_MINIMUM_BITRATE		"minimum-bitrate"
@@ -255,7 +257,6 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
 #define GST_TAG_TRACK_PEAK		"replaygain-track-peak"
 #define GST_TAG_ALBUM_GAIN  		"replaygain-album-gain"
 #define GST_TAG_ALBUM_PEAK		"replaygain-album-peak"
-
 
 G_END_DECLS
 

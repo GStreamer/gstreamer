@@ -1,3 +1,8 @@
+2004-02-20  Julien MOUTTE <julien@moutte.net>
+
+	* gst/gsttag.h: Adding video-codec and audio-codec for demuxers which
+	will emit found_tag for each stream they demux with the codec.
+
 2004-02-20  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstevent.c: (_gst_event_copy), (_gst_event_free):
