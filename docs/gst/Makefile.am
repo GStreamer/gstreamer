@@ -19,7 +19,6 @@ GST_LIBS += ../../gst/elements/libgstelements.la
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
 tmpl_sources =				\
-	tmpl/audioraw.sgml              \
 	tmpl/cothreads.sgml             \
 	tmpl/gst.sgml                   \
 	tmpl/gstinfo.sgml               \
@@ -27,8 +26,6 @@ tmpl_sources =				\
 	tmpl/gstscheduler.sgml          \
 	tmpl/gstprops.sgml              \
 	tmpl/gstcaps.sgml               \
-	tmpl/gstaudiosink.sgml          \
-	tmpl/gstaudiosrc.sgml           \
 	tmpl/gstbin.sgml                \
 	tmpl/gstbuffer.sgml             \
 	tmpl/gstbufferpool.sgml         \
