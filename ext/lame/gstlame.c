@@ -65,7 +65,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_lame_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "gstlame_src",
-    "audio/mp3",
+    "audio/x-mp3",
     NULL
   )
 )

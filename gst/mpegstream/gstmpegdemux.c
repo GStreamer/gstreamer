@@ -64,7 +64,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_factory,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "mpeg_demux_audio",
-    "audio/mp3",
+    "audio/x-mp3",
     NULL
   )
 );

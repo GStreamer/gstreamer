@@ -130,7 +130,7 @@ GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "mad_sink",
-    "audio/mp3",
+    "audio/x-mp3",
     NULL
   )
 )

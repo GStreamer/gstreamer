@@ -42,7 +42,7 @@ mp3_src_factory (void)
   	GST_PAD_ALWAYS,
   	gst_caps_new (
   	  "mp3parse_src",
-    	  "audio/mp3",
+    	  "audio/x-mp3",
 	  /*
 	  gst_props_new (
     	    "layer",   GST_PROPS_INT_RANGE (1, 3),
@@ -63,7 +63,7 @@ mp3_sink_factory (void)
   	GST_PAD_ALWAYS,
   	gst_caps_new (
   	  "mp3parse_sink",
-    	  "audio/mp3",
+    	  "audio/x-mp3",
 	  NULL),
 	NULL);
 };
