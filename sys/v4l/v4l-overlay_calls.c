@@ -65,13 +65,15 @@ gst_v4l_set_overlay (GstV4lElement *v4lelement)
   switch (system(buff))
   {
     case -1:
-      g_warning("Could not start v4l-conf: %s", g_strerror(errno));
+      gst_element_error (v4lelement, RESOURCE, FAILED,
+                         (_("Could not start v4l-conf")), GST_ERROR_SYSTEM);
       g_free(buff);
       return FALSE;
     case 0:
       break;
     default:
-      g_warning("v4l-conf failed to run correctly: %s", g_strerror(errno));
+      gst_element_error (v4lelement, RESOURCE, FAILED,
+                         (_("Executing v4l-conf failed")), GST_ERROR_SYSTEM);
       g_free(buff);
       return FALSE;
   }
