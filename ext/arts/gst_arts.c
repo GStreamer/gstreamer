@@ -44,13 +44,13 @@ GST_PAD_TEMPLATE_FACTORY ( sink_temp,
   GST_CAPS_NEW (
     "arts_sample",
     "audio/raw",
-    "format",   GST_PROPS_INT ("int"),
+    "format",   GST_PROPS_STRING ("int"),
     "law",      GST_PROPS_INT (0),
     "depth",    GST_PROPS_INT (16),
     "width",    GST_PROPS_INT (16),
     "signed",   GST_PROPS_BOOLEAN (TRUE),
     "channels", GST_PROPS_INT (2),
-    "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN)
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
   )
 )
 
@@ -61,7 +61,7 @@ GST_PAD_TEMPLATE_FACTORY ( src_temp,
   GST_CAPS_NEW (
     "arts_sample",
     "audio/raw",
-    "format",   GST_PROPS_INT ("int"),
+    "format",   GST_PROPS_STRING ("int"),
     "law",      GST_PROPS_INT (0),
     "depth",    GST_PROPS_INT (16),
     "width",    GST_PROPS_INT (16),

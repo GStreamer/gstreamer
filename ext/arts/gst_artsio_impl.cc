@@ -17,6 +17,7 @@ class ArtsStereoSink_impl : virtual public ArtsStereoSink_skel,
 {
 
   GstPad *sinkpad;
+  GstPad *srcpad;
   unsigned long remainingsamples;
   GstBuffer *inbuf;
   unsigned char *dataptr;
@@ -46,6 +47,17 @@ public:
 
 	// start by pulling a buffer from GStreamer
 	inbuf = gst_pad_pull (sinkpad);
+        while (GST_IS_EVENT (inbuf)) {
+          switch (GST_EVENT_TYPE (inbuf)) {
+          case GST_EVENT_EOS:
+            gst_element_set_eos (GST_PAD_PARENT (sinkpad));
+          default:
+            break;
+          }
+          gst_pad_event_default (srcpad, (GstEvent*)inbuf);
+          inbuf = gst_pad_pull (sinkpad);
+        }
+
 	dataptr = GST_BUFFER_DATA(inbuf);
 	remainingsamples = GST_BUFFER_SIZE(inbuf) / 4;
 //fprintf(stderr,"got a buffer with %d samples\n",remainingsamples);
@@ -66,6 +78,10 @@ public:
   void setPad(GstPad *pad)
   {
     sinkpad = pad;
+  }
+  void setSrcPad(GstPad *pad)
+  {
+    srcpad = pad;
   }
 };
 
@@ -114,6 +130,7 @@ public:
     ArtsStereoSink_impl *sink_impl = new ArtsStereoSink_impl();
     ArtsStereoSrc_impl *source_impl = new ArtsStereoSrc_impl();
     sink_impl->setPad(sinkpad);
+    sink_impl->setSrcPad(sourcepad);
     source_impl->setPad(sourcepad);
     sink = ArtsStereoSink::_from_base(sink_impl);
     source = ArtsStereoSrc::_from_base(source_impl);
