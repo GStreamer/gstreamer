@@ -173,6 +173,7 @@ struct _GstElementFactory {
   GstElementDetails *details;	/* pointer to details struct */
 
   GList *padtemplates;
+  guint16 numpadtemplates;
 };
 
 GtkType 		gst_element_get_type		(void);

@@ -237,20 +237,26 @@ gst_element_get_pad (GstElement *element, gchar *name)
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  
-  if (name == NULL)
-    return NULL;
+  g_return_val_if_fail (name != NULL, NULL);
+
+  // if there aren't any pads, well, we're not likely to find one
   if (!element->numpads)
     return NULL;
 
-  /* look through the list, matching by name */ 
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"searching for pad '%s' in element %s\n",
+            name,gst_element_get_name(element));
+
+  // look through the list, matching by name
   walk = element->pads;
   while (walk) {
-    if (!strcmp ((GST_PAD(walk->data))->name, name))
+    if (!strcmp ((GST_PAD(walk->data))->name, name)) {
+      GST_DEBUG(GST_CAT_ELEMENT_PADS,"found pad '%s'\n",name);
       return GST_PAD(walk->data);
+    }
     walk = g_list_next (walk);
   }
 
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"no such pad '%s'\n",name);
   return NULL;
 }
 

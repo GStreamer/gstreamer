@@ -118,6 +118,7 @@ gst_elementfactory_new (gchar *name, GtkType type,
   factory->type = type;
   factory->details = details;
   factory->padtemplates = NULL;
+  factory->numpadtemplates = 0;
 
   _gst_elementfactories = g_list_prepend (_gst_elementfactories, factory);
 
@@ -215,6 +216,7 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
   g_return_if_fail(temp != NULL);
 
   factory->padtemplates = g_list_append (factory->padtemplates, temp); 
+  factory->numpadtemplates++;
 }
 
 /**
