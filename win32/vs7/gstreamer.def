@@ -219,6 +219,7 @@ EXPORTS
         gst_atomic_int_read
         gst_pad_set_active
         gst_scheduler_get_type
+        gst_scheduler_register
         gst_plugin_add_feature
         gst_scheduler_factory_new
         gst_pad_call_get_function

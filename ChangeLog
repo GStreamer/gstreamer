@@ -1,3 +1,10 @@
+2004-08-11  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/GStreamer.vcproj:
+	  fix a memory leak that occured under Windows
+	* win32/gstreamer.def:
+	  add gst_scheduler_register
+
 2004-08-11  Benjamin Otte  <otte@gnome.org>
 
 	* docs/gst/gstreamer-sections.txt:
