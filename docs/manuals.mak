@@ -163,3 +163,9 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 # make sure xml validates properly
 check-local:
 	xmllint -noout -valid $(MAIN)
+
+### this is a website upload target
+upload: html ps pdf
+	export RSYNC_RSH=ssh
+	rsync -arv $(DOC).ps $(DOC).pdf html thomasvs@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$(VERSION)/$(DOC)
+
