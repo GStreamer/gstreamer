@@ -196,7 +196,7 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
           0.0, 10.0, DEFAULT_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
-          "Specify an encoding bit-rate (in bps). ",
+          "Specify an encoding bit-rate (in bps). (0 = automatic)",
           0, G_MAXINT, DEFAULT_BITRATE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
       g_param_spec_boolean ("vbr", "VBR",
@@ -952,6 +952,10 @@ gst_speexenc_chain (GstPad * pad, GstData * _data)
         g_assert (written == outsize);
         speex_bits_reset (&speexenc->bits);
 
+        GST_BUFFER_TIMESTAMP (outbuf) =
+            (speexenc->frameno * frame_size -
+            speexenc->lookahead) * GST_SECOND / speexenc->rate;
+        GST_BUFFER_DURATION (outbuf) = frame_size * GST_SECOND / speexenc->rate;
         GST_BUFFER_OFFSET (outbuf) = speexenc->bytes_out;
         GST_BUFFER_OFFSET_END (outbuf) =
             speexenc->frameno * frame_size - speexenc->lookahead;
