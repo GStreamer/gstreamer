@@ -26,13 +26,16 @@ import sys
 from gstreamer import *
 from gobject import GObject
 import gtk
+gtk.threads_init()
 
 class DVDPlayer(object):
    def __init__(self):
       pass
 
    def idle(self, pipeline):
+      #gtk.threads_enter()
       pipeline.iterate()
+      #gtk.threads_leave()
       return 1
 
    def eof(self, sender):
@@ -40,6 +43,7 @@ class DVDPlayer(object):
       sys.exit(0)
       
    def mpegparse_newpad(self, parser, pad, pipeline):
+      #gtk.threads_enter()
       print '***** a new pad %s was created' % pad.get_name()
       if pad.get_name()[:6] == 'video_':
          pad.connect(self.v_queue.get_pad('sink'))
@@ -55,10 +59,13 @@ class DVDPlayer(object):
          self.pipeline.set_state(STATE_PLAYING)
       else:
          print 'unknown pad: %s' % pad.get_name()
+      #gtk.threads_leave()
 
    def mpegparse_have_size(self, videosink, width, height):
+      gtk.threads_enter()
       self.gtk_socket.set_usize(width,height)
       self.appwindow.show_all()
+      gtk.threads_leave()
 
    def main(self):
       if len(sys.argv) < 5:
@@ -82,15 +89,17 @@ class DVDPlayer(object):
    def run(self):
       print 'setting to PLAYING state'
 
+      gtk.threads_enter()
+
       self.pipeline.set_state(STATE_PLAYING)
 
       gtk.idle_add(self.idle,self.pipeline)
 
-      #gtk.threads_enter()
       gtk.main()
-      #gtk.threads_leave()
 
       self.pipeline.set_state(STATE_NULL)
+
+      gtk.threads_leave()
 
       return 0
 
@@ -122,7 +131,7 @@ class DVDPlayer(object):
       self.color2 = gst_element_factory_make('colorspace','color2')
       assert self.color2
 
-      self.show = gst_element_factory_make('videosink','show')
+      self.show = gst_element_factory_make('xvideosink','show')
       #self.show = gst_element_factory_make('sdlvideosink','show')
       #self.show = gst_element_factory_make('fakesink','fakesinkv')
       assert self.show
@@ -177,7 +186,7 @@ class DVDPlayer(object):
       self.src = gst_element_factory_make('dvdreadsrc','src');
       assert self.src
 
-      #GObject.connect(self.src,'deep_notify',self.dnprint)
+      GObject.connect(self.src,'deep_notify',self.dnprint)
       self.src.set_property('location', self.location)
       self.src.set_property('title', self.title)
       self.src.set_property('chapter', self.chapter)
