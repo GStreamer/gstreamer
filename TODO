@@ -14,3 +14,6 @@
   add plugins with AC stuff (maybe from bits ?)
   write script that builds rpm's one from one
   get postun script right; gstreamer-register should be installed for example
+
+* check options in a52, it has some arch stuff and some opti stuff that 
+  looks dodgy

@@ -22,7 +22,7 @@
 
 
 #include <gst/gst.h>
-#include <gst-libs/audio/gstaudio.h>
+#include <gst/audio/audio.h>
 #include "gstafsrc.h"
 
 

@@ -413,10 +413,10 @@ echo
 echo
 AC_MSG_NOTICE(Checking for plugin libraries)
 
-dnl *** a52dec ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
-GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-  GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, -lm, a52dec/a52.h, A52DEC_LIBS="-la52")
+dnl *** a52 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_A52, true)
+GST_CHECK_FEATURE(A52, [a52], a52dec, [
+  GST_CHECK_LIBHEADER(A52, a52, a52_init, -lm, a52dec/a52.h, A52_LIBS="-la52")
 ])
 
 dnl *** aalib ***
@@ -951,10 +951,6 @@ if test "x$HAVE_LIBMIKMOD" = xyes; then
   AC_DEFINE(HAVE_LIBMIKMOD)
 fi
 
-if test "x$HAVE_AALIB" = "xyes"; then
-  AC_DEFINE(HAVE_AALIB)
-fi
-
 if test "x$HAVE_LIBJPEG" = xyes; then
   AC_DEFINE(HAVE_LIBJPEG)
 fi
@@ -1046,7 +1042,6 @@ AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
-AM_CONDITIONAL(HAVE_AALIB,          test "x$HAVE_AALIB" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
@@ -1090,6 +1085,7 @@ dnl Vars for everyone else
 dnl FIXME: is there a reason to add this top_builddir stuff ? don't think so
 dnl GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
 dnl GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
+GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
@@ -1154,6 +1150,8 @@ sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
+ext/a52/Makefile
+ext/aalib/Makefile
 ext/audiofile/Makefile
 ext/esd/Makefile
 ext/lame/Makefile
@@ -1161,7 +1159,8 @@ ext/mad/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile
-gst-libs/audio/Makefile
+gst-libs/gst/Makefile
+gst-libs/gst/audio/Makefile
 gst-plugins.spec
 )
 
