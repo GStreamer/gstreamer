@@ -192,7 +192,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
   if (!fakesink->silent)
-    g_print("fakesink: ******* (%s:%s)< \n",GST_DEBUG_PAD_NAME(pad));
+    g_print("fakesink: ******* (%s:%s)< (%d bytes) \n",GST_DEBUG_PAD_NAME(pad),GST_BUFFER_SIZE(buf));
   
   gst_buffer_unref (buf);
 
