@@ -81,7 +81,7 @@ static void
         fCallbackFunction (pcFilename, pvPluginHandle, fDescriptorFunction);
       } else {
         /* It was a library, but not a LADSPA one. Unload it. */
-        dlclose (pcFilename);
+        dlclose (pvPluginHandle);
       }
     }
     free (pcFilename);
@@ -131,6 +131,7 @@ LADSPAPluginSearch (LADSPAPluginSearchCallbackFunction fCallbackFunction)
     if (*pcStart == ':')
       pcStart++;
   }
+  g_free (pcLADSPAPath);
 }
 
 /*****************************************************************************/
