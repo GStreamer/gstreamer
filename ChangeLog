@@ -1,5 +1,15 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstpluginfeature.c:
+          fix doc snippet
+	* tools/gst-inspect.c: (print_element_list):
+          fix output of typefind
+          add GPL header
+	* tools/gst-launch.c:
+          add GPL header
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/elements/Makefile.am:
 	* gst/elements/gsttypefindelement.c:
 	* gst/elements/gsttypefindelement.h:

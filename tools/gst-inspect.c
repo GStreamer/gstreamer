@@ -1,6 +1,31 @@
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2000 Wim Taymans <wtay@chello.be>
+ *               2004 Thomas Vander Stichele <thomas@apestaart.org>
+ *
+ * gst-inspect.c: tool to inspect the GStreamer registry
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include "gst/gst-i18n-app.h"
 
 #include <gst/gst.h>
 #include <gst/control/control.h>
@@ -750,15 +775,17 @@ print_element_list (void)
         GstTypeFindFactory *factory;
 
         factory = GST_TYPE_FIND_FACTORY (feature);
+        g_print ("%s: %s: ", plugin->desc.name, gst_plugin_feature_get_name (feature));
         if (factory->extensions) {
 	  guint i = 0;
-          g_print ("%s type: ", plugin->desc.name);
 	  while (factory->extensions[i]) {
 	    g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
 	    i++;
 	  }
-	} else
-          g_print ("%s type: N/A\n", plugin->desc.name);
+          g_print ("\n");
+	} else {
+          g_print (_("no extensions\n"));
+        }
       }
       else if (GST_IS_SCHEDULER_FACTORY (feature)) {
         GstSchedulerFactory *factory;

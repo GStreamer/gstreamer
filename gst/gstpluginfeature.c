@@ -191,10 +191,10 @@ gst_plugin_feature_get_rank (GstPluginFeature *feature)
   return feature->rank;
 }
 /**
- * gst_plugin_feature_set_name:
+ * gst_plugin_feature_get_name:
  * @feature: a feature
  *
- * Gets the name of a pluginfeature.
+ * Gets the name of a plugin feature.
  *
  * Returns: the name
  */
