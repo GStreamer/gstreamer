@@ -2422,7 +2422,7 @@ restart:
 }
 
 /**
- * gst_pad_select:
+ * gst_pad_selectv:
  * @padlist: a #GList of pads.
  *
  * Waits for a buffer on any of the list of pads.
@@ -2431,7 +2431,7 @@ restart:
  * Use #gst_pad_pull() to get the buffer.
  */
 GstPad*
-gst_pad_select (GList *padlist)
+gst_pad_selectv (GList *padlist)
 {
   GstPad *pad;
 
@@ -2441,7 +2441,7 @@ gst_pad_select (GList *padlist)
 }
 
 /**
- * gst_pad_selectv:
+ * gst_pad_select:
  * @pad: a first #GstPad to perform the select on.
  * @...: A NULL-terminated list of more pads to select on.
  *
@@ -2451,10 +2451,9 @@ gst_pad_select (GList *padlist)
  * Use #gst_pad_pull() to get the buffer.
  */
 GstPad*
-gst_pad_selectv (GstPad *pad, ...)
+gst_pad_select (GstPad *pad, ...)
 {
   GstPad *result;
-  GList *padlist = NULL;
   va_list var_args;
 
   if (pad == NULL)
@@ -2462,15 +2461,39 @@ gst_pad_selectv (GstPad *pad, ...)
 
   va_start (var_args, pad);
 
+  result = gst_pad_select_valist (pad, var_args);
+
+  va_end (var_args);
+  
+  return result;
+}
+
+/**
+ * gst_pad_select_valist:
+ * @pad: a first #GstPad to perform the select on.
+ * @varargs: A va_list of more pads to select on.
+ *
+ * Waits for a buffer on the given set of pads.
+ *
+ * Returns: the #GstPad that has a buffer available.
+ * Use #gst_pad_pull() to get the buffer.
+ */
+GstPad*
+gst_pad_select_valist (GstPad *pad, va_list var_args)
+{
+  GstPad *result;
+  GList *padlist = NULL;
+
+  if (pad == NULL)
+    return NULL;
+
   while (pad) {
     padlist = g_list_prepend (padlist, pad);
     pad = va_arg (var_args, GstPad *);
   }
-  result = gst_pad_select (padlist);
+  result = gst_pad_selectv (padlist);
   g_list_free (padlist);
 
-  va_end (var_args);
-  
   return result;
 }
 

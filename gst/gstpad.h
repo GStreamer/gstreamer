@@ -476,8 +476,9 @@ void			gst_pad_push				(GstPad *pad, GstData *data);
 GstData*		gst_pad_pull				(GstPad *pad);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
-GstPad*			gst_pad_select				(GList *padlist);
-GstPad*			gst_pad_selectv				(GstPad *pad, ...);
+GstPad*			gst_pad_selectv				(GList *padlist);
+GstPad*			gst_pad_select				(GstPad *pad, ...);
+GstPad*			gst_pad_select_valist			(GstPad *pad, va_list varargs);
 
 
 /* convert/query/format functions */
