@@ -24,7 +24,7 @@
 #define __GST_ADDER_H__
 
 #include <gst/gst.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 
 #ifdef __cplusplus
 extern "C" {

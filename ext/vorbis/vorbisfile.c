@@ -24,7 +24,10 @@
 #include <gst/gst.h>
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
+
+GST_DEBUG_CATEGORY_STATIC (vorbisfile_debug);
+#define GST_CAT_DEFAULT vorbisfile_debug
 
 #define GST_TYPE_VORBISFILE \
   (vorbisfile_get_type())
@@ -168,6 +171,8 @@ vorbisfile_get_type (void)
 		                              &vorbisfile_info, 0);
 
     logical_stream_format = gst_format_register ("logical_stream", "The logical stream");
+
+    GST_DEBUG_CATEGORY_INIT (vorbisfile_debug, "vorbisfile", 0, "vorbis in ogg decoding element");
   }
   return vorbisfile_type;
 }
@@ -229,6 +234,8 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   vorbisfile->streaminfo = NULL;
   vorbisfile->current_link = -1;
   vorbisfile->blocksize = DEFAULT_BLOCKSIZE;
+
+  GST_FLAG_SET (vorbisfile, GST_ELEMENT_EVENT_AWARE);
 }
 
 /* the next four functions are the ov callbacks we provide to vorbisfile

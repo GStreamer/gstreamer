@@ -25,8 +25,6 @@ extern GType vorbisfile_get_type(void);
 extern GstElementDetails vorbisfile_details;
 extern GstElementDetails vorbisenc_details;
 
-static GstCaps* 	vorbis_type_find 	(GstByteStream *bs, gpointer private);
-
 GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template; 
 GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
@@ -73,43 +71,14 @@ raw_caps2_factory (void)
 	    NULL));
 }
 
-static GstTypeDefinition vorbisdefinition = {
-  "vorbis_audio/x-ogg",
-  "application/ogg",
-  ".ogg",
-  vorbis_type_find,
-};
-
-static GstCaps*
-vorbis_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
-    guint32 head = GUINT32_FROM_BE (*((guint32 *) GST_BUFFER_DATA (buf)));
-
-    if (head == 0x4F676753) {
-      new = GST_CAPS_NEW ("vorbis_type_find",
-			  "application/ogg",
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *enc, *file;
-  GstTypeFactory *type;
   GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
 
@@ -157,9 +126,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
-
-  type = gst_type_factory_new (&vorbisdefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

@@ -603,6 +603,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   factory = gst_element_factory_new ("adder", GST_TYPE_ADDER, &adder_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
