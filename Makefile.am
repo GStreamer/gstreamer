@@ -33,6 +33,7 @@ man_MANS = gstreamer-config.1
 
 EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
+	     configure.base autogen.sh \
 	     LICENSE REQUIREMENTS ABOUT-NLS $(man_MANS)
 
 dist-hook:
@@ -55,3 +56,10 @@ if PLUGINS_USE_SRCDIR
 	@echo
 	@/bin/false
 endif
+
+# Rules to generate autoconf scripts if configure.base is updated
+$(top_srcdir)/configure.in: $(top_srcdir)/configure.base
+	sed <$(top_srcdir)/configure.base >$(top_srcdir)/configure.in '/^SUBSTFOR configure.ac:.*/d;s/^SUBSTFOR configure.in://g'
+$(top_srcdir)/configure.ac: $(top_srcdir)/configure.base
+	sed <$(top_srcdir)/configure.base >$(top_srcdir)/configure.ac '/^SUBSTFOR configure.in:.*/d;s/^SUBSTFOR configure.ac://g'
+
