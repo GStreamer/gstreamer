@@ -64,12 +64,6 @@ else
 ESD_DIR=
 endif
 
-if USE_MAS
-MAS_DIR=mas
-else
-MAS_DIR=
-endif
-
 if USE_FAAC
 FAAC_DIR=faac
 else
@@ -347,7 +341,6 @@ SUBDIRS=\
 	$(LIBPNG_DIR) \
 	$(LIBRFB_DIR) \
 	$(MAD_DIR) \
-	$(MAS_DIR) \
 	$(MIKMOD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(MPEG2ENC_DIR) \
@@ -401,7 +394,6 @@ DIST_SUBDIRS=\
 	libpng \
 	librfb \
 	mad \
-	mas \
 	mikmod \
 	mpeg2dec \
 	mpeg2enc \
