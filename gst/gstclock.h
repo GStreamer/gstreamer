@@ -41,10 +41,10 @@ typedef gpointer 	GstClockID;
 
 #define GST_CLOCK_TIME_NONE  ((guint64)-1)
 
-#define GST_SECOND  ((guint64) G_USEC_PER_SEC * 1000LL)
-#define GST_MSECOND ((guint64) GST_SECOND / 1000LL)
-#define GST_USECOND ((guint64) GST_SECOND / 1000000LL)
-#define GST_NSECOND ((guint64) GST_SECOND / 1000000000LL)
+#define GST_SECOND  ((guint64) G_USEC_PER_SEC * G_GINT64_CONSTANT (1000))
+#define GST_MSECOND ((guint64) GST_SECOND / G_GINT64_CONSTANT (1000))
+#define GST_USECOND ((guint64) GST_SECOND / G_GINT64_CONSTANT (1000000))
+#define GST_NSECOND ((guint64) GST_SECOND / G_GINT64_CONSTANT (1000000000))
 
 #define GST_CLOCK_DIFF(s, e) 		(GstClockTimeDiff)((s) - (e))
 #define GST_TIMEVAL_TO_TIME(tv)		((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)

@@ -229,10 +229,10 @@ gst_queue_init (GstQueue *queue)
   queue->queue = NULL;
   queue->level_buffers = 0;
   queue->level_bytes = 0;
-  queue->level_time = 0LL;
-  queue->size_buffers = 100;		/* 100 buffers */
-  queue->size_bytes = 100 * 1024;	/* 100KB */
-  queue->size_time = 1000000000LL;	/* 1sec */
+  queue->level_time = G_GINT64_CONSTANT (0);
+  queue->size_buffers = 100;				/* 100 buffers */
+  queue->size_bytes = 100 * 1024;			/* 100KB */
+  queue->size_time = G_GINT64_CONSTANT (1000000000);	/* 1sec */
   queue->may_deadlock = TRUE;
   queue->block_timeout = -1;
   queue->interrupt = FALSE;
@@ -293,7 +293,7 @@ gst_queue_locked_flush (GstQueue *queue)
   queue->timeval = NULL;
   queue->level_buffers = 0;
   queue->level_bytes = 0;
-  queue->level_time = 0LL;
+  queue->level_time = G_GINT64_CONSTANT (0);
   /* make sure any pending buffers to be added are flushed too */
   queue->flush = TRUE;
 }

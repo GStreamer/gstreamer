@@ -89,7 +89,7 @@ gst_index_resolver_get_type (void)
 }
 
 GType
-gst_index_get_type(void) {
+gst_index_get_type (void) {
   static GType index_type = 0;
 
   if (!index_type) {
@@ -216,7 +216,7 @@ gst_index_group_new(guint groupnum)
  * Returns: a new index object
  */
 GstIndex*
-gst_index_new()
+gst_index_new (void)
 {
   GstIndex *index;
 

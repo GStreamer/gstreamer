@@ -39,8 +39,8 @@ typedef enum {
   GST_QUERY_RATE
 } GstQueryType;
 
-/* rate is relative to 1000000LL  */
-#define GST_QUERY_TYPE_RATE_DEN          1000000LL
+/* rate is relative to 1000000  */
+#define GST_QUERY_TYPE_RATE_DEN          G_GINT64_CONSTANT (1000000)
 
 typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 
