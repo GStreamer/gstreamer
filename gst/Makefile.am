@@ -67,8 +67,6 @@ libgst_la_SOURCES =		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
-	gstdparam.c		\
-	gstdparammanager.c	\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gstevent.c		\
@@ -139,12 +137,11 @@ cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h
 # Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst_marshal gstmarshal.list > gstmarshal.h
-	echo "#include \"glib-object.h\"" >gstmarshal.c
-	glib-genmarshal --body --prefix=gst_marshal gstmarshal.list >> gstmarshal.c
 
 gstmarshal.c: gstmarshal.list
-	glib-genmarshal --header --prefix=gst_marshal gstmarshal.list > gstmarshal.h
 	echo "#include \"glib-object.h\"" >gstmarshal.c
+	echo "#include \"gstlog.h\"" >> gstmarshal.c
+	echo "#include \"gstmarshal.h\"" >> gstmarshal.c
 	glib-genmarshal --body --prefix=gst_marshal gstmarshal.list >> gstmarshal.c
 
 ##### end built sources #####
@@ -172,8 +169,6 @@ libgstinclude_HEADERS =		\
 	gstclock.h		\
 	gstcpu.h		\
 	gstdata.h		\
-	gstdparam.h		\
-	gstdparammanager.h	\
 	gstelement.h		\
 	gstevent.h		\
 	gstextratypes.h		\
@@ -200,6 +195,18 @@ noinst_HEADERS = 	\
 	gst_private.h	\
 	gstarch.h	\
 	gstpropsprivate.h
+
+CFLAGS = \
+	$(LIBGST_CFLAGS) \
+	-D_GNU_SOURCE \
+	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
+	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+	\
+	-W -Wpointer-arith -Wbad-function-cast \
+	-Wcast-align -Wsign-compare \
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs \
+	-Winline -Wno-unused
 
 CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" -Wall
 LIBS = $(LIBGST_LIBS)

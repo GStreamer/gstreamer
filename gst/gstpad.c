@@ -24,6 +24,7 @@
 #include "gst_private.h"
 
 #include "gstpad.h"
+#include "gstutils.h"
 #include "gstelement.h"
 #include "gsttype.h"
 #include "gstbin.h"
@@ -55,6 +56,7 @@ gst_pad_get_type(void)
       sizeof(GstPad),
       32,
       (GInstanceInitFunc)gst_pad_init,
+      NULL
     };
     _gst_pad_type = g_type_register_static(GST_TYPE_OBJECT, "GstPad", &pad_info, 0);
   }
@@ -101,7 +103,7 @@ static void	gst_real_pad_init		(GstRealPad *pad);
 static void	gst_real_pad_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_real_pad_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_real_pad_destroy		(GObject *object);
+static void	gst_real_pad_dispose		(GObject *object);
 
 static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
 
@@ -123,6 +125,7 @@ gst_real_pad_get_type(void) {
       sizeof(GstRealPad),
       32,
       (GInstanceInitFunc)gst_real_pad_init,
+      NULL
     };
     _gst_real_pad_type = g_type_register_static(GST_TYPE_PAD, "GstRealPad", &pad_info, 0);
   }
@@ -140,8 +143,7 @@ gst_real_pad_class_init (GstRealPadClass *klass)
 
   real_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
 
-// FIXME!
-//  gobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
+  gobject_class->dispose  = GST_DEBUG_FUNCPTR(gst_real_pad_dispose);
   gobject_class->set_property  = GST_DEBUG_FUNCPTR(gst_real_pad_set_property);
   gobject_class->get_property  = GST_DEBUG_FUNCPTR(gst_real_pad_get_property);
 
@@ -284,10 +286,10 @@ gst_pad_new_from_template (GstPadTemplate *templ,
   g_return_val_if_fail (templ != NULL, NULL);
 
   pad = gst_pad_new (name, templ->direction);
+  
   gst_object_ref (GST_OBJECT (templ));
-  gst_object_sink (GST_OBJECT (templ));
   GST_PAD_PADTEMPLATE(pad) = templ;
-
+  
   return pad;
 }
 
@@ -552,11 +554,36 @@ gst_pad_disconnect (GstPad *srcpad,
  *
  * Connects the source pad to the sink pad.
  *
+ * You shouldn't use this API in a real application because the
+ * failure mode dumps diagnostics to stderr.  A professional
+ * application should never fail, or use gst_pad_try_connect and
+ * check the return code.
+ */
+void
+gst_pad_connect (GstPad *srcpad,
+		 GstPad *sinkpad)
+{
+  if (!gst_pad_try_connect (srcpad, sinkpad))
+/* FIXME: g_critical is glib-2.0, not glib-1.2
+    g_critical ("couldn't connect %s:%s and %s:%s",
+*/
+    g_warning ("couldn't connect %s:%s and %s:%s",
+		GST_DEBUG_PAD_NAME (srcpad),
+		GST_DEBUG_PAD_NAME (sinkpad));
+}
+
+/**
+ * gst_pad_try_connect:
+ * @srcpad: the source pad to connect
+ * @sinkpad: the sink pad to connect
+ *
+ * Connects the source pad to the sink pad.
+ *
  * Returns: TRUE if the pad could be connected
  */
 gboolean
-gst_pad_connect (GstPad *srcpad,
-		 GstPad *sinkpad)
+gst_pad_try_connect (GstPad *srcpad,
+		     GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
   gboolean negotiated = FALSE;
@@ -994,21 +1021,27 @@ gst_pad_get_bufferpool (GstPad *pad)
 }
 
 static void
-gst_real_pad_destroy (GObject *object)
+gst_real_pad_dispose (GObject *object)
 {
   GstPad *pad = GST_PAD (object);
+  
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s\n", GST_DEBUG_PAD_NAME(pad));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy %s:%s\n", GST_DEBUG_PAD_NAME(pad));
-
-  if (GST_PAD (pad)->padtemplate)
+  if (GST_PAD (pad)->padtemplate){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "unreffing padtemplate'%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_PAD (pad)->padtemplate)));
     gst_object_unref (GST_OBJECT (GST_PAD (pad)->padtemplate));
-
-  if (GST_PAD_PEER (pad))
+  }
+  
+  if (GST_PAD_PEER (pad)){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
     gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
-
-  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad)))
+  }
+  
+  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
-
+  }
+  
   // FIXME we should destroy the ghostpads, because they are nothing without the real pad
   if (GST_REAL_PAD (pad)->ghostpads) {
     GList *orig, *ghostpads;
@@ -1018,18 +1051,17 @@ gst_real_pad_destroy (GObject *object)
     while (ghostpads) {
       GstPad *ghostpad = GST_PAD (ghostpads->data);
 
-      if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad)))
+      if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad))){
+        GST_DEBUG (GST_CAT_REFCOUNTING, "removing ghost pad from element '%s'\n", GST_OBJECT_NAME(GST_OBJECT_PARENT (ghostpad)));
         gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (ghostpad)), ghostpad);
-
+      }
       ghostpads = g_list_next (ghostpads);
     }
     g_list_free (orig);
     g_list_free (GST_REAL_PAD(pad)->ghostpads);
   }
 
-// FIXME !!
-//  if (G_OBJECT_CLASS (real_pad_parent_class)->destroy)
-//    G_OBJECT_CLASS (real_pad_parent_class)->destroy (object);
+  G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
 }
 
 
@@ -1058,7 +1090,7 @@ gst_pad_load_and_connect (xmlNodePtr self,
       pad = gst_element_get_pad (GST_ELEMENT (parent), xmlNodeGetContent (field));
     }
     else if (!strcmp(field->name, "peer")) {
-      peer = g_strdup (xmlNodeGetContent (field));
+      peer = xmlNodeGetContent (field);
     }
     field = field->next;
   }
@@ -1424,7 +1456,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
           GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
     (peer->chainhandler) (((GstPad*)peer), buf);
   } else
-    GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
+    {
+      GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
+    }
 }
 #endif
 
@@ -1445,7 +1479,15 @@ gst_pad_pull (GstPad *pad)
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
-  g_return_val_if_fail (peer != NULL, NULL);
+
+  if (!peer)
+    {
+/* FIXME: g_critical is glib-2.0, not glib-1.2
+      g_critical ("gst_pad_pull but %s:%s is unconnected", GST_DEBUG_PAD_NAME(pad));
+*/
+      g_warning ("gst_pad_pull but %s:%s is unconnected", GST_DEBUG_PAD_NAME(pad));
+      return NULL;
+    }
 
   if (peer->gethandler) {
     GST_DEBUG (GST_CAT_DATAFLOW,"calling gethandler %s of peer pad %s:%s\n",
@@ -1610,6 +1652,7 @@ gst_padtemplate_get_type (void)
       sizeof(GstPadTemplate),
       32,
       (GInstanceInitFunc)gst_padtemplate_init,
+      NULL
     };
     padtemplate_type = g_type_register_static(GST_TYPE_OBJECT, "GstPadTemplate", &padtemplate_info, 0);
   }
@@ -1858,6 +1901,7 @@ gst_ghost_pad_get_type(void) {
       sizeof(GstGhostPad),
       8,
       (GInstanceInitFunc)gst_ghost_pad_init,
+      NULL
     };
     _gst_ghost_pad_type = g_type_register_static(GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
   }

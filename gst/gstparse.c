@@ -88,9 +88,11 @@ dynamic_connect (GstElement *element, GstPad *newpad, gpointer data)
 static gchar *
 gst_parse_unique_name(gchar *type,gst_parse_priv *priv)
 {
+  gpointer tmp;
   gint count;
 
-  count = GPOINTER_TO_INT(g_hash_table_lookup(priv->elementcounts,type));
+  tmp = g_hash_table_lookup (priv->elementcounts,type);
+  count = GPOINTER_TO_INT (tmp);
   count++;
   g_hash_table_insert(priv->elementcounts,type,GINT_TO_POINTER(count));
 
@@ -233,6 +235,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       argname = arg;
       pos[0] = '\0';
       argval = pos+1;
+      
       GST_DEBUG(0,"attempting to set argument '%s' to '%s' on element '%s'\n",
             argname,argval,GST_ELEMENT_NAME(previous));
       gst_util_set_object_arg (G_OBJECT(previous), argname, argval);
@@ -361,7 +364,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         }
       }
 
-      if (!sinkpads) GST_DEBUG(0,"can't find a sink pad for %s\n", gst_element_get_name (previous));
+      if (!sinkpads) GST_DEBUG(0,"can't find a sink pad for element\n");
       else GST_DEBUG(0,"have sink pad %s:%s\n",GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
 
       if (!srcpads && sinkpads && previous) {
@@ -375,8 +378,10 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           srcpadname,
           GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
 
-        g_signal_connect (G_OBJECT (previous), "new_pad", dynamic_connect, connect);
-        g_signal_connect (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
+        g_signal_connect (G_OBJECT (previous), "new_pad",
+			  G_CALLBACK (dynamic_connect), connect);
+        g_signal_connect (G_OBJECT (previous), "new_ghost_pad",
+			  G_CALLBACK (dynamic_connect), connect);
       }
       else {
         for (j=0; (j<numsrcpads) && (j<numsinkpads); j++){
@@ -448,9 +453,10 @@ GST_DEBUG_PAD_NAME(temppad),GST_ELEMENT_NAME (parent),GST_PAD_NAME(temppad));
 
   if (retval) return retval;
 
-  if (closingchar != '\0')
-    DEBUG("returning IN THE WRONG PLACE\n");
-  else DEBUG("ending pipeline\n");
+  DEBUG (closingchar != '\0'?
+	 "returning IN THE WRONG PLACE\n" : 
+	 "ending pipeline\n");
+
   return i+1;
 }
 

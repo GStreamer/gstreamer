@@ -56,8 +56,7 @@ static void			gst_element_set_property	(GObject *object, guint prop_id,
 static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *value, 
 								 GParamSpec *pspec);
 
-static void 			gst_element_shutdown 		(GObject *object);
-static void			gst_element_real_destroy	(GObject *object);
+static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 
@@ -84,6 +83,7 @@ GType gst_element_get_type (void)
       sizeof(GstElement),
       0,
       (GInstanceInitFunc)gst_element_init,
+      NULL
     };
     _gst_element_type = g_type_register_static(GST_TYPE_OBJECT, "GstElement", &element_info, G_TYPE_FLAG_ABSTRACT);
   }
@@ -140,9 +140,7 @@ gst_element_class_init (GstElementClass *klass)
 
   gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_set_property);
   gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_get_property);
-//  gobject_class->shutdown =		GST_DEBUG_FUNCPTR(gst_element_shutdown);
-// FIXME!
-//  gobject_class->destroy =		GST_DEBUG_FUNCPTR(gst_element_real_destroy);
+  gobject_class->dispose =		GST_DEBUG_FUNCPTR(gst_element_dispose);
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
@@ -940,36 +938,23 @@ GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEM
 }
 
 static void
-gst_element_shutdown (GObject *object)
-{
-  GstElement *element = GST_ELEMENT (object);
-
-  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "shutdown\n");
-
-  if (GST_IS_BIN (GST_OBJECT_PARENT (element)))
-    gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
-
-//  if (G_OBJECT_CLASS (parent_class)->shutdown)
-//    G_OBJECT_CLASS (parent_class)->shutdown (G_OBJECT (object));
-}
-
-static void
-gst_element_real_destroy (GObject *object)
+gst_element_dispose (GObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
   GList *pads;
   GstPad *pad;
+  
+  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose\n");
 
-  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "destroy\n");
+  if (GST_IS_BIN (GST_OBJECT_PARENT (element)))
+    gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
+
 
   if (element->pads) {
     GList *orig;
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      //gst_object_destroy (GST_OBJECT (pad));
-      gst_object_ref (GST_OBJECT (pad));
-      gst_element_remove_pad (element, pad);
       gst_object_unref (GST_OBJECT (pad));
       pads = g_list_next (pads);
     }
@@ -981,9 +966,7 @@ gst_element_real_destroy (GObject *object)
   element->numsrcpads = 0;
   element->numsinkpads = 0;
 
-// FIXME!
-//  if (G_OBJECT_CLASS (parent_class)->destroy)
-//    G_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /*
@@ -1142,9 +1125,9 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
   // first get the needed tags to construct the element
   while (children) {
     if (!strcmp (children->name, "name")) {
-      name = g_strdup (xmlNodeGetContent (children));
+      name = xmlNodeGetContent (children);
     } else if (!strcmp (children->name, "type")) {
-      type = g_strdup (xmlNodeGetContent (children));
+      type = xmlNodeGetContent (children);
     }
     children = children->next;
   }
@@ -1171,10 +1154,10 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
       while (child) {
         if (!strcmp (child->name, "name")) {
-          name = g_strdup (xmlNodeGetContent (child));
+          name = xmlNodeGetContent (child);
 	}
 	else if (!strcmp (child->name, "value")) {
-          value = g_strdup (xmlNodeGetContent (child));
+          value = xmlNodeGetContent (child);
 	}
         child = child->next;
       }

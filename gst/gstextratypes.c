@@ -41,6 +41,7 @@ gst_extra_get_filename_type (void)
       0, //sizeof(GstElement),
       0,
       NULL,
+      NULL
     };
     filename_type = g_type_register_static (G_TYPE_STRING, "GstFilename", &filename_info, 0);
   }

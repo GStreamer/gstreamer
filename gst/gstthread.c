@@ -61,7 +61,7 @@ enum {
 static void			gst_thread_class_init		(GstThreadClass *klass);
 static void			gst_thread_init			(GstThread *thread);
 
-static void 			gst_thread_real_destroy 	(GObject *object);
+static void 			gst_thread_dispose 	(GObject *object);
 
 static void			gst_thread_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void			gst_thread_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -95,6 +95,7 @@ gst_thread_get_type(void) {
       sizeof(GstThread),
       4,
       (GInstanceInitFunc)gst_thread_init,
+      NULL
     };
     thread_type = g_type_register_static(GST_TYPE_BIN, "GstThread", &thread_info, 0);
   }
@@ -120,8 +121,7 @@ gst_thread_class_init (GstThreadClass *klass)
     g_param_spec_boolean("create_thread", "Create Thread", "Whether to create a thread.",
                          TRUE,G_PARAM_READWRITE));
 
-// FIXME!
-//  gobject_class->destroy =		gst_thread_real_destroy;
+  gobject_class->dispose =		gst_thread_dispose;
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR (gst_thread_save_thyself);
@@ -161,21 +161,20 @@ gst_thread_init (GstThread *thread)
 }
 
 static void
-gst_thread_real_destroy (GObject *object)
+gst_thread_dispose (GObject *object)
 {
   GstThread *thread = GST_THREAD (object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING,"destroy()\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING,"dispose\n");
 
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
 
-// FIXME!
-//  if (G_OBJECT_CLASS (parent_class)->destroy)
-//    G_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 
   gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
+
 }
 
 static void
@@ -256,7 +255,6 @@ gst_thread_change_state (GstElement *element)
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
   pthread_t self = pthread_self();
-  GstElement *peerelement;
 
   g_return_val_if_fail (GST_IS_THREAD(element), FALSE);
 //  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME(element));
@@ -394,10 +392,15 @@ gst_thread_change_state (GstElement *element)
             GList *pads = GST_ELEMENT_PADS(e);
             while (pads)
             {
+	      GstRealPad *peer;
+	      GstElement *peerelement;
               GstPad *p = GST_PAD(pads->data);
               pads = g_list_next(pads);
 
-              peerelement = GST_PAD_PARENT(GST_PAD_PEER(p));
+	      peer = GST_PAD_PEER(p);
+	      if (!peer) continue;
+
+              peerelement = GST_PAD_PARENT(peer);
               if (!peerelement) continue;		// deal with case where there's no peer
 
               if (!GST_FLAG_IS_SET(peerelement,GST_ELEMENT_DECOUPLED)) {

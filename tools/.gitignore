@@ -11,4 +11,5 @@ gstreamer-register
 gstreamer-inspect
 gstreamer-compprep
 gstreamer-complete
+gstreamer-guilaunch
 *.xml

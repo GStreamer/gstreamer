@@ -53,6 +53,18 @@ static void 		load_plugin_func 	(gpointer data, gpointer user_data);
 
 static GSList *preload_plugins = NULL;
 
+const gchar *g_log_domain_gstreamer = "GStreamer";
+
+static void
+debug_log_handler (const gchar *log_domain,
+		   GLogLevelFlags log_level,
+		   const gchar *message,
+		   gpointer user_data)
+{
+  g_log_default_handler(log_domain, log_level, message, user_data);
+  g_on_error_query(NULL);
+}
+
 /**
  * gst_init:
  * @argc: pointer to application's argc
@@ -64,6 +76,7 @@ static GSList *preload_plugins = NULL;
 void 
 gst_init (int *argc, char **argv[]) 
 {
+  GLogLevelFlags llf;
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
 #endif
@@ -91,6 +104,9 @@ gst_init (int *argc, char **argv[])
   if (!gst_init_check (argc,argv)) {
     exit (0);				// FIXME!
   }
+
+  llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
+  g_log_set_handler(g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 

@@ -121,6 +121,7 @@ gst_queue_get_type(void)
       sizeof(GstQueue),
       4,
       (GInstanceInitFunc)gst_queue_init,
+      NULL
     };
     queue_type = g_type_register_static (GST_TYPE_ELEMENT, "GstQueue", &queue_info, 0);
   }

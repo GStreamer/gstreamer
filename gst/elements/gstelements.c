@@ -32,7 +32,6 @@
 #include "gstfdsrc.h"
 #include "gstmultidisksrc.h"
 #include "gstpipefilter.h"
-#include "gstsinesrc.h"
 #include "gsttee.h"
 #include "gstaggregator.h"
 
@@ -64,7 +63,6 @@ static struct _elements_entry _elements[] = {
   { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,		NULL },
   { "multidisksrc", gst_multidisksrc_get_type,	&gst_multidisksrc_details,	NULL },
   { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,	NULL },
-  { "sinesrc", 	    gst_sinesrc_get_type, 	&gst_sinesrc_details,		gst_sinesrc_factory_init },
   { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
   { "aggregator",   gst_aggregator_get_type, 	&gst_aggregator_details,	gst_aggregator_factory_init },
 
@@ -87,13 +85,20 @@ plugin_init (GModule *module, GstPlugin *plugin)
     factory = gst_elementfactory_new (_elements[i].name,
                                       (_elements[i].type) (),
                                       _elements[i].details);
-    if (factory != NULL) {
-      gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-      if (_elements[i].factoryinit) {
-        _elements[i].factoryinit (factory);
+
+    if (!factory)
+      {
+	g_warning ("gst_elementfactory_new failed for `%s'",
+		   _elements[i].name);
+	continue;
       }
-//      g_print("added factory '%s'\n",_elements[i].name);
+
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+    if (_elements[i].factoryinit) {
+      _elements[i].factoryinit (factory);
     }
+//      g_print("added factory '%s'\n",_elements[i].name);
+
     i++;
   }
 

@@ -9,6 +9,9 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code (if it contains documentation).
 DOC_SOURCE_DIR=$(top_srcdir)/gst
 
+# thomas
+# there's something wrong with gstreamer-sections.txt not being in the dist
+# maybe it doesn't resolve
 EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt $(DOC_MAIN_SGML_FILE)
 
 HTML_DIR=$(datadir)/gstreamer/html

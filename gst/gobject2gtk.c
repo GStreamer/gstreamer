@@ -2,6 +2,7 @@
 /* Modified by Jamie Gennis 06-2001 */
 #include <string.h>
 #include <stdio.h>
+#include "gstlog.h"
 #include "gobject2gtk.h"
 
 
@@ -126,16 +127,16 @@ g2g_object_class_find_property(GObjectClass *class, const gchar *name)
 
   //fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
 
-  gtk_object_arg_get_info(class->type,name,&info);
+  // the return value NULL if no error
+  if (gtk_object_arg_get_info(class->type,name,&info) != NULL) {
+    return NULL;
+  }
+  
   spec = g_new0(GParamSpec,1);
 
-  if (info) {
-    spec->name = (gchar *) name;
-    spec->value_type = info->type;
-    spec->flags = info->arg_flags;
-  } else {
-    spec->value_type = GTK_TYPE_NONE;
-  }
+  spec->name = (gchar *) name;
+  spec->value_type = info->type;
+  spec->flags = info->arg_flags;
 
   return spec;
 }

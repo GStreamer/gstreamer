@@ -23,7 +23,8 @@
 #define __GST_DPMAN_H__
 
 #include <gst/gstobject.h>
-#include <gst/gstdparam.h>
+#include <gst/gstprops.h>
+#include <libs/control/gstdparam.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,17 +46,23 @@ extern "C" {
 #define GST_DPMAN_MODE_DATA(dpman)				 ((dpman)->mode_data)
 #define GST_DPMAN_RATE(dpman)				 ((dpman)->rate)
 
+typedef enum {
+  GST_DPMAN_CALLBACK,
+  GST_DPMAN_DIRECT,
+  GST_DPMAN_ARRAY,
+} GstDPMUpdateMethod;
+
 typedef struct _GstDParamManager GstDParamManager;
 typedef struct _GstDParamManagerClass GstDParamManagerClass;
-typedef struct _GstDpmMode GstDpmMode;
+typedef struct _GstDPMMode GstDPMMode;
 typedef struct _GstDParamWrapper GstDParamWrapper;
 
-typedef guint (*GstDpmModeFirstCountdownFunction) (GstDParamManager *dpman, guint frames, gint64 timestamp);
-typedef guint (*GstDpmModeCountdownFunction) (GstDParamManager *dpman, guint frame_count);
-typedef void (*GstDpmModeSetupFunction) (GstDParamManager *dpman);
-typedef void (*GstDpmModeTeardownFunction) (GstDParamManager *dpman);
+typedef guint (*GstDPMModePreProcessFunction) (GstDParamManager *dpman, guint frames, gint64 timestamp);
+typedef guint (*GstDPMModeProcessFunction) (GstDParamManager *dpman, guint frame_count);
+typedef void (*GstDPMModeSetupFunction) (GstDParamManager *dpman);
+typedef void (*GstDPMModeTeardownFunction) (GstDParamManager *dpman);
 
-typedef void (*GstDpmUpdateFunction) (GValue *value, gpointer data);
+typedef void (*GstDPMUpdateFunction) (GValue *value, gpointer data);
 
 struct _GstDParamManager {
 	GstObject		object;
@@ -64,7 +71,7 @@ struct _GstDParamManager {
 	GSList *dparams_list;
 	
 	gchar *mode_name;
-	GstDpmMode* mode;
+	GstDPMMode* mode;
 	gpointer mode_data;
 	
 	gint64 timestamp;
@@ -78,58 +85,76 @@ struct _GstDParamManagerClass {
 	/* signal callbacks */
 };
 
-struct _GstDpmMode {
-	GstDpmModeFirstCountdownFunction firstcountdownfunc;
-	GstDpmModeCountdownFunction countdownfunc;
-	GstDpmModeSetupFunction setupfunc;
-	GstDpmModeTeardownFunction teardownfunc;
+struct _GstDPMMode {
+	GstDPMModePreProcessFunction preprocessfunc;
+	GstDPMModeProcessFunction processfunc;
+	GstDPMModeSetupFunction setupfunc;
+	GstDPMModeTeardownFunction teardownfunc;
 };
 
 struct _GstDParamWrapper {
-	gchar *dparam_name;
+	GstDParamSpec* spec;
 	GValue *value;
 	GstDParam *dparam;
-	GstDpmUpdateFunction update_func;
+	GstDPMUpdateMethod update_method;
 	gpointer update_data;
+	GstDPMUpdateFunction update_func;
 };
 
-#define GST_DPMAN_FIRST_COUNTDOWNFUNC(dpman)		(((dpman)->mode)->firstcountdownfunc)
-#define GST_DPMAN_COUNTDOWNFUNC(dpman)		(((dpman)->mode)->countdownfunc)
+#define GST_DPMAN_PREPROCESSFUNC(dpman)		(((dpman)->mode)->preprocessfunc)
+#define GST_DPMAN_PROCESSFUNC(dpman)		(((dpman)->mode)->processfunc)
 #define GST_DPMAN_SETUPFUNC(dpman)		(((dpman)->mode)->setupfunc)
 #define GST_DPMAN_TEARDOWNFUNC(dpman)		(((dpman)->mode)->teardownfunc)
 
-#define GST_DPMAN_FIRST_COUNTDOWN(dpman, buffer_size, timestamp) \
-				(GST_DPMAN_FIRST_COUNTDOWNFUNC(dpman)(dpman, buffer_size, timestamp))
+#define GST_DPMAN_PREPROCESS(dpman, buffer_size, timestamp) \
+				(GST_DPMAN_PREPROCESSFUNC(dpman)(dpman, buffer_size, timestamp))
 
-#define GST_DPMAN_COUNTDOWN(dpman, frame_countdown, frame_count) \
+#define GST_DPMAN_PROCESS(dpman, frame_count) \
+				(GST_DPMAN_PROCESSFUNC(dpman)(dpman, frame_count))
+
+#define GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, frame_count) \
 				(frame_countdown-- || \
-				(frame_countdown = GST_DPMAN_COUNTDOWNFUNC(dpman)(dpman, frame_count)))
-
+				(frame_countdown = GST_DPMAN_PROCESS(dpman, frame_count)))
+				
 #define GST_DPMAN_DO_UPDATE(dpwrap) ((dpwrap->update_func)(dpwrap->value, dpwrap->update_data))
 
 GType gst_dpman_get_type (void);
 GstDParamManager* gst_dpman_new (gchar *name, GstElement *parent);
 void gst_dpman_set_parent (GstDParamManager *dpman, GstElement *parent);
+GstDParamManager* gst_dpman_get_manager (GstElement *parent);
 
-gboolean gst_dpman_add_required_dparam (GstDParamManager *dpman, 
-                                        gchar *dparam_name, 
-                                        GType type, 
-                                        GstDpmUpdateFunction update_func, 
-                                        gpointer update_data);
+gboolean gst_dpman_add_required_dparam_callback (GstDParamManager *dpman, 
+                                                gchar *dparam_name, 
+                                                GType type, 
+                                                GstDPMUpdateFunction update_func, 
+                                                gpointer update_data);
+gboolean gst_dpman_add_required_dparam_direct (GstDParamManager *dpman, 
+                                               gchar *dparam_name, 
+                                               GType type, 
+                                               gpointer update_data);
+gboolean gst_dpman_add_required_dparam_array (GstDParamManager *dpman, 
+                                              gchar *dparam_name, 
+                                              GType type, 
+                                              gpointer update_data);
 void gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name);
 gboolean gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam *dparam);
 void gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name);                         
 GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, gchar *name);
+GType gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name);
+
+GstDParamSpec** gst_dpman_list_dparam_specs(GstDParamManager *dpman);
+GstDParamSpec* gst_dpman_get_dparam_spec (GstDParamManager *dpman, gchar *dparam_name);
+void gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, gchar *dparam_name);
 
 void gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad);
 
 gboolean gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename);
 void gst_dpman_register_mode (GstDParamManagerClass *klass,
                            gchar *modename, 
-                           GstDpmModeFirstCountdownFunction firstcountdownfunc,
-                           GstDpmModeCountdownFunction countdownfunc,
-                           GstDpmModeSetupFunction setupfunc,
-                           GstDpmModeTeardownFunction teardownfunc);
+                           GstDPMModePreProcessFunction preprocessfunc,
+                           GstDPMModeProcessFunction processfunc,
+                           GstDPMModeSetupFunction setupfunc,
+                           GstDPMModeTeardownFunction teardownfunc);
 
 #ifdef __cplusplus
 }

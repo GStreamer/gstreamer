@@ -19,6 +19,7 @@ recommended plugins:
 
 optional plugins:
 
+   gstreamer-a52dec
    gstreamer-aa
    gstreamer-alsa
    gstreamer-arts
@@ -35,10 +36,12 @@ optional plugins:
    gstreamer-jpeg
    gstreamer-lame
    gstreamer-mad
+   gstreamer-mikmod
    gstreamer-mpeg2dec
    gstreamer-mpg123
    gstreamer-oss
    gstreamer-sdl
+   gstreamer-sid
    gstreamer-vorbis
    gstreamer-x
 

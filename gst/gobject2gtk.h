@@ -23,6 +23,9 @@ GSList *g_slist_delete_link (GSList *list, GSList *llink);
 typedef struct _GObject GObject;
 typedef struct _GObjectClass GObjectClass;
 
+#define g_string_printf   g_string_sprintf
+#define g_string_printfa  g_string_sprintfa
+
 #define g_object_ref(obj)			gtk_object_ref((GtkObject *)(obj))
 #define g_object_unref(obj)			gtk_object_unref((GtkObject *)(obj))
 
@@ -79,6 +82,7 @@ typedef struct _GObjectClass GObjectClass;
 #define gst_marshal_VOID__VOID			gtk_marshal_NONE__NONE
 #define gst_marshal_VOID__BOOLEAN		gtk_marshal_NONE__BOOL
 #define gst_marshal_VOID__INT			gtk_marshal_NONE__INT
+#define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
 #define gst_marshal_VOID__STRING		gtk_marshal_NONE__STRING
 #define gst_marshal_VOID__POINTER		gtk_marshal_NONE__POINTER
 #define gst_marshal_VOID__OBJECT		gtk_marshal_NONE__POINTER
@@ -241,7 +245,7 @@ struct _GParamSpec {
 };
 
 #define g_value_init(value,t)			((value)->type = (t))
-#define g_value_copy			gtk_arg_copy
+#define g_value_copy(src_val,dest_val)	(dest_val = gtk_arg_copy(src_val,dest_val))
 #define g_value_unset(val)
 
 #define g_object_class_install_property		g2g_object_class_install_property

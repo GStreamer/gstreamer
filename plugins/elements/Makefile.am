@@ -25,7 +25,6 @@ libgstelements_la_SOURCES =	\
 	gstpipefilter.c		\
 	gsttee.c		\
 	gstaggregator.c		\
-	gstsinesrc.c		\
 	$(GSTHTTPSRC)
 
 noinst_HEADERS =		\

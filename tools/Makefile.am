@@ -11,7 +11,14 @@ else
 GST_LOADSAVE_SRC = gstreamer-compprep
 endif
 
+if USE_GLIB2
+GST_GUI_LAUNCH = 
+else
+GST_GUI_LAUNCH = gstreamer-guilaunch
+endif
+
 bin_PROGRAMS = 	gstreamer-launch 	\
+		$(GST_GUI_LAUNCH)	\
 		$(GST_REGISTRY_SRC) 	\
 		gstreamer-inspect 	\
 		$(GST_LOADSAVE_SRC) 	\

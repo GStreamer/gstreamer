@@ -69,6 +69,7 @@ gst_typefactory_get_type (void)
       sizeof(GstTypeFactory),
       0,
       (GInstanceInitFunc) gst_typefactory_init,
+      NULL
     };
     typefactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
                                                "GstTypeFactory", &typefactory_info, 0);

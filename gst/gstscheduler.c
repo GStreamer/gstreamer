@@ -842,6 +842,7 @@ GType gst_schedule_get_type(void) {
       sizeof(GstSchedule),
       0,
       (GInstanceInitFunc)gst_schedule_init,
+      NULL
     };
     schedule_type = g_type_register_static(GST_TYPE_OBJECT, "GstSchedule", &schedule_info, 0);
   }
@@ -910,7 +911,7 @@ GstElement *gst_schedule_check_pad (GstSchedule *sched, GstPad *pad) {
 }
 */
 
-GstScheduleChain *
+static GstScheduleChain *
 gst_schedule_chain_new (GstSchedule *sched)
 {
   GstScheduleChain *chain = g_new (GstScheduleChain, 1);
@@ -934,7 +935,7 @@ gst_schedule_chain_new (GstSchedule *sched)
   return chain;
 }
 
-void
+static void
 gst_schedule_chain_destroy (GstScheduleChain *chain)
 {
   GstSchedule *sched = chain->sched;
@@ -951,7 +952,7 @@ gst_schedule_chain_destroy (GstScheduleChain *chain)
   GST_INFO (GST_CAT_SCHEDULING, "destroyed chain %p, now are %d chains in sched %p",chain,sched->num_chains,sched);
 }
 
-void
+static void
 gst_schedule_chain_add_element (GstScheduleChain *chain, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain %p", GST_ELEMENT_NAME (element),chain);
@@ -964,7 +965,7 @@ gst_schedule_chain_add_element (GstScheduleChain *chain, GstElement *element)
   chain->num_elements++;
 }
 
-void
+static void
 gst_schedule_chain_enable_element (GstScheduleChain *chain, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "enabling element \"%s\" in chain %p", GST_ELEMENT_NAME (element),chain);
@@ -979,7 +980,7 @@ gst_schedule_chain_enable_element (GstScheduleChain *chain, GstElement *element)
   gst_schedule_cothreaded_chain(GST_BIN(chain->sched->parent),chain);
 }
 
-void
+static void
 gst_schedule_chain_disable_element (GstScheduleChain *chain, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "disabling element \"%s\" in chain %p", GST_ELEMENT_NAME (element),chain);
@@ -995,7 +996,7 @@ gst_schedule_chain_disable_element (GstScheduleChain *chain, GstElement *element
 //  gst_schedule_cothreaded_chain(GST_BIN(chain->sched->parent),chain);
 }
 
-void
+static void
 gst_schedule_chain_remove_element (GstScheduleChain *chain, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from chain %p", GST_ELEMENT_NAME (element),chain);
@@ -1017,7 +1018,7 @@ gst_schedule_chain_remove_element (GstScheduleChain *chain, GstElement *element)
   element->sched = NULL;
 }
 
-void
+static void
 gst_schedule_chain_elements (GstSchedule *sched, GstElement *element1, GstElement *element2)
 {
   GList *chains;
@@ -1103,7 +1104,7 @@ GST_ELEMENT_SCHED(srcelement),GST_ELEMENT_SCHED(sinkelement));
 }
 
 // find the chain within the schedule that holds the element, if any
-GstScheduleChain *
+static GstScheduleChain *
 gst_schedule_find_chain (GstSchedule *sched, GstElement *element)
 {
   GList *chains;
@@ -1125,7 +1126,7 @@ gst_schedule_find_chain (GstSchedule *sched, GstElement *element)
   return NULL;
 }
 
-void
+static void
 gst_schedule_chain_recursive_add (GstScheduleChain *chain, GstElement *element)
 {
   GList *pads;

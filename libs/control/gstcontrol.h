@@ -1,8 +1,7 @@
 /* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ * Copyright (C) 2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *
- * gstlog.h: Header for event logging (depracated?)
+ * gstcontrol.h: GStreamer control utility library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -11,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -19,18 +18,24 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+ 
+#ifndef __GST_CONTROL_H__
+#define __GST_CONTROL_H__
 
-#ifndef __GST_LOG_H__
-#define __GST_LOG_H__
+#include <gst/gstobject.h>
+#include <gst/gstprops.h>
 
-extern const char             *g_log_domain_gstreamer;
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-/* information messages */
-#define GST_SHOW_INFO
-#ifdef GST_SHOW_INFO
-#define gst_info(format,args...) fprintf(stderr,format,##args)
-#else
-#define gst_info(format,args...)
-#endif
+#include <libs/control/gstdparammanager.h>
+#include <libs/control/gstdparam.h>
 
-#endif /* __GST_LOG_H__ */
+#include <libs/control/gstdplinearinterp.h>
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* __GST_CONTROL_H__ */

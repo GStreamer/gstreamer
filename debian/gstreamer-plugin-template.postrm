@@ -3,8 +3,8 @@
 set -e
 
 if [ "$1" = "remove" ]; then
-   gstreamer-register --gst-mask=0
-   gstreamer-compprep --gst-mask=0
+   gstreamer-register --gst-mask=0 || true
+   gstreamer-compprep --gst-mask=0 || true
 fi
 
 #DEBHELPER#

@@ -81,6 +81,7 @@ gst_typefind_get_type (void)
       sizeof(GstTypeFind),
       0,
       (GInstanceInitFunc)gst_typefind_init,
+      NULL
     };
     typefind_type = g_type_register_static (GST_TYPE_ELEMENT, "GstTypeFind", &typefind_info, 0);
   }
