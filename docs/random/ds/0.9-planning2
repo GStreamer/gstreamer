@@ -1,0 +1,129 @@
+
+plans:
+
+ - The primary object that applications deal with is a GstPipeline.  A
+   given pipeline is connected to a particular main loop (GMainLoop for
+   glib, etc.).  Calls to gst_ functions for objects owned by that
+   pipeline must be done from the context of the pipeline's main loop.
+   Signals fired by elements are marshalled in the pipeline's main
+   loop.
+
+   Notably, this means the gst_ API is not necessarily thread-safe.
+   However, it is safe to operate on different GstPipelines from
+   different threads.  This makes it possible, for example, for
+   rhythmbox to play music and gather metadata from different threads
+   using different pipelines.  Likewise, it's also possible to do
+   both in the same thread.
+
+ - The primary method of scheduling an element is through a generic
+   'iterate()' method.  The iterate method explicitly tells the core
+   what it is waiting for (a specific time, pads to have available
+   data, etc.), and the core calls the iterate method when these
+   "triggers" happen.  GstElement subclasses will be created to
+   emulate 0.8-style get/chain/loop methods.  Existing elements will
+   be converted to the new subclasses rather than implement the
+   iterate method directly, unless there is a compelling reason to
+   do so.  Iterate implementations are expected not to block, ever.
+
+   Rationale: This makes it possible to create completely non-blocking
+   elements.
+
+ - Scheduling elements will be done in either a threaded or
+   non-threaded way.  The idle handler that is called by a pipeline's
+   main loop determines which elements are ready to be iterated
+   (based on their triggers), and puts them into a ready queue.  In
+   the non-threaded case, the idle handler then calls the iterate()
+   method on each element in the ready queue.  In the threaded case,
+   additional helper threads (which are completely owned by the
+   pipeline) are used to call the iterate methods.
+
+   Note that in the threaded case, elements may not always be run
+   in the same thread.
+
+   Some elements are much easier to write if they run in the same
+   thread as the main loop (i.e., elements that are also GUI widgets).
+   An element flag can be set to make the manager always call the
+   iterate method in the manager context (i.e., in the main loop
+   thread).  Also, elements like spider need to make core calls
+   which may not be allowed from other threads.
+
+   Rationale: Doing all bookkeeping in a single thread/context makes
+   the core code _much_ simpler.  This bookkeeping takes only a
+   minimal amount of CPU time, less than 5% of the CPU time in a
+   rhythmbox pipeline.  There is very little benefit to spreading
+   this over multiple CPUs until the number of CPUs is greater than
+   ~16, and you have _huge_ pipelines.  Also, a single-threaded
+   manager significantly decreases the number of locks necessary
+   in the core, decreasing lock contention (if any) and making it
+   easier to understand deadlocks (if any).
+
+ - There are essentially two types of objects/structures.  One type
+   includes objects that are derived from GObject, and are passed in
+   function calls similarly to gtk.  The other type includes objects
+   (structures, really) that are not reference counted and passed
+   around similar to how GstCaps works in 0.8.  That is, functions
+   that take 'const GstCaps *' do not take ownership of the passed
+   object, whereas functions that take 'GstCaps *' do.  Similar is
+   true for return values.
+
+ - The concept of GstBuffer from 0.8 will be split into two types.
+   One type will focus solely on holding information pertaining to
+   ownership of a memory area (call this GstMemBuffer), and the
+   other type will focus solely in transfering information between
+   elements (call this GstPipeBuffer).  In case you get confused,
+   GstMemBuffers _are not_ transferred between elements, and
+   GstPipeBuffers _do not_ own the memory they point to.
+
+   In general, GstPipeBuffers point to (and reference) a GstMemBuffer.
+   GstMemBuffers are GObjects.  GstPipeBuffers are structs, like
+   GstCaps.  GstPipeBuffers have timestamps, durations, and flags.
+   GstMemBuffers contain read/write flags.  There are no subbuffers
+   for either type, because they are not necessary.  Essentially,
+   GstPipeBuffers completely replace the concept of subbuffers.
+
+   (I'd like to continue to use the name GstBuffer for GstPipeBuffers,
+   since its usage is much more common in elements.)
+
+   Rationale: Memory regions need an ultimate owner and reference
+   counting.  However, chunks passed around between elements need
+   to be small and efficient.  These goals are non-overlapping and
+   conflicting, and thus are inappropriate to be combined in the
+   same class.
+
+ - Core objects should have very few (if any) public fields.  This
+   means that accessor macros will all be eliminated and replaced
+   with accessor functions.
+
+   Rationale: This makes it possible to change the core more during
+   an ABI-stable series.
+   
+ - Remove pluggable scheduling.
+
+   Rationale: We need one good scheduler.  Having multiple schedulers
+   is directly opposed to this goal.
+
+ - 0.8-style element states are split up.  One state (AppState)
+   indicates what the application wants the element to be doing,
+   and is completely under the control of the application.  The
+   other state (ElementState) indicates what the element is actually
+   doing, and is under control of the element.  If the application
+   wants an element to pause, it sets the AppState to PAUSED, and
+   the element eventually changes its ElementState to PAUSED (and
+   fires a signal).  If the element has an error or EOS, it sets
+   its ElementState to SOME_STATE and fires a signal, while the
+   AppState remains at PLAYING.  The actual number and descriptions
+   of states has not been discussed.
+
+   Rationale: It's pretty obvious that we're mixing concepts for
+   elements states in 0.8.
+
+ - getcaps() methods will be replaced by an element_allowed_caps()
+   field in the pad.  The primary reason for this is because
+   renegotiation only needs to happen when circumstances change.
+   This is more easily done by a field in GstPad and notification
+   of peers when this changes.
+
+   Somewhere, there's a document I wrote about completely redoing
+   caps.
+
+

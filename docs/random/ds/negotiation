@@ -1,0 +1,268 @@
+
+
+Properties:
+
+  "template_caps"
+    The union of all possible caps that a pad might have in any
+    condition.  Is a class property, and doesn't change over the
+    life of an object.  Set by the element during class init.
+
+  "internal_caps"
+    The caps that the element will allow on a pad, given its current
+    state and the external_caps of all the other pads of the element.
+    Set by the element.
+
+  "external_caps"
+    The caps representing what the core will allow on a pad.  This is
+    a combination of the peer's allowed caps, and filtering caps, and
+    any in-process negotiation restrictions.  Set by the core.
+
+  "negotiated_caps"
+    The format that the element will use.  Set by the core.
+
+  "filter_caps"
+    The caps intersected with everything else during negotiation.  Set
+    by the application.
+
+  "negotiable"
+    A boolean that indicates that the pad is ready to negotiate.  Set
+    by the element.
+
+
+
+Negotiation steps, from the element perspective:
+
+ - During object initialization, an element must set template_caps
+   and allowed_caps for each pad.
+
+ - In response to changes in the internal state of the element or in
+   the peer_allowed_caps of any other pad owned by the element, the
+   element should update allowed_caps of a pad.
+
+ - Pads are initially created with negotiable as FALSE.  When an
+   element wants to indicate that negotiation is allowable, it should
+   set negotiable to TRUE.
+
+ - In response to a negotiate signal, an element should copy the caps
+   in "allowed_caps" to "negotiated_caps", and extract any information
+   needed to handle the format.  At this point, "allowed_caps" is
+   guaranteed to be fixed.
+
+
+Negotiation steps, from the core perspective:
+
+ 
+
+
+
+
+
+<ds> I'd like to split it up into manageable "projects"
+<ds> hopefully some of which we can recruit others to do
+<Company> i'd like a decision about if we drop threads
+<ds> in what sense?
+<ds> threads being not required?
+<Company> threads being not part of the API
+<ds> or threads being not used
+<Company> so no thread safety considerations
+<ds> I would like threads to not be part of the API
+<ds> requiring apps/plugins to be written thread-safely is insane
+<Company> the question is this: If someone calls gst_element_set_state (element, state), does he have to marshal it into the correct thread himself or not?
+<ds> no
+<ds> reason being: we already have to deal with subthreads
+<ds> we == the core
+<Company> then you'll have a lot of problems
+<Company> i'd like to just drop subthreads and be done with it
+--> StyXman (~mdione@200.59.114.71) has joined #gstreamer
+<ds> and run everything in one thread?
+<Company> yes
+<Company> schedulers are free to use threads though
+<ds> this is obviously a retreat
+<Company> right
+<ds> but perhaps a strategic one
+<Company> otherwise you have to guarantee that you get no races
+<ds> I've seen this as a viable option for some time
+<Company> there's stuff that just does not work as is currently
+<ds> it always seemed difficult to convince other people that it's the right thing to do
+<ds> for example, wtay
+<Company> like setting xwindow ids, changing states or app-events
+<Company> like seeks
+<-- iain has quit ("leaving")
+<Company> all of this has the typical thread issues currently: it sometimes works and sometimes crashes the app
+<Company> and that's not acceptable to me
+<ds> let's do it
+<Company> if you look at my 0.10 code, I've tried to have GstObjects belong to a "context"
+<ds> this all fits into the idea that I think we should be a lot more like gtk architecturally
+<ds> for example, gtk doesn't have anything like caps negotiation, where elements call each other recursively
+<Company> and have functions ensure they're in the right context or otherwise marshal
+<Company> yes it does
+<ds> ?
+<Company> size requests and allocations
+<ds> but that's more like how I want it -- setting a property and firing a signal telling others that it's updated
+<ds> as i understand it
+<Company> though gtk has the bonus of being a tree which we don't have, we have a directed, maybe cyclic graph
+<Company> and for caps, the graph isn't even directed
+<Company> gtk is far too simple for gst
+<ds> true
+<Company> i can't even come up with an analogy to a video transcoder
+<ds> but we do some relatively simple stuff in a complicated way
+<-- StyXman (~mdione@200.59.114.71) has left #gstreamer
+<Company> like?
+<ds> caps negotiation
+<Company> that's not simple
+<ds> passing around the data should be
+<ds> was it you or thomasvs that wanted to split core headers into app headers and plugin headers?
+<Company> I definitely wanted that
+<Company> app/plugin/registry to be exact
+<ds> registry?
+<ds> for functions that access "internal" stuff?
+<Company> stuff an app normally doesn't touch
+<Company> so we can do something like declare the "app" stuff supported for a longer time
+<ds> oooh, good call
+<ds> I'm sold
+<Company> so, now that threads are gone, what are the biggies I want in 0.10?
+<Company> 1) non-blocking main-loop integrated processing
+<ds> that's rather important if you don't have threads :)
+<Company> right
+<Company> but it works in my gst-01.0 stuff already
+<Company> minus the elements that need to be ported of cause
+<Company> which aren't that many fortunately
+<Company> though some are hard (like gnomevfs), because they have no non-blocking API
+<ds> a subclass of GstElement that fires up a helper thread?
+<ds> (dirty, but it works)
+<Company> probably
+<ds> - autopluggers would be easier to write if there was a core method
+<ds>   to do what plugidentities do.
+<Company> no clue how to implement that
+<ds> there's also a note about bins being more involved with negotiation
+<Company> that's the next biggie: 2) fix the negotiation process to allow good autoplugging
+<ds> that was something I thought about last time around
+<Company> bins?
+<ds> that sounds like something I'd work on
+<ds> GstBin
+<Company> the only reason bhins still exist for me is to group elements
+<ds> so that a bin subclass could override how its children are negotiated
+<ds> much like GtkBin, actually
+<ds> and allocation
+<Company> hum
+<Company> how do you solve that issue with links that are only partly inside the bin and partly inside another one?
+<ds> that would be up to the parent (grandparent?)
+<Company> so all links must be in the same toplevel bin?
+<ds> yes
+<ds> isn't that the case currently?
+<ds> probably not checked
+<Company> pfff
+<Company> currently you can do anything
+<ds> heh
+<ds> what about state changes?
+<Company> dunno
+<Company> it's not really important for me
+<Company> apart from the EOS stuff
+<ds> I'd like states to be split into "what state does the app want me to be in" and "what state am I in"
+<ds> with the latter being under control of the element
+<Company> yeah, that'd be nice
+<ds> that way, you don't have multiple people trying to control the state
+<Company> we definitely need to fix EOS
+<Company> i'm not sure how we should handle errors
+<ds> element errors?
+<Company> yeah, if we want to explicitly unset errors or not
+<Company> currently on error the element goes to paused
+<ds> it's easier with actual_state
+<Company> in theory i just set it to PLAYING again and continue?
+<ds> the actual_state goes to PAUSED and fires a signal
+<Company> dunno, maybe actual_state should go to ERROR
+<ds> yeah
+<Company> that'd require gst_element_unset_error though
+<ds> with actual_state, we can add states without thinking too hard
+<Company> but if you can just unset it, why not just do it and continue
+<ds> the app may want to be involved
+<ds> especially to get the error message
+<ds> do we want a separate api section for autopluggers?
+<Company> why would we want that?
+<ds> or make it part of registry
+<Company> maybe s/registry/internal/ or some other name
+<ds> because autopluggers may want to access internal information that we wouldn't expose to apps or plugins
+<ds> could you add gst/gstcompat.c to your arch repo?
+<Company> hm
+<Company> what internal info would an autoplugger need
+<ds> depends
+<ds> whatever replaces plugidentities
+<Company> a simple one (decoder) just needs caps and ranks
+<ds> I meant for negotiation information
+<Company> hm
+<Company> no, i don't want a seperate section for it
+<Company> just put it in "internal", "extended" or whatever
+<ds> ok
+<ds> do we want to plan for the app api to be ABI compatible past 0.10?
+<ds> er, that's silly
+<ds> er, kinda silly
+<Company> API compat
+<Company> you could achieve ABI compat if you expose all objects just as typedefs
+<Company> lemme reboot into linux so i can add gstcompat.c
+<Company> brb
+<-- Company has quit (Read error: 104 (Connection reset by peer))
+--> Company (~Company@pD95D53D9.dip.t-dialin.net) has joined #gstreamer
+--> ploum (~ploum@21-4.CampusNet.ucl.ac.be) has joined #gstreamer
+<-- marv has quit (Read error: 104 (Connection reset by peer))
+<ds> so do you still support caps registration?
+<-- ploum has quit (Client Quit)
+<ds> registering media types, fields, descriptions, and default fixate functions?
+<ds> and validation
+<Company> yes
+<Company> that's an important thing we need
+<Company> otherwise people mess up by either carelessly doing stuff wrong or not understanding what they're supposed to do
+<ds> whose responsibility is it to register these?
+<ds> libgstplugins?
+<ds> a plugin?
+<ds> do we want this info in the registry so that a plugin can automatically be loaded to provide registration for video/x-raw-rgb?
+<Company> haven't really thought about that part yet
+<ds> it's somewhat similar to typefind functions
+<Company> yeah
+--> ultrafunk (~pd@eth779.vic.adsl.internode.on.net) has joined #gstreamer
+<Company> i'd probably have a seperate Factory for caps info
+<Company> and have the system load them when you use the caps info stuff
+<ds> should caps info be manditory?
+<ds> have you synced your repo?
+<Company> i'm trying to, but some commit was interrupted last time...
+<ds> how does one sync a local repository to fd.o?
+<ds> rsync?
+<Company> tla archive-mirror
+<ds> ah
+<Company> see rhythmbox.org => developers for how it works
+<Company> and _never_ press ctrl-c in arch
+<-- Misirlou has quit (Remote closed the connection)
+--> Misirlou (~asdf@c-24-125-118-27.va.client2.attbi.com) has joined #gstreamer
+<ds> is there a reason why a pad might know (and set) allowed_caps, but not be ready to negotiate?
+<Company> i don't know a good one
+<ds> know a bad one?
+<Company> "arch-mirror: unable to acquire revision lock (internal error in archive-pfs.c(pfs_lock_revision))"
+<Company> stupidly ordered code
+<Company> no, don't know one
+<ds> here's a good question:
+<ds> should the core negotiate links in a pipeline that are negotiatable, even though some other links are not negotiatable?
+<ds> this ends up making us negotiate some things multiple times
+<ds> filesrc ! mad ! audioconvert ! audioscale ! osssink
+<Company> the core doesn't know if links are negotiable
+<ds> it will in the future :)
+<Company> sinesrc ! identity ! osssink
+<Company> how does it know if sinesrc ! identity is negotiable?
+<ds> because the allowed_caps on the two pads intersect
+--> marv (~ilovekimm@host-216-76-232-134.hsv.bellsouth.net) has joined #gstreamer
+<ds> I'm pretty sure that I don't want gst_pad_link() to return negotiation errors
+<ds> ever
+<Company> you can't avoid that
+<ds> I want to separate "linkable" from "negotiable"
+<Company> ah, gst_pad_link
+<ds> so you can link videotestsrc ! identity ! osssink
+<Company> i confused it with GstPadLink
+<Company> yeah, i was thinking about that, too
+<ds> vts ! osssink won't link, since the pad templates don't intersect
+<Company> http://web.ics.purdue.edu/~kuliniew/wp/archives/2004/08/07/error-handling/
+<Company> :)
+<ds> right now the vts ! id ! osssink pipeline fails to link
+<Company> yeah
+<Company> and goom ! xvimagesink only fails when xvimagesink is at least READY
+<Company> (assuming your xv can't do RGB)
+
+
+

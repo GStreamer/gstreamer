@@ -145,7 +145,6 @@ object hierarchy:
   - all bitrates should be bits per second, since they're specified
     as integers
 
-
 - categorization of plugins:
   - categories were intended from the start as a list of keywords, instead
     of an implicit tree.
@@ -158,3 +157,4 @@ object hierarchy:
 - optimization:
   - delay parsing caps from the registry until after startup (until they're 
     first requested or maybe an idle handler for the main loop)
+
