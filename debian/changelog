@@ -1,3 +1,25 @@
+gstreamer (0.2.1-4) unstable; urgency=low
+
+  * Fix some problems reported from lintian 1.20.14:
+    * copyright-lists-upstream-authors-like-dh_make
+    * debian-changelog-file-contains-user-emacs-settings
+  * Patch from CVS to link libgst into plugins
+    Plugins now properly depend on libgst package
+  * Use RedHat Gtk+-1.3 hack to fix relink issues with ltmain.sh
+  * Patch from CVS for xvideosink segfault when no DISPLAY set
+  * Remove builddir references from gstreamer-config.in
+  * Move libgstelements.la from libgst-dev to gstreamer-elements
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 28 Aug 2001 20:05:28 -0400
+
+gstreamer (0.2.1-3) unstable; urgency=low
+
+  * Update build dependencies to FLAC 1.0
+  * Enable debug features
+  * Fixup broken doc build -scan voodoo with link into .libs/ dir
+
+ -- David I. Lehn <dlehn@vt.edu>  Sun,  5 Aug 2001 23:04:28 -0400
+
 gstreamer (0.2.1-2) unstable; urgency=low
 
   * Fix lib deps: run debhelper tools in the right order
@@ -142,8 +164,3 @@ gstreamer (0.1.0-1) unstable; urgency=low
   * Initial Release.
 
  -- David I. Lehn <dlehn@vt.edu>  Mon, 15 Jan 2001 18:25:18 -0500
-
-Local variables:
-mode: debian-changelog
-add-log-mailing-address "dlehn@vt.edu"
-End:

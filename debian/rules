@@ -44,7 +44,9 @@ configure-stamp:
 		--disable-tests \
 		--disable-examples \
 		--enable-docs-build \
-		--disable-plugin-docs
+		--disable-plugin-docs \
+		--enable-DEBUG \
+		--enable-debug
 
 	touch configure-stamp
 
@@ -62,7 +64,8 @@ clean:
 	dh_testroot
 	rm -f build-stamp configure-stamp
 
-	# Add here commands to clean up after the build process.
+	# why does distclean not get the docs? who knows?
+	-(cd docs; $(MAKE) clean)
 	-$(MAKE) distclean
 
 	dh_clean
@@ -79,8 +82,14 @@ clean:
 		docs/gst/gstreamer-decl.txt \
 		docs/gst/gstreamer.html \
 		docs/libs/tmpl \
-		docs/plugins/gstreamer-plugins.types
+		docs/plugins/gstreamer-plugins.types \
+		debian/libgst0.postinst \
+		debian/libgsteditor0.postinst \
+		debian/libgstmediaplay0.postinst \
+		debian/gstreamer-plugin-template.prerm
+	find . -name \*.stamp | xargs rm || true
 	find . -name Makefile | grep -v omega | xargs rm || true
+
 
 install: DH_OPTIONS=
 install: build
