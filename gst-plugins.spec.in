@@ -9,16 +9,16 @@ Group: 		Applications/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source:         http://gstreamer.net/releases/%{version}/src/gst-plugins-%{version}.tar.gz
+Source:         http://gstreamer.freedesktop.org/src/gst-plugins/gst-plugins-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 %define         _glib2          @GLIB2_REQ@
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer >= 0.7.4
-BuildRequires: 	gstreamer-devel >= 0.7.4
-BuildRequires:	gstreamer-tools >= 0.7.4
+Requires: 	gstreamer >= 0.8.1
+BuildRequires: 	gstreamer-devel >= 0.8.1
+BuildRequires:	gstreamer-tools >= 0.8.1
 
 @USE_ARTS_TRUE@Requires:      arts >= 1.1.4
 @USE_ARTS_TRUE@BuildRequires: arts-devel >= 1.1.4
