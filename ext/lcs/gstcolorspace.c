@@ -68,11 +68,8 @@ struct _GstColorspaceClass {
 static GstElementDetails colorspace_details = {
   "Colorspace converter",
   "Filter/Effect",
-  "LGPL",
   "Converts video from one colorspace to another",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 
@@ -91,6 +88,7 @@ enum {
 static GType 		gst_colorspace_get_type 		(void);
 
 static void		gst_colorspace_class_init		(GstColorspaceClass *klass);
+static void		gst_colorspace_base_init		(GstColorspaceClass *klass);
 static void		gst_colorspace_init			(GstColorspace *space);
 
 static void		gst_colorspace_set_property		(GObject *object, guint prop_id, 
@@ -333,7 +331,7 @@ gst_colorspace_get_type (void)
   if (!colorspace_type) {
     static const GTypeInfo colorspace_info = {
       sizeof(GstColorspaceClass),
-      NULL,
+      (GBaseInitFunc)gst_colorspace_base_init,
       NULL,
       (GClassInitFunc)gst_colorspace_class_init,
       NULL,
@@ -345,6 +343,16 @@ gst_colorspace_get_type (void)
     colorspace_type = g_type_register_static(GST_TYPE_ELEMENT, "GstColorspaceLCS", &colorspace_info, 0);
   }
   return colorspace_type;
+}
+
+static void
+gst_colorspace_base_init (GstColorspaceClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_set_details (element_class, &colorspace_details);
 }
 
 static void
@@ -490,16 +498,15 @@ gst_colorspace_get_property (GObject *object, guint prop_id, GValue *value, GPar
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   GstCaps *caps;
 
   lcs_init (NULL, NULL);
 
-  factory = gst_element_factory_new ("colorspacelcs", GST_TYPE_COLORSPACE,
-                                    &colorspace_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
+  if (!gst_element_register (plugin, "colorspace", GST_RANK_NONE,
+			     GST_TYPE_COLORSPACE))
+    return FALSE;
 
   /* create caps for templates */
   caps = gst_caps_new ("csp_templ_yuv",
@@ -529,17 +536,18 @@ plugin_init (GModule *module, GstPlugin *plugin)
 				    GST_PAD_ALWAYS,
 				    caps, NULL);
 
-  gst_element_factory_add_pad_template (factory, srctempl);
-  gst_element_factory_add_pad_template (factory, sinktempl);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "colorspacelcs",
-  plugin_init
-};
+  "LCS colorspace convertor",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  "(c) 2003 The LCS team",
+  "LCS",
+  "http://www.codecs.org/"
+)
