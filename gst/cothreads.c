@@ -133,6 +133,13 @@ cothread_create (cothread_context *ctx)
   // is this needed anymore?
   s->top_sp = s->sp;
 
+  // initialize the lock
+#ifdef COTHREAD_ATOMIC
+  atomic_set (s->lock, 0);
+#else
+  s->lock = g_mutex_new();
+#endif
+
   GST_INFO (GST_CAT_COTHREADS,"created cothread #%d: %p at sp:%p", ctx->nthreads, s, s->sp);
 
   ctx->threads[ctx->nthreads++] = s;
@@ -183,11 +190,11 @@ cothread_stub (void)
   GST_DEBUG_ENTER("");
 
   thread->flags |= COTHREAD_STARTED;
-#ifdef COTHREAD_ATOMIC
-  // do something here to lock
-#else
-  g_mutex_lock(thread->lock);
-#endif
+//#ifdef COTHREAD_ATOMIC
+//  // do something here to lock
+//#else
+//  g_mutex_lock(thread->lock);
+//#endif
   while (1) {
     thread->func(thread->argc,thread->argv);
     // we do this to avoid ever returning, we just switch to 0th thread
