@@ -164,8 +164,6 @@ enum {
 	ARG_0,
 	ARG_LOCATION,
 	ARG_BYTESPERREAD,
-	ARG_OFFSET,
-	ARG_FILESIZE,
 	ARG_IRADIO_MODE,
 	ARG_IRADIO_NAME,
 	ARG_IRADIO_GENRE,
@@ -239,8 +237,6 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 
       	gst_element_class_install_std_props (
                GST_ELEMENT_CLASS (klass),
-               "offset",       ARG_OFFSET,       G_PARAM_READWRITE,
-               "filesize",     ARG_FILESIZE,     G_PARAM_READABLE,
                "bytesperread", ARG_BYTESPERREAD, G_PARAM_READWRITE,
                "location",     ARG_LOCATION,     G_PARAM_READWRITE,
                NULL);
@@ -409,10 +405,6 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 	case ARG_BYTESPERREAD:
 		src->bytes_per_read = g_value_get_int (value);
 		break;
-	case ARG_OFFSET:
-		src->curoffset = g_value_get_int64 (value);
-		src->new_seek = TRUE;
-		break;
 	case ARG_IRADIO_MODE:
 		src->iradio_mode = g_value_get_boolean (value);
 		break;
@@ -437,12 +429,6 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 		break;
 	case ARG_BYTESPERREAD:
 		g_value_set_int (value, src->bytes_per_read);
-		break;
-	case ARG_OFFSET:
-		g_value_set_int64 (value, src->curoffset);
-		break;
-	case ARG_FILESIZE:
-		g_value_set_int64 (value, src->size);
 		break;
 	case ARG_IRADIO_MODE:
 		g_value_set_boolean (value, src->iradio_mode);
@@ -921,7 +907,6 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 		src->curoffset += GST_BUFFER_SIZE (buf);
 
-                g_object_notify ((GObject*) src, "offset");
 	} else if (src->iradio_mode && src->icy_metaint > 0) {
 		GST_BUFFER_DATA (buf) = g_malloc0 (src->icy_metaint);
 		g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
@@ -948,7 +933,6 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 			src->icy_count = 0;
 		}
 
-		g_object_notify (G_OBJECT (src), "offset");
 	} else {
 		/* allocate the space for the buffer data */
 		GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
@@ -987,7 +971,6 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		GST_BUFFER_OFFSET(buf) = src->curoffset;
 		GST_BUFFER_SIZE(buf) = readbytes;
 		src->curoffset += readbytes;
-                g_object_notify ((GObject*) src, "offset");
 	}
 
 	GST_BUFFER_TIMESTAMP (buf) = -1;
@@ -1042,8 +1025,6 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			return FALSE;
 		}
 
-                g_object_notify (G_OBJECT (src), "filesize");
-
 		src->new_seek = TRUE;
 	} else {
 
@@ -1081,7 +1062,6 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 				src->size = info->size;
 
 		        GST_DEBUG(0, "size %lld", src->size);
-                        g_object_notify (G_OBJECT (src), "filesize");
 
 			gnome_vfs_file_info_unref(info);
 		}
@@ -1245,7 +1225,6 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 		src->curoffset = desired_offset;
 		src->new_seek = TRUE;
 		src->need_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-		g_object_notify (G_OBJECT (src), "offset");
 		break;
 	}
 	case GST_EVENT_SIZE:
