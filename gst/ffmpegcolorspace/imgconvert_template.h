@@ -468,6 +468,9 @@ static void glue(RGB_NAME, _to_rgba32)(AVPicture *dst, const AVPicture *src,
     }
 }
 
+#if !defined(rgba32_fcts_done)
+#define rgba32_fcts_done
+
 static void ayuv4444_to_rgba32(AVPicture *dst, const AVPicture *src,
                              int width, int height)
 {
@@ -522,7 +525,9 @@ static void rgba32_to_ayuv4444(AVPicture *dst, const AVPicture *src,
     }
 }
 
-#endif /* !defined(FMT_RGBA32) && defined(RGBA_IN) */
+#endif /* !defined(rgba32_fcts_done) */
+
+#endif /* !defined(FMT_RGBA32) && defined(RGBA_OUT) */
 
 #ifndef FMT_RGB24
 

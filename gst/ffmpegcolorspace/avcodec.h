@@ -59,7 +59,9 @@ enum PixelFormat {
     PIX_FMT_YUV422P,   ///< Planar YUV 4:2:2 (1 Cr & Cb sample per 2x1 Y samples)
     PIX_FMT_YUV444P,   ///< Planar YUV 4:4:4 (1 Cr & Cb sample per 1x1 Y samples)
     PIX_FMT_RGBA32,    ///< Packed pixel, 4 bytes per pixel, BGRABGRA..., stored in cpu endianness
+    PIX_FMT_BGRA32,     ///< Packed pixel, 4 bytes per pixel, ARGBARGB...
     PIX_FMT_RGB32,     ///< Packed pixel, 4 bytes per pixel, BGRXBGRX..., stored in cpu endianness
+    PIX_FMT_BGR32,     ///< Packed pixel, 4 bytes per pixel, XRGBXRGB...
     PIX_FMT_YUV410P,   ///< Planar YUV 4:1:0 (1 Cr & Cb sample per 4x4 Y samples)
     PIX_FMT_YUV411P,   ///< Planar YUV 4:1:1 (1 Cr & Cb sample per 4x1 Y samples)
     PIX_FMT_RGB565,    ///< always stored in cpu endianness 
