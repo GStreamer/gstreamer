@@ -1527,8 +1527,12 @@ dvdnavsrc_open (DVDNavSrc * src)
   g_return_val_if_fail (!dvdnavsrc_is_open (src), FALSE);
   g_return_val_if_fail (src->location != NULL, FALSE);
 
-  DVDNAV_CALLVAL (dvdnav_open,
-      (&src->dvdnav, (char *) src->location), src, FALSE);
+  if (dvdnav_open (&src->dvdnav, (char *) src->location) != DVDNAV_STATUS_OK) {
+    GST_ELEMENT_ERROR (src, LIBRARY, FAILED,
+        (_("Failed to open DVD device '%s'."), src->location),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 
   GST_FLAG_SET (src, DVDNAVSRC_OPEN);
 
