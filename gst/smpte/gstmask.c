@@ -104,12 +104,3 @@ gst_mask_destroy (GstMask *mask)
   if (mask->destroy_func)
     mask->destroy_func (mask);
 }
-
-void
-gst_mask_update (GstMask *mask,
-		 GstClockTime position, 
-		 GstClockTime duration)
-{
-  g_return_if_fail (mask != NULL);
-
-}
