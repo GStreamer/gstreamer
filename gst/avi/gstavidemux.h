@@ -46,8 +46,8 @@ extern "C" {
 #define GST_AVI_DEMUX_MAX_STREAMS	16	
 
 #define CHUNKID_TO_STREAMNR(chunkid) \
-  (((GUINT32_FROM_BE (chunkid) >> 24) - '0') * 10 + \
-   ((GUINT32_FROM_BE (chunkid) >> 16) & 0xff) - '0')
+  ((((chunkid) & 0xff) - '0') * 10 + \
+   (((chunkid) >> 8) & 0xff) - '0')
 
 typedef struct _GstAviDemux GstAviDemux;
 typedef struct _GstAviDemuxClass GstAviDemuxClass;

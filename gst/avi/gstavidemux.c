@@ -1316,8 +1316,8 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 		   
       stream = &avi_demux->stream[stream_id];
 
-      GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x",
-		    chunkid, *chunksize);
+      GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x stream_id %d",
+		    chunkid, *chunksize, stream_id);
 
       format = GST_FORMAT_TIME;
       gst_pad_query (stream->pad, GST_PAD_QUERY_POSITION, &format, &next_ts);
@@ -1332,7 +1332,7 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 	stream->skip--;
       }
       else {
-        if (GST_PAD_IS_CONNECTED (stream->pad)) {
+        if (stream->pad && GST_PAD_IS_CONNECTED (stream->pad)) {
 	  GstBuffer *buf;
           guint32   got_bytes;
 
