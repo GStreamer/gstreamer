@@ -18,6 +18,7 @@
     </para>
 
     <programlisting>
+/* example-begin helloworld.c */
 #include &lt;gst/gst.h&gt;
 
 static void 	gst_play_have_type 	(GstElement *typefind, GstCaps *caps, GstElement *pipeline);
@@ -78,6 +79,7 @@ main (int argc, char *argv[])
 
   exit(0);
 }
+/* example-end helloworld.c */
     </programlisting>
     <para>
       We start by constructing a 'filesrc' element and an 'autobin' element that

@@ -16,7 +16,7 @@
     </para>
 
     <programlisting>
-      
+/* example-begin helloworld.c */      
 #include &lt;gst/gst.h&gt;
 
 int 
@@ -27,7 +27,7 @@ main (int argc, char *argv[])
   gst_init(&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: %s &lt;mp3 filename&gt;\n", argv[0]);
     exit (-1);
   }
 
@@ -64,7 +64,7 @@ main (int argc, char *argv[])
 
   exit (0);
 }
-
+/* example-end helloworld.c */      
     </programlisting>
 
     <para>
@@ -72,7 +72,8 @@ main (int argc, char *argv[])
     </para>
 
     <para>
-      The first thing you have to do is to include the standard <application>GStreamer</application> headers and 
+      The first thing you have to do is to include the standard 
+      <application>GStreamer</application> headers and 
       initialize the framework.
     </para>
     <programlisting>
