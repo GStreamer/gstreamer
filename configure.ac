@@ -591,7 +591,6 @@ libs/gst/Makefile
 libs/gst/bytestream/Makefile
 libs/gst/control/Makefile
 libs/gst/getbits/Makefile
-libs/ext/Makefile
 po/Makefile.in
 tests/Makefile
 tests/bufspeed/Makefile

@@ -69,67 +69,7 @@ typedef cothread_state cothread;
   
   
   
-/* use the new cothreads implementation in libs/ext/cothreads */
-#elif defined(_COTHREADS_WINGO)
-
-#include <cothreads/cothreads.h>
-#include <errno.h>
-
-/* the name of this cothreads */
-#define COTHREADS_NAME		"wingo"
-#define COTHREADS_NAME_CAPITAL	"Wingo"
-
-/* unify the structs 
- *
- * "cothread" and "cothread_context" need to be defined
- */
-typedef cothread cothread_context;
-
-/* define functions
- * the macros are prepended with "do_" 
- */
-#define do_cothreads_init(x) G_STMT_START{	\
-    if (!cothreads_initialized())               \
-      cothreads_init(0x0200000, 16);            \
-  }G_STMT_END
-
-#define do_cothreads_stackquery(stack,size)     \
-  cothreads_alloc_thread_stack (stack, size)
-
-static void do_cothread_switch(cothread *to)
-{
-  cothread *from = cothread_self ();
-  if (from == (to)) {
-    g_warning ("trying to switch to the same cothread, not allowed");
-  } else {
-    cothread_switch (from, (to));
-  }
-}
-
-#define do_cothread_create(new_cothread, context, func, argc, argv)         \
-  G_STMT_START{                                                             \
-    new_cothread = cothread_create ((func), 0, (char**) (argv), (context)); \
-  }G_STMT_END
-  
-#define do_cothread_setfunc(cothread, context, func, argc, argv)            \
-  cothread_setfunc ((cothread), (func), (argc), (char **) (argv), (context))
-
-#define do_cothread_destroy(cothread)		cothread_destroy(cothread)
-  
-#define do_cothread_context_init()		(cothread_create (NULL, 0,   \
-                                                                  NULL, NULL))
-#define do_cothread_context_destroy(context)	cothread_destroy (context)
-  
-#define do_cothread_lock(cothread)		/* FIXME */
-#define do_cothread_unlock(cothread)		/* FIXME */
-
-#define do_cothread_get_current(context)		(cothread_self())
-#define do_cothread_get_main(context)		(context)
-
-
-
-
-/* use the new cothreads implementation in libs/ext/cothreads */
+/* use the gthread-based cothreads implementation */
 #elif defined(_COTHREADS_GTHREAD)
 
 #include "gthread-cothreads.h"

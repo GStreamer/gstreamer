@@ -1,5 +1,12 @@
 2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/schedulers/cothreads_compat.h:
+	* libs/Makefile.am:
+          remove last instances of wingo cothread usage
+
+2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstplugin.c:
 	* gst/gstversion.h.in:
 	* gst/parse/grammar.y:
