@@ -205,6 +205,7 @@ main(int argc, char *argv[])
         gst_main ();
     } else {
         g_print ("waiting for the state change...\n");
+        gst_element_set_state(pipeline,GST_STATE_PLAYING);
         gst_element_wait_state_change (pipeline);
     }
 
