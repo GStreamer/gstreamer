@@ -12,14 +12,17 @@
     well as parse the GStreamer-specific command line options.
   </para>
   <para> 
-    A typical program would have code to initialize GStreamer that
+    A typical program
+    &EXAFOOT;
+    would have code to initialize GStreamer that
     looks like this:
   </para>
 
   <programlisting>
+<![CDATA[
 /* example-begin init.c */
 
-#include &lt;gst/gst.h&gt;
+#include <gst/gst.h>
 
 int
 main (int argc, char *argv[])
@@ -35,6 +38,7 @@ main (int argc, char *argv[])
   return 0;
 }
 /* example-end init.c */
+]]>
   </programlisting>
   <para>
     Use the <symbol>GST_VERSION_MAJOR</symbol>,

@@ -5,6 +5,18 @@
 %image-entities;
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
+<!ENTITY % url-entities SYSTEM "url.entities">
+%url-entities;
+
+<!ENTITY EXAFOOT "
+<footnote>
+<para>
+The code for this example is automatically extracted from
+the documentation and built under <filename>examples/manual</filename>
+in the GStreamer tarball.
+</para>
+</footnote>
+">
 
 <!-- Part 1: Overview -->
 <!ENTITY INTRO SYSTEM "intro.xml">
@@ -141,7 +153,8 @@
 
 <!-- ############ Basic concepts - part ############# -->
 
-  <part id="part-basic-concepts"><title>Basic Concepts</title>
+  <part id="part-basic-concepts">
+    <title>Basic Concepts</title>
     <partintro>
       <para> 
         We will first describe the basics of
@@ -170,7 +183,23 @@
   </part>
 
 <!-- ############ Basic API - part ############# -->
-  <part id="part-basic-api"><title>Basic API</title>
+  <part id="part-basic-api">
+    <title>Basic API</title>
+    <partintro>
+      <para> 
+This chapter will describe the basics of programming with GStreamer.
+Most of the concepts from the previous chapter will be illustrated with code
+fragments.
+     </para>
+      <para> 
+Most of the code examples in this manual are automatically extracted as part
+of the build process of the GStreamer tarball.  After building GStreamer from
+source, you will find the examples in <filename>examples/manual</filename>.
+Each example has a comment on the first line giving the name of the file
+it will be extracted as.
+     </para>
+     </partintro>
+
       &INIT-API;
 
       &ELEMENTS-API;

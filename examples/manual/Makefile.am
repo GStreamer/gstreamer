@@ -10,10 +10,6 @@ else
 GST_LOADSAVE_SRC = xml-mp3
 endif
 
-EXAMPLES = dynamic $(GNOME) helloworld init popt queue threads $(GST_LOADSAVE_SRC)
-noinst_PROGRAMS = $(EXAMPLES)
-
-LDADD = $(GST_OBJ_LIBS)
 INCLUDES = $(GST_OBJ_CFLAGS)
 
 #dynamic_LDADD = $(GST_OBJ_LIBS) $(LIBGNOMEUI_LIBS)
@@ -23,11 +19,41 @@ gnome_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 
 EXTRA_DIST = extract.pl
 
-# for some reason specifying %.c runs us into trouble when running make
-# clean, it starts looking for things like mostlyclean-am.c, please
-# help me fix that so we don't need to specify all sources here
-# also, it's a bit irritating that right now a change in any xml file
-# triggers a rebuild of all examples
-#%.c:
-dynamic.c gnome.c helloworld.c init.c popt.c queue.c threads.c xml-mp3.c: $(top_srcdir)/docs/manual/*.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/*.xml
+EXAMPLES = \
+	dynamic $(GNOME) factorymake helloworld \
+	init popt queue threads $(GST_LOADSAVE_SRC)
+
+dynamic.c: $(top_srcdir)/docs/manual/dynamic.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+elementmake.c elementget.c: $(top_srcdir)/docs/manual/elements-api.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+gnome.c: $(top_srcdir)/docs/manual/gnome.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+helloworld.c: $(top_srcdir)/docs/manual/helloworld.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+init.c popt.c: $(top_srcdir)/docs/manual/init-api.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+queue.c: $(top_srcdir)/docs/manual/queues.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+threads.c: $(top_srcdir)/docs/manual/threads.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+xml-mp3.c: $(top_srcdir)/docs/manual/xml.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+# we use some of the examples as testsuite apps, to verify that
+# they actually run
+include $(top_srcdir)/testsuite/Rules
+                                                                                
+tests_pass = elementmake elementget init popt $(GNOME)
+tests_fail =
+tests_ignore =
+
+noinst_PROGRAMS = $(EXAMPLES)
+LDADD = $(GST_OBJ_LIBS)

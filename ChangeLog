@@ -1,3 +1,21 @@
+2004-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/Makefile.am:
+	* docs/manual/elements-api.xml:
+	  restructure so that common stuff is shown first
+	* docs/manual/init-api.xml:
+	  convert to examples
+	* docs/manual/manual.xml:
+	* docs/manuals.mak:
+	* docs/url.entities:
+	  link to API on the website, possibly override later in build
+	* examples/manual/.cvsignore:
+	  ignore more
+	* examples/manual/Makefile.am:
+	  add more examples
+	* examples/manual/extract.pl:
+	  error out on failure
+
 2004-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/tmpl/gstthread.sgml:

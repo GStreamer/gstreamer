@@ -18,7 +18,7 @@ DIST_SUBDIRS = gst faq manual pwg libs plugins xsl
 
 EXTRA_DIST = \
 	slides manuals.mak htmlinstall.mak upload.mak \
-	image-png image-pdf image-eps version.entities.in
+	image-png image-pdf image-eps url.entities version.entities.in
 
 upload:
 	@if test "x$(SUBDIRS_DOCS)" != x; then for a in $(SUBDIRS_DOCS); do cd $$a; make upload; cd ..; done; fi

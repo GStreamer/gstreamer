@@ -22,6 +22,8 @@ xml_decode ($)
 # main
 my $output = shift @ARGV;
 
+$found = 0;
+
 foreach $file (@ARGV)
 {
   open FILE, $file or die "Cannot open file $file";
@@ -31,6 +33,7 @@ foreach $file (@ARGV)
     if ($line =~ /\/\* example-begin $output \*\//)
     {
       print "Extracting $output from $file\n";
+      $found = 1;
       open OUTPUT, ">$output";
       print OUTPUT xml_decode ($line); 
       my $example = 1;
@@ -49,4 +52,9 @@ foreach $file (@ARGV)
       }
     }
   }
+}
+if (!$found)
+{
+  print "Could not find $output example !\n";
+  exit(1);
 }
