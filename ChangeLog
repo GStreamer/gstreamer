@@ -1,3 +1,10 @@
+2004-11-11  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
+	  No warnings (#157986).
+
 2004-11-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
