@@ -35,12 +35,11 @@ void cut_start (GstElement *element)
   g_print ("DEBUG: cut_start: main_bin paused\n");
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
 
-  sprintf (buffer, "/tmp/test%d.raw", id);
+  sprintf (buffer, "/tmp/test%d.wav", id);
   g_print ("DEBUG: cut_start: setting new location to %s\n", buffer);
   gtk_object_set (GTK_OBJECT (disksink), "location", buffer, NULL);
-/*
   gtk_object_set (GTK_OBJECT (disksink), "type", 4, NULL);
-*/
+
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
   ++id;
   g_print ("start_cut_signal done\n");
@@ -104,7 +103,7 @@ int main (int argc, char *argv[])
   					 "format", 16, NULL);
 
   encoder = gst_elementfactory_make ("passthrough", "encoder");
-  disksink = gst_elementfactory_make ("disksink", "disk_sink");
+  disksink = gst_elementfactory_make ("afsink", "disk_sink");
 
   gtk_object_set (GTK_OBJECT (disksink), "location", "/dev/null", NULL);
 
