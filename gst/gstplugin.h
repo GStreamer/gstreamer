@@ -128,8 +128,7 @@ void			_gst_plugin_initialize		(void);
 void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
-void			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
-G_CONST_RETURN gchar*	gst_plugin_get_longname		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);

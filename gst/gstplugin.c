@@ -476,7 +476,7 @@ gst_plugin_get_name (GstPlugin *plugin)
 }
 
 /**
- * gst_plugin_get_longname:
+ * gst_plugin_get_description:
  * @plugin: plugin to get long name of
  *
  * Get the long descriptive name of the plugin

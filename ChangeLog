@@ -1,3 +1,18 @@
+2004-01-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstelement.h:
+	  remove gst_element_factory_get_version. It doesn't exist anymore.
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	  remove gst_plugin_set_name and change gst_plugin_get_longname to
+	  gst_plugin_get_description to match code.
+	* gst/gsterror.h:
+	  remove GST_LIBRARY_ERROR_ENCODE. It's GST_STREAM_ERROR_ENCODE.
+	* gst/gstpad.c: (gst_pad_try_set_caps):
+	  make it work with nonfixed caps.
+	  Note that even in the nonfixed case the link function of the pad
+	  that tries to set caps isn't called.
+
 2004-01-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/elements/gstbufferstore.c: (gst_buffer_store_get_buffer):

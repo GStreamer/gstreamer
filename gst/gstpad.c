@@ -1322,28 +1322,21 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (!GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING),
       GST_PAD_LINK_REFUSED);
-
-  /* setting non-fixed caps on a pad is not allowed */
-  if (!gst_caps_is_fixed (caps)) {
-    GST_CAT_INFO (GST_CAT_CAPS, 
-              "trying to set unfixed caps on pad %s:%s, not allowed",
-	      GST_DEBUG_PAD_NAME (pad));
-    g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
-               GST_DEBUG_PAD_NAME (pad));
-
-    gst_caps_debug (caps, "unfixed caps");
-    return GST_PAD_LINK_REFUSED;
-  }
-
+  
   /* we allow setting caps on non-linked pads.  It's ignored */
   if (!GST_PAD_PEER (pad)) {
     return GST_PAD_LINK_OK;
   }
 
   /* if the desired caps are already there, it's trivially ok */
-  if (GST_PAD_CAPS (pad) && gst_caps_is_equal_fixed (caps,
-        GST_PAD_CAPS (pad))) {
-    return GST_PAD_LINK_OK;
+  if (GST_PAD_CAPS (pad)) {
+    GstCaps *intersection;
+    intersection = gst_caps_intersect (caps, GST_PAD_CAPS (pad));
+    if (!gst_caps_is_empty (intersection)) {
+      gst_caps_free (intersection);
+      return GST_PAD_LINK_OK;
+    }
+    gst_caps_free (intersection);
   }
 
   g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);

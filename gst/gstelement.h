@@ -366,7 +366,9 @@ void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstCloc
 void			gst_element_set_eos		(GstElement *element);
 
 gchar *			_gst_element_error_printf	(const gchar *format, ...);
-void			gst_element_error_full		(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug, const gchar *file, const gchar *function, gint line);
+void			gst_element_error_full		(GstElement *element, GQuark domain, gint code, 
+							 gchar *message, gchar *debug, 
+							 const gchar *file, const gchar *function, gint line);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
 void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
@@ -435,7 +437,6 @@ GType			gst_element_factory_get_element_type	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_longname	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_klass		(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_description  	(GstElementFactory *factory);
-G_CONST_RETURN gchar *	gst_element_factory_get_version      	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_author		(GstElementFactory *factory);
 guint			gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 G_CONST_RETURN GList *	gst_element_factory_get_pad_templates	(GstElementFactory *factory);
