@@ -1331,30 +1331,31 @@ static GList *
 gst_xml_registry_rebuild_recurse (GstXMLRegistry * registry,
     const gchar * directory)
 {
-  GDir *dir;
   GList *ret = NULL;
   gint dr_len, sf_len;
 
-  dir = g_dir_open (directory, 0, NULL);
+  if (g_file_test (directory, G_FILE_TEST_IS_DIR)) {
+    GDir *dir = g_dir_open (directory, 0, NULL);
 
-  if (dir) {
-    const gchar *dirent;
+    if (dir) {
+      const gchar *dirent;
 
-    while ((dirent = g_dir_read_name (dir))) {
-      gchar *dirname;
+      while ((dirent = g_dir_read_name (dir))) {
+        gchar *dirname;
 
-      if (*dirent == '=') {
-        /* =build, =inst, etc. -- automake distcheck directories */
-        continue;
+        if (*dirent == '=') {
+          /* =build, =inst, etc. -- automake distcheck directories */
+          continue;
+        }
+
+        dirname = g_strjoin ("/", directory, dirent, NULL);
+        ret =
+            g_list_concat (ret, gst_xml_registry_rebuild_recurse (registry,
+                dirname));
+        g_free (dirname);
       }
-
-      dirname = g_strjoin ("/", directory, dirent, NULL);
-      ret =
-          g_list_concat (ret, gst_xml_registry_rebuild_recurse (registry,
-              dirname));
-      g_free (dirname);
+      g_dir_close (dir);
     }
-    g_dir_close (dir);
   } else {
     dr_len = strlen (directory);
     sf_len = strlen (G_MODULE_SUFFIX);

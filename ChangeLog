@@ -1,3 +1,13 @@
+2004-06-06  ed@catmur.co.uk
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_rebuild_recurse):
+	  don't rely on g_dir_open to figure out if a file is a directory, use
+	  explicit G_TEST_IS_DIR. Reiserfs4 allows opening files as
+	  directories. (fixes #142850)
+
 2004-06-06  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstqueue.c: (gst_queue_dispose), (gst_queue_change_state):
