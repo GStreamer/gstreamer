@@ -7,7 +7,8 @@ libgstvideo4linux_la_SOURCES = \
 	gstv4lelement-marshal.c \
 	gstv4lsrc.c v4lsrc_calls.c \
 	gstv4lmjpegsrc.c v4lmjpegsrc_calls.c \
-	gstv4lmjpegsink.c v4lmjpegsink_calls.c
+	gstv4lmjpegsink.c v4lmjpegsink_calls.c \
+	gstv4l.c
 libgstvideo4linux_la_CFLAGS = $(GST_CFLAGS)
 libgstvideo4linux_la_LIBADD =
 libgstvideo4linux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
