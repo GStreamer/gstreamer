@@ -1032,7 +1032,7 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
 }
 
 /* Handle the clients. Basically does a blocking select for one
- * of the client fds to become read or writable. We also have a 
+ * of the client fds to become read or writable. We also have a
  * filedescriptor to receive commands on that we need to check.
  *
  * After going out of the select call, we read and write to all

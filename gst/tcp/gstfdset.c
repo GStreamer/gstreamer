@@ -286,7 +286,7 @@ gst_fdset_fd_has_closed (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx > 0)
+      if (idx >= 0)
         res = (set->testpollfds[idx].revents & POLLHUP) != 0;
       break;
     }
@@ -309,7 +309,7 @@ gst_fdset_fd_has_error (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx > 0)
+      if (idx >= 0)
         res = (set->testpollfds[idx].revents & (POLLERR | POLLNVAL)) != 0;
       break;
     }
@@ -332,7 +332,7 @@ gst_fdset_fd_can_read (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx > 0)
+      if (idx >= 0)
         res = (set->testpollfds[idx].revents & (POLLIN | POLLPRI)) != 0;
       break;
     }
@@ -355,7 +355,7 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx > 0)
+      if (idx >= 0)
         res = (set->testpollfds[idx].revents & POLLOUT) != 0;
       break;
     }

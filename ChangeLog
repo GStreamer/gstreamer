@@ -1,3 +1,11 @@
+2004-08-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Wim Taymans
+
+	* gst/tcp/gstfdset.c:
+	* gst/tcp/gstmultifdsink.c:
+	  fix index comparison, should include 0
+
 2004-08-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstfdset.c: (ensure_size), (gst_fdset_new),
@@ -5,6 +13,8 @@
 	(gst_fdset_fd_has_closed), (gst_fdset_fd_has_error),
 	(gst_fdset_fd_can_read), (gst_fdset_fd_can_write),
 	(gst_fdset_wait):
+	  copy when reallocing for poll so the select arguments don't get
+	  changed during the call
 
 2004-08-16  Wim Taymans  <wim@fluendo.com>
 
