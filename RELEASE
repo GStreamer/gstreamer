@@ -1,0 +1,108 @@
+
+GStreamer: Release notes for GStreamer 0.7.5 "In A Bar"
+        
+
+The GStreamer team is happy to announce a new release in the
+0.7.x development series of the GStreamer streaming-media framework.
+The goal of this release series is to stabilize towards a 0.8
+release series which will be part of the GNOME 2.6 releases
+and hopefully eventually KDE 4.x. 
+
+
+The 0.7 series is a development series and is aimed at developers.
+It is NOT API or ABI compatible with the stable 0.6.x series or
+with other releases in the series.  This means you can not use this
+release to upgrade your current GStreamer installation and expect your
+GStreamer applications to keep working without a recompile.
+It is, however, parallel installable with the 0.6.x series.
+
+  
+Features of this release
+    
+      * API additions for bindings
+      * Queue memleak fix
+      * optimal scheduler fixes
+      * Ghost pad fixes
+      * Signal marshalling fixes
+      * documentation fixes
+      * underquotedness fixes for automake 1.8
+      * fixed atomic implementation on sparc and S390
+      * gstreamer-scan fixes
+      * multidisksrc renamed to multifilesrc
+      * fixed GstCaps docs
+      * fixed libxml checking when not needed
+      * added timeout to filesrc
+      * added support for double dparams
+      * make spider report an error when it can't handle a mime type
+      * fixed navigation event handling
+      * added codec and volume tags
+
+Bugs fixed in this release
+    
+      * 105844 : --disable-loadsave --disable-registry still check for libxml
+      * 118310 : Timeout support added for fdsrc
+      * 127133 : [API] Need non-vararg version of gst_index_add_association
+      * 127815 : gst-register sigsegs 100% of the time.
+      * 129600 : patch to compile on OSX
+      * 131362 : use serialize/deserialize in the core
+      * 132045 : incorrect dependency causes rebuilding of libgstreamer on "m
+      * 132935 : setting pipeline -> NULL -> PLAYING doesn't restart stream
+      * 132996 : configure fails: aclocal: macro `jm_AC_TYPE_UNSIGNED_LONG_LO
+      * 133391 : the asm mutex implementation is broken on SPARC
+      * 133631 : gst-launch seg faults in gst_caps_free with no sink
+      * 133800 : fixes for underquoted macros and automake 1.8.x
+      * 133817 : add support for disc number tag
+      * 134128 : typo in ./gstreamer/gst/gstclock.c
+      * 134145 : pot-update not updated after file removal
+      * 134583 : Race on gst_pad_link_free
+      * 134816 : test -e in autogen.sh does not work on Solaris
+      * 134841 : gst-inspect.c is defining GList *pads twice
+
+Download
+
+You find source releases of gstreamer in the download directory:
+(http://gstreamer.freedesktop.org//src/gstreamer/
+
+GStreamer Homepage
+
+More details can be found on the project's website:
+http://gstreamer.freedesktop.org//
+
+Support and Bugs
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Developers
+
+CVS is hosted on cvs.freedesktop.org.
+All code is in CVS and can be checked out from there.
+Interested developers of the core library, plug-ins, and applications should
+subscribe to the gstreamer-devel list. If there is sufficient interest we
+will create more lists as necessary.
+
+        
+Applications
+
+As mentioned there are some changes in API/ABI between the 0.6.x and 0.7.x
+releases.
+Many applications will probably be source compatible between 0.6.x. and 0.7.x
+however. Rhythmbox and Sound Juicer
+for instance work very well when compiled on 0.7.x.
+GStreamer Player does not work across releases however,
+so we will make a separate release of gst-player with the needed
+fixes for it to work with 0.7.x. This release contains the core fixes we
+were waiting for to port the player over so expect a gst-player release in
+the near future.
+
+  
+Contributors to this release
+    
+      * Thomas Vander Stichele
+      * Andy Wingo
+      * Julien Moutte
+      * Benjamin Otte
+      * David Schleef
+      * Stefan Kost
+      * Mattias Wadman
+ 

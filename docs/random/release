@@ -45,6 +45,8 @@ TODO :
   - create a new $(version).xml file in www/src/htdocs/releases/$(module)
     and add that to cvs
   - Start updating the release notes on the www cvs tree
+    - create the base xml file in www/htdocs/releases/$/module)/$(version).xml
+    - add the generated targets (text and html) for this to the Makefile.am
     - grepping ChangeLog for contributors:
  grep "<.*>" ChangeLog | perl -i -p -e 's@\d*-\d*-\d*\s*(.*)\s*<.*$@$1@' | sort | uniq
   - depending on how the API has changed update the libtool versioning
@@ -79,12 +81,12 @@ with the same name.
 TODO :
   - give the latest prerelease another good testing
   - proofread the release notes
-  - make a text copy of the release notes to be included in the tarball :
-    lynx -dump http://gstreamer.net/releases/$(module)/$(version) > NEWS
-    or
-    links -dump "http://gstreamer.net/releases/$(module)/$(version)" > NEWS
-    (FIXME: still need to remove the menu from this manually, maybe make
-    some xslt instead to do this ?)
+  - run bugzilla with the correct module and milestone and include
+    the output in the release notes
+    bin/bugzilla gstreamer 0.7.5 >> src/htdocs/releases/gstreamer/0.7.5.xml
+    then edit it
+  - copy  www/htdocs/releases/$(module)/$(version) to RELEASE
+  - copy the list of changes and add them to NEWS
 
   - update web site docs
     - release-specific docs should go in CVS

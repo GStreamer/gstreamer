@@ -1,3 +1,17 @@
+=== release 0.7.5 ===
+
+2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+          instate NEWS file
+	* Makefile.am:
+	* gstreamer.spec.in:
+	* RELEASE:
+          put back release
+	* configure.ac:
+	* docs/random/release:
+          more updates
+
 2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsttag.c: (_gst_tag_initialize):
@@ -15,8 +29,6 @@
 
 	* docs/random/release:
           update release strategy
-	* gst/gstelement.h:
-          log errors as WARNING since they're recoverable
 	* po/fr.po:
           auto-update po file
 	* po/nl.po:

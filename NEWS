@@ -1,2 +1,42 @@
-2001-12-12
-	* GStreamer 0.3.0 released, "Most Eventful Ever"
+This is GStreamer 0.7.5
+ 
+Changes since 0.7.4:
+
+      * API additions for bindings
+      * Queue memleak fix
+      * optimal scheduler fixes
+      * Ghost pad fixes
+      * Signal marshalling fixes
+      * documentation fixes
+      * underquotedness fixes for automake 1.8
+      * fixed atomic implementation on sparc and S390
+      * gstreamer-scan fixes
+      * multidisksrc renamed to multifilesrc
+      * fixed GstCaps docs
+      * fixed libxml checking when not needed
+      * added timeout to filesrc
+      * added support for double dparams
+      * make spider report an error when it can't handle a mime type
+      * fixed navigation event handling
+      * added codec and volume tags
+
+Bugs fixed since 0.7.5:
+    
+      * 105844 : --disable-loadsave --disable-registry still check for libxml
+      * 118310 : Timeout support added for fdsrc
+      * 127133 : [API] Need non-vararg version of gst_index_add_association
+      * 127815 : gst-register sigsegs 100% of the time.
+      * 129600 : patch to compile on OSX
+      * 131362 : use serialize/deserialize in the core
+      * 132045 : incorrect dependency causes rebuilding of libgstreamer on "m
+      * 132935 : setting pipeline -> NULL -> PLAYING doesn't restart stream
+      * 132996 : configure fails: aclocal: macro `jm_AC_TYPE_UNSIGNED_LONG_LO
+      * 133391 : the asm mutex implementation is broken on SPARC
+      * 133631 : gst-launch seg faults in gst_caps_free with no sink
+      * 133800 : fixes for underquoted macros and automake 1.8.x
+      * 133817 : add support for disc number tag
+      * 134128 : typo in ./gstreamer/gst/gstclock.c
+      * 134145 : pot-update not updated after file removal
+      * 134583 : Race on gst_pad_link_free
+      * 134816 : test -e in autogen.sh does not work on Solaris
+      * 134841 : gst-inspect.c is defining GList *pads twice
