@@ -266,7 +266,7 @@ gst_osssrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
       src->frequency = g_value_get_int (value);
       break;
     case ARG_CUROFFSET:
-      src->curoffset = g_value_get_int (value);
+      src->curoffset = g_value_get_ulong (value);
       break;
     case ARG_DEVICE:
       g_free(src->device);
