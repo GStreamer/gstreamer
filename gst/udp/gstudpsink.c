@@ -165,6 +165,16 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
+gst_udpsink_set_clock (GstElement *element, GstClock *clock)
+{
+  GstUDPSink *udpsink;
+	      
+  udpsink = GST_UDPSINK (element);
+
+  udpsink->clock = clock;
+}
+
+static void
 gst_udpsink_init (GstUDPSink *udpsink)
 {
   /* create the sink and src pads */
@@ -175,6 +185,10 @@ gst_udpsink_init (GstUDPSink *udpsink)
 
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;
+  
+  udpsink->clock = NULL;
+
+  GST_ELEMENT (udpsink)->setclockfunc = gst_udpsink_set_clock;
 }
 
 static void
@@ -182,12 +196,18 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstUDPSink *udpsink;
   int tolen;
+  GstClockTimeDiff *jitter = NULL;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
   udpsink = GST_UDPSINK (GST_OBJECT_PARENT (pad));
+  
+  if (udpsink->clock) {
+    GST_DEBUG (0, "udpsink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
+    gst_element_clock_wait (GST_ELEMENT (udpsink), udpsink->clock, GST_BUFFER_TIMESTAMP (buf), jitter);
+  }
 
   tolen = sizeof(udpsink->theiraddr);
 

@@ -266,7 +266,7 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
   fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
 
   GST_FLAG_SET (src, GST_UDPSRC_OPEN);
-
+  
   return TRUE;
 }
 

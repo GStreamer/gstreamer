@@ -73,6 +73,8 @@ struct _GstUDPSink {
 
   gint port;
   gchar *host;
+    
+  GstClock *clock;
 };
 
 struct _GstUDPSinkClass {
