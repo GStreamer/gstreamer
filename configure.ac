@@ -522,6 +522,7 @@ testsuite/clock/Makefile
 testsuite/dynparams/Makefile
 testsuite/elements/Makefile
 testsuite/indexers/Makefile
+testsuite/parse/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
 testsuite/threads/Makefile

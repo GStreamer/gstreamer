@@ -1,5 +1,11 @@
+if GST_DISABLE_PARSE
+GST_PARSE_DIRS = 
+else
+GST_PARSE_DIRS = parse
+endif
+
 # FIXME : threads bytestream
-SUBDIRS = caps plugin elements clock refcounting threads indexers ## cleanup dynparams
+SUBDIRS = caps plugin elements clock refcounting threads indexers $(GST_PARSE_DIRS) ## cleanup dynparams
 
 GST_PLUGIN_PATH = $(shell cd $(top_builddir) && pwd)
 TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`/test-registry.xml
@@ -24,6 +30,6 @@ AM_CFLAGS = $(GST_CFLAGS)
 CLEANFILES = test-registry.xml elementstest-registry.xml
 
 DIST_SUBDIRS = bytestream caps cleanup clock dynparams elements indexers \
-		plugin refcounting threads
+		plugin refcounting threads parse
 
 EXTRA_DIST = gst-inspect-check
