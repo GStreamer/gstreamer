@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstSrc *src, gpointer data) 
+void eos(GstElement *element, gpointer data) 
 {
   GstThread *thread = GST_THREAD(data);
   g_print("have eos, quitting\n");

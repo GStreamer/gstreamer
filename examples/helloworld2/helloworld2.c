@@ -1,7 +1,8 @@
+#include <stdlib.h>
 #include <gst/gst.h>
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstSrc *src) 
+void eos(GstElement *element)  
 {
   g_print("have eos, quitting\n");
 

@@ -1,9 +1,10 @@
+#include <stdlib.h>
 #include <gst/gst.h>
 
 gboolean playing;
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstSrc *src, gpointer data) 
+void eos(GstElement *element, gpointer data) 
 {
   g_print("have eos, quitting\n");
 

@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <gst/gst.h>
 
 gboolean playing;
