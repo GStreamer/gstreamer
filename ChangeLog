@@ -1,3 +1,7 @@
+2004-10-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: up req of GStreamer since we use fractions
+
 2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-ffmpeg.spec.in:

@@ -17,7 +17,7 @@ dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
 dnl required GStreamer version
-GST_REQ=0.8.0
+GST_REQ=0.8.4
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
