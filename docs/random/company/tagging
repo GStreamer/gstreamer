@@ -1,0 +1,104 @@
+Quoting iain <iain@prettypeople.org>:
+
+> If you could write a small thing about how to use the tagging, it'd be
+> appreciated. I think MArlin is going to be using it pretty extensivly,
+> and so it'd be nice to get it in there and tested quickly.
+> 
+Ok. A short writeup.
+
+
+Oh! Intro - Jellyman, offspring. Offspring, Jellyman.
+
+GStreamer manages tags in the form of GstTagList objects. A GstTagList (named 
+taglist from now on) consists of zero or more different tags (this will be 
+what I mean when I say tag) where each tag has one or more values attached to 
+it. A tag is registered via gst_tag_register with it's name, translated name 
+(glib calls that nick), a translated description, the GType values for this 
+tag must have and an optional merge function.
+GStreamer provides default caps which are registered in gsttag.c. You can look 
+them up there.
+
+
+You've got serious thrill issues, dude. 
+
+A taglist is primarily thought about as a 1:1 tag:value mapping. Sometimes it 
+is useful to have multiple values for the same tag however. (Multiple artists 
+performing a song). If a merge function is provided at tag registration time, 
+you can attach multiple values to a tag. These values are handled as an 
+ordered list, so you can access each of them with an index. The merge function 
+allows to merge all of them back into a single value.
+If no merge function is provided, only a single value is kept.
+
+
+Tell me, Dory, do you see anything? - Yeah, I see a light. 
+
+There's a whole lot of API provided to change taglists. see gsttag.h for the 
+whole glory. Most of that should be self explaining. Foreach functions, number 
+of values per tag, getting tags and so on. The gst-launch code shows a usage 
+example. The only thing that might be of interest is the merge mode. If you 
+merge two tag lists (via _merge or _insert or even when only adding values via 
+_add_tag) you have to provide a merge mode. The merge mode decides how to 
+handle the merging of caps. If you merge new_tags into old_tags, the different 
+merge modes do this:
+GST_TAG_MERGE_MODE_REPLACE_ALL: Remove all tags from old_tags, use only 
+new_tags.
+GST_TAG_MERGE_MODE_REPLACE: Remove all tags from old_tags where tags from 
+new_tags are available. Keep the others. Insert everything from new_tags.
+GST_TAG_MERGE_MODE_PREPEND: Prepend values from new_tags to the values from 
+old_tags. For single value tags when both are set, use the new_tags tag.
+GST_TAG_MERGE_MODE_APPEND: Same as GST_TAG_MERGE_MODE_PREPEND with new_tags 
+and old_tags swapped.
+GST_TAG_MERGE_MODE_KEEP: Same as GST_TAG_MERGE_MODE_REPLACE with new_tags and 
+old_tags swapped.
+GST_TAG_MERGE_MODE_KEEP_ALL: Same as GST_TAG_MERGE_MODE_REPLACE_ALL with 
+new_tags and old_tags swapped.
+This allows some powerful usage of taglists. I'll describe further down where 
+it really makes sense.
+
+
+Now what? 
+
+There are supposed to be two "producers" of taglists. The first are 
+applications, the second are plugins. (In my tag world domination plans I 
+simply assumed Rhythmbox would start using taglists internally.) Applications 
+can easily create and access them with the API shown above. It should even be 
+reasonably easy to put their values inside gtk objects via foreach loops and 
+similar. Especially because they're all just GValues internally.
+Plugins extract tag lists from the GstBuffer data. They'll have to convert it 
+to taglists obviously. (If you write plugins, please make sure to use the same 
+mapping than other plugins that use the same format. Mappings and plugins for 
+common tagging formats are kept in gst-plugins/gst/tags/* ) Once they have 
+extracted the taglist, they signal they have found tags via the "found-tag" 
+signal. After that they create a tag event and send that down the pipeline. 
+There are convenience functions for this. See code that implements this.
+
+
+Oh, look at me, I'm a flippy little dolphin, let me flip for you!
+
+There are also supposed to be two "consumers" of taglists. Applications and - 
+you guessed it - plugins. Applications obviously want to show the tags of the 
+playing pipeline or store tags for a given file, use them as the basis for 
+editing or whatever.
+Plugins that can set tags implement the GstTagSetter interface. Don't let 
+yourself be fooled by the fact that this interface is an empty interface. Your 
+plugin still has to do something. ;) The interface provides a way to attach 
+tags to elements implementing the interface. Whenever the interface wants to 
+write tags it has to do the following:
+1) Get the tags from the pipeline that you want to write. (This obviously 
+includes storing tags that came in via tag events.)
+2) Merge the user set tags into these tags with the user set merge mode. This 
+is the place where the merge mode allows all te flexibility you may want: 
+adding tags, adding values to tags, overwriting all tags or overwriting only 
+some tags.
+3) Write these tags to the buffer.
+
+
+Hey! You guys made me ink! 
+
+I hope this exciting little intro answered some of your questions. If not, ask 
+more specific questions next time, please. :)
+
+
+Benjamin
+
+
