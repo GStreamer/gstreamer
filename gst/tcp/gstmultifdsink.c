@@ -474,6 +474,7 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
     GstTCPClient * client)
 {
   int avail, fd;
+  gboolean ret;
 
   fd = client->fd;
 
@@ -482,27 +483,39 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
   GST_LOG_OBJECT (sink, "select reports client read on fd %d of %d bytes",
       fd, avail);
 
+  ret = TRUE;
+
   if (avail == 0) {
     /* client sent close, so remove it */
     GST_DEBUG_OBJECT (sink, "client asked for close, removing on fd %d", fd);
-    return FALSE;
+    ret = FALSE;
   } else {
     guint8 dummy[512];
     gint nread;
 
-    /* just Read 'n' Drop */
+    /* just Read 'n' Drop, could also just drop the client as it's not supposed
+     * to write to us except for closing the socket, I guess it's because we
+     * like to listen to our customers. */
     do {
-      nread = read (fd, dummy, 512);
+      /* this is the maximum we can read */
+      gint to_read = MIN (avail, 512);
+
+      nread = read (fd, dummy, to_read);
       if (nread < -1) {
         GST_DEBUG_OBJECT (sink, "could not read bytes from fd %d: %s",
             fd, g_strerror (errno));
+        ret = FALSE;
+        break;
+      } else if (nread == 0) {
+        GST_WARNING_OBJECT (sink, "fd %d: gave 0 bytes in read, removing", fd);
+        ret = FALSE;
         break;
       }
       avail -= nread;
     }
     while (avail > 0);
   }
-  return TRUE;
+  return ret;
 }
 
 static gboolean
