@@ -175,7 +175,7 @@ mp1videoparse_parse_seq (Mp1VideoParse * mp1videoparse, GstBuffer * buf)
     30. / 1.001, 30.,
     50., 60. / 1.001, 60.
   };
-  guint32 n = GUINT32_FROM_BE (*(guint32 *) GST_BUFFER_DATA (buf));
+  guint32 n = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf));
 
   width = (n & 0xfff00000) >> 20;
   height = (n & 0x000fff00) >> 8;
@@ -277,7 +277,7 @@ mp1videoparse_find_next_gop (Mp1VideoParse * mp1videoparse, GstBuffer * buf)
 static guint64
 gst_mp1videoparse_time_code (guchar * gop, gfloat fps)
 {
-  guint32 data = GUINT32_FROM_BE (*(guint32 *) gop);
+  guint32 data = GST_READ_UINT32_BE (gop);
 
   return ((((data & 0xfc000000) >> 26) * 3600 * GST_SECOND) +   /* hours */
       (((data & 0x03f00000) >> 20) * 60 * GST_SECOND) + /* minutes */
@@ -381,7 +381,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
     data = GST_BUFFER_DATA (mp1videoparse->partialbuf);
     size = GST_BUFFER_SIZE (mp1videoparse->partialbuf);
 
-    head = GUINT32_FROM_BE (*((guint32 *) data));
+    head = GST_READ_UINT32_BE (data);
 
     GST_DEBUG ("mp1videoparse: head is %08x", (unsigned int) head);
 
@@ -406,7 +406,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
           offset = 0;
         }
 
-        head = GUINT32_FROM_BE (*((guint32 *) data));
+        head = GST_READ_UINT32_BE (data);
         /* re-call this function so that if we hadn't already, we can
          * now read the sequence header and parse video properties,
          * set caps, stream data, be happy, bla, bla, bla... */

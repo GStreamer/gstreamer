@@ -336,7 +336,7 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
       GST_DEBUG ("mp3parse: **** now at %ld skipped %d bytes", offset, skipped);
     }
     /* construct the header word */
-    header = GUINT32_FROM_BE (*((guint32 *) (data + offset)));
+    header = GST_READ_UINT32_BE (data + offset);
     /* if it's a valid header, go ahead and send off the frame */
     if (head_check (header)) {
       /* calculate the bpf of the frame */
@@ -362,7 +362,7 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
             break;
         }
         /* wait until we have the the entire current frame as well as the next frame header */
-        header2 = GUINT32_FROM_BE (*((guint32 *) (data + offset + bpf)));
+        header2 = GST_READ_UINT32_BE (data + offset + bpf);
         GST_DEBUG ("mp3parse: header=%08X, header2=%08X, bpf=%d",
             (unsigned int) header, (unsigned int) header2, bpf);
 

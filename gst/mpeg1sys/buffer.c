@@ -401,7 +401,7 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
 
   GST_DEBUG ("mpeg1mux::update_audio_info %lu %lu", mb->base, mb->scan_pos);
   if (mb->base == 0 && mb->scan_pos == 0) {
-    id = GUINT32_FROM_BE (*((guint32 *) (data)));
+    id = GST_READ_UINT32_BE (data);
 
     printf ("MPEG audio id = %08x\n", (unsigned int) id);
     if ((id & 0xfff00000) == AUDIO_SYNCWORD << 20) {
@@ -486,7 +486,7 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
     }
   }
   while (offset < mb->length - 4) {
-    id = GUINT32_FROM_BE (*((guint32 *) (data + offset)));
+    id = GST_READ_UINT32_BE (data + offset);
 
     /* mpegver = (header >> 19) & 0x3;  don't need this for bpf */
     layer_index = (id >> 17) & 0x3;

@@ -807,13 +807,13 @@ gst_mpeg2subt_handle_subtitle (GstMpeg2Subt * mpeg2subt, GstData * _data)
     size = GST_BUFFER_SIZE (mpeg2subt->partialbuf);
 
     if (size > 4) {
-      mpeg2subt->packet_size = GUINT16_FROM_BE (*(guint16 *) data);
+      mpeg2subt->packet_size = GST_READ_UINT16_BE (data);
 
       if (mpeg2subt->packet_size == size) {
         GST_LOG ("Subtitle packet size %d, current size %ld",
             mpeg2subt->packet_size, size);
 
-        mpeg2subt->data_size = GUINT16_FROM_BE (*(guint16 *) (data + 2));
+        mpeg2subt->data_size = GST_READ_UINT16_BE (data + 2);
         mpeg2subt->have_title = TRUE;
 
         gst_mpeg2subt_parse_header (mpeg2subt);

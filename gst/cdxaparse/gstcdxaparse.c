@@ -250,7 +250,7 @@ gst_cdxa_parse_loop (GstElement * element)
         gst_bytestream_peek_bytes (cdxa_parse->bs, (guint8 **) & buf, 4);
     if (got_bytes < 4)
       return;
-    cdxa_parse->data_size = GUINT32_FROM_LE (*((guint32 *) buf));
+    cdxa_parse->data_size = GST_READ_UINT32_LE (buf);
 
     /* flush the data size */
     if (!gst_bytestream_flush (cdxa_parse->bs, 4))
