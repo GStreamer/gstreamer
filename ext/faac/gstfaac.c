@@ -99,7 +99,7 @@ gst_faac_base_init (GstFaacClass * klass)
 {
   GstElementDetails gst_faac_details = {
     "Free AAC Encoder (FAAC)",
-    "Codec/Audio/Encoder",
+    "Codec/Encoder/Audio",
     "Free MPEG-2/4 AAC encoder",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>",
   };

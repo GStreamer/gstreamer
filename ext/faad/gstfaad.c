@@ -94,7 +94,7 @@ gst_faad_base_init (GstFaadClass * klass)
 {
   GstElementDetails gst_faad_details = {
     "Free AAC Decoder (FAAD)",
-    "Codec/Audio/Decoder",
+    "Codec/Decoder/Audio",
     "Free MPEG-2/4 AAC decoder",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>",
   };

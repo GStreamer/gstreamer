@@ -30,7 +30,7 @@
 /* elementfactory information */
 GstElementDetails gst_xviddec_details = {
   "Xvid decoder",
-  "Codec/Video/Decoder",
+  "Codec/Decoder/Video",
   "Xvid decoder based on xvidcore",
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
 };

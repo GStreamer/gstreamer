@@ -28,7 +28,7 @@
 /* elementfactory information */
 GstElementDetails gst_divxdec_details = {
   "Divx4linux decoder",
-  "Codec/Video/Decoder",
+  "Codec/Decoder/Video",
   "Divx decoder based on divxdecore",
   "Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };

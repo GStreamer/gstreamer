@@ -125,7 +125,7 @@ gst_dtsdec_base_init (GstDtsDecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   static GstElementDetails gst_dtsdec_details = {
     "DTS audio decoder",
-    "Codec/Audio/Decoder",
+    "Codec/Decoder/Audio",
     "Decodes DTS audio streams",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>"
   };

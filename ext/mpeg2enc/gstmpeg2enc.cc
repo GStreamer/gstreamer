@@ -145,7 +145,7 @@ gst_mpeg2enc_base_init (GstMpeg2encClass * klass)
 {
   static GstElementDetails gst_mpeg2enc_details = {
     "mpeg2enc video encoder",
-    "Codec/Video/Encoder",
+    "Codec/Encoder/Video",
     "High-quality MPEG-1/2 video encoder",
     "Andrew Stevens <andrew.stevens@nexgo.de>\n"
         "Ronald Bultje <rbultje@ronald.bitfreak.net>"

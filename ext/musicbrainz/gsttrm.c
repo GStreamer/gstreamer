@@ -115,7 +115,7 @@ gst_musicbrainz_base_init (GstMusicBrainzClass * klass)
 {
   GstElementDetails gst_musicbrainz_details = {
     "Compute TRM Id",
-    "Codec/Audio/Decoder",
+    "Filter/Analyzer/Audio",
     "Compute TRM Id from muscibrainz",
     "Jeremy Simon <jsimon13@yahoo.fr>",
   };

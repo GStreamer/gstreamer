@@ -32,7 +32,7 @@
 /* elementfactory information */
 static GstElementDetails gst_fameenc_details = {
   "MPEG1 and MPEG4 video encoder using the libfame library",
-  "Codec/Video/Encoder",
+  "Codec/Encoder/Video",
   "Uses fameenc to encode MPEG video streams",
   "Thomas Vander Stichele <thomas@apestaart.org>"
 };

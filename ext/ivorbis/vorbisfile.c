@@ -82,7 +82,7 @@ static GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 /* elementfactory information */
 GstElementDetails ivorbisfile_details = {
   "Ogg Vorbis decoder",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Decodes OGG Vorbis audio using the Tremor vorbisfile API",
   "Monty <monty@xiph.org>\n"
       "Wim Taymans <wim.taymans@chello.be>\n"
