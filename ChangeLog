@@ -1,3 +1,11 @@
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/ximage/Makefile.am:
+	* sys/xvideo/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	  Move interface libs from LDFLAGS to LIBADD, fix relocation errors
+	  after installation (see #127664).
+
 2004-01-02  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_init),
