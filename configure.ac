@@ -345,6 +345,12 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
 GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
   AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
 ])
+dnl if mcopidl can't be found there's no use in compiling it
+AC_PATH_PROG(MCOPIDL, mcopidl, yes, no)
+if test "xHAVE_MCOPIDL" = "xno";
+then
+  USE_ARTS=NO
+fi
 
 dnl *** artsc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
