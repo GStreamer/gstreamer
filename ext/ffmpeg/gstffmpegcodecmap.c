@@ -177,6 +177,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         caps = GST_FF_VID_CAPS_NEW ("video/x-pn-realvideo",
             "systemstream", G_TYPE_BOOLEAN, FALSE,
             "rmversion", G_TYPE_INT, version, NULL);
+        if (context) {
+          gst_caps_set_simple (caps,
+              "rmsubid", GST_TYPE_FOURCC, context->sub_id, NULL);
+        }
       } while (0);
       break;
 
@@ -1180,6 +1184,16 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
         if (gst_structure_get_int (str, "depth", &depth))
           context->bits_per_sample = depth;
+      } while (0);
+      break;
+
+    case CODEC_ID_RV10:
+    case CODEC_ID_RV20:
+      do {
+        guint32 fourcc;
+
+        if (gst_structure_get_fourcc (str, "rmsubid", &fourcc))
+          context->sub_id = fourcc;
       } while (0);
       break;
 
