@@ -96,7 +96,7 @@ guint8 *	gst_type_find_peek			(GstTypeFind *		find,
 							 guint			size);
 void		gst_type_find_suggest			(GstTypeFind *		find,
 							 guint			probability,
-							 const GstCaps2 *		caps);
+							 const GstCaps2 *     	caps);
 guint64		gst_type_find_get_length		(GstTypeFind *		find);
 
 /* registration interface */
@@ -105,7 +105,7 @@ gboolean	gst_type_find_register			(GstPlugin *		plugin,
 							 guint			rank,
 							 GstTypeFindFunction	func,
 							 gchar **		extensions,
-							 const GstCaps2 *		possible_caps,
+							 const GstCaps2 *	possible_caps,
 							 gpointer		data); 
 
 /* typefinding interface */
