@@ -328,19 +328,17 @@ gst_aasink_chain (GstPad *pad, GstBuffer *buf)
   		    aa_imgwidth (aasink->context),	/* dw */
   		    aa_imgheight (aasink->context));	/* dh */
 
-  if (!GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
-    GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
 
-    jitter = gst_clock_current_diff(aasink->clock, GST_BUFFER_TIMESTAMP (buf));
+  jitter = gst_clock_current_diff(aasink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-    if (jitter > 500000 || jitter < -500000)
-    {
-      GST_DEBUG (0, "jitter: %lld\n", jitter);
-      gst_clock_set (aasink->clock, GST_BUFFER_TIMESTAMP (buf));
-    }
-    else {
-      gst_clock_wait(aasink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(aasink));
-    }
+  if (jitter > 500000 || jitter < -500000)
+  {
+    GST_DEBUG (0, "jitter: %lld\n", jitter);
+    gst_clock_set (aasink->clock, GST_BUFFER_TIMESTAMP (buf));
+  }
+  else {
+    gst_clock_wait(aasink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(aasink));
   }
 
   aa_render (aasink->context, &aasink->ascii_parms, 

@@ -28,20 +28,8 @@ GST_READER *gst_reader;
 
   gst_reader = ( GST_READER * ) reader;
        
-  /*tmp->mik->Buffer = gst_pad_pullregion( tmp->mik->sinkpad, GST_REGION_OFFSET_LEN, tmp->offset, size );*/
-
   memcpy( ptr, GST_BUFFER_DATA( gst_reader->mik->Buffer ) + gst_reader->offset, size);
   gst_reader->offset = gst_reader->offset + size;   
-
-/*  if ( GST_BUFFER_SIZE( tmp->mik->Buffer ) != size )
-    tmp->eof = 1;
-  else
-    tmp->eof = 0;
-        
-  if (GST_BUFFER_FLAG_IS_SET (tmp->mik->Buffer, GST_BUFFER_FLUSH))        
-  	need_sync = 1;
-        
-  gst_buffer_unref( tmp->mik->Buffer );*/
 
   return 1;
 }
@@ -54,17 +42,9 @@ int res;
 
   gst_reader = ( GST_READER * ) reader;
         
-  /*tmp->mik->Buffer = gst_pad_pullregion( tmp->mik->sinkpad, GST_REGION_OFFSET_LEN, tmp->offset, 1 );*/  
   res = *( GST_BUFFER_DATA( gst_reader->mik->Buffer ) + gst_reader->offset );
   gst_reader->offset += 1;
         
-/*  if ( GST_BUFFER_SIZE( tmp->mik->Buffer ) != 1 )
-    tmp->eof = 1;
-  else
-    tmp->eof = 0;
-    
-  gst_buffer_unref( tmp->mik->Buffer );*/
-
   return res;
 }
 

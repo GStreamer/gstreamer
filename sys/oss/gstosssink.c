@@ -388,9 +388,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 //  g_return_if_fail(GST_FLAG_IS_SET(osssink,GST_STATE_RUNNING));
 
   if (GST_IS_EVENT (buf)) {
-    g_print ("eos on osssink\n");
-    gst_element_set_state (GST_ELEMENT (osssink), GST_STATE_PAUSED);
-    gst_event_free (GST_EVENT (buf));
+    gst_pad_event_default (pad, GST_EVENT (buf));
     return;
   }
 

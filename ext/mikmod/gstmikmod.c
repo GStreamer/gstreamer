@@ -411,8 +411,8 @@ gst_mikmod_loop (GstElement *element)
       gst_element_yield (element);
     }
     else {
-      gst_element_set_state (GST_ELEMENT (mikmod), GST_STATE_PAUSED);
-      gst_pad_push (mikmod->srcpad, gst_event_new (GST_EVENT_EOS));
+      gst_element_set_eos (GST_ELEMENT (mikmod));
+      gst_pad_push (mikmod->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
     }
 
   } 

@@ -46,7 +46,7 @@ GstBuffer *outdata;
 
   if ( need_sync == 1 )
   {
-    GST_BUFFER_FLAG_SET (outdata, GST_BUFFER_FLUSH);
+    /* FIXME, send a flush event or something */
     need_sync = 0 ;
   }
   gst_pad_push( srcpad, outdata );

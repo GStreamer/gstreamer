@@ -608,8 +608,8 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
         avi_demux->next_time += avi_demux->time_interval;
 
         if (avi_demux->video_need_flush[0]) {
+           /* FIXME, do some flush event here */
           avi_demux->video_need_flush[0] = FALSE;
- 	  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
         }
 
         GST_DEBUG (0,"gst_avi_demux_chain: send video buffer %08x\n", *chunksize);
@@ -639,7 +639,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
         if (avi_demux->audio_need_flush[0]) {
   	  GST_DEBUG (0,"audio flush\n");
           avi_demux->audio_need_flush[0] = FALSE;
-  	  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+           /* FIXME, do some flush event here */
         }
 
         GST_DEBUG (0,"gst_avi_demux_chain: send audio buffer %08x\n", *chunksize);
