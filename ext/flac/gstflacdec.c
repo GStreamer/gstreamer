@@ -700,12 +700,12 @@ gst_flacdec_src_query (GstPad * pad, GstQueryType type,
       else
         samples = flacdec->stream_samples;
 
-      gst_pad_convert (flacdec->srcpad,
+      res = gst_pad_convert (flacdec->srcpad,
           GST_FORMAT_DEFAULT, samples, format, value);
       break;
     }
     case GST_QUERY_POSITION:
-      gst_pad_convert (flacdec->srcpad,
+      res = gst_pad_convert (flacdec->srcpad,
           GST_FORMAT_DEFAULT, flacdec->total_samples, format, value);
       break;
     default:

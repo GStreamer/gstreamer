@@ -28,6 +28,9 @@
 
 #define JIFFIE  (GST_SECOND/70)
 
+GST_DEBUG_CATEGORY_STATIC (flxdec_debug);
+#define GST_CAT_DEFAULT flxdec_debug
+
 /* flx element information */
 static GstElementDetails flxdec_details = {
   "FLX Decoder",
@@ -133,6 +136,8 @@ gst_flxdec_class_init (GstFlxDecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  GST_DEBUG_CATEGORY_INIT (flxdec_debug, "flxdec", 0, "FLX video decoder");
+
   gobject_class->set_property = gst_flxdec_set_property;
   gobject_class->get_property = gst_flxdec_get_property;
 
@@ -206,9 +211,8 @@ flx_decode_chunks (GstFlxDec * flxdec, gulong count, gchar * data, gchar * dest)
         break;
 
       default:
-        g_print ("GstFlxDec: Unimplented chunk type: 0x%02x size: %d\n",
+        GST_WARNING ("Unimplented chunk type: 0x%02x size: %d - skipping",
             hdr->id, hdr->size);
-        g_print ("GstFlxDec: Skipping...\n");
         data += rndalign (hdr->size) - FlxFrameChunkSize;
         break;
     }
@@ -228,7 +232,7 @@ flx_decode_color (GstFlxDec * flxdec, guchar * data, guchar * dest, gint scale)
   data += 2;
   indx = 0;
 
-  g_print ("GstFlxDec: cmap packs: %d\n", packs);
+  GST_LOG ("GstFlxDec: cmap packs: %d", packs);
   while (packs--) {
     /* color map index + skip count */
     indx += *data++;
@@ -238,7 +242,7 @@ flx_decode_color (GstFlxDec * flxdec, guchar * data, guchar * dest, gint scale)
     if (count == 0)
       count = 256;
 
-    g_print ("GstFlxDec: cmap count: %d (indx: %d)\n", count, indx);
+    GST_LOG ("GstFlxDec: cmap count: %d (indx: %d)\n", count, indx);
     flx_set_palette_vector (flxdec->converter, indx, count, data, scale);
 
     data += (count * 3);
@@ -449,7 +453,7 @@ gst_flxdec_loop (GstElement * element)
     databuf = flx_get_data (flxdec, FlxHeaderSize);
 
     if (!databuf) {
-      g_print ("empty buffer\n");
+      GST_LOG ("empty buffer");
       return;
     }
 
@@ -470,12 +474,12 @@ gst_flxdec_loop (GstElement * element)
     }
 
 
-    g_print ("GstFlxDec:       size      :  %d\n", flxh->size);
-    g_print ("GstFlxDec:       frames    :  %d\n", flxh->frames);
-    g_print ("GstFlxDec:       width     :  %d\n", flxh->width);
-    g_print ("GstFlxDec:       height    :  %d\n", flxh->height);
-    g_print ("GstFlxDec:       depth     :  %d\n", flxh->depth);
-    g_print ("GstFlxDec:       speed     :  %d\n", flxh->speed);
+    GST_LOG ("size      :  %d\n", flxh->size);
+    GST_LOG ("frames    :  %d\n", flxh->frames);
+    GST_LOG ("width     :  %d\n", flxh->width);
+    GST_LOG ("height    :  %d\n", flxh->height);
+    GST_LOG ("depth     :  %d\n", flxh->depth);
+    GST_LOG ("speed     :  %d\n", flxh->speed);
 
     flxdec->next_time = 0;
 
@@ -496,10 +500,10 @@ gst_flxdec_loop (GstElement * element)
           flx_colorspace_converter_new (flxh->width, flxh->height);
 
     if (flxh->type == FLX_MAGICHDR_FLC || flxh->type == FLX_MAGICHDR_FLX) {
-      g_print ("GstFlxDec: (FLC) aspect_dx :  %d\n", flxh->aspect_dx);
-      g_print ("GstFlxDec: (FLC) aspect_dy :  %d\n", flxh->aspect_dy);
-      g_print ("GstFlxDec: (FLC) oframe1   :  0x%08x\n", flxh->oframe1);
-      g_print ("GstFlxDec: (FLC) oframe2   :  0x%08x\n", flxh->oframe2);
+      GST_LOG ("(FLC) aspect_dx :  %d\n", flxh->aspect_dx);
+      GST_LOG ("(FLC) aspect_dy :  %d\n", flxh->aspect_dy);
+      GST_LOG ("(FLC) oframe1   :  0x%08x\n", flxh->oframe1);
+      GST_LOG ("(FLC) oframe2   :  0x%08x\n", flxh->oframe2);
     }
 
     flxdec->size = (flxh->width * flxh->height);
