@@ -14,7 +14,7 @@ then
 fi
 
 # ensure that we have the dirs we put ext libs in to appease automake
-mkdir -p gst-libs/ext/ffmpeg
+mkdir -p gst-libs/ext/ffmpeg/ffmpeg
 
 # source helper functions
 if test ! -e common/gst-autogen.sh;
