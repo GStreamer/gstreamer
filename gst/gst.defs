@@ -309,7 +309,8 @@
   (return-type "GType")
 )
 
-(define-function caps_new_empty
+(define-function new_empty
+  (is-constructor-of "GstCaps")
   (c-name "gst_caps_new_empty")
   (return-type "GstCaps*")
 )

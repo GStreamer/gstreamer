@@ -385,6 +385,49 @@ _wrap_gst_pad_get_negotiated_caps(PyGObject *self)
 	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
+override gst_caps_new_empty kwargs
+static int
+_wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
+{
+	PyObject* item;
+	int len, i;
+
+        /* we wrap caps_new, caps_from_string and caps_new_full */
+        len = PyTuple_Size(args);
+        self->gtype = GST_TYPE_CAPS;
+	self->free_on_dealloc = FALSE;
+        if (len == 0) {
+		self->boxed = gst_caps_new_empty();
+	} else if (len == 1) {
+		item = PyTuple_GetItem(args, 0);
+		if (!PyString_Check(item)) {
+                        PyErr_SetString(PyExc_TypeError, "argument must be a string");
+			return -1;
+		}		
+		self->boxed = gst_caps_from_string(PyString_AsString(item));
+	} else {
+		self->boxed = gst_caps_new_empty();
+        	for (i = 0; i < len; i++)
+        	{
+                	item = PyTuple_GetItem(args, i);
+                	if (!pyg_boxed_check(item, GST_TYPE_STRUCTURE))
+                	{
+                        	PyErr_SetString(PyExc_TypeError, "argument must be a GstStructure");
+				gst_caps_free(self->boxed);
+				return -1;
+			}
+			gst_caps_append_structure(self->boxed, pyg_boxed_get(item, GstStructure));
+		}
+	}
+
+
+	if (!self->boxed) {
+		PyErr_SetString(PyExc_RuntimeError, "could not create GstCaps object");
+		return -1;
+	}
+	return 0;
+}
+%%
 override gst_caps_get_structure kwargs
 static PyObject *
 _wrap_gst_caps_get_structure(PyObject *self, PyObject *args, PyObject *kwargs)
