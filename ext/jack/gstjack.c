@@ -375,7 +375,6 @@ gst_jack_change_state (GstElement *element)
                 pad = GST_JACK_PAD (l);
                 caps = gst_pad_get_caps (pad->pad);
                 gst_caps_set (caps, "rate", GST_PROPS_INT_TYPE, (gint) this->bin->rate, NULL);
-                GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
                 if (gst_pad_try_set_caps (pad->pad, caps) <= 0)
                     return GST_STATE_FAILURE;
                 l = g_list_next (l);
