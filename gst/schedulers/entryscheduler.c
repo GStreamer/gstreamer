@@ -873,10 +873,8 @@ static void
 gst_entry_scheduler_remove_element (GstScheduler * scheduler,
     GstElement * element)
 {
-  GstEntryScheduler *sched = GST_ENTRY_SCHEDULER (scheduler);
-
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
-    GST_INFO_OBJECT (sched, "decoupled element %s added, ignoring",
+    GST_INFO_OBJECT (scheduler, "decoupled element %s added, ignoring",
         GST_OBJECT_NAME (element));
     return;
   }

@@ -1,5 +1,13 @@
 2004-08-03  Benjamin Otte  <otte@gnome.org>
 
+	* gst/schedulers/entryscheduler.c:
+	(gst_entry_scheduler_remove_element):
+	  fix for GST_DISABLE_DEBUG
+	* tools/gst-launch.c: (print_tag):
+	  fixes for G_DISABLE_ASSERT
+
+2004-08-03  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gst.c: (gst_register_core_elements):
 	  fix for G_DISABLE_ASSERT
 	* gst/gstinfo.c: (__gst_in_valgrind):
