@@ -15,7 +15,7 @@ dnl the same date
 dnl (in an ideal world, cvs would understand it's own Tag file format as
 dnl a date spec)
 
-AC_DEFUN(AS_SLURP_FFMPEG,
+AC_DEFUN([AS_SLURP_FFMPEG],
 [
   # save original dir
   FAILED=""

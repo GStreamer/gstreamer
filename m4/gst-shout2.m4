@@ -5,7 +5,7 @@
 dnl AM_PATH_SHOUT2([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl Test for libshout, and define SHOUT2_CFLAGS and SHOUT2_LIBS
 dnl
-AC_DEFUN(AM_PATH_SHOUT2,
+AC_DEFUN([AM_PATH_SHOUT2],
 [dnl 
 dnl Get the cflags and libraries
 dnl
