@@ -397,6 +397,9 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   GstStructure *structure;
   const gchar *mimetype;
 
+  if (!strncmp (gst_pad_get_name (pad), "current_", 8))
+    return;
+
   /* the caps is empty, this means the pad has no type, we can only
    * decide to fire the unknown_type signal. */
   if (caps == NULL || gst_caps_is_empty (caps)) {
