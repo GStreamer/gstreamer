@@ -32,8 +32,6 @@ ext/(library)
 
 libHermes	(for colorspace conversions; you need this for any video work)
 			http://www.clanlib.org/hermes/
-libghttp	(for httpsrc)
-			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
 libaudiofile    (for afsrc/afsink
 			http://oss.sgi.com/projects/audiofile/
 libmad          (for the mad mp3 decoder plugin)
@@ -95,6 +93,9 @@ gtk		(for the gdk_pixbuf plugin)
 		>= 2.2.1 preferred, 2.0 ok
 pango		(for the textoverlay plugins)
 			http://www.pango.org/
+libHermes       (for colorspace conversion;most use ffcolorspace instead)
+                        http://www.clanlib.org/hermes/
+
 
 Optional debian packages:
 =========================
