@@ -39,10 +39,11 @@ _ref {_identifier}"."{_identifier}?
 _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
 
 /* links */
-_capschar ("\\".)|([^[:space:]!.,;()\]\[])
+_capschar ("\\".)|([^[:space:]\;!\.\,\(\)\]\[])
 _capsstring {_capschar}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
 _mimetype ({_capschar}+"/"{_capschar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
-_link ("!"[[:space:]]*{_mimetype}(","([^!]|{_capsstring})+)?[[:space:]]*"!")|("!")
+_caps {_mimetype}(","[^!]|{_capsstring})*
+_link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!")|("!")
 
 %x value
 %option noyywrap
