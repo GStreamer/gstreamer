@@ -12,9 +12,9 @@ create_pipeline (void)
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
 
-  gst_element_link (fakesrc, fakesink);
-
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+
+  gst_element_link (fakesrc, fakesink);
 
   g_object_set (G_OBJECT (fakesrc), "num_buffers", 5, NULL);
 

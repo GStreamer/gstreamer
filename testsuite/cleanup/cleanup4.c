@@ -30,10 +30,10 @@ main (gint argc, gchar * argv[])
 
     fakesink = gst_element_factory_make ("fakesink", "fakesink");
 
-    gst_element_link (fakesrc, fakesink);
-
     gst_bin_add (GST_BIN (bin), fakesink);
     gst_bin_add (GST_BIN (pipeline), bin);
+
+    gst_element_link (fakesrc, fakesink);
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

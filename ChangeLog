@@ -1,5 +1,12 @@
 2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/cleanup/cleanup1.c: (create_pipeline):
+	* testsuite/cleanup/cleanup2.c: (create_pipeline):
+	* testsuite/cleanup/cleanup4.c: (main):
+	  fix testsuite
+
+2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/control/control.c:
 	* libs/gst/control/dparam.c:
 	* libs/gst/control/dparam_smooth.c: (gst_dpsmooth_get_type):
