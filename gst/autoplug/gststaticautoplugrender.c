@@ -119,7 +119,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
 	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (srctemp), GST_PADTEMPLATE_CAPS (desttemp))) {
-	  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
+	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
           return TRUE;
 	}
@@ -129,7 +129,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
     srctemps = g_list_next (srctemps);
   }
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 		  "factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
   return FALSE;
 }
