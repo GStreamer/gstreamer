@@ -1,5 +1,10 @@
 2004-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_class_init):
+	Fix vorbis property descriptions and ranges.
+
+2004-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_iterate):
 	Really do nothing when no data is available.
 	Go to the playing state when the stream is not seekable
