@@ -519,6 +519,23 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
   translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
   translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
   GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
+  if test x"$HAVE_DVDNAV" = x"yes"; then
+    dnl check version
+    DVDNAV_VERSION=`dvdnav-config --version|head -n 1|sed 's/^.*) //'|sed 's/ (.*)//'`
+    DVDNAV_MAJOR=`echo $DVDNAV_VERSION | cut -d. -f1 | sed s/[a-zA-Z\-].*//g`
+    DVDNAV_MINOR=`echo $DVDNAV_VERSION | cut -d. -f2 | sed s/[a-zA-Z\-].*//g`
+    DVDNAV_MICRO=`echo $DVDNAV_VERSION | cut -d. -f3 | sed s/[a-zA-Z\-].*//g`
+    if [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
+       [[ "$DVDNAV_MINOR" -lt "1" ]]; then
+      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
+      HAVE_DVDNAV="no"
+    elif [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
+         [[ "$DVDNAV_MINOR" -eq "1" ]] && \
+         [[ "$DVDNAV_MICRO" -lt "7" ]]; then
+      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
+      HAVE_DVDNAV="no"
+      fi
+    fi
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
 ])
 
