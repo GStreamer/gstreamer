@@ -170,6 +170,7 @@ gst_play_init (GstPlay *play)
 	priv->video_element = gst_elementfactory_make ("bin", "video_bin");
   
 	priv->video_show = gst_elementfactory_make ("xvideosink", "show");
+	g_object_set (G_OBJECT (priv->video_show), "toplevel", FALSE, NULL);
 	g_return_if_fail (priv->video_show != NULL);
 	/* gtk_object_set (GTK_OBJECT (priv->video_element), "xv_enabled", FALSE, NULL); */
 	g_signal_connect (G_OBJECT (priv->video_show), "frame_displayed",
