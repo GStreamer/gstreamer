@@ -141,6 +141,8 @@ case "x${target_cpu}" in
               AC_DEFINE(HAVE_CPU_SPARC, 1, [Define if the target CPU is a PPC]) ;;
   xmips*)     HAVE_CPU_MIPS=yes
               AC_DEFINE(HAVE_CPU_MIPS, 1, [Define if the target CPU is a MIPS]) ;;
+  xhppa*)     HAVE_CPU_HPPA=yes
+              AC_DEFINE(HAVE_CPU_HPPA, 1, [Define if the target CPU is a HPPA]) ;;
 esac
 
 dnl Determine endianness

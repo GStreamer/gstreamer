@@ -144,6 +144,22 @@ struct minimal_stackframe {
     
 
 
+/***** HP-PA *****/
+#elif defined(HAVE_CPU_HPPA)
+
+#define GST_ARCH_SET_SP(stackpointer) \
+    __asm__("copy %0,%%sp\n\t" : : "r"(stackpointer));
+
+#define GST_ARCH_CALL(target) \
+    __asm__("copy $1,%%r22\n\t"		// set call address \
+            ".CALL\n\t"			// call pseudo insn (why?) \
+            "bl $$dyncall,%%r31\n\t" : : "r"(target));
+
+// assume stackframe is 16 bytes
+#define GST_ARCH_SETUP_STACK(sp) sp -= 4
+
+
+
 #else
 #error Need to know about this architecture, or have a generic implementation
 #endif
