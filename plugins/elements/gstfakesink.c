@@ -34,6 +34,7 @@ GstElementDetails gst_fakesink_details = {
 /* FakeSink signals and args */
 enum {
   /* FILL ME */
+  SIGNAL_HANDOFF,
   LAST_SIGNAL
 };
 
@@ -49,7 +50,7 @@ static void gst_fakesink_init(GstFakeSink *fakesink);
 static void gst_fakesink_chain(GstPad *pad,GstBuffer *buf);
 
 static GstSinkClass *parent_class = NULL;
-//static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
+static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_fakesink_get_type (void) 
@@ -75,9 +76,19 @@ gst_fakesink_get_type (void)
 static void
 gst_fakesink_class_init (GstFakeSinkClass *klass) 
 {
+  GtkObjectClass *gtkobject_class;
   GstSinkClass *gstsink_class;
 
+  gtkobject_class = (GtkObjectClass*)klass;
   gstsink_class = (GstSinkClass*)klass;
+
+  gst_fakesink_signals[SIGNAL_HANDOFF] =
+    gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstFakeSinkClass, handoff),
+                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_fakesink_signals,
+                                    LAST_SIGNAL);
 
   parent_class = gtk_type_class (GST_TYPE_SINK);
 }
@@ -114,4 +125,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   g_print("(%s:%s)< ",GST_DEBUG_PAD_NAME(pad));
   
   gst_buffer_unref (buf);
+
+  gtk_signal_emit (GTK_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF],
+	                      fakesink);
+
 }

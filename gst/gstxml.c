@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gstdebug.h"
 #include "gstxml.h"
 
 static void 	gst_xml_class_init		(GstXMLClass *klass);
@@ -107,7 +108,6 @@ gst_xml_new (const guchar *fname, const guchar *root)
 
   xml = GST_XML(gtk_type_new(GST_TYPE_XML));
 
-  xml->elements = g_hash_table_new(g_str_hash, g_str_equal);
   xml->topelements = NULL;
 
   field = doc->root->childs;
@@ -116,7 +116,11 @@ gst_xml_new (const guchar *fname, const guchar *root)
     if (!strcmp(field->name, "element")) {
       GstElement *element;
       
+      xml->elements = g_hash_table_new(g_str_hash, g_str_equal);
+
       element = gst_element_load_thyself(field, xml->elements);
+      
+      g_hash_table_destroy (xml->elements);
 
       xml->topelements = g_list_prepend (xml->topelements, element);
     }
@@ -163,7 +167,7 @@ gst_xml_get_element (GstXML *xml, const guchar *name)
   g_return_val_if_fail(xml != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  g_print("gstxml: getting element \"%s\"\n", name);
+  DEBUG ("gstxml: getting element \"%s\"\n", name);
 
   element = g_hash_table_lookup(xml->elements, name);
 

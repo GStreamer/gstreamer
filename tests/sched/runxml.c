@@ -1,0 +1,74 @@
+#include <gst/gst.h>
+
+static void
+buffer_handoff (GstElement *src, GstElement *bin)
+{
+  g_print ("\n\n *** buffer arrived in sink ***\n\n");
+  gst_element_set_state(bin, GST_STATE_NULL);
+}
+
+/* eos will be called when the src element has an end of stream */
+void eos(GstSrc *src, gpointer data)
+{
+  g_print("have eos, quitting\n");
+}
+
+int main(int argc,char *argv[]) 
+{
+  GstXML *xml;
+  GList *toplevelelements;
+  gint i = 1;
+
+  gst_init(&argc,&argv);
+
+  if (argc < 2) {
+    g_print ("usage: %s <xml file>\n", argv[0]);
+    exit (-1);
+  }
+
+  g_print ("\n *** using testfile %s\n", argv[1]);
+
+  xml = gst_xml_new(argv[1], NULL);
+
+  toplevelelements = gst_xml_get_topelements (xml);
+
+  while (toplevelelements) {
+    GstElement *bin = (GstElement *)toplevelelements->data;
+    GstElement *src, *sink;
+
+    g_print ("\n ***** testcase %d\n", i++);
+
+    src = gst_bin_get_by_name (GST_BIN (bin), "fakesrc");
+    if (src) {
+    }
+    else {
+      g_print ("could not find src element\n");
+      exit(-1);
+    }
+    
+    sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink");
+    if (sink) {
+      gtk_signal_connect (GTK_OBJECT(sink), "handoff",
+                   GTK_SIGNAL_FUNC(buffer_handoff), bin);
+    }
+    else {
+      g_print ("could not find sink element\n");
+      exit(-1);
+    }
+
+    gst_element_set_state(bin, GST_STATE_READY);
+    gst_element_set_state(bin, GST_STATE_PLAYING);
+
+    if (GST_IS_THREAD (bin)) {
+      sleep (1);
+    }
+    else {
+      gst_bin_iterate(GST_BIN(bin));
+    }
+
+    toplevelelements = g_list_next (toplevelelements);
+  }
+
+  exit(0);
+}
+

@@ -18,8 +18,6 @@ main (int argc, char *argv[])
   glade_init();
   glade_gnome_init();
 
-  gst_type_dump ();
-
   play = gst_media_play_new ();
 
   if (argc > 1) {

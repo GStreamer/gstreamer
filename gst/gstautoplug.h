@@ -27,17 +27,36 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define GST_TYPE_AUTOPLUG \
+  (gst_object_get_type())
+#define GST_AUTOPLUG(obj) \
+  (GTK_CHECK_CAST((obj),GST_TYPE_AUTOPLUG,GstAutoplug))
+#define GST_AUTOPLUG_CLASS(klass) \
+  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUG,GstAutoplugClass))
+#define GST_IS_AUTOPLUG(obj) \
+  (GTK_CHECK_TYPE((obj),GST_TYPE_AUTOPLUG))
+#define GST_IS_AUTOPLUG_CLASS(obj) \
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUG))
 
-GList* 		gst_autoplug_factories 			(GstElementFactory *srcfactory, 
-							 GstElementFactory *sinkfactory);
-GList* 		gst_autoplug_elements 			(GstElement *src, 
-							 GstElement *sink);
+typedef struct _GstAutoplug GstAutoplug;
+typedef struct _GstAutoplugClass GstAutoplugClass;
+
+#define GST_AUTOPLUG_MAX_COST 999999
+
+typedef guint   (*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
+typedef GList*  (*GstAutoplugListFunction) (gpointer data);
+
+struct _GstAutoplug {
+  GtkObject object;
+};
+
+struct _GstAutoplugClass {
+  GtkObjectClass parent_class;
+};
+
+GtkType 	gst_autoplug_get_type			(void);
 
 GList* 		gst_autoplug_caps 			(GstCaps *srccaps, GstCaps *sinkcaps);
-
-GList* 		gst_autoplug_caps_to_factory 		(GstCaps *srccaps, GstElementFactory *sinkfactory);
-
-GList* 		gst_autoplug_factory_to_caps 		(GstElementFactory *srcfactory, GstCaps *sinkcaps);
 
 
 #ifdef __cplusplus

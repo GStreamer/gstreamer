@@ -20,16 +20,13 @@
 #include "gstdebug.h"
 #include "gstautoplug.h"
 
-#define MAX_COST 999999
-
-typedef guint 	(*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
-typedef GList* 	(*GstAutoplugListFunction) (gpointer data);
+static void     gst_autoplug_class_init (GstAutoplugClass *klass);
+static void     gst_autoplug_init       (GstAutoplug *autoplug);
 
 static GList* 	gst_autoplug_func 	(gpointer src, gpointer sink, 
 		   			 GstAutoplugListFunction list_function,
 		   			 GstAutoplugCostFunction cost_function,
 					 gpointer data);
-
 
 struct _gst_autoplug_node
 {
@@ -40,69 +37,33 @@ struct _gst_autoplug_node
 
 typedef struct _gst_autoplug_node gst_autoplug_node;
 
-static GList*
-gst_autoplug_enqueue (GList *queue, gpointer iNode, gint iDist, gpointer iPrev) 
-{
-  gst_autoplug_node *node = g_malloc (sizeof (gst_autoplug_node));
+static GstObjectClass *parent_class = NULL;
 
-  node->iNode = iNode;
-  node->iDist = iDist;
-  node->iPrev = iPrev;
+GtkType gst_autoplug_get_type(void) {
+  static GtkType autoplug_type = 0;
 
-  queue = g_list_append (queue, node);
-
-  return queue;
+  if (!autoplug_type) {
+    static const GtkTypeInfo autoplug_info = {
+      "GstAutoplug",
+      sizeof(GstElement),
+      sizeof(GstElementClass),
+      (GtkClassInitFunc)gst_autoplug_class_init,
+      (GtkObjectInitFunc)gst_autoplug_init,
+      (GtkArgSetFunc)NULL,
+      (GtkArgGetFunc)NULL,
+      (GtkClassInitFunc)NULL,
+    };
+    autoplug_type = gtk_type_unique(GST_TYPE_AUTOPLUG,&autoplug_info);
+  }
+  return autoplug_type;
 }
 
-static GList*
-gst_autoplug_dequeue (GList *queue, gpointer *iNode, gint *iDist, gpointer *iPrev) 
-{
-  GList *head;
-  gst_autoplug_node *node;
-
-  head = g_list_first (queue);
-     
-  if (head) {
-    node = (gst_autoplug_node *)head->data;
-    *iNode = node->iNode;
-    *iPrev = node->iPrev;
-    *iDist = node->iDist;
-    head = g_list_remove (queue, node);
-  }
-
-  return head;
+static void
+gst_autoplug_class_init(GstAutoplugClass *klass) {
+  parent_class = gtk_type_class(GST_TYPE_OBJECT);
 }
 
-static gint
-find_factory (gst_autoplug_node *rgnNodes, GstElementFactory *factory)
-{
-  gint i=0;
-
-  while (rgnNodes[i].iNode) {
-    if (rgnNodes[i].iNode == factory) return i;
-    i++;  
-  }
-
-  return 0;
-}
-
-static GList*
-construct_path (gst_autoplug_node *rgnNodes, GstElementFactory *factory)
-{
-  GstElementFactory *current;
-  GList *factories = NULL;
-  
-  current = rgnNodes[find_factory(rgnNodes, factory)].iPrev;
-
-  while (current != NULL)
-  { 
-    gpointer next;
-    next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
-    if (next) factories = g_list_prepend (factories, current);
-    current = next;
-  }
-
-  return factories;
+static void gst_autoplug_init(GstAutoplug *autoplug) {
 }
 
 static gboolean 
@@ -144,25 +105,6 @@ gst_autoplug_elementfactory_get_list (gpointer data)
   return gst_elementfactory_get_list ();
 }
 
-static guint 
-gst_autoplug_elementfactory_find_cost (gpointer src, gpointer dest, gpointer data) 
-{
-  if (gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest)) {
-    return 1;
-  }
-  return MAX_COST;
-}
-
-
-GList*
-gst_autoplug_factories (GstElementFactory *srcfactory, GstElementFactory *sinkfactory) 
-{
-  return gst_autoplug_func (srcfactory, sinkfactory, 
-      	  		    gst_autoplug_elementfactory_get_list, 
-			    gst_autoplug_elementfactory_find_cost,
-			    NULL);
-}
-
 typedef struct {
   GstCaps *src;
   GstCaps *sink;
@@ -192,8 +134,10 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
   }
 
-  if (res) return 1;
-  return MAX_COST;
+  if (res) 
+    return 1;
+  else 
+    return GST_AUTOPLUG_MAX_COST;
 }
 
 GList*
@@ -210,34 +154,69 @@ gst_autoplug_caps (GstCaps *srccaps, GstCaps *sinkcaps)
 			    &caps);
 }
 
-GList*
-gst_autoplug_elements (GstElement *src, GstElement *sink) 
+static gint
+find_factory (gst_autoplug_node *rgnNodes, gpointer factory)
 {
-  return NULL;
+  gint i=0;
+
+  while (rgnNodes[i].iNode) {
+    if (rgnNodes[i].iNode == factory) return i;
+    i++;  
+  }
+  return 0;
 }
 
-GList*
-gst_autoplug_caps_to_factory (GstCaps *srccaps, GstElementFactory *sinkfactory) 
+static GList*
+construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
 {
-  return NULL;
+  GstElementFactory *current;
+  GList *factories = NULL;
+  
+  current = rgnNodes[find_factory(rgnNodes, factory)].iPrev;
+
+  while (current != NULL)
+  { 
+    gpointer next;
+    next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
+    if (next) factories = g_list_prepend (factories, current);
+    current = next;
+  }
+  return factories;
 }
 
-GList*
-gst_autoplug_factory_to_caps (GstElementFactory *srcfactory, GstCaps *sinkcaps) 
+static GList*
+gst_autoplug_enqueue (GList *queue, gpointer iNode, gint iDist, gpointer iPrev) 
 {
-  return NULL;
+  gst_autoplug_node *node = g_malloc (sizeof (gst_autoplug_node));
+
+  node->iNode = iNode;
+  node->iDist = iDist;
+  node->iPrev = iPrev;
+
+  queue = g_list_append (queue, node);
+
+  return queue;
 }
 
-/**
- * gst_type_get_sink_to_src:
- * @sinkid: the id of the sink
- * @srcid: the id of the source
- *
- * return a list of elementfactories that convert the source
- * type id to the sink type id
- *
- * Returns: a list of elementfactories
- */
+static GList*
+gst_autoplug_dequeue (GList *queue, gpointer *iNode, gint *iDist, gpointer *iPrev) 
+{
+  GList *head;
+  gst_autoplug_node *node;
+
+  head = g_list_first (queue);
+     
+  if (head) {
+    node = (gst_autoplug_node *)head->data;
+    *iNode = node->iNode;
+    *iPrev = node->iPrev;
+    *iDist = node->iDist;
+    head = g_list_remove (queue, node);
+  }
+
+  return head;
+}
+
 static GList*
 gst_autoplug_func (gpointer src, gpointer sink, 
 		   GstAutoplugListFunction list_function,
@@ -253,8 +232,6 @@ gst_autoplug_func (gpointer src, gpointer sink,
   GList *factories;
   guint num_factories;
   
-  DEBUG ("%p %p\n", src, sink);
-
   elements = g_list_append (elements, sink);
   elements = g_list_append (elements, src);
   
@@ -274,7 +251,7 @@ gst_autoplug_func (gpointer src, gpointer sink,
       rgnNodes[i].iDist = 0;
     }
     else {
-      rgnNodes[i].iDist = MAX_COST;
+      rgnNodes[i].iDist = GST_AUTOPLUG_MAX_COST;
     }
 
     factories = g_list_next (factories);
@@ -292,8 +269,8 @@ gst_autoplug_func (gpointer src, gpointer sink,
       gpointer current = factories2->data;
  	
       iCost = cost_function (iNode, current, data);
-      if (iCost != MAX_COST) {
-        if((MAX_COST == rgnNodes[i].iDist) ||
+      if (iCost != GST_AUTOPLUG_MAX_COST) {
+        if((GST_AUTOPLUG_MAX_COST == rgnNodes[i].iDist) ||
            (rgnNodes[i].iDist > (iCost + iDist))) {
           rgnNodes[i].iDist = iDist + iCost;
           rgnNodes[i].iPrev = iNode;

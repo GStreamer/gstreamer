@@ -54,7 +54,7 @@ struct _GstIdentity {
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  gint control;
+  gboolean loop_based;
 };
 
 struct _GstIdentityClass {

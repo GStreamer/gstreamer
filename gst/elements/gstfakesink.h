@@ -56,6 +56,9 @@ struct _GstFakeSink {
 
 struct _GstFakeSinkClass {
   GstSinkClass parent_class;
+
+  /* signals */
+  void (*handoff) (GstElement *element,GstPad *pad);
 };
 
 GtkType gst_fakesink_get_type(void);
