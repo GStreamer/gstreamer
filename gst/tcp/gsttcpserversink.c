@@ -629,7 +629,7 @@ gst_tcpserversink_close (GstTCPServerSink * this)
   if (this->streamheader) {
     GList *l;
 
-    for (l = sink->streamheader; l; l = l->next) {
+    for (l = this->streamheader; l; l = l->next) {
       gst_buffer_unref (l->data);
     }
     g_list_free (this->streamheader);
