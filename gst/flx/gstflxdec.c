@@ -30,6 +30,7 @@ static GstCaps* flxdec_type_find(GstBuffer *buf, gpointer private);
 static GstElementDetails flxdec_details = {
   "FLX Decoder",
   "Codec/Audio/Decoder",
+  "LGPL",
   "FLX decoder",
   VERSION,
   "Sepp Wijnands <mrrazz@garbage-coderz.net>"

@@ -21,10 +21,11 @@
 #include "gstlevel.h"
 #include "math.h"
 
-
+/* elementfactory information */
 static GstElementDetails level_details = {
   "Level",
   "Filter/Audio/Analysis",
+  "LGPL",
   "RMS Level indicator for audio/raw",
   VERSION,
   "Thomas <thomas@apestaart.org>",

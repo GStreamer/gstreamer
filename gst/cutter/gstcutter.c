@@ -22,10 +22,11 @@
 #include "gstcutter.h"
 #include "math.h"
 
-
+/* elementfactory information */
 static GstElementDetails cutter_details = {
   "Cutter",
   "Filter/Audio/Effect",
+  "LGPL",
   "Audio Cutter to split audio into non-silent bits",
   VERSION,
   "Thomas <thomas@apestaart.org>",

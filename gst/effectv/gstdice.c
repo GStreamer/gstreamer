@@ -62,9 +62,11 @@ struct _GstDiceTVClass
   void (*reset) (GstElement *element);
 };
 
+/* elementfactory information */
 GstElementDetails gst_dicetv_details = {
   "DiceTV",
   "Filter/Video/Effect",
+  "LGPL",
   "'Dices' the screen up into many small squares",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

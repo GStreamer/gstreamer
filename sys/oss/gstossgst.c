@@ -37,6 +37,7 @@
 static GstElementDetails gst_ossgst_details = {  
   "Audio Wrapper (OSS)",
   "Source/Audio",
+  "LGPL",
   "Hijacks /dev/dsp to get the output of OSS apps into GStreamer",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

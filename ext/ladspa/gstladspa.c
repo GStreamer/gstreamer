@@ -1113,6 +1113,7 @@ ladspa_describe_plugin(const char *pcFullFilename,
     details = g_new0(GstElementDetails,1);
     details->longname = g_strdup(desc->Name);
     details->klass = "Filter/Audio/LADSPA";
+    details->license = "LGPL";
     details->description = details->longname;
     details->version = g_strdup_printf("%ld",desc->UniqueID);
     details->author = g_strdup(desc->Maker);

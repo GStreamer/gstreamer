@@ -1,18 +1,22 @@
 #include "mulaw-encode.h"
 #include "mulaw-decode.h"
 
+/* elementfactory information */
 static GstElementDetails mulawenc_details = {
   "PCM to Mu Law conversion",
   "Filter/Audio/Conversion",
+  "LGPL",
   "Convert 16bit PCM to 8bit mu law",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",
   "(C) 2001"
 };
 
+/* elementfactory information */
 static GstElementDetails mulawdec_details = {
   "Mu Law to PCM conversion",
   "Filter/Audio/Conversion",
+  "LGPL",
   "Convert 8bit mu law to 16bit PCM",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",

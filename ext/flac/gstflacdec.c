@@ -30,6 +30,7 @@ extern GstPadTemplate *gst_flacdec_src_template, *gst_flacdec_sink_template;
 GstElementDetails flacdec_details = {
   "FLAC decoder",
   "Codec/Audio/Decoder",
+  "LGPL",
   "Decodes FLAC lossless audio streams",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

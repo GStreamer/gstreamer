@@ -28,6 +28,7 @@
 static GstElementDetails gst_avi_demux_details = {
   "Avi demuxer",
   "Codec/Demuxer",
+  "LGPL",
   "Demultiplex an avi file into audio and video",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"

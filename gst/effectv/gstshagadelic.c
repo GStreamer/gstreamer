@@ -63,9 +63,11 @@ struct _GstShagadelicTVClass
   GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails gst_shagadelictv_details = {
   "ShagadelicTV",
   "Filter/Video/Effect",
+  "LGPL",
   "Oh behave, ShagedelicTV makes images shagadelic!",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

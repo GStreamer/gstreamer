@@ -29,9 +29,11 @@
 
 #include <gstosssrc.h>
 
+/* elementfactory information */
 static GstElementDetails gst_osssrc_details = {
   "Audio Source (OSS)",
   "Source/Audio",
+  "LGPL",
   "Read from the sound card",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

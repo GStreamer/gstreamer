@@ -26,6 +26,7 @@
 GstElementDetails gst_jpegenc_details = {
   "jpeg image encoder",
   "Codec/Image/Encoder",
+  "LGPL",
   ".jpeg",
   VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",

@@ -69,9 +69,11 @@ struct _GstWarpTVClass
   GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails gst_warptv_details = {
   "WarpTV",
   "Filter/Video/Effect",
+  "LGPL",
   "WarpTV does realtime goo'ing of the video input",
   VERSION,
   "Sam Lantinga <slouken@devolution.com>",

@@ -20,10 +20,11 @@
 #include <string.h>
 #include <gstmedian.h>
 
-
+/* elementfactory information */
 static GstElementDetails median_details = {
   "Median effect",
   "Filter/Video",
+  "LGPL",
   "Apply a median filter to an image",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

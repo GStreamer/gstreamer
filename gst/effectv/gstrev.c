@@ -81,9 +81,11 @@ struct _GstRevTVClass
   void (*reset) (GstElement *element);
 };
 
+/* elementfactory information */
 GstElementDetails gst_revtv_details = {
   "RevTV",
   "Filter/Video/Effect",
+  "LGPL",
   "A video waveform monitor for each line of video processed",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

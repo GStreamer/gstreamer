@@ -27,6 +27,7 @@
 static GstElementDetails esdsink_details = {
   "Esound audio sink",
   "Sink/Audio",
+  "LGPL",
   "Plays audio to an esound server",
   VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",

@@ -1,18 +1,22 @@
 #include "alaw-encode.h"
 #include "alaw-decode.h"
 
+/* elementfactory information */
 static GstElementDetails alawenc_details = {
   "PCM to A Law conversion",
   "Filter/Audio/Conversion",
+  "LGPL",
   "Convert 16bit PCM to 8bit A law",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",
   "(C) 2001"
 };
 
+/* elementfactory information */
 static GstElementDetails alawdec_details = {
   "A Law to PCM conversion",
   "Filter/Audio/Conversion",
+  "LGPL",
   "Convert 8bit A law to 16bit PCM",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",

@@ -31,6 +31,7 @@
 static GstElementDetails gst_auparse_details = {
   ".au parser",
   "Codec/Parser",
+  "LGPL",
   "Parse an .au file into raw audio",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

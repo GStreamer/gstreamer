@@ -71,6 +71,7 @@ GType gst_esdmon_get_type(void);
 static GstElementDetails esdmon_details = {
   "Esound audio monitor",
   "Source/Audio",
+  "LGPL",
   "Monitors audio from an esound server",
   VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",

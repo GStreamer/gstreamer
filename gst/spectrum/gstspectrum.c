@@ -21,9 +21,11 @@
 
 #include "gstspectrum.h"
 
+/* elementfactory information */
 static GstElementDetails gst_spectrum_details = {
   "Spectrum analyzer",
   "Filter/Audio/Analysis",
+  "LGPL",
   "Run an FFT on the audio signal, output spectrum data",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

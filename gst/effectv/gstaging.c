@@ -74,9 +74,11 @@ struct _GstAgingTVClass
   GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails gst_agingtv_details = {
   "AgingTV",
   "Filter/Video/Effect",
+  "LGPL",
   "Aply aging effect on video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -62,9 +62,11 @@ struct _GstQuarkTVClass
   GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails gst_quarktv_details = {
   "QuarkTV",
   "Filter/Video/Effect",
+  "LGPL",
   "Motion disolver",
   VERSION,
   "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>",

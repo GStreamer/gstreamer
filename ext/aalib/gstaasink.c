@@ -24,9 +24,11 @@
 
 #include "gstaasink.h"
 
+/* elementfactory information */
 static GstElementDetails gst_aasink_details = {
   "Video sink",
   "Sink/Video",
+  "GPL",
   "An ASCII art videosink",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -29,6 +29,7 @@ extern GstPadTemplate *gst_flacenc_src_template, *gst_flacenc_sink_template;
 GstElementDetails flacenc_details = {
   "FLAC encoder",
   "Codec/Audio/Encoder",
+  "LGPL",
   "Encodes audio with the FLAC lossless audio encoder",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

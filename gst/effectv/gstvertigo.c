@@ -65,9 +65,11 @@ struct _GstVertigoTVClass
   void (*reset) (GstElement *element);
 };
 
+/* elementfactory information */
 GstElementDetails gst_vertigotv_details = {
   "VertigoTV",
   "Filter/Video/Effect",
+  "LGPL",
   "A loopback alpha blending effector with rotating and scaling",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -31,9 +31,11 @@
 
 #include <gstosssink.h>
 
+/* elementfactory information */
 static GstElementDetails gst_osssink_details = {  
   "Audio Sink (OSS)",
   "Sink/Audio",
+  "LGPL",
   "Output to a sound card via OSS",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>, "

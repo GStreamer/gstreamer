@@ -63,6 +63,7 @@ GType gst_monoscope_get_type(void);
 static GstElementDetails gst_monoscope_details = {
   "Monoscope",
   "Visualization",
+  "GPL",
   "Displays a highly stabilised waveform of audio input",
   VERSION,
   "Richard Boulton <richard@tartarus.org>",

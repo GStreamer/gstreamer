@@ -29,6 +29,7 @@ extern GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
 GstElementDetails gst_jpegdec_details = {
   "jpeg image decoder",
   "Codec/Image/Decoder",
+  "LGPL",
   ".jpeg",
   VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",

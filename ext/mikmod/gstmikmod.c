@@ -23,9 +23,11 @@
 #include <gst/audio/audio.h>
 #include <stdlib.h>
 
+/* elementfactory information */
 GstElementDetails mikmod_details = {
   "MikMod",
   "Codec/Audio/Decoder",
+  "GPL",
   "Module decoder based on libmikmod",
   VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",

@@ -56,9 +56,11 @@ struct _GstEdgeTVClass
   GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails gst_edgetv_details = {
   "EdgeTV",
   "Filter/Video/Effect",
+  "LGPL",
   "Aply edge detect on video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

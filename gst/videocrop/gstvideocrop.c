@@ -56,6 +56,7 @@ struct _GstVideoCropClass {
 static GstElementDetails gst_video_crop_details = {
   "video crop filter",
   "Filter/Video/Crop",
+  "LGPL",
   "Crops video into a user defined region",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -29,6 +29,7 @@
 static GstElementDetails gst_avi_audio_decoder_details = {
   ".avi parser",
   "Parser/Video",
+  "LGPL",
   "Parse a .avi file into audio and video",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"

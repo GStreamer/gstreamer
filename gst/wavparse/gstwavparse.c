@@ -33,6 +33,7 @@ static void		gst_wavparse_chain	(GstPad *pad, GstBuffer *buf);
 static GstElementDetails gst_wavparse_details = {
   ".wav parser",
   "Codec/Parser",
+  "LGPL",
   "Parse a .wav file into raw audio",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -26,6 +26,7 @@
 GstElementDetails gst_udpsrc_details = {
   "UDP packet receiver",
   "Source/Network",
+  "LGPL",
   "",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
