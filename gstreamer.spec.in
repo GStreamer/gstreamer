@@ -21,6 +21,11 @@ BuildRequires: 	gtk-doc >= 0.7
 BuildRequires: 	gcc
 BuildRequires: 	zlib-devel
 
+### documentation requirements
+BuildRequires:  openjade
+BuildRequires:  python2
+BuildRequires:  docbook-style-dsssl docbook-dtd31-sgml
+
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
