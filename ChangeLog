@@ -1,3 +1,11 @@
+2004-06-10  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_get_headers), (gst_ogg_mux_set_header_on_caps),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_loop):
+	* ext/theora/theoraenc.c: (theora_enc_chain):
+	Fix refcounting bugs
+
 2004-06-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_init),
