@@ -1,0 +1,38 @@
+
+The autoplugger is a custom bin with a set of custom add/remove methods.
+The point is to virtually add a set of plugins that should take part in
+the autoplugging (like the src, sink elements). The autoplugger should 
+try hard to included these plugins in the final pipeline.
+
+The autoplugger has to be a bin because else we cannot put it into the
+paused state when dynamically connecting elements.
+
+We cannot include the intermediate elements or sink/src elements to the bin
+right away because else they will be scheduled by the scheduler.
+
+The bin will use the elementfactory klass field to get a basic idea about 
+the plugin:
+
+ - the 'Source' keyword is used to detect source elements
+ - the 'Sink' keyword is used to detect the sink elements or targets
+   of the autoplugging.
+ - other elements are considered intermediate elements and will be 
+   inserted when possible.
+
+
+algorithm:
+
+- Autoplugging starts from a source element, it will be added to the real bin.
+- for all unconnected pads:
+  - if pad has NULL padtemplate caps add typefind + autoplugcache to the pad
+- if unconnected pad has fixed caps, find element in repository that can
+  connect.
+  - first check elements added to the bin
+  - test elements ordered by rank
+  - favour 'Demux' type elements close to sources, 'Decoder' elements after
+    that and 'Filter' elements close to sinks. 
+- link dummy element with pads with non-fixed caps. The dummy element getcaps
+  function will use the repository to return a list of compatible caps, so that
+  the element can choose freely. The dummy element is replaced with a real 
+  element when caps become fixed.
+- all new_pad signals and caps notifications trigger the above actions.
