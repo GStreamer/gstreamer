@@ -74,7 +74,7 @@ _gst_core_errors_init (void)
   TABLE (t, CORE, SEEK,
       N_("Internal GStreamer error: seek problem.  File a bug."));
   TABLE (t, CORE, CAPS,
-      N_("Internal GStreamer error: caps problem.  File a bug."));
+      N_("Internal GStreamer error: capabilities problem.  File a bug."));
   TABLE (t, CORE, TAG,
       N_("Internal GStreamer error: tag problem.  File a bug."));
 

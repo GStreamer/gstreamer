@@ -54,7 +54,6 @@ G_BEGIN_DECLS
  * @GST_CORE_ERROR_NUM_ERRORS: the number of core error types.
  *
  * Core errors are errors inside the core GStreamer library.
- * the core GStreamer library
  */
 /* FIXME: should we divide in numerical blocks so we can easily add
           for example PAD errors later ? */

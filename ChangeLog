@@ -1,3 +1,11 @@
+2005-03-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gsttypefindelement.c:
+	* gst/gsterror.c: (_gst_core_errors_init):
+	* gst/gsterror.h:
+	* gst/parse/grammar.y:
+	  Remove caps as a string (fixes #137485).
+
 2005-03-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/threads/Makefile.am:

@@ -154,8 +154,8 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
   typefind_class->have_type = gst_type_find_element_have_type;
 
   g_object_class_install_property (gobject_class, ARG_CAPS,
-      g_param_spec_boxed ("caps", _("caps"),
-          _("detected capabilities in stream"), gst_caps_get_type (),
+      g_param_spec_boxed ("caps", _("stream type"),
+          _("detected type of stream"), gst_caps_get_type (),
           G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
       g_param_spec_uint ("minimum", _("minimum"),

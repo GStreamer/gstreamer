@@ -553,7 +553,7 @@ link:		linkpart LINK linkpart	      { $$ = $1;
 						if ($2) {
 						  $$->caps = gst_caps_from_string ($2);
 						  if (!$$->caps)
-						    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $2);
+						    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_LINK, _("could not parse capabilities \"%s\""), $2);
 						  gst_parse_strfree ($2);
 						}
 						$$->sink_name = $3->src_name;
