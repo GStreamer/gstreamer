@@ -120,8 +120,11 @@ else
   HAVE_NASM="yes"
 fi
 
-dnl check for gstreamer
-PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0)
+dnl check for gstreamer; check for uninstalled first
+PKG_CHECK_MODULES(GST, gstreamer-uninstalled >= 0.3.0, HAVE_GST="yes", HAVE_GST="no")
+if test "x$HAVE_GST" = "xno"; then
+  PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0, HAVE_GST="yes", HAVE_GST="no")
+fi
 
 dnl dnl check for gtk-doc
 dnl AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
