@@ -66,19 +66,21 @@ psdist: psdocs
 # Data to install, in the usual automake way
 docdatadir   = $(datadir)/gstreamer
 docdata_DATA = $(PDFFILES) $(PSFILES)
-pngdatadir   = $(datadir)/gstreamer/gstreamer-manual/images
-pngdata_DATA = $(png_files)
 
 htmlinst:
 	@if [ -r $(manualname)/$(htmlname) ] ; then \
-	echo "Installing $(manualname)/*.html" ; \
+	    echo "Installing $(manualname)" ; \
 	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
+	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
 	    $(INSTALL_DATA) $(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
+	    for a in $(png_files); do $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; done \
 	else \
 	    if [ -r $(srcdir)/$(manualname)/$(htmlname) ] ; then \
-	        echo "Installing $(srcdir)/$(manualname)/*.html" ; \
+	        echo "Installing $(srcdir)/$(manualname)" ; \
 	        $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
+		$(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
 	        $(INSTALL_DATA) $(srcdir)/$(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
+		for a in $(png_files); do $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; done \
 	    else \
 	        echo "NOT installing HTML documentation: not present, and can't generate" ; \
 	    fi \
