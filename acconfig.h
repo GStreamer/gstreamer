@@ -30,7 +30,7 @@
 #undef HAVE_LIBXV
 #undef HAVE_OSS
 #undef HAVE_XAUDIO
-#undef HAVE_CSSAUTH
+#undef HAVE_LIBDVDREAD
 #undef HAVE_VORBIS
 #undef HAVE_LIBMAD
 #undef HAVE_LIBMIKMOD

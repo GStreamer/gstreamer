@@ -53,8 +53,9 @@ aRts		(for the arts plugin wrapper, and the artsd sink)
 			http://www.arts-project.org
 raw1394/linux1394	(for the dv plugin)
 			http://linux1394.sourceforge.net
-decss		(for the dvdsrc)
-			http://www.linuxrising.com/dvd-munitions_tar.gz
+libdvdread	(for the dvdsrc)
+			http://www.dtek.chalmers.se/groups/dvd/
+			(optional: libcss for encrypted DVDs)
 libesound	(for the esd sink 
 			ftp.gnome.org/pub/GNOME/stable/sources/esound)
 gnome-vfs	(for the gnome-vfs src)

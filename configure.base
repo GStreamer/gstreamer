@@ -197,7 +197,6 @@ AC_MSG_RESULT(no)
 AC_MSG_RESULT(no)
 ])
 
-
 dnl Check for essential libraries first:
 dnl ====================================
 
@@ -665,17 +664,10 @@ AC_MSG_CHECKING(openquicktime)
 AC_CHECK_LIB(openquicktime, quicktime_init, HAVE_LIBOPENQUICKTIME=yes, HAVE_LIBOPENQUICKTIME=no, )
 AC_CHECK_HEADER(openquicktime/openquicktime.h, :, HAVE_LIBOPENQUICKTIME=no)
 
-
-dnl check if css-auth.c exists (FIXME)
-AC_MSG_CHECKING(DVD CSS code)
-if test -f plugins/dvdsrc/css-auth.c
-then
-  AC_MSG_RESULT(yes)
-  HAVE_CSSAUTH="yes"
-else
-  AC_MSG_RESULT(no)
-  HAVE_CSSAUTH="no"
-fi
+dnl Check for libdvdread
+AC_MSG_CHECKING(libdvdread)
+AC_CHECK_LIB(dvdread, DVDOpen, HAVE_LIBDVDREAD=yes, HAVE_LIBDVDREAD=no, )
+AC_CHECK_HEADER(dvdread/dvd_reader.h, :, HAVE_LIBDVDREAD=no)
 
 dnl Check for SDL library
 AC_MSG_CHECKING(SDL library)
@@ -978,8 +970,8 @@ if test "x$HAVE_LIBHERMES" = "xyes"; then
   AC_DEFINE(HAVE_LIBHERMES)
 fi
 
-if test "x$HAVE_CSSAUTH" = xyes; then
-  AC_DEFINE(HAVE_CSSAUTH)
+if test "x$HAVE_LIBDVDREAD" = xyes; then
+  AC_DEFINE(HAVE_LIBDVDREAD)
 fi
 
 if test "x$HAVE_LINUX_CDROM" = xyes; then
@@ -1025,7 +1017,7 @@ AM_CONDITIONAL(HAVE_LIBMAD,         test "x$HAVE_LIBMAD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
-AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
+AM_CONDITIONAL(HAVE_LIBDVDREAD,     test "x$HAVE_LIBDVDREAD" = "xyes")
 AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
