@@ -30,7 +30,7 @@ static void gst_audio_clock_class_init (GstAudioClockClass * klass);
 static void gst_audio_clock_init (GstAudioClock * clock);
 
 static GstClockTime gst_audio_clock_get_internal_time (GstClock * clock);
-static GstClockReturn gst_audio_clock_id_wait_async (GstClock * clock,
+static GstClockEntryStatus gst_audio_clock_id_wait_async (GstClock * clock,
     GstClockEntry * entry);
 static void gst_audio_clock_id_unschedule (GstClock * clock,
     GstClockEntry * entry);
@@ -174,7 +174,7 @@ compare_clock_entries (GstClockEntry * entry1, GstClockEntry * entry2)
   return entry1->time - entry2->time;
 }
 
-static GstClockReturn
+static GstClockEntryStatus
 gst_audio_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
 {
   GstAudioClock *aclock = (GstAudioClock *) clock;
