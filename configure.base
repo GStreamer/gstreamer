@@ -393,31 +393,26 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
 
-dnl Check for libglade
+dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
 if test x$USE_GLIB2 = xyes; then
-  dnl no glade for glib2.0
-  LIBGLADE_GNOME_LIBS=
-  LIBGLADE_GNOME_CFLAGS=
   AC_MSG_WARN(libglade disabled for glib2.0)
 else
-  AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
-  if test x$LIBGLADE_CONFIG_PATH = xno; then
-    AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
-    LIBGLADE_GNOME_LIBS=
-    LIBGLADE_GNOME_CFLAGS=
-  else
-    LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
-    LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
-    AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
-  	        HAVE_LIBGLADE_GNOME="yes",
-	        AC_MSG_WARN(
-      [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
-	     )
-  fi
+  AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME=yes, , gnome)
 fi
-AC_SUBST(LIBGLADE_GNOME_LIBS)
-AC_SUBST(LIBGLADE_GNOME_CFLAGS)
+
+if test "x$HAVE_LIBGLADE_GNOME" = "xno"; then
+  AC_MSG_WARN(
+    [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor]
+  )
+else
+  dnl found libglade with gnome support
+  dnl save flags - it is needed only for editor and player
+  LIBGLADE_GNOME_LIBS="$LIBGLADE_LIBS"  
+  LIBGLADE_GNOME_CFLAGS="$LIBGLADE_CFLAGS"  
+  AC_SUBST(LIBGLADE_GNOME_LIBS)
+  AC_SUBST(LIBGLADE_GNOME_CFLAGS)
+fi
 
 dnl Check for Gnome VFS
 HAVE_GNOME_VFS="no"
