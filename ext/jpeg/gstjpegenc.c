@@ -224,7 +224,7 @@ gst_jpegenc_get (GstPad *pad)
 
   jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
 
-  if (jpegenc->buffer == NULL || GST_BUFFER_REFCOUNT(jpegenc->buffer) != 1) {
+  if (jpegenc->buffer == NULL || GST_BUFFER_REFCOUNT_VALUE(jpegenc->buffer) != 1) {
     if (jpegenc->buffer) gst_buffer_unref(jpegenc->buffer);
     GST_DEBUG (0,"gst_jpegenc_chain: new buffer");
     newbuf = jpegenc->buffer = gst_buffer_new();
