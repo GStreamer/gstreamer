@@ -86,6 +86,7 @@ struct _GstDVDLPCMStream {
                                    values are bit fields with the same
                                    format of the sample_info field in
                                    the linear PCM header. */
+  gint rate, channels, width;
 };
 
 

@@ -596,6 +596,9 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
 
 
         lpcm_str->sample_info = sample_info;
+        lpcm_str->width = width;
+        lpcm_str->rate = rate;
+        lpcm_str->channels = channels;
         break;
 
       case GST_DVD_DEMUX_AUDIO_AC3:
@@ -690,6 +693,7 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
   guint8 ps_id_code, lpcm_sample_info;
   GstMPEGStream *outstream = NULL;
   guint first_access = 0;
+  gint align = 1, len, off;
 
   basebuf = GST_BUFFER_DATA (buffer);
 
@@ -718,11 +722,14 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
         headerlen += 4;
         datalen -= 4;
       } else if (ps_id_code >= 0xA0 && ps_id_code <= 0xA7) {
+        GstDVDLPCMStream *lpcm_str;
+
         GST_LOG_OBJECT (dvd_demux,
             "we have an audio (LPCM) packet, track %d", ps_id_code - 0xA0);
         lpcm_sample_info = basebuf[headerlen + 9];
         outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
             ps_id_code - 0xA0, GST_DVD_DEMUX_AUDIO_LPCM, &lpcm_sample_info);
+        lpcm_str = (GstDVDLPCMStream *) outstream;
 
         /* Determine the position of the "first access". */
         first_access = *(basebuf + headerlen + 6) * 256 +
@@ -731,6 +738,9 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
         /* Get rid of the LPCM header. */
         headerlen += 7;
         datalen -= 7;
+
+        /* align by samples */
+        align = lpcm_str->width * lpcm_str->channels / 8;
       } else if (ps_id_code >= 0x20 && ps_id_code <= 0x3F) {
         GST_LOG_OBJECT (dvd_demux,
             "we have a subpicture packet, track %d", ps_id_code - 0x20);
@@ -784,14 +794,29 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
        a means to associate a timestamp to the middle of a buffer, we
        send two separate buffers and put the timestamp in the second
        one. */
-    DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
-        buffer, GST_CLOCK_TIME_NONE, headerlen + 4, first_access - 1);
-    DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
-        buffer, timestamp,
-        headerlen + 3 + first_access, datalen - (first_access - 1));
+    off = headerlen + 4;
+    len = first_access - 1;
+    len -= len % align;
+    if (len > 0) {
+      DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
+          buffer, GST_CLOCK_TIME_NONE, headerlen + 4, first_access - 1);
+    }
+    off += len;
+    len = datalen - len;
+    len -= len % align;
+    if (len > 0) {
+      DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
+          buffer, timestamp,
+          headerlen + 3 + first_access, datalen - (first_access - 1));
+    }
   } else {
-    DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
-        buffer, timestamp, headerlen + 4, datalen);
+    off = headerlen + 4;
+    len = datalen;
+    len -= len % align;
+    if (len > 0) {
+      DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
+          buffer, timestamp, headerlen + 4, datalen);
+    }
   }
 }
 
