@@ -1,3 +1,8 @@
+2004-09-19  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/dirent.c:
+	  fix a memory leak
+
 2004-09-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
