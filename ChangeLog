@@ -1,3 +1,16 @@
+2004-06-20  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstvalue.c: (gst_value_set_int_range):
+	  test that start is smaller then end
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/bytestream/filepad.c: 
+	* libs/gst/bytestream/filepad.h:
+	  add GstFilePad - a pad that behaves like a FILE*
+	* testsuite/bytestream/.cvsignore:
+	* testsuite/bytestream/Makefile.am:
+	* testsuite/bytestream/filepadsink.c: 
+	  test for the GstFilePad
+
 2004-06-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstidentity.c: (gst_identity_class_init),

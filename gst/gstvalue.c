@@ -590,6 +590,7 @@ void
 gst_value_set_int_range (GValue * value, int start, int end)
 {
   g_return_if_fail (GST_VALUE_HOLDS_INT_RANGE (value));
+  g_return_if_fail (start < end);
 
   value->data[0].v_int = start;
   value->data[1].v_int = end;
