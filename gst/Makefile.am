@@ -166,6 +166,7 @@ libgstinclude_HEADERS =		\
 	gstclock.h		\
 	gstcpu.h		\
 	gstelement.h		\
+	gstevent.h		\
 	gstextratypes.h		\
 	gstinfo.h		\
 	gstlog.h		\
