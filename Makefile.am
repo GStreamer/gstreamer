@@ -19,11 +19,11 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-SUBDIRS = include gst libs tools \
+SUBDIRS = include libs gst tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs tools tests testsuite examples docs
+DIST_SUBDIRS = include libs libs tools tests testsuite examples docs
 
 
 pkgconfigdir = $(libdir)/pkgconfig
