@@ -2391,7 +2391,16 @@ G_STMT_START {						 		\
     GST_PROPS_FLAG_UNSET ((props), GST_PROPS_FIXED);			\
   props->properties = g_list_prepend ((props)->properties, toadd);	\
 } G_STMT_END
+static gint
+compare_props_entry (gconstpointer one, gconstpointer two)
+{
+  GstPropsEntry *a = (GstPropsEntry *) one;
+  GstPropsEntry *b = (GstPropsEntry *) two;
 
+  if (a->propid > b->propid) return 1;
+  if (a->propid < b->propid) return -1;
+  return 0;
+}
 /**
  * gst_props_intersect:
  * @props1: a property
@@ -2416,6 +2425,9 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
   g_return_val_if_fail (props2 != NULL, NULL);
 
   intersection = gst_props_empty_new ();
+
+  props1->properties = g_list_sort (props1->properties, compare_props_entry);
+  props2->properties = g_list_sort (props2->properties, compare_props_entry);
 
   props1list = props1->properties;
   props2list = props2->properties;
@@ -2445,6 +2457,8 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
 
       entry2 = (GstPropsEntry *)props2list->data;
     }
+    if (entry1->propid < entry2->propid)
+      continue;
     /* at this point we are talking about the same property */
     iprops = gst_props_entry_intersect (entry1, entry2);
     if (!iprops) {
