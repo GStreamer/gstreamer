@@ -293,7 +293,9 @@ cothread_destroy (cothread_state *thread)
     g_free (thread);
   }
   else {
-    int res;
+  /*  int res; 
+   *  Replaced with version below until cothreads issues solved */
+	   int res = 0;
     
     /* doing cleanups of the cothread create */
     GST_DEBUG (GST_CAT_COTHREADS, "destroy cothread %d with magic number 0x%x",
@@ -315,7 +317,8 @@ cothread_destroy (cothread_state *thread)
                "munmap cothread slot stack from %p to %p (size 0x%lx)", 
   	       thread, thread + COTHREAD_STACKSIZE, 
 	       (long) COTHREAD_STACKSIZE);
-    res = munmap (thread, COTHREAD_STACKSIZE);
+/*    res = munmap (thread, COTHREAD_STACKSIZE);
+ *    Commented out waiting for resolution for cothread issue */
     if (res != 0)
     {
       switch (res)
