@@ -363,23 +363,51 @@ gst_matroska_mux_video_pad_link (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_OK;
   } else if (!strcmp (mimetype, "video/x-divx")) {
     gint divxversion;
+    BITMAPINFOHEADER *bih;
+
+    bih = (BITMAPINFOHEADER *) g_malloc0 (sizeof (BITMAPINFOHEADER));
+    GST_WRITE_UINT32_LE (&bih->bi_size, sizeof (BITMAPINFOHEADER));
+    GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
+    GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
+    GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
+    GST_WRITE_UINT16_LE (&bih->bi_bit_count, (guint16) 24);
+    GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
+        videocontext->pixel_height * 3);
 
     gst_structure_get_int (structure, "divxversion", &divxversion);
     switch (divxversion) {
       case 3:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
+        GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIV3"));
         break;
       case 4:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP);
+        GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIVX"));
         break;
       case 5:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
+        GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DX50"));
         break;
     }
 
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
+    context->codec_priv = (gpointer) bih;
+    context->codec_priv_size = sizeof (BITMAPINFOHEADER);
+
     return GST_PAD_LINK_OK;
   } else if (!strcmp (mimetype, "video/x-xvid")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
+    BITMAPINFOHEADER *bih;
+
+    bih = (BITMAPINFOHEADER *) g_malloc0 (sizeof (BITMAPINFOHEADER));
+    GST_WRITE_UINT32_LE (&bih->bi_size, sizeof (BITMAPINFOHEADER));
+    GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
+    GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
+    GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
+    GST_WRITE_UINT16_LE (&bih->bi_bit_count, (guint16) 24);
+    GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("XVID"));
+    GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
+        videocontext->pixel_height * 3);
+
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
+    context->codec_priv = (gpointer) bih;
+    context->codec_priv_size = sizeof (BITMAPINFOHEADER);
 
     return GST_PAD_LINK_OK;
   } else if (!strcmp (mimetype, "video/mpeg")) {

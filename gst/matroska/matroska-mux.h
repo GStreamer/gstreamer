@@ -42,6 +42,20 @@ G_BEGIN_DECLS
 
 #define GST_MATROSKA_MUX_MAX_STREAMS 64
 
+typedef struct _BITMAPINFOHEADER {
+  guint32 bi_size;
+  guint32 bi_width;
+  guint32 bi_height;
+  guint16 bi_planes;
+  guint16 bi_bit_count;
+  guint32 bi_compression;
+  guint32 bi_size_image;
+  guint32 bi_x_pels_per_meter;
+  guint32 bi_y_pels_per_meter;
+  guint32 bi_clr_used;
+  guint32 bi_clr_important;
+} BITMAPINFOHEADER;
+
 typedef enum {
   GST_MATROSKA_MUX_STATE_START,
   GST_MATROSKA_MUX_STATE_HEADER,
