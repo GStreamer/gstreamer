@@ -1722,6 +1722,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   while ((trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak)) != NULL)
     qtdemux_parse_trak (qtdemux, trak);
 
+  gst_element_no_more_pads (GST_ELEMENT (qtdemux));
 }
 
 static void

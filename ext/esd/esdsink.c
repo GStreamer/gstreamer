@@ -296,7 +296,10 @@ gst_esdsink_chain (GstPad * pad, GstData * _data)
           if (errno == EINTR) {
             goto done;
           }
-          g_assert_not_reached ();
+          /* connection closed? */
+          GST_ELEMENT_ERROR (esdsink, RESOURCE, WRITE, (NULL),
+              ("communication with ESD failed"));
+          return;
         }
 
         to_write -= done;
