@@ -221,10 +221,12 @@ print_element_info (GstElementFactory *factory)
 
   printf("  Has change_state() function: %s\n",
          GST_DEBUG_FUNCPTR_NAME(gstelement_class->change_state));
+#ifndef GST_DISABLE_LOADSAVE
   printf("  Has custom save_thyself() function: %s\n",
          GST_DEBUG_FUNCPTR_NAME(gstobject_class->save_thyself));
   printf("  Has custom restore_thyself() function: %s\n",
          GST_DEBUG_FUNCPTR_NAME(gstobject_class->restore_thyself));
+#endif
 
 
 

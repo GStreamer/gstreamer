@@ -152,9 +152,11 @@ main(int argc, char *argv[])
 
   gst_parse_launch (cmdline, GST_BIN (pipeline));
 
+#ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {
     xmlSaveFile (savefile, gst_xml_write (pipeline));
   }
+#endif
   if (run_pipeline) {
     arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
 
