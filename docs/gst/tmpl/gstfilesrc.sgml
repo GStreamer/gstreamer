@@ -31,6 +31,7 @@ and subbuffers.
 @block_size: 
 @touch: 
 @using_mmap: 
+@is_regular: 
 @mapbuf: 
 @mapsize: 
 @need_discont: 

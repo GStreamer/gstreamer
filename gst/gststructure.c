@@ -1040,6 +1040,27 @@ gst_structure_to_abbr (GType type)
   return g_type_name (type);
 }
 
+static GType
+gst_structure_value_get_generic_type (GValue * val)
+{
+  if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
+    GArray *array = g_value_peek_pointer (val);
+
+    if (array->len > 0) {
+      GValue *value = &g_array_index (array, GValue, 0);
+
+      return gst_structure_value_get_generic_type (value);
+    } else {
+      return G_TYPE_INT;
+    }
+  } else if (G_VALUE_TYPE (val) == GST_TYPE_INT_RANGE) {
+    return G_TYPE_INT;
+  } else if (G_VALUE_TYPE (val) == GST_TYPE_DOUBLE_RANGE) {
+    return G_TYPE_DOUBLE;
+  }
+  return G_VALUE_TYPE (val);
+}
+
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
       ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
       ((c) == '.'))
@@ -1077,23 +1098,8 @@ gst_structure_to_string (const GstStructure * structure)
     field = GST_STRUCTURE_FIELD (structure, i);
 
     t = gst_value_serialize (&field->value);
-    type = G_VALUE_TYPE (&field->value);
+    type = gst_structure_value_get_generic_type (&field->value);
 
-    if (type == GST_TYPE_LIST) {
-      GArray *array = g_value_peek_pointer (&field->value);
-
-      if (array->len > 0) {
-        GValue *value = &g_array_index (array, GValue, 0);
-
-        type = G_VALUE_TYPE (value);
-      } else {
-        type = G_TYPE_INT;
-      }
-    } else if (G_VALUE_TYPE (&field->value) == GST_TYPE_INT_RANGE) {
-      type = G_TYPE_INT;
-    } else if (G_VALUE_TYPE (&field->value) == GST_TYPE_DOUBLE_RANGE) {
-      type = G_TYPE_DOUBLE;
-    }
     g_string_append_printf (s, ", %s=(%s)%s", g_quark_to_string (field->name),
         gst_structure_to_abbr (type), t);
     g_free (t);

@@ -1,5 +1,34 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstfilesrc.sgml:
+	* docs/gst/tmpl/gststructure.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	  update for recent API changes
+	* gst/gstcaps.c: (gst_caps_do_simplify):
+	  fix to stop trying with a freed structure
+	* gst/gstpad.c: (gst_pad_link_fixate):
+	  simplify caps
+	* gst/gstpad.c: (gst_pad_template_get_caps_by_name):
+	  remove C++ comment
+	* gst/gstpad.h:
+	  deprecate gst_pad_template_get_caps_by_name, it doesn't work anyway
+	* gst/gststructure.c: (gst_structure_value_get_generic_type),
+	(gst_structure_to_string):
+	  keep the correct type when using lists of ranges
+	* gst/gstvalue.c: (gst_value_list_prepend_value),
+	(gst_value_list_append_value):
+	  copy the value before adding to the list (d'oh)
+	* gst/gstvalue.c: (gst_value_subtract_int_range_int),
+	(gst_value_subtract_int_range_int_range):
+	  handle overflows correctly
+	* gst/gstvalue.c: (gst_value_subtract_from_list):
+	  fix memleak
+	* testsuite/caps/caps.h:
+	  add a caps that caused segfaults
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* testsuite/refcounting/pad.c: (main):
 	  fix test
 

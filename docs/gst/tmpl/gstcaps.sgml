@@ -289,6 +289,16 @@ Structure describing sets of media formats
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_caps_is_equal ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_caps_is_equal_fixed ##### -->
 <para>
 
@@ -306,6 +316,16 @@ Structure describing sets of media formats
 
 @caps1: 
 @caps2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_subset ##### -->
+<para>
+
+</para>
+
+@subset: 
+@superset: 
 @Returns: 
 
 
@@ -345,6 +365,14 @@ Structure describing sets of media formats
 
 @caps: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_do_simplify ##### -->
+<para>
+
+</para>
+
+@caps: 
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->
@@ -412,6 +440,16 @@ Structure describing sets of media formats
 @structure: 
 @field_name: 
 @target: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_subtract ##### -->
+<para>
+
+</para>
+
+@minuend: 
+@subtrahend: 
 @Returns: 
 
 

@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <signal.h>
 
 #include <gst/gst.h>
 
@@ -1222,11 +1223,12 @@ gst_caps_do_simplify (GstCaps * caps)
         break;
       }
       result = gst_caps_structure_simplify (simplify, compare);
-      /*g_print ("%s  -  %s  =  %s\n", 
-         gst_structure_to_string (simplify),
-         gst_structure_to_string (compare),
-         result ? gst_structure_to_string (result) : "---");
-       */
+#if 0
+      g_print ("%s  -  %s  =  %s\n",
+          gst_structure_to_string (simplify),
+          gst_structure_to_string (compare),
+          result ? gst_structure_to_string (result) : "---");
+#endif
       if (result) {
         gst_structure_free (simplify);
         g_ptr_array_index (caps->structs, i) = result;
@@ -1234,6 +1236,7 @@ gst_caps_do_simplify (GstCaps * caps)
       } else {
         gst_caps_remove_structure (caps, i);
         start--;
+        break;
       }
     }
   }

@@ -2689,7 +2689,6 @@ gst_pad_template_get_caps_by_name (GstPadTemplate * templ, const gchar * name)
     return NULL;
 
   /* FIXME */
-  //return gst_caps_copy (gst_caps_get_by_name (caps, name));
   return NULL;
 }
 

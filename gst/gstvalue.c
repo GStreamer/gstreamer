@@ -160,9 +160,12 @@ gst_value_lcopy_list (const GValue * value, guint n_collect_values,
 void
 gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 {
+  GValue val = { 0, };
+
   g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
 
-  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, prepend_value, 1);
+  gst_value_init_and_copy (&val, prepend_value);
+  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
 }
 
 /**
@@ -175,9 +178,12 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 void
 gst_value_list_append_value (GValue * value, const GValue * append_value)
 {
+  GValue val = { 0, };
+
   g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
 
-  g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
+  gst_value_init_and_copy (&val, append_value);
+  g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
 }
 
 /**
@@ -1343,16 +1349,16 @@ gst_value_subtract_int_range_int_range (GValue * dest, const GValue * minuend,
   int min2 = gst_value_get_int_range_min (subtrahend);
   int max2 = gst_value_get_int_range_max (subtrahend);
 
-  if (max2 == G_MAXINT) {
-    max2--;
-    max1--;
+  if (max2 == G_MAXINT && min2 == G_MININT) {
+    return FALSE;
+  } else if (max2 == G_MAXINT) {
+    return gst_value_create_new_range (dest, min1, MIN (min2 - 1, max1), 1, 0);
+  } else if (min2 == G_MININT) {
+    return gst_value_create_new_range (dest, MAX (max2 + 1, min1), max1, 1, 0);
+  } else {
+    return gst_value_create_new_range (dest, min1, MIN (min2 - 1, max1),
+        MAX (max2 + 1, min1), max1);
   }
-  if (min2 == G_MININT) {
-    min2++;
-    min1++;
-  }
-  return gst_value_create_new_range (dest, min1, MIN (min2 - 1, max1),
-      MAX (max2 + 1, min1), max1);
 }
 
 static gboolean
@@ -1457,6 +1463,7 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
         gst_value_init_and_copy (&temp, dest);
         g_value_unset (dest);
         gst_value_list_concat (dest, &temp, &subtraction);
+        g_value_unset (&temp);
       }
       g_value_unset (&subtraction);
     }

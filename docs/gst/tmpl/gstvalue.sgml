@@ -195,6 +195,17 @@ GValue implementations specific to GStreamer
 @Returns: 
 
 
+<!-- ##### USER_FUNCTION GstValueSubtractFunc ##### -->
+<para>
+
+</para>
+
+@dest: 
+@minuend: 
+@subtrahend: 
+@Returns: 
+
+
 <!-- ##### STRUCT GstValueTable ##### -->
 <para>
 
@@ -464,6 +475,37 @@ GValue implementations specific to GStreamer
 
 @type1: 
 @type2: 
+@func: 
+
+
+<!-- ##### FUNCTION gst_value_subtract ##### -->
+<para>
+
+</para>
+
+@dest: 
+@minuend: 
+@subtrahend: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_can_subtract ##### -->
+<para>
+
+</para>
+
+@minuend: 
+@subtrahend: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_register_subtract_func ##### -->
+<para>
+
+</para>
+
+@minuend_type: 
+@subtrahend_type: 
 @func: 
 
 

@@ -110,6 +110,25 @@ Generic structure containing fields of names and values
 @name: 
 
 
+<!-- ##### FUNCTION gst_structure_get_name_id ##### -->
+<para>
+
+</para>
+
+@structure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_id_get_value ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_structure_id_set_value ##### -->
 <para>
 
@@ -118,6 +137,18 @@ Generic structure containing fields of names and values
 @structure: 
 @field: 
 @value: 
+
+
+<!-- ##### FUNCTION gst_structure_get_value ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
 
 
 <!-- ##### FUNCTION gst_structure_set_value ##### -->
@@ -152,28 +183,6 @@ Generic structure containing fields of names and values
 @structure: 
 @fieldname: 
 @varargs: 
-<!-- # Unused Parameters # -->
-@field: 
-
-
-<!-- ##### FUNCTION gst_structure_id_get_value ##### -->
-<para>
-
-</para>
-
-@structure: 
-@field: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_structure_get_value ##### -->
-<para>
-
-</para>
-
-@structure: 
-@fieldname: 
-@Returns: 
 <!-- # Unused Parameters # -->
 @field: 
 
