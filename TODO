@@ -18,3 +18,7 @@
 * check options in a52, it has some arch stuff and some opti stuff that 
   looks dodgy
 
+* what to do with the perftest in mpeg2dec ?
+
+* riff: do we need those cflags ?
+

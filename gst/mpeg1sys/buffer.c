@@ -21,7 +21,7 @@
 
 /*#define DEBUG_ENABLED */
 #include <gst/gst.h>
-#include <libs/getbits/gstgetbits.h>
+#include <gst/getbits/getbits.h>
 
 #include "buffer.h"
 

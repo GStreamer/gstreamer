@@ -21,7 +21,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <math.h>
-#include <libs/audio/gstaudio.h>
+#include <gst/audio/audio.h>
 #include "gstspeed.h"
 
 /* buffer size to make if no bufferpool is available, must be divisible by 
