@@ -551,15 +551,45 @@ make_mpegnt_pipeline (const gchar * location)
   return pipeline;
 }
 
+static GstCaps *
+fixate (GstPad * pad, const GstCaps * in_caps, gpointer data)
+{
+  GstCaps *caps;
+  GstStructure *s;
+
+  if (gst_caps_get_size (in_caps) > 1)
+    return NULL;
+
+  /* nothing if fixed already */
+  s = gst_caps_get_structure (in_caps, 0);
+  if (gst_structure_has_field_typed (s, "width", G_TYPE_INT) &&
+      gst_structure_has_field_typed (s, "height", G_TYPE_INT) &&
+      gst_structure_has_field_typed (s, "framerate", G_TYPE_DOUBLE))
+    return NULL;
+
+  /* fixate */
+  caps = gst_caps_copy (in_caps);
+  s = gst_caps_get_structure (caps, 0);
+  gst_caps_structure_fixate_field_nearest_int (s, "width", 200);
+  gst_caps_structure_fixate_field_nearest_int (s, "height", 150);
+  gst_caps_structure_fixate_field_nearest_double (s, "framerate", 10.0);
+
+  return caps;
+}
+
 static GstElement *
 make_playerbin_pipeline (const gchar * location)
 {
-  GstElement *player;
+  GstElement *player, *vis;
 
   player = gst_element_factory_make ("playbin", "player");
+  vis = gst_element_factory_make ("synaesthesia", "vis");
   g_assert (player);
+  g_assert (vis);
 
-  g_object_set (G_OBJECT (player), "uri", location, NULL);
+  g_signal_connect (gst_element_get_pad (vis, "src"), "fixate",
+      G_CALLBACK (fixate), NULL);
+  g_object_set (G_OBJECT (player), "uri", location, "vis-plugin", vis, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, player);
 
