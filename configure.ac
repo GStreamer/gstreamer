@@ -1087,8 +1087,8 @@ dnl Vars for everyone else
 dnl FIXME: is there a reason to add this top_builddir stuff ? don't think so
 dnl GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
 dnl GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
-dnl AC_SUBST(GST_LIBS)
-dnl AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_LIBS)
+AC_SUBST(GST_CFLAGS)
 
 dnl #############################
 dnl # Configure the subpackages #
