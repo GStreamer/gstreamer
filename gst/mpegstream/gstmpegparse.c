@@ -229,6 +229,7 @@ gst_mpeg_parse_update_streaminfo (GstMPEGParse *mpeg_parse)
   GstProps *props;
   GstPropsEntry *entry;
   gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
+  GstCaps *caps;
 
   props = gst_props_empty_new ();
 
@@ -238,13 +239,11 @@ gst_mpeg_parse_update_streaminfo (GstMPEGParse *mpeg_parse)
   entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (mpeg_parse->mux_rate * 400)); 
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-  if (mpeg_parse->streaminfo) 
-    gst_caps_unref (mpeg_parse->streaminfo);
+  caps = gst_caps_new ("mpeg_streaminfo",
+	               "application/x-gst-streaminfo",
+	  	       props);
 
-  mpeg_parse->streaminfo = gst_caps_new ("mpeg_streaminfo",
-		                         "application/x-gst-streaminfo",
-					  props);
-
+  gst_caps_replace_sink (&mpeg_parse->streaminfo, caps);
   g_object_notify (G_OBJECT (mpeg_parse), "streaminfo");
 }
 
@@ -413,6 +412,8 @@ gst_mpeg_parse_loop (GstElement *element)
   GstClockTime time;
 
   data = gst_mpeg_packetize_read (mpeg_parse->packetize);
+  if (!data)
+    return;
 
   id = GST_MPEG_PACKETIZE_ID (mpeg_parse->packetize);
   mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
@@ -802,6 +803,7 @@ gst_mpeg_parse_change_state (GstElement *element)
         gst_mpeg_packetize_destroy (mpeg_parse->packetize);
         mpeg_parse->packetize = NULL;
       }
+      gst_caps_replace (&mpeg_parse->streaminfo, NULL);
       break;
     default:
       break;
