@@ -25,9 +25,9 @@ int main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), thread);
   gst_bin_add (GST_BIN (pipeline), src);
 
-  gst_element_connect_pads (src, "src", queue, "sink");
-  gst_element_connect_pads (queue, "src", identity, "sink");
-  gst_element_connect_pads (identity, "src", sink, "sink");
+  gst_element_link_pads (src, "src", queue, "sink");
+  gst_element_link_pads (queue, "src", identity, "sink");
+  gst_element_link_pads (identity, "src", sink, "sink");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   sleep (1);
