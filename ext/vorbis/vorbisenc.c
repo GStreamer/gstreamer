@@ -729,6 +729,7 @@ gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
   outbuf = gst_vorbisenc_buffer_from_packet (vorbisenc, packet);
   gst_vorbisenc_push_buffer (vorbisenc, outbuf);
 }
+
 static void
 gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2, GstBuffer * buf3)

@@ -271,7 +271,8 @@ gst_ogg_mux_sinkconnect (GstPad * pad, const GstCaps * vscaps)
 
   ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("ogg_mux: sinkconnect triggered on %s", gst_pad_get_name (pad));
+  GST_DEBUG_OBJECT (ogg_mux, "sinkconnect triggered on %s",
+      gst_pad_get_name (pad));
 
   structure = gst_caps_get_structure (vscaps, 0);
   mimetype = gst_structure_get_name (structure);
@@ -282,19 +283,19 @@ gst_ogg_mux_sinkconnect (GstPad * pad, const GstCaps * vscaps)
 static void
 gst_ogg_mux_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
-  //GstOggMux *ogg_mux = GST_OGG_MUX (data);
+  GstOggMux *ogg_mux = ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
   const gchar *padname = gst_pad_get_name (pad);
 
-  GST_DEBUG ("pad '%s' connected", padname);
+  GST_DEBUG_OBJECT (ogg_mux, "pad '%s' connected", padname);
 }
 
 static void
 gst_ogg_mux_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
 {
-  //GstOggMux *ogg_mux = GST_OGG_MUX (data);
+  GstOggMux *ogg_mux = ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
   const gchar *padname = gst_pad_get_name (pad);
 
-  GST_DEBUG ("pad '%s' unlinked", padname);
+  GST_DEBUG_OBJECT (ogg_mux, "pad '%s' unlinked", padname);
 }
 
 static GstPad *
