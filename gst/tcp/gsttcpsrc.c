@@ -18,7 +18,12 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gsttcpsrc.h"
+#include <unistd.h>
 
 #define TCP_DEFAULT_PORT		4953
 
@@ -184,7 +189,7 @@ gst_tcpsrc_get (GstPad *pad)
   if (select (max_sock+1, &read_fds, NULL, NULL, NULL) > 0) {
     if ((tcpsrc->control_sock != -1) && FD_ISSET (tcpsrc->control_sock, &read_fds)) 
     {
-      guchar *buf;
+      guchar *buf=NULL;
       xmlDocPtr doc;
       GstCaps *caps;
       
