@@ -1,3 +1,31 @@
+2005-02-23  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstmessage.h
+	* gst/gstmessage.c (_gst_message_free)
+	(gst_message_new_application): New message type, APPLICATION,
+	explicitly for use by applications.
+
+	* gst/gstbus.c (gst_bus_post): Only write a byte to the wakeup
+	socket if the queue is coming from an empty state. Fixes a bug
+	where posting a message could block, waiting for someone to read
+	out bytes from the socket.
+	(bus_watch_callback): Renamed from bus_callback, let gst_bus_pop
+	handle the socket read.
+	(bus_watch_destroy): Renamed from bus_destroy.
+
+	* check/Makefile.am: Re-enable the gst-register test so we can
+	deal with elements here. Add the gstbus tests.
+
+	* check/gst/gstbus.c: New check, spawns off a bunch of threads all
+	posting messages to a bus, then reads to see if they are in the
+	right order.
+
+	* check/pipelines/simple_launch_lines.c: Add some tests, and make
+	sure to pop the message off the bus after the poll.
+
+	* gst/gstbus.c (gst_bus_pop): Read off the control byte if the
+	queue becomes empty.
+
 2005-02-23  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-states.txt:

@@ -47,6 +47,8 @@ GST_EXPORT GType _gst_message_type;
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
  * @GST_MESSAGE_STREAM_STATUS: status about a stream, emited when it starts,
  *                             stops, errors, etc..
+ * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
+ *                           via an application-specific element.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  */
 typedef enum
@@ -63,6 +65,7 @@ typedef enum
   GST_MESSAGE_NEW_CLOCK         = (1 << 8),
   GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 9),
   GST_MESSAGE_STREAM_STATUS     = (1 << 10),
+  GST_MESSAGE_APPLICATION       = (1 << 11),
   GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 
@@ -156,6 +159,7 @@ GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * 
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old,
                                                  GstElementState new);
+GstMessage *	gst_message_new_application 	(GstStructure *structure);
 
 G_END_DECLS
 #endif /* __GST_MESSAGE_H__ */

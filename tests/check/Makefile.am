@@ -5,11 +5,9 @@ TESTS_ENVIRONMENT=\
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 # make all tests depend on the versioned gst-register
-#$(TESTS): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
+$(TESTS): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
 
 # rebuild gst-register-@GST_MAJORMINOR@ if needed
-# the EXEEXT is because am 1.6 complained about overrides
-#$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
 $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@:
 	cd $(top_builddir)/tools && make
 
@@ -20,9 +18,8 @@ install-pluginLTLIBRARIES:
 # dumps have PIDs appended
 CLEANFILES = core.*
 
-#TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ 
-
-TESTS = \
+TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
+	gst/gstbus      \
 	gst/gstcaps     \
 	gst/gstdata	\
 	gst/gstobject	\

@@ -197,11 +197,13 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   GstBusSyncReply reply = GST_BUS_PASS;
   GstBusSyncHandler handler;
   gpointer handler_data;
+  gboolean need_write = FALSE;
   ssize_t write_ret = -1;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
+  //g_print ("posting message on bus, type %d\n", GST_MESSAGE_TYPE (message));
   GST_DEBUG_OBJECT (bus, "posting message on bus");
 
   GST_LOCK (bus);
@@ -222,20 +224,27 @@ gst_bus_post (GstBus * bus, GstMessage * message)
     case GST_BUS_PASS:
       /* pass the message to the async queue */
       g_mutex_lock (bus->queue_lock);
+      if (g_queue_get_length (bus->queue) == 0)
+        need_write = TRUE;
       g_queue_push_tail (bus->queue, message);
       g_mutex_unlock (bus->queue_lock);
-      c = 'p';
-      errno = EAGAIN;
-      while (write_ret == -1) {
-        switch (errno) {
-          case EAGAIN:
-          case EINTR:
-            break;
-          default:
-            perror ("gst_bus_post: could not write to fd");
-            return FALSE;
+
+      if (g_queue_get_length (bus->queue) == 0)
+        need_write = TRUE;
+      if (need_write) {
+        c = 'p';
+        errno = EAGAIN;
+        while (write_ret == -1) {
+          switch (errno) {
+            case EAGAIN:
+            case EINTR:
+              break;
+            default:
+              perror ("gst_bus_post: could not write to fd");
+              return FALSE;
+          }
+          write_ret = write (bus->control_socket[1], &c, 1);
         }
-        write_ret = write (bus->control_socket[1], &c, 1);
       }
       break;
     case GST_BUS_ASYNC:
@@ -255,21 +264,27 @@ gst_bus_post (GstBus * bus, GstMessage * message)
        * the cond will be signalled and we can continue */
       g_mutex_lock (lock);
       g_mutex_lock (bus->queue_lock);
+      if (g_queue_get_length (bus->queue) == 0)
+        need_write = TRUE;
       g_queue_push_tail (bus->queue, message);
       g_mutex_unlock (bus->queue_lock);
-      c = 'p';
-      errno = EAGAIN;
-      while (write_ret == -1) {
-        switch (errno) {
-          case EAGAIN:
-          case EINTR:
-            break;
-          default:
-            perror ("gst_bus_post: could not write to fd");
-            return FALSE;
+
+      if (need_write) {
+        c = 'p';
+        errno = EAGAIN;
+        while (write_ret == -1) {
+          switch (errno) {
+            case EAGAIN:
+            case EINTR:
+              break;
+            default:
+              perror ("gst_bus_post: could not write to fd");
+              return FALSE;
+          }
+          write_ret = write (bus->control_socket[1], &c, 1);
         }
-        write_ret = write (bus->control_socket[1], &c, 1);
       }
+
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
       g_mutex_unlock (lock);
@@ -324,12 +339,35 @@ GstMessage *
 gst_bus_pop (GstBus * bus)
 {
   GstMessage *message;
+  gboolean needs_read = FALSE;
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
   g_mutex_lock (bus->queue_lock);
   message = g_queue_pop_head (bus->queue);
+  if (message && g_queue_get_length (bus->queue) == 0)
+    needs_read = TRUE;
   g_mutex_unlock (bus->queue_lock);
+
+  if (needs_read) {
+    gchar c;
+    ssize_t read_ret = -1;
+
+    /* the char in the fd is essentially just a way to wake us up. read it off so
+       we're not woken up again. */
+    errno = EAGAIN;
+    while (read_ret == -1) {
+      switch (errno) {
+        case EAGAIN:
+        case EINTR:
+          break;
+        default:
+          perror ("gst_bus_pop: could not read from fd");
+          return NULL;
+      }
+      read_ret = read (bus->control_socket[0], &c, 1);
+    }
+  }
 
   return message;
 }
@@ -413,29 +451,13 @@ typedef struct
 } GstBusWatch;
 
 static gboolean
-bus_callback (GIOChannel * channel, GIOCondition cond, GstBusWatch * watch)
+bus_watch_callback (GIOChannel * channel, GIOCondition cond,
+    GstBusWatch * watch)
 {
   GstMessage *message;
   gboolean needs_pop = TRUE;
-  gchar c;
-  ssize_t read_ret = -1;
 
   g_return_val_if_fail (GST_IS_BUS (watch->bus), FALSE);
-
-  /* the char in the fd is essentially just a way to wake us up. read it off so
-     we're not woken up again. */
-  errno = EAGAIN;
-  while (read_ret == -1) {
-    switch (errno) {
-      case EAGAIN:
-      case EINTR:
-        break;
-      default:
-        perror ("gst_bus_pop: could not read from fd");
-        return TRUE;
-    }
-    read_ret = read (watch->bus->control_socket[0], &c, 1);
-  }
 
   message = gst_bus_peek (watch->bus);
 
@@ -451,7 +473,7 @@ bus_callback (GIOChannel * channel, GIOCondition cond, GstBusWatch * watch)
 }
 
 static void
-bus_destroy (GstBusWatch * watch)
+bus_watch_destroy (GstBusWatch * watch)
 {
   if (watch->notify) {
     watch->notify (watch->user_data);
@@ -496,8 +518,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
   if (priority != G_PRIORITY_DEFAULT)
     g_source_set_priority (watch->source, priority);
 
-  g_source_set_callback (watch->source, (GSourceFunc) bus_callback, watch,
-      (GDestroyNotify) bus_destroy);
+  g_source_set_callback (watch->source, (GSourceFunc) bus_watch_callback,
+      watch, (GDestroyNotify) bus_watch_destroy);
 
   id = g_source_attach (watch->source, NULL);
   g_source_unref (watch->source);

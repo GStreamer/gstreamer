@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
  *
- * gstcaps.c: Unit test for GstCaps
+ * simple_launch_lines.c: Unit test for simple pipelines
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,7 +37,8 @@ setup_pipeline (gchar * pipe_descr)
    the poll call will time out after half a second.
  */
 static void
-run_pipeline (GstElement * pipe, GstMessageType events, GstMessageType tevent)
+run_pipeline (GstElement * pipe, gchar * descr,
+    GstMessageType events, GstMessageType tevent)
 {
   GstBus *bus;
   GstMessageType revent;
@@ -48,15 +49,22 @@ run_pipeline (GstElement * pipe, GstMessageType events, GstMessageType tevent)
 
   while (1) {
     revent = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
+
+    /* always have to pop the message before getting back into poll */
+    if (revent != GST_MESSAGE_UNKNOWN)
+      gst_message_unref (gst_bus_pop (bus));
+
     if (revent == tevent) {
       break;
     } else if (revent == GST_MESSAGE_UNKNOWN) {
-      g_critical ("Unexpected timeout in gst_bus_poll, looking for %d", tevent);
+      g_critical ("Unexpected timeout in gst_bus_poll, looking for %d: %s",
+          tevent, descr);
       break;
     } else if (revent & events) {
       continue;
     }
-    g_critical ("Unexpected message received of type %d!", revent);
+    g_critical ("Unexpected message received of type %d, looking for %d: %s",
+        revent, tevent, descr);
   }
 
   gst_element_set_state (pipe, GST_STATE_NULL);
@@ -67,9 +75,25 @@ START_TEST (test_2_elements)
 {
   gchar *s;
 
-  s = "fakesrc ! fakesink";
-  run_pipeline (setup_pipeline (s),
+  s = "fakesrc has-loop=false ! fakesink has-loop=true";
+  run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
+
+  s = "fakesrc has-loop=true ! fakesink has-loop=false";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
+
+  s = "fakesrc has-loop=false num-buffers=10 ! fakesink has-loop=true";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
+
+  s = "fakesrc has-loop=true num-buffers=10 ! fakesink has-loop=false";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
+
+  s = "fakesrc has-loop=false ! fakesink has-loop=false";
+  ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
+          GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN));
 }
 END_TEST Suite * simple_launch_lines_suite (void)
 {

@@ -114,6 +114,12 @@ _gst_message_free (GstMessage * message)
         GST_ERROR ("tag message %p didn't contain a valid tag list!", message);
       }
       break;
+    case GST_MESSAGE_APPLICATION:
+      if (message->message_data.structure.structure) {
+        gst_structure_free (message->message_data.structure.structure);
+        message->message_data.structure.structure = NULL;
+      }
+      break;
     default:
       break;
   }
@@ -160,8 +166,10 @@ gst_message_new (GstMessageType type, GstObject * src)
 
   GST_MESSAGE_TYPE (message) = type;
   GST_MESSAGE_TIMESTAMP (message) = G_GINT64_CONSTANT (0);
-  gst_object_ref (src);
-  GST_MESSAGE_SRC (message) = src;
+  if (src) {
+    gst_object_ref (src);
+    GST_MESSAGE_SRC (message) = src;
+  }
 
   return message;
 }
@@ -266,6 +274,29 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
   message->message_data.state_changed.old = old;
   message->message_data.state_changed.new = new;
+
+  return message;
+}
+
+/**
+ * gst_message_new_application:
+ * @structure: The structure for the message. The message will take ownership of
+ * the structure.
+ *
+ * Create a new application-specific message. These messages can be used by
+ * application-specific plugins to pass data to the app.
+ *
+ * Returns: The new message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_application (GstStructure * structure)
+{
+  GstMessage *message;
+
+  message = gst_message_new (GST_MESSAGE_APPLICATION, NULL);
+  message->message_data.structure.structure = structure;
 
   return message;
 }
