@@ -255,11 +255,18 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
 
   vts = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
+  caps1 = NULL;
+
   if (vts->forced_format != NULL) {
     struct fourcc_list_struct *fourcc;
+
     fourcc = paintrect_find_name (vts->forced_format);
-    caps1 = paint_get_caps(fourcc);
-  } else {
+    if (fourcc) {
+      caps1 = paint_get_caps(fourcc);
+    }
+  }
+
+  if (caps1 == NULL) {
     caps1 = gst_videotestsrc_get_capslist ();
   }
 

@@ -435,6 +435,8 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
   unsigned int fourcc;
   GstCaps *caps;
 
+  g_return_val_if_fail(format, NULL);
+
   fourcc = GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2], format->fourcc[3]);
 
   if(format->ext_caps){
