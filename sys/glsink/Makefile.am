@@ -1,10 +1,11 @@
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-plugin_LTLIBRARIES = libgstglsink.la
+plugin_LTLIBRARIES = libgstglimagesink.la
 
-libgstglsink_la_SOURCES = gstglsink.c gstglxwindow.c gstgl_rgbimage.c gstgl_nvimage.c
-libgstglsink_la_CFLAGS = $(GST_CFLAGS)
-libgstglsink_la_LIBADD = $(X_LIBS) $(XVIDEO_LIBS) -lGL -lGLU -lglut
-libgstglsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstglimagesink_la_SOURCES =  glimagesink.c 
+libgstglimagesink_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS)
+libgstglimagesink_la_LIBADD = $(X_LIBS) $(XSHM_LIBS) -lGL -lGLU\
+	$(top_builddir)/gst-libs/gst/libgstinterfaces-$(GST_MAJORMINOR).la
+libgstglimagesink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstglsink.h
+noinst_HEADERS = glimagesink.h 
+
