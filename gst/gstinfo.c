@@ -70,7 +70,6 @@ extern gchar *_gst_progname;
 static void	gst_debug_reset_threshold	(gpointer category,
 						 gpointer unused);
 static void	gst_debug_reset_all_thresholds	(void);
-static void     gst_debug_set_log_function_level (GstLogFunction func, gpointer data, GstDebugLevel level);
 
 /* list of all name/level pairs from --gst-debug and GST_DEBUG */
 static GStaticMutex __level_name_mutex = G_STATIC_MUTEX_INIT;
@@ -88,13 +87,10 @@ static GSList *__categories = NULL;
 typedef struct {
   GstLogFunction	func;
   gpointer		user_data;
-  GstDebugLevel         max_level;
 } LogFuncEntry;
 static GStaticMutex __log_func_mutex = G_STATIC_MUTEX_INIT;
 static GSList *__log_functions = NULL;
-static GstDebugLevel __log_level;
 
-static GstDebugLevel _gst_debug_max_threshold;
 static GstAtomicInt __default_level;
 static GstAtomicInt __use_color;
 gboolean __gst_debug_enabled = TRUE;
@@ -291,16 +287,14 @@ void gst_debug_log_valist (GstDebugCategory *category, GstDebugLevel level,
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
 
-  if (level <= __log_level) {
-    message = g_strdup_vprintf (format, args);
-    handler = __log_functions;
-    while (handler) {
-      entry = handler->data;
-      handler = g_slist_next (handler);
-      entry->func (category, level, file, function, line, object, message, entry->user_data);
-    }
-    g_free (message);
+  message = g_strdup_vprintf (format, args);
+  handler = __log_functions;
+  while (handler) {
+    entry = handler->data;
+    handler = g_slist_next (handler);
+    entry->func (category, level, file, function, line, object, message, entry->user_data);
   }
+  g_free (message);
 }
 /**
  * gst_debug_construct_term_color:
@@ -446,8 +440,6 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
   entry = g_new (LogFuncEntry, 1);
   entry->func = func;
   entry->user_data = data;
-  //entry->max_level = GST_LEVEL_LOG;
-  entry->max_level = 0;
   /* FIXME: we leak the old list here - other threads might access it right now
    * in gst_debug_logv. Another solution is to lock the mutex in gst_debug_logv,
    * but that is waaay costly.
@@ -457,35 +449,11 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
   g_static_mutex_lock (&__log_func_mutex);
   list = g_slist_copy (__log_functions);
   __log_functions = g_slist_prepend (list, entry);
-  __log_level = MAX (__log_level, entry->max_level);
   g_static_mutex_unlock (&__log_func_mutex);
 
   GST_DEBUG ("prepended log function %p (user data %p) to log functions",
              func, data);
 }
-
-static void
-gst_debug_set_log_function_level (GstLogFunction func, gpointer data, GstDebugLevel level)
-{
-  LogFuncEntry *entry;
-  GSList *list;
-  GstDebugLevel new_level;
-
-  g_static_mutex_lock (&__log_func_mutex);
-  list = __log_functions;
-  new_level = 0;
-  while (list) {
-    entry = list->data;
-    if (entry->func == func && entry->user_data == data) {
-      entry->max_level = level;
-    }
-    new_level = MAX (new_level, entry->max_level);
-    list = g_slist_next (list);
-  }
-  __log_level = new_level;
-  g_static_mutex_unlock (&__log_func_mutex);
-}
-
 static gint
 gst_debug_compare_log_function_by_func (gconstpointer entry, gconstpointer func)
 {
@@ -500,16 +468,12 @@ gst_debug_compare_log_function_by_data (gconstpointer entry, gconstpointer data)
   
   return (entrydata < data) ? -1 : (entrydata > data) ? 1 : 0;
 }
-
 static guint
 gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
 {
   GSList *found;
   GSList *new;
   guint removals = 0;
-  GstDebugLevel new_level;
-  GSList *handler;
-
   g_static_mutex_lock (&__log_func_mutex);
   new = __log_functions;
   while ((found = g_slist_find_custom (new, data, func))) {
@@ -521,21 +485,12 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
     new = g_slist_delete_link (new, found);
     removals++;
   }
-  new_level = 0;
-  handler = new;
-  while (handler) {
-    LogFuncEntry *entry = handler->data;
-    new_level = MAX (entry->max_level, new_level);
-    handler = g_slist_next (handler);
-  }
-  __log_level = new_level;
   /* FIXME: We leak the old list here. See _add_log_function for why. */
   __log_functions = new;
   g_static_mutex_unlock (&__log_func_mutex);
 
   return removals;
 }
-
 /**
  * gst_debug_remove_log_function:
  * @func: the log function to remove
@@ -557,7 +512,6 @@ gst_debug_remove_log_function (GstLogFunction func)
 
   return removals;
 }
-
 /**
  * gst_debug_remove_log_function_by_data:
  * @data: user data of the log function to remove
@@ -577,7 +531,6 @@ gst_debug_remove_log_function_by_data (gpointer data)
 
   return removals;
 }
-
 /**
  * gst_debug_set_colored:
  * @colored: Whether to use colored output or not
@@ -653,23 +606,6 @@ gst_debug_get_default_threshold (void)
 {	
   return (GstDebugLevel) gst_atomic_int_read (&__default_level);
 }
-
-static void
-gst_debug_recalculate_max_threshold (void)
-{
-  GSList *walk;
-  GstDebugLevel new_threshold = 0;
-  walk = __categories;
-  while (walk) {
-    GstDebugCategory *cat = walk->data;
-    new_threshold = MAX (gst_atomic_int_read (cat->threshold), new_threshold);
-    walk = g_slist_next (walk);
-  }
-  _gst_debug_max_threshold = new_threshold;
-  gst_debug_set_log_function_level (gst_debug_log_default, NULL,
-      _gst_debug_max_threshold);
-}
-
 static void
 gst_debug_reset_threshold (gpointer category, gpointer unused)
 {
@@ -691,10 +627,8 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
   gst_debug_category_set_threshold (cat, gst_debug_get_default_threshold ());
 
 exit:
-  gst_debug_recalculate_max_threshold ();
   g_static_mutex_unlock (&__level_name_mutex);
 }
-
 static void
 gst_debug_reset_all_thresholds (void)
 {
@@ -739,7 +673,6 @@ gst_debug_set_threshold_for_name (const gchar *name, GstDebugLevel level)
   g_static_mutex_unlock (&__level_name_mutex);
   g_static_mutex_lock (&__cat_mutex);
   g_slist_foreach (__categories, for_each_threshold_by_entry, entry);
-  gst_debug_recalculate_max_threshold ();
   g_static_mutex_unlock (&__cat_mutex);
 }
 /**
@@ -770,7 +703,6 @@ gst_debug_unset_threshold_for_name (const gchar *name)
       walk = __level_name;
     }
   }
-  gst_debug_recalculate_max_threshold ();
   g_static_mutex_unlock (&__level_name_mutex);
   g_pattern_spec_free (pat);
   gst_debug_reset_all_thresholds ();
