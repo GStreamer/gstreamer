@@ -166,7 +166,7 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (osssrc_src_factory), "src");
   gst_pad_set_get_function (osssrc->srcpad, gst_osssrc_get);
-  gst_pad_set_connect_function (osssrc->srcpad, gst_osssrc_srcconnect);
+  gst_pad_set_link_function (osssrc->srcpad, gst_osssrc_srcconnect);
   gst_pad_set_convert_function (osssrc->srcpad, gst_osssrc_convert);
   gst_pad_set_formats_function (osssrc->srcpad, gst_osssrc_get_formats);
   gst_pad_set_event_function (osssrc->srcpad, gst_osssrc_src_event);
@@ -191,15 +191,15 @@ gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
   src = GST_OSSSRC(gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   if (!gst_osscommon_parse_caps (&src->common, caps))
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
   if (!gst_osscommon_sync_parms (&src->common))
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static gboolean

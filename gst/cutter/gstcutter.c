@@ -115,13 +115,13 @@ gst_cutter_connect (GstPad *pad, GstCaps *caps)
   GstPad *otherpad;
   
   filter = GST_CUTTER (gst_pad_get_parent (pad));
-  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_CUTTER (filter), GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_CUTTER (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
   if (GST_CAPS_IS_FIXED (caps)) 
     return gst_pad_try_set_caps (otherpad, caps);
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_LINK_DELAYED;
 }
 
 static void
@@ -179,10 +179,10 @@ gst_cutter_init (GstCutter *filter)
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_cutter_chain);
-  gst_pad_set_connect_function (filter->sinkpad, gst_cutter_connect);
+  gst_pad_set_link_function (filter->sinkpad, gst_cutter_connect);
   filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  gst_pad_set_connect_function (filter->srcpad, gst_cutter_connect);
+  gst_pad_set_link_function (filter->srcpad, gst_cutter_connect);
 }
 
 static void

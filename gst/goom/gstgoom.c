@@ -194,7 +194,7 @@ gst_goom_init (GstGOOM *goom)
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
-  gst_pad_set_connect_function (goom->sinkpad, gst_goom_sinkconnect);
+  gst_pad_set_link_function (goom->sinkpad, gst_goom_sinkconnect);
 
   goom->next_time = 0;
   goom->peerpool = NULL;
@@ -214,10 +214,10 @@ gst_goom_sinkconnect (GstPad *pad, GstCaps *caps)
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

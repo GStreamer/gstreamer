@@ -216,7 +216,7 @@ gst_wavenc_sinkconnect (GstPad *pad,
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   gst_caps_get_int (caps, "channels", &wavenc->channels);
@@ -226,10 +226,10 @@ gst_wavenc_sinkconnect (GstPad *pad,
   gst_wavenc_setup (wavenc);
 
   if (wavenc->setup) {
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
   }
 
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 static void
@@ -238,7 +238,7 @@ gst_wavenc_init (GstWavEnc *wavenc)
   wavenc->sinkpad = gst_pad_new_from_template (sinktemplate, "sink");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
-  gst_pad_set_connect_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
+  gst_pad_set_link_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
 
   wavenc->srcpad = gst_pad_new_from_template (srctemplate, "src");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);

@@ -162,7 +162,7 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
   serverhost = gethostbyname(udpsink->host);
   if (serverhost == (struct hostent *)0) {
 	perror("gethostbyname");
-    	return GST_PAD_CONNECT_REFUSED;
+    	return GST_PAD_LINK_REFUSED;
   }
   
   memmove(&serv_addr.sin_addr,serverhost->h_addr, serverhost->h_length);
@@ -179,7 +179,7 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
     case CONTROL_UDP:
   	    if ((fd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
     		perror("socket");
-    	    	return GST_PAD_CONNECT_REFUSED;
+    	    	return GST_PAD_LINK_REFUSED;
   	    }
 
 	    /* We can only do broadcast in udp */
@@ -191,7 +191,7 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
 	    if (sendto (fd, buf, buf_size, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == -1)
   	    {
 		perror("sending");
-    	    	return GST_PAD_CONNECT_REFUSED;
+    	    	return GST_PAD_LINK_REFUSED;
   	    } 
 
 	    close (fd);
@@ -199,13 +199,13 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
     case CONTROL_TCP:
   	    if ((fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
     		perror("socket");
-    	    	return GST_PAD_CONNECT_REFUSED;
+    	    	return GST_PAD_LINK_REFUSED;
   	    }
   
   	    if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
     		g_printerr ("udpsink: connect to %s port %d failed: %s\n",
 			     udpsink->host, udpsink->port, g_strerror(errno));
-    		return GST_PAD_CONNECT_REFUSED;
+    		return GST_PAD_LINK_REFUSED;
   	    }
   
 	    f = fdopen (dup (fd), "wb");
@@ -216,15 +216,15 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
   	    
 	    break;
     case CONTROL_NONE:
-    	    return GST_PAD_CONNECT_OK;
+    	    return GST_PAD_LINK_OK;
 	    break;
     default:
-    	    return GST_PAD_CONNECT_REFUSED;
+    	    return GST_PAD_LINK_REFUSED;
 	    break;
   }
 #endif
   
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -244,7 +244,7 @@ gst_udpsink_init (GstUDPSink *udpsink)
   udpsink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (udpsink), udpsink->sinkpad);
   gst_pad_set_chain_function (udpsink->sinkpad, gst_udpsink_chain);
-  gst_pad_set_connect_function (udpsink->sinkpad, gst_udpsink_sinkconnect);
+  gst_pad_set_link_function (udpsink->sinkpad, gst_udpsink_sinkconnect);
 
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;

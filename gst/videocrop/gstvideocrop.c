@@ -181,7 +181,7 @@ gst_video_crop_init (GstVideoCrop *video_crop)
 		  GST_PAD_TEMPLATE_GET (video_crop_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (video_crop), video_crop->sinkpad);
   gst_pad_set_chain_function (video_crop->sinkpad, GST_DEBUG_FUNCPTR (gst_video_crop_chain));
-  gst_pad_set_connect_function (video_crop->sinkpad, GST_DEBUG_FUNCPTR (gst_video_crop_sink_connect));
+  gst_pad_set_link_function (video_crop->sinkpad, GST_DEBUG_FUNCPTR (gst_video_crop_sink_connect));
 
   video_crop->srcpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (video_crop_src_template_factory), "src");
@@ -260,7 +260,7 @@ gst_video_crop_sink_connect (GstPad *pad, GstCaps *caps)
 
   /* we are not going to act on variable caps */
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   video_crop = GST_VIDEO_CROP (gst_pad_get_parent (pad));
 
@@ -272,7 +272,7 @@ gst_video_crop_sink_connect (GstPad *pad, GstCaps *caps)
   if (video_crop->crop_height + video_crop->crop_y > video_crop->height)
     video_crop->crop_height = video_crop->height - video_crop->crop_y;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

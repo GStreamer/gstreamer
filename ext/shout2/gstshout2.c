@@ -196,7 +196,7 @@ gst_shout2send_init (GstShout2send *shout2send)
   gst_element_add_pad(GST_ELEMENT(shout2send),shout2send->sinkpad);
   gst_pad_set_chain_function(shout2send->sinkpad,gst_shout2send_chain);
 
-  gst_pad_set_connect_function (shout2send->sinkpad, gst_shout2send_connect);
+  gst_pad_set_link_function (shout2send->sinkpad, gst_shout2send_connect);
 
   shout2send->ip = g_strdup ("127.0.0.1");
   shout2send->port = 8000;
@@ -361,16 +361,16 @@ gst_shout2send_connect (GstPad *pad, GstCaps *caps)
   if (!strcmp(gst_caps_get_mime (caps), "audio/x-mp3"))
     {
       audio_format = SHOUT_FORMAT_MP3;
-      return GST_PAD_CONNECT_OK;
+      return GST_PAD_LINK_OK;
     }
 
   if (!strcmp(gst_caps_get_mime (caps), "application/x-ogg"))
     {
       audio_format = SHOUT_FORMAT_VORBIS;
-      return GST_PAD_CONNECT_OK;
+      return GST_PAD_LINK_OK;
     }
   else {
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 	
 }

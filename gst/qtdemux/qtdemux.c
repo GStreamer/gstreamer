@@ -687,7 +687,7 @@ gst_qtp_traverse(gpointer poffs,gpointer value,gpointer data)
 
   if (qtdemux->bs_pos < sample->offset) {
     gst_qtp_skip(qtdemux,sample->offset - qtdemux->bs_pos);
-    if (sample->track->pad && GST_PAD_IS_CONNECTED(sample->track->pad)) {
+    if (sample->track->pad && GST_PAD_IS_LINKED(sample->track->pad)) {
       GstBuffer * buf;
       buf = gst_qtp_read(qtdemux,sample->size);
       GST_BUFFER_TIMESTAMP(buf) = sample->timestamp;

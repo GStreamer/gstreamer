@@ -244,7 +244,7 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
   aasink = GST_AASINK (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   
   gst_caps_get_int (caps, "width", &aasink->width);
   gst_caps_get_int (caps, "height", &aasink->height);
@@ -256,7 +256,7 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
   g_signal_emit( G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
 		 aasink->width, aasink->height);
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -274,7 +274,7 @@ gst_aasink_init (GstAASink *aasink)
 		  GST_PAD_TEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
   gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
-  gst_pad_set_connect_function (aasink->sinkpad, gst_aasink_sinkconnect);
+  gst_pad_set_link_function (aasink->sinkpad, gst_aasink_sinkconnect);
 
   memcpy(&aasink->ascii_surf, &aa_defparams, sizeof (struct aa_hardware_params));
   aasink->ascii_parms.bright = 0;

@@ -265,7 +265,7 @@ gst_flacenc_init (FlacEnc *flacenc)
   flacenc->sinkpad = gst_pad_new_from_template (gst_flacenc_sink_template, "sink");
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->sinkpad);
   gst_pad_set_chain_function(flacenc->sinkpad,gst_flacenc_chain);
-  gst_pad_set_connect_function (flacenc->sinkpad, gst_flacenc_sinkconnect);
+  gst_pad_set_link_function (flacenc->sinkpad, gst_flacenc_sinkconnect);
 
   flacenc->srcpad = gst_pad_new_from_template (gst_flacenc_src_template, "src");
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->srcpad);
@@ -306,7 +306,7 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "channels", &flacenc->channels);
   gst_caps_get_int (caps, "depth", &flacenc->depth);
@@ -321,7 +321,7 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
 
   flacenc->negotiated = TRUE;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static gboolean

@@ -102,7 +102,7 @@ gst_speexenc_init (GstSpeexEnc *speexenc)
   speexenc->sinkpad = gst_pad_new_from_template (speexenc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->sinkpad);
   gst_pad_set_chain_function (speexenc->sinkpad, gst_speexenc_chain);
-  gst_pad_set_connect_function (speexenc->sinkpad, gst_speexenc_sinkconnect);
+  gst_pad_set_link_function (speexenc->sinkpad, gst_speexenc_sinkconnect);
 
   speexenc->srcpad = gst_pad_new_from_template (speexenc_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->srcpad);
@@ -122,7 +122,7 @@ gst_speexenc_sinkconnect (GstPad *pad, GstCaps *caps)
   speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) 
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "rate", &speexenc->rate);
   if (gst_pad_try_set_caps (speexenc->srcpad, GST_CAPS_NEW (
@@ -137,9 +137,9 @@ gst_speexenc_sinkconnect (GstPad *pad, GstCaps *caps)
     speexenc->state = speex_encoder_init(speexenc->mode);
     speex_encoder_ctl(speexenc->state, SPEEX_GET_FRAME_SIZE, &speexenc->frame_size);
 
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
   }
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 
 }
 

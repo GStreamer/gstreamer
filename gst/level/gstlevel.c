@@ -127,8 +127,8 @@ gst_level_connect (GstPad *pad, GstCaps *caps)
   GstPad *otherpad;
 
   filter = GST_LEVEL (gst_pad_get_parent (pad));
-  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_LEVEL (filter), GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_LEVEL (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 	  
   if (GST_CAPS_IS_FIXED (caps)) 
@@ -136,7 +136,7 @@ gst_level_connect (GstPad *pad, GstCaps *caps)
     /*if ( !volume_parse_caps (filter, caps) || */
     return gst_pad_try_set_caps (otherpad, caps);
   }
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_LINK_DELAYED;
 }
 
 static void
@@ -253,9 +253,9 @@ static void
 gst_level_init (GstLevel *filter)
 {
   filter->sinkpad = gst_pad_new_from_template (level_sink_factory (), "sink");
-  gst_pad_set_connect_function (filter->sinkpad, gst_level_connect);
+  gst_pad_set_link_function (filter->sinkpad, gst_level_connect);
   filter->srcpad = gst_pad_new_from_template (level_src_factory (), "src");
-  gst_pad_set_connect_function (filter->srcpad, gst_level_connect);
+  gst_pad_set_link_function (filter->srcpad, gst_level_connect);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_level_chain);

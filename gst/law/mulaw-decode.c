@@ -54,7 +54,7 @@ mulawdec_connect_sink (GstPad *pad, GstCaps *caps)
   GstMuLawDec* mulawdec=GST_MULAWDEC (GST_OBJECT_PARENT (pad));
   
   if (caps==NULL) 
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
   newcaps = gst_caps_copy(caps);
 
@@ -66,7 +66,7 @@ mulawdec_connect_sink (GstPad *pad, GstCaps *caps)
 
   if (GST_CAPS_IS_FIXED (newcaps))
     return gst_pad_try_set_caps (mulawdec->srcpad, newcaps);
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_LINK_DELAYED;
 }		
 
 GType
@@ -109,7 +109,7 @@ gst_mulawdec_init (GstMuLawDec *mulawdec)
 {
   mulawdec->sinkpad = gst_pad_new_from_template(mulawdec_sink_template,"sink");
   mulawdec->srcpad = gst_pad_new_from_template(mulawdec_src_template,"src");
-  gst_pad_set_connect_function(mulawdec->sinkpad, mulawdec_connect_sink);
+  gst_pad_set_link_function(mulawdec->sinkpad, mulawdec_connect_sink);
 
   gst_element_add_pad(GST_ELEMENT(mulawdec),mulawdec->sinkpad);
   gst_pad_set_chain_function(mulawdec->sinkpad,gst_mulawdec_chain);

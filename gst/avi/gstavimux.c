@@ -303,7 +303,7 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
 
   /* we are not going to act on variable caps */
   if (!GST_CAPS_IS_FIXED (vscaps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   GST_DEBUG (0, "avimux: sinkconnect triggered on %s", gst_pad_get_name (pad));
 
@@ -435,10 +435,10 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
       goto done;
     }
   }
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 
 done:
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -467,7 +467,7 @@ gst_avimux_pad_connect (GstPad   *pad,
 }
 
 static void
-gst_avimux_pad_disconnect (GstPad   *pad,
+gst_avimux_pad_unlink (GstPad   *pad,
                            GstPad   *peer,
                            gpointer  data)
 {
@@ -490,7 +490,7 @@ gst_avimux_pad_disconnect (GstPad   *pad,
     return;
   }
 
-  GST_DEBUG(GST_CAT_PLUGIN_INFO, "pad '%s' disconnected", padname);
+  GST_DEBUG(GST_CAT_PLUGIN_INFO, "pad '%s' unlinked", padname);
 
   /* is this allowed? */
   gst_pad_destroy(pad);
@@ -532,9 +532,9 @@ gst_avimux_request_new_pad (GstElement     *element,
 
   g_signal_connect(newpad, "connected",
     G_CALLBACK(gst_avimux_pad_connect), (gpointer)avimux);
-  g_signal_connect(newpad, "disconnected",
-    G_CALLBACK(gst_avimux_pad_disconnect), (gpointer)avimux);
-  gst_pad_set_connect_function (newpad, gst_avimux_sinkconnect);
+  g_signal_connect(newpad, "unlinked",
+    G_CALLBACK(gst_avimux_pad_unlink), (gpointer)avimux);
+  gst_pad_set_link_function (newpad, gst_avimux_sinkconnect);
   gst_element_add_pad (element, newpad);
   gst_pad_set_event_function(newpad, gst_avimux_handle_event);
   gst_pad_set_event_mask_function(newpad, gst_avimux_get_event_masks);

@@ -207,7 +207,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (osssink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (osssink), osssink->sinkpad);
-  gst_pad_set_connect_function (osssink->sinkpad, gst_osssink_sinkconnect);
+  gst_pad_set_link_function (osssink->sinkpad, gst_osssink_sinkconnect);
   gst_pad_set_bufferpool_function (osssink->sinkpad, gst_osssink_get_bufferpool);
   gst_pad_set_convert_function (osssink->sinkpad, gst_osssink_convert);
   gst_pad_set_query_function (osssink->sinkpad, gst_osssink_sink_query);
@@ -236,16 +236,16 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
   GstOssSink *osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   if (!gst_osscommon_parse_caps (&osssink->common, caps))
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
   if (!gst_osscommon_sync_parms (&osssink->common)) {
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static inline gint64 

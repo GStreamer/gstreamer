@@ -133,7 +133,7 @@ gst_median_sinkconnect (GstPad *pad, GstCaps *caps)
   filter = GST_MEDIAN (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
@@ -146,7 +146,7 @@ void gst_median_init (GstMedian *median)
 {
   median->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (median_sink_factory), "sink");
-  gst_pad_set_connect_function (median->sinkpad, gst_median_sinkconnect);
+  gst_pad_set_link_function (median->sinkpad, gst_median_sinkconnect);
   gst_pad_set_chain_function (median->sinkpad, gst_median_chain);
   gst_element_add_pad (GST_ELEMENT (median), median->sinkpad);
 

@@ -193,7 +193,7 @@ gst_esdsink_init(GstEsdsink *esdsink)
 		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
   gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
-  gst_pad_set_connect_function(esdsink->sinkpad, gst_esdsink_sinkconnect);
+  gst_pad_set_link_function(esdsink->sinkpad, gst_esdsink_sinkconnect);
 
   esdsink->mute = FALSE;
   esdsink->fd = -1;
@@ -226,16 +226,16 @@ gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "depth", &esdsink->depth);
   gst_caps_get_int (caps, "channels", &esdsink->channels);
   gst_caps_get_int (caps, "rate", &esdsink->frequency);
 
   if (gst_esdsink_sync_parms (esdsink))
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
 
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 static void

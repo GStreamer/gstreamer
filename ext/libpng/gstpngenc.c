@@ -116,7 +116,7 @@ gst_pngenc_sinkconnect (GstPad * pad, GstCaps * caps)
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &pngenc->width);
   gst_caps_get_int (caps, "height", &pngenc->height);
@@ -135,7 +135,7 @@ gst_pngenc_init (GstPngEnc * pngenc)
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->srcpad);
 
   gst_pad_set_chain_function (pngenc->sinkpad, gst_pngenc_chain);
-  gst_pad_set_connect_function (pngenc->sinkpad, gst_pngenc_sinkconnect);
+  gst_pad_set_link_function (pngenc->sinkpad, gst_pngenc_sinkconnect);
 
   pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, (png_voidp)NULL, user_error_fn, user_warning_fn);
   if ( pngenc->png_struct_ptr == NULL )

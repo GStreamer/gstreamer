@@ -174,7 +174,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
 
   jpegdec = GST_JPEGDEC (GST_OBJECT_PARENT (pad));
 
-  if (!GST_PAD_IS_CONNECTED (jpegdec->srcpad)) {
+  if (!GST_PAD_IS_LINKED (jpegdec->srcpad)) {
     gst_buffer_unref (buf);
     return;
   }

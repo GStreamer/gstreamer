@@ -784,7 +784,7 @@ gst_dvdec_loop (GstElement *element)
 
   dvdec->next_ts += (GST_SECOND*100) / dvdec->framerate;
 
-  if (GST_PAD_IS_CONNECTED (dvdec->audiosrcpad)) {
+  if (GST_PAD_IS_LINKED (dvdec->audiosrcpad)) {
     gint16 *a_ptr;
     gint i, j;
 
@@ -822,7 +822,7 @@ gst_dvdec_loop (GstElement *element)
     gst_dvdec_push (dvdec, outbuf, dvdec->audiosrcpad, ts);
   }
 
-  if (GST_PAD_IS_CONNECTED (dvdec->videosrcpad)) {
+  if (GST_PAD_IS_LINKED (dvdec->videosrcpad)) {
     guint8 *outframe;
     guint8 *outframe_ptrs[3];
     gint outframe_pitches[3];

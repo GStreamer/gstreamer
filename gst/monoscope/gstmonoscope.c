@@ -197,7 +197,7 @@ gst_monoscope_init (GstMonoscope *monoscope)
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->srcpad);
 
   gst_pad_set_chain_function (monoscope->sinkpad, gst_monoscope_chain);
-  gst_pad_set_connect_function (monoscope->sinkpad, gst_monoscope_sinkconnect);
+  gst_pad_set_link_function (monoscope->sinkpad, gst_monoscope_sinkconnect);
 
   monoscope->next_time = 0;
   monoscope->peerpool = NULL;
@@ -217,10 +217,10 @@ gst_monoscope_sinkconnect (GstPad *pad, GstCaps *caps)
   monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

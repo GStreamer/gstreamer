@@ -154,7 +154,7 @@ gst_lpwsinc_init (GstLPWSinc * filter)
 {
   filter->sinkpad = gst_pad_new_from_template (gst_filter_sink_factory (), "sink");
   gst_pad_set_chain_function (filter->sinkpad, gst_lpwsinc_chain);
-  gst_pad_set_connect_function (filter->sinkpad, gst_lpwsinc_sink_connect);
+  gst_pad_set_link_function (filter->sinkpad, gst_lpwsinc_sink_connect);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_template (gst_filter_src_factory (), "src");
@@ -178,7 +178,7 @@ gst_lpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
   g_assert (caps != NULL);
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   set_retval = gst_pad_try_set_caps(filter->srcpad, caps);
   

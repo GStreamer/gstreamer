@@ -220,7 +220,7 @@ gst_udpsrc_get (GstPad *pad)
       caps = gst_caps_load_thyself(doc->xmlRootNode);
       
       /* foward the connect, we don't signal back the result here... */
-      gst_pad_proxy_connect (udpsrc->srcpad, caps);
+      gst_pad_proxy_link (udpsrc->srcpad, caps);
 
 #endif
       g_free (buf);
