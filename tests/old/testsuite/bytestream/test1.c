@@ -21,7 +21,7 @@ typedef struct
 static GSList *params = NULL;
 
 static guint8 count;
-static guint8 iters;
+static guint iterations;
 static gboolean integrity_check = TRUE;
 static gboolean verbose = FALSE;
 static gboolean dump = FALSE;
@@ -169,7 +169,8 @@ main (int argc, char *argv[])
     usage (argv);
     return -1;
   }
-  iters = atoi (argv[++arg_walk]);
+  arg_walk++;
+  iterations = atoi (argv[arg_walk]);
 
   pipeline = gst_elementfactory_make ("pipeline", "pipeline");
   g_assert (pipeline);
@@ -199,7 +200,7 @@ main (int argc, char *argv[])
 
     integrity_check = param->integrity_check;
 
-    g_print ("\n\nrunning test %d:\n", testnum+1);
+    g_print ("\n\nrunning test %d (%d iterations):\n", testnum+1, iterations);
     desc = create_desc (param);
     g_print ("%s\n", desc);
     g_free (desc);
@@ -215,7 +216,7 @@ main (int argc, char *argv[])
     g_object_set (G_OBJECT (sink), "dump", dump,
 		     		   "silent", !verbose, NULL);
 
-    run_test (GST_BIN (pipeline), iters);
+    run_test (GST_BIN (pipeline), iterations);
 
     testnum++;
 
