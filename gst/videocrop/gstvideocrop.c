@@ -297,12 +297,6 @@ gst_video_crop_i420 (GstVideoCrop *video_crop, GstBuffer *src_buffer, GstBuffer 
     destY += width;
   }
 
-  for (j = crop_height; j; j--) {
-    memcpy (destY, srcY, width);
-    srcY += src_stride;
-    destY += width;
-  }
-
   width >>= 1;
   src_stride >>= 1;
   crop_height >>= 1;
