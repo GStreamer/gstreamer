@@ -27,6 +27,17 @@ ELEMENTS (v4lsrc, alsasrc, osssrc)
       thread.
   - as long as no underruns happen, the flow being output is a perfect stream:
     the flow is data-contiguous and time-contiguous.
+  - underruns should be handled like this:
+    - if the code can detect how many samples it dropped, it should just
+      send the next buffer with the new correct offset.  Ie, it produced
+      a data gap, and since it provides the clock, it produces a perfect
+      data gap (the timestamp will be correctly updated too).
+    - if it cannot detect how many samples it dropped, there's a fallback
+      algorithm.  The element uses another GstClock (for example, system clock)
+      on which it corrects the skew and drift continuously as long as it
+      doesn't drop.  When it detected a drop, it can get the time delta
+      on the other GstClock since the last time it captured and the current
+      time, and use that delta to guesstimate the number of samples dropped.
 
 - if the element is not the clock provider
   - the element should always respect the clock it is given.
@@ -122,3 +133,101 @@ NETWORK
 - elements can be synchronized by writing a NTP clock subclass that listens
   to an ntp server, and tries to match its own clock against the NTP server
   by doing gradual rate adjustment, compared with the own system clock.
+- sending audio and video over the network using tcpserversink is possible
+  when the streams are made to be perfect streams and synchronized.
+  Since the streams are perfect and synchronized, the timestamps transmitted
+  along with the buffers can be trusted.  The client just has to make
+  sure that it respects the timestamps.
+- One good way of doing that is to make an element that provides a clock
+  based on the timestamps of the data stream, interpolating using another
+  GstClock inbetween those time points.  This allows you to create
+  a perfect network stream player (one that doesn't lag (increasing buffers))
+  or play too fast (having an empty network queue).
+- On the client side, a GStreamer-ish way to do that is to cut the playback
+  pipeline in half, and have a decoupled element that converts
+  timestamps/durations (by resampling/interpolating/...) so that the sinks
+  consume data at the same rate the tcp sources provide it.
+  tcpclientsrc ! theoradec ! clocker name=clocker { clocker. ! xvimagesink }
+
+SYNCHRONISATION
+---------------
+- low rate source with high rate source:
+  the high rate source can drop samples so it starts with the same phase
+  as the low rate source.  This could be done in a synchronizer element.
+  example:
+  - audio, 8000 Hz, and video, 5 fps
+  - pipeline goes to playing
+  - video src does capture and receives its first frame 50 ms after playing
+    -> phase is -90 or 270 degrees
+  - to compensate, the equivalent of 150 ms of audio could be dropped so
+    that the first videoframe's timestamp coincides with the timestamp of
+    the first audio buffer
+  - this should be done in the raw audio domain since it's typically not
+    possible to chop off samples in the encoded domain
+
+- two low rate sources:
+  not possible to do this correctly, maybe something in the middle can be
+  found ?
+
+IMPROVING QUALITY
+-----------------
+- video src can capture at a higher framerate than will be encoded
+- this gives the corrector more frames to choose from or interpolate with
+  to match the target framerate, reducing jerkiness.
+  e.g. capturing at 15 fps for 5 fps framerate.
+
+LIVE CHANGES IN PIPELINE
+------------------------
+- case 1: video recording for some time, user wants to add audio recording on
+          the fly
+  - user sets complete pipeline to paused
+  - user adds element for audio recording
+  - new element gets same base time as video element
+  - on PLAYING, new element will be in sync and the first buffer produced
+    will have a non-zero timestamp that is the same as the first new video
+    buffer
+
+- case 2: video recording for some time, user wants to add in an audio file
+          from disk.
+  - two possible expectations:
+    A) user expects the audio file to "start playing now" and be muxed
+       together with the current video frames
+    B) user expects the audio file to "start playing from the point where the
+       video currently is" (ie, video is at 10 seconds, so mux with audio
+       starting from 10 secs)
+  - case A):
+    - complete pipeline gets paused
+    - filesrc ! dec added
+    - both get base_time same as video element
+    - pipeline to playing
+    - all elements receive new "now" as base_time so timestamps are reset
+    - muxer will receive synchronized data from both
+  - case B):
+    nothing gets paused
+    - filesrc ! dec added
+    - both get base_time that is the current clock time
+    - pipeline to playing
+    - core sets 
+    1) - new audio part starts sending out data with timestamp 0 from start
+      of file
+      - muxer receives a whole set of frames from the audio side that are late
+      (since the timestamps start at 0), so keeps dropping until it has
+      caught up with the current set).
+    OR
+    2) - audio part does clock query 
+
+THINGS TO DIG UP
+----------------
+- is there a better way to get at "when was this frame captured" then doing
+  a clock query after capturing ?
+  Imagine a video device with a hardware buffer of four frames.  If you
+  haven't asked for a frame from it in a while, three frames could be
+  queued up.  So three consecutive frame gets result in immediate returns
+  with pretty much the same clock query for each of them.
+  So we should find a way to get "a comparable clock time" corresponding
+  to the captured frame.
+
+- v4l2 api returns a gettimeofday() timestamp with each buffer.
+  Given that, you can timestamp the buffer by subtracting the delta
+  between the buffer's clock timestamp with the current system clock time,
+  from the current time reported by the provided clock.
