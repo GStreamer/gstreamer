@@ -86,7 +86,7 @@ static void move_file(const char * nameold, const char * namenew) {
 }
 
 static int make_dir(const char * dirname) {
-    mode_t mode = 0766;
+    mode_t mode = 0777;
     return !mkdir(dirname, mode);
 }
 
