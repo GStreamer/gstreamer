@@ -449,74 +449,94 @@ mpeg2_sys_type_find (GstTypeFind *tf, gpointer unused)
 static guint
 mpeg1_parse_header (GstTypeFind *tf, guint64 offset)
 {
-  guint8 *data = gst_type_find_peek (tf, offset, 18);
+  guint8 *data = gst_type_find_peek (tf, offset, 4);
   guint size;
   
   if (!data) {
-    GST_LOG ("couldn't get 18 bytes to parse MPEG header");
+    GST_LOG ("couldn't get MPEG header bytes");
     return 1;
   }
-  
-  /* check header */
-  if (!IS_MPEG_HEADER (data)) {
-    GST_LOG ("This isn't an MPEG header");
-    return 0;
-  }
-  data += 4;
 
-  /* check marker bits */
-  if ((*data & 0xF1) != 0x21) {
-    GST_LOG ("marker bits in byte 4 don't match");
+  if (data[0] != 0 || data[1] != 0 || data[2] != 1) {
     return 0;
   }
-  data += 2;
-  if ((*data & 0x01) != 0x01) {
-    GST_LOG ("marker bits in byte 6 don't match");
-    return 0;
-  }
-  data += 2;
-  if ((*data & 0x01) != 0x01) {
-    GST_LOG ("marker bits in byte 8 don't match");
-    return 0;
-  }
-  data ++;
-  if ((*data & 0x80) != 0x80) {
-    GST_LOG ("marker bits in byte 9 don't match");
-    return 0;
-  }
-  data += 2;
-  if ((*data & 0x01) != 0x01) {
-    GST_LOG ("marker bits in byte 11 don't match");
-    return 0;
-  }
-  data++;
-  
-  if (!IS_MPEG_PACKET_HEADER (data) &&
-      !IS_MPEG_SYSTEM_HEADER (data)) {
-    GST_LOG ("MPEG packet header doesn't match: %8.8X", GUINT32_FROM_BE (*((guint32 *) data)));
-    return 0;
-  }
-    
-  data += 4;
-  
-  size = GUINT16_FROM_BE (*((guint16 *) data)) + 18;
+  offset += 4;
 
-  GST_DEBUG ("found mpeg1 packet at offset %"G_GUINT64_FORMAT" with size %u", offset, size);
+  switch (data[3]) {
+    case 0xBA: /* pack header */
+      data = gst_type_find_peek (tf, offset, 8);
+      if (!data) {
+        GST_LOG ("couldn't get MPEG pack header bytes");
+        return 1;
+      }
+      size = 12;
+      /* check marker bits */
+      if ((data[0] & 0xF1) != 0x21 ||
+          (data[2] & 0x01) != 0x01 ||
+          (data[4] & 0x01) != 0x01 ||
+          (data[5] & 0x80) != 0x80 ||
+          (data[7] & 0x01) != 0x01)
+        return 0;
+      break;
+
+    case 0xB9: /* ISO end code */
+      size = 4;
+      break;
+
+    case 0xBB: /* system header */
+      data = gst_type_find_peek (tf, offset, 2);
+      if (!data) {
+        GST_LOG ("couldn't get MPEG pack header bytes");
+        return 1;
+      }
+      size = GUINT16_FROM_BE (* (guint16 *) data) + 6;
+      offset += 2;
+      data = gst_type_find_peek (tf, offset, size - 6);
+      if (!data) {
+        GST_LOG ("couldn't get MPEG pack header bytes");
+        return 1;
+      }
+      /* check marker bits */
+      if ((data[0] & 0x80) != 0x80 ||
+          (data[2] & 0x01) != 0x01 ||
+          (data[4] & 0x20) != 0x20)
+        return 0;
+      /* check stream marker bits */
+      for (offset = 6; offset < (size - 6); offset += 3) {
+        if (data[offset] <= 0xBB ||
+            (data[offset + 1] & 0xC0) != 0xC0)
+          return 0;
+      }
+      break;
+
+    default:
+      if (data[3] < 0xB9)
+        return 0;
+      data = gst_type_find_peek (tf, offset, 2);
+      if (!data) {
+        GST_LOG ("couldn't get MPEG pack header bytes");
+        return 1;
+      }
+      size = GUINT16_FROM_BE (* (guint16 *) data) + 6;
+      /* FIXME: we could check PTS/DTS marker bits here... (bit overkill) */
+      break;
+  }
+
   return size;
 }
 /* calculation of possibility to identify random data as mpeg systemstream:
- * bits that must match in header detection:		65
- * chance that random data is identifed:		1/2^65
+ * bits that must match in header detection:		32 (or more)
+ * chance that random data is identifed:		1/2^32
  * chance that GST_MPEG_TYPEFIND_TRY_HEADERS headers are identified:	
- *					1/2^(65*GST_MPEG_TYPEFIND_TRY_HEADERS)
+ *					1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)
  * chance that this happens in GST_MPEG_TYPEFIND_TRY_SYNC bytes:
- *					1-(1-1/2^(65*GST_MPEG_TYPEFIND_TRY_HEADERS))^GST_MPEG_TYPEFIND_TRY_SYNC
+ *					1-(1+1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)^GST_MPEG_TYPEFIND_TRY_SYNC)
  * for current values:
- *					1-(1-1/2^(65*2)^50000
- *				      = 3.6734..*10^-35
+ *					1-(1+1/2^(32*4)^101024)
+ *				      = <some_number>
  */
-#define GST_MPEG_TYPEFIND_TRY_HEADERS 2
-#define GST_MPEG_TYPEFIND_TRY_SYNC (GST_TYPE_FIND_MAXIMUM * 500) /* 50kB */
+#define GST_MPEG_TYPEFIND_TRY_HEADERS 4
+#define GST_MPEG_TYPEFIND_TRY_SYNC (100 * 1024) /* 100kB */
 #define GST_MPEG_TYPEFIND_SYNC_SIZE 2048
 static void
 mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
@@ -538,7 +558,7 @@ mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
       guint found = 0;
       guint packet_size = 0;
       guint64 offset = skipped;
-      
+
       while (found < GST_MPEG_TYPEFIND_TRY_HEADERS) {
 	packet_size = mpeg1_parse_header (tf, offset);
 	if (packet_size <= 1)
