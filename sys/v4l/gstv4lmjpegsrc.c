@@ -47,17 +47,16 @@ enum {
 /* arguments */
 enum {
   ARG_0,
+#if 0
   ARG_X_OFFSET,
   ARG_Y_OFFSET,
   ARG_F_WIDTH,
   ARG_F_HEIGHT,
-  ARG_H_DECIMATION,
-  ARG_V_DECIMATION,
-  ARG_WIDTH,
-  ARG_HEIGHT,
+  /* normally, we would want to use subframe capture, however,
+   * for the time being it's easier if we disable it first */
+#endif
   ARG_QUALITY,
   ARG_NUMBUFS,
-  ARG_BUFSIZE,
   ARG_USE_FIXED_FPS
 };
 
@@ -75,6 +74,8 @@ static gboolean              gst_v4lmjpegsrc_srcconvert   (GstPad         *pad,
 static GstPadLinkReturn      gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
                                                            GstCaps        *caps);
 static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
+static GstCaps*              gst_v4lmjpegsrc_getcaps      (GstPad         *pad,
+                                                           GstCaps        *caps);
 
 /* get/set params */
 static void                  gst_v4lmjpegsrc_set_property (GObject        *object,
@@ -145,6 +146,7 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_V4LELEMENT);
 
+#if 0
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_X_OFFSET,
     g_param_spec_int("x_offset","x_offset","x_offset",
                      G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
@@ -157,20 +159,7 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_F_HEIGHT,
     g_param_spec_int("frame_height","frame_height","frame_height",
                      G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_H_DECIMATION,
-    g_param_spec_int("h_decimation","h_decimation","h_decimation",
-                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_V_DECIMATION,
-    g_param_spec_int("v_decimation","v_decimation","v_decimation",
-                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-    g_param_spec_int("width","width","width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-    g_param_spec_int("height","height","height",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE));
+#endif
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
     g_param_spec_int("quality","quality","quality",
@@ -178,9 +167,6 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
     g_param_spec_int("num_buffers","num_buffers","num_buffers",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
-    g_param_spec_int("buffer_size","buffer_size","buffer_size",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_USE_FIXED_FPS,
@@ -227,6 +213,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_element_add_pad(GST_ELEMENT(v4lmjpegsrc), v4lmjpegsrc->srcpad);
 
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
+  gst_pad_set_getcaps_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_getcaps);
   gst_pad_set_link_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
   gst_pad_set_convert_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconvert);
 
@@ -238,21 +225,16 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 					(GstBufferPoolBufferFreeFunction)gst_v4lmjpegsrc_buffer_free,
 					v4lmjpegsrc);
 
+#if 0
   v4lmjpegsrc->frame_width = 0;
   v4lmjpegsrc->frame_height = 0;
   v4lmjpegsrc->x_offset = -1;
   v4lmjpegsrc->y_offset = -1;
-
-  v4lmjpegsrc->horizontal_decimation = 4;
-  v4lmjpegsrc->vertical_decimation = 4;
-
-  v4lmjpegsrc->end_width = 0;
-  v4lmjpegsrc->end_height = 0;
+#endif
 
   v4lmjpegsrc->quality = 50;
 
   v4lmjpegsrc->numbufs = 64;
-  v4lmjpegsrc->bufsize = 256;
 
   /* no clock */
   v4lmjpegsrc->clock = NULL;
@@ -343,14 +325,44 @@ gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
 }
 
 
+static inline gulong
+calc_bufsize (int hor_dec,
+              int ver_dec)
+{
+        guint8 div = hor_dec * ver_dec;
+        guint32 num = (1024 * 512) / (div);
+        guint32 result = 2;
+                                                                                
+        num--;
+        while (num) {
+                num >>= 1;
+                result <<= 1;
+        }
+                                                                                
+        if (result > (512 * 1024))
+                return (512 * 1024);
+        if (result < 8192)
+                return 8192;
+        return result;
+}
+
+#define gst_caps_get_int_range(caps, name, min, max) \
+  gst_props_entry_get_int_range(gst_props_get_entry((caps)->properties, \
+                                                    name), \
+                                min, max)
+
+
 static GstPadLinkReturn
 gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                             GstCaps *caps)
 {
   GstPadLinkReturn ret_val;
-  GstV4lMjpegSrc *v4lmjpegsrc;
-
-  v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC(gst_pad_get_parent(pad));
+  gint hor_dec, ver_dec;
+  gint w, h;
+  gint max_w = GST_V4LELEMENT(v4lmjpegsrc)->vcap.maxwidth,
+       max_h = GST_V4LELEMENT(v4lmjpegsrc)->vcap.maxheight;
+  gulong bufsize;
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
@@ -370,11 +382,64 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
    * our own mime type back and it'll work. Other properties are to be set
    * by the src, not by the opposite caps */
 
+  if (gst_caps_has_property(caps, "width")) {
+    if (gst_caps_has_fixed_property(caps, "width")) {
+      gst_caps_get_int(caps, "width", &w);
+    } else {
+      int max;
+      gst_caps_get_int_range(caps, "width", &w, &max);
+    }
+  }
+  if (gst_caps_has_property(caps, "height")) {
+    if (gst_caps_has_fixed_property(caps, "height")) {
+      gst_caps_get_int(caps, "height", &h);
+    } else {
+      int max;
+      gst_caps_get_int_range(caps, "height", &h, &max);
+    }
+  }
+
+  /* figure out decimation */
+  if (w >= max_w) {
+    hor_dec = 1;
+  } else if (w*2 >= max_w) {
+    hor_dec = 2;
+  } else {
+    hor_dec = 4;
+  }
+  if (h >= max_h) {
+    ver_dec = 1;
+  } else if (h*2 >= max_h) {
+    ver_dec = 2;
+  } else {
+    ver_dec = 4;
+  }
+
+  /* calculate bufsize */
+  bufsize = calc_bufsize(hor_dec, ver_dec);
+
   /* set buffer info */
-  if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc, v4lmjpegsrc->numbufs, v4lmjpegsrc->bufsize))
+  if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc,
+                                  v4lmjpegsrc->numbufs, bufsize)) {
     return GST_PAD_LINK_REFUSED;
+  }
 
   /* set capture parameters and mmap the buffers */
+  if (hor_dec == ver_dec) {
+    if (!gst_v4lmjpegsrc_set_capture(v4lmjpegsrc,
+                                     hor_dec,
+                                     v4lmjpegsrc->quality)) {
+      return GST_PAD_LINK_REFUSED;
+    }
+  } else {
+    if (!gst_v4lmjpegsrc_set_capture_m(v4lmjpegsrc,
+                                       0, 0, max_w, max_h,
+                                       hor_dec, ver_dec,
+                                       v4lmjpegsrc->quality)) {
+      return GST_PAD_LINK_REFUSED;
+    }
+  }
+#if 0
   if (!v4lmjpegsrc->frame_width && !v4lmjpegsrc->frame_height &&
        v4lmjpegsrc->x_offset < 0 && v4lmjpegsrc->y_offset < 0 &&
        v4lmjpegsrc->horizontal_decimation == v4lmjpegsrc->vertical_decimation)
@@ -392,6 +457,8 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
          v4lmjpegsrc->quality))
       return GST_PAD_LINK_REFUSED;
   }
+#endif
+
   /* we now have an actual width/height - *set it* */
   caps = gst_caps_new("v4lmjpegsrc_caps",
                       "video/jpeg",
@@ -520,6 +587,30 @@ gst_v4lmjpegsrc_get (GstPad *pad)
 }
 
 
+static GstCaps*
+gst_v4lmjpegsrc_getcaps (GstPad  *pad,
+                         GstCaps *_caps)
+{
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC(gst_pad_get_parent(pad));
+  struct video_capability *vcap = &GST_V4LELEMENT(v4lmjpegsrc)->vcap;
+  GstCaps *caps;
+
+  if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc))) {
+    return NULL;
+  }
+
+  caps = GST_CAPS_NEW("v4lmjpegsrc_jpeg_caps",
+                      "video/jpeg",
+                        "width",  GST_PROPS_INT_RANGE(vcap->maxwidth/4,
+                                                      vcap->maxwidth),
+                        "height", GST_PROPS_INT_RANGE(vcap->maxheight/4,
+                                                      vcap->maxheight),
+                        NULL);
+
+  return caps;
+}
+
+
 static void
 gst_v4lmjpegsrc_set_property (GObject      *object,
                               guint        prop_id,
@@ -532,6 +623,7 @@ gst_v4lmjpegsrc_set_property (GObject      *object,
   v4lmjpegsrc = GST_V4LMJPEGSRC(object);
 
   switch (prop_id) {
+#if 0
     case ARG_X_OFFSET:
       v4lmjpegsrc->x_offset = g_value_get_int(value);
       break;
@@ -544,20 +636,12 @@ gst_v4lmjpegsrc_set_property (GObject      *object,
     case ARG_F_HEIGHT:
       v4lmjpegsrc->frame_height = g_value_get_int(value);
       break;
-    case ARG_H_DECIMATION:
-      v4lmjpegsrc->horizontal_decimation = g_value_get_int(value);
-      break;
-    case ARG_V_DECIMATION:
-      v4lmjpegsrc->vertical_decimation = g_value_get_int(value);
-      break;
+#endif
     case ARG_QUALITY:
       v4lmjpegsrc->quality = g_value_get_int(value);
       break;
     case ARG_NUMBUFS:
       v4lmjpegsrc->numbufs = g_value_get_int(value);
-      break;
-    case ARG_BUFSIZE:
-      v4lmjpegsrc->bufsize = g_value_get_int(value);
       break;
     case ARG_USE_FIXED_FPS:
       if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc))) {
@@ -583,12 +667,7 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
   v4lmjpegsrc = GST_V4LMJPEGSRC(object);
 
   switch (prop_id) {
-    case ARG_WIDTH:
-      g_value_set_int(value, v4lmjpegsrc->end_width);
-      break;
-    case ARG_HEIGHT:
-      g_value_set_int(value, v4lmjpegsrc->end_height);
-      break;
+#if 0
     case ARG_X_OFFSET:
       g_value_set_int(value, v4lmjpegsrc->x_offset);
       break;
@@ -601,20 +680,12 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
     case ARG_F_HEIGHT:
       g_value_set_int(value, v4lmjpegsrc->frame_height);
       break;
-    case ARG_H_DECIMATION:
-      g_value_set_int(value, v4lmjpegsrc->horizontal_decimation);
-      break;
-    case ARG_V_DECIMATION:
-      g_value_set_int(value, v4lmjpegsrc->vertical_decimation);
-      break;
+#endif
     case ARG_QUALITY:
       g_value_set_int(value, v4lmjpegsrc->quality);
       break;
     case ARG_NUMBUFS:
       g_value_set_int(value, v4lmjpegsrc->breq.count);
-      break;
-    case ARG_BUFSIZE:
-      g_value_set_int(value, v4lmjpegsrc->breq.size);
       break;
     case ARG_USE_FIXED_FPS:
       g_value_set_boolean(value, v4lmjpegsrc->use_fixed_fps);

@@ -85,11 +85,6 @@ struct _GstV4lSrc {
 
   /* how are we going to push buffers? */
   gboolean use_fixed_fps;
-
-  /* caching values */
-  gint width;
-  gint height;
-  gint palette;
 };
 
 struct _GstV4lSrcClass {

@@ -74,20 +74,19 @@ struct _GstV4lMjpegSrc {
   /* how are we going to push buffers? */
   gboolean use_fixed_fps;
 
+  /* end size */
+  gint end_width, end_height;
+
   /* caching values */
+#if 0
   gint x_offset;
   gint y_offset;
   gint frame_width;
   gint frame_height;
-  gint horizontal_decimation;
-  gint vertical_decimation;
-
-  gint end_width;
-  gint end_height;
+#endif
 
   gint quality;
   gint numbufs;
-  gint bufsize; /* in KB */
 };
 
 struct _GstV4lMjpegSrcClass {
