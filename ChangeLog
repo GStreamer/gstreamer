@@ -1,5 +1,10 @@
 2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/dvdnav/dvdnavsrc.c: (dvdnav_handle_navigation_event):
+	  Don't use g_print(); use GST_DEBUG().
+
+2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
 	(gst_ogg_mux_queue_pads):
 	  Handle EOS properly.
