@@ -1,3 +1,9 @@
+2004-05-18  David Schleef  <ds@schleef.org>
+
+	* testsuite/debug/commandline.c: (main): Call ./commandline, not
+	  argv[0].  Calling yourself is probably not the best way to
+	  construct a test like this, btw.
+
 2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbin.c: (gst_bin_iterate_func), (gst_bin_iterate):

@@ -59,10 +59,12 @@ main (gint argc, gchar * argv[])
 
       runs = G_N_ELEMENTS (lines);
       for (i = 0; i < runs; i++) {
-        command = g_strdup_printf ("%s %s %d", argv[0], lines[i], i);
+        int ret;
+
+        command = g_strdup_printf ("./commandline %s %d", lines[i], i);
         g_print ("running \"%s\"\n", command);
-        g_assert (g_spawn_command_line_sync (command, NULL, NULL, &exit,
-                NULL) == TRUE);
+        ret = g_spawn_command_line_sync (command, NULL, NULL, &exit, NULL);
+        g_assert (ret == TRUE);
         g_assert (exit == 0);
         g_print ("\"%s\" worked as expected.\n", command);
         g_free (command);
