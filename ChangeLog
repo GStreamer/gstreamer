@@ -1,5 +1,12 @@
 2004-05-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/auparse/gstauparse.c: (gst_auparse_class_init),
+	(gst_auparse_init), (gst_auparse_chain),
+	(gst_auparse_change_state):
+	  Hack around spider. Remove me some day please.
+
+2004-05-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/auparse/gstauparse.c: (gst_auparse_chain):
 	  Fix for some uninitialized variables in previous patch, also
 	  makes it work. Fixes #142286 while we're at it.
