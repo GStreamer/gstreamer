@@ -1,3 +1,15 @@
+2004-08-11  David Schleef  <ds@schleef.org>
+
+	* ext/pango/gsttextoverlay.c: Add copyright block and fix plugin
+	  license field
+	* gst-libs/gst/idct/Makefile.am: Remove mmx/sse code
+	* gst-libs/gst/video/gstvideosink.c: Change copyright block to
+	  LGPL.
+	* gst/auparse/gstauparse.c: Fix plugin license field.
+	* gst/monoscope/gstmonoscope.c: Fix plugin license field.
+	* gst/mpeg1sys/gstmpeg1systemencode.c: Fix plugin license field.
+	* gst/rtp/gstrtp.c: Fix plugin license field.
+
 2004-08-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/Makefile.am:
