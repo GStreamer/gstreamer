@@ -56,7 +56,6 @@ tmpl_sources =				\
 
 gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
-	gstreamer.html		\
 	gstreamer.types		\
 	gstreamer.hierarchy	\
 	gstreamer-sections.txt
@@ -66,15 +65,14 @@ SCANOBJS_FILES =		\
 	$(DOC_MODULE).hierarchy	\
 	$(DOC_MODULE).args
 
+# FIXME: the dependencies here are rather broken.  Really, html/book1.html
+# should be rebuilt if any file in $(top_srcdir)/gst is updated.
 if HAVE_GTK_DOC
-gstreamer.html: html/book1.html
-	-cd $(srcdir) && cp html/book1.html gstreamer.html
-else
-gstreamer.html:
-endif
-
 html/book1.html: sgml/gstreamer-doc.bottom
 	$(MAKE) html
+else
+html/book1.html:
+endif
 
 sgml/gstreamer-doc.bottom: $(tmpl_sources)
 	$(MAKE) sgml
@@ -103,12 +101,12 @@ html: sgml
 	-cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
 
 clean-local:
-	rm -f *~ *.bak *.signals *-unused.txt *.args *.o *.lo
+	rm -rf *~ *.bak *.signals *-unused.txt *.args *.o *.lo .libs sgml html
 
-maintainer-clean-local: clean
-	rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
+distclean-local: clean
+	rm -rf $(DOC_MODULE)-decl-list.txt
 
-install-data-local: gstreamer.html
+install-data-local: html/book1.html
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
 	(installfiles=`echo $(srcdir)/html/*.html`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
@@ -124,7 +122,7 @@ install-data-local: gstreamer.html
 	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
-dist-hook: gstreamer.html
+dist-hook: html/book1.html
 	if ! test -d $(distdir)/tmpl ; then mkdir $(distdir)/tmpl ; fi
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
 
