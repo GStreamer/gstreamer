@@ -97,9 +97,23 @@ GST_PAD_TEMPLATE_FACTORY (video_src_temp,
     "format", 		GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
     "bpp", 		GST_PROPS_INT(24),
     "depth", 		GST_PROPS_INT(24),
+    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN),
     "red_mask", 	GST_PROPS_INT(0x0000ff),
     "green_mask", 	GST_PROPS_INT(0x00ff00),
     "blue_mask", 	GST_PROPS_INT(0xff0000),
+    "width",     	GST_PROPS_INT (720),
+    "height",    	GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
+  ),
+  GST_CAPS_NEW (
+    "dv_dec_src",
+    "video/raw",
+    "format", 		GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
+    "bpp", 		GST_PROPS_INT(32),
+    "depth", 		GST_PROPS_INT(32),
+    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN),
+    "red_mask", 	GST_PROPS_INT(0x00ff0000),
+    "green_mask", 	GST_PROPS_INT(0x0000ff00),
+    "blue_mask", 	GST_PROPS_INT(0x000000ff),
     "width",     	GST_PROPS_INT (720),
     "height",    	GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
   )
@@ -487,9 +501,17 @@ gst_dvdec_handle_src_event (GstPad *pad, GstEvent *event)
        gint64 position;
        GstFormat format;
 
-       /* first try to figure out the byteoffset of this seek event */
+       /* first bring the format to time */
+       format = GST_FORMAT_TIME;
+       if (!gst_pad_convert (pad, GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+		        &format, &position)) {
+	 /* could not convert seek format to byte offset */
+	 res = FALSE;
+	 break;
+       }
+       /* then try to figure out the byteoffset for this time */
        format = GST_FORMAT_BYTES;
-       if (!gst_pad_convert (dvdec->sinkpad, GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+       if (!gst_pad_convert (dvdec->sinkpad, GST_FORMAT_TIME, position,
 		        &format, &position)) {
 	 /* could not convert seek format to byte offset */
 	 res = FALSE;
@@ -577,8 +599,17 @@ gst_dvdec_loop (GstElement *element)
 	gst_caps_get_fourcc_int (to_try, "format", &fourcc);
 
 	if (fourcc == GST_STR_FOURCC ("RGB ")) {
-          dvdec->space = e_dv_color_rgb;
-          dvdec->bpp = 3;
+          gint bpp;
+
+	  gst_caps_get_int (to_try, "bpp", &bpp);
+	  if (bpp == 24) {
+            dvdec->space = e_dv_color_rgb;
+            dvdec->bpp = 3;
+	  }
+	  else {
+            dvdec->space = e_dv_color_bgr0;
+            dvdec->bpp = 4;
+	  }
 	}
 	else {
           dvdec->space = e_dv_color_yuv;
@@ -670,12 +701,16 @@ gst_dvdec_loop (GstElement *element)
     outframe = GST_BUFFER_DATA (outbuf);
 
     outframe_ptrs[0] = outframe;
-    outframe_ptrs[1] = outframe_ptrs[0] + 720 * height;
-    outframe_ptrs[2] = outframe_ptrs[1] + 360 * height;
-  
     outframe_pitches[0] = 720 * dvdec->bpp;
-    outframe_pitches[1] = height / 2;
-    outframe_pitches[2] = height / 2;
+
+    /* the rest only matters for YUY2 */
+    if (dvdec->bpp < 3) {
+      outframe_ptrs[1] = outframe_ptrs[0] + 720 * height;
+      outframe_ptrs[2] = outframe_ptrs[1] + 360 * height;
+  
+      outframe_pitches[1] = height / 2;
+      outframe_pitches[2] = outframe_pitches[1];
+    }
 
     dv_decode_full_frame (dvdec->decoder, GST_BUFFER_DATA (buf), 
 		          dvdec->space, outframe_ptrs, outframe_pitches);
