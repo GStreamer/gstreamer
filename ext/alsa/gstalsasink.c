@@ -217,7 +217,7 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
           break;
         }
         delay = (this->format == NULL) ? 0 :
-            GST_SECOND * this->transmitted / this->format->rate -
+            GST_SECOND * this->played / this->format->rate -
             gst_alsa_sink_get_time (this);
         if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           gst_element_set_time_delay (GST_ELEMENT (this), MIN (value, delay),
@@ -386,11 +386,11 @@ sink_restart:
            * better way to get this info */
           if (element->base_time > this->clock->start_time) {
             expected =
-                this->transmitted - gst_alsa_timestamp_to_samples (this,
+                this->played - gst_alsa_timestamp_to_samples (this,
                 element->base_time - this->clock->start_time);
           } else {
             expected =
-                this->transmitted + gst_alsa_timestamp_to_samples (this,
+                this->played + gst_alsa_timestamp_to_samples (this,
                 this->clock->start_time - element->base_time);
           }
         } else {
@@ -485,7 +485,7 @@ sink_restart:
     if ((copied = this->transmit (this, &avail)) < 0)
       return;
     /* update our clock */
-    this->transmitted += copied;
+    this->played += copied;
     /* flush the data */
     bytes = gst_alsa_samples_to_bytes (this, copied);
     for (i = 0; i < element->numpads; i++) {
@@ -543,11 +543,11 @@ gst_alsa_sink_get_time (GstAlsa * this)
   if (!this->format)
     return 0;
   if (snd_pcm_delay (this->handle, &delay) != 0) {
-    return this->transmitted / this->format->rate;
+    return this->played / this->format->rate;
   }
-  if (this->transmitted <= delay) {
+  if (this->played <= delay) {
     return 0;
   }
 
-  return GST_SECOND * (this->transmitted - delay) / this->format->rate;
+  return GST_SECOND * (this->played - delay) / this->format->rate;
 }

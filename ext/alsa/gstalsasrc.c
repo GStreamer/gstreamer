@@ -43,6 +43,7 @@ static int gst_alsa_src_read (GstAlsa * this, snd_pcm_sframes_t * avail);
 static void gst_alsa_src_loop (GstElement * element);
 static void gst_alsa_src_flush (GstAlsaSrc * src);
 static GstElementStateReturn gst_alsa_src_change_state (GstElement * element);
+static GstClockTime gst_alsa_src_get_time (GstAlsa * this);
 
 static GstAlsa *src_parent_class = NULL;
 
@@ -127,7 +128,23 @@ gst_alsa_src_init (GstAlsaSrc * src)
   gst_pad_set_getcaps_function (this->pad[0], gst_alsa_get_caps);
   gst_element_add_pad (GST_ELEMENT (this), this->pad[0]);
 
+  this->clock =
+      gst_alsa_clock_new ("alsasrcclock", gst_alsa_src_get_time, this);
+  /* we hold a ref to our clock until we're disposed */
+  gst_object_ref (GST_OBJECT (this->clock));
+  gst_object_sink (GST_OBJECT (this->clock));
+
   gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_src_loop);
+}
+
+static GstClockTime
+gst_alsa_src_get_time (GstAlsa * this)
+{
+  GTimeVal now;
+
+  g_get_current_time (&now);
+
+  return GST_TIMEVAL_TO_TIME (now);
 }
 
 static int
@@ -305,6 +322,30 @@ gst_alsa_src_set_caps (GstAlsaSrc * src, gboolean aggressive)
   return FALSE;
 }
 
+inline snd_pcm_sframes_t
+gst_alsa_src_update_avail (GstAlsa * this)
+{
+  snd_pcm_sframes_t avail = -1;
+
+  while (avail < 0) {
+    avail = snd_pcm_avail_update (this->handle);
+    if (avail < 0) {
+      if (avail == -EPIPE) {
+        gst_alsa_xrun_recovery (this);
+      } else {
+        GST_WARNING_OBJECT (this, "unknown ALSA avail_update return value (%d)",
+            (int) avail);
+      }
+    }
+    if (snd_pcm_state (this->handle) != SND_PCM_STATE_RUNNING) {
+      if (!gst_alsa_start (this)) {
+        return 0;
+      }
+    }
+  }
+  return avail;
+}
+
 /* we transmit buffers of period_size frames */
 static void
 gst_alsa_src_loop (GstElement * element)
@@ -326,14 +367,13 @@ gst_alsa_src_loop (GstElement * element)
     GstClockTime now;
 
     now = gst_element_get_time (element);
-    this->clock_base = gst_alsa_get_time (this);
-    this->transmitted = gst_alsa_timestamp_to_samples (this, now);
+    this->clock_base = gst_alsa_src_get_time (this);
+    this->captured = gst_alsa_timestamp_to_samples (this, now);
   }
 
   /* the cast to long is explicitly needed;
    * with avail = -32 and period_size = 100, avail < period_size is false */
-  while ((long) (avail =
-          gst_alsa_update_avail (this)) < (long) this->period_size) {
+  while ((avail = gst_alsa_src_update_avail (this)) < this->period_size) {
     /* wait */
     if (gst_alsa_pcm_wait (this) == FALSE)
       return;
@@ -363,7 +403,7 @@ gst_alsa_src_loop (GstElement * element)
      * what is now in the buffer */
     outreal = gst_element_get_time (GST_ELEMENT (this)) - outdur;
     /* ideal time is counting samples */
-    outideal = gst_alsa_samples_to_timestamp (this, this->transmitted);
+    outideal = gst_alsa_samples_to_timestamp (this, this->captured);
 
     outsize = gst_alsa_samples_to_bytes (this, copied);
     outtime = GST_CLOCK_TIME_NONE;
@@ -371,11 +411,9 @@ gst_alsa_src_loop (GstElement * element)
     if (GST_ELEMENT_CLOCK (this)) {
       if (GST_CLOCK (GST_ALSA (this)->clock) == GST_ELEMENT_CLOCK (this)) {
         outtime = outideal;
-
         diff = outideal - outreal;
         GST_DEBUG_OBJECT (this, "ideal %lld, real %lld, diff %lld\n", outideal,
             outreal, diff);
-        gst_alsa_clock_update (this, outideal);
       } else {
         outtime = outreal;
       }
@@ -392,14 +430,14 @@ gst_alsa_src_loop (GstElement * element)
 
       GST_BUFFER_TIMESTAMP (src->buf[i]) = outtime;
       GST_BUFFER_DURATION (src->buf[i]) = outdur;
-      GST_BUFFER_OFFSET (src->buf[i]) = this->transmitted;
-      GST_BUFFER_OFFSET_END (src->buf[i]) = this->transmitted + copied;
+      GST_BUFFER_OFFSET (src->buf[i]) = this->captured;
+      GST_BUFFER_OFFSET_END (src->buf[i]) = this->captured + copied;
 
       buf = src->buf[i];
       src->buf[i] = NULL;
       gst_pad_push (this->pad[i], GST_DATA (buf));
     }
-    this->transmitted += copied;
+    this->captured += copied;
   }
 }
 

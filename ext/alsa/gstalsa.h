@@ -156,11 +156,13 @@ struct _GstAlsa {
 
   /* clocking */
   GstAlsaClock *		clock;		/* our provided clock */
-  snd_pcm_uframes_t		transmitted; 	/* samples transmitted since last sync 
+  GstClockTime			clock_base;
+  snd_pcm_uframes_t		played; 	/* samples transmitted since last sync 
 						   This thing actually is our master clock.
 						   We will event insert silent samples or
 						   drop some to sync to incoming timestamps.
 						 */
+  snd_pcm_uframes_t		captured;
   GstClockTime			max_discont;	/* max difference between current
   						   playback timestamp and buffers timestamps
 						 */
