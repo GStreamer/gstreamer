@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *
- * gstcontrol.h: GStreamer control utility library
+ * gstcontrol.c: GStreamer control utility library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,23 +19,4 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#ifndef __GST_CONTROL_H__
-#define __GST_CONTROL_H__
-
-#include <gst/gstobject.h>
-#include <gst/gstprops.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-#include <libs/control/gstdparammanager.h>
-#include <libs/control/gstdparam.h>
-
-#include <libs/control/gstdplinearinterp.h>
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* __GST_CONTROL_H__ */
+#include "gstcontrol.h"

@@ -21,7 +21,6 @@
 
 #include "gstdplinearinterp.h"
 
-
 static void gst_dp_linint_class_init (GstDParamClass *klass);
 static void gst_dp_linint_base_class_init (GstDParamClass *klass);
 static void gst_dp_linint_init (GstDParam *dp_linint);
