@@ -23,17 +23,17 @@
 
 #include "resample.h"
 
-void resample_nearest_s16(resample_t *r);
-void resample_bilinear_s16(resample_t *r);
-void resample_sinc_s16(resample_t *r);
-void resample_sinc_slow_s16(resample_t *r);
-void resample_sinc_ft_s16(resample_t * r);
+void gst_resample_nearest_s16(gst_resample_t *r);
+void gst_resample_bilinear_s16(gst_resample_t *r);
+void gst_resample_sinc_s16(gst_resample_t *r);
+void gst_resample_sinc_slow_s16(gst_resample_t *r);
+void gst_resample_sinc_ft_s16(gst_resample_t * r);
 
-void resample_nearest_float(resample_t *r);
-void resample_bilinear_float(resample_t *r);
-void resample_sinc_float(resample_t *r);
-void resample_sinc_slow_float(resample_t *r);
-void resample_sinc_ft_float(resample_t * r);
+void gst_resample_nearest_float(gst_resample_t *r);
+void gst_resample_bilinear_float(gst_resample_t *r);
+void gst_resample_sinc_float(gst_resample_t *r);
+void gst_resample_sinc_slow_float(gst_resample_t *r);
+void gst_resample_sinc_ft_float(gst_resample_t * r);
 
 
 typedef struct functable_s functable_t;

@@ -1,3 +1,31 @@
+2004-02-23  Benjamin Otte  <otte@gnome.org>
+
+	* ext/xine/xineinput.c: (gst_xine_input_dispose):
+	(gst_xine_input_subclass_init):
+	  call parent dispose.
+	  change pad template for CD reader correctly
+	* ext/xine/Makefile.am:
+	* ext/xine/gstxine.h:
+	* ext/xine/xine.c: (plugin_init):
+	* ext/xine/xineaudiosink.c:
+	  wrap audio sinks, too
+	* gst-libs/gst/resample/private.h:
+	* gst-libs/gst/resample/resample.c: (gst_resample_init),
+	(gst_resample_reinit), (gst_resample_scale),
+	(gst_resample_nearest_s16), (gst_resample_bilinear_s16),
+	(gst_resample_sinc_slow_s16), (gst_resample_sinc_s16),
+	(gst_resample_sinc_ft_s16), (gst_resample_nearest_float),
+	(gst_resample_bilinear_float), (gst_resample_sinc_slow_float),
+	(gst_resample_sinc_float), (gst_resample_sinc_ft_float):
+	* gst-libs/gst/resample/resample.h:
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_method_get_type),
+	(gst_audioscale_class_init), (gst_audioscale_link),
+	(gst_audioscale_get_buffer), (gst_audioscale_init),
+	(gst_audioscale_chain), (gst_audioscale_set_property),
+	(gst_audioscale_get_property):
+	* gst/audioscale/gstaudioscale.h:
+	  s/resample_*/gst_resample_*/i to not clobber namespaces
+
 2004-02-23  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),

@@ -18,30 +18,30 @@
  */
 
 
-#ifndef __RESAMPLE_H__
-#define __RESAMPLE_H__
+#ifndef __GST_RESAMPLE_H__
+#define __GST_RESAMPLE_H__
 
 typedef enum {
-	RESAMPLE_NEAREST = 0,
-	RESAMPLE_BILINEAR,
-	RESAMPLE_SINC_SLOW,
-	RESAMPLE_SINC,
-} resample_method;
+	GST_RESAMPLE_NEAREST = 0,
+	GST_RESAMPLE_BILINEAR,
+	GST_RESAMPLE_SINC_SLOW,
+	GST_RESAMPLE_SINC,
+} gst_resample_method;
 
 typedef enum {
-	RESAMPLE_S16 = 0,
-	RESAMPLE_FLOAT
-} resample_format;
+	GST_RESAMPLE_S16 = 0,
+	GST_RESAMPLE_FLOAT
+} gst_resample_format;
 
-typedef struct resample_s resample_t;
+typedef struct gst_resample_s gst_resample_t;
 
-struct resample_s {
+struct gst_resample_s {
 	/* parameters */
 
-	resample_method method;
+	gst_resample_method method;
 	int channels;
 	int verbose;
-	resample_format format;
+	gst_resample_format format;
 
 	int filter_length;
 
@@ -81,16 +81,16 @@ struct resample_s {
 	double acc[10];
 
 	/* methods */
-	void (*scale)(resample_t *r);
+	void (*scale)(gst_resample_t *r);
 
 	double ack;
 };
 
-void resample_init(resample_t *r);
+void gst_resample_init(gst_resample_t *r);
 
-void resample_reinit(resample_t *r);
+void gst_resample_reinit(gst_resample_t *r);
 
-void resample_scale(resample_t *r, void *i_buf, unsigned int size);
+void gst_resample_scale(gst_resample_t *r, void *i_buf, unsigned int size);
 
-#endif /* __RESAMPLE_H__ */
+#endif /* __GST_RESAMPLE_H__ */
 

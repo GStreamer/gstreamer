@@ -66,7 +66,7 @@ signed short double_to_s16_ppcasm(double x)
 	return rint(x);
 }
 
-void resample_init(resample_t * r)
+void gst_resample_init(gst_resample_t * r)
 {
 	r->i_start = 0;
 	if(r->filter_length&1){
@@ -77,10 +77,10 @@ void resample_init(resample_t * r)
 
 	memset(r->acc, 0, sizeof(r->acc));
 
-	resample_reinit(r);
+	gst_resample_reinit(r);
 }
 
-void resample_reinit(resample_t * r)
+void gst_resample_reinit(gst_resample_t * r)
 {
 	/* i_inc is the number of samples that the output increments for
 	 * each input sample.  o_inc is the opposite. */
@@ -89,40 +89,40 @@ void resample_reinit(resample_t * r)
 
 	r->halftaps = (r->filter_length - 1.0) * 0.5;
 
-	if (r->format == RESAMPLE_S16) {
+	if (r->format == GST_RESAMPLE_S16) {
 		switch (r->method) {
 		default:
-		case RESAMPLE_NEAREST:
-			r->scale = resample_nearest_s16;
+		case GST_RESAMPLE_NEAREST:
+			r->scale = gst_resample_nearest_s16;
 			break;
-		case RESAMPLE_BILINEAR:
-			r->scale = resample_bilinear_s16;
+		case GST_RESAMPLE_BILINEAR:
+			r->scale = gst_resample_bilinear_s16;
 			break;
-		case RESAMPLE_SINC_SLOW:
-			r->scale = resample_sinc_s16;
+		case GST_RESAMPLE_SINC_SLOW:
+			r->scale = gst_resample_sinc_s16;
 			break;
-		case RESAMPLE_SINC:
-			r->scale = resample_sinc_ft_s16;
+		case GST_RESAMPLE_SINC:
+			r->scale = gst_resample_sinc_ft_s16;
 			break;
 		}
-	} else if (r->format == RESAMPLE_FLOAT) {
+	} else if (r->format == GST_RESAMPLE_FLOAT) {
 		switch (r->method) {
 		default:
-		case RESAMPLE_NEAREST:
-			r->scale = resample_nearest_float;
+		case GST_RESAMPLE_NEAREST:
+			r->scale = gst_resample_nearest_float;
 			break;
-		case RESAMPLE_BILINEAR:
-			r->scale = resample_bilinear_float;
+		case GST_RESAMPLE_BILINEAR:
+			r->scale = gst_resample_bilinear_float;
 			break;
-		case RESAMPLE_SINC_SLOW:
-			r->scale = resample_sinc_float;
+		case GST_RESAMPLE_SINC_SLOW:
+			r->scale = gst_resample_sinc_float;
 			break;
-		case RESAMPLE_SINC:
-			r->scale = resample_sinc_ft_float;
+		case GST_RESAMPLE_SINC:
+			r->scale = gst_resample_sinc_ft_float;
 			break;
 		}
 	} else {
-		fprintf (stderr, "resample: Unexpected format \"%d\"\n", r->format);
+		fprintf (stderr, "gst_resample: Unexpected format \"%d\"\n", r->format);
 	}
 }
 
@@ -140,7 +140,7 @@ void resample_reinit(resample_t * r)
  * i_start_buf is the time of the first sample in the temporary
  * buffer.
  */
-void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
+void gst_resample_scale(gst_resample_t * r, void *i_buf, unsigned int i_size)
 {
 	int o_size;
 
@@ -160,11 +160,11 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 	r->o_buf = r->get_buffer(r->priv, o_size);
 
 	if(r->verbose){
-		printf("resample_scale: i_buf=%p i_size=%d\n",
+		printf("gst_resample_scale: i_buf=%p i_size=%d\n",
 			i_buf,i_size);
-		printf("resample_scale: i_samples=%d o_samples=%d i_inc=%g o_buf=%p\n",
+		printf("gst_resample_scale: i_samples=%d o_samples=%d i_inc=%g o_buf=%p\n",
 			r->i_samples, r->o_samples, r->i_inc, r->o_buf);
-		printf("resample_scale: i_start=%g i_end=%g o_start=%g\n",
+		printf("gst_resample_scale: i_start=%g i_end=%g o_start=%g\n",
 			r->i_start, r->i_end, r->o_start);
 	}
 
@@ -172,7 +172,7 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 		int size = (r->filter_length + r->i_samples) * sizeof(double) * 2;
 
 		if(r->verbose){
-			printf("resample temp buffer size=%d\n",size);
+			printf("gst_resample temp buffer size=%d\n",size);
 		}
 		if(r->buffer)free(r->buffer);
 		r->buffer_len = size;
@@ -180,7 +180,7 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 		memset(r->buffer, 0, size);
 	}
 
-        if (r->format==RESAMPLE_S16) {
+        if (r->format==GST_RESAMPLE_S16) {
 		if(r->channels==2){
 			conv_double_short(
 					r->buffer + r->filter_length * sizeof(double) * 2,
@@ -190,7 +190,7 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 					r->buffer + r->filter_length * sizeof(double) * 2,
 					r->i_buf, r->i_samples, sizeof(double) * 2);
 		}
-	} else if (r->format==RESAMPLE_FLOAT) {
+	} else if (r->format==GST_RESAMPLE_FLOAT) {
 		if(r->channels==2){
 			conv_double_float(
 					r->buffer + r->filter_length * sizeof(double) * 2,
@@ -216,7 +216,7 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 	r->i_start -= r->o_samples;
 }
 
-void resample_nearest_s16(resample_t * r)
+void gst_resample_nearest_s16(gst_resample_t * r)
 {
 	signed short *i_ptr, *o_ptr;
 	int i_count = 0;
@@ -262,7 +262,7 @@ void resample_nearest_s16(resample_t * r)
 	}
 }
 
-void resample_bilinear_s16(resample_t * r)
+void gst_resample_bilinear_s16(gst_resample_t * r)
 {
 	signed short *i_ptr, *o_ptr;
 	int o_count = 0;
@@ -311,7 +311,7 @@ void resample_bilinear_s16(resample_t * r)
 	}
 }
 
-void resample_sinc_slow_s16(resample_t * r)
+void gst_resample_sinc_slow_s16(gst_resample_t * r)
 {
 	signed short *i_ptr, *o_ptr;
 	int i, j;
@@ -324,7 +324,7 @@ void resample_sinc_slow_s16(resample_t * r)
 	if (!r->buffer) {
 		int size = r->filter_length * 2 * r->channels;
 
-		printf("resample temp buffer\n");
+		printf("gst_resample temp buffer\n");
 		r->buffer = malloc(size);
 		memset(r->buffer, 0, size);
 	}
@@ -377,7 +377,7 @@ void resample_sinc_slow_s16(resample_t * r)
 }
 
 /* only works for channels == 2 ???? */
-void resample_sinc_s16(resample_t * r)
+void gst_resample_sinc_s16(gst_resample_t * r)
 {
 	double *ptr;
 	signed short *o_ptr;
@@ -468,7 +468,7 @@ static functable_t *ft;
 
 double out_tmp[10000];
 
-void resample_sinc_ft_s16(resample_t * r)
+void gst_resample_sinc_ft_s16(gst_resample_t * r)
 {
 	double *ptr;
 	signed short *o_ptr;
@@ -567,7 +567,7 @@ void resample_sinc_ft_s16(resample_t * r)
  ********/
 
 
-void resample_nearest_float(resample_t * r)
+void gst_resample_nearest_float(gst_resample_t * r)
 {
 	float *i_ptr, *o_ptr;
 	int i_count = 0;
@@ -613,7 +613,7 @@ void resample_nearest_float(resample_t * r)
 	}
 }
 
-void resample_bilinear_float(resample_t * r)
+void gst_resample_bilinear_float(gst_resample_t * r)
 {
 	float *i_ptr, *o_ptr;
 	int o_count = 0;
@@ -662,7 +662,7 @@ void resample_bilinear_float(resample_t * r)
 	}
 }
 
-void resample_sinc_slow_float(resample_t * r)
+void gst_resample_sinc_slow_float(gst_resample_t * r)
 {
 	float *i_ptr, *o_ptr;
 	int i, j;
@@ -675,7 +675,7 @@ void resample_sinc_slow_float(resample_t * r)
 	if (!r->buffer) {
 		int size = r->filter_length * sizeof(float) * r->channels;
 
-		printf("resample temp buffer\n");
+		printf("gst_resample temp buffer\n");
 		r->buffer = malloc(size);
 		memset(r->buffer, 0, size);
 	}
@@ -728,7 +728,7 @@ void resample_sinc_slow_float(resample_t * r)
 }
 
 /* only works for channels == 2 ???? */
-void resample_sinc_float(resample_t * r)
+void gst_resample_sinc_float(gst_resample_t * r)
 {
 	double *ptr;
 	float *o_ptr;
@@ -778,7 +778,7 @@ void resample_sinc_float(resample_t * r)
 	}
 }
 
-void resample_sinc_ft_float(resample_t * r)
+void gst_resample_sinc_ft_float(gst_resample_t * r)
 {
 	double *ptr;
 	float *o_ptr;
