@@ -2,6 +2,15 @@
 
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_sinkconnect),
+	(gst_faad_chain), (gst_faad_change_state):
+	* ext/faad/gstfaad.h:
+	  Allow playback of raw (unframed) MPEG AAC files (#148993).
+
+2004-10-01  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt):
 	  Throw error if we didn't recognize the stream. Fixes #152289.
 
