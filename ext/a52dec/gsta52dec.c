@@ -548,10 +548,8 @@ plugin_init (GModule * module, GstPlugin * plugin)
   GstElementFactory *factory;
 
   /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream")) {
-    gst_info ("a52dec:: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   /* create an elementfactory for the a52dec element */
   factory = gst_element_factory_new ("a52dec", GST_TYPE_A52DEC, &gst_a52dec_details);
