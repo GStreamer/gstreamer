@@ -24,6 +24,7 @@
     </para>
 
     <programlisting>
+/* example-begin xml-mp3.c */
 #include &lt;stdlib.h&gt;
 #include &lt;gst/gst.h&gt;
 
@@ -32,14 +33,14 @@ gboolean playing;
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *filesrc, *osssink, *queue, *queue2, *parse, *decode;
+  GstElement *filesrc, *osssink, *queue, *queue2, *decode;
   GstElement *bin;
   GstElement *thread, *thread2;
 
   gst_init (&amp;argc,&amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: %s &lt;mp3 filename&gt;\n", argv[0]);
     exit (-1);
   }
 
@@ -99,6 +100,7 @@ main (int argc, char *argv[])
 
   exit (0);
 }
+/* example-end xml-mp3.c */
     </programlisting>
     <para>
       The most important line is:
