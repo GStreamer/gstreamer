@@ -90,10 +90,59 @@
     </para>
   </sect1>
   <sect1>
-    <title>A complete autoplugging example</title>
+    <title>Using the <classname>GstAutoplugCache</classname> element</title>
     <para>
-      We will create and explain how a complete media player can be built with the
-      autoplugger.
+      The <classname>GstAutoplugCache</classname> element is used to cache the 
+      media stream when performing typedetection. As we have have seen in the
+      previous chapter (typedetection), the type typefind function consumes a 
+      buffer to determine the media type of it. After we have set up the pipeline
+      to play the media stream we should be able to 'replay' the previous buffer(s).
+      This is where the autoplugcache is used for.
+    </para>
+    <para>
+      The basic usage pattern for the autoplugcache in combination with the typefind 
+      element is like this:
+      <orderedlist>
+        <listitem>
+          <para>
+	    Add the autoplugcache element to a bin and connect the sink pad to the src
+	    pad of an element with unkown caps.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    Connect the src pad of the autoplugcache to the sink pad of the typefind 
+	    element.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    Loop the pipeline until the typefind element has found a type. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    Remove the typefind element and add the plugins needed to play back the discovered
+	    media type to the autoplugcache src pad.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    Reset the cache to start playback of the cached data. Connect to the 
+	    "cache_empty" signal.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    In the cache_empty signal callback function, remove the autoplugcache and
+	    reconnect the pads.
+          </para>
+        </listitem>
+      </orderedlist>
+    </para>
+    <para>
+      In the next chapter we will create a new version of our helloworld exaple using the
+      autoplugger, the autoplugcache and the typefind element.
     </para>
   </sect1>
 </chapter>

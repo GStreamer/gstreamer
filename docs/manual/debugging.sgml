@@ -28,6 +28,12 @@
        </listitem>
        <listitem>
          <para>
+          <option>--gst-mask=<replaceable>mask</replaceable></option> 
+	  Sets the mask for the info *and* the debug output.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
           <option>--gst-plugin-spew</option> 
 	  Enable printout of errors while loading GST plugins.
          </para>
@@ -74,10 +80,13 @@ Mask (to be OR'ed)   info/debug         FLAGS
 0x00010000              /              PIPELINE
 0x00020000              /              PLUGIN_LOADING
 0x00040000              /              PLUGIN_ERRORS
-0x00080000              /              PROPERTIES
-0x00100000              /              THREAD
-0x00200000              /              TYPES
-0x00400000              /              XML
+0x00080000              /              PLUGIN_INFO
+0x00100000              /              PROPERTIES
+0x00200000              /              THREAD
+0x00400000              /              TYPES
+0x00800000              /              XML
+0x01000000              /              NEGOTIATION
+0x02000000              /              REFCOUNTING
     </programlisting>
   </sect1>
   <sect1>

@@ -101,52 +101,51 @@ video_00! (mpeg2dec ! videosink)
     </screen>
 
     </para>
-
     <para>
       Note that the parser isn't capable of more complex pipelines yet, including
-      the VOB player above.  The minor tweaks will be made post 0.1.0.
+      the VOB player above.  The minor tweaks will be made post 0.2.1.
     </para>
     <para>
       You can also use the the parser in you own code. <application>GStreamer</application>
-      provides a function gst_parse_launch () that you can use to construt a pipeline.
-      The code of gstreamer-launch actually looks like:
+      provides a function gst_parse_launch () that you can use to construt a pipeline. 
+      The following programs lets you create an mp3 pipeline using the gst_parse_launch () 
+      function:
     </para>
     <programlisting>
 #include &lt;gst/gst.h&gt;
-#include &lt;string.h&gt;
-#include &lt;stdlib.h&gt;
 
-int 
-main (int argc, char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstElement *pipeline;
-  char **argvn;
-  gchar *cmdline;
-  int i;
+  GstElement *disksrc;
 
   gst_init (&amp;argc, &amp;argv);
 
-  pipeline = gst_pipeline_new ("launch");
+  if (argc != 2) {
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    return -1;
+  }
+  pipeline = gst_pipeline_new ("my_pipeline");
 
-  // make a null-terminated version of argv
-  argvn = g_new0 (char *,argc);
-  memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
-  // join the argvs together
-  cmdline = g_strjoinv (" ", argvn);
-  // free the null-terminated argv
-  g_free (argvn);
+  gst_parse_launch ("disksrc[my_disksrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
 
-  gst_parse_launch (cmdline, pipeline);
+  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_disksrc");
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
 
-  fprintf(stderr,"RUNNING pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  while (1)
-    gst_bin_iterate (GST_BIN (pipeline));
+  while (gst_bin_iterate (GST_BIN (pipeline)));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   return 0;
 }
     </programlisting>
+    <para>
+      Note how we can retrieve the disksrc element from the constructed bin using the
+      element name.
+    </para>
   </sect1>
 
   <sect1>

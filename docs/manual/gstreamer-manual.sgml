@@ -131,9 +131,6 @@
 
       &FACTORIES;
 
-      &AUTOPLUGGING;
-
-      &HELLOWORLD2;
   </part>
 
 <!-- ############ Advanced GStreamer - part ############# -->
@@ -159,6 +156,10 @@
       &DYNAMIC;
 
       &TYPEDETECTION;
+
+      &AUTOPLUGGING;
+
+      &HELLOWORLD2;
 
       &UTILITY;
   </part>
