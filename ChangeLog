@@ -1,3 +1,15 @@
+2004-05-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_seek):
+	  Don't touch events after not owning them anymore.
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
+	(gst_wavparse_fmt), (gst_wavparse_other),
+	(gst_wavparse_handle_seek), (gst_wavparse_loop),
+	(gst_wavparse_pad_convert), (gst_wavparse_pad_query),
+	(gst_wavparse_srcpad_event):
+	* gst/wavparse/gstwavparse.h:
+	  Add seeking, fix querying.
+
 2004-05-16  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_comment):
