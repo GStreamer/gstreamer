@@ -100,12 +100,21 @@ I'll give two examples.
 ===========
 
 typedef struct _GstInterface {
-  /* dummy */
+  /* note: this struct indeed has no parent. That's normal. */
+
+  /* since we will mostly need a pointer to the element,
+   * we put it here! */
+  GstElement *element;
 } GstInterface;
 
+/* This small extra virtual function is here to provide an
+ * interface functionality on a per-instance basis rather
+ * than a per-class basis, which is the case for glib.
+ */
 typedef struct _GstInterfaceClass {
   GTypeInterface parent;
 
+  /* virtual functions */
   gboolean (* supported) (GstInterface *iface);
 } GstInterfaceClass;
 
@@ -135,6 +144,28 @@ gst_element_implements_interface (GstElement *element,
   return FALSE;
 }
 
+We could use this in the GST_IS_... () macros. For example, the
+macro GST_IS_MIXER () would then look like this:
+
+#define GST_IS_MIXER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER) && \
+   gst_element_implements_interface (GST_ELEMENT (obj), \
+				     GST_TYPE_MIXER))
+
+So the application would just tread it with the known macro, and
+everything would look extremely simple to the end user.
+
+Also some convenience function to set the element:
+
+void
+gst_interface_set_element (GstInterface *iface,
+			   GstElement   *element)
+{
+  g_return_if_fail (GST_IS_INTERFACE (iface));
+
+  iface->element = element;
+}
+
 4a) mixer
 ---------
 A mixer is a way of controlling volume and input/output channels.
@@ -147,18 +178,25 @@ input. Indeed, I want both osssrc *and* osssink to export the
 same mixer interface! Or at least a very similar one. Volume
 control works the same for both. You could say that osssrc should
 enumerate the input channels (such as microphone, line-in). Of
-course, osssink should not. Or maybe it should, not sure...
-And alsasink would surely implement the same interface.
+course, osssink should not. Or maybe it should, not sure... Maybe,
+we'd need a parent osselement which implements all mixer channels.
+And alsa* would surely implement the same interface.
 
 /* This is confusing naming... (i.e. FIXME)
  * A channel is referred to both as the number of simultaneous
  * sounds the input can handle as well as the in-/output itself
  */
 
+#define GST_MIXER_CHANNEL_INPUT  (1<<0)
+#define GST_MIXER_CHANNEL_OUTPUT (1<<1)
+#define GST_MIXER_CHANNEL_MUTE   (1<<2)
+#define GST_MIXER_CHANNEL_RECORD (1<<3)
+
 typedef struct _GstMixerChannel {
   gchar *label;
   gint   current_num_channels,
-         max_num_channels;
+         max_num_channels,
+         flags;
 } GstMixerChannel;
 
 typedef struct _GstMixer {
@@ -170,17 +208,20 @@ typedef struct _GstMixerClass {
 
   /* virtual functions */
   GList *  (* list_channels) (GstMixer        *mixer);
+
   void     (* set_volume)    (GstMixer        *mixer,
 			      GstMixerChannel *channel,
 			      gint            *volumes);
   void     (* get_volume)    (GstMixer        *mixer,
 			      GstMixerChannel *channel,
 			      gint            *volumes);
+
   void     (* set_mute)      (GstMixer        *mixer,
 			      GstMixerChannel *channel,
 			      gboolean         mute);
-  gboolean (* get_mute)      (GstMixer        *mixer,
-			      GstMixerChannel *channel);
+  void     (* set_record)    (GstMixer        *mixer,
+			      GstMixerChannel *channel,
+			      gboolean         record);
 } GstMixerClass;
 
 Name for in the element list: "mixer". Gstaudio provides wrapper
@@ -191,8 +232,6 @@ How to register these? Let's say that we use osssrc as an example.
 
 typedef struct _GstOssMixer {
   GstMixer mixer;
-
-  GstElement *element;
 
   [.. more? ..]
 } GstOssMixer;
@@ -208,17 +247,18 @@ gst_osssrc_init (GstOssSrc *osssrc)
 {
   GstOssMixer *mixer = GST_OSS_MIXER (osssrc);
 [..]
-  mixer->element = GST_ELEMENT (osssrc);
+  gst_interface_set_element (GST_INTERFACE (mixer),
+			     GST_ELEMENT (osssrc));
 [..]
 }
 
 The rest is done automatically, as described in the already-
-mentioned glib documentation for GInterface.
-
-We could add a pointer to the file descriptor in the
-osssrc/osssink, too, and we'd have full access to the device.
-However, that's implementation. Let's first worry about general
-design.
+mentioned glib documentation for GInterface. This includes
+things like the class_init () function of the GstOssMixerClass,
+which fills all the virtual functions for the mixer, and the
+actual function implementations. The mixer, basically, operates
+as an element on its own. It gets the file descriptor from
+the interface->element (every oss... is a osscommon, etc.).
 
 4b) overlay
 -----------
@@ -234,18 +274,25 @@ overlay? In the end, users will have to link against either FB
 or X anyway, so we might want to create separate interfaces for
 both. On the other hand, we want to be general too... This is a
 decision that we need to make as early as possible in this process.
+For now, I propose making X- and FB-based interfaces.
 
 Let's assume that we take X as a basis. Then, overlay becomes as
 simple as one function. Possible extendible by providing inputs
 (like in the mixer) and norms, although that only applies to
-input-to-analog, not to-digital... Discussion needed here!
+input-to-analog, not to-digital... Others simply return NULL.
+
+#define GST_OVERLAY_CHANNEL_INPUT  (1<<0)
+#define GST_OVERLAY_CHANNEL_OUTPUT (1<<1)
+#define GST_OVERLAY_CHANNEL_TUNER  (1<<2)
 
 typedef struct _GstOverlayChannel {
   gchar *label;
+  gint flags;
 } GstOverlayChannel;
 
 typedef struct _GstOverlayNorm {
   gchar *label;
+  gfloat framerate;
 } GstOverlayNorm;
 
 typedef struct _GstOverlay {
@@ -256,16 +303,18 @@ typedef struct _GstOverlayClass {
   GstInterfaceClass klass;
 
   /* virtual functions */
-  GList *       (* list_channels) (GstOverlay        *overlay);
-  void          (* set_channel)   (GstOverlay        *overlay,
-				   GstOverlayChannel *channel);
-  const gchar * (* get_channel)   (GstOverlay        *overlay);
-  GList *       (* list_norms)    (GstOverlay        *overlay);
-  void          (* set_norm)      (GstOverlay        *overlay,
-				   GstOverlayNorm    *norm);
-  const gchar * (* get_norm)      (GstOverlay        *overlay);
-  void          (* set_xwindowid) (GstOverlay        *overlay,
-			           XID                xid);
+  GList * (* list_channels) (GstOverlay        *overlay);
+  void    (* set_channel)   (GstOverlay        *overlay,
+			     gint               index);
+  gint    (* get_channel)   (GstOverlay        *overlay);
+
+  GList * (* list_norms)    (GstOverlay        *overlay);
+  void    (* set_norm)      (GstOverlay        *overlay,
+			     gint               index);
+  gint    (* get_norm)      (GstOverlay        *overlay);
+
+  void    (* set_xwindowid) (GstOverlay        *overlay,
+			     XID                xid);
 } GstOverlayClass;
 
 That's all!
@@ -277,6 +326,12 @@ should definately be. And wasn't this one of our key issues for
 0.8.0?
 
 No code here. Go implement it, lazy ass!
+
+General ways of thinking: input can come from a plugin, or from
+the application (we don't have modules for joystick input et all).
+However, plugins handling input (such as dvdsrc) need to be able
+to handle each. So we get both input-to-application as well as
+input-from-application APIs.
 
 5) Status of this document
 ==========================
