@@ -79,14 +79,12 @@ static gchar *s;
 #define PIPELINE6 "pipeline.(name=\"john\" fakesrc num-buffers=4 ( thread. ( ! queue ! identity !{ queue ! fakesink }) ))"
 #define PIPELINE7 "fakesrc num-buffers=4 ! tee name=tee .src%d! fakesink tee.src%d ! fakesink fakesink name =\"foo\" tee.src%d ! foo."
 #define PIPELINE8 "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink"
+#define PIPELINE9 "fakesrc num-buffers=4 ! test. fakesink name=test"
 
 gint 
 main (gint argc, gchar *argv[]) 
 {
   gst_init (&argc, &argv);
-
-goto here;
-here:
 
   /**
    * checks:
@@ -174,6 +172,13 @@ here:
   TEST_RUN;
   TEST_OK;
   
+  /**
+   * checks:
+   * - failed in grammar.y cvs version 1.17
+   */
+  TEST_START (PIPELINE9);
+  TEST_RUN;
+  TEST_OK;
+  
   return 0;
 }
-
