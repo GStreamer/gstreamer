@@ -2433,7 +2433,9 @@ gst_pad_template_new (const gchar *name_template,
 
   va_start (var_args, caps);
 
+  GST_FLAG_SET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
   while (caps) {
+    GST_FLAGS (GST_OBJECT (new)) &= (GST_CAPS_IS_FIXED (caps) ? GST_PAD_TEMPLATE_FIXED : 0);
     thecaps = gst_caps_append (thecaps, gst_caps_ref (caps));
     caps = va_arg (var_args, GstCaps*);
   }

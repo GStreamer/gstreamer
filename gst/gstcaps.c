@@ -924,7 +924,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
         }
         else if (!strcmp (subfield->name, "properties")) {
           caps->properties = gst_props_load_thyself (subfield);
-	  fixed &= GST_PROPS_IS_FIXED (caps->properties);
+          fixed &= (GST_PROPS_IS_FIXED (caps->properties) ? GST_CAPS_FIXED : 0 );
         }
 	
         subfield = subfield->next;

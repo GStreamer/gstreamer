@@ -922,7 +922,8 @@ gst_props_copy (GstProps *props)
 
   new = gst_props_empty_new ();
   new->properties = gst_props_list_copy (props->properties);
-  GST_PROPS_FLAGS (new) |= (GST_PROPS_FLAGS (props) & GST_PROPS_FIXED);
+  /* copy fixed and set floating flags */
+  GST_PROPS_FLAGS (new) = GST_PROPS_FLAGS (props) | GST_PROPS_FLOATING;
 
   return new;
 }
