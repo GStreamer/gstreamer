@@ -494,31 +494,7 @@ AC_CHECK_LIB(mad, mad_decoder_finish,
   HAVE_LIBMAD=no,
 )
 
-dnl Check for libmiikmod
-AC_MSG_CHECKING(Mikmod library)
-AC_CHECK_LIB(mikmod, MikMod_Init,
-  HAVE_LIBMIKMOD=yes
-  AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: mad
-)
-  HAVE_LIBMIKMOD=no,
-)
-
-
-dnl Check for libmiikmod
-AC_MSG_CHECKING(Mikmod library)
-AC_CHECK_LIB(mikmod, MikMod_Init,
-  HAVE_LIBMIKMOD=yes
-  AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: mad
-)
-  HAVE_LIBMIKMOD=no,
-)
-
-
-dnl Check for libmiikmod
+dnl Check for libmikmod
 AC_MSG_CHECKING(Mikmod library)
 AC_CHECK_LIB(mikmod, MikMod_Init,
   HAVE_LIBMIKMOD=yes
@@ -936,14 +912,6 @@ if test "x$HAVE_LIBMIKMOD" = xyes; then
   AC_DEFINE(HAVE_LIBMIKMOD)
 fi
 
-if test "x$HAVE_LIBMIKMOD" = xyes; then
-  AC_DEFINE(HAVE_LIBMIKMOD)
-fi
-
-if test "x$HAVE_LIBMIKMOD" = xyes; then
-  AC_DEFINE(HAVE_LIBMIKMOD)
-fi
-
 if test "x$HAVE_VORBIS" = xyes; then
   AC_DEFINE(HAVE_VORBIS)
 fi
@@ -1185,8 +1153,6 @@ plugins/mp3decode/parse/Makefile
 plugins/mp3encode/Makefile
 plugins/mp3encode/lame/Makefile
 plugins/mikmod/Makefile
-plugins/mikmod/decoder/Makefile
-plugins/mikmod/types/Makefile
 plugins/mpeg2/Makefile
 plugins/mpeg2/parse/Makefile
 plugins/mpeg2/ac3parse/Makefile
