@@ -1,3 +1,8 @@
+2004-01-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/adder/gstadder.c: (gst_adder_link):
+          fix non-compile and cut-n-paste code
+
 2004-01-21  David Schleef  <ds@schleef.org>
 
 	* ext/swfdec/gstswfdec.c: (gst_swfdec_video_getcaps),
