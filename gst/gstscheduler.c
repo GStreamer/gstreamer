@@ -320,13 +320,11 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         GST_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-        gst_object_replace ((GstObject **)&sched->current_clock, (GstObject *)clock);
-
-	gst_scheduler_set_clock (sched, sched->current_clock);
-        if (sched->current_clock) {
-          GST_DEBUG (GST_CAT_CLOCK, "enabling clock %p (%s)", sched->current_clock, 
-			GST_OBJECT_NAME (sched->current_clock));
-          gst_clock_set_active (sched->current_clock, TRUE);
+	gst_scheduler_set_clock (sched, clock);
+        if (clock) {
+          GST_DEBUG (GST_CAT_CLOCK, "enabling clock %p (%s)", clock, 
+			GST_OBJECT_NAME (clock));
+          gst_clock_set_active (clock, TRUE);
 	}
         break;
       }
