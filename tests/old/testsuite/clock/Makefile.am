@@ -1,5 +1,5 @@
-GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
-TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=$(GST_PLUGIN_PATH)/testsuite/test-registry.xml
+TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
 
 testprogs = clock1 clock2
 
