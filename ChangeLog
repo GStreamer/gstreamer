@@ -1,5 +1,11 @@
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (setup_source):
+	  Set source to NULL so that resources are free'ed. Fixes issues
+	  with playback of CDDA and similar device-accessing things.
+
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* testsuite/embed/Makefile.am:
 	  test->noinst, fix make test in buildbot.
 
