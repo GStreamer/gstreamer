@@ -1703,7 +1703,7 @@ gst_props_entry_get_safe (const GstPropsEntry *entry, ...)
   gboolean result;
   va_list var_args;
 
-  g_return_val_if_fail (entry != NULL, FALSE);
+  if(entry == NULL) return FALSE;
 
   va_start (var_args, entry);
   result = gst_props_entry_getv (entry, TRUE, var_args);
