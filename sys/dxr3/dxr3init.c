@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "dxr3videosink.h"
 #include "dxr3spusink.h"
 #include "dxr3audiosink.h"

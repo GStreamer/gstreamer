@@ -30,6 +30,7 @@
 
 #include <linux/em8300.h>
 
+#include <gst/gst-i18n-plugin.h>
 #include <gst/gst.h>
 
 #include "dxr3videosink.h"
@@ -316,7 +317,7 @@ dxr3videosink_close (Dxr3VideoSink *sink)
   if (close (sink->control_fd) != 0)
   {
     gst_element_error (sink, RESOURCE, CLOSE,
-                       (_("Could not close control device \"%s\""), sink->audio_filename),
+                       (_("Could not close control device \"%s\""), sink->control_filename),
                         GST_ERROR_SYSTEM);
     return;
   }

@@ -31,6 +31,7 @@
 #include <linux/soundcard.h>
 #include <linux/em8300.h>
 
+#include <gst/gst-i18n-plugin.h>
 #include <gst/gst.h>
 
 #include "dxr3audiosink.h"
