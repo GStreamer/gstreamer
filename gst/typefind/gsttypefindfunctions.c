@@ -1403,6 +1403,8 @@ plugin_init (GstPlugin * plugin)
       speex_type_find, NULL, SPEEX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
       m4a_exts, AAC_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-executable",
+      GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
 
   return TRUE;
 }
