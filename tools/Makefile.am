@@ -27,7 +27,7 @@ gst_register_LDADD = $(GST_LIBS)
 gst_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
 
-gst_inspect_LDADD = $(GST_LIBS)
+gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol.la
 gst_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
 gst_complete_LDADD = $(GST_LIBS)
