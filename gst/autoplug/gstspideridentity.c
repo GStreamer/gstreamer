@@ -188,7 +188,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
     }
     /* end hack for current event stuff here */
 
-    gst_pad_event_default (ident->sink, GST_EVENT (buf));
+    gst_pad_event_default (pad, GST_EVENT (buf));
     return;
   }
 

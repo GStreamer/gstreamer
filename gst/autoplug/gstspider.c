@@ -269,29 +269,14 @@ gst_spider_unused_elementname (GstBin *bin, const gchar *startwith)
 static void
 gst_spider_link_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection *conn)
 {
-  gboolean restart = FALSE;
   gulong signal_id = conn->signal_id;
   GstPad *sinkpad = conn->src->sink;
-  GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (conn->src));
-  
-  /* check if restarting is necessary */
-  if (gst_element_get_state ((GstElement *) spider) == GST_STATE_PLAYING)
-  {
-    restart = TRUE;
-    gst_element_set_state ((GstElement *) spider, GST_STATE_PAUSED);
-  }
   
   /* try to autoplug the elements */
   if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_LINK_REFUSED) {
     GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s:%s was autoplugged to %s:%s, removing callback", GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
     g_signal_handler_disconnect (src, signal_id);
     signal_id = 0;
-  }
-  
-  /* restart if needed */
-  if (restart)
-  {
-    gst_element_set_state ((GstElement *) spider, GST_STATE_PLAYING);
   }
 }
 /* create a new link from those two elements */
@@ -505,11 +490,11 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
       GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "Adding element %s of type %s and syncing state with autoplugger", 
                  GST_ELEMENT_NAME (element), GST_PLUGIN_FEATURE_NAME (plugpath->data));    
       gst_bin_add (GST_BIN (spider), element);
-      gst_element_sync_state_with_parent (element);
     }
     /* insert and link new element */
-    if (!gst_element_link (conn->current, element))
-    {
+    if (gst_element_link (conn->current, element)) {
+      gst_element_sync_state_with_parent (element);    
+    } else {
       /* check if the src has SOMETIMES templates. If so, link a callback */
       GList *templs = gst_element_get_pad_template_list (conn->current);
 	 
