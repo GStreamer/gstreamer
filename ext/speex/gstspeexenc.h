@@ -59,54 +59,58 @@ typedef struct _GstSpeexEnc GstSpeexEnc;
 typedef struct _GstSpeexEncClass GstSpeexEncClass;
 
 struct _GstSpeexEnc {
-  GstElement 	element;
+  GstElement		element;
 
   /* pads */
-  GstPad 	*sinkpad,
-  		*srcpad;
+  GstPad		*sinkpad,
+			*srcpad;
 
-  gint		 packet_count;
-  gint		 n_packets;
+  gint			packet_count;
+  gint			n_packets;
 
-  SpeexBits 	 bits;
-  SpeexHeader 	 header;
-  const SpeexMode 	*speex_mode;
-  void 		*state;
-  GstSpeexMode	 mode;
-  GstAdapter    *adapter;
+  SpeexBits		bits;
+  SpeexHeader		header;
+#if SPEEX_1_0
+  SpeexMode		*speex_mode;
+#else
+  const SpeexMode	*speex_mode;
+#endif
+  void			*state;
+  GstSpeexMode		mode;
+  GstAdapter		*adapter;
 
-  gfloat	 quality;
-  gint 		 bitrate;
-  gboolean	 vbr;
-  gint	 	 abr;
-  gboolean	 vad;
-  gboolean	 dtx;
-  gint		 complexity;
-  gint 		 nframes;
+  gfloat		quality;
+  gint			bitrate;
+  gboolean		vbr;
+  gint			abr;
+  gboolean		vad;
+  gboolean		dtx;
+  gint			complexity;
+  gint			nframes;
 
-  gint 		 lookahead;
+  gint			lookahead;
 
-  gint           channels;
-  gint           rate;
+  gint			channels;
+  gint			rate;
 
-  gboolean	 setup;
-  gboolean       header_sent;
-  gboolean	 eos;
+  gboolean		setup;
+  gboolean		header_sent;
+  gboolean		eos;
 
-  guint64        samples_in;
-  guint64        bytes_out;
+  guint64		samples_in;
+  guint64		bytes_out;
 
-  GstTagList    *tags;
+  GstTagList		*tags;
 
-  gchar         *last_message;
+  gchar			*last_message;
 
-  gint		 frame_size;
-  guint64	 frameno;
+  gint			frame_size;
+  guint64		frameno;
 
-  gchar		*comments;
-  gint		 comment_len;
+  gchar			*comments;
+  gint			comment_len;
 
-  gfloat 	 input[MAX_FRAME_SIZE];
+  gfloat		input[MAX_FRAME_SIZE];
 };
 
 struct _GstSpeexEncClass {
