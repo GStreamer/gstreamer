@@ -53,7 +53,11 @@ struct _GstGamma {
   GstVideofilter videofilter;
 
   double gamma;
+  double gamma_r, gamma_g, gamma_b;
   guint8 gamma_table[256];
+  guint8 gamma_table_r[256];
+  guint8 gamma_table_g[256];
+  guint8 gamma_table_b[256];
 };
 
 struct _GstGammaClass {
@@ -70,6 +74,9 @@ enum {
 enum {
   ARG_0,
   ARG_GAMMA,
+  ARG_GAMMA_R,
+  ARG_GAMMA_G,
+  ARG_GAMMA_B,
   /* FILL ME */
 };
 
@@ -81,8 +88,10 @@ static void	gst_gamma_set_property		(GObject *object, guint prop_id, const GValu
 static void	gst_gamma_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void gst_gamma_planar411(GstVideofilter *videofilter, void *dest, void *src);
+static void gst_gamma_rgb24(GstVideofilter *videofilter, void *dest, void *src);
+static void gst_gamma_rgb32(GstVideofilter *videofilter, void *dest, void *src);
 static void gst_gamma_setup(GstVideofilter *videofilter);
-static void gst_gamma_calculate_table (GstGamma *gamma);
+static void gst_gamma_calculate_tables (GstGamma *gamma);
 
 GType
 gst_gamma_get_type (void)
@@ -109,6 +118,8 @@ gst_gamma_get_type (void)
 
 static GstVideofilterFormat gst_gamma_formats[] = {
   { "I420", 12, gst_gamma_planar411, },
+  { "RGB ", 24, gst_gamma_rgb24, 24, G_BIG_ENDIAN, 0xff0000, 0xff00, 0xff },
+  { "RGB ", 32, gst_gamma_rgb32, 24, G_BIG_ENDIAN, 0x00ff00, 0xff0000, 0xff000000 },
 };
 
   
@@ -147,6 +158,15 @@ gst_gamma_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property(gobject_class, ARG_GAMMA,
       g_param_spec_double("gamma", "Gamma", "gamma",
         0.01, 10, 1, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_GAMMA_R,
+      g_param_spec_double("redgamma", "Gamma_r", "gamma value for the red channel",
+        0.01, 10, 1, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_GAMMA_G,
+      g_param_spec_double("greengamma", "Gamma_g", "gamma value for the green channel",
+        0.01, 10, 1, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_GAMMA_B,
+      g_param_spec_double("bluegamma", "Gamma_b", "gamma value for the blue channel",
+        0.01, 10, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_gamma_set_property;
   gobject_class->get_property = gst_gamma_get_property;
@@ -166,7 +186,10 @@ gst_gamma_init (GTypeInstance *instance, gpointer g_class)
 
   /* do stuff */
   gamma->gamma = 1;
-  gst_gamma_calculate_table (gamma);
+  gamma->gamma_r = 1;
+  gamma->gamma_g = 1;
+  gamma->gamma_b = 1;
+  gst_gamma_calculate_tables (gamma);
 }
 
 static void
@@ -182,7 +205,19 @@ gst_gamma_set_property (GObject *object, guint prop_id, const GValue *value, GPa
   switch (prop_id) {
     case ARG_GAMMA:
       gamma->gamma = g_value_get_double (value);
-      gst_gamma_calculate_table (gamma);
+      gst_gamma_calculate_tables (gamma);
+      break;
+    case ARG_GAMMA_R:
+      gamma->gamma_r = g_value_get_double (value);
+      gst_gamma_calculate_tables (gamma);
+      break;
+    case ARG_GAMMA_G:
+      gamma->gamma_g = g_value_get_double (value);
+      gst_gamma_calculate_tables (gamma);
+      break;
+    case ARG_GAMMA_B:
+      gamma->gamma_b = g_value_get_double (value);
+      gst_gamma_calculate_tables (gamma);
       break;
     default:
       break;
@@ -201,7 +236,15 @@ gst_gamma_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
   switch (prop_id) {
     case ARG_GAMMA:
       g_value_set_double (value, gamma->gamma);
-      gst_gamma_calculate_table (gamma);
+      break;
+    case ARG_GAMMA_R:
+      g_value_set_double (value, gamma->gamma_r);
+      break;
+    case ARG_GAMMA_G:
+      g_value_set_double (value, gamma->gamma_g);
+      break;
+    case ARG_GAMMA_B:
+      g_value_set_double (value, gamma->gamma_b);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -243,13 +286,16 @@ static void gst_gamma_setup(GstVideofilter *videofilter)
 }
 
 static void
-gst_gamma_calculate_table (GstGamma *gamma)
+gst_gamma_calculate_tables (GstGamma *gamma)
 {
   int n;
   double val;
   double exp;
 
-  if (gamma->gamma == 1.0) {
+  if (gamma->gamma == 1.0  &&
+      gamma->gamma_r == 1.0 &&
+      gamma->gamma_g == 1.0 &&
+      gamma->gamma_b == 1.0) {
     GST_VIDEOFILTER (gamma)->passthru = TRUE;
     return;
   }
@@ -261,6 +307,27 @@ gst_gamma_calculate_table (GstGamma *gamma)
     val = pow(val, exp);
     val = 255.0 * val;
     gamma->gamma_table[n] = (unsigned char) floor(val + 0.5);
+  }
+  exp = 1.0 / gamma->gamma_r;
+  for (n = 0; n < 256; n++) {
+    val = n/255.0;
+    val = pow(val, exp);
+    val = 255.0 * val;
+    gamma->gamma_table_r[n] = (unsigned char) floor(val + 0.5);
+  }
+  exp = 1.0 / gamma->gamma_g;
+  for (n = 0; n < 256; n++) {
+    val = n/255.0;
+    val = pow(val, exp);
+    val = 255.0 * val;
+    gamma->gamma_table_g[n] = (unsigned char) floor(val + 0.5);
+  }
+  exp = 1.0 / gamma->gamma_b;
+  for (n = 0; n < 256; n++) {
+    val = n/255.0;
+    val = pow(val, exp);
+    val = 255.0 * val;
+    gamma->gamma_table_b[n] = (unsigned char) floor(val + 0.5);
   }
 
 }
@@ -291,3 +358,67 @@ static void gst_gamma_planar411(GstVideofilter *videofilter,
   }
 }
 
+static void gst_gamma_rgb24(GstVideofilter *videofilter, void *dest, void *src)
+{
+  GstGamma *gamma;
+  int i;
+  int width, height;
+  guint8 *csrc = src;
+  guint8 *cdest = dest;
+  
+  g_return_if_fail(GST_IS_GAMMA(videofilter));
+  gamma = GST_GAMMA(videofilter);
+
+  width = gst_videofilter_get_input_width(videofilter);
+  height = gst_videofilter_get_input_height(videofilter);
+  if (gamma->gamma == 1.0) {
+    i = 0;
+    while ( i < width * height * 3) {
+      *cdest++ = gamma->gamma_table_r[*csrc++];
+      *cdest++ = gamma->gamma_table_g[*csrc++];
+      *cdest++ = gamma->gamma_table_b[*csrc++];
+      i = i + 3;
+    }
+  } else {
+    i = 0;
+    while (i < width * height * 3) {
+      *cdest++ = gamma->gamma_table[*csrc++];
+      i++;
+    }
+  }
+}
+
+static void gst_gamma_rgb32(GstVideofilter *videofilter, void *dest, void *src)
+{
+  GstGamma *gamma;
+  int i;
+  int width, height;
+  guint8 *csrc = src;
+  guint8 *cdest = dest;
+  
+  g_return_if_fail(GST_IS_GAMMA(videofilter));
+  gamma = GST_GAMMA(videofilter);
+
+  width = gst_videofilter_get_input_width(videofilter);
+  height = gst_videofilter_get_input_height(videofilter);
+  if (gamma->gamma == 1.0) {
+    i = 0;
+    while ( i < width * height * 4) {
+      *cdest++ = gamma->gamma_table_b[*csrc++];
+      *cdest++ = gamma->gamma_table_g[*csrc++];
+      *cdest++ = gamma->gamma_table_r[*csrc++];
+      *cdest++; *csrc++;
+      i = i + 4;
+    }
+  } else {
+    i = 0;
+    while (i < width * height * 4) {
+      if ((i % 4) != 3)
+        *cdest++ = gamma->gamma_table[*csrc++];
+      else {
+        *cdest++; *csrc++;
+      }
+      i++;
+    }
+  }
+}
