@@ -25,6 +25,7 @@
 
 #include "gst_private.h"
 #include "gst-i18n-lib.h"
+#include <locale.h>		/* for LC_ALL */
 
 #include "gst.h"
 #include "gstqueue.h"

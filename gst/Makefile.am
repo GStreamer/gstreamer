@@ -191,6 +191,7 @@ built_headers =			\
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers) $(built_headers)
 
 noinst_HEADERS = 		\
+	gettext.h		\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
 	gst_private.h		\
