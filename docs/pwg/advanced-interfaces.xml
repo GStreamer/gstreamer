@@ -3,26 +3,26 @@
   <para>
     Previously, in the chapter <xref linkend="chapter-building-args"/>, we have
     introduced the concept of GObject properties of controlling an element's
-    behaviour. This is a very powerful, but has two big disadvantage: firstly,
-    it is too generic, and secondly, it isn't dynamic.
+    behaviour. This is very powerful, but it has two big disadvantages:
+    first of all, it is too generic, and second, it isn't dynamic.
   </para>
   <para>
-    The first disadvantage has to do with customizability of the end-user
+    The first disadvantage is related to the customizability of the end-user
     interface that will be built to control the element. Some properties are
     more important than others. Some integer properties are better shown in a
     spin-button widget, whereas others would be better represented by a slider
     widget. Such things are not possible because the UI has no actual meaning
-    in the application. A UI widget that stands for a bitrate property is the
-    same as an UI widget that stands for the size of a video, as long as both
+    in the application. A UI widget that represents a bitrate property is the
+    same as a UI widget that represents the size of a video, as long as both
     are of the same <classname>GParamSpec</classname> type. Another problem,
-    related to the one about parameter important, is that things like parameter
-    grouping, function grouping or anything to make parameters coherent, is not
+    is that things like parameter grouping, function grouping, or parameter
+    coupling are not
     really possible.
   </para>
   <para>
-    The second argument against parameters are that they are not dynamic. In
+    The second problem with parameters are that they are not dynamic. In
     many cases, the allowed values for a property are not fixed, but depend
-    on things that can only be detected at run-time. The names of inputs for
+    on things that can only be detected at runtime. The names of inputs for
     a TV card in a video4linux source element, for example, can only be
     retrieved from the kernel driver when we've opened the device; this only
     happens when the element goes into the READY state. This means that we
@@ -44,8 +44,9 @@
   <para>
     One important note: interfaces do <emphasis>not</emphasis> replace
     properties. Rather, interfaces should be built <emphasis>next to</emphasis>
-    properties. There are two important reasons for this. Firstly, properties
-    can be saved in XML files. Secondly, properties can be specified on the
+    properties. There are two important reasons for this. First of all, 
+    properties
+    can be saved in XML files. Second, properties can be specified on the
     commandline (<filename>gst-launch</filename>).
   </para>
 
