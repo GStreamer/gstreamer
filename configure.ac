@@ -64,9 +64,11 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
 [
   AC_MSG_WARN(building experimental plug-ins)
   USE_TARKIN="yes"
+  USE_RTP="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plug-ins)
   USE_TARKIN="no"
+  USE_RTP="no"
 ])
 
 dnl broken plug-ins; stuff that doesn't seem to build at the moment
@@ -404,13 +406,12 @@ dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_in
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** libdv ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
-  dnl use this when gtk deps are removed from its pkg-config .pc
-  dnl PKG_CHECK_MODULES(LIBDV, libdv, HAVE_LIBDV="yes", HAVE_LIBDV="no")
-  AM_PATH_LIBDV(HAVE_LIBDV="yes", HAVE_LIBDV="no")
-  AC_SUBST(LIBDV_CFLAGS)
-  AC_SUBST(LIBDV_LIBS)
+translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
+GST_CHECK_FEATURE(DV, [libdv DV/video decoder], dvdec, [
+  dnl use pkg-config when gtk deps are removed from its pkg-config .pc
+  AM_PATH_LIBDV(HAVE_DV="yes", HAVE_DV="no")
+  AC_SUBST(DV_CFLAGS)
+  AC_SUBST(DV_LIBS)
 ])
 
 dnl *** dvdread ***
@@ -763,9 +764,9 @@ if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
 
-dnl if test "x$USE_DEBUG" = xyes; then
-dnl   CFLAGS="$CFLAGS -g"
-dnl fi
+if test "x$USE_DEBUG" = xyes; then
+  GST_CFLAGS="$GST_CFLAGS -g"
+fi
 
 if test "x$USE_PROFILING" = xyes; then
 dnl  CFLAGS="$CFLAGS -pg -fprofile-arcs"
