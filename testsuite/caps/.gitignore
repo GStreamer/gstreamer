@@ -18,6 +18,7 @@ intersect2
 intersection
 normalisation
 union
+simplify
 sets
 string-conversions
 subtract

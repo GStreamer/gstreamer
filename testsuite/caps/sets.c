@@ -18,17 +18,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
-
-static const gchar *caps[] = {
-  "video/x-raw-yuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], format=(fourcc)I420; video/x-raw-yuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], format=(fourcc)YUY2; video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], bpp=(int)24, depth=(int)24, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, endianness=(int)4321; video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], bpp=(int)24, depth=(int)24, red_mask=(int)255, green_mask=(int)65280, blue_mask=(int)16711680, endianness=(int)4321; video/x-raw-yuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], format=(fourcc)Y42B; video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], bpp=(int)32, depth=(int)24, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, endianness=(int)4321; video/x-raw-yuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], format=(fourcc)YUV9; video/x-raw-yuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], format=(fourcc)Y41B; video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], bpp=(int)16, depth=(int)16, red_mask=(int)63488, green_mask=(int)2016, blue_mask=(int)31, endianness=(int)1234; video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ], bpp=(int)16, depth=(int)15, red_mask=(int)31744, green_mask=(int)992, blue_mask=(int)31, endianness=(int)1234",
-  "video/x-raw-yuv, format=(fourcc){ YUY2, I420 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-jpeg, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-divx, divxversion=(int)[ 3, 5 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-xvid, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-3ivx, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-msmpeg, msmpegversion=(int)[ 41, 43 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/mpeg, mpegversion=(int)1, systemstream=(boolean)false, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-dv, systemstream=(boolean)false, width=(int)720, height=(int){ 576, 480 }; video/x-huffyuv, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]",
-  "video/x-raw-yuv, format=(fourcc){ YUY2, I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-divx, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], divxversion=(int)[ 3, 5 ]; video/x-xvid, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-3ivx, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-msmpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], msmpegversion=(int)[ 41, 43 ]; video/mpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], mpegversion=(int)1, systemstream=(boolean)false; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-dv, width=(int)720, height=(int){ 576, 480 }, systemstream=(boolean)false; video/x-huffyuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]",
-  "video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]",
-  "video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]",
-  "video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]",
-  "ANY",
-  "EMPTY"
-};
+#include "caps.h"
 
 static void
 check_caps (const gchar * eins, const gchar * zwei)
@@ -80,10 +70,10 @@ main (gint argc, gchar ** argv)
 
   gst_init (&argc, &argv);
 
-  for (i = 0; i < G_N_ELEMENTS (caps); i++) {
-    for (j = 0; j < G_N_ELEMENTS (caps); j++) {
+  for (i = 0; i < G_N_ELEMENTS (caps_list); i++) {
+    for (j = 0; j < G_N_ELEMENTS (caps_list); j++) {
       g_print ("%u - %u\n", i, j);
-      check_caps (caps[i], caps[j]);
+      check_caps (caps_list[i], caps_list[j]);
     }
   }
 

@@ -85,7 +85,7 @@ gst_caps_new_empty (void)
 }
 
 /**
- * gst_caps_new_empty:
+ * gst_caps_new_any:
  *
  * Creates a new #GstCaps that indicates that it is compatible with
  * any media format.
@@ -95,10 +95,8 @@ gst_caps_new_empty (void)
 GstCaps *
 gst_caps_new_any (void)
 {
-  GstCaps *caps = g_new0 (GstCaps, 1);
+  GstCaps *caps = gst_caps_new_empty ();
 
-  caps->type = GST_TYPE_CAPS;
-  caps->structs = g_ptr_array_new ();
   caps->flags = GST_CAPS_FLAGS_ANY;
 
   return caps;
@@ -123,9 +121,7 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
   GstStructure *structure;
   va_list var_args;
 
-  caps = g_new0 (GstCaps, 1);
-  caps->type = GST_TYPE_CAPS;
-  caps->structs = g_ptr_array_new ();
+  caps = gst_caps_new_empty ();
 
   va_start (var_args, fieldname);
   structure = gst_structure_new_valist (media_type, fieldname, var_args);
@@ -176,9 +172,7 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
 {
   GstCaps *caps;
 
-  caps = g_new0 (GstCaps, 1);
-  caps->type = GST_TYPE_CAPS;
-  caps->structs = g_ptr_array_new ();
+  caps = gst_caps_new_empty ();
 
   while (structure) {
     gst_caps_append_structure (caps, structure);
@@ -206,10 +200,8 @@ gst_caps_copy (const GstCaps * caps)
 
   g_return_val_if_fail (caps != NULL, NULL);
 
-  newcaps = g_new0 (GstCaps, 1);
-  newcaps->type = GST_TYPE_CAPS;
+  newcaps = gst_caps_new_empty ();
   newcaps->flags = caps->flags;
-  newcaps->structs = g_ptr_array_new ();
 
   for (i = 0; i < caps->structs->len; i++) {
     structure = gst_caps_get_structure (caps, i);
@@ -337,6 +329,33 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
   }
 }
 
+static GstStructure *
+gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
+{
+  /* don't use index_fast, gst_caps_simplify relies on the order */
+  return g_ptr_array_remove_index (caps->structs, idx);
+}
+
+/*
+ * gst_caps_remove_structure:
+ * @caps: the #GstCaps to remove from
+ * @idx: Index of the structure to remove
+ *
+ * removes the stucture with the given index from the list of structures 
+ * contained in @caps.
+ */
+void
+gst_caps_remove_structure (GstCaps * caps, guint idx)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (idx <= gst_caps_get_size (caps));
+
+  structure = gst_caps_remove_and_get_structure (caps, idx);
+  gst_structure_free (structure);
+}
+
 /**
  * gst_caps_split_one:
  * @caps: 
@@ -412,10 +431,8 @@ gst_caps_copy_1 (const GstCaps * caps)
 
   g_return_val_if_fail (caps != NULL, NULL);
 
-  newcaps = g_new0 (GstCaps, 1);
-  newcaps->type = GST_TYPE_CAPS;
+  newcaps = gst_caps_new_empty ();
   newcaps->flags = caps->flags;
-  newcaps->structs = g_ptr_array_new ();
 
   if (caps->structs->len > 0) {
     structure = gst_caps_get_structure (caps, 0);
@@ -1070,33 +1087,21 @@ gst_caps_normalize (const GstCaps * caps)
   return newcaps;
 }
 
-static gboolean
-simplify_foreach (GQuark field_id, GValue * value, gpointer user_data)
+static gint
+gst_caps_compare_structures (gconstpointer one, gconstpointer two)
 {
-  GstStructure *s2 = (GstStructure *) user_data;
-  const GValue *v2;
+  gint ret;
+  const GstStructure *struct1 = *((const GstStructure **) one);
+  const GstStructure *struct2 = *((const GstStructure **) two);
 
-  v2 = gst_structure_id_get_value (s2, field_id);
-  if (v2 == NULL)
-    return FALSE;
+  /* FIXME: this orders aphabetically, but ordering the quarks might be faster 
+     So what's the best way? */
+  ret = strcmp (gst_structure_get_name (struct1),
+      gst_structure_get_name (struct2));
+  if (ret)
+    return ret;
 
-  if (gst_value_compare (value, v2) == GST_VALUE_EQUAL)
-    return TRUE;
-  return FALSE;
-}
-
-static gboolean
-gst_caps_structure_simplify (GstStructure * struct1,
-    const GstStructure * struct2)
-{
-  /* FIXME this is just a simple compare.  Better would be to merge
-   * the two structures */
-  if (struct1->name != struct2->name)
-    return FALSE;
-  if (struct1->fields->len != struct2->fields->len)
-    return FALSE;
-
-  return gst_structure_foreach (struct1, simplify_foreach, (void *) struct2);
+  return gst_structure_n_fields (struct2) - gst_structure_n_fields (struct1);
 }
 
 /**
@@ -1113,33 +1118,121 @@ gst_caps_structure_simplify (GstStructure * struct1,
 GstCaps *
 gst_caps_simplify (const GstCaps * caps)
 {
-  int i;
-  int j;
-  GstCaps *newcaps;
-  GstStructure *structure;
-  GstStructure *struct2;
+  GstCaps *ret;
 
-  if (gst_caps_get_size (caps) < 2) {
-    return gst_caps_copy (caps);
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  ret = gst_caps_copy (caps);
+  gst_caps_do_simplify (ret);
+
+  return ret;
+}
+
+/* need this here */
+typedef struct
+{
+  GQuark name;
+  GValue value;
+  GstStructure *compare;
+}
+UnionField;
+
+static G_GNUC_UNUSED gboolean
+gst_caps_structure_figure_out_union (GQuark field_id, GValue * value,
+    gpointer user_data)
+{
+  UnionField *u = user_data;
+  const GValue *val = gst_structure_id_get_value (u->compare, field_id);
+
+  if (!val)
+    return TRUE;
+  if (gst_value_compare (val, value) == GST_VALUE_EQUAL)
+    return TRUE;
+  if (u->name) {
+    g_value_unset (&u->value);
+    return FALSE;
+  }
+  u->name = field_id;
+  gst_value_union (&u->value, val, value);
+  return TRUE;
+}
+
+static GstStructure *
+gst_caps_structure_simplify (const GstStructure * simplify,
+    GstStructure * compare)
+{
+  GstCaps *caps = gst_caps_new_empty ();
+  GstStructure *ret;
+  UnionField field = { 0, {0,}, NULL };
+
+  /* try to subtract to get a real subset */
+  gst_caps_structure_subtract (caps, simplify, compare);
+  switch (gst_caps_get_size (caps)) {
+    case 0:
+      gst_caps_free (caps);
+      return NULL;
+    case 1:
+      ret = gst_structure_copy (gst_caps_get_structure (caps, 0));
+      break;
+    default:
+      ret = gst_structure_copy (simplify);
+      break;
+  }
+  gst_caps_free (caps);
+
+  /* try to union both structs */
+  field.compare = compare;
+  if (gst_structure_foreach (ret, gst_caps_structure_figure_out_union, &field)) {
+    g_assert (field.name != 0);
+    gst_structure_id_set_value (compare, field.name, &field.value);
+    gst_structure_free (ret);
+    return NULL;
   }
 
-  newcaps = gst_caps_new_empty ();
+  return ret;
+}
 
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
+void
+gst_caps_do_simplify (GstCaps * caps)
+{
+  GstStructure *simplify, *compare, *result;
+  gint i, j, start;
 
-    for (j = 0; j < gst_caps_get_size (newcaps); j++) {
-      struct2 = gst_caps_get_structure (caps, i);
-      if (gst_caps_structure_simplify (struct2, structure)) {
+  g_return_if_fail (caps != NULL);
+
+  if (gst_caps_get_size (caps) < 2)
+    return;
+
+  g_ptr_array_sort (caps->structs, gst_caps_compare_structures);
+
+  start = caps->structs->len - 1;
+  for (i = caps->structs->len - 1; i >= 0; i--) {
+    simplify = gst_caps_get_structure (caps, i);
+    for (j = start; j >= 0; j--) {
+      compare = gst_caps_get_structure (caps, j);
+      if (j == i)
+        continue;
+      if (gst_structure_get_name_id (simplify) !=
+          gst_structure_get_name_id (compare)) {
+        start = j;
         break;
       }
-    }
-    if (j == gst_caps_get_size (newcaps)) {
-      gst_caps_append_structure (newcaps, gst_structure_copy (structure));
+      result = gst_caps_structure_simplify (simplify, compare);
+      /*g_print ("%s  -  %s  =  %s\n", 
+         gst_structure_to_string (simplify),
+         gst_structure_to_string (compare),
+         result ? gst_structure_to_string (result) : "---");
+       */
+      if (result) {
+        gst_structure_free (simplify);
+        g_ptr_array_index (caps->structs, i) = result;
+        simplify = result;
+      } else {
+        gst_caps_remove_structure (caps, i);
+        start--;
+      }
     }
   }
-
-  return newcaps;
 }
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -1262,7 +1355,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
     caps->flags = GST_CAPS_FLAGS_ANY;
     return TRUE;
   }
-  if (strcmp ("NONE", string) == 0) {
+  if (strcmp ("EMPTY", string) == 0) {
     return TRUE;
   }
 

@@ -18,7 +18,11 @@ tests_pass = \
 	filtercaps \
 	erathostenes \
 	subtract \
-	sets
+	sets \
+	simplify
+
+noinst_HEADERS = \
+	caps.h
 
 tests_fail =
 tests_ignore =
@@ -47,4 +51,6 @@ subtract_LDADD = $(GST_LIBS)
 subtract_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 sets_LDADD = $(GST_LIBS) 
 sets_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
+simplify_LDADD = $(GST_LIBS) 
+simplify_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 

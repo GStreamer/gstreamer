@@ -1,3 +1,29 @@
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstcaps.c: (gst_caps_from_string_inplace):
+	  fix bug when converting from empty string.
+	* gst/gstcaps.c: (gst_caps_new_any), (gst_caps_new_simple),
+	(gst_caps_new_full_valist), (gst_caps_copy), (gst_caps_copy_1):
+	  use gst_caps_new_empty to allocate a new caps. Only that function
+	  allocates memory for caps now.
+	* gst/gstcaps.c: (gst_caps_remove_and_get_structure),
+	(gst_caps_remove_structure):
+	  add ability to remove one structure (but not to header yet)
+	* gst/gstcaps.c: (gst_caps_compare_structures),
+	(gst_caps_simplify), (gst_caps_structure_figure_out_union),
+	(gst_caps_structure_simplify), (gst_caps_do_simplify),
+	* gst/gstcaps.h:
+	  add gst_caps_do_simplify that tries to simplify a caps in place.
+	  Deprecate old gst_caps_simplify function.
+	* testsuite/caps/caps.h:
+	  add caps.h containing a common set of caps to test against.
+	* testsuite/caps/sets.c: (check_caps), (main):
+	  use it.
+	* testsuite/caps/.cvsignore:
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/simplify.c: (check_caps), (main):
+	  add test to check correctness and efficency of caps simplification.
+
 2004-04-22  Sebastien Cote <sc5@hermes.usherb.ca>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>

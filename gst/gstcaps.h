@@ -88,11 +88,11 @@ void                     gst_caps_append                                (GstCaps
 									 GstCaps       *caps2);
 void                     gst_caps_append_structure                      (GstCaps       *caps,
 									 GstStructure  *structure);
-GstCaps *                gst_caps_split_one                             (GstCaps       *caps);
 int                      gst_caps_get_size                              (const GstCaps *caps);
 GstStructure *           gst_caps_get_structure                         (const GstCaps *caps,
 									 int            index);
 #ifndef GST_DISABLE_DEPRECATED
+GstCaps *                gst_caps_split_one                             (GstCaps       *caps);
 GstCaps *                gst_caps_copy_1                                (const GstCaps *caps);
 #endif
 void                     gst_caps_set_simple                            (GstCaps       *caps,
@@ -125,7 +125,10 @@ GstCaps *                gst_caps_subtract				(const GstCaps *minuend,
 GstCaps *                gst_caps_union                                 (const GstCaps *caps1,
 									 const GstCaps *caps2);
 GstCaps *                gst_caps_normalize                             (const GstCaps *caps);
+#ifndef GST_DISABLE_DEPRECATED
 GstCaps *                gst_caps_simplify                              (const GstCaps *caps);
+#endif
+void	                 gst_caps_do_simplify                           (GstCaps *caps);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr               gst_caps_save_thyself                          (const GstCaps *caps,
