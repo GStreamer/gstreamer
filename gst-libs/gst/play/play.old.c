@@ -370,6 +370,11 @@ gst_play_idle_signal (GstPlay * play)
       gst_object_unref (signal->signal_data.info.object);
       break;
     case PIPELINE_ERROR:
+
+      if (gst_element_get_state (play->pipeline) == GST_STATE_PLAYING)
+	if (gst_element_set_state (play->pipeline, GST_STATE_READY) !=
+	    GST_STATE_SUCCESS)
+	  g_warning ("PIPELINE_ERROR: set to READY failed");
       g_signal_emit (G_OBJECT (play), gst_play_signals[PIPELINE_ERROR], 0,
 		     signal->signal_data.error.element,
 		     signal->signal_data.error.error);
@@ -459,9 +464,6 @@ callback_pipeline_error (GstElement * object,
 
   g_async_queue_push (play->signal_queue, signal);
 
-  if (GST_IS_ELEMENT (play->pipeline))
-    gst_element_set_state (play->pipeline, GST_STATE_READY);
-
   play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 }
 
@@ -496,6 +498,8 @@ callback_pipeline_state_change (GstElement * element,
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_PLAY (play));
   g_return_if_fail (element == play->pipeline);
+
+  /*g_print ("got state change %s to %s\n", gst_element_state_get_name (old), gst_element_state_get_name (state)); */
 
   /* do additional stuff depending on state */
   if (GST_IS_PIPELINE (play->pipeline))
