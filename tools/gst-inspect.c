@@ -426,7 +426,7 @@ print_element_properties (GstElement *element)
         break;
     }
     if (!readable) 
-      g_print ("Write only\n");
+      g_print (" Write only\n");
     else 
       g_print ("\n");
   }
