@@ -186,7 +186,7 @@ gst_element_get_name (GstElement *element)
 /**
  * gst_element_set_parent:
  * @element: GstElement to set parent of
- * @name: new parent of the object
+ * @parent: new parent of the object
  *
  * Set the parent of the element.
  */
@@ -917,8 +917,7 @@ gst_element_save_thyself (GstObject *object,
 /**
  * gst_element_load_thyself:
  * @self: the xml node
- * @elements: a hashtable to store the elements in. This is used
- *    to resolve inter element dependecies during the loading.
+ * @parent: the parent of this object when it's loaded
  *
  * Load the element from the XML description
  *

@@ -152,10 +152,26 @@ Queries whether the cothread holding this element needs to be stopped.
 
 <!-- ##### MACRO GST_ELEMENT_IS_EOS ##### -->
 <para>
-
+Query wether this element is in the End Of Stream state.
 </para>
 
-@obj: 
+@obj: The element to query
+
+
+<!-- ##### MACRO GST_ELEMENT_PARENT ##### -->
+<para>
+Get the parent object of this element.
+</para>
+
+@obj: The element to query
+
+
+<!-- ##### MACRO GST_ELEMENT_NAME ##### -->
+<para>
+Get the name of this element.
+</para>
+
+@obj: The element to query
 
 
 <!-- ##### STRUCT GstElement ##### -->
@@ -253,6 +269,24 @@ circumstances.
 
 
 <!-- ##### FUNCTION gst_element_get_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_parent ##### -->
+<para>
+
+</para>
+
+@element: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_element_get_parent ##### -->
 <para>
 
 </para>

@@ -217,19 +217,19 @@ the stream.
 </para>
 
 
-<!-- ##### MACRO GST_SINESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>
@@ -690,6 +690,14 @@ on its own.
 </para>
 
 @obj: 
+
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<para>
+Is trigered whenever the state of an element changes
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new state of the object
 
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Title ##### -->
 GstGetbits

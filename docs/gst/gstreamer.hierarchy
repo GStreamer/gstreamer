@@ -1,5 +1,6 @@
 GtkObject
   GstObject
+    GstXML
     GstElement
       GstBin
         GstPipeline
@@ -20,3 +21,4 @@ GtkObject
       GstQueue
       GstTypeFind
     GstPad
+  GstSignalObject

@@ -478,6 +478,17 @@ gst_signal_object_init (GstSignalObject *object)
 {
 }
 
+/**
+ * gst_class_signal_connect
+ * @klass: the GstObjectClass to attach the signal to
+ * @name: the name of the signal to attach to
+ * @func: the signal function
+ * @func_data: a pointer to user data
+ *
+ * Connect to a class signal.
+ *
+ * Returns: the signal id.
+ */
 guint
 gst_class_signal_connect (GstObjectClass *klass,
 			  const gchar    *name,
@@ -487,6 +498,14 @@ gst_class_signal_connect (GstObjectClass *klass,
   return gtk_signal_connect (klass->signal_object, name, func, func_data);
 }
 
+/**
+ * gst_class_signal_emit_by_name:
+ * @object: the object that sends the signal
+ * @name: the name of the signal to emit
+ * @self: data for the signal
+ *
+ * emits the named class signal.
+ */
 void
 gst_class_signal_emit_by_name (GstObject *object,
 	                       const gchar *name,

@@ -20,9 +20,6 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 
 </para>
 
-@object: 
-@topelements: 
-@ns: 
 
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>
@@ -30,9 +27,40 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 </para>
 
 @Returns: 
-<!-- # Unused Parameters # -->
+
+
+<!-- ##### FUNCTION gst_xml_parse_doc ##### -->
+<para>
+
+</para>
+
+@xml: 
+@doc: 
+@root: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_xml_parse_memory ##### -->
+<para>
+
+</para>
+
+@xml: 
+@buffer: 
+@size: 
+@root: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_xml_parse_file ##### -->
+<para>
+
+</para>
+
+@xml: 
 @fname: 
 @root: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_xml_write ##### -->

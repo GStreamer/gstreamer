@@ -52,9 +52,6 @@ extern "C" {
 typedef struct _GstXML GstXML;
 typedef struct _GstXMLClass GstXMLClass;
 
-typedef void (*GstXMLObjectLoadedCallback)	(GstXML *xml, GstObject *object, xmlNodePtr self);
-typedef void (*GstXMLObjectSavedCallback)	(GstXML *xml, GstObject *object, xmlNodePtr self);
-
 struct _GstXML {
   GstObject object;
 
@@ -86,9 +83,6 @@ gboolean	gst_xml_parse_memory	(GstXML *xml, guchar *buffer, guint size, const gc
 
 GstElement*	gst_xml_get_element	(GstXML *xml, const guchar *name);
 GList*		gst_xml_get_topelements (GstXML *xml);
-
-void		gst_xml_connect_object_loaded	(GstXML *xml, GstXMLObjectLoadedCallback *callback, gpointer data);
-void		gst_xml_connect_object_saved	(GstXML *xml, GstXMLObjectSavedCallback *callback, gpointer data);
 
 #ifdef __cplusplus
 }

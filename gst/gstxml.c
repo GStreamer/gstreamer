@@ -124,6 +124,17 @@ gst_xml_write (GstElement *element)
   return doc;
 }
 
+/**
+ * gst_xml_parse_doc:
+ * @xml: a pointer to a GstXML object
+ * @doc: a pointer to an xml document to parse
+ * @root: The name of the root object to build
+ *
+ * Fills the GstXML object with the elements from the
+ * xmlDocPtr.
+ *
+ * Returns: TRUE on success, FALSE otherwise
+ */
 gboolean
 gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
 {
@@ -170,16 +181,15 @@ gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
 
 /**
  * gst_xml_parse_file:
+ * @xml: a pointer to a GstXML object
  * @fname: The filename with the xml description
  * @root: The name of the root object to build
  *
- * Creates a new GstXML object (and the corresponding elements) from
+ * Fills the GstXML object with the corresponding elements from
  * the XML file fname. Optionally it will only build the element from
  * the element node root (if it is not NULL). This feature is useful
  * if you only want to build a specific element from an XML file
- * but not the pipeline it is embedded in. Note also that the XML parse
- * tree is cached to speed up creating another GstXML object for
- * the same file
+ * but not the pipeline it is embedded in.
  *
  * Returns: TRUE on success, FALSE otherwise
  */
@@ -202,14 +212,15 @@ gst_xml_parse_file (GstXML *xml, const guchar *fname, const guchar *root)
 
 /**
  * gst_xml_parse_memory:
+ * @xml: a pointer to a GstXML object
  * @buffer: a pointer to the in memory XML buffer
  * @size: the size of the buffer
  * @root: the name of the root objects to build
  *
- * Creates a new GstXML object (and the corresponding elements) from
+ * Fills the GstXML object with the corresponding elements from
  * an in memory XML buffer.
  *
- * Returns: a pointer to a new GstXML object
+ * Returns: TRUE on success
  */
 gboolean
 gst_xml_parse_memory (GstXML *xml, guchar *buffer, guint size, const gchar *root)

@@ -99,6 +99,30 @@ This macro releases a lock on the object.
 @obj: Object to unlock.
 
 
+<!-- ##### MACRO GST_GET_LOCK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_OBJECT_PARENT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_OBJECT_NAME ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
 <!-- ##### FUNCTION gst_object_new ##### -->
 <para>
 
@@ -117,6 +141,24 @@ This macro releases a lock on the object.
 
 
 <!-- ##### FUNCTION gst_object_get_parent ##### -->
+<para>
+
+</para>
+
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_object_set_name ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_object_get_name ##### -->
 <para>
 
 </para>
@@ -165,12 +207,44 @@ This macro releases a lock on the object.
 @object: the object
 
 
+<!-- ##### FUNCTION gst_object_save_thyself ##### -->
+<para>
+
+</para>
+
+@object: 
+@parent: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_object_get_path_string ##### -->
 <para>
 
 </para>
 
 @object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_class_signal_emit_by_name ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@self: 
+
+
+<!-- ##### FUNCTION gst_class_signal_connect ##### -->
+<para>
+
+</para>
+
+@klass: 
+@name: 
+@func: 
+@func_data: 
 @Returns: 
 
 
@@ -181,4 +255,13 @@ This macro releases a lock on the object.
 
 @gstobject: the object which received the signal.
 @arg1: the new parent
+
+<!-- ##### SIGNAL GstObject::object-saved ##### -->
+<para>
+Is trigered whenever a new object is saved to XML. You can connect to
+this signal to insert custom XML tags into the core XML.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the xmlNodePtr of the parent node
 

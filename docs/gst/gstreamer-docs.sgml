@@ -22,7 +22,7 @@
 <!entity GstCaps SYSTEM "sgml/gstcaps.sgml">
 <!entity GstProps SYSTEM "sgml/gstprops.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
-<!entity GstXml SYSTEM "sgml/gstxml.sgml">
+<!entity GstXML SYSTEM "sgml/gstxml.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
 <!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
 <!entity cothreads SYSTEM "sgml/cothreads.sgml">
@@ -83,7 +83,7 @@ with some more specialized elements.</para>
     &GstType;
     &GstTypeFind;
     &GstUtils;
-    &GstXml;
+    &GstXML;
 
     &cothreads;
   </chapter>

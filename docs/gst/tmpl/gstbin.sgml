@@ -77,6 +77,16 @@ Flags for a bin.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_bin_get_by_name_recurse_up ##### -->
+<para>
+
+</para>
+
+@bin: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_bin_get_list ##### -->
 <para>
 

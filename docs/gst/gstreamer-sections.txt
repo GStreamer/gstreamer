@@ -90,6 +90,7 @@ gst_bin_destroy
 gst_bin_add
 gst_bin_remove
 gst_bin_get_by_name
+gst_bin_get_by_name_recurse_up
 gst_bin_get_list
 gst_bin_set_state_type
 gst_bin_iterate
@@ -188,6 +189,8 @@ GstElementFlags
 GST_ELEMENT_IS_THREAD_SUGGESTED
 GST_ELEMENT_IS_COTHREAD_STOPPING
 GST_ELEMENT_IS_EOS
+GST_ELEMENT_PARENT
+GST_ELEMENT_NAME
 GstElement
 GstElementDetails
 GstElementFactory
@@ -199,6 +202,8 @@ gst_element_set_name
 gst_element_get_name
 gst_element_set_manager
 gst_element_get_manager
+gst_element_set_parent
+gst_element_get_parent
 gst_element_add_pad
 gst_element_get_pad
 gst_element_get_pad_list
@@ -214,7 +219,6 @@ gst_element_set_state
 gst_element_error
 gst_element_get_factory
 gst_element_signal_eos
-gst_element_save_thyself
 gst_element_load_thyself
 gst_elementfactory_new
 gst_elementfactory_destroy
@@ -289,15 +293,23 @@ GST_FLAG_UNSET
 GST_LOCK
 GST_TRYLOCK
 GST_UNLOCK
+GST_GET_LOCK
+GST_OBJECT_PARENT
+GST_OBJECT_NAME
 gst_object_new
 gst_object_set_parent
 gst_object_get_parent
+gst_object_set_name
+gst_object_get_name
 gst_object_unparent
 gst_object_ref
 gst_object_unref
 gst_object_sink
 gst_object_destroy
+gst_object_save_thyself
 gst_object_get_path_string
+gst_class_signal_emit_by_name
+gst_class_signal_connect
 <SUBSECTION Standard>
 gst_object_get_type
 GstObjectClass
@@ -368,7 +380,6 @@ gst_pad_select
 gst_pad_set_eos
 gst_pad_handle_qos
 gst_pad_eos
-gst_pad_save_thyself
 gst_pad_load_and_connect
 
 GstRealPad
@@ -651,10 +662,12 @@ gst_util_dump_mem
 
 <SECTION>
 <FILE>gstxml</FILE>
-<TITLE>GstXml</TITLE>
+<TITLE>GstXML</TITLE>
 GstXML
 gst_xml_new
-gst_xml_new_from_memory
+gst_xml_parse_doc
+gst_xml_parse_memory
+gst_xml_parse_file
 gst_xml_write
 gst_xml_get_element
 gst_xml_get_topelements
