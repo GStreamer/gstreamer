@@ -115,7 +115,7 @@ gst_clock_new_periodic_id (GstClock *clock, GstClockTime start_time,
                            GstClockTime interval)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
-  g_return_val_if_fail (start_time != GST_CLOCK_TIME_NONE, NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start_time), NULL);
   g_return_val_if_fail (interval != 0, NULL);
 
   return gst_clock_entry_new (clock, 
@@ -165,7 +165,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
-  if (requested == GST_CLOCK_TIME_NONE) {
+  if (! GST_CLOCK_TIME_IS_VALID (requested)) {
     return GST_CLOCK_TIMEOUT;
   }
 
@@ -227,7 +227,7 @@ gst_clock_id_wait_async (GstClockID id,
   entry = (GstClockEntry *) id;
   clock = entry->clock;
 
-  if (GST_CLOCK_ENTRY_TIME (entry) == GST_CLOCK_TIME_NONE) {
+  if (! GST_CLOCK_TIME_IS_VALID (GST_CLOCK_ENTRY_TIME (entry))) {
     (func) (clock, GST_CLOCK_TIME_NONE, id, user_data);
     return GST_CLOCK_TIMEOUT;
   }
@@ -601,7 +601,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
 		            " %" G_GUINT64_FORMAT " %d",
 			    time, clock->start_time, clock->accept_discont);
 
-  if (time == GST_CLOCK_TIME_NONE)
+  if (! GST_CLOCK_TIME_IS_VALID (time))
     return TRUE;
 
   GST_LOCK (clock);

@@ -188,8 +188,7 @@ gst_buffer_new (void)
 		  (GstDataFreeFunction) gst_buffer_default_free,
 		  (GstDataCopyFunction) gst_buffer_default_copy);
 
-  GST_BUFFER_BUFFERPOOL (buf) = NULL;
-  GST_BUFFER_POOL_PRIVATE (buf) = NULL;
+  GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
 
   return buf;
 }

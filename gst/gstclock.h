@@ -39,7 +39,8 @@ typedef guint64 	GstClockTime;
 typedef gint64 		GstClockTimeDiff;
 typedef gpointer 	GstClockID;
 
-#define GST_CLOCK_TIME_NONE  ((guint64)-1)
+#define GST_CLOCK_TIME_NONE  		((GstClockTime)-1)
+#define GST_CLOCK_TIME_IS_VALID(time)	((time) != GST_CLOCK_TIME_NONE)
 
 #define GST_SECOND  ((guint64) G_USEC_PER_SEC * G_GINT64_CONSTANT (1000))
 #define GST_MSECOND ((guint64) GST_SECOND / G_GINT64_CONSTANT (1000))

@@ -25,6 +25,7 @@
 #define __GST_BUFFER_H__
 
 #include <gst/gstdata.h>
+#include <gst/gstclock.h>
 
 G_BEGIN_DECLS
 
@@ -64,6 +65,8 @@ extern GType _gst_buffer_pool_type;
 #define GST_BUFFER_BUFFERPOOL(buf)		(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_POOL_PRIVATE(buf)		(GST_BUFFER(buf)->pool_private)
 
+#define GST_BUFFER_TIMESTAMP_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
+
 typedef enum {
   GST_BUFFER_READONLY   = GST_DATA_READONLY,
   GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
@@ -84,7 +87,7 @@ struct _GstBuffer {
   guint64		 maxsize;		/* max size of this buffer */
 
   /* timestamp */
-  guint64		 timestamp;		
+  GstClockTime		 timestamp;		
   /* media specific offset */
   guint64		 offset;
 
