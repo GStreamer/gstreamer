@@ -97,6 +97,14 @@ GST_CAPS_FACTORY() macro as shown below.
   }
 </programlisting>
 </para>
+<para>
+If you want to check if a connection between source and destination caps
+is always possible, use gst_caps_is_always_compatible(), which returns
+a boolean.
+If you want to check if a connection between source and destination caps
+might be possible, use gst_caps_intersect(), which returns an intersection
+of the capabilities.
+</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
@@ -344,7 +352,7 @@ Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_check_compatibility ##### -->
+<!-- ##### FUNCTION gst_caps_is_always_compatible ##### -->
 <para>
 
 </para>
