@@ -31,5 +31,7 @@ noinst_HEADERS = \
 	gstplayprivate.h
 
 
+libgstmediaplay_la_LDFLAGS = -rdynamic
+
 gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS)
 gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la
