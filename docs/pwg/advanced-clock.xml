@@ -7,7 +7,7 @@
     syncrhonization mechanism.
   </para>
 
-  <sect1 id="clock-time-types"> 
+  <sect1 id="section-clock-time-types" xreflabel="Types of time"> 
     <title> Types of time </title>
 
     <para>
@@ -20,10 +20,10 @@
       adding an offset to the clock time.
     </para>
   </sect1>
-  <sect1 id="clocks">
+  <sect1 id="section-clocks" xreflabel="Clocks">
     <title>Clocks</title>
     <para>
-      A clock is a source of time measurements. Though the system time can be used
+      GStreamer can use different clocks. Though the system time can be used
       as a clock, soundcards and other devices provides a better time source. For
       this reason some elements provide a clock. The method
       <function>get_clock</function> is implemented in elements that provide
@@ -37,13 +37,13 @@
     </para>
   </sect1>
   
-  <sect1>
+  <sect1 id="section-time-data-flow" xreflabel="Flow of data between elements
+    and time">
     <title>
-      Flow control of data and time
+      Flow of data between elements and time
     </title>
     <para>
-      Now we will see how time is used in a pipeline in its different states. We
-      will assume that this is a real time playing.
+      Now we will see how time information travels the pipeline in different states.
     </para>
     
     <para>
@@ -84,7 +84,8 @@
       send a discontinous event.
     </para>
   </sect1>
-  <sect1 id="clock-obligations-of-each-element">
+  <sect1 id="section-clock-obligations-of-each-element" xreflabel="Obligations
+    of each element">
     <title>
       Obligations of each element.
     </title>
@@ -94,7 +95,7 @@
       pipeline.
     </para>
     
-    <sect2> 
+    <sect2>
       <title>Source elements </title>
       <para>
 	Source elements (or parsers of formats that provide notion of time, such
