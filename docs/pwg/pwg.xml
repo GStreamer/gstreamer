@@ -17,6 +17,7 @@
 <!ENTITY BUILDING_PROPS       SYSTEM "building_props.xml">
 <!ENTITY BUILDING_SIGNALS     SYSTEM "building_signals.xml">
 <!ENTITY BUILDING_TESTAPP     SYSTEM "building_testapp.xml">
+<!ENTITY BUILDING_FILTERFACT  SYSTEM "building_filterfactory.xml">
 
 <!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced_scheduling.xml">
 <!ENTITY ADVANCED_TYPES       SYSTEM "advanced_types.xml">
@@ -25,6 +26,8 @@
 <!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced_dparams.xml">
 <!ENTITY ADVANCED_MIDI        SYSTEM "advanced_midi.xml">
 <!ENTITY ADVANCED_INTERFACES  SYSTEM "advanced_interfaces.xml">
+<!ENTITY ADVANCED_TAGGING     SYSTEM "advanced_tagging.xml">
+<!ENTITY ADVANCED_EVENTS      SYSTEM "advanced_events.xml">
 
 <!ENTITY OTHER_SOURCE         SYSTEM "other_source.xml">
 <!ENTITY OTHER_SINK           SYSTEM "other_sink.xml">
@@ -108,6 +111,7 @@
     &BUILDING_PROPS;
     &BUILDING_SIGNALS;
     &BUILDING_TESTAPP;
+    &BUILDING_FILTERFACT;
   </part>
 
   <!-- ############ part ############# -->
@@ -126,6 +130,8 @@
     &ADVANCED_DPARAMS;
     &ADVANCED_MIDI;
     &ADVANCED_INTERFACES;
+    &ADVANCED_TAGGING;
+    &ADVANCED_EVENTS;
   </part>
 
   <!-- ############ part ############# -->

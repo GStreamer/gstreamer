@@ -1,0 +1,24 @@
+<chapter id="cha-building-filterfactory">
+  <title>Creating a Filter with a Filter Factory</title>
+    <para>
+      A plan for the future is to create a FilterFactory, to make the process of      making a new filter a simple process of specifying a few details, and
+      writing a small amount of code to perform the actual data processing.
+      Ideally, a FilterFactory would perform the tasks of boilerplate creation,
+      code functionality implementation, and filter registration.
+    </para>
+    <para>
+      Unfortunately, this has not yet been implemented. Even when someone
+      eventually does write a FilterFactory, this element will not be able to
+      cover all the possibilities available for filter writing. Thus, some
+      plugins will always need to be manually coded and registered.
+    </para>
+    <para>
+      Here is a rough outline of what is planned: You run the FilterFactory and
+      give the factory a list of appropriate function pointers and data
+      structures to define a filter. With a reasonable measure of preprocessor
+      magic, you just need to provide a name for the filter and definitions of
+      the functions and data structures desired. Then you call a macro from
+      within plugin_init() that registers the new filter. All the fluff that
+      goes into the definition of a filter is thus be hidden from view.
+    </para>
+</chapter>

@@ -39,6 +39,13 @@
     allows us to query for interface availability based on runtime properties.
     This extension is called <classname>GstImplementsInterface</classname>.
   </para>
+  <para>
+    One important note: interfaces do <emphasis>not</emphasis> replace
+    properties. Rather, interfaces should be built <emphasis>next to</emphasis>
+    properties. There are two important reasons for this. Firstly, properties
+    can be saved in XML files. Secondly, properties can be specified on the
+    commandline (<filename>gst-launch</filename>).
+  </para>
 
   <sect1 id="sect1-iface-general" xreflabel="How to Implement Interfaces">
     <title>How to Implement Interfaces</title>
@@ -137,6 +144,8 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
       to the implementation here.
     </para>
     <programlisting>
+#include &lt;gst/mixer/mixer.h&gt;
+
 typedef struct _GstMyFilter {
 [..]
   gint volume;
@@ -277,7 +286,164 @@ gst_my_filter_mixer_interface_init (GstMixerClass *iface)
   <sect1 id="sect1-iface-propprobe" xreflabel="Property Probe Interface">
     <title>Property Probe Interface</title>
     <para>
-      WRITEME
+      Property probing is a generic solution to the problem that properties'
+      value lists in an enumeration are static. We've shown enumerations in
+      <xref linkend="cha-building-args"/>. Property probing tries to accomplish
+      a goal similar to enumeration lists: to have a limited, explicit list of
+      allowed values for a property. There are two differences between
+      enumeration lists and probing. Firstly, enumerations only allow strings
+      as values; property probing works for any value type. Secondly, the
+      contents of a probed list of allowed values may change during the life
+      of an element. The contents of a enumeraiton list are static. Crrently,
+      property probing is being used for detection of devices (e.g. for OSS
+      elements, Video4linux elements, etc.). It could - in theory - be used
+      for any property, though.
+    </para>
+    <para>
+      Property probing stores the list of allowed (or recommended) values in a
+      <classname>GValueArray</classname> and returns that to the user.
+      <classname>NULL</classname> is a valid return value, too. The process of
+      property probing is separated over two virtual functions: one for probing
+      the property to create a <classname>GValueArray</classname>, and one to
+      retrieve the current <classname>GValueArray</classname>. Those two are
+      separated because probing might take a long time (several seconds). Also,
+      this simpliies interface implementation in elements. For the application,
+      there are functions that wrap those two. For more information on this,
+      have a look at the API reference for the
+      <classname>GstPropertyProbe</classname> interface.
+    </para>
+    <para>
+      Below is a example of property probing for the audio filter element; it
+      will probe for allowed values for the <quote>silent</quote> property.
+      Indeed, this value is a <classname>gboolean</classname> so it doesn't
+      make much sense. Then again, it's only an example.
+    </para>
+    <programlisting>
+#include &lt;gst/propertyprobe/propertyprobe.h&gt;
+
+static void	gst_my_filter_probe_interface_init	(GstPropertyProbeInterface *iface);
+
+GType
+gst_my_filter_get_type (void)
+{
+[..]
+    static const GInterfaceInfo probe_interface_info = {
+      (GInterfaceInitFunc) gst_my_filter_probe_interface_init,
+      NULL,
+      NULL
+    };
+[..]
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_PROPERTY_PROBE,
+				 &amp;probe_interface_info);
+[..]
+}
+
+static const GList *
+gst_my_filter_probe_get_properties (GstPropertyProbe *probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *props = NULL;
+
+  if (!props) {
+    GParamSpec *pspec;
+
+    pspec = g_object_class_find_property (klass, "silent");
+    props = g_list_append (props, pspec);
+  }
+
+  return props;
+}
+
+static gboolean
+gst_my_filter_probe_needs_probe (GstPropertyProbe *probe,
+				 guint             prop_id,
+				 const GParamSpec *pspec)
+{
+  gboolean res = FALSE;
+
+  switch (prop_id) {
+    case ARG_SILENT:
+      res = FALSE;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return res;
+}
+
+static void
+gst_my_filter_probe_probe_property (GstPropertyProbe *probe,
+				    guint             prop_id,
+				    const GParamSpec *pspec)
+{
+  switch (prop_id) {
+    case ARG_SILENT:
+      /* don't need to do much here... */
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+}
+
+static GValueArray *
+gst_my_filter_get_silent_values (GstMyFilter *filter)
+{
+  GValueArray *array = g_value_array_new (2);
+  GValue value = { 0 };
+
+  g_value_init (&amp;value, G_TYPE_BOOLEAN);
+
+  /* add TRUE */
+  g_value_set_boolean (&amp;value, TRUE);
+  g_value_array_append (array, &amp;value);
+
+  /* add FALSE */
+  g_value_set_boolean (&amp;value, FALSE);
+  g_value_array_append (array, &amp;value);
+
+  g_value_unset (&amp;value);
+
+  return array;
+}
+
+static GValueArray *
+gst_my_filter_probe_get_values (GstPropertyProbe *probe,
+				guint             prop_id,
+				const GParamSpec *pspec)
+{
+  GstMyFilter *filter = GST_MY_FILTER (probe);
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case ARG_SILENT:
+      array = gst_my_filter_get_silent_values (filter);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static void
+gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
+{
+  iface->get_properties = gst_my_filter_probe_get_properties;
+  iface->needs_probe    = gst_my_filter_probe_needs_probe;
+  iface->probe_property = gst_my_filter_probe_probe_property;
+  iface->get_values     = gst_my_filter_probe_get_values;
+}
+    </programlisting>
+    <para>
+      You don't need to support any functions for getting or setting values.
+      All that is handled via the standard <classname>GObject</classname>
+      <function>_set_property ()</function> and <function>_get_property ()</function>
+      functions.
     </para>
   </sect1>
 
@@ -297,13 +463,6 @@ gst_my_filter_mixer_interface_init (GstMixerClass *iface)
 
   <sect1 id="sect1-iface-navigation" xreflabel="Navigation Interface">
     <title>Navigation Interface</title>
-    <para>
-      WRITEME
-    </para>
-  </sect1>
-
-  <sect1 id="sect1-iface-tagging" xreflabel="Tagging Interface">
-    <title>Tagging Interface</title>
     <para>
       WRITEME
     </para>

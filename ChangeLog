@@ -1,6 +1,19 @@
 2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced_interfaces.xml:
+	  Add documentation on propertyprobing.
+	* docs/pwg/advanced_events.xml:
+	* docs/pwg/advanced_tagging.xml:
+	* docs/pwg/building_boiler.xml:
+	* docs/pwg/building_filterfactory.xml:
+	* docs/pwg/pwg.xml:
+	  Move filterfactory and tagging into their own chapter, add a chapter
+	  on events. all these are empty placeholders that will be filled in
+	  some day.
+
+2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced_interfaces.xml:
 	  Docs for mixer interface. Also a check for website uploading.
 
 2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
