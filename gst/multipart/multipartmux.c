@@ -588,6 +588,6 @@ gst_multipart_mux_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_multipart_mux_debug, "multipartmux", 0,
       "multipart muxer");
 
-  return gst_element_register (plugin, "multipartmux", GST_RANK_PRIMARY,
+  return gst_element_register (plugin, "multipartmux", GST_RANK_NONE,
       GST_TYPE_MULTIPART_MUX);
 }
