@@ -1,5 +1,11 @@
 2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* testsuite/alsa/Makefile.am:
+	* testsuite/alsa/srcstate.c:
+	add test for alsasrc changing state
+
+2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/silence/gstsilence.c: (gst_silence_init), (gst_silence_link),
 	(gst_silence_get):
 	* gst/silence/gstsilence.h:
