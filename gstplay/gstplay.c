@@ -184,6 +184,7 @@ gst_play_init (GstPlay *play)
 	priv->offset_element = NULL;
 	priv->bit_rate_element = NULL;
 	priv->media_time_element = NULL;
+	priv->current_time_element = NULL;
 
 	priv->source_width = 0;
 	priv->source_height = 0;
