@@ -9,7 +9,7 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 check_PROGRAMS = $(tests_pass) $(tests_fail)
 
-TESTS = $(top_builddir)/tools/gst-register $(tests_pass) $(tests_fail)
+TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ $(tests_pass) $(tests_fail)
 XFAIL_TESTS = $(tests_fail)
 
 AM_CFLAGS = $(GST_CFLAGS)

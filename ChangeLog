@@ -1,5 +1,10 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/Rules:
+          use versioned gst-register
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/libs/gstreamer-libs-sections.txt:
           remove </SUBSECTION>
 	* gst/gstplugin.c:
