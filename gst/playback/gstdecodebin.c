@@ -190,7 +190,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDecodeBinClass, new_decoded_pad), NULL, NULL,
-      gst_play_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2, G_TYPE_OBJECT,
+      gst_play_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2, GST_TYPE_PAD,
       G_TYPE_BOOLEAN);
   gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
       g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
