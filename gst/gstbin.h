@@ -67,6 +67,7 @@ struct _GstBin {
   GList *children;
   gint num_eos_providers;
   GList *eos_providers;
+  GCond *eoscond;
 
   /* iteration state */
   gboolean need_cothreads;

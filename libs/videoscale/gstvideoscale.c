@@ -63,6 +63,11 @@ GstVideoScale *gst_videoscale_new(gint sw, gint sh, gint dw, gint dh, GstColorSp
       new->scale = gst_videoscale_scale_rgb;
       scale_bytes = 2;
       break;
+    case GST_COLORSPACE_RGB32:
+    case GST_COLORSPACE_BGR32:
+      new->scale = gst_videoscale_scale_rgb;
+      scale_bytes = 4;
+      break;
     default:
       g_print("videoscale: unsupported video format %d\n", format);
       g_free(new);

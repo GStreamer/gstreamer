@@ -202,7 +202,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   element->pads = g_list_append (element->pads, ghostpad);
   element->numpads++;
   // set the parent of the ghostpad
-  gst_pad_set_parent(ghostpad,element);
+  gst_pad_set_parent(ghostpad, GST_OBJECT (element));
 
   GST_DEBUG(0,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
 

@@ -29,10 +29,11 @@ main(int argc,char *argv[])
   g_return_val_if_fail(pipeline != NULL, 1);
 
   src = gst_elementfactory_make("fakesrc","src");
-  gtk_object_set (GTK_OBJECT (src), "num_buffers", 1, NULL);
+  gtk_object_set (GTK_OBJECT (src), "num_buffers", 4, NULL);
   g_return_val_if_fail(src != NULL, 2);
 
   identity = gst_elementfactory_make("identity","identity");
+  gtk_object_set (GTK_OBJECT (identity), "sleep_time", 1000000, NULL);
   g_return_val_if_fail(identity != NULL, 3);
 
   sink = gst_elementfactory_make("fakesink","sink");
@@ -51,7 +52,7 @@ main(int argc,char *argv[])
   gst_element_connect(identity,"src",sink,"sink");
 
   src2 = gst_elementfactory_make("fakesrc","src2");
-  gtk_object_set (GTK_OBJECT (src2), "num_buffers", 4, NULL);
+  gtk_object_set (GTK_OBJECT (src2), "num_buffers", 1, NULL);
   g_return_val_if_fail(src2 != NULL, 2);
 
   identity2 = gst_elementfactory_make("identity","identity2");

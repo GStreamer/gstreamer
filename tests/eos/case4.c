@@ -19,7 +19,7 @@ eos_signal (GstElement *element)
 int
 main(int argc,char *argv[])
 {
-  GstBin *pipeline, *pipeline2;
+  GstBin *pipeline, *bin;
   GstElement *src,*identity,*sink;
   GstElement *src2,*identity2,*sink2;
 
@@ -38,14 +38,14 @@ main(int argc,char *argv[])
   sink = gst_elementfactory_make("fakesink","sink");
   g_return_val_if_fail(sink != NULL, 4);
 
-  pipeline2 = GST_BIN(gst_pipeline_new("pipeline2"));
-  g_return_val_if_fail(pipeline2 != NULL, 1);
+  bin = GST_BIN(gst_bin_new("bin"));
+  g_return_val_if_fail(bin != NULL, 1);
 
-  gst_bin_add(pipeline2,GST_ELEMENT(src));
-  gst_bin_add(pipeline2,GST_ELEMENT(identity));
-  gst_bin_add(pipeline2,GST_ELEMENT(sink));
+  gst_bin_add(bin,GST_ELEMENT(src));
+  gst_bin_add(bin,GST_ELEMENT(identity));
+  gst_bin_add(bin,GST_ELEMENT(sink));
 
-  gst_bin_add(pipeline,GST_ELEMENT(pipeline2));
+  gst_bin_add(pipeline,GST_ELEMENT(bin));
 
   gst_element_connect(src,"src",identity,"sink");
   gst_element_connect(identity,"src",sink,"sink");

@@ -34,7 +34,7 @@ GstElementDetails gst_thread_details = {
   "Container that creates/manages a thread",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
+  "(C) 1999, 2000",
 };
 
 
@@ -50,21 +50,22 @@ enum {
 };
 
 
-static void 			gst_thread_class_init		(GstThreadClass *klass);
-static void 			gst_thread_init			(GstThread *thread);
+static void			gst_thread_class_init		(GstThreadClass *klass);
+static void			gst_thread_init			(GstThread *thread);
 
-static void 			gst_thread_set_arg		(GtkObject *object,GtkArg *arg,guint id);
-static void 			gst_thread_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void			gst_thread_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void			gst_thread_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 
-static GstElementStateReturn 	gst_thread_change_state		(GstElement *element);
+static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
-static xmlNodePtr 		gst_thread_save_thyself		(GstElement *element,xmlNodePtr parent);
-static void 			gst_thread_restore_thyself	(GstElement *element,xmlNodePtr parent, 
+static xmlNodePtr		gst_thread_save_thyself		(GstElement *element,xmlNodePtr parent);
+static void			gst_thread_restore_thyself	(GstElement *element,xmlNodePtr parent,
 								 GHashTable *elements);
 
-static void 			gst_thread_signal_thread	(GstThread *thread);
-static void 			gst_thread_wait_thread		(GstThread *thread);
-static void 			gst_thread_create_plan_dummy	(GstBin *bin);
+static void			gst_thread_signal_thread	(GstThread *thread);
+static void			gst_thread_wait_thread		(GstThread *thread);
+static void			gst_thread_create_plan_dummy	(GstBin *bin);
+static void			gst_thread_schedule_dummy	(GstBin *bin);
 
 static void*			gst_thread_main_loop		(void *arg);
 
@@ -92,36 +93,37 @@ gst_thread_get_type(void) {
 }
 
 static void
-gst_thread_class_init (GstThreadClass *klass) 
+gst_thread_class_init (GstThreadClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
   GstBinClass *gstbin_class;
 
-  gtkobject_class = 	(GtkObjectClass*)klass;
-  gstobject_class = 	(GstObjectClass*)klass;
-  gstelement_class = 	(GstElementClass*)klass;
-  gstbin_class = 	(GstBinClass*)klass;
+  gtkobject_class =	(GtkObjectClass*)klass;
+  gstobject_class =	(GstObjectClass*)klass;
+  gstelement_class =	(GstElementClass*)klass;
+  gstbin_class =	(GstBinClass*)klass;
 
   parent_class = gtk_type_class (GST_TYPE_BIN);
 
   gtk_object_add_arg_type ("GstThread::create_thread", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_CREATE_THREAD);
 
-  gstelement_class->change_state = 	gst_thread_change_state;
-  gstelement_class->save_thyself = 	gst_thread_save_thyself;
-  gstelement_class->restore_thyself = 	gst_thread_restore_thyself;
+  gstelement_class->change_state =	gst_thread_change_state;
+  gstelement_class->save_thyself =	gst_thread_save_thyself;
+  gstelement_class->restore_thyself =	gst_thread_restore_thyself;
 
-  gstbin_class->create_plan = gst_thread_create_plan_dummy;
+  //gstbin_class->create_plan = gst_thread_create_plan_dummy;
+  gstbin_class->schedule = gst_thread_schedule_dummy;
 
   gtkobject_class->set_arg = gst_thread_set_arg;
   gtkobject_class->get_arg = gst_thread_get_arg;
 
 }
 
-static void 
-gst_thread_init (GstThread *thread) 
+static void
+gst_thread_init (GstThread *thread)
 {
   GST_DEBUG (0,"initializing thread '%s'\n",gst_element_get_name(GST_ELEMENT(thread)));
 
@@ -136,19 +138,28 @@ gst_thread_init (GstThread *thread)
   thread->cond = g_cond_new();
 }
 
-static void 
-gst_thread_create_plan_dummy (GstBin *bin) 
+static void
+gst_thread_schedule_dummy (GstBin *bin)
 {
   g_return_if_fail (GST_IS_THREAD (bin));
 
-  if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING)) 
+  if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING))
+    GST_INFO (GST_CAT_THREAD,"gstthread: scheduling delayed until thread starts");
+}
+
+static void
+gst_thread_create_plan_dummy (GstBin *bin)
+{
+  g_return_if_fail (GST_IS_THREAD (bin));
+
+  if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING))
     GST_INFO (GST_CAT_THREAD,"gstthread: create plan delayed until thread starts");
 }
 
-static void 
+static void
 gst_thread_set_arg (GtkObject *object,
 		    GtkArg *arg,
-		    guint id) 
+		    guint id)
 {
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
@@ -170,10 +181,10 @@ gst_thread_set_arg (GtkObject *object,
   }
 }
 
-static void 
+static void
 gst_thread_get_arg (GtkObject *object,
 		    GtkArg *arg,
-		    guint id) 
+		    guint id)
 {
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
@@ -197,15 +208,15 @@ gst_thread_get_arg (GtkObject *object,
  * Returns: The new thread
  */
 GstElement*
-gst_thread_new (guchar *name) 
+gst_thread_new (guchar *name)
 {
   return gst_elementfactory_make ("thread", name);
 }
 
 
 
-static GstElementStateReturn 
-gst_thread_change_state (GstElement *element) 
+static GstElementStateReturn
+gst_thread_change_state (GstElement *element)
 {
   GstThread *thread;
   gboolean stateset = GST_STATE_SUCCESS;
@@ -217,7 +228,7 @@ gst_thread_change_state (GstElement *element)
   thread = GST_THREAD (element);
 
   GST_INFO (GST_CAT_THREAD,"gstthread: thread \"%s\" change state %d",
-               gst_element_get_name (GST_ELEMENT (element)), 
+               gst_element_get_name (GST_ELEMENT (element)),
 	       GST_STATE_PENDING (element));
 
   pending = GST_STATE_PENDING (element);
@@ -229,8 +240,8 @@ gst_thread_change_state (GstElement *element)
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     stateset = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  
-  GST_INFO (GST_CAT_THREAD, "gstthread: stateset %d %d %d %02x", GST_STATE (element), stateset, 
+
+  GST_INFO (GST_CAT_THREAD, "gstthread: stateset %d %d %d %02x", GST_STATE (element), stateset,
 		  GST_STATE_PENDING (element), GST_STATE_TRANSITION (element));
 
   switch (transition) {
@@ -268,18 +279,18 @@ gst_thread_change_state (GstElement *element)
 
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
-      break;  
+      break;
     case GST_STATE_PLAYING_TO_PAUSED:
       GST_INFO (GST_CAT_THREAD,"gstthread: pausing thread \"%s\"",
               gst_element_get_name (GST_ELEMENT (element)));
-      
+
       //GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
       break;
     case GST_STATE_READY_TO_NULL:
       GST_INFO (GST_CAT_THREAD,"gstthread: stopping thread \"%s\"",
               gst_element_get_name (GST_ELEMENT (element)));
-      
+
       GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread (thread);
       break;
@@ -298,7 +309,7 @@ gst_thread_change_state (GstElement *element)
  * while the state is GST_THREAD_STATE_SPINNING
  */
 static void *
-gst_thread_main_loop (void *arg) 
+gst_thread_main_loop (void *arg)
 {
   GstThread *thread = GST_THREAD (arg);
 
@@ -306,8 +317,9 @@ gst_thread_main_loop (void *arg)
 		  gst_element_get_name (GST_ELEMENT (thread)), getpid ());
 
   // construct the plan and signal back
-  if (GST_BIN_CLASS (parent_class)->create_plan)
-    GST_BIN_CLASS (parent_class)->create_plan (GST_BIN (thread));
+  if (GST_BIN_CLASS (parent_class)->schedule)
+    GST_BIN_CLASS (parent_class)->schedule (GST_BIN (thread));
+
   gst_thread_signal_thread (thread);
 
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
@@ -323,7 +335,7 @@ gst_thread_main_loop (void *arg)
   }
 
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
-//  pthread_join (thread->thread_id, 0);
+  //pthread_join (thread->thread_id, 0);
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 		  gst_element_get_name (GST_ELEMENT (thread)));
