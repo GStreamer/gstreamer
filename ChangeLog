@@ -1,3 +1,8 @@
+2004-12-14  David Schleef  <ds@schleef.org>
+
+	* gst/festival/gstfestival.c: (gst_festival_chain): Set the
+	output rate to 16000.  Should fix #160235.
+
 2004-12-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
