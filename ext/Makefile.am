@@ -82,6 +82,12 @@ else
 FAAD_DIR=
 endif
 
+if USE_NAS
+NAS_DIR=nas
+else
+NAS_DIR=
+endif
+
 ## if USE_FESTIVAL
 ## FESTIVAL_DIR=festival
 ## else
@@ -322,6 +328,7 @@ SUBDIRS=\
 	$(DVDREAD_DIR) \
 	$(DVDNAV_DIR) \
 	$(ESD_DIR) \
+	$(NAS_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FFMPEG_DIR) \
@@ -376,6 +383,7 @@ DIST_SUBDIRS=\
 	dvdread \
 	dvdnav \
 	esd \
+	nas \
 	mas \
 	faac \
 	faad \
@@ -401,6 +409,7 @@ DIST_SUBDIRS=\
 	mpeg2enc \
 	mplex \
 	musicbrainz \
+	nas \
 	ogg \
 	pango \
 	raw1394 \

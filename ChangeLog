@@ -1,3 +1,9 @@
+2004-01-21  Christian Schaller <uraeus@gnome.org>
+
+	* ext/nas/
+	Add libnas (network audio system) plugin, patch from Arwed von Merkatz
+	based on earlier patch from Laurent Vivier
+
 2004-01-20  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_extradata):

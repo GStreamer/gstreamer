@@ -385,7 +385,6 @@ GStreamer support libraries header files.
 @USE_AALIB_TRUE@Summary:        GStreamer plug-in for libcaca Ascii-art output.
 @USE_AALIB_TRUE@Group:          Libraries/Multimedia
 @USE_AALIB_TRUE@Requires:       gstreamer-plugins = %{version}
-@USE_AALIB_TRUE@Requires:       libcaca >= 0.7
 @USE_AALIB_TRUE@BuildRequires:  libcaca-devel >= 0.7
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%description -n gstreamer-libcaca
@@ -637,6 +636,28 @@ Plug-ins for playback of AVI format media files.
 @USE_JACK_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_JACK_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+#### NETWORK AUDIO SYSTEM  ###
+@USE_NAS_TRUE@%package -n gstreamer-nas
+@USE_NAS_TRUE@Summary:  GStreamer plug-in for the Network Audio System.
+@USE_NAS_TRUE@Group:    Libraries/Multimedia
+@USE_NAS_TRUE@Requires: gstreamer-plugins = %{version}
+@USE_NAS_TRUE@Requires: libnas2 => 1.6
+@USE_NAS_TRUE@
+@USE_NAS_TRUE@%description -n gstreamer-nas
+@USE_NAS_TRUE@Plug-in for the Network Audio System sound server.
+@USE_NAS_TRUE@
+@USE_NAS_TRUE@%files -n gstreamer-nas
+@USE_NAS_TRUE@%defattr(-, root, root)
+@USE_NAS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstnassink.so
+@USE_NAS_TRUE@
+@USE_NAS_TRUE@%post -n gstreamer-nas
+@USE_NAS_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_NAS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_NAS_TRUE@
+@USE_NAS_TRUE@%postun -n gstreamer-nas
+@USE_NAS_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+
+
 ### LADSPA ###
 @USE_LADSPA_TRUE@%package -n gstreamer-ladspa
 @USE_LADSPA_TRUE@Summary:       GStreamer wrapper for LADSPA plug-ins.
@@ -887,6 +908,9 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Wed Jan 21 2004 Christian Schaller <Uraeus@gnome.org>
+- added NAS plugin
+
 * Fri Jan 16 2004 Christian Schaller <uraeus@gnome.org>
 - added libcaca plugin
 - added libgstcolorspace - fixed name of libgsthermescolorspace

@@ -38,3 +38,5 @@
 * check if we can drop some of the AC_SUBST's for libs and cflags
 
 * the mikmod author needs to drop the lib from the name ;)
+
+* Port wavparse plugin to use our rifflib - Ask Ronald Bultje for details
