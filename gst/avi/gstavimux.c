@@ -1001,7 +1001,7 @@ gst_avimux_stop_file (GstAviMux *avimux)
   if (avimux->audio_pad_connected)
   {
     if (avimux->auds_hdr.scale)
-      avimux->auds_hdr.length = avimux->audio_size/(avimux->auds.size/8);
+      avimux->auds_hdr.length = avimux->audio_size/(avimux->auds.channels*avimux->auds.size/8);
     else
       avimux->auds_hdr.length = 0; /* urm...? FIXME! ;-) */
 
