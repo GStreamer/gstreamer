@@ -14,6 +14,7 @@ noinst_PROGRAMS = demo-mp3
 endif
 
 demo_mp3_SOURCES = demo-mp3.c
-demo_mp3_CFLAGS  = $(GST_CFLAGS) $(GTK_CFLAGS)
+## putting GTK_CFLAGS first fixes a weird compilation error with GTK and XML
+demo_mp3_CFLAGS  = $(GTK_CFLAGS) $(GST_CFLAGS)
 demo_mp3_LDFLAGS = $(GST_LIBS) $(GTK_LIBS)
 
