@@ -275,8 +275,8 @@ Summary:        Additional audio plugins for GStreamer
 Group:          Applications/Multimedia
                                                                                 
 @USE_SIDPLAY_TRUE@BuildRequires:  libsidplay-devel >= 1.36.0
-@USE_SHOUT_TRUE@BuildRequires:  libshout-devel >= 1.0
-@USE_SHOUT2_TRUE@BuildRequires: libshout2-devel >= 1.0
+@USE_SHOUT_TRUE@BuildRequires:  libshout-devel <= 2.0
+# @USE_SHOUT2_TRUE@BuildRequires: libshout-devel >= 2.0
 @USE_LADSPA_TRUE@BuildRequires:  ladspa-devel
                                                                                 
 Requires:       gstreamer-plugins >= %{gstp_minver}
@@ -292,14 +292,14 @@ This package contains additional audio plugins for GStreamer, including
 - codec for sid (C64)
 - a shout element to stream to icecast servers
 - a ladspa elements wrapping LADSPA plugins
-- a shout 2 element
+# - a shout 2 element
 
 %files audio
 %defattr(-, root, root, -)
 @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
 @USE_SHOUT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout.so
-@USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
+# @USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 
 %post audio
 %{register}
