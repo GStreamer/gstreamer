@@ -1,0 +1,10 @@
+
+- property proxy in compount elements.
+- plugable schedulers.
+- implement events in plugins.
+- app must be able to catch events?
+- caps nego
+- propagation of errors in plugins.
+- deal with clocking issues
+- use real chaining where possible
+- factory aliases?
