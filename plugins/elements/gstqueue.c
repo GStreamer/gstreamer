@@ -332,7 +332,7 @@ gst_queue_otherpad (GstPad *pad)
 static GstPadLinkReturn
 gst_queue_link (GstPad  *pad, const GstCaps *caps)
 {
-  return gst_pad_proxy_link (gst_queue_otherpad (pad), caps);
+  return gst_pad_try_set_caps (gst_queue_otherpad (pad), caps);
 }
 
 static GstCaps *

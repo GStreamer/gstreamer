@@ -1,5 +1,12 @@
 2003-12-31  David Schleef  <ds@schleef.org>
 
+	* gst/elements/gstshaper.c: (gst_shaper_link):
+	* gst/elements/gsttee.c: (gst_tee_init), (gst_tee_request_new_pad):
+	* gst/gstqueue.c: (gst_queue_link):
+	  Negotiation fixes.
+
+2003-12-31  David Schleef  <ds@schleef.org>
+
 	* gst/gstpad.c: (gst_pad_proxy_pad_link), (gst_pad_proxy_fixate):
 	* gst/gstpad.h: Add functions that are useful as default pad
 	link and fixate functions for elements.

@@ -213,7 +213,7 @@ gst_shaper_link (GstPad *pad, const GstCaps *caps)
 
   otherpad = (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
 
-  return gst_pad_proxy_link (otherpad, caps);
+  return gst_pad_try_set_caps (otherpad, caps);
 }
 
 static GstShaperConnection*
