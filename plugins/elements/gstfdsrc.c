@@ -191,6 +191,12 @@ gst_fdsrc_get(GstPad *pad)
     return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
 
+  if (readbytes == -1) {
+	  g_error ("Error reading from file descriptor. Ending stream.\n");
+	  gst_element_set_eos (GST_ELEMENT (src));
+	  return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+	  }
+  
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
