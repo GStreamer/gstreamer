@@ -1,3 +1,9 @@
+2005-01-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/avi/gstavimux.c: (gst_avimux_write_tag),
+	(gst_avimux_riff_get_avi_header):
+	  Fix...
+
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_element_data),
