@@ -1,3 +1,6 @@
+
+#include "config.h"
+
 #include "gstgetbits.h"
 
 /* Defined in gstgetbits_i386.s */
