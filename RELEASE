@@ -1,10 +1,9 @@
 
-GStreamer: Release notes for GStreamer Plugins 0.8.0 "Pharmaceutical Itch"
+GStreamer: Release notes for GStreamer Plugins 0.8.1 "Comforting Sounds"
         
 
-The GStreamer team is happy to announce the first release
-in the 0.8.x stable series
-of the GStreamer Plugins.
+The GStreamer team is happy to announce a new release
+in the 0.8.x stable series of the GStreamer Plugins.
 
 
 The 0.8.x series is a stable series aimed at end users.
@@ -29,27 +28,48 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * Dutch, French and Serbian translations
+      * New translations in this release: Swedish, Afrikaans, Azerbeaijani
+      * Translations: af az nl sr sv
       * Updated to the new core 0.8 subsystems
       * Reworked play and media-info libraries
-      * Audio sinks synchronize on timestamps
-      * New demuxer: ogg
-      * New decoder: theora
-      * New elements: rfb, switch, trm, ffmpegcolorspace
-      * New sinks: ximagesink, xvimagesink
-      * Fixes to all other elements, including audioconvert, interleave, alsa, videotestsrc
+      * Updated osssink: now does probing of possible output properties
+      * Updated qtdemux: fixes for MACE audio
+      * New debug element: quasirandom byte changes
+      * New element: dvddemux
+      * New element: kiosrc, a KIO-slaves source
+      * Fixes to all other elements, including level, videodrop, gnomevfssrc, speex, *law, mpeg2dec, adder, a52dec, oggdemux, matroska, mad, v4l2, cacasink
       * Portability fixes
       * ChangeLog use
       * Coding style consistency
+      * Various memleak and buffer overflow fixes
 
 Bugs fixed in this release
     
-      * 126999 : [API]: "gstreamer-libs-0.7.pc" should be renamed
-      * 129299 : complied errors in alsa-lib-1.0.0-0.rc2
-      * 131270 : pkg-config-ification patch (alsa, esd, shout2, ogg, speex, .
-      * 135921 : speexenc support won't compile with 1.1.x
-      * 136590 : mod plugins doesn't work atm
-      * 137044 : GConf schemas unreadable
+      * 120883 : osssink advertises more rates than it handles
+      * 125732 : v4l2src don't support all YUV formats
+      * 134301 : gst-plugins should depend on X
+      * 135919 : Mandrake 10
+      * 136477 : [PATCH] gst-launch-ext does not support .mov
+      * 136527 : gdk_pixbuf makefile tried to execute targets contrains in...
+      * 137348 : media-info .pc file lacks a 'Version:' line
+      * 137448 : mpegaudioparse: crash (bus error)
+      * 137504 : mpeg2dec fails on 422 encoded material
+      * 137556 : Ogg Vorbis playback has poor spatialization
+      * 137588 : ffmpegcolorspace gives critical when it should throw error
+      * 137722 : Quicktime audio parsing is broken
+      * 138105 : [mpeg1videoparse] Hangs while decoding everest.m1v
+      * 138168 : id3tag using gst_event_new_discontinuous incorrectly?
+      * 138169 : matroska-demux using gst_event_new_discontinuous without ...
+      * 138635 : two GLib-GObject-CRITICAL Messages when running gst-regis...
+      * 138846 : all of the ladspa-wrapped source-plugins fail to go to pl...
+      * 138914 : gstgdkanimation.h is missing from gst-plugins-0.8.0
+      * 139034 : Non-standard test(1) operator used in configure script
+      * 139035 : Non-standard regex used as libtool argument
+      * 139382 : mad decoder can resync wrongly after seek and does explic...
+      * 139532 : gstcolorspace crashes when after v4lsrc (ffmpegcolorspace...
+      * 139926 : id3tag's caps cause it to be plugged more than once by sp...
+      * 139958 : Leak in avidemux
+      * 140058 : [msmpeg4] file with broken qscale/header does not play
 
 Download
 
@@ -84,29 +104,20 @@ as provided by gstreamer-gconf-0.8.pc, to access the default settings.
   
 Contributors to this release
     
-      * Amaury Jacquot
-      * Andy Wingo
-      * Arwed v. Merkatz
       * Benjamin Otte
-      * Brian Cameron
       * Christian Schaller
-      * Christophe Fergeau
-      * Colin Walters
-      * Danilo Segan
       * David I. Lehn
       * David Schleef
       * Iain Holmes
       * Jan Schmidt
       * Jérémy Simon
       * Johan Dahlin
-      * Jon Trowbridge
-      * Julien Moutte
       * Julio M. Merino Vidal
-      * Leif Morgan Johnson
-      * Ramon Garcia
+      * Martin Soto
+      * Petri Jooste
       * Ronald Bultje
-      * Steve Baker
-      * Thomas Canty
-      * Thomas Vander Stichele
       * Stefan Kost
+      * Thomas Vander Stichele
+      * Tim-Philipp Müller
+      * W. Michael Petullo
  

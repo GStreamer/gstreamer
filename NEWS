@@ -1,4 +1,41 @@
-This is GStreamer Plugins 0.8.0
+This is GStreamer Plugins 0.8.1
+
+Bugs fixed since 0.8.0:
+      * 120883 : osssink advertises more rates than it handles
+      * 125732 : v4l2src don't support all YUV formats
+      * 134301 : gst-plugins should depend on X
+      * 135919 : Mandrake 10
+      * 136477 : [PATCH] gst-launch-ext does not support .mov
+      * 136527 : gdk_pixbuf makefile tried to execute targets contrains in...
+      * 137348 : media-info .pc file lacks a 'Version:' line
+      * 137448 : mpegaudioparse: crash (bus error)
+      * 137504 : mpeg2dec fails on 422 encoded material
+      * 137556 : Ogg Vorbis playback has poor spatialization
+      * 137588 : ffmpegcolorspace gives critical when it should throw error
+      * 137722 : Quicktime audio parsing is broken
+      * 138105 : [mpeg1videoparse] Hangs while decoding everest.m1v
+      * 138168 : id3tag using gst_event_new_discontinuous incorrectly?
+      * 138169 : matroska-demux using gst_event_new_discontinuous without ...
+      * 138635 : two GLib-GObject-CRITICAL Messages when running gst-regis...
+      * 138846 : all of the ladspa-wrapped source-plugins fail to go to pl...
+      * 138914 : gstgdkanimation.h is missing from gst-plugins-0.8.0
+      * 139034 : Non-standard test(1) operator used in configure script
+      * 139035 : Non-standard regex used as libtool argument
+      * 139382 : mad decoder can resync wrongly after seek and does explic...
+      * 139532 : gstcolorspace crashes when after v4lsrc (ffmpegcolorspace...
+      * 139926 : id3tag's caps cause it to be plugged more than once by sp...
+      * 139958 : Leak in avidemux
+      * 140058 : [msmpeg4] file with broken qscale/header does not play
+
+Changes since 0.8.0:
+
+      * New translations in this release: Swedish, Afrikaans, Azerbeaijani
+      * Updated osssink: now does probing of possible output properties
+      * Updated qtdemux: fixes for MACE audio
+      * New debug element: quasirandom byte changes
+      * New element: dvddemux
+      * New element: kiosrc, a KIO-slaves source
+      * Various memleak and buffer overflow fixes
 
 Bugs fixed since 0.7.6:
                                                                                 
