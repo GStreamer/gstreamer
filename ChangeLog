@@ -1,3 +1,8 @@
+2004-07-13  Johan Dahlin  <johan@gnome.org>
+
+	* gst/playback/gstplaybin.c (gst_play_bin_set_property) 
+	(gst_play_bin_get_property): Impl.
+
 2004-07-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_seek_before):
