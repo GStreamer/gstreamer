@@ -1,3 +1,8 @@
+2005-02-04  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.c (gst_element_get_compatible_pad_template): Fix
+	the debugging on whether the caps are compatible.
+
 2005-02-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/basics-elements.xml:

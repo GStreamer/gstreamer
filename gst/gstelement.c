@@ -1657,6 +1657,8 @@ gst_element_get_compatible_pad_template (GstElement * element,
     GST_CAT_LOG (GST_CAT_CAPS,
         "checking pad template %s", padtempl->name_template);
     if (padtempl->direction != compattempl->direction) {
+      gboolean is_empty;
+
       GST_CAT_DEBUG (GST_CAT_CAPS,
           "compatible direction: found %s pad template \"%s\"",
           padtempl->direction == GST_PAD_SRC ? "src" : "sink",
@@ -1665,10 +1667,12 @@ gst_element_get_compatible_pad_template (GstElement * element,
       intersection = gst_caps_intersect (GST_PAD_TEMPLATE_CAPS (compattempl),
           GST_PAD_TEMPLATE_CAPS (padtempl));
 
-      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
-          (intersection ? "" : "not "));
+      is_empty = gst_caps_is_empty (intersection);
 
-      if (!gst_caps_is_empty (intersection))
+      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
+          is_empty ? "not " : "");
+
+      if (!is_empty)
         newtempl = padtempl;
       gst_caps_free (intersection);
       if (newtempl)
