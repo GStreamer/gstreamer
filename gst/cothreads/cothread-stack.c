@@ -19,63 +19,83 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* chunks can contain 1 or more blocks, each block contains one cothread stack */
+#include "cothreads-private.h"
+#include "linuxthreads.h"
 
-enum cothread_attr_method 
-{
-  COTHREAD_ATTR_METHOD_MALLOC,        /* cothread stacks on the heap, one block per chunk */
-  COTHREAD_ATTR_METHOD_GTHREAD_STACK, /* cothread stacks within the current gthread's stack */
-  COTHREAD_ATTR_METHOD_LINUXTHREADS,  /* a hack that allows for linuxthreads compatibility */
-}
+typedef enum _cothread_block_state cothread_block_state;
+typedef struct _cothread_chunk cothread_chunk;
 
-struct cothread_attr {
-  enum cothread_attr_method method;
-  int chunk_size;
-  int blocks_per_chunk;
-}
-
-#ifdef HAVE_LINUXTHREADS
-static struct cothread_attr cothread_attr_default = 
-{
-  COTHREAD_ATTR_METHOD_LINUXTHREADS,  /* use the linuxthreads hack */
-  0x20000,                            /* 2 MB */
-  8                                   /* for a stack size of 256 KB */
-}
-#else
-static struct cothread_attr cothread_attr_default = 
-{
-  COTHREAD_ATTR_METHOD_GTHREAD_STACK, /* this is what the old cothreads code does */
-  0x10000,                            /* only 1 MB due the the FreeBSD defaults */
-  8                                   /* for a stack size of 128 KB */
-}
-#endif
-
-static struct cothread_attr *_attr = NULL; /* set in cothread_init() */
-
-enum cothread_block_state
+enum _cothread_block_state
 {
   COTHREAD_BLOCK_STATE_UNUSED=0,
   COTHREAD_BLOCK_STATE_IN_USE
-}
+};
 
-struct cothread_chunk {
-  struct cothread_chunk *next;
-  enum cothread_block_state *block_states;
+struct _cothread_chunk {
+  cothread_chunk *next;
+  cothread_block_state *block_states;
   char *chunk;
   int size;
   int reserved_bottom;
   gboolean needs_free;
+  int nblocks;
+};
+
+
+static cothread_chunk*	cothread_chunk_new		(unsigned long size, gboolean allocate);
+static void		cothread_chunk_free		(cothread_chunk *chunk);
+static gboolean		cothread_stack_alloc_chunked 	(cothread_chunk *chunk, char **low, char **high, 
+                                                         cothread_chunk *(*chunk_new)(cothread_chunk*));
+static cothread_chunk*	cothread_chunk_new_linuxthreads	(cothread_chunk* old);
+
+
+gboolean
+cothread_stack_alloc_on_heap (char **low, char **high)
+{
+  *low = g_malloc (_cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk);
+  *high = *low + sizeof (*low) - 1;
+  return TRUE;
 }
 
+gboolean
+cothread_stack_alloc_on_gthread_stack (char **low, char **high)
+{
+  cothread_chunk *chunk = NULL;
+  static GStaticPrivate chunk_key = G_STATIC_PRIVATE_INIT;
+  
+  if (!(chunk = g_static_private_get(&chunk_key))) {
+    chunk = cothread_chunk_new (_cothread_attr_global->chunk_size, FALSE);
+    g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
+  }
+  
+  return cothread_stack_alloc_chunked (chunk, low, high, NULL);
+}
+
+gboolean
+cothread_stack_alloc_linuxthreads (char **low, char **high)
+{
+  cothread_chunk *chunk = NULL;
+  static GStaticPrivate chunk_key = G_STATIC_PRIVATE_INIT;
+  
+  if (!(chunk = g_static_private_get(&chunk_key))) {
+    chunk = cothread_chunk_new (_cothread_attr_global->chunk_size, FALSE);
+    g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
+  }
+  
+  return cothread_stack_alloc_chunked (chunk, low, high, cothread_chunk_new_linuxthreads);
+}
+
+
 /* size must be a power of two. */
-struct cothread_chunk*
+static cothread_chunk*
 cothread_chunk_new (unsigned long size, gboolean allocate)
 {
-  struct cothread_chunk *ret;
+  cothread_chunk *ret;
   char *sp = CURRENT_STACK_FRAME;
   
-  ret = g_new0 (struct cothread_chunk, 1);
-  ret->block_states = g_new0 (enum cothread_block_state, _attr->blocks_per_chunk);
+  ret = g_new0 (cothread_chunk, 1);
+  ret->nblocks = _cothread_attr_global->blocks_per_chunk;
+  ret->block_states = g_new0 (cothread_block_state, ret->nblocks);
   
   if (allocate) {
     if (!posix_memalign(&ret->chunk, size, size))
@@ -83,7 +103,7 @@ cothread_chunk_new (unsigned long size, gboolean allocate)
   } else {
     /* if we don't allocate the chunk, we must already be in it. */
 
-    ret->chunk = (unsigned long) sp &~ (size - 1);
+    ret->chunk = (char*) ((unsigned long) sp &~ (size - 1));
 #if PTH_STACK_GROWTH > 0
     ret->reserved_bottom = sp - ret->chunk;
 #else
@@ -97,51 +117,43 @@ cothread_chunk_new (unsigned long size, gboolean allocate)
   return ret;
 }
 
-gboolean
-cothread_stack_alloc_on_heap (char **low, char **high)
-{
-  *low = g_malloc (_attr->chunk_size / _attr->blocks_per_chunk);
-  *high = *low + sizeof (*low);
-  return TRUE;
-}
-
 /**
  * cothread_stack_alloc_chunked:
  * @chunk: the chunk for the 
  * Make a new cothread stack out of a chunk. Chunks are assumed to be aligned on
- * boundaries of _attr->chunk_size.
+ * boundaries of _cothread_attr_global->chunk_size.
  *
  * Returns: the new cothread context
  */
-  /* we assume that the stack is aligned on _attr->chunk_size boundaries */
+  /* we assume that the stack is aligned on _cothread_attr_global->chunk_size boundaries */
 static gboolean
-cothread_stack_alloc_chunked (struct cothread_chunk *chunk, char **low, char **high, 
-                              (struct cothread_chunk*)(*chunk_new)(struct cothread_chunk*))
+cothread_stack_alloc_chunked (cothread_chunk *chunk, char **low, char **high, 
+                              cothread_chunk *(*chunk_new)(cothread_chunk*))
 {
   int block;
-  struct cothread_chunk *walk, *last;
+  cothread_chunk *walk, *last;
   
   for (walk=chunk; walk; last=walk, walk=walk->next) {
-    if (chunk->block_states[0] == COTHREAD_BLOCK_STATE_UNUSED) {
-      chunk->block_states[0] = COTHREAD_BLOCK_STATE_IN_USE;
+    if (walk->block_states[0] == COTHREAD_BLOCK_STATE_UNUSED) {
+      walk->block_states[0] = COTHREAD_BLOCK_STATE_IN_USE;
 #if PTH_STACK_GROWTH > 0
-      *low  = chunk->chunk + chunk->reserved_bottom;
-      *high = chunk->chunk + chunk->chunk_size / _attr->blocks_per_chunk;
+      *low  = walk->chunk + walk->reserved_bottom;
+      *high = walk->chunk + walk->size / walk->nblocks;
 #else
-      *low  = chunk->chunk + chunk->size * (chunk->nblocks - 1) / chunk->nblocks;
-      *high = chunk->chunk + chunk->size - chunk->reserved_bottom;
+      *low  = walk->chunk + walk->size * (walk->nblocks - 1) / walk->nblocks;
+      *high = walk->chunk + walk->size - walk->reserved_bottom;
 #endif
       return TRUE;
     }
     
-    for (block = 1; block < _attr->blocks_per_chunk; block++) {
-      if (chunk->block_states[block] == COTHREAD_BLOCK_STATE_UNUSED) {
+    for (block = 1; block < walk->nblocks; block++) {
+      if (walk->block_states[block] == COTHREAD_BLOCK_STATE_UNUSED) {
 #if PTH_STACK_GROWTH > 0
-        *low  = chunk->chunk + chunk->size * (chunk->nblocks - block - 1) / chunk->nblocks;
+        *low  = walk->chunk + walk->size * (walk->nblocks - block - 1) / walk->nblocks;
 #else
-        *low  = chunk->chunk + chunk->size * (block - 1) / chunk->nblocks;
+        *low  = walk->chunk + walk->size * (block - 1) / walk->nblocks;
 #endif
-        *high = *low + chunk->size / chunk->nblocks;
+        *high = *low + walk->size / walk->nblocks;
         return TRUE;
       }
     }
@@ -153,41 +165,19 @@ cothread_stack_alloc_chunked (struct cothread_chunk *chunk, char **low, char **h
     return cothread_stack_alloc_chunked (chunk_new (last), low, high, NULL);
 }
 
-gboolean
-cothread_stack_alloc_on_gthread_stack (char **low, char **high)
+static void
+cothread_chunk_free (cothread_chunk *chunk) 
 {
-  struct cothread_chunk *chunk = NULL;
-  static GStaticPrivate chunk_key = G_STATIC_PRIVATE_INIT;
-  
-  if (!(chunk = g_static_private_get(&chunk_key))) {
-    chunk = cothread_chunk_new (_attr->size, FALSE);
-    g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
-  }
-  
-  return cothread_stack_alloc_chunked (chunk, low, high, NULL);
+  /* FIXME: implement me please */
 }
 
-gboolean
-cothread_stack_alloc_linuxthreads (char **low, char **high)
+static cothread_chunk*
+cothread_chunk_new_linuxthreads (cothread_chunk* old)
 {
-  struct cothread_chunk *chunk = NULL;
-  static GStaticPrivate chunk_key = G_STATIC_PRIVATE_INIT;
-  
-  if (!(chunk = g_static_private_get(&chunk_key))) {
-    chunk = cothread_chunk_new (_attr->size, FALSE);
-    g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
-  }
-  
-  return cothread_stack_alloc_chunked (chunk, low, high, cothread_chunk_new_linuxthreads);
-}
-
-struct cothread_chunk*
-cothread_chunk_new_linuxthreads (struct cothread_chunk* old)
-{
-  struct cothread_chunk *new;
+  cothread_chunk *new;
   void *pthread_descr;
   
-  new = cothread_chunk_new (_attr->chunk_size, TRUE);
+  new = cothread_chunk_new (_cothread_attr_global->chunk_size, TRUE);
   pthread_descr = __linuxthreads_self();
 #if PTH_STACK_GROWTH > 0
   /* we don't really know pthread_descr's size in this case, but we can be
@@ -196,12 +186,10 @@ cothread_chunk_new_linuxthreads (struct cothread_chunk* old)
   new->reserved_bottom = 2048;
   memcpy(new->chunk, pthread_descr, 2048);
 #else
-  new->reserved_bottom = ((unsigned long) pthread_descr | (_attr->chunk_size - 1)) - (unsigned long) pthread_descr;
+  new->reserved_bottom = ((unsigned long) pthread_descr | (new->size - 1)) - (unsigned long) pthread_descr;
   memcpy(new->chunk + new->size - new->reserved_bottom - 1, pthread_descr, new->reserved_bottom);
 #endif
   
   old->next = new;
   return new;
 }
-
-    

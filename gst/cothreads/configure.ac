@@ -259,6 +259,34 @@ AC_MSG_VERBOSE([decided mctx method: $mctx_mth])
 AC_MSG_VERBOSE([decided mctx dispatching: $mctx_dsp])
 AC_MSG_VERBOSE([decided mctx stack setup: $mctx_stk])
 
+AC_MSG_PART(Checking for GLib)
+
+dnl Check for glib2
+translit(dnm, m, l) AM_CONDITIONAL(USE_GLIB2, true)
+GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
+  PKG_CHECK_MODULES(GLIB2, glib-2.0 gthread-2.0,
+    HAVE_GLIB2=yes,HAVE_GLIB2=no)
+  GLIB_LIBS=$GLIB2_LIBS
+  GLIB_CFLAGS=$GLIB2_CFLAGS
+  AC_SUBST(GLIB_LIBS)
+  AC_SUBST(GLIB_CFLAGS)
+  # if we've gotten this far, the user has specifically asked that glib2 be
+  # used. if we have no glib2, that is an error.
+  if test "x$HAVE_GLIB2" = "xno"; then
+    AC_MSG_ERROR([no glib2 found, try --disable-glib2])
+  fi
+], enabled, [
+dnl  AC_DEFINE(USE_GLIB2)
+])
+dnl AC_SUBST(USE_GLIB2)
+
+if test x$USE_GLIB2 = xno; then
+  dnl Check for glib and gtk
+  AM_PATH_GLIB(1.2.0,,
+              AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
+              glib gmodule gthread)
+fi
+
 
 dnl ##  Additional support for some special platform/compiler options
 case "$PLATFORM:$CC" in

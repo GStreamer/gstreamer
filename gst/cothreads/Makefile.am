@@ -4,12 +4,16 @@
                              # ``UNIX -- where you can do anything
                              #   in two keystrokes, or less...''
 
-noinst_LTLIBRARIES = libpth-mctx.la
+noinst_LTLIBRARIES = libpth-mctx.la libgstcothreads.la
 
 libpth_mctx_la_SOURCES = pth_mctx.c pth_p.h pth_vers.c pth.h pth_acdef.h pth_acmac.h
 
+libgstcothreads_la_SOURCES = cothreads.c cothread-stack.c cothreads.h
+libgstcothreads_la_LIBADD = libpth-mctx.la $(GLIB_LIBS)
+libgstcothreads_la_CFLAGS = $(GLIB_CFLAGS)
+
 noinst_PROGRAMS = test-pth test-pth-pthreads test-pthreads test-pth-pthreads2
-noinst_HEADERS = linuxthreads.h
+noinst_HEADERS = linuxthreads.h cothreads-private.h cothreads.h
 
 test_pth_LDADD = libpth-mctx.la
 test_pth_pthreads_LDADD = libpth-mctx.la -lpthread

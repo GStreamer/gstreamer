@@ -137,6 +137,9 @@ if test -z "$*"; then
         echo "to pass any to it, please specify them on the $0 command line."
 fi
 
+echo "+ creating acinclude.m4"
+cat m4/*.m4 > acinclude.m4
+
 echo "+ running aclocal ..."
 aclocal $ACLOCAL_FLAGS || {
 	echo
