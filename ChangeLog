@@ -1,3 +1,9 @@
+2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
+	Added missing refcount, fixes bug #144425
+	Cheers Tim for finding the bug
+
 2004-06-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4l.c: (plugin_init):
