@@ -1,7 +1,5 @@
 Makefile
 Makefile.in
-*.png
-*.fig
 .deps
 build
 html
