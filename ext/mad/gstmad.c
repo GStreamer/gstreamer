@@ -992,7 +992,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	  break;
 	}
         if (!MAD_RECOVERABLE (mad->stream.error)) {
-          GST_ELEMENT_ERROR (mad, STREAM, DECODE, NULL, NULL);
+          GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL), (NULL));
           return;
         }
 	else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
