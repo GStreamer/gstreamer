@@ -1,0 +1,13 @@
+GStreamer is currently maintained by the consensus of a number
+of people, including, but not limited to:
+
+  David Schleef <ds@schleef.org>
+  Benjamin Otte <in7y118@public.uni-hamburg.de>
+  Ronald Bultje <rbultje@ronald.bitfreak.net>
+  Thomas Vander Stichele <thomas@apestaart.org>
+
+Maintainer-related issues should be addressed to:
+
+  gstreamer-devel@lists.sourceforge.net
+
+
