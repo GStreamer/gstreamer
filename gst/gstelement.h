@@ -310,7 +310,8 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-const GList*		gst_element_get_pad_list	(GstElement *element);
+G_CONST_RETURN GList*
+			gst_element_get_pad_list	(GstElement *element);
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 GstCaps *filtercaps);
@@ -338,14 +339,17 @@ gboolean		gst_element_link_pads_filtered 	(GstElement *src, const gchar *srcpadn
 void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
-const GstEventMask*	gst_element_get_event_masks	(GstElement *element);
+G_CONST_RETURN GstEventMask*
+			gst_element_get_event_masks	(GstElement *element);
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
 gboolean		gst_element_seek		(GstElement *element, GstSeekType seek_type,
 							 guint64 offset);
-const GstQueryType*	gst_element_get_query_types	(GstElement *element);
+G_CONST_RETURN GstQueryType*
+			gst_element_get_query_types	(GstElement *element);
 gboolean		gst_element_query		(GstElement *element, GstQueryType type,
 			                                 GstFormat *format, gint64 *value);
-const GstFormat*	gst_element_get_formats		(GstElement *element);
+G_CONST_RETURN GstFormat*
+			gst_element_get_formats		(GstElement *element);
 gboolean		gst_element_convert		(GstElement *element, 
 		 					 GstFormat  src_format,  gint64  src_value,
 							 GstFormat *dest_format, gint64 *dest_value);
@@ -367,7 +371,7 @@ GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementSta
 
 void 			gst_element_wait_state_change 	(GstElement *element);
 	
-const gchar*		gst_element_state_get_name	(GstElementState state);
+G_CONST_RETURN gchar*	gst_element_state_get_name	(GstElementState state);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 

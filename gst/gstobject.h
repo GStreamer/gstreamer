@@ -125,7 +125,8 @@ GType		gst_object_get_type		(void);
 
 /* name routines */
 void		gst_object_set_name		(GstObject *object, const gchar *name);
-const gchar*	gst_object_get_name		(GstObject *object);
+G_CONST_RETURN gchar*
+		gst_object_get_name		(GstObject *object);
 
 /* parentage routines */
 void		gst_object_set_parent		(GstObject *object, GstObject *parent);

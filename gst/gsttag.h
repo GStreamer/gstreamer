@@ -65,8 +65,10 @@ void		gst_tag_merge_strings_with_comma (GValue *		dest,
 /* basic tag support */
 gboolean	gst_tag_exists			(const gchar *		tag);
 GType		gst_tag_get_type		(const gchar *		tag);
-const gchar *   gst_tag_get_nick		(const gchar *		tag);
-const gchar *	gst_tag_get_description		(const gchar *		tag);
+G_CONST_RETURN gchar *
+		gst_tag_get_nick		(const gchar *		tag);
+G_CONST_RETURN gchar *
+		gst_tag_get_description		(const gchar *		tag);
 gboolean	gst_tag_is_fixed		(const gchar *		tag);
 
 /* tag lists */

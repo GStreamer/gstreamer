@@ -180,7 +180,8 @@ void		gst_debug_log_default		(GstDebugCategory *	category,
 						 gchar *		message,
 						 gpointer		unused) G_GNUC_NO_INSTRUMENT;
 
-const gchar *	gst_debug_level_get_name	(GstDebugLevel		level);
+G_CONST_RETURN gchar *
+		gst_debug_level_get_name	(GstDebugLevel		level);
 
 void		gst_debug_add_log_function	(GstLogFunction		func,
 						 gpointer data);
@@ -268,9 +269,11 @@ void		gst_debug_category_set_threshold (GstDebugCategory *	category,
 						 GstDebugLevel		level);
 void		gst_debug_category_reset_threshold (GstDebugCategory *	category);
 GstDebugLevel	gst_debug_category_get_threshold (GstDebugCategory *	category);
-const gchar *	gst_debug_category_get_name	(GstDebugCategory *	category);
+G_CONST_RETURN gchar *
+		gst_debug_category_get_name	(GstDebugCategory *	category);
 guint		gst_debug_category_get_color	(GstDebugCategory *	category);
-const gchar *	gst_debug_category_get_description (GstDebugCategory *	category);
+G_CONST_RETURN gchar *
+		gst_debug_category_get_description (GstDebugCategory *	category);
 GSList *	gst_debug_get_all_categories	(void);
 
 gchar *		gst_debug_construct_term_color	(guint colorinfo);
@@ -379,7 +382,8 @@ extern gboolean			__gst_debug_enabled;
 /********** function pointer stuff **********/
 void* 		_gst_debug_register_funcptr	(void *			ptr,
 						 gchar *		ptrname);
-const gchar*	_gst_debug_nameof_funcptr 	(void *			ptr);
+G_CONST_RETURN gchar*
+		_gst_debug_nameof_funcptr 	(void *			ptr);
 
 #define GST_DEBUG_FUNCPTR(ptr) (_gst_debug_register_funcptr((void *)(ptr), #ptr) , ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)

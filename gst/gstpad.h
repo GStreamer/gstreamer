@@ -408,7 +408,7 @@ GstPad*			gst_pad_custom_new			(GType type, const gchar *name, GstPadDirection d
 GstPad*			gst_pad_custom_new_from_template	(GType type, GstPadTemplate *templ, const gchar *name);
 
 void			gst_pad_set_name			(GstPad *pad, const gchar *name);
-const gchar*		gst_pad_get_name			(GstPad *pad);
+G_CONST_RETURN gchar*	gst_pad_get_name			(GstPad *pad);
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
@@ -438,8 +438,10 @@ void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_get_function		(GstPad *pad, GstPadGetFunction get);
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 void			gst_pad_set_event_mask_function		(GstPad *pad, GstPadEventMaskFunction mask_func);
-const GstEventMask*	gst_pad_get_event_masks			(GstPad *pad);
-const GstEventMask*	gst_pad_get_event_masks_default		(GstPad *pad);
+G_CONST_RETURN GstEventMask*
+			gst_pad_get_event_masks			(GstPad *pad);
+G_CONST_RETURN GstEventMask*
+			gst_pad_get_event_masks_default		(GstPad *pad);
 
 /* pad links */
 void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
@@ -481,8 +483,10 @@ GstPad*			gst_pad_selectv				(GstPad *pad, ...);
 /* convert/query/format functions */
 void			gst_pad_set_formats_function		(GstPad *pad, 
 								 GstPadFormatsFunction formats);
-const GstFormat*	gst_pad_get_formats			(GstPad *pad);
-const GstFormat*	gst_pad_get_formats_default		(GstPad *pad);
+G_CONST_RETURN GstFormat*
+			gst_pad_get_formats			(GstPad *pad);
+G_CONST_RETURN GstFormat*
+			gst_pad_get_formats_default		(GstPad *pad);
 
 void			gst_pad_set_convert_function		(GstPad *pad, GstPadConvertFunction convert);
 gboolean		gst_pad_convert				(GstPad *pad, 
@@ -494,8 +498,10 @@ gboolean		gst_pad_convert_default 		(GstPad *pad,
 
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
 void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
-const GstQueryType*	gst_pad_get_query_types			(GstPad *pad);
-const GstQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
+G_CONST_RETURN GstQueryType*
+			gst_pad_get_query_types			(GstPad *pad);
+G_CONST_RETURN GstQueryType*
+			gst_pad_get_query_types_default		(GstPad *pad);
 gboolean		gst_pad_query				(GstPad *pad, GstQueryType type,
 								 GstFormat *format, gint64 *value);
 gboolean 		gst_pad_query_default 			(GstPad *pad, GstQueryType type,

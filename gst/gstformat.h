@@ -86,9 +86,10 @@ GstFormat	gst_format_get_by_nick		(const gchar *nick);
 gboolean	gst_formats_contains		(const GstFormat *formats, GstFormat format);
 
 /* query for format details */
-const GstFormatDefinition*	
+G_CONST_RETURN GstFormatDefinition*	
 		gst_format_get_details		(GstFormat format);
-const GList* 	gst_format_get_definitions 	(void);
+G_CONST_RETURN GList*
+		gst_format_get_definitions 	(void);
 
 G_END_DECLS
 

@@ -86,7 +86,7 @@ struct _GstAllocTrace {
 };
 
 gboolean		gst_alloc_trace_available	(void);
-const GList*		gst_alloc_trace_list		(void);
+G_CONST_RETURN GList*	gst_alloc_trace_list		(void);
 GstAllocTrace*		_gst_alloc_trace_register	(const gchar *name);
 
 int			gst_alloc_trace_live_all	(void);

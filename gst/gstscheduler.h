@@ -181,7 +181,7 @@ GstScheduler*		gst_scheduler_factory_create		(GstSchedulerFactory *factory, GstE
 GstScheduler*		gst_scheduler_factory_make		(const gchar *name, GstElement *parent);
 
 void			gst_scheduler_factory_set_default_name	(const gchar* name);
-const gchar*		gst_scheduler_factory_get_default_name	(void);
+G_CONST_RETURN gchar*	gst_scheduler_factory_get_default_name	(void);
 
 
 G_END_DECLS
