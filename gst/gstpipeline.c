@@ -55,7 +55,7 @@ static void 			gst_pipeline_prepare		(GstPipeline *pipeline);
 static void 			gst_pipeline_have_type		(GstSink *sink, GstSink *sink2, gpointer data);
 static void 			gst_pipeline_pads_autoplug	(GstElement *src, GstElement *sink);
 
-static GstBin *parent_class = NULL;
+static GstBinClass *parent_class = NULL;
 //static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
 
 GtkType

@@ -44,6 +44,7 @@ extern "C" {
 #define GST_PAD_CONNECTED(pad) 		((pad) && (pad)->peer != NULL)
 #define GST_PAD_CAN_PULL(pad) 		((pad) && (pad)->pullfunc != NULL)
 
+
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
 
@@ -51,10 +52,13 @@ typedef struct _GstPadClass GstPadClass;
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
-typedef void (*GstPadPullFunction) (GstPad *pad);
-typedef void (*GstPadPullRegionFunction) (GstPad *pad, gulong offset, gulong size);
-typedef void (*GstPadPushFunction) (GstPad *pad);
+typedef void (*GstPadGetFunction) (GstPad *pad);
+typedef void (*GstPadGetRegionFunction) (GstPad *pad, gulong offset, gulong size);
 typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
+
+typedef void (*GstPadPushFunction) (GstPad *pad, GstBuffer *buf);
+typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
+typedef GstBuffer *(*GstPadPullRegionFunction) (GstPad *pad, gulong offset, gulong size);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -64,8 +68,9 @@ typedef enum {
 
 typedef enum {
   GST_PAD_DISABLED		= GST_OBJECT_FLAG_LAST,
+  GST_PAD_EOS,
 
-  GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST+2,
+  GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 4,
 } GstPadFlags;
 
 struct _GstPad {
@@ -83,10 +88,13 @@ struct _GstPad {
   GstBuffer *bufpen;
 
   GstPadChainFunction chainfunc;
+  GstPadGetFunction getfunc;
+  GstPadGetRegionFunction getregionfunc;
+  GstPadQoSFunction qosfunc;
+
   GstPadPushFunction pushfunc;
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
-  GstPadQoSFunction qosfunc;
 
   GstObject *parent;
   GList *ghostparents;
@@ -98,6 +106,7 @@ struct _GstPadClass {
   /* signal callbacks */
   void (*set_active)	(GstPad *pad, gboolean active);
   void (*caps_changed)	(GstPad *pad, GstCaps *newcaps);
+  void (*eos)		(GstPad *pad);
 };
 
 typedef enum {
@@ -133,8 +142,8 @@ GstPad*			gst_pad_new_from_template	(GstPadTemplate *temp, gchar *name);
 GstPadDirection 	gst_pad_get_direction		(GstPad *pad);
 
 void 			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
-void 			gst_pad_set_pull_function	(GstPad *pad, GstPadPullFunction pull);
-void			gst_pad_set_pullregion_function	(GstPad *pad, GstPadPullRegionFunction pullregion);
+void 			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
+void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getregion);
 void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 
 void	 		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
@@ -154,9 +163,23 @@ GstPad*			gst_pad_get_peer		(GstPad *pad);
 void 			gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void 			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
+#if 1
 void 			gst_pad_push			(GstPad *pad, GstBuffer *buffer);
+#else
+#define gst_pad_push(pad,buf) G_STMT_START{ \
+  if ((pad)->peer->pushfunc) ((pad)->peer->pushfunc)((pad)->peer,(buf)); \
+}G_STMT_END
+#endif
+#if 1
 GstBuffer*		gst_pad_pull			(GstPad *pad);
 GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
+#else
+#define gst_pad_pull(pad) \
+  (((pad)->peer->pullfunc) ? ((pad)->peer->pullfunc)((pad)->peer) : NULL)
+#define gst_pad_pullregion(pad,offset,size) \
+  (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(offset),(size)) : NULL)
+#endif
+
 void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
 xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);

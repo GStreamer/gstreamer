@@ -120,4 +120,35 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
 #define GST_DEBUG_PAD_NAME(pad) \
   ((pad)->parent != NULL) ? gst_element_get_name(GST_ELEMENT((pad)->parent)) : "''", gst_pad_get_name(pad)
 
+
+
+/********** function pointer stuff **********/
+extern GHashTable *__gst_function_pointers;
+
+#ifdef GST_DEBUG_ENABLED
+#define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
+#define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
+#else
+#define GST_DEBUG_FUNCPTR(ptr) (ptr)
+#define GST_DEBUG_FUNCPTR_NAME(ptr) ""
+#endif
+
+static inline void *
+_gst_debug_register_funcptr (void *ptr, gchar *ptrname) 
+{
+  if (!__gst_function_pointers) __gst_function_pointers = g_hash_table_new(g_direct_hash,g_direct_equal);
+  if (!g_hash_table_lookup(__gst_function_pointers,ptr))
+    g_hash_table_insert(__gst_function_pointers,ptr,ptrname);
+  return ptr;
+}
+
+static inline gchar *
+_gst_debug_nameof_funcptr (void *ptr) 
+{
+  gchar *ptrname = __gst_function_pointers ? g_hash_table_lookup(__gst_function_pointers,ptr) : NULL;
+// FIXME this must go away, it's a major leak
+  if (!ptrname) return g_strdup_printf("%p",ptr);
+  else return ptrname;
+}
+
 #endif /* __GST_H__ */

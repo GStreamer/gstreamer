@@ -1,4 +1,4 @@
-noinst_PROGRAMS = init loadall simplefake states caps queue registry paranoia rip
+noinst_PROGRAMS = init loadall simplefake states caps queue registry paranoia rip mp3encode
 
 LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
 CFLAGS = -Wall

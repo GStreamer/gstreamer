@@ -1,5 +1,5 @@
 
-CC = gcc
+CC = libtool gcc
 
 all: createxml runxml
 

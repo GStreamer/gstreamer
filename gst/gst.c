@@ -28,6 +28,8 @@
 
 extern gint _gst_trace_on;
 
+GHashTable *__gst_function_pointers = NULL;
+
 /**
  * gst_init:
  * @argc: pointer to application's argc

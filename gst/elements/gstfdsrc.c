@@ -57,7 +57,7 @@ static void gst_fdsrc_init		(GstFdSrc *fdsrc);
 static void gst_fdsrc_set_arg		(GtkObject *object, GtkArg *arg, guint id);
 static void gst_fdsrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
-static void gst_fdsrc_pull		(GstPad *pad);
+static void gst_fdsrc_get		(GstPad *pad);
 
 
 static GstSrcClass *parent_class = NULL;
@@ -108,7 +108,7 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
 
 static void gst_fdsrc_init(GstFdSrc *fdsrc) {
   fdsrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_pull_function(fdsrc->srcpad,gst_fdsrc_pull);
+  gst_pad_set_get_function(fdsrc->srcpad,gst_fdsrc_get);
   gst_element_add_pad(GST_ELEMENT(fdsrc),fdsrc->srcpad);
 
   fdsrc->fd = 0;
@@ -175,7 +175,7 @@ gst_fdsrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-void gst_fdsrc_pull(GstPad *pad) {
+void gst_fdsrc_get(GstPad *pad) {
   GstFdSrc *src;
   GstBuffer *buf;
   glong readbytes;

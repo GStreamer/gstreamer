@@ -55,7 +55,7 @@ static void 			gst_httpsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_httpsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 static GstElementStateReturn	gst_httpsrc_change_state	(GstElement *element);
 
-static void 			gst_httpsrc_pull	(GstPad *pad);
+static void 			gst_httpsrc_get		(GstPad *pad);
 
 static gboolean			gst_httpsrc_open_url	(GstHttpSrc *src);
 static void			gst_httpsrc_close_url	(GstHttpSrc *src);
@@ -112,7 +112,7 @@ gst_httpsrc_class_init (GstHttpSrcClass *klass)
 
 static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
   httpsrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_pull_function(httpsrc->srcpad,gst_httpsrc_pull);
+  gst_pad_set_get_function(httpsrc->srcpad,gst_httpsrc_get);
   gst_element_add_pad(GST_ELEMENT(httpsrc),httpsrc->srcpad);
 
   httpsrc->url = NULL;
@@ -122,7 +122,7 @@ static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
   httpsrc->bytes_per_read = 4096;
 }
 
-static void gst_httpsrc_pull(GstPad *pad) {
+static void gst_httpsrc_get(GstPad *pad) {
   GstHttpSrc *src;
   GstBuffer *buf;
   glong readbytes;

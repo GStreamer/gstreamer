@@ -570,17 +570,17 @@ gst_bin_src_wrapper (int argc,char *argv[])
     while (pads) {
       pad = GST_PAD (pads->data);
       if (pad->direction == GST_PAD_SRC) {
-        region_struct *region = cothread_get_data (pad->threadstate, "region");
+        region_struct *region = cothread_get_data (element->threadstate, "region");
+        DEBUG("calling _getfunc for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
         if (region) {
  	  //gst_src_push_region (GST_SRC (element), region->offset, region->size);
-          if (pad->pullregionfunc == NULL) 
-	    fprintf(stderr,"error, no pullregionfunc in \"%s\"\n", name);
-          (pad->pullregionfunc)(pad, region->offset, region->size);
- 	}
- 	else {
-          if (pad->pullfunc == NULL) 
- 	    fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
-          (pad->pullfunc)(pad);
+          if (pad->getregionfunc == NULL) 
+	    fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name);
+          (pad->getregionfunc)(pad, region->offset, region->size);
+ 	} else {
+          if (pad->getfunc == NULL) 
+ 	    fprintf(stderr,"error, no getfunc in \"%s\"\n", name);
+          (pad->getfunc)(pad);
  	}
       }
       pads = g_list_next(pads);
@@ -596,8 +596,9 @@ static void
 gst_bin_pullfunc_proxy (GstPad *pad) 
 {
   DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  cothread_switch (pad->threadstate);
+  cothread_switch (GST_ELEMENT(pad->parent)->threadstate);
 }
+*/
 
 static void 
 gst_bin_pullregionfunc_proxy (GstPad *pad, 
@@ -605,32 +606,56 @@ gst_bin_pullregionfunc_proxy (GstPad *pad,
 				gulong size) 
 {
   region_struct region;
+  cothread_state *threadstate;
 
   DEBUG_ENTER("%s:%s,%ld,%ld",GST_DEBUG_PAD_NAME(pad),offset,size);
 
   region.offset = offset;
   region.size = size;
 
-  cothread_set_data (pad->threadstate, "region", &region);
-  cothread_switch (pad->threadstate);
-  cothread_set_data (pad->threadstate, "region", NULL);
+  threadstate = GST_ELEMENT(pad->parent)->threadstate;
+  cothread_set_data (threadstate, "region", &region);
+  cothread_switch (threadstate);
+  cothread_set_data (threadstate, "region", NULL);
 }
 
 static void 
-gst_bin_pushfunc_proxy (GstPad *pad) 
+gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf) 
 {
+  cothread_state *threadstate = GST_ELEMENT(pad->parent)->threadstate;
   DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  cothread_switch (pad->threadstate);
+  DEBUG("putting buffer in peer's pen\n");
+  pad->peer->bufpen = buf;
+  DEBUG("switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(pad->parent)->threadstate));
+  cothread_switch (threadstate);
+  DEBUG("done switching\n");
+}
+
+static GstBuffer*
+gst_bin_pullfunc_proxy (GstPad *pad) 
+{
+  GstBuffer *buf;
+
+  cothread_state *threadstate = GST_ELEMENT(pad->parent)->threadstate;
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  if (pad->bufpen == NULL) {
+    DEBUG("switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(pad->parent)->threadstate));
+    cothread_switch (threadstate);
+  }
+  DEBUG("done switching\n");
+  buf = pad->bufpen;
+  pad->bufpen = NULL;
+  return buf;
 }
 
 static void
-gst_bin_pushfunc_fake_proxy (GstPad *pad) {
+gst_bin_pushfunc_fake_proxy (GstPad *pad)
+{
 }
 
 static void
 gst_bin_create_plan_func (GstBin *bin) 
 {
-  const gchar *binname = gst_element_get_name(GST_ELEMENT(bin));
   GList *elements;
   GstElement *element;
   int sink_pads;
@@ -661,6 +686,7 @@ gst_bin_create_plan_func (GstBin *bin)
       DEBUG("NEED COTHREADS, it's \"%s\"'s fault\n",gst_element_get_name(element));
       break;
     }
+
     // if it's a complex element, use cothreads
     else if (GST_ELEMENT_IS_MULTI_IN (element)) {
       DEBUG("complex element \"%s\" in bin \"%s\"\n", 
@@ -671,6 +697,7 @@ gst_bin_create_plan_func (GstBin *bin)
       DEBUG("NEED COTHREADS, it's \"%s\"'s fault\n",gst_element_get_name(element));
       break;
     }
+
     // if it has more than one input pad, use cothreads
     sink_pads = 0;
     pads = gst_element_get_pad_list (element);
@@ -689,6 +716,7 @@ gst_bin_create_plan_func (GstBin *bin)
       DEBUG("NEED COTHREADS, it's \"%s\"'s fault\n",gst_element_get_name(element));
       break;
     }
+
     elements = g_list_next (elements);
   }
 
@@ -719,8 +747,8 @@ gst_bin_create_plan_func (GstBin *bin)
         element->threadstate = cothread_create (bin->threadcontext);
         cothread_setfunc (element->threadstate, gst_bin_loopfunc_wrapper,
                           0, (char **)element);
-        DEBUG("created element threadstate %p for \"%s\"\n",element->threadstate,
-              gst_element_get_name(element));
+        DEBUG("created cothread %p (@%p) for \"%s\"\n",element->threadstate,
+              &element->threadstate,gst_element_get_name(element));
       }
 
       if (GST_IS_BIN (element)) {
@@ -737,42 +765,18 @@ gst_bin_create_plan_func (GstBin *bin)
       while (pads) {
         pad = GST_PAD(pads->data);
 
-        // ***** check for possible connections outside
-        // get the pad's peer
-        peer = gst_pad_get_peer (pad);
-        // FIXME this should be an error condition, if not disabled
-        if (!peer) break;
-        // get the parent of the peer of the pad
-        outside = GST_ELEMENT (gst_pad_get_parent (peer));
-        // FIXME this should *really* be an error condition
-        if (!outside) break;
-        // if it's a source or connection and it's not ours...
-        if ((GST_IS_SRC (outside) || GST_IS_CONNECTION (outside)) &&
-            (gst_object_get_parent (GST_OBJECT (outside)) != GST_OBJECT (bin))) {
-          if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
-            DEBUG("PUNT: copying pullfunc ptr from %s:%s to %s:%s (@ %p)\n",
-GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->pullfunc);
-            pad->pullfunc = pad->peer->pullfunc;
-            DEBUG("PUNT: setting pushfunc proxy to fake proxy on %s:%s\n",GST_DEBUG_PAD_NAME(pad->peer));
-            pad->peer->pushfunc = gst_bin_pushfunc_fake_proxy;
-          }
-        } else {
-          if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
-            DEBUG("checking/setting push proxy for srcpad %s:%s\n",
-                   GST_DEBUG_PAD_NAME(pad));
-            // set the proxy functions
-            if (!pad->pushfunc)
-              pad->pushfunc = gst_bin_pushfunc_proxy;
-
-          } else if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
-            DEBUG("checking/setting pull proxies for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-            // set the proxy functions
-            if (!pad->pullfunc)
-              pad->pullfunc = gst_bin_pullfunc_proxy;
-            if (!pad->pullregionfunc)
-              pad->pullregionfunc = gst_bin_pullregionfunc_proxy;
-          }
-	  //pad->threadstate = element->threadstate;
+        if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+          DEBUG("setting push proxy for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+          // set the proxy functions
+          pad->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
+          DEBUG("pushfunc %p = gst_bin_pushfunc_proxy %p\n",&pad->pushfunc,gst_bin_pushfunc_proxy);
+        } else if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
+          DEBUG("setting pull proxies for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+          // set the proxy functions
+          pad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          DEBUG("pad->pullfunc(@%p) = gst_bin_pullfunc_proxy(@%p)\n",
+                &pad->pullfunc,gst_bin_pullfunc_proxy);
+          pad->pullregionfunc = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
         }
         pads = g_list_next (pads);
       }
@@ -783,52 +787,60 @@ GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->pullfunc);
         bin->entries = g_list_prepend (bin->entries, GST_ELEMENT(bin->children->data));
     }
   } else {
-    g_print("gstbin: don't need cothreads, looking for entry points\n");
+    DEBUG("don't need cothreads, looking for entry points\n");
     // we have to find which elements will drive an iteration
     elements = bin->children;
     while (elements) {
       element = GST_ELEMENT (elements->data);
-      g_print("gstbin: found element \"%s\"\n", gst_element_get_name (element));
+      DEBUG("found element \"%s\"\n", gst_element_get_name (element));
       if (GST_IS_BIN (element)) {
-        gst_bin_create_plan (GST_BIN (element));	
+        gst_bin_create_plan (GST_BIN (element));
       }
       if (GST_IS_SRC (element)) {
-        g_print("adding '%s' as entry point, because it's a source\n",gst_element_get_name (element));
+        DEBUG("adding '%s' as entry point, because it's a source\n",gst_element_get_name (element));
         bin->entries = g_list_prepend (bin->entries, element);
         bin->numentries++;
-      } else {
-        /* go through the list of pads to see if there's a Connection */
-        pads = gst_element_get_pad_list (element);
-        while (pads) {
-          pad = GST_PAD (pads->data);
-          /* we only worry about sink pads */
-          if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
-	    g_print("gstbin '%s': found SINK pad %s:%s\n", binname, GST_DEBUG_PAD_NAME(pad));
-            /* get the pad's peer */
-            peer = gst_pad_get_peer (pad);
-            if (!peer) {
-	      g_print("gstbin: found SINK pad %s has no peer\n", gst_pad_get_name (pad));
-	      break;
-	    }
-            /* get the parent of the peer of the pad */
-            outside = GST_ELEMENT (gst_pad_get_parent (peer));
-            if (!outside) break;
-            /* if it's a connection and it's not ours... */
-            if (GST_IS_CONNECTION (outside) &&
-                 (gst_object_get_parent (GST_OBJECT (outside)) != GST_OBJECT (bin))) {
-              gst_info("gstbin: element \"%s\" is the external source Connection "
+      }
+
+      // go through all the pads, set pointers, and check for connections
+      pads = gst_element_get_pad_list (element);
+      while (pads) {
+        pad = GST_PAD (pads->data);
+
+        if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+	  DEBUG("found SINK pad %s:%s\n", GST_DEBUG_PAD_NAME(pad));
+
+          // copy the peer's chain function, easy enough
+          DEBUG("copying peer's chainfunc to %s:%s's pushfunc\n",GST_DEBUG_PAD_NAME(pad));
+          pad->pushfunc = pad->peer->chainfunc;
+
+          // need to walk through and check for outside connections
+//FIXME need to do this for all pads
+          /* get the pad's peer */
+          peer = gst_pad_get_peer (pad);
+          if (!peer) {
+	    DEBUG("found SINK pad %s has no peer\n", gst_pad_get_name (pad));
+	    break;
+	  }
+          /* get the parent of the peer of the pad */
+          outside = GST_ELEMENT (gst_pad_get_parent (peer));
+          if (!outside) break;
+          /* if it's a connection and it's not ours... */
+          if (GST_IS_CONNECTION (outside) &&
+               (gst_object_get_parent (GST_OBJECT (outside)) != GST_OBJECT (bin))) {
+            gst_info("gstbin: element \"%s\" is the external source Connection "
 				    "for internal element \"%s\"\n",
-	                    gst_element_get_name (GST_ELEMENT (outside)),
-	                    gst_element_get_name (GST_ELEMENT (element)));
-	      bin->entries = g_list_prepend (bin->entries, outside);
-	      bin->numentries++;
-	    }
+	                  gst_element_get_name (GST_ELEMENT (outside)),
+	                  gst_element_get_name (GST_ELEMENT (element)));
+	    bin->entries = g_list_prepend (bin->entries, outside);
+	    bin->numentries++;
 	  }
-	  else {
-	    g_print("gstbin: found pad %s\n", gst_pad_get_name (pad));
-	  }
-	  pads = g_list_next (pads);
 	}
+	else {
+	  DEBUG("found pad %s\n", gst_pad_get_name (pad));
+	}
+	pads = g_list_next (pads);
+
       }
       elements = g_list_next (elements);
     }
@@ -856,22 +868,25 @@ gst_bin_iterate_func (GstBin *bin)
   if (bin->need_cothreads) {
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
+    DEBUG("starting iteration via cothreads\n");
 
     if (GST_IS_ELEMENT(bin->entries->data)) {
       entry = GST_ELEMENT (bin->entries->data);
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
-      DEBUG("set COTHREAD_STOPPING flag on \"%s\"(%p)\n",
+      DEBUG("set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
             gst_element_get_name(entry),entry);
       cothread_switch (entry->threadstate);
     } else {
       sched = (_GstBinOutsideSchedule *) (bin->entries->data);
       sched->flags |= GST_ELEMENT_COTHREAD_STOPPING;
-      DEBUG("set COTHREAD STOPPING flag on sched for \"%s\"(%p)\n",
+      DEBUG("set COTHREAD STOPPING flag on sched for \"%s\"(@%p)\n",
             gst_element_get_name(sched->element),sched->element);
       cothread_switch (sched->threadstate);
     }
 
   } else {
+    DEBUG("starting iteration via chain-functions\n");
+
     if (bin->numentries <= 0) {
       //printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
       // we will try loop over the elements then...
@@ -890,10 +905,11 @@ gst_bin_iterate_func (GstBin *bin)
         while (pads) {
           pad = GST_PAD (pads->data);
           if (pad->direction == GST_PAD_SRC) {
-            if (pad->pullfunc == NULL) 
-	      fprintf(stderr, "error, no pullfunc in \"%s\"\n", gst_element_get_name (entry));
+            DEBUG("calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+            if (pad->getfunc == NULL) 
+	      fprintf(stderr, "error, no getfunc in \"%s\"\n", gst_element_get_name (entry));
 	    else
-              (pad->pullfunc)(pad);
+              (pad->getfunc)(pad);
           }
           pads = g_list_next (pads);
         }
@@ -911,3 +927,30 @@ gst_bin_iterate_func (GstBin *bin)
 
   DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
 }
+
+
+
+/*
+        // ***** check for possible connections outside
+        // get the pad's peer
+        peer = gst_pad_get_peer (pad);
+        // FIXME this should be an error condition, if not disabled
+        if (!peer) break;
+        // get the parent of the peer of the pad
+        outside = GST_ELEMENT (gst_pad_get_parent (peer));
+        // FIXME this should *really* be an error condition
+        if (!outside) break;
+        // if it's a source or connection and it's not ours...
+        if ((GST_IS_SRC (outside) || GST_IS_CONNECTION (outside)) &&
+            (gst_object_get_parent (GST_OBJECT (outside)) != GST_OBJECT (bin))) {
+          if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+            DEBUG("dealing with outside source element %s\n",gst_element_get_name(outside));
+//            DEBUG("PUNT: copying pullfunc ptr from %s:%s to %s:%s (@ %p)\n",
+//GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->pullfunc);
+//            pad->pullfunc = pad->peer->pullfunc;
+//            DEBUG("PUNT: setting pushfunc proxy to fake proxy on %s:%s\n",GST_DEBUG_PAD_NAME(pad->peer));
+//            pad->peer->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_fake_proxy);
+            pad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          }
+        } else {
+*/

@@ -46,7 +46,7 @@ enum {
 static void gst_fakesrc_class_init	(GstFakeSrcClass *klass);
 static void gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
-static void gst_fakesrc_pull		(GstPad *pad);
+static void gst_fakesrc_get		(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
@@ -85,7 +85,7 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
 static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
   // create our output pad
   fakesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_pull_function(fakesrc->srcpad,gst_fakesrc_pull);
+  gst_pad_set_get_function(fakesrc->srcpad,gst_fakesrc_get);
   gst_element_add_pad(GST_ELEMENT(fakesrc),fakesrc->srcpad);
 
   // we're ready right away, since we don't have any args...
@@ -107,12 +107,12 @@ GstElement *gst_fakesrc_new(gchar *name) {
 }
 
 /**
- * gst_fakesrc_pull:
- * @src: the faksesrc to pull
+ * gst_fakesrc_get:
+ * @src: the faksesrc to get
  * 
  * generate an empty buffer and push it to the next element.
  */
-void gst_fakesrc_pull(GstPad *pad) {
+void gst_fakesrc_get(GstPad *pad) {
   GstFakeSrc *src;
   GstBuffer *buf;
 
@@ -120,9 +120,7 @@ void gst_fakesrc_pull(GstPad *pad) {
   src = GST_FAKESRC(gst_pad_get_parent(pad));
   g_return_if_fail(GST_IS_FAKESRC(src));
 
-//  g_print("gst_fakesrc_push(): pushing fake buffer from '%s'\n",
-//          gst_element_get_name(GST_ELEMENT(src)));
-  g_print(">");
+  g_print("(%s:%s)> ",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
   gst_pad_push(pad,buf);
 }

@@ -34,7 +34,7 @@ Chained (current implementation):
                                            !------------------------------->!
 					   !                                !
 					   :                                :
-					                              (more chaining)                                
+					                              (more chaining)
 					   :                                :
 					   !<-------------------------------!
 			 !<----------------!
@@ -182,7 +182,7 @@ The stack will grow and unwind as many times as buffers are pushed out.
                                            !------------------------------->!
 					   !                                !
 					   :                                :
-					                              (more chaining)                                
+					                              (more chaining)
 					   :                                :
 					   !<-------------------------------!
 			 !<----------------!
@@ -195,7 +195,7 @@ The stack will grow and unwind as many times as buffers are pushed out.
                                            !------------------------------->!
 					   !                                !
 					   :                                :
-					                              (more chaining)                                
+					                              (more chaining)
 					   :                                :
 					   !<-------------------------------!
 			 !<----------------!
@@ -256,7 +256,7 @@ Chained:
        !------------------------------------------------------------------->!
 					                                    !
 					                                    :
-					                              (more chaining)                                
+					                              (more chaining)
 					                                    :
        !<-------------------------------------------------------------------!
        !

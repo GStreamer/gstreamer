@@ -57,8 +57,8 @@ static void 			gst_asyncdisksrc_init		(GstAsyncDiskSrc *asyncdisksrc);
 static void 			gst_asyncdisksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_asyncdisksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void 			gst_asyncdisksrc_pull		(GstPad *pad);
-static void 			gst_asyncdisksrc_pull_region	(GstPad *pad, gulong offset, gulong size);
+static void 			gst_asyncdisksrc_get		(GstPad *pad);
+static void 			gst_asyncdisksrc_get_region	(GstPad *pad, gulong offset, gulong size);
 
 static GstElementStateReturn 	gst_asyncdisksrc_change_state	(GstElement *element);
 
@@ -122,9 +122,8 @@ gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc)
 
   g_print("init\n");
   asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_pull_function (asyncdisksrc->srcpad,gst_asyncdisksrc_pull);
-  gst_pad_set_pullregion_function (asyncdisksrc->srcpad,gst_asyncdisksrc_pull_region);
-  // FIXME must set pullregion
+  gst_pad_set_get_function (asyncdisksrc->srcpad,gst_asyncdisksrc_get);
+  gst_pad_set_getregion_function (asyncdisksrc->srcpad,gst_asyncdisksrc_get_region);
   gst_element_add_pad (GST_ELEMENT (asyncdisksrc), asyncdisksrc->srcpad);
 
   asyncdisksrc->filename = NULL;
@@ -205,13 +204,13 @@ gst_asyncdisksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 /**
- * gst_asyncdisksrc_pull:
+ * gst_asyncdisksrc_get:
  * @pad: #GstPad to push a buffer from
  *
  * Push a new buffer from the asyncdisksrc at the current offset.
  */
 static void 
-gst_asyncdisksrc_pull (GstPad *pad) 
+gst_asyncdisksrc_get (GstPad *pad) 
 {
   GstAsyncDiskSrc *src;
   GstBuffer *buf;
@@ -256,7 +255,7 @@ gst_asyncdisksrc_pull (GstPad *pad)
 }
 
 /**
- * gst_asyncdisksrc_pull_region:
+ * gst_asyncdisksrc_get_region:
  * @src: #GstSrc to push a buffer from
  * @offset: offset in file
  * @size: number of bytes
@@ -264,7 +263,7 @@ gst_asyncdisksrc_pull (GstPad *pad)
  * Push a new buffer from the asyncdisksrc of given size at given offset.
  */
 static void 
-gst_asyncdisksrc_pull_region (GstPad *pad, gulong offset, gulong size) 
+gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size) 
 {
   GstAsyncDiskSrc *src;
   GstBuffer *buf;

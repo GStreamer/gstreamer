@@ -34,7 +34,7 @@ fprintf(stderr,"QUEUE: fakesink\n");
   gst_bin_add(thr2,sink);
   fprintf(stderr,"QUEUE: added sink to thr2\n");
   gst_element_add_ghost_pad(GST_ELEMENT(thr2),gst_element_get_pad(sink,"sink"));
-  gst_bin_use_cothreads(thr2,TRUE);
+//  gst_bin_use_cothreads(thr2,TRUE);
   fprintf(stderr,"QUEUE: filled in threads\n");
 
   gst_bin_add(pipeline,GST_ELEMENT(thr1));
@@ -53,10 +53,10 @@ fprintf(stderr,"QUEUE: fakesink\n");
 
   sleep(1);
   fprintf(stderr,"\n\n");
-//  for (i=0;i<1000;i++)
-//    gst_bin_iterate(thr1);
-  fprintf(stderr,"\n\n");
-  fflush(stdout);
-  fflush(stderr);
-  gst_bin_iterate(thr2);
+  for (i=0;i<1000;i++)
+    gst_bin_iterate(thr2);
+//  fprintf(stderr,"\n\n");
+//  fflush(stdout);
+//  fflush(stderr);
+//  gst_bin_iterate(thr2);
 }

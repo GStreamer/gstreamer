@@ -62,7 +62,7 @@ static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
 void gst_sinesrc_sync_parms(GstSineSrc *sinesrc);
 
-void gst_sinesrc_pull(GstPad *pad);
+void gst_sinesrc_get(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
@@ -116,7 +116,7 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
 
 static void gst_sinesrc_init(GstSineSrc *sinesrc) {
   sinesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_pull_function(sinesrc->srcpad,gst_sinesrc_pull);
+  gst_pad_set_get_function(sinesrc->srcpad,gst_sinesrc_get);
   gst_element_add_pad(GST_ELEMENT(sinesrc),sinesrc->srcpad);
 
   sinesrc->volume = 1.0;
@@ -142,7 +142,7 @@ GstElement *gst_sinesrc_new_with_fd(gchar *name,gchar *filename) {
   return sinesrc;
 }
 
-void gst_sinesrc_pull(GstPad *pad) {
+void gst_sinesrc_get(GstPad *pad) {
   GstSineSrc *src;
   GstBuffer *buf;
   gint16 *samples;

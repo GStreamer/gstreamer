@@ -64,7 +64,7 @@ static void 			gst_audiosrc_close_audio	(GstAudioSrc *src);
 static gboolean 		gst_audiosrc_open_audio		(GstAudioSrc *src);
 static void 			gst_audiosrc_sync_parms		(GstAudioSrc *audiosrc);
 
-static void 			gst_audiosrc_pull		(GstPad *pad);
+static void 			gst_audiosrc_get		(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
@@ -124,7 +124,7 @@ static void
 gst_audiosrc_init (GstAudioSrc *audiosrc) 
 {
   audiosrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_pull_function(audiosrc->srcpad,gst_audiosrc_pull);
+  gst_pad_set_get_function(audiosrc->srcpad,gst_audiosrc_get);
   gst_element_add_pad (GST_ELEMENT (audiosrc), audiosrc->srcpad);
 
   audiosrc->fd = -1;
@@ -140,7 +140,7 @@ gst_audiosrc_init (GstAudioSrc *audiosrc)
   audiosrc->seq = 0;
 }
 
-void gst_audiosrc_pull(GstPad *pad) {
+void gst_audiosrc_get(GstPad *pad) {
   GstAudioSrc *src;
   GstBuffer *buf;
   glong readbytes;

@@ -1,5 +1,5 @@
 
-CC = gcc
+CC = libtool gcc
 
 helloworld: helloworld.c 
 	$(CC) -Wall `gstreamer-config --cflags --libs` helloworld.c -o helloworld 

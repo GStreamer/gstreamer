@@ -47,6 +47,8 @@ static void gst_pad_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static void gst_pad_real_destroy(GtkObject *object);
 
+static void gst_pad_push_func(GstPad *pad, GstBuffer *buf);
+
 
 static GstObject *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
@@ -104,11 +106,16 @@ gst_pad_init (GstPad *pad)
 {
   pad->direction = GST_PAD_UNKNOWN;
   pad->peer = NULL;
+
   pad->chainfunc = NULL;
+  pad->getfunc = NULL;
+  pad->getregionfunc = NULL;
+  pad->qosfunc = NULL;
+
+  pad->pushfunc = NULL; //GST_DEBUG_FUNCPTR(gst_pad_push_func);
   pad->pullfunc = NULL;
   pad->pullregionfunc = NULL;
-  pad->pushfunc = NULL;
-  pad->qosfunc = NULL;
+
   pad->parent = NULL;
   pad->ghostparents = NULL;
   pad->caps = NULL;
@@ -257,46 +264,6 @@ gst_pad_get_name (GstPad *pad)
 }
 
 /**
- * gst_pad_set_pull_function:
- * @pad: the pad to set the pull function for
- * @pull: the pull function
- *
- * Set the given pull function for the pad
- */
-void 
-gst_pad_set_pull_function (GstPad *pad,
-		           GstPadPullFunction pull) 
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  // the if and such should optimize out when DEBUG is off
-  DEBUG("setting pull function for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-
-  pad->pullfunc = pull;
-  DEBUG("pullfunc for %s:%s(%p) at %p is set to %p\n",GST_DEBUG_PAD_NAME(pad),pad,&pad->pullfunc,pull);
-}
-
-/**
- * gst_pad_set_pullregion_function:
- * @pad: the pad to set the pull function for
- * @pull: the pull function
- *
- * Set the given pull function for the pad
- */
-void 
-gst_pad_set_pullregion_function (GstPad *pad,
-		           GstPadPullRegionFunction pull) 
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  g_print("gstpad: pad setting pullregion function\n");
-
-  pad->pullregionfunc = pull;
-}
-
-/**
  * gst_pad_set_chain_function:
  * @pad: the pad to set the chain function for
  * @chain: the chain function
@@ -310,6 +277,46 @@ void gst_pad_set_chain_function (GstPad *pad,
   g_return_if_fail (GST_IS_PAD (pad));
   
   pad->chainfunc = chain;
+}
+
+/**
+ * gst_pad_set_pull_function:
+ * @pad: the pad to set the get function for
+ * @get: the get function
+ *
+ * Set the given get function for the pad
+ */
+void 
+gst_pad_set_get_function (GstPad *pad,
+			  GstPadGetFunction get) 
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  // the if and such should optimize out when DEBUG is off
+  DEBUG("setting get function for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+
+  pad->getfunc = get;
+  DEBUG("getfunc for %s:%s(@%p) at %p is set to %p\n",GST_DEBUG_PAD_NAME(pad),pad,&pad->getfunc,get);
+}
+
+/**
+ * gst_pad_set_getregion_function:
+ * @pad: the pad to set the getregion function for
+ * @getregion: the getregion function
+ *
+ * Set the given getregion function for the pad
+ */
+void 
+gst_pad_set_getregion_function (GstPad *pad,
+				GstPadGetRegionFunction getregion) 
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  g_print("gstpad: pad setting getregion function\n");
+
+  pad->getregionfunc = getregion;
 }
 
 /**
@@ -329,6 +336,17 @@ gst_pad_set_qos_function (GstPad *pad,
   pad->qosfunc = qos;
 }
 
+static void
+gst_pad_push_func(GstPad *pad, GstBuffer *buf) 
+{
+  if (pad->peer->chainfunc != NULL) {
+    DEBUG("calling chain function\n");
+    (pad->peer->chainfunc)(pad,buf);
+  } else {
+    DEBUG("got a problem here: default pad_push handler in place, no chain function\n");
+  }
+}
+
 /**
  * gst_pad_push:
  * @pad: the pad to push
@@ -336,20 +354,21 @@ gst_pad_set_qos_function (GstPad *pad,
  *
  * pushes a buffer along a src pad
  */
+/*
 void 
 gst_pad_push (GstPad *pad, 
 	      GstBuffer *buffer) 
 {
   GstPad *peer;
 
-  DEBUG_ENTER("(pad:'%s'(%p),buffer:%p)",gst_pad_get_name(pad),pad,buffer);
+  DEBUG_ENTER("(pad:'%s'(@%p),buffer:%p)",gst_pad_get_name(pad),pad,buffer);
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(GST_PAD_CONNECTED(pad));
   g_return_if_fail(buffer != NULL);
 
-  /* if the pad has been disabled, unreference the pad and let it drop */
+  // if the pad has been disabled, unreference the pad and let it drop
   if (GST_FLAG_IS_SET(pad,GST_PAD_DISABLED)) {
     g_print("gst_pad_push: pad disabled, dropping buffer\n");
     gst_buffer_unref(buffer);
@@ -378,6 +397,7 @@ gst_pad_push (GstPad *pad,
     g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
   }
 }
+*/
 
 /**
  * gst_pad_pull:
@@ -387,6 +407,7 @@ gst_pad_push (GstPad *pad,
  *
  * Returns: the buffer that was pulled
  */
+/*
 GstBuffer*
 gst_pad_pull (GstPad *pad) 
 {
@@ -397,8 +418,8 @@ gst_pad_pull (GstPad *pad)
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
-  /* check to see if the peer pad is disabled.  return NULL if it is */
-  /* FIXME: this may be the wrong way to go about it */
+  // check to see if the peer pad is disabled.  return NULL if it is
+  // FIXME: this may be the wrong way to go about it
   if (GST_FLAG_IS_SET(pad->peer,GST_PAD_DISABLED)) {
     DEBUG("pad disabled, returning NULL\n");
     return NULL;
@@ -429,6 +450,7 @@ gst_pad_pull (GstPad *pad)
 
   return NULL;
 }
+*/
 
 /**
  * gst_pad_pull_region:
@@ -440,6 +462,7 @@ gst_pad_pull (GstPad *pad)
  *
  * Returns: the buffer that was pulled
  */
+/*
 GstBuffer*
 gst_pad_pull_region (GstPad *pad, 
 		     gulong offset, 
@@ -478,6 +501,7 @@ gst_pad_pull_region (GstPad *pad,
 
   return NULL;
 }
+*/
 
 /**
  * gst_pad_chain:
@@ -981,3 +1005,43 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
 
 
 
+#ifndef gst_pad_push
+void gst_pad_push(GstPad *pad,GstBuffer *buf) {
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  if (pad->peer->pushfunc) {
+    DEBUG("calling pushfunc &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME(pad->peer->pushfunc),GST_DEBUG_PAD_NAME(pad->peer));
+    (pad->peer->pushfunc)(pad->peer,buf);
+  } else
+    DEBUG("no pushfunc\n");
+}
+#endif
+
+#ifndef gst_pad_pull
+GstBuffer *gst_pad_pull(GstPad *pad) {
+  GstPad *peer = pad->peer;
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  if (peer->pullfunc) {
+    DEBUG("calling pullfunc &%s (@%p) of peer pad %s:%s\n",
+      GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(peer));
+    return (peer->pullfunc)(peer);
+  } else {
+    DEBUG("no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(peer),&peer->pullfunc);
+    return NULL;
+  }
+}
+#endif
+
+#ifndef gst_pad_pullregion
+GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
+  DEBUG_ENTER("(%s:%s,%ld,%ld)",GST_DEBUG_PAD_NAME(pad),offset,size);
+  if (pad->peer->pullregionfunc) {
+    DEBUG("calling pullregionfunc &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME(pad->peer->pullregionfunc),GST_DEBUG_PAD_NAME(pad->peer));
+    return (pad->peer->pullregionfunc)(pad->peer,offset,size);
+  } else {
+    DEBUG("no pullregionfunc\n");
+    return NULL;
+  }
+}
+#endif

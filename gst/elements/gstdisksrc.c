@@ -22,8 +22,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-//#define DEBUG_ENABLED
-
 #include <gstdisksrc.h>
 
 
@@ -60,7 +58,7 @@ static void 			gst_disksrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
 static void 			gst_disksrc_close_file		(GstDiskSrc *src);
 
-static void 			gst_disksrc_pull		(GstPad *pad);
+static void 			gst_disksrc_get			(GstPad *pad);
 
 static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
@@ -120,7 +118,7 @@ static void
 gst_disksrc_init (GstDiskSrc *disksrc) 
 {
   disksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_pull_function(disksrc->srcpad,gst_disksrc_pull);
+  gst_pad_set_get_function(disksrc->srcpad,gst_disksrc_get);
   gst_element_add_pad (GST_ELEMENT (disksrc), disksrc->srcpad);
 
   disksrc->filename = NULL;
@@ -202,7 +200,7 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void 
-gst_disksrc_pull (GstPad *pad) 
+gst_disksrc_get (GstPad *pad) 
 {
   GstDiskSrc *src;
   GstBuffer *buf;
@@ -228,18 +226,19 @@ gst_disksrc_pull (GstPad *pad)
     perror ("read()");
     gst_buffer_unref (buf);
     return;
-  }
-  else if (readbytes == 0) {
+  } else if (readbytes == 0) {
     gst_src_signal_eos (GST_SRC (src));
     gst_buffer_unref (buf);
     return;
   }
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
-  if (readbytes < src->bytes_per_read)
+  if (readbytes < src->bytes_per_read) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
+    DEBUG("setting GST_BUFFER_EOS\n");
+  }
 
-  /* if we have a new buffer froma seek, mark it */
+  /* if we have a new buffer from a seek, mark it */
   if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
     src->new_seek = FALSE;
@@ -249,10 +248,10 @@ gst_disksrc_pull (GstPad *pad)
   GST_BUFFER_SIZE (buf) = readbytes;
   src->curoffset += readbytes;
 
-  DEBUG("pushing with offset %d\n", GST_BUFFER_OFFSET (buf));
+  DEBUG("pushing %d bytes with offset %d\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
   /* we're done, push the buffer off now */
   gst_pad_push (pad, buf);
-  DEBUG("pushing with offset %d done\n", GST_BUFFER_OFFSET (buf));
+  DEBUG("pushing %d bytes with offset %d done\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
 }
 
 

@@ -111,9 +111,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   fakesink = GST_FAKESINK (pad->parent);
-//  g_print("gst_fakesink_chain: got buffer in '%s'\n",
-//          gst_element_get_name(GST_ELEMENT(fakesink)));
-  g_print("<");
+  g_print("(%s:%s)< ",GST_DEBUG_PAD_NAME(pad));
   
   gst_buffer_unref (buf);
 }

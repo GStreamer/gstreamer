@@ -61,7 +61,7 @@ static void 			gst_thread_create_plan_dummy	(GstBin *bin);
 
 static void*			gst_thread_main_loop		(void *arg);
 
-static GstBin *parent_class = NULL;
+static GstBinClass *parent_class = NULL;
 //static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
 
 GtkType

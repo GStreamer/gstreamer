@@ -116,9 +116,7 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   identity = GST_IDENTITY (pad->parent);
-//  g_print("gst_identity_chain: got buffer in '%s'\n",
-//          gst_element_get_name(GST_ELEMENT(identity)));
-  g_print("i");
+  g_print("(%s:%s)i ",GST_DEBUG_PAD_NAME(pad));
   
   gst_pad_push (identity->srcpad, buf);
 }

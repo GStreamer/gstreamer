@@ -15,6 +15,7 @@ int main(int argc,char *argv[]) {
 
   gst_init(&argc,&argv);
 
+  if (argc != 2) argv[1] = "output.mp3";
   unlink(argv[1]);
   outfile = open(argv[1],O_CREAT | O_RDWR | O_TRUNC);
   if (!outfile) {
@@ -24,13 +25,19 @@ int main(int argc,char *argv[]) {
   fprintf(stderr,"outfile is fd %d\n",outfile);
 
   pipeline = gst_pipeline_new("ripper");
+  g_return_val_if_fail(pipeline != NULL,1);
+  gst_bin_use_cothreads(GST_BIN(pipeline),TRUE);
+
   paranoia = gst_elementfactory_make("cdparanoia","paranoia");
-  g_return_val_if_fail(1,paranoia != NULL);
+  g_return_val_if_fail(paranoia != NULL,2);
+  gtk_object_set(GTK_OBJECT(paranoia),"paranoia_mode",0,NULL);
+//  gtk_object_set(GTK_OBJECT(paranoia),"start_sector",0,"end_sector",75,NULL);
+
   lame = gst_elementfactory_make("lame","lame");
-  g_return_val_if_fail(2,lame != NULL);
-  gtk_object_set(GTK_OBJECT(lame),"bitrate",320,NULL);
+  g_return_val_if_fail(lame != NULL,3);
+  gtk_object_set(GTK_OBJECT(lame),"bitrate",128,NULL);
   sink = gst_elementfactory_make("fdsink","fdsink");
-  g_return_val_if_fail(3,sink != NULL);
+  g_return_val_if_fail(sink != NULL,4);
   gtk_object_set(GTK_OBJECT(sink),"fd",outfile,NULL);
 
   fprintf(stderr,"paranoia is %p, lame is %p, sink is %p\n",paranoia,lame,sink);
