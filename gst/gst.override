@@ -1168,6 +1168,9 @@ _wrap_gst_registry_pool_feature_list(PyGObject *self, PyObject *args)
 %%
 override gst_xml_new noargs
 
+extern PyObject * libxml_xmlDocPtrWrap(xmlDocPtr doc);
+extern PyObject * libxml_xmlNodePtrWrap(xmlNodePtr node);
+ 
 /* libxml2 available check */
 static PyObject *
 _gst_get_libxml2_module(void)

@@ -1,4 +1,5 @@
-EXTRA_DIST = \
+examplesdir = $(pkgdatadir)/examples
+examples_DATA = 	\
 	bps.py		\
 	cp.py		\
 	f2f.py		\
@@ -6,3 +7,5 @@ EXTRA_DIST = \
 	gst123		\
 	play.py		\
 	vorbisplay.py
+
+EXTRA_DIST = $(examples)
