@@ -1,3 +1,8 @@
+2004-04-20  David Schleef  <ds@schleef.org>
+
+	* gst/realmedia/rmdemux.c:  This was supposed to part of the
+	last checkin.  Same idea.
+
 2004-04-20  Daniel Gazard  <daniel.gazard@epita.fr>
 
 	reviewed by David Schleef

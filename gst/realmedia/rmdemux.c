@@ -26,9 +26,9 @@
 #include <string.h>
 #include <zlib.h>
 
-#define RMDEMUX_GUINT32_GET(a) GUINT32_FROM_BE(*(guint32 *)(a))
-#define RMDEMUX_GUINT16_GET(a) GUINT16_FROM_BE(*(guint16 *)(a))
-#define RMDEMUX_FOURCC_GET(a) GUINT32_FROM_LE(*(guint32 *)(a))
+#define RMDEMUX_GUINT32_GET(a)	GST_READ_UINT32_BE(a)
+#define RMDEMUX_GUINT16_GET(a)	GST_READ_UINT16_BE(a)
+#define RMDEMUX_FOURCC_GET(a)	GST_READ_UINT32_LE(a)
 
 typedef struct _GstRMDemuxIndex GstRMDemuxIndex;
 
