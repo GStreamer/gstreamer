@@ -19,6 +19,7 @@ Optional libraries:
 gdk_pixbuf
 libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
 libglade	(for gstplay, gsteditor)
+libHermes	(for gstplay)
 
 libghttp	(for httpsrc)
 libXv		(for videosink)
