@@ -1,5 +1,10 @@
 #include <gst/gst.h>
 
+/* this pipeline is:
+ * { fakesrc ! fakesink }
+ */
+
+
 int main(int argc,char *argv[]) 
 {
   GstElement *fakesrc, *fakesink;

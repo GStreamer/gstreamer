@@ -1,5 +1,9 @@
 #include <gst/gst.h>
 
+/* this pipeline is:
+ * { filesrc ! mad ! osssink }
+ */
+
 /* eos will be called when the src element has an end of stream */
 void eos(GstElement *element, gpointer data) 
 {
@@ -51,7 +55,7 @@ int main(int argc,char *argv[])
   for (x = 0 ; x < 10 ; x++){
     g_print("playing %d\n", x);
     gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
-    sleep(5);
+    sleep(2);
 
     g_print("pausing %d\n", x);
     gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PAUSED);

@@ -1,5 +1,9 @@
 #include <gst/gst.h>
 
+/* this pipeline is:
+ * { { fakesrc ! fakesink } }
+ */
+
 int main(int argc,char *argv[]) 
 {
   GstElement *fakesrc, *fakesink;
@@ -30,8 +34,8 @@ int main(int argc,char *argv[])
     gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
     sleep(1);
 
-    g_print("pausing %d\n", x);
-    gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PAUSED);
+    g_print("nulling %d\n", x);
+    gst_element_set_state(GST_ELEMENT(thread), GST_STATE_NULL);
     sleep(1);
   }
 
