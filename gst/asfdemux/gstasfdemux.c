@@ -526,7 +526,7 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
     GST_TAG_COMMENT, NULL       /* ? */
   };
   guint16 *lengths = (guint16 *) & object;
-  gint i, n;
+  gint i;
   gsize in, out;
   GstTagList *taglist;
   const GList *padlist;
@@ -545,17 +545,18 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
     if (lengths[i] > 2 && lengths[i] % 2 == 0) {
       if (gst_bytestream_peek_bytes (bs, &data, lengths[i]) != lengths[i])
         goto fail;
-      gst_bytestream_flush_fast (bs, lengths[i]);
 
       /* check null-termination (malicious input) */
-      if (data[lengths[i] - 1] != '\0' || data[lengths[i] - 2] != '\0')
+      if (data[lengths[i] - 1] != '\0' || data[lengths[i] - 2] != '\0') {
+        gst_bytestream_flush_fast (bs, lengths[i]);
         continue;
+      }
 
       /* convert to UTF-8 */
-      for (n = 0; n < lengths[i] / 2 - 1; n++)
-        ((gint16 *) data)[n] = GUINT16_FROM_LE (((gint16 *) data)[n]);
       utf8_comments[i] = g_convert (data, lengths[i],
-          "UTF-8", "Unicode", &in, &out, NULL);
+          "UTF-8", "UTF-16LE", &in, &out, NULL);
+
+      gst_bytestream_flush_fast (bs, lengths[i]);
     } else {
       if (lengths[i] > 0 && !gst_bytestream_flush (bs, lengths[i]))
         goto fail;
@@ -706,7 +707,7 @@ gst_asf_demux_process_segment (GstASFDemux * asf_demux,
       }
 
       if (!gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info))
-	return FALSE;
+        return FALSE;
 
       frag_size -= segment_info.chunk_size + 1;
     }
@@ -1485,7 +1486,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
 
         buffer = gst_buffer_new_and_alloc (audio->size);
         memcpy (GST_BUFFER_DATA (buffer), extradata, audio->size);
-        gst_util_dump_mem (GST_BUFFER_DATA (buffer), audio->size);
+        /* gst_util_dump_mem (GST_BUFFER_DATA (buffer), audio->size); */
 
         gst_caps_set_simple (caps,
             "codec_data", GST_TYPE_BUFFER, buffer,
@@ -1505,7 +1506,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
 
         buffer = gst_buffer_new_and_alloc (audio->size);
         memcpy (GST_BUFFER_DATA (buffer), extradata, audio->size);
-        gst_util_dump_mem (GST_BUFFER_DATA (buffer), audio->size);
+        /* gst_util_dump_mem (GST_BUFFER_DATA (buffer), audio->size); */
 
         gst_caps_set_simple (caps,
             "codec_data", GST_TYPE_BUFFER, buffer,
