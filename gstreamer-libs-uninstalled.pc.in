@@ -1,0 +1,7 @@
+Name: GStreamer Uninstalled Media-Specific Libraries
+Description: Streaming-media framework media-specific libraries, not installed
+Version: @VERSION@
+Requires: gstreamer = @VERSION@
+Libs: 
+Cflags: -I${pcfiledir}/gst-libs
+
