@@ -144,6 +144,9 @@ gst_audiofilter_link (GstPad *pad, const GstCaps *caps)
   }
   ret &= gst_structure_get_int (structure, "rate", &audiofilter->rate);
 
+  audiofilter->bytes_per_sample = (audiofilter->width/8) *
+    audiofilter->channels;
+
   if (audiofilter_class->setup) (audiofilter_class->setup) (audiofilter);
 
   return GST_PAD_LINK_OK;
@@ -203,6 +206,9 @@ gst_audiofilter_chain (GstPad *pad, GstData *data)
     gst_pad_push(audiofilter->srcpad, data);
     return;
   }
+
+  audiofilter->size = GST_BUFFER_SIZE (inbuf);
+  audiofilter->n_samples = audiofilter->size / audiofilter->bytes_per_sample;
 
   if (gst_data_is_writable(data)) {
     if (audiofilter_class->filter_inplace) {

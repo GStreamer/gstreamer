@@ -2,6 +2,9 @@ librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 library_LTLIBRARIES = libgstaudio.la libgstaudiofilter.la libgstaudiofilterexample.la
 
+EXTRA_DIST = gstaudiofiltertemplate.c make_filter
+CLEANFILES = gstaudiofilterexample.c
+
 libgstaudio_la_SOURCES = audio.c audioclock.c
 
 libgstaudioincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
@@ -19,3 +22,5 @@ libgstaudiofilterexample_la_SOURCES = gstaudiofilterexample.c
 libgstaudiofilterexample_la_CFLAGS = $(GST_CFLAGS)
 libgstaudiofilterexample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+gstaudiofilterexample.c: $(srcdir)/make_filter $(srcdir)/gstaudiofiltertemplate.c
+	$(srcdir)/make_filter AudiofilterExample $(srcdir)/gstaudiofiltertemplate.c
