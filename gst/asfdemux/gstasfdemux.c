@@ -1223,6 +1223,11 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
 
   if (stream->frag_offset < segment_info->segment_size) {
     /* We don't have the whole packet yet */
+  } else if (got_bytes < segment_info->chunk_size) {
+    /* We didn't get the entire chunk, so don't push it down the pipeline. */
+    gst_buffer_unref (stream->payload);
+    stream->payload = NULL;
+    stream->frag_offset = 0;
   } else {
     /* We have the whole packet now so we should push the packet to
        the src pad now. First though we should check if we need to do
