@@ -72,6 +72,10 @@ struct _CDParanoia {
   /* pads */
   GstPad *srcpad;
 
+  /* Index */
+  GstIndex *index;
+  int index_id;
+  
   gchar *device;
   gchar *generic_device;
   gint default_sectors;

@@ -159,6 +159,9 @@ static gboolean 	cdparanoia_query 		(GstPad *pad, GstQueryType type,
 		     					 GstFormat *format, gint64 *value);
 static const GstQueryType*
 			cdparanoia_get_query_types 	(GstPad *pad);
+static void cdparanoia_set_index (GstElement *element, GstIndex *index);
+static GstIndex *cdparanoia_get_index (GstElement *element);
+																	
 
 static GstElementStateReturn cdparanoia_change_state (GstElement *element);
 
@@ -270,6 +273,8 @@ cdparanoia_class_init (CDParanoiaClass *klass)
   gobject_class->get_property = cdparanoia_get_property;
 
   gstelement_class->change_state = cdparanoia_change_state;
+	gstelement_class->set_index = cdparanoia_set_index;
+	gstelement_class->get_index = cdparanoia_get_index;
 }
 
 static void
@@ -347,7 +352,6 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
       break;
     case ARG_READ_SPEED:
       src->read_speed = g_value_get_int (value);
-      cdda_speed_set (src->d, src->read_speed);
       break;
     case ARG_TOC_OFFSET:
       src->toc_offset = g_value_get_int (value);
@@ -558,6 +562,34 @@ get_cddb_info (TOC *toc, gint tracks, gchar *discid, gint64 *offsets, gint64 *to
 
 }
 
+static void
+add_index_associations (CDParanoia *src)
+{
+	int i;
+
+	for (i = 0; i < src->d->tracks; i++) {
+		gint64 sector;
+
+		sector = cdda_track_firstsector (src->d, i + 1);
+		gst_index_add_association (src->index, src->index_id,
+															 GST_ACCOCIATION_FLAG_KEY_UNIT,
+															 track_format, i,
+															 sector_format, sector,
+															 GST_FORMAT_TIME, (gint64) (((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100),
+															 GST_FORMAT_BYTES, (gint64) (sector << 2),
+															 GST_FORMAT_UNITS, (gint64) ((CD_FRAMESIZE_RAW >> 2) * sector),
+															 NULL);
+#if 0
+		g_print ("Added association for track %d\n", i + 1);
+		g_print ("Sector: %lld\n", sector);
+		g_print ("Time: %lld\n", (gint64) (((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100));
+		g_print ("Bytes: %lld\n", (gint64) (sector << 2));
+		g_print ("Units: %lld\n", (gint64) ((CD_FRAMESIZE_RAW >> 2) * sector));
+		g_print ("-----------\n");
+#endif
+	}
+}
+			
 /* open the file, necessary to go to RUNNING state */
 static gboolean
 cdparanoia_open (CDParanoia *src)
@@ -643,7 +675,7 @@ cdparanoia_open (CDParanoia *src)
   paranoia_mode = src->paranoia_mode;
   if (src->never_skip)
     paranoia_mode |= PARANOIA_MODE_NEVERSKIP;
-
+	
   paranoia_modeset (src->p, paranoia_mode);
 
   if (src->search_overlap != -1) {
@@ -656,6 +688,10 @@ cdparanoia_open (CDParanoia *src)
 
   GST_FLAG_SET (src, CDPARANOIA_OPEN);
 
+	if (src->index && GST_INDEX_IS_WRITABLE (src->index)) {
+		add_index_associations (src);
+	}
+	
   GST_DEBUG_LEAVE ("");
 
   return TRUE;
@@ -689,28 +725,28 @@ cdparanoia_change_state (GstElement *element)
   cdparanoia = CDPARANOIA (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-      if (!cdparanoia_open (CDPARANOIA (element))) {
-	g_warning ("cdparanoia: failed opening cd");
-	return GST_STATE_FAILURE;
-      }
-      cdparanoia->seq = 0;
-      break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      cdparanoia_close (CDPARANOIA (element));
-      break;
-    case GST_STATE_READY_TO_NULL:
-      break;
-    default:
-      break;
+	case GST_STATE_NULL_TO_READY:
+		break;
+	case GST_STATE_READY_TO_PAUSED:
+		if (!cdparanoia_open (CDPARANOIA (element))) {
+			g_warning ("cdparanoia: failed opening cd");
+			return GST_STATE_FAILURE;
+		}
+		cdparanoia->seq = 0;
+		break;
+	case GST_STATE_PAUSED_TO_PLAYING:
+		break;
+	case GST_STATE_PLAYING_TO_PAUSED:
+		break;
+	case GST_STATE_PAUSED_TO_READY:
+		cdparanoia_close (CDPARANOIA (element));
+		break;
+	case GST_STATE_READY_TO_NULL:
+		break;
+	default:
+		break;
   }
-
+	
   /* if we haven't failed already, give the parent class a chance too ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
@@ -744,8 +780,10 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN))
+  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
+		g_print ("Not open\n");
     goto error;
+	}
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -763,75 +801,76 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
        * offsets to sectors first */
       if (offset != -1) {
         res &= gst_pad_convert (src->srcpad, format, offset, 
-		                &sector_format, &seg_start_sector);
+																&sector_format, &seg_start_sector);
       }
       if (endoffset != -1) {
         res &= gst_pad_convert (src->srcpad, format, endoffset, 
-		                &sector_format, &seg_end_sector);
+																&sector_format, &seg_end_sector);
       }
       
       if (!res) {
-	GST_DEBUG (0, "could not convert offsets to sectors");
-	goto error;
+				GST_DEBUG (0, "could not convert offsets to sectors");
+				goto error;
       }
       
       switch (GST_EVENT_SEEK_METHOD (event)) {
-	case GST_SEEK_METHOD_SET:
-          /* values are set for regular seek set */
-	  break;
-	case GST_SEEK_METHOD_CUR:
-	  if (seg_start_sector != -1) {
-	    seg_start_sector += src->cur_sector;
-	  }
-	  if (seg_end_sector != -1) {
-	    seg_end_sector += src->cur_sector;
-	  }
-	  break;
-	case GST_SEEK_METHOD_END:
-	  if (seg_start_sector != -1) {
-	    seg_start_sector = src->last_sector - seg_start_sector;
-	  }
-	  if (seg_end_sector != -1) {
-	    seg_end_sector = src->last_sector - seg_end_sector;
-	  }
-	  break;
-	default:
-	  goto error;
+			case GST_SEEK_METHOD_SET:
+				/* values are set for regular seek set */
+				break;
+			case GST_SEEK_METHOD_CUR:
+				if (seg_start_sector != -1) {
+					seg_start_sector += src->cur_sector;
+				}
+				if (seg_end_sector != -1) {
+					seg_end_sector += src->cur_sector;
+				}
+				break;
+			case GST_SEEK_METHOD_END:
+				if (seg_start_sector != -1) {
+					seg_start_sector = src->last_sector - seg_start_sector;
+				}
+				if (seg_end_sector != -1) {
+					seg_end_sector = src->last_sector - seg_end_sector;
+				}
+				break;
+			default:
+				goto error;
       }
       /* do we need to update the start sector? */
       if (seg_start_sector != -1) {
         seg_start_sector = CLAMP (seg_start_sector, 
-			          src->first_sector, src->last_sector);
-
+																	src->first_sector, src->last_sector);
+				
         if (paranoia_seek (src->p, seg_start_sector, SEEK_SET) > -1) {
-	  GST_DEBUG (0, "seeked to %lld", seg_start_sector);
-
-	  src->segment_start_sector = seg_start_sector;;
-	  src->cur_sector = src->segment_start_sector;
-	}
-	else
-	  goto error;
+					GST_DEBUG (0, "seeked to %lld", seg_start_sector);
+					
+					src->segment_start_sector = seg_start_sector;;
+					src->cur_sector = src->segment_start_sector;
+				}
+				else {
+					goto error;
+				}
       }
       if (seg_end_sector != -1) {
         seg_end_sector = CLAMP (seg_end_sector, 
-			        src->first_sector, src->last_sector);
+																src->first_sector, src->last_sector);
         src->segment_end_sector = seg_end_sector;;
       }
       GST_DEBUG (GST_CAT_PLUGIN_INFO, "configured for %d -> %d sectors\n", 
-		      src->segment_start_sector, 
-		      src->segment_end_sector);
+								 src->segment_start_sector, 
+								 src->segment_end_sector);
       break;
     }
-    default:
-      goto error;
+	default:
+		goto error;
   }
-
+	
   if (FALSE) {
-error:
+	error:
     res = FALSE;
   }
   gst_event_unref (event);
-
+	
   return res;
 }
 
@@ -862,104 +901,107 @@ cdparanoia_convert (GstPad *pad,
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN))
+  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
     return FALSE;
+	}
 
   switch (src_format) {
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          src_value <<= 2;	/* 4 bytes per sample */
-        case GST_FORMAT_UNITS:
-	  *dest_value = src_value * 44100 / GST_SECOND;
-	  break;
+	case GST_FORMAT_TIME:
+		switch (*dest_format) {
+		case GST_FORMAT_BYTES:
+			src_value <<= 2;	/* 4 bytes per sample */
+		case GST_FORMAT_UNITS:
+			*dest_value = src_value * 44100 / GST_SECOND;
+			break;
+		default:
+			if (*dest_format == track_format || *dest_format == sector_format) {
+				gint sector = (src_value * 44100) / ((CD_FRAMESIZE_RAW >> 2) * GST_SECOND);
+				
+				if (*dest_format == sector_format) {
+					*dest_value = sector;
+				}
+				else {
+					*dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+				}
+			}
+			else 
+				return FALSE;
+			break;
+		}
+		break;
+	case GST_FORMAT_BYTES:
+		src_value >>= 2;
+	case GST_FORMAT_UNITS:
+		switch (*dest_format) {
+		case GST_FORMAT_BYTES:
+			*dest_value = src_value * 4;
+			break;
+		case GST_FORMAT_TIME:
+			*dest_value = src_value * GST_SECOND / 44100;
+			break;
+		default:
+			if (*dest_format == track_format || *dest_format == sector_format) {
+				gint sector = src_value / (CD_FRAMESIZE_RAW >> 2);
+				
+				if (*dest_format == track_format) {
+					*dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+				}
+				else {
+					*dest_value = sector;
+				}
+			}
+			else 
+				return FALSE;
+			break;
+		}
+		break;
 	default:
-          if (*dest_format == track_format || *dest_format == sector_format) {
-	    gint sector = (src_value * 44100) / ((CD_FRAMESIZE_RAW >> 2) * GST_SECOND);
-
-	    if (*dest_format == sector_format) {
-	      *dest_value = sector;
-	    }
-	    else {
-	      *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
-	    }
-	  }
-          else 
-	    return FALSE;
-	  break;
-      }
-      break;
-    case GST_FORMAT_BYTES:
-      src_value >>= 2;
-    case GST_FORMAT_UNITS:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * 4;
-	  break;
-        case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / 44100;
-	  break;
-	default:
-          if (*dest_format == track_format || *dest_format == sector_format) {
-            gint sector = src_value / (CD_FRAMESIZE_RAW >> 2);
-
-            if (*dest_format == track_format) {
-	      *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
-	    }
-	    else {
-	      *dest_value = sector;
-	    }
-	  }
-          else 
-	    return FALSE;
-	  break;
-      }
-      break;
-    default:
-    {
-      gint sector;
-
-      if (src_format == track_format) {
-	/* some sanity checks */
-	if (src_value < 0 || src_value > src->d->tracks)
-          return FALSE;
-
-	sector = cdda_track_firstsector (src->d, src_value + 1);
-      }
-      else if (src_format == sector_format) {
-	sector = src_value;
-      }
-      else
-        return FALSE;
-
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = ((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100;
-	  break;
-        case GST_FORMAT_BYTES:
-          sector <<= 2;
-        case GST_FORMAT_UNITS:
-          *dest_value = (CD_FRAMESIZE_RAW >> 2) * sector;
-	  break;
-	default:
-          if (*dest_format == sector_format) {
-	    *dest_value = sector;
-	  }
-	  else if (*dest_format == track_format) {
-	    /* if we go past the last sector, make sure to report the last track */
-	    if (sector > src->last_sector)
-	      *dest_value = cdda_sector_gettrack (src->d, src->last_sector);
-	    else 
-	      *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
-	  }
-          else 
-            return FALSE;
-	  break;
-      }
-      break;
-    }
-  }
-
+	{
+		gint sector;
+		
+		if (src_format == track_format) {
+			/* some sanity checks */
+			if (src_value < 0 || src_value > src->d->tracks)
+				return FALSE;
+			
+			sector = cdda_track_firstsector (src->d, src_value + 1);
+		}
+		else if (src_format == sector_format) {
+			sector = src_value;
+		}
+		else {
+			return FALSE;
+		}
+		
+		switch (*dest_format) {
+		case GST_FORMAT_TIME:
+			*dest_value = ((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100;
+			break;
+		case GST_FORMAT_BYTES:
+			sector <<= 2;
+		case GST_FORMAT_UNITS:
+			*dest_value = (CD_FRAMESIZE_RAW >> 2) * sector;
+			break;
+		default:
+			if (*dest_format == sector_format) {
+				*dest_value = sector;
+			}
+			else if (*dest_format == track_format) {
+				/* if we go past the last sector, make sure to report the last track */
+				if (sector > src->last_sector)
+					*dest_value = cdda_sector_gettrack (src->d, src->last_sector);
+				else 
+					*dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+			}
+			else {
+				return FALSE;
+			}
+			break;
+		}
+		break;
+	}
+	}
+	
   return TRUE;
 }
 
@@ -985,8 +1027,9 @@ cdparanoia_query (GstPad *pad, GstQueryType type,
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN))
+  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
     return FALSE;
+	}
 
   switch (type) {
     case GST_QUERY_TOTAL:
@@ -1019,7 +1062,32 @@ cdparanoia_query (GstPad *pad, GstQueryType type,
   return res;
 }
 
+static void
+cdparanoia_set_index (GstElement *element,
+											GstIndex *index)
+{
+	CDParanoia *cdparanoia;
 
+	cdparanoia = CDPARANOIA (element);
+
+	cdparanoia->index = index;
+
+	gst_index_get_writer_id (index, GST_OBJECT (cdparanoia->srcpad),
+													 &cdparanoia->index_id);
+	gst_index_add_format (index, cdparanoia->index_id, track_format);
+	gst_index_add_format (index, cdparanoia->index_id, sector_format);
+}
+
+static GstIndex *
+cdparanoia_get_index (GstElement *element)
+{
+	CDParanoia *cdparanoia;
+
+	cdparanoia = CDPARANOIA (element);
+
+	return cdparanoia->index;
+}
+											
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
