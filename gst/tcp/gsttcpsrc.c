@@ -48,7 +48,7 @@ enum {
   ARG_0,
   ARG_PORT,
   ARG_CONTROL,
-  ARG_SOCKET_OPTIONS,
+/*  ARG_SOCKET_OPTIONS,*/
   /* FILL ME */
 };
 
@@ -124,11 +124,11 @@ gst_tcpsrc_class_init (GstTCPSrc *klass)
   g_object_class_install_property (gobject_class, ARG_CONTROL,
     g_param_spec_enum ("control", "control", "The type of control",
                        GST_TYPE_TCPSRC_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
-
+/*
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOCKET_OPTIONS,
     g_param_spec_boolean ("socketop", "socketop", "Enable or disable socket options REUSEADDR and KEEPALIVE",
                         FALSE, G_PARAM_READWRITE));
-
+*/
   gobject_class->set_property = gst_tcpsrc_set_property;
   gobject_class->get_property = gst_tcpsrc_get_property;
 
@@ -160,7 +160,7 @@ gst_tcpsrc_init (GstTCPSrc *tcpsrc)
   tcpsrc->sock = -1;
   tcpsrc->control_sock = -1;
   tcpsrc->client_sock = -1;
-  tcpsrc->socket_options = FALSE;
+  /*tcpsrc->socket_options = FALSE;*/
 
   GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_OPEN);
   GST_FLAG_SET (tcpsrc, GST_TCPSRC_1ST_BUF);
@@ -329,9 +329,9 @@ gst_tcpsrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_CONTROL:
         tcpsrc->control = g_value_get_enum (value);
       break;
-    case ARG_SOCKET_OPTIONS:
+/*    case ARG_SOCKET_OPTIONS:
 	tcpsrc->socket_options = g_value_get_boolean(value);	
-      break;	
+      break;	*/
     default:
       break;
   }
@@ -353,9 +353,9 @@ gst_tcpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
     case ARG_CONTROL:
       g_value_set_enum (value, tcpsrc->control);
       break;
-    case ARG_SOCKET_OPTIONS:
+/*    case ARG_SOCKET_OPTIONS:
       g_value_set_boolean(value,tcpsrc->socket_options);
-      break;
+      break;*/
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -377,9 +377,9 @@ gst_tcpsrc_init_receive (GstTCPSrc *src)
     return FALSE;
   }
 
-  if (src->socket_options)
-  {
-   g_print("Socket Options enabled\n");
+/*  if (src->socket_options)
+  {*/
+   g_print("Socket Options SO_REUSEADDR, SO_KEEPALIVE\n");
   /* Sock Options */ 
   val = 1;
   /* allow local address reuse */ 
@@ -390,7 +390,7 @@ gst_tcpsrc_init_receive (GstTCPSrc *src)
   if( setsockopt( src->sock,SOL_SOCKET,SO_KEEPALIVE, &val, sizeof( int )) <0)
     perror( "setsockopt()" );
   /* Sock Options */
-  }
+/*  } */
 
   if (bind (src->sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) {
     perror("stream_sock bind");
