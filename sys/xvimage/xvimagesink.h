@@ -84,6 +84,7 @@ struct _GstXContext {
   gint im_format;
   
   GList *formats_list;
+  GList *channels_list;
   
   GstCaps *caps;
 };

@@ -24,6 +24,7 @@
 /* Our interfaces */
 #include <gst/navigation/navigation.h>
 #include <gst/xoverlay/xoverlay.h>
+#include <gst/colorbalance/colorbalance.h>
 
 /* Object header */
 #include "xvimagesink.h"
@@ -529,6 +530,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
   GstXContext *xcontext = NULL;
   XPixmapFormatValues *px_formats = NULL;
   gint nb_formats = 0, i;
+  char *channels[4] = { "XV_HUE", "XV_SATURATION",
+                        "XV_BRIGHTNESS", "XV_CONTRAST" };
   
   g_return_val_if_fail (xvimagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
@@ -616,6 +619,19 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     
   g_mutex_unlock (xvimagesink->x_lock);
   
+  /* Generate the channels list */
+  for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++)
+    {
+      GstColorBalanceChannel *channel;
+    
+      channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+      channel->label = g_strdup (channels[i]);
+      channel->min_value = -1000;
+      channel->max_value = 1000;
+      xcontext->channels_list = g_list_append (xcontext->channels_list,
+                                               channel);
+    }
+    
   return xcontext;
 }
 
@@ -624,24 +640,36 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
 static void
 gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
 {
-  GList *list;
+  GList *formats_list, *channels_list;
   
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
-  list = xvimagesink->xcontext->formats_list;
+  formats_list = xvimagesink->xcontext->formats_list;
   
-  while (list)
+  while (formats_list)
     {
-      GstXvImageFormat *format = list->data;
+      GstXvImageFormat *format = formats_list->data;
       gst_caps_free (format->caps);
       g_free (format);
-      list = g_list_next (list);
+      formats_list = g_list_next (formats_list);
     }
     
   if (xvimagesink->xcontext->formats_list)
     g_list_free (xvimagesink->xcontext->formats_list);
+  
+  channels_list = xvimagesink->xcontext->channels_list;
+  
+  while (channels_list)
+    {
+      GstColorBalanceChannel *channel = channels_list->data;
+      g_object_unref (channel);
+      channels_list = g_list_next (channels_list);
+    }
     
+  if (xvimagesink->xcontext->channels_list)
+    g_list_free (xvimagesink->xcontext->channels_list);
+  
   gst_caps_free (xvimagesink->xcontext->caps);
   
   g_mutex_lock (xvimagesink->x_lock);
@@ -1039,7 +1067,9 @@ gst_xvimagesink_imagepool_clear (GstXvImageSink *xvimagesink)
 static gboolean
 gst_xvimagesink_interface_supported (GstImplementsInterface *iface, GType type)
 {
-  g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY);
+  g_assert (type == GST_TYPE_NAVIGATION ||
+            type == GST_TYPE_X_OVERLAY ||
+            type == GST_TYPE_COLOR_BALANCE);
   return TRUE;
 }
 
@@ -1192,6 +1222,72 @@ gst_xvimagesink_xoverlay_init (GstXOverlayClass *iface)
   iface->get_desired_size = gst_xvimagesink_get_desired_size;
 }
 
+static const GList *
+gst_xvimagesink_colorbalance_list_channels (GstColorBalance *balance)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
+  
+  g_return_val_if_fail (xvimagesink != NULL, NULL);
+  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
+  
+  if (xvimagesink->xcontext)
+    return xvimagesink->xcontext->channels_list;
+  else
+    return NULL;
+}
+
+static void
+gst_xvimagesink_colorbalance_set_value (GstColorBalance        *balance,
+                                        GstColorBalanceChannel *channel,
+                                        gint                    value)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
+  
+  g_return_if_fail (xvimagesink != NULL);
+  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  g_return_if_fail (channel->label != NULL);
+  
+  g_mutex_lock (xvimagesink->x_lock);
+  
+  XvSetPortAttribute (xvimagesink->xcontext->disp,
+                      xvimagesink->xcontext->xv_port_id,
+                      XInternAtom (xvimagesink->xcontext->disp,
+                                   channel->label, 1), value);
+  
+  g_mutex_unlock (xvimagesink->x_lock);
+}
+
+static gint
+gst_xvimagesink_colorbalance_get_value (GstColorBalance        *balance,
+                                        GstColorBalanceChannel *channel)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
+  gint value;
+  
+  g_return_val_if_fail (xvimagesink != NULL, 0);
+  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), 0);
+  g_return_val_if_fail (channel->label != NULL, 0);
+  
+  g_mutex_lock (xvimagesink->x_lock);
+  
+  XvGetPortAttribute (xvimagesink->xcontext->disp,
+                      xvimagesink->xcontext->xv_port_id,
+                      XInternAtom (xvimagesink->xcontext->disp,
+                                   channel->label, 1), &value);
+  
+  g_mutex_unlock (xvimagesink->x_lock);
+  
+  return value;
+}
+
+static void
+gst_xvimagesink_colorbalance_init (GstColorBalanceClass *iface)
+{
+  iface->list_channels = gst_xvimagesink_colorbalance_list_channels;
+  iface->set_value = gst_xvimagesink_colorbalance_set_value;
+  iface->get_value = gst_xvimagesink_colorbalance_get_value;
+}
+
 /* =========================================== */
 /*                                             */
 /*              Init & Class init              */
@@ -1339,6 +1435,11 @@ gst_xvimagesink_get_type (void)
         NULL,
         NULL,
       };
+      static const GInterfaceInfo colorbalance_info = {
+        (GInterfaceInitFunc) gst_xvimagesink_colorbalance_init,
+        NULL,
+        NULL,
+      };
       
       xvimagesink_type = g_type_register_static (GST_TYPE_VIDEOSINK,
                                                  "GstXvImageSink",
@@ -1350,6 +1451,8 @@ gst_xvimagesink_get_type (void)
                                    &navigation_info);
       g_type_add_interface_static (xvimagesink_type, GST_TYPE_X_OVERLAY,
                                    &overlay_info);
+      g_type_add_interface_static (xvimagesink_type, GST_TYPE_COLOR_BALANCE,
+                                   &colorbalance_info);
     }
     
   return xvimagesink_type;
