@@ -310,7 +310,7 @@ dnl
 dnl The macro will set USE_<<FEATURE-NAME> to "yes" or "no" depending on
 dnl whether the feature is to be used.
 dnl
-dnl The macro will call AM_CONDTIONAL(USE_<<FEATURE-NAME>, ...) to allow
+dnl The macro will call AM_CONDITIONAL(USE_<<FEATURE-NAME>, ...) to allow
 dnl the feature to control what is built in Makefile.ams.  If you want
 dnl additional actions resulting from the test, you can add them with the
 dnl ACTION-IF-USE and ACTION-IF-NOTUSE parameters.
