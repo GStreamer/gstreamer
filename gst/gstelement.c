@@ -245,6 +245,71 @@ gst_element_dispatch_properties_changed (GObject     *object,
   }
 }
 
+/** 
+ * gst_element_default_deep_notify:
+ * @object: the object that signalled the notify
+ * @orig: the object that intiated the notify
+ * @psepc: the paramspec of the property
+ * @excluded_props: user specified properties to exclude
+ *
+ * A default deep_notify signal callback that can be added to an
+ * element. The user data should contain a pointer to an array of
+ * strings that should be excluded from the notify.
+ * The default handler will print the new value of the property 
+ * using g_print.
+ */
+void
+gst_element_default_deep_notify (GObject *object, GstObject *orig, GParamSpec *pspec, gchar **excluded_props)
+{
+  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  gchar *str = 0;
+
+  if (pspec->flags & G_PARAM_READABLE) {
+    /* let's not print these out for excluded properties... */
+    while (excluded_props != NULL && *excluded_props != NULL) {
+      if (strcmp (pspec->name, *excluded_props) == 0)
+        return;
+      excluded_props++;
+    }
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
+
+    if (G_IS_PARAM_SPEC_ENUM (pspec)) {
+      GEnumValue *enum_value;
+      enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
+      g_value_get_enum (&value));
+
+      str = g_strdup_printf ("%s (%d)", enum_value->value_nick, enum_value->value);
+    }
+    else {
+      str = g_strdup_value_contents (&value);
+    }
+    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
+    g_value_unset(&value);
+  } else {
+    g_warning ("Parameter %s not readable in %s.", pspec->name, GST_OBJECT_NAME (orig));
+  }
+}
+
+/** 
+ * gst_element_default_error:
+ * @object: the object that signalled the error
+ * @orig: the object that intiated the error
+ * @error: the error message
+ *
+ * A default error signal callback that can be added to an
+ * element. The user data passed to the g_signal_connect is
+ * ignored.
+ * The default handler will smply print the error string 
+ * using g_print.
+ */
+void
+gst_element_default_error (GObject *object, GstObject *orig, gchar *error)
+{ 
+  g_print ("ERROR: %s: %s\n", GST_OBJECT_NAME (orig), error);
+} 
+
 typedef struct {
   const GParamSpec *pspec;
   const GValue *value;

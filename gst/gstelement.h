@@ -182,6 +182,9 @@ void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplat
 void                    gst_element_class_install_std_props	(GstElementClass *klass,
 								 const gchar      *first_name, ...);
 
+void			gst_element_default_deep_notify		(GObject *object, GstObject *orig, 
+								 GParamSpec *pspec, gchar **excluded_props);
+void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
 
 GType			gst_element_get_type		(void);
 #define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
