@@ -46,6 +46,7 @@ enum {
   ARG_LOOP_BASED,
   ARG_SLEEP_TIME,
   ARG_DUPLICATE,
+  ARG_ERROR_AFTER,
   ARG_SILENT,
 };
 
@@ -98,8 +99,11 @@ gst_identity_class_init (GstIdentityClass *klass)
     g_param_spec_uint ("sleep_time", "sleep_time", "sleep_time",
                        0, G_MAXUINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUPLICATE,
-    g_param_spec_uint ("duplicate", "duplicate", "duplicate",
+    g_param_spec_uint ("duplicate", "Duplicate Buffers", "Push the buffers N times",
                        0, G_MAXUINT, 1, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_AFTER,
+    g_param_spec_int ("error_after", "Error After", "Error after N buffers",
+                       G_MININT, G_MAXINT, -1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
                           TRUE,G_PARAM_READWRITE)); 
@@ -160,6 +164,7 @@ gst_identity_init (GstIdentity *identity)
   identity->loop_based = FALSE;
   identity->sleep_time = 0;
   identity->duplicate = 1;
+  identity->error_after = -1;
   identity->silent = FALSE;
 }
 
@@ -174,6 +179,15 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
+
+  if (identity->error_after >= 0) {
+    identity->error_after--;
+    if (identity->error_after == 0) {
+      gst_buffer_unref (buf);
+      gst_element_error (GST_ELEMENT (identity), "errored after iterations as requested");
+      return;
+    }
+  }
 
   for (i=identity->duplicate; i; i--) {
     if (!identity->silent)
@@ -206,6 +220,18 @@ gst_identity_loop (GstElement *element)
   identity = GST_IDENTITY (element);
   
   buf = gst_pad_pull (identity->sinkpad);
+  if (GST_IS_EVENT (buf)) {
+    gst_pad_event_default (identity->sinkpad, GST_EVENT (buf));
+  }
+
+  if (identity->error_after >= 0) {
+    identity->error_after--;
+    if (identity->error_after == 0) {
+      gst_buffer_unref (buf);
+      gst_element_error (element, "errored after iterations as requested");
+      return;
+    }
+  }
     
   for (i=identity->duplicate; i; i--) {
     if (!identity->silent)
@@ -256,6 +282,9 @@ gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_DUPLICATE:
       identity->duplicate = g_value_get_uint (value);
       break;
+    case ARG_ERROR_AFTER:
+      identity->error_after = g_value_get_uint (value);
+      break;
     default:
       break;
   }
@@ -278,6 +307,9 @@ static void gst_identity_get_property(GObject *object, guint prop_id, GValue *va
       break;
     case ARG_DUPLICATE:
       g_value_set_uint (value, identity->duplicate);
+      break;
+    case ARG_ERROR_AFTER:
+      g_value_set_uint (value, identity->error_after);
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, identity->silent);

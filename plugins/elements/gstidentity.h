@@ -59,6 +59,7 @@ struct _GstIdentity {
 
   gboolean loop_based;
   guint duplicate;
+  gint error_after;
   guint sleep_time;
   gboolean silent;
 };
