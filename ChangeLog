@@ -1,3 +1,12 @@
+2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_pix_fmt):
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.h:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_pad_link):
+	  don't make function do two things at the same time without reason.
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/ac3parse/ac3parse.vcproj
