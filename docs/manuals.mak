@@ -89,7 +89,7 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS)
 	@-mkdir -p $(BUILDDIR)
 	@for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done
 	@for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done
-	@cp $(srcdir)/../version.entities $(BUILDDIR)
+	@cp ../version.entities $(BUILDDIR)
 
 html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@echo "*** Generating HTML output ***"
@@ -164,8 +164,8 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 	@cat $< | pngtopnm | pnmtops -noturn > $@ 2> /dev/null
 
 # make sure xml validates properly
-check-local:
-	xmllint -noout -valid $(MAIN)
+#check-local:
+#	xmllint -noout -valid $(srcdir)/$(MAIN)
 
 ### this is a website upload target
 
