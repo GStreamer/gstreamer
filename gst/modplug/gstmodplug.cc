@@ -677,6 +677,9 @@ gst_modplug_loop (GstElement *element)
         
     modplug->mSoundFile->Create (modplug->buffer_in, modplug->song_size);    
       
+    gst_bytestream_flush (modplug->bs, modplug->song_size);
+    modplug->buffer_in = NULL;
+
     modplug->audiobuffer = (guchar *) g_malloc (modplug->length);
     
     gst_modplug_update_metadata (modplug);
@@ -731,8 +734,11 @@ gst_modplug_loop (GstElement *element)
         gst_pad_push (modplug->srcpad, buffer_out);   
     }
     else
-      if (GST_PAD_IS_USABLE (modplug->srcpad))
+      if (GST_PAD_IS_LINKED (modplug->srcpad))
       {        
+        /* FIXME, hack, pull final EOS from peer */
+        gst_bytestream_flush (modplug->bs, 1);
+	
         event = gst_event_new (GST_EVENT_EOS);
         gst_pad_push (modplug->srcpad, GST_BUFFER (event));
         gst_element_set_eos (element);
@@ -767,9 +773,8 @@ gst_modplug_change_state (GstElement *element)
       gst_bytestream_destroy (modplug->bs);          
       modplug->mSoundFile->Destroy ();      
       g_free (modplug->audiobuffer);      
-      g_free (modplug->buffer_in);
-      modplug->audiobuffer = NULL;
       modplug->buffer_in = NULL;
+      modplug->audiobuffer = NULL;
       gst_caps_unref (modplug->streaminfo);
       modplug->state = MODPLUG_STATE_NEED_TUNE;
       break;
