@@ -45,13 +45,15 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
   gchar *str = 0;
 
   /* let's not print these out for the offset property... */
-  if (pspec->flags & G_PARAM_READABLE && strcmp (pspec->name, "offset") != 0) {
-    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-    str = g_strdup_value_contents (&value);
-    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
-    g_free (str);
-    g_value_unset(&value);
+  if (pspec->flags & G_PARAM_READABLE) {
+    if (strcmp (pspec->name, "offset") != 0) {
+      g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+      g_object_get_property (G_OBJECT (orig), pspec->name, &value);
+      str = g_strdup_value_contents (&value);
+      g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+      g_free (str);
+      g_value_unset(&value);
+    }
   } else {
     g_warning ("Parameter not readable. What's up with that?");
   }
