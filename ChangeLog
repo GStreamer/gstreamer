@@ -1,3 +1,40 @@
+2004-03-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/aalib/gstaasink.c: (gst_aasink_class_init):
+	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_class_init):
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_class_init):
+	* ext/divx/gstdivxenc.c: (gst_divxenc_class_init):
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_class_init):
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_class_init):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_class_init):
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_class_init):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_class_init):
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_class_init):
+	* gst-libs/gst/colorbalance/colorbalance.c:
+	(gst_color_balance_class_init):
+	* gst-libs/gst/colorbalance/colorbalancechannel.c:
+	(gst_color_balance_channel_class_init):
+	* gst-libs/gst/mixer/mixer.c: (gst_mixer_class_init):
+	* gst-libs/gst/play/play.c: (gst_play_class_init):
+	* gst-libs/gst/propertyprobe/propertyprobe.c:
+	(gst_property_probe_iface_init):
+	* gst-libs/gst/tuner/tuner.c: (gst_tuner_class_init):
+	* gst-libs/gst/tuner/tunerchannel.c:
+	(gst_tuner_channel_class_init):
+	* gst-libs/gst/xoverlay/xoverlay.c: (gst_x_overlay_base_init):
+	* gst/cutter/gstcutter.c: (gst_cutter_class_init):
+	* gst/effectv/gstvertigo.c: (gst_vertigotv_class_init):
+	* sys/cdrom/gstcdplayer.c: (cdplayer_class_init):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_class_init):
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_class_init):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_class_init):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init):
+          fix signals to use - instead of _
+	* ext/libcaca/gstcacasink.h:
+	* ext/sdl/sdlvideosink.h:
+          fix header rename
+
 2004-03-04  David Schleef  <ds@schleef.org>
 
 	* testsuite/gst-lint:  Add a check for bad signal names.

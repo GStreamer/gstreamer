@@ -154,7 +154,7 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
   gobject_class->get_property = gst_v4lmjpegsink_get_property;
 
   gst_v4lmjpegsink_signals[SIGNAL_FRAME_DISPLAYED] =
-    g_signal_new ("frame_displayed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("frame-displayed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstV4lMjpegSinkClass, frame_displayed), NULL, NULL,
                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 

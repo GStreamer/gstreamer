@@ -222,15 +222,15 @@ cdparanoia_class_init (CDParanoiaClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   cdparanoia_signals[SMILIE_CHANGE] =
-    g_signal_new ("smilie_change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("smilie-change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (CDParanoiaClass, smilie_change), NULL, NULL,
 		  g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
   cdparanoia_signals[TRANSPORT_ERROR] =
-    g_signal_new ("transport_error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("transport-error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (CDParanoiaClass, transport_error), NULL, NULL,
 		  g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
   cdparanoia_signals[UNCORRECTED_ERROR] =
-    g_signal_new ("uncorrected_error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("uncorrected-error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (CDParanoiaClass, uncorrected_error), NULL, NULL,
 		  g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 

@@ -71,7 +71,7 @@ gst_color_balance_class_init (GstColorBalanceClass *klass)
   
   if (!initialized) {
     gst_color_balance_signals[VALUE_CHANGED] =
-      g_signal_new ("value_changed",
+      g_signal_new ("value-changed",
 		    GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
 		    G_STRUCT_OFFSET (GstColorBalanceClass, value_changed),
 		    NULL, NULL,

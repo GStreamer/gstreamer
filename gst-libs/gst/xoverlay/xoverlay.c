@@ -76,14 +76,14 @@ gst_x_overlay_base_init (gpointer g_class)
   if (! initialized)
     {
       gst_x_overlay_signals[HAVE_XWINDOW_ID] =
-        g_signal_new ("have_xwindow_id",
+        g_signal_new ("have-xwindow-id",
                       GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (GstXOverlayClass, have_xwindow_id),
                       NULL, NULL,
                       g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1,
 		      G_TYPE_INT);
       gst_x_overlay_signals[DESIRED_SIZE] =
-        g_signal_new ("desired_size_changed",
+        g_signal_new ("desired-size-changed",
                       GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (GstXOverlayClass, desired_size),
                       NULL, NULL,

@@ -559,16 +559,16 @@ gst_play_class_init (GstPlayClass *klass)
   element_class->state_change = gst_play_state_change;
   
   gst_play_signals[TIME_TICK] =
-    g_signal_new ("time_tick", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+    g_signal_new ("time-tick", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
                   G_STRUCT_OFFSET (GstPlayClass, time_tick), NULL, NULL,
                   gst_marshal_VOID__INT64, G_TYPE_NONE, 1, G_TYPE_INT64);
   gst_play_signals[STREAM_LENGTH] =
-    g_signal_new ("stream_length", G_TYPE_FROM_CLASS (klass),
+    g_signal_new ("stream-length", G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_FIRST,
                   G_STRUCT_OFFSET (GstPlayClass, stream_length), NULL, NULL,
                   gst_marshal_VOID__INT64, G_TYPE_NONE, 1, G_TYPE_INT64);
   gst_play_signals[HAVE_VIDEO_SIZE] =
-    g_signal_new ("have_video_size", G_TYPE_FROM_CLASS (klass),
+    g_signal_new ("have-video-size", G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_FIRST,
                   G_STRUCT_OFFSET (GstPlayClass, have_video_size), NULL, NULL,
                   gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,

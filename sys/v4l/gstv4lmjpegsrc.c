@@ -198,22 +198,22 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 
   /* signals */
   gst_v4lmjpegsrc_signals[SIGNAL_FRAME_CAPTURE] =
-    g_signal_new("frame_capture", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("frame-capture", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_capture),
                  NULL, NULL, g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   gst_v4lmjpegsrc_signals[SIGNAL_FRAME_DROP] =
-    g_signal_new("frame_drop", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("frame-drop", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_drop),
                  NULL, NULL, g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   gst_v4lmjpegsrc_signals[SIGNAL_FRAME_INSERT] =
-    g_signal_new("frame_insert", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("frame-insert", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_insert),
                  NULL, NULL, g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   gst_v4lmjpegsrc_signals[SIGNAL_FRAME_LOST] =
-    g_signal_new("frame_lost", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("frame-lost", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_lost),
                  NULL, NULL, g_cclosure_marshal_VOID__INT,
                  G_TYPE_NONE, 1, G_TYPE_INT);

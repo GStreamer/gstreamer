@@ -75,14 +75,14 @@ gst_tuner_channel_class_init (GstTunerChannelClass *klass)
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   signals[SIGNAL_FREQUENCY_CHANGED] =
-    g_signal_new ("frequency_changed", G_TYPE_FROM_CLASS (klass),
+    g_signal_new ("frequency-changed", G_TYPE_FROM_CLASS (klass),
 		  G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstTunerChannelClass,
 				   frequency_changed),
                   NULL, NULL, g_cclosure_marshal_VOID__ULONG,
                   G_TYPE_NONE, 1, G_TYPE_ULONG);
   signals[SIGNAL_SIGNAL_CHANGED] =
-    g_signal_new ("signal_changed", G_TYPE_FROM_CLASS (klass),
+    g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
 		  G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstTunerChannelClass,
 				   signal_changed),
