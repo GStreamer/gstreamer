@@ -99,8 +99,9 @@ gst_typefind_class_init (GstTypeFindClass *klass)
 
   gst_typefind_signals[HAVE_TYPE] =
       g_signal_newc ("have_type", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                      G_STRUCT_OFFSET (GstTypeFindClass, have_type), NULL, NULL,
-                      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_POINTER);
+                     G_STRUCT_OFFSET (GstTypeFindClass, have_type), NULL, NULL,
+                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                     G_TYPE_POINTER);
 
   gobject_class->set_property = gst_typefind_set_property;
   gobject_class->get_property = gst_typefind_get_property;

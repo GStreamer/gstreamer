@@ -33,7 +33,7 @@
 #include <glib-object.h>
 #include <gst/gstmarshal.h>
 #else
-#include <gobject2gtk.h>
+#include <gst/gobject2gtk.h>
 #endif
 
 #include <gst/gsttrace.h>

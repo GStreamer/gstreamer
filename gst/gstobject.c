@@ -99,8 +99,8 @@ gst_object_class_init (GstObjectClass *klass)
   gst_object_signals[OBJECT_SAVED] =
     g_signal_newc("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
-                  g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
-                  G_TYPE_OBJECT);
+                  g_cclosure_marshal_VOID__POINTER,G_TYPE_NONE,1,
+                  G_TYPE_POINTER);
 
   klass->path_string_separator = "/";
 // FIXME!!!

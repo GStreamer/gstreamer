@@ -132,25 +132,25 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_autoplugcache_signals[FIRST_BUFFER] =
-    g_signal_newc ("first_buffer", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstAutoplugCacheClass, first_buffer), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                    G_TYPE_POINTER);
-  gst_autoplugcache_signals[CACHE_EMPTY] =
-    g_signal_newc ("cache_empty", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstAutoplugCacheClass, cache_empty), NULL, NULL,
-                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_COUNT,
-    g_param_spec_enum("buffer_count","buffer_count","buffer_count",
-                      G_TYPE_INT,0,G_PARAM_READABLE)); // CHECKME!
+    g_param_spec_int("buffer_count","buffer_count","buffer_count",
+                     0,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CAPS_PROXY,
     g_param_spec_boolean("caps_proxy","caps_proxy","caps_proxy",
                          FALSE,G_PARAM_READWRITE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RESET,
     g_param_spec_boolean("reset","reset","reset",
                          FALSE,G_PARAM_WRITABLE)); // CHECKME!
+
+  gst_autoplugcache_signals[FIRST_BUFFER] =
+    g_signal_newc ("first_buffer", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstAutoplugCacheClass, first_buffer), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
+  gst_autoplugcache_signals[CACHE_EMPTY] =
+    g_signal_newc ("cache_empty", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstAutoplugCacheClass, cache_empty), NULL, NULL,
+                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->set_property = gst_autoplugcache_set_property;
   gobject_class->get_property = gst_autoplugcache_get_property;
