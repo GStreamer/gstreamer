@@ -569,8 +569,11 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
 
   if (have_tags) {
     GstElement *element = GST_ELEMENT (asf_demux);
-    GstEvent *event = gst_event_new_tag (taglist);
+    GstEvent *event;
     const GList *padlist;
+
+    gst_element_found_tags (element, taglist);
+    event = gst_event_new_tag (taglist);
 
     for (padlist = gst_element_get_pad_list (element);
         padlist != NULL; padlist = padlist->next) {
@@ -579,8 +582,6 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
         gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
       }
     }
-
-    gst_element_found_tags (element, taglist);
 
     gst_event_unref (event);
   } else {
