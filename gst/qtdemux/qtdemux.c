@@ -26,7 +26,7 @@
 #include <string.h>
 #include <zlib.h>
 
-#define g_print(x...)
+#define g_print(...)
 
 #define QTDEMUX_GUINT32_GET(a) GUINT32_FROM_BE(*(guint32 *)(a))
 #define QTDEMUX_GUINT16_GET(a) GUINT16_FROM_BE(*(guint16 *)(a))
@@ -77,8 +77,11 @@ struct _QtDemuxStream {
   int width;
   int height;
   float fps;
+  
   double rate;
   int n_channels;
+  guint bytes_per_frame;
+  guint samples_per_packet;
 };
 
 enum QtDemuxState {
@@ -477,6 +480,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
     cur_offset = gst_bytestream_tell(qtdemux->bs);
     if(offset != cur_offset){
       GST_DEBUG ("seeking to offset %d",offset);
+      g_print ("seeking to offset %d\n",offset);
       ret = gst_bytestream_seek(qtdemux->bs, offset, GST_SEEK_METHOD_SET);
       GST_DEBUG ("seek returned %d",ret);
       return;
@@ -1296,9 +1300,14 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
 
     if(version == 0x00010000){
       g_print("samples/packet:   %d\n", QTDEMUX_GUINT32_GET(stsd->data+offset + 20));
+      stream->samples_per_packet = QTDEMUX_GUINT32_GET(stsd->data+offset + 20);
       g_print("bytes/packet:     %d\n", QTDEMUX_GUINT32_GET(stsd->data+offset + 24));
       g_print("bytes/frame:      %d\n", QTDEMUX_GUINT32_GET(stsd->data+offset + 28));
+      stream->bytes_per_frame = QTDEMUX_GUINT32_GET(stsd->data+offset + 28);
       g_print("bytes/sample:     %d\n", QTDEMUX_GUINT32_GET(stsd->data+offset + 32));
+    } else {
+      stream->bytes_per_frame = stream->n_channels * QTDEMUX_GUINT16_GET(stsd->data+offset + 10);
+      stream->samples_per_packet = 1;
     }
 
     stream->caps = qtdemux_audio_caps(qtdemux,
@@ -1425,14 +1434,16 @@ done:
         }
 	samples[j].chunk = j;
 	samples[j].offset = chunk_offset;
-	samples[j].size = samples_per_chunk * stream->n_channels * sample_width;
+	samples[j].size = samples_per_chunk * stream->bytes_per_frame / stream->samples_per_packet;
+	samples[j].duration = samples_per_chunk * GST_SECOND / stream->rate;
+	samples[j].timestamp = j == 0 ? 0 : samples[j - 1].timestamp + samples[j - 1].duration;
 	samples[j].sample_index = sample_index;
 	sample_index += samples_per_chunk;
 	if(j>=n_samples)goto done2;
       }
     }
+/*
 done2:
-
     n_sample_times = QTDEMUX_GUINT32_GET(stts->data + 12);
     g_print("n_sample_times = %d\n",n_sample_times);
     timestamp = 0;
@@ -1449,13 +1460,14 @@ done2:
 
         samples[index].timestamp = timestamp;
 	size = samples[index+1].sample_index - samples[index].sample_index;
-	time = (GST_SECOND * duration * samples[index].size)/stream->timescale ;
+	time = GST_SECOND / stream->rate; //(GST_SECOND * duration * samples[index].size)/stream->timescale ;
         timestamp += time;
         samples[index].duration = time;
       }
     }
+*/
   }
-
+done2:
 #if 0
   for(i=0;i<n_samples;i++){
     g_print("%d: %d %d %d %d %" G_GUINT64_FORMAT "\n",i,
