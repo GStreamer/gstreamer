@@ -230,6 +230,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideomixer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmng.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -275,6 +276,7 @@ Group:          Applications/Multimedia
                                                                                 
 @USE_SIDPLAY_TRUE@BuildRequires:  libsidplay-devel >= 1.36.0
 @USE_SHOUT_TRUE@BuildRequires:  libshout-devel >= 1.0
+@USE_SHOUT2_TRUE@BuildRequires: libshout2-devel >= 1.0
 @USE_LADSPA_TRUE@BuildRequires:  ladspa-devel
                                                                                 
 Requires:       gstreamer-plugins >= %{gstp_minver}
@@ -290,12 +292,14 @@ This package contains additional audio plugins for GStreamer, including
 - codec for sid (C64)
 - a shout element to stream to icecast servers
 - a ladspa elements wrapping LADSPA plugins
+- a shout 2 element
 
 %files audio
 %defattr(-, root, root, -)
 @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
 @USE_SHOUT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout.so
+@USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 
 %post audio
 %{register}
@@ -662,6 +666,10 @@ GStreamer support libraries header files.
 
 
 %changelog
+* Wed Oct 06 2004 Christian Schaller <christian at fluendo dot com>
+- Add Wim's new mng decoder plugin
+- add shout2 plugin for Zaheer, hope it is correctly done :)
+
 * Wed Sep 29 2004 Christian Schaller <uraeus at gnome dot org>
 - Fix USE statement for V4L2
 
