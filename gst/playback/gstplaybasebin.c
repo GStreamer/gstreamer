@@ -453,7 +453,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
     play_base_bin->need_rebuild = FALSE;
   }
 
-  return (GST_STATE (play_base_bin->thread) == GST_STATE_PLAYING);
+  return TRUE;
 }
 
 static void
