@@ -1,3 +1,23 @@
+2005-02-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_get_range_unlocked):
+	* gst/elements/gstidentity.c: (gst_identity_handle_buffer):
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_lost_state):
+	* gst/gstelement.h:
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_init), (gst_pipeline_set_property),
+	(gst_pipeline_get_property), (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* gst/gstpipeline.h:
+	Convert timeout value in _get_state() to absolute time as
+	required by the _cond_wait().
+	Add _lost_state() to GstElement when elements in PAUSED loose
+	the preroll after a flush.
+	Add properties to GstPipeline, one to adjust clock times and
+	another to configure a timeout for a possibly blocking operation.
+	Removed some old methods.
+
 2005-02-24  Andy Wingo  <wingo@pobox.com>
 
 	* tests/bench-mass_elements.scm, tests/mass_elements.gnuplot:

@@ -40,10 +40,14 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_DELAY 0
+#define DEFAULT_PLAY_TIMEOUT  (2*GST_SECOND)
 enum
 {
-  ARG_0
-      /* FILL ME */
+  ARG_0,
+  ARG_DELAY,
+  ARG_PLAY_TIMEOUT,
+  /* FILL ME */
 };
 
 
@@ -52,6 +56,10 @@ static void gst_pipeline_class_init (gpointer g_class, gpointer class_data);
 static void gst_pipeline_init (GTypeInstance * instance, gpointer g_class);
 
 static void gst_pipeline_dispose (GObject * object);
+static void gst_pipeline_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_pipeline_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstBusSyncReply pipeline_bus_handler (GstBus * bus, GstMessage * message,
     GstPipeline * pipeline);
@@ -105,6 +113,19 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pipeline_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pipeline_get_property);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY,
+      g_param_spec_uint64 ("delay", "Delay",
+          "Expected delay needed for elements "
+          "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PLAY_TIMEOUT,
+      g_param_spec_uint64 ("play-timeout", "Play Timeout",
+          "Max timeout for going " "to PLAYING in nanoseconds", 0, G_MAXUINT64,
+          DEFAULT_PLAY_TIMEOUT, G_PARAM_READWRITE));
+
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
 
   gstelement_class->change_state =
@@ -134,7 +155,8 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
   gst_bus_set_sync_handler (bus,
       (GstBusSyncHandler) pipeline_bus_handler, pipeline);
   pipeline->eosed = NULL;
-  pipeline->delay = 0;
+  pipeline->delay = DEFAULT_DELAY;
+  pipeline->play_timeout = DEFAULT_PLAY_TIMEOUT;
   /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
   gst_element_set_bus (GST_ELEMENT (pipeline), bus);
@@ -150,6 +172,52 @@ gst_pipeline_dispose (GObject * object)
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_pipeline_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstPipeline *pipeline = GST_PIPELINE (object);
+
+  switch (prop_id) {
+    case ARG_DELAY:
+      GST_LOCK (pipeline);
+      pipeline->delay = g_value_get_uint64 (value);
+      GST_UNLOCK (pipeline);
+      break;
+    case ARG_PLAY_TIMEOUT:
+      GST_LOCK (pipeline);
+      pipeline->play_timeout = g_value_get_uint64 (value);
+      GST_UNLOCK (pipeline);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_pipeline_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstPipeline *pipeline = GST_PIPELINE (object);
+
+  switch (prop_id) {
+    case ARG_DELAY:
+      GST_LOCK (pipeline);
+      g_value_set_uint64 (value, pipeline->delay);
+      GST_UNLOCK (pipeline);
+      break;
+    case ARG_PLAY_TIMEOUT:
+      GST_LOCK (pipeline);
+      g_value_set_uint64 (value, pipeline->play_timeout);
+      GST_UNLOCK (pipeline);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -329,10 +397,24 @@ gst_pipeline_change_state (GstElement * element)
       break;
   }
 
-  /* we wait for async state changes ourselves */
+  /* we wait for async state changes ourselves.
+   * FIXME this can block forever, better do this in a worker
+   * thread or use a timeout? */
   if (result == GST_STATE_ASYNC) {
+    GTimeVal *timeval, timeout;
+
     GST_STATE_UNLOCK (pipeline);
-    result = gst_element_get_state (element, NULL, NULL, NULL);
+
+    GST_LOCK (pipeline);
+    if (pipeline->play_timeout > 0) {
+      GST_TIME_TO_TIMEVAL (pipeline->play_timeout, timeout);
+      timeval = &timeout;
+    } else {
+      timeval = NULL;
+    }
+    GST_UNLOCK (pipeline);
+
+    result = gst_element_get_state (element, NULL, NULL, timeval);
     GST_STATE_LOCK (pipeline);
   }
 

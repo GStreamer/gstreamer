@@ -1588,9 +1588,20 @@ gst_element_get_state_func (GstElement * element,
 
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
+    GTimeVal *timeval, abstimeout;
+
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "wait for pending");
+    if (timeout) {
+      /* make timeout absolute */
+      g_get_current_time (&abstimeout);
+      g_time_val_add (&abstimeout,
+          timeout->tv_sec * G_USEC_PER_SEC + timeout->tv_usec);
+      timeval = &abstimeout;
+    } else {
+      timeval = NULL;
+    }
     /* we have a pending state change, wait for it to complete */
-    if (!GST_STATE_TIMED_WAIT (element, timeout)) {
+    if (!GST_STATE_TIMED_WAIT (element, timeval)) {
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timeout");
       /* timeout triggered */
       ret = GST_STATE_ASYNC;
@@ -1742,6 +1753,40 @@ gst_element_commit_state (GstElement * element)
         old_state, pending);
     gst_element_post_message (element, message);
     GST_STATE_BROADCAST (element);
+  }
+}
+
+/**
+ * gst_element_lost_state:
+ * @element: a #GstElement the state is lost of
+ *
+ * Brings the element to the lost state. The current state of the
+ * element is copied to the pending state so that any call to
+ * #gst_element_get_state() will return ASYNC.
+ * This is mostly used for elements that lost their preroll buffer
+ * in the PAUSED state after a flush, they become PAUSED again
+ * if a new preroll buffer is queued.
+ * This function can only be called when the element is currently
+ * not in error or an async state change.
+ *
+ * This function can only be called with the STATE_LOCK held.
+ *
+ * MT safe.
+ */
+void
+gst_element_lost_state (GstElement * element)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING &&
+      !GST_STATE_ERROR (element)) {
+    GstElementState current_state = GST_STATE (element);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "lost state of %s", gst_element_state_get_name (current_state));
+
+    GST_STATE_PENDING (element) = current_state;
+    GST_STATE_ERROR (element) = FALSE;
   }
 }
 

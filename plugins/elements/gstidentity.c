@@ -596,7 +596,7 @@ gst_identity_handle_buffer (GstIdentity * identity, GstBuffer * buf)
 
     if (identity->sync) {
       if (identity->clock) {
-        gst_element_wait (GST_ELEMENT (identity), time);
+        /* gst_element_wait (GST_ELEMENT (identity), time); */
       }
     }
 

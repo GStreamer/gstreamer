@@ -832,7 +832,7 @@ gst_fakesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
   if (src->datarate > 0) {
     time = (src->bytes_sent * GST_SECOND) / src->datarate;
     if (src->sync) {
-      gst_element_wait (GST_ELEMENT (src), time);
+      /* gst_element_wait (GST_ELEMENT (src), time); */
     }
 
     GST_BUFFER_DURATION (buf) =

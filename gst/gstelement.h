@@ -223,19 +223,19 @@ struct _GstElementClass
   guint32 pad_templ_cookie;
 
   /* signal callbacks */
-  void (*state_change) (GstElement * element, GstElementState old,
-      GstElementState state);
-  void (*new_pad) (GstElement * element, GstPad * pad);
-  void (*pad_removed) (GstElement * element, GstPad * pad);
-  void (*no_more_pads) (GstElement * element);
+  void (*state_change)    (GstElement * element, GstElementState old,
+                           GstElementState state);
+  void (*new_pad)         (GstElement * element, GstPad * pad);
+  void (*pad_removed)     (GstElement * element, GstPad * pad);
+  void (*no_more_pads)    (GstElement * element);
 
   /*< protected > */
   /* vtable */
 
   /* request/release pads */
   GstPad *(*request_new_pad) (GstElement * element, GstPadTemplate * templ,
-      const gchar * name);
-  void (*release_pad) (GstElement * element, GstPad * pad);
+                              const gchar * name);
+  void    (*release_pad)     (GstElement * element, GstPad * pad);
 
   /* state changes */
   GstElementStateReturn (*get_state) 	(GstElement * element, GstElementState * state,
@@ -243,17 +243,17 @@ struct _GstElementClass
   GstElementStateReturn (*change_state) (GstElement * element);
 
   /* manager */
-  void (*set_manager) (GstElement * element, GstPipeline * pipeline);
-  void (*set_bus) (GstElement * element, GstBus * bus);
-  void (*set_scheduler) (GstElement * element, GstScheduler * scheduler);
+  void (*set_manager)      (GstElement * element, GstPipeline * pipeline);
+  void (*set_bus)          (GstElement * element, GstBus * bus);
+  void (*set_scheduler)    (GstElement * element, GstScheduler * scheduler);
 
   /* set/get clocks */
-  GstClock *(*get_clock) (GstElement * element);
-  void (*set_clock) (GstElement * element, GstClock * clock);
+  GstClock *  (*get_clock)       (GstElement * element);
+  void        (*set_clock)        (GstElement * element, GstClock * clock);
 
   /* index */
-  GstIndex *(*get_index) (GstElement * element);
-  void (*set_index) (GstElement * element, GstIndex * index);
+  GstIndex *  (*get_index)        (GstElement * element);
+  void        (*set_index)        (GstElement * element, GstIndex * index);
 
   /* query/convert/events functions */
   const GstEventMask *(*get_event_masks) (GstElement * element);
@@ -294,11 +294,6 @@ gboolean gst_element_requires_clock (GstElement * element);
 gboolean gst_element_provides_clock (GstElement * element);
 GstClock *gst_element_get_clock (GstElement * element);
 void gst_element_set_clock (GstElement * element, GstClock * clock);
-
-GstClockReturn gst_element_clock_wait (GstElement * element,
-    GstClockID id, GstClockTimeDiff * jitter);
-GstClockTime gst_element_get_time (GstElement * element);
-gboolean gst_element_wait (GstElement * element, GstClockTime timestamp);
 
 /* indexes */
 gboolean gst_element_is_indexable (GstElement * element);
@@ -365,6 +360,7 @@ GstElementStateReturn 	gst_element_set_state 			(GstElement * element,
 
 void 			gst_element_abort_state 		(GstElement * element);
 void 			gst_element_commit_state 		(GstElement * element);
+void 			gst_element_lost_state 		        (GstElement * element);
 
 /* factory management */
 GstElementFactory *gst_element_get_factory (GstElement * element);

@@ -52,6 +52,7 @@ struct _GstPipeline {
   GstClock      *fixed_clock;	/* fixed clock if any */
   GstClockTime   stream_time;
   GstClockTime   delay;
+  GstClockTime   play_timeout;
 
   GList		*eosed;		/* list of elements that posted EOS */
 
