@@ -18,4 +18,4 @@ libgstvideoscale_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finl
 libgstvideoscale_la_LIBADD =
 libgstvideoscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstvideoscale.h videoscale_x86.h
+noinst_HEADERS = gstvideoscale.h videoscale_x86.h videoscale.h
