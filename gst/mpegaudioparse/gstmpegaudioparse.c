@@ -28,11 +28,8 @@
 static GstElementDetails mp3parse_details = {
   "MPEG1 Audio Parser",
   "Codec/Parser",
-  "LGPL",
   "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
+  "Erik Walthinsen <omega@cse.ogi.edu>"
 };
 
 static GstPadTemplate*
@@ -86,6 +83,7 @@ enum {
 static GstPadTemplate *sink_temp, *src_temp;
 
 static void	gst_mp3parse_class_init		(GstMPEGAudioParseClass *klass);
+static void	gst_mp3parse_base_init		(GstMPEGAudioParseClass *klass);
 static void	gst_mp3parse_init		(GstMPEGAudioParse *mp3parse);
 
 static void	gst_mp3parse_chain		(GstPad *pad,GstData *_data);
@@ -106,7 +104,8 @@ gst_mp3parse_get_type(void) {
 
   if (!mp3parse_type) {
     static const GTypeInfo mp3parse_info = {
-      sizeof(GstMPEGAudioParseClass),      NULL,
+      sizeof(GstMPEGAudioParseClass),
+      (GBaseInitFunc)gst_mp3parse_base_init,
       NULL,
       (GClassInitFunc)gst_mp3parse_class_init,
       NULL,
@@ -256,6 +255,16 @@ mp3_caps_create (guint layer, guint channels,
 			"channels",    GST_PROPS_INT (channels));
 
   return new;
+}
+
+static void
+gst_mp3parse_base_init (GstMPEGAudioParseClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, sink_temp);
+  gst_element_class_add_pad_template (element_class, src_temp);
+  gst_element_class_set_details (element_class, &mp3parse_details);
 }
 
 static void
@@ -574,30 +583,24 @@ gst_mp3parse_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the mp3parse element */
-  factory = gst_element_factory_new ("mp3parse",
-		                    GST_TYPE_MP3PARSE,
-                                    &mp3parse_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
   sink_temp = mp3_sink_factory ();
-  gst_element_factory_add_pad_template (factory, sink_temp);
-
   src_temp = mp3_src_factory ();
-  gst_element_factory_add_pad_template (factory, src_temp);
 
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "mp3parse",
+			       GST_RANK_NONE, GST_TYPE_MP3PARSE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "mp3parse",
-  plugin_init
-};
+  "mpegaudioparse",
+  "MPEG-1 layer 1/2/3 audio parser",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
