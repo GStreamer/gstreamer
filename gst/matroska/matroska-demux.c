@@ -831,7 +831,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
     case GST_MATROSKA_TRACK_TYPE_VIDEO: {
       GstMatroskaTrackVideoContext *videocontext =
 	(GstMatroskaTrackVideoContext *) context;
-      padname = g_strdup_printf ("video_%02d", demux->num_v_streams);
+      padname = g_strdup_printf ("video_%02d", demux->num_v_streams++);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
       caps = gst_matroska_demux_video_caps (videocontext,
 					    context->codec_id,
@@ -843,7 +843,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
     case GST_MATROSKA_TRACK_TYPE_AUDIO: {
       GstMatroskaTrackAudioContext *audiocontext =
 	(GstMatroskaTrackAudioContext *) context;
-      padname = g_strdup_printf ("audio_%02d", demux->num_a_streams);
+      padname = g_strdup_printf ("audio_%02d", demux->num_a_streams++);
       templ = gst_element_class_get_pad_template (klass, "audio_%02d");
       caps = gst_matroska_demux_audio_caps (audiocontext,
 					    context->codec_id,
@@ -855,7 +855,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
     case GST_MATROSKA_TRACK_TYPE_COMPLEX: {
       GstMatroskaTrackComplexContext *complexcontext =
 	(GstMatroskaTrackComplexContext *) context;
-      padname = g_strdup_printf ("video_%02d", demux->num_v_streams);
+      padname = g_strdup_printf ("video_%02d", demux->num_v_streams++);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
       caps = gst_matroska_demux_complex_caps (complexcontext,
 					      context->codec_id,
@@ -867,7 +867,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
     case GST_MATROSKA_TRACK_TYPE_SUBTITLE: {
       GstMatroskaTrackSubtitleContext *subtitlecontext =
 	(GstMatroskaTrackSubtitleContext *) context;
-      padname = g_strdup_printf ("subtitle_%02d", demux->num_t_streams);
+      padname = g_strdup_printf ("subtitle_%02d", demux->num_t_streams++);
       templ = gst_element_class_get_pad_template (klass, "subtitle_%02d");
       caps = gst_matroska_demux_subtitle_caps (subtitlecontext,
 					       context->codec_id,
