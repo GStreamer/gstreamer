@@ -1,3 +1,9 @@
+2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):
+	* gst/matroska/ebml-write.c: (gst_ebml_write_sint):
+	  fix signed integer reading/writing.
+
 2004-01-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/alsa/README:
