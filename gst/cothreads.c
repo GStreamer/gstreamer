@@ -499,6 +499,7 @@ cothread_stackquery (void **stack, glong* stacksize)
 
   int retval = 0;
 
+#ifdef HAVE_POSIX_MEMALIGN
   retval = posix_memalign (stack, STACK_SIZE, STACK_SIZE);
   if (retval != 0)
   {
@@ -514,6 +515,16 @@ cothread_stackquery (void **stack, glong* stacksize)
   }
   GST_DEBUG (GST_CAT_THREAD, "have  posix_memalign at %p of size %d",
            (void *) *stack, STACK_SIZE);
+#else
+  if ((*stack = valloc (STACK_SIZE)) != 0)
+  {
+    g_warning ("Could not valloc stack !\n");
+    return FALSE;
+  }
+  GST_DEBUG (GST_CAT_THREAD, "have  valloc at %p of size %d",
+           (void *) *stack, STACK_SIZE);
+#endif
+
   GST_DEBUG (GST_CAT_COTHREADS, 
              "Got new cothread stack from %p to %p (size %ld)",
              *stack, *stack + STACK_SIZE - 1, (long) STACK_SIZE);

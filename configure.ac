@@ -323,7 +323,12 @@ fi
 dnl test if we have pthread_attr_setstack; if not use the older calls
 AC_CHECK_LIB(pthread, pthread_attr_setstack, 
    AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACK, 1, 
-   [Defined if libpthread has pthread_attr_setstack]))
+             [Defined if libpthread has pthread_attr_setstack ()]))
+
+dnl test if we have posix_memalign; FreeBSD doesn't
+AC_CHECK_FUNC(posix_memalign,
+   AC_DEFINE(HAVE_POSIX_MEMALIGN, 1,
+             [Defined if we have posix_memalign ()]))
 
 if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
