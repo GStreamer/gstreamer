@@ -1067,6 +1067,12 @@ gst_mpeg2dec_change_state (GstElement *element)
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
+      /* if we've negotiated caps, try to get a bufferpool */
+      if (mpeg2dec->peerpool == NULL && mpeg2dec->width > 0) {
+	mpeg2dec->peerpool = gst_pad_get_bufferpool (mpeg2dec->srcpad);
+	if (mpeg2dec->peerpool)
+	  GST_INFO ( "got pool %p", mpeg2dec->peerpool);
+      }
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* need to clear things we get from other plugins, since we could be reconnected */
