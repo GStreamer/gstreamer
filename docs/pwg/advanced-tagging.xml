@@ -78,7 +78,7 @@ gst_my_filter_loopfunc (GstElement *element)
     gchar *line = GST_BUFFER_DATA (buf), *colon_pos, *type = NULL;a
 
     /* get the position of the ':' and go beyond it */
-    if (!(colon_pos = strchr (line, ';')))
+    if (!(colon_pos = strchr (line, ':')))
       goto next:
 
     /* get the string before that as type of metadata */
