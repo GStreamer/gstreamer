@@ -6,6 +6,11 @@ EXPORTS
         gst_uri_handler_get_type
         gst_type_find_factory_get_type
         gst_index_factory_get_type
+        gst_index_add_association
+        gst_index_add_format
+        gst_index_entry_assoc_map
+        gst_index_get_assoc_entry
+        gst_index_get_writer_id
         gst_registry_pool_find_feature
         gst_scheduler_factory_get_type
         gst_element_factory_find
@@ -40,26 +45,36 @@ EXPORTS
         gst_element_provides_clock
         gst_element_requires_clock
         gst_element_found_tags
+        gst_element_yield
         gst_element_unlink
         gst_plugin_feature_get_type
         gst_element_factory_create
+        __gst_element_factory_add_pad_template
         gst_structure_foreach
+        gst_structure_to_string
         gst_structure_get_name
         gst_structure_get_boolean
         gst_structure_set_name
         gst_structure_copy
         gst_structure_remove_field
         gst_caps_structure_fixate_field_nearest_int
+        gst_caps_structure_fixate_field_nearest_double
         gst_caps_get_structure
         gst_caps_get_size
+        gst_pad_custom_new_from_template
         gst_caps_set_simple
         gst_caps_is_empty
         gst_caps_is_any
         gst_value_serialize
         gst_format_get_details
         gst_format_get_by_nick
+        gst_format_register
         gst_query_type_get_details
         gst_value_get_caps
+        gst_value_init_and_copy
+        gst_value_get_fraction_numerator
+        gst_value_get_fraction_denominator
+        gst_value_set_fraction
         gst_caps_get_type
         gst_uri_get_uri_type
         gst_plugin_feature_get_name
@@ -97,13 +112,21 @@ EXPORTS
         gst_tag_list_foreach
         gst_tag_list_free
         gst_tag_list_copy
+        gst_tag_list_merge
         gst_tag_get_nick
         gst_tag_get_flag
+        gst_tag_list_get_uint_index
+        gst_tag_list_get_double_index
         gst_tag_list_get_value_index
         gst_tag_list_get_string_index
+        gst_is_tag_list
         gst_tag_get_type
         gst_tag_list_get_tag_size
         gst_tag_list_add_values
+        gst_tag_setter_get_list
+        gst_tag_setter_get_merge_mode
+        gst_tag_setter_get_type
+        gst_element_found_tags_for_pad
         gst_registry_get_path_list      
         gst_registry_load
         gst_registry_save
@@ -120,6 +143,7 @@ EXPORTS
         gst_pad_pull
         gst_pad_send_event
         gst_pad_alloc_buffer
+        gst_pad_recover_caps_error
         gst_event_new_seek
         gst_event_new_tag
         gst_pad_query
@@ -159,6 +183,7 @@ EXPORTS
         gst_pad_set_query_function
         gst_pad_set_event_mask_function
         gst_pad_set_event_function
+        gst_pad_set_unlink_function
         gst_element_set_eos
         gst_event_new
         gst_resource_error_quark
@@ -184,6 +209,9 @@ EXPORTS
         gst_stream_error_quark
         gst_type_find_factory_call_function
         gst_type_find_factory_get_list
+        gst_type_find_suggest
+        gst_type_find_peek
+        gst_type_find_register
         gst_caps_free
         gst_element_get_state
         gst_caps_replace
@@ -231,6 +259,7 @@ EXPORTS
         gst_type_fourcc
         gst_type_double_range
         gst_type_int_range
+        gst_type_fraction
         gst_structure_new
         gst_caps_new_full
         gst_caps_append
@@ -241,6 +270,7 @@ EXPORTS
         gst_structure_get_int
         gst_structure_get_double
         gst_structure_get_fourcc
+        gst_structure_get_value
         gst_structure_set
         gst_structure_set_value
         gst_library_load

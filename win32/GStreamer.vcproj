@@ -289,6 +289,9 @@ type gstreamer.def &gt; gst.def
 				RelativePath="..\gst\gsttag.c">
 			</File>
 			<File
+				RelativePath="..\gst\gsttaginterface.c">
+			</File>
+			<File
 				RelativePath="..\gst\gstthread.c">
 			</File>
 			<File
@@ -376,6 +379,9 @@ type gstreamer.def &gt; gst.def
 			</File>
 			<File
 				RelativePath="..\gst\gstscheduler.h">
+			</File>
+			<File
+				RelativePath="..\gst\gsttaginterface.h">
 			</File>
 			<File
 				RelativePath="..\gst\gsttrace.h">

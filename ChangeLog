@@ -1,5 +1,11 @@
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/GStreamer.vcproj:
+	* win32/gstreamer.def:
+	  more exports for the plugins
+    
+2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/gstgetbits.vcproj:
 	* win32/gstgetbits.def:
 	* win32/msvc71.sln:
