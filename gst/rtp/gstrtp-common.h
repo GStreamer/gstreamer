@@ -26,7 +26,9 @@
 typedef enum
 {
 /* Audio: */
+  PAYLOAD_PCMU = 0,		/* ITU-T G.711. mu-law audio (RFC 3551) */ 
   PAYLOAD_GSM = 3,
+  PAYLOAD_PCMA = 8,		/* ITU-T G.711 A-law audio (RFC 3551) */
   PAYLOAD_L16_STEREO = 10,
   PAYLOAD_L16_MONO = 11,
   PAYLOAD_MPA = 14,		/* Audio MPEG 1-3 */
