@@ -24,8 +24,8 @@ Requires: 	gstreamer >= 0.6.1
 BuildRequires: 	gstreamer-devel >= 0.6.1
 BuildRequires:	gstreamer-tools >= 0.6.1
 
-@USE_ARTS_TRUE@Requires:      arts >= 2
-@USE_ARTS_TRUE@BuildRequires: arts-devel >= 2
+@USE_ARTS_TRUE@Requires:      arts >= 1.1.4
+@USE_ARTS_TRUE@BuildRequires: arts-devel >= 1.1.4
 @USE_ARTS_TRUE@BuildRequires: gcc-c++
 @USE_AUDIOFILE_TRUE@Requires:      audiofile >= 0.2.1
 @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
@@ -124,6 +124,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --libexecdir=%{_libexecdir} \
   --localstatedir=%{_localstatedir} \
   --sharedstatedir=%{_sharedstatedir} \
+  --with-gdk-pixbuf-loader-dir=$RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
   --enable-debug \
@@ -163,7 +164,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
 rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
-rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/gst_loader.la
 
 
 %clean
@@ -234,7 +234,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/gst_loader.la
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstefence.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobalance.so
@@ -259,8 +259,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/gst_loader.la
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
 %{_libdir}/gstreamer-%{majorminor}/libgstximagesink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
-%{_libdir}/gtk-2.0/2.2.0/loaders/gst_loader.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstswitch.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttagediting.so
 
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -274,6 +275,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/gst_loader.la
 @USE_MIKMOD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmikmod.so
 @USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
+@USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 @USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
@@ -302,12 +304,10 @@ GStreamer support libraries header files.
 %files -n gstreamer-plugins-devel
 %defattr(-, root, root)
 %{_includedir}/gstreamer-%{majorminor}/gst/gconf/gconf.h
-%{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
 %{_includedir}/gstreamer-%{majorminor}/gst/floatcast/floatcast.h
 %{_includedir}/gstreamer-%{majorminor}/gst/idct/idct.h
 %{_includedir}/gstreamer-%{majorminor}/gst/resample/resample.h
-%{_includedir}/gstreamer-%{majorminor}/gst/riff/riff.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audioclock.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
@@ -322,11 +322,15 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/xoverlay/xoverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/xwindowlistener/xwindowlistener.h
 %{_includedir}/gstreamer-%{majorminor}/gst/propertyprobe/propertyprobe.h
+%{_includedir}/gstreamer-%{majorminor}/gst/play/gstplay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/riff*
+%{_includedir}/gstreamer-%{majorminor}/gst/tags/gsttagediting.h
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
 %{_libdir}/libgstplay-%{majorminor}.so
+
 
 # Here are all the packages depending on external libs #
 
