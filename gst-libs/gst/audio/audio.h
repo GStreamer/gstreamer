@@ -111,5 +111,18 @@ long     gst_audio_highest_sample_value (GstPad* pad);
 /* check if the buffer size is a whole multiple of the frame size */
 gboolean gst_audio_is_buffer_framed     (GstPad* pad, GstBuffer* buf);
 
+/* functions useful for _getcaps functions */
+typedef enum {
+  GST_AUDIO_FIELD_RATE          = (1 << 0),
+  GST_AUDIO_FIELD_CHANNELS      = (1 << 1),
+  GST_AUDIO_FIELD_ENDIANNESS    = (1 << 2),
+  GST_AUDIO_FIELD_WIDTH         = (1 << 3),
+  GST_AUDIO_FIELD_DEPTH         = (1 << 4),
+  GST_AUDIO_FIELD_SIGNED        = (1 << 5),
+  GST_AUDIO_FIELD_BUFFER_FRAMES = (1 << 6)
+} GstAudioFieldFlag;
+
+void gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag flag);
+
 G_END_DECLS
 
