@@ -591,13 +591,18 @@ gst_ebml_read_utf8 (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 }
 
 /*
- * Read the next element as a date (nanoseconds since 1/1/2000).
+ * Read the next element as a date.
+ * Returns the seconds since the unix epoch.
  */
 
 gboolean
 gst_ebml_read_date (GstEbmlRead * ebml, guint32 * id, gint64 * date)
 {
-  return gst_ebml_read_sint (ebml, id, date);
+  gint64 ebml_date;
+  gboolean res = gst_ebml_read_sint (ebml, id, &ebml_date);
+
+  *date = (ebml_date / GST_SECOND) + GST_EBML_DATE_OFFSET;
+  return res;
 }
 
 /*

@@ -430,10 +430,11 @@ gst_ebml_write_utf8 (GstEbmlWrite * ebml, guint32 id, const gchar * str)
   gst_ebml_write_ascii (ebml, id, str);
 }
 
+/* date should be in seconds since the unix epoch */
 void
 gst_ebml_write_date (GstEbmlWrite * ebml, guint32 id, gint64 date)
 {
-  gst_ebml_write_sint (ebml, id, date);
+  gst_ebml_write_sint (ebml, id, (date - GST_EBML_DATE_OFFSET) * GST_SECOND);
 }
 
 /*

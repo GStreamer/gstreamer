@@ -42,6 +42,9 @@ G_BEGIN_DECLS
 /* general EBML types */
 #define GST_EBML_ID_VOID               0xEC
 
+/* EbmlDate offset from the unix epoch in seconds, 2001/01/01 00:00:00 UTC */
+#define GST_EBML_DATE_OFFSET           978307200
+
 G_END_DECLS
 
 #endif /* __GST_EBML_IDS_H__ */
