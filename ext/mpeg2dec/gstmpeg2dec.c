@@ -64,7 +64,16 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
       "height",       GST_PROPS_INT_RANGE (16, 4096),
       "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
       "pixel_height", GST_PROPS_INT_RANGE (1, 255),
-      "framerate",    GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+      "framerate",    GST_PROPS_LIST (
+			GST_PROPS_FLOAT (24/1.001),
+			GST_PROPS_FLOAT (24.),
+			GST_PROPS_FLOAT (25.),
+			GST_PROPS_FLOAT (30/1.001),
+			GST_PROPS_FLOAT (30.),
+			GST_PROPS_FLOAT (50.),
+			GST_PROPS_FLOAT (60/1.001),
+			GST_PROPS_FLOAT (60.)
+		      )
   )
 );
 
