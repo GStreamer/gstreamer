@@ -8,7 +8,7 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=2
-GST_VERSION_MICRO=1
+GST_VERSION_MICRO=b99
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
@@ -642,8 +642,8 @@ CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl Check for aalib
 AC_MSG_CHECKING(aalib)
-AC_CHECK_LIB(aa, aa_init, HAVE_AA=yes, HAVE_AA=no, )
-AC_CHECK_HEADER(aalib.h, :, HAVE_AA=no)
+AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
+AC_CHECK_HEADER(aalib.h, :, HAVE_LIBAA=no)
 
 dnl Check for quicktime
 AC_MSG_CHECKING(openquicktime)
@@ -928,8 +928,8 @@ if test "x$HAVE_VORBIS" = xyes; then
   AC_DEFINE(HAVE_VORBIS)
 fi
 
-if test "x$HAVE_AA" = xyes; then
-  AC_DEFINE(HAVE_AA)
+if test "x$HAVE_LIBAA" = "xyes"; then
+  AC_DEFINE(HAVE_LIBAA)
 fi
 
 if test "x$HAVE_LIBJPEG" = xyes; then
@@ -1026,7 +1026,7 @@ AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
-AM_CONDITIONAL(HAVE_AA,             test "x$HAVE_AA" = "xyes")
+AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
