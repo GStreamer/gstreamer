@@ -346,6 +346,11 @@ AC_MSG_CHECKING(LAME library)
 AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
 AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
 
+dnl Check for libshout
+AC_MSG_CHECKING(Shout library)
+AC_CHECK_LIB(shout, shout_init_connection, HAVE_LIBSHOUT=yes, HAVE_LIBSHOUT=no, )
+AC_CHECK_HEADER(shout/shout.h, :, HAVE_LIBSHOUT=no)
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -560,6 +565,7 @@ AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
+AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 
@@ -688,6 +694,8 @@ plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
 plugins/filters/ladspa/Makefile
+plugins/icecast/Makefile
+plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
 plugins/effects/stereo/Makefile
 plugins/effects/volume/Makefile
