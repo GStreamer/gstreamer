@@ -224,7 +224,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
 
   /* create a SDL window of the size requested by the user */
   sdlvideosink->screen = SDL_SetVideoMode(sdlvideosink->window_width,
-    sdlvideosink->window_height, 0, SDL_SWSURFACE);
+    sdlvideosink->window_height, 0, SDL_SWSURFACE | SDL_RESIZABLE);
   if ( sdlvideosink->screen == NULL)
   {
     gst_element_error(GST_ELEMENT(sdlvideosink),
@@ -323,6 +323,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstSDLVideoSink *sdlvideosink;
   GstClockTimeDiff jitter;
+  SDL_Event event;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -331,6 +332,19 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
   GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+
+  while (SDL_PollEvent(&event))
+  {
+    switch(event.type)
+    {
+      case SDL_VIDEORESIZE:
+        /* create a SDL window of the size requested by the user */
+        sdlvideosink->window_width = event.resize.w;
+        sdlvideosink->window_height = event.resize.h;
+        gst_sdlvideosink_create(sdlvideosink);
+        break;
+    }
+  }
 
   jitter = gst_clock_current_diff(sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
 
@@ -407,9 +421,13 @@ gst_sdlvideosink_set_property (GObject *object, guint prop_id, const GValue *val
   {
     case ARG_WIDTH:
       sdlvideosink->window_width = g_value_get_int(value);
+      if (sdlvideosink->yuv_overlay)
+        gst_sdlvideosink_create(sdlvideosink);
       break;
     case ARG_HEIGHT:
       sdlvideosink->window_height = g_value_get_int(value);
+      if (sdlvideosink->yuv_overlay)
+        gst_sdlvideosink_create(sdlvideosink);
       break;
     case ARG_XID:
       sdlvideosink->window_id = g_value_get_int(value);
@@ -476,9 +494,9 @@ gst_sdlvideosink_change_state (GstElement *element)
       GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
     case GST_STATE_READY_TO_NULL:
-      if (sdlvideosink->yuv_overlay)
+      /*if (sdlvideosink->yuv_overlay)
         SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
-      sdlvideosink->yuv_overlay = NULL;
+      sdlvideosink->yuv_overlay = NULL;*/
       SDL_Quit();
       GST_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
