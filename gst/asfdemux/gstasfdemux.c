@@ -1189,7 +1189,7 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
 	GST_CAPS_NEW (name,						\
 		      mimetype,						\
 		      "rate",     GST_PROPS_INT (			\
-				    GUINT32_FROM_LE (audio->byte_rate)), \
+				    GUINT32_FROM_LE (audio->sample_rate)), \
 		      "channels", GST_PROPS_INT (			\
 				    GUINT16_FROM_LE (audio->channels)),	\
 		      __VA_ARGS__)					\
@@ -1207,7 +1207,7 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
 	GST_CAPS_NEW (name,						\
 		      mimetype,						\
 		      "rate",     GST_PROPS_INT (			\
-				    GUINT32_FROM_LE (audio->byte_rate)), \
+				    GUINT32_FROM_LE (audio->sample_rate)), \
 		      "channels", GST_PROPS_INT (			\
 				    GUINT16_FROM_LE (audio->channels)),	\
 		      ##props)						\
