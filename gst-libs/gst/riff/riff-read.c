@@ -551,8 +551,12 @@ gst_riff_read_strf_vids_with_data (GstRiffRead * riff,
         strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
   } else if (strf->size < GST_BUFFER_SIZE (buf)) {
-    *extradata = gst_buffer_create_sub (buf, strf->size + 2,
-        GST_BUFFER_SIZE (buf) - strf->size - 2);
+    gint len;
+
+    len = GST_BUFFER_SIZE (buf) - strf->size - 2;
+    if (len > 0) {
+      *extradata = gst_buffer_create_sub (buf, strf->size + 2, len);
+    }
   }
 
   /* debug */
@@ -636,8 +640,12 @@ gst_riff_read_strf_auds_with_data (GstRiffRead * riff,
         strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
   } else if (strf->size < GST_BUFFER_SIZE (buf)) {
-    *extradata = gst_buffer_create_sub (buf, strf->size + 2,
-        GST_BUFFER_SIZE (buf) - strf->size - 2);
+    gint len;
+
+    len = GST_BUFFER_SIZE (buf) - strf->size - 2;
+    if (len > 0) {
+      *extradata = gst_buffer_create_sub (buf, strf->size + 2, len);
+    }
   }
 
   /* debug */
