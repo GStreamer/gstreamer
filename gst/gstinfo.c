@@ -122,6 +122,7 @@ GstDebugCategory *GST_CAT_REFCOUNTING = NULL;
 GstDebugCategory *GST_CAT_EVENT = NULL;
 GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
+GstDebugCategory *GST_CAT_SEEK = NULL;
 
 /**
  * _gst_debug_init:
@@ -230,6 +231,9 @@ void _gst_debug_init (void)
   GST_CAT_CALL_TRACE	= _gst_debug_category_new ("GST_CALL_TRACE",
 				GST_DEBUG_BOLD,
 				NULL);
+  GST_CAT_SEEK          = _gst_debug_category_new ("GST_SEEK",
+				0,
+				"plugins reacting to seek events");
 }
 
 /* we can't do this further above, because we initialize the GST_CAT_DEFAULT struct */
