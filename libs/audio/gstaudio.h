@@ -37,3 +37,6 @@ long		gst_audio_frame_rate		(GstPad *pad);
 /* calculate length in seconds of audio buffer buf based on caps of pad */
 double 		gst_audio_length 		(GstPad* pad, GstBuffer* buf);
 
+/* calculate highest possible sample value based on capabilities of pad */
+long 		gst_audio_highest_sample_value 	(GstPad* pad);
+

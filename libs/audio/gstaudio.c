@@ -119,3 +119,24 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   }
   return length;
 }
+
+long 
+gst_audio_highest_sample_value (GstPad* pad)
+/* calculate highest possible sample value
+ * based on capabilities of pad
+ */
+{
+  gboolean is_signed = FALSE;
+  gint width = 0;
+  GstCaps *caps = NULL;
+  
+  caps = GST_PAD_CAPS (pad);
+    // FIXME : Please change this to a better warning method !
+  if (caps == NULL)
+    printf ("WARNING: gstaudio: could not get caps of pad !\n");
+  width = gst_caps_get_int (caps, "width");
+  is_signed = gst_caps_get_boolean (caps, "signed");
+  if (is_signed) --width;
+  /* example : 16 bit, signed : samples between -32768 and 32767 */
+  return ((long) (1 << width));
+}
