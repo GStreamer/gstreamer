@@ -53,6 +53,7 @@ then
   exit $?
 fi
 
-# set up prompt to help us remember we're in a subshell and start $SHELL
+# set up prompt to help us remember we're in a subshell, cd to
+# the gstreamer base dir and start $SHELL
 cd $GST
 PS1="[gst-$VERSION] $PS1" $SHELL
