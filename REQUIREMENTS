@@ -96,3 +96,9 @@ rather than by an audit.)
 task-helix-gnome-dev   OR libgnome-dev
 
 gtk-doc-tools 0.4-0.2  -- needed to build documentation
+
+Alternatively, the docbook-gnome-bin package, which is available by adding the
+following lines to apt's sources.list (/etc/apt/sources.list):
+
+deb ftp://ftp.home-of-linux.org/pub/debian gnome/
+deb-src ftp://ftp.home-of-linux.org/pub/debian gnome/
