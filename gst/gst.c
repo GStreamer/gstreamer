@@ -99,6 +99,37 @@ enum
   ARG_REGISTRY
 };
 
+static void
+parse_debug_list (const gchar * list)
+{
+  gchar **split;
+  gchar **walk;
+
+  g_return_if_fail (list != NULL);
+
+  walk = split = g_strsplit (list, ",", 0);
+
+  while (walk[0]) {
+    gchar **values = g_strsplit (walk[0], ":", 2);
+
+    if (values[0] && values[1]) {
+      gint level = 0;
+
+      g_strstrip (values[0]);
+      g_strstrip (values[1]);
+      level = strtol (values[1], NULL, 0);
+      if (level >= 0 && level < GST_LEVEL_COUNT) {
+        GST_DEBUG ("setting debugging to level %d for name \"%s\"",
+            level, values[0]);
+        gst_debug_set_threshold_for_name (values[0], level);
+      }
+    }
+    g_strfreev (values);
+    walk++;
+  }
+  g_strfreev (split);
+}
+
 #ifndef NUL
 #define NUL '\0'
 #endif
@@ -281,6 +312,8 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   poptContext context;
   gint nextopt;
   GstPoptOption *options;
+  const gchar *gst_debug_env = NULL;
+
   GstPoptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:",
         NULL},
@@ -325,6 +358,11 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   context = poptGetContext ("GStreamer", *argc, (const char **) *argv,
       options, 0);
 
+  /* check for GST_DEBUG environment variable */
+  gst_debug_env = g_getenv ("GST_DEBUG");
+  if (gst_debug_env)
+    parse_debug_list (gst_debug_env);
+
   while ((nextopt = poptGetNextOpt (context)) > 0) {
     /* we only check for failures here, actual work is done in callbacks */
     if (_gst_initialization_failure)
@@ -364,36 +402,6 @@ prepare_for_load_plugin_func (gpointer data, gpointer user_data)
   preload_plugins = g_slist_prepend (preload_plugins, data);
 }
 
-static void
-parse_debug_list (const gchar * list)
-{
-  gchar **split;
-  gchar **walk;
-
-  g_return_if_fail (list != NULL);
-
-  walk = split = g_strsplit (list, ",", 0);
-
-  while (walk[0]) {
-    gchar **values = g_strsplit (walk[0], ":", 2);
-
-    if (values[0] && values[1]) {
-      gint level = 0;
-
-      g_strstrip (values[0]);
-      g_strstrip (values[1]);
-      level = strtol (values[1], NULL, 0);
-      if (level >= 0 && level < GST_LEVEL_COUNT) {
-        GST_DEBUG ("setting debugging to level %d for name \"%s\"",
-            level, values[0]);
-        gst_debug_set_threshold_for_name (values[0], level);
-      }
-    }
-    g_strfreev (values);
-    walk++;
-  }
-  g_strfreev (split);
-}
 static void
 load_plugin_func (gpointer data, gpointer user_data)
 {
