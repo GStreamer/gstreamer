@@ -50,7 +50,6 @@ typedef enum {
 	GST_PLAY_PIPE_AUDIO,
 	GST_PLAY_PIPE_AUDIO_THREADED,
 	GST_PLAY_PIPE_AUDIO_HYPER_THREADED,
-	GST_PLAY_PIPE_VIDEO_THREADSAFE,
 	GST_PLAY_PIPE_VIDEO,
 } GstPlayPipeType;
 
@@ -85,8 +84,9 @@ struct _GstPlay
 	GObject parent;
 	
 	gboolean (*setup_pipeline)     (GstPlay *play, GError **error);
-	void (*teardown_pipeline)  (GstPlay *play);
-	gboolean (*set_autoplugger)  (GstPlay *play, GstElement *autoplugger);
+	void (*teardown_pipeline)      (GstPlay *play);
+	gboolean (*set_data_src)       (GstPlay *play, GstElement *datasrc);
+	gboolean (*set_autoplugger)    (GstPlay *play, GstElement *autoplugger);
 	gboolean (*set_video_sink)     (GstPlay *play, GstElement *videosink);
 	gboolean (*set_audio_sink)     (GstPlay *play, GstElement *audiosink);
 	
@@ -155,6 +155,7 @@ void      gst_play_seek_to_time (GstPlay *play, gint64 time_nanos);
 
 GstElement*       gst_play_get_sink_element (GstPlay *play, GstElement *element);
 
+gboolean	  gst_play_set_data_src (GstPlay *play, GstElement *data_src);
 gboolean	  gst_play_set_video_sink  (GstPlay *play, GstElement *element);
 gboolean	  gst_play_set_audio_sink  (GstPlay *play, GstElement *element);
 void		  gst_play_need_new_video_window  (GstPlay *play);

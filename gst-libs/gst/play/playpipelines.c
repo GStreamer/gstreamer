@@ -21,6 +21,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
+static gboolean
+gst_play_default_set_data_src (GstPlay *play, GstElement *datasrc, GstElement* parent)
+{
+	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT (datasrc), FALSE);
+	
+	if (GST_IS_ELEMENT(play->source)) {
+		/* we need to remove the existing data source before creating a new one */
+		if (GST_IS_ELEMENT(play->autoplugger)){
+			gst_element_unlink (play->autoplugger, play->source);
+		}
+		gst_bin_remove (GST_BIN(parent), play->source);
+	}
+	
+	play->source = datasrc;
+	g_return_val_if_fail (play->source != NULL, FALSE);
+
+	gst_bin_add (GST_BIN (parent), play->source);
+	if (GST_IS_ELEMENT(play->autoplugger)){
+		gst_element_link (play->autoplugger, play->source);
+	}
+	return TRUE;
+}
+
 /*  
  *  GST_PLAY_PIPE_AUDIO
  *  gnomevfssrc ! spider ! volume ! osssink
@@ -78,6 +102,12 @@ gst_play_audio_setup (GstPlay *play, GError **error)
 			play->audio_bin_mutex);
 
 	return TRUE;
+}
+
+static gboolean
+gst_play_simple_set_data_src (GstPlay *play, GstElement *datasrc)
+{
+	return gst_play_default_set_data_src(play, datasrc, play->pipeline);
 }
 
 /*
@@ -492,6 +522,15 @@ gst_play_video_setup (GstPlay *play, GError **error)
 	return TRUE;
 }
 
+static gboolean
+gst_play_video_set_data_src (GstPlay *play, GstElement *datasrc)
+{
+	GstElement *work_thread;
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+
+	work_thread = g_hash_table_lookup(play->other_elements, "work_thread");
+	return gst_play_default_set_data_src(play, datasrc, work_thread);
+}
 
 static gboolean
 gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
@@ -581,236 +620,6 @@ gst_play_video_set_audio (GstPlay *play, GstElement *audio_sink)
 
 	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
 
-	if (play->audio_sink_element != NULL) {
-		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
-				  G_CALLBACK (callback_audio_sink_eos), play);
-	}
-
-	return TRUE;
-}
-
-/*
- * GST_PLAY_PIPE_VIDEO_THREADSAFE
- * { gnomevfssrc ! spider ! { queue ! volume ! osssink } } 
- * spider0.src2 ! queue ! videosink
- * (note that the xvideosink is not contained by a thread)
- */
-
-static gboolean 
-gst_play_videots_setup (GstPlay *play, GError **error)
-{
-	GstElement *audio_bin, *audio_queue, *video_queue, *auto_identity, *work_thread;
-
-	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
-	
-	/* creating pipeline */
-	play->pipeline = gst_pipeline_new ("main_pipeline");
-	g_return_val_if_fail (GST_IS_PIPELINE (play->pipeline), FALSE);
-
-	/* creating work thread */	
-	work_thread = gst_thread_new ("work_thread");
-	g_return_val_if_fail (GST_IS_THREAD (work_thread), FALSE);
-	g_hash_table_insert(play->other_elements, "work_thread", work_thread);
-	
-	gst_bin_add (GST_BIN (play->pipeline), work_thread);
-
-	/* create source element */
-	play->source = gst_element_factory_make ("gnomevfssrc", "source");
-	if (!play->source)
-	{
-		gst_play_error_plugin (GST_PLAY_ERROR_GNOMEVFSSRC, error);
-		return FALSE;
-	}
-	gst_bin_add (GST_BIN (work_thread), play->source);
-	
-	auto_identity = gst_element_factory_make ("identity", "auto_identity");
-	g_return_val_if_fail (auto_identity != NULL, FALSE);
-	g_hash_table_insert(play->other_elements, "auto_identity", auto_identity);
-
-	gst_bin_add (GST_BIN (work_thread), auto_identity);
-	gst_element_add_ghost_pad (work_thread, 
-				   gst_element_get_pad (auto_identity, "src"),
-				   "src");
-	
-	/* create volume elements */
-	play->volume = gst_element_factory_make ("volume", "volume");
-	if (!play->volume)
-	{
-		gst_play_error_plugin (GST_PLAY_ERROR_VOLUME, error);
-		return FALSE;
-	}
-
-	/* creating audio_sink element */
-	play->audio_sink = gst_element_factory_make ("fakesink", "fake_audio");
-	if (!play->audio_sink)
-	{
-		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
-		return FALSE;
-	}
-	play->audio_sink_element = NULL;
-	
-	audio_queue = gst_element_factory_make ("queue", "audio_queue");
-	if (!audio_queue)
-	{
-		gst_play_error_plugin (GST_PLAY_ERROR_QUEUE, error);
-		return FALSE;
-	}
-	g_hash_table_insert(play->other_elements, "audio_queue", audio_queue);
-	
-	audio_bin = gst_thread_new ("audio_bin");
-	if (!audio_bin)
-	{
-		gst_play_error_plugin (GST_PLAY_ERROR_THREAD, error);
-		return FALSE;
-	}
-	g_hash_table_insert(play->other_elements, "audio_bin", audio_bin);
-
-	gst_bin_set_pre_iterate_function(
-			GST_BIN (audio_bin), 
-			(GstBinPrePostIterateFunction) callback_bin_pre_iterate,
-			play->audio_bin_mutex);
-	
-	gst_bin_set_post_iterate_function(
-			GST_BIN (audio_bin), 
-			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-			play->audio_bin_mutex);
-
-	gst_bin_add_many (
-			GST_BIN (audio_bin), audio_queue,
-			play->volume, play->audio_sink, NULL);
-	
-	gst_element_link_many (
-			audio_queue, play->volume,
-			play->audio_sink, NULL);
-	
-	gst_element_add_ghost_pad (
-			audio_bin, 
-			gst_element_get_pad (audio_queue, "sink"),
-			"sink");
-
-	gst_bin_add (GST_BIN (work_thread), audio_bin);
-
-	/* create video elements */
-	play->video_sink = gst_element_factory_make ("xvideosink", "show");
-	
-	g_object_set (G_OBJECT (play->video_sink), "toplevel", FALSE, NULL);
-	
-	g_signal_connect (
-			G_OBJECT (play->video_sink), "have_xid",
-			G_CALLBACK (callback_video_have_xid), play);
-	
-	g_signal_connect (
-			G_OBJECT (play->video_sink), "have_size",
-			G_CALLBACK (callback_video_have_size), play);
-
-	g_return_val_if_fail (play->video_sink != NULL, FALSE);
-	
-	video_queue = gst_element_factory_make ("queue", "video_queue");
-	g_return_val_if_fail (video_queue != NULL, FALSE);
-	g_hash_table_insert(play->other_elements, "video_queue", video_queue);
-	g_object_set (G_OBJECT (video_queue), "block_timeout", 1000, NULL);
-
-	gst_bin_add_many (
-			GST_BIN (play->pipeline), video_queue,
-			play->video_sink, NULL);
-			
-	gst_element_link (video_queue, play->video_sink);
-	
-	gst_bin_set_pre_iterate_function(
-			GST_BIN (play->pipeline), 
-			(GstBinPrePostIterateFunction) callback_bin_pre_iterate,
-			play->video_bin_mutex);
-			
-	gst_bin_set_post_iterate_function(
-			GST_BIN (play->pipeline), 
-			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-			play->video_bin_mutex);
-	
-	gst_element_link (work_thread, video_queue);
-
-	return TRUE;
-}
-
-
-static gboolean
-gst_play_videots_set_auto (GstPlay *play, GstElement *autoplugger)
-{
-
-	GstElement *audio_bin, *auto_identity, *work_thread;
-
-	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
-	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
-	
-	audio_bin = g_hash_table_lookup(play->other_elements, "audio_bin");
-	auto_identity = g_hash_table_lookup(play->other_elements, "auto_identity");
-	work_thread = g_hash_table_lookup(play->other_elements, "work_thread");
-
-	if (play->autoplugger) {
-		/* we need to remove the existing autoplugger 
-		 * before creating a new one */
-		gst_element_unlink (play->autoplugger, audio_bin);
-		gst_element_unlink (play->autoplugger, play->source);
-		gst_element_unlink (play->autoplugger, auto_identity);
-
-		gst_bin_remove (GST_BIN (work_thread), play->autoplugger);
-	}
-	
-	play->autoplugger = autoplugger;
-	g_return_val_if_fail (play->autoplugger != NULL, FALSE);
-
-	gst_bin_add (GST_BIN (work_thread), play->autoplugger);
-	gst_element_link (play->source, play->autoplugger);
-	gst_element_link (play->autoplugger, audio_bin);
-	gst_element_link (play->autoplugger, auto_identity);
-
-	return TRUE;
-}
-
-
-static gboolean
-gst_play_videots_set_video (GstPlay *play, GstElement *video_sink)
-{
-	GstElement *video_mate;
-	
-	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
-	g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
-	
-	video_mate = g_hash_table_lookup (play->other_elements, "video_queue");
-
-	if (play->video_sink) {
-		gst_element_unlink (video_mate, play->video_sink);
-		gst_bin_remove (GST_BIN (play->pipeline), play->video_sink);
-	}
-	play->video_sink = video_sink;
-	gst_bin_add (GST_BIN (play->pipeline), play->video_sink);
-	gst_element_link (video_mate, play->video_sink);
-
-	return TRUE;
-}
-
-
-static gboolean
-gst_play_videots_set_audio (GstPlay *play, GstElement *audio_sink)
-{
-	GstElement *audio_bin;
-	
-	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
-	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
-	
-	audio_bin = g_hash_table_lookup(play->other_elements, "audio_bin");
-	
-	if (play->audio_sink)
-	{
-		gst_element_unlink (play->volume, play->audio_sink);
-		gst_bin_remove (GST_BIN (audio_bin), play->audio_sink);
-	}
-
-	play->audio_sink = audio_sink;
-	gst_bin_add (GST_BIN (audio_bin), play->audio_sink);
-	gst_element_link (play->volume, play->audio_sink);
-
-	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
-	
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
 				  G_CALLBACK (callback_audio_sink_eos), play);
