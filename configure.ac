@@ -1068,6 +1068,7 @@ sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
+ext/a52/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
 ext/audiofile/Makefile
