@@ -471,7 +471,19 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
         }
 	if ((GstElement *) conn->sink == conn->current)
 	{
+          gboolean restart = FALSE;
+          /* check if restarting is necessary */
+          if (gst_element_get_state ((GstElement *) spider) == GST_STATE_PLAYING)
+          {
+            restart = TRUE;
+            gst_element_set_state ((GstElement *) spider, GST_STATE_PAUSED);
+          }
 	  gst_spider_plug (conn);
+          /* restart if needed */
+          if (restart)
+          {
+            gst_element_set_state ((GstElement *) spider, GST_STATE_PLAYING);
+          }
 	}
       }
     }
