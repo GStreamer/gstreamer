@@ -322,7 +322,7 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
  * to get the shortest path.
  */
 GList *
-gst_autoplug_sp (GstCaps *src_caps, GstCaps *sink_caps, GList *factories)
+gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
 {
   GList *factory_nodes = NULL;
   guint curcost = GST_AUTOPLUG_MAX_COST; /* below this cost, there is no path */
