@@ -920,7 +920,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 {
   int result;
   fd_set testreadfds, testwritefds;
-  GList *clients, *error = NULL;
+  GList *clients, *closed = NULL;
   gboolean try_again;
   GstMultiFdSinkClass *fclass;
 
@@ -1031,7 +1031,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 
     client = (GstTCPClient *) clients->data;
     if (client->bad) {
-      error = g_list_prepend (error, client);
+      closed = g_list_prepend (closed, client);
       continue;
     }
 
@@ -1040,29 +1040,29 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
     if (FD_ISSET (fd, &testreadfds)) {
       /* handle client read */
       if (!gst_multifdsink_handle_client_read (sink, client)) {
-        error = g_list_prepend (error, client);
+        closed = g_list_prepend (closed, client);
         continue;
       }
     }
     if (FD_ISSET (fd, &testwritefds)) {
       /* handle client write */
       if (!gst_multifdsink_handle_client_write (sink, client)) {
-        error = g_list_prepend (error, client);
+        closed = g_list_prepend (closed, client);
         continue;
       }
     }
   }
   /* remove crappy clients */
-  for (clients = error; clients; clients = g_list_next (clients)) {
+  for (clients = closed; clients; clients = g_list_next (clients)) {
     GstTCPClient *client;
 
     client = (GstTCPClient *) clients->data;
 
-    GST_WARNING_OBJECT (sink, "removing client %p with fd %d with errors",
+    GST_DEBUG_OBJECT (sink, "removing client %p with fd %d because of close",
         client, client->fd);
     gst_multifdsink_client_remove (sink, client);
   }
-  g_list_free (error);
+  g_list_free (closed);
   g_mutex_unlock (sink->clientslock);
 }
 
