@@ -36,6 +36,9 @@
  * properties depending on whether we've got a context.
  *
  * See below for why we use this.
+ *
+ * We should actually do this stuff at the end, like in riff-media.c,
+ * but I'm too lazy today. Maybe later.
  */
 
 #define GST_FF_VID_CAPS_NEW(mimetype, props...)			\
@@ -71,174 +74,248 @@
  * for video/audio size will be included in the GstCaps
  *
  * CodecID is primarily meant for compressed data GstCaps!
+ *
+ * encode is a special parameter. gstffmpegdec will say
+ * FALSE, gstffmpegenc will say TRUE. The output caps
+ * depends on this, in such a way that it will be very
+ * specific, defined, fixed and correct caps for encoders,
+ * yet very wide, "forgiving" caps for decoders. Example
+ * for mp3: decode: audio/mpeg,mpegversion=1,layer=[1-3]
+ * but encode: audio/mpeg,mpegversion=1,layer=3,bitrate=x,
+ * rate=x,channels=x.
  */
 
 GstCaps *
 gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
-                            AVCodecContext *context)
+                            AVCodecContext *context,
+			    gboolean        encode)
 {
   GstCaps *caps = NULL;
+  gboolean buildcaps = FALSE;
 
   switch (codec_id) {
     case CODEC_ID_MPEG1VIDEO:
-      /* this caps doesn't need width/height/framerate */
-      caps = gst_caps_new_simple ("video/mpeg",
-	  "mpegversion",  G_TYPE_INT,	  1,
-          "systemstream", G_TYPE_BOOLEAN, FALSE,
-          NULL);
+      /* For decoding, CODEC_ID_MPEG2VIDEO is preferred... So omit here */
+      if (encode) {
+        /* FIXME: bitrate */
+        caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
+	  "mpegversion",  G_TYPE_INT,     1,
+	  "systemstream", G_TYPE_BOOLEAN, FALSE,
+	  NULL);
+      }
       break;
-      
+
+    case CODEC_ID_MPEG2VIDEO:
+      if (encode) {
+        /* FIXME: bitrate */
+        caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
+	  "mpegversion",  G_TYPE_INT,     2,
+	  "systemstream", G_TYPE_BOOLEAN, FALSE,
+	  NULL);
+      } else {
+        /* decode both MPEG-1 and MPEG-2; width/height/fps are all in
+         * the MPEG video stream headers, so may be omitted from caps. */
+        caps = gst_caps_new_simple ("video/mpeg",
+	  "mpegversion",  GST_TYPE_INT_RANGE, 1, 2,
+	  "systemstream", G_TYPE_BOOLEAN,     FALSE,
+	  NULL);
+      }
+      break;
+
+    case CODEC_ID_MPEG2VIDEO_XVMC:
+      /* this is a special ID - don't need it in GStreamer, I think */
+      break;
+
+    /* I don't know the exact differences between those... Anyone? */
+    case CODEC_ID_H263:
     case CODEC_ID_H263P:
     case CODEC_ID_H263I:
-    case CODEC_ID_H263:
       caps = GST_FF_VID_CAPS_NEW ("video/x-h263");
       break;
 
     case CODEC_ID_RV10:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-pn-realvideo",
+    case CODEC_ID_RV20:
+      do {
+        gint version = (codec_id == CODEC_ID_RV10) ? 1 : 2;
+
+        /* FIXME: context->sub_id must be filled in during decoding */
+        caps = GST_FF_VID_CAPS_NEW ("video/x-pn-realvideo",
 	  "systemstream", G_TYPE_BOOLEAN, FALSE,
+	  "rmversion",    G_TYPE_INT,     version,
 	  NULL);
+      } while (0);
       break;
 
     case CODEC_ID_MP2:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
+      /* we use CODEC_ID_MP3 for decoding */
+      if (encode) {
+        /* FIXME: bitrate */
+        caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
 	  "mpegversion", G_TYPE_INT, 1,
-	  "layer", G_TYPE_INT, 2,
-          NULL);
-      break;
-
-    case CODEC_ID_MP3LAME:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
-	  "mpegversion", G_TYPE_INT, 1,
-	  "layer", G_TYPE_INT, 3,
+	  "layer",       G_TYPE_INT, 2,
 	  NULL);
+      }
       break;
 
-    /* FIXME: This could become problematic when we fully switched to seperation
-       of ogg and vorbis, because ffmpeg does ass ume ogg == ogg/vorbis 
-       Maybe we want to disable this? */
+    case CODEC_ID_MP3:
+      if (encode) {
+        /* FIXME: bitrate */
+        caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
+	  "mpegversion", G_TYPE_INT, 1,
+	  "layer",       G_TYPE_INT, 3,
+	  NULL);
+      } else {
+        /* Decodes MPEG-1 layer 1/2/3. Samplerate, channels et al are
+         * in the MPEG audio header, so may be omitted from caps. */
+        caps = gst_caps_new_simple ("audio/mpeg",
+	  "mpegversion", G_TYPE_INT,         1,
+	  "layer",       GST_TYPE_INT_RANGE, 1, 3,
+	  NULL);
+      }
+      break;
+
     case CODEC_ID_VORBIS:
-      caps = GST_FF_AUD_CAPS_NEW ("application/ogg");
-      break;
-      
-    case CODEC_ID_AC3:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-ac3");
+      /* This one is disabled for several reasons:
+       * - GStreamer already has perfect Ogg and Vorbis support
+       * - The ffmpeg implementation depends on libvorbis/libogg,
+       *   which are not included in the ffmpeg that GStreamer ships.
+       * - The ffmpeg implementation depends on shared objects between
+       *   the ogg demuxer and vorbis decoder, which GStreamer doesn't.
+       */
       break;
 
+    case CODEC_ID_AC3:
+      /* Decoding is disabled, because:
+       * - it depends on liba52, which we don't ship in ffmpeg.
+       * - we already have a liba52 plugin ourselves.
+       */
+      if (encode) {
+        /* FIXME: bitrate */
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-ac3");
+      }
+      break;
+
+    /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
+     * is Quicktime's MJPEG-B. LJPEG is lossless JPEG. I don't know what
+     * sp5x is, but it's apparently something JPEG... We don't separate
+     * between those in GStreamer. Should we (at least between MJPEG,
+     * MJPEG-B and sp5x decoding...)? */
     case CODEC_ID_MJPEG:
     case CODEC_ID_MJPEGB:
-    /*case CODEC_ID_LJPEG:*/
+    case CODEC_ID_LJPEG:
+    case CODEC_ID_SP5X:
       caps = GST_FF_VID_CAPS_NEW ("video/x-jpeg");
       break;
 
     case CODEC_ID_MPEG4:
-      caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
-	  "mpegversion",  G_TYPE_INT, 4,
-          "systemstream", G_TYPE_BOOLEAN, FALSE,
+      if (encode) {
+        /* I'm not exactly sure what ffmpeg outputs... ffmpeg itself uses
+         * the AVI fourcc 'DIVX', but 'mp4v' for Quicktime... */
+        /* FIXME: bitrate */
+        caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
+	  "systemstream", G_TYPE_BOOLEAN, FALSE,
+	  "mpegversion",  G_TYPE_INT,     4,
 	  NULL);
-      gst_caps_append(caps,
-	  GST_FF_VID_CAPS_NEW ("video/x-divx",
-	      "divxversion", GST_TYPE_INT_RANGE, 4, 5,
-	      NULL));
-      gst_caps_append(caps,
-             GST_FF_VID_CAPS_NEW ("video/x-xvid"));
-      gst_caps_append(caps,
-             GST_FF_VID_CAPS_NEW ("video/x-3ivx"));
+      } else {
+        /* The trick here is to separate xvid, divx, mpeg4, 3ivx et al */
+        caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
+	  "mpegversion",  G_TYPE_INT,     4,
+	  "systemstream", G_TYPE_BOOLEAN, FALSE,
+	  NULL);
+        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
+				 "divxversion", GST_TYPE_INT_RANGE, 4, 5,
+				 NULL));
+        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid"));
+        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx"));
+      }
       break;
 
-    /* weird quasi-codecs for the demuxers only */
     case CODEC_ID_RAWVIDEO:
-      /* we use a shortcut to the raw-video pad function */
-      return gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, context);
+      caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, context);
+      break;
 
     case CODEC_ID_MSMPEG4V1:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 41,
-	  NULL);
-      break;
-
     case CODEC_ID_MSMPEG4V2:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-msmpeg",
-          "msmpegversion", G_TYPE_INT, 42,
-          NULL);
-      break;
-
     case CODEC_ID_MSMPEG4V3:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 43,
+      do {
+        gint version = 41 + codec_id - CODEC_ID_MSMPEG4V1;
+
+        /* encode-FIXME: bitrate */
+        caps = GST_FF_VID_CAPS_NEW ("video/x-msmpeg",
+	  "msmpegversion", G_TYPE_INT, version,
 	  NULL);
-      gst_caps_append(caps,
-          GST_FF_VID_CAPS_NEW ("video/x-divx",
-	      "divxversion", G_TYPE_INT, 3,
-              NULL));
+        if (!encode && codec_id == CODEC_ID_MSMPEG4V3) {
+          gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
+				   "divxversion", G_TYPE_INT, 3,
+				   NULL));
+        }
+      } while (0);
       break;
 
     case CODEC_ID_WMV1:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, 1,
-          NULL);
+    case CODEC_ID_WMV2:
+      do {
+        gint version = (codec_id == CODEC_ID_WMV1) ? 1 : 2;
+
+        /* encode-FIXME: bitrate */
+        caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
+	  "wmvversion", G_TYPE_INT, version,
+	  NULL);
+      } while (0);
       break;
 
-    case CODEC_ID_WMV2:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, 2,
-          NULL);
+    case CODEC_ID_FLV1:
+      buildcaps = TRUE;
       break;
 
     case CODEC_ID_SVQ1:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
-	  "svqversion", G_TYPE_INT, 1,
-          NULL);
+	"svqversion", G_TYPE_INT, 1,
+	NULL);
       break;
 
     case CODEC_ID_SVQ3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
-	  "svqversion",        G_TYPE_INT,          3,
-	  "halfpel_flag",      GST_TYPE_INT_RANGE,  0, 1,
-	  "thirdpel_flag",     GST_TYPE_INT_RANGE,  0, 1,
-	  "low_delay",         GST_TYPE_INT_RANGE,  0, 1,
-	  "unknown_svq3_flag", GST_TYPE_INT_RANGE,  0, 1,
-          NULL);
+	"svqversion",        G_TYPE_INT,          3,
+	"halfpel_flag",      GST_TYPE_INT_RANGE,  0, 1,
+	"thirdpel_flag",     GST_TYPE_INT_RANGE,  0, 1,
+	"low_delay",         GST_TYPE_INT_RANGE,  0, 1,
+	"unknown_svq3_flag", GST_TYPE_INT_RANGE,  0, 1,
+	NULL);
       break;
 
     case CODEC_ID_DVAUDIO:
-        caps = GST_FF_AUD_CAPS_NEW ("audio/x-dv");
-        break;
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-dv");
+      break;
 
     case CODEC_ID_DVVIDEO:
       caps = GST_FF_VID_CAPS_NEW ("video/dv");
       break;
 
     case CODEC_ID_WMAV1:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
-	  "wmaversion",  G_TYPE_INT,	      1,
-          "flags1",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-          "flags2",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-          "block_align", GST_TYPE_INT_RANGE,  0, G_MAXINT,
-          "bitrate",     GST_TYPE_INT_RANGE,  0, G_MAXINT,
-	  NULL);
-      break;
-
     case CODEC_ID_WMAV2:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
-	  "wmaversion",  G_TYPE_INT,	      2,
-          "flags1",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-          "flags2",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-          "block_align", GST_TYPE_INT_RANGE,  0, G_MAXINT,
-          "bitrate",     GST_TYPE_INT_RANGE,  0, G_MAXINT,
+      do {
+        gint version = (codec_id == CODEC_ID_WMAV1) ? 1 : 2;
+
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
+	  "wmaversion",  G_TYPE_INT,          version,
+	  "flags1",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
+	  "flags2",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
+	  "block_align", GST_TYPE_INT_RANGE,  0, G_MAXINT,
+	  "bitrate",     GST_TYPE_INT_RANGE,  0, G_MAXINT,
 	  NULL);
+      } while (0);
       break;
 
     case CODEC_ID_MACE3:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-mace",
-	  "maceversion", G_TYPE_INT, 3,
-          NULL);
-      break;
-
     case CODEC_ID_MACE6:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-mace",
-	  "maceversion", G_TYPE_INT, 6,
-          NULL);
+      do {
+        gint version = (codec_id == CODEC_ID_MACE3) ? 3 : 6;
+
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-mace",
+	  "maceversion", G_TYPE_INT, version,
+	  NULL);
+      } while (0);
       break;
 
     case CODEC_ID_HUFFYUV:
@@ -246,7 +323,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       break;
 
     case CODEC_ID_CYUV:
-      /* .. */
+      buildcaps = TRUE;
       break;
 
     case CODEC_ID_H264:
@@ -255,40 +332,69 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_INDEO3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-indeo",
-	  "indeoversion", G_TYPE_INT, 3,
-	  NULL);
+	"indeoversion", G_TYPE_INT, 3,
+	NULL);
       break;
 
     case CODEC_ID_VP3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-vp3");
       break;
 
-    case CODEC_ID_AAC:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  "mpegversion",  G_TYPE_INT,	  2,
-	  NULL);
+    case CODEC_ID_THEORA:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-theora");
       break;
 
+    case CODEC_ID_AAC:
     case CODEC_ID_MPEG4AAC:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  "mpegversion",  G_TYPE_INT,	  4,
-	  NULL);
+      /* ffmpeg uses libfaac/libfaad for those. We do not ship these as
+       * part of ffmpeg, so defining those is useless. Besides, we have
+       * our own faad/faac plugins. */
       break;
 
     case CODEC_ID_ASV1:
-      /* .. */
+    case CODEC_ID_ASV2:
+      buildcaps = TRUE;
       break;
 
     case CODEC_ID_FFV1:
       caps = GST_FF_VID_CAPS_NEW ("video/x-ffv",
-	  "ffvversion", G_TYPE_INT, 1,
-	  NULL);
+	"ffvversion", G_TYPE_INT, 1,
+	NULL);
       break;
 
     case CODEC_ID_4XM:
       caps = GST_FF_VID_CAPS_NEW ("video/x-4xm");
+      break;
+
+    case CODEC_ID_VCR1:
+    case CODEC_ID_CLJR:
+    case CODEC_ID_MDEC:
+    case CODEC_ID_ROQ:
+    case CODEC_ID_INTERPLAY_VIDEO:
+    case CODEC_ID_XAN_WC3:
+    case CODEC_ID_XAN_WC4:
+    case CODEC_ID_RPZA:
+      buildcaps = TRUE;
+      break;
+
+    case CODEC_ID_CINEPAK:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-cinepak");
+      break;
+
+    case CODEC_ID_WS_VQA:
+    case CODEC_ID_MSRLE:
+    case CODEC_ID_MSVIDEO1:
+    case CODEC_ID_IDCIN:
+    case CODEC_ID_8BPS:
+    case CODEC_ID_SMC:
+    case CODEC_ID_FLIC:
+    case CODEC_ID_TRUEMOTION1:
+    case CODEC_ID_VMDVIDEO:
+    case CODEC_ID_VMDAUDIO:
+    case CODEC_ID_MSZH:
+    case CODEC_ID_ZLIB:
+    case CODEC_ID_QTRLE:
+      buildcaps = TRUE;
       break;
 
     /* weird quasi-codecs for the demuxers only */
@@ -356,58 +462,159 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       break;
 
     case CODEC_ID_ADPCM_IMA_QT:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
-	  "layout", G_TYPE_STRING, "quicktime",
-          NULL);
-      break;
-
     case CODEC_ID_ADPCM_IMA_WAV:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
-	  "layout", G_TYPE_STRING, "wav",
-          NULL);
-      break;
-
+    case CODEC_ID_ADPCM_IMA_DK3:
+    case CODEC_ID_ADPCM_IMA_DK4:
+    case CODEC_ID_ADPCM_IMA_WS:
+    case CODEC_ID_ADPCM_IMA_SMJPEG:
     case CODEC_ID_ADPCM_MS:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
-	  "layout", G_TYPE_STRING, "microsoft",
-          NULL);
-      break;
-
     case CODEC_ID_ADPCM_4XM:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
-	  "layout", G_TYPE_STRING, "4xm",
+    case CODEC_ID_ADPCM_XA:
+    case CODEC_ID_ADPCM_ADX:
+    case CODEC_ID_ADPCM_EA:
+    case CODEC_ID_ADPCM_G726:
+      do {
+        gchar *layout = NULL;
+
+        switch (codec_id) {
+          case CODEC_ID_ADPCM_IMA_QT:
+            layout = "quicktime";
+            break;
+          case CODEC_ID_ADPCM_IMA_WAV:
+            layout = "wav";
+            break;
+          case CODEC_ID_ADPCM_IMA_DK3:
+            layout = "dk3";
+            break;
+          case CODEC_ID_ADPCM_IMA_DK4:
+            layout = "dk4";
+            break;
+          case CODEC_ID_ADPCM_IMA_WS:
+            layout = "westwood";
+            break;
+          case CODEC_ID_ADPCM_IMA_SMJPEG:
+            layout = "smjpeg";
+            break;
+          case CODEC_ID_ADPCM_MS:
+            layout = "microsoft";
+            break;
+          case CODEC_ID_ADPCM_4XM:
+            layout = "4xm";
+            break;
+          case CODEC_ID_ADPCM_XA:
+            layout = "xa";
+            break;
+          case CODEC_ID_ADPCM_ADX:
+            layout = "adx";
+            break;
+          case CODEC_ID_ADPCM_EA:
+            layout = "ea";
+            break;
+          case CODEC_ID_ADPCM_G726:
+            layout = "g726";
+            break;
+          default:
+            g_assert (0); /* don't worry, we never get here */
+            break;
+        }
+
+        /* FIXME: someone please check whether we need additional properties
+         * in this caps definition. */
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
+	  "layout", G_TYPE_STRING, layout,
           NULL);
+      } while (0);
       break;
 
     case CODEC_ID_AMR_NB:
-      /* .. */
+    case CODEC_ID_AMR_WB:
+      /* what's this? ffmpeg uses external libs here that we don't include
+       * so there's no point in defining those. Still, I want to know what
+       * it actually is... */
       break;
 
     case CODEC_ID_RA_144:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
-	  "bitrate", G_TYPE_INT, 14400,
-          NULL);
-      break;
-
     case CODEC_ID_RA_288:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
-	  "bitrate", G_TYPE_INT, 28800,
-          NULL);
+      do {
+        gint version = (codec_id == CODEC_ID_RA_144) ? 1 : 2;
+
+        /* FIXME: properties? */
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
+	  "raversion", G_TYPE_INT, version,
+	  NULL);
+      } while (0);
       break;
 
-    case CODEC_ID_CINEPAK:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-cinepak", NULL);
+    case CODEC_ID_ROQ_DPCM:
+    case CODEC_ID_INTERPLAY_DPCM:
+    case CODEC_ID_XAN_DPCM:
+      do {
+        gchar *layout = NULL;
+
+        switch (codec_id) {
+          case CODEC_ID_ROQ_DPCM:
+            layout = "roq";
+            break;
+          case CODEC_ID_INTERPLAY_DPCM:
+            layout = "interplay";
+            break;
+          case CODEC_ID_XAN_DPCM:
+            layout = "xan";
+            break;
+          default:
+            g_assert (0); /* don't worry, we never get here */
+            break;
+        }
+
+        /* FIXME: someone please check whether we need additional properties
+         * in this caps definition. */
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-dpcm",
+	  "layout", G_TYPE_STRING, layout,
+	  NULL);
+      } while (0);
+      break;
+    
+    case CODEC_ID_FLAC:
+      /* Note that ffmpeg has no encoder yet, but just for safety. In the
+       * encoder case, we want to add things like samplerate, channels... */
+      if (!encode) {
+        caps = gst_caps_new_simple ("audio/x-flac", NULL);
+      }
       break;
 
     default:
-      /* .. */
+      g_warning ("Unknown codec ID %d, please add here", codec_id);
       break;
+  }
+
+  if (buildcaps) {
+    AVCodec *codec;
+
+    if ((codec = avcodec_find_decoder (codec_id)) ||
+        (codec = avcodec_find_encoder (codec_id))) {
+      gchar *mime = NULL;
+
+      switch (codec->type) {
+        case CODEC_TYPE_VIDEO:
+          mime = g_strdup_printf ("video/x-gst_ff-%s", codec->name);
+          caps = GST_FF_VID_CAPS_NEW (mime);
+          g_free (mime);
+          break;
+        case CODEC_TYPE_AUDIO:
+          mime = g_strdup_printf ("audio/x-gst_ff-%s", codec->name);
+          caps = GST_FF_AUD_CAPS_NEW (mime);
+          g_free (mime);
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   if (caps != NULL) {
     char *str = gst_caps_to_string (caps);
     GST_DEBUG ("caps for codec_id=%d: %s", codec_id, str);
-    g_free(str);
+    g_free (str);
   } else {
     GST_WARNING ("No caps found for codec_id=%d", codec_id);
   }
@@ -941,7 +1148,9 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
  * are omitted, that can be queried by the user itself,
  * we're not eating the GstCaps or anything
  * A pointer to an allocated context is also needed for
- * optional extra info (not used yet, though)
+ * optional extra info
+ *
+ * FIXME: lots of ffmpeg decoders need more properties...
  */
 
 enum CodecID
@@ -1139,8 +1348,14 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
         case 1:
           id = CODEC_ID_MPEG1VIDEO;
           break;
+        case 2:
+          id = CODEC_ID_MPEG2VIDEO;
+          break;
         case 4:
           id = CODEC_ID_MPEG4;
+          if (context) {
+            context->codec_tag = GST_MAKE_FOURCC ('m','p','4','v');
+          }
           break;
         default:
           /* ... */
@@ -1312,8 +1527,12 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       audio = TRUE;
     }
 
-  } else if (!strcmp (mimetype, "video/x-theora") ||
-             !strcmp (mimetype, "video/x-vp3")) {
+  } else if (!strcmp (mimetype, "video/x-theora")) {
+
+    id = CODEC_ID_THEORA;
+    video = TRUE;
+
+  } else if (!strcmp (mimetype, "video/x-vp3")) {
 
     id = CODEC_ID_VP3;
     video = TRUE;
@@ -1350,6 +1569,10 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       default:
 	/* ... */
 	break;
+    }
+
+    if (context) {
+      context->codec_tag = GST_MAKE_FOURCC ('D','I','V','X');
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1405,6 +1628,22 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       id = CODEC_ID_ADPCM_IMA_WAV;
     } else if (!strcmp (layout, "4xm")) {
       id = CODEC_ID_ADPCM_4XM;
+    } else if (!strcmp (layout, "smjpeg")) {
+      id = CODEC_ID_ADPCM_IMA_SMJPEG;
+    } else if (!strcmp (layout, "dk3")) {
+      id = CODEC_ID_ADPCM_IMA_DK3;
+    } else if (!strcmp (layout, "dk4")) {
+      id = CODEC_ID_ADPCM_IMA_DK4;
+    } else if (!strcmp (layout, "westwood")) {
+      id = CODEC_ID_ADPCM_IMA_WS;
+    } else if (!strcmp (layout, "xa")) {
+      id = CODEC_ID_ADPCM_XA;
+    } else if (!strcmp (layout, "adx")) {
+      id = CODEC_ID_ADPCM_ADX;
+    } else if (!strcmp (layout, "ea")) {
+      id = CODEC_ID_ADPCM_EA;
+    } else if (!strcmp (layout, "g726")) {
+      id = CODEC_ID_ADPCM_G726;
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1416,9 +1655,96 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     id = CODEC_ID_4XM;
     video = TRUE;
 
-  }
+  } else if (!strcmp (mimetype, "audio/x-dpcm")) {
+    const gchar *layout;
 
-  /* TODO: realvideo/audio (well, we can't write them anyway) */
+    layout = gst_structure_get_string (structure, "layout");
+
+    if (!strcmp (layout, "roq")) {
+      id = CODEC_ID_ROQ_DPCM;
+    } else if (!strcmp (layout, "interplay")) {
+      id = CODEC_ID_INTERPLAY_DPCM;
+    } else if (!strcmp (layout, "xan")) {
+      id = CODEC_ID_XAN_DPCM;
+    }
+
+    if (id != CODEC_ID_NONE) {
+      audio = TRUE;
+    }
+
+  } else if (!strcmp (mimetype, "audio/x-flax")) {
+
+    id = CODEC_ID_FLAC;
+    audio = TRUE;
+
+  } else if (!strcmp (mimetype, "video/x-cinepak")) {
+
+    id = CODEC_ID_CINEPAK;
+    video = TRUE;
+
+  } else if (!strcmp (mimetype, "video/x-pn-realvideo")) {
+
+    gint rmversion;
+
+    gst_structure_get_int (structure, "rmversion", &rmversion);
+
+    switch (rmversion) {
+      case 1:
+        id = CODEC_ID_RV10;
+        break;
+      case 2:
+        id = CODEC_ID_RV20;
+        break;
+      default:
+        /* .. */
+        break;
+    }
+
+    if (id != CODEC_ID_NONE) {
+      video = TRUE;
+    }
+
+  } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
+
+    gint raversion;
+                                                                                
+    gst_structure_get_int (structure, "raversion", &raversion);
+                                                                                
+    switch (raversion) {
+      case 1:
+        id = CODEC_ID_RA_144;
+        break;
+      case 2:
+        id = CODEC_ID_RA_288;
+        break;
+      default:
+        /* .. */
+        break;
+    }
+                                                                                
+    if (id != CODEC_ID_NONE) {
+      audio = TRUE;
+    }
+
+  } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ||
+             !strncmp (mimetype, "video/x-gst_ff-", 15)) {
+
+    gchar ext[16];
+    AVCodec *codec;
+
+    if (strlen (mimetype) <= 30 &&
+        sscanf (mimetype, "%*s/x-gst_ff-%s", &ext) == 1) {
+      if ((codec = avcodec_find_decoder_by_name (ext)) ||
+          (codec = avcodec_find_encoder_by_name (ext))) {
+        id = codec->id;
+        if (mimetype[0] == 'v')
+          video = TRUE;
+        else if (mimetype[0] == 'a')
+          audio = TRUE;
+      }
+    }
+
+  }
 
   if (context != NULL) {
     if (video == TRUE) {

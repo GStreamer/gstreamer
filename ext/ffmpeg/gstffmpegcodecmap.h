@@ -33,7 +33,8 @@
 
 GstCaps *
 gst_ffmpeg_codecid_to_caps   (enum CodecID    codec_id,
-                              AVCodecContext *context);
+                              AVCodecContext *context,
+			      gboolean        encode);
 
 /* _codectype_to_caps () gets the GstCaps that belongs to
  * a certain CodecType for a pad with uncompressed data.

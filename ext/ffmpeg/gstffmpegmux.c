@@ -488,7 +488,7 @@ gst_ffmpegmux_register (GstPlugin *plugin)
     videosinkcaps = gst_caps_new_empty ();
     for (in_codec = first_avcodec; in_codec != NULL;
 	 in_codec = in_codec->next) {
-      GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL);
+      GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL, TRUE);
       if (!temp) {
         continue;
       }

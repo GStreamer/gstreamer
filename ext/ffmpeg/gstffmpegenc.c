@@ -343,7 +343,7 @@ gst_ffmpegenc_connect (GstPad  *pad,
 
   /* try to set this caps on the other side */
   other_caps = gst_ffmpeg_codecid_to_caps (oclass->in_plugin->id,
-					 ffmpegenc->context);
+					   ffmpegenc->context, TRUE);
   if (!other_caps) {
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
@@ -638,7 +638,7 @@ gst_ffmpegenc_register (GstPlugin *plugin)
     }
 
     /* first make sure we've got a supported type */
-    srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL);
+    srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE);
     sinkcaps  = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
     if (!sinkcaps || !srccaps)
       goto next;

@@ -392,6 +392,7 @@ gst_ffmpegdec_chain (GstPad    *pad,
 				    (int16_t *) GST_BUFFER_DATA (outbuf),
 				    &have_data,
 				    data, size);
+
         if (have_data) {
           GST_BUFFER_SIZE (outbuf) = have_data;
           GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
@@ -498,7 +499,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     }
 
     /* first make sure we've got a supported type */
-    sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL);
+    sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
     srccaps  = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
     if (!sinkcaps || !srccaps)
       goto next;

@@ -504,7 +504,7 @@ gst_ffmpegdemux_add (GstFFMpegDemux *demux,
   demux->srcpads[stream->index] = pad;
 
   /* get caps that belongs to this stream */
-  caps = gst_ffmpeg_codecid_to_caps (stream->codec.codec_id, &stream->codec);
+  caps = gst_ffmpeg_codecid_to_caps (stream->codec.codec_id, &stream->codec, TRUE);
   gst_pad_set_explicit_caps (pad, caps);
 
   gst_element_add_pad (GST_ELEMENT (demux), pad);
@@ -701,7 +701,7 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
     videosrccaps = gst_caps_new_empty ();
     for (in_codec = first_avcodec; in_codec != NULL;
 	 in_codec = in_codec->next) {
-      GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL);
+      GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL, TRUE);
       if (!temp) {
         continue;
       }
