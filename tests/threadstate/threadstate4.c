@@ -4,6 +4,7 @@ int main(int argc,char *argv[])
 {
   GstElement *fakesrc, *fakesink;
   GstElement *thread, *thread2;
+  GstElement *queue;
   gint x;
 
   gst_init(&argc,&argv);
@@ -11,10 +12,12 @@ int main(int argc,char *argv[])
   thread = gst_thread_new("thread");
   g_assert(thread != NULL);
 
-  thread2 = gst_thread_new("thread2");
+  thread2 = gst_thread_new("thread");
   g_assert(thread2 != NULL);
 
-  gst_bin_add(GST_BIN(thread), GST_ELEMENT(thread2));
+  queue = gst_element_factory_make("queue", "the_queue");
+  g_assert(queue != NULL);
+
 
   fakesrc = gst_element_factory_make("fakesrc", "fake_source");
   g_assert(fakesrc != NULL);
@@ -22,16 +25,19 @@ int main(int argc,char *argv[])
   fakesink = gst_element_factory_make("fakesink", "fake_sink");
   g_assert(fakesink != NULL);
 
-  gst_bin_add_many (GST_BIN(thread2), fakesrc, fakesink, NULL);
-  gst_element_connect (fakesrc, fakesink);
+  gst_bin_add_many (GST_BIN(thread), thread2, queue, fakesink, NULL);
+
+  gst_bin_add(GST_BIN(thread2), fakesrc);
+  gst_element_add_ghost_pad (thread2, gst_element_get_pad (fakesrc, "src"), "src");
+  gst_element_connect_many (thread2, queue, fakesink, NULL);
 
   for (x = 0 ; x < 10 ; x++){
     g_print("playing %d\n", x);
-    gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
+    gst_element_set_state(thread, GST_STATE_PLAYING);
     sleep(1);
 
-    g_print("pausing %d\n", x);
-    gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PAUSED);
+    g_print("nulling %d\n", x);
+    gst_element_set_state(thread, GST_STATE_NULL);
     sleep(1);
   }
 
