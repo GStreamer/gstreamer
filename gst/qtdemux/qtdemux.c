@@ -210,6 +210,186 @@ gst_qtdemux_init (GstQTDemux *qtdemux)
   gst_element_add_pad (GST_ELEMENT (qtdemux), qtdemux->sinkpad);
 }
 
+static const GstFormat *
+gst_qtdemux_get_src_formats (GstPad *pad)
+{
+  static const GstFormat src_a_formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_DEFAULT,
+    0
+  };
+  static const GstFormat src_v_formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_DEFAULT,
+    0
+  };
+  QtDemuxStream *stream = gst_pad_get_element_private(pad);
+
+  return (stream->subtype == GST_MAKE_FOURCC('v','i','d','e')) ?
+    src_v_formats : src_a_formats;
+}
+
+static gboolean
+gst_qtdemux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
+    GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  QtDemuxStream *stream = gst_pad_get_element_private(pad);
+
+  if (stream->subtype == GST_MAKE_FOURCC('v','i','d','e') &&
+      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
+    return FALSE;
+
+  switch (src_format) {
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * 1; /* FIXME */
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * 1; /* FIXME */
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * 1; /* FIXME */
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * 1; /* FIXME */
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+
+  return res;
+}
+
+static const GstQueryType *
+gst_qtdemux_get_src_query_types (GstPad *pad)
+{
+  static const GstQueryType src_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return src_types;
+}
+
+static const GstEventMask *
+gst_qtdemux_get_event_mask (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_KEY_UNIT },
+    { 0, }
+  };
+
+  return masks;
+}
+
+static gboolean
+gst_qtdemux_handle_src_query (GstPad *pad, GstQueryType type,
+    GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  //QtDemuxStream *stream = gst_pad_get_element_private(pad);
+
+  switch (type) {
+    case GST_QUERY_TOTAL:
+      switch (*format) {
+        case GST_FORMAT_TIME:
+          *value = 0; /* FIXME */
+          break;
+        case GST_FORMAT_BYTES:
+          *value = 0; /* FIXME */
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = 0; /* FIXME */
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_QUERY_POSITION:
+      switch (*format) {
+        case GST_FORMAT_TIME:
+          *value = 0; /* FIXME */
+          break;
+        case GST_FORMAT_BYTES:
+          *value = 0; /* FIXME */
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = 0; /* FIXME */
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
+gst_qtdemux_handle_src_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  //QtDemuxStream *stream = gst_pad_get_element_private(pad);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      GST_DEBUG ("seek format %d", GST_EVENT_SEEK_FORMAT (event));
+
+      switch (GST_EVENT_SEEK_FORMAT (event)) {
+        case GST_FORMAT_BYTES:
+        case GST_FORMAT_DEFAULT:
+        case GST_FORMAT_TIME:
+          {
+            gint64 desired_offset = GST_EVENT_SEEK_OFFSET (event);
+
+            GST_DEBUG ("seeking to %" G_GINT64_FORMAT, desired_offset);
+
+            res = FALSE;
+          }
+        default:
+          res = FALSE;
+          break;
+      }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  gst_event_unref (event);
+
+  return res;
+}
+
+
+
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
 static gboolean
@@ -536,6 +716,13 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
   qtdemux->streams[qtdemux->n_streams] = stream;
   qtdemux->n_streams++;
   GST_DEBUG ("n_streams is now %d", qtdemux->n_streams);
+
+  gst_pad_set_event_mask_function (stream->pad, gst_qtdemux_get_event_mask);
+  gst_pad_set_event_function (stream->pad, gst_qtdemux_handle_src_event);
+  gst_pad_set_query_type_function (stream->pad, gst_qtdemux_get_src_query_types);
+  gst_pad_set_query_function (stream->pad, gst_qtdemux_handle_src_query);
+  gst_pad_set_formats_function (stream->pad, gst_qtdemux_get_src_formats);
+  gst_pad_set_convert_function (stream->pad, gst_qtdemux_src_convert);
 
   gst_pad_set_explicit_caps(stream->pad, stream->caps);
 
