@@ -78,13 +78,31 @@ gst_xvimagesink_interface_init (GstInterfaceClass *klass)
 }
 
 static void
-gst_xvimagesink_navigation_send_event (GstNavigation *navigation, GstCaps *caps)
+gst_xvimagesink_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (navigation);
+  XWindowAttributes attr; 
   GstEvent *event;
+  double x,y;
+
+  g_mutex_lock (xvimagesink->x_lock);
+  XGetWindowAttributes (xvimagesink->xcontext->disp,
+                        xvimagesink->xwindow->win, &attr); 
+  g_mutex_unlock (xvimagesink->x_lock);
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
-  event->event_data.caps.caps = caps;
+  event->event_data.structure.structure = structure;
+  if(gst_structure_get_double(structure, "pointer_x", &x)){
+    x *= xvimagesink->width;
+    x /= attr.width;
+    gst_structure_set(structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+  }
+  if(gst_structure_get_double(structure, "pointer_y", &y)){
+    y *= xvimagesink->height;
+    y /= attr.height;
+    gst_structure_set(structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+  }
+
   gst_pad_send_event (gst_pad_get_peer (xvimagesink->sinkpad), event);
 }
 
@@ -359,6 +377,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
                             ButtonReleaseMask, &e))
     {
       GstEvent *event = NULL;
+      KeySym keysym;
       
       /* We lock only for the X function call */
       g_mutex_unlock (xvimagesink->x_lock);
@@ -370,43 +389,28 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
                events for interactivity/navigation */
             GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
                        e.xmotion.x, e.xmotion.y);
-            event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->event_data.caps.caps = GST_CAPS_NEW (
-                                             "xvimagesink_navigation",
-                                             "video/x-raw-rgb",
-                                             "pointer_x", GST_PROPS_FLOAT (e.xmotion.x),
-                                             "pointer_y", GST_PROPS_FLOAT (e.xmotion.y),
-                                             "state", GST_PROPS_INT (e.xmotion.state));
+            gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
+                e.xmotion.x, e.xmotion.y);
             break;
           case ButtonPress:
           case ButtonRelease:
             /* Mouse button pressed/released over our window. We send upstream
                events for interactivity/navigation */
             GST_DEBUG ("xvimagesink button %d pressed over window at %d,%d",
-                       e.xbutton.button, e.xbutton.x, e.xbutton.x);
-            event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->event_data.caps.caps = GST_CAPS_NEW (
-                                             "xvimagesink_navigation",
-                                             "video/x-raw-rgb",
-                                             "pointer_x", GST_PROPS_FLOAT (e.xbutton.x),
-                                             "pointer_y", GST_PROPS_FLOAT (e.xbutton.y),
-                                             "button", GST_PROPS_INT (e.xbutton.button),
-                                             "state", GST_PROPS_INT (e.xbutton.state));
+                       e.xbutton.button, e.xbutton.x, e.xbutton.y);
+            gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
+                e.xbutton.x, e.xbutton.y);
             break;
           case KeyPress:
           case KeyRelease:
             /* Key pressed/released over our window. We send upstream
                events for interactivity/navigation */
             GST_DEBUG ("xvimagesink key %d pressed over window at %d,%d",
-                       e.xbutton.button, e.xbutton.x, e.xbutton.x);
-            event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->event_data.caps.caps = GST_CAPS_NEW (
-                                             "xvimagesink_navigation",
-                                             "video/x-raw-rgb",
-                                             "pointer_x", GST_PROPS_INT (e.xkey.x),
-                                             "pointer_y", GST_PROPS_INT (e.xkey.y),
-                                             "keycode", GST_PROPS_INT (e.xkey.keycode),
-                                             "state", GST_PROPS_INT (e.xkey.state));
+                       e.xkey.keycode, e.xkey.x, e.xkey.y);
+            keysym = XKeycodeToKeysym(xvimagesink->xcontext->disp,
+                e.xkey.keycode, 0);
+            gst_navigation_send_key_event (GST_NAVIGATION (xvimagesink),
+                XKeysymToString (keysym));
             break;
           default:
             GST_DEBUG ("xvimagesink unhandled X event (%d)", e.type);

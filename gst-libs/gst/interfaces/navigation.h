@@ -42,7 +42,7 @@ typedef struct _GstNavigationInterface {
   GTypeInterface g_iface;
 
   /* virtual functions */
-  void (*send_event) (GstNavigation *navigation, GstCaps *caps);
+  void (*send_event) (GstNavigation *navigation, GstStructure *structure);
   
   GST_CLASS_PADDING
 } GstNavigationInterface;
@@ -50,7 +50,7 @@ typedef struct _GstNavigationInterface {
 GType		gst_navigation_get_type	(void);
 
 /* virtual class function wrappers */
-void gst_navigation_send_event (GstNavigation *navigation, GstCaps *caps);
+void gst_navigation_send_event (GstNavigation *navigation, GstStructure *structure);
 
 void gst_navigation_send_key_event (GstNavigation *navigation, const char *key);
 void gst_navigation_send_mouse_event (GstNavigation *navigation, double x,

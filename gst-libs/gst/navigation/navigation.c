@@ -61,31 +61,31 @@ gst_navigation_class_init (GstNavigationInterface *iface)
 }
 
 void
-gst_navigation_send_event (GstNavigation *navigation, GstCaps *caps)
+gst_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
 {
   GstNavigationInterface *iface = GST_NAVIGATION_GET_IFACE (navigation);
 
   if (iface->send_event) {
-    iface->send_event (navigation, caps);
+    iface->send_event (navigation, structure);
   }
 }
 
 void
 gst_navigation_send_key_event (GstNavigation *navigation, const char *key)
 {
-  gst_navigation_send_event (navigation, GST_CAPS_NEW ("key_event",
-	"application/x-gst-navigation",
-	"key", GST_PROPS_STRING (key)));
+  gst_navigation_send_event (navigation, gst_structure_new (
+        "application/x-gst-navigation",
+	"key", G_TYPE_STRING, key, NULL));
 }
 
 void
 gst_navigation_send_mouse_event (GstNavigation *navigation, double x,
         double y)
 {
-  gst_navigation_send_event (navigation, GST_CAPS_NEW ("mouse_event",
+  gst_navigation_send_event (navigation, gst_structure_new (
 	"application/x-gst-navigation",
-	"pointer_x", GST_PROPS_FLOAT (x),
-	"pointer_y", GST_PROPS_FLOAT (y)));
+	"pointer_x", G_TYPE_DOUBLE, x,
+	"pointer_y", G_TYPE_DOUBLE, y, NULL));
 }
 
 
