@@ -79,15 +79,9 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [
   AC_MSG_WARN(building experimental plugins)
   USE_LIBMIKMOD="yes"
-  USE_ARTS="yes"
-  USE_ARTSC="yes"
-  USE_SINE="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
   USE_LIBMIKMOD="no"
-  USE_ARTS="no"
-  USE_ARTSC="no"
-  USE_SINE="no"
 ])
 
 dnl broken plugins; stuff that doesn't seem to build at the moment
@@ -494,6 +488,25 @@ GST_CHECK_FEATURE(HERMES, [Hermes library], colorspace, [
   GST_CHECK_LIBHEADER(HERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, HERMES_LIBS="-lHermes")
 ], AC_SUBST(HERMES_LIBS))
 
+dnl *** http ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_HTTP, true)
+GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
+  dnl FIXME: need to check for header
+  GHTTP_LIBS=
+  GST_HTTPSRC_GET_TYPE=
+  if test x$USE_GLIB2 = xyes; then
+    AC_MSG_WARN(ghttp disabled for glib2.0)
+  else
+    AC_CHECK_LIB(ghttp, ghttp_request_new,
+      [HTTP_LIBS="-lghttp"
+       GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
+       HAVE_HTTP=yes
+      ], :, $LIBS)
+  fi
+  AC_SUBST(HTTP_LIBS)
+  AC_SUBST(GST_HTTPSRC_GET_TYPE)
+])
+
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
@@ -599,25 +612,6 @@ dnl *** XMMS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XMMS, true)
 GST_CHECK_FEATURE(XMMS, [xmms plugin], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_XMMS=yes, HAVE_XMMS=no)
-])
-
-dnl Check for libghttp
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
-GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
-  dnl FIXME: need to check for header
-  GHTTP_LIBS=
-  GST_HTTPSRC_GET_TYPE=
-  if test x$USE_GLIB2 = xyes; then
-    AC_MSG_WARN(ghttp disabled for glib2.0)
-  else
-    AC_CHECK_LIB(ghttp, ghttp_request_new,
-      [GHTTP_LIBS="-lghttp"
-       GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
-       HAVE_LIBGHTTP=yes
-      ], :, $LIBS)
-  fi
-  AC_SUBST(GHTTP_LIBS)
-  AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
 
 dnl Check for atomic.h
@@ -837,12 +831,6 @@ dnl # Set defines according to variables set above #
 dnl ################################################
 
 
-dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
-dnl HAVE_ and it is likely to be easier to stick with the old name
-if test "x$USE_LIBGHTTP" = xyes; then
-  AC_DEFINE(HAVE_LIBGHTTP, 1, [Define if ghttp library is available])
-fi
-
 if test "x$USE_LIBMMX" = xyes; then
   AC_DEFINE(HAVE_LIBMMX, 1, [Define if libmmx is available])
 fi
@@ -1002,8 +990,6 @@ dnl wtay fix this: testsuite/threads/Makefile
 dnl testsuite/refcounting/Makefile
 dnl stamp.h
 dnl echo "$infomessages", infomessages="$infomessages"
-dnl ext/arts/Makefile
-dnl ext/artsd/Makefile
 AC_OUTPUT(
 Makefile
 gst/Makefile
@@ -1058,6 +1044,8 @@ ext/Makefile
 ext/a52/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
+ext/arts/Makefile
+ext/artsd/Makefile
 ext/audiofile/Makefile
 ext/avifile/Makefile
 ext/cdparanoia/Makefile
