@@ -61,16 +61,27 @@ main (gint argc, gchar *argv[])
   if (testnum == 1) {
     g_print ("stress test state changes...\n");
 
+    g_print ("NULL\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_print ("READY\n");
     gst_element_set_state (pipeline, GST_STATE_READY);
+    g_print ("NULL\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_print ("PAUSED\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    g_print ("READY\n");
     gst_element_set_state (pipeline, GST_STATE_READY);
+    g_print ("PAUSED\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    g_print ("PLAYING\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    g_print ("PAUSED\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    g_print ("PLAYING\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    g_print ("READY\n");
     gst_element_set_state (pipeline, GST_STATE_READY);
+    g_print ("NULL\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
 
