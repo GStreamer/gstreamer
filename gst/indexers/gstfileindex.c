@@ -543,7 +543,7 @@ _file_index_id_save_entries (gpointer * _key,
 
   err = NULL;
   path = g_strdup_printf ("%s/%d", prefix, ii->id);
-  chan = g_io_channel_new_file (path, "w", &err);
+  chan = g_io_channel_new_file (path, GST_FILE_MODE_WRITE, &err);
   g_free (path);
   if (err)
     goto fail;
@@ -605,7 +605,7 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
   }
 
   path = g_strdup_printf ("%s/gstindex.xml", index->location);
-  tocfile = g_io_channel_new_file (path, "w", &err);
+  tocfile = g_io_channel_new_file (path, GST_FILE_MODE_WRITE, &err);
   g_free (path);
   if (err) {
     GST_ERROR_OBJECT (index, "%s", err->message);

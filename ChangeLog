@@ -1,4 +1,13 @@
 2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst/elements/gstfilesink.c:
+	* gst/elements/gstfilesrc.c:
+	* gst/indexers/gstfileindex.c:
+	* gst/gsttypes.h:
+	* testsuite/bytestream/filepadsink.c:
+	* testsuite/bytestream/test1.c:
+	  Handle binary files under Windows
+
+2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
 	* docs/manual/win32.xml:
 	* win32/config.h:
 	* win32/gst-register.vcproj:

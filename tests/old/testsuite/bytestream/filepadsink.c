@@ -259,7 +259,7 @@ main (gint argc, gchar ** argv)
   if (!gst_element_link (src, sink))
     g_assert_not_reached ();
   g_object_set (src, "location", THE_FILE, NULL);
-  GST_FP_SINK (sink)->stream = fopen (THE_FILE, "r");
+  GST_FP_SINK (sink)->stream = fopen (THE_FILE, GST_FILE_MODE_READ);
   g_assert (GST_FP_SINK (sink)->stream);
   /* check correct file sizes */
   if (fseek (GST_FP_SINK (sink)->stream, 0, SEEK_END) != 0)

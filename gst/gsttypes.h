@@ -66,6 +66,16 @@ typedef enum {
 #define GST_PADDING 4
 #define GST_PADDING_INIT	{ 0 }
 
+#ifdef WIN32
+#define GST_FILE_MODE_READ  "rb"
+#define GST_FILE_MODE_WRITE "wb"
+#define GST_O_READONLY      O_RDONLY|O_BINARY
+#else
+#define GST_FILE_MODE_READ  "r"
+#define GST_FILE_MODE_WRITE "w"
+#define GST_O_READONLY      O_RDONLY
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_TYPES_H__ */

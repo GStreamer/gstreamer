@@ -260,7 +260,7 @@ gst_filesink_open_file (GstFileSink * sink)
     return FALSE;
   }
 
-  sink->file = fopen (sink->filename, "w");
+  sink->file = fopen (sink->filename, "wb");
   if (sink->file == NULL) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         (_("Could not open file \"%s\" for writing."), sink->filename),

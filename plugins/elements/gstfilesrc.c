@@ -756,7 +756,7 @@ gst_filesrc_open_file (GstFileSrc * src)
   GST_INFO_OBJECT (src, "opening file %s", src->filename);
 
   /* open the file */
-  src->fd = open (src->filename, O_RDONLY);
+  src->fd = open (src->filename, GST_O_READONLY);
   if (src->fd < 0) {
     if (errno == ENOENT)
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
