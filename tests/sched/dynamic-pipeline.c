@@ -2,49 +2,43 @@
 
 int main (int argc, char *argv[]) 
 {
-    GstElement *osssink, *pipe1, *pipe2, *bin, *filesrc, *mad, *fakesink;
+    GstElement *fakesrc, *fakesink1, *fakesink2, *pipe1, *pipe2;
     
     gst_init(&argc, &argv);
     
-    if (argc!=2) {
-        g_print("usage: %s file.mp3\n", argv[0]);
+    if (argc!=1) {
+        g_print("usage: %s\n", argv[0]);
         exit(-1);
     }
     
-    filesrc = gst_elementfactory_make("filesrc", "filesrc");
-    mad = gst_elementfactory_make("mad", "mad");
-    bin = gst_bin_new("bin");
+    fakesrc = gst_elementfactory_make("fakesrc", "fakesrc");
+    fakesink1 = gst_elementfactory_make("fakesink", "fakesink1");
+    fakesink2 = gst_elementfactory_make("fakesink", "fakesink2");
     pipe1 = gst_pipeline_new("pipe1");
     pipe2 = gst_pipeline_new("pipe2");
-    osssink = gst_elementfactory_make("osssink", "osssink");
-    fakesink = gst_elementfactory_make("fakesink", "fakesink");
-    
-    g_object_set(G_OBJECT(filesrc), "location", argv[1], NULL);
     
     // make the first pipeline
-    gst_bin_add (GST_BIN(pipe1), filesrc);
-    gst_bin_add (GST_BIN(pipe1), fakesink);
-    gst_element_connect(filesrc, "src", fakesink, "sink");
+    gst_bin_add (GST_BIN(pipe1), fakesrc);
+    gst_bin_add (GST_BIN(pipe1), fakesink1);
+    gst_element_connect(fakesrc, "src", fakesink1, "sink");
     
     // initialize cothreads
     gst_element_set_state(pipe1, GST_STATE_PLAYING);
     gst_element_set_state(pipe1, GST_STATE_READY);
     
-    // destroy the fakesink, but keep filesrc (its state is GST_STATE_READY)
-    gst_element_disconnect(filesrc, "src", fakesink, "sink");
-    gst_object_ref(GST_OBJECT(filesrc));
-    gst_bin_remove(GST_BIN(pipe1), filesrc);
-    gst_bin_remove(GST_BIN(pipe1), fakesink);
+    // destroy the fakesink, but keep fakesrc (its state is GST_STATE_READY)
+    gst_element_disconnect(fakesrc, "src", fakesink1, "sink");
+    gst_object_ref(GST_OBJECT(fakesrc));
+    gst_bin_remove(GST_BIN(pipe1), fakesrc);
+    gst_bin_remove(GST_BIN(pipe1), fakesink1);
     
     // make a new pipeline
-    gst_bin_add (GST_BIN(pipe2), mad);
-    gst_bin_add (GST_BIN(pipe2), osssink);
-    gst_element_connect(mad, "src", osssink, "sink");
+    gst_bin_add (GST_BIN(pipe2), fakesink2);
     
     // change the new pipeline's state to READY (is this necessary?)
     gst_element_set_state(pipe2, GST_STATE_READY);
-    gst_bin_add (GST_BIN(pipe2), filesrc);
-    gst_element_connect(filesrc, "src", mad, "sink");
+    gst_bin_add (GST_BIN(pipe2), fakesrc);
+    gst_element_connect(fakesrc, "src", fakesink2, "sink");
     
     // show the pipeline state
     xmlDocDump(stdout, gst_xml_write(pipe2));
