@@ -98,7 +98,7 @@ struct _GstMPEGParseClass {
 
 GType gst_mpeg_parse_get_type(void);
 
-gboolean 	gst_mpeg_parse_plugin_init 		(GModule *module, GstPlugin *plugin);
+gboolean 	gst_mpeg_parse_plugin_init 		(GstPlugin *plugin);
 
 const GstFormat*
 		gst_mpeg_parse_get_src_formats 		(GstPad *pad);

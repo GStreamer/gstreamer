@@ -103,7 +103,7 @@ struct _GstMPEGDemuxClass {
 
 GType gst_mpeg_demux_get_type(void);
 
-gboolean 	gst_mpeg_demux_plugin_init 	(GModule *module, GstPlugin *plugin);
+gboolean gst_mpeg_demux_plugin_init 	(GstPlugin *plugin);
 
 #ifdef __cplusplus
 }

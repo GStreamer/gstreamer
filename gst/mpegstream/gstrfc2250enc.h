@@ -78,7 +78,7 @@ struct _GstRFC2250EncClass {
 
 GType gst_rfc2250_enc_get_type(void);
 
-gboolean 	gst_rfc2250_enc_plugin_init 	(GModule *module, GstPlugin *plugin);
+gboolean gst_rfc2250_enc_plugin_init 	(GstPlugin *plugin);
 
 
 #ifdef __cplusplus

@@ -33,12 +33,9 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 static GstElementDetails mpeg_parse_details = {
   "MPEG System Parser",
   "Codec/Parser",
-  "LGPL",
   "Parses MPEG1 and MPEG2 System Streams",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 #define CLASS(o)	GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
@@ -84,6 +81,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 );
 
 static void 		gst_mpeg_parse_class_init	(GstMPEGParseClass *klass);
+static void 		gst_mpeg_parse_base_init	(GstMPEGParseClass *klass);
 static void 		gst_mpeg_parse_init		(GstMPEGParse *mpeg_parse);
 static GstElementStateReturn
 			gst_mpeg_parse_change_state	(GstElement *element);
@@ -117,7 +115,8 @@ gst_mpeg_parse_get_type (void)
 
   if (!mpeg_parse_type) {
     static const GTypeInfo mpeg_parse_info = {
-      sizeof(GstMPEGParseClass),      NULL,
+      sizeof(GstMPEGParseClass),
+      (GBaseInitFunc)gst_mpeg_parse_base_init,
       NULL,
       (GClassInitFunc)gst_mpeg_parse_class_init,
       NULL,
@@ -129,6 +128,18 @@ gst_mpeg_parse_get_type (void)
     mpeg_parse_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMPEGParse", &mpeg_parse_info, 0);
   }
   return mpeg_parse_type;
+}
+
+static void
+gst_mpeg_parse_base_init (GstMPEGParseClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &mpeg_parse_details);
 }
 
 static void
@@ -911,21 +922,10 @@ gst_mpeg_parse_release_locks (GstElement *element)
 }
 
 gboolean
-gst_mpeg_parse_plugin_init (GModule *module, GstPlugin *plugin)
+gst_mpeg_parse_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the mpeg_parse element */
-  factory = gst_element_factory_new ("mpegparse", GST_TYPE_MPEG_PARSE,
-                                     &mpeg_parse_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
   scr_format = gst_format_register ("scr", "The MPEG system clock reference time");
 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "mpegparse",
+			       GST_RANK_NONE, GST_TYPE_MPEG_PARSE);
 }

@@ -30,12 +30,9 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 static GstElementDetails mpeg_demux_details = {
   "MPEG Demuxer",
   "Codec/Demuxer",
-  "LGPL",
   "Demultiplexes MPEG1 and MPEG2 System Streams",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 /* MPEG2Demux signals and args */
@@ -154,6 +151,7 @@ GST_PAD_TEMPLATE_FACTORY (subtitle_factory,
 );
 
 static void 		gst_mpeg_demux_class_init	(GstMPEGDemuxClass *klass);
+static void 		gst_mpeg_demux_base_init	(GstMPEGDemuxClass *klass);
 static void 		gst_mpeg_demux_init		(GstMPEGDemux *mpeg_demux);
 
 static gboolean 	gst_mpeg_demux_parse_packhead 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
@@ -187,7 +185,7 @@ mpeg_demux_get_type (void)
   if (!mpeg_demux_type) {
     static const GTypeInfo mpeg_demux_info = {
       sizeof(GstMPEGDemuxClass),      
-      NULL,
+      (GBaseInitFunc)gst_mpeg_demux_base_init,
       NULL,
       (GClassInitFunc)gst_mpeg_demux_class_init,
       NULL,
@@ -199,6 +197,29 @@ mpeg_demux_get_type (void)
     mpeg_demux_type = g_type_register_static(GST_TYPE_MPEG_PARSE, "GstMPEGDemux", &mpeg_demux_info, 0);
   }
   return mpeg_demux_type;
+}
+
+static void
+gst_mpeg_demux_base_init (GstMPEGDemuxClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (video_src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (private1_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (private2_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (pcm_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (subtitle_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (audio_factory));
+  gst_element_class_set_details (element_class, &mpeg_demux_details);
+
 }
 
 static void
@@ -1231,25 +1252,8 @@ gst_mpeg_demux_get_index (GstElement *element)
 
 
 gboolean
-gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
+gst_mpeg_demux_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the mpeg_demux element */
-  factory = gst_element_factory_new ("mpegdemux", GST_TYPE_MPEG_DEMUX,
-                                     &mpeg_demux_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private1_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private2_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (pcm_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (subtitle_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "mpegdemux",
+			       GST_RANK_PRIMARY, GST_TYPE_MPEG_DEMUX);
 }

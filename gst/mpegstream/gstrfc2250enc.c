@@ -28,11 +28,8 @@
 static GstElementDetails rfc2250_enc_details = {
   "RFC 2250 packet encoder",
   "Codec/Parser",
-  "LGPL",
   "transforms MPEG1/2 video to an RFC 2250 compliant format",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 #define CLASS(o)	GST_RFC2250_ENC_CLASS (G_OBJECT_GET_CLASS (o))
@@ -75,6 +72,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 );
 
 static void 	gst_rfc2250_enc_class_init	(GstRFC2250EncClass *klass);
+static void 	gst_rfc2250_enc_base_init	(GstRFC2250EncClass *klass);
 static void 	gst_rfc2250_enc_init		(GstRFC2250Enc *rfc2250_enc);
 static GstElementStateReturn
 		gst_rfc2250_enc_change_state	(GstElement *element);
@@ -94,7 +92,8 @@ gst_rfc2250_enc_get_type (void)
 
   if (!rfc2250_enc_type) {
     static const GTypeInfo rfc2250_enc_info = {
-      sizeof(GstRFC2250EncClass),      NULL,
+      sizeof(GstRFC2250EncClass),
+      (GBaseInitFunc)gst_rfc2250_enc_base_init,
       NULL,
       (GClassInitFunc)gst_rfc2250_enc_class_init,
       NULL,
@@ -106,6 +105,18 @@ gst_rfc2250_enc_get_type (void)
     rfc2250_enc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstRFC2250Enc", &rfc2250_enc_info, 0);
   }
   return rfc2250_enc_type;
+}
+
+static void
+gst_rfc2250_enc_base_init (GstRFC2250EncClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &rfc2250_enc_details);
 }
 
 static void
@@ -324,19 +335,8 @@ gst_rfc2250_enc_get_property (GObject *object, guint prop_id, GValue *value, GPa
 
 
 gboolean
-gst_rfc2250_enc_plugin_init (GModule *module, GstPlugin *plugin)
+gst_rfc2250_enc_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the rfc2250_enc element */
-  factory = gst_element_factory_new ("rfc2250enc", GST_TYPE_RFC2250_ENC,
-                                     &rfc2250_enc_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "rfc2250enc",
+			       GST_RANK_NONE, GST_TYPE_RFC2250_ENC);
 }
