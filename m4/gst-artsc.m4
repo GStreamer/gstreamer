@@ -6,7 +6,7 @@ dnl
 dnl This check was written for GStreamer: it should be renamed and checked
 dnl for portability if you decide to use it elsewhere.
 dnl
-AC_DEFUN(GST_CHECK_ARTSC,
+AC_DEFUN([GST_CHECK_ARTSC],
 [ 
   AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
   if test "x$ARTSC_CONFIG" = "xno"; then

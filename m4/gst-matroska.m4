@@ -3,7 +3,7 @@
 dnl PATH_EBML([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl Test for libebml, and define EBML_CFLAGS and EBML_LIBS
 dnl
-AC_DEFUN(PATH_EBML,
+AC_DEFUN([PATH_EBML],
 [dnl 
 dnl Get the cflags and libraries
 dnl
@@ -125,7 +125,7 @@ int main ()
 dnl PATH_MATROSKA(MIN_VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl Test for libmatroska, and define MATROSKA_CFLAGS and MATROSKA_LIBS
 dnl
-AC_DEFUN(PATH_MATROSKA,
+AC_DEFUN([PATH_MATROSKA],
 [dnl 
 dnl Get the cflags and libraries
 dnl

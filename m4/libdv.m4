@@ -6,7 +6,7 @@
 dnl AM_PATH_LIBDV([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl Test for liblibdv, and define LIBDV_CFLAGS and LIBDV_LIBS
 dnl
-AC_DEFUN(AM_PATH_LIBDV,
+AC_DEFUN([AM_PATH_LIBDV],
 [dnl 
 dnl Get the cflags and libraries
 
