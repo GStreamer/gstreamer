@@ -166,8 +166,10 @@ gst_init_check (int *argc, char **argv[])
 void
 gst_init (int *argc, char **argv[])
 {
-  if (!gst_init_with_popt_table (argc, argv, NULL))
-    g_error ("Could not initialize GStreamer !\n");
+  if (!gst_init_with_popt_table (argc, argv, NULL)) {
+    g_print ("Could not initialize GStreamer !\n");
+    exit (1);
+  }
 }
 
 /**
