@@ -86,6 +86,11 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
 </para>
 
+@object: 
+@name_template: 
+@direction: 
+@presence: 
+@caps: 
 
 <!-- ##### MACRO GST_PADTEMPLATE_CAPS ##### -->
 <para>
@@ -201,12 +206,4 @@ Get the padtemplate of the factory created with GST_PADTEMPLATE_FACTORY()
 @name: 
 @Returns: 
 
-
-<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
-<para>
-
-</para>
-
-@gstpadtemplate: the object which received the signal.
-@arg1: 
 

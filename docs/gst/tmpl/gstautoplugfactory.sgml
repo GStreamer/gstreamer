@@ -19,8 +19,8 @@ or use gst_autoplugfactory_get_list() to get a  list of all available autoplugge
 </para>
 <para>
 Once an autoplugfactory has been obtained use gst_autoplugfactory_create() to
-instantiate a real autopugger. Optionally gst_autoplugfactory_make() to create
-and autoplugger from the named factory.
+instantiate a real autoplugger. Optionally gst_autoplugfactory_make() to create
+a autoplugger from the named factory.
 </para>
 <para>
 Use gst_autoplugfactory_destroy() to remove the factory from the global list.

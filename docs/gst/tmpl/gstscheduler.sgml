@@ -23,120 +23,7 @@ Get the parent #GstElement of this scheduler.
 @sched: the scheduler to query.
 
 
-<!-- ##### STRUCT GstScheduleChain ##### -->
-<para>
-
-</para>
-
-@sched: 
-@disabled: 
-@elements: 
-@num_elements: 
-@entry: 
-@cothreaded_elements: 
-@schedule: 
-
-<!-- ##### MACRO GST_SCHEDULE_SAFETY ##### -->
-<para>
-Handy macro to check for a non NULL scheduler. The next block of statements
-will only be axecuted if the scheduler is not NULL.
-</para>
-
-@sched: the scheduler to query.
-
-
-<!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
-<para>
-Fast macro to add an element to the scheduler.
-</para>
-
-@sched: The scheduler to add the element to.
-@element: The element to add to the scheduler.
-
-
-<!-- ##### MACRO GST_SCHEDULE_REMOVE_ELEMENT ##### -->
-<para>
-Fast macro to remove an element from the scheduler.
-</para>
-
-@sched: The scheduler to remove the element from.
-@element: The element to remove from the scheduler.
-
-
-<!-- ##### MACRO GST_SCHEDULE_ENABLE_ELEMENT ##### -->
-<para>
-Fast macro to enable the element in the scheduler.
-</para>
-
-@sched: The scheduler.
-@element: The element to activate.
-
-
-<!-- ##### MACRO GST_SCHEDULE_DISABLE_ELEMENT ##### -->
-<para>
-Fast macro to disable the element.
-</para>
-
-@sched: The scheduler.
-@element: The element to disable.
-
-
-<!-- ##### MACRO GST_SCHEDULE_LOCK_ELEMENT ##### -->
-<para>
-Fast macro to lock a given element.
-</para>
-
-@sched: The scheduler.
-@element: The element to lock.
-
-
-<!-- ##### MACRO GST_SCHEDULE_UNLOCK_ELEMENT ##### -->
-<para>
-Fast macro to unlock a given element.
-</para>
-
-@sched: The scheduler.
-@element: The element to unlock.
-
-
-<!-- ##### MACRO GST_SCHEDULE_PAD_CONNECT ##### -->
-<para>
-Fast macro to connect two pads.
-</para>
-
-@sched: The scheduler.
-@srcpad: The source pad.
-@sinkpad: The sink pad.
-
-
-<!-- ##### MACRO GST_SCHEDULE_PAD_DISCONNECT ##### -->
-<para>
-Fast macro to disconnect two pads.
-</para>
-
-@sched: The scheduler.
-@srcpad: The source pad.
-@sinkpad: The sink pad.
-
-
-<!-- ##### MACRO GST_SCHEDULE_ITERATE ##### -->
-<para>
-Fast macro to perform one iteration of the scheduler.
-</para>
-
-@sched: The scheduler to iterate.
-
-
-<!-- ##### FUNCTION gst_schedule_new ##### -->
-<para>
-
-</para>
-
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_schedule_add_element ##### -->
+<!-- ##### FUNCTION gst_scheduler_add_element ##### -->
 <para>
 
 </para>
@@ -145,7 +32,7 @@ Fast macro to perform one iteration of the scheduler.
 @element: 
 
 
-<!-- ##### FUNCTION gst_schedule_remove_element ##### -->
+<!-- ##### FUNCTION gst_scheduler_remove_element ##### -->
 <para>
 
 </para>
@@ -154,7 +41,7 @@ Fast macro to perform one iteration of the scheduler.
 @element: 
 
 
-<!-- ##### FUNCTION gst_schedule_enable_element ##### -->
+<!-- ##### FUNCTION gst_scheduler_enable_element ##### -->
 <para>
 
 </para>
@@ -163,7 +50,7 @@ Fast macro to perform one iteration of the scheduler.
 @element: 
 
 
-<!-- ##### FUNCTION gst_schedule_disable_element ##### -->
+<!-- ##### FUNCTION gst_scheduler_disable_element ##### -->
 <para>
 
 </para>
@@ -172,7 +59,7 @@ Fast macro to perform one iteration of the scheduler.
 @element: 
 
 
-<!-- ##### FUNCTION gst_schedule_pad_connect ##### -->
+<!-- ##### FUNCTION gst_scheduler_pad_connect ##### -->
 <para>
 
 </para>
@@ -182,7 +69,7 @@ Fast macro to perform one iteration of the scheduler.
 @sinkpad: 
 
 
-<!-- ##### FUNCTION gst_schedule_pad_disconnect ##### -->
+<!-- ##### FUNCTION gst_scheduler_pad_disconnect ##### -->
 <para>
 
 </para>
@@ -192,7 +79,7 @@ Fast macro to perform one iteration of the scheduler.
 @sinkpad: 
 
 
-<!-- ##### FUNCTION gst_schedule_pad_select ##### -->
+<!-- ##### FUNCTION gst_scheduler_pad_select ##### -->
 <para>
 
 </para>
@@ -202,7 +89,7 @@ Fast macro to perform one iteration of the scheduler.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_schedule_iterate ##### -->
+<!-- ##### FUNCTION gst_scheduler_iterate ##### -->
 <para>
 
 </para>
@@ -211,11 +98,29 @@ Fast macro to perform one iteration of the scheduler.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_schedule_show ##### -->
+<!-- ##### FUNCTION gst_scheduler_show ##### -->
 <para>
 
 </para>
 
 @sched: 
+
+
+<!-- ##### FUNCTION gst_scheduler_lock_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_scheduler_unlock_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
 
 

@@ -22,6 +22,7 @@
 <!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
+<!entity GstSchedulerFactory SYSTEM "sgml/gstschedulerfactory.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
 <!entity GstType SYSTEM "sgml/gsttype.sgml">
 <!entity GstTypeFactory SYSTEM "sgml/gsttypefactory.sgml">
@@ -48,6 +49,7 @@
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
+<!entity GstStatistics SYSTEM "sgml/gststatistics.sgml">
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
 
 <!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
@@ -90,6 +92,7 @@ with some more specialized elements.</para>
     &GstProps;
     &GstQueue;
     &GstScheduler;
+    &GstSchedulerFactory;
     &GstThread;
     &GstTimeCache;
     &GstType;
@@ -126,6 +129,8 @@ with some more specialized elements.</para>
 
     &GstPipefilter;
     &GstIdentity;
+
+    &GstStatistics;
 
     &GstTee;
   </chapter>

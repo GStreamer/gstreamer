@@ -45,14 +45,11 @@ GtkObject
         GstPipefilter
         GstIdentity
         GstQueue
+        GstStatistics
         GstTypeFind
       GstPad
-      GstPadTemplate
       GstPluginFeature
         GstAutoplugFactory
         GstTypeFactory
         GstElementFactory
-      GstSchedule
-      GstAutoplug
-        GstStaticAutoplug
-        GstStaticAutoplugRender
+        GstSchedulerFactory

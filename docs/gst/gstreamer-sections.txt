@@ -34,6 +34,9 @@ G_TYPE_STRING
 G_TYPE_POINTER
 G_TYPE_BOXED
 G_TYPE_PARAM
+G_CSET_A_2_Z
+G_CSET_DIGITS
+G_CSET_a_2_z
 G_BEGIN_DECLS
 G_E
 G_END_DECLS
@@ -190,6 +193,7 @@ g_value_get_string
 g_value_set_string
 g_value_get_pointer
 g_value_set_pointer
+g_strcanon
 g_string_append_printf
 G_OBJECT
 g_cclosure_marshal_VOID__OBJECT
@@ -286,40 +290,50 @@ GST_DISABLE_LOADSAVE_REGISTRY
 
 <SECTION>
 <FILE>gstscheduler</FILE>
-<TITLE>GstSchedule</TITLE>
+<TITLE>GstScheduler</TITLE>
 GST_SCHED_PARENT
-GstScheduleChain
-GST_SCHEDULE_SAFETY
-GST_SCHEDULE_ADD_ELEMENT
-GST_SCHEDULE_REMOVE_ELEMENT
-GST_SCHEDULE_ENABLE_ELEMENT
-GST_SCHEDULE_DISABLE_ELEMENT
-GST_SCHEDULE_LOCK_ELEMENT
-GST_SCHEDULE_UNLOCK_ELEMENT
-GST_SCHEDULE_PAD_CONNECT
-GST_SCHEDULE_PAD_DISCONNECT
-GST_SCHEDULE_ITERATE
-gst_schedule_new
-gst_schedule_add_element
-gst_schedule_remove_element
-gst_schedule_enable_element
-gst_schedule_disable_element
-gst_schedule_pad_connect
-gst_schedule_pad_disconnect
-gst_schedule_pad_select
-gst_schedule_iterate
-gst_schedule_show
+gst_scheduler_add_element
+gst_scheduler_remove_element
+gst_scheduler_enable_element
+gst_scheduler_disable_element
+gst_scheduler_pad_connect
+gst_scheduler_pad_disconnect
+gst_scheduler_pad_select
+gst_scheduler_iterate
+gst_scheduler_show
+gst_scheduler_lock_element
+gst_scheduler_unlock_element
 <SUBSECTION Standard>
-GstSchedule
-GST_SCHEDULE
-GST_SCHEDULE_FAST
-GST_IS_SCHEDULE
-GST_TYPE_SCHEDULE
-gst_schedule_get_type
-GST_SCHEDULE_CLASS
-GST_SCHEDULE_CLASS_FAST
-GST_IS_SCHEDULE_CLASS
+GstScheduler
+GstSchedulerClass
+gst_scheduler_get_type
+GST_SCHEDULER
+GST_IS_SCHEDULER
+GST_TYPE_SCHEDULER
+GST_SCHEDULER_CLASS
+GST_IS_SCHEDULER_CLASS
 </SECTION>
+
+<SECTION>
+<FILE>gstschedulerfactory</FILE>
+<TITLE>GstSchedulerFactory</TITLE>
+gst_schedulerfactory_create
+gst_schedulerfactory_destroy
+gst_schedulerfactory_find
+gst_schedulerfactory_get_list
+gst_schedulerfactory_make
+gst_schedulerfactory_new
+<SUBSECTION Standard>
+gst_schedulerfactory_get_type
+GST_IS_SCHEDULERFACTORY
+GST_IS_SCHEDULERFACTORY_CLASS
+GST_SCHEDULERFACTORY
+GST_SCHEDULERFACTORY_CLASS
+GST_TYPE_SCHEDULERFACTORY
+GstSchedulerFactory
+GstSchedulerFactoryClass
+</SECTION>
+
 
 <SECTION>
 <FILE>gstbin</FILE>
@@ -346,12 +360,12 @@ GST_BIN_CLASS_FAST
 GST_IS_BIN
 GST_IS_BIN_CLASS
 gst_bin_details
-_GstBinChain
 </SECTION>
 
 <SECTION>
 <FILE>gstparse</FILE>
 <TITLE>GstParse</TITLE>
+GstParseErrors
 gst_parse_launch
 </SECTION>
 
@@ -466,6 +480,7 @@ GST_TYPE_EVENT
 <TITLE>GstElement</TITLE>
 GstElementState
 GstElementStateReturn
+GST_NUM_STATES
 GST_STATE
 GST_STATE_PENDING
 GST_STATE_TRANSITION
@@ -479,6 +494,7 @@ GstElementFlags
 GST_ELEMENT_IS_THREAD_SUGGESTED
 GST_ELEMENT_IS_COTHREAD_STOPPING
 GST_ELEMENT_IS_EOS
+GST_ELEMENT_IS_EVENT_AWARE
 GST_ELEMENT_PARENT
 GST_ELEMENT_NAME
 GST_ELEMENT_PADS
@@ -509,6 +525,7 @@ gst_element_connect
 gst_element_disconnect
 gst_element_set_state
 gst_element_get_state
+gst_element_wait_state_change
 gst_element_statename
 gst_element_error
 gst_element_get_factory
@@ -726,6 +743,7 @@ gst_pad_peek
 gst_pad_select
 gst_pad_selectv
 gst_pad_send_event
+gst_pad_event_default
 gst_pad_set_event_function
 
 
@@ -1298,6 +1316,22 @@ GstPipefilter
 GstPipefilterClass
 gst_pipefilter_get_type
 </SECTION>
+
+<SECTION>
+<FILE>gststatistics</FILE>
+<TITLE>GstStatistics</TITLE>
+<SUBSECTION Standard>
+GstStatistics
+GstStatisticsClass
+stats
+GST_STATISTICS
+GST_IS_STATISTICS
+GST_TYPE_STATISTICS
+gst_statistics_get_type
+GST_STATISTICS_CLASS
+GST_IS_STATISTICS_CLASS
+</SECTION>
+
 
 <SECTION>
 <FILE>gsttypefind</FILE>
