@@ -172,12 +172,6 @@ else
 MAD_DIR=
 endif
 
-if USE_MATROSKA
-MATROSKA_DIR=matroska
-else
-MATROSKA_DIR=
-endif
-
 if USE_MIKMOD
 MIKMOD_DIR=mikmod
 else
@@ -309,7 +303,6 @@ SUBDIRS=\
 	$(LIBPNG_DIR) \
 	$(MAD_DIR) \
 	$(MAS_DIR) \
-	$(MATROSKA_DIR) \
 	$(MIKMOD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(MPLEX_DIR) \
@@ -357,7 +350,6 @@ DIST_SUBDIRS=\
 	libfame \
 	libpng \
 	mad \
-	matroska \
 	mikmod \
 	mpeg2dec \
 	mplex \
