@@ -8,12 +8,13 @@ feedback pipelines are the most complex.
 
 A simple commandline looks like:
 
-./launch disksrc demo.mp3 | mp3parse | mpg123 | osssink
+ ./launch disksrc demo.mp3 | mp3parse | mpg123 | osssink
 
 A more complex pipeline looks like:
 
-./launch disksrc redpill.vob | css-descramble | private_stream_1.0| \
-(ac3parse | ac3dec | audioink-oss) video_0| (mpeg2dec | videosink)
+ ./launch disksrc redpill.vob | css-descramble | private_stream_1.0| \
+  (ac3parse | ac3dec | audioink-oss) video_0| (mpeg2dec | videosink)
+
 
 gstreamer-complete
 ==================
@@ -28,3 +29,28 @@ then put, in your .bashrc,
 
 You can then enjoy context sensitive tab-completion of gstreamer-launch
 commands.
+
+
+gstreamer-register
+==================
+
+This tool will perform an introspection on all available plugins and will
+create a registry file in /etc/gstreamer/reg.xml. Startup time will be
+much faster since the gstreamer core doesn't have to bring all the plugins 
+files into memory at startup.
+
+
+gstreamer-inspect
+=================
+
+Allows you to check the properties of plugins and elements.
+
+ ./gstreamer-inspect 
+ 
+will show all the plugins available and the elements they contain.
+
+ ./gstreamer-inspect <pluginname/elementname>
+
+shows more info about the plugin/element.
+
+
