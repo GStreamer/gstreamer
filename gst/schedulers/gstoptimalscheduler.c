@@ -2276,7 +2276,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
 
       GST_LOG ("elements still have links with other elements in the group");
 
-      while (group->elements)
+      while (group && group->elements)
         for (l = group->elements; l && l->data; l = l->next) {
           GstElement *element = (GstElement *) l->data;
 
@@ -2309,7 +2309,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
           }
 
           if (linkcount < 2) {
-            remove_from_group (group, element);
+            group = remove_from_group (group, element);
           }
           /* if linkcount == 2, it will be unlinked later on */
           else if (linkcount > 2) {

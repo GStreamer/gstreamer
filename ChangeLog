@@ -1,9 +1,17 @@
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Joe Marcus Clarke <marcus at freebsd dot org>
+
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_pad_unlink):
+	  fix SIGBUS error, fixes #145338
+
+2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstobject.c: (gst_object_replace):
 	* gst/gstscheduler.c: (gst_scheduler_get_clock):
 	* gst/gstsystemclock.c: (gst_system_clock_obtain):
-          clean up clock lifecycle.  Fixes #109831
+	  clean up clock lifecycle.  Fixes #109831
 
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -372,7 +380,7 @@
 2004-06-10  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.c (gst_init_check_with_popt_table): Do not fail on
-	errors, like gtk. It makes it more useful in bindings.
+	errors, like gtk. It makes it more useful in bindings.  Fixes #141692.
 
 2004-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
