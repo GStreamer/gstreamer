@@ -1,5 +1,12 @@
 2004-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_iterate):
+	Really do nothing when no data is available.
+	Go to the playing state when the stream is not seekable
+	instead of failing.
+
+2004-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* ext/cdaudio/gstcdaudio.c: (_do_init), (gst_cdaudio_base_init),
 	(gst_cdaudio_get_event_masks), (gst_cdaudio_send_event),
 	(gst_cdaudio_query), (plugin_init), (cdaudio_uri_get_type),
