@@ -56,13 +56,16 @@ struct _GstAudiofilter {
 
   /* audio state */
   gboolean inited;
+  gboolean passthru;
 
   int rate;
   int width;
   int channels;
   int depth;
-  gboolean passthru;
 
+  int n_samples;
+  int size;
+  int bytes_per_sample;
 };
 
 struct _GstAudiofilterClass {
