@@ -205,7 +205,7 @@ static void     	gst_opt_scheduler_pad_connect		(GstScheduler *sched, GstPad *sr
 static void     	gst_opt_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static GstPad*  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn   gst_opt_scheduler_clock_wait        	(GstScheduler *sched, GstElement *element,
-	                                                         GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter);
+	                                                         GstClockID id, GstClockTimeDiff *jitter);
 static GstSchedulerState
 			gst_opt_scheduler_iterate    		(GstScheduler *sched);
 
@@ -1496,12 +1496,8 @@ gst_opt_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 
 static GstClockReturn
 gst_opt_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
-	                      GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
+	                      GstClockID id, GstClockTimeDiff *jitter)
 {
-  GstClockID id;
-  
-  id = gst_clock_new_single_shot_id (clock, time);
-
   return gst_clock_id_wait (id, jitter);
 }
 

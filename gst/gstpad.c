@@ -214,7 +214,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->formatsfunc 	= gst_pad_get_formats_default;
   pad->querytypefunc 	= gst_pad_get_query_types_default;
 
-  /* GST_FLAG_SET (pad, GST_PAD_DISABLED); */
+  GST_FLAG_SET (pad, GST_PAD_DISABLED);
   
   gst_probe_dispatcher_init (&pad->probedisp);
 }
@@ -2173,7 +2173,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   }
   else {
     if (!GST_IS_EVENT (buf) && !GST_PAD_IS_ACTIVE (pad)) {
-      g_warning ("push on pad %s:%s but it is unusable", 
+      g_warning ("push on pad %s:%s but it is not active", 
 	         GST_DEBUG_PAD_NAME (pad));
       return;
     }
@@ -2233,6 +2233,7 @@ gst_pad_pull (GstPad *pad)
   else {
     if (peer->gethandler) {
       GstBuffer *buf;
+      gboolean active = GST_PAD_IS_ACTIVE (peer);
 
       GST_DEBUG (GST_CAT_DATAFLOW, "calling gethandler %s of peer pad %s:%s",
                  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), 
@@ -2244,6 +2245,11 @@ gst_pad_pull (GstPad *pad)
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, GST_DATA (buf)))
           return NULL;
 
+        if (!GST_IS_EVENT (buf) && !active) {
+          g_warning ("pull on pad %s:%s but it is not active", 
+	         GST_DEBUG_PAD_NAME (peer));
+          return NULL;
+        }
         return buf;
       }
 
@@ -2670,7 +2676,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
 
     /* for all pads in the opposite direction that are connected */
     if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) 
-     && GST_PAD_IS_USABLE (eventpad)) {
+     && GST_PAD_IS_CONNECTED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
 	/* increase the refcount */
         gst_event_ref (event);
@@ -2762,7 +2768,7 @@ gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunction dispatch,
     GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
     GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
 
-    if (int_peer && GST_PAD_IS_USABLE (int_peer)) {
+    if (int_peer) {
       res = dispatch (GST_PAD_CAST (int_peer), data);
       if (res)
         break;
@@ -2794,13 +2800,6 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   g_return_val_if_fail (event, FALSE);
 
   rpad = GST_PAD_REALIZE (pad);
-
-  /* don't send events on usuable pads */
-  if (GST_PAD_IS_SINK (rpad) && !GST_PAD_IS_ACTIVE (rpad)) {
-    GST_DEBUG (GST_CAT_EVENT, "pad %s:%s is not usable", 
-	       GST_DEBUG_PAD_NAME (rpad));
-    return FALSE;
-  }
 
   if (GST_EVENT_SRC (event) == NULL)
     GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (rpad));

@@ -282,7 +282,10 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   }
 
   if (fakesink->sync && fakesink->clock) { 
-    gst_element_clock_wait (GST_ELEMENT (fakesink), fakesink->clock, GST_BUFFER_TIMESTAMP (buf), NULL);
+    GstClockID id = gst_clock_new_single_shot_id (fakesink->clock, GST_BUFFER_TIMESTAMP (buf));
+
+    gst_element_clock_wait (GST_ELEMENT (fakesink), id, NULL);
+    gst_clock_id_free (id);
   }
 
   if (!fakesink->silent) { 

@@ -641,32 +641,29 @@ gst_scheduler_auto_clock (GstScheduler *sched)
  * gst_scheduler_clock_wait:
  * @sched: the scheduler
  * @element: the element that wants to wait
- * @clock: the clock to use
- * @time: the time to wait for
+ * @id: the clockid to use
  * @jitter: the time difference between requested time and actual time
  *
- * Wait till the clock reaches a specific time
+ * Wait till the clock reaches a specific time. The ClockID can
+ * be obtained from #gst_clock_new_single_shot_id. 
  *
  * Returns: the status of the operation
  */
 GstClockReturn
-gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *clock, GstClockTime time,
-		GstClockTimeDiff *jitter)
+gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, 
+		          GstClockID id, GstClockTimeDiff *jitter)
 {
   GstSchedulerClass *sclass;
 
   g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_CLOCK_ERROR);
+  g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
   if (sclass->clock_wait)
-    return sclass->clock_wait (sched, element, clock, time, jitter);
-  else
-  {
-    GstClockID id = gst_clock_new_single_shot_id (clock, time);
-
+    return sclass->clock_wait (sched, element, id, jitter);
+  else 
     return gst_clock_id_wait (id, jitter);
-  }
 
   return GST_CLOCK_TIMEOUT;
 }

@@ -749,8 +749,7 @@ gst_element_get_clock (GstElement *element)
 /**
  * gst_element_clock_wait:
  * @element: a #GstElement.
- * @clock: the #GstClock to use.
- * @time: the #GstClockTime to wait for on the clock.
+ * @id: the #GstClock to use.
  * @jitter: the difference between requested time and actual time.
  *
  * Waits for a specific time on the clock.
@@ -758,14 +757,14 @@ gst_element_get_clock (GstElement *element)
  * Returns: the #GstClockReturn result of the wait operation.
  */
 GstClockReturn
-gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
+gst_element_clock_wait (GstElement *element, GstClockID id, GstClockTimeDiff *jitter)
 {
   GstClockReturn res;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
 
   if (GST_ELEMENT_SCHED (element)) {
-    res = gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, clock, time, jitter);
+    res = gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, id, jitter);
   }
   else 
     res = GST_CLOCK_TIMEOUT;
@@ -1899,6 +1898,8 @@ gst_element_error (GstElement *element, const gchar *error, ...)
     gst_scheduler_error (element->sched, element); 
   } 
 
+  gst_element_set_state (element, GST_STATE_PAUSED);
+
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));
   g_free (string);
@@ -2100,6 +2101,22 @@ gst_element_clear_pad_caps (GstElement *element)
   }
 }
 
+static void
+gst_element_pads_activate (GstElement *element, gboolean active)
+{
+  GList *pads = element->pads;
+
+  while (pads) {
+    GstPad *pad = GST_PAD_CAST (pads->data);
+    pads = g_list_next (pads);
+
+    if (!GST_IS_REAL_PAD (pad))
+      continue;
+
+    gst_pad_set_active (pad, active);
+  }
+}
+
 static GstElementStateReturn
 gst_element_change_state (GstElement *element)
 {
@@ -2121,17 +2138,23 @@ gst_element_change_state (GstElement *element)
     return GST_STATE_SUCCESS;
   }
   
-  GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %d", 
+  GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %04x", 
             GST_ELEMENT_NAME (element),
             gst_element_state_get_name (old_state),
             gst_element_state_get_name (old_pending),
-	    GST_STATE_TRANSITION (element));
+	    old_transition);
 
   /* we set the state change early for the negotiation functions */
   GST_STATE (element) = old_pending;
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
   switch (old_transition) {
+    case GST_STATE_PLAYING_TO_PAUSED:
+      gst_element_pads_activate (element, FALSE);
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      gst_element_pads_activate (element, TRUE);
+      break;
     /* if we are going to paused, we try to negotiate the pads */
     case GST_STATE_READY_TO_PAUSED:
       if (!gst_element_negotiate_pads (element)) 

@@ -140,7 +140,7 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
   diff = GST_CLOCK_ENTRY_TIME (entry) - current;
 
   if (ABS (diff) > clock->max_diff) {
-    g_warning ("abnormal clock request diff: %lld > %lld", diff, clock->max_diff);
+    g_warning ("abnormal clock request diff: ABS(%lld) > %lld", diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
   

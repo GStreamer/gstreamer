@@ -226,8 +226,8 @@ gboolean		gst_element_requires_clock	(GstElement *element);
 gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
-GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, 
-							 GstClockTime time, GstClockTimeDiff *jitter);
+GstClockReturn		gst_element_clock_wait 		(GstElement *element, 
+							 GstClockID id, GstClockTimeDiff *jitter);
 /* indexs */
 gboolean		gst_element_is_indexable	(GstElement *element);
 void			gst_element_set_index		(GstElement *element, GstIndex *index);
