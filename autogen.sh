@@ -143,7 +143,7 @@ test -f $srcfile || {
 }
 
 echo "+ running aclocal ..."
-aclocal -I m4 $ACLOCAL_FLAGS || {
+cat m4/*.m4 >acinclude.m4;aclocal $ACLOCAL_FLAGS || {
 	echo
 	echo "aclocal failed - check that all needed development files are present on system"
 	exit 1
