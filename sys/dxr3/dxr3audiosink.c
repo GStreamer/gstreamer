@@ -104,7 +104,6 @@ GST_PAD_TEMPLATE_FACTORY (dxr3audiosink_ac3_sink_factory,
 GST_PAD_EVENT_MASK_FUNCTION(dxr3audiosink_get_event_mask,
   { GST_EVENT_FLUSH, 0 },
   { GST_EVENT_DISCONTINUOUS, 0 },
-  { GST_EVENT_NEW_MEDIA, 0 },
   { GST_EVENT_EOS, 0 }
 )
 
