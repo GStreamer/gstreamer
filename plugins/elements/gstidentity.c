@@ -27,7 +27,7 @@
 
 GstElementDetails gst_identity_details = {
   "Identity",
-  "Filter",
+  "Generic",
   "Pass data without modification",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

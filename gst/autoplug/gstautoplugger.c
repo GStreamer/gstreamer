@@ -23,7 +23,7 @@
 
 GstElementDetails gst_autoplugger_details = {
   "Dynamic autoplugger",
-  "Autoplugger",
+  "Generic",
   "Magic element that converts from any type to any other",
   VERSION,
   "Erik Walthinsen <omega@temple-baptist.com>",

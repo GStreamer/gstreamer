@@ -31,7 +31,7 @@
 
 GstElementDetails gst_thread_details = {
   "Threaded container",
-  "Bin",
+  "Generic/Bin",
   "Container that creates/manages a thread",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

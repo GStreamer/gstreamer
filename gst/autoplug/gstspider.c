@@ -676,7 +676,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
 
 GstElementDetails gst_spider_details = {
   "Spider",
-  "Filter/Autplug",
+  "Generic",
   "Automatically connect sinks and sources",
   VERSION,
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",

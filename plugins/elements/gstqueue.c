@@ -39,7 +39,7 @@
 
 GstElementDetails gst_queue_details = {
   "Queue",
-  "Connection",
+  "Generic",
   "Simple data queue",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

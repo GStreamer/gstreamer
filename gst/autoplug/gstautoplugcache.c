@@ -24,7 +24,7 @@
 
 GstElementDetails gst_autoplugcache_details = {
   "AutoplugCache",
-  "Connection",
+  "Generic",
   "Data cache for the dynamic autoplugger",
   VERSION,
   "Erik Walthinsen <omega@temple-baptist.com>",

@@ -28,8 +28,8 @@
 
 GstElementDetails gst_disksink_details = {
   "Disk Sink",
-  "Sink",
-  "Disk hole for data",
+  "Sink/File",
+  "Write stream to a file",
   VERSION,
   "Thomas <thomas@apestaart.org>",
   "(C) 2001"

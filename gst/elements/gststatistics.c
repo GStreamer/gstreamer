@@ -26,7 +26,7 @@
 
 GstElementDetails gst_statistics_details = {
   "Statistics",
-  "Filter",
+  "Generic",
   "Statistics on buffers/bytes/events",
   VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",

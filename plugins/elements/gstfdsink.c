@@ -26,7 +26,7 @@
 
 GstElementDetails gst_fdsink_details = {
   "Filedescriptor Sink",
-  "Sink",
+  "Sink/File",
   "Write data to a file descriptor",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -31,7 +31,7 @@
 
 GstElementDetails gst_bin_details = {
   "Generic bin",
-  "Bin",
+  "Generic/Bin",
   "Simple container object",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
