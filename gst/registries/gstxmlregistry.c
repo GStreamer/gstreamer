@@ -1612,7 +1612,7 @@ gst_xml_registry_rebuild (GstRegistry *registry)
 {
   GList *walk = NULL, *plugins = NULL, *prune = NULL;
   GError *error = NULL;
-  gint length;
+  guint length;
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (registry);
  
   walk = registry->paths;
