@@ -330,7 +330,6 @@ gst_id3_tag_init (GTypeInstance * instance, gpointer g_class)
 
   if (GST_ID3_TAG_GET_CLASS (tag)->type != GST_ID3_TAG_PARSE_BASE) {
     /* create the sink and src pads */
-    g_print ("creating sinkpad\n");
     tag->sinkpad =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_CLASS (g_class), "sink"), "sink");
