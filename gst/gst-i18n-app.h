@@ -30,7 +30,6 @@
 #include "gettext.h" /* included with gettext distribution and copied */
 
 /* we want to use shorthand _() for translating and N_() for marking */
-//#define _(String) gettext (String)
 #define _(String) gettext (String)
 #define N_(String) gettext_noop (String)
 /* FIXME: if we need it, we can add Q_ as well, like in glib */
