@@ -59,7 +59,7 @@ static void
 gst_mixer_class_init (GstMixerClass *klass)
 {
   /* default virtual functions */
-  klass->list_channels = NULL;
+  klass->list_tracks = NULL;
   klass->set_volume = NULL;
   klass->get_volume = NULL;
   klass->set_mute = NULL;
@@ -67,67 +67,67 @@ gst_mixer_class_init (GstMixerClass *klass)
 }
 
 const GList *
-gst_mixer_list_channels	(GstMixer *mixer)
+gst_mixer_list_tracks	(GstMixer *mixer)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
-  if (klass->list_channels) {
-    return klass->list_channels (mixer);
+  if (klass->list_tracks) {
+    return klass->list_tracks (mixer);
   }
 
   return NULL;
 }
 
 void
-gst_mixer_set_volume (GstMixer        *mixer,
-		      GstMixerChannel *channel,
-		      gint            *volumes)
+gst_mixer_set_volume (GstMixer      *mixer,
+		      GstMixerTrack *track,
+		      gint          *volumes)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
   if (klass->set_volume) {
-    klass->set_volume (mixer, channel, volumes);
+    klass->set_volume (mixer, track, volumes);
   }
 }
 
 void
-gst_mixer_get_volume (GstMixer        *mixer,
-		      GstMixerChannel *channel,
-		      gint            *volumes)
+gst_mixer_get_volume (GstMixer      *mixer,
+		      GstMixerTrack *track,
+		      gint          *volumes)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
   if (klass->get_volume) {
-    klass->get_volume (mixer, channel, volumes);
+    klass->get_volume (mixer, track, volumes);
   } else {
     gint i;
 
-    for (i = 0; i < channel->num_channels; i++) {
+    for (i = 0; i < track->num_channels; i++) {
       volumes[i] = 0;
     }
   }
 }
 
 void
-gst_mixer_set_mute (GstMixer        *mixer,
-		    GstMixerChannel *channel,
-		    gboolean         mute)
+gst_mixer_set_mute (GstMixer      *mixer,
+		    GstMixerTrack *track,
+		    gboolean       mute)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
   if (klass->set_mute) {
-    klass->set_mute (mixer, channel, mute);
+    klass->set_mute (mixer, track, mute);
   }
 }
 
 void
-gst_mixer_set_record (GstMixer        *mixer,
-		      GstMixerChannel *channel,
-		      gboolean         record)
+gst_mixer_set_record (GstMixer      *mixer,
+		      GstMixerTrack *track,
+		      gboolean       record)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
   if (klass->set_record) {
-    klass->set_record (mixer, channel, record);
+    klass->set_record (mixer, track, record);
   }
 }
