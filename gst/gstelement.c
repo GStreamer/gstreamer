@@ -757,10 +757,13 @@ gst_element_clock_wait (GstElement *element, GstClockID id, GstClockTimeDiff *ji
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
 
   if (GST_ELEMENT_SCHED (element)) {
+    GST_DEBUG (GST_CAT_CLOCK, "waiting on scheduler clock");
     res = gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, id, jitter);
   }
-  else 
+  else {
+    GST_DEBUG (GST_CAT_CLOCK, "no scheduler, returning GST_CLOCK_TIMEOUT");
     res = GST_CLOCK_TIMEOUT;
+  }
 
   return res;
 }
