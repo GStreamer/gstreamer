@@ -118,9 +118,8 @@ AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
 GST_CHECK_LIBHEADER(POPT, popt, poptAddItem,, popt.h, POPT_LIBS="-lpopt",
-  AC_MSG_ERROR(
-[popt 1.6.3 or newer is required to build gstreamer. You can download the latest
-version from ftp://people.redhat.com/sopwith/popt/]))
+  AC_MSG_ERROR([popt 1.6.3 or newer is required to build gstreamer. You can
+download the latest version from ftp://people.redhat.com/sopwith/popt/]))
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
