@@ -63,6 +63,7 @@ thread (void)
     g_print ("Unreffing pipeline\n");
     g_object_unref (G_OBJECT (pipeline));
   }
+  done = TRUE;
 }
 
 int
