@@ -547,7 +547,6 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       gst_osscommon_sync_parms (&osssink->common);
       break;
     case ARG_BUFFER_SIZE:
-      if (osssink->bufsize == g_value_get_int (value)) break;
       osssink->bufsize = g_value_get_uint (value);
       osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
       g_object_notify (object, "buffer_size");
