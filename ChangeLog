@@ -1,3 +1,8 @@
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	remove from docs, the define that Benjamin removed from gstelement.h
+
 2004-06-22  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.h:
