@@ -240,10 +240,11 @@ int CAPETag::Analyze()
         APE_TAG_FOOTER APETagFooter;
         m_spIO->Seek(-int(sizeof(APE_TAG_FOOTER)), FILE_END);
         nRetVal = m_spIO->Read((unsigned char *) &APETagFooter, sizeof(APE_TAG_FOOTER), &nBytesRead);
+
         if ((nBytesRead == sizeof(APE_TAG_FOOTER)) && (nRetVal == 0))
         {
             if ((strncmp(APETagFooter.cID, "APETAGEX", 8) == 0) &&
-                (APETagFooter.nVersion <= CURRENT_APE_TAG_VERSION) &&
+                /*(APETagFooter.nVersion <= CURRENT_APE_TAG_VERSION) &&*/
                 (APETagFooter.nFields <= 65536) &&
                 (APETagFooter.nSize <= (1024 * 1024 * 16)))
             {
