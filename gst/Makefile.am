@@ -80,6 +80,7 @@ libgst_la_SOURCES =		\
 	gsttype.c		\
 	$(GST_TYPEFIND_SRC)	\
 	gstutils.c		\
+	gsttimecache.c		\
 	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
@@ -178,6 +179,7 @@ libgstinclude_HEADERS =		\
 	gsttype.h		\
 	gsttypefind.h		\
 	gstutils.h		\
+	gsttimecache.h		\
 	gstparse.h		\
 	gstversion.h		\
 	gstxml.h
@@ -194,6 +196,7 @@ noinst_HEADERS = 	\
 
 CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""@sysconfdir@/gstreamer"\"
 LIBS = $(LIBGST_LIBS)
+LDFLAGS = ""
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 EXTRA_DIST = ROADMAP
