@@ -108,39 +108,32 @@ class DVDPlayer(object):
       self.v_thread = Thread('v_thread')
       assert self.v_thread
 
-      self.v_queue = gst_element_factory_make('queue','v_queue')
-      assert self.v_queue
+      self.v_queue = Element('queue','v_queue')
 
-      self.v_decode = gst_element_factory_make('mpeg2dec','decode_video')
-      assert self.v_decode
+      self.v_decode = Element('mpeg2dec','decode_video')
 
-      self.color = gst_element_factory_make('colorspace','color')
-      assert self.color
+      self.color = Element('colorspace','color')
 
-      self.efx = gst_element_factory_make('identity','identity')
-      #self.efx = gst_element_factory_make('edgeTV','EdgeTV')
-      #self.efx = gst_element_factory_make('agingTV','AgingTV')
+      self.efx = Element('identity','identity')
+      #self.efx = Element('edgeTV','EdgeTV')
+      #self.efx = Element('agingTV','AgingTV')
       #effectv:  diceTV: DiceTV
       #effectv:  warpTV: WarpTV
       #effectv:  shagadelicTV: ShagadelicTV
       #effectv:  vertigoTV: VertigoTV
-      #self.efx = gst_element_factory_make('revTV','RevTV')
-      #self.efx = gst_element_factory_make('quarkTV','QuarkTV')
-      assert self.efx
+      #self.efx = Element('revTV','RevTV')
+      #self.efx = Element('quarkTV','QuarkTV')
 
-      self.color2 = gst_element_factory_make('colorspace','color2')
-      assert self.color2
+      self.color2 = Element('colorspace','color2')
 
-      self.show = gst_element_factory_make('xvideosink','show')
-      #self.show = gst_element_factory_make('sdlvideosink','show')
-      #self.show = gst_element_factory_make('fakesink','fakesinkv')
-      assert self.show
+      self.show = Element('xvideosink','show')
+      #self.show = Element('sdlvideosink','show')
+      #self.show = Element('fakesink','fakesinkv')
       #self.show.set_property('silent', 0)
       #self.show.set_property('sync', 1)
 
-      #self.deinterlace = gst_element_factory_make('deinterlace','deinterlace')
-      self.deinterlace = gst_element_factory_make('identity','deinterlace')
-      assert self.deinterlace
+      #self.deinterlace = Element('deinterlace','deinterlace')
+      self.deinterlace = Element('identity','deinterlace')
 
       last = None
       for e in (self.v_queue, self.v_decode, self.color, self.efx, self.color2,  self.deinterlace, self.show):
@@ -160,15 +153,12 @@ class DVDPlayer(object):
       self.a_thread = Thread('a_thread')
       assert self.a_thread
 
-      self.a_queue = gst_element_factory_make('queue','a_queue')
-      assert self.a_queue
+      self.a_queue = Element('queue','a_queue')
 
-      self.a_decode = gst_element_factory_make('a52dec','decode_audio')
-      assert self.a_decode
+      self.a_decode = Element('a52dec','decode_audio')
 
-      self.osssink = gst_element_factory_make('osssink','osssink')
-      #self.osssink = gst_element_factory_make('fakesink','fakesinka')
-      assert self.osssink
+      self.osssink = Element('osssink','osssink')
+      #self.osssink = Element('fakesink','fakesinka')
       #self.osssink.set_property('silent', 0)
       #self.osssink.set_property('sync', 0)
 
@@ -183,8 +173,7 @@ class DVDPlayer(object):
       self.pipeline = Pipeline('pipeline')
       assert self.pipeline
 
-      self.src = gst_element_factory_make('dvdreadsrc','src');
-      assert self.src
+      self.src = Element('dvdreadsrc','src');
 
       self.src.connect('deep_notify',self.dnprint)
       self.src.set_property('location', self.location)
@@ -192,8 +181,7 @@ class DVDPlayer(object):
       self.src.set_property('chapter', self.chapter)
       self.src.set_property('angle', self.angle)
 
-      self.parse = gst_element_factory_make('mpegdemux','parse')
-      assert self.parse
+      self.parse = Element('mpegdemux','parse')
       self.parse.set_property('sync', 0)
 
       self.pipeline.add(self.src)

@@ -1,3 +1,7 @@
+2003-10-05  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * examples/gstreamer/*.py: use Element over gst_element_factory_make
+
 2003-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gstreamer/gstreamermodule.c: (init_gstreamer):

@@ -38,16 +38,10 @@ def filter(filters):
    # create a new bin to hold the elements
    bin = Pipeline('pipeline')
 
-   filesrc = gst_element_factory_make('filesrc', 'source');
-   if not filesrc:
-      print 'could not find plugin \"filesrc\"'
-      return -1
+   filesrc = Element('filesrc', 'source');
    filesrc.set_property('location', sys.argv[1])
 
-   filesink = gst_element_factory_make('filesink', 'sink')
-   if not filesink:
-      print 'could not find plugin \"filesink\"'
-      return -1
+   filesink = Element('filesink', 'sink')
    filesink.set_property('location', sys.argv[2])
 
    elements = [filesrc] + filters + [filesink]
@@ -77,10 +71,7 @@ def main():
    #gst_info_set_categories(-1)
    #gst_debug_set_categories(-1)
 
-   stats = gst_element_factory_make ('statistics', 'stats');
-   if not stats:
-      print 'could not find plugin \"statistics\"'
-      return -1
+   stats = Element ('statistics', 'stats');
    stats.set_property('silent', 0)
    stats.set_property('buffer_update_freq', 1)
    stats.set_property('update_on_eos', 1)

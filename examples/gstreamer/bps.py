@@ -45,15 +45,13 @@ class BPS(object):
             gtk.main_quit()
 
     def fakesrc(self, buffers):
-        src = gst_element_factory_make('fakesrc','src')
-        assert src
+        src = Element('fakesrc','src')
         src.set_property('silent', 1)
         src.set_property('num_buffers', buffers)
         return src
 
     def fakesink(self):
-        sink = gst_element_factory_make('fakesink','sink')
-        assert sink
+        sink = Element('fakesink','sink')
         sink.set_property('silent', 1)
         return sink
 

@@ -109,24 +109,15 @@ def main():
     bin = Pipeline('pipeline')
 
     # create a disk reader
-    filesrc = gst_element_factory_make ('filesrc', 'disk_source');
-    if not filesrc:
-        print 'could not find plugin \"filesrc\"'
-        return -1
+    filesrc = Element ('filesrc', 'disk_source')
     filesrc.set_property('location', sys.argv[1])
 
     # now get the decoder
-    decoder = gst_element_factory_make ('vorbisfile', 'parse');
-    if not decoder:
-        print 'could not find plugin \"vorbisfile\"'
-        return -1
+    decoder = Element ('vorbisfile', 'parse')
     decoder.connect('notify', decoder_notified)
 
     # and an audio sink
-    osssink = gst_element_factory_make ('osssink', 'play_audio')
-    if not osssink:
-        print 'could not find plugin \"osssink\"'
-        return -1
+    osssink = Element ('osssink', 'play_audio')
 
     #  add objects to the main pipeline
     for e in (filesrc, decoder, osssink):
