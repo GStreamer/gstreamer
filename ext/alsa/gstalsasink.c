@@ -220,13 +220,15 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
             GST_SECOND * this->transmitted / this->format->rate -
             gst_alsa_sink_get_time (this);
         if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-          gst_element_set_time_delay (GST_ELEMENT (this), value, delay);
-        } else if (this->format &&
-            (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value) ||
-                gst_event_discont_get_value (event, GST_FORMAT_BYTES,
+          gst_element_set_time_delay (GST_ELEMENT (this), MIN (value, delay),
+              delay);
+        } else if (this->format
+            && (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)
+                || gst_event_discont_get_value (event, GST_FORMAT_BYTES,
                     &value))) {
           value = gst_alsa_samples_to_timestamp (this, value);
-          gst_element_set_time_delay (GST_ELEMENT (this), value, delay);
+          gst_element_set_time_delay (GST_ELEMENT (this), MIN (value, delay),
+              delay);
         } else {
           GST_WARNING_OBJECT (this,
               "couldn't extract time from discont event. Bad things might happen!");

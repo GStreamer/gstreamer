@@ -1,3 +1,12 @@
+2004-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_init), (gst_alsa_dispose),
+	(gst_alsa_change_state), (gst_alsa_update_avail),
+	(gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  merge back changes from release
+
 2004-06-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audiorate_class_init),
