@@ -333,8 +333,8 @@ gst_default_info_handler (gint category, gboolean incore,
   #else
     fprintf(stderr,"INFO:%s%s %s\n",
             location,elementname,string);
-  #endif /* GST_DEBUG_COLOR */
-/*
+  #endif // GST_DEBUG_COLOR
+
 #endif
 */
 
@@ -480,7 +480,7 @@ gst_default_error_handler (gchar *file, gchar *function,
 /***** DEBUG system *****/
 GHashTable *__gst_function_pointers = NULL;
 /* FIXME make this thread specific */
-static GSList *stack_trace = NULL;
+/* static GSList *stack_trace = NULL; */
 
 gchar *_gst_debug_nameof_funcptr (void *ptr) __attribute__ ((no_instrument_function));
 

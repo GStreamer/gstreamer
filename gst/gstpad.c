@@ -1011,7 +1011,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
       return GST_PAD_CONNECT_REFUSED;
     }
   }
-  /* we can only set caps on the pad if they are ficed */
+  /* we can only set caps on the pad if they are fixed */
   if (GST_CAPS_IS_FIXED (caps)) {
 
     GST_INFO (GST_CAT_CAPS, "setting caps on pad %s:%s",
@@ -1052,7 +1052,9 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
 
   /* setting non fixed caps on a pad is not allowed */
   if (!GST_CAPS_IS_FIXED (caps)) {
-    g_warning ("trying to set non fixed caps on pad %s:%s",
+  GST_INFO (GST_CAT_CAPS, "trying to set unfixed caps on pad %s:%s, not allowed",
+		  GST_DEBUG_PAD_NAME (realpad));
+    g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
             GST_DEBUG_PAD_NAME (realpad));
     gst_caps_debug (caps);
     return FALSE;
@@ -1060,11 +1062,22 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   /* if we have a peer try to set the caps, notifying the peerpad
    * if it has a connect function */
   if (peer && !gst_pad_try_set_caps_func (peer, caps, TRUE))
+  {
+    GST_INFO (GST_CAT_CAPS, "tried to set caps on peerpad %s:%s but couldn't",
+	      GST_DEBUG_PAD_NAME (peer));
     return FALSE;
+  }
   /* then try to set our own caps, we don't need to be notified */
   if (!gst_pad_try_set_caps_func (realpad, caps, FALSE))
+  {
+    GST_INFO (GST_CAT_CAPS, "tried to set own caps on pad %s:%s but couldn't",
+	      GST_DEBUG_PAD_NAME (realpad));
     return FALSE;
-	  
+  }
+  GST_INFO (GST_CAT_CAPS, "succeeded setting caps %p on pad %s:%s",
+	    caps, GST_DEBUG_PAD_NAME (realpad));
+  gst_caps_debug (caps);
+			  
   return TRUE;
 }
 
