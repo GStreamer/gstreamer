@@ -4,11 +4,11 @@ Hi,
  MTM, 669, STM, ULT, FAR, MED, AMF, DSM, IMF, GDM, STX, OKT and of course MOD
  module formats.
 
-  Take a look to : www.mikmod.org
+  Take a look to : http://mikmod.raphnet.net/
 
  
- Usage : gstreamer-launch disksrc location=foo.mod ! mikmod ! osssink
-     or  gstmediaplay foo.mod
+ Usage : gstreamer-launch filesrc location=foo.mod ! mikmod ! osssink
+     or  gst-player foo.mod
 
 
 Properties :
