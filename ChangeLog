@@ -1,3 +1,11 @@
+2004-06-14  David Schleef  <ds@schleef.org>
+
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_init),
+	(cdparanoia_get), (cdparanoia_open), (cdparanoia_change_state):
+	Send discont events and change timestamps appropriately when
+	we get a seek event.  (bug #144240)
+	* ext/cdparanoia/gstcdparanoia.h:
+
 2004-06-14  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: Use snd_pcm_hw_params_set_rate _near instead of
