@@ -1,5 +1,16 @@
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/manual/gnome.xml:
+          expand example a little
+	* gst/gst.c: (gst_init_with_popt_table),
+	(gst_init_check_with_popt_table), (init_pre), (init_popt_callback):
+          make sure popt option displays are done with right textdomain
+          use GstPoptOption type
+	* gst/gst.h:
+          create GstPoptOption type
+
+2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gsterror.c: (_gst_stream_errors_init):
 	* gst/gsterror.h:
           adding error type for no codec

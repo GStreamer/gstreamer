@@ -66,7 +66,7 @@ extern GThreadFunctions gst_thread_dummy_functions;
 static void	load_plugin_func	(gpointer data, gpointer user_data);
 static void	init_popt_callback	(poptContext context,
 		                         enum poptCallbackReason reason,
-                                         const struct poptOption *option,
+                                         const GstPoptOption *option,
 					 const char *arg, void *data);
 static gboolean	init_pre		(void);
 static gboolean	init_post		(void);
@@ -113,13 +113,15 @@ enum {
 /* default scheduler, can be changed in gstscheduler.h with
  * the GST_SCHEDULER_DEFAULT_NAME define.
  */
-static const struct poptOption gstreamer_options[] = {
+static const GstPoptOption gstreamer_options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, (void *) &init_popt_callback, 0, NULL, NULL},
+  /* make sure we use our GETTEXT_PACKAGE as the domain for popt translations */
+  {NULL, NUL, POPT_ARG_INTL_DOMAIN, GETTEXT_PACKAGE, 0, NULL, NULL},
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        N_("Print the GStreamer version"), NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG
   {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("Default debug level from 1 (only error) to 5 (anything) or 0 for no output"), N_("LEVEL")},
-  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("Comma-separated list of category_name:level pairs to set specific levels for the individual categories.\nExample: GST_AUTOPLUG:5,GST_ELEMENT_*:3"), N_("CATEGORIES")},
+  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"), N_("CATEGORIES")},
   {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("Disable color debugging output"), NULL},
   {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  N_("Disable debugging")},
   {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     N_("Print available debug categories and exit"), NULL},
@@ -142,10 +144,13 @@ static const struct poptOption gstreamer_options[] = {
  * actually performed (via poptGetContext), the GStreamer libraries will
  * be initialized.
  *
+ * This function is useful if you want to integrate GStreamer with other
+ * libraries that use popt.
+ *
  * Returns: a pointer to the static GStreamer option table.
  * No free is necessary.
  */
-const struct poptOption *
+const GstPoptOption *
 gst_init_get_popt_table (void)
 {
   return gstreamer_options;
@@ -205,7 +210,7 @@ gst_init (int *argc, char **argv[])
  */
 void
 gst_init_with_popt_table (int *argc, char **argv[],
-	                  const struct poptOption *popt_options)
+	                  const GstPoptOption *popt_options)
 {
   if (!gst_init_check_with_popt_table (argc, argv, popt_options)) {
     g_print ("Could not initialize GStreamer !\n");
@@ -226,20 +231,20 @@ gst_init_with_popt_table (int *argc, char **argv[],
  */
 gboolean
 gst_init_check_with_popt_table (int *argc, char **argv[],
-		                const struct poptOption *popt_options)
+		                const GstPoptOption *popt_options)
 {
   poptContext context;
   gint nextopt;
-  struct poptOption *options;
-  struct poptOption options_with[] = {
+  GstPoptOption *options;
+  GstPoptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		 0, "Application options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) popt_options, 		 0, "Application options:", NULL},
     POPT_TABLEEND
   };
-  struct poptOption options_without[] = {
+  GstPoptOption options_without[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
     POPT_TABLEEND
   };
 
@@ -385,7 +390,6 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gp
 static gboolean
 init_pre (void)
 {
-
   g_type_init ();
 
   if (g_thread_supported ()) {
@@ -651,7 +655,7 @@ gst_debug_help (void)
 
 static void
 init_popt_callback (poptContext context, enum poptCallbackReason reason,
-                    const struct poptOption *option, const char *arg, void *data)
+                    const GstPoptOption *option, const char *arg, void *data)
 {
   GLogLevelFlags fatal_mask;
 
