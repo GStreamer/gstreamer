@@ -179,12 +179,12 @@ cothread_create (cothread_context *ctx)
   stack_end = (guchar *) ((gulong) sp & ~(STACK_SIZE - 1));
 
   thread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
-  GST_DEBUG (GST_CAT_COTHREAD, "new stack at %p", thread);
+  GST_DEBUG (GST_CAT_COTHREADS, "new stack at %p", thread);
 
-  GST_DEBUG (GST_CAT_COTHREAD, "going into mmap");
+  GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
   mmaped = mmap ((void *) thread, COTHREAD_STACKSIZE,
 	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  GST_DEBUG (GST_CAT_COTHREAD, "coming out of mmap");
+  GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
   if (mmaped == MAP_FAILED) {
     perror ("mmap'ing cothread stack space");
     return NULL;
@@ -309,7 +309,7 @@ cothread_stop (cothread_state * thread)
 cothread_state *
 cothread_main (cothread_context * ctx)
 {
-  GST_DEBUG (GST_CAT_COTHREAD, "returning %p, the 0th cothread", ctx->threads[0]);
+  GST_DEBUG (GST_CAT_COTHREADS, "returning %p, the 0th cothread", ctx->threads[0]);
   return ctx->threads[0];
 }
 
@@ -502,11 +502,11 @@ cothread_switch (cothread_state * thread)
 #endif
   enter = setjmp (current->jmp);
   if (enter != 0) {
-    GST_DEBUG (GST_CAT_COTHREAD, "enter thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
+    GST_DEBUG (GST_CAT_COTHREADS, "enter thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
 	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp, current->jmp);
     return;
   }
-  GST_DEBUG (GST_CAT_COTHREAD, "exit thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
+  GST_DEBUG (GST_CAT_COTHREADS, "exit thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
 	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp, current->jmp);
   enter = 1;
 
@@ -514,10 +514,10 @@ cothread_switch (cothread_state * thread)
     cothread_destroy (current);
   }
 
-  GST_DEBUG (GST_CAT_COTHREAD, "set stack to %p", thread->sp);
+  GST_DEBUG (GST_CAT_COTHREADS, "set stack to %p", thread->sp);
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
-    GST_DEBUG (GST_CAT_COTHREAD, "in thread %p", thread->jmp);
+    GST_DEBUG (GST_CAT_COTHREADS, "in thread %p", thread->jmp);
     /* switch to it */
     longjmp (thread->jmp, 1);
   }
@@ -526,7 +526,7 @@ cothread_switch (cothread_state * thread)
     GST_ARCH_SET_SP (thread->sp);
     /* start it */
     GST_ARCH_CALL (cothread_stub);
-    GST_DEBUG (GST_CAT_COTHREAD, "exit thread ");
+    GST_DEBUG (GST_CAT_COTHREADS, "exit thread ");
     ctx->current = 0;
   }
 
