@@ -1,5 +1,17 @@
 2004-01-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* sys/ximage/ximagesink.h:
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_new),
+	(gst_ximagesink_xwindow_destroy), (gst_ximagesink_sinkconnect),
+	(gst_ximagesink_change_state), (gst_ximagesink_set_xwindow_id),
+	(gst_ximagesink_xoverlay_init):
+	  assorted fixes to make (re)embedding work
+	* sys/ximage/ximagesink.c: (gst_ximagesink_sinkconnect),
+	(gst_ximagesink_get_desired_size):
+	  implement desired size additions to XOverlay
+
+2004-01-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst-libs/gst/xoverlay/xoverlay.c: (gst_x_overlay_base_init),
 	(gst_x_overlay_got_xwindow_id), (gst_x_overlay_get_desired_size),
 	(gst_x_overlay_got_desired_size):
