@@ -4323,6 +4323,9 @@ gst_pad_call_chain_function (GstPad * pad, GstData * data)
       link->temp_store = data;
       link->engaged = TRUE;
       CALL_CHAINFUNC (pad, _invent_event (pad, GST_BUFFER (data)));
+      link = GST_RPAD_LINK (pad);
+      if (link->temp_store == NULL)     /* happens after relinking in chainfunc */
+        return;
       g_assert (link->temp_store == data);
       link->temp_store = NULL;
     } else if (GST_IS_EVENT (data) &&

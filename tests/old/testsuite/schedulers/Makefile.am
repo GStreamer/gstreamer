@@ -3,7 +3,8 @@ include ../Rules
 tests_pass = \
 	unlink_src unlink_sink \
 	relink_src relink_sink \
-	unref_src unref_sink
+	unref_src unref_sink \
+	143777
 
 # don't enable this one unless it actually works.
 #	useless_iteration
