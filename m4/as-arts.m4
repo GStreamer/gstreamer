@@ -1,10 +1,11 @@
+# This is an example arts .m4 adapted and scrubbed by thomasvs
+
 # Configure paths for ARTS
 # Philip Stadermann   2001-06-21
 # stolen from esd.m4
-# adapted and scrubbed by thomas
 
 dnl AM_PATH_ARTS([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
-dnl Test for ARTS, and define ARTS_CFLAGS and ARTS_LIBS
+dnl Test for ARTS, and define ARTS_CXXFLAGS and ARTS_LIBS
 dnl
 AC_DEFUN([AM_PATH_ARTS],
 [dnl 
@@ -18,16 +19,16 @@ AC_ARG_ENABLE(artstest, [  --disable-artstest      Do not try to compile and run
 		    , enable_artstest=yes)
 
   if test x$arts_exec_prefix != x ; then
-     arts_args="$arts_args --exec-prefix=$arts_exec_prefix"
-     if test x${ARTS_CONFIG+set} != xset ; then
-        ARTS_CONFIG=$arts_exec_prefix/bin/artsc-config
-     fi
+    arts_args="$arts_args --exec-prefix=$arts_exec_prefix"
+    if test x${ARTS_CONFIG+set} != xset ; then
+      ARTS_CONFIG=$arts_exec_prefix/bin/artsc-config
+    fi
   fi
   if test x$arts_prefix != x ; then
-     arts_args="$arts_args --prefix=$arts_prefix"
-     if test x${ARTS_CONFIG+set} != xset ; then
-        ARTS_CONFIG=$arts_prefix/bin/artsc-config
-     fi
+    arts_args="$arts_args --prefix=$arts_prefix"
+    if test x${ARTS_CONFIG+set} != xset ; then
+      ARTS_CONFIG=$arts_prefix/bin/artsc-config
+    fi
   fi
 
   AC_PATH_PROG(ARTS_CONFIG, artsc-config, no)
@@ -38,7 +39,7 @@ AC_ARG_ENABLE(artstest, [  --disable-artstest      Do not try to compile and run
     no_arts=yes
   else
     # FIXME : thomas added this sed to get arts path instead of artsc
-    ARTS_CFLAGS=`$ARTS_CONFIG $artsconf_args --cflags | sed 's/artsc$/arts/'`
+    ARTS_CXXFLAGS=`$ARTS_CONFIG $artsconf_args --cflags | sed 's/artsc$/arts/'`
     ARTS_LIBS=`$ARTS_CONFIG $artsconf_args --libs | sed 's/artsc$/arts/'`
 
     arts_major_version=`$ARTS_CONFIG $arts_args --version | \
@@ -48,19 +49,33 @@ AC_ARG_ENABLE(artstest, [  --disable-artstest      Do not try to compile and run
     arts_micro_version=`$ARTS_CONFIG $arts_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
     if test "x$enable_artstest" = "xyes" ; then
-      ac_save_CFLAGS="$CFLAGS"
-      ac_save_LIBS="$LIBS"
-      CFLAGS="$CFLAGS $ARTS_CFLAGS"
-      LIBS="$LIBS $ARTS_LIBS"
+      dnl ac_save_CXXFLAGS="$CXXFLAGS"
+      dnl ac_save_LIBS="$LIBS"
+      dnl CFLAGS="$CFLAGS $ARTS_CXXFLAGS"
+      dnl LIBS="$LIBS $ARTS_LIBS"
 dnl
 dnl Now check if the installed ARTS is sufficiently new. (Also sanity
 dnl checks the results of artsc-config to some extent)
 dnl
-dnl thomas: ask nicely for C++ compilation
-AC_LANG_PUSH(C++)
-AC_SUBST(CPPFLAGS,"$CPPFLAGS $ARTS_CFLAGS")
-AC_SUBST(LDFLAGS,"$LDFLAGS $ARTS_CLIBS") 
-     rm -f conf.artstest
+
+dnl a*s: to successfully compile the C++ test app, we need to 
+dnl first make sure we're going to compile it as C++ (with AC_LANG_PUSH),
+dnl then add the CFLAGS and CLIBS of arts which we just discovered to the
+dnl C++ compilation and linking flags.
+dnl We also need to clean up after the test; this means using AC_LANG_POP
+dnl and restoring the CPPFLAGS and LDFLAGS from the saved values we take 
+dnl here.
+
+dnl ask nicely for C++ compilation
+      AC_LANG_PUSH(C++)
+
+dnl save compilation and link flags and make our own
+      ac_save_CPPFLAGS="$CPPFLAGS"
+      ac_save_LDFLAGS="$LDFLAGS"
+      AC_SUBST(CPPFLAGS,"$CPPFLAGS $ARTS_CXXFLAGS")
+      AC_SUBST(LDFLAGS,"$LDFLAGS $ARTS_CLIBS")
+ 
+      rm -f conf.artstest
       AC_TRY_RUN([
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,28 +132,35 @@ int main ()
 }
 
 ],, no_arts=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
-       CFLAGS="$ac_save_CFLAGS"
-       LIBS="$ac_save_LIBS"
-     fi
+      dnl CFLAGS="$ac_save_CFLAGS"
+      dnl LIBS="$ac_save_LIBS"
+      dnl a*s this is were we clean up after the test
+      AC_LANG_POP(C++)
+      CXXFLAGS="$ac_save_CXXFLAGS"
+      LDFLAGS="$ac_save_LDFLAGS"
+      dnl a*s we are sure that these are right, so we make them active
+      AC_SUBST(CXXFLAGS,"$CXXFLAGS")
+      AC_SUBST(LDFLAGS,"$LDFLAGS")
+    fi
   fi
   if test "x$no_arts" = x ; then
-     AC_MSG_RESULT(yes)
-     ifelse([$2], , :, [$2])     
+    AC_MSG_RESULT(yes)
+    ifelse([$2], , :, [$2])     
   else
-     AC_MSG_RESULT(no)
-     if test "$ARTS_CONFIG" = "no" ; then
-       echo "*** The artsc-config script installed by ARTS could not be found"
-       echo "*** If ARTS was installed in PREFIX, make sure PREFIX/bin is in"
-       echo "*** your path, or set the ARTS_CONFIG environment variable to the"
-       echo "*** full path to artsc-config."
-     else
-       if test -f conf.artstest ; then
+    AC_MSG_RESULT(no)
+    if test "$ARTS_CONFIG" = "no" ; then
+      echo "*** The artsc-config script installed by ARTS could not be found"
+      echo "*** If ARTS was installed in PREFIX, make sure PREFIX/bin is in"
+      echo "*** your path, or set the ARTS_CONFIG environment variable to the"
+      echo "*** full path to artsc-config."
+    else
+      if test -f conf.artstest ; then
         :
-       else
-          echo "*** Could not run ARTS test program, checking why..."
-          CFLAGS="$CFLAGS $ARTS_CFLAGS"
-          LIBS="$LIBS $ARTS_LIBS"
-          AC_TRY_LINK([
+      else
+         echo "*** Could not run ARTS test program, checking why..."
+         CFLAGS="$CFLAGS $ARTS_CFLAGS"
+         LIBS="$LIBS $ARTS_LIBS"
+         AC_TRY_LINK([
 #include <stdio.h>
 #include <artsflow.h>
 ],      [ return 0; ],
@@ -157,16 +179,16 @@ int main ()
           echo "*** may want to edit the artsc-config script: $ARTS_CONFIG" ])
           CFLAGS="$ac_save_CFLAGS"
           LIBS="$ac_save_LIBS"
-       fi
-     fi
-     ARTS_CFLAGS=""
-     ARTS_LIBS=""
-     ifelse([$3], , :, [$3])
+      fi
+    fi
+    ARTS_CFLAGS=""
+    ARTS_LIBS=""
+    ifelse([$3], , :, [$3])
   fi
   AC_SUBST(ARTS_CFLAGS)
   AC_SUBST(ARTS_LIBS)
   rm -f conf.artstest
 ])
+
 dnl release C++ question
-AC_LANG_POP(C++)
 
