@@ -18,7 +18,7 @@ main (int argc, char *argv[])
 
   osssink = gst_elementfactory_make ("osssink", "osssink");
   g_assert (osssink != NULL);
-  videosink = gst_elementfactory_make ("videosink", "videosink");
+  videosink = gst_elementfactory_make ("xvideosink", "videosink");
   g_assert (videosink != NULL);
 
   testcaps = gst_caps_new ("test_caps",
