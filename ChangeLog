@@ -1,3 +1,11 @@
+2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_get_formats),
+	(gst_vorbis_dec_init), (vorbis_dec_event):
+        add debug category
+        make vorbisdec handle _BYTE and _TIME queries
+
 2004-03-06  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/mad/gstmad.c: (gst_mad_chain): send the average bitrate read
