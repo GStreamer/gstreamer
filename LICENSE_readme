@@ -1,42 +1,143 @@
-GStreamer is developed under the terms of the LGPL (see LICENSE file for details). Some of our plugins however rely on libraries which are available under i other licenses. This means that if you are using an application which has a non-GPL compatible license, for instance a closed-source application with GStreamer you have to make sure not to use GPL linked or derived plugins.
-When using GPL linked plugins GStreamer is for all practical reasons under the GPL itself. 
+
+Disclaimer:  The GStreamer team makes a real effort to make sure that
+the information in this file is as up-to-date and accurate as possible.
+However, this file may contain errors and omissions.  Some dependant
+libraries change their licensing from version-to-version and some of 
+the libraries listed here as LGPL were under the GPL license in
+older releases.  Distributions which include GStreamer are responsible
+for ensuring that plugins are used in accordance with licensing terms
+and other laws.
+
+GStreamer is developed under the terms of the LGPL (see LICENSE file for details).
+Some of our plugins however rely on libraries which are available under other
+licenses. This means that if you are using an application which has a non-GPL
+compatible license, for instance a closed-source application with GStreamer
+you have to make sure not to use GPL linked or derived plugins.  When using
+GPL linked plugins GStreamer is for all practical reasons under the GPL itself. 
 
 The plugins which use a GPL library are as follows:
-cdparanoia      libcdparanoia   (http://www.xiph.org/paranoia/)
-aasink		aalib		(http://aa-project.sourceforge.net/aalib/)
-xmms		libxmms		(http://www.xmms.org)
-decdvd		ac3dec,mpeg2dec	(http://linuxvideo.org/mpeg2dec/,http://linuxvideo.org/ac3dec/)
-sidplay		libsidplay	(http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/)
+
+a52dec           liba52           (http://liba52.sourceforge.net/)
+aasink           aalib            (http://sourceforge.net/projects/aa-project/)
+cdparanoia       libcdparanoia    (http://www.xiph.org/paranoia/)
+decdvd           ac3dec,libmpeg2  (http://libmpeg2.sourceforge.net/,
+                                   http://www.ac3dec.com/)
+dtsdec           libdts           (http://www.videolan.org/dtsdec.html)
+dvdnavsrc        libdvdnav        (http://dvd.sourceforge.net/)
+dxr3                              (http://dxr3.sourceforge.net/)
+icecastsend      libshout         (http://www.icecast.org)
+mad              libmad           (http://www.mars.org/home/rob/proj/mpeg/)
+mpeg2dec         libmpeg2         (http://libmpeg2.sourceforge.net/)
+mpeg2enc         libmpeg2enc      (http://mjpeg.sourceforge.net/)
+mplex            libmplex         (http://mjpeg.sourceforge.net/)
+siddec           libsidplay       (http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/,
+                                   http://sourceforge.net/projects/sidplay2/)
+trm              libmusicbrainz   (http://www.musicbrainz.org/)
+xine             libxine          (http://xinehq.de/)
+xvid             libxvidcore      (http://www.xvid.org/)
 
 Plugins derived from GPL code are as follows:
-synaesthesia	synaesthesia	(http://yoyo.cc.monash.edu.au/~pfh/synaesthesia.html)
+
+dvdreadsrc       libdvdread       (http://www.dtek.chalmers.se/groups/dvd/)
+jack             libjack          (http://jackit.sourceforge.net/)
+                                   Note libjack is LGPL, but plugin is GPL.
+monoscope        None             (Algorithm by Ralph Loader, Joerg Walter,
+                                   Richard Boulton, and Andy Lo A Foe)
+rtjpeg           None             (Erik Walthinsen's algorithm)
+rtp              None             (http://www.linphone.org/ortp/)
+synaesthesia                      (http://www.logarithmic.net/pfh/synaesthesia)
+system_encode    None             (Algorithm by Chrisoph Moar, Wim Tayman's and
+                                   Erik Walthinsen)
+vbidec           None             (Algorithm by Billy Biggs, Doug Bell, 
+                                   Erik Walthinsen and David I. Lehn)
 
 Plugins which use a LGPL library are as follows:
-Colorspace 	Hermes 		(http://www.clanlib.org/hermes/)
-httpsrc		libghttp	(ftp.gnome.org/pub/GNOME/stable/sources/libghttp/)
-alsasink	alsa		(http://alsa-project.org)
-aRts		aRts		(http://arts-project.org)
-sdlsink		libsdl		(http://www.libsdl.org)
-gnomevfssource  gnome-vfs       (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs)
-gnomevfssink    gnome-vfs
-esdsink         libesd          (ftp.gnome.org/pub/GNOME/stable/sources/esound)
-icastsend       libshout        (http://www.icecast.org)
-lame            libmp3lame      (http://www.mp3dev.org/mp3/)
-gst1394         libraw1394      (http://linux1394.sourceforge.net)
-flac		libFLAC		(http://flac.sourceforge.net)
-RTP		ortp		(http://www.linphone.org/ortp/)
-Effectv		effectv		(http://effectv.sourceforge.net)
-ffmpeg		ffmpeg		(http://ffmpeg.sourceforge.net)
+
+alsa             alsa             (http://alsa-project.org/)
+artsdsink        aRts             (http://arts-project.org/)
+cacasink         libcaca          (http://sam.zoy.org/projects/libcaca/)
+colorspacelcs    libcolorspace    
+dvdec            libdv            (http://libdv.sourceforge.net/)
+esdmon,esdsink   libesd           (ftp.gnome.org/pub/GNOME/stable/sources/esound/)
+fameenc          libfame          (http://fame.sourceforge.net/)
+ffmpeg           ffmpeg           (http://ffmpeg.sourceforge.net/)
+flac             libFLAC          (http://flac.sourceforge.net/)
+gdkpixbuf        GTK+             (http://www.gtk.org/)
+gnomevfs         gnome-vfs        (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs/)
+gst_arts         aRts             (http://arts-project.org/)
+gst1394          libraw1394       (http://www.linux1394.org/)
+gstaf            libaudiofile     (http://www.68k.org/~michael/audiofile/)
+gstsf            libsndfile       (http://www.mega-nerd.com/libsndfile/)
+hermescolorspace Hermes           (http://www.clanlib.org/hermes/)
+kio              KDE              (http://www.kde.org/)
+ladspa                            (http://www.ladspa.org/)
+lame             libmp3lame       (http://lame.sourceforge.net/)
+libvisual        libvisual        (http://libvisual.sourceforge.net/)
+matroska                          (http://www.matroska.org/)
+ossaudio                          (http://www.opensound.com/)
+qcamsrc
+rfbenc           librfb
+sdlvideosink     libsdl           (http://www.libsdl.org/)
+shout2send       libshout2        (http://www.icecast.org)
+smoothwave      
+swfdec                            (http://swfdec.sourceforge.net/)
+tarkin
+textoverlay      pango            (http://www.pango.org/)
 
 Plugins which use a BSD covered library are as follows:
-vorbisenc	libogg/libvorbis	(http://www.xiph.org/ogg/vorbis)
-vorbisdec	libogg/libvorbis
+
+ogg              libogg/libvorbis (http://www.xiph.org/ogg/vorbis/)
+vorbis           libogg/libvorbis (http://www.xiph.org/ogg/vorbis/)
+gsttheora        libtheora        (http://www.theora.org/)
+speex                             (http://www.speex.org/)
 
 Plugins based on libraries with other free licenses:
-xsink		libXv		(MIT X11 / X Consortium license)
-gsm		libgsm		(MIT license http://kbs.cs.tu-berlin.de/~jutta/toast.html)
+
+ximagesink       libXv
+xvimagesink      libXv            
+ - license:      MIT X11 / X Consortium license
+
+gsm              libgsm           
+ - license       MIT license http://kbs.cs.tu-berlin.de/~jutta/toast.html
+
+faac             libfaac          (http://www.audiocoding.com/download.php)
+ - license       http://www.audiocoding.com/download.php
+
+festival                          (http://www.cstr.ed.ac.uk/projects/festival/)
+ - license:      http://www.cstr.ed.ac.uk/projects/festival/freecopyright.shtml
+
+jpeg                              (http://www.ijg.org/)
+ - license:      IJG license
+
+nas                               (http://radscan.com/nas.html)
+ - license:      NAS license
+
+snapshot         libpng           (http://www.libpng.org/pub/png/)
+ - license:      PNG license
 
 Plugins using non-free libraries:
-xamp3 decoder 	libxaudio       (http://www.xaudio.com/)
-wincodec	win32ddl	(http://divx.euro.ru/)
+divxdec, divxenc                        (http://www.divx.com/)
+osxaudio                                (http://www.apple.com/macosx/)
+sunaudiosink                            (http://www.sun.com/)
+
+Unsure:
+
+mikmod           libmikmod        (http://mikmod.raphnet.net/)
+Seems a newer release of mikmod is LGPL, though it's listed as GPL by
+GStreamer.
+
+faad             libfaad          (http://www.audiocoding.com/)
+Faad is under this license (http://www.audiocoding.com/download.php) if
+using FAAD but GPL if using FAAD2.  GStreamer seems to use FAAD2 if
+avaialable, then defaults to FAAD.  Not sure how this should be 
+described here.
+
+dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
+The sourceforge website claims it uses GPL, LGPL, and the Mozilla Public
+License 1.1.  Not sure which parts GStreamer uses, and what licenses are
+inherited.
+
+effectv          effectv          (http://effectv.sourceforge.net/)
+The sourceforge website claims it uses GPL, though it is currently
+listed as an LGPL library in GStreamer.
 
