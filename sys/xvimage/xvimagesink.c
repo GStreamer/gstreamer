@@ -605,7 +605,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
 /* Element stuff */
 
 static GstCaps *
-gst_xvimagesink_fixate (GstPad *pad, const GstCaps *caps, gpointer ignore)
+gst_xvimagesink_fixate (GstPad *pad, const GstCaps *caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;

@@ -194,8 +194,7 @@ gst_videotestsrc_set_clock (GstElement *element, GstClock *clock)
 }
 
 static GstCaps *
-gst_videotestsrc_src_fixate (GstPad * pad, const GstCaps * caps,
-    gpointer user_data)
+gst_videotestsrc_src_fixate (GstPad * pad, const GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;

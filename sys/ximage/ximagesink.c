@@ -510,7 +510,7 @@ gst_ximagesink_xcontext_clear (GstXImageSink *ximagesink)
 /* Element stuff */
 
 static GstCaps *
-gst_ximagesink_fixate (GstPad *pad, const GstCaps *caps, gpointer ignore)
+gst_ximagesink_fixate (GstPad *pad, const GstCaps *caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;

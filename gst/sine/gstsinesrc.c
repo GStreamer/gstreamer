@@ -99,7 +99,7 @@ static gboolean     gst_sinesrc_src_query           (GstPad      *pad,
 						     gint64      *value);
 
 static GstData*   gst_sinesrc_get		    (GstPad *pad);
-static GstCaps * gst_sinesrc_src_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data);
+static GstCaps * gst_sinesrc_src_fixate (GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 }; */
@@ -216,8 +216,7 @@ gst_sinesrc_init (GstSineSrc *src)
 }
 
 static GstCaps *
-gst_sinesrc_src_fixate (GstPad *pad, const GstCaps *caps,
-    gpointer user_data)
+gst_sinesrc_src_fixate (GstPad *pad, const GstCaps *caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;
