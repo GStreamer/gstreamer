@@ -1,3 +1,16 @@
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup):
+          use the new ffmpegcolorspace
+	* gst-plugins.spec.in:
+          package new colorspace and media-info
+	* configure.ac:
+	* pkgconfig/Makefile.am:
+          fix some more disting issues
+	* pkgconfig/gstreamer-media-info-uninstalled.pc.in:
+	* pkgconfig/gstreamer-media-info.pc.in:
+          generate media-info pc files
+
 2004-03-15  Johan Dahlin  <johan@gnome.org>
 	
 	* *.h: Revert indenting

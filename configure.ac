@@ -1578,14 +1578,6 @@ dnl #########################
 
 AC_CONFIG_FILES(
 Makefile
-pkgconfig/gstreamer-gconf.pc
-pkgconfig/gstreamer-gconf-uninstalled.pc
-pkgconfig/gstreamer-interfaces.pc
-pkgconfig/gstreamer-interfaces-uninstalled.pc
-pkgconfig/gstreamer-libs.pc
-pkgconfig/gstreamer-libs-uninstalled.pc
-pkgconfig/gstreamer-play.pc
-pkgconfig/gstreamer-play-uninstalled.pc
 gst-plugins.spec
 gst/Makefile
 gst/ac3parse/Makefile
@@ -1754,6 +1746,16 @@ tools/Makefile
 gconf/Makefile
 gconf/gstreamer.schemas
 pkgconfig/Makefile
+pkgconfig/gstreamer-gconf.pc
+pkgconfig/gstreamer-gconf-uninstalled.pc
+pkgconfig/gstreamer-interfaces.pc
+pkgconfig/gstreamer-interfaces-uninstalled.pc
+pkgconfig/gstreamer-libs.pc
+pkgconfig/gstreamer-libs-uninstalled.pc
+pkgconfig/gstreamer-media-info.pc
+pkgconfig/gstreamer-media-info-uninstalled.pc
+pkgconfig/gstreamer-play.pc
+pkgconfig/gstreamer-play-uninstalled.pc
 po/Makefile.in
 )
 AC_OUTPUT
