@@ -21,6 +21,7 @@
 #define __GST_STRUCTURE_H__
 
 #include <gst/gstconfig.h>
+#include <gst/gsttypes.h>
 #include <glib-object.h>
 
 G_BEGIN_DECLS

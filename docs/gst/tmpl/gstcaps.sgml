@@ -112,6 +112,7 @@ The gstcaps structure
 @type: 
 @flags: 
 @structs: 
+@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_caps_copy ##### -->
 <para>
