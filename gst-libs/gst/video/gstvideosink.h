@@ -52,50 +52,27 @@ struct _GstVideoSink {
   
   GstPad *sinkpad;
   
-  gpointer video_out;
-  
   gint width, height;
-  gint frames_displayed;
-  gint64 frame_time;
   
   GstClock *clock;
   
-  GstCaps *formats;
-
   GST_OBJECT_PADDING
 };
 
 struct _GstVideoSinkClass {
   GstElementClass parent_class;
-  
-  /* public virtual methods */
-  void (*set_video_out) (GstVideoSink *videosink, gpointer video_out);
-  void (*set_geometry)  (GstVideoSink *videosink, gint width, gint height);
-  
+    
   /* signals */
-  void (*have_video_out)  (GstVideoSink *element, gpointer video_out);
   void (*have_size)       (GstVideoSink *element, gint width, gint height);
-  void (*frame_displayed) (GstVideoSink *element);
-
+  
   GST_CLASS_PADDING
 };
 
 GType gst_videosink_get_type (void);
 
-/* public virtual methods */
-void gst_video_sink_set_video_out (GstVideoSink *videosink, gpointer video_out);
-void gst_video_sink_set_geometry  (GstVideoSink *videosink, gint width,
-                                   gint height);
-
 /* public methods to fire signals */
-void gst_video_sink_got_video_out (GstVideoSink *videosink, gpointer video_out);
 void gst_video_sink_got_video_size (GstVideoSink *videosink,
                                     gint width, gint height);
-void gst_video_sink_frame_displayed (GstVideoSink *videosink);
-
-/* public methods */
-void gst_video_sink_get_geometry (GstVideoSink *videosink,
-                                  gint *width, gint *height);
 
 #ifdef __cplusplus
 }
