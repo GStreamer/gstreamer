@@ -412,6 +412,8 @@ gst_osselement_open_audio (GstOssElement *oss)
     if (GST_PAD_IS_SINK (firstpad)) {
       mode = GST_OSSELEMENT_WRITE;
     }
+  } else {
+    goto do_mixer;
   }
 
   /* first try to open the sound card */
@@ -515,6 +517,7 @@ gst_osselement_open_audio (GstOssElement *oss)
 
   oss->caps = caps;
 
+do_mixer:
   gst_ossmixer_build_list (oss);
 
   return TRUE;
@@ -523,10 +526,11 @@ gst_osselement_open_audio (GstOssElement *oss)
 static void
 gst_osselement_close_audio (GstOssElement *oss)
 {
+  gst_ossmixer_free_list (oss);
+
   if (oss->fd < 0) 
     return;
 
-  gst_ossmixer_free_list (oss);
   close(oss->fd);
   oss->fd = -1;
 }
@@ -678,7 +682,7 @@ gst_osselement_factory_init (GstPlugin *plugin)
 { 
   GstElementFactory *factory;
 
-  factory = gst_element_factory_new ("osselement",
+  factory = gst_element_factory_new ("ossmixer",
 				     GST_TYPE_OSSELEMENT,
 				     &gst_osselement_details);
   g_return_val_if_fail (factory != NULL, FALSE);
