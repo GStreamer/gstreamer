@@ -132,7 +132,7 @@ gst_v4lsrc_base_init (gpointer g_class)
   gst_element_class_set_details (gstelement_class, &gst_v4lsrc_details);
 
   src_template = gst_pad_template_new ("src",
-      GST_PAD_SRC, GST_PAD_ALWAYS, NULL);
+      GST_PAD_SRC, GST_PAD_ALWAYS, gst_caps_new_any ());
 
   gst_element_class_add_pad_template (gstelement_class, src_template);
 }
