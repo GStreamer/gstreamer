@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="audiofilter"
 	ProjectGUID="{979C216F-0ACF-4956-AE00-055A42D67894}"
+	RootNamespace="audiofilter"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -12,8 +13,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../../../../win32/Debug"
-			IntermediateDirectory="../../../../win32/Debug"
+			OutputDirectory="../../../win32/Debug"
+			IntermediateDirectory="../../../win32/Debug"
 			ConfigurationType="2"
 			CharacterSet="2">
 			<Tool
@@ -67,8 +68,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../../../../win32/Release"
-			IntermediateDirectory="../../../../win32/Release"
+			OutputDirectory="../../../win32/Release"
+			IntermediateDirectory="../../../win32/Release"
 			ConfigurationType="2"
 			CharacterSet="2">
 			<Tool
