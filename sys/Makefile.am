@@ -40,8 +40,14 @@ else
 XVIDEO_DIR=
 endif
 
-SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
-	$(VGA_DIR) $(XVIDEO_DIR)
+if USE_CDROM
+CDROM_DIR=cdrom
+else
+CDROM_DIR=
+endif
 
-DIST_SUBDIRS=dxr3 oss qcam v4l vcd vga xvideo videosink
+SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
+	$(VGA_DIR) $(XVIDEO_DIR) $(CDROM_DIR)
+
+DIST_SUBDIRS=dxr3 oss qcam v4l vcd vga xvideo videosink cdrom
 
