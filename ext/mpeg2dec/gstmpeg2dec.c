@@ -894,18 +894,26 @@ index_seek (GstPad *pad, GstEvent *event)
 			     GST_EVENT_SEEK_OFFSET (event));
 
   if (entry) {
-    const GstFormat *peer_formats;
+    const GstFormat *peer_formats, *try_formats;
+    /* since we know the exaxt byteoffset of the frame, make sure to seek on bytes first */
+    const GstFormat try_all_formats[] = 
+    { 
+	GST_FORMAT_BYTES,
+	GST_FORMAT_TIME,
+	0 
+    };
 
+    try_formats = try_all_formats;
     peer_formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
 
-    while (peer_formats && *peer_formats) {
+    while (gst_formats_contains (peer_formats, *try_formats)) {
       gint64 value;
     
-      if (gst_index_entry_assoc_map (entry, *peer_formats, &value)) {
+      if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
         GstEvent *seek_event;
 
         /* lookup succeeded, create the seek */
-        seek_event = gst_event_new_seek (*peer_formats | GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, value);
+        seek_event = gst_event_new_seek (*try_formats | GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, value);
         /* do the seekk */
         if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
           /* seek worked, we're done, loop will exit */
@@ -914,7 +922,7 @@ index_seek (GstPad *pad, GstEvent *event)
           return TRUE;
         }
       }
-      peer_formats++;
+      try_formats++;
     }
   }
   return FALSE;
