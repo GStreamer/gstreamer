@@ -105,6 +105,7 @@ struct _GstFakeSrc {
   gboolean 	silent;
   gboolean 	dump;
   gboolean 	need_flush;
+  gchar         *last_message;
 };
 
 struct _GstFakeSrcClass {

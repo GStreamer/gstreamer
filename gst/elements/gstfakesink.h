@@ -56,6 +56,7 @@ struct _GstFakeSink {
 
   gboolean silent;
   gboolean dump;
+  gchar    *last_message;
 };
 
 struct _GstFakeSinkClass {
