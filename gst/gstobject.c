@@ -523,6 +523,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   g_return_if_fail (object != parent);
   g_return_if_fail (object->parent == NULL);
 
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "set parent (ref and sink)");
   gst_object_ref (object);
   gst_object_sink (object);
   object->parent = parent;
