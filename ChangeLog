@@ -1,3 +1,9 @@
+2004-05-03  David Schleef  <ds@schleef.org>
+
+	* testsuite/caps/Makefile.am: Fix spelling of Ηρατοσθενες
+	* testsuite/caps/erathostenes.c:
+	* testsuite/caps/eratosthenes.c: (eratosthenes), (main):
+
 2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/pwg/pwg.xml:

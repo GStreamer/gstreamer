@@ -16,7 +16,7 @@ tests_pass = \
 	value_serialize \
 	audioscale \
 	filtercaps \
-	erathostenes \
+	eratosthenes \
 	subtract \
 	sets \
 	simplify
@@ -45,7 +45,7 @@ intersect2_LDADD = $(GST_LIBS)
 intersect2_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 filtercaps_LDADD = $(GST_LIBS) 
 filtercaps_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
-erathostenes_LDADD = $(GST_LIBS) 
+eratosthenes_LDADD = $(GST_LIBS) 
 ersthostenes_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 subtract_LDADD = $(GST_LIBS) 
 subtract_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)

@@ -22,7 +22,7 @@
 #define MAX_SIEVE 20
 
 static void
-erathostenes (GValue * sieve, gboolean up, int size)
+eratosthenes (GValue * sieve, gboolean up, int size)
 {
   guint i, j;
   GValue temp = { 0, };
@@ -63,8 +63,8 @@ main (gint argc, gchar ** argv)
   if (argc > 1)
     size = atol (argv[1]);
 
-  erathostenes (&up, TRUE, size);
-  erathostenes (&down, FALSE, size);
+  eratosthenes (&up, TRUE, size);
+  eratosthenes (&down, FALSE, size);
 
   g_assert (gst_value_compare (&up, &down) == GST_VALUE_EQUAL);
   return 0;
