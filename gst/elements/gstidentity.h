@@ -65,6 +65,9 @@ struct _GstIdentity {
 
 struct _GstIdentityClass {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*handoff) (GstElement *element, GstBuffer *buf);
 };
 
 GType gst_identity_get_type(void);

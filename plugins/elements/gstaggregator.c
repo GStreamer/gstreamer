@@ -107,16 +107,16 @@ gst_aggregator_class_init (GstAggregatorClass *klass)
     g_param_spec_boolean ("silent", "silent", "silent",
                       FALSE, G_PARAM_READWRITE)); 
 
-  gobject_class->set_property = gst_aggregator_set_property;
-  gobject_class->get_property = gst_aggregator_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_aggregator_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_aggregator_get_property);
 
-  gstelement_class->request_new_pad = gst_aggregator_request_new_pad;
+  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_aggregator_request_new_pad);
 }
 
 static void 
 gst_aggregator_init (GstAggregator *aggregator) 
 {
-  aggregator->srcpad = gst_pad_new ("src", GST_PAD_SINK);
+  aggregator->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (aggregator), aggregator->srcpad);
 
   aggregator->numsinkpads = 0;

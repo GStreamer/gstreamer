@@ -49,7 +49,7 @@ struct _elements_entry {
 };
 
 static struct _elements_entry _elements[] = {
-  { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		NULL },
+  { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		gst_fakesrc_factory_init },
   { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		NULL },
   { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
   { "disksink",	    gst_disksink_get_type,      &gst_disksink_details, 		NULL },

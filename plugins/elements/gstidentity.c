@@ -36,6 +36,7 @@ GstElementDetails gst_identity_details = {
 
 /* Identity signals and args */
 enum {
+  SIGNAL_HANDOFF,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -57,7 +58,7 @@ static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *v
 static void gst_identity_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
+static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_identity_get_type (void) 
@@ -99,8 +100,14 @@ gst_identity_class_init (GstIdentityClass *klass)
     g_param_spec_boolean("silent","silent","silent",
                          TRUE,G_PARAM_READWRITE)); // CHECKME
 
-  gobject_class->set_property = gst_identity_set_property;  
-  gobject_class->get_property = gst_identity_get_property;
+  gst_identity_signals[SIGNAL_HANDOFF] =
+    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                   G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
+                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                   G_TYPE_POINTER);
+
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);  
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
 
 static GstBufferPool*
@@ -138,7 +145,7 @@ gst_identity_init (GstIdentity *identity)
 {
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
-  gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
+  gst_pad_set_chain_function (identity->sinkpad, GST_DEBUG_FUNCPTR (gst_identity_chain));
   gst_pad_set_bufferpool_function (identity->sinkpad, gst_identity_get_bufferpool);
   gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink);
   
@@ -166,6 +173,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
     g_print("identity: chain ******* (%s:%s)i (%d bytes, %llu) \n",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
   
+  g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+	                       buf);
+
   gst_pad_push (identity->srcpad, buf);
 
   if (identity->sleep_time)
@@ -189,7 +199,8 @@ gst_identity_loop (GstElement *element)
       g_print("identity: loop  ******* (%s:%s)i (%d bytes, %llu) \n",
 		      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
-
+    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+	                       buf);
 
     gst_pad_push (identity->srcpad, buf);
 

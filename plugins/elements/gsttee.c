@@ -102,10 +102,10 @@ gst_tee_class_init (GstTeeClass *klass)
     g_param_spec_int ("num_pads", "num_pads", "num_pads",
                       0, G_MAXINT, 0, G_PARAM_READABLE)); 
 
-  gobject_class->set_property = gst_tee_set_property;
-  gobject_class->get_property = gst_tee_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_tee_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_tee_get_property);
 
-  gstelement_class->request_new_pad = gst_tee_request_new_pad;
+  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_tee_request_new_pad);
 }
 
 static void 
@@ -113,7 +113,7 @@ gst_tee_init (GstTee *tee)
 {
   tee->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
-  gst_pad_set_chain_function (tee->sinkpad, gst_tee_chain);
+  gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
 
   tee->numsrcpads = 0;
   tee->srcpads = NULL;

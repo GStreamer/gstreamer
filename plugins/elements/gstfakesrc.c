@@ -30,7 +30,7 @@ GstElementDetails gst_fakesrc_details = {
   "Push empty (no data) buffers around",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>"
+  "Wim Taymans <wim.taymans@chello.be>",
   "(C) 1999",
 };
 
@@ -53,9 +53,17 @@ enum {
   ARG_SILENT
 };
 
+GST_PADTEMPLATE_FACTORY (fakesrc_src_factory,
+  "src%d",
+  GST_PAD_SRC,
+  GST_PAD_REQUEST,
+  NULL                  /* no caps */
+);
+
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
 static GType
-gst_fakesrc_output_get_type(void) {
+gst_fakesrc_output_get_type (void) 
+{
   static GType fakesrc_output_type = 0;
   static GEnumValue fakesrc_output[] = {
     { FAKESRC_FIRST_LAST_LOOP, 		"1", "First-Last loop"},
@@ -69,7 +77,7 @@ gst_fakesrc_output_get_type(void) {
     {0, NULL, NULL},
   };
   if (!fakesrc_output_type) {
-    fakesrc_output_type = g_enum_register_static("GstFakeSrcOutput", fakesrc_output);
+    fakesrc_output_type = g_enum_register_static ("GstFakeSrcOutput", fakesrc_output);
   }
   return fakesrc_output_type;
 }
@@ -77,6 +85,7 @@ gst_fakesrc_output_get_type(void) {
 static void		gst_fakesrc_class_init		(GstFakeSrcClass *klass);
 static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
+static GstPad* 		gst_fakesrc_request_new_pad 	(GstElement *element, GstPadTemplate *templ);
 static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
@@ -112,14 +121,16 @@ static void
 gst_fakesrc_class_init (GstFakeSrcClass *klass) 
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_SOURCES,
-    g_param_spec_int("num_sources","num_sources","num_sources",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
+    g_param_spec_int ("num_sources", "num_sources", "num_sources",
+                      1, G_MAXINT, 1, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
     g_param_spec_boolean("loop_based","loop_based","loop_based",
                          TRUE,G_PARAM_READWRITE)); // CHECKME
@@ -145,8 +156,10 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
-  gobject_class->set_property = gst_fakesrc_set_property;
-  gobject_class->get_property = gst_fakesrc_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
+
+  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
 }
 
 static void 
@@ -165,15 +178,42 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->loop_based = TRUE;
 
   if (fakesrc->loop_based)
-    gst_element_set_loop_function (GST_ELEMENT (fakesrc), gst_fakesrc_loop);
+    gst_element_set_loop_function (GST_ELEMENT (fakesrc), GST_DEBUG_FUNCPTR (gst_fakesrc_loop));
   else
-    gst_pad_set_get_function(pad,gst_fakesrc_get);
+    gst_pad_set_get_function (pad, GST_DEBUG_FUNCPTR (gst_fakesrc_get));
 
   fakesrc->num_buffers = -1;
   fakesrc->buffer_count = 0;
   fakesrc->silent = FALSE;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
+}
+
+static GstPad*
+gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
+{
+  gchar *name;
+  GstPad *srcpad;
+  GstFakeSrc *fakesrc;
+
+  g_return_val_if_fail (GST_IS_FAKESRC (element), NULL);
+
+  if (templ->direction != GST_PAD_SRC) {
+    g_warning ("gstfakesrc: request new pad that is not a SRC pad\n");
+    return NULL;
+  }
+
+  fakesrc = GST_FAKESRC (element);
+
+  name = g_strdup_printf ("src%d", fakesrc->numsrcpads);
+
+  srcpad = gst_pad_new_from_template (templ, name);
+  gst_element_add_pad (GST_ELEMENT (fakesrc), srcpad);
+
+  fakesrc->srcpads = g_slist_prepend (fakesrc->srcpads, srcpad);
+  fakesrc->numsrcpads++;
+
+  return srcpad;
 }
 
 static void
@@ -201,25 +241,11 @@ static void
 gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstFakeSrc *src;
-  gint new_numsrcs;
-  GstPad *pad;
 
   /* it's not null if we got it, but it might not be ours */
   src = GST_FAKESRC (object);
    
   switch (prop_id) {
-    case ARG_NUM_SOURCES:
-      new_numsrcs = g_value_get_int (value);
-      if (new_numsrcs > src->numsrcpads) {
-        while (src->numsrcpads != new_numsrcs) {
-          pad = gst_pad_new (g_strdup_printf ("src%d", src->numsrcpads), GST_PAD_SRC);
-          gst_element_add_pad(GST_ELEMENT(src),pad);
-          src->srcpads = g_slist_append(src->srcpads,pad);
-          src->numsrcpads++;
-        }
-        gst_fakesrc_update_functions (src);
-      }
-      break;
     case ARG_LOOP_BASED:
       src->loop_based = g_value_get_boolean (value);
       gst_fakesrc_update_functions (src);
@@ -385,3 +411,12 @@ gst_fakesrc_loop(GstElement *element)
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
+
+gboolean
+gst_fakesrc_factory_init (GstElementFactory *factory)
+{
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (fakesrc_src_factory));
+
+  return TRUE;
+}
+

@@ -43,7 +43,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_NUM_SOURCES,
+  ARG_NUM_SINKS,
   ARG_SILENT,
 };
 
@@ -91,12 +91,12 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_SOURCES,
-    g_param_spec_int("num_sources","num_sources","num_sources",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
-    g_param_spec_boolean("silent","silent","silent",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
+    g_param_spec_int ("num_sinks", "num_sinks", "num_sinks",
+                      1, G_MAXINT, 1, G_PARAM_READABLE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+    g_param_spec_boolean ("silent", "silent", "silent",
+                          FALSE, G_PARAM_READWRITE)); 
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -115,35 +115,21 @@ gst_fakesink_init (GstFakeSink *fakesink)
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
   gst_pad_set_chain_function (pad, gst_fakesink_chain);
+
   fakesink->sinkpads = g_slist_prepend (NULL, pad);
   fakesink->numsinkpads = 1;
   fakesink->silent = FALSE;
-
-  // we're ready right away, since we don't have any args...
-//  gst_element_set_state(GST_ELEMENT(fakesink),GST_STATE_READY);
 }
 
 static void
 gst_fakesink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstFakeSink *sink;
-  gint new_numsinks;
-  GstPad *pad;
 
   /* it's not null if we got it, but it might not be ours */
   sink = GST_FAKESINK (object);
 
   switch (prop_id) {
-    case ARG_NUM_SOURCES:
-      new_numsinks = g_value_get_int (value);
-      while (sink->numsinkpads < new_numsinks) {
-        pad = gst_pad_new (g_strdup_printf ("sink%d", sink->numsinkpads), GST_PAD_SINK);
-        gst_pad_set_chain_function (pad, gst_fakesink_chain);
-        gst_element_add_pad (GST_ELEMENT (sink), pad);
-        sink->sinkpads = g_slist_append (sink->sinkpads, pad);
-        sink->numsinkpads++;
-      }
-      break;
     case ARG_SILENT:
       sink->silent = g_value_get_boolean (value);
       break;
@@ -163,7 +149,7 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
   sink = GST_FAKESINK (object);
   
   switch (prop_id) {
-    case ARG_NUM_SOURCES:
+    case ARG_NUM_SINKS:
       g_value_set_int (value, sink->numsinkpads);
       break;
     case ARG_SILENT:

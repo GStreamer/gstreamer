@@ -85,6 +85,8 @@ struct _GstFakeSrcClass {
 
 GType gst_fakesrc_get_type(void);
 
+gboolean gst_fakesrc_factory_init (GstElementFactory *factory);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
