@@ -179,7 +179,11 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
 
   if (module != NULL) {
-    if (g_module_symbol (module, "plugin_desc", (gpointer *)&desc)) {
+    gpointer ptr;
+
+    if (g_module_symbol (module, "plugin_desc", &ptr)) {
+      desc = (GstPluginDesc *)ptr;
+
       GST_DEBUG (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded, called entry function...", filename);
 
       plugin->filename = g_strdup (filename);
