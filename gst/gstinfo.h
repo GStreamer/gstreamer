@@ -53,7 +53,7 @@ typedef enum {
 
 /* we can now override this to be more general in maintainer builds or cvs checkouts */
 #ifndef GST_LEVEL_DEFAULT
-#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR 
+#define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 #endif
 
 /* defines for format (colors etc) - don't change them around, it uses terminal layout 
