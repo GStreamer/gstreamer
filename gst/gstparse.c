@@ -67,6 +67,7 @@ gst_parse_newpad(GstElement *element,GstPad *pad,launch_delayed_pad *peer)
 typedef struct {
   gchar *srcpadname;
   GstPad *target;
+  GstElement *pipeline;
 } dyn_connect;
 
 static void have_eos (void)
@@ -81,7 +82,9 @@ dynamic_connect (GstElement *element, GstPad *newpad, gpointer data)
   dyn_connect *connect = (dyn_connect *)data;
 
   if (!strcmp (gst_pad_get_name (newpad), connect->srcpadname)) {
+    gst_element_set_state (connect->pipeline, GST_STATE_PAUSED);
     gst_pad_connect (newpad, connect->target);
+    gst_element_set_state (connect->pipeline, GST_STATE_PLAYING);
   }
 }
 
@@ -375,6 +378,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
 
         connect->srcpadname = srcpadname;
         connect->target = GST_PARSE_LISTPAD(sinkpads);
+        connect->pipeline = parent;
 
         GST_DEBUG(0,"SETTING UP dynamic connection %s:%s and %s:%s\n",
           gst_element_get_name (previous),
