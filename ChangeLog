@@ -4,6 +4,15 @@
 	(theora_dec_src_convert), (theora_dec_sink_convert),
 	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_event),
 	(theora_dec_chain):
+	Don't screw up the 1 Chroma for 1 luma sample situation when we
+	have an odd offset/width by adding a black border in those cases.
+
+2004-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_get_formats),
+	(theora_dec_src_convert), (theora_dec_sink_convert),
+	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_event),
+	(theora_dec_chain):
 	* ext/theora/theoraenc.c: (theora_enc_sink_link):
 	Added first attempt at cropping of the image as required by the 
 	theora spec. We need more properties in the caps (offset_x,
