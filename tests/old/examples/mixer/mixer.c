@@ -218,9 +218,9 @@ int main(int argc,char *argv[])
   }
   g_list_free (input_channels);
   
-  gst_object_destroy(GST_OBJECT(audiosink));
+  gst_object_unref(GST_OBJECT(audiosink));
 
-  gst_object_destroy(GST_OBJECT(main_bin));
+  gst_object_unref(GST_OBJECT(main_bin));
 
   exit(0);
 }
@@ -393,7 +393,7 @@ destroy_input_channel (input_channel_t *channel)
 
   /* destroy elements */
 
-  gst_object_destroy (GST_OBJECT (channel->pipe));
+  gst_object_unref (GST_OBJECT (channel->pipe));
 
   free (channel);
 }
@@ -406,4 +406,3 @@ void env_register_cp (GstElement *volenv, double cp_time, double cp_level)
   g_object_set(G_OBJECT(volenv), "controlpoint", buffer, NULL);
 
 }
-

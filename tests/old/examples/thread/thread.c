@@ -68,8 +68,7 @@ int main(int argc,char *argv[])
 
   gst_main();
 
-  gst_pipeline_destroy(thread);
+  gst_object_unref(GST_OBJECT(thread));
 
   exit(0);
 }
-

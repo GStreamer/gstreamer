@@ -196,8 +196,8 @@ int main (int argc, char *argv[])
 
   gst_element_set_state (main_bin, GST_STATE_NULL);
 
-  gst_object_destroy (GST_OBJECT (disksink));
-  gst_object_destroy (GST_OBJECT (main_bin));
+  gst_object_unref (GST_OBJECT (disksink));
+  gst_object_unref (GST_OBJECT (main_bin));
 
   exit(0);
 }
