@@ -84,6 +84,8 @@ enum
 enum
 {
   MODE_NORMAL,                  /* act as identity */
+  MODE_TRANSITION,              /* wait for the discont between the two
+                                 * other modes */
   MODE_TYPEFIND                 /* do typefinding */
 };
 
@@ -277,7 +279,7 @@ gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
 {
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
-  if (typefind->mode == MODE_TYPEFIND) {
+  if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
     gst_data_unref (GST_DATA (event));
     return FALSE;
@@ -350,10 +352,11 @@ stop_typefinding (GstTypeFindElement * typefind)
     typefind->possibilities = NULL;
   }
 
-  typefind->mode = MODE_NORMAL;
+  typefind->mode = MODE_TRANSITION;
 
-  if (push_cached_buffers) {
-    GstBuffer *buffer;
+  if (!push_cached_buffers) {
+    gst_buffer_store_clear (typefind->store);
+  } else {
     guint size = gst_buffer_store_get_size (typefind->store, 0);
 
     GST_DEBUG_OBJECT (typefind, "seeking back to current position %u", size);
@@ -362,18 +365,31 @@ stop_typefinding (GstTypeFindElement * typefind)
                 size))) {
       GST_WARNING_OBJECT (typefind,
           "could not seek to required position %u, hope for the best", size);
-    }
-    gst_pad_push (typefind->src, GST_DATA (gst_event_new_discontinuous (TRUE,
-                GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
-                GST_FORMAT_UNDEFINED)));
-    if (size
-        && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
-      GST_DEBUG_OBJECT (typefind, "pushing cached data (%u bytes)", size);
-      gst_pad_push (typefind->src, GST_DATA (buffer));
+      typefind->mode = MODE_NORMAL;
+      gst_buffer_store_clear (typefind->store);
     } else {
-      size = 0;
+      typefind->waiting_for_discont_offset = size;
     }
   }
+}
+
+static void
+push_buffer_store (GstTypeFindElement * typefind)
+{
+  guint size = gst_buffer_store_get_size (typefind->store, 0);
+  GstBuffer *buffer;
+
+  gst_pad_push (typefind->src, GST_DATA (gst_event_new_discontinuous (TRUE,
+              GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
+              GST_FORMAT_UNDEFINED)));
+  if (size && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
+    GST_DEBUG_OBJECT (typefind, "pushing cached data (%u bytes)", size);
+    gst_pad_push (typefind->src, GST_DATA (buffer));
+  } else {
+    /* FIXME: shouldn't we throw an error here? */
+    size = 0;
+  }
+
   gst_buffer_store_clear (typefind->store);
 }
 
@@ -416,40 +432,65 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
   TypeFindEntry *entry;
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
-  if (typefind->mode == MODE_TYPEFIND) {
-    /* need to do more? */
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        /* this should only happen when we got all available data */
-        entry =
-            (TypeFindEntry *) typefind->possibilities ? typefind->
-            possibilities->data : NULL;
-        if (entry && entry->probability >= typefind->min_probability) {
-          GST_INFO_OBJECT (typefind,
-              "'%s' is the best typefind left after we got all data, using it now (probability %u)",
-              GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
-          g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
-              entry->probability, entry->caps);
-          stop_typefinding (typefind);
-          gst_pad_event_default (pad, event);
+  switch (typefind->mode) {
+    case MODE_TYPEFIND:
+      switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_EOS:
+          /* this should only happen when we got all available data */
+          entry =
+              (TypeFindEntry *) typefind->possibilities ? typefind->
+              possibilities->data : NULL;
+          if (entry && entry->probability >= typefind->min_probability) {
+            GST_INFO_OBJECT (typefind,
+                "'%s' is the best typefind left after we got all data, using it now (probability %u)",
+                GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+            g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
+                0, entry->probability, entry->caps);
+            stop_typefinding (typefind);
+            gst_pad_event_default (pad, event);
+          } else {
+            gst_pad_event_default (pad, event);
+            GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL),
+                (NULL));
+            stop_typefinding (typefind);
+          }
+          break;
+        default:
+          gst_data_unref (GST_DATA (event));
+          break;
+      }
+      break;
+    case MODE_TRANSITION:
+      if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
+        if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+          start_typefinding (typefind);
+          gst_event_unref (event);
         } else {
-          gst_pad_event_default (pad, event);
-          GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
-          stop_typefinding (typefind);
+          guint64 off;
+
+          if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &off) &&
+              off == typefind->waiting_for_discont_offset) {
+            typefind->mode = MODE_NORMAL;
+            push_buffer_store (typefind);
+          } else {
+            gst_event_unref (event);
+          }
         }
-        break;
-      default:
-        gst_data_unref (GST_DATA (event));
-        break;
-    }
-  } else {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS &&
-        GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-      start_typefinding (typefind);
-      gst_event_unref (event);
-    } else {
-      gst_pad_event_default (pad, event);
-    }
+      } else {
+        gst_event_unref (event);
+      }
+      break;
+    case MODE_NORMAL:
+      if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS &&
+          GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+        start_typefinding (typefind);
+        gst_event_unref (event);
+      } else {
+        gst_pad_event_default (pad, event);
+      }
+      break;
+    default:
+      g_assert_not_reached ();
   }
 }
 static guint8 *
@@ -536,6 +577,9 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
   switch (typefind->mode) {
     case MODE_NORMAL:
       gst_pad_push (typefind->src, data);
+      return;
+    case MODE_TRANSITION:
+      gst_data_unref (data);
       return;
     case MODE_TYPEFIND:{
       guint64 current_offset;

@@ -1,5 +1,18 @@
 2004-09-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Ronald Bultje
+
+	* gst/elements/gsttypefindelement.c: (stop_typefinding),
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_chain):
+	* gst/elements/gsttypefindelement.h:
+	 #153657.
+	 Filter out discont event from seekable sources when typefind
+	 asks them to seek.  Fixes typefind with demuxers for
+	 avi, asf and matroska.
+
+2004-09-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstcaps.c:
 	* gst/gstcaps.h:
