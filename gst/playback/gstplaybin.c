@@ -387,6 +387,10 @@ gen_video_element (GstPlayBin * play_bin)
 done:
   play_bin->seekables = g_list_append (play_bin->seekables, sink);
 
+  /* since we're gonna add it to a bin but don't want to lose it,
+   * we keep a reference. */
+  gst_object_ref (GST_OBJECT (element));
+
   return element;
 }
 
@@ -454,6 +458,10 @@ gen_audio_element (GstPlayBin * play_bin)
 
 done:
   play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
+
+  /* since we're gonna add it to a bin but don't want to lose it,
+   * we keep a reference. */
+  gst_object_ref (GST_OBJECT (element));
 
   return element;
 }
@@ -695,7 +703,6 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
 
     /* we found a sink for this stream, now try to install it */
     if (sink != NULL) {
-      gst_object_ref (GST_OBJECT (sink));
       gst_bin_add (GST_BIN (play_bin), sink);
       GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
           GST_STATE (sink), GST_STATE (play_bin),
@@ -743,18 +750,15 @@ gst_play_bin_change_state (GstElement * element)
     return ret;
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-      break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      /* Set audio sink state to NULL to release the sound device,
+       * but only if we own it (else we might be in chain-transition). */
+      if (GST_STATE (play_bin->audio_sink) == GST_STATE_PAUSED) {
+        gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
+      }
       break;
     case GST_STATE_PAUSED_TO_READY:
       remove_sinks (play_bin);
-      break;
-    case GST_STATE_READY_TO_NULL:
       break;
     default:
       break;
