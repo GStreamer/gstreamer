@@ -88,8 +88,10 @@ gst_tuner_norm_dispose (GObject * object)
 {
   GstTunerNorm *norm = GST_TUNER_NORM (object);
 
-  if (norm->label)
+  if (norm->label) {
     g_free (norm->label);
+    norm->label = NULL;
+  }
 
   if (parent_class->dispose)
     parent_class->dispose (object);

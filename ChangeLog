@@ -1,3 +1,52 @@
+2004-11-02  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/alsa/gstalsa.c: (gst_alsa_class_init), (gst_alsa_dispose),
+	(gst_alsa_finalize):
+	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_class_init),
+	(gst_cdaudio_finalize):
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_class_init),
+	(cdparanoia_finalize):
+	* ext/divx/gstdivxdec.c: (gst_divxdec_dispose):
+	* ext/divx/gstdivxenc.c: (gst_divxenc_dispose):
+	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_class_init),
+	(dvdreadsrc_finalize):
+	* ext/flac/gstflacdec.c: (gst_flacdec_class_init),
+	(gst_flacdec_finalize):
+	* ext/flac/gstflacenc.c: (gst_flacenc_class_init),
+	(gst_flacenc_finalize):
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_class_init),
+	(gst_gnomevfssink_finalize):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_class_init),
+	(gst_gnomevfssrc_finalize):
+	* ext/libfame/gstlibfame.c: (gst_fameenc_class_init),
+	(gst_fameenc_finalize):
+	* ext/nas/nassink.c: (gst_nassink_class_init),
+	(gst_nassink_finalize):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_finalize),
+	(gst_sdlvideosink_class_init):
+	* ext/sndfile/gstsf.c: (gst_sf_dispose):
+	* gst-libs/gst/mixer/mixertrack.c: (gst_mixer_track_dispose):
+	* gst-libs/gst/tuner/tunerchannel.c: (gst_tuner_channel_dispose):
+	* gst-libs/gst/tuner/tunernorm.c: (gst_tuner_norm_dispose):
+	* gst-libs/gst/xwindowlistener/xwindowlistener.c:
+	(gst_x_window_listener_dispose):
+	* gst/audioscale/gstaudioscale.c:
+	* gst/playondemand/gstplayondemand.c: (play_on_demand_class_init),
+	(play_on_demand_finalize):
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_dispose):
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_chain):
+	* sys/cdrom/gstcdplayer.c: (cdplayer_class_init),
+	(cdplayer_finalize):
+	* sys/glsink/glimagesink.c: (gst_glimagesink_finalize),
+	(gst_glimagesink_class_init):
+	* sys/oss/gstosselement.c: (gst_osselement_class_init),
+	(gst_osselement_finalize):
+	* sys/oss/gstosssink.c: (gst_osssink_dispose):
+	* sys/oss/gstosssrc.c: (gst_osssrc_dispose):
+	* sys/v4l/gstv4lelement.c: (gst_v4lelement_dispose):
+	  Fixes a bunch of problems with finalize and dispose functions,
+	  either assumptions that dispose is only called once, or not calling
+	  the parent class dispose/finalize function
+
 2004-11-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/esd/esdsink.c: (gst_esdsink_init), (gst_esdsink_link):

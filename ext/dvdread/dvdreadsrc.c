@@ -116,7 +116,7 @@ enum
 static void dvdreadsrc_base_init (gpointer g_class);
 static void dvdreadsrc_class_init (DVDReadSrcClass * klass);
 static void dvdreadsrc_init (DVDReadSrc * dvdreadsrc);
-static void dvdreadsrc_dispose (GObject * object);
+static void dvdreadsrc_finalize (GObject * object);
 
 static void dvdreadsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -194,7 +194,7 @@ dvdreadsrc_class_init (DVDReadSrcClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (dvdreadsrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (dvdreadsrc_get_property);
 
-  gobject_class->dispose = dvdreadsrc_dispose;
+  gobject_class->finalize = dvdreadsrc_finalize;
 
   gstelement_class->change_state = dvdreadsrc_change_state;
 
@@ -219,7 +219,7 @@ dvdreadsrc_init (DVDReadSrc * dvdreadsrc)
 }
 
 static void
-dvdreadsrc_dispose (GObject * object)
+dvdreadsrc_finalize (GObject * object)
 {
   DVDReadSrc *dvdreadsrc = DVDREADSRC (object);
 
@@ -228,6 +228,7 @@ dvdreadsrc_dispose (GObject * object)
     g_free (dvdreadsrc->priv);
     dvdreadsrc->priv = NULL;
   }
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

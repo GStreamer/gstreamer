@@ -104,8 +104,10 @@ gst_tuner_channel_dispose (GObject * object)
 {
   GstTunerChannel *channel = GST_TUNER_CHANNEL (object);
 
-  if (channel->label)
+  if (channel->label) {
     g_free (channel->label);
+    channel->label = NULL;
+  }
 
   if (parent_class->dispose)
     parent_class->dispose (object);
