@@ -736,6 +736,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
         if (result == 0)
 	  break;
 
+
         outbuf = gst_buffer_new_and_alloc (vorbisenc->og.header_len + 
 			                   vorbisenc->og.body_len);
 
@@ -750,7 +751,12 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
 
         vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);
 
-        gst_pad_push (vorbisenc->srcpad, outbuf);
+	if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
+          gst_pad_push (vorbisenc->srcpad, outbuf);
+	}
+	else {
+          gst_buffer_unref (outbuf);
+	}
 
         /* this could be set above, but for illustrative purposes, I do
            it here (to show that vorbis does know where the stream ends) */
