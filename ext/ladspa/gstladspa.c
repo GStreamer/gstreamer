@@ -848,8 +848,8 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buffer_in)
 
   if (numsrcpads) {
     for (i=0; i<numsrcpads; i++) {
-      DEBUG_OBJ (ladspa, "pushing buffer (%p, length %d) on src pad %d",
-                 buffers_out[i], GST_BUFFER_SIZE (buffers_out[i])/sizeof(float), i);
+      DEBUG_OBJ (ladspa, "pushing buffer (%p, length %u bytes) on src pad %d",
+                 buffers_out[i], GST_BUFFER_SIZE (buffers_out[i]), i);
       gst_pad_push (ladspa->srcpads[i], buffers_out[i]);
     }
 
