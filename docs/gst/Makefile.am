@@ -70,6 +70,7 @@ IGNORE_HFILES= \
 	cothreads.h \
 	cothreads_compat.h \
 	gthread-cothreads.h \
+	faircothreads.h \
 	types.h \
 	grammar.tab.h \
 	gstmarshal.h \

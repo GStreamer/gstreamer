@@ -1,3 +1,19 @@
+2004-11-07  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/schedulers/fairscheduler.c:
+	* gst/schedulers/faircothreads.c:
+	* gst/schedulers/faircothreads.h:
+	New cothread based scheduler: Fair scheduler.
+	* gst/schedulers/gthread-cothreads.h: 
+	Add the standard #if around the whole file.
+	Defining symbol GTHREAD_COTHREADS_NO_DEFINITIONS will now prevent
+	compilation of the functions defined in this file. This is
+	necessary to be able to use this file as a normal header.
+	* gst/schedulers/Makefile.am: Add compiling support for fair
+	scheduler.
+	* docs/gst/Makefile.am (IGNORE_HFILES): Exclude internal fair
+	scheduler cothreads layer from documentation generation.
+
 2004-11-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/autoplug/gstspideridentity.c:

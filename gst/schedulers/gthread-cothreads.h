@@ -20,6 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifndef __GTHREAD_COTHREADS_H__
+#define __GTHREAD_COTHREADS_H__
+
 #include <glib.h>
 #include <gst/gstthread.h>
 
@@ -59,6 +62,8 @@ struct _cothread {
   gboolean              die;
   cothread_context *    context;
 };
+
+#ifndef GTHREAD_COTHREADS_NO_DEFINITIONS
 
 /* define functions
  * Functions starting with "do_" are used by the scheduler.
@@ -210,3 +215,7 @@ do_cothread_destroy (cothread *thread)
   
 #define do_cothread_get_current(context) ((context)->current)
 #define do_cothread_get_main(context) ((context)->main)
+
+#endif /* GTHREAD_COTHREADS_NO_DEFINITIONS */
+
+#endif /* __GTHREAD_COTHREADS_H__ */
