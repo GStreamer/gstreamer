@@ -136,8 +136,8 @@ update_scale (gpointer data)
 
   if (stats) {
     if (clock)
-      g_print ("clock:                  %13llu  (%s)\n", position,
-          gst_object_get_name (GST_OBJECT (clock)));
+      g_print ("clock:                  %13" G_GUINT64_FORMAT "  (%s)\n",
+          position, gst_object_get_name (GST_OBJECT (clock)));
     query_durations ();
     query_positions ();
   }
