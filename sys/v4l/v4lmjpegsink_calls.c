@@ -379,7 +379,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     return FALSE;
   }
 
-  /* TODO: allocate/init the pthread thingies */
+  /* allocate/init the pthread thingies */
   pthread_mutex_init(&(v4lmjpegsink->mutex_queued_frames), NULL);
   v4lmjpegsink->isqueued_queued_frames = (gint8 *)
     malloc(sizeof(gint8) * v4lmjpegsink->breq.count);
