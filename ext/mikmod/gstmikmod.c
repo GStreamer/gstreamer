@@ -230,6 +230,8 @@ gst_mikmod_init (GstMikMod *filter)
   filter->sndfxvolume = 128;
   filter->songname    = NULL;
   filter->modtype     = NULL;
+  
+  filter->initialized = FALSE;
 }
 
 static GstCaps *
@@ -288,60 +290,55 @@ gst_mikmod_loop (GstElement *element)
   srcpad = mikmod->srcpad;
   mikmod->Buffer = NULL;
   	
-  while ((buffer_in = GST_BUFFER (gst_pad_pull( mikmod->sinkpad )))) {
-    if ( GST_IS_EVENT (buffer_in) ) {
-      GstEvent *event = GST_EVENT (buffer_in);
+  if (!mikmod->initialized) {
+    while ((buffer_in = GST_BUFFER (gst_pad_pull( mikmod->sinkpad )))) {
+      if ( GST_IS_EVENT (buffer_in) ) {
+	GstEvent *event = GST_EVENT (buffer_in);
 		
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
-         break;
-    }
-    else		
-    {
-      if ( mikmod->Buffer ) {	 
-	GstBuffer *merge;	
-        merge = gst_buffer_merge( mikmod->Buffer, buffer_in );
-        gst_buffer_unref( buffer_in );	 	
-	gst_buffer_unref( mikmod->Buffer );
-	mikmod->Buffer = merge;
+	if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
+	   break;
+      } else {
+	if ( mikmod->Buffer ) {	 
+	  GstBuffer *merge;	
+	  merge = gst_buffer_merge( mikmod->Buffer, buffer_in );
+	  gst_buffer_unref( buffer_in );	 	
+	  gst_buffer_unref( mikmod->Buffer );
+	  mikmod->Buffer = merge;
+	} else {
+	  mikmod->Buffer = buffer_in;
+	}
       }
-      else
-        mikmod->Buffer = buffer_in;
-    }
-  }  
+    }  
   
-  if (!GST_PAD_CAPS (mikmod->srcpad)) {
-    if (GST_PAD_LINK_SUCCESSFUL (gst_pad_renegotiate (mikmod->srcpad))) {
-      GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, (NULL), (NULL));
-      return;
+    if (!GST_PAD_CAPS (mikmod->srcpad)) {
+      if (GST_PAD_LINK_SUCCESSFUL (gst_pad_renegotiate (mikmod->srcpad))) {
+	GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, (NULL), (NULL));
+	return;
+      }
     }
+  
+    MikMod_RegisterDriver(&drv_gst);
+    MikMod_RegisterAllLoaders();
+
+    MikMod_Init("");
+    reader = GST_READER_new( mikmod );
+    module = Player_LoadGeneric ( reader, 64, 0 );
+  
+    gst_buffer_unref (mikmod->Buffer);
+  
+    if ( ! Player_Active() )
+      Player_Start(module);
+    
+    mikmod->initialized = TRUE;
   }
-  
-  MikMod_RegisterDriver(&drv_gst);
-  MikMod_RegisterAllLoaders();
 
-  MikMod_Init("");
-  reader = GST_READER_new( mikmod );
-  module = Player_LoadGeneric ( reader, 64, 0 );
-  
-  gst_buffer_unref (mikmod->Buffer);
-  
-  if ( ! Player_Active() )
-    Player_Start(module);
-
-  do {
-    if ( Player_Active() ) {
-
-      timestamp = ( module->sngtime / 1024.0 ) * GST_SECOND;
-      drv_gst.Update();
-      gst_element_yield (element);
-    }
-    else {
-      gst_element_set_eos (GST_ELEMENT (mikmod));
-      gst_pad_push (mikmod->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    }
-
-  } 
-  while ( 1 );
+  if ( Player_Active() ) {
+    timestamp = ( module->sngtime / 1024.0 ) * GST_SECOND;
+    drv_gst.Update();
+  } else {
+    gst_element_set_eos (GST_ELEMENT (mikmod));
+    gst_pad_push (mikmod->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+  }
 }
 
 
@@ -405,7 +402,7 @@ GstMikMod *mikmod;
 		Player_TogglePause();
 		Player_SetPosition( 0 );
 	 }
-	
+     mikmod->initialized = FALSE;	
   }
   
   if (GST_STATE_PENDING (element) == GST_STATE_PLAYING) 

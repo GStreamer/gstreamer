@@ -63,6 +63,8 @@ struct _GstMikMod {
   gboolean soft_music;
   gboolean soft_sndfx;
   gboolean stereo;
+
+  gboolean initialized;
 };
 
 struct _GstMikModClass {
