@@ -509,7 +509,9 @@ AVIFILE_LIBS="`avifile-config --libs`"
 AVIFILE_CFLAGS="`avifile-config --cflags`"
 AC_SUBST(AVIFILE_LIBS)
 AC_SUBST(AVIFILE_CFLAGS)
+dnl HAVE_AVIFILE is needed in a Makefile.am
 
+AC_SUBST(HAVE_AVIFILE)
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
 dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)
