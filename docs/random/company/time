@@ -1,0 +1,39 @@
+Time in Gstreamer
+
+When talking about time in streams (or "clocking"), people often confuse 3 
+different things that need to be treated seperately. Older designs in GStreamer
+confused those and this made it difficult to design solutions for time 
+management.
+
+1) clock time
+There are many clock providers in GStreamer. In normal circumstances there is 
+only one clock, commonly referred to as the system clock. But in the GStreamer
+case there are others - like a sound card. If a sound card claims to output 
+44100 samples/sec, one second in the sound cards clock has elapsed when 44100 
+samples have been processed. If a webcam claims to deliver 25 pictures/sec a
+second has elapsed after processing 25 pictures. This concept is useful in
+starvation cases - when you use the clock of the sound card and due to high 
+load (or the hard disc of your laptop needing to start spinning again to read
+in an mp3) no samples are processed, the clock does not advance. A system clock
+would merrily go on ticking and make your song jump.
+
+2) element time
+Some elements need to know when to output a buffer. Therefore buffers have 
+timestamps. But there needs to be a way those timestamps to the time reported by
+clocks. This is were element time comes in. GStreamer takes transparently care 
+of this by remembering at what clock time you set your element to PLAYING and 
+computes the time that has passed since then automatically. It takes care of the
+PAUSE state, too. There is even a way to adjust the time in the case of a 
+discontinuity event (which most likely happens after seeking).
+
+3) synchronization
+It is a common case (especially in video playback) that people want to 
+synchronize two elements (audio and video output), so that they report the same
+time. This is an unsolved problem in GStreamer and is only handled implicitly.
+To aid in this, clocks have "clock events". An event happens when an element 
+does something, for example changing states. Because people want to set the 
+states of multiple elements at once, but computers serialize everything, the
+actual state setting on the elements is serialized, too. If however such events
+happen shortly after each other, GStreamer assumes they were meant to happen at
+the same time and handles this as such.
+

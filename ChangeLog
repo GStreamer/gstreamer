@@ -1,3 +1,8 @@
+2004-01-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* docs/random/company/time:
+	  Add some docs about clocking and time
+
 2004-01-28  Julien MOUTTE <julien@moutte.net>
 
 	* docs/pwg/advanced-interfaces.xml: Adding XOverlay documentation.
