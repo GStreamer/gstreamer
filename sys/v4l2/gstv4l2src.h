@@ -44,11 +44,14 @@ struct _GstV4l2Src {
 	/* pads */
 	GstPad *srcpad;
 
+	/* internal lists */
+	GList /*v4l2_fmtdesc*/ *formats; /* list of available capture formats */
+
 	/* buffer properties */
 	struct v4l2_buffer bufsettings;
 	struct v4l2_requestbuffers breq;
 	struct v4l2_format format;
-	stamp_t first_timestamp;
+	guint64 first_timestamp;
 
 	/* bufferpool for the buffers we're gonna use */
 	GstBufferPool *bufferpool;

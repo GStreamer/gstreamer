@@ -42,6 +42,62 @@
 
 
 /******************************************************
+ * gst_v4l2src_fill_format_list():
+ *   create list of supported capture formats
+ * return value: TRUE on success, FALSE on error
+ ******************************************************/
+
+gboolean
+gst_v4l2src_fill_format_list (GstV4l2Src *v4l2src)
+{
+	gint n;
+
+	DEBUG("getting src format enumerations");
+
+	/* format enumeration */
+	for (n=0;;n++) {
+		struct v4l2_fmtdesc format, *fmtptr;
+		format.index = n;
+		format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_ENUM_FMT, &format) < 0) {
+			if (errno == EINVAL)
+				break; /* end of enumeration */
+			else {
+				gst_element_error(GST_ELEMENT(v4l2src),
+					"Failed to get no. %d in pixelformat enumeration for %s: %s",
+					n, GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
+				return FALSE;
+			}
+		}
+		fmtptr = g_malloc(sizeof(format));
+		memcpy(fmtptr, &format, sizeof(format));
+		v4l2src->formats = g_list_append(v4l2src->formats, fmtptr);
+	}
+
+	return TRUE;
+}
+
+
+/******************************************************
+ * gst_v4l2src_empty_format_list():
+ *   free list of supported capture formats
+ * return value: TRUE on success, FALSE on error
+ ******************************************************/
+
+gboolean
+gst_v4l2src_empty_format_list (GstV4l2Src *v4l2src)
+{
+	while (g_list_length(v4l2src->formats) > 0) {
+		gpointer data = g_list_nth_data(v4l2src->formats, 0);
+		v4l2src->formats = g_list_remove(v4l2src->formats, data);
+		g_free(data);
+	}
+
+	return TRUE;
+}
+
+
+/******************************************************
  * gst_v4l2src_queue_frame():
  *   queue a frame for capturing
  * return value: TRUE on success, FALSE on error
@@ -101,6 +157,7 @@ gst_v4l2src_get_capture (GstV4l2Src *v4l2src)
 
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 
+	v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Failed to get pixel format for device %s: %s",
@@ -134,12 +191,7 @@ gst_v4l2src_set_capture (GstV4l2Src          *v4l2src,
 	v4l2src->format.fmt.pix.width = width;
 	v4l2src->format.fmt.pix.height = height;
 	v4l2src->format.fmt.pix.pixelformat = fmt->pixelformat;
-	if (fmt->flags & V4L2_FMT_FLAG_COMPRESSED) {
-		v4l2src->format.fmt.pix.flags = V4L2_FMT_FLAG_COMPRESSED;
-		v4l2src->format.type = V4L2_BUF_TYPE_CODECIN;
-	} else {
-		v4l2src->format.type = V4L2_BUF_TYPE_CAPTURE;
-	}
+	v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_S_FMT, &v4l2src->format) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
@@ -189,8 +241,8 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 	}
 	v4l2src->bufsettings.type = v4l2src->format.type;
 
-	for (n=0;n<g_list_length(GST_V4L2ELEMENT(v4l2src)->formats);n++) {
-		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->formats, n);
+	for (n=0;n<g_list_length(v4l2src->formats);n++) {
+		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, n);
 		if (v4l2src->format.fmt.pix.pixelformat == fmt->pixelformat) {
 			desc = fmt->description;
 			break;
@@ -359,11 +411,10 @@ GList *
 gst_v4l2src_get_fourcc_list (GstV4l2Src *v4l2src)
 {
 	GList *list = NULL;
-	GstV4l2Element *v4l2element = GST_V4L2ELEMENT(v4l2src);
 	gint n;
 
-	for (n=0;n<g_list_length(v4l2element->formats);n++) {
-		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2element->formats, n);
+	for (n=0;n<g_list_length(v4l2src->formats);n++) {
+		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, n);
 		guint32 print_format = GUINT32_FROM_LE(fmt->pixelformat);
 		gchar *print_format_str = (gchar *) &print_format;
 
@@ -384,11 +435,10 @@ GList *
 gst_v4l2src_get_format_list (GstV4l2Src *v4l2src)
 {
 	GList *list = NULL;
-	GstV4l2Element *v4l2element = GST_V4L2ELEMENT(v4l2src);
 	gint n;
 
-	for (n=0;n<g_list_length(v4l2element->formats);n++) {
-		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2element->formats, n);
+	for (n=0;n<g_list_length(v4l2src->formats);n++) {
+		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, n);
 
 		list = g_list_append(list, g_strdup(fmt->description));
 	}
