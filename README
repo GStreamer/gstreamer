@@ -8,6 +8,7 @@ interface hopefully is generic enough for various companies (ahem, Apple)
 to release binary codecs for Linux, until such time as they get a clue and
 release the source.
 
+
 COMPILING FROM SOURCE
 ---------------------
 - check output of ./configure --help to see if any options apply to you
