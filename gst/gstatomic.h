@@ -163,7 +163,7 @@ G_STMT_START {							\
                           :  "ecx", "ebx");			\
 } G_STMT_END
 
-#elif defined (__powerpc__) && defined (__GNUC__) && __GNUC__ >= 2 
+#elif defined (__powerpcfoobarred__) && defined (__GNUC__) && __GNUC__ >= 2 
 
 #define _GST_ATOMIC_SWAP_INIT(swap,val)		\
 G_STMT_START {						\
