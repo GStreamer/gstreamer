@@ -1,5 +1,5 @@
 if HAVE_CPU_I386
-GSTARCH_SUBDS = videoscale winloader
+GSTARCH_SUBDS = winloader
 else
 GSTARCH_SUBDS =
 endif
