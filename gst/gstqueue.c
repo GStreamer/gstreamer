@@ -67,6 +67,24 @@ enum
       /* FILL ME */
 };
 
+#define GST_QUEUE_MUTEX_LOCK G_STMT_START {				\
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue,				\
+      "locking qlock from thread %p",					\
+      g_thread_self ());						\
+  g_mutex_lock (queue->qlock);						\
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue,				\
+      "locked qlock from thread %p",					\
+      g_thread_self ());						\
+} G_STMT_END
+
+#define GST_QUEUE_MUTEX_UNLOCK G_STMT_START {				\
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue,				\
+      "unlocking qlock from thread %p",					\
+      g_thread_self ());						\
+  g_mutex_unlock (queue->qlock);					\
+} G_STMT_END
+
+
 typedef struct _GstQueueEventResponse
 {
   GstEvent *event;
@@ -77,7 +95,7 @@ GstQueueEventResponse;
 static void gst_queue_base_init (GstQueueClass * klass);
 static void gst_queue_class_init (GstQueueClass * klass);
 static void gst_queue_init (GstQueue * queue);
-static void gst_queue_dispose (GObject * object);
+static void gst_queue_finalize (GObject * object);
 
 static void gst_queue_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -232,7 +250,7 @@ gst_queue_class_init (GstQueueClass * klass)
           0, G_MAXUINT64, -1, G_PARAM_READWRITE));
 
   /* set several parent class virtual functions */
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_queue_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
 
@@ -295,12 +313,13 @@ gst_queue_init (GstQueue * queue)
       "initialized queue's not_empty & not_full conditions");
 }
 
+/* called only once, as opposed to dispose */
 static void
-gst_queue_dispose (GObject * object)
+gst_queue_finalize (GObject * object)
 {
   GstQueue *queue = GST_QUEUE (object);
 
-  gst_element_set_state (GST_ELEMENT (queue), GST_STATE_NULL);
+  GST_DEBUG_OBJECT (queue, "finalizing queue");
 
   while (!g_queue_is_empty (queue->queue)) {
     GstData *data = g_queue_pop_head (queue->queue);
@@ -322,8 +341,8 @@ gst_queue_dispose (GObject * object)
   g_mutex_free (queue->event_lock);
   g_queue_free (queue->events);
 
-  if (G_OBJECT_CLASS (parent_class)->dispose)
-    G_OBJECT_CLASS (parent_class)->dispose (object);
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -454,9 +473,7 @@ gst_queue_chain (GstPad * pad, GstData * data)
 
 restart:
   /* we have to lock the queue since we span threads */
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locking t:%p", g_thread_self ());
-  g_mutex_lock (queue->qlock);
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locked t:%p", g_thread_self ());
+  GST_QUEUE_MUTEX_LOCK;
 
   gst_queue_handle_pending_events (queue);
 
@@ -495,9 +512,9 @@ restart:
               queue->cur_level.bytes >= queue->max_size.bytes) ||
           (queue->max_size.time > 0 &&
               queue->cur_level.time >= queue->max_size.time))) {
-    g_mutex_unlock (queue->qlock);
+    GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_OVERRUN], 0);
-    g_mutex_lock (queue->qlock);
+    GST_QUEUE_MUTEX_LOCK;
 
     /* how are we going to make space for this buffer? */
     switch (queue->leaky) {
@@ -506,7 +523,7 @@ restart:
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on upstream end");
         /* now we can clean up and exit right away */
-        g_mutex_unlock (queue->qlock);
+        GST_QUEUE_MUTEX_UNLOCK;
         goto out_unref;
 
         /* leak first buffer in the queue */
@@ -569,7 +586,7 @@ restart:
            * half of state change executes */
           if (queue->interrupt) {
             GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
-            g_mutex_unlock (queue->qlock);
+            GST_QUEUE_MUTEX_UNLOCK;
             if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->sinkpad),
                     GST_ELEMENT (queue))) {
               goto out_unref;
@@ -591,7 +608,7 @@ restart:
             /* this means the other end is shut down. Try to
              * signal to resolve the error */
             if (!queue->may_deadlock) {
-              g_mutex_unlock (queue->qlock);
+              GST_QUEUE_MUTEX_UNLOCK;
               gst_data_unref (data);
               GST_ELEMENT_ERROR (queue, CORE, THREAD, (NULL),
                   ("deadlock found, shutting down source pad elements"));
@@ -613,15 +630,15 @@ restart:
            * that, we handle pending upstream events here, too. */
           gst_queue_handle_pending_events (queue);
 
-          STATUS (queue, "waiting for item_del signal");
+          STATUS (queue, "waiting for item_del signal from thread using qlock");
           g_cond_wait (queue->item_del, queue->qlock);
-          STATUS (queue, "received item_del signal");
+          STATUS (queue, "received item_del signal from thread using qlock");
         }
 
         STATUS (queue, "post-full wait");
-        g_mutex_unlock (queue->qlock);
+        GST_QUEUE_MUTEX_UNLOCK;
         g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_RUNNING], 0);
-        g_mutex_lock (queue->qlock);
+        GST_QUEUE_MUTEX_LOCK;
         break;
     }
   }
@@ -645,7 +662,7 @@ restart:
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_add");
   g_cond_signal (queue->item_add);
-  g_mutex_unlock (queue->qlock);
+  GST_QUEUE_MUTEX_UNLOCK;
 
   return;
 
@@ -667,9 +684,7 @@ gst_queue_get (GstPad * pad)
 
 restart:
   /* have to lock for thread-safety */
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locking t:%p", g_thread_self ());
-  g_mutex_lock (queue->qlock);
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locked t:%p", g_thread_self ());
+  GST_QUEUE_MUTEX_LOCK;
 
   if (queue->queue->length == 0 ||
       (queue->min_threshold.buffers > 0 &&
@@ -678,9 +693,9 @@ restart:
           queue->cur_level.bytes < queue->min_threshold.bytes) ||
       (queue->min_threshold.time > 0 &&
           queue->cur_level.time < queue->min_threshold.time)) {
-    g_mutex_unlock (queue->qlock);
+    GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_UNDERRUN], 0);
-    g_mutex_lock (queue->qlock);
+    GST_QUEUE_MUTEX_LOCK;
 
     STATUS (queue, "pre-empty wait");
     while (queue->queue->length == 0 ||
@@ -695,7 +710,7 @@ restart:
        * change executes. */
       if (queue->interrupt) {
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
-        g_mutex_unlock (queue->qlock);
+        GST_QUEUE_MUTEX_UNLOCK;
         if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->srcpad),
                 GST_ELEMENT (queue)))
           return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
@@ -704,7 +719,7 @@ restart:
       if (GST_STATE (queue) != GST_STATE_PLAYING) {
         /* this means the other end is shut down */
         if (!queue->may_deadlock) {
-          g_mutex_unlock (queue->qlock);
+          GST_QUEUE_MUTEX_UNLOCK;
           GST_ELEMENT_ERROR (queue, CORE, THREAD, (NULL),
               ("deadlock found, shutting down sink pad elements"));
           goto restart;
@@ -722,22 +737,28 @@ restart:
 
         g_get_current_time (&timeout);
         g_time_val_add (&timeout, queue->block_timeout / 1000);
+        GST_LOG_OBJECT (queue, "g_cond_time_wait using qlock from thread %p",
+            g_thread_self ());
         if (!g_cond_timed_wait (queue->item_add, queue->qlock, &timeout)) {
-          g_mutex_unlock (queue->qlock);
+          GST_QUEUE_MUTEX_UNLOCK;
           GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
               "Sending filler event");
           return GST_DATA (gst_event_new_filler ());
         }
       } else {
+        GST_LOG_OBJECT (queue, "doing g_cond_wait using qlock from thread %p",
+            g_thread_self ());
         g_cond_wait (queue->item_add, queue->qlock);
+        GST_LOG_OBJECT (queue, "done g_cond_wait using qlock from thread %p",
+            g_thread_self ());
       }
       STATUS (queue, "got item_add signal");
     }
 
     STATUS (queue, "post-empty wait");
-    g_mutex_unlock (queue->qlock);
+    GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_RUNNING], 0);
-    g_mutex_lock (queue->qlock);
+    GST_QUEUE_MUTEX_LOCK;
   }
 
   /* There's something in the list now, whatever it is */
@@ -764,7 +785,7 @@ restart:
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_del");
   g_cond_signal (queue->item_del);
-  g_mutex_unlock (queue->qlock);
+  GST_QUEUE_MUTEX_UNLOCK;
 
   /* FIXME: I suppose this needs to be locked, since the EOS
    * bit affects the pipeline state. However, that bit is
@@ -795,7 +816,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
       event, GST_EVENT_TYPE (event));
-  g_mutex_lock (queue->qlock);
+  GST_QUEUE_MUTEX_LOCK;
 
   if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
     GstQueueEventResponse er;
@@ -818,6 +839,8 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 
       g_get_current_time (&timeout);
       g_time_val_add (&timeout, 500 * 1000);    /* half a second */
+      GST_LOG_OBJECT (queue, "doing g_cond_wait using qlock from thread %p",
+          g_thread_self ());
       if (!g_cond_timed_wait (queue->event_done, queue->qlock, &timeout) &&
           !er.handled) {
         GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
@@ -856,7 +879,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
     }
   }
 handled:
-  g_mutex_unlock (queue->qlock);
+  GST_QUEUE_MUTEX_UNLOCK;
 
   return res;
 }
@@ -868,11 +891,11 @@ gst_queue_release_locks (GstElement * element)
 
   queue = GST_QUEUE (element);
 
-  g_mutex_lock (queue->qlock);
+  GST_QUEUE_MUTEX_LOCK;
   queue->interrupt = TRUE;
   g_cond_signal (queue->item_add);
   g_cond_signal (queue->item_del);
-  g_mutex_unlock (queue->qlock);
+  GST_QUEUE_MUTEX_UNLOCK;
 
   return TRUE;
 }
@@ -890,7 +913,7 @@ gst_queue_change_state (GstElement * element)
   /* lock the queue so another thread (not in sync with this thread's state)
    * can't call this queue's _get (or whatever)
    */
-  g_mutex_lock (queue->qlock);
+  GST_QUEUE_MUTEX_LOCK;
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
@@ -904,7 +927,7 @@ gst_queue_change_state (GstElement * element)
         g_cond_signal (queue->item_add);
 
         ret = GST_STATE_FAILURE;
-        goto error;
+        goto unlock;
       } else {
         GstScheduler *src_sched, *sink_sched;
 
@@ -920,7 +943,7 @@ gst_queue_change_state (GstElement * element)
               GST_ELEMENT_NAME (queue));
 
           ret = GST_STATE_FAILURE;
-          goto error;
+          goto unlock;
         }
       }
       queue->interrupt = FALSE;
@@ -942,8 +965,8 @@ gst_queue_change_state (GstElement * element)
   gst_pad_set_active (queue->sinkpad, TRUE);
   gst_pad_set_active (queue->srcpad, TRUE);
 
-error:
-  g_mutex_unlock (queue->qlock);
+unlock:
+  GST_QUEUE_MUTEX_UNLOCK;
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "done with state change");
 
@@ -959,7 +982,7 @@ gst_queue_set_property (GObject * object,
 
   /* someone could change levels here, and since this
    * affects the get/put funcs, we need to lock for safety. */
-  g_mutex_lock (queue->qlock);
+  GST_QUEUE_MUTEX_LOCK;
 
   switch (prop_id) {
     case ARG_MAX_SIZE_BYTES:
@@ -994,7 +1017,7 @@ gst_queue_set_property (GObject * object,
       break;
   }
 
-  g_mutex_unlock (queue->qlock);
+  GST_QUEUE_MUTEX_UNLOCK;
 }
 
 static void

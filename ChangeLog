@@ -1,5 +1,14 @@
 2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* gst/gstqueue.c: (gst_queue_class_init), (gst_queue_finalize),
+	(gst_queue_chain), (gst_queue_get), (gst_queue_handle_src_event),
+	(gst_queue_release_locks), (gst_queue_change_state),
+	(gst_queue_set_property):
+	  add proper lock debugging.  Change dispose to finalize, since
+	  we're freeing mutexes and other stuff which should happen only once.
+
+2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* docs/gst/tmpl/gstelement.sgml:
 	* docs/gst/tmpl/gstplugin.sgml:
 	* docs/gst/tmpl/gsttypes.sgml:
