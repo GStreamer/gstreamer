@@ -70,9 +70,11 @@ gst_caps_to_string (GstCaps *caps)
   gchar *ret;
   GString *result;
 
-  g_return_val_if_fail (caps != NULL, NULL);
-
   result = g_string_new ("");
+
+  if(caps==NULL){
+    g_string_append(result, "NULL");
+  }
 
   while (caps) {
     gchar *props;
