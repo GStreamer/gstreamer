@@ -21,7 +21,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\;..\;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_CONFIG_H"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories=".\;..\;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GST_DISABLE_GST_DEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GST_DISABLE_GST_DEBUG;HAVE_CONFIG_H"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"

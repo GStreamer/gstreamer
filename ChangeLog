@@ -1,3 +1,11 @@
+2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
+    * gst/gstplugin.c:
+      Fix an impossible C syntax
+    * win32/config.h:
+      Disable i18n under Windows for the moment
+    * win32/gst-register.vcproj:
+      Use this configuration
+
 2004-07-12  Jan Schmidt  <thaytan@mad.scientis.com>
 	* docs/manual/quotes.xml:
 	  Keep the quotes file alive

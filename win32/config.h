@@ -1,7 +1,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* always defined to indicate that i18n is enabled */
-#define ENABLE_NLS 1
+#define ENABLE_NLS 0
 
 /* gettext package name */
 #define GETTEXT_PACKAGE "gstreamer-0.8"

@@ -310,6 +310,7 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
 {
   GModule *module;
   struct stat file_status;
+  gpointer ptr;
 
   g_return_val_if_fail (filename != NULL, FALSE);
 
@@ -336,7 +337,6 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
         "Error loading plugin %s, reason: %s\n", filename, g_module_error ());
     return FALSE;
   }
-  gpointer ptr;
 
   if (!g_module_symbol (module, "gst_plugin_desc", &ptr)) {
     GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
