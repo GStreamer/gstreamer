@@ -370,7 +370,7 @@ gst_vorbisfile_loop (GstElement *element)
           }
 	}
 	break;
-      case GST_FORMAT_SAMPLES:
+      case GST_FORMAT_UNIT:
 	if (vorbisfile->seek_accurate) {
           if (ov_pcm_seek (&vorbisfile->vf, (gdouble) vorbisfile->seek_value / GST_SECOND) == 0) {
             vorbisfile->need_discont = TRUE;
@@ -398,7 +398,7 @@ gst_vorbisfile_loop (GstElement *element)
     samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
 
     discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
-		    				  GST_FORMAT_SAMPLES, samples, NULL); 
+		    				  GST_FORMAT_UNIT, samples, NULL); 
 
     vorbisfile->need_discont = FALSE;
     gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
@@ -463,7 +463,7 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
     case GST_PAD_QUERY_TOTAL:
     {
       switch (*format) {
-        case GST_FORMAT_SAMPLES:
+        case GST_FORMAT_UNIT:
 	  *value = ov_pcm_total (&vorbisfile->vf, -1);
 	  break;
         case GST_FORMAT_BYTES:
@@ -489,7 +489,7 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
         case GST_FORMAT_TIME:
 	  *value = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
 	  break;
-        case GST_FORMAT_SAMPLES:
+        case GST_FORMAT_UNIT:
 	  *value = ov_pcm_tell (&vorbisfile->vf);
 	  break;
         default:
@@ -522,10 +522,10 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 	  vorbisfile->seek_format = GST_FORMAT_TIME;
 	  vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_ACCURATE;
 	  break;
-	case GST_FORMAT_SAMPLES:
+	case GST_FORMAT_UNIT:
 	  vorbisfile->seek_pending = TRUE;
 	  vorbisfile->seek_value = GST_EVENT_SEEK_OFFSET (event);
-	  vorbisfile->seek_format = GST_FORMAT_SAMPLES;
+	  vorbisfile->seek_format = GST_FORMAT_UNIT;
 	  vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_ACCURATE;
 	  break;
 	default:
