@@ -75,7 +75,7 @@ struct _GstRevTVClass
 GstElementDetails gst_revtv_details = {
   "RevTV",
   "Filter/Effect",
-  "A loopback alpha blending effector with rotating and scaling",
+  "A video waveform monitor for each line of video processed",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2001 FUKUCHI Kentarou,"
