@@ -104,7 +104,9 @@ struct _GstSchedulerClass {
   /* for debugging */
   void 			(*show)			(GstScheduler *sched);
 
-  /* signals go here */
+  /* signals */
+  void                  (*object_sync)          (GstScheduler *sched, GstClock *clock, GstObject *object,
+			                         GstClockID id);
 };
 
 GType			gst_scheduler_get_type		(void);
