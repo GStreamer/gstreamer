@@ -360,6 +360,7 @@ gst_modplug_src_event (GstPad *pad, GstEvent *event)
     res = FALSE;
     break;
   }
+  gst_event_unref (event);
 
   return res;
 }
@@ -385,17 +386,26 @@ gst_modplug_loop (GstElement *element)
     if ( GST_IS_EVENT (buffer_in) ) {
       GstEvent *event = GST_EVENT (buffer_in);
 		
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
+      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+         gst_event_unref (event);
          break;
+      }
+      gst_event_unref (event);
     }
     else
     {
       if ( modplug->Buffer ) {	 
-        modplug->Buffer = gst_buffer_append( modplug->Buffer, buffer_in );
+        GstBuffer *merge;
+
+        merge = gst_buffer_merge( modplug->Buffer, buffer_in );
         gst_buffer_unref( buffer_in );	 	  
+        gst_buffer_unref( modplug->Buffer );	 	  
+
+	modplug->Buffer = merge;
       }
-      else
+      else {
         modplug->Buffer = buffer_in;
+      }
     }
   }  
 

@@ -257,9 +257,15 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
  
 
   if (mp1videoparse->partialbuf) {
+    GstBuffer *merge;
+
     offset = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
-    mp1videoparse->partialbuf = gst_buffer_append(mp1videoparse->partialbuf, buf);
+    merge = gst_buffer_merge(mp1videoparse->partialbuf, buf);
+
+    gst_buffer_unref(mp1videoparse->partialbuf);
     gst_buffer_unref(buf);
+
+    mp1videoparse->partialbuf = merge;
   }
   else {
     mp1videoparse->partialbuf = buf;

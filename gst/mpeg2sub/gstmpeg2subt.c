@@ -366,7 +366,7 @@ gst_mpeg2subt_chain_subtitle (GstPad *pad, GstBuffer *buf)
   /* deal with partial frame from previous buffer */
   if (mpeg2subt->partialbuf) {
 
-    mpeg2subt->partialbuf = gst_buffer_append(mpeg2subt->partialbuf, buf);;
+    mpeg2subt->partialbuf = gst_buffer_merge(mpeg2subt->partialbuf, buf);;
     /* and the one we received.. */
     gst_buffer_unref(buf);
   }
