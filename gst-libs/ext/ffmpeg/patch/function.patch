@@ -63,3 +63,13 @@ diff -urN ffmpeg.patch/libavformat/wav.c ffmpeg/libavformat/wav.c
      av_register_input_format(&wav_iformat);
      av_register_output_format(&wav_oformat);
 }
+--- ffmpeg.patch/libavformat/grab.c	Fri Apr  4 23:14:14 2003
++++ ffmpeg/libavformat/grab.c	Fri Apr  4 23:14:27 2003
+@@ -17,6 +17,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  */
+ #include "avformat.h"
++#define _LINUX_TIME_H
+ #include <linux/videodev.h>
+ #include <unistd.h>
+ #include <fcntl.h>
