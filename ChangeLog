@@ -1,3 +1,12 @@
+2004-08-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
+	(theora_get_formats), (theora_dec_src_convert),
+	(theora_dec_sink_convert), (theora_dec_src_query),
+	(theora_dec_src_event), (theora_dec_event), (theora_dec_chain),
+	(theora_dec_change_state):
+	Don't crash on missing header packets.
+
 2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:
