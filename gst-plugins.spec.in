@@ -341,6 +341,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 # @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2play*
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2enc*
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2subt*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2types*
 # @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp2videoparse*
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
@@ -384,7 +385,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_OPENQUICKTIME_TRUE@Summary: GStreamer OpenQuicktime video Plugin
 @USE_OPENQUICKTIME_TRUE@Group: Libraries/Multimedia
 @USE_OPENQUICKTIME_TRUE@Requires: gstreamer >= %{ver}
-@USE_OPENQUICKTIME_TRUE@Requires: OpenQuicktime = 20010429
+@USE_OPENQUICKTIME_TRUE@Requires: OpenQuicktime => 1.0
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%description -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@Plugin which uses the OpenQuicktime library
