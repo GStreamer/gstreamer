@@ -30,11 +30,8 @@
 static GstElementDetails gst_mplex_details = {
   "MPlex multiplexer",
   "Codec/Audio/Decoder",
-  "GPL",
   "multiplex mpeg audio and video into a system stream",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be> ",
-  "(C) 2002",
 };
 
 /* Sidec signals and args */
@@ -136,6 +133,7 @@ gst_mplex_mux_format_get_type (void)
   return mplex_mux_format_type;
 }
 
+static void     gst_mplex_base_init             (gpointer g_class);
 static void 	gst_mplex_class_init		(GstMPlex *klass);
 static void 	gst_mplex_init			(GstMPlex *mplex);
 
@@ -166,7 +164,7 @@ gst_mplex_get_type (void)
   if (!mplex_type) {
     static const GTypeInfo mplex_info = {
       sizeof(GstMPlexClass),      
-      NULL,
+      gst_mplex_base_init,
       NULL,
       (GClassInitFunc) gst_mplex_class_init,
       NULL,
@@ -180,6 +178,20 @@ gst_mplex_get_type (void)
   }
 
   return mplex_type;
+}
+
+static void
+gst_mplex_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (audio_sink_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (video_sink_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (private_1_sink_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (private_2_sink_factory));
+
+  gst_element_class_set_details (element_class, &gst_mplex_details);
 }
 
 static void
@@ -573,35 +585,26 @@ gst_mplex_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* this filter needs the bytestream package */
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  /* create an elementfactory for the avi_demux element */
-  factory = gst_element_factory_new ("mplex",GST_TYPE_MPLEX,
-                                    &gst_mplex_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private_1_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private_2_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "mplex", GST_RANK_NONE, GST_TYPE_MPLEX))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "mplex",
-  plugin_init
-};
+  "MPlexs an audio and video stream into a system stream",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 
