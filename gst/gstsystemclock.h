@@ -47,9 +47,6 @@ typedef struct _GstSystemClockClass GstSystemClockClass;
 
 struct _GstSystemClock {
   GstClock clock;
-
-  GstClockTime absolute_start;
-  GstClockTime current_time;
 };
 
 struct _GstSystemClockClass {

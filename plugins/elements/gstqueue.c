@@ -83,7 +83,6 @@ static GstBuffer *		gst_queue_get			(GstPad *pad);
 static GstBufferPool* 		gst_queue_get_bufferpool 	(GstPad *pad);
 	
 static void			gst_queue_locked_flush			(GstQueue *queue);
-static void			gst_queue_flush			(GstQueue *queue);
 
 static GstElementStateReturn	gst_queue_change_state		(GstElement *element);
 
@@ -275,15 +274,6 @@ gst_queue_locked_flush (GstQueue *queue)
 }
 
 static void
-gst_queue_flush (GstQueue *queue)
-{
-  g_mutex_lock (queue->qlock);
-  gst_queue_locked_flush (queue);
-  g_mutex_unlock (queue->qlock);
-}
-
-
-static void
 gst_queue_chain (GstPad *pad, GstBuffer *buf)
 {
   GstQueue *queue;
@@ -378,7 +368,7 @@ restart:
 	  return;
 	}
 	else {
-          gst_element_info (GST_ELEMENT (queue), "waiting for the app to restart source pad elements");
+          g_print ("%s: waiting for the app to restart source pad elements\n", GST_ELEMENT_NAME (queue));
 	}
       }
 
@@ -459,7 +449,7 @@ restart:
         goto restart;
       }
       else {
-        gst_element_info (GST_ELEMENT (queue), "waiting for the app to restart sink pad elements");
+        g_print ("%s: waiting for the app to restart source pad elements\n", GST_ELEMENT_NAME (queue));
       }
     }
 

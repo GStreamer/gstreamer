@@ -152,78 +152,16 @@ gst_bin_new (const gchar * name)
   return gst_elementfactory_make ("bin", name);
 }
 
-static inline void
-gst_bin_reset_element_sched (GstElement * element, GstScheduler * sched)
-{
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "resetting element's scheduler");
-
-  gst_element_set_sched (element, sched);
-}
-
-
-static void
-gst_bin_get_clock_elements (GstBin *bin, GList **needing, GList **providing) 
-{
-  GList *children = gst_bin_get_list (bin);
-
-  while (children) {
-    GstElement *child = GST_ELEMENT (children->data);
-
-    if (GST_IS_BIN (child)) {
-      gst_bin_get_clock_elements (GST_BIN (child), needing, providing);
-    }
-    if (child->getclockfunc) {
-      *providing = g_list_prepend (*providing, child);
-    }
-    if (child->setclockfunc) {
-      *needing = g_list_prepend (*needing, child);
-    }
-	
-    children = g_list_next (children);
-  }
-}
-
-static void
-gst_bin_distribute_clock (GstBin *bin, GList *needing, GstClock *clock)
-{
-  while (needing) {
-    GST_DEBUG (GST_CAT_CLOCK, "setting clock on %s", GST_ELEMENT_NAME (needing->data));
-    gst_element_set_clock (GST_ELEMENT (needing->data), clock);
-
-    needing = g_list_next (needing);
-  }
-}
-
-static void
-gst_bin_distribute_clocks (GstBin *bin)
-{
-  GList *needing = NULL, *providing = NULL;
-  GstClock *clock;
-      
-  gst_bin_get_clock_elements (bin, &needing, &providing);
-
-  if (GST_FLAG_IS_SET (bin, GST_BIN_FLAG_FIXED_CLOCK)) {
-    clock = bin->clock;
-  }
-  else if (providing) {
-    clock = gst_element_get_clock (GST_ELEMENT (providing->data));	
-  }
-  else {
-    GST_DEBUG (GST_CAT_CLOCK, "no clock provided, using default clock");
-    clock = gst_system_clock_obtain ();
-  }
-
-  GST_BIN_CLOCK (bin) = clock;
-  gst_bin_distribute_clock (bin, needing, clock);
-}
-
 GstClock*
 gst_bin_get_clock (GstBin *bin)
 {
   g_return_val_if_fail (bin != NULL, NULL);
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
-  return GST_BIN_CLOCK (bin);
+  if (GST_ELEMENT_SCHED (bin)) 
+    return gst_scheduler_get_clock (GST_ELEMENT_SCHED (bin));
+
+  return NULL;
 }
 
 void
@@ -232,8 +170,8 @@ gst_bin_use_clock (GstBin *bin, GstClock *clock)
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
-  GST_FLAG_SET (bin, GST_BIN_FLAG_FIXED_CLOCK);
-  GST_BIN_CLOCK (bin) = clock;
+  if (GST_ELEMENT_SCHED (bin)) 
+    gst_scheduler_use_clock (GST_ELEMENT_SCHED (bin), clock);
 }
 
 void
@@ -242,12 +180,12 @@ gst_bin_auto_clock (GstBin *bin)
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
-  GST_FLAG_UNSET (bin, GST_BIN_FLAG_FIXED_CLOCK);
-  GST_BIN_CLOCK (bin) = NULL;
+  if (GST_ELEMENT_SCHED (bin)) 
+    gst_scheduler_auto_clock (GST_ELEMENT_SCHED (bin));
 }
 
 static void
-gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
+gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
 {
   GList *children;
   GstElement *child;
@@ -264,6 +202,7 @@ gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
   if (GST_IS_BIN (element)) {
     if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
       GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not resetting");
+      gst_scheduler_add_scheduler (sched, GST_ELEMENT_SCHED (element));
       return;
     }
 
@@ -278,7 +217,6 @@ gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
 
       gst_bin_set_element_sched (child, sched);
     }
-
   }
   /* otherwise, if it's just a regular old element */
   else {
@@ -288,7 +226,7 @@ gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
 
 
 static void
-gst_bin_unset_element_sched (GstElement * element)
+gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
 {
   GList *children;
   GstElement *child;
@@ -302,7 +240,7 @@ gst_bin_unset_element_sched (GstElement * element)
     return;
   }
   
-  GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from it sched %p",
+  GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from its sched %p",
 	    GST_ELEMENT_NAME (element), GST_ELEMENT_SCHED (element));
 
   /* if it's actually a Bin */
@@ -311,20 +249,21 @@ gst_bin_unset_element_sched (GstElement * element)
     if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
       GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element,
 			"child is already a manager, not unsetting sched");
+      if (sched) {
+        gst_scheduler_remove_scheduler (sched, GST_ELEMENT_SCHED (element));
+      }
       return;
     }
-
-    gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
-
     /* for each child, remove them from their schedule */
     children = GST_BIN (element)->children;
     while (children) {
       child = GST_ELEMENT (children->data);
       children = g_list_next (children);
 
-      gst_bin_unset_element_sched (child);
+      gst_bin_unset_element_sched (child, sched);
     }
 
+    gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
   }
   /* otherwise, if it's just a regular old element */
   else {
@@ -372,10 +311,11 @@ gst_bin_add_many (GstBin *bin, GstElement *element_1, ...)
  * add a reference.
  */
 void
-gst_bin_add (GstBin * bin, GstElement * element)
+gst_bin_add (GstBin *bin, GstElement *element)
 {
   gint state_idx = 0;
   GstElementState state;
+  GstScheduler *sched;
 
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
@@ -409,11 +349,9 @@ gst_bin_add (GstBin * bin, GstElement * element)
   /* now we have to deal with manager stuff 
    * we can only do this if there's a scheduler: 
    * if we're not a manager, and aren't attached to anything, we have no sched (yet) */
-  if (GST_IS_BIN (element) && GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
-    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is a manager");
-  }
-  else if (GST_ELEMENT_SCHED (bin) != NULL) {
-    gst_bin_set_element_sched (element, GST_ELEMENT_SCHED (bin));
+  sched = GST_ELEMENT_SCHED (bin);
+  if (sched) {
+    gst_bin_set_element_sched (element, sched);
   }
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
@@ -429,7 +367,7 @@ gst_bin_add (GstBin * bin, GstElement * element)
  * Remove the element from its associated bin, unparenting as well.
  */
 void
-gst_bin_remove (GstBin * bin, GstElement * element)
+gst_bin_remove (GstBin *bin, GstElement *element)
 {
   gint state_idx = 0;
   GstElementState state;
@@ -456,7 +394,7 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   }
 
   /* remove this element from the list of managed elements */
-  gst_bin_unset_element_sched (element);
+  gst_bin_unset_element_sched (element, GST_ELEMENT_SCHED (bin));
 
   /* now remove the element from the list of elements */
   bin->children = g_list_remove (bin->children, element);
@@ -504,7 +442,7 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
   GST_LOCK (bin);
   bin->child_states[old_idx]--;
   bin->child_states[new_idx]++;
-
+  
   for (i = GST_NUM_STATES - 1; i >= 0; i--) {
     if (bin->child_states[i] != 0) {
       gint state = (1 << i);
@@ -512,7 +450,9 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
 	GST_INFO (GST_CAT_STATES, "bin %s need state change to %s",
 		  GST_ELEMENT_NAME (bin), gst_element_statename (state));
 	GST_STATE_PENDING (bin) = state;
+        GST_UNLOCK (bin);
 	gst_bin_change_state_norecurse (bin);
+	return;
       }
       break;
     }
@@ -542,7 +482,11 @@ gst_bin_change_state (GstElement * element)
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
 		    gst_element_statename (old_state), gst_element_statename (pending));
 
+  if (pending == GST_STATE_VOID_PENDING)
+    return GST_STATE_SUCCESS;
+
   children = bin->children;
+
   while (children) {
     child = GST_ELEMENT (children->data);
     children = g_list_next (children);
@@ -568,28 +512,6 @@ gst_bin_change_state (GstElement * element)
 	break;
     }
   }
-
-  if (GST_ELEMENT_SCHED (bin) != NULL && GST_ELEMENT_PARENT (bin) == NULL) {
-    switch (transition) {
-      case GST_STATE_NULL_TO_READY:
-        gst_bin_distribute_clocks (bin);
-	break;
-      case GST_STATE_READY_TO_PAUSED:
-        if (GST_BIN_CLOCK (bin))
-          gst_clock_reset (GST_BIN_CLOCK (bin));
-        break;
-      case GST_STATE_PAUSED_TO_PLAYING:
-        gst_bin_distribute_clocks (bin);
-        if (GST_BIN_CLOCK (bin))
-          gst_clock_activate (GST_BIN_CLOCK (bin), TRUE);
-        break;
-      case GST_STATE_PLAYING_TO_PAUSED:
-        if (GST_BIN_CLOCK (bin))
-          gst_clock_activate (GST_BIN_CLOCK (bin), FALSE);
-        break;
-    }
-  }
-
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s, now in %s",
                 gst_element_statename (old_state),

@@ -26,10 +26,10 @@
 #include "gstcaps.h"
 #include "gsttype.h"
 
-#include "gstpropsprivate.h"
-
 static GMemChunk *_gst_caps_chunk;
 static GMutex *_gst_caps_chunk_lock;
+
+GType _gst_caps_type;
 
 void
 _gst_caps_initialize (void)
@@ -38,6 +38,11 @@ _gst_caps_initialize (void)
                   sizeof (GstCaps), sizeof (GstCaps) * 256,
                   G_ALLOC_AND_FREE);
   _gst_caps_chunk_lock = g_mutex_new ();
+
+  _gst_caps_type = g_boxed_type_register_static ("GstCaps",
+                                       (GBoxedCopyFunc) gst_caps_ref,
+                                       (GBoxedFreeFunc) gst_caps_unref);
+
 }
 
 static guint16
@@ -104,7 +109,6 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
   caps->properties = props;
   caps->next = NULL;
   caps->refcount = 1;
-  caps->lock = g_mutex_new ();
   if (props)
     caps->fixed = props->fixed;
   else
@@ -128,11 +132,8 @@ gst_caps_destroy (GstCaps *caps)
   if (caps == NULL)
     return;
   
-  GST_CAPS_LOCK (caps);
   next = caps->next;
-  GST_CAPS_UNLOCK (caps);
 
-  g_mutex_free (caps->lock);
   gst_props_unref (caps->properties);
   g_free (caps->name);
   g_mutex_lock (_gst_caps_chunk_lock);
@@ -189,11 +190,9 @@ gst_caps_unref (GstCaps *caps)
 
   g_return_val_if_fail (caps->refcount > 0, NULL);
 
-  GST_CAPS_LOCK (caps);
   caps->refcount--;
   zero = (caps->refcount == 0);
   next = &caps->next;
-  GST_CAPS_UNLOCK (caps);
 
   if (*next)
     *next = gst_caps_unref (*next);
@@ -218,9 +217,7 @@ gst_caps_ref (GstCaps *caps)
 {
   g_return_val_if_fail (caps != NULL, NULL);
 
-  GST_CAPS_LOCK (caps);
   caps->refcount++;
-  GST_CAPS_UNLOCK (caps);
 
   return caps;
 }
@@ -296,9 +293,7 @@ gst_caps_copy_on_write (GstCaps *caps)
 
   g_return_val_if_fail (caps != NULL, NULL);
 
-  GST_CAPS_LOCK (caps);
   needcopy = (caps->refcount > 1);
-  GST_CAPS_UNLOCK (caps);
 
   if (needcopy) {
     new = gst_caps_copy (caps);
@@ -798,7 +793,6 @@ gst_caps_load_thyself (xmlNodePtr parent)
       g_mutex_unlock (_gst_caps_chunk_lock);
 
       caps->refcount = 1;
-      caps->lock = g_mutex_new ();
       caps->next = NULL;
       caps->fixed = TRUE;
 	

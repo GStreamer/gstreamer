@@ -30,12 +30,13 @@
 
 typedef struct _GstCaps GstCaps;
 
+extern GType _gst_caps_type;
+
+#define GST_TYPE_CAPS  (_get_caps_type)
+
+
 #define GST_CAPS(caps) \
   ((GstCaps *)(caps))
-
-#define GST_CAPS_LOCK(caps)    (g_mutex_lock(GST_CAPS(caps)->lock))
-#define GST_CAPS_TRYLOCK(caps) (g_mutex_trylock(GST_CAPS(caps)->lock))
-#define GST_CAPS_UNLOCK(caps)  (g_mutex_unlock(GST_CAPS(caps)->lock))
 
 #define GST_CAPS_IS_FIXED(caps)		((caps)->fixed)
 #define GST_CAPS_IS_CHAINED(caps)  	((caps)->next)
@@ -45,7 +46,6 @@ struct _GstCaps {
   guint16 	id;			/* type id (major type) */
 
   guint 	refcount;		
-  GMutex 	*lock;			/* global lock for this capability */
   gboolean 	fixed;			/* this caps doesn't contain variable properties */
 
   GstProps 	*properties;		/* properties for this capability */
@@ -104,14 +104,16 @@ GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);
 
 #define		gst_caps_set(caps, name, args...)	gst_props_set ((caps)->properties, name, args)
+#define		gst_caps_get(caps, name, args...)	gst_props_get ((caps)->properties, name, args)
 
-#define		gst_caps_get_int(caps, name)		gst_props_get_int ((caps)->properties, name)
-#define		gst_caps_get_float(caps, name)		gst_props_get_float ((caps)->properties, name)
-#define		gst_caps_get_fourcc_int(caps, name)	gst_props_get_fourcc_int ((caps)->properties, name)
-#define		gst_caps_get_boolean(caps, name)	gst_props_get_boolean ((caps)->properties, name)
-#define		gst_caps_get_string(caps, name)		gst_props_get_string ((caps)->properties, name)
+#define		gst_caps_get_int(caps,name,res)		gst_props_entry_get_int(gst_props_get_entry((caps)->properties,name),res)
+#define		gst_caps_get_float(caps,name,res)	gst_props_entry_get_float(gst_props_get_entry((caps)->properties,name),res)
+#define		gst_caps_get_fourcc_int(caps,name,res)	gst_props_entry_get_fourcc_int(gst_props_get_entry((caps)->properties,name),res)
+#define		gst_caps_get_boolean(caps,name,res)	gst_props_entry_get_boolean(gst_props_get_entry((caps)->properties,name),res)
+#define		gst_caps_get_string(caps,name,res)	gst_props_entry_get_string(gst_props_get_entry((caps)->properties,name),res)
 
 #define		gst_caps_has_property(caps, name)	gst_props_has_property ((caps)->properties, name)
+#define		gst_caps_has_property_typed(caps, name)	gst_props_has_property_typed ((caps)->properties, name)
 #define		gst_caps_has_fixed_property(caps, name)	gst_props_has_fixed_property ((caps)->properties, name)
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);

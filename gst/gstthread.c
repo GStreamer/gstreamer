@@ -140,6 +140,7 @@ gst_thread_init (GstThread *thread)
 
   /* we're a manager by default */
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
+  GST_FLAG_SET (thread, GST_BIN_SELF_SCHEDULABLE);
 
   schedname = gst_schedulerfactory_get_default_name ();
 

@@ -199,28 +199,6 @@ gst_util_get_pointer_arg (GObject * object, const gchar * argname)
 }
 
 /**
- * gst_util_get_widget_property:
- * @object: the object to query
- * @argname: the name of the argument
- *
- * Retrieves a property of an object as a widget.
- *
- * Returns: the property of the object
- */
-/* COMMENTED OUT BECAUSE WE HAVE NO MORE gtk.h
-GtkWidget*
-gst_util_get_widget_property (GObject *object, const gchar *argname) 
-{
-  GtkArg arg;
-
-  arg.name = argname;
-  gtk_object_getv(G_OBJECT(object),1,&arg);
-  
-  return GTK_WIDGET(G_VALUE_OBJECT(arg));
-}
-*/
-
-/**
  * gst_util_dump_mem:
  * @mem: a pointer to the memory to dump
  * @size: the size of the memory block to dump
@@ -448,7 +426,6 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
 #include "gstpad.h"
 #include "gsttype.h"
 #include "gstprops.h"
-#include "gstpropsprivate.h"
 
 static void
 string_append_indent (GString * str, gint count)
@@ -460,15 +437,16 @@ string_append_indent (GString * str, gint count)
 }
 
 static void
-gst_print_props (GString * buf, gint indent, GList * props, gboolean showname)
+gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
 {
   GList *elem;
   guint width = 0;
+  GstPropsType type;
 
   if (showname)
     for (elem = props; elem; elem = g_list_next (elem)) {
       GstPropsEntry *prop = elem->data;
-      const gchar *name = g_quark_to_string (prop->propid);
+      const gchar *name = gst_props_entry_get_name (prop);
 
       if (width < strlen (name))
 	width = strlen (name);
@@ -479,45 +457,76 @@ gst_print_props (GString * buf, gint indent, GList * props, gboolean showname)
 
     string_append_indent (buf, indent);
     if (showname) {
-      const gchar *name = g_quark_to_string (prop->propid);
+      const gchar *name = gst_props_entry_get_name (prop);
 
       g_string_append (buf, name);
       string_append_indent (buf, 2 + width - strlen (name));
     }
 
-    switch (prop->propstype) {
-      case GST_PROPS_INT_ID:
-	g_string_append_printf (buf, "%d (int)\n", prop->data.int_data);
+    type = gst_props_entry_get_type (prop);
+    switch (type) {
+      case GST_PROPS_INT_TYPE:
+      {
+	gint val;
+	gst_props_entry_get_int (prop, &val);
+	g_string_append_printf (buf, "%d (int)\n", val);
 	break;
-      case GST_PROPS_INT_RANGE_ID:
-	g_string_append_printf (buf, "%d - %d (int)\n",
-				prop->data.int_range_data.min, prop->data.int_range_data.max);
+      }
+      case GST_PROPS_INT_RANGE_TYPE:
+      {
+	gint min, max;
+	gst_props_entry_get_int_range (prop, &min, &max);
+	g_string_append_printf (buf, "%d - %d (int)\n", min, max);
 	break;
-      case GST_PROPS_FLOAT_ID:
-	g_string_append_printf (buf, "%f (float)\n", prop->data.float_data);
+      }
+      case GST_PROPS_FLOAT_TYPE:
+      {
+	gfloat val;
+	gst_props_entry_get_float (prop, &val);
+	g_string_append_printf (buf, "%f (float)\n", val);
 	break;
-      case GST_PROPS_FLOAT_RANGE_ID:
-	g_string_append_printf (buf, "%f - %f (float)\n",
-				prop->data.float_range_data.min, prop->data.float_range_data.max);
+      }
+      case GST_PROPS_FLOAT_RANGE_TYPE:
+      {
+	gfloat min, max;
+	gst_props_entry_get_float_range (prop, &min, &max);
+	g_string_append_printf (buf, "%f - %f (float)\n", min, max);
 	break;
-      case GST_PROPS_BOOL_ID:
-	g_string_append_printf (buf, "%s\n", prop->data.bool_data ? "TRUE" : "FALSE");
+      }
+      case GST_PROPS_BOOL_TYPE:
+      {
+	gboolean val;
+	gst_props_entry_get_boolean (prop, &val);
+	g_string_append_printf (buf, "%s\n", val ? "TRUE" : "FALSE");
 	break;
-      case GST_PROPS_STRING_ID:
-	g_string_append_printf (buf, "\"%s\"\n", prop->data.string_data.string);
+      }
+      case GST_PROPS_STRING_TYPE:
+      {
+	const gchar *val;
+	gst_props_entry_get_string (prop, &val);
+	g_string_append_printf (buf, "\"%s\"\n", val);
 	break;
-      case GST_PROPS_FOURCC_ID:
+      }
+      case GST_PROPS_FOURCC_TYPE:
+      {
+	guint32 val;
+	gst_props_entry_get_fourcc_int (prop, &val);
 	g_string_append_printf (buf, "'%c%c%c%c' (fourcc)\n",
-				prop->data.fourcc_data & 0xff,
-				prop->data.fourcc_data >> 8 & 0xff,
-				prop->data.fourcc_data >> 16 & 0xff,
-				prop->data.fourcc_data >> 24 & 0xff);
+		                (gchar)( val        & 0xff),
+				(gchar)((val >> 8)  & 0xff),
+				(gchar)((val >> 16) & 0xff),
+				(gchar)((val >> 24) & 0xff));
 	break;
-      case GST_PROPS_LIST_ID:
-	gst_print_props (buf, indent + 2, prop->data.list_data.entries, FALSE);
+      }
+      case GST_PROPS_LIST_TYPE:
+      {
+	const GList *list;
+	gst_props_entry_get_list (prop, &list);
+	gst_print_props (buf, indent + 2, (GList *)list, FALSE);
 	break;
+      }
       default:
-	g_string_append_printf (buf, "unknown proptype %d\n", prop->propstype);
+	g_string_append_printf (buf, "unknown proptype %d\n", type);
 	break;
     }
   }

@@ -24,6 +24,7 @@
 
 #include "gst_private.h"
 
+#include "gstsystemclock.h"
 #include "gstscheduler.h"
 
 static void 	gst_scheduler_class_init 	(GstSchedulerClass *klass);
@@ -67,6 +68,13 @@ gst_scheduler_class_init (GstSchedulerClass *klass)
 static void
 gst_scheduler_init (GstScheduler *sched)
 {
+  sched->clock_providers = NULL;
+  sched->clock_receivers = NULL;
+  sched->schedulers = NULL;
+  sched->state = GST_SCHEDULER_STATE_NONE;
+  sched->parent = NULL;
+  sched->parent_sched = NULL;
+  sched->clock = NULL;
 }
 
 /**
@@ -171,8 +179,45 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  if (element->getclockfunc) {
+    sched->clock_providers = g_list_prepend (sched->clock_providers, element);
+  }
+  if (element->setclockfunc) {
+    sched->clock_receivers = g_list_prepend (sched->clock_receivers, element);
+  }
+
   if (CLASS (sched)->add_element)
     CLASS (sched)->add_element (sched, element);
+}
+
+/**
+ * gst_scheduler_remove_element:
+ * @sched: the schedulerr
+ * @element: the element to remov
+ *
+ * Remove an element from the schedulerr.
+ */
+void
+gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
+{
+  GList *pads;
+  
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  sched->clock_providers = g_list_remove (sched->clock_providers, element);
+  sched->clock_receivers = g_list_remove (sched->clock_receivers, element);
+
+  if (CLASS (sched)->remove_element)
+    CLASS (sched)->remove_element (sched, element);
+  
+  for (pads = element->pads; pads; pads = pads->next) {
+    GstPad *pad = GST_PAD (pads->data);
+    
+    if (GST_IS_REAL_PAD (pad)) {
+      gst_pad_unset_sched (GST_PAD (pads->data));
+    }
+  }
 }
 
 /**
@@ -192,38 +237,65 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
   g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
+  if (element == sched->parent && sched->parent_sched == NULL) {
+
+    switch (transition) {
+      case GST_STATE_READY_TO_PAUSED:
+      {
+        GstClock *clock = gst_scheduler_get_clock (sched);
+
+        if (clock)
+          gst_clock_reset (clock);
+
+	sched->current_clock = clock;
+        break;
+      }
+      case GST_STATE_PAUSED_TO_PLAYING:
+      {
+	gst_scheduler_set_clock (sched, sched->current_clock);
+        if (sched->current_clock)
+          gst_clock_activate (sched->current_clock, TRUE);
+        break;
+      }
+      case GST_STATE_PLAYING_TO_PAUSED:
+        if (sched->current_clock)
+          gst_clock_activate (sched->current_clock, FALSE);
+        break;
+    }
+  }
+
   if (CLASS (sched)->state_transition)
     return CLASS (sched)->state_transition (sched, element, transition);
 
   return GST_STATE_SUCCESS;
 }
 
-/**
- * gst_scheduler_remove_element:
- * @sched: the schedulerr
- * @element: the element to remov
- *
- * Remove an element from the schedulerr.
- */
 void
-gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
+gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
 {
-  GList *pads;
-  
   g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_SCHEDULER (sched2));
 
-  if (CLASS (sched)->remove_element)
-    CLASS (sched)->remove_element (sched, element);
-  
-  for (pads = element->pads; pads; pads = pads->next) {
-    GstPad *pad = GST_PAD (pads->data);
-    
-    if (GST_IS_REAL_PAD (pad)) {
-      gst_pad_unset_sched (GST_PAD (pads->data));
-    }
-  }
+  sched->schedulers = g_list_prepend (sched->schedulers, sched2);
+  sched2->parent_sched = sched;
+
+  if (CLASS (sched)->add_scheduler)
+    CLASS (sched)->add_scheduler (sched, sched2);
 }
+
+void
+gst_scheduler_remove_scheduler (GstScheduler *sched, GstScheduler *sched2)
+{
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_SCHEDULER (sched2));
+
+  sched->schedulers = g_list_remove (sched->schedulers, sched2);
+  sched2->parent_sched = NULL;
+
+  if (CLASS (sched)->remove_scheduler)
+    CLASS (sched)->remove_scheduler (sched, sched2);
+}
+
 
 /**
  * gst_scheduler_lock_element:
@@ -313,6 +385,106 @@ gst_scheduler_interrupt (GstScheduler *sched, GstElement *element)
     return CLASS (sched)->interrupt (sched, element);
 
   return FALSE;
+}
+
+GstClock*
+gst_scheduler_get_clock (GstScheduler *sched)
+{
+  GstClock *clock = NULL;
+  
+  if (GST_FLAG_IS_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK)) {
+    clock = sched->clock;  
+  }
+  else {
+    if (sched->schedulers) {
+      GList *schedulers = sched->schedulers;
+
+      while (schedulers) {
+        GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
+      
+        clock = gst_scheduler_get_clock (scheduler);
+        if (clock)
+	  break;
+
+        schedulers = g_list_next (schedulers);
+      }
+    }
+    if (!clock && sched->clock_providers) {
+      clock = gst_element_get_clock (GST_ELEMENT (sched->clock_providers->data));
+    }
+    if (!clock && sched->parent_sched == NULL) {
+      clock = gst_system_clock_obtain ();
+    }
+  }
+
+  return clock;
+}
+
+void
+gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
+{
+  g_return_if_fail (sched != NULL);
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
+  GST_FLAG_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
+  sched->clock = clock;
+}
+
+void
+gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
+{
+  GList *receivers;
+  GList *schedulers;
+
+  g_return_if_fail (sched != NULL);
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
+  receivers = sched->clock_receivers;
+  schedulers = sched->schedulers;
+
+  sched->current_clock = clock;
+
+  while (receivers) {
+    GstElement *element = GST_ELEMENT (receivers->data);
+
+    gst_element_set_clock (element, clock);
+    receivers = g_list_next (receivers);
+  }
+  while (schedulers) {
+    GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
+
+    gst_scheduler_set_clock (scheduler, clock);
+    schedulers = g_list_next (schedulers);
+  }
+}
+
+void
+gst_scheduler_auto_clock (GstScheduler *sched)
+{
+  g_return_if_fail (sched != NULL);
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
+  GST_FLAG_UNSET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
+  sched->clock = NULL;
+}
+
+/**
+ * gst_scheduler_clock_wait:
+ * @sched: the scheduler
+ *
+ * Perform one iteration on the schedulerr.
+ *
+ * Returns: a boolean indicating something usefull has happened.
+ */
+GstClockReturn
+gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *clock, GstClockTime time)
+{
+  g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_CLOCK_ERROR);
+
+  if (CLASS (sched)->clock_wait)
+    return CLASS (sched)->clock_wait (sched, element, clock, time);
+
+  return GST_CLOCK_TIMEOUT;
 }
 
 /**

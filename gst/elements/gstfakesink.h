@@ -52,11 +52,14 @@ typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
 
 struct _GstFakeSink {
-  GstElement element;
+  GstElement 	 element;
 
-  gboolean silent;
-  gboolean dump;
-  gchar    *last_message;
+  gboolean 	 silent;
+  gboolean 	 dump;
+  gboolean 	 sync;
+  GstClock 	*clock;
+
+  gchar 	*last_message;
 };
 
 struct _GstFakeSinkClass {

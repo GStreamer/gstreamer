@@ -535,7 +535,7 @@ gst_pad_disconnect (GstPad *srcpad,
   realsink = GST_PAD_REALIZE (sinkpad);
 
   g_return_if_fail (GST_RPAD_PEER (realsrc) != NULL);
-  g_return_if_fail (GST_RPAD_PEER (realsink) != NULL);
+  g_return_if_fail (GST_RPAD_PEER (realsink) == realsrc);
 
   if ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&
       (GST_RPAD_DIRECTION (realsink) == GST_PAD_SRC)) {
@@ -1013,8 +1013,8 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 	debug_string = "DELAYED";
 	break;
       default:
-	g_warning ("unknown return code from connect function of pad %s:%s",
-            GST_DEBUG_PAD_NAME (pad));
+	g_warning ("unknown return code from connect function of pad %s:%s %d",
+            GST_DEBUG_PAD_NAME (pad), res);
         return GST_PAD_CONNECT_REFUSED;
     }
 
@@ -1337,9 +1337,9 @@ gst_pad_proxy_connect (GstPad *pad, GstCaps *caps)
   GST_INFO (GST_CAT_CAPS, "proxy connect to pad %s:%s",
             GST_DEBUG_PAD_NAME (realpad));
 
-  if (peer && !gst_pad_try_set_caps_func (peer, caps, TRUE))
+  if (peer && gst_pad_try_set_caps_func (peer, caps, TRUE) < 0)
     return GST_PAD_CONNECT_REFUSED;
-  if (!gst_pad_try_set_caps_func (realpad, caps, FALSE))
+  if (gst_pad_try_set_caps_func (realpad, caps, FALSE) < 0)
     return GST_PAD_CONNECT_REFUSED;
 
   return GST_PAD_CONNECT_OK;

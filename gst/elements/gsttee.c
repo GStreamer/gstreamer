@@ -181,7 +181,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   GList *pads;
 
   g_return_val_if_fail (GST_IS_TEE (element), NULL);
-
+  
   if (templ->direction != GST_PAD_SRC) {
     g_warning ("gsttee: request new pad that is not a SRC pad\n");
     return NULL;

@@ -315,8 +315,11 @@ gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time)
   g_return_val_if_fail (element != NULL, GST_CLOCK_ERROR);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
 
-  /* FIXME inform the scheduler */
-  return gst_clock_wait (clock, time);
+  if (GST_ELEMENT_SCHED (element)) {
+    return gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, clock, time);
+  }
+  else 
+    return GST_CLOCK_TIMEOUT;
 }
 
 /**
@@ -489,7 +492,9 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   /* look through the list, matching by name */
   walk = element->pads;
   while (walk) {
-    GstPad *pad = GST_PAD(walk->data);
+    GstPad *pad;
+    
+    pad = GST_PAD(walk->data);
     if (!strcmp (GST_PAD_NAME(pad), name)) {
       GST_INFO(GST_CAT_ELEMENT_PADS,"found pad %s:%s",GST_DEBUG_PAD_NAME(pad));
       return pad;
@@ -717,6 +722,7 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
+
 
   if (strstr (name, "%")) {
     templ = gst_element_get_padtemplate_by_name (element, name);
@@ -1182,35 +1188,6 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 }
 
 /**
- * gst_element_info:
- * @element: Element with the info
- * @info: String describing the info
- * @...: arguments for the string.
- *
- * This function is used internally by elements to signal an info
- * condition.  It results in the "info" signal.
- */
-void
-gst_element_info (GstElement *element, const gchar *info, ...)
-{
-  g_warning ("The function gst_element_info is gone. Use g_object_notify instead.");
-}
-
-
-/**
- * gst_element_send_event:
- * @element: Element generating the event
- * @event: the event to send
- *
- * This function is deprecated and doesn't work anymore.
- */
-void
-gst_element_send_event (GstElement *element, GstEvent *event)
-{
-  g_warning ("The function gst_element_send_event is gone. Use g_object_notify instead.");
-}
-
-/**
  * gst_element_get_state:
  * @element: element to get state of
  *
@@ -1258,12 +1235,12 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
-  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s\n",
-                     gst_element_statename (GST_STATE (element)),
-                     gst_element_statename (state));
-
   /* start with the current state */
   curpending = GST_STATE(element);
+
+  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s\n",
+                     gst_element_statename (curpending),
+                     gst_element_statename (state));
 
   /* loop until the final requested state is set */
   while (GST_STATE (element) != state && GST_STATE (element) != GST_STATE_VOID_PENDING) {
@@ -1277,9 +1254,10 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* FIXME: should probably check to see that we don't already have one */
     GST_STATE_PENDING (element) = curpending;
 
-    if (curpending != state)
+    if (curpending != state) {
       GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "intermediate: setting state to %s\n",
                          gst_element_statename (curpending));
+    }
 
     /* call the state change function so it can set the state */
     oclass = CLASS (element);
@@ -1297,7 +1275,11 @@ gst_element_set_state (GstElement *element, GstElementState state)
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
         if (GST_STATE (element) != curpending) {
-          GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element claimed state-change success, but state didn't change\n");
+          GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
+			  "element claimed state-change success, but state didn't change %s, %s <-> %s\n",
+                     	  gst_element_statename (GST_STATE (element)),
+                     	  gst_element_statename (GST_STATE_PENDING (element)),
+                     	  gst_element_statename (curpending));
           return GST_STATE_FAILURE;
 	}
         break;
@@ -1429,15 +1411,15 @@ gst_element_change_state (GstElement *element)
     }
   }
 
-  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
-		  0, old_state, GST_STATE (element));
-
   parent = GST_ELEMENT_PARENT (element);
 
   /* tell our parent about the state change */
   if (parent && GST_IS_BIN (parent)) {
     gst_bin_child_state_change (GST_BIN (parent), old_state, GST_STATE (element), element);
   }
+
+  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
+		  0, old_state, GST_STATE (element));
 
   /* signal the state change in case somebody is waiting for us */
   g_mutex_lock (element->state_mutex);
@@ -1688,7 +1670,7 @@ gst_element_interrupt (GstElement *element)
  */
 void
 gst_element_set_sched (GstElement *element,
-		         GstScheduler *sched)
+		       GstScheduler *sched)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
   
@@ -1727,8 +1709,8 @@ gst_element_get_sched (GstElement *element)
  * a new loopfunc to be assigned, this should be no problem.
  */
 void
-gst_element_set_loop_function(GstElement *element,
-                              GstElementLoopFunction loop)
+gst_element_set_loop_function (GstElement *element,
+                               GstElementLoopFunction loop)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
 

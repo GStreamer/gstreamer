@@ -38,7 +38,6 @@ extern "C" {
 
 #define GST_NUM_STATES 4
 
-
 /* NOTE: this probably should be done with an #ifdef to decide 
  * whether to safe-cast or to just do the non-checking cast.
  */
@@ -171,7 +170,6 @@ struct _GstElementClass {
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
-  void			(*send_event)		(GstElement *element, GstEvent *event);
 };
 
 void			gst_element_class_add_padtemplate	(GstElementClass *klass, GstPadTemplate *templ);
@@ -228,8 +226,7 @@ gboolean		gst_element_connect_elements_many (GstElement *element_1, GstElement *
 
 void			gst_element_set_eos		(GstElement *element);
 
-void			gst_element_send_event		(GstElement *element, GstEvent *event);
-
+void 			gst_element_error 		(GstElement *element, const gchar *error, ...);
 
 GstElementState         gst_element_get_state           (GstElement *element);
 gint			gst_element_set_state		(GstElement *element, GstElementState state);
@@ -237,9 +234,6 @@ gint			gst_element_set_state		(GstElement *element, GstElementState state);
 void 			gst_element_wait_state_change 	(GstElement *element);
 	
 const gchar*		gst_element_statename		(GstElementState state);
-
-void			gst_element_info		(GstElement *element, const gchar *info, ...);
-void			gst_element_error		(GstElement *element, const gchar *error, ...);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 

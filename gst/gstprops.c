@@ -25,7 +25,39 @@
 
 #include "gstlog.h"
 #include "gstprops.h"
-#include "gstpropsprivate.h"
+
+GType _gst_props_type;
+
+#define GST_PROPS_ENTRY_IS_VARIABLE(a)	(((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_TYPE)
+
+struct _GstPropsEntry {
+  GQuark    	propid;
+  GstPropsType 	propstype;		
+
+  union {
+    /* flat values */
+    gboolean bool_data;
+    guint32  fourcc_data;
+    gint     int_data;
+    gfloat   float_data;
+
+    /* structured values */
+    struct {
+      GList *entries;
+    } list_data;
+    struct {
+      gchar *string;
+    } string_data;
+    struct {
+      gint min;
+      gint max;
+    } int_range_data;
+    struct {
+      gfloat min;
+      gfloat max;
+    } float_range_data;
+  } data;
+};
 
 static GMemChunk *_gst_props_entries_chunk;
 static GMutex *_gst_props_entries_chunk_lock;
@@ -49,6 +81,11 @@ _gst_props_initialize (void)
 		  sizeof (GstProps), sizeof (GstProps) * 256, 
 		  G_ALLOC_AND_FREE);
   _gst_props_chunk_lock = g_mutex_new ();
+
+  _gst_props_type = g_boxed_type_register_static ("GstProps",
+		                       (GBoxedCopyFunc) gst_props_ref,
+		                       (GBoxedFreeFunc) gst_props_unref);
+
 }
 
 static void
@@ -57,31 +94,31 @@ gst_props_debug_entry (GstPropsEntry *entry)
   const gchar *name = g_quark_to_string (entry->propid);
 
   switch (entry->propstype) {
-    case GST_PROPS_INT_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: int %d", name, entry->data.int_data);
+    case GST_PROPS_INT_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: int %d\n", name, entry->data.int_data);
       break;
-    case GST_PROPS_FLOAT_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: float %f", name, entry->data.float_data);
+    case GST_PROPS_FLOAT_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: float %f\n", name, entry->data.float_data);
       break;
-    case GST_PROPS_FOURCC_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: fourcc %4.4s", name, (gchar*)&entry->data.fourcc_data);
+    case GST_PROPS_FOURCC_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: fourcc %4.4s\n", name, (gchar*)&entry->data.fourcc_data);
       break;
-    case GST_PROPS_BOOL_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: bool %d", name, entry->data.bool_data);
+    case GST_PROPS_BOOL_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: bool %d\n", name, entry->data.bool_data);
       break;
-    case GST_PROPS_STRING_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: string %s", name, entry->data.string_data.string);
+    case GST_PROPS_STRING_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: string %s\n", name, entry->data.string_data.string);
       break;
-    case GST_PROPS_INT_RANGE_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: int range %d-%d", name, entry->data.int_range_data.min,
+    case GST_PROPS_INT_RANGE_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: int range %d-%d\n", name, entry->data.int_range_data.min,
 		      entry->data.int_range_data.max);
       break;
-    case GST_PROPS_FLOAT_RANGE_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: float range %f-%f", name, entry->data.float_range_data.min,
+    case GST_PROPS_FLOAT_RANGE_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: float range %f-%f\n", name, entry->data.float_range_data.min,
 		      entry->data.float_range_data.max);
       break;
-    case GST_PROPS_LIST_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "[list]");
+    case GST_PROPS_LIST_TYPE:
+      GST_DEBUG (GST_CAT_PROPERTIES, "[list]\n");
       {
 	GList *entries = entry->data.list_data.entries;
 
@@ -122,34 +159,80 @@ props_find_func (gconstpointer a,
  */
 #define GST_PROPS_ENTRY_FILL(entry, var_args) 					\
 G_STMT_START { 									\
-  entry->propstype = va_arg (var_args, GstPropsId); 				\
+  entry->propstype = va_arg (var_args, GstPropsType); 				\
 										\
   switch (entry->propstype) {							\
-    case GST_PROPS_INT_ID:							\
+    case GST_PROPS_INT_TYPE:							\
       entry->data.int_data = va_arg (var_args, gint);				\
       break;									\
-    case GST_PROPS_INT_RANGE_ID:						\
+    case GST_PROPS_INT_RANGE_TYPE:						\
       entry->data.int_range_data.min = va_arg (var_args, gint);			\
       entry->data.int_range_data.max = va_arg (var_args, gint);			\
       break;									\
-    case GST_PROPS_FLOAT_ID:							\
+    case GST_PROPS_FLOAT_TYPE:							\
       entry->data.float_data = va_arg (var_args, gdouble);			\
       break;									\
-    case GST_PROPS_FLOAT_RANGE_ID:						\
+    case GST_PROPS_FLOAT_RANGE_TYPE:						\
       entry->data.float_range_data.min = va_arg (var_args, gdouble);		\
       entry->data.float_range_data.max = va_arg (var_args, gdouble);		\
       break;									\
-    case GST_PROPS_FOURCC_ID:							\
+    case GST_PROPS_FOURCC_TYPE:							\
       entry->data.fourcc_data = va_arg (var_args, gulong);			\
       break;									\
-    case GST_PROPS_BOOL_ID:							\
+    case GST_PROPS_BOOL_TYPE:							\
       entry->data.bool_data = va_arg (var_args, gboolean);			\
       break;									\
-    case GST_PROPS_STRING_ID:							\
+    case GST_PROPS_STRING_TYPE:							\
       entry->data.string_data.string = g_strdup (va_arg (var_args, gchar*));	\
       break;									\
     default:									\
       break;									\
+  }										\
+} G_STMT_END
+
+
+#define GST_PROPS_ENTRY_READ(entry, var_args, safe, result)			\
+G_STMT_START { 									\
+  *result = TRUE;								\
+										\
+  if (safe) {									\
+    GstPropsType propstype = va_arg (var_args, GstPropsType); 			\
+    if (propstype != entry->propstype) {					\
+      *result = FALSE;								\
+    }										\
+  }										\
+  if (*result) {								\
+    switch (entry->propstype) {							\
+      case GST_PROPS_INT_TYPE:							\
+        *(va_arg (var_args, gint*)) = entry->data.int_data;			\
+        break;									\
+      case GST_PROPS_INT_RANGE_TYPE:						\
+        *(va_arg (var_args, gint*)) = entry->data.int_range_data.min;		\
+        *(va_arg (var_args, gint*)) = entry->data.int_range_data.max;		\
+        break;									\
+      case GST_PROPS_FLOAT_TYPE:						\
+        *(va_arg (var_args, gfloat*)) = entry->data.float_data;			\
+        break;									\
+      case GST_PROPS_FLOAT_RANGE_TYPE:						\
+        *(va_arg (var_args, gfloat*)) = entry->data.float_range_data.min;	\
+        *(va_arg (var_args, gfloat*)) = entry->data.float_range_data.max;	\
+        break;									\
+      case GST_PROPS_FOURCC_TYPE:						\
+        *(va_arg (var_args, guint32*)) = entry->data.fourcc_data;		\
+        break;									\
+      case GST_PROPS_BOOL_TYPE:							\
+        *(va_arg (var_args, gboolean*)) = entry->data.bool_data;		\
+        break;									\
+      case GST_PROPS_STRING_TYPE:						\
+        *(va_arg (var_args, gchar**)) = entry->data.string_data.string;		\
+        break;									\
+      case GST_PROPS_LIST_TYPE:							\
+        *(va_arg (var_args, GList**)) = entry->data.list_data.entries;		\
+        break;									\
+      default:									\
+        *result = FALSE;							\
+        break;									\
+    }										\
   }										\
 } G_STMT_END
 
@@ -169,10 +252,10 @@ static void
 gst_props_entry_destroy (GstPropsEntry *entry)
 {
   switch (entry->propstype) {
-    case GST_PROPS_STRING_ID:		
+    case GST_PROPS_STRING_TYPE:		
       g_free (entry->data.string_data.string);
       break;				
-    case GST_PROPS_LIST_ID:		
+    case GST_PROPS_LIST_TYPE:		
     {
       GList *entries = entry->data.list_data.entries;
 
@@ -275,7 +358,7 @@ gst_props_merge_int_entries(GstPropsEntry * newentry, GstPropsEntry * oldentry)
   gint new_min, new_max, old_min, old_max;
   gboolean can_merge = FALSE;
 
-  if (newentry->propstype == GST_PROPS_INT_ID) {
+  if (newentry->propstype == GST_PROPS_INT_TYPE) {
     new_min = newentry->data.int_data;
     new_max = newentry->data.int_data;
   } else {
@@ -283,7 +366,7 @@ gst_props_merge_int_entries(GstPropsEntry * newentry, GstPropsEntry * oldentry)
     new_max = newentry->data.int_range_data.max;
   }
 
-  if (oldentry->propstype == GST_PROPS_INT_ID) {
+  if (oldentry->propstype == GST_PROPS_INT_TYPE) {
     old_min = oldentry->data.int_data;
     old_max = oldentry->data.int_data;
   } else {
@@ -312,10 +395,10 @@ gst_props_merge_int_entries(GstPropsEntry * newentry, GstPropsEntry * oldentry)
 
   if (can_merge) {
     if (new_min == new_max) {
-      newentry->propstype = GST_PROPS_INT_ID;
+      newentry->propstype = GST_PROPS_INT_TYPE;
       newentry->data.int_data = new_min;
     } else {
-      newentry->propstype = GST_PROPS_INT_RANGE_ID;
+      newentry->propstype = GST_PROPS_INT_RANGE_TYPE;
       newentry->data.int_range_data.min = new_min;
       newentry->data.int_range_data.max = new_max;
     }
@@ -411,27 +494,27 @@ gst_props_newv (const gchar *firstname, va_list var_args)
     GST_PROPS_ENTRY_FILL (entry, var_args);
 
     switch (entry->propstype) {
-      case GST_PROPS_INT_ID:
-      case GST_PROPS_INT_RANGE_ID:
+      case GST_PROPS_INT_TYPE:
+      case GST_PROPS_INT_RANGE_TYPE:
 	entry_type = GST_PROPS_LIST_T_INTS;
 	break;
-      case GST_PROPS_FLOAT_ID:
-      case GST_PROPS_FLOAT_RANGE_ID:
+      case GST_PROPS_FLOAT_TYPE:
+      case GST_PROPS_FLOAT_RANGE_TYPE:
 	entry_type = GST_PROPS_LIST_T_FLOATS;
 	break;
-      case GST_PROPS_FOURCC_ID:
-      case GST_PROPS_BOOL_ID:
-      case GST_PROPS_STRING_ID:
+      case GST_PROPS_FOURCC_TYPE:
+      case GST_PROPS_BOOL_TYPE:
+      case GST_PROPS_STRING_TYPE:
 	entry_type = GST_PROPS_LIST_T_MISC;
 	break;
-      case GST_PROPS_LIST_ID:
+      case GST_PROPS_LIST_TYPE:
 	g_return_val_if_fail (inlist == FALSE, NULL);
 	inlist = TRUE;
 	list_entry = entry;
 	list_type = GST_PROPS_LIST_T_UNSET;
 	list_entry->data.list_data.entries = NULL;
 	break;
-      case GST_PROPS_END_ID:
+      case GST_PROPS_END_TYPE:
 	g_return_val_if_fail (inlist == TRUE, NULL);
 
 	/* if list was of size 1, replace the list by a the item it contains */
@@ -605,10 +688,10 @@ gst_props_entry_copy (GstPropsEntry *entry)
 
   newentry = gst_props_alloc_entry ();
   memcpy (newentry, entry, sizeof (GstPropsEntry));
-  if (entry->propstype == GST_PROPS_LIST_ID) {
+  if (entry->propstype == GST_PROPS_LIST_TYPE) {
     newentry->data.list_data.entries = gst_props_list_copy (entry->data.list_data.entries);
   }
-  else if (entry->propstype == GST_PROPS_STRING_ID) {
+  else if (entry->propstype == GST_PROPS_STRING_TYPE) {
     newentry->data.string_data.string = g_strdup (entry->data.string_data.string);
   }
 
@@ -679,8 +762,8 @@ gst_props_copy_on_write (GstProps *props)
   return new;
 }
 
-static GstPropsEntry*
-gst_props_get_entry_func (GstProps *props, const gchar *name)
+const GstPropsEntry*
+gst_props_get_entry (GstProps *props, const gchar *name)
 {
   GList *lentry;
   GQuark quark;
@@ -703,133 +786,167 @@ gst_props_get_entry_func (GstProps *props, const gchar *name)
 gboolean
 gst_props_has_property (GstProps *props, const gchar *name)
 {
-  return (gst_props_get_entry_func (props, name) != NULL);
+  return (gst_props_get_entry (props, name) != NULL);
 }
 
-/**
- * gst_props_get_int:
- * @props: the props to get the int value from
- * @name: the name of the props entry to get.
- *
- * Get the named entry as an integer.
- *
- * Returns: the integer value of the named entry, 0 if not found.
- */
-gint
-gst_props_get_int (GstProps *props, const gchar *name)
-{
-  GstPropsEntry *thisentry;
-
-  thisentry = gst_props_get_entry_func (props, name);
-
-  if (thisentry) {
-    return thisentry->data.int_data;
-  }
-  else {
-    g_warning ("props: property %s not found", name);
-  }
-  return 0;
-}
-
-/**
- * gst_props_get_float:
- * @props: the props to get the float value from
- * @name: the name of the props entry to get.
- *
- * Get the named entry as a float.
- *
- * Returns: the float value of the named entry, 0.0 if not found.
- */
-gfloat
-gst_props_get_float (GstProps *props, const gchar *name)
-{
-  GstPropsEntry *thisentry;
-
-  thisentry = gst_props_get_entry_func (props, name);
-
-  if (thisentry) {
-    return thisentry->data.float_data;
-  }
-  else {
-    g_warning ("props: property %s not found", name);
-  }
-  return 0.0F;
-}
-
-/**
- * gst_props_get_fourcc_int:
- * @props: the props to get the fourcc value from
- * @name: the name of the props entry to get.
- *
- * Get the named entry as a gulong fourcc.
- *
- * Returns: the fourcc value of the named entry, 0 if not found.
- */
-gulong
-gst_props_get_fourcc_int (GstProps *props, const gchar *name)
-{
-  GstPropsEntry *thisentry;
-
-  thisentry = gst_props_get_entry_func (props, name);
-
-  if (thisentry) {
-    return thisentry->data.fourcc_data;
-  }
-  else {
-    g_warning ("props: property %s not found", name);
-  }
-  return 0;
-}
-
-/**
- * gst_props_get_boolean:
- * @props: the props to get the fourcc value from
- * @name: the name of the props entry to get.
- *
- * Get the named entry as a boolean value.
- *
- * Returns: the boolean value of the named entry, 0 if not found.
- */
 gboolean
-gst_props_get_boolean (GstProps *props, const gchar *name)
+gst_props_has_property_typed (GstProps *props, const gchar *name, GstPropsType type)
 {
-  GstPropsEntry *thisentry;
+  const GstPropsEntry *entry;
 
-  thisentry = gst_props_get_entry_func (props, name);
+  entry = gst_props_get_entry (props, name);
+  if (!entry) 
+    return FALSE;
 
-  if (thisentry) {
-    return thisentry->data.bool_data;
-  }
-  else {
-    g_warning ("props: property %s not found", name);
-  }
-  return 0;
+  return (entry->propstype == type);
 }
 
-/**
- * gst_props_get_string:
- * @props: the props to get the fourcc value from
- * @name: the name of the props entry to get.
- *
- * Get the named entry as a string value.
- *
- * Returns: the string value of the named entry, NULL if not found.
- */
+gboolean
+gst_props_has_fixed_property (GstProps *props, const gchar *name)
+{
+  const GstPropsEntry *entry;
+
+  entry = gst_props_get_entry (props, name);
+  if (!entry) 
+    return FALSE;
+
+  return !GST_PROPS_ENTRY_IS_VARIABLE (entry);
+}
+
+GstPropsType
+gst_props_entry_get_type (const GstPropsEntry *entry)
+{
+  g_return_val_if_fail (entry != NULL, GST_PROPS_INVALID_TYPE);
+
+  return entry->propstype;
+}
+
 const gchar*
-gst_props_get_string (GstProps *props, const gchar *name)
+gst_props_entry_get_name (const GstPropsEntry *entry)
 {
-  GstPropsEntry *thisentry;
+  g_return_val_if_fail (entry != NULL, NULL);
 
-  thisentry = gst_props_get_entry_func (props, name);
-
-  if (thisentry) {
-    return thisentry->data.string_data.string;
-  }
-  else {
-    g_warning ("props: property %s not found", name);
-  }
-  return NULL;
+  return g_quark_to_string (entry->propid);
 }
+
+gboolean
+gst_props_entry_is_fixed (const GstPropsEntry *entry)
+{
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  return !GST_PROPS_ENTRY_IS_VARIABLE (entry);
+}
+
+static gboolean
+gst_props_entry_getv (const GstPropsEntry *entry, gboolean safe, va_list var_args)
+{
+  gboolean result;
+
+  GST_PROPS_ENTRY_READ (entry, var_args, safe, &result);
+
+  return result;
+}
+
+gboolean
+gst_props_entry_get (const GstPropsEntry *entry, ...)
+{
+  gboolean result;
+  va_list var_args;
+
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  va_start (var_args, entry);
+  result = gst_props_entry_getv (entry, FALSE, var_args);
+  va_end (var_args);
+
+  return result;
+}
+
+static gboolean
+gst_props_entry_get_safe (const GstPropsEntry *entry, ...)
+{
+  gboolean result;
+  va_list var_args;
+
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  va_start (var_args, entry);
+  result = gst_props_entry_getv (entry, TRUE, var_args);
+  va_end (var_args);
+
+  return result;
+}
+
+gboolean
+gst_props_get (GstProps *props, gchar *first_name, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, first_name);
+
+  while (first_name) {
+    const GstPropsEntry *entry = gst_props_get_entry (props, first_name);
+    gboolean result;
+
+    if (!entry) return FALSE;
+    GST_PROPS_ENTRY_READ (entry, var_args, FALSE, &result);
+    if (!result) return FALSE;
+
+    first_name = va_arg (var_args, gchar *);
+  }
+  va_end (var_args);
+  
+  return TRUE;
+}
+
+gboolean
+gst_props_entry_get_int (const GstPropsEntry *entry, gint *val)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_INT_TYPE, val);
+}
+
+gboolean
+gst_props_entry_get_float (const GstPropsEntry *entry, gfloat *val)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_FLOAT_TYPE, val);
+}
+
+gboolean
+gst_props_entry_get_fourcc_int (const GstPropsEntry *entry, guint32 *val)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_FOURCC_TYPE, val);
+}
+
+gboolean
+gst_props_entry_get_boolean (const GstPropsEntry *entry, gboolean *val)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_BOOL_TYPE, val);
+}
+
+gboolean
+gst_props_entry_get_string (const GstPropsEntry *entry, const gchar **val)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_STRING_TYPE, val);
+}
+
+gboolean
+gst_props_entry_get_int_range (const GstPropsEntry *entry, gint *min, gint *max)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_INT_RANGE_TYPE, min, max);
+}
+
+gboolean
+gst_props_entry_get_float_range (const GstPropsEntry *entry, gfloat *min, gfloat *max)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_FLOAT_RANGE_TYPE, min, max);
+}
+
+gboolean
+gst_props_entry_get_list (const GstPropsEntry *entry, const GList **val)
+{
+  return gst_props_entry_get_safe (entry, GST_PROPS_LIST_TYPE, val);
+}
+
 
 /**
  * gst_props_merge:
@@ -887,12 +1004,12 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
   GST_DEBUG (GST_CAT_PROPERTIES,"compare: %s %s", g_quark_to_string (entry1->propid),
 	                     g_quark_to_string (entry2->propid));
 
-  if (entry2->propstype == GST_PROPS_LIST_ID && entry1->propstype != GST_PROPS_LIST_ID) {
+  if (entry2->propstype == GST_PROPS_LIST_TYPE && entry1->propstype != GST_PROPS_LIST_TYPE) {
     return gst_props_entry_check_list_compatibility (entry1, entry2);
   }
 
   switch (entry1->propstype) {
-    case GST_PROPS_LIST_ID:
+    case GST_PROPS_LIST_TYPE:
     {
       GList *entrylist = entry1->data.list_data.entries;
       gboolean valid = TRUE;    /* innocent until proven guilty */
@@ -907,79 +1024,79 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       
       return valid;
     }
-    case GST_PROPS_INT_RANGE_ID:
+    case GST_PROPS_INT_RANGE_TYPE:
       switch (entry2->propstype) {
 	/* a - b   <--->   a - c */
-        case GST_PROPS_INT_RANGE_ID:
+        case GST_PROPS_INT_RANGE_TYPE:
 	  return (entry2->data.int_range_data.min <= entry1->data.int_range_data.min &&
 	          entry2->data.int_range_data.max >= entry1->data.int_range_data.max);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_FLOAT_RANGE_ID:
+    case GST_PROPS_FLOAT_RANGE_TYPE:
       switch (entry2->propstype) {
 	/* a - b   <--->   a - c */
-        case GST_PROPS_FLOAT_RANGE_ID:
+        case GST_PROPS_FLOAT_RANGE_TYPE:
 	  return (entry2->data.float_range_data.min <= entry1->data.float_range_data.min &&
 	          entry2->data.float_range_data.max >= entry1->data.float_range_data.max);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_FOURCC_ID:
+    case GST_PROPS_FOURCC_TYPE:
       switch (entry2->propstype) {
 	/* b   <--->   a */
-        case GST_PROPS_FOURCC_ID:
-          GST_DEBUG(GST_CAT_PROPERTIES,"\"%4.4s\" <--> \"%4.4s\" ?",
+        case GST_PROPS_FOURCC_TYPE:
+          GST_DEBUG(GST_CAT_PROPERTIES,"\"%4.4s\" <--> \"%4.4s\" ?\n",
 			  (char*) &entry2->data.fourcc_data, (char*) &entry1->data.fourcc_data);
 	  return (entry2->data.fourcc_data == entry1->data.fourcc_data);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_INT_ID:
+    case GST_PROPS_INT_TYPE:
       switch (entry2->propstype) {
 	/* b   <--->   a - d */
-        case GST_PROPS_INT_RANGE_ID:
-          GST_DEBUG(GST_CAT_PROPERTIES,"%d <= %d <= %d ?",entry2->data.int_range_data.min,
+        case GST_PROPS_INT_RANGE_TYPE:
+          GST_DEBUG(GST_CAT_PROPERTIES,"%d <= %d <= %d ?\n",entry2->data.int_range_data.min,
                     entry1->data.int_data,entry2->data.int_range_data.max);
 	  return (entry2->data.int_range_data.min <= entry1->data.int_data &&
 	          entry2->data.int_range_data.max >= entry1->data.int_data);
 	/* b   <--->   a */
-        case GST_PROPS_INT_ID:
-          GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?",entry1->data.int_data,entry2->data.int_data);
+        case GST_PROPS_INT_TYPE:
+          GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?\n",entry1->data.int_data,entry2->data.int_data);
 	  return (entry2->data.int_data == entry1->data.int_data);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_FLOAT_ID:
+    case GST_PROPS_FLOAT_TYPE:
       switch (entry2->propstype) {
 	/* b   <--->   a - d */
-        case GST_PROPS_FLOAT_RANGE_ID:
+        case GST_PROPS_FLOAT_RANGE_TYPE:
 	  return (entry2->data.float_range_data.min <= entry1->data.float_data &&
 	          entry2->data.float_range_data.max >= entry1->data.float_data);
 	/* b   <--->   a */
-        case GST_PROPS_FLOAT_ID:
+        case GST_PROPS_FLOAT_TYPE:
 	  return (entry2->data.float_data == entry1->data.float_data);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_BOOL_ID:
+    case GST_PROPS_BOOL_TYPE:
       switch (entry2->propstype) {
 	/* t   <--->   t */
-        case GST_PROPS_BOOL_ID:
+        case GST_PROPS_BOOL_TYPE:
           return (entry2->data.bool_data == entry1->data.bool_data);
         default:
 	  break;
       }
-    case GST_PROPS_STRING_ID:
+    case GST_PROPS_STRING_TYPE:
       switch (entry2->propstype) {
 	/* t   <--->   t */
-        case GST_PROPS_STRING_ID:
-          GST_DEBUG(GST_CAT_PROPERTIES,"\"%s\" <--> \"%s\" ?",
+        case GST_PROPS_STRING_TYPE:
+          GST_DEBUG(GST_CAT_PROPERTIES,"\"%s\" <--> \"%s\" ?\n",
 			  entry2->data.string_data.string, entry1->data.string_data.string);
           return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
         default:
@@ -1065,9 +1182,9 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 
   /* try to move the ranges and lists first */
   switch (entry2->propstype) {
-    case GST_PROPS_INT_RANGE_ID:
-    case GST_PROPS_FLOAT_RANGE_ID:
-    case GST_PROPS_LIST_ID:
+    case GST_PROPS_INT_RANGE_TYPE:
+    case GST_PROPS_FLOAT_RANGE_TYPE:
+    case GST_PROPS_LIST_TYPE:
     {
       GstPropsEntry *temp;
 
@@ -1080,7 +1197,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
   }
 
   switch (entry1->propstype) {
-    case GST_PROPS_LIST_ID:
+    case GST_PROPS_LIST_TYPE:
     {
       GList *entrylist = entry1->data.list_data.entries;
       GList *intersection = NULL;
@@ -1092,7 +1209,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	intersectentry = gst_props_entry_intersect (entry2, entry);
 
 	if (intersectentry) {
-	  if (intersectentry->propstype == GST_PROPS_LIST_ID) {
+	  if (intersectentry->propstype == GST_PROPS_LIST_TYPE) {
 	    intersection = g_list_concat (intersection, intersectentry->data.list_data.entries);
 	    /* set the list to NULL because the entries are concatenated to the above
 	     * list and we don't want to free them */
@@ -1115,16 +1232,16 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	else {
 	  result = gst_props_alloc_entry ();
 	  result->propid = entry1->propid;
-	  result->propstype = GST_PROPS_LIST_ID;
+	  result->propstype = GST_PROPS_LIST_TYPE;
 	  result->data.list_data.entries = g_list_reverse (intersection);
 	}
       }
       return result;
     }
-    case GST_PROPS_INT_RANGE_ID:
+    case GST_PROPS_INT_RANGE_TYPE:
       switch (entry2->propstype) {
 	/* a - b   <--->   a - c */
-        case GST_PROPS_INT_RANGE_ID:
+        case GST_PROPS_INT_RANGE_TYPE:
         {
 	  gint lower = MAX (entry1->data.int_range_data.min, entry2->data.int_range_data.min);
 	  gint upper = MIN (entry1->data.int_range_data.max, entry2->data.int_range_data.max);
@@ -1134,27 +1251,27 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	    result->propid = entry1->propid;
 
 	    if (lower == upper) {
-	      result->propstype = GST_PROPS_INT_ID;
+	      result->propstype = GST_PROPS_INT_TYPE;
 	      result->data.int_data = lower;
 	    }
 	    else {
-	      result->propstype = GST_PROPS_INT_RANGE_ID;
+	      result->propstype = GST_PROPS_INT_RANGE_TYPE;
 	      result->data.int_range_data.min = lower;
 	      result->data.int_range_data.max = upper;
 	    }
 	  }
 	  break;
 	}
-        case GST_PROPS_LIST_ID:
+        case GST_PROPS_LIST_TYPE:
         {
           GList *entries = entry2->data.list_data.entries;
           result = gst_props_alloc_entry ();
           result->propid = entry1->propid;
-          result->propstype = GST_PROPS_LIST_ID;
+          result->propstype = GST_PROPS_LIST_TYPE;
           result->data.list_data.entries = NULL;
           while (entries) {
             GstPropsEntry * this = (GstPropsEntry *)entries->data;
-            if (this->propstype != GST_PROPS_INT_ID) {
+            if (this->propstype != GST_PROPS_INT_TYPE) {
               /* no hope, this list doesn't even contain ints! */
               gst_props_entry_destroy (result);
               result = NULL;
@@ -1169,7 +1286,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
           }
           break;
         }
-        case GST_PROPS_INT_ID:
+        case GST_PROPS_INT_TYPE:
         {
 	  if (entry1->data.int_range_data.min <= entry2->data.int_data && 
 	      entry1->data.int_range_data.max >= entry2->data.int_data) {
@@ -1181,10 +1298,10 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	  break;
       }
       break;
-    case GST_PROPS_FLOAT_RANGE_ID:
+    case GST_PROPS_FLOAT_RANGE_TYPE:
       switch (entry2->propstype) {
 	/* a - b   <--->   a - c */
-        case GST_PROPS_FLOAT_RANGE_ID:
+        case GST_PROPS_FLOAT_RANGE_TYPE:
         {
 	  gfloat lower = MAX (entry1->data.float_range_data.min, entry2->data.float_range_data.min);
 	  gfloat upper = MIN (entry1->data.float_range_data.max, entry2->data.float_range_data.max);
@@ -1194,18 +1311,18 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	    result->propid = entry1->propid;
 
 	    if (lower == upper) {
-	      result->propstype = GST_PROPS_FLOAT_ID;
+	      result->propstype = GST_PROPS_FLOAT_TYPE;
 	      result->data.float_data = lower;
 	    }
 	    else {
-	      result->propstype = GST_PROPS_FLOAT_RANGE_ID;
+	      result->propstype = GST_PROPS_FLOAT_RANGE_TYPE;
 	      result->data.float_range_data.min = lower;
 	      result->data.float_range_data.max = upper;
 	    }
 	  }
 	  break;
 	}
-        case GST_PROPS_FLOAT_ID:
+        case GST_PROPS_FLOAT_TYPE:
 	  if (entry1->data.float_range_data.min <= entry2->data.float_data && 
 	      entry1->data.float_range_data.max >= entry2->data.float_data) {
             result = gst_props_entry_copy (entry2);
@@ -1214,49 +1331,49 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	  break;
       }
       break;
-    case GST_PROPS_FOURCC_ID:
+    case GST_PROPS_FOURCC_TYPE:
       switch (entry2->propstype) {
 	/* b   <--->   a */
-        case GST_PROPS_FOURCC_ID:
+        case GST_PROPS_FOURCC_TYPE:
           if (entry1->data.fourcc_data == entry2->data.fourcc_data)
 	    result = gst_props_entry_copy (entry1);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_INT_ID:
+    case GST_PROPS_INT_TYPE:
       switch (entry2->propstype) {
 	/* b   <--->   a */
-        case GST_PROPS_INT_ID:
+        case GST_PROPS_INT_TYPE:
           if (entry1->data.int_data == entry2->data.int_data)
 	    result = gst_props_entry_copy (entry1);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_FLOAT_ID:
+    case GST_PROPS_FLOAT_TYPE:
       switch (entry2->propstype) {
 	/* b   <--->   a */
-        case GST_PROPS_FLOAT_ID:
+        case GST_PROPS_FLOAT_TYPE:
           if (entry1->data.float_data == entry2->data.float_data)
 	    result = gst_props_entry_copy (entry1);
         default:
 	  break;
       }
       break;
-    case GST_PROPS_BOOL_ID:
+    case GST_PROPS_BOOL_TYPE:
       switch (entry2->propstype) {
 	/* t   <--->   t */
-        case GST_PROPS_BOOL_ID:
+        case GST_PROPS_BOOL_TYPE:
           if (entry1->data.bool_data == entry2->data.bool_data)
 	    result = gst_props_entry_copy (entry1);
         default:
 	  break;
       }
-    case GST_PROPS_STRING_ID:
+    case GST_PROPS_STRING_TYPE:
       switch (entry2->propstype) {
 	/* t   <--->   t */
-        case GST_PROPS_STRING_ID:
+        case GST_PROPS_STRING_TYPE:
           if (!strcmp (entry1->data.string_data.string, entry2->data.string_data.string))
 	    result = gst_props_entry_copy (entry1);
         default:
@@ -1392,7 +1509,7 @@ gst_props_normalize (GstProps *props)
   while (entries) {
     GstPropsEntry *entry = (GstPropsEntry *) entries->data;
 
-    if (entry->propstype == GST_PROPS_LIST_ID) {
+    if (entry->propstype == GST_PROPS_LIST_TYPE) {
       GList *list_entries = entry->data.list_data.entries;
 
       while (list_entries) {
@@ -1443,14 +1560,14 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
   gchar *str;
 
   switch (entry->propstype) {
-    case GST_PROPS_INT_ID: 
+    case GST_PROPS_INT_TYPE: 
       subtree = xmlNewChild (parent, NULL, "int", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       str = g_strdup_printf ("%d", entry->data.int_data);
       xmlNewProp (subtree, "value", str);
       g_free(str);
       break;
-    case GST_PROPS_INT_RANGE_ID: 
+    case GST_PROPS_INT_RANGE_TYPE: 
       subtree = xmlNewChild (parent, NULL, "range", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       str = g_strdup_printf ("%d", entry->data.int_range_data.min);
@@ -1460,14 +1577,14 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "max", str);
       g_free(str);
       break;
-    case GST_PROPS_FLOAT_ID: 
+    case GST_PROPS_FLOAT_TYPE: 
       subtree = xmlNewChild (parent, NULL, "float", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       str = g_strdup_printf ("%f", entry->data.float_data);
       xmlNewProp (subtree, "value", str);
       g_free(str);
       break;
-    case GST_PROPS_FLOAT_RANGE_ID: 
+    case GST_PROPS_FLOAT_RANGE_TYPE: 
       subtree = xmlNewChild (parent, NULL, "floatrange", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       str = g_strdup_printf ("%f", entry->data.float_range_data.min);
@@ -1477,7 +1594,7 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "max", str);
       g_free(str);
       break;
-    case GST_PROPS_FOURCC_ID: 
+    case GST_PROPS_FOURCC_TYPE: 
       str = g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
       xmlAddChild (parent, xmlNewComment (str));
       g_free(str);
@@ -1487,12 +1604,12 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "hexvalue", str);
       g_free(str);
       break;
-    case GST_PROPS_BOOL_ID: 
+    case GST_PROPS_BOOL_TYPE: 
       subtree = xmlNewChild (parent, NULL, "boolean", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       xmlNewProp (subtree, "value", (entry->data.bool_data ?  "true" : "false"));
       break;
-    case GST_PROPS_STRING_ID: 
+    case GST_PROPS_STRING_TYPE: 
       subtree = xmlNewChild (parent, NULL, "string", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       xmlNewProp (subtree, "value", entry->data.string_data.string);
@@ -1528,7 +1645,7 @@ gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
     GstPropsEntry *entry = (GstPropsEntry *) proplist->data;
 
     switch (entry->propstype) {
-      case GST_PROPS_LIST_ID: 
+      case GST_PROPS_LIST_TYPE: 
         subtree = xmlNewChild (parent, NULL, "list", NULL);
         xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
         g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_save_thyself_func, subtree);
@@ -1552,7 +1669,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
   entry = gst_props_alloc_entry ();
 
   if (!strcmp(field->name, "int")) {
-    entry->propstype = GST_PROPS_INT_ID;
+    entry->propstype = GST_PROPS_INT_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1561,7 +1678,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "range")) {
-    entry->propstype = GST_PROPS_INT_RANGE_ID;
+    entry->propstype = GST_PROPS_INT_RANGE_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1573,7 +1690,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "float")) {
-    entry->propstype = GST_PROPS_FLOAT_ID;
+    entry->propstype = GST_PROPS_FLOAT_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1582,7 +1699,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "floatrange")) {
-    entry->propstype = GST_PROPS_FLOAT_RANGE_ID;
+    entry->propstype = GST_PROPS_FLOAT_RANGE_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1594,7 +1711,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "boolean")) {
-    entry->propstype = GST_PROPS_BOOL_ID;
+    entry->propstype = GST_PROPS_BOOL_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1604,7 +1721,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "fourcc")) {
-    entry->propstype = GST_PROPS_FOURCC_ID;
+    entry->propstype = GST_PROPS_FOURCC_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1613,7 +1730,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "string")) {
-    entry->propstype = GST_PROPS_STRING_ID;
+    entry->propstype = GST_PROPS_STRING_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);
@@ -1655,7 +1772,7 @@ gst_props_load_thyself (xmlNodePtr parent)
       prop = xmlGetProp (field, "name");
       entry->propid = g_quark_from_string (prop);
       g_free (prop);
-      entry->propstype = GST_PROPS_LIST_ID;
+      entry->propstype = GST_PROPS_LIST_TYPE;
       entry->data.list_data.entries = NULL;
 
       while (subfield) {

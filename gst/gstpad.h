@@ -40,7 +40,7 @@ extern GType _gst_pad_type;
 extern GType _gst_real_pad_type;
 extern GType _gst_ghost_pad_type;
 
-/*#define GST_TYPE_PARANOID */
+#define GST_TYPE_PARANOID 
 
 /* 
  * Pad base class
@@ -118,10 +118,10 @@ typedef enum {
 } GstRegionType;
 
 typedef enum {
-  GST_PAD_CONNECT_REFUSED = 0,
-  GST_PAD_CONNECT_OK      = 1,
-  GST_PAD_CONNECT_DONE    = 2,
-  GST_PAD_CONNECT_DELAYED = 3,
+  GST_PAD_CONNECT_REFUSED = -1,
+  GST_PAD_CONNECT_DELAYED =  0,
+  GST_PAD_CONNECT_OK      =  1,
+  GST_PAD_CONNECT_DONE    =  2,
 } GstPadConnectReturn;
 
 /* this defines the functions used to chain buffers

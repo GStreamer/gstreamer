@@ -34,11 +34,7 @@ static GstClock *_the_system_clock = NULL;
 static void		gst_system_clock_class_init	(GstSystemClockClass *klass);
 static void		gst_system_clock_init		(GstSystemClock *clock);
 
-static void		gst_system_clock_activate 	(GstClock *clock, gboolean active);
-static void		gst_system_clock_reset	 	(GstClock *clock);
-static void		gst_system_clock_set_time	(GstClock *clock, GstClockTime time);
-static GstClockTime	gst_system_clock_get_time	(GstClock *clock);
-static GstClockReturn	gst_system_clock_wait 		(GstClock *clock, GstClockTime time);
+static GstClockTime	gst_system_clock_get_internal_time	(GstClock *clock);
 static guint64		gst_system_clock_get_resolution (GstClock *clock);
 
 
@@ -82,11 +78,7 @@ gst_system_clock_class_init (GstSystemClockClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_CLOCK);
 
-  gstclock_class->activate = 		gst_system_clock_activate;
-  gstclock_class->reset = 		gst_system_clock_reset;
-  gstclock_class->set_time = 		gst_system_clock_set_time;
-  gstclock_class->get_time = 		gst_system_clock_get_time;
-  gstclock_class->wait =		gst_system_clock_wait;
+  gstclock_class->get_internal_time =	gst_system_clock_get_internal_time;
   gstclock_class->get_resolution =	gst_system_clock_get_resolution;
 }
 
@@ -105,89 +97,12 @@ gst_system_clock_obtain (void)
   return _the_system_clock;
 }
 
-static void
-gst_system_clock_activate (GstClock *clock, gboolean active)
-{
-  GTimeVal timeval;
-  GstSystemClock *sys_clock = GST_SYSTEM_CLOCK (clock);
-
-  g_get_current_time (&timeval);
-  GST_LOCK (clock);
-  if (active) {
-    sys_clock->absolute_start = GST_TIMEVAL_TO_TIME (timeval) - sys_clock->current_time;;
-  }
-  else {
-    sys_clock->current_time = GST_TIMEVAL_TO_TIME (timeval) - sys_clock->absolute_start;
-  }
-  GST_UNLOCK (clock);
-}
-
-static void
-gst_system_clock_set_time (GstClock *clock, GstClockTime time)
-{
-  GTimeVal timeval;
-  GstSystemClock *sys_clock = GST_SYSTEM_CLOCK (clock);
-
-  g_get_current_time (&timeval);
-
-  GST_LOCK (clock);
-  sys_clock->absolute_start = GST_TIMEVAL_TO_TIME (timeval) - time;
-  sys_clock->current_time = time;
-  GST_UNLOCK (clock);
-}
-
-static void
-gst_system_clock_reset (GstClock *clock)
-{
-  gst_system_clock_set_time (clock, 0LL);
-}
-
 static GstClockTime
-gst_system_clock_get_time (GstClock *clock)
+gst_system_clock_get_internal_time (GstClock *clock)
 {
-  GstSystemClock *sys_clock = GST_SYSTEM_CLOCK (clock);
-  GstClockTime res;
-
-  if (!clock->active) {
-    GST_LOCK (clock);
-    res = sys_clock->current_time;
-  }
-  else {
-    GTimeVal timeval;
-
-    g_get_current_time (&timeval);
-
-    GST_LOCK (clock);
-    res = GST_TIMEVAL_TO_TIME (timeval) - sys_clock->absolute_start;
-  }
-  GST_UNLOCK (clock);
-
-  return res;
-}
-
-static GstClockReturn
-gst_system_clock_wait (GstClock *clock, GstClockTime time)
-{
-  GstClockTime target;
   GTimeVal timeval;
-  GCond *cond = g_cond_new ();
-  GstSystemClock *sys_clock = GST_SYSTEM_CLOCK (clock);
-  GstClockReturn ret;
-
-  GST_LOCK (clock);
-  target = time + sys_clock->absolute_start;
-	
-  timeval.tv_usec = target % 1000000;
-  timeval.tv_sec = target / 1000000;
-
-  g_cond_timed_wait (cond, GST_GET_LOCK (clock), &timeval); 
-  GST_UNLOCK (clock);
-
-  ret = GST_CLOCK_TIMEOUT;
-
-  g_cond_free (cond);
-
-  return ret;
+  g_get_current_time (&timeval);
+  return GST_TIMEVAL_TO_TIME (timeval);
 }
 
 static guint64

@@ -46,6 +46,7 @@ enum {
   ARG_NUM_SINKS,
   ARG_SILENT,
   ARG_DUMP,
+  ARG_SYNC,
   ARG_LAST_MESSAGE,
 };
 
@@ -60,6 +61,7 @@ GST_PADTEMPLATE_FACTORY (fakesink_sink_factory,
 static void	gst_fakesink_class_init		(GstFakeSinkClass *klass);
 static void	gst_fakesink_init		(GstFakeSink *fakesink);
 
+static void 	gst_fakesink_set_clock 		(GstElement *element, GstClock *clock);
 static GstPad* 	gst_fakesink_request_new_pad 	(GstElement *element, GstPadTemplate *templ, const
                                                  gchar *unused);
 
@@ -106,12 +108,14 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
-    g_param_spec_int ("num_sinks", "num_sinks", "num_sinks",
+    g_param_spec_int ("num_sinks", "Number of sinks", "The number of sinkpads",
                       1, G_MAXINT, 1, G_PARAM_READABLE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
     g_param_spec_string ("last_message", "last_message", "last_message",
                          NULL, G_PARAM_READABLE));
-
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SYNC,
+    g_param_spec_boolean("sync","Sync","Sync on the clock",
+                         FALSE, G_PARAM_READWRITE)); /* CHECKME */
 
   gst_element_class_install_std_props (
 	  GST_ELEMENT_CLASS (klass),
@@ -141,8 +145,21 @@ gst_fakesink_init (GstFakeSink *fakesink)
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
+  fakesink->sync = FALSE;
   fakesink->last_message = NULL;
+
+  GST_ELEMENT (fakesink)->setclockfunc    = gst_fakesink_set_clock;
 }
+
+static void
+gst_fakesink_set_clock (GstElement *element, GstClock *clock)
+{ 
+  GstFakeSink *sink;
+
+  sink = GST_FAKESINK (element);
+
+  sink->clock = clock;
+} 
 
 static GstPad*
 gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused)
@@ -183,6 +200,9 @@ gst_fakesink_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_DUMP:
       sink->dump = g_value_get_boolean (value);
       break;
+    case ARG_SYNC:
+      sink->sync = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -208,6 +228,9 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
     case ARG_DUMP:
       g_value_set_boolean (value, sink->dump);
       break;
+    case ARG_SYNC:
+      g_value_set_boolean (value, sink->sync);
+      break;
     case ARG_LAST_MESSAGE:
       g_value_set_string (value, sink->last_message);
       break;
@@ -228,9 +251,12 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
 
+  if (fakesink->sync) { 
+    gst_element_clock_wait (GST_ELEMENT (fakesink), fakesink->clock, GST_BUFFER_TIMESTAMP (buf));
+  }
+
   if (!fakesink->silent) { 
-    if (fakesink->last_message) 
-      g_free (fakesink->last_message);
+    g_free (fakesink->last_message);
 
     fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, %lld) %p",
 		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);

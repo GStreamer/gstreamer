@@ -48,10 +48,6 @@ extern GType _gst_bin_type;
 # define GST_BIN_CLASS               GST_BIN_CLASS_CAST
 #endif
 
-#define GST_BIN_CLOCK_PROVIDERS(bin)	(GST_BIN(bin)->clock_providers)
-#define GST_BIN_CLOCK_RECEIVERS(bin)	(GST_BIN(bin)->clock_receivers)
-#define GST_BIN_CLOCK(bin)		(GST_BIN(bin)->clock)
-
 typedef enum {
   /* this bin is a manager of child elements, i.e. a pipeline or thread */
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
@@ -82,8 +78,6 @@ struct _GstBin {
 
   GstElementState child_states[GST_NUM_STATES];
 
-  GstClock 	*clock;
-  
   gpointer 	 sched_private;
 };
 
@@ -128,9 +122,6 @@ void		gst_bin_auto_clock		(GstBin *bin);
 /* one of our childs signaled a state change */
 void 		gst_bin_child_state_change 	(GstBin *bin, GstElementState oldstate, 
 						 GstElementState newstate, GstElement *child);
-/* one of our childs signaled an error */
-void 		gst_bin_child_error	 	(GstBin *bin, GstElement *child);
-
 
 #ifdef __cplusplus
 }

@@ -65,8 +65,11 @@ struct _GstClock {
   GstObject 	 object;
 
   GstClockTime	 start_time;
+  GstClockTime	 last_time;
   gdouble 	 speed;
   gboolean 	 active;
+  GList		*entries;
+  gboolean	 async_supported;
 
   GMutex	*active_mutex;
   GCond		*active_cond;
@@ -76,20 +79,8 @@ struct _GstClockClass {
   GstObjectClass        parent_class;
 
   /* vtable */
-  void 			(*activate)		(GstClock *clock, gboolean active);
-  void 			(*reset)		(GstClock *clock);
+  GstClockTime 		(*get_internal_time)	(GstClock *clock);
 
-  void 			(*set_time)		(GstClock *clock, GstClockTime time);
-  GstClockTime 		(*get_time)		(GstClock *clock);
-
-  GstClockReturn	(*wait)			(GstClock *clock, GstClockTime time);
-  GstClockID		(*wait_async)		(GstClock *clock, GstClockTime time, 
-			  			 GstClockCallback func, gpointer user_data);
-  void 			(*cancel_wait_async)	(GstClock *clock, GstClockID id);
-  GstClockID		(*notify_async)		(GstClock *clock, GstClockTime interval, 
-			  			 GstClockCallback func, gpointer user_data);
-  void 			(*remove_notify_async)	(GstClock *clock, GstClockID id);
-	
   void 			(*set_resolution)	(GstClock *clock, guint64 resolution);
   guint64		(*get_resolution)	(GstClock *clock);
 
@@ -104,8 +95,8 @@ void 			gst_clock_get_speed		(GstClock *clock, gdouble speed);
 void 			gst_clock_activate		(GstClock *clock, gboolean active);
 gboolean 		gst_clock_is_active		(GstClock *clock);
 void 			gst_clock_reset			(GstClock *clock);
+gboolean 		gst_clock_async_supported	(GstClock *clock);
 
-void 			gst_clock_set_time		(GstClock *clock, GstClockTime time);
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 
 GstClockReturn		gst_clock_wait			(GstClock *clock, GstClockTime time);
@@ -115,6 +106,12 @@ void			gst_clock_cancel_wait_async	(GstClock *clock, GstClockID id);
 GstClockID		gst_clock_notify_async		(GstClock *clock, GstClockTime interval, 
 						 	 GstClockCallback func, gpointer user_data);
 void 			gst_clock_remove_notify_async	(GstClock *clock, GstClockID id);
+GstClockReturn		gst_clock_wait_id		(GstClock *clock, GstClockID id);
+
+GstClockID		gst_clock_get_next_id		(GstClock *clock);
+void			gst_clock_unlock_id		(GstClock *clock, GstClockID id);
+
+GstClockTime		gst_clock_id_get_time		(GstClockID id);
 
 void 			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
 guint64			gst_clock_get_resolution	(GstClock *clock);

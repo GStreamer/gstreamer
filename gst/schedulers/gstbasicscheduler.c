@@ -72,7 +72,7 @@ typedef enum {
 
 typedef enum {
   /* something important has changed inside the scheduler */
-  GST_BASIC_SCHEDULER_CHANGE	= GST_OBJECT_FLAG_LAST,
+  GST_BASIC_SCHEDULER_CHANGE	= GST_SCHEDULER_FLAG_LAST,
 } GstBasicSchedulerFlags;
 
 struct _GstBasicScheduler {
@@ -112,6 +112,8 @@ static void 		gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *elem
 static void     	gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static void     	gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
+static GstClockReturn	gst_basic_scheduler_clock_wait	 	(GstScheduler *sched, GstElement *element,
+								 GstClock *clock, GstClockTime time);
 static GstSchedulerState
 			gst_basic_scheduler_iterate    		(GstScheduler *sched);
 
@@ -169,6 +171,7 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gstscheduler_class->pad_connect 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_connect);
   gstscheduler_class->pad_disconnect 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_disconnect);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_select);
+  gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_clock_wait);
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_iterate);
 
   gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_show);
@@ -424,6 +427,9 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
     if (GST_RPAD_PEER (peer) != (GstRealPad *) pad) {
       GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!");
       pad = (GstPad *) GST_RPAD_PEER (peer);
+      if (!pad) {
+	gst_element_error (GST_ELEMENT (GST_PAD_PARENT (peer)), "pad unconnected");
+      }
     }
   }
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching");
@@ -530,7 +536,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
       if (!GST_IS_REAL_PAD (pad))
 	continue;
       
-      peerpad = GST_PAD (GST_RPAD_PEER (pad));
+      peerpad = GST_PAD_PEER (pad);
 
       /* if the element is DECOUPLED or outside the manager, we have to chain */
       if ((wrapper_function == NULL) ||
@@ -677,6 +683,7 @@ gst_basic_scheduler_chain_enable_element (GstSchedulerChain * chain, GstElement 
 
   /* notify the scheduler that something changed */
   GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
+  //GST_FLAG_UNSET(element, GST_ELEMENT_COTHREAD_STOPPING);
 
   /* reschedule the chain */
   return gst_basic_scheduler_cothreaded_chain (GST_BIN (GST_SCHEDULER (chain->sched)->parent), chain);
@@ -696,6 +703,7 @@ gst_basic_scheduler_chain_disable_element (GstSchedulerChain * chain, GstElement
 
   /* notify the scheduler that something changed */
   GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
+  GST_FLAG_SET(element, GST_ELEMENT_COTHREAD_STOPPING);
 
   /* reschedule the chain */
 /* FIXME this should be done only if manager state != NULL */
@@ -969,19 +977,6 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     /* find what chain the element is in */
     chain = gst_basic_scheduler_find_chain (bsched, element);
 
-    if (GST_ELEMENT_IS_COTHREAD_STOPPING (element)) {
-      GstElement *entry = GST_ELEMENT (cothread_get_private (cothread_current ()));
-
-      if (entry == element) {
-        g_warning ("removing currently running element! %s", GST_ELEMENT_NAME (entry));
-      }
-      else if (entry) {
-        GST_INFO (GST_CAT_SCHEDULING, "moving stopping to element \"%s\"",
-	      GST_ELEMENT_NAME (entry));
-	GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
-      }
-    }
-    
     /* remove it from its chain */
     gst_basic_scheduler_chain_remove_element (chain, element);
 
@@ -1194,6 +1189,13 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
     g_assert (pad != NULL);
   }
   return pad;
+}
+
+static GstClockReturn
+gst_basic_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
+				GstClock *clock, GstClockTime time)
+{
+  return gst_clock_wait (clock, time);
 }
 
 static GstSchedulerState

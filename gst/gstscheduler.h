@@ -44,6 +44,13 @@ extern "C" {
 #define GST_IS_SCHEDULER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULER))
 
+typedef enum {
+  /* this scheduler works with a fixed clock */
+  GST_SCHEDULER_FLAG_FIXED_CLOCK	= GST_OBJECT_FLAG_LAST,
+
+  /* padding */
+  GST_SCHEDULER_FLAG_LAST 		= GST_OBJECT_FLAG_LAST + 4,
+} GstSchedulerFlags;
 
 #define GST_SCHEDULER_PARENT(sched)		((sched)->parent)
 #define GST_SCHEDULER_STATE(sched)		((sched)->state)
@@ -58,11 +65,19 @@ typedef enum {
 } GstSchedulerState;
 
 struct _GstScheduler {
-  GstObject object;
+  GstObject 		 object;
 
-  GstElement *parent;
+  GstElement 		*parent;
+  GstScheduler 		*parent_sched;
 
-  GstSchedulerState state;
+  GstSchedulerState 	 state;
+  GstClock		*clock;
+  GstClock		*current_clock;
+
+  GList			*clock_providers;
+  GList			*clock_receivers;
+
+  GList			*schedulers;
 };
 
 struct _GstSchedulerClass {
@@ -73,6 +88,8 @@ struct _GstSchedulerClass {
   void 			(*reset)		(GstScheduler *sched);
   void 			(*add_element)		(GstScheduler *sched, GstElement *element);
   void 			(*remove_element)	(GstScheduler *sched, GstElement *element);
+  void 			(*add_scheduler)	(GstScheduler *sched, GstScheduler *sched2);
+  void 			(*remove_scheduler)	(GstScheduler *sched, GstScheduler *sched2);
   GstElementStateReturn (*state_transition)	(GstScheduler *sched, GstElement *element, gint transition);
   void 			(*lock_element)		(GstScheduler *sched, GstElement *element);
   void 			(*unlock_element)	(GstScheduler *sched, GstElement *element);
@@ -82,6 +99,8 @@ struct _GstSchedulerClass {
   void 			(*pad_connect)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
   void 			(*pad_disconnect)	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
   void 			(*pad_select)		(GstScheduler *sched, GList *padlist);
+  GstClockReturn	(*clock_wait)		(GstScheduler *sched, GstElement *element,
+		  				 GstClock *clock, GstClockTime time);
   GstSchedulerState 	(*iterate)		(GstScheduler *sched);
   /* for debugging */
   void 			(*show)			(GstScheduler *sched);
@@ -98,6 +117,8 @@ void			gst_scheduler_setup		(GstScheduler *sched);
 void			gst_scheduler_reset		(GstScheduler *sched);
 void			gst_scheduler_add_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
+void			gst_scheduler_add_scheduler	(GstScheduler *sched, GstScheduler *sched2);
+void			gst_scheduler_remove_scheduler	(GstScheduler *sched, GstScheduler *sched2);
 GstElementStateReturn	gst_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
 void			gst_scheduler_lock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_unlock_element	(GstScheduler *sched, GstElement *element);
@@ -107,7 +128,16 @@ void			gst_scheduler_error		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_pad_connect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 void			gst_scheduler_pad_disconnect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 GstPad*                 gst_scheduler_pad_select 	(GstScheduler *sched, GList *padlist);
+GstClock*		gst_scheduler_get_clock		(GstScheduler *sched);
+GstClock*		gst_scheduler_get_clock		(GstScheduler *sched);
+GstClockReturn		gst_scheduler_clock_wait	(GstScheduler *sched, GstElement *element,
+							 GstClock *clock, GstClockTime time);
 gboolean		gst_scheduler_iterate		(GstScheduler *sched);
+
+void			gst_scheduler_use_clock		(GstScheduler *sched, GstClock *clock);
+void			gst_scheduler_set_clock		(GstScheduler *sched, GstClock *clock);
+GstClock*		gst_scheduler_get_clock		(GstScheduler *sched);
+void			gst_scheduler_auto_clock	(GstScheduler *sched);
 
 void			gst_scheduler_show		(GstScheduler *sched);
 
