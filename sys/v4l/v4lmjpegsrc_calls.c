@@ -498,7 +498,7 @@ guint8 *
 gst_v4lmjpegsrc_get_buffer (GstV4lMjpegSrc *v4lmjpegsrc,
                             gint           num)
 {
-  DEBUG("gst_v4lmjpegsrc_get_buffer(), num = %d", num);
+  /*DEBUG("gst_v4lmjpegsrc_get_buffer(), num = %d", num);*/
 
   if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)) ||
       !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))

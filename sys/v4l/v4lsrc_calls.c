@@ -77,9 +77,12 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
 
   v4lsrc->mmap.frame = num;
 
+  g_mutex_lock(v4lsrc->mutex_queued_frames);
+
   if (v4lsrc->frame_queued[num] < 0)
   {
-    v4lsrc->frame_queued[num] = 0;
+    //v4lsrc->frame_queued[num] = 0;
+    g_mutex_unlock(v4lsrc->mutex_queued_frames);
     return TRUE;
   }
 
@@ -88,12 +91,12 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error queueing a buffer (%d): %s",
       num, g_strerror(errno));
+    g_mutex_unlock(v4lsrc->mutex_queued_frames);
     return FALSE;
   }
 
   v4lsrc->frame_queued[num] = 1;
 
-  g_mutex_lock(v4lsrc->mutex_queued_frames);
   v4lsrc->num_queued_frames++;
   g_cond_broadcast(v4lsrc->cond_queued_frames);
   g_mutex_unlock(v4lsrc->mutex_queued_frames);
@@ -128,8 +131,10 @@ gst_v4lsrc_soft_sync_thread (void *arg)
     g_mutex_lock(v4lsrc->mutex_queued_frames);
     if (v4lsrc->num_queued_frames < MIN_BUFFERS_QUEUED)
     {
-      if (v4lsrc->frame_queued[frame] < 0)
+      if (v4lsrc->frame_queued[frame] < 0) {
+        g_mutex_unlock(v4lsrc->mutex_queued_frames);
         break;
+      }
 
       DEBUG("Waiting for new frames to be queued (%d < %d)",
         v4lsrc->num_queued_frames, MIN_BUFFERS_QUEUED);
@@ -410,7 +415,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
 guint8 *
 gst_v4lsrc_get_buffer (GstV4lSrc *v4lsrc, gint  num)
 {
-  DEBUG("gst_v4lsrc_get_buffer(), num = %d", num);
+  /*DEBUG("gst_v4lsrc_get_buffer(), num = %d", num);*/
 
   if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)) ||
       !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
@@ -460,8 +465,11 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
   /* we actually need to sync on all queued buffers but not on the non-queued ones */
+  g_mutex_lock(v4lsrc->mutex_queued_frames);
   for (n=0;n<v4lsrc->mbuf.frames;n++)
     v4lsrc->frame_queued[n] = -1;
+  g_cond_broadcast(v4lsrc->cond_queued_frames);
+  g_mutex_unlock(v4lsrc->mutex_queued_frames);
 
   g_thread_join(v4lsrc->thread_soft_sync);
 
