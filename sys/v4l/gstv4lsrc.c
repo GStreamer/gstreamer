@@ -21,10 +21,11 @@
 #include <sys/time.h>
 #include "v4lsrc_calls.h"
 
-
+/* elementfactory information */
 static GstElementDetails gst_v4lsrc_details = {
   "Video (video4linux/raw) Source",
   "Source/Video",
+  "LGPL",
   "Reads raw frames from a video4linux (BT8x8) device",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",

@@ -27,6 +27,7 @@
 static GstElementDetails videoscale_details = {
   "Video scaler",
   "Filter/Video",
+  "LGPL",
   "Resizes video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

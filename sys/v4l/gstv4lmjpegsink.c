@@ -20,9 +20,11 @@
 #include <string.h>
 #include "v4lmjpegsink_calls.h"
 
+/* elementfactory information */
 static GstElementDetails gst_v4lmjpegsink_details = {
   "Video (video4linux/MJPEG) sink",
   "Sink/Video",
+  "LGPL",
   "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",

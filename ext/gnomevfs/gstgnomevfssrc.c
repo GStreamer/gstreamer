@@ -126,9 +126,11 @@ struct _GstGnomeVFSSrcClass {
 	GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails gst_gnomevfssrc_details = {
 	"GnomeVFS Source",
 	"Source/File",
+	"LGPL",
 	"Read from any GnomeVFS file",
 	VERSION,
 	"Bastien Nocera <hadess@hadess.net>",

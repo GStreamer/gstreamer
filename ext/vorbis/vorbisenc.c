@@ -33,6 +33,7 @@ extern GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 GstElementDetails vorbisenc_details = {
   "Ogg Vorbis encoder",
   "Codec/Audio/Encoder",
+  "LGPL",
   "Encodes audio in OGG Vorbis format",
   VERSION,
   "Monty <monty@xiph.org>, " 

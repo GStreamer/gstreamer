@@ -28,10 +28,11 @@
 
 #include <gstsinesrc.h>
 
-
+/* elementfactory information */
 GstElementDetails gst_sinesrc_details = {
   "Sine-wave src",
   "Source/Audio",
+  "LGPL",
   "Create a sine wave of a given frequency and volume",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

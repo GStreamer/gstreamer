@@ -20,9 +20,11 @@
 #include <string.h>
 #include "v4lmjpegsrc_calls.h"
 
+/* elementfactory information */
 static GstElementDetails gst_v4lmjpegsrc_details = {
   "Video (video4linux/MJPEG) Source",
   "Source/Video",
+  "LGPL",
   "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",

@@ -30,6 +30,7 @@
 static GstElementDetails audioscale_details = {
   "Audio scaler",
   "Filter/Audio",
+  "LGPL",
   "Audio resampler",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

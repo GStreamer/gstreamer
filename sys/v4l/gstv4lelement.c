@@ -19,9 +19,11 @@
 
 #include "v4l_calls.h"
 
+/* elementfactory information */
 static GstElementDetails gst_v4lelement_details = {
   "Generic video4linux Element",
   "None/Video",
+  "LGPL",
   "Generic plugin for handling common video4linux calls",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",

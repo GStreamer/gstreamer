@@ -28,9 +28,11 @@
 #define GST_ADDER_BUFFER_SIZE 4096
 #define GST_ADDER_NUM_BUFFERS 8
 
+/* elementfactory information */
 GstElementDetails adder_details = {
   "Adder",
   "Filter/Audio",
+  "LGPL",
   "N-to-1 audio adder/mixer",
   VERSION,
   "Thomas <thomas@apestaart.org>",

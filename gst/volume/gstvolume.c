@@ -29,6 +29,7 @@
 static GstElementDetails volume_details = {
   "Volume",
   "Filter/Audio/Effect",
+  "LGPL",
   "Set volume on audio/raw streams",
   VERSION,
   "Andy Wingo <apwingo@eos.ncsu.edu>",

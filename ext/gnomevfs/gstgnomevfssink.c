@@ -73,9 +73,11 @@ struct _GstGnomeVFSSinkClass {
 
 GType gst_gnomevfssink_get_type(void);
 
+/* elementfactory information */
 GstElementDetails gst_gnomevfssink_details = {
   "GnomeVFS Sink",
   "Sink/File",
+  "LGPL",
   "Write stream to a GnomeVFS URI",
   VERSION,
   "Bastien Nocera <hadess@hadess.net>",

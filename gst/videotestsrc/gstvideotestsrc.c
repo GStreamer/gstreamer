@@ -30,6 +30,7 @@
 static GstElementDetails videotestsrc_details = {
   "Video test source",
   "Source/Video",
+  "LGPL",
   "Creates a test video stream",
   VERSION,
   "David A. Schleef <ds@schleef.org>",

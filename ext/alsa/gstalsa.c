@@ -23,9 +23,11 @@
 #include <sys/time.h>
 #include "gstalsa.h"
 
+/* elementfactory information */
 static GstElementDetails gst_alsa_sink_details = {  
     "Alsa Sink",
     "Sink/Audio",
+    "LGPL",
     "Output to a sound card via ALSA",
     VERSION,
     "Thomas Nyberg <thomas@codefactory.se>, "
@@ -33,9 +35,11 @@ static GstElementDetails gst_alsa_sink_details = {
     "(C) 2001 "
 };
 
+/* elementfactory information */
 static GstElementDetails gst_alsa_src_details = {  
     "Alsa Src",
     "Source/Audio",
+    "LGPL",
     "Read from a sound card via ALSA",
     VERSION,
     "Thomas Nyberg <thomas@codefactory.se>, "
