@@ -1,4 +1,81 @@
-This is GStreamer Plugins 0.8.6
+This is GStreamer Plugins 0.8.7
+
+Changes since 0.8.6:
+ 
+      * multichannel audio support
+      * new element: apetag
+      * new element: ttadec, ttaparse
+      * new element: directfbvideosink
+      * vcd fixes
+      * playbin fixes
+      * dvdread fixes
+      * a52dec fixes
+      * sunaudiosrc fixes
+      * osssrc fixes
+      * avidemux fixes
+      * licensing updates
+
+Bugs fixed since 0.8.6:
+    
+      * 147919 : [playbin] broken wav seeking
+      * 148559 : [monoscope] grinds to a halt
+      * 149102 : gstreamer license problems
+      * 149613 : [PATCH}Add proxy server support to the musicbrainz plugin
+      * 151624 : Multichannel support
+      * 152339 : [PATCH]  [build] gst-plugins cross compiling
+      * 154773 : [playbin] crashes trying to play short wave files (1 or 2...
+      * 154775 : [qtdemux] Quicktime movie causing some weird debug spew
+      * 154814 : Selection of totem crashing videos
+      * 154815 : [PATCH] ffmpegcolorspace leaks caps
+      * 155348 : Various MP3 files cannot be detected or played
+      * 155879 : [libriff] Bug in lib-riff
+      * 156798 :  " An error occured "  " Could not write to resource " this sa...
+      * 157233 : [PATCH] playbin leak fixes
+      * 158258 : Patch for polypsink to make it work with both threaded an...
+      * 158382 : [PATCH] [build] debian speex detection patch
+      * 158650 : [PATCH] [videocrop] video crop is completely buggered
+      * 158704 : Fix/finish (S)VCD support
+      * 159215 : [PATCH] Memory leaks in audioscale
+      * 159296 : Playing benow.mp3 file cause totem to hang on EOS with de...
+      * 159297 : dark.441-16-s.flac hangs on eos in totem with debug spew
+      * 159301 : gstreamer.avi file plays, but have broken seeking in totem
+      * 159338 : alaw/mulaw decoders caps warning
+      * 159433 : [osssink] doesn't check for supported channels
+      * 159512 : Progress bar with m4a (aac) broken
+      * 159651 : [decodebin] totem crash
+      * 159759 : DVD LCPM asserts
+      * 159847 : [build] hardcoded path for musepack headers in configure
+      * 159864 : avidemux sends GST_EVENT_DISCONTINUOUS
+      * 159986 : [PATCH] Videorate doesn't handle seek and doesn't reset w...
+      * 160276 : [PATCH] mpegdemux and dvddemux don't reset themselves in ...
+      * 160439 : Can't compile gst-plugins without GCONF
+      * 160514 : [avidemux] seek after EOF for truncated avi files (to non...
+      * 160532 : [avidemux] avi[cvid+PCM] : no image, sound is noise
+      * 160808 : 'ERROR: pipeline doesn't want to play' when using xvimage...
+      * 160869 : [playbin] ogg file (theora/vorbis) causes segfault near end
+      * 161039 : [PATCH] [deinterlace] rowstrides need fixing
+      * 161538 : [playbin] AVI files with mp3 audio are out-of-sync in pla...
+      * 161624 : [alsasink] crash at end of playing this file
+      * 161980 : Volume control applet does not set value correctly.
+      * 162819 : [audioscale] cleanup
+      * 162913 : [mms] missing NULL terminator to g_object_set() in uri ha...
+      * 162924 : [playbin] totem assertion failures when playing cd / pote...
+
+API changes since 0.8.6:
+
+- API additions:
+    
+* A new cdparanoia property, device, has been added.
+* A new dvdnavsrc property, device, has been added.
+* A new dvdreadsrc property, device, has been added.
+* A new vcdsrc property, device, has been added.
+
+- API depreciations:
+    
+* A cdparanoia property, location, has been marked for deprecation.
+* A dvdnavsrc property, location, has been marked for deprecation.
+* A dvdreadsrc property, location, has been marked for deprecation.
+* A vcdsrc property, location, has been marked for deprecation.
   
 Changes since 0.8.5:
     
@@ -438,4 +515,5 @@ Bugs fixed since 0.7.4:
       * 135038 : port gst-shorten to the new caps system
       * 135042 : fix tag writing in lame
       * 135116 : gstflacenc.c fails to build in NetBSD
+
 
