@@ -1,5 +1,14 @@
 2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/mixer/mixer.c:
+	* gst-libs/gst/propertyprobe/propertyprobe.c:
+	* gst-libs/gst/tuner/tuner.c: (gst_tuner_find_norm_by_name),
+	(gst_tuner_find_channel_by_name):
+	* gst-libs/gst/tuner/tuner.h:
+	  Add gtk-doc style comments. Also fix a function name.
+
+2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/divx/gstdivxdec.c: (gst_divxdec_init),
 	(gst_divxdec_negotiate):
 	  Fix for new capsnego - also fixes gst-player with divxdec.
