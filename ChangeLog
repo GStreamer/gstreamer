@@ -1,3 +1,7 @@
+2004-07-12  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Fix test for Objective C
+
 2004-07-12  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_get_capslist),
 	(gst_gdk_pixbuf_chain):
