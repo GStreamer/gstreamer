@@ -48,6 +48,9 @@ GstElementDetails gst_gnomevfssrc_details;
 #define GST_IS_GNOMEVFSSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GNOMEVFSSRC))
 
+static GStaticMutex count_lock = G_STATIC_MUTEX_INIT;
+static gint ref_count = 0;
+
 typedef enum {
 	GST_GNOMEVFSSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
@@ -118,6 +121,7 @@ GType gst_gnomevfssrc_get_type(void);
 
 static void 		gst_gnomevfssrc_class_init	(GstGnomeVFSSrcClass *klass);
 static void 		gst_gnomevfssrc_init		(GstGnomeVFSSrc *gnomevfssrc);
+static void 		gst_gnomevfssrc_dispose		(GObject *object);
 
 static void 		gst_gnomevfssrc_set_property	(GObject *object, guint prop_id,
 							 const GValue *value, GParamSpec *pspec);
@@ -180,19 +184,17 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
                "location",     ARG_LOCATION,     G_PARAM_READWRITE,
                NULL);
 
+	gobject_class->dispose         = gst_gnomevfssrc_dispose;
+
 	gstelement_class->set_property = gst_gnomevfssrc_set_property;
 	gstelement_class->get_property = gst_gnomevfssrc_get_property;
 
 	gstelement_class->change_state = gst_gnomevfssrc_change_state;
 
-	/* gnome vfs engine init */
-	if (gnome_vfs_initialized() == FALSE)
-		gnome_vfs_init();
 }
 
 static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 {
-
 	gnomevfssrc->srcpad = gst_pad_new("src", GST_PAD_SRC);
 	gst_pad_set_get_function(gnomevfssrc->srcpad, gst_gnomevfssrc_get);
 	gst_pad_set_event_function (gnomevfssrc->srcpad,
@@ -209,6 +211,31 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 	gnomevfssrc->curoffset = 0;
 	gnomevfssrc->bytes_per_read = 4096;
 	gnomevfssrc->new_seek = FALSE;
+
+	g_static_mutex_lock (&count_lock);
+	if (ref_count == 0) {
+		/* gnome vfs engine init */
+		if (gnome_vfs_initialized() == FALSE) {
+			gnome_vfs_init();
+		}
+	}
+	ref_count++;
+	g_static_mutex_unlock (&count_lock);
+}
+
+static void
+gst_gnomevfssrc_dispose (GObject *object)
+{
+	g_static_mutex_lock (&count_lock);
+	ref_count--;
+	if (ref_count == 0) {
+		if (gnome_vfs_initialized() == TRUE) {
+			gnome_vfs_shutdown();
+		}
+	}
+	g_static_mutex_unlock (&count_lock);
+
+  	G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
@@ -345,6 +372,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		{
 			GstEvent *event;
 
+			gst_buffer_unref (buf);
 			GST_DEBUG (0,"new seek %lld", src->curoffset);
 			src->new_seek = FALSE;
 
@@ -368,12 +396,15 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		{
 			GstEvent *event;
 
+			gst_buffer_unref (buf);
+			GST_DEBUG (0,"new seek %lld", src->curoffset);
 			src->new_seek = FALSE;
 
 			GST_DEBUG (GST_CAT_EVENT, "gnomevfssrc sending discont");
 			event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
 			GST_EVENT_DISCONT_FLUSH (event) = src->need_flush;
 			src->need_flush = FALSE;
+
 			return GST_BUFFER (event);
 		}
 
@@ -507,12 +538,12 @@ static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 		close(src->fd);
 	} else {
 		gnome_vfs_close(src->handle);
+		gnome_vfs_handle_destroy(src->handle);
 	}
 
 	/* zero out a lot of our state */
 	src->is_local = FALSE;
-	g_free(src->uri);
-	g_free(src->handle);
+	gnome_vfs_uri_unref(src->uri);
 	g_free(src->local_name);
 	src->fd = 0;
 	src->map = NULL;
