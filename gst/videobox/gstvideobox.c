@@ -84,13 +84,6 @@ GST_ELEMENT_DETAILS ("video box filter",
     "Wim Taymans <wim@fluendo.com>");
 
 
-/* VideoBox signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 #define DEFAULT_LEFT      0
 #define DEFAULT_RIGHT     0
 #define DEFAULT_TOP       0
@@ -397,17 +390,54 @@ gst_video_box_sink_link (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-#define GST_VIDEO_I420_Y_OFFSET(width,height) (0)
-#define GST_VIDEO_I420_U_OFFSET(width,height) ((width)*(height))
-#define GST_VIDEO_I420_V_OFFSET(width,height) ((width)*(height) + ((width/2)*(height/2)))
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
 
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (width)
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) ((width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((width)/2)
+/* see gst-plugins/gst/games/gstvideoimage.c, paint_setup_I420() */
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+
+#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
+#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
 
 static int yuv_colors_Y[] = { 16, 150, 29 };
 static int yuv_colors_U[] = { 128, 46, 255 };
 static int yuv_colors_V[] = { 128, 21, 107 };
+
+static void
+gst_video_box_copy_plane_i420 (GstVideoBox * video_box, guint8 * src,
+    guint8 * dest, gint br, gint bl, gint bt, gint bb, gint src_crop_width,
+    gint src_crop_height, gint src_stride, gint dest_width, gint dest_stride,
+    guint8 fill_color)
+{
+  gint j;
+
+  /* top border */
+  for (j = 0; j < bt; j++) {
+    memset (dest, fill_color, dest_width);
+    dest += dest_stride;
+  }
+
+  /* copy and add left and right border */
+  for (j = 0; j < src_crop_height; j++) {
+    memset (dest, fill_color, bl);
+    memcpy (dest + bl, src, src_crop_width);
+    memset (dest + bl + src_crop_width, fill_color, br);
+    dest += dest_stride;
+    src += src_stride;
+  }
+
+  /* bottom border */
+  for (j = 0; j < bb; j++) {
+    memset (dest, fill_color, dest_width);
+    dest += dest_stride;
+  }
+}
 
 static void
 gst_video_box_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
@@ -416,10 +446,9 @@ gst_video_box_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   guint8 *destY, *destU, *destV;
   gint crop_width, crop_height;
   gint out_width, out_height;
-  gint src_stride;
+  gint src_width, src_height;
+  gint src_stride, dest_stride;
   gint br, bl, bt, bb;
-  gint j;
-  gint color1, color2;
 
   br = video_box->border_right;
   bl = video_box->border_left;
@@ -429,96 +458,54 @@ gst_video_box_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   out_width = video_box->out_width;
   out_height = video_box->out_height;
 
+  src_width = video_box->in_width;
+  src_height = video_box->in_height;
+
+  crop_width = src_width - (video_box->crop_left + video_box->crop_right);
+  crop_height = src_height - (video_box->crop_top + video_box->crop_bottom);
+
+  /* Y plane */
+  src_stride = GST_VIDEO_I420_Y_ROWSTRIDE (src_width);
+  dest_stride = GST_VIDEO_I420_Y_ROWSTRIDE (out_width);
+
   destY = dest + GST_VIDEO_I420_Y_OFFSET (out_width, out_height);
 
-  srcY =
-      src + GST_VIDEO_I420_Y_OFFSET (video_box->in_width, video_box->in_height);
-  src_stride = GST_VIDEO_I420_Y_ROWSTRIDE (video_box->in_width);
-
-  crop_width =
-      video_box->in_width - (video_box->crop_left + video_box->crop_right);
-  crop_height =
-      video_box->in_height - (video_box->crop_top + video_box->crop_bottom);
-
+  srcY = src + GST_VIDEO_I420_Y_OFFSET (src_width, src_height);
   srcY += src_stride * video_box->crop_top + video_box->crop_left;
 
-  color1 = yuv_colors_Y[video_box->fill_type];
+  gst_video_box_copy_plane_i420 (video_box, srcY, destY, br, bl, bt, bb,
+      crop_width, crop_height, src_stride, out_width, dest_stride,
+      yuv_colors_Y[video_box->fill_type]);
 
-  /* copy Y plane first */
-  for (j = 0; j < bt; j++) {
-    memset (destY, color1, out_width);
-    destY += out_width;
-  }
-  for (j = 0; j < crop_height; j++) {
-    memset (destY, color1, bl);
-    destY += bl;
-    memcpy (destY, srcY, crop_width);
-    destY += crop_width;
-    memset (destY, color1, br);
-    destY += br;
-    srcY += src_stride;
-  }
-  for (j = 0; j < bb; j++) {
-    memset (destY, color1, out_width);
-    destY += out_width;
-  }
-
-  src_stride = GST_VIDEO_I420_U_ROWSTRIDE (video_box->in_width);
+  /* U plane */
+  src_stride = GST_VIDEO_I420_U_ROWSTRIDE (src_width);
+  dest_stride = GST_VIDEO_I420_U_ROWSTRIDE (out_width);
 
   destU = dest + GST_VIDEO_I420_U_OFFSET (out_width, out_height);
+
+  srcU = src + GST_VIDEO_I420_U_OFFSET (src_width, src_height);
+  srcU += src_stride * (video_box->crop_top / 2) + (video_box->crop_left / 2);
+
+  gst_video_box_copy_plane_i420 (video_box, srcU, destU, br / 2, bl / 2, bt / 2,
+      bb / 2, crop_width / 2, crop_height / 2, src_stride, out_width / 2,
+      dest_stride, yuv_colors_U[video_box->fill_type]);
+
+  /* V plane */
+  src_stride = GST_VIDEO_I420_V_ROWSTRIDE (src_width);
+  dest_stride = GST_VIDEO_I420_V_ROWSTRIDE (out_width);
+
   destV = dest + GST_VIDEO_I420_V_OFFSET (out_width, out_height);
 
-  crop_width /= 2;
-  crop_height /= 2;
-  out_width /= 2;
-  out_height /= 2;
-  bb /= 2;
-  bt /= 2;
-  br /= 2;
-  bl /= 2;
-
-  srcU =
-      src + GST_VIDEO_I420_U_OFFSET (video_box->in_width, video_box->in_height);
-  srcV =
-      src + GST_VIDEO_I420_V_OFFSET (video_box->in_width, video_box->in_height);
-  srcU += src_stride * (video_box->crop_top / 2) + (video_box->crop_left / 2);
+  srcV = src + GST_VIDEO_I420_V_OFFSET (src_width, src_height);
   srcV += src_stride * (video_box->crop_top / 2) + (video_box->crop_left / 2);
 
-  color1 = yuv_colors_U[video_box->fill_type];
-  color2 = yuv_colors_V[video_box->fill_type];
-
-  for (j = 0; j < bt; j++) {
-    memset (destU, color1, out_width);
-    memset (destV, color2, out_width);
-    destU += out_width;
-    destV += out_width;
-  }
-  for (j = 0; j < crop_height; j++) {
-    memset (destU, color1, bl);
-    destU += bl;
-    /* copy U plane */
-    memcpy (destU, srcU, crop_width);
-    destU += crop_width;
-    memset (destU, color1, br);
-    destU += br;
-    srcU += src_stride;
-
-    memset (destV, color2, bl);
-    destV += bl;
-    /* copy V plane */
-    memcpy (destV, srcV, crop_width);
-    destV += crop_width;
-    memset (destV, color2, br);
-    destV += br;
-    srcV += src_stride;
-  }
-  for (j = 0; j < bb; j++) {
-    memset (destU, color1, out_width);
-    memset (destV, color2, out_width);
-    destU += out_width;
-    destV += out_width;
-  }
+  gst_video_box_copy_plane_i420 (video_box, srcV, destV, br / 2, bl / 2, bt / 2,
+      bb / 2, crop_width / 2, crop_height / 2, src_stride, out_width / 2,
+      dest_stride, yuv_colors_V[video_box->fill_type]);
 }
+
+/* Note the source image is always I420, we
+ * are converting to AYUV on the fly here */
 
 static void
 gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
@@ -685,7 +672,7 @@ gst_video_box_chain (GstPad * pad, GstData * _data)
         GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
   } else {
     outbuf = gst_pad_alloc_buffer (video_box->srcpad,
-        GST_BUFFER_OFFSET_NONE, (new_width * new_height * 3) / 2);
+        GST_BUFFER_OFFSET_NONE, GST_VIDEO_I420_SIZE (new_width, new_height));
 
     gst_video_box_i420 (video_box,
         GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
