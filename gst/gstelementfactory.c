@@ -209,7 +209,7 @@ gst_element_factory_new (const gchar *name, GType type,
  * @name: name of new element
  *
  * Create a new element of the type defined by the given elementfactory.
- * It wll be given the name supplied, since all elements require a name as
+ * It will be given the name supplied, since all elements require a name as
  * their first argument.
  *
  * Returns: new #GstElement
@@ -260,9 +260,10 @@ gst_element_factory_create (GstElementFactory *factory,
  * @factoryname: a named factory to instantiate
  * @name: name of new element
  *
- * Create a new element of the type defined by the given elementfactory.
- * It wll be given the name supplied, since all elements require a name as
- * their first argument.
+ * Create a new element of the type defined by the given element factory.
+ * If name is NULL, then the element will receive a guaranteed unique name,
+ * consisting of the element factory name and a number.
+ * If name is given, it will be given the name supplied.
  *
  * Returns: new #GstElement (or NULL if unable to create element)
  */
