@@ -1,3 +1,9 @@
+2004-06-06  David Schleef  <ds@schleef.org>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c: that's
+	G_HAVE_GNUC_VARARGS, not G_HAVE_GNU_VARARGS.  Should fix compile
+	problems on several systems.
+
 2004-06-06  Benjamin Otte  <otte@gnome.org>
 
 	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init):
