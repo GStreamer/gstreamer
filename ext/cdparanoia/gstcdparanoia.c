@@ -47,11 +47,8 @@
 static GstElementDetails cdparanoia_details = {
   "CD Audio (cdda) Source, Paranoia IV",
   "Source/File",
-  "GPL",
   "Read audio from CD in paranoid mode",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 2000",
 };
 
 GST_PAD_TEMPLATE_FACTORY (cdparanoia_src_factory,
@@ -136,7 +133,7 @@ enum
   ARG_DISCID
 };
 
-
+static void     cdparanoia_base_init (gpointer g_class);
 static void 		cdparanoia_class_init 		(CDParanoiaClass *klass);
 static void 		cdparanoia_init 		(CDParanoia *cdparanoia);
 
@@ -180,7 +177,8 @@ cdparanoia_get_type (void)
 
   if (!cdparanoia_type) {
     static const GTypeInfo cdparanoia_info = {
-      sizeof (CDParanoiaClass), NULL,
+      sizeof (CDParanoiaClass),
+			cdparanoia_base_init,
       NULL,
       (GClassInitFunc) cdparanoia_class_init,
       NULL,
@@ -197,6 +195,15 @@ cdparanoia_get_type (void)
     sector_format = gst_format_register ("sector", "CD sector");
   }
   return cdparanoia_type;
+}
+
+static void
+cdparanoia_base_init (gpointer g_class)
+{
+	GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+	gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (cdparanoia_src_factory));
+	gst_element_class_set_details (element_class, &cdparanoia_details);
 }
 
 static void
@@ -1099,29 +1106,22 @@ cdparanoia_get_index (GstElement *element)
 }
 											
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the cdparanoia element */
-  factory = gst_element_factory_new ("cdparanoia", 
-		                     GST_TYPE_CDPARANOIA, 
-				     &cdparanoia_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  /* register the source's caps */
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (cdparanoia_src_factory));
-
-  /* and add the cdparanoia element factory to the plugin */
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+	if (!gst_element_register (plugin, "cdparanoia", GST_RANK_NONE, GST_TYPE_CDPARANOIA))
+		return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "cdparanoia",
-  plugin_init
-};
+	"Read audio from CD in paranoid mode",
+  plugin_init,
+	VERSION,
+	"GPL",
+	GST_COPYRIGHT,
+	GST_PACKAGE,
+	GST_ORIGIN)
