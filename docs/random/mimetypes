@@ -238,7 +238,7 @@ framerate = 0 - MAXFLOAT (FLOAT)
 6 - H263 and related codecs
     MIME type: video/x-h263
     Properties:
-    Known fourccs: H263, i263, M263, x263, VDOW, VIVO
+    Known fourccs: H263, i263, L263, M263/m263, s263, x263, VDOW, VIVO
     Encoder: ffenc_h263, ffenc_h263p
     Decoder: ffdec_h263, ffdec_h263i
 

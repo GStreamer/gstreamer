@@ -1,3 +1,8 @@
+2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* docs/random/mimetypes.txt:
+	  Add alternate FOURCC codes for h263 related codecs
+
 2004-12-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/programs.xml:
