@@ -328,7 +328,7 @@ gst_xine_audio_dec_chain (GstPad * pad, GstData * in)
     xine->decoder->decode_data (xine->decoder, &element);
     /* send stsd emulation to the decoder */
     /* FIXME: qdm2 only right now */
-    g_assert (gst_pad_get_negotiated_caps (xine->sinkpad));
+    g_assert (gst_pad_is_negotiated (xine->sinkpad));
     structure =
         gst_caps_get_structure (gst_pad_get_negotiated_caps (xine->sinkpad), 0);
     *((guint32 *) & stsd[56]) = GUINT32_TO_BE (12);
