@@ -2,6 +2,9 @@
  * Sample app for element embedding.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <gst/xoverlay/xoverlay.h>
 #include <gtk/gtk.h>
@@ -29,7 +32,7 @@ main (int argc, char *argv[])
   pipeline = gst_element_factory_make ("pipeline", NULL);
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
   csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  videosink = gst_element_factory_make ("xvimagesink", NULL);
+  videosink = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);

@@ -406,7 +406,7 @@ gen_video_element (GstPlayBin * play_bin)
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
-    sink = gst_element_factory_make ("xvimagesink", "sink");
+    sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
   }
   gst_object_ref (GST_OBJECT (sink));
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
@@ -511,7 +511,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
-    sink = gst_element_factory_make ("osssink", "sink");
+    sink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sink");
     play_bin->audio_sink = GST_ELEMENT (gst_object_ref (GST_OBJECT (sink)));
   }
 

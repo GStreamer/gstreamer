@@ -16,6 +16,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 
 static GstElement *
@@ -27,7 +30,7 @@ gen_video_element ()
 
   element = gst_thread_new ("vbin");
   conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
-  sink = gst_element_factory_make ("ximagesink", "sink");
+  sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
 
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), sink);
@@ -48,7 +51,7 @@ gen_audio_element ()
 
   element = gst_thread_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "conv");
-  sink = gst_element_factory_make ("osssink", "sink");
+  sink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sink");
 
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), sink);

@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -50,7 +53,7 @@ main (int argc, char *argv[])
   GtkWidget *volume_slider;
   GtkWidget *freq_slider;
 
-  GstElement *thread, *sinesrc, *volfilter, *osssink;
+  GstElement *thread, *sinesrc, *volfilter, *audiosink;
   GstDParamManager *dpman;
   GstDParam *volume;
   GstDParam *freq;
@@ -65,13 +68,13 @@ main (int argc, char *argv[])
   g_print ("creating elements\n");
   thread = gst_thread_new ("live-example");
   sinesrc = gst_element_factory_make ("sinesrc", "sine-source");
-  osssink = gst_element_factory_make ("osssink", "sound-sink");
+  audiosink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sound-sink");
   volfilter = gst_element_factory_make ("volume", "volume-filter");
-  gst_bin_add_many (GST_BIN (thread), sinesrc, volfilter, osssink, NULL);
-  gst_element_link_many (sinesrc, volfilter, osssink, NULL);
+  gst_bin_add_many (GST_BIN (thread), sinesrc, volfilter, audiosink, NULL);
+  gst_element_link_many (sinesrc, volfilter, audiosink, NULL);
   /* this breaks with current alsa oss compat lib */
-  g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
-  g_object_set (G_OBJECT (osssink), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
+  g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (sinesrc), "samplesperbuffer", 1024, NULL);
 

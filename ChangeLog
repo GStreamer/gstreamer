@@ -1,3 +1,40 @@
+2005-02-02  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Put DEFAULT_AUDIOSINK in config.h and use
+	whereever possible.  (Fixes #165997)
+	* examples/capsfilter/capsfilter1.c: (main):
+	* examples/dynparams/filter.c: (create_ui):
+	* examples/seeking/cdparanoia.c: (get_track_info), (main):
+	* examples/seeking/chained.c: (main):
+	* examples/seeking/seek.c: (make_mod_pipeline), (make_dv_pipeline),
+	(make_wav_pipeline), (make_flac_pipeline), (make_sid_pipeline),
+	(make_vorbis_pipeline), (make_mp3_pipeline), (make_avi_pipeline),
+	(make_mpeg_pipeline), (make_mpegnt_pipeline):
+	* examples/seeking/spider_seek.c: (make_spider_pipeline):
+	* examples/switch/switcher.c: (main):
+	* ext/dv/demo-play.c: (main):
+	* ext/faad/gstfaad.c: (gst_faad_change_state):
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	* ext/smoothwave/demo-osssrc.c: (main):
+	* gst-libs/gst/gconf/gconf.c: (gst_gconf_set_string),
+	(gst_gconf_render_bin_from_description),
+	(gst_gconf_get_default_audio_sink),
+	(gst_gconf_get_default_video_sink),
+	(gst_gconf_get_default_audio_src),
+	(gst_gconf_get_default_video_src),
+	(gst_gconf_get_default_visualization_element):
+	* gst/level/demo.c: (main):
+	* gst/level/plot.c: (main):
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	* gst/playback/test.c: (gen_video_element), (gen_audio_element):
+	* gst/playondemand/demo-mp3.c: (setup_pipeline):
+	* gst/sine/demo-dparams.c: (main):
+	* gst/spectrum/demo-osssrc.c: (main):
+	* gst/speed/demo-mp3.c: (main):
+	* gst/volume/demo.c: (main):
+	* testsuite/embed/embed.c: (main):
+
 2005-02-02  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_class_init),

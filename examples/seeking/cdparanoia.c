@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <gst/gst.h>
 #include <string.h>
@@ -132,7 +135,7 @@ main (int argc, char **argv)
 {
   GstElement *pipeline;
   GstElement *cdparanoia;
-  GstElement *osssink;
+  GstElement *audiosink;
   GstPad *pad;
   GstFormat track_format;
   GstEvent *event;
@@ -147,13 +150,13 @@ main (int argc, char **argv)
   g_assert (cdparanoia);
   g_object_set (G_OBJECT (cdparanoia), "paranoia_mode", 0, NULL);
 
-  osssink = gst_element_factory_make ("osssink", "osssink");
-  g_assert (osssink);
+  audiosink = gst_element_factory_make (DEFAULT_AUDIOSINK, DEFAULT_AUDIOSINK);
+  g_assert (audiosink);
 
   gst_bin_add (GST_BIN (pipeline), cdparanoia);
-  gst_bin_add (GST_BIN (pipeline), osssink);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_link_pads (cdparanoia, "src", osssink, "sink");
+  gst_element_link_pads (cdparanoia, "src", audiosink, "sink");
 
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
       G_CALLBACK (gst_element_default_deep_notify), NULL);
