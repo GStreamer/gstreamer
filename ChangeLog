@@ -1,3 +1,20 @@
+2004-02-23  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_audio_caps), (gst_riff_create_iavs_caps),
+	(gst_riff_create_video_template_caps),
+	(gst_riff_create_audio_template_caps),
+	(gst_riff_create_iavs_template_caps):
+	* gst-libs/gst/riff/riff-media.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_base_init),
+	(gst_asf_demux_audio_caps), (gst_asf_demux_add_audio_stream),
+	(gst_asf_demux_video_caps), (gst_asf_demux_add_video_stream):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_add_stream):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps),
+	(gst_matroska_demux_plugin_init): First batch implementing audio and 
+	video codec tags in demuxers.
+
 2004-02-22  Benjamin Otte  <otte@gnome.org>
 
 	* ext/xine/Makefile.am:
