@@ -476,7 +476,7 @@ gst_osssink_sink_query (GstPad *pad, GstQueryType type, GstFormat *format, gint6
       break;
     case GST_QUERY_POSITION:
       if (!gst_osssink_convert (pad, 
-			        GST_FORMAT_TIME, gst_clock_get_time (osssink->provided_clock),
+			        GST_FORMAT_TIME, gst_element_get_time (GST_ELEMENT (osssink)),
 		                format, value)) 
       {
         res = FALSE;
