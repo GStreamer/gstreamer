@@ -22,7 +22,7 @@
 
 #include "gstlog.h"
 #include "gst_private.h"
-#include "gstregistry.h"
+#include "gstregistrypool.h"
 
 #include "gstpad.h"
 #include "gstindex.h"

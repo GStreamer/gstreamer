@@ -23,7 +23,7 @@
 #include "gst_private.h"
 
 #include "gsturi.h"
-#include "gstregistry.h"
+#include "gstregistrypool.h"
 #include "gstlog.h"
 
 static void 		gst_uri_handler_class_init 	(GstURIHandlerClass *klass);
