@@ -37,7 +37,7 @@ struct _GstByteStream {
 
   /* we keep state of assembled pieces */
   guint8	*assembled;
-  guint32	 assembled_len;
+  guint32	 assembled_len; /* only valid when assembled != NULL */
 
   /* this is needed for gst_bytestream_tell */
   guint64	 offset;
@@ -50,6 +50,7 @@ struct _GstByteStream {
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
+void			gst_bytestream_reset		(GstByteStream *bs);
 guint32			gst_bytestream_read		(GstByteStream *bs, GstBuffer** buf, guint32 len);
 guint64			gst_bytestream_tell		(GstByteStream *bs);
 guint64			gst_bytestream_length		(GstByteStream *bs);

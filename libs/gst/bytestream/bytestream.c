@@ -52,6 +52,34 @@
 
 static guint8 *gst_bytestream_assemble (GstByteStream * bs, guint32 len);
 
+static inline void
+gst_bytestream_init (GstByteStream *bs)
+{
+  bs->event = NULL;
+  bs->buflist = NULL;
+  bs->headbufavail = 0;
+  bs->listavail = 0;
+  bs->assembled = NULL;
+  bs->offset = 0LL;
+  bs->in_seek = FALSE;
+}
+static inline void
+gst_bytestream_exit (GstByteStream *bs)
+{
+  GSList *walk;
+
+  if (bs->event)
+    gst_event_unref (bs->event);
+  
+  walk = bs->buflist;
+  while (walk) {
+    gst_buffer_unref (GST_BUFFER (walk->data));
+    walk = g_slist_next (walk);
+  }
+  g_slist_free (bs->buflist);
+
+  g_free (bs->assembled);
+}
 /**
  * gst_bytestream_new:
  * @pad: the pad to attach the bytestream to
@@ -66,13 +94,7 @@ gst_bytestream_new (GstPad * pad)
   GstByteStream *bs = g_new (GstByteStream, 1);
 
   bs->pad = pad;
-  bs->event = NULL;
-  bs->buflist = NULL;
-  bs->headbufavail = 0;
-  bs->listavail = 0;
-  bs->assembled = NULL;
-  bs->offset = 0LL;
-  bs->in_seek = FALSE;
+  gst_bytestream_init (bs);
 
   return bs;
 }
@@ -86,22 +108,17 @@ gst_bytestream_new (GstPad * pad)
 void
 gst_bytestream_destroy (GstByteStream * bs)
 {
-  GSList *walk;
-
-  if (bs->event)
-    gst_event_unref (bs->event);
-
-  walk = bs->buflist;
-  while (walk) {
-    gst_buffer_unref (GST_BUFFER (walk->data));
-    walk = g_slist_next (walk);
-  }
-  g_slist_free (bs->buflist);
-  if (bs->assembled)
-    g_free (bs->assembled);
+  gst_bytestream_exit (bs);
   g_free (bs);
 }
-
+void
+gst_bytestream_reset (GstByteStream *bs)
+{
+  /* free all data */
+  gst_bytestream_exit (bs);
+  /* reset data to clean state */
+  gst_bytestream_init (bs);
+}
 /* HOW THIS WORKS:
  *
  * The fundamental structure is a singly-linked list of buffers.  The
@@ -328,6 +345,10 @@ gst_bytestream_peek_bytes (GstByteStream *bs, guint8** data, guint32 len)
 
   bs_print ("peek_bytes: asking for %d bytes", len);
   if (bs->assembled) {
+    if (bs->assembled_len >= len) {
+      *data = bs->assembled;
+      return len;
+    }
     g_free (bs->assembled);
     bs->assembled = NULL;
   }
