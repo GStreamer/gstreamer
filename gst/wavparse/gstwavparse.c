@@ -22,24 +22,28 @@
 
 #include <gstwavparse.h>
 
-static void		gst_wavparse_class_init	(GstWavParseClass *klass);
-static void		gst_wavparse_init	(GstWavParse *wavparse);
+static void		gst_wavparse_class_init		(GstWavParseClass *klass);
+static void		gst_wavparse_init		(GstWavParse *wavparse);
 
-static GstCaps*		wav_type_find		(GstBuffer *buf, gpointer private);
+static GstCaps*		wav_type_find			(GstBuffer *buf, gpointer private);
 
 static const GstFormat*	gst_wavparse_get_formats	(GstPad *pad);
 static const GstQueryType *
 			gst_wavparse_get_query_types	(GstPad *pad);
-static gboolean		gst_wavparse_pad_query	(GstPad *pad, 
-		                                 GstQueryType type,
-						 GstFormat *format, 
-						 gint64 *value);
-static gboolean		gst_wavparse_pad_convert (GstPad *pad,
-						  GstFormat src_format,
-						  gint64 src_value,
-						  GstFormat *dest_format,
-						  gint64 *dest_value);
-static void		gst_wavparse_chain	(GstPad *pad, GstBuffer *buf);
+static gboolean		gst_wavparse_pad_query		(GstPad *pad, 
+		                                	 GstQueryType type,
+							 GstFormat *format, 
+							 gint64 *value);
+static gboolean		gst_wavparse_pad_convert 	(GstPad *pad,
+							 GstFormat src_format,
+							 gint64 src_value,
+							 GstFormat *dest_format,
+							 gint64 *dest_value);
+static void		gst_wavparse_chain		(GstPad *pad, GstBuffer *buf);
+
+static const GstEventMask*
+			gst_wavparse_get_event_masks 	(GstPad *pad);
+static gboolean 	gst_wavparse_srcpad_event 	(GstPad *pad, GstEvent *event);
 
 /* elementfactory information */
 static GstElementDetails gst_wavparse_details = {
@@ -172,6 +176,8 @@ gst_wavparse_init (GstWavParse *wavparse)
   gst_pad_set_query_type_function (wavparse->srcpad,
 		                   gst_wavparse_get_query_types);
   gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
+  gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
+  gst_pad_set_event_mask_function (wavparse->srcpad, gst_wavparse_get_event_masks);
 
   gst_pad_set_chain_function (wavparse->sinkpad, gst_wavparse_chain);
 
@@ -183,6 +189,8 @@ gst_wavparse_init (GstWavParse *wavparse)
   wavparse->riff_nextlikely = 0;
   wavparse->size = 0;
   wavparse->bps = 0;
+  wavparse->offset = 0;
+  wavparse->need_discont = FALSE;
 }
 
 static GstCaps*
@@ -196,37 +204,11 @@ wav_type_find (GstBuffer *buf, gpointer private)
   return gst_caps_new ("wav_type_find", "audio/x-wav", NULL);
 }
 
-
-/* set timestamp on outgoing buffer
- * returns TRUE if a timestamp was set
- */
-static gboolean
-gst_wavparse_set_timestamp (GstWavParse *wavparse, GstBuffer *buf)
-{
-  gboolean retval = FALSE;
-
-  /* only do timestamps on linear audio */
-  switch (wavparse->format)
-  {
-    case GST_RIFF_WAVE_FORMAT_PCM:
-      GST_BUFFER_TIMESTAMP (buf) = wavparse->offset * GST_SECOND
-	                         / wavparse->rate;
-      wavparse->offset += GST_BUFFER_SIZE (buf) * 8
-		        / (wavparse->width * wavparse->channels);
-      retval = TRUE;
-      break;
-    default:
-      break;
-  }
-  return retval;
-}
-
 static void
 gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 {
   GstWavParse *wavparse;
   gboolean buffer_riffed = FALSE;	/* so we don't parse twice */
-  gchar *data;
   gulong size;
 
   g_return_if_fail (pad != NULL);
@@ -237,29 +219,55 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
   GST_DEBUG (0, "gst_wavparse_chain: got buffer in '%s'",
           gst_object_get_name (GST_OBJECT (wavparse)));
-  data = (guchar *) GST_BUFFER_DATA (buf);
+
   size = GST_BUFFER_SIZE (buf);
 
   /* walk through the states in priority order */
   /* we're in the data region */
   if (wavparse->state == GST_WAVPARSE_DATA) {
+    GstFormat format;
+    guint64 maxsize;
+
+    /* we can't go beyond the max length */
+    maxsize = wavparse->riff_nextlikely - GST_BUFFER_OFFSET (buf);
+
     /* if we're expected to see a new chunk in this buffer */
-    if ((wavparse->riff_nextlikely - GST_BUFFER_OFFSET (buf))
-	< GST_BUFFER_SIZE (buf)) {
-      GST_BUFFER_SIZE (buf) = wavparse->riff_nextlikely
-	                    - GST_BUFFER_OFFSET (buf);
+    if (maxsize < size) {
+      GstBuffer *newbuf;
+
+      newbuf = gst_buffer_create_sub (buf, 0, maxsize);
+      gst_buffer_unref (buf);
+      buf = newbuf;
+
+      size = maxsize;
 
       wavparse->state = GST_WAVPARSE_OTHER;
       /* I suppose we could signal an EOF at this point, but that may be
          premature.  We've stopped data flow, that's the main thing. */
     }
 
-    gst_wavparse_set_timestamp (wavparse, buf);
+    if (GST_PAD_IS_USABLE (wavparse->srcpad)) {
+      format = GST_FORMAT_TIME;
+      gst_pad_convert (wavparse->srcpad,
+		       GST_FORMAT_BYTES,
+		       wavparse->offset,
+		       &format,
+		       &GST_BUFFER_TIMESTAMP (buf));
 
-    if (GST_PAD_IS_USABLE (wavparse->srcpad))
+      if (wavparse->need_discont) {
+        gst_pad_push (wavparse->srcpad, 
+	              GST_BUFFER (gst_event_new_discontinuous (FALSE,
+			      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf), 
+			      NULL)));
+        wavparse->need_discont = FALSE;
+      }
       gst_pad_push (wavparse->srcpad, buf);
+    }
     else
       gst_buffer_unref (buf);
+
+    wavparse->offset += size;
+
     return;
   }
 
@@ -396,6 +404,8 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
       GST_DEBUG (0, "data begins at %ld", datachunk->offset);
 
+      wavparse->datastart = datachunk->offset;
+
       /* at this point we can ACK that we have data */
       wavparse->state = GST_WAVPARSE_DATA;
 
@@ -403,21 +413,17 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       subsize = size - datachunk->offset;
       GST_DEBUG (0, "sending last %ld bytes along as audio", subsize);
 
-      newbuf = gst_buffer_new ();
-      GST_BUFFER_DATA (newbuf) = g_malloc (subsize);
-      GST_BUFFER_SIZE (newbuf) = subsize;
-
-      gst_wavparse_set_timestamp (wavparse, newbuf);
-
-      memcpy (GST_BUFFER_DATA (newbuf),
-	      GST_BUFFER_DATA (buf) + datachunk->offset, subsize);
-
+      newbuf = gst_buffer_create_sub (buf, datachunk->offset, subsize);
       gst_buffer_unref (buf);
+
+      GST_BUFFER_TIMESTAMP (newbuf) = 0;
 
       if (GST_PAD_IS_USABLE (wavparse->srcpad))
         gst_pad_push (wavparse->srcpad, newbuf);
       else
 	gst_buffer_unref (newbuf);
+
+      wavparse->offset = subsize;
 
       /* now we're ready to go, the next buffer should start data */
       wavparse->state = GST_WAVPARSE_DATA;
@@ -456,22 +462,23 @@ gst_wavparse_pad_convert (GstPad *pad,
   GstWavParse *wavparse;
 
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  /* FIXME default should be samples in this case IMO */
   if (*dest_format == GST_FORMAT_DEFAULT)
     *dest_format = GST_FORMAT_TIME;
   
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
-	  g_warning ("bytes_per_sample is 0, internal error\n");
-	  g_warning ("channels %d,  width %d\n",
-		     wavparse->channels, wavparse->width);
-	  return FALSE;
+    g_warning ("bytes_per_sample is 0, internal error\n");
+    g_warning ("channels %d,  width %d\n",
+	     wavparse->channels, wavparse->width);
+    return FALSE;
   }
   byterate = (glong) (bytes_per_sample * wavparse->rate);
   if (byterate == 0) {
-	  g_warning ("byterate is 0, internal error\n");
-	  return FALSE;
+    g_warning ("byterate is 0, internal error\n");
+    return FALSE;
   }
-  g_print ("DEBUG: bytes per sample: %d\n", bytes_per_sample);
+  GST_DEBUG (0, "bytes per sample: %d\n", bytes_per_sample);
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -494,9 +501,11 @@ gst_wavparse_pad_convert (GstPad *pad,
       if (*dest_format == GST_FORMAT_BYTES)
 	*dest_value = src_value * byterate / GST_SECOND;
       else if (*dest_format == GST_FORMAT_UNITS)
-        *dest_value = src_value * wavparse->rate /GST_SECOND;
+	*dest_value = src_value * wavparse->rate / GST_SECOND;
       else
         return FALSE;
+
+      *dest_value = *dest_value & ~(bytes_per_sample - 1);
       break;
     default:
       g_warning ("unhandled format for wavparse\n");
@@ -539,10 +548,76 @@ gst_wavparse_pad_query (GstPad *pad, GstQueryType type,
     g_warning ("Could not query sink pad's peer\n");
     return FALSE;
   }
-  g_print ("DEBUG: pad_query done, value %" G_GINT64_FORMAT "\n", *value);
+  GST_DEBUG (0, "pad_query done, value %" G_GINT64_FORMAT "\n", *value);
   return TRUE;
 }
 
+static const GstEventMask*
+gst_wavparse_get_event_masks (GstPad *pad)
+{ 
+  static const GstEventMask gst_wavparse_src_event_masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET |
+                      GST_SEEK_FLAG_FLUSH },
+    { 0, }
+  };
+  return gst_wavparse_src_event_masks;
+}   
+
+static gboolean
+gst_wavparse_srcpad_event (GstPad *pad, GstEvent *event)
+{
+  GstWavParse *wavparse = GST_WAVPARSE (GST_PAD_PARENT (pad));
+  gboolean res = FALSE;
+
+  GST_DEBUG(0, "event %d", GST_EVENT_TYPE (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gint64 byteoffset;
+      GstFormat format;
+
+      /* we can only seek when in the DATA state */
+      if (wavparse->state != GST_WAVPARSE_DATA) {
+	return FALSE;
+      }
+
+      format = GST_FORMAT_BYTES;
+      
+      /* bring format to bytes for the peer element, 
+       * FIXME be smarter here */
+      res = gst_pad_convert (pad, 
+		             GST_EVENT_SEEK_FORMAT (event),
+		             GST_EVENT_SEEK_OFFSET (event),
+		             &format,
+		             &byteoffset);
+      
+      if (res) {
+	 GstEvent *seek;
+
+	 /* seek to byteoffset + header length */
+	 seek = gst_event_new_seek (
+			 GST_FORMAT_BYTES |
+			 (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK), 
+			 byteoffset + wavparse->datastart);
+
+	 res = gst_pad_send_event (GST_PAD_PEER (wavparse->sinkpad), seek);
+
+	 if (res) {
+           /* ok, seek worked, update our state */
+           wavparse->offset = byteoffset; 
+	   wavparse->need_discont = TRUE;
+	 }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  gst_event_unref (event);
+  return res;
+}
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
