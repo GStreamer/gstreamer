@@ -103,8 +103,6 @@ static void                  gst_v4lmjpegsrc_set_clock    (GstElement     *eleme
 static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *element);
 
 
-static GstPadTemplate *src_template;
-
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lmjpegsrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -230,9 +228,12 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 static void
 gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 {
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (v4lmjpegsrc);
+
   GST_FLAG_SET(GST_ELEMENT(v4lmjpegsrc), GST_ELEMENT_THREAD_SUGGESTED);
 
-  v4lmjpegsrc->srcpad = gst_pad_new_from_template (src_template, "src");
+  v4lmjpegsrc->srcpad = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "src"), "src");
   gst_element_add_pad(GST_ELEMENT(v4lmjpegsrc), v4lmjpegsrc->srcpad);
 
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);

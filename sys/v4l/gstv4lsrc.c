@@ -95,8 +95,6 @@ static GstElementStateReturn gst_v4lsrc_change_state (GstElement     *element);
 static void                  gst_v4lsrc_set_clock    (GstElement     *element,
                                                       GstClock       *clock);
 
-static GstPadTemplate *src_template = NULL;
-
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lsrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -127,6 +125,7 @@ gst_v4lsrc_get_type (void)
 static void
 gst_v4lsrc_base_init (gpointer g_class)
 {
+  GstPadTemplate *src_template;
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (gstelement_class, &gst_v4lsrc_details);
@@ -191,9 +190,12 @@ gst_v4lsrc_class_init (GstV4lSrcClass *klass)
 static void
 gst_v4lsrc_init (GstV4lSrc *v4lsrc)
 {
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (v4lsrc);
+
   GST_FLAG_SET(GST_ELEMENT(v4lsrc), GST_ELEMENT_THREAD_SUGGESTED);
 
-  v4lsrc->srcpad = gst_pad_new_from_template (src_template, "src");
+  v4lsrc->srcpad = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "src"), "src");
   gst_element_add_pad(GST_ELEMENT(v4lsrc), v4lsrc->srcpad);
 
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);

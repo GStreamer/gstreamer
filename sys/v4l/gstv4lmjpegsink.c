@@ -73,8 +73,6 @@ static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement          
 static void		     gst_v4lmjpegsink_set_clock    (GstElement *element, GstClock *clock);
 
 
-static GstPadTemplate *sink_template;
-
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lmjpegsink_signals[LAST_SIGNAL] = { 0 };
 
@@ -168,7 +166,10 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
 static void
 gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
 {
-  v4lmjpegsink->sinkpad = gst_pad_new_from_template (sink_template, "sink");
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (v4lmjpegsink);
+
+  v4lmjpegsink->sinkpad = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (v4lmjpegsink), v4lmjpegsink->sinkpad);
 
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
