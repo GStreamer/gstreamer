@@ -8,4 +8,4 @@ Description: Streaming-media framework
 Requires: glib >= 1.2.0, gtk+ >= 1.2.0, libxml >= 1.8.1
 Version: @VERSION@
 Libs: -L${libdir} -lgst
-Cflags: -I${includedir}
+Cflags: -I${includedir} @GST_DEFINE_CFLAGS@

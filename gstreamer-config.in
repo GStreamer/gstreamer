@@ -47,7 +47,7 @@ while test $# -gt 0; do
       elif test @includedir@ != /usr/include ; then
         includes=-I@includedir@ 
       fi
-      echo $includes @CORE_CFLAGS@
+      echo $includes @CORE_CFLAGS@ @GST_DEFINE_CFLAGS@
       ;;
     --libs)
       if test $prefix -ef @builddir@ ; then

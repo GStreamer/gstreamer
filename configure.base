@@ -191,6 +191,7 @@ if test x$USE_GLIB2 = xyes; then
     AC_SUBST(GLIB2_CFLAGS)
 
     AC_DEFINE(USE_GLIB2)
+    GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS -DUSE_GLIB2"
 
     HAVE_OBJECT_MODEL=yes
   else
@@ -843,7 +844,8 @@ GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
 GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
 GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
-AC_SUBST(GST_SUBSYSTEM_DISABLE_DEFINES)
+
+GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
 
 
 dnl ################################################
@@ -1055,6 +1057,7 @@ AC_SUBST(LDFLAGS)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 
+AC_SUBST(GST_DEFINE_CFLAGS)
 
 dnl #############################
 dnl # Configure the subpackages #
