@@ -67,6 +67,11 @@ static void gst_play_base_bin_remove_element (GstBin * bin,
 extern GstElementStateReturn gst_element_set_state_func (GstElement * element,
     GstElementState state);
 
+static void gst_play_base_bin_error (GstElement * element,
+    GstElement * source, GError * error, gchar * debug, gpointer data);
+static void gst_play_base_bin_found_tag (GstElement * element,
+    GstElement * source, const GstTagList * taglist, gpointer data);
+
 static GstElementClass *element_class;
 static GstElementClass *parent_class;
 static guint gst_play_base_bin_signals[LAST_SIGNAL] = { 0 };
@@ -341,7 +346,6 @@ state_change (GstElement * element,
   }
 }
 
-
 static gboolean
 setup_source (GstPlayBaseBin * play_base_bin)
 {
@@ -402,20 +406,26 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (no_more_pads), play_base_bin);
     sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
         G_CALLBACK (unknown_type), play_base_bin);
-    sig4 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
-        "state-change", G_CALLBACK (state_change), play_base_bin);
 
     /* either when the queues are filled or when the decoder element has no more
      * dynamic streams, the cond is unlocked. We can remove the signal handlers then
      */
     g_mutex_lock (play_base_bin->preroll_lock);
-    gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
-    GST_DEBUG ("waiting for preroll...");
-    g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
-    GST_DEBUG ("preroll done !");
+    if (gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING) ==
+        GST_STATE_SUCCESS) {
+      GST_DEBUG ("waiting for preroll...");
+      sig4 = g_signal_connect (G_OBJECT (play_base_bin->thread),
+          "state-change", G_CALLBACK (state_change), play_base_bin);
+      g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
+      GST_DEBUG ("preroll done !");
+    } else {
+      GST_DEBUG ("state change failed, media cannot be loaded");
+      sig4 = 0;
+    }
     g_mutex_unlock (play_base_bin->preroll_lock);
 
-    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
+    if (sig4 != 0)
+      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig4);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig3);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig2);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig1);
@@ -527,6 +537,8 @@ gst_play_base_bin_change_state (GstElement * element)
 
         g_signal_connect (G_OBJECT (play_base_bin->thread), "eos",
             G_CALLBACK (play_base_eos), play_base_bin);
+        g_signal_connect (play_base_bin->thread, "found_tag",
+            G_CALLBACK (gst_play_base_bin_found_tag), play_base_bin);
       } else {
         g_warning ("could not get 'opt' scheduler");
         gst_object_unref (GST_OBJECT (play_base_bin->thread));
@@ -546,6 +558,14 @@ gst_play_base_bin_change_state (GstElement * element)
       } else {
         ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
       }
+      if (ret == GST_STATE_SUCCESS) {
+        /* error forwarding:
+         * we only connect after the stream has been set up. If that failed,
+         * we simply emit our own error. This also prevents us from failing
+         * because one stream was unrecognized. */
+        g_signal_connect (play_base_bin->thread, "error",
+            G_CALLBACK (gst_play_base_bin_error), play_base_bin);
+      }
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -555,6 +575,8 @@ gst_play_base_bin_change_state (GstElement * element)
       ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
       break;
     case GST_STATE_PAUSED_TO_READY:
+      g_signal_handlers_disconnect_by_func (play_base_bin->thread,
+          G_CALLBACK (gst_play_base_bin_error), play_base_bin);
       ret = gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
       play_base_bin->need_rebuild = TRUE;
       break;
@@ -637,6 +659,52 @@ gst_play_base_bin_remove_element (GstBin * bin, GstElement * element)
   } else {
     g_warning ("removing elements is not allowed in NULL");
   }
+}
+
+static void
+gst_play_base_bin_error (GstElement * element,
+    GstElement * _source, GError * error, gchar * debug, gpointer data)
+{
+  GstObject *source, *parent;
+
+  source = GST_OBJECT (_source);
+  parent = GST_OBJECT (data);
+
+  /* tell ourselves */
+  gst_object_ref (source);
+  gst_object_ref (parent);
+  GST_DEBUG ("forwarding error \"%s\" from %s to %s", error->message,
+      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
+
+  g_signal_emit_by_name (G_OBJECT (parent), "error", source, error, debug);
+
+  GST_DEBUG ("forwarded error \"%s\" from %s to %s", error->message,
+      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
+  gst_object_unref (source);
+  gst_object_unref (parent);
+}
+
+static void
+gst_play_base_bin_found_tag (GstElement * element,
+    GstElement * _source, const GstTagList * taglist, gpointer data)
+{
+  GstObject *source, *parent;
+
+  source = GST_OBJECT (_source);
+  parent = GST_OBJECT (data);
+
+  /* tell ourselves */
+  gst_object_ref (source);
+  gst_object_ref (parent);
+  GST_DEBUG ("forwarding taglist %p from %s to %s", taglist,
+      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
+
+  g_signal_emit_by_name (G_OBJECT (parent), "found-tag", source, taglist);
+
+  GST_DEBUG ("forwarded taglist %p from %s to %s", taglist,
+      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
+  gst_object_unref (source);
+  gst_object_unref (parent);
 }
 
 void
