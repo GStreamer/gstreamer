@@ -993,7 +993,6 @@ gst_mad_change_state (GstElement *element)
       mad->caps_set = FALSE;
       mad->vbr_average = 0;
       mad->frame.header.samplerate = 0;
-      mad->restart = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */
@@ -1004,6 +1003,7 @@ gst_mad_change_state (GstElement *element)
       mad_synth_finish (&mad->synth);
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
+      mad->restart = TRUE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
