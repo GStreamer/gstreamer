@@ -211,7 +211,8 @@ gst_filesink_open_file (GstFileSink *sink)
   /* open the file */
   if (!sink->filename)
   {
-    /* Out of files */
+    gst_element_error (GST_ELEMENT (sink),
+		       "Error opening file: no file given");
     return FALSE;
   }
 
