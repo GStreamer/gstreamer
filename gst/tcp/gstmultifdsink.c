@@ -39,7 +39,7 @@
 #define CONTROL_SOCKETS(sink)	sink->control_sock
 #define WRITE_SOCKET(sink)	sink->control_sock[1]
 #define READ_SOCKET(sink)	sink->control_sock[0]
-#define SEND_COMMAND(sink, command) 		\
+#define SEND_COMMAND(sink, command)		\
 G_STMT_START {					\
   unsigned char c; c = command;			\
   write (WRITE_SOCKET(sink), &c, 1);		\
@@ -47,7 +47,7 @@ G_STMT_START {					\
 
 #define READ_COMMAND(sink, command, res)	\
 G_STMT_START {					\
-  res = read(READ_SOCKET(sink), &command, 1);		\
+  res = read(READ_SOCKET(sink), &command, 1);	\
 } G_STMT_END
 
 /* elementfactory information */
@@ -1200,7 +1200,9 @@ gst_multifdsink_init_send (GstMultiFdSink * this)
   FD_ZERO (&this->writefds);
 
   if (socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (this)) < 0) {
-    perror ("creating socket pair");
+    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ_WRITE, (NULL),
+        GST_ERROR_SYSTEM);
+    return FALSE;
   }
   FD_SET (READ_SOCKET (this), &this->readfds);
   fcntl (READ_SOCKET (this), F_SETFL, O_NONBLOCK);
