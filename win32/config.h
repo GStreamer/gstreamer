@@ -8,7 +8,7 @@
 #define GETTEXT_PACKAGE "gstreamer-0.8"
 
 /* Location of registry */
-#define GST_CACHE_DIR ""
+#define GST_CACHE_DIR "c:\\gstreamer"
 
 /* macro to use to show function name */
 /*#undef GST_FUNCTION*/
@@ -174,7 +174,7 @@
 #undef PLUGINS_BUILDDIR
 
 /* Define the plugin directory */
-#define PLUGINS_DIR "."
+#define PLUGINS_DIR "c:\\gstreamer"
 
 /* Define if plugins should be loaded from the build tree - only developers
    should use this */

@@ -1,5 +1,8 @@
 <chapter id="chapter-win32">
+<title>Windows support</title>
+  <sect1 id="section-win32-build">
   <title>Building <application>GStreamer</application> under Win32</title>
+
 <para>There are different makefiles that can be used to build GStreamer with the usual Microsoft 
 compiling tools.</para>
 
@@ -54,5 +57,39 @@ sources</para>
 <para>the generated files from the -auto makefiles will be available soon separately on the net 
 for convenience (people who don't want to install GNU tools).</para>
 </note>
+</sect1>
+
+  <sect1 id="section-win32-install">
+<title>Installation on the system</title>
+
+<para>By default, GSTreamer needs a registry. You have to generate it using "gst-register.exe". It will create
+the file in c:\gstreamer\registry.xml that will hold all the plugins you can use.</para>
+
+<para>You should install the GSTreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins.</para>
+<para>For example, my current setup is :</para>
+
+<itemizedlist>
+<listitem><para><filename>c:\gstreamer\registry.xml</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gst-inspect.exe</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gst-launch.exe</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gst-register.exe</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstbytestream.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstelements.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstoptimalscheduler.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstspider.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\iconv.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\intl.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libglib-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libgmodule-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libgobject-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libgthread-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libgtreamer-0.8.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libxml2.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\popt1.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\plugins\gst-libs.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\plugins\gstmatroska.dll</filename></para></listitem>
+</itemizedlist>
+
+</sect1>
 
 </chapter>

@@ -1,3 +1,7 @@
+==== Windows support ====
+
+== Building GStreamer under Win32 ==
+
 There are different makefiles that can be used to build GStreamer with the usual Microsoft 
 compiling tools.
 
@@ -39,3 +43,31 @@ and http://www.mingw.org/
 
 NOTE : the generated files from the -auto makefiles will be available soon separately on the net 
 for convenience (people who don't want to install GNU tools).
+
+== Installation on the system ==
+
+By default, GSTreamer needs a registry. You have to generate it using "gst-register.exe". It will create
+the file in c:\gstreamer\registry.xml that will hold all the plugins you can use.
+
+You should install the GSTreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins.
+For example, my current setup is :
+
+C:\gstreamer\registry.xml
+C:\gstreamer\bin\gst-inspect.exe
+C:\gstreamer\bin\gst-launch.exe
+C:\gstreamer\bin\gst-register.exe
+C:\gstreamer\bin\gstbytestream.dll
+C:\gstreamer\bin\gstelements.dll
+C:\gstreamer\bin\gstoptimalscheduler.dll
+C:\gstreamer\bin\gstspider.dll
+C:\gstreamer\bin\iconv.dll
+C:\gstreamer\bin\intl.dll
+C:\gstreamer\bin\libglib-2.0-0.dll
+C:\gstreamer\bin\libgmodule-2.0-0.dll
+C:\gstreamer\bin\libgobject-2.0-0.dll
+C:\gstreamer\bin\libgthread-2.0-0.dll
+C:\gstreamer\bin\libgtreamer-0.8.dll
+C:\gstreamer\bin\libxml2.dll
+C:\gstreamer\bin\popt1.dll
+C:\gstreamer\plugins\gst-libs.dll
+C:\gstreamer\plugins\gstmatroska.dll

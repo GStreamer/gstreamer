@@ -1,31 +1,37 @@
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/config.h:
+	* win32/README.txt:
+	* docs/manual/win32.xml:
+	Fixed the plugin and GSTreamer location
+
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gstreamer.def:
 	More exports for the plugins
 
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/gstinfo.h:
 	Marc was right, we need to export literraly GST_CAT_DEFAULT
 
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/config.h:
 	NLS crashes in gettext, disabled until this is solved
 
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gst-inspect.vcproj:
 	* win32/gst-launch.vcproj:
 	Should use NLS when available
 
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/registries/gstxmlregistry.c:
 	removing the file doesn't seem to be a good idea on Linux
 
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/registries/gstxmlregistry.c:
 	Remove the registry before renaming the tempfile (needed for Windows)
