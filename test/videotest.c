@@ -38,7 +38,7 @@ int main(int argc,char *argv[]) {
   g_return_if_fail(videosinkfactory != NULL);
 
   src = gst_elementfactory_create(srcfactory,"src");
-  gtk_object_set(GTK_OBJECT(src),"format",3,NULL);
+  //gtk_object_set(GTK_OBJECT(src),"format",3,NULL);
   gtk_object_set(GTK_OBJECT(src),"width",320,"height",240,NULL);
 
   videosink = gst_elementfactory_create(videosinkfactory,"videosink");
