@@ -229,7 +229,7 @@ gst_ebml_write_element_size (GstBuffer * buf, guint64 size)
     mask = 0x01;
     bytes = 8;
     /* Now here's a real FIXME: we cannot read those yet! */
-    size = 0x00ffffffffffffffLLU;
+    size = G_GINT64_CONSTANT (0x00ffffffffffffff);
   }
 
   /* write out, BE, with length size marker */
@@ -321,7 +321,7 @@ gst_ebml_write_get_uint_size (guint64 num)
   guint size = 1;
 
   /* get size */
-  while (num >= (1LLU << (size * 8)) && size < 8) {
+  while (num >= (G_GINT64_CONSTANT (1) << (size * 8)) && size < 8) {
     size++;
   }
 
@@ -464,9 +464,10 @@ gst_ebml_write_master_finish (GstEbmlWrite * ebml, guint64 startpos)
 
   gst_ebml_write_seek (ebml, startpos);
   buf = gst_ebml_write_element_new (ebml, 0);
-  startpos = GUINT64_TO_BE ((1LLU << 56) | (pos - startpos - 8));
-  memcpy (GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf),
-      (guint8 *) & startpos, 8);
+  startpos =
+      GUINT64_TO_BE ((G_GINT64_CONSTANT (1) << 56) | (pos - startpos - 8));
+  memcpy (GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf), (guint8 *) & startpos,
+      8);
   GST_BUFFER_SIZE (buf) += 8;
   gst_ebml_write_element_push (ebml, buf);
   gst_ebml_write_seek (ebml, pos);
