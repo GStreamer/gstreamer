@@ -9,7 +9,7 @@ Reviewing the registry (thomasvs, April 8 2002)
 
   - if specified (using --gst-registry) then use the specified location
   - if not specified :
-       - if GST_CONFIG_DIR is writable as the current user, do it there
+       - it can be written in the global location, do it there
          (which should be sysconfdir/gstreamer) and reg.xml
        - if not writable, then try ~/.gstreamer/reg.xml
 
@@ -17,8 +17,12 @@ Reviewing the registry (thomasvs, April 8 2002)
 
   - if specified (using --gst-registry) then use the specified location
   - if not specified :
-    - try reading GST_CONFIG_DIR/reg.xml first
-    - TODO: then try reading ~/.gstreamer/reg.xml
+    - right now :
+      if local exists, only read local
+      if not, read global
+
+    - TODO: try reading GST_CONFIG_DIR/reg.xml first
+      then try reading ~/.gstreamer/reg.xml
       AND replace every namespace collision with the new one
 
 * actual variables stuff (gstregistry.c)
