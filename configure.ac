@@ -1,4 +1,4 @@
-dnl Note: this file is generated from configure.base by autogen.sh
+dnl Note: this file is now the main autoconf file
 AC_INIT
 AC_CONFIG_SRCDIR([gst/gstobject.h])
 
@@ -658,9 +658,9 @@ AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interf
 AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl Check for liblame
-AC_MSG_CHECKING(LAME library)
-AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, -lm)
-AC_CHECK_HEADER(lame/lame.h, :, HAVE_LIBLAME=no)
+dnl checking the version doesn't work yet
+dnl HAVE_LIBLAME gets set by AM_PATH_LIBLAME, but for clarity we do it again
+AM_PATH_LIBLAME(:, HAVE_LIBLAME=yes, HAVE_LIBLAME=no)
 
 dnl Check for libshout
 AC_MSG_CHECKING(Shout library)
