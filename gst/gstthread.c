@@ -178,7 +178,7 @@ gst_thread_init (GstThread *thread)
   thread->cond = g_cond_new ();
 
   thread->ppid = getpid ();
-  thread->thread_id = -1;
+  thread->thread_id = (pthread_t) -1;
   thread->sched_policy = SCHED_OTHER;
   thread->priority = 0;
 }
@@ -329,11 +329,23 @@ gst_thread_change_state (GstElement * element)
       if (pthread_attr_init (&thread->attr) != 0)
 	g_warning ("pthread_attr_init returned an error !");
 
-      if (gst_scheduler_get_preferred_stack (GST_ELEMENT_SCHED (element), &thread->stack, &stacksize)) {
+      if (gst_scheduler_get_preferred_stack (GST_ELEMENT_SCHED (element), 
+	                                     &thread->stack, &stacksize)) {
+#ifdef HAVE_PTHREAD_ATTR_SETSTACK
         if (pthread_attr_setstack (&thread->attr, thread->stack, stacksize) != 0) {
-          g_warning ("pthread_attr_setstack failed");
+          g_warning ("pthread_attr_setstack failed\n");
           return GST_STATE_FAILURE;
         }
+#else
+        if (pthread_attr_setstackaddr (&thread->attr, thread->stack) != 0) {
+	  g_warning ("pthread_attr_setstackaddr failed\n");
+	  return GST_STATE_FAILURE;
+	}
+        if (pthread_attr_setstacksize (&thread->attr, stacksize) != 0) {
+	  g_warning ("pthread_attr_setstacksize failed\n");
+	  return GST_STATE_FAILURE;
+	}
+#endif
 	GST_DEBUG (GST_CAT_THREAD, "pthread attr set stack at %p of size %ld", 
 		   thread->stack, stacksize);
       }

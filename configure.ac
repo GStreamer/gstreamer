@@ -320,6 +320,11 @@ if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
 
+dnl test if we have pthread_attr_setstack; if not use the older calls
+AC_CHECK_LIB(pthread, pthread_attr_setstack, 
+   AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACK, 1, 
+   [Defined if libpthread has pthread_attr_setstack]))
+
 if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
