@@ -319,9 +319,19 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
         gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, tmp, NULL);
       }
       break;
-    case G_TYPE_STRING:
-      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, value, NULL);
+    case G_TYPE_STRING:{
+      gchar *valid;
+
+      if (!g_utf8_validate (value, -1, (const gchar **) &valid)) {
+        valid = g_strndup (value, valid - value);
+        g_warning ("Invalid vorbis comment tag, truncated it to %s\n", valid);
+      } else {
+        valid = g_strdup (value);
+      }
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, valid, NULL);
+      g_free (valid);
       break;
+    }
     case G_TYPE_DOUBLE:
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, g_strtod (value,
               NULL), NULL);
