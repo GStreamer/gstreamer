@@ -982,6 +982,30 @@ xcf_type_find (GstTypeFind *tf, gpointer unused)
   }
 }
 
+/*** image/x-xpixmap ***************/
+#define XPM_CAPS GST_CAPS_NEW ("xpm_type_find", "image/x-xpixmap", NULL)
+static void
+xpm_type_find (GstTypeFind *tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 9);
+
+  if (data && memcmp (data, "/* XPM */", 9) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, XPM_CAPS);
+  }
+}
+
+#define RAS_CAPS GST_CAPS_NEW ("ras_type_find", "image/x-sun-raster", NULL)
+static void
+ras_type_find (GstTypeFind *tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+  guint8 header[4] = {0x59, 0xA6, 0x6A, 0x95};
+
+  if (data && memcmp (data, header, 4) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, RAS_CAPS);
+  }
+}
+
 /*** video/x-matroska *********************************************************/
 
 #define MATROSKA_CAPS gst_caps_new ("matroska_type", "video/x-matroska", NULL)
@@ -1080,6 +1104,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   static gchar * xcf_exts[] = {"xcf", NULL};
   static gchar * mng_exts[] = {"mng", NULL};
   static gchar * jng_exts[] = {"jng", NULL};
+  static gchar * xpm_exts[] = {"xpm", NULL};
+  static gchar * ras_exts[] = {"ras", NULL};
   
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions", GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
 
@@ -1145,6 +1171,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
 				  mng_type_find, mng_exts, MNG_CAPS, NULL);
   gst_type_find_factory_register (plugin, "image/x-jng", GST_ELEMENT_RANK_SECONDARY,
 				  jng_type_find, jng_exts, JNG_CAPS, NULL);
+  gst_type_find_factory_register (plugin, "image/x-xpixmap", GST_ELEMENT_RANK_SECONDARY,
+				  xpm_type_find, xpm_exts, XPM_CAPS, NULL);
+  gst_type_find_factory_register (plugin, "image/x-sun-raster", GST_ELEMENT_RANK_SECONDARY,
+				  ras_type_find, ras_exts, RAS_CAPS, NULL);
   
   return TRUE;
 }
