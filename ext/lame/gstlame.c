@@ -462,10 +462,10 @@ gst_lame_set_property (GObject *object, guint prop_id, const GValue *value, GPar
       lame->compression_ratio = g_value_get_float (value);
       break;
     case ARG_QUALITY:
-      lame->quality = g_value_get_int (value);
+      lame->quality = g_value_get_enum (value);
       break;
     case ARG_MODE:
-      lame->mode = g_value_get_int (value);
+      lame->mode = g_value_get_enum (value);
       break;
     case ARG_FORCE_MS:
       lame->force_ms = g_value_get_boolean (value);
