@@ -50,8 +50,12 @@ typedef enum {
 #define GST_CAPS_PROPERTIES(caps)       ((caps)->properties)
 #define GST_CAPS_NEXT(caps)             ((caps)->next)
 
+/* GST_CAPS_IS_FIXED is wrong, please use the backported function */
 #define GST_CAPS_IS_FIXED(caps)         (GST_CAPS_FLAGS (caps) & GST_CAPS_FIXED)
+#define GST_CAPS_IS_FIXED_BP(caps)      (((caps)->properties == NULL) || \
+                                         (GST_PROPS_IS_FIXED ((caps)->properties)))
 #define GST_CAPS_IS_FLOATING(caps)      (GST_CAPS_FLAGS (caps) & GST_CAPS_FLOATING)
+
 #define GST_CAPS_IS_CHAINED(caps)       (GST_CAPS_NEXT (caps) != NULL)
 
 struct _GstCaps {

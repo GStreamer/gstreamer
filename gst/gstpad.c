@@ -1442,7 +1442,8 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
  * @pad: a #GstPad to try to set the caps on.
  * @caps: the #GstCaps to set.
  *
- * Tries to set the caps on the given pad.
+ * Tries to set the caps on the given pad.  Takes ownership of the caps;
+ * if you want to reuse these caps you need to ref them first.
  *
  * Returns: A #GstPadLinkReturn value indicating whether the caps
  * 		could be set.
