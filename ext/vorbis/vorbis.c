@@ -21,21 +21,27 @@
 #include "config.h"
 #endif
 
-#include <vorbisenc.h>
+#include "vorbisenc.h"
+#include "vorbisdec.h"
 
 extern GType vorbisfile_get_type(void);
 
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-
   if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
+  if (!gst_library_load ("gsttags"))
     return FALSE;
 
   if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE, GST_TYPE_VORBISENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "vorbisfile", GST_RANK_PRIMARY + 1, vorbisfile_get_type ()))
+  if (!gst_element_register (plugin, "vorbisfile", GST_RANK_SECONDARY, vorbisfile_get_type ()))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "vorbisdec", GST_RANK_PRIMARY, gst_vorbis_dec_get_type ()))
     return FALSE;
 
   return TRUE;

@@ -1048,7 +1048,7 @@ dv_type_find (GstTypeFind *tf, gpointer private)
   }
 }
 
-/*** application/x-vorbis *****************************************************/
+/*** audio/x-vorbis ***********************************************************/
 
 static GstStaticCaps vorbis_caps = GST_STATIC_CAPS ("audio/x-vorbis");
 #define VORBIS_CAPS gst_caps_copy(gst_static_caps_get(&vorbis_caps))
@@ -1082,6 +1082,23 @@ vorbis_type_find (GstTypeFind *tf, gpointer private)
     if ((data[0] & 0x01) != 1) return;
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, VORBIS_CAPS);
   } 
+}
+
+/*** video/x-theora ***********************************************************/
+
+static GstStaticCaps theora_caps = GST_STATIC_CAPS ("video/x-theora");
+#define THEORA_CAPS gst_caps_copy(gst_static_caps_get(&theora_caps))
+static void
+theora_type_find (GstTypeFind *tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 7); //42);
+
+  if (data) {
+    if (data[0] != 0x80) return;
+    if (memcmp (&data[1], "theora", 6) != 0) return;
+    /* FIXME: make this more reliable when specs are out */
+  }
+  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, THEORA_CAPS);
 }
 
 /*** generic typefind for streams that have some data at a specific position***/
@@ -1276,6 +1293,8 @@ plugin_init (GstPlugin *plugin)
 	  compress_exts, "\037\235", 2, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "audio/x-vorbis", GST_RANK_PRIMARY,
 	  vorbis_type_find, NULL, VORBIS_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-theora", GST_RANK_PRIMARY,
+	  theora_type_find, NULL, THEORA_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY,
 	  m4a_type_find, m4a_exts, AAC_CAPS, NULL);
   
