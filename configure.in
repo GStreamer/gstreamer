@@ -694,9 +694,9 @@ libs/putbits/Makefile
 libs/winloader/Makefile
 libs/idct/Makefile
 plugins/Makefile
-plugins/au/Makefile
 plugins/alsa/Makefile
-plugins/wav/Makefile
+plugins/au/Makefile
+plugins/audioscale/Makefile
 plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
 plugins/jpeg/Makefile
@@ -726,6 +726,8 @@ plugins/mpeg1/system_encode/Makefile
 plugins/mpeg1/mpeg1encoder/Makefile
 plugins/mpeg1video/Makefile
 plugins/mpeg1video/parse/Makefile
+plugins/rtp/Makefile
+plugins/rtp/rtpsend/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
@@ -742,7 +744,7 @@ plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
 plugins/videosink/Makefile
 plugins/videoscale/Makefile
-plugins/audioscale/Makefile
+plugins/wav/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/rtjpeg/Makefile
