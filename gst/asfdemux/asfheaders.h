@@ -67,7 +67,8 @@ enum {
 
 static ASFGuidHash asf_correction_guids[] = {
   { ASF_CORRECTION_ON,     { 0xBFC3CD50, 0x11CF618F, 0xAA00B28B, 0x20E2B400 }},
-  { ASF_CORRECTION_OFF,    { 0x20FB5700, 0x11CF5B55, 0x8000FDA8, 0x2B445C5F }},
+/*  { ASF_CORRECTION_OFF,    { 0x20FB5700, 0x11CF5B55, 0x8000FDA8, 0x2B445C5F }},*/
+  { ASF_CORRECTION_OFF,    { 0x49F1A440, 0x11D04ECE, 0xA000ACA3, 0xF64803C9 }},
   { ASF_CORRECTION_UNDEFINED,  { 0, 0, 0, 0 }},
 };
 
@@ -114,11 +115,11 @@ typedef struct _asf_obj_file asf_obj_file;
 struct _asf_obj_stream {
   ASFGuid type;
   ASFGuid correction;
-  guint64 offset;
-  guint32 unknown1;
-  guint32 unknown2;
+  guint64 unknown1;
+  guint32 type_specific_size;
+  guint32 stream_specific_size;
   guint16 id;
-  guint32 unknown3;
+  guint32 unknown2;
 };
 
 typedef struct _asf_obj_stream asf_obj_stream;
