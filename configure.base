@@ -1296,6 +1296,7 @@ tests/sched/Makefile
 tests/eos/Makefile
 tests/muxing/Makefile
 testsuite/Makefile
+testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
