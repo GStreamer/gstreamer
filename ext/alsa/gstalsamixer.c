@@ -171,7 +171,7 @@ gst_alsa_mixer_dispose (GObject * object)
 {
   GstAlsaMixer *mixer = GST_ALSA_MIXER (object);
 
-  if (((gint) mixer->mixer_handle) != -1) return;
+  if (((gint) mixer->mixer_handle) == -1) return;
 
   snd_mixer_close (mixer->mixer_handle);
   mixer->mixer_handle = (snd_mixer_t *) -1;
