@@ -16,7 +16,7 @@ libgstgetbitsinclude_HEADERS = gstgetbits.h
 
 noinst_HEADERS = gstgetbits.h gstgetbits_inl.h
 
-bin_PROGRAMS = gbtest
+check_PROGRAMS = gbtest
 
 gbtest_SOURCES = gbtest.c
 gbtest_LDADD = libgstgetbits.la $(top_srcdir)/gst/libgst.la

@@ -1,5 +1,3 @@
-#include <glib.h>
-
 #include "gstgetbits.h"
 
 unsigned long _gst_getbits_int_cb(gst_getbits_t *gb, unsigned long bits);
@@ -52,7 +50,7 @@ unsigned long _gst_get1bit_int(gst_getbits_t *gb, unsigned long bits) {
   gb->ptr += (gb->bits>>3);
   gb->bits &= 0x7;
 
-  GST_DEBUG (0,"getbits%d, %08x\n", bits, rval);
+  GST_DEBUG (0,"getbits%ld, %08x\n", bits, rval);
   return rval>>7;
 }
 
@@ -70,7 +68,7 @@ unsigned long _gst_getbits_int(gst_getbits_t *gb, unsigned long bits) {
   gb->ptr += (gb->bits>>3);
   gb->bits &= 0x7;
 
-  GST_DEBUG (0,"getbits%d, %08x\n", bits, rval);
+  GST_DEBUG (0,"getbits%ld, %08lx\n", bits, rval);
   return rval;
 }
 
@@ -86,7 +84,7 @@ unsigned long _gst_getbits_fast_int(gst_getbits_t *gb, unsigned long bits) {
   gb->ptr += (gb->bits>>3);
   gb->bits &= 0x7;
 
-  GST_DEBUG (0,"getbits%d, %08x\n", bits, rval);
+  GST_DEBUG (0,"getbits%ld, %08lx\n", bits, rval);
   return rval;
 }
 
@@ -99,7 +97,7 @@ unsigned long _gst_showbits_int(gst_getbits_t *gb, unsigned long bits) {
   rval <<= gb->bits;
   rval >>= (32-bits);
 
-  GST_DEBUG (0,"showbits%d, %08x\n", bits, rval);
+  GST_DEBUG (0,"showbits%ld, %08lx\n", bits, rval);
   return rval;
 }
 
@@ -107,7 +105,7 @@ void _gst_flushbits_int(gst_getbits_t *gb, unsigned long bits) {
   gb->bits += bits;
   gb->ptr += (gb->bits>>3);
   gb->bits &= 0x7;
-  GST_DEBUG (0,"flushbits%d\n", bits);
+  GST_DEBUG (0,"flushbits%ld\n", bits);
 }
 
 void _gst_getbits_back_int(gst_getbits_t *gb, unsigned long bits) {

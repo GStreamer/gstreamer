@@ -40,23 +40,10 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
+
 dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################
-
-dnl Set up conditionals for (target) architecture:
-dnl ==============================================
-
-dnl Determine CPU
-case "x${target_cpu}" in
-  xi?86)     HAVE_CPU_I386=yes ;
-             AC_DEFINE(HAVE_CPU_I386) ;;
-  xpowerpc)  HAVE_CPU_PPC=yes ;
-             AC_DEFINE(HAVE_CPU_PPC) ;;
-esac
-
-dnl Determine endianness
-AC_C_BIGENDIAN
 
 dnl Check for tools:
 dnl ================
@@ -72,8 +59,62 @@ else
   HAVE_NASM="yes"
 fi
 
+dnl check for gtkdoc
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
+
+dnl check for docbook tools
+AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
+AC_CHECK_PROG(HAVE_DB2PS, db2ps, true, false)
+AC_CHECK_PROG(HAVE_PS2PDF, ps2pdf, true, false)
+
+dnl check for image conversion tool
+AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
+
+
+dnl Set up conditionals for (target) architecture:
+dnl ==============================================
+
+dnl Determine CPU
+case "x${target_cpu}" in
+  xi?86)     HAVE_CPU_I386=yes ;
+             AC_DEFINE(HAVE_CPU_I386) ;;
+  xpowerpc)  HAVE_CPU_PPC=yes ;
+             AC_DEFINE(HAVE_CPU_PPC) ;;
+esac
+
+dnl Determine endianness
+AC_C_BIGENDIAN
+
+dnl Check for MMX-capable compiler
+AC_MSG_CHECKING(for MMX-capable compiler)
+AC_TRY_RUN([
+#include "include/mmx.h"
+
+main()
+{ movq_r2r(mm0, mm1); return 0; }
+],
+[
+HAVE_LIBMMX="yes"
+AC_MSG_RESULT(yes)
+],
+HAVE_LIBMMX="no"
+AC_MSG_RESULT(no)
+,
+HAVE_LIBMMX="no"
+AC_MSG_RESULT(no)
+)
+
+
+
 dnl Check for essential libraries first:
 dnl ====================================
+
 
 dnl Check for glib
 AM_PATH_GLIB(1.2.0,,
@@ -81,7 +122,16 @@ AM_PATH_GLIB(1.2.0,,
             glib gmodule gthread)
 dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
 LIBS="$LIBS $GLIB_LIBS"
-CFLAGS="$FLAGS $GLIB_CFLAGS"
+CFLAGS="$CFLAGS $GLIB_CFLAGS"
+
+
+dnl Check for gtk
+AM_PATH_GTK(1.2.0,,
+            AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
+dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
+LIBS="$LIBS $GTK_LIBS"
+CFLAGS="$CFLAGS $GTK_CFLAGS"
+
 
 dnl Check for libxml
 AC_PATH_PROG(XML_CONFIG, xml-config, no)
@@ -92,10 +142,13 @@ XML_LIBS=`xml-config --libs`
 XML_CFLAGS=`xml-config --cflags`
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
+LIBS="$LIBS $XML_LIBS"
+CFLAGS="$CFLAGS $XML_CFLAGS"
 
 
 dnl Next, check for the optional libraries:
 dnl =======================================
+
 
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
@@ -113,24 +166,35 @@ AC_SUBST(GDK_PIXBUF_LIBS)
 AC_SUBST(GDK_PIXBUF_CFLAGS)
 
 
-dnl Check for gtk
-AM_PATH_GTK(1.2.0)
-
 dnl Check for libghttp
 dnl FIXME: need to check for header
 AC_CHECK_LIB(ghttp, ghttp_request_new,
   [GHTTP_LIBS="-lghttp"
-   GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
    HAVE_LIBGHTTP=yes
   ],
   [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
    GHTTP_LIBS=
-   GST_HTTPSRC_GET_TYPE=
    HAVE_LIBGHTTP=no
   ],
   $LIBS)
 AC_SUBST(GHTTP_LIBS)
-AC_SUBST(GST_HTTPSRC_GET_TYPE)
+
+
+dnl Check for libgnome
+AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
+if test x$GNOME_CONFIG = xno; then
+  AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
+  GNOME_LIBS=
+  GNOME_CFLAGS=
+  HAVE_GNOME=no
+else
+  GNOME_LIBS=`gnome-config --libs gnome gnomeui`
+  GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
+  HAVE_GNOME=yes
+fi
+AC_SUBST(GNOME_LIBS)
+AC_SUBST(GNOME_CFLAGS)
+
 
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
@@ -147,6 +211,7 @@ else
 	     )
   CFLAGS=${libglade_save_CFLAGS}
 fi
+
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -170,24 +235,6 @@ main() { atomic_t t; atomic_set(&t,0); return 0;}
   ])
 fi
 
-dnl Check for MMX capable compiler
-AC_MSG_CHECKING(Checking MMX compilation)
-AC_TRY_RUN([
-#include "include/mmx.h"
-
-main()
-{ movq_r2r(mm0, mm1); return 0; }
-],
-[
-HAVE_LIBMMX="yes"
-AC_MSG_RESULT(yes)
-],
-HAVE_LIBMMX="no"
-AC_MSG_RESULT(no)
-,
-HAVE_LIBMMX="no"
-AC_MSG_RESULT(no)
-)
 
 dnl Check for X11 extensions
 AC_PATH_XTRA
@@ -199,6 +246,8 @@ AC_SUBST(X_PRE_LIBS)
 AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
 
+
+dnl Check for the Xv library
 xvsave_LIBS=${LIBS}
 AC_CHECK_LIB(Xv, XvQueryExtension, 
 HAVE_LIBXV=yes 
@@ -206,25 +255,36 @@ AC_DEFINE(HAVE_LIBXV),
 HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
 LIBS=${xvsave_LIBS}
 
+
 dnl Check for xaudio
 AC_CHECK_HEADER(xaudio/decoder.h,[
   AC_DEFINE(HAVE_XAUDIO) 
   HAVE_XAUDIO="yes", []
 ])
 
-dnl Set location of plugin directory
-if test "x${prefix}" = "xNONE"; then
-  PLUGINS_DIR=${ac_default_prefix}/lib/gst
-else
-  PLUGINS_DIR=${prefix}/lib/gst
-fi
-AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
-AC_SUBST(PLUGINS_DIR)
 
-dnl Set location of uninstalled plugin directory
-PLUGINS_SRCDIR=`pwd`/$srcdir
-AC_DEFINE_UNQUOTED(PLUGINS_SRCDIR,"$PLUGINS_SRCDIR")
-AC_SUBST(PLUGINS_SRCDIR)
+dnl Check for libvorbis
+AC_MSG_CHECKING(Vorbis library)
+AC_CHECK_LIB(vorbis, ogg_sync_init, 
+HAVE_VORBIS=yes 
+AC_DEFINE(HAVE_VORBIS),
+HAVE_VORBIS=no, )
+
+
+dnl Check for cdparanoia
+AC_MSG_CHECKING(CDparanoia library)
+HAVE_CDPARANOIA=yes
+AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, )
+AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
+AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
+AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
+
+
+dnl Check for liblame
+AC_MSG_CHECKING(LAME library)
+AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
+AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -238,42 +298,6 @@ else
   HAVE_CSSAUTH="no"
 fi
 
-dnl check for libvorbis
-AC_MSG_CHECKING(Vorbis library)
-AC_CHECK_LIB(vorbis, ogg_sync_init, 
-HAVE_VORBIS=yes 
-AC_DEFINE(HAVE_VORBIS),
-HAVE_VORBIS=no, )
-
-dnl check for cdparanoia
-AC_MSG_CHECKING(CDparanoia library)
-HAVE_CDPARANOIA=yes
-AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, )
-AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
-AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
-AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
-
-dnl check for liblame
-AC_MSG_CHECKING(LAME library)
-AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
-AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
-
-dnl check for gtkdoc
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
-
-dnl check for docbook tools
-AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
-AC_CHECK_PROG(HAVE_DB2PS, db2ps, true, false)
-AC_CHECK_PROG(HAVE_PS2PDF, ps2pdf, true, false)
-
-dnl check for image conversion tool
-AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
 
 
 dnl ######################################################################
@@ -447,6 +471,32 @@ AM_CONDITIONAL(HAVE_FIG2DEV,        $HAVE_FIG2DEV)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 
+
+
+dnl ############################
+dnl # Set up some more defines #
+dnl ############################
+
+dnl Set location of plugin directory
+if test "x${prefix}" = "xNONE"; then
+  PLUGINS_DIR=${ac_default_prefix}/lib/gst
+else
+  PLUGINS_DIR=${prefix}/lib/gst
+fi
+AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
+AC_SUBST(PLUGINS_DIR)
+
+dnl Set location of uninstalled plugin directory
+PLUGINS_SRCDIR=`pwd`/$srcdir
+AC_DEFINE_UNQUOTED(PLUGINS_SRCDIR,"$PLUGINS_SRCDIR")
+AC_SUBST(PLUGINS_SRCDIR)
+
+
+
+
+dnl ##############################
+dnl # Set up the defaults cflags #
+dnl ##############################
 dnl CC="kgcc"
 CFLAGS="$CFLAGS -O6 -Wall"
 
@@ -456,12 +506,13 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 
+
 dnl #############################
 dnl # Configure the subpackages #
 dnl #############################
 
-AC_CONFIG_SUBDIRS(gist)
-AC_CONFIG_SUBDIRS(plugins/mp3decode/xing/libxing)
+dnl AC_CONFIG_SUBDIRS(gist)
+dnl AC_CONFIG_SUBDIRS(plugins/mp3decode/xing/libxing)
 
 
 dnl #########################
@@ -533,7 +584,6 @@ plugins/videoscale/Makefile
 plugins/audioscale/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
-plugins/cobin/Makefile
 plugins/rtjpeg/Makefile
 plugins/vorbis/Makefile
 plugins/capture/Makefile
@@ -557,6 +607,7 @@ examples/queue2/Makefile
 examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
+examples/launch/Makefile
 examples/xml/Makefile
 editor/Makefile
 editor/pixmaps/Makefile

@@ -22,8 +22,7 @@
 #define __GST_COLORSPACE_H__
 
 #include <gdk/gdk.h>
-#include <gst/gstbuffer.h>
-#include <gst/gstplugin.h>
+#include <gst/gst.h>
 
 #include "yuv2rgb.h"
 

@@ -18,11 +18,11 @@
  */
 
 //#define DEBUG_ENABLED
+#include <stdlib.h>
 #include <math.h>
 
-#include <gst/gst.h>
-
-#include <gstvideoscale.h>
+#include "gstvideoscale.h"
+//FIXME
 #include <gst/meta/videoraw.h>
 
 static void gst_videoscale_scale_yuv(GstVideoScale *scale, unsigned char *src, unsigned char *dest); 
@@ -281,7 +281,7 @@ static void generate_rowbytes(unsigned char *copy_row, int src_w, int dst_w, int
     pos += inc;
   }
   *eip++ = RETURN;
-  GST_DEBUG (0,"scaler start/end %p %p %p\n", copy_row, eip, eip-copy_row);
+  GST_DEBUG (0,"scaler start/end %p %p %p\n", copy_row, eip, (void*)(eip-copy_row));
 }
 
 

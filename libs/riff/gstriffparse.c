@@ -17,8 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 //#define DEBUG_ENABLED
-#include <gst/gst.h>
 #include <gstriff.h>
 
 GstRiff*
@@ -124,7 +125,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 
   if (riff->nextlikely & 0x01) riff->nextlikely++;
 
-  GST_DEBUG (0,"gst_riff_parser: next 0x%08x  last 0x%08lx offset %08x\n",riff->nextlikely, last, off);
+  GST_DEBUG (0,"gst_riff_parser: next 0x%08x  last 0x%08lx offset %08lx\n",riff->nextlikely, last, off);
   /* loop while the next likely chunk header is in this buffer */
   while ((riff->nextlikely+12) <= last) {
     gulong *words = (gulong *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely - off );
@@ -198,7 +199,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   }
   if ((riff->nextlikely+12) > last && !riff->incomplete_chunk) {
     guint left = last - riff->nextlikely;
-    GST_DEBUG (0,"gst_riff_parser: not enough data next 0x%08x  last 0x%08lx %08x %08x\n",riff->nextlikely, 
+    GST_DEBUG (0,"gst_riff_parser: not enough data next 0x%08x  last 0x%08lx %08x %08lx\n",riff->nextlikely, 
 		    last, left, off);
 
     riff->dataleft = g_malloc(left);

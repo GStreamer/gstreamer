@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+// getbits is critical, we need to forcibly disable DEBUG   
+#define GST_DEBUG_FORCE_DISABLE
 #include <gst/gst.h>
 
 /* disabled for now */

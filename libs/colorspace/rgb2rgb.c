@@ -17,10 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG_ENABLED
+#include <string.h>
 
-#include <gst/gst.h>
-#include <gstcolorspace.h>
+//#define DEBUG_ENABLED
+#include "gstcolorspace.h"
 
 static void gst_colorspace_rgb_to_rgb_identity(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
 static void gst_colorspace_rgb24_to_bgr24(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);

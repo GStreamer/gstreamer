@@ -19,7 +19,7 @@ libgstidct_la_SOURCES = \
 libgstidctincludedir = $(includedir)/gst/libs/gstidct
 libgstidctinclude_HEADERS = gstidct.h
 
-bin_PROGRAMS = ieeetest
+check_PROGRAMS = ieeetest
 
 ieeetest_SOURCES = ieeetest.c
 ieeetest_LDADD = libgstidct.la $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la

@@ -17,14 +17,14 @@ libgstelements_la_SOURCES =	\
 	gstdisksrc.c		\
 	gstasyncdisksrc.c	\
 	gstfdsrc.c		\
-	$(GSTHTTPSRC)           \
 	gstaudiosink.c		\
 	gstaudiosrc.c		\
 	gstfdsink.c		\
 	gstpipefilter.c		\
 	gstqueue.c		\
 	gsttypefind.c		\
-	gstsinesrc.c
+	gstsinesrc.c		\
+	$(GSTHTTPSRC)
 
 noinst_HEADERS =		\
 	gstfakesrc.h		\

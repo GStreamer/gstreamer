@@ -9,3 +9,6 @@
 - make autoplugging algorithms pluggable
 
 - make scheduling algorithms pluggable
+
+- add help functions to traverse the hierarchy
+  - gst_bin_traverse_with_func(GstBin *bin, funcptr)

@@ -17,10 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
 
 //#define DEBUG_ENABLED
-#include <gst/gst.h>
-#include <gstriff.h>
+#include "gstriff.h"
 
 #define GST_RIFF_ENCODER_BUF_SIZE    1024
 
