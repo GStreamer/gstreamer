@@ -56,8 +56,8 @@ enum
 };
 
 /*
- * "audio/a52" and "audio/ac3" are the same format.  The name
- * "ac3" is now deprecated and should not be used in new code.
+ * "audio/a52", "audio/x-a52" and "audio/ac3" should not be used (deprecated names)
+ * Only use "audio/x-ac3" in new code.
  */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

@@ -520,7 +520,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_rmdemux_audiosrc_template), g_strdup_printf ("audio_%02d",
             rmdemux->n_audio_streams));
-    stream->caps = gst_caps_new_simple ("audio/a52", NULL);
+    stream->caps = gst_caps_new_simple ("audio/x-ac3", NULL);
     gst_caps_set_simple (stream->caps,
         "rate", G_TYPE_INT, (int) stream->rate,
         "channels", G_TYPE_INT, stream->n_channels, NULL);

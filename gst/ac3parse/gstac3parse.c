@@ -99,7 +99,7 @@ static GstStaticPadTemplate gst_ac3parse_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/ac3, "
+    GST_STATIC_CAPS ("audio/x-ac3, "
         "channels = (int) [ 1, 6 ], " "rate = (int) [ 32000, 48000 ]")
     );
 
