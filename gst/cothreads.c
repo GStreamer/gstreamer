@@ -605,17 +605,17 @@ cothread_switch (cothread_state * thread)
 
 #ifdef COTHREAD_PARANOID
 nothread:
-  g_print ("cothread: can't switch to NULL cothread!\n");
+  g_warning ("cothread: can't switch to NULL cothread!\n");
   return;
 nocontext:
-  g_print ("cothread: there's no context, help!\n");
+  g_warning ("cothread: there's no context, help!\n");
   exit (2);
 nocurrent:
-  g_print ("cothread: there's no current thread, help!\n");
+  g_warning ("cothread: there's no current thread, help!\n");
   exit (2);
 #endif /* COTHREAD_PARANOID */
 selfswitch:
-  g_print ("cothread: trying to switch to same thread, legal but not necessary\n");
+  g_warning ("cothread: trying to switch to same thread, legal but not necessary\n");
   return;
 }
 

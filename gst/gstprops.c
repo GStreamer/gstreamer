@@ -667,7 +667,7 @@ gst_props_set (GstProps *props, const gchar *name, ...)
     va_end (var_args);
   }
   else {
-    g_print("gstprops: no property '%s' to change\n", name);
+    g_warning ("gstprops: no property '%s' to change\n", name);
   }
 
   return props;
