@@ -166,6 +166,12 @@ else
 MAD_DIR=
 endif
 
+if USE_MATROSKA
+MATROSKA_DIR=matroska
+else
+MATROSKA_DIR=
+endif
+
 if USE_MIKMOD
 MIKMOD_DIR=mikmod
 else
@@ -264,8 +270,9 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(HERMES_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
-	$(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) $(PANGO_DIR) \
-	$(RAW1394_DIR) $(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
+	$(MAD_DIR) $(MATROSKA_DIR) $(MIKMOD_DIR) \
+	$(MPEG2DEC_DIR) $(PANGO_DIR) $(RAW1394_DIR) \
+	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
 	$(VORBIS_DIR) $(XVID_DIR) $(SNAPSHOT_DIR)
 
@@ -276,7 +283,9 @@ DIST_SUBDIRS=\
 	flac gdk_pixbuf gnomevfs gsm \
 	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
-	mad mikmod mpeg2dec pango raw1394 \
-	sdl snapshot sndfile shout shout2 sidplay \
+	mad matroska mikmod \
+	mpeg2dec pango raw1394 \
+	sdl snapshot sndfile \
+	shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
 	xvid 
