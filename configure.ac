@@ -353,7 +353,7 @@ GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdsrc, [
 
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
-GST_CHECK_FEATURE(ESD, [esound plugins], esdsrc esdsink, [
+GST_CHECK_FEATURE(ESD, [esound plugins], esdsink esdmon, [
   AM_PATH_ESD(0.2.12, HAVE_ESD=yes, HAVE_ESD=no)
 ])
 
