@@ -1,3 +1,16 @@
+2004-03-06  Christophe Fergeau  <teuf@gnome.org>
+
+	* ext/faac/gstfaac.c: (gst_faac_chain):
+	* ext/flac/gstflactag.c: (gst_flac_tag_chain):
+	* ext/libpng/gstpngenc.c: (user_write_data):
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_loop):
+	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_chain):
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_chain_subtitle):
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_add_slice):
+	Fix several misuse of gst_buffer_merge (it doesn't take ownership
+	of any buffer), should fix some leaks. I hope I didn't unref buffers
+	that shouldn't be...
+	
 2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/media-info/media-info-priv.c: (have_type_callback),
