@@ -1,5 +1,5 @@
 # FIXME : refcounting threads bytestream cleanup
-SUBDIRS = caps plugin
+SUBDIRS = caps plugin elements
 
 testprogs = test_gst_init
 
@@ -12,4 +12,4 @@ LIBS = $(GST_LIBS)
 CFLAGS = $(GST_CFLAGS)
 
 # FIXME : refcounting threadds
-DIST_SUBDIRS = caps plugin bytestream cleanup
+DIST_SUBDIRS = caps plugin bytestream cleanup elements
