@@ -322,6 +322,16 @@ main(int argc, char *argv[])
 #endif
   
   if (!savefile) {
+  
+    if (!GST_IS_BIN (pipeline)) {
+      GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
+      if (real_pipeline == NULL) {
+        fprintf(stderr, "ERROR: The pipeline element wasn't found.\n");
+        exit(1);
+      }
+      gst_bin_add (GST_BIN (real_pipeline), pipeline);
+      pipeline = real_pipeline;
+    }
 
     fprintf(stderr,"RUNNING pipeline\n");
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
@@ -353,4 +363,3 @@ end:
 
   return res;
 }
-
