@@ -758,7 +758,14 @@ int
 gst_element_loopfunc_wrapper (int argc, char **argv) 
 {
   GstElement *element = GST_ELEMENT (argv);
-  element->loopfunc (element);
+  while (1) {
+    /* if NEW_LOOPFUNC is set, clear it, we're implicitly updating */
+    if (GST_FLAG_IS_SET(element,GST_ELEMENT_NEW_LOOPFUNC))
+      GST_FLAG_UNSET(element,GST_ELEMENT_NEW_LOOPFUNC);
+
+    /* start up the loop function */
+    element->loopfunc (element);
+  }
   return 0;
 }
 
@@ -770,16 +777,22 @@ gst_element_loopfunc_wrapper (int argc, char **argv)
  * This sets the loop function for the element.  The function pointed to
  * can deviate from the GstElementLoopFunction definition in type of
  * pointer only.
+ *
+ * NOTE: in order for this to take effect, the current loop function *must*
+ * exit.  Assuming the loop function itself is the only one who will cause
+ * a new loopfunc to be assigned, this should be no problem.
  */
 void 
 gst_element_set_loop_function(GstElement *element,
                               GstElementLoopFunction loop) 
 {
+  /* set the loop function */
   element->loopfunc = loop;
+
+  /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
+  GST_FLAG_SET(element,GST_ELEMENT_NEW_LOOPFUNC);
   
   /* if there's a threadstate, reset the function pointer */
-  /* FIXME: need to figure out how to make the loop functions exit when there's
-   * a new one, so we can hotswap them. */
   if (element->threadstate != NULL)
     // note that this casts a GstElement * to a char **.  Ick.
     cothread_setfunc (element->threadstate, gst_element_loopfunc_wrapper,

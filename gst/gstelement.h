@@ -79,6 +79,8 @@ typedef enum {
   GST_ELEMENT_MULTI_IN		= (1 << 4),
   GST_ELEMENT_THREAD_SUGGESTED	= (1 << 5),
   GST_ELEMENT_NO_SEEK		= (1 << 6),
+
+  GST_ELEMENT_NEW_LOOPFUNC	= (1 << 16),
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
