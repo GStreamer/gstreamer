@@ -25,16 +25,13 @@
 #include "gstfilter.h"
 #include "iir.h"
 
-GstElementDetails gst_iir_details = {
+static GstElementDetails gst_iir_details = GST_ELEMENT_DETAILS (
   "IIR",
   "Filter/Audio/Effect",
-  "LGPL",
   "IIR filter based on vorbis code",
-  VERSION,
-  "Monty <monty@xiph.org>, "\
-  "Thomas <thomas@apestaart.org>",
-  "(C) 2001",
-};
+  "Monty <monty@xiph.org>, "
+  "Thomas <thomas@apestaart.org>"
+);
 
 enum {
   /* FILL ME */
@@ -80,6 +77,7 @@ struct _GstIIRClass
     GstElementClass parent_class;
 };
 
+static void gst_iir_base_init		(gpointer g_class);
 static void gst_iir_class_init		(GstIIRClass * klass);
 static void gst_iir_init               	(GstIIR * filter);
 
@@ -102,7 +100,9 @@ GType gst_iir_get_type (void)
 
   if (!iir_type) {
     static const GTypeInfo iir_info = {
-      sizeof (GstIIRClass), NULL, NULL,
+      sizeof (GstIIRClass), 
+      gst_iir_base_init,
+      NULL,
       (GClassInitFunc) gst_iir_class_init, NULL, NULL,
       sizeof (GstIIR), 0,
       (GInstanceInitFunc) gst_iir_init,
@@ -112,6 +112,18 @@ GType gst_iir_get_type (void)
 	                                   &iir_info, 0);
   }
   return iir_type;
+}
+
+static void
+gst_iir_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  /* register src pads */
+  gst_element_class_add_pad_template (element_class, gst_filter_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_filter_sink_factory ());
+
+  gst_element_class_set_details (element_class, &gst_iir_details);  
 }
 
 static void

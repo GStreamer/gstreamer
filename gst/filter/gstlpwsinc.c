@@ -38,15 +38,13 @@
 #include <math.h>		/* M_PI */
 #include <string.h>		/* memmove */
 
-GstElementDetails gst_lpwsinc_details = {
+static GstElementDetails gst_lpwsinc_details = GST_ELEMENT_DETAILS (
   "LPWSinc",
   "Filter/Audio/Effect",
-  "LGPL",
   "Low-pass Windowed sinc filter",
-  VERSION,
-  "Thomas <thomas@apestaart.org>",
-  "(C) 2002 Steven W. Smith",
-};
+  "Thomas <thomas@apestaart.org>, "
+  "Steven W. Smith"
+);
 
 enum {
   /* FILL ME */
@@ -92,6 +90,7 @@ struct _GstLPWSincClass
     GstElementClass parent_class;
 };
 
+static void gst_lpwsinc_base_init		(gpointer g_class);
 static void gst_lpwsinc_class_init		(GstLPWSincClass * klass);
 static void gst_lpwsinc_init               	(GstLPWSinc * filter);
 
@@ -114,7 +113,9 @@ GType gst_lpwsinc_get_type (void)
 
   if (!lpwsinc_type) {
     static const GTypeInfo lpwsinc_info = {
-      sizeof (GstLPWSincClass), NULL, NULL,
+      sizeof (GstLPWSincClass), 
+      gst_lpwsinc_base_init,
+      NULL,
       (GClassInitFunc) gst_lpwsinc_class_init, NULL, NULL,
       sizeof (GstLPWSinc), 0,
       (GInstanceInitFunc) gst_lpwsinc_init,
@@ -124,6 +125,18 @@ GType gst_lpwsinc_get_type (void)
 	                                   &lpwsinc_info, 0);
   }
   return lpwsinc_type;
+}
+
+static void
+gst_lpwsinc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  /* register src pads */
+  gst_element_class_add_pad_template (element_class, gst_filter_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_filter_sink_factory ());
+
+  gst_element_class_set_details (element_class, &gst_lpwsinc_details);  
 }
 
 static void

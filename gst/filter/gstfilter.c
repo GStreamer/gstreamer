@@ -20,6 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstfilter.h"
 #include <gst/audio/audio.h>
 
@@ -27,14 +30,12 @@
 struct _elements_entry {
   gchar *name;
   GType (*type) (void);
-  GstElementDetails *details;
-  gboolean (*factoryinit) (GstElementFactory *factory);
 };
 
 static struct _elements_entry _elements[] = {
-  { "iir",  	gst_iir_get_type,  	&gst_iir_details,  	NULL },
-  { "lpwsinc",  gst_lpwsinc_get_type,	&gst_lpwsinc_details,	NULL },
-  { "bpwsinc",  gst_bpwsinc_get_type,	&gst_bpwsinc_details,	NULL },
+  { "iir",  	gst_iir_get_type	},
+  { "lpwsinc",  gst_lpwsinc_get_type	},
+  { "bpwsinc",  gst_bpwsinc_get_type	},
   { NULL, 0 },
 };
 
@@ -77,37 +78,29 @@ gst_filter_sink_factory (void)
 }
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
   gint i = 0;
 
   while (_elements[i].name) {
-    factory = gst_element_factory_new (_elements[i].name,
-                                      (_elements[i].type) (),
-                                       _elements[i].details);
+    if (!gst_element_register (plugin, _elements[i].name, GST_RANK_NONE, _elements[i].type()))
+      return FALSE;
 
-    if (!factory) {
-      g_warning ("gst_filter_new failed for `%s'",
-                 _elements[i].name);
-      continue;
-    }
-    gst_element_factory_add_pad_template (factory, gst_filter_src_factory ());
-    gst_element_factory_add_pad_template (factory, gst_filter_sink_factory ());
-
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    if (_elements[i].factoryinit) {
-      _elements[i].factoryinit (factory);
-    }
     i++;
   }
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "filter",
-  plugin_init
-};
+  "IIR, lpwsinc and bpwsinc audio filter elements",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);

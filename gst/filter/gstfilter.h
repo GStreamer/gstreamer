@@ -26,15 +26,10 @@
 
 #include <gst/gst.h>
 GType gst_iir_get_type (void);
-extern GstElementDetails gst_iir_details;
+GType gst_lpwsinc_get_type (void);
+GType gst_bpwsinc_get_type (void);
 
 extern GstPadTemplate *gst_filter_sink_factory ();
 extern GstPadTemplate *gst_filter_src_factory ();
-
-GType gst_lpwsinc_get_type (void);
-extern GstElementDetails gst_lpwsinc_details;
-
-GType gst_bpwsinc_get_type (void);
-extern GstElementDetails gst_bpwsinc_details;
 
 #endif /* __GST_FILTER_H__ */
