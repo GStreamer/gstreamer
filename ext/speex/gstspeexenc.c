@@ -25,8 +25,8 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include <speex.h>
-#include <speex_stereo.h>
+#include <speex/speex.h>
+#include <speex/speex_stereo.h>
 
 #include <gst/gsttaginterface.h>
 #include <gst/tag/tag.h>

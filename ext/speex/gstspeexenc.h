@@ -25,8 +25,8 @@
 #include <gst/gst.h>
 #include <gst/bytestream/adapter.h>
 
-#include <speex.h>
-#include <speex_header.h>
+#include <speex/speex.h>
+#include <speex/speex_header.h>
 
 #ifdef __cplusplus
 extern "C" {
