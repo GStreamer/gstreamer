@@ -2255,8 +2255,7 @@ gst_pad_set_explicit_caps (GstPad *pad, const GstCaps *caps)
   }
   link_ret = gst_pad_try_set_caps (pad, caps);
   if (link_ret == GST_PAD_LINK_REFUSED) {
-    GST_ELEMENT_ERROR (gst_pad_get_parent (pad), CORE, PAD,
-                       NULL,
+    GST_ELEMENT_ERROR (gst_pad_get_parent (pad), CORE, PAD, (NULL),
                        ("failed to negotiate (try_set_caps returned REFUSED)"));
     return FALSE;
   }
@@ -2633,8 +2632,7 @@ gst_pad_recover_caps_error (GstPad *pad, const GstCaps *allowed)
 
   /* report error */
   parent = gst_pad_get_parent (pad);
-  GST_ELEMENT_ERROR (parent, CORE, PAD,
-                     NULL,
+  GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
                      ("negotiation failed on pad %s:%s", GST_DEBUG_PAD_NAME (pad)));
 #endif
   return FALSE;
@@ -2939,7 +2937,7 @@ gst_pad_pull (GstPad *pad)
   peer = GST_RPAD_PEER (pad);
 
   if (!peer) {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, NULL,
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
 		       ("pull on pad %s:%s but it was unlinked", GST_DEBUG_PAD_NAME (pad)));
   }
   else {
@@ -2961,10 +2959,10 @@ restart:
       }
 
       /* no null buffers allowed */
-      GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, NULL,
+      GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
 		       ("NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad)));
     } else {
-      GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, NULL,
+      GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
 		       ("pull on pad %s:%s but the peer pad %s:%s has no gethandler",
 		         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     }

@@ -391,8 +391,7 @@ gst_fakesink_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 
 error:
-  GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE,
-                       NULL, NULL);
+  GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
   return GST_STATE_FAILURE;
 }
 

@@ -255,9 +255,8 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
     /* collapse state if that failed */
     if (src->map == NULL) {
       close (src->fd);
-      GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY,
-                         NULL,
-                         ("mmap call failed"));
+      GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL),
+                         ("mmap call failed."));
       return FALSE;
     }
     GST_FLAG_SET (src, GST_MULTIDISKSRC_OPEN);

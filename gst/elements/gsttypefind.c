@@ -555,8 +555,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
       if (typefind->caps) {
 	stop_typefinding (typefind);
       } else if (typefind->possibilities == NULL) {
-	GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
-                             NULL, NULL);
+	GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
       } else {
 	/* set up typefind element for next iteration */
 	typefind->possibilities = g_list_sort (typefind->possibilities, compare_type_find_entry);
