@@ -155,6 +155,7 @@ gst_mp1videoparse_init (Mp1VideoParse * mp1videoparse)
 
   mp1videoparse->partialbuf = NULL;
   mp1videoparse->need_resync = FALSE;
+  mp1videoparse->need_discont = TRUE;
   mp1videoparse->last_pts = GST_CLOCK_TIME_NONE;
   mp1videoparse->picture_in_buffer = 0;
   mp1videoparse->width = mp1videoparse->height = -1;
@@ -333,8 +334,10 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
     GstEvent *event = GST_EVENT (buf);
 
     switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_FLUSH:
       case GST_EVENT_DISCONTINUOUS:
+        mp1videoparse->need_discont = TRUE;
+        /* fall-through */
+      case GST_EVENT_FLUSH:
         gst_mp1videoparse_flush (mp1videoparse);
         break;
       case GST_EVENT_EOS:
@@ -481,16 +484,16 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
       /* something else... */
       else
         sync_state = 0;
+
       /* go down the buffer */
       offset++;
     }
 
     if (have_sync) {
       offset -= 2;
-      GST_DEBUG ("mp1videoparse: synced at %ld code 0x000001%02x", offset,
-          data[offset + 3]);
+      GST_DEBUG ("mp1videoparse: synced");
 
-      outbuf = gst_buffer_create_sub (mp1videoparse->partialbuf, 0, offset + 4);
+      outbuf = gst_buffer_create_sub (mp1videoparse->partialbuf, 0, offset);
       g_assert (outbuf != NULL);
       GST_BUFFER_TIMESTAMP (outbuf) = mp1videoparse->last_pts;
       GST_BUFFER_DURATION (outbuf) = GST_SECOND / mp1videoparse->fps;
@@ -502,6 +505,16 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
       }
 
       if (GST_PAD_CAPS (outpad) != NULL) {
+        if (mp1videoparse->need_discont &&
+            GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)) {
+          GstEvent *event = gst_event_new_discontinuous (FALSE,
+              GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
+              GST_FORMAT_UNDEFINED);
+
+          GST_DEBUG ("prepending discont event");
+          gst_pad_push (outpad, GST_DATA (event));
+          mp1videoparse->need_discont = FALSE;
+        }
         GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT,
             GST_BUFFER_SIZE (outbuf), GST_BUFFER_TIMESTAMP (outbuf));
         gst_pad_push (outpad, GST_DATA (outbuf));
@@ -512,19 +525,22 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
       }
       mp1videoparse->picture_in_buffer = 0;
 
-      temp =
-          gst_buffer_create_sub (mp1videoparse->partialbuf, offset,
-          size - offset);
+      if (size != offset) {
+        temp =
+            gst_buffer_create_sub (mp1videoparse->partialbuf, offset,
+            size - offset);
+      } else {
+        temp = NULL;
+      }
       gst_buffer_unref (mp1videoparse->partialbuf);
       mp1videoparse->partialbuf = temp;
       offset = 0;
     } else {
-      if (time_stamp != GST_CLOCK_TIME_NONE) {
+      if (time_stamp != GST_CLOCK_TIME_NONE)
         mp1videoparse->last_pts = time_stamp;
-        break;
-      }
+      return;
     }
-  } while (1);
+  } while (mp1videoparse->partialbuf != NULL);
 }
 
 static GstElementStateReturn
@@ -539,6 +555,7 @@ gst_mp1videoparse_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
       gst_mp1videoparse_flush (mp1videoparse);
+      mp1videoparse->need_discont = TRUE;
       mp1videoparse->width = mp1videoparse->height = -1;
       mp1videoparse->fps = mp1videoparse->asr = 0.;
       break;

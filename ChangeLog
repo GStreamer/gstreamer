@@ -1,5 +1,14 @@
 2004-04-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/mpeg1videoparse/gstmp1videoparse.c: (gst_mp1videoparse_init),
+	(gst_mp1videoparse_real_chain), (gst_mp1videoparse_change_state):
+	* gst/mpeg1videoparse/gstmp1videoparse.h:
+	  Fix for some slight mis-cuts in buffer parsing, and for some
+	  potential overflows or faults-causers. Adds disconts. Also fixes
+	  #139105 while we're at it.
+
+2004-04-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	* sys/v4l2/gstv4l2element.h:
 	  Workaround for missing struct v4l2_buffer declaration in Suse 9

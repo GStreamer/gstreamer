@@ -53,6 +53,7 @@ struct _Mp1VideoParse {
   gulong next_buffer_offset;
   gboolean need_resync;
   gboolean in_flush;
+  gboolean need_discont;
   guint64 last_pts;
   gint picture_in_buffer;
 
