@@ -106,10 +106,10 @@ GStreamer support libraries header files.
 
 %files -n gstreamer-plugins-devel
 %defattr(-, root, root)
-%{_includedir}/gst/audio/audio.h
-%{_includedir}/gst/idct/idct.h
-%{_includedir}/gst/resample/resample.h
-%{_includedir}/gst/riff/riff.h
+%{_includedir}/gst-plugins-%{version}/gst/audio/audio.h
+%{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
+%{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
+%{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
 
 # Here are all the packages depending on external libs #
 
@@ -1179,6 +1179,9 @@ processed with the lavtools from mjpegtools.
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Sun Jun 23 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- changed header location of plug-in libs
+
 * Mon Jun 17 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - major cleanups
 - adding gst-register on postun everywhere

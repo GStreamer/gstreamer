@@ -15,7 +15,7 @@ libgstidct_la_SOURCES = \
 	intidct.c \
 	$(GSTIDCTARCH_SRCS)
 
-libgstidctincludedir = $(includedir)/gst/idct
+libgstidctincludedir = $(includedir)/@PACKAGE@-@VERSION@/gst/idct
 libgstidctinclude_HEADERS = idct.h
 
 ## check_PROGRAMS = ieeetest
