@@ -1,5 +1,10 @@
 2004-03-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	  Fix buffer overflow read error.
+
+2004-03-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsa.h:
 	  Remove unused entry.
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
