@@ -160,11 +160,11 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
   "''", GST_OBJECT_NAME (pad)
 
 #ifdef GST_DEBUG_COLOR
-  #define GST_DEBUG_ENTER(format, args...) GST_DEBUG( 31 , format ": \033[01;37mentering\033[00m\n", ## args )
-  #define GST_DEBUG_LEAVE(format, args...) GST_DEBUG( 31 , format ": \033[01;37mleaving\033[00m\n", ## args )
+  #define GST_DEBUG_ENTER(format, args...) GST_DEBUG( 31 , format ": \033[01;37mentering\033[00m\n" , ##args )
+  #define GST_DEBUG_LEAVE(format, args...) GST_DEBUG( 31 , format ": \033[01;37mleaving\033[00m\n" , ##args )
 #else
-  #define GST_DEBUG_ENTER(format, args...) GST_DEBUG( 31 , format ": entering\n", ## args )
-  #define GST_DEBUG_LEAVE(format, args...) GST_DEBUG( 31 , format ": leaving\n", ## args )
+  #define GST_DEBUG_ENTER(format, args...) GST_DEBUG( 31 , format ": entering\n" , ##args )
+  #define GST_DEBUG_LEAVE(format, args...) GST_DEBUG( 31 , format ": leaving\n" , ##args )
 #endif
 
 
