@@ -170,7 +170,7 @@ type_as_function ## _get_type (void)						\
 #define GST_READ_UINT8(data)		(_GST_GET (data, 0,  8,  0))
 
 #define _GST_PUT(__data, __idx, __size, __shift, __num) \
-    (((guint8 *) (__data))[__idx] = (((guint##size) __num) >> __shift) & 0xff)
+    (((guint8 *) (__data))[__idx] = (((guint##__size) __num) >> __shift) & 0xff)
 
 #define GST_WRITE_UINT64_BE(data, num)	do { \
 					  _GST_PUT (data, 0, 64, 56, num); \
