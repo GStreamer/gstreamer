@@ -69,15 +69,21 @@ struct _GstDV1394Src {
   GstBuffer *buf;
   
   GstBuffer *frame;
-  guint frameSize;
-  guint bytesInFrame;
-  guint frameSequence;
+  guint frame_size;
+  guint frame_rate;
+  guint bytes_in_frame;
+  guint frame_sequence;
 
   gboolean negotiated;
+
+  gchar *uri;
 };
 
 struct _GstDV1394SrcClass {
   GstElementClass parent_class;
+
+  /* signal */
+  void (*frame_dropped)  (GstElement *elem);
 };
 
 GType gst_dv1394src_get_type(void);

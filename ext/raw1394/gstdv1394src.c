@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2000> Daniel Fischer <dan@f3c.com>
@@ -30,14 +31,19 @@
 
 #include "gstdv1394src.h"
 
-#define N_BUFFERS_IN_POOL 3
+GST_DEBUG_CATEGORY_STATIC (dv1394src_debug);
+#define GST_CAT_DEFAULT (dv1394src_debug)
 
 #define PAL_FRAMESIZE 144000
+#define PAL_FRAMERATE 25
+
 #define NTSC_FRAMESIZE 120000
+#define NTSC_FRAMERATE 30
 
 /* Filter signals and args */
 enum
 {
+  SIGNAL_FRAME_DROPPED,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -69,30 +75,16 @@ GST_ELEMENT_DETAILS ("Firewire (1394) DV Source",
     "Erik Walthinsen <omega@temple-baptist.com>\n"
     "Daniel Fischer <dan@f3c.com>\n" "Wim Taymans <wim@fluendo.com>");
 
-#if 0
-static GstPadTemplate *
-gst_dv1394src_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template) {
-    template = gst_pad_template_new ("src",
-        GST_PAD_SRC,
-        GST_PAD_ALWAYS,
-        GST_STATIC_CAPS ("dv1394src",
-            "video/x-dv",
-            gst_props_new ("format", GST_PROPS_LIST (G_TYPE_STRING ("NTSC"),
-                    G_TYPE_STRING ("PAL")
-                ), NULL)
-        ), NULL);
-  }
-  return template;
-}
-#endif
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-dv, " "format = (string) { NTSC, PAL }")
+    );
 
 static void gst_dv1394src_base_init (gpointer g_class);
 static void gst_dv1394src_class_init (GstDV1394SrcClass * klass);
 static void gst_dv1394src_init (GstDV1394Src * filter);
+static void gst_dv1394src_dispose (GObject * obj);
 
 static void gst_dv1394src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -103,9 +95,24 @@ static GstElementStateReturn gst_dv1394src_change_state (GstElement * element);
 
 static GstData *gst_dv1394src_get (GstPad * pad);
 
+static const GstEventMask *gst_dv1394src_get_event_mask (GstPad * pad);
+static gboolean gst_dv1394src_event (GstPad * pad, GstEvent * event);
+static const GstFormat *gst_dv1394src_get_formats (GstPad * pad);
+static gboolean gst_dv1394src_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value);
+
+static const GstQueryType *gst_dv1394src_get_query_types (GstPad * pad);
+static gboolean gst_dv1394src_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value);
+
+
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
+static void gst_dv1394src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+
+static guint gst_dv1394src_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_dv1394src_get_type (void)
@@ -124,10 +131,21 @@ gst_dv1394src_get_type (void)
       0,
       (GInstanceInitFunc) gst_dv1394src_init,
     };
+    static const GInterfaceInfo urihandler_info = {
+      gst_dv1394src_uri_handler_init,
+      NULL,
+      NULL,
+    };
 
     gst_dv1394src_type =
         g_type_register_static (GST_TYPE_ELEMENT, "DV1394Src",
         &gst_dv1394src_info, 0);
+
+    g_type_add_interface_static (gst_dv1394src_type, GST_TYPE_URI_HANDLER,
+        &urihandler_info);
+
+    GST_DEBUG_CATEGORY_INIT (dv1394src_debug, "dv1394src", 0,
+        "DV firewire source");
   }
   return gst_dv1394src_type;
 }
@@ -136,6 +154,9 @@ static void
 gst_dv1394src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
 
   gst_element_class_set_details (element_class, &gst_dv1394src_details);
 }
@@ -148,6 +169,11 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  gst_dv1394src_signals[SIGNAL_FRAME_DROPPED] =
+      g_signal_new ("frame-dropped", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDV1394SrcClass, frame_dropped),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "Port", "Port number (-1 automatic)",
@@ -179,6 +205,7 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 
   gobject_class->set_property = gst_dv1394src_set_property;
   gobject_class->get_property = gst_dv1394src_get_property;
+  gobject_class->dispose = gst_dv1394src_dispose;
 
   gstelement_class->change_state = gst_dv1394src_change_state;
 }
@@ -186,9 +213,20 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 static void
 gst_dv1394src_init (GstDV1394Src * dv1394src)
 {
-  dv1394src->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  dv1394src->srcpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+          (dv1394src), "src"), "src");
   gst_pad_set_get_function (dv1394src->srcpad, gst_dv1394src_get);
   gst_pad_use_explicit_caps (dv1394src->srcpad);
+  gst_pad_set_event_function (dv1394src->srcpad, gst_dv1394src_event);
+  gst_pad_set_event_mask_function (dv1394src->srcpad,
+      gst_dv1394src_get_event_mask);
+  gst_pad_set_convert_function (dv1394src->srcpad, gst_dv1394src_convert);
+  gst_pad_set_query_function (dv1394src->srcpad, gst_dv1394src_query);
+  gst_pad_set_query_type_function (dv1394src->srcpad,
+      gst_dv1394src_get_query_types);
+  gst_pad_set_formats_function (dv1394src->srcpad, gst_dv1394src_get_formats);
+
   gst_element_add_pad (GST_ELEMENT (dv1394src), dv1394src->srcpad);
 
   dv1394src->port = DEFAULT_PORT;
@@ -201,11 +239,21 @@ gst_dv1394src_init (GstDV1394Src * dv1394src)
   dv1394src->guid = DEFAULT_GUID;
 
   /* initialized when first header received */
-  dv1394src->frameSize = 0;
+  dv1394src->frame_size = 0;
 
   dv1394src->buf = NULL;
   dv1394src->frame = NULL;
-  dv1394src->frameSequence = 0;
+  dv1394src->frame_sequence = 0;
+}
+
+static void
+gst_dv1394src_dispose (GObject * obj)
+{
+  GstDV1394Src *dv1394src;
+
+  dv1394src = GST_DV1394SRC (obj);
+
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 static void
@@ -308,7 +356,8 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
         // figure format (NTSC/PAL)
         if (p[3] & 0x80) {
           // PAL
-          dv1394src->frameSize = PAL_FRAMESIZE;
+          dv1394src->frame_size = PAL_FRAMESIZE;
+          dv1394src->frame_rate = PAL_FRAMERATE;
           GST_DEBUG ("PAL data");
           if (!gst_pad_set_explicit_caps (dv1394src->srcpad,
                   gst_caps_new_simple ("video/x-dv",
@@ -319,7 +368,8 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
           }
         } else {
           // NTSC (untested)
-          dv1394src->frameSize = NTSC_FRAMESIZE;
+          dv1394src->frame_size = NTSC_FRAMESIZE;
+          dv1394src->frame_rate = NTSC_FRAMERATE;
           GST_DEBUG
               ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
           if (!gst_pad_set_explicit_caps (dv1394src->srcpad,
@@ -334,25 +384,43 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
       }
       // drop last frame when not complete
       if (!dv1394src->drop_incomplete
-          || dv1394src->bytesInFrame == dv1394src->frameSize) {
+          || dv1394src->bytes_in_frame == dv1394src->frame_size) {
         dv1394src->buf = dv1394src->frame;
       } else {
         GST_INFO_OBJECT (GST_ELEMENT (dv1394src), "incomplete frame dropped");
+        g_signal_emit (G_OBJECT (dv1394src),
+            gst_dv1394src_signals[SIGNAL_FRAME_DROPPED], 0);
+        if (dv1394src->frame) {
+          gst_buffer_unref (dv1394src->frame);
+        }
       }
       dv1394src->frame = NULL;
-
-      dv1394src->frameSequence++;
-
-      if (dv1394src->frameSequence % (dv1394src->skip +
+      if ((dv1394src->frame_sequence + 1) % (dv1394src->skip +
               dv1394src->consecutive) < dv1394src->consecutive) {
-        dv1394src->frame = gst_buffer_new_and_alloc (dv1394src->frameSize);
+        GstFormat format;
+        GstBuffer *buf;
+
+        buf = gst_buffer_new_and_alloc (dv1394src->frame_size);
+        /* fill in default offset */
+        format = GST_FORMAT_DEFAULT;
+        gst_dv1394src_query (dv1394src->srcpad, GST_QUERY_POSITION, &format,
+            &GST_BUFFER_OFFSET (buf));
+        /* fill in timestamp */
+        format = GST_FORMAT_TIME;
+        gst_dv1394src_query (dv1394src->srcpad, GST_QUERY_POSITION, &format,
+            &GST_BUFFER_TIMESTAMP (buf));
+        /* fill in duration by converting one frame to time */
+        gst_dv1394src_convert (dv1394src->srcpad, GST_FORMAT_DEFAULT, 1,
+            &format, &GST_BUFFER_DURATION (buf));
+
+        dv1394src->frame = buf;
       }
-      dv1394src->bytesInFrame = 0;
+      dv1394src->frame_sequence++;
+      dv1394src->bytes_in_frame = 0;
     }
 
     if (dv1394src->frame != NULL) {
-      void *data = GST_BUFFER_DATA (dv1394src->frame);
-
+      guint8 *data = GST_BUFFER_DATA (dv1394src->frame);
 
       switch (section_type) {
         case 0:                /* 1 Header block */
@@ -383,7 +451,7 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
         default:               /* we can't handle any other data */
           break;
       }
-      dv1394src->bytesInFrame += 480;
+      dv1394src->bytes_in_frame += 480;
     }
   }
 
@@ -566,4 +634,169 @@ gst_dv1394src_change_state (GstElement * element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+
+static const GstEventMask *
+gst_dv1394src_get_event_mask (GstPad * pad)
+{
+  static const GstEventMask masks[] = {
+    {0,}
+  };
+
+  return masks;
+}
+
+static gboolean
+gst_dv1394src_event (GstPad * pad, GstEvent * event)
+{
+  return FALSE;
+}
+
+static const GstFormat *
+gst_dv1394src_get_formats (GstPad * pad)
+{
+  static GstFormat formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_DEFAULT,
+    0
+  };
+
+  return formats;
+}
+
+static gboolean
+gst_dv1394src_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
+{
+  GstDV1394Src *src;
+
+  src = GST_DV1394SRC (gst_pad_get_parent (pad));
+
+  switch (src_format) {
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          src_value *= src->frame_size;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * src->frame_rate / GST_SECOND;
+          break;
+        default:
+          return FALSE;
+      }
+      break;
+    case GST_FORMAT_BYTES:
+      src_value /= src->frame_size;
+    case GST_FORMAT_DEFAULT:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * src->frame_size;
+          break;
+        case GST_FORMAT_TIME:
+          if (src->frame_rate != 0)
+            *dest_value = src_value * GST_SECOND / src->frame_rate;
+          else
+            return FALSE;
+          break;
+        default:
+          return FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
+static const GstQueryType *
+gst_dv1394src_get_query_types (GstPad * pad)
+{
+  static const GstQueryType src_query_types[] = {
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return src_query_types;
+}
+
+static gboolean
+gst_dv1394src_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value)
+{
+  gboolean res = TRUE;
+  GstDV1394Src *src;
+
+  src = GST_DV1394SRC (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_QUERY_POSITION:
+      /* bring our current frame to the requested format */
+      res = gst_pad_convert (src->srcpad,
+          GST_FORMAT_DEFAULT, src->frame_sequence, format, value);
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+gst_dv1394src_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+gst_dv1394src_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "dv", NULL };
+
+  return protocols;
+}
+static const gchar *
+gst_dv1394src_uri_get_uri (GstURIHandler * handler)
+{
+  GstDV1394Src *gst_dv1394src = GST_DV1394SRC (handler);
+
+  return gst_dv1394src->uri;
+}
+
+static gboolean
+gst_dv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gchar *protocol, *location;
+  gboolean ret;
+
+  ret = TRUE;
+
+  GstDV1394Src *gst_dv1394src = GST_DV1394SRC (handler);
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "dv") != 0) {
+    g_free (protocol);
+    return FALSE;
+  }
+  g_free (protocol);
+
+  location = gst_uri_get_location (uri);
+  gst_dv1394src->port = strtol (location, NULL, 10);
+  g_free (location);
+
+  return ret;
+}
+
+static void
+gst_dv1394src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_dv1394src_uri_get_type;
+  iface->get_protocols = gst_dv1394src_uri_get_protocols;
+  iface->get_uri = gst_dv1394src_uri_get_uri;
+  iface->set_uri = gst_dv1394src_uri_set_uri;
 }
