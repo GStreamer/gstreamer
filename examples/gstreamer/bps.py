@@ -23,8 +23,8 @@
 
 import sys
 import time
-from gstreamer import *
-from gobject import GObject
+import gobject
+import gst
 import gtk
 
 class BPS(object):
@@ -42,21 +42,21 @@ class BPS(object):
     def eos(self, sink):
         self.done()
         if self.method in ('gtk', 'c'):
-            gtk.main_quit()
+            gst.main_quit()
 
     def fakesrc(self, buffers):
-        src = Element('fakesrc','src')
+        src = gst.Element('fakesrc','src')
         src.set_property('silent', 1)
         src.set_property('num_buffers', buffers)
         return src
 
     def fakesink(self):
-        sink = Element('fakesink','sink')
+        sink = gst.Element('fakesink','sink')
         sink.set_property('silent', 1)
         return sink
 
     def build_pipeline(self, buffers):
-        pipeline = Pipeline('pipeline')
+        pipeline = gst.Pipeline('pipeline')
 
         src = self.fakesrc(buffers)
         pipeline.add(src)
@@ -77,8 +77,9 @@ class BPS(object):
 
     def test(self, method):
         print '%s:' % (method,),
-
-        self.pipeline.set_state(STATE_PLAYING)
+        self.method = method
+        
+        self.pipeline.set_state(gst.STATE_PLAYING)
 
         if method == 'py':
             self.start = time.time()
@@ -86,50 +87,50 @@ class BPS(object):
                 pass
         elif method == 'c':
             self.start = time.time()
-            self.iter_id = add_iterate_bin(self.pipeline)
-            gtk.main()
-        elif method == 'gtk':
-            self.start = time.time()
-            gtk.idle_add(self.idle, self.pipeline)
-            gtk.main()
+            self.iter_id = gst.add_iterate_bin(self.pipeline)
+            gst.main()
+        #elif method == 'gst':
+        #    self.start = time.time()
+        #    gtk.idle_add(self.idle, self.pipeline)
+        #    gtk.main()
         elif method == 'all':
             self.start = time.time()
             iterate_bin_all(self.pipeline)
 
-        self.pipeline.set_state(STATE_NULL)
+        self.pipeline.set_state(gst.STATE_NULL)
 
-    def __main__(self):
-        "GStreamer Buffers-Per-Second tester"
-        gst_info_set_categories(0L)
-        gst_debug_set_categories(0L)
-
-        if len(sys.argv) < 2:
-            print 'usage: %s buffers [method method ...]' % sys.argv[0]
-            return 1
-        else:
-            self.buffers = int(sys.argv[1])
-            self.methods = sys.argv[2:]
-            if self.methods == []:
-                self.methods = ('gtk', 'c', 'py', 'all')
- 
+    def run(self, buffers, methods):
+        self.buffers = buffers
+        
         print '# Testing buffer processing rate for "fakesrc ! fakesink"'
-        print '# gtk = gtk idle loop function in python'
+        #print '# gst = gtk idle loop function in python'
         print '# c = gtk idle loop function in C'
         print '# py = full iterate loop in python'
         print '# all = full iterate loop in C'
         print '# bps = buffers per second'
         print '# spb = seconds per buffer'
-        self.pipeline = self.build_pipeline(self.buffers)
+        
+        self.pipeline = self.build_pipeline(buffers)
         assert self.pipeline
         #self.pipeline.connect('deep-notify', self.notify)
+        
+        map(self.test, methods)
+    
+def main(args):
+    "GStreamer Buffers-Per-Second tester"
 
-        for m in self.methods:
-            self.method = m
-            self.test(m)
+    if len(args) < 2:
+        print 'usage: %s buffers [method method ...]' % args[0]
+        return 1
+    
+    bps = BPS()
+    
+    buffers = int(args[1])
+    methods = args[2:]
+    if not methods:
+        methods = ('gtk', 'c', 'py', 'all')
 
-        return 0;
+    bps.run(buffers, methods)
 
 if __name__ == '__main__':
-    bps = BPS()
-    ret = bps.__main__()
-    sys.exit (ret)
+    sys.exit(main(sys.argv))

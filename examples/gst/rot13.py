@@ -22,8 +22,7 @@
 #
 
 import sys
-from gstreamer import *
-import gobject
+import gst
 from identity import Identity
 from cp import filter
 
@@ -41,15 +40,14 @@ class Rot13(Identity):
                a = 'A'
             c = chr((((ord(c) - ord(a)) + 13) % 26) + ord(a))
          data2 = data2 + c
-      newbuf = Buffer()
+      newbuf = gst.Buffer()
       newbuf.set_data(data2)
       self.srcpad.push(newbuf)
 
 gobject.type_register(Rot13)
 
-def main():
+def main(args):
    "A GStreamer Python subclassing example of a rot13 filter"
-   gst_debug_set_categories(0L)
 
    rot13 = Rot13()
    rot13.set_name('rot13')
@@ -60,5 +58,4 @@ def main():
    return filter([rot13])
 
 if __name__ == '__main__':
-   ret = main()
-   sys.exit (ret)
+   sys.exit(main(sys.argv))

@@ -22,16 +22,11 @@
 #
 
 import sys
-#from gnome import *
-from gstreamer import *
-from gobject import GObject
+import gst
 import gtk
 gtk.threads_init()
 
 class DVDPlayer(object):
-   def __init__(self):
-      pass
-
    def idle(self, pipeline):
       #gtk.threads_enter()
       pipeline.iterate()
@@ -47,16 +42,16 @@ class DVDPlayer(object):
       print '***** a new pad %s was created' % pad.get_name()
       if pad.get_name()[:6] == 'video_':
          pad.link(self.v_queue.get_pad('sink'))
-         self.pipeline.set_state(STATE_PAUSED)
+         self.pipeline.set_state(gst.STATE_PAUSED)
          self.pipeline.add(self.v_thread)
-         #self.v_thread.set_state(STATE_PLAYING)
-         self.pipeline.set_state(STATE_PLAYING)
+         #self.v_thread.set_state(gst.STATE_PLAYING)
+         self.pipeline.set_state(gst.STATE_PLAYING)
       elif pad.get_name() == 'private_stream_1.0':
          pad.link(self.a_queue.get_pad('sink'))
-         self.pipeline.set_state(STATE_PAUSED)
+         self.pipeline.set_state(gst.STATE_PAUSED)
          self.pipeline.add(self.a_thread)
-         #self.a_thread.set_state(STATE_PLAYING);
-         self.pipeline.set_state(STATE_PLAYING)
+         #self.a_thread.set_state(gst.STATE_PLAYING);
+         self.pipeline.set_state(gst.STATE_PLAYING)
       else:
          print 'unknown pad: %s' % pad.get_name()
       #gtk.threads_leave()
@@ -67,16 +62,12 @@ class DVDPlayer(object):
       self.appwindow.show_all()
       gtk.threads_leave()
 
-   def main(self):
-      if len(sys.argv) < 5:
-         print 'usage: %s dvdlocation title chapter angle' % sys.argv[0]
-         return -1
-
-      self.location = sys.argv[1]
-      self.title = int(sys.argv[2])
-      self.chapter = int(sys.argv[3])
-      self.angle = int(sys.argv[4])
-
+   def main(self, location, title, chapter, angle):
+      self.location = location
+      self.title = title
+      self.chapter = chapter
+      self.angle = angle
+      
       #gst_init(&argc,&argv);
       #gnome_init('MPEG2 Video player','0.0.1',argc,argv);
 
@@ -91,13 +82,13 @@ class DVDPlayer(object):
 
       gtk.threads_enter()
 
-      self.pipeline.set_state(STATE_PLAYING)
+      self.pipeline.set_state(gst.STATE_PLAYING)
 
       gtk.idle_add(self.idle,self.pipeline)
 
       gtk.main()
 
-      self.pipeline.set_state(STATE_NULL)
+      self.pipeline.set_state(gst.STATE_NULL)
 
       gtk.threads_leave()
 
@@ -105,34 +96,34 @@ class DVDPlayer(object):
 
    def build_video_thread(self):
       # ***** pre-construct the video thread *****
-      self.v_thread = Thread('v_thread')
+      self.v_thread = gst.Thread('v_thread')
 
-      self.v_queue = Element('queue','v_queue')
+      self.v_queue = gst.Element('queue','v_queue')
 
-      self.v_decode = Element('mpeg2dec','decode_video')
+      self.v_decode = gst.Element('mpeg2dec','decode_video')
 
-      self.color = Element('colorspace','color')
+      self.color = gst.Element('colorspace','color')
 
-      self.efx = Element('identity','identity')
-      #self.efx = Element('edgeTV','EdgeTV')
-      #self.efx = Element('agingTV','AgingTV')
+      self.efx = gst.Element('identity','identity')
+      #self.efx = gst.Element('edgeTV','EdgeTV')
+      #self.efx = gst.Element('agingTV','AgingTV')
       #effectv:  diceTV: DiceTV
       #effectv:  warpTV: WarpTV
       #effectv:  shagadelicTV: ShagadelicTV
       #effectv:  vertigoTV: VertigoTV
-      #self.efx = Element('revTV','RevTV')
-      #self.efx = Element('quarkTV','QuarkTV')
+      #self.efx = gst.Element('revTV','RevTV')
+      #self.efx = gst.Element('quarkTV','QuarkTV')
 
-      self.color2 = Element('colorspace','color2')
+      self.color2 = gst.Element('colorspace','color2')
 
-      self.show = Element('xvideosink','show')
+      self.show = gst.Element('xvideosink','show')
       #self.show = Element('sdlvideosink','show')
       #self.show = Element('fakesink','fakesinkv')
       #self.show.set_property('silent', 0)
       #self.show.set_property('sync', 1)
 
-      #self.deinterlace = Element('deinterlace','deinterlace')
-      self.deinterlace = Element('identity','deinterlace')
+      #self.deinterlace = gst.Element('deinterlace','deinterlace')
+      self.deinterlace = gst.Element('identity','deinterlace')
 
       last = None
       for e in (self.v_queue, self.v_decode, self.color, self.efx, self.color2,  self.deinterlace, self.show):
@@ -149,13 +140,13 @@ class DVDPlayer(object):
 
    def build_audio_thread(self):
       # ***** pre-construct the audio thread *****
-      self.a_thread = Thread('a_thread')
+      self.a_thread = gst.Thread('a_thread')
 
-      self.a_queue = Element('queue','a_queue')
+      self.a_queue = gst.Element('queue','a_queue')
 
-      self.a_decode = Element('a52dec','decode_audio')
+      self.a_decode = gst.Element('a52dec','decode_audio')
 
-      self.osssink = Element('osssink','osssink')
+      self.osssink = gst.Element('osssink','osssink')
       #self.osssink = Element('fakesink','fakesinka')
       #self.osssink.set_property('silent', 0)
       #self.osssink.set_property('sync', 0)
@@ -168,9 +159,9 @@ class DVDPlayer(object):
 
    def build(self):
       # ***** construct the main pipeline *****
-      self.pipeline = Pipeline('pipeline')
+      self.pipeline = gst.Pipeline('pipeline')
 
-      self.src = Element('dvdreadsrc','src');
+      self.src = gst.Element('dvdreadsrc','src');
 
       self.src.connect('deep_notify',self.dnprint)
       self.src.set_property('location', self.location)
@@ -178,7 +169,7 @@ class DVDPlayer(object):
       self.src.set_property('chapter', self.chapter)
       self.src.set_property('angle', self.angle)
 
-      self.parse = Element('mpegdemux','parse')
+      self.parse = gst.Element('mpegdemux','parse')
       self.parse.set_property('sync', 0)
 
       self.pipeline.add(self.src)
@@ -219,9 +210,18 @@ class DVDPlayer(object):
       str = obj.get_property(param.name)
       print '%s: %s = %s' % (sender.get_name(), param.name, str)
 
-if __name__ == '__main__':
-   #gst_debug_set_categories(0xFFFFFFFFL)
-   #gst_info_set_categories(0xFFFFFFFFL)
+def main(args):
+   if len(sys.argv) < 5:
+      print 'usage: %s dvdlocation title chapter angle' % sys.argv[0]
+      return -1
+
+   location = sys.argv[1]
+   title = int(sys.argv[2])
+   chapter = int(sys.argv[3])
+   angle = int(sys.argv[4])
+
    player = DVDPlayer()
-   ret = player.main()
-   sys.exit(ret)
+   return player.main(location, title, chapter, angle)
+   
+if __name__ == '__main__':
+   sys.exit(main(sys.argv))

@@ -21,23 +21,24 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 #
 
-from gobject import GObject
-from gstreamer import *
+import sys
+
+import gst
 
 def handoff(sender, *args):
    print sender.get_name(), args
 
-def main():
+def main(args):
    # create a new bin to hold the elements
    #gst_debug_set_categories(-1)
-   bin = Pipeline('pipeline')
+   bin = gst.Pipeline('pipeline')
 
-   src = Element('fakesrc', 'src')
+   src = gst.Element('fakesrc', 'src')
    src.connect('handoff', handoff)
    src.set_property('silent', 1)
    src.set_property('num_buffers', 10)
 
-   sink = Element('fakesink', 'sink')
+   sink = gst.Element('fakesink', 'sink')
    sink.connect('handoff', handoff)
    src.set_property('silent', 1)
 
@@ -50,14 +51,15 @@ def main():
    assert res
 
    # start playing
-   res = bin.set_state(STATE_PLAYING);
+   res = bin.set_state(gst.STATE_PLAYING);
    assert res
 
-   while bin.iterate(): pass
+   while bin.iterate():
+      pass
 
    # stop the bin
-   res = bin.set_state(STATE_NULL)
+   res = bin.set_state(gst.STATE_NULL)
    assert res
 
 if __name__ == '__main__':
-   main()
+   sys.exit(main(sys.argv))

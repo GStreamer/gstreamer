@@ -23,6 +23,7 @@
 #
 
 import sys
+
 import gst
 
 def filter(input, output):

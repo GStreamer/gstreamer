@@ -23,8 +23,7 @@
 
 import sys
 import time
-from gstreamer import *
-from gobject import GObject
+import gst
 
 def update(sender, *args):
    print sender.get_name(), args
@@ -63,7 +62,7 @@ def identity_add(pipeline, first, count):
 
    for i in range(count):
      name = 'identity_%03d' % i
-     ident = Element('identity', name)
+     ident = gst.Element('identity', name)
      ident.set_property('silent', 1)
      pipeline.add(ident)
      last.get_pad('src').link(ident.get_pad('sink'))
@@ -72,14 +71,14 @@ def identity_add(pipeline, first, count):
    return last
 
 def fakesrc():
-   src = Element('fakesrc','src')
+   src = gst.Element('fakesrc','src')
    src.set_property('silent', 1)
    src.set_property('num_buffers', iterations)
    src.connect('handoff', handoff_src)
    return src
 
 def fakesink():
-   sink = Element('fakesink','fakesink')
+   sink = gst.Element('fakesink','fakesink')
    sink.set_property('silent', 1)
    sink.connect('handoff', handoff_sink)
    return sink
@@ -89,10 +88,8 @@ def simple(argv):
      print 'simple: bad params'
      return None
    idents = int(argv[0])
-   if len(argv) == 2:
-      gst_schedulerfactory_set_default_name (argv[1])
 
-   pipeline = Pipeline('pipeline')
+   pipeline = gst.Pipeline('pipeline')
 
    src = fakesrc()
    pipeline.add(src)
@@ -109,17 +106,14 @@ def queue(argv):
       return None
    idents = int(argv[0])
 
-   if len(arv) == 2:
-      gst_schedulerfactory_set_default_name (argv[1])
+   pipeline = gst.Pipeline('pipeline')
 
-   pipeline = Pipeline('pipeline')
-
-   src_thr = Thread('src_thread')
+   src_thr = gst.Thread('src_thread')
 
    src = fakesrc()
    src_thr.add(src)
 
-   src_q = Element('queue','src_q')
+   src_q = gst.Element('queue','src_q')
    src_thr.add(src_q)
    src.get_pad('src').link(src_q.get_pad('sink'))
 
@@ -127,11 +121,11 @@ def queue(argv):
 
    last = identity_add(pipeline, src_q, idents)
 
-   sink_q = Element('queue','sink_q')
+   sink_q = gst.Element('queue','sink_q')
    pipeline.add(sink_q)
    last.get_pad('src').link(sink_q.get_pad('sink'))
 
-   sink_thr = Thread('sink_thread')
+   sink_thr = gst.Thread('sink_thread')
 
    sink = fakesink()
 
@@ -169,12 +163,12 @@ def main():
 
    #xmlSaveFile('lat.gst', gst_xml_write(pipeline))
 
-   pipeline.set_state(STATE_PLAYING)
+   pipeline.set_state(gst.STATE_PLAYING)
 
    while count < iterations:
       pipeline.iterate()
 
-   pipeline.set_state(STATE_NULL)
+   pipeline.set_state(gst.STATE_NULL)
 
    print
 

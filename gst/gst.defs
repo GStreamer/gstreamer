@@ -850,12 +850,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstbin.h
 
-(define-function gst_bin_get_type
+(define-function bin_get_type
   (c-name "gst_bin_get_type")
   (return-type "GType")
 )
 
-(define-function gst_bin_new
+(define-function bin_new
   (c-name "gst_bin_new")
   (is-constructor-of "GstBin")
   (return-type "GstElement*")
@@ -1012,18 +1012,18 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstbuffer.h
 
-(define-function gst_buffer_get_type
+(define-function buffer_get_type
   (c-name "gst_buffer_get_type")
   (return-type "GType")
 )
 
-(define-function gst_buffer_new
+(define-function buffer_new
   (c-name "gst_buffer_new")
   (is-constructor-of "GstBuffer")
   (return-type "GstBuffer*")
 )
 
-(define-function gst_buffer_new_and_alloc
+(define-function buffer_new_and_alloc
   (c-name "gst_buffer_new_and_alloc")
   (return-type "GstBuffer*")
   (parameters
@@ -1105,22 +1105,22 @@
   (return-type "none")
 )
 
-(define-function gst_caps_get_type
+(define-function caps_get_type
   (c-name "gst_caps_get_type")
   (return-type "GType")
 )
 
-(define-function gst_caps_new_empty
+(define-function caps_new_empty
   (c-name "gst_caps_new_empty")
   (return-type "GstCaps*")
 )
 
-(define-function gst_caps_new_any
+(define-function caps_new_any
   (c-name "gst_caps_new_any")
   (return-type "GstCaps*")
 )
 
-(define-function gst_caps_new_simple
+(define-function caps_new_simple
   (c-name "gst_caps_new_simple")
   (return-type "GstCaps*")
   (parameters
@@ -1130,7 +1130,7 @@
   (varargs #t)
 )
 
-(define-function gst_caps_new_full
+(define-function caps_new_full
   (c-name "gst_caps_new_full")
   (return-type "GstCaps*")
   (parameters
@@ -1139,7 +1139,7 @@
   (varargs #t)
 )
 
-(define-function gst_caps_new_full_valist
+(define-function caps_new_full_valist
   (c-name "gst_caps_new_full_valist")
   (return-type "GstCaps*")
   (parameters
@@ -1312,7 +1312,7 @@
   )
 )
 
-(define-function gst_caps_load_thyself
+(define-function caps_load_thyself
   (c-name "gst_caps_load_thyself")
   (return-type "GstCaps*")
   (parameters
@@ -1320,7 +1320,7 @@
   )
 )
 
-(define-function gst_caps_replace
+(define-function caps_replace
   (c-name "gst_caps_replace")
   (return-type "none")
   (parameters
@@ -1335,7 +1335,7 @@
   (return-type "gchar*")
 )
 
-(define-function gst_caps_from_string
+(define-function caps_from_string
   (c-name "gst_caps_from_string")
   (return-type "GstCaps*")
   (parameters
@@ -1343,7 +1343,7 @@
   )
 )
 
-(define-function gst_caps_structure_fixate_field_nearest_int
+(define-function caps_structure_fixate_field_nearest_int
   (c-name "gst_caps_structure_fixate_field_nearest_int")
   (return-type "gboolean")
   (parameters
@@ -1353,7 +1353,7 @@
   )
 )
 
-(define-function gst_caps_structure_fixate_field_nearest_double
+(define-function caps_structure_fixate_field_nearest_double
   (c-name "gst_caps_structure_fixate_field_nearest_double")
   (return-type "gboolean")
   (parameters
@@ -1367,7 +1367,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstclock.h
 
-(define-function gst_clock_get_type
+(define-function clock_get_type
   (c-name "gst_clock_get_type")
   (return-type "GType")
 )
@@ -1528,7 +1528,7 @@
   )
 )
 
-(define-function gst_cpu_get_flags
+(define-function cpu_get_flags
   (c-name "gst_cpu_get_flags")
   (return-type "GstCPUFlags")
 )
@@ -1641,7 +1641,7 @@
   )
 )
 
-(define-function gst_element_default_error
+(define-function element_default_error
   (c-name "gst_element_default_error")
   (return-type "none")
   (parameters
@@ -1652,7 +1652,7 @@
   )
 )
 
-(define-function gst_element_get_type
+(define-function element_get_type
   (c-name "gst_element_get_type")
   (return-type "GType")
 )
@@ -2257,12 +2257,12 @@
   (return-type "GstBin*")
 )
 
-(define-function gst_element_factory_get_type
+(define-function element_factory_get_type
   (c-name "gst_element_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_element_register
+(define-function element_register
   (c-name "gst_element_register")
   (return-type "gboolean")
   (parameters
@@ -2273,7 +2273,7 @@
   )
 )
 
-(define-function gst_element_factory_find
+(define-function element_factory_find
   (c-name "gst_element_factory_find")
   (return-type "GstElementFactory*")
   (parameters
@@ -2344,7 +2344,7 @@
   )
 )
 
-(define-function gst_element_factory_make
+(define-function element_factory_make
   (is-constructor-of "GstElement")
   (c-name "gst_element_factory_make")
   (return-type "GstElement*")
@@ -2394,242 +2394,242 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstenumtypes.h
 
-(define-function gst_object_flags_get_type
+(define-function object_flags_get_type
   (c-name "gst_object_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_bin_flags_get_type
+(define-function bin_flags_get_type
   (c-name "gst_bin_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_buffer_flag_get_type
+(define-function buffer_flag_get_type
   (c-name "gst_buffer_flag_get_type")
   (return-type "GType")
 )
 
-(define-function gst_clock_entry_status_get_type
+(define-function clock_entry_status_get_type
   (c-name "gst_clock_entry_status_get_type")
   (return-type "GType")
 )
 
-(define-function gst_clock_entry_type_get_type
+(define-function clock_entry_type_get_type
   (c-name "gst_clock_entry_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_clock_return_get_type
+(define-function clock_return_get_type
   (c-name "gst_clock_return_get_type")
   (return-type "GType")
 )
 
-(define-function gst_clock_flags_get_type
+(define-function clock_flags_get_type
   (c-name "gst_clock_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_cpu_flags_get_type
+(define-function cpu_flags_get_type
   (c-name "gst_cpu_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_data_flags_get_type
+(define-function data_flags_get_type
   (c-name "gst_data_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_element_flags_get_type
+(define-function element_flags_get_type
   (c-name "gst_element_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_core_error_get_type
+(define-function core_error_get_type
   (c-name "gst_core_error_get_type")
   (return-type "GType")
 )
 
-(define-function gst_library_error_get_type
+(define-function library_error_get_type
   (c-name "gst_library_error_get_type")
   (return-type "GType")
 )
 
-(define-function gst_resource_error_get_type
+(define-function resource_error_get_type
   (c-name "gst_resource_error_get_type")
   (return-type "GType")
 )
 
-(define-function gst_stream_error_get_type
+(define-function stream_error_get_type
   (c-name "gst_stream_error_get_type")
   (return-type "GType")
 )
 
-(define-function gst_event_type_get_type
+(define-function event_type_get_type
   (c-name "gst_event_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_event_flag_get_type
+(define-function event_flag_get_type
   (c-name "gst_event_flag_get_type")
   (return-type "GType")
 )
 
-(define-function gst_seek_type_get_type
+(define-function seek_type_get_type
   (c-name "gst_seek_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_seek_accuracy_get_type
+(define-function seek_accuracy_get_type
   (c-name "gst_seek_accuracy_get_type")
   (return-type "GType")
 )
 
-(define-function gst_format_get_type
+(define-function format_get_type
   (c-name "gst_format_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_certainty_get_type
+(define-function index_certainty_get_type
   (c-name "gst_index_certainty_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_entry_type_get_type
+(define-function index_entry_type_get_type
   (c-name "gst_index_entry_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_lookup_method_get_type
+(define-function index_lookup_method_get_type
   (c-name "gst_index_lookup_method_get_type")
   (return-type "GType")
 )
 
-(define-function gst_assoc_flags_get_type
+(define-function assoc_flags_get_type
   (c-name "gst_assoc_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_resolver_method_get_type
+(define-function index_resolver_method_get_type
   (c-name "gst_index_resolver_method_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_flags_get_type
+(define-function index_flags_get_type
   (c-name "gst_index_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_debug_level_get_type
+(define-function debug_level_get_type
   (c-name "gst_debug_level_get_type")
   (return-type "GType")
 )
 
-(define-function gst_debug_color_flags_get_type
+(define-function debug_color_flags_get_type
   (c-name "gst_debug_color_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_link_return_get_type
+(define-function pad_link_return_get_type
   (c-name "gst_pad_link_return_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_direction_get_type
+(define-function pad_direction_get_type
   (c-name "gst_pad_direction_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_flags_get_type
+(define-function pad_flags_get_type
   (c-name "gst_pad_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_presence_get_type
+(define-function pad_presence_get_type
   (c-name "gst_pad_presence_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_template_flags_get_type
+(define-function pad_template_flags_get_type
   (c-name "gst_pad_template_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_plugin_error_get_type
+(define-function plugin_error_get_type
   (c-name "gst_plugin_error_get_type")
   (return-type "GType")
 )
 
-(define-function gst_query_type_get_type
+(define-function query_type_get_type
   (c-name "gst_query_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_scheduler_flags_get_type
+(define-function scheduler_flags_get_type
   (c-name "gst_scheduler_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_scheduler_state_get_type
+(define-function scheduler_state_get_type
   (c-name "gst_scheduler_state_get_type")
   (return-type "GType")
 )
 
-(define-function gst_tag_merge_mode_get_type
+(define-function tag_merge_mode_get_type
   (c-name "gst_tag_merge_mode_get_type")
   (return-type "GType")
 )
 
-(define-function gst_tag_flag_get_type
+(define-function tag_flag_get_type
   (c-name "gst_tag_flag_get_type")
   (return-type "GType")
 )
 
-(define-function gst_thread_state_get_type
+(define-function thread_state_get_type
   (c-name "gst_thread_state_get_type")
   (return-type "GType")
 )
 
-(define-function gst_alloc_trace_flags_get_type
+(define-function alloc_trace_flags_get_type
   (c-name "gst_alloc_trace_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_type_find_probability_get_type
+(define-function type_find_probability_get_type
   (c-name "gst_type_find_probability_get_type")
   (return-type "GType")
 )
 
-(define-function gst_element_state_get_type
+(define-function element_state_get_type
   (c-name "gst_element_state_get_type")
   (return-type "GType")
 )
 
-(define-function gst_element_state_return_get_type
+(define-function element_state_return_get_type
   (c-name "gst_element_state_return_get_type")
   (return-type "GType")
 )
 
-(define-function gst_result_get_type
+(define-function result_get_type
   (c-name "gst_result_get_type")
   (return-type "GType")
 )
 
-(define-function gst_uri_type_get_type
+(define-function uri_type_get_type
   (c-name "gst_uri_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_registry_return_get_type
+(define-function registry_return_get_type
   (c-name "gst_registry_return_get_type")
   (return-type "GType")
 )
 
-(define-function gst_registry_flags_get_type
+(define-function registry_flags_get_type
   (c-name "gst_registry_flags_get_type")
   (return-type "GType")
 )
 
-(define-function gst_parse_error_get_type
+(define-function parse_error_get_type
   (c-name "gst_parse_error_get_type")
   (return-type "GType")
 )
@@ -2638,27 +2638,27 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gsterror.h
 
-(define-function gst_core_error_quark
+(define-function core_error_quark
   (c-name "gst_core_error_quark")
   (return-type "GQuark")
 )
 
-(define-function gst_library_error_quark
+(define-function library_error_quark
   (c-name "gst_library_error_quark")
   (return-type "GQuark")
 )
 
-(define-function gst_resource_error_quark
+(define-function resource_error_quark
   (c-name "gst_resource_error_quark")
   (return-type "GQuark")
 )
 
-(define-function gst_stream_error_quark
+(define-function stream_error_quark
   (c-name "gst_stream_error_quark")
   (return-type "GQuark")
 )
 
-(define-function gst_error_get_message
+(define-function error_get_message
   (c-name "gst_error_get_message")
   (return-type "gchar*")
   (parameters
@@ -2676,12 +2676,12 @@
   (return-type "none")
 )
 
-(define-function gst_event_get_type
+(define-function event_get_type
   (c-name "gst_event_get_type")
   (return-type "GType")
 )
 
-(define-function gst_event_new
+(define-function event_new
   (c-name "gst_event_new")
   (is-constructor-of "GstEvent")
   (return-type "GstEvent*")
@@ -2699,7 +2699,7 @@
   )
 )
 
-(define-function gst_event_new_seek
+(define-function event_new_seek
   (c-name "gst_event_new_seek")
   (return-type "GstEvent*")
   (parameters
@@ -2708,7 +2708,7 @@
   )
 )
 
-(define-function gst_event_new_segment_seek
+(define-function event_new_segment_seek
   (c-name "gst_event_new_segment_seek")
   (return-type "GstEvent*")
   (parameters
@@ -2718,7 +2718,7 @@
   )
 )
 
-(define-function gst_event_new_size
+(define-function event_new_size
   (c-name "gst_event_new_size")
   (return-type "GstEvent*")
   (parameters
@@ -2727,7 +2727,7 @@
   )
 )
 
-(define-function gst_event_new_discontinuous
+(define-function event_new_discontinuous
   (c-name "gst_event_new_discontinuous")
   (return-type "GstEvent*")
   (parameters
@@ -2737,7 +2737,7 @@
   (varargs #t)
 )
 
-(define-function gst_event_new_discontinuous_valist
+(define-function event_new_discontinuous_valist
   (c-name "gst_event_new_discontinuous_valist")
   (return-type "GstEvent*")
   (parameters
@@ -2761,7 +2761,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstfilter.h
 
-(define-function gst_filter_run
+(define-function filter_run
   (c-name "gst_filter_run")
   (return-type "GList*")
   (parameters
@@ -2781,7 +2781,7 @@
   (return-type "none")
 )
 
-(define-function gst_format_register
+(define-function format_register
   (c-name "gst_format_register")
   (return-type "GstFormat")
   (parameters
@@ -2790,7 +2790,7 @@
   )
 )
 
-(define-function gst_format_get_by_nick
+(define-function format_get_by_nick
   (c-name "gst_format_get_by_nick")
   (return-type "GstFormat")
   (parameters
@@ -2813,7 +2813,7 @@
   (return-type "const-GstFormatDefinition*")
 )
 
-(define-function gst_format_get_definitions
+(define-function format_get_definitions
   (c-name "gst_format_get_definitions")
   (return-type "const-GList*")
 )
@@ -2822,7 +2822,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gst.h
 
-(define-function gst_init
+(define-function init
   (c-name "gst_init")
   (return-type "none")
   (parameters
@@ -2831,7 +2831,7 @@
   )
 )
 
-(define-function gst_init_check
+(define-function init_check
   (c-name "gst_init_check")
   (return-type "gboolean")
   (parameters
@@ -2840,7 +2840,7 @@
   )
 )
 
-(define-function gst_init_with_popt_table
+(define-function init_with_popt_table
   (c-name "gst_init_with_popt_table")
   (return-type "none")
   (parameters
@@ -2850,7 +2850,7 @@
   )
 )
 
-(define-function gst_init_check_with_popt_table
+(define-function init_check_with_popt_table
   (c-name "gst_init_check_with_popt_table")
   (return-type "gboolean")
   (parameters
@@ -2860,12 +2860,12 @@
   )
 )
 
-(define-function gst_init_get_popt_table
+(define-function init_get_popt_table
   (c-name "gst_init_get_popt_table")
   (return-type "const-GstPoptOption*")
 )
 
-(define-function gst_use_threads
+(define-function use_threads
   (c-name "gst_use_threads")
   (return-type "none")
   (parameters
@@ -2873,17 +2873,17 @@
   )
 )
 
-(define-function gst_has_threads
+(define-function has_threads
   (c-name "gst_has_threads")
   (return-type "gboolean")
 )
 
-(define-function gst_main
+(define-function main
   (c-name "gst_main")
   (return-type "none")
 )
 
-(define-function gst_main_quit
+(define-function main_quit
   (c-name "gst_main_quit")
   (return-type "none")
 )
@@ -2892,12 +2892,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstindex.h
 
-(define-function gst_index_get_type
+(define-function index_get_type
   (c-name "gst_index_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_new
+(define-function index_new
   (c-name "gst_index_new")
   (is-constructor-of "GstIndex")
   (return-type "GstIndex*")
@@ -3051,7 +3051,7 @@
   )
 )
 
-(define-function gst_index_entry_get_type
+(define-function index_entry_get_type
   (c-name "gst_index_entry_get_type")
   (return-type "GType")
 )
@@ -3078,12 +3078,12 @@
   )
 )
 
-(define-function gst_index_factory_get_type
+(define-function index_factory_get_type
   (c-name "gst_index_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_index_factory_new
+(define-function index_factory_new
   (c-name "gst_index_factory_new")
   (is-constructor-of "GstIndexFactory")
   (return-type "GstIndexFactory*")
@@ -3100,7 +3100,7 @@
   (return-type "none")
 )
 
-(define-function gst_index_factory_find
+(define-function index_factory_find
   (c-name "gst_index_factory_find")
   (return-type "GstIndexFactory*")
   (parameters
@@ -3114,7 +3114,7 @@
   (return-type "GstIndex*")
 )
 
-(define-function gst_index_factory_make
+(define-function index_factory_make
   (c-name "gst_index_factory_make")
   (return-type "GstIndex*")
   (parameters
@@ -3131,7 +3131,7 @@
   (return-type "none")
 )
 
-(define-function gst_debug_log
+(define-function debug_log
   (c-name "gst_debug_log")
   (return-type "none")
   (parameters
@@ -3146,7 +3146,7 @@
   (varargs #t)
 )
 
-(define-function gst_debug_log_valist
+(define-function debug_log_valist
   (c-name "gst_debug_log_valist")
   (return-type "none")
   (parameters
@@ -3167,7 +3167,7 @@
   (return-type "const-gchar*")
 )
 
-(define-function gst_debug_log_default
+(define-function debug_log_default
   (c-name "gst_debug_log_default")
   (return-type "none")
   (parameters
@@ -3188,7 +3188,7 @@
   (return-type "const-gchar*")
 )
 
-(define-function gst_debug_add_log_function
+(define-function debug_add_log_function
   (c-name "gst_debug_add_log_function")
   (return-type "none")
   (parameters
@@ -3197,7 +3197,7 @@
   )
 )
 
-(define-function gst_debug_remove_log_function
+(define-function debug_remove_log_function
   (c-name "gst_debug_remove_log_function")
   (return-type "guint")
   (parameters
@@ -3205,7 +3205,7 @@
   )
 )
 
-(define-function gst_debug_remove_log_function_by_data
+(define-function debug_remove_log_function_by_data
   (c-name "gst_debug_remove_log_function_by_data")
   (return-type "guint")
   (parameters
@@ -3213,7 +3213,7 @@
   )
 )
 
-(define-function gst_debug_set_active
+(define-function debug_set_active
   (c-name "gst_debug_set_active")
   (return-type "none")
   (parameters
@@ -3221,12 +3221,12 @@
   )
 )
 
-(define-function gst_debug_is_active
+(define-function debug_is_active
   (c-name "gst_debug_is_active")
   (return-type "gboolean")
 )
 
-(define-function gst_debug_set_colored
+(define-function debug_set_colored
   (c-name "gst_debug_set_colored")
   (return-type "none")
   (parameters
@@ -3234,12 +3234,12 @@
   )
 )
 
-(define-function gst_debug_is_colored
+(define-function debug_is_colored
   (c-name "gst_debug_is_colored")
   (return-type "gboolean")
 )
 
-(define-function gst_debug_set_default_threshold
+(define-function debug_set_default_threshold
   (c-name "gst_debug_set_default_threshold")
   (return-type "none")
   (parameters
@@ -3247,12 +3247,12 @@
   )
 )
 
-(define-function gst_debug_get_default_threshold
+(define-function debug_get_default_threshold
   (c-name "gst_debug_get_default_threshold")
   (return-type "GstDebugLevel")
 )
 
-(define-function gst_debug_set_threshold_for_name
+(define-function debug_set_threshold_for_name
   (c-name "gst_debug_set_threshold_for_name")
   (return-type "none")
   (parameters
@@ -3261,7 +3261,7 @@
   )
 )
 
-(define-function gst_debug_unset_threshold_for_name
+(define-function debug_unset_threshold_for_name
   (c-name "gst_debug_unset_threshold_for_name")
   (return-type "none")
   (parameters
@@ -3325,12 +3325,12 @@
   (return-type "const-gchar*")
 )
 
-(define-function gst_debug_get_all_categories
+(define-function debug_get_all_categories
   (c-name "gst_debug_get_all_categories")
   (return-type "GSList*")
 )
 
-(define-function gst_debug_construct_term_color
+(define-function debug_construct_term_color
   (c-name "gst_debug_construct_term_color")
   (return-type "gchar*")
   (parameters
@@ -3355,7 +3355,7 @@
   )
 )
 
-(define-function gst_debug_print_stack_trace
+(define-function debug_print_stack_trace
   (c-name "gst_debug_print_stack_trace")
   (return-type "none")
 )
@@ -3364,7 +3364,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstinterface.h
 
-(define-function gst_implements_interface_get_type
+(define-function implements_interface_get_type
   (c-name "gst_implements_interface_get_type")
   (return-type "GType")
 )
@@ -3378,7 +3378,7 @@
   )
 )
 
-(define-function gst_implements_interface_cast
+(define-function implements_interface_cast
   (c-name "gst_implements_interface_cast")
   (return-type "gpointer")
   (parameters
@@ -3387,7 +3387,7 @@
   )
 )
 
-(define-function gst_implements_interface_check
+(define-function implements_interface_check
   (c-name "gst_implements_interface_check")
   (return-type "gboolean")
   (parameters
@@ -3412,7 +3412,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstmemchunk.h
 
-(define-function gst_mem_chunk_new
+(define-function mem_chunk_new
   (c-name "gst_mem_chunk_new")
   (is-constructor-of "GstMemChunk")
   (return-type "GstMemChunk*")
@@ -3455,7 +3455,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstobject.h
 
-(define-function gst_object_get_type
+(define-function object_get_type
   (c-name "gst_object_get_type")
   (return-type "GType")
 )
@@ -3496,7 +3496,7 @@
   (return-type "none")
 )
 
-(define-function gst_object_default_deep_notify
+(define-function object_default_deep_notify
   (c-name "gst_object_default_deep_notify")
   (return-type "none")
   (parameters
@@ -3507,7 +3507,7 @@
   )
 )
 
-(define-function gst_object_check_uniqueness
+(define-function object_check_uniqueness
   (c-name "gst_object_check_uniqueness")
   (return-type "gboolean")
   (parameters
@@ -3552,7 +3552,7 @@
   (return-type "none")
 )
 
-(define-function gst_object_replace
+(define-function object_replace
   (c-name "gst_object_replace")
   (return-type "none")
   (parameters
@@ -3567,7 +3567,7 @@
   (return-type "gchar*")
 )
 
-(define-function gst_class_signal_connect
+(define-function class_signal_connect
   (c-name "gst_class_signal_connect")
   (return-type "guint")
   (parameters
@@ -3578,7 +3578,7 @@
   )
 )
 
-(define-function gst_class_signal_emit_by_name
+(define-function class_signal_emit_by_name
   (c-name "gst_class_signal_emit_by_name")
   (return-type "none")
   (parameters
@@ -3592,22 +3592,22 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstpad.h
 
-(define-function gst_pad_get_type
+(define-function pad_get_type
   (c-name "gst_pad_get_type")
   (return-type "GType")
 )
 
-(define-function gst_real_pad_get_type
+(define-function real_pad_get_type
   (c-name "gst_real_pad_get_type")
   (return-type "GType")
 )
 
-(define-function gst_ghost_pad_get_type
+(define-function ghost_pad_get_type
   (c-name "gst_ghost_pad_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_new
+(define-function pad_new
   (c-name "gst_pad_new")
   (is-constructor-of "GstPad")
   (return-type "GstPad*")
@@ -3617,7 +3617,7 @@
   )
 )
 
-(define-function gst_pad_new_from_template
+(define-function pad_new_from_template
   (c-name "gst_pad_new_from_template")
   (return-type "GstPad*")
   (parameters
@@ -3626,7 +3626,7 @@
   )
 )
 
-(define-function gst_pad_custom_new
+(define-function pad_custom_new
   (c-name "gst_pad_custom_new")
   (is-constructor-of "GstPadCustom")
   (return-type "GstPad*")
@@ -3637,7 +3637,7 @@
   )
 )
 
-(define-function gst_pad_custom_new_from_template
+(define-function pad_custom_new_from_template
   (c-name "gst_pad_custom_new_from_template")
   (return-type "GstPad*")
   (parameters
@@ -4111,7 +4111,7 @@
   )
 )
 
-(define-function gst_pad_selectv
+(define-function pad_selectv
   (c-name "gst_pad_selectv")
   (return-type "GstPad*")
   (parameters
@@ -4274,7 +4274,7 @@
   )
 )
 
-(define-function gst_pad_load_and_link
+(define-function pad_load_and_link
   (c-name "gst_pad_load_and_link")
   (return-type "none")
   (parameters
@@ -4283,7 +4283,7 @@
   )
 )
 
-(define-function gst_ghost_pad_new
+(define-function ghost_pad_new
   (c-name "gst_ghost_pad_new")
   (is-constructor-of "GstGhostPad")
   (return-type "GstPad*")
@@ -4293,12 +4293,12 @@
   )
 )
 
-(define-function gst_pad_template_get_type
+(define-function pad_template_get_type
   (c-name "gst_pad_template_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pad_template_new
+(define-function pad_template_new
   (c-name "gst_pad_template_new")
   (is-constructor-of "GstPadTemplate")
   (return-type "GstPadTemplate*")
@@ -4331,7 +4331,7 @@
   )
 )
 
-(define-function gst_ghost_pad_save_thyself
+(define-function ghost_pad_save_thyself
   (c-name "gst_ghost_pad_save_thyself")
   (return-type "xmlNodePtr")
   (parameters
@@ -4344,12 +4344,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstparse.h
 
-(define-function gst_parse_error_quark
+(define-function parse_error_quark
   (c-name "gst_parse_error_quark")
   (return-type "GQuark")
 )
 
-(define-function gst_parse_launch
+(define-function parse_launch
   (c-name "gst_parse_launch")
   (return-type "GstElement*")
   (parameters
@@ -4358,7 +4358,7 @@
   )
 )
 
-(define-function gst_parse_launchv
+(define-function parse_launchv
   (c-name "gst_parse_launchv")
   (return-type "GstElement*")
   (parameters
@@ -4371,12 +4371,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstpipeline.h
 
-(define-function gst_pipeline_get_type
+(define-function pipeline_get_type
   (c-name "gst_pipeline_get_type")
   (return-type "GType")
 )
 
-(define-function gst_pipeline_new
+(define-function pipeline_new
   (c-name "gst_pipeline_new")
   (is-constructor-of "GstPipeline")
   (return-type "GstElement*")
@@ -4389,7 +4389,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstpluginfeature.h
 
-(define-function gst_plugin_feature_get_type
+(define-function plugin_feature_get_type
   (c-name "gst_plugin_feature_get_type")
   (return-type "GType")
 )
@@ -4449,12 +4449,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstplugin.h
 
-(define-function gst_plugin_error_quark
+(define-function plugin_error_quark
   (c-name "gst_plugin_error_quark")
   (return-type "GQuark")
 )
 
-(define-function gst_plugin_get_type
+(define-function plugin_get_type
   (c-name "gst_plugin_get_type")
   (return-type "GType")
 )
@@ -4531,7 +4531,7 @@
   )
 )
 
-(define-function gst_plugin_list_feature_filter
+(define-function plugin_list_feature_filter
   (c-name "gst_plugin_list_feature_filter")
   (return-type "GList*")
   (parameters
@@ -4567,7 +4567,7 @@
   )
 )
 
-(define-function gst_plugin_load_file
+(define-function plugin_load_file
   (c-name "gst_plugin_load_file")
   (return-type "GstPlugin*")
   (parameters
@@ -4591,7 +4591,7 @@
   )
 )
 
-(define-function gst_plugin_load
+(define-function plugin_load
   (c-name "gst_plugin_load")
   (return-type "gboolean")
   (parameters
@@ -4599,7 +4599,7 @@
   )
 )
 
-(define-function gst_library_load
+(define-function library_load
   (c-name "gst_library_load")
   (return-type "gboolean")
   (parameters
@@ -4611,7 +4611,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstprobe.h
 
-(define-function gst_probe_new
+(define-function probe_new
   (c-name "gst_probe_new")
   (is-constructor-of "GstProbe")
   (return-type "GstProbe*")
@@ -4637,7 +4637,7 @@
   )
 )
 
-(define-function gst_probe_dispatcher_new
+(define-function probe_dispatcher_new
   (c-name "gst_probe_dispatcher_new")
   (is-constructor-of "GstProbeDispatcher")
   (return-type "GstProbeDispatcher*")
@@ -4700,7 +4700,7 @@
   (return-type "none")
 )
 
-(define-function gst_query_type_register
+(define-function query_type_register
   (c-name "gst_query_type_register")
   (return-type "GstQueryType")
   (parameters
@@ -4709,7 +4709,7 @@
   )
 )
 
-(define-function gst_query_type_get_by_nick
+(define-function query_type_get_by_nick
   (c-name "gst_query_type_get_by_nick")
   (return-type "GstQueryType")
   (parameters
@@ -4732,7 +4732,7 @@
   (return-type "const-GstQueryTypeDefinition*")
 )
 
-(define-function gst_query_type_get_definitions
+(define-function query_type_get_definitions
   (c-name "gst_query_type_get_definitions")
   (return-type "const-GList*")
 )
@@ -4741,7 +4741,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstqueue.h
 
-(define-function gst_queue_get_type
+(define-function queue_get_type
   (c-name "gst_queue_get_type")
   (return-type "GType")
 )
@@ -4750,7 +4750,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstregistry.h
 
-(define-function gst_registry_get_type
+(define-function registry_get_type
   (c-name "gst_registry_get_type")
   (return-type "GType")
 )
@@ -4896,7 +4896,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstregistrypool.h
 
-(define-function gst_registry_pool_list
+(define-function registry_pool_list
   (c-name "gst_registry_pool_list")
   (return-type "GList*")
 )
@@ -4916,7 +4916,7 @@
   (return-type "none")
 )
 
-(define-function gst_registry_pool_add_plugin
+(define-function registry_pool_add_plugin
   (c-name "gst_registry_pool_add_plugin")
   (return-type "none")
   (parameters
@@ -4924,12 +4924,12 @@
   )
 )
 
-(define-function gst_registry_pool_load_all
+(define-function registry_pool_load_all
   (c-name "gst_registry_pool_load_all")
   (return-type "none")
 )
 
-(define-function gst_registry_pool_plugin_filter
+(define-function registry_pool_plugin_filter
   (c-name "gst_registry_pool_plugin_filter")
   (return-type "GList*")
   (parameters
@@ -4939,7 +4939,7 @@
   )
 )
 
-(define-function gst_registry_pool_feature_filter
+(define-function registry_pool_feature_filter
   (c-name "gst_registry_pool_feature_filter")
   (return-type "GList*")
   (parameters
@@ -4949,12 +4949,12 @@
   )
 )
 
-(define-function gst_registry_pool_plugin_list
+(define-function registry_pool_plugin_list
   (c-name "gst_registry_pool_plugin_list")
   (return-type "GList*")
 )
 
-(define-function gst_registry_pool_feature_list
+(define-function registry_pool_feature_list
   (c-name "gst_registry_pool_feature_list")
   (return-type "GList*")
   (parameters
@@ -4962,7 +4962,7 @@
   )
 )
 
-(define-function gst_registry_pool_find_plugin
+(define-function registry_pool_find_plugin
   (c-name "gst_registry_pool_find_plugin")
   (return-type "GstPlugin*")
   (parameters
@@ -4970,7 +4970,7 @@
   )
 )
 
-(define-function gst_registry_pool_find_feature
+(define-function registry_pool_find_feature
   (c-name "gst_registry_pool_find_feature")
   (return-type "GstPluginFeature*")
   (parameters
@@ -4979,7 +4979,7 @@
   )
 )
 
-(define-function gst_registry_pool_get_prefered
+(define-function registry_pool_get_prefered
   (c-name "gst_registry_pool_get_prefered")
   (return-type "GstRegistry*")
   (parameters
@@ -4991,7 +4991,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstscheduler.h
 
-(define-function gst_scheduler_get_type
+(define-function scheduler_get_type
   (c-name "gst_scheduler_get_type")
   (return-type "GType")
 )
@@ -5190,12 +5190,12 @@
   (return-type "none")
 )
 
-(define-function gst_scheduler_factory_get_type
+(define-function scheduler_factory_get_type
   (c-name "gst_scheduler_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_scheduler_factory_new
+(define-function scheduler_factory_new
   (c-name "gst_scheduler_factory_new")
   (is-constructor-of "GstSchedulerFactory")
   (return-type "GstSchedulerFactory*")
@@ -5212,7 +5212,7 @@
   (return-type "none")
 )
 
-(define-function gst_scheduler_factory_find
+(define-function scheduler_factory_find
   (c-name "gst_scheduler_factory_find")
   (return-type "GstSchedulerFactory*")
   (parameters
@@ -5229,7 +5229,7 @@
   )
 )
 
-(define-function gst_scheduler_factory_make
+(define-function scheduler_factory_make
   (c-name "gst_scheduler_factory_make")
   (return-type "GstScheduler*")
   (parameters
@@ -5238,7 +5238,7 @@
   )
 )
 
-(define-function gst_scheduler_factory_set_default_name
+(define-function scheduler_factory_set_default_name
   (c-name "gst_scheduler_factory_set_default_name")
   (return-type "none")
   (parameters
@@ -5246,7 +5246,7 @@
   )
 )
 
-(define-function gst_scheduler_factory_get_default_name
+(define-function scheduler_factory_get_default_name
   (c-name "gst_scheduler_factory_get_default_name")
   (return-type "const-gchar*")
 )
@@ -5255,7 +5255,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gststructure.h
 
-(define-function gst_structure_get_type
+(define-function structure_get_type
   (c-name "gst_structure_get_type")
   (return-type "GType")
 )
@@ -5265,7 +5265,7 @@
   (return-type "none")
 )
 
-(define-function gst_structure_empty_new
+(define-function structure_empty_new
   (c-name "gst_structure_empty_new")
   (is-constructor-of "GstStructureEmpty")
   (return-type "GstStructure*")
@@ -5274,7 +5274,7 @@
   )
 )
 
-(define-function gst_structure_id_empty_new
+(define-function structure_id_empty_new
   (c-name "gst_structure_id_empty_new")
   (is-constructor-of "GstStructureIdEmpty")
   (return-type "GstStructure*")
@@ -5283,7 +5283,7 @@
   )
 )
 
-(define-function gst_structure_new
+(define-function structure_new
   (c-name "gst_structure_new")
   (is-constructor-of "GstStructure")
   (return-type "GstStructure*")
@@ -5294,7 +5294,7 @@
   (varargs #t)
 )
 
-(define-function gst_structure_new_valist
+(define-function structure_new_valist
   (c-name "gst_structure_new_valist")
   (return-type "GstStructure*")
   (parameters
@@ -5523,7 +5523,7 @@
   (return-type "gchar*")
 )
 
-(define-function gst_structure_from_string
+(define-function structure_from_string
   (c-name "gst_structure_from_string")
   (return-type "GstStructure*")
   (parameters
@@ -5536,12 +5536,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstsystemclock.h
 
-(define-function gst_system_clock_get_type
+(define-function system_clock_get_type
   (c-name "gst_system_clock_get_type")
   (return-type "GType")
 )
 
-(define-function gst_system_clock_obtain
+(define-function system_clock_obtain
   (c-name "gst_system_clock_obtain")
   (return-type "GstClock*")
 )
@@ -5555,12 +5555,12 @@
   (return-type "none")
 )
 
-(define-function gst_tag_list_get_type
+(define-function tag_list_get_type
   (c-name "gst_tag_list_get_type")
   (return-type "GType")
 )
 
-(define-function gst_tag_register
+(define-function tag_register
   (c-name "gst_tag_register")
   (return-type "none")
   (parameters
@@ -5573,7 +5573,7 @@
   )
 )
 
-(define-function gst_tag_merge_use_first
+(define-function tag_merge_use_first
   (c-name "gst_tag_merge_use_first")
   (return-type "none")
   (parameters
@@ -5582,7 +5582,7 @@
   )
 )
 
-(define-function gst_tag_merge_strings_with_comma
+(define-function tag_merge_strings_with_comma
   (c-name "gst_tag_merge_strings_with_comma")
   (return-type "none")
   (parameters
@@ -5591,7 +5591,7 @@
   )
 )
 
-(define-function gst_tag_exists
+(define-function tag_exists
   (c-name "gst_tag_exists")
   (return-type "gboolean")
   (parameters
@@ -5599,7 +5599,7 @@
   )
 )
 
-(define-function gst_tag_get_type
+(define-function tag_get_type
   (c-name "gst_tag_get_type")
   (return-type "GType")
   (parameters
@@ -5607,7 +5607,7 @@
   )
 )
 
-(define-function gst_tag_get_nick
+(define-function tag_get_nick
   (c-name "gst_tag_get_nick")
   (return-type "const-gchar*")
   (parameters
@@ -5615,7 +5615,7 @@
   )
 )
 
-(define-function gst_tag_get_description
+(define-function tag_get_description
   (c-name "gst_tag_get_description")
   (return-type "const-gchar*")
   (parameters
@@ -5623,7 +5623,7 @@
   )
 )
 
-(define-function gst_tag_is_fixed
+(define-function tag_is_fixed
   (c-name "gst_tag_is_fixed")
   (return-type "gboolean")
   (parameters
@@ -5631,13 +5631,13 @@
   )
 )
 
-(define-function gst_tag_list_new
+(define-function tag_list_new
   (c-name "gst_tag_list_new")
   (is-constructor-of "GstTagList")
   (return-type "GstTagList*")
 )
 
-(define-function gst_is_tag_list
+(define-function is_tag_list
   (c-name "gst_is_tag_list")
   (return-type "gboolean")
   (parameters
@@ -5759,7 +5759,7 @@
   )
 )
 
-(define-function gst_tag_list_copy_value
+(define-function tag_list_copy_value
   (c-name "gst_tag_list_copy_value")
   (return-type "gboolean")
   (parameters
@@ -6042,7 +6042,7 @@
   )
 )
 
-(define-function gst_event_new_tag
+(define-function event_new_tag
   (c-name "gst_event_new_tag")
   (return-type "GstEvent*")
   (parameters
@@ -6060,7 +6060,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gsttaginterface.h
 
-(define-function gst_tag_setter_get_type
+(define-function tag_setter_get_type
   (c-name "gst_tag_setter_get_type")
   (return-type "GType")
 )
@@ -6144,12 +6144,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstthread.h
 
-(define-function gst_thread_get_type
+(define-function thread_get_type
   (c-name "gst_thread_get_type")
   (return-type "GType")
 )
 
-(define-function gst_thread_new
+(define-function thread_new
   (c-name "gst_thread_new")
   (is-constructor-of "GstThread")
   (return-type "GstElement*")
@@ -6167,7 +6167,7 @@
   )
 )
 
-(define-function gst_thread_get_current
+(define-function thread_get_current
   (c-name "gst_thread_get_current")
   (return-type "GstThread*")
 )
@@ -6176,7 +6176,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gsttrace.h
 
-(define-function gst_trace_new
+(define-function trace_new
   (c-name "gst_trace_new")
   (is-constructor-of "GstTrace")
   (return-type "GstTrace*")
@@ -6221,7 +6221,7 @@
   )
 )
 
-(define-function gst_trace_read_tsc
+(define-function trace_read_tsc
   (c-name "gst_trace_read_tsc")
   (return-type "none")
   (parameters
@@ -6229,12 +6229,12 @@
   )
 )
 
-(define-function gst_alloc_trace_available
+(define-function alloc_trace_available
   (c-name "gst_alloc_trace_available")
   (return-type "gboolean")
 )
 
-(define-function gst_alloc_trace_list
+(define-function alloc_trace_list
   (c-name "gst_alloc_trace_list")
   (return-type "const-GList*")
 )
@@ -6247,17 +6247,17 @@
   )
 )
 
-(define-function gst_alloc_trace_live_all
+(define-function alloc_trace_live_all
   (c-name "gst_alloc_trace_live_all")
   (return-type "int")
 )
 
-(define-function gst_alloc_trace_print_all
+(define-function alloc_trace_print_all
   (c-name "gst_alloc_trace_print_all")
   (return-type "none")
 )
 
-(define-function gst_alloc_trace_set_flags_all
+(define-function alloc_trace_set_flags_all
   (c-name "gst_alloc_trace_set_flags_all")
   (return-type "none")
   (parameters
@@ -6265,7 +6265,7 @@
   )
 )
 
-(define-function gst_alloc_trace_get
+(define-function alloc_trace_get
   (c-name "gst_alloc_trace_get")
   (return-type "GstAllocTrace*")
   (parameters
@@ -6322,7 +6322,7 @@
   (return-type "guint64")
 )
 
-(define-function gst_type_find_register
+(define-function type_find_register
   (c-name "gst_type_find_register")
   (return-type "gboolean")
   (parameters
@@ -6336,12 +6336,12 @@
   )
 )
 
-(define-function gst_type_find_factory_get_type
+(define-function type_find_factory_get_type
   (c-name "gst_type_find_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_type_find_factory_get_list
+(define-function type_find_factory_get_list
   (c-name "gst_type_find_factory_get_list")
   (return-type "GList*")
 )
@@ -6375,7 +6375,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gsturi.h
 
-(define-function gst_uri_protocol_is_valid
+(define-function uri_protocol_is_valid
   (c-name "gst_uri_protocol_is_valid")
   (return-type "gboolean")
   (parameters
@@ -6383,7 +6383,7 @@
   )
 )
 
-(define-function gst_uri_is_valid
+(define-function uri_is_valid
   (c-name "gst_uri_is_valid")
   (return-type "gboolean")
   (parameters
@@ -6391,7 +6391,7 @@
   )
 )
 
-(define-function gst_uri_get_protocol
+(define-function uri_get_protocol
   (c-name "gst_uri_get_protocol")
   (return-type "gchar*")
   (parameters
@@ -6399,7 +6399,7 @@
   )
 )
 
-(define-function gst_uri_get_location
+(define-function uri_get_location
   (c-name "gst_uri_get_location")
   (return-type "gchar*")
   (parameters
@@ -6407,7 +6407,7 @@
   )
 )
 
-(define-function gst_uri_construct
+(define-function uri_construct
   (c-name "gst_uri_construct")
   (return-type "gchar*")
   (parameters
@@ -6416,7 +6416,7 @@
   )
 )
 
-(define-function gst_element_make_from_uri
+(define-function element_make_from_uri
   (c-name "gst_element_make_from_uri")
   (return-type "GstElement*")
   (parameters
@@ -6426,7 +6426,7 @@
   )
 )
 
-(define-function gst_uri_handler_get_type
+(define-function uri_handler_get_type
   (c-name "gst_uri_handler_get_type")
   (return-type "GType")
 )
@@ -6471,7 +6471,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gsturitype.h
 
-(define-function gst_uri_get_uri_type
+(define-function uri_get_uri_type
   (c-name "gst_uri_get_uri_type")
   (return-type "GType")
 )
@@ -6480,7 +6480,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstutils.h
 
-(define-function gst_util_set_value_from_string
+(define-function util_set_value_from_string
   (c-name "gst_util_set_value_from_string")
   (return-type "none")
   (parameters
@@ -6489,7 +6489,7 @@
   )
 )
 
-(define-function gst_util_set_object_arg
+(define-function util_set_object_arg
   (c-name "gst_util_set_object_arg")
   (return-type "none")
   (parameters
@@ -6499,7 +6499,7 @@
   )
 )
 
-(define-function gst_util_dump_mem
+(define-function util_dump_mem
   (c-name "gst_util_dump_mem")
   (return-type "none")
   (parameters
@@ -6508,7 +6508,7 @@
   )
 )
 
-(define-function gst_print_pad_caps
+(define-function print_pad_caps
   (c-name "gst_print_pad_caps")
   (return-type "none")
   (parameters
@@ -6518,7 +6518,7 @@
   )
 )
 
-(define-function gst_print_element_args
+(define-function print_element_args
   (c-name "gst_print_element_args")
   (return-type "none")
   (parameters
@@ -6532,7 +6532,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstvalue.h
 
-(define-function gst_value_list_prepend_value
+(define-function value_list_prepend_value
   (c-name "gst_value_list_prepend_value")
   (return-type "none")
   (parameters
@@ -6541,7 +6541,7 @@
   )
 )
 
-(define-function gst_value_list_append_value
+(define-function value_list_append_value
   (c-name "gst_value_list_append_value")
   (return-type "none")
   (parameters
@@ -6550,7 +6550,7 @@
   )
 )
 
-(define-function gst_value_list_get_size
+(define-function value_list_get_size
   (c-name "gst_value_list_get_size")
   (return-type "guint")
   (parameters
@@ -6558,7 +6558,7 @@
   )
 )
 
-(define-function gst_value_list_get_value
+(define-function value_list_get_value
   (c-name "gst_value_list_get_value")
   (return-type "const-GValue*")
   (parameters
@@ -6567,7 +6567,7 @@
   )
 )
 
-(define-function gst_value_list_concat
+(define-function value_list_concat
   (c-name "gst_value_list_concat")
   (return-type "none")
   (parameters
@@ -6577,7 +6577,7 @@
   )
 )
 
-(define-function gst_value_set_fourcc
+(define-function value_set_fourcc
   (c-name "gst_value_set_fourcc")
   (return-type "none")
   (parameters
@@ -6586,7 +6586,7 @@
   )
 )
 
-(define-function gst_value_get_fourcc
+(define-function value_get_fourcc
   (c-name "gst_value_get_fourcc")
   (return-type "guint32")
   (parameters
@@ -6594,7 +6594,7 @@
   )
 )
 
-(define-function gst_value_set_int_range
+(define-function value_set_int_range
   (c-name "gst_value_set_int_range")
   (return-type "none")
   (parameters
@@ -6604,7 +6604,7 @@
   )
 )
 
-(define-function gst_value_get_int_range_min
+(define-function value_get_int_range_min
   (c-name "gst_value_get_int_range_min")
   (return-type "int")
   (parameters
@@ -6612,7 +6612,7 @@
   )
 )
 
-(define-function gst_value_get_int_range_max
+(define-function value_get_int_range_max
   (c-name "gst_value_get_int_range_max")
   (return-type "int")
   (parameters
@@ -6620,7 +6620,7 @@
   )
 )
 
-(define-function gst_value_set_double_range
+(define-function value_set_double_range
   (c-name "gst_value_set_double_range")
   (return-type "none")
   (parameters
@@ -6630,7 +6630,7 @@
   )
 )
 
-(define-function gst_value_get_double_range_min
+(define-function value_get_double_range_min
   (c-name "gst_value_get_double_range_min")
   (return-type "double")
   (parameters
@@ -6638,7 +6638,7 @@
   )
 )
 
-(define-function gst_value_get_double_range_max
+(define-function value_get_double_range_max
   (c-name "gst_value_get_double_range_max")
   (return-type "double")
   (parameters
@@ -6646,7 +6646,7 @@
   )
 )
 
-(define-function gst_value_get_caps
+(define-function value_get_caps
   (c-name "gst_value_get_caps")
   (return-type "const-GstCaps*")
   (parameters
@@ -6654,7 +6654,7 @@
   )
 )
 
-(define-function gst_value_set_caps
+(define-function value_set_caps
   (c-name "gst_value_set_caps")
   (return-type "none")
   (parameters
@@ -6663,7 +6663,7 @@
   )
 )
 
-(define-function gst_value_can_compare
+(define-function value_can_compare
   (c-name "gst_value_can_compare")
   (return-type "gboolean")
   (parameters
@@ -6672,7 +6672,7 @@
   )
 )
 
-(define-function gst_value_compare
+(define-function value_compare
   (c-name "gst_value_compare")
   (return-type "int")
   (parameters
@@ -6681,7 +6681,7 @@
   )
 )
 
-(define-function gst_value_can_union
+(define-function value_can_union
   (c-name "gst_value_can_union")
   (return-type "gboolean")
   (parameters
@@ -6690,7 +6690,7 @@
   )
 )
 
-(define-function gst_value_union
+(define-function value_union
   (c-name "gst_value_union")
   (return-type "gboolean")
   (parameters
@@ -6700,7 +6700,7 @@
   )
 )
 
-(define-function gst_value_register_union_func
+(define-function value_register_union_func
   (c-name "gst_value_register_union_func")
   (return-type "none")
   (parameters
@@ -6710,7 +6710,7 @@
   )
 )
 
-(define-function gst_value_can_intersect
+(define-function value_can_intersect
   (c-name "gst_value_can_intersect")
   (return-type "gboolean")
   (parameters
@@ -6719,7 +6719,7 @@
   )
 )
 
-(define-function gst_value_intersect
+(define-function value_intersect
   (c-name "gst_value_intersect")
   (return-type "gboolean")
   (parameters
@@ -6729,7 +6729,7 @@
   )
 )
 
-(define-function gst_value_register_intersect_func
+(define-function value_register_intersect_func
   (c-name "gst_value_register_intersect_func")
   (return-type "none")
   (parameters
@@ -6739,7 +6739,7 @@
   )
 )
 
-(define-function gst_value_register
+(define-function value_register
   (c-name "gst_value_register")
   (return-type "none")
   (parameters
@@ -6747,7 +6747,7 @@
   )
 )
 
-(define-function gst_value_init_and_copy
+(define-function value_init_and_copy
   (c-name "gst_value_init_and_copy")
   (return-type "none")
   (parameters
@@ -6761,7 +6761,7 @@
   (return-type "none")
 )
 
-(define-function gst_value_serialize
+(define-function value_serialize
   (c-name "gst_value_serialize")
   (return-type "gchar*")
   (parameters
@@ -6769,7 +6769,7 @@
   )
 )
 
-(define-function gst_value_deserialize
+(define-function value_deserialize
   (c-name "gst_value_deserialize")
   (return-type "gboolean")
   (parameters
@@ -6782,7 +6782,7 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstversion.h
 
-(define-function gst_version
+(define-function version
   (c-name "gst_version")
   (return-type "none")
   (parameters
@@ -6796,12 +6796,12 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstxml.h
 
-(define-function gst_xml_get_type
+(define-function xml_get_type
   (c-name "gst_xml_get_type")
   (return-type "GType")
 )
 
-(define-function gst_xml_write
+(define-function xml_write
   (c-name "gst_xml_write")
   (return-type "xmlDocPtr")
   (parameters
@@ -6809,7 +6809,7 @@
   )
 )
 
-(define-function gst_xml_write_file
+(define-function xml_write_file
   (c-name "gst_xml_write_file")
   (return-type "gint")
   (parameters
@@ -6818,7 +6818,7 @@
   )
 )
 
-(define-function gst_xml_new
+(define-function xml_new
   (c-name "gst_xml_new")
   (is-constructor-of "GstXml")
   (return-type "GstXML*")
@@ -6870,7 +6870,7 @@
   (return-type "GList*")
 )
 
-(define-function gst_xml_make_element
+(define-function xml_make_element
   (c-name "gst_xml_make_element")
   (return-type "GstElement*")
   (parameters
@@ -6966,3 +6966,5 @@
   (c-name "GstTagList")
   (gtype-id "GST_TYPE_TAG_LIST")
 )
+
+

@@ -22,8 +22,7 @@
 #
 
 import sys
-from gstreamer import *
-from gobject import GObject
+import gst
 import time
 from identity import Identity
 
@@ -32,38 +31,30 @@ def update(sender, *args):
 
 def build(filters, b):
     # create a new bin to hold the elements
-    bin = Pipeline('pipeline')
+    bin = gst.Pipeline('pipeline')
 
-    src = Element('fakesrc', 'source');
+    src = gst.Element('fakesrc', 'source');
     src.set_property('silent', 1)
     src.set_property('num_buffers', b)
 
-    sink = Element('fakesink', 'sink')
+    sink = gst.Element('fakesink', 'sink')
     sink.set_property('silent', 1)
 
     elements = [src] + filters + [sink]
-    #  add objects to the main pipeline
-    for e in elements: 
-        bin.add(e)
-
-    # link the elements
-    previous = None
-    for e in elements:
-        if previous:
-            previous.link(e)
-        previous = e
-
+    bin.add_many(*elements)
+    gst.element_link_many(*elements)
     return bin
 
 def filter(bin):
-    bin.set_state(STATE_PLAYING);
-    while bin.iterate(): pass
-    bin.set_state(STATE_NULL)
+    bin.set_state(gst.STATE_PLAYING);
+    while bin.iterate():
+        pass
+    bin.set_state(gst.STATE_NULL)
 
 ccnt = 0
 def c():
     global ccnt
-    id = Element ('identity', 'c identity %d' % ccnt);
+    id = gst.Element('identity', 'c identity %d' % ccnt);
     id.set_property('silent', 1)
     id.set_property('loop_based', 0)
     ccnt += 1
@@ -91,19 +82,17 @@ def check(f, n, b):
     print '%s b:%d i:%d t:%f' % (f, b, n, end - start)
     return ret
 
-def main():
+def main(args):
     "Identity timer and latency check"
-    if gst_version() < (0,7,0):
-        gst_debug_set_categories(0L)
 
-    if len(sys.argv) < 3:
-        print 'usage: %s identites buffers' % (sys.argv[0],)
+    if len(args) < 3:
+        print 'usage: %s identites buffers' % args[0]
         return -1
-    n = int(sys.argv[1])
-    b = int(sys.argv[2])
+    n = int(args[1])
+    b = int(args[2])
+    
     for f in (c, py):
         check(f, n, b)
 
 if __name__ == '__main__':
-    ret = main()
-    sys.exit (ret)
+    sys.exit(main(sys.argv))
