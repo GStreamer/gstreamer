@@ -113,6 +113,7 @@ read_config ($0);
   "mod", "modplug !  $cfg{AUDIOSINK}",
   "mp2", "mad ! $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
+  "mp4", "decodebin name=d { d. ! queue ! ffmpegcolorspace ! videoscale ! $cfg{VIDEOSINK} } { d. ! queue ! audioconvert ! audioscale ! $cfg{AUDIOSINK} }",
   "mpeg", "mpegdemux name=d { d.audio_00 ! queue ! mad ! audioconvert ! audioscale ! $cfg{AUDIOSINK} } { d.video_00 ! queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
   "mpg", "mpegdemux name=demux { demux.video_00 ! queue ! mpeg2dec ! ffmpegcolorspace ! $cfg{VIDEOSINK} } { demux.audio_00 ! queue ! mad ! $cfg{AUDIOSINK} }",
   "ogg", "oggdemux ! vorbisdec ! audioconvert ! $cfg{AUDIOSINK}",
@@ -126,7 +127,7 @@ read_config ($0);
   "wmv", "asfdemux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
   "mkv", "matroskademux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
   "mka", "matroskademux ! spider ! $cfg{AUDIOSINK}",
-  "mov", "qtdemux name=demux { demux.video_00 ! queue ! spider ! ffmpegcolorspace ! $cfg{VIDEOSINK} } { demux.audio_00 !  queue ! spider ! $cfg{AUDIOSINK} }",
+  "mov", "decodebin name=d { d. ! queue ! ffmpegcolorspace ! videoscale ! $cfg{VIDEOSINK} } { d. ! queue ! audioconvert ! audioscale ! $cfg{AUDIOSINK} }",
 );
 
 if ($cfg{VISUALIZER}) {
