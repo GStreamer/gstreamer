@@ -1,3 +1,12 @@
+2004-07-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_get_video_stream),
+	(gst_mpeg_demux_get_audio_stream),
+	(gst_mpeg_demux_process_private):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_send_data):
+	Check for error codes from the negotiation functions. Make sure
+	we really set the pad caps when a new pad is created.
+
 2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
