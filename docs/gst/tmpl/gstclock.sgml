@@ -76,7 +76,7 @@ The opaque data structure of the clock.
 </para>
 
 
-<!-- ##### FUNCTION gst_clock_activate ##### -->
+<!-- ##### FUNCTION gst_clock_set_active ##### -->
 <para>
 
 </para>
