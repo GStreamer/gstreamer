@@ -22,7 +22,7 @@
 #
 
 import sys
-from gstreamer import *
+from gst import *
 
 def gst_props_debug_entry(entry, level=0):
     name = entry.get_name()

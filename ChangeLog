@@ -1,5 +1,12 @@
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* examples/gst/player.py:
+          update for new API.  Use Enter to pause pipeline.
+	* examples/gst/vorbisplay.py:
+          update for new API
+
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
           subst GST_MAJORMINOR
 	* docs/Makefile.am:
