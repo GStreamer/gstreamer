@@ -517,6 +517,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   /* push the buffer */
   gst_spider_identity_chain (ident->sink, buf);
 }
+
 /* this function is needed after typefinding:
  * empty the cache and when the cache is empty - remove this function
  */
@@ -535,12 +536,14 @@ gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident)
   if (ident->cache_start == NULL)
   {
     GST_DEBUG(0, "cache from %s is empty, changing loop function", GST_ELEMENT_NAME(ident));
+
     /* free cache */
     g_list_free (ident->cache_end);
     ident->cache_end = NULL;
     
     /* remove loop function */
-    gst_element_set_loop_function (GST_ELEMENT (ident), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
+    gst_element_set_loop_function (GST_ELEMENT (ident), 
+		                   (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
     gst_element_interrupt (GST_ELEMENT (ident));
   }  
 }
@@ -564,7 +567,8 @@ gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
 	/* FIXME we need to find the right position in the cache, make sure we 
 	 * push from that offset and send out a discont event on the 
 	 * next buffer */
-	return TRUE;
+	/* FIXME, we pass the event for now */
+	/*return TRUE; */
       }
     default:
       res = gst_pad_event_default (pad, event);
