@@ -22,7 +22,6 @@
 #define __ASF_DEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/riff/riff.h>
 #include <gst/bytestream/bytestream.h>
 #include "asfheaders.h"
 
