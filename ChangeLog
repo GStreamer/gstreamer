@@ -1,3 +1,16 @@
+2004-11-27  Arwed v. Merkatz <v.merkatz@gmx.net>
+	* configure.ac:
+	* gst/tta/Makefile.am:
+	* gst/tta/crc32.h:
+	* gst/tta/filters.h:
+	* gst/tta/gsttta.c:
+	* gst/tta/gstttadec.c:
+	* gst/tta/gstttadec.h:
+	* gst/tta/gstttaparse.c:
+	* gst/tta/gstttaparse.h:
+	* gst/tta/ttadec.h:
+	  added TTA parser and decoder
+
 2004-11-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
