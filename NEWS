@@ -1,10 +1,50 @@
-This is GStreamer 0.8.3
+This is GStreamer 0.8.4
+
+Changes since 0.8.3:
+    
+      * New Translation: Czech (cs), Miloslav Trmac
+      * New Translation: Catalan (ca), Jordi Mallach
+      * gst_init () now behaves like gtk_init ()
+      * queue fixes
+      * ongoing win32 build integration
+      * bytestream now has GstFilePad
+      * gst-register is now i18n-ized
+      * GstCaps XML-ization works again
+      * Fixed enum GValue
+      * Added GstFraction GValue
+
+Bugs fixed since 0.8.3:
+    
+      * 109831 : clocks aren't refcounted properly
+      * 123774 : state change on bin should set same state change on all c...
+      * 134663 : failed assertion at end of movie in totem
+      * 137863 : CPU/Memory leak when using spider decoder
+      * 140219 : no man page for gst-xmlinspect
+      * 141378 : gstreamer crashes during initialization due to a recent c...
+      * 141692 : gst_init() type function that ignores arguments it doesn'...
+      * 142418 : Win32 Debug build should not be the same as the Release one
+      * 142422 : Win32 Build documentation missing
+      * 142795 : [PATCH] Memory leak in queue element
+      * 142813 : [PATCH] Deadlock in optimal scheduler
+      * 142850 : GST-Register didn't find any plugins
+      * 142903 : [PATCH] fdsrc element never resets buffer offset to zero
+      * 143741 : cross compiling issue
+      * 143777 : [opt] problem after removing some elemnts and putting the...
+      * 143953 : Crash cause by gst_data_is_writable + audioconvert
+      * 144185 : Double-free memory
+      * 145137 : patch to make GstCaps XML functions actually do something
+      * 145338 : [PATCH] Fix a bus error in the optimal scheduler
+      * 145391 : gstvalue.c: ref klasses instead of peek
+      * 145520 : registry rebuilds too easily
+      * 147707 : FreeBSD dosn't have strndup
+      * 147713 : opt scheduler resorts the chain incorrectly
+      * 147819 : [PATCH] Add some checks in the opt scheduler
+      * 147894 : opt scheduler decoupled elements mismanagement
+      * 147929 : [PATCH] running gst-register in non-utf8 locale can cause...
 
 Changes since 0.8.2:
 
       * Hotfix for unregisterable switch element
-
-This is GStreamer 0.8.2
 
 Changes since 0.8.1:
 
