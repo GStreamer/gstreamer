@@ -1,3 +1,12 @@
+2005-01-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/README:
+    another shell oneliner for empty return value docs
+	* gst/gstcaps.c:
+	* gst/gstvalue.c:
+	* libs/gst/control/dparam.c:
+    more doc fixes (parameters and return values)
+
 2005-01-05  Vincent Torri  <torri@iecn.u-nancy.fr>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

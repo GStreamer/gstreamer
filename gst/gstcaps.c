@@ -361,11 +361,11 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
 /**
  * gst_caps_split_one:
- * @caps: 
+ * @caps: a #GstCaps
  *
  * This function is not implemented.
  *
- * Returns:
+ * Returns: NULL
  */
 GstCaps *
 gst_caps_split_one (GstCaps * caps)

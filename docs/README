@@ -138,7 +138,10 @@ GTK-DOC NOTES
     with the types in XXX.types to detect entries that
     are maybe missing
   - gtk docs does not warns about empty member docs!, run
-    find . -name "*.[c,h]" -exec egrep -Hn "^ +\* +@.*: *$" {} \; | wc -l
+    find . -name "*.[c,h]" -exec egrep -Hn "^ +\* +@.*: *$" {} \;
+    in the project root to find them
+  - gtk docs does not warns about empty Returns: docs!, run
+    find . -name "*.[c,h]" -exec egrep -Hn "^ +\* +@Returns: *$" {} \;
     in the project root to find them
 
 * what happens during a gtk-doc build ?

@@ -205,7 +205,10 @@ gst_dpman_add_required_dparam_callback (GstDParamManager * dpman,
   dpwrap =
       gst_dpman_new_wrapper (dpman, param_spec, unit_name, GST_DPMAN_CALLBACK);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain a new dparam wrapper");
+    return FALSE;
+  }
 
   GST_DEBUG ("adding required callback dparam '%s'",
       g_param_spec_get_name (param_spec));
@@ -244,7 +247,10 @@ gst_dpman_add_required_dparam_direct (GstDParamManager * dpman,
   dpwrap =
       gst_dpman_new_wrapper (dpman, param_spec, unit_name, GST_DPMAN_DIRECT);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain a new dparam wrapper");
+    return FALSE;
+  }
 
   GST_DEBUG ("adding required direct dparam '%s'",
       g_param_spec_get_name (param_spec));
@@ -282,7 +288,10 @@ gst_dpman_add_required_dparam_array (GstDParamManager * dpman,
   dpwrap =
       gst_dpman_new_wrapper (dpman, param_spec, unit_name, GST_DPMAN_ARRAY);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain a new dparam wrapper");
+    return FALSE;
+  }
 
   GST_DEBUG ("adding required array dparam '%s'",
       g_param_spec_get_name (param_spec));
@@ -353,7 +362,12 @@ gst_dpman_attach_dparam (GstDParamManager * dpman, const gchar * dparam_name,
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain get the dparam wrapper for parameter '%s'",
+        dparam_name);
+    return FALSE;
+  }
+  // FIXME: if these are triggered convert them to messages + returns as well
   g_return_val_if_fail (dpwrap->value != NULL, FALSE);
   g_return_val_if_fail (G_PARAM_SPEC_VALUE_TYPE (dpwrap->param_spec) ==
       GST_DPARAM_TYPE (dparam), FALSE);
@@ -407,7 +421,12 @@ gst_dpman_get_dparam (GstDParamManager * dpman, const gchar * dparam_name)
   g_return_val_if_fail (dparam_name != NULL, NULL);
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
-  g_return_val_if_fail (dpwrap != NULL, NULL);
+
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain get the dparam wrapper for parameter '%s'",
+        dparam_name);
+    return NULL;
+  }
 
   return dpwrap->dparam;
 }
@@ -431,7 +450,12 @@ gst_dpman_get_dparam_type (GstDParamManager * dpman, const gchar * dparam_name)
   g_return_val_if_fail (dparam_name != NULL, 0);
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
-  g_return_val_if_fail (dpwrap != NULL, 0);
+
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain get the dparam wrapper for parameter '%s'",
+        dparam_name);
+    return 0;
+  }
 
   return G_VALUE_TYPE (dpwrap->value);
 }

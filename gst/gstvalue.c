@@ -2249,9 +2249,11 @@ gst_value_register (const GstValueTable * table)
 
 /**
  * gst_value_init_and_copy:
- * @dest:
- * @src:
+ * @dest: the target value
+ * @src: the source value
  *
+ * Initialises the target value to be of the same type as source and then copies
+ * the contents from source to target.
  */
 void
 gst_value_init_and_copy (GValue * dest, const GValue * src)

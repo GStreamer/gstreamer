@@ -247,10 +247,10 @@ gst_dparam_set_property (GObject * object, guint prop_id, const GValue * value,
 
 /**
  * gst_dparam_do_update_default:
- * @dparam: 
- * @timestamp:
- * @value:
- * @update_info:
+ * @dparam: the parameter to update
+ * @timestamp: when should the update take place
+ * @value: the new value
+ * @update_info: unused here
  *
  * Default implementation for changing a dynamic parameter.
  * Subclasses might overwrite the behaviour of this.
