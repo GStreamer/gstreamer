@@ -456,6 +456,7 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   }
 
   GST_DEBUG_OBJECT (this, "negotiated pad to %" GST_PTR_FORMAT, caps);
+  gst_audio_convert_setup_matrix (this);
   return GST_PAD_LINK_OK;
 }
 
@@ -900,10 +901,7 @@ gst_audio_convert_channels (GstAudioConvert * this, GstBuffer * buf)
   GstBuffer *ret;
   gint count;
 
-  /* setup if not yet done */
-  if (!this->matrix)
-    gst_audio_convert_setup_matrix (this);
-
+  g_assert (this->matrix != NULL);
   /* check for passthrough */
   if (gst_audio_convert_passthrough (this))
     return buf;
