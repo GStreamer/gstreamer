@@ -1,3 +1,13 @@
+2004-08-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_get_type),
+	(gst_bin_child_state_change_func):
+	* gst/gstthread.c: (gst_thread_change_state):
+	Backported some debug logging from a reverted patch
+	Don't try to destroy the thread twice. Added some more
+	debugging in GstThread. Unlock and signal even if we
+	are in the thread context.
+
 2004-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/uk.po:

@@ -482,27 +482,37 @@ gst_thread_change_state (GstElement * element)
          by ourself (ouch) */
       GST_LOG_OBJECT (thread, "destroying GThread %p", thread->thread_id);
       GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
-      thread->thread_id = NULL;
-      if (thread == gst_thread_get_current ()) {
-        /* or should we continue? */
-        g_warning
-            ("Thread %s is destroying itself. Function call will not return!",
-            GST_ELEMENT_NAME (thread));
-        gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
+      /* thread was already gone */
+      if (thread->thread_id != NULL) {
+        thread->thread_id = NULL;
+        if (thread == gst_thread_get_current ()) {
+          /* or should we continue? */
+          GST_LOG_OBJECT (thread,
+              "Thread %s is destroying itself. Function call will not return!",
+              GST_ELEMENT_NAME (thread));
+          gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
 
-        /* unlock and signal - we are out */
-        gst_thread_release (thread);
+          /* unlock and signal - we are out, note that gst_thread_release does
+           * nothing when we are running in the thread context */
+          GST_DEBUG_OBJECT (thread, "releasing lock");
+          g_cond_signal (thread->cond);
+          g_mutex_unlock (thread->lock);
 
-        GST_INFO_OBJECT (thread, "GThread %p is exiting", g_thread_self ());
+          GST_INFO_OBJECT (thread, "GThread %p is exiting", g_thread_self ());
 
-        g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
+          g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
 
-        g_thread_exit (NULL);
+          g_thread_exit (NULL);
+          return GST_STATE_SUCCESS;
+        }
+        /* now wait for the thread to destroy itself */
+        GST_DEBUG_OBJECT (thread, "signal");
+        g_cond_signal (thread->cond);
+        GST_DEBUG_OBJECT (thread, "wait");
+        g_cond_wait (thread->cond, thread->lock);
+        GST_DEBUG_OBJECT (thread, "done");
+        /* it should be dead now */
       }
-      /* now wait for the thread to destroy itself */
-      g_cond_signal (thread->cond);
-      g_cond_wait (thread->cond, thread->lock);
-      /* it should be dead now */
       break;
     default:
       break;

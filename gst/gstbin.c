@@ -34,6 +34,15 @@
 #include "gstindex.h"
 #include "gstutils.h"
 
+GST_DEBUG_CATEGORY_STATIC (bin_debug);
+#define GST_CAT_DEFAULT bin_debug
+#define GST_LOG_BIN_CONTENTS(bin, text) GST_LOG_OBJECT ((bin), \
+	text ": %d elements: %u PLAYING, %u PAUSED, %u READY, %u NULL, own state: %s", \
+	(bin)->numchildren, (guint) (bin)->child_states[3], \
+	(guint) (bin)->child_states[2], (bin)->child_states[1], \
+	(bin)->child_states[0], gst_element_state_get_name (GST_STATE (bin)))
+
+
 static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS ("Generic bin",
     "Generic/Bin",
     "Simple container object",
@@ -116,6 +125,9 @@ gst_bin_get_type (void)
 
     _gst_bin_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD,
+        "debugging info for the 'bin' container element");
   }
   return _gst_bin_type;
 }
@@ -685,6 +697,7 @@ gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
     new_idx++;
 
   GST_LOCK (bin);
+  GST_LOG_BIN_CONTENTS (bin, "before child state change");
   bin->child_states[old_idx]--;
   bin->child_states[new_idx]++;
 
@@ -703,11 +716,13 @@ gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
           g_warning ("%s: state change in callback %d %d",
               GST_ELEMENT_NAME (bin), state, GST_STATE (bin));
         }
+        GST_LOG_BIN_CONTENTS (bin, "after child state change");
         return;
       }
       break;
     }
   }
+  GST_LOG_BIN_CONTENTS (bin, "after child state change");
   GST_UNLOCK (bin);
 }
 
