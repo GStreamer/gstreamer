@@ -87,13 +87,20 @@ plugin_init (GModule *module, GstPlugin *plugin)
     factory = gst_elementfactory_new (_elements[i].name,
                                       (_elements[i].type) (),
                                       _elements[i].details);
-    if (factory != NULL) {
-      gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-      if (_elements[i].factoryinit) {
-        _elements[i].factoryinit (factory);
+
+    if (!factory)
+      {
+	g_warning ("gst_elementfactory_new failed for `%s'",
+		   _elements[i].name);
+	continue;
       }
-//      g_print("added factory '%s'\n",_elements[i].name);
+
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+    if (_elements[i].factoryinit) {
+      _elements[i].factoryinit (factory);
     }
+//      g_print("added factory '%s'\n",_elements[i].name);
+
     i++;
   }
 
