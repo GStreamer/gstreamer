@@ -613,8 +613,6 @@ gst_sdlvideosink_chain (GstPad *pad, GstData *_data)
   /* Show, baby, show! */
   SDL_DisplayYUVOverlay(sdlvideosink->overlay, &(sdlvideosink->rect));
 
-  gst_video_sink_frame_displayed (GST_VIDEOSINK (sdlvideosink));
-
   while (SDL_PollEvent(&sdl_event))
   {
     switch(sdl_event.type)
