@@ -1,3 +1,11 @@
+2004-05-07  Colin Walters  <walters@redhat.com>
+
+	* gst/volume/gstvolume.c (gst_volume_dispose): Unref dpman.
+	* ext/flac/gstflacdec.c (gst_flacdec_dispose): Add dispose
+	function.
+	* gst/audioscale/gstaudioscale.c (gst_audioscale_dispose): 
+	Add dispose function.
+
 2004-05-08  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/dv/gstdvdec.c: (gst_dvdec_video_link):
 	  Fix caps nego and pad templates. RGB mode caps should
