@@ -183,6 +183,8 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	    gst_data_ref (GST_DATA (buffer));
 	  }
 	  /* replace current buffer with new one */
+	  GST_INFO_OBJECT (store, "replacing buffer %p with buffer %p with offset %"G_GINT64_FORMAT" and size %u", 
+			   current_list->data, buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
 	  gst_data_unref (GST_DATA (current_list->data));
 	  current_list->data = buffer;
 	  buffer = NULL;
@@ -206,10 +208,13 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	    GstBuffer* sub = gst_buffer_create_sub (buffer, start_offset,
 		    MIN (GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (current) - start_offset - GST_BUFFER_OFFSET (buffer)));
 	    g_assert (sub);
+	    GST_BUFFER_OFFSET (sub) = start_offset + GST_BUFFER_OFFSET (buffer);
 	    buffer = sub;
 	  } else {
 	    gst_data_ref (GST_DATA (buffer));
 	  }
+	  GST_INFO_OBJECT (store, "adding buffer %p with offset %"G_GINT64_FORMAT" and size %u", 
+			   buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
 	  store->buffers = g_list_insert_before (store->buffers, walk, buffer);
 	  buffer = NULL;
 	  break;
@@ -218,6 +223,8 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
     }
     if (buffer) {
       gst_data_ref (GST_DATA (buffer));
+      GST_INFO_OBJECT (store, "adding buffer %p with offset %"G_GINT64_FORMAT" and size %u", 
+		       buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
       if (current_list) {
 	g_list_append (current_list, buffer);
       } else {
