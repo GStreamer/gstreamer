@@ -176,6 +176,9 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
+  GST_DEBUG_OBJECT (space, "pad_link on %s:%s with caps %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
+
   /* FIXME attempt and/or check for passthru */
 
   /* loop over all possibilities and select the first one we can convert and
