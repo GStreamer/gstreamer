@@ -221,39 +221,53 @@ gst_autoplug_factories_filters (GList *factories)
 }
 
 
+static gint 
+gst_autoplug_rank_compare (const GstElementFactory *a, const GstElementFactory *b)
+{
+	if (a->rank > b->rank) return -1;
+	return (a->rank < b->rank) ? 1 : 0;
+}
+
 /* returns all factories which have sinks with non-NULL caps and srcs with
- * any caps.
+ * any caps. also only returns factories with a non-zero rank, and sorts by 
+ * rank descending.
  */
 GList *
 gst_autoplug_factories_filters_with_sink_caps (GList *factories)
 {
   GList *ret = NULL;
+  GstElementFactory *factory;
+  GList *templs;
   
   while (factories)
   {
-    GList *templs = ((GstElementFactory *) factories->data)->padtemplates;
-    gboolean have_src = FALSE;
-    gboolean have_sink = FALSE;
-    while (templs)
-    {
-      if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC)
+    factory = (GstElementFactory *) factories->data;
+    templs = factory->padtemplates;
+    if (factory->rank > 0){
+      gboolean have_src = FALSE;
+      gboolean have_sink = FALSE;
+
+      while (templs)
       {
-        have_src = TRUE;
-      }  
-      if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && (GST_PAD_TEMPLATE_CAPS (templs->data) != NULL))
-      {
-        have_sink = TRUE;
+        if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC)
+        {
+          have_src = TRUE;
+        }  
+        if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && (GST_PAD_TEMPLATE_CAPS (templs->data) != NULL))
+        {
+          have_sink = TRUE;
+        }
+        if (have_src && have_sink)
+        {
+          ret = g_list_prepend (ret, factory);
+          break;
+        }
+        templs = g_list_next (templs);
       }
-      if (have_src && have_sink)
-      {
-        ret = g_list_prepend (ret, factories->data);
-        break;
-      }
-      templs = g_list_next (templs);
     }
     factories = g_list_next (factories);
   }
-  return ret;
+  return g_list_sort(ret, (GCompareFunc)gst_autoplug_rank_compare);
 }
 
 
