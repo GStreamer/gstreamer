@@ -171,8 +171,6 @@ gst_vorbisdec_loop (GstElement * element)
        stream initial header) We need the first page to get the stream
        serialno. */
 
-    gst_element_yield (GST_ELEMENT (vorbisdec));
-
     /* submit a 4k block to libvorbis' Ogg layer */
     buf = gst_vorbisdec_pull (vorbisdec, &oy);
 
