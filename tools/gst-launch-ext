@@ -13,8 +13,17 @@ my (%pipes, %cfg);
 sub extension
 {
   my $path = shift;
-  my $ext = (fileparse ($path, '\..*?'))[2];
-  $ext =~ s/^\.//;
+  my $ext;
+
+  # get only the bit after the last period.  We don't deal with
+  # .tar.gz extensions do we ?
+  if ($path =~ /\./)
+  {
+    my $ext = $path;
+    $ext =~ s/^.*\.//;
+  }
+  else { $ext = ""; }
+
   return $ext;
 }
 
