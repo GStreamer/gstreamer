@@ -24,8 +24,7 @@
 #ifndef __GST_THREAD_H__
 #define __GST_THREAD_H__
 
-#include <unistd.h>
-#include <pthread.h>
+#include <glib.h>
 
 #include <gst/gstbin.h>
 
@@ -62,11 +61,11 @@ typedef struct _GstThreadClass 	GstThreadClass;
 struct _GstThread {
   GstBin 	 bin;
 
-  pthread_t 	 thread_id;		/* id of the thread, if any */
-  pthread_attr_t attr;			/* attributes for the stack space */
+  GThread 	*thread_id;		/* id of the thread, if any */
   int 		 sched_policy;
   int 		 priority;
-  void 		*stack;			/* set with gst_scheduler_get_preferred_stack */
+  gpointer	*stack;			/* set with gst_scheduler_get_preferred_stack */
+  guint 	 stack_size;		/* stack size */
   gint		 pid;			/* the pid of the thread */
   gint		 ppid;			/* the pid of the thread's parent process */
   GMutex 	*lock;			/* thread lock/condititon pair ... */

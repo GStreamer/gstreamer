@@ -30,6 +30,10 @@
 #include "gstscheduler.h"
 #include "gstqueue.h"
 
+#define STACK_SIZE 0x200000
+
+#define g_thread_equal(a,b) ((a) == (b))
+
 GstElementDetails gst_thread_details = {
   "Threaded container",
   "Generic/Bin",
@@ -84,9 +88,10 @@ static GType
 gst_thread_schedpolicy_get_type(void) {
   static GType thread_schedpolicy_type = 0;
   static GEnumValue thread_schedpolicy[] = {
-    {SCHED_OTHER, "SCHED_OTHER", "Normal Scheduling"},
-    {SCHED_FIFO,  "SCHED_FIFO",  "FIFO Scheduling (requires root)"},
-    {SCHED_RR,    "SCHED_RR",    "Round-Robin Scheduling (requires root)"},
+    {G_THREAD_PRIORITY_LOW,    "LOW", "Low Priority Scheduling"},
+    {G_THREAD_PRIORITY_NORMAL, "NORMAL",  "Normal Scheduling"},
+    {G_THREAD_PRIORITY_HIGH,   "HIGH",  "High Priority Scheduling"},
+    {G_THREAD_PRIORITY_URGENT, "URGENT", "Urgent Scheduling"},
     {0, NULL, NULL},
   };
   if (!thread_schedpolicy_type) {
@@ -137,7 +142,7 @@ gst_thread_class_init (GstThreadClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_SCHEDPOLICY,
     g_param_spec_enum("schedpolicy", "Scheduling Policy", "The scheduling policy of the thread",
-                      GST_TYPE_THREAD_SCHEDPOLICY, SCHED_OTHER, G_PARAM_READWRITE));
+                      GST_TYPE_THREAD_SCHEDPOLICY, G_THREAD_PRIORITY_NORMAL, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_PRIORITY,
     g_param_spec_int("priority", "Scheduling Priority", "The scheduling priority of the thread",
                      0, 99, 0, G_PARAM_READWRITE));
@@ -179,8 +184,8 @@ gst_thread_init (GstThread *thread)
   thread->cond = g_cond_new ();
 
   thread->ppid = getpid ();
-  thread->thread_id = (pthread_t) -1;
-  thread->sched_policy = SCHED_OTHER;
+  thread->thread_id = (GThread *) NULL;
+  thread->sched_policy = G_THREAD_PRIORITY_NORMAL;
   thread->priority = 0;
   thread->stack = NULL;
 }
@@ -309,8 +314,8 @@ gst_thread_change_state (GstElement * element)
   GstThread *thread;
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
-  pthread_t self = pthread_self ();
-  glong stacksize;
+  GThread * self = g_thread_self ();
+  GError * error = NULL;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
   g_return_val_if_fail (gst_has_threads (), GST_STATE_FAILURE);
@@ -323,7 +328,7 @@ gst_thread_change_state (GstElement * element)
 	    gst_element_state_get_name (GST_STATE (element)),
 	    gst_element_state_get_name (GST_STATE_PENDING (element)));
 
-  if (pthread_equal (self, thread->thread_id)) {
+  if (g_thread_equal (self, thread->thread_id)) {
     GST_DEBUG (GST_CAT_THREAD,
 	       "no sync(" GST_DEBUG_THREAD_FORMAT "): setting own thread's state to spinning",
 	       GST_DEBUG_THREAD_ARGS (thread->pid));
@@ -337,70 +342,29 @@ gst_thread_change_state (GstElement * element)
 
       THR_DEBUG ("creating thread \"%s\"", GST_ELEMENT_NAME (element));
 
-      /* this bit of code handles creation of pthreads
+      /* this bit of code handles creation of GThreads
        * this is therefor tricky code
        * compare it with the block of code that handles the destruction
        * in GST_STATE_READY_TO_NULL below
        */
       g_mutex_lock (thread->lock);
 
-      /* create attribute struct for pthread
-       * and assign stack pointer and size to it
-       *
-       * the default state of a pthread is PTHREAD_CREATE_JOINABLE
-       * (see man pthread_attr_init)
-       * - other thread can sync on termination
-       * - thread resources are kept allocated until other thread performs
-       *   pthread_join
-       */
-
-      if (pthread_attr_init (&thread->attr) != 0)
-	g_warning ("pthread_attr_init returned an error !");
-
-      /* this function should return a newly allocated stack
-       * (using whatever method)
-       * which we can initiate the pthreads with
-       * the stack should be freed in 
-       */
-      if (gst_scheduler_get_preferred_stack (GST_ELEMENT_SCHED (element), 
-	                                     &thread->stack, &stacksize)) {
-#ifdef HAVE_PTHREAD_ATTR_SETSTACK
-        if (pthread_attr_setstack (&thread->attr, 
-	                           thread->stack, stacksize) != 0) {
-          g_warning ("pthread_attr_setstack failed\n");
-          return GST_STATE_FAILURE;
-        }
-#else
-        if (pthread_attr_setstackaddr (&thread->attr, thread->stack) != 0) {
-	  g_warning ("pthread_attr_setstackaddr failed\n");
-	  return GST_STATE_FAILURE;
-	}
-        if (pthread_attr_setstacksize (&thread->attr, stacksize) != 0) {
-	  g_warning ("pthread_attr_setstacksize failed\n");
-	  return GST_STATE_FAILURE;
-	}
-#endif
-	GST_DEBUG (GST_CAT_THREAD, "pthread attr set stack at %p of size %ld", 
-		   thread->stack, stacksize);
-      }
-      else {
-	g_warning ("scheduler did not return a preferred stack");
-      }
-
-      /* create a new pthread
+      /* create a new GThread
        * use the specified attributes
        * make it execute gst_thread_main_loop (thread)
        */
-      GST_DEBUG (GST_CAT_THREAD, "going to pthread_create...");
-      if (pthread_create (&thread->thread_id, &thread->attr, 
-	  gst_thread_main_loop, thread) != 0) {
-        GST_DEBUG (GST_CAT_THREAD, "pthread_create failed");
+      GST_DEBUG (GST_CAT_THREAD, "going to g_thread_create_full...");
+      thread->thread_id = g_thread_create_full(gst_thread_main_loop,
+	  thread, STACK_SIZE, TRUE, TRUE, G_THREAD_PRIORITY_NORMAL,
+	  &error);
+      if (!thread->thread_id){
+        GST_DEBUG (GST_CAT_THREAD, "g_thread_create_full failed");
 	g_mutex_unlock (thread->lock);
         GST_DEBUG (GST_CAT_THREAD, "could not create thread \"%s\"", 
 	           GST_ELEMENT_NAME (element));
 	return GST_STATE_FAILURE;
       }
-      GST_DEBUG (GST_CAT_THREAD, "pthread created");
+      GST_DEBUG (GST_CAT_THREAD, "GThread created");
 
       /* wait for it to 'spin up' */
       THR_DEBUG ("waiting for child thread spinup");
@@ -530,17 +494,10 @@ gst_thread_change_state (GstElement * element)
        * compare this block to the block
        */
 
-      
-      /* in glibc 2.2.5, pthread_attr_destroy does nothing more
-       * than return 0 */
-      if (pthread_attr_destroy (&thread->attr) != 0)
-	g_warning ("pthread_attr_destroy has failed !");
+      GST_DEBUG (GST_CAT_THREAD, "joining GThread %p", thread->thread_id);
+      g_thread_join (thread->thread_id);
 
-      GST_DEBUG (GST_CAT_THREAD, "joining pthread %ld", thread->thread_id);
-      if (pthread_join (thread->thread_id, NULL) != 0)
-        g_warning ("pthread_join has failed !\n");
-
-      thread->thread_id = -1;
+      thread->thread_id = NULL;
       
       /* the stack was allocated when we created the thread
        * using scheduler->get_preferred_stack */
@@ -590,25 +547,13 @@ gst_thread_main_loop (void *arg)
 {
   GstThread *thread = NULL;
   gint stateset;
+  glong page_size;
+  gpointer stack_pointer;
+  gulong stack_offset;
 
   GST_DEBUG (GST_CAT_THREAD, "gst_thread_main_loop started");
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
-
-  /* handle scheduler policy; do stuff if not the normal scheduler */
-  if (thread->sched_policy != SCHED_OTHER) {
-    struct sched_param sched_param;
-
-    memset (&sched_param, 0, sizeof (sched_param));
-    if (thread->priority == 0) {
-      thread->priority = sched_get_priority_max (thread->sched_policy);
-    }
-    sched_param.sched_priority = thread->priority;
-
-    if (sched_setscheduler (0, thread->sched_policy, &sched_param) != 0) {
-      GST_DEBUG (GST_CAT_THREAD, "not running with real-time priority");
-    }
-  }
 
   /* set up the element's scheduler */
   gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
@@ -616,6 +561,21 @@ gst_thread_main_loop (void *arg)
 
   thread->pid = getpid();
   THR_INFO_MAIN ("thread is running");
+
+  page_size = sysconf(_SC_PAGESIZE);
+  stack_pointer = (gpointer) &stack_pointer;
+
+  if(((gulong)stack_pointer & (page_size-1)) < (page_size>>1)){
+    /* stack grows up, I think */
+    /* FIXME this is probably not true for the main thread */
+    stack_offset = (gulong)stack_pointer & (page_size - 1);
+  }else{
+    /* stack grows down, I think */
+    stack_offset = STACK_SIZE - ((gulong)stack_pointer & (page_size - 1));
+  }
+  /* note the subtlety with pointer arithmetic */
+  thread->stack = stack_pointer - stack_offset;
+  thread->stack_size = STACK_SIZE;
 
   /* first we need to change the state of all the children */
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {

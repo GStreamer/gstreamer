@@ -29,7 +29,6 @@
 #define STATUS(A)
 #endif
 
-#include <pthread.h>
 
 #include "config.h"
 #include "gst_private.h"
@@ -320,9 +319,9 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
 restart:
   /* we have to lock the queue since we span threads */
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld", pthread_self ());
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%p", g_thread_self ());
   g_mutex_lock (queue->qlock);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld", pthread_self ());
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%p", g_thread_self ());
 
   /* assume don't need to flush this buffer when the queue is filled */
   queue->flush = FALSE;
@@ -472,9 +471,9 @@ gst_queue_get (GstPad *pad)
 
 restart:
   /* have to lock for thread-safety */
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld", pthread_self ());
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%p", g_thread_self ());
   g_mutex_lock (queue->qlock);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld %p", pthread_self (), queue->not_empty);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%p %p", g_thread_self (), queue->not_empty);
 
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre empty wait, level:%d/%d", queue->level_buffers, queue->size_buffers);
   while (queue->level_buffers == 0) {

@@ -20,7 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <pthread.h>
+#include <glib.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -59,12 +60,12 @@ struct _cothread_context
 };
 
 
-/* this _cothread_ctx_key is used as a pthread key to the thread's context
- * a pthread key is a "pointer" to memory space that is/can be different
+/* this _cothread_ctx_key is used as a GThread key to the thread's context
+ * a GThread key is a "pointer" to memory space that is/can be different
  * (ie. private) for each thread.  The key itself is shared among threads,
  * so it only needs to be initialized once.
  */
-static pthread_key_t _cothread_ctx_key = -1;
+static GPrivate *_cothread_ctx_key;
 
 /* Disabling this define allows you to shut off a few checks in
  * cothread_switch.  This likely will speed things up fractionally */
@@ -83,7 +84,14 @@ cothread_context_init (void)
   /*
    * initalize the whole of the cothreads context 
    */
-  cothread_context *ctx = (cothread_context *) g_malloc (sizeof (cothread_context));
+  cothread_context *ctx;
+  
+  /* if there already is a cotread context for this thread,
+   * just return it */
+  ctx = g_private_get (_cothread_ctx_key);
+  if(ctx) return ctx;
+
+  ctx = (cothread_context *) g_malloc (sizeof (cothread_context));
 
   /* we consider the initiating process to be cothread 0 */
   ctx->ncothreads = 1;
@@ -92,16 +100,18 @@ cothread_context_init (void)
 
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
-  /* initialize the cothread key (for pthread space) if not done yet */
-  if (_cothread_ctx_key == (pthread_key_t) -1) {
-    if (pthread_key_create (&_cothread_ctx_key, NULL) != 0) {
-      perror ("pthread_key_create");
+  /* initialize the cothread key (for GThread space) if not done yet */
+  /* FIXME this should be done in cothread_init() */
+  if (_cothread_ctx_key == NULL) {
+    _cothread_ctx_key = g_private_new (NULL);
+    if (_cothread_ctx_key == NULL) {
+      perror ("g_private_new");
       return NULL;
     }
   }
 
   /* set this thread's context pointer */
-  pthread_setspecific (_cothread_ctx_key, ctx);
+  g_private_set (_cothread_ctx_key, ctx);
 
   /* clear the cothread data */
 
@@ -189,6 +199,7 @@ cothread_create (cothread_context *ctx)
   GST_DEBUG (GST_CAT_COTHREADS, "Found free cothread slot %d", slot);
 
   sp = CURRENT_STACK_FRAME;
+printf("stack pointer %p\n",sp);
   /* FIXME this may not be 64bit clean
    *       could use casts to uintptr_t from inttypes.h
    *       if only all platforms had inttypes.h
@@ -392,14 +403,14 @@ cothread_main (cothread_context * ctx)
 /**
  * cothread_current_main:
  *
- * Get the main thread in the current pthread.
+ * Get the main thread in the current GThread.
  *
- * Returns: the #cothread_state of the main (0th) thread in the current pthread
+ * Returns: the #cothread_state of the main (0th) thread in the current GThread
  */
 cothread_state *
 cothread_current_main (void)
 {
-  cothread_context *ctx = pthread_getspecific (_cothread_ctx_key);
+  cothread_context *ctx = g_private_get (_cothread_ctx_key);
 
   return ctx->cothreads[0];
 }
@@ -414,7 +425,7 @@ cothread_current_main (void)
 cothread_state *
 cothread_current (void)
 {
-  cothread_context *ctx = pthread_getspecific (_cothread_ctx_key);
+  cothread_context *ctx = g_private_get (_cothread_ctx_key);
 
   return ctx->cothreads[ctx->current];
 }
@@ -422,7 +433,7 @@ cothread_current (void)
 static void
 cothread_stub (void)
 {
-  cothread_context *ctx = pthread_getspecific (_cothread_ctx_key);
+  cothread_context *ctx = g_private_get (_cothread_ctx_key);
   register cothread_state *thread = ctx->cothreads[ctx->current];
 
   GST_DEBUG_ENTER ("");
@@ -448,7 +459,7 @@ int cothread_getcurrent (void) __attribute__ ((no_instrument_function));
 int
 cothread_getcurrent (void)
 {
-  cothread_context *ctx = pthread_getspecific (_cothread_ctx_key);
+  cothread_context *ctx = g_private_get (_cothread_ctx_key);
 
   if (!ctx)
     return -1;
@@ -479,7 +490,7 @@ cothread_set_private (cothread_state *thread, gpointer data)
 void
 cothread_context_set_data (cothread_state *thread, gchar *key, gpointer data)
 {
-  cothread_context *ctx = pthread_getspecific (_cothread_ctx_key);
+  cothread_context *ctx = g_private_get (_cothread_ctx_key);
 
   g_hash_table_insert (ctx->data, key, data);
 }
@@ -510,7 +521,7 @@ cothread_get_private (cothread_state *thread)
 gpointer
 cothread_context_get_data (cothread_state * thread, gchar * key)
 {
-  cothread_context *ctx = pthread_getspecific (_cothread_ctx_key);
+  cothread_context *ctx = g_private_get (_cothread_ctx_key);
 
   return g_hash_table_lookup (ctx->data, key);
 }
