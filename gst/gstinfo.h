@@ -169,6 +169,16 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 #endif
 
 
+/***** Colorized debug for thread ids *****/
+#ifdef GST_DEBUG_COLOR
+  #define GST_DEBUG_THREAD_FORMAT "\033[00;%dm%d\033[00m"
+  #define GST_DEBUG_THREAD_ARGS(id) ( ((id) < 0) ? 37 : ((id) % 6 + 31) ), (id)
+#else
+  #define GST_DEBUG_THREAD_FORMAT "%d"
+  #define GST_DEBUG_THREAD_ARGS(id) (id)
+#endif
+
+
 
 /**********************************************************************
  * The following is a DEBUG_ENTER implementation that will wrap the

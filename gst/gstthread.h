@@ -24,6 +24,7 @@
 #ifndef __GST_THREAD_H__
 #define __GST_THREAD_H__
 
+#include <unistd.h>
 #include <pthread.h>
 
 #include <gst/gstbin.h>
@@ -67,6 +68,8 @@ struct _GstThread {
   GstBin bin;
 
   pthread_t thread_id;		/* id of the thread, if any */
+  gint pid;			/* the pid of the thread */
+  gint ppid;			/* the pid of the thread's parent process */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */
 
