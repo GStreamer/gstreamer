@@ -68,6 +68,7 @@ clean:
 	-$(RM) -f *.log *.dvi *.aux *.tex *.out *-t
 	-$(RM) -f $(PNGS) $(PDFS) builddate *.html
 	-$(RM) -rf $(DOC) $(DOC).ps $(DOC).pdf $(DOC).fo
+	-$(RM) -f magic
 
 distclean: clean
 	-$(RM) -f *~ $(DOC).tar.gz docbook.tar.gz
