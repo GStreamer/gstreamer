@@ -100,7 +100,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
   --enable-debug \
-  --with-cachedir=%{_localstatedir}/cache/gstreamer \
+  --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
   --disable-tests --disable-examples \
   --enable-docs-build --with-html-dir=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 
@@ -120,6 +120,7 @@ cp $RPM_BUILD_DIR/%{name}-%{version}/docs/devhelp/*.devhelp $RPM_BUILD_ROOT/usr/
 %makeinstall
 # Clean out files that should not be part of the rpm. 
 # This is the recommended way of dealing with it for RH8
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
 rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
@@ -147,6 +148,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
+%dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstautoplugger*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
