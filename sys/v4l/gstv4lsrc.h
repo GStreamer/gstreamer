@@ -42,9 +42,9 @@ typedef struct _GstV4lSrcClass GstV4lSrcClass;
 enum
 {
   QUEUE_STATE_ERROR = -1,
-  QUEUE_STATE_READY_FOR_QUEUE, /* the frame is ready to be queued for capture */
-  QUEUE_STATE_QUEUED,          /* the frame is queued for capture */
-  QUEUE_STATE_SYNCED           /* the frame is captured */
+  QUEUE_STATE_READY_FOR_QUEUE,  /* the frame is ready to be queued for capture */
+  QUEUE_STATE_QUEUED,           /* the frame is queued for capture */
+  QUEUE_STATE_SYNCED            /* the frame is captured */
 };
 
 typedef enum
@@ -101,11 +101,13 @@ struct _GstV4lSrc
   GList *colourspaces;
 
   /* how are we going to timestamp buffers? */
-   GstV4lSrcSyncMode syncmode;
+  GstV4lSrcSyncMode syncmode;
 
-   gboolean copy_mode;
-   gboolean autoprobe;     /* probe features on startup ? */
-   gboolean autoprobe_fps; /* probe fps on startup ? */
+  gboolean copy_mode;
+  gboolean autoprobe;           /* probe features on startup ? */
+  gboolean autoprobe_fps;       /* probe fps on startup ? */
+
+  GValue *fps_list;             /* list of fps probed */
 };
 
 struct _GstV4lSrcClass

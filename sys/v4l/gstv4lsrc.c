@@ -287,6 +287,8 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   v4lsrc->autoprobe_fps = TRUE;
 
   v4lsrc->latency_offset = 0;
+
+  v4lsrc->fps_list = NULL;
 }
 
 static void
@@ -634,6 +636,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
     return GST_PAD_LINK_DELAYED;
   }
 
+  /* FIXME: setting the first one is just stupid.  We should loop */
   structure = gst_caps_get_structure (vscapslist, 0);
 
   if (!strcmp (gst_structure_get_name (structure), "video/x-raw-yuv"))
@@ -644,6 +647,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
   gst_structure_get_double (structure, "framerate", &fps);
+  GST_DEBUG_OBJECT (v4lsrc, "linking with %dx%d at %f fps", w, h, fps);
 
   /* set framerate if it's not already correct */
   if (fps != gst_v4lsrc_get_fps (v4lsrc)) {
@@ -812,7 +816,6 @@ gst_v4lsrc_getcaps (GstPad * pad)
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
   gfloat fps = 0.0;
   GList *item;
-  GValue *fps_list = NULL;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
     return gst_caps_new_any ();
@@ -822,12 +825,12 @@ gst_v4lsrc_getcaps (GstPad * pad)
     return gst_caps_new_any ();
   }
 
-  /* FIXME: cache this on gst_v4l_open() */
-  if (v4lsrc->autoprobe_fps) {
-    fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
-  }
-  if (!fps_list)
-    fps = gst_v4lsrc_get_fps (v4lsrc);
+  /*
+     FIXME: if we choose a fixed one because we didn't probe, fixated caps don't
+     work.  So comment this out for now.
+     if (!v4lsrc->fps_list)
+     fps = gst_v4lsrc_get_fps (v4lsrc);
+   */
 
   list = gst_caps_new_empty ();
   for (item = v4lsrc->colourspaces; item != NULL; item = item->next) {
@@ -855,15 +858,18 @@ gst_v4lsrc_getcaps (GstPad * pad)
       gst_caps_set_simple (one, "height", G_TYPE_INT, vcap->minheight, NULL);
     }
 
-    if (fps_list) {
+    if (v4lsrc->fps_list) {
       GstStructure *structure = gst_caps_get_structure (one, 0);
 
-      gst_structure_set_value (structure, "framerate", fps_list);
-    } else {
+      gst_structure_set_value (structure, "framerate", v4lsrc->fps_list);
+    }
+/* see higher up why we comment this
+else {
       GstStructure *structure = gst_caps_get_structure (one, 0);
 
       gst_structure_set (structure, "framerate", G_TYPE_DOUBLE, fps, NULL);
     }
+*/
     GST_DEBUG_OBJECT (v4lsrc, "caps: %" GST_PTR_FORMAT, one);
     gst_caps_append (list, one);
   }
@@ -1163,14 +1169,14 @@ gst_v4lsrc_change_state (GstElement * element)
   GstV4lSrc *v4lsrc;
   GTimeVal time;
   gint transition = GST_STATE_TRANSITION (element);
+  GstElementStateReturn parent_ret = GST_STATE_SUCCESS;
 
   g_return_val_if_fail (GST_IS_V4LSRC (element), GST_STATE_FAILURE);
 
   v4lsrc = GST_V4LSRC (element);
 
+  /* pre-parent state change */
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-      break;
     case GST_STATE_READY_TO_PAUSED:
       v4lsrc->handled = 0;
       v4lsrc->need_discont = TRUE;
@@ -1210,9 +1216,22 @@ gst_v4lsrc_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    parent_ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  /* post-parent change_state */
+  switch (transition) {
+    case GST_STATE_NULL_TO_READY:
+      GST_DEBUG_OBJECT (v4lsrc,
+          "Doing post-parent NULL_TO_READY, checking probes");
+      if (v4lsrc->autoprobe_fps) {
+        GST_DEBUG_OBJECT (v4lsrc, "autoprobing framerates");
+        v4lsrc->fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
+      }
+    default:
+      break;
+  }
+
+  return parent_ret;
 }
 
 
