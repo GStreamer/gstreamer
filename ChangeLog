@@ -4,6 +4,9 @@
 
 	* configure.ac, Makefile.am, pkgconfig/*: add pkgconfig support
 
+	* AUTHORS, NEWS, README, TODO, docs/HEAD.in, docs/Makefile.am,
+	docs/docutils.conf, docs/gst-python.css: docutils based docs
+
 2003-06-11  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* gst-python.spec.in: fix

@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 gst-python.spec
 aclocal.m4
+autoregen.sh
 config.cache
 config.guess
 config.h

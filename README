@@ -1,36 +1,186 @@
-gst-python
-==========
+.. gst-python README
+.. This file writen with docutils markup (http://docutils.sourceforge.net/)
 
-This is gst-python, the Python[1] bindings for the GStreamer[2] project.
+About
+=====
 
-For further help ask on a GStreamer mailing list or IRC.
+This is **gst-python**, the Python_ bindings for the GStreamer_ project.  The
+bindings provide access to almost all of the GStreamer C API through an object
+oriented Python API.
 
-[1] http://www.python.org/
-[2] http://www.gstreamer.net/
-
-
-build/install
--------------
-
-For build and install information please refer to the "INSTALL" file.
-Installation is optional, gst-python can be used from the build directory.
+.. _Python: http://www.python.org/
+.. _GStreamer: http://www.gstreamer.net/
 
 
-using
------
+Requirements
+============
+
+* Python_ 2.2
+* GStreamer_ 0.6.0
+* PyGTK_ 1.99.14
+
+.. _PyGTK: http://www.daa.com.au/~james/pygtk/
+
+
+Build/Install
+=============
+
+For build and install information please refer to the "``INSTALL``" file.
+Installation is optional, gst-python can be used from the build directory.  The
+quick instructions: build and install PyGTK and GStreamer then build
+gst-python::
+
+ $ ./configure && make
+
+
+Using
+=====
 
 You either need to install the package or add the root directory to your
-Python path.
+Python path::
 
  $ export PYTHONPATH=$PYTHONPATH:`pwd`
 
-Try running an example:
+Try running examples::
 
  $ cd examples/gstreamer/
  $ python cp.py <input file> <output file>
+ $ cmp <input file> <output file>
+ $ python vorbisplay.py <a vorbis file>
 
 
-documentation
--------------
+Documentation
+=============
 
-The examples are the best documentation for now.  Read them.
+General/API
+-----------
+
+The gst-python bindings are directly generated from the GStreamer headers.
+Look at the GStreamer documentation_ for general API and programming issues.
+In most cases the GStreamer classes and boxed types map directly to Python
+classes.  The function-based methods also map onto Python object methods.
+
+.. _documentation: http://www.gstreamer.net/docs/
+
+
+Divergence From C API
+---------------------
+
+Due to the nature of C and Python some of the GStreamer API is handled slightly
+different in Python than C.  There are a few of the GStreamer C functions that
+are not yet provided in gst-python.  These are mostly related to creating
+`Python Elements`_.  A few others remain that return GList* or return values in
+their parameters.  These have been wrapped as needed.  Please file a bug_ if
+you need one of the unwrapped functions.
+
+API changes:
+
+* ``gst_props_entry_get_type`` is accessed through
+  ``PropsEntry.get_props_type()``.  This is due to the ``_get_type`` function
+  extention being normally used for ``GType`` access and is inaccessable
+  otherwise.
+
+* Special `Pipeline Iteration`_ support through the following functions:
+
+  * ``add_iterate_bin(bin) -> id``: used to iterate a bin with a C idle loop
+    callback instead of a Python callback.
+  * ``remove_iterate_bin(id)``: used to remove the ``add_iterate_bin``
+    idle loop callback id.
+  * ``iterate_bin_all(bin)``: releases locks, calls ``gst_bin_iterate``
+    until it returns 0, reacquires locks and completes
+
+* `Python Elements`_ support through the following horribly inefficient
+  functions:
+
+  * ``Buffer.get_data() -> string``: converts buffer data to a string and
+     returns it.
+  * ``Buffer.set_data(string)``: sets the buffer data from a string.
+
+
+Examples
+--------
+
+The best documentation right now is the examples in
+"``./examples/gstreamer/``".  Read them.
+
+
+Threads
+-------
+
+Threading is a tricky subject for gst-python.  There are a few lock you need to
+be aware of:
+
+* GIL
+
+  The CPython interpreter is single threaded.  Code execution in the
+  interpreter is protected by a Global Interpreter Lock (GIL).  This means that
+  C code can run in other threads in parallel but only one thread will be
+  running Python code at any one point.  Most of this is handled internally by
+  means of locking and unlocking the GIL at appropriate times.  Callback code
+  and other various code paths between Python and C *should* be setup to do
+  proper GIL handling.
+  
+  However, it is possible that you may encounter a situation where proper
+  locking is not done.  This is most likely due to calling a wrapper function
+  that follows a sequence like this:
+
+  - Python -> wrapper function
+  - wrapper function -> C GStreamer function
+  - C GStreamer function -> side effect code
+  - side effect code -> callback
+  - callback -> tries to acquire Python GIL but it's already locked
+  - deadlocked...
+
+  This has been fixed for commonly called functions that have side effects
+  which are likely to re-enter the interpreter.  It just involves lock/unlock
+  around the call to the C gst function.  But doing it for every function could
+  have performance issues and, more importantly, is not an automated process.
+
+  Please file a bug_ if you have problems related to this and need other
+  functions to be specially handled.
+
+* Gdk lock
+
+  If you are using PyGTK you will have to deal with Gdk locking.  Make sure
+  you're holding the Gdk lock while executing Gdk/Gtk calls.  See PyGTK
+  documentation and FAQ list for more information.
+
+
+Pipeline Iteration
+------------------
+
+There are a number of ways to iterate pipelines.  ./examples/gstreamer/bps.py
+is a small test program to measure the performance in buffers per second of
+these various techniques.  Please see the example for how to use these
+techniques.
+
+* Bin.iterate() in Python from the gtk idle loop
+* gst_bin_iterate() in C from gtk idle loop
+* Bin.iterate() in a Python loop
+* gst_bin_iterate() in a C loop
+
+The method you chose depends on your application.  The idle loop methods are
+slightly slower yet more flexible.  Probably useful for interactive GUI
+applications.
+
+The basic loop methods are faster but probably more use for non-interactive
+applications.  A variation on these loops would be to also check for a stop
+condition which may provide performance increase and some level of control.
+
+
+Python Elements
+---------------
+
+It is possible to write Python subclasses of GstElement.  This support is very
+primitive and likely to change.  See "``./examples/gstreamer/rot13.py``" for an
+example.
+
+
+Bugs
+====
+
+*Please* submit gst-python bugs, patches, or suggestions to GNOME Bugzilla_,
+Product: GStreamer, Component: gst-python.  Thank you.
+
+.. _Bugzilla: http://bugzilla.gnome.org/
+.. _bug: `Bugs`_

@@ -1,0 +1,13 @@
+.. gst-python HEAD.in
+.. This file writen with docutils markup (http://docutils.sourceforge.net/)
+
+==========
+gst-python
+==========
+
+:Author: David I. Lehn
+:Contact: dlehn@users.sourceforge.net
+:Web site: http://www.gstreamer.net/bindings/python/
+:Version: @VERSION@
+
+.. contents::

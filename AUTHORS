@@ -1,11 +1,39 @@
-gst-python authors:
+.. gst-python AUTHORS
+.. This file writen with docutils markup (http://docutils.sourceforge.net/)
 
-David I. Lehn  <dlehn@users.sourceforge.net>
+Contact
+=======
 
+Please feel free to contact the developers.  They hang out on IRC_ and the
+mailing lists_.
+
+.. _IRC: http://gstreamer.net/dev/
+.. _lists: http://gstreamer.net/contact/lists.php
+
+Authors
+=======
+
+Maintainer
+----------
+
+* David I. Lehn  <dlehn@users.sourceforge.net>
+
+Contributions
+-------------
+
+Patches, suggestions, and other help:
+
+* Kenichi Sato <ksato@users.sourceforge.net>)
 
 Much of the framework for gst-python stolen from gtk and gconf bindings by:
 
-James Henstridge  <james@daa.com.au>
-Johan Dahlin  <jdahlin@telia.com>
-Matt Wilson  <msw@redhat.com>
-and many more...
+* James Henstridge  <james@daa.com.au>
+* Johan Dahlin  <jdahlin@telia.com>
+* Matt Wilson  <msw@redhat.com>
+* and many more...
+
+GStreamer
+---------
+
+And of course, none of this would be possible without the extreme hacker mojo
+of the whole GStreamer crew!
