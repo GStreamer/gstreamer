@@ -1,4 +1,4 @@
-if USE_GCONF
+if USE_GCONFTOOL
 GCONF_DIR=gconf
 else
 GCONF_DIR=
