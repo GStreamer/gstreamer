@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
@@ -17,7 +17,7 @@ fi
 mkdir -p gst-libs/ext/ffmpeg/ffmpeg
 
 # source helper functions
-if test ! -e common/gst-autogen.sh;
+if test ! -f common/gst-autogen.sh;
 then
   echo There is something wrong with your source tree.
   echo You are missing common/gst-autogen.sh
