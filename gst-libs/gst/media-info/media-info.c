@@ -419,72 +419,15 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp, GEr
 GstMediaInfoStream *
 gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags, GError **error)
 {
-  GstMediaInfoPriv *priv = info->priv;
   GstMediaInfoStream *stream = NULL;
-  GstElement *decoder = NULL;
-  gchar *mime;
-  int i;
 
-  GST_DEBUG ("DEBUG: gst_media_info_read: start");
-  gmip_reset (info->priv);		/* reset all structs */
-  priv->location = g_strdup (location);
-  priv->flags = flags;
-
-  if (!gmip_find_type (priv, error)) return NULL;
-
-  mime = g_strdup (gst_structure_get_name (
-	    gst_caps_get_structure(priv->type, 0)));
-  GST_DEBUG ("mime type: %s", mime);
-
-  /* c) figure out decoding pipeline */
-  //FIXMEdecoder = gmi_get_pipeline_description (info, mime);
-  g_print ("DEBUG: using decoder %s\n", gst_element_get_name (decoder));
-
- /* if it's NULL, then that's a sign we can't decode it */
-  if (decoder == NULL)
-  {
-    g_warning ("Can't find a decoder for type %s\n", mime);
+  gst_media_info_read_with_idler (info, location, flags, error);
+  if (*error) return FALSE;
+  while (gst_media_info_read_idler (info, &stream, error) && stream == NULL)
+    /* keep looping */;
+  if (*error)
     return NULL;
-  }
 
-  /* b) create media info stream object */
-  priv->stream = gmi_stream_new ();
-  priv->stream->mime = mime;
-  priv->stream->path = priv->location;
-
-  /* install this decoder in the pipeline */
-
-  //FIXME: use new systemgmi_set_decoder (info, decoder);
-
-  /* collect total stream properties */
-  /* d) get all stream properties */
-  gmip_find_stream (priv);
-
-  /* e) if we have multiple tracks, loop over them; if not, just get
-   * metadata and return it */
-  GST_DEBUG ("num tracks %ld", priv->stream->length_tracks);
-  for (i = 0; i < priv->stream->length_tracks; ++i)
-  {
-    priv->current_track = gmi_track_new ();
-    if (i > 0)
-    {
-      GST_DEBUG ("seeking to track %d", i);
-      gmi_seek_to_track (info, i);
-    }
-    if (flags & GST_MEDIA_INFO_METADATA)
-      gmip_find_track_metadata (priv);
-    if (flags & GST_MEDIA_INFO_STREAMINFO)
-      gmip_find_track_streaminfo (priv);
-    if (flags & GST_MEDIA_INFO_FORMAT)
-      gmip_find_track_format (priv);
-    priv->stream->tracks = g_list_append (priv->stream->tracks,
-		                          priv->current_track);
-    priv->current_track = NULL;
-  }
-
-  /* please return it */
-  stream = priv->stream;
-  priv->stream = NULL;
   return stream;
 }
 

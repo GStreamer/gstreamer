@@ -354,22 +354,25 @@ gmi_set_mime (GstMediaInfo *info, const char *mime)
   /* FIXME: please figure out proper mp3 mimetypes */
   if ((strcmp (mime, "application/x-ogg") == 0) ||
       (strcmp (mime, "application/ogg") == 0))
-    desc = g_strdup_printf ("%s name=source ! oggdemux ! vorbisdec name=decoder ! audioconvert ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+    desc = g_strdup_printf ("%s name=source ! oggdemux ! vorbisdec name=decoder ! fakesink name=sink", priv->source_name);
   else if ((strcmp (mime, "audio/mpeg") == 0) ||
            (strcmp (mime, "audio/x-mp3") == 0) ||
            (strcmp (mime, "audio/mp3") == 0) ||
            (strcmp (mime, "application/x-id3") == 0) ||
 	   (strcmp (mime, "audio/x-id3") == 0))
     desc = g_strdup_printf ("%s name=source ! id3tag ! mad name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
-  else if (strcmp (mime, "application/x-flac") == 0)
-    desc = g_strdup_printf ("%s name=source ! flac name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
-  else if (strcmp (mime, "audio/x-wav") == 0)
+  else if ((strcmp (mime, "application/x-flac") == 0) ||
+           (strcmp (mime, "audio/x-flac") == 0))
+    desc = g_strdup_printf ("%s name=source ! flacdec name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+  else if ((strcmp (mime, "audio/wav") == 0) ||
+           (strcmp (mime, "audio/x-wav") == 0))
     desc = g_strdup_printf ("%s ! wavparse name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
   else if (strcmp (mime, "audio/x-mod") == 0 ||
 	   strcmp (mime, "audio/x-s3m") == 0 ||
            strcmp (mime, "audio/x-xm") == 0 ||
 	   strcmp (mime, "audio/x-it") == 0)
     desc = g_strdup_printf ("%s name=source ! modplug name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+  else return FALSE;
 
   GST_DEBUG ("using description %s", desc);
   priv->pipeline_desc = desc;

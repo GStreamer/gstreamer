@@ -1,3 +1,9 @@
+2004-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/media-info/media-info-priv.c: (gmi_set_mime):
+	* gst-libs/gst/media-info/media-info.c: (gst_media_info_read):
+          adding mime types, fixing the one-stop function
+
 2004-03-08  Christian Schaller <Uraeus@gnome.org>
 
 	* tools/gst-launch-ext.in: 
