@@ -1,6 +1,6 @@
-## libdir = $(libdir)/gst
+librarydir = $(libdir)/gst
 
-lib_LTLIBRARIES = libgstaudio.la
+library_LTLIBRARIES = libgstaudio.la
 
 libgstaudio_la_SOURCES = audio.c
 
