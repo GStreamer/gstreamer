@@ -23,6 +23,10 @@
 #endif
 #include <string.h>
 
+#include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/audio/audio.h>
+
 #include "gstsmoothwave.h"
 
 static GstElementDetails gst_smoothwave_details =
@@ -39,29 +43,58 @@ enum
   LAST_SIGNAL
 };
 
-enum
-{
-  ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_WIDGET
-};
-
 static void gst_smoothwave_base_init (gpointer g_class);
 static void gst_smoothwave_class_init (GstSmoothWaveClass * klass);
 static void gst_smoothwave_init (GstSmoothWave * smoothwave);
-
-static void gst_smoothwave_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_smoothwave_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
+static void gst_smoothwave_dispose (GObject * object);
+static GstElementStateReturn gst_sw_change_state (GstElement * element);
 static void gst_smoothwave_chain (GstPad * pad, GstData * _data);
+static GstPadLinkReturn gst_sw_sinklink (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn gst_sw_srclink (GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
 /*static guint gst_smoothwave_signals[LAST_SIGNAL] = { 0 }; */
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-rgb, "
+        "bpp = (int) 32, "
+        "depth = (int) 24, "
+        "endianness = (int) BIG_ENDIAN, "
+        "red_mask = (int) " GST_VIDEO_BYTE2_MASK_32 ", "
+        "green_mask = (int) " GST_VIDEO_BYTE3_MASK_32 ", "
+        "blue_mask = (int) " GST_VIDEO_BYTE4_MASK_32 ", "
+        "width = (int)512, "
+        "height = (int)256, " "framerate = " GST_VIDEO_FPS_RANGE)
+    );
+#else
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-rgb, "
+        "bpp = (int) 32, "
+        "depth = (int) 24, "
+        "endianness = (int) BIG_ENDIAN, "
+        "red_mask = (int) " GST_VIDEO_BYTE3_MASK_32 ", "
+        "green_mask = (int) " GST_VIDEO_BYTE2_MASK_32 ", "
+        "blue_mask = (int) " GST_VIDEO_BYTE1_MASK_32 ", "
+        "width = (int)512, "
+        "height = (int)256, " "framerate = " GST_VIDEO_FPS_RANGE)
+    );
+#endif
+
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 2 ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
+    );
 
 GType
 gst_smoothwave_get_type (void)
@@ -100,56 +133,111 @@ static void
 gst_smoothwave_class_init (GstSmoothWaveClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  element_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  gobject_class->dispose = gst_smoothwave_dispose;
+  element_class->change_state = gst_sw_change_state;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT, g_param_spec_int ("height", "height", "height", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDGET, g_param_spec_object ("widget", "widget", "widget", GTK_TYPE_WIDGET, G_PARAM_READABLE));  /* CHECKME! */
-
-  gobject_class->set_property = gst_smoothwave_set_property;
-  gobject_class->get_property = gst_smoothwave_get_property;
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
 }
 
 static void
 gst_smoothwave_init (GstSmoothWave * smoothwave)
 {
   int i;
-  guint32 palette[256];
 
-  smoothwave->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  smoothwave->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
+      "sink");
+  smoothwave->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
+      "src");
   gst_element_add_pad (GST_ELEMENT (smoothwave), smoothwave->sinkpad);
   gst_pad_set_chain_function (smoothwave->sinkpad, gst_smoothwave_chain);
-  smoothwave->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (smoothwave), smoothwave->srcpad);
+  gst_pad_set_link_function (smoothwave->sinkpad, gst_sw_sinklink);
 
-/*  smoothwave->meta = NULL; */
+  gst_element_add_pad (GST_ELEMENT (smoothwave), smoothwave->srcpad);
+  gst_pad_set_link_function (smoothwave->srcpad, gst_sw_srclink);
+
+  GST_FLAG_SET (smoothwave, GST_ELEMENT_EVENT_AWARE);
+
+  smoothwave->adapter = gst_adapter_new ();
+
   smoothwave->width = 512;
   smoothwave->height = 256;
 
-  gdk_rgb_init ();
-/*  gtk_widget_set_default_colormap (gdk_rgb_get_cmap()); */
-/*  gtk_widget_set_default_visual (gdk_rgb_get_visual()); */
+#define SPLIT_PT 96
 
-/*  GST_DEBUG ("creating palette"); */
-  for (i = 0; i < 256; i++)
-    palette[i] = (i << 16) || (i << 8);
-/*  GST_DEBUG ("creating cmap"); */
-  smoothwave->cmap = gdk_rgb_cmap_new (palette, 256);
-/*  GST_DEBUG ("created cmap"); */
-/*  gtk_widget_set_default_colormap (smoothwave->cmap); */
+  /* Fade in blue up to the split point */
+  for (i = 0; i < SPLIT_PT; i++)
+    smoothwave->palette[i] = (255 * i / SPLIT_PT);
 
-  smoothwave->image = gtk_drawing_area_new ();
-  gtk_drawing_area_size (GTK_DRAWING_AREA (smoothwave->image),
-      smoothwave->width, smoothwave->height);
-  gtk_widget_show (smoothwave->image);
+  /* After the split point, fade out blue and fade in red */
+  for (; i < 256; i++) {
+    gint val = (i - SPLIT_PT) * 255 / (255 - SPLIT_PT);
+
+    smoothwave->palette[i] = (255 - val) | (val << 16);
+  }
 
   smoothwave->imagebuffer = g_malloc (smoothwave->width * smoothwave->height);
   memset (smoothwave->imagebuffer, 0, smoothwave->width * smoothwave->height);
+
+  smoothwave->fps = 0;
+  smoothwave->sample_rate = 0;
+  smoothwave->audio_basetime = GST_CLOCK_TIME_NONE;
+  smoothwave->samples_consumed = 0;
+}
+
+static void
+gst_smoothwave_dispose (GObject * object)
+{
+  GstSmoothWave *sw = GST_SMOOTHWAVE (object);
+
+  if (sw->adapter != NULL) {
+    g_object_unref (sw->adapter);
+    sw->adapter = NULL;
+  }
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static GstPadLinkReturn
+gst_sw_sinklink (GstPad * pad, const GstCaps * caps)
+{
+  GstSmoothWave *sw = GST_SMOOTHWAVE (GST_OBJECT_PARENT (pad));
+  GstStructure *structure;
+
+  g_return_val_if_fail (sw != NULL, GST_PAD_LINK_REFUSED);
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "channels", &sw->channels) ||
+      !gst_structure_get_int (structure, "rate", &sw->sample_rate))
+    return GST_PAD_LINK_REFUSED;
+
+  return GST_PAD_LINK_OK;
+}
+
+static GstPadLinkReturn
+gst_sw_srclink (GstPad * pad, const GstCaps * caps)
+{
+  GstSmoothWave *sw = GST_SMOOTHWAVE (GST_OBJECT_PARENT (pad));
+  GstStructure *structure;
+
+  g_return_val_if_fail (sw != NULL, GST_PAD_LINK_REFUSED);
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "width", &sw->width) ||
+      !gst_structure_get_int (structure, "height", &sw->height) ||
+      !gst_structure_get_double (structure, "framerate", &sw->fps))
+    return GST_PAD_LINK_REFUSED;
+
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -157,146 +245,140 @@ gst_smoothwave_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstSmoothWave *smoothwave;
-  gint16 *samples;
-  gint samplecount, i;
-  register guint32 *ptr;
+  guint32 bytesperread;
+  gint samples_per_frame;
   gint qheight;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
-/*  g_return_if_fail(GST_IS_BUFFER(buf)); */
 
   smoothwave = GST_SMOOTHWAVE (GST_OBJECT_PARENT (pad));
 
-  /* first deal with audio metadata */
-#if 0
-  if (buf->meta) {
-    if (smoothwave->meta != NULL) {
-      /* FIXME: need to unref the old metadata so it goes away */
+  if (GST_IS_EVENT (_data)) {
+    GstEvent *event = GST_EVENT (_data);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+      {
+        gint64 value = 0;
+
+        gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
+        gst_adapter_clear (smoothwave->adapter);
+        smoothwave->audio_basetime = value;
+        smoothwave->samples_consumed = 0;
+      }
+      default:
+        gst_pad_event_default (pad, event);
+        break;
     }
-    /* we just make a copy of the pointer */
-    smoothwave->meta = (MetaAudioRaw *) (buf->meta);
-    /* FIXME: now we have to ref the metadata so it doesn't go away */
-  }
-#endif
-
-/*  g_return_if_fail(smoothwave->meta != NULL); */
-
-  samples = (gint16 *) GST_BUFFER_DATA (buf);
-/*  samplecount = buf->datasize / (smoothwave->meta->channels * sizeof(gint16)); */
-  samplecount = GST_BUFFER_SIZE (buf) / (2 * sizeof (gint16));
-
-  qheight = smoothwave->height / 4;
-
-/*  GST_DEBUG ("traversing %d",smoothwave->width); */
-  for (i = 0; i < MAX (smoothwave->width, samplecount); i++) {
-    gint16 y1 = (gint32) (samples[i * 2] * qheight) / 32768 + qheight;
-    gint16 y2 = (gint32) (samples[(i * 2) + 1] * qheight) / 32768 +
-        (qheight * 3);
-    smoothwave->imagebuffer[y1 * smoothwave->width + i] = 0xff;
-    smoothwave->imagebuffer[y2 * smoothwave->width + i] = 0xff;
-/*    smoothwave->imagebuffer[i+(smoothwave->width*5)] = i; */
+    return;
   }
 
-  ptr = (guint32 *) smoothwave->imagebuffer;
-  for (i = 0; i < (smoothwave->width * smoothwave->height) / 4; i++) {
-    if (*ptr) {
-      *ptr -= ((*ptr & 0xf0f0f0f0ul) >> 4) + ((*ptr & 0xe0e0e0e0ul) >> 5);
-      ptr++;
+  if (!GST_PAD_IS_USABLE (smoothwave->srcpad)) {
+    gst_buffer_unref (buf);
+    return;
+  }
+  if (smoothwave->audio_basetime == GST_CLOCK_TIME_NONE)
+    smoothwave->audio_basetime = GST_BUFFER_TIMESTAMP (buf);
+  if (smoothwave->audio_basetime == GST_CLOCK_TIME_NONE)
+    smoothwave->audio_basetime = 0;
+
+  bytesperread = smoothwave->width * smoothwave->channels * sizeof (gint16);
+  samples_per_frame = smoothwave->sample_rate / smoothwave->fps;
+
+  gst_adapter_push (smoothwave->adapter, buf);
+  while (gst_adapter_available (smoothwave->adapter) > MAX (bytesperread,
+          samples_per_frame * smoothwave->channels * sizeof (gint16))) {
+    const gint16 *samples =
+        (const guint16 *) gst_adapter_peek (smoothwave->adapter, bytesperread);
+    register guint32 *ptr;
+    gint i;
+
+    /* First draw the new waveform */
+    if (smoothwave->channels == 2) {
+      qheight = smoothwave->height / 4;
+      for (i = 0; i < smoothwave->width; i++) {
+        gint16 y1 = (gint32) (samples[i * 2] * qheight) / 32768 + qheight;
+        gint16 y2 = (gint32) (samples[(i * 2) + 1] * qheight) / 32768 +
+            (qheight + smoothwave->height / 2);
+        smoothwave->imagebuffer[y1 * smoothwave->width + i] = 0xff;
+        smoothwave->imagebuffer[y2 * smoothwave->width + i] = 0xff;
+      }
     } else {
+      qheight = smoothwave->height / 2;
+      for (i = 0; i < smoothwave->width; i++) {
+        gint16 y1 = (gint32) (samples[i] * qheight) / 32768 + qheight;
+
+        smoothwave->imagebuffer[y1 * smoothwave->width + i] = 0xff;
+      }
+    }
+
+    /* Now fade stuff out */
+    ptr = (guint32 *) smoothwave->imagebuffer;
+    for (i = 0; i < (smoothwave->width * smoothwave->height) / 4; i++) {
+      if (*ptr)
+        *ptr -= ((*ptr & 0xf0f0f0f0ul) >> 4) + ((*ptr & 0xe0e0e0e0ul) >> 5);
       ptr++;
     }
+
+    {
+      guint32 *out;
+      guchar *in;
+      GstBuffer *bufout;
+
+      bufout =
+          gst_buffer_new_and_alloc (smoothwave->width * smoothwave->height * 4);
+
+      GST_BUFFER_TIMESTAMP (bufout) =
+          smoothwave->audio_basetime +
+          (GST_SECOND * smoothwave->samples_consumed / smoothwave->sample_rate);
+      GST_BUFFER_DURATION (bufout) = GST_SECOND / smoothwave->fps;
+      out = (guint32 *) GST_BUFFER_DATA (bufout);
+      in = smoothwave->imagebuffer;
+
+      for (i = 0; i < (smoothwave->width * smoothwave->height); i++) {
+        // guchar t = *in++;
+        *out++ = smoothwave->palette[*in++];    // t | (t << 8) | (t << 16) | (t << 24);
+      }
+      gst_pad_push (smoothwave->srcpad, GST_DATA (bufout));
+    }
+    smoothwave->samples_consumed += samples_per_frame;
+    gst_adapter_flush (smoothwave->adapter,
+        samples_per_frame * smoothwave->channels * sizeof (gint16));
   }
-
-/*  GST_DEBUG ("drawing"); */
-/*  GST_DEBUG ("gdk_draw_indexed_image(%p,%p,%d,%d,%d,%d,%s,%p,%d,%p);",
-        smoothwave->image->window,
-	smoothwave->image->style->fg_gc[GTK_STATE_NORMAL],
-	0,0,smoothwave->width,smoothwave->height,
-	"GDK_RGB_DITHER_NORMAL",
-	smoothwave->imagebuffer,smoothwave->width,
-	smoothwave->cmap);*/
-/*  gdk_draw_indexed_image(smoothwave->image->window,
-	smoothwave->image->style->fg_gc[GTK_STATE_NORMAL],
-	0,0,smoothwave->width,smoothwave->height,
-	GDK_RGB_DITHER_NONE,
-	smoothwave->imagebuffer,smoothwave->width,
-	smoothwave->cmap);*/
-  gdk_draw_gray_image (smoothwave->image->window,
-      smoothwave->image->style->fg_gc[GTK_STATE_NORMAL],
-      0, 0, smoothwave->width, smoothwave->height,
-      GDK_RGB_DITHER_NORMAL, smoothwave->imagebuffer, smoothwave->width);
-
-/*  gst_trace_add_entry(NULL,0,buf,"smoothwave: calculated smoothwave"); */
-
-  gst_buffer_unref (buf);
 }
 
-static void
-gst_smoothwave_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+static GstElementStateReturn
+gst_sw_change_state (GstElement * element)
 {
-  GstSmoothWave *smoothwave;
+  GstSmoothWave *sw = GST_SMOOTHWAVE (element);
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_SMOOTHWAVE (object));
-  smoothwave = GST_SMOOTHWAVE (object);
-
-  switch (prop_id) {
-    case ARG_WIDTH:
-      smoothwave->width = g_value_get_int (value);
-      gtk_drawing_area_size (GTK_DRAWING_AREA (smoothwave->image),
-          smoothwave->width, smoothwave->height);
-      gtk_widget_set_usize (GTK_WIDGET (smoothwave->image),
-          smoothwave->width, smoothwave->height);
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
       break;
-    case ARG_HEIGHT:
-      smoothwave->height = g_value_get_int (value);
-      gtk_drawing_area_size (GTK_DRAWING_AREA (smoothwave->image),
-          smoothwave->width, smoothwave->height);
-      gtk_widget_set_usize (GTK_WIDGET (smoothwave->image),
-          smoothwave->width, smoothwave->height);
+    case GST_STATE_READY_TO_NULL:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      sw->audio_basetime = GST_CLOCK_TIME_NONE;
+      gst_adapter_clear (sw->adapter);
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      sw->channels = 0;
       break;
     default:
       break;
   }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 }
-
-static void
-gst_smoothwave_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstSmoothWave *smoothwave;
-
-  /* it's not null if we got it, but it might not be ours */
-  smoothwave = GST_SMOOTHWAVE (object);
-
-  switch (prop_id) {
-    case ARG_WIDTH:{
-      g_value_set_int (value, smoothwave->width);
-      break;
-    }
-    case ARG_HEIGHT:{
-      g_value_set_int (value, smoothwave->height);
-      break;
-    }
-    case ARG_WIDGET:{
-      g_value_set_object (value, smoothwave->image);
-      break;
-    }
-    default:{
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-    }
-  }
-}
-
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   if (!gst_element_register (plugin, "smoothwave", GST_RANK_NONE,
           GST_TYPE_SMOOTHWAVE))
     return FALSE;

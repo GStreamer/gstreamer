@@ -184,7 +184,7 @@ gst_chart_init (GstChart * chart)
 
   gst_pad_set_chain_function (chart->sinkpad, gst_chart_chain);
   gst_pad_set_link_function (chart->sinkpad, gst_chart_sinkconnect);
-  gst_pad_set_link_function (chart->sinkpad, gst_chart_srcconnect);
+  gst_pad_set_link_function (chart->srcpad, gst_chart_srcconnect);
 
   chart->next_time = 0;
 
@@ -229,13 +229,12 @@ gst_chart_srcconnect (GstPad * pad, const GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_get_double (structure, "framerate", &chart->framerate)) {
-    chart->samples_between_frames = chart->samplerate / chart->framerate;
-  }
+  if (!gst_structure_get_double (structure, "framerate", &chart->framerate) ||
+      !gst_structure_get_int (structure, "width", &chart->width) ||
+      !gst_structure_get_int (structure, "height", &chart->height))
+    return GST_PAD_LINK_REFUSED;
 
-  gst_structure_get_int (structure, "width", &chart->width);
-  gst_structure_get_int (structure, "height", &chart->height);
-
+  chart->samples_between_frames = chart->samplerate / chart->framerate;
   GST_DEBUG ("CHART: new src caps: framerate %f, %dx%d",
       chart->framerate, chart->width, chart->height);
 
