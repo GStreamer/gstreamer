@@ -53,6 +53,9 @@ struct _GstStaticCaps2 {
 #define GST_CAPS2_ANY gst_caps2_new_any()
 #define GST_CAPS2_NONE gst_caps2_new_empty()
 
+#define GST_STATIC_CAPS2_ANY GST_STATIC_CAPS("ANY")
+#define GST_STATIC_CAPS2_NONE GST_STATIC_CAPS("NONE")
+
 #define GST_TYPE_CAPS2 gst_caps2_get_type()
 
 void _gst_caps2_initialize (void);
@@ -66,7 +69,7 @@ GstCaps2 *gst_caps2_new_full (const GstStructure *struct1, ...);
 GstCaps2 *gst_caps2_new_full_valist (const GstStructure *structure, va_list var_args);
 GstCaps2 *gst_caps2_copy (const GstCaps2 *caps);
 void gst_caps2_free (GstCaps2 *caps);
-const GstCaps2 *gst_caps2_from_static (GstStaticCaps2 *caps);
+G_CONST_RETURN GstCaps2 *gst_static_caps2_get (GstStaticCaps2 *caps);
 
 /* manipulation */
 void gst_caps2_append (GstCaps2 *caps1, GstCaps2 *caps2);
