@@ -155,8 +155,6 @@ enum {
 enum {
   ARG_0,
   ARG_BITRATE,
-  ARG_FREQUENCY,
-  ARG_CHANNELS,
   ARG_COMPRESSION_RATIO,
   ARG_QUALITY,
   ARG_MODE,
@@ -240,12 +238,6 @@ gst_lame_class_init (GstLameClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
     g_param_spec_int("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
                      8, 320, 128, G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
-    g_param_spec_int("frequency", "frequency", "frequency",
-                     8000, 48000, 44100, G_PARAM_READABLE)); 
-  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_int("channels", "channels", "channels",
-                     0, 2, 2, G_PARAM_READABLE)); 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMPRESSION_RATIO,
     g_param_spec_float("compression_ratio","compression_ratio","compression_ratio",
                        0.0,200.0,11.0,G_PARAM_READWRITE)); /* CHECKME */
@@ -372,11 +364,6 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "rate", &lame->samplerate);
   gst_caps_get_int (caps, "channels", &lame->num_channels);
-
-  g_object_freeze_notify (G_OBJECT (lame));
-  g_object_notify (G_OBJECT (lame), "frequency");
-  g_object_notify (G_OBJECT (lame), "channels");
-  g_object_thaw_notify (G_OBJECT (lame));
 
   if (gst_lame_setup (lame)) {
     lame->initialized = TRUE;
@@ -573,12 +560,6 @@ gst_lame_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
   switch (prop_id) {
     case ARG_BITRATE:
       g_value_set_int (value, lame->bitrate);
-      break;
-    case ARG_FREQUENCY:
-      g_value_set_int (value, lame->samplerate);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_int (value, lame->num_channels);
       break;
     case ARG_COMPRESSION_RATIO:
       g_value_set_float (value, lame->compression_ratio);
