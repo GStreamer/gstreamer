@@ -227,11 +227,11 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 {
   guint32 got_bytes;
   guint8 *data;
-  size_t read_size = size * nmemb;
+  guint32 read_size = size * nmemb;
 
   VorbisFile *vorbisfile = GST_VORBISFILE (datasource);
 
-  GST_DEBUG (0, "read %" G_GINT64_FORMAT, read_size);
+  GST_DEBUG (0, "read %d", read_size);
 
   /* make sure we don't go to EOS */
   if (!vorbisfile->may_eos && vorbisfile->total_bytes && 
@@ -245,6 +245,8 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
   
   do {
     got_bytes = gst_bytestream_peek_bytes (vorbisfile->bs, &data, read_size);
+
+    GST_DEBUG (0, "peek returned  %d", got_bytes);
 
     if (got_bytes == 0) {
       GstEvent *event;
@@ -262,11 +264,14 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 	  GST_DEBUG (0, "discont");
 	  vorbisfile->need_discont = TRUE;
 	default:
+	  GST_DEBUG (0, "unknown event %d", GST_EVENT_TYPE (event));
           break;
       }
       gst_event_unref (event);
     }
   } while (got_bytes == 0);
+
+  GST_DEBUG (0, "read %d got %d bytes", read_size, got_bytes);
 
   memcpy (ptr, data, got_bytes);
   gst_bytestream_flush_fast (vorbisfile->bs, got_bytes);
@@ -284,7 +289,6 @@ gst_vorbisfile_seek (void *datasource, int64_t offset, int whence)
   GstSeekType method;
   guint64 pending_offset = vorbisfile->offset;
   gboolean need_total = FALSE;
-
 
   if (!vorbisfile->vf.seekable) {
     return -1;
@@ -484,7 +488,7 @@ gst_vorbisfile_loop (GstElement *element)
     vorbisfile->may_eos = FALSE;
     vorbisfile->vf.seekable = gst_bytestream_seek (vorbisfile->bs, 0, 
 		                                   GST_SEEK_METHOD_SET);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "vorbisfile: seekable: %s\n",
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "vorbisfile: seekable: %s",
 	       vorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom vorbisfile data object with the callbacks we provide */
