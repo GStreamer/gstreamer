@@ -38,17 +38,17 @@ struct _GstMonoscope {
   GstPad *sinkpad,*srcpad;
   GstBufferPool *peerpool;
 
-  // the timestamp of the next frame
+  /* the timestamp of the next frame */
   guint64 next_time;
   gint16 datain[512];
 
-  // video state
+  /* video state */
   gint fps;
   gint width;
   gint height;
   gboolean first_buffer;
 
-  // visualisation state
+  /* visualisation state */
   struct monoscope_state * visstate;
 };
 
@@ -201,11 +201,11 @@ gst_monoscope_init (GstMonoscope *monoscope)
   monoscope->next_time = 0;
   monoscope->peerpool = NULL;
 
-  // reset the initial video state
+  /* reset the initial video state */
   monoscope->first_buffer = TRUE;
   monoscope->width = 256;
   monoscope->height = 128;
-  monoscope->fps = 25; // desired frame rate
+  monoscope->fps = 25; /* desired frame rate */
 
 }
 
@@ -247,7 +247,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
   }
 
   data = (gint16 *) GST_BUFFER_DATA (bufin);
-  // FIXME: get rid of this: waste of effort.
+  /* FIXME: Select samples in a better way. */
   for (i=0; i < 512; i++) {
     monoscope->datain[i] = *data++;
   }

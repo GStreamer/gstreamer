@@ -9,8 +9,8 @@
 
 struct monoscope_state {
     gint16 copyEq[CONVOLVE_BIG];
-    int avgEq[CONVOLVE_SMALL];      // a running average of the last few.
-    int avgMax;                     // running average of max sample.
+    int avgEq[CONVOLVE_SMALL];      /* a running average of the last few. */
+    int avgMax;                     /* running average of max sample. */
     guint32 display[(scope_width + 1) * (scope_height + 1)];
 
     convolve_state *cstate;
