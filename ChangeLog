@@ -1,3 +1,8 @@
+2004-05-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_caps):
+	  Missing break, detected by Daniel Gazard <daniel.gazard@free.fr>.
+
 2004-05-07  Colin Walters  <walters@redhat.com>
 
 	* gst/volume/gstvolume.c (gst_volume_dispose): Unref dpman.
