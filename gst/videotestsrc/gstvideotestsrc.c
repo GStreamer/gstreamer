@@ -141,14 +141,18 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT, g_param_spec_int ("height", "height", "height", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
+      g_param_spec_int ("width", "width", "width",
+        G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
+      g_param_spec_int ("height", "height", "height",
+        G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FOURCC,
-				   g_param_spec_string ("fourcc", "fourcc", "fourcc",
-							NULL, G_PARAM_READWRITE));
+      g_param_spec_string ("fourcc", "fourcc", "fourcc",
+        NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
-	   g_param_spec_int ("rate", "Rate", "Frame rate",
-		0, 100, 30, G_PARAM_READWRITE));
+      g_param_spec_int ("rate", "Rate", "Frame rate",
+        0, 100, 30, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -239,11 +243,11 @@ gst_videotestsrc_get_capslist (void)
     char *s = fourcc_list[i].fourcc;
     int fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
 
-    caps = gst_caps_new ("videotestsrc_filter",
+    caps = GST_CAPS_NEW ("videotestsrc_filter",
 			 "video/raw",
-			 gst_props_new ("format", GST_PROPS_FOURCC (fourcc),
-					"width", GST_PROPS_INT (640), "height", GST_PROPS_INT (480)
-			 ));
+			 "format", GST_PROPS_FOURCC (fourcc),
+			 "width", GST_PROPS_INT (640),
+			 "height", GST_PROPS_INT (480));
     capslist = gst_caps_append (capslist, caps);
   }
 
@@ -261,8 +265,8 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
     return GST_CAPS_NEW ("videotestsrc_filter",
 			 "video/raw",
 			 "format", GST_PROPS_FOURCC (vts->forced_format),
-			 "width", GST_PROPS_INT (640), "height", GST_PROPS_INT (480)
-      );
+			 "width", GST_PROPS_INT (640),
+			 "height", GST_PROPS_INT (480));
   } else {
     return gst_videotestsrc_get_capslist ();
   }
