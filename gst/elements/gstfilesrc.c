@@ -360,6 +360,10 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
   }
   g_mutex_unlock(src->map_regions_lock);
 
+#ifdef MADV_DONTNEED
+  // madvise to tell the kernel what to do with it
+  madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_DONTNEED);
+#endif
   // now unmap the memory
   munmap(GST_BUFFER_DATA(buf),GST_BUFFER_MAXSIZE(buf));
 }
@@ -384,8 +388,10 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
     g_error ("gstfilesrc mmap(0x%x, %d, 0x%llx) : %s",
  	     size, src->fd, offset, sys_errlist[errno]);
   }
+#ifdef MADV_SEQUENTIAL
   // madvise to tell the kernel what to do with it
   retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
+#endif
   // fill in the rest of the fields
   GST_BUFFER_FLAGS(buf) = GST_BUFFER_READONLY | GST_BUFFER_ORIGINAL;
   GST_BUFFER_SIZE(buf) = size;
