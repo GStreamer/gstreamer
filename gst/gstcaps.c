@@ -952,8 +952,6 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   GstCaps *dest = NULL, *src;
 
   g_return_val_if_fail (minuend != NULL, NULL);
-  /* what would that be ? */
-  g_return_val_if_fail (!gst_caps_is_any (minuend), NULL);
   g_return_val_if_fail (subtrahend != NULL, NULL);
 
   if (gst_caps_is_empty (minuend) || gst_caps_is_any (subtrahend)) {
@@ -961,6 +959,13 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   }
   if (gst_caps_is_empty (subtrahend))
     return gst_caps_copy (minuend);
+
+  /* FIXME: Do we want this here or above?
+     The reason we need this is that there is no definition about what
+     ANY means for specific types, so it's not possible to reduce ANY partially
+     You can only remove everything or nothing and that is done above.
+     Note: there's a test that checks this behaviour. */
+  g_return_val_if_fail (!gst_caps_is_any (minuend), NULL);
 
   src = gst_caps_copy (minuend);
   for (i = 0; i < subtrahend->structs->len; i++) {

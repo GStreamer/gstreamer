@@ -1,5 +1,10 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstcaps.c: (gst_caps_subtract):
+	  allow subtracting ANY and EMPTY from ANY caps
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstcaps.c: (gst_caps_append), (gst_caps_intersect),
 	(gst_caps_union):
 	  only simplify in functions that create new caps. Simplifying in
