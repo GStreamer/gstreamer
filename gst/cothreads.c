@@ -36,6 +36,11 @@
 #include "gstarch.h"
 
 
+#define COTHREAD_STACKSIZE 8192
+#define COTHREAD_MAXTHREADS 64
+#define STACK_SIZE 0x200000
+
+
 pthread_key_t _cothread_key = -1;
 
 /* Disablig this define allows you to shut off a few checks in

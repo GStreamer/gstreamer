@@ -26,10 +26,6 @@
 #include <glib.h>
 #include <setjmp.h>
 
-#define COTHREAD_STACKSIZE 8192
-#define COTHREAD_MAXTHREADS 16
-#define STACK_SIZE 0x200000
-
 #ifndef CURRENT_STACK_FRAME
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
 #endif /* CURRENT_STACK_FRAME */
