@@ -38,11 +38,13 @@
  * Returns: the property of the object
  */
 gint
-gst_util_get_int_arg (GObject *object,gchar *argname) 
+gst_util_get_int_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_INT);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_int(&value);
 }
 
@@ -56,11 +58,13 @@ gst_util_get_int_arg (GObject *object,gchar *argname)
  * Returns: the property of the object
  */
 gint
-gst_util_get_bool_arg (GObject *object,gchar *argname) 
+gst_util_get_bool_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_BOOLEAN);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_boolean(&value);
 }
 
@@ -74,11 +78,13 @@ gst_util_get_bool_arg (GObject *object,gchar *argname)
  * Returns: the property of the object
  */
 glong
-gst_util_get_long_arg (GObject *object,gchar *argname) 
+gst_util_get_long_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_LONG);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_long(&value);
 }
 
@@ -92,11 +98,13 @@ gst_util_get_long_arg (GObject *object,gchar *argname)
  * Returns: the property of the object
  */
 gfloat
-gst_util_get_float_arg (GObject *object,gchar *argname) 
+gst_util_get_float_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_FLOAT);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_float(&value);
 }
 
@@ -110,11 +118,13 @@ gst_util_get_float_arg (GObject *object,gchar *argname)
  * Returns: the property of the object
  */
 gdouble 
-gst_util_get_double_arg (GObject *object,gchar *argname) 
+gst_util_get_double_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_DOUBLE);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_double(&value);
 }
 
@@ -127,12 +137,14 @@ gst_util_get_double_arg (GObject *object,gchar *argname)
  *
  * Returns: the property of the object
  */
-gchar*
-gst_util_get_string_arg (GObject *object,gchar *argname) 
+ const gchar*
+gst_util_get_string_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_STRING);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_string(&value);
 }
 
@@ -146,11 +158,13 @@ gst_util_get_string_arg (GObject *object,gchar *argname)
  * Returns: the property of the object
  */
 gpointer
-gst_util_get_pointer_arg (GObject *object,gchar *argname) 
+gst_util_get_pointer_arg (GObject *object, const gchar *argname) 
 {
-  GValue value;
+  GValue value = {0, };
 
+  g_value_init (&value, G_TYPE_POINTER);
   g_object_get_property(G_OBJECT(object),argname,&value);
+
   return g_value_get_pointer(&value);
 }
 
@@ -165,7 +179,7 @@ gst_util_get_pointer_arg (GObject *object,gchar *argname)
  */
 /* COMMENTED OUT BECAUSE WE HAVE NO MORE gtk.h
 GtkWidget*
-gst_util_get_widget_property (GObject *object,gchar *argname) 
+gst_util_get_widget_property (GObject *object, const gchar *argname) 
 {
   GtkArg arg;
 
@@ -213,12 +227,16 @@ gst_util_dump_mem (guchar *mem, guint size)
  * sets the argument with it.
  */
 void
-gst_util_set_object_arg (GObject *object, gchar *name, gchar *value) 
+gst_util_set_object_arg (GObject *object,  const gchar *name,  const gchar *value) 
 {
   if (name && value) {
     GParamSpec *paramspec;
 
     paramspec = g_object_class_find_property(G_OBJECT_GET_CLASS(object),name);
+
+    if (!paramspec) {
+      return;
+    }
 
     GST_DEBUG(0,"paramspec->flags is %d, paramspec->value_type is %d\n",
               paramspec->flags,paramspec->value_type);
