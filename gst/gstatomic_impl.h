@@ -290,7 +290,9 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** MIPS *****/
-#elif defined(HAVE_CPU_MIPS) && defined(__GNUC__)
+/* This is disabled because the asm code is broken on most MIPS
+ * processors and doesn't generally compile. */
+#elif defined(HAVE_CPU_MIPS) && defined(__GNUC__) && 0
 
 GST_INLINE_FUNC void 	gst_atomic_int_init 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
