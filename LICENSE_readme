@@ -26,6 +26,7 @@ gst1394         libraw1394      (http://linux1394.sourceforge.net)
 flac		libFLAC		(http://flac.sourceforge.net)
 RTP		ortp		(http://www.linphone.org/ortp/)
 Effectv		effectv		(http://effectv.sourceforge.net)
+ffmpeg		ffmpeg		(http://ffmpeg.sourceforge.net)
 
 Plugins which use a BSD covered library are as follows:
 vorbisenc	libogg/libvorbis	(http://www.xiph.org/ogg/vorbis)
