@@ -31,12 +31,14 @@ EXPORTS
         gst_element_get_clock
         gst_element_provides_clock
         gst_element_requires_clock
+        gst_element_found_tags
         gst_plugin_feature_get_type
         gst_element_factory_create
         gst_structure_foreach
         gst_structure_get_name
         gst_caps_get_structure
         gst_caps_get_size
+        gst_caps_set_simple
         gst_caps_is_empty
         gst_caps_is_any
         gst_value_serialize
@@ -72,12 +74,16 @@ EXPORTS
         gst_xml_get_topelements
         gst_xml_parse_file
         gst_xml_new
+        gst_tag_list_new
+        gst_tag_list_add
         gst_tag_list_foreach
+        gst_tag_list_free
         gst_tag_get_nick
         gst_tag_list_get_value_index
         gst_tag_list_get_string_index
         gst_tag_get_type
         gst_tag_list_get_tag_size
+        gst_tag_list_add_values
         gst_registry_get_path_list      
         gst_registry_load
         gst_registry_save
@@ -93,12 +99,15 @@ EXPORTS
         gst_pad_pull
         gst_pad_send_event
         gst_event_new_seek
+        gst_event_new_tag
         gst_pad_query
         gst_event_new_size
         gst_element_class_set_details
         gst_element_class_add_pad_template
+        gst_element_class_get_pad_template
         gst_static_pad_template_get
         gst_element_add_pad
+        gst_element_remove_pad
         gst_pad_set_getcaps_function
         gst_pad_proxy_getcaps
         gst_pad_new
@@ -110,6 +119,7 @@ EXPORTS
         gst_pad_get_parent
         gst_buffer_get_type
         gst_data_ref
+        gst_data_copy
         gst_buffer_new_and_alloc
         gst_element_register
         gst_util_dump_mem
@@ -161,6 +171,7 @@ EXPORTS
         gst_object_ref
         gst_pad_call_chain_function
         gst_caps_intersect
+        gst_pad_template_new
         gst_pad_template_get_type
         gst_pad_template_get_caps
         gst_element_add_ghost_pad
@@ -188,11 +199,22 @@ EXPORTS
         gst_caps_new_simple
         gst_caps_is_fixed
         gst_caps_to_string
+        gst_caps_from_string
         gst_type_fourcc
+        gst_type_double_range
+        gst_type_int_range
         gst_structure_new
         gst_caps_new_full
         gst_caps_append
         gst_caps_append_structure
+        gst_structure_has_field
+        gst_structure_get_string
+        gst_structure_get_int
+        gst_structure_get_double
+        gst_structure_get_fourcc
+        gst_structure_set
+        gst_structure_set_value
+        gst_library_load
         gst_marshal_VOID__UINT_BOXED
         gst_marshal_BOOLEAN__POINTER
         gst_marshal_VOID__POINTER_OBJECT
