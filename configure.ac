@@ -448,6 +448,12 @@ GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
   AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
 ])
 
+dnl *** OS X audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_AUDIO, true)
+GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudiosrc osxaudiosink, [
+  AC_CHECK_HEADER(CoreAudio/CoreAudio.h, HAVE_OSX_AUDIO="yes", HAVE_OSX_AUDIO="no")
+])
+
 dnl *** QuickCam ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QCAM, true)
 GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
@@ -1793,6 +1799,7 @@ sys/cdrom/Makefile
 sys/dxr3/Makefile
 sys/glsink/Makefile
 sys/oss/Makefile
+sys/osxaudio/Makefile
 sys/qcam/Makefile
 sys/sunaudio/Makefile
 sys/v4l/Makefile
