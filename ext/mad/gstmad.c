@@ -289,6 +289,18 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
     g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
 		          FALSE, G_PARAM_READWRITE));
+
+  /* register tags */
+#define GST_TAG_LAYER    "layer"
+#define GST_TAG_MODE     "mode"
+#define GST_TAG_EMPHASIS "emphasis"
+
+  gst_tag_register (GST_TAG_LAYER, GST_TAG_FLAG_ENCODED, G_TYPE_UINT,
+                    "layer", "MPEG audio layer", NULL);
+  gst_tag_register (GST_TAG_MODE, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
+                    "mode", "MPEG audio channel mode", NULL);
+  gst_tag_register (GST_TAG_EMPHASIS, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
+                    "emphasis", "MPEG audio emphasis", NULL);
 }
 
 static void
@@ -828,6 +840,24 @@ G_STMT_START{							\
     mad->header.bitrate = header->bitrate;
   }
   mad->new_header = FALSE;
+
+  if (changed) {
+    GstTagList *list;
+    GEnumValue *mode;
+    GEnumValue *emphasis;
+
+    mode = g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_MODE), mad->header.mode);
+    emphasis = g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_EMPHASIS), mad->header.emphasis);
+    list = gst_tag_list_new ();
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+                      GST_TAG_LAYER, mad->header.layer,
+                      GST_TAG_MODE, mode->value_nick,
+                      GST_TAG_EMPHASIS, emphasis->value_nick,
+                      NULL);
+    gst_element_found_tags (GST_ELEMENT (mad), list);
+    gst_tag_list_free (list);
+  }
+
 
 #undef CHECK_HEADER
 

@@ -1,3 +1,8 @@
+2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/mad/gstmad.c: (gst_mad_class_init), (gst_mad_update_info):
+          report layer/mode/emphasis
+
 2004-03-06  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/mad/gstmad.c: (gst_mad_chain): fixed caps leak
