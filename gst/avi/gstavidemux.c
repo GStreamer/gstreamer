@@ -80,7 +80,10 @@ GST_PADTEMPLATE_FACTORY (src_video_templ,
       "format",  GST_PROPS_LIST (
 	           GST_PROPS_STRING ("strf_vids"),
 	           GST_PROPS_STRING ("strf_iavs")
-      		 )
+      		 ),
+      "width",   GST_PROPS_INT_RANGE (16, 4096),
+      "height",  GST_PROPS_INT_RANGE (16, 4096)
+
   ),
   GST_CAPS_NEW (
     "avidemux_src_video",
@@ -104,7 +107,9 @@ GST_PADTEMPLATE_FACTORY (src_video_templ,
       "format",  GST_PROPS_LIST (
                    GST_PROPS_STRING ("NTSC"),
                    GST_PROPS_STRING ("PAL")
-                 )
+                 ),
+      "width",   GST_PROPS_INT_RANGE (16, 4096),
+      "height",  GST_PROPS_INT_RANGE (16, 4096)
   )
 )
 
@@ -370,7 +375,7 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 			      "imp_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->imp_colors))
 			      ));
 
-  /* whoa, it doesn't fit, let's try some gstreamer-like mime-type caps */
+  /* let's try some gstreamer-like mime-type caps */
   switch (GUINT32_FROM_LE(strf->compression))
   {
     case GST_MAKE_FOURCC('I','4','2','0'):
@@ -404,7 +409,7 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 
   if (newcaps) capslist = gst_caps_append(capslist, newcaps);
 
-  gst_pad_try_set_caps(srcpad, newcaps);
+  gst_pad_try_set_caps(srcpad, capslist);
 
   avi_demux->video_pad[avi_demux->num_video_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
