@@ -1,5 +1,15 @@
 2004-11-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
+	(gst_alpha_set_property), (gst_alpha_sink_link),
+	(gst_alpha_set_ayuv), (gst_alpha_set_i420),
+	(gst_alpha_chroma_key_ayuv), (gst_alpha_chroma_key_i420),
+	(gst_alpha_init_params), (gst_alpha_chain):
+	Implement alpha functions for AYUV too, this increases
+	accuracy quite a bit.
+
+2004-11-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/ffmpegcolorspace/avcodec.h:
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt),

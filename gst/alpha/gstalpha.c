@@ -42,7 +42,7 @@ typedef struct _GstAlphaClass GstAlphaClass;
 
 typedef enum
 {
-  ALPHA_METHOD_ADD,
+  ALPHA_METHOD_SET,
   ALPHA_METHOD_GREEN,
   ALPHA_METHOD_BLUE,
   ALPHA_METHOD_CUSTOM,
@@ -64,6 +64,7 @@ struct _GstAlpha
   /* caps */
   gint in_width, in_height;
   gint out_width, out_height;
+  gboolean ayuv;
 
   gdouble alpha;
 
@@ -107,7 +108,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_METHOD ALPHA_METHOD_ADD
+#define DEFAULT_METHOD ALPHA_METHOD_SET
 #define DEFAULT_ALPHA 1.0
 #define DEFAULT_TARGET_R 0
 #define DEFAULT_TARGET_G 255
@@ -136,10 +137,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_alpha_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")
+        ";" GST_VIDEO_CAPS_YUV ("I420")
+    )
     );
 
 
@@ -168,7 +171,7 @@ gst_alpha_method_get_type (void)
 {
   static GType alpha_method_type = 0;
   static GEnumValue alpha_method[] = {
-    {ALPHA_METHOD_ADD, "0", "Add alpha channel"},
+    {ALPHA_METHOD_SET, "0", "Set/adjust alpha channel"},
     {ALPHA_METHOD_GREEN, "1", "Chroma Key green"},
     {ALPHA_METHOD_BLUE, "2", "Chroma Key blue"},
     {ALPHA_METHOD_CUSTOM, "3", "Chroma Key on target_r/g/b"},
@@ -390,9 +393,25 @@ gst_alpha_sink_link (GstPad * pad, const GstCaps * caps)
   GstAlpha *alpha;
   GstStructure *structure;
   gboolean ret;
+  guint32 fourcc;
 
   alpha = GST_ALPHA (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
+    switch (fourcc) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        alpha->ayuv = FALSE;
+        break;
+      case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
+        alpha->ayuv = TRUE;
+        break;
+      default:
+        return GST_PAD_LINK_REFUSED;
+    }
+  } else {
+    return GST_PAD_LINK_REFUSED;
+  }
 
   ret = gst_structure_get_int (structure, "width", &alpha->in_width);
   ret &= gst_structure_get_int (structure, "height", &alpha->in_height);
@@ -401,7 +420,37 @@ gst_alpha_sink_link (GstPad * pad, const GstCaps * caps)
 }
 
 static void
-gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
+gst_alpha_set_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
+    gdouble alpha)
+{
+  gint b_alpha = (gint) (alpha * 255);
+  gint i, j;
+  gint size;
+  gint stride;
+  gint wrap;
+
+  width = ROUND_UP_2 (width);
+  height = ROUND_UP_2 (height);
+
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+
+  wrap = stride - width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      *dest++ = (*src++ * b_alpha) >> 8;
+      *dest++ = *src++;
+      *dest++ = *src++;
+      *dest++ = *src++;
+    }
+    src += wrap;
+    dest += wrap;
+  }
+}
+
+static void
+gst_alpha_set_i420 (guint8 * src, guint8 * dest, gint width, gint height,
     gdouble alpha)
 {
   gint b_alpha = (gint) (alpha * 255);
@@ -450,18 +499,126 @@ gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
   }
 }
 
+static void
+gst_alpha_chroma_key_ayuv (gchar * src, gchar * dest, gint width, gint height,
+    GstAlpha * alpha)
+{
+  gint b_alpha;
+  guint8 *src1;
+  guint8 *dest1;
+  gint i, j;
+  gint x, z, u, v, y, a;
+  gint size;
+  gint stride;
+  gint wrap;
+  gint tmp, tmp1;
+  gint x1, y1;
+
+  width = ROUND_UP_2 (width);
+  height = ROUND_UP_2 (height);
+
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+
+  src1 = src;
+  dest1 = dest;
+
+  wrap = stride - width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      a = *src1++ * (alpha->alpha);
+      y = *src1++;
+      u = *src1++ - 128;
+      v = *src1++ - 128;
+
+      /* Convert foreground to XZ coords where X direction is defined by
+         the key color */
+      tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
+      x = CLAMP (tmp, -128, 127);
+      tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
+      z = CLAMP (tmp, -128, 127);
+
+      /* WARNING: accept angle should never be set greater than "somewhat less
+         than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
+         80 degrees should be enough if foreground is reasonable. If this seems
+         to be a problem, go to alternative ways of checking point position
+         (scalar product or line equations). This angle should not be too small
+         either to avoid infinite ctg (used to suppress foreground without use of
+         division) */
+
+      tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
+      tmp = MIN (tmp, 127);
+
+      if (abs (z) > tmp) {
+        /* keep foreground Kfg = 0 */
+        b_alpha = a;
+      } else {
+        /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
+           according to Kfg */
+        tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
+        tmp = CLAMP (tmp, -128, 127);
+        x1 = abs (tmp);
+        y1 = z;
+
+        tmp1 = x - x1;
+        tmp1 = MAX (tmp1, 0);
+        b_alpha = (((unsigned char) (tmp1) *
+                (unsigned short) (alpha->one_over_kc)) / 2);
+        b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+        b_alpha = (a * b_alpha) >> 8;
+
+        tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
+        tmp1 = MIN (tmp, 255);
+
+        tmp = y - tmp1;
+        y = MAX (tmp, 0);
+
+        /* Convert suppressed foreground back to CbCr */
+        tmp = ((char) (x1) * (short) (alpha->cb) -
+            (char) (y1) * (short) (alpha->cr)) >> 7;
+        u = CLAMP (tmp, -128, 127);
+
+        tmp = ((char) (x1) * (short) (alpha->cr) +
+            (char) (y1) * (short) (alpha->cb)) >> 7;
+        v = CLAMP (tmp, -128, 127);
+
+        /* Deal with noise. For now, a circle around the key color with
+           radius of noise_level treated as exact key color. Introduces
+           sharp transitions.
+         */
+        tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
+        tmp = MIN (tmp, 0xffff);
+
+        if (tmp < alpha->noise_level * alpha->noise_level) {
+          b_alpha = 0;
+        }
+      }
+
+      u += 128;
+      v += 128;
+
+      *dest1++ = b_alpha;
+      *dest1++ = y;
+      *dest1++ = u;
+      *dest1++ = v;
+    }
+    dest1 += wrap;
+    src1 += wrap;
+  }
+}
 
 /* based on http://www.cs.utah.edu/~michael/chroma/
  */
 static void
-gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
+gst_alpha_chroma_key_i420 (gchar * src, gchar * dest, gint width, gint height,
     GstAlpha * alpha)
 {
   gint b_alpha;
   guint8 *srcY1, *srcY2, *srcU, *srcV;
   guint8 *dest1, *dest2;
   gint i, j;
-  gint x, z, u, v, y11, y12, y21, y22;
+  gint x, z, u, v, y11, y12, y21, y22, a;
   gint size, size2;
   gint stride, stride2;
   gint wrap, wrap2, wrap3;
@@ -487,6 +644,8 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
   wrap = 2 * stride - 2 * (width / 2);
   wrap2 = stride2 - width / 2;
   wrap3 = 8 * width - 8 * (width / 2);
+
+  a = 255 * alpha->alpha;
 
   for (i = 0; i < height / 2; i++) {
     for (j = 0; j < width / 2; j++) {
@@ -531,6 +690,7 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
         b_alpha = (((unsigned char) (tmp1) *
                 (unsigned short) (alpha->one_over_kc)) / 2);
         b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+        b_alpha = (a * b_alpha) >> 8;
 
         tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
         tmp1 = MIN (tmp, 255);
@@ -682,21 +842,25 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
 
   switch (alpha->method) {
-    case ALPHA_METHOD_ADD:
-      gst_alpha_add (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha->alpha);
+    case ALPHA_METHOD_SET:
+      if (alpha->ayuv) {
+        gst_alpha_set_ayuv (GST_BUFFER_DATA (buffer),
+            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha->alpha);
+      } else {
+        gst_alpha_set_i420 (GST_BUFFER_DATA (buffer),
+            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha->alpha);
+      }
       break;
     case ALPHA_METHOD_GREEN:
-      gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
-      break;
     case ALPHA_METHOD_BLUE:
-      gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
-      break;
     case ALPHA_METHOD_CUSTOM:
-      gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
+      if (alpha->ayuv) {
+        gst_alpha_chroma_key_ayuv (GST_BUFFER_DATA (buffer),
+            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
+      } else {
+        gst_alpha_chroma_key_i420 (GST_BUFFER_DATA (buffer),
+            GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
+      }
       break;
     default:
       break;
