@@ -381,6 +381,11 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
     gst_buffer_unref (inbuf);
   }
 
+  /* try negotiating here if it isn't yet */
+  if (!gst_pad_is_negotiated (space->srcpad)) {
+    gst_pad_renegotiate (space->srcpad);
+  }
+
   gst_pad_push (space->srcpad, GST_DATA (outbuf));
 }
 
