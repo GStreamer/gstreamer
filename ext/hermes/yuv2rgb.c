@@ -201,6 +201,13 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
   return new;
 }
 
+void 
+gst_colorspace_converter_destroy (GstColorSpaceConverter *conv) 
+{
+  if (conv)
+    g_free (conv);
+}
+
 static void gst_colorspace_I420_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
 {
   int size;

@@ -541,6 +541,13 @@ gst_colorspace_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       space->pool = NULL;
       break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_colorspace_converter_destroy (space->converter);
+      space->converter = NULL;
+      space->disabled = TRUE;
+      space->type = GST_COLORSPACE_NONE;
+      space->sinkcaps = NULL;
+      break;
   }
 
   parent_class->change_state (element);
@@ -611,11 +618,4 @@ GstPluginDesc plugin_desc = {
   "colorspace",
   plugin_init
 };
-
-
-
-
-
-
-
 
