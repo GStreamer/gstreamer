@@ -1,5 +1,14 @@
 2005-03-29  Andy Wingo  <wingo@pobox.com>
 
+	* libs/gst/dataprotocol/Makefile.am: 
+	* libs/gst/dataprotocol/dataprotocol-test.c: Remove test, it's
+	the same as the one in check/gst-libs/gdp.c.
+
+	* po/, docs/gst/: Commit automatic changes to docs and po files.
+
+	* gst/elements/Makefile.am (libgstelements_la_LDFLAGS): Link to
+	the versioned libgstbase.
+
 	* check/Makefile.am: Depend on an unversioned gst-register, seems
 	to make autoconf happier.
 
