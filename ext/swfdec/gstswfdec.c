@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2002,2003> David A. Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,22 +45,28 @@ enum {
 };
 
 GST_PAD_TEMPLATE_FACTORY (video_template_factory,
-  "video_%02d",
+  "video_00",
   GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
+  GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "swfdec_src",
+    "swfdec_videosrc",
     "video/raw",
-      "format",    GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
-      "width",     GST_PROPS_INT_RANGE (16, 4096),
-      "height",    GST_PROPS_INT_RANGE (16, 4096)
+      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
+      "width",		GST_PROPS_INT_RANGE (16, 4096),
+      "height",		GST_PROPS_INT_RANGE (16, 4096),
+      "bpp",		GST_PROPS_INT (24),
+      "depth",		GST_PROPS_INT (24),
+      "endianness",	GST_PROPS_INT (G_BIG_ENDIAN),
+      "red_mask",	GST_PROPS_INT (0xff0000),
+      "green_mask",	GST_PROPS_INT (0x00ff00),
+      "blue_mask",	GST_PROPS_INT (0x0000ff)
   )
 );
 
 GST_PAD_TEMPLATE_FACTORY (audio_template_factory,
-  "audio_%02d",
+  "audio_00",
   GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
+  GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "swfdec_audiosrc",
     "audio/raw",
@@ -81,7 +88,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   GST_CAPS_NEW (
     "swfdec_sink",
     "application/x-shockwave-flash",
-      "format",		GST_PROPS_STRING("SWF")
+    NULL
   )
 );
 
@@ -94,11 +101,6 @@ static void	gst_swfdec_set_property	(GObject *object, guint prop_id,
 						 const GValue *value, GParamSpec *pspec);
 static void	gst_swfdec_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
-#if 0
-static GstPad *
-gst_swfdec_request_new_pad (GstElement *element, GstPadTemplate *templ,
-	const gchar *template);
-#endif
 
 #if 0
 static gboolean gst_swfdec_src_event       	(GstPad *pad, GstEvent *event);
@@ -113,15 +115,10 @@ static gboolean gst_swfdec_convert_src 	(GstPad *pad, GstFormat src_format, gint
 		        	 		 GstFormat *dest_format, gint64 *dest_value);
 #endif
 
-static GstElementStateReturn
-		gst_swfdec_change_state	(GstElement *element);
+static GstElementStateReturn gst_swfdec_change_state	(GstElement *element);
 
-#if 0
-static void	gst_swfdec_chain		(GstPad *pad, GstBuffer *buffer);
-#endif
 
 static GstElementClass *parent_class = NULL;
-/*static guint gst_swfdec_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_swfdec_get_type (void)
@@ -165,302 +162,40 @@ gst_swfdec_class_init(GstSwfdecClass *klass)
   gobject_class->dispose 	= gst_swfdec_dispose;
 
   gstelement_class->change_state = gst_swfdec_change_state;
-  //gstelement_class->request_new_pad = gst_swfdec_request_new_pad;
 }
 
-#if 0
-static void
-gst_swfdec_vo_frame_draw (vo_frame_t * frame)
+static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad, GstCaps *caps)
 {
-  gst_swfdec_vo_instance_t *_instance;
-  gst_swfdec_vo_frame_t *_frame;
   GstSwfdec *swfdec;
-  gint64 pts = -1;
+  GstCaps *c;
 
-  g_return_if_fail (frame != NULL);
-  g_return_if_fail (((gst_swfdec_vo_frame_t *)frame)->buffer != NULL);
+  swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
-  _frame = (gst_swfdec_vo_frame_t *)frame;
-  _instance = (gst_swfdec_vo_instance_t *)frame->instance;
+  c = GST_CAPS_NEW (
+    "swfdec_videosrc",
+    "video/raw",
+      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
+      "width",		GST_PROPS_INT_RANGE (16, 4096),
+      "height",		GST_PROPS_INT_RANGE (16, 4096),
+      "bpp",		GST_PROPS_INT (24),
+      "depth",		GST_PROPS_INT (24),
+      "endianness",	GST_PROPS_INT (G_BIG_ENDIAN),
+      "red_mask",	GST_PROPS_INT (0xff0000),
+      "green_mask",	GST_PROPS_INT (0x00ff00),
+      "blue_mask",	GST_PROPS_INT (0x0000ff)
+  );
 
-  swfdec = GST_SWFDEC (_instance->swfdec);
-
-
-  /* we have to be carefull here. we do swf_close in the READY state
-   * but it can send a few frames still. We have to make sure we are playing
-   * when we send frames. we do have to free those last frames though */
-  if (GST_STATE (GST_ELEMENT (swfdec)) != GST_STATE_PLAYING) {
-    gst_buffer_unref (_frame->buffer);
-    /* pretend we have sent the frame */
-    _frame->sent = TRUE;
-    return;
+  if(swfdec->height){
+    gst_caps_set(c,"height",GST_PROPS_INT(swfdec->height));
+    gst_caps_set(c,"width",GST_PROPS_INT(swfdec->width));
+    
+    /* FIXME: this feels like a hack or bug workaround */
+    GST_PROPS_FLAG_SET(c->properties,GST_PROPS_FIXED);
+    GST_CAPS_FLAG_SET(c,GST_CAPS_FIXED);
   }
 
-  if (swfdec->frame_rate_code != swfdec->decoder->frame_rate_code)
-  {
-    swfdec->frame_rate_code = swfdec->decoder->frame_rate_code;
-
-    g_object_notify (G_OBJECT (swfdec), "frame_rate");
-  }
-
-  pts = swfdec->next_time - 3 * (GST_SECOND / video_rates[swfdec->decoder->frame_rate_code]);
-
-  GST_BUFFER_TIMESTAMP (_frame->buffer) = pts;
-
-  GST_DEBUG (0, "out: %lld %d %lld", GST_BUFFER_TIMESTAMP (_frame->buffer),
-		  swfdec->decoder->frame_rate_code,
-                  (long long)(GST_SECOND / video_rates[swfdec->decoder->frame_rate_code]));
-
-  swfdec->next_time += (GST_SECOND / video_rates[swfdec->decoder->frame_rate_code]) + swfdec->adjust;
-
-  GST_BUFFER_FLAG_SET (_frame->buffer, GST_BUFFER_READONLY);
-  swfdec->frames_per_PTS++;
-  swfdec->first = FALSE;
-  _frame->sent = TRUE;
-  swfdec->total_frames++;
-  gst_pad_push (swfdec->videopad, _frame->buffer);
+  return c;
 }
-#endif
-
-#if 0
-static int
-gst_swfdec_setup (GstSwfdec *swfdec, int width, int height)
-{
-  g_return_val_if_fail (swfdec != NULL, -1);
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: setup w=%d h=%d", width, height);
-
-  swfdec->width = width;
-  swfdec->height = height;
-  swfdec->total_frames = 0;
-
-  gst_pad_try_set_caps (swfdec->videopad, 
-		    gst_caps_new (
-		      "swfdec_caps",
-		      "video/raw",
-		      gst_props_new (
-			"format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
-			  "width",  GST_PROPS_INT (width),
-			  "height", GST_PROPS_INT (height),
-			  NULL)));
-
-
-  return 0;
-}
-#endif
-
-
-#if 0
-static void
-gst_swfdec_close (GstSwfdec *swfdec)
-{
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: close");
-
-  /* FIXME */
-}
-#endif
-
-#if 0
-static vo_frame_t *
-gst_swfdec_vo_get_frame (vo_instance_t * instance, int flags)
-{
-  gst_swfdec_vo_instance_t * _instance;
-  gst_swfdec_vo_frame_t *frame;
-  size_t size0;
-  uint8_t *data = NULL;
-  GstSwfdec *swfdec;
-
-  g_return_val_if_fail (instance != NULL, NULL);
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: get_frame");
-
-  _instance = (gst_swfdec_vo_instance_t *)instance;
-
-  swfdec = _instance->swfdec;
-  
-  if (flags & VO_PREDICTION_FLAG) {
-    _instance->prediction_index ^= 1;
-    frame = &_instance->frames[_instance->prediction_index];
-  } else {
-    frame = &_instance->frames[2];
-  }
-
-  /* we are reusing this frame */
-  if (frame->buffer != NULL) {
-    /* if the frame wasn't sent, we have to unref twice */
-    if (!frame->sent)
-      gst_buffer_unref (frame->buffer);
-    gst_buffer_unref (frame->buffer);
-    frame->buffer = NULL;
-  }
-
-  size0 = swfdec->width * swfdec->height / 4;
-
-  if (swfdec->pool) {
-    frame->buffer = gst_buffer_new_from_pool (swfdec->pool, 0, 0);
-  } else {
-    size_t size = 6 * size0;
-    size_t offset;
-    GstBuffer *parent;
-
-    parent = gst_buffer_new ();
-
-    GST_BUFFER_SIZE(parent) = size + 0x10;
-    GST_BUFFER_DATA(parent) = data = g_new(uint8_t, size + 0x10);
-
-    offset = 0x10 - (((unsigned long)data) & 0xf);
-    frame->buffer = gst_buffer_create_sub(parent, offset, size);
-
-    gst_buffer_unref(parent);
-  }
-  data = GST_BUFFER_DATA(frame->buffer);
-
-  /* need ref=2						*/
-  /* 1 - unref when reusing this frame			*/
-  /* 2 - unref when other elements done with buffer	*/
-  gst_buffer_ref (frame->buffer);
-
-  frame->vo.base[0] = data;
-  frame->vo.base[1] = data + 4 * size0;
-  frame->vo.base[2] = data + 5 * size0;
-  /*printf("base[0]=%p\n", frame->vo.base[0]); */
-  frame->sent = FALSE;
-
-  return (vo_frame_t *)frame;
-}
-#endif
-
-#if 0
-static void
-gst_swfdec_vo_open (GstSwfdec *swfdec)
-{
-  gst_swfdec_vo_instance_t * instance;
-  gint i,j;
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: open");
-
-  instance = g_new (gst_swfdec_vo_instance_t, 1);
-  
-  instance->vo.setup = gst_swfdec_vo_setup;
-  instance->vo.close = gst_swfdec_vo_close;
-  instance->vo.get_frame = gst_swfdec_vo_get_frame;
-  instance->swfdec = swfdec;
-
-  for (i=0; i<NUM_FRAMES; i++) {
-    for (j=0; j<3; j++) {
-      instance->frames[j].vo.base[j] = NULL;
-    }
-    instance->frames[i].vo.copy = NULL;
-    instance->frames[i].vo.field = NULL;
-    instance->frames[i].vo.draw = gst_swfdec_vo_frame_draw;
-    instance->frames[i].vo.instance = (vo_instance_t *)instance;
-    instance->frames[i].buffer = NULL;
-  }
-
-  swfdec->vo = (vo_instance_t *) instance;
-}
-#endif
-
-#if 0
-static void
-gst_swfdec_vo_destroy (GstSwfdec *swfdec)
-{
-  gst_swfdec_vo_instance_t * instance;
-  gint i;
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: destroy");
-
-  instance = (gst_swfdec_vo_instance_t *) swfdec->vo;
-  
-  for (i=0; i<NUM_FRAMES; i++) {
-    if (instance->frames[i].buffer) {
-      if (!instance->frames[i].sent) {
-        gst_buffer_unref (instance->frames[i].buffer);
-      }
-      gst_buffer_unref (instance->frames[i].buffer);
-    } 
-  }
-
-  g_free (instance);
-  swfdec->vo = NULL;
-}
-#endif
-
-#if 0
-static GstPadLinkReturn
-gst_swfdec_connect(GstPad *pad, GstCaps *caps)
-{
-	return GST_PAD_LINK_DELAYED;
-}
-#endif
-
-#if 0
-static void
-src_unlinked(GstPad *srcpad, GstPad *sinkpad, GstSwfdec *plugin)
-{
-	GST_DEBUG(GST_CAT_PADS, "removing pad %s:%s",
-		GST_DEBUG_PAD_NAME(srcpad));
-	
-	gst_element_remove_pad(GST_ELEMENT(plugin), srcpad);
-
-	if(plugin->videopad == srcpad) plugin->videopad = NULL;
-	if(plugin->audiopad == srcpad) plugin->audiopad = NULL;
-}
-#endif
-
-#if 0
-static GstPad *
-gst_swfdec_request_new_pad (GstElement *element, GstPadTemplate *templ,
-	const gchar *template)
-{
-	gchar *name;
-	GstPad *srcpad;
-	GstSwfdec *plugin;
-
-	plugin = GST_SWFDEC(element);
-
-	g_return_val_if_fail(plugin != NULL, NULL);
-	g_return_val_if_fail(GST_IS_SWFDEC(plugin), NULL);
-
-	if(templ->direction != GST_PAD_SRC){
-		g_warning("swfdec: request new pad that is not SRC pad.\n");
-		return NULL;
-	}
-
-//printf("requesting pad %s %d\n",template,templ->name);
-#if 0
-	if(strcmp("audio", template) == 0){
-		g_print("swfdec adding pad audio_00\n");
-
-		srcpad = gst_pad_new_from_template(templ, "audio_00");
-		gst_element_add_pad(GST_ELEMENT(plugin), srcpad);
-
-		g_signal_connect(G_OBJECT(srcpad), "unlinked",
-			G_CALLBACK(src_unlinked), plugin);
-		gst_pad_set_link_function(srcpad, gst_swfdec_connect);
-		plugin->audiopad = srcpad;
-	}else if(strcmp("video", template) == 0){
-#endif
-	if(1){
-		g_print("swfdec adding pad video_00\n");
-
-		srcpad = gst_pad_new_from_template(templ, "video_00");
-		gst_element_add_pad(GST_ELEMENT(plugin), srcpad);
-
-		g_signal_connect(G_OBJECT(srcpad), "unlinked",
-			G_CALLBACK(src_unlinked), plugin);
-		gst_pad_set_link_function(srcpad, gst_swfdec_connect);
-		plugin->videopad = srcpad;
-	}else{
-		g_warning("swfdec: request new pad with bad template\n");
-		return NULL;
-	}
-
-	return srcpad;
-}
-#endif
-
-
 
 static void
 gst_swfdec_loop(GstElement *element)
@@ -475,53 +210,6 @@ gst_swfdec_loop(GstElement *element)
 	swfdec = GST_SWFDEC(element);
 
 	if(!swfdec->videopad){
-		swfdec->videopad =
-			gst_pad_new_from_template(
-				GST_PAD_TEMPLATE_GET(video_template_factory),
-				"video_00");
-  		gst_pad_set_query_function (swfdec->videopad,
-			GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
-		swfdec->audiopad =
-			gst_pad_new_from_template(
-				GST_PAD_TEMPLATE_GET(audio_template_factory),
-				"audio_00");
-  		gst_pad_set_query_function (swfdec->audiopad,
-			GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
-
-#if 0
-		gst_pad_try_set_caps(swfdec->videopad,
-			gst_pad_get_pad_template_caps(swfdec->videopad));
-#endif
-
-  gst_pad_try_set_caps (swfdec->videopad, 
-		    gst_caps_new (
-		      "swfdec_caps",
-		      "video/raw",
-		      gst_props_new (
-			"format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
-			  ///"width",  GST_PROPS_INT (640),
-			  //"height", GST_PROPS_INT (480),
-			  "rate", GST_PROPS_INT(12),
-			  NULL)));
-
-  gst_pad_try_set_caps (swfdec->audiopad, 
-		    gst_caps_new (
-		      "swfdec_caps",
-		      "audio/raw",
-			gst_props_new(
-			"format", GST_PROPS_STRING("int"),
-			"law", GST_PROPS_INT(0),
-			"endianness", GST_PROPS_INT(G_BYTE_ORDER),
-			"signed", GST_PROPS_BOOLEAN(TRUE),
-			"width", GST_PROPS_INT(16),
-			"depth", GST_PROPS_INT(16),
-		  	"rate", GST_PROPS_INT (44100),
-			"channels", GST_PROPS_INT (1),
-			NULL)));
-
-printf("adding pad\n");
-		gst_element_add_pad(element, swfdec->videopad);
-		gst_element_add_pad(element, swfdec->audiopad);
 	}
 
 	ret = swfdec_decoder_parse(swfdec->state);
@@ -551,59 +239,10 @@ printf("adding pad\n");
 			&swfdec->width, &swfdec->height);
 		swfdec_decoder_get_rate(swfdec->state, &swfdec->rate);
 		swfdec->interval = GST_SECOND / swfdec->rate;
-#if G_BYTE_ORDER == 4321
-#define RED_MASK 0xff0000
-#define GREEN_MASK 0x00ff00
-#define BLUE_MASK 0x0000ff
-#else
-#define RED_MASK 0x0000ff
-#define GREEN_MASK 0x00ff00
-#define BLUE_MASK 0xff0000
-#endif
-#if 1
+
+		gst_caps_debug(gst_swfdec_videosrc_getcaps(swfdec->videopad,NULL),"ack");
 		gst_pad_try_set_caps(swfdec->videopad,
-			gst_caps_new(
-				"swfdec_caps",
-				"video/raw",
-				gst_props_new(
-				"format", GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-				"width", GST_PROPS_INT(swfdec->width),
-				"height", GST_PROPS_INT(swfdec->height),
-			  	"bpp", GST_PROPS_INT (24),
-				  "depth", GST_PROPS_INT (24),
-				  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-				  "red_mask", GST_PROPS_INT (RED_MASK),
-				  "green_mask", GST_PROPS_INT (GREEN_MASK),
-				  "blue_mask", GST_PROPS_INT (BLUE_MASK),
-				NULL)));
-#else
-		gst_pad_try_set_caps(swfdec->videopad,
-			gst_caps_new(
-				"swfdec_caps",
-				"video/raw",
-				gst_props_new(
-				"format", GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-				"width", GST_PROPS_INT(swfdec->width),
-				"height", GST_PROPS_INT(swfdec->height),
-			  	"bpp", GST_PROPS_INT (16),
-				  "depth", GST_PROPS_INT (16),
-				  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-				NULL)));
-#endif
-		gst_pad_try_set_caps(swfdec->audiopad,
-			gst_caps_new(
-				"swfdec_caps",
-				"audio/raw",
-				gst_props_new(
-				"format", GST_PROPS_STRING("int"),
-				"law", GST_PROPS_INT(0),
-				"endianness", GST_PROPS_INT(G_BYTE_ORDER),
-				"signed", GST_PROPS_BOOLEAN(TRUE),
-				"width", GST_PROPS_INT(16),
-				"depth", GST_PROPS_INT(16),
-			  	"rate", GST_PROPS_INT (44100),
-				"channels", GST_PROPS_INT (1),
-				NULL)));
+			gst_swfdec_videosrc_getcaps(swfdec->videopad,NULL));
 		return;
 	}
 
@@ -653,23 +292,23 @@ gst_swfdec_init (GstSwfdec *swfdec)
   swfdec->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->sinkpad);
-  //gst_pad_set_chain_function (swfdec->sinkpad, gst_swfdec_chain);
-  //gst_pad_set_convert_function (swfdec->sinkpad, gst_swfdec_convert_sink);
 
-#if 0
-  swfdec->videopad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (video_template_factory), "video_00");
-  gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->videopad);
-#endif
-  //gst_pad_set_event_function (swfdec->videopad, GST_DEBUG_FUNCPTR (gst_swfdec_src_event));
-  //gst_pad_set_query_function (swfdec->videopad, GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
-  //gst_pad_set_convert_function (swfdec->videopad, gst_swfdec_convert_src);
-  
-#if 0
-  swfdec->audiopad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (audio_template_factory), "audio_00");
-  gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->audiopad);
-#endif
+  swfdec->videopad = gst_pad_new_from_template(
+		GST_PAD_TEMPLATE_GET(video_template_factory),
+		"video_00");
+  gst_pad_set_query_function (swfdec->videopad,
+		GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
+  gst_pad_set_getcaps_function (swfdec->videopad,
+		GST_DEBUG_FUNCPTR (gst_swfdec_videosrc_getcaps));
+  gst_element_add_pad(GST_ELEMENT(swfdec), swfdec->videopad);
+
+  swfdec->audiopad = gst_pad_new_from_template(
+		GST_PAD_TEMPLATE_GET(audio_template_factory),
+		"audio_00");
+  gst_pad_set_query_function (swfdec->audiopad,
+		GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
+
+  gst_element_add_pad(GST_ELEMENT(swfdec), swfdec->audiopad);
   
   gst_element_set_loop_function(GST_ELEMENT(swfdec), gst_swfdec_loop);
 
@@ -692,66 +331,6 @@ gst_swfdec_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
-
-#if 0
-static void
-gst_swfdec_chain (GstPad *pad, GstBuffer *buf)
-{
-  GstSwfdec *swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
-  guint32 size;
-  guchar *data;
-  gint ret;
-  gint64 pts;
-
-  GST_DEBUG (0, "SWFDEC: chain called");
-
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-      {
-	//gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-	//swfdec->decoder->is_sequence_needed = 1;
-	GST_DEBUG (GST_CAT_EVENT, "swfdec: discont\n"); 
-        swfdec->first = TRUE;
-        swfdec->timestamp = 0;
-        gst_pad_event_default (pad, event);
-	return;
-      }
-      case GST_EVENT_EOS:
-        if (!swfdec->closed) {
-          /* close flushes the last few frames */
-          //swf_close (swfdec->state); 
-	  swfdec->closed = TRUE;
-        }
-      default:
-        gst_pad_event_default (pad, event);
-	return;
-    }
-  }
-
-  size = GST_BUFFER_SIZE (buf);
-  data = GST_BUFFER_DATA (buf);
-  pts = GST_BUFFER_TIMESTAMP (buf);
-
-  GST_DEBUG (GST_CAT_CLOCK, "swfdec: pts %llu\n", pts);
-
-  swfdec->timestamp += swfdec->interval;
-
-/* fprintf(stderr, "SWFDEC: in timestamp=%llu\n",GST_BUFFER_TIMESTAMP(buf)); */
-/* fprintf(stderr, "SWFDEC: have buffer of %d bytes\n",size);		*/
-  ret = swfdec_decoder_addbits(swfdec->state, data, size);
-
-  if(ret==SWF_IMAGE){
-
-  }
-
-/*fprintf(stderr, "SWFDEC: decoded %d frames\n", num_frames);*/
-
-  gst_buffer_unref(buf);
-}
-#endif
 
 #if 0
 static gboolean
