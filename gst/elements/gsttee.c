@@ -198,7 +198,7 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
     peercaps = gst_pad_get_caps (peer);
     newcaps = gst_caps_intersect (caps, peercaps);
     gst_caps_unref (caps);
-    gst_caps_unref (peercaps);
+    gst_caps_sink (peercaps);
     caps = newcaps;
   }
 
