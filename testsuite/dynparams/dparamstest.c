@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <libs/control/gstcontrol.h>
+#include <gst/control/control.h>
 
 #define GST_TYPE_DPTEST  		(gst_dptest_get_type())
 #define GST_DPTEST(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DPTEST,GstDpTest))
