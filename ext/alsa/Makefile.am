@@ -11,4 +11,4 @@ libgstalsa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstalsa.h
 
-EXTRA_DIST = README $(man_MANS)
+EXTRA_DIST = README
