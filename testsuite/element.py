@@ -33,20 +33,48 @@ class FakeSinkTest(ElementTest):
     def setUp(self):
         self.element = gst.Element('fakesink', 'sink')
 
-    def testStateError(self):
-        self.element.set_property('state-error',
-                                  self.FAKESINK_STATE_ERROR_NULL_READY)
+    def checkError(self, old_state, state, name):
+        assert self.element.get_state() == gst.STATE_NULL
+        assert self.element.set_state(old_state)
+        assert self.element.get_state() == old_state
+        
+        self.element.set_property('state-error', name)
         def error_cb(element, source, error, debug):
             assert isinstance(element, gst.Element)
             assert element == self.element
             assert isinstance(source, gst.Element)
             assert source == self.element
             assert isinstance(error, gst.GError)
-        
+
         self.element.connect('error', error_cb)
-        common.disable_stderr()
-        self.element.set_state(gst.STATE_READY)
-        common.enable_stderr()
+        error_message = common.run_silent(self.element.set_state, state)
+        
+        assert error_message.find('ERROR') != -1
+        self.element.get_state() == old_state, 'state changed'
+
+    def testStateErrorNullReady(self):
+        self.checkError(gst.STATE_NULL, gst.STATE_READY,
+                        self.FAKESINK_STATE_ERROR_NULL_READY)
+        
+    def testStateErrorReadyPaused(self):
+        self.checkError(gst.STATE_READY, gst.STATE_PAUSED,
+                        self.FAKESINK_STATE_ERROR_READY_PAUSED)
+        
+    def testStateErrorPausedPlaying(self):
+        self.checkError(gst.STATE_PAUSED, gst.STATE_PLAYING,
+                        self.FAKESINK_STATE_ERROR_PAUSED_PLAYING)        
+
+    def testStateErrorPlayingPaused(self):
+        self.checkError(gst.STATE_PLAYING, gst.STATE_PAUSED,
+                        self.FAKESINK_STATE_ERROR_PLAYING_PAUSED)
+        
+    def testStateErrorPausedReady(self):
+        self.checkError(gst.STATE_PAUSED, gst.STATE_READY,
+                        self.FAKESINK_STATE_ERROR_PAUSED_READY)
+
+    def testStateErrorReadyNull(self):
+        self.checkError(gst.STATE_READY, gst.STATE_NULL,
+                        self.FAKESINK_STATE_ERROR_READY_NULL)
         
 class NonExistentTest(ElementTest):
     name = 'this-element-does-not-exist'

@@ -47,3 +47,16 @@ def enable_stderr():
     _stderr.close()
     os.remove('/tmp/stderr')
     return data
+
+def run_silent(function, *args, **kwargs):
+   disable_stderr()
+
+   try:
+      function(*args, **kwargs)
+   except Exception, exc:
+      enable_stderr()
+      raise exc
+   
+   output = enable_stderr()
+
+   return output
