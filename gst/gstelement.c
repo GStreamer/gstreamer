@@ -2269,7 +2269,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
 	             gst_element_state_get_name (curpending),
 	             gst_element_state_get_name (GST_STATE (element)),
 	             gst_element_state_get_name (GST_STATE_PENDING (element)));
-	  return GST_STATE_FAILURE;
+	  return_val = GST_STATE_FAILURE;
+          goto exit;
 	}
         break;
       default:
@@ -2278,6 +2279,11 @@ gst_element_set_state (GstElement *element, GstElementState state)
     }
   }
 exit:
+
+  /* signal the state change in case somebody is waiting for us */
+  g_mutex_lock (element->state_mutex);
+  g_cond_signal (element->state_cond);
+  g_mutex_unlock (element->state_mutex);
 
   return return_val;
 }
@@ -2459,11 +2465,6 @@ gst_element_change_state (GstElement *element)
     gst_bin_child_state_change (GST_BIN (parent), old_state, 
 	                        GST_STATE (element), element);
   }
-
-  /* signal the state change in case somebody is waiting for us */
-  g_mutex_lock (element->state_mutex);
-  g_cond_signal (element->state_cond);
-  g_mutex_unlock (element->state_mutex);
 
   return GST_STATE_SUCCESS;
 

@@ -363,6 +363,7 @@ gst_thread_catch (GstThread *thread)
   }
   g_assert (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING));
 }
+
 static void
 gst_thread_release (GstThread *thread)
 {
@@ -371,6 +372,7 @@ gst_thread_release (GstThread *thread)
     g_mutex_unlock (thread->lock);
   }
 }
+
 static GstElementStateReturn
 gst_thread_change_state (GstElement *element)
 {
@@ -493,7 +495,7 @@ static void
 gst_thread_child_state_change (GstBin *bin, GstElementState oldstate, 
 			       GstElementState newstate, GstElement *element)
 {
-  GST_DEBUG (GST_CAT_THREAD, "%s (from thread %s) child %s changed state from %s to %s\n",
+  GST_DEBUG (GST_CAT_THREAD, "%s (from thread %s) child %s changed state from %s to %s",
               GST_ELEMENT_NAME (bin), 
               gst_thread_get_current() ? GST_ELEMENT_NAME (gst_thread_get_current()) : "(none)", 
               GST_ELEMENT_NAME (element), gst_element_state_get_name (oldstate),
@@ -535,7 +537,7 @@ gst_thread_main_loop (void *arg)
     if (GST_STATE (thread) == GST_STATE_PLAYING) {
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       status = TRUE;
-      GST_DEBUG (GST_CAT_THREAD, "%s starts iterating\n", GST_ELEMENT_NAME (thread));
+      GST_DEBUG (GST_CAT_THREAD, "%s starts iterating", GST_ELEMENT_NAME (thread));
       while (status && GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
         g_mutex_unlock (thread->lock);
         status = gst_bin_iterate (GST_BIN (thread));
@@ -549,7 +551,7 @@ gst_thread_main_loop (void *arg)
     }
     if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING))
       break;
-    GST_DEBUG (GST_CAT_THREAD, "%s was caught\n", GST_ELEMENT_NAME (thread));
+    GST_DEBUG (GST_CAT_THREAD, "%s was caught", GST_ELEMENT_NAME (thread));
     g_cond_signal (thread->cond);
     g_cond_wait (thread->cond, thread->lock);
   }
