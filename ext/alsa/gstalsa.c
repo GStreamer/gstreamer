@@ -352,7 +352,8 @@ gst_alsa_class_probe_devices (GstAlsaClass *klass,
           res == -EBUSY) {
         klass->devices = g_list_append (klass->devices, dev);
 
-        snd_pcm_close (pcm);
+	if (res != -EBUSY)
+          snd_pcm_close (pcm);
       } else {
         g_free (dev);
       }
