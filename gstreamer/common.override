@@ -369,3 +369,39 @@ _wrap_gst_version(void)
 
 	return Py_BuildValue("(iii)", major, minor, micro);
 }
+%%
+override gst_bin_add_many args
+static PyObject *
+_wrap_gst_bin_add_many(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    PyGObject *element;
+    int i;
+    int len;
+
+    len = PyList_Size(args);
+    if (len == 0)
+	{
+	    PyErr_SetString(PyExc_TypeError, "GstBin.add requires at least one argument");
+	    return NULL;
+	}
+       
+    
+    for (i = 0; i < len; i++)
+	{
+	    element = (PyGObject*)PyList_GetItem(args, i);
+	    if (!pygobject_check(element, &PyGstElement_Type))
+		{
+		    PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
+		    return NULL;
+		}
+	}
+	
+    for (i = 0; i < len; i++)
+	{
+	    element = (PyGObject*)PyList_GetItem(args, i);
+	    gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj));
+	}
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}

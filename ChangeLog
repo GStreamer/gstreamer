@@ -1,5 +1,21 @@
 2004-02-23  Johan Dahlin  <johan@gnome.org>
 
+	* gstreamer/gstreamer.defs (element_link_many): This is function
+	and not a method, despite popular belief
+	(gst_element_factory_make): Make it the constructor of GstElement,
+	so we can avoid dirty hacks.
+
+	* gstreamer/gstreamer.override (_wrap_gst_element_link_many): Wrap
+	(_wrap_gst_element_link_many): Wrap
+
+	* gstreamer/common.defs: 
+	* gstreamer/common.override: 	
+	* gstreamer/Makefile.am: Beginning of reorganization, to include
+	gstreamer.defs and override (eg, not auto generate them)
+
+	* examples/gstreamer/cp.py: Prettify and pythonify. Will do the
+	other examples later
+	
 	* gstreamer/gstreamer.py: Backwards compatibility module
 
 	* gstreamer/gstreamermodule.c:

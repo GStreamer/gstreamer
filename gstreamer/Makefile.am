@@ -42,26 +42,17 @@ _gstmodule_la_SOURCES = \
 _gstmodule_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
 _gstmodule_la_LIBADD = $(GST_LIBS)
 _gstmodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gst
-nodist__gstmodule_la_SOURCES = gstreamer.c
+nodist__gstmodule_la_SOURCES = $(MODULE).c
 
-CLEANFILES = $(MODULE).c h2def.defs $(MODULE).defs $(MODULE).override
-EXTRA_DIST = $(GST_OVERRIDES) $(GST_DEFS) $(GST_CODE) arg-types.py
+CLEANFILES = $(MODULE).c
+EXTRA_DIST = $(MODULE).defs $(GST_OVERRIDES) $(GST_DEFS) $(GST_CODE) arg-types.py
 
 GST_EXCLUDE_INCLUDES=\
 	$(GST_INCLUDEDIR)/gst/gstatomic_impl.h \
 	$(GST_INCLUDEDIR)/gst/gstcompat.h
 GST_INCLUDES=$(filter-out $(GST_EXCLUDE_INCLUDES),$(wildcard $(GST_INCLUDEDIR)/gst/*.h))
 
-gstreamer.override: common.override $(GST_MAJORMINOR).override
-	cat $+ > $@
-
-h2def.defs: $(GST_INCLUDES)
-	$(PYTHON) $(PYGTK_H2DEF) $(GST_INCLUDES) > $@
-
-gstreamer.defs: h2def.defs common.defs $(GST_MAJORMINOR).defs
-	cat $+ > $@
-
-gstreamer.c: $(MODULE).defs arg-types.py $(MODULE).override
+gstreamer.c: $(srcdir)/$(MODULE).defs $(srcdir)/arg-types.py $(srcdir)/$(MODULE).override
 	$(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \
 		--override $(srcdir)/$(MODULE).override \

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 #
 # gst-python
-# Copyright (C) 2002 David I. Lehn
+# Copyright (C) 2002 David I. Lehn <dlehn@users.sourceforge.net>
+#               2004 Johan Dahlin  <johan@gnome.org>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -22,63 +23,45 @@
 #
 
 import sys
-from gstreamer import *
-from gobject import GObject
+import gst
 
-def update(sender, *args):
-   print sender.get_name(), args
-
-def filter(filters):
+def filter(input, output):
    "A GStreamer copy pipeline which can add arbitrary filters"
 
-   if len(sys.argv) != 3:
+   # create a new bin to hold the elements
+   bin = gst.Pipeline('pipeline')
+
+   filesrc = gst.Element('filesrc', 'source');
+   filesrc.set_property('location', input)
+
+   stats = gst.Element('statistics', 'stats');
+   stats.set_property('silent', False)
+   stats.set_property('buffer_update_freq', True)
+   stats.set_property('update_on_eos', True)
+   
+   filesink = gst.Element('filesink', 'sink')
+   filesink.set_property('location', output)
+
+   bin.add_many(filesrc, stats, filesink)
+   gst.element_link_many(filesrc, stats, filesink)
+
+   # start playing
+   bin.set_state(gst.STATE_PLAYING);
+
+   while bin.iterate():
+      pass
+
+   # stop the bin
+   bin.set_state(gst.STATE_NULL)
+
+def main(args):
+   "A GStreamer based cp(1) with stats"
+
+   if len(args) != 3:
       print 'usage: %s source dest' % (sys.argv[0])
       return -1
 
-   # create a new bin to hold the elements
-   bin = Pipeline('pipeline')
-
-   filesrc = Element('filesrc', 'source');
-   filesrc.set_property('location', sys.argv[1])
-
-   filesink = Element('filesink', 'sink')
-   filesink.set_property('location', sys.argv[2])
-
-   elements = [filesrc] + filters + [filesink]
-   #  add objects to the main pipeline
-   for e in elements: 
-      bin.add(e)
-
-   # link the elements
-   previous = None
-   for e in elements:
-      if previous:
-         previous.link(e)
-      previous = e
-
-   # start playing
-   bin.set_state(STATE_PLAYING);
-
-   while bin.iterate(): pass
-
-   # stop the bin
-   bin.set_state(STATE_NULL)
-
-   return 0
-
-def main():
-   "A GStreamer based cp(1) with stats"
-   #gst_info_set_categories(-1)
-   #gst_debug_set_categories(-1)
-
-   stats = Element ('statistics', 'stats');
-   stats.set_property('silent', 0)
-   stats.set_property('buffer_update_freq', 1)
-   stats.set_property('update_on_eos', 1)
-   #stats.connect('update', update)
-
-   return filter([stats])
+   return filter(args[1], args[2])
 
 if __name__ == '__main__':
-   ret = main()
-   sys.exit (ret)
+   sys.exit(main(sys.argv))

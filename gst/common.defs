@@ -1,3 +1,4 @@
+;; -*- scheme -*-
 ;;
 ;; Boxed types
 ;;
@@ -67,17 +68,4 @@
   )
 )
 
-;;
-;; Element constructor override; uses a nonexistant make_element
-;; which is defined in gstreamer.overrides
-;;
 
-(define-function gst_element_factory_make_element
-  (is-constructor-of "GstElement")
-  (c-name "gst_element_factory_make_element")
-  (return-type "GstElement*")
-  (parameters
-    '("const-gchar*" "elementname")
-    '("const-gchar*" "name")
-  )
-)
