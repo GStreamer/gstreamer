@@ -373,7 +373,8 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
 {
   GstAudioConvert *this;
   GstPad *otherpad;
-  GstAudioConvertCaps ac_caps, other_ac_caps;
+  GstAudioConvertCaps ac_caps = { 0 }, other_ac_caps = {
+  0};
   GstCaps *othercaps;
   guint i;
   GstPadLinkReturn ret;
