@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/control/control.h>
+
+#define ZERO(mem) memset(&mem, 0, sizeof(mem))
 
 static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
   gtk_main_quit();
@@ -10,31 +13,30 @@ static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
 }
 
 static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
-  GValue **point;
+  GValue *set_val;
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
-  point = GST_DPARAM_GET_POINT(dparam, 0LL);
+  set_val = g_object_get_data(G_OBJECT(dparam), "set_val");
+  g_return_if_fail(set_val != NULL);
+  g_value_set_float(set_val, exp(adj->value));
   
-  GST_DPARAM_LOCK(dparam);
-  g_print("setting value from %f to %f\n", g_value_get_float(point[0]), (gfloat)exp(adj->value));  
-  g_value_set_float(point[0], (gfloat)exp(adj->value));
-  GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
-  GST_DPARAM_UNLOCK(dparam);
+  g_print("setting value to %f\n", g_value_get_float(set_val));  
+  g_object_set_property(G_OBJECT(dparam), "value_float", set_val);
 }
 
 static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
-  GValue **point;
+  GValue *set_val;
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
-  point = GST_DPARAM_GET_POINT(dparam, 0LL);
+  set_val = g_object_get_data(G_OBJECT(dparam), "set_val");
+  g_return_if_fail(set_val != NULL);
+  g_value_set_float(set_val, adj->value);
   
-  GST_DPARAM_LOCK(dparam);
-  g_print("setting value from %f to %f\n", g_value_get_float(point[0]), adj->value);  
-  g_value_set_float(point[0], adj->value);
-  GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
-  GST_DPARAM_UNLOCK(dparam);
+  g_print("setting value to %f\n", adj->value);  
+  g_object_set_property(G_OBJECT(dparam), "value_float", set_val);
+
 }
 
 
@@ -50,9 +52,8 @@ int main(int argc,char *argv[]) {
   GstDParamManager *dpman;
   GstDParam *volume;
   GstDParam *freq;
-  GstDParamSpec *spec;
-  
-  GValue **vals;
+  GParamSpecFloat *spec;
+  GValue *set_val, temp_val;
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
@@ -72,8 +73,27 @@ int main(int argc,char *argv[]) {
  
   dpman = gst_dpman_get_manager (sinesrc);
 
-  freq = gst_dparam_smooth_new(G_TYPE_FLOAT);
-  vals = GST_DPARAM_GET_POINT(freq, 0LL);
+  freq = gst_dpsmooth_new(G_TYPE_FLOAT);
+  set_val = g_new0(GValue,1);
+  g_value_init(set_val, G_TYPE_FLOAT);
+  g_object_set_data(G_OBJECT(freq), "set_val", set_val);
+  
+  ZERO(temp_val);
+  g_value_init(&temp_val, G_TYPE_INT64);
+  g_value_set_int64(&temp_val, 2000000LL);
+  g_object_set_property(G_OBJECT(freq), "update_period", &temp_val);
+
+  ZERO(temp_val);
+  g_value_init(&temp_val, G_TYPE_FLOAT);
+  g_value_set_float(&temp_val, 0.693);
+  g_object_set_property(G_OBJECT(freq), "slope_delta_float", &temp_val);
+
+  ZERO(temp_val);
+  g_value_init(&temp_val, G_TYPE_INT64);
+  g_value_set_int64(&temp_val, 50000000LL);
+  g_object_set_property(G_OBJECT(freq), "slope_time", &temp_val);
+  
+/*  vals = GST_DPARAM_GET_POINT(freq, 0LL);
   
   g_value_set_float(vals[0], 10.0);
 
@@ -86,9 +106,13 @@ int main(int argc,char *argv[]) {
   
   // set the default update period to 0.5ms, or 2000Hz
   GST_DPARAM_DEFAULT_UPDATE_PERIOD(freq) = 2000000LL;
+  */
+  volume = gst_dparam_new(G_TYPE_FLOAT);
+  set_val = g_new0(GValue,1);
+  g_value_init(set_val, G_TYPE_FLOAT);
+  g_object_set_data(G_OBJECT(volume), "set_val", set_val);
   
-  volume = gst_dparam_smooth_new(G_TYPE_FLOAT);
-  vals = GST_DPARAM_GET_POINT(volume, 0LL);
+/*  vals = GST_DPARAM_GET_POINT(volume, 0LL);
   
   // this defines the maximum slope that this
   // param can change.  This says that in 10ms
@@ -98,7 +122,7 @@ int main(int argc,char *argv[]) {
   
   // set the default update period to 0.5ms, or 2000Hz
   GST_DPARAM_DEFAULT_UPDATE_PERIOD(volume) = 2000000LL;
-  
+  */
   g_assert(gst_dpman_attach_dparam (dpman, "volume", volume));
   g_assert(gst_dpman_attach_dparam (dpman, "freq", freq));
   
@@ -111,18 +135,20 @@ int main(int argc,char *argv[]) {
   hbox = gtk_hbox_new(TRUE,0);
   gtk_container_add(GTK_CONTAINER(window),hbox);
 
-  spec = gst_dpman_get_dparam_spec (dpman, "volume");
-  volume_adj = (GtkAdjustment*)gtk_adjustment_new(g_value_get_float(spec->default_val), 
-                                                  g_value_get_float(spec->min_val),
-                                                  g_value_get_float(spec->max_val), 0.1, 0.01, 0.01);
+  spec = (GParamSpecFloat*)gst_dpman_get_param_spec (dpman, "volume");
+  volume_adj = (GtkAdjustment*)gtk_adjustment_new(spec->default_value, 
+                                                  spec->minimum,
+                                                  spec->maximum, 0.1, 0.01, 0.01);
   volume_slider = gtk_vscale_new(volume_adj);
   gtk_scale_set_digits(GTK_SCALE(volume_slider), 2);
   gtk_box_pack_start(GTK_BOX(hbox),volume_slider,TRUE,TRUE,0);
 
-  spec = gst_dpman_get_dparam_spec (dpman, "freq");
-  freq_adj = (GtkAdjustment*)gtk_adjustment_new((gfloat)log(g_value_get_float(spec->default_val)), 
-                                                (gfloat)log(g_value_get_float(spec->min_val)),
-                                                (gfloat)log(g_value_get_float(spec->max_val)), 0.1, 0.01, 0.01);
+  spec = (GParamSpecFloat*)gst_dpman_get_param_spec (dpman, "freq");
+  freq_adj = (GtkAdjustment*)gtk_adjustment_new((gfloat)log(spec->default_value), 
+                                                (gfloat)log(spec->minimum),
+                                                (gfloat)log(spec->maximum), 0.1, 0.01, 0.01);
+
+
   freq_slider = gtk_vscale_new(freq_adj);
   gtk_scale_set_digits(GTK_SCALE(freq_slider), 2);
   gtk_box_pack_start(GTK_BOX(hbox),freq_slider,TRUE,TRUE,0);

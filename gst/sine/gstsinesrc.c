@@ -76,7 +76,6 @@ GST_PADTEMPLATE_FACTORY (sinesrc_src_factory,
 
 static void 			gst_sinesrc_class_init		(GstSineSrcClass *klass);
 static void 			gst_sinesrc_init		(GstSineSrc *src);
-static void 			gst_sinesrc_sinkconnect		(GstPad *pad, GstCaps *caps); 
 static void 			gst_sinesrc_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
 static void 			gst_sinesrc_get_property	(GObject *object, guint prop_id, 
@@ -157,8 +156,7 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
 static void 
 gst_sinesrc_init (GstSineSrc *src) 
 {
-  GstDParamSpec *spec;
-  
+ 
   src->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
@@ -178,23 +176,25 @@ gst_sinesrc_init (GstSineSrc *src)
   src->seq = 0;
 
   src->dpman = gst_dpman_new ("sinesrc_dpman", GST_ELEMENT(src));
-  
-  gst_dpman_add_required_dparam_callback (src->dpman, "freq", G_TYPE_FLOAT, gst_sinesrc_update_freq, src);
-  spec = gst_dpman_get_dparam_spec (src->dpman, "freq");
-  g_value_set_float(spec->min_val, 10.0);
-  g_value_set_float(spec->max_val, 10000.0);
-  g_value_set_float(spec->default_val, 350.0);
-  spec->unit_name = "frequency";
-  spec->is_log = TRUE;
 
-  gst_dpman_add_required_dparam_direct (src->dpman, "volume", G_TYPE_FLOAT, &(src->volume));
-  spec = gst_dpman_get_dparam_spec (src->dpman, "volume");
-  g_value_set_float(spec->min_val, 0.0);
-  g_value_set_float(spec->max_val, 1.0);
-  g_value_set_float(spec->default_val, 0.8);
-  spec->unit_name = "scalar";
+  gst_dpman_add_required_dparam_callback (
+    src->dpman, 
+    g_param_spec_float("freq","Frequency (Hz)","Frequency of the tone",
+                       10.0, 10000.0, 350.0, G_PARAM_READWRITE),
+    TRUE,
+    FALSE,
+    gst_sinesrc_update_freq, 
+    src
+  );
   
-  src->volume = 0.0;
+  gst_dpman_add_required_dparam_direct (
+    src->dpman, 
+    g_param_spec_float("volume","Volume","Volume of the tone",
+                       0.0, 1.0, 0.8, G_PARAM_READWRITE),
+    FALSE,
+    FALSE,
+    &(src->volume)
+  );
   
   gst_dpman_set_rate_change_pad(src->dpman, src->srcpad);
   
