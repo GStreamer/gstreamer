@@ -568,6 +568,11 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
+dnl Check for flac
+AC_MSG_CHECKING(FLAC library)
+AC_CHECK_LIB(FLAC, FLAC__stream_decoder_new, HAVE_FLAC=yes, HAVE_FLAC=no, -lm)
+AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLAC=no)
+
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
