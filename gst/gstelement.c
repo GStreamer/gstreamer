@@ -1592,14 +1592,21 @@ gst_element_disconnect (GstElement *src, GstElement *dest)
   g_return_if_fail (GST_IS_ELEMENT(src));
   g_return_if_fail (GST_IS_ELEMENT(dest));
 
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "disconnecting \"%s\" and \"%s\"", GST_ELEMENT_NAME (src),
+		  GST_ELEMENT_NAME (dest));
+
   srcpads = gst_element_get_pad_list (src);
 
   while (srcpads) {
     pad = GST_PAD_CAST (srcpads->data);
     
-    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
-      if (GST_OBJECT_PARENT (GST_PAD_PEER (pad)) == (GstObject*) dest)
-        gst_pad_disconnect (pad, GST_PAD_PEER (pad));
+    if (GST_IS_REAL_PAD (pad) && GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+      GstPad *peerpad = GST_PAD_PEER (pad);
+
+      if (peerpad && (GST_OBJECT_PARENT (GST_PAD_PEER (peerpad)) == (GstObject*) src)) {
+        gst_pad_disconnect (pad, peerpad);
+      }
+    }
 
     srcpads = g_list_next (srcpads);
   }
