@@ -1,3 +1,10 @@
+2004-07-26  Johan Dahlin  <johan@gnome.org>
+
+	* gst/tcp/gsttcpclientsrc.c (gst_tcpclientsrc_get): Make sure that
+	the pad is negotiated.
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c (gst_ffmpegcolorspace_chain): Ditto
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst-libs/gst/colorbalance/colorbalance.vcproj:
