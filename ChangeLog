@@ -1,5 +1,14 @@
 2004-08-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* ext/lame/gstlame.c: (gst_lame_mode_get_type),
+	(gst_lame_quality_get_type), (gst_lame_padding_get_type),
+	(gst_lame_preset_get_type), (gst_lame_class_init), (gst_lame_init),
+	(gst_lame_set_property), (gst_lame_get_property), (gst_lame_setup):
+	* ext/lame/gstlame.h:
+	add preset property to lame so it can use lame presets
+
+2004-08-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* ext/lame/gstlame.c: (gst_lame_get_property):
 	whoops forgot break, thanks teuf
 
