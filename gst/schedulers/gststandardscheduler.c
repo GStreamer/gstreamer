@@ -242,7 +242,9 @@ static inline void sched_switch (cothread *to)
   if (from == to) {
     GST_DEBUG (GST_CAT_COTHREAD_SWITCH, "trying to switch to the same cothread (%p), not allowed\n",
               to);
-    G_BREAKPOINT();
+    /* wingo says G_BREAKPOINT only works for x86, so change it */
+    /* G_BREAKPOINT(); */
+    g_assert_not_reached ();
   }
   GST_INFO (GST_CAT_COTHREAD_SWITCH, "switching from cothread %p to cothread %p",
 	    from, to);
