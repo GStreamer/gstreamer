@@ -2,6 +2,7 @@
 
 	* configure.ac:
 	 don't compile faad plugin if a RC of 2.0 is found
+	 Fixes #155346 (and FC1 buildbot)
 
 	* gst/asfdemux/gstasfdemux.c:
 	(gst_asf_demux_process_ext_content_desc):
