@@ -365,7 +365,7 @@ dnl FIXME: perhaps warn user if they have a shared libXv since
 dnl        this is an error until XFree86 starts shipping one
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 
-GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink videosink, [
+GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
   dnl use X_CFLAGS for check
   save_FLAGS=$CFLAGS
   CFLAGS=$X_CFLAGS
@@ -1086,7 +1086,6 @@ sys/v4l2/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
-sys/videosink/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
