@@ -1,3 +1,9 @@
+2004-02-25  Christian Fredrik Kalager Schaller <uraeus@gnome.org>
+
+	* common/m4/gst-docs.m4
+	change flavour text from enable to disable as enable is our default
+	closes bug Bug 135304
+
 2004-02-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/manual/debugging.xml:
