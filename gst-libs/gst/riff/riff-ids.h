@@ -27,6 +27,7 @@
 /* RIFF types */
 #define GST_RIFF_RIFF_WAVE GST_MAKE_FOURCC ('W','A','V','E')
 #define GST_RIFF_RIFF_AVI  GST_MAKE_FOURCC ('A','V','I',' ')
+#define GST_RIFF_RIFF_CDXA GST_MAKE_FOURCC ('C','D','X','A')
 
 /* tags */
 #define GST_RIFF_TAG_RIFF GST_MAKE_FOURCC ('R','I','F','F')
@@ -44,6 +45,7 @@
 /* WAV stuff */
 #define GST_RIFF_TAG_fmt  GST_MAKE_FOURCC ('f','m','t',' ')
 #define GST_RIFF_TAG_data GST_MAKE_FOURCC ('d','a','t','a')
+#define GST_RIFF_TAG_plst GST_MAKE_FOURCC ('p','l','s','t')
 #define GST_RIFF_TAG_cue  GST_MAKE_FOURCC ('c','u','e',' ')
 /* LIST types */
 #define GST_RIFF_LIST_movi GST_MAKE_FOURCC ('m','o','v','i')
