@@ -310,22 +310,6 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SDL_TRUE@%post -n gstreamer-sdl
 @USE_SDL_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
-@USE_MAD_TRUE@%package -n gstreamer-mad
-@USE_MAD_TRUE@Summary: Gstreamer MAD mp3 decoder library
-@USE_MAD_TRUE@Group: Libraries/Multimedia
-@USE_MAD_TRUE@Requires: %{name} = %{ver}
-@USE_MAD_TRUE@Requires: mad >= 0.13.0
-@USE_MAD_TRUE@
-@USE_MAD_TRUE@%description -n gstreamer-mad
-@USE_MAD_TRUE@Plugin for playback of mp3 songs using the very good MAD library
-@USE_MAD_TRUE@
-@USE_MAD_TRUE@%files -n gstreamer-mad
-@USE_MAD_TRUE@%defattr(-, root, root)
-@USE_MAD_TRUE@%{prefix}/lib/gst/libgstmad*
-@USE_MAD_TRUE@
-@USE_MAD_TRUE@%post -n gstreamer-mad
-@USE_MAD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
-
 @USE_OPENQUICKTIME_TRUE@%package -n gstreamer-quicktime
 @USE_OPENQUICKTIME_TRUE@Summary: GStreamer Quicktime video Plugin
 @USE_OPENQUICKTIME_TRUE@Group: Libraries/Multimedia
