@@ -279,11 +279,10 @@ GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
 dnl *** QuickCam ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QCAM, true)
 GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
-dnl this one is for hadess, no qcam when no nasm found
-  if test "x$HAVE_NASM" = "xno";
+  if test "x$HAVE_CPU_I386" = "xno";
   then
     HAVE_QCAM="no"
-    AC_MSG_WARN([QuickCam needs nasm])
+    AC_MSG_WARN([QuickCam only works on i386])
   else
     HAVE_QCAM="yes"
   fi
