@@ -63,6 +63,7 @@ foreach $filename (<FIND>) {
 	check_config_h();
 	check_varargs_functions();
 	check_debugging();
+	check_bad_includes();
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -308,8 +309,8 @@ sub check_varargs_functions()
 #
 sub check_debugging()
 {
-	if (grep { /\Wg_print\W/; } @lines) {
-		print "W: friendly libraries don't use g_print\n";
+	if (grep { /\Wg_print\W/ || /\Wprintf\W/ && /\Wfprintf\W/; } @lines) {
+		print "W: friendly libraries don't print to stdio or stderr\n";
 	}
 
 	if (grep { /GST_DEBUG.*\\n"/; } @lines) {
