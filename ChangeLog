@@ -1,5 +1,11 @@
 2004-02-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/fr.po:
+	* po/nl.po:
+          updating translations
+
+2004-02-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tools/gst-run.c: (get_candidates), (main): some fixes from jdahlin
 
 2004-02-18  kost@imn.htwk-leipzig.de

@@ -529,8 +529,10 @@ msgid ", "
 msgstr ", "
 
 #: gst/autoplug/gstspider.c:418
+#, c-format
 msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Er is geen element aanwezig die het mime-type %s van de stroom kan verwerken."
+msgstr ""
+"Er is geen element aanwezig die het mime-type %s van de stroom kan verwerken."
 
 #: gst/elements/gstfilesink.c:248 gst/elements/gstfilesrc.c:676
 msgid "No filename specified."
