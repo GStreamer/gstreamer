@@ -95,7 +95,7 @@ struct _GstLame {
   lame_global_flags *lgf;
 
   /* time tracker */
-  guint64 last_ts;
+  guint64 last_ts, last_offs;
 };
 
 struct _GstLameClass {
