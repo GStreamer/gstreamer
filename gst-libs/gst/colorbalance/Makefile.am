@@ -18,7 +18,9 @@ built_headers =	\
 	colorbalance-marshal.h \
 	colorbalance-enumtypes.h
 
-libgstcolorbalanceinclude_HEADERS = $(colorbalance_headers) \
+libgstcolorbalanceinclude_HEADERS = $(colorbalance_headers)
+
+nodist_libgstcolorbalanceinclude_HEADERS = \
 	colorbalance-enumtypes.h
 
 noinst_LTLIBRARIES = libgstcolorbalance.la
@@ -26,6 +28,7 @@ noinst_LTLIBRARIES = libgstcolorbalance.la
 libgstcolorbalance_la_SOURCES = \
 	colorbalance.c \
 	colorbalancechannel.c
+
 nodist_libgstcolorbalance_la_SOURCES = \
         $(built_sources) \
 	colorbalance-marshal.h
