@@ -1,8 +1,8 @@
 TODO:
 -----
 
-short term API stability
-------------------------
+short term core API stability
+-----------------------------
 
 Changes that probably impact the API, carefull discussion (IRC) + design doc is required
 before changes are accepted.
@@ -42,6 +42,16 @@ target release ! description
 	       ! to deal with the lowlevel stuff.
 	       ! (HARD, need to negotiate with people :))
 	       
+
+shortterm core feature enhancements
+-----------------------------------
+
+    ?	       ! Implement PAD_DISABLED. This requires simple checks in the scheduler so that
+               ! it doesn't try to pull/push data from/to a disabled pad.
+	       ! When an element goes to the PAUSED state, all of its pads should be disabled. 
+	       ! This should also work for ghostpads.
+               !  (API: MEDIUM to moderatly HARD, requires some scheduler understanding)
+
 
 short term usability
 --------------------
