@@ -53,16 +53,19 @@ struct _GstAutoplugCache {
   GList *cache_start;
   gint buffer_count;
   GList *current_playout;
+  gboolean fire_empty;
 };
 
 struct _GstAutoplugCacheClass {
   GstElementClass parent_class;
+
+  void		(*cache_empty)		(GstElement *element);
 };
 
 
 /* Cache signals and args */
 enum {
-  /* FILL ME */
+  CACHE_EMPTY,
   LAST_SIGNAL
 };
 
@@ -85,7 +88,7 @@ static GstElementStateReturn	gst_autoplugcache_change_state	(GstElement *element
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_autoplugcache_signals[LAST_SIGNAL] = { 0 };
+static guint gst_autoplugcache_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_autoplugcache_get_type(void) {
@@ -118,6 +121,12 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
 
   parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
+  gst_autoplugcache_signals[CACHE_EMPTY] =
+    gtk_signal_new ("cache_empty", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstAutoplugCacheClass, cache_empty),
+                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+  gtk_object_class_add_signals (gtkobject_class, gst_autoplugcache_signals, LAST_SIGNAL);
+
   gtk_object_add_arg_type ("GstAutoplugCache::buffer_count", GTK_TYPE_INT,
                            GTK_ARG_READABLE, ARG_BUFFER_COUNT);
   gtk_object_add_arg_type ("GstAutoplugCache::reset", GTK_TYPE_BOOL,
@@ -140,9 +149,12 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
   cache->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT(cache), cache->srcpad);
 
-  cache->cache = NULL;
+  // provide a zero basis for the cache
+  cache->cache = g_list_prepend(NULL, NULL);
+  cache->cache_start = cache->cache;
   cache->buffer_count = 0;
   cache->current_playout = 0;
+  cache->fire_empty = FALSE;
 }
 
 static void
@@ -169,14 +181,12 @@ gst_autoplugcache_loop (GstElement *element)
   do {
     // the first time through, the current_playout pointer is going to be NULL
     if (cache->current_playout == NULL) {
-fprintf(stderr,"current_playout is NULL, first time\n");
       // get a buffer
       buf = gst_pad_pull (cache->sinkpad);
 
       // add it to the cache, though cache == NULL
       gst_buffer_ref (buf);
       cache->cache = g_list_prepend (cache->cache, buf);
-      cache->cache_start = cache->cache;
       cache->buffer_count++;
 
       // set the current_playout pointer
@@ -188,7 +198,13 @@ fprintf(stderr,"current_playout is NULL, first time\n");
 
     // the steady state is where the playout is at the front of the cache
     else if (g_list_previous(cache->current_playout) == NULL) {
-fprintf(stderr,"current_playout doesn't have a previous\n");
+
+      // if we've been told to fire an empty signal (after a reset)
+      if (cache->fire_empty) {
+        fprintf(stderr,"at front of cache, about to pull, but firing signal\n");
+        gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], NULL);
+      }
+
       // get a buffer
       buf = gst_pad_pull (cache->sinkpad);
 
@@ -206,7 +222,6 @@ fprintf(stderr,"current_playout doesn't have a previous\n");
 
     // otherwise we're trundling through existing cached buffers
     else {
-fprintf(stderr,"current_playout as a previous\n");
       // move the current_playout pointer
       cache->current_playout = g_list_previous (cache->current_playout);
 
@@ -238,8 +253,11 @@ gst_autoplugcache_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_RESET:
       // no idea why anyone would set this to FALSE, but just in case ;-)
       if (GTK_VALUE_BOOL(*arg)) {
+        fprintf(stderr,"resetting playout pointer\n");
         // reset the playout pointer to the begining again
         cache->current_playout = cache->cache_start;
+        // now we can fire a signal when the cache runs dry
+        cache->fire_empty = TRUE;
       }
       break;
     default:
