@@ -183,7 +183,10 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
  * @format1: The format of the discont value
  * @...: more discont values and formats
  *
- * Allocate a new discontinuous event with the geven format/value pairs.
+ * Allocate a new discontinuous event with the given format/value pairs. Note
+ * that the values are of type gint64 - you may not use simple integers such
+ * as "0" when calling this function, always cast them like "(gint64) 0".
+ * Terminate the list with #GST_FORMAT_UNDEFINED.
  *
  * Returns: A new discontinuous event.
  */
@@ -199,12 +202,12 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 
   va_start (var_args, format1);
 	        
-  while (format1) {
+  while (format1 >= GST_FORMAT_UNDEFINED && count < 8) {
 
     GST_EVENT_DISCONT_OFFSET (event, count).format = format1 & GST_SEEK_FORMAT_MASK;
     GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
 
-    format1 = va_arg (var_args, GstSeekType);
+    format1 = va_arg (var_args, GstFormat);
 
     count++;
   }
@@ -313,4 +316,3 @@ gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
 
   return event;
 }
-
