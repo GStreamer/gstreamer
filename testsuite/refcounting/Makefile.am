@@ -1,15 +1,16 @@
-testprogs = object element pad element_pad bin thread
+testprogs = object element pad element_pad bin 
 
 object_SOURCES = object.c mem.c
 element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c
 element_pad_SOURCES = element_pad.c mem.c
 bin_SOURCES = bin.c mem.c
-thread_SOURCES = thread.c mem.c
 
 TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)
+
+EXTRA_DIST = thread.c
 
 noinst_HEADERS = mem.h
 
