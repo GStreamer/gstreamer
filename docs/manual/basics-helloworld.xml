@@ -174,7 +174,7 @@ main (int argc, char *argv[])
     </programlisting>
     
     <para>
-      We now have a created a complete pipeline.  We can visualise the
+      We now have created a complete pipeline.  We can visualise the
       pipeline as follows:
     </para>
     <figure float="1" id="section-hello-img">
@@ -265,9 +265,8 @@ main (int argc, char *argv[])
     </para>
     <para>
       It should be clear from the example that we can very easily replace the
-      filesrc element with an httpsrc element, giving you instant network
-      streaming.  An element could be built to handle icecast connections,
-      for example.
+      filesrc element with the gnomevfssrc element, giving you instant streaming
+      from any gnomevfs URL.
     </para>
     <para>
       We can also choose to use another type of sink instead of the audiosink.

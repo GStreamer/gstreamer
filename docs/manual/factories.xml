@@ -54,7 +54,7 @@
       <itemizedlist>
         <listitem>
           <para>
-	    audio/raw : raw audio samples
+	    audio/x-raw-int : raw audio samples
           </para>
         </listitem>
         <listitem>
@@ -103,7 +103,7 @@
     <para>
       The typing of the source and sink pads also makes it possible to
       'autoplug' a pipeline. We will have the ability to say: "construct
-      a pipeline that does an audio/mpeg to audio/raw conversion".
+      a pipeline that does an audio/mpeg to audio/x-raw-int conversion".
     </para>
     <note>
       <para>

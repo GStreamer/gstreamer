@@ -32,7 +32,7 @@
 
   </programlisting>
    <para>
-     An even more convenient shortcut for single-source, single-sink elements is the
+     An even more convenient shortcut but only works for single-source, single-sink elements is the
      gst_element_link () function:
    </para>
   <programlisting>
@@ -46,7 +46,8 @@
   </programlisting>
    <para>
      If you have more than one element to link, the gst_element_link_many () function takes
-     a NULL-terminated list of elements:
+     a NULL-terminated list of elements.  Again this only works for single-source single-sink
+     elements:
    </para>
   <programlisting>
 

@@ -33,7 +33,7 @@
   
   bin = gst_bin_new ("mybin");
   
-  element = gst_element_factory_make ("mpg123", "decoder");
+  element = gst_element_factory_make ("mad", "decoder");
   gst_bin_add (GST_BIN (bin), element);
    ...
     </programlisting>
