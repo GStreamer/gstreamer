@@ -1168,6 +1168,17 @@ gst_osselement_rate_probe_check (GstOssProbe * probe)
   probe->min = gst_osselement_rate_check_rate (probe, 1000);
   n_checks++;
   probe->max = gst_osselement_rate_check_rate (probe, 100000);
+  /* a little bug workaround */
+  {
+    int max;
+
+    max = gst_osselement_rate_check_rate (probe, 48000);
+    if (max > probe->max) {
+      GST_ERROR
+          ("Driver bug recognized (driver does not round rates correctly).  Please file a bug report.");
+      probe->max = max;
+    }
+  }
   n_checks++;
   if (probe->min == -1 || probe->max == -1) {
     GST_DEBUG ("unexpected check_rate error");
