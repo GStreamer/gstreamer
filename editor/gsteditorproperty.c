@@ -573,7 +573,7 @@ create_property_entry (GtkArg *arg, GstElement *element)
 {
   GtkWidget *entry = NULL;
 
-  // basic types
+  /* basic types */
   switch (arg->type) {
     case GTK_TYPE_STRING: 
     {
@@ -632,7 +632,7 @@ create_property_entry (GtkArg *arg, GstElement *element)
     default:
       break;
   }
-  // more extensive testing here
+  /* more extensive testing here */
   if (!entry) {
     if (arg->type == GTK_TYPE_WIDGET) 
     {

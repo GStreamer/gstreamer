@@ -46,7 +46,7 @@ enum {
 };
 
 static GtkObjectClass *parent_class;
-//static guint gst_editor_project_view_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_editor_project_view_signals[LAST_SIGNAL] = { 0 }; */
 
 GtkType 
 gst_editor_project_view_get_type(void) 

@@ -35,21 +35,21 @@ gst_editor_create_item(gdouble x,gdouble y)
 
   factory = element_select_dialog();
   if (factory) {
-//    g_print("got factory \"%s\"\n",factory->name);
+/*    g_print("got factory \"%s\"\n",factory->name); */
     element = gst_elementfactory_create(factory, GST_OBJECT_NAME (factory));
     if (element) {
       if (GST_IS_BIN(element)) {
-//        g_print("factory is a bin\n");
+/*        g_print("factory is a bin\n"); */
         editorelement = GST_EDITOR_ELEMENT(gst_editor_bin_new(
           GST_BIN(element), "x",x,"y",y,"width",50.0,"height",20.0,NULL));
       } else {
-//        g_print("factory is an element\n");
+/*        g_print("factory is an element\n"); */
         editorelement = gst_editor_element_new(element,
           "x",x,"y",y,"width",50.0,"height",20.0,NULL);
       }
-//      g_print("created element \"%s\" at %.2fx%.2f\n",
-//              gst_object_get_name(GST_OBJECT(element)),
-//              x,y);
+/*      g_print("created element \"%s\" at %.2fx%.2f\n", */
+/*              gst_object_get_name(GST_OBJECT(element)), */
+/*              x,y); */
       return editorelement;
     }
   }

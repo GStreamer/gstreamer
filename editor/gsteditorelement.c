@@ -236,7 +236,7 @@ gst_editor_element_construct (GstEditorElement *element,
   GSList *arg_list = NULL, *info_list = NULL;
   gchar *error;
 
-//  g_print("in gst_editor_element_construct()\n");
+/*  g_print("in gst_editor_element_construct()\n"); */
 
   error = gtk_object_args_collect(GTK_OBJECT_TYPE(obj),&arg_list,
                                   &info_list,first_arg_name,args);
@@ -245,7 +245,7 @@ gst_editor_element_construct (GstEditorElement *element,
     g_free(error);
   } else {
     GSList *arg,*info;
-//    g_print("setting all the arguments on the element\n");
+/*    g_print("setting all the arguments on the element\n"); */
     for (arg=arg_list,info=info_list;arg;arg=arg->next,info=info->next)
       gtk_object_arg_set(obj,arg->data,info->data);
     gtk_args_collect_cleanup(arg_list,info_list);
@@ -284,12 +284,12 @@ gst_editor_element_set_arg (GtkObject *object, GtkArg *arg, guint id)
       element->resize = TRUE;
       break;
     case ARG_X2:
-      // make sure it's big enough, grow if not
+      /* make sure it's big enough, grow if not */
       element->width = MAX(GTK_VALUE_DOUBLE(*arg),element->minwidth);
       element->resize = TRUE;
       break;
     case ARG_Y2:
-      // make sure it's big enough, grow if not
+      /* make sure it's big enough, grow if not */
       element->height = MAX(GTK_VALUE_DOUBLE(*arg),element->minheight);
       element->resize = TRUE;
       break;
@@ -371,12 +371,12 @@ gst_editor_element_realize (GstEditorElement *element)
   gdouble x1,y1,x2,y2;
   GList *pads;
 
-//  g_print("realizing editor element %p\n",element);
+/*  g_print("realizing editor element %p\n",element); */
 
   /* we have to have a parent by this point */
   g_return_if_fail(element->parent != NULL);
 
-  // set the state signal of the actual element
+  /* set the state signal of the actual element */
   gtk_signal_connect_object (GTK_OBJECT(element->element),"state_change",
                              GTK_SIGNAL_FUNC(gst_editor_element_sync_state_wrapper),
                              GTK_OBJECT (element));
@@ -389,9 +389,10 @@ gst_editor_element_realize (GstEditorElement *element)
                              GTK_SIGNAL_FUNC(gst_editor_element_position_changed),
                              GTK_OBJECT (element));
 
-  // create the bounds if we haven't had them set
-//  g_print("centering element at %.2fx%.2f (%.2fx%.2f)\n",
-//          element->x,element->y,element->width,element->height);
+  /* create the bounds if we haven't had them set */
+/*  g_print("centering element at %.2fx%.2f (%.2fx%.2f)\n", */
+/*          element->x,element->y,element->width,element->height); */
+
 
   /* create the group holding all the stuff for this element */
   parentgroup = GST_EDITOR_ELEMENT(element->parent)->group;
@@ -399,15 +400,15 @@ gst_editor_element_realize (GstEditorElement *element)
     gnome_canvas_group_get_type(),
     "x",element->x - (element->width / 2.0),
     "y",element->y - (element->height / 2.0),NULL));
-//  g_print("origin of group is %.2fx%.2f\n",
-//          element->x - (element->width / 2.0),
-//          element->y - (element->height / 2.0));
+/*  g_print("origin of group is %.2fx%.2f\n", */
+/*          element->x - (element->width / 2.0), */
+/*          element->y - (element->height / 2.0)); */
   g_return_if_fail(element->group != NULL);
   GST_EDITOR_SET_OBJECT(element->group,element);
   gtk_signal_connect(GTK_OBJECT(element->group),"event",
     GTK_SIGNAL_FUNC(gst_editor_element_group_event),element);
 
-  // calculate the inter-group coords (x1,y1,x2,y2 are convenience vars)
+  /* calculate the inter-group coords (x1,y1,x2,y2 are convenience vars) */
   x1 = 0.0;y1 = 0.0;
   x2 = element->width;y2 = element->height;
 
@@ -465,7 +466,7 @@ gst_editor_element_realize (GstEditorElement *element)
                        GINT_TO_POINTER(i));
   }
   
-  // get all the padtemplates
+  /* get all the padtemplates */
   pads = gst_element_get_padtemplate_list(element->element);
   while (pads) {
     GstPadTemplate *temp = (GstPadTemplate *) pads->data;
@@ -475,7 +476,7 @@ gst_editor_element_realize (GstEditorElement *element)
     pads = g_list_next(pads);
   }
 
-  // get all the pads
+  /* get all the pads */
   pads = gst_element_get_pad_list(element->element);
   while (pads) {
     GstPad *pad = GST_PAD(pads->data);
@@ -487,18 +488,18 @@ gst_editor_element_realize (GstEditorElement *element)
 
   element->realized = TRUE;
 
-  // force a resize
+  /* force a resize */
   element->resize = TRUE;
   gst_editor_element_resize(element);
 
-  // recenter things on the supposed center
-//  g_print("recentering element at %.2fx%.2f (%.2fx%.2f)\n",
-//          element->x,element->y,element->width,element->height);
+  /* recenter things on the supposed center */
+/*  g_print("recentering element at %.2fx%.2f (%.2fx%.2f)\n", */
+/*          element->x,element->y,element->width,element->height); */
   element->x -= (element->width / 2.0);
   element->y -= (element->height / 2.0);
   gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->group),
     "x",element->x,"y",element->y,NULL);
-//  g_print("origin of group is %.2fx%.2f\n",element->x,element->y);
+/*  g_print("origin of group is %.2fx%.2f\n",element->x,element->y); */
 
   gst_editor_element_repack(element);
 }
@@ -517,12 +518,12 @@ gst_editor_element_resize (GstEditorElement *element)
   if (element->resize != TRUE) return;
   element->resize = FALSE;
 
-//  g_print("resizing element\n");
+/*  g_print("resizing element\n"); */
 
   element->minwidth = element->insidewidth;
   element->minheight = element->insideheight;
 
-  // get the text size and add it into minsize
+  /* get the text size and add it into minsize */
   g_return_if_fail(element->title != NULL);
   itemwidth = gst_util_get_double_arg(GTK_OBJECT(element->title),
                                       "text_width") + 2.0;
@@ -534,8 +535,8 @@ gst_editor_element_resize (GstEditorElement *element)
   element->minwidth = MAX(element->minwidth,itemwidth);
   element->minheight += itemheight;
 
-  // now do the bottom bar
-  // find the biggest of the state chars
+  /* now do the bottom bar */
+  /* find the biggest of the state chars */
   element->statewidth = 0.0;element->stateheight = 0.0;
   for (i=0;i<4;i++) {
     g_return_if_fail(element->statetext[i] != NULL);
@@ -546,17 +547,17 @@ gst_editor_element_resize (GstEditorElement *element)
     element->statewidth = MAX(element->statewidth,itemwidth);
     element->stateheight = MAX(element->stateheight,itemheight);
   }
-  // calculate the size of the primary group
-  groupwidth = element->statewidth * 5;	// 4 states plus playstate
+  /* calculate the size of the primary group */
+  groupwidth = element->statewidth * 5;	/* 4 states plus playstate */
   groupheight = element->stateheight;
-  // add in the resize box
-  groupwidth += 7.0;		// 2.0 for buffer, 5.0 for actual size
+  /* add in the resize box */
+  groupwidth += 7.0;		/* 2.0 for buffer, 5.0 for actual size */
   groupheight = MAX(groupheight,5.0);
-  // update the minsize
+  /* update the minsize */
   element->minwidth = MAX(element->minwidth,groupwidth);
   element->minheight += groupheight;
 
-  // now go and try to calculate necessary space for the pads
+  /* now go and try to calculate necessary space for the pads */
   element->sinkwidth = 10.0;element->sinkheight = 0.0;element->sinks = 0;
   pads = element->sinkpads;
   while (pads) {
@@ -591,23 +592,23 @@ gst_editor_element_resize (GstEditorElement *element)
     element->srcs++;
     pads = g_list_next(pads);
   }
-  // add in the needed space
+  /* add in the needed space */
   element->minheight += MAX((element->sinkheight*element->sinks),
                             (element->srcheight*element->srcs)) + 4.0;
   element->minwidth = MAX(element->minwidth,
                           ((element->sinkwidth) +
                            (element->srcwidth) + 4.0));
-//  g_print("have %d sinks (%.2fx%.2f) and %d srcs (%.2fx%.2f)\n",
-//          element->sinks,element->sinkwidth,element->sinkheight,
-//          element->srcs,element->srcwidth,element->srcheight);
+/*  g_print("have %d sinks (%.2fx%.2f) and %d srcs (%.2fx%.2f)\n", */
+/*          element->sinks,element->sinkwidth,element->sinkheight, */
+/*          element->srcs,element->srcwidth,element->srcheight); */
 
-  // grow the element to hold all the stuff
-//  g_print("minsize is %.2fx%.2f,
-//",element->minwidth,element->minheight);
-//  g_print("size was %.2fx%.2f, ",element->width,element->height);
+  /* grow the element to hold all the stuff */
+/*  g_print("minsize is %.2fx%.2f, */
+/*",element->minwidth,element->minheight); */
+/*  g_print("size was %.2fx%.2f, ",element->width,element->height); */
   element->width = MAX(element->width,element->minwidth);
   element->height = MAX(element->height,element->minheight);
-//  g_print("is now %.2fx%.2f\n",element->width,element->height);
+/*  g_print("is now %.2fx%.2f\n",element->width,element->height); */
 
   gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[SIZE_CHANGED], element);
 }
@@ -627,35 +628,35 @@ gst_editor_element_repack (GstEditorElement *element)
 
   gst_editor_element_resize(element);
 
-  // still use x1,y1,x2,y2 so we can change around later
+  /* still use x1,y1,x2,y2 so we can change around later */
   x1 = 0.0;y1 = 0.0;
   x2 = element->width;y2 = element->height;
 
-//  g_print("repacking element at %.2fx%.2f + %.2fx%.2f\n",
-//          element->x,element->y,x2,y2);
+/*  g_print("repacking element at %.2fx%.2f + %.2fx%.2f\n", */
+/*          element->x,element->y,x2,y2); */
 
-  // move the element group to match
+  /* move the element group to match */
   gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->group),
                         "x",element->x,"y",element->y,NULL);
 
-  // start by resizing the bordering box
+  /* start by resizing the bordering box */
   g_return_if_fail(element->border != NULL);
   gtk_object_set(GTK_OBJECT(element->border),
                  "x1",x1,"y1",y1,"x2",x2,"y2",y2,NULL);
 
-  // then move the text to the new top left
+  /* then move the text to the new top left */
   g_return_if_fail(element->title != NULL);
   gtk_object_set(GTK_OBJECT(element->title),
                  "x",x1+1.0,"y",y1+1.0,
                  "anchor",GTK_ANCHOR_NORTH_WEST,
                  NULL);
 
-  // and move the resize box
+  /* and move the resize box */
   g_return_if_fail(element->resizebox != NULL);
   gtk_object_set(GTK_OBJECT(element->resizebox),
                  "x1",x2-5.0,"y1",y2-5.0,"x2",x2,"y2",y2,NULL);
 
-  // now place the state boxes
+  /* now place the state boxes */
   for (i=0;i<4;i++) {
     g_return_if_fail(element->statebox[i] != NULL);
     gtk_object_set(GTK_OBJECT(element->statebox[i]),
@@ -670,7 +671,7 @@ gst_editor_element_repack (GstEditorElement *element)
   }
   gst_editor_element_sync_state(element);
 
-  // now we try to place all the pads
+  /* now we try to place all the pads */
   sinks = element->sinks;
   pads = element->sinkpads;
   while (pads) {
@@ -724,7 +725,7 @@ gst_editor_element_repack (GstEditorElement *element)
   }
 
   gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[SIZE_CHANGED], element);
-//  g_print("done resizing element\n");
+/*  g_print("done resizing element\n"); */
 }
 
 static void
@@ -746,15 +747,15 @@ gst_editor_element_add_pad_func (GstEditorElement *element,
 
   editorpad = gst_editor_pad_new (element, pad, NULL);
 
-  // FIXME does this need to check for ghost/real?
+  /* FIXME does this need to check for ghost/real? */
   if (GST_PAD_DIRECTION(pad) == GST_PAD_SINK) {
     element->sinkpads = g_list_prepend(element->sinkpads,editorpad);
     element->sinks++;
-//    g_print("added 'new' pad to sink list\n");
+/*    g_print("added 'new' pad to sink list\n"); */
   } else if (GST_PAD_DIRECTION(pad) == GST_PAD_SRC) {
     element->srcpads = g_list_prepend(element->srcpads,editorpad);
     element->srcs++;
-//    g_print("added 'new' pad to src list\n");
+/*    g_print("added 'new' pad to src list\n"); */
   } else
     g_print("HUH?!?  Don't know which direction this pad is...\n");
 
@@ -772,7 +773,7 @@ gst_editor_element_add_pad (GstEditorElement *element,
     gst_editor_element_add_pad_func (element,pad);
   }
   else {
-    // find the template
+    /* find the template */
     GList *temppads;
 
     temppads = element->sinkpadtemps;
@@ -811,9 +812,9 @@ gst_editor_element_add_padtemplate (GstEditorElement *element,
   if (pad->direction == GST_PAD_SINK) {
     element->sinkpadtemps = g_list_prepend(element->sinkpadtemps,editorpad);
     element->sinks++;
-//    g_print("added 'new' pad to sink list\n");
+/*    g_print("added 'new' pad to sink list\n"); */
   } else if (pad->direction == GST_PAD_SRC) {
-//    g_print("added 'new' pad to src list\n");
+/*    g_print("added 'new' pad to src list\n"); */
     element->srcpadtemps = g_list_prepend(element->srcpadtemps,editorpad);
     element->srcs++;
   } else
@@ -851,7 +852,7 @@ gst_editor_element_event(GnomeCanvasItem *item,
   gdouble dx,dy;
   GdkCursor *fleur;
 
-//  g_print("element in event, type %d\n",event->type);
+/*  g_print("element in event, type %d\n",event->type); */
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
@@ -871,17 +872,17 @@ gst_editor_element_event(GnomeCanvasItem *item,
 	return TRUE;
       }
       else {
-        // dragxy coords are world coords of button press
+        /* dragxy coords are world coords of button press */
         element->dragx = event->button.x;
         element->dragy = event->button.y;
-        // set some flags
+        /* set some flags */
         element->dragging = TRUE;
         element->moved = FALSE;
         fleur = gdk_cursor_new (GDK_FLEUR);
         gnome_canvas_item_grab(item,
                              GDK_POINTER_MOTION_MASK |
-//                             GDK_ENTER_NOTIFY_MASK |
-//                             GDK_LEAVE_NOTIFY_MASK |
+/*                             GDK_ENTER_NOTIFY_MASK | */
+/*                             GDK_LEAVE_NOTIFY_MASK | */
                              GDK_BUTTON_RELEASE_MASK,
                              fleur,event->button.time);
         return TRUE;
@@ -908,8 +909,8 @@ gst_editor_element_event(GnomeCanvasItem *item,
         if (elementclass->button_event)
           (elementclass->button_event)(item,event,element);
       }
-//g_print("in element group_event, setting inchild");
-      //element->canvas->inchild = TRUE;
+/* g_print("in element group_event, setting inchild"); */
+      /* element->canvas->inchild = TRUE; */
       return TRUE;
 
     default:
@@ -927,9 +928,9 @@ gst_editor_element_resizebox_event (GnomeCanvasItem *item,
   GdkCursor *bottomright;
   gdouble item_x,item_y;
 
-//  g_print("in resizebox_event...\n");
+/*  g_print("in resizebox_event...\n"); */
 
-  // calculate coords relative to the group, not the box
+  /* calculate coords relative to the group, not the box */
   item_x = event->button.x;
   item_y = event->button.y;
   gnome_canvas_item_w2i(item->parent,&item_x,&item_y);
@@ -962,8 +963,8 @@ gst_editor_element_resizebox_event (GnomeCanvasItem *item,
       break;
     case GDK_MOTION_NOTIFY:
       if (element->resizing) {
-        // doing a set because the code is in the arg set code
-//        g_print("resizing to x2,y2 of %.2f,%.2f\n",item_x,item_y);
+        /* doing a set because the code is in the arg set code */
+/*        g_print("resizing to x2,y2 of %.2f,%.2f\n",item_x,item_y); */
         gtk_object_set(GTK_OBJECT(element),"x2",item_x,"y2",item_y,NULL);
         element->resize = TRUE;
         gst_editor_element_repack(element);
@@ -974,8 +975,8 @@ gst_editor_element_resizebox_event (GnomeCanvasItem *item,
       if (element->resizing) {
         element->resizing = FALSE;
         gnome_canvas_item_ungrab(item,event->button.time);
-//g_print("in element resizebox_event, setting inchild");
-        //element->canvas->inchild = TRUE;
+/* g_print("in element resizebox_event, setting inchild"); */
+        /* element->canvas->inchild = TRUE; */
         return TRUE;
       }
       break;
@@ -1032,8 +1033,8 @@ gst_editor_element_state_event(GnomeCanvasItem *item,
         gdk_threads_enter ();
       } else
         g_warning("Uh, shouldn't have gotten here, unknown state\n");
-//g_print("in element statebox_event, setting inchild");
-      //element->canvas->inchild = TRUE;
+/* g_print("in element statebox_event, setting inchild"); */
+      /* element->canvas->inchild = TRUE; */
       return TRUE;
     }
     default:
@@ -1048,7 +1049,7 @@ gst_editor_element_set_state(GstEditorElement *element,
                              gint id,gboolean set) 
 {
   gboolean stateset = TRUE;	/* if we have no element, set anyway */
-  //g_print("element set state %d\n", id);
+  /* g_print("element set state %d\n", id); */
   if (element->element)
     stateset = gst_element_set_state(element->element,_gst_element_states[id]);
 }
@@ -1096,7 +1097,7 @@ static void
 gst_editor_element_move(GstEditorElement *element,
                         gdouble dx,gdouble dy) 
 {
-  // this is a 'little' trick to keep from repacking the whole thing...
+  /* this is a 'little' trick to keep from repacking the whole thing... */
   element->x += dx;element->y += dy;
   gnome_canvas_item_move(GNOME_CANVAS_ITEM(element->group),dx,dy);
 
