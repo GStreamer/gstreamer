@@ -8,6 +8,13 @@
 
 2004-09-26 Iain <iaingnome@gmail.com>
 
+	* gst/interleave/interleave.c (all_channels_new_media): Checks if all
+	the channels have received a new media event.
+	(interleave_buffered_loop): Compresses a new media event on all 
+	channels into one.
+
+2004-09-26 Iain <iaingnome@gmail.com>
+
 	* gst/wavenc/gstwavenc.c (gst_wavenc_chain): Company says we need to
 	call the sinkpad's default event handler and not the srcpads. He also
 	says this is confusing :)
