@@ -99,8 +99,9 @@ gst_smooth_get_type (void)
       0,
       (GInstanceInitFunc) gst_smooth_init,
     };
+
     smooth_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSmooth", &smooth_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSmooth", &smooth_info, 0);
   }
   return smooth_type;
 }
@@ -128,9 +129,9 @@ gst_smooth_class_init (GstSmoothClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_boolean ("active", "active", "active", TRUE, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOLERANCE, g_param_spec_int ("tolerance", "tolerance", "tolerance", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE, g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_boolean ("active", "active", "active", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOLERANCE, g_param_spec_int ("tolerance", "tolerance", "tolerance", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE, g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
   gobject_class->set_property = gst_smooth_set_property;
   gobject_class->get_property = gst_smooth_get_property;
@@ -207,16 +208,16 @@ smooth_filter (unsigned char *dest, unsigned char *src, int width, int height,
       fx2 = MIN (x + filtersize + 1, width) + fy1;
 
       for (fy = fy1; fy < fy2; fy += width) {
-	for (fx = fx1; fx < fx2; fx++) {
-	  aktval = srcp[fx];
-	  if ((lowerval - aktval) * (upperval - aktval) < 0) {
-	    numvalues++;
-	    sum += aktval;
-	  }
-	}			/*for fx */
-	fx1 += width;
-	fx2 += width;
-      }				/*for fy */
+        for (fx = fx1; fx < fx2; fx++) {
+          aktval = srcp[fx];
+          if ((lowerval - aktval) * (upperval - aktval) < 0) {
+            numvalues++;
+            sum += aktval;
+          }
+        }                       /*for fx */
+        fx1 += width;
+        fx2 += width;
+      }                         /*for fy */
 
       src++;
       *dest++ = sum / numvalues;
@@ -261,11 +262,11 @@ gst_smooth_chain (GstPad * pad, GstData * _data)
       smooth->tolerance, smooth->filtersize);
   if (!smooth->lum_only) {
     smooth_filter (GST_BUFFER_DATA (outbuf) + lumsize, data + lumsize,
-	smooth->width / 2, smooth->height / 2, smooth->tolerance,
-	smooth->filtersize / 2);
+        smooth->width / 2, smooth->height / 2, smooth->tolerance,
+        smooth->filtersize / 2);
     smooth_filter (GST_BUFFER_DATA (outbuf) + lumsize + chromsize,
-	data + lumsize + chromsize, smooth->width / 2, smooth->height / 2,
-	smooth->tolerance, smooth->filtersize / 2);
+        data + lumsize + chromsize, smooth->width / 2, smooth->height / 2,
+        smooth->tolerance, smooth->filtersize / 2);
   } else {
     memcpy (GST_BUFFER_DATA (outbuf) + lumsize, data + lumsize, chromsize * 2);
   }

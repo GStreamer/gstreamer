@@ -109,7 +109,7 @@ gst_iir_get_type (void)
     };
 
     iir_type = g_type_register_static (GST_TYPE_ELEMENT, "GstIIR",
-	&iir_info, 0);
+        &iir_info, 0);
   }
   return iir_type;
 }
@@ -141,16 +141,16 @@ gst_iir_class_init (GstIIRClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_A,
       g_param_spec_double ("A", "A", "A filter coefficient",
-	  -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_B,
       g_param_spec_double ("B", "B", "B filter coefficient",
-	  -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAIN,
       g_param_spec_double ("gain", "Gain", "Filter gain",
-	  -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STAGES,
       g_param_spec_int ("stages", "Stages", "Number of filter stages",
-	  1, G_MAXINT, 1, G_PARAM_READWRITE));
+          1, G_MAXINT, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_iir_set_property;
   gobject_class->get_property = gst_iir_get_property;
@@ -173,7 +173,7 @@ gst_iir_init (GstIIR * filter)
 
   filter->A = 0.0;
   filter->B = 0.0;
-  filter->gain = 1.0;		/* unity gain as default */
+  filter->gain = 1.0;           /* unity gain as default */
   filter->stages = 1;
   filter->state = NULL;
 }
@@ -192,7 +192,7 @@ gst_iir_sink_connect (GstPad * pad, const GstCaps * caps)
     /* FIXME: remember to free it */
     filter->state = (IIR_state *) g_malloc (sizeof (IIR_state));
     IIR_init (filter->state, filter->stages,
-	filter->gain, &(filter->A), &(filter->B));
+        filter->gain, &(filter->A), &(filter->B));
   }
 
   return set_retval;

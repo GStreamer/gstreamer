@@ -139,7 +139,7 @@ mpeg1mux_buffer_queue (Mpeg1MuxBuffer * mb, GstBuffer * buf)
   } else {
     mb->buffer = g_realloc (mb->buffer, mb->length + GST_BUFFER_SIZE (buf));
     memcpy (mb->buffer + mb->length, GST_BUFFER_DATA (buf),
-	GST_BUFFER_SIZE (buf));
+        GST_BUFFER_SIZE (buf));
     mb->length += GST_BUFFER_SIZE (buf);
   }
 
@@ -169,7 +169,7 @@ mpeg1mux_buffer_update_queued (Mpeg1MuxBuffer * mb, guint64 scr)
       queued_list = g_list_first (mb->queued_list);
     } else {
       GST_DEBUG ("queued in buffer %ld, %" G_GUINT64_FORMAT,
-	  tc->original_length, tc->DTS);
+          tc->original_length, tc->DTS);
       total_queued += tc->original_length;
       queued_list = g_list_next (queued_list);
     }
@@ -208,18 +208,18 @@ mpeg1mux_buffer_shrink (Mpeg1MuxBuffer * mb, gulong size)
     consumed += tc->length;
     while (size >= consumed) {
       GST_DEBUG ("removing timecode: %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT
-	  " %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
+          " %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
       mb->timecode_list = g_list_remove_link (mb->timecode_list, timecode_list);
       mb->queued_list = g_list_append (mb->queued_list, tc);
       timecode_list = g_list_first (mb->timecode_list);
       tc = (Mpeg1MuxTimecode *) timecode_list->data;
       consumed += tc->length;
       GST_DEBUG ("next timecode: %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT
-	  " %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
+          " %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
     }
     mb->new_frame = TRUE;
     GST_DEBUG ("leftover frame size from %lu to %lu ", tc->length,
-	consumed - size);
+        consumed - size);
     tc->length = consumed - size;
   }
 
@@ -275,17 +275,17 @@ mpeg1mux_buffer_update_video_info (Mpeg1MuxBuffer * mb)
       mb->info.video.picture_rate = gst_getbits4 (&gb);
       mb->info.video.bit_rate = gst_getbits18 (&gb);
       if (gst_getbits1 (&gb) != 1) {
-	g_print ("mpeg1mux::update_video_info: marker bit error\n");
+        g_print ("mpeg1mux::update_video_info: marker bit error\n");
       }
       mb->info.video.vbv_buffer_size = gst_getbits10 (&gb);
       mb->info.video.CSPF = gst_getbits1 (&gb);
 
       mb->info.video.secs_per_frame =
-	  1. / picture_rates[mb->info.video.picture_rate];
+          1. / picture_rates[mb->info.video.picture_rate];
       mb->info.video.decoding_order = 0;
       mb->info.video.group_order = 0;
       GST_DEBUG ("mpeg1mux::update_video_info: secs per frame %g",
-	  mb->info.video.secs_per_frame);
+          mb->info.video.secs_per_frame);
     } else {
       g_print ("mpeg1mux::update_video_info: Invalid MPEG Video header\n");
     }
@@ -298,82 +298,82 @@ mpeg1mux_buffer_update_video_info (Mpeg1MuxBuffer * mb)
       offset++;
       /* if it's zero, increment the zero count */
       if (byte == 0) {
-	sync_zeros++;
-	/*GST_DEBUG ("mpeg1mux::update_video_info: found zero #%d at %lu",sync_zeros,offset-1); */
+        sync_zeros++;
+        /*GST_DEBUG ("mpeg1mux::update_video_info: found zero #%d at %lu",sync_zeros,offset-1); */
       }
       /* if it's a one and we have two previous zeros, we have sync */
       else if ((byte == 1) && (sync_zeros >= 2)) {
-	GST_DEBUG ("mpeg1mux::update_video_info: synced at %lu", offset - 1);
-	have_sync = TRUE;
-	sync_zeros = 0;
+        GST_DEBUG ("mpeg1mux::update_video_info: synced at %lu", offset - 1);
+        have_sync = TRUE;
+        sync_zeros = 0;
       }
       /* if it's anything else, we've lost it completely */
       else
-	sync_zeros = 0;
+        sync_zeros = 0;
       /* then snag the chunk ID */
     } else if (id == 0) {
       id = *(data + offset);
       GST_DEBUG ("mpeg1mux::update_video_info: got id 0x%02lX", id);
       id = (SYNCWORD_START << 8) + id;
       switch (id) {
-	case SEQUENCE_HEADER:
-	  GST_DEBUG ("mpeg1mux::update_video_info: sequence header");
-	  break;
-	case GROUP_START:
-	  GST_DEBUG ("mpeg1mux::update_video_info: group start");
-	  mb->info.video.group_order = 0;
-	  break;
-	case PICTURE_START:
-	  /* skip the first access unit */
-	  if (mb->info.video.decoding_order != 0) {
-	    Mpeg1MuxTimecode *tc;
+        case SEQUENCE_HEADER:
+          GST_DEBUG ("mpeg1mux::update_video_info: sequence header");
+          break;
+        case GROUP_START:
+          GST_DEBUG ("mpeg1mux::update_video_info: group start");
+          mb->info.video.group_order = 0;
+          break;
+        case PICTURE_START:
+          /* skip the first access unit */
+          if (mb->info.video.decoding_order != 0) {
+            Mpeg1MuxTimecode *tc;
 
-	    GST_DEBUG ("mpeg1mux::update_video_info: PTS %" G_GUINT64_FORMAT
-		", DTS %" G_GUINT64_FORMAT ", length %lu",
-		mb->info.video.current_PTS, mb->info.video.current_DTS,
-		offset - mb->current_start - 3);
+            GST_DEBUG ("mpeg1mux::update_video_info: PTS %" G_GUINT64_FORMAT
+                ", DTS %" G_GUINT64_FORMAT ", length %lu",
+                mb->info.video.current_PTS, mb->info.video.current_DTS,
+                offset - mb->current_start - 3);
 
-	    tc = (Mpeg1MuxTimecode *) g_malloc (sizeof (Mpeg1MuxTimecode));
-	    tc->length = offset - mb->current_start - 3;
-	    tc->original_length = tc->length;
-	    tc->frame_type = mb->info.video.current_type;
-	    tc->DTS = mb->info.video.current_DTS;
-	    tc->PTS = mb->info.video.current_PTS;
+            tc = (Mpeg1MuxTimecode *) g_malloc (sizeof (Mpeg1MuxTimecode));
+            tc->length = offset - mb->current_start - 3;
+            tc->original_length = tc->length;
+            tc->frame_type = mb->info.video.current_type;
+            tc->DTS = mb->info.video.current_DTS;
+            tc->PTS = mb->info.video.current_PTS;
 
-	    mb->timecode_list = g_list_append (mb->timecode_list, tc);
+            mb->timecode_list = g_list_append (mb->timecode_list, tc);
 
-	    if (mb->info.video.decoding_order == 0) {
-	      mb->next_frame_time = tc->DTS;
-	    }
+            if (mb->info.video.decoding_order == 0) {
+              mb->next_frame_time = tc->DTS;
+            }
 
-	    mb->current_start = offset - 3;
-	  }
+            mb->current_start = offset - 3;
+          }
 
-	  temp = (*(data + offset + 1) << 8) + *(data + offset + 2);
-	  temporal_reference = (temp & 0xffc0) >> 6;
-	  mb->info.video.current_type = (temp & 0x0038) >> 3;
-	  GST_DEBUG
-	      ("mpeg1mux::update_video_info: picture start temporal_ref:%d type:%s Frame",
-	      temporal_reference,
-	      picture_types[mb->info.video.current_type - 1]);
+          temp = (*(data + offset + 1) << 8) + *(data + offset + 2);
+          temporal_reference = (temp & 0xffc0) >> 6;
+          mb->info.video.current_type = (temp & 0x0038) >> 3;
+          GST_DEBUG
+              ("mpeg1mux::update_video_info: picture start temporal_ref:%d type:%s Frame",
+              temporal_reference,
+              picture_types[mb->info.video.current_type - 1]);
 
-	  mb->info.video.current_DTS =
-	      mb->info.video.decoding_order * mb->info.video.secs_per_frame *
-	      CLOCKS;
-	  mb->info.video.current_PTS =
-	      (temporal_reference - mb->info.video.group_order + 1 +
-	      mb->info.video.decoding_order) * mb->info.video.secs_per_frame *
-	      CLOCKS;
+          mb->info.video.current_DTS =
+              mb->info.video.decoding_order * mb->info.video.secs_per_frame *
+              CLOCKS;
+          mb->info.video.current_PTS =
+              (temporal_reference - mb->info.video.group_order + 1 +
+              mb->info.video.decoding_order) * mb->info.video.secs_per_frame *
+              CLOCKS;
 
-	  mb->info.video.decoding_order++;
-	  mb->info.video.group_order++;
+          mb->info.video.decoding_order++;
+          mb->info.video.group_order++;
 
 
-	  offset++;
-	  break;
-	case SEQUENCE_END:
-	  GST_DEBUG ("mpeg1mux::update_video_info: sequence end");
-	  break;
+          offset++;
+          break;
+        case SEQUENCE_END:
+          GST_DEBUG ("mpeg1mux::update_video_info: sequence end");
+          break;
       }
       /* prepare for next sync */
       offset++;
@@ -411,30 +411,30 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
       mb->info.audio.layer = 4 - layer_index;
       lsf = (id & (1 << 20)) ? ((id & (1 << 19)) ? 0 : 1) : 1;
       mb->info.audio.bit_rate =
-	  bitrate_index[lsf][mb->info.audio.layer - 1][((id >> 12) & 0xf)];
+          bitrate_index[lsf][mb->info.audio.layer - 1][((id >> 12) & 0xf)];
       samplerate_index = (id >> 10) & 0x3;
       padding = (id >> 9) & 0x1;
 
       if (mb->info.audio.layer == 1) {
-	bpf = mb->info.audio.bit_rate * 12000;
-	bpf /= frequency[samplerate_index];
-	bpf = ((bpf + padding) << 2);
+        bpf = mb->info.audio.bit_rate * 12000;
+        bpf /= frequency[samplerate_index];
+        bpf = ((bpf + padding) << 2);
       } else {
-	bpf = mb->info.audio.bit_rate * 144000;
-	bpf /= frequency[samplerate_index];
-	bpf += padding;
+        bpf = mb->info.audio.bit_rate * 144000;
+        bpf /= frequency[samplerate_index];
+        bpf += padding;
       }
       mb->info.audio.framesize = bpf;
 
       GST_DEBUG ("mpeg1mux::update_audio_info: samples per second %d",
-	  samplerate_index);
+          samplerate_index);
 
       gst_getbits_init (&gb, NULL, NULL);
       gst_getbits_newbuf (&gb, data, mb->length);
 
       gst_flushbitsn (&gb, 12);
       if (gst_getbits1 (&gb) != 1) {
-	g_print ("mpeg1mux::update_audio_info: marker bit error\n");
+        g_print ("mpeg1mux::update_audio_info: marker bit error\n");
       }
       gst_flushbitsn (&gb, 2);
       mb->info.audio.protection = gst_getbits1 (&gb);
@@ -450,15 +450,15 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
 
       GST_DEBUG ("mpeg1mux::update_audio_info: layer %d", mb->info.audio.layer);
       GST_DEBUG ("mpeg1mux::update_audio_info: bit_rate %d",
-	  mb->info.audio.bit_rate);
+          mb->info.audio.bit_rate);
       GST_DEBUG ("mpeg1mux::update_audio_info: frequency %d",
-	  mb->info.audio.frequency);
+          mb->info.audio.frequency);
 
       mb->info.audio.samples_per_second =
-	  (double) dfrequency[mb->info.audio.frequency];
+          (double) dfrequency[mb->info.audio.frequency];
 
       GST_DEBUG ("mpeg1mux::update_audio_info: samples per second %g",
-	  mb->info.audio.samples_per_second);
+          mb->info.audio.samples_per_second);
 
       mb->info.audio.decoding_order = 0;
 
@@ -468,11 +468,11 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
       tc->frame_type = FRAME_TYPE_AUDIO;
 
       mb->info.audio.current_PTS =
-	  mb->info.audio.decoding_order * samples[mb->info.audio.layer] /
-	  mb->info.audio.samples_per_second * 90. + startup_delay;
+          mb->info.audio.decoding_order * samples[mb->info.audio.layer] /
+          mb->info.audio.samples_per_second * 90. + startup_delay;
 
       GST_DEBUG ("mpeg1mux::update_audio_info: PTS %" G_GUINT64_FORMAT
-	  ", length %u", mb->info.audio.current_PTS, mb->info.audio.framesize);
+          ", length %u", mb->info.audio.current_PTS, mb->info.audio.framesize);
       tc->PTS = mb->info.audio.current_PTS;
       tc->DTS = mb->info.audio.current_PTS;
       mb->timecode_list = g_list_append (mb->timecode_list, tc);
@@ -493,7 +493,7 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
     mb->info.audio.layer = 4 - layer_index;
     lsf = (id & (1 << 20)) ? ((id & (1 << 19)) ? 0 : 1) : 1;
     mb->info.audio.bit_rate =
-	bitrate_index[lsf][mb->info.audio.layer - 1][((id >> 12) & 0xf)];
+        bitrate_index[lsf][mb->info.audio.layer - 1][((id >> 12) & 0xf)];
     samplerate_index = (id >> 10) & 0x3;
     padding = (id >> 9) & 0x1;
 
@@ -514,16 +514,16 @@ mpeg1mux_buffer_update_audio_info (Mpeg1MuxBuffer * mb)
     mb->current_start = offset + bpf;
 
     mb->info.audio.samples_per_second =
-	(double) dfrequency[mb->info.audio.frequency];
+        (double) dfrequency[mb->info.audio.frequency];
 
     mb->info.audio.current_PTS =
-	(mb->info.audio.decoding_order * samples[mb->info.audio.layer]) /
-	mb->info.audio.samples_per_second * 90.;
+        (mb->info.audio.decoding_order * samples[mb->info.audio.layer]) /
+        mb->info.audio.samples_per_second * 90.;
 
     tc->DTS = tc->PTS = mb->info.audio.current_PTS;
     GST_DEBUG ("mpeg1mux::update_audio_info: PTS %" G_GUINT64_FORMAT ", %"
-	G_GUINT64_FORMAT " length %lu", mb->info.audio.current_PTS, tc->PTS,
-	tc->length);
+        G_GUINT64_FORMAT " length %lu", mb->info.audio.current_PTS, tc->PTS,
+        tc->length);
     mb->timecode_list = g_list_append (mb->timecode_list, tc);
 
     mb->info.audio.decoding_order++;

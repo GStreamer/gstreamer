@@ -86,8 +86,8 @@ tarkinenc_get_type (void)
     };
 
     tarkinenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "TarkinEnc", &tarkinenc_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "TarkinEnc", &tarkinenc_info,
+        0);
   }
   return tarkinenc_type;
 }
@@ -146,15 +146,15 @@ gst_tarkinenc_class_init (TarkinEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "bitrate", "bitrate",
-	  G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_S_MOMENTS,
       g_param_spec_int ("s_moments", "Synthesis Moments",
-	  "Number of vanishing moments for the synthesis filter",
-	  1, 4, 2, G_PARAM_READWRITE));
+          "Number of vanishing moments for the synthesis filter",
+          1, 4, 2, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_A_MOMENTS,
       g_param_spec_int ("a_moments", "Analysis Moments",
-	  "Number of vanishing moments for the analysis filter",
-	  1, 4, 2, G_PARAM_READWRITE));
+          "Number of vanishing moments for the analysis filter",
+          1, 4, 2, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -313,7 +313,7 @@ gst_tarkinenc_chain (GstPad * pad, GstData * _data)
 
   if (!tarkinenc->setup) {
     GST_ELEMENT_ERROR (tarkinenc, CORE, NEGOTIATION, (NULL),
-	("encoder not initialized (input is not tarkin?)"));
+        ("encoder not initialized (input is not tarkin?)"));
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
@@ -324,12 +324,12 @@ gst_tarkinenc_chain (GstPad * pad, GstData * _data)
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
       case GST_EVENT_EOS:
-	tarkin_analysis_framein (tarkinenc->tarkin_stream, NULL, 0, NULL);	/* EOS */
-	tarkin_comment_clear (&tarkinenc->tc);
-	tarkin_stream_destroy (tarkinenc->tarkin_stream);
+        tarkin_analysis_framein (tarkinenc->tarkin_stream, NULL, 0, NULL);      /* EOS */
+        tarkin_comment_clear (&tarkinenc->tc);
+        tarkin_stream_destroy (tarkinenc->tarkin_stream);
       default:
-	gst_pad_event_default (pad, GST_EVENT (buf));
-	break;
+        gst_pad_event_default (pad, GST_EVENT (buf));
+        break;
     }
   } else {
     gchar *data;
@@ -396,9 +396,9 @@ gst_tarkinenc_set_property (GObject * object, guint prop_id,
 
       s_moments = g_value_get_int (value);
       if (s_moments != 1 || s_moments != 2 || s_moments != 4) {
-	g_warning ("tarkinenc: s_moments must be 1, 2 or 4");
+        g_warning ("tarkinenc: s_moments must be 1, 2 or 4");
       } else {
-	tarkinenc->s_moments = s_moments;
+        tarkinenc->s_moments = s_moments;
       }
       break;
     }
@@ -408,9 +408,9 @@ gst_tarkinenc_set_property (GObject * object, guint prop_id,
 
       a_moments = g_value_get_int (value);
       if (a_moments != 1 || a_moments != 2 || a_moments != 4) {
-	g_warning ("tarkinenc: a_moments must be 1, 2 or 4");
+        g_warning ("tarkinenc: a_moments must be 1, 2 or 4");
       } else {
-	tarkinenc->a_moments = a_moments;
+        tarkinenc->a_moments = a_moments;
       }
       break;
     }

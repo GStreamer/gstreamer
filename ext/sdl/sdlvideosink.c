@@ -108,11 +108,11 @@ gst_sdlvideosink_get_type (void)
     };
 
     sdlvideosink_type = g_type_register_static (GST_TYPE_VIDEOSINK,
-	"GstSDLVideoSink", &sdlvideosink_info, 0);
+        "GstSDLVideoSink", &sdlvideosink_info, 0);
     g_type_add_interface_static (sdlvideosink_type,
-	GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
+        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
     g_type_add_interface_static (sdlvideosink_type, GST_TYPE_X_OVERLAY,
-	&xoverlay_info);
+        &xoverlay_info);
   }
 
   return sdlvideosink_type;
@@ -135,11 +135,11 @@ gst_sdlvideosink_base_init (gpointer g_class)
   capslist = gst_caps_new_empty ();
   for (i = 0; i < 5; i++) {
     gst_caps_append_structure (capslist,
-	gst_structure_new ("video/x-raw-yuv",
-	    "format", GST_TYPE_FOURCC, format[i],
-	    "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	    "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	    "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL));
+        gst_structure_new ("video/x-raw-yuv",
+            "format", GST_TYPE_FOURCC, format[i],
+            "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL));
   }
 
   sink_template = gst_pad_template_new ("sink",
@@ -207,7 +207,7 @@ gst_sdlvideosink_buffer_new (GstBufferPool * pool,
   if (sdlvideosink->format == SDL_YV12_OVERLAY ||
       sdlvideosink->format == SDL_IYUV_OVERLAY) {
     GST_BUFFER_SIZE (buffer) =
-	sdlvideosink->width * sdlvideosink->height * 3 / 2;
+        sdlvideosink->width * sdlvideosink->height * 3 / 2;
   } else {
     GST_BUFFER_SIZE (buffer) = sdlvideosink->width * sdlvideosink->height * 2;
   }
@@ -271,9 +271,9 @@ gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
   sdlvideosink->lock = g_mutex_new ();
 
 #if 0
-  sdlvideosink->bufferpool = gst_buffer_pool_new (NULL,	/* free */
-      NULL,			/* copy */
-      (GstBufferPoolBufferNewFunction) gst_sdlvideosink_buffer_new, NULL,	/* buffer copy, the default is fine */
+  sdlvideosink->bufferpool = gst_buffer_pool_new (NULL, /* free */
+      NULL,                     /* copy */
+      (GstBufferPoolBufferNewFunction) gst_sdlvideosink_buffer_new, NULL,       /* buffer copy, the default is fine */
       (GstBufferPoolBufferFreeFunction) gst_sdlvideosink_buffer_free,
       sdlvideosink);
 #endif
@@ -354,7 +354,7 @@ gst_sdlvideosink_lock (GstSDLVideoSink * sdlvideosink)
   /* assure that we've got a screen */
   if (!sdlvideosink->screen || !sdlvideosink->overlay) {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
-	("Tried to lock screen without being set-up"));
+        ("Tried to lock screen without being set-up"));
     return FALSE;
   }
 
@@ -362,13 +362,13 @@ gst_sdlvideosink_lock (GstSDLVideoSink * sdlvideosink)
   if (SDL_MUSTLOCK (sdlvideosink->screen)) {
     if (SDL_LockSurface (sdlvideosink->screen) < 0) {
       GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
-	  ("SDL: couldn't lock the SDL video window: %s", SDL_GetError ()));
+          ("SDL: couldn't lock the SDL video window: %s", SDL_GetError ()));
       return FALSE;
     }
   }
   if (SDL_LockYUVOverlay (sdlvideosink->overlay) < 0) {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
-	("SDL: couldn\'t lock the SDL YUV overlay: %s", SDL_GetError ()));
+        ("SDL: couldn\'t lock the SDL YUV overlay: %s", SDL_GetError ()));
     return FALSE;
   }
 
@@ -413,7 +413,7 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
   /* Initialize the SDL library */
   if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, INIT, (NULL),
-	("Couldn't initialize SDL: %s", SDL_GetError ()));
+        ("Couldn't initialize SDL: %s", SDL_GetError ()));
     return FALSE;
   }
 
@@ -449,8 +449,8 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
       GST_VIDEOSINK_HEIGHT (sdlvideosink), 0, SDL_HWSURFACE | SDL_RESIZABLE);
   if (sdlvideosink->screen == NULL) {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
-	("SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
-	    GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError ()));
+        ("SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
+            GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError ()));
     return FALSE;
   }
 
@@ -459,16 +459,16 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
       sdlvideosink->height, sdlvideosink->format, sdlvideosink->screen);
   if (sdlvideosink->overlay == NULL) {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
-	("SDL: Couldn't create SDL YUV overlay (%dx%d \'" GST_FOURCC_FORMAT
-	    "\'): %s", sdlvideosink->width, sdlvideosink->height,
-	    GST_FOURCC_ARGS (sdlvideosink->format), SDL_GetError ()));
+        ("SDL: Couldn't create SDL YUV overlay (%dx%d \'" GST_FOURCC_FORMAT
+            "\'): %s", sdlvideosink->width, sdlvideosink->height,
+            GST_FOURCC_ARGS (sdlvideosink->format), SDL_GetError ()));
     return FALSE;
   } else {
     GST_DEBUG ("Using a %dx%d %dbpp SDL screen with a %dx%d \'"
-	GST_FOURCC_FORMAT "\' YUV overlay", GST_VIDEOSINK_WIDTH (sdlvideosink),
-	GST_VIDEOSINK_HEIGHT (sdlvideosink),
-	sdlvideosink->screen->format->BitsPerPixel, sdlvideosink->width,
-	sdlvideosink->height, GST_FOURCC_ARGS (sdlvideosink->format));
+        GST_FOURCC_FORMAT "\' YUV overlay", GST_VIDEOSINK_WIDTH (sdlvideosink),
+        GST_VIDEOSINK_HEIGHT (sdlvideosink),
+        sdlvideosink->screen->format->BitsPerPixel, sdlvideosink->width,
+        sdlvideosink->height, GST_FOURCC_ARGS (sdlvideosink->format));
   }
 
   sdlvideosink->rect.x = 0;
@@ -505,7 +505,7 @@ gst_sdlvideosink_fixate (GstPad * pad, const GstCaps * caps)
     return newcaps;
   }
   if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-	  30.0)) {
+          30.0)) {
     return newcaps;
   }
 
@@ -555,13 +555,13 @@ gst_sdlvideosink_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-	/*gst_clock_handle_discont (sdlvideosink->clock,
-	   (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value); */
-	break;
+        offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+        /*gst_clock_handle_discont (sdlvideosink->clock,
+           (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value); */
+        break;
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
     gst_event_unref (event);
     return;
@@ -578,19 +578,19 @@ gst_sdlvideosink_chain (GstPad * pad, GstData * _data)
 
     /* buf->yuv - FIXME: bufferpool! */
     if (sdlvideosink->format == SDL_IYUV_OVERLAY ||
-	sdlvideosink->format == SDL_YV12_OVERLAY) {
+        sdlvideosink->format == SDL_YV12_OVERLAY) {
       memcpy (sdlvideosink->overlay->pixels[0], GST_BUFFER_DATA (buf),
-	  sdlvideosink->width * sdlvideosink->height);
+          sdlvideosink->width * sdlvideosink->height);
       memcpy (sdlvideosink->overlay->pixels[1],
-	  GST_BUFFER_DATA (buf) + sdlvideosink->width * sdlvideosink->height,
-	  sdlvideosink->width * sdlvideosink->height / 4);
+          GST_BUFFER_DATA (buf) + sdlvideosink->width * sdlvideosink->height,
+          sdlvideosink->width * sdlvideosink->height / 4);
       memcpy (sdlvideosink->overlay->pixels[2],
-	  GST_BUFFER_DATA (buf) +
-	  sdlvideosink->width * sdlvideosink->height * 5 / 4,
-	  sdlvideosink->width * sdlvideosink->height / 4);
+          GST_BUFFER_DATA (buf) +
+          sdlvideosink->width * sdlvideosink->height * 5 / 4,
+          sdlvideosink->width * sdlvideosink->height / 4);
     } else {
       memcpy (sdlvideosink->overlay->pixels[0], GST_BUFFER_DATA (buf),
-	  sdlvideosink->width * sdlvideosink->height * 2);
+          sdlvideosink->width * sdlvideosink->height * 2);
     }
 
     gst_sdlvideosink_unlock (sdlvideosink);
@@ -604,11 +604,11 @@ gst_sdlvideosink_chain (GstPad * pad, GstData * _data)
   while (SDL_PollEvent (&sdl_event)) {
     switch (sdl_event.type) {
       case SDL_VIDEORESIZE:
-	/* create a SDL window of the size requested by the user */
-	GST_VIDEOSINK_WIDTH (sdlvideosink) = sdl_event.resize.w;
-	GST_VIDEOSINK_HEIGHT (sdlvideosink) = sdl_event.resize.h;
-	gst_sdlvideosink_create (sdlvideosink);
-	break;
+        /* create a SDL window of the size requested by the user */
+        GST_VIDEOSINK_WIDTH (sdlvideosink) = sdl_event.resize.w;
+        GST_VIDEOSINK_HEIGHT (sdlvideosink) = sdl_event.resize.h;
+        gst_sdlvideosink_create (sdlvideosink);
+        break;
     }
   }
 }
@@ -661,7 +661,7 @@ gst_sdlvideosink_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!gst_sdlvideosink_initsdl (sdlvideosink))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
     case GST_STATE_PAUSED_TO_READY:
@@ -671,7 +671,7 @@ gst_sdlvideosink_change_state (GstElement * element)
       gst_sdlvideosink_deinitsdl (sdlvideosink);
       GST_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
-    default:			/* do nothing */
+    default:                   /* do nothing */
       break;
   }
 
@@ -690,7 +690,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "sdlvideosink", GST_RANK_NONE,
-	  GST_TYPE_SDLVIDEOSINK))
+          GST_TYPE_SDLVIDEOSINK))
     return FALSE;
 
   return TRUE;

@@ -142,9 +142,10 @@ gst_mixmatrix_get_type (void)
       0,
       (GInstanceInitFunc) gst_mixmatrix_init,
     };
+
     mixmatrix_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMixMatrix",
-	&mixmatrix_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMixMatrix",
+        &mixmatrix_info, 0);
   }
   return mixmatrix_type;
 }
@@ -181,15 +182,15 @@ gst_mixmatrix_class_init (GstMixMatrixClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SINKPADS,
       g_param_spec_int ("sinkpads", "Sink Pads",
-	  "Number of sink pads in matrix", 0, G_MAXINT, 8, G_PARAM_READABLE));
+          "Number of sink pads in matrix", 0, G_MAXINT, 8, G_PARAM_READABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SRCPADS,
       g_param_spec_int ("srcpads", "Src Pads", "Number of src pads in matrix",
-	  0, G_MAXINT, 8, G_PARAM_READABLE));
+          0, G_MAXINT, 8, G_PARAM_READABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MATRIXPTR,
       g_param_spec_pointer ("matrixptr", "Matrix Pointer",
-	  "Pointer to gfloat mix matrix", G_PARAM_READABLE));
+          "Pointer to gfloat mix matrix", G_PARAM_READABLE));
 
   gobject_class->set_property = gst_mixmatrix_set_property;
   gobject_class->get_property = gst_mixmatrix_get_property;
@@ -271,17 +272,17 @@ mixmatrix_resize (GstMixMatrix * mix, int sinkpads, int srcpads)
   // check the sinkpads list
   if (sinkresize) {
     mix->sinkpads =
-	(GstPad **) grow_ptrlist ((void **) mix->sinkpads, mix->sinkpadalloc,
-	sinkpads);
+        (GstPad **) grow_ptrlist ((void **) mix->sinkpads, mix->sinkpadalloc,
+        sinkpads);
     mix->sinkbs =
-	(GstByteStream **) grow_ptrlist ((void **) mix->sinkbs,
-	mix->sinkpadalloc, sinkpads);
+        (GstByteStream **) grow_ptrlist ((void **) mix->sinkbs,
+        mix->sinkpadalloc, sinkpads);
   }
   // check the srcpads list
   if (srcresize) {
     mix->srcpads =
-	(GstPad **) grow_ptrlist ((void **) mix->srcpads, mix->srcpadalloc,
-	srcpads);
+        (GstPad **) grow_ptrlist ((void **) mix->srcpads, mix->srcpadalloc,
+        srcpads);
   }
   // now resize the matrix if either has changed
   if (sinkresize || srcresize) {
@@ -293,8 +294,8 @@ mixmatrix_resize (GstMixMatrix * mix, int sinkpads, int srcpads)
       // otherwise we have to copy line by line
     } else {
       for (i = 0; i < mix->srcpadalloc; i++)
-	memcpy (newmatrix[i], mix->matrix[i],
-	    sizeof (gfloat) * mix->srcpadalloc);
+        memcpy (newmatrix[i], mix->matrix[i],
+            sizeof (gfloat) * mix->srcpadalloc);
     }
 
     // would signal here!
@@ -343,9 +344,9 @@ gst_mixmatrix_connect (GstPad * pad, const GstCaps * caps)
   for (i = 0; i < mix->srcpadalloc; i++) {
     if (mix->srcpads[i]) {
       if (GST_PAD_CAPS (mix->srcpads[i]) == NULL) {
-	if (gst_pad_try_set_caps (mix->srcpads[i], caps) <= 0) {
-	  return GST_PAD_LINK_REFUSED;
-	}
+        if (gst_pad_try_set_caps (mix->srcpads[i], caps) <= 0) {
+          return GST_PAD_LINK_REFUSED;
+        }
       }
     }
   }
@@ -377,11 +378,11 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
     // determine if it's bigger than the current size
     if (padnum >= mix->sinkpadalloc)
       mixmatrix_resize (mix, ROUND_UP (padnum, mix->grpsize),
-	  mix->sinkpadalloc);
+          mix->sinkpadalloc);
 
     pad =
-	gst_pad_new_from_template (gst_static_pad_template_get
-	(&mixmatrix_sink_template), name);
+        gst_pad_new_from_template (gst_static_pad_template_get
+        (&mixmatrix_sink_template), name);
     GST_PAD_ELEMENT_PRIVATE (pad) = GINT_TO_POINTER (padnum);
     gst_element_add_pad (GST_ELEMENT (mix), pad);
 //    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
@@ -404,8 +405,8 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
       mixmatrix_resize (mix, ROUND_UP (padnum, mix->grpsize), mix->srcpadalloc);
 
     pad =
-	gst_pad_new_from_template (gst_static_pad_template_get
-	(&mixmatrix_src_template), name);
+        gst_pad_new_from_template (gst_static_pad_template_get
+        (&mixmatrix_src_template), name);
     GST_PAD_ELEMENT_PRIVATE (pad) = GINT_TO_POINTER (padnum);
     gst_element_add_pad (GST_ELEMENT (mix), pad);
 //    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
@@ -450,7 +451,7 @@ gst_mixmatrix_loop (GstElement * element)
       infloats[i] = (gfloat *) GST_BUFFER_DATA (inbufs[i]);
       // loop through each src pad
       for (j = 0; j < mix->srcpadalloc; j++) {
-	if (mix->srcpads[j] != NULL) {
+        if (mix->srcpads[j] != NULL) {
 /*
 {
   int z;
@@ -461,12 +462,12 @@ gst_mixmatrix_loop (GstElement * element)
 }
 fprintf(stderr,"attempting to get gain for %dx%d\n",i,j);
 */
-	  gain = mix->matrix[i][j];
+          gain = mix->matrix[i][j];
 //          fprintf(stderr,"%d->%d=%0.2f ",i,j,gain);
-	  for (k = 0; k < mix->outsize; k++) {
-	    outfloats[j][k] += infloats[i][k] * gain;
-	  }
-	}
+          for (k = 0; k < mix->outsize; k++) {
+            outfloats[j][k] += infloats[i][k] * gain;
+          }
+        }
       }
     }
   }

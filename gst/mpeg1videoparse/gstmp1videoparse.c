@@ -46,19 +46,19 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) 1, "
-	"systemstream = (boolean) false, "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], "
-	"pixel_width = (int) [ 1, 255 ], "
-	"pixel_height = (int) [ 1, 255 ], " "framerate = (double) [ 0, MAX ]")
+        "mpegversion = (int) 1, "
+        "systemstream = (boolean) false, "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], "
+        "pixel_width = (int) [ 1, 255 ], "
+        "pixel_height = (int) [ 1, 255 ], " "framerate = (double) [ 0, MAX ]")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) 1, " "systemstream = (boolean) false")
+        "mpegversion = (int) 1, " "systemstream = (boolean) false")
     );
 
 /* Mp1VideoParse signals and args */
@@ -106,9 +106,10 @@ mp1videoparse_get_type (void)
       0,
       (GInstanceInitFunc) gst_mp1videoparse_init,
     };
+
     mp1videoparse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "Mp1VideoParse",
-	&mp1videoparse_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "Mp1VideoParse",
+        &mp1videoparse_info, 0);
   }
   return mp1videoparse_type;
 }
@@ -181,9 +182,9 @@ mp1videoparse_parse_seq (Mp1VideoParse * mp1videoparse, GstBuffer * buf)
   fps_idx = (n & 0x0000000f) >> 0;
 
   if (fps_idx >= 9 || fps_idx <= 0)
-    fps_idx = 3;		/* well, we need a default */
+    fps_idx = 3;                /* well, we need a default */
   if (asr_idx >= 15 || asr_idx <= 0)
-    asr_idx = 1;		/* no aspect ratio */
+    asr_idx = 1;                /* no aspect ratio */
 
   if (asr_table[asr_idx] != mp1videoparse->asr ||
       fps_table[fps_idx] != mp1videoparse->fps ||
@@ -200,12 +201,12 @@ mp1videoparse_parse_seq (Mp1VideoParse * mp1videoparse, GstBuffer * buf)
     p_h = (asr_table[asr_idx] > 1.0) ? (100 * asr_table[asr_idx]) : 1;
 
     caps = gst_caps_new_simple ("video/mpeg",
-	"systemstream", G_TYPE_BOOLEAN, FALSE,
-	"mpegversion", G_TYPE_INT, 1,
-	"width", G_TYPE_INT, width,
-	"height", G_TYPE_INT, height,
-	"framerate", G_TYPE_DOUBLE, fps_table[fps_idx],
-	"pixel_width", G_TYPE_INT, p_w, "pixel_height", G_TYPE_INT, p_h, NULL);
+        "systemstream", G_TYPE_BOOLEAN, FALSE,
+        "mpegversion", G_TYPE_INT, 1,
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", G_TYPE_DOUBLE, fps_table[fps_idx],
+        "pixel_width", G_TYPE_INT, p_w, "pixel_height", G_TYPE_INT, p_h, NULL);
 
     GST_DEBUG ("New mpeg1videoparse caps: " GST_PTR_FORMAT, caps);
 
@@ -220,7 +221,7 @@ mp1videoparse_valid_sync (Mp1VideoParse * mp1videoparse, guint32 head,
   switch (head) {
     case SEQ_START_CODE:{
       GstBuffer *subbuf = gst_buffer_create_sub (buf, 4,
-	  GST_BUFFER_SIZE (buf) - 4);
+          GST_BUFFER_SIZE (buf) - 4);
 
       mp1videoparse_parse_seq (mp1videoparse, subbuf);
       gst_buffer_unref (subbuf);
@@ -233,7 +234,7 @@ mp1videoparse_valid_sync (Mp1VideoParse * mp1videoparse, guint32 head,
       return TRUE;
     default:
       if (head >= SLICE_MIN_START_CODE && head <= SLICE_MAX_START_CODE)
-	return TRUE;
+        return TRUE;
   }
 
   return FALSE;
@@ -259,10 +260,10 @@ mp1videoparse_find_next_gop (Mp1VideoParse * mp1videoparse, GstBuffer * buf)
       have_sync = TRUE;
     } else if (have_sync) {
       if (byte == (SEQ_START_CODE & 0xff) || byte == (GOP_START_CODE & 0xff)) {
-	return offset - 4;
+        return offset - 4;
       } else {
-	sync_zeros = 0;
-	have_sync = FALSE;
+        sync_zeros = 0;
+        have_sync = FALSE;
       }
     } else {
       sync_zeros = 0;
@@ -277,10 +278,10 @@ gst_mp1videoparse_time_code (guchar * gop, gfloat fps)
 {
   guint32 data = GUINT32_FROM_BE (*(guint32 *) gop);
 
-  return ((((data & 0xfc000000) >> 26) * 3600 * GST_SECOND) +	/* hours */
-      (((data & 0x03f00000) >> 20) * 60 * GST_SECOND) +	/* minutes */
-      (((data & 0x0007e000) >> 13) * GST_SECOND) +	/* seconds */
-      (((data & 0x00001f80) >> 7) * GST_SECOND / fps));	/* frames */
+  return ((((data & 0xfc000000) >> 26) * 3600 * GST_SECOND) +   /* hours */
+      (((data & 0x03f00000) >> 20) * 60 * GST_SECOND) + /* minutes */
+      (((data & 0x0007e000) >> 13) * GST_SECOND) +      /* seconds */
+      (((data & 0x00001f80) >> 7) * GST_SECOND / fps)); /* frames */
 }
 
 static void
@@ -334,17 +335,17 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_FLUSH:
       case GST_EVENT_DISCONTINUOUS:
-	gst_mp1videoparse_flush (mp1videoparse);
-	break;
+        gst_mp1videoparse_flush (mp1videoparse);
+        break;
       case GST_EVENT_EOS:
-	gst_mp1videoparse_flush (mp1videoparse);
-	gst_event_ref (event);
-	gst_pad_push (outpad, GST_DATA (event));
-	gst_element_set_eos (GST_ELEMENT (mp1videoparse));
-	break;
+        gst_mp1videoparse_flush (mp1videoparse);
+        gst_event_ref (event);
+        gst_pad_push (outpad, GST_DATA (event));
+        gst_element_set_eos (GST_ELEMENT (mp1videoparse));
+        break;
       default:
-	GST_DEBUG ("Unhandled event type %d", GST_EVENT_TYPE (event));
-	break;
+        GST_DEBUG ("Unhandled event type %d", GST_EVENT_TYPE (event));
+        break;
     }
 
     gst_event_unref (event);
@@ -382,43 +383,43 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
     GST_DEBUG ("mp1videoparse: head is %08x", (unsigned int) head);
 
     if (!mp1videoparse_valid_sync (mp1videoparse, head,
-	    mp1videoparse->partialbuf) || mp1videoparse->need_resync) {
+            mp1videoparse->partialbuf) || mp1videoparse->need_resync) {
       sync_pos =
-	  mp1videoparse_find_next_gop (mp1videoparse,
-	  mp1videoparse->partialbuf);
+          mp1videoparse_find_next_gop (mp1videoparse,
+          mp1videoparse->partialbuf);
       if (sync_pos >= 0) {
-	mp1videoparse->need_resync = FALSE;
-	GST_DEBUG ("mp1videoparse: found new gop at %d", sync_pos);
+        mp1videoparse->need_resync = FALSE;
+        GST_DEBUG ("mp1videoparse: found new gop at %d", sync_pos);
 
-	if (sync_pos != 0) {
-	  temp =
-	      gst_buffer_create_sub (mp1videoparse->partialbuf, sync_pos,
-	      size - sync_pos);
-	  g_assert (temp != NULL);
-	  gst_buffer_unref (mp1videoparse->partialbuf);
-	  mp1videoparse->partialbuf = temp;
-	  data = GST_BUFFER_DATA (mp1videoparse->partialbuf);
-	  size = GST_BUFFER_SIZE (mp1videoparse->partialbuf);
-	  offset = 0;
-	}
+        if (sync_pos != 0) {
+          temp =
+              gst_buffer_create_sub (mp1videoparse->partialbuf, sync_pos,
+              size - sync_pos);
+          g_assert (temp != NULL);
+          gst_buffer_unref (mp1videoparse->partialbuf);
+          mp1videoparse->partialbuf = temp;
+          data = GST_BUFFER_DATA (mp1videoparse->partialbuf);
+          size = GST_BUFFER_SIZE (mp1videoparse->partialbuf);
+          offset = 0;
+        }
 
-	head = GUINT32_FROM_BE (*((guint32 *) data));
-	/* re-call this function so that if we hadn't already, we can
-	 * now read the sequence header and parse video properties,
-	 * set caps, stream data, be happy, bla, bla, bla... */
-	if (!mp1videoparse_valid_sync (mp1videoparse, head,
-		mp1videoparse->partialbuf))
-	  g_error ("Found sync but no valid sync point at pos 0x0");
+        head = GUINT32_FROM_BE (*((guint32 *) data));
+        /* re-call this function so that if we hadn't already, we can
+         * now read the sequence header and parse video properties,
+         * set caps, stream data, be happy, bla, bla, bla... */
+        if (!mp1videoparse_valid_sync (mp1videoparse, head,
+                mp1videoparse->partialbuf))
+          g_error ("Found sync but no valid sync point at pos 0x0");
       } else {
-	GST_DEBUG ("mp1videoparse: could not sync");
-	gst_buffer_unref (mp1videoparse->partialbuf);
-	mp1videoparse->partialbuf = NULL;
-	return;
+        GST_DEBUG ("mp1videoparse: could not sync");
+        gst_buffer_unref (mp1videoparse->partialbuf);
+        mp1videoparse->partialbuf = NULL;
+        return;
       }
     }
 
     if (mp1videoparse->picture_in_buffer == 1 &&
-	time_stamp != GST_CLOCK_TIME_NONE) {
+        time_stamp != GST_CLOCK_TIME_NONE) {
       mp1videoparse->last_pts = time_stamp;
     }
 
@@ -430,56 +431,56 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
     while (offset < size - 1) {
       sync_byte = *(data + offset);
       if (sync_byte == 0) {
-	sync_state++;
+        sync_state++;
       } else if ((sync_byte == 1) && (sync_state >= 2)) {
-	GST_DEBUG ("mp1videoparse: code 0x000001%02x", data[offset + 1]);
-	if (data[offset + 1] == (PICTURE_START_CODE & 0xff)) {
-	  mp1videoparse->picture_in_buffer++;
-	  if (mp1videoparse->picture_in_buffer == 1) {
-	    if (time_stamp != GST_CLOCK_TIME_NONE) {
-	      mp1videoparse->last_pts = time_stamp;
-	    }
-	    sync_state = 0;
-	  } else if (mp1videoparse->picture_in_buffer == 2) {
-	    have_sync = TRUE;
-	    break;
-	  } else {
-	    GST_DEBUG ("mp1videoparse: %d in buffer",
-		mp1videoparse->picture_in_buffer);
-	    g_assert_not_reached ();
-	  }
-	}
-	/* A new sequence (or GOP) is a valid sync too. Note that the
-	 * sequence header should be put in the next buffer, not here. */
-	else if (data[offset + 1] == (SEQ_START_CODE & 0xFF) ||
-	    data[offset + 1] == (GOP_START_CODE & 0xFF)) {
-	  if (mp1videoparse->picture_in_buffer == 0 &&
-	      data[offset + 1] == (GOP_START_CODE & 0xFF)) {
-	    mp1videoparse->last_pts = gst_mp1videoparse_time_code (&data[2],
-		mp1videoparse->fps);
-	  } else if (mp1videoparse->picture_in_buffer == 1) {
-	    have_sync = TRUE;
-	    break;
-	  } else {
-	    g_assert (mp1videoparse->picture_in_buffer == 0);
-	  }
-	}
-	/* end-of-sequence is a valid sync point and should be included
-	 * in the current picture, not the next. */
-	else if (data[offset + 1] == (SEQ_END_CODE & 0xFF)) {
-	  if (mp1videoparse->picture_in_buffer == 1) {
-	    offset += 4;
-	    have_sync = TRUE;
-	    break;
-	  } else {
-	    g_assert (mp1videoparse->picture_in_buffer == 0);
-	  }
-	} else
-	  sync_state = 0;
+        GST_DEBUG ("mp1videoparse: code 0x000001%02x", data[offset + 1]);
+        if (data[offset + 1] == (PICTURE_START_CODE & 0xff)) {
+          mp1videoparse->picture_in_buffer++;
+          if (mp1videoparse->picture_in_buffer == 1) {
+            if (time_stamp != GST_CLOCK_TIME_NONE) {
+              mp1videoparse->last_pts = time_stamp;
+            }
+            sync_state = 0;
+          } else if (mp1videoparse->picture_in_buffer == 2) {
+            have_sync = TRUE;
+            break;
+          } else {
+            GST_DEBUG ("mp1videoparse: %d in buffer",
+                mp1videoparse->picture_in_buffer);
+            g_assert_not_reached ();
+          }
+        }
+        /* A new sequence (or GOP) is a valid sync too. Note that the
+         * sequence header should be put in the next buffer, not here. */
+        else if (data[offset + 1] == (SEQ_START_CODE & 0xFF) ||
+            data[offset + 1] == (GOP_START_CODE & 0xFF)) {
+          if (mp1videoparse->picture_in_buffer == 0 &&
+              data[offset + 1] == (GOP_START_CODE & 0xFF)) {
+            mp1videoparse->last_pts = gst_mp1videoparse_time_code (&data[2],
+                mp1videoparse->fps);
+          } else if (mp1videoparse->picture_in_buffer == 1) {
+            have_sync = TRUE;
+            break;
+          } else {
+            g_assert (mp1videoparse->picture_in_buffer == 0);
+          }
+        }
+        /* end-of-sequence is a valid sync point and should be included
+         * in the current picture, not the next. */
+        else if (data[offset + 1] == (SEQ_END_CODE & 0xFF)) {
+          if (mp1videoparse->picture_in_buffer == 1) {
+            offset += 4;
+            have_sync = TRUE;
+            break;
+          } else {
+            g_assert (mp1videoparse->picture_in_buffer == 0);
+          }
+        } else
+          sync_state = 0;
       }
       /* something else... */
       else
-	sync_state = 0;
+        sync_state = 0;
       /* go down the buffer */
       offset++;
     }
@@ -487,7 +488,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
     if (have_sync) {
       offset -= 2;
       GST_DEBUG ("mp1videoparse: synced at %ld code 0x000001%02x", offset,
-	  data[offset + 3]);
+          data[offset + 3]);
 
       outbuf = gst_buffer_create_sub (mp1videoparse->partialbuf, 0, offset + 4);
       g_assert (outbuf != NULL);
@@ -496,31 +497,31 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
       mp1videoparse->last_pts += GST_BUFFER_DURATION (outbuf);
 
       if (mp1videoparse->in_flush) {
-	/* FIXME, send a flush event here */
-	mp1videoparse->in_flush = FALSE;
+        /* FIXME, send a flush event here */
+        mp1videoparse->in_flush = FALSE;
       }
 
       if (GST_PAD_CAPS (outpad) != NULL) {
-	GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT,
-	    GST_BUFFER_SIZE (outbuf), GST_BUFFER_TIMESTAMP (outbuf));
-	gst_pad_push (outpad, GST_DATA (outbuf));
-	GST_DEBUG ("mp1videoparse: pushing  done");
+        GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT,
+            GST_BUFFER_SIZE (outbuf), GST_BUFFER_TIMESTAMP (outbuf));
+        gst_pad_push (outpad, GST_DATA (outbuf));
+        GST_DEBUG ("mp1videoparse: pushing  done");
       } else {
-	GST_DEBUG ("No capsnego yet, delaying buffer push");
-	gst_buffer_unref (outbuf);
+        GST_DEBUG ("No capsnego yet, delaying buffer push");
+        gst_buffer_unref (outbuf);
       }
       mp1videoparse->picture_in_buffer = 0;
 
       temp =
-	  gst_buffer_create_sub (mp1videoparse->partialbuf, offset,
-	  size - offset);
+          gst_buffer_create_sub (mp1videoparse->partialbuf, offset,
+          size - offset);
       gst_buffer_unref (mp1videoparse->partialbuf);
       mp1videoparse->partialbuf = temp;
       offset = 0;
     } else {
       if (time_stamp != GST_CLOCK_TIME_NONE) {
-	mp1videoparse->last_pts = time_stamp;
-	break;
+        mp1videoparse->last_pts = time_stamp;
+        break;
       }
     }
   } while (1);

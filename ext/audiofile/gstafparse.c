@@ -57,13 +57,13 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"rate = (int) [ 1, MAX ], "
-	"channels = (int) [ 1, MAX ], "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"signed = (boolean) { true, false }, "
-	"buffer-frames = (int) [ 1, MAX ]")
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "signed = (boolean) { true, false }, "
+        "buffer-frames = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate afparse_sink_factory =
@@ -112,9 +112,10 @@ gst_afparse_get_type (void)
       0,
       (GInstanceInitFunc) gst_afparse_init,
     };
+
     afparse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstAFParse", &afparse_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstAFParse", &afparse_info,
+        0);
   }
   return afparse_type;
 }
@@ -151,13 +152,13 @@ gst_afparse_init (GstAFParse * afparse)
 {
   afparse->srcpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-	  (afparse), "src"), "src");
+          (afparse), "src"), "src");
   gst_pad_use_explicit_caps (afparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (afparse), afparse->srcpad);
 
   afparse->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-	  (afparse), "sink"), "sink");
+          (afparse), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (afparse), afparse->sinkpad);
 
   gst_element_set_loop_function (GST_ELEMENT (afparse), gst_afparse_loop);
@@ -217,8 +218,8 @@ gst_afparse_loop (GstElement * element)
       &v_width);
   if (afGetCompression != AF_COMPRESSION_NONE
       || afGetByteOrder (afparse->file,
-	  AF_DEFAULT_TRACK) != afGetVirtualByteOrder (afparse->file,
-	  AF_DEFAULT_TRACK) || s_format != v_format || s_width != v_width) {
+          AF_DEFAULT_TRACK) != afGetVirtualByteOrder (afparse->file,
+          AF_DEFAULT_TRACK) || s_format != v_format || s_width != v_width) {
     bypass_afread = FALSE;
   }
 
@@ -241,24 +242,24 @@ gst_afparse_loop (GstElement * element)
 
       got_bytes = gst_bytestream_read (bs, &buf, bytes_per_read);
       if (got_bytes == 0) {
-	/* we need to check for an event. */
-	gst_bytestream_get_status (bs, &waiting, &event);
-	if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-	  gst_pad_push (afparse->srcpad,
-	      GST_DATA (gst_event_new (GST_EVENT_EOS)));
-	  gst_element_set_eos (GST_ELEMENT (afparse));
-	  break;
-	}
+        /* we need to check for an event. */
+        gst_bytestream_get_status (bs, &waiting, &event);
+        if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+          gst_pad_push (afparse->srcpad,
+              GST_DATA (gst_event_new (GST_EVENT_EOS)));
+          gst_element_set_eos (GST_ELEMENT (afparse));
+          break;
+        }
       } else {
-	GST_BUFFER_TIMESTAMP (buf) = afparse->timestamp;
-	gst_pad_push (afparse->srcpad, GST_DATA (buf));
-	if (got_bytes != bytes_per_read) {
-	  /* this shouldn't happen very often */
-	  /* FIXME calculate the timestamps based on the fewer bytes received */
+        GST_BUFFER_TIMESTAMP (buf) = afparse->timestamp;
+        gst_pad_push (afparse->srcpad, GST_DATA (buf));
+        if (got_bytes != bytes_per_read) {
+          /* this shouldn't happen very often */
+          /* FIXME calculate the timestamps based on the fewer bytes received */
 
-	} else {
-	  afparse->timestamp += frames_per_read * 1E9 / afparse->rate;
-	}
+        } else {
+          afparse->timestamp += frames_per_read * 1E9 / afparse->rate;
+        }
       }
     }
     while (TRUE);
@@ -269,17 +270,17 @@ gst_afparse_loop (GstElement * element)
       GST_BUFFER_TIMESTAMP (buf) = afparse->timestamp;
       data = GST_BUFFER_DATA (buf);
       numframes =
-	  afReadFrames (afparse->file, AF_DEFAULT_TRACK, data, frames_per_read);
+          afReadFrames (afparse->file, AF_DEFAULT_TRACK, data, frames_per_read);
 
       /* events are handled in gst_afparse_vf_read so if there are no
        * frames it must be EOS */
       if (numframes < 1) {
-	gst_buffer_unref (buf);
+        gst_buffer_unref (buf);
 
-	gst_pad_push (afparse->srcpad,
-	    GST_DATA (gst_event_new (GST_EVENT_EOS)));
-	gst_element_set_eos (GST_ELEMENT (afparse));
-	break;
+        gst_pad_push (afparse->srcpad,
+            GST_DATA (gst_event_new (GST_EVENT_EOS)));
+        gst_element_set_eos (GST_ELEMENT (afparse));
+        break;
       }
       GST_BUFFER_SIZE (buf) = numframes * frames_to_bytes;
       gst_pad_push (afparse->srcpad, GST_DATA (buf));
@@ -334,7 +335,7 @@ gst_afparse_plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "afparse", GST_RANK_NONE,
-	  GST_TYPE_AFPARSE))
+          GST_TYPE_AFPARSE))
     return FALSE;
 
   return TRUE;
@@ -363,35 +364,35 @@ gst_afparse_open_file (GstAFParse * afparse)
 
     afparse->channels = afGetChannels (afparse->file, AF_DEFAULT_TRACK);
     afGetSampleFormat (afparse->file, AF_DEFAULT_TRACK,
-	&sampleFormat, &sampleWidth);
+        &sampleFormat, &sampleWidth);
     switch (sampleFormat) {
       case AF_SAMPFMT_TWOSCOMP:
-	afparse->is_signed = TRUE;
-	break;
+        afparse->is_signed = TRUE;
+        break;
       case AF_SAMPFMT_UNSIGNED:
-	afparse->is_signed = FALSE;
-	break;
+        afparse->is_signed = FALSE;
+        break;
       case AF_SAMPFMT_FLOAT:
       case AF_SAMPFMT_DOUBLE:
-	GST_DEBUG ("ERROR: float data not supported yet !\n");
+        GST_DEBUG ("ERROR: float data not supported yet !\n");
     }
     afparse->rate = (guint) afGetRate (afparse->file, AF_DEFAULT_TRACK);
     afparse->width = sampleWidth;
     GST_DEBUG ("input file: %d channels, %d width, %d rate, signed %s\n",
-	afparse->channels, afparse->width, afparse->rate,
-	afparse->is_signed ? "yes" : "no");
+        afparse->channels, afparse->width, afparse->rate,
+        afparse->is_signed ? "yes" : "no");
   }
 
   /* set caps on src */
   /*FIXME: add all the possible formats, especially float ! */
   gst_pad_set_explicit_caps (afparse->srcpad,
       gst_caps_new_simple ("audio/x-raw-int",
-	  "endianness", G_TYPE_INT, G_BYTE_ORDER,
-	  "signed", G_TYPE_BOOLEAN, afparse->is_signed,
-	  "width", G_TYPE_INT, afparse->width,
-	  "depth", G_TYPE_INT, afparse->width,
-	  "rate", G_TYPE_INT, afparse->rate,
-	  "channels", G_TYPE_INT, afparse->channels, NULL));
+          "endianness", G_TYPE_INT, G_BYTE_ORDER,
+          "signed", G_TYPE_BOOLEAN, afparse->is_signed,
+          "width", G_TYPE_INT, afparse->width,
+          "depth", G_TYPE_INT, afparse->width,
+          "rate", G_TYPE_INT, afparse->rate,
+          "channels", G_TYPE_INT, afparse->channels, NULL));
 
   GST_FLAG_SET (afparse, GST_AFPARSE_OPEN);
 
@@ -433,17 +434,17 @@ gst_afparse_vf_read (AFvirtualfile * vfile, void *data, size_t nbytes)
     }
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	return 0;
+        return 0;
       case GST_EVENT_FLUSH:
-	GST_DEBUG ("flush");
-	break;
+        GST_DEBUG ("flush");
+        break;
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG ("seek done");
-	got_bytes = gst_bytestream_peek_bytes (bs, &bytes, nbytes);
-	break;
+        GST_DEBUG ("seek done");
+        got_bytes = gst_bytestream_peek_bytes (bs, &bytes, nbytes);
+        break;
       default:
-	g_warning ("unknown event %d", GST_EVENT_TYPE (event));
-	got_bytes = gst_bytestream_peek_bytes (bs, &bytes, nbytes);
+        g_warning ("unknown event %d", GST_EVENT_TYPE (event));
+        got_bytes = gst_bytestream_peek_bytes (bs, &bytes, nbytes);
     }
   }
 

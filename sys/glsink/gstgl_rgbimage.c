@@ -32,8 +32,8 @@ typedef struct _GstGLImageConnection GstGLImageConnection;
 struct _GstGLImageConnection
 {
   GstImageConnection conn;
-  Display *dpy;			// the Xlib drawing context
-  GLXContext ctx;		// The GLX drawing context
+  Display *dpy;                 // the Xlib drawing context
+  GLXContext ctx;               // The GLX drawing context
   gint w, h;
   gint bpp;
 
@@ -131,15 +131,15 @@ gst_gl_rgbimage_get_caps (GstImageInfo * info)
       100, 100, xpad, (attrib.depth + 7) / 8 * 100);
   if (ximage != NULL) {
     caps =
-	GST_CAPS_NEW ("forcing Video RGB", "video/x-raw-rgb", "format",
-	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), "depth", GST_PROPS_INT (24),
-	"bpp", GST_PROPS_INT (24), "red_mask", GST_PROPS_INT (0xff),
-	"green_mask", GST_PROPS_INT (0xff00), "blue_mask",
-	GST_PROPS_INT (0xff0000), "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-								/*= 1234/4321 (INT) <- endianness */
-	"width", GST_PROPS_INT_RANGE (0, TEX_XSIZE),	/* can't have videos larger than TEX_SIZE */
-	"height", GST_PROPS_INT_RANGE (0, TEX_YSIZE)
-	);
+        GST_CAPS_NEW ("forcing Video RGB", "video/x-raw-rgb", "format",
+        GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), "depth", GST_PROPS_INT (24),
+        "bpp", GST_PROPS_INT (24), "red_mask", GST_PROPS_INT (0xff),
+        "green_mask", GST_PROPS_INT (0xff00), "blue_mask",
+        GST_PROPS_INT (0xff0000), "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+                                                                /*= 1234/4321 (INT) <- endianness */
+        "width", GST_PROPS_INT_RANGE (0, TEX_XSIZE),    /* can't have videos larger than TEX_SIZE */
+        "height", GST_PROPS_INT_RANGE (0, TEX_YSIZE)
+        );
     XDestroyImage (ximage);
   }
 
@@ -260,7 +260,7 @@ gst_gl_rgbimage_put_image (GstImageInfo * info, GstImageData * image)
   glEnable (GL_TEXTURE_2D);
 
   if (xinfo->info.demo) {
-    glTranslatef (0.0, 0.0, -5.0);	// make it avoid the clipping plane, zoom 2.0 instead
+    glTranslatef (0.0, 0.0, -5.0);      // make it avoid the clipping plane, zoom 2.0 instead
     glRotatef (180.0 * sin (xinfo->rotX), 1, 0, 0);
     glRotatef (180.0 * cos (xinfo->rotY), 0, 1, 0);
 
@@ -321,11 +321,11 @@ gst_gl_rgbimage_put_image (GstImageInfo * info, GstImageData * image)
 
     printf ("Recording frame #%d\n", framenr);
     glReadPixels (0, 0, img_width, img_height, GL_RGB, GL_UNSIGNED_BYTE,
-	cap_image_data);
+        cap_image_data);
     // invert the pixels
     for (i = 0; i < img_height; i++)
       memcpy (cap_image_data2 + i * img_width * 3,
-	  cap_image_data + (img_height - 1 - i) * img_width * 3, img_width * 3);
+          cap_image_data + (img_height - 1 - i) * img_width * 3, img_width * 3);
 
     sprintf (capfilename, "cap%04d.ppm", framenr);
     FILE *outfile = fopen (capfilename, "wb");
@@ -336,7 +336,7 @@ gst_gl_rgbimage_put_image (GstImageInfo * info, GstImageData * image)
       fprintf (outfile, "%d %d\n", img_width, img_height);
       fprintf (outfile, "255\n");
       fwrite (cap_image_data2, sizeof (char), img_width * img_height * 3,
-	  outfile);
+          outfile);
       fclose (outfile);
     }
     framenr++;

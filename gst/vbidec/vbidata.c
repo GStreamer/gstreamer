@@ -115,7 +115,7 @@ static char *extcode2 = "\0303\0343\0315\0314\0354\0322\0362\0325"
 
 int
 parityok (int n)
-{				/* check parity for 2 bytes packed in n */
+{                               /* check parity for 2 bytes packed in n */
   int j, k;
 
   for (k = 0, j = 0; j < 7; j++)
@@ -135,11 +135,11 @@ int
 decodebit (unsigned char *data, int threshold)
 {
   return ((data[0] + data[1] + data[2] + data[3] + data[4] + data[5] +
-	  data[6] + data[7] + data[8] + data[9] + data[10] + data[11] +
-	  data[12] + data[13] + data[14] + data[15] + data[16] + data[17] +
-	  data[18] + data[19] + data[20] + data[21] + data[22] + data[23] +
-	  data[24] + data[25] + data[26] + data[27] + data[28] + data[29] +
-	  data[30] + data[31]) >> 5 > threshold);
+          data[6] + data[7] + data[8] + data[9] + data[10] + data[11] +
+          data[12] + data[13] + data[14] + data[15] + data[16] + data[17] +
+          data[18] + data[19] + data[20] + data[21] + data[22] + data[23] +
+          data[24] + data[25] + data[26] + data[27] + data[28] + data[29] +
+          data[30] + data[31]) >> 5 > threshold);
 }
 
 
@@ -170,7 +170,7 @@ ccdecode (unsigned char *vbiline)
   if (!decodebit (&vbiline[i], sample))
     return 0;
 #ifndef PAL_DECODE
-  tmp = i + 57;			/* tmp = data bit zero */
+  tmp = i + 57;                 /* tmp = data bit zero */
 #else
   tmp = i + 71;
 #endif
@@ -187,7 +187,7 @@ ccdecode (unsigned char *vbiline)
   if (parityok (packedbits))
     return packedbits;
   return 0;
-}				/* ccdecode */
+}                               /* ccdecode */
 
 const char *movies[] = { "N/A", "G", "PG", "PG-13", "R",
   "NC-17", "X", "Not Rated"
@@ -280,25 +280,25 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
     const char *str;
 
     switch (VSL | scheme) {
-      case 3:			/* Canadian English TV */
-	str = cane_tv[tv_rating];
-	break;
-      case 7:			/* Canadian French TV */
-	str = canf_tv[tv_rating];
-	break;
-      case 19:			/* Reserved */
+      case 3:                  /* Canadian English TV */
+        str = cane_tv[tv_rating];
+        break;
+      case 7:                  /* Canadian French TV */
+        str = canf_tv[tv_rating];
+        break;
+      case 19:                 /* Reserved */
       case 31:
-	str = "";
-	break;
+        str = "";
+        break;
       default:
-	if (((VSL | scheme) & 3) == 1) {
-	  /* USA TV */
-	  str = usa_tv[tv_rating];
-	} else {
-	  /* MPAA Movie Rating */
-	  str = movies[movie_rating];
-	}
-	break;
+        if (((VSL | scheme) & 3) == 1) {
+          /* USA TV */
+          str = usa_tv[tv_rating];
+        } else {
+          /* MPAA Movie Rating */
+          str = movies[movie_rating];
+        }
+        break;
     }
 
     if (vbi->rating && !strcmp (vbi->rating, str)) {
@@ -310,20 +310,20 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
     if (((VSL | scheme) & 3) == 1 || ((VSL | scheme) & 3) == 0) {
       /* show VSLD for the americans */
       if ((VSL | scheme) & 32) {
-	if (vbi->verbose)
-	  fprintf (stderr, " V");
+        if (vbi->verbose)
+          fprintf (stderr, " V");
       }
       if ((VSL | scheme) & 16) {
-	if (vbi->verbose)
-	  fprintf (stderr, " S");
+        if (vbi->verbose)
+          fprintf (stderr, " S");
       }
       if ((VSL | scheme) & 8) {
-	if (vbi->verbose)
-	  fprintf (stderr, " L");
+        if (vbi->verbose)
+          fprintf (stderr, " L");
       }
       if ((VSL | scheme) & 4) {
-	if (vbi->verbose)
-	  fprintf (stderr, " D");
+        if (vbi->verbose)
+          fprintf (stderr, " D");
       }
     }
     if (vbi->verbose)
@@ -342,15 +342,15 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
     vbi->call_letters = strdup (packet + 2);
     /*tvtime_osd_set_network_call( vbi->osd, vbi->call_letters ); */
   } else if (packet[0] == 0x01 && packet[1] == 0x01) {
-    int month = packet[5];	// & 15;
-    int day = packet[4];	// & 31;
-    int hour = packet[3];	// & 31;
-    int min = packet[2];	// & 63;
+    int month = packet[5];      // & 15;
+    int day = packet[4];        // & 31;
+    int hour = packet[3];       // & 31;
+    int min = packet[2];        // & 63;
     char str[33];
 
     if (vbi->verbose)
       fprintf (stderr, "Program Start: %02d %s, %02d:%02d\n",
-	  day & 31, months[month & 15], hour & 31, min & 63);
+          day & 31, months[month & 15], hour & 31, min & 63);
     // packet[ 3 ], packet[ 4 ], packet[ 5 ], packet[ 6 ] );
     //packet[ 5 ] & 31, packet[ 6 ], packet[ 4 ] & 31, packet[ 3 ] & 63 );
     vbi->start_month = month & 15;
@@ -358,7 +358,7 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
     vbi->start_hour = hour & 31;
     vbi->start_min = hour & 63;
     snprintf (str, 32, "%02d %s, %02d:%02d",
-	day & 31, months[month & 15], hour & 31, min & 63);
+        day & 31, months[month & 15], hour & 31, min & 63);
     /*tvtime_osd_set_show_start( vbi->osd, str ); */
   } else if (packet[0] == 0x01 && packet[1] == 0x04) {
     if (vbi->verbose)
@@ -367,10 +367,10 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
       int cur = packet[2 + i] - 0x20;
 
       if (cur >= 0 && cur < 96) {
-	if (vbi->verbose)
-	  fprintf (stderr, "%s%s", i ? ", " : "", eia608_program_type[cur]);
-	/* this will cause us to keep only the last type we check */
-	vbi->program_type = eia608_program_type[cur];
+        if (vbi->verbose)
+          fprintf (stderr, "%s%s", i ? ", " : "", eia608_program_type[cur]);
+        /* this will cause us to keep only the last type we check */
+        vbi->program_type = eia608_program_type[cur];
       }
     }
     if (vbi->verbose)
@@ -378,7 +378,7 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
   } else if (packet[0] < 0x03 && packet[1] >= 0x10 && packet[1] <= 0x17) {
 
     if (vbi->program_desc[packet[1] & 0xf] &&
-	!strcmp (vbi->program_desc[packet[1] & 0xf], packet + 2)) {
+        !strcmp (vbi->program_desc[packet[1] & 0xf], packet + 2)) {
       return;
     }
 
@@ -395,17 +395,17 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
     str[0] = 0;
     if (vbi->verbose)
       fprintf (stderr, "Program Length: %02d:%02d",
-	  packet[3] & 63, packet[2] & 63);
+          packet[3] & 63, packet[2] & 63);
     vbi->length_hour = packet[3] & 63;
     vbi->length_min = packet[2] & 63;
     snprintf (str, 32, "%02d:%02d", packet[3] & 63, packet[2] & 63);
     if (length > 4) {
       if (vbi->verbose)
-	fprintf (stderr, " Elapsed: %02d:%02d", packet[5] & 63, packet[4] & 63);
+        fprintf (stderr, " Elapsed: %02d:%02d", packet[5] & 63, packet[4] & 63);
       vbi->length_elapsed_hour = packet[5] & 63;
       vbi->length_elapsed_min = packet[4] & 63;
       snprintf (str, 32, "%02d:%02d/%02d:%02d",
-	  packet[5] & 63, packet[4] & 63, packet[3] & 63, packet[2] & 63);
+          packet[5] & 63, packet[4] & 63, packet[3] & 63, packet[2] & 63);
     } else {
       vbi->length_elapsed_hour = 0;
       vbi->length_elapsed_min = 0;
@@ -413,11 +413,11 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
 
     if (length > 6) {
       if (vbi->verbose)
-	fprintf (stderr, ".%02d", packet[6] & 63);
+        fprintf (stderr, ".%02d", packet[6] & 63);
       vbi->length_elapsed_hour = packet[6] & 63;
       snprintf (str, 32, "%02d:%02d.%02d/%02d:%02d",
-	  packet[5] & 63, packet[4] & 63, packet[6] & 63,
-	  packet[3] & 63, packet[2] & 63);
+          packet[5] & 63, packet[4] & 63, packet[6] & 63,
+          packet[3] & 63, packet[2] & 63);
     } else {
       vbi->length_elapsed_hour = 0;
     }
@@ -427,7 +427,7 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
   } else if (packet[0] == 0x05 && packet[1] == 0x04) {
     if (vbi->verbose)
       fprintf (stderr, "Transmission Signal Identifier (TSID): 0x%04x\n",
-	  packet[2] << 24 | packet[3] << 16 | packet[4] << 8 | packet[5]);
+          packet[2] << 24 | packet[3] << 16 | packet[4] << 8 | packet[5]);
   } else {
     /* unknown */
 
@@ -435,71 +435,71 @@ parse_xds_packet (vbidata_t * vbi, char *packet, int length)
       fprintf (stderr, "Unknown XDS packet, class ");
     switch (packet[0]) {
       case 0x1:
-	if (vbi->verbose)
-	  fprintf (stderr, "CURRENT start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "CURRENT start\n");
+        break;
       case 0x2:
-	if (vbi->verbose)
-	  fprintf (stderr, "CURRENT continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "CURRENT continue\n");
+        break;
 
       case 0x3:
-	if (vbi->verbose)
-	  fprintf (stderr, "FUTURE start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "FUTURE start\n");
+        break;
       case 0x4:
-	if (vbi->verbose)
-	  fprintf (stderr, "FUTURE continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "FUTURE continue\n");
+        break;
 
       case 0x5:
-	if (vbi->verbose)
-	  fprintf (stderr, "CHANNEL start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "CHANNEL start\n");
+        break;
       case 0x6:
-	if (vbi->verbose)
-	  fprintf (stderr, "CHANNEL continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "CHANNEL continue\n");
+        break;
 
       case 0x7:
-	if (vbi->verbose)
-	  fprintf (stderr, "MISC start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "MISC start\n");
+        break;
       case 0x8:
-	if (vbi->verbose)
-	  fprintf (stderr, "MISC continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "MISC continue\n");
+        break;
 
       case 0x9:
-	if (vbi->verbose)
-	  fprintf (stderr, "PUB start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "PUB start\n");
+        break;
       case 0xa:
-	if (vbi->verbose)
-	  fprintf (stderr, "PUB continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "PUB continue\n");
+        break;
 
       case 0xb:
-	if (vbi->verbose)
-	  fprintf (stderr, "RES start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "RES start\n");
+        break;
       case 0xc:
-	if (vbi->verbose)
-	  fprintf (stderr, "RES continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "RES continue\n");
+        break;
 
       case 0xd:
-	if (vbi->verbose)
-	  fprintf (stderr, "UNDEF start\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "UNDEF start\n");
+        break;
       case 0xe:
-	if (vbi->verbose)
-	  fprintf (stderr, "UNDEF continue\n");
-	break;
+        if (vbi->verbose)
+          fprintf (stderr, "UNDEF continue\n");
+        break;
     }
     for (i = 0; i < length; i++) {
       if (vbi->verbose)
-	fprintf (stderr, "0x%02x ", packet[i]);
+        fprintf (stderr, "0x%02x ", packet[i]);
     }
     if (vbi->verbose)
       fprintf (stderr, "\n");
@@ -554,18 +554,18 @@ xds_decode (vbidata_t * vbi, int b1, int b2)
 #define T4      4
 
 const unsigned int colours[] = {
-  0xFFFFFFFFU,			/* white */
-  0xFF00FF00U,			/* green */
-  0xFF0000FFU,			/* blue */
-  0xFF00C7C7U,			/* cyan */
-  0xFFFF0000U,			/* red */
-  0xFFFFFF00U,			/* yellow */
-  0xFFC700C7U			/* magenta */
+  0xFFFFFFFFU,                  /* white */
+  0xFF00FF00U,                  /* green */
+  0xFF0000FFU,                  /* blue */
+  0xFF00C7C7U,                  /* cyan */
+  0xFFFF0000U,                  /* red */
+  0xFFFFFF00U,                  /* yellow */
+  0xFFC700C7U                   /* magenta */
 };
 
 const int rows[] = {
   11,
-  0,				/* unused */
+  0,                            /* unused */
   1,
   2,
   3,
@@ -609,46 +609,46 @@ Process16b (vbidata_t * vbi, int bottom, int w1)
       /* This sets up colors and indenting */
 
       if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	vbi->lastcount = (vbi->lastcount + 1) % 2;
-	return 1;
+        vbi->lastcount = (vbi->lastcount + 1) % 2;
+        return 1;
       }
 
       vbi->current_chan = (b1 & 8) >> 3;
       if (!bottom == vbi->wanttop) {
-	if (vbi->chan != vbi->current_chan)
-	  return 0;
+        if (vbi->chan != vbi->current_chan)
+          return 0;
       } else
-	return 0;
+        return 0;
 
       vbi->current_ital = (b2 & 1);
       if (!(b2 & 16)) {
-	vbi->current_colour = colours[(b2 & 30) >> 1];
-	vbi->current_indent = 0;
+        vbi->current_colour = colours[(b2 & 30) >> 1];
+        vbi->current_indent = 0;
       } else {
-	vbi->current_colour = 0xFFFFFFFFU;	/* white */
-	vbi->current_indent = 4 * ((b2 & 14) >> 1);
+        vbi->current_colour = 0xFFFFFFFFU;      /* white */
+        vbi->current_indent = 4 * ((b2 & 14) >> 1);
       }
       vbi->current_row = rows[((b1 & 7) << 1) | ((b2 & 32) >> 5)];
       vbi->current_ul = b2 & 1;
 
       if (vbi->verbose)
-	fprintf (stderr, "field: %d chan %d, ital %d, ul %d, colour 0x%x, "
-	    "indent %d, row %d\n", bottom, vbi->current_chan,
-	    vbi->current_ital, vbi->current_ul, vbi->current_colour,
-	    vbi->current_indent, vbi->current_row);
+        fprintf (stderr, "field: %d chan %d, ital %d, ul %d, colour 0x%x, "
+            "indent %d, row %d\n", bottom, vbi->current_chan,
+            vbi->current_ital, vbi->current_ul, vbi->current_colour,
+            vbi->current_indent, vbi->current_row);
 
       if (!bottom == vbi->wanttop &&
-	  vbi->current_chan == vbi->chan &&
-	  vbi->current_istext == vbi->wanttext) {
+          vbi->current_chan == vbi->chan &&
+          vbi->current_istext == vbi->wanttext) {
 
-	vbi->indent = vbi->current_indent;
-	vbi->ital = vbi->current_ital;
-	vbi->colour = vbi->current_colour;
-	vbi->row = vbi->current_row;
-	vbi->current_istext = 0;
+        vbi->indent = vbi->current_indent;
+        vbi->ital = vbi->current_ital;
+        vbi->colour = vbi->current_colour;
+        vbi->row = vbi->current_row;
+        vbi->current_istext = 0;
 
-	vbiscreen_new_caption (vbi->vs, vbi->indent, vbi->ital,
-	    vbi->colour, vbi->row);
+        vbiscreen_new_caption (vbi->vs, vbi->indent, vbi->ital,
+            vbi->colour, vbi->row);
 
       }
 
@@ -660,15 +660,15 @@ Process16b (vbidata_t * vbi, int bottom, int w1)
     if ((b1 & 8) == 1) {
       /* Midrow code */
       if (!vbi->initialised)
-	return 0;
+        return 0;
 
       if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	vbi->lastcount = (vbi->lastcount + 1) % 2;
-	return 1;
+        vbi->lastcount = (vbi->lastcount + 1) % 2;
+        return 1;
       }
 
       if (vbi->verbose)
-	fprintf (stderr, "Midrow TODO: Add me.\n");
+        fprintf (stderr, "Midrow TODO: Add me.\n");
 
       vbi->lastcode = (b1 << 8) | b2;
       return 1;
@@ -676,229 +676,229 @@ Process16b (vbidata_t * vbi, int bottom, int w1)
 
     if ((b1 & 2) && !(b2 & 64)) {
       if (!vbi->initialised)
-	return 0;
+        return 0;
 
       if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	vbi->lastcount = (vbi->lastcount + 1) % 2;
-	return 1;
+        vbi->lastcount = (vbi->lastcount + 1) % 2;
+        return 1;
       }
 
       if (vbi->verbose)
-	fprintf (stderr, "Tab Offset: %d columns\n", b2 & 3);
+        fprintf (stderr, "Tab Offset: %d columns\n", b2 & 3);
       if (vbi->wanttext && vbi->current_istext &&
-	  vbi->current_chan == vbi->chan && !bottom == vbi->wanttop) {
-	vbiscreen_tab (vbi->vs, b2 & 3);
+          vbi->current_chan == vbi->chan && !bottom == vbi->wanttop) {
+        vbiscreen_tab (vbi->vs, b2 & 3);
       }
       vbi->lastcode = (b1 << 8) | b2;
       return 1;
     }
 
     switch ((code = b2 & 15)) {
-      case 0:			/* POP-UP */
-      case 5:			/* ROLL UP 2 */
-      case 6:			/* ROLL UP 3 */
-      case 7:			/* ROLL UP 4 */
-      case 9:			/* PAINT-ON */
-      case 10:			/* TEXT */
-      case 11:			/* TEXT */
-	vbi->initialised = 1;
-	if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	  /* This is the repeated Control Code */
-	  vbi->lastcount = (vbi->lastcount + 1) % 2;
-	  return 1;
-	}
-	switch (code) {
-	  case 0:		/* POP-UP */
-	    if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Pop-Up\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 0;
-	      vbiscreen_set_mode (vbi->vs, 1, POP_UP);
-	    }
-	    break;
-	  case 5:		/* ROLL UP 2 */
-	    if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Roll-Up 2 (RU2)\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 0;
-	      vbiscreen_set_mode (vbi->vs, 1, ROLL_2);
-	    }
-	    break;
-	  case 6:		/* ROLL UP 3 */
-	    if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Roll-Up 3 (RU3)\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 0;
-	      vbiscreen_set_mode (vbi->vs, 1, ROLL_3);
-	    }
-	    break;
-	  case 7:		/* ROLL UP 4 */
-	    if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Roll-Up 4 (RU4)\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 0;
-	      vbiscreen_set_mode (vbi->vs, 1, ROLL_4);
-	    }
-	    break;
-	  case 9:		/* PAINT-ON */
-	    if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Paint-On\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 0;
-	      vbiscreen_set_mode (vbi->vs, 1, PAINT_ON);
-	    }
-	    break;
-	  case 10:		/* TEXT */
-	    if (vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Text Restart\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 1;
-	      vbiscreen_set_mode (vbi->vs, 0, 0);
-	    }
-	    break;
-	  case 11:		/* TEXT */
-	    if (vbi->wanttext && vbi->current_chan == vbi->chan &&
-		!bottom == vbi->wanttop) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Resume Text Display\n");
-	      vbi->indent = vbi->current_indent;
-	      vbi->ital = vbi->current_ital;
-	      vbi->colour = vbi->current_colour;
-	      vbi->row = vbi->current_row;
-	      vbi->current_istext = 1;
-	      vbiscreen_set_mode (vbi->vs, 0, 0);
-	    }
-	    break;
-	  default:		/* impossible */
-	    break;
-	}
-	break;
+      case 0:                  /* POP-UP */
+      case 5:                  /* ROLL UP 2 */
+      case 6:                  /* ROLL UP 3 */
+      case 7:                  /* ROLL UP 4 */
+      case 9:                  /* PAINT-ON */
+      case 10:                 /* TEXT */
+      case 11:                 /* TEXT */
+        vbi->initialised = 1;
+        if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
+          /* This is the repeated Control Code */
+          vbi->lastcount = (vbi->lastcount + 1) % 2;
+          return 1;
+        }
+        switch (code) {
+          case 0:              /* POP-UP */
+            if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Pop-Up\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 0;
+              vbiscreen_set_mode (vbi->vs, 1, POP_UP);
+            }
+            break;
+          case 5:              /* ROLL UP 2 */
+            if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Roll-Up 2 (RU2)\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 0;
+              vbiscreen_set_mode (vbi->vs, 1, ROLL_2);
+            }
+            break;
+          case 6:              /* ROLL UP 3 */
+            if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Roll-Up 3 (RU3)\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 0;
+              vbiscreen_set_mode (vbi->vs, 1, ROLL_3);
+            }
+            break;
+          case 7:              /* ROLL UP 4 */
+            if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Roll-Up 4 (RU4)\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 0;
+              vbiscreen_set_mode (vbi->vs, 1, ROLL_4);
+            }
+            break;
+          case 9:              /* PAINT-ON */
+            if (!vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Paint-On\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 0;
+              vbiscreen_set_mode (vbi->vs, 1, PAINT_ON);
+            }
+            break;
+          case 10:             /* TEXT */
+            if (vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Text Restart\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 1;
+              vbiscreen_set_mode (vbi->vs, 0, 0);
+            }
+            break;
+          case 11:             /* TEXT */
+            if (vbi->wanttext && vbi->current_chan == vbi->chan &&
+                !bottom == vbi->wanttop) {
+              if (vbi->verbose)
+                fprintf (stderr, "Resume Text Display\n");
+              vbi->indent = vbi->current_indent;
+              vbi->ital = vbi->current_ital;
+              vbi->colour = vbi->current_colour;
+              vbi->row = vbi->current_row;
+              vbi->current_istext = 1;
+              vbiscreen_set_mode (vbi->vs, 0, 0);
+            }
+            break;
+          default:             /* impossible */
+            break;
+        }
+        break;
       case 1:
-	if (!vbi->initialised)
-	  return 0;
-	if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	  vbi->lastcount = (vbi->lastcount + 1) % 2;
-	}
-	if (!bottom == vbi->wanttop && vbi->current_chan == vbi->chan &&
-	    vbi->current_istext == vbi->wanttext) {
-	  if (vbi->verbose)
-	    fprintf (stderr, "Backspace\n");
-	  vbiscreen_backspace (vbi->vs);
-	}
-	break;
+        if (!vbi->initialised)
+          return 0;
+        if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
+          vbi->lastcount = (vbi->lastcount + 1) % 2;
+        }
+        if (!bottom == vbi->wanttop && vbi->current_chan == vbi->chan &&
+            vbi->current_istext == vbi->wanttext) {
+          if (vbi->verbose)
+            fprintf (stderr, "Backspace\n");
+          vbiscreen_backspace (vbi->vs);
+        }
+        break;
       case 2:
       case 3:
-	if (!vbi->initialised)
-	  return 0;
-	fprintf (stderr, "Reserved\n");
-	break;
+        if (!vbi->initialised)
+          return 0;
+        fprintf (stderr, "Reserved\n");
+        break;
       case 4:
-	if (!vbi->initialised)
-	  return 0;
-	if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	  vbi->lastcount = (vbi->lastcount + 1) % 2;
-	}
-	if (!bottom == vbi->wanttop && vbi->current_chan == vbi->chan &&
-	    vbi->current_istext == vbi->wanttext) {
-	  if (vbi->verbose)
-	    fprintf (stderr, "Delete to End of Row\n");
-	  vbiscreen_delete_to_end (vbi->vs);
-	}
-	break;
+        if (!vbi->initialised)
+          return 0;
+        if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
+          vbi->lastcount = (vbi->lastcount + 1) % 2;
+        }
+        if (!bottom == vbi->wanttop && vbi->current_chan == vbi->chan &&
+            vbi->current_istext == vbi->wanttext) {
+          if (vbi->verbose)
+            fprintf (stderr, "Delete to End of Row\n");
+          vbiscreen_delete_to_end (vbi->vs);
+        }
+        break;
       case 8:
-	if (!vbi->initialised)
-	  return 0;
-	if (vbi->verbose)
-	  fprintf (stderr, "Flash On\n");
-	break;
+        if (!vbi->initialised)
+          return 0;
+        if (vbi->verbose)
+          fprintf (stderr, "Flash On\n");
+        break;
       case 12:
       case 13:
       case 14:
       case 15:
-	if (!vbi->initialised)
-	  return 0;
-	if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
-	  vbi->lastcount = (vbi->lastcount + 1) % 2;
-	  return 1;
-	}
+        if (!vbi->initialised)
+          return 0;
+        if (!bottom && vbi->lastcode == ((b1 << 8) | b2)) {
+          vbi->lastcount = (vbi->lastcount + 1) % 2;
+          return 1;
+        }
 
-	switch (code) {
-	  case 12:
-	    /* Show buffer 1, Fill buffer 2 */
-	    if (!bottom == vbi->wanttop &&
-		vbi->current_chan == vbi->chan &&
-		vbi->current_istext == vbi->wanttext) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Erase Displayed Memory\n");
-	      vbiscreen_erase_displayed (vbi->vs);
-	    }
-	    break;
-	  case 13:
-	    if (!bottom == vbi->wanttop &&
-		vbi->current_chan == vbi->chan &&
-		vbi->current_istext == vbi->wanttext) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Carriage Return\n");
-	      vbiscreen_carriage_return (vbi->vs);
-	    }
-	    break;
-	  case 14:
-	    if (!bottom == vbi->wanttop &&
-		vbi->current_chan == vbi->chan &&
-		vbi->current_istext == vbi->wanttext) {
-	      if (vbi->verbose)
-		fprintf (stderr, "Erase Non-Displayed\n");
-	      vbiscreen_erase_non_displayed (vbi->vs);
-	    }
-	    break;
-	  case 15:
-	    /* Show buffer 2, Fill Buffer 1 */
-	    if (!bottom == vbi->wanttop &&
-		vbi->current_chan == vbi->chan &&
-		vbi->current_istext == vbi->wanttext) {
-	      if (vbi->verbose)
-		fprintf (stderr, "End Of Caption\n");
-	      vbiscreen_end_of_caption (vbi->vs);
-	    }
-	    break;
-	  default:		/* impossible */
-	    return 0;
-	    break;
-	}
-	break;
-      default:			/* Impossible */
-	return 0;
-	break;
+        switch (code) {
+          case 12:
+            /* Show buffer 1, Fill buffer 2 */
+            if (!bottom == vbi->wanttop &&
+                vbi->current_chan == vbi->chan &&
+                vbi->current_istext == vbi->wanttext) {
+              if (vbi->verbose)
+                fprintf (stderr, "Erase Displayed Memory\n");
+              vbiscreen_erase_displayed (vbi->vs);
+            }
+            break;
+          case 13:
+            if (!bottom == vbi->wanttop &&
+                vbi->current_chan == vbi->chan &&
+                vbi->current_istext == vbi->wanttext) {
+              if (vbi->verbose)
+                fprintf (stderr, "Carriage Return\n");
+              vbiscreen_carriage_return (vbi->vs);
+            }
+            break;
+          case 14:
+            if (!bottom == vbi->wanttop &&
+                vbi->current_chan == vbi->chan &&
+                vbi->current_istext == vbi->wanttext) {
+              if (vbi->verbose)
+                fprintf (stderr, "Erase Non-Displayed\n");
+              vbiscreen_erase_non_displayed (vbi->vs);
+            }
+            break;
+          case 15:
+            /* Show buffer 2, Fill Buffer 1 */
+            if (!bottom == vbi->wanttop &&
+                vbi->current_chan == vbi->chan &&
+                vbi->current_istext == vbi->wanttext) {
+              if (vbi->verbose)
+                fprintf (stderr, "End Of Caption\n");
+              vbiscreen_end_of_caption (vbi->vs);
+            }
+            break;
+          default:             /* impossible */
+            return 0;
+            break;
+        }
+        break;
+      default:                 /* Impossible */
+        return 0;
+        break;
     }
 
     if (vbi->lastcode != ((b1 << 8) | b2)) {
@@ -932,33 +932,33 @@ Process16b (vbidata_t * vbi, int bottom, int w1)
     switch (b1) {
       case 0x1A:
       case 0x12:
-	/* use extcode1 */
-	if (b1 > 31 && b2 > 31 && b1 <= 0x3F && b2 <= 0x3F)
-	  if (vbi->verbose)
-	    fprintf (stderr, "char %d (%c),  char %d (%c)\n", b1,
-		extcode1[b1 - 32], b2, extcode1[b2 - 32]);
+        /* use extcode1 */
+        if (b1 > 31 && b2 > 31 && b1 <= 0x3F && b2 <= 0x3F)
+          if (vbi->verbose)
+            fprintf (stderr, "char %d (%c),  char %d (%c)\n", b1,
+                extcode1[b1 - 32], b2, extcode1[b2 - 32]);
 
-	break;
+        break;
       case 0x13:
       case 0x1B:
-	/* use extcode2 */
-	if (b1 > 31 && b2 > 31 && b1 <= 0x3F && b2 <= 0x3F)
-	  if (vbi->verbose)
-	    fprintf (stderr, "char %d (%c),  char %d (%c)\n", b1,
-		extcode2[b1 - 32], b2, extcode2[b2 - 32]);
+        /* use extcode2 */
+        if (b1 > 31 && b2 > 31 && b1 <= 0x3F && b2 <= 0x3F)
+          if (vbi->verbose)
+            fprintf (stderr, "char %d (%c),  char %d (%c)\n", b1,
+                extcode2[b1 - 32], b2, extcode2[b2 - 32]);
 
-	break;
+        break;
       case 0x11:
       case 0x19:
-	/* use wcode */
-	if (b1 > 31 && b2 > 31 && b1 <= 0x3F && b2 <= 0x3F)
-	  if (vbi->verbose)
-	    fprintf (stderr, "char %d (%c),  char %d (%c)\n", b1,
-		wccode[b1 - 32], b2, wccode[b2 - 32]);
+        /* use wcode */
+        if (b1 > 31 && b2 > 31 && b1 <= 0x3F && b2 <= 0x3F)
+          if (vbi->verbose)
+            fprintf (stderr, "char %d (%c),  char %d (%c)\n", b1,
+                wccode[b1 - 32], b2, wccode[b2 - 32]);
 
-	break;
+        break;
       default:
-	break;
+        break;
     }
   } else if (b1) {
     /* use ccode */
@@ -968,13 +968,13 @@ Process16b (vbidata_t * vbi, int bottom, int w1)
       b2 = 32;
     if (vbi->verbose)
       fprintf (stderr, "vbidata: data: %c %c\n", ccode[b1 - 32],
-	  ccode[b2 - 32]);
+          ccode[b2 - 32]);
     vbiscreen_print (vbi->vs, ccode[b1 - 32], ccode[b2 - 32]);
   }
 
 
   return 1;
-}				/* Process16b */
+}                               /* Process16b */
 
 int
 ProcessLine (vbidata_t * vbi, unsigned char *s, int bottom)
@@ -989,7 +989,7 @@ ProcessLine (vbidata_t * vbi, unsigned char *s, int bottom)
   w1 = ccdecode (s);
 
   return Process16b (vbi, bottom, w1);
-}				/* ProcessLine */
+}                               /* ProcessLine */
 
 
 
@@ -1006,7 +1006,7 @@ vbidata_new_file (const char *filename, vbiscreen_t * vs,
   vbi->fd = open (filename, O_RDONLY);
   if (vbi->fd < 0) {
     fprintf (stderr, "vbidata: Can't open %s: %s\n",
-	filename, strerror (errno));
+        filename, strerror (errno));
     free (vbi);
     return 0;
   }

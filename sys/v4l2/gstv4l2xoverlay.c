@@ -72,7 +72,7 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
     xwin->display_name = g_strdup (v4l2element->display);
 
     if (v4l2element->xwindow_id != 0 &&
-	xwin->display_name && xwin->display_name[0] == ':') {
+        xwin->display_name && xwin->display_name[0] == ':') {
       gst_x_window_listener_set_xid (xwin, v4l2element->xwindow_id);
     }
   }
@@ -85,7 +85,7 @@ gst_v4l2_xoverlay_close (GstV4l2Element * v4l2element)
 
   if (xwin != NULL) {
     if (v4l2element->xwindow_id != 0 &&
-	xwin->display_name && xwin->display_name[0] == ':') {
+        xwin->display_name && xwin->display_name[0] == ':') {
       gst_x_window_listener_set_xid (xwin, 0);
     }
 

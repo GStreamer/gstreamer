@@ -85,8 +85,8 @@ tarkindec_get_type (void)
     };
 
     tarkindec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "TarkinDec", &tarkindec_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "TarkinDec", &tarkindec_info,
+        0);
   }
   return tarkindec_type;
 }
@@ -145,7 +145,7 @@ gst_tarkindec_class_init (TarkinDecClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "bitrate", "bitrate",
-	  G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -200,7 +200,7 @@ gst_tarkindec_chain (GstPad * pad, GstData * _data)
 
   if (!tarkindec->setup) {
     GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),
-	("decoder not initialized (input is not tarkin?)"));
+        ("decoder not initialized (input is not tarkin?)"));
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
@@ -212,8 +212,8 @@ gst_tarkindec_chain (GstPad * pad, GstData * _data)
     switch (GST_EVENT_TYPE (buf)) {
       case GST_EVENT_EOS:
       default:
-	gst_pad_event_default (pad, GST_EVENT (buf));
-	break;
+        gst_pad_event_default (pad, GST_EVENT (buf));
+        break;
     }
   } else {
     gchar *data;
@@ -235,43 +235,43 @@ gst_tarkindec_chain (GstPad * pad, GstData * _data)
       ogg_stream_pagein (&tarkindec->os, &tarkindec->og);
 
       while (ogg_stream_packetout (&tarkindec->os, &tarkindec->op)) {
-	if (tarkindec->op.e_o_s)
-	  break;
-	if (tarkindec->nheader < 3) {	/* 3 first packets to headerin */
-	  tarkin_synthesis_headerin (&tarkindec->ti, &tarkindec->tc,
-	      &tarkindec->op);
+        if (tarkindec->op.e_o_s)
+          break;
+        if (tarkindec->nheader < 3) {   /* 3 first packets to headerin */
+          tarkin_synthesis_headerin (&tarkindec->ti, &tarkindec->tc,
+              &tarkindec->op);
 
-	  if (tarkindec->nheader == 2) {
-	    tarkin_synthesis_init (tarkindec->tarkin_stream, &tarkindec->ti);
-	  }
-	  tarkindec->nheader++;
-	} else {
-	  tarkin_synthesis_packetin (tarkindec->tarkin_stream, &tarkindec->op);
+          if (tarkindec->nheader == 2) {
+            tarkin_synthesis_init (tarkindec->tarkin_stream, &tarkindec->ti);
+          }
+          tarkindec->nheader++;
+        } else {
+          tarkin_synthesis_packetin (tarkindec->tarkin_stream, &tarkindec->op);
 
-	  while (tarkin_synthesis_frameout (tarkindec->tarkin_stream, &rgb, 0,
-		  &date) == 0) {
-	    GstBuffer *outbuf;
+          while (tarkin_synthesis_frameout (tarkindec->tarkin_stream, &rgb, 0,
+                  &date) == 0) {
+            GstBuffer *outbuf;
 
-	    layer = &tarkindec->tarkin_stream->layer->desc;
+            layer = &tarkindec->tarkin_stream->layer->desc;
 
-	    if (!GST_PAD_CAPS (tarkindec->srcpad)) {
-	      if (gst_pad_try_set_caps (tarkindec->srcpad, GST_CAPS_NEW ("tarkin_raw", "video/x-raw-rgb", "bpp", GST_PROPS_INT (24), "depth", GST_PROPS_INT (24), "endianness", GST_PROPS_INT (G_BYTE_ORDER), "red_mask", GST_PROPS_INT (0xff0000), "green_mask", GST_PROPS_INT (0xff00), "blue_mask", GST_PROPS_INT (0xff), "width", GST_PROPS_INT (layer->width), "height", GST_PROPS_INT (layer->height), "framerate", GST_PROPS_FLOAT (0.)	/* FIXME!!! */
-		      )) <= 0) {
-		GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),
-		    ("could not output format"));
-		gst_buffer_unref (buf);
-		return;
-	      }
-	    }
-	    outbuf = gst_buffer_new ();
-	    GST_BUFFER_DATA (outbuf) = rgb;
-	    GST_BUFFER_SIZE (outbuf) = layer->width * layer->height * 3;
-	    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-	    gst_pad_push (tarkindec->srcpad, GST_DATA (outbuf));
+            if (!GST_PAD_CAPS (tarkindec->srcpad)) {
+              if (gst_pad_try_set_caps (tarkindec->srcpad, GST_CAPS_NEW ("tarkin_raw", "video/x-raw-rgb", "bpp", GST_PROPS_INT (24), "depth", GST_PROPS_INT (24), "endianness", GST_PROPS_INT (G_BYTE_ORDER), "red_mask", GST_PROPS_INT (0xff0000), "green_mask", GST_PROPS_INT (0xff00), "blue_mask", GST_PROPS_INT (0xff), "width", GST_PROPS_INT (layer->width), "height", GST_PROPS_INT (layer->height), "framerate", GST_PROPS_FLOAT (0.)  /* FIXME!!! */
+                      )) <= 0) {
+                GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),
+                    ("could not output format"));
+                gst_buffer_unref (buf);
+                return;
+              }
+            }
+            outbuf = gst_buffer_new ();
+            GST_BUFFER_DATA (outbuf) = rgb;
+            GST_BUFFER_SIZE (outbuf) = layer->width * layer->height * 3;
+            GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
+            gst_pad_push (tarkindec->srcpad, GST_DATA (outbuf));
 
-	    tarkin_synthesis_freeframe (tarkindec->tarkin_stream, rgb);
-	  }
-	}
+            tarkin_synthesis_freeframe (tarkindec->tarkin_stream, rgb);
+          }
+        }
       }
     }
     gst_buffer_unref (buf);

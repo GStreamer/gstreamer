@@ -73,11 +73,11 @@ GST_STATIC_PAD_TEMPLATE ("pcm_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) { 32000, 44100, 48000, 66000 }, " "channels = (int) 2")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) { 32000, 44100, 48000, 66000 }, " "channels = (int) 2")
     );
 
 static GstStaticPadTemplate dxr3audiosink_ac3_sink_factory =
@@ -85,7 +85,7 @@ GST_STATIC_PAD_TEMPLATE ("ac3_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ac3"
-	/* no parameters needed, we don't need a parsed stream */
+        /* no parameters needed, we don't need a parsed stream */
     )
     );
 
@@ -143,8 +143,9 @@ dxr3audiosink_get_type (void)
       0,
       (GInstanceInitFunc) dxr3audiosink_init,
     };
+
     dxr3audiosink_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"Dxr3AudioSink", &dxr3audiosink_info, 0);
+        "Dxr3AudioSink", &dxr3audiosink_info, 0);
   }
 
   return dxr3audiosink_type;
@@ -184,7 +185,7 @@ dxr3audiosink_class_init (Dxr3AudioSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DIGITAL_PCM,
       g_param_spec_boolean ("digital-pcm", "Digital PCM",
-	  "Use the digital output for PCM sound", FALSE, G_PARAM_READWRITE));
+          "Use the digital output for PCM sound", FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = dxr3audiosink_set_property;
   gobject_class->get_property = dxr3audiosink_get_property;
@@ -249,7 +250,7 @@ dxr3audiosink_set_property (GObject * object, guint prop_id,
       sink->digital_pcm = g_value_get_boolean (value);
       /* Refresh the setup of the device. */
       if (sink->mode == DXR3AUDIOSINK_MODE_PCM) {
-	dxr3audiosink_set_mode_pcm (sink);
+        dxr3audiosink_set_mode_pcm (sink);
       }
       g_object_notify (G_OBJECT (sink), "digital-pcm");
       break;
@@ -294,8 +295,8 @@ dxr3audiosink_open (Dxr3AudioSink * sink)
   sink->audio_fd = open (sink->audio_filename, O_WRONLY);
   if (sink->audio_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open audio device \"%s\" for writing."),
-	    sink->audio_filename), GST_ERROR_SYSTEM);
+        (_("Could not open audio device \"%s\" for writing."),
+            sink->audio_filename), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -306,8 +307,8 @@ dxr3audiosink_open (Dxr3AudioSink * sink)
   sink->control_fd = open (sink->control_filename, O_WRONLY);
   if (sink->control_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open control device \"%s\" for writing."),
-	    sink->control_filename), GST_ERROR_SYSTEM);
+        (_("Could not open control device \"%s\" for writing."),
+            sink->control_filename), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -339,8 +340,8 @@ dxr3audiosink_set_mode_pcm (Dxr3AudioSink * sink)
   tmp = oss_mode;
   if (ioctl (sink->audio_fd, SNDCTL_DSP_SETFMT, &tmp) < 0 || tmp != oss_mode) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
-	(_("Could not configure audio device \"%s\"."), sink->audio_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not configure audio device \"%s\"."), sink->audio_filename),
+        GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -353,8 +354,8 @@ dxr3audiosink_set_mode_pcm (Dxr3AudioSink * sink)
   tmp = sink->rate;
   if (ioctl (sink->audio_fd, SNDCTL_DSP_SPEED, &tmp) < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
-	(_("Could not set audio device \"%s\" to %d Hz."), sink->audio_filename,
-	    sink->rate), GST_ERROR_SYSTEM);
+        (_("Could not set audio device \"%s\" to %d Hz."), sink->audio_filename,
+            sink->rate), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -390,8 +391,8 @@ dxr3audiosink_set_mode_ac3 (Dxr3AudioSink * sink)
   if (ioctl (sink->audio_fd, SNDCTL_DSP_SPEED, &tmp) < 0 ||
       tmp != AC3_BYTE_RATE) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
-	(_("Could not set audio device \"%s\" to %d Hz."), sink->audio_filename,
-	    AC3_BYTE_RATE), GST_ERROR_SYSTEM);
+        (_("Could not set audio device \"%s\" to %d Hz."), sink->audio_filename,
+            AC3_BYTE_RATE), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -418,15 +419,15 @@ dxr3audiosink_close (Dxr3AudioSink * sink)
 
   if (close (sink->audio_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Could not close audio device \"%s\"."), sink->audio_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not close audio device \"%s\"."), sink->audio_filename),
+        GST_ERROR_SYSTEM);
     return;
   }
 
   if (close (sink->control_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Could not close control device \"%s\"."), sink->audio_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not close control device \"%s\"."), sink->audio_filename),
+        GST_ERROR_SYSTEM);
     return;
   }
 
@@ -495,18 +496,18 @@ dxr3audiosink_handle_event (GstPad * pad, GstEvent * event)
   switch (type) {
     case GST_EVENT_FLUSH:
       if (sink->control_fd >= 0) {
-	unsigned audiomode;
+        unsigned audiomode;
 
-	if (sink->mode == DXR3AUDIOSINK_MODE_AC3) {
-	  audiomode = EM8300_AUDIOMODE_DIGITALPCM;
-	  ioctl (sink->control_fd, EM8300_IOCTL_SET_AUDIOMODE, &audiomode);
-	  audiomode = EM8300_AUDIOMODE_DIGITALAC3;
-	  ioctl (sink->control_fd, EM8300_IOCTL_SET_AUDIOMODE, &audiomode);
-	}
+        if (sink->mode == DXR3AUDIOSINK_MODE_AC3) {
+          audiomode = EM8300_AUDIOMODE_DIGITALPCM;
+          ioctl (sink->control_fd, EM8300_IOCTL_SET_AUDIOMODE, &audiomode);
+          audiomode = EM8300_AUDIOMODE_DIGITALAC3;
+          ioctl (sink->control_fd, EM8300_IOCTL_SET_AUDIOMODE, &audiomode);
+        }
 
-	/* Report the flush operation. */
-	g_signal_emit (G_OBJECT (sink),
-	    dxr3audiosink_signals[SIGNAL_FLUSHED], 0);
+        /* Report the flush operation. */
+        g_signal_emit (G_OBJECT (sink),
+            dxr3audiosink_signals[SIGNAL_FLUSHED], 0);
       }
       break;
     default:
@@ -561,21 +562,21 @@ dxr3audiosink_chain_pcm (GstPad * pad, GstData * _data)
       in = MPEGTIME_TO_DXRTIME (sink->scr - (odelay * 90) / 192);
       diff = in > out ? in - out : out - in;
       if (diff > 1800) {
-	dxr3audiosink_set_scr (sink, in);
+        dxr3audiosink_set_scr (sink, in);
       }
     }
 
     /* Update our SCR value. */
     sink->scr += (unsigned) (GST_BUFFER_SIZE (buf) *
-	(90000.0 / ((float) sink->rate * 4)));
+        (90000.0 / ((float) sink->rate * 4)));
 
     /* Write the buffer to the sound device. */
     bytes_written = write (sink->audio_fd, GST_BUFFER_DATA (buf),
-	GST_BUFFER_SIZE (buf));
+        GST_BUFFER_SIZE (buf));
     if (bytes_written < GST_BUFFER_SIZE (buf)) {
       fprintf (stderr, "dxr3audiosink: Warning: %d bytes should be "
-	  "written, only %d bytes written\n",
-	  GST_BUFFER_SIZE (buf), bytes_written);
+          "written, only %d bytes written\n",
+          GST_BUFFER_SIZE (buf), bytes_written);
     }
   }
 
@@ -627,40 +628,40 @@ dxr3audiosink_chain_ac3 (GstPad * pad, GstData * _data)
     event = ac3p_parse (sink->padder);
     while (event != AC3P_EVENT_PUSH) {
       switch (event) {
-	case AC3P_EVENT_FRAME:
-	  /* We have a new frame: */
+        case AC3P_EVENT_FRAME:
+          /* We have a new frame: */
 
-	  /* Update the system reference clock (SCR) in the card. */
-	{
-	  unsigned in, out, odelay;
-	  unsigned diff;
+          /* Update the system reference clock (SCR) in the card. */
+        {
+          unsigned in, out, odelay;
+          unsigned diff;
 
-	  ioctl (sink->control_fd, EM8300_IOCTL_SCR_GET, &out);
+          ioctl (sink->control_fd, EM8300_IOCTL_SCR_GET, &out);
 
-	  ioctl (sink->audio_fd, SNDCTL_DSP_GETODELAY, &odelay);
-	  /* 192000 bytes/sec */
+          ioctl (sink->audio_fd, SNDCTL_DSP_GETODELAY, &odelay);
+          /* 192000 bytes/sec */
 
-	  in = MPEGTIME_TO_DXRTIME (sink->scr - (odelay * 90) / 192);
-	  diff = in > out ? in - out : out - in;
-	  if (diff > 1800) {
-	    dxr3audiosink_set_scr (sink, in);
-	  }
-	}
+          in = MPEGTIME_TO_DXRTIME (sink->scr - (odelay * 90) / 192);
+          diff = in > out ? in - out : out - in;
+          if (diff > 1800) {
+            dxr3audiosink_set_scr (sink, in);
+          }
+        }
 
-	  /* Update our SCR value. */
-	  sink->scr += TIME_FOR_BYTES (ac3p_frame_size (sink->padder));
+          /* Update our SCR value. */
+          sink->scr += TIME_FOR_BYTES (ac3p_frame_size (sink->padder));
 
-	  /* Write the frame to the sound device. */
-	  bytes_written = write (sink->audio_fd, ac3p_frame (sink->padder),
-	      AC3P_IEC_FRAME_SIZE);
+          /* Write the frame to the sound device. */
+          bytes_written = write (sink->audio_fd, ac3p_frame (sink->padder),
+              AC3P_IEC_FRAME_SIZE);
 
-	  if (bytes_written < AC3P_IEC_FRAME_SIZE) {
-	    fprintf (stderr, "dxr3audiosink: Warning: %d bytes should be "
-		"written, only %d bytes written\n",
-		AC3P_IEC_FRAME_SIZE, bytes_written);
-	  }
+          if (bytes_written < AC3P_IEC_FRAME_SIZE) {
+            fprintf (stderr, "dxr3audiosink: Warning: %d bytes should be "
+                "written, only %d bytes written\n",
+                AC3P_IEC_FRAME_SIZE, bytes_written);
+          }
 
-	  break;
+          break;
       }
 
       event = ac3p_parse (sink->padder);
@@ -714,7 +715,7 @@ dxr3audiosink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
       if (!dxr3audiosink_open (DXR3AUDIOSINK (element))) {
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       }
     }
   }

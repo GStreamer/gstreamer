@@ -102,9 +102,10 @@ gst_cdxa_parse_get_type (void)
       0,
       (GInstanceInitFunc) gst_cdxa_parse_init,
     };
+
     cdxa_parse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstCDXAParse",
-	&cdxa_parse_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstCDXAParse",
+        &cdxa_parse_info, 0);
   }
   return cdxa_parse_type;
 }
@@ -202,7 +203,8 @@ typedef struct
   gchar CDXA_tag[4];
   gchar fmt_tag[4];
   guint32 fmt_size;
-} CDXAParseHeader;
+}
+CDXAParseHeader;
 
 /*
 A sectors is 2352 bytes long and is composed of:
@@ -245,7 +247,7 @@ gst_cdxa_parse_loop (GstElement * element)
 
     /* get the data size */
     got_bytes =
-	gst_bytestream_peek_bytes (cdxa_parse->bs, (guint8 **) & buf, 4);
+        gst_bytestream_peek_bytes (cdxa_parse->bs, (guint8 **) & buf, 4);
     if (got_bytes < 4)
       return;
     cdxa_parse->data_size = GUINT32_FROM_LE (*((guint32 *) buf));
@@ -315,7 +317,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "cdxaparse", GST_RANK_NONE,
-	  GST_TYPE_CDXA_PARSE))
+          GST_TYPE_CDXA_PARSE))
     return FALSE;
 
   return TRUE;

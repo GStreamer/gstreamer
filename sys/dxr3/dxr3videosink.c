@@ -63,18 +63,18 @@ enum
 /* Possible states for the MPEG start code scanner. */
 enum
 {
-  SCAN_STATE_WAITING,		/* Waiting for a code. */
-  SCAN_STATE_0,			/* 0 seen. */
-  SCAN_STATE_00,		/* 00 seen. */
-  SCAN_STATE_001		/* 001 seen. */
+  SCAN_STATE_WAITING,           /* Waiting for a code. */
+  SCAN_STATE_0,                 /* 0 seen. */
+  SCAN_STATE_00,                /* 00 seen. */
+  SCAN_STATE_001                /* 001 seen. */
 };
 
 /* Possible states for the MPEG sequence parser. */
 enum
 {
-  PARSE_STATE_WAITING,		/* Waiting for the start of a sequence. */
-  PARSE_STATE_START,		/* Start of sequence seen. */
-  PARSE_STATE_PICTURE,		/* Picture start seen. */
+  PARSE_STATE_WAITING,          /* Waiting for the start of a sequence. */
+  PARSE_STATE_START,            /* Start of sequence seen. */
+  PARSE_STATE_PICTURE,          /* Picture start seen. */
 };
 
 
@@ -88,9 +88,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) { 1, 2 }, " "systemstream = (boolean) FALSE"
-	/* width/height/framerate omitted, we don't
-	 * need a parsed stream */
+        "mpegversion = (int) { 1, 2 }, " "systemstream = (boolean) FALSE"
+        /* width/height/framerate omitted, we don't
+         * need a parsed stream */
     )
     );
 
@@ -146,8 +146,9 @@ dxr3videosink_get_type (void)
       0,
       (GInstanceInitFunc) dxr3videosink_init,
     };
+
     dxr3videosink_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"Dxr3VideoSink", &dxr3videosink_info, 0);
+        "Dxr3VideoSink", &dxr3videosink_info, 0);
   }
 
   return dxr3videosink_type;
@@ -267,8 +268,8 @@ dxr3videosink_open (Dxr3VideoSink * sink)
   sink->video_fd = open (sink->video_filename, O_WRONLY);
   if (sink->video_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open video device \"%s\" for writing."),
-	    sink->video_filename), GST_ERROR_SYSTEM);
+        (_("Could not open video device \"%s\" for writing."),
+            sink->video_filename), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -279,8 +280,8 @@ dxr3videosink_open (Dxr3VideoSink * sink)
   sink->control_fd = open (sink->control_filename, O_WRONLY);
   if (sink->control_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open control device \"%s\" for writing."),
-	    sink->control_filename), GST_ERROR_SYSTEM);
+        (_("Could not open control device \"%s\" for writing."),
+            sink->control_filename), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -297,15 +298,15 @@ dxr3videosink_close (Dxr3VideoSink * sink)
 
   if (close (sink->video_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Could not close video device \"%s\"."), sink->video_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not close video device \"%s\"."), sink->video_filename),
+        GST_ERROR_SYSTEM);
     return;
   }
 
   if (close (sink->control_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Could not close control device \"%s\"."), sink->control_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not close control device \"%s\"."), sink->control_filename),
+        GST_ERROR_SYSTEM);
     return;
   }
 
@@ -353,28 +354,28 @@ dxr3videosink_next_start_code (Dxr3VideoSink * sink)
 
     switch (sink->scan_state) {
       case SCAN_STATE_WAITING:
-	if (c == 0x00) {
-	  sink->scan_state = SCAN_STATE_0;
-	}
-	break;
+        if (c == 0x00) {
+          sink->scan_state = SCAN_STATE_0;
+        }
+        break;
       case SCAN_STATE_0:
-	if (c == 0x00) {
-	  sink->scan_state = SCAN_STATE_00;
-	} else {
-	  sink->scan_state = SCAN_STATE_WAITING;
-	}
-	break;
+        if (c == 0x00) {
+          sink->scan_state = SCAN_STATE_00;
+        } else {
+          sink->scan_state = SCAN_STATE_WAITING;
+        }
+        break;
       case SCAN_STATE_00:
-	if (c == 0x01) {
-	  sink->scan_state = SCAN_STATE_001;
-	} else if (c != 0x00) {
-	  sink->scan_state = SCAN_STATE_WAITING;
-	}
-	break;
+        if (c == 0x01) {
+          sink->scan_state = SCAN_STATE_001;
+        } else if (c != 0x00) {
+          sink->scan_state = SCAN_STATE_WAITING;
+        }
+        break;
       case SCAN_STATE_001:
-	sink->scan_pos++;
-	sink->scan_state = SCAN_STATE_WAITING;
-	return c;
+        sink->scan_pos++;
+        sink->scan_state = SCAN_STATE_WAITING;
+        return c;
     }
 
     sink->scan_pos++;
@@ -402,8 +403,8 @@ dxr3videosink_discard_data (Dxr3VideoSink * sink, guint cut)
     sink->cur_buf = NULL;
   } else {
     sub = gst_buffer_create_sub (sink->cur_buf, size,
-	GST_BUFFER_SIZE (sink->cur_buf)
-	- size);
+        GST_BUFFER_SIZE (sink->cur_buf)
+        - size);
     gst_buffer_unref (sink->cur_buf);
     sink->cur_buf = sub;
   }
@@ -448,10 +449,10 @@ dxr3videosink_write_data (Dxr3VideoSink * sink, guint cut)
     while (size > 0) {
       written = write (sink->video_fd, data, size);
       if (written < 0) {
-	GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
-	    (_("Could not write to device \"%s\"."), sink->video_filename),
-	    GST_ERROR_SYSTEM);
-	break;
+        GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+            (_("Could not write to device \"%s\"."), sink->video_filename),
+            GST_ERROR_SYSTEM);
+        break;
       }
       size = size - written;
       data = data + written;
@@ -476,45 +477,45 @@ dxr3videosink_parse_data (Dxr3VideoSink * sink)
     switch (sink->parse_state) {
 
       case PARSE_STATE_WAITING:
-	if (code == START_CODE_SEQUENCE_HEADER) {
-	  dxr3videosink_discard_data (sink, 4);
-	  sink->parse_state = PARSE_STATE_START;
-	  sink->cur_ts = sink->last_ts;
-	}
-	break;
+        if (code == START_CODE_SEQUENCE_HEADER) {
+          dxr3videosink_discard_data (sink, 4);
+          sink->parse_state = PARSE_STATE_START;
+          sink->cur_ts = sink->last_ts;
+        }
+        break;
 
       case PARSE_STATE_START:
-	switch (code) {
-	  case START_CODE_SEQUENCE_HEADER:
-	    dxr3videosink_discard_data (sink, 4);
-	    sink->cur_ts = sink->last_ts;
-	    break;
-	  case START_CODE_SEQUENCE_END:
-	    dxr3videosink_discard_data (sink, 0);
-	    sink->parse_state = PARSE_STATE_WAITING;
-	    break;
-	  case START_CODE_PICTURE:
-	    sink->parse_state = PARSE_STATE_PICTURE;
-	    break;
-	}
-	break;
+        switch (code) {
+          case START_CODE_SEQUENCE_HEADER:
+            dxr3videosink_discard_data (sink, 4);
+            sink->cur_ts = sink->last_ts;
+            break;
+          case START_CODE_SEQUENCE_END:
+            dxr3videosink_discard_data (sink, 0);
+            sink->parse_state = PARSE_STATE_WAITING;
+            break;
+          case START_CODE_PICTURE:
+            sink->parse_state = PARSE_STATE_PICTURE;
+            break;
+        }
+        break;
 
       case PARSE_STATE_PICTURE:
-	switch (code) {
-	  case START_CODE_SEQUENCE_HEADER:
-	    dxr3videosink_write_data (sink, 4);
-	    sink->parse_state = PARSE_STATE_START;
-	    sink->cur_ts = sink->last_ts;
-	    break;
-	  case START_CODE_SEQUENCE_END:
-	    dxr3videosink_write_data (sink, 0);
-	    sink->parse_state = PARSE_STATE_WAITING;
-	    break;
-	  case START_CODE_PICTURE:
-	    dxr3videosink_write_data (sink, 4);
-	    break;
-	}
-	break;
+        switch (code) {
+          case START_CODE_SEQUENCE_HEADER:
+            dxr3videosink_write_data (sink, 4);
+            sink->parse_state = PARSE_STATE_START;
+            sink->cur_ts = sink->last_ts;
+            break;
+          case START_CODE_SEQUENCE_END:
+            dxr3videosink_write_data (sink, 0);
+            sink->parse_state = PARSE_STATE_WAITING;
+            break;
+          case START_CODE_PICTURE:
+            dxr3videosink_write_data (sink, 4);
+            break;
+        }
+        break;
 
     }
 
@@ -548,7 +549,7 @@ dxr3videosink_handle_event (GstPad * pad, GstEvent * event)
       static guint8 sec[4] = { 0x00, 0x00, 0x01, 0xb7 };
 
       if (sink->cur_buf != NULL) {
-	dxr3videosink_write_data (sink, 0);
+        dxr3videosink_write_data (sink, 0);
       }
 
       write (sink->video_fd, &sec, 4);
@@ -567,19 +568,19 @@ dxr3videosink_handle_event (GstPad * pad, GstEvent * event)
 /*         fprintf (stderr, "^^^^^^ Discontinuous event has time %.4f\n", */
 /*                  (double) time / GST_SECOND); */
 
-	/* If the SCR in the card is way off, fix it. */
-	ioctl (sink->control_fd, EM8300_IOCTL_SCR_GET, &cur_scr);
-	mpeg_scr = MPEGTIME_TO_DXRTIME (GSTTIME_TO_MPEGTIME (time));
+        /* If the SCR in the card is way off, fix it. */
+        ioctl (sink->control_fd, EM8300_IOCTL_SCR_GET, &cur_scr);
+        mpeg_scr = MPEGTIME_TO_DXRTIME (GSTTIME_TO_MPEGTIME (time));
 
-	diff = cur_scr > mpeg_scr ? cur_scr - mpeg_scr : mpeg_scr - cur_scr;
-	if (diff > 1800) {
-	  unsigned zero = 0;
+        diff = cur_scr > mpeg_scr ? cur_scr - mpeg_scr : mpeg_scr - cur_scr;
+        if (diff > 1800) {
+          unsigned zero = 0;
 
 /*           fprintf (stderr, "====== Adjusting SCR from video\n"); */
 
-	  ioctl (sink->control_fd, EM8300_IOCTL_SCR_SET, &zero);
-	  ioctl (sink->control_fd, EM8300_IOCTL_SCR_SET, &mpeg_scr);
-	}
+          ioctl (sink->control_fd, EM8300_IOCTL_SCR_SET, &zero);
+          ioctl (sink->control_fd, EM8300_IOCTL_SCR_SET, &mpeg_scr);
+        }
       } else {
 /*         fprintf (stderr, "^^^^^^ Discontinuous event has no time\n"); */
       }
@@ -642,9 +643,9 @@ dxr3videosink_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
-	if (!dxr3videosink_open (DXR3VIDEOSINK (element))) {
-	  return GST_STATE_FAILURE;
-	}
+        if (!dxr3videosink_open (DXR3VIDEOSINK (element))) {
+          return GST_STATE_FAILURE;
+        }
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -661,7 +662,7 @@ dxr3videosink_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
-	dxr3videosink_close (DXR3VIDEOSINK (element));
+        dxr3videosink_close (DXR3VIDEOSINK (element));
       }
       break;
   }

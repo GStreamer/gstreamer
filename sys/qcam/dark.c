@@ -154,21 +154,21 @@ fixdark (const struct qcam *q, scanbuf * scan)
       return 0;
     for (y = 0; y < MAX_HEIGHT; y++)
       for (x = 0; x < MAX_HEIGHT; x++)
-	if (master_darkmask1[y][x] < smallest_dm) {
-	  smallest_dm = master_darkmask1[y][x];
+        if (master_darkmask1[y][x] < smallest_dm) {
+          smallest_dm = master_darkmask1[y][x];
 #ifdef DEBUG
-	  fprintf (stderr, "Smallest mask is %d at (%d, %d)\n",
-	      smallest_dm, x, y);
+          fprintf (stderr, "Smallest mask is %d at (%d, %d)\n",
+              smallest_dm, x, y);
 #endif
-	}
+        }
     init = 1;
   }
 
   if (brightness < smallest_dm) {
 #ifdef DEBUG
     fprintf (stderr,
-	"Brightness %d (dark current starts at %d), no fixup needed\n",
-	brightness, smallest_dm);
+        "Brightness %d (dark current starts at %d), no fixup needed\n",
+        brightness, smallest_dm);
 #endif
     return 1;
   }
@@ -181,16 +181,16 @@ fixdark (const struct qcam *q, scanbuf * scan)
   for (y = 0; y < max_height; y++)
     for (x = 0; x < max_width; x++)
       if (scale == 1) {
-	darkmask[y][x] = master_darkmask1[y][x];
+        darkmask[y][x] = master_darkmask1[y][x];
       } else if (scale == 2) {
-	darkmask[y][x] = master_darkmask2[y][x];
+        darkmask[y][x] = master_darkmask2[y][x];
       } else if (scale == 4) {
-	darkmask[y][x] = master_darkmask4[y][x];
+        darkmask[y][x] = master_darkmask4[y][x];
       } else {
 #ifdef DEBUG
-	fprintf (stderr, "Bad transfer_scale in darkmask assignment!\n");
+        fprintf (stderr, "Bad transfer_scale in darkmask assignment!\n");
 #endif
-	return 0;
+        return 0;
       }
 
   do {
@@ -202,52 +202,52 @@ fixdark (const struct qcam *q, scanbuf * scan)
       ccd_x *= 2;
       ccd_x /= scale;
       for (x = 0; x < width; x++, ccd_x++) {
-	val = scan[y * width + x];
-	if (brightness < darkmask[ccd_y][ccd_x]) {	/* good pixel */
-	  new_image[y][x] = val;
-	} else {		/* bad pixel */
-	  /* look at nearby pixels, average the good values */
-	  pixelcount = 0;
-	  pixeltotal = 0;
-	  if (x > 0) {		/* left */
-	    if (brightness < darkmask[ccd_y][ccd_x - 1]) {
-	      pixelcount++;
-	      pixeltotal += scan[y * width + x - 1];
-	    }
-	  }
-	  if (x < width - 1) {	/* right */
-	    if (brightness < darkmask[ccd_y][ccd_x + 1]) {
-	      pixelcount++;
-	      pixeltotal += scan[y * width + x + 1];
-	    }
-	  }
-	  if (y > 0) {		/* above */
-	    if (brightness < darkmask[ccd_y - 1][ccd_x]) {
-	      pixelcount++;
-	      pixeltotal += scan[(y - 1) * width + x];
-	    }
-	  }
-	  if (y < height - 1) {	/* below */
-	    if (brightness < darkmask[ccd_y + 1][ccd_x]) {
-	      pixelcount++;
-	      pixeltotal += scan[(y + 1) * width + x];
-	    }
-	  }
+        val = scan[y * width + x];
+        if (brightness < darkmask[ccd_y][ccd_x]) {      /* good pixel */
+          new_image[y][x] = val;
+        } else {                /* bad pixel */
+          /* look at nearby pixels, average the good values */
+          pixelcount = 0;
+          pixeltotal = 0;
+          if (x > 0) {          /* left */
+            if (brightness < darkmask[ccd_y][ccd_x - 1]) {
+              pixelcount++;
+              pixeltotal += scan[y * width + x - 1];
+            }
+          }
+          if (x < width - 1) {  /* right */
+            if (brightness < darkmask[ccd_y][ccd_x + 1]) {
+              pixelcount++;
+              pixeltotal += scan[y * width + x + 1];
+            }
+          }
+          if (y > 0) {          /* above */
+            if (brightness < darkmask[ccd_y - 1][ccd_x]) {
+              pixelcount++;
+              pixeltotal += scan[(y - 1) * width + x];
+            }
+          }
+          if (y < height - 1) { /* below */
+            if (brightness < darkmask[ccd_y + 1][ccd_x]) {
+              pixelcount++;
+              pixeltotal += scan[(y + 1) * width + x];
+            }
+          }
 
-	  if (pixelcount == 0) {	/* no valid neighbors! */
-	    again = 1;
-	  } else {
-	    new_image[y][x] = pixeltotal / pixelcount;
-	    /* mark this pixel as valid, so we don't loop forever */
-	    darkmask[ccd_y][ccd_x] = 255;
-	  }
-	}
+          if (pixelcount == 0) {        /* no valid neighbors! */
+            again = 1;
+          } else {
+            new_image[y][x] = pixeltotal / pixelcount;
+            /* mark this pixel as valid, so we don't loop forever */
+            darkmask[ccd_y][ccd_x] = 255;
+          }
+        }
       }
     }
 
     for (y = 0; y < height; y++)
       for (x = 0; x < width; x++)
-	scan[y * width + x] = new_image[y][x];
+        scan[y * width + x] = new_image[y][x];
 
   } while (loopcount++ < MAX_LOOPS && again);
 #ifdef DEBUG

@@ -96,7 +96,7 @@ gst_mpeg2enc_format_get_type (void)
     };
 
     mpeg2enc_format_type =
-	g_enum_register_static ("GstMpeg2encFormat", mpeg2enc_formats);
+        g_enum_register_static ("GstMpeg2encFormat", mpeg2enc_formats);
   }
 
   return mpeg2enc_format_type;
@@ -125,7 +125,7 @@ gst_mpeg2enc_framerate_get_type (void)
     };
 
     mpeg2enc_framerate_type =
-	g_enum_register_static ("GstMpeg2encFramerate", mpeg2enc_framerates);
+        g_enum_register_static ("GstMpeg2encFramerate", mpeg2enc_framerates);
   }
 
   return mpeg2enc_framerate_type;
@@ -150,7 +150,7 @@ gst_mpeg2enc_aspect_get_type (void)
     };
 
     mpeg2enc_aspect_type =
-	g_enum_register_static ("GstMpeg2encAspect", mpeg2enc_aspects);
+        g_enum_register_static ("GstMpeg2encAspect", mpeg2enc_aspects);
   }
 
   return mpeg2enc_aspect_type;
@@ -174,8 +174,8 @@ gst_mpeg2enc_interlace_mode_get_type (void)
     };
 
     mpeg2enc_interlace_mode_type =
-	g_enum_register_static ("GstMpeg2encInterlaceMode",
-	mpeg2enc_interlace_modes);
+        g_enum_register_static ("GstMpeg2encInterlaceMode",
+        mpeg2enc_interlace_modes);
   }
 
   return mpeg2enc_interlace_mode_type;
@@ -197,19 +197,19 @@ gst_mpeg2enc_quantisation_matrix_get_type (void)
   if (!mpeg2enc_quantisation_matrix_type) {
     static const GEnumValue mpeg2enc_quantisation_matrixes[] = {
       {GST_MPEG2ENC_QUANTISATION_MATRIX_DEFAULT,
-	  "0", "Default"},
+          "0", "Default"},
       {GST_MPEG2ENC_QUANTISATION_MATRIX_HI_RES,
-	  "1", "High resolution"},
+          "1", "High resolution"},
       {GST_MPEG2ENC_QUANTISATION_MATRIX_KVCD,
-	  "2", "KVCD"},
+          "2", "KVCD"},
       {GST_MPEG2ENC_QUANTISATION_MATRIX_TMPGENC,
-	  "3", "TMPGEnc"},
+          "3", "TMPGEnc"},
       {0, NULL, NULL},
     };
 
     mpeg2enc_quantisation_matrix_type =
-	g_enum_register_static ("GstMpeg2encQuantisationMatrix",
-	mpeg2enc_quantisation_matrixes);
+        g_enum_register_static ("GstMpeg2encQuantisationMatrix",
+        mpeg2enc_quantisation_matrixes);
   }
 
   return mpeg2enc_quantisation_matrix_type;
@@ -233,7 +233,7 @@ gst_mpeg2enc_video_norm_get_type (void)
     };
 
     mpeg2enc_video_norm_type =
-	g_enum_register_static ("GstMpeg2encVideoNorm", mpeg2enc_video_norms);
+        g_enum_register_static ("GstMpeg2encVideoNorm", mpeg2enc_video_norms);
   }
 
   return mpeg2enc_video_norm_type;
@@ -256,8 +256,8 @@ gst_mpeg2enc_playback_field_order_get_type (void)
     };
 
     mpeg2enc_playback_field_order_type =
-	g_enum_register_static ("GstMpeg2encPlaybackFieldOrders",
-	mpeg2enc_playback_field_orders);
+        g_enum_register_static ("GstMpeg2encPlaybackFieldOrders",
+        mpeg2enc_playback_field_orders);
   }
 
   return mpeg2enc_playback_field_order_type;
@@ -288,160 +288,160 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* encoding profile */
   g_object_class_install_property (klass, ARG_FORMAT,
       g_param_spec_enum ("format", "Format", "Encoding profile format",
-	  GST_TYPE_MPEG2ENC_FORMAT, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_FORMAT, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* input/output stream overrides */
   g_object_class_install_property (klass, ARG_FRAMERATE,
       g_param_spec_enum ("framerate", "Framerate", "Output framerate",
-	  GST_TYPE_MPEG2ENC_FRAMERATE, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_FRAMERATE, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_ASPECT,
       g_param_spec_enum ("aspect", "Aspect", "Display aspect ratio",
-	  GST_TYPE_MPEG2ENC_ASPECT, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_ASPECT, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_INTERLACE_MODE,
       g_param_spec_enum ("interlace-mode", "Interlace mode",
-	  "MPEG-2 motion estimation and encoding modes",
-	  GST_TYPE_MPEG2ENC_INTERLACE_MODE, 0,
-	  (GParamFlags) G_PARAM_READWRITE));
+          "MPEG-2 motion estimation and encoding modes",
+          GST_TYPE_MPEG2ENC_INTERLACE_MODE, 0,
+          (GParamFlags) G_PARAM_READWRITE));
 
   /* general encoding stream options */
   g_object_class_install_property (klass, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-	  0, 10 * 1024, 1125, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1024, 1125, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_NONVIDEO_BITRATE,
       g_param_spec_int ("non-video-bitrate", "Non-video bitrate",
-	  "Assumed bitrate of non-video for sequence splitting (kbps)",
-	  0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Assumed bitrate of non-video for sequence splitting (kbps)",
+          0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_QUANTISATION,
       g_param_spec_int ("quantisation", "Quantisation",
-	  "Quantisation factor (0=default, 1=best, 31=worst)",
-	  0, 31, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Quantisation factor (0=default, 1=best, 31=worst)",
+          0, 31, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* stills options */
   g_object_class_install_property (klass, ARG_VCD_STILL_SIZE,
       g_param_spec_int ("vcd-still-size", "VCD stills size",
-	  "Size of VCD stills (in kB)",
-	  0, 512, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Size of VCD stills (in kB)",
+          0, 512, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* motion estimation options */
   g_object_class_install_property (klass, ARG_MOTION_SEARCH_RADIUS,
       g_param_spec_int ("motion-search-radius", "Motion search radius",
-	  "Motion compensation search radius",
-	  0, 32, 16, (GParamFlags) G_PARAM_READWRITE));
+          "Motion compensation search radius",
+          0, 32, 16, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_REDUCTION_4_4,
       g_param_spec_int ("reduction-4x4", "4x4 reduction",
-	  "Reduction factor for 4x4 subsampled candidate motion estimates"
-	  " (1=max. quality, 4=max. speed)",
-	  1, 4, 2, (GParamFlags) G_PARAM_READWRITE));
+          "Reduction factor for 4x4 subsampled candidate motion estimates"
+          " (1=max. quality, 4=max. speed)",
+          1, 4, 2, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_REDUCTION_2_2,
       g_param_spec_int ("reduction-2x2", "2x2 reduction",
-	  "Reduction factor for 2x2 subsampled candidate motion estimates"
-	  " (1=max. quality, 4=max. speed)",
-	  1, 4, 3, (GParamFlags) G_PARAM_READWRITE));
+          "Reduction factor for 2x2 subsampled candidate motion estimates"
+          " (1=max. quality, 4=max. speed)",
+          1, 4, 3, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_UNIT_COEFF_ELIM,
       g_param_spec_int ("unit-coeff-elim", "Unit coefficience elimination",
-	  "How agressively small-unit picture blocks should be skipped",
-	  -40, 40, 0, (GParamFlags) G_PARAM_READWRITE));
+          "How agressively small-unit picture blocks should be skipped",
+          -40, 40, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* GOP options */
   g_object_class_install_property (klass, ARG_MIN_GOP_SIZE,
       g_param_spec_int ("min-gop-size", "Min. GOP size",
-	  "Minimal size per Group-of-Pictures (-1=default)",
-	  -1, 250, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Minimal size per Group-of-Pictures (-1=default)",
+          -1, 250, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_MAX_GOP_SIZE,
       g_param_spec_int ("max-gop-size", "Max. GOP size",
-	  "Maximal size per Group-of-Pictures (-1=default)",
-	  -1, 250, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Maximal size per Group-of-Pictures (-1=default)",
+          -1, 250, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_CLOSED_GOP,
       g_param_spec_boolean ("closed-gop", "Closed GOP",
-	  "All Group-of-Pictures are closed (for multi-angle DVDs)",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          "All Group-of-Pictures are closed (for multi-angle DVDs)",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_FORCE_B_B_P,
       g_param_spec_boolean ("force-b-b-p", "Force B-B-P",
-	  "Force two B frames between I/P frames when closing GOP boundaries",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          "Force two B frames between I/P frames when closing GOP boundaries",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_B_PER_REFFRAME,
       g_param_spec_int ("b-per-refframe", "B per ref. frame",
-	  "Number of B frames between each I/P frame",
-	  0, 2, 2, (GParamFlags) G_PARAM_READWRITE));
+          "Number of B frames between each I/P frame",
+          0, 2, 2, (GParamFlags) G_PARAM_READWRITE));
 
   /* quantisation options */
   g_object_class_install_property (klass, ARG_QUANTISATION_REDUCTION,
       g_param_spec_float ("quantisation-reduction", "Quantisation reduction",
-	  "Max. quantisation reduction for highly active blocks",
-	  -4., 10., 0., (GParamFlags) G_PARAM_READWRITE));
+          "Max. quantisation reduction for highly active blocks",
+          -4., 10., 0., (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_QUANT_REDUCTION_MAX_VAR,
       g_param_spec_float ("quant-reduction-max-var",
-	  "Max. quant. reduction variance",
-	  "Maximal luma variance below which quantisation boost is used", 0.,
-	  2500., 0., (GParamFlags) G_PARAM_READWRITE));
+          "Max. quant. reduction variance",
+          "Maximal luma variance below which quantisation boost is used", 0.,
+          2500., 0., (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_INTRA_DC_PRECISION,
       g_param_spec_int ("intra-dc-prec", "Intra. DC precision",
-	  "Number of bits precision for DC (base colour) in MPEG-2 blocks", 8,
-	  11, 9, (GParamFlags) G_PARAM_READWRITE));
+          "Number of bits precision for DC (base colour) in MPEG-2 blocks", 8,
+          11, 9, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_REDUCE_HF,
       g_param_spec_float ("reduce-hf", "Reduce HF",
-	  "How much to reduce high-frequency resolution (by increasing quantisation)",
-	  0., 2., 0., (GParamFlags) G_PARAM_READWRITE));
+          "How much to reduce high-frequency resolution (by increasing quantisation)",
+          0., 2., 0., (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_KEEP_HF,
       g_param_spec_boolean ("keep-hf", "Keep HF",
-	  "Maximize high-frequency resolution (for high-quality sources)",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          "Maximize high-frequency resolution (for high-quality sources)",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_QUANTISATION_MATRIX,
       g_param_spec_enum ("quant-matrix", "Quant. matrix",
-	  "Quantisation matrix to use for encoding",
-	  GST_TYPE_MPEG2ENC_QUANTISATION_MATRIX, 0,
-	  (GParamFlags) G_PARAM_READWRITE));
+          "Quantisation matrix to use for encoding",
+          GST_TYPE_MPEG2ENC_QUANTISATION_MATRIX, 0,
+          (GParamFlags) G_PARAM_READWRITE));
 
   /* general options */
   g_object_class_install_property (klass, ARG_BUFSIZE,
       g_param_spec_int ("bufsize", "Decoder buf. size",
-	  "Target decoders video buffer size (kB)",
-	  20, 4000, 46, (GParamFlags) G_PARAM_READWRITE));
+          "Target decoders video buffer size (kB)",
+          20, 4000, 46, (GParamFlags) G_PARAM_READWRITE));
 
   /* header flag settings */
   g_object_class_install_property (klass, ARG_VIDEO_NORM,
       g_param_spec_enum ("norm", "Norm",
-	  "Tag output for specific video norm",
-	  GST_TYPE_MPEG2ENC_VIDEO_NORM, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Tag output for specific video norm",
+          GST_TYPE_MPEG2ENC_VIDEO_NORM, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_SEQUENCE_LENGTH,
       g_param_spec_int ("sequence-length", "Sequence length",
-	  "Place a sequence boundary after each <num> MB (0=disable)",
-	  0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+          "Place a sequence boundary after each <num> MB (0=disable)",
+          0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_3_2_PULLDOWN,
       g_param_spec_boolean ("pulldown-3-2", "3-2 pull down",
-	  "Generate header flags for 3-2 pull down 24fps movies",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          "Generate header flags for 3-2 pull down 24fps movies",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_SEQUENCE_HEADER_EVERY_GOP,
       g_param_spec_boolean ("sequence-header-every-gop",
-	  "Sequence hdr. every GOP",
-	  "Include a sequence header in every GOP",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          "Sequence hdr. every GOP",
+          "Include a sequence header in every GOP",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_DUMMY_SVCD_SOF,
       g_param_spec_boolean ("dummy-svcd-sof", "Dummy SVCD SOF",
-	  "Generate dummy SVCD scan-data (for vcdimager)",
-	  TRUE, (GParamFlags) G_PARAM_READWRITE));
+          "Generate dummy SVCD scan-data (for vcdimager)",
+          TRUE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_PLAYBACK_FIELD_ORDER,
       g_param_spec_enum ("playback-field-order", "Playback field order",
-	  "Force specific playback field order",
-	  GST_TYPE_MPEG2ENC_PLAYBACK_FIELD_ORDER, Y4M_UNKNOWN,
-	  (GParamFlags) G_PARAM_READWRITE));
+          "Force specific playback field order",
+          GST_TYPE_MPEG2ENC_PLAYBACK_FIELD_ORDER, Y4M_UNKNOWN,
+          (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_CORRECT_SVCD_HDS,
       g_param_spec_boolean ("correct-svcd-hds", "Correct SVCD hor. size",
-	  "Force SVCD width to 480 instead of 540/720",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          "Force SVCD width to 480 instead of 540/720",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_ALTSCAN_MPEG2,
       g_param_spec_boolean ("altscan-mpeg2", "Alt. MPEG-2 scan",
-	  "Alternate MPEG-2 block scanning. Disabling this might "
-	  "make buggy players play SVCD streams",
-	  TRUE, (GParamFlags) G_PARAM_READWRITE));
+          "Alternate MPEG-2 block scanning. Disabling this might "
+          "make buggy players play SVCD streams",
+          TRUE, (GParamFlags) G_PARAM_READWRITE));
 #if 0
   "--dxr2-hack"
 #endif
       /* dangerous/experimental stuff */
       g_object_class_install_property (klass, ARG_CONSTRAINTS,
       g_param_spec_boolean ("constraints", "Constraints",
-	  "Use strict video resolution and bitrate checks",
-	  TRUE, (GParamFlags) G_PARAM_READWRITE));
+          "Use strict video resolution and bitrate checks",
+          TRUE, (GParamFlags) G_PARAM_READWRITE));
 }
 
 /*
@@ -520,18 +520,18 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
       break;
     case ARG_QUANTISATION_MATRIX:
       switch (hf_quant) {
-	case 0:
-	  g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_DEFAULT);
-	  break;
-	case 2:
-	  g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_HI_RES);
-	  break;
-	case 3:
-	  g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_KVCD);
-	  break;
-	case 4:
-	  g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_TMPGENC);
-	  break;
+        case 0:
+          g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_DEFAULT);
+          break;
+        case 2:
+          g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_HI_RES);
+          break;
+        case 3:
+          g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_KVCD);
+          break;
+        case 4:
+          g_value_set_enum (value, GST_MPEG2ENC_QUANTISATION_MATRIX_TMPGENC);
+          break;
       }
       break;
     case ARG_BUFSIZE:
@@ -636,26 +636,26 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
     case ARG_REDUCE_HF:
       hf_q_boost = g_value_get_float (value);
       if (hf_quant == 0 && hf_q_boost != 0.)
-	hf_quant = 1;
+        hf_quant = 1;
       break;
     case ARG_KEEP_HF:
       hf_quant = g_value_get_boolean (value) ? 2 : 0;
       break;
     case ARG_QUANTISATION_MATRIX:
       switch (g_value_get_enum (value)) {
-	case GST_MPEG2ENC_QUANTISATION_MATRIX_DEFAULT:
-	  hf_quant = 0;
-	  hf_q_boost = 0;
-	  break;
-	case GST_MPEG2ENC_QUANTISATION_MATRIX_HI_RES:
-	  hf_quant = 2;
-	  break;
-	case GST_MPEG2ENC_QUANTISATION_MATRIX_KVCD:
-	  hf_quant = 3;
-	  break;
-	case GST_MPEG2ENC_QUANTISATION_MATRIX_TMPGENC:
-	  hf_quant = 4;
-	  break;
+        case GST_MPEG2ENC_QUANTISATION_MATRIX_DEFAULT:
+          hf_quant = 0;
+          hf_q_boost = 0;
+          break;
+        case GST_MPEG2ENC_QUANTISATION_MATRIX_HI_RES:
+          hf_quant = 2;
+          break;
+        case GST_MPEG2ENC_QUANTISATION_MATRIX_KVCD:
+          hf_quant = 3;
+          break;
+        case GST_MPEG2ENC_QUANTISATION_MATRIX_TMPGENC:
+          hf_quant = 4;
+          break;
       }
       break;
     case ARG_BUFSIZE:

@@ -124,7 +124,7 @@ create_sector (sector, pack, sys_header,
 
   if (buffers) {
     *(index++) = (unsigned char) (0x40 |
-	(buffer_scale << 5) | (buffer_size >> 8));
+        (buffer_scale << 5) | (buffer_size >> 8));
     *(index++) = (unsigned char) (buffer_size & 0xff);
   }
 
@@ -164,9 +164,9 @@ create_sector (sector, pack, sys_header,
     if (tmp != i) {
       packet_size -= (i - tmp);
       *(size_offset++) =
-	  (unsigned char) ((packet_size - PACKET_HEADER_SIZE) >> 8);
+          (unsigned char) ((packet_size - PACKET_HEADER_SIZE) >> 8);
       *(size_offset++) =
-	  (unsigned char) ((packet_size - PACKET_HEADER_SIZE) & 0xff);
+          (unsigned char) ((packet_size - PACKET_HEADER_SIZE) & 0xff);
 
 /* zero byte stuffing in the last Packet of a stream */
 /* we don't need this any more, since we shortenend the packet */
@@ -281,14 +281,14 @@ create_sys_header (sys_header, rate_bound, audio_bound,
   if (which_streams & STREAMS_AUDIO) {
     *(index++) = stream1;
     *(index++) = (unsigned char) (0xc0 |
-	(buffer1_scale << 5) | (buffer1_size >> 8));
+        (buffer1_scale << 5) | (buffer1_size >> 8));
     *(index++) = (unsigned char) (buffer1_size & 0xff);
   }
 
   if (which_streams & STREAMS_VIDEO) {
     *(index++) = stream2;
     *(index++) = (unsigned char) (0xc0 |
-	(buffer2_scale << 5) | (buffer2_size >> 8));
+        (buffer2_scale << 5) | (buffer2_size >> 8));
     *(index++) = (unsigned char) (buffer2_size & 0xff);
   }
 

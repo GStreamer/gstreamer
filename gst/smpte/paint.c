@@ -189,22 +189,22 @@ gst_smpte_paint_triangle_linear (guint32 * dest, gint stride,
 
       e += sign;
       for (j = s; j != e; j += sign) {
-	dest[j] = (ec * (j - s) + sc * (e - j)) / (e - s);
+        dest[j] = (ec * (j - s) + sc * (e - j)) / (e - s);
       }
 
       while (pyr == i) {
-	STEP_3D_LINE (dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr,
-	    xrr, yrr, crr, pxr, pyr, pcr);
+        STEP_3D_LINE (dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr,
+            xrr, yrr, crr, pxr, pyr, pcr);
       }
       while (pyl == i) {
-	STEP_3D_LINE (dxlabs, dylabs, dclabs, sdxl, sdyl, sdcl,
-	    xrl, yrl, crl, pxl, pyl, pcl);
+        STEP_3D_LINE (dxlabs, dylabs, dclabs, sdxl, sdyl, sdcl,
+            xrl, yrl, crl, pxl, pyl, pcl);
       }
       dest += stride;
     }
 
     PREPARE_3D_LINE (x1, y1, c1, x2, y2, c2,
-	dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr, xrr, yrr, crr, pxr, pyr, pcr);
+        dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr, xrr, yrr, crr, pxr, pyr, pcr);
 
     seg_start = y1;
     seg_end = y2;
@@ -265,7 +265,7 @@ gst_smpte_paint_triangle_clock (guint32 * dest, gint stride,
   angle_s = 0.0;
   angle_e = acos (((x1 - x0) * (x2 - x0) + (y1 - y0) * (y2 - y0)) /
       (sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) *
-	  sqrt ((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0))));
+          sqrt ((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0))));
 
   len1 = sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
 
@@ -274,28 +274,28 @@ gst_smpte_paint_triangle_clock (guint32 * dest, gint stride,
 
     for (i = y1; i != (y2 + sign); i += sign) {
       if (y1 == i)
-	angle = 0;
+        angle = 0;
       else
-	angle = acos (((x1 - x0) * (x2 - x0) + (y1 - y0) * (i - y0)) /
-	    (len1 * sqrt ((x1 - x0) * (x1 - x0) + (i - y0) * (i -
-			y0)))) / angle_e;
+        angle = acos (((x1 - x0) * (x2 - x0) + (y1 - y0) * (i - y0)) /
+            (len1 * sqrt ((x1 - x0) * (x1 - x0) + (i - y0) * (i -
+                        y0)))) / angle_e;
 
       draw_bresenham_line (dest, stride,
-	  x0, y0, x1, i, (c2 * angle + c1 * (1.0 - angle)));
+          x0, y0, x1, i, (c2 * angle + c1 * (1.0 - angle)));
     }
   } else if (y1 == y2) {
     sign = SIGN (x2 - x1);
 
     for (i = x1; i != (x2 + sign); i += sign) {
       if (x1 == i)
-	angle = 0;
+        angle = 0;
       else
-	angle = acos (((x1 - x0) * (i - x0) + (y1 - y0) * (y2 - y0)) /
-	    (len1 * sqrt ((i - x0) * (i - x0) + (y2 - y0) * (y2 -
-			y0)))) / angle_e;
+        angle = acos (((x1 - x0) * (i - x0) + (y1 - y0) * (y2 - y0)) /
+            (len1 * sqrt ((i - x0) * (i - x0) + (y2 - y0) * (y2 -
+                        y0)))) / angle_e;
 
       draw_bresenham_line (dest, stride,
-	  x0, y0, i, y1, (c2 * angle + c1 * (1.0 - angle)));
+          x0, y0, i, y1, (c2 * angle + c1 * (1.0 - angle)));
     }
   }
 }
@@ -321,7 +321,7 @@ gst_smpte_paint_box_clock (guint32 * dest, gint stride,
 
   angle_m = 2 * acos (((x1 - x0) * (xv - x0) + (y1 - y0) * (yv - y0)) /
       (sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) *
-	  sqrt ((xv - x0) * (xv - x0) + (yv - y0) * (yv - y0)))) / M_PI;
+          sqrt ((xv - x0) * (xv - x0) + (yv - y0) * (yv - y0)))) / M_PI;
 
   col_m = c2 * angle_m + c1 * (1.0 - angle_m);
 

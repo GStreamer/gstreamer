@@ -42,21 +42,21 @@ static GstStaticPadTemplate sink_temp = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"depth = (int) 16, "
-	"width = (int) 16, "
-	"signed = (boolean) true, "
-	"channels = (int) 2, " "endianness = (int) byte_order")
+        "depth = (int) 16, "
+        "width = (int) 16, "
+        "signed = (boolean) true, "
+        "channels = (int) 2, " "endianness = (int) byte_order")
     );
 
 static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"depth = (int) 16, "
-	"width = (int) 16, "
-	"signed = (boolean) true, "
-	"channels = (int) 2, "
-	"rate = (int) 44100, " "endianness = (int) byte_order")
+        "depth = (int) 16, "
+        "width = (int) 16, "
+        "signed = (boolean) true, "
+        "channels = (int) 2, "
+        "rate = (int) 44100, " "endianness = (int) byte_order")
     );
 
 enum
@@ -93,8 +93,9 @@ gst_arts_get_type (void)
       0,
       (GInstanceInitFunc) gst_arts_init,
     };
+
     gst_arts_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstArts", &gst_arts_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstArts", &gst_arts_info, 0);
   }
   return gst_arts_type;
 }
@@ -128,12 +129,12 @@ gst_arts_init (GstARTS * arts)
 {
   arts->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-	  (arts), "sink"), "sink");
+          (arts), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (arts), arts->sinkpad);
 
   arts->srcpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-	  (arts), "src"), "src");
+          (arts), "src"), "src");
   gst_element_add_pad (GST_ELEMENT (arts), arts->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (arts), gst_arts_loop);

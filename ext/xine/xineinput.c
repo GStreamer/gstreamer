@@ -75,7 +75,7 @@ GST_BOILERPLATE (GstXineInput, gst_xine_input, GstXine, GST_TYPE_XINE)
      static void gst_xine_input_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
      static GstElementStateReturn
-	 gst_xine_input_change_state (GstElement * element);
+         gst_xine_input_change_state (GstElement * element);
 
      static void gst_xine_input_base_init (gpointer g_class)
 {
@@ -95,7 +95,7 @@ gst_xine_input_class_init (GstXineInputClass * klass)
 
   g_object_class_install_property (object, ARG_LOCATION,
       g_param_spec_string ("location", "location", "location",
-	  NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE));
 }
 
 static void
@@ -123,9 +123,9 @@ gst_xine_input_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_LOCATION:
       if (gst_element_get_state (GST_ELEMENT (xine)) != GST_STATE_NULL)
-	return;
+        return;
       if (xine->location)
-	g_free (xine->location);
+        g_free (xine->location);
       xine->location = g_strdup (g_value_get_string (value));
       break;
     default:
@@ -150,7 +150,7 @@ gst_xine_input_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-#define BUFFER_SIZE 4096	/* FIXME: what size? */
+#define BUFFER_SIZE 4096        /* FIXME: what size? */
 static GstData *
 gst_xine_input_get (GstPad * pad)
 {
@@ -176,7 +176,7 @@ gst_xine_input_get (GstPad * pad)
   GST_BUFFER_SIZE (buf) = real_size;
   if (real_size < 0) {
     GST_ELEMENT_ERROR (xine, RESOURCE, READ, (NULL), ("error %d reading data",
-	    real_size));
+            real_size));
     gst_data_unref (GST_DATA (buf));
     return NULL;
   } else if (real_size == 0) {
@@ -184,8 +184,8 @@ gst_xine_input_get (GstPad * pad)
 
     if (xine->input->get_capabilities (xine->input) & INPUT_CAP_BLOCK)
       element =
-	  xine->input->read_block (xine->input,
-	  gst_xine_get_stream (GST_XINE (xine))->audio_fifo, xine->blocksize);
+          xine->input->read_block (xine->input,
+          gst_xine_get_stream (GST_XINE (xine))->audio_fifo, xine->blocksize);
     if (element == NULL) {
       /* FIXME: is this EOS? */
       gst_element_set_eos (GST_ELEMENT (xine));
@@ -213,15 +213,15 @@ gst_xine_input_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       xine->input =
-	  input->get_instance (input, gst_xine_get_stream (GST_XINE (xine)),
-	  xine->location);
+          input->get_instance (input, gst_xine_get_stream (GST_XINE (xine)),
+          xine->location);
       if (!xine->input)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       if (xine->input->open (xine->input) == 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       xine->blocksize = xine->input->get_blocksize (xine->input);
       if (xine->blocksize == 0)
-	xine->blocksize = BUFFER_SIZE;
+        xine->blocksize = BUFFER_SIZE;
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
@@ -256,10 +256,10 @@ static GstStaticPadTemplate cdda_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) LITTLE_ENDIAN, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, " "rate = (int) 44100, " "channels = (int) 2")
+        "endianness = (int) LITTLE_ENDIAN, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, " "rate = (int) 44100, " "channels = (int) 2")
     );
 
 static void
@@ -285,10 +285,10 @@ gst_xine_input_subclass_init (gpointer g_class, gpointer class_data)
   /* FIXME: this is pretty hackish, anyone knows a better idea (xine doesn't) */
   if (strcmp (input->get_identifier (input), "cdda") == 0) {
     gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&cdda_template));
+        gst_static_pad_template_get (&cdda_template));
   } else {
     gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&any_template));
+        gst_static_pad_template_get (&any_template));
   }
 }
 
@@ -300,7 +300,7 @@ gst_xine_input_sub_init (GTypeInstance * instance, gpointer g_class)
 
   xine->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "src"), "src");
+          "src"), "src");
   gst_pad_set_get_function (xine->srcpad, gst_xine_input_get);
   gst_element_add_pad (GST_ELEMENT (xine), xine->srcpad);
 }
@@ -332,8 +332,8 @@ gst_xine_input_init_plugin (GstPlugin * plugin)
 
     plugin_info.class_data = node;
     type =
-	g_type_register_static (GST_TYPE_XINE_INPUT, type_name, &plugin_info,
-	0);
+        g_type_register_static (GST_TYPE_XINE_INPUT, type_name, &plugin_info,
+        0);
     g_free (type_name);
     if (!gst_element_register (plugin, plugin_name, GST_RANK_MARGINAL, type)) {
       g_free (plugin_name);

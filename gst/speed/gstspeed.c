@@ -60,7 +60,7 @@ static GstStaticPadTemplate gst_speed_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate gst_speed_src_template =
@@ -68,7 +68,7 @@ static GstStaticPadTemplate gst_speed_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 static void speed_base_init (gpointer g_class);
@@ -157,8 +157,9 @@ gst_speed_get_type (void)
       0,
       (GInstanceInitFunc) speed_init,
     };
+
     speed_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSpeed", &speed_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSpeed", &speed_info, 0);
   }
   return speed_type;
 }
@@ -187,7 +188,7 @@ speed_class_init (GstSpeedClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SPEED,
       g_param_spec_float ("speed", "speed", "speed",
-	  0.1, 40.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0.1, 40.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -250,7 +251,7 @@ speed_loop (GstElement * element)
 #undef _FORMAT
   } else {
     GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
-	("format wasn't negotiated before chain function"));
+        ("format wasn't negotiated before chain function"));
     gst_element_yield (element);
   }
 }

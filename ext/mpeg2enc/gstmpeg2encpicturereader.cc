@@ -85,7 +85,9 @@ bool GstMpeg2EncPictureReader::LoadFrame ()
   GstData *
       data;
   GstBuffer *
-      buf = NULL;
+      buf =
+      NULL;
+
   gint
       i,
       x,
@@ -93,10 +95,15 @@ bool GstMpeg2EncPictureReader::LoadFrame ()
       n;
   guint8 *
       frame;
+
   GstFormat
-      fmt = GST_FORMAT_DEFAULT;
+      fmt =
+      GST_FORMAT_DEFAULT;
   gint64
-      pos = 0, tot = 0;
+      pos =
+      0,
+      tot =
+      0;
 
   gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_POSITION, &fmt, &pos);
   gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_TOTAL, &fmt, &tot);
@@ -106,16 +113,16 @@ bool GstMpeg2EncPictureReader::LoadFrame ()
       gst_pad_set_element_private (pad, NULL);
     } else if (!(data = gst_pad_pull (pad))) {
       GST_ELEMENT_ERROR (gst_pad_get_parent (pad), RESOURCE, READ,
-	  (NULL), (NULL));
+          (NULL), (NULL));
       return true;
     }
 
     if (GST_IS_EVENT (data)) {
       if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-	gst_event_unref (GST_EVENT (data));
-	return true;
+        gst_event_unref (GST_EVENT (data));
+        return true;
       } else {
-	gst_pad_event_default (pad, GST_EVENT (data));
+        gst_pad_event_default (pad, GST_EVENT (data));
       }
     } else {
       buf = GST_BUFFER (data);

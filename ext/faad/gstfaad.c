@@ -29,23 +29,23 @@ GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-	"systemstream = (bool) FALSE, " "mpegversion = { (int) 2, (int) 4 }")
+        "systemstream = (bool) FALSE, " "mpegversion = { (int) 2, (int) 4 }")
     );
 
 GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (bool) TRUE, "
-	"width = (int) { 16, 24, 32 }, "
-	"depth = (int) { 16, 24, 32 }, "
-	"rate = (int) [ 8000, 96000 ], "
-	"channels = (int) [ 1, 6 ]; "
-	"audio/x-raw-float, "
-	"endianness = (int) BYTE_ORDER, "
-	"depth = (int) { 32, 64 }, "
-	"rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 6 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (bool) TRUE, "
+        "width = (int) { 16, 24, 32 }, "
+        "depth = (int) { 16, 24, 32 }, "
+        "rate = (int) [ 8000, 96000 ], "
+        "channels = (int) [ 1, 6 ]; "
+        "audio/x-raw-float, "
+        "endianness = (int) BYTE_ORDER, "
+        "depth = (int) { 32, 64 }, "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
 static void gst_faad_base_init (GstFaadClass * klass);
@@ -83,7 +83,7 @@ gst_faad_get_type (void)
     };
 
     gst_faad_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstFaad", &gst_faad_info, 0);
+        "GstFaad", &gst_faad_info, 0);
   }
 
   return gst_faad_type;
@@ -171,46 +171,46 @@ gst_faad_srcgetcaps (GstPad * pad)
 
     for (n = 0; fmt[n] != -1; n++) {
       switch (n) {
-	case FAAD_FMT_16BIT:
-	  str = gst_structure_new ("audio/x-raw-int",
-	      "signed", G_TYPE_BOOLEAN, TRUE,
-	      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
-	  break;
-	case FAAD_FMT_24BIT:
-	  str = gst_structure_new ("audio/x-raw-int",
-	      "signed", G_TYPE_BOOLEAN, TRUE,
-	      "width", G_TYPE_INT, 24, "depth", G_TYPE_INT, 24, NULL);
-	  break;
-	case FAAD_FMT_32BIT:
-	  str = gst_structure_new ("audio/x-raw-int",
-	      "signed", G_TYPE_BOOLEAN, TRUE,
-	      "width", G_TYPE_INT, 32, "depth", G_TYPE_INT, 32, NULL);
-	  break;
-	case FAAD_FMT_FLOAT:
-	  str = gst_structure_new ("audio/x-raw-float",
-	      "depth", G_TYPE_INT, 32, NULL);
-	  break;
-	case FAAD_FMT_DOUBLE:
-	  str = gst_structure_new ("audio/x-raw-float",
-	      "depth", G_TYPE_INT, 64, NULL);
-	  break;
-	default:
-	  str = NULL;
-	  break;
+        case FAAD_FMT_16BIT:
+          str = gst_structure_new ("audio/x-raw-int",
+              "signed", G_TYPE_BOOLEAN, TRUE,
+              "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
+          break;
+        case FAAD_FMT_24BIT:
+          str = gst_structure_new ("audio/x-raw-int",
+              "signed", G_TYPE_BOOLEAN, TRUE,
+              "width", G_TYPE_INT, 24, "depth", G_TYPE_INT, 24, NULL);
+          break;
+        case FAAD_FMT_32BIT:
+          str = gst_structure_new ("audio/x-raw-int",
+              "signed", G_TYPE_BOOLEAN, TRUE,
+              "width", G_TYPE_INT, 32, "depth", G_TYPE_INT, 32, NULL);
+          break;
+        case FAAD_FMT_FLOAT:
+          str = gst_structure_new ("audio/x-raw-float",
+              "depth", G_TYPE_INT, 32, NULL);
+          break;
+        case FAAD_FMT_DOUBLE:
+          str = gst_structure_new ("audio/x-raw-float",
+              "depth", G_TYPE_INT, 64, NULL);
+          break;
+        default:
+          str = NULL;
+          break;
       }
       if (!str)
-	continue;
+        continue;
 
       if (faad->samplerate != -1) {
-	gst_structure_set (str, "rate", G_TYPE_INT, faad->samplerate, NULL);
+        gst_structure_set (str, "rate", G_TYPE_INT, faad->samplerate, NULL);
       } else {
-	gst_structure_set (str, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
+        gst_structure_set (str, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
       }
 
       if (faad->channels != -1) {
-	gst_structure_set (str, "channels", G_TYPE_INT, faad->channels, NULL);
+        gst_structure_set (str, "channels", G_TYPE_INT, faad->channels, NULL);
       } else {
-	gst_structure_set (str, "channels", GST_TYPE_INT_RANGE, 1, 6, NULL);
+        gst_structure_set (str, "channels", GST_TYPE_INT_RANGE, 1, 6, NULL);
       }
 
       gst_structure_set (str, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
@@ -252,21 +252,21 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
     gint width;
 
     if (!gst_structure_get_int (structure, "depth", &depth) ||
-	!gst_structure_get_int (structure, "width", &width))
+        !gst_structure_get_int (structure, "width", &width))
       return GST_PAD_LINK_REFUSED;
     if (depth != width)
       return GST_PAD_LINK_REFUSED;
 
     switch (depth) {
       case 16:
-	fmt = FAAD_FMT_16BIT;
-	break;
+        fmt = FAAD_FMT_16BIT;
+        break;
       case 24:
-	fmt = FAAD_FMT_24BIT;
-	break;
+        fmt = FAAD_FMT_24BIT;
+        break;
       case 32:
-	fmt = FAAD_FMT_32BIT;
-	break;
+        fmt = FAAD_FMT_32BIT;
+        break;
     }
   } else {
     if (!gst_structure_get_int (structure, "depth", &depth))
@@ -274,11 +274,11 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 
     switch (depth) {
       case 32:
-	fmt = FAAD_FMT_FLOAT;
-	break;
+        fmt = FAAD_FMT_FLOAT;
+        break;
       case 64:
-	fmt = FAAD_FMT_DOUBLE;
-	break;
+        fmt = FAAD_FMT_DOUBLE;
+        break;
     }
   }
 
@@ -310,12 +310,12 @@ gst_faad_chain (GstPad * pad, GstData * data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	gst_element_set_eos (GST_ELEMENT (faad));
-	gst_pad_push (faad->srcpad, data);
-	return;
+        gst_element_set_eos (GST_ELEMENT (faad));
+        gst_pad_push (faad->srcpad, data);
+        return;
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
   }
 
@@ -327,7 +327,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
     guchar channels;
 
     faacDecInit (faad->handle,
-	GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate, &channels);
+        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate, &channels);
     faad->samplerate = samplerate;
     faad->channels = channels;
     ret = gst_pad_renegotiate (faad->srcpad);
@@ -342,7 +342,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   if (info.error) {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-	("Failed to decode buffer: %s", faacDecGetErrorMessage (info.error)));
+        ("Failed to decode buffer: %s", faacDecGetErrorMessage (info.error)));
     gst_buffer_unref (buf);
     return;
   }
@@ -384,13 +384,13 @@ gst_faad_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!(faad->handle = faacDecOpen ()))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       else {
-	faacDecConfiguration *conf;
+        faacDecConfiguration *conf;
 
-	conf = faacDecGetCurrentConfiguration (faad->handle);
-	conf->defObjectType = LC;
-	faacDecSetConfiguration (faad->handle, conf);
+        conf = faacDecGetCurrentConfiguration (faad->handle);
+        conf->defObjectType = LC;
+        faacDecSetConfiguration (faad->handle, conf);
       }
       break;
     case GST_STATE_PAUSED_TO_READY:

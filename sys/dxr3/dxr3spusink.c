@@ -122,8 +122,9 @@ dxr3spusink_get_type (void)
       0,
       (GInstanceInitFunc) dxr3spusink_init,
     };
+
     dxr3spusink_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"Dxr3SpuSink", &dxr3spusink_info, 0);
+        "Dxr3SpuSink", &dxr3spusink_info, 0);
   }
   return dxr3spusink_type;
 }
@@ -264,8 +265,8 @@ dxr3spusink_open (Dxr3SpuSink * sink)
   sink->spu_fd = open (sink->spu_filename, O_WRONLY);
   if (sink->spu_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open spu device \"%s\" for writing."),
-	    sink->spu_filename), GST_ERROR_SYSTEM);
+        (_("Could not open spu device \"%s\" for writing."),
+            sink->spu_filename), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -276,8 +277,8 @@ dxr3spusink_open (Dxr3SpuSink * sink)
   sink->control_fd = open (sink->control_filename, O_WRONLY);
   if (sink->control_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open control device \"%s\" for writing."),
-	    sink->control_filename), GST_ERROR_SYSTEM);
+        (_("Could not open control device \"%s\" for writing."),
+            sink->control_filename), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -294,15 +295,15 @@ dxr3spusink_close (Dxr3SpuSink * sink)
 
   if (close (sink->spu_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Could not close spu device \"%s\"."), sink->spu_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not close spu device \"%s\"."), sink->spu_filename),
+        GST_ERROR_SYSTEM);
     return;
   }
 
   if (close (sink->control_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Could not close control device \"%s\"."), sink->control_filename),
-	GST_ERROR_SYSTEM);
+        (_("Could not close control device \"%s\"."), sink->control_filename),
+        GST_ERROR_SYSTEM);
     return;
   }
 
@@ -335,19 +336,19 @@ dxr3spusink_handle_event (GstPad * pad, GstEvent * event)
   switch (type) {
     case GST_EVENT_FLUSH:
       if (sink->control_fd >= 0) {
-	int subdevice;
+        int subdevice;
 
-	subdevice = EM8300_SUBDEVICE_SUBPICTURE;
-	ioctl (sink->control_fd, EM8300_IOCTL_FLUSH, &subdevice);
+        subdevice = EM8300_SUBDEVICE_SUBPICTURE;
+        ioctl (sink->control_fd, EM8300_IOCTL_FLUSH, &subdevice);
 
-	/* FIXME: There should be a nicer way to do this, but I tried
-	   everything and nothing else seems to really reset the video
-	   fifo. */
+        /* FIXME: There should be a nicer way to do this, but I tried
+           everything and nothing else seems to really reset the video
+           fifo. */
 /*       dxr3spusink_close (sink); */
 /*       dxr3spusink_open (sink); */
 
-	/* Report the flush operation. */
-	g_signal_emit (G_OBJECT (sink), dxr3spusink_signals[SIGNAL_FLUSHED], 0);
+        /* Report the flush operation. */
+        g_signal_emit (G_OBJECT (sink), dxr3spusink_signals[SIGNAL_FLUSHED], 0);
       }
       break;
     default:
@@ -387,10 +388,10 @@ dxr3spusink_chain (GstPad * pad, GstData * _data)
     }
 
     bytes_written = write (sink->spu_fd, GST_BUFFER_DATA (buf),
-	GST_BUFFER_SIZE (buf));
+        GST_BUFFER_SIZE (buf));
     if (bytes_written < GST_BUFFER_SIZE (buf)) {
       fprintf (stderr, "dxr3spusink: Warning: %d bytes should be written,"
-	  " only %d bytes written\n", GST_BUFFER_SIZE (buf), bytes_written);
+          " only %d bytes written\n", GST_BUFFER_SIZE (buf), bytes_written);
     }
   }
 
@@ -406,9 +407,9 @@ dxr3spusink_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
-	if (!dxr3spusink_open (DXR3SPUSINK (element))) {
-	  return GST_STATE_FAILURE;
-	}
+        if (!dxr3spusink_open (DXR3SPUSINK (element))) {
+          return GST_STATE_FAILURE;
+        }
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -421,7 +422,7 @@ dxr3spusink_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
-	dxr3spusink_close (DXR3SPUSINK (element));
+        dxr3spusink_close (DXR3SPUSINK (element));
       }
       break;
   }
@@ -470,7 +471,7 @@ dxr3spusink_set_clut (Dxr3SpuSink * sink, const guint32 * clut)
 
   if (ioctl (sink->spu_fd, EM8300_IOCTL_SPU_SETPALETTE, clut_fixed))
     fprintf (stderr, "dxr3spusink: failed to set CLUT (%s)\n",
-	strerror (errno));
+        strerror (errno));
 }
 
 
@@ -489,7 +490,7 @@ dxr3spusink_highlight_on (Dxr3SpuSink * sink, unsigned palette,
 
   if (ioctl (sink->spu_fd, EM8300_IOCTL_SPU_BUTTON, &btn)) {
     fprintf (stderr, "dxr3spusink: failed to set spu button (%s)\n",
-	strerror (errno));
+        strerror (errno));
   }
 }
 
@@ -499,7 +500,7 @@ dxr3spusink_highlight_off (Dxr3SpuSink * sink)
 {
   if (ioctl (sink->spu_fd, EM8300_IOCTL_SPU_BUTTON, NULL)) {
     fprintf (stderr, "dxr3spusink: failed to set spu button (%s)\n",
-	strerror (errno));
+        strerror (errno));
   }
 }
 

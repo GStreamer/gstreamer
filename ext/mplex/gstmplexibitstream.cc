@@ -53,7 +53,7 @@ IBitStream ()
 
   if (!ReadIntoBuffer () && buffered == 0) {
     GST_ELEMENT_ERROR (gst_pad_get_parent (_pad), RESOURCE, READ, (NULL),
-	("Failed to read from input pad %s", gst_pad_get_name (pad)));
+        ("Failed to read from input pad %s", gst_pad_get_name (pad)));
   }
 }
 
@@ -70,6 +70,7 @@ size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
 {
   guint8 *
       data;
+
   guint
       read;
 
@@ -78,18 +79,19 @@ size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
 
   if ((read = gst_bytestream_peek_bytes (bs, &data, size)) != size) {
     GstEvent *
-	event;
+        event;
+
     guint
-	pending;
+        pending;
 
     gst_bytestream_get_status (bs, &pending, &event);
     if (event) {
       switch (GST_EVENT_TYPE (event)) {
-	case GST_EVENT_EOS:
-	  eos = TRUE;
-	  break;
-	default:
-	  break;
+        case GST_EVENT_EOS:
+          eos = TRUE;
+          break;
+        default:
+          break;
       }
       gst_event_unref (event);
     }

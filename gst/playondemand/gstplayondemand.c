@@ -32,9 +32,9 @@
  * way beyond what a real computer can actually keep track of, but hey ... */
 
 /* some default values */
-#define GST_POD_MAX_PLAYS    100	/* maximum simultaneous plays */
-#define GST_POD_BUFFER_TIME  5.0	/* buffer length in seconds */
-#define GST_POD_TICK_RATE    1e-6	/* ticks per second */
+#define GST_POD_MAX_PLAYS    100        /* maximum simultaneous plays */
+#define GST_POD_BUFFER_TIME  5.0        /* buffer length in seconds */
+#define GST_POD_TICK_RATE    1e-6       /* ticks per second */
 
 /* buffer pool fallback values ... use if no buffer pool is available */
 #define GST_POD_BUFPOOL_SIZE 4096
@@ -54,7 +54,7 @@ static GstStaticPadTemplate play_on_demand_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate play_on_demand_src_template =
@@ -62,7 +62,7 @@ static GstStaticPadTemplate play_on_demand_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 
@@ -109,8 +109,9 @@ gst_play_on_demand_get_type (void)
       0,
       (GInstanceInitFunc) play_on_demand_init,
     };
+
     play_on_demand_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstPlayOnDemand", &play_on_demand_info, 0);
+        "GstPlayOnDemand", &play_on_demand_info, 0);
   }
   return play_on_demand_type;
 }
@@ -203,33 +204,33 @@ play_on_demand_class_init (GstPlayOnDemandClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MUTE,
       g_param_spec_boolean ("mute", "Silence output", "Do not output any sound",
-	  FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
       g_param_spec_float ("buffer-time", "Buffer length in seconds",
-	  "Number of seconds of audio the buffer holds", 0.0, G_MAXFLOAT,
-	  GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Number of seconds of audio the buffer holds", 0.0, G_MAXFLOAT,
+          GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_PLAYS,
       g_param_spec_uint ("max-plays", "Maximum simultaneous playbacks",
-	  "Maximum allowed number of simultaneous plays from the buffer", 1,
-	  G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Maximum allowed number of simultaneous plays from the buffer", 1,
+          G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TICK_RATE,
       g_param_spec_float ("tick-rate", "Tick rate (ticks/second)",
-	  "The rate of musical ticks, the smallest time unit in a song", 0,
-	  G_MAXFLOAT, GST_POD_TICK_RATE,
-	  G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "The rate of musical ticks, the smallest time unit in a song", 0,
+          G_MAXFLOAT, GST_POD_TICK_RATE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TOTAL_TICKS,
       g_param_spec_uint ("total-ticks", "Total number of ticks",
-	  "Total number of ticks in the tick array", 1, G_MAXUINT, 1,
-	  G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Total number of ticks in the tick array", 1, G_MAXUINT, 1,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TICKS,
       g_param_spec_pointer ("ticks", "Ticks to play sample on",
-	  "An array of ticks (musical times) at which to play the sample",
-	  G_PARAM_READWRITE));
+          "An array of ticks (musical times) at which to play the sample",
+          G_PARAM_READWRITE));
 }
 
 static void
@@ -282,7 +283,7 @@ play_on_demand_set_property (GObject * object, guint prop_id,
 
       /* clear out now-invalid play pointers */
       for (i = 0; i < filter->max_plays; i++)
-	filter->plays[i] = G_MAXUINT;
+        filter->plays[i] = G_MAXUINT;
 
       break;
     case PROP_MAX_PLAYS:
@@ -291,9 +292,9 @@ play_on_demand_set_property (GObject * object, guint prop_id,
 
       new_plays = g_new (guint, new_size);
       for (i = 0; i < min_size; i++)
-	new_plays[i] = filter->plays[i];
+        new_plays[i] = filter->plays[i];
       for (i = min_size; i < new_size; i++)
-	new_plays[i] = G_MAXUINT;
+        new_plays[i] = G_MAXUINT;
 
       g_free (filter->plays);
       filter->plays = new_plays;
@@ -306,13 +307,13 @@ play_on_demand_set_property (GObject * object, guint prop_id,
     case PROP_TOTAL_TICKS:
       new_size = g_value_get_uint (value);
       min_size =
-	  (new_size < filter->total_ticks) ? new_size : filter->total_ticks;
+          (new_size < filter->total_ticks) ? new_size : filter->total_ticks;
 
       new_ticks = g_new (guint32, new_size / 32 + 1);
       for (i = 0; i <= min_size / 32; i++)
-	new_ticks[i] = filter->ticks[i];
+        new_ticks[i] = filter->ticks[i];
       for (i = min_size / 32 + 1; i <= new_size / 32; i++)
-	new_ticks[i] = 0;
+        new_ticks[i] = 0;
 
       g_free (filter->ticks);
       filter->ticks = new_ticks;
@@ -322,8 +323,8 @@ play_on_demand_set_property (GObject * object, guint prop_id,
     case PROP_TICKS:
       new_ticks = (guint *) g_value_get_pointer (value);
       if (new_ticks) {
-	g_free (filter->ticks);
-	filter->ticks = new_ticks;
+        g_free (filter->ticks);
+        filter->ticks = new_ticks;
       }
       break;
     default:
@@ -415,10 +416,10 @@ play_on_demand_add_play_pointer (GstPlayOnDemand * filter, guint pos)
   if (filter->rate && ((filter->buffer_time * filter->rate) > pos)) {
     for (i = 0; i < filter->max_plays; i++) {
       if (filter->plays[i] == G_MAXUINT) {
-	filter->plays[i] = pos;
-	/* emit a signal to indicate a sample being played */
-	g_signal_emit (filter, gst_pod_filter_signals[PLAYED_SIGNAL], 0);
-	break;
+        filter->plays[i] = pos;
+        /* emit a signal to indicate a sample being played */
+        g_signal_emit (filter, gst_pod_filter_signals[PLAYED_SIGNAL], 0);
+        break;
       }
     }
   }

@@ -63,36 +63,36 @@ dlopenLADSPA (const char *pcFilename, int iFlag)
      */
 
     pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
-	getenv ("LADSPA_PATH"));
+        getenv ("LADSPA_PATH"));
 
     if (pcLADSPAPath) {
 
       pcStart = pcLADSPAPath;
       while (*pcStart != '\0') {
-	pcEnd = pcStart;
-	while (*pcEnd != ':' && *pcEnd != '\0')
-	  pcEnd++;
+        pcEnd = pcStart;
+        while (*pcEnd != ':' && *pcEnd != '\0')
+          pcEnd++;
 
-	pcBuffer = malloc (iFilenameLength + 2 + (pcEnd - pcStart));
-	if (pcEnd > pcStart)
-	  strncpy (pcBuffer, pcStart, pcEnd - pcStart);
-	iNeedSlash = 0;
-	if (pcEnd > pcStart)
-	  if (*(pcEnd - 1) != '/') {
-	    iNeedSlash = 1;
-	    pcBuffer[pcEnd - pcStart] = '/';
-	  }
-	strcpy (pcBuffer + iNeedSlash + (pcEnd - pcStart), pcFilename);
+        pcBuffer = malloc (iFilenameLength + 2 + (pcEnd - pcStart));
+        if (pcEnd > pcStart)
+          strncpy (pcBuffer, pcStart, pcEnd - pcStart);
+        iNeedSlash = 0;
+        if (pcEnd > pcStart)
+          if (*(pcEnd - 1) != '/') {
+            iNeedSlash = 1;
+            pcBuffer[pcEnd - pcStart] = '/';
+          }
+        strcpy (pcBuffer + iNeedSlash + (pcEnd - pcStart), pcFilename);
 
-	pvResult = dlopen (pcBuffer, iFlag);
+        pvResult = dlopen (pcBuffer, iFlag);
 
-	free (pcBuffer);
-	if (pvResult != NULL)
-	  return pvResult;
+        free (pcBuffer);
+        if (pvResult != NULL)
+          return pvResult;
 
-	pcStart = pcEnd;
-	if (*pcStart == ':')
-	  pcStart++;
+        pcStart = pcEnd;
+        if (*pcStart == ':')
+          pcStart++;
       }
     }
   }
@@ -134,7 +134,7 @@ loadLADSPAPluginLibrary (const char *pcPluginFilename)
   pvPluginHandle = dlopenLADSPA (pcPluginFilename, RTLD_NOW);
   if (!pvPluginHandle) {
     fprintf (stderr,
-	"Failed to load plugin \"%s\": %s\n", pcPluginFilename, dlerror ());
+        "Failed to load plugin \"%s\": %s\n", pcPluginFilename, dlerror ());
     exit (1);
   }
 
@@ -169,10 +169,10 @@ findLADSPAPluginDescriptor (void *pvLADSPAPluginLibrary,
 
     if (pcError) {
       fprintf (stderr,
-	  "Unable to find ladspa_descriptor() function in plugin "
-	  "library file \"%s\": %s.\n"
-	  "Are you sure this is a LADSPA plugin file?\n",
-	  pcPluginLibraryFilename, pcError);
+          "Unable to find ladspa_descriptor() function in plugin "
+          "library file \"%s\": %s.\n"
+          "Are you sure this is a LADSPA plugin file?\n",
+          pcPluginLibraryFilename, pcError);
       exit (1);
     }
   }
@@ -181,8 +181,8 @@ findLADSPAPluginDescriptor (void *pvLADSPAPluginLibrary,
     psDescriptor = pfDescriptorFunction (lPluginIndex);
     if (psDescriptor == NULL) {
       fprintf (stderr,
-	  "Unable to find label \"%s\" in plugin library file \"%s\".\n",
-	  pcPluginLabel, pcPluginLibraryFilename);
+          "Unable to find label \"%s\" in plugin library file \"%s\".\n",
+          pcPluginLabel, pcPluginLibraryFilename);
       exit (1);
     }
     if (strcmp (psDescriptor->Label, pcPluginLabel) == 0)

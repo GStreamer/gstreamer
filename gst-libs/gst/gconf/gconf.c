@@ -31,7 +31,7 @@
 #error "GST_GCONF_DIR is not defined !"
 #endif
 
-static GConfClient *_gst_gconf_client = NULL;	/* GConf connection */
+static GConfClient *_gst_gconf_client = NULL;   /* GConf connection */
 
 
 /* internal functions */
@@ -63,13 +63,13 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
     while (pads) {
       /* check if the direction matches */
       if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == direction) {
-	if (GST_PAD_PEER (GST_PAD (pads->data)) == NULL) {
-	  /* found it ! */
-	  pad = GST_PAD (pads->data);
-	}
+        if (GST_PAD_PEER (GST_PAD (pads->data)) == NULL) {
+          /* found it ! */
+          pad = GST_PAD (pads->data);
+        }
       }
       if (pad)
-	break;			/* found one already */
+        break;                  /* found one already */
       pads = g_list_next (pads);
     }
     elements = g_list_next (elements);
@@ -149,7 +149,7 @@ gst_gconf_render_bin_from_description (const gchar * description)
   g_free (desc);
   if (error) {
     g_print ("DEBUG: gstgconf: error parsing pipeline %s\n%s\n",
-	description, error->message);
+        description, error->message);
     g_error_free (error);
     return NULL;
   }
@@ -308,7 +308,7 @@ gst_gconf_get_default_visualization_element (void)
 
     if (!ret)
       g_warning
-	  ("No GConf default visualization plugin key and goom doesn't work");
+          ("No GConf default visualization plugin key and goom doesn't work");
     else
       g_print ("GConf visualization plugin not found, using goom\n");
   }

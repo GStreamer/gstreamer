@@ -106,15 +106,15 @@ static GstStaticPadTemplate gst_colorspace_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
-	GST_VIDEO_CAPS_BGR "; "
-	GST_VIDEO_CAPS_RGBx "; "
-	GST_VIDEO_CAPS_xRGB "; "
-	GST_VIDEO_CAPS_BGRx "; "
-	GST_VIDEO_CAPS_xBGR "; "
-	GST_VIDEO_CAPS_RGB_16 "; "
-	GST_VIDEO_CAPS_RGB_15 "; "
-	GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, YVYU, UYVY, YUV9, YVU9, "
-	    "Y800, Y41P, Y41B, Y42B, IUY2 }")
+        GST_VIDEO_CAPS_BGR "; "
+        GST_VIDEO_CAPS_RGBx "; "
+        GST_VIDEO_CAPS_xRGB "; "
+        GST_VIDEO_CAPS_BGRx "; "
+        GST_VIDEO_CAPS_xBGR "; "
+        GST_VIDEO_CAPS_RGB_16 "; "
+        GST_VIDEO_CAPS_RGB_15 "; "
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, YVYU, UYVY, YUV9, YVU9, "
+            "Y800, Y41P, Y41B, Y42B, IUY2 }")
     )
     );
 
@@ -123,15 +123,15 @@ static GstStaticPadTemplate gst_colorspace_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
-	GST_VIDEO_CAPS_BGR "; "
-	GST_VIDEO_CAPS_RGBx "; "
-	GST_VIDEO_CAPS_xRGB "; "
-	GST_VIDEO_CAPS_BGRx "; "
-	GST_VIDEO_CAPS_xBGR "; "
-	GST_VIDEO_CAPS_RGB_16 "; "
-	GST_VIDEO_CAPS_RGB_15 "; "
-	GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, YVYU, UYVY, YUV9, YVU9, "
-	    "Y800, Y41P, Y41B, Y42B, IUY2 }")
+        GST_VIDEO_CAPS_BGR "; "
+        GST_VIDEO_CAPS_RGBx "; "
+        GST_VIDEO_CAPS_xRGB "; "
+        GST_VIDEO_CAPS_BGRx "; "
+        GST_VIDEO_CAPS_xBGR "; "
+        GST_VIDEO_CAPS_RGB_16 "; "
+        GST_VIDEO_CAPS_RGB_15 "; "
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, YVYU, UYVY, YUV9, YVU9, "
+            "Y800, Y41P, Y41B, Y42B, IUY2 }")
     )
     );
 
@@ -154,16 +154,16 @@ colorspace_find_lcs_format (const GstCaps * caps)
 
     ((LCSFormat *) rgb_fmt)->type = LCS_FORMAT_RGB_PACKED;
     gst_structure_get_int (structure, "bpp",
-	&((LCSFormat *) rgb_fmt)->bits_per_pixel);
+        &((LCSFormat *) rgb_fmt)->bits_per_pixel);
     gst_structure_get_int (structure, "red_mask", &mask);
     lcs_utils_mask_to_shift (mask, &rgb_fmt->bits_per_component[LCS_R],
-	&rgb_fmt->component_bit_offset[LCS_R]);
+        &rgb_fmt->component_bit_offset[LCS_R]);
     gst_structure_get_int (structure, "green_mask", &mask);
     lcs_utils_mask_to_shift (mask, &rgb_fmt->bits_per_component[LCS_G],
-	&rgb_fmt->component_bit_offset[LCS_G]);
+        &rgb_fmt->component_bit_offset[LCS_G]);
     gst_structure_get_int (structure, "blue_mask", &mask);
     lcs_utils_mask_to_shift (mask, &rgb_fmt->bits_per_component[LCS_B],
-	&rgb_fmt->component_bit_offset[LCS_B]);
+        &rgb_fmt->component_bit_offset[LCS_B]);
     rgb_fmt->bits_per_component[LCS_A] = 0;
     rgb_fmt->component_bit_offset[LCS_A] = 0;
     gst_structure_get_int (structure, "endianness", &endianness);
@@ -224,7 +224,7 @@ colorspace_setup_converter (GstColorspace * space, const GstCaps * from_caps,
 
   if (space->converter) {
     GST_DEBUG ("trying from " GST_FOURCC_FORMAT " to " GST_FOURCC_FORMAT,
-	GST_FOURCC_ARGS (from_space), GST_FOURCC_ARGS (to_space));
+        GST_FOURCC_ARGS (from_space), GST_FOURCC_ARGS (to_space));
     space->disabled = FALSE;
     return TRUE;
   }
@@ -290,9 +290,9 @@ gst_colorspace_link (GstPad * pad, const GstCaps * caps)
     othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
 
     gst_caps_set_simple (othercaps,
-	"width", G_TYPE_INT, width,
-	"height", G_TYPE_INT, height,
-	"framerate", G_TYPE_DOUBLE, framerate, NULL);
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", G_TYPE_DOUBLE, framerate, NULL);
 
     ret = gst_pad_try_set_caps (otherpad, othercaps);
     if (!GST_PAD_LINK_SUCCESSFUL (ret)) {
@@ -329,9 +329,10 @@ gst_colorspace_get_type (void)
       0,
       (GInstanceInitFunc) gst_colorspace_init,
     };
+
     colorspace_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstColorspaceLCS",
-	&colorspace_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstColorspaceLCS",
+        &colorspace_info, 0);
   }
   return colorspace_type;
 }
@@ -407,13 +408,13 @@ gst_colorspace_chain (GstPad * pad, GstData * _data)
     unsigned long size;
 
     lcs_format_buffer_size (lcs_converter_get_dest_format (space->converter),
-	space->width, space->height, &size);
+        space->width, space->height, &size);
 
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     lcs_convert_auto (space->converter,
-	GST_BUFFER_DATA (buf),
-	GST_BUFFER_DATA (outbuf), space->width, space->height);
+        GST_BUFFER_DATA (buf),
+        GST_BUFFER_DATA (outbuf), space->width, space->height);
 
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);

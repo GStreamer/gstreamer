@@ -28,9 +28,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "rtjpegenc",
-	  GST_RANK_NONE, GST_TYPE_RTJPEGENC) ||
+          GST_RANK_NONE, GST_TYPE_RTJPEGENC) ||
       !gst_element_register (plugin, "rtjpegdec",
-	  GST_RANK_NONE, GST_TYPE_RTJPEGDEC))
+          GST_RANK_NONE, GST_TYPE_RTJPEGDEC))
     return FALSE;
 
   return TRUE;

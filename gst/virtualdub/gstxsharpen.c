@@ -107,8 +107,8 @@ gst_xsharpen_get_type (void)
     };
 
     xsharpen_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstXsharpen", &xsharpen_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstXsharpen", &xsharpen_info,
+        0);
   }
   return xsharpen_type;
 }
@@ -126,11 +126,11 @@ gst_xsharpen_class_init (GstXsharpenClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STRENGTH,
       g_param_spec_int ("strength", "strength", "strength",
-	  0, 255, 255, (GParamFlags) G_PARAM_READWRITE));
+          0, 255, 255, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD,
       g_param_spec_int ("threshold", "threshold", "threshold",
-	  0, 255, 255, (GParamFlags) G_PARAM_READWRITE));
+          0, 255, 255, (GParamFlags) G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_xsharpen_set_property;
   gobject_class->get_property = gst_xsharpen_get_property;
@@ -204,10 +204,10 @@ gst_xsharpen_chain (GstPad * pad, GstData * _data)
 
   src =
       (Pixel *) ((char *) src_buf + (xsharpen->height -
-	  1) * xsharpen->srcpitch);
+          1) * xsharpen->srcpitch);
   dst =
       (Pixel *) ((char *) dst_buf + (xsharpen->height -
-	  1) * xsharpen->dstpitch);
+          1) * xsharpen->dstpitch);
 
   for (x = 0; x < xsharpen->width; x++) {
     dst[x] = src[x];
@@ -252,100 +252,100 @@ gst_xsharpen_chain (GstPad * pad, GstData * _data)
       p = ((Pixel32 *) ((char *) src - xsharpen->srcpitch))[x - 1];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = ((Pixel32 *) ((char *) src - xsharpen->srcpitch))[x];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = ((Pixel32 *) ((char *) src - xsharpen->srcpitch))[x + 1];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = src[x - 1];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = src[x];
       lumac = luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = src[x + 1];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = ((Pixel32 *) ((char *) src + xsharpen->srcpitch))[x - 1];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = ((Pixel32 *) ((char *) src + xsharpen->srcpitch))[x];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       p = ((Pixel32 *) ((char *) src + xsharpen->srcpitch))[x + 1];
       luma = p >> 24;
       if (luma > lumamax) {
-	lumamax = luma;
-	max = p;
+        lumamax = luma;
+        max = p;
       }
       if (luma < lumamin) {
-	lumamin = luma;
-	min = p;
+        lumamin = luma;
+        min = p;
       }
 
       /* Determine whether the current pixel is closer to the
@@ -356,32 +356,32 @@ gst_xsharpen_chain (GstPad * pad, GstData * _data)
 
       p = -1;
       if (xsharpen->strength != 0) {
-	mindiff = lumac - lumamin;
-	maxdiff = lumamax - lumac;
-	if (mindiff > maxdiff) {
-	  if (maxdiff < xsharpen->threshold) {
-	    p = max;
-	  }
-	} else {
-	  if (mindiff < xsharpen->threshold) {
-	    p = min;
-	  }
-	}
+        mindiff = lumac - lumamin;
+        maxdiff = lumamax - lumac;
+        if (mindiff > maxdiff) {
+          if (maxdiff < xsharpen->threshold) {
+            p = max;
+          }
+        } else {
+          if (mindiff < xsharpen->threshold) {
+            p = min;
+          }
+        }
       }
 
       if (p == -1) {
-	dst[x] = src[x];
+        dst[x] = src[x];
       } else {
-	R = (src[x] >> 16) & 0xff;
-	G = (src[x] >> 8) & 0xff;
-	B = src[x] & 0xff;
-	r = (p >> 16) & 0xff;
-	g = (p >> 8) & 0xff;
-	b = p & 0xff;
-	r = (xsharpen->strength * r + xsharpen->strengthinv * R) / 255;
-	g = (xsharpen->strength * g + xsharpen->strengthinv * G) / 255;
-	b = (xsharpen->strength * b + xsharpen->strengthinv * B) / 255;
-	dst[x] = (r << 16) | (g << 8) | b;
+        R = (src[x] >> 16) & 0xff;
+        G = (src[x] >> 8) & 0xff;
+        B = src[x] & 0xff;
+        r = (p >> 16) & 0xff;
+        g = (p >> 8) & 0xff;
+        b = p & 0xff;
+        r = (xsharpen->strength * r + xsharpen->strengthinv * R) / 255;
+        g = (xsharpen->strength * g + xsharpen->strengthinv * G) / 255;
+        b = (xsharpen->strength * b + xsharpen->strengthinv * B) / 255;
+        dst[x] = (r << 16) | (g << 8) | b;
       }
     }
     src = (Pixel *) ((char *) src + xsharpen->srcpitch);

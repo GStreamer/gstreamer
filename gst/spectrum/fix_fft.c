@@ -61,11 +61,11 @@
 
 #define FIX_MPY(DEST,A,B)       DEST = ((long)(A) * (long)(B))>>15
 
-#define N_WAVE          1024	/* dimension of Sinewave[] */
-#define LOG2_N_WAVE     10	/* log2(N_WAVE) */
-#define N_LOUD          100	/* dimension of Loudampl[] */
+#define N_WAVE          1024    /* dimension of Sinewave[] */
+#define LOG2_N_WAVE     10      /* log2(N_WAVE) */
+#define N_LOUD          100     /* dimension of Loudampl[] */
 
-extern fixed gst_spectrum_Sinewave[N_WAVE];	/* placed at end of this file for clarity */
+extern fixed gst_spectrum_Sinewave[N_WAVE];     /* placed at end of this file for clarity */
 extern fixed gst_spectrum_Loudampl[N_LOUD];
 static int gst_spectrum_db_from_ampl (fixed re, fixed im);
 static fixed gst_spectrum_fix_mpy (fixed a, fixed b);
@@ -119,19 +119,19 @@ gst_spectrum_fix_fft (fixed fr[], fixed fi[], int m, int inverse)
       /* variable scaling, depending upon data */
       shift = 0;
       for (i = 0; i < n; ++i) {
-	j = fr[i];
-	if (j < 0)
-	  j = -j;
-	m = fi[i];
-	if (m < 0)
-	  m = -m;
-	if (j > 16383 || m > 16383) {
-	  shift = 1;
-	  break;
-	}
+        j = fr[i];
+        if (j < 0)
+          j = -j;
+        m = fi[i];
+        if (m < 0)
+          m = -m;
+        if (j > 16383 || m > 16383) {
+          shift = 1;
+          break;
+        }
       }
       if (shift)
-	++scale;
+        ++scale;
     } else {
       /* fixed scaling, for proper normalization -
          there will be log2(n) passes, so this
@@ -148,27 +148,27 @@ gst_spectrum_fix_fft (fixed fr[], fixed fi[], int m, int inverse)
       wr = gst_spectrum_Sinewave[j + N_WAVE / 4];
       wi = -gst_spectrum_Sinewave[j];
       if (inverse)
-	wi = -wi;
+        wi = -wi;
       if (shift) {
-	wr >>= 1;
-	wi >>= 1;
+        wr >>= 1;
+        wi >>= 1;
       }
       for (i = m; i < n; i += istep) {
-	j = i + l;
-	tr = gst_spectrum_fix_mpy (wr, fr[j]) -
-	    gst_spectrum_fix_mpy (wi, fi[j]);
-	ti = gst_spectrum_fix_mpy (wr, fi[j]) +
-	    gst_spectrum_fix_mpy (wi, fr[j]);
-	qr = fr[i];
-	qi = fi[i];
-	if (shift) {
-	  qr >>= 1;
-	  qi >>= 1;
-	}
-	fr[j] = qr - tr;
-	fi[j] = qi - ti;
-	fr[i] = qr + tr;
-	fi[i] = qi + ti;
+        j = i + l;
+        tr = gst_spectrum_fix_mpy (wr, fr[j]) -
+            gst_spectrum_fix_mpy (wi, fi[j]);
+        ti = gst_spectrum_fix_mpy (wr, fi[j]) +
+            gst_spectrum_fix_mpy (wi, fr[j]);
+        qr = fr[i];
+        qi = fi[i];
+        if (shift) {
+          qr >>= 1;
+          qi >>= 1;
+        }
+        fr[j] = qr - tr;
+        fi[j] = qi - ti;
+        fr[i] = qr + tr;
+        fi[i] = qi + ti;
       }
     }
     --k;
@@ -230,7 +230,7 @@ gst_spectrum_db_from_ampl (fixed re, fixed im)
 
   if (loud2[0] == 0) {
     loud2[0] =
-	(long) gst_spectrum_Loudampl[0] * (long) gst_spectrum_Loudampl[0];
+        (long) gst_spectrum_Loudampl[0] * (long) gst_spectrum_Loudampl[0];
     for (i = 1; i < N_LOUD; ++i) {
       v = (long) gst_spectrum_Loudampl[i] * (long) gst_spectrum_Loudampl[i];
       loud2[i] = v;
@@ -272,7 +272,7 @@ gst_spectrum_iscale (int value, int numer, int denom)
 fixed
 gst_spectrum_fix_dot (fixed * hpa, fixed * pb, int n)
 {
-  fixed *pa = hpa;		/* FIXME */
+  fixed *pa = hpa;              /* FIXME */
   long sum;
   register fixed a, b;
 

@@ -51,17 +51,17 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianess = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 96000 ], "
-	"channels = (int) [ 1, 2 ]; "
-	"audio/x-raw-int, "
-	"signed = (boolean) FALSE, "
-	"width = (int) 8, "
-	"depth = (int) 8, "
-	"rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "endianess = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 96000 ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "signed = (boolean) FALSE, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
+        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static void gst_nassink_base_init (gpointer g_class);
@@ -111,9 +111,10 @@ gst_nassink_get_type (void)
       0,
       (GInstanceInitFunc) gst_nassink_init,
     };
+
     nassink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstNassink", &nassink_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstNassink", &nassink_info,
+        0);
   }
 
   return nassink_type;
@@ -127,7 +128,7 @@ gst_nassink_base_init (gpointer g_class)
     "Sink/Audio",
     "Plays audio to a Network Audio Server",
     "Laurent Vivier <Laurent.Vivier@bull.net>, "
-	"Arwed v. Merkatz <v.merkatz@gmx.net>"
+        "Arwed v. Merkatz <v.merkatz@gmx.net>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -152,8 +153,8 @@ gst_nassink_class_init (GstNassinkClass * klass)
   gobject_class->set_property = gst_nassink_set_property;
   gobject_class->get_property = gst_nassink_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));    /* CHECKME */
 
   gstelement_class->change_state = gst_nassink_change_state;
 }
@@ -203,7 +204,7 @@ gst_nassink_getcaps (GstPad * pad)
     GstStructure *structure = gst_caps_get_structure (templatecaps, i);
 
     gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE,
-	AuServerMinSampleRate (server), AuServerMaxSampleRate (server), NULL);
+        AuServerMinSampleRate (server), AuServerMaxSampleRate (server), NULL);
   }
   caps = gst_caps_intersect (templatecaps, gst_pad_get_pad_template_caps (pad));
   gst_caps_free (templatecaps);
@@ -291,28 +292,28 @@ gst_nassink_chain (GstPad * pad, GstData * _data)
       remaining = GST_BUFFER_SIZE (buf);
       while ((nassink->flow != AuNone) && (remaining > 0)) {
 
-	/* number of bytes we can copy to buffer */
+        /* number of bytes we can copy to buffer */
 
-	available = remaining > nassink->size - nassink->pos ?
-	    nassink->size - nassink->pos : remaining;
+        available = remaining > nassink->size - nassink->pos ?
+            nassink->size - nassink->pos : remaining;
 
-	/* fill the buffer */
+        /* fill the buffer */
 
-	memcpy (nassink->buf + nassink->pos, GST_BUFFER_DATA (buf) + pos,
-	    available);
+        memcpy (nassink->buf + nassink->pos, GST_BUFFER_DATA (buf) + pos,
+            available);
 
-	nassink->pos += available;
-	pos += available;
+        nassink->pos += available;
+        pos += available;
 
-	remaining -= available;
+        remaining -= available;
 
-	/* if we have more bytes, need to flush the buffer */
+        /* if we have more bytes, need to flush the buffer */
 
-	if (remaining > 0) {
-	  while ((nassink->flow != AuNone) && (nassink->pos == nassink->size)) {
-	    NAS_flush (nassink);
-	  }
-	}
+        if (remaining > 0) {
+          while ((nassink->flow != AuNone) && (nassink->pos == nassink->size)) {
+            NAS_flush (nassink);
+          }
+        }
       }
 
       /* give some time to event handler */
@@ -340,11 +341,11 @@ gst_nassink_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_HOST:
       if (nassink->host != NULL)
-	g_free (nassink->host);
+        g_free (nassink->host);
       if (g_value_get_string (value) == NULL)
-	nassink->host = NULL;
+        nassink->host = NULL;
       else
-	nassink->host = g_strdup (g_value_get_string (value));
+        nassink->host = g_strdup (g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -379,7 +380,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "nassink", GST_RANK_NONE,
-	  GST_TYPE_NASSINK)) {
+          GST_TYPE_NASSINK)) {
     return FALSE;
   }
 
@@ -460,17 +461,17 @@ gst_nassink_change_state (GstElement * element)
   switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
       if (GST_FLAG_IS_SET (element, GST_NASSINK_OPEN))
-	gst_nassink_close_audio (nassink);
+        gst_nassink_close_audio (nassink);
       break;
 
     case GST_STATE_READY:
       if (!GST_FLAG_IS_SET (element, GST_NASSINK_OPEN))
-	gst_nassink_open_audio (nassink);
+        gst_nassink_open_audio (nassink);
       break;
 
     case GST_STATE_PAUSED:
       while (nassink->pos && nassink->buf)
-	NAS_flush (nassink);
+        NAS_flush (nassink);
       break;
 
     case GST_STATE_PLAYING:
@@ -498,7 +499,7 @@ NAS_sendData (GstNassink * sink, AuUint32 numBytes)
   if (numBytes < (sink->pos)) {
 
     AuWriteElement (sink->audio, sink->flow, 0,
-	numBytes, sink->buf, AuFalse, NULL);
+        numBytes, sink->buf, AuFalse, NULL);
 
     memmove (sink->buf, sink->buf + numBytes, sink->pos - numBytes);
 
@@ -506,7 +507,7 @@ NAS_sendData (GstNassink * sink, AuUint32 numBytes)
 
   } else {
     AuWriteElement (sink->audio, sink->flow, 0,
-	sink->pos, sink->buf, (numBytes > sink->pos), NULL);
+        sink->pos, sink->buf, (numBytes > sink->pos), NULL);
     sink->pos = 0;
   }
 }
@@ -525,49 +526,49 @@ NAS_EventHandler (AuServer * aud, AuEvent * ev, AuEventHandlerRec * handler)
 
       switch (notify->kind) {
 
-	case AuElementNotifyKindLowWater:
-	  NAS_sendData (sink, notify->num_bytes);
-	  break;
+        case AuElementNotifyKindLowWater:
+          NAS_sendData (sink, notify->num_bytes);
+          break;
 
-	case AuElementNotifyKindState:
+        case AuElementNotifyKindState:
 
-	  switch (notify->cur_state) {
+          switch (notify->cur_state) {
 
-	    case AuStateStop:
+            case AuStateStop:
 
-	      if (sink->flow != AuNone) {
-		if (notify->reason == AuReasonEOF)
-		  AuStopFlow (handler->aud, sink->flow, NULL);
-		AuReleaseScratchFlow (handler->aud, sink->flow, NULL);
-		sink->flow = AuNone;
-	      }
-	      AuUnregisterEventHandler (handler->aud, handler);
-	      break;
+              if (sink->flow != AuNone) {
+                if (notify->reason == AuReasonEOF)
+                  AuStopFlow (handler->aud, sink->flow, NULL);
+                AuReleaseScratchFlow (handler->aud, sink->flow, NULL);
+                sink->flow = AuNone;
+              }
+              AuUnregisterEventHandler (handler->aud, handler);
+              break;
 
-	    case AuStatePause:
+            case AuStatePause:
 
-	      switch (notify->reason) {
-		case AuReasonUnderrun:
-		case AuReasonOverrun:
-		case AuReasonEOF:
-		case AuReasonWatermark:
+              switch (notify->reason) {
+                case AuReasonUnderrun:
+                case AuReasonOverrun:
+                case AuReasonEOF:
+                case AuReasonWatermark:
 
-		  NAS_sendData (sink, notify->num_bytes);
+                  NAS_sendData (sink, notify->num_bytes);
 
-		  break;
+                  break;
 
-		case AuReasonHardware:
+                case AuReasonHardware:
 
-		  if (AuSoundRestartHardwarePauses)
-		    AuStartFlow (handler->aud, sink->flow, NULL);
-		  else
-		    AuStopFlow (handler->aud, sink->flow, NULL);
+                  if (AuSoundRestartHardwarePauses)
+                    AuStartFlow (handler->aud, sink->flow, NULL);
+                  else
+                    AuStopFlow (handler->aud, sink->flow, NULL);
 
-		  break;
-	      }
-	      break;
-	  }
-	  break;
+                  break;
+              }
+              break;
+          }
+          break;
       }
       break;
   }
@@ -582,8 +583,8 @@ NAS_getDevice (AuServer * aud, int numTracks)
 
   for (i = 0; i < AuServerNumDevices (aud); i++) {
     if ((AuDeviceKind (AuServerDevice (aud, i))
-	    == AuComponentKindPhysicalOutput) &&
-	(AuDeviceNumTracks (AuServerDevice (aud, i)) == numTracks)) {
+            == AuComponentKindPhysicalOutput) &&
+        (AuDeviceNumTracks (AuServerDevice (aud, i)) == numTracks)) {
 
       return AuDeviceIdentifier (AuServerDevice (aud, i));
 
@@ -631,18 +632,18 @@ NAS_createFlow (GstNassink * sink, unsigned char format, unsigned short rate,
     AuElement *oldelems;
 
     oldelems =
-	AuGetElements (sink->audio, sink->flow, &clocked, &num_elements,
-	&status);
+        AuGetElements (sink->audio, sink->flow, &clocked, &num_elements,
+        &status);
     if (num_elements > 0) {
       GST_CAT_DEBUG (NAS, "GetElements status: %i", status);
       if (oldelems)
-	AuFreeElements (sink->audio, num_elements, oldelems);
+        AuFreeElements (sink->audio, num_elements, oldelems);
       gst_nassink_close_audio (sink);
       gst_nassink_open_audio (sink);
       sink->flow = AuGetScratchFlow (sink->audio, NULL);
       if (sink->flow == 0) {
-	GST_CAT_DEBUG (NAS, "couldn't get flow");
-	return -1;
+        GST_CAT_DEBUG (NAS, "couldn't get flow");
+        return -1;
       }
     }
   }
@@ -655,18 +656,18 @@ NAS_createFlow (GstNassink * sink, unsigned char format, unsigned short rate,
     AuElement *oldelems;
 
     oldelems =
-	AuGetElements (sink->audio, sink->flow, &clocked, &num_elements,
-	&status);
+        AuGetElements (sink->audio, sink->flow, &clocked, &num_elements,
+        &status);
     if (num_elements > 0) {
       GST_CAT_DEBUG (NAS, "GetElements status: %i", status);
       if (oldelems)
-	AuFreeElements (sink->audio, num_elements, oldelems);
+        AuFreeElements (sink->audio, num_elements, oldelems);
       gst_nassink_close_audio (sink);
       gst_nassink_open_audio (sink);
       sink->flow = AuGetScratchFlow (sink->audio, NULL);
       if (sink->flow == 0) {
-	GST_CAT_DEBUG (NAS, "couldn't get flow");
-	return -1;
+        GST_CAT_DEBUG (NAS, "couldn't get flow");
+        return -1;
       }
     }
   }
@@ -674,38 +675,38 @@ NAS_createFlow (GstNassink * sink, unsigned char format, unsigned short rate,
   buf_samples = rate * NAS_SOUND_PORT_DURATION;
 
 
-  AuMakeElementImportClient (&elements[0],	/* element */
-      rate,			/* rate */
-      format,			/* format */
-      numTracks,		/* number of tracks */
-      AuTrue,			/* discart */
-      buf_samples,		/* max samples */
+  AuMakeElementImportClient (&elements[0],      /* element */
+      rate,                     /* rate */
+      format,                   /* format */
+      numTracks,                /* number of tracks */
+      AuTrue,                   /* discart */
+      buf_samples,              /* max samples */
       (AuUint32) (buf_samples / 100 * AuSoundPortLowWaterMark),
       /* low water mark */
-      0,			/* num actions */
+      0,                        /* num actions */
       NULL);
 
-  AuMakeElementExportDevice (&elements[1],	/* element */
-      0,			/* input */
-      sink->device,		/* device */
-      rate,			/* rate */
-      AuUnlimitedSamples,	/* num samples */
-      0,			/* num actions */
-      NULL);			/* actions */
+  AuMakeElementExportDevice (&elements[1],      /* element */
+      0,                        /* input */
+      sink->device,             /* device */
+      rate,                     /* rate */
+      AuUnlimitedSamples,       /* num samples */
+      0,                        /* num actions */
+      NULL);                    /* actions */
 
-  AuSetElements (sink->audio,	/* server */
-      sink->flow,		/* flow ID */
-      AuTrue,			/* clocked */
-      2,			/* num elements */
-      elements,			/* elements */
+  AuSetElements (sink->audio,   /* server */
+      sink->flow,               /* flow ID */
+      AuTrue,                   /* clocked */
+      2,                        /* num elements */
+      elements,                 /* elements */
       NULL);
 
-  AuRegisterEventHandler (sink->audio,	/* server */
-      AuEventHandlerIDMask,	/* value mask */
-      0,			/* type */
-      sink->flow,		/* flow ID */
-      NAS_EventHandler,		/* callback */
-      (AuPointer) sink);	/* data */
+  AuRegisterEventHandler (sink->audio,  /* server */
+      AuEventHandlerIDMask,     /* value mask */
+      0,                        /* type */
+      sink->flow,               /* flow ID */
+      NAS_EventHandler,         /* callback */
+      (AuPointer) sink);        /* data */
 
   sink->size = buf_samples * numTracks * AuSizeofFormat (format);
 

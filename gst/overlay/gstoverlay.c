@@ -105,9 +105,10 @@ gst_overlay_get_type (void)
       0,
       (GInstanceInitFunc) gst_overlay_init,
     };
+
     overlay_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstOverlay", &overlay_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstOverlay", &overlay_info,
+        0);
   }
   return overlay_type;
 }
@@ -155,18 +156,18 @@ gst_overlay_getcaps (GstPad * pad)
 
   if (overlay->width && overlay->height) {
     caps = GST_STATIC_CAPS ("overlay_sink2",
-	"video/raw",
-	"format", GST_TYPE_FOURCC (GST_MAKE_FOURCC ('I', '4', '2', '0')),
-	"width", G_TYPE_INT (overlay->width),
-	"height", G_TYPE_INT (overlay->height)
-	);
+        "video/raw",
+        "format", GST_TYPE_FOURCC (GST_MAKE_FOURCC ('I', '4', '2', '0')),
+        "width", G_TYPE_INT (overlay->width),
+        "height", G_TYPE_INT (overlay->height)
+        );
   } else {
     caps = GST_STATIC_CAPS ("overlay_sink2",
-	"video/raw",
-	"format", GST_TYPE_FOURCC (GST_MAKE_FOURCC ('I', '4', '2', '0')),
-	"width", G_TYPE_INT_RANGE (0, 4096),
-	"height", G_TYPE_INT_RANGE (0, 4096)
-	);
+        "video/raw",
+        "format", GST_TYPE_FOURCC (GST_MAKE_FOURCC ('I', '4', '2', '0')),
+        "width", G_TYPE_INT_RANGE (0, 4096),
+        "height", G_TYPE_INT_RANGE (0, 4096)
+        );
   }
 
   return caps;
@@ -246,22 +247,22 @@ gst_overlay_blend_i420 (guint8 * out, guint8 * in1, guint8 * in2, guint8 * in3,
     for (j = 0; j < width; j++) {
       mask = in3[i * width + j];
       out[i * width + j] = ((in1[i * width + j] * mask) +
-	  (in2[i * width + j] * (255 - mask))) >> 8;
+          (in2[i * width + j] * (255 - mask))) >> 8;
     }
   }
 
   for (i = 0; i < height / 2; i++) {
     for (j = 0; j < width / 2; j++) {
       mask =
-	  (in3[(i * 2) * width + (j * 2)] + in3[(i * 2 + 1) * width + (j * 2)] +
-	  in3[(i * 2) * width + (j * 2 + 1)] + in3[(i * 2 + 1) * width +
-	      (j * 2 + 1)]) / 4;
+          (in3[(i * 2) * width + (j * 2)] + in3[(i * 2 + 1) * width + (j * 2)] +
+          in3[(i * 2) * width + (j * 2 + 1)] + in3[(i * 2 + 1) * width +
+              (j * 2 + 1)]) / 4;
       outu[i * width2 + j] =
-	  ((in1u[i * width2 + j] * mask) + (in2u[i * width2 + j] * (255 -
-		  mask))) >> 8;
+          ((in1u[i * width2 + j] * mask) + (in2u[i * width2 + j] * (255 -
+                  mask))) >> 8;
       outv[i * width2 + j] =
-	  ((in1v[i * width2 + j] * mask) + (in2v[i * width2 + j] * (255 -
-		  mask))) >> 8;
+          ((in1v[i * width2 + j] * mask) + (in2v[i * width2 + j] * (255 -
+                  mask))) >> 8;
     }
   }
 }

@@ -51,7 +51,7 @@
  */
 
 #if DCTSIZE != 8
-Sorry, this code only copes with 8 x8 DCTs.	/* deliberate syntax err */
+Sorry, this code only copes with 8 x8 DCTs.     /* deliberate syntax err */
 #endif
 /*
  * A 2-D IDCT can be done by 1-D IDCT on each row followed by 1-D IDCT
@@ -93,7 +93,7 @@ Sorry, this code only copes with 8 x8 DCTs.	/* deliberate syntax err */
 #define PASS1_BITS  2
 #else
 #define CONST_BITS  13
-#define PASS1_BITS  1		/* lose a little precision to avoid overflow */
+#define PASS1_BITS  1           /* lose a little precision to avoid overflow */
 #endif
 #define ONE	((INT32) 1)
 #define CONST_SCALE (ONE << CONST_BITS)
@@ -106,18 +106,18 @@ Sorry, this code only copes with 8 x8 DCTs.	/* deliberate syntax err */
  * (With a reasonable C compiler, you can just rely on the FIX() macro...)
  */
 #if CONST_BITS == 13
-#define FIX_0_298631336  ((INT32)  2446)	/* FIX(0.298631336) */
-#define FIX_0_390180644  ((INT32)  3196)	/* FIX(0.390180644) */
-#define FIX_0_541196100  ((INT32)  4433)	/* FIX(0.541196100) */
-#define FIX_0_765366865  ((INT32)  6270)	/* FIX(0.765366865) */
-#define FIX_0_899976223  ((INT32)  7373)	/* FIX(0.899976223) */
-#define FIX_1_175875602  ((INT32)  9633)	/* FIX(1.175875602) */
-#define FIX_1_501321110  ((INT32)  12299)	/* FIX(1.501321110) */
-#define FIX_1_847759065  ((INT32)  15137)	/* FIX(1.847759065) */
-#define FIX_1_961570560  ((INT32)  16069)	/* FIX(1.961570560) */
-#define FIX_2_053119869  ((INT32)  16819)	/* FIX(2.053119869) */
-#define FIX_2_562915447  ((INT32)  20995)	/* FIX(2.562915447) */
-#define FIX_3_072711026  ((INT32)  25172)	/* FIX(3.072711026) */
+#define FIX_0_298631336  ((INT32)  2446)        /* FIX(0.298631336) */
+#define FIX_0_390180644  ((INT32)  3196)        /* FIX(0.390180644) */
+#define FIX_0_541196100  ((INT32)  4433)        /* FIX(0.541196100) */
+#define FIX_0_765366865  ((INT32)  6270)        /* FIX(0.765366865) */
+#define FIX_0_899976223  ((INT32)  7373)        /* FIX(0.899976223) */
+#define FIX_1_175875602  ((INT32)  9633)        /* FIX(1.175875602) */
+#define FIX_1_501321110  ((INT32)  12299)       /* FIX(1.501321110) */
+#define FIX_1_847759065  ((INT32)  15137)       /* FIX(1.847759065) */
+#define FIX_1_961570560  ((INT32)  16069)       /* FIX(1.961570560) */
+#define FIX_2_053119869  ((INT32)  16819)       /* FIX(2.053119869) */
+#define FIX_2_562915447  ((INT32)  20995)       /* FIX(2.562915447) */
+#define FIX_3_072711026  ((INT32)  25172)       /* FIX(3.072711026) */
 #else
 #define FIX_0_298631336  FIX(0.298631336)
 #define FIX_0_390180644  FIX(0.390180644)
@@ -148,14 +148,14 @@ Sorry, this code only copes with 8 x8 DCTs.	/* deliberate syntax err */
  * NB: for 12-bit samples, a full 32-bit multiplication will be needed.
  */
 #ifdef EIGHT_BIT_SAMPLES
-#ifdef SHORTxSHORT_32		/* may work if 'int' is 32 bits */
+#ifdef SHORTxSHORT_32           /* may work if 'int' is 32 bits */
 #define MULTIPLY(var,const)  (((INT16) (var)) * ((INT16) (const)))
 #endif
-#ifdef SHORTxLCONST_32		/* known to work with Microsoft C 6.0 */
+#ifdef SHORTxLCONST_32          /* known to work with Microsoft C 6.0 */
 #define MULTIPLY(var,const)  (((INT16) (var)) * ((INT32) (const)))
 #endif
 #endif
-#ifndef MULTIPLY		/* default definition */
+#ifndef MULTIPLY                /* default definition */
 #define MULTIPLY(var,const)  ((var) * (const))
 #endif
 /*
@@ -186,7 +186,7 @@ gst_idct_int_idct (DCTBLOCK data)
      */
 
     if ((dataptr[1] | dataptr[2] | dataptr[3] | dataptr[4] |
-	    dataptr[5] | dataptr[6] | dataptr[7]) == 0) {
+            dataptr[5] | dataptr[6] | dataptr[7]) == 0) {
       /* AC terms all zero */
       DCTELEM dcval = (DCTELEM) (dataptr[0] << PASS1_BITS);
 
@@ -199,7 +199,7 @@ gst_idct_int_idct (DCTBLOCK data)
       dataptr[6] = dcval;
       dataptr[7] = dcval;
 
-      dataptr += DCTSIZE;	/* advance pointer to next row */
+      dataptr += DCTSIZE;       /* advance pointer to next row */
       continue;
     }
 
@@ -234,16 +234,16 @@ gst_idct_int_idct (DCTBLOCK data)
     z2 = tmp1 + tmp2;
     z3 = tmp0 + tmp2;
     z4 = tmp1 + tmp3;
-    z5 = MULTIPLY (z3 + z4, FIX_1_175875602);	/* sqrt(2) * c3 */
+    z5 = MULTIPLY (z3 + z4, FIX_1_175875602);   /* sqrt(2) * c3 */
 
-    tmp0 = MULTIPLY (tmp0, FIX_0_298631336);	/* sqrt(2) * (-c1+c3+c5-c7) */
-    tmp1 = MULTIPLY (tmp1, FIX_2_053119869);	/* sqrt(2) * ( c1+c3-c5+c7) */
-    tmp2 = MULTIPLY (tmp2, FIX_3_072711026);	/* sqrt(2) * ( c1+c3+c5-c7) */
-    tmp3 = MULTIPLY (tmp3, FIX_1_501321110);	/* sqrt(2) * ( c1+c3-c5-c7) */
-    z1 = MULTIPLY (z1, -FIX_0_899976223);	/* sqrt(2) * (c7-c3) */
-    z2 = MULTIPLY (z2, -FIX_2_562915447);	/* sqrt(2) * (-c1-c3) */
-    z3 = MULTIPLY (z3, -FIX_1_961570560);	/* sqrt(2) * (-c3-c5) */
-    z4 = MULTIPLY (z4, -FIX_0_390180644);	/* sqrt(2) * (c5-c3) */
+    tmp0 = MULTIPLY (tmp0, FIX_0_298631336);    /* sqrt(2) * (-c1+c3+c5-c7) */
+    tmp1 = MULTIPLY (tmp1, FIX_2_053119869);    /* sqrt(2) * ( c1+c3-c5+c7) */
+    tmp2 = MULTIPLY (tmp2, FIX_3_072711026);    /* sqrt(2) * ( c1+c3+c5-c7) */
+    tmp3 = MULTIPLY (tmp3, FIX_1_501321110);    /* sqrt(2) * ( c1+c3-c5-c7) */
+    z1 = MULTIPLY (z1, -FIX_0_899976223);       /* sqrt(2) * (c7-c3) */
+    z2 = MULTIPLY (z2, -FIX_2_562915447);       /* sqrt(2) * (-c1-c3) */
+    z3 = MULTIPLY (z3, -FIX_1_961570560);       /* sqrt(2) * (-c3-c5) */
+    z4 = MULTIPLY (z4, -FIX_0_390180644);       /* sqrt(2) * (c5-c3) */
 
     z3 += z5;
     z4 += z5;
@@ -264,7 +264,7 @@ gst_idct_int_idct (DCTBLOCK data)
     dataptr[3] = (DCTELEM) DESCALE (tmp13 + tmp0, CONST_BITS - PASS1_BITS);
     dataptr[4] = (DCTELEM) DESCALE (tmp13 - tmp0, CONST_BITS - PASS1_BITS);
 
-    dataptr += DCTSIZE;		/* advance pointer to next row */
+    dataptr += DCTSIZE;         /* advance pointer to next row */
   }
 
   /* Pass 2: process columns. */
@@ -283,8 +283,8 @@ gst_idct_int_idct (DCTBLOCK data)
 
 #ifndef NO_ZERO_COLUMN_TEST
     if ((dataptr[DCTSIZE * 1] | dataptr[DCTSIZE * 2] | dataptr[DCTSIZE * 3] |
-	    dataptr[DCTSIZE * 4] | dataptr[DCTSIZE * 5] | dataptr[DCTSIZE * 6] |
-	    dataptr[DCTSIZE * 7]) == 0) {
+            dataptr[DCTSIZE * 4] | dataptr[DCTSIZE * 5] | dataptr[DCTSIZE * 6] |
+            dataptr[DCTSIZE * 7]) == 0) {
       /* AC terms all zero */
       DCTELEM dcval = (DCTELEM) DESCALE ((INT32) dataptr[0], PASS1_BITS + 3);
 
@@ -297,7 +297,7 @@ gst_idct_int_idct (DCTBLOCK data)
       dataptr[DCTSIZE * 6] = dcval;
       dataptr[DCTSIZE * 7] = dcval;
 
-      dataptr++;		/* advance pointer to next column */
+      dataptr++;                /* advance pointer to next column */
       continue;
     }
 #endif
@@ -313,11 +313,11 @@ gst_idct_int_idct (DCTBLOCK data)
     tmp3 = z1 + MULTIPLY (z2, FIX_0_765366865);
 
     tmp0 =
-	((INT32) dataptr[DCTSIZE * 0] +
-	(INT32) dataptr[DCTSIZE * 4]) << CONST_BITS;
+        ((INT32) dataptr[DCTSIZE * 0] +
+        (INT32) dataptr[DCTSIZE * 4]) << CONST_BITS;
     tmp1 =
-	((INT32) dataptr[DCTSIZE * 0] -
-	(INT32) dataptr[DCTSIZE * 4]) << CONST_BITS;
+        ((INT32) dataptr[DCTSIZE * 0] -
+        (INT32) dataptr[DCTSIZE * 4]) << CONST_BITS;
 
     tmp10 = tmp0 + tmp3;
     tmp13 = tmp0 - tmp3;
@@ -337,16 +337,16 @@ gst_idct_int_idct (DCTBLOCK data)
     z2 = tmp1 + tmp2;
     z3 = tmp0 + tmp2;
     z4 = tmp1 + tmp3;
-    z5 = MULTIPLY (z3 + z4, FIX_1_175875602);	/* sqrt(2) * c3 */
+    z5 = MULTIPLY (z3 + z4, FIX_1_175875602);   /* sqrt(2) * c3 */
 
-    tmp0 = MULTIPLY (tmp0, FIX_0_298631336);	/* sqrt(2) * (-c1+c3+c5-c7) */
-    tmp1 = MULTIPLY (tmp1, FIX_2_053119869);	/* sqrt(2) * ( c1+c3-c5+c7) */
-    tmp2 = MULTIPLY (tmp2, FIX_3_072711026);	/* sqrt(2) * ( c1+c3+c5-c7) */
-    tmp3 = MULTIPLY (tmp3, FIX_1_501321110);	/* sqrt(2) * ( c1+c3-c5-c7) */
-    z1 = MULTIPLY (z1, -FIX_0_899976223);	/* sqrt(2) * (c7-c3) */
-    z2 = MULTIPLY (z2, -FIX_2_562915447);	/* sqrt(2) * (-c1-c3) */
-    z3 = MULTIPLY (z3, -FIX_1_961570560);	/* sqrt(2) * (-c3-c5) */
-    z4 = MULTIPLY (z4, -FIX_0_390180644);	/* sqrt(2) * (c5-c3) */
+    tmp0 = MULTIPLY (tmp0, FIX_0_298631336);    /* sqrt(2) * (-c1+c3+c5-c7) */
+    tmp1 = MULTIPLY (tmp1, FIX_2_053119869);    /* sqrt(2) * ( c1+c3-c5+c7) */
+    tmp2 = MULTIPLY (tmp2, FIX_3_072711026);    /* sqrt(2) * ( c1+c3+c5-c7) */
+    tmp3 = MULTIPLY (tmp3, FIX_1_501321110);    /* sqrt(2) * ( c1+c3-c5-c7) */
+    z1 = MULTIPLY (z1, -FIX_0_899976223);       /* sqrt(2) * (c7-c3) */
+    z2 = MULTIPLY (z2, -FIX_2_562915447);       /* sqrt(2) * (-c1-c3) */
+    z3 = MULTIPLY (z3, -FIX_1_961570560);       /* sqrt(2) * (-c3-c5) */
+    z4 = MULTIPLY (z4, -FIX_0_390180644);       /* sqrt(2) * (c5-c3) */
 
     z3 += z5;
     z4 += z5;
@@ -359,22 +359,22 @@ gst_idct_int_idct (DCTBLOCK data)
     /* Final output stage: inputs are tmp10..tmp13, tmp0..tmp3 */
 
     dataptr[DCTSIZE * 0] = (DCTELEM) DESCALE (tmp10 + tmp3,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 7] = (DCTELEM) DESCALE (tmp10 - tmp3,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 1] = (DCTELEM) DESCALE (tmp11 + tmp2,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 6] = (DCTELEM) DESCALE (tmp11 - tmp2,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 2] = (DCTELEM) DESCALE (tmp12 + tmp1,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 5] = (DCTELEM) DESCALE (tmp12 - tmp1,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 3] = (DCTELEM) DESCALE (tmp13 + tmp0,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
     dataptr[DCTSIZE * 4] = (DCTELEM) DESCALE (tmp13 - tmp0,
-	CONST_BITS + PASS1_BITS + 3);
+        CONST_BITS + PASS1_BITS + 3);
 
-    dataptr++;			/* advance pointer to next column */
+    dataptr++;                  /* advance pointer to next column */
   }
 }

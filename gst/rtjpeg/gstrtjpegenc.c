@@ -72,9 +72,10 @@ gst_rtjpegenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_rtjpegenc_init,
     };
+
     rtjpegenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRTJpegEnc",
-	&rtjpegenc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRTJpegEnc",
+        &rtjpegenc_info, 0);
   }
   return rtjpegenc_type;
 }

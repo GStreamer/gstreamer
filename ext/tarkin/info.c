@@ -71,7 +71,7 @@ tarkin_comment_add (TarkinComment * vc, char *comment)
 void
 tarkin_comment_add_tag (TarkinComment * vc, char *tag, char *contents)
 {
-  char *comment = alloca (strlen (tag) + strlen (contents) + 2);	/* +2 for = and \0 */
+  char *comment = alloca (strlen (tag) + strlen (contents) + 2);        /* +2 for = and \0 */
 
   strcpy (comment, tag);
   strcat (comment, "=");
@@ -99,7 +99,7 @@ tarkin_comment_query (TarkinComment * vc, char *tag, int count)
 {
   long i;
   int found = 0;
-  int taglen = strlen (tag) + 1;	/* +1 for the = we append */
+  int taglen = strlen (tag) + 1;        /* +1 for the = we append */
   char *fulltag = alloca (taglen + 1);
 
   strcpy (fulltag, tag);
@@ -108,20 +108,20 @@ tarkin_comment_query (TarkinComment * vc, char *tag, int count)
   for (i = 0; i < vc->comments; i++) {
     if (!tagcompare (vc->user_comments[i], fulltag, taglen)) {
       if (count == found)
-	/* We return a pointer to the data, not a copy */
-	return vc->user_comments[i] + taglen;
+        /* We return a pointer to the data, not a copy */
+        return vc->user_comments[i] + taglen;
       else
-	found++;
+        found++;
     }
   }
-  return NULL;			/* didn't find anything */
+  return NULL;                  /* didn't find anything */
 }
 
 int
 tarkin_comment_query_count (TarkinComment * vc, char *tag)
 {
   int i, count = 0;
-  int taglen = strlen (tag) + 1;	/* +1 for the = we append */
+  int taglen = strlen (tag) + 1;        /* +1 for the = we append */
   char *fulltag = alloca (taglen + 1);
 
   strcpy (fulltag, tag);
@@ -143,7 +143,7 @@ tarkin_comment_clear (TarkinComment * vc)
 
     for (i = 0; i < vc->comments; i++)
       if (vc->user_comments[i])
-	FREE (vc->user_comments[i]);
+        FREE (vc->user_comments[i]);
     if (vc->user_comments)
       FREE (vc->user_comments);
     if (vc->comment_lengths)
@@ -200,7 +200,7 @@ _tarkin_unpack_info (TarkinInfo * vi, oggpack_buffer * opb)
     goto err_out;
 
   if (oggpack_read (opb, 1) != 1)
-    goto err_out;		/* EOP check */
+    goto err_out;               /* EOP check */
 
 #ifdef DBG_OGG
   printf ("Success\n");
@@ -245,7 +245,7 @@ _tarkin_unpack_comment (TarkinComment * vc, oggpack_buffer * opb)
     _v_readstring (opb, vc->user_comments[i], len);
   }
   if (oggpack_read (opb, 1) != 1)
-    goto err_out;		/* EOP check */
+    goto err_out;               /* EOP check */
 
 #ifdef DBG_OGG
   printf ("Success, read %d comments\n", vc->comments);
@@ -284,55 +284,55 @@ _tarkin_unpack_layer_desc (TarkinInfo * vi, oggpack_buffer * opb)
 
     switch (layer->desc.format) {
       case TARKIN_GRAYSCALE:
-	layer->n_comp = 1;
-	layer->color_fwd_xform = grayscale_to_y;
-	layer->color_inv_xform = y_to_grayscale;
-	break;
+        layer->n_comp = 1;
+        layer->color_fwd_xform = grayscale_to_y;
+        layer->color_inv_xform = y_to_grayscale;
+        break;
       case TARKIN_RGB24:
-	layer->n_comp = 3;
-	layer->color_fwd_xform = rgb24_to_yuv;
-	layer->color_inv_xform = yuv_to_rgb24;
-	break;
+        layer->n_comp = 3;
+        layer->color_fwd_xform = rgb24_to_yuv;
+        layer->color_inv_xform = yuv_to_rgb24;
+        break;
       case TARKIN_RGB32:
-	layer->n_comp = 3;
-	layer->color_fwd_xform = rgb32_to_yuv;
-	layer->color_inv_xform = yuv_to_rgb32;
-	break;
+        layer->n_comp = 3;
+        layer->color_fwd_xform = rgb32_to_yuv;
+        layer->color_inv_xform = yuv_to_rgb32;
+        break;
       case TARKIN_RGBA:
-	layer->n_comp = 4;
-	layer->color_fwd_xform = rgba_to_yuv;
-	layer->color_inv_xform = yuv_to_rgba;
-	break;
+        layer->n_comp = 4;
+        layer->color_fwd_xform = rgba_to_yuv;
+        layer->color_inv_xform = yuv_to_rgba;
+        break;
       default:
-	return -TARKIN_INVALID_COLOR_FORMAT;
+        return -TARKIN_INVALID_COLOR_FORMAT;
     };
 
     layer->waveletbuf = (Wavelet3DBuf **) CALLOC (layer->n_comp,
-	sizeof (Wavelet3DBuf *));
+        sizeof (Wavelet3DBuf *));
 
     layer->packet = MALLOC (layer->n_comp * sizeof (*layer->packet));
     memset (layer->packet, 0, layer->n_comp * sizeof (*layer->packet));
 
     for (j = 0; j < layer->n_comp; j++) {
       layer->waveletbuf[j] = wavelet_3d_buf_new (layer->desc.width,
-	  layer->desc.height, layer->desc.frames_per_buf);
+          layer->desc.height, layer->desc.frames_per_buf);
       layer->packet[j].data = MALLOC (layer->desc.bitstream_len);
       layer->packet[j].storage = layer->desc.bitstream_len;
     }
 
-    vi->max_bitstream_len += layer->desc.bitstream_len + 2 * 10 * sizeof (uint32_t) * layer->n_comp;	/* truncation tables  */
+    vi->max_bitstream_len += layer->desc.bitstream_len + 2 * 10 * sizeof (uint32_t) * layer->n_comp;    /* truncation tables  */
 
 #ifdef DBG_OGG
     printf
-	("\n     layer%d: size %dx%dx%d, format %d, a_m %d, s_m %d, %d fpb\n",
-	i, layer->desc.width, layer->desc.height, layer->n_comp,
-	layer->desc.format, layer->desc.a_moments, layer->desc.s_moments,
-	layer->desc.frames_per_buf);
+        ("\n     layer%d: size %dx%dx%d, format %d, a_m %d, s_m %d, %d fpb\n",
+        i, layer->desc.width, layer->desc.height, layer->n_comp,
+        layer->desc.format, layer->desc.a_moments, layer->desc.s_moments,
+        layer->desc.frames_per_buf);
 #endif
-  }				/* for each layer */
+  }                             /* for each layer */
 
   if (oggpack_read (opb, 1) != 1)
-    goto err_out;		/* EOP check */
+    goto err_out;               /* EOP check */
 
 #ifdef DBG_OGG
   printf ("Success\n");
@@ -369,42 +369,42 @@ tarkin_synthesis_headerin (TarkinInfo * vi, TarkinComment * vc, ogg_packet * op)
       memset (buffer, 0, 6);
       _v_readstring (&opb, buffer, 6);
       if (memcmp (buffer, "tarkin", 6)) {
-	/* not a tarkin header */
-	return (-TARKIN_NOT_TARKIN);
+        /* not a tarkin header */
+        return (-TARKIN_NOT_TARKIN);
       }
       switch (packtype) {
-	case 0x01:		/* least significant *bit* is read first */
-	  if (!op->b_o_s) {
-	    /* Not the initial packet */
-	    return (-TARKIN_BAD_HEADER);
-	  }
-	  if (vi->inter.numerator != 0) {
-	    /* previously initialized info header */
-	    return (-TARKIN_BAD_HEADER);
-	  }
+        case 0x01:             /* least significant *bit* is read first */
+          if (!op->b_o_s) {
+            /* Not the initial packet */
+            return (-TARKIN_BAD_HEADER);
+          }
+          if (vi->inter.numerator != 0) {
+            /* previously initialized info header */
+            return (-TARKIN_BAD_HEADER);
+          }
 
-	  return (_tarkin_unpack_info (vi, &opb));
+          return (_tarkin_unpack_info (vi, &opb));
 
-	case 0x03:		/* least significant *bit* is read first */
-	  if (vi->inter.denominator == 0) {
-	    /* um... we didn't get the initial header */
-	    return (-TARKIN_BAD_HEADER);
-	  }
+        case 0x03:             /* least significant *bit* is read first */
+          if (vi->inter.denominator == 0) {
+            /* um... we didn't get the initial header */
+            return (-TARKIN_BAD_HEADER);
+          }
 
-	  return (_tarkin_unpack_comment (vc, &opb));
+          return (_tarkin_unpack_comment (vc, &opb));
 
-	case 0x05:		/* least significant *bit* is read first */
-	  if (vi->inter.numerator == 0 || vc->vendor == NULL) {
-	    /* um... we didn;t get the initial header or comments yet */
-	    return (-TARKIN_BAD_HEADER);
-	  }
+        case 0x05:             /* least significant *bit* is read first */
+          if (vi->inter.numerator == 0 || vc->vendor == NULL) {
+            /* um... we didn;t get the initial header or comments yet */
+            return (-TARKIN_BAD_HEADER);
+          }
 
-	  return (_tarkin_unpack_layer_desc (vi, &opb));
+          return (_tarkin_unpack_layer_desc (vi, &opb));
 
-	default:
-	  /* Not a valid tarkin header type */
-	  return (-TARKIN_BAD_HEADER);
-	  break;
+        default:
+          /* Not a valid tarkin header type */
+          return (-TARKIN_BAD_HEADER);
+          break;
       }
     }
   }
@@ -462,10 +462,10 @@ _tarkin_pack_comment (oggpack_buffer * opb, TarkinComment * vc)
 
     for (i = 0; i < vc->comments; i++) {
       if (vc->user_comments[i]) {
-	oggpack_write (opb, vc->comment_lengths[i], 32);
-	_v_writestring (opb, vc->user_comments[i], vc->comment_lengths[i]);
+        oggpack_write (opb, vc->comment_lengths[i], 32);
+        _v_writestring (opb, vc->user_comments[i], vc->comment_lengths[i]);
       } else {
-	oggpack_write (opb, 0, 32);
+        oggpack_write (opb, 0, 32);
       }
     }
   }
@@ -503,9 +503,9 @@ _tarkin_pack_layer_desc (oggpack_buffer * opb, TarkinInfo * vi)
 
 #ifdef DBG_OGG
     printf ("       res. %dx%d, format %d, a_m %d, s_m %d, fpb %d\n",
-	layer->desc.width, layer->desc.height, layer->desc.format,
-	layer->desc.a_moments, layer->desc.s_moments,
-	layer->desc.frames_per_buf);
+        layer->desc.width, layer->desc.height, layer->desc.format,
+        layer->desc.a_moments, layer->desc.s_moments,
+        layer->desc.frames_per_buf);
 #endif
 
   }

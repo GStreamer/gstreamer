@@ -73,9 +73,10 @@ gst_autoexp_mode_get_type (void)
     {AE_NONE, "3", "None"},
     {0, NULL, NULL},
   };
+
   if (!autoexp_mode_type) {
     autoexp_mode_type =
-	g_enum_register_static ("GstAutoExposureMode", autoexp_modes);
+        g_enum_register_static ("GstAutoExposureMode", autoexp_modes);
   }
   return autoexp_mode_type;
 }
@@ -140,9 +141,10 @@ gst_qcamsrc_get_type (void)
       (GInstanceInitFunc) gst_qcamsrc_init,
       NULL
     };
+
     qcamsrc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstQCamSrc", &qcamsrc_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstQCamSrc", &qcamsrc_info,
+        0);
   }
   return qcamsrc_type;
 }
@@ -168,37 +170,37 @@ gst_qcamsrc_class_init (GstQCamSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
       g_param_spec_int ("width", "width", "width",
-	  0, 320, DEF_WIDTH, G_PARAM_READWRITE));
+          0, 320, DEF_WIDTH, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
       g_param_spec_int ("height", "height", "height",
-	  0, 240, DEF_HEIGHT, G_PARAM_READWRITE));
+          0, 240, DEF_HEIGHT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BRIGHTNESS,
       g_param_spec_int ("brightness", "brightness", "brightness",
-	  0, 255, DEF_BRIGHTNESS, G_PARAM_READWRITE));
+          0, 255, DEF_BRIGHTNESS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WHITEBAL,
       g_param_spec_int ("whitebal", "whitebal", "whitebal",
-	  0, 255, DEF_WHITEBAL, G_PARAM_READWRITE));
+          0, 255, DEF_WHITEBAL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONTRAST,
       g_param_spec_int ("contrast", "contrast", "contrast",
-	  0, 255, DEF_CONTRAST, G_PARAM_READWRITE));
+          0, 255, DEF_CONTRAST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOP,
       g_param_spec_int ("top", "top", "top",
-	  0, 240, DEF_TOP, G_PARAM_READWRITE));
+          0, 240, DEF_TOP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEFT,
       g_param_spec_int ("left", "left", "left",
-	  0, 320, DEF_LEFT, G_PARAM_READWRITE));
+          0, 320, DEF_LEFT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TRANSFER_SCALE,
       g_param_spec_int ("transfer_scale", "transfer_scale", "transfer_scale",
-	  1, 4, DEF_TRANSFER_SCALE, G_PARAM_READWRITE));
+          1, 4, DEF_TRANSFER_SCALE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEPTH,
       g_param_spec_int ("depth", "depth", "depth",
-	  4, 6, DEF_DEPTH, G_PARAM_READWRITE));
+          4, 6, DEF_DEPTH, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "port",
-	  0, G_MAXINT, DEF_PORT, G_PARAM_READWRITE));
+          0, G_MAXINT, DEF_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AUTOEXP,
       g_param_spec_enum ("autoexposure", "autoexposure", "autoexposure",
-	  GST_TYPE_AUTOEXP_MODE, DEF_AUTOEXP, G_PARAM_READWRITE));
+          GST_TYPE_AUTOEXP_MODE, DEF_AUTOEXP, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_qcamsrc_set_property;
   gobject_class->get_property = gst_qcamsrc_get_property;
@@ -256,10 +258,10 @@ gst_qcamsrc_get (GstPad * pad)
   qc_set (qcamsrc->qcam);
   if (!GST_PAD_CAPS (pad)) {
     gst_pad_try_set_caps (pad, gst_caps_new_simple ("video/x-raw-yuv",
-	    "format", GST_TYPE_FOURCC, "I420",
-	    "width", G_TYPE_INT, qcamsrc->qcam->width / scale,
-	    "height", G_TYPE_INT, qcamsrc->qcam->height / scale,
-	    "framerate", G_TYPE_DOUBLE, 10., NULL));
+            "format", GST_TYPE_FOURCC, "I420",
+            "width", G_TYPE_INT, qcamsrc->qcam->width / scale,
+            "height", G_TYPE_INT, qcamsrc->qcam->height / scale,
+            "framerate", G_TYPE_DOUBLE, 10., NULL));
   }
   scan = qc_scan (qcamsrc->qcam);
 
@@ -324,7 +326,7 @@ gst_qcamsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_AUTOEXP:
       src->autoexposure = g_value_get_enum (value);
       if (src->autoexposure != AE_NONE)
-	qcip_set_autoexposure_mode (src->autoexposure);
+        qcip_set_autoexposure_mode (src->autoexposure);
       break;
     default:
       break;
@@ -395,8 +397,8 @@ gst_qcamsrc_change_state (GstElement * element)
     if (!GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
       gst_info ("qcamsrc: opening\n");
       if (!gst_qcamsrc_open (GST_QCAMSRC (element))) {
-	gst_info ("qcamsrc: open failed\n");
-	return GST_STATE_FAILURE;
+        gst_info ("qcamsrc: open failed\n");
+        return GST_STATE_FAILURE;
       }
     }
   }
@@ -431,7 +433,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "qcamsrc", GST_RANK_NONE,
-	  GST_TYPE_QCAMSRC))
+          GST_TYPE_QCAMSRC))
     return FALSE;
 
   return TRUE;

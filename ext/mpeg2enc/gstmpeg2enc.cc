@@ -33,7 +33,8 @@ static void
 add_fps (GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  GValue list = { 0 }, fps = {
+  GValue list = { 0 }, fps =
+  {
   0};
   gdouble fpss[] = { 24.0 / 1.001, 24.0, 25.0,
     30.0 / 1.001, 30.0, 50.0,
@@ -61,10 +62,10 @@ sink_templ (void)
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC,
-	GST_MAKE_FOURCC ('I', '4', '2', '0'),
-	"width", GST_TYPE_INT_RANGE, 16, 4096,
-	"height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+        "format", GST_TYPE_FOURCC,
+        GST_MAKE_FOURCC ('I', '4', '2', '0'),
+        "width", GST_TYPE_INT_RANGE, 16, 4096,
+        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
     add_fps (caps);
 
     templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
@@ -82,10 +83,10 @@ src_templ (void)
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("video/mpeg",
-	"systemstream", G_TYPE_BOOLEAN, FALSE,
-	"mpegversion", GST_TYPE_INT_RANGE, 1, 2,
-	"width", GST_TYPE_INT_RANGE, 16, 4096,
-	"height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+        "systemstream", G_TYPE_BOOLEAN, FALSE,
+        "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
+        "width", GST_TYPE_INT_RANGE, 16, 4096,
+        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
     add_fps (caps);
 
     templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
@@ -132,8 +133,8 @@ gst_mpeg2enc_get_type (void)
     };
 
     gst_mpeg2enc_type =
-	g_type_register_static (GST_TYPE_ELEMENT,
-	"GstMpeg2enc", &gst_mpeg2enc_info, (GTypeFlags) 0);
+        g_type_register_static (GST_TYPE_ELEMENT,
+        "GstMpeg2enc", &gst_mpeg2enc_info, (GTypeFlags) 0);
   }
 
   return gst_mpeg2enc_type;
@@ -147,7 +148,7 @@ gst_mpeg2enc_base_init (GstMpeg2encClass * klass)
     "Codec/Video/Encoder",
     "High-quality MPEG-1/2 video encoder",
     "Andrew Stevens <andrew.stevens@nexgo.de>\n"
-	"Ronald Bultje <rbultje@ronald.bitfreak.net>"
+        "Ronald Bultje <rbultje@ronald.bitfreak.net>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -199,13 +200,13 @@ gst_mpeg2enc_init (GstMpeg2enc * enc)
 
   enc->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "sink"), "sink");
+          "sink"), "sink");
   gst_pad_set_link_function (enc->sinkpad, gst_mpeg2enc_sink_link);
   gst_element_add_pad (element, enc->sinkpad);
 
   enc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "src"), "src");
+          "src"), "src");
   gst_pad_use_explicit_caps (enc->srcpad);
   gst_element_add_pad (element, enc->srcpad);
 
@@ -232,13 +233,13 @@ gst_mpeg2enc_loop (GstElement * element)
 
     if (!(caps = GST_PAD_CAPS (enc->sinkpad))) {
       GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
-	  ("format wasn't negotiated before loop function"));
+          ("format wasn't negotiated before loop function"));
       return;
     }
 
     /* create new encoder with these settings */
     enc->encoder = new GstMpeg2Encoder (enc->options, enc->sinkpad,
-	caps, enc->srcpad);
+        caps, enc->srcpad);
 
     /* and set caps on other side */
     othercaps = enc->encoder->getFormat ();

@@ -66,23 +66,23 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-	"format = (fourcc) I420, "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], "
-	"framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
-	"  50.0, 59.940060, 60.0 }")
+        "format = (fourcc) I420, "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], "
+        "framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
+        "  50.0, 59.940060, 60.0 }")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) { 1, 4 }, "
-	"systemstream = (boolean) FALSE, "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], "
-	"framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
-	"  50.0, 59.940060, 60.0 }")
+        "mpegversion = (int) { 1, 4 }, "
+        "systemstream = (boolean) FALSE, "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], "
+        "framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
+        "  50.0, 59.940060, 60.0 }")
     );
 
 #define MAX_FRAME_RATES  9
@@ -90,7 +90,8 @@ typedef struct
 {
   gint num;
   gint den;
-} frame_rate_entry;
+}
+frame_rate_entry;
 
 static const frame_rate_entry frame_rates[] = {
   {0, 0},
@@ -115,12 +116,12 @@ framerate_to_index (gfloat fps)
       idx = i;
     } else {
       gfloat old_diff = fabs ((1. * frame_rates[idx].num /
-	      frame_rates[idx].den) - fps),
-	  new_diff = fabs ((1. * frame_rates[i].num /
-	      frame_rates[i].den) - fps);
+              frame_rates[idx].den) - fps),
+          new_diff = fabs ((1. * frame_rates[i].num /
+              frame_rates[i].den) - fps);
 
       if (new_diff < old_diff) {
-	idx = i;
+        idx = i;
       }
     }
   }
@@ -161,8 +162,9 @@ gst_fameenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_fameenc_init,
     };
+
     fameenc_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstFameEnc", &fameenc_info, 0);
+        "GstFameEnc", &fameenc_info, 0);
   }
   return fameenc_type;
 }
@@ -214,8 +216,8 @@ gst_fameenc_class_init (GstFameEncClass * klass)
   walk = context->type_list;
   while (walk) {
     props =
-	g_list_insert_sorted (props, walk,
-	(GCompareFunc) gst_fameenc_item_compare);
+        g_list_insert_sorted (props, walk,
+        (GCompareFunc) gst_fameenc_item_compare);
     walk = walk->next;
   }
 
@@ -239,21 +241,21 @@ gst_fameenc_class_init (GstFameEncClass * klass)
 
     do {
       if (strstr (walk->type, "/")) {
-	GEnumValue value;
+        GEnumValue value;
 
-	if (current_default == walk->item)
-	  default_index = current_value;
+        if (current_default == walk->item)
+          default_index = current_value;
 
-	value.value = current_value++;
-	value.value_name = g_strdup (walk->type);
-	value.value_nick = g_strdup (walk->item->name);
+        value.value = current_value++;
+        value.value_name = g_strdup (walk->type);
+        value.value_nick = g_strdup (walk->item->name);
 
-	g_array_append_val (array, value);
+        g_array_append_val (array, value);
       }
 
       props_walk = g_list_next (props_walk);
       if (props_walk)
-	walk = (fame_list_t *) props_walk->data;
+        walk = (fame_list_t *) props_walk->data;
 
     } while (props_walk && !strncmp (walk->type, current_type, current_len));
 
@@ -262,43 +264,43 @@ gst_fameenc_class_init (GstFameEncClass * klass)
       GParamSpec *pspec;
 
       type =
-	  g_enum_register_static (g_strdup_printf ("GstFameEnc_%s",
-	      current_type), (GEnumValue *) array->data);
+          g_enum_register_static (g_strdup_printf ("GstFameEnc_%s",
+              current_type), (GEnumValue *) array->data);
 
       pspec =
-	  g_param_spec_enum (current_type, current_type,
-	  g_strdup_printf ("The FAME \"%s\" object", current_type), type,
-	  default_index, G_PARAM_READWRITE);
+          g_param_spec_enum (current_type, current_type,
+          g_strdup_printf ("The FAME \"%s\" object", current_type), type,
+          default_index, G_PARAM_READWRITE);
 
       g_param_spec_set_qdata (pspec, fame_object_name, (gpointer) current_type);
 
       g_object_class_install_property (G_OBJECT_CLASS (klass), current_prop++,
-	  pspec);
+          pspec);
     }
   }
 
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Target bitrate (0 = VBR)",
-	  0, 5000000, 0, G_PARAM_READWRITE));
+          0, 5000000, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality",
-	  "Percentage of quality of compression (versus size)", 0, 100, 75,
-	  G_PARAM_READWRITE));
+          "Percentage of quality of compression (versus size)", 0, 100, 75,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PATTERN,
       g_param_spec_string ("pattern", "Pattern",
-	  "Encoding pattern of I, P, and B frames", "IPPPPPPPPPPP",
-	  G_PARAM_READWRITE));
+          "Encoding pattern of I, P, and B frames", "IPPPPPPPPPPP",
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_FRAMES_PER_SEQUENCE,
       g_param_spec_int ("frames_per_sequence", "Frames Per Sequence",
-	  "The number of frames in one sequence", 1, G_MAXINT, 12,
-	  G_PARAM_READWRITE));
+          "The number of frames in one sequence", 1, G_MAXINT, 12,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_FAME_VERBOSE,
       g_param_spec_boolean ("fame_verbose", "Fame Verbose",
-	  "Make FAME produce verbose output", FALSE, G_PARAM_READWRITE));
+          "Make FAME produce verbose output", FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BUFFER_SIZE,
       g_param_spec_int ("buffer_size", "Buffer Size",
-	  "Set the decoding output buffer size", 0, 1024 * 1024,
-	  FAMEENC_BUFFER_SIZE, G_PARAM_READWRITE));
+          "Set the decoding output buffer size", 0, 1024 * 1024,
+          FAMEENC_BUFFER_SIZE, G_PARAM_READWRITE));
 }
 
 static GstPadLinkReturn
@@ -386,13 +388,13 @@ gst_fameenc_init (GstFameEnc * fameenc)
   fameenc->fp.bitrate = 0;
   fameenc->fp.quality = 75;
   fameenc->fp.frame_rate_num = 25;
-  fameenc->fp.frame_rate_den = 1;	/* avoid floating point exceptions */
+  fameenc->fp.frame_rate_den = 1;       /* avoid floating point exceptions */
   fameenc->fp.frames_per_sequence = 12;
 
   fameenc->pattern = g_strdup ("IPPPPPPPPPP");
 
   /* allocate space for the buffer */
-  fameenc->buffer_size = FAMEENC_BUFFER_SIZE;	/* FIXME */
+  fameenc->buffer_size = FAMEENC_BUFFER_SIZE;   /* FIXME */
   fameenc->buffer = (unsigned char *) g_malloc (fameenc->buffer_size);
 
   fameenc->next_time = 0;
@@ -454,12 +456,12 @@ gst_fameenc_chain (GstPad * pad, GstData * _data)
     /* FIXME: safeguard, remove me when a better way is found */
     if (length > FAMEENC_BUFFER_SIZE)
       g_warning
-	  ("FAMEENC_BUFFER_SIZE is defined too low, encoded slice has size %d !\n",
-	  length);
+          ("FAMEENC_BUFFER_SIZE is defined too low, encoded slice has size %d !\n",
+          length);
 
     if (!fameenc->time_interval) {
       fameenc->time_interval =
-	  GST_SECOND * fameenc->fp.frame_rate_den / fameenc->fp.frame_rate_num;
+          GST_SECOND * fameenc->fp.frame_rate_den / fameenc->fp.frame_rate_num;
     }
 
     fameenc->next_time += fameenc->time_interval;
@@ -471,7 +473,7 @@ gst_fameenc_chain (GstPad * pad, GstData * _data)
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
     GST_DEBUG ("gst_fameenc_chain: pushing buffer of size %d",
-	GST_BUFFER_SIZE (outbuf));
+        GST_BUFFER_SIZE (outbuf));
 
     gst_pad_push (fameenc->srcpad, GST_DATA (outbuf));
   }
@@ -492,7 +494,7 @@ gst_fameenc_set_property (GObject * object, guint prop_id,
 
   if (fameenc->initialized) {
     GST_DEBUG
-	("error: fameenc encoder already initialized, cannot set properties !");
+        ("error: fameenc encoder already initialized, cannot set properties !");
     return;
   }
 
@@ -518,17 +520,17 @@ gst_fameenc_set_property (GObject * object, guint prop_id,
       break;
     default:
       if (prop_id >= ARG_FAME_PROPS_START) {
-	gchar *name;
-	gint index = g_value_get_enum (value);
-	GEnumValue *values;
+        gchar *name;
+        gint index = g_value_get_enum (value);
+        GEnumValue *values;
 
-	values = G_ENUM_CLASS (g_type_class_ref (pspec->value_type))->values;
-	name = (gchar *) g_param_spec_get_qdata (pspec, fame_object_name);
+        values = G_ENUM_CLASS (g_type_class_ref (pspec->value_type))->values;
+        name = (gchar *) g_param_spec_get_qdata (pspec, fame_object_name);
 
-	fame_register (fameenc->fc, name, fame_get_object (fameenc->fc,
-		values[index].value_name));
+        fame_register (fameenc->fc, name, fame_get_object (fameenc->fc,
+                values[index].value_name));
       } else
-	G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -563,23 +565,23 @@ gst_fameenc_get_property (GObject * object, guint prop_id,
       break;
     default:
       if (prop_id >= ARG_FAME_PROPS_START) {
-	gchar *name;
-	gint index = 0;
-	GEnumValue *values;
-	fame_object_t *f_object;
+        gchar *name;
+        gint index = 0;
+        GEnumValue *values;
+        fame_object_t *f_object;
 
-	values = G_ENUM_CLASS (g_type_class_ref (pspec->value_type))->values;
-	name = (gchar *) g_param_spec_get_qdata (pspec, fame_object_name);
+        values = G_ENUM_CLASS (g_type_class_ref (pspec->value_type))->values;
+        name = (gchar *) g_param_spec_get_qdata (pspec, fame_object_name);
 
-	f_object = fame_get_object (fameenc->fc, name);
+        f_object = fame_get_object (fameenc->fc, name);
 
-	while (values[index].value_name) {
-	  if (!strcmp (values[index].value_nick, f_object->name)) {
-	    g_value_set_enum (value, index);
-	    return;
-	  }
-	  index++;
-	}
+        while (values[index].value_name) {
+          if (!strcmp (values[index].value_nick, f_object->name)) {
+            g_value_set_enum (value, index);
+            return;
+          }
+          index++;
+        }
       }
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

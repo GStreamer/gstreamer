@@ -152,101 +152,101 @@ ac3p_parse (ac3_padder * padder)
   while (padder->remaining > 0) {
     switch (padder->state) {
       case AC3P_STATE_SYNC1:
-	if (*(padder->in_ptr) == 0x0b) {
-	  /* The first sync byte was found.  Go to the next state. */
-	  padder->frame.sync_byte1 = 0x0b;
-	  padder->state = AC3P_STATE_SYNC2;
-	}
-	ac3p_in_fw (padder);
-	break;
+        if (*(padder->in_ptr) == 0x0b) {
+          /* The first sync byte was found.  Go to the next state. */
+          padder->frame.sync_byte1 = 0x0b;
+          padder->state = AC3P_STATE_SYNC2;
+        }
+        ac3p_in_fw (padder);
+        break;
 
       case AC3P_STATE_SYNC2:
-	if (*(padder->in_ptr) == 0x77) {
-	  /* The second sync byte was seen right after the first.  Go to
-	     the next state. */
-	  padder->frame.sync_byte2 = 0x77;
-	  padder->state = AC3P_STATE_HEADER;
+        if (*(padder->in_ptr) == 0x77) {
+          /* The second sync byte was seen right after the first.  Go to
+             the next state. */
+          padder->frame.sync_byte2 = 0x77;
+          padder->state = AC3P_STATE_HEADER;
 
-	  /* Skip one byte. */
-	  ac3p_in_fw (padder);
+          /* Skip one byte. */
+          ac3p_in_fw (padder);
 
-	  /* Prepare for reading the header. */
-	  padder->out_ptr = (guchar *) & (padder->frame.crc1);
-	  /* Discount the 2 sync bytes from the header size. */
-	  padder->bytes_to_copy = AC3P_AC3_HEADER_SIZE - 2;
-	} else {
-	  /* The second sync byte was not seen.  Go back to the
-	     first state. */
-	  padder->state = AC3P_STATE_SYNC1;
-	}
-	break;
+          /* Prepare for reading the header. */
+          padder->out_ptr = (guchar *) & (padder->frame.crc1);
+          /* Discount the 2 sync bytes from the header size. */
+          padder->bytes_to_copy = AC3P_AC3_HEADER_SIZE - 2;
+        } else {
+          /* The second sync byte was not seen.  Go back to the
+             first state. */
+          padder->state = AC3P_STATE_SYNC1;
+        }
+        break;
 
       case AC3P_STATE_HEADER:
-	if (padder->bytes_to_copy > 0) {
-	  /* Copy one byte. */
-	  *(padder->out_ptr) = *(padder->in_ptr);
-	  ac3p_in_fw (padder);
-	  ac3p_out_fw (padder);
-	} else {
-	  int fscod;
+        if (padder->bytes_to_copy > 0) {
+          /* Copy one byte. */
+          *(padder->out_ptr) = *(padder->in_ptr);
+          ac3p_in_fw (padder);
+          ac3p_out_fw (padder);
+        } else {
+          int fscod;
 
-	  /* The header is ready: */
+          /* The header is ready: */
 
-	  fscod = (padder->frame.code >> 6) & 0x03;
+          fscod = (padder->frame.code >> 6) & 0x03;
 
-	  /* Calculate the frame size. */
-	  padder->ac3_frame_size =
-	      2 * frmsizecod_tbl[padder->frame.code & 0x3f].frm_size[fscod];
+          /* Calculate the frame size. */
+          padder->ac3_frame_size =
+              2 * frmsizecod_tbl[padder->frame.code & 0x3f].frm_size[fscod];
 
-	  /* Set up the IEC header. */
-	  if (padder->ac3_frame_size > 0) {
-	    padder->frame.header[4] = IEC61937_DATA_TYPE_AC3;
-	  } else {
-	    /* Don't know what it is, better be careful. */
-	    padder->state = AC3P_STATE_SYNC1;
-	    break;
-	  }
-	  padder->frame.header[5] = 0x00;
-	  padder->frame.header[6] = (padder->ac3_frame_size * 8) & 0xFF;
-	  padder->frame.header[7] = ((padder->ac3_frame_size * 8) >> 8) & 0xFF;
+          /* Set up the IEC header. */
+          if (padder->ac3_frame_size > 0) {
+            padder->frame.header[4] = IEC61937_DATA_TYPE_AC3;
+          } else {
+            /* Don't know what it is, better be careful. */
+            padder->state = AC3P_STATE_SYNC1;
+            break;
+          }
+          padder->frame.header[5] = 0x00;
+          padder->frame.header[6] = (padder->ac3_frame_size * 8) & 0xFF;
+          padder->frame.header[7] = ((padder->ac3_frame_size * 8) >> 8) & 0xFF;
 
-	  /* Prepare for reading the body. */
-	  padder->bytes_to_copy = padder->ac3_frame_size - AC3P_AC3_HEADER_SIZE;
-	  padder->state = AC3P_STATE_CONTENT;
-	}
-	break;
+          /* Prepare for reading the body. */
+          padder->bytes_to_copy = padder->ac3_frame_size - AC3P_AC3_HEADER_SIZE;
+          padder->state = AC3P_STATE_CONTENT;
+        }
+        break;
 
       case AC3P_STATE_CONTENT:
-	if (padder->bytes_to_copy > 0) {
-	  /* Copy one byte. */
-	  *(padder->out_ptr) = *(padder->in_ptr);
-	  ac3p_in_fw (padder);
-	  ac3p_out_fw (padder);
-	} else {
-	  guint16 *ptr, i;
+        if (padder->bytes_to_copy > 0) {
+          /* Copy one byte. */
+          *(padder->out_ptr) = *(padder->in_ptr);
+          ac3p_in_fw (padder);
+          ac3p_out_fw (padder);
+        } else {
+          guint16 *ptr, i;
 
-	  /* Frame ready.  Prepare for output: */
+          /* Frame ready.  Prepare for output: */
 
-	  /* Zero the non AC3 portion of the padded frame. */
-	  memset (&(padder->frame.sync_byte1) + padder->ac3_frame_size, 0,
-	      AC3P_IEC_FRAME_SIZE - AC3P_IEC_HEADER_SIZE -
-	      padder->ac3_frame_size);
+          /* Zero the non AC3 portion of the padded frame. */
+          memset (&(padder->frame.sync_byte1) + padder->ac3_frame_size, 0,
+              AC3P_IEC_FRAME_SIZE - AC3P_IEC_HEADER_SIZE -
+              padder->ac3_frame_size);
 
-	  /* Fix the byte order in the AC3 portion: */
-	  ptr = (guint16 *) & (padder->frame.sync_byte1);
-	  i = padder->ac3_frame_size / 2;
-	  while (i > 0) {
-	    *ptr = GUINT16_TO_BE (*ptr);
-	    ptr++;
-	    i--;
-	  }
+          /* Fix the byte order in the AC3 portion: */
+          ptr = (guint16 *) & (padder->frame.sync_byte1);
+          i = padder->ac3_frame_size / 2;
+          while (i > 0) {
+            *ptr = GUINT16_TO_BE (*ptr);
+            ptr++;
+            i--;
+          }
 
-	  /* Start over again. */
-	  padder->state = AC3P_STATE_SYNC1;
+          /* Start over again. */
+          padder->state = AC3P_STATE_SYNC1;
 
-	  return AC3P_EVENT_FRAME;
-	}
-	break;
+          return AC3P_EVENT_FRAME;
+        }
+        break;
     }
   }
 

@@ -33,7 +33,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "tremor", GST_RANK_PRIMARY,
-	  ivorbisfile_get_type ()))
+          ivorbisfile_get_type ()))
     return FALSE;
 
   return TRUE;

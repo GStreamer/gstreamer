@@ -56,7 +56,7 @@ static GstStaticPadTemplate passthrough_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate passthrough_src_template =
@@ -64,7 +64,7 @@ static GstStaticPadTemplate passthrough_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 static void passthrough_class_init (GstPassthroughClass * klass);
@@ -118,17 +118,17 @@ passthrough_connect_sink (GstPad * pad, const GstCaps * caps)
 
     if (!filter->silent) {
       g_print ("Passthrough : channels %d, rate %d\n", filter->channels,
-	  filter->rate);
+          filter->rate);
       g_print
-	  ("Passthrough : format int, bit width %d, endianness %d, signed %s\n",
-	  filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
+          ("Passthrough : format int, bit width %d, endianness %d, signed %s\n",
+          filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
     }
   } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
     filter->format = GST_PASSTHROUGH_FORMAT_FLOAT;
 
     if (!filter->silent) {
       g_print ("Passthrough : channels %d, rate %d\n", filter->channels,
-	  filter->rate);
+          filter->rate);
       g_print ("Passthrough : format float, width %d\n", filter->width);
     }
   }
@@ -153,9 +153,10 @@ gst_passthrough_get_type (void)
       0,
       (GInstanceInitFunc) passthrough_init,
     };
+
     passthrough_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstPassthrough",
-	&passthrough_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstPassthrough",
+        &passthrough_info, 0);
   }
   return passthrough_type;
 }
@@ -183,7 +184,7 @@ passthrough_class_init (GstPassthroughClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT, g_param_spec_boolean ("silent", "silent", "silent", TRUE, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT, g_param_spec_boolean ("silent", "silent", "silent", TRUE, G_PARAM_READWRITE));   /* CHECKME */
 
   gobject_class->set_property = passthrough_set_property;
   gobject_class->get_property = passthrough_get_property;
@@ -228,13 +229,13 @@ passthrough_chain (GstPad * pad, GstData * _data)
       int_data = (gint16 *) GST_BUFFER_DATA (buf);
 
       switch (filter->width) {
-	case 16:
-	  passthrough_fast_16bit_chain (int_data, GST_BUFFER_SIZE (buf) / 2);
-	  break;
-	case 8:
-	  passthrough_fast_8bit_chain ((gint8 *) int_data,
-	      GST_BUFFER_SIZE (buf));
-	  break;
+        case 16:
+          passthrough_fast_16bit_chain (int_data, GST_BUFFER_SIZE (buf) / 2);
+          break;
+        case 8:
+          passthrough_fast_8bit_chain ((gint8 *) int_data,
+              GST_BUFFER_SIZE (buf));
+          break;
       }
 
       break;
@@ -242,7 +243,7 @@ passthrough_chain (GstPad * pad, GstData * _data)
       float_data = (gfloat *) GST_BUFFER_DATA (buf);
 
       passthrough_fast_float_chain (float_data,
-	  GST_BUFFER_SIZE (buf) / sizeof (gfloat));
+          GST_BUFFER_SIZE (buf) / sizeof (gfloat));
 
       break;
   }
@@ -254,13 +255,13 @@ static void inline
 passthrough_fast_float_chain (gfloat * data, guint num_samples)
 #include "filter.func"
      static void inline
-	 passthrough_fast_16bit_chain (gint16 * data, guint num_samples)
+         passthrough_fast_16bit_chain (gint16 * data, guint num_samples)
 #include "filter.func"
      static void inline
-	 passthrough_fast_8bit_chain (gint8 * data, guint num_samples)
+         passthrough_fast_8bit_chain (gint8 * data, guint num_samples)
 #include "filter.func"
      static void
-	 passthrough_set_property (GObject * object, guint prop_id,
+         passthrough_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstPassthrough *filter;

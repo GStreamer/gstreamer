@@ -39,20 +39,20 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-xvid, "
-	"width = (int) [ 0, MAX ], "
-	"height = (int) [ 0, MAX ], " "framerate = (double) [ 0, MAX ]")
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], " "framerate = (double) [ 0, MAX ]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2, YV12, YVYU, UYVY }")
-	"; " RGB_24_32_STATIC_CAPS (32, 0x00ff0000, 0x0000ff00,
-	    0x000000ff) "; " RGB_24_32_STATIC_CAPS (32, 0xff000000, 0x00ff0000,
-	    0x0000ff00) "; " RGB_24_32_STATIC_CAPS (32, 0x0000ff00, 0x00ff0000,
-	    0xff000000) "; " RGB_24_32_STATIC_CAPS (32, 0x000000ff, 0x0000ff00,
-	    0x00ff0000) "; " RGB_24_32_STATIC_CAPS (24, 0x0000ff, 0x00ff00,
-	    0xff0000) "; " GST_VIDEO_CAPS_RGB_15 "; " GST_VIDEO_CAPS_RGB_16)
+        "; " RGB_24_32_STATIC_CAPS (32, 0x00ff0000, 0x0000ff00,
+            0x000000ff) "; " RGB_24_32_STATIC_CAPS (32, 0xff000000, 0x00ff0000,
+            0x0000ff00) "; " RGB_24_32_STATIC_CAPS (32, 0x0000ff00, 0x00ff0000,
+            0xff000000) "; " RGB_24_32_STATIC_CAPS (32, 0x000000ff, 0x0000ff00,
+            0x00ff0000) "; " RGB_24_32_STATIC_CAPS (24, 0x0000ff, 0x00ff00,
+            0xff0000) "; " GST_VIDEO_CAPS_RGB_15 "; " GST_VIDEO_CAPS_RGB_16)
     );
 
 
@@ -103,8 +103,9 @@ gst_xviddec_get_type (void)
       0,
       (GInstanceInitFunc) gst_xviddec_init,
     };
+
     xviddec_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstXvidDec", &xviddec_info, 0);
+        "GstXvidDec", &xviddec_info, 0);
   }
   return xviddec_type;
 }
@@ -187,9 +188,9 @@ gst_xviddec_setup (GstXvidDec * xviddec)
 
   if ((ret = xvid_decore (NULL, XVID_DEC_CREATE, &xdec, NULL)) < 0) {
     GST_ELEMENT_ERROR (xviddec, LIBRARY, SETTINGS, (NULL),
-	("Setting parameters %dx%d@%d failed: %s (%d)",
-	    xviddec->width, xviddec->height, xviddec->csp,
-	    gst_xvid_error (ret), ret));
+        ("Setting parameters %dx%d@%d failed: %s (%d)",
+            xviddec->width, xviddec->height, xviddec->csp,
+            gst_xvid_error (ret), ret));
     return FALSE;
   }
 
@@ -213,7 +214,7 @@ gst_xviddec_chain (GstPad * pad, GstData * _data)
 
   if (!xviddec->handle) {
     GST_ELEMENT_ERROR (xviddec, CORE, NEGOTIATION, (NULL),
-	("format wasn't negotiated before chain function"));
+        ("format wasn't negotiated before chain function"));
     gst_buffer_unref (buf);
     return;
   }
@@ -234,9 +235,9 @@ gst_xviddec_chain (GstPad * pad, GstData * _data)
   if (xviddec->width == xviddec->stride) {
     xframe.output.plane[0] = GST_BUFFER_DATA (outbuf);
     xframe.output.plane[1] =
-	xframe.output.plane[0] + (xviddec->width * xviddec->height);
+        xframe.output.plane[0] + (xviddec->width * xviddec->height);
     xframe.output.plane[2] =
-	xframe.output.plane[1] + (xviddec->width * xviddec->height / 4);
+        xframe.output.plane[1] + (xviddec->width * xviddec->height / 4);
     xframe.output.stride[0] = xviddec->width;
     xframe.output.stride[1] = xviddec->width / 2;
     xframe.output.stride[2] = xviddec->width / 2;
@@ -247,7 +248,7 @@ gst_xviddec_chain (GstPad * pad, GstData * _data)
 
   if ((ret = xvid_decore (xviddec->handle, XVID_DEC_DECODE, &xframe, NULL)) < 0) {
     GST_ELEMENT_ERROR (xviddec, STREAM, DECODE, (NULL),
-	("Error decoding xvid frame: %s (%d)\n", gst_xvid_error (ret), ret));
+        ("Error decoding xvid frame: %s (%d)\n", gst_xvid_error (ret), ret));
     gst_buffer_unref (buf);
     gst_buffer_unref (outbuf);
     return;
@@ -289,7 +290,7 @@ gst_xviddec_src_getcaps (GstPad * pad)
   caps = gst_caps_new_empty ();
   for (i = 0; csp[i] != 0; i++) {
     GstCaps *one = gst_xvid_csp_to_caps (csp[i], xviddec->width,
-	xviddec->height, xviddec->fps);
+        xviddec->height, xviddec->fps);
 
     gst_caps_append (caps, one);
   }
@@ -350,13 +351,13 @@ gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscaps)
 
     for (i = 0; i < gst_caps_get_size (vscaps); i++) {
       csp = gst_xvid_structure_to_csp (gst_caps_get_structure (vscaps, i),
-	  0, NULL, NULL);
+          0, NULL, NULL);
       new =
-	  gst_xvid_csp_to_caps (csp, xviddec->width, xviddec->height,
-	  xviddec->fps);
+          gst_xvid_csp_to_caps (csp, xviddec->width, xviddec->height,
+          xviddec->fps);
       ret = gst_pad_try_set_caps (xviddec->srcpad, new);
       if (ret != GST_PAD_LINK_REFUSED)
-	return ret;
+        return ret;
     }
 
     return GST_PAD_LINK_REFUSED;
@@ -373,7 +374,7 @@ gst_xviddec_change_state (GstElement * element)
   switch (GST_STATE_PENDING (element)) {
     case GST_STATE_PAUSED_TO_READY:
       if (xviddec->handle) {
-	gst_xviddec_unset (xviddec);
+        gst_xviddec_unset (xviddec);
       }
       break;
     default:

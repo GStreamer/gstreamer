@@ -60,14 +60,14 @@ gst_v4l2_set_display (GstV4l2Element * v4l2element)
   switch (system (buff)) {
     case -1:
       GST_ELEMENT_ERROR (v4l2element, RESOURCE, FAILED,
-	  (_("Could not start v4l-conf.")), GST_ERROR_SYSTEM);
+          (_("Could not start v4l-conf.")), GST_ERROR_SYSTEM);
       g_free (buff);
       return FALSE;
     case 0:
       break;
     default:
       GST_ELEMENT_ERROR (v4l2element, RESOURCE, FAILED,
-	  (_("Executing v4l-conf failed.")), GST_ERROR_SYSTEM);
+          (_("Executing v4l-conf failed.")), GST_ERROR_SYSTEM);
       g_free (buff);
       return FALSE;
   }
@@ -106,7 +106,7 @@ gst_v4l2_set_window (GstElement * element,
 
   if (ioctl (v4l2element->video_fd, VIDIOC_S_FMT, &fmt) < 0) {
     GST_ELEMENT_ERROR (v4l2element, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to set the video window: %s", g_strerror (errno)));
+        ("Failed to set the video window: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -131,8 +131,8 @@ gst_v4l2_enable_overlay (GstV4l2Element * v4l2element, gboolean enable)
 
   if (ioctl (v4l2element->video_fd, VIDIOC_OVERLAY, &doit) < 0) {
     GST_ELEMENT_ERROR (v4l2element, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to %s overlay display: %s",
-	    enable ? "enable" : "disable", g_strerror (errno)));
+        ("Failed to %s overlay display: %s",
+            enable ? "enable" : "disable", g_strerror (errno)));
     return FALSE;
   }
 

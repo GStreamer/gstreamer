@@ -118,7 +118,7 @@ wavelet_3d_buf_dump (char *fmt,
     snprintf (fname, 256, fmt, id, first_frame_in_buf + f);
 
     write_pgm16 (fname, buf->data + f * buf->width * buf->height,
-	buf->width, buf->height, offset);
+        buf->width, buf->height, offset);
   }
 }
 #endif

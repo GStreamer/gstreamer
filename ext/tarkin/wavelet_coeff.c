@@ -104,15 +104,15 @@ skip_0coeffs (Wavelet3DBuf * buf,
       uint32_t runlength = ENTROPY_CODER_RUNLENGTH (&s_stream[i]);
 
       if (i == 0)
-	runlength /= 2;		/* sign bits are in this bitplane ... */
+        runlength /= 2;         /* sign bits are in this bitplane ... */
       if (skip > runlength)
-	skip = runlength;
+        skip = runlength;
       if (skip <= 2)
-	return 0;
+        return 0;
     }
   }
 
-  ENTROPY_CODER_SKIP (&s_stream[0], 2 * skip);	/* kill sign+significance bits */
+  ENTROPY_CODER_SKIP (&s_stream[0], 2 * skip);  /* kill sign+significance bits */
 
   for (i = 1; i < TYPE_BITS; i++)
     ENTROPY_CODER_SKIP (&s_stream[i], skip);
@@ -134,11 +134,11 @@ encode_quadrant (const Wavelet3DBuf * buf,
   for (z = 0; z < f; z++) {
     for (y = 0; y < h; y++) {
       for (x = 0; x < w; x++) {
-	unsigned int index = buf->offset[level][quadrant]
-	    + z * buf->width * buf->height + y * buf->width + x;
+        unsigned int index = buf->offset[level][quadrant]
+            + z * buf->width * buf->height + y * buf->width + x;
 
-	encode_coeff (significand_bitstream, insignificand_bitstream,
-	    buf->data[index]);
+        encode_coeff (significand_bitstream, insignificand_bitstream,
+            buf->data[index]);
       }
     }
   }
@@ -194,28 +194,28 @@ decode_quadrant (Wavelet3DBuf * buf,
     do {
       x = 0;
       do {
-	uint32_t skip;
-	uint32_t index = buf->offset[level][quadrant]
-	    + z * buf->width * buf->height + y * buf->width + x;
+        uint32_t skip;
+        uint32_t index = buf->offset[level][quadrant]
+            + z * buf->width * buf->height + y * buf->width + x;
 
-	buf->data[index] = decode_coeff (s_stream, i_stream);
+        buf->data[index] = decode_coeff (s_stream, i_stream);
 
-	skip = skip_0coeffs (buf, s_stream, i_stream,
-	    (w - x - 1) + (h - y - 1) * w + (f - z - 1) * w * h);
-	if (skip > 0) {
-	  x += skip;
-	  while (x >= w) {
-	    y++;
-	    x -= w;
-	    while (y >= h) {
-	      z++;
-	      y -= h;
-	      if (z >= f)
-		return;
-	    }
-	  }
-	}
-	x++;
+        skip = skip_0coeffs (buf, s_stream, i_stream,
+            (w - x - 1) + (h - y - 1) * w + (f - z - 1) * w * h);
+        if (skip > 0) {
+          x += skip;
+          while (x >= w) {
+            y++;
+            x -= w;
+            while (y >= h) {
+              z++;
+              y -= h;
+              if (z >= f)
+                return;
+            }
+          }
+        }
+        x++;
       } while (x < w);
       y++;
     } while (y < h);
@@ -285,7 +285,7 @@ decode_coefficients (Wavelet3DBuf * buf,
     buf->data[i] = decode_coeff (s_stream, i_stream);
 
     skip = skip_0coeffs (buf, s_stream, i_stream,
-	buf->width * buf->height * buf->frames - i);
+        buf->width * buf->height * buf->frames - i);
     i += skip;
   }
 }
@@ -304,10 +304,10 @@ setup_limittabs (ENTROPY_CODER significand_bitstream[],
   uint32_t byte_count;
   int i;
 
-  assert (limit > 2 * TYPE_BITS * sizeof (uint32_t));	/* limit too small */
+  assert (limit > 2 * TYPE_BITS * sizeof (uint32_t));   /* limit too small */
 
   printf ("%s: limit == %u\n", __FUNCTION__, limit);
-  byte_count = 2 * TYPE_BITS * sizeof (uint32_t);	/* 2 binary coded limittabs */
+  byte_count = 2 * TYPE_BITS * sizeof (uint32_t);       /* 2 binary coded limittabs */
   limit -= byte_count;
   printf ("%s: rem. limit == %u\n", __FUNCTION__, limit);
 
@@ -342,9 +342,9 @@ setup_limittabs (ENTROPY_CODER significand_bitstream[],
     byte_count += insignificand_limittab[i];
 
     printf ("insignificand_limittab[%i]  == %u / %u\n",
-	i, insignificand_limittab[i], i_bytes);
+        i, insignificand_limittab[i], i_bytes);
     printf ("  significand_limittab[%i]  == %u / %u\n",
-	i, significand_limittab[i], s_bytes);
+        i, significand_limittab[i], s_bytes);
 
     significand_limit -= significand_limittab[i];
     insignificand_limit -= insignificand_limittab[i];
@@ -394,7 +394,7 @@ read_limittabs (uint8_t * bitstream,
   for (i = 0; i < TYPE_BITS; i++) {
     insignificand_limittab[i] = *(uint32_t *) bitstream;
     printf ("insignificand_limittab[%i]  == %u\n", i,
-	insignificand_limittab[i]);
+        insignificand_limittab[i]);
     bitstream += 4;
   }
 
@@ -415,16 +415,16 @@ merge_bitstreams (uint8_t * bitstream,
 
   for (i = TYPE_BITS - 1; i >= 0; i--) {
     memcpy (bitstream,
-	ENTROPY_CODER_BITSTREAM (&significand_bitstream[i]),
-	significand_limittab[i]);
+        ENTROPY_CODER_BITSTREAM (&significand_bitstream[i]),
+        significand_limittab[i]);
 
     bitstream += significand_limittab[i];
   }
 
   for (i = TYPE_BITS - 1; i >= 0; i--) {
     memcpy (bitstream,
-	ENTROPY_CODER_BITSTREAM (&insignificand_bitstream[i]),
-	insignificand_limittab[i]);
+        ENTROPY_CODER_BITSTREAM (&insignificand_bitstream[i]),
+        insignificand_limittab[i]);
 
     bitstream += insignificand_limittab[i];
   }

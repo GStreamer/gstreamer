@@ -75,8 +75,9 @@ gst_gsmenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_gsmenc_init,
     };
+
     gsmenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstGSMEnc", &gsmenc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstGSMEnc", &gsmenc_info, 0);
   }
   return gsmenc_type;
 }
@@ -86,7 +87,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-gsm, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gsmenc_sink_template =
@@ -94,11 +95,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static void
@@ -164,9 +165,9 @@ gst_gsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "rate", &gsmenc->rate);
   if (gst_pad_try_set_caps (gsmenc->srcpad,
-	  gst_caps_new_simple ("audio/x-gsm",
-	      "rate", G_TYPE_INT, gsmenc->rate,
-	      "channels", G_TYPE_INT, 1, NULL)) > 0) {
+          gst_caps_new_simple ("audio/x-gsm",
+              "rate", G_TYPE_INT, gsmenc->rate,
+              "channels", G_TYPE_INT, 1, NULL)) > 0) {
     return GST_PAD_LINK_OK;
   }
   return GST_PAD_LINK_REFUSED;
@@ -194,14 +195,14 @@ gst_gsmenc_chain (GstPad * pad, GstData * _data)
     GstBuffer *outbuf;
 
     memcpy (gsmenc->buffer + gsmenc->bufsize, data,
-	(160 - gsmenc->bufsize) * sizeof (gsm_signal));
+        (160 - gsmenc->bufsize) * sizeof (gsm_signal));
 
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = g_malloc (33 * sizeof (gsm_byte));
     GST_BUFFER_SIZE (outbuf) = 33 * sizeof (gsm_byte);
 
     gsm_encode (gsmenc->state, gsmenc->buffer,
-	(gsm_byte *) GST_BUFFER_DATA (outbuf));
+        (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
     GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
     gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));

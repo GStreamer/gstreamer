@@ -75,9 +75,9 @@ static GstStaticPadTemplate modplug_src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16, " "rate = (int) { 8000, 11025, 22050, 44100 }, "	/* FIXME? */
-	"channels = (int) [ 1, 2 ]; " "audio/x-raw-int, " "signed = (boolean) FALSE, " "width = (int) 8, " "depth = (int) 8, " "rate = (int) { 8000, 11025, 22050, 44100 }, "	/* FIXME? */
-	"channels = (int) [ 1, 2 ]")
+    GST_STATIC_CAPS ("audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16, " "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
+        "channels = (int) [ 1, 2 ]; " "audio/x-raw-int, " "signed = (boolean) FALSE, " "width = (int) 8, " "depth = (int) 8, " "rate = (int) { 8000, 11025, 22050, 44100 }, "   /* FIXME? */
+        "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate modplug_sink_template_factory =
@@ -133,9 +133,10 @@ gst_modplug_get_type (void)
       (GInstanceInitFunc) gst_modplug_init,
       NULL
     };
+
     modplug_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstModPlug", &modplug_info,
-	(GTypeFlags) 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstModPlug", &modplug_info,
+        (GTypeFlags) 0);
   }
   return modplug_type;
 }
@@ -165,51 +166,51 @@ gst_modplug_class_init (GstModPlugClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SONGNAME,
       g_param_spec_string ("songname", "Songname", "The song name",
-	  "", G_PARAM_READABLE));
+          "", G_PARAM_READABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB,
       g_param_spec_boolean ("reverb", "reverb", "reverb",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB_DEPTH,
       g_param_spec_int ("reverb_depth", "reverb_depth", "reverb_depth",
-	  0, 100, 30, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, 30, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB_DELAY,
       g_param_spec_int ("reverb_delay", "reverb_delay", "reverb_delay",
-	  0, 200, 100, (GParamFlags) G_PARAM_READWRITE));
+          0, 200, 100, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS,
       g_param_spec_boolean ("megabass", "megabass", "megabass",
-	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS_AMOUNT,
       g_param_spec_int ("megabass_amount", "megabass_amount", "megabass_amount",
-	  0, 100, 40, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, 40, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS_RANGE,
       g_param_spec_int ("megabass_range", "megabass_range", "megabass_range",
-	  0, 100, 30, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, 30, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND,
       g_param_spec_boolean ("surround", "surround", "surround",
-	  TRUE, (GParamFlags) G_PARAM_READWRITE));
+          TRUE, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND_DEPTH,
       g_param_spec_int ("surround_depth", "surround_depth", "surround_depth",
-	  0, 100, 20, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, 20, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND_DELAY,
       g_param_spec_int ("surround_delay", "surround_delay", "surround_delay",
-	  0, 40, 20, (GParamFlags) G_PARAM_READWRITE));
+          0, 40, 20, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OVERSAMP,
       g_param_spec_boolean ("oversamp", "oversamp", "oversamp",
-	  TRUE, (GParamFlags) G_PARAM_READWRITE));
+          TRUE, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NOISE_REDUCTION,
       g_param_spec_boolean ("noise_reduction", "noise_reduction",
-	  "noise_reduction", TRUE, (GParamFlags) G_PARAM_READWRITE));
+          "noise_reduction", TRUE, (GParamFlags) G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_modplug_set_property;
   gobject_class->get_property = gst_modplug_get_property;
@@ -233,8 +234,7 @@ gst_modplug_init (GstModPlug * modplug)
   gst_pad_set_event_function (modplug->srcpad,
       (GstPadEventFunction) GST_DEBUG_FUNCPTR (gst_modplug_src_event));
   gst_pad_set_query_function (modplug->srcpad, gst_modplug_src_query);
-  gst_pad_set_query_type_function (modplug->srcpad,
-      (GstPadQueryTypeFunction)
+  gst_pad_set_query_type_function (modplug->srcpad, (GstPadQueryTypeFunction)
       GST_DEBUG_FUNCPTR (gst_modplug_get_query_types));
   gst_pad_set_formats_function (modplug->srcpad,
       (GstPadFormatsFunction) GST_DEBUG_FUNCPTR (gst_modplug_get_formats));
@@ -269,10 +269,10 @@ gst_modplug_setup (GstModPlug * modplug)
 {
   if (modplug->_16bit)
     modplug->mSoundFile->SetWaveConfig (modplug->frequency, 16,
-	modplug->channel);
+        modplug->channel);
   else
     modplug->mSoundFile->SetWaveConfig (modplug->frequency, 8,
-	modplug->channel);
+        modplug->channel);
 
   modplug->mSoundFile->SetWaveConfigEx (modplug->surround, !modplug->oversamp,
       modplug->reverb, true, modplug->megabass, modplug->noise_reduction, true);
@@ -280,15 +280,15 @@ gst_modplug_setup (GstModPlug * modplug)
 
   if (modplug->surround)
     modplug->mSoundFile->SetSurroundParameters (modplug->surround_depth,
-	modplug->surround_delay);
+        modplug->surround_delay);
 
   if (modplug->megabass)
     modplug->mSoundFile->SetXBassParameters (modplug->megabass_amount,
-	modplug->megabass_range);
+        modplug->megabass_range);
 
   if (modplug->reverb)
     modplug->mSoundFile->SetReverbParameters (modplug->reverb_depth,
-	modplug->reverb_delay);
+        modplug->reverb_delay);
 
 }
 
@@ -336,23 +336,23 @@ gst_modplug_src_query (GstPad * pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value = (gint64) modplug->mSoundFile->GetSongTime () * GST_SECOND;
-	  break;
-	default:
-	  res = FALSE;
-	  break;
+        case GST_FORMAT_TIME:
+          *value = (gint64) modplug->mSoundFile->GetSongTime () * GST_SECOND;
+          break;
+        default:
+          res = FALSE;
+          break;
       }
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-	default:
-	  tmp =
-	      ((float) (modplug->mSoundFile->GetSongTime () *
-		  modplug->mSoundFile->GetCurrentPos ()) /
-	      (float) modplug->mSoundFile->GetMaxPosition ());
-	  *value = (gint64) (tmp * GST_SECOND);
-	  break;
+        default:
+          tmp =
+              ((float) (modplug->mSoundFile->GetSongTime () *
+                  modplug->mSoundFile->GetCurrentPos ()) /
+              (float) modplug->mSoundFile->GetMaxPosition ());
+          *value = (gint64) (tmp * GST_SECOND);
+          break;
       }
     default:
       break;
@@ -503,10 +503,10 @@ gst_modplug_handle_event (GstModPlug * modplug)
       break;
     case GST_EVENT_DISCONTINUOUS:
       if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
-	if (remaining == value) {
-	  gst_event_unref (event);
-	  break;
-	}
+        if (remaining == value) {
+          gst_event_unref (event);
+          break;
+        }
       }
       gst_bytestream_flush_fast (modplug->bs, remaining);
     default:
@@ -568,12 +568,12 @@ gst_modplug_loop (GstElement * element)
       modplug->song_size = gst_bytestream_length (modplug->bs);
 
       got =
-	  gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in,
-	  modplug->song_size);
+          gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in,
+          modplug->song_size);
 
       if (got < modplug->song_size) {
-	gst_modplug_handle_event (modplug);
-	return;
+        gst_modplug_handle_event (modplug);
+        return;
       }
       modplug->state = MODPLUG_STATE_LOAD_TUNE;
     }
@@ -583,7 +583,7 @@ gst_modplug_loop (GstElement * element)
     modplug->mSoundFile = new CSoundFile;
 
     if (!GST_PAD_CAPS (modplug->srcpad) &&
-	GST_PAD_LINK_FAILED (gst_pad_renegotiate (modplug->srcpad))) {
+        GST_PAD_LINK_FAILED (gst_pad_renegotiate (modplug->srcpad))) {
       GST_ELEMENT_ERROR (modplug, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
@@ -624,14 +624,14 @@ gst_modplug_loop (GstElement * element)
       GstFormat format = GST_FORMAT_TIME;
 
       if (gst_modplug_src_query (modplug->srcpad, GST_QUERY_POSITION, &format,
-	      &value)) {
-	discont =
-	    gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, value,
-	    GST_FORMAT_UNDEFINED);
-	modplug->timestamp = value;
+              &value)) {
+        discont =
+            gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, value,
+            GST_FORMAT_UNDEFINED);
+        modplug->timestamp = value;
       } else {
-	modplug->timestamp = GST_CLOCK_TIME_NONE;
-	discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_UNDEFINED);
+        modplug->timestamp = GST_CLOCK_TIME_NONE;
+        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_UNDEFINED);
       }
       gst_pad_push (modplug->srcpad, GST_DATA (discont));
       modplug->need_discont = FALSE;
@@ -642,19 +642,19 @@ gst_modplug_loop (GstElement * element)
 
       buffer_out = gst_buffer_new ();
       GST_BUFFER_DATA (buffer_out) =
-	  (guchar *) g_memdup (modplug->audiobuffer, modplug->length);
+          (guchar *) g_memdup (modplug->audiobuffer, modplug->length);
       GST_BUFFER_SIZE (buffer_out) = modplug->length;
       GST_BUFFER_TIMESTAMP (buffer_out) = modplug->timestamp;
 
       if (GST_CLOCK_TIME_IS_VALID (modplug->timestamp)) {
-	GST_BUFFER_DURATION (buffer_out) =
-	    modplug->length * GST_SECOND / modplug->frequency /
-	    modplug->channel / (modplug->_16bit ? 2 : 1);
-	modplug->timestamp += GST_BUFFER_DURATION (buffer_out);
+        GST_BUFFER_DURATION (buffer_out) =
+            modplug->length * GST_SECOND / modplug->frequency /
+            modplug->channel / (modplug->_16bit ? 2 : 1);
+        modplug->timestamp += GST_BUFFER_DURATION (buffer_out);
       }
 
       if (GST_PAD_IS_USABLE (modplug->srcpad))
-	gst_pad_push (modplug->srcpad, GST_DATA (buffer_out));
+        gst_pad_push (modplug->srcpad, GST_DATA (buffer_out));
     } else if (GST_PAD_IS_LINKED (modplug->srcpad)) {
       /* FIXME, hack, pull final EOS from peer */
       gst_bytestream_flush (modplug->bs, 1);
@@ -691,11 +691,11 @@ gst_modplug_change_state (GstElement * element)
       gst_bytestream_destroy (modplug->bs);
       modplug->bs = NULL;
       if (modplug->opened) {
-	modplug->mSoundFile->Destroy ();
-	modplug->opened = FALSE;
+        modplug->mSoundFile->Destroy ();
+        modplug->opened = FALSE;
       }
       if (modplug->audiobuffer)
-	g_free (modplug->audiobuffer);
+        g_free (modplug->audiobuffer);
       modplug->buffer_in = NULL;
       modplug->audiobuffer = NULL;
       modplug->state = MODPLUG_STATE_NEED_TUNE;

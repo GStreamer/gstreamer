@@ -85,7 +85,7 @@ gst_sf_major_types_get_type (void)
     for (k = 0; k < count; k++) {
       format_info.format = k;
       sf_command (NULL, SFC_GET_FORMAT_MAJOR, &format_info,
-	  sizeof (format_info));
+          sizeof (format_info));
       sf_major_types[k].value = format_info.format;
       sf_major_types[k].value_name = g_strdup (format_info.name);
       sf_major_types[k].value_nick = g_strdup (format_info.extension);
@@ -94,19 +94,19 @@ gst_sf_major_types_get_type (void)
          just hope that sndfile gives us the list in alphabetical order, as it
          currently does. */
       if (k > 0
-	  && strcmp (sf_major_types[k].value_nick,
-	      sf_major_types[k - 1].value_nick) == 0) {
-	g_free (sf_major_types[k].value_nick);
-	sf_major_types[k].value_nick =
-	    g_strconcat (sf_major_types[k - 1].value_nick, "-",
-	    sf_major_types[k].value_name, NULL);
-	g_strcanon (sf_major_types[k].value_nick,
-	    G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+          && strcmp (sf_major_types[k].value_nick,
+              sf_major_types[k - 1].value_nick) == 0) {
+        g_free (sf_major_types[k].value_nick);
+        sf_major_types[k].value_nick =
+            g_strconcat (sf_major_types[k - 1].value_nick, "-",
+            sf_major_types[k].value_name, NULL);
+        g_strcanon (sf_major_types[k].value_nick,
+            G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
       }
     }
 
     sf_major_types_type =
-	g_enum_register_static ("GstSndfileMajorTypes", sf_major_types);
+        g_enum_register_static ("GstSndfileMajorTypes", sf_major_types);
   }
   return sf_major_types_type;
 }
@@ -129,16 +129,16 @@ gst_sf_minor_types_get_type (void)
     for (k = 0; k < count; k++) {
       format_info.format = k;
       sf_command (NULL, SFC_GET_FORMAT_SUBTYPE, &format_info,
-	  sizeof (format_info));
+          sizeof (format_info));
       sf_minor_types[k].value = format_info.format;
       sf_minor_types[k].value_name = g_strdup (format_info.name);
       sf_minor_types[k].value_nick = g_ascii_strdown (format_info.name, -1);
       g_strcanon (sf_minor_types[k].value_nick, G_CSET_a_2_z G_CSET_DIGITS "-",
-	  '-');
+          '-');
     }
 
     sf_minor_types_type =
-	g_enum_register_static ("GstSndfileMinorTypes", sf_minor_types);
+        g_enum_register_static ("GstSndfileMinorTypes", sf_minor_types);
   }
   return sf_minor_types_type;
 }
@@ -186,13 +186,14 @@ gst_sf_get_type (void)
     static const GTypeInfo sf_info = {
       sizeof (GstSFClass), NULL,
       NULL,
-      (GClassInitFunc) NULL,	/* don't even initialize the class */
+      (GClassInitFunc) NULL,    /* don't even initialize the class */
       NULL,
       NULL,
       sizeof (GstSF),
       0,
-      (GInstanceInitFunc) NULL	/* abstract base class */
+      (GInstanceInitFunc) NULL  /* abstract base class */
     };
+
     sf_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSF", &sf_info, 0);
   }
   return sf_type;
@@ -215,8 +216,9 @@ gst_sfsrc_get_type (void)
       0,
       (GInstanceInitFunc) gst_sf_init,
     };
+
     sfsrc_type =
-	g_type_register_static (GST_TYPE_SF, "GstSFSrc", &sfsrc_info, 0);
+        g_type_register_static (GST_TYPE_SF, "GstSFSrc", &sfsrc_info, 0);
   }
   return sfsrc_type;
 }
@@ -238,8 +240,9 @@ gst_sfsink_get_type (void)
       0,
       (GInstanceInitFunc) gst_sf_init,
     };
+
     sfsink_type =
-	g_type_register_static (GST_TYPE_SF, "GstSFSink", &sfsink_info, 0);
+        g_type_register_static (GST_TYPE_SF, "GstSFSink", &sfsink_info, 0);
   }
   return sfsink_type;
 }
@@ -291,12 +294,12 @@ gst_sf_class_init (GstSFClass * klass)
 
   if (G_TYPE_FROM_CLASS (klass) == GST_TYPE_SFSRC) {
     pspec = g_param_spec_boolean ("loop", "Loop?", "Loop the output?",
-	FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+        FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
     g_object_class_install_property (gobject_class, ARG_LOOP, pspec);
     pspec =
-	g_param_spec_boolean ("create-pads", "Create pads?",
-	"Create one pad for each channel in the sound file?", TRUE,
-	G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+        g_param_spec_boolean ("create-pads", "Create pads?",
+        "Create one pad for each channel in the sound file?", TRUE,
+        G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
     g_object_class_install_property (gobject_class, ARG_CREATE_PADS, pspec);
   }
 
@@ -338,17 +341,17 @@ gst_sf_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_LOCATION:
       if (GST_FLAG_IS_SET (object, GST_SF_OPEN))
-	gst_sf_close_file (this);
+        gst_sf_close_file (this);
       if (this->filename)
-	g_free (this->filename);
+        g_free (this->filename);
 
       if (g_value_get_string (value))
-	this->filename = g_strdup (g_value_get_string (value));
+        this->filename = g_strdup (g_value_get_string (value));
       else
-	this->filename = NULL;
+        this->filename = NULL;
 
       if (this->filename)
-	gst_sf_open_file (this);
+        gst_sf_open_file (this);
       break;
 
     case ARG_MAJOR_TYPE:
@@ -366,10 +369,10 @@ gst_sf_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_CREATE_PADS:
       this->create_pads = g_value_get_boolean (value);
       if (this->file && this->create_pads) {
-	int i;
+        int i;
 
-	for (i = g_list_length (this->channels); i < this->numchannels; i++)
-	  gst_element_get_request_pad ((GstElement *) this, "src%d");
+        for (i = g_list_length (this->channels); i < this->numchannels; i++)
+          gst_element_get_request_pad ((GstElement *) this, "src%d");
       }
       break;
 
@@ -450,13 +453,13 @@ gst_sf_change_state (GstElement * element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (this->provided_clock),
-	  FALSE);
+          FALSE);
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (this, GST_SF_OPEN))
-	gst_sf_close_file (this);
+        gst_sf_close_file (this);
       break;
   }
 
@@ -514,7 +517,7 @@ gst_sf_release_request_pad (GstElement * element, GstPad * pad)
 
   if (GST_STATE (element) == GST_STATE_PLAYING) {
     g_warning
-	("You can't release a request pad if the element is PLAYING, sorry.");
+        ("You can't release a request pad if the element is PLAYING, sorry.");
     return;
   }
 
@@ -557,9 +560,9 @@ gst_sf_link (GstPad * pad, const GstCaps * caps)
     if (this->buffer)
       g_free (this->buffer);
     this->buffer =
-	g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
+        g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
     memset (this->buffer, 0,
-	this->numchannels * this->buffer_frames * sizeof (float));
+        this->numchannels * this->buffer_frames * sizeof (float));
   }
   return GST_PAD_LINK_OK;
 }
@@ -576,7 +579,7 @@ gst_sf_open_file (GstSF * this)
 
   if (!this->filename) {
     GST_ELEMENT_ERROR (this, RESOURCE, NOT_FOUND,
-	(_("No filename specified.")), (NULL));
+        (_("No filename specified.")), (NULL));
     return FALSE;
   }
 
@@ -586,11 +589,11 @@ gst_sf_open_file (GstSF * this)
   } else {
     if (!this->rate) {
       INFO_OBJ (this, "Not opening %s yet because caps are not set",
-	  this->filename);
+          this->filename);
       return FALSE;
     } else if (!this->numchannels) {
       INFO_OBJ (this, "Not opening %s yet because we have no input channels",
-	  this->filename);
+          this->filename);
       return FALSE;
     }
 
@@ -601,12 +604,12 @@ gst_sf_open_file (GstSF * this)
     info.format = this->format;
 
     INFO_OBJ (this, "Opening %s with rate %d, %d channels, format 0x%x",
-	this->filename, info.samplerate, info.channels, info.format);
+        this->filename, info.samplerate, info.channels, info.format);
 
     if (!sf_format_check (&info)) {
       GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
-	  ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
-	      info.samplerate, info.channels, info.format));
+          ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
+              info.samplerate, info.channels, info.format));
       return FALSE;
     }
   }
@@ -615,8 +618,8 @@ gst_sf_open_file (GstSF * this)
 
   if (!this->file) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_WRITE,
-	(_("Could not open file \"%s\" for writing."), this->filename),
-	("soundfile error: %s", sf_strerror (NULL)));
+        (_("Could not open file \"%s\" for writing."), this->filename),
+        ("soundfile error: %s", sf_strerror (NULL)));
     return FALSE;
   }
 
@@ -632,7 +635,7 @@ gst_sf_open_file (GstSF * this)
       int i;
 
       for (i = g_list_length (this->channels); i < this->numchannels; i++)
-	gst_element_get_request_pad ((GstElement *) this, "src%d");
+        gst_element_get_request_pad ((GstElement *) this, "src%d");
     }
 
     for (l = this->channels; l; l = l->next)
@@ -656,8 +659,8 @@ gst_sf_close_file (GstSF * this)
 
   if ((err = sf_close (this->file)))
     GST_ELEMENT_ERROR (this, RESOURCE, CLOSE,
-	("Could not close file file \"%s\".", this->filename),
-	("soundfile error: %s", strerror (err)));
+        ("Could not close file file \"%s\".", this->filename),
+        ("soundfile error: %s", strerror (err)));
   else
     GST_FLAG_UNSET (this, GST_SF_OPEN);
 
@@ -677,7 +680,7 @@ gst_sf_loop (GstElement * element)
 
   if (this->channels == NULL) {
     GST_ELEMENT_ERROR (element, CORE, PAD, (NULL),
-	("You must connect at least one pad to sndfile elements."));
+        ("You must connect at least one pad to sndfile elements."));
     return;
   }
 
@@ -694,7 +697,7 @@ gst_sf_loop (GstElement * element)
 
     if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
       if (!gst_sf_open_file (this))
-	return;			/* we've already set gst_element_error */
+        return;                 /* we've already set gst_element_error */
 
     if (buffer_frames == 0) {
       /* we have to set the caps later */
@@ -702,9 +705,9 @@ gst_sf_loop (GstElement * element)
     }
     if (buf == NULL) {
       buf = this->buffer =
-	  g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
+          g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
       memset (this->buffer, 0,
-	  this->numchannels * this->buffer_frames * sizeof (float));
+          this->numchannels * this->buffer_frames * sizeof (float));
     }
 
     read = sf_readf_float (this->file, buf, buffer_frames);
@@ -713,51 +716,51 @@ gst_sf_loop (GstElement * element)
 
     if (read)
       for (i = 0, l = this->channels; l; l = l->next, i++) {
-	channel = GST_SF_CHANNEL (l);
+        channel = GST_SF_CHANNEL (l);
 
-	/* don't push on disconnected pads -- useful for ::create-pads=TRUE */
-	if (!GST_PAD_PEER (channel->pad))
-	  continue;
+        /* don't push on disconnected pads -- useful for ::create-pads=TRUE */
+        if (!GST_PAD_PEER (channel->pad))
+          continue;
 
-	if (!channel->caps_set) {
-	  GstCaps *caps =
-	      gst_caps_copy (GST_PAD_CAPS (GST_SF_CHANNEL (l)->pad));
-	  if (!caps)
-	    caps = gst_caps_copy
-		(GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (GST_SF_CHANNEL
-			(l)->pad)));
-	  gst_caps_set_simple (caps, "rate", G_TYPE_INT, this->rate,
-	      "buffer-frames", G_TYPE_INT, this->buffer_frames, NULL);
-	  if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
-	    GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
-		("Opened file with sample rate %d, but could not set caps",
-		    this->rate));
-	    gst_sf_close_file (this);
-	    return;
-	  }
-	  channel->caps_set = TRUE;
-	}
+        if (!channel->caps_set) {
+          GstCaps *caps =
+              gst_caps_copy (GST_PAD_CAPS (GST_SF_CHANNEL (l)->pad));
+          if (!caps)
+            caps = gst_caps_copy
+                (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (GST_SF_CHANNEL
+                        (l)->pad)));
+          gst_caps_set_simple (caps, "rate", G_TYPE_INT, this->rate,
+              "buffer-frames", G_TYPE_INT, this->buffer_frames, NULL);
+          if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
+            GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
+                ("Opened file with sample rate %d, but could not set caps",
+                    this->rate));
+            gst_sf_close_file (this);
+            return;
+          }
+          channel->caps_set = TRUE;
+        }
 
-	out = gst_buffer_new_and_alloc (read * sizeof (float));
-	data = (gfloat *) GST_BUFFER_DATA (out);
-	for (j = 0; j < read; j++)
-	  data[j] = buf[j * nchannels + i % nchannels];
-	gst_pad_push (channel->pad, GST_DATA (out));
+        out = gst_buffer_new_and_alloc (read * sizeof (float));
+        data = (gfloat *) GST_BUFFER_DATA (out);
+        for (j = 0; j < read; j++)
+          data[j] = buf[j * nchannels + i % nchannels];
+        gst_pad_push (channel->pad, GST_DATA (out));
       }
 
     this->time += read * (GST_SECOND / this->rate);
     gst_audio_clock_update_time ((GstAudioClock *) this->provided_clock,
-	this->time);
+        this->time);
 
     if (eos) {
       if (this->loop) {
-	sf_seek (this->file, (sf_count_t) 0, SEEK_SET);
-	eos = 0;
+        sf_seek (this->file, (sf_count_t) 0, SEEK_SET);
+        eos = 0;
       } else {
-	for (l = this->channels; l; l = l->next)
-	  gst_pad_push (GST_SF_CHANNEL (l)->pad,
-	      GST_DATA (gst_event_new (GST_EVENT_EOS)));
-	gst_element_set_eos (element);
+        for (l = this->channels; l; l = l->next)
+          gst_pad_push (GST_SF_CHANNEL (l)->pad,
+              GST_DATA (gst_event_new (GST_EVENT_EOS)));
+        gst_element_set_eos (element);
       }
     }
   } else {
@@ -777,7 +780,7 @@ gst_sf_loop (GstElement * element)
     num_to_write = buffer_frames;
 
     INFO_OBJ (this, "looping, buffer_frames=%d, nchannels=%d", buffer_frames,
-	nchannels);
+        nchannels);
 
     for (i = 0, l = this->channels; l; l = l->next, i++) {
       channel = GST_SF_CHANNEL (l);
@@ -786,40 +789,40 @@ gst_sf_loop (GstElement * element)
       in = GST_BUFFER (gst_pad_pull (channel->pad));
 
       if (buffer_frames == 0) {
-	/* pulling a buffer from the pad should have caused capsnego to occur,
-	   which then would set this->buffer_frames to a new value */
-	buffer_frames = this->buffer_frames;
-	if (buffer_frames == 0) {
-	  GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
-	      ("format wasn't negotiated before chain function"));
-	  return;
-	}
-	buf = this->buffer;
-	num_to_write = buffer_frames;
+        /* pulling a buffer from the pad should have caused capsnego to occur,
+           which then would set this->buffer_frames to a new value */
+        buffer_frames = this->buffer_frames;
+        if (buffer_frames == 0) {
+          GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
+              ("format wasn't negotiated before chain function"));
+          return;
+        }
+        buf = this->buffer;
+        num_to_write = buffer_frames;
       }
 
       if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
-	if (!gst_sf_open_file (this))
-	  return;		/* we've already set gst_element_error */
+        if (!gst_sf_open_file (this))
+          return;               /* we've already set gst_element_error */
 
       if (GST_IS_EVENT (in)) {
-	switch (GST_EVENT_TYPE (in)) {
-	  case GST_EVENT_EOS:
-	  case GST_EVENT_INTERRUPT:
-	    num_to_write = 0;
-	    break;
-	  default:
-	    goto pull_again;
-	    break;
-	}
+        switch (GST_EVENT_TYPE (in)) {
+          case GST_EVENT_EOS:
+          case GST_EVENT_INTERRUPT:
+            num_to_write = 0;
+            break;
+          default:
+            goto pull_again;
+            break;
+        }
       }
 
       if (num_to_write) {
-	data = (gfloat *) GST_BUFFER_DATA (in);
-	num_to_write =
-	    MIN (num_to_write, GST_BUFFER_SIZE (in) / sizeof (gfloat));
-	for (j = 0; j < num_to_write; j++)
-	  buf[j * nchannels + i % nchannels] = data[j];
+        data = (gfloat *) GST_BUFFER_DATA (in);
+        num_to_write =
+            MIN (num_to_write, GST_BUFFER_SIZE (in) / sizeof (gfloat));
+        for (j = 0; j < num_to_write; j++)
+          buf[j * nchannels + i % nchannels] = data[j];
       }
 
       gst_data_unref ((GstData *) in);
@@ -828,14 +831,14 @@ gst_sf_loop (GstElement * element)
     if (num_to_write) {
       written = sf_writef_float (this->file, buf, num_to_write);
       if (written != num_to_write)
-	GST_ELEMENT_ERROR (element, RESOURCE, WRITE,
-	    (_("Could not write to file \"%s\"."), this->filename),
-	    ("soundfile error: %s", sf_strerror (this->file)));
+        GST_ELEMENT_ERROR (element, RESOURCE, WRITE,
+            (_("Could not write to file \"%s\"."), this->filename),
+            ("soundfile error: %s", sf_strerror (this->file)));
     }
 
     this->time += num_to_write * (GST_SECOND / this->rate);
     gst_audio_clock_update_time ((GstAudioClock *) this->provided_clock,
-	this->time);
+        this->time);
 
     if (num_to_write != buffer_frames)
       gst_element_set_eos (element);

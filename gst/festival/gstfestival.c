@@ -107,10 +107,10 @@ GST_STATIC_PAD_TEMPLATE ("festival_src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, " "rate = (int) 16000, " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, " "rate = (int) 16000, " "channels = (int) 1")
     );
 
 /* Festival signals and args */
@@ -147,9 +147,10 @@ gst_festival_get_type (void)
       0,
       (GInstanceInitFunc) gst_festival_init,
     };
+
     festival_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstFestival", &festival_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstFestival", &festival_info,
+        0);
   }
   return festival_type;
 }
@@ -241,12 +242,12 @@ gst_festival_chain (GstPad * pad, GstData * _data)
     for (n = 0; n < 3;)
       n += read (festival->info->server_fd, ack + n, 3 - n);
     ack[3] = '\0';
-    if (strcmp (ack, "WV\n") == 0)	/* receive a waveform */
+    if (strcmp (ack, "WV\n") == 0)      /* receive a waveform */
       wavefile =
-	  socket_receive_file_to_buff (festival->info->server_fd, &filesize);
-    else if (strcmp (ack, "LP\n") == 0)	/* receive an s-expr */
+          socket_receive_file_to_buff (festival->info->server_fd, &filesize);
+    else if (strcmp (ack, "LP\n") == 0) /* receive an s-expr */
       client_accept_s_expr (festival->info->server_fd);
-    else if (strcmp (ack, "ER\n") == 0) {	/* server got an error */
+    else if (strcmp (ack, "ER\n") == 0) {       /* server got an error */
       fprintf (stderr, "festival_client: server returned error\n");
       break;
     }
@@ -337,7 +338,7 @@ socket_receive_file_to_buff (int fd, int *size)
   /* Festival key stuff technique, but long winded I know, sorry */
   /* but will receive any file without closeing the stream or    */
   /* using OOB data                                              */
-  static const char *file_stuff_key = "ft_StUfF_key";	/* must == Festival's key */
+  static const char *file_stuff_key = "ft_StUfF_key";   /* must == Festival's key */
   char *buff;
   int bufflen;
   int n, k, i;
@@ -350,7 +351,7 @@ socket_receive_file_to_buff (int fd, int *size)
   for (k = 0; file_stuff_key[k] != '\0';) {
     n = read (fd, &c, 1);
     if (n == 0)
-      break;			/* hit stream eof before end of file */
+      break;                    /* hit stream eof before end of file */
     if ((*size) + k + 1 >= bufflen) {
       /* +1 so you can add a NULL if you want */
       bufflen += bufflen / 4;
@@ -361,12 +362,12 @@ socket_receive_file_to_buff (int fd, int *size)
     else if ((c == 'X') && (file_stuff_key[k + 1] == '\0')) {
       /* It looked like the key but wasn't */
       for (i = 0; i < k; i++, (*size)++)
-	buff[*size] = file_stuff_key[i];
+        buff[*size] = file_stuff_key[i];
       k = 0;
       /* omit the stuffed 'X' */
     } else {
       for (i = 0; i < k; i++, (*size)++)
-	buff[*size] = file_stuff_key[i];
+        buff[*size] = file_stuff_key[i];
       k = 0;
       buff[*size] = c;
       (*size)++;
@@ -419,7 +420,7 @@ gst_festival_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_FESTIVAL_OPEN)) {
       if (!gst_festival_open (GST_FESTIVAL (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 
@@ -433,7 +434,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "festival", GST_RANK_NONE,
-	  GST_TYPE_FESTIVAL))
+          GST_TYPE_FESTIVAL))
     return FALSE;
 
   return TRUE;

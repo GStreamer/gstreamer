@@ -106,8 +106,9 @@ gst_jack_get_type (void)
       0,
       NULL,
     };
+
     jack_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstJack", &jack_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstJack", &jack_info, 0);
   }
   return jack_type;
 }
@@ -129,8 +130,9 @@ gst_jack_sink_get_type (void)
       0,
       (GInstanceInitFunc) gst_jack_init,
     };
+
     jack_type =
-	g_type_register_static (GST_TYPE_JACK, "GstJackSink", &jack_info, 0);
+        g_type_register_static (GST_TYPE_JACK, "GstJackSink", &jack_info, 0);
   }
   return jack_type;
 }
@@ -152,8 +154,9 @@ gst_jack_src_get_type (void)
       0,
       (GInstanceInitFunc) gst_jack_init,
     };
+
     jack_type =
-	g_type_register_static (GST_TYPE_JACK, "GstJackSrc", &jack_info, 0);
+        g_type_register_static (GST_TYPE_JACK, "GstJackSrc", &jack_info, 0);
   }
   return jack_type;
 }
@@ -240,7 +243,7 @@ gst_jack_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_PORT_NAME_PREFIX:
       if (this->port_name_prefix)
-	g_free (this->port_name_prefix);
+        g_free (this->port_name_prefix);
       this->port_name_prefix = g_strdup (g_value_get_string (value));
       break;
     default:
@@ -318,8 +321,8 @@ gst_jack_request_new_pad (GstElement * element, GstPadTemplate * templ,
     l = *pad_list;
     while (l) {
       if (strcmp (GST_JACK_PAD (l)->name, name) == 0) {
-	g_warning ("requested port name %s already in use.", name);
-	return NULL;
+        g_warning ("requested port name %s already in use.", name);
+        return NULL;
       }
       l = l->next;
     }
@@ -338,7 +341,7 @@ gst_jack_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   count =
       GPOINTER_TO_INT (g_hash_table_lookup (port_name_counts,
-	  this->port_name_prefix));
+          this->port_name_prefix));
   g_hash_table_insert (port_name_counts, g_strdup (this->port_name_prefix),
       GINT_TO_POINTER (count + 1));
 
@@ -377,26 +380,26 @@ gst_jack_change_state (GstElement * element)
       JACK_DEBUG ("%s: READY", GST_OBJECT_NAME (GST_OBJECT (this)));
 
       if (!this->bin) {
-	if (!(this->bin = (GstJackBin *) gst_element_get_managing_bin (element))
-	    || !GST_IS_JACK_BIN (this->bin)) {
-	  this->bin = NULL;
-	  g_warning ("jack element %s needs to be contained in a jack bin.",
-	      GST_OBJECT_NAME (element));
-	  return GST_STATE_FAILURE;
-	}
+        if (!(this->bin = (GstJackBin *) gst_element_get_managing_bin (element))
+            || !GST_IS_JACK_BIN (this->bin)) {
+          this->bin = NULL;
+          g_warning ("jack element %s needs to be contained in a jack bin.",
+              GST_OBJECT_NAME (element));
+          return GST_STATE_FAILURE;
+        }
 
-	/* fixme: verify that all names are unique */
-	l = this->pads;
-	pads =
-	    (this->direction ==
-	    GST_PAD_SRC) ? &this->bin->src_pads : &this->bin->sink_pads;
-	while (l) {
-	  pad = GST_JACK_PAD (l);
-	  JACK_DEBUG ("%s: appending pad %s:%s to list", GST_OBJECT_NAME (this),
-	      pad->name, pad->peer_name);
-	  *pads = g_list_append (*pads, pad);
-	  l = g_list_next (l);
-	}
+        /* fixme: verify that all names are unique */
+        l = this->pads;
+        pads =
+            (this->direction ==
+            GST_PAD_SRC) ? &this->bin->src_pads : &this->bin->sink_pads;
+        while (l) {
+          pad = GST_JACK_PAD (l);
+          JACK_DEBUG ("%s: appending pad %s:%s to list", GST_OBJECT_NAME (this),
+              pad->name, pad->peer_name);
+          *pads = g_list_append (*pads, pad);
+          l = g_list_next (l);
+        }
       }
       break;
 
@@ -404,18 +407,18 @@ gst_jack_change_state (GstElement * element)
       JACK_DEBUG ("%s: PAUSED", GST_OBJECT_NAME (GST_OBJECT (this)));
 
       if (GST_STATE (element) == GST_STATE_READY) {
-	/* we're in READY->PAUSED */
-	l = this->pads;
-	while (l) {
-	  pad = GST_JACK_PAD (l);
-	  caps = gst_caps_copy (gst_pad_get_negotiated_caps (pad->pad));
-	  gst_caps_set_simple (caps,
-	      "rate", G_TYPE_INT, (int) this->bin->rate,
-	      "buffer-frames", G_TYPE_INT, (gint) this->bin->nframes, NULL);
-	  if (gst_pad_try_set_caps (pad->pad, caps) <= 0)
-	    return GST_STATE_FAILURE;
-	  l = g_list_next (l);
-	}
+        /* we're in READY->PAUSED */
+        l = this->pads;
+        while (l) {
+          pad = GST_JACK_PAD (l);
+          caps = gst_caps_copy (gst_pad_get_negotiated_caps (pad->pad));
+          gst_caps_set_simple (caps,
+              "rate", G_TYPE_INT, (int) this->bin->rate,
+              "buffer-frames", G_TYPE_INT, (gint) this->bin->nframes, NULL);
+          if (gst_pad_try_set_caps (pad->pad, caps) <= 0)
+            return GST_STATE_FAILURE;
+          l = g_list_next (l);
+        }
       }
       break;
     case GST_STATE_PLAYING:
@@ -444,7 +447,7 @@ gst_jack_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "rate", &rate);
   gst_structure_get_int (structure, "buffer-frames", &buffer_frames);
   if (this->bin && (rate != this->bin->rate ||
-	  buffer_frames != this->bin->nframes))
+          buffer_frames != this->bin->nframes))
     return GST_PAD_LINK_REFUSED;
 
   return GST_PAD_LINK_OK;
@@ -471,17 +474,17 @@ gst_jack_loop (GstElement * element)
       buffer = GST_BUFFER (gst_pad_pull (pad->pad));
 
       if (GST_IS_EVENT (buffer)) {
-	GstEvent *event = GST_EVENT (buffer);
+        GstEvent *event = GST_EVENT (buffer);
 
-	switch (GST_EVENT_TYPE (buffer)) {
-	  case GST_EVENT_EOS:
-	    gst_element_set_eos (element);
-	    gst_event_unref (event);
-	    return;
-	  default:
-	    gst_pad_event_default (pad->pad, event);
-	    return;
-	}
+        switch (GST_EVENT_TYPE (buffer)) {
+          case GST_EVENT_EOS:
+            gst_element_set_eos (element);
+            gst_event_unref (event);
+            return;
+          default:
+            gst_pad_event_default (pad->pad, event);
+            return;
+        }
       }
 
       /* if the other plugins only give out buffer-frames or less (as
@@ -490,8 +493,8 @@ gst_jack_loop (GstElement * element)
          next */
       memcpy (pad->data, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
       if (len != GST_BUFFER_SIZE (buffer))
-	memset (pad->data + GST_BUFFER_SIZE (buffer), 0,
-	    len - GST_BUFFER_SIZE (buffer));
+        memset (pad->data + GST_BUFFER_SIZE (buffer), 0,
+            len - GST_BUFFER_SIZE (buffer));
 
       gst_buffer_unref (buffer);
     } else {
@@ -509,15 +512,15 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "jackbin", GST_RANK_NONE,
-	  GST_TYPE_JACK_BIN))
+          GST_TYPE_JACK_BIN))
     return FALSE;
 
   if (!gst_element_register (plugin, "jacksrc", GST_RANK_NONE,
-	  GST_TYPE_JACK_SRC))
+          GST_TYPE_JACK_SRC))
     return FALSE;
 
   if (!gst_element_register (plugin, "jacksink", GST_RANK_NONE,
-	  GST_TYPE_JACK_SINK))
+          GST_TYPE_JACK_SINK))
     return FALSE;
 
   return TRUE;

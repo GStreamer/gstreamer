@@ -103,8 +103,9 @@ gst_flxdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_flxdec_init,
     };
+
     flxdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstFlxDec", &flxdec_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstFlxDec", &flxdec_info, 0);
   }
   return flxdec_type;
 }
@@ -172,44 +173,44 @@ flx_decode_chunks (GstFlxDec * flxdec, gulong count, gchar * data, gchar * dest)
 
     switch (hdr->id) {
       case FLX_COLOR64:
-	flx_decode_color (flxdec, data, dest, 2);
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        flx_decode_color (flxdec, data, dest, 2);
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
 
       case FLX_COLOR256:
-	flx_decode_color (flxdec, data, dest, 0);
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        flx_decode_color (flxdec, data, dest, 0);
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
 
       case FLX_BRUN:
-	flx_decode_brun (flxdec, data, dest);
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        flx_decode_brun (flxdec, data, dest);
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
 
       case FLX_LC:
-	flx_decode_delta_fli (flxdec, data, dest);
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        flx_decode_delta_fli (flxdec, data, dest);
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
 
       case FLX_SS2:
-	flx_decode_delta_flc (flxdec, data, dest);
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        flx_decode_delta_flc (flxdec, data, dest);
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
 
       case FLX_BLACK:
-	memset (dest, 0, flxdec->size);
-	break;
+        memset (dest, 0, flxdec->size);
+        break;
 
       case FLX_MINI:
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
 
       default:
-	g_print ("GstFlxDec: Unimplented chunk type: 0x%02x size: %d\n",
-	    hdr->id, hdr->size);
-	g_print ("GstFlxDec: Skipping...\n");
-	data += rndalign (hdr->size) - FlxFrameChunkSize;
-	break;
+        g_print ("GstFlxDec: Unimplented chunk type: 0x%02x size: %d\n",
+            hdr->id, hdr->size);
+        g_print ("GstFlxDec: Skipping...\n");
+        data += rndalign (hdr->size) - FlxFrameChunkSize;
+        break;
     }
   }
 }
@@ -266,20 +267,20 @@ flx_decode_brun (GstFlxDec * flxdec, guchar * data, guchar * dest)
       count = *data++;
 
       if (count > 0x7f) {
-	/* literal run */
-	count = 0x100 - count;
-	row -= count;
+        /* literal run */
+        count = 0x100 - count;
+        row -= count;
 
-	while (count--)
-	  *dest++ = *data++;
+        while (count--)
+          *dest++ = *data++;
 
       } else {
-	/* replicate run */
-	row -= count;
-	x = *data++;
+        /* replicate run */
+        row -= count;
+        x = *data++;
 
-	while (count--)
-	  *dest++ = x;
+        while (count--)
+          *dest++ = x;
       }
     }
   }
@@ -320,17 +321,17 @@ flx_decode_delta_fli (GstFlxDec * flxdec, guchar * data, guchar * dest)
       count = *data++;
 
       if (count > 0x7f) {
-	/* literal run */
-	count = 0x100 - count;
-	x = *data++;
+        /* literal run */
+        count = 0x100 - count;
+        x = *data++;
 
-	while (count--)
-	  *dest++ = x;
+        while (count--)
+          *dest++ = x;
 
       } else {
-	/* replicate run */
-	while (count--)
-	  *dest++ = *data++;
+        /* replicate run */
+        while (count--)
+          *dest++ = *data++;
       }
     }
     start_p += flxdec->hdr.width;
@@ -365,13 +366,13 @@ flx_decode_delta_flc (GstFlxDec * flxdec, guchar * data, guchar * dest)
     while ((opcode = (data[0] + (data[1] << 8))) & 0xc000) {
       data += 2;
       if ((opcode & 0xc000) == 0xc000) {
-	/* skip count */
-	start_l += (0x10000 - opcode);
-	dest += flxdec->hdr.width * (0x10000 - opcode);
+        /* skip count */
+        start_l += (0x10000 - opcode);
+        dest += flxdec->hdr.width * (0x10000 - opcode);
       } else {
-	/* last pixel */
-	dest += flxdec->hdr.width;
-	*dest++ = (opcode & 0xff);
+        /* last pixel */
+        dest += flxdec->hdr.width;
+        *dest++ = (opcode & 0xff);
       }
     }
     data += 2;
@@ -385,19 +386,19 @@ flx_decode_delta_flc (GstFlxDec * flxdec, guchar * data, guchar * dest)
       count = *data++;
 
       if (count > 0x7f) {
-	/* replicate word run */
-	count = 0x100 - count;
-	while (count--) {
-	  *dest++ = data[0];
-	  *dest++ = data[1];
-	}
-	data += 2;
+        /* replicate word run */
+        count = 0x100 - count;
+        while (count--) {
+          *dest++ = data[0];
+          *dest++ = data[1];
+        }
+        data += 2;
       } else {
-	/* literal word run */
-	while (count--) {
-	  *dest++ = *data++;
-	  *dest++ = *data++;
-	}
+        /* literal word run */
+        while (count--) {
+          *dest++ = *data++;
+          *dest++ = *data++;
+        }
       }
     }
     lines--;
@@ -462,9 +463,9 @@ gst_flxdec_loop (GstElement * element)
 
     /* check header */
     if (flxh->type != FLX_MAGICHDR_FLI &&
-	flxh->type != FLX_MAGICHDR_FLC && flxh->type != FLX_MAGICHDR_FLX) {
+        flxh->type != FLX_MAGICHDR_FLC && flxh->type != FLX_MAGICHDR_FLX) {
       GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-	  ("not a flx file (type %d)\n", flxh->type));
+          ("not a flx file (type %d)\n", flxh->type));
       return;
     }
 
@@ -486,13 +487,13 @@ gst_flxdec_loop (GstElement * element)
 
     caps = gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN);
     gst_caps_set_simple (caps,
-	"width", G_TYPE_INT, flxh->width,
-	"height", G_TYPE_INT, flxh->height,
-	"framerate", G_TYPE_DOUBLE, GST_SECOND / flxdec->frame_time, NULL);
+        "width", G_TYPE_INT, flxh->width,
+        "height", G_TYPE_INT, flxh->height,
+        "framerate", G_TYPE_DOUBLE, GST_SECOND / flxdec->frame_time, NULL);
 
     if (flxh->depth <= 8)
       flxdec->converter =
-	  flx_colorspace_converter_new (flxh->width, flxh->height);
+          flx_colorspace_converter_new (flxh->width, flxh->height);
 
     if (flxh->type == FLX_MAGICHDR_FLC || flxh->type == FLX_MAGICHDR_FLX) {
       g_print ("GstFlxDec: (FLC) aspect_dx :  %d\n", flxh->aspect_dx);
@@ -523,41 +524,41 @@ gst_flxdec_loop (GstElement * element)
 
     switch (flxfh->id) {
       case FLX_FRAME_TYPE:
-	buf = flx_get_data (flxdec, flxfh->size - FlxFrameChunkSize);
+        buf = flx_get_data (flxdec, flxfh->size - FlxFrameChunkSize);
 
-	chunk = GST_BUFFER_DATA (buf);
+        chunk = GST_BUFFER_DATA (buf);
 
-	if (((FlxFrameType *) chunk)->chunks == 0)
-	  break;
+        if (((FlxFrameType *) chunk)->chunks == 0)
+          break;
 
-	/* create 32 bits output frame */
-	out = gst_buffer_new ();
-	GST_BUFFER_DATA (out) = g_malloc (flxdec->size * 4);
-	GST_BUFFER_SIZE (out) = flxdec->size * 4;
+        /* create 32 bits output frame */
+        out = gst_buffer_new ();
+        GST_BUFFER_DATA (out) = g_malloc (flxdec->size * 4);
+        GST_BUFFER_SIZE (out) = flxdec->size * 4;
 
-	/* decode chunks */
-	flx_decode_chunks (flxdec,
-	    ((FlxFrameType *) chunk)->chunks,
-	    GST_BUFFER_DATA (buf) + FlxFrameTypeSize,
-	    GST_BUFFER_DATA (flxdec->frame));
+        /* decode chunks */
+        flx_decode_chunks (flxdec,
+            ((FlxFrameType *) chunk)->chunks,
+            GST_BUFFER_DATA (buf) + FlxFrameTypeSize,
+            GST_BUFFER_DATA (flxdec->frame));
 
-	/* destroy input buffer */
-	gst_buffer_unref (buf);
+        /* destroy input buffer */
+        gst_buffer_unref (buf);
 
-	/* save copy of the current frame for possible delta. */
-	memcpy (GST_BUFFER_DATA (flxdec->delta),
-	    GST_BUFFER_DATA (flxdec->frame), GST_BUFFER_SIZE (flxdec->delta));
+        /* save copy of the current frame for possible delta. */
+        memcpy (GST_BUFFER_DATA (flxdec->delta),
+            GST_BUFFER_DATA (flxdec->frame), GST_BUFFER_SIZE (flxdec->delta));
 
-	/* convert current frame. */
-	flx_colorspace_convert (flxdec->converter,
-	    GST_BUFFER_DATA (flxdec->frame), GST_BUFFER_DATA (out));
+        /* convert current frame. */
+        flx_colorspace_convert (flxdec->converter,
+            GST_BUFFER_DATA (flxdec->frame), GST_BUFFER_DATA (out));
 
-	GST_BUFFER_TIMESTAMP (out) = flxdec->next_time;
-	flxdec->next_time += flxdec->frame_time;
+        GST_BUFFER_TIMESTAMP (out) = flxdec->next_time;
+        flxdec->next_time += flxdec->frame_time;
 
-	gst_pad_push (flxdec->srcpad, GST_DATA (out));
+        gst_pad_push (flxdec->srcpad, GST_DATA (out));
 
-	break;
+        break;
     }
 
     /* destroy header buffer */

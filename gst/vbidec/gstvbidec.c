@@ -115,10 +115,11 @@ gst_vbidec_caption_type_get_type (void)
     {CAPTURE_T4, "9", "Closed Caption T4"},
     {0, NULL, NULL},
   };
+
   if (!vbidec_caption_type_type) {
     vbidec_caption_type_type =
-	g_enum_register_static ("GstVBIDecCaptionTypeType",
-	vbidec_caption_type);
+        g_enum_register_static ("GstVBIDecCaptionTypeType",
+        vbidec_caption_type);
   }
   return vbidec_caption_type_type;
 }
@@ -155,8 +156,9 @@ gst_vbidec_get_type (void)
       0,
       (GInstanceInitFunc) gst_vbidec_init,
     };
+
     vbidec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVBIDec", &vbidec_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVBIDec", &vbidec_info, 0);
   }
   return vbidec_type;
 }
@@ -189,14 +191,14 @@ gst_vbidec_class_init (GstVBIDecClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VERBOSE,
       g_param_spec_boolean ("verbose", "verbose", "verbose",
-	  FALSE, G_PARAM_WRITABLE));
+          FALSE, G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CAPTION_TYPE,
       g_param_spec_enum ("caption type", "caption type", "Closed Caption Type",
-	  GST_TYPE_VBIDEC_CAPTION_TYPE_TYPE, CAPTURE_OFF, G_PARAM_READWRITE));
+          GST_TYPE_VBIDEC_CAPTION_TYPE_TYPE, CAPTURE_OFF, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DVD_INPUT,
       g_param_spec_boolean ("dvd input", "dvd input",
-	  "VBI is encapsulated in MPEG2 GOP user_data field (as on DVDs)",
-	  FALSE, G_PARAM_READWRITE));
+          "VBI is encapsulated in MPEG2 GOP user_data field (as on DVDs)",
+          FALSE, G_PARAM_READWRITE));
 }
 
 static void
@@ -233,7 +235,7 @@ dvd_user_data_decode (GstVBIDec * vbidec, guint8 * data, guint32 size)
 {
   //char caption[128];
   //int ci; /* caption index */
-  int i;			/* buf index */
+  int i;                        /* buf index */
   int num_disp_field;
   guint8 b1, b2;
   int w;
@@ -248,8 +250,8 @@ dvd_user_data_decode (GstVBIDec * vbidec, guint8 * data, guint32 size)
     return;
   }
   //g_print ("CC data\n");
-  i += 4;			/* above */
-  i += 4;			/* ? */
+  i += 4;                       /* above */
+  i += 4;                       /* ? */
   num_disp_field = data[i] & 0x3f;
   //g_print ("ndf %d\n", num_disp_field);
   while ((data[i] & 0xfe) == 0xfe) {

@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) 1, " "systemstream = (boolean) FALSE")
+        "mpegversion = (int) 1, " "systemstream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate audio_sink_factory =
@@ -69,7 +69,7 @@ GST_STATIC_PAD_TEMPLATE ("audio_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/mpeg, "
-	"mpegversion = (int) 1, " "layer = (int) [ 1, 2 ] ")
+        "mpegversion = (int) 1, " "layer = (int) [ 1, 2 ] ")
     );
 
 static void gst_system_encode_class_init (GstMPEG1SystemEncodeClass * klass);
@@ -107,9 +107,10 @@ gst_mpeg1_system_encode_get_type (void)
       (GInstanceInitFunc) gst_system_encode_init,
       NULL
     };
+
     system_encode_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMPEG1SystemEncode",
-	&system_encode_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMPEG1SystemEncode",
+        &system_encode_info, 0);
   }
   return system_encode_type;
 }
@@ -194,7 +195,7 @@ gst_system_encode_request_new_pad (GstElement * element, GstPadTemplate * templ,
     g_print ("%s\n", name);
     newpad = gst_pad_new_from_template (templ, name);
     gst_pad_set_element_private (newpad,
-	GINT_TO_POINTER (system_encode->num_audio_pads));
+        GINT_TO_POINTER (system_encode->num_audio_pads));
 
     system_encode->audio_pad[system_encode->num_audio_pads] = newpad;
     system_encode->num_audio_pads++;
@@ -204,7 +205,7 @@ gst_system_encode_request_new_pad (GstElement * element, GstPadTemplate * templ,
     g_print ("%s\n", name);
     newpad = gst_pad_new_from_template (templ, name);
     gst_pad_set_element_private (newpad,
-	GINT_TO_POINTER (system_encode->num_video_pads));
+        GINT_TO_POINTER (system_encode->num_video_pads));
 
     system_encode->video_pad[system_encode->num_video_pads] = newpad;
     system_encode->num_video_pads++;
@@ -233,13 +234,13 @@ gst_system_encode_pick_streams (GList * mta,
 
   if (system_encode->which_streams & STREAMS_VIDEO) {
     if (system_encode->video_buffer->next_frame_time <
-	lowest - system_encode->video_delay) {
+        lowest - system_encode->video_delay) {
       lowest = system_encode->video_buffer->next_frame_time;
     }
   }
   if (system_encode->which_streams & STREAMS_AUDIO) {
     if (system_encode->audio_buffer->next_frame_time <
-	lowest - system_encode->audio_delay) {
+        lowest - system_encode->audio_delay) {
       lowest = system_encode->audio_buffer->next_frame_time;
     }
   }
@@ -263,25 +264,25 @@ gst_system_encode_have_data (GstMPEG1SystemEncode * system_encode)
 
   if (system_encode->which_streams == (STREAMS_VIDEO | STREAMS_AUDIO)) {
     if (MPEG1MUX_BUFFER_QUEUED (system_encode->audio_buffer) > 2 &&
-	MPEG1MUX_BUFFER_SPACE (system_encode->audio_buffer) >
-	system_encode->packet_size * 2
-	&& MPEG1MUX_BUFFER_QUEUED (system_encode->video_buffer) > 2
-	&& MPEG1MUX_BUFFER_SPACE (system_encode->video_buffer) >
-	system_encode->packet_size * 2) {
+        MPEG1MUX_BUFFER_SPACE (system_encode->audio_buffer) >
+        system_encode->packet_size * 2
+        && MPEG1MUX_BUFFER_QUEUED (system_encode->video_buffer) > 2
+        && MPEG1MUX_BUFFER_SPACE (system_encode->video_buffer) >
+        system_encode->packet_size * 2) {
       return TRUE;
     }
   }
   if (system_encode->which_streams == STREAMS_VIDEO) {
     if (MPEG1MUX_BUFFER_QUEUED (system_encode->video_buffer) > 2 &&
-	MPEG1MUX_BUFFER_SPACE (system_encode->video_buffer) >
-	system_encode->packet_size * 2) {
+        MPEG1MUX_BUFFER_SPACE (system_encode->video_buffer) >
+        system_encode->packet_size * 2) {
       return TRUE;
     }
   }
   if (system_encode->which_streams == STREAMS_VIDEO) {
     if (MPEG1MUX_BUFFER_QUEUED (system_encode->audio_buffer) > 2 &&
-	MPEG1MUX_BUFFER_SPACE (system_encode->audio_buffer) >
-	system_encode->packet_size * 2) {
+        MPEG1MUX_BUFFER_SPACE (system_encode->audio_buffer) >
+        system_encode->packet_size * 2) {
       return TRUE;
     }
   }
@@ -321,12 +322,12 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode * system_encode)
 
   if (system_encode->which_streams & STREAMS_VIDEO) {
     system_encode->video_rate =
-	system_encode->video_buffer->info.video.bit_rate * 50;
+        system_encode->video_buffer->info.video.bit_rate * 50;
   } else
     system_encode->video_rate = 0;
   if (system_encode->which_streams & STREAMS_AUDIO)
     system_encode->audio_rate =
-	system_encode->audio_buffer->info.audio.bit_rate * 128;
+        system_encode->audio_buffer->info.audio.bit_rate * 128;
   else
     system_encode->audio_rate = 0;
 
@@ -335,11 +336,11 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode * system_encode)
 
   system_encode->dmux_rate = ceil ((double) (system_encode->data_rate) *
       ((double) (system_encode->packet_size) /
-	  (double) (system_encode->min_packet_data) +
-	  ((double) (system_encode->packet_size) /
-	      (double) (system_encode->max_packet_data) *
-	      (double) (system_encode->packets_per_pack -
-		  1.))) / (double) (system_encode->packets_per_pack));
+          (double) (system_encode->min_packet_data) +
+          ((double) (system_encode->packet_size) /
+              (double) (system_encode->max_packet_data) *
+              (double) (system_encode->packets_per_pack -
+                  1.))) / (double) (system_encode->packets_per_pack));
   system_encode->data_rate = ceil (system_encode->dmux_rate / 50.) * 50;
 
   GST_DEBUG
@@ -363,9 +364,9 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode * system_encode)
 
   system_encode->delay = ((double) system_encode->sectors_delay +
       ceil ((double) video_tc->length /
-	  (double) system_encode->min_packet_data) +
+          (double) system_encode->min_packet_data) +
       ceil ((double) video_tc->length /
-	  (double) system_encode->min_packet_data)) *
+          (double) system_encode->min_packet_data)) *
       (double) system_encode->packet_size / system_encode->dmux_rate *
       (double) CLOCKS;
 
@@ -406,15 +407,15 @@ gst_system_encode_multiplex (GstMPEG1SystemEncode * system_encode)
 
     if (system_encode->mta == NULL) {
       system_encode->mta =
-	  gst_system_encode_pick_streams (system_encode->mta, system_encode);
+          gst_system_encode_pick_streams (system_encode->mta, system_encode);
     }
     if (system_encode->mta == NULL)
       break;
 
 
     system_encode->SCR =
-	(guint64) (system_encode->bytes_output +
-	LAST_SCR_BYTE_IN_PACK) * CLOCKS / system_encode->dmux_rate;
+        (guint64) (system_encode->bytes_output +
+        LAST_SCR_BYTE_IN_PACK) * CLOCKS / system_encode->dmux_rate;
 
 
     streams = g_list_first (system_encode->mta);
@@ -422,11 +423,11 @@ gst_system_encode_multiplex (GstMPEG1SystemEncode * system_encode)
 
     if (system_encode->current_pack == system_encode->packets_per_pack) {
       create_pack (system_encode->pack, system_encode->SCR,
-	  system_encode->mux_rate);
+          system_encode->mux_rate);
       create_sys_header (system_encode->sys_header, system_encode->mux_rate, 1,
-	  1, 1, 1, 1, 1, AUDIO_STR_0, 0, system_encode->audio_buffer_size / 128,
-	  VIDEO_STR_0, 1, system_encode->video_buffer_size / 1024,
-	  system_encode->which_streams);
+          1, 1, 1, 1, 1, AUDIO_STR_0, 0, system_encode->audio_buffer_size / 128,
+          VIDEO_STR_0, 1, system_encode->video_buffer_size / 1024,
+          system_encode->which_streams);
       system_encode->current_pack = 0;
       pack = system_encode->pack;
       sys_header = system_encode->sys_header;
@@ -440,11 +441,11 @@ gst_system_encode_multiplex (GstMPEG1SystemEncode * system_encode)
     if (mb->new_frame) {
       GST_DEBUG ("system_encode::multiplex: new frame");
       if (tc->frame_type == FRAME_TYPE_AUDIO
-	  || tc->frame_type == FRAME_TYPE_IFRAME
-	  || tc->frame_type == FRAME_TYPE_PFRAME) {
-	timestamps = TIMESTAMPS_PTS;
+          || tc->frame_type == FRAME_TYPE_IFRAME
+          || tc->frame_type == FRAME_TYPE_PFRAME) {
+        timestamps = TIMESTAMPS_PTS;
       } else {
-	timestamps = TIMESTAMPS_PTS_DTS;
+        timestamps = TIMESTAMPS_PTS_DTS;
       }
     } else {
       timestamps = TIMESTAMPS_NO;
@@ -452,7 +453,7 @@ gst_system_encode_multiplex (GstMPEG1SystemEncode * system_encode)
 
     if (tc->frame_type != FRAME_TYPE_AUDIO) {
       if (tc->PTS < system_encode->startup_delay)
-	system_encode->startup_delay = tc->PTS;
+        system_encode->startup_delay = tc->PTS;
     }
 
     if (tc->frame_type == FRAME_TYPE_AUDIO) {
@@ -475,27 +476,27 @@ gst_system_encode_multiplex (GstMPEG1SystemEncode * system_encode)
 
       /* write the pack/packet here */
       create_sector (system_encode->sector, pack, sys_header,
-	  system_encode->packet_size,
-	  MPEG1MUX_BUFFER_DATA (mb), mb->stream_id, buffer_scale,
-	  buffer_size, TRUE, PTS, DTS,
-	  timestamps, system_encode->which_streams);
+          system_encode->packet_size,
+          MPEG1MUX_BUFFER_DATA (mb), mb->stream_id, buffer_scale,
+          buffer_size, TRUE, PTS, DTS,
+          timestamps, system_encode->which_streams);
       /* update mta */
       system_encode->mta =
-	  gst_system_encode_update_mta (system_encode, system_encode->mta,
-	  system_encode->sector->length_of_packet_data);
+          gst_system_encode_update_mta (system_encode, system_encode->mta,
+          system_encode->sector->length_of_packet_data);
     } else {
       /* write  a padding packet */
       create_sector (system_encode->sector, pack, sys_header,
-	  system_encode->packet_size, NULL, PADDING_STR, 0,
-	  0, FALSE, 0, 0, TIMESTAMPS_NO, system_encode->which_streams);
+          system_encode->packet_size, NULL, PADDING_STR, 0,
+          0, FALSE, 0, 0, TIMESTAMPS_NO, system_encode->which_streams);
     }
 
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) =
-	g_malloc (system_encode->sector->length_of_sector);
+        g_malloc (system_encode->sector->length_of_sector);
     GST_BUFFER_SIZE (outbuf) = system_encode->sector->length_of_sector;
     memcpy (GST_BUFFER_DATA (outbuf), system_encode->sector->buf,
-	system_encode->sector->length_of_sector);
+        system_encode->sector->length_of_sector);
     system_encode->bytes_output += GST_BUFFER_SIZE (outbuf);
     gst_pad_push (system_encode->srcpad, GST_DATA (outbuf));
 
@@ -535,15 +536,15 @@ gst_system_encode_chain (GstPad * pad, GstData * _data)
   if (strncmp (padname, "audio_", 6) == 0) {
     channel = atoi (&padname[6]);
     GST_DEBUG
-	("gst_system_encode_chain: got audio buffer in from audio channel %02d",
-	channel);
+        ("gst_system_encode_chain: got audio buffer in from audio channel %02d",
+        channel);
 
     mpeg1mux_buffer_queue (system_encode->audio_buffer, buf);
   } else if (strncmp (padname, "video_", 6) == 0) {
     channel = atoi (&padname[6]);
     GST_DEBUG
-	("gst_system_encode_chain: got video buffer in from video channel %02d",
-	channel);
+        ("gst_system_encode_chain: got video buffer in from video channel %02d",
+        channel);
 
     mpeg1mux_buffer_queue (system_encode->video_buffer, buf);
 

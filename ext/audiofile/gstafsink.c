@@ -65,13 +65,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"rate = (int) [ 1, MAX ], "
-	"channels = (int) [ 1, 2 ], "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"signed = (boolean) { true, false }, "
-	"buffer-frames = (int) [ 1, MAX ]")
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 2 ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "signed = (boolean) { true, false }, "
+        "buffer-frames = (int) [ 1, MAX ]")
     );
 
 /* we use an enum for the output type arg */
@@ -93,7 +93,7 @@ gst_afsink_types_get_type (void)
 
   if (!afsink_types_type) {
     afsink_types_type =
-	g_enum_register_static ("GstAudiosinkTypes", afsink_types);
+        g_enum_register_static ("GstAudiosinkTypes", afsink_types);
   }
   return afsink_types_type;
 }
@@ -136,8 +136,9 @@ gst_afsink_get_type (void)
       0,
       (GInstanceInitFunc) gst_afsink_init,
     };
+
     afsink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstAFSink", &afsink_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstAFSink", &afsink_info, 0);
   }
   return afsink_type;
 }
@@ -166,8 +167,8 @@ gst_afsink_class_init (GstAFSinkClass * klass)
   gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
       "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE, g_param_spec_enum ("type", "type", "type", GST_TYPE_AFSINK_TYPES, 0, G_PARAM_READWRITE));	/* CHECKME! */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT_ENDIANNESS, g_param_spec_int ("endianness", "endianness", "endianness", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE, g_param_spec_enum ("type", "type", "type", GST_TYPE_AFSINK_TYPES, 0, G_PARAM_READWRITE));  /* CHECKME! */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT_ENDIANNESS, g_param_spec_int ("endianness", "endianness", "endianness", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));       /* CHECKME */
 
   gst_afsink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -188,7 +189,7 @@ gst_afsink_init (GstAFSink * afsink)
 
   afsink->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-	  (afsink), "sink"), "sink");
+          (afsink), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (afsink), afsink->sinkpad);
 
   gst_pad_set_chain_function (afsink->sinkpad, gst_afsink_chain);
@@ -217,14 +218,14 @@ gst_afsink_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
       g_return_if_fail ((GST_STATE (sink) < GST_STATE_PLAYING)
-	  || (GST_STATE (sink) == GST_STATE_PAUSED));
+          || (GST_STATE (sink) == GST_STATE_PAUSED));
       if (sink->filename)
-	g_free (sink->filename);
+        g_free (sink->filename);
       sink->filename = g_strdup (g_value_get_string (value));
       if ((GST_STATE (sink) == GST_STATE_PAUSED)
-	  && (sink->filename != NULL)) {
-	gst_afsink_close_file (sink);
-	gst_afsink_open_file (sink);
+          && (sink->filename != NULL)) {
+        gst_afsink_close_file (sink);
+        gst_afsink_open_file (sink);
       }
 
       break;
@@ -236,7 +237,7 @@ gst_afsink_set_property (GObject * object, guint prop_id, const GValue * value,
       int end = g_value_get_int (value);
 
       if (end == 1234 || end == 4321)
-	sink->endianness_output = end;
+        sink->endianness_output = end;
     }
       break;
     default:
@@ -291,8 +292,8 @@ gst_afsink_open_file (GstAFSink * sink)
   AFfilesetup outfilesetup;
   const GstCaps *caps;
   GstStructure *structure;
-  int sample_format;		/* audiofile's sample format, look in audiofile.h */
-  int byte_order = 0;		/* audiofile's byte order defines */
+  int sample_format;            /* audiofile's sample format, look in audiofile.h */
+  int byte_order = 0;           /* audiofile's byte order defines */
 
   g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN), FALSE);
 
@@ -342,8 +343,8 @@ gst_afsink_open_file (GstAFSink * sink)
   sink->file = afOpenFile (sink->filename, "w", outfilesetup);
   if (sink->file == AF_NULL_FILEHANDLE) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	(_("Could not open file \"%s\" for writing."), sink->filename),
-	("system error: %s", strerror (errno)));
+        (_("Could not open file \"%s\" for writing."), sink->filename),
+        ("system error: %s", strerror (errno)));
     return FALSE;
   }
 
@@ -364,7 +365,7 @@ gst_afsink_close_file (GstAFSink * sink)
 /*  if (fclose (sink->file) != 0) */
   if (afCloseFile (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	(_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
+        (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
   } else {
     GST_FLAG_UNSET (sink, GST_AFSINK_OPEN);
   }
@@ -417,10 +418,10 @@ gst_afsink_chain (GstPad * pad, GstData * _data)
     int frameCount = 0;
 
     frameCount =
-	GST_BUFFER_SIZE (buf) / ((afsink->width / 8) * afsink->channels);
+        GST_BUFFER_SIZE (buf) / ((afsink->width / 8) * afsink->channels);
     /*   g_print ("DEBUG: writing %d frames ", frameCount); */
     ret = afWriteFrames (afsink->file, AF_DEFAULT_TRACK,
-	GST_BUFFER_DATA (buf), frameCount);
+        GST_BUFFER_DATA (buf), frameCount);
     if (ret == AF_BAD_WRITE || ret == AF_BAD_LSEEK) {
       printf ("afsink : Warning : afWriteFrames returned an error (%d)\n", ret);
     }

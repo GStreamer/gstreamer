@@ -50,9 +50,9 @@ struct _GstChart
   gint height;
 
   gint samplerate;
-  gdouble framerate;		/* desired frame rate */
-  gint samples_between_frames;	/* number of samples between start of successive frames */
-  gint samples_since_last_frame;	/* number of samples between start of successive frames */
+  gdouble framerate;            /* desired frame rate */
+  gint samples_between_frames;  /* number of samples between start of successive frames */
+  gint samples_since_last_frame;        /* number of samples between start of successive frames */
 };
 
 struct _GstChartClass
@@ -94,11 +94,11 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 8000, 96000 ], " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) 1")
     );
 
 static void gst_chart_base_init (gpointer g_class);
@@ -136,6 +136,7 @@ gst_chart_get_type (void)
       0,
       (GInstanceInitFunc) gst_chart_init,
     };
+
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstChart", &info, 0);
   }
   return type;
@@ -194,8 +195,8 @@ gst_chart_init (GstChart * chart)
   chart->height = 128;
 
   chart->samplerate = -1;
-  chart->framerate = 25;	/* desired frame rate */
-  chart->samples_between_frames = 0;	/* number of samples between start of successive frames */
+  chart->framerate = 25;        /* desired frame rate */
+  chart->samples_between_frames = 0;    /* number of samples between start of successive frames */
   chart->samples_since_last_frame = 0;
 }
 
@@ -264,29 +265,29 @@ draw_chart_16bpp (guchar * output, gint width, gint height,
 
     if (h1 < height / 2) {
       while (pos < colstart + h1 * width) {
-	*pos = 0x0000;
-	pos += width;
+        *pos = 0x0000;
+        pos += width;
       }
       while (pos < colstart + height / 2 * width) {
-	*pos = 0x07e0;
-	pos += width;
+        *pos = 0x07e0;
+        pos += width;
       }
       while (pos < colstart + height * width) {
-	*pos = 0x0000;
-	pos += width;
+        *pos = 0x0000;
+        pos += width;
       }
     } else {
       while (pos < colstart + height / 2 * width) {
-	*pos = 0x0000;
-	pos += width;
+        *pos = 0x0000;
+        pos += width;
       }
       while (pos < colstart + h1 * width) {
-	*pos = 0x07e0;
-	pos += width;
+        *pos = 0x07e0;
+        pos += width;
       }
       while (pos < colstart + height * width) {
-	*pos = 0x0000;
-	pos += width;
+        *pos = 0x0000;
+        pos += width;
       }
     }
   }
@@ -333,12 +334,12 @@ gst_chart_chain (GstPad * pad, GstData * _data)
       GST_BUFFER_SIZE (bufout) = sizeout;
       GST_BUFFER_DATA (bufout) = dataout;
       GST_DEBUG ("CHART: made new buffer: size %d, width %d, height %d",
-	  sizeout, chart->width, chart->height);
+          sizeout, chart->width, chart->height);
 
       /* take data and draw to new buffer */
       /* FIXME: call different routines for different properties */
       draw_chart_16bpp (dataout, chart->width, chart->height, (gint16 *) datain,
-	  samples_in);
+          samples_in);
 
       gst_buffer_unref (bufin);
 

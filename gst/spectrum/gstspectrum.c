@@ -82,9 +82,10 @@ gst_spectrum_get_type (void)
       0,
       (GInstanceInitFunc) gst_spectrum_init,
     };
+
     spectrum_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSpectrum", &spectrum_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSpectrum", &spectrum_info,
+        0);
   }
   return spectrum_type;
 }
@@ -105,7 +106,7 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));   /* CHECKME */
 
   gobject_class->set_property = gst_spectrum_set_property;
 }

@@ -67,7 +67,8 @@ typedef struct
   xine_ao_driver_t driver;
   GstXineAudioDec *xine;
   gboolean open;
-} GstXineAudioDriver;
+}
+GstXineAudioDriver;
 
 static guint32
 _driver_get_capabilities (xine_ao_driver_t * driver)
@@ -152,19 +153,19 @@ _driver_status (xine_ao_driver_t * driver, xine_stream_t * stream,
     return 0;
 
   structure = gst_caps_get_structure (caps, 0);
-  *bits = 0;			/* FIXME */
+  *bits = 0;                    /* FIXME */
   if (!gst_structure_get_int (structure, "rate", &temp)) {
-    g_assert_not_reached ();	/* may never happen with negotiated caps */
+    g_assert_not_reached ();    /* may never happen with negotiated caps */
     return 0;
   }
   *rate = temp;
   if (!gst_structure_get_int (structure, "channels", &temp)) {
-    g_assert_not_reached ();	/* may never happen with negotiated caps */
+    g_assert_not_reached ();    /* may never happen with negotiated caps */
     return 0;
   }
   *mode = (temp == 2) ? AO_CAP_MODE_STEREO : AO_CAP_MODE_MONO;
   if (!gst_structure_get_int (structure, "width", &temp)) {
-    g_assert_not_reached ();	/* may never happen with negotiated caps */
+    g_assert_not_reached ();    /* may never happen with negotiated caps */
     return 0;
   }
   if (temp == 8)
@@ -233,11 +234,11 @@ GST_BOILERPLATE (GstXineAudioDec, gst_xine_audio_dec, GstXine, GST_TYPE_XINE)
 
      static void gst_xine_audio_dec_chain (GstPad * pad, GstData * in);
      static GstElementStateReturn
-	 gst_xine_audio_dec_change_state (GstElement * element);
+         gst_xine_audio_dec_change_state (GstElement * element);
 
 /* this function handles the link with other plug-ins */
      static GstPadLinkReturn
-	 gst_xine_audio_dec_sink_link (GstPad * pad, const GstCaps * caps)
+         gst_xine_audio_dec_sink_link (GstPad * pad, const GstCaps * caps)
 {
   guint temp;
   GstStructure *structure;
@@ -255,7 +256,7 @@ GST_BOILERPLATE (GstXineAudioDec, gst_xine_audio_dec, GstXine, GST_TYPE_XINE)
     xine->wave.nChannels = temp;
   if (gst_structure_get_int (structure, "rate", &temp))
     xine->wave.nSamplesPerSec = temp;
-  xine->wave.wBitsPerSample = 16;	/* FIXME: how do we figure this thing out? */
+  xine->wave.wBitsPerSample = 16;       /* FIXME: how do we figure this thing out? */
   /* FIXME: fill wave header better */
 
   return GST_PAD_LINK_OK;
@@ -304,7 +305,7 @@ gst_xine_audio_dec_chain (GstPad * pad, GstData * in)
   if (xine->format == 0) {
     /* no caps yet */
     GST_ELEMENT_ERROR (xine, CORE, NEGOTIATION, (NULL),
-	("buffer sent before doing caps nego"));
+        ("buffer sent before doing caps nego"));
     gst_data_unref (in);
     return;
   }
@@ -329,7 +330,7 @@ gst_xine_audio_dec_chain (GstPad * pad, GstData * in)
     /* FIXME: qdm2 only right now */
     g_assert (gst_pad_get_negotiated_caps (xine->sinkpad));
     structure =
-	gst_caps_get_structure (gst_pad_get_negotiated_caps (xine->sinkpad), 0);
+        gst_caps_get_structure (gst_pad_get_negotiated_caps (xine->sinkpad), 0);
     *((guint32 *) & stsd[56]) = GUINT32_TO_BE (12);
     memcpy (&stsd[60], "frmaQDM2", 8);
     *((guint32 *) & stsd[68]) = GUINT32_TO_BE (36);
@@ -409,7 +410,7 @@ gst_xine_audio_dec_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       xine->decoder = _load_decoder (xine);
       if (!xine->decoder)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
@@ -422,7 +423,7 @@ gst_xine_audio_dec_change_state (GstElement * element)
     case GST_STATE_READY_TO_NULL:
       xine->setup = FALSE;
       _x_free_audio_decoder (gst_xine_get_stream (GST_XINE (xine)),
-	  xine->decoder);
+          xine->decoder);
       break;
     default:
       GST_ERROR_OBJECT (element, "invalid state change");
@@ -439,17 +440,17 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1, MAX ], "
-	"channels = (int) [ 1, 2 ]; "
-	"audio/x-raw-int, "
-	"signed = (boolean) FALSE, "
-	"width = (int) 8, "
-	"depth = (int) 8, "
-	"rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "signed = (boolean) FALSE, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
 static void
@@ -483,7 +484,7 @@ gst_xine_audio_dec_subclass_init (gpointer g_class, gpointer class_data)
 
   while (dec->supported_types[i] != 0) {
     const gchar *type_str =
-	gst_xine_get_caps_for_format (dec->supported_types[i]);
+        gst_xine_get_caps_for_format (dec->supported_types[i]);
     if (type_str) {
       gst_caps_append (caps, gst_caps_from_string (type_str));
     }
@@ -501,14 +502,14 @@ gst_xine_audio_dec_sub_init (GTypeInstance * instance, gpointer g_class)
 
   xine->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "sink"), "sink");
+          "sink"), "sink");
   gst_pad_set_link_function (xine->sinkpad, gst_xine_audio_dec_sink_link);
   gst_pad_set_chain_function (xine->sinkpad, gst_xine_audio_dec_chain);
   gst_element_add_pad (GST_ELEMENT (xine), xine->sinkpad);
 
   xine->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "src"), "src");
+          "src"), "src");
   gst_pad_use_explicit_caps (xine->srcpad);
   gst_element_add_pad (GST_ELEMENT (xine), xine->srcpad);
 }
@@ -545,26 +546,26 @@ gst_xine_audio_dec_init_plugin (GstPlugin * plugin)
     dec = node->info->special_info;
     while (dec->supported_types[format] != 0) {
       const gchar *caps =
-	  gst_xine_get_caps_for_format (dec->supported_types[format]);
+          gst_xine_get_caps_for_format (dec->supported_types[format]);
       if (caps) {
-	gchar *plugin_name =
-	    g_strdup_printf ("xineaudiodec_%s", node->info->id);
-	gchar *type_name =
-	    g_strdup_printf ("GstXineAudioDec%s", node->info->id);
-	GType type;
+        gchar *plugin_name =
+            g_strdup_printf ("xineaudiodec_%s", node->info->id);
+        gchar *type_name =
+            g_strdup_printf ("GstXineAudioDec%s", node->info->id);
+        GType type;
 
-	plugin_info.class_data = node;
-	type =
-	    g_type_register_static (GST_TYPE_XINE_AUDIO_DEC, type_name,
-	    &plugin_info, 0);
-	g_free (type_name);
-	if (!gst_element_register (plugin, plugin_name,
-		MAX (GST_RANK_MARGINAL,
-		    GST_RANK_MARGINAL * dec->priority / 10 + 1), type)) {
-	  g_free (plugin_name);
-	  return FALSE;
-	}
-	g_free (plugin_name);
+        plugin_info.class_data = node;
+        type =
+            g_type_register_static (GST_TYPE_XINE_AUDIO_DEC, type_name,
+            &plugin_info, 0);
+        g_free (type_name);
+        if (!gst_element_register (plugin, plugin_name,
+                MAX (GST_RANK_MARGINAL,
+                    GST_RANK_MARGINAL * dec->priority / 10 + 1), type)) {
+          g_free (plugin_name);
+          return FALSE;
+        }
+        g_free (plugin_name);
       }
       format++;
     }

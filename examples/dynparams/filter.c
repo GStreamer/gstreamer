@@ -15,17 +15,17 @@
 /* filter UI data */
 struct _filter_ui
 {
-  GtkWidget *window;		/* top-level interface window */
+  GtkWidget *window;            /* top-level interface window */
 
-  GtkWidget *buttons;		/* all of the control buttons */
-  GtkWidget *parse, *play, *stop;	/* control buttons */
+  GtkWidget *buttons;           /* all of the control buttons */
+  GtkWidget *parse, *play, *stop;       /* control buttons */
 
-  GtkWidget *feedback;		/* here's where we'll tell you stuff */
-  GtkTextBuffer *fb_buffer;	/* feedback buffer */
-  GtkWidget *selection;		/* the place to input element stuff */
-  GtkWidget *input, *filter, *output;	/* the selection widgets */
+  GtkWidget *feedback;          /* here's where we'll tell you stuff */
+  GtkTextBuffer *fb_buffer;     /* feedback buffer */
+  GtkWidget *selection;         /* the place to input element stuff */
+  GtkWidget *input, *filter, *output;   /* the selection widgets */
 
-  GtkWidget *control;		/* the dynamically generated control UI */
+  GtkWidget *control;           /* the dynamically generated control UI */
 };
 
 typedef struct _filter_ui _filter_ui_t;
@@ -33,13 +33,13 @@ typedef struct _filter_ui _filter_ui_t;
 /* back-end data */
 struct _filter_data
 {
-  _filter_ui_t *ui;		/* the UI data */
+  _filter_ui_t *ui;             /* the UI data */
   gchar *input_pipe, *output_pipe, *filter_element;
   gchar *pipe_string;
   GList *filter_choices;
 
   gboolean playing;
-  GstElement *input, *output;	/* these are in and out bins */
+  GstElement *input, *output;   /* these are in and out bins */
   GstElement *pipeline;
   GstElement *filter;
 };
@@ -75,21 +75,21 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction,
     while (pads) {
       /* check if the direction matches */
       if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == direction) {
-	if (GST_PAD_PEER (GST_PAD (pads->data)) == NULL) {
-	  /* found it ! */
-	  g_print ("DEBUG: found an unconnected pad !\n");
-	  pad = GST_PAD (pads->data);
-	}
+        if (GST_PAD_PEER (GST_PAD (pads->data)) == NULL) {
+          /* found it ! */
+          g_print ("DEBUG: found an unconnected pad !\n");
+          pad = GST_PAD (pads->data);
+        }
       }
       if (pad)
-	break;			/* found one already */
+        break;                  /* found one already */
       pads = g_list_next (pads);
     }
     elements = g_list_next (elements);
   }
 
   g_print ("DEBUG: find_unconnected stop\n");
-  if (pad == NULL)		/* we didn't find it at all */
+  if (pad == NULL)              /* we didn't find it at all */
     return NULL;
 
   pad = gst_ghost_pad_new (name, pad);
@@ -157,37 +157,37 @@ ui_control_create (GstElement * element, GtkWidget * control, _filter_ui_t * ui)
       gtk_container_add (GTK_CONTAINER (hbox), widget);
       gtk_widget_show (widget);
       switch (G_PARAM_SPEC_VALUE_TYPE (specs[i])) {
-	case G_TYPE_INT64:
-	  widget = gtk_hscale_new_with_range (
-	      (gdouble) (((GParamSpecInt64 *) specs[i])->minimum),
-	      (gdouble) (((GParamSpecInt64 *) specs[i])->maximum), 1.0);
-	  gtk_range_set_value (GTK_RANGE (widget),
-	      (gdouble) ((GParamSpecInt64 *) specs[i])->default_value);
-	  break;
+        case G_TYPE_INT64:
+          widget = gtk_hscale_new_with_range (
+              (gdouble) (((GParamSpecInt64 *) specs[i])->minimum),
+              (gdouble) (((GParamSpecInt64 *) specs[i])->maximum), 1.0);
+          gtk_range_set_value (GTK_RANGE (widget),
+              (gdouble) ((GParamSpecInt64 *) specs[i])->default_value);
+          break;
 
-	case G_TYPE_INT:
-	  widget = gtk_hscale_new_with_range (
-	      (gdouble) (((GParamSpecInt *) specs[i])->minimum),
-	      (gdouble) (((GParamSpecInt *) specs[i])->maximum), 1.0);
-	  gtk_range_set_value (GTK_RANGE (widget),
-	      (gdouble) ((GParamSpecInt *) specs[i])->default_value);
-	  break;
-	case G_TYPE_FLOAT:
-	  widget = gtk_hscale_new_with_range (
-	      (gdouble) (((GParamSpecFloat *) specs[i])->minimum),
-	      (gdouble) (((GParamSpecFloat *) specs[i])->maximum), 0.00001);
-	  gtk_range_set_value (GTK_RANGE (widget),
-	      (gdouble) ((GParamSpecFloat *) specs[i])->default_value);
-	  break;
+        case G_TYPE_INT:
+          widget = gtk_hscale_new_with_range (
+              (gdouble) (((GParamSpecInt *) specs[i])->minimum),
+              (gdouble) (((GParamSpecInt *) specs[i])->maximum), 1.0);
+          gtk_range_set_value (GTK_RANGE (widget),
+              (gdouble) ((GParamSpecInt *) specs[i])->default_value);
+          break;
+        case G_TYPE_FLOAT:
+          widget = gtk_hscale_new_with_range (
+              (gdouble) (((GParamSpecFloat *) specs[i])->minimum),
+              (gdouble) (((GParamSpecFloat *) specs[i])->maximum), 0.00001);
+          gtk_range_set_value (GTK_RANGE (widget),
+              (gdouble) ((GParamSpecFloat *) specs[i])->default_value);
+          break;
       }
       /* create the dparam object */
       dparam = gst_dpsmooth_new (G_PARAM_SPEC_VALUE_TYPE (specs[i]));
       g_object_set (G_OBJECT (dparam), "update_period", 2000000LL, NULL);
       g_assert (gst_dpman_attach_dparam (dpman,
-	      (gchar *) g_param_spec_get_name (specs[i]), dparam));
+              (gchar *) g_param_spec_get_name (specs[i]), dparam));
       gst_dpman_set_mode (dpman, "asynchronous");
       g_signal_connect (widget, "value-changed",
-	  G_CALLBACK (cb_dynparm_value_changed), dparam);
+          G_CALLBACK (cb_dynparm_value_changed), dparam);
       cb_dynparm_value_changed (GTK_RANGE (widget), dparam);
 
       gtk_container_add (GTK_CONTAINER (hbox), widget);
@@ -315,7 +315,7 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
   fd->input = GST_ELEMENT (gst_parse_launch (fd->input_pipe, &error));
   if (error) {
     ui_feedback_add (fd->ui, "Error : parsing input pipeline : %s\n",
-	error->message);
+        error->message);
     g_error_free (error);
     return;
   }
@@ -329,7 +329,7 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
   fd->output = GST_ELEMENT (gst_parse_launch (fd->output_pipe, &error));
   if (error) {
     ui_feedback_add (fd->ui, "Error : parsing output pipeline : %s\n",
-	error->message);
+        error->message);
     g_error_free (error);
     return;
   }
@@ -340,7 +340,7 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
   fd->filter = gst_element_factory_make (fd->filter_element, "filter");
   if (fd->filter == NULL) {
     ui_feedback_add (fd->ui, "Error : could not create element %s\n",
-	fd->filter_element);
+        fd->filter_element);
     return;
   }
 
@@ -359,14 +359,14 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
       "source");
   if (src_pad == NULL) {
     ui_feedback_add (fd->ui,
-	"Error : could not find an unconnected source pad !\n");
+        "Error : could not find an unconnected source pad !\n");
     return;
   }
   sink_pad = gst_bin_find_unconnected_pad (GST_BIN (fd->output), GST_PAD_SINK,
       "sink");
   if (sink_pad == NULL) {
     ui_feedback_add (fd->ui,
-	"Error : could not find an unconnected sink pad !\n");
+        "Error : could not find an unconnected sink pad !\n");
     return;
   }
   gst_element_add_pad (fd->input, src_pad);
@@ -417,8 +417,8 @@ init_data (_filter_data_t * fd)
 void
 create_ui (_filter_ui_t * fui, _filter_data_t * fd)
 {
-  GtkWidget *widget;		/* temporary widget */
-  GtkWidget *vbox;		/* temporary vbox */
+  GtkWidget *widget;            /* temporary widget */
+  GtkWidget *vbox;              /* temporary vbox */
 
   g_print ("DEBUG: creating top-level window\n");
   fui->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -480,7 +480,7 @@ create_ui (_filter_ui_t * fui, _filter_data_t * fd)
   widget = gtk_label_new ("Output Pipe");
   gtk_container_add (GTK_CONTAINER (vbox), widget);
   fui->output = gtk_entry_new ();
-  gtk_entry_set_text (GTK_ENTRY (fui->output), "osssink fragment=1572872");	/* fixme: gconf default ? */
+  gtk_entry_set_text (GTK_ENTRY (fui->output), "osssink fragment=1572872");     /* fixme: gconf default ? */
   gtk_container_add (GTK_CONTAINER (vbox), fui->output);
   gtk_container_add (GTK_CONTAINER (fui->selection), vbox);
   g_signal_connect (G_OBJECT (fui->output), "activate",

@@ -74,9 +74,10 @@ gst_rtjpegdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_rtjpegdec_init,
     };
+
     rtjpegdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRTJpegDec",
-	&rtjpegdec_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRTJpegDec",
+        &rtjpegdec_info, 0);
   }
   return rtjpegdec_type;
 }

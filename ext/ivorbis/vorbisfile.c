@@ -152,13 +152,13 @@ ivorbisfile_get_type (void)
     };
 
     ivorbisfile_type = g_type_register_static (GST_TYPE_ELEMENT, "Ivorbisfile",
-	&ivorbisfile_info, 0);
+        &ivorbisfile_info, 0);
 
     logical_stream_format =
-	gst_format_register ("logical_stream", "The logical stream");
+        gst_format_register ("logical_stream", "The logical stream");
 
     GST_DEBUG_CATEGORY_INIT (ivorbisfile_debug, "ivorbisfile", 0,
-	"vorbis in ogg decoding element (integer arithmetic)");
+        "vorbis in ogg decoding element (integer arithmetic)");
   }
   return ivorbisfile_type;
 }
@@ -232,10 +232,10 @@ gst_ivorbisfile_class_init (IvorbisfileClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_METADATA,
       g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
-	  GST_TYPE_CAPS, G_PARAM_READABLE));
+          GST_TYPE_CAPS, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_STREAMINFO,
       g_param_spec_boxed ("streaminfo", "stream",
-	  "(logical) Stream information", GST_TYPE_CAPS, G_PARAM_READABLE));
+          "(logical) Stream information", GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_ivorbisfile_get_property;
   gobject_class->set_property = gst_ivorbisfile_set_property;
@@ -311,25 +311,25 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
       gst_bytestream_get_status (ivorbisfile->bs, &avail, &event);
 
       switch (GST_EVENT_TYPE (event)) {
-	case GST_EVENT_EOS:
-	  GST_DEBUG ("eos");
-	  ivorbisfile->eos = TRUE;
-	  if (avail == 0) {
-	    gst_event_unref (event);
-	    return 0;
-	  }
-	  break;
-	case GST_EVENT_DISCONTINUOUS:
-	  GST_DEBUG ("discont");
-	  ivorbisfile->need_discont = TRUE;
-	default:
-	  break;
+        case GST_EVENT_EOS:
+          GST_DEBUG ("eos");
+          ivorbisfile->eos = TRUE;
+          if (avail == 0) {
+            gst_event_unref (event);
+            return 0;
+          }
+          break;
+        case GST_EVENT_DISCONTINUOUS:
+          GST_DEBUG ("discont");
+          ivorbisfile->need_discont = TRUE;
+        default:
+          break;
       }
       gst_event_unref (event);
       if (avail > 0)
-	got_bytes = gst_bytestream_peek_bytes (ivorbisfile->bs, &data, avail);
+        got_bytes = gst_bytestream_peek_bytes (ivorbisfile->bs, &data, avail);
       else
-	got_bytes = 0;
+        got_bytes = 0;
     }
   }
 
@@ -539,13 +539,13 @@ gst_ivorbisfile_loop (GstElement * element)
     ivorbisfile->total_bytes = 0;
     ivorbisfile->may_eos = FALSE;
     ivorbisfile->vf.seekable = gst_bytestream_seek (ivorbisfile->bs, 0,
-	GST_SEEK_METHOD_SET);
+        GST_SEEK_METHOD_SET);
     GST_DEBUG ("ivorbisfile: seekable: %s\n",
-	ivorbisfile->vf.seekable ? "yes" : "no");
+        ivorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom ivorbisfile data object with the callbacks we provide */
     if (ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
-	    ivorbisfile_ov_callbacks) < 0) {
+            ivorbisfile_ov_callbacks) < 0) {
       GST_ELEMENT_ERROR (element, STREAM, DECODE, (NULL), (NULL));
       return;
     }
@@ -560,45 +560,45 @@ gst_ivorbisfile_loop (GstElement * element)
     switch (ivorbisfile->seek_format) {
       case GST_FORMAT_TIME:
       {
-	gdouble seek_to = (gdouble) ivorbisfile->seek_value / GST_SECOND;
+        gdouble seek_to = (gdouble) ivorbisfile->seek_value / GST_SECOND;
 
-	if (ivorbisfile->seek_accurate) {
-	  if (ov_time_seek (&ivorbisfile->vf, seek_to) == 0) {
-	    ivorbisfile->need_discont = TRUE;
-	  }
-	} else {
-	  if (ov_time_seek_page (&ivorbisfile->vf, seek_to) == 0) {
-	    ivorbisfile->need_discont = TRUE;
-	  }
-	}
-	break;
+        if (ivorbisfile->seek_accurate) {
+          if (ov_time_seek (&ivorbisfile->vf, seek_to) == 0) {
+            ivorbisfile->need_discont = TRUE;
+          }
+        } else {
+          if (ov_time_seek_page (&ivorbisfile->vf, seek_to) == 0) {
+            ivorbisfile->need_discont = TRUE;
+          }
+        }
+        break;
       }
       case GST_FORMAT_DEFAULT:
-	if (ivorbisfile->seek_accurate) {
-	  if (ov_pcm_seek (&ivorbisfile->vf, ivorbisfile->seek_value) == 0) {
-	    ivorbisfile->need_discont = TRUE;
-	  }
-	} else {
-	  if (ov_pcm_seek_page (&ivorbisfile->vf, ivorbisfile->seek_value) == 0) {
-	    ivorbisfile->need_discont = TRUE;
-	  }
-	}
-	break;
+        if (ivorbisfile->seek_accurate) {
+          if (ov_pcm_seek (&ivorbisfile->vf, ivorbisfile->seek_value) == 0) {
+            ivorbisfile->need_discont = TRUE;
+          }
+        } else {
+          if (ov_pcm_seek_page (&ivorbisfile->vf, ivorbisfile->seek_value) == 0) {
+            ivorbisfile->need_discont = TRUE;
+          }
+        }
+        break;
       default:
-	if (ivorbisfile->seek_format == logical_stream_format) {
-	  gint64 seek_to;
+        if (ivorbisfile->seek_format == logical_stream_format) {
+          gint64 seek_to;
 
-	  seek_to = ivorbisfile->vf.offsets[ivorbisfile->seek_value];
+          seek_to = ivorbisfile->vf.offsets[ivorbisfile->seek_value];
 
-	  if (ov_raw_seek (&ivorbisfile->vf, seek_to) == 0) {
-	    ivorbisfile->need_discont = TRUE;
-	    ivorbisfile->current_link = -1;
-	  } else {
-	    g_warning ("raw seek failed");
-	  }
-	} else
-	  g_warning ("unknown seek method, implement me !");
-	break;
+          if (ov_raw_seek (&ivorbisfile->vf, seek_to) == 0) {
+            ivorbisfile->need_discont = TRUE;
+            ivorbisfile->current_link = -1;
+          } else {
+            g_warning ("raw seek failed");
+          }
+        } else
+          g_warning ("unknown seek method, implement me !");
+        break;
     }
     ivorbisfile->seek_pending = FALSE;
   }
@@ -630,7 +630,7 @@ gst_ivorbisfile_loop (GstElement * element)
     /* if the pad is not usable, don't push it out */
     if (GST_PAD_IS_USABLE (ivorbisfile->srcpad)) {
       gst_pad_push (ivorbisfile->srcpad,
-	  GST_DATA (gst_event_new (GST_EVENT_EOS)));
+          GST_DATA (gst_event_new (GST_EVENT_EOS)));
     }
     gst_element_set_eos (element);
     return;
@@ -646,13 +646,13 @@ gst_ivorbisfile_loop (GstElement * element)
 
       /* if the pad is not usable, don't push it out */
       if (GST_PAD_IS_USABLE (ivorbisfile->srcpad)) {
-	/* get stream stats */
-	samples = (gint64) (ov_pcm_tell (&ivorbisfile->vf));
+        /* get stream stats */
+        samples = (gint64) (ov_pcm_tell (&ivorbisfile->vf));
 
-	discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time,
-	    GST_FORMAT_DEFAULT, samples, NULL);
+        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time,
+            GST_FORMAT_DEFAULT, samples, NULL);
 
-	gst_pad_push (ivorbisfile->srcpad, GST_DATA (discont));
+        gst_pad_push (ivorbisfile->srcpad, GST_DATA (discont));
       }
     }
 
@@ -714,90 +714,90 @@ gst_ivorbisfile_src_convert (GstPad * pad,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-	case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value / (vi->channels * 2);
-	  break;
-	case GST_FORMAT_TIME:
-	{
-	  gint byterate = bytes_per_sample * vi->rate;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value / (vi->channels * 2);
+          break;
+        case GST_FORMAT_TIME:
+        {
+          gint byterate = bytes_per_sample * vi->rate;
 
-	  if (byterate == 0)
-	    return FALSE;
-	  *dest_value = src_value * GST_SECOND / byterate;
-	  break;
-	}
-	default:
-	  res = FALSE;
+          if (byterate == 0)
+            return FALSE;
+          *dest_value = src_value * GST_SECOND / byterate;
+          break;
+        }
+        default:
+          res = FALSE;
       }
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-	case GST_FORMAT_BYTES:
-	  *dest_value = src_value * bytes_per_sample;
-	  break;
-	case GST_FORMAT_TIME:
-	  if (vi->rate == 0)
-	    return FALSE;
-	  *dest_value = src_value * GST_SECOND / vi->rate;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * bytes_per_sample;
+          break;
+        case GST_FORMAT_TIME:
+          if (vi->rate == 0)
+            return FALSE;
+          *dest_value = src_value * GST_SECOND / vi->rate;
+          break;
+        default:
+          res = FALSE;
       }
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-	case GST_FORMAT_BYTES:
-	  scale = bytes_per_sample;
-	case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value * scale * vi->rate / GST_SECOND;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_BYTES:
+          scale = bytes_per_sample;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * scale * vi->rate / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
       }
       break;
     default:
       if (src_format == logical_stream_format) {
-	/* because we need to convert relative from 0, we have to add
-	 * all pcm totals */
-	gint i;
-	gint64 count = 0;
+        /* because we need to convert relative from 0, we have to add
+         * all pcm totals */
+        gint i;
+        gint64 count = 0;
 
-	switch (*dest_format) {
-	  case GST_FORMAT_BYTES:
-	    res = FALSE;
-	    break;
-	  case GST_FORMAT_DEFAULT:
-	    if (src_value > ivorbisfile->vf.links) {
-	      src_value = ivorbisfile->vf.links;
-	    }
-	    for (i = 0; i < src_value; i++) {
-	      vi = ov_info (&ivorbisfile->vf, i);
+        switch (*dest_format) {
+          case GST_FORMAT_BYTES:
+            res = FALSE;
+            break;
+          case GST_FORMAT_DEFAULT:
+            if (src_value > ivorbisfile->vf.links) {
+              src_value = ivorbisfile->vf.links;
+            }
+            for (i = 0; i < src_value; i++) {
+              vi = ov_info (&ivorbisfile->vf, i);
 
-	      count += ov_pcm_total (&ivorbisfile->vf, i);
-	    }
-	    *dest_value = count;
-	    break;
-	  case GST_FORMAT_TIME:
-	  {
-	    if (src_value > ivorbisfile->vf.links) {
-	      src_value = ivorbisfile->vf.links;
-	    }
-	    for (i = 0; i < src_value; i++) {
-	      vi = ov_info (&ivorbisfile->vf, i);
-	      if (vi->rate)
-		count +=
-		    ov_pcm_total (&ivorbisfile->vf, i) * GST_SECOND / vi->rate;
-	      else
-		count += ov_time_total (&ivorbisfile->vf, i) * GST_SECOND;
-	    }
-	    /* we use the pcm totals to get the total time, it's more accurate */
-	    *dest_value = count;
-	    break;
-	  }
-	  default:
-	    res = FALSE;
-	}
+              count += ov_pcm_total (&ivorbisfile->vf, i);
+            }
+            *dest_value = count;
+            break;
+          case GST_FORMAT_TIME:
+          {
+            if (src_value > ivorbisfile->vf.links) {
+              src_value = ivorbisfile->vf.links;
+            }
+            for (i = 0; i < src_value; i++) {
+              vi = ov_info (&ivorbisfile->vf, i);
+              if (vi->rate)
+                count +=
+                    ov_pcm_total (&ivorbisfile->vf, i) * GST_SECOND / vi->rate;
+              else
+                count += ov_time_total (&ivorbisfile->vf, i) * GST_SECOND;
+            }
+            /* we use the pcm totals to get the total time, it's more accurate */
+            *dest_value = count;
+            break;
+          }
+          default:
+            res = FALSE;
+        }
       } else
-	res = FALSE;
+        res = FALSE;
       break;
   }
   return res;
@@ -816,34 +816,34 @@ gst_ivorbisfile_sink_convert (GstPad * pad,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-	case GST_FORMAT_TIME:
-	  break;
-	default:
-	  if (*dest_format == logical_stream_format) {
-	  } else
-	    res = FALSE;
+        case GST_FORMAT_TIME:
+          break;
+        default:
+          if (*dest_format == logical_stream_format) {
+          } else
+            res = FALSE;
       }
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-	case GST_FORMAT_BYTES:
-	  break;
-	default:
-	  if (*dest_format == logical_stream_format) {
-	  } else
-	    res = FALSE;
+        case GST_FORMAT_BYTES:
+          break;
+        default:
+          if (*dest_format == logical_stream_format) {
+          } else
+            res = FALSE;
       }
     default:
       if (src_format == logical_stream_format) {
-	switch (*dest_format) {
-	  case GST_FORMAT_TIME:
-	    break;
-	  case GST_FORMAT_BYTES:
-	    break;
-	  default:
-	    res = FALSE;
-	}
+        switch (*dest_format) {
+          case GST_FORMAT_TIME:
+            break;
+          case GST_FORMAT_BYTES:
+            break;
+          default:
+            res = FALSE;
+        }
       } else
-	res = FALSE;
+        res = FALSE;
       break;
   }
 
@@ -858,6 +858,7 @@ gst_ivorbisfile_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0
   };
+
   return types;
 }
 
@@ -878,67 +879,67 @@ gst_ivorbisfile_src_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  if (ivorbisfile->vf.seekable)
-	    *value = ov_pcm_total (&ivorbisfile->vf, -1);
-	  else
-	    return FALSE;
-	  break;
-	case GST_FORMAT_BYTES:
-	  if (ivorbisfile->vf.seekable)
-	    *value = ov_pcm_total (&ivorbisfile->vf, -1) * vi->channels * 2;
-	  else
-	    return FALSE;
-	  break;
-	case GST_FORMAT_TIME:
-	  if (ivorbisfile->vf.seekable)
-	    *value =
-		(gint64) (ov_time_total (&ivorbisfile->vf, -1) * GST_SECOND);
-	  else
-	    return FALSE;
-	  break;
-	default:
-	  if (*format == logical_stream_format) {
-	    if (ivorbisfile->vf.seekable)
-	      *value = ivorbisfile->vf.links;
-	    else
-	      return FALSE;
-	  } else
-	    res = FALSE;
-	  break;
+        case GST_FORMAT_DEFAULT:
+          if (ivorbisfile->vf.seekable)
+            *value = ov_pcm_total (&ivorbisfile->vf, -1);
+          else
+            return FALSE;
+          break;
+        case GST_FORMAT_BYTES:
+          if (ivorbisfile->vf.seekable)
+            *value = ov_pcm_total (&ivorbisfile->vf, -1) * vi->channels * 2;
+          else
+            return FALSE;
+          break;
+        case GST_FORMAT_TIME:
+          if (ivorbisfile->vf.seekable)
+            *value =
+                (gint64) (ov_time_total (&ivorbisfile->vf, -1) * GST_SECOND);
+          else
+            return FALSE;
+          break;
+        default:
+          if (*format == logical_stream_format) {
+            if (ivorbisfile->vf.seekable)
+              *value = ivorbisfile->vf.links;
+            else
+              return FALSE;
+          } else
+            res = FALSE;
+          break;
       }
       break;
     }
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  if (ivorbisfile->vf.seekable)
-	    *value = (gint64) (ov_time_tell (&ivorbisfile->vf) * GST_SECOND);
-	  else
-	    *value = ivorbisfile->total_bytes * GST_SECOND
-		/ (vi->rate * vi->channels * 2);
-	  break;
-	case GST_FORMAT_BYTES:
-	  if (ivorbisfile->vf.seekable)
-	    *value = ov_pcm_tell (&ivorbisfile->vf) * vi->channels * 2;
-	  else
-	    *value = ivorbisfile->total_bytes;
-	  break;
-	case GST_FORMAT_DEFAULT:
-	  if (ivorbisfile->vf.seekable)
-	    *value = ov_pcm_tell (&ivorbisfile->vf);
-	  else
-	    *value = ivorbisfile->total_bytes / (vi->channels * 2);
-	  break;
-	default:
-	  if (*format == logical_stream_format) {
-	    if (ivorbisfile->vf.seekable)
-	      *value = ivorbisfile->current_link;
-	    else
-	      return FALSE;
-	  } else
-	    res = FALSE;
-	  break;
+        case GST_FORMAT_TIME:
+          if (ivorbisfile->vf.seekable)
+            *value = (gint64) (ov_time_tell (&ivorbisfile->vf) * GST_SECOND);
+          else
+            *value = ivorbisfile->total_bytes * GST_SECOND
+                / (vi->rate * vi->channels * 2);
+          break;
+        case GST_FORMAT_BYTES:
+          if (ivorbisfile->vf.seekable)
+            *value = ov_pcm_tell (&ivorbisfile->vf) * vi->channels * 2;
+          else
+            *value = ivorbisfile->total_bytes;
+          break;
+        case GST_FORMAT_DEFAULT:
+          if (ivorbisfile->vf.seekable)
+            *value = ov_pcm_tell (&ivorbisfile->vf);
+          else
+            *value = ivorbisfile->total_bytes / (vi->channels * 2);
+          break;
+        default:
+          if (*format == logical_stream_format) {
+            if (ivorbisfile->vf.seekable)
+              *value = ivorbisfile->current_link;
+            else
+              return FALSE;
+          } else
+            res = FALSE;
+          break;
       }
       break;
     default:
@@ -956,6 +957,7 @@ gst_ivorbisfile_get_event_masks (GstPad * pad)
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_ACCURATE},
     {0,}
   };
+
   return masks;
 }
 
@@ -976,52 +978,52 @@ gst_ivorbisfile_src_event (GstPad * pad, GstEvent * event)
       GstFormat format;
 
       GST_DEBUG ("ivorbisfile: handling seek event on pad %s:%s",
-	  GST_DEBUG_PAD_NAME (pad));
+          GST_DEBUG_PAD_NAME (pad));
       if (!ivorbisfile->vf.seekable) {
-	gst_event_unref (event);
-	GST_DEBUG ("vorbis stream is not seekable");
-	return FALSE;
+        gst_event_unref (event);
+        GST_DEBUG ("vorbis stream is not seekable");
+        return FALSE;
       }
 
       offset = GST_EVENT_SEEK_OFFSET (event);
       format = GST_EVENT_SEEK_FORMAT (event);
 
       switch (format) {
-	case GST_FORMAT_TIME:
-	  ivorbisfile->seek_pending = TRUE;
-	  ivorbisfile->seek_value = offset;
-	  ivorbisfile->seek_format = format;
-	  ivorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event)
-	      & GST_SEEK_FLAG_ACCURATE;
-	  break;
-	case GST_FORMAT_BYTES:
-	  vi = ov_info (&ivorbisfile->vf, -1);
-	  if (vi->channels == 0) {
-	    GST_DEBUG ("vorbis stream has 0 channels ?");
-	    res = FALSE;
-	    goto done;
-	  }
-	  offset /= vi->channels * 2;
-	  /* fallthrough */
-	case GST_FORMAT_DEFAULT:
-	  ivorbisfile->seek_pending = TRUE;
-	  ivorbisfile->seek_value = offset;
-	  ivorbisfile->seek_format = format;
-	  ivorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event)
-	      & GST_SEEK_FLAG_ACCURATE;
-	  break;
-	default:
-	  if (format == logical_stream_format) {
-	    ivorbisfile->seek_pending = TRUE;
-	    ivorbisfile->seek_value = offset;
-	    ivorbisfile->seek_format = format;
-	    ivorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event)
-		& GST_SEEK_FLAG_ACCURATE;
-	  } else {
-	    GST_DEBUG ("unhandled seek format");
-	    res = FALSE;
-	  }
-	  break;
+        case GST_FORMAT_TIME:
+          ivorbisfile->seek_pending = TRUE;
+          ivorbisfile->seek_value = offset;
+          ivorbisfile->seek_format = format;
+          ivorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event)
+              & GST_SEEK_FLAG_ACCURATE;
+          break;
+        case GST_FORMAT_BYTES:
+          vi = ov_info (&ivorbisfile->vf, -1);
+          if (vi->channels == 0) {
+            GST_DEBUG ("vorbis stream has 0 channels ?");
+            res = FALSE;
+            goto done;
+          }
+          offset /= vi->channels * 2;
+          /* fallthrough */
+        case GST_FORMAT_DEFAULT:
+          ivorbisfile->seek_pending = TRUE;
+          ivorbisfile->seek_value = offset;
+          ivorbisfile->seek_format = format;
+          ivorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event)
+              & GST_SEEK_FLAG_ACCURATE;
+          break;
+        default:
+          if (format == logical_stream_format) {
+            ivorbisfile->seek_pending = TRUE;
+            ivorbisfile->seek_value = offset;
+            ivorbisfile->seek_format = format;
+            ivorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event)
+                & GST_SEEK_FLAG_ACCURATE;
+          } else {
+            GST_DEBUG ("unhandled seek format");
+            res = FALSE;
+          }
+          break;
       }
       break;
     }

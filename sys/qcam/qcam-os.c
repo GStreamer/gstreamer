@@ -82,7 +82,7 @@ int
 enable_ports (const struct qcam *q)
 {
   if (q->port < 0x278)
-    return 1;			/* Better safe than sorry */
+    return 1;                   /* Better safe than sorry */
   if (q->port > 0x3bc)
     return 1;
   return (ioperm (q->port, 3, 1));
@@ -115,7 +115,7 @@ qc_lock_wait (struct qcam *q, int wait)
 #if 1
   static struct flock sfl;
 
-  if (-1 == q->fd) {		/* we've yet to open the lock file */
+  if (-1 == q->fd) {            /* we've yet to open the lock file */
     static char lockfile[128];
 
     sprintf (lockfile, "/var/run/LOCK.qcam.0x%x", q->port);
@@ -131,7 +131,7 @@ qc_lock_wait (struct qcam *q, int wait)
     sfl.l_type = F_WRLCK;
   }
 #ifdef TESTING
-  if (0 != fcntl (q->fd, F_SETLK, &sfl))	/* non-blocking set lock */
+  if (0 != fcntl (q->fd, F_SETLK, &sfl))        /* non-blocking set lock */
 #else
   if (0 != fcntl (q->fd, wait ? F_SETLKW : F_SETLK, &sfl))
 #endif
@@ -142,9 +142,9 @@ qc_lock_wait (struct qcam *q, int wait)
       return 1;
 
     fprintf (stderr, "%s - %d: waiting for exclusive lock on fd %d...\n",
-	__FILE__, __LINE__, q->fd);
+        __FILE__, __LINE__, q->fd);
 
-    if (0 != fcntl (q->fd, F_SETLKW, &sfl))	/* "blocking" set lock */
+    if (0 != fcntl (q->fd, F_SETLKW, &sfl))     /* "blocking" set lock */
 #endif
     {
       perror ("fcntl");
@@ -202,7 +202,7 @@ qc_unlock (struct qcam *q)
   static struct flock sfl;
 
 #if 1
-  if (-1 == q->fd) {		/* port was not locked */
+  if (-1 == q->fd) {            /* port was not locked */
     return 1;
   }
 
@@ -220,7 +220,7 @@ qc_unlock (struct qcam *q)
   char lockfile[128];
 
   sprintf (lockfile, "/var/run/LOCK.qcam.0x%x", q->port);
-  unlink (lockfile);		/* What would I do with an error? */
+  unlink (lockfile);            /* What would I do with an error? */
 #endif
 
   return 0;

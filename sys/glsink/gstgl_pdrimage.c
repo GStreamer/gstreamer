@@ -55,7 +55,7 @@ typedef struct _GstNvImage GstNvImage;
 struct _GstNvImage
 {
   GstImageData data;
-  int slot;			// < AGP_BUFSLOTS: allocated from AGP mem, otherwise from CPU mem
+  int slot;                     // < AGP_BUFSLOTS: allocated from AGP mem, otherwise from CPU mem
   GstGLImageConnection *conn;
 };
 
@@ -143,10 +143,10 @@ gst_gl_nvimage_get_caps (GstImageInfo * info)
   }
 
   caps = gst_caps_append (caps, GST_CAPS_NEW ("xvimage_caps",
-	  "video/raw",
-	  "format", GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'C', '1', '2')),
-	  "width", GST_PROPS_INT_RANGE (0, 1024),
-	  "height", GST_PROPS_INT_RANGE (0, 1024))
+          "video/raw",
+          "format", GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'C', '1', '2')),
+          "width", GST_PROPS_INT_RANGE (0, 1024),
+          "height", GST_PROPS_INT_RANGE (0, 1024))
       );
   return caps;
 }
@@ -178,7 +178,7 @@ gst_gl_nvimage_set_caps (GstImageInfo * info, GstCaps * caps)
     GST_DEBUG (GST_CAT_PLUGIN_INFO, "GL_NVImage: Format is invalid !\n");
     return NULL;
   }
-  if (0)			//conn->port == (XvPortID) -1)
+  if (0)                        //conn->port == (XvPortID) -1)
   {
     /* this happens if the plugin can't handle the caps, so no warning */
     g_free (conn);
@@ -216,15 +216,15 @@ gst_gl_nvimage_get_image (GstImageInfo * info, GstImageConnection * conn)
 
   image->data.size = nvconn->w * nvconn->h * 3 / 2;
 
-  if (slot < AGP_BUFSLOTS)	// found an AGP buffer slot
+  if (slot < AGP_BUFSLOTS)      // found an AGP buffer slot
   {
     image->data.data = nvconn->m_memory + slot * YUVTEX_SIZE;
-    image->slot = slot;		// store for freeing
-    nvconn->m_bufslots[slot] = 1;	// it is now taken
+    image->slot = slot;         // store for freeing
+    nvconn->m_bufslots[slot] = 1;       // it is now taken
   } else {
     g_warning ("Allocating from main memory !");
     image->data.data = g_malloc (image->data.size);
-    image->slot = AGP_BUFSLOTS;	// no AGP slot
+    image->slot = AGP_BUFSLOTS; // no AGP slot
   }
   image->conn = nvconn;
 
@@ -325,13 +325,13 @@ gst_gl_nvimage_open_conn (GstImageConnection * conn, GstImageInfo * info)
 
   if (!xconn->m_memory) {
     printf
-	("Unable to acquire graphics card mem... will acquire in normal memory.\n");
+        ("Unable to acquire graphics card mem... will acquire in normal memory.\n");
     for (slot = 0; slot < AGP_BUFSLOTS; slot++)
       xconn->m_bufslots[slot] = 1;
   } else {
     // maybe this fast writable memory, awfully slow to read from, though
     glPixelDataRangeNV (GL_WRITE_PIXEL_DATA_RANGE_NV,
-	AGP_BUFSLOTS * YUVTEX_SIZE, xconn->m_memory);
+        AGP_BUFSLOTS * YUVTEX_SIZE, xconn->m_memory);
     glEnableClientState (GL_WRITE_PIXEL_DATA_RANGE_NV);
 
     for (slot = 0; slot < AGP_BUFSLOTS; slot++)

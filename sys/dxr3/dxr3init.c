@@ -34,11 +34,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "dxr3videosink",
-	  GST_RANK_NONE, GST_TYPE_DXR3VIDEOSINK) ||
+          GST_RANK_NONE, GST_TYPE_DXR3VIDEOSINK) ||
       !gst_element_register (plugin, "dxr3audiosink",
-	  GST_RANK_NONE, GST_TYPE_DXR3AUDIOSINK) ||
+          GST_RANK_NONE, GST_TYPE_DXR3AUDIOSINK) ||
       !gst_element_register (plugin, "dxr3spusink",
-	  GST_RANK_NONE, GST_TYPE_DXR3SPUSINK))
+          GST_RANK_NONE, GST_TYPE_DXR3SPUSINK))
     return FALSE;
 
 #ifdef ENABLE_NLS

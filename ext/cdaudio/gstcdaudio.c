@@ -134,9 +134,10 @@ gst_cdaudio_get_type (void)
       (GInstanceInitFunc) gst_cdaudio_init,
       NULL
     };
+
     gst_cdaudio_type =
-	g_type_register_static (GST_TYPE_BIN, "GstCDAudio", &gst_cdaudio_info,
-	0);
+        g_type_register_static (GST_TYPE_BIN, "GstCDAudio", &gst_cdaudio_info,
+        0);
 
     track_format = gst_format_register ("track", "CD track");
     sector_format = gst_format_register ("sector", "CD sector");
@@ -163,22 +164,22 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
 
   g_object_class_install_property (gobject_klass, ARG_DEVICE,
       g_param_spec_string ("device", "Device", "CDROM device",
-	  NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_DISCID,
       g_param_spec_ulong ("discid", "Disc ID", "CDDB Disc ID",
-	  0, G_MAXULONG, 0, G_PARAM_READABLE));
+          0, G_MAXULONG, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_VOLUME_FL,
       g_param_spec_int ("volume_fl", "Volume fl", "Front left volume",
-	  0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_VOLUME_FR,
       g_param_spec_int ("volume_fr", "Volume fr", "Front right volume",
-	  0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_VOLUME_BL,
       g_param_spec_int ("volume_bl", "Volume bl", "Back left volume",
-	  0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_VOLUME_BR,
       g_param_spec_int ("volume_br", "Volume br", "Back right volume",
-	  0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE));
 
   gst_cdaudio_signals[TRACK_CHANGE] =
       g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass),
@@ -290,10 +291,10 @@ print_track_info (GstCDAudio * cdaudio)
 
   for (i = 0; i < cdaudio->info.disc_total_tracks; i++) {
     g_print ("%d %d %d %d:%02d\n", i,
-	cdaudio->info.disc_track[i].track_length.frames,
-	cdaudio->info.disc_track[i].track_pos.frames,
-	cdaudio->info.disc_track[i].track_length.minutes,
-	cdaudio->info.disc_track[i].track_length.seconds);
+        cdaudio->info.disc_track[i].track_length.frames,
+        cdaudio->info.disc_track[i].track_pos.frames,
+        cdaudio->info.disc_track[i].track_length.minutes,
+        cdaudio->info.disc_track[i].track_length.seconds);
   }
 }
 
@@ -310,14 +311,14 @@ gst_cdaudio_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       cdaudio->cd_desc = cd_init_device (cdaudio->device);
       if (cdaudio->cd_desc < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
 
       /* close tray */
       if (cd_close (cdaudio->cd_desc) < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
 
       if (cd_stat (cdaudio->cd_desc, &cdaudio->info) < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
 
       print_track_info (cdaudio);
 
@@ -331,12 +332,12 @@ gst_cdaudio_change_state (GstElement * element)
       gint res;
 
       if (cdaudio->was_playing)
-	res = cd_resume (cdaudio->cd_desc);
+        res = cd_resume (cdaudio->cd_desc);
       else
-	res = cd_play (cdaudio->cd_desc, 1);
+        res = cd_play (cdaudio->cd_desc, 1);
 
       if (res < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
 
       cdaudio->was_playing = TRUE;
       g_timer_start (cdaudio->timer);
@@ -344,14 +345,14 @@ gst_cdaudio_change_state (GstElement * element)
     }
     case GST_STATE_PLAYING_TO_PAUSED:
       if (cd_pause (cdaudio->cd_desc) < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       g_timer_stop (cdaudio->timer);
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (cd_stop (cdaudio->cd_desc) < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       if (cd_finish (cdaudio->cd_desc) < 0)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -386,15 +387,15 @@ gst_cdaudio_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       switch (GST_EVENT_SEEK_FORMAT (event)) {
-	case GST_FORMAT_TIME:
-	{
-	  cd_play_pos (cdaudio->cd_desc, 1,
-	      GST_EVENT_SEEK_OFFSET (event) / (60 * GST_SECOND));
-	  break;
-	}
-	default:
-	  res = FALSE;
-	  break;
+        case GST_FORMAT_TIME:
+        {
+          cd_play_pos (cdaudio->cd_desc, 1,
+              GST_EVENT_SEEK_OFFSET (event) / (60 * GST_SECOND));
+          break;
+        }
+        default:
+          res = FALSE;
+          break;
       }
       break;
     default:
@@ -412,8 +413,8 @@ gst_cdaudio_get_formats (GstElement * element)
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
     GST_FORMAT_DEFAULT,
-    0,				/* fillted below */
-    0,				/* fillted below */
+    0,                          /* fillted below */
+    0,                          /* fillted below */
     0,
   };
 
@@ -441,6 +442,7 @@ gst_cdaudio_get_query_types (GstElement * element)
     GST_QUERY_SEGMENT_END,
     0
   };
+
   return query_types;
 }
 
@@ -465,36 +467,36 @@ gst_cdaudio_query (GstElement * element, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value = (cdaudio->info.disc_length.minutes * 60 +
-	      cdaudio->info.disc_length.seconds) * GST_SECOND;
-	  break;
-	default:
-	{
-	  if (*format == track_format) {
-	    *value = cdaudio->info.disc_total_tracks;
-	  } else {
-	    res = FALSE;
-	  }
-	  break;
-	}
+        case GST_FORMAT_TIME:
+          *value = (cdaudio->info.disc_length.minutes * 60 +
+              cdaudio->info.disc_length.seconds) * GST_SECOND;
+          break;
+        default:
+        {
+          if (*format == track_format) {
+            *value = cdaudio->info.disc_total_tracks;
+          } else {
+            res = FALSE;
+          }
+          break;
+        }
       }
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value = (cdaudio->info.disc_time.minutes * 60 +
-	      cdaudio->info.disc_time.seconds) * GST_SECOND;
-	  break;
-	default:
-	{
-	  if (*format == track_format) {
-	    *value = cdaudio->info.disc_current_track;
-	  } else {
-	    res = FALSE;
-	  }
-	  break;
-	}
+        case GST_FORMAT_TIME:
+          *value = (cdaudio->info.disc_time.minutes * 60 +
+              cdaudio->info.disc_time.seconds) * GST_SECOND;
+          break;
+        default:
+        {
+          if (*format == track_format) {
+            *value = cdaudio->info.disc_current_track;
+          } else {
+            res = FALSE;
+          }
+          break;
+        }
       }
       break;
     default:

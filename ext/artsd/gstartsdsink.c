@@ -91,9 +91,10 @@ gst_artsdsink_get_type (void)
       0,
       (GInstanceInitFunc) gst_artsdsink_init,
     };
+
     artsdsink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstArtsdsink",
-	&artsdsink_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstArtsdsink",
+        &artsdsink_info, 0);
   }
   return artsdsink_type;
 }
@@ -119,9 +120,9 @@ gst_artsdsink_class_init (GstArtsdsinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));   /* CHECKME */
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));    /* CHECKME */
 
   gobject_class->set_property = gst_artsdsink_set_property;
   gobject_class->get_property = gst_artsdsink_get_property;
@@ -134,7 +135,7 @@ gst_artsdsink_init (GstArtsdsink * artsdsink)
 {
   artsdsink->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-	  (artsdsink), "sink"), "sink");
+          (artsdsink), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (artsdsink), artsdsink->sinkpad);
   gst_pad_set_chain_function (artsdsink->sinkpad, gst_artsdsink_chain);
   gst_pad_set_link_function (artsdsink->sinkpad, gst_artsdsink_link);
@@ -190,24 +191,24 @@ gst_artsdsink_chain (GstPad * pad, GstData * _data)
 
   if (GST_BUFFER_DATA (buf) != NULL) {
     gst_trace_add_entry (NULL, 0, GPOINTER_TO_INT (buf),
-	"artsdsink: writing to server");
+        "artsdsink: writing to server");
     if (!artsdsink->mute && artsdsink->connected) {
       int bytes;
       void *bufptr = GST_BUFFER_DATA (buf);
       int bufsize = GST_BUFFER_SIZE (buf);
 
       GST_DEBUG ("artsdsink: stream=%p data=%p size=%d",
-	  artsdsink->stream, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+          artsdsink->stream, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
       do {
-	bytes = arts_write (artsdsink->stream, bufptr, bufsize);
-	if (bytes < 0) {
-	  fprintf (stderr, "arts_write error: %s\n", arts_error_text (bytes));
-	  gst_buffer_unref (buf);
-	  return;
-	}
-	bufptr += bytes;
-	bufsize -= bytes;
+        bytes = arts_write (artsdsink->stream, bufptr, bufsize);
+        if (bytes < 0) {
+          fprintf (stderr, "arts_write error: %s\n", arts_error_text (bytes));
+          gst_buffer_unref (buf);
+          return;
+        }
+        bufptr += bytes;
+        bufsize -= bytes;
       } while (bufsize > 0);
     }
   }
@@ -230,11 +231,11 @@ gst_artsdsink_set_property (GObject * object, guint prop_id,
       break;
     case ARG_NAME:
       if (artsdsink->connect_name != NULL)
-	g_free (artsdsink->connect_name);
+        g_free (artsdsink->connect_name);
       if (g_value_get_string (value) == NULL)
-	artsdsink->connect_name = NULL;
+        artsdsink->connect_name = NULL;
       else
-	artsdsink->connect_name = g_strdup (g_value_get_string (value));
+        artsdsink->connect_name = g_strdup (g_value_get_string (value));
       break;
     default:
       break;
@@ -268,7 +269,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "artsdsink", GST_RANK_NONE,
-	  GST_TYPE_ARTSDSINK))
+          GST_TYPE_ARTSDSINK))
     return FALSE;
 
   return TRUE;
@@ -337,7 +338,7 @@ gst_artsdsink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_ARTSDSINK_OPEN)) {
       if (!gst_artsdsink_open_audio (GST_ARTSDSINK (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

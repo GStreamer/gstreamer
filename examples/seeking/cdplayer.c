@@ -47,7 +47,8 @@ typedef struct
 {
   const gchar *name;
   const GstFormat format;
-} seek_format;
+}
+seek_format;
 
 static seek_format seek_formats[] = {
   {"tim", GST_FORMAT_TIME},
@@ -76,9 +77,9 @@ query_durations ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
       if (res) {
-	g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
       } else {
-	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
       i++;
     }
@@ -105,9 +106,9 @@ query_positions ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
       if (res) {
-	g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
       } else {
-	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
       i++;
     }
@@ -137,7 +138,7 @@ update_scale (gpointer data)
   if (stats) {
     if (clock)
       g_print ("clock:                  %13llu  (%s)\n", position,
-	  gst_object_get_name (GST_OBJECT (clock)));
+          gst_object_get_name (GST_OBJECT (clock)));
     query_durations ();
     query_positions ();
   }
@@ -184,7 +185,7 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 
     g_print ("seek to %lld on element %s\n", real, GST_ELEMENT_NAME (seekable));
     s_event = gst_event_new_seek (GST_FORMAT_TIME |
-	GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, real);
+        GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_element_send_event (seekable, s_event);
 
@@ -208,7 +209,7 @@ play_cb (GtkButton * button, gpointer data)
     if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
       gtk_idle_add ((GtkFunction) iterate, pipeline);
     update_id =
-	gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+        gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
 }
 
@@ -237,7 +238,7 @@ main (int argc, char **argv)
       *play_button, *pause_button, *stop_button, *hscale;
   struct poptOption options[] = {
     {"stats", 's', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &stats, 0,
-	"Show element stats", NULL},
+        "Show element stats", NULL},
     POPT_TABLEEND
   };
 

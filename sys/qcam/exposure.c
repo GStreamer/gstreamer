@@ -223,7 +223,7 @@ qcip_autoexposure (struct qcam *q, scanbuf * scan)
 
       /* set target if it has not been explicitly set */
       if (luminance_std_target == -1) {
-	luminance_std_target = q->bpp == 6 ? 10 : 2;
+        luminance_std_target = q->bpp == 6 ? 10 : 2;
       }
 
       /* Adjust contrast to reach target luminance standard deviation */
@@ -231,15 +231,15 @@ qcip_autoexposure (struct qcam *q, scanbuf * scan)
       lum_std_max = luminance_std_target + luminance_std_tolerance;
 
       if (lum_std < lum_std_min || lum_std > lum_std_max) {
-	ret = QCIP_XPSR_RSCN;
-	if (qc_setcontrast (q,
-		luminance_std_target - lum_std + qc_getcontrast (q))) {
-	  return QCIP_XPSR_ERR;
-	}
+        ret = QCIP_XPSR_RSCN;
+        if (qc_setcontrast (q,
+                luminance_std_target - lum_std + qc_getcontrast (q))) {
+          return QCIP_XPSR_ERR;
+        }
       }
 #ifdef DEBUG
       fprintf (stderr, "Luminance std/target/tolerance: %d/%d/%d\n",
-	  lum_std, luminance_std_target, luminance_std_tolerance);
+          lum_std, luminance_std_target, luminance_std_tolerance);
 #endif
 
       break;

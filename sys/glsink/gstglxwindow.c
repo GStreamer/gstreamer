@@ -17,7 +17,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "gstglsink.h"
-#include <string.h>		/* strncmp */
+#include <string.h>             /* strncmp */
 
 /* attributes for a single buffered visual in RGBA format with at least
  * 4 bits per color and a 16 bit depth buffer */
@@ -41,9 +41,9 @@ static int attrListDbl[] = {
 };
 
 
-GLfloat LightAmbient[] = { 0.1, 0.1, 0.1, 1.0 };	/* reddish ambient light  */
-GLfloat LightDiffuse[] = { 0.6, 0.6, 0.6, 1.0 };	/* bluish  diffuse light. */
-GLfloat LightPosition[] = { 1.5, 1.5, 1.5, 0.0 };	/* position */
+GLfloat LightAmbient[] = { 0.1, 0.1, 0.1, 1.0 };        /* reddish ambient light  */
+GLfloat LightDiffuse[] = { 0.6, 0.6, 0.6, 1.0 };        /* bluish  diffuse light. */
+GLfloat LightPosition[] = { 1.5, 1.5, 1.5, 0.0 };       /* position */
 
 
 void
@@ -202,10 +202,10 @@ gst_glxwindow_new (GstElement * sink)
   {
     /* create a window in window mode */
     new->attr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |
-	StructureNotifyMask;
+        StructureNotifyMask;
     new->win = XCreateWindow (new->dpy, RootWindow (new->dpy, vi->screen),
-	new->x, new->y, new->width, new->height, 0, vi->depth, InputOutput,
-	vi->visual, CWBorderPixel | CWColormap | CWEventMask, &new->attr);
+        new->x, new->y, new->width, new->height, 0, vi->depth, InputOutput,
+        vi->visual, CWBorderPixel | CWColormap | CWEventMask, &new->attr);
     if (!new->win) {
       g_warning ("create window failed\n");
       g_free (new);
@@ -215,7 +215,7 @@ gst_glxwindow_new (GstElement * sink)
     wmDelete = XInternAtom (new->dpy, "WM_DELETE_WINDOW", True);
     XSetWMProtocols (new->dpy, new->win, &wmDelete, 1);
     XSetStandardProperties (new->dpy, new->win, title,
-	title, None, NULL, 0, NULL);
+        title, None, NULL, 0, NULL);
     XMapRaised (new->dpy, new->win);
   }
   /* connect the glx-context to the window */
@@ -238,14 +238,14 @@ gst_glxwindow_new (GstElement * sink)
   glClearDepth (1.0f);
   glClearColor (0, 0, 0, 0);
 
-  glLightfv (GL_LIGHT0, GL_AMBIENT, LightAmbient);	/*  add lighting. (ambient) */
-  glLightfv (GL_LIGHT0, GL_DIFFUSE, LightDiffuse);	/*  add lighting. (diffuse). */
-  glLightfv (GL_LIGHT0, GL_POSITION, LightPosition);	/*  set light position. */
+  glLightfv (GL_LIGHT0, GL_AMBIENT, LightAmbient);      /*  add lighting. (ambient) */
+  glLightfv (GL_LIGHT0, GL_DIFFUSE, LightDiffuse);      /*  add lighting. (diffuse). */
+  glLightfv (GL_LIGHT0, GL_POSITION, LightPosition);    /*  set light position. */
 
   //glEnable(GL_LIGHT0);                                        // Quick And Dirty Lighting (Assumes Light0 Is Set Up)
   //glEnable(GL_LIGHTING);                                      // Enable Lighting
-  glDisable (GL_COLOR_MATERIAL);	// Enable Material Coloring
-  glEnable (GL_AUTO_NORMAL);	// let OpenGL generate the Normals
+  glDisable (GL_COLOR_MATERIAL);        // Enable Material Coloring
+  glEnable (GL_AUTO_NORMAL);    // let OpenGL generate the Normals
 
   glDisable (GL_BLEND);
 

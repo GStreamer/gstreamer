@@ -96,7 +96,7 @@ gst_videodrop_get_type (void)
     };
 
     videodrop_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstVideodrop", &videodrop_info, 0);
+        "GstVideodrop", &videodrop_info, 0);
   }
 
   return videodrop_type;
@@ -124,7 +124,7 @@ gst_videodrop_class_init (GstVideodropClass * klass)
 
   g_object_class_install_property (object_class, ARG_SPEED,
       g_param_spec_float ("speed", "Speed",
-	  "Output speed (relative to input)", 0.01, 100, 1, G_PARAM_READWRITE));
+          "Output speed (relative to input)", 0.01, 100, 1, G_PARAM_READWRITE));
 
   object_class->set_property = gst_videodrop_set_property;
   object_class->get_property = gst_videodrop_get_property;
@@ -151,7 +151,7 @@ gst_videodrop_getcaps (GstPad * pad)
     structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
-	"framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
   }
 
   return caps;
@@ -244,13 +244,13 @@ gst_videodrop_chain (GstPad * pad, GstData * data)
       gint64 time;
 
       if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-	videodrop->time_adjust = time;
-	videodrop->total = videodrop->pass = 0;
+        videodrop->time_adjust = time;
+        videodrop->total = videodrop->pass = 0;
       } else {
-	GST_ELEMENT_ERROR (videodrop, STREAM, TOO_LAZY, (NULL),
-	    ("Received discont, but no time information"));
-	gst_event_unref (event);
-	return;
+        GST_ELEMENT_ERROR (videodrop, STREAM, TOO_LAZY, (NULL),
+            ("Received discont, but no time information"));
+        gst_event_unref (event);
+        return;
       }
     }
 
@@ -262,7 +262,7 @@ gst_videodrop_chain (GstPad * pad, GstData * data)
 
   videodrop->total++;
   while (((GST_BUFFER_TIMESTAMP (buf) - videodrop->time_adjust) *
-	  videodrop->to_fps * videodrop->speed / GST_SECOND) >=
+          videodrop->to_fps * videodrop->speed / GST_SECOND) >=
       videodrop->pass) {
     /* since we write to the struct (time/duration), we need a new struct,
      * but we don't want to copy around data - a subbuffer is the easiest
@@ -271,7 +271,7 @@ gst_videodrop_chain (GstPad * pad, GstData * data)
 
     /* adjust timestamp/duration and push forward */
     GST_BUFFER_TIMESTAMP (copy) = videodrop->time_adjust / videodrop->speed +
-	GST_SECOND * videodrop->pass / videodrop->to_fps;
+        GST_SECOND * videodrop->pass / videodrop->to_fps;
     GST_BUFFER_DURATION (copy) = GST_SECOND / videodrop->to_fps;
     gst_pad_push (videodrop->srcpad, GST_DATA (copy));
 

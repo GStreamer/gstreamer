@@ -22,7 +22,7 @@ played (GstElement * pod, gpointer data)
 
   g_print ("Played beat at %02u, beats are ",
       (guint) (gst_clock_get_time (element_clock) / GST_SECOND *
-	  (GTK_ADJUSTMENT (speed_adj))->value) % NUM_BEATS);
+          (GTK_ADJUSTMENT (speed_adj))->value) % NUM_BEATS);
 
   for (i = 0; i <= NUM_BEATS / 32; i++)
     g_print ("%08x ", beats[i]);
@@ -120,7 +120,7 @@ setup_gui (void)
 
   for (i = 0; i < NUM_BEATS; i++)
     beat_button[i] =
-	gtk_toggle_button_new_with_label (g_strdup_printf ("%2d", i + 1));
+        gtk_toggle_button_new_with_label (g_strdup_printf ("%2d", i + 1));
 
   speed_adj = gtk_adjustment_new (1, 0.0, 10.0, 0.1, 1.0, 0.0);
   speed_scale = gtk_hscale_new (GTK_ADJUSTMENT (speed_adj));
@@ -156,7 +156,7 @@ setup_gui (void)
       NULL);
   for (i = 0; i < NUM_BEATS; i++)
     g_signal_connect (G_OBJECT (beat_button[i]), "toggled", G_CALLBACK (beat),
-	GUINT_TO_POINTER (i));
+        GUINT_TO_POINTER (i));
 
   /* show the gui. */
   gtk_widget_show_all (window);

@@ -28,8 +28,8 @@
 #include <gst/audio/audio.h>
 
 #include "gstladspa.h"
-#include <ladspa.h>		/* main ladspa sdk include file */
-#include "utils.h"		/* ladspa sdk utility functions */
+#include <ladspa.h>             /* main ladspa sdk include file */
+#include "utils.h"              /* ladspa sdk utility functions */
 
 /* 1.0 and the 1.1 preliminary headers don't define a version, but 1.1 final
    does */
@@ -107,13 +107,13 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
 
       /* the factories take ownership of the name */
       if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j])) {
-	templ = gst_pad_template_new (name, GST_PAD_SINK, GST_PAD_ALWAYS,
-	    gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
-	klass->numsinkpads++;
+        templ = gst_pad_template_new (name, GST_PAD_SINK, GST_PAD_ALWAYS,
+            gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
+        klass->numsinkpads++;
       } else {
-	templ = gst_pad_template_new (name, GST_PAD_SRC, GST_PAD_ALWAYS,
-	    gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
-	klass->numsrcpads++;
+        templ = gst_pad_template_new (name, GST_PAD_SRC, GST_PAD_ALWAYS,
+            gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
+        klass->numsrcpads++;
       }
 
       gst_element_class_add_pad_template (element_class, templ);
@@ -132,7 +132,7 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
   else if ((klass->numsinkpads > 0) && (klass->numsrcpads == 0))
     details->klass = "Sink/Audio/LADSPA";
   else
-    details->klass = "Filter/Effect/Audio/LADSPA";	/* whatever this is */
+    details->klass = "Filter/Effect/Audio/LADSPA";      /* whatever this is */
   gst_element_class_set_details (element_class, details);
 
   klass->srcpad_portnums = g_new0 (gint, klass->numsrcpads);
@@ -144,9 +144,9 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
   for (j = 0; j < desc->PortCount; j++) {
     if (LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[j])) {
       if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j]))
-	klass->sinkpad_portnums[sinkcount++] = j;
+        klass->sinkpad_portnums[sinkcount++] = j;
       else
-	klass->srcpad_portnums[srccount++] = j;
+        klass->srcpad_portnums[srccount++] = j;
     }
   }
 
@@ -185,7 +185,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
   /* walk through the ports, count the input, output and control ports */
   for (i = 0; i < desc->PortCount; i++) {
     if (!LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[i]) &&
-	LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i]))
+        LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i]))
       klass->numcontrols++;
   }
 
@@ -199,7 +199,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
   /* walk through the ports, note the portnums for control params */
   for (i = 0; i < desc->PortCount; i++) {
     if (!LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[i]) &&
-	LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i]))
+        LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i]))
       klass->control_portnums[controlcount++] = i;
   }
 
@@ -232,27 +232,27 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
     if (LADSPA_IS_HINT_BOUNDED_BELOW (hintdesc)) {
       klass->control_info[i].lower = TRUE;
       klass->control_info[i].lowerbound =
-	  desc->PortRangeHints[current_portnum].LowerBound;
+          desc->PortRangeHints[current_portnum].LowerBound;
     } else {
       if (argtype == G_TYPE_INT)
-	klass->control_info[i].lowerbound = (gfloat) G_MININT;
+        klass->control_info[i].lowerbound = (gfloat) G_MININT;
       if (argtype == G_TYPE_FLOAT)
-	klass->control_info[i].lowerbound = -G_MAXFLOAT;
+        klass->control_info[i].lowerbound = -G_MAXFLOAT;
     }
 
     if (LADSPA_IS_HINT_BOUNDED_ABOVE (hintdesc)) {
       klass->control_info[i].upper = TRUE;
       klass->control_info[i].upperbound =
-	  desc->PortRangeHints[current_portnum].UpperBound;
+          desc->PortRangeHints[current_portnum].UpperBound;
       if (LADSPA_IS_HINT_SAMPLE_RATE (hintdesc)) {
-	klass->control_info[i].samplerate = TRUE;
-	klass->control_info[i].upperbound *= 44100;	/* FIXME? */
+        klass->control_info[i].samplerate = TRUE;
+        klass->control_info[i].upperbound *= 44100;     /* FIXME? */
       }
     } else {
       if (argtype == G_TYPE_INT)
-	klass->control_info[i].upperbound = (gfloat) G_MAXINT;
+        klass->control_info[i].upperbound = (gfloat) G_MAXINT;
       if (argtype == G_TYPE_FLOAT)
-	klass->control_info[i].upperbound = G_MAXFLOAT;
+        klass->control_info[i].upperbound = G_MAXFLOAT;
     }
 
     /* use the lowerbound as the default value */
@@ -262,49 +262,49 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
     /* figure out the defaults */
     if (LADSPA_IS_HINT_HAS_DEFAULT (hintdesc)) {
       if (LADSPA_IS_HINT_DEFAULT_MINIMUM (hintdesc))
-	klass->control_info[i].def = klass->control_info[i].lowerbound;
+        klass->control_info[i].def = klass->control_info[i].lowerbound;
       else if (LADSPA_IS_HINT_DEFAULT_LOW (hintdesc))
-	if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-	  klass->control_info[i].def =
-	      exp (0.75 * log (klass->control_info[i].lowerbound) +
-	      0.25 * log (klass->control_info[i].upperbound));
-	else
-	  klass->control_info[i].def =
-	      (0.75 * klass->control_info[i].lowerbound +
-	      0.25 * klass->control_info[i].upperbound);
+        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
+          klass->control_info[i].def =
+              exp (0.75 * log (klass->control_info[i].lowerbound) +
+              0.25 * log (klass->control_info[i].upperbound));
+        else
+          klass->control_info[i].def =
+              (0.75 * klass->control_info[i].lowerbound +
+              0.25 * klass->control_info[i].upperbound);
       else if (LADSPA_IS_HINT_DEFAULT_MIDDLE (hintdesc))
-	if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-	  klass->control_info[i].def =
-	      exp (0.5 * log (klass->control_info[i].lowerbound) +
-	      0.5 * log (klass->control_info[i].upperbound));
-	else
-	  klass->control_info[i].def =
-	      (0.5 * klass->control_info[i].lowerbound +
-	      0.5 * klass->control_info[i].upperbound);
+        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
+          klass->control_info[i].def =
+              exp (0.5 * log (klass->control_info[i].lowerbound) +
+              0.5 * log (klass->control_info[i].upperbound));
+        else
+          klass->control_info[i].def =
+              (0.5 * klass->control_info[i].lowerbound +
+              0.5 * klass->control_info[i].upperbound);
       else if (LADSPA_IS_HINT_DEFAULT_HIGH (hintdesc))
-	if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-	  klass->control_info[i].def =
-	      exp (0.25 * log (klass->control_info[i].lowerbound) +
-	      0.75 * log (klass->control_info[i].upperbound));
-	else
-	  klass->control_info[i].def =
-	      (0.25 * klass->control_info[i].lowerbound +
-	      0.75 * klass->control_info[i].upperbound);
+        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
+          klass->control_info[i].def =
+              exp (0.25 * log (klass->control_info[i].lowerbound) +
+              0.75 * log (klass->control_info[i].upperbound));
+        else
+          klass->control_info[i].def =
+              (0.25 * klass->control_info[i].lowerbound +
+              0.75 * klass->control_info[i].upperbound);
       else if (LADSPA_IS_HINT_DEFAULT_MAXIMUM (hintdesc))
-	klass->control_info[i].def = klass->control_info[i].upperbound;
+        klass->control_info[i].def = klass->control_info[i].upperbound;
       else if (LADSPA_IS_HINT_DEFAULT_0 (hintdesc))
-	klass->control_info[i].def = 0.0;
+        klass->control_info[i].def = 0.0;
       else if (LADSPA_IS_HINT_DEFAULT_1 (hintdesc))
-	klass->control_info[i].def = 1.0;
+        klass->control_info[i].def = 1.0;
       else if (LADSPA_IS_HINT_DEFAULT_100 (hintdesc))
-	klass->control_info[i].def = 100.0;
+        klass->control_info[i].def = 100.0;
       else if (LADSPA_IS_HINT_DEFAULT_440 (hintdesc))
-	klass->control_info[i].def = 440.0;
+        klass->control_info[i].def = 440.0;
     }
 #endif /* LADSPA_IS_HINT_HAS_DEFAULT */
 
     klass->control_info[i].def = CLAMP (klass->control_info[i].def,
-	klass->control_info[i].lowerbound, klass->control_info[i].upperbound);
+        klass->control_info[i].lowerbound, klass->control_info[i].upperbound);
 
     if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[current_portnum])) {
       argperms = G_PARAM_READWRITE;
@@ -326,7 +326,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
     g_strcanon (argname, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
     /* satisfy glib2 (argname[0] must be [A-Za-z]) */
     if (!((argname[0] >= 'a' && argname[0] <= 'z') || (argname[0] >= 'A'
-		&& argname[0] <= 'Z'))) {
+                && argname[0] <= 'Z'))) {
       tempstr = argname;
       argname = g_strconcat ("param-", argname, NULL);
       g_free (tempstr);
@@ -338,9 +338,9 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
       gchar *numargname = g_strdup_printf ("%s_%d", argname, numarg++);
 
       while (g_object_class_find_property (G_OBJECT_CLASS (klass),
-	      numargname) != NULL) {
-	g_free (numargname);
-	numargname = g_strdup_printf ("%s_%d", argname, numarg++);
+              numargname) != NULL) {
+        g_free (numargname);
+        numargname = g_strdup_printf ("%s_%d", argname, numarg++);
       }
       argname = numargname;
     }
@@ -351,19 +351,19 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
 
     if (argtype == G_TYPE_BOOLEAN) {
       paramspec =
-	  g_param_spec_boolean (argname, argname, argname, FALSE, argperms);
+          g_param_spec_boolean (argname, argname, argname, FALSE, argperms);
     } else if (argtype == G_TYPE_INT) {
       paramspec = g_param_spec_int (argname, argname, argname,
-	  (gint) klass->control_info[i].lowerbound,
-	  (gint) klass->control_info[i].upperbound,
-	  (gint) klass->control_info[i].def, argperms);
+          (gint) klass->control_info[i].lowerbound,
+          (gint) klass->control_info[i].upperbound,
+          (gint) klass->control_info[i].def, argperms);
     } else if (klass->control_info[i].samplerate) {
       paramspec = g_param_spec_float (argname, argname, argname,
-	  0.0, G_MAXFLOAT, 0.0, argperms);
+          0.0, G_MAXFLOAT, 0.0, argperms);
     } else {
       paramspec = g_param_spec_float (argname, argname, argname,
-	  klass->control_info[i].lowerbound, klass->control_info[i].upperbound,
-	  klass->control_info[i].def, argperms);
+          klass->control_info[i].lowerbound, klass->control_info[i].upperbound,
+          klass->control_info[i].def, argperms);
     }
 
     /* properties have an offset of 1 */
@@ -395,7 +395,7 @@ gst_ladspa_init (GstLADSPA * ladspa)
   srccount = 0;
   for (l = GST_ELEMENT_CLASS (oclass)->padtemplates; l; l = l->next) {
     GstPad *pad = gst_pad_new_from_template (GST_PAD_TEMPLATE (l->data),
-	GST_PAD_TEMPLATE_NAME_TEMPLATE (l->data));
+        GST_PAD_TEMPLATE_NAME_TEMPLATE (l->data));
 
     gst_pad_set_link_function (pad, gst_ladspa_link);
     gst_element_add_pad ((GstElement *) ladspa, pad);
@@ -413,32 +413,32 @@ gst_ladspa_init (GstLADSPA * ladspa)
       ladspa->controls[i] = cinfo.def;
 
       if (cinfo.toggled) {
-	gst_dpman_add_required_dparam_callback (ladspa->dpman,
-	    g_param_spec_int (cinfo.param_name, cinfo.name, cinfo.name,
-		0, 1, (gint) (ladspa->controls[i]), G_PARAM_READWRITE),
-	    "int", gst_ladspa_update_int, &(ladspa->controls[i])
-	    );
+        gst_dpman_add_required_dparam_callback (ladspa->dpman,
+            g_param_spec_int (cinfo.param_name, cinfo.name, cinfo.name,
+                0, 1, (gint) (ladspa->controls[i]), G_PARAM_READWRITE),
+            "int", gst_ladspa_update_int, &(ladspa->controls[i])
+            );
       } else if (cinfo.integer) {
-	gst_dpman_add_required_dparam_callback (ladspa->dpman,
-	    g_param_spec_int (cinfo.param_name, cinfo.name, cinfo.name,
-		(gint) cinfo.lowerbound, (gint) cinfo.upperbound,
-		(gint) ladspa->controls[i], G_PARAM_READWRITE),
-	    "int", gst_ladspa_update_int, &(ladspa->controls[i])
-	    );
+        gst_dpman_add_required_dparam_callback (ladspa->dpman,
+            g_param_spec_int (cinfo.param_name, cinfo.name, cinfo.name,
+                (gint) cinfo.lowerbound, (gint) cinfo.upperbound,
+                (gint) ladspa->controls[i], G_PARAM_READWRITE),
+            "int", gst_ladspa_update_int, &(ladspa->controls[i])
+            );
       } else if (cinfo.samplerate) {
-	gst_dpman_add_required_dparam_direct (ladspa->dpman,
-	    g_param_spec_float (cinfo.param_name, cinfo.name, cinfo.name,
-		cinfo.lowerbound, cinfo.upperbound,
-		ladspa->controls[i], G_PARAM_READWRITE),
-	    "hertz-rate-bound", &(ladspa->controls[i])
-	    );
+        gst_dpman_add_required_dparam_direct (ladspa->dpman,
+            g_param_spec_float (cinfo.param_name, cinfo.name, cinfo.name,
+                cinfo.lowerbound, cinfo.upperbound,
+                ladspa->controls[i], G_PARAM_READWRITE),
+            "hertz-rate-bound", &(ladspa->controls[i])
+            );
       } else {
-	gst_dpman_add_required_dparam_direct (ladspa->dpman,
-	    g_param_spec_float (cinfo.param_name, cinfo.name, cinfo.name,
-		cinfo.lowerbound, cinfo.upperbound,
-		ladspa->controls[i], G_PARAM_READWRITE),
-	    "float", &(ladspa->controls[i])
-	    );
+        gst_dpman_add_required_dparam_direct (ladspa->dpman,
+            g_param_spec_float (cinfo.param_name, cinfo.name, cinfo.name,
+                cinfo.lowerbound, cinfo.upperbound,
+                ladspa->controls[i], G_PARAM_READWRITE),
+            "float", &(ladspa->controls[i])
+            );
       }
     }
   }
@@ -446,7 +446,7 @@ gst_ladspa_init (GstLADSPA * ladspa)
   /* nonzero default needed to instantiate() some plugins */
   ladspa->samplerate = 44100;
 
-  ladspa->buffer_frames = 0;	/* should be set with caps */
+  ladspa->buffer_frames = 0;    /* should be set with caps */
   ladspa->activated = FALSE;
   ladspa->inplace_broken =
       LADSPA_IS_INPLACE_BROKEN (ladspa->descriptor->Properties);
@@ -464,7 +464,7 @@ gst_ladspa_init (GstLADSPA * ladspa)
   } else if (sinkcount > 1) {
     /* more than one sink pad needs loop mode */
     DEBUG_OBJ (ladspa, "loop mode with %d sink pads and %d src pads", sinkcount,
-	srccount);
+        srccount);
 
     gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
   } else if (sinkcount == 0 && srccount == 0) {
@@ -472,7 +472,7 @@ gst_ladspa_init (GstLADSPA * ladspa)
      * it for now */
   } else {
     g_warning ("%d sink pads, %d src pads not yet supported", sinkcount,
-	srccount);
+        srccount);
   }
 
   gst_ladspa_instantiate (ladspa);
@@ -500,7 +500,7 @@ gst_ladspa_link (GstPad * pad, const GstCaps * caps)
   for (l = gst_element_get_pad_list (element); l; l = l->next)
     if (pad != (GstPad *) l->data)
       if (gst_pad_try_set_caps ((GstPad *) l->data, caps) <= 0)
-	return GST_PAD_LINK_REFUSED;
+        return GST_PAD_LINK_REFUSED;
 
   /* we assume that the ladspa plugin can handle any sample rate, so this
      check gets put last */
@@ -523,7 +523,7 @@ static void
 gst_ladspa_force_src_caps (GstLADSPA * ladspa, GstPad * pad)
 {
   if (!ladspa->buffer_frames) {
-    ladspa->buffer_frames = 256;	/* 5 ms at 44100 kHz (just a default...) */
+    ladspa->buffer_frames = 256;        /* 5 ms at 44100 kHz (just a default...) */
   }
 
   DEBUG_OBJ (ladspa, "forcing caps with rate=%d, buffer-frames=%d",
@@ -531,12 +531,12 @@ gst_ladspa_force_src_caps (GstLADSPA * ladspa, GstPad * pad)
 
   gst_pad_try_set_caps (pad,
       gst_caps_new ("ladspa_src_caps",
-	  "audio/x-raw-float",
-	  gst_props_new ("width", G_TYPE_INT (32),
-	      "endianness", G_TYPE_INT (G_BYTE_ORDER),
-	      "rate", G_TYPE_INT (ladspa->samplerate),
-	      "buffer-frames", G_TYPE_INT (ladspa->buffer_frames),
-	      "channels", G_TYPE_INT (1), NULL)));
+          "audio/x-raw-float",
+          gst_props_new ("width", G_TYPE_INT (32),
+              "endianness", G_TYPE_INT (G_BYTE_ORDER),
+              "rate", G_TYPE_INT (ladspa->samplerate),
+              "buffer-frames", G_TYPE_INT (ladspa->buffer_frames),
+              "channels", G_TYPE_INT (1), NULL)));
 }
 #endif
 
@@ -629,7 +629,7 @@ gst_ladspa_instantiate (GstLADSPA * ladspa)
   /* connect the control ports */
   for (i = 0; i < oclass->numcontrols; i++)
     desc->connect_port (ladspa->handle,
-	oclass->control_portnums[i], &(ladspa->controls[i]));
+        oclass->control_portnums[i], &(ladspa->controls[i]));
 
   /* reactivate if it was activated before the reinstantiation */
   if (was_activated)
@@ -731,13 +731,13 @@ gst_ladspa_loop (GstElement * element)
       /* push it out on all pads */
       gst_data_ref_by_count ((GstData *) buffers_in[i], numsrcpads);
       for (j = 0; j < numsrcpads; j++)
-	gst_pad_push (ladspa->srcpads[j], GST_DATA (buffers_in[i]));
+        gst_pad_push (ladspa->srcpads[j], GST_DATA (buffers_in[i]));
       if (GST_EVENT_TYPE (buffers_in[i]) == GST_EVENT_EOS) {
-	/* shut down */
-	gst_element_set_eos (element);
-	return;
+        /* shut down */
+        gst_element_set_eos (element);
+        return;
       } else {
-	goto get_buffer;
+        goto get_buffer;
       }
     }
 
@@ -745,8 +745,8 @@ gst_ladspa_loop (GstElement * element)
       largest_buffer = GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat);
     else
       largest_buffer =
-	  MIN (GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat),
-	  largest_buffer);
+          MIN (GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat),
+          largest_buffer);
     data_in[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_in[i]);
     GST_BUFFER_TIMESTAMP (buffers_in[i]) = ladspa->timestamp;
   }
@@ -761,7 +761,7 @@ gst_ladspa_loop (GstElement * element)
   }
   for (; i < numsrcpads; i++) {
     buffers_out[i] =
-	gst_buffer_new_and_alloc (ladspa->buffer_frames * sizeof (gfloat));
+        gst_buffer_new_and_alloc (ladspa->buffer_frames * sizeof (gfloat));
     GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
     data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
   }
@@ -778,10 +778,10 @@ gst_ladspa_loop (GstElement * element)
 
     for (i = 0; i < numsinkpads; i++)
       desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i],
-	  data_in[i]);
+          data_in[i]);
     for (i = 0; i < numsrcpads; i++)
       desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
-	  data_out[i]);
+          data_out[i]);
 
     desc->run (ladspa->handle, num_to_process);
 
@@ -874,7 +874,7 @@ gst_ladspa_chain (GstPad * pad, GstData * _data)
     desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[0], data_in);
     for (i = 0; i < numsrcpads; i++)
       desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
-	  data_out[i]);
+          data_out[i]);
 
     desc->run (ladspa->handle, num_to_process);
 
@@ -891,7 +891,7 @@ gst_ladspa_chain (GstPad * pad, GstData * _data)
   if (numsrcpads) {
     for (i = 0; i < numsrcpads; i++) {
       DEBUG_OBJ (ladspa, "pushing buffer (%p, length %u bytes) on src pad %d",
-	  buffers_out[i], GST_BUFFER_SIZE (buffers_out[i]), i);
+          buffers_out[i], GST_BUFFER_SIZE (buffers_out[i]), i);
       gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
     }
 
@@ -979,7 +979,7 @@ ladspa_describe_plugin (const char *pcFullFilename,
 
     /* base-init temp alloc */
     g_hash_table_insert (ladspa_descriptors,
-	GINT_TO_POINTER (0), (gpointer) desc);
+        GINT_TO_POINTER (0), (gpointer) desc);
 
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
@@ -988,7 +988,7 @@ ladspa_describe_plugin (const char *pcFullFilename,
 
     /* add this plugin to the hash */
     g_hash_table_insert (ladspa_descriptors,
-	GINT_TO_POINTER (type), (gpointer) desc);
+        GINT_TO_POINTER (type), (gpointer) desc);
   }
 
   g_hash_table_remove (ladspa_descriptors, GINT_TO_POINTER (0));

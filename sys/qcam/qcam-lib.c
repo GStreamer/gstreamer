@@ -252,8 +252,8 @@ qc_calibrate (struct qcam *q)
   int count = 0;
 #endif
 
-  qc_command (q, 27);		/* AutoAdjustOffset */
-  qc_command (q, 0);		/* Dummy Parameter, ignored by the camera */
+  qc_command (q, 27);           /* AutoAdjustOffset */
+  qc_command (q, 0);            /* Dummy Parameter, ignored by the camera */
 
   /* GetOffset (33) will read 255 until autocalibration */
   /* is finished. After that, a value of 1-254 will be */
@@ -294,7 +294,7 @@ qc_init (void)
 
   q = malloc (sizeof (struct qcam));
 
-  q->port = 0;			/* Port 0 == Autoprobe */
+  q->port = 0;                  /* Port 0 == Autoprobe */
   q->port_mode = (QC_ANY | QC_NOTSET);
   q->width = 160;
   q->height = 120;
@@ -306,11 +306,11 @@ qc_init (void)
   q->top = 1;
   q->left = 14;
   q->mode = -1;
-  q->fd = -1;			/* added initialization of fd member
-				 * BTW, there doesn't seem to be a place to close this fd...
-				 * I think we need a qc_free function.
-				 * - Dave Plonka (plonka@carroll1.cc.edu)
-				 */
+  q->fd = -1;                   /* added initialization of fd member
+                                 * BTW, there doesn't seem to be a place to close this fd...
+                                 * I think we need a qc_free function.
+                                 * - Dave Plonka (plonka@carroll1.cc.edu)
+                                 */
 
   return q;
 }
@@ -470,9 +470,9 @@ qc_detect (const struct qcam *q)
   /* Be liberal in what you accept...  */
 
   if (count > 3 && count < 15)
-    return 1;			/* found */
+    return 1;                   /* found */
   else
-    return 0;			/* not found */
+    return 0;                   /* not found */
 }
 
 
@@ -498,9 +498,9 @@ qc_reset (struct qcam *q)
       write_lpdata (q, 0x75);
 
       if (read_lpdata (q) != 0x75) {
-	q->port_mode = (q->port_mode & ~QC_MODE_MASK) | QC_BIDIR;
+        q->port_mode = (q->port_mode & ~QC_MODE_MASK) | QC_BIDIR;
       } else {
-	q->port_mode = (q->port_mode & ~QC_MODE_MASK) | QC_UNIDIR;
+        q->port_mode = (q->port_mode & ~QC_MODE_MASK) | QC_UNIDIR;
       }
       break;
 
@@ -514,7 +514,7 @@ qc_reset (struct qcam *q)
   write_lpcontrol (q, 0xb);
   usleep (250);
   write_lpcontrol (q, 0xe);
-  (void) qc_setscanmode (q);	/* in case port_mode changed */
+  (void) qc_setscanmode (q);    /* in case port_mode changed */
 }
 
 
@@ -600,7 +600,7 @@ qc_set (struct qcam *q)
   } else {
     val = q->width * q->bpp;
     val2 = (((q->port_mode & QC_MODE_MASK) == QC_BIDIR) ? 24 : 8) *
-	q->transfer_scale;
+        q->transfer_scale;
   }
   val = (val + val2 - 1) / val2;
   qc_command (q, 0x13);
@@ -639,7 +639,7 @@ qc_readbytes (const struct qcam *q, char buffer[])
   }
 
   switch (q->port_mode & QC_MODE_MASK) {
-    case QC_BIDIR:		/* Bi-directional Port */
+    case QC_BIDIR:             /* Bi-directional Port */
       write_lpcontrol (q, 0x26);
       lo = (qc_waithand2 (q, 1) >> 1);
       hi = (read_lpstatus (q) >> 3) & 0x1f;
@@ -647,74 +647,74 @@ qc_readbytes (const struct qcam *q, char buffer[])
       lo2 = (qc_waithand2 (q, 0) >> 1);
       hi2 = (read_lpstatus (q) >> 3) & 0x1f;
       switch (q->bpp) {
-	case 4:
-	  buffer[0] = lo & 0xf;
-	  buffer[1] = ((lo & 0x70) >> 4) | ((hi & 1) << 3);
-	  buffer[2] = (hi & 0x1e) >> 1;
-	  buffer[3] = lo2 & 0xf;
-	  buffer[4] = ((lo2 & 0x70) >> 4) | ((hi2 & 1) << 3);
-	  buffer[5] = (hi2 & 0x1e) >> 1;
-	  ret = 6;
-	  break;
-	case 6:
-	  buffer[0] = lo & 0x3f;
-	  buffer[1] = ((lo & 0x40) >> 6) | (hi << 1);
-	  buffer[2] = lo2 & 0x3f;
-	  buffer[3] = ((lo2 & 0x40) >> 6) | (hi2 << 1);
-	  ret = 4;
-	  break;
-	default:
-	  fprintf (stderr, "Bad bidir pixel depth %d\n", q->bpp);
-	  ret = -1;
-	  break;
+        case 4:
+          buffer[0] = lo & 0xf;
+          buffer[1] = ((lo & 0x70) >> 4) | ((hi & 1) << 3);
+          buffer[2] = (hi & 0x1e) >> 1;
+          buffer[3] = lo2 & 0xf;
+          buffer[4] = ((lo2 & 0x70) >> 4) | ((hi2 & 1) << 3);
+          buffer[5] = (hi2 & 0x1e) >> 1;
+          ret = 6;
+          break;
+        case 6:
+          buffer[0] = lo & 0x3f;
+          buffer[1] = ((lo & 0x40) >> 6) | (hi << 1);
+          buffer[2] = lo2 & 0x3f;
+          buffer[3] = ((lo2 & 0x40) >> 6) | (hi2 << 1);
+          ret = 4;
+          break;
+        default:
+          fprintf (stderr, "Bad bidir pixel depth %d\n", q->bpp);
+          ret = -1;
+          break;
       }
       break;
 
-    case QC_UNIDIR:		/* Unidirectional Port */
+    case QC_UNIDIR:            /* Unidirectional Port */
       write_lpcontrol (q, 6);
       lo = (qc_waithand (q, 1) & 0xf0) >> 4;
       write_lpcontrol (q, 0xe);
       hi = (qc_waithand (q, 0) & 0xf0) >> 4;
 
       switch (q->bpp) {
-	case 4:
-	  buffer[0] = lo;
-	  buffer[1] = hi;
-	  ret = 2;
-	  break;
-	case 6:
-	  switch (state) {
-	    case 0:
-	      buffer[0] = (lo << 2) | ((hi & 0xc) >> 2);
-	      saved_bits = (hi & 3) << 4;
-	      state = 1;
-	      ret = 1;
-	      break;
-	    case 1:
-	      buffer[0] = lo | saved_bits;
-	      saved_bits = hi << 2;
-	      state = 2;
-	      ret = 1;
-	      break;
-	    case 2:
-	      buffer[0] = ((lo & 0xc) >> 2) | saved_bits;
-	      buffer[1] = ((lo & 3) << 4) | hi;
-	      state = 0;
-	      ret = 2;
-	      break;
-	    default:
-	      fprintf (stderr, "Unidir 6-bit state %d?\n", state);
-	      ret = -1;
-	      break;
-	  }
-	  break;
-	default:
-	  fprintf (stderr, "Bad unidir pixel depth %d\n", q->bpp);
-	  ret = -1;
-	  break;
+        case 4:
+          buffer[0] = lo;
+          buffer[1] = hi;
+          ret = 2;
+          break;
+        case 6:
+          switch (state) {
+            case 0:
+              buffer[0] = (lo << 2) | ((hi & 0xc) >> 2);
+              saved_bits = (hi & 3) << 4;
+              state = 1;
+              ret = 1;
+              break;
+            case 1:
+              buffer[0] = lo | saved_bits;
+              saved_bits = hi << 2;
+              state = 2;
+              ret = 1;
+              break;
+            case 2:
+              buffer[0] = ((lo & 0xc) >> 2) | saved_bits;
+              buffer[1] = ((lo & 3) << 4) | hi;
+              state = 0;
+              ret = 2;
+              break;
+            default:
+              fprintf (stderr, "Unidir 6-bit state %d?\n", state);
+              ret = -1;
+              break;
+          }
+          break;
+        default:
+          fprintf (stderr, "Bad unidir pixel depth %d\n", q->bpp);
+          ret = -1;
+          break;
       }
       break;
-    case QC_SERIAL:		/* Serial Interface.  Just in case. */
+    case QC_SERIAL:            /* Serial Interface.  Just in case. */
     default:
       fprintf (stderr, "Mode %x not supported\n", q->port_mode);
       ret = -1;
@@ -770,7 +770,7 @@ qc_scan (const struct qcam * q)
   }
 
   if ((q->port_mode & QC_MODE_MASK) == QC_BIDIR) {
-    write_lpcontrol (q, 0x2e);	/* turn port around */
+    write_lpcontrol (q, 0x2e);  /* turn port around */
     write_lpcontrol (q, 0x26);
     (void) qc_waithand (q, 1);
     write_lpcontrol (q, 0x2e);
@@ -801,18 +801,18 @@ qc_scan (const struct qcam * q)
       bytes = qc_readbytes (q, buffer);
       assert (bytes > 0);
       for (k = 0; k < bytes && (pixels_read + k) < pixels_per_line; k++) {
-	assert (buffer[k] <= invert);
-	assert (buffer[k] >= 0);
-	if (buffer[k] == 0 && invert == 16) {
-	  /* 4bpp is odd (again) -- inverter is 16, not 15, but output
-	     must be 0-15 -- bls */
-	  buffer[k] = 16;
-	}
-	ret[i * pixels_per_line + pixels_read + k] = invert - buffer[k];
+        assert (buffer[k] <= invert);
+        assert (buffer[k] >= 0);
+        if (buffer[k] == 0 && invert == 16) {
+          /* 4bpp is odd (again) -- inverter is 16, not 15, but output
+             must be 0-15 -- bls */
+          buffer[k] = 16;
+        }
+        ret[i * pixels_per_line + pixels_read + k] = invert - buffer[k];
       }
       pixels_read += bytes;
     }
-    (void) qc_readbytes (q, 0);	/* reset state machine */
+    (void) qc_readbytes (q, 0); /* reset state machine */
   }
 
   if ((q->port_mode & QC_MODE_MASK) == QC_BIDIR) {

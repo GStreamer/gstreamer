@@ -99,9 +99,10 @@ gst_deinterlace_get_type (void)
       0,
       (GInstanceInitFunc) gst_deinterlace_init,
     };
+
     deinterlace_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstDeInterlace",
-	&deinterlace_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstDeInterlace",
+        &deinterlace_info, 0);
   }
   return deinterlace_type;
 }
@@ -130,10 +131,10 @@ gst_deinterlace_class_init (GstDeInterlaceClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DI_ONLY, g_param_spec_boolean ("di_area_only", "di_area_only", "di_area_only", TRUE, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLEND, g_param_spec_boolean ("blend", "blend", "blend", TRUE, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD, g_param_spec_int ("threshold", "threshold", "threshold", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EDGE_DETECT, g_param_spec_int ("edge_detect", "edge_detect", "edge_detect", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DI_ONLY, g_param_spec_boolean ("di_area_only", "di_area_only", "di_area_only", TRUE, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLEND, g_param_spec_boolean ("blend", "blend", "blend", TRUE, G_PARAM_READWRITE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD, g_param_spec_int ("threshold", "threshold", "threshold", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EDGE_DETECT, g_param_spec_int ("edge_detect", "edge_detect", "edge_detect", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
 
   gobject_class->set_property = gst_deinterlace_set_property;
   gobject_class->get_property = gst_deinterlace_get_property;
@@ -227,7 +228,7 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
 
   memcpy (filter->src, yuvptr, filter->picsize);
 
-  y_dst = yuvptr;		/* dst y pointer */
+  y_dst = yuvptr;               /* dst y pointer */
   /* we should not change u,v because one u, v value stands for */
   /* 2 pixels per 2 lines = 4 pixel and we don't want to change */
   /* the color of */
@@ -241,7 +242,7 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
     iEdgeDetect = 180;
   iEdgeDetect = iEdgeDetect * iEdgeDetect;
 
-  y1 = 0;			/* Avoid compiler warning. The value is not used. */
+  y1 = 0;                       /* Avoid compiler warning. The value is not used. */
   for (x = 0; x < width; x++) {
     psrc3 = y_src + x;
     y3 = *psrc3;
@@ -257,49 +258,49 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
       y1 = y2;
       y2 = y3;
       if (y < height - 1) {
-	y3 = *psrc3;
+        y3 = *psrc3;
       } else {
-	y3 = y1;
+        y3 = y1;
       }
 
       iInterlaceValue0 = iInterlaceValue1;
       iInterlaceValue1 = iInterlaceValue2;
 
       if (y < height)
-	iInterlaceValue2 = ((y1 - y2) * (y3 - y2) -
-	    ((iEdgeDetect * (y1 - y3) * (y1 - y3)) >> 12)) * 10;
+        iInterlaceValue2 = ((y1 - y2) * (y3 - y2) -
+            ((iEdgeDetect * (y1 - y3) * (y1 - y3)) >> 12)) * 10;
       else
-	iInterlaceValue2 = 0;
+        iInterlaceValue2 = 0;
 
       if (y > 0) {
-	if (iInterlaceValue0 + 2 * iInterlaceValue1 + iInterlaceValue2 >
-	    iThreshold) {
-	  if (bBlend) {
-	    *pdst1 = (unsigned char) ((y0 + 2 * y1 + y2) >> 2);
-	  } else {
-	    /* this method seems to work better than blending if the */
-	    /* quality is pretty bad and the half pics don't fit together */
-	    if ((y % 2) == 1) {	/* if odd simply copy the value */
-	      *pdst1 = *psrc1;
-	      /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
-	    } else {		/* even interpolate the even line (upper + lower)/2 */
-	      *pdst1 = (unsigned char) ((y0 + y2) >> 1);
-	      /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
-	    }
-	  }
-	} else {
-	  /* so we went below the treshold and therefore we don't have to  */
-	  /* change anything */
-	  if (bShowDeinterlacedAreaOnly) {
-	    /* this is for testing to see how we should tune the treshhold */
-	    /* and shows as the things that haven't change because the  */
-	    /* threshhold was to low?? (or shows that everything is ok :-) */
-	    *pdst1 = 0;		/* blank the point and so the interlac area */
-	  } else {
-	    *pdst1 = *psrc1;
-	  }
-	}
-	pdst1 = pdst1 + y_line;
+        if (iInterlaceValue0 + 2 * iInterlaceValue1 + iInterlaceValue2 >
+            iThreshold) {
+          if (bBlend) {
+            *pdst1 = (unsigned char) ((y0 + 2 * y1 + y2) >> 2);
+          } else {
+            /* this method seems to work better than blending if the */
+            /* quality is pretty bad and the half pics don't fit together */
+            if ((y % 2) == 1) { /* if odd simply copy the value */
+              *pdst1 = *psrc1;
+              /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
+            } else {            /* even interpolate the even line (upper + lower)/2 */
+              *pdst1 = (unsigned char) ((y0 + y2) >> 1);
+              /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
+            }
+          }
+        } else {
+          /* so we went below the treshold and therefore we don't have to  */
+          /* change anything */
+          if (bShowDeinterlacedAreaOnly) {
+            /* this is for testing to see how we should tune the treshhold */
+            /* and shows as the things that haven't change because the  */
+            /* threshhold was to low?? (or shows that everything is ok :-) */
+            *pdst1 = 0;         /* blank the point and so the interlac area */
+          } else {
+            *pdst1 = *psrc1;
+          }
+        }
+        pdst1 = pdst1 + y_line;
       }
     }
   }
@@ -370,7 +371,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "deinterlace", GST_RANK_NONE,
-	  gst_deinterlace_get_type ()))
+          gst_deinterlace_get_type ()))
     return FALSE;
 
   return TRUE;

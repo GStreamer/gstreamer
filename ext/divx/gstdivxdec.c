@@ -37,16 +37,16 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-divx, "
-	"divxversion = (int) [ 3, 5 ], "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
+        "divxversion = (int) [ 3, 5 ], "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2, YV12, UYVY }")
-	/* FIXME: 15/16/24/32bpp RGB */
+        /* FIXME: 15/16/24/32bpp RGB */
     )
     );
 
@@ -125,8 +125,9 @@ gst_divxdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_divxdec_init,
     };
+
     divxdec_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstDivxDec", &divxdec_info, 0);
+        "GstDivxDec", &divxdec_info, 0);
   }
   return divxdec_type;
 }
@@ -222,7 +223,7 @@ gst_divxdec_setup (GstDivxDec * divxdec)
   }
   if ((ret = decore (&handle, DEC_OPT_INIT, &xinit, NULL)) != 0) {
     GST_ELEMENT_ERROR (divxdec, LIBRARY, INIT, (NULL),
-	("divx library error: %s (%d)", gst_divxdec_error (ret), ret));
+        ("divx library error: %s (%d)", gst_divxdec_error (ret), ret));
     return FALSE;
   }
 
@@ -239,7 +240,7 @@ gst_divxdec_setup (GstDivxDec * divxdec)
 
   if ((ret = decore (divxdec->handle, DEC_OPT_SETOUT, &output, NULL)) != 0) {
     GST_ELEMENT_ERROR (divxdec, LIBRARY, SETTINGS, (NULL),
-	("error setting output: %s (%d)", gst_divxdec_error (ret), ret));
+        ("error setting output: %s (%d)", gst_divxdec_error (ret), ret));
     gst_divxdec_unset (divxdec);
     return FALSE;
   }
@@ -275,7 +276,7 @@ gst_divxdec_chain (GstPad * pad, GstData * _data)
   if (!divxdec->handle) {
     if (gst_divxdec_negotiate (divxdec) <= 0) {
       GST_ELEMENT_ERROR (divxdec, CORE, TOO_LAZY, (NULL),
-	  ("No format set - aborting"));
+          ("No format set - aborting"));
       gst_buffer_unref (buf);
       return;
     }
@@ -296,7 +297,7 @@ gst_divxdec_chain (GstPad * pad, GstData * _data)
 
   if ((ret = decore (divxdec->handle, DEC_OPT_FRAME, &xframe, NULL))) {
     GST_ELEMENT_ERROR (divxdec, STREAM, DECODE, (NULL),
-	("Error decoding divx frame: %s (%d)", gst_divxdec_error (ret), ret));
+        ("Error decoding divx frame: %s (%d)", gst_divxdec_error (ret), ret));
     gst_buffer_unref (buf);
     return;
   }
@@ -395,16 +396,22 @@ gst_divxdec_negotiate (GstDivxDec * divxdec)
     gint depth, bpp;
     guint32 csp;
     gint bitcnt;
-  } fmt_list[] = {
+  }
+  fmt_list[] =
+  {
     {
     GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), 16, 16,
-	  GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), 0}, {
+          GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), 0}
+    , {
     GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), 16, 16,
-	  GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), 0}, {
+          GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), 0}
+    , {
     GST_MAKE_FOURCC ('I', '4', '2', '0'), 12, 12,
-	  GST_MAKE_FOURCC ('I', '4', '2', '0'), 0}, {
+          GST_MAKE_FOURCC ('I', '4', '2', '0'), 0}
+    , {
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'), 12, 12,
-	  GST_MAKE_FOURCC ('Y', 'V', '1', '2'), 0}, {
+          GST_MAKE_FOURCC ('Y', 'V', '1', '2'), 0}
+    , {
     0, 0, 0, 0, 0}
   };
   gint i;
@@ -413,13 +420,13 @@ gst_divxdec_negotiate (GstDivxDec * divxdec)
     divxdec->csp = fmt_list[i].csp;
 
     caps = gst_caps_new_simple ("video/x-raw-yuv",
-	"width", G_TYPE_INT, divxdec->width,
-	"height", G_TYPE_INT, divxdec->height,
-	"framerate", G_TYPE_DOUBLE, divxdec->fps,
-	"format", GST_TYPE_FOURCC, fmt_list[i].fourcc, NULL);
+        "width", G_TYPE_INT, divxdec->width,
+        "height", G_TYPE_INT, divxdec->height,
+        "framerate", G_TYPE_DOUBLE, divxdec->fps,
+        "format", GST_TYPE_FOURCC, fmt_list[i].fourcc, NULL);
 
     if (gst_divxdec_setup (divxdec) &&
-	gst_pad_set_explicit_caps (divxdec->srcpad, caps)) {
+        gst_pad_set_explicit_caps (divxdec->srcpad, caps)) {
       divxdec->csp = fmt_list[i].csp;
       divxdec->bpp = fmt_list[i].bpp;
       divxdec->bitcnt = fmt_list[i].bitcnt;
@@ -468,8 +475,8 @@ plugin_init (GstPlugin * plugin)
   lib_version = decore (NULL, DEC_OPT_VERSION, 0, 0);
   if (lib_version != DECORE_VERSION) {
     g_warning ("Version mismatch! This plugin was compiled for "
-	"DivX version %d, while your library has version %d!",
-	DECORE_VERSION, lib_version);
+        "DivX version %d, while your library has version %d!",
+        DECORE_VERSION, lib_version);
     return FALSE;
   }
 

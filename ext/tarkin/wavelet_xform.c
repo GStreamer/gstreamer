@@ -61,13 +61,13 @@ fwd_analyze_2 (const TYPE * x, TYPE * d, int stride, int n)
   if (n & 1) {
     for (i = 0; i < k; i++)
       d[i] =
-	  x[(2 * i + 1) * stride] - (x[2 * i * stride] + x[(2 * i +
-		  2) * stride]) / 2;
+          x[(2 * i + 1) * stride] - (x[2 * i * stride] + x[(2 * i +
+                  2) * stride]) / 2;
   } else {
     for (i = 0; i < k - 1; i++)
       d[i] =
-	  x[(2 * i + 1) * stride] - (x[2 * i * stride] + x[(2 * i +
-		  2) * stride]) / 2;
+          x[(2 * i + 1) * stride] - (x[2 * i * stride] + x[(2 * i +
+                  2) * stride]) / 2;
     d[k - 1] = x[(n - 1) * stride] - x[(n - 2) * stride];
   }
 }
@@ -95,11 +95,11 @@ inv_analyze_2 (TYPE * x, const TYPE * d, int stride, int n)
   if (n & 1) {
     for (i = 0; i < k; i++)
       x[(2 * i + 1) * stride] =
-	  d[i] + (x[2 * i * stride] + x[(2 * i + 2) * stride]) / 2;
+          d[i] + (x[2 * i * stride] + x[(2 * i + 2) * stride]) / 2;
   } else {
     for (i = 0; i < k - 1; i++)
       x[(2 * i + 1) * stride] =
-	  d[i] + (x[2 * i * stride] + x[(2 * i + 2) * stride]) / 2;
+          d[i] + (x[2 * i * stride] + x[(2 * i + 2) * stride]) / 2;
     x[(n - 1) * stride] = d[k - 1] + x[(n - 2) * stride];
   }
 }
@@ -129,20 +129,20 @@ fwd_analyze_4 (const TYPE * x, TYPE * d, int stride, int n)
   if (n & 1) {
     for (i = 1; i < k - 1; i++)
       d[i] = x[(2 * i + 1) * stride]
-	  - ((uint32_t) 9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
-	  - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
+          - ((uint32_t) 9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
+          - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
     if (k > 1)
       d[k - 1] =
-	  x[(2 * k - 1) * stride] - (x[(2 * k - 2) * stride] +
-	  x[2 * k * stride]) / 2;
+          x[(2 * k - 1) * stride] - (x[(2 * k - 2) * stride] +
+          x[2 * k * stride]) / 2;
   } else {
     for (i = 1; i < k - 2; i++)
       d[i] = x[(2 * i + 1) * stride]
-	  - ((uint32_t) 9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
-	  - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
+          - ((uint32_t) 9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
+          - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
     if (k > 2)
       d[k - 2] = x[(2 * k - 3) * stride] - (x[(2 * k - 4) * stride]
-	  + x[(2 * k - 2) * stride]) / 2;
+          + x[(2 * k - 2) * stride]) / 2;
     if (k > 1)
       d[k - 1] = x[(n - 1) * stride] - x[(n - 2) * stride];
   }
@@ -159,7 +159,7 @@ fwd_synthesize_4 (const TYPE * x, TYPE * s, const TYPE * d, int stride, int n)
     s[stride] = x[2 * stride] + (d[0] + d[1]) / 4;
   for (i = 2; i < k - 1; i++)
     s[i * stride] = x[2 * i * stride]
-	+ ((uint32_t) 9 * (d[i - 1] + d[i]) - (d[i - 2] + d[i + 1])) / 32;
+        + ((uint32_t) 9 * (d[i - 1] + d[i]) - (d[i - 2] + d[i + 1])) / 32;
   if (k > 2)
     s[(k - 1) * stride] = x[(2 * k - 2) * stride] + (d[k - 2] + d[k - 1]) / 4;
   if (n & 1)
@@ -177,19 +177,19 @@ inv_analyze_4 (TYPE * x, const TYPE * d, int stride, int n)
   if (n & 1) {
     for (i = 1; i < k - 1; i++)
       x[(2 * i + 1) * stride] = d[i]
-	  + ((uint32_t) 9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
-	  - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
+          + ((uint32_t) 9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
+          - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
     if (k > 1)
       x[(2 * k - 1) * stride] =
-	  d[k - 1] + (x[(2 * k - 2) * stride] + x[2 * k * stride]) / 2;
+          d[k - 1] + (x[(2 * k - 2) * stride] + x[2 * k * stride]) / 2;
   } else {
     for (i = 1; i < k - 2; i++)
       x[(2 * i + 1) * stride] = d[i]
-	  + (9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
-	  - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
+          + (9 * (x[2 * i * stride] + x[(2 * i + 2) * stride])
+          - (x[(2 * i - 2) * stride] + x[(2 * i + 4) * stride])) / 16;
     if (k > 2)
       x[(2 * k - 3) * stride] = d[k - 2] + (x[(2 * k - 4) * stride]
-	  + x[(2 * k - 2) * stride]) / 2;
+          + x[(2 * k - 2) * stride]) / 2;
     if (k > 1)
       x[(n - 1) * stride] = d[k - 1] + x[(n - 2) * stride];
   }
@@ -206,7 +206,7 @@ inv_synthesize_4 (TYPE * x, const TYPE * s, const TYPE * d, int stride, int n)
     x[2 * stride] = s[1] - (d[0] + d[1]) / 4;
   for (i = 2; i < k - 1; i++)
     x[2 * i * stride] = s[i] - ((uint32_t) 9 * (d[i - 1] + d[i])
-	- (d[i - 2] + d[i + 1])) / 32;
+        - (d[i - 2] + d[i + 1])) / 32;
   if (k > 2)
     x[(2 * k - 2) * stride] = s[k - 1] - (d[k - 2] + d[k - 1]) / 4;
   if (n & 1)
@@ -333,11 +333,11 @@ wavelet_3d_buf_fwd_xform (Wavelet3DBuf * buf, int a_moments, int s_moments)
       int row, frame;
 
       for (frame = 0; frame < f; frame++) {
-	for (row = 0; row < h; row++) {
-	  TYPE *data = buf->data + (frame * buf->height + row) * buf->width;
+        for (row = 0; row < h; row++) {
+          TYPE *data = buf->data + (frame * buf->height + row) * buf->width;
 
-	  fwd_xform (buf->scratchbuf, data, 1, w, a_moments, s_moments);
-	}
+          fwd_xform (buf->scratchbuf, data, 1, w, a_moments, s_moments);
+        }
       }
     }
 
@@ -345,12 +345,12 @@ wavelet_3d_buf_fwd_xform (Wavelet3DBuf * buf, int a_moments, int s_moments)
       int col, frame;
 
       for (frame = 0; frame < f; frame++) {
-	for (col = 0; col < w; col++) {
-	  TYPE *data = buf->data + frame * buf->width * buf->height + col;
+        for (col = 0; col < w; col++) {
+          TYPE *data = buf->data + frame * buf->width * buf->height + col;
 
-	  fwd_xform (buf->scratchbuf, data, buf->width, h,
-	      a_moments, s_moments);
-	}
+          fwd_xform (buf->scratchbuf, data, buf->width, h,
+              a_moments, s_moments);
+        }
       }
     }
 
@@ -358,12 +358,12 @@ wavelet_3d_buf_fwd_xform (Wavelet3DBuf * buf, int a_moments, int s_moments)
       int i, j;
 
       for (j = 0; j < h; j++) {
-	for (i = 0; i < w; i++) {
-	  TYPE *data = buf->data + j * buf->width + i;
+        for (i = 0; i < w; i++) {
+          TYPE *data = buf->data + j * buf->width + i;
 
-	  fwd_xform (buf->scratchbuf, data, buf->width * buf->height, f,
-	      a_moments, s_moments);
-	}
+          fwd_xform (buf->scratchbuf, data, buf->width * buf->height, f,
+              a_moments, s_moments);
+        }
       }
     }
   }
@@ -384,12 +384,12 @@ wavelet_3d_buf_inv_xform (Wavelet3DBuf * buf, int a_moments, int s_moments)
       int i, j;
 
       for (j = 0; j < h; j++) {
-	for (i = 0; i < w; i++) {
-	  TYPE *data = buf->data + j * buf->width + i;
+        for (i = 0; i < w; i++) {
+          TYPE *data = buf->data + j * buf->width + i;
 
-	  inv_xform (buf->scratchbuf, data, buf->width * buf->height, f,
-	      a_moments, s_moments);
-	}
+          inv_xform (buf->scratchbuf, data, buf->width * buf->height, f,
+              a_moments, s_moments);
+        }
       }
     }
 
@@ -397,12 +397,12 @@ wavelet_3d_buf_inv_xform (Wavelet3DBuf * buf, int a_moments, int s_moments)
       int col, frame;
 
       for (frame = 0; frame < f; frame++) {
-	for (col = 0; col < w; col++) {
-	  TYPE *data = buf->data + frame * buf->width * buf->height + col;
+        for (col = 0; col < w; col++) {
+          TYPE *data = buf->data + frame * buf->width * buf->height + col;
 
-	  inv_xform (buf->scratchbuf, data, buf->width, h,
-	      a_moments, s_moments);
-	}
+          inv_xform (buf->scratchbuf, data, buf->width, h,
+              a_moments, s_moments);
+        }
       }
     }
 
@@ -410,11 +410,11 @@ wavelet_3d_buf_inv_xform (Wavelet3DBuf * buf, int a_moments, int s_moments)
       int row, frame;
 
       for (frame = 0; frame < f; frame++) {
-	for (row = 0; row < h; row++) {
-	  TYPE *data = buf->data + (frame * buf->height + row) * buf->width;
+        for (row = 0; row < h; row++) {
+          TYPE *data = buf->data + (frame * buf->height + row) * buf->width;
 
-	  inv_xform (buf->scratchbuf, data, 1, w, a_moments, s_moments);
-	}
+          inv_xform (buf->scratchbuf, data, 1, w, a_moments, s_moments);
+        }
       }
     }
   }

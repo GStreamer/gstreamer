@@ -44,40 +44,40 @@ namespace Gst
 
       while (fulfilled < samples)
       {
-	if (remainingsamples == 0) {
+        if (remainingsamples == 0) {
 //fprintf(stderr,"need to get a buffer\n");
-	  if (inbuf) {
-	    gst_data_unref (inbuf);
-	    inbuf = NULL;
-	  }
-	  // start by pulling a buffer from GStreamer
-	  inbuf = gst_pad_pull (sinkpad);
+          if (inbuf) {
+            gst_data_unref (inbuf);
+            inbuf = NULL;
+          }
+          // start by pulling a buffer from GStreamer
+          inbuf = gst_pad_pull (sinkpad);
 
-	  while (GST_IS_EVENT (inbuf)) {
-	    switch (GST_EVENT_TYPE (inbuf)) {
-	      case GST_EVENT_EOS:
-		gst_element_set_eos (GST_PAD_PARENT (sinkpad));
-	      default:
-		break;
-	    }
-	    gst_pad_event_default (srcpad, GST_EVENT (inbuf));
-	    inbuf = gst_pad_pull (sinkpad);
-	  }
+          while (GST_IS_EVENT (inbuf)) {
+            switch (GST_EVENT_TYPE (inbuf)) {
+              case GST_EVENT_EOS:
+                gst_element_set_eos (GST_PAD_PARENT (sinkpad));
+              default:
+                break;
+            }
+            gst_pad_event_default (srcpad, GST_EVENT (inbuf));
+            inbuf = gst_pad_pull (sinkpad);
+          }
 
-	  dataptr = GST_BUFFER_DATA (GST_BUFFER (inbuf));
-	  remainingsamples = GST_BUFFER_SIZE (GST_BUFFER (inbuf)) / 4;
+          dataptr = GST_BUFFER_DATA (GST_BUFFER (inbuf));
+          remainingsamples = GST_BUFFER_SIZE (GST_BUFFER (inbuf)) / 4;
 //fprintf(stderr,"got a buffer with %d samples\n",remainingsamples);
-	}
+        }
 
-	unsigned long count = MIN (remainingsamples, samples - fulfilled);
+        unsigned long count = MIN (remainingsamples, samples - fulfilled);
 
 //fprintf(stderr,"have %d samples left, can fill %d\n",remainingsamples,count);
-	convert_stereo_i16le_2float (count, dataptr, outleft, outright);
+        convert_stereo_i16le_2float (count, dataptr, outleft, outright);
 //s = (gint16 *)dataptr;
 //fprintf(stderr,"samples in are %d and %d, out are %f and %f\n",s[0],s[1],outleft[0],outright[0]);
-	remainingsamples -= count;
-	dataptr += 4 * count;
-	fulfilled += count;
+        remainingsamples -= count;
+        dataptr += 4 * count;
+        fulfilled += count;
       }
     }
 
@@ -112,7 +112,7 @@ namespace Gst
       GST_BUFFER_SIZE (outbuf) = samples * 4;
       memset (GST_BUFFER_DATA (outbuf), 0, samples * 4);
       convert_stereo_2float_i16le (samples, inleft, inright,
-	  GST_BUFFER_DATA (outbuf));
+          GST_BUFFER_DATA (outbuf));
 //s = (gint16 *)GST_BUFFER_DATA(outbuf);
 //fprintf(stderr,"samples in are %f and %f, out are %d and %d\n",inleft[0],inright[0],s[0],s[1]);
       gst_pad_push (srcpad, GST_DATA (outbuf));

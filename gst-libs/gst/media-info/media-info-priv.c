@@ -104,11 +104,11 @@ have_type_callback (GstElement * typefind, guint probability, GstCaps * type,
       /* FIXME: signal error */
       g_warning ("Couldn't create id3tag");
     if (!gst_element_link_many (priv->source, priv->decontainer, priv->typefind,
-	    NULL));
+            NULL));
     g_warning ("Couldn't link in id3tag");
 
     if (gst_element_set_state (priv->pipeline, GST_STATE_PLAYING)
-	== GST_STATE_FAILURE)
+        == GST_STATE_FAILURE)
       g_warning ("Couldn't set to playing");
   }
 #endif
@@ -139,8 +139,8 @@ deep_notify_callback (GObject * object, GstObject * origin,
       GST_DEBUG ("caps: %" GST_PTR_FORMAT, priv->format);
     } else
       GST_DEBUG ("ignoring caps on object %s:%s",
-	  gst_object_get_name (gst_object_get_parent (origin)),
-	  gst_object_get_name (origin));
+          gst_object_get_name (gst_object_get_parent (origin)),
+          gst_object_get_name (origin));
   } else if (strcmp (pspec->name, "offset") == 0) {
     /* we REALLY ignore offsets, we hate them */
   }
@@ -151,7 +151,8 @@ typedef struct
 {
   guint meta;
   guint encoded;
-} TagFlagScore;
+}
+TagFlagScore;
 
 static void
 tag_flag_score (const GstTagList * list, const gchar * tag, gpointer user_data)
@@ -323,7 +324,7 @@ gmi_seek_to_track (GstMediaInfo * info, long track)
   res = gst_pad_send_event (info->priv->decoder_pad, event);
   if (!res) {
     g_warning ("seek to logical track on pad %s:%s failed",
-	GST_DEBUG_PAD_NAME (info->priv->decoder_pad));
+        GST_DEBUG_PAD_NAME (info->priv->decoder_pad));
     return FALSE;
   }
   /* clear structs because of the seek */
@@ -350,37 +351,37 @@ gmi_set_mime (GstMediaInfo * info, const char *mime)
   if ((strcmp (mime, "application/x-ogg") == 0) ||
       (strcmp (mime, "application/ogg") == 0))
     desc =
-	g_strdup_printf
-	("%s name=source ! oggdemux ! vorbisdec name=decoder ! fakesink name=sink",
-	priv->source_name);
+        g_strdup_printf
+        ("%s name=source ! oggdemux ! vorbisdec name=decoder ! fakesink name=sink",
+        priv->source_name);
   else if ((strcmp (mime, "audio/mpeg") == 0)
       || (strcmp (mime, "audio/x-mp3") == 0)
       || (strcmp (mime, "audio/mp3") == 0)
       || (strcmp (mime, "application/x-id3") == 0)
       || (strcmp (mime, "audio/x-id3") == 0))
     desc =
-	g_strdup_printf
-	("%s name=source ! id3tag ! mad name=decoder ! audio/x-raw-int ! fakesink name=sink",
-	priv->source_name);
+        g_strdup_printf
+        ("%s name=source ! id3tag ! mad name=decoder ! audio/x-raw-int ! fakesink name=sink",
+        priv->source_name);
   else if ((strcmp (mime, "application/x-flac") == 0)
       || (strcmp (mime, "audio/x-flac") == 0))
     desc =
-	g_strdup_printf
-	("%s name=source ! flacdec name=decoder ! audio/x-raw-int ! fakesink name=sink",
-	priv->source_name);
+        g_strdup_printf
+        ("%s name=source ! flacdec name=decoder ! audio/x-raw-int ! fakesink name=sink",
+        priv->source_name);
   else if ((strcmp (mime, "audio/wav") == 0)
       || (strcmp (mime, "audio/x-wav") == 0))
     desc =
-	g_strdup_printf
-	("%s ! wavparse name=decoder ! audio/x-raw-int ! fakesink name=sink",
-	priv->source_name);
+        g_strdup_printf
+        ("%s ! wavparse name=decoder ! audio/x-raw-int ! fakesink name=sink",
+        priv->source_name);
   else if (strcmp (mime, "audio/x-mod") == 0
       || strcmp (mime, "audio/x-s3m") == 0 || strcmp (mime, "audio/x-xm") == 0
       || strcmp (mime, "audio/x-it") == 0)
     desc =
-	g_strdup_printf
-	("%s name=source ! modplug name=decoder ! audio/x-raw-int ! fakesink name=sink",
-	priv->source_name);
+        g_strdup_printf
+        ("%s name=source ! modplug name=decoder ! audio/x-raw-int ! fakesink name=sink",
+        priv->source_name);
   else
     return FALSE;
 
@@ -409,7 +410,7 @@ gmi_set_mime (GstMediaInfo * info, const char *mime)
   g_assert (GST_IS_PAD (priv->decoder_pad));
   GST_DEBUG ("decoder pad: %s:%s",
       gst_object_get_name (gst_object_get_parent (GST_OBJECT (priv->
-		  decoder_pad))), gst_pad_get_name (priv->decoder_pad));
+                  decoder_pad))), gst_pad_get_name (priv->decoder_pad));
 
   /* attach notify handler */
   g_signal_connect (G_OBJECT (info->priv->pipeline), "deep_notify",
@@ -557,21 +558,21 @@ gmip_find_stream_post (GstMediaInfoPriv * priv)
 
     if (res) {
       switch (format) {
-	case GST_FORMAT_TIME:
-	  stream->length_time = value;
-	  GST_DEBUG ("  total %s: %lld", definition->nick, value);
-	  break;
-	case GST_FORMAT_DEFAULT:
-	case GST_FORMAT_BYTES:
-	  break;
-	default:
-	  /* separation is necessary because track_format doesn't resolve to
-	   * int */
-	  if (format == track_format) {
-	    stream->length_tracks = value;
-	    GST_DEBUG ("  total %s: %lld", definition->nick, value);
-	  } else
-	    GST_DEBUG ("unhandled format %s", definition->nick);
+        case GST_FORMAT_TIME:
+          stream->length_time = value;
+          GST_DEBUG ("  total %s: %lld", definition->nick, value);
+          break;
+        case GST_FORMAT_DEFAULT:
+        case GST_FORMAT_BYTES:
+          break;
+        default:
+          /* separation is necessary because track_format doesn't resolve to
+           * int */
+          if (format == track_format) {
+            stream->length_tracks = value;
+            GST_DEBUG ("  total %s: %lld", definition->nick, value);
+          } else
+            GST_DEBUG ("unhandled format %s", definition->nick);
       }
     } else
       GST_DEBUG ("query didn't return result for %s", definition->nick);
@@ -597,7 +598,7 @@ gmip_find_stream_post (GstMediaInfoPriv * priv)
     stream->bitrate = (long) (bits / seconds);
   }
   GST_DEBUG ("moving to STATE_METADATA\n");
-  priv->state = GST_MEDIA_INFO_STATE_METADATA;	/* metadata of first track */
+  priv->state = GST_MEDIA_INFO_STATE_METADATA;  /* metadata of first track */
   return TRUE;
 }
 
@@ -694,23 +695,23 @@ gmip_find_track_streaminfo_post (GstMediaInfoPriv * priv)
     gboolean res;
 
     res = gst_pad_query (priv->decoder_pad, GST_QUERY_POSITION,
-	&track_format, &value_start);
+        &track_format, &value_start);
     if (res) {
       format = GST_FORMAT_TIME;
       track_num = value_start;
       GST_DEBUG ("we are currently at %ld", track_num);
       res = gst_pad_convert (priv->decoder_pad,
-	  track_format, track_num, &format, &value_start);
+          track_format, track_num, &format, &value_start);
       res &= gst_pad_convert (priv->decoder_pad,
-	  track_format, track_num + 1, &format, &value_end);
+          track_format, track_num + 1, &format, &value_end);
       if (res) {
-	/* substract to get the length */
-	GST_DEBUG ("start %lld, end %lld", value_start, value_end);
-	value_end -= value_start;
-	/* FIXME: check units; this is in seconds */
+        /* substract to get the length */
+        GST_DEBUG ("start %lld, end %lld", value_start, value_end);
+        value_end -= value_start;
+        /* FIXME: check units; this is in seconds */
 
-	gst_tag_list_add (priv->streaminfo, GST_TAG_MERGE_REPLACE,
-	    GST_TAG_DURATION, (int) (value_end / 1E6), NULL);
+        gst_tag_list_add (priv->streaminfo, GST_TAG_MERGE_REPLACE,
+            GST_TAG_DURATION, (int) (value_end / 1E6), NULL);
       }
     }
   }

@@ -28,11 +28,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "tarkinenc", GST_RANK_NONE,
-	  GST_TYPE_TARKINENC))
+          GST_TYPE_TARKINENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "tarkindec", GST_RANK_NONE,
-	  GST_TYPE_TARKINDEC))
+          GST_TYPE_TARKINDEC))
     return FALSE;
 
   return TRUE;

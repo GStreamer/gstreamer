@@ -57,9 +57,9 @@ gst_mixer_get_type (void)
     };
 
     gst_mixer_type = g_type_register_static (G_TYPE_INTERFACE,
-	"GstMixer", &gst_mixer_info, 0);
+        "GstMixer", &gst_mixer_info, 0);
     g_type_interface_add_prerequisite (gst_mixer_type,
-	GST_TYPE_IMPLEMENTS_INTERFACE);
+        GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_mixer_type;
@@ -72,26 +72,26 @@ gst_mixer_class_init (GstMixerClass * klass)
 
   if (!initialized) {
     gst_mixer_signals[RECORD_TOGGLED] =
-	g_signal_new ("record-toggled",
-	GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-	G_STRUCT_OFFSET (GstMixerClass, record_toggled),
-	NULL, NULL,
-	gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
-	GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
+        g_signal_new ("record-toggled",
+        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET (GstMixerClass, record_toggled),
+        NULL, NULL,
+        gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
+        GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
     gst_mixer_signals[MUTE_TOGGLED] =
-	g_signal_new ("mute-toggled",
-	GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-	G_STRUCT_OFFSET (GstMixerClass, mute_toggled),
-	NULL, NULL,
-	gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
-	GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
+        g_signal_new ("mute-toggled",
+        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET (GstMixerClass, mute_toggled),
+        NULL, NULL,
+        gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
+        GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
     gst_mixer_signals[VOLUME_CHANGED] =
-	g_signal_new ("volume-changed",
-	GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-	G_STRUCT_OFFSET (GstMixerClass, volume_changed),
-	NULL, NULL,
-	gst_mixer_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
-	GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
+        g_signal_new ("volume-changed",
+        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET (GstMixerClass, volume_changed),
+        NULL, NULL,
+        gst_mixer_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
+        GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
 
     initialized = TRUE;
   }

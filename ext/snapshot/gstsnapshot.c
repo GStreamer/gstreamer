@@ -112,9 +112,10 @@ gst_snapshot_get_type (void)
       0,
       (GInstanceInitFunc) gst_snapshot_init,
     };
+
     snapshot_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSnapshot", &snapshot_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSnapshot", &snapshot_info,
+        0);
   }
   return snapshot_type;
 }
@@ -145,10 +146,10 @@ gst_snapshot_class_init (GstSnapshotClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME,
       g_param_spec_long ("frame", "frame", "frame",
-	  0, G_MAXLONG, 0, G_PARAM_READWRITE));
+          0, G_MAXLONG, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
       g_param_spec_string ("location", "location", "location",
-	  0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE));
 
   gst_snapshot_signals[SNAPSHOT_SIGNAL] =
       g_signal_new ("snapshot", G_TYPE_FROM_CLASS (klass),
@@ -257,30 +258,30 @@ gst_snapshot_chain (GstPad * pad, GstData * _data)
       g_warning (" Can not open %s\n", snapshot->location);
     else {
       png_set_filter (snapshot->png_struct_ptr, 0,
-	  PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
+          PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
       png_init_io (snapshot->png_struct_ptr, fp);
       png_set_compression_level (snapshot->png_struct_ptr, 9);
       png_set_IHDR (snapshot->png_struct_ptr,
-	  snapshot->png_info_ptr,
-	  snapshot->width,
-	  snapshot->height,
-	  snapshot->to_bpp / 3,
-	  PNG_COLOR_TYPE_RGB,
-	  PNG_INTERLACE_NONE,
-	  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+          snapshot->png_info_ptr,
+          snapshot->width,
+          snapshot->height,
+          snapshot->to_bpp / 3,
+          PNG_COLOR_TYPE_RGB,
+          PNG_INTERLACE_NONE,
+          PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
       for (i = 0; i < snapshot->height; i++)
-	row_pointers[i] = data + (snapshot->width * i * snapshot->to_bpp / 8);
+        row_pointers[i] = data + (snapshot->width * i * snapshot->to_bpp / 8);
 
       png_write_info (snapshot->png_struct_ptr, snapshot->png_info_ptr);
       png_write_image (snapshot->png_struct_ptr, row_pointers);
       png_write_end (snapshot->png_struct_ptr, NULL);
       png_destroy_info_struct (snapshot->png_struct_ptr,
-	  &snapshot->png_info_ptr);
+          &snapshot->png_info_ptr);
       png_destroy_write_struct (&snapshot->png_struct_ptr, (png_infopp) NULL);
       fclose (fp);
       g_signal_emit (G_OBJECT (snapshot),
-	  gst_snapshot_signals[SNAPSHOT_SIGNAL], 0);
+          gst_snapshot_signals[SNAPSHOT_SIGNAL], 0);
 
 
     }
@@ -337,7 +338,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "snapshot", GST_RANK_NONE,
-	  GST_TYPE_SNAPSHOT))
+          GST_TYPE_SNAPSHOT))
     return FALSE;
 
   return TRUE;

@@ -144,16 +144,16 @@ struct vbiscreen_s
   int frame_height;
   int frame_aspect;
 
-  int x, y;			/* where to draw console */
-  int width, height;		/* the size box we have to draw in */
+  int x, y;                     /* where to draw console */
+  int width, height;            /* the size box we have to draw in */
   int rowheight, charwidth;
 
-  int curx, cury;		/* cursor position */
-  int rows, cols;		/* 32 cols 15 rows */
-  int captions, style;		/* CC (1) or Text (0), RU2 RU3 RU4 POP_UP PAINT_ON */
-  int first_line;		/* where to start drawing */
+  int curx, cury;               /* cursor position */
+  int rows, cols;               /* 32 cols 15 rows */
+  int captions, style;          /* CC (1) or Text (0), RU2 RU3 RU4 POP_UP PAINT_ON */
+  int first_line;               /* where to start drawing */
   int curbuffer;
-  int top_of_screen;		/* a pointer into line[] */
+  int top_of_screen;            /* a pointer into line[] */
   int indent;
   int got_eoc;
   int scroll;
@@ -184,8 +184,8 @@ vbiscreen_new (int video_width, int video_height,
   vs->frame_aspect = video_aspect;
   vs->curx = 0;
   vs->cury = 0;
-  vs->fgcolour = 0xFFFFFFFFU;	/* white */
-  vs->bgcolour = 0xFF000000U;	/* black */
+  vs->fgcolour = 0xFFFFFFFFU;   /* white */
+  vs->bgcolour = 0xFF000000U;   /* black */
   vs->bg_luma = 16;
   vs->bg_cb = 128;
   vs->bg_cr = 128;
@@ -216,7 +216,7 @@ vbiscreen_new (int video_width, int video_height,
     vs->fontfile = "./FreeMonoBold.ttf";
 
     vs->line[0] = osd_string_new (vs->fontfile, fontsize,
-	video_width, video_height, video_aspect, user_data);
+        video_width, video_height, video_aspect, user_data);
   }
 
   if (!vs->line[0]) {
@@ -232,15 +232,15 @@ vbiscreen_new (int video_width, int video_height,
 
   for (i = 0; i < ROWS; i++) {
     vs->line[i] = osd_string_new (vs->fontfile, fontsize,
-	video_width, video_height, video_aspect, user_data);
+        video_width, video_height, video_aspect, user_data);
     if (!vs->line[i]) {
       fprintf (stderr, "vbiscreen: Could not allocate a line.\n");
       vbiscreen_delete (vs);
       return NULL;
     }
     osd_string_set_colour_rgb (vs->line[i],
-	(vs->fgcolour & 0xff0000) >> 16,
-	(vs->fgcolour & 0xff00) >> 8, (vs->fgcolour & 0xff));
+        (vs->fgcolour & 0xff0000) >> 16,
+        (vs->fgcolour & 0xff00) >> 8, (vs->fgcolour & 0xff));
     osd_string_show_text (vs->line[i], " ", 0);
   }
   memset (vs->text, 0, 2 * ROWS * COLS);
@@ -418,7 +418,7 @@ scroll_screen (vbiscreen_t * vs)
   start_row = (vs->first_line + vs->top_of_screen) % (2 * ROWS);
   if (vs->verbose)
     fprintf (stderr, "start row : %d first line %d\n ", start_row,
-	vs->first_line);
+        vs->first_line);
 
   /* zero out top row */
   memset ((char *) (vs->text + start_row * COLS), 0, COLS);
@@ -444,7 +444,7 @@ vbiscreen_new_caption (vbiscreen_t * vs, int indent, int ital,
     return;
   if (vs->verbose)
     fprintf (stderr, "indent: %d, ital: %d, colour: 0x%x, row: %d\n", indent,
-	ital, colour, row);
+        ital, colour, row);
 
   if (0 && vs->captions && vs->style <= ROLL_4 && vs->style) {
     if (row != vs->cury + 1) {
@@ -476,22 +476,22 @@ vbiscreen_set_mode (vbiscreen_t * vs, int caption, int style)
     fprintf (stderr, "Caption: %d ", caption);
     switch (style) {
       case ROLL_2:
-	fprintf (stderr, "ROLL 2\n");
-	break;
+        fprintf (stderr, "ROLL 2\n");
+        break;
       case ROLL_3:
-	fprintf (stderr, "ROLL 3\n");
-	break;
+        fprintf (stderr, "ROLL 3\n");
+        break;
       case ROLL_4:
-	fprintf (stderr, "ROLL 4\n");
-	break;
+        fprintf (stderr, "ROLL 4\n");
+        break;
       case POP_UP:
-	fprintf (stderr, "POP UP\n");
-	break;
+        fprintf (stderr, "POP UP\n");
+        break;
       case PAINT_ON:
-	fprintf (stderr, "PAINT ON\n");
-	break;
+        fprintf (stderr, "PAINT ON\n");
+        break;
       default:
-	break;
+        break;
     }
   }
   if (!caption) {
@@ -510,21 +510,21 @@ vbiscreen_set_mode (vbiscreen_t * vs, int caption, int style)
       case ROLL_2:
       case ROLL_3:
       case ROLL_4:
-	if (vs->style == style) {
-	  return;
-	}
-	vs->first_line = ROWS - (style - 4);
+        if (vs->style == style) {
+          return;
+        }
+        vs->first_line = ROWS - (style - 4);
 
-	if (vs->verbose)
-	  fprintf (stderr, "first_line %d\n", vs->first_line);
+        if (vs->verbose)
+          fprintf (stderr, "first_line %d\n", vs->first_line);
 
-	vs->cury = ROWS - 1;
-	break;
+        vs->cury = ROWS - 1;
+        break;
       case POP_UP:
-	vs->got_eoc = 0;
-	break;
+        vs->got_eoc = 0;
+        break;
       case PAINT_ON:
-	break;
+        break;
     }
   }
 
@@ -586,7 +586,7 @@ vbiscreen_delete_to_end (vbiscreen_t * vs)
     vbiscreen_clear_current_cell (vs);
     vs->curx++;
   }
-  vs->curx = COLS - 1;		/* is this right ? */
+  vs->curx = COLS - 1;          /* is this right ? */
   if (vs->captions && vs->style && vs->style != POP_UP)
     update_row (vs);
 }
@@ -631,7 +631,7 @@ vbiscreen_erase_non_displayed (vbiscreen_t * vs)
 
   if (vs->captions && vs->style == POP_UP) {
     memset (vs->buffers + vs->curbuffer * COLS * ROWS + vs->cury * COLS, 0,
-	COLS);
+        COLS);
 //        clear_hidden_pop( vs );
   } else if (vs->captions && vs->style && vs->style <= ROLL_4) {
     clear_hidden_roll (vs);
@@ -711,17 +711,17 @@ vbiscreen_print (vbiscreen_t * vs, char c1, char c2)
     /* this all gets displayed at another time */
     if (vs->curx != COLS - 1) {
       *(vs->buffers + vs->curx + vs->curbuffer * ROWS * COLS +
-	  vs->cury * COLS) = c1;
+          vs->cury * COLS) = c1;
       vs->curx++;
     }
 
     if (vs->curx != COLS - 1 && c2) {
       *(vs->buffers + vs->curx + vs->curbuffer * ROWS * COLS +
-	  vs->cury * COLS) = c2;
+          vs->cury * COLS) = c2;
       vs->curx++;
     } else if (c2) {
       *(vs->buffers + vs->curx + vs->curbuffer * ROWS * COLS +
-	  vs->cury * COLS) = c2;
+          vs->cury * COLS) = c2;
     }
   }
 
@@ -783,40 +783,40 @@ vbiscreen_composite_packed422_scanline (vbiscreen_t * vs,
 
     if (0 && !vs->captions)
       blit_colour_packed422_scanline (output + (vs->x * 2), vs->width,
-	  vs->bg_luma, vs->bg_cb, vs->bg_cr);
+          vs->bg_luma, vs->bg_cb, vs->bg_cr);
 
     index = vs->top_of_screen * COLS;
     x = (vs->x + vs->charwidth) & ~1;
     for (row = 0; row < ROWS; row++) {
       y = vs->y + row * vs->rowheight + vs->rowheight;
       if (osd_string_visible (vs->line[row])) {
-	if (scanline >= y && scanline < y + vs->rowheight) {
+        if (scanline >= y && scanline < y + vs->rowheight) {
 
-	  int startx;
-	  int strx;
+          int startx;
+          int strx;
 
-	  startx = x - xpos;
-	  strx = 0;
+          startx = x - xpos;
+          strx = 0;
 
-	  if (startx < 0) {
-	    strx = -startx;
-	    startx = 0;
-	  }
+          if (startx < 0) {
+            strx = -startx;
+            startx = 0;
+          }
 
 
-	  if (startx < width) {
+          if (startx < width) {
 
-	    if (vs->captions)
-	      blit_colour_packed422_scanline (output + (startx * 2),
-		  osd_string_get_width (vs->line[row]),
-		  vs->bg_luma, vs->bg_cb, vs->bg_cr);
+            if (vs->captions)
+              blit_colour_packed422_scanline (output + (startx * 2),
+                  osd_string_get_width (vs->line[row]),
+                  vs->bg_luma, vs->bg_cb, vs->bg_cr);
 
-	    osd_string_composite_packed422_scanline (vs->line[row],
-		output + (startx * 2),
-		output + (startx * 2), width - startx, strx, scanline - y);
-	  }
-	}
-	index++;
+            osd_string_composite_packed422_scanline (vs->line[row],
+                output + (startx * 2),
+                output + (startx * 2), width - startx, strx, scanline - y);
+          }
+        }
+        index++;
       }
     }
   }

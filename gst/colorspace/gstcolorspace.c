@@ -62,7 +62,7 @@ static GstStaticPadTemplate gst_colorspace_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB "; "
-	GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGB_16)
+        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGB_16)
     );
 
 /* Stereo signals and args */
@@ -132,125 +132,125 @@ colorspace_setup_converter (GstColorspace * space, GstCaps * from_caps,
       gst_structure_get_int (from_struct, "bpp", &from_bpp);
 
       switch (to_space) {
-	case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
+        case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
 #ifdef HAVE_HERMES
-	{
-	  gint to_bpp;
+        {
+          gint to_bpp;
 
-	  gst_structure_get_int (to_struct, "bpp", &to_bpp);
+          gst_structure_get_int (to_struct, "bpp", &to_bpp);
 
-	  gst_structure_get_int (from_struct, "red_mask", &space->source.r);
-	  gst_structure_get_int (from_struct, "green_mask", &space->source.g);
-	  gst_structure_get_int (from_struct, "blue_mask", &space->source.b);
-	  space->source.a = 0;
-	  space->srcbpp = space->source.bits = from_bpp;
-	  space->source.indexed = 0;
-	  space->source.has_colorkey = 0;
+          gst_structure_get_int (from_struct, "red_mask", &space->source.r);
+          gst_structure_get_int (from_struct, "green_mask", &space->source.g);
+          gst_structure_get_int (from_struct, "blue_mask", &space->source.b);
+          space->source.a = 0;
+          space->srcbpp = space->source.bits = from_bpp;
+          space->source.indexed = 0;
+          space->source.has_colorkey = 0;
 
-	  GST_INFO ("source red mask   %08x", space->source.r);
-	  GST_INFO ("source green mask %08x", space->source.g);
-	  GST_INFO ("source blue mask  %08x", space->source.b);
-	  GST_INFO ("source bpp        %08x", space->srcbpp);
+          GST_INFO ("source red mask   %08x", space->source.r);
+          GST_INFO ("source green mask %08x", space->source.g);
+          GST_INFO ("source blue mask  %08x", space->source.b);
+          GST_INFO ("source bpp        %08x", space->srcbpp);
 
-	  gst_structure_get_int (to_struct, "red_mask", &space->dest.r);
-	  gst_structure_get_int (to_struct, "green_mask", &space->dest.g);
-	  gst_structure_get_int (to_struct, "blue_mask", &space->dest.b);
-	  space->dest.a = 0;
-	  space->destbpp = space->dest.bits = to_bpp;
-	  space->dest.indexed = 0;
-	  space->dest.has_colorkey = 0;
+          gst_structure_get_int (to_struct, "red_mask", &space->dest.r);
+          gst_structure_get_int (to_struct, "green_mask", &space->dest.g);
+          gst_structure_get_int (to_struct, "blue_mask", &space->dest.b);
+          space->dest.a = 0;
+          space->destbpp = space->dest.bits = to_bpp;
+          space->dest.indexed = 0;
+          space->dest.has_colorkey = 0;
 
-	  GST_INFO ("dest red mask   %08x", space->dest.r);
-	  GST_INFO ("dest green mask %08x", space->dest.g);
-	  GST_INFO ("dest blue mask  %08x", space->dest.b);
-	  GST_INFO ("dest bpp        %08x", space->destbpp);
+          GST_INFO ("dest red mask   %08x", space->dest.r);
+          GST_INFO ("dest green mask %08x", space->dest.g);
+          GST_INFO ("dest blue mask  %08x", space->dest.b);
+          GST_INFO ("dest bpp        %08x", space->destbpp);
 
-	  if (!Hermes_ConverterRequest (space->h_handle, &space->source,
-		  &space->dest)) {
-	    g_warning ("Hermes: could not get converter\n");
-	    return FALSE;
-	  }
-	  GST_INFO ("converter set up");
-	  space->type = GST_COLORSPACE_HERMES;
-	  return TRUE;
-	}
+          if (!Hermes_ConverterRequest (space->h_handle, &space->source,
+                  &space->dest)) {
+            g_warning ("Hermes: could not get converter\n");
+            return FALSE;
+          }
+          GST_INFO ("converter set up");
+          space->type = GST_COLORSPACE_HERMES;
+          return TRUE;
+        }
 #else
-	  g_warning ("colorspace: compiled without hermes!");
-	  return FALSE;
+          g_warning ("colorspace: compiled without hermes!");
+          return FALSE;
 #endif
-	case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-	  if (from_bpp == 32) {
-	    space->type = GST_COLORSPACE_RGB32_YV12;
-	    space->destbpp = 12;
-	    return TRUE;
-	  }
-	case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-	  if (from_bpp == 32) {
-	    space->type = GST_COLORSPACE_RGB32_I420;
-	    space->destbpp = 12;
-	    return TRUE;
-	  }
-	case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-	  GST_INFO ("colorspace: RGB to YUV with bpp %d not implemented!!",
-	      from_bpp);
-	  return FALSE;
+        case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+          if (from_bpp == 32) {
+            space->type = GST_COLORSPACE_RGB32_YV12;
+            space->destbpp = 12;
+            return TRUE;
+          }
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+          if (from_bpp == 32) {
+            space->type = GST_COLORSPACE_RGB32_I420;
+            space->destbpp = 12;
+            return TRUE;
+          }
+        case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+          GST_INFO ("colorspace: RGB to YUV with bpp %d not implemented!!",
+              from_bpp);
+          return FALSE;
       }
       break;
     }
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       switch (to_space) {
-	case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
-	  GST_INFO ("colorspace: YUV to RGB");
+        case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
+          GST_INFO ("colorspace: YUV to RGB");
 
-	  gst_structure_get_int (to_struct, "bpp", &space->destbpp);
-	  space->converter =
-	      gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
-	  space->type = GST_COLORSPACE_YUV_RGB;
-	  return TRUE;
-	case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-	  space->type = GST_COLORSPACE_NONE;
-	  space->destbpp = 12;
-	  return TRUE;
-	case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-	  space->type = GST_COLORSPACE_420_SWAP;
-	  space->destbpp = 12;
-	  return TRUE;
+          gst_structure_get_int (to_struct, "bpp", &space->destbpp);
+          space->converter =
+              gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
+          space->type = GST_COLORSPACE_YUV_RGB;
+          return TRUE;
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+          space->type = GST_COLORSPACE_NONE;
+          space->destbpp = 12;
+          return TRUE;
+        case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+          space->type = GST_COLORSPACE_420_SWAP;
+          space->destbpp = 12;
+          return TRUE;
 
       }
       break;
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       switch (to_space) {
-	case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-	  space->type = GST_COLORSPACE_YUY2_I420;
-	  space->destbpp = 12;
-	  return TRUE;
-	case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-	  space->type = GST_COLORSPACE_NONE;
-	  space->destbpp = 16;
-	  return TRUE;
-	case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
-	  GST_INFO ("colorspace: YUY2 to RGB not implemented!!");
-	  return FALSE;
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+          space->type = GST_COLORSPACE_YUY2_I420;
+          space->destbpp = 12;
+          return TRUE;
+        case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+          space->type = GST_COLORSPACE_NONE;
+          space->destbpp = 16;
+          return TRUE;
+        case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
+          GST_INFO ("colorspace: YUY2 to RGB not implemented!!");
+          return FALSE;
       }
       break;
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
       switch (to_space) {
-	case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
-	  GST_INFO ("colorspace: YV12 to RGB");
+        case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
+          GST_INFO ("colorspace: YV12 to RGB");
 
-	  gst_structure_get_int (to_struct, "bpp", &space->destbpp);
-	  space->converter =
-	      gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
-	  space->type = GST_COLORSPACE_YUV_RGB;
-	  return TRUE;
-	case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-	  space->type = GST_COLORSPACE_420_SWAP;
-	  space->destbpp = 12;
-	  return TRUE;
-	case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-	  space->type = GST_COLORSPACE_NONE;
-	  space->destbpp = 12;
-	  return TRUE;
+          gst_structure_get_int (to_struct, "bpp", &space->destbpp);
+          space->converter =
+              gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
+          space->type = GST_COLORSPACE_YUV_RGB;
+          return TRUE;
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+          space->type = GST_COLORSPACE_420_SWAP;
+          space->destbpp = 12;
+          return TRUE;
+        case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+          space->type = GST_COLORSPACE_NONE;
+          space->destbpp = 12;
+          return TRUE;
       }
       break;
   }
@@ -317,7 +317,7 @@ gst_colorspace_get_format (const GstCaps * caps)
     GstCaps *fcaps;
 
     fcaps =
-	gst_caps_copy (gst_static_caps_get (&gst_colorspace_formats[i].caps));
+        gst_caps_copy (gst_static_caps_get (&gst_colorspace_formats[i].caps));
 
     icaps = gst_caps_intersect (caps, fcaps);
     if (!gst_caps_is_empty (icaps)) {
@@ -417,8 +417,8 @@ gst_colorspace_link (GstPad * pad, const GstCaps * caps)
     othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
 
     gst_caps_set_simple (othercaps,
-	"width", G_TYPE_INT, width,
-	"height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
 
     link_ret = gst_pad_try_set_caps (otherpad, othercaps);
     if (link_ret != GST_PAD_LINK_OK) {
@@ -434,15 +434,15 @@ gst_colorspace_link (GstPad * pad, const GstCaps * caps)
 
   if (gst_pad_is_negotiated (otherpad)) {
     space->converter_index =
-	gst_colorspace_get_converter (space->sink_format_index,
-	space->src_format_index);
+        gst_colorspace_get_converter (space->sink_format_index,
+        space->src_format_index);
 
     g_print ("using index %d\n", space->converter_index);
 
     space->sink_size = gst_colorspace_format_get_size (space->sink_format_index,
-	width, height);
+        width, height);
     space->src_size = gst_colorspace_format_get_size (space->src_format_index,
-	width, height);
+        width, height);
     space->width = width;
     space->height = height;
     space->fps = fps;
@@ -474,9 +474,10 @@ gst_colorspace_get_type (void)
       0,
       (GInstanceInitFunc) gst_colorspace_init,
     };
+
     colorspace_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstColorspace",
-	&colorspace_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstColorspace",
+        &colorspace_info, 0);
   }
   return colorspace_type;
 }
@@ -621,7 +622,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "colorspace", GST_RANK_PRIMARY,
-	  GST_TYPE_COLORSPACE))
+          GST_TYPE_COLORSPACE))
     return FALSE;
 
   return TRUE;

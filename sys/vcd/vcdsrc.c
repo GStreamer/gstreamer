@@ -97,8 +97,9 @@ vcdsrc_get_type (void)
       0,
       (GInstanceInitFunc) vcdsrc_init,
     };
+
     vcdsrc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "VCDSrc", &vcdsrc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "VCDSrc", &vcdsrc_info, 0);
   }
   return vcdsrc_type;
 }
@@ -121,13 +122,13 @@ vcdsrc_class_init (VCDSrcClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TRACK, g_param_spec_int ("track", "track", "track", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTESPERREAD, g_param_spec_int ("bytesperread", "bytesperread", "bytesperread", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OFFSET, g_param_spec_int ("offset", "offset", "offset", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TRACK, g_param_spec_int ("track", "track", "track", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTESPERREAD, g_param_spec_int ("bytesperread", "bytesperread", "bytesperread", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OFFSET, g_param_spec_int ("offset", "offset", "offset", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_ERRORS,
       g_param_spec_int ("max-errors", "", "", 0, G_MAXINT, 16,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
 
   gobject_class->set_property = vcdsrc_set_property;
   gobject_class->get_property = vcdsrc_get_property;
@@ -170,13 +171,13 @@ vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 /*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       if (src->device)
-	g_free (src->device);
+        g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
       if (g_value_get_string (value) == NULL)
-	src->device = NULL;
+        src->device = NULL;
       /* otherwise set the new filename */
       else
-	src->device = g_strdup (g_value_get_string (value));
+        src->device = g_strdup (g_value_get_string (value));
       break;
     case ARG_TRACK:
       src->track = g_value_get_int (value);
@@ -276,7 +277,7 @@ read_sector:
     }
 
     fprintf (stderr, "%s while reading raw data from cdrom at %d:%d:%d\n",
-	strerror (errno), msf->cdmsf_min0, msf->cdmsf_sec0, msf->cdmsf_frame0);
+        strerror (errno), msf->cdmsf_min0, msf->cdmsf_sec0, msf->cdmsf_frame0);
     vcdsrc->curoffset += 1;
 
     /* Or we can return a zero-filled buffer.  Which is better? */
@@ -327,14 +328,14 @@ vcdsrc_open_file (VCDSrc * src)
 /*      exit(1);*/
     }
     fprintf (stderr, "VCDSrc: track begins at %d:%d:%d\n",
-	src->tracks[i].cdte_addr.msf.minute,
-	src->tracks[i].cdte_addr.msf.second,
-	src->tracks[i].cdte_addr.msf.frame);
+        src->tracks[i].cdte_addr.msf.minute,
+        src->tracks[i].cdte_addr.msf.second,
+        src->tracks[i].cdte_addr.msf.frame);
   }
 
   src->trackoffset =
       (((src->tracks[src->track - 1].cdte_addr.msf.minute * 60) +
-	  src->tracks[src->track - 1].cdte_addr.msf.second) * 75) +
+          src->tracks[src->track - 1].cdte_addr.msf.second) * 75) +
       src->tracks[src->track - 1].cdte_addr.msf.frame;
   fprintf (stderr, "VCDSrc: track offset is %ld\n", src->trackoffset);
 
@@ -372,7 +373,7 @@ vcdsrc_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, VCDSRC_OPEN)) {
       if (!vcdsrc_open_file (VCDSRC (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 
@@ -387,9 +388,9 @@ vcdsrc_recalculate (VCDSrc * vcdsrc)
   if (GST_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN)) {
     /* calculate track offset (beginning of track) */
     vcdsrc->trackoffset =
-	(((vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.minute * 60) +
-	    vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.second) * 75) +
-	vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.frame;
+        (((vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.minute * 60) +
+            vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.second) * 75) +
+        vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.frame;
     fprintf (stderr, "VCDSrc: track offset is %ld\n", vcdsrc->trackoffset);
   }
 }

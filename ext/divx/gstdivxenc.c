@@ -38,7 +38,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2, YV12, YVYU, UYVY }")
-	/* FIXME: 15/16/24/32bpp RGB */
+        /* FIXME: 15/16/24/32bpp RGB */
     )
     );
 
@@ -46,9 +46,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-divx, "
-	"divxversion = (int) 5, "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
+        "divxversion = (int) 5, "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
     );
 
 
@@ -137,8 +137,9 @@ gst_divxenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_divxenc_init,
     };
+
     divxenc_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstDivxEnc", &divxenc_info, 0);
+        "GstDivxEnc", &divxenc_info, 0);
   }
   return divxenc_type;
 }
@@ -171,20 +172,20 @@ gst_divxenc_class_init (GstDivxEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_ulong ("bitrate", "Bitrate",
-	  "Target video bitrate", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+          "Target video bitrate", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXKEYINTERVAL,
       g_param_spec_int ("max_key_interval", "Max. Key Interval",
-	  "Maximum number of frames between two keyframes",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Maximum number of frames between two keyframes",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_ulong ("buffer_size", "Buffer Size",
-	  "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READABLE));
+          "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_int ("quality", "Quality",
-	  "Amount of Motion Estimation", 1, 5, 3, G_PARAM_READWRITE));
+          "Amount of Motion Estimation", 1, 5, 3, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_divxenc_set_property;
   gobject_class->get_property = gst_divxenc_get_property;
@@ -221,7 +222,7 @@ gst_divxenc_init (GstDivxEnc * divxenc)
   /* bitrate, etc. */
   divxenc->width = divxenc->height = divxenc->csp = divxenc->bitcnt = -1;
   divxenc->bitrate = 512 * 1024;
-  divxenc->max_key_interval = -1;	/* default - 2*fps */
+  divxenc->max_key_interval = -1;       /* default - 2*fps */
   divxenc->buffer_size = 512 * 1024;
   divxenc->quality = 3;
 
@@ -279,8 +280,8 @@ gst_divxenc_setup (GstDivxEnc * divxenc)
 
   if ((ret = encore (&handle, ENC_OPT_INIT, &input, &output))) {
     GST_ELEMENT_ERROR (divxenc, LIBRARY, SETTINGS, (NULL),
-	("Error setting up divx encoder: %s (%d)",
-	    gst_divxenc_error (ret), ret));
+        ("Error setting up divx encoder: %s (%d)",
+            gst_divxenc_error (ret), ret));
     return FALSE;
   }
 
@@ -339,7 +340,7 @@ gst_divxenc_chain (GstPad * pad, GstData * _data)
 
   if ((ret = encore (divxenc->handle, ENC_OPT_ENCODE, &xframe, &xres))) {
     GST_ELEMENT_ERROR (divxenc, LIBRARY, ENCODE, (NULL),
-	("Error encoding divx frame: %s (%d)", gst_divxenc_error (ret), ret));
+        ("Error encoding divx frame: %s (%d)", gst_divxenc_error (ret), ret));
     gst_buffer_unref (buf);
     return;
   }
@@ -427,9 +428,9 @@ gst_divxenc_connect (GstPad * pad, const GstCaps * caps)
     GstCaps *new_caps;
 
     new_caps = gst_caps_new_simple ("video/x-divx",
-	"divxversion", G_TYPE_INT, 5,
-	"width", G_TYPE_INT, w,
-	"height", G_TYPE_INT, h, "framerate", G_TYPE_DOUBLE, fps, NULL);
+        "divxversion", G_TYPE_INT, 5,
+        "width", G_TYPE_INT, w,
+        "height", G_TYPE_INT, h, "framerate", G_TYPE_DOUBLE, fps, NULL);
 
     ret = gst_pad_set_explicit_caps (divxenc->srcpad, new_caps);
     if (ret <= 0) {
@@ -509,8 +510,8 @@ plugin_init (GstPlugin * plugin)
   lib_version = encore (NULL, ENC_OPT_VERSION, 0, 0);
   if (lib_version != ENCORE_VERSION) {
     g_warning ("Version mismatch! This plugin was compiled for "
-	"DivX version %d, while your library has version %d!",
-	ENCORE_VERSION, lib_version);
+        "DivX version %d, while your library has version %d!",
+        ENCORE_VERSION, lib_version);
     return FALSE;
   }
 

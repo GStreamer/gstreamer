@@ -87,7 +87,7 @@ gst_smpte_transition_type_get_type (void)
 
     definitions = gst_mask_get_definitions ();
     smpte_transitions =
-	g_new0 (GEnumValue, g_list_length ((GList *) definitions) + 1);
+        g_new0 (GEnumValue, g_list_length ((GList *) definitions) + 1);
 
     while (definitions) {
       GstMaskDefinition *definition = (GstMaskDefinition *) definitions->data;
@@ -102,7 +102,7 @@ gst_smpte_transition_type_get_type (void)
     }
 
     smpte_transition_type =
-	g_enum_register_static ("GstSMPTETransitionType", smpte_transitions);
+        g_enum_register_static ("GstSMPTETransitionType", smpte_transitions);
   }
   return smpte_transition_type;
 }
@@ -140,8 +140,9 @@ gst_smpte_get_type (void)
       0,
       (GInstanceInitFunc) gst_smpte_init,
     };
+
     smpte_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSMPTE", &smpte_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSMPTE", &smpte_info, 0);
   }
   return smpte_type;
 }
@@ -178,18 +179,18 @@ gst_smpte_class_init (GstSMPTEClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
       g_param_spec_enum ("type", "Type", "The type of transition to use",
-	  GST_TYPE_SMPTE_TRANSITION_TYPE, 1, G_PARAM_READWRITE));
+          GST_TYPE_SMPTE_TRANSITION_TYPE, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
       g_param_spec_float ("fps", "FPS",
-	  "Frames per second if no input files are given", 0., G_MAXFLOAT, 25.,
-	  G_PARAM_READWRITE));
+          "Frames per second if no input files are given", 0., G_MAXFLOAT, 25.,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BORDER,
       g_param_spec_int ("border", "Border",
-	  "The border width of the transition", 0, G_MAXINT, 0,
-	  G_PARAM_READWRITE));
+          "The border width of the transition", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEPTH,
       g_param_spec_int ("depth", "Depth", "Depth of the mask in bits", 1, 24,
-	  16, G_PARAM_READWRITE));
+          16, G_PARAM_READWRITE));
 }
 
 /*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
@@ -324,8 +325,8 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
 
       *out++ = ((*in1++ * value) + (*in2++ * (256 - value))) >> 8;
       if (!(i & 1) && !(j & 1)) {
-	*outu++ = ((*in1u++ * value) + (*in2u++ * (256 - value))) >> 8;
-	*outv++ = ((*in1v++ * value) + (*in2v++ * (256 - value))) >> 8;
+        *outu++ = ((*in1u++ * value) + (*in2u++ * (256 - value))) >> 8;
+        *outv++ = ((*in1v++ * value) + (*in2v++ * (256 - value))) >> 8;
       }
     }
   }
@@ -376,25 +377,25 @@ gst_smpte_loop (GstElement * element)
       GstCaps *caps;
 
       caps =
-	  gst_caps_copy (gst_static_caps_get (&gst_smpte_src_template.
-	      static_caps));
+          gst_caps_copy (gst_static_caps_get (&gst_smpte_src_template.
+              static_caps));
       gst_caps_set_simple (caps, "width", G_TYPE_INT, smpte->width, "height",
-	  G_TYPE_INT, smpte->height, "framerate", G_TYPE_DOUBLE, smpte->fps,
-	  NULL);
+          G_TYPE_INT, smpte->height, "framerate", G_TYPE_DOUBLE, smpte->fps,
+          NULL);
 
       if (!gst_pad_try_set_caps (smpte->srcpad, caps)) {
-	GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL), (NULL));
-	return;
+        GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL), (NULL));
+        return;
       }
     }
 
     gst_smpte_blend_i420 (GST_BUFFER_DATA (in1),
-	GST_BUFFER_DATA (in2),
-	GST_BUFFER_DATA (outbuf),
-	smpte->mask, smpte->width, smpte->height,
-	smpte->border,
-	((1 << smpte->depth) + smpte->border) *
-	smpte->position / smpte->duration);
+        GST_BUFFER_DATA (in2),
+        GST_BUFFER_DATA (outbuf),
+        smpte->mask, smpte->width, smpte->height,
+        smpte->border,
+        ((1 << smpte->depth) + smpte->border) *
+        smpte->position / smpte->duration);
   } else {
     outbuf = in2;
     gst_buffer_ref (in2);
@@ -425,7 +426,7 @@ gst_smpte_set_property (GObject * object, guint prop_id,
       gint type = g_value_get_enum (value);
 
       gst_smpte_update_mask (smpte, type, smpte->depth,
-	  smpte->width, smpte->height);
+          smpte->width, smpte->height);
       break;
     }
     case ARG_BORDER:
@@ -439,7 +440,7 @@ gst_smpte_set_property (GObject * object, guint prop_id,
       gint depth = g_value_get_int (value);
 
       gst_smpte_update_mask (smpte, smpte->type, depth,
-	  smpte->width, smpte->height);
+          smpte->width, smpte->height);
       break;
     }
     default:
@@ -459,7 +460,7 @@ gst_smpte_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_TYPE:
       if (smpte->mask) {
-	g_value_set_enum (value, smpte->mask->type);
+        g_value_set_enum (value, smpte->mask->type);
       }
       break;
     case ARG_FPS:

@@ -104,9 +104,10 @@ gst_mpeg2subt_get_type (void)
       0,
       (GInstanceInitFunc) gst_mpeg2subt_init,
     };
+
     mpeg2subt_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMpeg2Subt",
-	&mpeg2subt_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMpeg2Subt",
+        &mpeg2subt_info, 0);
   }
   return mpeg2subt_type;
 }
@@ -128,7 +129,7 @@ gst_mpeg2subt_class_init (GstMpeg2SubtClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -193,68 +194,68 @@ gst_mpeg2subt_parse_header (GstMpeg2Subt * mpeg2subt)
   while (i < mpeg2subt->packet_size) {
     dummy = buffer[i];
     switch (dummy) {
-      case 0x01:		/* null packet ? */
-	i++;
-	break;
-      case 0x02:		/* 02 ff (ff) is the end of the packet */
-	i = mpeg2subt->packet_size;
-	break;
-      case 0x03:		/* palette */
-	mpeg2subt->color[0] = yuv_color[buffer[i + 1] >> 4];
-	mpeg2subt->color[1] = yuv_color[buffer[i + 1] & 0xf];
-	mpeg2subt->color[2] = yuv_color[buffer[i + 2] >> 4];
-	mpeg2subt->color[3] = yuv_color[buffer[i + 2] & 0xf];
-	mpeg2subt->color[4] = yuv_color[0xf];
-	GST_DEBUG ("mpeg2subt: colors %d %d %d %d", mpeg2subt->color[0],
-	    mpeg2subt->color[1], mpeg2subt->color[2], mpeg2subt->color[3]);
-	i += 3;
-	break;
-      case 0x04:		/* transparency palette */
-	mpeg2subt->trans[3] = buffer[i + 1] >> 4;
-	mpeg2subt->trans[2] = buffer[i + 1] & 0xf;
-	mpeg2subt->trans[1] = buffer[i + 2] >> 4;
-	mpeg2subt->trans[0] = buffer[i + 2] & 0xf;
-	GST_DEBUG ("mpeg2subt: transparency %d %d %d %d", mpeg2subt->trans[0],
-	    mpeg2subt->trans[1], mpeg2subt->trans[2], mpeg2subt->trans[3]);
-	i += 3;
-	break;
-      case 0x05:		/* image coordinates */
-	mpeg2subt->width = 1 + (((buffer[i + 2] & 0x0f) << 8) + buffer[i + 3])
-	    - ((((unsigned int) buffer[i + 1]) << 4) + (buffer[i + 2] >> 4));
-	mpeg2subt->height = 1 + (((buffer[i + 5] & 0x0f) << 8) + buffer[i + 6])
-	    - ((((unsigned int) buffer[i + 4]) << 4) + (buffer[i + 5] >> 4));
-	i += 7;
-	break;
-      case 0x06:		/* image 1 / image 2 offsets */
-	mpeg2subt->offset[0] =
-	    (((unsigned int) buffer[i + 1]) << 8) + buffer[i + 2];
-	mpeg2subt->offset[1] =
-	    (((unsigned int) buffer[i + 3]) << 8) + buffer[i + 4];
-	i += 5;
-	break;
-      case 0xff:		/* "ff xx yy zz uu" with 'zz uu' == start of control packet
-				 *  xx and yy are the end time in 90th/sec
-				 */
-	mpeg2subt->duration =
-	    (((buffer[i + 1] << 8) + buffer[i + 2]) * 25) / 90;
+      case 0x01:               /* null packet ? */
+        i++;
+        break;
+      case 0x02:               /* 02 ff (ff) is the end of the packet */
+        i = mpeg2subt->packet_size;
+        break;
+      case 0x03:               /* palette */
+        mpeg2subt->color[0] = yuv_color[buffer[i + 1] >> 4];
+        mpeg2subt->color[1] = yuv_color[buffer[i + 1] & 0xf];
+        mpeg2subt->color[2] = yuv_color[buffer[i + 2] >> 4];
+        mpeg2subt->color[3] = yuv_color[buffer[i + 2] & 0xf];
+        mpeg2subt->color[4] = yuv_color[0xf];
+        GST_DEBUG ("mpeg2subt: colors %d %d %d %d", mpeg2subt->color[0],
+            mpeg2subt->color[1], mpeg2subt->color[2], mpeg2subt->color[3]);
+        i += 3;
+        break;
+      case 0x04:               /* transparency palette */
+        mpeg2subt->trans[3] = buffer[i + 1] >> 4;
+        mpeg2subt->trans[2] = buffer[i + 1] & 0xf;
+        mpeg2subt->trans[1] = buffer[i + 2] >> 4;
+        mpeg2subt->trans[0] = buffer[i + 2] & 0xf;
+        GST_DEBUG ("mpeg2subt: transparency %d %d %d %d", mpeg2subt->trans[0],
+            mpeg2subt->trans[1], mpeg2subt->trans[2], mpeg2subt->trans[3]);
+        i += 3;
+        break;
+      case 0x05:               /* image coordinates */
+        mpeg2subt->width = 1 + (((buffer[i + 2] & 0x0f) << 8) + buffer[i + 3])
+            - ((((unsigned int) buffer[i + 1]) << 4) + (buffer[i + 2] >> 4));
+        mpeg2subt->height = 1 + (((buffer[i + 5] & 0x0f) << 8) + buffer[i + 6])
+            - ((((unsigned int) buffer[i + 4]) << 4) + (buffer[i + 5] >> 4));
+        i += 7;
+        break;
+      case 0x06:               /* image 1 / image 2 offsets */
+        mpeg2subt->offset[0] =
+            (((unsigned int) buffer[i + 1]) << 8) + buffer[i + 2];
+        mpeg2subt->offset[1] =
+            (((unsigned int) buffer[i + 3]) << 8) + buffer[i + 4];
+        i += 5;
+        break;
+      case 0xff:               /* "ff xx yy zz uu" with 'zz uu' == start of control packet
+                                   *  xx and yy are the end time in 90th/sec
+                                 */
+        mpeg2subt->duration =
+            (((buffer[i + 1] << 8) + buffer[i + 2]) * 25) / 90;
 
-	GST_DEBUG ("duration %d", mpeg2subt->duration);
+        GST_DEBUG ("duration %d", mpeg2subt->duration);
 
-	if ((buffer[i + 3] != buffer[mpeg2subt->data_size + 2])
-	    || (buffer[i + 4] != buffer[mpeg2subt->data_size + 3])) {
-	  g_print
-	      ("mpeg2subt: invalid control header (%.2x%.2x != %.2x%.2x) !\n",
-	      buffer[i + 3], buffer[i + 4], buffer[mpeg2subt->data_size + 2],
-	      buffer[mpeg2subt->data_size + 3]);
+        if ((buffer[i + 3] != buffer[mpeg2subt->data_size + 2])
+            || (buffer[i + 4] != buffer[mpeg2subt->data_size + 3])) {
+          g_print
+              ("mpeg2subt: invalid control header (%.2x%.2x != %.2x%.2x) !\n",
+              buffer[i + 3], buffer[i + 4], buffer[mpeg2subt->data_size + 2],
+              buffer[mpeg2subt->data_size + 3]);
 /* FIXME */
 /*          exit(1); */
-	}
-	i += 5;
-	break;
+        }
+        i += 5;
+        break;
       default:
-	g_print ("mpeg2subt: invalid sequence in control header (%.2x) !\n",
-	    dummy);
-	break;
+        g_print ("mpeg2subt: invalid sequence in control header (%.2x) !\n",
+            dummy);
+        break;
     }
   }
 }
@@ -298,46 +299,46 @@ gst_mpeg2subt_merge_title (GstMpeg2Subt * mpeg2subt, GstBuffer * buf)
     gint length, colorid;
 
     code = get_nibble ();
-    if (code >= 0x4) {		/* 4 .. f */
+    if (code >= 0x4) {          /* 4 .. f */
     found_code:
       length = code >> 2;
       colorid = code & 3;
       while (length--)
-	if (x++ < width) {
-	  if (mpeg2subt->trans[colorid] != 0x0) {
-	    *target++ = mpeg2subt->color[colorid];
-	  } else
-	    target++;
-	}
+        if (x++ < width) {
+          if (mpeg2subt->trans[colorid] != 0x0) {
+            *target++ = mpeg2subt->color[colorid];
+          } else
+            target++;
+        }
 
       if (x >= width) {
-	if (!aligned)
-	  get_nibble ();
-	goto next_line;
+        if (!aligned)
+          get_nibble ();
+        goto next_line;
       }
       continue;
     }
 
     code = (code << 4) + get_nibble ();
-    if (code >= 0x10)		/* 1x .. 3x */
+    if (code >= 0x10)           /* 1x .. 3x */
       goto found_code;
 
     code = (code << 4) + get_nibble ();
-    if (code >= 0x40)		/* 04x .. 0fx */
+    if (code >= 0x40)           /* 04x .. 0fx */
       goto found_code;
 
     code = (code << 4) + get_nibble ();
-    if (code >= 0x100)		/* 01xx .. 03xx */
+    if (code >= 0x100)          /* 01xx .. 03xx */
       goto found_code;
 
     /* 00xx - should only happen for 00 00 */
     if (!aligned)
-      code = (code << 4) + get_nibble ();	/* 0 0x xx */
+      code = (code << 4) + get_nibble ();       /* 0 0x xx */
 
     if (code) {
       g_print
-	  ("mpeg2subt: got unknown code 00%x (offset %x side %x, x=%d, y=%d)\n",
-	  code, mpeg2subt->offset[id], id, x, y);
+          ("mpeg2subt: got unknown code 00%x (offset %x side %x, x=%d, y=%d)\n",
+          code, mpeg2subt->offset[id], id, x, y);
       goto next_line;
     }
   next_line:
@@ -395,7 +396,7 @@ gst_mpeg2subt_chain_subtitle (GstPad * pad, GstData * _data)
   if (mpeg2subt->packet_size == size) {
 
     GST_DEBUG ("mpeg2subt: subtitle packet size %d, current size %ld",
-	mpeg2subt->packet_size, size);
+        mpeg2subt->packet_size, size);
 
     mpeg2subt->data_size = GUINT16_FROM_BE (*(guint16 *) (data + 2));
 

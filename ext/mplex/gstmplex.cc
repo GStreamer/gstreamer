@@ -39,7 +39,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) false")
+        "mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) false")
     );
 
 static GstStaticPadTemplate audio_sink_templ =
@@ -47,16 +47,16 @@ static GstStaticPadTemplate audio_sink_templ =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/mpeg, "
-	"mpegversion = (int) 1, "
-	"layer = (int) [ 1, 2 ]; "
-	"audio/x-ac3; "
-	"audio/x-dts; "
-	"audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) { 16, 20, 24 }, "
-	"depth = (int) { 16, 20, 24 }, "
-	"rate = (int) { 48000, 96000 }, " "channels = (int) [ 1, 6 ]")
+        "mpegversion = (int) 1, "
+        "layer = (int) [ 1, 2 ]; "
+        "audio/x-ac3; "
+        "audio/x-dts; "
+        "audio/x-raw-int, "
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) { 16, 20, 24 }, "
+        "depth = (int) { 16, 20, 24 }, "
+        "rate = (int) { 48000, 96000 }, " "channels = (int) [ 1, 6 ]")
     );
 
 /* FIXME: subtitles */
@@ -99,8 +99,8 @@ gst_mplex_get_type (void)
     };
 
     gst_mplex_type =
-	g_type_register_static (GST_TYPE_ELEMENT,
-	"GstMplex", &gst_mplex_info, (GTypeFlags) 0);
+        g_type_register_static (GST_TYPE_ELEMENT,
+        "GstMplex", &gst_mplex_info, (GTypeFlags) 0);
   }
 
   return gst_mplex_type;
@@ -114,7 +114,7 @@ gst_mplex_base_init (GstMplexClass * klass)
     "Codec/Muxer",
     "High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer",
     "Andrew Stevens <andrew.stevens@nexgo.de>\n"
-	"Ronald Bultje <rbultje@ronald.bitfreak.net>"
+        "Ronald Bultje <rbultje@ronald.bitfreak.net>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -191,7 +191,7 @@ gst_mplex_loop (GstElement * element)
     const GList *item;
 
     for (item = gst_element_get_pad_list (element);
-	item != NULL; item = item->next) {
+        item != NULL; item = item->next) {
       StreamKind type;
       GstMplexIBitStream *inputstream;
       JobStream *jobstream;
@@ -202,16 +202,16 @@ gst_mplex_loop (GstElement * element)
 
       /* skip our source pad */
       if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
-	continue;
+        continue;
 
       /* create inputstream, assure we've got caps */
       inputstream = new GstMplexIBitStream (pad);
 
       /* skip unnegotiated pads */
       if (!(caps = GST_PAD_CAPS (pad))) {
-	delete inputstream;
+        delete inputstream;
 
-	continue;
+        continue;
       }
 
       /* get format */
@@ -219,41 +219,41 @@ gst_mplex_loop (GstElement * element)
       mime = gst_structure_get_name (structure);
 
       if (!strcmp (mime, "video/mpeg")) {
-	VideoParams *params;
+        VideoParams *params;
 
-	type = MPEG_VIDEO;
+        type = MPEG_VIDEO;
 
-	params = VideoParams::Default (mplex->job->mux_format);
-	mplex->job->video_param.push_back (params);
-	mplex->job->video_tracks++;
+        params = VideoParams::Default (mplex->job->mux_format);
+        mplex->job->video_param.push_back (params);
+        mplex->job->video_tracks++;
       } else if (!strcmp (mime, "audio/mpeg")) {
-	type = MPEG_AUDIO;
-	mplex->job->audio_tracks++;
+        type = MPEG_AUDIO;
+        mplex->job->audio_tracks++;
       } else if (!strcmp (mime, "audio/x-ac3")) {
-	type = AC3_AUDIO;
-	mplex->job->audio_tracks++;
+        type = AC3_AUDIO;
+        mplex->job->audio_tracks++;
       } else if (!strcmp (mime, "audio/x-dts")) {
-	type = DTS_AUDIO;
-	mplex->job->audio_tracks++;
+        type = DTS_AUDIO;
+        mplex->job->audio_tracks++;
       } else if (!strcmp (mime, "audio/x-raw-int")) {
-	LpcmParams *params;
-	gint bits, chans, rate;
+        LpcmParams *params;
+        gint bits, chans, rate;
 
-	type = LPCM_AUDIO;
+        type = LPCM_AUDIO;
 
-	/* set LPCM params */
-	gst_structure_get_int (structure, "depth", &bits);
-	gst_structure_get_int (structure, "rate", &rate);
-	gst_structure_get_int (structure, "channels", &chans);
-	params = LpcmParams::Checked (rate, chans, bits);
+        /* set LPCM params */
+        gst_structure_get_int (structure, "depth", &bits);
+        gst_structure_get_int (structure, "rate", &rate);
+        gst_structure_get_int (structure, "channels", &chans);
+        params = LpcmParams::Checked (rate, chans, bits);
 
-	mplex->job->lpcm_param.push_back (params);
-	mplex->job->audio_tracks++;
-	mplex->job->lpcm_tracks++;
+        mplex->job->lpcm_param.push_back (params);
+        mplex->job->audio_tracks++;
+        mplex->job->lpcm_tracks++;
       } else {
-	delete inputstream;
+        delete inputstream;
 
-	continue;
+        continue;
       }
 
       jobstream = new JobStream (inputstream, type);
@@ -262,7 +262,7 @@ gst_mplex_loop (GstElement * element)
 
     if (!mplex->job->video_tracks && !mplex->job->audio_tracks) {
       GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
-	  ("no input video or audio tracks set up before loop function"));
+          ("no input video or audio tracks set up before loop function"));
       return;
     }
 

@@ -62,8 +62,8 @@ gst_v4l2_color_balance_channel_get_type (void)
     };
 
     gst_v4l2_color_balance_channel_type =
-	g_type_register_static (GST_TYPE_COLOR_BALANCE_CHANNEL,
-	"GstV4l2ColorBalanceChannel", &v4l2_tuner_channel_info, 0);
+        g_type_register_static (GST_TYPE_COLOR_BALANCE_CHANNEL,
+        "GstV4l2ColorBalanceChannel", &v4l2_tuner_channel_info, 0);
   }
 
   return gst_v4l2_color_balance_channel_type;
@@ -123,7 +123,7 @@ gst_v4l2_color_balance_set_value (GstColorBalance * balance,
   /* assert that we're opened and that we're using a known item */
   g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
   g_return_if_fail (gst_v4l2_color_balance_contains_channel (v4l2element,
-	  v4l2channel));
+          v4l2channel));
 
   gst_v4l2_set_attribute (v4l2element, v4l2channel->index, value);
 }
@@ -140,7 +140,7 @@ gst_v4l2_color_balance_get_value (GstColorBalance * balance,
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), 0);
   g_return_val_if_fail (gst_v4l2_color_balance_contains_channel (v4l2element,
-	  v4l2channel), 0);
+          v4l2channel), 0);
 
   if (!gst_v4l2_get_attribute (v4l2element, v4l2channel->index, &value))
     return 0;

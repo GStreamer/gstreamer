@@ -66,7 +66,7 @@ gst_idct_init_float_idct ()
     scale = (freq == 0) ? sqrt (0.125) : 0.5;
     for (time = 0; time < 8; time++)
       gst_idct_float_c[freq][time] =
-	  scale * cos ((PI / 8.0) * freq * (time + 0.5));
+          scale * cos ((PI / 8.0) * freq * (time + 0.5));
   }
 }
 
@@ -85,7 +85,7 @@ gst_idct_float_idct (block)
       partial_product = 0.0;
 
       for (k = 0; k < 8; k++)
-	partial_product += gst_idct_float_c[k][j] * block[8 * i + k];
+        partial_product += gst_idct_float_c[k][j] * block[8 * i + k];
 
       tmp[8 * i + j] = partial_product;
     }
@@ -98,7 +98,7 @@ gst_idct_float_idct (block)
       partial_product = 0.0;
 
       for (k = 0; k < 8; k++)
-	partial_product += gst_idct_float_c[k][i] * tmp[8 * k + j];
+        partial_product += gst_idct_float_c[k][i] * tmp[8 * k + j];
 
       v = (int) floor (partial_product + 0.5);
       block[8 * i + j] = (v < -256) ? -256 : ((v > 255) ? 255 : v);

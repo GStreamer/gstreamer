@@ -75,8 +75,9 @@ gst_gsmdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_gsmdec_init,
     };
+
     gsmdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstGSMDec", &gsmdec_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstGSMDec", &gsmdec_info, 0);
   }
   return gsmdec_type;
 }
@@ -86,7 +87,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-gsm, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gsmdec_src_template =
@@ -94,11 +95,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static void
@@ -158,12 +159,12 @@ gst_gsmdec_sinkconnect (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "rate", &rate);
 
   if (gst_pad_try_set_caps (gsmdec->srcpad,
-	  gst_caps_new_simple ("audio/x-raw-int",
-	      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-	      "signed", G_TYPE_BOOLEAN, TRUE,
-	      "width", G_TYPE_INT, 16,
-	      "depth", G_TYPE_INT, 16,
-	      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL)) > 0) {
+          gst_caps_new_simple ("audio/x-raw-int",
+              "endianness", G_TYPE_INT, G_BYTE_ORDER,
+              "signed", G_TYPE_BOOLEAN, TRUE,
+              "width", G_TYPE_INT, 16,
+              "depth", G_TYPE_INT, 16,
+              "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL)) > 0) {
     return GST_PAD_LINK_OK;
   }
   return GST_PAD_LINK_REFUSED;
@@ -191,14 +192,14 @@ gst_gsmdec_chain (GstPad * pad, GstData * _data)
     GstBuffer *outbuf;
 
     memcpy (gsmdec->buffer + gsmdec->bufsize, data,
-	(33 - gsmdec->bufsize) * sizeof (gsm_byte));
+        (33 - gsmdec->bufsize) * sizeof (gsm_byte));
 
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = g_malloc (160 * sizeof (gsm_signal));
     GST_BUFFER_SIZE (outbuf) = 160 * sizeof (gsm_signal);
 
     gsm_decode (gsmdec->state, gsmdec->buffer,
-	(gsm_signal *) GST_BUFFER_DATA (outbuf));
+        (gsm_signal *) GST_BUFFER_DATA (outbuf));
 
     gst_pad_push (gsmdec->srcpad, GST_DATA (outbuf));
 

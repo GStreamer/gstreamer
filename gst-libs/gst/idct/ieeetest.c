@@ -52,10 +52,10 @@ main (int argc, char **argv)
   int i, j;
   double max, total;
   int method;
-  DCTELEM block[DCTSIZE2];	/* random source data */
-  DCTELEM refcoefs[DCTSIZE2];	/* coefs from reference FDCT */
-  DCTELEM refout[DCTSIZE2];	/* output from reference IDCT */
-  DCTELEM testout[DCTSIZE2];	/* output from test IDCT */
+  DCTELEM block[DCTSIZE2];      /* random source data */
+  DCTELEM refcoefs[DCTSIZE2];   /* coefs from reference FDCT */
+  DCTELEM refout[DCTSIZE2];     /* output from reference IDCT */
+  DCTELEM testout[DCTSIZE2];    /* output from test IDCT */
   GstIDCT *idct;
   guint64 tscstart, tscmin = ~0, tscmax = 0;
   guint64 tscstop;
@@ -96,9 +96,9 @@ main (int argc, char **argv)
     /* clip */
     for (i = 0; i < DCTSIZE2; i++) {
       if (refcoefs[i] < -2048)
-	refcoefs[i] = -2048;
+        refcoefs[i] = -2048;
       else if (refcoefs[i] > 2047)
-	refcoefs[i] = 2047;
+        refcoefs[i] = 2047;
     }
 
     /* perform reference IDCT */
@@ -107,17 +107,17 @@ main (int argc, char **argv)
     /* clip */
     for (i = 0; i < DCTSIZE2; i++) {
       if (refout[i] < -256)
-	refout[i] = -256;
+        refout[i] = -256;
       else if (refout[i] > 255)
-	refout[i] = 255;
+        refout[i] = 255;
     }
 
     /* perform test IDCT */
     if (GST_IDCT_TRANSPOSE (idct)) {
       for (j = 0; j < DCTSIZE; j++) {
-	for (i = 0; i < DCTSIZE; i++) {
-	  testout[i * DCTSIZE + j] = refcoefs[j * DCTSIZE + i];
-	}
+        for (i = 0; i < DCTSIZE; i++) {
+          testout[i * DCTSIZE + j] = refcoefs[j * DCTSIZE + i];
+        }
       }
     } else {
       memcpy (testout, refcoefs, sizeof (DCTELEM) * DCTSIZE2);
@@ -135,9 +135,9 @@ main (int argc, char **argv)
     /* clip */
     for (i = 0; i < DCTSIZE2; i++) {
       if (testout[i] < -256)
-	testout[i] = -256;
+        testout[i] = -256;
       else if (testout[i] > 255)
-	testout[i] = 255;
+        testout[i] = 255;
     }
 
     /* accumulate error stats */
@@ -147,9 +147,9 @@ main (int argc, char **argv)
       sumerrs[i] += err;
       sumsqerrs[i] += err * err;
       if (err < 0)
-	err = -err;
+        err = -err;
       if (maxerr[i] < err)
-	maxerr[i] = err;
+        maxerr[i] = err;
     }
 
     if (curiter % 100 == 99) {
@@ -290,7 +290,7 @@ dct_init (void)
     for (b = 0; b < 8; b++) {
       tmp = cos ((double) ((a + a + 1) * b) * (3.14159265358979323846 / 16.0));
       if (b == 0)
-	tmp /= sqrt (2.0);
+        tmp /= sqrt (2.0);
       coslu[a][b] = tmp * 0.5;
     }
 }
@@ -307,11 +307,11 @@ ref_fdct (DCTELEM block[8][8])
     for (u = 0; u < 8; u++) {
       tmp = 0.0;
       for (y = 0; y < 8; y++) {
-	tmp2 = 0.0;
-	for (x = 0; x < 8; x++) {
-	  tmp2 += (double) block[y][x] * coslu[x][u];
-	}
-	tmp += coslu[y][v] * tmp2;
+        tmp2 = 0.0;
+        for (x = 0; x < 8; x++) {
+          tmp2 += (double) block[y][x] * coslu[x][u];
+        }
+        tmp += coslu[y][v] * tmp2;
       }
       res[v][u] = tmp;
     }
@@ -321,9 +321,9 @@ ref_fdct (DCTELEM block[8][8])
     for (u = 0; u < 8; u++) {
       tmp = res[v][u];
       if (tmp < 0.0) {
-	x = -((int) (0.5 - tmp));
+        x = -((int) (0.5 - tmp));
       } else {
-	x = (int) (tmp + 0.5);
+        x = (int) (tmp + 0.5);
       }
       block[v][u] = (DCTELEM) x;
     }
@@ -342,11 +342,11 @@ ref_idct (DCTELEM block[8][8])
     for (x = 0; x < 8; x++) {
       tmp = 0.0;
       for (v = 0; v < 8; v++) {
-	tmp2 = 0.0;
-	for (u = 0; u < 8; u++) {
-	  tmp2 += (double) block[v][u] * coslu[x][u];
-	}
-	tmp += coslu[y][v] * tmp2;
+        tmp2 = 0.0;
+        for (u = 0; u < 8; u++) {
+          tmp2 += (double) block[v][u] * coslu[x][u];
+        }
+        tmp += coslu[y][v] * tmp2;
       }
       res[y][x] = tmp;
     }
@@ -356,9 +356,9 @@ ref_idct (DCTELEM block[8][8])
     for (u = 0; u < 8; u++) {
       tmp = res[v][u];
       if (tmp < 0.0) {
-	x = -((int) (0.5 - tmp));
+        x = -((int) (0.5 - tmp));
       } else {
-	x = (int) (tmp + 0.5);
+        x = (int) (tmp + 0.5);
       }
       block[v][u] = (DCTELEM) x;
     }

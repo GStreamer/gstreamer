@@ -42,8 +42,8 @@ tarkin_stream_destroy (TarkinStream * s)
   for (i = 0; i < s->n_layers; i++) {
     if (s->layer[i].waveletbuf) {
       for (j = 0; j < s->layer[i].n_comp; j++) {
-	wavelet_3d_buf_destroy (s->layer[i].waveletbuf[j]);
-	FREE (s->layer[i].packet[j].data);
+        wavelet_3d_buf_destroy (s->layer[i].waveletbuf[j]);
+        FREE (s->layer[i].packet[j].data);
       }
       FREE (s->layer[i].waveletbuf);
       FREE (s->layer[i].packet);
@@ -141,7 +141,7 @@ tarkin_analysis_add_layer (TarkinStream * s, TarkinVideoLayerDesc * tvld)
 
   for (i = 0; i < layer->n_comp; i++) {
     layer->waveletbuf[i] = wavelet_3d_buf_new (layer->desc.width,
-	layer->desc.height, layer->desc.frames_per_buf);
+        layer->desc.height, layer->desc.frames_per_buf);
     layer->packet[i].data = MALLOC (layer->desc.bitstream_len);
     layer->packet[i].storage = layer->desc.bitstream_len;
   }
@@ -165,7 +165,7 @@ _analysis_packetout (TarkinStream * s, uint32_t layer_id, uint32_t comp)
   data_len = s->layer[layer_id].packet[comp].data_len;
 
   oggpack_writeinit (&opb);
-  oggpack_write (&opb, 0, 8);	/* No feature flags for now */
+  oggpack_write (&opb, 0, 8);   /* No feature flags for now */
   oggpack_write (&opb, layer_id, 12);
   oggpack_write (&opb, comp, 12);
   for (i = 0; i < data_len; i++)
@@ -180,7 +180,7 @@ _analysis_packetout (TarkinStream * s, uint32_t layer_id, uint32_t comp)
   printf ("dbg_ogg: writing packet layer %d, comp %d, data_len %d %s\n",
       layer_id, comp, data_len, op.e_o_s ? "eos" : "");
 #endif
-  s->layer[layer_id].packet[comp].data_len = 0;	/* so direct call => eos */
+  s->layer[layer_id].packet[comp].data_len = 0; /* so direct call => eos */
   return (s->packet_out (s, &op));
 }
 
@@ -198,31 +198,31 @@ _stream_flush (TarkinStream * s)
       uint32_t comp_bitstream_len;
       TarkinPacket *packet = layer->packet + j;
 
-	/**
+        /**
          *  implicit 6:1:1 subsampling
          */
       if (j == 0)
-	comp_bitstream_len =
-	    6 * layer->desc.bitstream_len / (layer->n_comp + 5);
+        comp_bitstream_len =
+            6 * layer->desc.bitstream_len / (layer->n_comp + 5);
       else
-	comp_bitstream_len = layer->desc.bitstream_len / (layer->n_comp + 5);
+        comp_bitstream_len = layer->desc.bitstream_len / (layer->n_comp + 5);
 
       if (packet->storage < comp_bitstream_len) {
-	packet->storage = comp_bitstream_len;
-	packet->data = REALLOC (packet->data, comp_bitstream_len);
+        packet->storage = comp_bitstream_len;
+        packet->data = REALLOC (packet->data, comp_bitstream_len);
       }
 
       wavelet_3d_buf_dump ("color-%d-%03d.pgm",
-	  s->current_frame, j, layer->waveletbuf[j], j == 0 ? 0 : 128);
+          s->current_frame, j, layer->waveletbuf[j], j == 0 ? 0 : 128);
 
       wavelet_3d_buf_fwd_xform (layer->waveletbuf[j],
-	  layer->desc.a_moments, layer->desc.s_moments);
+          layer->desc.a_moments, layer->desc.s_moments);
 
       wavelet_3d_buf_dump ("coeff-%d-%03d.pgm",
-	  s->current_frame, j, layer->waveletbuf[j], 128);
+          s->current_frame, j, layer->waveletbuf[j], 128);
 
       packet->data_len = wavelet_3d_buf_encode_coeff (layer->waveletbuf[j],
-	  packet->data, comp_bitstream_len);
+          packet->data, comp_bitstream_len);
 
       _analysis_packetout (s, i, j);
     }
@@ -237,7 +237,7 @@ tarkin_analysis_framein (TarkinStream * s, uint8_t * frame,
   TarkinVideoLayer *layer;
 
   if (!frame)
-    return (_analysis_packetout (s, 0, 0));	/* eos */
+    return (_analysis_packetout (s, 0, 0));     /* eos */
   if ((layer_id >= s->n_layers) || (date->denominator == 0))
     return (TARKIN_FAULT);
 
@@ -286,7 +286,7 @@ TarkinError
 tarkin_synthesis_init (TarkinStream * s, TarkinInfo * ti)
 {
   s->ti = ti;
-  s->layer = ti->layer;		/* It was malloc()ed by headerin() */
+  s->layer = ti->layer;         /* It was malloc()ed by headerin() */
   s->n_layers = ti->n_layers;
   return (TARKIN_OK);
 }
@@ -307,17 +307,17 @@ tarkin_synthesis_packetin (TarkinStream * s, ogg_packet * op)
 #endif
   oggpack_readinit (&opb, op->packet, op->bytes);
   flags = oggpack_read (&opb, 8);
-  layer_id = oggpack_read (&opb, 12);	/* Theses are  required for */
-  comp = oggpack_read (&opb, 12);	/* data hole handling (or maybe
-					 * packetno would be enough ?) */
+  layer_id = oggpack_read (&opb, 12);   /* Theses are  required for */
+  comp = oggpack_read (&opb, 12);       /* data hole handling (or maybe
+                                         * packetno would be enough ?) */
   nread = 4;
 
-  if (flags) {			/* This is void "infinite future features" feature ;) */
+  if (flags) {                  /* This is void "infinite future features" feature ;) */
     if (flags & 1 << 7) {
       junk = flags;
       while (junk & 1 << 7)
-	junk = oggpack_read (&opb, 8);	/* allow for many future flags
-					   that must be correctly ordonned. */
+        junk = oggpack_read (&opb, 8);  /* allow for many future flags
+                                           that must be correctly ordonned. */
     }
     /* This shows how to get a feature's data:
        if (flags & TARKIN_FLAGS_EXAMPLE){
@@ -326,7 +326,7 @@ tarkin_synthesis_packetin (TarkinStream * s, ogg_packet * op)
        tp->example &= 0x4fffffff;
        }
      */
-    for (junk = 1 << 31; junk & 1 << 31;)	/* and many future data */
+    for (junk = 1 << 31; junk & 1 << 31;)       /* and many future data */
       while ((junk = oggpack_read (&opb, 32)) & 1 << 30);
     /* That is, feature data comes in 30 bit chunks. We also have
      * 31 potentially usefull bits in last chunk. */
@@ -343,7 +343,7 @@ tarkin_synthesis_packetin (TarkinStream * s, ogg_packet * op)
   /* We now have for shure our data. */
   packet = &s->layer[layer_id].packet[comp];
   if (packet->data_len)
-    return (-TARKIN_UNUSED);	/* Previous data wasn't used */
+    return (-TARKIN_UNUSED);    /* Previous data wasn't used */
 
   if (packet->storage < data_len) {
     packet->storage = data_len + 255;
@@ -371,19 +371,19 @@ tarkin_synthesis_frameout (TarkinStream * s,
       TarkinPacket *packet = layer->packet + j;
 
       if (packet->data_len == 0)
-	goto err_out;
+        goto err_out;
 
       wavelet_3d_buf_decode_coeff (layer->waveletbuf[j], packet->data,
-	  packet->data_len);
+          packet->data_len);
 
       wavelet_3d_buf_dump ("rcoeff-%d-%03d.pgm",
-	  s->current_frame, j, layer->waveletbuf[j], 128);
+          s->current_frame, j, layer->waveletbuf[j], 128);
 
       wavelet_3d_buf_inv_xform (layer->waveletbuf[j],
-	  layer->desc.a_moments, layer->desc.s_moments);
+          layer->desc.a_moments, layer->desc.s_moments);
 
       wavelet_3d_buf_dump ("rcolor-%d-%03d.pgm",
-	  s->current_frame, j, layer->waveletbuf[j], j == 0 ? 0 : 128);
+          s->current_frame, j, layer->waveletbuf[j], j == 0 ? 0 : 128);
     }
 
     /* We did successfylly read a block from this layer, acknowledge it. */

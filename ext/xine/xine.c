@@ -72,7 +72,7 @@ gst_xine_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       if (xine->stream != NULL)
-	gst_xine_free_stream (xine);
+        gst_xine_free_stream (xine);
       break;
     default:
       GST_ERROR_OBJECT (element, "invalid state change");
@@ -107,7 +107,7 @@ gst_xine_get_stream (GstXine * xine)
     xine->audio_driver = klass->create_audio_driver (xine);
     xine->video_driver = klass->create_video_driver (xine);
     xine->stream =
-	xine_stream_new (klass->xine, xine->audio_driver, xine->video_driver);
+        xine_stream_new (klass->xine, xine->audio_driver, xine->video_driver);
 
     /* FIXME: fail gracefully */
     g_assert (xine->stream);

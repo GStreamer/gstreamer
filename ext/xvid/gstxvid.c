@@ -99,30 +99,30 @@ gst_xvid_structure_to_csp (GstStructure * structure,
     gst_structure_get_fourcc (structure, "format", &fourcc);
     switch (fourcc) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-	xvid_cs = XVID_CSP_I420;
-	stride = w;
-	bpp = 12;
-	break;
+        xvid_cs = XVID_CSP_I420;
+        stride = w;
+        bpp = 12;
+        break;
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-	xvid_cs = XVID_CSP_YUY2;
-	stride = w * 2;
-	bpp = 16;
-	break;
+        xvid_cs = XVID_CSP_YUY2;
+        stride = w * 2;
+        bpp = 16;
+        break;
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-	xvid_cs = XVID_CSP_YV12;
-	stride = w;
-	bpp = 12;
-	break;
+        xvid_cs = XVID_CSP_YV12;
+        stride = w;
+        bpp = 12;
+        break;
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-	xvid_cs = XVID_CSP_UYVY;
-	stride = w * 2;
-	bpp = 16;
-	break;
+        xvid_cs = XVID_CSP_UYVY;
+        stride = w * 2;
+        bpp = 16;
+        break;
       case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
-	xvid_cs = XVID_CSP_YVYU;
-	stride = w * 2;
-	bpp = 16;
-	break;
+        xvid_cs = XVID_CSP_YVYU;
+        stride = w * 2;
+        bpp = 16;
+        break;
     }
   } else {
     gint depth, r_mask;
@@ -133,35 +133,35 @@ gst_xvid_structure_to_csp (GstStructure * structure,
 
     switch (depth) {
       case 15:
-	xvid_cs = XVID_CSP_RGB555;
-	break;
+        xvid_cs = XVID_CSP_RGB555;
+        break;
       case 16:
-	xvid_cs = XVID_CSP_RGB565;
-	break;
+        xvid_cs = XVID_CSP_RGB565;
+        break;
       case 24:
-	if (bpp == 24) {
-	  xvid_cs = XVID_CSP_BGR;
-	} else {
-	  switch (r_mask) {
-	    case 0xff000000:
-	      xvid_cs = XVID_CSP_RGBA;
-	      break;
+        if (bpp == 24) {
+          xvid_cs = XVID_CSP_BGR;
+        } else {
+          switch (r_mask) {
+            case 0xff000000:
+              xvid_cs = XVID_CSP_RGBA;
+              break;
 #ifdef XVID_CSP_ARGB
-	    case 0x00ff0000:
-	      xvid_cs = XVID_CSP_ARGB;
-	      break;
+            case 0x00ff0000:
+              xvid_cs = XVID_CSP_ARGB;
+              break;
 #endif
-	    case 0x0000ff00:
-	      xvid_cs = XVID_CSP_BGRA;
-	      break;
-	    case 0x000000ff:
-	      xvid_cs = XVID_CSP_ABGR;
-	      break;
-	  }
-	}
-	break;
+            case 0x0000ff00:
+              xvid_cs = XVID_CSP_BGRA;
+              break;
+            case 0x000000ff:
+              xvid_cs = XVID_CSP_ABGR;
+              break;
+          }
+        }
+        break;
       default:
-	break;
+        break;
     }
 
     stride = w * bpp / 8;
@@ -191,79 +191,79 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
 #endif
     case XVID_CSP_RGBA:{
       gint r_mask = 0, b_mask = 0, g_mask = 0,
-	  endianness = 0, bpp = 0, depth = 0;
+          endianness = 0, bpp = 0, depth = 0;
 
       switch (csp) {
-	case XVID_CSP_RGB555:
-	  r_mask = GST_VIDEO_RED_MASK_15_INT;
-	  g_mask = GST_VIDEO_GREEN_MASK_15_INT;
-	  b_mask = GST_VIDEO_BLUE_MASK_15_INT;
-	  endianness = G_BYTE_ORDER;
-	  depth = 15;
-	  bpp = 16;
-	  break;
-	case XVID_CSP_RGB565:
-	  r_mask = GST_VIDEO_RED_MASK_16_INT;
-	  g_mask = GST_VIDEO_GREEN_MASK_16_INT;
-	  b_mask = GST_VIDEO_BLUE_MASK_16_INT;
-	  endianness = G_BYTE_ORDER;
-	  depth = 16;
-	  bpp = 16;
-	  break;
-	case XVID_CSP_BGR:
-	  r_mask = 0x0000ff;
-	  g_mask = 0x00ff00;
-	  b_mask = 0xff0000;
-	  endianness = G_BIG_ENDIAN;
-	  depth = 24;
-	  bpp = 24;
-	  break;
-	case XVID_CSP_ABGR:
-	  r_mask = 0x000000ff;
-	  g_mask = 0x0000ff00;
-	  b_mask = 0x00ff0000;
-	  endianness = G_BIG_ENDIAN;
-	  depth = 24;
-	  bpp = 32;
-	  break;
-	case XVID_CSP_BGRA:
-	  r_mask = 0x0000ff00;
-	  g_mask = 0x00ff0000;
-	  b_mask = 0xff000000;
-	  endianness = G_BIG_ENDIAN;
-	  depth = 24;
-	  bpp = 32;
-	  break;
+        case XVID_CSP_RGB555:
+          r_mask = GST_VIDEO_RED_MASK_15_INT;
+          g_mask = GST_VIDEO_GREEN_MASK_15_INT;
+          b_mask = GST_VIDEO_BLUE_MASK_15_INT;
+          endianness = G_BYTE_ORDER;
+          depth = 15;
+          bpp = 16;
+          break;
+        case XVID_CSP_RGB565:
+          r_mask = GST_VIDEO_RED_MASK_16_INT;
+          g_mask = GST_VIDEO_GREEN_MASK_16_INT;
+          b_mask = GST_VIDEO_BLUE_MASK_16_INT;
+          endianness = G_BYTE_ORDER;
+          depth = 16;
+          bpp = 16;
+          break;
+        case XVID_CSP_BGR:
+          r_mask = 0x0000ff;
+          g_mask = 0x00ff00;
+          b_mask = 0xff0000;
+          endianness = G_BIG_ENDIAN;
+          depth = 24;
+          bpp = 24;
+          break;
+        case XVID_CSP_ABGR:
+          r_mask = 0x000000ff;
+          g_mask = 0x0000ff00;
+          b_mask = 0x00ff0000;
+          endianness = G_BIG_ENDIAN;
+          depth = 24;
+          bpp = 32;
+          break;
+        case XVID_CSP_BGRA:
+          r_mask = 0x0000ff00;
+          g_mask = 0x00ff0000;
+          b_mask = 0xff000000;
+          endianness = G_BIG_ENDIAN;
+          depth = 24;
+          bpp = 32;
+          break;
 #ifdef XVID_CSP_ARGB
-	case XVID_CSP_ARGB:
-	  r_mask = 0x00ff0000;
-	  g_mask = 0x0000ff00;
-	  b_mask = 0x000000ff;
-	  endianness = G_BIG_ENDIAN;
-	  depth = 24;
-	  bpp = 32;
-	  break;
+        case XVID_CSP_ARGB:
+          r_mask = 0x00ff0000;
+          g_mask = 0x0000ff00;
+          b_mask = 0x000000ff;
+          endianness = G_BIG_ENDIAN;
+          depth = 24;
+          bpp = 32;
+          break;
 #endif
-	case XVID_CSP_RGBA:
-	  r_mask = 0xff000000;
-	  g_mask = 0x00ff0000;
-	  b_mask = 0x0000ff00;
-	  endianness = G_BIG_ENDIAN;
-	  depth = 24;
-	  bpp = 32;
-	  break;
+        case XVID_CSP_RGBA:
+          r_mask = 0xff000000;
+          g_mask = 0x00ff0000;
+          b_mask = 0x0000ff00;
+          endianness = G_BIG_ENDIAN;
+          depth = 24;
+          bpp = 32;
+          break;
       }
 
       caps = gst_caps_new_simple ("video/x-raw-rgb",
-	  "width", G_TYPE_INT, w,
-	  "height", G_TYPE_INT, h,
-	  "depth", G_TYPE_INT, depth,
-	  "bpp", G_TYPE_INT, bpp,
-	  "endianness", G_TYPE_INT, endianness,
-	  "red_mask", G_TYPE_INT, r_mask,
-	  "green_mask", G_TYPE_INT, g_mask,
-	  "blue_mask", G_TYPE_INT, b_mask,
-	  "framerate", G_TYPE_DOUBLE, fps, NULL);
+          "width", G_TYPE_INT, w,
+          "height", G_TYPE_INT, h,
+          "depth", G_TYPE_INT, depth,
+          "bpp", G_TYPE_INT, bpp,
+          "endianness", G_TYPE_INT, endianness,
+          "red_mask", G_TYPE_INT, r_mask,
+          "green_mask", G_TYPE_INT, g_mask,
+          "blue_mask", G_TYPE_INT, b_mask,
+          "framerate", G_TYPE_DOUBLE, fps, NULL);
       break;
     }
 
@@ -275,28 +275,28 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
       guint32 fourcc = 0;
 
       switch (csp) {
-	case XVID_CSP_YUY2:
-	  fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
-	  break;
-	case XVID_CSP_YVYU:
-	  fourcc = GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U');
-	  break;
-	case XVID_CSP_UYVY:
-	  fourcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
-	  break;
-	case XVID_CSP_I420:
-	  fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
-	  break;
-	case XVID_CSP_YV12:
-	  fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
-	  break;
+        case XVID_CSP_YUY2:
+          fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+          break;
+        case XVID_CSP_YVYU:
+          fourcc = GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U');
+          break;
+        case XVID_CSP_UYVY:
+          fourcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+          break;
+        case XVID_CSP_I420:
+          fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+          break;
+        case XVID_CSP_YV12:
+          fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
+          break;
       }
 
       caps = gst_caps_new_simple ("video/x-raw-yuv",
-	  "width", G_TYPE_INT, w,
-	  "height", G_TYPE_INT, h,
-	  "format", GST_TYPE_FOURCC, fourcc,
-	  "framerate", G_TYPE_DOUBLE, fps, NULL);
+          "width", G_TYPE_INT, w,
+          "height", G_TYPE_INT, h,
+          "format", GST_TYPE_FOURCC, fourcc,
+          "framerate", G_TYPE_DOUBLE, fps, NULL);
       break;
     }
   }
@@ -309,9 +309,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return (gst_element_register (plugin, "xvidenc",
-	  GST_RANK_NONE, GST_TYPE_XVIDENC) &&
+          GST_RANK_NONE, GST_TYPE_XVIDENC) &&
       gst_element_register (plugin, "xviddec",
-	  GST_RANK_SECONDARY, GST_TYPE_XVIDDEC));
+          GST_RANK_SECONDARY, GST_TYPE_XVIDDEC));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

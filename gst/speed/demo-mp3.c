@@ -49,7 +49,7 @@ main (int argc, char **argv)
   vbox = gtk_vbox_new (FALSE, 0);
   gtk_widget_show (vbox);
   hscale = gtk_hscale_new (GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 0.01, 4.0,
-	      0.1, 0.0, 0.0)));
+              0.1, 0.0, 0.0)));
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
   button = gtk_button_new_with_label ("quit");
@@ -68,7 +68,7 @@ main (int argc, char **argv)
   g_object_set (osssink, "fragment", 0x00180008, NULL);
 
   gtk_signal_connect (GTK_OBJECT (gtk_range_get_adjustment (GTK_RANGE
-	      (hscale))), "value_changed", G_CALLBACK (set_speed), speed);
+              (hscale))), "value_changed", G_CALLBACK (set_speed), speed);
 
   pipeline = gst_pipeline_new ("app");
   gst_bin_add_many (GST_BIN (pipeline), filesrc, mad, stereo2mono, speed,

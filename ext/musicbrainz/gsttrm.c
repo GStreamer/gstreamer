@@ -46,11 +46,11 @@ GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (bool) TRUE, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (bool) TRUE, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 
@@ -58,11 +58,11 @@ GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (bool) TRUE, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (bool) TRUE, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 
@@ -102,8 +102,9 @@ gst_musicbrainz_get_type (void)
       0,
       (GInstanceInitFunc) gst_musicbrainz_init,
     };
+
     musicbrainz_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstMusicBrainz", &musicbrainz_info, 0);
+        "GstMusicBrainz", &musicbrainz_info, 0);
   }
   return musicbrainz_type;
 }
@@ -143,10 +144,10 @@ gst_musicbrainz_class_init (GstMusicBrainzClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNATURE,
       g_param_spec_string ("signature", "signature", "signature",
-	  NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ASCII_SIGNATURE,
       g_param_spec_string ("ascii_signature", "ascii_signature",
-	  "ascii_signature", NULL, G_PARAM_READABLE));
+          "ascii_signature", NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_musicbrainz_set_property;
   gobject_class->get_property = gst_musicbrainz_get_property;
@@ -154,7 +155,7 @@ gst_musicbrainz_class_init (GstMusicBrainzClass * klass)
   gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE] =
       g_signal_new ("signature-available", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMusicBrainzClass,
-	  signature_available), NULL, NULL, g_cclosure_marshal_VOID__VOID,
+          signature_available), NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0);
 
   gstelement_class->change_state = gst_musicbrainz_change_state;
@@ -251,7 +252,7 @@ gst_musicbrainz_chain (GstPad * pad, GstData * data)
 
   if (musicbrainz->linked && !musicbrainz->data_available)
     if (gst_pad_query (gst_pad_get_peer (pad), GST_QUERY_TOTAL, &format,
-	    &nanos)) {
+            &nanos)) {
       musicbrainz->total_time = nanos / GST_SECOND;
       trm_SetSongLength (musicbrainz->trm, musicbrainz->total_time);
       musicbrainz->data_available = TRUE;
@@ -261,16 +262,16 @@ gst_musicbrainz_chain (GstPad * pad, GstData * data)
 
   if (!musicbrainz->signature_available
       && trm_GenerateSignature (musicbrainz->trm, GST_BUFFER_DATA (buf),
-	  GST_BUFFER_SIZE (buf))) {
+          GST_BUFFER_SIZE (buf))) {
     GST_DEBUG ("Signature");
 
     trm_FinalizeSignature (musicbrainz->trm, musicbrainz->signature, NULL);
     trm_ConvertSigToASCII (musicbrainz->trm, musicbrainz->signature,
-	musicbrainz->ascii_signature);
+        musicbrainz->ascii_signature);
     g_print ("Signature : %s\n", musicbrainz->ascii_signature);
     musicbrainz->signature_available = TRUE;
     g_signal_emit (G_OBJECT (musicbrainz),
-	gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE], 0);
+        gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE], 0);
 
     GST_DEBUG ("Signature : %s", musicbrainz->ascii_signature);
 

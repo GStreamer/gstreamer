@@ -57,8 +57,9 @@ gst_audio_clock_get_type (void)
       (GInstanceInitFunc) gst_audio_clock_init,
       NULL
     };
+
     clock_type = g_type_register_static (GST_TYPE_SYSTEM_CLOCK, "GstAudioClock",
-	&clock_info, 0);
+        &clock_info, 0);
   }
   return clock_type;
 }
@@ -162,7 +163,7 @@ gst_audio_clock_update_time (GstAudioClock * aclock, GstClockTime time)
     entry->func ((GstClock *) aclock, time, entry, entry->user_data);
 
     aclock->async_entries = g_slist_delete_link (aclock->async_entries,
-	aclock->async_entries);
+        aclock->async_entries);
     /* do I need to free the entry? */
   }
 }
