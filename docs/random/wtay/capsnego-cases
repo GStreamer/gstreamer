@@ -1,0 +1,298 @@
+
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+--- -> ---
+
+always compatible
+
+--+ -> ---
+
+call negotiate function, set the resulting caps
+
+-+- -> ---
+
+always compatible
+
+-++ -> ---
+
+call negotiate function, set the resulting caps
+
++-- -> ---
+
+always compatible, caps are those of the pad
+
++-+ -> ---
+
+always compatible, caps are those of the pad
+
+++- -> ---
+
+always compatible, caps are those of the pad
+
++++ -> ---
+
+always compatible, caps are those of the pad
+
+=====================================
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> --+
+
+call negotiate function, set the resulting caps
+
+--+ -> --+
+
+negotiate until agreed
+
+-+- -> --+
+
+call negotiate until caps match padtemplate
+
+-++ -> --+
+
+negotiate until agreed, caps only got send to the
+other pad if they match the padtemplate
+
++-- -> --+
+
+call negotiate function with src caps, set caps if ok
+
++-+ -> --+
+
+call negotiate function with src caps, negotiate until agreed
+
+++- -> --+
+
+call negotiate function with src caps, set caps if ok
+
++++ -> --+
+
+call negotiate function with src caps, negotiate until agreed
+
+=====================================
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> -+-
+
+always compatible
+
+--+ -> -+-
+
+call negotiate until caps match padtemplate
+
+-+- -> -+-
+
+check padtemplates, if compatible connect
+
+-++ -> -+-
+
+check templates, if compatible,
+call negotiate, until it matches the padtemplate
+
++-- -> -+-
+
+check caps against padtemplate, if compatible, connect
+
++-+ -> -+-
+
+check caps against padtemplate, if compatible: connect
+alse call negotiate until it matches template
+
+++- -> -+-
+
+check caps against padtemplate, if match, connect
+
++++ -> -+-
+
+check caps against padtemplate, if match, connect
+alse check padtemplates if compatible,
+call negotiate until match template
+
+
+=====================================
+
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> -++
+
+call negotiate, set resulting caps
+
+--+ -> -++
+
+call negotiate until agree, check src caps against
+padtemplate before calling sink negotiate
+
+-+- -> -++
+
+check padtemplates, if match call negotiate until
+match src padtemplate.
+
+-++ -> -++
+
+check padtemplates, if match call negotiate until
+agree
+
++-- -> -++
+
+check caps against padtemplate
+call negotiate with caps, if agree, set caps
+
++-+ -> -++
+
+check caps against padtemplate
+call negotiate with caps, negotiate until agree
+
+++- -> -++
+
+check caps against padtemplate
+call negotiate with caps, call negotiate until
+sink caps match src padtemplate
+
++++ -> -++
+
+check caps against padtemplate
+call negotiate with caps, negotiate until agree
+
+
+=====================================
+
+
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> +--
+
+connection fails
+
+--+ -> +--
+
+
+
+-+- -> +--
+
+
+-++ -> +--
+
+
++-- -> +--
+
+
++-+ -> +--
+
+
+++- -> +--
+
+
++++ -> +--
+
+check caps, 
+call src negotiate with caps
+
+
+=====================================
+
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> +-+
+
+
+--+ -> +-+
+
+
+-+- -> +-+
+
+
+-++ -> +-+
+
+
++-- -> +-+
+
+
++-+ -> +-+
+
+
+++- -> +-+
+
+
++++ -> +-+
+
+
+=====================================
+
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> ++-
+
+
+--+ -> ++-
+
+
+-+- -> ++-
+
+
+-++ -> ++-
+
+
++-- -> ++-
+
+
++-+ -> ++-
+
+
+++- -> ++-
+
+
++++ -> ++-
+
+
+=====================================
+
+pad has caps
+| pad has template
+|/ pad has negotiate function
+||/
+
+--- -> +++
+
+
+--+ -> +++
+
+
+-+- -> +++
+
+
+-++ -> +++
+
+
++-- -> +++
+
+
++-+ -> +++
+
+
+++- -> +++
+
+
++++ -> +++
+
+
+=====================================
