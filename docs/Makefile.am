@@ -18,17 +18,15 @@ CLEANFILES = $(DOCS) $(TOPDOCS) $(RELNOTES) tmpbuildcatalog
 
 if BUILD_DOCS
 
-XMLTO = xmlto
 XMLTOFLAGS = --skip-validation -o $(CURDIR)
-XMLLINT = xmllint
 XMLLINTFLAGS = --xinclude --noout --loaddtd --catalogs --postvalid
 
 all: $(DOCS)
 
 tmpbuildcatalog: gst-python.ent
-	xmlcatalog --noout --create $@
-	xmlcatalog --noout --add system `cd $(srcdir) && pwd`/gst-python.ent $(CURDIR)/gst-python.ent $@
-	xmlcatalog --noout --add system $(srcdir)/gst-python.ent $(CURDIR)/gst-python.ent $@
+	$(XMLCATALOG) --noout --create $@
+	$(XMLCATALOG) --noout --add system `cd $(srcdir) && pwd`/gst-python.ent $(CURDIR)/gst-python.ent $@
+	$(XMLCATALOG) --noout --add system $(srcdir)/gst-python.ent $(CURDIR)/gst-python.ent $@
 
 #check: tmpbuildcatalog
 #	for d in $(XMLFILES); do \

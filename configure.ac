@@ -107,29 +107,47 @@ dnl AM_CONDITIONAL(BUILD_EDITOR, test "x$HAVE_EDITOR" = "xyes")
 dnl AC_SUBST(GST_EDITOR_CFLAGS)
 dnl AC_SUBST(GST_EDITOR_LIBS)
 
-AC_CHECK_PROG(HAVE_XMLTO, xmlto, true, false)
-AC_CHECK_PROG(HAVE_XMLCATALOG, xmlcatalog, true, false)
+BUILD_DOCS=yes
+AC_CHECK_PROG(XMLTO, xmlto, xmlto, no)
+if test "x$XMLTO" = xno ; then
+  BUILD_DOCS=no
+fi
+AC_SUBST(XMLTO)
+AC_CHECK_PROG(XMLCATALOG, xmlcatalog, xmlcatalog, no)
+if test "x$XMLCATALOG" = xno ; then
+  BUILD_DOCS=no
+fi
+AC_SUBST(XMLCATALOG)
+AC_CHECK_PROG(XMLLINT, xmllint, xmllint, no)
+if test "x$XMLLINT" = xno ; then
+  BUILD_DOCS=no
+fi
+AC_SUBST(XMLLINT)
 
 AC_ARG_ENABLE(docs,
 AC_HELP_STRING([--enable-docs],[enable building of documentation]),
 [case "${enableval}" in
   yes)
-    if test "x$HAVE_XMLTO" = "xtrue" ; then
-      BUILD_DOCS=yes
-    else
+    if test "x$XMLTO" = "xno" ; then
       AC_MSG_ERROR([you don't have xmlto, so don't use --enable-docs])
       BUILD_DOCS=no
     fi
-    if test "x$HAVE_XMLCATALOG" = "xtrue" ; then
-      BUILD_DOCS=yes
-    else
+    if test "x$XMLCATALOG" = "xno" ; then
       AC_MSG_ERROR([you don't have xmlcatalog, so don't use --enable-docs])
       BUILD_DOCS=no
-    fi ;;
-  no)  BUILD_DOCS=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs) ;;
-esac],
-[BUILD_DOCS=yes]) dnl Default value
+    fi
+    if test "x$XMLLINT" = "xno" ; then
+      AC_MSG_ERROR([you don't have xmllint, so don't use --enable-docs])
+      BUILD_DOCS=no
+    fi
+    ;;
+  no)
+    BUILD_DOCS=no
+    ;;
+  *)
+    AC_MSG_ERROR(bad value ${enableval} for --enable-docs)
+    ;;
+esac])
 
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 

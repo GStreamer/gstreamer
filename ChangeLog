@@ -1,3 +1,9 @@
+2004-07-02  David Schleef  <ds@schleef.org>
+
+	* configure.ac:  Correctly check for XML tools.  Correctly set
+	BUILD_DOCS variable depending on tools.
+	* docs/Makefile.am:  Use XML variables.
+
 2004-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to cvs
