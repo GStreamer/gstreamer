@@ -1,3 +1,10 @@
+2004-08-27  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/glimagesink.c: (gst_glimagesink_ximage_put),
+	(gst_glimagesink_xwindow_new), (gst_glimagesink_xcontext_get),
+	(gst_glimagesink_fixate):  Move local variable declarations to
+	make gcc-2.95 happy.
+
 2004-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
