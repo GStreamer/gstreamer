@@ -31,6 +31,7 @@ enum {
   ARG_0
 };
 
+#if 0
 static GstPadTemplate*
 gst_dv1394src_factory (void)
 {
@@ -51,6 +52,7 @@ gst_dv1394src_factory (void)
   }
   return template;
 }
+#endif
 
 static void		gst_dv1394src_class_init		(GstDV1394SrcClass *klass);
 static void		gst_dv1394src_init		(GstDV1394Src *filter);
@@ -171,7 +173,8 @@ fprintf(stderr,".");
 }
 
 static
-int gst_dv1394src_bus_reset(raw1394handle_t handle) {
+int gst_dv1394src_bus_reset(raw1394handle_t handle,
+		            unsigned int generation) {
   GST_INFO_ELEMENT(0,GST_DV1394SRC(raw1394_get_userdata(handle)),"have bus reset");
   return 0;
 }
@@ -198,7 +201,7 @@ gst_dv1394src_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      if ((dv1394src->handle = raw1394_get_handle()) == NULL) {
+      if ((dv1394src->handle = raw1394_new_handle()) == NULL) {
         GST_INFO_ELEMENT(0,dv1394src,"can't get raw1394 handle");
         return GST_STATE_FAILURE;
       }

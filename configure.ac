@@ -687,7 +687,7 @@ GST_CHECK_FEATURE(OPENQUICKTIME, [Open Quicktime], quicktime_parser quicktime_de
 dnl *** raw1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RAW1394, true)
 GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
-  GST_CHECK_LIBHEADER(RAW1394, raw1394, raw1394_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
+  GST_CHECK_LIBHEADER(RAW1394, raw1394, raw1394_new_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-lraw1394")
   AC_SUBST(RAW1394_LIBS)
 ])
 

@@ -21,7 +21,7 @@
 #include <gst/gst.h>
 
 
-#include "dv1394src.h"
+#include "gstdv1394src.h"
 
 /* elementfactory information */
 static GstElementDetails gst_dv1394src_details = {
