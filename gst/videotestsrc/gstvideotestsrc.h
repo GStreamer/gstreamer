@@ -60,8 +60,9 @@ struct _GstVideotestsrc {
   struct fourcc_list_struct *fourcc;
 
   /* private */
-  gint64 timestamp_offset;
-  gint64 n_frames;
+  gint64 timestamp_offset;		/* base offset */
+  GstClockTime running_time;		/* total running time */
+  gint64 n_frames;			/* total frames sent */
   gint bpp;
   gdouble rate;
   int type;

@@ -575,19 +575,14 @@ gst_videotestsrc_get (GstPad * pad)
   videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (buf),
       videotestsrc->width, videotestsrc->height);
 
+  GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
+      (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
+  videotestsrc->n_frames++;
   if (videotestsrc->sync) {
-    GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
-        (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
-    videotestsrc->n_frames++;
-
     /* FIXME this is not correct if we do QoS */
     if (videotestsrc->clock) {
       gst_element_wait (GST_ELEMENT (videotestsrc), GST_BUFFER_TIMESTAMP (buf));
     }
-  } else {
-    GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
-        (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
-    videotestsrc->n_frames++;
   }
   GST_BUFFER_DURATION (buf) = GST_SECOND / (double) videotestsrc->rate;
 
