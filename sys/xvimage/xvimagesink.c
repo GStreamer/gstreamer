@@ -374,8 +374,8 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
             event->event_data.caps.caps = GST_CAPS_NEW (
                                              "xvimagesink_navigation",
                                              "video/x-raw-rgb",
-                                             "pointer_x", GST_PROPS_INT (e.xmotion.x),
-                                             "pointer_y", GST_PROPS_INT (e.xmotion.y),
+                                             "pointer_x", GST_PROPS_FLOAT (e.xmotion.x),
+                                             "pointer_y", GST_PROPS_FLOAT (e.xmotion.y),
                                              "state", GST_PROPS_INT (e.xmotion.state));
             break;
           case ButtonPress:
@@ -388,8 +388,8 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
             event->event_data.caps.caps = GST_CAPS_NEW (
                                              "xvimagesink_navigation",
                                              "video/x-raw-rgb",
-                                             "pointer_x", GST_PROPS_INT (e.xbutton.x),
-                                             "pointer_y", GST_PROPS_INT (e.xbutton.y),
+                                             "pointer_x", GST_PROPS_FLOAT (e.xbutton.x),
+                                             "pointer_y", GST_PROPS_FLOAT (e.xbutton.y),
                                              "button", GST_PROPS_INT (e.xbutton.button),
                                              "state", GST_PROPS_INT (e.xbutton.state));
             break;
