@@ -44,33 +44,26 @@ SUFFIXES = .1 .1.in
 		-e s,gst.-xmllaunch,`echo gst-xmllaunch | sed $(program_transform_name) | sed s/-/\\-/`,g \
 		$< >$@
 
+AM_CFLAGS = $(GST_CFLAGS)
+
 gst_launch_LDADD = $(GST_LIBS) #-lefence
-gst_launch_CFLAGS = $(GST_CFLAGS)
 
 gst_md5sum_LDADD = $(GST_LIBS) #-lefence
-gst_md5sum_CFLAGS = $(GST_CFLAGS)
 
 gst_typefind_LDADD = $(GST_LIBS) #-lefence
-gst_typefind_CFLAGS = $(GST_CFLAGS)
 
 gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
-gst_inspect_CFLAGS = $(GST_CFLAGS)
 
 gst_xmlinspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
-gst_xmlinspect_CFLAGS = $(GST_CFLAGS)
 
 if !GST_DISABLE_REGISTRY
 gst_register_LDADD = $(GST_LIBS)
-gst_register_CFLAGS = $(GST_CFLAGS)
 
 gst_complete_LDADD = $(GST_LIBS)
-gst_complete_CFLAGS = $(GST_CFLAGS)
 
 gst_compprep_LDADD = $(GST_LIBS)
-gst_compprep_CFLAGS = $(GST_CFLAGS)
 
 gst_xmllaunch_SOURCES = gst-launch.c
 gst_xmllaunch_LDADD = $(GST_LIBS)
-gst_xmllaunch_CFLAGS = $(GST_CFLAGS)
 endif
 

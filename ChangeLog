@@ -1,5 +1,10 @@
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tools/Makefile.am:
+	  use AM_CFLAGS since all the CFLAGS are the same
+
+2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/manual/gnome.xml:
           expand example a little
 	* gst/gst.c: (gst_init_with_popt_table),
