@@ -1,0 +1,159 @@
+changes:
+date = 09-feb-2001 [Markus Fick]
+-> file: fastmix.cpp
+		where: spline creation, spline macros
+		what: added unity gain clamp code, added Quantizer_Bits(shift) preprocessor constants
+		where: fir creation, fir macros
+		what: - removed x<pi/2 condition in coef creation
+		      - added quantizer_bits(shift) preprocessor constants
+		      - set default quantizer bits to 15 instead 14 (scale now 32768 instead 16384)
+		        there should not occure any overflows during fir response calculation because
+		        of the symmetric form of filter and the position of the negative fir coefs
+		      - changed final volume calculation for 16bit samples (quality enhancement)
+
+date = 08-feb-2001 [Markus Fick]
+-> file: sndmix.cpp
+		where: function ReadNote()
+		what: modified behaviour of modplug so that interpolation is only deactivated if
+		      a) the user selects "no interpolation"
+			  b) linear interpolation is set and speed incr. > 0xff00
+			 => if spline or fir is active then we use always interpolation
+
+-> file: fastmix.cpp
+		where: spline macros
+		what: changed spline macros to use precalculated tables (way faster)
+		where: file
+		what: - implemented spline table precalculator
+		      - changed fir precalculator + macros (for higher quality and clearer source)
+		      - added some comments and documentation
+		comment: 
+		  - preprocessor constant: SPLINE_FRACBITS
+		     ) controls quality/memory usage
+			   range is [4..14] inclusive
+			   4 = low quality, low memory usage
+			   14 = highest quality, highest memory usage (1L<<14)*4*2 bytes
+		  - preprocessor constant: WFIR_FRACBITS
+		     ) controls quality/memory usage
+			   range is [4..12] inclusive
+			   4 = low quality, low mu
+			   12 = highest quality, highest memory usage ((1L<<(12+1))+1)*8*2 bytes
+
+date = 07-feb-2001 [Markus Fick]
+-> file: fastmix.cpp
+		where: spline macros
+		what: fixed error in coef calculation
+
+date = 07-feb-2001 [Markus Fick]
+-> file: sndfile.h
+		where: class definition of soundfile 
+		what: removed InitFIR + DoneFIR function prototypes
+-> file: sndfile.cpp
+		function:CSoundFile::CSoundFile()
+		what: [modify] removed call to CSoundFile::InitFIRMixer( )
+
+		function:CSoundFile::~CSoundFile()
+		what: [modify] removed call to CSoundFile::DoneFIRMixer( )
+-> file: fastmix.cpp
+		where: spline macros
+		what: changed formula + added some guard bits to calculation
+
+		where: fir macros + implementation
+		what: - moved CSoundfile::FIR funtions to CzFIR (single instance sfir)
+		      - changed fir macros to support CzFIR class
+
+date = 06-feb-2001 [Markus Fick]
+-> file: fastmix.cpp
+         where: macros
+		 what: - removed fir filter with coef interpolation
+		       - add spline interpolation
+			RM: now modplug->select( SPLINE ) selects spline and
+			        modplug->select( POLYPHASE ) selects 8tap fir filter
+
+date = 05-feb-2001 [Markus Fick]
+-> file: fastmix.cpp
+         where: macros + filter order
+         what: [modify] changed filter order to 8 instead of 10
+
+-> file: fastmix.cpp
+         what: new macros+switch for fir-interpolator with coef interpolation
+
+date = 04-feb-2001 [Markus Fick]
+
+-> file: sndfile.h
+	 where: class CSoundFile (bottom)
+	 what: [add] methods for FIR mixer support
+	             1. int InitFIRInterpolator( );
+				 2. int DoneFIRInterpolator( );
+
+-> file: sndfile.cpp
+     function:CSoundFile::CSoundFile()
+	 what: [modify] add call to CSoundFile::InitFIRMixer( )
+	 
+	 function:CSoundFile::~CSoundFile()
+	 what: [modify] add call to CSoundFile::DoneFIRMixer( )
+
+-> file:  fastmix.cpp
+	 new include: <math.h>
+		why: need it for fir-coef calculation
+     new function: CSoundFile::InitFIRMixer( ) // initializes fir filter lookup (if necessary)
+	 new function: CSoundFile::DoneFIRMixer( ) // decrements ReferenceCounter (for static vars) and deinitializes fir struct (if possible).
+	 new defs:
+		#define FIRCPWBN 10							// log2 of number of precalculated wings (-(1L<<FIRCPWBN)..(1L<<FIRCPWBN))
+		#define FIRLOPOSSHIFT (16-(FIRCPWBN+1))		// shift for lopos of sampleposition -> (16 - FIRCPWBN - 1)
+		#define FIRLEN 9							// number(-1) of multiplications per sample
+		#define FIRCUT 0.90f						// cutoff of filter
+		#define MIXNDX_FIRMIXERSRC  0x20			// src-type for firfilter
+	 new vars:
+		static signed short *cFirLut;				// lulines
+		static int bFirInitialized	= 0;			// initialized?
+		static int nFirOrder		= FIRLEN;		// order (modplug has 4smps pre/post extension, so limit this to 9)
+		static float nFirFC			= FIRCUT;		// cutoff (normalized to pi/2)
+		static int nFirCpw			= (1L<<FIRCPWBN);	// number of precalculted filter lines
+		static int nFirUsers		= 0;			// reference counter
+	 new macros:
+		#define SNDMIX_GETMONOVOL8FIRFILTER
+		#define SNDMIX_GETMONOVOL16FIRFILTER
+		#define SNDMIX_GETSTEREOVOL8FIRFILTER
+		#define SNDMIX_GETSTEREOVOL16FIRFILTER
+	new mixer interface macros:
+		BEGIN_MIX_INTERFACE(Mono8BitFirFilterMix)
+		BEGIN_MIX_INTERFACE(Mono16BitFirFilterMix)
+		BEGIN_RAMPMIX_INTERFACE(Mono8BitFirFilterRampMix)
+		BEGIN_RAMPMIX_INTERFACE(Mono16BitFirFilterRampMix)
+		BEGIN_MIX_INTERFACE(FastMono8BitFirFilterMix)
+		BEGIN_MIX_INTERFACE(FastMono16BitFirFilterMix)
+		BEGIN_FASTRAMPMIX_INTERFACE(FastMono8BitFirFilterRampMix)
+		BEGIN_FASTRAMPMIX_INTERFACE(FastMono16BitFirFilterRampMix)
+		BEGIN_MIX_INTERFACE(Stereo8BitFirFilterMix)
+		BEGIN_MIX_INTERFACE(Stereo16BitFirFilterMix)
+		BEGIN_RAMPMIX_INTERFACE(Stereo8BitFirFilterRampMix)
+		BEGIN_RAMPMIX_INTERFACE(Stereo16BitFirFilterRampMix)
+		BEGIN_MIX_FLT_INTERFACE(FilterMono8BitFirFilterMix)
+		BEGIN_MIX_FLT_INTERFACE(FilterMono16BitFirFilterMix)
+		BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitFirFilterRampMix)
+		BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitFirFilterRampMix)
+		BEGIN_MIX_STFLT_INTERFACE(FilterStereo8BitFirFilterMix)
+		BEGIN_MIX_STFLT_INTERFACE(FilterStereo16BitFirFilterMix)
+		BEGIN_RAMPMIX_STFLT_INTERFACE(FilterStereo8BitFirFilterRampMix)
+		BEGIN_RAMPMIX_STFLT_INTERFACE(FilterStereo16BitFirFilterRampMix)
+	modified:
+		const LPMIXINTERFACE gpMixFunctionTable[2*2*16] // to hold new fir mixer interface
+		const LPMIXINTERFACE gpFastMixFunctionTable[2*2*16] // to hold new fir mixer interface
+		functioN: UINT CSoundFile::CreateStereoMix(int count)
+			new: 
+				if (!(pChannel->dwFlags & CHN_NOIDO))
+				{
+					// use hq-fir mixer?
+					if( ((gdwSoundSetup & (SNDMIX_HQRESAMPLER|SNDMIX_ULTRAHQSRCMODE)) == (SNDMIX_HQRESAMPLER|SNDMIX_ULTRAHQSRCMODE)) ||
+						((gdwSoundSetup & (SNDMIX_HQRESAMPLER)) == (SNDMIX_HQRESAMPLER)) )
+						nFlags += MIXNDX_FIRMIXERSRC;
+					else
+						nFlags += MIXNDX_LINEARSRC; // use 
+				}
+			was:
+				if (!(pChannel->dwFlags & CHN_NOIDO))
+				{
+					nFlags += MIXNDX_LINEARSRC; // use 
+				}
+
+
