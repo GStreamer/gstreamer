@@ -90,9 +90,6 @@ struct _GstV4l2Element {
 	GList /*v4l2_queryctrl*/ *controls;
 	GList /*GList:v4l2_querymenu*/ *menus;
 
-	/* and last but not least, the current video window */
-	struct v4l2_window vwin;
-
 	/* caching values */
 	gint channel;
 	gint output;

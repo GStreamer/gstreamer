@@ -270,16 +270,6 @@ gst_v4l2_open (GstV4l2Element *v4l2element)
 		goto error;
 	}
 
-	/* and get the video window */
-	if (GST_V4L2_IS_OVERLAY(v4l2element)) {
-		if (ioctl(v4l2element->video_fd, VIDIOC_G_WIN, &(v4l2element->vwin)) < 0) {
-			gst_element_error(GST_ELEMENT(v4l2element),
-				"Failed to get video window properties of %s: %s",
-				v4l2element->device, sys_errlist[errno]);
-			goto error;
-		}
-	}
-
 	/* create enumerations */
 	if (!gst_v4l2_fill_lists(v4l2element))
 		goto error;
