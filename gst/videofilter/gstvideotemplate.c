@@ -22,15 +22,6 @@
 /*#define DEBUG_ENABLED */
 #include <gstvideotemplate.h>
 
-
-/* elementfactory information */
-static GstElementDetails videotemplate_details = GST_ELEMENT_DETAILS (
-  "Video Filter Template",
-  "Filter/Video",
-  "Template for a video filter",
-  "David Schleef <ds@schleef.org>",
-);
-
 /* GstVideotemplate signals and args */
 enum {
   /* FILL ME */
@@ -42,7 +33,7 @@ enum {
   /* FILL ME */
 };
 
-static void	gst_videotemplate_class_init	(gpointer g_class);
+static void	gst_videotemplate_base_init	(gpointer g_class);
 static void	gst_videotemplate_class_init	(GstVideotemplateClass *klass);
 static void	gst_videotemplate_init		(GstVideotemplate *videotemplate);
 
@@ -64,7 +55,7 @@ gst_videotemplate_get_type (void)
   if (!videotemplate_type) {
     static const GTypeInfo videotemplate_info = {
       sizeof(GstVideotemplateClass),
-      gst_videotemplate_class_init,
+      gst_videotemplate_base_init,
       NULL,
       (GClassInitFunc)gst_videotemplate_class_init,
       NULL,
@@ -73,7 +64,8 @@ gst_videotemplate_get_type (void)
       0,
       (GInstanceInitFunc)gst_videotemplate_init,
     };
-    videotemplate_type = g_type_register_static(GST_TYPE_VIDEOFILTER, "GstVideotemplate", &videotemplate_info, 0);
+    videotemplate_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
+        "GstVideotemplate", &videotemplate_info, 0);
   }
   return videotemplate_type;
 }
@@ -84,14 +76,17 @@ static GstVideofilterFormat gst_videotemplate_formats[] = {
 
   
 static void
-gst_videotemplate_class_init (gpointer g_class)
+gst_videotemplate_base_init (gpointer g_class)
 {
+  static GstElementDetails videotemplate_details = GST_ELEMENT_DETAILS (
+    "Video Filter Template",
+    "Filter/Video",
+    "Template for a video filter",
+    "David Schleef <ds@schleef.org>"
+  );
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
-  factory = gst_element_set_details (element_class, &videotemplate_details);
-
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videotemplate_sink_template_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videotemplate_src_template_factory));
+  gst_element_class_set_details (element_class, &videotemplate_details);
 }
 static void
 gst_videotemplate_class_init (GstVideotemplateClass *klass)
@@ -236,8 +231,6 @@ gst_videotemplate_get_property (GObject *object, guint prop_id, GValue *value, G
 
 static gboolean plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if(!gst_library_load("gstvideofilter"))
     return FALSE;
 
