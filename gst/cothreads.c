@@ -76,7 +76,7 @@ cothread_context_init (void)
 
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
-  if (_cothread_key == -1) {
+  if (_cothread_key == (pthread_key_t)-1) {
     if (pthread_key_create (&_cothread_key, NULL) != 0) {
       perror ("pthread_key_create");
       return NULL;
@@ -118,17 +118,13 @@ cothread_context_free (cothread_context *ctx)
 {
   gint i;
 
+  g_return_if_fail (ctx != NULL);
+
   GST_INFO (GST_CAT_COTHREADS, "free cothread context");
 
-  for (i = 0; i < ctx->nthreads; i++) {
-#ifndef COTHREAD_ATOMIC
+  for (i = 0; i < COTHREAD_MAXTHREADS; i++) {
     if (ctx->threads[i]) {
-      g_mutex_unlock (ctx->threads[i]->lock);
-      g_mutex_free (ctx->threads[i]->lock);
-    }
-#endif
-    if (i == 0) {
-      g_free (ctx->threads[i]);
+      cothread_destroy (ctx->threads[i]);
     }
   }
   g_hash_table_destroy (ctx->data);
@@ -158,7 +154,7 @@ cothread_create (cothread_context *ctx)
     g_warning ("cothread_create: attempt to create > COTHREAD_MAXTHREADS\n");
     return NULL;
   }
-  /* find a free spot in the stack, note slot 1 has the main thread */
+  /* find a free spot in the stack, note slot 0 has the main thread */
   for (slot = 1; slot < ctx->nthreads; slot++) {
     if (ctx->threads[slot] == NULL)
       break;
@@ -180,7 +176,7 @@ cothread_create (cothread_context *ctx)
   GST_DEBUG (0, "new stack at %p\n", thread);
 
   if (mmap ((void *) thread, COTHREAD_STACKSIZE,
-	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0) < 0) {
+	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0) == MAP_FAILED) {
     perror ("mmap'ing cothread stack space");
     return NULL;
   }
@@ -228,19 +224,28 @@ static void
 cothread_destroy (cothread_state *thread)
 {
   cothread_context *ctx;
+  gint threadnum;
 
   g_return_if_fail (thread != NULL);
 
-  GST_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %p", thread->threadnum, thread, ctx->current);
-
+  threadnum = thread->threadnum;
   ctx = thread->ctx;
+
+  GST_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %d", threadnum, thread, ctx->current);
+
 #ifndef COTHREAD_ATOMIC
   g_mutex_unlock (thread->lock);
   g_mutex_free (thread->lock);
 #endif
-  //munmap ((void *) thread, COTHREAD_STACKSIZE);
 
-  ctx->threads[thread->threadnum] = NULL;
+  if (threadnum == 0) {
+    g_free (thread);
+  }
+  else {
+    munmap ((void *) thread, COTHREAD_STACKSIZE);
+  }
+
+  ctx->threads[threadnum] = NULL;
   ctx->nthreads--;
 }
 
@@ -427,11 +432,11 @@ cothread_switch (cothread_state * thread)
   enter = sigsetjmp (current->jmp, 1);
   if (enter != 0) {
     GST_DEBUG (0, "enter thread #%d %d %p<->%p (%d)\n", current->threadnum, enter,
-	       current->sp, current->top_sp, current->top_sp - current->sp);
+	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
     return;
   }
   GST_DEBUG (0, "exit thread #%d %d %p<->%p (%d)\n", current->threadnum, enter,
-	     current->sp, current->top_sp, current->top_sp - current->sp);
+	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
   enter = 1;
 
   if (current->flags & COTHREAD_DESTROYED)
@@ -445,7 +450,7 @@ cothread_switch (cothread_state * thread)
     siglongjmp (thread->jmp, 1);
   }
   else {
-    GST_ARCH_SETUP_STACK (thread->sp);
+    GST_ARCH_SETUP_STACK ((char*)thread->sp);
     GST_ARCH_SET_SP (thread->sp);
     /* start it */
     GST_ARCH_CALL (cothread_stub);
