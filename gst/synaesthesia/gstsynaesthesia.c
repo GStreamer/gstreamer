@@ -86,7 +86,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
 );
 
 static GstStaticPadTemplate gst_synaesthesia_sink_template =
