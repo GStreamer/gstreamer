@@ -46,6 +46,7 @@ main (int argc, char *argv[])
   GstCaps *src_caps = NULL;
   GstCaps *sink_caps = NULL;
   GstProps *props = NULL;
+  GstPad *pad = NULL;
 
   /* init */
   gst_init (&argc, &argv);
@@ -107,7 +108,8 @@ main (int argc, char *argv[])
 	);
   g_assert (src_caps != NULL);
   g_print ("Setting caps on fakesrc's src pad\n");
-  if (! (gst_pad_try_set_caps (gst_element_get_pad (src, "src"), src_caps)))
+  pad = gst_element_get_pad (src, "src");
+  if (! (gst_pad_try_set_caps (pad, src_caps)))
   {
     g_print ("Could not set caps !\n");
   }
