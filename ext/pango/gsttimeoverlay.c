@@ -204,8 +204,6 @@ gst_timeoverlay_init (GstTimeoverlay *timeoverlay)
   videofilter->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (gst_timeoverlay_src_template_factory),
 		  "src");
-
-  gst_videofilter_postinit(GST_VIDEOFILTER(timeoverlay));
 }
 
 static void
