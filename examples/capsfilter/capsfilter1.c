@@ -13,7 +13,7 @@ new_pad_func (GstElement *element, GstPad *newpad, gpointer data)
 
   if (!strcmp (gst_pad_get_name (newpad), "video_00")) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gst_pad_connect (newpad, gst_element_get_pad (queue, "sink"));
+    gst_pad_link (newpad, gst_element_get_pad (queue, "sink"));
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
   }
 }
@@ -65,11 +65,11 @@ main (gint argc, gchar *argv[])
   gst_bin_add (GST_BIN (thread), xvideosink);
   gst_bin_add (GST_BIN (pipeline), thread);
 
-  gst_element_connect (filesrc, "src", demux, "sink");
-  gst_element_connect (queue, "src", mpeg2dec, "sink");
-  gst_element_connect (mpeg2dec, "src", colorspace, "sink");
+  gst_element_link (filesrc, "src", demux, "sink");
+  gst_element_link (queue, "src", mpeg2dec, "sink");
+  gst_element_link (mpeg2dec, "src", colorspace, "sink");
   /* force RGB data passing between colorspace and xvideosink */
-  res = gst_element_connect_filtered (colorspace, "src", xvideosink, "sink",
+  res = gst_element_link_filtered (colorspace, "src", xvideosink, "sink",
 		        GST_CAPS_NEW (
 			  "filtercaps",
 			  "video/raw",
