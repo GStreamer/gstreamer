@@ -150,7 +150,26 @@ gst_idct_destroy
 <FILE>gstcontrol</FILE>
 <INCLUDE>libs/control/control.h</INCLUDE>
 gst_control_init
+<SUBSECTION Dynamic Parameter Manager>
+gst_dpman_new
+gst_dpman_add_required_dparam_callback
+gst_dpman_add_required_dparam_direct
+gst_dpman_add_required_dparam_array
+gst_dpman_remove_required_dparam
+gst_dpman_attach_dparam
+gst_dpman_detach_dparam
+gst_dpman_get_dparam
+gst_dpman_get_dparam_type
+gst_dpman_register_mode
+gst_dpman_set_mode
+gst_dpman_set_parent
+gst_dpman_get_manager
+gst_dpman_bypass_dparam
+</SUBSECTION>
+<SUBSECTION Dynamic Parameters>
+gst_dparam_new
 gst_dparam_attach
 gst_dparam_detach
 gst_dparam_do_update_default
+</SUBSECTION>
 </SECTION>

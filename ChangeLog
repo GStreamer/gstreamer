@@ -1,3 +1,10 @@
+2004-02-18  kost@imn.htwk-leipzig.de
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	* docs/libs/gstreamer-libs-sections.txt:  Add missing sections
+	for libgstcontrol.
+
 2004-02-18  David Schleef  <ds@schleef.org>
 
 	* libs/gst/control/dparam.c: (gst_dparam_class_init):
