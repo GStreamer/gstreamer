@@ -1,8 +1,8 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.1 "Just Another Victim"
+GStreamer: Release notes for GStreamer FFmpeg 0.8.2 "Titan Shifting Gears"
         
 
-The GStreamer team is happy to announce the first stable release of the
+The GStreamer team is happy to announce a new stable release of the
 FFmpeg-based GStreamer plugin.
 
 
@@ -17,12 +17,12 @@ Features of this release
     
       * codecs for most popular formats
       * optimized colorspace conversion
+      * stability and synchronization fixes
 
 Bugs fixed in this release
     
-      * 136493 : compile error in gst-ffmpeg
-      * 138985 : minor mem leak in gstffmpegdemux.c
-      * 139460 : Compile error with gcc 2.95
+      * 150449 : ffdemux_mpegts causes internal error: push on pad
+      * 152798 : wmv2/wma2 file fails to play back
 
 Download
 
@@ -51,10 +51,6 @@ will create more lists as necessary.
 Contributors to this release
     
       * Ronald Bultje
-      * Benjamin Otte
-      * David Schleef
-      * Jeremy Simon
-      * Stephane Loeuillet
-      * Tim-Philipp Müller
       * Thomas Vander Stichele
+      * Iain Holmes
  

@@ -1,1 +1,29 @@
+This is GStreamer FFmpeg 0.8.2
+
+Changes since 0.8.1:
+	Demuxers:
+	* ffmpeg demuxer wrapper timestamp fixes. Tested are RoQ and Interplay,
+	  several other gaming formats might actually work, too.
+	* signals no_more_pads now, handles events.
+	* use the "new" av_read_frame() instead of av_read_packet().
+
+	Colorspace:
+	* palette handling in the colorspace converter.
+
+	Decoders:
+	* real video codec negotiation fixes. Works on the commandline, doesn't
+	  work in playbin just yet.
+	* lots of codec extradata handling fixes (e.g. MS MPEG, WMV), also
+	  several codec palette handling fixes.
+	* increase priority for ffdec_msmpeg4 so it overtakes divxdec.
+	* proper timestamp handling if a input buffer contains multiple
+	  audio/video frames.
+
+	Muxers:
+	* memleak fix.
+
+Bugs fixed since 0.8.1:
+	* 150449 : ffdemux_mpegts causes internal error: push on pad
+	* 152798 : wmv2/wma2 file fails to play back
+
 This is GStreamer FFmpeg 0.8.0
