@@ -199,11 +199,14 @@ gst_sdlvideosink_get_sdl_from_fourcc (GstSDLVideoSink *sdlvideosink,
       return SDL_UYVY_OVERLAY;
     case GST_MAKE_FOURCC('Y','V','Y','U'):
       return SDL_YVYU_OVERLAY;
-    default:
+    default: {
+      gulong print_format;
+      print_format = GULONG_FROM_LE(code);
       gst_element_error(GST_ELEMENT(sdlvideosink),
         "Unsupported format %08lx (%4.4s)",
-        GULONG_FROM_LE(code), (char*)(&(GULONG_FROM_LE(code))));
+        print_format, (char*)&print_format);
       return 0;
+    }
   }
 }
 
