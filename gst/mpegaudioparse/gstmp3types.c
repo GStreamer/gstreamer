@@ -19,6 +19,7 @@
 
 //#define DEBUG_ENABLED
 #include <gst/gst.h>
+#include <string.h> /* memcmp */
 
 static GstCaps* mp3_typefind(GstBuffer *buf, gpointer private);
 
@@ -30,10 +31,38 @@ static GstTypeDefinition mp3type_definitions[] = {
 static GstCaps* 
 mp3_typefind(GstBuffer *buf, gpointer private) 
 {
-  gulong head = GULONG_FROM_BE(*((gulong *)GST_BUFFER_DATA(buf)));
+  gchar *data;
+  gulong head;
+  
+  data = GST_BUFFER_DATA(buf);
   GstCaps *caps;
 
   GST_DEBUG (0,"mp3typefind: typefind\n");
+ 
+  /* check for ID3 Tag first and forward ID3 length */
+  if (!memcmp (data, "ID3", 3))
+  {
+    guint32 skip;
+    /* ignore next 3 bytes */
+    data += 6;
+    /* if you want that thing faster, do it */
+    skip = GUINT32_FROM_BE(*((guint32 *)data));
+    skip = (((skip & 0x7f000000) >> 3) |
+	    ((skip & 0x007f0000) >> 2) |
+	    ((skip & 0x00007f00) >> 1) |
+	    ((skip & 0x0000007f) >> 0)) + 4 
+    GST_DEBUG (0, "mp3typefind: detected ID3 Tag with %u bytes\n", skip + 6);
+    /* return if buffer is not big enough */
+    if (GST_BUFFER_SIZE (buf) < skip + 10)
+    {
+      GST_DEBUG (0, "mp3typefind: buffer too small to go on typefinding\n", skip + 6);
+      return NULL;
+    }
+    data += skip;
+  }
+  
+  /* now with the right postion, do typefinding */
+  head = GULONG_FROM_BE(*((gulong *)data));
   if ((head & 0xffe00000) != 0xffe00000)
     return NULL;
   if (!((head >> 17) & 3))
