@@ -7,7 +7,36 @@ Parses commandline syntax into a pipeline.
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 This method allows you to create a pipeline from a command
-line syntax description.
+line syntax description. The following example creates a simple
+mp3 player.
+<programlisting>
+  GstElement *pipeline;
+
+  /* create a pipeline to hold our elements */
+  pipeline = gst_pipeline_new ("launch");
+
+  /* build a pipeline in the pipeline */
+  gst_parse_launch ("disksrc location=some.mp3 ! mad ! osssink", GST_BIN (pipeline));
+
+  /* play the thing */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  while (gst_bin_iterate (GST_BIN (pipeline)));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+</programlisting>
+</para>
+
+<para>
+Elements are separated with a <option>!</option>, properties are set with 
+<replaceable>property</replaceable>=<replaceable>value</replaceable>, specific pads
+of an element are selected by replacing the <option>!</option> with 
+<replaceable>padname</replaceable><option>!</option>.
+</para>
+<para>
+Elements can be added to a bin by embracing them with <option>()</option>. Threads
+can be made with <option>{}</option>. 
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

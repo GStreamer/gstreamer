@@ -7,7 +7,67 @@ Capabilities of pads
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GstCaps is used to attach capabilities to a pad. Capabilities are made of
-a mime-type and a set of properties.
+a mime-type and a set of properties. GstCaps can be named and chained into
+a list, which is then a GstCaps on its own.
+</para>
+<para>
+GstCaps are created with gst_caps_new(), which takes a name, a mime type and
+a pointer to a #GstProps. A convenience macro with a cleaner syntax is 
+available to create a caps with GST_CAPS_NEW(). The following example shows how
+to create a GstCaps.
+<programlisting>
+  GstCaps *caps;
+
+  caps = gst_caps_new (
+          "my_caps",		/* capability name */
+	  "audio/raw",		/* mime type */
+	  gst_props_new (	/* properties */
+	    "format",   GST_PROPS_STRING ("float"),
+	    "layout",   GST_PROPS_INT (5),
+	    NULL));
+</programlisting>
+
+The following code example is equivalent to the above example:
+<programlisting>
+  GstCaps *caps;
+
+  caps = GST_CAPS_NEW (
+          "my_caps",		/* capability name */
+	  "audio/raw",		/* mime type */
+	    "format",   GST_PROPS_STRING ("float"),
+	    "channels", GST_PROPS_INT (5)
+	  );
+</programlisting>
+</para>
+<para>
+GstCaps are refcounted with gst_caps_ref() and gst_caps_unref().
+</para>
+<para>
+GstCaps can be chained with the gst_caps_append(), gst_caps_prepend() and
+gst_caps_chain() functions. Use gst_caps_get_by_name() to get a named caps
+structure from a chained list.
+</para>
+<para>
+To get the properties of a caps structure the functions 
+gst_caps_get_boolean(), gst_caps_get_fourcc_int(), gst_caps_get_int(),
+gst_caps_get_string(), which all take a property name as an argument.
+</para>
+<para>
+The properties of the caps structure can be modified with gst_caps_set, which
+takes a list of key value pairs in the #GstProps syntax as shown by this example:
+
+<programlisting>
+  GstCaps *caps;
+   ....
+
+  gst_caps_set (caps, "format", GST_PROPS_STRING ("int"), NULL);
+  gst_caps_set (caps, "channels", GST_PROPS_INT (20), NULL);
+ 
+</programlisting>
+</para>
+<para>
+before modifying a GstCaps, it is a good idea to make a copy if it first with
+gst_caps_copy_on_write(). This will copy thr GstCaps if the refcount is &gt;1.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

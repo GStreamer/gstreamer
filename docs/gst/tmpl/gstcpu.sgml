@@ -10,7 +10,9 @@ Request the features of the CPU.
 This module can be used when developing plugins. It is
 typically used to enable special optimisations based on the
 features of the CPU.
-
+</para>
+<para>
+You'll get a bitmask of flags with gst_cpu_get_flags().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

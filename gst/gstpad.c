@@ -917,10 +917,10 @@ gst_pad_get_peer (GstPad *pad)
 }
 
 /**
- * gst_pad_get_buffer_pool:
+ * gst_pad_get_bufferpool:
  * @pad: the pad to get the bufferpool from
  *
- * Gst the bufferpool of the peer pad of the given
+ * Get the bufferpool of the peer pad of the given
  * pad
  *
  * Returns: The GstBufferPool or NULL.
@@ -1456,11 +1456,12 @@ gst_padtemplate_init (GstPadTemplate *templ)
 }
 
 /**
- * gst_padtemplate_create:
+ * gst_padtemplate_new:
  * @name_template: the name template
  * @direction: the direction for the template
  * @presence: the presence of the pad
  * @caps: a list of capabilities for the template
+ * @...: more capabilities
  *
  * Creates a new padtemplate from the given arguments.
  *

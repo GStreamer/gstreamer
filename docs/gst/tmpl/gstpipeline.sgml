@@ -12,12 +12,6 @@ including threading, as well as provide simple interfaces to common
 functions, like 'Play'.
 </para>
 
-<para>
-The pipeline also has the capability to autoplug. This feature
-allows you to only define the input/output plugins and let the
-pipeline figure out what plugins to use.
-</para>
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 

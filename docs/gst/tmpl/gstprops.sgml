@@ -12,7 +12,7 @@ are usually used in conjunction with GstCaps.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-GstCaps
+#GstCaps
 </para>
 
 <!-- ##### STRUCT GstProps ##### -->
