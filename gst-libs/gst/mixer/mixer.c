@@ -76,21 +76,21 @@ gst_mixer_class_init (GstMixerClass *klass)
 		    GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
 		    G_STRUCT_OFFSET (GstMixerClass, record_toggled),
 		    NULL, NULL,
-		    gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 1,
+		    gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
 		    GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
     gst_mixer_signals[MUTE_TOGGLED] =
       g_signal_new ("mute-toggled",
 		    GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
 		    G_STRUCT_OFFSET (GstMixerClass, mute_toggled),
 		    NULL, NULL,
-		    gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 1,
+		    gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
 		    GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
     gst_mixer_signals[VOLUME_CHANGED] =
       g_signal_new ("volume-changed",
 		    GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
 		    G_STRUCT_OFFSET (GstMixerClass, volume_changed),
 		    NULL, NULL,
-		    gst_mixer_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 1,
+		    gst_mixer_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
 		    GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
       
     initialized = TRUE;
