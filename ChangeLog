@@ -1,5 +1,23 @@
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_base_init),
+	(gst_multifilesrc_class_init), (gst_multifilesrc_init),
+	(gst_multifilesrc_set_property), (gst_multifilesrc_get_property),
+	(gst_multifilesrc_get), (gst_multifilesrc_open_file),
+	(gst_multifilesrc_close_file), (gst_multifilesrc_change_state):
+	* gst/elements/gstmultifilesrc.h:
+          rename multidisksrc to multifilesrc (part of #122200)
+
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  don't check for libxml when load/save and registry disabled (#105844)
+
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/manuals.mak:
           fix automake complaints
 	* gst-element-check.m4:

@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Dominic Ludlam <dom@recoil.org>
  *
- * gstmultidisksrc.c:
+ * gstmultifilesrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,19 +35,19 @@
 
 #include "../gst-i18n-lib.h"
 
-#include "gstmultidisksrc.h"
+#include "gstmultifilesrc.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_multidisksrc_debug);
-#define GST_CAT_DEFAULT gst_multidisksrc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_multifilesrc_debug);
+#define GST_CAT_DEFAULT gst_multifilesrc_debug
 
-GstElementDetails gst_multidisksrc_details = GST_ELEMENT_DETAILS (
-  "Multi Disk Source",
+GstElementDetails gst_multifilesrc_details = GST_ELEMENT_DETAILS (
+  "Multi File Source",
   "Source/File",
   "Read from multiple files in order",
   "Dominic Ludlam <dom@openfx.org>"
 );
 
-/* DiskSrc signals and args */
+/* FileSrc signals and args */
 enum {
   NEW_FILE,
   LAST_SIGNAL
@@ -59,32 +59,32 @@ enum {
 };
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_multidisksrc_debug, "multidisksrc", 0, "multidisksrc element");
+    GST_DEBUG_CATEGORY_INIT (gst_multifilesrc_debug, "multifilesrc", 0, "multifilesrc element");
 
-GST_BOILERPLATE_FULL (GstMultiDiskSrc, gst_multidisksrc, GstElement, GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE_FULL (GstMultiFileSrc, gst_multifilesrc, GstElement, GST_TYPE_ELEMENT, _do_init);
 
-static void		gst_multidisksrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_multidisksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_multifilesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_multifilesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstData *	gst_multidisksrc_get		(GstPad *pad);
-/*static GstBuffer *	gst_multidisksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
+static GstData *	gst_multifilesrc_get		(GstPad *pad);
+/*static GstBuffer *	gst_multifilesrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
 
-static GstElementStateReturn	gst_multidisksrc_change_state	(GstElement *element);
+static GstElementStateReturn	gst_multifilesrc_change_state	(GstElement *element);
 
-static gboolean		gst_multidisksrc_open_file	(GstMultiDiskSrc *src, GstPad *srcpad);
-static void		gst_multidisksrc_close_file	(GstMultiDiskSrc *src);
+static gboolean		gst_multifilesrc_open_file	(GstMultiFileSrc *src, GstPad *srcpad);
+static void		gst_multifilesrc_close_file	(GstMultiFileSrc *src);
 
-static guint gst_multidisksrc_signals[LAST_SIGNAL] = { 0 };
+static guint gst_multifilesrc_signals[LAST_SIGNAL] = { 0 };
 
 static void
-gst_multidisksrc_base_init (gpointer g_class)
+gst_multifilesrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
-  gst_element_class_set_details (gstelement_class, &gst_multidisksrc_details);
+  gst_element_class_set_details (gstelement_class, &gst_multifilesrc_details);
 }
 static void
-gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
+gst_multifilesrc_class_init (GstMultiFileSrcClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -93,9 +93,9 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
   gstelement_class = (GstElementClass*)klass;
 
 
-  gst_multidisksrc_signals[NEW_FILE] =
+  gst_multifilesrc_signals[NEW_FILE] =
     g_signal_new ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstMultiDiskSrcClass, new_file), NULL, NULL,
+                    G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
@@ -103,39 +103,39 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
     g_param_spec_pointer("locations","locations","locations",
                         G_PARAM_READWRITE)); /* CHECKME */
 
-  gobject_class->set_property = gst_multidisksrc_set_property;
-  gobject_class->get_property = gst_multidisksrc_get_property;
+  gobject_class->set_property = gst_multifilesrc_set_property;
+  gobject_class->get_property = gst_multifilesrc_get_property;
 
-  gstelement_class->change_state = gst_multidisksrc_change_state;
+  gstelement_class->change_state = gst_multifilesrc_change_state;
 }
 
 static void
-gst_multidisksrc_init (GstMultiDiskSrc *multidisksrc)
+gst_multifilesrc_init (GstMultiFileSrc *multifilesrc)
 {
-/*  GST_FLAG_SET (disksrc, GST_SRC_); */
+/*  GST_FLAG_SET (filesrc, GST_SRC_); */
 
-  multidisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function (multidisksrc->srcpad,gst_multidisksrc_get);
-/*  gst_pad_set_getregion_function (multidisksrc->srcpad,gst_multidisksrc_get_region); */
-  gst_element_add_pad (GST_ELEMENT (multidisksrc), multidisksrc->srcpad);
+  multifilesrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_get_function (multifilesrc->srcpad,gst_multifilesrc_get);
+/*  gst_pad_set_getregion_function (multifilesrc->srcpad,gst_multifilesrc_get_region); */
+  gst_element_add_pad (GST_ELEMENT (multifilesrc), multifilesrc->srcpad);
 
-  multidisksrc->listptr = NULL;
-  multidisksrc->currentfilename = NULL;
-  multidisksrc->fd = 0;
-  multidisksrc->size = 0;
-  multidisksrc->map = NULL;
-  multidisksrc->new_seek = FALSE;
+  multifilesrc->listptr = NULL;
+  multifilesrc->currentfilename = NULL;
+  multifilesrc->fd = 0;
+  multifilesrc->size = 0;
+  multifilesrc->map = NULL;
+  multifilesrc->new_seek = FALSE;
 }
 
 static void
-gst_multidisksrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_multifilesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstMultiDiskSrc *src;
+  GstMultiFileSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_MULTIDISKSRC (object));
+  g_return_if_fail (GST_IS_MULTIFILESRC (object));
 
-  src = GST_MULTIDISKSRC (object);
+  src = GST_MULTIFILESRC (object);
 
   switch (prop_id) {
     case ARG_LOCATIONS:
@@ -157,14 +157,14 @@ gst_multidisksrc_set_property (GObject *object, guint prop_id, const GValue *val
 }
 
 static void
-gst_multidisksrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_multifilesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstMultiDiskSrc *src;
+  GstMultiFileSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_MULTIDISKSRC (object));
+  g_return_if_fail (GST_IS_MULTIFILESRC (object));
 
-  src = GST_MULTIDISKSRC (object);
+  src = GST_MULTIFILESRC (object);
 
   switch (prop_id) {
     case ARG_LOCATIONS:
@@ -177,23 +177,23 @@ gst_multidisksrc_get_property (GObject *object, guint prop_id, GValue *value, GP
 }
 
 /**
- * gst_disksrc_get:
+ * gst_filesrc_get:
  * @pad: #GstPad to push a buffer from
  *
- * Push a new buffer from the disksrc at the current offset.
+ * Push a new buffer from the filesrc at the current offset.
  */
 static GstData *
-gst_multidisksrc_get (GstPad *pad)
+gst_multifilesrc_get (GstPad *pad)
 {
-  GstMultiDiskSrc *src;
+  GstMultiFileSrc *src;
   GstBuffer *buf;
   GSList *list;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_MULTIDISKSRC (gst_pad_get_parent (pad));
+  src = GST_MULTIFILESRC (gst_pad_get_parent (pad));
 
-  if (GST_FLAG_IS_SET (src, GST_MULTIDISKSRC_OPEN))
-    gst_multidisksrc_close_file(src);
+  if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN))
+    gst_multifilesrc_close_file(src);
 
   if (!src->listptr) {
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
@@ -203,11 +203,11 @@ gst_multidisksrc_get (GstPad *pad)
   src->currentfilename = (gchar *) list->data;
   src->listptr = src->listptr->next;
 
-  if (!gst_multidisksrc_open_file(src, pad))
+  if (!gst_multifilesrc_open_file(src, pad))
       return NULL;
 
   /* emitted after the open, as the user may free the list and string from here*/
-  g_signal_emit(G_OBJECT(src), gst_multidisksrc_signals[NEW_FILE], 0, list);
+  g_signal_emit(G_OBJECT(src), gst_multifilesrc_signals[NEW_FILE], 0, list);
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
@@ -232,9 +232,9 @@ gst_multidisksrc_get (GstPad *pad)
 
 /* open the file and mmap it, necessary to go to READY state */
 static
-gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
+gboolean gst_multifilesrc_open_file (GstMultiFileSrc *src, GstPad *srcpad)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_MULTIDISKSRC_OPEN), FALSE);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN), FALSE);
 
   /* open the file */
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
@@ -259,7 +259,7 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
                          ("mmap call failed."));
       return FALSE;
     }
-    GST_FLAG_SET (src, GST_MULTIDISKSRC_OPEN);
+    GST_FLAG_SET (src, GST_MULTIFILESRC_OPEN);
     src->new_seek = TRUE;
   }
   return TRUE;
@@ -267,9 +267,9 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
 
 /* unmap and close the file */
 static void
-gst_multidisksrc_close_file (GstMultiDiskSrc *src)
+gst_multifilesrc_close_file (GstMultiFileSrc *src)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, GST_MULTIDISKSRC_OPEN));
+  g_return_if_fail (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN));
 
   /* unmap the file from memory and close the file */
   munmap (src->map, src->size);
@@ -281,17 +281,17 @@ gst_multidisksrc_close_file (GstMultiDiskSrc *src)
   src->map = NULL;
   src->new_seek = FALSE;
 
-  GST_FLAG_UNSET (src, GST_MULTIDISKSRC_OPEN);
+  GST_FLAG_UNSET (src, GST_MULTIFILESRC_OPEN);
 }
 
 static GstElementStateReturn
-gst_multidisksrc_change_state (GstElement *element)
+gst_multifilesrc_change_state (GstElement *element)
 {
-  g_return_val_if_fail (GST_IS_MULTIDISKSRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MULTIFILESRC (element), GST_STATE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_MULTIDISKSRC_OPEN))
-      gst_multidisksrc_close_file (GST_MULTIDISKSRC (element));
+    if (GST_FLAG_IS_SET (element, GST_MULTIFILESRC_OPEN))
+      gst_multifilesrc_close_file (GST_MULTIFILESRC (element));
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

@@ -21,7 +21,7 @@ libgstelements_la_SOURCES =	\
 	gstfdsrc.c		\
 	gstidentity.c		\
 	gstmd5sink.c		\
-	gstmultidisksrc.c	\
+	gstmultifilesrc.c	\
 	gstpipefilter.c		\
 	gstshaper.c		\
 	gststatistics.c		\
@@ -43,7 +43,7 @@ noinst_HEADERS =		\
 	gstfilesrc.h		\
 	gstidentity.h		\
 	gstmd5sink.h		\
-	gstmultidisksrc.h	\
+	gstmultifilesrc.h	\
 	gstpipefilter.h		\
 	gstshaper.h		\
 	gststatistics.h		\
