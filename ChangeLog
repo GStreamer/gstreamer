@@ -1,3 +1,23 @@
+2005-02-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_basesink_get_template),
+	(gst_basesink_base_init), (gst_basesink_class_init),
+	(gst_basesink_pad_getcaps), (gst_basesink_pad_setcaps),
+	(gst_basesink_pad_buffer_alloc), (gst_basesink_init),
+	(gst_base_sink_get_template), (gst_base_sink_get_caps),
+	(gst_base_sink_set_caps), (gst_base_sink_buffer_alloc),
+	(gst_basesink_finish_preroll), (gst_basesink_event),
+	(gst_basesink_get_times), (gst_basesink_do_sync),
+	(gst_basesink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/gstiterator.c: (gst_iterator_init), (gst_iterator_new),
+	(gst_list_iterator_next), (gst_list_iterator_free),
+	(gst_iterator_new_list), (gst_iterator_pop), (gst_iterator_next),
+	(gst_iterator_push):
+	Only call the item function in the iterator if there is an item.
+	Add capsnego stuff and buffer_alloc to the basesink class.
+	Cleanups in the preroll code.
+
 2005-02-23  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstidentity.c (gst_identity_event): Pause the sink

@@ -69,7 +69,7 @@ static void gst_basesink_get_property (GObject * object, guint prop_id,
 static GstStaticPadTemplate *gst_base_sink_get_template (GstBaseSink * sink);
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
-static GstBuffer *gst_base_sink_alloc_buffer (GstBaseSink * sink,
+static GstBuffer *gst_base_sink_buffer_alloc (GstBaseSink * sink,
     guint64 offset, guint size, GstCaps * caps);
 static void gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
@@ -139,8 +139,54 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
   klass->get_template = GST_DEBUG_FUNCPTR (gst_base_sink_get_template);
-  klass->alloc_buffer = GST_DEBUG_FUNCPTR (gst_base_sink_alloc_buffer);
+  klass->buffer_alloc = GST_DEBUG_FUNCPTR (gst_base_sink_buffer_alloc);
   klass->get_times = GST_DEBUG_FUNCPTR (gst_basesink_get_times);
+}
+
+static GstCaps *
+gst_basesink_pad_getcaps (GstPad * pad)
+{
+  GstBaseSinkClass *bclass;
+  GstBaseSink *bsink;
+  GstCaps *caps = NULL;
+
+  bsink = GST_BASESINK (GST_PAD_PARENT (pad));
+  bclass = GST_BASESINK_GET_CLASS (bsink);
+  if (bclass->get_caps)
+    caps = bclass->get_caps (bsink);
+
+  return caps;
+}
+
+static gboolean
+gst_basesink_pad_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstBaseSinkClass *bclass;
+  GstBaseSink *bsink;
+  gboolean res = FALSE;
+
+  bsink = GST_BASESINK (GST_PAD_PARENT (pad));
+  bclass = GST_BASESINK_GET_CLASS (bsink);
+  if (bclass->set_caps)
+    res = bclass->set_caps (bsink, caps);
+
+  return res;
+}
+
+static GstBuffer *
+gst_basesink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps)
+{
+  GstBaseSinkClass *bclass;
+  GstBaseSink *bsink;
+  GstBuffer *buffer = NULL;
+
+  bsink = GST_BASESINK (GST_PAD_PARENT (pad));
+  bclass = GST_BASESINK_GET_CLASS (bsink);
+  if (bclass->buffer_alloc)
+    buffer = bclass->buffer_alloc (bsink, offset, size, caps);
+
+  return buffer;
 }
 
 static void
@@ -153,6 +199,12 @@ gst_basesink_init (GstBaseSink * basesink)
   basesink->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (template),
       "sink");
+  gst_pad_set_getcaps_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_basesink_pad_getcaps));
+  gst_pad_set_setcaps_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_basesink_pad_setcaps));
+  gst_pad_set_bufferalloc_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_basesink_pad_buffer_alloc));
   gst_element_add_pad (GST_ELEMENT (basesink), basesink->sinkpad);
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
@@ -263,7 +315,7 @@ gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_base_sink_alloc_buffer (GstBaseSink * sink, guint64 offset, guint size,
+gst_base_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
     GstCaps * caps)
 {
   return NULL;
@@ -288,15 +340,16 @@ gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
   if (bclass->preroll)
     bclass->preroll (basesink, buffer);
 
-  basesink->need_preroll = FALSE;
-  basesink->have_preroll = TRUE;
   gst_element_commit_state (GST_ELEMENT (basesink));
   GST_STATE_UNLOCK (basesink);
 
   GST_DEBUG ("element %s waiting to finish preroll",
       GST_ELEMENT_NAME (basesink));
+  basesink->need_preroll = FALSE;
+  basesink->have_preroll = TRUE;
   GST_PREROLL_WAIT (pad);
   GST_DEBUG ("done preroll");
+  basesink->have_preroll = FALSE;
 
   GST_LOCK (pad);
   usable = !GST_RPAD_IS_FLUSHING (pad) && GST_RPAD_IS_ACTIVE (pad);
@@ -305,7 +358,6 @@ gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
     goto unusable;
 
   GST_DEBUG ("done preroll");
-  basesink->have_preroll = FALSE;
 
   GST_PREROLL_UNLOCK (pad);
   return GST_FLOW_OK;
@@ -390,17 +442,20 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH:
       /* make sure we are not blocked on the clock also clear any pending
        * eos state. */
-      GST_LOCK (basesink);
-      basesink->eos = FALSE;
-      if (basesink->clock_id) {
-        gst_clock_id_unschedule (basesink->clock_id);
-      }
-      GST_UNLOCK (basesink);
+      if (!GST_EVENT_FLUSH_DONE (event)) {
+        GST_LOCK (basesink);
+        basesink->eos = FALSE;
+        if (basesink->clock_id) {
+          gst_clock_id_unschedule (basesink->clock_id);
+        }
+        GST_UNLOCK (basesink);
 
-      /* unlock from a possible state change/preroll */
-      GST_PREROLL_LOCK (pad);
-      GST_PREROLL_SIGNAL (pad);
-      GST_PREROLL_UNLOCK (pad);
+        /* unlock from a possible state change/preroll */
+        GST_PREROLL_LOCK (pad);
+        basesink->need_preroll = TRUE;
+        GST_PREROLL_SIGNAL (pad);
+        GST_PREROLL_UNLOCK (pad);
+      }
       /* now we are completely unblocked and the _chain method
        * will return */
       break;
@@ -615,15 +670,16 @@ gst_basesink_change_state (GstElement * element)
       ret = GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* the state change completes when we are blocking on a preroll
-       * sample */
       GST_PREROLL_LOCK (basesink->sinkpad);
-      if (!basesink->have_preroll) {
-        basesink->need_preroll = TRUE;
-        ret = GST_STATE_ASYNC;
-      } else {
+      if (basesink->have_preroll) {
         /* now let it play */
         GST_PREROLL_SIGNAL (basesink->sinkpad);
+      } else {
+        /* FIXME. We do not have a preroll and we don't need it anymore 
+         * now, this is a case we want to avoid. One way would be to make
+         * a 'lost state' function that makes get_state return PAUSED with
+         * ASYNC to indicate that we are prerolling again. */
+        basesink->need_preroll = FALSE;
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
@@ -640,10 +696,10 @@ gst_basesink_change_state (GstElement * element)
       GST_UNLOCK (basesink);
 
       GST_PREROLL_LOCK (basesink->sinkpad);
-      basesink->need_preroll = TRUE;
       /* if we don't have a preroll buffer and we have not received EOS,
        * we need to wait for a preroll */
       if (!basesink->have_preroll && !eos) {
+        basesink->need_preroll = TRUE;
         ret = GST_STATE_ASYNC;
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);

@@ -68,7 +68,7 @@ struct _GstBaseSinkClass {
   GstCaps*      (*get_caps)     (GstBaseSink *sink);
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 
-  GstBuffer*    (*alloc_buffer) (GstBaseSink *sink, guint64 offset, guint size,
+  GstBuffer*    (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
 		                 GstCaps *caps);
 
   void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer, 

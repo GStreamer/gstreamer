@@ -209,7 +209,7 @@ restart:
   }
 
   result = it->next (it, elem);
-  if (it->item) {
+  if (result == GST_ITERATOR_OK && it->item) {
     GstIteratorItem itemres;
 
     itemres = it->item (it, *elem);
