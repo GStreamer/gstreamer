@@ -85,7 +85,7 @@ struct _GstPad {
 
   gchar *name;
   GList *caps;
-  gpointer private;
+  gpointer element_private;
 
   cothread_state *threadstate;
 
@@ -183,8 +183,8 @@ gboolean 		gst_pad_check_compatibility	(GstPad *srcpad, GstPad *sinkpad);
 void 			gst_pad_set_name		(GstPad *pad, const gchar *name);
 const gchar*		gst_pad_get_name		(GstPad *pad);
 
-void			gst_pad_set_private		(GstPad *pad, gpointer private);
-gpointer		gst_pad_get_private		(GstPad *pad);
+void			gst_pad_set_element_private	(GstPad *pad, gpointer private);
+gpointer		gst_pad_get_element_private	(GstPad *pad);
 
 void 			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
 GstObject*		gst_pad_get_parent		(GstPad *pad);

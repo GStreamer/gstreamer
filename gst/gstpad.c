@@ -1126,14 +1126,14 @@ gst_pad_select(GstPad *nextpad, ...) {
 
 
 void
-gst_pad_set_private (GstPad *pad, gpointer private)
+gst_pad_set_element_private (GstPad *pad, gpointer private)
 {
-  pad->private = private;
+  pad->element_private = private;
 }
 
 gpointer
-gst_pad_get_private (GstPad *pad)
+gst_pad_get_element_private (GstPad *pad)
 {
-  return pad->private;
+  return pad->element_private;
 }
 
