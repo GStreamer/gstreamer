@@ -137,6 +137,7 @@ struct _asf_stream_audio {
 typedef struct _asf_stream_audio asf_stream_audio;
 
 struct _asf_stream_correction {
+  guint8  span;
   guint16 packet_size;
   guint16 chunk_size;
   guint16 data_size;
@@ -150,9 +151,7 @@ struct _asf_stream_video {
   guint32 height;
   guint8  unknown;
   guint16 size;
-} __attribute__ ((__packed__));
-/* the packed attribute is needed to prevent this thing
- * from expanding 'unknown' to 16 bits */
+};
 
 typedef struct _asf_stream_video asf_stream_video;
 
@@ -176,7 +175,7 @@ struct _asf_obj_data {
   ASFGuid file_id;
   guint64 packets;
   guint8  unknown1;
-  guint8  unknown2;
+  /* guint8  unknown2; FIXME: this object is supposed to be 26 bytes?! */
   guint8  correction;
 };
 

@@ -923,6 +923,7 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
 	}
       }
       /* caps nego and typefinding */
+      GST_LOG_OBJECT (tag, "removing first %ld bytes, because they're the ID3v2 tag", tag->v2tag_size);
       buffer = gst_buffer_create_sub (tag->buffer, tag->v2tag_size, 
 				     GST_BUFFER_SIZE (tag->buffer) - tag->v2tag_size);
       gst_data_unref (GST_DATA (tag->buffer));

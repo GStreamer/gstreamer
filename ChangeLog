@@ -1,3 +1,15 @@
+2004-01-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: 
+	* gst/asfdemux/gstasfmux.c: (gst_asfmux_put_guid),
+	(gst_asfmux_put_string), (gst_asfmux_put_wav_header),
+	(gst_asfmux_put_vid_header), (gst_asfmux_put_bmp_header):
+	  lot's of fixes to make data extraction simpler and get the code
+	  architecture and compiler independant. Add debugging category
+	* gst/goom/gstgoom.c: (gst_goom_change_state):
+	  reset channel count on PAUSED=>READY, not READY=>PAUSED
+
 2004-01-26  Colin Walters  <walters@verbum.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_get): Remove ugly

@@ -770,14 +770,10 @@ gst_asfmux_put_guid (GstBuffer   *packet,
   }
   guid = &hash[n].guid;
 
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
   gst_asfmux_put_le32 (packet, guid->v1);
   gst_asfmux_put_le32 (packet, guid->v2);
   gst_asfmux_put_le32 (packet, guid->v3);
   gst_asfmux_put_le32 (packet, guid->v4);
-#else
-  gst_asfmux_put_buffer (packet, (guint8 *) guid, 16);
-#endif
 }
 
 static void
@@ -785,16 +781,12 @@ gst_asfmux_put_string (GstBuffer   *packet,
                        const gchar *str)
 {
   gunichar2 *utf16_str = g_utf8_to_utf16 (str, strlen (str), NULL, NULL, NULL);
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
   gint i, len = strlen (str);
 
   /* this is not an off-by-one-bug, we need the terminating /0 too */
   for (i = 0; i <= len; i++) {
     gst_asfmux_put_le16 (packet, utf16_str[i]);
   }
-#else
-  gst_asfmux_put_buffer (packet, (guint8 *) utf16_str, (strlen (str) + 1) * 2);
-#endif
 
   g_free (utf16_str);
 }
@@ -825,7 +817,6 @@ static void
 gst_asfmux_put_wav_header (GstBuffer        *packet,
                            asf_stream_audio *hdr)
 {
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
   gst_asfmux_put_le16 (packet, hdr->codec_tag);
   gst_asfmux_put_le16 (packet, hdr->channels);
   gst_asfmux_put_le32 (packet, hdr->sample_rate);
@@ -833,31 +824,22 @@ gst_asfmux_put_wav_header (GstBuffer        *packet,
   gst_asfmux_put_le16 (packet, hdr->block_align);
   gst_asfmux_put_le16 (packet, hdr->word_size);
   gst_asfmux_put_le16 (packet, hdr->size);
-#else
-  gst_asfmux_put_buffer (packet, (guint8 *) hdr, 18);
-#endif
 }
 
 static void
 gst_asfmux_put_vid_header (GstBuffer        *packet,
                            asf_stream_video *hdr)
 {
-/* why does it write hdr->size incorrectly? */
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
   gst_asfmux_put_le32 (packet, hdr->width);
   gst_asfmux_put_le32 (packet, hdr->height);
   gst_asfmux_put_byte (packet, hdr->unknown);
   gst_asfmux_put_le16 (packet, hdr->size);
-#else
-  gst_asfmux_put_buffer (packet, (guint8 *) hdr, 11);
-#endif
 }
 
 static void
 gst_asfmux_put_bmp_header (GstBuffer               *packet,
                            asf_stream_video_format *hdr)
 {
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
   gst_asfmux_put_le32 (packet, hdr->size);
   gst_asfmux_put_le32 (packet, hdr->width);
   gst_asfmux_put_le32 (packet, hdr->height);
@@ -869,9 +851,6 @@ gst_asfmux_put_bmp_header (GstBuffer               *packet,
   gst_asfmux_put_le32 (packet, hdr->ypels_meter);
   gst_asfmux_put_le32 (packet, hdr->num_colors);
   gst_asfmux_put_le32 (packet, hdr->imp_colors);
-#else
-  gst_asfmux_put_buffer (packet, (guint8 *) hdr, 40);
-#endif
 }
 
 /* init header */
