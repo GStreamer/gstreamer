@@ -31,6 +31,15 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_FUNC
+#define FUNCTION __func__
+#elif HAVE_PRETTY_FUNCTION
+#define FUNCTION __PRETTY_FUNCTION__
+#elif HAVE_FUNCTION
+#define FUNCTION __FUNCTION__
+#else
+#define FUNCTION ""
+#endif
 
 /***** are we in the core or not? *****/
 #ifdef __GST_PRIVATE_H__
@@ -136,23 +145,46 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 
 
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#ifdef GST_DEBUG_ENABLED
+#define GST_DEBUG(cat, ...) G_STMT_START{ \
+  if ((1<<cat) & _gst_debug_categories) \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+                       NULL,g_strdup_printf( __VA_ARGS__ )); \
+}G_STMT_END
+
+#define GST_DEBUG_ELEMENT(cat, element, ...) G_STMT_START{ \
+  if ((1<<cat) & _gst_debug_categories) \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+                       element,g_strdup_printf( __VA_ARGS__ )); \
+}G_STMT_END
+
+#else
+#define GST_DEBUG(cat, ...)
+#define GST_DEBUG_ELEMENT(cat,element, ...)
+#endif
+
+#elif defined(G_HAVE_GNUC_VARARGS)
 
 #ifdef GST_DEBUG_ENABLED
 #define GST_DEBUG(cat,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_debug_categories) \
-    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
                        NULL,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #define GST_DEBUG_ELEMENT(cat,element,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_debug_categories) \
-    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
                        element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #else
 #define GST_DEBUG(cat,format,args...)
 #define GST_DEBUG_ELEMENT(cat,element,format,args...)
+#endif
+
 #endif
 
 
@@ -164,12 +196,26 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
   GST_OBJECT_NAME (GST_OBJECT_PARENT(pad)) : \
   "''", GST_OBJECT_NAME (pad)
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#ifdef GST_DEBUG_COLOR
+  #define GST_DEBUG_ENTER(...) GST_DEBUG( 31 , "\033[00;37mentering\033[00m :" __VA_ARGS__ )
+  #define GST_DEBUG_LEAVE(...) GST_DEBUG( 31 , "\033[00;37mleaving\033[00m :" , __VA_ARGS__ )
+#else
+  #define GST_DEBUG_ENTER(...) GST_DEBUG( 31 , "entering :" __VA_ARGS__ )
+  #define GST_DEBUG_LEAVE(...) GST_DEBUG( 31 , "leaving :" __VA_ARGS__ )
+#endif
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #ifdef GST_DEBUG_COLOR
   #define GST_DEBUG_ENTER(format, args...) GST_DEBUG( 31 , format ": \033[00;37mentering\033[00m" , ##args )
   #define GST_DEBUG_LEAVE(format, args...) GST_DEBUG( 31 , format ": \033[00;37mleaving\033[00m" , ##args )
 #else
   #define GST_DEBUG_ENTER(format, args...) GST_DEBUG( 31 , format ": entering" , ##args )
   #define GST_DEBUG_LEAVE(format, args...) GST_DEBUG( 31 , format ": leaving" , ##args )
+#endif
+
 #endif
 
 
@@ -194,6 +240,38 @@ typedef void (*_debug_function_f)();
 G_GNUC_UNUSED static gchar *_debug_string_pointer = NULL;
 G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define _DEBUG_ENTER_BUILTIN(...)							\
+  static int _debug_in_wrapper = 0;							\
+  gchar *_debug_string = ({								\
+    if (!_debug_in_wrapper) {								\
+      void *_return_value;								\
+      gchar *_debug_string;								\
+      _debug_function_f function;							\
+      void *_function_args = __builtin_apply_args();					\
+      _debug_in_wrapper = 1;								\
+      _debug_string = g_strdup_printf(GST_DEBUG_PREFIX(""));				\
+      _debug_string_pointer = _debug_string;						\
+      fprintf(stderr,"%s: entered " FUNCTION, _debug_string);				\ 
+      fprintf(stderr, __VA_ARGS__ );							\
+      fprintf(stderr,"\n");								\
+      if (_debug_self_module == NULL) _debug_self_module = g_module_open(NULL,0);	\
+      g_module_symbol(_debug_self_module,FUNCTION,(gpointer *)&function);		\
+      _return_value = __builtin_apply(function,_function_args,64);			\
+      fprintf(stderr,"%s: left " FUNCTION, _debug_string);				\
+      fprintf(stderr, __VA_ARGS__);							\
+      fprintf(stderr,"\n");								\
+      g_free(_debug_string);								\
+      __builtin_return(_return_value);							\
+    } else {										\
+      _debug_in_wrapper = 0;								\
+    }											\
+    _debug_string_pointer;								\
+  });
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define _DEBUG_ENTER_BUILTIN(format,args...)						\
   static int _debug_in_wrapper = 0;							\
   gchar *_debug_string = ({								\
@@ -205,11 +283,11 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
       _debug_in_wrapper = 1;								\
       _debug_string = g_strdup_printf(GST_DEBUG_PREFIX(""));				\
       _debug_string_pointer = _debug_string;						\
-      fprintf(stderr,"%s: entered " __PRETTY_FUNCTION__ format "\n" , _debug_string , ## args ); \
+      fprintf(stderr,"%s: entered " FUNCTION format "\n" , _debug_string , ## args );	\
       if (_debug_self_module == NULL) _debug_self_module = g_module_open(NULL,0);	\
-      g_module_symbol(_debug_self_module,__FUNCTION__,(gpointer *)&function);		\
+      g_module_symbol(_debug_self_module,FUNCTION,(gpointer *)&function);		\
       _return_value = __builtin_apply(function,_function_args,64);			\
-      fprintf(stderr,"%s: left " __PRETTY_FUNCTION__ format "\n" , _debug_string , ## args ); \
+      fprintf(stderr,"%s: left " FUNCTION format "\n" , _debug_string , ## args ); \
       g_free(_debug_string);								\
       __builtin_return(_return_value);							\
     } else {										\
@@ -218,9 +296,26 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
     _debug_string_pointer;								\
   });
 
+#endif
+
 * WARNING: there's a gcc CPP bug lurking in here.  The extra space before the ##args	*
  * somehow make the preprocessor leave the _debug_string. If it's removed, the		*
  * _debug_string somehow gets stripped along with the ##args, and that's all she wrote. *
+
+#ifdef G_HAVE_ISO_VARARGS
+
+#define _DEBUG_BUILTIN(...)					\
+  if (_debug_string != (void *)-1) {				\
+    if (_debug_string) {					\
+      fprintf(stderr, "%s: " _debug_string);			\
+      fprintf(stderr, __VA_ARGS__);				\
+    } else {							\
+      fprintf(stderr,GST_DEBUG_PREFIX(": " __VA_ARGS__));	\
+    } 								\
+  }
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define _DEBUG_BUILTIN(format,args...)				\
   if (_debug_string != (void *)-1) {				\
     if (_debug_string)						\
@@ -228,6 +323,8 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
     else							\
       fprintf(stderr,GST_DEBUG_PREFIX(": " format , ## args));	\
   }
+
+#endif
 
 */
 
@@ -259,22 +356,46 @@ extern guint32 _gst_info_categories;
 #define GST_INFO_ENABLED
 #endif
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#ifdef GST_INFO_ENABLED
+#define GST_INFO(cat,...) G_STMT_START{ \
+  if ((1<<cat) & _gst_info_categories) \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+                      NULL,g_strdup_printf( __VA_ARGS__ )); \
+}G_STMT_END
+
+#define GST_INFO_ELEMENT(cat,element,...) G_STMT_START{ \
+  if ((1<<cat) & _gst_info_categories) \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+                      element,g_strdup_printf( __VA_ARGS__ )); \
+}G_STMT_END
+
+#else
+#define GST_INFO(cat,...) 
+#define GST_INFO_ELEMENT(cat,element,...)
+#endif
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #ifdef GST_INFO_ENABLED
 #define GST_INFO(cat,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
-    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
                       NULL,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #define GST_INFO_ELEMENT(cat,element,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
-    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
                       element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #else
 #define GST_INFO(cat,format,args...) 
 #define GST_INFO_ELEMENT(cat,element,format,args...)
+#endif
+
 #endif
 
 
@@ -305,13 +426,27 @@ void gst_default_error_handler (gchar *file,gchar *function,
 
 extern GstErrorHandler _gst_error_handler;
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GST_ERROR(element,...) \
+  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
+                     element,NULL,g_strdup_printf( __VA_ARGS__ ))
+
+#define GST_ERROR_OBJECT(element,object,...) \
+  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
+                     element,object,g_strdup_printf( __VA_ARGS__ ))
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GST_ERROR(element,format,args...) \
-  _gst_error_handler(__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
                      element,NULL,g_strdup_printf( format , ## args ))
 
 #define GST_ERROR_OBJECT(element,object,format,args...) \
-  _gst_error_handler(__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
                      element,object,g_strdup_printf( format , ## args ))
+
+#endif
 
 
 

@@ -95,7 +95,7 @@ enum {
 /* default scheduler, 'basicomega', can be changed in
  * gstscheduler.c in function gst_scheduler_factory_class_init
  */
-static const struct poptOption options[] = {
+static const struct poptOption gstreamer_options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        "Print the GStreamer version", NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
@@ -126,7 +126,7 @@ static const struct poptOption options[] = {
 const struct poptOption *
 gst_init_get_popt_table (void)
 {
-  return options;
+  return gstreamer_options;
 }
 
 /**
@@ -186,15 +186,15 @@ gst_init_with_popt_table (int *argc, char **argv[],
   gchar **temp;
   const struct poptOption *options;
   /* this is probably hacky, no? */
-  const struct poptOption options_with[] = {
+  struct poptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, gstreamer_options, 0, "GStreamer options:", NULL},
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		 0, "Application options:", NULL},
     POPT_TABLEEND
   };
   const struct poptOption options_without[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, gstreamer_options, 0, "GStreamer options:", NULL},
     POPT_TABLEEND
   };
 

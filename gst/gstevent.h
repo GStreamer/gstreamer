@@ -78,6 +78,18 @@ typedef struct
   GstEventFlag 	flags;
 } GstEventMask;
 
+#ifdef G_HAVE_ISO_VARARGS
+#define GST_EVENT_MASK_FUNCTION(functionname, ...)      \
+static const GstEventMask*                              \
+functionname (GstPad *pad)                            	\
+{                                               	\
+  static const GstEventMask masks[] = {                 \
+    __VA_ARGS__,					\
+    { 0, }						\
+  };                                             	\
+  return masks;                                  	\
+}
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define GST_EVENT_MASK_FUNCTION(functionname, a...)     \
 static const GstEventMask*                              \
 functionname (GstPad *pad)                            	\
@@ -88,6 +100,7 @@ functionname (GstPad *pad)                            	\
   };                                             	\
   return masks;                                  	\
 }
+#endif
 
 /* seek events, extends GstEventFlag */
 typedef enum {

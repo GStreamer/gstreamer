@@ -25,12 +25,25 @@
 
 extern const char             *g_log_domain_gstreamer;
 
+#ifdef G_HAVE_ISO_VARARGS
+
+/* information messages */
+#define GST_SHOW_INFO
+#ifdef GST_SHOW_INFO
+#define gst_info(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define gst_info(...)
+#endif
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 /* information messages */
 #define GST_SHOW_INFO
 #ifdef GST_SHOW_INFO
 #define gst_info(format,args...) fprintf(stderr,format,##args)
 #else
 #define gst_info(format,args...)
+#endif
 #endif
 
 #endif /* __GST_LOG_H__ */
