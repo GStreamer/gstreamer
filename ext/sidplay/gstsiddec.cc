@@ -346,36 +346,35 @@ gst_siddec_loop (GstElement *element)
 
   siddec = GST_SIDDEC (element);
 
-  do {
-    if (siddec->state == SID_STATE_NEED_TUNE) {
-      GstBuffer *buf = gst_pad_pull (siddec->sinkpad);
-      g_assert (buf != NULL);
+  if (siddec->state == SID_STATE_NEED_TUNE) {
+    GstBuffer *buf = gst_pad_pull (siddec->sinkpad);
+    g_assert (buf != NULL);
       
-      if (GST_IS_EVENT (buf)) {
-        switch (GST_EVENT_TYPE (buf)) {
-	  case GST_EVENT_EOS:
-            siddec->state = SID_STATE_LOAD_TUNE;
-	    break;
-	  default:
-	    // bail out, we're not going to do anything
-	    gst_element_set_state (element, GST_STATE_PAUSED);
-	    gst_pad_send_event (siddec->srcpad, gst_event_new (GST_EVENT_EOS));
-	    break;
-	}
-      }
-      else {
-        memcpy (siddec->tune_buffer+siddec->tune_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-        siddec->tune_len += GST_BUFFER_SIZE (buf);
-
-        gst_buffer_unref (buf);
+    if (GST_IS_EVENT (buf)) {
+      switch (GST_EVENT_TYPE (buf)) {
+	case GST_EVENT_EOS:
+          siddec->state = SID_STATE_LOAD_TUNE;
+	  break;
+	default:
+	  // bail out, we're not going to do anything
+	  gst_element_set_state (element, GST_STATE_PAUSED);
+	  gst_pad_send_event (siddec->srcpad, gst_event_new (GST_EVENT_EOS));
+	  break;
       }
     }
-    if (siddec->state == SID_STATE_LOAD_TUNE) {
+    else {
+      memcpy (siddec->tune_buffer+siddec->tune_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      siddec->tune_len += GST_BUFFER_SIZE (buf);
 
-      if (siddec->tune->load (siddec->tune_buffer, siddec->tune_len)) {
-        if (sidEmuInitializeSong (*siddec->engine, *siddec->tune, siddec->tune_number)) {
+      gst_buffer_unref (buf);
+    }
+  }
+  if (siddec->state == SID_STATE_LOAD_TUNE) {
 
-	  gst_pad_set_caps (siddec->srcpad, 
+    if (siddec->tune->load (siddec->tune_buffer, siddec->tune_len)) {
+      if (sidEmuInitializeSong (*siddec->engine, *siddec->tune, siddec->tune_number)) {
+
+	gst_pad_set_caps (siddec->srcpad, 
 			  GST_CAPS_NEW (
 			    "siddec_src",
 			    "audio/raw",
@@ -388,28 +387,27 @@ gst_siddec_loop (GstElement *element)
 			        "rate",       GST_PROPS_INT (siddec->config->frequency),
 			        "channels",   GST_PROPS_INT (siddec->config->channels)
 				));
-	  siddec->state = SID_STATE_PLAY_TUNE;
-        }
-        else {
-          g_warning ("siddec: could not initialize song\n");
-        }
+	siddec->state = SID_STATE_PLAY_TUNE;
       }
       else {
-        g_warning ("siddec: could not load song\n");
+        g_warning ("siddec: could not initialize song\n");
       }
     }
-    if (siddec->state == SID_STATE_PLAY_TUNE) {
-      GstBuffer *out = gst_buffer_new ();
-
-      GST_BUFFER_SIZE (out) = 4096;
-      GST_BUFFER_DATA (out) = (guchar *)g_malloc (4096);
-
-      sidEmuFillBuffer (*siddec->engine, *siddec->tune,
-    		      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
-
-      gst_pad_push (siddec->srcpad, out);
+    else {
+      g_warning ("siddec: could not load song\n");
     }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  }
+  if (siddec->state == SID_STATE_PLAY_TUNE) {
+    GstBuffer *out = gst_buffer_new ();
+
+    GST_BUFFER_SIZE (out) = 4096;
+    GST_BUFFER_DATA (out) = (guchar *)g_malloc (4096);
+
+    sidEmuFillBuffer (*siddec->engine, *siddec->tune,
+ 		      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
+
+    gst_pad_push (siddec->srcpad, out);
+  }
 }
 
 static void 

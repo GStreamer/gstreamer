@@ -423,133 +423,131 @@ dvdsrc_loop (GstElement *element)
   priv = dvdsrc->priv;
   g_return_if_fail (GST_FLAG_IS_SET (dvdsrc, DVDSRC_OPEN));
 
-  do {
-    /**
-     * Playback by cell in this pgc, starting at the cell for our chapter.
-     */
-    priv->next_cell = priv->start_cell;
-    for( priv->cur_cell = priv->start_cell; priv->next_cell < priv->cur_pgc->nr_of_cells; ) {
+  /**
+   * Playback by cell in this pgc, starting at the cell for our chapter.
+   */
+  priv->next_cell = priv->start_cell;
+  for( priv->cur_cell = priv->start_cell; priv->next_cell < priv->cur_pgc->nr_of_cells; ) {
 
-        priv->cur_cell = priv->next_cell;
+      priv->cur_cell = priv->next_cell;
 
-        /* Check if we're entering an angle block. */
-        if( priv->cur_pgc->cell_playback[ priv->cur_cell ].block_type
+      /* Check if we're entering an angle block. */
+      if( priv->cur_pgc->cell_playback[ priv->cur_cell ].block_type
                                         == BLOCK_TYPE_ANGLE_BLOCK ) {
-            int i;
+          int i;
 
-            priv->cur_cell += priv->angle;
-            for( i = 0;; ++i ) {
-                if( priv->cur_pgc->cell_playback[ priv->cur_cell + i ].block_mode
-                                          == BLOCK_MODE_LAST_CELL ) {
-                    priv->next_cell = priv->cur_cell + i + 1;
-                    break;
-                }
-            }
-        } else {
-            priv->next_cell = priv->cur_cell + 1;
-        }
-
-
-        /**
-         * We loop until we're out of this cell.
-         */
-        for( priv->cur_pack = priv->cur_pgc->cell_playback[ priv->cur_cell ].first_sector;
-             priv->cur_pack < priv->cur_pgc->cell_playback[ priv->cur_cell ].last_sector; ) {
-
-            dsi_t dsi_pack;
-            unsigned int next_vobu, next_ilvu_start, cur_output_size;
-            GstBuffer *buf;
-            unsigned char *data;
-            int len;
-
-            /* create the buffer */
-            // FIXME: should eventually use a bufferpool for this
-            buf = gst_buffer_new ();
-            g_return_if_fail (buf);
-
-            /* allocate the space for the buffer data */
-            data = g_malloc (1024 * DVD_VIDEO_LB_LEN);
-            GST_BUFFER_DATA (buf) = data;
-
-            g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
-
-            /*
-            if (priv->new_seek) {
-              _seek(priv, priv->titleid, priv->chapid, priv->angle);
-              GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
-              priv->new_seek = FALSE;
-            }
-            */
-
-            /**
-             * Read NAV packet.
-             */
-            len = DVDReadBlocks( priv->dvd_title, priv->cur_pack, 1, data );
-            if( len == 0 ) {
-                fprintf( stderr, "Read failed for block %d\n", priv->cur_pack );
-                _close(priv);
-                gst_element_signal_eos (GST_ELEMENT (dvdsrc));
-                return;
-            }
-            assert( is_nav_pack( data ) );
+          priv->cur_cell += priv->angle;
+          for( i = 0;; ++i ) {
+              if( priv->cur_pgc->cell_playback[ priv->cur_cell + i ].block_mode
+                                        == BLOCK_MODE_LAST_CELL ) {
+                  priv->next_cell = priv->cur_cell + i + 1;
+                  break;
+              }
+          }
+      } else {
+          priv->next_cell = priv->cur_cell + 1;
+      }
 
 
-            /**
-             * Parse the contained dsi packet.
-             */
-            navRead_DSI( &dsi_pack, &(data[ DSI_START_BYTE ]) );
-            assert( priv->cur_pack == dsi_pack.dsi_gi.nv_pck_lbn );
-            //navPrint_DSI(&dsi_pack);
+      /**
+       * We loop until we're out of this cell.
+       */
+      for( priv->cur_pack = priv->cur_pgc->cell_playback[ priv->cur_cell ].first_sector;
+           priv->cur_pack < priv->cur_pgc->cell_playback[ priv->cur_cell ].last_sector; ) {
+
+          dsi_t dsi_pack;
+          unsigned int next_vobu, next_ilvu_start, cur_output_size;
+          GstBuffer *buf;
+          unsigned char *data;
+          int len;
+
+          /* create the buffer */
+          // FIXME: should eventually use a bufferpool for this
+          buf = gst_buffer_new ();
+          g_return_if_fail (buf);
+
+          /* allocate the space for the buffer data */
+          data = g_malloc (1024 * DVD_VIDEO_LB_LEN);
+          GST_BUFFER_DATA (buf) = data;
+
+          g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
+
+          /*
+          if (priv->new_seek) {
+            _seek(priv, priv->titleid, priv->chapid, priv->angle);
+            GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+            priv->new_seek = FALSE;
+          }
+          */
+
+          /**
+           * Read NAV packet.
+           */
+          len = DVDReadBlocks( priv->dvd_title, priv->cur_pack, 1, data );
+          if( len == 0 ) {
+              fprintf( stderr, "Read failed for block %d\n", priv->cur_pack );
+              _close(priv);
+              gst_element_signal_eos (GST_ELEMENT (dvdsrc));
+              return;
+          }
+          assert( is_nav_pack( data ) );
 
 
-            /**
-             * Determine where we go next.  These values are the ones we mostly
-             * care about.
-             */
-            next_ilvu_start = priv->cur_pack
-                              + dsi_pack.sml_agli.data[ priv->angle ].address;
-            cur_output_size = dsi_pack.dsi_gi.vobu_ea;
+          /**
+           * Parse the contained dsi packet.
+           */
+          navRead_DSI( &dsi_pack, &(data[ DSI_START_BYTE ]) );
+          assert( priv->cur_pack == dsi_pack.dsi_gi.nv_pck_lbn );
+          //navPrint_DSI(&dsi_pack);
 
 
-            /**
-             * If we're not at the end of this cell, we can determine the next
-             * VOBU to display using the VOBU_SRI information section of the
-             * DSI.  Using this value correctly follows the current angle,
-             * avoiding the doubled scenes in The Matrix, and makes our life
-             * really happy.
-             *
-             * Otherwise, we set our next address past the end of this cell to
-             * force the code above to go to the next cell in the program.
-             */
-            if( dsi_pack.vobu_sri.next_vobu != SRI_END_OF_CELL ) {
-                next_vobu = priv->cur_pack
-                            + ( dsi_pack.vobu_sri.next_vobu & 0x7fffffff );
-            } else {
-                next_vobu = priv->cur_pack + cur_output_size + 1;
-            }
+          /**
+           * Determine where we go next.  These values are the ones we mostly
+           * care about.
+           */
+          next_ilvu_start = priv->cur_pack
+                            + dsi_pack.sml_agli.data[ priv->angle ].address;
+          cur_output_size = dsi_pack.dsi_gi.vobu_ea;
 
-            assert( cur_output_size < 1024 );
-            priv->cur_pack++;
 
-            /**
-             * Read in and output cursize packs.
-             */
-            len = DVDReadBlocks( priv->dvd_title, priv->cur_pack,
-                                         cur_output_size, data );
-            if( len != cur_output_size ) {
-                fprintf( stderr, "Read failed for %d blocks at %d\n",
-                         cur_output_size, priv->cur_pack );
-                _close(priv);
-                gst_element_signal_eos (GST_ELEMENT (dvdsrc));
-                return;
-            }
+          /**
+           * If we're not at the end of this cell, we can determine the next
+           * VOBU to display using the VOBU_SRI information section of the
+           * DSI.  Using this value correctly follows the current angle,
+           * avoiding the doubled scenes in The Matrix, and makes our life
+           * really happy.
+           *
+           * Otherwise, we set our next address past the end of this cell to
+           * force the code above to go to the next cell in the program.
+           */
+          if( dsi_pack.vobu_sri.next_vobu != SRI_END_OF_CELL ) {
+              next_vobu = priv->cur_pack
+                          + ( dsi_pack.vobu_sri.next_vobu & 0x7fffffff );
+          } else {
+              next_vobu = priv->cur_pack + cur_output_size + 1;
+          }
 
-            GST_BUFFER_SIZE(buf) = cur_output_size * DVD_VIDEO_LB_LEN;
-            gst_pad_push(priv->srcpad, buf);
-            priv->cur_pack = next_vobu;
-        }
-    }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+          assert( cur_output_size < 1024 );
+          priv->cur_pack++;
+
+          /**
+           * Read in and output cursize packs.
+           */
+          len = DVDReadBlocks( priv->dvd_title, priv->cur_pack,
+                                       cur_output_size, data );
+          if( len != cur_output_size ) {
+              fprintf( stderr, "Read failed for %d blocks at %d\n",
+                       cur_output_size, priv->cur_pack );
+              _close(priv);
+              gst_element_signal_eos (GST_ELEMENT (dvdsrc));
+              return;
+          }
+
+          GST_BUFFER_SIZE(buf) = cur_output_size * DVD_VIDEO_LB_LEN;
+          gst_pad_push(priv->srcpad, buf);
+          priv->cur_pack = next_vobu;
+      }
+  }
 }
 
 #if 0
