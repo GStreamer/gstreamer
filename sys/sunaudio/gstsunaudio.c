@@ -313,12 +313,9 @@ gst_sunaudiosink_setparams (GstSunAudioSink * sunaudiosink)
 static gboolean
 gst_sunaudiosink_open (GstSunAudioSink * sunaudiosink)
 {
-  const char *file;
   int fd, ret;
 
-  file = "/dev/audio";
-
-  fd = open (file, O_WRONLY);
+  fd = open (sunaudiosink->device, O_WRONLY);
   if (fd == -1) {
     /* FIXME error */
     return FALSE;
