@@ -2,6 +2,10 @@
 
 2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.in: releasing 0.7.6, "There"
+
+2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* pkgconfig/gstreamer-play-uninstalled.pc.in:
 	* pkgconfig/gstreamer-play.pc.in:
           synchronize the two
