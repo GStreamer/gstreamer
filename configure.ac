@@ -287,6 +287,7 @@ GST_PLUGINS_ALL="\
 	intfloat \
 	law \
 	level \
+	matroska \
 	median \
 	mixmatrix \
 	mpeg1sys \
@@ -956,15 +957,6 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
 ])
 AC_SUBST(MAD_LIBS)
 
-dnl *** matroska ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MATROSKA, true)
-GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
-  PATH_EBML([HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
-  if test x$HAVE_MATROSKA = xyes; then
-    PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
-  fi
-])
-
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MIKMOD, true)
 GST_CHECK_FEATURE(MIKMOD, [mikmod plug-in], mikmod, [
@@ -1316,6 +1308,7 @@ gst/id3/Makefile
 gst/intfloat/Makefile
 gst/law/Makefile
 gst/level/Makefile
+gst/matroska/Makefile
 gst/median/Makefile
 gst/mixmatrix/Makefile
 gst/mpeg1sys/Makefile
@@ -1401,7 +1394,6 @@ ext/libfame/Makefile
 ext/libpng/Makefile
 ext/mad/Makefile
 ext/mas/Makefile
-ext/matroska/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/mplex/Makefile
