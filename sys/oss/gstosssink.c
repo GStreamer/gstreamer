@@ -327,7 +327,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
   GstBuffer *buf = GST_BUFFER (_data);
   GstOssSink *osssink;
   GstClockTime buftime;
-
+g_print ("OSS data\n");
   /* this has to be an audio buffer */
   osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
@@ -343,7 +343,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
       case GST_EVENT_DISCONTINUOUS:
       {
 	gint64 value;
-
+g_print ("OSS reset\n");
         ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET);
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           if (!gst_clock_handle_discont (osssink->clock, value))
@@ -351,6 +351,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 	  osssink->handled = 0;
 	}
 	osssink->resync = TRUE;
+g_print ("OSS reset done\n");
         break;
       }
       default:
@@ -378,23 +379,15 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
       if (osssink->clock) {
         gint delay = 0;
 	gint64 queued;
-	GstClockTimeDiff jitter;
     
 	delay = gst_osssink_get_delay (osssink);
 	queued = delay * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
 
 	if  (osssink->resync && osssink->sync) {
-          GstClockID id = gst_clock_new_single_shot_id (osssink->clock, buftime - queued);
-
-	  gst_element_clock_wait (GST_ELEMENT (osssink), id, &jitter);
-	  gst_clock_id_free (id);
-
-	  if (jitter >= 0) {
-            gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);
-	    to_write = size;
-	    gst_audio_clock_set_active ((GstAudioClock*)osssink->provided_clock, TRUE);
-	    osssink->resync = FALSE;
-	  }
+          gst_audio_clock_set_active ((GstAudioClock*)osssink->provided_clock, TRUE);
+          gst_clock_handle_discont (osssink->clock, buftime - queued);
+	  to_write = size;
+	  osssink->resync = FALSE;
 	}
 	else {
 	  to_write = size;
@@ -427,7 +420,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
       }
     }
   }
-
+g_print ("OSS data done\n");
   gst_audio_clock_update_time ((GstAudioClock*)osssink->provided_clock, buftime);
 
   gst_buffer_unref (buf);
