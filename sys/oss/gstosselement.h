@@ -69,7 +69,7 @@ struct _GstOssElement
   gint		 fragment_size;
   GstOssOpenMode mode;
 
-  /* stats */
+  /* stats bytes per *second* */
   guint		 bps;
 
   /* parameters */

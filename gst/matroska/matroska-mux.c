@@ -51,20 +51,95 @@ GST_PAD_TEMPLATE_FACTORY (src_templ,
   )
 )
 
-/* FIXME: caps */
+#define COMMON_VIDEO_PROPERTIES \
+  "width",     GST_PROPS_INT_RANGE (16, 4096), \
+  "height",    GST_PROPS_INT_RANGE (16, 4096), \
+  "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
 
 GST_PAD_TEMPLATE_FACTORY (videosink_templ,
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  NULL
+  GST_CAPS_NEW ("matroska_video_sink_mpeg",
+		"video/mpeg",
+		  "mpegversion",  GST_PROPS_LIST (
+				    GST_PROPS_INT (1),
+				    GST_PROPS_INT (2),
+				    GST_PROPS_INT (4)
+				  ),
+		  "systemstream", GST_PROPS_BOOLEAN (FALSE),
+		  COMMON_VIDEO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_video_sink_divx",
+		"video/x-divx",
+		  "divxversion", GST_PROPS_INT_RANGE (3, 5),
+		  COMMON_VIDEO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_video_sink_xvid",
+		"video/x-xvid",
+		  COMMON_VIDEO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_video_sink_msmpeg4v3",
+		"video/x-msmpeg",
+		  "msmpegversion", GST_PROPS_INT (43),
+		  COMMON_VIDEO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_video_sink_jpeg",
+		"video/x-jpeg",
+		  COMMON_VIDEO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_video_sink_rawyuv",
+		"video/x-raw-yuv",
+		  "format", GST_PROPS_LIST (
+		      GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
+		      GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))
+			    ),
+		  COMMON_VIDEO_PROPERTIES)
 )
 
+#define COMMON_AUDIO_PROPERTIES \
+  "channels", GST_PROPS_INT_RANGE (1, 8), \
+  "rate",     GST_PROPS_INT_RANGE (8000, 96000)
+
+/* FIXME:
+ * * audio/x-raw-float: endianness needs defining.
+ * * audio/x-vorbis: private data setup needs work.
+ */
 GST_PAD_TEMPLATE_FACTORY (audiosink_templ,
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  NULL
+  GST_CAPS_NEW ("matroska_audio_sink_mpeg1",
+		"audio/mpeg",
+		  "mpegversion", GST_PROPS_INT (1),
+		  "layer",       GST_PROPS_INT_RANGE (1, 3),
+		  COMMON_AUDIO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_audio_sink_mpeg24",
+		"audio/mpeg",
+		  "mpegversion", GST_PROPS_LIST (
+				   GST_PROPS_INT (2),
+				   GST_PROPS_INT (4)
+				 ),
+		  COMMON_AUDIO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_audio_sink_ac3",
+		"audio/x-ac3",
+		  COMMON_AUDIO_PROPERTIES),
+  GST_CAPS_NEW ("matroska_audio_sink_raw_int",
+		"audio/x-raw-int",
+		  "width",      GST_PROPS_LIST (
+				  GST_PROPS_INT (8),
+				  GST_PROPS_INT (16),
+				  GST_PROPS_INT (24)
+				),
+		  "depth",      GST_PROPS_LIST (
+				  GST_PROPS_INT (8),
+				  GST_PROPS_INT (16),
+				  GST_PROPS_INT (24)
+				),
+		  "endianness", GST_PROPS_LIST (
+				  GST_PROPS_INT (G_BIG_ENDIAN),
+				  GST_PROPS_INT (G_LITTLE_ENDIAN)
+				),
+		  "signed",     GST_PROPS_LIST (
+				  GST_PROPS_BOOLEAN (TRUE),
+				  GST_PROPS_BOOLEAN (FALSE)
+				),
+		  COMMON_AUDIO_PROPERTIES)
 )
 
 GST_PAD_TEMPLATE_FACTORY (subtitlesink_templ,
@@ -413,7 +488,7 @@ gst_matroska_mux_audio_pad_link (GstPad  *pad,
 		  NULL);
     audiocontext->samplerate = samplerate;
     audiocontext->channels = channels;
-    audiocontext->bitdepth = 16;
+    audiocontext->bitdepth = 0;
 
     if (!strcmp (mimetype, "audio/mpeg")) {
       gint mpegversion = 0;
@@ -459,7 +534,7 @@ gst_matroska_mux_audio_pad_link (GstPad  *pad,
 		    "signed",     &signedness,
 		    NULL);
       if (width != depth ||
-	  (width == 8 && signedness) || (width == 16 && !signedness))
+	  (width == 8 && signedness) || (width != 8 && !signedness))
         continue;
 
       audiocontext->bitdepth = depth;
@@ -602,8 +677,10 @@ gst_matroska_mux_track_header (GstMatroskaMux          *mux,
       if (audiocontext->channels != 1)
         gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOCHANNELS,
 			     audiocontext->channels);
-      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOBITDEPTH,
-			   audiocontext->bitdepth);
+      if (audiocontext->bitdepth) {
+        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOBITDEPTH,
+			     audiocontext->bitdepth);
+      }
       gst_ebml_write_master_finish (ebml, master);
 
       break;

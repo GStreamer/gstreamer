@@ -791,7 +791,7 @@ gst_osselement_convert (GstOssElement *oss,
 	  *dest_value = src_value * GST_SECOND / oss->bps;
           break;
         case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value / (oss->channels * oss->width);
+	  *dest_value = src_value / (oss->width * oss->channels / 8);
           break;
         default:
           res = FALSE;
@@ -815,7 +815,7 @@ gst_osselement_convert (GstOssElement *oss,
 	  *dest_value = src_value * GST_SECOND / oss->rate;
           break;
         case GST_FORMAT_BYTES:
-	  *dest_value = src_value * oss->channels * oss->width;
+	  *dest_value = src_value * oss->width * oss->channels / 8;
           break;
         default:
           res = FALSE;

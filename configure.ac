@@ -1076,16 +1076,52 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
 dnl *** mpeg2enc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2ENC, true)
 GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
-  PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.92,
-      HAVE_MPEG2ENC="yes", HAVE_MPEG2ENC="no")
-  MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp"
-  AC_SUBST(MPEG2ENC_CFLAGS)
-  AC_SUBST(MPEG2ENC_LIBS)
+  HAVE_MPEG2ENC="no"
+  dnl we require a c++ compiler for this one
+  if [ test x$HAVE_CXX = xyes ]; then
+    dnl libmpeg2enc was first included in mjpegtools-1.6.2-rc3 (1.6.1.92)
+    dnl since many distros include mjpegtools specifically without mplex
+    dnl and mpeg2enc, we check for mpeg2enc on its own, too.
+    PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.92, [
+      dnl switch over to c++ to test things
+      AC_LANG_CPLUSPLUS
+      OLD_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $MPEG2ENC_CFLAGS"
+      AC_CHECK_HEADER(mpeg2encoder.hh, [
+        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp -lm -lpthread"
+        OLD_LIBS="$LIBS"
+        LIBS="$LIBS $MPEG2ENC_LIBS"
+        AC_MSG_CHECKING([for valid mpeg2enc objects])
+        AC_TRY_RUN([
+#include <mpeg2encoder.hh>
+#include <mpeg2encoptions.hh>
+
+int
+main (int   argc,
+      char *argv[])
+{
+  MPEG2EncOptions *options = new MPEG2EncOptions ();
+  MPEG2Encoder encoder (*options);
+  return 0;
+}
+        ],[
+          HAVE_MPEG2ENC="yes"
+          AC_SUBST(MPEG2ENC_CFLAGS)
+          AC_SUBST(MPEG2ENC_LIBS)
+          AC_MSG_RESULT(yes)
+        ], AC_MSG_RESULT(no))
+        LIBS="$OLD_LIBS"
+      ])
+      CPPFLAGS="$OLD_CPPFLAGS"
+      AC_LANG_C
+    ])
+  fi
 ])
 
 dnl *** mplex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
 GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [HAVE_MPLEX=$HAVE_CXX])
+])
 
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)

@@ -1617,7 +1617,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux *demux,
       case GST_MATROSKA_ID_BLOCK: {
         GstBuffer *buf;
         guint8 *data;
-        gint16 time;
+        gint64 time;
         guint size, *lace_size = NULL;
         gint n, stream, flags, laces = 0;
         guint64 num;
@@ -1651,10 +1651,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux *demux,
         }
 
         /* time (relative to cluster time) */
-        time = (* (gint16 *) data) * demux->time_scale;
-        /* I think this is mis-documented in the matroska sources, we should
-         * probably shift values (EBML-style) on this value... */
-        time = GINT16_FROM_BE (time);
+        time = (GINT16_FROM_BE (* (gint16 *) data)) * demux->time_scale;
         data += 2; size -= 2;
         flags = * (guint8 *) data;
         data += 1; size -= 1;
