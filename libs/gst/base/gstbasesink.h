@@ -47,6 +47,9 @@ struct _GstBaseSink {
   GstPad 	*sinkpad;
   GstActivateMode	pad_mode;
 
+  GQueue	*preroll_queue; /* with PREROLL_LOCK */
+  gint		 preroll_queue_max_len; /* with PREROLL_LOCK */
+
   guint64	 offset;
   gboolean 	 has_loop;
   gboolean 	 has_chain;

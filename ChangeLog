@@ -1,3 +1,28 @@
+2005-03-07  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstobject.c (test_fake_object_name): The object *does*
+	have a name after g_object_new.
+
+	* gst/base/gstbasesink.c: Change "arguments" to "properties" in
+	the code. Die GtkObject die!
+	(GstBaseSink::preroll-queue-len): New object property, the number
+	of buffers to queue in preroll. By default, does not queue any
+	buffers. Set to a higher number if you have a one-threaded
+	demuxer.
+	(gst_basesink_preroll_queue_push) 
+	(gst_basesink_preroll_queue_empty) 
+	(gst_basesink_preroll_queue_flush): Implement a queue of buffers
+	for preroll. All must be called with PREROLL_LOCK.
+	(gst_basesink_finish_preroll): Instead of always blocking, push
+	the buffer onto the queue. preroll_queue_push will block if the
+	queue is full.
+	(gst_basesink_event): Make sure the preroll queue is emptied on
+	eos and flushed on flush.
+	(gst_basesink_handle_buffer): Does the work of chain_unlocked, but
+	without going into finish_preroll.
+	(gst_basesink_change_state): Handle setting up the queue and
+	flushing it in READY<->PAUSED transitions.
+
 2005-03-03  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-MT-refcounting.txt:

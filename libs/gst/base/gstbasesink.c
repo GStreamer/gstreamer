@@ -34,7 +34,14 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_basesink_debug);
 #define GST_CAT_DEFAULT gst_basesink_debug
 
-/* BaseSink signals and args */
+/* #define DEBUGGING */
+#ifdef DEBUGGING
+#define DEBUG(str,args...) g_print (str,##args)
+#else
+#define DEBUG(str,args...)
+#endif
+
+/* BaseSink signals and properties */
 enum
 {
   /* FILL ME */
@@ -48,9 +55,10 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_HAS_LOOP,
-  ARG_HAS_CHAIN
+  PROP_0,
+  PROP_HAS_LOOP,
+  PROP_HAS_CHAIN,
+  PROP_PREROLL_QUEUE_LEN
 };
 
 #define _do_init(bla) \
@@ -82,6 +90,8 @@ static void gst_basesink_loop (GstPad * pad);
 static GstFlowReturn gst_basesink_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_basesink_activate (GstPad * pad, GstActivateMode mode);
 static gboolean gst_basesink_event (GstPad * pad, GstEvent * event);
+static inline void gst_basesink_handle_buffer (GstBaseSink * basesink,
+    GstBuffer * buf);
 
 static GstStaticPadTemplate *
 gst_basesink_get_template (GstBaseSink * bsink)
@@ -123,13 +133,18 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_basesink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_basesink_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAS_LOOP,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_LOOP,
       g_param_spec_boolean ("has-loop", "has-loop",
           "Enable loop-based operation", DEFAULT_HAS_LOOP,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAS_CHAIN,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_CHAIN,
       g_param_spec_boolean ("has-chain", "has-chain",
           "Enable chain-based operation", DEFAULT_HAS_CHAIN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_PREROLL_QUEUE_LEN,
+      g_param_spec_uint ("preroll-queue-len", "preroll-queue-len",
+          "Number of buffers to queue during preroll", 0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_basesink_set_clock);
@@ -262,22 +277,29 @@ gst_basesink_set_property (GObject * object, guint prop_id,
 {
   GstBaseSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = GST_BASESINK (object);
 
+  GST_LOCK (sink);
   switch (prop_id) {
-    case ARG_HAS_LOOP:
+    case PROP_HAS_LOOP:
       sink->has_loop = g_value_get_boolean (value);
       gst_basesink_set_all_pad_functions (sink);
       break;
-    case ARG_HAS_CHAIN:
+    case PROP_HAS_CHAIN:
       sink->has_chain = g_value_get_boolean (value);
       gst_basesink_set_all_pad_functions (sink);
+      break;
+    case PROP_PREROLL_QUEUE_LEN:
+      /* preroll lock necessary to serialize with finish_preroll */
+      GST_PREROLL_LOCK (sink->sinkpad);
+      sink->preroll_queue_max_len = g_value_get_uint (value);
+      GST_PREROLL_UNLOCK (sink->sinkpad);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_UNLOCK (sink);
 }
 
 static void
@@ -286,22 +308,24 @@ gst_basesink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBaseSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_BASESINK (object));
-
   sink = GST_BASESINK (object);
 
+  GST_LOCK (sink);
   switch (prop_id) {
-    case ARG_HAS_LOOP:
+    case PROP_HAS_LOOP:
       g_value_set_boolean (value, sink->has_loop);
       break;
-    case ARG_HAS_CHAIN:
+    case PROP_HAS_CHAIN:
       g_value_set_boolean (value, sink->has_chain);
+      break;
+    case PROP_PREROLL_QUEUE_LEN:
+      g_value_set_uint (value, sink->preroll_queue_max_len);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_UNLOCK (sink);
 }
 
 static GstStaticPadTemplate *
@@ -329,35 +353,94 @@ gst_base_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
   return NULL;
 }
 
-/* STREAM_LOCK should be held */
-GstFlowReturn
+/* with PREROLL_LOCK */
+static void
+gst_basesink_preroll_queue_push (GstBaseSink * basesink, GstPad * pad,
+    GstBuffer * buffer)
+{
+  if (basesink->preroll_queue->length == 0) {
+    GstBaseSinkClass *bclass = GST_BASESINK_GET_CLASS (basesink);
+
+    if (bclass->preroll)
+      bclass->preroll (basesink, buffer);
+  }
+
+  if (basesink->preroll_queue->length < basesink->preroll_queue_max_len) {
+    DEBUG ("push %p %p\n", basesink, buffer);
+    g_queue_push_tail (basesink->preroll_queue, buffer);
+  } else {
+    /* block until the state changes, or we get a flush, or something */
+    DEBUG ("block %p %p\n", basesink, buffer);
+    GST_DEBUG ("element %s waiting to finish preroll",
+        GST_ELEMENT_NAME (basesink));
+    basesink->need_preroll = FALSE;
+    basesink->have_preroll = TRUE;
+    GST_PREROLL_WAIT (pad);
+    GST_DEBUG ("done preroll");
+    basesink->have_preroll = FALSE;
+  }
+}
+
+/* with PREROLL_LOCK */
+static void
+gst_basesink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
+{
+  GstBuffer *buf;
+  GQueue *q = basesink->preroll_queue;
+
+  if (q) {
+    DEBUG ("empty queue\n");
+    while ((buf = g_queue_pop_head (q))) {
+      DEBUG ("pop %p\n", buf);
+      gst_basesink_handle_buffer (basesink, buf);
+    }
+    DEBUG ("queue len %p %d\n", basesink, q->length);
+  }
+}
+
+/* with PREROLL_LOCK */
+static void
+gst_basesink_preroll_queue_flush (GstBaseSink * basesink)
+{
+  GstBuffer *buf;
+  GQueue *q = basesink->preroll_queue;
+
+  DEBUG ("flush %p\n", basesink);
+  if (q) {
+    while ((buf = g_queue_pop_head (q))) {
+      DEBUG ("pop %p\n", buf);
+      gst_buffer_unref (buf);
+    }
+  }
+}
+
+typedef enum
+{
+  PREROLL_QUEUEING,
+  PREROLL_PLAYING,
+  PREROLL_FLUSHING,
+  PREROLL_ERROR
+} PrerollReturn;
+
+/* with STREAM_LOCK */
+PrerollReturn
 gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
     GstBuffer * buffer)
 {
   gboolean usable;
-  GstBaseSinkClass *bclass;
 
+  DEBUG ("finish preroll %p <\n", basesink);
   /* lock order is important */
   GST_STATE_LOCK (basesink);
   GST_PREROLL_LOCK (pad);
+  DEBUG ("finish preroll %p >\n", basesink);
   if (!basesink->need_preroll)
     goto no_preroll;
-
-  bclass = GST_BASESINK_GET_CLASS (basesink);
-
-  if (bclass->preroll)
-    bclass->preroll (basesink, buffer);
 
   gst_element_commit_state (GST_ELEMENT (basesink));
   GST_STATE_UNLOCK (basesink);
 
-  GST_DEBUG ("element %s waiting to finish preroll",
-      GST_ELEMENT_NAME (basesink));
-  basesink->need_preroll = FALSE;
-  basesink->have_preroll = TRUE;
-  GST_PREROLL_WAIT (pad);
-  GST_DEBUG ("done preroll");
-  basesink->have_preroll = FALSE;
+  gst_basesink_preroll_queue_push (basesink, pad, buffer);
 
   GST_LOCK (pad);
   usable = !GST_RPAD_IS_FLUSHING (pad) && GST_RPAD_IS_ACTIVE (pad);
@@ -365,25 +448,39 @@ gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
   if (!usable)
     goto unusable;
 
+  if (basesink->need_preroll)
+    goto still_queueing;
+
   GST_DEBUG ("done preroll");
 
+  gst_basesink_preroll_queue_empty (basesink, pad);
+
   GST_PREROLL_UNLOCK (pad);
-  return GST_FLOW_OK;
+
+  return PREROLL_PLAYING;
 
 no_preroll:
   {
+    /* maybe it was another sink that blocked in preroll, need to check for
+       buffers to drain */
+    if (basesink->preroll_queue->length)
+      gst_basesink_preroll_queue_empty (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
     GST_STATE_UNLOCK (basesink);
-    return GST_FLOW_OK;
+    return PREROLL_PLAYING;
   }
 unusable:
   {
     GST_DEBUG ("pad is flushing");
     GST_PREROLL_UNLOCK (pad);
-    return GST_FLOW_UNEXPECTED;
+    return PREROLL_FLUSHING;
+  }
+still_queueing:
+  {
+    GST_PREROLL_UNLOCK (pad);
+    return PREROLL_QUEUEING;
   }
 }
-
 
 static gboolean
 gst_basesink_event (GstPad * pad, GstEvent * event)
@@ -396,38 +493,40 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
 
   bclass = GST_BASESINK_GET_CLASS (basesink);
 
+  DEBUG ("event %p\n", basesink);
+
   if (bclass->event)
     bclass->event (basesink, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      GstFlowReturn ret;
+      gboolean need_eos;
 
       GST_STREAM_LOCK (pad);
-      ret = gst_basesink_finish_preroll (basesink, pad, NULL);
-      if (ret == GST_FLOW_OK) {
-        gboolean need_eos;
 
-        GST_LOCK (basesink);
-        need_eos = basesink->eos = TRUE;
-        if (basesink->clock) {
-          /* wait for last buffer to finish if we have a valid end time */
-          if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
-            basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-                basesink->end_time + GST_ELEMENT (basesink)->base_time);
-            GST_UNLOCK (basesink);
+      GST_PREROLL_LOCK (pad);
+      gst_basesink_preroll_queue_empty (basesink, pad);
+      GST_PREROLL_UNLOCK (pad);
 
-            gst_clock_id_wait (basesink->clock_id, NULL);
+      GST_LOCK (basesink);
+      need_eos = basesink->eos = TRUE;
+      if (basesink->clock) {
+        /* wait for last buffer to finish if we have a valid end time */
+        if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
+          basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
+              basesink->end_time + GST_ELEMENT (basesink)->base_time);
+          GST_UNLOCK (basesink);
 
-            GST_LOCK (basesink);
-            if (basesink->clock_id) {
-              gst_clock_id_unref (basesink->clock_id);
-              basesink->clock_id = NULL;
-            }
-            basesink->end_time = GST_CLOCK_TIME_NONE;
-            need_eos = basesink->eos;
+          gst_clock_id_wait (basesink->clock_id, NULL);
+
+          GST_LOCK (basesink);
+          if (basesink->clock_id) {
+            gst_clock_id_unref (basesink->clock_id);
+            basesink->clock_id = NULL;
           }
+          basesink->end_time = GST_CLOCK_TIME_NONE;
+          need_eos = basesink->eos;
         }
         GST_UNLOCK (basesink);
 
@@ -462,6 +561,7 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
         /* unlock from a possible state change/preroll */
         GST_PREROLL_LOCK (pad);
         basesink->need_preroll = TRUE;
+        gst_basesink_preroll_queue_flush (basesink);
         GST_PREROLL_SIGNAL (pad);
         GST_PREROLL_UNLOCK (pad);
       }
@@ -528,18 +628,10 @@ gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   }
 }
 
-static GstFlowReturn
-gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
+static inline void
+gst_basesink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 {
-  GstBaseSink *basesink;
-  GstFlowReturn result = GST_FLOW_OK;
   GstBaseSinkClass *bclass;
-
-  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
-
-  result = gst_basesink_finish_preroll (basesink, pad, buf);
-  if (result != GST_FLOW_OK)
-    goto exit;
 
   gst_basesink_do_sync (basesink, buf);
 
@@ -547,10 +639,36 @@ gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
   if (bclass->render)
     bclass->render (basesink, buf);
 
-exit:
+  DEBUG ("unref %p %p\n", basesink, buf);
   gst_buffer_unref (buf);
+}
 
-  return result;
+static GstFlowReturn
+gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
+{
+  GstBaseSink *basesink;
+  PrerollReturn result;
+
+  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+
+  DEBUG ("chain_unlocked %p\n", basesink);
+
+  result = gst_basesink_finish_preroll (basesink, pad, buf);
+
+  DEBUG ("chain_unlocked %p after\n", basesink);
+
+  switch (result) {
+    case PREROLL_QUEUEING:
+      return GST_FLOW_OK;
+    case PREROLL_PLAYING:
+      gst_basesink_handle_buffer (basesink, buf);
+      return GST_FLOW_OK;
+    case PREROLL_FLUSHING:
+      return GST_FLOW_UNEXPECTED;
+    default:
+      g_assert_not_reached ();
+      return GST_FLOW_UNEXPECTED;
+  }
 }
 
 static GstFlowReturn
@@ -591,13 +709,14 @@ gst_basesink_loop (GstPad * pad)
   if (result != GST_FLOW_OK)
     goto paused;
 
-exit:
+  /* default */
   GST_STREAM_UNLOCK (pad);
   return;
 
 paused:
   gst_task_pause (GST_RPAD_TASK (pad));
-  goto exit;
+  GST_STREAM_UNLOCK (pad);
+  return;
 }
 
 static gboolean
@@ -665,6 +784,8 @@ gst_basesink_change_state (GstElement * element)
   GstBaseSink *basesink = GST_BASESINK (element);
   GstElementState transition = GST_STATE_TRANSITION (element);
 
+  DEBUG ("state change > %p %x\n", basesink, transition);
+
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
@@ -673,6 +794,7 @@ gst_basesink_change_state (GstElement * element)
        * is no data flow in READY so we cqn safely assume we need to preroll. */
       basesink->offset = 0;
       GST_PREROLL_LOCK (basesink->sinkpad);
+      basesink->preroll_queue = g_queue_new ();
       basesink->need_preroll = TRUE;
       basesink->have_preroll = FALSE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
@@ -715,6 +837,22 @@ gst_basesink_change_state (GstElement * element)
       break;
     }
     case GST_STATE_PAUSED_TO_READY:
+      /* flush out the data thread if it's locked in finish_preroll */
+      GST_PREROLL_LOCK (basesink->sinkpad);
+
+      gst_basesink_preroll_queue_flush (basesink);
+      g_queue_free (basesink->preroll_queue);
+      basesink->preroll_queue = NULL;
+
+      if (basesink->have_preroll)
+        GST_PREROLL_SIGNAL (basesink->sinkpad);
+
+      basesink->need_preroll = FALSE;
+      basesink->have_preroll = FALSE;
+      GST_PREROLL_UNLOCK (basesink->sinkpad);
+      /* make sure the element is finished processing */
+      GST_STREAM_LOCK (basesink->sinkpad);
+      GST_STREAM_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -723,5 +861,6 @@ gst_basesink_change_state (GstElement * element)
   }
 
   GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  DEBUG ("state change < %p %x\n", basesink, transition);
   return ret;
 }

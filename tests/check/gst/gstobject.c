@@ -98,7 +98,9 @@ START_TEST (test_fake_object_name)
   object = g_object_new (gst_fake_object_get_type (), NULL);
 
   name = gst_object_get_name (object);
-  fail_if (name != NULL, "Newly created object has a name");
+  fail_if (name == NULL, "Newly created object has no name");
+  fail_if (strncmp (name, "fakeobject", 10) != 0,
+      "Random name %s does not start with Gst", name);
 
   /* give a random name by setting with NULL;
    * GstFakeObject class -> fakeobject%d */
