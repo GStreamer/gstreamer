@@ -8,7 +8,7 @@
         <default>osssink</default>
         <locale name="C">
         <short>default GStreamer audiosink</short>
-        <long>GStreamer can play audio using any number of output plugins.  Some possible choices are osssink, esdsink and alsasink.</long>
+        <long>GStreamer can play audio using any number of output elements.  Some possible choices are osssink, esdsink and alsasink.  The audiosink can be a partial pipeline instead of just one element.</long>
         </locale>
       </schema>
       <schema>
@@ -19,8 +19,30 @@
         <default>xvideosink</default>
         <locale name="C">
         <short>default GStreamer videosink</short>
-        <long>GStreamer can play video using any number of output plugins.  Some possible choices are xvideosink, sdlvideosink and aasink.</long>
+        <long>GStreamer can play video using any number of output elements.  Some possible choices are xvideosink, sdlvideosink and aasink.  The videosink can be a partial pipeline instead of just one element.</long>
         </locale>
       </schema>
-    </schemalist>
+      <schema>
+        <key>/schemas/system/gstreamer/default/audiosrc</key>
+        <applyto>/system/gstreamer/default/audiosrc</applyto>
+        <owner>gstreamer</owner>
+        <type>string</type>
+        <default>osssrc</default>
+        <locale name="C">
+        <short>default GStreamer audiosrc</short>
+        <long>GStreamer can record audio using any number of input elements.  Some possible choices are osssrc, esdsrc and alsasrc.  The videosink can be a partial pipeline instead of just one element.</long>
+        </locale>
+      </schema>
+      <schema>
+        <key>/schemas/system/gstreamer/default/videosink</key>
+        <applyto>/system/gstreamer/default/videosink</applyto>
+        <owner>gstreamer</owner>
+        <type>string</type>
+        <default>xvideosink</default>
+        <locale name="C">
+        <short>default GStreamer videosink</short>
+        <long>GStreamer can record video from any number of input elements.  Some possible choices are v4lsrc and videotestsrc. The videosrc can be a partial pipeline instead of just one element.</long>
+        </locale>
+      </schema>
+     </schemalist>
 </gconfschemafile>
