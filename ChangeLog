@@ -1,3 +1,14 @@
+2004-01-07  David Schleef  <ds@schleef.org>
+
+	* gst/videofilter/gstvideotemplate.c:
+	* gst/videofilter/gstvideotemplate.h:
+	* gst/videofilter/make_filter:
+	Merge videotemplate header into source file.
+	* gst/effectv/Makefile.am:
+	* gst/effectv/gsteffectv.c: (plugin_init):
+	* gst/effectv/gstwarp.c:
+	Make warpTV a subclass of videofilter.
+
 2004-01-07  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
