@@ -24,7 +24,24 @@
 #include <string.h>
 
 #include <stdlib.h>
+
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
+#else
+/* (Ronald) hacky... can't include stdint.h because it's not available
+ * everywhere. however, a52dec wants uint8_t/uint32_t... how? */
+#ifndef __uint8_t_defined
+#define __uint8_t_defined
+typedef guint8 uint8_t;
+#endif
+
+#ifndef __uint32_t_defined
+#define __uint32_t_defined
+typedef guint32 uint32_t;
+#endif
+/* grosj... but it works (tm) */
+#end /* HAVE_STDINT_H */
+
 #include <gst/gst.h>
 #include <a52dec/a52.h>
 #include <a52dec/mm_accel.h>
