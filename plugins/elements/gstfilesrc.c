@@ -871,6 +871,9 @@ gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
 {
   GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
+  if (*format == GST_FORMAT_DEFAULT)
+    *format = GST_FORMAT_BYTES;
+
   switch (type) {
     case GST_QUERY_TOTAL:
       if (*format != GST_FORMAT_BYTES) {

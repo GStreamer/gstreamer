@@ -1279,8 +1279,9 @@ gst_pad_link_call_link_functions (GstPadLink * link)
         res, GST_DEBUG_PAD_NAME (link->srcpad));
 
     if (GST_PAD_LINK_FAILED (res)) {
-      GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
-          GST_DEBUG_PAD_NAME (link->srcpad));
+      GST_CAT_INFO (GST_CAT_CAPS,
+          "pad %s:%s doesn't accept caps %" GST_PTR_FORMAT,
+          GST_DEBUG_PAD_NAME (link->srcpad), link->caps);
       return res;
     }
   }
@@ -1307,8 +1308,9 @@ gst_pad_link_call_link_functions (GstPadLink * link)
         res, GST_DEBUG_PAD_NAME (link->sinkpad));
 
     if (GST_PAD_LINK_FAILED (res)) {
-      GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
-          GST_DEBUG_PAD_NAME (link->sinkpad));
+      GST_CAT_INFO (GST_CAT_CAPS,
+          "pad %s:%s doesn't accept caps %" GST_PTR_FORMAT,
+          GST_DEBUG_PAD_NAME (link->sinkpad), link->caps);
       return res;
     }
   }
