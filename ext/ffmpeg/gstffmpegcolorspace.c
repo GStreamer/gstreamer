@@ -59,6 +59,7 @@ struct _GstFFMpegCsp {
   AVFrame	*from_frame,
 		*to_frame;
   GstCaps	*sinkcaps;
+  gboolean      passthru;
 };
 
 struct _GstFFMpegCspClass {
@@ -100,15 +101,8 @@ static void	gst_ffmpegcsp_get_property	(GObject    *object,
 						 GParamSpec *pspec);
 
 static GstPadLinkReturn
-		gst_ffmpegcsp_sinkconnect	(GstPad     *pad,
+		gst_ffmpegcsp_pad_link	        (GstPad     *pad,
 						 const GstCaps *caps);
-static GstPadLinkReturn
-		gst_ffmpegcsp_srcconnect 	(GstPad     *pad,
-						 const GstCaps *caps);
-static GstPadLinkReturn
-		gst_ffmpegcsp_srcconnect_func 	(GstPad     *pad,
-						 const GstCaps *caps,
-						 gboolean    newcaps);
 
 static void	gst_ffmpegcsp_chain		(GstPad     *pad,
 						 GstData    *data);
@@ -119,168 +113,149 @@ static GstPadTemplate *srctempl, *sinktempl;
 static GstElementClass *parent_class = NULL;
 /*static guint gst_ffmpegcsp_signals[LAST_SIGNAL] = { 0 }; */
 
+
 static GstCaps *
-gst_ffmpegcsp_getcaps (GstPad  *pad)
+gst_ffmpegcsp_caps_remove_format_info (GstCaps *caps)
+{
+  int i;
+  GstStructure *structure;
+  GstCaps *rgbcaps;
+
+  for(i=0;i<gst_caps_get_size (caps);i++){
+    structure = gst_caps_get_structure (caps, i);
+
+    gst_structure_set_name (structure,"video/x-raw-yuv");
+    gst_structure_remove_field (structure,"format");
+    gst_structure_remove_field (structure,"endianness");
+    gst_structure_remove_field (structure,"depth");
+    gst_structure_remove_field (structure,"bpp");
+    gst_structure_remove_field (structure,"red_mask");
+    gst_structure_remove_field (structure,"green_mask");
+    gst_structure_remove_field (structure,"blue_mask");
+  }
+
+  rgbcaps = gst_caps_simplify (caps);
+  gst_caps_free (caps);
+  caps = gst_caps_copy (rgbcaps);
+
+  for(i=0;i<gst_caps_get_size (rgbcaps);i++){
+    structure = gst_caps_get_structure (rgbcaps, i);
+
+    gst_structure_set_name (structure,"video/x-raw-rgb");
+  }
+
+  gst_caps_append (caps, rgbcaps);
+
+  return caps;
+}
+
+static GstCaps *
+gst_ffmpegcsp_getcaps (GstPad *pad)
 {
   GstFFMpegCsp *space;
-  GstCaps *peercaps;
-  GstCaps *ourcaps;
+  GstCaps *othercaps;
+  GstCaps *caps;
+  GstPad *otherpad;
   
   space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
-  /* we can do everything our peer can... */
-  peercaps = gst_caps_copy (gst_pad_get_allowed_caps (space->srcpad));
+  otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
-  /* and our own template of course */
-  ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  /* merge them together, we prefer the peercaps first */
-  gst_caps_append (peercaps, ourcaps);
+  othercaps = gst_ffmpegcsp_caps_remove_format_info (othercaps);
 
-  return peercaps;
+  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_free (othercaps);
+
+  return caps;
 }
 
 static GstPadLinkReturn
-gst_ffmpegcsp_srcconnect_func (GstPad        *pad,
-			       const GstCaps *caps,
-			       gboolean       newcaps)
+gst_ffmpegcsp_pad_link (GstPad        *pad,
+			const GstCaps *caps)
 {
   GstStructure *structure;
-  guint n;
   AVCodecContext *ctx;
   GstFFMpegCsp *space;
-  GstCaps *peercaps, *ourcaps, *one;
+  const GstCaps *othercaps;
+  GstPad *otherpad;
+  GstPadLinkReturn ret;
+  int height, width;
+  double framerate;
 
   space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
-  /* we cannot operate if we didn't get src caps */
-  if (!(ourcaps = space->sinkcaps)) {
-#if 0
-    if (!newcaps) {
-      gst_pad_recalc_allowed_caps (pad);
-    }
-#endif
-    return GST_PAD_LINK_DELAYED;
+  otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
+
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+  gst_structure_get_double (structure, "framerate", &framerate);
+
+  ret = gst_pad_try_set_caps (otherpad, caps);
+  if (GST_PAD_LINK_SUCCESSFUL (ret)) {
+    space->passthru = TRUE;
+    return ret;
   }
 
-  /* then see what the peer has that matches the size */
-  caps = gst_caps_intersect (caps,
-		  gst_caps_new_full (
-		  gst_structure_new (
-		   "video/x-raw-yuv",
-		     "width",     G_TYPE_INT,    space->width,
-		     "height",    G_TYPE_INT,    space->height,
-		     "framerate", G_TYPE_DOUBLE, space->fps, NULL
-		  ), gst_structure_new (
-		   "video/x-raw-rgb",
-		     "width",     G_TYPE_INT,    space->width,
-		     "height",    G_TYPE_INT,    space->height,
-		     "framerate", G_TYPE_DOUBLE, space->fps, NULL
-		  ), NULL));
-
-  /* first see if we can do the format natively by filtering the peer caps 
-   * with our incomming caps */
-  if ((peercaps = gst_caps_intersect (caps, ourcaps)) != NULL) {
-    for (n = 0; n < gst_caps_get_size (peercaps); n++) {
-      structure = gst_caps_get_structure (peercaps, n);
-      one = gst_caps_new_full (gst_structure_copy (structure), NULL);
-
-      /* see if the peer likes it too, it should as the caps say so.. */
-      if (gst_pad_try_set_caps (space->srcpad, one) > 0) {
-        space->from_pixfmt = space->to_pixfmt = -1;
-        return GST_PAD_LINK_DONE;
-      }
-    }
-  }
+  space->passthru = FALSE;
 
   /* loop over all possibilities and select the first one we can convert and
    * is accepted by the peer */
   ctx = avcodec_alloc_context ();
-  for (n = 0; n < gst_caps_get_size (caps); n++) {
-    structure = gst_caps_get_structure (caps, n);
-    one = gst_caps_new_full (gst_structure_copy (structure), NULL);
-    ctx->width = space->width;
-    ctx->height = space->height;
-    ctx->pix_fmt = PIX_FMT_NB;
-    gst_ffmpeg_caps_to_codectype (CODEC_TYPE_VIDEO, one, ctx);
-    if (ctx->pix_fmt != PIX_FMT_NB) {
-      if (gst_pad_try_set_caps (space->srcpad, one) > 0) {
-        space->to_pixfmt = ctx->pix_fmt;
-        av_free (ctx);
-        if (space->from_frame)
-          av_free (space->from_frame);
-        if (space->to_frame)
-          av_free (space->to_frame);
-        space->from_frame = avcodec_alloc_frame ();
-        space->to_frame = avcodec_alloc_frame ();
-        return GST_PAD_LINK_DONE;
-      }
-      gst_caps_free (one);
-    }
-  }
-  av_free (ctx);
-  
-  /* we disable ourself here */
-  space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
 
-  return GST_PAD_LINK_REFUSED;
-}
-
-static GstPadLinkReturn
-gst_ffmpegcsp_sinkconnect (GstPad        *pad,
-			   const GstCaps *caps)
-{
-  AVCodecContext *ctx;
-  GstFFMpegCsp *space;
-  GstPad *peer;
-
-  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
-
-  if (!gst_caps_is_fixed (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
-
-  ctx = avcodec_alloc_context ();
-  ctx->width = 0;
-  ctx->height = 0;
+  ctx->width = width;
+  ctx->height = height;
   ctx->pix_fmt = PIX_FMT_NB;
-
   gst_ffmpeg_caps_to_codectype (CODEC_TYPE_VIDEO, caps, ctx);
-  if (!ctx->width || !ctx->height || ctx->pix_fmt == PIX_FMT_NB) {
+  if (ctx->pix_fmt == PIX_FMT_NB) {
+    av_free (ctx);
+
+    /* we disable ourself here */
+    if (pad == space->srcpad) {
+      space->to_pixfmt = PIX_FMT_NB;
+    } else {
+      space->from_pixfmt = PIX_FMT_NB;
+    }
+
     return GST_PAD_LINK_REFUSED;
   }
 
-  space->fps = 1. * ctx->frame_rate / ctx->frame_rate_base;
-  space->width = ctx->width;
-  space->height = ctx->height;
-  space->from_pixfmt = ctx->pix_fmt;
-  av_free (ctx);
+  /* set the size on the otherpad */
+  othercaps = gst_pad_get_negotiated_caps (otherpad);
+  if (othercaps) {
+    GstCaps *caps = gst_caps_copy (othercaps);
 
-  GST_INFO ( "size: %dx%d", space->width, space->height);
-
-  space->sinkcaps = (GstCaps *) caps;
-
-  if ((peer = gst_pad_get_peer (pad)) != NULL) {
-    GstPadLinkReturn ret;
-    ret = gst_ffmpegcsp_srcconnect_func (pad,
-					 gst_pad_get_caps (GST_PAD_PEER (space->srcpad)),
-					 FALSE);
-    if (ret <= 0) {
-      space->sinkcaps = NULL;
+    gst_caps_set_simple (caps,
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", G_TYPE_DOUBLE, framerate,
+        NULL);
+    ret = gst_pad_try_set_caps (otherpad, caps);
+    if (GST_PAD_LINK_FAILED (ret)) {
       return ret;
     }
-
-    return GST_PAD_LINK_DONE;
   }
 
-  return GST_PAD_LINK_OK;
-}
+  if (pad == space->srcpad) {
+    space->to_pixfmt = ctx->pix_fmt;
+  } else {
+    space->from_pixfmt = ctx->pix_fmt;
+  }
+  av_free (ctx);
+  if (space->from_frame)
+    av_free (space->from_frame);
+  if (space->to_frame)
+    av_free (space->to_frame);
 
-static GstPadLinkReturn
-gst_ffmpegcsp_srcconnect (GstPad        *pad,
-			  const GstCaps *caps)
-{
-  return gst_ffmpegcsp_srcconnect_func (pad, caps, TRUE);
+  space->width = width & ~3;
+  space->height = height & ~3;
+
+  space->from_frame = avcodec_alloc_frame ();
+  space->to_frame = avcodec_alloc_frame ();
+
+  return GST_PAD_LINK_OK;
 }
 
 static GType
@@ -340,14 +315,15 @@ static void
 gst_ffmpegcsp_init (GstFFMpegCsp *space)
 {
   space->sinkpad = gst_pad_new_from_template (sinktempl, "sink");
-  gst_pad_set_link_function (space->sinkpad, gst_ffmpegcsp_sinkconnect);
+  gst_pad_set_link_function (space->sinkpad, gst_ffmpegcsp_pad_link);
   gst_pad_set_getcaps_function (space->sinkpad, gst_ffmpegcsp_getcaps);
   gst_pad_set_chain_function (space->sinkpad,gst_ffmpegcsp_chain);
   gst_element_add_pad (GST_ELEMENT(space), space->sinkpad);
 
   space->srcpad = gst_pad_new_from_template (srctempl, "src");
   gst_element_add_pad (GST_ELEMENT (space), space->srcpad);
-  gst_pad_set_link_function (space->srcpad, gst_ffmpegcsp_srcconnect);
+  gst_pad_set_link_function (space->srcpad, gst_ffmpegcsp_pad_link);
+  gst_pad_set_getcaps_function (space->srcpad, gst_ffmpegcsp_getcaps);
 
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
   space->from_frame = space->to_frame = NULL;
@@ -370,8 +346,14 @@ gst_ffmpegcsp_chain (GstPad  *pad,
   g_return_if_fail (space != NULL);
   g_return_if_fail (GST_IS_FFMPEGCSP (space));
 
+  if (space->passthru) {
+    gst_pad_push (space->srcpad, data);
+    return;
+  }
+
   if (space->from_pixfmt == PIX_FMT_NB ||
       space->to_pixfmt == PIX_FMT_NB) {
+    g_critical ("attempting to convert unknown formats");
     gst_buffer_unref (inbuf);
     return;
   }
