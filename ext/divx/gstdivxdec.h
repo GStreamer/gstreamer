@@ -1,4 +1,4 @@
-/* GStreamer xvid encoder plugin
+/* GStreamer divx decoder plugin
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -17,65 +17,54 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_XVIDENC_H__
-#define __GST_XVIDENC_H__
+#ifndef __GST_DIVXDEC_H__
+#define __GST_DIVXDEC_H__
 
 #include <gst/gst.h>
+#include <decore.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_XVIDENC \
-  (gst_xvidenc_get_type())
-#define GST_XVIDENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_XVIDENC, GstXvidEnc))
-#define GST_XVIDENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_XVIDENC, GstXvidEnc))
-#define GST_IS_XVIDENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XVIDENC))
-#define GST_IS_XVIDENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XVIDENC))
+#define GST_TYPE_DIVXDEC \
+  (gst_divxdec_get_type())
+#define GST_DIVXDEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DIVXDEC, GstDivxDec))
+#define GST_DIVXDEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DIVXDEC, GstDivxDec))
+#define GST_IS_DIVXDEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DIVXDEC))
+#define GST_IS_DIVXDEC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DIVXDEC))
 
-typedef struct _GstXvidEnc GstXvidEnc;
-typedef struct _GstXvidEncClass GstXvidEncClass;
+typedef struct _GstDivxDec GstDivxDec;
+typedef struct _GstDivxDecClass GstDivxDecClass;
 
-struct _GstXvidEnc {
+struct _GstDivxDec {
   GstElement element;
 
   /* pads */
   GstPad *sinkpad, *srcpad;
 
-  /* quality of encoded JPEG image */
-  gulong bitrate;
-
-  /* size of the JPEG buffers */
-  gulong buffer_size;
-
-  /* max key interval */
-  gint max_key_interval;
-
-  /* xvid handle */
+  /* divx handle */
   void *handle;
-  int csp;
+  DEC_BUFFERS bufinfo;
+
+  /* video (output) settings */
+  int csp, bpp;
   int width, height;
 };
 
-struct _GstXvidEncClass {
+struct _GstDivxDecClass {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
 };
 
-GType gst_xvidenc_get_type(void);
-
-gboolean gst_xvidenc_plugin_init (GModule   *module,
-                                  GstPlugin *plugin);
+GType gst_divxdec_get_type(void);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __GST_XVIDENC_H__ */
+#endif /* __GST_DIVXDEC_H__ */

@@ -1,10 +1,15 @@
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-plugin_LTLIBRARIES = libgstdivx.la
+plugin_LTLIBRARIES = libgstdivxenc.la libgstdivxdec.la
 
-libgstdivx_la_SOURCES = gstdivxenc.c
-libgstdivx_la_CFLAGS = $(GST_CFLAGS) $(DIVX_CFLAGS)
-libgstdivx_la_LIBADD = $(DIVX_LIBS)
-libgstdivx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdivxenc_la_SOURCES = gstdivxenc.c
+libgstdivxenc_la_CFLAGS = $(GST_CFLAGS) $(DIVX_CFLAGS)
+libgstdivxenc_la_LIBADD = $(DIVXENC_LIBS)
+libgstdivxenc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstdivxenc.h
+libgstdivxdec_la_SOURCES = gstdivxdec.c
+libgstdivxdec_la_CFLAGS = $(GST_CFLAGS) $(DIVX_CFLAGS)
+libgstdivxdec_la_LIBADD = $(DIVXDEC_LIBS)
+libgstdivxdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+noinst_HEADERS = gstdivxenc.h gstdivxdec.h

@@ -61,7 +61,7 @@ GST_PAD_TEMPLATE_FACTORY(src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("xvidenc_sink",
+  GST_CAPS_NEW("xvidenc_src",
                "video/xvid",
                  NULL)
 )
@@ -191,9 +191,9 @@ gst_xvidenc_init (GstXvidEnc *xvidenc)
   gst_pad_set_link_function(xvidenc->sinkpad, gst_xvidenc_connect);
 
   /* create the src pad */
-  xvidenc->sinkpad = gst_pad_new_from_template(
-                       GST_PAD_TEMPLATE_GET(src_template),
-                       "src");
+  xvidenc->srcpad = gst_pad_new_from_template(
+                      GST_PAD_TEMPLATE_GET(src_template),
+                      "src");
   gst_element_add_pad(GST_ELEMENT(xvidenc), xvidenc->srcpad);
 
   /* bitrate, etc. */
@@ -460,9 +460,9 @@ gst_xvidenc_get_property (GObject    *object,
 }
 
 
-static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+gboolean
+gst_xvidenc_plugin_init (GModule   *module,
+                         GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
@@ -484,11 +484,3 @@ plugin_init (GModule   *module,
 
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "xvidenc",
-  plugin_init
-};

@@ -60,7 +60,7 @@ GST_PAD_TEMPLATE_FACTORY(src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("divxenc_sink",
+  GST_CAPS_NEW("divxenc_src",
                "video/divx",
                  NULL)
 )
@@ -82,6 +82,7 @@ enum {
 
 static void             gst_divxenc_class_init   (GstDivxEncClass *klass);
 static void             gst_divxenc_init         (GstDivxEnc      *divxenc);
+static void             gst_divxenc_dispose      (GObject         *object);
 static void             gst_divxenc_chain        (GstPad          *pad,
                                                   GstBuffer       *buf);
 static GstPadLinkReturn gst_divxenc_connect      (GstPad          *pad,
@@ -156,6 +157,8 @@ gst_divxenc_class_init (GstDivxEncClass *klass)
   gobject_class->set_property = gst_divxenc_set_property;
   gobject_class->get_property = gst_divxenc_get_property;
 
+  gobject_class->dispose = gst_divxenc_dispose;
+
   gst_divxenc_signals[FRAME_ENCODED] =
     g_signal_new ("frame_encoded", G_TYPE_FROM_CLASS(klass),
                   G_SIGNAL_RUN_LAST,
@@ -178,9 +181,9 @@ gst_divxenc_init (GstDivxEnc *divxenc)
   gst_pad_set_link_function(divxenc->sinkpad, gst_divxenc_connect);
 
   /* create the src pad */
-  divxenc->sinkpad = gst_pad_new_from_template(
-                       GST_PAD_TEMPLATE_GET(src_template),
-                       "src");
+  divxenc->srcpad = gst_pad_new_from_template(
+                      GST_PAD_TEMPLATE_GET(src_template),
+                      "src");
   gst_element_add_pad(GST_ELEMENT(divxenc), divxenc->srcpad);
 
   /* bitrate, etc. */
@@ -236,6 +239,23 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   divxenc->handle = xenc.handle;
 
   return TRUE;
+}
+
+
+static void
+gst_divxenc_unset (GstDivxEnc *divxenc)
+{
+  encore(divxenc->handle, ENC_OPT_RELEASE, NULL, NULL);
+  divxenc->handle = NULL;
+}
+
+
+static void
+gst_divxenc_dispose (GObject *object)
+{
+  GstDivxEnc *divxenc = GST_DIVXENC(object);
+
+  gst_divxenc_unset(divxenc);
 }
 
 
@@ -306,16 +326,14 @@ gst_divxenc_connect (GstPad  *pad,
 
   /* if there's something old around, remove it */
   if (divxenc->handle) {
-    encore(divxenc->handle, ENC_OPT_RELEASE, NULL, NULL);
-    divxenc->handle = NULL;
+    gst_divxenc_unset(divxenc);
   }
 
   /* we are not going to act on variable caps */
   if (!GST_CAPS_IS_FIXED(vscaps))
     return GST_PAD_LINK_DELAYED;
 
-  for (caps = vscaps; caps != NULL; caps = caps->next)
-  {
+  for (caps = vscaps; caps != NULL; caps = caps->next) {
     int w,h,d;
     guint32 fourcc;
     gint divx_cs;
@@ -323,8 +341,7 @@ gst_divxenc_connect (GstPad  *pad,
     gst_caps_get_int(caps, "height", &h);
     gst_caps_get_fourcc_int(caps, "format", &fourcc);
 
-    switch (fourcc)
-    {
+    switch (fourcc) {
       case GST_MAKE_FOURCC('I','4','2','0'):
       case GST_MAKE_FOURCC('I','Y','U','V'):
         divx_cs = ENC_CSP_I420;
@@ -388,8 +405,7 @@ gst_divxenc_set_property (GObject      *object,
   g_return_if_fail (GST_IS_DIVXENC (object));
   divxenc = GST_DIVXENC(object);
 
-  switch (prop_id)
-  {
+  switch (prop_id) {
     case ARG_BITRATE:
       divxenc->bitrate = g_value_get_ulong(value);
       break;
@@ -444,7 +460,7 @@ plugin_init (GModule   *module,
   if (!gst_library_load("gstvideo"))
     return FALSE;
 
-  /* create an elementfactory for the v4lmjpegsrcparse element */
+  /* create an elementfactory for the element */
   factory = gst_element_factory_new("divxenc", GST_TYPE_DIVXENC,
                                     &gst_divxenc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
