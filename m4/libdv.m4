@@ -23,7 +23,7 @@ AC_ARG_ENABLE(libdvtest, [  --disable-libdvtest       Do not try to compile and 
     LIBDV_LIBS="-L$prefix/lib"
   fi
 
-  LIBDV_LIBS="$LIBDV_LIBS -ldv"
+  LIBDV_LIBS="$LIBDV_LIBS -ldv -lm"
 
   if test "x$libdv_includes" != "x" ; then
     LIBDV_CFLAGS="-I$libdv_includes"
