@@ -33,6 +33,7 @@
 #include "cothreads.h"
 #include "gstarch.h"
 #include "gstlog.h"
+#include "gstutils.h"
 
 
 #define STACK_SIZE 0x200000
@@ -86,7 +87,7 @@ cothread_context_init (void)
 
   memset (ctx->threads, 0, sizeof (ctx->threads));
 
-  ctx->threads[0] = (cothread_state *) g_malloc (sizeof (cothread_state));
+  ctx->threads[0] = (cothread_state *) g_malloc0 (sizeof (cothread_state));
   ctx->threads[0]->ctx = ctx;
   ctx->threads[0]->threadnum = 0;
   ctx->threads[0]->func = NULL;
@@ -491,21 +492,22 @@ cothread_switch (cothread_state * thread)
 #endif
   enter = setjmp (current->jmp);
   if (enter != 0) {
-    GST_DEBUG (0, "enter thread #%d %d %p<->%p (%d)", current->threadnum, enter,
-	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
+    GST_DEBUG (0, "enter thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
+	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp, current->jmp);
     return;
   }
-  GST_DEBUG (0, "exit thread #%d %d %p<->%p (%d)", current->threadnum, enter,
-	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
+  GST_DEBUG (0, "exit thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
+	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp, current->jmp);
   enter = 1;
 
-  if (current->flags & COTHREAD_DESTROYED)
+  if (current->flags & COTHREAD_DESTROYED) {
     cothread_destroy (current);
+  }
 
   GST_DEBUG (0, "set stack to %p", thread->sp);
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
-    GST_DEBUG (0, "in thread ");
+    GST_DEBUG (0, "in thread %p", thread->jmp);
     /* switch to it */
     longjmp (thread->jmp, 1);
   }
