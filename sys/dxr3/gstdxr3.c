@@ -1,9 +1,10 @@
 #include "gstdxr3videosink.h"
 
-
+/* elementfactory information */
 static GstElementDetails dxr3_video_sink_details = {
   "dxr3/Hollywood+ mpeg decoder board plugin",
   "video/mpeg",
+  "GPL",
   "Outputs PAL/NTSC video via the dxr3/Hollywood+ mpeg decoder board",
   VERSION,
   "Rehan Khwaja <rehankhwaja@yahoo.com>",

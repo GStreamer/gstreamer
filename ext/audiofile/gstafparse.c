@@ -26,10 +26,11 @@
 #include <string.h>
 #include "gstafparse.h"
 
-
+/* elementfactory information */
 static GstElementDetails afparse_details = {
   "Audiofile Parse",
   "Codec/Parser",
+  "LGPL",
   "Audiofile parser for audio/raw",
   VERSION,
   "Steve Baker <stevebaker_org@yahoo.co.uk>",

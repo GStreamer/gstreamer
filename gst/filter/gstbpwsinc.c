@@ -35,9 +35,11 @@
 #include <math.h>		/* M_PI */
 #include <string.h>		/* memmove */
 
+/* elementfactory information */
 GstElementDetails gst_bpwsinc_details = {
   "BPWSinc",
   "Filter/Audio/Effect",
+  "LGPL",
   "Band-Pass Windowed sinc filter",
   VERSION,
   "Thomas <thomas@apestaart.org>",

@@ -30,9 +30,11 @@
 /* number of buffers to allocate per chunk in sink buffer pool */
 #define SPEED_NUMBUF 6
 
+/* elementfactory information */
 static GstElementDetails speed_details = {
   "Speed",
   "Filter/Audio/Effect",
+  "LGPL",
   "Set speed/pitch on audio/raw streams (resampler)",
   VERSION,
   "Andy Wingo <apwingo@eos.ncsu.edu>",

@@ -24,6 +24,7 @@
 static GstElementDetails gst_swfdec_details = {
   "SWF video decoder",
   "Codec/Video/Decoder",
+  "LGPL",
   "Uses libswfdec to decode Flash video streams",
   VERSION,
   "David Schleef <ds@schleef.org>",

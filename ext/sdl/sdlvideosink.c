@@ -27,10 +27,11 @@
 
 #include "sdlvideosink.h"
 
-
+/* elementfactory information */
 static GstElementDetails gst_sdlvideosink_details = {
   "Video sink",
   "Sink/Video",
+  "LGPL",
   "An SDL-based videosink",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",

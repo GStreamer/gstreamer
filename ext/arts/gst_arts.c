@@ -29,6 +29,7 @@
 static GstElementDetails gst_arts_details = {
   "aRts plugin",
   "Filter/Audio",
+  "LGPL",
   "aRts wrapper filter",
   VERSION,
   "Erik Walthinsen <omega@temple-baptist.com,\n"

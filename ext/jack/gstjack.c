@@ -35,10 +35,11 @@
      sensitive to them
 */
 
-
+/* elementfactory information */
 static GstElementDetails gst_jack_bin_details = {  
     "Jack Bin",
     "Generic/Bin",
+    "LGPL",
     "Jack processing bin: see README for more info",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",

@@ -42,9 +42,11 @@ struct _GstMixMatrixClass {
   void (*resize) (GstMixMatrix *mix);
 };
 
+/* elementfactory information */
 static GstElementDetails mixmatrix_details = {
   "Mixing Matrix",
   "Filter/Audio/Mixing",
+  "LGPL",
   "Mix N audio channels together into M channels",
   VERSION,
   "Erik Walthinsen <omega@temple-baptist.com>",

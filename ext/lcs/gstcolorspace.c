@@ -59,10 +59,11 @@ struct _GstColorspaceClass {
   GstElementClass parent_class;
 };
 
-
+/* elementfactory information */
 static GstElementDetails colorspace_details = {
   "Colorspace converter",
   "Filter/Effect",
+  "LGPL",
   "Converts video from one colorspace to another",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

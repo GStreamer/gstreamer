@@ -28,6 +28,7 @@ gst_qtdemux_details =
 {
   "quicktime parser",
   "Codec/Parser",
+  "LGPL",
   "Parses a quicktime stream into audio and video substreams",
   VERSION,
   "A.Baguinski <artm@v2.nl>",

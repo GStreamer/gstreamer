@@ -33,9 +33,11 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 
+/* elementfactory information */
 GstElementDetails modplug_details = {
   "ModPlug",
   "Codec/Audio/Decoder",
+  "LGPL",
   "Module decoder based on modplug engine",
   VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr> "

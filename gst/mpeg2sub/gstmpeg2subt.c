@@ -36,6 +36,7 @@ static void	gst_mpeg2subt_get_property		(GObject *object, guint prop_id, GValue 
 static GstElementDetails mpeg2subt_details = {
   "MPEG2 subtitle Decoder",
   "Codec/Video/Decoder",
+  "LGPL",
   "Decodes and merges MPEG2 subtitles into a video frame",
   VERSION,
   "Samuel Hocevar <sam@via.ecp.fr>\n"

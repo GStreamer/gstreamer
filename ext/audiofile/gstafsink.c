@@ -24,10 +24,11 @@
 #include <gst/gst.h>
 #include "gstafsink.h"
 
-
+/* elementfactory information */
 static GstElementDetails afsink_details = {
   "Audiofile Sink",
   "Sink/Audio",
+  "LGPL",
   "Write audio streams to disk using libaudiofile",
   VERSION,
   "Thomas <thomas@apestaart.org>",

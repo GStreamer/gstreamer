@@ -25,10 +25,11 @@
 #include <gst/audio/audio.h>
 #include "gstafsrc.h"
 
-
+/* elementfactory information */
 static GstElementDetails afsrc_details = {
   "Audiofile Src",
   "Source/Audio",
+  "LGPL",
   "Read audio files from disk using libaudiofile",
   VERSION,
   "Thomas <thomas@apestaart.org>",

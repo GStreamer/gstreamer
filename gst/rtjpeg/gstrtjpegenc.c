@@ -24,6 +24,7 @@
 GstElementDetails gst_rtjpegenc_details = {
   "RTjpeg encoder",
   "Codec/Video/Encoder",
+  "LGPL",
   "Encodes video in RTjpeg format",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -24,10 +24,11 @@
 
 #define MAX_HEIGHT	2048
 
-
+/* elementfactory information */
 static GstElementDetails snapshot_details = {
   "snapshot",
   "Filter/Effect",
+  "LGPL",
   "Dump a frame to a png file",
   VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",

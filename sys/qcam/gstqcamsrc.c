@@ -29,11 +29,13 @@
 
 #include "qcamip.h"
 
+/* elementfactory information */
 static GstElementDetails 
 gst_qcamsrc_details = 
 {
   "QCam Source",
   "Source/Video",
+  "LGPL",
   "Read from a QuickCam device",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -23,6 +23,7 @@
 static GstElementDetails icecastsend_details = {
   "An Icecast  plugin",
   "IcecastSend",
+  "GPL",
   "Sends data to an icecast server",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

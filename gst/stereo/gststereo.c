@@ -19,10 +19,11 @@
 
 #include <gststereo.h>
 
-
+/* elementfactory information */
 static GstElementDetails stereo_details = {
   "Stereo effect",
   "Filter/Audio/Effect",
+  "LGPL",
   "Muck with the stereo signal, enhance it's 'stereo-ness'",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

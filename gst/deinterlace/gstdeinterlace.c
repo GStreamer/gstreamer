@@ -23,9 +23,11 @@
 #include <gst/gst.h>
 #include "gstdeinterlace.h"
 
+/* elementfactory information */
 static GstElementDetails deinterlace_details = {
   "Deinterlace",
   "Filter/Video",
+  "LGPL",
   "Deinterlace video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -24,6 +24,7 @@
 static GstElementDetails lavencode_details = {
   "LavEncode",
   "Codec/Video/Encoder",
+  "LGPL",
   "Encodes a YUV frame into the lav format (mjpeg_tools)",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

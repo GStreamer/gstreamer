@@ -25,6 +25,7 @@
 static GstElementDetails gst_smoothwave_details = {
   "Smooth waveform",
   "Sink/Visualization",
+  "LGPL",
   "Fading grayscale waveform display",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

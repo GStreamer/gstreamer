@@ -29,6 +29,7 @@ extern GstPadTemplate *enc_src_template, *enc_sink_template;
 GstElementDetails tarkinenc_details = {
   "Ogg Tarkin encoder",
   "Filter/Video/Encoder",
+  "LGPL",
   "Encodes video in OGG Tarkin format",
   VERSION,
   "Monty <monty@xiph.org>, " 

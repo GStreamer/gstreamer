@@ -53,6 +53,7 @@ struct _GstXsharpenClass
 GstElementDetails gst_xsharpen_details = {
   "",
   "Filter/Video/Effect",
+  "LGPL",
   "Apply a sharpen effect on video"
   VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",

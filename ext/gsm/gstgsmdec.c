@@ -28,6 +28,7 @@ extern GstPadTemplate *gsmdec_src_template, *gsmdec_sink_template;
 GstElementDetails gst_gsmdec_details = {
   "gsm audio decoder",
   "Codec/Audio/Decoder",
+  "LGPL",
   ".gsm",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

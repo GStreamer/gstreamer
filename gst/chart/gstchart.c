@@ -63,6 +63,7 @@ GType gst_chart_get_type(void);
 static GstElementDetails gst_chart_details = {
   "chart drawer",
   "Visualization",
+  "LGPL",
   "Takes frames of data and outputs video frames of a chart of data",
   VERSION,
   "Richard Boulton <richard@tartarus.org>",

@@ -32,9 +32,11 @@
 #define POD_BUFFER_SIZE   882000  /* enough space for 10 seconds of 16-bit audio
                                      at 44100 samples per second ... */
 
+/* elementfactory information */
 static GstElementDetails play_on_demand_details = {
   "Play On Demand",
   "Filter/Audio/Effect",
+  "LGPL",
   "Plays a stream whenever it receives a certain signal",
   VERSION,
   "Leif Morgan Johnson <lmjohns3@eos.ncsu.edu>",

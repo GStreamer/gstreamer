@@ -90,6 +90,7 @@ static char*		client_accept_s_expr		(int fd);
 static GstElementDetails gst_festival_details = {
   "Festival synthesizer",
   "Filter/Audio",
+  "LGPL",
   "Synthesizes plain text into audio",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

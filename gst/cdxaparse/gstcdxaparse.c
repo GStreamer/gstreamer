@@ -40,6 +40,7 @@
 static GstElementDetails gst_cdxa_parse_details = {
   ".dat parser",
   "Codec/Parser",
+  "LGPL",
   "Parse a .dat file (VCD) into raw mpeg1",
   VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",

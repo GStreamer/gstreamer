@@ -20,10 +20,11 @@
 #include <string.h>
 #include <gstsmooth.h>
 
-
+/* elementfactory information */
 static GstElementDetails smooth_details = {
   "Smooth effect",
   "Filter/Video",
+  "LGPL",
   "Apply a smooth filter to an image",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

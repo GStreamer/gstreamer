@@ -21,6 +21,7 @@
 #include <gstrtjpegenc.h>
 #include <gstrtjpegdec.h>
 
+/* elementfactory information */
 extern GstElementDetails gst_rtjpegenc_details;
 extern GstElementDetails gst_rtjpegdec_details;
 

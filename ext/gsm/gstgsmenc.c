@@ -28,6 +28,7 @@ extern GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
 GstElementDetails gst_gsmenc_details = {
   "gsm audio encoder",
   "Codec/Audio/Encoder",
+  "LGPL",
   ".gsm",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

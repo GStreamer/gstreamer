@@ -29,6 +29,7 @@ extern GstPadTemplate *dec_src_template, *dec_sink_template;
 GstElementDetails tarkindec_details = {
   "Ogg Tarkin decoder",
   "Filter/Video/Decoder",
+  "LGPL",
   "Decodes video in OGG Tarkin format",
   VERSION,
   "Monty <monty@xiph.org>, " 

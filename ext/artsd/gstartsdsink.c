@@ -26,6 +26,7 @@
 static GstElementDetails artsdsink_details = {
   "aRtsd audio sink",
   "Sink/Audio",
+  "LGPL",
   "Plays audio to an aRts server",
   VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",
