@@ -30,15 +30,12 @@
 #include <gst/resample/resample.h>
 
 /* elementfactory information */
-static GstElementDetails audioscale_details = {
+static GstElementDetails gst_audioscale_details = GST_ELEMENT_DETAILS (
   "Audio scaler",
   "Filter/Audio",
-  "LGPL",
   "Audio resampler",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
-};
+  "David Schleef <ds@schleef.org>"
+);
 
 /* Audioscale signals and args */
 enum {
@@ -89,6 +86,7 @@ gst_audioscale_method_get_type (void)
   return audioscale_method_type;
 }
 
+static void     gst_audioscale_base_init        (gpointer g_class);
 static void	gst_audioscale_class_init	(AudioscaleClass *klass);
 static void	gst_audioscale_init		(Audioscale *audioscale);
 
@@ -110,7 +108,8 @@ audioscale_get_type (void)
 
   if (!audioscale_type) {
     static const GTypeInfo audioscale_info = {
-      sizeof(AudioscaleClass),      NULL,
+      sizeof(AudioscaleClass),
+      gst_audioscale_base_init,
       NULL,
       (GClassInitFunc)gst_audioscale_class_init,
       NULL,
@@ -122,6 +121,19 @@ audioscale_get_type (void)
     audioscale_type = g_type_register_static(GST_TYPE_ELEMENT, "Audioscale", &audioscale_info, 0);
   }
   return audioscale_type;
+}
+
+static void
+gst_audioscale_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (gstelement_class,
+		  GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+		  GST_PAD_TEMPLATE_GET (sink_factory));
+
+  gst_element_class_set_details (gstelement_class, &gst_audioscale_details);
 }
 
 static void
@@ -397,29 +409,30 @@ gst_audioscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the audioscale element */
-  factory = gst_element_factory_new ("audioscale", GST_TYPE_AUDIOSCALE, &audioscale_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
   /* load support library */
   if (!gst_library_load ("gstresample"))
     return FALSE;
 
+  if (!gst_element_register (plugin, "audioscale", GST_RANK_NONE,
+        GST_TYPE_AUDIOSCALE)) {
+    return FALSE;
+  }
+
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "audioscale",
-  plugin_init
-};
+  "Resamples audio",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
+
