@@ -3,8 +3,6 @@
 
 <!ENTITY INTRO SYSTEM "intro.sgml">
 
-<!ENTITY FIRSTPLUGIN SYSTEM "firstplugin.sgml">
-
 <!ENTITY TESTAPP SYSTEM "testapp.sgml">
 
 <!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
@@ -94,7 +92,7 @@
       </para>
       <para>
         User specific plugin directories and registries will be available
-	in future versions of &GStreamer.
+	in future versions of &GStreamer;.
       </para>
     </chapter>
 
@@ -111,9 +109,9 @@
         An element may be constructed in several different ways, but all must
         conform to the same basic rules.  A simple filter may be built with the
         FilterFactory, where the only code that need be written is the actual
-        filter code.  A more complex filter, or a source or sink, will need to be
-        written out fully for complete access to the features and performance
-        possible with &GStreamer;.
+        filter code.  A more complex filter, or a source or sink, will need to
+	be written out fully for complete access to the features and
+	performance possible with &GStreamer;.
       </para>
       <para>
         The implementation of a new element will be contained in a plugin:
@@ -128,7 +126,9 @@
         Buffers are structures used to pass data between elements.  All streams
         of data are chopped up into chunks which are stored in buffers.
         Buffers can be of any size, and also contain metadata indicating the
-        type of data contained in them.
+        type of data contained in them.  Buffers can be allocated by various
+	different schemes, and may either be passed on by elements or
+	unreferenced (and the memory used by the buffer freed).
       </para>
     </chapter>
 
@@ -140,7 +140,8 @@
 	to fully specify that format match up correctly.  Each connection
 	that is made between elements has a specified type.  This is related,
 	but different, to the metadata in buffers which describes the type
-	of data in that particular buffer.
+	of data in that particular buffer.  See later in this document for
+	details of the available types.
       </para>
     </chapter>
 
@@ -162,50 +163,22 @@
       </para>
     </chapter>
 
-  </part>
-
-<!-- ############ part ############# -->
-
-  <part id="first-plugin"><title>Building our first plugin</title>
-    <partintro>
+    <chapter id="cha-chainloop">
+      <title>Autopluggers</title>
       <para>
-	We are now have the neccessary concepts to build our first plugin.
-	We are going to build an element which has a single input pad and
-	a single output pad, and simply passes anything it reads on
-	the input pad through and out on the output pad.  We will also
-	see where we could add code to convert this plugin into something
-	more useful.
+        &GStreamer; has an autoplugging mechanism, which enables application
+	writers to simply specify start and end elements for a path, and
+	the system will then create a path which links these elements,
+	in accordance with the type information provided by the elements.
       </para>
       <para>
-        The example code used in this section can be found in
-	<filename>examples/plugins/</filename>
+        It is possible to devise many different schemes for generating such
+	pathways, perhaps to optimise based on special criteria, or with
+	some specific constraints.  It is thus possible to define new
+	autoplugging systems, using the plugin system.
       </para>
-    </partintro>
+    </chapter>
 
-      &FIRSTPLUGIN;
-
-  </part>
-
-<!-- ############ part ############# -->
-
-  <part id="test-app"><title>Building a simple test application</title>
-    <partintro>
-      <para>
-      </para>
-    </partintro>
-
-      &TESTAPP;
-  </part>
-
-<!-- ############ part ############# -->
-
-  <part id="loopbased"><title>Loop-based Elements</title>
-    <partintro>
-      <para>
-      </para>
-    </partintro>
-
-      &LOOPBASED;
   </part>
 
 <!-- ############ part ############# -->
@@ -223,7 +196,7 @@
 	In order for types to be useful, and for systems like autopluggers to
 	work, it is neccessary that all elements
 	agree on the type definitions, and which properties are required
-	for each type.  The GStreamer framework itself
+	for each type.  The &GStreamer; framework itself
 	simply provides the ability to define types and parameters, but does
 	not fix the meaning of types and parameters, and does not enforce
 	standards on the creation of new types.  This is a matter for
@@ -241,8 +214,8 @@
 	  <listitem>
 	    <para>
 	      If creating a new type, discuss it first with the other
-	      GStreamer developers, on at least one of: IRC, mailing lists,
-	      the GStreamer wiki.
+	      &GStreamer; developers, on at least one of: IRC, mailing lists,
+	      the &GStreamer; wiki.
 	    </para>
 	  </listitem>
 	  <listitem>
@@ -376,6 +349,12 @@
 	    - Raw video data.
 	  </para><para>
 	    <emphasis>fourcc</emphasis>
+	    - A FOURCC code identifying the format in which this data is
+	    stored.  FOURCC (Four Character Code) is a simple system to
+	    allow unambiguous identification of a video datastream format.
+	    See <ulink
+	    url="http://www.webartz.com/fourcc/"
+	    type="http">http://www.webartz.com/fourcc/</ulink>
 	  </para><para>
 	    <emphasis>width</emphasis>
 	    - The number of pixels wide that each video frame is.
@@ -432,6 +411,243 @@
       </para>
     </chapter>
 
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="first-plugin"><title>Building our first plugin</title>
+    <partintro>
+      <para>
+	We are now have the neccessary concepts to build our first plugin.
+	We are going to build an element which has a single input pad and
+	a single output pad, and simply passes anything it reads on
+	the input pad through and out on the output pad.  We will also
+	see where we could add code to convert this plugin into something
+	more useful.
+      </para>
+      <para>
+        The example code used in this section can be found in
+	<filename>examples/plugins/</filename>
+      </para>
+    </partintro>
+
+    <chapter id="cha-boilerplate">
+      <title>Constructing the boilerplate</title>
+      <para>
+        The first thing to do when making a new element is to specify some basic
+        details about it: what its name is, who wrote it, what version number it
+        is, etc.  We also need to define an object to represent the element and to
+        store the data the element needs.  I shall refer to these details
+        collectively as the <emphasis>boilerplate</emphasis>.
+      </para>
+
+      <sect1 id="sect-boilerplate-gobject">
+        <title>Doing it the hard way with GstObject</title>
+        <para>
+          The standard way of defining the boilerplate is simply to write some
+          code, and fill in some structures.  The easiest way to do this is to
+          copy an example and modify according to your needs.
+        </para>
+        <para>
+          First we will examine the code you would be likely to place in a header
+          file (although since the interface to the code is entirely defined 
+          by the pluging system, and doesn't depend on reading a header file,
+          this is not crucial.)
+
+          The code here can be found in
+          <filename>examples/plugins/example.h</filename>
+        </para>
+
+        <programlisting>
+  /* Definition of structure storing data for this element. */
+  typedef struct _GstExample GstExample;
+
+  struct _GstExample {
+    GstElement element;
+
+    GstPad *sinkpad,*srcpad;
+
+    gint8 active;
+  };
+
+  /* Standard definition defining a class for this element. */
+  typedef struct _GstExampleClass GstExampleClass;
+  struct _GstExampleClass {
+    GstElementClass parent_class;
+  };
+
+  /* Standard macros for defining types for this element.  */
+  #define GST_TYPE_EXAMPLE \
+    (gst_example_get_type())
+  #define GST_EXAMPLE(obj) \
+    (GTK_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
+  #define GST_EXAMPLE_CLASS(klass) \
+    (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+  #define GST_IS_EXAMPLE(obj) \
+    (GTK_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
+  #define GST_IS_EXAMPLE_CLASS(obj) \
+    (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
+
+  /* Standard function returning type information. */
+  GtkType gst_example_get_type(void);
+        </programlisting>
+    
+      </sect1>
+
+      <sect1 id="sect-boilerplate-filterfactory">
+        <title>Doing it the easy way with FilterFactory</title>
+        <para>
+          A plan for the future is to create a FilterFactory, to make the
+          process of making a new filter a simple process of specifying a few
+          details, and writing a small amount of code to perform the actual
+          data processing.
+        </para>
+        <para>
+          Unfortunately, this hasn't yet been implemented.  It is also likely
+          that when it is, it will not be possible to cover all the possibilities
+          available by writing the boilerplate yourself, so some plugins will
+          always need to be manually registered.
+        </para>
+        <para>
+          As a rough outline of what is planned: the FilterFactory will take a
+          list of appropriate function pointers, and data structures to define
+          a filter.  With a reasonable measure of preprocessor magic, the
+          plugin writer will then simply need to provide definitions of the
+          functions and data structures desired, and a name for the filter, and
+          then call a macro from within plugin_init() which will register the
+          new filter.  All the fluff that goes into the definition of a filter
+          will thus be hidden from view.
+        </para>
+        <para>
+          Ideally, we will come up with a way for various FilterFactory-provided
+          functions to be overridden, to the point where you can construct
+          almost the most complex stuff with it, it just saves typing.
+        </para>
+        <para>
+          Of course, the filter factory can be used to create sources and sinks
+          too: simply create a filter with only source or sink pads.
+        </para>
+        <para>
+          You may be thinking that this should really be called an
+          ElementFactory.  Well, we agree, but there is already something else
+          justifiably ealled an ElementFactory (this is the thing which actually
+          makes instances of elements).  There is also already something called
+          a PluginFactory.  We just have too many factories and not enough words.
+          And since this isn't yet written, it doesn't get priority for claiming
+          a name.
+        </para>
+      </sect1>
+    </chapter>
+
+    <chapter id="cha-defineelt">
+      <title>Defining an element</title>
+      <para>
+      </para>
+
+      <sect1 id="sect-defineelt-pads">
+        <title>Specifying the pads</title>
+        <para>
+        </para>
+      </sect1>
+
+      <sect1 id="sect-defineelt-fns">
+        <title>Attaching functions</title>
+        <para>
+        </para>
+      </sect1>
+	
+      <sect1 id="sect-defineelt-chainfn">
+        <title>The chain function</title>
+        <para>
+        </para>
+      </sect1>
+    </chapter>
+
+    <chapter id="cha-plugininit">
+      <title>The plugin_init function</title>
+      <para>
+        Once we have written code defining all the parts of the plugin,
+	we need to write the plugin_init() function.  This is a special
+	function, which is called as soon as the plugin is loaded, and
+	must return a pointer to a newly allocated GstPlugin structure.
+	This structure contains the details of all the facilities provided
+	by the plugin.  Helper functions are provided to help fill the
+	structure: for future compatability it is recommended that these
+	functions are used, as documented below.
+      </para>
+      <para>
+        Note that the information returned by the plugin_init() function
+	will be cached in a central registry.  For this reason, it is
+	important that the same information is always returned by
+	the function: for example, it must not make element factories
+	available based on runtime conditions.  If an element can only
+	work in certain conditions (for example, if the soundcard is not
+	being used by some other process) this must be reflected by the
+	element being unable to enter the READY state if unavailable, rather
+	than the plugin attempting to deny existence of the plugin.
+      </para>
+
+      <sect1 id="sect-plugininit-types">
+        <title>Registering new types</title>
+        <para>
+        </para>
+        <programlisting>
+  void gst_plugin_add_type(GstPlugin *plugin,
+			   GstTypeFactory *factory);
+        </programlisting>
+	<para>
+	</para>
+      </sect1>
+
+      <sect1 id="sect-plugininit-filter">
+        <title>Registering new element factories</title>
+        <para>
+        </para>
+        <programlisting>
+  void gst_plugin_add_factory(GstPlugin *plugin,
+			      GstElementFactory *factory);
+        </programlisting>
+	<para>
+	  Multiple element factories can be provided by a single plugin:
+	  all it needs to do is call gst_plugin_add_factory() for each
+	  element factory it wishes to provide.
+	</para>
+      </sect1>
+	
+      <sect1 id="sect-plugininit-autopluggers">
+        <title>Registering new autopluggers</title>
+        <para>
+        </para>
+        <programlisting>
+  void gst_plugin_add_autoplugger(GstPlugin *plugin,
+				  GstAutoplugFactory *factory);
+        </programlisting>
+      </sect1>
+
+    </chapter>
+
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="test-app"><title>Building a simple test application</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &TESTAPP;
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="loopbased"><title>Loop-based Elements</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &LOOPBASED;
   </part>
 
 <!-- ############ part ############# -->

@@ -4,7 +4,6 @@ htmlname = index.html
 sgml_files = gst-plugin-writers-guide.sgml \
 	     titlepage.sgml \
 	     intro.sgml \
-	     firstplugin.sgml \
 	     testapp.sgml \
 	     loopbased.sgml
 
