@@ -189,7 +189,7 @@ gst_init_get_popt_table (void)
     {"gst-plugin-load", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
           ARG_PLUGIN_LOAD,
           N_("Comma-separated list of plugins to preload in addition to the "
-              "list stored in envronment variable GST_PLUGIN_PATH"),
+              "list stored in environment variable GST_PLUGIN_PATH"),
         N_("PLUGINS")},
     {"gst-disable-segtrap", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
           ARG_SEGTRAP_DISABLE,
