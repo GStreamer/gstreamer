@@ -203,7 +203,7 @@ int main(int argc,char *argv[])
     /* Init gst */
     _gst_plugin_spew = TRUE;
     _gst_warn_old_registry = FALSE;
-    gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
+    //gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
     gst_init(&argc,&argv);
 
     /* Check args */
