@@ -20,6 +20,7 @@ BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	nasm >= 0.90
 BuildRequires: 	bison
+BuildRequires: 	flex
 BuildRequires: 	gtk-doc >= 0.7
 BuildRequires: 	gcc
 BuildRequires: 	zlib-devel
@@ -212,6 +213,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Tue Sep 17 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- adding flex to buildrequires
+
 * Fri Sep 13 2002 Christian F.K. Schaller <Uraeus@linuxrising.org>
 - Fixed the schedulers after the renaming
 * Sun Sep 08 2002 Thomas Vander Stichele <thomas@apestaart.org>
