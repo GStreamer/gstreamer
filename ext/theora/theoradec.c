@@ -559,6 +559,11 @@ theora_dec_chain (GstPad * pad, GstData * data)
 
   /* switch depending on packet type */
   if (packet.packet[0] & 0x80) {
+    if (packet.packetno > 3) {
+      GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
+      gst_data_unref (data);
+      return;
+    }
     /* header packet */
     if (theora_decode_header (&dec->info, &dec->comment, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,

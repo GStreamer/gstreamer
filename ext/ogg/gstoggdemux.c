@@ -408,14 +408,14 @@ gst_ogg_demux_src_query (GstPad * pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:{
       if (cur->length != 0 && cur->length != cur->start) {
-        granulepos = cur->length;
+        granulepos = cur->length - cur->start;
         res = TRUE;
       }
       break;
     }
     case GST_QUERY_POSITION:
       if (cur->length != 0 && cur->length != cur->start) {
-        granulepos = cur->known_offset;
+        granulepos = cur->known_offset - cur->start;
         res = TRUE;
       }
       break;
@@ -522,8 +522,6 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
           goto error;
       }
 
-      if (offset < 0)
-        offset = 0;
       position = offset;
       if (format != GST_FORMAT_DEFAULT) {
         GstFormat fmt = GST_FORMAT_DEFAULT;
@@ -532,17 +530,20 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
                 offset, &fmt, &position))
           goto error;
       }
+      if (position < 0)
+        position = 0;
+      else if (position > cur->length - cur->start)
+        position = cur->length - cur->start;
 
       if (gst_file_pad_seek (ogg->sinkpad,
-              gst_file_pad_get_length (ogg->sinkpad) * (position - cur->start) /
+              gst_file_pad_get_length (ogg->sinkpad) * position /
               (cur->length - cur->start), GST_SEEK_METHOD_SET) != 0)
         goto error;
       ogg_sync_clear (&ogg->sync);
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       GST_DEBUG_OBJECT (ogg,
           "initiating seeking to format %d, offset %" G_GUINT64_FORMAT, format,
           offset);
@@ -615,8 +616,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -902,8 +902,7 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
-      );
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -1032,8 +1031,7 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset);
-        );
+        endpos = MIN (endpos, pad->start_offset););
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
@@ -1408,7 +1406,11 @@ gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
         if ((pad->flags & GST_OGG_PAD_NEEDS_DISCONT)
             && GST_PAD_IS_USABLE (pad->pad)) {
           GstEvent *event = gst_event_new_discontinuous (FALSE,
-              GST_FORMAT_DEFAULT, pad->known_offset, GST_FORMAT_UNDEFINED);     /* FIXME: this might be wrong because we can only use the last known offset */
+              GST_FORMAT_DEFAULT, pad->known_offset - pad->start,
+              GST_FORMAT_UNDEFINED);
+
+          /* FIXME: this might be wrong because we can only use the last
+           * known offset */
 
           gst_pad_push (pad->pad, GST_DATA (event));
           pad->flags &= (~GST_OGG_PAD_NEEDS_DISCONT);
@@ -1421,7 +1423,7 @@ gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
         if (pad->offset != -1)
           GST_BUFFER_OFFSET (buf) = pad->offset;
         if (packet.granulepos != -1)
-          GST_BUFFER_OFFSET_END (buf) = packet.granulepos;
+          GST_BUFFER_OFFSET_END (buf) = packet.granulepos - pad->start;
         pad->offset = packet.granulepos;
         if (GST_PAD_IS_USABLE (pad->pad))
           gst_pad_push (pad->pad, GST_DATA (buf));
