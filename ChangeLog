@@ -1,3 +1,15 @@
+2004-09-15  David Schleef  <ds@schleef.org>
+
+	* configure.ac: remove NASM check, since we don't use it.  Update
+	dirac check to 0.4
+	* ext/dirac/gstdiracdec.cc: update to current 0.4 API
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_link):
+	Initialized variables.
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_header), (qtdemux_parse), (qtdemux_parse_trak),
+	(gst_qtdemux_handle_esds), (qtdemux_audio_caps): Fix seeking, add
+	SVQ3 format
+
 2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),

@@ -25,8 +25,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include <seq_decompress.h>
-#include <pic_io.h>
+#include <libdirac_decoder/seq_decompress.h>
+#include <libdirac_common/pic_io.h>
 
 #define GST_TYPE_DIRACDEC \
   (gst_diracdec_get_type())
@@ -51,6 +51,7 @@ struct _GstDiracDec
 
   SequenceDecompressor *decompress;
 
+    std::istream * input_stream;
   PicOutput *output_image;
 
 };
@@ -104,7 +105,7 @@ gst_diracdec_get_type (void)
 
   if (!diracdec_type) {
     static const GTypeInfo diracdec_info = {
-      sizeof (GstDiracDec),
+      sizeof (GstDiracDecClass),
       gst_diracdec_base_init,
       NULL,
       (GClassInitFunc) gst_diracdec_class_init,
@@ -165,6 +166,8 @@ gst_diracdec_class_init (GstDiracDec * klass)
 static void
 gst_diracdec_init (GstDiracDec * diracdec)
 {
+  SeqParams params;
+
   GST_DEBUG ("gst_diracdec_init: initializing");
   /* create the sink and src pads */
 
@@ -181,8 +184,11 @@ gst_diracdec_init (GstDiracDec * diracdec)
   gst_pad_use_explicit_caps (diracdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (diracdec), diracdec->srcpad);
 
-  diracdec->decompress = new SequenceDecompressor;
-  diracdec->output_image = new PicOutput;
+  //diracdec->input_stream = new std::istream ();
+  diracdec->input_stream = NULL;
+  diracdec->decompress =
+      new SequenceDecompressor (diracdec->input_stream, FALSE);
+  diracdec->output_image = new PicOutput ("moo", params, (bool) FALSE);
 }
 
 static GstPadLinkReturn
