@@ -37,6 +37,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
 #include <gst/gstcaps.h>
+#include <gst/gstevent.h>
 
 
 #ifdef __cplusplus
@@ -91,12 +92,11 @@ typedef enum {
  * buf is the buffer being passed */
 typedef void 		(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
 typedef GstBuffer*	(*GstPadGetFunction) 		(GstPad *pad);
-typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
-typedef void 		(*GstPadQoSFunction) 		(GstPad *pad, glong qos_message);
+typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, void *event);
 
-typedef void 		(*GstPadPushFunction) 		(GstPad *pad, GstBuffer *buf);
-typedef GstBuffer*	(*GstPadPullFunction) 		(GstPad *pad);
+typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
+typedef void 		(*GstPadQoSFunction) 		(GstPad *pad, glong qos_message);
 typedef gboolean 	(*GstPadEOSFunction) 		(GstPad *pad);
 typedef GstPadNegotiateReturn (*GstPadNegotiateFunction) 	(GstPad *pad, GstCaps **caps, gpointer *data);
 typedef void 		(*GstPadNewCapsFunction) 	(GstPad *pad, GstCaps *caps);
@@ -145,14 +145,17 @@ struct _GstRealPad {
   GstSchedule			*sched;
 
   GstPadChainFunction 		chainfunc;
+  GstPadChainFunction 		chainhandler;
   GstPadGetFunction 		getfunc;
+  GstPadGetFunction		gethandler;
+
+  GstPadEventFunction		eventfunc;
+  GstPadEventFunction		eventhandler;
+
   GstPadGetRegionFunction 	getregionfunc;
+  GstPadPullRegionFunction 	pullregionfunc;
   GstPadQoSFunction 		qosfunc;
   GstPadEOSFunction 		eosfunc;
-
-  GstPadPushFunction 		pushfunc;
-  GstPadPullFunction		pullfunc;
-  GstPadPullRegionFunction 	pullregionfunc;
 
   GstPadNegotiateFunction 	negotiatefunc;
   GstPadNewCapsFunction 	newcapsfunc;
@@ -199,13 +202,17 @@ struct _GstGhostPadClass {
 #define GST_RPAD_BUFPEN(pad)		(((GstRealPad *)(pad))->bufpen)
 #define GST_RPAD_SCHED(pad)		(((GstRealPad *)(pad))->sched)
 #define GST_RPAD_CHAINFUNC(pad)		(((GstRealPad *)(pad))->chainfunc)
+#define GST_RPAD_CHAINHANDLER(pad)	(((GstRealPad *)(pad))->chainhandler)
 #define GST_RPAD_GETFUNC(pad)		(((GstRealPad *)(pad))->getfunc)
+#define GST_RPAD_GETHANDLER(pad)	(((GstRealPad *)(pad))->gethandler)
+#define GST_RPAD_EVENTFUNC(pad)		(((GstRealPad *)(pad))->eventfunc)
+#define GST_RPAD_EVENTHANDLER(pad)	(((GstRealPad *)(pad))->eventhandler)
+
 #define GST_RPAD_GETREGIONFUNC(pad)	(((GstRealPad *)(pad))->getregionfunc)
-#define GST_RPAD_PUSHFUNC(pad)		(((GstRealPad *)(pad))->pushfunc)
-#define GST_RPAD_PULLFUNC(pad)		(((GstRealPad *)(pad))->pullfunc)
 #define GST_RPAD_PULLREGIONFUNC(pad)	(((GstRealPad *)(pad))->pullregionfunc)
 #define GST_RPAD_QOSFUNC(pad)		(((GstRealPad *)(pad))->qosfunc)
 #define GST_RPAD_EOSFUNC(pad)		(((GstRealPad *)(pad))->eosfunc)
+
 #define GST_RPAD_NEGOTIATEFUNC(pad)	(((GstRealPad *)(pad))->negotiatefunc)
 #define GST_RPAD_NEWCAPSFUNC(pad)	(((GstRealPad *)(pad))->newcapsfunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
@@ -225,7 +232,7 @@ struct _GstGhostPadClass {
 
 /* Some check functions (unused?) */
 #define GST_PAD_CONNECTED(pad)		(GST_PAD_PEER(pad) != NULL)
-#define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
+#define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->gethandler != NULL)
 
 
 /***** PadTemplate *****/
@@ -299,9 +306,12 @@ GstPadDirection		gst_pad_get_direction		(GstPad *pad);
 
 void			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
+void			gst_pad_set_event_function	(GstPad *pad, GstPadEventFunction event);
+
 void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getregion);
 void			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
+
 void			gst_pad_set_negotiate_function	(GstPad *pad, GstPadNegotiateFunction nego);
 void			gst_pad_set_newcaps_function	(GstPad *pad, GstPadNewCapsFunction newcaps);
 void			gst_pad_set_bufferpool_function	(GstPad *pad, GstPadBufferPoolFunction bufpool);
@@ -344,8 +354,8 @@ GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *srcpad, GstPad *destpad,
 void			gst_pad_push			(GstPad *pad, GstBuffer *buf);
 #else
 #define gst_pad_push(pad,buf) G_STMT_START{ \
-  if (((GstRealPad *)(pad))->peer->pushfunc) \
-    (((GstRealPad *)(pad))->peer->pushfunc)((GstPad *)(((GstRealPad *)(pad))->peer),(buf)); \
+  if (((GstRealPad *)(pad))->peer->chainhandler) \
+    (((GstRealPad *)(pad))->peer->chainhandler)((GstPad *)(((GstRealPad *)(pad))->peer),(buf)); \
 }G_STMT_END
 #endif
 #if 1
@@ -353,14 +363,26 @@ GstBuffer*		gst_pad_pull			(GstPad *pad);
 GstBuffer*		gst_pad_pullregion		(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 #else
 #define gst_pad_pull(pad) \
-  ( (((GstRealPad *)(pad))->peer->pullfunc) ? \
-(((GstRealPad *)(pad))->peer->pullfunc)((GstPad *)(((GstRealPad *)(pad))->peer)) : \
+  ( (((GstRealPad *)(pad))->peer->gethandler) ? \
+(((GstRealPad *)(pad))->peer->gethandler)((GstPad *)(((GstRealPad *)(pad))->peer)) : \
 NULL )
 #define gst_pad_pullregion(pad,type,offset,len) \
   ( (((GstRealPad *)(pad))->peer->pullregionfunc) ? \
 (((GstRealPad *)(pad))->peer->pullregionfunc)((GstPad *)(((GstRealPad *)(pad))->peer),(type),(offset),(len)) : \
 NULL )
 #endif
+
+#if 1
+gboolean			gst_pad_event			(GstPad *pad, void *event);
+#else
+#define gst_pad_event(pad,event) G_STMT_START{ \
+  ( (((GstRealPad *)(pad))->peer->eventhandler) ? \
+    (((GstRealPad *)(pad))->peer->eventhandler)((GstPad *)(((GstRealPad *)(pad))->peer),(event)) : \
+FALSE )
+}G_STMT_END
+#endif
+
+
 GstBuffer*		gst_pad_peek			(GstPad *pad);
 GstPad*			gst_pad_select			(GList *padlist);
 GstPad*			gst_pad_selectv			(GstPad *pad, ...);

@@ -196,8 +196,8 @@ gst_real_pad_init (GstRealPad *pad)
   pad->qosfunc = NULL;
   pad->eosfunc = GST_DEBUG_FUNCPTR(gst_pad_eos_func);
 
-  pad->pushfunc = GST_DEBUG_FUNCPTR(gst_pad_push_func);
-  pad->pullfunc = NULL;
+  pad->chainhandler = GST_DEBUG_FUNCPTR(gst_pad_push_func);
+  pad->gethandler = NULL;
   pad->pullregionfunc = NULL;
 
   pad->bufferpoolfunc = NULL;
@@ -380,6 +380,25 @@ gst_pad_set_get_function (GstPad *pad,
   GST_RPAD_GETFUNC(pad) = get;
   GST_DEBUG (GST_CAT_PADS,"getfunc for %s:%s  set to %s\n",
              GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(get));
+}
+
+/**
+ * gst_pad_set_event_function:
+ * @pad: the pad to set the event handler for
+ * @event: the event handler
+ *
+ * Set the given event handler for the pad.
+ */
+void
+gst_pad_set_event_function (GstPad *pad,
+                            GstPadEventFunction event)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_EVENTFUNC(pad) = event;
+  GST_DEBUG (GST_CAT_PADS,"eventfunc for %s:%s  set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(event));
 }
 
 /**
@@ -1477,12 +1496,12 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
   g_return_if_fail (peer != NULL);
   
-  if (peer->pushfunc) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "calling pushfunc &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME (peer->pushfunc), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
-    (peer->pushfunc) (((GstPad*)peer), buf);
+  if (peer->chainhandler) {
+    GST_DEBUG (GST_CAT_DATAFLOW, "calling chainhandler &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
+    (peer->chainhandler) (((GstPad*)peer), buf);
   } else
-    GST_DEBUG (GST_CAT_DATAFLOW, "no pushfunc\n");
+    GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
 }
 #endif
 
@@ -1505,12 +1524,12 @@ gst_pad_pull (GstPad *pad)
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
   g_return_val_if_fail (peer != NULL, NULL);
 
-  if (peer->pullfunc) {
-    GST_DEBUG (GST_CAT_DATAFLOW,"calling pullfunc %s of peer pad %s:%s\n",
-      GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),GST_DEBUG_PAD_NAME(peer));
-    return (peer->pullfunc)(((GstPad*)peer));
+  if (peer->gethandler) {
+    GST_DEBUG (GST_CAT_DATAFLOW,"calling gethandler %s of peer pad %s:%s\n",
+      GST_DEBUG_FUNCPTR_NAME(peer->gethandler),GST_DEBUG_PAD_NAME(peer));
+    return (peer->gethandler)(((GstPad*)peer));
   } else {
-    GST_DEBUG (GST_CAT_DATAFLOW,"no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(((GstPad*)peer)),&peer->pullfunc);
+    GST_DEBUG (GST_CAT_DATAFLOW,"no gethandler for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(((GstPad*)peer)),&peer->gethandler);
     return NULL;
   }
 }
@@ -2034,4 +2053,41 @@ gst_ghost_pad_new (gchar *name,
   GST_DEBUG(GST_CAT_PADS,"created ghost pad \"%s\"\n",name);
 
   return GST_PAD(ghostpad);
+}
+
+
+gboolean
+gst_pad_event (GstPad *pad, void *event)
+{
+  GstRealPad *peer;
+  gboolean handled = FALSE;
+
+  GST_DEBUG(GST_CAT_EVENT, "have event %d on pad %s:%s\n",(gint)event,GST_DEBUG_PAD_NAME(pad));
+
+  peer = GST_RPAD_PEER(pad);
+  if (GST_RPAD_EVENTFUNC(peer))
+    handled = GST_RPAD_EVENTFUNC(peer) (peer, event);
+
+  else {
+    GST_DEBUG(GST_CAT_EVENT, "there's no event function for peer %s:%s\n",GST_DEBUG_PAD_NAME(peer));
+  }
+
+  if (!handled) {
+    GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
+    gst_pad_event_default(peer,event);
+  }
+}
+
+/* pad is the receiving pad */
+static void 
+gst_pad_event_default(GstPad *pad, void *event)
+{
+  switch((gint)event) {
+    case GST_EVENT_EOS:
+      if (GST_PAD_PARENT(pad)->numsrcpads == 1)
+        gst_element_signal_eos(GST_PAD_PARENT(pad));
+      else
+        GST_DEBUG(GST_CAT_EVENT, "WARNING: no default behavior for EOS with multiple srcpads\n");
+      break;
+  }
 }

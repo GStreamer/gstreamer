@@ -840,6 +840,13 @@ gst_element_set_state (GstElement *element, GstElementState state)
       GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"have failed change_state return\n");
       return return_val;
     }
+
+    /* Last thing we do is verify that a successful state change really
+     * did change the state... */
+    if (GST_STATE(element) != curpending) {
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element claimed state-change success, but state didn't change\n");
+      return GST_STATE_FAILURE;
+    }
   }
 
   /* this is redundant, really, it will always return SUCCESS */
@@ -1248,6 +1255,7 @@ gst_element_signal_eos (GstElement *element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  GST_DEBUG(GST_CAT_EVENT, "signaling EOS on element %s\n",GST_OBJECT_NAME(element));
   g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
   GST_FLAG_SET(element,GST_ELEMENT_COTHREAD_STOPPING);
 }

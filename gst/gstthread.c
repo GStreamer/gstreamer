@@ -479,6 +479,7 @@ gst_thread_change_state (GstElement *element)
       
       break;
     default:
+      GST_DEBUG_ELEMENT(GST_CAT_THREAD, element, "UNHANDLED STATE CHANGE! %x\n",transition);
       break;
   }
 

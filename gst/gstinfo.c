@@ -56,6 +56,7 @@ static gchar *_gst_info_category_strings[] = {
   "XML",
   "NEGOTIATION",
   "REFCOUNTING",
+  "EVENT",
 };
 
 /**
@@ -108,6 +109,7 @@ const gchar *_gst_category_colors[32] = {
   [GST_CAT_XML]			= "01;37;41",		// !!
   [GST_CAT_NEGOTIATION]		= "07;34",
   [GST_CAT_REFCOUNTING]		= "00;34:42",
+  [GST_CAT_EVENT]		= "01;37;41",		// !!
 
   [31]				= "",
 };

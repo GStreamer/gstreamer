@@ -66,6 +66,7 @@ static void	gst_fakesink_get_property	(GObject *object, guint prop_id,
 						 GValue *value, GParamSpec *pspec);
 
 static void	gst_fakesink_chain		(GstPad *pad, GstBuffer *buf);
+static gboolean	gst_fakesink_event		(GstPad *pad, void *event);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -128,6 +129,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_event));
 
   fakesink->sinkpads = g_slist_prepend (NULL, pad);
   fakesink->numsinkpads = 1;
@@ -237,3 +239,13 @@ gst_fakesink_factory_init (GstElementFactory *factory)
   return TRUE;
 }
 
+
+
+static gboolean
+gst_fakesink_event (GstPad *pad, void *event)
+{
+  GST_DEBUG (GST_CAT_EVENT, "fakesink has event %d on pad %s:%s\n",(gint)event,GST_DEBUG_PAD_NAME(pad));
+  if ((gint)event == GST_EVENT_EOS) {
+    GST_DEBUG(GST_CAT_EVENT, "have EOS\n");
+  }
+}

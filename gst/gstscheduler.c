@@ -127,12 +127,12 @@ gst_schedule_src_wrapper (int argc,char *argv[])
 }
 
 static void
-gst_schedule_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
+gst_schedule_chainhandler_proxy (GstPad *pad, GstBuffer *buf)
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
 
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  GST_DEBUG (GST_CAT_DATAFLOW,"putting buffer %p in peer's pen\n",buf);
+  GST_DEBUG (GST_CAT_DATAFLOW,"putting buffer %p in peer \"%s:%s\"'s pen\n",buf,GST_DEBUG_PAD_NAME(peer));
 
   // FIXME this should be bounded
   // loop until the bufferpen is empty so we can fill it up again
@@ -181,7 +181,7 @@ gst_schedule_select_proxy (GstPad *pad, GstBuffer *buf)
 
 
 static GstBuffer*
-gst_schedule_pullfunc_proxy (GstPad *pad)
+gst_schedule_gethandler_proxy (GstPad *pad)
 {
   GstBuffer *buf;
   GstRealPad *peer = GST_RPAD_PEER(pad);
@@ -304,10 +304,10 @@ gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
         // set the chain proxies
         if (GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) {
           GST_DEBUG (GST_CAT_SCHEDULING,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PUSHFUNC(pad) = GST_RPAD_CHAINFUNC(pad);
+          GST_RPAD_CHAINHANDLER(pad) = GST_RPAD_CHAINFUNC(pad);
         } else {
           GST_DEBUG (GST_CAT_SCHEDULING,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PULLFUNC(pad) = GST_RPAD_GETFUNC(pad);
+          GST_RPAD_GETHANDLER(pad) = GST_RPAD_GETFUNC(pad);
           GST_RPAD_PULLREGIONFUNC(pad) = GST_RPAD_GETREGIONFUNC(pad);
         }
 
@@ -315,10 +315,10 @@ gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
       } else {
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
           GST_DEBUG (GST_CAT_SCHEDULING,"setting cothreaded push proxy for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PUSHFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_pushfunc_proxy);
+          GST_RPAD_CHAINHANDLER(pad) = GST_DEBUG_FUNCPTR(gst_schedule_chainhandler_proxy);
         } else {
           GST_DEBUG (GST_CAT_SCHEDULING,"setting cothreaded pull proxy for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_pullfunc_proxy);
+          GST_RPAD_GETHANDLER(pad) = GST_DEBUG_FUNCPTR(gst_schedule_gethandler_proxy);
           GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_pullregionfunc_proxy);
         }
       }
@@ -361,10 +361,10 @@ gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
 
       if (GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) {
         GST_DEBUG (GST_CAT_SCHEDULING,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        GST_RPAD_PUSHFUNC(pad) = GST_RPAD_CHAINFUNC(pad);
+        GST_RPAD_CHAINHANDLER(pad) = GST_RPAD_CHAINFUNC(pad);
       } else {
         GST_DEBUG (GST_CAT_SCHEDULING,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        GST_RPAD_PULLFUNC(pad) = GST_RPAD_GETFUNC(pad);
+        GST_RPAD_GETHANDLER(pad) = GST_RPAD_GETFUNC(pad);
         GST_RPAD_PULLREGIONFUNC(pad) = GST_RPAD_GETREGIONFUNC(pad);
       }
     }
@@ -564,12 +564,12 @@ void gst_bin_schedule_func(GstBin *bin) {
             (gst_object_get_parent (GST_OBJECT (outside)) != GST_OBJECT (bin))) {
           if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
             GST_DEBUG (0,"dealing with outside source element %s\n",GST_ELEMENT_NAME(outside));
-//            GST_DEBUG (0,"PUNT: copying pullfunc ptr from %s:%s to %s:%s (@ %p)\n",
-//GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->pullfunc);
-//            pad->pullfunc = pad->peer->pullfunc;
-//            GST_DEBUG (0,"PUNT: setting pushfunc proxy to fake proxy on %s:%s\n",GST_DEBUG_PAD_NAME(pad->peer));
-//            pad->peer->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_fake_proxy);
-            GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+//            GST_DEBUG (0,"PUNT: copying gethandler ptr from %s:%s to %s:%s (@ %p)\n",
+//GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->gethandler);
+//            pad->gethandler = pad->peer->gethandler;
+//            GST_DEBUG (0,"PUNT: setting chainhandler proxy to fake proxy on %s:%s\n",GST_DEBUG_PAD_NAME(pad->peer));
+//            pad->peer->chainhandler = GST_DEBUG_FUNCPTR(gst_bin_chainhandler_fake_proxy);
+            GST_RPAD_GETHANDLER(pad) = GST_DEBUG_FUNCPTR(gst_bin_gethandler_proxy);
             GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
           }
         } else {
@@ -594,15 +594,15 @@ void gst_bin_schedule_func(GstBin *bin) {
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
           GST_DEBUG (0,"setting push proxy for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
           // set the proxy functions
-          pad->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
-          GST_DEBUG (0,"pushfunc %p = gst_bin_pushfunc_proxy %p\n",&pad->pushfunc,gst_bin_pushfunc_proxy);
+          pad->chainhandler = GST_DEBUG_FUNCPTR(gst_bin_chainhandler_proxy);
+          GST_DEBUG (0,"chainhandler %p = gst_bin_chainhandler_proxy %p\n",&pad->chainhandler,gst_bin_chainhandler_proxy);
         } else if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
           GST_DEBUG (0,"setting pull proxies for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
           // set the proxy functions
-          GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          GST_RPAD_GETHANDLER(pad) = GST_DEBUG_FUNCPTR(gst_bin_gethandler_proxy);
           GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
-          GST_DEBUG (0,"pad->pullfunc(@%p) = gst_bin_pullfunc_proxy(@%p)\n",
-                &pad->pullfunc,gst_bin_pullfunc_proxy);
+          GST_DEBUG (0,"pad->gethandler(@%p) = gst_bin_gethandler_proxy(@%p)\n",
+                &pad->gethandler,gst_bin_gethandler_proxy);
           pad->pullregionfunc = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
         }
         pads = g_list_next (pads);
@@ -638,8 +638,8 @@ void gst_bin_schedule_func(GstBin *bin) {
 	  GST_DEBUG (0,"found SINK pad %s:%s\n", GST_DEBUG_PAD_NAME(pad));
 
           // copy the peer's chain function, easy enough
-          GST_DEBUG (0,"copying peer's chainfunc to %s:%s's pushfunc\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PUSHFUNC(pad) = GST_DEBUG_FUNCPTR(GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)));
+          GST_DEBUG (0,"copying peer's chainfunc to %s:%s's chainhandler\n",GST_DEBUG_PAD_NAME(pad));
+          GST_RPAD_CHAINHANDLER(pad) = GST_DEBUG_FUNCPTR(GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)));
 
           // need to walk through and check for outside connections
 //FIXME need to do this for all pads
@@ -650,7 +650,7 @@ void gst_bin_schedule_func(GstBin *bin) {
 	    break;
 	  }
           // get the parent of the peer of the pad
-          outside = GST_ELEMENT (GST_RPAD_PARENT(peer));
+          outside = GST_ELEMENT (GST_PAD_PARENT(peer));
           if (!outside) break;
           // if it's a connection and it's not ours...
           if (GST_IS_CONNECTION (outside) &&
@@ -734,10 +734,10 @@ void gst_bin_schedule_func(GstBin *bin) {
           // set up proxy functions
           if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
             GST_DEBUG (0,"setting push proxy for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-            pad->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
+            pad->chainhandler = GST_DEBUG_FUNCPTR(gst_bin_chainhandler_proxy);
           } else if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
             GST_DEBUG (0,"setting pull proxy for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-            GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+            GST_RPAD_GETHANDLER(pad) = GST_DEBUG_FUNCPTR(gst_bin_gethandler_proxy);
             GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
           }
         } else {
@@ -746,12 +746,12 @@ void gst_bin_schedule_func(GstBin *bin) {
             // we can just copy the chain function, since it shares the prototype
             GST_DEBUG (0,"copying chain function into push proxy for %s:%s\n",
                   GST_DEBUG_PAD_NAME(pad));
-            pad->pushfunc = pad->chainfunc;
+            pad->chainhandler = pad->chainfunc;
           } else if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
             // we can just copy the get function, since it shares the prototype
             GST_DEBUG (0,"copying get function into pull proxy for %s:%s\n",
                   GST_DEBUG_PAD_NAME(pad));
-            pad->pullfunc = pad->getfunc;
+            pad->gethandler = pad->getfunc;
           }
         }
       }
@@ -789,10 +789,10 @@ void gst_bin_schedule_func(GstBin *bin) {
 
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
           GST_DEBUG (0,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          pad->pushfunc = pad->chainfunc;
+          pad->chainhandler = pad->chainfunc;
         } else {
           GST_DEBUG (0,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          pad->pullfunc = pad->getfunc;
+          pad->gethandler = pad->getfunc;
         }
       }
     }
@@ -1197,7 +1197,7 @@ gst_schedule_pad_select (GstSchedule *sched, GList *padlist)
   while (padlist) {
     pad = GST_PAD (padlist->data);
 
-    GST_RPAD_PUSHFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_select_proxy);
+    GST_RPAD_CHAINHANDLER(pad) = GST_DEBUG_FUNCPTR(gst_schedule_select_proxy);
 
     padlist = g_list_next (padlist);
   }

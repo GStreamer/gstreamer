@@ -60,7 +60,10 @@ static time_t get_time(const char * path);
 void
 _gst_plugin_initialize (void)
 {
+#ifndef GST_DISABLE_REGISTRY
   xmlDocPtr doc;
+#endif
+
   _gst_modules = NULL;
   _gst_modules_seqno = 0;
   _gst_plugins = NULL;
@@ -89,6 +92,7 @@ _gst_plugin_initialize (void)
                                       PLUGINS_BUILDDIR "/gst/autoplug");
 #endif /* PLUGINS_USE_BUILDDIR */
 
+#ifndef GST_DISABLE_REGISTRY
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
   if (!doc || 
@@ -104,6 +108,7 @@ _gst_plugin_initialize (void)
   gst_plugin_load_thyself (doc->xmlRootNode);
 
   xmlFreeDoc (doc);
+#endif // GST_DISABLE_REGISTRY
 }
 
 /**
@@ -841,6 +846,7 @@ gst_plugin_get_list (void)
   return g_list_copy (_gst_plugins);
 }
 
+#ifndef GST_DISABLE_REGISTRY
 /**
  * gst_plugin_save_thyself:
  * @parent: the parent node to save the plugin to
@@ -974,6 +980,7 @@ gst_plugin_load_thyself (xmlNodePtr parent)
   GST_INFO (GST_CAT_PLUGIN_LOADING, "added %d registered factories, %d autopluggers and %d types",
 		  elementcount, autoplugcount, typecount);
 }
+#endif // GST_DISABLE_REGISTRY
 
 
 /**
