@@ -77,9 +77,6 @@ Get the error quark passed in the GError messages.
 @pipeline_description: 
 @error: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@cmdline: 
-@parent: 
 
 
 <!-- ##### FUNCTION gst_parse_launchv ##### -->

@@ -91,8 +91,6 @@ Gets the name of the element.
 
 
 <!-- connection -->
-<!-- # Unused Parameters # -->
-@element: a #GstElement to get the name of.
 
 
 <!-- ##### MACRO gst_element_set_name ##### -->
@@ -100,10 +98,8 @@ Gets the name of the element.
 Sets the name of the element, getting rid of the old name if there was one.
 </para>
 
-@elem: 
+@elem: a #GstElement to set the name of.
 @name: the new name of the element.
-<!-- # Unused Parameters # -->
-@element: a #GstElement to set the name of.
 
 
 <!-- ##### FUNCTION gst_element_get_factory ##### -->
@@ -234,8 +230,6 @@ Sets the name of the element, getting rid of the old name if there was one.
 
 @klass: 
 @templ: 
-<!-- # Unused Parameters # -->
-@element: 
 
 
 <!-- ##### FUNCTION gst_element_connect ##### -->
@@ -302,9 +296,6 @@ Sets the name of the element, getting rid of the old name if there was one.
 
 @src: 
 @dest: 
-<!-- # Unused Parameters # -->
-@srcpadname: 
-@destpadname: 
 
 
 <!-- ##### FUNCTION gst_element_disconnect_many ##### -->
@@ -379,8 +370,6 @@ Sets the name of the element, getting rid of the old name if there was one.
 
 @element: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@elem: 
 
 
 <!-- ##### FUNCTION gst_element_state_get_name ##### -->
@@ -561,10 +550,8 @@ circumstances.
 Gets the parent of an element.
 </para>
 
-@elem: 
+@elem: a #GstElement to get the parent of.
 @Returns: the #GstObject parent of the element.
-<!-- # Unused Parameters # -->
-@element: a #GstElement to get the parent of.
 
 
 <!-- ##### MACRO gst_element_set_parent ##### -->
@@ -572,10 +559,8 @@ Gets the parent of an element.
 Sets the parent of an element.
 </para>
 
-@elem: 
+@elem: a #GstElement to set the parent of.
 @parent:  the new #GstObject parent of the object.
-<!-- # Unused Parameters # -->
-@element: a #GstElement to set the parent of.
 
 
 <!-- ##### FUNCTION gst_element_get_managing_bin ##### -->

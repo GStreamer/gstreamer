@@ -299,9 +299,6 @@ An entry hols one key/value pair.
 @name: 
 @Varargs: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@entry: 
-@value: 
 
 
 <!-- ##### FUNCTION gst_props_get ##### -->
@@ -431,8 +428,6 @@ An entry hols one key/value pair.
 @entry: 
 @Varargs: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@props: 
 
 
 <!-- ##### FUNCTION gst_props_entry_get_boolean ##### -->

@@ -245,8 +245,6 @@ Check if the object has been destroyed.
 
 @object: 
 @self: 
-<!-- # Unused Parameters # -->
-@parent: 
 
 
 <!-- ##### FUNCTION gst_object_get_path_string ##### -->

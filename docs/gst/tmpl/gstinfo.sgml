@@ -100,10 +100,7 @@ Print out any information usable at run-time by application developers.
 </para>
 
 @cat: the GST_CAT_... category for the information
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-style format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### MACRO GST_INFO_ELEMENT ##### -->
@@ -113,10 +110,7 @@ Print out information like #GST_INFO, but with an element pointer to clarify thi
 
 @cat: the GST_CAT_... category for the information
 @element: pointer to the #GstElement in question
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-style format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### FUNCTION gst_debug_get_categories ##### -->
@@ -157,10 +151,7 @@ Called at the beginning of a function, it simply prints out a DEBUG string of "e
 in addition to the given string.
 </para>
 
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-style format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
@@ -169,10 +160,7 @@ Called at the end of a function, it simply prints out a DEBUG string of "leaving
 in addition to the given string.
 </para>
 
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-stype format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### MACRO GST_DEBUG ##### -->
@@ -181,10 +169,7 @@ Print out debugging information.
 </para>
 
 @cat: the GST_CAT_... the debug falls within
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-style format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
@@ -234,10 +219,7 @@ Print out usefull debugging info of an element.
 
 @cat: The category of this debugging statement.
 @element: The element to debug.
-@...: 
-<!-- # Unused Parameters # -->
-@format: A printf-like string.
-@args...: The argument for the printf-like string.
+@...: printf arguments
 
 
 <!-- ##### MACRO GST_ERROR ##### -->
@@ -246,10 +228,7 @@ Print out an error condition and abort the application.
 </para>
 
 @element: the #GstElement in question
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-style format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### MACRO GST_ERROR_OBJECT ##### -->
@@ -259,10 +238,7 @@ Print out an error condition and abort the application.
 
 @element: the #GstElement in question
 @object: pointer to a 'contributing' object
-@...: 
-<!-- # Unused Parameters # -->
-@format: printf-style format string
-@args...: printf arguments
+@...: printf arguments
 
 
 <!-- ##### USER_FUNCTION GstDebugHandler ##### -->

@@ -134,10 +134,6 @@ A macro used to define a statically linked plugin.
 
 @filename: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@name: 
-@major: 
-@minor: 
 
 
 <!-- ##### FUNCTION gst_plugin_set_name ##### -->

@@ -421,8 +421,6 @@ Destroy the pad.
 @templ: 
 @name: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@temp: 
 
 
 <!-- ##### FUNCTION gst_pad_get_direction ##### -->
@@ -637,8 +635,6 @@ Destroy the pad.
 @sinkpad: 
 @filtercaps: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_try_reconnect_filtered ##### -->
@@ -650,8 +646,6 @@ Destroy the pad.
 @sinkpad: 
 @filtercaps: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_disconnect ##### -->
@@ -691,8 +685,6 @@ Destroy the pad.
 
 @pad: 
 @buf: 
-<!-- # Unused Parameters # -->
-@buffer: 
 
 
 <!-- ##### FUNCTION gst_pad_pull ##### -->
@@ -720,9 +712,6 @@ Destroy the pad.
 
 @self: 
 @parent: 
-<!-- # Unused Parameters # -->
-@element: 
-@elements: 
 
 
 <!-- ##### FUNCTION gst_pad_proxy_connect ##### -->
@@ -957,8 +946,6 @@ Destroy the pad.
 
 @pad: 
 @formats: 
-<!-- # Unused Parameters # -->
-@format: 
 
 
 <!-- ##### FUNCTION gst_pad_get_internal_connections ##### -->
@@ -1046,8 +1033,6 @@ Destroy the pad.
 
 @pad: 
 @type_func: 
-<!-- # Unused Parameters # -->
-@type_function: 
 
 
 <!-- ##### MACRO gst_pad_add_probe ##### -->

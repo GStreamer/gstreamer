@@ -364,10 +364,8 @@ created buffer can be safely written to.
 If the refcount is 1, this function just returns the original buffer.
 </para>
 
-@buf: 
+@buf: a #GstBuffer to copy
 @Returns: the #GstBuffer that can safely be written to.
-<!-- # Unused Parameters # -->
-@buffer: a #GstBuffer to copy.
 
 
 <!-- ##### MACRO gst_buffer_free ##### -->
@@ -377,8 +375,7 @@ It is dangerous to use this function, you should use gst_buffer_unref() instead.
 </para>
 
 @buf: 
-<!-- # Unused Parameters # -->
-@buffer: a #GstBuffer to free.
+@buf: a #GstBuffer to free.
 
 
 <!-- ##### FUNCTION gst_buffer_create_sub ##### -->

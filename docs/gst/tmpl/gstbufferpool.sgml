@@ -228,9 +228,6 @@ Free the given pool. This is dangerous, use gst_buffer_pool_unref() instead.
 @buffer_size: 
 @pool_size: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@size: 
-@numbuffers: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_default_free ##### -->
