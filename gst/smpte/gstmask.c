@@ -19,6 +19,7 @@
 
 
 #include "gstmask.h"
+#include "paint.h"
 
 extern void _gst_barboxwipes_register (void);
 
@@ -73,28 +74,20 @@ gst_mask_factory_new (gint type, gint bpp, gint width, gint height)
 
   definition = gst_mask_find_definition (type);
   if (definition) {
-    mask = definition->new_func (definition, bpp, width, height);
+    mask = g_new0 (GstMask, 1);
+
+    mask->type = definition->type;
+    mask->bpp = bpp;
+    mask->width = width;
+    mask->height = height;
+    mask->destroy_func = definition->destroy_func;
+    mask->user_data = definition->user_data;
+    mask->data = g_malloc (width * height * sizeof (guint32));
+
+    if (definition->draw_func)
+      definition->draw_func (mask);
   }
 
-  return mask;
-}
-
-GstMask*
-_gst_mask_default_new (GstMaskDefinition *definition,
-		       gint bpp, gint width, gint height)
-{
-  GstMask *mask;
-
-  mask = g_new0 (GstMask, 1);
-
-  mask->type = definition->type;
-  mask->bpp = bpp;
-  mask->width = width;
-  mask->height = height;
-  mask->update_func = definition->update_func;
-  mask->destroy_func = definition->destroy_func;
-  mask->data = g_malloc (width * height * (bpp+7)>>3);
-  
   return mask;
 }
 
@@ -119,6 +112,4 @@ gst_mask_update (GstMask *mask,
 {
   g_return_if_fail (mask != NULL);
 
-  if (mask->update_func)
-    mask->update_func (mask, position, duration);
 }

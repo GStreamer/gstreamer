@@ -53,6 +53,9 @@ struct _GstSMPTE {
   		*sinkpad2;
 
   gint 		 type;
+  gint 		 fps;
+  gint 		 border;
+  gint 		 depth;
   GstMask	*mask;
 };
 
