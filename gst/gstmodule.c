@@ -34,6 +34,24 @@ void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
 		
 extern PyMethodDef pygst_functions[];
 
+static gboolean
+python_do_pending_calls(gpointer data)
+{
+    gboolean quit = FALSE;
+      
+    pyg_block_threads();
+    if (PyErr_CheckSignals() == -1) {
+	PyErr_SetNone(PyExc_KeyboardInterrupt);
+	quit = TRUE;
+    }
+    pyg_unblock_threads();
+
+    if (quit)
+	gst_main_quit();
+    
+    return TRUE;
+}
+
 DL_EXPORT(void)
 init_gst (void)
 {
@@ -85,9 +103,15 @@ init_gst (void)
 			    PYGST_MICRO_VERSION);
      PyDict_SetItemString(d, "pygst_version", tuple);
      Py_DECREF(tuple);
+
+     PyModule_AddIntConstant(m, "SECOND", GST_SECOND);
+     PyModule_AddIntConstant(m, "MSECOND", GST_MSECOND);
+     PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
      
      pygst_register_classes (d);
      pygst_add_constants (m, "GST_");
+
+     g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
      
      if (PyErr_Occurred ()) {
 	  Py_FatalError ("can't initialize module gst");

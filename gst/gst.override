@@ -153,6 +153,26 @@ _wrap_gst_bin_iterate(PyGObject *self)
 	return PyInt_FromLong(ret);
 }
 %%
+override gst_bin_get_list
+static PyObject *
+_wrap_gst_bin_get_list(PyGObject *self)
+{
+	GList *elements, *l;
+	PyObject *tuple;
+	int i;
+	
+	elements = (GList*)gst_bin_get_list(GST_BIN(self->obj));
+	tuple = PyTuple_New(g_list_length(elements));
+	for (i = 0, l = elements; l; l = l->next, i++) {
+		GstElement *element = (GstElement*)l->data;
+		if (!element)
+			continue;
+		PyTuple_SetItem(tuple, i, pygobject_new(G_OBJECT(element)));
+	}
+		
+	return tuple;
+}
+%%
 override gst_element_get_pad_list noargs
 static PyObject *
 _wrap_gst_element_get_pad_list(PyGObject *self)
@@ -188,6 +208,22 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
 	pyg_block_threads();
 	return PyInt_FromLong(ret);
+}
+%%
+override-slot GstPad.tp_repr
+static PyObject *
+_wrap_gst_pad_tp_repr (PyGObject *self)
+{
+	char *buf;
+	PyObject *retval;
+	
+	buf = g_strdup_printf("<GstPad (%s) at %lx>",
+			      gst_pad_get_name(GST_PAD(self->obj)),
+			      (long)self->obj);
+
+	retval = PyString_FromString(buf);
+	g_free(buf);
+	return retval;
 }
 %%
 override gst_pad_query kwargs
@@ -439,6 +475,39 @@ _wrap_gst_pad_get_negotiated_caps(PyGObject *self)
 	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
+override-slot GstCaps.tp_as_sequence
+static int
+caps_length(PyGObject *self)
+{
+	return gst_caps_get_size((GstCaps*)self->obj);
+}
+
+static PyObject *
+caps_item(PyGObject *self, int i)
+			
+{
+	GstStructure *structure;
+	
+	if (i < 0 || i >= gst_caps_get_size((GstCaps*)self->obj)) {
+		PyErr_SetString(PyExc_IndexError, "list index out of range");
+		return NULL;
+	}
+	
+	structure = gst_caps_get_structure((GstCaps*)self->obj, i);
+	return pyg_boxed_new(GST_TYPE_STRUCTURE, structure, TRUE, TRUE);
+}
+
+static PySequenceMethods _wrap_gst_caps_tp_as_sequence = {
+	(inquiry)caps_length,         /* mp_length */
+        NULL,
+        NULL,
+	(intargfunc)caps_item,
+        NULL,
+	NULL,
+	NULL,
+        NULL,
+};
+%%
 override gst_buffer_new kwargs
 static int
 _wrap_gst_buffer_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
@@ -677,6 +746,40 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
 	return Py_None;
 }
 %%
+override-slot GstStructure.tp_as_mapping
+static int
+_wrap_gst_structure_length(PyGObject *self)
+{
+	return gst_structure_n_fields((GstStructure*)self->obj);
+}
+
+static PyObject *
+_wrap_gst_structure_subscript(PyGObject *self, PyObject *py_key)
+{
+	PyObject *v = NULL;
+	const char *field = PyString_AsString(py_key);
+	
+	if (gst_structure_has_field((GstStructure*)self->obj, field)) {
+		const GValue *gvalue;
+		gvalue = gst_structure_get_value((GstStructure*)self->obj, field);
+		g_assert(gvalue != NULL);
+		v = pyg_value_as_pyobject(gvalue, TRUE);
+	} else {
+		PyErr_SetString(PyExc_KeyError, field);
+	}
+		
+	if (v != NULL)
+		Py_INCREF(v);
+	return v;
+}
+
+static PySequenceMethods _wrap_gst_structure_tp_as_mapping = {
+	(inquiry)_wrap_gst_structure_length,         /* mp_length */
+	(binaryfunc)_wrap_gst_structure_subscript,   /* mp_subscript */
+	NULL,
+};
+
+%%
 override gst_structure_foreach kwargs
 static gboolean
 pygst_structure_foreach_marshal(GQuark field_id,
@@ -691,9 +794,6 @@ pygst_structure_foreach_marshal(GQuark field_id,
 
 	pyg_block_threads();
 
-	//py_model = pygobject_new((GObject *)model);
-	//py_path = pygtk_tree_path_to_pyobject(path);
-	//py_iter = pyg_boxed_new(GTK_TYPE_TREE_ITER, iter, TRUE, TRUE);
 	py_field = Py_BuildValue("s", g_quark_to_string(field_id));
 	py_value = pyg_value_as_pyobject(value, FALSE);
 	if (cunote->data)
@@ -749,8 +849,23 @@ _wrap_gst_structure_foreach (PyGObject *self,
 	return Py_None;
 }
 %%
-override gst_tag_list_foreach kwargs
+override-slot GstStructure.tp_repr
+static PyObject *
+_wrap_gst_structure_tp_repr (PyGObject *self)
+{
+	char *buf;
+	PyObject *retval;
+	
+	buf = g_strdup_printf("<GstStructure (%s) at %lx>",
+			      gst_structure_get_name((GstStructure*)self->obj),
+			      (long)self->obj);
 
+	retval = PyString_FromString(buf);
+	g_free(buf);
+	return retval;
+}
+%%
+override gst_tag_list_foreach kwargs
 static gboolean
 pygst_tag_list_foreach_marshal(GstTagList *list,
 			       const gchar *tag,
@@ -911,4 +1026,20 @@ _wrap_gst_g_error_tp_str(PyGObject *self)
     GError *error = (GError*)self->obj;
     return PyString_FromString(gst_error_get_message (error->domain,
 						      error->code));
+}
+%%
+override gst_main noargs
+static PyObject *
+_wrap_gst_main(PyObject *self)
+{
+	pyg_unblock_threads();
+	gst_main();
+	pyg_block_threads();
+	
+	if (PyErr_Occurred())
+		return NULL;
+	
+        Py_INCREF(Py_None);
+        return Py_None;
+
 }

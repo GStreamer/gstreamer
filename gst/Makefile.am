@@ -1,26 +1,16 @@
-INCLUDES = $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
-PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
-
-defs_DATA = 
-defsdir = $(pkgdatadir)/2.0/defs
-
-EXTRA_DIST = $(defs_DATA) arg-types.py
+common_cflags = $(GST_CFLAGS) -fno-strict-aliasing
+common_libadd = $(GST_LIBS)
+common_ldflags = -module -avoid-version
 
 pkgpythondir = $(pythondir)/gst
 pkgpyexecdir = $(pyexecdir)/gst
-
-common_ldflags = -module -avoid-version
 
 pygstdir = $(pkgpythondir)
 pygst_PYTHON = __init__.py
 
 pygstexecdir = $(pkgpyexecdir)
+pygstexec_LTLIBRARIES = _gst.la $(interface_lib) $(play_lib)
 
-# GStreamer bindings
-GST_OVERRIDES = gst.override gstpad-handlers.override
-GST_DEFS = gst.defs gst-types.defs
-
-# what shall we build ?
 if BUILD_INTERFACES
 interface_lib = interfaces.la
 else
@@ -32,42 +22,47 @@ else
 play_lib =
 endif
 
-pygstexec_LTLIBRARIES = _gst.la $(interface_lib) $(play_lib)
+defs_DATA = 
+defsdir = $(pkgdatadir)/2.0/defs
 
-# how shall we build them ?
-_gst_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
-_gst_la_LIBADD = $(GST_LIBS)
+INCLUDES = $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
+EXTRA_DIST = $(defs_DATA) arg-types.py
+PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
+
+# GStreamer bindings
+_gst_la_CFLAGS = $(common_cflags)
+_gst_la_LIBADD = $(common_libadd)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst
 _gst_la_SOURCES = gst-argtypes.c gstmodule.c 
 nodist__gst_la_SOURCES = gst.c
+GST_OVERRIDES = gst.override gstpad-handlers.override
+GST_DEFS = gst.defs gst-types.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_OVERRIDES)
 defs_DATA += $(GST_DEFS)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES)
 
 # gst-play bindings
-PLAY_OVERRIDES = play.override
-PLAY_DEFS = play.defs
-
-play_la_CFLAGS = $(GST_CFLAGS) $(GST_PLAY_CFLAGS) -fno-strict-aliasing
-play_la_LIBADD = $(GST_LIBS) $(GST_PLAY_LIBS)
+play_la_CFLAGS = $(common_cflags) $(GST_PLAY_CFLAGS) 
+play_la_LIBADD = $(common_libadd) $(GST_PLAY_LIBS)
 play_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initplay
 play_la_SOURCES = playmodule.c
 nodist_play_la_SOURCES = play.c
+PLAY_OVERRIDES = play.override
+PLAY_DEFS = play.defs
 CLEANFILES += play.c
 EXTRA_DIST += $(PLAY_OVERRIDES)
 defs_DATA += $(PLAY_DEFS)
 play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
 
 # GStreamer interfaces bindings
-INTERFACES_OVERRIDES = interfaces.override xoverlay.override
-INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
-
-interfaces_la_CFLAGS = $(GST_CFLAGS) $(GST_INTERFACES_CFLAGS) -fno-strict-aliasing
-interfaces_la_LIBADD = $(GST_LIBS) $(GST_INTERFACES_LIBS)
+interfaces_la_CFLAGS = $(common_cflags) $(GST_INTERFACES_CFLAGS) 
+interfaces_la_LIBADD = $(common_libadd) $(GST_INTERFACES_LIBS)
 interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c
+INTERFACES_OVERRIDES = interfaces.override xoverlay.override
+INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 CLEANFILES += interfaces.c
 EXTRA_DIST += $(INTERFACES_OVERRIDES)
 defs_DATA += $(INTERFACES_DEFS)

@@ -6,6 +6,9 @@
   (parent "GObject")
   (c-name "GstObject")
   (gtype-id "GST_TYPE_OBJECT")
+  (fields 
+     '("guint32" "flags")
+  )
 )
 
 (define-object Index
@@ -195,14 +198,12 @@
 )
 
 
-;;
-;; 0.7 Boxed types
-;;
-
 (define-boxed Structure
   (in-module "Gst")
   (c-name "GstStructure")
   (gtype-id "GST_TYPE_STRUCTURE")
+  (copy-func "gst_structure_copy")
+  (release-func "gst_structure_unref")
 )
 
 (define-boxed TagList

@@ -1,3 +1,26 @@
+2004-03-24  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstmodule.c (init_gst): Add constants for GST_*SECOND.
+	(python_do_pending_calls): New idler handler, similar to pygtk, so
+	python events (eg KeyboardInterrupt) can be raised during mainloop
+	
+	* gst/gst.override (_wrap_gst_bin_get_list): 
+	(_wrap_gst_pad_tp_repr, caps_length, caps_item) 
+	(structure_length, structure_subscript) 
+	(_wrap_gst_structure_tp_repr): Impl.
+	(_wrap_gst_main): Override with threading blocking.
+
+	* gst/gst-types.defs (Object): add flags field.
+	(Structure): Add copy/release funcs
+
+	* gst/__init__.py (devloc): Don't initialize threads
+
+	* gst/Makefile.am: clean up
+
+	* examples/gst/player.py: Prettify and simplify. Uses GstThread now.
+
+	* examples/gstplay/player.py: Update to new api and make it work.
+
 2004-03-18  Johan Dahlin  <johan@gnome.org>
 
 	* configure.ac: s/GST_*_INCLUDES/GST_*_LIBS/
