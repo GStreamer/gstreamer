@@ -37,9 +37,38 @@ DL_EXPORT(void)
 init_gstreamer (void)
 {
 	PyObject *m, *d;
+	PyObject *av;
+        int argc, i;
+        char **argv;
 
 	init_pygobject ();
-	gst_init(NULL,NULL);
+
+        /* pull in arguments */
+        av = PySys_GetObject ("argv");
+        if (av != NULL) {
+            argc = PyList_Size (av);
+            argv = g_new (char *, argc);
+            for (i = 0; i < argc; i++)
+                argv[i] = g_strdup (PyString_AsString (PyList_GetItem (av, i)));
+        } else {
+                argc = 0;
+                argv = NULL;
+        }
+                                                                                    
+        if (!gst_init_check (&argc, &argv)) {
+            if (argv != NULL) {
+                for (i = 0; i < argc; i++)
+                    g_free (argv[i]);
+                g_free (argv);
+            }
+            PyErr_SetString (PyExc_RuntimeError, "can't initialize module gstreamer");
+        }
+        if (argv != NULL) {
+            PySys_SetArgv (argc, argv);
+            for (i = 0; i < argc; i++)
+                g_free (argv[i]);
+            g_free (argv);
+        }
 
 	m = Py_InitModule ("_gstreamer", pygstreamer_functions);
 	d = PyModule_GetDict (m);

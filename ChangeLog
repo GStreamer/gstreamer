@@ -1,3 +1,8 @@
+2003-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gstreamer/gstreamermodule.c: (init_gstreamer):
+          use gst_init_check () with argc and argv (see pygtk)
+
 2003-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am: add testsuite dir
