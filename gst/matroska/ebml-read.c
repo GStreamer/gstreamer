@@ -160,8 +160,12 @@ gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
 
     /* Here, we might encounter EOS */
     gst_bytestream_get_status (ebml->bs, &remaining, &event);
-    if (event) {
+    if (event && GST_IS_EVENT (event)) {
+      gboolean eos = (GST_EVENT_TYPE (event) == GST_EVENT_EOS);
+
       gst_pad_event_default (ebml->sinkpad, event);
+      if (eos)
+        return FALSE;
     } else {
       guint64 pos = gst_bytestream_tell (ebml->bs);
 
@@ -299,7 +303,7 @@ gst_ebml_peek_id (GstEbmlRead * ebml, guint * level_up)
 
   g_assert (level_up);
 
-  if (gst_ebml_read_element_id (ebml, &id, level_up) < 0)
+  if (gst_ebml_read_element_id (ebml, &id, level_up) <= 0)
     return 0;
 
   return id;
