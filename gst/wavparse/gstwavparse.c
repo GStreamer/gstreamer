@@ -215,15 +215,16 @@ gst_wavparse_init (GstWavParse * wavparse)
 static void
 gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
 {
-  gst_element_remove_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
-  wavparse->srcpad = NULL;
+  if (wavparse->srcpad) {
+    gst_element_remove_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
+    wavparse->srcpad = NULL;
+  }
 }
 
 static void
 gst_wavparse_create_sourcepad (GstWavParse * wavparse)
 {
-  if (wavparse->srcpad)
-    gst_wavparse_destroy_sourcepad (wavparse);
+  gst_wavparse_destroy_sourcepad (wavparse);
 
   /* source */
   wavparse->srcpad =
