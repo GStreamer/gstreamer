@@ -21,6 +21,8 @@ built_headers =	\
 
 EXTRA_DIST = mixermarshal.list
 
+CLEANFILES = $(BUILT_SOURCES)
+
 mixermarshal.h: mixermarshal.list
 	glib-genmarshal --header --prefix=gst_mixer_marshal $^ > mixermarshal.h.tmp
 	mv mixermarshal.h.tmp mixermarshal.h

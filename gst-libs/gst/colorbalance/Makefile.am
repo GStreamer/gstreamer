@@ -21,6 +21,8 @@ built_headers =	\
 
 EXTRA_DIST = colorbalancemarshal.list
 
+CLEANFILES = $(BUILT_SOURCES)
+
 colorbalancemarshal.h: colorbalancemarshal.list
 	glib-genmarshal --header --prefix=gst_color_balance_marshal $^ > colorbalancemarshal.h.tmp
 	mv colorbalancemarshal.h.tmp colorbalancemarshal.h
