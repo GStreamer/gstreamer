@@ -395,7 +395,7 @@ gst_v4l_set_chan_norm (GstV4lElement * v4lelement, gint channel, gint norm)
   GST_DEBUG_OBJECT (v4lelement, "setting channel = %d, norm = %d (%s)",
       channel, norm, norm_name[norm]);
   GST_V4L_CHECK_OPEN (v4lelement);
-  GST_V4L_CHECK_NOT_ACTIVE (v4lelement);
+  //GST_V4L_CHECK_NOT_ACTIVE (v4lelement);
 
   v4lelement->vchan.channel = channel;
   v4lelement->vchan.norm = norm;

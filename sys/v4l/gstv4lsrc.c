@@ -826,21 +826,17 @@ gst_v4lsrc_getcaps (GstPad * pad)
   }
   fps = gst_v4lsrc_get_fps (v4lsrc);
 
-  /*
-     FIXME: if we choose a fixed one because we didn't probe, fixated caps don't
-     work.  So comment this out for now.
-     if (!v4lsrc->fps_list)
-     fps = gst_v4lsrc_get_fps (v4lsrc);
-   */
-
   list = gst_caps_new_empty ();
   for (item = v4lsrc->colourspaces; item != NULL; item = item->next) {
     GstCaps *one;
 
     one = gst_v4lsrc_palette_to_caps (GPOINTER_TO_INT (item->data));
-    if (!one)
+    if (!one) {
       GST_WARNING_OBJECT (v4lsrc, "Palette %d gave no caps\n",
           GPOINTER_TO_INT (item->data));
+      continue;
+    }
+
     GST_DEBUG_OBJECT (v4lsrc,
         "Device reports w: %d-%d, h: %d-%d, fps: %f for palette %d",
         vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight, fps,
@@ -859,20 +855,19 @@ gst_v4lsrc_getcaps (GstPad * pad)
       gst_caps_set_simple (one, "height", G_TYPE_INT, vcap->minheight, NULL);
     }
 
-    if (v4lsrc->fps_list) {
-      GstStructure *structure = gst_caps_get_structure (one, 0);
+    if (v4lsrc->autoprobe_fps) {
+      if (v4lsrc->fps_list) {
+        GstStructure *structure = gst_caps_get_structure (one, 0);
 
-      gst_structure_set_value (structure, "framerate", v4lsrc->fps_list);
+        gst_structure_set_value (structure, "framerate", v4lsrc->fps_list);
+      } else {
+        gst_caps_set_simple (one, "framerate", G_TYPE_DOUBLE, fps, NULL);
+      }
     } else {
-      gst_caps_set_simple (one, "framerate", G_TYPE_DOUBLE, fps, NULL);
+      gst_caps_set_simple (one, "framerate", GST_TYPE_DOUBLE_RANGE,
+          (gdouble) 1.0, (gdouble) 100.0, NULL);
     }
-/* see higher up why we comment this
-else {
-      GstStructure *structure = gst_caps_get_structure (one, 0);
 
-      gst_structure_set (structure, "framerate", G_TYPE_DOUBLE, fps, NULL);
-    }
-*/
     GST_DEBUG_OBJECT (v4lsrc, "caps: %" GST_PTR_FORMAT, one);
     gst_caps_append (list, one);
   }
