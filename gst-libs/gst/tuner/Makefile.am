@@ -23,6 +23,8 @@ built_headers =	\
 
 EXTRA_DIST = tunermarshal.list
 
+CLEANFILES = $(BUILT_SOURCES)
+
 tunermarshal.h: tunermarshal.list
 	glib-genmarshal --header --prefix=gst_tuner_marshal $^ > tunermarshal.h.tmp
 	mv tunermarshal.h.tmp tunermarshal.h
