@@ -1,3 +1,9 @@
+2004-08-12  Johan Dahlin  <johan@gnome.org>
+
+	* sys/v4l/gstv4lelement.c (gst_v4l_iface_supported): Remove bogus
+	checks. Doesn't matter what state we are in. Interfaces are a
+	compile time thing, not runtime. It also broke the python bindings.
+
 2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_src_link):
