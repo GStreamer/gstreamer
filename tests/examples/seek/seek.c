@@ -88,23 +88,25 @@ make_mp3_pipeline (const gchar *location)
 {
   GstElement *pipeline;
   GstElement *src, *decoder, *osssink;
+  GstElement *thread, *queue;
   GstPad *seekable;
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make ("filesrc", "src");
-  decoder = gst_element_factory_make ("mad", "dec");
-  osssink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn ("filesrc", "src");
+  decoder = gst_element_factory_make_or_warn ("mad", "dec");
+  osssink = gst_element_factory_make_or_warn ("osssink", "sink");
+  queue = gst_element_factory_make_or_warn ("queue", "queue");
+  thread = gst_thread_new ("playback");
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
   g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
 
-  gst_bin_add (GST_BIN (pipeline), src);
-  gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (pipeline), osssink);
+  gst_bin_add_many (GST_BIN (thread), queue, osssink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, decoder, thread, NULL);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, osssink);
+  gst_element_connect_many (src, decoder, queue, NULL);
+  gst_element_connect_many (queue, osssink, NULL);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekables = g_list_prepend (seekables, seekable);
@@ -158,7 +160,7 @@ make_avi_pipeline (const gchar *location)
   //v_decoder = gst_element_factory_make ("identity", "v_dec");
   v_decoder = gst_element_factory_make ("windec", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
-  videosink = gst_element_factory_make ("xvideosink", "v_sink");
+  videosink = gst_element_factory_make ("sdlvideosink", "v_sink");
   //videosink = gst_element_factory_make ("fakesink", "v_sink");
   //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
   v_queue = gst_element_factory_make ("queue", "v_queue");
@@ -268,9 +270,7 @@ static seek_format seek_formats[] =
 {
   { "tim",  GST_FORMAT_TIME    },
   { "byt",  GST_FORMAT_BYTES   },
-  { "smp",  GST_FORMAT_SAMPLES },
-  { "frm",  GST_FORMAT_FRAMES  },
-  { "fld",  GST_FORMAT_FIELDS  },
+  { "uni",  GST_FORMAT_UNITS   },
   { "buf",  GST_FORMAT_BUFFERS },
   { "def",  GST_FORMAT_DEFAULT },
   { NULL, 0 }, 
