@@ -65,15 +65,6 @@ GST_PAD_TEMPLATE_FACTORY (spider_src_factory,
   NULL      /* no caps */
 );
 
-GST_PAD_TEMPLATE_FACTORY (spider_sink_factory,
-  "sink_%d",
-  GST_PAD_SINK,
-  GST_PAD_REQUEST,
-  NULL      /* no caps */
-);
-
-
-
 /* standard GObject stuff */
 static void                     gst_spider_class_init                   (GstSpiderClass *klass);
 static void                     gst_spider_init                         (GstSpider *spider);
@@ -85,12 +76,12 @@ static void			gst_spider_set_property                 (GObject *object, guint pr
 static void			gst_spider_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 /* connection functions */
-static GstSpiderConnection *	gst_spider_connection_new		(GstSpiderIdentity *sink, GstSpiderIdentity *src);
+static GstSpiderConnection *	gst_spider_connection_new		(GstSpiderIdentity *src);
 static void			gst_spider_connection_destroy		(GstSpiderConnection *conn);
 static void			gst_spider_connection_reset		(GstSpiderConnection *conn, GstElement *to);
 static void			gst_spider_connection_add		(GstSpiderConnection *conn, GstElement *element);
-static GstSpiderConnection *	gst_spider_connection_find		(GstSpiderIdentity *sink, GstSpiderIdentity *src);
-static GstSpiderConnection *	gst_spider_connection_get		(GstSpiderIdentity *sink, GstSpiderIdentity *src);
+static GstSpiderConnection *	gst_spider_connection_find		(GstSpiderIdentity *src);
+static GstSpiderConnection *	gst_spider_connection_get		(GstSpiderIdentity *src);
 
 /* autoplugging functions */
 static GstElement *             gst_spider_find_element_to_plug      	(GstElement *src, GstElementFactory *fac, GstPadDirection dir);
@@ -113,12 +104,6 @@ static                          GstElementClass	*			parent_class = NULL;
 static guint gst_spider_signals[LAST_SIGNAL] = { 0 };*/
 
 /* let gstreamer know that we have some request pads available */
-GST_PAD_TEMPLATE_FACTORY (gst_spider_sink_template_factory,
-  "sink%d",
-  GST_PAD_SINK,
-  GST_PAD_REQUEST,
-  NULL
-);  
 GST_PAD_TEMPLATE_FACTORY (gst_spider_src_template_factory,
   "src%d",
   GST_PAD_SRC,
@@ -169,7 +154,6 @@ gst_spider_class_init (GstSpiderClass *klass)
   gobject_class->dispose = gst_spider_dispose;
 
   gst_element_class_add_pad_template (gstelement_class, gst_spider_src_template_factory());
-  gst_element_class_add_pad_template (gstelement_class, gst_spider_sink_template_factory());
   
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_request_new_pad);
 }
@@ -182,6 +166,11 @@ gst_spider_init (GstSpider *spider)
 		  gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY));
 
   spider->connections = NULL;
+
+  spider->sink_ident = gst_spider_identity_new_sink ("sink_ident");
+  gst_bin_add (GST_BIN (spider), GST_ELEMENT (spider->sink_ident));
+  gst_element_add_ghost_pad (GST_ELEMENT(spider), spider->sink_ident->sink, "sink");
+  
 }
 
 static void
@@ -204,27 +193,14 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   
   g_return_val_if_fail (templ != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
+  g_return_val_if_fail (GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC, NULL);
   
   spider = GST_SPIDER (element);
   
   /* create an identity object, so we have a pad */
-  switch ( GST_PAD_TEMPLATE_DIRECTION (templ))
-  {
-    case GST_PAD_SRC:
-      padname = gst_spider_unused_elementname ((GstBin *)spider, "src_");
-      identity = gst_spider_identity_new_src (padname);
-      returnpad = identity->src;
-      break;
-    case GST_PAD_SINK:
-      padname = gst_spider_unused_elementname ((GstBin *)spider, "sink_");
-      identity = gst_spider_identity_new_sink (padname);
-      returnpad = identity->sink;
-      break;
-    case GST_PAD_UNKNOWN:
-    default:
-      g_warning("Spider: you must request a source or sink pad.");
-      return NULL;
-  }
+  padname = gst_spider_unused_elementname ((GstBin *)spider, "src_");
+  identity = gst_spider_identity_new_src (padname);
+  returnpad = identity->src;
   
   /* FIXME: use the requested name for the pad */
 
@@ -234,6 +210,7 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   gst_bin_add (GST_BIN (element), GST_ELEMENT (identity));
   
   returnpad = gst_element_add_ghost_pad (element, returnpad, padname);
+  gst_spider_connection_new (identity);
   GST_DEBUG (GST_CAT_ELEMENT_PADS, "successuflly created requested pad %s:%s", GST_DEBUG_PAD_NAME (returnpad));
   
   return returnpad;
@@ -304,7 +281,7 @@ gst_spider_connect_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection 
   gboolean restart = FALSE;
   gulong signal_id = conn->signal_id;
   GstPad *sinkpad = conn->src->sink;
-  GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (conn->sink));
+  GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (conn->src));
   
   /* check if restarting is necessary */
   if (gst_element_get_state ((GstElement *) spider) == GST_STATE_PLAYING)
@@ -328,16 +305,15 @@ gst_spider_connect_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection 
 }
 /* create a new connection from those two elements */
 static GstSpiderConnection *
-gst_spider_connection_new (GstSpiderIdentity *sink, GstSpiderIdentity *src)
+gst_spider_connection_new (GstSpiderIdentity *src)
 {
-  GstSpider *spider;
+  GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (src));
   
   GstSpiderConnection *conn = g_new0 (GstSpiderConnection, 1);
   conn->src = src;
-  conn->sink = sink;
-  conn->current = (GstElement *) sink;
   conn->path = NULL;
-  spider = GST_SPIDER (GST_OBJECT_PARENT (src));
+  conn->current = (GstElement *) spider->sink_ident;
+  g_print("creating new connection\n");
   spider->connections = g_list_prepend (spider->connections, conn);
   
   return conn;
@@ -345,14 +321,16 @@ gst_spider_connection_new (GstSpiderIdentity *sink, GstSpiderIdentity *src)
 static void
 gst_spider_connection_destroy (GstSpiderConnection *conn)
 {
+  GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (conn->src));
   /* reset connection to unplugged */
-  gst_spider_connection_reset (conn, (GstElement *) conn->sink);
+  gst_spider_connection_reset (conn, (GstElement *) spider->sink_ident);
   g_free (conn);
 }
 static void
 gst_spider_connection_reset (GstSpiderConnection *conn, GstElement *to)
 {
-  GST_DEBUG (GST_CAT_AUTOPLUG, "resetting connection from %s to %s, currently at %s to %s", GST_ELEMENT_NAME (conn->sink), 
+  GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (conn->src));
+  GST_DEBUG (GST_CAT_AUTOPLUG, "resetting connection from %s to %s, currently at %s to %s", GST_ELEMENT_NAME (spider->sink_ident), 
 	     GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (to));
   while ((conn->path != NULL) && ((GstElement *) conn->path->data != to))
   {
@@ -361,7 +339,7 @@ gst_spider_connection_reset (GstSpiderConnection *conn, GstElement *to)
   }
   if (conn->path == NULL)
   {
-    conn->current = (GstElement *) conn->sink;
+    conn->current = (GstElement *) spider->sink_ident;
   } else {
     conn->current = to;
   }
@@ -377,18 +355,17 @@ gst_spider_connection_add (GstSpiderConnection *conn, GstElement *element)
 }
 /* find the connection from those two elements */
 static GstSpiderConnection *
-gst_spider_connection_find (GstSpiderIdentity *sink, GstSpiderIdentity *src)
+gst_spider_connection_find (GstSpiderIdentity *src)
 {
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (src);
   GList *list = spider->connections;
   
-  g_assert (spider == (GstSpider *) GST_OBJECT_PARENT (sink));
-  
   while (list)
   {
     GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
-    if (conn->src == src && conn->sink == sink)
+    if (conn->src == src){
       return conn;
+    }
     list = g_list_next(list);
   }
   return NULL;
@@ -396,15 +373,15 @@ gst_spider_connection_find (GstSpiderIdentity *sink, GstSpiderIdentity *src)
 /* get a new connection from those two elements
  * search first; if none is found, create a new one */
 static GstSpiderConnection *
-gst_spider_connection_get (GstSpiderIdentity *sink, GstSpiderIdentity *src)
+gst_spider_connection_get (GstSpiderIdentity *src)
 {
   GstSpiderConnection *ret;
   
-  if ((ret = gst_spider_connection_find (sink, src)) != NULL)
+  if ((ret = gst_spider_connection_find (src)) != NULL)
   {
     return ret;
   }
-  return gst_spider_connection_new (sink, src);
+  return gst_spider_connection_new (src);
 }  
 void			
 gst_spider_identity_plug (GstSpiderIdentity *ident)
@@ -465,11 +442,11 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
         /* plug in the right direction */
         if (dir == GST_PAD_SINK)
         {
-	  conn = gst_spider_connection_get (ident, peer);
+	  conn = gst_spider_connection_get (peer);
         } else {
-	  conn = gst_spider_connection_get (peer, ident);
+	  conn = gst_spider_connection_get (ident);
         }
-	if ((GstElement *) conn->sink == conn->current)
+	if ((GstElement *) spider->sink_ident == conn->current)
 	{
           gboolean restart = FALSE;
           /* check if restarting is necessary */
@@ -503,7 +480,7 @@ gst_spider_identity_unplug (GstSpiderIdentity *ident)
     GstSpiderConnection *conn = list->data;
     GList *cur = list;
     list = g_list_next (list);
-    if ((conn->src == ident) || (conn->sink == ident))
+    if (conn->src == ident)
     {
       g_list_delete_link (spider->connections, cur);
       gst_spider_connection_destroy (conn);
@@ -516,7 +493,7 @@ gst_spider_identity_unplug (GstSpiderIdentity *ident)
 static GstPadConnectReturn
 gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
 {
-  GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->sink);
+  GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
   GList *endelements = NULL, *templist = NULL;
   GstElement *element;
   
@@ -617,10 +594,11 @@ gst_spider_find_element_to_plug (GstElement *src, GstElementFactory *fac, GstPad
 static GstPadConnectReturn
 gst_spider_plug	(GstSpiderConnection *conn)
 {
+  GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
   if ((GstElement *) conn->src == conn->current)
     return GST_PAD_CONNECT_DONE;
-  if ((GstElement *) conn->sink == conn->current)
-    return gst_spider_plug_from_srcpad (conn, conn->sink->src);
+  if ((GstElement *) spider->sink_ident == conn->current)
+    return gst_spider_plug_from_srcpad (conn, spider->sink_ident->src);
   g_warning ("FIXME: autoplugging only possible from GstSpiderIdentity conn->sink yet (yep, that's technical)\n");
   return GST_PAD_CONNECT_REFUSED;
 }
@@ -640,10 +618,10 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   
   /* find a path from src to sink */
   /* FIXME: make that if go away and work anyway */
-  if (srcpad == conn->sink->src)
+  if (srcpad == spider->sink_ident->src)
   {
-    g_assert (GST_RPAD_PEER (conn->sink->sink) != NULL);
-    plugpath = gst_autoplug_sp (gst_pad_get_caps ((GstPad *) GST_RPAD_PEER (conn->sink->sink)), gst_pad_get_caps (conn->src->sink), spider->factories);
+    g_assert (GST_RPAD_PEER (spider->sink_ident->sink) != NULL);
+    plugpath = gst_autoplug_sp (gst_pad_get_caps ((GstPad *) GST_RPAD_PEER (spider->sink_ident->sink)), gst_pad_get_caps (conn->src->sink), spider->factories);
   } else {
     plugpath = gst_autoplug_sp (gst_pad_get_caps (srcpad), gst_pad_get_caps (conn->src->sink), spider->factories);
   }
@@ -709,7 +687,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(factory != NULL, FALSE);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (spider_src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (spider_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

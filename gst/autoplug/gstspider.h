@@ -46,7 +46,6 @@ extern GstElementDetails gst_spider_details;
  * A GstSpider keeps a list of all GstSpiderConnections in it.
  */
 typedef struct {
-  GstSpiderIdentity *sink;
   GstSpiderIdentity *src;
   /* dunno if the path should stay here or if its too much load.
    * it's at least easier then always searching it */
@@ -72,6 +71,7 @@ typedef struct _GstSpiderClass GstSpiderClass;
 struct _GstSpider {
   GstBin        parent;
 	
+  GstSpiderIdentity *sink_ident;
   GList *     	factories; /* factories to use for plugging */
 
   GList *	connections; /* GStSpiderConnection list of all connections */

@@ -77,15 +77,8 @@ static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad, GstCaps *caps);
 static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
 static void                     gst_spider_identity_src_loop		(GstSpiderIdentity *ident);
 static void                     gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident);
-static void                     gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident);
 
 static gboolean 		gst_spider_identity_handle_src_event 	(GstPad *pad, GstEvent *event);
-
-/* set/get functions */
-static void			gst_spider_identity_set_caps		(GstSpiderIdentity *identity, GstCaps *caps);
-
-/* callback */
-static void			callback_type_find_have_type		(GstElement *typefind, GstCaps *caps, GstSpiderIdentity *identity);
 
 /* other functions */
 static void			gst_spider_identity_start_type_finding	(GstSpiderIdentity *ident);
@@ -159,10 +152,6 @@ gst_spider_identity_init (GstSpiderIdentity *ident)
   /* variables */
   ident->plugged = FALSE;
   
-  /* caching */
-  ident->cache_start = NULL;
-  ident->cache_end = NULL;
-  
 }
 
 static void 
@@ -170,7 +159,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 {
   GstSpiderIdentity *ident;
   
-  /* g_print ("chaining on pad %s:%s with buffer %p\n", GST_DEBUG_PAD_NAME (pad), buf); */
+  /*g_print ("chaining on pad %s:%s with buffer %p\n", GST_DEBUG_PAD_NAME (pad), buf);*/
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -185,15 +174,14 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
     {
       GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (ident);
       GList *list = spider->connections;
+      g_print("have EOS in chain\n");
       while (list)
       {
 	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
 	list = g_list_next (list);
-	if (conn->sink == ident)
-	{
-	  gst_element_set_eos (GST_ELEMENT (conn->src));
-          gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
-	}
+        g_print("forwarding EOS to conn\n");
+	gst_element_set_eos (GST_ELEMENT (conn->src));
+        gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
       }
     }
     /* end hack for current event stuff here */
@@ -363,8 +351,8 @@ gst_spider_identity_change_state (GstElement *element)
 static void
 gst_spider_identity_start_type_finding (GstSpiderIdentity *ident)
 {
-  GstElement* typefind;
-  gchar *name;
+/*  GstElement* typefind;
+  gchar *name;*/
   gboolean restart = FALSE;
   
   GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding", GST_ELEMENT_NAME(ident));
@@ -373,17 +361,7 @@ gst_spider_identity_start_type_finding (GstSpiderIdentity *ident)
     gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT (ident)), GST_STATE_PAUSED);
     restart = TRUE;
   }
-  
-  /* create and connect typefind object */
-  name = g_strdup_printf ("%s%s", "typefind", GST_ELEMENT_NAME(ident));
-  typefind = gst_element_factory_make ("typefind", name);
-  g_free (name);
-  
-  g_signal_connect (G_OBJECT (typefind), "have_type",
-                    G_CALLBACK (callback_type_find_have_type), ident);
-  gst_bin_add (GST_BIN (GST_ELEMENT_PARENT (ident)), typefind);
-  gst_pad_connect (gst_element_get_compatible_pad ((GstElement *) ident, gst_element_get_pad (typefind, "sink")), gst_element_get_pad (typefind, "sink"));
-  
+
   gst_element_set_loop_function (GST_ELEMENT (ident), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_sink_loop_type_finding));
 
   if (restart)
@@ -391,58 +369,7 @@ gst_spider_identity_start_type_finding (GstSpiderIdentity *ident)
     gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT (ident)), GST_STATE_PLAYING);
   }
 }
-/* waiting for a good suggestion on where to set the caps from typefinding
- * Caps must be cleared when pad is disconnected
- * 
- * Currently we are naive and set the caps on the source of the identity object 
- * directly and hope to avoid any disturbance in the force.
- */
-void
-gst_spider_identity_set_caps (GstSpiderIdentity *ident, GstCaps *caps)
-{
-  if (ident->src)
-  {
-    gst_pad_try_set_caps (ident->src, caps);
-  }
-}
 
-
-static void
-callback_type_find_have_type (GstElement *typefind, GstCaps *caps, GstSpiderIdentity *ident)
-{
-  gboolean restart_spider = FALSE;
-  
-  GST_INFO (GST_CAT_AUTOPLUG, "element %s has found caps\n", GST_ELEMENT_NAME(ident));
-
-  /* checks */  
-  g_assert (GST_IS_ELEMENT (typefind));
-  g_assert (GST_IS_SPIDER_IDENTITY (ident));
-  
-  /* pause the autoplugger */
-  if (gst_element_get_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident))) == GST_STATE_PLAYING)
-  {
-    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PAUSED);
-    restart_spider = TRUE;
-  }
-
-  /* remove typefind */
-  gst_pad_disconnect (ident->src, (GstPad*) GST_RPAD_PEER (ident->src));
-  gst_bin_remove (GST_BIN (GST_ELEMENT_PARENT (ident)), typefind);
-  
-  /* set caps */
-  gst_spider_identity_set_caps (ident, caps);
-  
-  /* set new loop function, we gotta empty the cache */
-  gst_element_set_loop_function (GST_ELEMENT (ident), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_sink_loop_emptycache));
-  
-  /* autoplug this pad */
-  gst_spider_identity_plug (ident);  
-  
-  /* restart autoplugger */
-  if (restart_spider)
-    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PLAYING);
-  
-}
 /* since we can't set the loop function to NULL if there's a cothread for us,
  * we have to use a dumb one
  */
@@ -484,68 +411,117 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
   return;  
 }
 /* This loop function is only needed when typefinding.
- * It works quite simple: get a new buffer, append it to the cache
- * and push it to the typefinder.
  */
 static void
 gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 {
   GstBuffer *buf;
+  GstBuffer *typefindbuf = NULL;
+  gboolean getmorebuf = TRUE;
+  GList *type_list;
+  gboolean restart_spider = FALSE;
+
+  /* this should possibly be a property */
+  guint bufsizelimit = 4096;
   
   /* checks - disable for speed */
   g_return_if_fail (ident != NULL);
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
-  g_assert (ident->sink != NULL);
   
-  /* get buffer */
-  buf = gst_pad_pull (ident->sink);
-  
-  /* if it's an event... */
-  while (GST_IS_EVENT (buf)) {
-    /* handle DISCONT events, please */
-    gst_pad_event_default (ident->sink, GST_EVENT (buf));
-    buf = gst_pad_pull (ident->sink);
-  } 
+  while (getmorebuf){
 
-  /* add it to the end of the cache */
-  gst_buffer_ref (buf);
-  GST_DEBUG (0, "element %s adds buffer %p (size %d) to cache", GST_ELEMENT_NAME(ident),  buf, GST_BUFFER_SIZE (buf));
-  ident->cache_end = g_list_prepend (ident->cache_end, buf);
-  if (ident->cache_start == NULL)
-    ident->cache_start = ident->cache_end;
+    /* check if our buffer is big enough to do a typefind */
+    if (typefindbuf && GST_BUFFER_SIZE(typefindbuf) >= bufsizelimit){
+      getmorebuf = FALSE;
+      break;
+    }
+    buf = gst_pad_pull (ident->sink);
+  
+    /* if it's an event... */
+    while (GST_IS_EVENT (buf)) {
+      switch (GST_EVENT_TYPE (GST_EVENT (buf))){
+      case GST_EVENT_EOS:
+        getmorebuf = FALSE;
+	g_print("have EOS\n");
+	/* FIXME Notify the srcs that EOS has happened */
+        gst_pad_event_default (ident->sink, GST_EVENT (buf));
+	break;
+      default:
+        gst_pad_event_default (ident->sink, GST_EVENT (buf));
+        buf = gst_pad_pull (ident->sink);
+        break;
+      }
+      /* handle DISCONT events, please */
+    }
+
+    typefindbuf = buf;
+    getmorebuf = FALSE;
+    /* FIXME merging doesn't work for some reason so 
+     * we'll just typefind with the first element
+    if (!typefindbuf){
+      typefindbuf = buf;
+      gst_buffer_ref(buf);
+    }
+    else {
+      GstBuffer *oldbuf = typefindbuf;
+      typefindbuf = gst_buffer_merge(typefindbuf, buf);
+      gst_buffer_unref(oldbuf);
+      gst_buffer_unref(buf);
+    }
+    */
+  }
+  
+  if (!typefindbuf){
+    goto end;
+  }
+
+  /* now do the actual typefinding with the supplied buffer */
+  type_list = (GList *) gst_type_get_list ();
+    
+  while (type_list) {
+    GstType *type = (GstType *) type_list->data;
+    GSList *factories = type->factories;
+
+    while (factories) {
+      GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
+      GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
+      GstCaps *caps;
+
+      if (typefindfunc && (caps = typefindfunc (buf, factory))) {
+
+        /* pause the autoplugger */
+        if (gst_element_get_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident))) == GST_STATE_PLAYING) {
+          gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PAUSED);
+          restart_spider = TRUE;
+        }
+	if (gst_pad_try_set_caps (ident->sink, caps) <= 0) {
+          g_warning ("typefind: found type but peer didn't accept it");
+	}
+        gst_spider_identity_plug (ident);  
+
+        /* restart autoplugger */
+        if (restart_spider){
+          gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PLAYING);
+	}
+
+        goto end;
+      }
+      factories = g_slist_next (factories);
+    }
+    type_list = g_list_next (type_list);
+  }
+  gst_element_error(GST_ELEMENT(ident), "Could not find media type", NULL);
+  gst_buffer_unref(buf);
+  buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+
+end:
+
+  /* remove loop function */
+  gst_element_set_loop_function (GST_ELEMENT (ident), 
+                                (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
   
   /* push the buffer */
   gst_spider_identity_chain (ident->sink, buf);
-}
-
-/* this function is needed after typefinding:
- * empty the cache and when the cache is empty - remove this function
- */
-static void
-gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident)
-{
-  GstBuffer *buf;
-  
-  /* get the buffer and push it */
-  buf = GST_BUFFER (ident->cache_start->data);
-  gst_spider_identity_chain (ident->sink, buf);
-  
-  ident->cache_start = g_list_previous (ident->cache_start);
-
-  /* now check if we have more buffers to push */
-  if (ident->cache_start == NULL)
-  {
-    GST_DEBUG(0, "cache from %s is empty, changing loop function", GST_ELEMENT_NAME(ident));
-
-    /* free cache */
-    g_list_free (ident->cache_end);
-    ident->cache_end = NULL;
-    
-    /* remove loop function */
-    gst_element_set_loop_function (GST_ELEMENT (ident), 
-		                   (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
-    gst_element_interrupt (GST_ELEMENT (ident));
-  }  
 }
 
 static gboolean
@@ -561,15 +537,6 @@ gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
     case GST_EVENT_SEEK:
-      /* see if there's something cached */
-      if (ident->cache_start && ident->cache_start->data) {
-        GST_DEBUG (0, "spider_identity seek in cache\n");
-	/* FIXME we need to find the right position in the cache, make sure we 
-	 * push from that offset and send out a discont event on the 
-	 * next buffer */
-	/* FIXME, we pass the event for now */
-	/*return TRUE; */
-      }
     default:
       res = gst_pad_event_default (pad, event);
       break;

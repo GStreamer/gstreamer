@@ -57,10 +57,6 @@ struct _GstSpiderIdentity {
   /* plugged into autoplugger yet? */
   gboolean plugged;
 	
-  /* caching */
-  GList *cache_start;
-  GList *cache_end;
-	
   /* Caps from typefinding */
   GstCaps *caps;
 
