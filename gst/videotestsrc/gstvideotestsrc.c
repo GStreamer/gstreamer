@@ -87,6 +87,7 @@ gst_videotestsrc_method_get_type (void)
 
 static void	gst_videotestsrc_class_init	(GstVideotestsrcClass *klass);
 static void	gst_videotestsrc_init		(GstVideotestsrc *videotestsrc);
+static GstElementStateReturn gst_videotestsrc_change_state (GstElement *element);
 
 static void	gst_videotestsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videotestsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -147,6 +148,7 @@ gst_videotestsrc_class_init (GstVideotestsrcClass *klass)
   gobject_class->set_property = gst_videotestsrc_set_property;
   gobject_class->get_property = gst_videotestsrc_get_property;
 
+  gstelement_class->change_state = gst_videotestsrc_change_state;
 }
 
 static GstPadConnectReturn
@@ -195,6 +197,27 @@ gst_videotestsrc_srcconnect (GstPad *pad, GstCaps *caps)
   return GST_PAD_CONNECT_OK;
 }
 
+static GstElementStateReturn
+gst_videotestsrc_change_state (GstElement *element)
+{
+	GstVideotestsrc *v;
+
+	v = GST_VIDEOTESTSRC(element);
+
+	switch(GST_STATE_TRANSITION(element)){
+	case GST_STATE_PAUSED_TO_PLAYING:
+		v->pool = gst_pad_get_bufferpool(v->srcpad);
+		break;
+	case GST_STATE_PLAYING_TO_PAUSED:
+		v->pool = NULL;
+		break;
+	}
+
+	parent_class->change_state(element);
+
+	return GST_STATE_SUCCESS;
+}
+
 static void
 gst_videotestsrc_init (GstVideotestsrc *videotestsrc)
 {
@@ -224,6 +247,8 @@ gst_videotestsrc_init (GstVideotestsrc *videotestsrc)
 
   videotestsrc->timestamp = 0;
   videotestsrc->interval = GST_SECOND/30;
+
+  videotestsrc->pool = NULL;
 }
 
 
@@ -252,9 +277,15 @@ gst_videotestsrc_get (GstPad *pad)
   GST_DEBUG(0,"size=%ld %dx%d",newsize,
 	videotestsrc->width, videotestsrc->height);
 
-  buf = gst_buffer_new();
-  GST_BUFFER_SIZE(buf) = newsize;
-  GST_BUFFER_DATA(buf) = g_malloc (newsize);
+  buf = NULL;
+  if(videotestsrc->pool){
+	  buf = gst_buffer_new_from_pool(videotestsrc->pool, 0, 0);
+  }
+  if(!buf){
+  	buf = gst_buffer_new();
+  	GST_BUFFER_SIZE(buf) = newsize;
+  	GST_BUFFER_DATA(buf) = g_malloc (newsize);
+  }
   g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
 
   videotestsrc->timestamp += videotestsrc->interval;

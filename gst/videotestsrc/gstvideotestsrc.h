@@ -69,6 +69,8 @@ struct _GstVideotestsrc {
   gint64 interval;
   gint bpp;
 
+  GstBufferPool *pool;
+
   void (*make_image)(GstVideotestsrc *v, unsigned char *dest, int w, int h);
 };
 
