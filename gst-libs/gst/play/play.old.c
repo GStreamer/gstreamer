@@ -312,21 +312,16 @@ gst_play_new (GstPlayPipeType pipe_type, GError **error)
 		case GST_PLAY_PIPE_VIDEO:
 			play->setup_pipeline = gst_play_video_setup;
 			play->teardown_pipeline = NULL;
+			play->set_data_src = gst_play_video_set_data_src;
 			play->set_autoplugger = gst_play_video_set_auto;
 			play->set_video_sink = gst_play_video_set_video;
 			play->set_audio_sink = gst_play_video_set_audio;
-			break;
-		case GST_PLAY_PIPE_VIDEO_THREADSAFE:
-			play->setup_pipeline = gst_play_videots_setup;
-			play->teardown_pipeline = NULL;
-			play->set_autoplugger = gst_play_videots_set_auto;
-			play->set_video_sink = gst_play_videots_set_video;
-			play->set_audio_sink = gst_play_videots_set_audio;
 			break;
 		case GST_PLAY_PIPE_AUDIO:
 			/* we can reuse the threaded set functions */
 			play->setup_pipeline = gst_play_audio_setup;
 			play->teardown_pipeline = NULL;
+			play->set_data_src = gst_play_simple_set_data_src;
 			play->set_autoplugger = gst_play_audiot_set_auto;
 			play->set_video_sink = NULL;
 			play->set_audio_sink = gst_play_audiot_set_audio;
@@ -334,6 +329,7 @@ gst_play_new (GstPlayPipeType pipe_type, GError **error)
 		case GST_PLAY_PIPE_AUDIO_THREADED:
 			play->setup_pipeline = gst_play_audiot_setup;
 			play->teardown_pipeline = NULL;
+			play->set_data_src = gst_play_simple_set_data_src;
 			play->set_autoplugger = gst_play_audiot_set_auto;
 			play->set_video_sink = NULL;
 			play->set_audio_sink = gst_play_audiot_set_audio;
@@ -341,6 +337,7 @@ gst_play_new (GstPlayPipeType pipe_type, GError **error)
 		case GST_PLAY_PIPE_AUDIO_HYPER_THREADED:
 			play->setup_pipeline = gst_play_audioht_setup;
 			play->teardown_pipeline = NULL;
+			play->set_data_src = gst_play_simple_set_data_src;
 			play->set_autoplugger = gst_play_audioht_set_auto;
 			play->set_video_sink = NULL;
 			play->set_audio_sink = gst_play_audioht_set_audio;
@@ -805,6 +802,24 @@ gst_play_get_sink_element (GstPlay *play, GstElement *element){
 	}
 	/* we didn't find a sink element */
 	return NULL;
+}
+
+gboolean
+gst_play_set_data_src (GstPlay *play, GstElement *data_src)
+{
+	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT (data_src), FALSE);
+
+	if (gst_play_get_state (play) != GST_STATE_READY){
+		gst_play_set_state (play, GST_STATE_READY);
+	}
+
+	if (play->set_data_src){
+		return play->set_data_src(play, data_src);
+	}
+
+	/* if there is no set_data_src func, fail quietly */
+	return FALSE;
 }
 
 gboolean
