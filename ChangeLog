@@ -2,6 +2,13 @@
 
 	* gst/schedulers/gstoptimalscheduler.c: (group_dec_link),
 	(gst_opt_scheduler_pad_link), (group_migrate_connected):
+	Fix stupid warning when an element is to be migrated but
+	is already migrated.
+
+2004-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (group_dec_link),
+	(gst_opt_scheduler_pad_link), (group_migrate_connected):
 	Make sure that a single non-loop-based element does not 
 	end up in a group. This fixes the testsuite again.
 

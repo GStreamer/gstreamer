@@ -2302,12 +2302,18 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
     GstOptSchedulerGroup * group, GstPad * brokenpad)
 {
   GList *connected, *c;
-  GstOptSchedulerGroup *new_group = NULL;
+  GstOptSchedulerGroup *new_group = NULL, *tst;
   GstOptSchedulerChain *chain;
   gint len;
 
   if (GST_ELEMENT_IS_DECOUPLED (element)) {
     /* the element is decoupled and is therefore not in the group */
+    return NULL;
+  }
+
+  get_group (element, &tst);
+  if (tst == NULL) {
+    GST_LOG ("element has no group, not interesting");
     return NULL;
   }
 
