@@ -1,0 +1,248 @@
+caps negotiation
+================
+
+1) purpose
+----------
+
+The pads expose the media types they can handle using a mime
+type and a set of properties. Before the pad is created or
+used to pass buffers, we only know the global 'range' of media
+data this pad can accept. When the element has had a chance to
+look at the media data, only then it knows the exact values of the 
+properties.
+
+example1:
+!
+! The mp3 decoder exposes the capabilities of its src pad
+! with the following caps:
+!
+!     'mpg123_src':
+!       MIME type: 'audio/raw':
+!       format: Integer: 16
+!       depth: Integer: 16
+!       rate: Integer range: 11025 - 48000
+!       channels: Integer range: 1 - 2
+
+as you can see in example1, the padtemplate has both a range
+(for the audio rate) and a list (for the number of channels)
+for its properties.
+
+only when the mpg123 element has decoded the first mpeg audio
+header, it knows the exact values of the rate and channels
+properties.
+
+suppose that we want to connect this src pad to the sink pad
+of an audiosink with the properties given in example2:
+
+example2:
+!
+!     'audiosink_sink':
+!       MIME type: 'audio/raw':
+!       format: Integer: 16
+!       depth: List:
+!         Integer: 8
+!         Integer: 16
+!       rate: Integer range: 8000 - 44000
+!       channels: Integer range: 1 - 2
+
+we can see that connecting the mpg123 src pad with the
+audiosinks sink pad can cause a potential problem with the
+rate property.
+
+When the mpg123 decoder decides to output raw audio with a
+48000Hz samplerate, the audiosink will not be able to handle
+it. The conservative approach would be to disallow the connection
+between the two incompatible pads. This rules out any potential
+problems but severely limits the amount of possible connections
+between the elements. 
+
+Another approach would be to allow the connection (and mark it
+as dangerous) and let the two elements figure out a suitable
+media type at runtime. This procedure is called caps negotiation.
+
+
+2) a bit of history
+-------------------
+
+The typing of the data that was attached to a buffer used to be
+done using GstMeta* (and it still is as of 11 feb 2001). With
+the new GstCaps and GstProps system this typing is gradually moved
+to the pads and to the padtemplates. This has several advantages:
+
+  - the typing of the data tends to be static. The type of media
+    doesn't change for every buffer.
+
+  - Moving the typing up to the pad(templates) allows us to save
+    them into the registry and allows us to figure out what pads
+    are compatible.
+
+  - the current metadata implementation needs header files. this may
+    change when we also use properties for metadata.
+
+example3:
+!
+! This is the current GstMeta structure that travels with audio buffers
+!
+!  struct _MetaAudioRaw {
+!    GstMeta meta;
+!
+!    /* formatting information */
+!    gint format;
+!    gint channels;
+!    gint frequency;
+!    gint bps;
+!  };
+	    
+
+The question still remains what purpose the metadata will serve
+now that we expose the media type in the pads. Some possibilities:
+
+  - interesting information, not describing the data itself but the
+    context in which the data was generated (suggested buffer size,
+    timestamps, etc...)
+
+  - user app metadata. 
+
+In this proposal we also assume that the current use of metadata using
+GstMeta is deprecated and that we move this information to the properties
+of the pads.
+
+
+3) the pad/padtemplates caps
+----------------------------
+
+All elements have to provide a padtemplate for their pads.
+
+The padtemplates provide a range of possible media types this pad can
+src/sink. the main purpose for the padtemplates is to allow a
+rough guess at which pads are compatible before even a single buffer
+has been processed by the element.
+
+pads are usually created from the templates. When the pad is created
+it has no GstCaps* attached to it yet. The possible caps this pad
+can have is exposed in the padtemplate.
+
+
+4) the connect function
+-----------------------
+
+when two pads are connected the following steps will take
+place: 
+
+ - if both pads have caps, the caps are checked. If the caps
+   are incompatible, the padtemplates are checked, if they
+   are compatible, caps negotiation is performed.
+
+ - if one of the pads has caps, the caps is checked against
+   the padtemplate of the peer pad. If they are incompatible,
+   the padtemplates are compared, if they are incompatible,
+   caps negotiation is performed.
+   
+ - if none of the pads have caps, the padtemplates are checked, 
+   if they are incompatible, a warning is issued.
+   
+
+5) when the element knows the media type it is handling
+-------------------------------------------------------
+
+When the element has received its first buffer it will know
+the media type it is handling by inspecting the buffer.
+
+before pushing the data out to its peer element(s), the element
+will set its src pad with the appropriate caps and properties.
+These caps must follow the following rules:
+
+  - the caps must be compatible with the padtemplates of this 
+    pad.
+
+  - the caps cannot contain ranges or lists.
+
+by setting the caps of the src pad, the following procedure
+happens:
+
+  - if the peer pad has a negotiate function, it is called and
+    negotiation is performed (see later)
+
+  - if the peer pad has no negotiate function, the padtemplate
+    is checked:
+
+    - if the caps are compatible with the template, the peer pad
+      receives the same caps as the src pad.
+
+    - if the caps are not compatible, the negotiation fails and
+      the elements are disconnected. A signal is emitted to inform
+      the user app or the manager of the element to find a solution.
+ 
+the caps can be set with the gst_pad_set_caps function, which accepts
+the following parameters:
+
+   - the pad to set the caps to
+   - whether the peer pad *must* accept the caps (AUTHORITATIVE) or
+     whether if can reject the caps (TRY)
+   - a GstCaps* structure
+
+example4:
+!
+!  an audio element setting its src pad caps (need something easier):
+!
+!     gst_pad_set_caps (
+!       pad,
+!       GST_CAPS_NEGOTIATE_AUTHORITATIVE,
+!       gst_caps_new_with_props (
+!         "src_caps",                       /* name */
+!         "audio/raw",                      /* mime */
+!         gst_props_new (
+!           "format",   GST_PROPS_INT (AFMT_S16_LE),
+!           "depth",    GST_PROPS_INT (16),
+!           "rate",     GST_PROPS_INT (44100),
+!           "channels", GST_PROPS_INT (2),
+!           NULL
+!         )
+!       )
+!     );
+
+the _set_caps function returns a gboolean, indicating that the
+new caps are accepted by the peer pad.
+
+when the negotiation type is set to TRY, and the negotiation 
+fails, the pad has to perform another _set_caps call. The last 
+call to _set_caps has to be of type AUTHORITATIVE.
+
+when the negotiation fails and the type is set to AUTHORITATIVE,
+the pads are disconnected and a signal is emitted to inform any
+interested listeners.
+
+
+6) caps negotiation
+-------------------
+
+the negotiate function of a pad is called whenever the peer pad 
+modifies the caps using the gst_pad_set_caps function.
+
+The negotiate function has to return a gboolean indicating the 
+new caps are acceptable. When it accepts the caps, both pads will
+be set to the negotiated caps.
+
+example5:
+! this is the caps negotiation function implemented by an element on
+! one of its sink pads.
+!
+!  static gboolean
+!  gst_pad_caps_negotiate (GstPad *pad, GstCaps *caps)
+!  {
+!    /* we don't accept anything else than audio/raw */
+!    if (strcmp (gst_caps_get_mime (caps), "audio/raw"))
+!      return FALSE;
+!
+!    if (gst_caps_get_int_prop (caps, "format") != AFMT_S16_LE)
+!      return FALSE;
+!      
+!    /* we accept everything else */
+!    return TRUE;
+!  }
+
+
+
+
+
+
