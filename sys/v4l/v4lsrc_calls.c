@@ -40,6 +40,10 @@
 #define MAP_FAILED ( (caddr_t) -1 )
 #endif
 
+GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
+
+#define GST_CAT_DEFAULT v4l_debug
+
 #define DEBUG(format, args...) \
 	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lsrc), \
@@ -301,6 +305,8 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
     return FALSE;
   }
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
+
+  GST_DEBUG ("grabbed frame %d", *num);
 
   g_mutex_unlock (v4lsrc->mutex_queue_state);
 

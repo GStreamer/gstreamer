@@ -30,9 +30,13 @@
 #include "gstv4lmjpegsrc.h"
 #include "gstv4lmjpegsink.h"
 
+GST_DEBUG_CATEGORY (v4l_debug); /* used in v4l_calls.c and v4lsrc_calls.c */
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (v4l_debug, "v4l", 0, "V4L API calls");
+
   /* actually, we can survive without it, but I'll create
    * that handling later on. */
   if (!gst_library_load ("xwindowlistener"))

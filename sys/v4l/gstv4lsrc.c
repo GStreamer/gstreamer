@@ -32,6 +32,9 @@ GST_ELEMENT_DETAILS ("Video (video4linux/raw) Source",
     "Reads raw frames from a video4linux (BT8x8) device",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
+GST_DEBUG_CATEGORY (v4lsrc_debug);
+#define GST_CAT_DEFAULT v4lsrc_debug
+
 /* V4lSrc signals and args */
 enum
 {
@@ -55,6 +58,14 @@ GST_FORMATS_FUNCTION (GstPad *, gst_v4lsrc_get_formats,
     GST_FORMAT_TIME, GST_FORMAT_DEFAULT);
 GST_QUERY_TYPE_FUNCTION (GstPad *, gst_v4lsrc_get_query_types,
     GST_QUERY_POSITION);
+
+/* structure for buffer private data referencing element and frame number */
+typedef struct
+{
+  GstV4lSrc *v4lsrc;
+  int num;
+}
+v4lsrc_private_t;
 
 /* init functions */
 static void gst_v4lsrc_base_init (gpointer g_class);
@@ -176,6 +187,7 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstV4lSrcClass, frame_insert), NULL,
       NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  GST_DEBUG_CATEGORY_INIT (v4lsrc_debug, "v4lsrc", 0, "V4L source element");
   gobject_class->set_property = gst_v4lsrc_set_property;
   gobject_class->get_property = gst_v4lsrc_get_property;
 
@@ -601,6 +613,7 @@ gst_v4lsrc_get (GstPad * pad)
   GstBuffer *buf;
   gint num;
   gdouble fps = 0.;
+  v4lsrc_private_t *v4lsrc_private = NULL;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
@@ -670,7 +683,13 @@ gst_v4lsrc_get (GstPad * pad)
 
   buf = gst_buffer_new ();
   GST_BUFFER_FREE_DATA_FUNC (buf) = gst_v4lsrc_buffer_free;
-  GST_BUFFER_PRIVATE (buf) = v4lsrc;    /* hack to re-queue buffer on free */
+  /* to requeue buffers, we need a ref to the element, as well as the frame
+     number we got this buffer from */
+  v4lsrc_private = g_malloc (sizeof (v4lsrc_private_t));
+  v4lsrc_private->v4lsrc = v4lsrc;
+  v4lsrc_private->num = num;
+  GST_BUFFER_PRIVATE (buf) = v4lsrc_private;
+
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
@@ -826,24 +845,27 @@ gst_v4lsrc_buffer_new (GstBufferPool * pool,
 static void
 gst_v4lsrc_buffer_free (GstBuffer * buf)
 {
-  GstV4lSrc *v4lsrc = GST_V4LSRC (GST_BUFFER_PRIVATE (buf));
-  int n;
+  v4lsrc_private_t *v4lsrc_private;
+  GstV4lSrc *v4lsrc;
+  int num;
 
+  v4lsrc_private = GST_BUFFER_PRIVATE (buf);
+  g_assert (v4lsrc_private);
+  v4lsrc = v4lsrc_private->v4lsrc;
+  num = v4lsrc_private->num;
+  g_free (v4lsrc_private);
+  GST_BUFFER_PRIVATE (buf) = 0;
+
+  GST_DEBUG_OBJECT (v4lsrc, "freeing buffer %p with refcount %d for frame %d",
+      buf, GST_BUFFER_REFCOUNT_VALUE (buf), num);
   if (gst_element_get_state (GST_ELEMENT (v4lsrc)) != GST_STATE_PLAYING)
     return;                     /* we've already cleaned up ourselves */
 
-  for (n = 0; n < v4lsrc->mbuf.frames; n++)
-    if (GST_BUFFER_DATA (buf) == gst_v4lsrc_get_buffer (v4lsrc, n)) {
-      v4lsrc->use_num_times[n]--;
-      if (v4lsrc->use_num_times[n] <= 0) {
-        gst_v4lsrc_requeue_frame (v4lsrc, n);
-      }
-      break;
-    }
-
-  if (n == v4lsrc->mbuf.frames)
-    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
-        ("Couldn\'t find the buffer"));
+  v4lsrc->use_num_times[num]--;
+  if (v4lsrc->use_num_times[num] <= 0) {
+    GST_DEBUG_OBJECT (v4lsrc, "requeueing frame %d", num);
+    gst_v4lsrc_requeue_frame (v4lsrc, num);
+  }
 }
 
 

@@ -42,6 +42,11 @@
 #include "gstv4lmjpegsrc.h"
 #include "gstv4lmjpegsink.h"
 
+
+GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
+
+#define GST_CATEGORY_DEFAULT v4l_debug
+
 #define DEBUG(format, args...) \
 	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lelement), \
