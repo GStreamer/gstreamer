@@ -36,6 +36,17 @@ GstCaps
 </para>
 
 
+<!-- ##### MACRO GST_MAKE_FOURCC ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+@d: 
+
+
 <!-- ##### MACRO GST_PROPS_LIST ##### -->
 <para>
 Create a list of properties.
@@ -67,17 +78,10 @@ Construct a fourcc property out of four bytes.
 </para>
 
 @a: first byte
+<!-- # Unused Parameters # -->
 @b: second byte
 @c: third byte
 @d: fourth byte
-
-
-<!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
-<para>
-Create a fourcc property out of an integer value.
-</para>
-
-@a: the integer value
 
 
 <!-- ##### MACRO GST_PROPS_BOOLEAN ##### -->
@@ -94,6 +98,40 @@ Create a boolean property.
 </para>
 
 @a: 
+
+
+<!-- ##### MACRO GST_PROPS_FLOAT ##### -->
+<para>
+
+</para>
+
+@a: 
+
+
+<!-- ##### MACRO GST_PROPS_FLOAT_RANGE ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO GST_PROPS_FLOAT_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+
+
+<!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
 
 
 <!-- ##### FUNCTION gst_props_register ##### -->

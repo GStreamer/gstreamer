@@ -306,6 +306,15 @@ Unlock the caps structure
 @name: 
 
 
+<!-- ##### MACRO gst_caps_get_string ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
+
+
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->
 <para>
 

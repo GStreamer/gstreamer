@@ -381,6 +381,19 @@ Generic connection between elements.
 @format: 
 @args...: 
 
+<!-- ##### STRUCT MetaVideoRaw ##### -->
+<para>
+
+</para>
+
+@meta: 
+@format: 
+@visual: 
+@width: 
+@height: 
+@overlay_info: 
+@dga_info: 
+
 <!-- ##### SECTION ./tmpl/gstaudiosink.sgml:See_Also ##### -->
 <para>
 
@@ -521,6 +534,13 @@ Generic connection between elements.
 @pad: 
 @caps: 
 
+<!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
+<para>
+Create a fourcc property out of an integer value.
+</para>
+
+@a: the integer value
+
 <!-- ##### MACRO GST_TYPE_SINK ##### -->
 <para>
 
@@ -601,6 +621,16 @@ Specify the current offset in the file.
 
 </para>
 
+
+<!-- ##### STRUCT MetaDGA ##### -->
+<para>
+
+</para>
+
+@base: 
+@swidth: 
+@sheight: 
+@bytes_per_line: 
 
 <!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
 <para>
@@ -1094,6 +1124,16 @@ GstFilter
 </para>
 
 @thread: 
+
+<!-- ##### STRUCT OverlayClip ##### -->
+<para>
+
+</para>
+
+@x1: 
+@x2: 
+@y1: 
+@y2: 
 
 <!-- ##### ENUM GstSrcFlags ##### -->
 <para>
@@ -1735,6 +1775,12 @@ Query whether this object has multiple input pads.
 </para>
 
 
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Long_Description ##### -->
+<para>
+Information about video buffers.
+</para>
+
+
 <!-- ##### FUNCTION gst_queue_new ##### -->
 <para>
 
@@ -1877,12 +1923,31 @@ on its own.
 
 
 
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Title ##### -->
+videoraw
+
+
 <!-- ##### MACRO GST_IS_FILTER ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### STRUCT MetaOverlay ##### -->
+<para>
+
+</para>
+
+@wx: 
+@wy: 
+@overlay_element: 
+@clip_count: 
+@overlay_clip: 
+@width: 
+@height: 
+@did_overlay: 
+@fully_obscured: 
 
 <!-- ##### MACRO GST_TYPE_FILTER ##### -->
 <para>
@@ -2253,6 +2318,10 @@ This macro sets the given state on the element.
 
 @obj: 
 
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Short_Description ##### -->
+Information about video buffers.
+
+
 <!-- ##### FUNCTION gst_fdsink_get_type ##### -->
 <para>
 
@@ -2315,6 +2384,12 @@ Is trigered whenever the state of an element changes
 
 <!-- ##### SECTION ./tmpl/audioraw.sgml:Short_Description ##### -->
 Information about audio buffers.
+
+
+<!-- ##### SECTION ./tmpl/videoraw.sgml:See_Also ##### -->
+<para>
+
+</para>
 
 
 <!-- ##### SECTION ./tmpl/gstfilter.sgml:Short_Description ##### -->

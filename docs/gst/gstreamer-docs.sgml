@@ -41,7 +41,6 @@
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
 
 <!entity spectrum SYSTEM "sgml/spectrum.sgml">
-<!entity videoraw SYSTEM "sgml/videoraw.sgml">
 
 <!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
 ]>
@@ -142,7 +141,6 @@ with some more specialized elements.</para>
     <para>MetaData is used to specify the content of buffers. See <classname>GstMeta</classname>. </para>
 
     &spectrum;
-    &videoraw;
   </chapter>
 
   <chapter id="autopluggers">
