@@ -1,3 +1,16 @@
+2004-12-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* Makefile.am:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-libs-docs.sgml:
+	* docs/libs/gst-plugins-libs-sections.txt:
+	* docs/libs/tmpl/gstgconf.sgml:
+	* docs/upload.mak:
+	* docs/version.entities.in:
+	  Added boilerplate gtk-doc files for plugin-libs documentation.
+
 2004-12-19  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* gst/auparse/gstauparse.c: fix int and float audio caps
