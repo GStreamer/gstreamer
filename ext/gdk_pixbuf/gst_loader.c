@@ -43,7 +43,7 @@ fill_info (GdkPixbufFormat *info)
 {
   static GdkPixbufModulePattern signature[] = {
     { "RIFF    AVI ", "    xxxx    ", 100 },
-    { "\000\000\001\272", "", 100 },
+    { "xx\001\272", "zz  ", 100 },
     { NULL, NULL, 0 }
   };
   
