@@ -1,3 +1,8 @@
+2004-04-28  David Schleef  <ds@schleef.org>
+
+	* gst/speed/gstspeed.c: (speed_parse_caps):  Fix caps parsing.
+	(bug #140064)
+
 2004-04-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_class_probe_devices):

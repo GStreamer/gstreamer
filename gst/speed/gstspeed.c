@@ -121,9 +121,9 @@ speed_parse_caps (GstSpeed * filter, const GstCaps * caps)
   ret &= gst_structure_get_int (structure, "channels", &filter->channels);
   ret &= gst_structure_get_int (structure, "width", &filter->width);
   ret &= gst_structure_get_int (structure, "endianness", &filter->endianness);
-  ret &=
-      gst_structure_get_int (structure, "buffer-frames",
-      &filter->buffer_frames);
+
+  filter->buffer_frames = 0;
+  gst_structure_get_int (structure, "buffer-frames", &filter->buffer_frames);
 
   mimetype = gst_structure_get_name (structure);
 
