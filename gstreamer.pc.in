@@ -5,7 +5,7 @@ includedir=@includedir@
 
 Name: GStreamer
 Description: Streaming-media framework
-Requires: @GST_PKG_DEPS@, libxml >= 1.8.1
+Requires: @GST_PKG_DEPS@@LIBXML_PKG@
 Version: @VERSION@
 Libs: -L${libdir}/gst -lgst
 Cflags: -I${includedir} @GST_CFLAGS@
