@@ -1,5 +1,11 @@
 2004-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* examples/gstplay/Makefile.am:
+	* examples/gstplay/player.c: (main):
+          make the commandline player example use gconf settings
+
+2004-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init),
 	(gst_cacasink_sinkconnect), (gst_cacasink_init),
 	(gst_cacasink_chain), (gst_cacasink_open), (gst_cacasink_close):
