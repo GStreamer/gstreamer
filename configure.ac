@@ -1477,7 +1477,7 @@ GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
   ])
 ])
 
-dnl *** sidplay ***
+dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
   GST_PATH_SIDPLAY()
