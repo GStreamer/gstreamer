@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <errno.h>
 
 
 /**********************************************************************
@@ -113,7 +114,7 @@ struct _GstFileSrc {
   gboolean touch;			// whether to touch every page
 
   GstBuffer *mapbuf;
-  off_t mapsize;
+  size_t mapsize;
 
   GTree *map_regions;
   GMutex *map_regions_lock;
@@ -354,10 +355,12 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 }
 
 static GstBuffer *
-gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
+gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
 {
   GstBuffer *buf;
   gint retval;
+
+  g_return_val_if_fail (offset >= 0, NULL);
 
   fs_print  ("mapping region %08lx+%08lx from file into memory\n",offset,size);
 
@@ -367,8 +370,9 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
   GST_BUFFER_DATA(buf) = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
   if (GST_BUFFER_DATA(buf) == NULL) {
     fprintf (stderr, "ERROR: gstfilesrc couldn't map file!\n");
-  } else if (GST_BUFFER_DATA(buf) == (void *)-1) {
-    perror("gstfilesrc:mmap()");
+  } else if (GST_BUFFER_DATA(buf) == MAP_FAILED) {
+    g_error ("gstfilesrc mmap(0x%x, %d, 0x%llx) : %s",
+ 	     size, src->fd, offset, sys_errlist[errno]);
   }
   // madvise to tell the kernel what to do with it
   retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
@@ -389,20 +393,27 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
 }
 
 static GstBuffer *
-gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, off_t size)
+gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, size_t size)
 {
-  int mod, mapbase, mapsize;
+  size_t mapsize;
+  off_t mod, mapbase;
   GstBuffer *map;
 
 //  printf("attempting to map a small buffer at %d+%d\n",offset,size);
 
   // if the offset starts at a non-page boundary, we have to special case
   if ((mod = offset % src->pagesize)) {
+    GstBuffer *ret;
+
     mapbase = offset - mod;
     mapsize = ((size + mod + src->pagesize - 1) / src->pagesize) * src->pagesize;
 //    printf("not on page boundaries, resizing map to %d+%d\n",mapbase,mapsize);
     map = gst_filesrc_map_region(src, mapbase, mapsize);
-    return gst_buffer_create_sub (map, offset - mapbase, size);
+    ret = gst_buffer_create_sub (map, offset - mapbase, size);
+
+    gst_buffer_unref (map);
+
+    return ret;
   }
 
   return gst_filesrc_map_region(src,offset,size);
@@ -438,7 +449,8 @@ gst_filesrc_get (GstPad *pad)
 {
   GstFileSrc *src;
   GstBuffer *buf = NULL, *map;
-  off_t readend,readsize,mapstart,mapend;
+  size_t readsize;
+  off_t readend,mapstart,mapend;
   GstFileSrcRegion region;
   int i;
 
@@ -449,13 +461,13 @@ gst_filesrc_get (GstPad *pad)
   // check for seek
   if (src->seek_happened) {
     src->seek_happened = FALSE;
-    return gst_event_empty_new(GST_EVENT_DISCONTINUOUS);
+    return gst_event_new(GST_EVENT_DISCONTINUOUS);
   }
 
   // check for EOF
   if (src->curoffset == src->filelen) {
     gst_element_set_state(src,GST_STATE_PAUSED);
-    return gst_event_empty_new(GST_EVENT_EOS);
+    return gst_event_new(GST_EVENT_EOS);
   }
 
   // calculate end pointers so we don't have to do so repeatedly later
@@ -506,7 +518,9 @@ gst_filesrc_get (GstPad *pad)
     fs_print ("searching for mapbuf to cover %d+%d\n",src->curoffset,readsize);
     region.offset = src->curoffset;
     region.size = readsize;
-    map = g_tree_search(src->map_regions,gst_filesrc_search_region_match,&region);
+    map = g_tree_search (src->map_regions,
+			 (GCompareFunc) gst_filesrc_search_region_match,
+			 &region);
 
     // if we found an exact match, subbuffer it
     if (map != NULL) {
