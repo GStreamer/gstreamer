@@ -160,6 +160,9 @@ struct _GstAlsaSinkClass {
 };
 struct _GstAlsaSrc {
   GstAlsa			parent;
+
+  GstBuffer *			buf[GST_ALSA_MAX_CHANNELS];
+  GstBufferPool *		pool;
 };
 struct _GstAlsaSrcClass {
   GstAlsaClass			parent_class;
