@@ -1,7 +1,5 @@
 2004-05-17  Benjamin Otte  <otte@gnome.org>
 
-	* autogen.sh:
-	* configure.ac:
 	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
 	  compute offsets correctly for internal buffers so timestamps are set
 	  correctly when we can't seek. Also handle cases where there are no

@@ -72,7 +72,7 @@ fi
 tool_run "$autopoint --force"
 patch -p0 < common/gettext.patch
 
-tool_run "$aclocal" "-I m4 -I common/m4 -I . $ACLOCAL_FLAGS"
+tool_run "$aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
 tool_run "$libtoolize" "--copy --force"
 tool_run "$autoheader"
 
