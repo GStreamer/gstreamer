@@ -6,6 +6,7 @@
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/config.h:
+    * gst/gst-i18n-app.h:
           enable NLS under Windows
 
 2004-06-12  Jan Schmidt  <thaytan@mad.scientist.com>

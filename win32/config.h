@@ -1,10 +1,10 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* always defined to indicate that i18n is enabled */
-#undef ENABLE_NLS
+#define ENABLE_NLS 1
 
 /* gettext package name */
-#undef GETTEXT_PACKAGE
+#define GETTEXT_PACKAGE "gstreamer-0.8"
 
 /* Location of registry */
 #define GST_CACHE_DIR ""
@@ -19,7 +19,7 @@
 #define GST_LICENSE "LGPL"
 
 /* Define the location where the catalogs will be installed */
-#undef GST_LOCALEDIR
+#define LOCALEDIR ".\locale"
 
 /* package origin */
 #define GST_ORIGIN "http://gstreamer.net"
@@ -28,7 +28,7 @@
 #define GST_PACKAGE "GStreamer"
 
 /* Define the version */
-#define GST_VERSION "0.8.1"
+#define GST_VERSION "0.8.3"
 
 /* Define the release version */
 #define GST_VERSION_RELEASE "20040129_103536"
@@ -189,11 +189,11 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.8.1.0"
+#define VERSION "0.8.3.0"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #define WORDS_BIGENDIAN 0
 
-#define GST_MAJORMINOR "GST_VERSION_MAJOR.GST_VERSION_MINOR"
+#define GST_MAJORMINOR "0.8"
 

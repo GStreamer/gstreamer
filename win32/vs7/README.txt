@@ -14,19 +14,19 @@ The GStreamer project depends on other libraries, namely :
 - GLib
 - libpopt
 - libxml
-- libintl
+- gettext
 - libiconv
 
 The sources should be organised in folders as follow :
 $(PROJECT_DIR)\glib
 $(PROJECT_DIR)\gstreamer (this package)
 $(PROJECT_DIR)\libiconv
-$(PROJECT_DIR)\libintl
+$(PROJECT_DIR)\gettext
 $(PROJECT_DIR)\libxml2
 $(PROJECT_DIR)\popt
 
-NOTE : you can find Win32 versions of these libraries on http://gnuwin32.sourceforge.net/ 
-You will need the Binaries and Developer files for each package.
+NOTE : you can find Win32 versions of these libraries on http://gettext.sourceforge.net/ and
+http://gnuwin32.sourceforge.net/ (you will need the Binaries and Developer files for each package.)
 
 NOTE : GLib can be found on ftp://ftp.gtk.org/pub/gtk/v2.4/ and should be compiled from the 
 sources
