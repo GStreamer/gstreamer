@@ -103,53 +103,68 @@ static GstBufferPool    *gst_alsa_src_get_buffer_pool (GstPad *pad);
 static GstElementStateReturn gst_alsa_change_state (GstElement *element);
 
 /* audio processing functions */
-static int      gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail);
+static int      	gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail);
 
-static void     gst_alsa_sink_loop (GstElement *element);
-static void     gst_alsa_src_loop (GstElement *element);
-static void     gst_alsa_xrun_recovery (GstAlsa *this);
+static void     	gst_alsa_sink_loop (GstElement *element);
+static void     	gst_alsa_src_loop (GstElement *element);
+static void     	gst_alsa_xrun_recovery (GstAlsa *this);
 
-static gboolean gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event);
+static gboolean 	gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event);
 
 /* alsa setup / start / stop functions */
-static void     gst_alsa_set_eos (GstAlsa *this);
+static void     	gst_alsa_set_eos (GstAlsa *this);
 
-static gboolean gst_alsa_probe_hw_params (GstAlsa *this, GstAlsaFormat *format);
-static gboolean gst_alsa_set_hw_params (GstAlsa *this);
-static gboolean gst_alsa_set_sw_params (GstAlsa *this);
+static gboolean 	gst_alsa_probe_hw_params (GstAlsa *this, GstAlsaFormat *format);
+static gboolean 	gst_alsa_set_hw_params (GstAlsa *this);
+static gboolean 	gst_alsa_set_sw_params (GstAlsa *this);
 
-static gboolean gst_alsa_open_audio (GstAlsa *this);
-static gboolean gst_alsa_start_audio (GstAlsa *this);
-static gboolean gst_alsa_drain_audio (GstAlsa *this);
-static gboolean gst_alsa_stop_audio (GstAlsa *this);
-static gboolean gst_alsa_close_audio (GstAlsa *this);
+static gboolean 	gst_alsa_open_audio (GstAlsa *this);
+static gboolean 	gst_alsa_start_audio (GstAlsa *this);
+static gboolean 	gst_alsa_drain_audio (GstAlsa *this);
+static gboolean 	gst_alsa_stop_audio (GstAlsa *this);
+static gboolean 	gst_alsa_close_audio (GstAlsa *this);
+
+/* clock functions */
+static void	 		gst_alsa_clock_class_init 	(GstAlsaClockClass *klass);
+static void 			gst_alsa_clock_init 		(GstAlsaClock *clock);
+static GstAlsaClock*		gst_alsa_clock_new		(gchar *name, 
+								 GstAlsaClockGetTimeFunc func,
+								 GstAlsa* owner);
+
+static void			gst_alsa_clock_start	 	(GstAlsaClock *clock);
+static void			gst_alsa_clock_stop	 	(GstAlsaClock *clock);
+
+static GstClockTime		gst_alsa_clock_get_internal_time (GstClock *clock);
+static guint64			gst_alsa_clock_get_resolution	(GstClock *clock);
+static GstClockEntryStatus	gst_alsa_clock_wait		(GstClock *clock,
+								 GstClockEntry *entry);
+static void			gst_alsa_clock_unlock		(GstClock *clock, 
+								 GstClockEntry *entry);
+
+static GstClockTime		gst_alsa_sink_get_time		(GstAlsa *this);
+static GstClockTime		gst_alsa_src_get_time		(GstAlsa *this);
+static GstClock *		gst_alsa_get_clock		(GstElement *element);
+static void			gst_alsa_set_clock		(GstElement *element, 
+								 GstClock *clock);
+static GstClockClass *		clock_parent_class = NULL;
+/* static guint gst_alsa_clock_signals[LAST_SIGNAL] = { 0 }; */
+
+/* format conversions */
+static inline snd_pcm_uframes_t	gst_alsa_timestamp_to_samples 	(GstAlsa *		this, 
+								 GstClockTime 		time);
+static inline GstClockTime 	gst_alsa_samples_to_timestamp 	(GstAlsa *		this, 
+								 snd_pcm_uframes_t 	samples);
+static inline snd_pcm_uframes_t	gst_alsa_bytes_to_samples 	(GstAlsa *		this, 
+								 guint	 		bytes);
+static inline guint	 	gst_alsa_samples_to_bytes 	(GstAlsa *		this, 
+								 snd_pcm_uframes_t 	samples);
+static inline GstClockTime	gst_alsa_bytes_to_timestamp 	(GstAlsa *		this, 
+								 guint	 		bytes);
+static inline guint	 	gst_alsa_timestamp_to_bytes 	(GstAlsa *		this, 
+								 GstClockTime	 	time);
 
 /*** TYPE FUNCTIONS ***********************************************************/
 
-#define GST_TYPE_ALSA_FORMAT (gst_alsa_format_get_type())
-static GType
-gst_alsa_format_get_type (void)
-{
-  static GType type = 0;
-  static GEnumValue *values = NULL;
-  gint i;
-
-  if (values == NULL) {
-    /* the three: for -1, 0, and the terminating NULL */
-    values = g_new0 (GEnumValue, SND_PCM_FORMAT_LAST + 1);
- 
-    for (i = -1; i <= SND_PCM_FORMAT_LAST; i++) {
-      values[i + 1].value = i; /* UNKNOWN is -1 */
-      values[i + 1].value_name = g_strdup_printf ("%d", i);
-      values[i + 1].value_nick = g_strdup (snd_pcm_format_name ((snd_pcm_format_t) i));
-    }
-  }
-
-  if (!type)
-    type = g_enum_register_static ("GstAlsaFormat", values);
-
-  return type;
-}
 GType
 gst_alsa_get_type (void)
 {
@@ -225,9 +240,6 @@ enum
 {
   ARG_0,
   ARG_DEVICE,
-  ARG_FORMAT,
-  ARG_CHANNELS,
-  ARG_RATE,
   ARG_PERIODCOUNT,
   ARG_PERIODSIZE,
   ARG_BUFFERSIZE,
@@ -257,16 +269,6 @@ gst_alsa_class_init (GstAlsaClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
     g_param_spec_string ("device", "Device", "Alsa device, as defined in an asoundrc",
                          "default", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  /* the next 3 are only settable on srcs */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORMAT,
-    g_param_spec_enum ("format", "Format", "PCM audio format",
-                       GST_TYPE_ALSA_FORMAT, -1, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHANNELS,
-    g_param_spec_int ("channels", "Channels", "Number of channels",
-                      1, GST_ALSA_MAX_CHANNELS, 2, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
-    g_param_spec_int ("rate", "Rate", "Sample rate, in Hz",
-                      GST_ALSA_MIN_RATE, GST_ALSA_MAX_RATE, 44100, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PERIODCOUNT,
     g_param_spec_int ("period-count", "Period count", "Number of hardware buffers to use",
                       2, 64, 2, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
@@ -283,8 +285,10 @@ gst_alsa_class_init (GstAlsaClass *klass)
     g_param_spec_boolean ("mmap", "Use mmap'ed access", "Wether to use mmap (faster) or standard read/write (more compatible)",
                           TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  element_class->change_state = gst_alsa_change_state;
+  element_class->change_state    = gst_alsa_change_state;
   element_class->request_new_pad = gst_alsa_request_new_pad;
+  element_class->set_clock 	 = gst_alsa_set_clock;
+  element_class->get_clock 	 = gst_alsa_get_clock;
 }
 
 static void
@@ -308,16 +312,18 @@ gst_alsa_init (GstAlsa *this)
     gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_src_loop);
     this->pads[0].pad = gst_pad_new_from_template (gst_alsa_src_pad_factory (), "src");
     gst_pad_set_bufferpool_function(this->pads[0].pad, gst_alsa_src_get_buffer_pool);
-
-    /* set the rate to a sensible value. we can't have gobject construct this
-       manually since it only really makes sense on src elements. the rate can
-       be changed later through the gobject set property function. */
+    this->clock = gst_alsa_clock_new ("alsasrcclock", gst_alsa_src_get_time, this);
   } else if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SINK) {
     this->stream = SND_PCM_STREAM_PLAYBACK;
     gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_sink_loop);
     this->pads[0].pad = gst_pad_new_from_template (gst_alsa_sink_pad_factory (), "sink");
+    this->clock = gst_alsa_clock_new ("alsasinkclock", gst_alsa_sink_get_time, this);
+  } else {
+    g_assert_not_reached ();
   }
-
+  /* we hold a ref to our clock until we're disposed */
+  gst_object_ref (GST_OBJECT (this->clock));
+  gst_object_sink (GST_OBJECT (this->clock));
   gst_element_add_pad (GST_ELEMENT (this), this->pads[0].pad);
 
   gst_pad_set_link_function (this->pads[0].pad, gst_alsa_link);
@@ -335,6 +341,8 @@ gst_alsa_dispose (GObject *object)
       gst_data_unref (GST_DATA (this->pads[i].buf));
     }
   }
+  gst_object_unref (GST_OBJECT (this->clock));
+
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -351,21 +359,6 @@ gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value,
     if (this->device)
       g_free (this->device);
     this->device = g_strdup (g_value_get_string (value));
-    break;
-  case ARG_FORMAT:
-    /* setting this property only makes sense on sources */
-    if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC)
-      this->format->format = g_value_get_enum (value);
-    break;
-  case ARG_CHANNELS:
-    /* setting this property only makes sense on sources */
-    if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC)
-      this->format->channels = g_value_get_int (value);
-    break;
-  case ARG_RATE:
-    /* setting this property only makes sense on sources */
-    if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC)
-      this->format->rate = g_value_get_int (value);
     break;
   case ARG_PERIODCOUNT:
     g_return_if_fail (!GST_FLAG_IS_SET (this, GST_ALSA_RUNNING));
@@ -387,7 +380,7 @@ gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value,
     this->mmap = g_value_get_boolean (value);
     return;
   default:
-    GST_DEBUG (0, "Unknown arg");
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     return;
   }
 
@@ -412,15 +405,6 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value,
   case ARG_DEVICE:
     g_value_set_string (value, this->device);
     break;
-  case ARG_FORMAT:
-    g_value_set_enum (value, this->format ? this->format->format : SND_PCM_FORMAT_UNKNOWN);
-    break;
-  case ARG_CHANNELS:
-    g_value_set_int (value, this->format ? this->format->channels : 2);
-    break;
-  case ARG_RATE:
-    g_value_set_int (value, this->format ? this->format->rate : 44100);
-    break;
   case ARG_PERIODCOUNT:
     g_value_set_int (value, this->period_count);
     break;
@@ -437,7 +421,7 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value,
     g_value_set_boolean (value, this->mmap);
     break;
   default:
-    GST_DEBUG (0, "Unknown arg");
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
   }
 }
@@ -950,15 +934,28 @@ gst_alsa_change_state (GstElement *element)
     if (!GST_FLAG_IS_SET (element, GST_ALSA_RUNNING))
       if (!gst_alsa_start_audio (this))
         return GST_STATE_FAILURE;
+    this->transmitted = 0;
     break;
   case GST_STATE_PAUSED_TO_PLAYING:
-    if (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED)
-      snd_pcm_pause (this->handle, 0);
+    if (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED) {
+      int err = snd_pcm_pause (this->handle, 0);
+      if (err < 0) {
+        g_warning ("Error unpausing sound: %s", snd_strerror (err));
+        return GST_STATE_FAILURE;
+      }
+      gst_alsa_clock_start (this->clock);
+    }
     break;
   case GST_STATE_PLAYING_TO_PAUSED:
     if (GST_ALSA_CAPS_IS_SET(this, GST_ALSA_CAPS_PAUSE)) {
-      if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)
-        snd_pcm_pause (this->handle, 1);
+      if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING) {
+        int err = snd_pcm_pause (this->handle, 1);
+        if (err < 0) {
+          g_warning ("Error pausing sound: %s", snd_strerror (err));
+          return GST_STATE_FAILURE;
+        }
+        gst_alsa_clock_stop (this->clock);
+      }
       break;
     }
     /* if device doesn't know how to pause, we just stop */
@@ -1117,6 +1114,8 @@ gst_alsa_pcm_wait (GstAlsa *this)
 inline static gboolean
 gst_alsa_start (GstAlsa *this)
 {
+  gint avail;
+
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "Starting playback");
 
   switch (snd_pcm_state(this->handle)) {
@@ -1136,12 +1135,18 @@ gst_alsa_start (GstAlsa *this)
       g_assert_not_reached ();
       break;
   }
+  avail = (gint) gst_alsa_update_avail (this);
+  if (avail < 0)
+    return FALSE;
+  this->transmitted = this->period_count * this->period_size - avail;
+  gst_alsa_clock_start (this->clock);
   return TRUE;
 }
 static void
 gst_alsa_sink_loop (GstElement *element)
 {
   snd_pcm_sframes_t avail, avail2, copied;
+  snd_pcm_uframes_t samplestamp;
   gint i;
   guint bytes; /* per channel */
   GstAlsa *this = GST_ALSA (element);
@@ -1154,20 +1159,21 @@ sink_restart:
   if (avail == -EPIPE) goto sink_restart;
   if (avail < 0) return;
   if (avail > 0) {
-    int width;
-    
-    /* Not enough space. We grab data nonetheless and sleep afterwards */
+
+  /* Not enough space. We grab data nonetheless and sleep afterwards */
     if (avail < this->period_size) {
       avail = this->period_size;
     }
     
     /* check how many bytes we still have in all our bytestreams */
-    bytes = G_MAXUINT;
+    /* initialize this value to a somewhat sane state, we might alloc this much data below (which would be a bug, but who knows)... */
+    bytes = this->period_size * this->period_count * element->numpads * 8; /* must be > max sample size in bytes */
     for (i = 0; i < element->numpads; i++) {
       GstAlsaPad *pad = &this->pads[i];
       g_assert (pad->pad != NULL);
       while (pad->size == 0) {
-        pad->buf = gst_pad_pull (pad->pad);
+        if (!pad->buf)
+          pad->buf = gst_pad_pull (pad->pad);
         if (GST_IS_EVENT (pad->buf)) {
 	  gboolean cont = gst_alsa_sink_check_event (this, i, GST_EVENT (pad->buf));
 	  pad->buf = NULL;
@@ -1175,19 +1181,55 @@ sink_restart:
 	    continue;
 	  return;
 	}
-        pad->size = pad->buf->size;
-        pad->data = pad->buf->data;
+        /* caps nego failed somewhere */
+        if (this->format == NULL) {
+          gst_element_error (GST_ELEMENT (this), "alsasink: No caps available");
+          return;
+        }
+        samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (pad->buf));
+        if (!GST_BUFFER_TIMESTAMP_IS_VALID (pad->buf) || 
+	     /* difference between them is < GST_ALSA_DEVIATION */
+	    ((this->transmitted + GST_ALSA_DEVIATION > samplestamp) &&
+	     (this->transmitted < GST_ALSA_DEVIATION + samplestamp))) {
+no_difference:
+	  pad->size = pad->buf->size;
+          pad->data = pad->buf->data;
+          pad->behaviour = 0;
+	} else if (samplestamp > this->transmitted) {
+	  /* there are empty samples in front of us, fill them with silence */
+	  int samples = MIN (bytes, samplestamp - this->transmitted) * 
+	             (element->numpads == 1 ? this->format->channels : 1);
+	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
+	  g_print ("Allocating %d bytes (%d silent samples) now to resync to timestamp\n", size, samples);
+	  pad->data = g_malloc (size);
+	  if (!pad->data) {
+	    g_warning ("GstAlsa: error allocating %d bytes, buffers unsynced now.", size);
+	    goto no_difference;
+	  }
+	  pad->size = size;
+	  if (0 != snd_pcm_format_set_silence (this->format->format, pad->data, samples)) {
+	    g_warning ("GstAlsa: error silencing buffer, enjoy the noise.");
+	  }
+	  pad->behaviour = 1;
+	} else if (gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp) >= pad->buf->size) {
+	  /* this buffer is way behind */
+	  gst_buffer_unref (pad->buf);
+	  pad->buf = NULL;
+	  continue;
+	} else if (this->transmitted > samplestamp) {
+	  gint difference = gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp);	
+	  /* this buffer is only a bit behind */
+          pad->size = pad->buf->size - difference;
+          pad->data = pad->buf->data + difference;
+          pad->behaviour = 0;
+	} else {
+	  g_assert_not_reached ();
+	}
       }
       bytes = MIN (bytes, pad->size);
     }
-    /* caps nego failed somewhere */
-    if (this->format == NULL) {
-      gst_element_error (GST_ELEMENT (this), "alsasink: No caps available");
-      return;
-    }
 
-    width = snd_pcm_format_physical_width (this->format->format);
-    avail = MIN (avail, bytes / (width / 8 ) / (element->numpads == 1 ? this->format->channels : 1));
+    avail = MIN (avail, gst_alsa_bytes_to_samples (this, bytes));
 
     /* wait until the hw buffer has enough space */
     while (gst_element_get_state (element) == GST_STATE_PLAYING && (avail2 = gst_alsa_update_avail (this)) < avail) {
@@ -1204,19 +1246,32 @@ sink_restart:
     /* put this data into alsa */
     if ((copied = this->transmit (this, &avail)) < 0)
       return;
-
+    /* update our clock */
+    this->transmitted += copied;
     /* flush the data */
-    bytes = copied * ( width / 8 ) * (element->numpads == 1 ? this->format->channels : 1);
+    bytes = gst_alsa_samples_to_bytes (this, copied);
     for (i = 0; i < element->numpads; i++) {
       GstAlsaPad *pad = &this->pads[i];
       if ((pad->size -= bytes) == 0) {
-        gst_data_unref (GST_DATA (pad->buf));
-        pad->buf = NULL;  /* needed? */
-        pad->data = NULL; /* needed? */
-        continue;
+        switch (pad->behaviour) {
+	case 0:
+          gst_data_unref (GST_DATA (pad->buf));
+          pad->buf = NULL;  /* needed? */
+          pad->data = NULL; /* needed? */
+          pad->behaviour = 0; /* needed? */
+          continue;
+	case 1:
+          g_free (pad->data);
+          pad->data = NULL; /* needed? */
+          pad->behaviour = 0; /* needed? */
+	  continue;
+	default:
+	  g_assert_not_reached ();
+	}
       }
       g_assert (pad->size > 0);
-      pad->data += bytes;
+      if (pad->behaviour != 1)
+        pad->data += bytes;
     }
   }
 
@@ -1361,8 +1416,48 @@ gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event)
       case GST_EVENT_INTERRUPT:
 	cont = FALSE;
         break;
+      case GST_EVENT_NEW_MEDIA:
+	/* only the first pad my seek */
+	if (pad_nr != 0)
+	  break;	    
+	
+	this->transmitted = 0;
+	/* FIXME: Notify the clock that we're at offset 0 again */
+	break;
+      case GST_EVENT_DISCONTINUOUS: 
+	{
+	  gint64 value;
+	  
+	  /* only the first pad my seek */
+	  if (pad_nr != 0) {
+	    break;	    
+	  }
+	  if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+	    if (!gst_clock_handle_discont (GST_ELEMENT (this)->clock, value))
+	      g_warning ("GstAlsa: clock couldn't handle discontinuity");
+	  }
+	  if (!gst_event_discont_get_value (event, GST_FORMAT_UNITS, &value)) {
+	    if (!gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
+	      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+	        g_warning ("GstAlsa: Could not acquire samplecount after seek, the clock might screw your pipeline now");
+	        break;
+	      } else {
+	        if (this->format) /* discont event before any data (and before any caps...) */
+	          value = gst_alsa_timestamp_to_samples (this, value);
+	      }
+	    } else {
+              if (this->format) /* discont event before any data (and before any caps...) */
+	        value = gst_alsa_bytes_to_samples (this, value);
+	    }
+	  }
+	  this->transmitted = value;
+	  if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)
+	    gst_alsa_clock_start (this->clock);
+	  /* flush the current pad */
+	  break;
+        }
       default:
-        g_warning ("GstAlsaSink: got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
+        g_warning ("GstAlsa: got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
         break;
     }
     gst_event_unref (event);
@@ -1561,6 +1656,7 @@ gst_alsa_drain_audio (GstAlsa *this)
   if (this->stream == SND_PCM_STREAM_PLAYBACK) {
     ERROR_CHECK (snd_pcm_drain (this->handle),
                  "couldn't stop and drain buffer: %s");
+    gst_alsa_clock_stop (this->clock);
   }
 
   GST_FLAG_UNSET (this, GST_ALSA_RUNNING);  
@@ -1579,6 +1675,7 @@ gst_alsa_stop_audio (GstAlsa *this)
   if (this->stream == SND_PCM_STREAM_PLAYBACK) {
     ERROR_CHECK (snd_pcm_drop (this->handle),
                  "couldn't stop (dropping frames): %s");
+    gst_alsa_clock_stop (this->clock);
   }
 
   GST_FLAG_UNSET (this, GST_ALSA_RUNNING);  
@@ -1597,6 +1694,219 @@ gst_alsa_close_audio (GstAlsa *this)
   GST_FLAG_UNSET (this, GST_ALSA_OPEN);
 
   return TRUE;
+}
+
+/*** CLOCK FUNCTIONS **********************************************************/
+
+GType
+gst_alsa_clock_get_type (void)
+{ 
+  static GType clock_type = 0;
+	    
+  if (!clock_type) {
+    static const GTypeInfo clock_info = {
+      sizeof (GstAlsaClockClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_alsa_clock_class_init,
+      NULL,
+      NULL,
+      sizeof (GstAlsaClock),
+      4,
+      (GInstanceInitFunc) gst_alsa_clock_init,
+      NULL
+    };
+    clock_type = g_type_register_static (GST_TYPE_CLOCK, "GstAlsaClock",
+                                         &clock_info, 0);
+  }
+  return clock_type;
+}
+static void
+gst_alsa_clock_class_init (GstAlsaClockClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstObjectClass *gstobject_class;
+  GstClockClass *gstclock_class;
+
+  gobject_class = (GObjectClass*) klass;
+  gstobject_class = (GstObjectClass*) klass;
+  gstclock_class = (GstClockClass*) klass;
+
+  clock_parent_class = g_type_class_ref (GST_TYPE_CLOCK);
+
+  gstclock_class->get_internal_time = gst_alsa_clock_get_internal_time;
+  gstclock_class->get_resolution = gst_alsa_clock_get_resolution;
+  gstclock_class->wait = gst_alsa_clock_wait;
+  gstclock_class->unlock = gst_alsa_clock_unlock;
+}
+static void
+gst_alsa_clock_init (GstAlsaClock *clock)
+{
+  gst_object_set_name (GST_OBJECT (clock), "GstAlsaClock");
+}
+GstAlsaClock*
+gst_alsa_clock_new (gchar *name, GstAlsaClockGetTimeFunc get_time, GstAlsa *owner)
+{
+  GstAlsaClock *alsa_clock = GST_ALSA_CLOCK (g_object_new (GST_TYPE_ALSA_CLOCK, NULL));
+
+  g_assert (alsa_clock);
+
+  alsa_clock->get_time = get_time;
+  alsa_clock->owner = owner;
+  alsa_clock->adjust = 0;
+
+  gst_object_set_name (GST_OBJECT (alsa_clock), name);
+
+  return alsa_clock;
+}
+void
+gst_alsa_clock_start (GstAlsaClock *clock)
+{
+  GTimeVal timeval;
+  g_get_current_time (&timeval);
+
+  if (clock->owner->format) {
+    clock->adjust = GST_TIMEVAL_TO_TIME (timeval) - clock->get_time (clock->owner);
+  } else {
+    clock->adjust = GST_TIMEVAL_TO_TIME (timeval);
+  }
+}
+void
+gst_alsa_clock_stop (GstAlsaClock *clock)
+{
+  clock->adjust = 0;
+}
+static GstClockTime
+gst_alsa_clock_get_internal_time (GstClock *clock)
+{
+  GstAlsaClock *alsa_clock = GST_ALSA_CLOCK (clock);
+  
+  if (alsa_clock->adjust) {
+    return alsa_clock->get_time (alsa_clock->owner) + alsa_clock->adjust;
+  } else {
+    GTimeVal timeval;
+    g_get_current_time (&timeval);
+    return GST_TIMEVAL_TO_TIME (timeval);
+  }
+}
+static guint64
+gst_alsa_clock_get_resolution (GstClock *clock)
+{
+  GstAlsaClock *this = GST_ALSA_CLOCK (clock);
+
+  if (this->owner->format) {
+    return GST_SECOND / this->owner->format->rate;
+  } else {
+    /* FIXME: is there an "unknown" value? We just return the sysclock's time by default */
+    return 1 * GST_USECOND;
+  }
+}
+static GstClockEntryStatus
+gst_alsa_clock_wait (GstClock *clock, GstClockEntry *entry)
+{
+  GstClockTime target, entry_time;
+  GstClockTimeDiff diff;
+  GstAlsaClock *this = GST_ALSA_CLOCK (clock);
+
+  entry_time = this->get_time (this->owner);
+  diff = GST_CLOCK_ENTRY_TIME (entry) - gst_clock_get_time (clock);
+
+  if (diff < 0)
+    return GST_CLOCK_ENTRY_EARLY;
+    
+  if (diff > clock->max_diff) {
+    g_warning ("GstAlsaClock: abnormal clock request diff: %" G_GINT64_FORMAT") >"
+               "  %"G_GINT64_FORMAT, diff, clock->max_diff);
+    return GST_CLOCK_ENTRY_EARLY;
+  }
+  
+  target = entry_time + diff;
+
+  GST_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
+		            " target %" G_GUINT64_FORMAT
+			    " now %" G_GUINT64_FORMAT,
+                            target, GST_CLOCK_ENTRY_TIME (entry), entry_time);
+
+  while (this->get_time (this->owner) < target && this->last_unlock < entry_time) {
+    g_usleep (gst_alsa_clock_get_resolution (clock) * G_USEC_PER_SEC / GST_SECOND);
+  }
+
+  return entry->status;
+}
+static void
+gst_alsa_clock_unlock (GstClock *clock, GstClockEntry *entry)
+{
+  GstAlsaClock *this = GST_ALSA_CLOCK (clock);
+
+  this->last_unlock = this->get_time (this->owner);
+}
+static GstClockTime
+gst_alsa_sink_get_time (GstAlsa *this)
+{
+  snd_pcm_sframes_t delay;
+  
+  if (snd_pcm_delay (this->handle, &delay) == 0) {
+    return GST_SECOND * (GstClockTime) (this->transmitted > delay ? this->transmitted - delay : 0) / this->format->rate;
+  } else {
+    return 0;
+  }
+}
+static GstClockTime 
+gst_alsa_src_get_time (GstAlsa *this)
+{
+  snd_pcm_sframes_t delay;
+  
+  if (snd_pcm_delay (this->handle, &delay) == 0) {
+    return GST_SECOND * (this->transmitted + delay) / this->format->rate;
+  } else {
+    return 0;
+  }
+}
+static GstClock *
+gst_alsa_get_clock (GstElement *element)
+{
+  return GST_CLOCK (GST_ALSA (element)->clock);
+}
+static void 
+gst_alsa_set_clock (GstElement *element, GstClock *clock)
+{
+  /* we only must have this function so everybody knows we use a clock */
+}
+
+/*** FORMAT FUNCTIONS *********************************************************/
+/* ALL THES FUNCTIONS ASSUME this->format != NULL */
+
+static inline snd_pcm_uframes_t
+gst_alsa_timestamp_to_samples (GstAlsa *this, GstClockTime time)
+{
+  return (snd_pcm_uframes_t) ((time * this->format->rate + this->format->rate / 2) / GST_SECOND);
+}
+/* assumes that this->format != NULL */
+static inline GstClockTime
+gst_alsa_samples_to_timestamp (GstAlsa *this, snd_pcm_uframes_t samples)
+{
+  return (GstClockTime) ((samples * GST_SECOND + GST_SECOND / 2)/ this->format->rate);
+}
+
+static inline snd_pcm_uframes_t
+gst_alsa_bytes_to_samples (GstAlsa *this, guint bytes)
+{
+  return bytes / (snd_pcm_format_physical_width (this->format->format) / 8) / (GST_ELEMENT (this)->numpads == 1 ? this->format->channels : 1);
+}
+static inline guint
+gst_alsa_samples_to_bytes (GstAlsa *this, snd_pcm_uframes_t samples)
+{
+  return samples * snd_pcm_format_physical_width (this->format->format) / 8 * (GST_ELEMENT (this)->numpads == 1 ? this->format->channels : 1);
+}
+static inline GstClockTime
+gst_alsa_bytes_to_timestamp (GstAlsa *this, guint bytes)
+{
+  return gst_alsa_samples_to_timestamp (this, gst_alsa_bytes_to_samples (this, bytes));
+}
+static inline guint
+gst_alsa_timestamp_to_bytes (GstAlsa *this, GstClockTime time)
+{
+  return gst_alsa_samples_to_bytes (this, gst_alsa_timestamp_to_samples (this, time));
 }
 
 

@@ -31,6 +31,9 @@
 #define GST_ALSA_MAX_CHANNELS 64 /* we don't support more than 64 channels */
 #define GST_ALSA_MIN_RATE 8000
 #define GST_ALSA_MAX_RATE 192000
+/* max allowed deviation between timestamp and playback pointer before killing/inserting samples 
+   should be >= 1 to allow rounding errors on timestamp <=> samplerate conversions */
+#define GST_ALSA_DEVIATION 2 
 
 #define GST_ALSA(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa)
 #define GST_ALSA_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA, GstAlsaClass)
@@ -50,6 +53,12 @@
 #define GST_IS_ALSA_SRC_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA_SRC)
 #define GST_TYPE_ALSA_SRC gst_alsa_src_get_type()
 
+#define GST_ALSA_CLOCK(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_CLOCK,GstAlsaClock))
+#define GST_ALSA_CLOCK_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_CLOCK,GstAlsaClockClass))
+#define GST_IS_ALSA_CLOCK(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_CLOCK))
+#define GST_IS_ALSA_CLOCK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_CLOCK))
+#define GST_TYPE_ALSA_CLOCK (gst_alsa_clock_get_type())
+
 /* I would have preferred to avoid this variety of trickery, but without it i
  * can't tell whether I'm a source or a sink upon creation. */
 
@@ -59,6 +68,11 @@ typedef GstAlsa GstAlsaSink;
 typedef GstAlsaClass GstAlsaSinkClass;
 typedef GstAlsa GstAlsaSrc;
 typedef GstAlsaClass GstAlsaSrcClass;
+
+typedef struct _GstAlsaClock GstAlsaClock;
+typedef struct _GstAlsaClockClass GstAlsaClockClass;
+
+typedef GstClockTime (*GstAlsaClockGetTimeFunc) (GstAlsa *owner);
 
 enum {
   GST_ALSA_OPEN = GST_ELEMENT_FLAG_LAST,
@@ -84,10 +98,12 @@ typedef enum {
 typedef int (*GstAlsaTransmitFunction) (GstAlsa *this, snd_pcm_sframes_t *avail);
 
 typedef struct {
-  GstPad *pad;
-  guint8 *data; /* pointer into buffer */
-  guint size; /* sink: bytes left in buffer */
-  GstBuffer *buf; /* current buffer */
+  GstPad *	pad;
+  guint8 *	data;	/* pointer into buffer */
+  guint		size;	/* sink: bytes left in buffer */
+  GstBuffer *	buf;	/* current buffer */
+  guint		behaviour; /* 0 = data points into buffer (so unref when size == 0), 
+                              1 = data should be freed, use buffer after that */
 } GstAlsaPad;
 typedef struct {
   snd_pcm_format_t format;
@@ -115,14 +131,39 @@ struct _GstAlsa {
   unsigned int period_count;
 
   gboolean autorecover;
-};
 
+  /* clocking */
+  GstAlsaClock         *clock;			/* our provided clock */
+  snd_pcm_uframes_t	transmitted; 		/* samples transmitted since last sync 
+                                                   This thing actually is our master clock.
+						   We will event insert silent samples or
+						   drop some to sync to incoming timestamps.
+                                                 */
+};
 struct _GstAlsaClass {
   GstElementClass parent_class;
 };
 
-GType gst_alsa_get_type (void);
-GType gst_alsa_sink_get_type (void);
-GType gst_alsa_src_get_type (void);
+
+struct _GstAlsaClock {
+  GstSystemClock		parent;
+
+  GstAlsaClockGetTimeFunc	get_time;
+  GstAlsa *			owner;
+
+  GstClockTimeDiff		adjust; 	/* time_of_clock - time_of_element at sync point */
+
+  GstClockTime			last_unlock;    /* time of last unlock request */
+};
+
+struct _GstAlsaClockClass {
+  GstSystemClockClass 		parent_class;
+};
+
+GType 				gst_alsa_get_type		(void);
+GType 				gst_alsa_sink_get_type		(void);
+GType 				gst_alsa_src_get_type		(void);
+
+GType                   	gst_alsa_clock_get_type		(void);
 
 #endif /* __ALSA_H__ */
