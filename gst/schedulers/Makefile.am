@@ -15,6 +15,8 @@ if AS_LIBTOOL_WIN32
 
 as_libtool_noinst_DATA_files = $(AS_LIBTOOL_LIB).lib
 
+as_libtool_LDFLAGS = -no-undefined
+
 # depend on this in install-data-local
 as-libtool-install-data-local:
 	for i in $(AS_LIBTOOL_LIBS); do \

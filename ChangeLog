@@ -1,5 +1,17 @@
 2005-03-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstcaps.h:
+	* gst/gstdata.h:
+	* gst/gstprobe.h:
+	* gst/gststructure.h:
+	* gst/gsttaginterface.h:
+	* gst/schedulers/Makefile.am:
+	a G_GNUC_CONST function is not allowed to change global
+	memory, so it is not suited for _get_type() functions.
+	Backport Makefile addition from HEAD.
+
+2005-03-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/Makefile.am:
 	* gst/autoplug/gstsearchfuncs.c: (gst_autoplug_caps_intersect):
 	* gst/autoplug/gstspider.c: (gst_spider_identity_plug),
