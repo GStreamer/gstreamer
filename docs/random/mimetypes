@@ -256,16 +256,15 @@ for convenience, the two-byte hexcodes (as are being used for identification
 in AVI files) are also given
 
 Preface - (optional) properties for all audio formats:
-  currently none
+  'rate' = X (int) <- sampling rate
+  'channels' = X (int) <- number of audio channels
 
 1 - Raw Audio
   mimetype: audio/raw
-  properties: 'rate' = X (INT) <- samplerate
-              'width' = X (INT) <- memory bits per sample
+  properties: 'width' = X (INT) <- memory bits per sample
               'depth' = X (INT) <- used bits per sample
               'law' = 0/1/2 (INT) <- no law (0), alaw (1) or mulaw (2)
               'signedness' = X (BOOLEAN)
-              'channels' = X (INT) <- number of audio channels
               'endianness' = 1234/4321 <- endianness of audio stream
 
 2 - MPEG-1 layer 1/2/3 audio
@@ -284,6 +283,10 @@ Preface - (optional) properties for all audio formats:
 
 6 - FLAC (Free Lossless Audio Codec)
   mimetype: audio/x-flac
+
+7 - MACE 3/6 (Quicktime audio)
+  mimetype: audio/x-mace
+  properties: 'maceversion' = 3/6 (INT)
 
 4 - Status of this document
 ---------------------------
