@@ -31,7 +31,6 @@ GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
 /* temporary hack */
-#define g_print(...)            /* */
 #define gst_util_dump_mem(a,b)  /* */
 
 #define QTDEMUX_GUINT32_GET(a)	(GST_READ_UINT32_BE(a))
@@ -773,7 +772,7 @@ gst_qtdemux_loop_header (GstElement * element)
           }
           gst_event_unref (event);
         }
-        g_print ("Pushing buf with time=%" GST_TIME_FORMAT "\n",
+        GST_DEBUG ("Pushing buf with time=%" GST_TIME_FORMAT "\n",
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
         gst_pad_push (stream->pad, GST_DATA (buf));
 
@@ -836,7 +835,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   gst_pad_set_formats_function (stream->pad, gst_qtdemux_get_src_formats);
   gst_pad_set_convert_function (stream->pad, gst_qtdemux_src_convert);
 
-  g_print ("setting caps %s\n", gst_caps_to_string (stream->caps));
+  GST_DEBUG ("setting caps %s\n", gst_caps_to_string (stream->caps));
   gst_pad_set_explicit_caps (stream->pad, stream->caps);
 
   GST_DEBUG ("adding pad %s %p to qtdemux %p",
@@ -1138,7 +1137,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       }
       len = QTDEMUX_GUINT32_GET (buf);
       if (len < 8) {
-        GST_LOG ("bad length");
+        GST_ERROR ("atom length too short (%d < 8)", len);
+        break;
+      }
+      if (len > (end - buf)) {
+        GST_ERROR ("atom length too long (%d > %d)", len, end - buf);
         break;
       }
 
@@ -1165,6 +1168,14 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           GST_LOG ("buffer overrun");
         }
         len = QTDEMUX_GUINT32_GET (buf);
+        if (len < 8) {
+          GST_ERROR ("length too short (%d < 8)");
+          break;
+        }
+        if (len > (end - buf)) {
+          GST_ERROR ("length too long (%d > %d)", len, end - buf);
+          break;
+        }
 
         child = g_node_new (buf);
         g_node_append (node, child);
@@ -1189,6 +1200,14 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
             GST_LOG ("buffer overrun");
           }
           len = QTDEMUX_GUINT32_GET (buf);
+          if (len < 8) {
+            GST_ERROR ("length too short (%d < 8)");
+            break;
+          }
+          if (len > (end - buf)) {
+            GST_ERROR ("length too long (%d > %d)", len, end - buf);
+            break;
+          }
 
           child = g_node_new (buf);
           g_node_append (node, child);
@@ -1203,9 +1222,9 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       guint32 version;
       int tlen;
 
-      g_print ("parsing in mp4v\n");
+      GST_DEBUG ("parsing in mp4v\n");
       version = QTDEMUX_GUINT32_GET (buffer + 16);
-      g_print ("version %08x\n", version);
+      GST_DEBUG ("version %08x\n", version);
       if (1 || version == 0x00000000) {
 
         buf = buffer + 0x32;
@@ -1215,9 +1234,9 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
          * the iso format uses C strings. Check the file
          * type before attempting to parse the string here. */
         tlen = QTDEMUX_GUINT8_GET (buf);
-        g_print ("tlen = %d\n", tlen);
+        GST_DEBUG ("tlen = %d\n", tlen);
         buf++;
-        g_print ("string = %.*s\n", tlen, (char *) buf);
+        GST_DEBUG ("string = %.*s\n", tlen, (char *) buf);
         /* the string has a reserved space of 32 bytes so skip
          * the remaining 31 */
         buf += 31;
@@ -1234,6 +1253,14 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           len = QTDEMUX_GUINT32_GET (buf);
           if (len == 0)
             break;
+          if (len < 8) {
+            GST_ERROR ("length too short (%d < 8)");
+            break;
+          }
+          if (len > (end - buf)) {
+            GST_ERROR ("length too long (%d > %d)", len, end - buf);
+            break;
+          }
 
           child = g_node_new (buf);
           g_node_append (node, child);
@@ -1257,7 +1284,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         }
         len = QTDEMUX_GUINT32_GET (buf);
         if (len < 8) {
-          GST_LOG ("bad length");
+          GST_ERROR ("length too short (%d < 8)");
+          break;
+        }
+        if (len > (end - buf)) {
+          GST_ERROR ("length too long (%d > %d)", len, end - buf);
           break;
         }
 
@@ -1277,16 +1308,16 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       buf = buffer + 12;
       end = buffer + length;
       version = QTDEMUX_GUINT32_GET (buffer + 16);
-      g_print ("version %08x\n", version);
+      GST_DEBUG ("version %08x\n", version);
       if (1 || version == 0x00000000) {
 
         buf = buffer + 0x32;
         end = buffer + length;
 
         tlen = QTDEMUX_GUINT8_GET (buf);
-        g_print ("tlen = %d\n", tlen);
+        GST_DEBUG ("tlen = %d\n", tlen);
         buf++;
-        g_print ("string = %.*s\n", tlen, (char *) buf);
+        GST_DEBUG ("string = %.*s\n", tlen, (char *) buf);
         buf += tlen;
         buf += 23;
 
@@ -1301,6 +1332,14 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           len = QTDEMUX_GUINT32_GET (buf);
           if (len == 0)
             break;
+          if (len < 8) {
+            GST_ERROR ("length too short (%d < 8)");
+            break;
+          }
+          if (len > (end - buf)) {
+            GST_ERROR ("length too long (%d > %d)", len, end - buf);
+            break;
+          }
 
           child = g_node_new (buf);
           g_node_append (node, child);
@@ -1816,7 +1855,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     qtdemux_parse_udta (qtdemux, udta);
 
     if (qtdemux->tag_list) {
-      g_print ("calling gst_element_found_tags with %s\n",
+      GST_DEBUG ("calling gst_element_found_tags with %s\n",
           gst_structure_to_string (qtdemux->tag_list));
       gst_element_found_tags (GST_ELEMENT (qtdemux), qtdemux->tag_list);
     }
@@ -2258,7 +2297,7 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
     return;
   }
 
-  g_print ("new tag list\n");
+  GST_DEBUG ("new tag list\n");
   qtdemux->tag_list = gst_tag_list_new ();
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__nam);
@@ -2293,7 +2332,7 @@ qtdemux_tag_add (GstQTDemux * qtdemux, const char *tag, GNode * node)
     type = QTDEMUX_GUINT32_GET (data->data + 8);
     if (type == 0x00000001) {
       s = g_strndup ((char *) data->data + 16, len - 16);
-      g_print ("adding tag %s\n", s);
+      GST_DEBUG ("adding tag %s\n", s);
       gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
       g_free (s);
     }
@@ -2333,42 +2372,42 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   gst_util_dump_mem (ptr, len);
   ptr += 8;
-  g_print ("version/flags = %08x\n", QTDEMUX_GUINT32_GET (ptr));
+  GST_DEBUG ("version/flags = %08x\n", QTDEMUX_GUINT32_GET (ptr));
   ptr += 4;
   while (ptr < end) {
     tag = QTDEMUX_GUINT8_GET (ptr);
-    g_print ("tag = %02x\n", tag);
+    GST_DEBUG ("tag = %02x\n", tag);
     ptr++;
     len = get_size (ptr, &ptr);
-    g_print ("len = %d\n", len);
+    GST_DEBUG ("len = %d\n", len);
 
     switch (tag) {
       case 0x03:
-        g_print ("ID %04x\n", QTDEMUX_GUINT16_GET (ptr));
-        g_print ("priority %04x\n", QTDEMUX_GUINT8_GET (ptr + 2));
+        GST_DEBUG ("ID %04x\n", QTDEMUX_GUINT16_GET (ptr));
+        GST_DEBUG ("priority %04x\n", QTDEMUX_GUINT8_GET (ptr + 2));
         ptr += 3;
         break;
       case 0x04:
-        g_print ("object_type_id %02x\n", QTDEMUX_GUINT8_GET (ptr));
-        g_print ("stream_type %02x\n", QTDEMUX_GUINT8_GET (ptr + 1));
-        g_print ("buffer_size_db %02x\n", QTDEMUX_GUINT24_GET (ptr + 2));
-        g_print ("max bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 5));
-        g_print ("avg bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 9));
+        GST_DEBUG ("object_type_id %02x\n", QTDEMUX_GUINT8_GET (ptr));
+        GST_DEBUG ("stream_type %02x\n", QTDEMUX_GUINT8_GET (ptr + 1));
+        GST_DEBUG ("buffer_size_db %02x\n", QTDEMUX_GUINT24_GET (ptr + 2));
+        GST_DEBUG ("max bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 5));
+        GST_DEBUG ("avg bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 9));
         ptr += 13;
         break;
       case 0x05:
-        g_print ("data:\n");
+        GST_DEBUG ("data:\n");
         gst_util_dump_mem (ptr, len);
         data_ptr = ptr;
         data_len = len;
         ptr += len;
         break;
       case 0x06:
-        g_print ("data %02x\n", QTDEMUX_GUINT8_GET (ptr));
+        GST_DEBUG ("data %02x\n", QTDEMUX_GUINT8_GET (ptr));
         ptr += 1;
         break;
       default:
-        g_print ("parse error\n");
+        GST_ERROR ("parse error\n");
     }
   }
 
