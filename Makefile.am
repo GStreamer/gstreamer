@@ -43,7 +43,7 @@ DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf testsuite
 EXTRA_DIST=gst-plugins.spec depcomp gst-element-check.m4 \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
            gstreamer-play.pc.in gstreamer-play-uninstalled.pc.in \
-	   AUTHORS COPYING README RELEASE \
+	   AUTHORS COPYING README RELEASE REQUIREMENTS \
 	   ChangeLog autogen.sh common m4
 
 dist-hook:
