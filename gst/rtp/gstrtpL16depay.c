@@ -19,7 +19,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_L16parse_details = {
   "RTP packet parser",
-  "RtpL16Parse",
+  "Codec/Network",
   "GPL",
   "Extracts raw audio from RTP packets",
   VERSION,
