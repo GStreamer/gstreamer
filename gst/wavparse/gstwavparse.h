@@ -77,8 +77,6 @@ struct _GstWavParse {
   guint64 seek_offset;
   
   GstBuffer *buf;
-
-  GstCaps *metadata;
 };
 
 struct _GstWavParseClass {

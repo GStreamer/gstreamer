@@ -41,25 +41,24 @@ enum
   ARG_FREQUENCY
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
- 	"src",
-	GST_PAD_SRC,
-	GST_PAD_ALWAYS,
-	GST_CAPS_NEW (
-    		 "gsm_gsm",
-    		 "audio/x-gsm",
-      		 "rate",       GST_PROPS_INT_RANGE (1000, 48000))
-)
- 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-	"sink",
-	GST_PAD_SINK,
-	GST_PAD_ALWAYS,
-	GST_CAPS_NEW (
-		"rtp",
-		"application/x-rtp",
-		NULL)
+static GstStaticPadTemplate gst_rtpgsmparse_src_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS, 
+    GST_STATIC_CAPS ( "audio/x-gsm, "
+      "rate = (int) [ 1000, 48000 ]"
+    )
 );
+
+static GstStaticPadTemplate gst_rtpgsmparse_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS, 
+    GST_STATIC_CAPS ("application/x-rtp")
+);
+
 
 static void gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass);
@@ -103,9 +102,9 @@ gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+      gst_static_pad_template_get(&gst_rtpgsmparse_src_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+      gst_static_pad_template_get(&gst_rtpgsmparse_sink_template));
   gst_element_class_set_details (element_class, &gst_rtp_gsmparse_details);
 }
 
@@ -133,8 +132,10 @@ gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass)
 static void
 gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse)
 {
-  rtpgsmparse->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_factory), "src");
-  rtpgsmparse->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+  rtpgsmparse->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&gst_rtpgsmparse_src_template), "src");
+  rtpgsmparse->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&gst_rtpgsmparse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (rtpgsmparse), rtpgsmparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (rtpgsmparse), rtpgsmparse->sinkpad);
   gst_pad_set_chain_function (rtpgsmparse->sinkpad, gst_rtpgsmparse_chain);
@@ -161,10 +162,8 @@ gst_rtpgsm_caps_nego (GstRtpGSMParse *rtpgsmparse)
 {
   GstCaps *caps;
 
-  caps = GST_CAPS_NEW (
-    		 "gsm_gsm",
-    		 "audio/x-gsm",
-		 "rate",	GST_PROPS_INT (rtpgsmparse->frequency));
+  caps = gst_caps_new_simple ("audio/x-gsm",
+       "rate", G_TYPE_INT, rtpgsmparse->frequency);
 
   gst_pad_try_set_caps (rtpgsmparse->srcpad, caps);
 }

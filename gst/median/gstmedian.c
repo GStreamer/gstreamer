@@ -32,31 +32,21 @@ static GstElementDetails median_details = {
   "Wim Taymans <wim.taymans@chello.be>"
 };
 
-GST_PAD_TEMPLATE_FACTORY (median_src_factory,
+static GstStaticPadTemplate median_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "median_src",
-   "video/x-raw-yuv",
-    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
-    )
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (median_sink_factory,
+static GstStaticPadTemplate median_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "median_src",
-    "video/x-raw-yuv",
-    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
-    )
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
 
 /* Median signals and args */
@@ -115,9 +105,9 @@ gst_median_base_init (GstMedianClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (median_sink_factory));
+	gst_static_pad_template_get (&median_sink_factory));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (median_src_factory));
+	gst_static_pad_template_get (&median_src_factory));
   gst_element_class_set_details (element_class, &median_details);
 }
 
@@ -147,32 +137,32 @@ gst_median_class_init (GstMedianClass *klass)
 }
 
 static gboolean
-gst_median_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_median_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstMedian *filter;
+  GstStructure *structure;
 
   filter = GST_MEDIAN (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "height", &filter->height);
+  gst_structure_get_int (structure, "width", &filter->width);
+  gst_structure_get_int (structure, "height", &filter->height);
 
   /* forward to the next plugin */
-  return gst_pad_try_set_caps(filter->srcpad, gst_caps_copy_1(caps));
+  return gst_pad_try_set_caps(filter->srcpad, caps);
 }
 
 void gst_median_init (GstMedian *median)
 {
   median->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (median_sink_factory), "sink");
+		  gst_static_pad_template_get (&median_sink_factory), "sink");
   gst_pad_set_link_function (median->sinkpad, gst_median_sinkconnect);
   gst_pad_set_chain_function (median->sinkpad, gst_median_chain);
   gst_element_add_pad (GST_ELEMENT (median), median->sinkpad);
 
   median->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (median_src_factory), "src");
+		  gst_static_pad_template_get (&median_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (median), median->srcpad);
 
   median->filtersize = 5;

@@ -78,42 +78,31 @@ static GstElementDetails gst_wavenc_details = GST_ELEMENT_DETAILS (
 
 static GstPadTemplate *srctemplate, *sinktemplate;
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "wavenc_raw",
-    "audio/x-raw-int",
-      "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
-      "signed",      GST_PROPS_BOOLEAN (TRUE),
-      "width",       GST_PROPS_LIST (
-                       GST_PROPS_INT (8),
-                       GST_PROPS_INT (16)
-                     ),
-      "depth",       GST_PROPS_LIST (
-                       GST_PROPS_INT (8),
-                       GST_PROPS_INT (16)
-                     ),
-      "rate",        GST_PROPS_INT_RANGE (8000, 48000),
-      "channels",    GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "rate = (int) [ 1, MAX ], "
+    "channels = (int) [ 1, MAX ], "
+    "endianness = (int) LITTLE_ENDIAN, "
+    "width = (int) { 8, 16 }, "
+    "depth = (int) { 8, 16 }, "
+    "signed = (boolean) true"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "wavenc_wav",
-    "audio/x-wav",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ("audio/x-wav")
+);
 
 enum {
 	PROP_0,
-	PROP_METADATA
 };
 
 static GstElementClass *parent_class = NULL;
@@ -174,10 +163,6 @@ set_property (GObject *object,
 	enc = GST_WAVENC (object);
 	
 	switch (prop_id) {
-	case PROP_METADATA:
-		enc->metadata = g_value_get_boxed (value);
-		break;
-
 	default:
 		break;
 	}
@@ -190,32 +175,24 @@ gst_wavenc_base_init (gpointer g_class)
 
   gst_element_class_set_details (element_class, &gst_wavenc_details);
   
-  srctemplate = src_factory ();
-  gst_element_class_add_pad_template (element_class, srctemplate);
-
-  sinktemplate = sink_factory ();
-  gst_element_class_add_pad_template (element_class, sinktemplate);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
 }
 static void
 gst_wavenc_class_init (GstWavEncClass *klass)
 {
   GstElementClass *element_class;
-	GObjectClass *object_class;
+  GObjectClass *object_class;
 	
   element_class = (GstElementClass *) klass;
-	object_class = (GObjectClass *) klass;
-
-	object_class->set_property = set_property;
+  object_class = (GObjectClass *) klass;
+  object_class->set_property = set_property;
 	
   element_class->change_state = gst_wavenc_change_state;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-	g_object_class_install_property (object_class,
-																	 PROP_METADATA,
-																	 g_param_spec_boxed ("metadata", "", "",
-																											 GST_TYPE_CAPS,
-																											 G_PARAM_WRITABLE));
 }
 
 static gboolean
@@ -264,20 +241,18 @@ gst_wavenc_setup (GstWavEnc *wavenc)
 }
 
 static GstPadLinkReturn
-gst_wavenc_sinkconnect (GstPad *pad,
-												GstCaps *caps)
+gst_wavenc_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstWavEnc *wavenc;
+  GstStructure *structure;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "channels", &wavenc->channels);
-  gst_caps_get_int (caps, "rate", &wavenc->rate);
-  gst_caps_get_int (caps, "depth", &wavenc->bits);
+  gst_structure_get_int  (structure, "channels", &wavenc->channels);
+  gst_structure_get_int  (structure, "rate", &wavenc->rate);
+  gst_structure_get_int  (structure, "depth", &wavenc->bits);
 
   gst_wavenc_setup (wavenc);
 
@@ -318,9 +293,8 @@ gst_wavenc_init (GstWavEnc *wavenc)
 
   wavenc->setup = FALSE;
   wavenc->flush_header = TRUE;
-	wavenc->metadata = NULL;
 	
-	GST_FLAG_SET (wavenc, GST_ELEMENT_EVENT_AWARE);
+  GST_FLAG_SET (wavenc, GST_ELEMENT_EVENT_AWARE);
 }
 
 struct _maps {
@@ -344,6 +318,7 @@ struct _maps {
 	{ 0, NULL }
 };
 
+#if 0
 static guint32
 get_id_from_name (const char *name)
 {
@@ -598,6 +573,7 @@ write_labels (GstWavEnc *wavenc)
 	gst_pad_push (wavenc->srcpad, GST_DATA (buf));
 	g_string_free (info_str, FALSE);
 }
+#endif
 
 static void
 gst_wavenc_chain (GstPad *pad,
@@ -618,12 +594,14 @@ gst_wavenc_chain (GstPad *pad,
 		if (GST_EVENT_TYPE (buf) == GST_EVENT_EOS) {
 			wavenc->pad_eos = TRUE;
 
+#if 0
 			/* Write our metadata if we have any */
 			if (wavenc->metadata) {
 				write_metadata (wavenc);
 				write_cues (wavenc);
 				write_labels (wavenc);
 			}
+#endif
 			
 			gst_wavenc_stop_file (wavenc);
 			gst_pad_push (wavenc->srcpad,

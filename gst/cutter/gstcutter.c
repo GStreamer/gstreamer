@@ -51,35 +51,25 @@ enum {
   ARG_LEAKY
 };
 
-GST_PAD_TEMPLATE_FACTORY (cutter_src_factory,
+static GstStaticPadTemplate cutter_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "cutter_src_int",
-    "audio/x-raw-int",
-      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
-  ),
-  gst_caps_new (
-    "cutter_src_float",
-    "audio/x-raw-float",
-      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+  GST_STATIC_CAPS (
+    GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+    GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (cutter_sink_factory,
+static GstStaticPadTemplate cutter_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "cutter_sink_int",
-    "audio/x-raw-int",
-      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
-  ),
-  gst_caps_new (
-    "cutter_sink_float",
-    "audio/x-raw-float",
-      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+  GST_STATIC_CAPS (
+    GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+    GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS
   )
 );
 
@@ -129,13 +119,13 @@ gst_cutter_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (cutter_src_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (cutter_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&cutter_src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&cutter_sink_factory));
   gst_element_class_set_details (element_class, &cutter_details);
 }
 
 static GstPadLinkReturn
-gst_cutter_link (GstPad *pad, GstCaps *caps)
+gst_cutter_link (GstPad *pad, const GstCaps*caps)
 {
   GstCutter *filter;
   GstPad *otherpad;
@@ -145,9 +135,7 @@ gst_cutter_link (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail (GST_IS_CUTTER (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
-  if (GST_CAPS_IS_FIXED (caps))
-    return gst_pad_try_set_caps (otherpad, gst_caps_ref (caps));
-  return GST_PAD_LINK_DELAYED;
+  return gst_pad_try_set_caps (otherpad, caps);
 }
 
 static void
@@ -200,8 +188,10 @@ gst_cutter_class_init (GstCutterClass *klass)
 static void
 gst_cutter_init (GstCutter *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (cutter_sink_factory (),"sink");
-  filter->srcpad = gst_pad_new_from_template (cutter_src_factory (),"src");
+  filter->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&cutter_sink_factory),"sink");
+  filter->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&cutter_src_factory),"src");
 
   filter->threshold_level = 0.1;
   filter->threshold_length = 0.5;
@@ -461,13 +451,16 @@ void
 gst_cutter_get_caps (GstPad *pad, GstCutter* filter)
 {
   GstCaps *caps = NULL;
+  GstStructure *structure;
 
   caps = GST_PAD_CAPS (pad);
     /* FIXME : Please change this to a better warning method ! */
   g_assert (caps != NULL);
   if (caps == NULL)
     printf ("WARNING: get_caps: Could not get caps of pad !\n");
-  gst_caps_get_int (caps, "width", &filter->width);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &filter->width);
   filter->max_sample = gst_audio_highest_sample_value (pad);
   filter->have_caps = TRUE;
 }
+

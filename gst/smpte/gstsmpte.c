@@ -33,41 +33,35 @@ static GstElementDetails smpte_details = {
   "Wim Taymans <wim.taymans@chello.be>"
 };
 
-GST_PAD_TEMPLATE_FACTORY (smpte_src_factory,
+static GstStaticPadTemplate gst_smpte_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "smpte_src",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
+  GST_STATIC_CAPS (
+     GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420")
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (smpte_sink1_factory,
+static GstStaticPadTemplate gst_smpte_sink1_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink1",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "smpte_sink1",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
+  GST_STATIC_CAPS (
+     GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420")
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (smpte_sink2_factory,
+static GstStaticPadTemplate gst_smpte_sink2_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink2",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "smpte_sink2",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
+  GST_STATIC_CAPS (
+     GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420")
   )
-)
+);
 
 
 /* SMPTE signals and args */
@@ -158,11 +152,11 @@ gst_smpte_base_init (GstSMPTEClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (smpte_sink1_factory));
+      gst_static_pad_template_get(&gst_smpte_sink1_template));
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (smpte_sink2_factory));
+      gst_static_pad_template_get(&gst_smpte_sink2_template));
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (smpte_src_factory));
+      gst_static_pad_template_get(&gst_smpte_src_template));
   gst_element_class_set_details (element_class, &smpte_details);
 }
 
@@ -236,40 +230,42 @@ gst_smpte_update_mask (GstSMPTE *smpte, gint type, gint depth, gint width, gint 
 }
 
 static gboolean
-gst_smpte_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_smpte_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstSMPTE *smpte;
+  GstStructure *structure;
+  gboolean ret;
 
   smpte = GST_SMPTE (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &smpte->width);
-  gst_caps_get_int (caps, "height", &smpte->height);
-  gst_caps_get_float (caps, "framerate", &smpte->fps);
+  ret = gst_structure_get_int (structure, "width", &smpte->width);
+  ret &= gst_structure_get_int (structure, "height", &smpte->height);
+  ret &= gst_structure_get_double (structure, "framerate", &smpte->fps);
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
   gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width, smpte->height);
 
   /* forward to the next plugin */
-  return gst_pad_try_set_caps(smpte->srcpad, gst_caps_copy_1(caps));
+  return gst_pad_try_set_caps(smpte->srcpad, caps);
 }
 
 static void 
 gst_smpte_init (GstSMPTE *smpte)
 {
   smpte->sinkpad1 = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (smpte_sink1_factory), "sink1");
+      gst_static_pad_template_get(&gst_smpte_sink1_template), "sink1");
   gst_pad_set_link_function (smpte->sinkpad1, gst_smpte_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad1);
 
   smpte->sinkpad2 = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (smpte_sink2_factory), "sink2");
+      gst_static_pad_template_get(&gst_smpte_sink2_template), "sink2");
   gst_pad_set_link_function (smpte->sinkpad2, gst_smpte_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad2);
 
   smpte->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (smpte_src_factory), "src");
+      gst_static_pad_template_get(&gst_smpte_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (smpte), gst_smpte_loop);
@@ -366,16 +362,15 @@ gst_smpte_loop (GstElement *element)
     outbuf = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
 
     if (!GST_PAD_CAPS (smpte->srcpad)) {
-      if (!gst_pad_try_set_caps (smpte->srcpad,
-	    GST_CAPS_NEW (
-		    "smpte_srccaps",
-		    "video/raw",
-		      "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-		      "width",    GST_PROPS_INT (smpte->width),
-		      "height",   GST_PROPS_INT (smpte->height),
-                      "framerate", GST_PROPS_FLOAT (smpte->fps)
-		    )))
-      {
+      GstCaps *caps;
+      caps = gst_caps_copy (gst_static_caps_get (
+	    &gst_smpte_src_template.static_caps));
+      gst_caps_set_simple (caps,
+	  "width", G_TYPE_INT, smpte->width,
+	  "height", G_TYPE_INT, smpte->height,
+	  "framerate", G_TYPE_DOUBLE, smpte->fps, NULL);
+
+      if (!gst_pad_try_set_caps (smpte->srcpad, caps)) {
         gst_element_error (element, "cannot set caps");
         return;
       }

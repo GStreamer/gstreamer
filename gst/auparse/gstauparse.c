@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include <gstauparse.h>
+#include <gst/audio/audio.h>
 
 /* elementfactory information */
 static GstElementDetails gst_auparse_details = GST_ELEMENT_DETAILS (
@@ -37,47 +38,26 @@ static GstElementDetails gst_auparse_details = GST_ELEMENT_DETAILS (
   "Erik Walthinsen <omega@cse.ogi.edu>"
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory_templ,
+static GstStaticPadTemplate gst_auparse_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "auparse_sink",
-    "audio/x-au",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ( "audio/x-au" )
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_factory_templ,
+static GstStaticPadTemplate gst_auparse_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "auparse_src",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-      "signed",     GST_PROPS_LIST(
-		      GST_PROPS_BOOLEAN (FALSE),
-		      GST_PROPS_BOOLEAN (TRUE)
-	  	    ),
-      "width",      GST_PROPS_LIST(
-		      GST_PROPS_INT (8),
-		      GST_PROPS_INT (16)
-		    ),
-      "depth",      GST_PROPS_LIST(
-		      GST_PROPS_INT (8),
-		      GST_PROPS_INT (16)
-		    ),
-      "rate",       GST_PROPS_INT_RANGE (8000,48000),
-      "channels",   GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "auparse_src_alaw",
-    "audio/x-alaw",
-      "rate",       GST_PROPS_INT_RANGE (8000,48000),
-      "channels",   GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS (
+    GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+    "audio/x-alaw, "
+      "rate = (int) [ 8000, 48000 ], "
+      "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
 /* AuParse signals and args */
 enum {
@@ -127,9 +107,9 @@ gst_auparse_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (sink_factory_templ));
+      gst_static_pad_template_get (&gst_auparse_sink_template));
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (src_factory_templ));
+      gst_static_pad_template_get (&gst_auparse_src_template));
   gst_element_class_set_details (element_class, &gst_auparse_details);
 
 }
@@ -148,12 +128,12 @@ static void
 gst_auparse_init (GstAuParse *auparse) 
 {
   auparse->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_factory_templ), "sink");
+      gst_static_pad_template_get (&gst_auparse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
 
   auparse->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_factory_templ), "src");
+      gst_static_pad_template_get (&gst_auparse_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
   auparse->offset = 0;
@@ -170,7 +150,7 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
   GstAuParse *auparse;
   gchar *data;
   glong size;
-  GstCaps* tempcaps;
+  GstCaps *tempcaps;
   gint law, depth;
   gboolean sign;
 
@@ -258,19 +238,17 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
     }
 
     if (law) {
-      tempcaps = GST_CAPS_NEW ("auparse_src",
-			       "audio/x-alaw",
-				 "rate",     GST_PROPS_INT (auparse->frequency),
-				 "channels", GST_PROPS_INT (auparse->channels));
+      tempcaps = gst_caps_new_simple ("audio/x-alaw",
+	  "rate", G_TYPE_INT, auparse->frequency,
+	  "channels", G_TYPE_INT, auparse->channels, NULL);
     } else {
-      tempcaps = GST_CAPS_NEW ("auparse_src",
-			       "audio/x-raw-int",
-      				 "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-				 "rate",       GST_PROPS_INT (auparse->frequency),
-				 "channels",   GST_PROPS_INT (auparse->channels),
-				 "depth",      GST_PROPS_INT (depth),
-				 "width",      GST_PROPS_INT (depth),
-				 "signed",     GST_PROPS_BOOLEAN (sign));
+      tempcaps = gst_caps_new_simple ("audio/x-raw-int",
+	  "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+	  "rate",       G_TYPE_INT, auparse->frequency,
+	  "channels",   G_TYPE_INT, auparse->channels,
+	  "depth",      G_TYPE_INT, depth,
+	  "width",      G_TYPE_INT, depth,
+	  "signed",     G_TYPE_BOOLEAN, sign, NULL);
     }
 
     if (gst_pad_try_set_caps (auparse->srcpad, tempcaps) <= 0) {

@@ -32,5 +32,5 @@ GType gst_vertigotv_get_type (void);
 GType gst_revtv_get_type (void);
 GType gst_quarktv_get_type (void);
 
-extern GstPadTemplate *gst_effectv_sink_factory ();
-extern GstPadTemplate *gst_effectv_src_factory ();
+extern GstStaticPadTemplate gst_effectv_sink_template;
+extern GstStaticPadTemplate gst_effectv_src_template;

@@ -37,45 +37,15 @@
 #define LADSPA_VERSION "1.0"
 #endif
 
-/* takes ownership of the name */
-static GstPadTemplate*
-ladspa_sink_factory (gchar *name)
-{
-  return GST_PAD_TEMPLATE_NEW (
-  name,
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  gst_caps_new (
-    "ladspa_sink",
-    "audio/x-raw-float",
-    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-    )
-  );
-}
-
-/* takes ownership of the name */
-static GstPadTemplate*
-ladspa_src_factory (gchar *name)
-{
-  return GST_PAD_TEMPLATE_NEW (
-  name,
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  gst_caps_new (
-    "ladspa_src",
-    "audio/x-raw-float",
-    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-    )
-  );
-}
+static GstStaticCaps ladspa_pad_caps =
+GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS);
 
 static void			gst_ladspa_class_init		(GstLADSPAClass *klass);
 static void			gst_ladspa_base_init		(GstLADSPAClass *klass);
 static void			gst_ladspa_init			(GstLADSPA *ladspa);
 
 static void			gst_ladspa_update_int		(const GValue *value, gpointer data);
-static GstPadLinkReturn		gst_ladspa_link			(GstPad *pad, GstCaps *caps);
-static void			gst_ladspa_force_src_caps	(GstLADSPA *ladspa, GstPad *pad);
+static GstPadLinkReturn		gst_ladspa_link			(GstPad *pad, const GstCaps *caps);
 
 static void			gst_ladspa_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void			gst_ladspa_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -141,10 +111,12 @@ gst_ladspa_base_init (GstLADSPAClass *klass)
 
       /* the factories take ownership of the name */
       if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[j])) {
-        templ = ladspa_sink_factory (name);
+        templ = gst_pad_template_new (name, GST_PAD_SINK, GST_PAD_ALWAYS,
+            gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
         klass->numsinkpads++;
       } else {
-        templ = ladspa_src_factory (name);
+        templ = gst_pad_template_new (name, GST_PAD_SRC, GST_PAD_ALWAYS,
+            gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
         klass->numsrcpads++;
       }
 
@@ -456,7 +428,6 @@ gst_ladspa_init (GstLADSPA *ladspa)
 
   ladspa->buffer_frames = 0; /* should be set with caps */
   ladspa->activated = FALSE;
-  ladspa->bufpool = NULL;
   ladspa->inplace_broken = LADSPA_IS_INPLACE_BROKEN(ladspa->descriptor->Properties);
 
   if (sinkcount==0 && srccount == 1) {
@@ -492,52 +463,43 @@ gst_ladspa_update_int(const GValue *value, gpointer data)
 }
 
 static GstPadLinkReturn
-gst_ladspa_link (GstPad *pad, GstCaps *caps)
+gst_ladspa_link (GstPad *pad, const GstCaps *caps)
 {
   GstElement *element = (GstElement*)GST_PAD_PARENT (pad);
   GstLADSPA *ladspa = (GstLADSPA*)element;
   const GList *l = NULL;
   gint rate;
+  GstStructure *structure;
 
-  if (GST_CAPS_IS_FIXED (caps)) {
-    /* if this fails in some other plugin, the graph is left in an inconsistent
-       state */
-    for (l=gst_element_get_pad_list (element); l; l=l->next)
-      if (pad != (GstPad*)l->data)
-        if (gst_pad_try_set_caps ((GstPad*)l->data, caps) <= 0)
-          return GST_PAD_LINK_REFUSED;
-    
-    /* we assume that the ladspa plugin can handle any sample rate, so this
-       check gets put last */
-    gst_caps_get_int (caps, "rate", &rate);
-    /* have to instantiate ladspa plugin when samplerate changes (groan) */
-    if (ladspa->samplerate != rate) {
-      ladspa->samplerate = rate;
-      if (! gst_ladspa_instantiate(ladspa))
+  /* if this fails in some other plugin, the graph is left in an inconsistent
+     state */
+  for (l=gst_element_get_pad_list (element); l; l=l->next)
+    if (pad != (GstPad*)l->data)
+      if (gst_pad_try_set_caps ((GstPad*)l->data, caps) <= 0)
         return GST_PAD_LINK_REFUSED;
-    }
-    
-    gst_caps_get_int (caps, "buffer-frames", &ladspa->buffer_frames);
-    
-    if (ladspa->bufpool)
-      gst_buffer_pool_unref (ladspa->bufpool);
-    ladspa->bufpool = gst_buffer_pool_get_default (ladspa->buffer_frames * sizeof(gfloat),
-                                                   3);
-    
-    return GST_PAD_LINK_OK;
+  
+  /* we assume that the ladspa plugin can handle any sample rate, so this
+     check gets put last */
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "rate", &rate);
+  /* have to instantiate ladspa plugin when samplerate changes (groan) */
+  if (ladspa->samplerate != rate) {
+    ladspa->samplerate = rate;
+    if (! gst_ladspa_instantiate(ladspa))
+      return GST_PAD_LINK_REFUSED;
   }
   
-  return GST_PAD_LINK_DELAYED;
+  gst_structure_get_int  (structure, "buffer-frames", &ladspa->buffer_frames);
+  
+  return GST_PAD_LINK_OK;
 }
 
+#if 0
 static void
 gst_ladspa_force_src_caps(GstLADSPA *ladspa, GstPad *pad)
 {
   if (!ladspa->buffer_frames) {
     ladspa->buffer_frames = 256; /* 5 ms at 44100 kHz (just a default...) */
-    g_return_if_fail (ladspa->bufpool == NULL);
-    ladspa->bufpool =
-      gst_buffer_pool_get_default (ladspa->buffer_frames * sizeof(gfloat), 3);
   }
 
   DEBUG_OBJ (ladspa, "forcing caps with rate=%d, buffer-frames=%d",
@@ -548,13 +510,14 @@ gst_ladspa_force_src_caps(GstLADSPA *ladspa, GstPad *pad)
     "ladspa_src_caps",
     "audio/x-raw-float",
     gst_props_new (
-      "width",          GST_PROPS_INT (32),
-      "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
-      "rate",           GST_PROPS_INT (ladspa->samplerate),
-      "buffer-frames",	GST_PROPS_INT (ladspa->buffer_frames),
-      "channels",	GST_PROPS_INT (1),
+      "width",          G_TYPE_INT (32),
+      "endianness",     G_TYPE_INT (G_BYTE_ORDER),
+      "rate",           G_TYPE_INT (ladspa->samplerate),
+      "buffer-frames",	G_TYPE_INT (ladspa->buffer_frames),
+      "channels",	G_TYPE_INT (1),
       NULL)));
 }
+#endif
 
 static void
 gst_ladspa_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -759,11 +722,6 @@ gst_ladspa_loop (GstElement *element)
     GST_BUFFER_TIMESTAMP(buffers_in[i]) = ladspa->timestamp;
   }
 
-  if (!ladspa->bufpool) {
-    gst_element_error (element, "Caps were never set, bailing...");
-    return;
-  }
-
   i=0;
   if (!ladspa->inplace_broken) {
     for (; i<numsrcpads && i<numsinkpads; i++) {
@@ -773,8 +731,7 @@ gst_ladspa_loop (GstElement *element)
     }
   }
   for (; i<numsrcpads; i++) {
-    /* we have to make new buffers -- at least we're taking them from a pool */
-    buffers_out[i] = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
+    buffers_out[i] = gst_buffer_new_and_alloc (ladspa->buffer_frames * sizeof(gfloat));
     GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
     data_out[i] = (LADSPA_Data*)GST_BUFFER_DATA (buffers_out[i]);
   }
@@ -850,11 +807,6 @@ gst_ladspa_chain (GstPad *pad, GstData *_data)
   /* we shouldn't get events here... */
   g_return_if_fail (GST_IS_BUFFER (buffer_in));
   
-  if (!ladspa->bufpool) {
-    gst_element_error ((GstElement*)ladspa, "Caps were never set, bailing...");
-    return;
-  }
-
   /* FIXME: this function shouldn't need to malloc() anything */
   if (numsrcpads > 0) {
     buffers_out = g_new(GstBuffer*, numsrcpads);
@@ -870,11 +822,7 @@ gst_ladspa_chain (GstPad *pad, GstData *_data)
     i++;
   }
   for (; i<numsrcpads; i++) {
-    /* we have to make new buffers -- at least we're taking them from a pool */
-    buffers_out[i] = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
-    /* the size of the buffer returned from the pool is the maximum size; this
-       chained buffer might be smaller */
-    GST_BUFFER_SIZE (buffers_out[i]) = GST_BUFFER_SIZE (buffer_in);
+    buffers_out[i] = gst_buffer_new_and_alloc (GST_BUFFER_SIZE(buffer_in));
     DEBUG ("new %d", GST_BUFFER_SIZE (buffer_in));
     GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
     data_out[i] = (LADSPA_Data*)GST_BUFFER_DATA (buffers_out[i]);
@@ -932,12 +880,8 @@ gst_ladspa_get(GstPad *pad)
   oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS(ladspa));
   desc = ladspa->descriptor;
 
-  if (!ladspa->bufpool) {
-    /* capsnego hasn't happened... */
-    gst_ladspa_force_src_caps(ladspa, ladspa->srcpads[0]);
-  }
-
-  buf = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
+  /* 4096 is arbitrary */
+  buf = gst_buffer_new_and_alloc (4096);
   GST_BUFFER_TIMESTAMP(buf) = ladspa->timestamp;
   data = (LADSPA_Data *) GST_BUFFER_DATA(buf);  
 

@@ -28,46 +28,35 @@ enum {
 };
 
 
-GST_PAD_TEMPLATE_FACTORY(textoverlay_src_template_factory,
-			 "src",
-			 GST_PAD_SRC,
-			 GST_PAD_ALWAYS,
-			 GST_CAPS_NEW(
-			     "textoverlay_src",
-			     "video/x-raw-yuv",
-			     "format",		GST_PROPS_LIST(
-				 GST_PROPS_FOURCC(GST_STR_FOURCC("I420"))
-				 ),
-			     "width", 		GST_PROPS_INT_RANGE(0, G_MAXINT), 
-			     "height",		GST_PROPS_INT_RANGE(0, G_MAXINT)
-			     )
-    )
+static GstStaticPadTemplate textoverlay_src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-yuv, "
+      "format = (fourcc) I420, "
+      "width = (int) [ 1, MAX ], "
+      "height = (int) [ 1, MAX ]")
+);
 
-GST_PAD_TEMPLATE_FACTORY(video_sink_template_factory,
-			 "video_sink",
-			 GST_PAD_SINK,
-			 GST_PAD_ALWAYS,
-			 GST_CAPS_NEW(
-			     "video_sink",
-			     "video/x-raw-yuv",
-			     "format",		GST_PROPS_LIST(
-				 GST_PROPS_FOURCC(GST_STR_FOURCC("I420"))
-				 ),
-			     "width", 		GST_PROPS_INT_RANGE(0, G_MAXINT),
-			     "height",		GST_PROPS_INT_RANGE(0, G_MAXINT)
-			     )
-    )
+static GstStaticPadTemplate video_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
+    "video_sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-yuv, "
+      "format = (fourcc) I420, "
+      "width = (int) [ 1, MAX ], "
+      "height = (int) [ 1, MAX ]")
+);
 
-GST_PAD_TEMPLATE_FACTORY(text_sink_template_factory,
-			 "text_sink",
-			 GST_PAD_SINK,
-			 GST_PAD_ALWAYS,
-			 GST_CAPS_NEW(
-			     "text_sink",
-			     "text/x-pango-markup", 
-			     NULL
-			     )
-    )
+static GstStaticPadTemplate text_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
+    "text_sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("text/x-pango-markup; text/plain")
+);
 
 static void                  gst_textoverlay_base_init (gpointer g_class);
 static void                  gst_textoverlay_class_init(GstTextOverlayClass *klass);
@@ -116,9 +105,12 @@ gst_textoverlay_base_init (gpointer g_class)
 {
     GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-    gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (textoverlay_src_template_factory));
-    gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (video_sink_template_factory));
-    gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (text_sink_template_factory));
+    gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&textoverlay_src_template_factory));
+    gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&video_sink_template_factory));
+    gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&text_sink_template_factory));
 
     gst_element_class_set_details (element_class, &textoverlay_details);
 }
@@ -228,18 +220,17 @@ render_text(GstTextOverlay *overlay)
 
 
 static GstPadLinkReturn
-gst_textoverlay_video_sinkconnect(GstPad *pad, GstCaps *caps)
+gst_textoverlay_video_sinkconnect(GstPad *pad, const GstCaps *caps)
 {
     GstTextOverlay *overlay;
+    GstStructure *structure;
 
     overlay = GST_TEXTOVERLAY(gst_pad_get_parent(pad));
 
-    if (!GST_CAPS_IS_FIXED(caps))
-	return GST_PAD_LINK_DELAYED;
-
+    structure = gst_caps_get_structure (caps, 0);
     overlay->width = overlay->height = 0;
-    gst_caps_get_int(caps, "width", &overlay->width);
-    gst_caps_get_int(caps, "height", &overlay->height);
+    gst_structure_get_int (structure, "width", &overlay->width);
+    gst_structure_get_int (structure, "height", &overlay->height);
 
     return gst_pad_try_set_caps(overlay->srcpad, caps);
 }
@@ -514,20 +505,20 @@ gst_textoverlay_init(GstTextOverlay *overlay)
 {
     /* video sink */
     overlay->video_sinkpad = gst_pad_new_from_template(
-	GST_PAD_TEMPLATE_GET(video_sink_template_factory), "video_sink");
+	gst_static_pad_template_get (&video_sink_template_factory), "video_sink");
 /*     gst_pad_set_chain_function(overlay->video_sinkpad, gst_textoverlay_video_chain); */
     gst_pad_set_link_function(overlay->video_sinkpad, gst_textoverlay_video_sinkconnect);
     gst_element_add_pad(GST_ELEMENT(overlay), overlay->video_sinkpad);
 
     /* text sink */
     overlay->text_sinkpad = gst_pad_new_from_template(
-	GST_PAD_TEMPLATE_GET(text_sink_template_factory), "text_sink");
+	gst_static_pad_template_get (&text_sink_template_factory), "text_sink");
 /*     gst_pad_set_link_function(overlay->text_sinkpad, gst_textoverlay_text_sinkconnect); */
     gst_element_add_pad(GST_ELEMENT(overlay), overlay->text_sinkpad);
 
     /* (video) source */
     overlay->srcpad = gst_pad_new_from_template(
-	GST_PAD_TEMPLATE_GET(textoverlay_src_template_factory), "src");
+	gst_static_pad_template_get (&textoverlay_src_template_factory), "src");
     gst_element_add_pad(GST_ELEMENT(overlay), overlay->srcpad);
 
     overlay->layout = pango_layout_new(GST_TEXTOVERLAY_GET_CLASS(overlay)->pango_context);

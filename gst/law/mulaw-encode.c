@@ -58,33 +58,30 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstPadLinkReturn
-mulawenc_link (GstPad *pad, GstCaps *caps)
+mulawenc_link (GstPad *pad, const GstCaps *caps)
 {
   GstCaps* tempcaps;
   gint rate, channels;
+  GstStructure *structure;
+  gboolean ret;
   
   GstMuLawEnc* mulawenc = GST_MULAWENC (GST_OBJECT_PARENT (pad));
   
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;  
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "rate", &rate);
+  ret = gst_structure_get_int (structure, "channels", &channels);
+  if (!ret) return GST_PAD_LINK_REFUSED;
   
-  if (!gst_caps_get (caps, "rate", &rate,
-                           "channels", &channels,
-                           NULL))
-    return GST_PAD_LINK_DELAYED;
-  
-  tempcaps = GST_CAPS_NEW (
-	      "sinesrc_src_caps",
-	      "audio/x-mulaw",
-          "depth",    GST_PROPS_INT (8),
-          "width",    GST_PROPS_INT (8),
-          "signed",   GST_PROPS_BOOLEAN (FALSE),
-          "rate",     GST_PROPS_INT (rate),
-          "channels", GST_PROPS_INT (channels),
-        NULL);
+  tempcaps = gst_caps_new_simple ("audio/x-mulaw",
+      "depth",    G_TYPE_INT, 8,
+      "width",    G_TYPE_INT, 8,
+      "signed",   G_TYPE_BOOLEAN, FALSE,
+      "rate",     G_TYPE_INT, rate,
+      "channels", G_TYPE_INT, channels,
+      NULL);
   
   return gst_pad_try_set_caps (mulawenc->srcpad, tempcaps);
-}		
+}
 
 GType
 gst_mulawenc_get_type(void) {

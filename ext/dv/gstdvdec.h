@@ -54,7 +54,6 @@ struct _GstDVDec {
   gint		 quality;
 
   GstByteStream *bs;
-  GstBufferPool *pool;
   dv_color_space_t space;
   gint 		 bpp;
   gboolean	 PAL;

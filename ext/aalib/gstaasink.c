@@ -58,17 +58,13 @@ enum {
   ARG_FRAME_TIME,
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_template,
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "aasink_caps",
-    "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
 static void	gst_aasink_base_init	(gpointer g_class);
 static void	gst_aasink_class_init	(GstAASinkClass *klass);
@@ -177,7 +173,7 @@ gst_aasink_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_template));
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &gst_aasink_details);
 }
 
@@ -244,17 +240,16 @@ gst_aasink_class_init (GstAASinkClass *klass)
 }
 
 static GstPadLinkReturn
-gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_aasink_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstAASink *aasink;
+  GstStructure *structure;
 
   aasink = GST_AASINK (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-  
-  gst_caps_get_int (caps, "width", &aasink->width);
-  gst_caps_get_int (caps, "height", &aasink->height);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &aasink->width);
+  gst_structure_get_int (structure, "height", &aasink->height);
 
   /* FIXME aasink->format is never set */
 
@@ -279,7 +274,7 @@ static void
 gst_aasink_init (GstAASink *aasink)
 {
   aasink->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template), "sink");
+      gst_element_get_pad_template (GST_ELEMENT (aasink), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
   gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
   gst_pad_set_link_function (aasink->sinkpad, gst_aasink_sinkconnect);

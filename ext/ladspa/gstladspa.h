@@ -59,8 +59,6 @@ struct _GstLADSPA {
   GstPad **sinkpads, 
          **srcpads;
 
-  GstBufferPool *bufpool;
-
   gboolean activated;
 
   gint samplerate, buffer_frames;

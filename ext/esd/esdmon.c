@@ -52,38 +52,31 @@ enum {
   ARG_HOST,
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
-  "src",				/* the name of the pads */
-  GST_PAD_SRC,				/* type of the pad */
-  GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "esdmon_src",				/* the name of the caps */
-    "audio/x-raw-int",				/* the mime type of the caps */
-      /* Properties follow: */
-        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-	"signed",     GST_PROPS_LIST (
-			GST_PROPS_BOOLEAN (TRUE),
-			GST_PROPS_BOOLEAN (FALSE)
-		      ),
-        "width",      GST_PROPS_LIST (
-			GST_PROPS_INT (8),
-			GST_PROPS_INT (16)
-		      ),
-	"depth",      GST_PROPS_LIST (
-			GST_PROPS_INT (8),
-			GST_PROPS_INT (16)
-		      ),
-	"rate",       GST_PROPS_INT_RANGE (8000, 96000),
-     	"channels",   GST_PROPS_LIST (
-			GST_PROPS_INT (1),
-			GST_PROPS_INT (2)
-                      )
+static GstStaticPadTemplate src_factory = 
+GST_STATIC_PAD_TEMPLATE (
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+      "signed = (boolean) TRUE, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = [ 8000, 96000 ], "
+      "channels = [ 1, 2 ]; "
+    "audio/x-raw-int, "
+      "signed = (boolean) FALSE, "
+      "width = (int) 8, "
+      "depth = (int) 8, "
+      "rate = [ 8000, 96000 ], "
+      "channels = [ 1, 2 ]"
   )
 );
 
 static void                     gst_esdmon_base_init    (gpointer g_class);
-static void			gst_esdmon_class_init	(GstEsdmonClass *klass);
-static void			gst_esdmon_init		(GstEsdmon *esdmon);
+static void			gst_esdmon_class_init	(gpointer g_class, gpointer class_data);
+static void			gst_esdmon_init		(GTypeInstance *instance, gpointer g_class);
 
 static gboolean			gst_esdmon_open_audio	(GstEsdmon *src);
 static void			gst_esdmon_close_audio	(GstEsdmon *src);
@@ -143,12 +136,12 @@ gst_esdmon_get_type (void)
       sizeof(GstEsdmonClass),
       gst_esdmon_base_init,
       NULL,
-      (GClassInitFunc)gst_esdmon_class_init,
+      gst_esdmon_class_init,
       NULL,
       NULL,
       sizeof(GstEsdmon),
       0,
-      (GInstanceInitFunc)gst_esdmon_init,
+      gst_esdmon_init,
     };
     esdmon_type = g_type_register_static(GST_TYPE_ELEMENT, "GstEsdmon", &esdmon_info, 0);
   }
@@ -160,37 +153,35 @@ gst_esdmon_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class, 
+      gst_static_pad_template_get (&src_factory));
   gst_element_class_set_details (element_class, &esdmon_details);
 }
 
 static void
-gst_esdmon_class_init (GstEsdmonClass *klass)
+gst_esdmon_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  parent_class = g_type_class_peek_parent (g_class);
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
+  g_object_class_install_property(gobject_class, ARG_BYTESPERREAD,
     g_param_spec_ulong("bytes_per_read","bytes_per_read","bytes_per_read",
                        0,G_MAXULONG,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CUROFFSET,
+  g_object_class_install_property(gobject_class, ARG_CUROFFSET,
     g_param_spec_ulong("curoffset","curoffset","curoffset",
                        0,G_MAXULONG,0,G_PARAM_READABLE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
+  g_object_class_install_property(gobject_class, ARG_DEPTH,
     g_param_spec_enum("depth","depth","depth",
                       GST_TYPE_ESDMON_DEPTHS,16,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
+  g_object_class_install_property(gobject_class, ARG_CHANNELS,
     g_param_spec_enum("channels","channels","channels",
                       GST_TYPE_ESDMON_CHANNELS,2,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
+  g_object_class_install_property(gobject_class, ARG_RATE,
     g_param_spec_int("frequency","frequency","frequency",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HOST,
+  g_object_class_install_property(gobject_class, ARG_HOST,
     g_param_spec_string("host","host","host",
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
 
@@ -201,10 +192,13 @@ gst_esdmon_class_init (GstEsdmonClass *klass)
 }
 
 static void
-gst_esdmon_init(GstEsdmon *esdmon)
+gst_esdmon_init(GTypeInstance *instance, gpointer g_class)
 {
+  GstEsdmon *esdmon = GST_ESDMON (instance);
+
   esdmon->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (esdmon), "src"),
+      "src");
   gst_pad_set_get_function(esdmon->srcpad, gst_esdmon_get);
   gst_element_add_pad(GST_ELEMENT(esdmon), esdmon->srcpad);
 
@@ -262,17 +256,16 @@ gst_esdmon_get (GstPad *pad)
   if (!GST_PAD_CAPS (pad)) {
     gint sign = (esdmon->depth == 8 ? FALSE : TRUE);
     /* set caps on src pad */
+    /* FIXME: do this dynamically */
     if (gst_pad_try_set_caps (esdmon->srcpad,
-                    GST_CAPS_NEW (
-                      "oss_src",
-                      "audio/x-raw-int",
-                          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
-                          "signed",     GST_PROPS_BOOLEAN (sign),       /*FIXME */
-                          "width",      GST_PROPS_INT (esdmon->depth),
-                          "depth",      GST_PROPS_INT (esdmon->depth),
-                          "rate",       GST_PROPS_INT (esdmon->frequency),
-                          "channels",   GST_PROPS_INT (esdmon->channels)
-                   )) <= 0)
+	gst_caps_new_simple ("audio/x-raw-int",
+	  "endianness", G_TYPE_INT,	G_BYTE_ORDER,
+          "signed",     G_TYPE_BOOLEAN, sign,
+          "width",      G_TYPE_INT,	esdmon->depth,
+          "depth",      G_TYPE_INT,	esdmon->depth,
+          "rate",       G_TYPE_INT,	esdmon->frequency,
+          "channels",   G_TYPE_INT,	esdmon->channels
+        )) <= 0)
     {
       gst_element_error (GST_ELEMENT (esdmon), "could not set caps");
       return NULL;

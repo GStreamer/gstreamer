@@ -68,7 +68,7 @@ static void		gst_flacenc_class_init		(FlacEncClass *klass);
 static void 		gst_flacenc_dispose 		(GObject *object);
 
 static GstPadLinkReturn
-			gst_flacenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
+			gst_flacenc_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 static void		gst_flacenc_chain		(GstPad *pad, GstData *_data);
 
 static gboolean 	gst_flacenc_update_quality 	(FlacEnc *flacenc, gint quality);
@@ -179,31 +179,22 @@ gst_flacenc_quality_get_type (void)
 static GstCaps*
 flac_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"flac_flac",
-  	"audio/x-flac",
-	/* gst_props_new (
- 	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL) */NULL);
+  return gst_caps_new_simple ("audio/x-flac", NULL);
+  /* "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+   * "channels", 	GST_PROPS_INT_RANGE (1, 2), */
 }
 
 static GstCaps*
 raw_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"flac_raw",
-  	"audio/x-raw-int",
-	gst_props_new (
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
+  return gst_caps_new_simple ("audio/x-raw-int",
+      "endianness", 	G_TYPE_INT, G_BYTE_ORDER,
+      "signed", 	G_TYPE_BOOLEAN, TRUE,
+      "width", 		G_TYPE_INT, 16,
+      "depth",    	G_TYPE_INT, 16,
+      "rate",     	GST_TYPE_INT_RANGE, 11025, 48000,
+      "channels", 	GST_TYPE_INT_RANGE, 1, 2,
+      NULL);
 }
 
 static void
@@ -217,10 +208,10 @@ gst_flacenc_base_init (gpointer g_class)
 
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 					GST_PAD_ALWAYS, 
-					raw_caps, NULL);
+					raw_caps);
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 				       GST_PAD_ALWAYS, 
-				       flac_caps, NULL);
+				       flac_caps);
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_add_pad_template (element_class, src_template);
   gst_element_class_set_details (element_class, &flacenc_details);
@@ -354,24 +345,23 @@ gst_flacenc_dispose (GObject *object)
 }
 
 static GstPadLinkReturn
-gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_flacenc_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstPadLinkReturn ret;
   FlacEnc *flacenc;
+  GstStructure *structure;
 
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "channels", &flacenc->channels);
-  gst_caps_get_int (caps, "depth", &flacenc->depth);
-  gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
+  gst_structure_get_int (structure, "channels", &flacenc->channels);
+  gst_structure_get_int (structure, "depth", &flacenc->depth);
+  gst_structure_get_int (structure, "rate", &flacenc->sample_rate);
   
-  caps = GST_CAPS_NEW ("flacenc_srccaps",
-                       "audio/x-flac",
-                         "channels", GST_PROPS_INT (flacenc->channels),
-                         "rate", GST_PROPS_INT (flacenc->sample_rate));
+  caps = gst_caps_new_simple ("audio/x-flac",
+      "channels", G_TYPE_INT, flacenc->channels,
+      "rate", G_TYPE_INT, flacenc->sample_rate, NULL);
   ret = gst_pad_try_set_caps (flacenc->srcpad, caps);
   if (ret <= 0) {
     return ret;

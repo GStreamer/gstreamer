@@ -56,7 +56,6 @@ struct _GstOssSink {
   GstOssElement	 element;
 
   GstPad 	*sinkpad;
-  GstBufferPool *sinkpool;
 
   GstClock 	*provided_clock;
   GstClock 	*clock;

@@ -58,51 +58,28 @@ enum {
 };
 
 
-static GstPadTemplate*
-mikmod_src_factory (void)
-{
-  static GstPadTemplate *template = NULL;
+static GstStaticPadTemplate mikmod_src_factory =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+);
 
-  if (!template) {
-    template = gst_pad_template_new (
-      "src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      gst_caps_new (
-        "mikmod_src",
-        "audio/x-raw-int",
-          GST_AUDIO_INT_PAD_TEMPLATE_PROPS
-      ), NULL);
-  }
-  return template;
-}
-
-
-static GstPadTemplate*
-mikmod_sink_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template) {
-    template = gst_pad_template_new (
-      "sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      gst_caps_new (
-        "mikmod_sink",
-        "audio/x-mod",
-        NULL),NULL        
-      );
-  }
-  return template;
-}
+static GstStaticPadTemplate mikmod_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-mod")
+);
 
 static void             gst_mikmod_base_init            (gpointer g_class);
 static void		gst_mikmod_class_init		(GstMikModClass *klass);
 static void		gst_mikmod_init			(GstMikMod *filter);
 static void		gst_mikmod_set_property 	(GObject *object, guint id, const GValue *value, GParamSpec *pspec );
 static void		gst_mikmod_get_property		(GObject *object, guint id, GValue *value, GParamSpec *pspec );
-static GstPadLinkReturn	gst_mikmod_srclink		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_mikmod_srclink		(GstPad *pad, const GstCaps *caps);
 static void             gst_mikmod_loop                 (GstElement *element);
 static gboolean		gst_mikmod_setup 		(GstMikMod *mikmod);
 static GstElementStateReturn  gst_mikmod_change_state 	(GstElement *element);
@@ -137,8 +114,10 @@ gst_mikmod_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, mikmod_src_factory ());
-  gst_element_class_add_pad_template (element_class, mikmod_sink_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mikmod_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mikmod_sink_factory));
   gst_element_class_set_details (element_class, &mikmod_details);
 }
 
@@ -205,8 +184,10 @@ gst_mikmod_class_init (GstMikModClass *klass)
 static void
 gst_mikmod_init (GstMikMod *filter)
 {  
-  filter->sinkpad = gst_pad_new_from_template(mikmod_sink_factory (),"sink");
-  filter->srcpad = gst_pad_new_from_template(mikmod_src_factory (),"src");
+  filter->sinkpad = gst_pad_new_from_template(
+      gst_static_pad_template_get (&mikmod_sink_factory),"sink");
+  filter->srcpad = gst_pad_new_from_template(
+    gst_static_pad_template_get (&mikmod_src_factory),"src");
 
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
@@ -245,39 +226,35 @@ gst_mikmod_negotiate (GstMikMod *mikmod)
     sign = FALSE;
   }
 
-  return gst_pad_try_set_caps (mikmod->srcpad, 
-		          GST_CAPS_NEW (
-			    "mikmod_src",
-			    "audio/x-raw-int",
-			      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-			      "signed",      GST_PROPS_BOOLEAN (sign),
-			      "width",       GST_PROPS_INT (width),
-			      "depth",       GST_PROPS_INT (width),
-			      "rate",        GST_PROPS_INT (mikmod->mixfreq),
-			      "channels",    GST_PROPS_INT (mikmod->stereo ? 2 : 1)));
+  return gst_pad_try_set_caps (mikmod->srcpad,
+      gst_caps_new_simple ( "audio/x-raw-int",
+	"endianness",  G_TYPE_INT, G_BYTE_ORDER,
+	"signed",      G_TYPE_BOOLEAN, sign,
+	"width",       G_TYPE_INT, width,
+	"depth",       G_TYPE_INT, width,
+	"rate",        G_TYPE_INT, mikmod->mixfreq,
+	"channels",    G_TYPE_INT, mikmod->stereo ? 2 : 1,
+	NULL));
 }
 
 
 static GstPadLinkReturn
-gst_mikmod_srclink (GstPad *pad, GstCaps *caps)
+gst_mikmod_srclink (GstPad *pad, const GstCaps *caps)
 {
   GstMikMod *filter; 
+  GstStructure *structure;
+  gint depth;
+  gint channels;
 
   filter = GST_MIKMOD (gst_pad_get_parent (pad));
 
-  if (gst_caps_has_property_typed (caps, "depth", GST_PROPS_INT_TYPE)) {
-    gint depth;
-    gst_caps_get_int (caps, "depth", &depth);
-    filter->_16bit = (depth == 16);
-  }
-  if (gst_caps_has_property_typed (caps, "channels", GST_PROPS_INT_TYPE)) {
-    gint channels;
-    gst_caps_get_int (caps, "channels", &channels);
-    filter->stereo = (channels == 2);
-  }
-  if (gst_caps_has_property_typed (caps, "rate", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "rate", &filter->mixfreq);
-  }
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "depth", &depth);
+  filter->_16bit = (depth == 16);
+  gst_structure_get_int (structure, "channels", &channels);
+  filter->stereo = (channels == 2);
+  gst_structure_get_int (structure, "rate", &filter->mixfreq);
 
   return gst_mikmod_negotiate(filter);
 }

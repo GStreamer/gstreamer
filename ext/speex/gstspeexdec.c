@@ -51,7 +51,7 @@ static void			gst_speexdec_class_init	(GstSpeexDec *klass);
 static void			gst_speexdec_init		(GstSpeexDec *speexdec);
 
 static void			gst_speexdec_chain	(GstPad *pad, GstData *_data);
-static GstPadLinkReturn	gst_speexdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_speexdec_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_speexdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -77,45 +77,41 @@ gst_speexdec_get_type(void) {
   return speexdec_type;
 }
 
-GST_CAPS_FACTORY (speex_caps_factory,
-  GST_CAPS_NEW (
-    "speex_speex",
-    "audio/x-speex",
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
+static GstStaticPadTemplate speex_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("audio/x-speex, "
+      "rate = (int) [ 1000, 48000 ], "
+      "channels = (int) 1"
   )
-)
+);
 
-GST_CAPS_FACTORY (raw_caps_factory,
-  GST_CAPS_NEW (
-    "speex_raw",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
+static GstStaticPadTemplate speex_src_template =
+GST_STATIC_PAD_TEMPLATE (
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) [ 1000, 48000 ], "
+      "channels = (int) 1"
   )
-)
+);
 
 static void
 gst_speexdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *speex_caps;
 
-  raw_caps = GST_CAPS_GET (raw_caps_factory);
-  speex_caps = GST_CAPS_GET (speex_caps_factory);
-
-  speexdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      speex_caps, NULL);
-  speexdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     raw_caps, NULL);
-  gst_element_class_add_pad_template (element_class, speexdec_sink_template);
-  gst_element_class_add_pad_template (element_class, speexdec_src_template);
+  gst_element_class_add_pad_template (element_class,
+        gst_static_pad_template_get (&speex_src_template));
+  gst_element_class_add_pad_template (element_class,
+        gst_static_pad_template_get (&speex_sink_template));
 
   gst_element_class_set_details (element_class, &gst_speexdec_details);
 }
@@ -147,29 +143,26 @@ gst_speexdec_init (GstSpeexDec *speexdec)
 }
 
 static GstPadLinkReturn
-gst_speexdec_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_speexdec_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstSpeexDec *speexdec;
   gint rate;
+  GstStructure *structure;
   
   speexdec = GST_SPEEXDEC (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-  
-  gst_caps_get_int (caps, "rate", &rate);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int  (structure, "rate", &rate);
 
   if (gst_pad_try_set_caps (speexdec->srcpad, 
-		      GST_CAPS_NEW (
-	  		"speex_raw",
-			"audio/x-raw-int",
-			    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-			    "signed",     GST_PROPS_BOOLEAN (TRUE),
-			    "width",      GST_PROPS_INT (16),
-			    "depth",      GST_PROPS_INT (16),
-			    "rate",       GST_PROPS_INT (rate),
-			    "channels",   GST_PROPS_INT (1)
-			   )))
+        gst_caps_new_simple ("audio/x-raw-int",
+          "endianness", G_TYPE_INT, G_BYTE_ORDER,
+          "signed",     G_TYPE_BOOLEAN, TRUE,
+          "width",      G_TYPE_INT, 16,
+          "depth",      G_TYPE_INT, 16,
+          "rate",       G_TYPE_INT, rate,
+          "channels",   G_TYPE_INT, 1,
+          NULL)))
   {
     return GST_PAD_LINK_OK;
   }

@@ -45,7 +45,7 @@ struct _GstGOOM {
   gint16 datain[2][512];
 
   /* video state */
-  gfloat fps;
+  gdouble fps;
   gint width;
   gint height;
   gint channels;
@@ -78,33 +78,28 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_template,
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "goomsrc",
-    "video/x-raw-rgb",
-    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_32
-  )
-)
+  GST_STATIC_CAPS ( GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 )
+);
 
-GST_PAD_TEMPLATE_FACTORY (sink_template,
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",				/* the name of the pads */
   GST_PAD_SINK,				/* type of the pad */
   GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "goomsink",				/* the name of the caps */
-    "audio/x-raw-int",			/* the mime type of the caps */
-       /* Properties follow: */
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ( "audio/x-raw-int, "
+    "endianness = (int) BYTE_ORDER, "
+    "signed = (boolean) TRUE, "
+    "width = (int) 16, "
+    "depth = (int) 16, "
+    "rate = (int) [ 8000, 96000 ], "
+    "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
 
 static void		gst_goom_class_init	(GstGOOMClass *klass);
@@ -117,8 +112,8 @@ static GstElementStateReturn
 
 static void		gst_goom_chain		(GstPad *pad, GstData *_data);
 
-static GstPadLinkReturn gst_goom_sinkconnect 	(GstPad *pad, GstCaps *caps);
-static GstPadLinkReturn gst_goom_srcconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_goom_sinkconnect 	(GstPad *pad, const GstCaps *caps);
+static GstPadLinkReturn gst_goom_srcconnect 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -151,9 +146,9 @@ gst_goom_base_init (GstGOOMClass *klass)
 
   gst_element_class_set_details (element_class, &gst_goom_details);
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (sink_template));
+	gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (src_template));
+	gst_static_pad_template_get (&src_template));
 }
 
 static void
@@ -177,9 +172,9 @@ gst_goom_init (GstGOOM *goom)
 {
   /* create the sink and src pads */
   goom->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template ), "sink");
+		  gst_static_pad_template_get (&sink_template ), "sink");
   goom->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template ), "src");
+		  gst_static_pad_template_get (&src_template ), "src");
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
@@ -207,74 +202,38 @@ gst_goom_dispose (GObject *object)
 }
 
 static GstPadLinkReturn
-gst_goom_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_goom_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstGOOM *goom;
+  GstStructure *structure;
+
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "channels", &goom->channels);
+  gst_structure_get_int (structure, "channels", &goom->channels);
 
   return GST_PAD_LINK_OK;
 }
 
 static GstPadLinkReturn
-gst_goom_srcconnect (GstPad *pad, GstCaps *caps)
+gst_goom_srcconnect (GstPad *pad, const GstCaps *caps)
 {
   GstGOOM *goom;
+  GstStructure *structure;
+
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
+  structure = gst_caps_get_structure (caps, 0);
 
-  if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "width", &goom->width);
-  }
-  if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "height", &goom->height);
-  }
-  if (gst_caps_has_property_typed (caps, "framerate", GST_PROPS_FLOAT_TYPE)) {
-    gst_caps_get_float (caps, "framerate", &goom->fps);
-  }
+  gst_structure_get_int (structure, "width", &goom->width);
+  gst_structure_get_int (structure, "height", &goom->height);
+  gst_structure_get_double (structure, "framerate", &goom->fps);
 
   goom_set_resolution (goom->width, goom->height);
   goom->srcnegotiated = TRUE;
 
   return GST_PAD_LINK_OK;
-}
-
-static gboolean
-gst_goom_negotiate_default (GstGOOM *goom)
-{
-  GstCaps *caps;
-
-  caps = GST_CAPS_NEW (
-	     "goomsrc",
-	     "video/x-raw-rgb",
-	       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
-	       "bpp", 		GST_PROPS_INT (32), 
-	       "depth", 	GST_PROPS_INT (32), 
-	       "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
-	       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
-	       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
-	       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
-	       "width", 	GST_PROPS_INT (goom->width), 
-	       "height", 	GST_PROPS_INT (goom->height),
-	       "framerate",	GST_PROPS_FLOAT (goom->fps)
-	   );
-
-  if (gst_pad_try_set_caps (goom->srcpad, caps) <= 0) {
-    return FALSE;
-  }
-
-  goom_set_resolution (goom->width, goom->height);
-  goom->srcnegotiated = TRUE;
-
-  return TRUE;
 }
 
 static void
@@ -317,13 +276,6 @@ gst_goom_chain (GstPad *pad, GstData *_data)
 
   if (!GST_PAD_IS_USABLE (goom->srcpad))
     goto done;
-
-  if (!goom->srcnegotiated) {
-    if (!gst_goom_negotiate_default (goom)) {
-      gst_element_error (GST_ELEMENT (goom), "could not negotiate src format");
-      goto done;
-    }
-  }
 
   samples_in = GST_BUFFER_SIZE (bufin) / (sizeof (gint16) * goom->channels);
 

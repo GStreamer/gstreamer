@@ -80,9 +80,6 @@ struct _GstV4l2Src {
 
 	/* how are we going to push buffers? */
 	gboolean use_fixed_fps;
-
-	/* bufferpool for the buffers we're gonna use */
-	GstBufferPool *bufferpool;
 };
 
 struct _GstV4l2SrcClass {

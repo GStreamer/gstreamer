@@ -45,26 +45,24 @@ enum
   ARG_0,
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-		"sink",
-		GST_PAD_SINK,
-	        GST_PAD_ALWAYS,
-		GST_CAPS_NEW (
-    			"gsm_gsm",
-    			"audio/x-gsm",
-      			"rate",       GST_PROPS_INT_RANGE (1000, 48000)
-		)
-)
+static GstStaticPadTemplate gst_rtpgsmenc_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ( "audio/x-gsm, "
+      "rate = (int) [ 1000, 48000 ]"
+    )
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
-		"src",
-		GST_PAD_SRC,
-	        GST_PAD_ALWAYS,
-		GST_CAPS_NEW (
-			"rtp",
-			"application/x-rtp",
-			NULL)
-)
+static GstStaticPadTemplate gst_rtpgsmenc_src_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp")
+);
+
 
 static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass);
@@ -74,7 +72,7 @@ static void gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
 				   const GValue * value, GParamSpec * pspec);
 static void gst_rtpgsmenc_get_property (GObject * object, guint prop_id,
 				   GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_rtpgsmenc_sinkconnect (GstPad * pad, GstCaps * caps);
+static GstPadLinkReturn gst_rtpgsmenc_sinkconnect (GstPad * pad, const GstCaps * caps);
 static GstElementStateReturn gst_rtpgsmenc_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
@@ -107,9 +105,9 @@ gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+      gst_static_pad_template_get (&gst_rtpgsmenc_sink_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+      gst_static_pad_template_get (&gst_rtpgsmenc_src_template));
   gst_element_class_set_details (element_class, &gst_rtpgsmenc_details);
 }
 
@@ -133,8 +131,10 @@ gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass)
 static void
 gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
 {
-  rtpgsmenc->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_factory), "sink");
-  rtpgsmenc->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_factory), "src");
+  rtpgsmenc->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_rtpgsmenc_sink_template), "sink");
+  rtpgsmenc->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_rtpgsmenc_sink_template), "src");
   gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->srcpad);
   gst_pad_set_chain_function (rtpgsmenc->sinkpad, gst_rtpgsmenc_chain);
@@ -150,13 +150,18 @@ gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
 }
 
 static GstPadLinkReturn
-gst_rtpgsmenc_sinkconnect (GstPad * pad, GstCaps * caps)
+gst_rtpgsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
   GstRtpGSMEnc *rtpgsmenc;
+  GstStructure *structure;
+  gboolean ret;
 
   rtpgsmenc = GST_RTP_GSM_ENC (gst_pad_get_parent (pad));
 
-  gst_caps_get_int (caps, "rate", &rtpgsmenc->frequency);
+  structure = gst_caps_get_structure (caps, 0);
+
+  ret = gst_structure_get_int (structure, "rate", &rtpgsmenc->frequency);
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
   /* Pre-calculate what we can */
   rtpgsmenc->time_interval = GST_SECOND / (2 * rtpgsmenc->frequency);

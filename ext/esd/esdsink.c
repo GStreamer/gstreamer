@@ -50,43 +50,36 @@ enum {
   ARG_FALLBACK,
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-  "sink",					/* the name of the pads */
-  GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "esdsink_sink",				/* the name of the caps */
-    "audio/x-raw-int",				/* the mime type of the caps */
-      /* Properties follow: */
-        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-	"signed",     GST_PROPS_LIST (
-			GST_PROPS_BOOLEAN (TRUE),
-			GST_PROPS_BOOLEAN (FALSE)
-		      ),
-        "width",      GST_PROPS_LIST (
-			GST_PROPS_INT (8),
-			GST_PROPS_INT (16)
-		      ),
-	"depth",      GST_PROPS_LIST (
-			GST_PROPS_INT (8),
-			GST_PROPS_INT (16)
-		      ),
-	"rate",       GST_PROPS_INT_RANGE (8000, 96000),
-     	"channels",   GST_PROPS_LIST (
-			GST_PROPS_INT (1),
-			GST_PROPS_INT (2)
-		      )
+static GstStaticPadTemplate sink_factory = 
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+      "signed = (boolean) TRUE, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = [ 8000, 96000 ], "
+      "channels = [ 1, 2 ]; "
+    "audio/x-raw-int, "
+      "signed = (boolean) FALSE, "
+      "width = (int) 8, "
+      "depth = (int) 8, "
+      "rate = [ 8000, 96000 ], "
+      "channels = [ 1, 2 ]"
   )
 );
 
 static void                     gst_esdsink_base_init           (gpointer g_class);
-static void			gst_esdsink_class_init		(GstEsdsinkClass *klass);
-static void			gst_esdsink_init		(GstEsdsink *esdsink);
+static void			gst_esdsink_class_init		(gpointer g_class, gpointer class_data);
+static void			gst_esdsink_init		(GTypeInstance *instance, gpointer g_class);
 
 static gboolean			gst_esdsink_open_audio		(GstEsdsink *sink);
 static void			gst_esdsink_close_audio		(GstEsdsink *sink);
 static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
-static GstPadLinkReturn		gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_esdsink_link		(GstPad *pad, const GstCaps *caps);
 
 static GstClockTime		gst_esdsink_get_time		(GstClock *clock, gpointer data);
 static GstClock *		gst_esdsink_get_clock		(GstElement *element);
@@ -111,12 +104,12 @@ gst_esdsink_get_type (void)
       sizeof(GstEsdsinkClass),
       gst_esdsink_base_init,
       NULL,
-      (GClassInitFunc)gst_esdsink_class_init,
+      gst_esdsink_class_init,
       NULL,
       NULL,
       sizeof(GstEsdsink),
       0,
-      (GInstanceInitFunc)gst_esdsink_init,
+      gst_esdsink_init,
     };
     esdsink_type = g_type_register_static(GST_TYPE_ELEMENT, "GstEsdsink", &esdsink_info, 0);
   }
@@ -128,31 +121,29 @@ gst_esdsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class, 
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &esdsink_details);
 }
 
 static void
-gst_esdsink_class_init (GstEsdsinkClass *klass)
+gst_esdsink_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  parent_class = g_type_class_peek_parent (g_class);
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
+  g_object_class_install_property(gobject_class, ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
                          TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HOST,
+  g_object_class_install_property(gobject_class, ARG_HOST,
     g_param_spec_string("host","host","host",
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SYNC,
+  g_object_class_install_property(gobject_class, ARG_SYNC,
     g_param_spec_boolean("sync","sync","Synchronize output to clock",
                          FALSE,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FALLBACK,
+  g_object_class_install_property(gobject_class, ARG_FALLBACK,
     g_param_spec_boolean("fallback","fallback","Fall back to using OSS if Esound daemon is not present",
                          FALSE,G_PARAM_READWRITE));
 
@@ -165,13 +156,16 @@ gst_esdsink_class_init (GstEsdsinkClass *klass)
 }
 
 static void
-gst_esdsink_init(GstEsdsink *esdsink)
+gst_esdsink_init(GTypeInstance *instance, gpointer g_class)
 {
+  GstEsdsink *esdsink = GST_ESDSINK (instance);
+  
   esdsink->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (instance), "sink"), 
+      "sink");
   gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
   gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
-  gst_pad_set_link_function(esdsink->sinkpad, gst_esdsink_sinkconnect);
+  gst_pad_set_link_function(esdsink->sinkpad, gst_esdsink_link);
 
   GST_FLAG_SET (esdsink, GST_ELEMENT_EVENT_AWARE);
 
@@ -191,34 +185,27 @@ gst_esdsink_init(GstEsdsink *esdsink)
 }
 
 static GstPadLinkReturn
-gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_esdsink_link (GstPad *pad, const GstCaps *caps)
 {
   GstEsdsink *esdsink;
-  gboolean sign;
+  GstStructure *structure;
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-
-  gst_caps_get_int (caps, "depth", &esdsink->depth);
-  gst_caps_get_int (caps, "signed", &sign);
-  gst_caps_get_int (caps, "channels", &esdsink->channels);
-  gst_caps_get_int (caps, "rate", &esdsink->frequency);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "signed", &esdsink->depth);
+  gst_structure_get_int (structure, "channels", &esdsink->channels);
+  gst_structure_get_int (structure, "rate", &esdsink->frequency);
 
   esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth/8);
-
-  /* only u8/s16 */
-  if ((sign == FALSE && esdsink->depth != 8) ||
-      (sign == TRUE  && esdsink->depth != 16)) {
-    return GST_PAD_LINK_REFUSED;
-  }
 
   gst_esdsink_close_audio (esdsink);
   if (gst_esdsink_open_audio (esdsink)) {
     esdsink->negotiated = TRUE;
     return GST_PAD_LINK_OK;
   }
+  /* FIXME: is it supposed to be correct to have closed audio when caps nego 
+     failed? */
 
   return GST_PAD_LINK_REFUSED;
 }

@@ -43,11 +43,11 @@ struct videoflip_format_struct videoflip_formats[] = {
 
 int videoflip_n_formats = sizeof(videoflip_formats)/sizeof(videoflip_formats[0]);
 
-GstCaps *
-videoflip_get_caps(struct videoflip_format_struct *format)
+GstStructure *
+videoflip_get_cap(struct videoflip_format_struct *format)
 {
   unsigned int fourcc;
-  GstCaps *caps;
+  GstStructure *structure;
 
   if(format->scale==NULL)
     return NULL;
@@ -55,40 +55,40 @@ videoflip_get_caps(struct videoflip_format_struct *format)
   fourcc = GST_MAKE_FOURCC(format->fourcc[0],format->fourcc[1],format->fourcc[2],format->fourcc[3]);
 
   if(format->bpp){
-    caps = GST_CAPS_NEW ("videoflip", "video/x-raw-rgb",
-		"depth", GST_PROPS_INT(format->bpp),
-		"bpp", GST_PROPS_INT(format->depth),
-		"endianness", GST_PROPS_INT(format->endianness),
-		"red_mask", GST_PROPS_INT(format->red_mask),
-		"green_mask", GST_PROPS_INT(format->green_mask),
-		"blue_mask", GST_PROPS_INT(format->blue_mask));
+    structure = gst_structure_new("video/x-raw-rgb",
+	"depth", G_TYPE_INT, format->bpp,
+	"bpp", G_TYPE_INT, format->depth,
+	"endianness", G_TYPE_INT, format->endianness,
+	"red_mask", G_TYPE_INT, format->red_mask,
+	"green_mask", G_TYPE_INT, format->green_mask,
+	"blue_mask", G_TYPE_INT, format->blue_mask, NULL);
   }else{
-    caps = GST_CAPS_NEW ("videoflip", "video/x-raw-yuv",
-		"format", GST_PROPS_FOURCC (fourcc));
+    structure = gst_structure_new("video/x-raw-yuv",
+	"format", GST_TYPE_FOURCC, fourcc, NULL);
   }
 
-  return caps;
+  return structure;
 }
 
 struct videoflip_format_struct *
-videoflip_find_by_caps(GstCaps *caps)
+videoflip_find_by_caps(const GstCaps *caps)
 {
   int i;
 
-  GST_DEBUG ("finding %p",caps);
+  GST_DEBUG ("finding %p", caps);
 
   g_return_val_if_fail(caps != NULL, NULL);
 
   for (i = 0; i < videoflip_n_formats; i++){
     GstCaps *c;
 
-    c = videoflip_get_caps(videoflip_formats + i);
+    c = gst_caps_new_full (videoflip_get_cap (videoflip_formats + i), NULL);
     if(c){
       if(gst_caps_is_always_compatible(caps, c)){
-        gst_caps_unref(c);
+        gst_caps_free(c);
         return videoflip_formats + i;
       }
-      gst_caps_unref(c);
+      gst_caps_free(c);
     }
   }
 

@@ -68,7 +68,8 @@ struct _GstDV1394Src {
   guint frameSize;
   guint bytesInFrame;
   guint frameSequence;
-  GstBufferPool *pool;
+
+  gboolean negotiated;
 };
 
 struct _GstDV1394SrcClass {

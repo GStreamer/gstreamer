@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include "monoscope.h"
 
 #define GST_TYPE_MONOSCOPE (gst_monoscope_get_type())
@@ -39,14 +40,13 @@ struct _GstMonoscope {
 
   /* pads */
   GstPad *sinkpad,*srcpad;
-  GstBufferPool *peerpool;
 
   /* the timestamp of the next frame */
   guint64 next_time;
   gint16 datain[512];
 
   /* video state */
-  gfloat fps;
+  gdouble fps;
   gint width;
   gint height;
   gboolean first_buffer;
@@ -81,41 +81,21 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_template,
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "monoscopesrc",
-    "video/x-raw-rgb",
-      "bpp",		GST_PROPS_INT (32),
-      "depth",		GST_PROPS_INT (32),
-      "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
-      "red_mask",   	GST_PROPS_INT (R_MASK_32),
-      "green_mask", 	GST_PROPS_INT (G_MASK_32),
-      "blue_mask",  	GST_PROPS_INT (B_MASK_32),
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096),
-      "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32)
+);
 
-GST_PAD_TEMPLATE_FACTORY (sink_template,
-  "sink",					/* the name of the pads */
-  GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "monoscopesink",				/* the name of the caps */
-    "audio/x-raw-int",				/* the mime type of the caps */
-       /* Properties follow: */
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT (1)
-  )
-)
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+);
 
 
 static void	gst_monoscope_class_init	(GstMonoscopeClass *klass);
@@ -125,9 +105,9 @@ static void	gst_monoscope_init		(GstMonoscope *monoscope);
 static void	gst_monoscope_chain		(GstPad *pad, GstData *_data);
 
 static GstPadLinkReturn 
-		gst_monoscope_sinkconnect 	(GstPad *pad, GstCaps *caps);
+		gst_monoscope_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 static GstPadLinkReturn
-		gst_monoscope_srcconnect 	(GstPad *pad, GstCaps *caps);
+		gst_monoscope_srcconnect 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -159,9 +139,9 @@ gst_monoscope_base_init (GstMonoscopeClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_template));
+		gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_template));
+		gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &gst_monoscope_details);
 }
 
@@ -182,9 +162,9 @@ gst_monoscope_init (GstMonoscope *monoscope)
 {
   /* create the sink and src pads */
   monoscope->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template ), "sink");
+		  gst_static_pad_template_get (&sink_template ), "sink");
   monoscope->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template ), "src");
+		  gst_static_pad_template_get (&src_template ), "src");
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->sinkpad);
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->srcpad);
 
@@ -193,7 +173,6 @@ gst_monoscope_init (GstMonoscope *monoscope)
   gst_pad_set_link_function (monoscope->srcpad, gst_monoscope_srcconnect);
 
   monoscope->next_time = 0;
-  monoscope->peerpool = NULL;
 
   /* reset the initial video state */
   monoscope->first_buffer = TRUE;
@@ -203,14 +182,10 @@ gst_monoscope_init (GstMonoscope *monoscope)
 }
 
 static GstPadLinkReturn
-gst_monoscope_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_monoscope_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstMonoscope *monoscope;
   monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
 
   return GST_PAD_LINK_OK;
 }
@@ -220,38 +195,32 @@ gst_monoscope_negotiate (GstMonoscope *monoscope)
 {
   GstCaps *caps;
 
-  caps = GST_CAPS_NEW (
-		     "monoscopesrc",
-		     "video/x-raw-rgb",
-		       "bpp", 		GST_PROPS_INT (32), 
-		       "depth", 	GST_PROPS_INT (32), 
-		       "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN), 
-		       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
-		       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
-		       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
-		       "width", 	GST_PROPS_INT (monoscope->width), 
-		       "height", 	GST_PROPS_INT (monoscope->height),
-               "framerate",     GST_PROPS_FLOAT (monoscope->fps)
-		   );
+  caps = gst_caps_new_simple ("video/x-raw-rgb",
+      "bpp", 		G_TYPE_INT, 32, 
+      "depth", 	G_TYPE_INT, 32, 
+      "endianness", 	G_TYPE_INT, G_BIG_ENDIAN, 
+      "red_mask", 	G_TYPE_INT, R_MASK_32, 
+      "green_mask", 	G_TYPE_INT, G_MASK_32, 
+      "blue_mask", 	G_TYPE_INT, B_MASK_32, 
+      "width", 	G_TYPE_INT, monoscope->width, 
+      "height", 	G_TYPE_INT, monoscope->height,
+      "framerate",     G_TYPE_DOUBLE, monoscope->fps, NULL);
 
   return gst_pad_try_set_caps (monoscope->srcpad, caps);
 }
 
 static GstPadLinkReturn
-gst_monoscope_srcconnect (GstPad *pad, GstCaps *caps)
+gst_monoscope_srcconnect (GstPad *pad, const GstCaps *caps)
 {
   GstPadLinkReturn ret;
   GstMonoscope *monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
+  GstStructure *structure;
 
-  if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "width", &monoscope->width);
-  }
-  if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "height", &monoscope->height);
-  }
-  if (gst_caps_has_property_typed (caps, "framerate", GST_PROPS_FLOAT_TYPE)) {
-    gst_caps_get_float (caps, "framerate", &monoscope->fps);
-  }
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "width", &monoscope->width);
+  gst_structure_get_int (structure, "height", &monoscope->height);
+  gst_structure_get_double (structure, "framerate", &monoscope->fps);
 
   if ((ret = gst_monoscope_negotiate (monoscope)) <= 0)
     return ret;

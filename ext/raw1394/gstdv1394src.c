@@ -62,14 +62,14 @@ gst_dv1394src_factory (void)
       "src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
-      GST_CAPS_NEW (
+      GST_STATIC_CAPS (
         "dv1394src",
         "video/dv",
 /*
 	gst_props_new (
           "format", GST_PROPS_LIST (
-	  		GST_PROPS_STRING ("NTSC"),
-	  		GST_PROPS_STRING ("PAL")
+	  		G_TYPE_STRING ("NTSC"),
+	  		G_TYPE_STRING ("PAL")
 			), 
 	  NULL)
 	),
@@ -167,7 +167,6 @@ gst_dv1394src_init (GstDV1394Src *dv1394src)
   
   /* initialized when first header received */
   dv1394src->frameSize=0; 
-  dv1394src->pool = NULL;
  
   dv1394src->buf = NULL;
   dv1394src->frame = NULL;
@@ -237,22 +236,20 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
         int dif_block = p[2];
 
         /* if we are at the beginning of a frame, 
-          we set buf=frame, and get a new buffer from pool for frame
+          we set buf=frame, and alloc a new buffer for frame
         */
 
         if (section_type == 0 && dif_sequence == 0) {	// dif header
 	
-          if( dv1394src->pool == NULL ) {
+          if( !dv1394src->negotiated) {
             // figure format (NTSC/PAL)
             if( p[3] & 0x80 ) {
               // PAL
               dv1394src->frameSize = PAL_FRAMESIZE;
               GST_DEBUG ("PAL data");
               if (gst_pad_try_set_caps (dv1394src->srcpad, 
-                        GST_CAPS_NEW ( "dv1394src", "video/dv",
-                                      "format", GST_PROPS_STRING("PAL"),
-                                      NULL)
-              ) <= 0) {
+                    gst_caps_new_simple ("video/dv",
+                      "format", G_TYPE_STRING, "PAL", NULL)) <= 0) {
 		gst_element_error (GST_ELEMENT(dv1394src), "Could not set source caps for PAL");
                 return 0;
               }
@@ -261,19 +258,13 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
               dv1394src->frameSize = NTSC_FRAMESIZE;
               GST_DEBUG ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
               if (gst_pad_try_set_caps (dv1394src->srcpad, 
-                        GST_CAPS_NEW ( "dv1394src", "video/dv",
-                                      "format", GST_PROPS_STRING ("NTSC"),
-                                      NULL)
-              ) <= 0) {
+                    gst_caps_new_simple ("video/dv",
+                      "format", G_TYPE_STRING, "NTSC", NULL)) <= 0) {
                 gst_element_error (GST_ELEMENT(dv1394src), "Could not set source caps for NTSC");
                 return 0;
               }
             }
-
-            dv1394src->pool = gst_buffer_pool_get_default( dv1394src->frameSize, N_BUFFERS_IN_POOL );
-            if (dv1394src->pool == NULL) {
-              gst_element_error (GST_ELEMENT(dv1394src), "gst_buffer_pool_get_default returned NULL");
-            }
+            dv1394src->negotiated = TRUE;
           }
   
           // drop last frame when not complete
@@ -287,9 +278,9 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
           dv1394src->frameSequence++;
 
           if( dv1394src->frameSequence % (dv1394src->skip+dv1394src->consecutive) < dv1394src->consecutive ) {
-            if( dv1394src->pool ) dv1394src->frame = gst_buffer_new_from_pool( dv1394src->pool, 0, dv1394src->frameSize );
-              dv1394src->bytesInFrame = 0;
+            dv1394src->frame = gst_buffer_new_and_alloc (dv1394src->frameSize);
             }
+            dv1394src->bytesInFrame = 0;
           }
 
           if (dv1394src->frame != NULL) {
@@ -390,10 +381,6 @@ gst_dv1394src_change_state (GstElement *element)
       raw1394_stop_iso_rcv(dv1394src->handle, dv1394src->channel);
       break;
     case GST_STATE_READY_TO_NULL:
-      if (dv1394src->pool != NULL) {
-        gst_buffer_pool_unref(dv1394src->pool);
-        dv1394src->pool = NULL;
-      }
       raw1394_destroy_handle(dv1394src->handle);
       break;
     default:

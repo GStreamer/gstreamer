@@ -486,19 +486,22 @@ gst_ossformat_get (gint law, gint endianness, gboolean sign, gint width, gint de
 }
 
 gboolean 
-gst_osselement_parse_caps (GstOssElement *oss, GstCaps *caps) 
+gst_osselement_parse_caps (GstOssElement *oss, const GstCaps *caps) 
 {
   gint bps, format;
+  GstStructure *structure;
 
-  gst_caps_get_int (caps, "width", &oss->width);
-  gst_caps_get_int (caps, "depth", &oss->depth);
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int  (structure, "width", &oss->width);
+  gst_structure_get_int  (structure, "depth", &oss->depth);
 	        
   if (oss->width != oss->depth) 
     return FALSE;
 		  
-  gst_caps_get_int (caps, "law", &oss->law); 
-  gst_caps_get_int (caps, "endianness", &oss->endianness);
-  gst_caps_get_boolean (caps, "signed", &oss->sign);
+  gst_structure_get_int  (structure, "law", &oss->law); 
+  gst_structure_get_int  (structure, "endianness", &oss->endianness);
+  gst_structure_get_boolean  (structure, "signed", &oss->sign);
 			    
   if (!gst_ossformat_get (oss->law, oss->endianness, oss->sign, 
                           oss->width, oss->depth, &format, &bps))
@@ -507,8 +510,8 @@ gst_osselement_parse_caps (GstOssElement *oss, GstCaps *caps)
      return FALSE;
   }
 
-  gst_caps_get_int (caps, "channels", &oss->channels);
-  gst_caps_get_int (caps, "rate", &oss->rate);
+  gst_structure_get_int  (structure, "channels", &oss->channels);
+  gst_structure_get_int  (structure, "rate", &oss->rate);
 			      
   oss->bps = bps * oss->channels * oss->rate;
   oss->format = format;
@@ -519,25 +522,28 @@ gst_osselement_parse_caps (GstOssElement *oss, GstCaps *caps)
 #define GET_FIXED_INT(caps, name, dest)         \
 G_STMT_START {                                  \
   if (gst_caps_has_fixed_property (caps, name)) \
-    gst_caps_get_int (caps, name, dest);        \
+    gst_structure_get_int  (structure, name, dest);        \
 } G_STMT_END
 #define GET_FIXED_BOOLEAN(caps, name, dest)     \
 G_STMT_START {                                  \
   if (gst_caps_has_fixed_property (caps, name)) \
-    gst_caps_get_boolean (caps, name, dest);    \
+    gst_structure_get_boolean  (structure, name, dest);    \
 } G_STMT_END
 
 gboolean 
 gst_osselement_merge_fixed_caps (GstOssElement *oss, GstCaps *caps) 
 {
   gint bps, format;
+  GstStructure *structure;
 
+  structure = gst_caps_get_structure (caps, 0);
+  
   /* peel off fixed stuff from the caps */
-  GET_FIXED_INT         (caps, "law",        &oss->law);
-  GET_FIXED_INT         (caps, "endianness", &oss->endianness);
-  GET_FIXED_BOOLEAN     (caps, "signed",     &oss->sign);
-  GET_FIXED_INT         (caps, "width",      &oss->width);
-  GET_FIXED_INT         (caps, "depth",      &oss->depth);
+  gst_structure_get_int (structure, "law",        &oss->law);
+  gst_structure_get_int (structure, "endianness", &oss->endianness);
+  gst_structure_get_boolean (structure, "signed",     &oss->sign);
+  gst_structure_get_int (structure, "width",      &oss->width);
+  gst_structure_get_int (structure, "depth",      &oss->depth);
 
   if (!gst_ossformat_get (oss->law, oss->endianness, oss->sign, 
                           oss->width, oss->depth, &format, &bps))
@@ -545,8 +551,8 @@ gst_osselement_merge_fixed_caps (GstOssElement *oss, GstCaps *caps)
      return FALSE;
   }
 
-  GET_FIXED_INT         (caps, "rate",       &oss->rate);
-  GET_FIXED_INT         (caps, "channels",   &oss->channels);
+  gst_structure_get_int (structure, "rate",       &oss->rate);
+  gst_structure_get_int (structure, "channels",   &oss->channels);
 			      
   oss->bps = bps * oss->channels * oss->rate;
   oss->format = format;

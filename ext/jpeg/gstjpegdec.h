@@ -64,7 +64,7 @@ struct _GstJpegDec {
   gint format;
   gint width;
   gint height;
-  gfloat fps;
+  gdouble fps;
   /* the size of the output buffer */
   gint outsize;
   /* the jpeg line buffer */

@@ -62,7 +62,7 @@ typedef struct _GstMatroskaMux {
                  num_v_streams, num_a_streams, num_t_streams;
 
   /* metadata - includes writing_app and creation_time */
-  GstCaps       *metadata;
+  GstCaps      *metadata;
 
   /* state */
   GstMatroskaMuxState state;

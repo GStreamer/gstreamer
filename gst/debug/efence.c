@@ -56,18 +56,20 @@ enum {
   ARG_FENCE_TOP
 };
 
-GST_PAD_TEMPLATE_FACTORY (gst_efence_sink_factory,
+static GstStaticPadTemplate gst_efence_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (gst_efence_src_factory,
+static GstStaticPadTemplate gst_efence_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 static void     gst_efence_base_init    (gpointer g_class);
@@ -100,7 +102,7 @@ void *gst_fenced_buffer_alloc(GstBuffer *buffer, unsigned int length,
 GstBuffer *gst_fenced_buffer_new(void);
 
 static GstPadLinkReturn
-gst_efence_link (GstPad *pad, GstCaps *caps)
+gst_efence_link (GstPad *pad, const GstCaps *caps)
 {
   GstEFence *filter;
   GstPad *otherpad;
@@ -111,19 +113,7 @@ gst_efence_link (GstPad *pad, GstCaps *caps)
                         GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
-  if (GST_CAPS_IS_FIXED (caps))
-  {
-    /* caps are not fixed, so try to link on the other side and see if
-     * that works */
-
-    if (!gst_pad_try_set_caps (otherpad, caps))
-      return GST_PAD_LINK_REFUSED;
-
-    /* caps on other side were accepted, so we're ok */
-    return GST_PAD_LINK_OK;
-  }
-  /* not enough information yet, delay negotation */
-  return GST_PAD_LINK_DELAYED;
+  return gst_pad_try_set_caps (otherpad, caps);
 }
 
 GType
@@ -157,8 +147,10 @@ gst_efence_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, gst_efence_sink_factory ());
-  gst_element_class_add_pad_template (element_class, gst_efence_src_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get(&gst_efence_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get(&gst_efence_src_factory));
   gst_element_class_set_details (element_class, &plugin_details);
 }
 
@@ -190,11 +182,11 @@ gst_efence_class_init (GstEFenceClass *klass)
 static void
 gst_efence_init (GstEFence *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (gst_efence_sink_factory (),
-                                               "sink");
+  filter->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&gst_efence_sink_factory), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_efence_link);
-  filter->srcpad = gst_pad_new_from_template (gst_efence_src_factory (),
-                                              "src");
+  filter->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&gst_efence_src_factory), "src");
   gst_pad_set_link_function (filter->srcpad, gst_efence_link);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);

@@ -25,6 +25,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include "gstlevel.h"
 #include "math.h"
 
@@ -38,47 +39,21 @@ static GstElementDetails level_details = {
 
 /* pad templates */
 
-GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+static GstStaticPadTemplate sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "level_sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "level_sink",
-    "audio/x-raw-int",
-      "signed", GST_PROPS_BOOLEAN (TRUE),
-      "width", GST_PROPS_LIST (
-                 GST_PROPS_INT (8),
-                 GST_PROPS_INT (16)
-               ),
-      "depth", GST_PROPS_LIST (
-                 GST_PROPS_INT (8),
-                 GST_PROPS_INT (16)
-               ),
-      "rate", GST_PROPS_INT_RANGE (1, G_MAXINT),
-      "channels", GST_PROPS_INT_RANGE (1, 2)
-  )
-)
+  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_template_factory,
+static GstStaticPadTemplate src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "level_src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "level_src",
-    "audio/x-raw-int",
-    "signed", GST_PROPS_BOOLEAN (TRUE),
-    "width", GST_PROPS_LIST (
-               GST_PROPS_INT (8),
-               GST_PROPS_INT (16)
-             ),
-    "depth", GST_PROPS_LIST (
-               GST_PROPS_INT (8),
-               GST_PROPS_INT (16)
-             ),
-    "rate", GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "channels", GST_PROPS_INT_RANGE (1, 2)
-  )
-)
+  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+);
 
 /* Filter signals and args */
 enum {
@@ -130,22 +105,20 @@ gst_level_get_type (void)
 }
 
 static GstPadLinkReturn
-gst_level_link (GstPad *pad, GstCaps *caps)
+gst_level_link (GstPad *pad, const GstCaps *caps)
 {
   GstLevel *filter;
   GstPad *otherpad;
   GstPadLinkReturn res;
+  GstStructure *structure;
   int i;
+  gboolean ret;
 
   filter = GST_LEVEL (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_LEVEL (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 	  
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
-
   res = gst_pad_try_set_caps (otherpad, caps);
   /* if ok, set filter */
   if (res != GST_PAD_LINK_OK && res != GST_PAD_LINK_DONE) {
@@ -154,12 +127,12 @@ gst_level_link (GstPad *pad, GstCaps *caps)
 
   filter->num_samples = 0;
   
-  if (!gst_caps_get_int (caps, "rate", &(filter->rate)))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_int (caps, "width", &(filter->width)))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_int (caps, "channels", &(filter->channels)))
-    return GST_PAD_LINK_REFUSED;
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "rate", &filter->rate);
+  ret &= gst_structure_get_int (structure, "width", &filter->width);
+  ret &= gst_structure_get_int (structure, "channels", &filter->channels);
+
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
   /* allocate channel variable arrays */
   if (filter->CS) g_free (filter->CS);
@@ -393,9 +366,9 @@ gst_level_base_init (GstLevelClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (sink_template_factory));
+	gst_static_pad_template_get (&sink_template_factory));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (src_template_factory));
+	gst_static_pad_template_get (&src_template_factory));
   gst_element_class_set_details (element_class, &level_details);
 
   element_class->change_state = gst_level_change_state;
@@ -443,9 +416,9 @@ gst_level_class_init (GstLevelClass *klass)
 static void
 gst_level_init (GstLevel *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
+  filter->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get (&sink_template_factory), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_level_link);
-  filter->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template_factory), "src");
+  filter->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (&src_template_factory), "src");
   gst_pad_set_link_function (filter->srcpad, gst_level_link);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);

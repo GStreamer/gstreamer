@@ -41,29 +41,27 @@ enum
   ARG_PAYLOAD_TYPE,
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
- 	"src",
-	GST_PAD_SRC,
-	GST_PAD_ALWAYS,
-	GST_CAPS_NEW (
-		 "audio_raw",
-		 "audio/x-raw-int",
-		 "endianness",  GST_PROPS_INT (G_BYTE_ORDER), 
-		 "signed", 	GST_PROPS_BOOLEAN (TRUE), 
-		 "width", 	GST_PROPS_INT (16), 
-		 "depth",	GST_PROPS_INT (16), 
-		 "rate",	GST_PROPS_INT_RANGE (1000, 48000),
-		 "channels", 	GST_PROPS_INT_RANGE (1, 2))
-)
- 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-	"sink",
-	GST_PAD_SINK,
-	GST_PAD_ALWAYS,
-	GST_CAPS_NEW (
-		"rtp",
-		"application/x-rtp",
-		NULL)
+static GstStaticPadTemplate gst_rtpL16parse_src_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ( "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) [ 1000, 48000 ], "
+      "channels = (int) [ 1, 2 ]"
+    )
+);
+
+static GstStaticPadTemplate gst_rtpL16parse_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp")
 );
 
 static void gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass);
@@ -108,9 +106,9 @@ gst_rtpL16parse_base_init (GstRtpL16ParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+      gst_static_pad_template_get (&gst_rtpL16parse_src_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+      gst_static_pad_template_get (&gst_rtpL16parse_sink_template));
   gst_element_class_set_details (element_class, &gst_rtp_L16parse_details);
 }
 
@@ -141,8 +139,10 @@ gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass)
 static void
 gst_rtpL16parse_init (GstRtpL16Parse * rtpL16parse)
 {
-  rtpL16parse->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_factory), "src");
-  rtpL16parse->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+  rtpL16parse->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_rtpL16parse_src_template), "src");
+  rtpL16parse->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_rtpL16parse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (rtpL16parse), rtpL16parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (rtpL16parse), rtpL16parse->sinkpad);
   gst_pad_set_chain_function (rtpL16parse->sinkpad, gst_rtpL16parse_chain);
@@ -172,15 +172,11 @@ gst_rtpL16_caps_nego (GstRtpL16Parse *rtpL16parse)
 {
   GstCaps *caps;
 
-  caps = GST_CAPS_NEW (
-		 "audio_raw",
-		 "audio/x-raw-int",
-		 "endianness",  GST_PROPS_INT (G_BYTE_ORDER), 
-		 "signed", 	GST_PROPS_BOOLEAN (TRUE), 
-		 "width", 	GST_PROPS_INT (16), 
-		 "depth",	GST_PROPS_INT (16), 
-		 "rate",	GST_PROPS_INT (rtpL16parse->frequency),
-		 "channels", 	GST_PROPS_INT (rtpL16parse->channels));
+  caps = gst_caps_copy(gst_static_caps_get (&gst_rtpL16parse_src_template.static_caps));
+
+  gst_caps_set_simple (caps,
+      "rate", G_TYPE_INT, rtpL16parse->frequency,
+      "channel", G_TYPE_INT, rtpL16parse->channels, NULL);
 
   gst_pad_try_set_caps (rtpL16parse->srcpad, caps);
 }

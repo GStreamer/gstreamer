@@ -57,37 +57,27 @@ enum {
   ARG_FRAGMENT,
 };
 
-GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
+static GstStaticPadTemplate osssrc_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "osssrc_src",
-    "audio/x-raw-int",
-      "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",   	GST_PROPS_LIST (
-			  GST_PROPS_BOOLEAN (TRUE),
-			  GST_PROPS_BOOLEAN (FALSE)
-			),
-      "width",   	GST_PROPS_LIST (
-			  GST_PROPS_INT (8),
-			  GST_PROPS_INT (16)
-			),
-      "depth",   	GST_PROPS_LIST (
-			  GST_PROPS_INT (8),
-			  GST_PROPS_INT (16)
-			),
-      "rate",     	GST_PROPS_INT_RANGE (1000, 48000),
-      "channels", 	GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) { TRUE, FALSE }, "
+      "width = (int) { 8, 16 }, "
+      "depth = (int) { 8, 16 }, "
+      "rate = (int) [ 1000, 48000 ], "
+      "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
 static void			gst_osssrc_base_init	(gpointer g_class);
 static void 			gst_osssrc_class_init	(GstOssSrcClass *klass);
 static void 			gst_osssrc_init		(GstOssSrc *osssrc);
 static void 			gst_osssrc_dispose	(GObject *object);
 
-static GstPadLinkReturn 	gst_osssrc_srcconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn 	gst_osssrc_srcconnect 	(GstPad *pad, const GstCaps *caps);
 static const GstFormat* 	gst_osssrc_get_formats 	(GstPad *pad);
 static gboolean 		gst_osssrc_convert 	(GstPad *pad, 
 							 GstFormat src_format, gint64 src_value,
@@ -143,7 +133,7 @@ gst_osssrc_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (element_class, &gst_osssrc_details);
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (osssrc_src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&osssrc_src_factory));
 }
 static void
 gst_osssrc_class_init (GstOssSrcClass *klass) 
@@ -179,7 +169,7 @@ static void
 gst_osssrc_init (GstOssSrc *osssrc) 
 {
   osssrc->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (osssrc_src_factory), "src");
+		  gst_static_pad_template_get (&osssrc_src_factory), "src");
   gst_pad_set_get_function (osssrc->srcpad, gst_osssrc_get);
   gst_pad_set_link_function (osssrc->srcpad, gst_osssrc_srcconnect);
   gst_pad_set_convert_function (osssrc->srcpad, gst_osssrc_convert);
@@ -212,14 +202,11 @@ gst_osssrc_dispose (GObject *object)
 }
 
 static GstPadLinkReturn 
-gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
+gst_osssrc_srcconnect (GstPad *pad, const GstCaps *caps)
 {
   GstOssSrc *src;
 
   src = GST_OSSSRC(gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
 
   if (!gst_osselement_parse_caps (GST_OSSELEMENT (src), caps))
     return GST_PAD_LINK_REFUSED;
@@ -248,17 +235,14 @@ gst_osssrc_negotiate (GstPad *pad)
     
   /* set caps on src pad */
   if (gst_pad_try_set_caps (src->srcpad, 
-	GST_CAPS_NEW (
-    	  "oss_src",
-	  "audio/x-raw-int",
-	    "endianness", GST_PROPS_INT (GST_OSSELEMENT (src)->endianness),
-	    "signed",     GST_PROPS_BOOLEAN (GST_OSSELEMENT (src)->sign),
-	    "width",      GST_PROPS_INT (GST_OSSELEMENT (src)->width),
-	    "depth",      GST_PROPS_INT (GST_OSSELEMENT (src)->depth),
-	    "rate",       GST_PROPS_INT (GST_OSSELEMENT (src)->rate),
-	    "channels",   GST_PROPS_INT (GST_OSSELEMENT (src)->channels)
-        )) <= 0) 
-  {
+	gst_caps_new_simple("audio/x-raw-int",
+	    "endianness", G_TYPE_INT, GST_OSSELEMENT (src)->endianness,
+	    "signed",     G_TYPE_BOOLEAN, GST_OSSELEMENT (src)->sign,
+	    "width",      G_TYPE_INT, GST_OSSELEMENT (src)->width,
+	    "depth",      G_TYPE_INT, GST_OSSELEMENT (src)->depth,
+	    "rate",       G_TYPE_INT, GST_OSSELEMENT (src)->rate,
+	    "channels",   G_TYPE_INT, GST_OSSELEMENT (src)->channels,
+	    NULL)) <= 0) {
     return FALSE;
   }
   return TRUE;

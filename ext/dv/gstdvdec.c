@@ -29,8 +29,11 @@
 
 #define NTSC_HEIGHT 480
 #define NTSC_BUFFER 120000
+#define NTSC_FRAMERATE 29.997
+
 #define PAL_HEIGHT 576
 #define PAL_BUFFER 144000
+#define PAL_FRAMERATE 25.0
 
 /* The ElementDetails structure gives a human-readable description
  * of the plugin, as well as author and version data.
@@ -68,91 +71,88 @@ enum {
  * can have.  They can be quite complex, but for this dvdec plugin
  * they are rather simple.
  */
-GST_PAD_TEMPLATE_FACTORY (sink_temp,
-  "sink",
+static GstStaticPadTemplate sink_temp =
+GST_STATIC_PAD_TEMPLATE 
+(
+  "sink" , 
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dv_dec_sink",
-    "video/x-dv",
-    "systemstream", GST_PROPS_BOOLEAN (TRUE)
+  GST_STATIC_CAPS (
+    "video/x-dv, systemstream = (boolean) true"
   )
-)
+);
 
-
-GST_PAD_TEMPLATE_FACTORY (video_src_temp,
+static GstStaticPadTemplate video_src_temp =
+GST_STATIC_PAD_TEMPLATE
+(
   "video",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dv_dec_src",
-    "video/x-raw-yuv",
-    "format",   	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
-    "width",    	GST_PROPS_INT (720),
-    "height",  		GST_PROPS_LIST (
-			  GST_PROPS_INT (NTSC_HEIGHT),
-			  GST_PROPS_INT (PAL_HEIGHT)
-			),
-    "framerate",	GST_PROPS_LIST (
-			  GST_PROPS_FLOAT (25.),
-			  GST_PROPS_FLOAT (30/1.001)
-			)
-  ),
-  GST_CAPS_NEW (
-    "dv_dec_src",
-    "video/x-raw-rgb",
-    "bpp", 		GST_PROPS_INT(32),
-    "depth", 		GST_PROPS_INT(32),
-    "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
-    "red_mask", 	GST_PROPS_INT(0x000000ff),
-    "green_mask", 	GST_PROPS_INT(0x0000ff00),
-    "blue_mask", 	GST_PROPS_INT(0x00ff0000),
-    "width",     	GST_PROPS_INT (720),
-    "height",  		GST_PROPS_LIST (
-			  GST_PROPS_INT (NTSC_HEIGHT),
-			  GST_PROPS_INT (PAL_HEIGHT)
-			),
-    "framerate",	GST_PROPS_LIST (
-			  GST_PROPS_FLOAT (25.),
-			  GST_PROPS_FLOAT (30/1.001)
-			)
-  ),
-  GST_CAPS_NEW (
-    "dv_dec_src",
-    "video/x-raw-rgb",
-    "bpp", 		GST_PROPS_INT(24),
-    "depth", 		GST_PROPS_INT(24),
-    "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
-    "red_mask", 	GST_PROPS_INT(0x0000ff),
-    "green_mask", 	GST_PROPS_INT(0x00ff00),
-    "blue_mask", 	GST_PROPS_INT(0xff0000),
-    "width",     	GST_PROPS_INT (720),
-    "height",  		GST_PROPS_LIST (
-			  GST_PROPS_INT (NTSC_HEIGHT),
-			  GST_PROPS_INT (PAL_HEIGHT)
-			),
-    "framerate",	GST_PROPS_LIST (
-			  GST_PROPS_FLOAT (25.),
-			  GST_PROPS_FLOAT (30/1.001)
-			)
-  )
-)
+  GST_STATIC_CAPS (
+    "video/x-raw-yuv, "
+    "format = (fourcc) YUY2, " 
+    "width = (int) 720, "
+    "height = (int) { " 
+    	G_STRINGIFY(NTSC_HEIGHT) ", "
+	G_STRINGIFY(PAL_HEIGHT)
+    " }, "
+    "framerate = (float) { "
+        G_STRINGIFY(PAL_FRAMERATE) ", "
+	G_STRINGIFY(NTSC_FRAMERATE) 
+    " }; "
 
-GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
+    "video/x-raw-rgb, "
+    "bpp = (int) 32, "
+    "depth = (int) 32, "
+    "endianness = (int) " G_STRINGIFY(G_BIG_ENDIAN) ", "
+    "red_mask =   (int) 0x000000ff, "
+    "green_mask = (int) 0x0000ff00, "
+    "blue_mask =  (int) 0x00ff0000, "
+    "width = (int) 720, "
+    "height = (int) { "
+    	G_STRINGIFY(NTSC_HEIGHT) ", "
+	G_STRINGIFY(PAL_HEIGHT)
+    " }, "
+    "framerate = (float) { "
+        G_STRINGIFY(PAL_FRAMERATE) ", "
+	G_STRINGIFY(NTSC_FRAMERATE) 
+    " }; "
+
+    "video/x-raw-rgb, "
+    "bpp = (int) 24, "
+    "depth = (int) 24, "
+    "endianness = (int) " G_STRINGIFY(G_BIG_ENDIAN) ", "
+    "red_mask =   (int) 0x000000ff, "
+    "green_mask = (int) 0x0000ff00, "
+    "blue_mask =  (int) 0x00ff0000, "
+    "width = (int) 720, "
+    "height = (int) { "
+    	G_STRINGIFY(NTSC_HEIGHT) ", "
+	G_STRINGIFY(PAL_HEIGHT)
+    " }, "
+    "framerate = (float) { "
+        G_STRINGIFY(PAL_FRAMERATE) ", "
+	G_STRINGIFY(NTSC_FRAMERATE) 
+    " }"
+  )
+);
+
+static GstStaticPadTemplate audio_src_temp =
+GST_STATIC_PAD_TEMPLATE
+(
   "audio",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "arts_sample",
-    "audio/x-raw-int",
-    "depth",   		GST_PROPS_INT (16),
-    "width",    	GST_PROPS_INT (16),
-    "signed",   	GST_PROPS_BOOLEAN (TRUE),
-    "channels", 	GST_PROPS_INT (2),
-    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN),
-    "rate",   		GST_PROPS_INT_RANGE (4000, 48000)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+    "depth = (int) 16, "
+    "width = (int) 16, "
+    "signed = (boolean) TRUE, "
+    "channels = (int) 2, "
+    "endianness = (int) " G_STRINGIFY(G_LITTLE_ENDIAN) ", "
+    "rate = (int) [ 4000, 48000 ]"
   )
-)
+);
 
 #define GST_TYPE_DVDEC_QUALITY (gst_dvdec_quality_get_type())
 GType
@@ -247,9 +247,9 @@ gst_dvdec_base_init (gpointer g_class)
    * Note that the generated padtemplates are stored in static global
    * variables, for the gst_dvdec_init function to use later on.
    */
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET(sink_temp));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET(video_src_temp));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET(audio_src_temp));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get(&sink_temp));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get(&video_src_temp));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get(&audio_src_temp));
 
   gst_element_class_set_details (element_class, &dvdec_details);
 }
@@ -303,13 +303,13 @@ gst_dvdec_init(GstDVDec *dvdec)
 {
   gint i;
 
-  dvdec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_temp), "sink");
+  dvdec->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get (&sink_temp), "sink");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
   gst_pad_set_query_function (dvdec->sinkpad, NULL);
   gst_pad_set_convert_function (dvdec->sinkpad, GST_DEBUG_FUNCPTR (gst_dvdec_sink_convert));
   gst_pad_set_formats_function (dvdec->sinkpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
 
-  dvdec->videosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (video_src_temp), "video");
+  dvdec->videosrcpad = gst_pad_new_from_template (gst_static_pad_template_get (&video_src_temp), "video");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
   gst_pad_set_query_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_query));
   gst_pad_set_query_type_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_src_query_types));
@@ -318,7 +318,7 @@ gst_dvdec_init(GstDVDec *dvdec)
   gst_pad_set_convert_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_convert));
   gst_pad_set_formats_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
 
-  dvdec->audiosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET(audio_src_temp), "audio");
+  dvdec->audiosrcpad = gst_pad_new_from_template (gst_static_pad_template_get (&audio_src_temp), "audio");
   gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
   gst_pad_set_query_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_query));
   gst_pad_set_query_type_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_src_query_types));
@@ -329,7 +329,6 @@ gst_dvdec_init(GstDVDec *dvdec)
 
   gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
 
-  dvdec->pool = NULL;
   dvdec->length = 0;
   dvdec->next_ts = 0LL;
   dvdec->end_position = -1LL;
@@ -706,7 +705,7 @@ gst_dvdec_loop (GstElement *element)
   dvdec->PAL = dv_system_50_fields (dvdec->decoder);
 
   dvdec->framerate = (dvdec->PAL ? 2500 : 2997);
-  fps = (dvdec->PAL ? 25. : 30/1.001);
+  fps = (dvdec->PAL ? PAL_FRAMERATE : NTSC_FRAMERATE);
   dvdec->height = height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
   length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
 
@@ -724,43 +723,51 @@ gst_dvdec_loop (GstElement *element)
 
   /* if we did not negotiate yet, do it now */
   if (!GST_PAD_CAPS (dvdec->videosrcpad)) {
-    GstCaps *allowed;
-    GstCaps *trylist;
+    GstCaps *caps = NULL;
+    GstCaps *negotiated_caps = NULL;
+    GstPadTemplate *src_pad_template;
+    int i;
     
-    /* we what we are allowed to do */
-    allowed = gst_pad_get_allowed_caps (dvdec->videosrcpad);
-
     /* try to fix our height */
-    trylist = gst_caps_intersect (allowed, gst_caps_append (
-            GST_CAPS_NEW (
-	      "dvdec_negotiate",
-	      "video/x-raw-yuv",
-	        "height",  	GST_PROPS_INT (height),
-                "framerate",	GST_PROPS_FLOAT (fps)
-	    ), GST_CAPS_NEW (
-	      "dvdec_negotiate",
-	      "video/x-raw-rgb",
-	        "height",  	GST_PROPS_INT (height),
-                "framerate",	GST_PROPS_FLOAT (fps)
-            )));
-    
-    /* prepare for looping */
-    trylist = gst_caps_normalize (trylist);
+    src_pad_template = gst_static_pad_template_get (&video_src_temp);
+    caps = gst_caps_copy(gst_pad_template_get_caps (src_pad_template));
 
-    while (trylist) {
-      GstCaps *to_try = gst_caps_copy_1 (trylist);
+    for (i = 0; i < gst_caps_get_size (caps); i++)
+    {
+	GstStructure *structure = gst_caps_get_structure (caps, i);
+	gst_structure_set(structure, 
+	        "height", G_TYPE_INT, height,
+                "framerate", G_TYPE_INT, fps, NULL
+	      );
+    }
+
+    for (i=0; i < gst_caps_get_size(caps); i++) {
+      GstStructure *to_try_struct = gst_caps_get_structure (caps, i);
+      GstCaps *try_caps = gst_caps_new_full (to_try_struct);
 
       /* try each format */
-      if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try) > 0) {
-	guint32 fourcc;
+      if (gst_pad_try_set_caps (dvdec->videosrcpad, try_caps) > 0) {
+        negotiated_caps = try_caps;
+        break;
+      }
+
+      gst_caps_free(try_caps);
+    }
+
+    gst_caps_free (caps);
+
+    /* Check if we negotiated caps successfully */
+    if (negotiated_caps != NULL) {
+        GstStructure *structure = gst_caps_get_structure (negotiated_caps, 0);
+        guint32 fourcc;
 
 	/* it worked, try to find what it was again */
-	gst_caps_get_fourcc_int (to_try, "format", &fourcc);
+	gst_structure_get_fourcc (structure, "format", &fourcc);
 
 	if (fourcc == GST_STR_FOURCC ("RGB ")) {
           gint bpp;
 
-	  gst_caps_get_int (to_try, "bpp", &bpp);
+	  gst_structure_get_int (structure, "bpp", &bpp);
 	  if (bpp == 24) {
             dvdec->space = e_dv_color_rgb;
             dvdec->bpp = 3;
@@ -774,12 +781,7 @@ gst_dvdec_loop (GstElement *element)
           dvdec->space = e_dv_color_yuv;
           dvdec->bpp = 2;
 	}
-	break;
-      }
-      trylist = trylist->next;
-    }
-    /* oops list exhausted an nothing was found... */
-    if (!trylist) {
+    } else {
       gst_element_error (element, "could not negotiate");
       return;
     }
@@ -799,15 +801,14 @@ gst_dvdec_loop (GstElement *element)
     /* if we did not negotiate yet, do it now */
     if (!GST_PAD_CAPS (dvdec->audiosrcpad)) {
       gst_pad_try_set_caps (dvdec->audiosrcpad,
-	GST_CAPS_NEW (
-	  "dvdec_audio_caps",
-	  "audio/x-raw-int",
-    	    "rate",   		GST_PROPS_INT (dvdec->decoder->audio->frequency),
-	    "depth",   		GST_PROPS_INT (16),
-	    "width",    	GST_PROPS_INT (16),
-	    "signed",   	GST_PROPS_BOOLEAN (TRUE),
-	    "channels", 	GST_PROPS_INT (dvdec->decoder->audio->num_channels),
-	    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN)
+	gst_caps_new_simple (
+	  "audio/x-raw-int", 
+    	    "rate", G_TYPE_INT, dvdec->decoder->audio->frequency,
+	    "depth", G_TYPE_INT,  16,
+	    "width", G_TYPE_INT,  16,
+	    "signed", G_TYPE_BOOLEAN, TRUE,
+	    "channels", G_TYPE_INT, dvdec->decoder->audio->num_channels,
+	    "endianness", G_TYPE_INT, G_LITTLE_ENDIAN
   	  ));
     }
 
@@ -831,23 +832,7 @@ gst_dvdec_loop (GstElement *element)
     guint8 *outframe_ptrs[3];
     gint outframe_pitches[3];
 
-    /* try to grab a pool */
-    if (!dvdec->pool) {
-      dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
-    }
-
-    outbuf = NULL;
-    /* try to get a buffer from the pool if we have one */
-    if (dvdec->pool) {
-      outbuf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
-    }
-    /* no buffer from pool, allocate one ourselves */
-    if (!outbuf) {
-      outbuf = gst_buffer_new ();
-    
-      GST_BUFFER_SIZE (outbuf) = (720 * height) * dvdec->bpp;
-      GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-    }
+    outbuf = gst_buffer_new_and_alloc ((720 * height) * dvdec->bpp);
     
     outframe = GST_BUFFER_DATA (outbuf);
 
@@ -898,9 +883,6 @@ gst_dvdec_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      if (dvdec->pool)
-	gst_buffer_pool_unref (dvdec->pool);
-      dvdec->pool = NULL;
       break;
     case GST_STATE_PAUSED_TO_READY:
       dv_decoder_free (dvdec->decoder);

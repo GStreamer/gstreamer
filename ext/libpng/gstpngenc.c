@@ -93,23 +93,18 @@ GType gst_pngenc_get_type (void)
 static GstCaps*
 png_caps_factory (void)
 {
-  return gst_caps_new ( "png_png",
-			"video/x-png",
-			gst_props_new (
-			  "width",     GST_PROPS_INT_RANGE (16, 4096),
-			  "height",    GST_PROPS_INT_RANGE (16, 4096),
-			  "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-			  NULL));
+  return gst_caps_new_simple ("video/x-png",
+      "width",     GST_TYPE_INT_RANGE, 16, 4096,
+      "height",    GST_TYPE_INT_RANGE, 16, 4096,
+      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+      NULL);
 }
 
 
 static GstCaps*
 raw_caps_factory (void)
 { 
-  return gst_caps_new ( "png_raw", 
-  			"video/x-raw-rgb",
-			 GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24
-	              );
+  return gst_caps_from_string (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24);
 }
 
 static void
@@ -123,11 +118,11 @@ gst_pngenc_base_init (gpointer g_class)
 
   pngenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
 					       GST_PAD_ALWAYS,
-					       raw_caps, NULL);
+					       raw_caps);
   
   pngenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
 					      GST_PAD_ALWAYS,
-					      png_caps, NULL);
+					      png_caps);
   
   gst_element_class_add_pad_template (element_class, pngenc_sink_template);
   gst_element_class_add_pad_template (element_class, pngenc_src_template);
@@ -148,26 +143,24 @@ gst_pngenc_class_init (GstPngEncClass *klass)
 
 
 static GstPadLinkReturn
-gst_pngenc_sinklink (GstPad *pad, GstCaps *caps)
+gst_pngenc_sinklink (GstPad *pad, const GstCaps *caps)
 {
   GstPngEnc *pngenc;
-  gfloat fps;
+  gdouble fps;
+  GstStructure *structure;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &pngenc->width);
+  gst_structure_get_int (structure, "height", &pngenc->height);
+  gst_structure_get_double (structure, "framerate", &fps);
+  gst_structure_get_int (structure, "bpp", &pngenc->bpp);
 
-  gst_caps_get_int (caps, "width", &pngenc->width);
-  gst_caps_get_int (caps, "height", &pngenc->height);
-  gst_caps_get_float (caps, "framerate", &fps);
-  gst_caps_get_int (caps, "bpp", &pngenc->bpp);
-
-  caps = GST_CAPS_NEW ("png_src",
-		       "video/x-png",
-			 "framerate", GST_PROPS_FLOAT (fps),
-			 "width",     GST_PROPS_INT (pngenc->width),
-			 "height",    GST_PROPS_INT (pngenc->height));
+  caps = gst_caps_new_simple ("video/x-png",
+      "framerate", G_TYPE_DOUBLE, fps,
+      "width",     G_TYPE_INT, pngenc->width,
+      "height",    G_TYPE_INT, pngenc->height, NULL);
 
   return gst_pad_try_set_caps (pngenc->srcpad, caps);
 }

@@ -105,7 +105,7 @@ static void gst_bpwsinc_get_property	(GObject * object, guint prop_id,
 
 static void gst_bpwsinc_chain		(GstPad * pad, GstData *_data);
 static GstPadLinkReturn
-       gst_bpwsinc_sink_connect 		(GstPad * pad, GstCaps * caps);
+       gst_bpwsinc_sink_connect 		(GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_bpwsinc_signals[LAST_SIGNAL] = { 0 }; */
@@ -136,8 +136,10 @@ gst_bpwsinc_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   /* register src pads */
-  gst_element_class_add_pad_template (element_class, gst_filter_src_factory ());
-  gst_element_class_add_pad_template (element_class, gst_filter_sink_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_filter_src_template));
+  gst_element_class_add_pad_template (element_class,
+    gst_static_pad_template_get (&gst_filter_sink_template));
 
   gst_element_class_set_details (element_class, &gst_bpwsinc_details);  
 }
@@ -176,12 +178,14 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 static void
 gst_bpwsinc_init (GstBPWSinc * filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (gst_filter_sink_factory (), "sink");
+  filter->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_filter_sink_template), "sink");
   gst_pad_set_chain_function (filter->sinkpad, gst_bpwsinc_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_bpwsinc_sink_connect);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
-  filter->srcpad = gst_pad_new_from_template (gst_filter_src_factory (), "src");
+  filter->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_filter_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->wing_size = 50;
@@ -191,7 +195,7 @@ gst_bpwsinc_init (GstBPWSinc * filter)
 }
 
 static GstPadLinkReturn
-gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
+gst_bpwsinc_sink_connect (GstPad * pad, const GstCaps * caps)
 {
   int i = 0;
   double sum = 0.0;
@@ -204,10 +208,7 @@ gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
   g_assert (GST_IS_PAD (pad));
   g_assert (caps != NULL);
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
- 
-  set_retval = gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
+  set_retval = gst_pad_try_set_caps (filter->srcpad, caps);
   
   if (set_retval > 0)
   {

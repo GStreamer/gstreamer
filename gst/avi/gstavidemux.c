@@ -42,15 +42,12 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_templ,
+static GstStaticPadTemplate sink_templ =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "avidemux_sink",
-    "video/x-msvideo",
-      NULL
-  )
+  GST_STATIC_CAPS ("video/x-msvideo")
 );
 
 static void 	gst_avi_demux_base_init	        (GstAviDemuxClass *klass);
@@ -138,20 +135,19 @@ gst_avi_demux_base_init (GstAviDemuxClass *klass)
   audiosrctempl = gst_pad_template_new ("audio_%02d",
 					GST_PAD_SRC,
 					GST_PAD_SOMETIMES,
-					audcaps, NULL);
+					audcaps);
 
-  vidcaps = gst_caps_append (
-		gst_riff_create_video_template_caps (),
-		gst_riff_create_iavs_template_caps ());
+  vidcaps = gst_riff_create_video_template_caps ();
+  gst_caps_append (vidcaps, gst_riff_create_iavs_template_caps ());
   videosrctempl = gst_pad_template_new ("video_%02d",
 					GST_PAD_SRC,
 					GST_PAD_SOMETIMES,
-					vidcaps, NULL);
+					vidcaps);
 
   gst_element_class_add_pad_template (element_class, audiosrctempl);
   gst_element_class_add_pad_template (element_class, videosrctempl);
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (sink_templ));
+      gst_static_pad_template_get (&sink_templ));
   gst_element_class_set_details (element_class, &gst_avi_demux_details);
 }
 
@@ -185,7 +181,7 @@ gst_avi_demux_init (GstAviDemux *avi)
   GST_FLAG_SET (avi, GST_ELEMENT_EVENT_AWARE);
 
   avi->sinkpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET (sink_templ), "sink");
+	gst_static_pad_template_get (&sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (avi), avi->sinkpad);
   GST_RIFF_READ (avi)->sinkpad = avi->sinkpad;
 
@@ -232,16 +228,10 @@ gst_avi_demux_reset (GstAviDemux *avi)
 static void
 gst_avi_demux_streaminfo (GstAviDemux *avi)
 {
-  GstProps *props;
-
-  props = gst_props_empty_new ();
-
   /* compression formats are added later - a bit hacky */
 
-  gst_caps_replace_sink (&avi->streaminfo,
-		  	 gst_caps_new ("avi_streaminfo",
-                                       "application/x-gst-streaminfo",
-                                       props));
+  gst_caps_replace (&avi->streaminfo,
+      gst_caps_new_simple ("application/x-gst-streaminfo", NULL));
 
   /*g_object_notify(G_OBJECT(avi), "streaminfo");*/
 }

@@ -54,139 +54,85 @@ enum {
   ARG_BIGFILE,
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "avimux_src_video",
-    "video/x-msvideo",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ("video/x-msvideo")
+);
     
-GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
+static GstStaticPadTemplate video_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "avimux_sink_video_yuv",
-    "video/x-raw-yuv",
-      "format", GST_PROPS_LIST (
-                  GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
-                  GST_PROPS_FOURCC (GST_MAKE_FOURCC('I','4','2','0'))
-                ),
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_jpeg",
-    "video/x-jpeg",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_divx",
-    "video/x-divx",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096),
-      "divxversion", GST_PROPS_INT_RANGE (3, 5)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_xvid",
-    "video/x-xvid",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_3ivx",
-    "video/x-3ivx",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_msmpeg",
-    "video/x-msmpeg",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096),
-      "msmpegversion", GST_PROPS_INT_RANGE (41, 43)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_mpeg",
-    "video/mpeg",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096),
-      "mpegversion", GST_PROPS_INT (1),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_h263",
-    "video/x-h263",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_dv",
-    "video/x-dv",
-      "width",  GST_PROPS_INT (720),
-      "height", GST_PROPS_LIST (
-		  GST_PROPS_INT (576),
-		  GST_PROPS_INT (480)
-		),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_video_hfyu",
-    "video/x-huffyuv",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
+  GST_STATIC_CAPS (
+    "video/x-raw-yuv, "
+      "format = (fourcc) { YUY2, I420 }, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ]; "
+    "video/x-jpeg, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ]; "
+    "video/x-divx, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ], "
+      "divxversion = (int) [ 3, 5 ]; "
+    "video/x-xvid, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ]; "
+    "video/x-3ivx, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ]; "
+    "video/x-msmpeg, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ], "
+      "msmpegversion = (int) [ 41, 43 ]; "
+    "video/mpeg, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ], "
+      "mpegversion = (int) 1, "
+      "systemstream = (boolean) FALSE; "
+    "video/x-h263, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ]; "
+    "video/x-dv, "
+      "width = (int) 720, "
+      "height = (int) { 576, 480 }, "
+      "systemstream = (boolean) FALSE; "
+    "video/x-huffyuv, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ]"
   )
-)
+);
     
-GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
+static GstStaticPadTemplate audio_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "avimux_sink_audio_raw",
-    "audio/x-raw-int",
-      "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
-      "signed",           GST_PROPS_LIST (
-      			    GST_PROPS_BOOLEAN (TRUE),
-      			    GST_PROPS_BOOLEAN (FALSE)
-			  ),
-      "width",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			  ),
-      "depth",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			  ),
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_audio_mpeg",
-    "audio/mpeg",
-      "mpegversion",      GST_PROPS_INT (1),
-      "layer",		  GST_PROPS_INT_RANGE (1, 3),
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_audio_vorbis",
-    "audio/x-vorbis",
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "avimux_sink_audio_ac3",
-    "audio/x-ac3",
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 6)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) LITTLE_ENDIAN, "
+      "signed = (boolean) { TRUE, FALSE }, "
+      "width = (int) { 8, 16 }, "
+      "depth = (int) { 8, 16 }, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2 ]; "
+    "audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) [ 1, 3 ], "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2 ]; "
+    "audio/x-vorbis, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2 ]; "
+    "audio/x-ac3, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2 ]"
   )
-)
+);
     
 
 static void 	gst_avimux_base_init		     (gpointer g_class);
@@ -246,11 +192,11 @@ gst_avimux_base_init (gpointer g_class)
   );
 
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (src_factory));
+      gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (audio_sink_factory));
+      gst_static_pad_template_get (&audio_sink_factory));
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (video_sink_factory));
+      gst_static_pad_template_get (&video_sink_factory));
 
   gst_element_class_set_details (element_class, &gst_avimux_details);
 }
@@ -334,113 +280,101 @@ gst_avimux_init (GstAviMux *avimux)
 }
 
 static GstPadLinkReturn
-gst_avimux_vidsinkconnect (GstPad *pad, GstCaps *vscaps)
+gst_avimux_vidsinkconnect (GstPad *pad, const GstCaps *vscaps)
 {
   GstAviMux *avimux;
-  GstCaps *caps;
+  GstStructure *structure;
+  const gchar* mimetype;
+  gdouble fps = 0.;
+  gboolean ret;
 
   avimux = GST_AVIMUX (gst_pad_get_parent (pad));
-
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscaps))
-    return GST_PAD_LINK_DELAYED;
 
   GST_DEBUG ("avimux: video sinkconnect triggered on %s",
 	     gst_pad_get_name (pad));
 
-  for (caps = vscaps; caps != NULL; caps = vscaps = vscaps->next)
-  {
-    const gchar* mimetype = gst_caps_get_mime(caps);
-    gfloat fps = 0.;
+  structure = gst_caps_get_structure (vscaps, 0);
+  mimetype = gst_structure_get_name (structure);
 
-    /* global */
-    avimux->vids.size        = sizeof(gst_riff_strf_vids);
-    avimux->vids.planes      = 1;
-    gst_caps_get (caps, "width", &avimux->vids.width,
-			"height", &avimux->vids.height,
-			"framerate", &fps,
-			NULL);
-    if (fps != 0.)
-      avimux->vids_hdr.scale = avimux->vids_hdr.rate / fps;
+  /* global */
+  avimux->vids.size        = sizeof(gst_riff_strf_vids);
+  avimux->vids.planes      = 1;
+  ret = gst_structure_get_int (structure, "width", &avimux->vids.width);
+  ret &= gst_structure_get_int (structure, "height", &avimux->vids.height);
+  ret &= gst_structure_get_double (structure, "framerate", &fps);
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
-    if (!strcmp (mimetype, "video/x-raw-yuv"))
+  if (fps != 0.)
+    avimux->vids_hdr.scale = avimux->vids_hdr.rate / fps;
+
+  if (!strcmp (mimetype, "video/x-raw-yuv")) {
+    guint32 format;
+
+    gst_structure_get_fourcc (structure, "format", &format);
+    avimux->vids.compression = format;
+    switch (format)
     {
-      guint32 format;
-
-      gst_caps_get_fourcc_int (caps, "format", &format);
-      avimux->vids.compression = format;
-      switch (format)
-      {
-        case GST_MAKE_FOURCC('Y','U','Y','2'):
-          avimux->vids.bit_cnt     = 16;
-          break;
-        case GST_MAKE_FOURCC('I','4','2','0'):
-          avimux->vids.bit_cnt     = 12;
-          break;
-      }
-
-      goto done;
+      case GST_MAKE_FOURCC('Y','U','Y','2'):
+	avimux->vids.bit_cnt     = 16;
+	break;
+      case GST_MAKE_FOURCC('I','4','2','0'):
+	avimux->vids.bit_cnt     = 12;
+	break;
     }
-    else
-    {
-      avimux->vids.bit_cnt = 24;
-      avimux->vids.compression = 0;
+  } else {
+    avimux->vids.bit_cnt = 24;
+    avimux->vids.compression = 0;
 
-      /* find format */
-      if (!strcmp (mimetype, "video/x-huffyuv")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('H','F','Y','U');
-      } else if (!strcmp (mimetype, "video/x-jpeg")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('M','J','P','G');
-      } else if (!strcmp (mimetype, "video/x-divx")) {
-        gint divxversion;
-        gst_caps_get_int (caps, "divxversion", &divxversion);
-        switch (divxversion) {
-          case 3:
-            avimux->vids.compression = GST_MAKE_FOURCC('D','I','V','3');
+    /* find format */
+    if (!strcmp (mimetype, "video/x-huffyuv")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('H','F','Y','U');
+    } else if (!strcmp (mimetype, "video/x-jpeg")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('M','J','P','G');
+    } else if (!strcmp (mimetype, "video/x-divx")) {
+      gint divxversion;
+      gst_structure_get_int (structure, "divxversion", &divxversion);
+      switch (divxversion) {
+	case 3:
+	  avimux->vids.compression = GST_MAKE_FOURCC('D','I','V','3');
+	  break;
+	case 4:
+	  avimux->vids.compression = GST_MAKE_FOURCC('D','I','V','X');
+	  break;
+	case 5:
+	  avimux->vids.compression = GST_MAKE_FOURCC('D','X','5','0');
             break;
-          case 4:
-            avimux->vids.compression = GST_MAKE_FOURCC('D','I','V','X');
-            break;
-          case 5:
-            avimux->vids.compression = GST_MAKE_FOURCC('D','X','5','0');
-            break;
-        }
-      } else if (!strcmp (mimetype, "video/x-xvid")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('X','V','I','D');
-      } else if (!strcmp (mimetype, "video/x-3ivx")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('3','I','V','2');
-      } else if (!strcmp (mimetype, "video/x-msmpeg")) {
-        gint msmpegversion;
-        gst_caps_get_int (caps, "msmpegversion", &msmpegversion);
-        switch (msmpegversion) {
-          case 41:
-            avimux->vids.compression = GST_MAKE_FOURCC('M','P','G','4');
-            break;
-          case 42:
-            avimux->vids.compression = GST_MAKE_FOURCC('M','P','4','2');
-            break;
-          case 43:
-            avimux->vids.compression = GST_MAKE_FOURCC('M','P','4','3');
-            break;
-        }
-      } else if (!strcmp (mimetype, "video/x-dv")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('D','V','S','D');
-      } else if (!strcmp (mimetype, "video/x-h263")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('H','2','6','3');
-      } else if (!strcmp (mimetype, "video/mpeg")) {
-        avimux->vids.compression = GST_MAKE_FOURCC('M','P','E','G');
       }
-
-      if (!avimux->vids.compression) {
-        continue;
+    } else if (!strcmp (mimetype, "video/x-xvid")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('X','V','I','D');
+    } else if (!strcmp (mimetype, "video/x-3ivx")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('3','I','V','2');
+    } else if (!strcmp (mimetype, "video/x-msmpeg")) {
+      gint msmpegversion;
+      gst_structure_get_int (structure, "msmpegversion", &msmpegversion);
+      switch (msmpegversion) {
+	case 41:
+	  avimux->vids.compression = GST_MAKE_FOURCC('M','P','G','4');
+	  break;
+	case 42:
+	  avimux->vids.compression = GST_MAKE_FOURCC('M','P','4','2');
+	  break;
+	case 43:
+	  avimux->vids.compression = GST_MAKE_FOURCC('M','P','4','3');
+	  break;
       }
+    } else if (!strcmp (mimetype, "video/x-dv")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('D','V','S','D');
+    } else if (!strcmp (mimetype, "video/x-h263")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('H','2','6','3');
+    } else if (!strcmp (mimetype, "video/mpeg")) {
+      avimux->vids.compression = GST_MAKE_FOURCC('M','P','E','G');
+    }
 
-      goto done;
+    if (!avimux->vids.compression) {
+      return GST_PAD_LINK_DELAYED;
     }
   }
-  return GST_PAD_LINK_REFUSED;
 
-done:
   avimux->vids_hdr.fcc_handler = avimux->vids.compression;
   avimux->vids.image_size = avimux->vids.height * avimux->vids.width;
   avimux->avi_hdr.width = avimux->vids.width;
@@ -450,80 +384,70 @@ done:
 }
 
 static GstPadLinkReturn
-gst_avimux_audsinkconnect (GstPad *pad, GstCaps *vscaps)
+gst_avimux_audsinkconnect (GstPad *pad, const GstCaps *vscaps)
 {
   GstAviMux *avimux;
-  GstCaps *caps;
+  GstStructure *structure;
+  const gchar* mimetype;
+  int i;
 
   avimux = GST_AVIMUX (gst_pad_get_parent (pad));
-
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscaps))
-    return GST_PAD_LINK_DELAYED;
 
   GST_DEBUG ("avimux: audio sinkconnect triggered on %s",
 	     gst_pad_get_name (pad));
 
-  for (caps = vscaps; caps != NULL; caps = vscaps = vscaps->next)
-  {
-    const gchar* mimetype = gst_caps_get_mime(caps);
+  structure = gst_caps_get_structure (vscaps, 0);
+  mimetype = gst_structure_get_name (structure);
 
-    /* we want these for all */
-    gst_caps_get (caps, "channels", &avimux->auds.channels,
-			"rate",     &avimux->auds.rate,
-			NULL);
+  /* we want these for all */
+  gst_structure_get_int (structure, "channels", &i);
+  avimux->auds.channels = i;
+  gst_structure_get_int (structure, "rate", &i);
+  avimux->auds.rate = i;
 
-    if (!strcmp (mimetype, "audio/x-raw-int"))
-    {
-      avimux->auds.format      = GST_RIFF_WAVE_FORMAT_PCM;
+  if (!strcmp (mimetype, "audio/x-raw-int")) {
+    avimux->auds.format      = GST_RIFF_WAVE_FORMAT_PCM;
 
-      gst_caps_get (caps, "width",	&avimux->auds.blockalign,
-		          "depth",	&avimux->auds.size,
-		          NULL);
+    gst_structure_get_int (structure, "width", &i);
+    avimux->auds.blockalign = i;
+    gst_structure_get_int (structure, "depth", &i);
+    avimux->auds.size = i;
 
-      /* set some more info straight */
-      avimux->auds.blockalign /= 8;
-      avimux->auds.blockalign *= avimux->auds.channels;
-      avimux->auds.av_bps = avimux->auds.blockalign * avimux->auds.rate;
-      goto done;
-    }
-    else if (!strcmp (mimetype, "audio/mpeg") ||
+    /* set some more info straight */
+    avimux->auds.blockalign /= 8;
+    avimux->auds.blockalign *= avimux->auds.channels;
+    avimux->auds.av_bps = avimux->auds.blockalign * avimux->auds.rate;
+  } else if (!strcmp (mimetype, "audio/mpeg") ||
 	     !strcmp (mimetype, "audio/x-vorbis") ||
-	     !strcmp (mimetype, "audio/x-ac3"))
-    {
-      avimux->auds.format = 0;
+	     !strcmp (mimetype, "audio/x-ac3")) {
+    avimux->auds.format = 0;
 
-      if (!strcmp (mimetype, "audio/mpeg")) {
-        gint layer = 3;
-        gst_caps_get_int(caps, "layer", &layer);
-        switch (layer) {
-          case 3:
-            avimux->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL3;
-            break;
-          case 1: case 2:
-            avimux->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL12;
-            break;
-        }
-      } else if (!strcmp (mimetype, "audio/x-vorbis")) {
-        avimux->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS3;
-      } else if (!strcmp (mimetype, "audio/x-ac3")) {
-        avimux->auds.format = GST_RIFF_WAVE_FORMAT_A52;
+    if (!strcmp (mimetype, "audio/mpeg")) {
+      gint layer = 3;
+      gst_structure_get_int (structure, "layer", &layer);
+      switch (layer) {
+	case 3:
+	  avimux->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL3;
+	  break;
+	case 1: case 2:
+	  avimux->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL12;
+	  break;
       }
+    } else if (!strcmp (mimetype, "audio/x-vorbis")) {
+      avimux->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS3;
+    } else if (!strcmp (mimetype, "audio/x-ac3")) {
+      avimux->auds.format = GST_RIFF_WAVE_FORMAT_A52;
+    }
 
-      avimux->auds.blockalign = 1;
-      avimux->auds.av_bps = 0;
-      avimux->auds.size = 16;
+    avimux->auds.blockalign = 1;
+    avimux->auds.av_bps = 0;
+    avimux->auds.size = 16;
 
-      if (!avimux->auds.format) {
-        continue;
-      }
-
-      goto done;
+    if (!avimux->auds.format) {
+      return GST_PAD_LINK_REFUSED;
     }
   }
-  return GST_PAD_LINK_REFUSED;
 
-done:
   avimux->auds_hdr.rate = avimux->auds.blockalign * avimux->auds.rate; 
   avimux->auds_hdr.samplesize = avimux->auds.blockalign;
   avimux->auds_hdr.scale = avimux->auds.blockalign;

@@ -49,43 +49,21 @@ static struct _elements_entry _elements[] = {
 };
 
 
-GstPadTemplate* 
-gst_effectv_src_factory (void)
-{
-  static GstPadTemplate *templ = NULL;
-  if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW ( 
-  		"src",
-  		GST_PAD_SRC,
-  		GST_PAD_ALWAYS,
-  		gst_caps_new (
-  		  "effectv_src",
-  		  "video/x-raw-rgb",
-  		  GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_32
-		)
-  	     );
-  }
-  return templ;
-}
+GstStaticPadTemplate gst_effectv_src_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ( GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 )
+);
 
-GstPadTemplate* 
-gst_effectv_sink_factory (void)
-{
-  static GstPadTemplate *templ = NULL;
-  if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW ( 
-  		"sink",
-  		GST_PAD_SINK,
-  		GST_PAD_ALWAYS,
-  		gst_caps_new (
-  		  "effectv_sink",
-  		  "video/x-raw-rgb",
-  		  GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_32
-		)
-  	     );
-  }
-  return templ;
-}
+GstStaticPadTemplate gst_effectv_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ( GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 )
+);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -94,7 +72,7 @@ plugin_init (GstPlugin * plugin)
 
   while (_elements[i].name) {
     if (!gst_element_register (plugin, _elements[i].name,
-			       GST_RANK_NONE, (_elements[i].type) ()))
+	  GST_RANK_NONE, (_elements[i].type) ()))
       return FALSE;
     i++;
   }

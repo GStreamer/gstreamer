@@ -54,7 +54,7 @@ static void	gst_jpegdec_init	(GstJpegDec *jpegdec);
 
 static void	gst_jpegdec_chain	(GstPad *pad, GstData *_data);
 static GstPadLinkReturn
-		gst_jpegdec_link	(GstPad *pad, GstCaps *caps);
+		gst_jpegdec_link	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_jpegdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -83,26 +83,17 @@ gst_jpegdec_get_type(void) {
 static GstCaps*
 jpeg_caps_factory (void) 
 {
-  return
-    gst_caps_new (
-  	"jpeg_jpeg",
-  	"image/jpeg",
-  	    gst_props_new (
-		"width",     GST_PROPS_INT_RANGE (16, 4096),
-		"height",    GST_PROPS_INT_RANGE (16, 4096),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                NULL));
+  return gst_caps_new_simple ("image/jpeg",
+      "width",     GST_TYPE_INT_RANGE, 16, 4096,
+      "height",    GST_TYPE_INT_RANGE, 16, 4096,
+      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+      NULL);
 }
 
 static GstCaps*
 raw_caps_factory (void)
 {
-  return
-    gst_caps_new (
-      "jpeg_raw",
-  	"video/x-raw-yuv",
-	GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-	  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))));
+  return gst_caps_from_string (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"));
 }
 
 static void
@@ -116,10 +107,10 @@ gst_jpegdec_base_init (gpointer g_class)
   
   jpegdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 						GST_PAD_ALWAYS, 
-						jpeg_caps, NULL);
+						jpeg_caps);
   jpegdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 					       GST_PAD_ALWAYS, 
-					       raw_caps, NULL);
+					       raw_caps);
   gst_element_class_add_pad_template (element_class, jpegdec_sink_template);
   gst_element_class_add_pad_template (element_class, jpegdec_src_template);
   gst_element_class_set_details (element_class, &gst_jpegdec_details);
@@ -206,26 +197,23 @@ gst_jpegdec_init (GstJpegDec *jpegdec)
 }
 
 static GstPadLinkReturn
-gst_jpegdec_link (GstPad *pad, GstCaps *caps)
+gst_jpegdec_link (GstPad *pad, const GstCaps *caps)
 {
   GstJpegDec *jpegdec = GST_JPEGDEC (gst_pad_get_parent (pad));
+  GstStructure *structure;
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get (caps,
-		"framerate", &jpegdec->fps,
-		"width",     &jpegdec->width,
-		"height",    &jpegdec->height,
-		NULL);
+  gst_structure_get_double (structure, "framerate", &jpegdec->fps);
+  gst_structure_get_int (structure, "width",     &jpegdec->width);
+  gst_structure_get_int (structure, "height",    &jpegdec->height);
 
-  caps = GST_CAPS_NEW ("jpegdec_srccaps",
-		       "video/x-raw-yuv",
-			 "format",    GST_PROPS_FOURCC (
-			   GST_MAKE_FOURCC ('I','4','2','0')),
-			 "width",     GST_PROPS_INT (jpegdec->width),
-			 "height",    GST_PROPS_INT (jpegdec->height),
-			 "framerate", GST_PROPS_FLOAT (jpegdec->fps));
+  caps = gst_caps_new_simple ("video/x-raw-yuv",
+      "format",    GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I','4','2','0'),
+      "width",     G_TYPE_INT, jpegdec->width,
+      "height",    G_TYPE_INT, jpegdec->height,
+      "framerate", G_TYPE_DOUBLE, jpegdec->fps,
+      NULL);
 
   return gst_pad_try_set_caps (jpegdec->srcpad, caps);
 }
@@ -416,16 +404,13 @@ gst_jpegdec_chain (GstPad *pad, GstData *_data)
     jpegdec->line[2] = g_realloc(jpegdec->line[2], height*sizeof(char*));
     jpegdec->height = height;
 
-    gst_pad_try_set_caps (jpegdec->srcpad, 
-		          GST_CAPS_NEW (
-			    "jpegdec_caps",
-			    "video/x-raw-yuv",
-			      "format",    GST_PROPS_FOURCC (
-				GST_MAKE_FOURCC ('I','4','2','0')),
-			      "width",     GST_PROPS_INT (width),
-			      "height",    GST_PROPS_INT (height),
-			      "framerate", GST_PROPS_FLOAT (jpegdec->fps) 
-			  ));
+    gst_pad_try_set_caps (jpegdec->srcpad,
+        gst_caps_new_simple ("video/x-raw-yuv",
+          "format",    GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I','4','2','0'),
+          "width",     G_TYPE_INT, width,
+          "height",    G_TYPE_INT, height,
+          "framerate", G_TYPE_DOUBLE, jpegdec->fps,
+          NULL));
   }
 
   /* mind the swap, jpeglib outputs blue chroma first */

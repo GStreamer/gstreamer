@@ -44,7 +44,7 @@ struct _GstSMPTE {
   gint 		 format;
   gint 		 width;
   gint 		 height;
-  gfloat	 fps;
+  gdouble	 fps;
 
   gint 		 duration;
   gint 		 position;

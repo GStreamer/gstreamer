@@ -130,8 +130,10 @@ gst_shagadelictv_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
-  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get(&gst_effectv_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get(&gst_effectv_sink_template));
  
   gst_element_class_set_details (element_class, &gst_shagadelictv_details);
 }
@@ -152,18 +154,18 @@ gst_shagadelictv_class_init (GstShagadelicTVClass * klass)
 }
 
 static GstPadLinkReturn
-gst_shagadelictv_sinkconnect (GstPad * pad, GstCaps * caps)
+gst_shagadelictv_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
   GstShagadelicTV *filter;
   gint area;
+  GstStructure *structure;
 
   filter = GST_SHAGADELICTV (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "height", &filter->height);
+  gst_structure_get_int  (structure, "width", &filter->width);
+  gst_structure_get_int  (structure, "height", &filter->height);
 
   area = filter->width * filter->height;
 
@@ -175,18 +177,20 @@ gst_shagadelictv_sinkconnect (GstPad * pad, GstCaps * caps)
 
   gst_shagadelic_initialize (filter);
 
-  return gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
+  return gst_pad_try_set_caps (filter->srcpad, caps);
 }
 
 static void
 gst_shagadelictv_init (GstShagadelicTV * filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (gst_effectv_sink_factory (), "sink");
+  filter->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&gst_effectv_sink_template), "sink");
   gst_pad_set_chain_function (filter->sinkpad, gst_shagadelictv_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_shagadelictv_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
-  filter->srcpad = gst_pad_new_from_template (gst_effectv_src_factory (), "src");
+  filter->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get(&gst_effectv_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->ripple = NULL;

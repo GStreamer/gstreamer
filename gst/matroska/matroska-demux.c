@@ -45,16 +45,13 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_templ,
+static GstStaticPadTemplate sink_templ =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "matroskademux_sink",
-     "video/x-matroska",
-       NULL
-  )
-)
+  GST_STATIC_CAPS ( "video/x-matroska" )
+);
 
 /* gobject magic foo */
 static void     gst_matroska_demux_base_init	      (GstMatroskaDemuxClass *klass);
@@ -163,7 +160,7 @@ gst_matroska_demux_base_init (GstMatroskaDemuxClass *klass)
   gst_element_class_add_pad_template (element_class, audiosrctempl);
   gst_element_class_add_pad_template (element_class, subtitlesrctempl);
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_templ));
+		gst_static_pad_template_get (&sink_templ));
   gst_element_class_set_details (element_class,
 		&gst_matroska_demux_details);
 }
@@ -179,10 +176,10 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass *klass)
 
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
+                        GST_TYPE_STRUCTURE, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_STREAMINFO,
     g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
+                        GST_TYPE_STRUCTURE, G_PARAM_READABLE));
 
   parent_class = g_type_class_ref (GST_TYPE_EBML_READ);
 
@@ -251,6 +248,7 @@ gst_matroska_demux_reset (GstElement *element)
   demux->num_v_streams = 0;
 
   /* reset media info */
+
   gst_caps_replace (&demux->metadata, NULL);
   gst_caps_replace (&demux->streaminfo, NULL);
 
@@ -2157,6 +2155,114 @@ gst_matroska_demux_loop (GstElement *element)
   gst_matroska_demux_loop_stream (demux);
 }
 
+#if 0
+static GstCaps *
+gst_matroska_demux_vfw_caps (guint32             codec_fcc,
+			     gst_riff_strf_vids *vids)
+{
+  GstCaps *caps = NULL;
+
+  switch (codec_fcc) {
+    case GST_MAKE_FOURCC('I','4','2','0'):
+    case GST_MAKE_FOURCC('Y','U','Y','2'):
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+	  "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('M','J','P','G'): /* YUY2 MJPEG */
+    case GST_MAKE_FOURCC('J','P','E','G'): /* generic (mostly RGB) MJPEG */
+    case GST_MAKE_FOURCC('P','I','X','L'): /* Miro/Pinnacle fourccs */
+    case GST_MAKE_FOURCC('V','I','X','L'): /* Miro/Pinnacle fourccs */
+      caps = gst_caps_new_simple ("video/x-jpeg", NULL);
+      break;
+
+    case GST_MAKE_FOURCC('H','F','Y','U'):
+      caps = gst_caps_new_simple ("video/x-huffyuv", NULL);
+      break;
+
+    case GST_MAKE_FOURCC('M','P','E','G'):
+    case GST_MAKE_FOURCC('M','P','G','I'):
+      caps = gst_caps_new_simple ("video/mpeg",
+	  "systemstream", G_TYPE_BOOLEAN, FALSE,
+	  "mpegversion", G_TYPE_BOOLEAN, 1, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('H','2','6','3'):
+    case GST_MAKE_FOURCC('i','2','6','3'):
+    case GST_MAKE_FOURCC('L','2','6','3'):
+    case GST_MAKE_FOURCC('M','2','6','3'):
+    case GST_MAKE_FOURCC('V','D','O','W'):
+    case GST_MAKE_FOURCC('V','I','V','O'):
+    case GST_MAKE_FOURCC('x','2','6','3'):
+      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      break;
+
+    case GST_MAKE_FOURCC('D','I','V','3'):
+    case GST_MAKE_FOURCC('D','I','V','4'):
+    case GST_MAKE_FOURCC('D','I','V','5'):
+      caps = gst_caps_new_simple ("video/x-divx",
+	  "divxversion", G_TYPE_INT, 3, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('d','i','v','x'):
+    case GST_MAKE_FOURCC('D','I','V','X'):
+    case GST_MAKE_FOURCC('D','X','5','0'):
+      caps = gst_caps_new_simple ("video/x-divx",
+	  "divxversion", G_TYPE_INT, 5, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('X','V','I','D'):
+    case GST_MAKE_FOURCC('x','v','i','d'):
+      caps = gst_caps_new_simple ("video/x-xvid", NULL);
+      break;
+
+    case GST_MAKE_FOURCC('M','P','G','4'):
+      caps = gst_caps_new_simple ("video/x-msmpeg",
+	  "msmpegversion", G_TYPE_INT, 41, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('M','P','4','2'):
+      caps = gst_caps_new_simple ("video/x-msmpeg",
+	  "msmpegversion", G_TYPE_INT, 42, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('M','P','4','3'):
+      caps = gst_caps_new_simple ("video/x-msmpeg",
+	  "msmpegversion", G_TYPE_INT, 43, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('3','I','V','1'):
+    case GST_MAKE_FOURCC('3','I','V','2'):
+      caps = gst_caps_new_simple ("video/x-3ivx", NULL);
+      break;
+
+    case GST_MAKE_FOURCC('D','V','S','D'):
+    case GST_MAKE_FOURCC('d','v','s','d'):
+      caps = gst_caps_new_simple ("video/x-dv",
+	  "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('W','M','V','1'):
+      caps = gst_caps_new_simple ("video/x-wmv",
+	  "wmvversion", G_TYPE_INT, 1, NULL);
+      break;
+
+    case GST_MAKE_FOURCC('W','M','V','2'):
+      caps = gst_caps_new_simple ("video/x-wmv",
+	  "wmvversion", G_TYPE_INT, 2, NULL);
+      break;
+
+    default:
+      GST_WARNING ("matroskademux: unkown VFW video format " GST_FOURCC_FORMAT,
+		   GST_FOURCC_ARGS (codec_fcc));
+      return NULL;
+      break;
+  }
+
+  return caps;
+}
+#endif
+
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
 			       const gchar                  *codec_id,
@@ -2169,7 +2275,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
 
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC)) {
     gst_riff_strf_vids *vids = NULL;
-    GstCaps *t;
 
     if (data) {
       vids = (gst_riff_strf_vids *) data;
@@ -2200,12 +2305,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
     } else {
       caps = gst_riff_create_video_template_caps ();
     }
-
-    for (t = caps; t != NULL; t = t->next) {
-      gst_props_remove_entry_by_name (t->properties, "width");
-      gst_props_remove_entry_by_name (t->properties, "height");
-      gst_props_remove_entry_by_name (t->properties, "framerate");
-    }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED)) {
     /* how nice, this is undocumented... */
     if (videocontext != NULL) {
@@ -2223,45 +2322,32 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
           return NULL;
       }
 
-      caps = GST_CAPS_NEW ("matroskademux_src_uncompressed",
-			   "video/x-raw-yuv",
-			     "format", GST_PROPS_FOURCC (fourcc));
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+	  "format", GST_TYPE_FOURCC, fourcc, NULL);
     } else {
-      caps = GST_CAPS_NEW ("matroskademux_src_uncompressed",
-			   "video/x-raw-yuv",
-			     "format", GST_PROPS_LIST (
-				GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-				GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
-				GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2'))
-			     )
-			  );
+      caps = gst_caps_from_string ("video/x-raw-yuv, "
+	  "format = (fourcc) { I420, YUY2, YV12 }");
     }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP)) {
-    caps = GST_CAPS_NEW ("matroskademux_src_divx4",
-			 "video/x-divx",
-			   "divxversion", GST_PROPS_INT (4));
+    caps = gst_caps_new_simple ("video/x-divx",
+	"divxversion", G_TYPE_INT, 4, NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP) ||
 	     !strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AP)) {
-    caps = GST_CAPS_NEW ("matroskademux_src_divx5",
-			 "video/x-divx",
-			   "divxversion", GST_PROPS_INT (5));
-    caps = gst_caps_append (caps,
-	   GST_CAPS_NEW ("matroskademux_src_xvid",
-			 "video/x-xvid",
-			   NULL));
-    caps = gst_caps_append (caps,
-	   GST_CAPS_NEW ("matroskademux_src_mpeg4asp/ap",
-			 "video/mpeg",
-			   "mpegversion",  GST_PROPS_INT (4),
-			   "systemstream", GST_PROPS_BOOLEAN (FALSE)));
+    caps = gst_caps_new_full (
+	gst_structure_new ("video/x-divx",
+	  "divxversion", G_TYPE_INT, 5, NULL),
+	gst_structure_new ("video/x-xvid", NULL),
+	gst_structure_new ("video/mpeg",
+	  "mpegversion",  G_TYPE_INT, 4,
+	  "systemstream", G_TYPE_BOOLEAN, FALSE, NULL),
+	NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3)) {
-    caps = GST_CAPS_NEW ("matroskademux_src_msmpeg4v3",
-			 "video/x-divx",
-			   "divxversion", GST_PROPS_INT (3));
-    caps = gst_caps_append (caps,
-	   GST_CAPS_NEW ("matroskademux_src_divx3",
-			 "video/x-msmpeg",
-			   "msmpegversion", GST_PROPS_INT (43)));
+    caps = gst_caps_new_full (
+	gst_structure_new ("video/x-divx",
+	  "divxversion", G_TYPE_INT, 3, NULL),
+	gst_structure_new ("video/x-msmpeg",
+	  "msmpegversion", G_TYPE_INT, 43, NULL),
+	NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG1) ||
 	     !strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG2)) {
     gint mpegversion = -1;
@@ -2273,36 +2359,37 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
     else
       g_assert (0);
 
-    caps = GST_CAPS_NEW ("matroska_demux_mpeg1",
-			 "video/mpeg",
-			   "systemstream", GST_PROPS_BOOLEAN (FALSE),
-			   "mpegversion",  GST_PROPS_INT (mpegversion));
+    caps = gst_caps_new_simple ("video/mpeg",
+	"systemstream", G_TYPE_BOOLEAN, FALSE,
+	"mpegversion",  G_TYPE_INT, mpegversion, NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MJPEG)) {
-    caps = GST_CAPS_NEW ("matroska_demux_mjpeg",
-			 "video/x-jpeg",
-			   NULL);
+    caps = gst_caps_new_simple ("video/x-jpeg", NULL);
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps",
 		 codec_id);
+    return NULL;
   }
 
   if (caps != NULL) {
-    GstCaps *one;
-    GstPropsEntry *fps = NULL;
-    GstPropsEntry *width = NULL, *height = NULL;
-    GstPropsEntry *pixel_width = NULL, *pixel_height = NULL;
+    int i;
+    GstStructure *structure;
 
-    for (one = caps; one != NULL; one = one->next) { 
+    for (i=0;i<gst_caps_get_size(caps);i++){
+      structure = gst_caps_get_structure (caps, i);
       if (videocontext != NULL) {
         if (videocontext->pixel_width > 0 &&
             videocontext->pixel_height > 0) {
           gint w = videocontext->pixel_width;
           gint h = videocontext->pixel_height;
 
-          width = gst_props_entry_new ("width",
-				       GST_PROPS_INT (w));
-          height = gst_props_entry_new ("height",
-				        GST_PROPS_INT (h));
+	  gst_structure_set (structure,
+	      "width", G_TYPE_INT, w,
+	      "height", G_TYPE_INT, h, NULL);
+        } else {
+	  gst_structure_set (structure,
+	      "width", GST_TYPE_INT_RANGE, 16, 4096,
+	      "height", GST_TYPE_INT_RANGE, 16, 4096,
+              NULL);
         }
 #if 0
         if (videocontext->display_width > 0 &&
@@ -2310,59 +2397,117 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
           gint w = 100 * videocontext->display_width / videocontext->pixel_width;
           gint h = 100 * videocontext->display_height / videocontext->pixel_height;
 
-          pixel_width = gst_props_entry_new ("pixel_width",
-					     GST_PROPS_INT (w));
-          pixel_height = gst_props_entry_new ("pixel_height",
-					      GST_PROPS_INT (h));
+	  gst_structure_set (structure,
+	      "pixel_width", G_TYPE_INT, w,
+              "pixel_height", G_TYPE_INT, h,
+	      NULL);
         }
 #endif
         if (context->default_duration > 0) {
           gfloat framerate = 1. * GST_SECOND / context->default_duration;
 
-          fps = gst_props_entry_new ("framerate",
-				     GST_PROPS_FLOAT (framerate));
+	  gst_structure_set (structure,
+	      "framerate", G_TYPE_DOUBLE, framerate, NULL);
         } else {
           /* sort of a hack to get most codecs to support,
 	   * even if the default_duration is missing */
-          fps = gst_props_entry_new ("framerate", GST_PROPS_FLOAT (25.));
+	  gst_structure_set (structure,
+	      "framerate", G_TYPE_DOUBLE, 25.0, NULL);
         }
       } else {
-        width = gst_props_entry_new ("width",
-				     GST_PROPS_INT_RANGE (16, 4096));
-        height = gst_props_entry_new ("height",
-				      GST_PROPS_INT_RANGE (16, 4096));
-#if 0
-        pixel_width = gst_props_entry_new ("pixel_width",
-				           GST_PROPS_INT_RANGE (0, 255));
-        pixel_height = gst_props_entry_new ("pixel_height",
-					    GST_PROPS_INT_RANGE (0, 255));
-#endif
-        fps = gst_props_entry_new ("framerate",
-			           GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-      }
-
-      if (one->properties == NULL) {
-        one->properties = gst_props_empty_new ();
-      }
-
-      if (width != NULL && height != NULL) {
-        gst_props_add_entry (one->properties, width);
-        gst_props_add_entry (one->properties, height);
-      }
-
-      if (pixel_width != NULL && pixel_height != NULL) {
-        gst_props_add_entry (one->properties, pixel_width);
-        gst_props_add_entry (one->properties, pixel_height);
-      }
-
-      if (fps != NULL) {
-        gst_props_add_entry (one->properties, fps);
+	gst_structure_set (structure,
+	    "width", GST_TYPE_INT_RANGE, 16, 4096,
+	    "height", GST_TYPE_INT_RANGE, 16, 4096,
+	    "pixel_width", GST_TYPE_INT_RANGE, 0, 255,
+	    "pixel_height", GST_TYPE_INT_RANGE, 0, 255,
+            "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+	    NULL);
       }
     }
   }
 
   return caps;
 }
+
+#if 0
+static GstCaps *
+gst_matroskademux_acm_caps (guint16             codec_id,
+			     gst_riff_strf_auds *auds)
+{
+  GstCaps *caps = NULL;
+
+  switch (codec_id) {
+    case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
+      caps = gst_caps_new_simple ("audio/mpeg",
+	  "layer", G_TYPE_INT, 3, NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
+      caps = gst_caps_new_simple ("audio/mpeg",
+	  "layer", G_TYPE_INT, 2, NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */ {
+      if (auds != NULL) {
+        gint ba = GUINT16_FROM_LE (auds->blockalign);
+        gint ch = GUINT16_FROM_LE (auds->channels);
+        gint ws = GUINT16_FROM_LE (auds->size);
+
+        caps = gst_caps_new_simple ("audio/x-raw-int",
+  	    "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+	    "width", G_TYPE_INT, ba * 8 / ch,
+	    "depth", G_TYPE_INT, ws,
+	    "signed", G_TYPE_BOOLEAN, ws != 8, NULL);
+      } else {
+	caps = gst_caps_from_string ("audio/x-raw-int, "
+	    "endianness = (int) LITTLE_ENDIAN, "
+	    "signed = (boolean) { TRUE, FALSE }, "
+	    "depth = (int) { 8, 16 }, "
+	    "width = (int) { 8, 16 }");
+      }
+
+    }
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MULAW:
+      if (auds != NULL && auds->size != 8) {
+        g_warning ("invalid depth (%d) of mulaw audio, overwriting.",
+		   auds->size);
+      }
+      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_ALAW:
+      if (auds != NULL && auds->size != 8) {
+        g_warning ("invalid depth (%d) of alaw audio, overwriting.",
+		   auds->size);
+      }
+      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
+      caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_A52:
+      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      break;
+
+    default:
+      GST_WARNING ("matroskademux: unkown ACM audio format 0x%04x",
+		   codec_id);
+      return NULL;
+      break;
+  }
+
+  return caps;
+}
+#endif
 
 static GstCaps *
 gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
@@ -2388,14 +2533,12 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
     else
       g_assert (0);
 
-    caps = GST_CAPS_NEW ("matroskademux_mpeg1-l1",
-			 "audio/mpeg",
-			   "mpegversion",  GST_PROPS_INT (1),
-			   "layer",        GST_PROPS_INT (layer));
+    caps = gst_caps_new_simple ("audio/mpeg",
+	"mpegversion", G_TYPE_INT, 1,
+	"layer",        G_TYPE_INT, layer, NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE) ||
 	     !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE)) {
     gint endianness = -1;
-    GstPropsEntry *depth, *width, *sign;
 
     if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE))
       endianness = G_BIG_ENDIAN;
@@ -2405,60 +2548,35 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
       g_assert (0);
 
     if (context != NULL) {
-      width = gst_props_entry_new ("width",
-			GST_PROPS_INT (audiocontext->bitdepth));
-      depth = gst_props_entry_new ("depth",
-			GST_PROPS_INT (audiocontext->bitdepth));
-      sign = gst_props_entry_new ("signed",
-			GST_PROPS_BOOLEAN (audiocontext->bitdepth == 8));
+      caps = gst_caps_new_simple ("audio/x-raw-int",
+	  "width", G_TYPE_INT, audiocontext->bitdepth,
+	  "depth", G_TYPE_INT, audiocontext->bitdepth,
+	  "signed", G_TYPE_BOOLEAN, audiocontext->bitdepth == 8, NULL);
     } else {
-      width = gst_props_entry_new ("width", GST_PROPS_LIST (
-			GST_PROPS_INT (8),
-			GST_PROPS_INT (16)));
-      depth = gst_props_entry_new ("depth", GST_PROPS_LIST (
-			GST_PROPS_INT (8),
-			GST_PROPS_INT (16)));
-      sign = gst_props_entry_new ("signed", GST_PROPS_LIST (
-			GST_PROPS_BOOLEAN (TRUE),
-			GST_PROPS_BOOLEAN (FALSE)));
+      caps = gst_caps_from_string ("audio/x-raw-int, "
+	  "signed = (boolean) { TRUE, FALSE }, "
+	  "depth = (int) { 8, 16 }, "
+	  "width = (int) { 8, 16 }");
     }
-
-    caps = GST_CAPS_NEW ("matroskademux_audio_raw",
-			 "audio/x-raw-int",
-			   "endianness", GST_PROPS_INT (endianness));
-    gst_props_add_entry (caps->properties, width);
-    gst_props_add_entry (caps->properties, depth);
-    gst_props_add_entry (caps->properties, sign);
+    gst_caps_set_simple (caps, "endianness", G_TYPE_INT, endianness, NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT)) {
-    GstPropsEntry *width;
-
+    caps = gst_caps_new_simple ("audio/x-raw-float",
+	"endianness", G_TYPE_INT, G_BYTE_ORDER,
+	"buffer-frames", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
     if (audiocontext != NULL) {
-      width = gst_props_entry_new ("width",
-			GST_PROPS_INT (audiocontext->bitdepth));
+      gst_caps_set_simple (caps,
+	  "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
     } else {
-      width = gst_props_entry_new ("width", GST_PROPS_LIST (
-			GST_PROPS_INT (32),
-			GST_PROPS_INT (64)));
+      gst_caps_set_simple (caps,
+	  "width", GST_TYPE_INT_RANGE, 32, 64, NULL);
     }
-
-    caps = GST_CAPS_NEW ("matroskademux_audio_float",
-			 "audio/x-raw-float",
-			   "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                           "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT));
-
-    gst_props_add_entry (caps->properties, width);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AC3) ||
 	     !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_DTS)) {
-    caps = GST_CAPS_NEW ("matroskademux_audio_ac3/dts",
-			 "audio/x-ac3",
-			   NULL);
+    caps = gst_caps_new_simple ("audio/x-ac3", NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS)) {
-    caps = GST_CAPS_NEW ("matroskademux_audio_vorbis",
-			 "audio/x-vorbis",
-			   NULL);
+    caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds *auds = NULL;
-    GstCaps *t;
 
     if (data) {
       auds = (gst_riff_strf_auds *) data;
@@ -2475,11 +2593,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
     } else {
       caps = gst_riff_create_audio_template_caps ();
     }
-
-    for (t = caps; t != NULL; t = t->next) {
-      gst_props_remove_entry_by_name (t->properties, "rate");
-      gst_props_remove_entry_by_name (t->properties, "channels");
-    }
   } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG2,
 		       strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2)) ||
              !strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
@@ -2495,41 +2608,33 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
     else
       g_assert (0);
 
-    caps = GST_CAPS_NEW ("matroska_demux_aac_mpeg2",
-			 "audio/mpeg",
-			   "mpegversion",  GST_PROPS_INT (mpegversion));
+    caps = gst_caps_new_simple ("audio/mpeg",
+	"mpegversion",  G_TYPE_INT, mpegversion, NULL);
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps",
 		 codec_id);
+    return NULL;
   }
 
   if (caps != NULL) {
-    GstCaps *one;
-    GstPropsEntry *chans = NULL, *rate = NULL;
+    GstStructure *structure;
+    int i;
 
-    for (one = caps; one != NULL; one = one->next) { 
+    for (i=0; i<gst_caps_get_size(caps); i++){
+      structure = gst_caps_get_structure (caps, i);
       if (audiocontext != NULL) {
         if (audiocontext->samplerate > 0 &&
             audiocontext->channels > 0) {
-          chans = gst_props_entry_new ("channels",
-				GST_PROPS_INT (audiocontext->channels));
-          rate = gst_props_entry_new ("rate",
-				GST_PROPS_INT (audiocontext->samplerate));
+	  gst_structure_set (structure,
+	      "channels", G_TYPE_INT, audiocontext->channels,
+	      "rate", G_TYPE_INT, audiocontext->samplerate,
+	      NULL);
         }
       } else {
-        chans = gst_props_entry_new ("channels",
-				GST_PROPS_INT_RANGE (1, 6));
-        rate = gst_props_entry_new ("rate",
-				GST_PROPS_INT_RANGE (4000, 96000));
-      }
-
-      if (caps->properties == NULL) {
-        caps->properties = gst_props_empty_new ();
-      }
-
-      if (chans != NULL && rate != NULL) {
-        gst_props_add_entry (caps->properties, chans);
-        gst_props_add_entry (caps->properties, rate);
+	gst_structure_set (structure,
+	    "channels", GST_TYPE_INT_RANGE, 1, 6,
+	    "rate", GST_TYPE_INT_RANGE, 4000, 96000,
+	    NULL);
       }
     }
   }
@@ -2610,8 +2715,7 @@ gboolean
 gst_matroska_demux_plugin_init (GstPlugin *plugin)
 {
   gint i;
-  GstCaps *videosrccaps = NULL, *audiosrccaps = NULL,
-	  *subtitlesrccaps = NULL, *temp;
+  GstCaps *videosrccaps, *audiosrccaps, *subtitlesrccaps, *temp;
   const gchar *video_id[] = {
     GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC,
     GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED,
@@ -2653,38 +2757,41 @@ gst_matroska_demux_plugin_init (GstPlugin *plugin)
     return FALSE;
 
   /* video src template */
+  videosrccaps = gst_caps_new_empty ();
   for (i = 0; video_id[i] != NULL; i++) {
     temp = gst_matroska_demux_video_caps (NULL, video_id[i], NULL, 0);
-    videosrccaps = gst_caps_append (videosrccaps, temp);
+    gst_caps_append (videosrccaps, temp);
   }
   for (i = 0; complex_id[i] != NULL; i++) {
     temp = gst_matroska_demux_complex_caps (NULL, video_id[i], NULL, 0);
-    videosrccaps = gst_caps_append (videosrccaps, temp);
+    gst_caps_append (videosrccaps, temp);
   }
   videosrctempl = gst_pad_template_new ("video_%02d",
 					GST_PAD_SRC,
 					GST_PAD_SOMETIMES,
-					videosrccaps, NULL);
+					videosrccaps);
 
+  audiosrccaps = gst_caps_new_empty ();
   /* audio src template */
   for (i = 0; audio_id[i] != NULL; i++) {
     temp = gst_matroska_demux_audio_caps (NULL, audio_id[i], NULL, 0);
-    audiosrccaps = gst_caps_append (audiosrccaps, temp);
+    gst_caps_append (audiosrccaps, temp);
   }
   audiosrctempl = gst_pad_template_new ("audio_%02d",
 					GST_PAD_SRC,
 					GST_PAD_SOMETIMES,
-					audiosrccaps, NULL);
+					audiosrccaps);
 
+  subtitlesrccaps = gst_caps_new_empty ();
   /* subtitle src template */
   for (i = 0; subtitle_id[i] != NULL; i++) {
     temp = gst_matroska_demux_subtitle_caps (NULL, subtitle_id[i], NULL, 0);
-    subtitlesrccaps = gst_caps_append (subtitlesrccaps, temp);
+    gst_caps_append (subtitlesrccaps, temp);
   }
   subtitlesrctempl = gst_pad_template_new ("subtitle_%02d",
 					   GST_PAD_SRC,
 					   GST_PAD_SOMETIMES,
-					   subtitlesrccaps, NULL);
+					   subtitlesrccaps);
 
   /* create an elementfactory for the matroska_demux element */
   if (!gst_element_register (plugin, "matroskademux",

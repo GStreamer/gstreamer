@@ -37,9 +37,9 @@ struct videoflip_format_struct {
 extern struct videoflip_format_struct videoflip_formats[];
 extern int videoflip_n_formats;
 
-GstCaps *videoflip_get_caps(struct videoflip_format_struct *format);
+GstStructure *videoflip_get_cap(struct videoflip_format_struct *format);
 
-struct videoflip_format_struct *videoflip_find_by_caps(GstCaps *caps);
+struct videoflip_format_struct *videoflip_find_by_caps(const GstCaps *caps);
 
 
 #endif

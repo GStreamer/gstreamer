@@ -47,36 +47,22 @@ enum {
 };
 
 /* input */
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",          
   GST_PAD_SINK, 
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "flxdec_sink",         
-    "video/x-fli",
-     NULL
-  )
-)
+  GST_STATIC_CAPS ( "video/x-fli" )
+);
 
 /* output */
-GST_PAD_TEMPLATE_FACTORY (src_video_factory,
+static GstStaticPadTemplate src_video_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "src_video",
-    "video/x-raw-rgb",
-        "bpp",        GST_PROPS_INT (32),
-        "depth",      GST_PROPS_INT (32),
-        "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-        "red_mask",   GST_PROPS_INT (R_MASK_32),
-        "green_mask", GST_PROPS_INT (G_MASK_32),
-        "blue_mask",  GST_PROPS_INT (B_MASK_32),
-        "width",      GST_PROPS_INT_RANGE(320, 1280), 
-        "height",     GST_PROPS_INT_RANGE(200, 1024),
-        "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS ( GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 )
+);
 
 
 static void	gst_flxdec_class_init	(GstFlxDecClass *klass);
@@ -130,9 +116,9 @@ gst_flxdec_base_init (GstFlxDecClass *klass)
   
   gst_element_class_set_details (gstelement_class, &flxdec_details);
   gst_element_class_add_pad_template (gstelement_class,
-	GST_PAD_TEMPLATE_GET (sink_factory));
+	gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (gstelement_class,
-	GST_PAD_TEMPLATE_GET (src_video_factory));
+	gst_static_pad_template_get (&src_video_factory));
 }
 
 static void 
@@ -158,12 +144,12 @@ static void
 gst_flxdec_init(GstFlxDec *flxdec) 
 {
   flxdec->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+		  gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(flxdec),flxdec->sinkpad);
   gst_element_set_loop_function(GST_ELEMENT(flxdec),gst_flxdec_loop);
 
   flxdec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_video_factory), "src");
+		  gst_static_pad_template_get (&src_video_factory), "src");
   gst_element_add_pad(GST_ELEMENT(flxdec),flxdec->srcpad);
 
   flxdec->bs = NULL;
@@ -444,6 +430,7 @@ gst_flxdec_loop (GstElement *element)
   GstBuffer  *buf;  
   GstBuffer  *databuf;
   guchar     *data, *chunk;
+  GstCaps   *caps;
 
   GstFlxDec         *flxdec;  
   FlxHeader      *flxh;
@@ -497,19 +484,11 @@ gst_flxdec_loop (GstElement *element)
       flxdec->frame_time = flxh->speed * GST_MSECOND;
     }
     
-    gst_pad_try_set_caps (flxdec->srcpad,
-  		GST_CAPS_NEW (
-  	  	  "src_video",
-	  	  "video/x-raw-rgb",
-	            "bpp",        GST_PROPS_INT (32),
-		    "depth",      GST_PROPS_INT (32),
-		    "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-		    "red_mask",   GST_PROPS_INT (R_MASK_32),
-		    "green_mask", GST_PROPS_INT (G_MASK_32),
-		    "blue_mask",  GST_PROPS_INT (B_MASK_32),
-  		    "width",      GST_PROPS_INT (flxh->width), 
-  		    "height",     GST_PROPS_INT (flxh->height),
-		    "framerate",  GST_PROPS_FLOAT (GST_SECOND/flxdec->frame_time)));
+    caps = gst_caps_from_string (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32);
+    gst_caps_set_simple (caps,
+	"width", G_TYPE_INT, flxh->width, 
+	"height", G_TYPE_INT, flxh->height,
+	"framerate",  G_TYPE_DOUBLE, GST_SECOND/flxdec->frame_time, NULL);
 
     if (flxh->depth <= 8) 
       flxdec->converter = flx_colorspace_converter_new(flxh->width, flxh->height);
@@ -521,7 +500,6 @@ gst_flxdec_loop (GstElement *element)
       g_print("GstFlxDec: (FLC) oframe1   :  0x%08x\n", flxh->oframe1);
       g_print("GstFlxDec: (FLC) oframe2   :  0x%08x\n", flxh->oframe2);
     }
-
   
     flxdec->size = (flxh->width * flxh->height);
   

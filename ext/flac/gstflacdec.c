@@ -124,31 +124,22 @@ flacdec_get_type(void) {
 static GstCaps*
 flac_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"flac_flac",
-  	"audio/x-flac",
-	/*gst_props_new (
- 	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL)*/ NULL);
+  return gst_caps_new_simple ("audio/x-flac", NULL);
+  /* "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+   * "channels", 	GST_PROPS_INT_RANGE (1, 2), */
 }
 
 static GstCaps*
 raw_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"flac_raw",
-  	"audio/x-raw-int",
-	gst_props_new (
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
+  return gst_caps_new_simple ("audio/x-raw-int",
+      "endianness", 	G_TYPE_INT, G_BYTE_ORDER,
+      "signed", 	G_TYPE_BOOLEAN, TRUE,
+      "width", 		G_TYPE_INT, 16,
+      "depth",    	G_TYPE_INT, 16,
+      "rate",     	GST_TYPE_INT_RANGE, 11025, 48000,
+      "channels", 	GST_TYPE_INT_RANGE, 1, 2,
+      NULL);
 }
 
 static void
@@ -160,12 +151,10 @@ gst_flacdec_base_init (gpointer g_class)
   raw_caps = raw_caps_factory ();
   flac_caps = flac_caps_factory ();
 
-  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      flac_caps, NULL);
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS, flac_caps);
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     raw_caps, NULL);
+      GST_PAD_ALWAYS, raw_caps);
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_add_pad_template (element_class, src_template);
   gst_element_class_set_details (element_class, &flacdec_details);
@@ -485,16 +474,14 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder *decoder,
   
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
     gst_pad_try_set_caps (flacdec->srcpad,
-		    GST_CAPS_NEW (
-		      "flac_caps",
-		      "audio/x-raw-int",
-                         "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-                         "signed",      GST_PROPS_BOOLEAN (TRUE),
-                         "width",       GST_PROPS_INT (depth),
-                         "depth",       GST_PROPS_INT (depth),
-                         "rate",     	GST_PROPS_INT (frame->header.sample_rate),
-                         "channels", 	GST_PROPS_INT (channels)
-		    ));
+        gst_caps_new_simple ("audio/x-raw-int",
+          "endianness",  G_TYPE_INT, G_BYTE_ORDER,
+          "signed",      G_TYPE_BOOLEAN, TRUE,
+          "width",       G_TYPE_INT, depth,
+          "depth",       G_TYPE_INT, depth,
+          "rate",     	 G_TYPE_INT, frame->header.sample_rate,
+          "channels", 	 G_TYPE_INT, channels,
+          NULL));
 
     flacdec->depth = depth;
     flacdec->channels = channels;

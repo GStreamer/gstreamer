@@ -57,9 +57,6 @@ struct _GstWavEnc {
   
   gboolean setup, flush_header, pad_eos;
   guchar header[WAV_HEADER_LEN];
-
-  /* Metadata */
-  GstCaps *metadata;
 };
 
 struct _GstWavEncClass {

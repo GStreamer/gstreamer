@@ -150,7 +150,7 @@ gst_udpsink_class_init (GstUDPSink *klass)
 
 
 static GstPadLinkReturn
-gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_udpsink_sink_link (GstPad *pad, const GstCaps *caps)
 {
   GstUDPSink *udpsink;
   struct sockaddr_in serv_addr;
@@ -251,7 +251,7 @@ gst_udpsink_init (GstUDPSink *udpsink)
   udpsink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (udpsink), udpsink->sinkpad);
   gst_pad_set_chain_function (udpsink->sinkpad, gst_udpsink_chain);
-  gst_pad_set_link_function (udpsink->sinkpad, gst_udpsink_sinkconnect);
+  gst_pad_set_link_function (udpsink->sinkpad, gst_udpsink_sink_link);
 
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;

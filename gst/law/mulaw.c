@@ -7,34 +7,23 @@
 static GstCaps*
 mulaw_factory (void)
 {
-  return
-    gst_caps_new (
-  	"test_src",
-    	"audio/x-mulaw",
-	gst_props_new (
-    	    "width",    GST_PROPS_INT(8),
-    	    "depth",    GST_PROPS_INT(8),
-    	    "signed",   GST_PROPS_BOOLEAN(FALSE),
-    	    "rate",     GST_PROPS_INT_RANGE (8000, 192000),
-            "channels", GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
+  return gst_caps_new_simple ("audio/x-mulaw",
+      "rate",     GST_TYPE_INT_RANGE, 8000, 192000,
+      "channels", GST_TYPE_INT_RANGE, 1, 2,
+      NULL);
 }
 
 static GstCaps*
 linear_factory (void)
 {
-  return
-    gst_caps_new (
-  	"test_sink",
-    	"audio/x-raw-int",
-	gst_props_new (
-      	    "width",      GST_PROPS_INT(16),
-      	    "depth",      GST_PROPS_INT(16),
-      	    "signed",     GST_PROPS_BOOLEAN(TRUE),
-      	    "endianness", GST_PROPS_INT(G_BYTE_ORDER),
-    	    "rate",       GST_PROPS_INT_RANGE (8000, 192000),
-            "channels",   GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
+  return gst_caps_new_simple ("audio/x-raw-int",
+      "width",      G_TYPE_INT, 16,
+      "depth",      G_TYPE_INT, 16,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "signed",     G_TYPE_BOOLEAN, TRUE,
+      "rate",       GST_TYPE_INT_RANGE, 8000, 192000,
+      "channels",   GST_TYPE_INT_RANGE, 1, 2,
+      NULL);
 }
 
 GstPadTemplate *mulawenc_src_template, *mulawenc_sink_template;
@@ -49,14 +38,14 @@ plugin_init (GstPlugin *plugin)
   linear_caps = linear_factory ();
 
   mulawenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-		   		               mulaw_caps, NULL);
+		   		               mulaw_caps);
   mulawenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-		   			        linear_caps, NULL);
+		   			        linear_caps);
 
   mulawdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-		  				linear_caps, NULL);
+		  				linear_caps);
   mulawdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-		   				mulaw_caps, NULL);
+		   				mulaw_caps);
 
   if (!gst_element_register (plugin, "mulawenc",
 			     GST_RANK_NONE, GST_TYPE_MULAWENC) ||
