@@ -391,12 +391,6 @@ calc_bufsize (int hor_dec,
         return result;
 }
 
-#define gst_structure_get_int_range (structure, name, min, max) \
-  gst_props_entry_get_int_range(gst_props_get_entry((caps)->properties, \
-                                                    name), \
-                                min, max)
-
-
 static GstPadLinkReturn
 gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                             const GstCaps *caps)

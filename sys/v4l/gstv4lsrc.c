@@ -538,18 +538,6 @@ gst_v4lsrc_getcaps (GstPad  *pad)
   list = gst_caps_new_empty();
   for (i = 0; i < 8; i++) {
     GstCaps *one;
-#define gst_v4lsrc_palette_to_caps_range(palette, min_w, max_w, min_h, max_h) \
-  gst_v4lsrc_palette_to_caps(palette, \
-                             gst_props_entry_new("width", \
-                                                 G_TYPE_INT_RANGE(min_w, \
-                                                                     max_w)), \
-                             gst_props_entry_new("height", \
-                                                 G_TYPE_INT_RANGE(min_h, \
-                                                                     max_h)), \
-                             gst_props_entry_new("framerate", \
-                                                 G_TYPE_DOUBLE_RANGE(0., \
-                                                                 G_MAXFLOAT)) \
-                            )
 
     one = gst_v4lsrc_palette_to_caps(palette[i]);
     gst_caps_set_simple (one,
