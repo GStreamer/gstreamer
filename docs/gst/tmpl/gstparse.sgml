@@ -49,10 +49,25 @@ can be made with <option>{}</option>.
 
 </para>
 
-@GST_PARSE_ERROR_SYNTAX: 
-@GST_PARSE_ERROR_NO_SUCH_ELEMENT: 
-@GST_PARSE_ERROR_NO_SUCH_PROPERTY: 
-@GST_PARSE_ERROR_CONNECT: 
+@GST_PARSE_ERROR_SYNTAX: A syntax error was detected
+@GST_PARSE_ERROR_NO_SUCH_ELEMENT: The pipeline description contains a non existing element
+@GST_PARSE_ERROR_NO_SUCH_PROPERTY: The pipeline description contains a non existing element property
+@GST_PARSE_ERROR_CONNECT: A pad connection could not be made
+
+<!-- ##### MACRO GST_PARSE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_parse_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 
 <!-- ##### FUNCTION gst_parse_launch ##### -->
 <para>

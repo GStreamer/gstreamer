@@ -239,6 +239,7 @@ Destroy the scheduler
 @element: 
 @clock: 
 @time: 
+@jitter: 
 @Returns: 
 
 

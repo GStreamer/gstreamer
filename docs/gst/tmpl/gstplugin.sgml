@@ -20,8 +20,7 @@ that was provided in the plugin_desc.
 Once you have a handle to a #GstPlugin, you can add any object that subclasses #GstPluginFeature.
 </para>
 <para>
-use gst_plugin_find(), gst_plugin_get_list() and gst_plugin_get_feature_list()
-to query the plugin repository.
+use gst_plugin_find_feature() and gst_plugin_get_feature_list() to find features in a plugin.
 </para>
 <para>
 Usually plugins are always automaticlly loaded so you don't need to call gst_plugin_load() explicitly 
@@ -35,6 +34,29 @@ to bring the plugin into memory.
 #GstPluginFeature, #GstType, #GstAutoplug, #GstElementFactory
 </para>
 
+<!-- ##### MACRO GST_PLUGIN_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_plugin_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### ENUM GstPluginError ##### -->
+<para>
+The plugin loading errors
+</para>
+
+@GST_PLUGIN_ERROR_MODULE: The plugin could not be loaded
+@GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
+
 <!-- ##### STRUCT GstPlugin ##### -->
 <para>
 
@@ -45,7 +67,9 @@ to bring the plugin into memory.
 @filename: 
 @features: 
 @numfeatures: 
+@manager: 
 @module: 
+@init_called: 
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
@@ -103,6 +127,19 @@ A macro used to define a statically linked plugin.
 @init: The init function of this plugin.
 
 
+<!-- ##### FUNCTION gst_plugin_new ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@name: 
+@major: 
+@minor: 
+
+
 <!-- ##### FUNCTION gst_plugin_set_name ##### -->
 <para>
 
@@ -157,79 +194,42 @@ A macro used to define a statically linked plugin.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_load_all ##### -->
+<!-- ##### FUNCTION gst_plugin_get_feature_list ##### -->
 <para>
 
 </para>
 
+@plugin: 
+@Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_load ##### -->
+<!-- ##### FUNCTION gst_plugin_find_feature ##### -->
 <para>
 
 </para>
 
+@plugin: 
 @name: 
+@type: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_load_absolute ##### -->
+<!-- ##### FUNCTION gst_plugin_load_plugin ##### -->
 <para>
 
 </para>
 
-@name: 
+@plugin: 
+@error: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_add_path ##### -->
+<!-- ##### FUNCTION gst_plugin_unload_plugin ##### -->
 <para>
 
 </para>
 
-@path: 
-
-
-<!-- ##### FUNCTION gst_library_load ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_find ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_get_list ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
-
-
-<!-- ##### FUNCTION gst_plugin_save_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
+@plugin: 
 @Returns: 
 
 
@@ -242,28 +242,21 @@ A macro used to define a statically linked plugin.
 @feature: 
 
 
-<!-- ##### FUNCTION gst_plugin_get_feature_list ##### -->
+<!-- ##### FUNCTION gst_plugin_load ##### -->
 <para>
 
 </para>
 
-@plugin: 
+@name: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_load_plugin ##### -->
+<!-- ##### FUNCTION gst_library_load ##### -->
 <para>
 
 </para>
 
-@plugin: 
+@name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_unload_all ##### -->
-<para>
-
-</para>
-
 
 

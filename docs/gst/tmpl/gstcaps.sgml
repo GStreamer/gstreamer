@@ -223,6 +223,15 @@ Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_caps_copy_on_write ##### -->
 <para>
 
@@ -370,6 +379,7 @@ Check if the GstCaps has a property with the given type
 
 @caps: the caps to query
 @name: the name of the property
+@type: 
 
 
 <!-- ##### FUNCTION gst_caps_normalize ##### -->

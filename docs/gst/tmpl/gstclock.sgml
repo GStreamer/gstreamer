@@ -6,7 +6,14 @@ Abstract class for global clocks
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+GStreamer uses a global clock to synchronise the plugins in a pipeline.
+Different clock implementations are possible by implementing this abstract
+base class.
+</para>
+<para>
+The clock time is always measured in nanoseconds, with the clock being set
+to 0 when the pipeline goes to READY. Usually all renderers sync to the global
+clock so that the clock is always a good measure of the time in the pipeline.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -16,13 +23,13 @@ Abstract class for global clocks
 
 <!-- ##### TYPEDEF GstClockTime ##### -->
 <para>
-A datatype to hold a time, measured in microseconds.
+A datatype to hold a time, measured in nanoseconds.
 </para>
 
 
 <!-- ##### TYPEDEF GstClockTimeDiff ##### -->
 <para>
-A datatype to hold a timedifference, measured in microseconds.
+A datatype to hold a timedifference, measured in nanoseconds.
 </para>
 
 
@@ -53,6 +60,41 @@ The return value of a clock operation.
 @GST_CLOCK_EARLY: The operation was scheduled too late.
 @GST_CLOCK_ERROR: An error occured
 
+<!-- ##### MACRO GST_CLOCK_TIME_NONE ##### -->
+<para>
+Constant to define an undefined clock time
+</para>
+
+
+
+<!-- ##### MACRO GST_SECOND ##### -->
+<para>
+Constant that defines one GStreamer second
+</para>
+
+
+
+<!-- ##### MACRO GST_MSECOND ##### -->
+<para>
+Constant that defines one GStreamer millisecond
+</para>
+
+
+
+<!-- ##### MACRO GST_USECOND ##### -->
+<para>
+Constant that defines one GStreamer microsecond
+</para>
+
+
+
+<!-- ##### MACRO GST_NSECOND ##### -->
+<para>
+Constant that defines one GStreamer nanosecond
+</para>
+
+
+
 <!-- ##### MACRO GST_CLOCK_DIFF ##### -->
 <para>
 Calculate a difference between to clock times.
@@ -70,10 +112,39 @@ Convert a GTimeVal to a GstClockTime
 @tv: the timeval to convert
 
 
+<!-- ##### MACRO GST_TIME_TO_TIMEVAL ##### -->
+<para>
+Convert a GstClockTime to a GTimeVal
+</para>
+
+@t: The GstClockTime to convert
+@tv: The target timeval
+
+
 <!-- ##### STRUCT GstClock ##### -->
 <para>
 The opaque data structure of the clock.
 </para>
+
+
+<!-- ##### FUNCTION gst_clock_set_speed ##### -->
+<para>
+
+</para>
+
+@clock: 
+@speed: 
+
+
+<!-- ##### FUNCTION gst_clock_get_speed ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@speed: 
 
 
 <!-- ##### FUNCTION gst_clock_set_active ##### -->
@@ -94,12 +165,41 @@ The opaque data structure of the clock.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_clock_reset ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
+<!-- ##### FUNCTION gst_clock_handle_discont ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_clock_async_supported ##### -->
 <para>
 
 </para>
 
 @clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_wait ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@jitter: 
 @Returns: 
 
 
@@ -145,15 +245,6 @@ The opaque data structure of the clock.
 @id: 
 
 
-<!-- ##### FUNCTION gst_clock_unlock_id ##### -->
-<para>
-
-</para>
-
-@clock: 
-@id: 
-
-
 <!-- ##### FUNCTION gst_clock_wait_id ##### -->
 <para>
 
@@ -161,6 +252,7 @@ The opaque data structure of the clock.
 
 @clock: 
 @id: 
+@jitter: 
 @Returns: 
 
 
@@ -171,6 +263,15 @@ The opaque data structure of the clock.
 
 @clock: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_unlock_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
 
 
 <!-- ##### FUNCTION gst_clock_get_time ##### -->
@@ -207,43 +308,5 @@ The opaque data structure of the clock.
 
 @clock: 
 @resolution: 
-
-
-<!-- ##### FUNCTION gst_clock_set_speed ##### -->
-<para>
-
-</para>
-
-@clock: 
-@speed: 
-
-
-<!-- ##### FUNCTION gst_clock_get_speed ##### -->
-<para>
-
-</para>
-
-@clock: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@speed: 
-
-
-<!-- ##### FUNCTION gst_clock_reset ##### -->
-<para>
-
-</para>
-
-@clock: 
-
-
-<!-- ##### FUNCTION gst_clock_wait ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
-@Returns: 
 
 

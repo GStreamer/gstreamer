@@ -65,14 +65,6 @@ Use gst_autoplug_factory_destroy() to remove the factory from the global list.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_autoplug_factory_get_list ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_autoplug_factory_create ##### -->
 <para>
 

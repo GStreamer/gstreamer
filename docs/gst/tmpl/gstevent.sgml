@@ -36,11 +36,11 @@ The different major types of events.
 @GST_EVENT_EOS: an end-of-stream event.
 @GST_EVENT_FLUSH: a flush event.
 @GST_EVENT_EMPTY: an empty event.
-@GST_EVENT_SEEK: a seek event.
 @GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
-@GST_EVENT_NEW_MEDIA: 
-@GST_EVENT_INFO: an informational event
-@GST_EVENT_ERROR: an error event
+@GST_EVENT_NEW_MEDIA: a new media stream is started
+@GST_EVENT_QOS: a quality of service event
+@GST_EVENT_SEEK: a seek event.
+@GST_EVENT_FILLER: a dummy element that should be ignored by plugins
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -71,11 +71,21 @@ Get the timestamp of the event.
 The different types of seek events.
 </para>
 
-@GST_SEEK_ANY: the seek is performed anyway.
-@GST_SEEK_TIMEOFFSET_SET: 
-@GST_SEEK_BYTEOFFSET_SET: 
-@GST_SEEK_BYTEOFFSET_CUR: 
-@GST_SEEK_BYTEOFFSET_END: 
+@GST_SEEK_METHOD_CUR: Seek to an relative position
+@GST_SEEK_METHOD_SET: Seek to an absolute position
+@GST_SEEK_METHOD_END: Seek relative to the end of the stream
+@GST_SEEK_FLAG_FLUSH: Flush any pending data while seeking
+@GST_SEEK_FLAG_ACCURATE: Seek as accuratly as possible
+@GST_SEEK_FLAG_KEY_UNIT: Seek to a nearby key unit
+
+<!-- ##### ENUM GstSeekAccuracy ##### -->
+<para>
+The seekaccuracy gives more information of how the seek was performed,
+if the seek was accurate or fuzzy.
+</para>
+
+@GST_SEEK_CERTAIN: 
+@GST_SEEK_FUZZY: 
 
 <!-- ##### MACRO GST_EVENT_SEEK_TYPE ##### -->
 <para>
@@ -83,6 +93,30 @@ Get the seektype of the GST_EVENT_SEEK.
 </para>
 
 @event: The event to query.
+
+
+<!-- ##### MACRO GST_EVENT_SEEK_FORMAT ##### -->
+<para>
+The format of the seek value
+</para>
+
+@event: The event operate on
+
+
+<!-- ##### MACRO GST_EVENT_SEEK_METHOD ##### -->
+<para>
+The seek method to use as one of #GstSeekType
+</para>
+
+@event: The event operate on
+
+
+<!-- ##### MACRO GST_EVENT_SEEK_FLAGS ##### -->
+<para>
+The optional seek flags
+</para>
+
+@event: The event operate on
 
 
 <!-- ##### MACRO GST_EVENT_SEEK_OFFSET ##### -->
@@ -93,20 +127,81 @@ Get the offset of the seek event.
 @event: The event to query.
 
 
-<!-- ##### MACRO GST_EVENT_SEEK_FLUSH ##### -->
+<!-- ##### MACRO GST_EVENT_SEEK_ACCURACY ##### -->
 <para>
-Qeury wether the seek event also needs a flush.
-</para>
-
-@event: The event to query.
-
-
-<!-- ##### MACRO GST_EVENT_INFO_PROPS ##### -->
-<para>
-The properties of the info event
+Indicates how accurate the event was performed.
 </para>
 
 @event: The event to query
+
+
+<!-- ##### MACRO GST_SEEK_FLAGS_MASK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_SEEK_FLAGS_SHIFT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_SEEK_FORMAT_MASK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_SEEK_FORMAT_SHIFT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_SEEK_METHOD_MASK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_SEEK_METHOD_SHIFT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_EVENT_DISCONT_NEW_MEDIA ##### -->
+<para>
+Flag that indicates the discont event was because of a new media
+type.
+</para>
+
+@event: The event to operate on
+
+
+<!-- ##### MACRO GST_EVENT_DISCONT_OFFSET ##### -->
+<para>
+The offset of the discont event. A discont evetn can hold up to 8 different
+format/value pairs.
+</para>
+
+@event: The event to query
+@i: The offset/value pair.
+
+
+<!-- ##### MACRO GST_EVENT_DISCONT_OFFSET_LEN ##### -->
+<para>
+Get the number of offset/value pairs this event has.
+</para>
+
+@event: The event to query.
 
 
 <!-- ##### STRUCT GstEvent ##### -->
@@ -117,7 +212,7 @@ The event data structure.
 @data: The parent data type.
 @type: The event type.
 @timestamp: The event timestamp.
-@src: 
+@src: The object that generated the event
 
 <!-- ##### FUNCTION gst_event_new ##### -->
 <para>
@@ -126,14 +221,6 @@ The event data structure.
 
 @type: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_event_free ##### -->
-<para>
-
-</para>
-
-@event: 
 
 
 <!-- ##### FUNCTION gst_event_copy ##### -->
@@ -145,6 +232,14 @@ The event data structure.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_event_free ##### -->
+<para>
+
+</para>
+
+@event: 
+
+
 <!-- ##### FUNCTION gst_event_new_seek ##### -->
 <para>
 
@@ -152,8 +247,36 @@ The event data structure.
 
 @type: 
 @offset: 
-@flush: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_discontinuous ##### -->
+<para>
+
+</para>
+
+@new_media: 
+@format1: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_discont_get_value ##### -->
+<para>
+
+</para>
+
+@event: 
+@format: 
+@value: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_event_new_filler ##### -->
+<para>
+Create a new dummy event that should be ignored
+</para>
+
 
 
 <!-- ##### MACRO gst_event_new_flush ##### -->
@@ -161,15 +284,5 @@ The event data structure.
 Create a new flush event.
 </para>
 
-
-
-<!-- ##### FUNCTION gst_event_new_info ##### -->
-<para>
-
-</para>
-
-@firstname: 
-@Varargs: 
-@Returns: 
 
 

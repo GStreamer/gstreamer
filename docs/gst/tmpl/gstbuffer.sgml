@@ -249,6 +249,11 @@ This enumeration type describes the flags that can be used for a buffer.
 @GST_BUFFER_READONLY: buffer is read-only
 @GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer
 @GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unreferenced
+@GST_BUFFER_DISCONTINOUS: This buffer is the first one after a discontinuity in the stream
+@GST_BUFFER_KEY_UNIT: This buffer holds a key unit, a unit that can be decoded independently
+                      of other buffers
+@GST_BUFFER_PREROLL: This buffer should be decoded but not rendered, it is mainly used
+                     to resynchronise the stream
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>

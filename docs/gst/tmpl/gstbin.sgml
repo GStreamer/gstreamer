@@ -39,6 +39,11 @@ The "object_added" signal is fired whenever a new object is added to the bin.
 <para>
 gst_bin_destroy() is used to destroy the bin. 
 </para>
+<para>
+To control the selection of the clock in a bin, you can use the following methods:
+gst_bin_auto_clock() to let the bin select a clock automatically, gst_bin_get_clock() to
+get the current clock of the bin and gst_bin_use_clock() to specify a clock explicitly.
+</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
@@ -60,6 +65,16 @@ Flags for a bin.
 <para>
 
 </para>
+
+
+<!-- ##### USER_FUNCTION GstBinPrePostIterateFunction ##### -->
+<para>
+The signature of the callback for the post and pre iterate function as set with
+gst_bin_set_pre_iterate_function() and gst_bin_set_post_iterate_function().
+</para>
+
+@bin: The bin that performed the callback
+@data: user data
 
 
 <!-- ##### FUNCTION gst_bin_new ##### -->
@@ -154,6 +169,26 @@ Free the memory allocated by this bin
 
 @bin: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_set_post_iterate_function ##### -->
+<para>
+
+</para>
+
+@bin: 
+@func: 
+@func_data: 
+
+
+<!-- ##### FUNCTION gst_bin_set_pre_iterate_function ##### -->
+<para>
+
+</para>
+
+@bin: 
+@func: 
+@func_data: 
 
 
 <!-- ##### FUNCTION gst_bin_child_state_change ##### -->

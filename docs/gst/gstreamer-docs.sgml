@@ -21,6 +21,7 @@
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
+<!entity GstRegistry SYSTEM "sgml/gstregistry.sgml">
 <!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
 <!entity GstSchedulerFactory SYSTEM "sgml/gstschedulerfactory.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
@@ -91,6 +92,7 @@ with some more specialized elements.</para>
     &GstPluginFeature;
     &GstProps;
     &GstQueue;
+    &GstRegistry;
     &GstScheduler;
     &GstSchedulerFactory;
     &GstSystemClock;

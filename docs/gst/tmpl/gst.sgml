@@ -33,8 +33,32 @@ process its own command line options, as shown in the following example.
   int 
   main (int argc, char *argv[])
   {
-    // initialize the GStreamer library
+    /* initialize the GStreamer library */
     gst_init (&amp;argc, &amp;argv);
+    ...
+  }
+  </programlisting>
+</para>
+
+<para>
+You can also use a popt table to initialize your own parameters as shown in the next code 
+fragment:
+  <programlisting>
+  static gboolean stats = FALSE;
+  ...
+
+  int 
+  main (int argc, char *argv[])
+  {
+    struct poptOption options[] = {
+      { "stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &amp;stats,   0,
+          "Show pad stats", NULL},
+        POPT_TABLEEND
+      };
+
+    /* initialize the GStreamer library */
+    gst_init_with_popt_table (&amp;argc, &amp;argv, options);
+      
     ...
   }
   </programlisting>

@@ -24,12 +24,6 @@ are usually used in conjunction with GstCaps.
 @fixed: indicates that this props has no lists or ranges
 @properties: the properties
 
-<!-- ##### STRUCT GstPropsEntry ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### ENUM GstPropsType ##### -->
 <para>
 
@@ -172,6 +166,12 @@ Create an integer property that can hold positive ints.
 
 
 
+<!-- ##### STRUCT GstPropsEntry ##### -->
+<para>
+An entry hols one key/value pair.
+</para>
+
+
 <!-- ##### FUNCTION gst_props_new ##### -->
 <para>
 
@@ -189,6 +189,14 @@ Create an integer property that can hold positive ints.
 
 @firstname: 
 @var_args: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_empty_new ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 
@@ -301,6 +309,27 @@ Create an integer property that can hold positive ints.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_props_get_safe ##### -->
+<para>
+
+</para>
+
+@props: 
+@first_name: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_has_property ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_props_has_fixed_property ##### -->
 <para>
 
@@ -366,6 +395,25 @@ Create an integer property that can hold positive ints.
 
 @props: 
 @name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_add_entry ##### -->
+<para>
+
+</para>
+
+@props: 
+@entry: 
+
+
+<!-- ##### FUNCTION gst_props_entry_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Varargs: 
 @Returns: 
 
 

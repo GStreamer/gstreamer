@@ -167,20 +167,6 @@ The function that will be called when pulling a buffer.
 @Returns: a #GstBuffer
 
 
-<!-- ##### USER_FUNCTION GstPadGetRegionFunction ##### -->
-<para>
-The function that will be called when pulling a region buffer.
-You can specify which buffer to get using an offset/length pair or
-a start/stop timecode pair.
-</para>
-
-@pad: the pad to get a buffer from
-@type: the type of region to get (time or offset based)
-@offset: the offset of the region to get
-@len: the length of the region to get
-@Returns: a #GstBuffer
-
-
 <!-- ##### USER_FUNCTION GstPadBufferPoolFunction ##### -->
 <para>
 The function that will be called when a bufferpool is requested
@@ -200,29 +186,6 @@ will return the pad template caps but can optionally be overridden.
 @pad: The pad to get the caps of
 @caps: The peer caps, can be used to filter the caps.
 @Returns: The caps of the pad.
-
-
-<!-- ##### ENUM GstRegionType ##### -->
-<para>
-the region types for #gst_pad_pullregion.
-</para>
-
-@GST_REGION_VOID: 
-@GST_REGION_OFFSET_LEN: an offet/length pair
-@GST_REGION_TIME_LEN: a time start/length pair
-
-<!-- ##### USER_FUNCTION GstPadPullRegionFunction ##### -->
-<para>
-The function that will be called when pulling a region buffer.
-You can specify which buffer to get using an offset/length pair or
-a start/stop timecode pair.
-</para>
-
-@pad: the pad to get a buffer from
-@type: the type of region to get (time or offset based)
-@offset: the offset of the region to get
-@len: the length of the region to get
-@Returns: a #GstBuffer
 
 
 <!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
@@ -247,13 +210,68 @@ Function signature to handle a new connection on the pad.
 
 <!-- ##### ENUM GstPadConnectReturn ##### -->
 <para>
-
+The result of a pad connection.
 </para>
 
-@GST_PAD_CONNECT_REFUSED: 
-@GST_PAD_CONNECT_DELAYED: 
-@GST_PAD_CONNECT_OK: 
-@GST_PAD_CONNECT_DONE: 
+@GST_PAD_CONNECT_REFUSED: The connectino was refused
+@GST_PAD_CONNECT_DELAYED: The connection was delayed, probably because the
+                          element needs more specific pad caps.
+@GST_PAD_CONNECT_OK: The connection succeeded.
+@GST_PAD_CONNECT_DONE: The connection succeeded, any more attempts are not needed.
+
+<!-- ##### USER_FUNCTION GstPadConvertFunction ##### -->
+<para>
+The signature of a convert function. 
+</para>
+
+@pad: The pad to perform the convert on
+@src_format: The source format of the conversion
+@src_value: The source value of the conversion
+@dest_format: a pointer to the destination format
+@dest_value: a pointer to the destination value
+@Returns: TRUE if the conversion could be performed.
+
+
+<!-- ##### USER_FUNCTION GstPadDispatcherFunc ##### -->
+<para>
+The signature of the dispatcher callback.
+</para>
+
+@pad: The pad that is being dispatched
+@data: user data
+@Returns: TRUE if no further pads need to be processed
+
+
+<!-- ##### USER_FUNCTION GstPadIntConnFunction ##### -->
+<para>
+The signature of the internal pad connection function
+</para>
+
+@pad: The pad to query
+@Returns: a Glist of pads that connect to the requested pad internally to the
+          parent element. g_list_free() after use.
+
+
+<!-- ##### ENUM GstPadQueryType ##### -->
+<para>
+The different supported query types
+</para>
+
+@GST_PAD_QUERY_TOTAL: Query the total stream time
+@GST_PAD_QUERY_POSITION: Query the current stream position
+@GST_PAD_QUERY_LATENCY: Query the latency on the pad
+
+<!-- ##### USER_FUNCTION GstPadQueryFunction ##### -->
+<para>
+The signature of query function
+</para>
+
+@pad: The pad to query
+@type: The query type
+@format: a pointer to the target format
+@value: a pointer to the target value
+@Returns: TRUE if the query could be performed
+
 
 <!-- ##### ENUM GstPadDirection ##### -->
 <para>
@@ -280,6 +298,28 @@ Flags for the pad.
 
 @name: 
 @direction: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_custom_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@name: 
+@direction: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_custom_new_from_template ##### -->
+<para>
+
+</para>
+
+@type: 
+@templ: 
+@name: 
 @Returns: 
 
 
@@ -328,15 +368,6 @@ Destroy the pad.
 
 @pad: 
 @get: 
-
-
-<!-- ##### FUNCTION gst_pad_set_getregion_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@getregion: 
 
 
 <!-- ##### FUNCTION gst_pad_set_bufferpool_function ##### -->
@@ -617,20 +648,6 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_pullregion ##### -->
-<para>
-
-</para>
-
-@pad: 
-@type: 
-@offset: 
-@len: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@size: 
-
-
 <!-- ##### FUNCTION gst_pad_get_bufferpool ##### -->
 <para>
 
@@ -747,6 +764,17 @@ Destroy the pad.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_pad_dispatcher ##### -->
+<para>
+
+</para>
+
+@pad: 
+@dispatch: 
+@data: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_pad_send_event ##### -->
 <para>
 
@@ -764,6 +792,7 @@ Destroy the pad.
 
 @pad: 
 @event: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_set_event_function ##### -->
@@ -773,6 +802,101 @@ Destroy the pad.
 
 @pad: 
 @event: 
+
+
+<!-- ##### FUNCTION gst_pad_set_convert_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@convert: 
+
+
+<!-- ##### FUNCTION gst_pad_convert ##### -->
+<para>
+
+</para>
+
+@pad: 
+@src_format: 
+@src_value: 
+@dest_format: 
+@dest_value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_convert_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@src_format: 
+@src_value: 
+@dest_format: 
+@dest_value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_internal_connections ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_internal_connections_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_internal_connection_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@intconn: 
+
+
+<!-- ##### FUNCTION gst_pad_set_query_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@query: 
+
+
+<!-- ##### FUNCTION gst_pad_query ##### -->
+<para>
+
+</para>
+
+@pad: 
+@type: 
+@format: 
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_query_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@type: 
+@format: 
+@value: 
+@Returns: 
 
 
 <!-- ##### STRUCT GstRealPad ##### -->
@@ -789,49 +913,23 @@ Destroy the pad.
 @sched_private: 
 @peer: 
 @bufpen: 
-@regiontype: 
-@offset: 
-@len: 
 @chainfunc: 
 @chainhandler: 
 @getfunc: 
 @gethandler: 
 @eventfunc: 
 @eventhandler: 
-@getregionfunc: 
-@pullregionfunc: 
+@convertfunc: 
+@queryfunc: 
+@intconnfunc: 
 @getcapsfunc: 
 @connectfunc: 
 @bufferpoolfunc: 
 @ghostpads: 
 
-<!-- ##### MACRO GST_RPAD_LEN ##### -->
-<para>
-Get the length of the region that is being pulled.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_OFFSET ##### -->
-<para>
-Get the offset of the region that is being pulled.
-</para>
-
-@pad: the real pad to query.
-
-
 <!-- ##### MACRO GST_RPAD_SCHED ##### -->
 <para>
 Get the scheduler of this real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
-<para>
-Get the type of the region that is being pulled.
 </para>
 
 @pad: the real pad to query.
@@ -901,22 +999,6 @@ Get get getfunction of the real pad.
 @pad: the real pad to query.
 
 
-<!-- ##### MACRO GST_RPAD_GETREGIONFUNC ##### -->
-<para>
-Get the getregion function of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_PULLREGIONFUNC ##### -->
-<para>
-Get the pullregion function of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
 <!-- ##### MACRO GST_RPAD_BUFFERPOOLFUNC ##### -->
 <para>
 Get the bufferpoolfunction from the real pad.
@@ -968,6 +1050,30 @@ Get the connect function of the pad
 <!-- ##### MACRO GST_RPAD_GETCAPSFUNC ##### -->
 <para>
 Get the getcaps function of this pad
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_RPAD_CONVERTFUNC ##### -->
+<para>
+Get the convert function of this pad
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_RPAD_INTCONNFUNC ##### -->
+<para>
+Get the internal connection function of this pad
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_RPAD_QUERYFUNC ##### -->
+<para>
+Get the query function of this pad
 </para>
 
 @pad: the pad to query

@@ -184,12 +184,31 @@ of an element he doesn't need anymore.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_release_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
 <!-- ##### FUNCTION gst_element_get_pad_list ##### -->
 <para>
 
 </para>
 
 @element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_pad_template ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
 @Returns: 
 
 
@@ -331,6 +350,16 @@ of an element he doesn't need anymore.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_get_compatible_pad_template ##### -->
+<para>
+
+</para>
+
+@element: 
+@compattempl: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_set_state ##### -->
 <para>
 
@@ -404,6 +433,15 @@ of an element he doesn't need anymore.
 @element: 
 
 
+<!-- ##### FUNCTION gst_element_release_locks ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_get_clock ##### -->
 <para>
 
@@ -430,6 +468,7 @@ of an element he doesn't need anymore.
 @element: 
 @clock: 
 @time: 
+@jitter: 
 @Returns: 
 
 
@@ -515,6 +554,128 @@ circumstances.
 @Returns: 
 
 <!-- clocking -->
+
+
+<!-- ##### USER_FUNCTION GstElementPostRunFunction ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### USER_FUNCTION GstElementPreRunFunction ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_disable_threadsafe_properties ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_enable_threadsafe_properties ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_get ##### -->
+<para>
+
+</para>
+
+@element: 
+@first_property_name: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_element_get_property ##### -->
+<para>
+
+</para>
+
+@element: 
+@property_name: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_element_get_valist ##### -->
+<para>
+
+</para>
+
+@element: 
+@first_property_name: 
+@var_args: 
+
+
+<!-- ##### FUNCTION gst_element_set ##### -->
+<para>
+
+</para>
+
+@element: 
+@first_property_name: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_element_set_pending_properties ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_set_property ##### -->
+<para>
+
+</para>
+
+@element: 
+@property_name: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_element_set_valist ##### -->
+<para>
+
+</para>
+
+@element: 
+@first_property_name: 
+@var_args: 
+
+
+<!-- ##### FUNCTION gst_element_query ##### -->
+<para>
+
+</para>
+
+@element: 
+@type: 
+@format: 
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_send_event ##### -->
+<para>
+
+</para>
+
+@element: 
+@event: 
+@Returns: 
 
 
 <!-- ##### ENUM GstElementState ##### -->
@@ -623,12 +784,12 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_COMPLEX: 
 @GST_ELEMENT_DECOUPLED: 
 @GST_ELEMENT_THREAD_SUGGESTED: 
-@GST_ELEMENT_NO_SEEK: 
 @GST_ELEMENT_INFINITE_LOOP: 
-@GST_ELEMENT_SCHEDULER_PRIVATE1: 
-@GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_NEW_LOOPFUNC: 
 @GST_ELEMENT_EVENT_AWARE: 
+@GST_ELEMENT_USE_THREADSAFE_PROPERTIES: 
+@GST_ELEMENT_SCHEDULER_PRIVATE1: 
+@GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
@@ -710,6 +871,15 @@ Get the clock of this element
 
 @obj: a #GstElement to query
 
+
+<!-- ##### SIGNAL GstElement::deep-notify ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
 
 <!-- ##### SIGNAL GstElement::eos ##### -->
 <para>
