@@ -155,7 +155,7 @@ gst_aasink_dither_get_type (void)
       i++;
     }
     
-    ditherers = g_new0(GEnumValue, i);
+    ditherers = g_new0(GEnumValue, i + 1);
 
     i = 0;
     while (aa_dithernames[i]) {
