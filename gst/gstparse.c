@@ -239,6 +239,28 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       g_free(argname);
 
     // element or argument, or beginning of bin or thread
+    } else if (arg[0] == '[') {
+      // we have the start of a name of the preceding element.
+      // rename previous element to next arg.
+      if (arg[1] != '\0') {
+	fprintf(stderr,"error, unexpected junk after [\n");
+	exit(-1);
+      }
+      i++;
+      if (i < argc) {
+	gst_element_set_name(previous, argv[i]);
+      } else {
+	fprintf(stderr,"error, expected element name, found end of arguments\n");
+	exit(-1);
+      }
+      i++;
+      if (i >= argc) {
+	fprintf(stderr,"error, expected ], found end of arguments\n");
+	exit(-1);
+      } else if (strcmp(argv[i], "]") != 0) {
+	fprintf(stderr,"error, expected ], found '%s'\n", argv[i]);
+	exit(-1);
+      }
     } else {
       DEBUG("have element or bin/thread\n");
       // if we have a bin or thread starting
@@ -259,7 +281,11 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
 //            exit(-1);
           }
           GST_DEBUG(0,"CREATED thread %s\n",GST_ELEMENT_NAME(element));
-        }
+	} else {
+	  DEBUG("error in parser, unexpected symbol, FIXME\n");
+	  i++;
+	  continue;
+	}
 
         i += gst_parse_launch_cmdline(argc - i, argv + i + 1, GST_BIN (element), priv);
 
