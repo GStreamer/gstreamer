@@ -122,17 +122,19 @@ GStreamer support libraries header files.
 
 %files -n gstreamer-plugins-devel
 %defattr(-, root, root)
+%{_includedir}/gstreamer-%{majorminor}/gst/gconf/gconf.h
+%{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
 %{_includedir}/gstreamer-%{majorminor}/gst/floatcast/floatcast.h
-%{_includedir}/gstreamer-%{majorminor}/gst/gconf/gconf.h
 %{_includedir}/gstreamer-%{majorminor}/gst/idct/idct.h
 %{_includedir}/gstreamer-%{majorminor}/gst/resample/resample.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
-%{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
+@USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
+%{_libdir}/libgstplay-%{majorminor}.so
 
 # Here are all the packages depending on external libs #
 
@@ -734,7 +736,7 @@ Plug-ins for playback of AVI format media files.
 @USE_LIBPNG_TRUE@
 @USE_LIBPNG_TRUE@%files -n gstreamer-libpng
 @USE_LIBPNG_TRUE@%defattr(-, root, root)
-@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibpng.so
+@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_LIBPNG_TRUE@
 @USE_LIBPNG_TRUE@%post -n gstreamer-libpng
 @USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1177,7 +1179,6 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
 %{_libdir}/gstreamer-%{majorminor}/libmixmatrix.so
-@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 
 %post -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1495,17 +1496,16 @@ Plug-in for demuxing Quicktime movies
 @USE_GCONF_TRUE@Requires: 	gstreamer-plugins = %{version}
 @USE_GCONF_TRUE@Requires: 	GConf2
 @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
-
+@USE_GCONF_TRUE@
 @USE_GCONF_TRUE@%description -n gstreamer-GConf
 @USE_GCONF_TRUE@Installation of GStreamer GConf schemas.
 @USE_GCONF_TRUE@These set usable defaults used by all GStreamer-enabled Gnome applications.
-
+@USE_GCONF_TRUE@
 @USE_GCONF_TRUE@%files -n gstreamer-GConf
 @USE_GCONF_TRUE@%defattr(-, root, root)
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
-@USE_GCONF_TRUE@%{_libdir}/libgstgconf.so
-@USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{version}.so.*
-
+@USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so.*
+@USE_GCONF_TRUE@
 @USE_GCONF_TRUE@%post -n gstreamer-GConf
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
@@ -1521,8 +1521,7 @@ This package contains a basic audio and video playback library.
 
 %files -n gstreamer-play
 %defattr(-, root, root)
-%{_sysconfdir}/gconf/schemas/gstreamer.schemas
-%{_libdir}/libgstplay-%{majorminor}.so*
+%{_libdir}/libgstplay-%{majorminor}.so.*
 
 %post -n gstreamer-play
 /sbin/ldconfig
@@ -1531,6 +1530,10 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
+* Tue Dec 10 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- only install schema once
+- move out devel lib stuff to -devel package
+
 * Sun Dec 08 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - fix location of libgstpng
 - changes for parallel installability
