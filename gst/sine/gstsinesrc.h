@@ -71,7 +71,7 @@ struct _GstSineSrc {
   gint table_lookup_next;
     
   /* audio parameters */
-  gint format;
+  gint width;
   gint samplerate;
 
   gint samples_per_buffer;

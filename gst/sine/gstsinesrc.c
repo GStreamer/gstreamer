@@ -283,10 +283,12 @@ gst_sinesrc_set_property (GObject *object, guint prop_id,
   src = GST_SINESRC (object);
 
   switch (prop_id) {
+/*
     case ARG_WIDTH:
       src->width = g_value_get_int (value);
       src->newcaps = TRUE;
       break;
+*/
     case ARG_SAMPLERATE:
       src->samplerate = g_value_get_int (value);
       gst_dpman_set_rate (src->dpman, src->samplerate);
@@ -325,9 +327,11 @@ gst_sinesrc_get_property (GObject *object, guint prop_id,
   src = GST_SINESRC(object);
 
   switch (prop_id) {
+/*
     case ARG_WIDTH:
       g_value_set_int (value, src->width);
       break;
+*/
     case ARG_SAMPLERATE:
       g_value_set_int (value, src->samplerate);
       break;
