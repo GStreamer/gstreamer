@@ -1,3 +1,11 @@
+2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/dv/gstdvdec.c:
+	 Fix audio caps i just broke (missing ',')
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_get_type),
+	(gst_matroska_mux_reset):
+	 Fix typo + add FIXME about old "x-gst-metadata" crap
+
 2005-01-07  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dv/demo-play.c: (main):

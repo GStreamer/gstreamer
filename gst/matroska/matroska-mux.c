@@ -168,7 +168,7 @@ gst_matroska_mux_get_type (void)
 
     gst_matroska_mux_type =
         g_type_register_static (GST_TYPE_EBML_WRITE,
-        "GstMatroskaMmux", &gst_matroska_mux_info, 0);
+        "GstMatroskaMux", &gst_matroska_mux_info, 0);
   }
 
   return gst_matroska_mux_type;
@@ -302,6 +302,8 @@ gst_matroska_mux_reset (GstElement * element)
   mux->num_a_streams = 0;
   mux->num_t_streams = 0;
   mux->num_v_streams = 0;
+
+/* FIXME x-gst-metadata : prehistoric way to do metadata in caps. is done via signals actually */
 
   /* reset media info  (to default) */
   gst_caps_replace (&mux->metadata,
