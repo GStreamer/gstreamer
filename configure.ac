@@ -1268,7 +1268,6 @@ docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
 docs/fwg/Makefile
-debian/Makefile
 stamp.h
 gstreamer.pc
 gstreamer-uninstalled.pc
