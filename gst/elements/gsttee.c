@@ -137,7 +137,7 @@ gst_tee_sinkconnect (GstPad *pad, GstCaps *caps)
     GstPad *outpad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 		     
-    if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC || !GST_PAD_IS_CONNECTED (outpad))
+    if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC || !GST_PAD_IS_USABLE (outpad))
       continue;
 
     if (!(gst_pad_try_set_caps (outpad, caps))) {
@@ -304,7 +304,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
       g_object_notify (G_OBJECT (tee), "last_message");
     }
 
-    if (GST_PAD_IS_CONNECTED (outpad))
+    if (GST_PAD_IS_USABLE (outpad))
       gst_pad_push (outpad, buf);
     else
       gst_buffer_unref (buf);

@@ -338,6 +338,18 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
   return TRUE;
 }
 
+static const GstEventMask*
+gst_fakesrc_get_event_mask (GstPad *pad)
+{
+  static const GstEventMask gst_fakesrc_event_mask[] = {
+    { GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH },
+    { GST_EVENT_FLUSH, 0 },
+    { 0, }
+  };
+
+  return gst_fakesrc_event_mask;
+}
+
 static void
 gst_fakesrc_update_functions (GstFakeSrc *src)
 {
@@ -362,6 +374,7 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
     }
 
     gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
+    gst_pad_set_event_mask_function (pad, gst_fakesrc_get_event_mask);
     pads = g_list_next (pads);
   }
 }
@@ -412,7 +425,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
         if (src->sizetype != FAKESRC_SIZETYPE_FIXED)
           g_object_set (src, "sizetype", FAKESRC_SIZETYPE_FIXED, NULL);
         
-        if (!src->pool)
+        if (!src->pool) 
           src->pool = gst_buffer_pool_get_default (src->sizemax, 10);
       } else {
         if (src->pool) {
