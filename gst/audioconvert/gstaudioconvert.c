@@ -330,7 +330,7 @@ gst_audio_convert_link (GstPad *pad, const GstCaps *caps)
     GstStructure *structure = gst_caps_get_structure (othercaps, i);
     gst_structure_set (structure, "rate", G_TYPE_INT, ac_caps.rate, NULL);
   }
-  ret = gst_pad_try_set_caps (otherpad, othercaps);
+  ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
   gst_caps_free (othercaps);
   if (ret < GST_PAD_LINK_OK)
     return ret;
