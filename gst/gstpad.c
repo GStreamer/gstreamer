@@ -2278,6 +2278,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   GstRealPad *peer;
   GstData *data = GST_DATA(buf);
 
+  g_assert (GST_IS_PAD (pad));
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);

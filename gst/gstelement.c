@@ -2238,6 +2238,14 @@ gst_element_set_state (GstElement *element, GstElementState state)
   /* start with the current state */
   curpending = GST_STATE(element);
 
+  if (state == curpending)
+  {
+    GST_DEBUG_ELEMENT (GST_CAT_STATES, element,
+                       "element is already in requested state %s",
+                       gst_element_state_get_name (state));
+    return (GST_STATE_SUCCESS);
+  }
+
   GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s",
                      gst_element_state_get_name (curpending),
                      gst_element_state_get_name (state));
