@@ -301,7 +301,7 @@ gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, 
       identity->dump = g_value_get_boolean (value);
       break;
     case ARG_ERROR_AFTER:
-      identity->error_after = g_value_get_uint (value);
+      identity->error_after = g_value_get_int (value);
       break;
     case ARG_DROP_PROBABILITY:
       identity->drop_probability = g_value_get_float (value);
@@ -330,7 +330,7 @@ static void gst_identity_get_property(GObject *object, guint prop_id, GValue *va
       g_value_set_uint (value, identity->duplicate);
       break;
     case ARG_ERROR_AFTER:
-      g_value_set_uint (value, identity->error_after);
+      g_value_set_int (value, identity->error_after);
       break;
     case ARG_DROP_PROBABILITY:
       g_value_set_float (value, identity->drop_probability);
