@@ -253,7 +253,7 @@ dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_sca
   int i, j;
   int dnum;
   int d, len;
-  int x, y;
+  guint x, y;
 
   if (dust_interval == 0) {
     if ((fastrand () & 0xf0000000) == 0) {
@@ -272,8 +272,9 @@ dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_sca
       dest[y * width + x] = 0x101010;
       y += dy[d];
       x += dx[d];
-      if (x < 0 || x >= width) break;
-      if (y < 0 || y >= height) break;
+
+      if (y >= height || x >= width) break;
+
       d = (d + fastrand () % 3 - 1) & 7;
     }
   }
@@ -285,7 +286,7 @@ pits (guint32 *dest, gint width, gint height, gint area_scale, gint pits_interva
 {
   int i, j;
   int pnum, size, pnumscale;
-  int x, y;
+  guint x, y;
 
   pnumscale = area_scale * 2;
   if (pits_interval) {
@@ -308,6 +309,9 @@ pits (guint32 *dest, gint width, gint height, gint area_scale, gint pits_interva
     for (j = 0; j < size; j++) {
       x = x + fastrand () % 3 - 1;
       y = y + fastrand () % 3 - 1;
+
+      if (y >= height || x >= width) break;
+
       dest[y * width + x] = 0xc0c0c0;
     }
   }
