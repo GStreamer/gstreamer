@@ -257,7 +257,7 @@ static void
 gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstBuffer *buf, guchar *debug) 
 {
   if (!aggregator->silent)
-    g_print("aggregator: %10.10s ******* (%s:%s)a (%d bytes, %llu) \n",
+    gst_element_info (GST_ELEMENT (aggregator), "%10.10s ******* (%s:%s)a (%d bytes, %llu) \n",
             debug, GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
   gst_pad_push (aggregator->srcpad, buf);

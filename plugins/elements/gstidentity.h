@@ -60,6 +60,7 @@ struct _GstIdentity {
   gboolean loop_based;
   guint duplicate;
   gint error_after;
+  gfloat drop_probability;
   guint sleep_time;
   gboolean silent;
 };
