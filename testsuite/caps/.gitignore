@@ -10,9 +10,11 @@ Makefile.in
 .libs
 
 app_fixate
+audioscale
 caps
 compatibility
 erathostenes
+filtercaps
 fixed
 intersect2
 intersection
@@ -24,3 +26,4 @@ string-conversions
 subtract
 value_compare
 value_intersect
+value_serialize
