@@ -41,13 +41,8 @@ DOC_SOURCE_DIR=$(top_srcdir)/gst
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
 
-# FIXME :
-# there's something wrong with gstreamer-sections.txt not being in the dist
-# maybe it doesn't resolve; we're adding it below for now
-#EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
-
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=trio
+MKDB_OPTIONS=--sgml-mode --ignore-files=trio
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=
@@ -77,6 +72,7 @@ IGNORE_HFILES= \
 	gthread-cothreads.h \
 	types.h \
 	grammar.tab.h \
+	gstmarshal.h \
 	elements/gstaggregator.h \
 	elements/gstbufferstore.h \
 	elements/gstfakesink.h \
@@ -180,11 +176,11 @@ scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
           export BUILT_OPTIONS="--source-dir=$(top_builddir)/gst"; \
         fi; \
 	gtkdoc-scan \
+		$(SCAN_OPTIONS) $(EXTRA_HFILES) \
 		--module=$(DOC_MODULE) \
 		--source-dir=$(DOC_SOURCE_DIR) \
 		$$BUILT_OPTIONS \
-		--ignore-headers="$(IGNORE_HFILES)" \
-		$(SCAN_OPTIONS) $(EXTRA_HFILES)
+		--ignore-headers="$(IGNORE_HFILES)"
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
@@ -206,11 +202,11 @@ tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections
 tmpl.stamp: tmpl-build.stamp
 	@true
 
-#### sgml ####
+#### xml ####
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB)
-	@echo '*** Building SGML ***'
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS) | tee sgml-build.log
+	@echo '*** Building XML ***'
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) --output-format=xml $(MKDB_OPTIONS) | tee sgml-build.log
 	@if grep "WARNING:" sgml-build.log > /dev/null; then exit 1; fi
 	rm sgml-build.log
 	touch sgml-build.stamp
@@ -235,11 +231,11 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 endif
 
 clean-local:
-	rm -f *~ *.bak $(SCANOBJ_FILES) *-unused.txt $(DOC_STAMPS)
-	rm -rf xml html
+	rm -f *~ *.bak
+	rm -rf .libs
 
 maintainer-clean-local: clean
-	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
+	cd $(srcdir) && rm -rf xml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
 
 # company: don't delete .sgml and -sections.txt as they're in CVS
 # FIXME : thomas added all sgml files and some other things to make

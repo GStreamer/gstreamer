@@ -14,6 +14,12 @@ GstXML
 
 </para>
 
+<!-- ##### STRUCT GstXML ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT GstXMLNs ##### -->
 <para>
 
@@ -115,16 +121,11 @@ GstXML
 
 </para>
 
+@: 
+@: 
+@:
+
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
-
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@: 
-@: 
-@: 
 

@@ -1,7 +1,6 @@
 #include <gst/gst.h>
 
 gst_object_get_type
-gst_xml_get_type
 gst_element_get_type
 gst_bin_get_type
 gst_clock_get_type
