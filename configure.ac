@@ -120,11 +120,8 @@ else
   HAVE_NASM="yes"
 fi
 
-dnl check for gstreamer; check for uninstalled first
-PKG_CHECK_MODULES(GST, gstreamer-uninstalled >= 0.3.1, HAVE_GST="yes", HAVE_GST="no")
-if test "x$HAVE_GST" = "xno"; then
-  PKG_CHECK_MODULES(GST, gstreamer >= 0.3.1, HAVE_GST="yes", HAVE_GST="no")
-fi
+dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
+PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0, HAVE_GST="yes", HAVE_GST="no")
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(no GStreamer found)
