@@ -1193,8 +1193,15 @@ GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-  GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame")
+  GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame -lm")
 ])
+dnl is lame presets available
+ac_save_LIBS="$LIBS"
+LIBS="$LAME_LIBS"
+LAME_CFLAGS=""
+AC_CHECK_FUNC(lame_set_preset, LAME_CFLAGS="-DGSTLAME_PRESET",)
+LIBS="$ac_save_LIBS"				
+AC_SUBST(LAME_CFLAGS)
 AC_SUBST(LAME_LIBS)
 
 dnl *** libcaca ***
