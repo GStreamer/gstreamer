@@ -86,6 +86,7 @@ struct _GstTCPServerSink {
   fd_set streamheader_sent; /* all the client file descriptors that have had
                              * streamheader sent */
 
+  GList *streamheader; /* GList of GstBuffers to use as streamheader */
   GstTCPProtocolType protocol;
   guint mtu;
   GstClock *clock;

@@ -231,6 +231,7 @@ gst_tcpclientsrc_get (GstPad * pad)
             ("ioctl failed: %s", g_strerror (errno)));
         return NULL;
       }
+      GST_LOG_OBJECT (src, "ioctl says %d bytes available", readsize);
       buf = gst_buffer_new_and_alloc (readsize);
       break;
     case GST_TCP_PROTOCOL_TYPE_GDP:
