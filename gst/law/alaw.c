@@ -48,7 +48,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "alawenc",
           GST_RANK_NONE, GST_TYPE_ALAWENC) ||
       !gst_element_register (plugin, "alawdec",
-          GST_RANK_PRIMARY, GST_TYPE_ALAWENC))
+          GST_RANK_PRIMARY, GST_TYPE_ALAWDEC))
     return FALSE;
 
   return TRUE;
