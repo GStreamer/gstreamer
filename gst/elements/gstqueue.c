@@ -195,11 +195,11 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   while (queue->level_buffers >= queue->max_buffers) {
     GST_DEBUG (0,"queue: %s waiting %d\n", name, queue->level_buffers);
     STATUS("%s: O\n");
-    GST_UNLOCK (queue);
     g_mutex_lock (queue->fulllock);
+    GST_UNLOCK (queue);
     g_cond_wait (queue->fullcond, queue->fulllock);
-    g_mutex_unlock (queue->fulllock);
     GST_LOCK (queue);
+    g_mutex_unlock (queue->fulllock);
     STATUS("%s: O+\n");
     GST_DEBUG (0,"queue: %s waiting done %d\n", name, queue->level_buffers);
   }
