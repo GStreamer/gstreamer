@@ -263,7 +263,7 @@ not important for the example.
   (please note that this example is purely theoretical. It should just show ideas)
   During playback, an application is interested in "interpret", "title", "length_time",
   "length_size" and "URI" of the current stream. 
-  - The appplication creates a HAS_INFO event and inserts it at the end of the pipeline into the
+  - The application creates a HAS_INFO event and inserts it at the end of the pipeline into the
     osssink.
   - The osssink cannot supply any info so it forwards the event to the mikmod element.
   - The mikmod element can supply "title" and "length_time". It calls the supplied callback twice
