@@ -1,5 +1,10 @@
 2004-06-16  Wim Taymans  <wim@fluendo.com>
 
+	* sys/oss/gstosssrc.c: (gst_osssrc_get):
+	Timestamp fixes.
+
+2004-06-16  Wim Taymans  <wim@fluendo.com>
+
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_sync_mode_get_type),
 	(gst_v4lsrc_class_init), (gst_v4lsrc_init), (gst_v4lsrc_get_fps),
 	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
