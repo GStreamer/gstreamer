@@ -206,20 +206,40 @@ dnl Next, check for the optional libraries:
 dnl =======================================
 
 
-dnl Check for libesd
-esd_save_LIBS=$LIBS
-esd_save_CFLAGS=$CFLAGS 
-AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
-LIBS=$esd_save_LIBS
-CFLAGS=$esd_save_CFLAGS
-AC_ARG_ENABLE(esdsink,
-[  --enable-esdsink          enable the building of the esdsink],
-[case "${enableval}" in
-	yes) : ;;
-	no) HAVE_LIBESD=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-esdsink) ;;
-	esac],
-[HAVE_LIBESD=$HAVE_LIBESD])
+
+dnl ***** ESound *****
+
+dnl *** First, the --enable-esd arg
+AC_ARG_ENABLE(esd,
+  [  --enable-esd             enable esound plugins: esdsrc, esdsink],
+  [ case "${enableval}" in
+      yes) USE_LIBESD=yes ;;
+      no) USE_LIBESD=no ;;
+      *) AC_MSG_ERROR(bad value ${enableval} for --enable-esd) ;;
+    esac],
+  [ USE_LIBESD=yes ])		dnl DEFAULT
+dnl *** If it's enabled
+if test x$USE_LIBESD = xyes; then
+  esd_save_LIBS=$LIBS
+  esd_save_CFLAGS=$CFLAGS
+  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+  LIBS=$esd_save_LIBS
+  CFLAGS=$esd_save_CFLAGS
+
+  dnl If it isn't found, unset USE_LIBESD
+  if test x$HAVE_LIBESD = xno; then
+    USE_LIBESD=yes
+  fi
+fi
+dnl *** Warn if it's disabled or not found
+if test x$USE_LIBESD = xno; then
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: esdsink
+)
+fi
+dnl *** Define the conditional as appropriate
+AM_CONDITIONAL(USE_LIBESD, test x$USE_LIBESD = xyes)
+
 
 dnl Check for artsc
 AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
@@ -998,7 +1018,7 @@ AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
-AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
+dnl AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_ARTSC,          test "x$HAVE_ARTSC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
