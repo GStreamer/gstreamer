@@ -192,6 +192,7 @@ main(int argc, char *argv[])
   GstElement *pipeline;
   gchar **argvn;
   GError *error = NULL;
+  gint res = 0;
 
   free (malloc (8)); /* -lefence */
 
@@ -237,7 +238,8 @@ main(int argc, char *argv[])
     fprintf(stderr,"RUNNING pipeline\n");
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
       fprintf(stderr,"pipeline doesn't want to play\n");
-      exit (-1);
+      res = -1;
+      goto end;
     }
 
     s_clock = gst_bin_get_clock (GST_BIN (pipeline));
@@ -252,12 +254,14 @@ main(int argc, char *argv[])
     }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_buffer_print_stats();
-    gst_event_print_stats();
-
   }
+
+end:
+  gst_buffer_print_stats();
+  gst_event_print_stats();
+
   gst_object_unref (GST_OBJECT (pipeline));
 
-  return 0;
+  return res;
 }
 
