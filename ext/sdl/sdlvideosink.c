@@ -60,6 +60,8 @@ enum {
 static void                  gst_sdlvideosink_class_init   (GstSDLVideoSinkClass *klass);
 static void                  gst_sdlvideosink_init         (GstSDLVideoSink      *sdlvideosink);
 
+static void 		     gst_sdlvideosink_set_clock    (GstElement *element, GstClock *clock);
+
 static gboolean              gst_sdlvideosink_create       (GstSDLVideoSink      *sdlvideosink,
                                                             gboolean              showlogo);
 static GstPadConnectReturn   gst_sdlvideosink_sinkconnect  (GstPad               *pad,
@@ -152,6 +154,7 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass *klass)
 
 
   gstelement_class->change_state = gst_sdlvideosink_change_state;
+  gstelement_class->set_clock    = gst_sdlvideosink_set_clock;
 }
 
 
@@ -188,7 +191,6 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
   sdlvideosink->capslist = capslist;
 
   sdlvideosink->clock = NULL;
-  GST_ELEMENT (sdlvideosink)->setclockfunc    = gst_sdlvideosink_set_clock;
 
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_EVENT_AWARE);
@@ -433,7 +435,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
       case GST_EVENT_DISCONTINUOUS:
 	offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
 	g_print ("sdl discont %lld\n", offset);
-	gst_clock_handle_discont (sdlvideosink->clock, (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value);
+	//gst_clock_handle_discont (sdlvideosink->clock, (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value);
 	break;
       default:
 	gst_pad_event_default (pad, event);

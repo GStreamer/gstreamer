@@ -269,6 +269,8 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
 
   gobject_class->set_property = play_on_demand_set_property;
   gobject_class->get_property = play_on_demand_get_property;
+
+  gstelement_class->set_clock = play_on_demand_set_clock;
 }
 
 static void
@@ -297,7 +299,6 @@ play_on_demand_init (GstPlayOnDemand *filter)
   filter->play_from_beginning = TRUE;
   filter->silent              = TRUE;
 
-  GST_ELEMENT (filter)->setclockfunc = play_on_demand_set_clock;
   filter->clock       = NULL;
   filter->last_time   = 0;
 
