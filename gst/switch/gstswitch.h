@@ -44,6 +44,7 @@ struct _GstSwitchPad {
   GstPad *sinkpad;
   GstData *data;
   gboolean forwarded;
+  gboolean eos;
 };
 
 struct _GstSwitch {

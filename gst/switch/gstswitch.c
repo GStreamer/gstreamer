@@ -30,6 +30,9 @@ enum {
   ARG_ACTIVE_SOURCE
 };
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_ELEMENT_PADS);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DATAFLOW);
+
 /* ElementFactory information */
 static GstElementDetails gst_switch_details = GST_ELEMENT_DETAILS (
   "Switch",
@@ -65,6 +68,9 @@ gst_switch_release_pad (GstElement *element, GstPad *pad)
   
   gstswitch = GST_SWITCH (element);
   
+  GST_CAT_LOG_OBJECT (GST_CAT_ELEMENT_PADS, gstswitch,
+                      "releasing requested pad %p", pad);
+  
   sinkpads = gstswitch->sinkpads;
   
   /* Walking through our pad list searching for the pad we want to release */
@@ -81,8 +87,12 @@ gst_switch_release_pad (GstElement *element, GstPad *pad)
   
   /* Releasing the found pad */
   if (switchpad) {
-    if (!switchpad->forwarded && switchpad->data)
+    /* We unref the data of that pad to loose our reference */
+    gst_data_unref (switchpad->data);
+    /* If data has not been forwarded we have to destroy it */
+    if (!switchpad->forwarded && switchpad->data) {
       gst_data_unref (switchpad->data);
+    }
     gst_element_remove_pad (element, pad);
     gstswitch->sinkpads = g_list_remove (gstswitch->sinkpads, switchpad);
     gstswitch->nb_sinkpads--;
@@ -104,13 +114,14 @@ gst_switch_request_new_pad (GstElement *element,
   
   g_return_val_if_fail (GST_IS_SWITCH (element), NULL);
   
+  gstswitch = GST_SWITCH (element);
+  
   /* We only provide requested sink pads */
   if (templ->direction != GST_PAD_SINK) {
-    g_warning ("gstswitch: requested a non sink pad\n");
+    GST_CAT_LOG_OBJECT (GST_CAT_ELEMENT_PADS, gstswitch,
+                        "requested a non sink pad");
     return NULL;
   }
-  
-  gstswitch = GST_SWITCH (element);
   
   name = g_strdup_printf ("sink%d", gstswitch->nb_sinkpads);
   
@@ -134,6 +145,7 @@ gst_switch_request_new_pad (GstElement *element,
   switchpad->sinkpad = sinkpad;
   switchpad->data = NULL;
   switchpad->forwarded = FALSE;
+  switchpad->eos = FALSE;
   
   gstswitch->sinkpads = g_list_insert (gstswitch->sinkpads, switchpad,
                                        gstswitch->nb_sinkpads);
@@ -158,28 +170,52 @@ gst_switch_poll_sinkpads (GstSwitch *gstswitch)
   
   while (pads) {
     GstSwitchPad *switchpad = pads->data;
-    GstData *data = NULL;
     
-    /* If that data was not forwarded we unref it */
-    if (!switchpad->forwarded && switchpad->data) {
+    /* We only pull from usable pads and non EOS pads */
+    if (GST_PAD_IS_USABLE (switchpad->sinkpad) && !switchpad->eos) {
+      
+      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                          "polling pad %p",
+                          switchpad->sinkpad);
+      
+      /* We loose the reference to the data we stored */
+      if (switchpad->data) {
         gst_data_unref (switchpad->data);
-        switchpad->data = NULL;
       }
-
-    if (GST_PAD_IS_USABLE (switchpad->sinkpad)) {
-      data = gst_pad_pull (switchpad->sinkpad);
-
-      if (GST_IS_EVENT (data) &&
-          (GST_EVENT_TYPE (GST_EVENT (data)) == GST_EVENT_EOS)) {
-        gst_event_unref (GST_EVENT (data));
+      
+      /* If that data was not forwarded we unref it another time to destroy it */
+      if (!switchpad->forwarded && switchpad->data) {
+        gst_data_unref (switchpad->data);
       }
-      else  {
-        switchpad->data = data;
+      
+      switchpad->data = NULL;
+      switchpad->data = gst_pad_pull (switchpad->sinkpad);
+      
+      if (!switchpad->data) {
+        GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                            "received NULL data from pad %p",
+                            switchpad->sinkpad);
+      }
+      else {
+        gst_data_ref (switchpad->data);
         switchpad->forwarded = FALSE;
+      
+        /* If the buffer is an EOS event we tag the pad as being in EOS. That 
+           means we won't try to pull more data from that pad */
+        if (GST_IS_EVENT (switchpad->data) &&
+            (GST_EVENT_TYPE (GST_EVENT (switchpad->data)) == GST_EVENT_EOS)) {
+          GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                              "received EOS event on pad %p",
+                              switchpad->sinkpad);
+          switchpad->eos = TRUE;
+        }
       }
     }
     else {
-      g_message ("not pulling from pad %s", gst_pad_get_name (switchpad->sinkpad));
+      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                          "not pulling from pad %s (eos is %d)",
+                          gst_pad_get_name (switchpad->sinkpad),
+                          switchpad->eos);
     }
     pads = g_list_next (pads);
   }
@@ -204,11 +240,34 @@ gst_switch_loop (GstElement *element)
   /* We get the active sinkpad */
   switchpad = g_list_nth_data (gstswitch->sinkpads, gstswitch->active_sinkpad);
   
-  if (switchpad) {
-    /* Pushing active sinkpad data to srcpad */
-    gst_pad_push (gstswitch->srcpad, switchpad->data);
+  if (switchpad && switchpad->data) {
+    
+    /* Loose our reference to that data */
+    gst_data_unref (switchpad->data);
+    
+    GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                        "using data from active pad %p",
+                        switchpad->sinkpad);
+    
+    if (GST_IS_EVENT (switchpad->data)) {
+      GstEvent *event = GST_EVENT (switchpad->data);
+      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                          "handling event from active pad %p",
+                          switchpad->sinkpad);
+      /* Handling event */
+      gst_pad_event_default (switchpad->sinkpad, event);
+    }
+    else {
+      /* Pushing active sinkpad data to srcpad */
+      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+                          "pushing data from active pad %p to %p",
+                          switchpad->sinkpad, gstswitch->srcpad);
+      gst_pad_push (gstswitch->srcpad, switchpad->data);
+    }
+    
     /* Mark this data as forwarded so that it won't get unrefed on next poll */
     switchpad->forwarded = TRUE;
+    switchpad->data = NULL;
   }
 }
 
@@ -271,9 +330,28 @@ static void
 gst_switch_dispose (GObject *object)
 {
   GstSwitch *gstswitch = NULL;
+  GList *sinkpads = NULL;
   
   gstswitch = GST_SWITCH (object);
 
+  sinkpads = gstswitch->sinkpads;
+  
+  while (sinkpads) {
+    GstSwitchPad *switchpad = sinkpads->data;
+    
+    /* If a data is still stored in our structure we unref it */
+    if (switchpad->data) {
+      gst_data_unref (switchpad->data);
+      switchpad->data = NULL;
+    }
+    
+    /* Freeing our structure */
+    g_free (switchpad);
+    
+    sinkpads = g_list_next (sinkpads);
+  }
+  
+  /* Freeing the list correctly */
   if (gstswitch->sinkpads) {  
     g_list_free (gstswitch->sinkpads);
     gstswitch->sinkpads = NULL;
@@ -338,7 +416,8 @@ gst_switch_class_init (GstSwitchClass *klass)
   gobject_class->dispose = gst_switch_dispose;
   gobject_class->set_property = gst_switch_set_property;
   gobject_class->get_property = gst_switch_get_property;
-  
+  /* FIXME: implement change state to unref all data from our sinkpad list on 
+     READY */
   gstelement_class->request_new_pad = gst_switch_request_new_pad;
   gstelement_class->release_pad = gst_switch_release_pad;
 }

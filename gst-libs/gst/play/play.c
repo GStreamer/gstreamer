@@ -944,6 +944,9 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
+  /* Until i fix the switch */
+  return TRUE;
+  
   /* Getting needed objects */
   video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
   if (!GST_IS_ELEMENT (video_thread))
