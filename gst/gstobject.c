@@ -27,6 +27,7 @@
 /* Object signals and args */
 enum {
   PARENT_SET,
+  DEEP_NOTIFY,
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   OBJECT_SAVED,
 #endif
@@ -62,6 +63,7 @@ static void 		gst_object_set_property 	(GObject * object, guint prop_id, const G
 		                                    	 GParamSpec * pspec);
 static void 		gst_object_get_property 	(GObject * object, guint prop_id, GValue * value,
 		                                    	 GParamSpec * pspec);
+static void		gst_object_dispatch_properties_changed (GObject * object, guint n_pspecs, GParamSpec **pspecs);
 
 static void 		gst_object_dispose 		(GObject *object);
 static void 		gst_object_finalize 		(GObject *object);
@@ -105,6 +107,7 @@ gst_object_class_init (GstObjectClass *klass)
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
+  gobject_class->dispatch_properties_changed = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
     g_param_spec_string ("name", "Name", "The name of the object",
@@ -115,6 +118,12 @@ gst_object_class_init (GstObjectClass *klass)
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
+  gst_object_signals[DEEP_NOTIFY] =
+    g_signal_new ("deep_notify", G_TYPE_FROM_CLASS (klass), 
+		  G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED | G_SIGNAL_NO_HOOKS,
+		  G_STRUCT_OFFSET (GstObjectClass, deep_notify), NULL, NULL,
+		  gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE,
+		  2, G_TYPE_OBJECT, G_TYPE_PARAM);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_object_signals[OBJECT_SAVED] =
     g_signal_new ("object_saved", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -574,6 +583,32 @@ gst_object_get_property (GObject* object, guint prop_id,
       break;
   }
 }
+static void
+gst_object_dispatch_properties_changed (GObject     *object,
+				      guint        n_pspecs,
+				      GParamSpec **pspecs)
+{
+#ifdef USE_GLIB2
+  GstObject *gst_object;
+  guint i;
+
+  /* do the standard dispatching */
+  parent_class->dispatch_properties_changed (object, n_pspecs, pspecs);
+
+  /* now let the parent dispatch those, too */
+  gst_object = GST_OBJECT (object);
+  while (gst_object)
+  {
+    /* need own category? */
+    GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s\n", GST_OBJECT_NAME (object), GST_OBJECT_NAME (gst_object));
+    for (i = 0; i < n_pspecs; i++)
+      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name), (GstObject *) object, pspecs[i]);
+
+    gst_object = GST_OBJECT_PARENT (gst_object);
+  }
+#endif /* USE_GLIB2 */
+}
+
 /**
  * gst_object_get_path_string:
  * @object: GstObject to get the path from

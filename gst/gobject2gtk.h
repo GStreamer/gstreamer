@@ -42,6 +42,11 @@ typedef struct _GObjectClass GObjectClass;
 #define g_object_ref(obj)			gtk_object_ref((GtkObject *)(obj))
 #define g_object_unref(obj)			gtk_object_unref((GtkObject *)(obj))
 
+/* notification - just disable it */
+#define g_object_freeze_notify(obj)
+#define g_object_notify(obj,name)
+#define g_object_thaw_notify(obj)
+
 /* the helper macros for type checking */
 #define G_TYPE_CHECK_INSTANCE_CAST		GTK_CHECK_CAST
 #define G_TYPE_CHECK_INSTANCE_TYPE		GTK_CHECK_TYPE
@@ -70,7 +75,7 @@ typedef struct _GObjectClass GObjectClass;
 #define G_TYPE_STRING				GTK_TYPE_STRING
 #define G_TYPE_POINTER				GTK_TYPE_POINTER
 #define G_TYPE_BOXED				GTK_TYPE_BOXED
-#define G_TYPE_PARAM				GTK_TYPE_PARAM
+#define G_TYPE_PARAM				GTK_TYPE_POINTER
 
 /* marshallers */
 #define g_cclosure_marshal_VOID__VOID			gtk_marshal_NONE__NONE
@@ -100,6 +105,7 @@ typedef struct _GObjectClass GObjectClass;
 #define gst_marshal_VOID__STRING		gtk_marshal_NONE__STRING
 #define gst_marshal_VOID__POINTER		gtk_marshal_NONE__POINTER
 #define gst_marshal_VOID__OBJECT		gtk_marshal_NONE__POINTER
+#define gst_marshal_VOID__OBJECT_PARAM  	gtk_marshal_NONE__POINTER_POINTER
 #define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER_POINTER
 #define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
 
@@ -197,6 +203,7 @@ void g2g_object_run_dispose (GObject *object);
 #define G_SIGNAL_RUN_CLEANUP				0
 #define G_SIGNAL_NO_RECURSE				GTK_RUN_NO_RECURSE
 #define G_SIGNAL_NO_HOOKS				GTK_RUN_NO_HOOKS
+#define G_SIGNAL_DETAILED				0
 
 #define GCallback					gpointer	/* FIXME?*/
 #define G_CALLBACK(f)					((gpointer)(f))
@@ -431,6 +438,10 @@ struct _GObjectClass {
                         const GValue *value, GParamSpec *pspec);
   void (*get_property) (GObject *object, guint prop_id,
                         GValue *value, GParamSpec *pspec);
+			
+  void (*dispatch_properties_changed) (GObject *object, guint n_pspecs,
+				       GParamSpec **pspecs);
+
 };
 
 GType g_object_get_type (void);

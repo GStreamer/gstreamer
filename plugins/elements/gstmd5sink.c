@@ -422,15 +422,17 @@ gst_md5sink_change_state (GstElement *element)
   
   /* element check */
   sink = GST_MD5SINK (element);
-  g_return_val_if_fail (sink != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_MD5SINK (sink), GST_PAD_CONNECT_REFUSED);
+
+  g_return_val_if_fail (GST_IS_MD5SINK (sink), GST_STATE_FAILURE);
   
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       md5_init_ctx (sink);
+      g_object_notify (G_OBJECT (element), "md5");
       break;
     case GST_STATE_PAUSED_TO_READY:
       md5_finish_ctx (sink, sink->md5);
+      g_object_notify (G_OBJECT (element), "md5");
       break;
     default:
       break;
@@ -454,7 +456,8 @@ gst_md5sink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   
   switch (prop_id) {
     case ARG_MD5:
-      md5_read_ctx (sink, sink->md5);
+      /* you could actually get a value for the current md5. This is currently disabled.
+       * md5_read_ctx (sink, sink->md5); */
       g_value_set_pointer (value, sink->md5);
       break;
     default:
