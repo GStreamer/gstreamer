@@ -1290,13 +1290,15 @@ static int
 gst_value_compare_enum (const GValue * value1, const GValue * value2)
 {
   GEnumValue *en1, *en2;
-  GEnumClass *klass1 = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (value1));
-  GEnumClass *klass2 = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (value2));
+  GEnumClass *klass1 = (GEnumClass *) g_type_class_ref (G_VALUE_TYPE (value1));
+  GEnumClass *klass2 = (GEnumClass *) g_type_class_ref (G_VALUE_TYPE (value2));
 
   g_return_val_if_fail (klass1, GST_VALUE_UNORDERED);
   g_return_val_if_fail (klass2, GST_VALUE_UNORDERED);
   en1 = g_enum_get_value (klass1, g_value_get_enum (value1));
   en2 = g_enum_get_value (klass2, g_value_get_enum (value2));
+  g_type_class_unref (klass1);
+  g_type_class_unref (klass2);
   g_return_val_if_fail (en1, GST_VALUE_UNORDERED);
   g_return_val_if_fail (en2, GST_VALUE_UNORDERED);
   if (en1->value < en2->value)
@@ -1311,10 +1313,11 @@ static char *
 gst_value_serialize_enum (const GValue * value)
 {
   GEnumValue *en;
-  GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (value));
+  GEnumClass *klass = (GEnumClass *) g_type_class_ref (G_VALUE_TYPE (value));
 
   g_return_val_if_fail (klass, NULL);
   en = g_enum_get_value (klass, g_value_get_enum (value));
+  g_type_class_unref (klass);
   g_return_val_if_fail (en, NULL);
   return g_strdup (en->value_name);
 }
@@ -1324,7 +1327,7 @@ gst_value_deserialize_enum (GValue * dest, const char *s)
 {
   GEnumValue *en;
   gchar *endptr = NULL;
-  GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (dest));
+  GEnumClass *klass = (GEnumClass *) g_type_class_ref (G_VALUE_TYPE (dest));
 
   g_return_val_if_fail (klass, FALSE);
   if (!(en = g_enum_get_value_by_name (klass, s))) {
@@ -1336,6 +1339,7 @@ gst_value_deserialize_enum (GValue * dest, const char *s)
       }
     }
   }
+  g_type_class_unref (klass);
   g_return_val_if_fail (en, FALSE);
   g_value_set_enum (dest, en->value);
   return TRUE;
@@ -1781,7 +1785,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
     return FALSE;
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->type == G_VALUE_TYPE (value1) && table->compare)
+    if (g_type_is_a (G_VALUE_TYPE (value1), table->type) && table->compare)
       return TRUE;
   }
 
@@ -1804,7 +1808,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
 int
 gst_value_compare (const GValue * value1, const GValue * value2)
 {
-  GstValueTable *table;
+  GstValueTable *table, *best = NULL;
   int i;
 
   if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
@@ -1812,10 +1816,17 @@ gst_value_compare (const GValue * value1, const GValue * value2)
 
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->type != G_VALUE_TYPE (value1) || table->compare == NULL)
-      continue;
-
-    return table->compare (value1, value2);
+    if (table->type == G_VALUE_TYPE (value1) && table->compare != NULL) {
+      best = table;
+      break;
+    }
+    if (g_type_is_a (G_VALUE_TYPE (value1), table->type)) {
+      if (!best || g_type_is_a (table->type, best->type))
+        best = table;
+    }
+  }
+  if (best) {
+    return best->compare (value1, value2);
   }
 
   g_critical ("unable to compare values of type %s\n",

@@ -1,3 +1,13 @@
+2004-07-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* gst/gstvalue.c: (gst_value_compare_enum),
+	(gst_value_serialize_enum), (gst_value_deserialize_enum),
+	(gst_value_can_compare), (gst_value_compare):
+	* testsuite/Makefile.am:
+	  Fix enum serialization, deserialization, comparison in caps, add
+	  a test to ensure that this continues working in the future.
+
 2004-07-06  David Schleef  <ds@schleef.org>
 
 	* gst/gstcaps.c: (gst_caps_save_thyself), (gst_caps_load_thyself):
