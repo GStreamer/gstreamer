@@ -29,7 +29,7 @@ VGA_DIR=
 endif
 
 if USE_XVIDEO
-XVIDEO_DIR=xvideo
+XVIDEO_DIR=xvideo videosink
 else
 XVIDEO_DIR=
 endif
@@ -37,5 +37,5 @@ endif
 SUBDIRS=$(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
 	$(VGA_DIR) $(XVIDEO_DIR)
 
-DIST_SUBDIRS=oss qcam v4l vcd vga xvideo
+DIST_SUBDIRS=oss qcam v4l vcd vga xvideo videosink
 
