@@ -173,16 +173,17 @@ G_STMT_START {						\
 
 #define _GST_ATOMIC_SWAP(swap, val)				\
 G_STMT_START {							\
+  int tmp;							\
   __asm__ __volatile__ ("1:"					\
                         "	lwarx	%0, 0, %2	\n"	\
                         "	stwcx.  %3, 0, %2 	\n"	\
                         "	bne-	1b		\n"	\
-                          : "=&r",				\
+                          : "=&r" (tmp),			\
 			    "=m" (*swap)			\
                           : "r" (swap),  			\
 			    "r" (val), 				\
-			    "m" (*swap)				\
-			  : "cc", "memory");			\
+			    "m" (* swap)			\
+			  : "9", "cc");				\
 } G_STMT_END
 
 #define _GST_ATOMIC_SWAP_GET(swap, val, res)			\
@@ -196,7 +197,7 @@ G_STMT_START {							\
                           : "r" (swap),  			\
 			    "r" (val), 				\
 			    "m" (*swap)				\
-			  : "cc", "memory");			\
+			  : "cc");				\
 } G_STMT_END
 
 #else
