@@ -489,6 +489,8 @@ gst_vorbisfile_loop (GstElement *element)
     vorbisfile->may_eos = FALSE;
     vorbisfile->vf.seekable = gst_bytestream_seek (vorbisfile->bs, 0, 
 		                                   GST_SEEK_METHOD_SET);
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "vorbisfile: seekable: %s\n",
+	       vorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom vorbisfile data object with the callbacks we provide */
     if (ov_open_callbacks (vorbisfile, &vorbisfile->vf, NULL, 0, 
@@ -935,7 +937,8 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
       vorbis_info *vi;
       GstFormat format;
   
-      GST_DEBUG (GST_CAT_EVENT, "vorbisfile: handling seek event");
+      GST_DEBUG (GST_CAT_EVENT, "vorbisfile: handling seek event on pad %s:%s",
+		 GST_DEBUG_PAD_NAME (pad));
       if (!vorbisfile->vf.seekable) {
 	gst_event_unref (event);
 	GST_DEBUG (GST_CAT_EVENT, "vorbis stream is not seekable");
