@@ -472,10 +472,16 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   AC_SUBST(JPEG_LIBS)
 ])
 
+dnl *** ladspa ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
+GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
+  AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
+])
+
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame")
+  GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame")
 ])
 AC_SUBST(LAME_LIBS)
 
