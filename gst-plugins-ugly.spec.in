@@ -68,8 +68,20 @@ fi
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
-make install prefix=$RPM_BUILD_ROOT%{prefix} \
-        sysconfdir=$RPM_BUILD_ROOT%{sysconfdir}
+make prefix=%{?buildroot:%{buildroot}}%{_prefix} \
+     exec_prefix=%{?buildroot:%{buildroot}}%{_exec_prefix} \
+     bindir=%{?buildroot:%{buildroot}}%{_bindir} \
+     sbindir=%{?buildroot:%{buildroot}}%{_sbindir} \
+     sysconfdir=%{?buildroot:%{buildroot}}%{_sysconfdir} \
+     datadir=%{?buildroot:%{buildroot}}%{_datadir} \
+     includedir=%{?buildroot:%{buildroot}}%{_includedir} \
+     libdir=%{?buildroot:%{buildroot}}%{_libdir} \
+     libexecdir=%{?buildroot:%{buildroot}}%{_libexecdir} \
+     localstatedir=%{?buildroot:%{buildroot}}%{_localstatedir} \
+     sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \
+     mandir=%{?buildroot:%{buildroot}}%{_mandir} \
+     infodir=%{?buildroot:%{buildroot}}%{_infodir} \
+  install
 unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 %clean
