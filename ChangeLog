@@ -1,3 +1,9 @@
+2004-11-28  Benjamin Otte  <otte@gnome.org>
+
+	* gst/audioconvert/gstchannelmix.c: (gst_audio_convert_mix):
+	  more overwriting protection due to modifying channels one by one
+	  instead of all at once
+
 2004-11-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/audioconvert/gstchannelmix.c:
