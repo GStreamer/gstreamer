@@ -1,3 +1,15 @@
+2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/debug/testplugin.c: 
+	* gst/debug/tests.c: 
+	* gst/debug/tests.h:
+	  add new extensible and configurable testing element. Current tests
+	  include buffer count, stream length, timestamp/duration matching and
+	  md5.
+	* gst/debug/Makefile.am:
+	* gst/debug/gstdebug.c: (plugin_init):
+	  add infrastructure for new element
+
 2004-05-19  Johan Dahlin  <johan@gnome.org>
 
 	* ext/dv/gstdvdec.c (gst_dvdec_quality_get_type): Add proper

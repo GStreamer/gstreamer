@@ -17,34 +17,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 #include <gst/gst.h>
 
+#ifndef __GST_TESTS_H__
+#define __GST_TESTS_H__
 
-gboolean gst_break_my_data_plugin_init (GstPlugin * plugin);
-gboolean gst_negotiation_plugin_init (GstPlugin * plugin);
-gboolean gst_navseek_plugin_init (GstPlugin * plugin);
-gboolean gst_progressreport_plugin_init (GstPlugin * plugin);
-gboolean gst_test_plugin_init (GstPlugin * plugin);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_break_my_data_plugin_init (plugin) ||
-      !gst_negotiation_plugin_init (plugin) ||
-      !gst_navseek_plugin_init (plugin) ||
-      !gst_progressreport_plugin_init (plugin) ||
-      !gst_test_plugin_init (plugin))
-    return FALSE;
+typedef struct _GstTestInfo GstTestInfo;
 
-  return TRUE;
-}
+struct _GstTestInfo {
+  GParamSpec *	(* get_spec)	(const GstTestInfo *info, gboolean compare_value);
+  gpointer	(* new)		(const GstTestInfo *info);
+  void		(* add)		(gpointer test,
+				 GstBuffer *buffer);
+  gboolean    	(* finish)	(gpointer test, GValue *value);
+  void		(* get_value)	(gpointer test,
+				 GValue *value);
+  void		(* free)	(gpointer test);
+};
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "debug",
-    "elements for testing and debugging",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+extern const GstTestInfo tests[];
+/* keep up to date! */
+#define TESTS_COUNT (4)
+
+
+#endif /* __GST_TESTS_H__ */
