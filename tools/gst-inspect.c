@@ -1109,9 +1109,6 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
 int
 main (int argc, char *argv[])
 {
-  GstElementFactory *factory;
-  GstPlugin *plugin;
-  gchar *so;
   gboolean print_all = FALSE;
   struct poptOption options[] = {
     {"print-all", 'a', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_all, 0,
@@ -1138,41 +1135,30 @@ main (int argc, char *argv[])
     print_element_list (print_all);
     /* else we try to get a factory */
   } else {
+    GstElementFactory *factory;
+    GstPlugin *plugin;
     const char *arg = argv[argc - 1];
+    int retval;
 
-    /* only search for a factory if there's not a '.so' */
-    if (!strstr (argv[1], ".so")) {
-      int retval;
-
-      factory = gst_element_factory_find (arg);
-      /* if there's a factory, print out the info */
-      if (factory) {
-        retval = print_element_info (factory, print_all);
-      } else {
-        retval = print_element_features (arg);
-      }
-
-      if (retval)
-        g_print ("No such element: '%s'\n", arg);
-
-      return retval;
+    factory = gst_element_factory_find (arg);
+    /* if there's a factory, print out the info */
+    if (factory) {
+      retval = print_element_info (factory, print_all);
     } else {
-      /* strip the .so */
-      so = strstr (argv[argc - 1], ".so");
-      so[0] = '\0';
+      retval = print_element_features (arg);
     }
 
-    /* otherwise assume it's a plugin */
-    plugin = gst_registry_pool_find_plugin (arg);
+    /* otherwise check if it's a plugin */
+    if (retval) {
+      plugin = gst_registry_pool_find_plugin (arg);
 
-    /* if there is such a plugin, print out info */
-
-    if (plugin) {
-      print_plugin_info (plugin);
-
-    } else {
-      g_print ("No such plugin '%s'\n", arg);
-      return -1;
+      /* if there is such a plugin, print out info */
+      if (plugin) {
+        print_plugin_info (plugin);
+      } else {
+        g_print ("No such element or plugin '%s'\n", arg);
+        return -1;
+      }
     }
   }
 

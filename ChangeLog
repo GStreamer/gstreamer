@@ -1,3 +1,9 @@
+2004-06-15  Johan Dahlin  <johan@gnome.org>
+
+	* tools/gst-inspect.c (main): Fallback to plugin if no element is
+	found. This matches the old behavior better. Thanks to Thomas for
+	pointing out.
+
 2004-06-14  David Schleef  <ds@schleef.org>
 
 	* gst/gstcpu.c: (gst_cpuid_i386): Fix problem when using
