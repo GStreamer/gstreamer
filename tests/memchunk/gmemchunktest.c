@@ -1,62 +1,190 @@
-#include <string.h>             /* strerror */
-#include <stdlib.h>             /* strerror */
-#include <gst/gst.h>
+/* GStreamer
+ * Copyright (C) 2005 Andy Wingo <wingo at pobox.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+
+#include <stdlib.h>
+#include <glib.h>
+#include <gst/gstmemchunk.h>
+
 
 #define MAX_THREADS  100
+#define CHUNK_SIZE 32
+#define GMEMCHUNK_THREADSAFE
 
-static GMemChunk *_chunks;
-static GMutex *_lock;
+
+typedef gpointer (*alloc_func_t) (void);
+typedef void (*free_func_t) (gpointer);
+
 
 static gint num_allocs;
 static gint num_threads;
+static alloc_func_t _alloc = NULL;
+static free_func_t _free = NULL;
+
+static GMemChunk *_gmemchunk;
+static GMutex *_gmemchunklock;
+static GstMemChunk *_gstmemchunk;
+
+static GCond *ready_cond;
+static GCond *start_cond;
+static GMutex *sync_mutex;
+
+
+static gdouble
+get_current_time (void)
+{
+  GTimeVal tv;
+
+  g_get_current_time (&tv);
+  return tv.tv_sec + ((gdouble) tv.tv_usec) / G_USEC_PER_SEC;
+}
+
+
+/*
+ * GMemChunk implementation
+ */
 
 static gpointer
-alloc_chunk (void)
+gmemchunk_alloc (void)
 {
   gpointer ret;
 
-  g_mutex_lock (_lock);
-  ret = g_mem_chunk_alloc (_chunks);
-  g_mutex_unlock (_lock);
+#ifdef GMEMCHUNK_THREADSAFE
+  g_mutex_lock (_gmemchunklock);
+#endif
+  ret = g_mem_chunk_alloc (_gmemchunk);
+#ifdef GMEMCHUNK_THREADSAFE
+  g_mutex_unlock (_gmemchunklock);
+#endif
 
   return ret;
 }
 
 static void
-free_chunk (gpointer chunk)
+gmemchunk_free (gpointer chunk)
 {
-  g_mutex_lock (_lock);
-  g_mem_chunk_free (_chunks, chunk);
-  g_mutex_unlock (_lock);
+#ifdef GMEMCHUNK_THREADSAFE
+  g_mutex_lock (_gmemchunklock);
+#endif
+  g_mem_chunk_free (_gmemchunk, chunk);
+#ifdef GMEMCHUNK_THREADSAFE
+  g_mutex_unlock (_gmemchunklock);
+#endif
 }
 
+/*
+ * GstMemChunk implementation
+ */
+
+static gpointer
+gstmemchunk_alloc (void)
+{
+  return gst_mem_chunk_alloc (_gstmemchunk);
+}
+
+static void
+gstmemchunk_free (gpointer chunk)
+{
+  gst_mem_chunk_free (_gstmemchunk, chunk);
+}
+
+/*
+ * Normal (malloc/free) implementation
+ */
+
+static gpointer
+normal_alloc (void)
+{
+  return g_malloc (CHUNK_SIZE);
+}
+
+static void
+normal_free (gpointer chunk)
+{
+  g_free (chunk);
+}
+
+/*
+ * The test
+ */
 
 void *
-run_test (void *threadid)
+worker_thread (void *threadid)
 {
   gint i;
   gpointer chunk;
 
-  g_usleep (G_USEC_PER_SEC);
+  g_mutex_lock (sync_mutex);
+  g_cond_signal (ready_cond);
+  g_cond_wait (start_cond, sync_mutex);
+  g_mutex_unlock (sync_mutex);
 
   for (i = 0; i < num_allocs; i++) {
-    chunk = alloc_chunk ();
-    free_chunk (chunk);
+    chunk = _alloc ();
+    _free (chunk);
   }
 
-  g_thread_exit (NULL);
   return NULL;
 }
 
-
-gint
-main (gint argc, gchar * argv[])
+gdouble
+run_test (alloc_func_t alloc_func, free_func_t free_func)
 {
+  gdouble start, end;
   GThread *threads[MAX_THREADS];
   GError *error;
   int t;
 
-  gst_init (&argc, &argv);
+  _alloc = alloc_func;
+  _free = free_func;
+
+  g_mutex_lock (sync_mutex);
+  for (t = 0; t < num_threads; t++) {
+    error = NULL;
+    threads[t] =
+        g_thread_create (worker_thread, GINT_TO_POINTER (t), TRUE, &error);
+    g_assert (threads[t]);
+    g_cond_wait (ready_cond, sync_mutex);
+  }
+
+  g_cond_broadcast (start_cond);
+  start = get_current_time ();
+  g_mutex_unlock (sync_mutex);
+
+  for (t = 0; t < num_threads; t++)
+    g_thread_join (threads[t]);
+
+  end = get_current_time ();
+
+  return end - start;
+}
+
+gint
+main (gint argc, gchar * argv[])
+{
+  gdouble time;
+
+  g_thread_init (NULL);
+
+  ready_cond = g_cond_new ();
+  start_cond = g_cond_new ();
+  sync_mutex = g_mutex_new ();
 
   if (argc != 3) {
     g_print ("usage: %s <num_threads> <num_allocs>\n", argv[0]);
@@ -65,21 +193,23 @@ main (gint argc, gchar * argv[])
 
   num_threads = atoi (argv[1]);
   num_allocs = atoi (argv[2]);
+  g_assert (num_threads > 0);
+  g_assert (num_allocs > 0);
 
-  _chunks = g_mem_chunk_new ("test", 32, 32 * 16, G_ALLOC_AND_FREE);
-  _lock = g_mutex_new ();
+  _gmemchunk =
+      g_mem_chunk_new ("test", CHUNK_SIZE, CHUNK_SIZE * 16, G_ALLOC_AND_FREE);
+  _gmemchunklock = g_mutex_new ();
+  _gstmemchunk =
+      gst_mem_chunk_new ("test", CHUNK_SIZE, CHUNK_SIZE * 16, G_ALLOC_AND_FREE);
 
-  for (t = 0; t < num_threads; t++) {
-    error = NULL;
-    threads[t] = g_thread_create (run_test, GINT_TO_POINTER (t), TRUE, &error);
-    if (error) {
-      printf ("ERROR: g_thread_create () is %s\n", error->message);
-      exit (-1);
-    }
-  }
-  printf ("main(): Created %d threads.\n", t);
+  g_print ("%d alloc+frees X %d threads\n", num_allocs, num_threads);
+  time = run_test (gmemchunk_alloc, gmemchunk_free);
+  g_print ("%fs - GMemChunk\n", time);
+  time = run_test (gstmemchunk_alloc, gstmemchunk_free);
+  g_print ("%fs - GstMemChunk\n", time);
+  time = run_test (normal_alloc, normal_free);
+  g_print ("%fs - g_malloc/g_free\n", time);
 
-  g_thread_exit (NULL);
-  g_mem_chunk_info ();
+  /* g_mem_chunk_info (); */
   return 0;
 }
