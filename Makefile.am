@@ -12,6 +12,6 @@ endif
 
 SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools $(GCONF_DIR) ## testsuite
 
-DIST_SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools gconf ## testsuite
+DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf ## testsuite
 
 EXTRA_DIST=gst-plugins.spec depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh
