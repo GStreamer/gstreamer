@@ -1,7 +1,7 @@
 The esdsink plugin
 ==================
 
-The esdsink plugin is for outputting an audio atream to an esd soundserver, whether local or on a remote machine 
+The esdsink plugin is for outputting an audio stream to an esd soundserver, whether local or on a remote machine 
 
 esdsink has 2 arguments that it accepts:
  - 'mute'      (boolean value)
