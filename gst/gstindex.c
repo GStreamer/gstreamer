@@ -914,11 +914,12 @@ gst_index_factory_new (const gchar * name, const gchar * longdesc, GType type)
   factory = gst_index_factory_find (name);
   if (!factory) {
     factory = GST_INDEX_FACTORY (g_object_new (GST_TYPE_INDEX_FACTORY, NULL));
+    GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
+  } else {
+    gst_object_ref (GST_OBJECT (factory));
   }
 
-  GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
-  if (factory->longdesc)
-    g_free (factory->longdesc);
+  g_free (factory->longdesc);
   factory->longdesc = g_strdup (longdesc);
   factory->type = type;
 

@@ -1,5 +1,10 @@
 2005-03-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstindex.c: (gst_index_factory_new):
+	  Fix memory leaks and refcount issues (#168493).
+
+2005-03-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* tools/gst-launch.1.in:
 	  Document --tags.
 
