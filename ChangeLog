@@ -1,5 +1,10 @@
 2004-06-24  Benjamin Otte  <otte@gnome.org>
 
+	* ext/kio/Makefile.am:
+	  fix for builddir != srcdir and distcheck
+
+2004-06-24  Benjamin Otte  <otte@gnome.org>
+
 	* gst-libs/gst/colorbalance/Makefile.am:
 	* gst-libs/gst/mixer/Makefile.am:
 	* gst-libs/gst/play/Makefile.am:
