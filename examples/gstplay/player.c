@@ -90,13 +90,6 @@ seek_timer (GstPlay * play)
   return FALSE;
 }
 
-static gboolean
-idle_iterate (GstPlay * play)
-{
-  gst_bin_iterate (GST_BIN (play));
-  return (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING);
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -168,7 +161,6 @@ main (int argc, char *argv[])
           GST_STATE_PLAYING) == GST_STATE_FAILURE)
     g_error ("Could not set state to PLAYING");
 
-  g_idle_add ((GSourceFunc) idle_iterate, play);
   g_timeout_add (20000, (GSourceFunc) seek_timer, play);
 
   g_main_loop_run (loop);

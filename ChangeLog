@@ -1,3 +1,45 @@
+2005-01-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* examples/gstplay/player.c: (main):
+	  Don't iterate.
+	* examples/seeking/seek.c: (fixate), (make_playerbin_pipeline):
+	  Add visualizations.
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_push),
+	(gst_a52dec_handle_frame):
+	  Set duration.
+	* ext/dvdnav/gst-dvd:
+	  Add audioconvert. Fixes #161325.
+	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_get):
+	  Explicitely case to gint64. Possible valgrind error.
+	* gst-libs/gst/play/play.c: (caps_set), (setup_size),
+	(gst_play_tick_callback), (gst_play_change_state),
+	(gst_play_dispose), (gst_play_init), (gst_play_class_init),
+	(gst_play_set_location), (gst_play_get_location),
+	(gst_play_seek_to_time), (gst_play_set_data_src),
+	(gst_play_set_video_sink), (gst_play_set_audio_sink),
+	(gst_play_set_visualization), (gst_play_connect_visualization),
+	(gst_play_get_framerate), (gst_play_get_all_by_interface),
+	(gst_play_new):
+	  Use playbin. Fixes #139749 and #147744.
+	* gst/apetag/apedemux.c: (gst_ape_demux_parse_tags):
+	  Add genre tag.
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_method_get_type),
+	(audioscale_get_type), (gst_audioscale_base_init),
+	(gst_audioscale_class_init), (gst_audioscale_expand_caps),
+	(gst_audioscale_getcaps), (gst_audioscale_fixate),
+	(gst_audioscale_link), (gst_audioscale_get_buffer),
+	(gst_audioscale_decrease_rate), (gst_audioscale_increase_rate),
+	(gst_audioscale_init), (gst_audioscale_dispose),
+	(gst_audioscale_chain), (gst_audioscale_set_property),
+	(gst_audioscale_get_property), (plugin_init):
+	  Indent properly.
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_private):
+	  Fix LPCM.
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_udta),
+	(qtdemux_tag_add_str), (qtdemux_tag_add_num),
+	(qtdemux_tag_add_gnre), (qtdemux_video_caps):
+	  Add more metadata (fixes #162656).
+
 2005-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
