@@ -1,3 +1,10 @@
+2004-10-09  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/dvdread/dvdreadsrc.c: (_read):
+	  Make titles > 0 work again (fixes #154834).
+
 2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-media.c:
