@@ -380,10 +380,10 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
 
   GST_INFO (GST_CAT_STATES, "child %s changed state in bin %s from %s to %s",
 	    GST_ELEMENT_NAME (child), GST_ELEMENT_NAME (bin),
-	    gst_element_statename (old), gst_element_statename (new));
+	    gst_element_statename (oldstate), gst_element_statename (newstate));
 
-  while (old >>= 1) old_idx++;
-  while (new >>= 1) new_idx++;
+  while (oldstate >>= 1) old_idx++;
+  while (newstate >>= 1) new_idx++;
 
   GST_LOCK (bin);
   bin->child_states[old_idx]--;
