@@ -36,13 +36,11 @@
 static GstElementDetails gst_sdlvideosink_details = {
   "Video sink",
   "Sink/Video",
-  "LGPL",
   "An SDL-based videosink",
-  VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2001",
 };
 
+static void     gst_sdlvideosink_base_init    (gpointer g_class);
 static void     gst_sdlvideosink_class_init   (GstSDLVideoSinkClass *klass);
 static void     gst_sdlvideosink_init         (GstSDLVideoSink      *sdl);
 
@@ -94,7 +92,8 @@ gst_sdlvideosink_get_type (void)
 
   if (!sdlvideosink_type) {
     static const GTypeInfo sdlvideosink_info = {
-      sizeof (GstSDLVideoSinkClass),      NULL,
+      sizeof (GstSDLVideoSinkClass),
+      gst_sdlvideosink_base_init,
       NULL,
       (GClassInitFunc) gst_sdlvideosink_class_init,
       NULL,
@@ -124,6 +123,42 @@ gst_sdlvideosink_get_type (void)
   }
 
   return sdlvideosink_type;
+}
+
+static void
+gst_sdlvideosink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *caps;
+  gint i;
+  gulong format[6] = { GST_MAKE_FOURCC('I','4','2','0'),
+                       GST_MAKE_FOURCC('Y','V','1','2'),
+                       GST_MAKE_FOURCC('Y','U','Y','2'),
+                       GST_MAKE_FOURCC('Y','V','Y','U'),
+                       GST_MAKE_FOURCC('U','Y','V','Y')
+                     };
+
+  /* make a list of all available caps */
+  for (i = 0; i < 5; i++) {
+    caps = gst_caps_new ("sdlvideosink_caps",
+                         "video/x-raw-yuv",
+                         gst_props_new (
+			   "format", GST_PROPS_FOURCC(format[i]),
+			   "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
+			   "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+			   "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+			   NULL       )
+      );
+    capslist = gst_caps_append(capslist, caps);
+  }
+
+  sink_template = gst_pad_template_new ("sink",
+					GST_PAD_SINK,
+					GST_PAD_ALWAYS,
+					capslist, NULL);
+  
+  gst_element_class_add_pad_template (element_class, sink_template);
+  gst_element_class_set_details (element_class, &gst_sdlvideosink_details);
 }
 
 static void
@@ -663,59 +698,26 @@ gst_sdlvideosink_change_state (GstElement *element)
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  GstCaps *caps;
-  gint i;
-  gulong format[6] = { GST_MAKE_FOURCC('I','4','2','0'),
-                       GST_MAKE_FOURCC('Y','V','1','2'),
-                       GST_MAKE_FOURCC('Y','U','Y','2'),
-                       GST_MAKE_FOURCC('Y','V','Y','U'),
-                       GST_MAKE_FOURCC('U','Y','V','Y')
-                     };
-
   /* Loading the library containing GstVideoSink, our parent object */
   if (!gst_library_load ("gstvideo"))
     return FALSE;
-                     
-  /* create an elementfactory for the sdlvideosink element */
-  factory = gst_element_factory_new("sdlvideosink",GST_TYPE_SDLVIDEOSINK,
-                                   &gst_sdlvideosink_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
 
-  /* make a list of all available caps */
-  for (i=0;i<5;i++)
-  {
-    caps = gst_caps_new ("sdlvideosink_caps",
-                         "video/x-raw-yuv",
-                         gst_props_new (
-                            "format", GST_PROPS_FOURCC(format[i]),
-                            "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
-                            "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-			    "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                            NULL       )
-                        );
-    capslist = gst_caps_append(capslist, caps);
-  }
-
-  sink_template = gst_pad_template_new (
-		  "sink",
-                  GST_PAD_SINK,
-  		  GST_PAD_ALWAYS,
-		  capslist, NULL);
-
-  gst_element_factory_add_pad_template (factory, sink_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "sdlvideosink", GST_RANK_NONE, GST_TYPE_SDLVIDEOSINK))
+    return FALSE;
 
   return TRUE;
 }
 
-
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "sdlvideosink",
-  plugin_init
-};
+  "SDL Video Sink",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
