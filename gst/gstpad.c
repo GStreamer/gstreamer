@@ -220,6 +220,7 @@ _gst_real_pad_fixate_accumulator (GSignalInvocationHint *ihint,
     GValue *return_accu, const GValue *handler_return, gpointer dummy)
 {
   if (g_value_get_pointer (handler_return)) {
+    g_value_copy (handler_return, return_accu);
     /* stop emission if something was returned */
     return FALSE;
   }
@@ -1872,8 +1873,7 @@ _gst_pad_default_fixate_func (GstPad *pad, const GstCaps *caps)
   }
 
   if (caps->structs->len > 1) {
-    GstCaps *retcaps = gst_caps_copy_1 (caps);
-    return retcaps;
+    return gst_caps_new_full (gst_caps_get_structure (caps, 0), NULL);
   }
 
   newcaps = gst_caps_copy (caps);

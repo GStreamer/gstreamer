@@ -85,14 +85,18 @@ void gst_caps_append_structure (GstCaps *caps1, GstStructure *structure);
 GstCaps *gst_caps_split_one (GstCaps *caps);
 int gst_caps_get_size (const GstCaps *caps);
 GstStructure *gst_caps_get_structure (const GstCaps *caps, int index);
+#ifndef GST_DISABLE_DEPRECATED
 GstCaps *gst_caps_copy_1 (const GstCaps *caps);
+#endif
 void gst_caps_set_simple (GstCaps *caps, char *field, ...);
 void gst_caps_set_simple_valist (GstCaps *caps, char *field, va_list varargs);
 
 /* tests */
 gboolean gst_caps_is_any (const GstCaps *caps);
 gboolean gst_caps_is_empty (const GstCaps *caps);
+#ifndef GST_DISABLE_DEPRECATED
 gboolean gst_caps_is_chained (const GstCaps *caps);
+#endif
 gboolean gst_caps_is_fixed (const GstCaps *caps);
 gboolean gst_caps_is_equal_fixed (const GstCaps *caps1, const GstCaps *caps2);
 gboolean gst_caps_is_always_compatible (const GstCaps *caps1,
