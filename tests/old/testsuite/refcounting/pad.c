@@ -115,18 +115,18 @@ main (int argc, gchar *argv[])
   pad2 = gst_pad_new ("padname2", GST_PAD_SRC);
 
   gst_pad_connect (pad2, pad);
-  g_assert (GST_PAD_CONNECTED (pad));
-  g_assert (GST_PAD_CONNECTED (pad2));
+  g_assert (GST_PAD_IS_CONNECTED (pad));
+  g_assert (GST_PAD_IS_CONNECTED (pad2));
   gst_pad_disconnect (pad2, pad);
-  g_assert (!GST_PAD_CONNECTED (pad));
-  g_assert (!GST_PAD_CONNECTED (pad2));
+  g_assert (!GST_PAD_IS_CONNECTED (pad));
+  g_assert (!GST_PAD_IS_CONNECTED (pad2));
   g_print ("connect/disconnect pad %ld\n", vmsize()-usage1);
   gst_pad_connect (pad, pad2);
-  g_assert (GST_PAD_CONNECTED (pad));
-  g_assert (GST_PAD_CONNECTED (pad2));
+  g_assert (GST_PAD_IS_CONNECTED (pad));
+  g_assert (GST_PAD_IS_CONNECTED (pad2));
   gst_pad_disconnect (pad, pad2);
-  g_assert (!GST_PAD_CONNECTED (pad));
-  g_assert (!GST_PAD_CONNECTED (pad2));
+  g_assert (!GST_PAD_IS_CONNECTED (pad));
+  g_assert (!GST_PAD_IS_CONNECTED (pad2));
   g_print ("connect/disconnect pad wrong direction %ld\n", vmsize()-usage1);
 
   gst_object_unref (GST_OBJECT (pad));
@@ -148,11 +148,11 @@ main (int argc, gchar *argv[])
   pad2 = gst_pad_new ("padname2", GST_PAD_SRC);
 
   gst_pad_connect (pad2, pad);
-  g_assert (GST_PAD_CONNECTED (pad2));
-  g_assert (GST_PAD_CONNECTED (pad));
+  g_assert (GST_PAD_IS_CONNECTED (pad2));
+  g_assert (GST_PAD_IS_CONNECTED (pad));
 
   gst_object_unref (GST_OBJECT (pad2));
-  g_assert (!GST_PAD_CONNECTED (pad));
+  g_assert (!GST_PAD_IS_CONNECTED (pad));
   g_assert (!GST_OBJECT_DESTROYED (pad));
   gst_object_unref (GST_OBJECT (pad));
 
@@ -160,11 +160,11 @@ main (int argc, gchar *argv[])
   pad2 = gst_pad_new ("padname2", GST_PAD_SRC);
 
   gst_pad_connect (pad2, pad);
-  g_assert (GST_PAD_CONNECTED (pad2));
-  g_assert (GST_PAD_CONNECTED (pad));
+  g_assert (GST_PAD_IS_CONNECTED (pad2));
+  g_assert (GST_PAD_IS_CONNECTED (pad));
 
   gst_object_unref (GST_OBJECT (pad));
-  g_assert (!GST_PAD_CONNECTED (pad2));
+  g_assert (!GST_PAD_IS_CONNECTED (pad2));
   g_assert (!GST_OBJECT_DESTROYED (pad2));
   gst_object_unref (GST_OBJECT (pad2));
 
@@ -174,32 +174,32 @@ main (int argc, gchar *argv[])
   pad2 = gst_pad_new ("padname2", GST_PAD_SRC);
 
   gst_pad_connect (pad2, pad);
-  g_assert (GST_PAD_CONNECTED (pad2));
-  g_assert (GST_PAD_CONNECTED (pad));
+  g_assert (GST_PAD_IS_CONNECTED (pad2));
+  g_assert (GST_PAD_IS_CONNECTED (pad));
 
   gst_object_destroy (GST_OBJECT (pad2));
   g_assert (GST_OBJECT_DESTROYED (pad2));
   g_assert (!GST_OBJECT_DESTROYED (pad));
-  g_assert (!GST_PAD_CONNECTED (pad));
+  g_assert (!GST_PAD_IS_CONNECTED (pad));
   gst_object_unref (GST_OBJECT (pad2));
   g_assert (!GST_OBJECT_DESTROYED (pad));
-  g_assert (!GST_PAD_CONNECTED (pad));
+  g_assert (!GST_PAD_IS_CONNECTED (pad));
   gst_object_unref (GST_OBJECT (pad));
 
   pad = gst_pad_new ("padname", GST_PAD_SINK);
   pad2 = gst_pad_new ("padname2", GST_PAD_SRC);
 
   gst_pad_connect (pad2, pad);
-  g_assert (GST_PAD_CONNECTED (pad2));
-  g_assert (GST_PAD_CONNECTED (pad));
+  g_assert (GST_PAD_IS_CONNECTED (pad2));
+  g_assert (GST_PAD_IS_CONNECTED (pad));
 
   gst_object_destroy (GST_OBJECT (pad));
   g_assert (GST_OBJECT_DESTROYED (pad));
   g_assert (!GST_OBJECT_DESTROYED (pad2));
-  g_assert (!GST_PAD_CONNECTED (pad2));
+  g_assert (!GST_PAD_IS_CONNECTED (pad2));
   gst_object_unref (GST_OBJECT (pad));
   g_assert (!GST_OBJECT_DESTROYED (pad2));
-  g_assert (!GST_PAD_CONNECTED (pad2));
+  g_assert (!GST_PAD_IS_CONNECTED (pad2));
   gst_object_unref (GST_OBJECT (pad2));
 
   g_print ("pad destroy effects on connect pad ok %ld\n", vmsize()-usage1);
