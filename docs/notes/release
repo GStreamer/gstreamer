@@ -1,0 +1,18 @@
+Release Checklist
+-----------------
+
+(procedure while just working on trunk)
+
+- update version in configure.ac
+- update date in docs/gst-python.ent.in
+- add entry for current version to docs/NEWS.xml
+- 'make distcheck'
+  - fix problems and repeat as needed
+- tag cvs ('cvs tag RELEASE-x_y_z')
+- GPG sign tarball
+- upload tarball to sourceforge
+- build release notes:
+  - '(cd docs/; make RELNOTES.txt)'
+- announce:
+  - gstreamer-{devel, announce}
+  - freshmeat
