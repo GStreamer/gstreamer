@@ -39,6 +39,8 @@ guchar*		gst_util_get_string_arg		(GtkObject *object, guchar *argname);
 gpointer 	gst_util_get_pointer_arg	(GtkObject *object, guchar *argname);
 GtkWidget*	gst_util_get_widget_arg		(GtkObject *object, guchar *argname);
 
+void 		gst_util_set_object_arg 	(GtkObject *object, guchar *name, gchar *value);
+	
 void 		gst_util_dump_mem		(guchar *mem, guint size);
 
 #ifdef __cplusplus

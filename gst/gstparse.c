@@ -30,6 +30,7 @@
 #include "gstparse.h"
 #include "gstpipeline.h"
 #include "gstthread.h"
+#include "gstutils.h"
 
 typedef struct _gst_parse_priv gst_parse_priv;
 struct _gst_parse_priv {
@@ -180,7 +181,8 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       argval = pos+1;
       DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
             argname,argval,GST_ELEMENT_NAME(previous));
-      gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
+      //gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
+      gst_util_set_object_arg (GTK_OBJECT(previous), argname, argval);
       g_free(argname);
 
     // element or argument, or beginning of bin or thread
