@@ -260,7 +260,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     case G_TYPE_ULONG:
     case G_TYPE_UINT64:
       g_value_init (&v2, G_TYPE_ULONG); 
-      g_value_set_long (&v2, strtoul (pos, NULL, 0));
+      g_value_set_ulong (&v2, strtoul (pos, NULL, 0));
       if (!g_value_transform (&v2, &v)) goto error;
       break;
     case G_TYPE_FLOAT:
