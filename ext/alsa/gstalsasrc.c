@@ -37,7 +37,6 @@ static GstElementDetails gst_alsa_src_details = GST_ELEMENT_DETAILS (
 );
 
 static GstPadTemplate *		gst_alsa_src_pad_factory 	(void);
-static GstPadTemplate *		gst_alsa_src_request_pad_factory (void);
 static void			gst_alsa_src_base_init		(gpointer		g_class);
 static void			gst_alsa_src_class_init		(gpointer		g_class,
 								 gpointer		class_data);
@@ -65,17 +64,7 @@ gst_alsa_src_pad_factory (void)
 
   return template;
 }
-static GstPadTemplate *
-gst_alsa_src_request_pad_factory (void)
-{
-  static GstPadTemplate *template = NULL;
 
-  if (!template)
-    template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, 1));
-
-  return template;
-}
 GType
 gst_alsa_src_get_type (void)
 {
@@ -105,7 +94,6 @@ gst_alsa_src_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
  
   gst_element_class_add_pad_template (element_class, gst_alsa_src_pad_factory ());
-  gst_element_class_add_pad_template (element_class, gst_alsa_src_request_pad_factory ());
 
   gst_element_class_set_details (element_class, &gst_alsa_src_details);
 }
