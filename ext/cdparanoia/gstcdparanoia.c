@@ -36,6 +36,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include "gst/gst-i18n-plugin.h"
+#include <gst/gst.h>
 
 /* taken from linux/cdrom.h */
 #define CD_MSF_OFFSET       150 /* MSF numbering offset of first frame */
@@ -137,6 +138,7 @@ enum
 static void cdparanoia_base_init (gpointer g_class);
 static void cdparanoia_class_init (CDParanoiaClass * klass);
 static void cdparanoia_init (CDParanoia * cdparanoia);
+static void cdparanoia_dispose (GObject * obj);
 
 static void cdparanoia_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -157,43 +159,31 @@ static void cdparanoia_set_index (GstElement * element, GstIndex * index);
 static GstIndex *cdparanoia_get_index (GstElement * element);
 
 
+static void cdparanoia_uri_handler_init (gpointer g_iface, gpointer iface_data);
+
+static void
+_do_init (GType cdparanoia_type)
+{
+  static const GInterfaceInfo urihandler_info = {
+    cdparanoia_uri_handler_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (cdparanoia_type, GST_TYPE_URI_HANDLER,
+      &urihandler_info);
+}
+
+GST_BOILERPLATE_FULL (CDParanoia, cdparanoia, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
+
 static GstElementStateReturn cdparanoia_change_state (GstElement * element);
 
-
-static GstElementClass *parent_class = NULL;
 static guint cdparanoia_signals[LAST_SIGNAL] = { 0 };
 
+/* our two formats */
 static GstFormat track_format;
 static GstFormat sector_format;
-
-GType
-cdparanoia_get_type (void)
-{
-  static GType cdparanoia_type = 0;
-
-  if (!cdparanoia_type) {
-    static const GTypeInfo cdparanoia_info = {
-      sizeof (CDParanoiaClass),
-      cdparanoia_base_init,
-      NULL,
-      (GClassInitFunc) cdparanoia_class_init,
-      NULL,
-      NULL,
-      sizeof (CDParanoia),
-      0,
-      (GInstanceInitFunc) cdparanoia_init,
-    };
-
-    cdparanoia_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "CDParanoia",
-        &cdparanoia_info, 0);
-
-    /* Register the track format */
-    track_format = gst_format_register ("track", "CD track");
-    sector_format = gst_format_register ("sector", "CD sector");
-  }
-  return cdparanoia_type;
-}
 
 static void
 cdparanoia_base_init (gpointer g_class)
@@ -204,6 +194,9 @@ cdparanoia_base_init (gpointer g_class)
       gst_static_pad_template_get (&cdparanoia_src_template));
   gst_element_class_set_details (element_class, &cdparanoia_details);
 
+  /* Register the track and sector format */
+  track_format = gst_format_register ("track", "CD track");
+  sector_format = gst_format_register ("sector", "CD sector");
 }
 
 static void
@@ -281,6 +274,7 @@ cdparanoia_class_init (CDParanoiaClass * klass)
 
   gobject_class->set_property = cdparanoia_set_property;
   gobject_class->get_property = cdparanoia_get_property;
+  gobject_class->dispose = cdparanoia_dispose;
 
   gstelement_class->change_state = cdparanoia_change_state;
   gstelement_class->set_index = cdparanoia_set_index;
@@ -319,8 +313,23 @@ cdparanoia_init (CDParanoia * cdparanoia)
 
   cdparanoia->total_seconds = 0;
   cdparanoia->discont_sent = FALSE;
+  cdparanoia->uri = NULL;
+  cdparanoia->uri_track = -1;
+  cdparanoia->seek_request = -1;
 }
 
+static void
+cdparanoia_dispose (GObject * obj)
+{
+  CDParanoia *cdparanoia;
+
+  cdparanoia = CDPARANOIA (obj);
+
+  g_free (cdparanoia->uri);
+  cdparanoia->uri = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
+}
 
 static void
 cdparanoia_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -464,6 +473,14 @@ cdparanoia_get (GstPad * pad)
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
   g_return_val_if_fail (GST_FLAG_IS_SET (src, CDPARANOIA_OPEN), NULL);
+
+  if (src->seek_request != -1) {
+    gst_pad_send_event (src->srcpad,
+        gst_event_new_segment_seek (track_format |
+            GST_SEEK_METHOD_SET |
+            GST_SEEK_FLAG_FLUSH, src->seek_request - 1, src->seek_request));
+    src->seek_request = -1;
+  }
 
   /* stop things apropriatly */
   if (src->cur_sector > src->segment_end_sector) {
@@ -774,6 +791,9 @@ cdparanoia_change_state (GstElement * element)
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
+      if (cdparanoia->uri_track > 0) {
+        cdparanoia->seek_request = cdparanoia->uri_track;
+      }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -784,6 +804,7 @@ cdparanoia_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       cdparanoia_close (CDPARANOIA (element));
+      cdparanoia->seek_request = -1;
       break;
     default:
       break;
@@ -990,7 +1011,7 @@ cdparanoia_convert (GstPad * pad,
       break;
     default:
     {
-      gint sector;
+      gint64 sector;
 
       if (src_format == track_format) {
         /* some sanity checks */
@@ -1121,6 +1142,65 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   return TRUE;
+}
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+cdparanoia_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+cdparanoia_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "cdda", NULL };
+
+  return protocols;
+}
+static const gchar *
+cdparanoia_uri_get_uri (GstURIHandler * handler)
+{
+  CDParanoia *cdparanoia = CDPARANOIA (handler);
+
+  return cdparanoia->uri;
+}
+
+static gboolean
+cdparanoia_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gchar *protocol, *location;
+  gboolean ret;
+
+  ret = TRUE;
+
+  CDParanoia *cdparanoia = CDPARANOIA (handler);
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "cdda") != 0) {
+    g_free (protocol);
+    return FALSE;
+  }
+  g_free (protocol);
+  location = gst_uri_get_location (uri);
+  cdparanoia->uri_track = strtol (location, NULL, 10);
+  if (cdparanoia->uri_track > 0) {
+    cdparanoia->seek_request = cdparanoia->uri_track;
+  }
+  g_free (location);
+
+  return ret;
+}
+
+static void
+cdparanoia_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = cdparanoia_uri_get_type;
+  iface->get_protocols = cdparanoia_uri_get_protocols;
+  iface->get_uri = cdparanoia_uri_get_uri;
+  iface->set_uri = cdparanoia_uri_set_uri;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -1,5 +1,17 @@
 2004-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* ext/cdparanoia/gstcdparanoia.c: (_do_init),
+	(cdparanoia_base_init), (cdparanoia_class_init), (cdparanoia_init),
+	(cdparanoia_dispose), (cdparanoia_get), (cdparanoia_change_state),
+	(cdparanoia_convert), (cdparanoia_uri_get_type),
+	(cdparanoia_uri_get_protocols), (cdparanoia_uri_get_uri),
+	(cdparanoia_uri_set_uri), (cdparanoia_uri_handler_init):
+	* ext/cdparanoia/gstcdparanoia.h:
+	Added reworked patch from #154903 from milosz derezynski. This
+	adds the cdda://<tracknum> uri.
+
+2004-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
 	(gst_decode_bin_init), (find_compatibles), (close_pad_link),
 	(try_to_link_1), (no_more_pads), (close_link), (type_found):

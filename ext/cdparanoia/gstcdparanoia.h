@@ -86,6 +86,9 @@ struct _CDParanoia {
   gint never_skip;
   gboolean abort_on_skip;
   gint paranoia_mode;
+  gchar *uri; /* URI caching */
+  gint uri_track;
+  gint seek_request;
 
   cdrom_drive *d;
   cdrom_paranoia *p;
