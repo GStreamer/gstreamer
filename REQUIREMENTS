@@ -24,6 +24,14 @@ libglade	(for gstplay, gsteditor)
 
 libghttp	(for httpsrc)
 			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
+libaudiofile    (for afsrc/afsink)
+                        //URL FIXME
+libmad          (for the mad mp3 decoder plugin)
+                        //URL FIXME
+libjpeg         (for jpegenc/jpegdec)
+                        //URL FIXME
+libopenquicktime (for the QT plugin)
+                        //URL FIXME
 libXv		(for videosink)
 libxaudio	(for xa mp3 decoder)
 			http://www.xaudio.com/
