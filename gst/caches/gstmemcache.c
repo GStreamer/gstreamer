@@ -32,12 +32,58 @@
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MEM_CACHE))
 #define GST_IS_MEM_CACHE_CLASS(obj)	\
   (GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MEM_CACHE))
+	
+/*
+ * Object model:
+ *
+ * All entries are simply added to a GList first. Then we build
+ * an index to each entry for each id/format
+ * 
+ *
+ *  memcache
+ *    -----------------------------...
+ *    !                  !         
+ *   id1                 id2        
+ *    ------------
+ *    !          !
+ *   format1  format2
+ *    !          !
+ *   GTree      GTree
+ *
+ *
+ * The memcache creates a MemCacheId object for each writer id, a
+ * Hashtable is kept to map the id to the MemCacheId
+ *
+ * The MemCacheId keeps a MemCacheFormatIndex for each format the
+ * specific writer wants indexed.
+ *
+ * The MemCacheFormatIndex keeps all the values of the particular 
+ * format in a GTree, The values of the GTree point back to the entry. 
+ *
+ * Finding a value for an id/format requires locating the correct GTree,
+ * then do a lookup in the Tree to get the required value.
+ */
+
+typedef struct _GstMemCacheFormatIndex {
+  GstFormat 	 format;
+  gint		 offset;
+  GTree		*tree;
+} GstMemCacheFormatIndex;
+
+typedef struct _GstMemCacheId {
+  gint 		 id;
+  GHashTable	*format_index;
+} GstMemCacheId;
 
 typedef struct _GstMemCache GstMemCache;
 typedef struct _GstMemCacheClass GstMemCacheClass;
 
 struct _GstMemCache {
   GstCache		 parent;
+
+  GList			*associations;
+
+  GHashTable		*id_index;
 };
 
 struct _GstMemCacheClass {
@@ -56,6 +102,14 @@ enum {
 
 static void		gst_mem_cache_class_init	(GstMemCacheClass *klass);
 static void		gst_mem_cache_init		(GstMemCache *cache);
+static void 		gst_mem_cache_dispose 		(GObject *object);
+
+static void 		gst_mem_cache_add_entry 	(GstCache *cache, GstCacheEntry *entry);
+static GstCacheEntry* 	gst_mem_cache_get_assoc_entry 	(GstCache *cache, gint id,
+                              				 GstCacheLookupMethod method,
+                              				 GstFormat format, gint64 value,
+                              				 GCompareDataFunc func,
+                              				 gpointer user_data);
 
 #define CLASS(mem_cache)  GST_MEM_CACHE_CLASS (G_OBJECT_GET_CLASS (mem_cache))
 
@@ -88,18 +142,190 @@ static void
 gst_mem_cache_class_init (GstMemCacheClass *klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstCacheClass *gstcache_class;
 
   gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gstcache_class = (GstCacheClass*)klass;
 
   parent_class = g_type_class_ref(GST_TYPE_CACHE);
+
+  gobject_class->dispose = gst_mem_cache_dispose;
+
+  gstcache_class->add_entry 	  = gst_mem_cache_add_entry;
+  gstcache_class->get_assoc_entry = gst_mem_cache_get_assoc_entry;
 }
 
 static void
 gst_mem_cache_init (GstMemCache *cache)
 {
   GST_DEBUG(0, "created new mem cache");
+
+  cache->associations = NULL;
+  cache->id_index = g_hash_table_new (g_int_hash, g_int_equal);
+}
+
+static void
+gst_mem_cache_dispose (GObject *object)
+{
+  //GstMemCache *memcache = GST_MEM_CACHE (object);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_mem_cache_add_id (GstCache *cache, GstCacheEntry *entry)
+{
+  GstMemCache *memcache = GST_MEM_CACHE (cache);
+  GstMemCacheId *id_index;
+
+  id_index = g_hash_table_lookup (memcache->id_index, &entry->id);
+
+  if (!id_index) {
+    id_index = g_new0 (GstMemCacheId, 1);
+
+    id_index->id = entry->id;
+    id_index->format_index = g_hash_table_new (g_int_hash, g_int_equal);
+    g_hash_table_insert (memcache->id_index, &entry->id, id_index);
+  }
+}
+
+static gint
+mem_cache_compare (gconstpointer a,
+		   gconstpointer b,
+		   gpointer user_data)
+{
+  GstMemCacheFormatIndex *index = user_data;
+  gint64 val1, val2;
+
+  val1 = GST_CACHE_ASSOC_VALUE (((GstCacheEntry *)a), index->offset);
+  val2 = GST_CACHE_ASSOC_VALUE (((GstCacheEntry *)b), index->offset);
+	  
+  return val1 - val2;
+}
+
+static void
+gst_mem_cache_index_format (GstMemCacheId *id_index, GstCacheEntry *entry, gint assoc)
+{
+  GstMemCacheFormatIndex *index;
+  GstFormat *format;
+
+  format = &GST_CACHE_ASSOC_FORMAT (entry, assoc);
+
+  index = g_hash_table_lookup (id_index->format_index, format);
+
+  if (!index) {
+    index = g_new0 (GstMemCacheFormatIndex, 1);
+
+    index->format = *format;
+    index->offset = assoc;
+    index->tree = g_tree_new_with_data (mem_cache_compare, index);
+
+    g_hash_table_insert (id_index->format_index, format, index);
+  }
+
+  g_tree_insert (index->tree, entry, entry);
+}
+
+static void
+gst_mem_cache_add_association (GstCache *cache, GstCacheEntry *entry)
+{
+  GstMemCache *memcache = GST_MEM_CACHE (cache);
+  GstMemCacheId *id_index;
+
+  memcache->associations = g_list_prepend (memcache->associations, entry);
+
+  id_index = g_hash_table_lookup (memcache->id_index, &entry->id);
+  if (id_index) {
+    gint i;
+
+    for (i = 0; i < GST_CACHE_NASSOCS (entry); i++) {
+      gst_mem_cache_index_format (id_index, entry, i);
+    }
+  }
+}
+
+static void
+gst_mem_cache_add_object (GstCache *cache, GstCacheEntry *entry)
+{
+}
+
+static void
+gst_mem_cache_add_format (GstCache *cache, GstCacheEntry *entry)
+{
+}
+
+static void
+gst_mem_cache_add_entry (GstCache *cache, GstCacheEntry *entry)
+{
+  GstMemCache *memcache = GST_MEM_CACHE (cache);
+
+  GST_DEBUG (0, "adding entry %p\n", memcache);
+
+  switch (entry->type){
+     case GST_CACHE_ENTRY_ID:
+       gst_mem_cache_add_id (cache, entry);
+       break;
+     case GST_CACHE_ENTRY_ASSOCIATION:
+       gst_mem_cache_add_association (cache, entry);
+       break;
+     case GST_CACHE_ENTRY_OBJECT:
+       gst_mem_cache_add_object (cache, entry);
+       break;
+     case GST_CACHE_ENTRY_FORMAT:
+       gst_mem_cache_add_format (cache, entry);
+       break;
+     default:
+       break;
+  }
+}
+
+static GstCacheEntry*
+gst_mem_cache_get_assoc_entry (GstCache *cache, gint id,
+                               GstCacheLookupMethod method,
+                               GstFormat format, gint64 value,
+                               GCompareDataFunc func,
+                               gpointer user_data)
+{
+  GstMemCache *memcache = GST_MEM_CACHE (cache);
+  GList *walk = memcache->associations;
+  GList *next;
+
+  /* FIXME use GTree here */
+  while (walk) {
+    GstCacheEntry *entry = (GstCacheEntry *) walk->data;
+
+    next = g_list_next (walk);
+
+    if (entry->type == GST_CACHE_ENTRY_ASSOCIATION && entry->id == id) {
+      gint64 got;
+
+      if (gst_cache_entry_assoc_map (entry, format, &got)) {
+	if (got == value && method == GST_CACHE_LOOKUP_EXACT)
+          return entry;
+	else {
+          gint64 got_next = G_MININT64;
+          GstCacheEntry *next_entry = NULL;
+
+	  if (next != NULL) {
+            next_entry = (GstCacheEntry *) next->data;
+
+	    gst_cache_entry_assoc_map (next_entry, format, &got_next);
+	  }
+
+          if ((got >= value) && (got_next <= value)) {
+	    if (method == GST_CACHE_LOOKUP_BEFORE) 
+	      return next_entry;
+	    else if (method == GST_CACHE_LOOKUP_AFTER) 
+	      return entry;
+	  }
+	}
+      }
+    }
+    
+    walk = next;
+  }
+
+  return NULL;
 }
 
 static gboolean
