@@ -305,7 +305,7 @@ gst_modplug_src_query (GstPad *pad, GstPadQueryType type,
         case GST_FORMAT_DEFAULT:
               *format = GST_FORMAT_TIME;
 	case GST_FORMAT_TIME:
-          *value=(gint64)modplug->mSoundFile->GetSongTime() * 1000000000LL;
+          *value=(gint64)modplug->mSoundFile->GetSongTime() * GST_SECOND;
 	  break;
 	default:
           res = FALSE;
@@ -318,7 +318,7 @@ gst_modplug_src_query (GstPad *pad, GstPadQueryType type,
            *format = GST_FORMAT_TIME;
 	 default:
 	   tmp = ((float)( modplug->mSoundFile->GetSongTime() * modplug->mSoundFile->GetCurrentPos() ) / (float)modplug->mSoundFile->GetMaxPosition() );
-	   *value=(gint64)(tmp * 1000000000LL);
+	   *value=(gint64)(tmp * GST_SECOND);
 	   break;
       }
     default:
@@ -399,6 +399,12 @@ gst_modplug_loop (GstElement *element)
     }
   }  
 
+  if ( modplug->Buffer == NULL) {
+    gst_pad_push (modplug->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));	  
+    gst_element_set_eos (GST_ELEMENT (modplug));
+    return;
+  }
+  
   if ( modplug->_16bit )
     mode16bits = 16;
   else
@@ -410,6 +416,7 @@ gst_modplug_loop (GstElement *element)
   modplug->mSoundFile->Create( GST_BUFFER_DATA( modplug->Buffer ), GST_BUFFER_SIZE( modplug->Buffer ));
   
   gst_buffer_unref( modplug->Buffer );
+  modplug->Buffer = NULL;
 
   gst_pad_try_set_caps (modplug->srcpad, 
 		          GST_CAPS_NEW (
@@ -436,35 +443,44 @@ gst_modplug_loop (GstElement *element)
   do {
     if ( modplug->seek_at != 0 )
     {
-      GstEvent *discont;
-      GstClockTime time;
       int seek_to_pos;
       gint64 total;
 
-      total = modplug->mSoundFile->GetSongTime() * 1000000000LL;
+      total = modplug->mSoundFile->GetSongTime() * GST_SECOND;
 
       temp = (float) total / modplug->seek_at;     
       seek_to_pos = (int)( modplug->mSoundFile->GetMaxPosition() / temp );
 
       modplug->mSoundFile->SetCurrentPos( seek_to_pos );
-      modplug->seek_at = 0;
-
-      /* get stream stats */
-      time = (gint64) (total * modplug->mSoundFile->GetCurrentPos() ) / modplug->mSoundFile->GetMaxPosition();
-      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL );
-
-      gst_pad_push (modplug->srcpad, GST_BUFFER (discont));
     }
-
-    
   
     if( modplug->mSoundFile->Read ( modplug->audiobuffer, modplug->length ) != 0 )
     {
+      GstClockTime time;
+
       buffer_out = gst_buffer_new();
       GST_BUFFER_DATA( buffer_out ) = (guchar *) g_memdup( modplug->audiobuffer, modplug->length );
       GST_BUFFER_SIZE( buffer_out ) = modplug->length;
- 	  
+
       total_samples+=1152;		
+
+      if ( modplug->seek_at != 0 )
+      {
+        GstEvent *discont;
+        gint64 total;
+
+        modplug->seek_at = 0;
+
+        /* get stream stats */
+        total = modplug->mSoundFile->GetSongTime() * GST_SECOND;
+        time = (gint64) (total * modplug->mSoundFile->GetCurrentPos() ) / modplug->mSoundFile->GetMaxPosition();
+
+        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL );
+        total_samples = time * modplug->frequency / GST_SECOND ;		
+
+        gst_pad_push (modplug->srcpad, GST_BUFFER (discont));
+      }
+ 	  
       GST_BUFFER_TIMESTAMP( buffer_out ) = total_samples * GST_SECOND / modplug->frequency;
  	  	
       gst_pad_push( srcpad, buffer_out );
@@ -473,8 +489,9 @@ gst_modplug_loop (GstElement *element)
     else
     {	    
       free( modplug->audiobuffer );
-      gst_element_set_eos (GST_ELEMENT (modplug));
       gst_pad_push (modplug->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));	  
+      gst_element_set_eos (GST_ELEMENT (modplug));
+      break;
     }
   } 
   while ( 1 );
@@ -495,6 +512,7 @@ gst_modplug_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      modplug->Buffer = NULL;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
