@@ -612,7 +612,7 @@ gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 {
   cothread_state *threadstate = GST_ELEMENT(pad->parent)->threadstate;
   DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  DEBUG("putting buffer in peer's pen\n");
+  DEBUG("putting buffer %p in peer's pen\n",buf);
   pad->peer->bufpen = buf;
   DEBUG("switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(pad->parent)->threadstate));
   cothread_switch (threadstate);
@@ -796,6 +796,8 @@ gst_bin_create_plan_func (GstBin *bin)
   // If cothreads are needed, we need to not only find elements but
   // set up cothread states and various proxy functions.
   if (bin->need_cothreads) {
+    DEBUG("bin is using cothreads\n");
+
     // first create thread context
     if (bin->threadcontext == NULL) {
       DEBUG("initializing cothread context\n");
@@ -887,7 +889,27 @@ gst_bin_create_plan_func (GstBin *bin)
 
   // otherwise, cothreads are not needed
   } else {
-    ;
+    DEBUG("bin is chained, no cothreads needed\n");
+
+    elements = bin->managed_elements;
+    while (elements) {
+      element = GST_ELEMENT (elements->data);
+      elements = g_list_next (elements);
+
+      pads = gst_element_get_pad_list (element);
+      while (pads) {
+        pad = GST_PAD (pads->data);
+        pads = g_list_next (pads);
+
+        if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+          DEBUG("copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+          pad->pushfunc = pad->chainfunc;
+        } else {
+          DEBUG("copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+          pad->pullfunc = pad->getfunc;
+        }
+      }
+    }
   }
 
   DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
@@ -924,9 +946,10 @@ gst_bin_iterate_func (GstBin *bin)
     DEBUG("starting iteration via chain-functions\n");
 
     if (bin->num_entries <= 0) {
-      //printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
+      DEBUG("no entries in bin \"%s\", trying managed elements...\n",
+            gst_element_get_name(GST_ELEMENT(bin)));
       // we will try loop over the elements then...
-      entries = bin->children;
+      entries = bin->managed_elements;
     }
     else {
       entries = bin->entries;
@@ -936,6 +959,10 @@ gst_bin_iterate_func (GstBin *bin)
 
     while (entries) {
       entry = GST_ELEMENT (entries->data);
+      entries = g_list_next (entries);
+
+      DEBUG("have entry \"%s\"\n",gst_element_get_name(entry));
+
       if (GST_IS_SRC (entry) || GST_IS_CONNECTION (entry)) {
         pads = entry->pads;
         while (pads) {
@@ -956,9 +983,8 @@ gst_bin_iterate_func (GstBin *bin)
         gst_bin_iterate (GST_BIN (entry));
       else {
 	fprintf(stderr, "gstbin: entry \"%s\" cannot be handled\n", gst_element_get_name (entry));
-        g_assert_not_reached ();
+//        g_assert_not_reached ();
       }
-      entries = g_list_next (entries);
     }
   }
 
