@@ -12,6 +12,7 @@ GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
 VERSION=$GST_VERSION
+
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
 AC_SUBST(PACKAGE)
@@ -272,7 +273,6 @@ if test x$AUDIOFILE_CONFIG = xno; then
   AUDIOFILE_LIBS=
   HAVE_LIBAUDIOFILE=no
 else
-  AC_MSG_WARN(did find audiofile-config: delete this msg)
   AUDIOFILE_LIBS=`audiofile-config --libs`
   HAVE_LIBAUDIOFILE=yes
 fi
@@ -935,7 +935,8 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
-AC_CONFIG_FILES(Makefile
+AC_OUTPUT(
+Makefile
 include/Makefile
 include/wine/Makefile
 gst/Makefile
@@ -1082,4 +1083,3 @@ gstreamer-config
 gstreamer.spec,
 chmod +x gstreamer-config
 )
-AC_OUTPUT
