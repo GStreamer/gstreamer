@@ -485,6 +485,7 @@ paint_rect_random (unsigned char *dest, int stride, int x, int y, int w, int h)
   }
 }
 
+#if 0
 static void
 paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char color)
 {
@@ -496,6 +497,7 @@ paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigne
     d += stride;
   }
 }
+#endif
 
 static void
 paint_rect_s2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char col)
