@@ -51,6 +51,10 @@
 #ifndef S_ISSOCK
 #define S_ISSOCK(x) (0)
 #endif
+/* FIXME: is that enough or should we do #ifdef __WIN32__ stuff? */
+#ifndef O_BINARY
+#define O_BINARY (0)
+#endif
 
 /**********************************************************************
  * GStreamer Default File Source
@@ -756,7 +760,7 @@ gst_filesrc_open_file (GstFileSrc * src)
   GST_INFO_OBJECT (src, "opening file %s", src->filename);
 
   /* open the file */
-  src->fd = open (src->filename, GST_O_READONLY);
+  src->fd = open (src->filename, O_RDONLY | O_BINARY);
   if (src->fd < 0) {
     if (errno == ENOENT)
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),

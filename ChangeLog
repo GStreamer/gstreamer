@@ -1,5 +1,20 @@
 2004-07-12  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gsttypes.h:
+	  get rid of GST_O_READONLY, GST_FILE_MODE_READ and
+	  GST_FILE_MODE_WRITE, I don't want them in the exported headers. It
+	  just causes support madness
+	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
+	  make it work without this
+	* gst/indexers/gstfileindex.c: (_file_index_id_save_entries),
+	(gst_file_index_commit):
+	  glib IO channels don't want binary mode
+	* testsuite/bytestream/filepadsink.c: (main):
+	* testsuite/bytestream/test1.c: (read_param_file):
+	  use "rb" instead of GST_FILE_MODE_READ, it works on POSIX systems
+
+2004-07-12  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstelement.c: (gst_element_class_init),
 	(gst_element_set_state), (gst_element_set_state_func):
 	  virutalize gst_element_set_state, use set_state member in class

@@ -68,7 +68,7 @@ read_param_file (gchar * filename)
   gchar *scan_str;
   gboolean res = TRUE;
 
-  fp = fopen (filename, GST_FILE_MODE_READ);
+  fp = fopen (filename, "rb");
   if (fp == NULL)
     return FALSE;
 
