@@ -23,6 +23,9 @@
 
 #include <gst/gst.h>
 
-gdouble gst_video_frame_rate (GstPad *pad);
+gdouble  gst_video_frame_rate (GstPad *pad);
+gboolean gst_video_get_size   (GstPad *pad,
+                               gint   *width,
+                               gint   *height);
 
 #endif /* __GST_VIDEO_H__ */
