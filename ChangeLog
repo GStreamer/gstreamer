@@ -1,3 +1,10 @@
+2004-10-29  Martin Pitt  <martin.pitt@canonical.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_chunk):
+	  Don't touch buffer if it is of size 0 (fixes #151064).
+
 2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_push), (gst_ogg_pad_push):
