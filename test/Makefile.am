@@ -1,6 +1,6 @@
 #noinst_PROGRAMS = basic m types a r plugin w s args mpg123 mcut push qtest
 noinst_PROGRAMS = qtest spectrum record wave mp3 teardown buffer mp3parse \
-		  mpeg2parse mp1parse mp3play ac3parse ac3play dvdcat fake cobin
+		  mpeg2parse mp1parse mp3play ac3parse ac3play dvdcat fake cobin videotest
 
 SUBDIRS = xml cothreads bindings
 
@@ -8,6 +8,10 @@ spectrum_CFLAGS = $(shell gnome-config --cflags gnomeui)
 spectrum_LDFLAGS = $(shell gnome-config --libs gnomeui)
 wave_CFLAGS = $(shell gnome-config --cflags gnomeui)
 wave_LDFLAGS = $(shell gnome-config --libs gnomeui)
+videotest_CFLAGS = $(shell gnome-config --cflags gnomeui)
+videotest_LDFLAGS = $(shell gnome-config --libs gnomeui)
+mp1parse_CFLAGS = $(shell gnome-config --cflags gnomeui)
+mp1parse_LDFLAGS = $(shell gnome-config --libs gnomeui)
 
 buffer_SOURCES = buffer.c mem.c
 teardown_SOURCES = teardown.c mem.c

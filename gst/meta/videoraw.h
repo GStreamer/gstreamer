@@ -25,6 +25,16 @@
 
 typedef struct _MetaVideoRaw MetaVideoRaw;
 
+enum {
+  GST_META_VIDEORAW_RGB15,
+  GST_META_VIDEORAW_RGB16,
+  GST_META_VIDEORAW_RGB24,                   // RGB
+  GST_META_VIDEORAW_RGB32,
+  GST_META_VIDEORAW_YUV420,                  // YUV planar
+  GST_META_VIDEORAW_YUV422
+};
+
+
 struct _MetaVideoRaw {
   GstMeta meta;
 
