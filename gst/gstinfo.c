@@ -47,6 +47,8 @@
 
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
+/* time of initialization, so we get useful debugging output times */
+GstClockTime start_time;
 
 #if 0
 #if defined __sgi__
@@ -203,8 +205,14 @@ __gst_in_valgrind (void)
 void
 _gst_debug_init (void)
 {
+  GTimeVal current;
+
   gst_atomic_int_init (&__default_level, GST_LEVEL_DEFAULT);
   gst_atomic_int_init (&__use_color, 1);
+
+  /* get time we started for debugging messages */
+  g_get_current_time (&current);
+  start_time = GST_TIMEVAL_TO_TIME (current);
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension,
@@ -494,6 +502,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar *pidcolor;
   gint pid;
   GTimeVal now;
+  GstClockTime elapsed;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
@@ -516,10 +525,11 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   obj = object ? gst_debug_print_object (object) : g_strdup ("");
 
   g_get_current_time (&now);
+  elapsed = GST_TIMEVAL_TO_TIME (now) - start_time;
   g_printerr ("%s (%p - %" GST_TIME_FORMAT
       ") %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
       gst_debug_level_get_name (level), g_thread_self (),
-      GST_TIME_ARGS (GST_TIMEVAL_TO_TIME (now)), color,
+      GST_TIME_ARGS (elapsed), color,
       gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
       color, file, line, function, obj, clear, gst_debug_message_get (message));
 

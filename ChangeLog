@@ -1,3 +1,9 @@
+2005-02-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_log_default):
+	  make the time that debugging functions print relative to when
+	  gst_init was called
+
 2005-02-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttaginterface.c:
