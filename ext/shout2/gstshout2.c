@@ -542,7 +542,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "LGPL",
-  GST_COPYRIGHT,
   "libshout2",
   "http://www.icecast.org/download.html"
 )

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2001> Steve Baker <stevebaker_org@yahoo.co.uk>
+ *               2003 Andy Wingo <wingo at pobox.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,6 +31,11 @@
 #include <ladspa.h>     /* main ladspa sdk include file */
 #include "utils.h"      /* ladspa sdk utility functions */
 
+/* 1.0 and the 1.1 preliminary headers don't define a version, but 1.1 final
+   does */
+#ifndef LADSPA_VERSION
+#define LADSPA_VERSION "1.0"
+#endif
 
 /* takes ownership of the name */
 static GstPadTemplate*
@@ -1038,9 +1044,8 @@ GST_PLUGIN_DEFINE (
   "ladspa",
   "All LADSPA plugins",
   plugin_init,
-  LADSPA_VERSION,
-  "LGPL",
-  "(c) 2003 The LADSPA team",
-  "LADSPA",
-  "http://www.ladspa.org/"
+  VERSION,
+  GST_LICENSE,
+  GST_PACKAGE,
+  GST_ORIGIN
 )
