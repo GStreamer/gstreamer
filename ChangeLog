@@ -1,3 +1,10 @@
+2002-12-21  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gstreamer/gstreamer.override (call_connect_function,
+	call_chain_function): block/unblock threads before entering Python
+	interpreter
+	* gstreamer/gstreamer.override: indent
+
 2002-12-17  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/gstreamer.override: add wrapper for gst_element_set_state

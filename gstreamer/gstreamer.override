@@ -75,9 +75,12 @@ call_connect_function (GstPad *pad, GstCaps *caps)
 {
 	PyObject *function;
 	PyObject *retval;
+	GstPadConnectReturn ret;
 	
 	function = pad_private(pad)->connect_function;
 	
+	pyg_block_threads();
+
 	retval = (PyObject*)PyObject_CallFunction (function,
 			"OO",
 			pad_private(pad)->pad,
@@ -85,10 +88,15 @@ call_connect_function (GstPad *pad, GstCaps *caps)
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
+        	pyg_unblock_threads();
 		return GST_PAD_CONNECT_REFUSED;
 	}
 
-	return PyInt_AsLong(retval);
+	ret = PyInt_AsLong(retval);
+
+	pyg_unblock_threads();
+
+	return ret;
 }
 
 static PyObject*
@@ -99,19 +107,19 @@ _wrap_gst_pad_set_connect_function (PyGObject *self,
 	static char *kwlist[] = { "connect_function", NULL };
 	PyObject *connect_function;
 	GstPad *pad;
-	
+
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-	                                 "O:GstPad.set_connect_funcion",
-					 kwlist,
-					 &connect_function)) {
+				"O:GstPad.set_connect_funcion",
+				kwlist,
+				&connect_function)) {
 		return NULL;
 	}
-	
+
 	if (!PyCallable_Check(connect_function)) {
 		PyErr_SetString(PyExc_TypeError, "connect_function not callable");
 		return NULL;
 	}
-	
+
 	Py_INCREF(connect_function);
 	py_pad_private(self)->connect_function = connect_function;
 	pad = (GstPad*)pygobject_get(self);
@@ -127,18 +135,23 @@ static void
 call_chain_function(GstPad *pad, GstBuffer *buf)
 {
 	PyObject *function;
-	
+
 	function = pad_private(pad)->chain_function;
-	
+
+	pyg_block_threads();
+
 	PyObject_CallFunction (function,
 			"OO", 
 			pad_private(pad)->pad,
-    			pyg_boxed_new(GST_TYPE_BUFFER, buf, TRUE, TRUE));
+			pyg_boxed_new(GST_TYPE_BUFFER, buf, TRUE, TRUE));
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
+		pyg_unblock_threads();
 		return;
 	}
+
+	pyg_unblock_threads();
 }
 
 static PyObject*
@@ -149,19 +162,19 @@ _wrap_gst_pad_set_chain_function(PyGObject *self,
 	static char *kwlist[] = { "chain_function", NULL };
 	PyObject *chain_function;
 	GstPad *pad;
-	
+
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-	                                 "O:GstPad.set_chain_funcion",
-					 kwlist,
-					 &chain_function)) {
+				"O:GstPad.set_chain_funcion",
+				kwlist,
+				&chain_function)) {
 		return NULL;
 	}
-	
+
 	if (!PyCallable_Check(chain_function)) {
 		PyErr_SetString(PyExc_TypeError, "chain_function not callable");
 		return NULL;
 	}
-	
+
 	Py_INCREF(chain_function);
 	py_pad_private(self)->chain_function = chain_function;
 	pad = (GstPad*)pygobject_get(self);
@@ -177,7 +190,7 @@ static PyObject*
 _wrap_gst_buffer_get_data(PyObject *self)
 {
 	GstBuffer *buf;
-	
+
 	buf = pyg_boxed_get(self, GstBuffer);
 
 	return PyString_FromStringAndSize(
@@ -193,7 +206,7 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	static char *kwlist[] = {"data", NULL};
 	PyObject *data;
 	GstBuffer *buf;
-	
+
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer:set_data", kwlist, &data)) {
 		return NULL;
 	}
@@ -222,12 +235,12 @@ override gst_bin_iterate
 static PyObject *
 _wrap_gst_bin_iterate(PyGObject *self)
 {
-    int ret;
+	int ret;
 
-    pyg_unblock_threads();
-    ret = gst_bin_iterate(GST_BIN(self->obj));
-    pyg_block_threads();
-    return PyInt_FromLong(ret);
+	pyg_unblock_threads();
+	ret = gst_bin_iterate(GST_BIN(self->obj));
+	pyg_block_threads();
+	return PyInt_FromLong(ret);
 }
 %%
 override gst_element_set_state kwargs
@@ -235,17 +248,17 @@ override gst_element_set_state kwargs
 static PyObject *
 _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "state", NULL };
-    PyObject *py_state = NULL;
-    GstElementState state;
-    gint ret;
+	static char *kwlist[] = { "state", NULL };
+	PyObject *py_state = NULL;
+	GstElementState state;
+	gint ret;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.set_state", kwlist, &py_state))
-        return NULL;
-    if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
-        return NULL;
-    pyg_unblock_threads();
-    ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
-    pyg_block_threads();
-    return PyInt_FromLong(ret);
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.set_state", kwlist, &py_state))
+		return NULL;
+	if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
+		return NULL;
+	pyg_unblock_threads();
+	ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
+	pyg_block_threads();
+	return PyInt_FromLong(ret);
 }
