@@ -247,42 +247,6 @@ GValue implementations specific to GStreamer
 @deserialize: 
 @_gst_reserved: 
 
-<!-- ##### VARIABLE gst_type_fourcc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### VARIABLE gst_type_int_range ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### VARIABLE gst_type_double_range ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### VARIABLE gst_type_list ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### VARIABLE gst_type_fixed_list ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### VARIABLE gst_type_fraction ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_type_is_fixed ##### -->
 <para>
 

@@ -1,5 +1,11 @@
 2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstvalue.sgml:
+	  remove some valuable stuff from the documentation due to the use of GST_EXPORT
+
+2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/gstbytestream.vcproj:
 	* win32/gstelements.vcproj:
 	* win32/gstgetbits.vcproj:
