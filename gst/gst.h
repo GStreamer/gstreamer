@@ -35,10 +35,10 @@
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferpool-default.h>
-#include <gst/gstcache.h>
 #include <gst/gstcpu.h>
 #include <gst/gstelement.h>
 #include <gst/gstbin.h>
+#include <gst/gstindex.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstthread.h>
 #include <gst/gsttype.h>

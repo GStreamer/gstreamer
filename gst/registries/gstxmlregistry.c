@@ -755,10 +755,10 @@ gst_xml_registry_parse_autoplug_factory (GMarkupParseContext *context, const gch
 }
 
 static gboolean
-gst_xml_registry_parse_cache_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
+gst_xml_registry_parse_index_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                       gsize text_len, GstXMLRegistry *registry, GError **error)
 {
-  GstCacheFactory *factory = GST_CACHE_FACTORY (registry->current_feature);
+  GstIndexFactory *factory = GST_INDEX_FACTORY (registry->current_feature);
 
   if (!strcmp (tag, "name")) {
     registry->current_feature->name = g_strndup (text, text_len);
@@ -882,8 +882,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	  }
 	  else if (GST_IS_AUTOPLUG_FACTORY (feature))
 	    xmlregistry->parser = gst_xml_registry_parse_autoplug_factory;
-	  else if (GST_IS_CACHE_FACTORY (feature))
-	    xmlregistry->parser = gst_xml_registry_parse_cache_factory;
+	  else if (GST_IS_INDEX_FACTORY (feature))
+	    xmlregistry->parser = gst_xml_registry_parse_index_factory;
 	  else {
             g_warning ("unkown feature type");
 	  }
@@ -1408,8 +1408,8 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_AUTOPLUG_FACTORY (feature)->longdesc);
   }
-  else if (GST_IS_CACHE_FACTORY (feature)) {
-    PUT_ESCAPED ("longdesc", GST_CACHE_FACTORY (feature)->longdesc);
+  else if (GST_IS_INDEX_FACTORY (feature)) {
+    PUT_ESCAPED ("longdesc", GST_INDEX_FACTORY (feature)->longdesc);
   }
   return TRUE;
 }

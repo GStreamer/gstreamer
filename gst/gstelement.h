@@ -30,7 +30,7 @@
 #include <gst/gstpad.h>
 #include <gst/gstclock.h>
 #include <gst/gstpluginfeature.h>
-#include <gst/gstcache.h>
+#include <gst/gstindex.h>
 
 G_BEGIN_DECLS
 
@@ -176,9 +176,9 @@ struct _GstElementClass {
   /* set/get clocks */
   GstClock*		(*get_clock)		(GstElement *element);
   void			(*set_clock)		(GstElement *element, GstClock *clock);
-  /* cache */
-  GstCache*		(*get_cache)		(GstElement *element);
-  void			(*set_cache)		(GstElement *element, GstCache *cache);
+  /* index */
+  GstIndex*		(*get_index)		(GstElement *element);
+  void			(*set_index)		(GstElement *element, GstIndex *index);
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -223,10 +223,10 @@ GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
 GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, 
 							 GstClockTime time, GstClockTimeDiff *jitter);
-/* caches */
+/* indexs */
 gboolean		gst_element_is_cachable		(GstElement *element);
-void			gst_element_set_cache		(GstElement *element, GstCache *cache);
-GstCache*		gst_element_get_cache		(GstElement *element);
+void			gst_element_set_index		(GstElement *element, GstIndex *index);
+GstIndex*		gst_element_get_index		(GstElement *element);
 
 
 gboolean		gst_element_release_locks	(GstElement *element);

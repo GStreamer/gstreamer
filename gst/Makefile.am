@@ -43,8 +43,8 @@ endif
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
-SUBDIRS = parse registries . $(GST_AUTOPLUG_DIRS) elements schedulers types caches
-DIST_SUBDIRS = autoplug elements parse registries schedulers types caches
+SUBDIRS = parse registries . $(GST_AUTOPLUG_DIRS) elements schedulers types indexers
+DIST_SUBDIRS = autoplug elements parse registries schedulers types indexers
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gst.c			\
@@ -55,7 +55,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferpool-default.c	\
-	gstcache.c		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
@@ -65,6 +64,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstevent.c		\
 	gstextratypes.c		\
 	gstformat.c		\
+	gstindex.c		\
 	gstinfo.c		\
 	gstmemchunk.c		\
 	gstpad.c		\
@@ -111,7 +111,6 @@ gst_headers =			\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferpool-default.h \
-	gstcache.h		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcpu.h		\
@@ -120,6 +119,7 @@ gst_headers =			\
 	gstevent.h		\
 	gstextratypes.h		\
 	gstformat.h		\
+	gstindex.h		\
 	gstinfo.h		\
 	gstlog.h		\
 	gstmacros.h		\

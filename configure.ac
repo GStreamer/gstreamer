@@ -464,7 +464,7 @@ include/Makefile
 gst/Makefile
 gst/gstversion.h
 gst/autoplug/Makefile
-gst/caches/Makefile
+gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
 gst/schedulers/Makefile
@@ -486,6 +486,7 @@ tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
+testsuite/indexers/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile

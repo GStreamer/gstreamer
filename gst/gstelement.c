@@ -771,26 +771,26 @@ gst_element_is_cachable (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  return (CLASS (element)->set_cache != NULL);
+  return (CLASS (element)->set_index != NULL);
 }
 
 void
-gst_element_set_cache (GstElement *element, GstCache *cache)
+gst_element_set_index (GstElement *element, GstIndex *index)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_CACHE (cache));
+  g_return_if_fail (GST_IS_INDEX (index));
 
-  if (CLASS (element)->set_cache)
-    CLASS (element)->set_cache (element, cache);
+  if (CLASS (element)->set_index)
+    CLASS (element)->set_index (element, index);
 }
 
-GstCache*
-gst_element_get_cache (GstElement *element)
+GstIndex*
+gst_element_get_index (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  if (CLASS (element)->get_cache)
-    return CLASS (element)->get_cache (element);
+  if (CLASS (element)->get_index)
+    return CLASS (element)->get_index (element);
 
   return NULL;
 }
