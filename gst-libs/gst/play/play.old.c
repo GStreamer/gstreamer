@@ -642,9 +642,10 @@ void
 gst_play_seek_to_time (GstPlay *play, gint64 time_nanos)
 {
 	GstEvent *s_event;
+        guint8   prev_state;
 	gboolean audio_seek_worked = FALSE;
 	gboolean video_seek_worked = FALSE;
-	
+
 	g_return_if_fail (GST_IS_PLAY (play));
 	if (time_nanos < 0LL){
 		play->seek_time = 0LL;
@@ -657,6 +658,7 @@ gst_play_seek_to_time (GstPlay *play, gint64 time_nanos)
 	}
 
 	/*g_print("doing seek to %lld\n", play->seek_time);*/
+        prev_state = GST_STATE(play->pipeline);
 	gst_element_set_state(play->pipeline, GST_STATE_PAUSED);
 
 	s_event = gst_event_new_seek (GST_FORMAT_TIME |
@@ -676,7 +678,7 @@ gst_play_seek_to_time (GstPlay *play, gint64 time_nanos)
 		play->time_nanos = gst_clock_get_time(play->clock);
 		g_signal_emit (G_OBJECT (play), gst_play_signals [TIME_TICK], 0, play->time_nanos);
 	}
-	gst_element_set_state(play->pipeline, GST_STATE_PLAYING);
+	gst_element_set_state(play->pipeline, prev_state);
 }
 
 void
