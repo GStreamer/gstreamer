@@ -1,3 +1,11 @@
+2004-01-11  Steve Baker  <steve@stevebaker.org>
+
+	* gst/effectv/gstaging.c: (gst_agingtv_get_type),
+	(gst_agingtv_base_init), (gst_agingtv_class_init),
+	(gst_agingtv_init), (gst_agingtv_setup), (gst_agingtv_rgb32),
+	(gst_agingtv_set_property), (gst_agingtv_get_property):
+        Port agingTV to videofilter
+
 2004-01-09  Julien MOUTTE <julien@moutte.net>
 
 	* ext/hermes/gstcolorspace.c: (gst_colorspace_chain):
