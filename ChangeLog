@@ -1,3 +1,11 @@
+2004-01-11  Arwed v. Merkatz <v.merkatz@gmx.net>
+
+	reviewed by: David Schleef <ds@schleef.org>
+
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstgamma.c: Gamma correction filter.  Modified
+	from the patch by ds to fit in with recent make_filter changes.
+
 2004-01-11  Julien MOUTTE  <julien@moutte.net>
 
 	* configure.ac: Adding examples/switch/Makefile
