@@ -19,32 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#include <gst/gst.h>
 #include "control.h"
-
-static void 
-gst_control_init_common()
-{
-	_gst_dpman_initialize ();
-	_gst_unitconv_initialize ();	
-}
 
 void
 gst_control_init (int *argc, char **argv[]) {
-	gst_control_init_common();
+	_gst_dpman_initialize ();
+	_gst_unitconv_initialize ();	
 }
-
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
-{
-	gst_control_init_common();
-	gst_plugin_set_longname (plugin, "Dynamic Parameters");
-	return TRUE;
-}
-
-GstPluginDesc plugin_desc = {
-	GST_VERSION_MAJOR,
-	GST_VERSION_MINOR,
-	"gstcontrol",
-	plugin_init
-};

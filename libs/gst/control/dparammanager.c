@@ -23,7 +23,7 @@
 #include <gst/gstelement.h>
 #include <gst/gstinfo.h>
 
-static GHashTable *_element_registry;
+static GHashTable *_element_registry = NULL;
 static gboolean _gst_dpman_init_done = FALSE;
 
 enum {

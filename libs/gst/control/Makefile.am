@@ -1,4 +1,4 @@
-librarydir = $(libdir)/gst
+librarydir = $(libdir)
 
 library_LTLIBRARIES = libgstcontrol.la
 
