@@ -206,7 +206,7 @@ gst_element_get_padtemplate_list
 gst_element_get_padtemplate_by_name
 gst_element_add_ghost_pad
 gst_element_remove_ghost_pad
-gst_element_request_pad
+gst_element_request_compatible_pad
 gst_element_request_pad_by_name
 gst_element_connect
 gst_element_disconnect

@@ -80,8 +80,8 @@ gst_media_play_get_type(void)
   return play_type;
 }
 
-static void 
-gst_media_play_class_init (GstMediaPlayClass *klass) 
+static void
+gst_media_play_class_init (GstMediaPlayClass *klass)
 {
   GtkObjectClass *object_class;
 
@@ -99,7 +99,7 @@ typedef struct {
 } connect_struct;
 
 /* we need more control here so... */
-static void 
+static void
 gst_media_play_connect_func (const gchar *handler_name,
                              GtkObject *object,
                              const gchar *signal_name,
@@ -122,8 +122,8 @@ gst_media_play_connect_func (const gchar *handler_name,
 }
 
 
-static void 
-gst_media_play_init(GstMediaPlay *mplay) 
+static void
+gst_media_play_init(GstMediaPlay *mplay)
 {
   GModule *symbols;
   connect_struct data;
@@ -144,7 +144,7 @@ gst_media_play_init(GstMediaPlay *mplay)
   {
     GtkArg arg;
     GtkRange *range;
-    
+
     arg.name = "adjustment";
     gtk_object_getv (GTK_OBJECT (mplay->slider), 1, &arg);
     range = GTK_RANGE (GTK_VALUE_POINTER (arg));
@@ -206,28 +206,28 @@ gst_media_play_init(GstMediaPlay *mplay)
 }
 
 GstMediaPlay *
-gst_media_play_new () 
+gst_media_play_new ()
 {
   return GST_MEDIA_PLAY (gtk_type_new (GST_TYPE_MEDIA_PLAY));
 }
 
-static void 
-gst_media_play_update_status_area (GstMediaPlay *play, 
-				   gulong current_time, 
+static void
+gst_media_play_update_status_area (GstMediaPlay *play,
+				   gulong current_time,
 				   gulong total_time)
 {
   gchar time[14];
 
-  sprintf(time, "%02lu:%02lu / %02lu:%02lu", 
+  sprintf(time, "%02lu:%02lu / %02lu:%02lu",
 	 current_time/60, current_time%60,
 	 total_time/60, total_time%60);
 
   gst_status_area_set_playtime (play->status, time);
 }
 
-void 
-gst_media_play_start_uri (GstMediaPlay *play, 
-		          const guchar *uri) 
+void
+gst_media_play_start_uri (GstMediaPlay *play,
+		          const guchar *uri)
 {
   GstPlayReturn ret;
 
@@ -241,7 +241,7 @@ gst_media_play_start_uri (GstMediaPlay *play,
       gtk_widget_set_sensitive (play->slider, FALSE);
     }
 
-    gtk_window_set_title (GTK_WINDOW (play->window), 
+    gtk_window_set_title (GTK_WINDOW (play->window),
 		          g_strconcat ( "Gstplay - ", uri, NULL));
 
     gst_play_play (play->play);
@@ -262,7 +262,7 @@ on_load_file_selected (GtkWidget *button,
 
   gchar *file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION(selector));
   gdk_threads_leave();
-  gst_media_play_start_uri (play, file_name); 
+  gst_media_play_start_uri (play, file_name);
   gdk_threads_enter();
 
   g_free (data);
@@ -297,10 +297,10 @@ on_open2_activate (GtkWidget *widget,
 }
 
 
-static void 
+static void
 gst_media_play_set_arg (GtkObject *object,
 		        GtkArg *arg,
-		        guint id) 
+		        guint id)
 {
   GstMediaPlay *play;
   play = GST_MEDIA_PLAY (object);
@@ -312,10 +312,10 @@ gst_media_play_set_arg (GtkObject *object,
   }
 }
 
-static void 
+static void
 gst_media_play_get_arg (GtkObject *object,
 		        GtkArg *arg,
-		        guint id) 
+		        guint id)
 {
   GstMediaPlay *play;
 
@@ -359,15 +359,15 @@ gst_media_play_state_changed (GstPlay *play,
   gdk_threads_leave ();
 }
 
-void 
-on_gst_media_play_destroy (GtkWidget *widget, 
+void
+on_gst_media_play_destroy (GtkWidget *widget,
 		           GstMediaPlay *mplay)
 {
   gst_main_quit ();
 }
 
-void 
-on_exit_menu_activate (GtkWidget *widget, 
+void
+on_exit_menu_activate (GtkWidget *widget,
 		       GstMediaPlay *mplay)
 {
   gdk_threads_leave ();
@@ -376,9 +376,9 @@ on_exit_menu_activate (GtkWidget *widget,
   gst_main_quit ();
 }
 
-gint 
-on_gst_media_play_delete_event (GtkWidget *widget, 
-		                GdkEvent *event, 
+gint
+on_gst_media_play_delete_event (GtkWidget *widget,
+		                GdkEvent *event,
 			        GstMediaPlay *mplay)
 {
   gdk_threads_leave ();
@@ -387,8 +387,8 @@ on_gst_media_play_delete_event (GtkWidget *widget,
   return FALSE;
 }
 
-void 
-on_extended1_activate (GtkCheckMenuItem *item, 
+void
+on_extended1_activate (GtkCheckMenuItem *item,
 		       GstMediaPlay *mplay)
 {
   gdk_threads_leave ();
@@ -464,9 +464,9 @@ on_toggle_stop_toggled (GtkToggleButton *togglebutton,
   update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
-static void 
-update_buttons (GstMediaPlay *mplay, 
-		GstPlayState state) 
+static void
+update_buttons (GstMediaPlay *mplay,
+		GstPlayState state)
 {
   gtk_signal_handler_block_by_func (GTK_OBJECT (mplay->play_button),
                          GTK_SIGNAL_FUNC (on_toggle_play_toggled),
@@ -503,10 +503,10 @@ update_buttons (GstMediaPlay *mplay,
 	                 mplay);
 }
 
-static void 
+static void
 update_slider (GstMediaPlay *mplay,
-	       GtkAdjustment *adjustment, 
-	       gfloat value) 
+	       GtkAdjustment *adjustment,
+	       gfloat value)
 {
   gtk_signal_handler_block_by_func (GTK_OBJECT (adjustment),
                          GTK_SIGNAL_FUNC (gst_media_play_slider_changed),

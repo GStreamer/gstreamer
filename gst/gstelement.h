@@ -74,11 +74,11 @@ static inline char *_gst_print_statename(int state) {
 
 // Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g>
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
-#define GST_STATE_NULL_TO_READY 	((GST_STATE_NULL<<8) | GST_STATE_READY)
-#define GST_STATE_READY_TO_PLAYING 	((GST_STATE_READY<<8) | GST_STATE_PLAYING)
+#define GST_STATE_NULL_TO_READY		((GST_STATE_NULL<<8) | GST_STATE_READY)
+#define GST_STATE_READY_TO_PLAYING	((GST_STATE_READY<<8) | GST_STATE_PLAYING)
 #define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<8) | GST_STATE_PAUSED)
 #define GST_STATE_PAUSED_TO_PLAYING	((GST_STATE_PAUSED<<8) | GST_STATE_PLAYING)
-#define GST_STATE_PLAYING_TO_READY 	((GST_STATE_PLAYING<<8) | GST_STATE_READY)
+#define GST_STATE_PLAYING_TO_READY	((GST_STATE_PLAYING<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
 
 #define GST_TYPE_ELEMENT \
@@ -155,20 +155,20 @@ struct _GstElementClass {
   GstElementFactory *elementfactory;
 
   /* signal callbacks */
-  void (*state_change) 	(GstElement *element,GstElementState state);
-  void (*new_pad) 	(GstElement *element,GstPad *pad);
+  void (*state_change)	(GstElement *element,GstElementState state);
+  void (*new_pad)	(GstElement *element,GstPad *pad);
   void (*new_ghost_pad) (GstElement *element,GstPad *pad);
-  void (*error) 	(GstElement *element,gchar *error);
+  void (*error)		(GstElement *element,gchar *error);
   void (*eos)		(GstElement *element);
 
   /* change the element state */
-  GstElementStateReturn (*change_state) 	(GstElement *element);
+  GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
-  GstPad* 		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ);
+  GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ);
 
   /* create or read XML representation of self */
-  xmlNodePtr	(*save_thyself) 	(GstElement *element, xmlNodePtr parent);
-  void 		(*restore_thyself) 	(GstElement *element, xmlNodePtr self, GHashTable *elements);
+  xmlNodePtr	(*save_thyself)		(GstElement *element, xmlNodePtr parent);
+  void		(*restore_thyself)	(GstElement *element, xmlNodePtr self, GHashTable *elements);
 };
 
 struct _GstElementDetails {
@@ -208,7 +208,7 @@ GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const guchar *name);
-void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, gchar *name);
+void			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, gchar *name);
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
 GstPad*			gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ);
@@ -241,29 +241,29 @@ GstElement*		gst_element_load_thyself	(xmlNodePtr parent, GHashTable *elements);
  **/
 GstElementFactory*	gst_elementfactory_new			(const gchar *name,GtkType type,
                                                                  GstElementDetails *details);
-void 			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
+void			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 
 GstElementFactory*	gst_elementfactory_find			(const gchar *name);
 GList*			gst_elementfactory_get_list		(void);
 
-void 			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory, 
-							 	 GstPadTemplate *templ);
+void			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory,
+								 GstPadTemplate *templ);
 
-gboolean		gst_elementfactory_can_src_caps 	(GstElementFactory *factory,
+gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
 								 GstCaps *caps);
-gboolean		gst_elementfactory_can_sink_caps 	(GstElementFactory *factory,
-							 	 GstCaps *caps);
-gboolean		gst_elementfactory_can_src_caps_list 	(GstElementFactory *factory,
+gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
+								 GstCaps *caps);
+gboolean		gst_elementfactory_can_src_caps_list	(GstElementFactory *factory,
 								 GList *caps);
-gboolean		gst_elementfactory_can_sink_caps_list 	(GstElementFactory *factory,
-							 	 GList *caps);
+gboolean		gst_elementfactory_can_sink_caps_list	(GstElementFactory *factory,
+								 GList *caps);
 
 GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
-                                      				 const gchar *name);
+								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
 
-xmlNodePtr 		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent); 
+xmlNodePtr		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent);
 GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);
 
 #ifdef __cplusplus
@@ -271,5 +271,5 @@ GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);
 #endif /* __cplusplus */
 
 
-#endif /* __GST_ELEMENT_H__ */     
+#endif /* __GST_ELEMENT_H__ */
 

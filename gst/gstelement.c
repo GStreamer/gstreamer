@@ -403,30 +403,12 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
   return newtempl;
 }
 
-/**
- * gst_element_request_pad:
- * @element: element to request a new pad from
- * @templ: the padtemplate specifying the pad to connect to.
- *
- * Request a new pad from the element. The template will
- * be used to decide what type of pad to create. This function
- * is typically used for elements with a padtemplate with presence
- * GST_PAD_REQUEST.
- *
- * Returns: the new pad that was created, NULL if no suitable pad can be
- * created.
- */
 static GstPad*
 gst_element_request_pad (GstElement *element, GstPadTemplate *templ)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (templ != NULL, NULL);
-
-  /* call the state change function so it can set the state */
   oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
   if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad)(element, templ);

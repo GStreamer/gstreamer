@@ -327,7 +327,7 @@ circumstances.
 @pad: 
 
 
-<!-- ##### FUNCTION gst_element_request_pad ##### -->
+<!-- ##### FUNCTION gst_element_request_compatible_pad ##### -->
 <para>
 
 </para>
@@ -335,8 +335,6 @@ circumstances.
 @element: 
 @templ: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@temp: 
 
 
 <!-- ##### FUNCTION gst_element_request_pad_by_name ##### -->

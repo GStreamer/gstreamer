@@ -217,19 +217,19 @@ the stream.
 </para>
 
 
-<!-- ##### MACRO GST_SINESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>
@@ -1380,6 +1380,16 @@ The end point of a filter graph
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_element_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+@temp: 
 
 <!-- ##### FUNCTION gst_pad_set_caps ##### -->
 <para>
