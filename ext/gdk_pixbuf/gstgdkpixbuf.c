@@ -107,6 +107,7 @@ static void	gst_gdk_pixbuf_get_property(GObject *object, guint prop_id,
 						 GParamSpec *pspec);
 
 static void	gst_gdk_pixbuf_chain	(GstPad *pad, GstData *_data);
+static void     gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore);
 
 static GstElementClass *parent_class = NULL;
 
@@ -365,6 +366,38 @@ gst_gdk_pixbuf_get_property (GObject *object, guint prop_id,
   }
 }
 
+#define GST_GDK_PIXBUF_TYPE_FIND_SIZE 1024
+
+static void
+gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
+{
+  guint8 *data;
+  GdkPixbufLoader *pixbuf_loader;
+  GdkPixbufFormat *format;
+  GError *error = NULL;
+
+  data = gst_type_find_peek (tf, 0, GST_GDK_PIXBUF_TYPE_FIND_SIZE);
+  if (data == NULL) return;
+
+  GST_DEBUG ("gst_gdk_pixbuf_type_find");
+
+  pixbuf_loader = gdk_pixbuf_loader_new();
+  
+  gdk_pixbuf_loader_write (pixbuf_loader, data, GST_GDK_PIXBUF_TYPE_FIND_SIZE,
+      &error);
+  
+  format = gdk_pixbuf_loader_get_format (pixbuf_loader);
+
+  if (format != NULL) {
+    gchar **mlist = gdk_pixbuf_format_get_mime_types(format);
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+        gst_caps_new ("gdk_pixbuf_type_find", mlist[0], NULL));
+  }
+
+  g_object_unref (G_OBJECT (pixbuf_loader));
+}
+
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
  * register the element factories and pad templates
@@ -385,6 +418,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                         gst_gdk_pixbuf_sink_factory ());
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  gst_type_find_factory_register (plugin, "image/*", GST_ELEMENT_RANK_MARGINAL,
+      gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
 
   /* plugin initialisation succeeded */
   return TRUE;
