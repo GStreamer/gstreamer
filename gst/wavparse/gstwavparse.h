@@ -85,46 +85,6 @@ struct _GstWavParseClass {
 
 GType gst_wavparse_get_type(void);
 
-typedef struct _gst_riff_fmt {
-  gint16 wFormatTag;
-  guint16 wChannels;
-  guint32 dwSamplesPerSec;
-  guint32 dwAvgBytesPerSec;
-  guint16 wBlockAlign;
-  guint16 wBitsPerSample;
-} gst_riff_fmt;
-  
-  
-/**** from public Microsoft RIFF docs ******/
-#define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
-#define GST_RIFF_WAVE_FORMAT_PCM            (0x0001)
-#define GST_RIFF_WAVE_FORMAT_ADPCM          (0x0002)
-#define GST_RIFF_WAVE_FORMAT_IBM_CVSD       (0x0005)
-#define GST_RIFF_WAVE_FORMAT_ALAW           (0x0006)
-#define GST_RIFF_WAVE_FORMAT_MULAW          (0x0007)
-#define GST_RIFF_WAVE_FORMAT_OKI_ADPCM      (0x0010)
-#define GST_RIFF_WAVE_FORMAT_DVI_ADPCM      (0x0011)
-#define GST_RIFF_WAVE_FORMAT_DIGISTD        (0x0015)
-#define GST_RIFF_WAVE_FORMAT_DIGIFIX        (0x0016)
-#define GST_RIFF_WAVE_FORMAT_YAMAHA_ADPCM   (0x0020)
-#define GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH (0x0022)
-#define GST_RIFF_WAVE_FORMAT_GSM610         (0x0031)
-#define GST_RIFF_WAVE_FORMAT_MSN            (0x0032)
-#define GST_RIFF_WAVE_FORMAT_MPEGL12        (0x0050)
-#define GST_RIFF_WAVE_FORMAT_MPEGL3         (0x0055)
-#define GST_RIFF_IBM_FORMAT_MULAW           (0x0101)
-#define GST_RIFF_IBM_FORMAT_ALAW            (0x0102)
-#define GST_RIFF_IBM_FORMAT_ADPCM           (0x0103)
-#define GST_RIFF_WAVE_FORMAT_WMAV1          (0x0160)
-#define GST_RIFF_WAVE_FORMAT_WMAV2          (0x0161)
-#define GST_RIFF_WAVE_FORMAT_WMAV3          (0x0162)
-#define GST_RIFF_WAVE_FORMAT_VORBIS1        (0x674f)
-#define GST_RIFF_WAVE_FORMAT_VORBIS2        (0x6750)
-#define GST_RIFF_WAVE_FORMAT_VORBIS3        (0x6751)
-#define GST_RIFF_WAVE_FORMAT_VORBIS1PLUS    (0x676f)
-#define GST_RIFF_WAVE_FORMAT_VORBIS2PLUS    (0x6770)
-#define GST_RIFF_WAVE_FORMAT_VORBIS3PLUS    (0x6771)
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
