@@ -83,6 +83,7 @@ struct _GstXContext {
 struct _GstXWindow {
   Window win;
   gint width, height;
+  gboolean internal;
   GC gc;
 };
 
@@ -102,8 +103,6 @@ struct _GstXImageSink {
   /* Our element stuff */
   GstVideoSink videosink;
 
-  XID embed_into;
-  
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXImage *ximage;
@@ -114,6 +113,8 @@ struct _GstXImageSink {
   /* Unused */
   gint pixel_width, pixel_height;
  
+  GstClockTime time;
+  
   GMutex *pool_lock;
   GSList *image_pool;
 };
