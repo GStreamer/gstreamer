@@ -31,7 +31,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_create(srcfactory,"src");
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
   pipe = gst_elementfactory_create(pipefactory,"pipe");
   g_return_val_if_fail(pipe != NULL, -1);
@@ -39,10 +39,10 @@ int main(int argc,char *argv[]) {
   g_return_val_if_fail(sink != NULL, -1);
 
   fd = open(argv[2],O_CREAT|O_RDWR|O_TRUNC);
-  gtk_object_set(GTK_OBJECT(sink),"fd",fd,NULL);
+  g_object_set(G_OBJECT(sink),"fd",fd,NULL);
 
-  gtk_signal_connect(GTK_OBJECT(src),"eos",
-	                       GTK_SIGNAL_FUNC(eof),NULL);
+  g_signal_connectc(G_OBJECT(src),"eos",
+	                       G_CALLBACK(eof),NULL,FALSE);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(pipe));

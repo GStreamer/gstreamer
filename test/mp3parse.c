@@ -35,7 +35,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_create(srcfactory,"src");
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1]);
   g_print("should be using file '%s'\n",argv[1]);
   parse = gst_elementfactory_create(parsefactory,"parse");
   g_return_val_if_fail(parse != NULL, -1);
@@ -46,8 +46,8 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
 
-  gtk_signal_connect(GTK_OBJECT(src),"eos",
-                      GTK_SIGNAL_FUNC(eof),NULL);
+  g_signal_connectc(G_OBJECT(src),"eos",
+                    G_CALLBACK(eof),NULL, FALSE);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));

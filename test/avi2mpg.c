@@ -40,7 +40,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(audio_thread != NULL);
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_encode));
 
-    gtk_object_set(GTK_OBJECT(mux),"audio","00",NULL);
+    g_object_set(G_OBJECT(mux),"audio","00",NULL);
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -50,7 +50,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",BUFFER,NULL);
+    g_object_set(G_OBJECT(audio_queue),"max_level",BUFFER,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -60,7 +60,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
@@ -74,17 +74,17 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(smooth != NULL);
     median = gst_elementfactory_make("median","median");
     g_return_if_fail(median != NULL);
-    gtk_object_set(GTK_OBJECT(median),"filtersize",5,NULL);
-    gtk_object_set(GTK_OBJECT(median),"active",TRUE,NULL);
+    g_object_set(G_OBJECT(median),"filtersize",5,NULL);
+    g_object_set(G_OBJECT(median),"active",TRUE,NULL);
 
-    gtk_object_set(GTK_OBJECT(smooth),"filtersize",16,NULL);
-    gtk_object_set(GTK_OBJECT(smooth),"tolerance",16,NULL);
-    gtk_object_set(GTK_OBJECT(smooth),"active",FALSE,NULL);
+    g_object_set(G_OBJECT(smooth),"filtersize",16,NULL);
+    g_object_set(G_OBJECT(smooth),"tolerance",16,NULL);
+    g_object_set(G_OBJECT(smooth),"active",FALSE,NULL);
 
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);
     
-    gtk_object_set(GTK_OBJECT(mux),"video","00",NULL);
+    g_object_set(G_OBJECT(mux),"video","00",NULL);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
@@ -105,7 +105,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
-    gtk_object_set(GTK_OBJECT(video_queue),"max_level",BUFFER,NULL);
+    g_object_set(G_OBJECT(video_queue),"max_level",BUFFER,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
     gst_pad_connect(pad,
@@ -114,7 +114,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
                     gst_element_get_pad(video_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(video_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
   }
@@ -139,7 +139,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_make("disksrc","src");
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
   parse = gst_elementfactory_make("avidecoder","parse");
   g_return_val_if_fail(parse != NULL, -1);
@@ -153,18 +153,18 @@ int main(int argc,char *argv[]) {
   g_return_val_if_fail(fdsinkfactory != NULL, -1);
   fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
   g_return_val_if_fail(fdsink != NULL, -1);
-  gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
+  g_object_set(G_OBJECT(fdsink),"fd",fd,NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(mux));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(fdsink));
 
-  gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
-                      GTK_SIGNAL_FUNC(new_pad_created),pipeline);
+  g_signal_connectc(G_OBJECT(parse),"new_pad",
+                      G_CALLBACK(new_pad_created),pipeline, FALSE);
 
-  gtk_signal_connect(GTK_OBJECT(src),"eos",
-                      GTK_SIGNAL_FUNC(eof),NULL);
+  g_signal_connectc(G_OBJECT(src),"eos",
+                      G_CALLBACK(eof),NULL, FALSE);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));
@@ -178,9 +178,7 @@ int main(int argc,char *argv[]) {
 
   g_idle_add(idle_func,pipeline);
 
-  gdk_threads_enter();
-  gtk_main();
-  gdk_threads_leave();
+  //gtk_main();
 
   return 0;
 }

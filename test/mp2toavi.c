@@ -18,7 +18,7 @@ void frame_encoded(GstElement *element, gint framenum, gpointer data) {
   gulong frame_size;
   static gulong total = 0;
 
-  frame_size = gst_util_get_long_arg(GTK_OBJECT(element),"last_frame_size");
+  frame_size = gst_util_get_long_arg(G_OBJECT(element),"last_frame_size");
 
   total+=frame_size;
 
@@ -45,17 +45,17 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     // construct internal pipeline elements
     parse_audio = gst_elementfactory_make("ac3parse","parse_audio");
     g_return_if_fail(parse_audio != NULL);
-    gtk_object_set(GTK_OBJECT(parse_audio),"skip", 15, NULL);
+    g_object_set(G_OBJECT(parse_audio),"skip", 15, NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
     audio_resample = gst_elementfactory_make("audioscale","audioscale");
     g_return_if_fail(audio_resample != NULL);
-    gtk_object_set(GTK_OBJECT(audio_resample),"frequency", 44100, NULL);
+    g_object_set(G_OBJECT(audio_resample),"frequency", 44100, NULL);
 
     audio_encode = gst_elementfactory_make("mpegaudio","audio_encode");
     //audio_encode = gst_elementfactory_make("pipefilter","audio_encode");
     g_return_if_fail(audio_encode != NULL);
-    //gtk_object_set(GTK_OBJECT(audio_encode),"command", "lame -x - -", NULL);
+    //g_object_set(G_OBJECT(audio_encode),"command", "lame -x - -", NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
@@ -65,7 +65,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_resample));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_encode));
 
-    gtk_object_set(GTK_OBJECT(mux),"audio","00",NULL);
+    g_object_set(G_OBJECT(mux),"audio","00",NULL);
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -81,7 +81,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",1,NULL);
+    g_object_set(G_OBJECT(audio_queue),"max_level",1,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -90,7 +90,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
                     gst_element_get_pad(audio_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
   } else if (strncmp(gst_pad_get_name(pad), "subtitle_stream_4", 17) == 0) {
@@ -125,7 +125,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",1,NULL);
+    g_object_set(G_OBJECT(audio_queue),"max_level",1,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -134,7 +134,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
                     gst_element_get_pad(audio_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
@@ -157,27 +157,27 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(merge_subtitles != NULL);
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
-    //gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 288,NULL);
-    gtk_object_set(GTK_OBJECT(videoscale),"width",640, "height", 480,NULL);
+    //g_object_set(G_OBJECT(videoscale),"width",352, "height", 288,NULL);
+    g_object_set(G_OBJECT(videoscale),"width",640, "height", 480,NULL);
     median = gst_elementfactory_make("median","median");
     g_return_if_fail(median != NULL);
-    gtk_object_set(GTK_OBJECT(median),"filtersize",9,NULL);
-    gtk_object_set(GTK_OBJECT(median),"active",TRUE,NULL);
+    g_object_set(G_OBJECT(median),"filtersize",9,NULL);
+    g_object_set(G_OBJECT(median),"active",TRUE,NULL);
     smooth = gst_elementfactory_make("smooth","smooth");
     g_return_if_fail(smooth != NULL);
-    gtk_object_set(GTK_OBJECT(smooth),"filtersize",5,NULL);
-    gtk_object_set(GTK_OBJECT(smooth),"tolerance",9,NULL);
-    gtk_object_set(GTK_OBJECT(smooth),"active",FALSE,NULL);
+    g_object_set(G_OBJECT(smooth),"filtersize",5,NULL);
+    g_object_set(G_OBJECT(smooth),"tolerance",9,NULL);
+    g_object_set(G_OBJECT(smooth),"active",FALSE,NULL);
     encode = gst_elementfactory_make("winenc","encode");
     g_return_if_fail(encode != NULL);
-    gtk_signal_connect(GTK_OBJECT(encode),"frame_encoded",GTK_SIGNAL_FUNC(frame_encoded),NULL);
-    gtk_object_set(GTK_OBJECT(encode),"bitrate",800*4,NULL);
-    gtk_object_set(GTK_OBJECT(encode),"quality",10000,NULL);
-    //gtk_object_set(GTK_OBJECT(encode),"compression",NULL,NULL);
+    g_signal_connectc(G_OBJECT(encode),"frame_encoded",G_CALLBACK(frame_encoded),NULL,FALSE);
+    g_object_set(G_OBJECT(encode),"bitrate",800*4,NULL);
+    g_object_set(G_OBJECT(encode),"quality",10000,NULL);
+    //g_object_set(G_OBJECT(encode),"compression",NULL,NULL);
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
-    //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
+    //g_object_set(G_OBJECT(show),"width",640, "height", 480,NULL);
 
-    gtk_object_set(GTK_OBJECT(mux),"video","00:DIV3",NULL);
+    g_object_set(G_OBJECT(mux),"video","00:DIV3",NULL);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
@@ -210,7 +210,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
-    gtk_object_set(GTK_OBJECT(video_queue),"max_level",1,NULL);
+    g_object_set(G_OBJECT(video_queue),"max_level",1,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
     gst_pad_connect(pad,
@@ -219,7 +219,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
                     gst_element_get_pad(video_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(video_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
   }
@@ -249,7 +249,7 @@ int main(int argc,char *argv[]) {
     src = gst_elementfactory_make("disksrc","src");
 
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
 
   g_print("should be using output file '%s'\n",argv[2]);
@@ -264,16 +264,16 @@ int main(int argc,char *argv[]) {
   g_return_val_if_fail(fdsinkfactory != NULL, -1);
   fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
   g_return_val_if_fail(fdsink != NULL, -1);
-  gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
+  g_object_set(G_OBJECT(fdsink),"fd",fd,NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(mux));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(fdsink));
 
-  gtk_signal_connect(GTK_OBJECT(parse),"new_pad",mp2tomp1, pipeline);
+  g_signal_connectc(G_OBJECT(parse),"new_pad",mp2tomp1, pipeline, FALSE);
 
-  gtk_signal_connect(GTK_OBJECT(src),"eos",GTK_SIGNAL_FUNC(eof),NULL);
+  g_signal_connectc(G_OBJECT(src),"eos",G_CALLBACK(eof),NULL, FALSE);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));

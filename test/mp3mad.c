@@ -21,7 +21,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_create(srcfactory,"src");
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
   decode = gst_elementfactory_create(decodefactory,"decode");
   g_return_val_if_fail(decode != NULL, -1);

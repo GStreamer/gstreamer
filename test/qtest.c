@@ -36,7 +36,7 @@ int main(int argc,char *argv[]) {
 
   srcfactory = gst_elementfactory_find("disksrc");
   src = gst_elementfactory_create(srcfactory,"src");
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   gst_bin_add(GST_BIN(decodethread),GST_ELEMENT(src));
 
   _gst_plugin_spew = TRUE;
@@ -77,12 +77,12 @@ int main(int argc,char *argv[]) {
 //  gst_pad_connect(gst_element_get_pad(queue,"src"),
                   gst_element_get_pad(playthread,"sink"));
 
-  gtk_signal_connect(GTK_OBJECT(src),"eof",
-                     GTK_SIGNAL_FUNC(eof),NULL);
+  g_signal_connectc(G_OBJECT(src),"eof",
+                     G_CALLBACK(eof),NULL, FALSE);
 
   g_print("\nsetting up the decode thread to *NOT* thread\n");
 //  gtk_object_set(GTK_OBJECT(decodethread),"create_thread",TRUE,NULL);
-  gtk_object_set(GTK_OBJECT(playthread),"create_thread",FALSE,NULL);
+  g_object_set(G_OBJECT(playthread),"create_thread",FALSE,NULL);
 
   g_print("\neverything's built, setting it up to be runnable\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
