@@ -241,13 +241,12 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
   gst_multifdsink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass, client_added),
-      NULL, NULL, gst_tcp_marshal_VOID__STRING_UINT, G_TYPE_NONE, 2,
-      G_TYPE_STRING, G_TYPE_UINT);
+      NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
   gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass,
-          client_removed), NULL, NULL, gst_tcp_marshal_VOID__STRING_UINT,
-      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_UINT);
+          client_removed), NULL, NULL, gst_tcp_marshal_VOID__INT,
+      G_TYPE_NONE, 1, G_TYPE_INT);
 
   gobject_class->set_property = gst_multifdsink_set_property;
   gobject_class->get_property = gst_multifdsink_get_property;
@@ -332,7 +331,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   g_mutex_unlock (sink->clientslock);
 
   g_signal_emit (G_OBJECT (sink),
-      gst_multifdsink_signals[SIGNAL_CLIENT_ADDED], 0, NULL, fd);
+      gst_multifdsink_signals[SIGNAL_CLIENT_ADDED], 0, fd);
 }
 
 void
@@ -434,7 +433,7 @@ gst_multifdsink_client_remove (GstMultiFdSink * sink, GstTCPClient * client)
   client->connect_interval = client->disconnect_time = client->connect_time;
 
   g_signal_emit (G_OBJECT (sink),
-      gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED], 0, NULL, fd);
+      gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED], 0, fd);
 
   sink->clients = g_list_remove (sink->clients, client);
 
