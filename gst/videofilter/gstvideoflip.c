@@ -35,11 +35,8 @@
 static GstElementDetails videoflip_details = {
   "Video flipper",
   "Filter/Video",
-  "LGPL",
   "Flips and rotates video",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2003",
+  "David Schleef <ds@schleef.org>"
 };
 
 /* GstVideoflip signals and args */
@@ -55,6 +52,7 @@ enum {
 };
 
 static void	gst_videoflip_class_init	(GstVideoflipClass *klass);
+static void	gst_videoflip_base_init		(GstVideoflipClass *klass);
 static void	gst_videoflip_init		(GstVideoflip *videoflip);
 
 static void	gst_videoflip_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -98,7 +96,8 @@ gst_videoflip_get_type (void)
 
   if (!videoflip_type) {
     static const GTypeInfo videoflip_info = {
-      sizeof(GstVideoflipClass),      NULL,
+      sizeof(GstVideoflipClass),
+      (GBaseInitFunc)gst_videoflip_base_init,
       NULL,
       (GClassInitFunc)gst_videoflip_class_init,
       NULL,
@@ -118,6 +117,21 @@ static GstVideofilterFormat gst_videoflip_formats[] = {
   { "I420", 12, gst_videoflip_planar411, },
   { "IYUV", 12, gst_videoflip_planar411, },
 };
+
+static GstPadTemplate *gst_videoflip_sink_template_factory (void);
+static GstPadTemplate *gst_videoflip_src_template_factory (void);
+
+static void
+gst_videoflip_base_init (GstVideoflipClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (gst_videoflip_sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (gst_videoflip_src_template_factory));
+  gst_element_class_set_details (element_class, &videoflip_details);
+}
 
 static void
 gst_videoflip_class_init (GstVideoflipClass *klass)
@@ -256,32 +270,27 @@ gst_videoflip_get_property (GObject *object, guint prop_id, GValue *value, GPara
   }
 }
 
-static gboolean plugin_init (GModule *module, GstPlugin *plugin)
+static gboolean plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if(!gst_library_load("gstvideofilter"))
     return FALSE;
 
-  /* create an elementfactory for the videoflip element */
-  factory = gst_element_factory_new("videoflip",GST_TYPE_VIDEOFLIP,
-                                   &videoflip_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videoflip_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videoflip_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "videoflip",
+			      GST_RANK_NONE, GST_TYPE_VIDEOFLIP);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videoflip",
-  plugin_init
-};
+  "Flips video",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 
 static void gst_videoflip_flip(GstVideoflip *videoflip, unsigned char *dest,

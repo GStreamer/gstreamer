@@ -29,11 +29,8 @@
 static GstElementDetails videobalance_details = {
   "Video Balance control",
   "Filter/Video",
-  "LGPL",
   "Adjusts brightness, contrast, hue, saturation on a video stream",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2003",
+  "David Schleef <ds@schleef.org>"
 };
 
 /* GstVideobalance signals and args */
@@ -52,6 +49,7 @@ enum {
 };
 
 static void	gst_videobalance_class_init	(GstVideobalanceClass *klass);
+static void	gst_videobalance_base_init	(GstVideobalanceClass *klass);
 static void	gst_videobalance_init		(GstVideobalance *videobalance);
 
 static void	gst_videobalance_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -71,7 +69,8 @@ gst_videobalance_get_type (void)
 
   if (!videobalance_type) {
     static const GTypeInfo videobalance_info = {
-      sizeof(GstVideobalanceClass),      NULL,
+      sizeof(GstVideobalanceClass),
+      (GBaseInitFunc)gst_videobalance_base_init,
       NULL,
       (GClassInitFunc)gst_videobalance_class_init,
       NULL,
@@ -88,6 +87,21 @@ gst_videobalance_get_type (void)
 static GstVideofilterFormat gst_videobalance_formats[] = {
   { "I420", 12, gst_videobalance_planar411, },
 };
+
+static GstPadTemplate *gst_videobalance_sink_template_factory (void);
+static GstPadTemplate *gst_videobalance_src_template_factory (void);
+
+static void
+gst_videobalance_base_init (GstVideobalanceClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (gst_videobalance_sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (gst_videobalance_src_template_factory));
+  gst_element_class_set_details (element_class, &videobalance_details);
+}
 
 static void
 gst_videobalance_class_init (GstVideobalanceClass *klass)
@@ -255,32 +269,27 @@ gst_videobalance_get_property (GObject *object, guint prop_id, GValue *value, GP
   }
 }
 
-static gboolean plugin_init (GModule *module, GstPlugin *plugin)
+static gboolean plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if(!gst_library_load("gstvideofilter"))
     return FALSE;
 
-  /* create an elementfactory for the videobalance element */
-  factory = gst_element_factory_new("videobalance",GST_TYPE_VIDEOBALANCE,
-                                   &videobalance_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videobalance_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videobalance_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "videobalance",
+			      GST_RANK_NONE, GST_TYPE_VIDEOBALANCE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videobalance",
-  plugin_init
-};
+  "Changes hue, saturation, brightness etc. on video images",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 static void gst_videobalance_setup(GstVideofilter *videofilter)
 {

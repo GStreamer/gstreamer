@@ -29,11 +29,8 @@
 static GstElementDetails videofilter_details = {
   "Video scaler",
   "Filter/Video",
-  "LGPL",
   "Resizes video",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2003",
+  "David Schleef <ds@schleef.org>"
 };
 #endif
 
@@ -49,7 +46,7 @@ enum {
   /* FILL ME */
 };
 
-static void gst_videofilter_base_init (GstVideofilterClass *klass);
+static void     gst_videofilter_base_init       (GstVideofilterClass *klass);
 static void	gst_videofilter_class_init	(GstVideofilterClass *klass);
 static void	gst_videofilter_init		(GstVideofilter *videofilter);
 
@@ -88,6 +85,16 @@ gst_videofilter_get_type (void)
 static void gst_videofilter_base_init (GstVideofilterClass *klass)
 {
   klass->formats = g_ptr_array_new();
+
+#if 0
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (gst_videofilter_sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (gst_videofilter_src_template_factory));
+  gst_element_class_set_details (element_class, &videofilter_details);
+#endif
 }
 
 static void gst_videofilter_class_init (GstVideofilterClass *klass)
@@ -565,32 +572,25 @@ void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
 #if 0
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the videofilter element */
-  factory = gst_element_factory_new("videofilter",GST_TYPE_VIDEOFILTER,
-                                   &videofilter_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* FIXME: we need to init the class before we can call the
-   * pad template factories */
-  gst_element_factory_add_pad_template (factory,
-      GST_PAD_TEMPLATE_GET (gst_videofilter_sink_template_factory));
-  gst_element_factory_add_pad_template (factory,
-      GST_PAD_TEMPLATE_GET (gst_videofilter_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  return gst_element_register(plugin, "videofilter",
+			      GST_RANK_NONE, GST_TYPE_VIDEOFILTER);
 #endif
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstvideofilter",
-  plugin_init
-};
+  "Video filter parent class",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
