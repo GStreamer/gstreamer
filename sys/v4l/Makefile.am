@@ -17,7 +17,9 @@ noinst_HEADERS = gstv4lelement.h v4l_calls.h \
 		gstv4lsrc.h v4lsrc_calls.h \
 		gstv4lmjpegsrc.h v4lmjpegsrc_calls.h \
 		gstv4lmjpegsink.h v4lmjpegsink_calls.h \
-		videodev_mjpeg.h gstv4lelement-marshal.h
+		videodev_mjpeg.h gstv4lelement-marshal.h \
+		gstv4lcolorbalance.h gstv4ltuner.h \
+		gstv4lxoverlay.h
 
 EXTRA_libgstvideo4linux_la_SOURCES = \
 	gstv4lelement-marshal.list
@@ -46,3 +48,5 @@ dist-hook:
 distclean-local:
 	rm -f $(top_builddir)/src/element/gstv4lelement-marshal.c
 	rm -f $(top_builddir)/src/element/gstv4lelement-marshal.h
+
+
