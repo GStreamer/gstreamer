@@ -40,6 +40,7 @@
 <!ENTITY OTHER_MANAGER        SYSTEM "other-manager.xml">
 
 <!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix-checklist.xml">
+<!ENTITY APPENDIX_LICENSING   SYSTEM "appendix-licensing.xml">
 <!ENTITY APPENDIX_PYTHON      SYSTEM "appendix-python.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
@@ -186,6 +187,7 @@
     </partintro>
 
       &APPENDIX_CHECKLIST;
+      &APPENDIX_LICENSING;
       &APPENDIX_PYTHON;
   </part>
 
