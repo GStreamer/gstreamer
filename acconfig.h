@@ -1,0 +1,11 @@
+#undef PLUGINS_DIR
+#undef PLUGINS_SRCDIR
+#undef PLUGINS_USE_SRCDIR
+
+#undef HAVE_LIBGHTTP
+#undef HAVE_LIBXML
+#undef HAVE_LIBMMX
+
+#undef HAVE_ATOMIC_H
+
+#undef DEBUG_ENABLED

@@ -1,0 +1,7 @@
+This is gnome-streamer, a framework for streaming media in GNOME.  The
+fundamental design comes from the video pipeline at Oregon Graduate
+Institute, as well as some ideas from DirectX.  It's based on plug-ins
+that will provide the various codec and other functionality.  The
+interface hopefully is generic enough for various companies (ahem, Apple)
+to release binary codecs for Linux, until such time as they get a clue and
+release the source.

@@ -1,0 +1,29 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define if you need to in order for stat and other things to work.  */
+#undef _POSIX_SOURCE
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+#undef PLUGINS_DIR
+#undef PLUGINS_SRCDIR
+#undef PLUGINS_USE_SRCDIR
+
+#undef HAVE_LIBGHTTP
+#undef HAVE_LIBXML
+#undef HAVE_LIBMMX
+
+#undef HAVE_ATOMIC_H
+
+#undef DEBUG_ENABLED
+
+/* Define if you have the <asm/atomic.h> header file.  */
+#undef HAVE_ASM_ATOMIC_H
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+
