@@ -8,10 +8,10 @@ libglade_subdir=
 endif
 
 # These are the subdirs which might get used.
-SUBDIRS = gst libs plugins . test $(libglade_subdir) tools docs # tests
+SUBDIRS = include gst libs plugins . test $(libglade_subdir) tools docs # tests
 
 # These are all the possible subdirs
-DIST_SUBDIRS = gst libs plugins . gstplay test editor tools docs tests
+DIST_SUBDIRS = include gst libs plugins . gstplay test editor tools docs tests
 
 bin_SCRIPTS = gstreamer-config
 

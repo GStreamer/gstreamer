@@ -419,6 +419,8 @@ dnl # Make the output files #
 dnl #########################
 
 AC_OUTPUT([Makefile
+include/Makefile
+include/wine/Makefile
 gst/Makefile
 gst/types/Makefile
 gst/meta/Makefile
