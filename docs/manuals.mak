@@ -85,7 +85,7 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SOURCES)
 	@for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done
 	@for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done
 	@cp ../version.entities $(BUILDDIR)
-	@cp $(top_srcdir)/manual/url.entities $(BUILDDIR)
+	@cp $(top_srcdir)/docs/url.entities $(BUILDDIR)
 
 html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@make check-local
