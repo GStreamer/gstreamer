@@ -771,6 +771,13 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 	structure = (GstStructure*)self->obj;
 	key = PyString_AsString(py_key);
 	if (py_value != NULL) {
+	    if (PyString_Check(py_value))
+		gst_structure_set(structure, key, G_TYPE_STRING, PyString_AsString(py_value), NULL);
+	    else if (PyInt_Check(py_value))
+		gst_structure_set(structure, key, G_TYPE_INT, PyInt_AsLong(py_value), NULL);
+	    else if (PyFloat_Check(py_value))
+		gst_structure_set(structure, key, G_TYPE_DOUBLE, PyFloat_AsDouble(py_value), NULL);
+#if 0	    
 	    g_value_init(&value, g_type_from_name("PyObject"));
 	    if (pyg_value_from_pyobject(&value, py_value)) {
 		PyErr_SetString(PyExc_TypeError, "can't convert value");
@@ -779,6 +786,7 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 	    
 	    gst_structure_set_value(structure, key, &value);
 	    g_value_unset(&value);
+#endif	    
 	} else {
 	    gst_structure_remove_field(structure, key);
 	}
