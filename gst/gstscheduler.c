@@ -1315,11 +1315,13 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
         while (elements) {
           entry = GST_ELEMENT(elements->data);
           elements = g_list_next(elements);
-          if (GST_FLAG_IS_SET(entry,GST_ELEMENT_DECOUPLED))
+          if (GST_FLAG_IS_SET(entry,GST_ELEMENT_DECOUPLED)) {
             GST_DEBUG(GST_CAT_SCHEDULING,"entry \"%s\" is DECOUPLED, skipping\n",GST_ELEMENT_NAME(entry));
-          else if (GST_FLAG_IS_SET(entry,GST_ELEMENT_NO_ENTRY))
+            entry = NULL;
+          } else if (GST_FLAG_IS_SET(entry,GST_ELEMENT_NO_ENTRY)) {
             GST_DEBUG(GST_CAT_SCHEDULING,"entry \"%s\" is not valid, skipping\n",GST_ELEMENT_NAME(entry));
-          else
+            entry = NULL;
+          } else
             break;
         }
         if (entry) {
@@ -1342,7 +1344,7 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
           }
 
         } else {
-          GST_INFO (GST_CAT_DATAFLOW,"no entry into chain!");
+          GST_INFO (GST_CAT_DATAFLOW,"NO ENTRY INTO CHAIN!");
         }
       } else {
         GST_INFO (GST_CAT_DATAFLOW,"no entry into chain!");
