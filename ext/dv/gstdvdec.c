@@ -1,6 +1,4 @@
-//#define RGB
-
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -26,15 +24,10 @@
  */
 #include "gstdvdec.h"
 
-#define NTSC
-
-#ifdef NTSC
-#  define HEIGHT 480
-#  define BUFFER 120000
-#else
-#  define HEIGHT 576
-#  define BUFFER 144000
-#endif
+#define NTSC_HEIGHT 480
+#define NTSC_BUFFER 120000
+#define PAL_HEIGHT 576
+#define PAL_BUFFER 144000
 
 /* The ElementDetails structure gives a human-readable description
  * of the plugin, as well as author and version data.
@@ -44,9 +37,11 @@ static GstElementDetails dvdec_details = {
   "Decoder/DV",
   "Uses libdv to decode DV video (libdv.sourceforge.net)",
   VERSION,
-  "asdfasdf",
-  "(C) 2001",
+  "Erik Walthinsen <omega@cse.ogi.edu>\n"
+  "Wim Taymans <wim.taymans@tvd.be>",
+  "(C) 2001-2002",
 };
+
 
 /* These are the signals that this element can fire.  They are zero-
  * based because the numbers themselves are private to the object.
@@ -70,7 +65,7 @@ enum {
  * can have.  They can be quite complex, but for this dvdec plugin
  * they are rather simple.
  */
-GST_PADTEMPLATE_FACTORY ( sink_temp,
+GST_PADTEMPLATE_FACTORY (sink_temp,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -82,11 +77,17 @@ GST_PADTEMPLATE_FACTORY ( sink_temp,
 )
 
 
-#ifdef RGB
-GST_PADTEMPLATE_FACTORY ( video_src_temp,
+GST_PADTEMPLATE_FACTORY (video_src_temp,
   "video",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "dv_dec_src",
+    "video/raw",
+    "format",   	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
+    "width",    	GST_PROPS_INT (720),
+    "height",  		GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
+  ),
   GST_CAPS_NEW (
     "dv_dec_src",
     "video/raw",
@@ -97,23 +98,9 @@ GST_PADTEMPLATE_FACTORY ( video_src_temp,
     "green_mask", 	GST_PROPS_INT(0x00ff00),
     "blue_mask", 	GST_PROPS_INT(0xff0000),
     "width",     	GST_PROPS_INT (720),
-    "height",    	GST_PROPS_INT (HEIGHT)
+    "height",    	GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
   )
 )
-#else
-GST_PADTEMPLATE_FACTORY ( video_src_temp,
-  "video",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dv_dec_src",
-    "video/raw",
-    "format",    GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
-    "width",     GST_PROPS_INT (720),
-    "height",    GST_PROPS_INT (HEIGHT)
-  )
-)
-#endif
 
 GST_PADTEMPLATE_FACTORY ( audio_src_temp,
   "audio",
@@ -134,13 +121,18 @@ GST_PADTEMPLATE_FACTORY ( audio_src_temp,
 
 
 /* A number of functon prototypes are given so we can refer to them later. */
-static void	gst_dvdec_class_init	(GstDVDecClass *klass);
-static void	gst_dvdec_init	(GstDVDec *dvdec);
+static void		gst_dvdec_class_init	(GstDVDecClass *klass);
+static void		gst_dvdec_init		(GstDVDec *dvdec);
 
-static void	gst_dvdec_loop		(GstElement *element);
+static void		gst_dvdec_loop		(GstElement *element);
 
-static void	gst_dvdec_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_dvdec_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static GstElementStateReturn 	
+			gst_dvdec_change_state 	(GstElement *element);
+
+static void		gst_dvdec_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void		gst_dvdec_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
 /* The parent class pointer needs to be kept around for some object
  * operations.
@@ -150,7 +142,7 @@ static GstElementClass *parent_class = NULL;
 /* This array holds the ids of the signals registered for this object.
  * The array indexes are based on the enum up above.
  */
-static guint gst_dvdec_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_dvdec_signals[LAST_SIGNAL] = { 0 };
 
 /* This function is used to register and subsequently return the type
  * identifier for this object class.  On first invocation, it will
@@ -158,21 +150,23 @@ static guint gst_dvdec_signals[LAST_SIGNAL] = { 0 };
  * and pointers to the various functions that define the class.
  */
 GType
-gst_dvdec_get_type(void)
+gst_dvdec_get_type (void)
 {
   static GType dvdec_type = 0;
 
   if (!dvdec_type) {
     static const GTypeInfo dvdec_info = {
-      sizeof(GstDVDecClass),      NULL,      NULL,
-      (GClassInitFunc)gst_dvdec_class_init,
+      sizeof (GstDVDecClass),      
+      NULL,      
+      NULL,
+      (GClassInitFunc) gst_dvdec_class_init,
       NULL,
       NULL,
-      sizeof(GstDVDec),
+      sizeof (GstDVDec),
       0,
-      (GInstanceInitFunc)gst_dvdec_init,
+      (GInstanceInitFunc) gst_dvdec_init,
     };
-    dvdec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstDVDec", &dvdec_info, 0);
+    dvdec_type = g_type_register_static (GST_TYPE_ELEMENT, "GstDVDec", &dvdec_info, 0);
   }
   return dvdec_type;
 }
@@ -193,34 +187,16 @@ gst_dvdec_class_init (GstDVDecClass *klass)
   /* Since the dvdec class contains the parent classes, you can simply
    * cast the pointer to get access to the parent classes.
    */
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass*) klass;
+  gstelement_class = (GstElementClass*) klass;
 
   /* The parent class is needed for class method overrides. */
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  /* Here we add an argument to the object.  This argument is an integer,
-   * and can be both read and written.
-   */
-//  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ACTIVE,
-//    g_param_spec_int("active","active","active",
-//                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
-
-  /* Here we add a signal to the object. This is avery useless signal
-   * called asdf. The signal will also pass a pointer to the listeners
-   * which happens to be the dvdec element itself */
-  gst_dvdec_signals[ASDF] =
-    g_signal_new("asdf", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstDVDecClass, asdf), NULL, NULL,
-                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                   GST_TYPE_DVDEC);
-
-  /* The last thing is to provide the functions that implement get and set
-   * of arguments.
-   */
   gobject_class->set_property = gst_dvdec_set_property;
   gobject_class->get_property = gst_dvdec_get_property;
 
+  gstelement_class->change_state = gst_dvdec_change_state;
 
   // table initialization, only do once
   dv_init();
@@ -232,23 +208,55 @@ gst_dvdec_class_init (GstDVDecClass *klass)
 static void
 gst_dvdec_init(GstDVDec *dvdec)
 {
-  dvdec->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(sink_temp), "sink");
-  gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->sinkpad);
+  dvdec->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_temp), "sink");
+  gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
 
-  dvdec->videosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(video_src_temp), "video");
-  gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->videosrcpad);
+  dvdec->videosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (video_src_temp), "video");
+  gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
 
-//  dvdec->audiosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(audio_src_temp), "audio");
-//  gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
+  dvdec->audiosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(audio_src_temp), "audio");
+  gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
 
-  gst_element_set_loop_function (GST_ELEMENT(dvdec), gst_dvdec_loop);
+  gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
 
-  dvdec->decoder = dv_decoder_new();
+  dvdec->decoder = dv_decoder_new ();
   dvdec->decoder->quality = DV_QUALITY_BEST;
-  dvdec->inframe = g_malloc(BUFFER);
   dvdec->pool = NULL;
-  dvdec->carryover = NULL;
-  dvdec->remaining = 0;
+}
+
+static gboolean
+gst_dvdec_handle_event (GstDVDec *dvdec)
+{
+  guint32 remaining;
+  GstEvent *event;
+  GstEventType type;
+	        
+  gst_bytestream_get_status (dvdec->bs, &remaining, &event);
+		  
+  type = event? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+		      
+  switch (type) {
+    case GST_EVENT_EOS:
+      gst_pad_event_default (dvdec->sinkpad, event);
+      break;
+    case GST_EVENT_SEEK:
+      g_warning ("seek event\n");
+      gst_event_free (event);
+      break;
+    case GST_EVENT_FLUSH:
+      g_warning ("flush event\n");
+      gst_event_free (event);
+      break;
+    case GST_EVENT_DISCONTINUOUS:
+      g_warning ("discont event\n");
+      gst_event_free (event);
+      break;
+    default:
+      g_warning ("unhandled event %d\n", type);
+      gst_event_free (event);
+      break;
+  }
+  return TRUE;
 }
 
 
@@ -256,86 +264,142 @@ static void
 gst_dvdec_loop (GstElement *element)
 {   
   GstDVDec *dvdec;
-  int needed;
-  GstBuffer *buf;
+  GstBuffer *buf, *outbuf;
+  guint8 *inframe;
   guint8 *outframe;
   guint8 *outframe_ptrs[3];
   gint outframe_pitches[3];
+  gboolean PAL;
+  gint height;
 
   dvdec = GST_DVDEC (element);
 
-  // grab an input frame
-  needed = BUFFER;
-  if (dvdec->remaining > 0) {
-    memcpy(&dvdec->inframe[BUFFER-needed],
-           GST_BUFFER_DATA(dvdec->carryover)+(GST_BUFFER_SIZE(dvdec->carryover)-dvdec->remaining),
-           dvdec->remaining);
-    dvdec->remaining = 0;
-    gst_buffer_unref(dvdec->carryover);
+  /* first read enough bytes to parse the header */
+  inframe = gst_bytestream_peek_bytes (dvdec->bs, header_size);
+  if (!inframe) {
+    gst_dvdec_handle_event (dvdec);
+    return;
   }
-  while (needed) {
-    buf = gst_pad_pull(dvdec->sinkpad);
-    if (needed < GST_BUFFER_SIZE(buf)) {
-      memcpy(&dvdec->inframe[BUFFER-needed],GST_BUFFER_DATA(buf),needed);
-/**** NOTE: this is done because 1394src doesn't allow buffers to outlive the handler *****/
-      dvdec->carryover = gst_buffer_copy(buf);
-      dvdec->remaining = GST_BUFFER_SIZE(buf) - needed;
-      needed = 0;
-    } else {
-      memcpy(&dvdec->inframe[BUFFER-needed],GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
-      needed -= GST_BUFFER_SIZE(buf);
-    }
-    gst_buffer_unref(buf);
-  }
+  dv_parse_header (dvdec->decoder, inframe);
+  /* after parsing the header we know the size of the data */
+  PAL = dv_system_50_fields (dvdec->decoder);
 
+  height = (PAL ? PAL_HEIGHT : NTSC_HEIGHT);
+
+  /* then read the read data */
+  buf = gst_bytestream_read (dvdec->bs, (PAL ? PAL_BUFFER : NTSC_BUFFER));
+  if (!buf) {
+    gst_dvdec_handle_event (dvdec);
+    return;
+  }
+  
+  /* if we did not negotiate yet, do it now */
   if (!GST_PAD_CAPS (dvdec->videosrcpad)) {
-    gst_pad_try_set_caps (dvdec->videosrcpad, gst_pad_get_padtemplate_caps (dvdec->videosrcpad));
-  }
+    GstCaps *allowed;
+    GstCaps *trylist;
+    
+    /* we what we are allowed to do */
+    allowed = gst_pad_get_allowed_caps (dvdec->videosrcpad);
 
+    /* try to fix our height */
+    trylist = gst_caps_intersect (allowed,
+				    GST_CAPS_NEW (
+				      "dvdec_negotiate",
+				      "video/raw",
+				        "height",  	GST_PROPS_INT (height)
+				    ));
+    
+    /* prepare for looping */
+    trylist = gst_caps_normalize (trylist);
+
+    while (trylist) {
+      GstCaps *to_try = gst_caps_copy_1 (trylist);
+
+      /* try each format */
+      if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try)) {
+	/* it worked, try to find what it was again */
+	if (gst_caps_get_fourcc_int (to_try, "format") == GST_STR_FOURCC ("RGB ")) {
+          dvdec->space = e_dv_color_rgb;
+          dvdec->bpp = 3;
+	}
+	else {
+          dvdec->space = e_dv_color_yuv;
+          dvdec->bpp = 2;
+	}
+	break;
+      }
+      trylist = trylist->next;
+    }
+    /* oops list exhausted an nothing was found... */
+    if (!trylist) {
+      gst_element_error (element, "could not negotiate");
+      return;
+    }
+  }
+  /* try to grab a pool */
   if (!dvdec->pool) {
     dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
   }
 
-  buf = NULL;
+  outbuf = NULL;
+  /* try to get a buffer from the pool if we have one */
   if (dvdec->pool) {
-    buf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
+    outbuf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
   }
-
-  if (!buf) {
-    // allocate an output frame
-    buf = gst_buffer_new();
-#ifdef RGB
-    GST_BUFFER_SIZE(buf) = (720*HEIGHT)*3;
-#else
-    GST_BUFFER_SIZE(buf) = (720*HEIGHT)*2;
-#endif
-    GST_BUFFER_DATA(buf) = g_malloc(GST_BUFFER_SIZE(buf));
-    outframe = GST_BUFFER_DATA(buf);
-  } else {
-    outframe = GST_BUFFER_DATA (buf);
+  /* no buffer from pool, allocate one ourselves */
+  if (!outbuf) {
+    outbuf = gst_buffer_new ();
+    
+    GST_BUFFER_SIZE (outbuf) = (720 * height) * dvdec->bpp;
+    GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
   }
+    
+  outframe = GST_BUFFER_DATA (outbuf);
 
   outframe_ptrs[0] = outframe;
-  outframe_ptrs[1] = outframe_ptrs[0] + 720*HEIGHT;
-  outframe_ptrs[2] = outframe_ptrs[1] + 360*HEIGHT;
-#ifdef RGB
-  outframe_pitches[0] = 720*3;
-#else
-  outframe_pitches[0] = 720*2;	// huh?
-#endif
-  outframe_pitches[1] = HEIGHT/2;
-  outframe_pitches[2] = HEIGHT/2;
+  outframe_ptrs[1] = outframe_ptrs[0] + 720 * height;
+  outframe_ptrs[2] = outframe_ptrs[1] + 360 * height;
+  
+  outframe_pitches[0] = 720 * dvdec->bpp;
+  outframe_pitches[1] = height / 2;
+  outframe_pitches[2] = height / 2;
 
-  // now we start decoding the frame
-  dv_parse_header(dvdec->decoder,dvdec->inframe);
+  dv_decode_full_frame (dvdec->decoder, GST_BUFFER_DATA (buf), 
+		        dvdec->space, outframe_ptrs, outframe_pitches);
 
-#ifdef RGB
-  dv_decode_full_frame(dvdec->decoder,dvdec->inframe,e_dv_color_rgb,outframe_ptrs,outframe_pitches);
-#else
-  dv_decode_full_frame(dvdec->decoder,dvdec->inframe,e_dv_color_yuv,outframe_ptrs,outframe_pitches);
-#endif
+  gst_buffer_unref (buf);
 
-  gst_pad_push(dvdec->videosrcpad,buf);
+  gst_pad_push (dvdec->videosrcpad, outbuf);
+}
+
+static GstElementStateReturn
+gst_dvdec_change_state (GstElement *element)
+{
+  GstDVDec *dvdec = GST_DVDEC (element);
+	    
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      dvdec->bs = gst_bytestream_new (dvdec->sinkpad);
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      dvdec->pool = NULL;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_bytestream_destroy (dvdec->bs);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+	      
+  parent_class->change_state (element);
+	        
+  return GST_STATE_SUCCESS;
 }
 
 
@@ -385,6 +449,11 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+
+  if (!gst_library_load ("gstbytestream")) {
+    gst_info("dvdec: could not load support library: 'gstbytestream'\n");
+    return FALSE;
+  }
 
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GType identifier,

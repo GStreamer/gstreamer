@@ -29,7 +29,7 @@ extern "C" {
 
 
 #include <libdv/dv.h>
-#include <stdio.h>
+#include <gst/bytestream/bytestream.h>
 
 
 /* This is the definition of the element's object structure. */
@@ -46,11 +46,11 @@ struct _GstDVDec {
   /* We need to keep track of our pads, so we do so here. */
   GstPad *sinkpad,*videosrcpad,*audiosrcpad;
 
-  guint8 *inframe;	// here because we allocate it once, can't be on stack
   dv_decoder_t *decoder;
-  GstBuffer *carryover;
-  gint remaining;
+  GstByteStream *bs;
   GstBufferPool *pool;
+  dv_color_space_t space;
+  gint bpp;
 };
 
 /* The other half of the object is its class.  The class also derives from
@@ -61,9 +61,6 @@ typedef struct _GstDVDecClass GstDVDecClass;
 
 struct _GstDVDecClass {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*asdf) (GstElement *element, GstDVDec *dvdec);
 };
 
 /* Five standard preprocessing macros are used in the Gtk+ object system.
