@@ -41,7 +41,7 @@
 	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
 	"framerate", GST_TYPE_DOUBLE_RANGE, 0., G_MAXDOUBLE,	\
 	__VA_ARGS__)
-#elif defined(G_HAVE_GNU_VARARGS)
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define GST_FF_VID_CAPS_NEW(mimetype, props...)                        \
     gst_caps_new_simple (mimetype,                             \
        "width",     GST_TYPE_INT_RANGE, 16, 4096,              \
