@@ -1,9 +1,5 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
- *                    2003 Andy Wingo <wingo at pobox dot com>
- *
- * gstsf.c: libsndfile plugin for GStreamer
+/* GStreamer libsndfile plugin
+ * Copyright (C) 2003 Andy Wingo <wingo at pobox dot com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -87,6 +83,8 @@ struct _GstSF {
   GstElement element;
   GList *channels;
 
+  GstClock *clock, *provided_clock;
+
   gchar *filename;
   SNDFILE *file;
   void *buffer;
@@ -98,7 +96,11 @@ struct _GstSF {
   gint format_major;
   gint format_subtype;
   gint format;
+
   gint rate;
+  gint buffer_frames;
+
+  guint64 time;
 };
 
 struct _GstSFClass {

@@ -1,9 +1,5 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
- *                    2003 Andy Wingo <wingo at pobox dot com>
- *
- * gstsf.c: libsndfile plugin for GStreamer
+/* GStreamer libsndfile plugin
+ * Copyright (C) 2003 Andy Wingo <wingo at pobox dot com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,12 +18,14 @@
  */
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-#include <gst/gst.h>
 #include <string.h>
+#include <gst/gst.h>
+
+#include <config.h>
+#include <gst/audio/audio.h>
+
 #include "gstsf.h"
+
 
 static GstElementDetails sfsrc_details = {
   "Sndfile Source",
@@ -58,9 +56,6 @@ enum {
   ARG_CREATE_PADS
 };
 
-#define GST_SF_BUF_BYTES 2048
-#define GST_SF_BUF_FRAMES (GST_SF_BUF_BYTES / sizeof(float))
-
 GST_PAD_TEMPLATE_FACTORY (sf_src_factory,
   "src%d",
   GST_PAD_SRC,
@@ -68,12 +63,11 @@ GST_PAD_TEMPLATE_FACTORY (sf_src_factory,
   GST_CAPS_NEW (
     "sf_src",
     "audio/x-raw-float",
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "intercept",  GST_PROPS_FLOAT(0.0),
-    "slope",      GST_PROPS_FLOAT(1.0),
-    "channels",   GST_PROPS_INT (1),
-    "width",	  GST_PROPS_INT (32),
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
+    "rate",		GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "width",		GST_PROPS_INT (32),
+    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+    "buffer-frames",	GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "channels",		GST_PROPS_INT (1)
   )
 );
 
@@ -84,12 +78,11 @@ GST_PAD_TEMPLATE_FACTORY (sf_sink_factory,
   GST_CAPS_NEW (
     "sf_sink",
     "audio/x-raw-float",
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "intercept",  GST_PROPS_FLOAT(0.0),
-    "slope",      GST_PROPS_FLOAT(1.0),
-    "channels",   GST_PROPS_INT (1),
-    "width",	  GST_PROPS_INT (32),
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
+    "rate",		GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "width",		GST_PROPS_INT (32),
+    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+    "buffer-frames",	GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "channels",		GST_PROPS_INT (1)
   )
 );
 
@@ -163,26 +156,37 @@ gst_sf_minor_types_get_type (void)
   return sf_minor_types_type;
 }
 
-static void	gst_sf_class_init	(GstSFClass *klass);
-static void	gst_sf_init		(GstSF *this);
+static void		gst_sf_class_init	(GstSFClass *klass);
+static void		gst_sf_init		(GstSF *this);
+static void		gst_sf_dispose		(GObject *object);
+static void		gst_sf_set_property	(GObject *object, guint prop_id,
+                                                 const GValue *value, GParamSpec *pspec);
+static void		gst_sf_get_property	(GObject *object, guint prop_id, 
+                                                 GValue *value, GParamSpec *pspec);
 
-static gboolean gst_sf_open_file 	(GstSF *this);
-static void 	gst_sf_close_file 	(GstSF *this);
-
-static void	gst_sf_loop		(GstElement *element);
-
-static void	gst_sf_set_property	(GObject *object, guint prop_id, const GValue *value, 
-                                         GParamSpec *pspec);
-static void	gst_sf_get_property	(GObject *object, guint prop_id, GValue *value, 
-                                         GParamSpec *pspec);
-
-static GstPad*	gst_sf_request_new_pad	(GstElement *element, GstPadTemplate *templ,
-                                         const gchar *unused);
-
+static GstClock*	gst_sf_get_clock	(GstElement *element);
+static void		gst_sf_set_clock	(GstElement *element, GstClock *clock);
+static GstPad*		gst_sf_request_new_pad	(GstElement *element, GstPadTemplate *templ,
+                                                 const gchar *unused);
+static void		gst_sf_release_request_pad (GstElement *element, GstPad *pad);
 static GstElementStateReturn gst_sf_change_state (GstElement *element);
-static GstPadLinkReturn gst_sf_link	(GstPad *pad, GstCaps *caps);
+
+static GstPadLinkReturn gst_sf_link		(GstPad *pad, GstCaps *caps);
+
+static void		gst_sf_loop		(GstElement *element);
+
+static GstClockTime	gst_sf_get_time		(GstClock *clock, gpointer data);
+
+static gboolean 	gst_sf_open_file 	(GstSF *this);
+static void 		gst_sf_close_file 	(GstSF *this);
 
 static GstElementClass *parent_class = NULL;
+
+GST_DEBUG_CATEGORY_STATIC (gstsf_debug);
+#define INFO(...) \
+    GST_CAT_LEVEL_LOG (gstsf_debug, GST_LEVEL_INFO, NULL, __VA_ARGS__)
+#define INFO_OBJ(obj,...) \
+    GST_CAT_LEVEL_LOG (gstsf_debug, GST_LEVEL_INFO, obj, __VA_ARGS__)
 
 GType
 gst_sf_get_type (void) 
@@ -281,64 +285,33 @@ gst_sf_class_init (GstSFClass *klass)
     g_object_class_install_property (gobject_class, ARG_CREATE_PADS, pspec);
   }
  
+  gobject_class->dispose = gst_sf_dispose;
   gobject_class->set_property = gst_sf_set_property;
   gobject_class->get_property = gst_sf_get_property;
 
+  gstelement_class->get_clock = gst_sf_get_clock;
+  gstelement_class->set_clock = gst_sf_set_clock;
   gstelement_class->change_state = gst_sf_change_state;
   gstelement_class->request_new_pad = gst_sf_request_new_pad;
+  gstelement_class->release_pad = gst_sf_release_request_pad;
 }
 
 static void 
 gst_sf_init (GstSF *this) 
 {
   gst_element_set_loop_function (GST_ELEMENT (this), gst_sf_loop);
+  this->provided_clock = gst_audio_clock_new ("sfclock", gst_sf_get_time, this);
+  gst_object_set_parent (GST_OBJECT (this->provided_clock), GST_OBJECT (this));
 }
 
-static GstPad*
-gst_sf_request_new_pad (GstElement *element, GstPadTemplate *templ,
-                        const gchar *unused) 
+static void
+gst_sf_dispose (GObject *object)
 {
-  gchar *name;
-  GstSF *this;
-  GstSFChannel *channel;
+  GstSF *this = (GstSF*)object;
 
-  this = GST_SF (element);
-  channel = g_new0 (GstSFChannel, 1);
-  
-  if (templ->direction == GST_PAD_SINK) {
-    /* we have an SFSink */
-    name = g_strdup_printf ("sink%d", this->channelcount);
-    this->numchannels++;
-    if (this->file) {
-      gst_sf_close_file (this);
-      gst_sf_open_file (this);
-    }
-  } else {
-    /* we have an SFSrc */
-    name = g_strdup_printf ("src%d", this->channelcount);
-  }
-  
-  channel->pad = gst_pad_new_from_template (templ, name);
-  gst_element_add_pad (GST_ELEMENT (this), channel->pad);
-  gst_pad_set_link_function (channel->pad, gst_sf_link);
-  
-  this->channels = g_list_append (this->channels, channel);
-  this->channelcount++;
-  
-  GST_DEBUG ("sf added pad %s\n", name);
+  gst_object_unparent (GST_OBJECT (this->provided_clock));
 
-  g_free (name);
-  return channel->pad;
-}
-
-static GstPadLinkReturn
-gst_sf_link (GstPad *pad, GstCaps *caps)
-{
-  GstSF *this = (GstSF*)GST_OBJECT_PARENT (pad);
-  
-  gst_caps_get_int (caps, "rate", &this->rate);
-
-  return GST_PAD_LINK_OK;
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -420,6 +393,156 @@ gst_sf_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *
   }
 }
 
+static GstClock*
+gst_sf_get_clock (GstElement *element)
+{
+  GstSF *this = GST_SF (element);
+
+  return this->provided_clock;
+}
+
+static void
+gst_sf_set_clock (GstElement *element, GstClock *clock)
+{
+  GstSF *this = GST_SF (element);
+  
+  this->clock = clock;
+}
+
+static GstClockTime 
+gst_sf_get_time (GstClock *clock, gpointer data) 
+{
+  GstSF *this = GST_SF (data);
+
+  return this->time;
+}
+
+static GstElementStateReturn
+gst_sf_change_state (GstElement *element)
+{
+  GstSF *this = GST_SF (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      gst_audio_clock_set_active (GST_AUDIO_CLOCK (this->provided_clock), TRUE);
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      gst_audio_clock_set_active (GST_AUDIO_CLOCK (this->provided_clock), FALSE);
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      if (GST_FLAG_IS_SET (this, GST_SF_OPEN))
+        gst_sf_close_file (this);
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+
+static GstPad*
+gst_sf_request_new_pad (GstElement *element, GstPadTemplate *templ,
+                        const gchar *unused) 
+{
+  gchar *name;
+  GstSF *this;
+  GstSFChannel *channel;
+
+  this = GST_SF (element);
+  channel = g_new0 (GstSFChannel, 1);
+  
+  if (templ->direction == GST_PAD_SINK) {
+    /* we have an SFSink */
+    name = g_strdup_printf ("sink%d", this->channelcount);
+    this->numchannels++;
+    if (this->file) {
+      gst_sf_close_file (this);
+      gst_sf_open_file (this);
+    }
+  } else {
+    /* we have an SFSrc */
+    name = g_strdup_printf ("src%d", this->channelcount);
+  }
+  
+  channel->pad = gst_pad_new_from_template (templ, name);
+  gst_element_add_pad (GST_ELEMENT (this), channel->pad);
+  gst_pad_set_link_function (channel->pad, gst_sf_link);
+  
+  this->channels = g_list_append (this->channels, channel);
+  this->channelcount++;
+  
+  INFO_OBJ (element, "added pad %s\n", name);
+
+  g_free (name);
+  return channel->pad;
+}
+
+static void
+gst_sf_release_request_pad (GstElement *element, GstPad *pad)
+{
+  GstSF *this;
+  GstSFChannel *channel = NULL;
+  GList *l;
+
+  this = GST_SF (element);
+  
+  if (GST_STATE (element) == GST_STATE_PLAYING) {
+    g_warning ("You can't release a request pad if the element is PLAYING, sorry.");
+    return;
+  }
+
+  for (l=this->channels; l; l=l->next) {
+    if (GST_SF_CHANNEL (l)->pad == pad) {
+      channel = GST_SF_CHANNEL (l);
+      break;
+    }
+  }
+
+  g_return_if_fail (channel != NULL);
+
+  INFO_OBJ (element, "Releasing request pad %s", GST_PAD_NAME (channel->pad));
+
+  if (GST_FLAG_IS_SET (element, GST_SF_OPEN))
+    gst_sf_close_file (this);
+
+  gst_element_remove_pad (element, channel->pad);
+  this->channels = g_list_remove (this->channels, channel);
+  this->numchannels--;
+  g_free (channel);
+}
+
+static GstPadLinkReturn
+gst_sf_link (GstPad *pad, GstCaps *caps)
+{
+  GstSF *this = (GstSF*)GST_OBJECT_PARENT (pad);
+  
+  if (GST_CAPS_IS_FIXED (caps)) {
+    gst_caps_get_int (caps, "rate", &this->rate);
+    gst_caps_get_int (caps, "buffer-frames", &this->buffer_frames);
+
+    INFO_OBJ (this, "linked pad %s:%s with fixed caps, frames=%d, rate=%d",
+              GST_DEBUG_PAD_NAME (pad), this->rate, this->buffer_frames);
+
+    if (this->numchannels) {
+      /* we can go ahead and allocate our buffer */
+      if (this->buffer)
+        g_free (this->buffer);
+      this->buffer = g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
+      memset (this->buffer, 0, this->numchannels * this->buffer_frames * sizeof (float));
+    }
+    return GST_PAD_LINK_OK;
+  }
+
+  return GST_PAD_LINK_DELAYED;
+}
+
 static gboolean
 gst_sf_open_file (GstSF *this)
 {
@@ -428,8 +551,10 @@ gst_sf_open_file (GstSF *this)
   
   g_return_val_if_fail (!GST_FLAG_IS_SET (this, GST_SF_OPEN), FALSE);
 
+  this->time = 0;
+
   if (!this->filename) {
-    gst_element_error (GST_ELEMENT (this), "sndfile::location was not set");
+    gst_element_error (GST_ELEMENT (this), "sndfile: 'location' was not set");
     return FALSE;
   }
     
@@ -437,15 +562,26 @@ gst_sf_open_file (GstSF *this)
     mode = SFM_READ;
     info.format = 0;
   } else {
+    if (!this->rate) {
+      INFO_OBJ (this, "Not opening %s yet because caps are not set", this->filename);
+      return FALSE;
+    } else if (!this->numchannels) {
+      INFO_OBJ (this, "Not opening %s yet because we have no input channels", this->filename);
+      return FALSE;
+    }
+
     mode = SFM_WRITE;
     this->format = this->format_major | this->format_subtype;
     info.samplerate = this->rate;
     info.channels = this->numchannels;
     info.format = this->format;
 
+    INFO_OBJ (this, "Opening %s with rate %d, %d channels, format 0x%x",
+              this->filename, info.samplerate, info.channels, info.format);
+
     if (!sf_format_check (&info)) {
       gst_element_error (GST_ELEMENT (this),
-                         g_strdup_printf ("Input parameters (rate:%d, channels:%d, format:%x) invalid",
+                         g_strdup_printf ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
                                           info.samplerate, info.channels, info.format));
       return FALSE;
     }
@@ -478,7 +614,6 @@ gst_sf_open_file (GstSF *this)
       GST_SF_CHANNEL (l)->caps_set = FALSE;
   }
 
-  this->buffer = g_malloc (this->numchannels * GST_SF_BUF_BYTES);
   GST_FLAG_SET (this, GST_SF_OPEN);
 
   return TRUE;
@@ -490,6 +625,8 @@ gst_sf_close_file (GstSF *this)
   int err = 0;
 
   g_return_if_fail (GST_FLAG_IS_SET (this, GST_SF_OPEN));
+
+  INFO_OBJ (this, "Closing file %s", this->filename);
 
   if ((err = sf_close (this->file)))
     gst_element_error (GST_ELEMENT (this),
@@ -513,25 +650,36 @@ gst_sf_loop (GstElement *element)
   this = (GstSF*)element;
   
   if (this->channels == NULL) {
-    gst_element_error (element, "You must connect at least one pad to soundfile elements.");
+    gst_element_error (element, "You must connect at least one pad to sndfile elements.");
     return;
   }
-  if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
-    if (!gst_sf_open_file (this))
-      return; /* we've already set gst_element_error */
 
   if (GST_IS_SFSRC (this)) {
     sf_count_t read;
     gint i, j;
     int eos = 0;
+    int buffer_frames = this->buffer_frames;
     int nchannels = this->numchannels;
     GstSFChannel *channel = NULL;
     gfloat *data;
     gfloat *buf = this->buffer;
     GstBuffer *out;
 
-    read = sf_readf_float (this->file, buf, GST_SF_BUF_FRAMES);
-    if (read < GST_SF_BUF_FRAMES)
+    if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
+      if (!gst_sf_open_file (this))
+        return; /* we've already set gst_element_error */
+
+    if (buffer_frames == 0) {
+      /* we have to set the caps later */
+      buffer_frames = this->buffer_frames = 1024;
+    }
+    if (buf == NULL) {
+      buf = this->buffer = g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
+      memset (this->buffer, 0, this->numchannels * this->buffer_frames * sizeof (float));
+    }
+
+    read = sf_readf_float (this->file, buf, buffer_frames);
+    if (read < buffer_frames)
       eos = 1;
 
     if (read)
@@ -548,16 +696,12 @@ gst_sf_loop (GstElement *element)
             caps = gst_caps_copy
               (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (GST_SF_CHANNEL (l)->pad)));
           gst_caps_set (caps, "rate", GST_PROPS_INT (this->rate), NULL);
-          /* we know it's fixed, yo. */
-          GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
+          gst_caps_set (caps, "buffer-frames", GST_PROPS_INT (this->buffer_frames), NULL);
           if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
             gst_element_error (GST_ELEMENT (this),
                                g_strdup_printf ("Opened file with sample rate %d, but could not set caps",
                                                 this->rate));
-            sf_close (this->file);
-            this->file = NULL;
-            g_free (this->buffer);
-            this->buffer = NULL;
+            gst_sf_close_file (this->file);
             return;
           }
           channel->caps_set = TRUE;
@@ -570,35 +714,81 @@ gst_sf_loop (GstElement *element)
         gst_pad_push (channel->pad, out);
       }
 
+    this->time += read * (GST_SECOND / this->rate);
+    gst_audio_clock_update_time ((GstAudioClock*)this->provided_clock, this->time);
+
     if (eos) {
       if (this->loop) {
         sf_seek (this->file, (sf_count_t)0, SEEK_SET);
         eos = 0;
       } else {
         for (l=this->channels; l; l=l->next)
-          gst_pad_push (GST_SF_CHANNEL (l)->pad, gst_event_new (GST_EVENT_EOS));
+          gst_pad_push (GST_SF_CHANNEL (l)->pad, (GstBuffer*)gst_event_new (GST_EVENT_EOS));
         gst_element_set_eos (element);
       }
     }
   } else {
-    /* unimplemented */
+    sf_count_t written, num_to_write;
+    gint i, j;
+    int buffer_frames = this->buffer_frames;
+    int nchannels = this->numchannels;
+    GstSFChannel *channel = NULL;
+    gfloat *data;
+    gfloat *buf = this->buffer;
+    GstBuffer *in;
+
+    /* the problem: we can't allocate a buffer for pulled data before caps is
+     * set, and we can't open the file without the sample rate from the
+     * caps... */
+
+    num_to_write = buffer_frames;
+
+    INFO_OBJ (this, "looping, buffer_frames=%d, nchannels=%d", buffer_frames, nchannels);
+
+    for (i=0,l=this->channels; l; l=l->next,i++) {
+      channel = GST_SF_CHANNEL (l);
+      
+      in = gst_pad_pull (channel->pad);
+
+      if (buffer_frames == 0) {
+        /* pulling a buffer from the pad should have caused capsnego to occur,
+           which then would set this->buffer_frames to a new value */
+        buffer_frames = this->buffer_frames;
+        if (buffer_frames == 0) {
+          gst_element_error (element, "Caps were never set, bailing...");
+          return;
+        }
+        buf = this->buffer;
+        num_to_write = buffer_frames;
+      }
+
+      if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
+        if (!gst_sf_open_file (this))
+          return; /* we've already set gst_element_error */
+
+      if (GST_IS_EVENT (in)) {
+        num_to_write = 0;
+      } else {
+        data = (gfloat*)GST_BUFFER_DATA (in);
+        num_to_write = MIN (num_to_write, GST_BUFFER_SIZE (in) / sizeof (gfloat));
+        for (j=0; j<num_to_write; j++)
+          buf[j * nchannels + i % nchannels] = data[j];
+      }
+      gst_data_unref ((GstData*)in);
+    }
+
+    if (num_to_write) {
+      written = sf_writef_float (this->file, buf, num_to_write);
+      if (written != num_to_write)
+        gst_element_error (element, "Error writing file: %s", sf_strerror (this->file));
+    }
+
+    this->time += num_to_write * (GST_SECOND / this->rate);
+    gst_audio_clock_update_time ((GstAudioClock*)this->provided_clock, this->time);
+
+    if (num_to_write != buffer_frames)
+      gst_element_set_eos (element);
   }
-}
-
-static GstElementStateReturn
-gst_sf_change_state (GstElement *element)
-{
-  g_return_val_if_fail (GST_IS_SF (element), GST_STATE_FAILURE);
-
-  /* if going to NULL then close the file */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
-    if (GST_FLAG_IS_SET (element, GST_SF_OPEN))
-      gst_sf_close_file (GST_SF (element));
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
 }
 
 static gboolean
@@ -606,6 +796,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   
+  if (!gst_library_load ("gstaudio"))
+    return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gstsf_debug, "sf",
+                           GST_DEBUG_FG_WHITE | GST_DEBUG_BG_GREEN | GST_DEBUG_BOLD,
+                           "libsndfile plugin");
+
   factory = gst_element_factory_new ("sfsrc", GST_TYPE_SFSRC,
                                      &sfsrc_details);
   g_return_val_if_fail (factory != NULL, FALSE);
