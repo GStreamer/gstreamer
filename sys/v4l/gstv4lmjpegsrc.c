@@ -76,11 +76,15 @@ static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *eleme
 
 /* bufferpool functions */
 static GstBuffer*            gst_v4lmjpegsrc_buffer_new   (GstBufferPool  *pool,
-                                                           gint64         location,
-                                                           gint           size,
+                                                           guint64        location,
+                                                           guint          size,
                                                            gpointer       user_data);
-static GstBuffer*            gst_v4lmjpegsrc_buffer_copy  (GstBuffer      *srcbuf);
-static void                  gst_v4lmjpegsrc_buffer_free  (GstBuffer      *buf);
+static GstBuffer*            gst_v4lmjpegsrc_buffer_copy  (GstBufferPool  *pool,
+		 				           const GstBuffer *srcbuf,
+                                                           gpointer       user_data);
+static void                  gst_v4lmjpegsrc_buffer_free  (GstBufferPool  *pool,
+							   GstBuffer      *buf,
+                                                           gpointer       user_data);
 
 
 static GstCaps *capslist = NULL;
@@ -179,11 +183,13 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
   gst_pad_set_connect_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
 
-  v4lmjpegsrc->bufferpool = gst_buffer_pool_new();
-  gst_buffer_pool_set_buffer_new_function(v4lmjpegsrc->bufferpool, gst_v4lmjpegsrc_buffer_new);
-  gst_buffer_pool_set_buffer_copy_function(v4lmjpegsrc->bufferpool, gst_v4lmjpegsrc_buffer_copy);
-  gst_buffer_pool_set_buffer_free_function(v4lmjpegsrc->bufferpool, gst_v4lmjpegsrc_buffer_free);
-  gst_buffer_pool_set_user_data(v4lmjpegsrc->bufferpool, v4lmjpegsrc);
+  v4lmjpegsrc->bufferpool = gst_buffer_pool_new(
+		  			NULL,
+					NULL,
+					gst_v4lmjpegsrc_buffer_new,
+					gst_v4lmjpegsrc_buffer_copy,
+					gst_v4lmjpegsrc_buffer_free,
+					v4lmjpegsrc);
 
   v4lmjpegsrc->frame_width = 0;
   v4lmjpegsrc->frame_height = 0;
@@ -242,7 +248,7 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   if (!gst_v4lmjpegsrc_grab_frame(v4lmjpegsrc, &num, &(GST_BUFFER_SIZE(buf))))
     return NULL;
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
-  buf->timestamp = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000000 +
+  GST_BUFFER_TIMESTAMP (buf) = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000000 +
     v4lmjpegsrc->bsync.timestamp.tv_usec * 1000;
 
   return buf;
@@ -454,15 +460,14 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
 
 static GstBuffer*
 gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
-                            gint64        location,
-                            gint          size,
+                            guint64       location,
+                            guint         size,
                             gpointer      user_data)
 {
   GstBuffer *buffer;
 
   buffer = gst_buffer_new();
   if (!buffer) return NULL;
-  buffer->pool_private = user_data;
 
   /* TODO: add interlacing info to buffer as metadata */
 
@@ -471,7 +476,7 @@ gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
 
 
 static GstBuffer*
-gst_v4lmjpegsrc_buffer_copy (GstBuffer *srcbuf)
+gst_v4lmjpegsrc_buffer_copy (GstBufferPool *pool, const GstBuffer *srcbuf, gpointer user_data)
 {
   GstBuffer *buffer;
 
@@ -488,9 +493,9 @@ gst_v4lmjpegsrc_buffer_copy (GstBuffer *srcbuf)
 
 
 static void
-gst_v4lmjpegsrc_buffer_free (GstBuffer *buf)
+gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_data)
 {
-  GstV4lMjpegSrc *v4lmjpegsrc = buf->pool_private;
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (user_data);
   int n;
 
   for (n=0;n<v4lmjpegsrc->breq.count;n++)
