@@ -11,4 +11,4 @@ gstreamer.c
 gstreamer-base.defs
 gstreamer.defs
 gstreamer.override
-h2defs.defs
+h2def.defs
