@@ -81,7 +81,7 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
   USE_LIBMIKMOD="yes"
   USE_ARTS="yes"
   USE_ARTSC="yes"
-  USE_SINE="no"
+  USE_SINE="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
   USE_LIBMIKMOD="no"
@@ -397,7 +397,11 @@ GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
 dnl *** XVideo ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
-  GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
+  dnl look for the PIC library first, debian likes it
+  GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
+  if test "x$HAVE_XVIDEO" = "no"; then
+    GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
+  fi    
 ])
 
 dnl Next, check for the optional libraries:
