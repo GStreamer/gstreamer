@@ -12,7 +12,7 @@ a mime-type and a set of properties.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstProps, #GstPad
 </para>
 
 <!-- ##### MACRO GST_CAPS_LOCK ##### -->
