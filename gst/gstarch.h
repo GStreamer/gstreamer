@@ -136,7 +136,7 @@ struct minimal_stackframe {
     __asm__("move $sp,%0\n\t" : : "r"(stackpointer));
 
 #define GST_ARCH_CALL(target) \
-    __asm__("move $25,%1\n\t"	// call via $25 \
+    __asm__("move $25,%1\n\t"	/* call via $25 */ \
             "jal  $25\n\t" : : "r"(target));
 
 // assuming the stackframe is 16 bytes
@@ -151,8 +151,8 @@ struct minimal_stackframe {
     __asm__("copy %0,%%sp\n\t" : : "r"(stackpointer));
 
 #define GST_ARCH_CALL(target) \
-    __asm__("copy $1,%%r22\n\t"		// set call address \
-            ".CALL\n\t"			// call pseudo insn (why?) \
+    __asm__("copy $1,%%r22\n\t"		/* set call address */ \
+            ".CALL\n\t"			/* call pseudo insn (why?) */ \
             "bl $$dyncall,%%r31\n\t" : : "r"(target));
 
 // assume stackframe is 16 bytes
