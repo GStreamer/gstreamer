@@ -188,7 +188,7 @@ Checklist for pad_link:
  - Pad link functions are called with fixed caps.  There's no need
    to check for this.  This means that you can assume that the caps
    is not ANY or EMPTY, and that there is exactly one structure in
-   the caps, and that all the properties in the caps
+   the caps, and that all the fields in the structure are fixed.
 
  - Pad link functions are called with caps that are a subset of the
    most recent return value of the pad's getcaps function.  Generally,
