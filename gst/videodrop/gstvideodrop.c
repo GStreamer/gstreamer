@@ -137,24 +137,44 @@ gst_videodrop_getcaps (GstPad * pad)
 {
   GstVideodrop *videodrop;
   GstPad *otherpad;
-  GstCaps *caps;
+  GstCaps *caps, *copy, *copy2 = NULL;
   int i;
+  gdouble otherfps;
   GstStructure *structure;
+  gboolean negotiated;
 
   videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
 
   otherpad = (pad == videodrop->srcpad) ? videodrop->sinkpad :
       videodrop->srcpad;
+  negotiated = gst_pad_is_negotiated (otherpad);
+  otherfps = (pad == videodrop->srcpad) ? videodrop->from_fps :
+      videodrop->to_fps;
 
   caps = gst_pad_get_allowed_caps (otherpad);
+  copy = gst_caps_copy (caps);
+  if (negotiated) {
+    copy2 = gst_caps_copy (caps);
+  }
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
         "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
   }
+  if (negotiated) {
+    for (i = 0; i < gst_caps_get_size (caps); i++) {
+      structure = gst_caps_get_structure (caps, i);
 
-  return caps;
+      gst_structure_set (structure,
+          "framerate", G_TYPE_DOUBLE, otherfps * videodrop->speed, NULL);
+    }
+    gst_caps_append (copy2, copy);
+    copy = copy2;
+  }
+  gst_caps_append (copy, caps);
+
+  return copy;
 }
 
 static GstPadLinkReturn
@@ -162,12 +182,9 @@ gst_videodrop_link (GstPad * pad, const GstCaps * caps)
 {
   GstVideodrop *videodrop;
   GstStructure *structure;
-  GstPadLinkReturn link_ret;
   gboolean ret;
   double fps;
-  double otherfps;
   GstPad *otherpad;
-  GstCaps *othercaps;
 
   videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
 
@@ -178,25 +195,14 @@ gst_videodrop_link (GstPad * pad, const GstCaps * caps)
   ret = gst_structure_get_double (structure, "framerate", &fps);
   if (!ret)
     return GST_PAD_LINK_REFUSED;
-
-  if (gst_pad_is_negotiated (otherpad)) {
-    othercaps = gst_caps_copy (caps);
-    if (pad == videodrop->srcpad) {
-      otherfps = videodrop->from_fps;
-    } else {
-      otherfps = videodrop->to_fps;
-    }
-    gst_caps_set_simple (othercaps, "framerate", G_TYPE_DOUBLE, otherfps, NULL);
-    link_ret = gst_pad_try_set_caps (otherpad, othercaps);
-    if (GST_PAD_LINK_FAILED (link_ret)) {
-      return link_ret;
-    }
+  if (pad == videodrop->srcpad) {
+    videodrop->from_fps = fps;
+  } else {
+    videodrop->to_fps = fps;
   }
 
-  if (pad == videodrop->srcpad) {
-    videodrop->to_fps = fps;
-  } else {
-    videodrop->from_fps = fps;
+  if (gst_pad_is_negotiated (otherpad)) {
+    gst_pad_renegotiate (otherpad);
   }
 
   return GST_PAD_LINK_OK;
@@ -244,14 +250,15 @@ gst_videodrop_chain (GstPad * pad, GstData * data)
       gint64 time;
 
       if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-        videodrop->time_adjust = time;
         videodrop->total = videodrop->pass = 0;
+        videodrop->time_adjust = time;
       } else {
         GST_ELEMENT_ERROR (videodrop, STREAM, TOO_LAZY, (NULL),
             ("Received discont, but no time information"));
         gst_event_unref (event);
         return;
       }
+      /* FIXME: increase timestamp / speed */
     }
 
     gst_pad_event_default (pad, event);
@@ -259,10 +266,16 @@ gst_videodrop_chain (GstPad * pad, GstData * data)
   }
 
   buf = GST_BUFFER (data);
-
   videodrop->total++;
-  while (((GST_BUFFER_TIMESTAMP (buf) - videodrop->time_adjust) *
-          videodrop->to_fps * videodrop->speed / GST_SECOND) >=
+  GST_DEBUG ("Received buffer at %u:%02u:%02u:%09u, fps=%lf, pass=%"
+      G_GUINT64_FORMAT " of " G_GUINT64_FORMAT ", speed=%lf",
+      (guint) (GST_BUFFER_TIMESTAMP (buf) / (GST_SECOND * 60 * 60)),
+      (guint) ((GST_BUFFER_TIMESTAMP (buf) / (GST_SECOND * 60)) % 60),
+      (guint) ((GST_BUFFER_TIMESTAMP (buf) / GST_SECOND) % 60),
+      (guint) (GST_BUFFER_TIMESTAMP (buf) % GST_SECOND),
+      videodrop->to_fps, videodrop->total, videodrop->pass, videodrop->speed);
+  while (((GST_BUFFER_TIMESTAMP (buf) - videodrop->time_adjust) /
+          videodrop->speed * videodrop->to_fps / GST_SECOND) >=
       videodrop->pass) {
     /* since we write to the struct (time/duration), we need a new struct,
      * but we don't want to copy around data - a subbuffer is the easiest
@@ -270,9 +283,14 @@ gst_videodrop_chain (GstPad * pad, GstData * data)
     GstBuffer *copy = gst_buffer_create_sub (buf, 0, GST_BUFFER_SIZE (buf));
 
     /* adjust timestamp/duration and push forward */
-    GST_BUFFER_TIMESTAMP (copy) = videodrop->time_adjust / videodrop->speed +
+    GST_BUFFER_TIMESTAMP (copy) = (videodrop->time_adjust / videodrop->speed) +
         GST_SECOND * videodrop->pass / videodrop->to_fps;
     GST_BUFFER_DURATION (copy) = GST_SECOND / videodrop->to_fps;
+    GST_DEBUG ("Sending out buffer from out %u:%02u:%02u:%09u",
+        (guint) (GST_BUFFER_TIMESTAMP (copy) / (GST_SECOND * 60 * 60)),
+        (guint) ((GST_BUFFER_TIMESTAMP (copy) / (GST_SECOND * 60)) % 60),
+        (guint) ((GST_BUFFER_TIMESTAMP (copy) / GST_SECOND) % 60),
+        (guint) (GST_BUFFER_TIMESTAMP (copy) % GST_SECOND));
     gst_pad_push (videodrop->srcpad, GST_DATA (copy));
 
     videodrop->pass++;
