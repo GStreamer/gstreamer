@@ -22,7 +22,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY (videorate_debug);
 #define GST_CAT_DEFAULT videorate_debug
@@ -94,19 +93,17 @@ enum
 };
 
 static GstStaticPadTemplate gst_videorate_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ YUY2, I420, YV12, YUYV, UYVY }")
-    )
+    GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb")
     );
 
 static GstStaticPadTemplate gst_videorate_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ YUY2, I420, YV12, YUYV, UYVY }")
-    )
+    GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb")
     );
 
 static void gst_videorate_base_init (gpointer g_class);
