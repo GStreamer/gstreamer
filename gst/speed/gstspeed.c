@@ -169,6 +169,80 @@ gst_speed_get_type (void)
   return speed_type;
 }
 
+static const GstQueryType *
+speed_get_query_types (GstPad * pad)
+{
+  static const GstQueryType src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return src_query_types;
+}
+
+static gboolean
+speed_src_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * val)
+{
+  gboolean res = TRUE;
+  GstSpeed *filter;
+
+  filter = GST_SPEED (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_QUERY_POSITION:
+    case GST_QUERY_TOTAL:
+    {
+      switch (*format) {
+        case GST_FORMAT_BYTES:
+        case GST_FORMAT_DEFAULT:
+        case GST_FORMAT_TIME:
+        {
+          gint64 peer_value;
+          const GstFormat *peer_formats;
+
+          res = FALSE;
+
+          peer_formats = gst_pad_get_formats (GST_PAD_PEER (filter->sinkpad));
+
+          while (peer_formats && *peer_formats && !res) {
+
+            GstFormat peer_format = *peer_formats;
+
+            /* do the probe */
+            if (gst_pad_query (GST_PAD_PEER (filter->sinkpad), type,
+                    &peer_format, &peer_value)) {
+              GstFormat conv_format;
+
+              /* convert to TIME */
+              conv_format = GST_FORMAT_TIME;
+              res = gst_pad_convert (filter->sinkpad,
+                  peer_format, peer_value, &conv_format, val);
+
+              /* adjust for speed factor */
+              *val = (gint64) (((gdouble) * val) / filter->speed);
+
+              /* and to final format */
+              res &= gst_pad_convert (pad, GST_FORMAT_TIME, *val, format, val);
+            }
+            peer_formats++;
+          }
+          break;
+        }
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
 static void
 speed_base_init (gpointer g_class)
 {
@@ -214,6 +288,8 @@ speed_init (GstSpeed * filter)
       (&gst_speed_src_template), "src");
   gst_pad_set_link_function (filter->srcpad, speed_link);
   gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
+  gst_pad_set_query_type_function (filter->srcpad, speed_get_query_types);
+  gst_pad_set_query_function (filter->srcpad, speed_src_query);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->offset = 0;
@@ -307,12 +383,15 @@ speed_chain (GstPad * pad, GstData * data)
       {
         gint64 timestamp, offset;
 
+        if (gst_event_discont_get_value (GST_EVENT (data), GST_FORMAT_TIME,
+                &timestamp)) {
+          filter->timestamp = timestamp;
+          filter->offset = timestamp * filter->rate / GST_SECOND;
+        }
         if (gst_event_discont_get_value (GST_EVENT (data), GST_FORMAT_BYTES,
-                &timestamp)
-            && gst_event_discont_get_value (GST_EVENT (data), GST_FORMAT_BYTES,
                 &offset)) {
           filter->offset = offset;
-          filter->timestamp = timestamp;
+          filter->timestamp = offset * GST_SECOND / filter->rate;
         }
         break;
       }
