@@ -228,7 +228,7 @@ gst_avi_decoder_new_pad (GstElement *element, GstPad *pad, GstAviDecoder *avi_de
     pad = gst_element_get_pad (type, "src");
     caps = gst_pad_get_caps (pad);
 
-    if (gst_caps_check_compatibility (caps, targetcaps)) {
+    if (gst_caps_is_always_compatible (caps, targetcaps)) {
       gst_element_add_ghost_pad (GST_ELEMENT (avi_decoder), 
 	    gst_element_get_pad (type, "src"), gpadname);
 
