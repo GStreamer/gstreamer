@@ -13,11 +13,8 @@ BUILT_SOURCES = grammar.tab.h grammar.tab.c lex.yy.c
 
 EXTRA_DIST = grammar.y parse.l types.h
 
-grammar.tab.h: grammar.y
-	$(BISON) grammar.y
-
-grammar.tab.c: grammar.y
-	$(BISON) grammar.y
-
+grammar.tab.c grammar.tab.h: grammar.y
+	$(BISON) $^
+ 
 lex.yy.c: parse.l
-	flex parse.l
+	flex $^
