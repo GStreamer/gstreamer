@@ -73,9 +73,9 @@ gst_trash_stack_push (GstTrashStack *stack, gpointer mem)
 {
  __asm__ __volatile__ (
    "1:                         \n\t"
-   "  movl %2, (%1);           \n\t"
-   "  lock; cmpxchg %1, %0;    \n\t"
-   "  jnz 1b;                  \n"
+   "  movl %2, (%1);           \n\t"	/* mem->next == stack->head */
+   "  lock; cmpxchg %1, %0;    \n\t"	/* if head unchanged, move mem into it */
+   "  jnz 1b;                  \n"	/* head changed, retry */
      :
      : "m" (*stack),
        "r" (mem),
@@ -88,15 +88,22 @@ gst_trash_stack_pop (GstTrashStack *stack)
 {
   GstTrashStackElement *head;
 
+  /* pop is a little more complicated as we need to avoid the so called ABA
+   * problem that arises when a pop and push of the same element happens
+   * right between when we read head->next and try to swing the new pointer
+   * into place. This is usually solved using a counter which makes it highly
+   * inlikely that we manage to grab the wrong head->next value.
+   */
   __asm__ __volatile__ (
-    "  testl %%eax, %%eax;      \n\t"
+    "  testl %%eax, %%eax;      \n\t"	/* if (head == NULL) return */
     "  jz 20f;                  \n\t"
     "10:                        \n\t"
-    "  movl (%%eax), %%ebx;     \n\t"
-    "  movl %%edx, %%ecx;       \n\t"
-    "  incl %%ecx;              \n\t"
-    "  lock; cmpxchg8b %1;      \n\t"
-    "  jnz 10b;                 \n\t"
+    "  movl (%%eax), %%ebx;     \n\t"	/* take value pointed to by head (head->next) */
+    "  movl %%edx, %%ecx;       \n\t"	/* take counter */
+    "  incl %%ecx;              \n\t"	/* and increment */
+    "  lock; cmpxchg8b %1;      \n\t"	/* if eax:edx == *stack, move ebx:ecx to *stack,
+					 * else *stack is moved into eax:edx again... */
+    "  jnz 10b;                 \n\t"	/* ... and we retry */
     "20:                        \n"
       : "=a" (head)
       :  "m" (*stack),
