@@ -27,12 +27,12 @@ CLEANFILES = gst.c
 EXTRA_DIST = gst.defs gst-types.defs $(GST_OVERRIDES) arg-types.py
 
 gst.c: $(srcdir)/gst.defs $(srcdir)/arg-types.py $(GST_OVERRIDES)
-        && rm -f $(srcdir)/gst.c \
-	$(PYGTK_CODEGEN) \
+	rm -f $(srcdir)/gst.c \
+	&& $(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \
 	        --register $(srcdir)/gst-types.defs \
 		--override $(srcdir)/gst.override \
 		--prefix pygst $(srcdir)/gst.defs > $(srcdir)/gen-gst.c \
-        && echo '/* GENERATED FILE - DO NOT EDIT */' >> $(srcdir)/gst.c \
+	&& echo '/* GENERATED FILE - DO NOT EDIT */' >> $(srcdir)/gst.c \
 	&& cat $(srcdir)/gen-gst.c >> $(srcdir)/gst.c \
 	&& rm -f $(srcdir)/gen-gst.c
