@@ -932,7 +932,6 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
-  g_return_val_if_fail (element->sched != NULL, GST_STATE_FAILURE);
 
   GST_DEBUG_ELEMENT (GST_CAT_STATES,element, "setting state from %s to %s\n",
                      gst_element_statename(GST_STATE(element)),
@@ -1292,12 +1291,14 @@ gst_element_yield (GstElement *element)
   }
 }
 
-void
+gboolean
 gst_element_interrupt (GstElement *element)
 {
   if (GST_ELEMENT_SCHED (element)) {
-    gst_scheduler_interrupt (GST_ELEMENT_SCHED (element), element);
+    return gst_scheduler_interrupt (GST_ELEMENT_SCHED (element), element);
   }
+  else 
+    return FALSE;
 }
 
 /**

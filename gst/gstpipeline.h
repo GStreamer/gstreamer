@@ -58,6 +58,7 @@ GType		gst_pipeline_get_type		(void);
 GstElement*	gst_pipeline_new		(const gchar *name);
 #define		gst_pipeline_destroy(pipeline)	gst_object_destroy(GST_OBJECT(pipeline))
 
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -133,19 +133,27 @@ gst_thread_class_init (GstThreadClass *klass)
 static void
 gst_thread_init (GstThread *thread)
 {
+  const gchar *schedname;
+  GstScheduler *scheduler;
 
-  GST_DEBUG (GST_CAT_THREAD,"initializing thread\n");
+  GST_DEBUG (GST_CAT_THREAD, "initializing thread\n");
 
   /* we're a manager by default */
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
 
-  thread->lock = g_mutex_new();
-  thread->cond = g_cond_new();
+  schedname = gst_schedulerfactory_get_default_name ();
 
-  GST_ELEMENT_SCHED(thread) = gst_schedulerfactory_make ("basic", GST_ELEMENT(thread));
-  GST_DEBUG(GST_CAT_THREAD, "thread's scheduler is %p\n",GST_ELEMENT_SCHED(thread));
+  scheduler = gst_schedulerfactory_make (schedname, GST_ELEMENT (thread));
 
-  thread->ppid = getpid();
+  GST_ELEMENT_SCHED (thread) = scheduler;
+
+  gst_object_ref (GST_OBJECT (scheduler));
+  gst_object_sink (GST_OBJECT (scheduler));
+
+  thread->lock = g_mutex_new ();
+  thread->cond = g_cond_new ();
+
+  thread->ppid = getpid ();
   thread->thread_id = -1;
 }
 
@@ -154,16 +162,17 @@ gst_thread_dispose (GObject *object)
 {
   GstThread *thread = GST_THREAD (object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING,"dispose\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose\n");
 
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
-  gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
-
+  if (GST_ELEMENT_SCHED (thread)) {
+    gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
+    gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
+  }
 }
 
 static void

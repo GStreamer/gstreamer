@@ -77,7 +77,7 @@ struct _GstSchedulerClass {
   void 			(*lock_element)		(GstScheduler *sched, GstElement *element);
   void 			(*unlock_element)	(GstScheduler *sched, GstElement *element);
   void 			(*yield)		(GstScheduler *sched, GstElement *element);
-  void 			(*interrupt)		(GstScheduler *sched, GstElement *element);
+  gboolean		(*interrupt)		(GstScheduler *sched, GstElement *element);
   void 			(*error)		(GstScheduler *sched, GstElement *element);
   void 			(*pad_connect)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
   void 			(*pad_disconnect)	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -101,7 +101,7 @@ GstElementStateReturn	gst_scheduler_state_transition	(GstScheduler *sched, GstEl
 void			gst_scheduler_lock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_unlock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_yield		(GstScheduler *sched, GstElement *element);
-void			gst_scheduler_interrupt		(GstScheduler *sched, GstElement *element);
+gboolean		gst_scheduler_interrupt		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_error		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_pad_connect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 void			gst_scheduler_pad_disconnect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -149,6 +149,9 @@ GList*			gst_schedulerfactory_get_list		(void);
 
 GstScheduler*		gst_schedulerfactory_create		(GstSchedulerFactory *factory, GstElement *parent);
 GstScheduler*		gst_schedulerfactory_make		(const gchar *name, GstElement *parent);
+
+void			gst_schedulerfactory_set_default_name	(const gchar* name);
+const gchar*		gst_schedulerfactory_get_default_name	(void);
 
 
 #ifdef __cplusplus   

@@ -494,7 +494,9 @@ gst_pad_push_func(GstPad *pad, GstBuffer *buf)
                GST_DEBUG_FUNCPTR_NAME(GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad))));
     (GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)))(pad,buf);
   } else {
-    GST_DEBUG (GST_CAT_DATAFLOW,"got a problem here: default pad_push handler in place, no chain function\n");
+    GST_DEBUG (GST_CAT_DATAFLOW,"default pad_push handler in place, no chain function\n");
+    g_warning ("(internal error) default pad_push in place for pad %s:%s but it has no chain function", 
+		    GST_DEBUG_PAD_NAME (pad));
   }
 }
 

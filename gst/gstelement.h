@@ -29,7 +29,6 @@
 #include <gst/gsttypes.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
-#include <gst/cothreads.h>
 #include <gst/gstpluginfeature.h>
 
 #ifdef __cplusplus
@@ -103,6 +102,7 @@ typedef enum {
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
 #define GST_ELEMENT_IS_EOS(obj)			(GST_FLAG_IS_SET(obj,GST_ELEMENT_EOS))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))
+#define GST_ELEMENT_IS_DECOUPLED(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_DECOUPLED))
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
@@ -184,7 +184,7 @@ void                    gst_element_set_parent          (GstElement *element, Gs
 GstObject*              gst_element_get_parent          (GstElement *element);
 
 void			gst_element_yield		(GstElement *element);
-void			gst_element_interrupt		(GstElement *element);
+gboolean		gst_element_interrupt		(GstElement *element);
 void			gst_element_set_sched		(GstElement *element, GstScheduler *sched);
 GstScheduler*		gst_element_get_sched		(GstElement *element);
 

@@ -97,21 +97,22 @@ gst_pipeline_class_init (GstPipelineClass *klass)
 static void
 gst_pipeline_init (GstPipeline *pipeline)
 {
+  const gchar *schedname;
   GstScheduler *scheduler;
 
   /* we're a manager by default */
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
-  scheduler = gst_schedulerfactory_make ("basic", GST_ELEMENT (pipeline));
+  schedname = gst_schedulerfactory_get_default_name ();
 
+  scheduler = gst_schedulerfactory_make (schedname, GST_ELEMENT (pipeline));
+	  
   GST_ELEMENT_SCHED (pipeline) = scheduler;
 
   gst_object_ref (GST_OBJECT (scheduler));
   gst_object_sink (GST_OBJECT (scheduler));
 
   gst_scheduler_setup (scheduler);
-
-  GST_DEBUG (GST_CAT_PIPELINE, "pipeline's scheduler is %p\n", scheduler);
 }
 
 static void
@@ -121,8 +122,10 @@ gst_pipeline_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  gst_scheduler_reset (GST_ELEMENT_SCHED (pipeline));
-  gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (pipeline)));
+  if (GST_ELEMENT_SCHED (pipeline)) {
+    gst_scheduler_reset (GST_ELEMENT_SCHED (pipeline));
+    gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (pipeline)));
+  }
 }
 
 /**

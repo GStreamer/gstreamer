@@ -31,6 +31,8 @@ static void 	gst_scheduler_init 		(GstScheduler *sched);
 
 static GstObjectClass *parent_class = NULL;
 
+static gchar *_default_name = NULL;
+
 GType
 gst_scheduler_get_type (void)
 {
@@ -282,15 +284,20 @@ gst_scheduler_yield (GstScheduler *sched, GstElement *element)
  * @element: the element requesting an interrupt
  *
  * Tell the scheduler to interrupt execution of this element.
+ *
+ * Retruns: TRUE if the element should return NULL from the chain/get
+ * function.
  */
-void
+gboolean
 gst_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_val_if_fail (GST_IS_SCHEDULER (sched), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   if (CLASS (sched)->interrupt)
-    CLASS (sched)->interrupt (sched, element);
+    return CLASS (sched)->interrupt (sched, element);
+
+  return FALSE;
 }
 
 /**
@@ -387,6 +394,7 @@ gst_schedulerfactory_class_init (GstSchedulerFactoryClass *klass)
 #endif
 
   _gst_schedulerfactories = NULL;
+  _default_name = g_strdup ("basic");
 }
 
 static void
@@ -534,6 +542,21 @@ gst_schedulerfactory_make (const gchar *name, GstElement *parent)
     return NULL;
 
   return gst_schedulerfactory_create (factory, parent);
+}
+
+void
+gst_schedulerfactory_set_default_name (const gchar* name)
+{
+  if (_default_name)
+    g_free (_default_name);
+
+  _default_name = g_strdup (name);
+}
+
+const gchar*
+gst_schedulerfactory_get_default_name (void)
+{
+  return _default_name;
 }
 
 #ifndef GST_DISABLE_REGISTRY

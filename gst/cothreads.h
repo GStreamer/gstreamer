@@ -76,7 +76,6 @@ void				cothread_setfunc	(cothread_state *thread, cothread_func func,
 						         int argc, char **argv);
 void				cothread_stop		(cothread_state *thread);
 
-int				cothread_getcurrent	(void);
 void				cothread_switch		(cothread_state *thread);
 void				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
 gpointer			cothread_get_data	(cothread_state *thread, gchar *key);
@@ -87,5 +86,6 @@ void				cothread_unlock		(cothread_state *thread);
 
 cothread_state*			cothread_main		(cothread_context *ctx);
 cothread_state*			cothread_current_main	(void);
+cothread_state*			cothread_current	(void);
 
 #endif /* __COTHREAD_H__ */

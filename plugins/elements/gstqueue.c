@@ -284,7 +284,6 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
   reader = FALSE;
-
 restart:
   /* we have to lock the queue since we span threads */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
@@ -353,7 +352,8 @@ restart:
       while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
         g_mutex_unlock (queue->qlock);
-	gst_element_interrupt (GST_ELEMENT (queue));
+	if (gst_element_interrupt (GST_ELEMENT (queue)))
+          return;
 	goto restart;
       }
       if (GST_STATE (queue) != GST_STATE_PLAYING) {
@@ -419,7 +419,6 @@ gst_queue_get (GstPad *pad)
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
   writer = FALSE;
-
 restart:
   /* have to lock for thread-safety */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
@@ -434,7 +433,8 @@ restart:
     while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
       g_mutex_unlock (queue->qlock);
-      gst_element_interrupt (GST_ELEMENT (queue));
+      if (gst_element_interrupt (GST_ELEMENT (queue)))
+        return NULL;
       goto restart;
     }
     if (GST_STATE (queue) != GST_STATE_PLAYING) {
@@ -442,7 +442,7 @@ restart:
       if (!queue->may_deadlock) {
         g_mutex_unlock (queue->qlock);
         gst_element_error (GST_ELEMENT (queue), "deadlock found, sink pad elements are shut down");
-        return NULL;
+        goto restart;
       }
       else {
         gst_element_info (GST_ELEMENT (queue), "waiting for the app to restart sink pad elements");

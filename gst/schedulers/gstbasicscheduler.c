@@ -101,7 +101,7 @@ static GstElementStateReturn
 static void 		gst_basic_scheduler_lock_element 	(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
-static void 		gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
+static gboolean		gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *element);
 static void     	gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static void     	gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -330,6 +330,7 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+exit:
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
   GST_DEBUG_LEAVE ("");
@@ -1056,10 +1057,13 @@ gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
   }
 }
 
-static void
+static gboolean
 gst_basic_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
+  GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
   cothread_switch (cothread_current_main ());
+
+  return FALSE;
 }
 
 static void

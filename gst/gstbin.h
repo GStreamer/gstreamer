@@ -25,7 +25,6 @@
 #define __GST_BIN_H__
 
 #include <gst/gstelement.h>
-#include <gst/cothreads.h>
 
 #ifdef __cplusplus
 extern "C" {

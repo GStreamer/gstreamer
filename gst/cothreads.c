@@ -308,6 +308,21 @@ cothread_current_main (void)
   return ctx->threads[0];
 }
 
+/**
+ * cothread_current:
+ *
+ * Get the currenttly executing cothread
+ *
+ * Returns: the #cothread_state of the current cothread
+ */
+cothread_state *
+cothread_current (void)
+{
+  cothread_context *ctx = pthread_getspecific (_cothread_key);
+
+  return ctx->threads[ctx->current];
+}
+
 static void
 cothread_stub (void)
 {
