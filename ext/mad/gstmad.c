@@ -77,6 +77,7 @@ struct _GstMad
   gint rate;
   gint channels;
 
+  gboolean caps_set;            /* used to keep track of whether to change/update caps */
   GstIndex *index;
   gint index_id;
 
@@ -885,7 +886,7 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
   GstEvent *event = GST_EVENT (buffer);
   GstMad *mad = GST_MAD (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("handling event");
+  GST_DEBUG ("handling event %d", GST_EVENT_TYPE (event));
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
     {
@@ -937,6 +938,10 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
       mad->restart = FALSE;
       break;
     }
+    case GST_EVENT_EOS:
+      mad->caps_set = FALSE;    /* could be a new stream */
+      gst_pad_event_default (pad, event);
+      break;
     default:
       gst_pad_event_default (pad, event);
       break;
@@ -1125,6 +1130,18 @@ gst_mad_check_caps_reset (GstMad * mad)
   rate = mad->frame.header.samplerate;
 #endif
 
+  /* rate and channels are not supposed to change in a continuous stream,
+   * so check this first before doing anything */
+
+  /* only set caps if they weren't already set for this continuous stream */
+  if (mad->channels != nchannels || mad->rate != rate) {
+    if (mad->caps_set) {
+      GST_DEBUG
+          ("Header changed from %d Hz/%d ch to %d Hz/%d ch, failed sync after seek ?",
+          mad->rate, mad->channels, rate, nchannels);
+      return;
+    }
+  }
   gst_mad_update_info (mad);
 
   if (mad->channels != nchannels || mad->rate != rate) {
@@ -1144,6 +1161,7 @@ gst_mad_check_caps_reset (GstMad * mad)
 
     gst_pad_set_explicit_caps (mad->srcpad, caps);
     gst_caps_free (caps);
+    mad->caps_set = TRUE;       /* set back to FALSE on discont */
     mad->channels = nchannels;
     mad->rate = rate;
   }
@@ -1219,10 +1237,11 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
     /* while we have data we can consume it */
     while (mad->tempsize >= 0) {
-      gint consumed;
+      gint consumed = 0;
       guint nsamples;
       guint64 time_offset;
       guint64 time_duration;
+      unsigned char const *before_sync, *after_sync;
 
       mad->in_error = FALSE;
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
@@ -1288,6 +1307,18 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
         mad_frame_mute (&mad->frame);
         mad_synth_mute (&mad->synth);
+        before_sync = mad->stream.ptr.byte;
+        if (mad_stream_sync (&mad->stream) != 0)
+          GST_WARNING ("mad_stream_sync failed");
+        after_sync = mad->stream.ptr.byte;
+        /* a succesful resync should make us drop bytes as consumed, so
+           calculate from the byte pointers before and after resync */
+        consumed = after_sync - before_sync;
+        GST_DEBUG ("resynchronization consumes %d bytes", consumed);
+        GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
+            *(mad->stream.ptr.byte + 1));
+
+
         mad_stream_sync (&mad->stream);
         /* recoverable errors pass */
         goto next;
@@ -1407,7 +1438,12 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
     next:
       /* figure out how many bytes mad consumed */
-      consumed = mad->stream.next_frame - mad_input_buffer;
+      /* if consumed is already set, it's from the resync higher up, so
+         we need to use that value instead.  Otherwise, recalculate from
+         mad's consumption */
+      if (consumed == 0)
+        consumed = mad->stream.next_frame - mad_input_buffer;
+
       GST_LOG ("mad consumed %d bytes", consumed);
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
@@ -1443,6 +1479,7 @@ gst_mad_change_state (GstElement * element)
       mad->total_samples = 0;
       mad->rate = 0;
       mad->channels = 0;
+      mad->caps_set = FALSE;
       mad->vbr_average = 0;
       mad->segment_start = 0;
       mad->new_header = TRUE;
