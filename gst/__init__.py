@@ -36,3 +36,7 @@ sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
 del devloc, sys, os
 
 from _gstreamer import *
+
+def threads_init():
+    import gtk
+    gtk.threads_init()
