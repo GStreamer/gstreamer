@@ -377,7 +377,8 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
   gssize size;
   GError *error = NULL;
 
-  context = g_markup_parse_context_new (&gst_xml_registry_paths_parser, 0, registry, NULL);
+  context = g_markup_parse_context_new (&gst_xml_registry_paths_parser, 0, 
+                                        registry, NULL);
 
   if (! (reg = fopen (registry->location, "r"))) {
     return;
@@ -392,7 +393,8 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
     g_markup_parse_context_parse (context, text, size, &error);
 
     if (error) {
-      fprintf(stderr, "ERROR: parsing registry: %s\n", error->message);
+      fprintf (stderr, "ERROR: parsing registry %s: %s\n", 
+	       registry->location, error->message);
       g_free (text);
       fclose (reg);
       return;

@@ -433,11 +433,23 @@ gboolean
 gst_plugin_load (const gchar *name)
 {
   GstPlugin *plugin;
+  GError *error = NULL;
 
   plugin = gst_registry_pool_find_plugin (name);
   if (plugin)
-    return gst_plugin_load_plugin (plugin, NULL);
+  {
+    gboolean result = gst_plugin_load_plugin (plugin, &error);
+    if (error)
+    {
+      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "load_plugin error: %s\n",
+	         error->message);
+      g_error_free (error);
+    }
+    return result;
+  }
 
+  GST_DEBUG (GST_CAT_PLUGIN_LOADING, "Could not find %s in registry pool",
+             name);
   return FALSE;
 }
 
@@ -456,7 +468,7 @@ gst_library_load (const gchar *name)
   gboolean res;
 
   /* for now this is the same */
-  res = gst_plugin_load(name);
+  res = gst_plugin_load (name);
 
   return res;
 }

@@ -106,7 +106,7 @@ get_type_for_mime (const gchar *mime)
  * @mime: the mime type to attach to the capability
  * @props: the properties to add to this capability
  *
- * Create a new capability with the given mime typei and properties.
+ * Create a new capability with the given mime type and properties.
  *
  * Returns: a new capability
  */
