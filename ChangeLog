@@ -1,3 +1,10 @@
+2004-12-09  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-conventions.txt:
+	Added design doc for MT-safe API implementation 
+	guidelines in GST.
+
 2004-12-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* commited Wim's preliminary work according to his design to
