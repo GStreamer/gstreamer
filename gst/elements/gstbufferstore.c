@@ -233,14 +233,6 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	store->buffers = g_list_prepend (NULL, buffer);
       }
     }
-    {
-      GList *walk = store->buffers;
-      while (walk) {
-	g_print ("  %llu - %u\n", GST_BUFFER_OFFSET (walk->data), GST_BUFFER_SIZE (walk->data));
-	walk = g_list_next (walk);
-      }
-      g_print ("\n");
-    }
     return TRUE;
   }
 }
