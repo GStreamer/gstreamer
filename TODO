@@ -1,40 +1,25 @@
+Warning !!! most of those item are probably obsolete :
+
+configure.ac / build :
 * version the element check m4
-
-* check qcam plugin; it includes source of the qcam package that might
-  be librified
-
-* check xvideo; the flags need better handling but first try to understand
-  it better ;)
-
-* check SDL optimisation flags
-
 * check GST_* in configure.ac, there is too much in it
+* check if we can drop some of the AC_SUBST's for libs and cflags
 
+plugins :
+* ext/a52dec	check options, it has some arch stuff and some opti stuff that looks dodgy
+* ext/arts[d]	need a good onceover
+* ext/jack	plugin is rotten, won't work with current jack versions
+* ext/ladspa	add header check stuff and dir stuff
+* ext/mpeg2dec	what to do with the perftest ?
+* ext/sdl	check SDL optimisation flags
+* gst/festival	should have checks and stuff and added properly
+* gst/wavenc	merge gst/wavenc/riff.h and gst-libs/gst/riff/riff-ids.h
+* sys/qcam	it includes source of the qcam package that might be librified
+
+* gst-libs/gst/riff: do we need those cflags ?
+
+packaging :
 * work on spec file :
   add plugins with AC stuff (maybe from bits ?)
   write script that builds rpm's one from one
   get postun script right; gstreamer-register should be installed for example
-
-* check options in a52, it has some arch stuff and some opti stuff that 
-  looks dodgy
-
-* what to do with the perftest in mpeg2dec ?
-
-* riff: do we need those cflags ?
-
-* festival should have checks and stuff and added properly
-
-* fix ffmpeg
-
-* add ladspa header check stuff and dir stuff
-
-* make sidplay stuff ok, the source is on the net ;)
-
-* fix xmms plugin, doesn't register atm
-
-* arts and artsd need a good onceover
-
-
-* check if we can drop some of the AC_SUBST's for libs and cflags
-
-* the mikmod author needs to drop the lib from the name ;)
