@@ -1,3 +1,20 @@
+2005-02-04  Jan Schmidt  <thaytan@mad.scientist.com>
+	* sys/v4l/gstv4l.c: (plugin_init):
+	* sys/v4l/gstv4ljpegsrc.c: (gst_v4ljpegsrc_get_type),
+	(gst_v4ljpegsrc_base_init), (gst_v4ljpegsrc_class_init),
+	(gst_v4ljpegsrc_init), (gst_v4ljpegsrc_src_link),
+	(gst_v4ljpegsrc_getcaps), (gst_v4ljpegsrc_get):
+	* sys/v4l/gstv4ljpegsrc.h:
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_open), (gst_v4lsrc_src_link):
+	* sys/v4l/v4l_calls.h:
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_palette_name),
+	(gst_v4lsrc_get_fps):
+	* sys/v4l/v4lsrc_calls.h:
+	  Add new v4ljpegsrc for handling the ov51x hacky "I'll give
+	  you jpeg inside rgb frames" driver.
+	  Don't error in the v4lsrc link function, just return 
+	  REFUSED.
+
 2005-02-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/qcam/gstqcamsrc.c: (gst_qcamsrc_change_state),
