@@ -37,9 +37,10 @@ extern GstElementDetails gst_thread_details;
 
 
 typedef enum {
-  GST_THREAD_CREATE		= GST_BIN_FLAG_LAST,
+  GST_THREAD_STATE_STARTED		= GST_BIN_FLAG_LAST,
   GST_THREAD_STATE_SPINNING,
   GST_THREAD_STATE_REAPING,
+  GST_THREAD_STATE_ELEMENT_CHANGED,
 
   /* padding */
   GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4,
@@ -66,7 +67,6 @@ struct _GstThread {
   pthread_t thread_id;		/* id of the thread, if any */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */
-  gboolean signaling;
 
   gint transition;		/* the current state transition */
 };
