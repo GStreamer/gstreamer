@@ -31,10 +31,9 @@
 #include "gstgnomevfsuri.h"
 
 gchar **
-gst_gnomevfs_get_supported_uris (GnomeVFSOpenMode mode)
+gst_gnomevfs_get_supported_uris (void)
 {
-  GnomeVFSResult res;
-  GnomeVFSHandle *handle;
+  GnomeVFSURI *uri;
   gchar *uris[] = {
     "http://localhost/bla",
     "file:///bla",
@@ -50,15 +49,12 @@ gst_gnomevfs_get_supported_uris (GnomeVFSOpenMode mode)
 
   result = g_new (gchar *, 9);
   for (n = 0; uris[n] != NULL; n++) {
-    res = gnome_vfs_open (&handle, uris[n], mode);
-    if (res == GNOME_VFS_OK) {
-      gnome_vfs_close (handle);
-    }
-    /* FIXME: do something with mode error */
-    if (res != GNOME_VFS_ERROR_INVALID_URI) {
+    uri = gnome_vfs_uri_new (uris[n]);
+    if (uri != NULL) {
       gchar *protocol = g_strdup (uris[n]);
       gint n;
 
+      gnome_vfs_uri_unref (uri);
       for (n = 0; protocol[n] != '\0'; n++) {
         if (protocol[n] == ':') {
           protocol[n] = '\0';

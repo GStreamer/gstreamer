@@ -264,7 +264,7 @@ gst_gnomevfssink_uri_get_protocols (void)
   static gchar **protocols = NULL;
 
   if (!protocols)
-    protocols = gst_gnomevfs_get_supported_uris (GNOME_VFS_OPEN_WRITE);
+    protocols = gst_gnomevfs_get_supported_uris ();
 
   return protocols;
 }
