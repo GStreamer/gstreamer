@@ -1,0 +1,79 @@
+
+After some discussion on IRC, I think it's time to propose a
+formal plan for the next 6 months or so to the list.
+
+I think most people are in agreement that we need a period of time
+in which we can focus on improving non-core bits (like elements,
+schedulers, autopluggers, applications, etc.)  In the last cycle,
+there was a lot of time spent with a significant number of plugins
+broken, and it's realistic to assume that this could happen again
+in a 0.9 unstable series.
+
+What I propose is:
+
+ - We continue to develop the 0.8.x series as HEAD, with the obvious
+   requirement that all changes be ABI/API compatible.
+ 
+ - API additions are encouraged, as long as they are well-thought-out.
+
+ - Significant API additions should be developed on a separate branch
+   (not HEAD) to test out any bugs.
+
+In mid-August (or so, in order to coordinate with GNOME-2.8), we have
+two options:
+
+ - Continue with 0.8.x releases, obviously ABI compatible with 0.8.0.
+
+ - or, remove deprecated functions, readjust the padding on structures,
+   perhaps make a few additional ABI changes [1], and quickly go to
+   0.10.0.
+
+I prefer the latter, although we don't have to decide that until
+later.  In either case, there should be no API changes that affect
+more than a bare minimum of elements or applications.
+
+A few things that we won't be able to do without a true unstable
+branch are:
+
+ - using GstStructure for all GstEvents.
+
+ - significant clock changes
+
+ - significant scheduling changes
+
+ - separation of headers into application and plugin headers
+
+ - anything that requires modification of every plugin
+
+There are perils with having HEAD being the stable branch,
+specifically that bugs can creep in and accidentally cause regressions
+in releases.  I'm hoping that the introduction of media regression
+testing and also the development of new testsuites will keep this
+to a minimum.  Don't forget that accidental bugs that get into
+releases typically cause rude IRC conversations, which we really
+don't need.  Please keep the bugs (and the rudeness) to a minimum.
+
+Also, keep in mind that we will have to live with 0.8's unfixable
+bugs for an entire year.[2]
+
+
+
+dave...
+
+--
+[1] I'm thinking about making GstData a subclass of GTypeInstance or
+    GObject.
+[2] But then, 0.6 was 1 year ago, and felt a lot more buggy when it
+    was released.
+
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by: IBM Linux Tutorials
+Free Linux tutorial presented by Daniel Robbins, President and CEO of
+GenToo technologies. Learn everything from fundamentals to system
+administration.http://ads.osdn.com/?ad_id=1470&alloc_id=3638&op=click
+_______________________________________________
+gstreamer-devel mailing list
+gstreamer-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/gstreamer-devel
