@@ -104,11 +104,19 @@ getpid() , cothread_getcurrent() , _gst_category_colors[cat] , __LINE__ , ## arg
     fprintf(stderr,format , ## args ); \
 }G_STMT_END
 
-#define GST_DEBUG_ENTER(format, args...) G_STMT_START{ \
-  if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
-      ((1<<31) & _gst_debug_categories)) \
-    fprintf(stderr,GST_DEBUG_PREFIX(31,format": entering\n" , ## args )); \
-}G_STMT_END
+#ifdef GST_DEBUG_COLOR
+  #define GST_DEBUG_ENTER(format, args...) G_STMT_START{ \
+    if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
+        ((1<<31) & _gst_debug_categories)) \
+      fprintf(stderr,GST_DEBUG_PREFIX(31,format": \033[01;37mentering\033[00m\n" , ## args )); \
+  }G_STMT_END
+#else
+  #define GST_DEBUG_ENTER(format, args...) G_STMT_START{ \
+    if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
+        ((1<<31) & _gst_debug_categories)) \
+      fprintf(stderr,GST_DEBUG_PREFIX(31,format": entering\n" , ## args )); \
+  }G_STMT_END
+#endif /* GST_DEBUG_COLOR */
 
 // FIXME FIXME FIXME this leaks like crazy
 #define GST_DEBUG_SET_STRING(format, args...) \
@@ -116,12 +124,21 @@ getpid() , cothread_getcurrent() , _gst_category_colors[cat] , __LINE__ , ## arg
 
 #define GST_DEBUG_ENTER_STRING GST_DEBUG_ENTER("%s",_debug_string)
 
-#define GST_DEBUG_LEAVE(format, args...) G_STMT_START{ \
-  if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
-      ((1<<31) & _gst_debug_categories)) \
-    if (_debug_string != NULL) g_free(_debug_string),\
-      fprintf(stderr,GST_DEBUG_PREFIX(31,format": leaving\n" , ## args )); \
-}G_STMT_END
+#ifdef GST_DEBUG_COLOR
+  #define GST_DEBUG_LEAVE(format, args...) G_STMT_START{ \
+    if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
+        ((1<<31) & _gst_debug_categories)) \
+      if (_debug_string != NULL) g_free(_debug_string),\
+        fprintf(stderr,GST_DEBUG_PREFIX(31,format": \033[01;37mleaving\033[00m\n" , ## args )); \
+  }G_STMT_END
+#else
+  #define GST_DEBUG_LEAVE(format, args...) G_STMT_START{ \
+    if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
+        ((1<<31) & _gst_debug_categories)) \
+      if (_debug_string != NULL) g_free(_debug_string),\
+        fprintf(stderr,GST_DEBUG_PREFIX(31,format": leaving\n" , ## args )); \
+  }G_STMT_END
+#endif /* GST_DEBUG_COLOR */
 
 #define GST_DEBUG_LEAVE_STRING GST_DEBUG_LEAVE("%s",_debug_string)
 

@@ -69,33 +69,33 @@ static gchar *_gst_info_category_strings[] = {
 };
 
 const gchar *_gst_category_colors[32] = {
-  [GST_CAT_GST_INIT] = "00;37",
-  [GST_CAT_COTHREADS] = "00;32",
-  [GST_CAT_COTHREAD_SWITCH] = "00;32",
-  [GST_CAT_AUTOPLUG] = "00;34",
-  [GST_CAT_AUTOPLUG_ATTEMPT] = "00;34",
-  [GST_CAT_PARENTAGE] = "",
-  [GST_CAT_STATES] = "00;31",
-  [GST_CAT_PLANNING] = "00;35",
-  [GST_CAT_SCHEDULING] = "00;35",
-  [GST_CAT_DATAFLOW] = "00;32",
-  [GST_CAT_BUFFER] = "00;32",
-  [GST_CAT_CAPS] = "",
-  [GST_CAT_CLOCK] = "",
-  [GST_CAT_ELEMENT_PADS] = "",
-  [GST_CAT_ELEMENTFACTORY] = "",
-  [GST_CAT_PADS] = "",
-  [GST_CAT_PIPELINE] = "",
-  [GST_CAT_PLUGIN_LOADING] = "00;36",
-  [GST_CAT_PLUGIN_ERRORS] = "05;31",
-  [GST_CAT_PLUGIN_INFO] = "00;36",
-  [GST_CAT_PROPERTIES] = "",
-  [GST_CAT_THREAD] = "00;31",
-  [GST_CAT_TYPES] = "",
-  [GST_CAT_XML] = "",
-  [GST_CAT_NEGOTIATION] = "",
+  [GST_CAT_GST_INIT]		= "07;37",
+  [GST_CAT_COTHREADS]		= "00;32",
+  [GST_CAT_COTHREAD_SWITCH]	= "00;32",
+  [GST_CAT_AUTOPLUG]		= "00;34",
+  [GST_CAT_AUTOPLUG_ATTEMPT]	= "00;34",
+  [GST_CAT_PARENTAGE]		= "01;37;41",		// !!
+  [GST_CAT_STATES]		= "00;31",
+  [GST_CAT_PLANNING]		= "00;35",
+  [GST_CAT_SCHEDULING]		= "00;35",
+  [GST_CAT_DATAFLOW]		= "00;32",
+  [GST_CAT_BUFFER]		= "00;32",
+  [GST_CAT_CAPS]		= "01;37;41",		// !!
+  [GST_CAT_CLOCK]		= "01;37;41",		// !!
+  [GST_CAT_ELEMENT_PADS]	= "01;37;41",		// !!
+  [GST_CAT_ELEMENTFACTORY]	= "01;37;41",		// !!
+  [GST_CAT_PADS]		= "01;37;41",		// !!
+  [GST_CAT_PIPELINE]		= "01;37;41",		// !!
+  [GST_CAT_PLUGIN_LOADING]	= "00;36",
+  [GST_CAT_PLUGIN_ERRORS]	= "05;31",
+  [GST_CAT_PLUGIN_INFO]		= "00;36",
+  [GST_CAT_PROPERTIES]		= "01;37;41",		// !!
+  [GST_CAT_THREAD]		= "00;31",
+  [GST_CAT_TYPES]		= "01;37;41",		// !!
+  [GST_CAT_XML]			= "01;37;41",		// !!
+  [GST_CAT_NEGOTIATION]		= "01;37;41",		// !!
 
-  [31] = "",
+  [31]				= "",
 };
 
 
