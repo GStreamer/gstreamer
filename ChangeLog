@@ -1,3 +1,11 @@
+2005-01-10  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_my_output_message),
+	(gst_jpegdec_my_emit_message), (gst_jpegdec_init):
+	  Make jpegdec quiet on MJPEG decoding
+	* gst/asfdemux/README:
+	  Fix mimetypes for MJPEG and H263
+
 2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/theora/theoradec.c: (theora_dec_chain):
