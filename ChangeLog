@@ -1,5 +1,14 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+	* gst-libs/ext/ffmpeg/.pc/no-imlib/configure.ac:
+	* gst-libs/ext/ffmpeg/autogen.sh:
+          fix aclocal invocation to include m4 dir
+	* gst-libs/ext/ffmpeg/configure.ac:
+          add line to fix maintainer mode with aclocal 
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/ext/ffmpeg/m4/imlib.m4:
 	* gst-libs/ext/ffmpeg/m4/sdl.m4:
 	* gst-libs/ext/ffmpeg/m4/freetype2.m4:
