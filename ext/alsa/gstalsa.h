@@ -155,9 +155,6 @@ struct _GstAlsa {
   GstClockTime			max_discont;	/* max difference between current
   						   playback timestamp and buffers timestamps
 						 */
-  /* mixer */
-  GList				*tracklist;	/* list of available tracks */
-  snd_mixer_t *			mixer_handle;
 };
 
 struct _GstAlsaClass {

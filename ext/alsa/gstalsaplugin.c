@@ -23,9 +23,9 @@
 #include "config.h"
 #endif
 
-#include "gstalsa.h"
 #include "gstalsasink.h"
 #include "gstalsasrc.h"
+#include "gstalsamixer.h"
 
 GST_DEBUG_CATEGORY (alsa_debug);
 
@@ -34,6 +34,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
 
+  if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE, GST_TYPE_ALSA_MIXER))
+    return FALSE;
   if (!gst_element_register (plugin, "alsasrc", GST_RANK_NONE, GST_TYPE_ALSA_SRC))
     return FALSE;
   if (!gst_element_register (plugin, "alsasink", GST_RANK_NONE, GST_TYPE_ALSA_SINK))
