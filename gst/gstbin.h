@@ -48,9 +48,14 @@ typedef enum {
 /*typedef struct _GstBin GstBin; */
 /*typedef struct _GstBinClass GstBinClass; */
 
+#define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren);
+#define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children);
+#define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie);
+
 struct _GstBin {
   GstElement 	 element;
 
+  /*< public >*/ /* with LOCK */
   /* our children */
   gint 		 numchildren;
   GList 	*children;
@@ -65,7 +70,6 @@ struct _GstBinClass {
   /* vtable */
   void		(*add_element)		(GstBin *bin, GstElement *element);
   void		(*remove_element)	(GstBin *bin, GstElement *element);
-  GstIterator* 	(*iterate_elements)	(GstBin *bin);
 
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);

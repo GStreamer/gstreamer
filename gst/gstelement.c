@@ -197,6 +197,8 @@ gst_element_init (GstElement * element)
  * The user data passed to the g_signal_connect is ignored.
  *
  * The default handler will simply print the error string using g_print.
+ *
+ * MT safe.
  */
 void
 gst_element_default_error (GObject * object, GstObject * source, GError * error,
@@ -211,21 +213,6 @@ gst_element_default_error (GObject * object, GstObject * source, GError * error,
   g_free (name);
 }
 
-static GstPad *
-gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
-{
-  GstPad *newpad = NULL;
-  GstElementClass *oclass;
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad) (element, templ, name);
-
-  return newpad;
-}
-
 /**
  * gst_element_release_request_pad:
  * @element: a #GstElement to release the request pad of.
@@ -233,6 +220,8 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  *
  * Makes the element free the previously requested pad as obtained
  * with gst_element_get_request_pad().
+ *
+ * MT safe.
  */
 void
 gst_element_release_request_pad (GstElement * element, GstPad * pad)
@@ -255,6 +244,8 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
  * Query if the element requiresd a clock
  *
  * Returns: TRUE if the element requires a clock
+ *
+ * MT safe.
  */
 gboolean
 gst_element_requires_clock (GstElement * element)
@@ -272,9 +263,11 @@ gst_element_requires_clock (GstElement * element)
  * gst_element_provides_clock:
  * @element: a #GstElement to query
  *
- * Query if the element provides a clock
+ * Query if the element provides a clock.
  *
  * Returns: TRUE if the element provides a clock
+ *
+ * MT safe.
  */
 gboolean
 gst_element_provides_clock (GstElement * element)
@@ -293,7 +286,11 @@ gst_element_provides_clock (GstElement * element)
  * @element: a #GstElement to set the clock for.
  * @clock: the #GstClock to set for the element.
  *
- * Sets the clock for the element.
+ * Sets the clock for the element. This function increases the
+ * refcount on the clock. Any previously set clock on the object
+ * is unreffed.
+ *
+ * MT safe.
  */
 void
 gst_element_set_clock (GstElement * element, GstClock * clock)
@@ -316,9 +313,13 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * gst_element_get_clock:
  * @element: a #GstElement to get the clock of.
  *
- * Gets the clock of the element.
+ * Gets the clock of the element. If the element provides a clock,
+ * this function will return this clock. For elements that do not
+ * provide a clock, this function returns NULL.
  *
- * Returns: the #GstClock of the element.
+ * Returns: the #GstClock of the element. unref after usage.
+ *
+ * MT safe.
  */
 GstClock *
 gst_element_get_clock (GstElement * element)
@@ -343,6 +344,8 @@ gst_element_get_clock (GstElement * element)
  * Queries if the element can be indexed.
  *
  * Returns: TRUE if the element can be indexed.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_is_indexable (GstElement * element)
@@ -361,7 +364,9 @@ gst_element_is_indexable (GstElement * element)
  * @element: a #GstElement.
  * @index: a #GstIndex.
  *
- * Set the specified GstIndex on the element.
+ * Set the specified GstIndex on the element. 
+ *
+ * MT safe.
  */
 void
 gst_element_set_index (GstElement * element, GstIndex * index)
@@ -384,7 +389,9 @@ gst_element_set_index (GstElement * element, GstIndex * index)
  * Gets the index from the element.
  *
  * Returns: a #GstIndex or NULL when no index was set on the
- * element.
+ * element. unref after usage.
+ *
+ * MT safe.
  */
 GstIndex *
 gst_element_get_index (GstElement * element)
@@ -408,37 +415,45 @@ gst_element_get_index (GstElement * element)
  * @pad: the #GstPad to add to the element.
  *
  * Adds a pad (link point) to @element. @pad's parent will be set to @element;
- * see gst_object_set_parent() for refcounting information.
+ * see gst_object_set_parent() for refcounting information. 
  *
  * Pads are automatically activated when the element is in state PLAYING.
  *
+ * The pad and the element should be unlocked when calling this function.
+ *
  * Returns: TRUE if the pad could be added. This function can fail when
  * passing bad arguments or when a pad with the same name already existed.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_add_pad (GstElement * element, GstPad * pad)
 {
+  GstElement *old_parent;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   /* first check to make sure the pad hasn't already been added to another
    * element */
-  g_return_val_if_fail (GST_PAD_PARENT (pad) == NULL, FALSE);
+  old_parent = gst_pad_get_parent (pad);
+  if (G_UNLIKELY (old_parent != NULL))
+    goto had_parent;
 
   GST_LOCK (element);
+  GST_LOCK (pad);
   /* then check to see if there's already a pad by that name here */
-  if (!gst_object_check_uniqueness (element->pads, GST_PAD_NAME (pad))) {
-    g_warning ("Padname %s:%s is not unique in element %s, not adding\n",
-        GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
-    GST_UNLOCK (element);
-    return FALSE;
-  }
+  if (G_UNLIKELY (!gst_object_check_uniqueness (element->pads,
+              GST_PAD_NAME (pad))))
+    goto name_exists;
 
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
-      GST_STR_NULL (GST_OBJECT_NAME (pad)));
+      GST_STR_NULL (GST_PAD_NAME (pad)));
+
+  GST_UNLOCK (pad);
 
   /* set the pad's parent */
-  gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
+  gst_object_set_parent (GST_OBJECT_CAST (pad), GST_OBJECT_CAST (element));
 
   /* add it to the list */
   switch (gst_pad_get_direction (pad)) {
@@ -469,6 +484,30 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
 
   return TRUE;
+
+had_parent:
+  {
+    gchar *parent_name = gst_element_get_name (old_parent);
+
+    gst_object_unref (GST_OBJECT (old_parent));
+    GST_LOCK (pad);
+    GST_LOCK (element);
+    g_critical
+        ("Padname %s:%s already has parent when trying to add to element %s",
+        parent_name, GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+    GST_UNLOCK (element);
+    GST_UNLOCK (pad);
+    g_free (parent_name);
+    return FALSE;
+  }
+
+name_exists:
+  g_critical ("Padname %s is not unique in element %s, not adding\n",
+      GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+
+  GST_UNLOCK (pad);
+  GST_UNLOCK (element);
+  return FALSE;
 }
 
 /**
@@ -482,6 +521,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
  * gst_element_add_pad().
  *
  * Returns: the added ghost #GstPad, or NULL on error.
+ *
+ * MT safe.
  */
 GstPad *
 gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
@@ -509,21 +550,31 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
  *
  * Removes @pad from @element. @pad will be destroyed if it has not been
  * referenced elsewhere.
+ *
+ * MT safe.
  */
 void
 gst_element_remove_pad (GstElement * element, GstPad * pad)
 {
-  g_return_if_fail (element != NULL);
+  GstElement *current_parent;
+
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  g_return_if_fail (GST_PAD_PARENT (pad) == element);
+  current_parent = gst_pad_get_parent (pad);
+  if (G_UNLIKELY (current_parent != element))
+    goto not_our_pad;
 
   if (GST_IS_REAL_PAD (pad)) {
+    GstPad *peer = gst_pad_get_peer (pad);
+
     /* unlink */
-    if (GST_RPAD_PEER (pad) != NULL) {
-      gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
+    if (peer != NULL) {
+      /* window for MT unsafeness, someone else could unlink here
+       * and then we call unlink with wrong pads. The unlink
+       * function would catch this and safely return failed. */
+      gst_pad_unlink (pad, GST_PAD_CAST (peer));
+      gst_object_unref (GST_OBJECT (peer));
     }
   } else if (GST_IS_GHOST_PAD (pad)) {
     g_object_set (pad, "real-pad", NULL, NULL);
@@ -552,6 +603,23 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
   gst_object_unparent (GST_OBJECT (pad));
+
+  return;
+
+not_our_pad:
+  {
+    gchar *parent_name = gst_element_get_name (current_parent);
+
+    gst_object_unref (GST_OBJECT (current_parent));
+    GST_LOCK (pad);
+    GST_LOCK (element);
+    g_critical ("Padname %s:%s does not belong to element %s when removing",
+        parent_name, GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+    GST_UNLOCK (element);
+    GST_UNLOCK (pad);
+    g_free (parent_name);
+    return;
+  }
 }
 
 /**
@@ -563,6 +631,8 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
  * pads have been added by the element itself. Elements with GST_PAD_SOMETIMES
  * pad templates use this in combination with autopluggers to figure out that
  * the element is done initializing its pads.
+ *
+ * MT safe.
  */
 void
 gst_element_no_more_pads (GstElement * element)
@@ -639,6 +709,21 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
         GST_DEBUG_PAD_NAME (result));
   }
   return result;
+}
+
+static GstPad *
+gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * name)
+{
+  GstPad *newpad = NULL;
+  GstElementClass *oclass;
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->request_new_pad)
+    newpad = (oclass->request_new_pad) (element, templ, name);
+
+  return newpad;
 }
 
 /**
@@ -1116,6 +1201,7 @@ gst_element_convert (GstElement * element,
   return FALSE;
 }
 
+/* MT safe */
 gboolean
 gst_element_post_message (GstElement * element, GstMessage * message)
 {
@@ -1125,14 +1211,18 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   g_return_val_if_fail (GST_IS_ELEMENT (element), result);
   g_return_val_if_fail (message != NULL, result);
 
+  GST_LOCK (element);
   manager = element->manager;
-
   if (manager == NULL) {
+    GST_UNLOCK (element);
     gst_data_unref (GST_DATA (message));
     return result;
   }
+  gst_object_ref (GST_OBJECT (manager));
+  GST_UNLOCK (element);
 
   result = gst_pipeline_post_message (manager, message);
+  gst_object_unref (GST_OBJECT (manager));
 
   return result;
 }
@@ -1187,9 +1277,12 @@ void gst_element_error_full
   gchar *name;
   gchar *sent_message;
   gchar *sent_debug;
+  gchar *elem_name;
 
   /* checks */
   g_return_if_fail (GST_IS_ELEMENT (element));
+
+  elem_name = gst_element_get_name (element);
 
   /* check if we send the given message or the default error message */
   if ((message == NULL) || (message[0] == 0)) {
@@ -1207,11 +1300,10 @@ void gst_element_error_full
 
   /* create error message */
   GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signaling error in %s: %s",
-      GST_ELEMENT_NAME (element), sent_message);
+      elem_name, sent_message);
   error = g_error_new_literal (domain, code, sent_message);
 
   /* emit the signal, make sure the element stays available */
-  gst_object_ref (GST_OBJECT (element));
   name = gst_object_get_path_string (GST_OBJECT (element));
   if (debug)
     sent_debug = g_strdup_printf ("%s(%d): %s: %s:\n%s",
@@ -1225,11 +1317,11 @@ void gst_element_error_full
       gst_message_new_error (GST_OBJECT (element), error, sent_debug));
 
   GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signalled error in %s: %s",
-      GST_ELEMENT_NAME (element), sent_message);
+      elem_name, sent_message);
 
   /* cleanup */
-  gst_object_unref (GST_OBJECT (element));
   g_free (sent_message);
+  g_free (elem_name);
 }
 
 /**
@@ -1243,16 +1335,19 @@ void gst_element_error_full
  * state before changing the state from #GST_STATE_NULL.
  *
  * Returns: TRUE, if the element's state is locked.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_is_locked_state (GstElement * element)
 {
   gboolean result = FALSE;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_LOCK (element);
-  result = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE) ? TRUE : FALSE;
+  /* be careful with the flag tests */
+  result = !!GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
   GST_UNLOCK (element);
 
   return result;
@@ -1265,19 +1360,22 @@ gst_element_is_locked_state (GstElement * element)
  *
  * Locks the state of an element, so state changes of the parent don't affect
  * this element anymore.
+ *
+ * Returns: TRUE if the state was changed, FALSE if bad params were given or
+ * the element was already in the correct state.
  */
-void
+gboolean
 gst_element_set_locked_state (GstElement * element, gboolean locked_state)
 {
   gboolean old;
 
-  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_LOCK (element);
-  old = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  old = !!GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
 
-  if (old == locked_state)
-    goto exit;
+  if (G_UNLIKELY (old == locked_state))
+    goto was_ok;
 
   if (locked_state) {
     GST_CAT_DEBUG (GST_CAT_STATES, "locking state of element %s",
@@ -1288,9 +1386,12 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
         GST_ELEMENT_NAME (element));
     GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
   }
+  return TRUE;
 
-exit:
+was_ok:
   GST_UNLOCK (element);
+
+  return FALSE;
 }
 
 /**
@@ -1869,6 +1970,8 @@ gst_element_set_manager (GstElement * element, GstPipeline * manager)
  * Returns the manager of the element.
  *
  * Returns: the element's #GstPipeline.
+ *
+ * MT safe.
  */
 GstPipeline *
 gst_element_get_manager (GstElement * element)
@@ -1884,6 +1987,18 @@ gst_element_get_manager (GstElement * element)
   return result;
 }
 
+/**
+ * gst_element_create_task:
+ * @element: a #GstElement to get the manager of.
+ * @func: the taskfunction to run
+ * @data: user data passed to the taskfunction.
+ *
+ * Creates a new GstTask.
+ *
+ * Returns: the newly created #GstTask.
+ *
+ * MT safe.
+ */
 GstTask *
 gst_element_create_task (GstElement * element, GstTaskFunction func,
     gpointer data)
@@ -1893,10 +2008,12 @@ gst_element_create_task (GstElement * element, GstTaskFunction func,
 
   GST_LOCK (element);
   pipeline = GST_ELEMENT_MANAGER (element);
+  gst_object_ref (GST_OBJECT (pipeline));
+  GST_UNLOCK (element);
   if (pipeline) {
     result = gst_scheduler_create_task (pipeline->scheduler, func, data);
+    gst_object_unref (GST_OBJECT (pipeline));
   }
-  GST_UNLOCK (element);
 
   return result;
 }

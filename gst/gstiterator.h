@@ -62,6 +62,10 @@ GstIterator* 		gst_iterator_new		(guint size,
   							 GstIteratorResyncFunction resync,
   							 GstIteratorFreeFunction free);
 
+GstIterator*		gst_iterator_new_list		(GMutex *lock,
+							 guint32 *master_cookie,
+							 GList *list);
+
 GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *result);
 void			gst_iterator_resync		(GstIterator *it);
 void			gst_iterator_free		(GstIterator *it);

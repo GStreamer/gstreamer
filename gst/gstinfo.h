@@ -109,6 +109,7 @@ struct _GstDebugCategory {
 #define GST_STR_NULL(str) ((str) ? (str) : "(NULL)")
 
 /* easier debugging for pad names */
+/* FIXME, not MT safe */
 #define GST_DEBUG_PAD_NAME(pad) \
   (GST_OBJECT_PARENT(pad) != NULL) ? \
   GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \

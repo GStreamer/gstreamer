@@ -385,9 +385,9 @@ gst_pad_get_direction (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_UNKNOWN);
 
-  GST_LOCK (pad);
+  /* since the direction cannot change at runtime we can
+   * safely read without locking. */
   result = GST_PAD_DIRECTION (pad);
-  GST_UNLOCK (pad);
 
   return result;
 }
@@ -998,27 +998,49 @@ gst_pad_set_bufferalloc_function (GstPad * pad,
  *
  * Unlinks the source pad from the sink pad. Will emit the "unlinked" signal on
  * both pads.
+ *
+ * Returns: TRUE if the pads were unlinked. This function returns FALSE if
+ * the pads were not linked together.
+ *
+ * MT safe.
  */
-void
+gboolean
 gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
 {
   GstRealPad *realsrc, *realsink;
 
-  g_return_if_fail (GST_IS_PAD (srcpad));
-  g_return_if_fail (GST_IS_PAD (sinkpad));
+  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinking %s:%s(%p) and %s:%s(%p)",
       GST_DEBUG_PAD_NAME (srcpad), srcpad,
       GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
+  GST_LOCK (srcpad);
   realsrc = GST_PAD_REALIZE (srcpad);
+  if (srcpad != GST_PAD_CAST (realsrc)) {
+    GST_LOCK (realsrc);
+    /* we don't care if the ghostpad goes away now */
+    GST_UNLOCK (srcpad);
+  }
+  if (G_UNLIKELY (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC))
+    goto not_srcpad;
+
+  if (G_UNLIKELY (GST_RPAD_PEER (realsrc) == NULL))
+    goto was_unlinked;
+
+  GST_LOCK (sinkpad);
   realsink = GST_PAD_REALIZE (sinkpad);
+  if (sinkpad != GST_PAD_CAST (realsink)) {
+    GST_LOCK (realsink);
+    /* we don't care if the ghostpad goes away now */
+    GST_UNLOCK (sinkpad);
+  }
+  if (G_UNLIKELY (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK))
+    goto not_sinkpad;
 
-  g_return_if_fail (GST_RPAD_PEER (realsrc) != NULL);
-  g_return_if_fail (GST_RPAD_PEER (realsink) == realsrc);
-
-  g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
-      (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
+  if (G_UNLIKELY (GST_RPAD_PEER (realsrc) != realsink))
+    goto not_linked_together;
 
   if (GST_RPAD_UNLINKFUNC (realsrc)) {
     GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD (realsrc));
@@ -1035,9 +1057,8 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   gst_caps_replace (&GST_RPAD_APPFILTER (realsrc), NULL);
   gst_caps_replace (&GST_RPAD_APPFILTER (realsink), NULL);
 
-  /* hold a reference, as they can go away in the signal handlers */
-  gst_object_ref (GST_OBJECT (realsrc));
-  gst_object_ref (GST_OBJECT (realsink));
+  GST_UNLOCK (realsrc);
+  GST_UNLOCK (realsink);
 
   /* fire off a signal to each of the pads telling them 
    * that they've been unlinked */
@@ -1049,8 +1070,36 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  gst_object_unref (GST_OBJECT (realsrc));
-  gst_object_unref (GST_OBJECT (realsink));
+  return TRUE;
+
+not_srcpad:
+  {
+    g_critical ("pad %s is not a source pad", GST_PAD_NAME (realsrc));
+    GST_UNLOCK (realsrc);
+    return FALSE;
+  }
+not_sinkpad:
+  {
+    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (realsink));
+    GST_UNLOCK (realsrc);
+    GST_UNLOCK (realsink);
+    return FALSE;
+  }
+was_unlinked:
+  {
+    /* we do not emit a warning in this case because unlinking cannot
+     * be made MT safe.*/
+    GST_UNLOCK (realsrc);
+    return FALSE;
+  }
+not_linked_together:
+  {
+    /* we do not emit a warning in this case because unlinking cannot
+     * be made MT safe.*/
+    GST_UNLOCK (realsrc);
+    GST_UNLOCK (realsink);
+    return FALSE;
+  }
 }
 
 /**
@@ -1060,13 +1109,21 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
  * Checks if a @pad is linked to another pad or not.
  *
  * Returns: TRUE if the pad is linked, FALSE otherwise.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_is_linked (GstPad * pad)
 {
+  gboolean result;
+
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  return GST_PAD_PEER (pad) != NULL;
+  GST_LOCK (pad);
+  result = (GST_PAD_PEER (pad) != NULL);
+  GST_UNLOCK (pad);
+
+  return result;
 }
 
 /**
@@ -1092,9 +1149,7 @@ gst_pad_link_filtered (GstPad * srcpad, GstPad * sinkpad,
   GstPadLinkReturn result;
 
   /* generic checks */
-  g_return_val_if_fail (srcpad != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (sinkpad != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), GST_PAD_LINK_REFUSED);
 
   GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
@@ -1321,13 +1376,17 @@ gst_pad_remove_ghost_pad (GstPad * pad, GstPad * ghostpad)
  * and an error code is returned.
  *
  * Returns: The result code of the operation.
+ *
+ * MT safe
  */
 GstPadLinkReturn
 gst_pad_relink_filtered (GstPad * srcpad, GstPad * sinkpad,
     const GstCaps * filtercaps)
 {
-  GstCaps *filtercopy = gst_caps_copy (filtercaps);
+  GstCaps *filtercopy;
 
+  /* create copy with two refs */
+  filtercopy = gst_caps_copy (filtercaps);
   filtercopy = gst_caps_ref (filtercopy);
 
   /* probably check if intersection with new filter is ok */
@@ -1454,6 +1513,8 @@ done:
  *
  * Returns: TRUE if the caps could be set. FALSE if the caps were not fixed
  * or bad parameters were provided to this function.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_set_caps (GstPad * pad, GstCaps * caps)
@@ -1501,16 +1562,32 @@ gst_pad_get_pad_template_caps (GstPad * pad)
  * gst_pad_get_peer:
  * @pad: a #GstPad to get the peer of.
  *
- * Gets the peer of @pad.
+ * Gets the peer of @pad. This function refs the peer pad so
+ * you need to unref it after use.
  *
- * Returns: the peer #GstPad.
+ * Returns: the peer #GstPad. Unref after usage.
+ *
+ * MT safe.
  */
 GstPad *
 gst_pad_get_peer (GstPad * pad)
 {
+  GstRealPad *realpad;
+  GstRealPad *result;
+
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD (GST_PAD_PEER (pad));
+  GST_LOCK (pad);
+  realpad = GST_PAD_REALIZE (pad);
+  if (pad != GST_PAD_CAST (realpad)) {
+    GST_LOCK (realpad);
+    GST_UNLOCK (pad);
+  }
+  result = GST_RPAD_PEER (realpad);
+  gst_object_ref (GST_OBJECT (result));
+  GST_UNLOCK (realpad);
+
+  return GST_PAD_CAST (result);
 }
 
 /**
@@ -1857,16 +1934,16 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   GST_LOCK (pad);
 
-  while (GST_RPAD_IS_BLOCKED (pad))
+  while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
     handle_pad_block (pad);
 
-  if ((peer = GST_RPAD_PEER (pad)) == NULL)
+  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_linked;
 
-  if (!GST_RPAD_IS_ACTIVE (peer))
+  if (G_UNLIKELY (!GST_RPAD_IS_ACTIVE (peer)))
     goto not_active;
 
-  if ((chainfunc = peer->chainfunc) == NULL)
+  if (G_UNLIKELY ((chainfunc = peer->chainfunc) == NULL))
     goto no_function;
 
   GST_UNLOCK (pad);
@@ -1883,25 +1960,17 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 not_linked:
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "pushing, but it was not linked");
-  ret = GST_FLOW_NOT_CONNECTED;
-  goto error;
+  GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
 
 not_active:
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing, but it was inactive");
-  ret = GST_FLOW_WRONG_STATE;
-  goto error;
+  GST_UNLOCK_RETURN (pad, GST_FLOW_WRONG_STATE);
 
 no_function:
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing, but not chainhandler");
   g_warning ("push on pad %s:%s but it has no chainhandler, file a bug.",
       GST_DEBUG_PAD_NAME (peer));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
-error:
-  GST_UNLOCK (pad);
-
-  return ret;
+  GST_UNLOCK_RETURN (pad, GST_FLOW_ERROR);
 }
 
 /**
@@ -1928,13 +1997,13 @@ gst_pad_pull (GstPad * pad, GstBuffer ** buffer)
 
   GST_LOCK (pad);
 
-  while (GST_RPAD_IS_BLOCKED (pad))
+  while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
     handle_pad_block (pad);
 
-  if ((peer = GST_RPAD_PEER (pad)) == NULL)
+  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_connected;
 
-  if ((getfunc = peer->getfunc) == NULL)
+  if (G_UNLIKELY ((getfunc = peer->getfunc) == NULL))
     goto no_function;
 
   GST_UNLOCK (pad);
@@ -1951,20 +2020,13 @@ gst_pad_pull (GstPad * pad, GstBuffer ** buffer)
 not_connected:
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "pulling, but it was not linked");
-  ret = GST_FLOW_NOT_CONNECTED;
-  goto error;
+  GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
 
 no_function:
   GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
       ("pull on pad %s:%s but the peer pad %s:%s has no getfunc",
           GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
-error:
-  GST_UNLOCK (pad);
-
-  return ret;
+  GST_UNLOCK_RETURN (pad, GST_FLOW_ERROR);
 }
 
 /**
@@ -1994,13 +2056,13 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   GST_LOCK (pad);
 
-  while (GST_RPAD_IS_BLOCKED (pad))
+  while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
     handle_pad_block (pad);
 
-  if ((peer = GST_RPAD_PEER (pad)) == NULL)
+  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_connected;
 
-  if ((getrangefunc = peer->getrangefunc) == NULL)
+  if (G_UNLIKELY ((getrangefunc = peer->getrangefunc) == NULL))
     goto no_function;
 
   GST_UNLOCK (pad);
@@ -2017,22 +2079,13 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 not_connected:
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "pulling range, but it was not linked");
-  ret = GST_FLOW_NOT_CONNECTED;
-  goto error;
+  GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
 
 no_function:
   GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
       ("pullrange on pad %s:%s but the peer pad %s:%s has no getrangefunction",
           GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
-error:
-  GST_UNLOCK (pad);
-
-  return ret;
-
-
+  GST_UNLOCK_RETURN (pad, GST_FLOW_ERROR);
 }
 
 /************************************************************************

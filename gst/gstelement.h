@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2004 Wim Taymans <wim@fluendo.com>
  *
  * gstelement.h: Header for GstElement
  *
@@ -42,14 +43,16 @@ typedef struct _GstElementDetails GstElementDetails;
 
 /* FIXME: need translatable stuff in here (how handle in registry)? */
 struct _GstElementDetails {
+  /*< public >*/
   gchar *longname;              /* long, english name */
   gchar *klass;                 /* type of element, as hierarchy */
   gchar *description;           /* insights of one form or another */
   gchar *author;                /* who wrote this thing? */
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
-#define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
+#define GST_ELEMENT_DETAILS(longname,klass,description,author)			\
   { longname, klass, description, author, GST_PADDING_INIT }
 #define GST_IS_ELEMENT_DETAILS(details) (					\
   (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
@@ -80,6 +83,7 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ELEMENT, GstElementClass))
 #define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
 #define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
+#define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 
 /* convenience functions */
 #ifdef G_HAVE_ISO_VARARGS
@@ -112,9 +116,9 @@ typedef enum {
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
-#define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
-#define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
-#define GST_ELEMENT_PADS(obj)			((obj)->pads)
+#define GST_ELEMENT_MANAGER(obj)		(GST_ELEMENT_CAST(obj)->manager)
+#define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
+#define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
 
 #define GST_ELEMENT_ERROR(el, domain, code, message, debug) G_STMT_START { \
   gchar *__msg = _gst_element_error_printf message; \
@@ -129,11 +133,11 @@ typedef enum {
 } G_STMT_END
 
 /* the state change mutexes and conds */
-#define GST_STATE_GET_LOCK(elem)               (((GstElement *)(elem))->state_lock)
+#define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
 #define GST_STATE_LOCK(elem)                   g_mutex_lock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_TRYLOCK(elem)                g_mutex_trylock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_UNLOCK(elem)                 g_mutex_unlock(GST_STATE_GET_LOCK(elem))
-#define GST_STATE_GET_COND(elem)               (((GstElement *)(elem))->state_cond)
+#define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
 #define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem))
 #define GST_STATE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem),\
 			 			timeval)
@@ -144,12 +148,14 @@ typedef struct _GstElementFactoryClass GstElementFactoryClass;
 struct _GstElement {
   GstObject 		object;
 
+  /*< public >*/ /* with STATE_LOCK */
   /* element state */
   GMutex		*state_lock;
   GCond 		*state_cond;
   guint8 		current_state;
   guint8 		pending_state;
 
+  /*< public >*/ /* with LOCK */
   /* element manager */
   GstPipeline		*manager;
   /* private pointer for the scheduler */
@@ -160,7 +166,7 @@ struct _GstElement {
   GstClockTimeDiff    	base_time; /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
 
   /* element pads, these lists can only be iterated while holding
-   * the element lock or checking the cookie after each lock. */
+   * the LOCK or checking the cookie after each LOCK. */
   guint16 		numpads;
   GList 		*pads;
   guint16 		numsrcpads;
@@ -169,6 +175,7 @@ struct _GstElement {
   GList 		*sinkpads;
   guint32		pads_cookie;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -241,9 +248,9 @@ GList*                  gst_element_class_get_pad_template_list (GstElementClass
 
 GType			gst_element_get_type		(void);
 
-#define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
-#define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
-#define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
+#define			gst_element_get_name(elem)		gst_object_get_name(GST_OBJECT(elem))
+#define			gst_element_set_name(elem,name)		gst_object_set_name(GST_OBJECT(elem),name)
+#define			gst_element_get_parent(elem)		gst_object_get_parent(GST_OBJECT(elem))
 #define			gst_element_set_parent(elem,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
 
 /* clocking */
@@ -310,7 +317,7 @@ void			gst_element_error_full		(GstElement *element, GQuark domain, gint code,
 
 /* state management */
 gboolean		gst_element_is_locked_state	(GstElement *element);
-void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
+gboolean		gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
 gboolean		gst_element_sync_state_with_parent (GstElement *element);
 
 gboolean                gst_element_get_state           (GstElement *element, GstElementState *state,

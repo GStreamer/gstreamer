@@ -64,7 +64,6 @@ static GstClock *gst_bin_get_clock (GstElement * element);
 
 static void gst_bin_add_func (GstBin * bin, GstElement * element);
 static void gst_bin_remove_func (GstBin * bin, GstElement * element);
-static GstIterator *gst_bin_iterate_elements_func (GstBin * bin);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
@@ -171,7 +170,6 @@ gst_bin_class_init (GstBinClass * klass)
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
-  klass->iterate_elements = GST_DEBUG_FUNCPTR (gst_bin_iterate_elements_func);
 }
 
 static void
@@ -198,67 +196,59 @@ gst_bin_new (const gchar * name)
 
 #ifndef GST_DISABLE_INDEX
 static void
-bin_set_index_func (GstElement * element, GstIndex * index)
-{
-  gst_element_set_index (element, index);
-  gst_object_unref (GST_OBJECT (element));
-}
-
-static void
 gst_bin_set_index (GstElement * element, GstIndex * index)
 {
-  GstIterator *it = gst_bin_iterate_elements (GST_BIN (element));
+  GstBin *bin;
+  GList *children;
 
-  gst_iterator_foreach (it, (GFunc) bin_set_index_func, index);
-  gst_iterator_free (it);
+  bin = GST_BIN (element);
+
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    gst_element_set_index (child, index);
+  }
+  GST_UNLOCK (bin);
 }
 #endif
 
 static void
-bin_set_clock_func (GstElement * element, GstClock * clock)
-{
-  gst_element_set_clock (element, clock);
-  gst_object_unref (GST_OBJECT (element));
-}
-
-static void
 gst_bin_set_clock (GstElement * element, GstClock * clock)
 {
-  GstIterator *it = gst_bin_iterate_elements (GST_BIN (element));
+  GList *children;
+  GstBin *bin;
 
-  gst_iterator_foreach (it, (GFunc) bin_set_clock_func, clock);
-  gst_iterator_free (it);
-}
+  bin = GST_BIN (element);
 
-static gint
-bin_get_clock_func (GstElement * element, GstClock ** clock)
-{
-  GstClock *result;
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
 
-  result = gst_element_get_clock (element);
-  if (result) {
-    *clock = result;
-    return 0;                   /* found */
+    gst_element_set_clock (child, clock);
   }
-
-  gst_object_unref (GST_OBJECT (element));
-  return 1;
+  GST_UNLOCK (bin);
 }
 
 static GstClock *
 gst_bin_get_clock (GstElement * element)
 {
-  GstIterator *children;
-  GstElement *found;
   GstClock *result = NULL;
+  GstBin *bin;
+  GList *children;
 
-  children = gst_bin_iterate_elements (GST_BIN (element));
-  found = (GstElement *) gst_iterator_find_custom (children, &result,
-      (GCompareFunc) bin_get_clock_func);
-  gst_iterator_free (children);
-  if (found) {
-    gst_object_unref (GST_OBJECT (found));
+  bin = GST_BIN (element);
+
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    result = gst_element_get_clock (child);
+    if (result)
+      break;
   }
+  GST_UNLOCK (bin);
+
   return result;
 }
 
@@ -437,8 +427,19 @@ gst_bin_iterator_free (GstBinIterator * it)
   g_free (it);
 }
 
-static GstIterator *
-gst_bin_iterate_elements_func (GstBin * bin)
+/**
+ * gst_bin_iterate_elements:
+ * @bin: #Gstbin to iterate the elements of
+ *
+ * Get an iterator for the elements in this bin. 
+ * Each element will have its refcount increased, so unref 
+ * after usage.
+ *
+ * Returns: a #GstIterator of #GstElements. gst_iterator_free after
+ * use.
+ */
+GstIterator *
+gst_bin_iterate_elements (GstBin * bin)
 {
   GstBinIterator *result;
 
@@ -455,36 +456,6 @@ gst_bin_iterate_elements_func (GstBin * bin)
   GST_UNLOCK (bin);
 
   return GST_ITERATOR (result);
-}
-
-/**
- * gst_bin_iterate_elements:
- * @bin: #Gstbin to iterate the elements of
- *
- * Get an iterator for the elements in this bin. 
- * Each element will have its refcount increased, so unref 
- * after usage.
- *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after
- * use.
- */
-GstIterator *
-gst_bin_iterate_elements (GstBin * bin)
-{
-  GstBinClass *bclass;
-  GstIterator *result;
-
-  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-
-  bclass = GST_BIN_GET_CLASS (bin);
-
-  if (bclass->iterate_elements) {
-    result = bclass->iterate_elements (bin);
-  } else {
-    g_warning ("cannot iterate elements of bin %s", GST_ELEMENT_NAME (bin));
-    result = NULL;
-  }
-  return result;
 }
 
 /* returns 0 if the element is a sink, this is made so that
@@ -811,8 +782,6 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
   GST_CAT_INFO (GST_CAT_PARENTAGE, "[%s]: looking up child element %s",
       GST_ELEMENT_NAME (bin), name);
 
-  /* FIXME, does not use the virtual method to get
-   * the children */
   GST_LOCK (bin);
   children = bin->children;
   while (children) {
@@ -863,6 +832,7 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
     if (parent && GST_IS_BIN (parent)) {
       result = gst_bin_get_by_name_recurse_up (GST_BIN (parent), name);
     }
+    gst_object_unref (parent);
   }
 
   return result;
@@ -890,8 +860,6 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
-  /* FIXME, does not use the virtual method to get
-   * the children */
   GST_LOCK (bin);
   walk = bin->children;
   while (walk) {
@@ -932,8 +900,7 @@ gst_bin_get_all_by_interface (GstBin * bin, GType interface)
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
-  /* FIXME, not MT safe and does not use the virtual method to get
-   * the children */
+  GST_LOCK (bin);
   walk = bin->children;
   while (walk) {
     if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface)) {
@@ -947,6 +914,7 @@ gst_bin_get_all_by_interface (GstBin * bin, GType interface)
     }
     walk = g_list_next (walk);
   }
+  GST_UNLOCK (bin);
 
   return ret;
 }
