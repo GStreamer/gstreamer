@@ -70,6 +70,7 @@ struct _GstASFDemux {
 
   GstByteStream *bs;
 
+  GstTagList *taglist;
   GstAsfDemuxState state;
   guint64 data_offset, num_packets, packet, data_size;
   guint64 seek_pending;

@@ -169,6 +169,7 @@ gst_asf_demux_init (GstASFDemux * asf_demux)
   asf_demux->num_video_streams = 0;
   asf_demux->num_streams = 0;
 
+  asf_demux->taglist = NULL;
   asf_demux->state = GST_ASF_DEMUX_STATE_HEADER;
   asf_demux->seek_pending = GST_CLOCK_TIME_NONE;
   asf_demux->seek_discont = FALSE;
@@ -532,6 +533,39 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux * asf_demux,
   return TRUE;
 }
 
+static void
+gst_asf_demux_commit_taglist (GstASFDemux * asf_demux, GstTagList * taglist)
+{
+  GstElement *element = GST_ELEMENT (asf_demux);
+  GstEvent *event;
+  const GList *padlist;
+
+  /* emit signal */
+  gst_element_found_tags (element, taglist);
+
+  /* save internally */
+  if (!asf_demux->taglist)
+    asf_demux->taglist = gst_tag_list_copy (taglist);
+  else {
+    GstTagList *t;
+
+    t = gst_tag_list_merge (asf_demux->taglist, taglist, GST_TAG_MERGE_APPEND);
+    gst_tag_list_free (asf_demux->taglist);
+    asf_demux->taglist = t;
+  }
+
+  /* pads */
+  event = gst_event_new_tag (taglist);
+  for (padlist = gst_element_get_pad_list (element);
+      padlist != NULL; padlist = padlist->next) {
+    if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
+      gst_event_ref (event);
+      gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
+    }
+  }
+  gst_event_unref (event);
+}
+
 /* Content Description Object */
 static gboolean
 gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
@@ -590,22 +624,7 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
   g_value_unset (&value);
 
   if (have_tags) {
-    GstElement *element = GST_ELEMENT (asf_demux);
-    GstEvent *event;
-    const GList *padlist;
-
-    gst_element_found_tags (element, taglist);
-    event = gst_event_new_tag (taglist);
-
-    for (padlist = gst_element_get_pad_list (element);
-        padlist != NULL; padlist = padlist->next) {
-      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
-        gst_event_ref (event);
-        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
-      }
-    }
-
-    gst_event_unref (event);
+    gst_asf_demux_commit_taglist (asf_demux, taglist);
   } else {
     gst_tag_list_free (taglist);
   }
@@ -754,22 +773,7 @@ IsVBR
   }
 
   if (have_tags) {
-    GstElement *element = GST_ELEMENT (asf_demux);
-    GstEvent *event;
-    const GList *padlist;
-
-    gst_element_found_tags (element, taglist);
-    event = gst_event_new_tag (taglist);
-
-    for (padlist = gst_element_get_pad_list (element);
-        padlist != NULL; padlist = padlist->next) {
-      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
-        gst_event_ref (event);
-        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
-      }
-    }
-
-    gst_event_unref (event);
+    gst_asf_demux_commit_taglist (asf_demux, taglist);
   } else {
     gst_tag_list_free (taglist);
   }
@@ -1683,6 +1687,10 @@ gst_asf_demux_change_state (GstElement * element)
       for (i = 0; i < GST_ASF_DEMUX_NUM_AUDIO_PADS; i++) {
         asf_demux->audio_PTS[i] = 0;
       }
+      if (asf_demux->taglist) {
+        gst_tag_list_free (asf_demux->taglist);
+        asf_demux->taglist = NULL;
+      }
       asf_demux->state = GST_ASF_DEMUX_STATE_HEADER;
       asf_demux->seek_pending = GST_CLOCK_TIME_NONE;
       asf_demux->seek_discont = FALSE;
@@ -1757,7 +1765,6 @@ gst_asf_demux_add_audio_stream (GstASFDemux * asf_demux,
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
       codec_name, NULL);
   gst_element_found_tags (GST_ELEMENT (asf_demux), list);
-  gst_tag_list_free (list);
   g_free (codec_name);
   if (extradata)
     gst_buffer_unref (extradata);
@@ -1767,7 +1774,12 @@ gst_asf_demux_add_audio_stream (GstASFDemux * asf_demux,
 
   asf_demux->num_audio_streams++;
 
-  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
+  if (!gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id))
+    return FALSE;
+
+  gst_pad_push (src_pad, GST_DATA (gst_event_new_tag (list)));
+
+  return TRUE;
 }
 
 static gboolean
@@ -1802,7 +1814,6 @@ gst_asf_demux_add_video_stream (GstASFDemux * asf_demux,
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
       codec_name, NULL);
   gst_element_found_tags (GST_ELEMENT (asf_demux), list);
-  gst_tag_list_free (list);
   g_free (codec_name);
   if (extradata)
     gst_buffer_unref (extradata);
@@ -1811,7 +1822,12 @@ gst_asf_demux_add_video_stream (GstASFDemux * asf_demux,
 
   asf_demux->num_video_streams++;
 
-  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
+  if (!gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id))
+    return FALSE;
+
+  gst_pad_push (src_pad, GST_DATA (gst_event_new_tag (list)));
+
+  return TRUE;
 }
 
 
@@ -1843,6 +1859,11 @@ gst_asf_demux_setup_pad (GstASFDemux * asf_demux,
   asf_demux->num_streams++;
 
   gst_element_add_pad (GST_ELEMENT (asf_demux), src_pad);
+
+  if (asf_demux->taglist) {
+    gst_pad_push (src_pad,
+        GST_DATA (gst_event_new_tag (gst_tag_list_copy (asf_demux->taglist))));
+  }
 
   return TRUE;
 }
