@@ -109,7 +109,7 @@ enum {
   ARG_TOUCH,
 };
 
-GST_EVENT_MASK_FUNCTION (gst_filesrc_get_event_mask,
+GST_PAD_EVENT_MASK_FUNCTION (gst_filesrc_get_event_mask,
   { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | 
 	  	    GST_SEEK_METHOD_SET | 
 		    GST_SEEK_METHOD_END | 
@@ -119,11 +119,11 @@ GST_EVENT_MASK_FUNCTION (gst_filesrc_get_event_mask,
 )
 
 GST_PAD_QUERY_TYPE_FUNCTION (gst_filesrc_get_query_types,
-  GST_PAD_QUERY_TOTAL,
-  GST_PAD_QUERY_POSITION
+  GST_QUERY_TOTAL,
+  GST_QUERY_POSITION
 )
 
-GST_FORMATS_FUNCTION (gst_filesrc_get_formats,
+GST_PAD_FORMATS_FUNCTION (gst_filesrc_get_formats,
   GST_FORMAT_BYTES
 )
 
@@ -138,7 +138,7 @@ static void		gst_filesrc_get_property	(GObject *object, guint prop_id,
 
 static GstBuffer *	gst_filesrc_get			(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
-static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
+static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstQueryType type,
 		         				 GstFormat *format, gint64 *value);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
@@ -732,19 +732,19 @@ gst_filesrc_change_state (GstElement *element)
 }
 
 static gboolean
-gst_filesrc_srcpad_query (GstPad *pad, GstPadQueryType type,
+gst_filesrc_srcpad_query (GstPad *pad, GstQueryType type,
 		          GstFormat *format, gint64 *value)
 {
   GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
       if (*format != GST_FORMAT_BYTES) {
 	return FALSE;
       }
       *value = src->filelen;
       break;
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
 	case GST_FORMAT_BYTES:
           *value = src->curoffset;

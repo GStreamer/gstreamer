@@ -79,9 +79,9 @@ typedef struct
 } GstEventMask;
 
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_EVENT_MASK_FUNCTION(functionname, ...)      \
+#define GST_EVENT_MASK_FUNCTION(type,functionname, ...)      \
 static const GstEventMask*                              \
-functionname (GstPad *pad)                            	\
+functionname (type pad)                            	\
 {                                               	\
   static const GstEventMask masks[] = {                 \
     __VA_ARGS__,					\
@@ -90,9 +90,9 @@ functionname (GstPad *pad)                            	\
   return masks;                                  	\
 }
 #elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_EVENT_MASK_FUNCTION(functionname, a...)     \
+#define GST_EVENT_MASK_FUNCTION(type,functionname, a...)     \
 static const GstEventMask*                              \
-functionname (GstPad *pad)                            	\
+functionname (type pad)                            	\
 {                                               	\
   static const GstEventMask masks[] = {                 \
     a,							\
@@ -188,6 +188,8 @@ GstEvent*	gst_event_new	        	(GstEventType type);
 #define         gst_event_unref(ev)           	gst_data_unref (GST_DATA (ev))
 /* copy buffer */
 #define         gst_event_copy(ev)         	GST_EVENT (gst_data_copy (GST_DATA (ev)))
+
+gboolean 	gst_event_masks_contains 	(const GstEventMask *masks, GstEventMask *mask);
 
 /* seek event */
 GstEvent*	gst_event_new_seek		(GstSeekType type, gint64 offset);

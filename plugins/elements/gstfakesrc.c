@@ -319,34 +319,34 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
   return srcpad;
 }
 
-GST_FORMATS_FUNCTION (gst_fakesrc_get_formats,
+GST_PAD_FORMATS_FUNCTION (gst_fakesrc_get_formats,
   GST_FORMAT_DEFAULT
 )
 
 GST_PAD_QUERY_TYPE_FUNCTION (gst_fakesrc_get_query_types,
-  GST_PAD_QUERY_TOTAL,
-  GST_PAD_QUERY_POSITION,
-  GST_PAD_QUERY_START,
-  GST_PAD_QUERY_SEGMENT_END
+  GST_QUERY_TOTAL,
+  GST_QUERY_POSITION,
+  GST_QUERY_START,
+  GST_QUERY_SEGMENT_END
 ) 
 
 static gboolean
-gst_fakesrc_query (GstPad *pad, GstPadQueryType type,
+gst_fakesrc_query (GstPad *pad, GstQueryType type,
 	           GstFormat *format, gint64 *value)
 {
   GstFakeSrc *src = GST_FAKESRC (GST_PAD_PARENT (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
       *value = src->num_buffers;
       break;
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       *value = src->buffer_count;
       break;
-    case GST_PAD_QUERY_START:
+    case GST_QUERY_START:
       *value = src->segment_start;
       break;
-    case GST_PAD_QUERY_SEGMENT_END:
+    case GST_QUERY_SEGMENT_END:
       *value = src->segment_end;
       break;
     default:
@@ -355,7 +355,7 @@ gst_fakesrc_query (GstPad *pad, GstPadQueryType type,
   return TRUE;
 }
 
-GST_EVENT_MASK_FUNCTION (gst_fakesrc_get_event_mask,
+GST_PAD_EVENT_MASK_FUNCTION (gst_fakesrc_get_event_mask,
   { GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH },
   { GST_EVENT_SEEK_SEGMENT, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP },
   { GST_EVENT_FLUSH, 0 }

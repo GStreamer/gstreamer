@@ -489,7 +489,7 @@ gst_bytestream_tell (GstByteStream *bs)
 
   format = GST_FORMAT_BYTES;
 
-  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_PAD_QUERY_POSITION, &format, &value)) 
+  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_QUERY_POSITION, &format, &value)) 
     return value;
   
   return -1;
@@ -505,7 +505,7 @@ gst_bytestream_length (GstByteStream *bs)
 
   format = GST_FORMAT_BYTES;
 
-  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_PAD_QUERY_TOTAL, &format, &value)) 
+  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_QUERY_TOTAL, &format, &value)) 
     return value;
   
   return -1;

@@ -69,6 +69,23 @@ extern GType _gst_element_type;
 # define GST_ELEMENT_CLASS              GST_ELEMENT_CLASS_CAST
 #endif
 
+/* convenience functions */
+#ifdef G_HAVE_ISO_VARARGS
+#define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, ...) \
+	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, __VA_ARGS__);
+#define GST_ELEMENT_FORMATS_FUNCTION(functionname, ...)    \
+	GST_FORMATS_FUNCTION (GstElement*, functionname, __VA_ARGS__);
+#define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, ...) \
+	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, __VA_ARGS__);
+#elif defined(G_HAVE_GNUC_VARARGS)
+#define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, a...) \
+	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, a);
+#define GST_ELEMENT_FORMATS_FUNCTION(functionname, a...)    \
+	GST_FORMATS_FUNCTION (GstElement*, functionname, a);
+#define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, a...) \
+	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, a);
+#endif
+
 typedef enum {
   /* element is complex (for some def.) and generally require a cothread */
   GST_ELEMENT_COMPLEX		= GST_OBJECT_FLAG_LAST,
@@ -168,21 +185,34 @@ struct _GstElementClass {
 
   /* vtable*/
   gboolean		(*release_locks)	(GstElement *element);
+
+  /* query/convert/events functions */
+  const GstEventMask*   (*get_event_masks)     	(GstElement *element);
   gboolean		(*send_event)		(GstElement *element, GstEvent *event);
-  gboolean		(*query)		(GstElement *element, GstPadQueryType type,
+  const GstFormat*      (*get_formats)        	(GstElement *element);
+  gboolean              (*convert)        	(GstElement *element,
+		                                 GstFormat  src_format,  gint64  src_value,
+						 GstFormat *dest_format, gint64 *dest_value);
+  const GstQueryType* 	(*get_query_types)    	(GstElement *element);
+  gboolean		(*query)		(GstElement *element, GstQueryType type,
 		  				 GstFormat *format, gint64 *value);
+
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
-  /* request a new pad */
+
+  /* request/release pads */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
   void			(*release_pad)		(GstElement *element, GstPad *pad);
+
   /* set/get clocks */
   GstClock*		(*get_clock)		(GstElement *element);
   void			(*set_clock)		(GstElement *element, GstClock *clock);
+
   /* index */
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
+  /* padding */
   gpointer		dummy[8];
 };
 
@@ -255,10 +285,6 @@ const GList*		gst_element_get_pad_list	(GstElement *element);
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 GstCaps *filtercaps);
-/* unimplemented
-GstPad*			gst_element_get_compatible_request_pad (GstElement *element, GstPadTemplate *templ);
-GstPad*			gst_element_get_compatible_static_pad (GstElement *element, GstPadTemplate *templ);
-*/
 
 GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_template_list	(GstElement *element);
@@ -279,9 +305,15 @@ gboolean		gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpa
 void			gst_element_disconnect_pads	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
+const GstEventMask*	gst_element_get_event_masks	(GstElement *element);
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
-gboolean		gst_element_query		(GstElement *element, GstPadQueryType type,
+const GstQueryType*	gst_element_get_query_types	(GstElement *element);
+gboolean		gst_element_query		(GstElement *element, GstQueryType type,
 			                                 GstFormat *format, gint64 *value);
+const GstFormat*	gst_element_get_formats		(GstElement *element);
+gboolean		gst_element_convert		(GstElement *element, 
+		 					 GstFormat  src_format,  gint64  src_value,
+							 GstFormat *dest_format, gint64 *dest_value);
 
 void			gst_element_set_eos		(GstElement *element);
 

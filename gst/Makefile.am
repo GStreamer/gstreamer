@@ -131,6 +131,7 @@ gst_headers =			\
 	gstprobe.h		\
 	gstprops.h		\
 	gstqueue.h		\
+	gstquery.h		\
 	gstscheduler.h		\
 	gstsystemclock.h	\
 	gstthread.h		\

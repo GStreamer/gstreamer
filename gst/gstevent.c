@@ -89,6 +89,34 @@ _gst_event_free (GstEvent* event)
 }
 
 /**
+ * gst_event_masks_contains:
+ * @masks: The eventmask array to search
+ * @mask: the event mask to find
+ *
+ * See if the given eventmask is inside the eventmask array.
+ *
+ * Returns: TRUE if the eventmask is found inside the array
+ */
+gboolean
+gst_event_masks_contains (const GstEventMask *masks, GstEventMask *mask)
+{
+  g_return_val_if_fail (mask != NULL, FALSE);
+
+  if (!masks)
+    return FALSE;
+  
+  while (masks->type) {
+    if (masks->type == mask->type &&
+        (masks->flags & mask->flags) == mask->flags)
+      return TRUE;
+
+    masks++;
+  }
+
+  return FALSE;
+}
+
+/**
  * gst_event_new:
  * @type: The type of the new event
  *

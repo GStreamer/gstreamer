@@ -54,26 +54,26 @@ struct _GstFormatDefinition
 };
 
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_FORMATS_FUNCTION(functionname, ...)      \
-static const GstFormat*                              \
-functionname (GstPad *pad)                           \
-{                                                    \
-  static const GstFormat formats[] = {               \
-    __VA_ARGS__,                                     \
-    0                                                \
-  };                                                 \
-  return formats;                                    \
+#define GST_FORMATS_FUNCTION(type, functionname, ...)   \
+static const GstFormat*                              	\
+functionname (type object)                       	\
+{                                                    	\
+  static const GstFormat formats[] = {               	\
+    __VA_ARGS__,                                     	\
+    0                                                	\
+  };                                                 	\
+  return formats;                                    	\
 }
 #elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_FORMATS_FUNCTION(functionname, a...)     \
-static const GstFormat*                              \
-functionname (GstPad *pad)                           \
-{                                                    \
-  static const GstFormat formats[] = {               \
-    a,                                               \
-    0                                                \
-  };                                                 \
-  return formats;                                    \
+#define GST_FORMATS_FUNCTION(type, functionname, a...)  \
+static const GstFormat*                              	\
+functionname (type object)                       	\
+{                                                    	\
+  static const GstFormat formats[] = {               	\
+    a,                                               	\
+    0                                                	\
+  };                                                 	\
+  return formats;                                    	\
 }
 #endif
 

@@ -50,7 +50,7 @@ enum {
   ARG_MAXFILESIZE,
 };
 
-GST_EVENT_MASK_FUNCTION (gst_filesink_get_event_mask,
+GST_PAD_EVENT_MASK_FUNCTION (gst_filesink_get_event_mask,
   { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
                     GST_SEEK_METHOD_SET |
                     GST_SEEK_METHOD_END |

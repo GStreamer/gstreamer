@@ -581,38 +581,6 @@ gst_pad_get_event_masks_default (GstPad *pad)
 }
 
 /**
- * gst_pad_handles_event:
- * @pad: a #GstPad to check
- * @mask: the mask to check
- *
- * Checks if the pad can handle the given eventmask.
- *
- * Returns: TRUE if the pad can handle the given eventmask
- */
-gboolean
-gst_pad_handles_event (GstPad *pad, GstEventMask *mask)
-{
-  const GstEventMask *masks;
-
-  g_return_val_if_fail (pad != NULL, FALSE);
-  g_return_val_if_fail (mask != NULL, FALSE);
-
-  masks = gst_pad_get_event_masks (pad);
-  if (!masks)
-    return FALSE;
-
-  while (masks->type) {
-    if (masks->type == mask->type &&
-        (masks->flags & mask->flags) == mask->flags)
-      return TRUE;
-
-    masks++;
-  }
-
-  return FALSE;
-}
-
-/**
  * gst_pad_set_convert_function:
  * @pad: a #GstPad to set the convert function for.
  * @convert: the #GstPadConvertFunction to set.
@@ -679,7 +647,7 @@ gst_pad_set_query_type_function (GstPad *pad, GstPadQueryTypeFunction type_func)
  *
  * Returns: an array of querytypes anded with 0.
  */
-const GstPadQueryType*
+const GstQueryType*
 gst_pad_get_query_types (GstPad *pad)
 {
   GstRealPad *rpad;
@@ -698,7 +666,7 @@ gst_pad_get_query_types (GstPad *pad)
 }
 
 static gboolean
-gst_pad_get_query_types_dispatcher (GstPad *pad, const GstPadQueryType **data)
+gst_pad_get_query_types_dispatcher (GstPad *pad, const GstQueryType **data)
 {
   *data = gst_pad_get_query_types (pad);
 
@@ -714,10 +682,10 @@ gst_pad_get_query_types_dispatcher (GstPad *pad, const GstPadQueryType **data)
  *
  * Returns: an array of querytypes anded with 0.
  */
-const GstPadQueryType*
+const GstQueryType*
 gst_pad_get_query_types_default (GstPad *pad)
 {
-  GstPadQueryType *result = NULL;
+  GstQueryType *result = NULL;
 
   gst_pad_dispatcher (pad, (GstPadDispatcherFunction) 
                            gst_pad_get_query_types_dispatcher, &result);
@@ -2908,7 +2876,7 @@ gst_pad_convert (GstPad *pad,
 
 typedef struct 
 {
-  GstPadQueryType type;
+  GstQueryType 	  type;
   GstFormat	 *format;
   gint64	 *value;
 } GstPadQueryData;
@@ -2922,7 +2890,7 @@ gst_pad_query_dispatcher (GstPad *pad, GstPadQueryData *data)
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to invoke the default query on.
- * @type: the #GstPadQueryType of the query to perform.
+ * @type: the #GstQueryType of the query to perform.
  * @format: a pointer to the #GstFormat of the result.
  * @value: a pointer to the result.
  *
@@ -2931,7 +2899,7 @@ gst_pad_query_dispatcher (GstPad *pad, GstPadQueryData *data)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_default (GstPad *pad, GstPadQueryType type,
+gst_pad_query_default (GstPad *pad, GstQueryType type,
 	               GstFormat *format,  gint64 *value)
 {
   GstPadQueryData data;
@@ -2951,7 +2919,7 @@ gst_pad_query_default (GstPad *pad, GstPadQueryType type,
 /**
  * gst_pad_query:
  * @pad: a #GstPad to invoke the default query on.
- * @type: the #GstPadQueryType of the query to perform.
+ * @type: the #GstQueryType of the query to perform.
  * @format: a pointer to the #GstFormat of the result.
  * @value: a pointer to the result.
  *
@@ -2960,7 +2928,7 @@ gst_pad_query_default (GstPad *pad, GstPadQueryType type,
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query (GstPad *pad, GstPadQueryType type,
+gst_pad_query (GstPad *pad, GstQueryType type,
 	       GstFormat *format, gint64 *value) 
 {
   GstRealPad *rpad;
@@ -2977,25 +2945,6 @@ gst_pad_query (GstPad *pad, GstPadQueryType type,
     return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (pad), type, format, value);
 
   return FALSE;
-}
-
-/**
- * gst_pad_handles_format:
- * @pad: a #GstPad to check
- * @format: the format to check
- *
- * Checks if the pad can handle the given format.
- *
- * Returns: TRUE if the pad can handle the given format
- */
-gboolean
-gst_pad_handles_format (GstPad *pad, GstFormat format)
-{
-  const GstFormat *formats;
-
-  formats = gst_pad_get_formats (pad);
-
-  return gst_formats_contains (formats, format);
 }
 
 static gboolean

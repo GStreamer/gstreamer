@@ -31,6 +31,7 @@
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
 #include <gst/gstprobe.h>
+#include <gst/gstquery.h>
 
 
 G_BEGIN_DECLS
@@ -117,39 +118,15 @@ typedef enum {
   GST_PAD_CONNECT_DONE    =  2
 } GstPadConnectReturn;
 
-typedef enum {
-  GST_PAD_QUERY_NONE = 0,
-  GST_PAD_QUERY_TOTAL,
-  GST_PAD_QUERY_POSITION,
-  GST_PAD_QUERY_LATENCY,
-  GST_PAD_QUERY_JITTER,
-  GST_PAD_QUERY_START,
-  GST_PAD_QUERY_SEGMENT_END,
-  GST_PAD_QUERY_RATE
-} GstPadQueryType;
-
+/* convenience functions */
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_PAD_QUERY_TYPE_FUNCTION(functionname, ...)  \
-static const GstPadQueryType*                           \
-functionname (GstPad *pad)                              \
-{                                                       \
-  static const GstPadQueryType types[] = {              \
-    __VA_ARGS__,                                        \
-    0                                              	\
-  };                                                    \
-  return types;                                         \
-}
+#define GST_PAD_QUERY_TYPE_FUNCTION(functionname, ...)  GST_QUERY_TYPE_FUNCTION (GstPad *, functionname, __VA_ARGS__);
+#define GST_PAD_FORMATS_FUNCTION(functionname, ...)  	GST_FORMATS_FUNCTION (GstPad *, functionname, __VA_ARGS__);
+#define GST_PAD_EVENT_MASK_FUNCTION(functionname, ...) 	GST_EVENT_MASK_FUNCTION (GstPad *, functionname, __VA_ARGS__);
 #elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_PAD_QUERY_TYPE_FUNCTION(functionname, a...) \
-static const GstPadQueryType*                           \
-functionname (GstPad *pad)                              \
-{                                                       \
-  static const GstPadQueryType types[] = {              \
-    a,                                                  \
-    0                                              	\
-  };                                                    \
-  return types;                                         \
-}
+#define GST_PAD_QUERY_TYPE_FUNCTION(functionname, a...) GST_QUERY_TYPE_FUNCTION (GstPad *, functionname, a);
+#define GST_PAD_FORMATS_FUNCTION(functionname, a...)  	GST_FORMATS_FUNCTION (GstPad *, functionname, a);
+#define GST_PAD_EVENT_MASK_FUNCTION(functionname, a...) GST_EVENT_MASK_FUNCTION (GstPad *, functionname, a);
 #endif
 
  
@@ -162,12 +139,12 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad, 
 		 						 GstFormat src_format,  gint64  src_value,
 								 GstFormat *dest_format, gint64 *dest_value);
-typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstPadQueryType type,
+typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQueryType type,
 		 						 GstFormat *format, gint64  *value);
 typedef GList*			(*GstPadIntConnFunction)	(GstPad *pad);
 typedef const GstFormat*	(*GstPadFormatsFunction)	(GstPad *pad);
 typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
-typedef const GstPadQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
+typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
 typedef GstPadConnectReturn	(*GstPadConnectFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
@@ -440,7 +417,6 @@ void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 void			gst_pad_set_event_mask_function		(GstPad *pad, GstPadEventMaskFunction mask_func);
 const GstEventMask*	gst_pad_get_event_masks			(GstPad *pad);
 const GstEventMask*	gst_pad_get_event_masks_default		(GstPad *pad);
-gboolean		gst_pad_handles_event			(GstPad *pad, GstEventMask *mask);
 
 /* pad connections */
 void			gst_pad_set_connect_function		(GstPad *pad, GstPadConnectFunction connect);
@@ -479,7 +455,6 @@ GstPad*			gst_pad_selectv				(GstPad *pad, ...);
 /* convert/query/format functions */
 void			gst_pad_set_formats_function		(GstPad *pad, 
 								 GstPadFormatsFunction formats);
-gboolean		gst_pad_handles_format			(GstPad *pad, GstFormat format);
 const GstFormat*	gst_pad_get_formats			(GstPad *pad);
 const GstFormat*	gst_pad_get_formats_default		(GstPad *pad);
 
@@ -493,11 +468,11 @@ gboolean		gst_pad_convert_default 		(GstPad *pad,
 
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
 void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
-const GstPadQueryType*	gst_pad_get_query_types			(GstPad *pad);
-const GstPadQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
-gboolean		gst_pad_query				(GstPad *pad, GstPadQueryType type,
+const GstQueryType*	gst_pad_get_query_types			(GstPad *pad);
+const GstQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
+gboolean		gst_pad_query				(GstPad *pad, GstQueryType type,
 								 GstFormat *format, gint64 *value);
-gboolean 		gst_pad_query_default 			(GstPad *pad, GstPadQueryType type,
+gboolean 		gst_pad_query_default 			(GstPad *pad, GstQueryType type,
 		                      				 GstFormat *format, gint64 *value);
 
 void			gst_pad_set_internal_connection_function(GstPad *pad, GstPadIntConnFunction intconn);

@@ -199,12 +199,12 @@ print_event_masks (const GstEventMask *masks)
 }
 
 static void 
-print_query_types (const GstPadQueryType *types) 
+print_query_types (const GstQueryType *types) 
 {
   GType query_type;
   GEnumClass *klass;
 
-  query_type = gst_pad_query_type_get_type();
+  query_type = gst_query_type_get_type();
   klass = (GEnumClass *) g_type_class_ref (query_type);
 
   while (types && *types) {

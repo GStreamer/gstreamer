@@ -547,6 +547,7 @@ gst_index_compare_func (gconstpointer a,
  * @index: the index to search
  * @id: the id of the index writer
  * @method: The lookup method to use
+ * @flags: Flags for the entry
  * @format: the format of the value
  * @value: the value to find
  *
@@ -571,6 +572,7 @@ gst_index_get_assoc_entry (GstIndex *index, gint id,
  * @index: the index to search
  * @id: the id of the index writer
  * @method: The lookup method to use
+ * @flags: Flags for the entry
  * @format: the format of the value
  * @value: the value to find
  * @func: the function used to compare entries
