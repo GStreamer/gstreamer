@@ -74,8 +74,6 @@ struct _GstCACASink {
   gboolean antialiasing;
   guint red_mask, green_mask, blue_mask;
 
-  gint64 correction;
-  //GstClockID id;
   GstClock *clock;
 
   struct caca_bitmap *bitmap;
