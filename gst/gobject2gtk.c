@@ -23,7 +23,26 @@ g_slist_delete_link (GSList *list, GSList *llink)
   return temp;
 }
 
+// string helper functions not in glib 1.2
 
+gchar*
+g_strcanon (gchar       *string,
+	    const gchar *valid_chars,
+	    gchar        substitutor)
+{
+  register gchar *c;
+  
+  g_return_val_if_fail (string != NULL, NULL);
+  g_return_val_if_fail (valid_chars != NULL, NULL);
+    
+  for (c = string; *c; c++)
+    {
+      if (!strchr (valid_chars, *c))
+	*c = substitutor;
+    }
+
+  return string;
+}
 
 // GObject dummy implementation
 static void

@@ -21,6 +21,14 @@ GSList *g_slist_delete_link (GSList *list, GSList *llink);
 
 #define g_string_append_printf g_string_printfa
 
+// string helper functions not in glib 1.2
+#define G_CSET_A_2_Z       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define G_CSET_a_2_z       "abcdefghijklmnopqrstuvwxyz"
+#define G_CSET_DIGITS      "0123456789"
+
+gchar* g_strcanon (gchar *string, const gchar *valid_chars, 
+                   gchar substitutor);
+
 
 // GObject
 typedef struct _GObject GObject;
