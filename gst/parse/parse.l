@@ -110,7 +110,8 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
       while (g_ascii_isspace (*c)) c++;
       c = lvalp->s = gst_parse_strdup (c);
       while (*c) c++;
-      g_assert (*--c == '!');
+      if (*--c != '!')
+	g_assert_not_reached ();
       while (g_ascii_isspace (*--c));
       *++c = '\0';
     } else {

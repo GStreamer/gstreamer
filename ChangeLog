@@ -1,3 +1,8 @@
+2004-08-03  Benjamin Otte  <otte@gnome.org>
+
+	* gst/parse/parse.l:
+	  fix for G_DISABLE_ASSERT
+
 2004-08-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_get_type),
