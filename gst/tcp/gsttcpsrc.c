@@ -294,7 +294,10 @@ gst_tcpsrc_get (GstPad *pad)
       }
       
       else {
-	perror ("read");
+        if (numbytes == -1){
+		perror ("read");
+	}
+	else g_print("End of Stream reached\n");
         gst_buffer_unref (outbuf);
         outbuf = NULL;
 	close (tcpsrc->client_sock);
