@@ -32,16 +32,11 @@ typedef enum {
   GST_FORMAT_NONE   	= 0,
   GST_FORMAT_DEFAULT   	= 1,
   GST_FORMAT_BYTES   	= 2,
-  GST_FORMAT_TIME 	= 6,
-  GST_FORMAT_BUFFERS	= 7,
-  GST_FORMAT_PERCENT	= 8,
-
-  /* audio related */
-  GST_FORMAT_SAMPLES 	= 3,
-
-  /* video related */
-  GST_FORMAT_FRAMES 	= 4,  /* can also be used for compressed audio */
-  GST_FORMAT_FIELDS 	= 5,
+  GST_FORMAT_TIME 	= 3,
+  GST_FORMAT_BUFFERS	= 4,
+  GST_FORMAT_PERCENT	= 5,
+  /* samples for audio, frames/fields for video */
+  GST_FORMAT_UNIT 	= 6,
 } GstFormat;
 
 G_END_DECLS
