@@ -107,6 +107,8 @@ gst_ffmpeg_set_palette (GstCaps *caps, AVCodecContext *context)
 	__VA_ARGS__, NULL)					\
     :								\
     gst_caps_new_simple (mimetype,	      			\
+        "rate", GST_TYPE_INT_RANGE, 8000, 96000,		\
+	"channels", GST_TYPE_INT_RANGE, 1, 2,			\
 	__VA_ARGS__, NULL)
 
 /* Convert a FFMPEG codec ID and optional AVCodecContext
@@ -1325,6 +1327,24 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   return caps;
 }
 
+gboolean
+gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
+    enum CodecID ** video_codec_list, enum CodecID ** audio_codec_list)
+{
+  if (!strcmp (format_name, "mp4")) {
+    static enum CodecID mp4_video_list[] = { CODEC_ID_MPEG4, CODEC_ID_NONE };
+    static enum CodecID mp4_audio_list[] = { CODEC_ID_AAC, CODEC_ID_NONE };
+
+    *video_codec_list = mp4_video_list;
+    *audio_codec_list = mp4_audio_list;
+  } else {
+    GST_WARNING ("Format %s not found", format_name);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 /* Convert a GstCaps to a FFMPEG codec ID. Size et all
  * are omitted, that can be queried by the user itself,
  * we're not eating the GstCaps or anything
@@ -1398,7 +1418,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-dv")) {
     gboolean sys_strm;
 
-    if (!gst_structure_get_boolean (structure, "systemstream", &sys_strm) &&
+    if (gst_structure_get_boolean (structure, "systemstream", &sys_strm) &&
         !sys_strm) {
       id = CODEC_ID_DVVIDEO;
       video = TRUE;
@@ -1419,8 +1439,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     gboolean sys_strm;
     gint mpegversion;
 
-    if (!gst_structure_get_boolean (structure, "systemstream", &sys_strm) &&
-        !gst_structure_get_int (structure, "mpegversion", &mpegversion) &&
+    if (gst_structure_get_boolean (structure, "systemstream", &sys_strm) &&
+        gst_structure_get_int (structure, "mpegversion", &mpegversion) &&
         !sys_strm) {
       switch (mpegversion) {
         case 1:
@@ -1468,7 +1488,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       switch (mpegversion) {
         case 2:                /* ffmpeg uses faad for both... */
         case 4:
-          id = CODEC_ID_MPEG4AAC;
+          id = CODEC_ID_AAC;
           break;
         case 1:
           if (gst_structure_get_int (structure, "layer", &layer)) {

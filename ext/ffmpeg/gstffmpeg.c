@@ -80,7 +80,7 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpegenc_register (plugin);
   gst_ffmpegdec_register (plugin);
   gst_ffmpegdemux_register (plugin);
-  /*gst_ffmpegmux_register (plugin); */
+  gst_ffmpegmux_register (plugin);
   gst_ffmpegcsp_register (plugin);
 
   register_protocol (&gstreamer_protocol);

@@ -88,6 +88,17 @@ GstCaps *
 gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
 /*
+ * _formatid_get_codecids () can be used to get the codecIDs
+ * (CODEC_ID_NONE-terminated list) that fit that specific
+ * output format.
+ */
+
+gboolean
+gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
+				  enum CodecID ** video_codec_list,
+				  enum CodecID ** audio_codec_list);
+
+/*
  * Since FFMpeg has such really cool and useful descriptions
  * of its codecs, we use our own...
  */
@@ -118,7 +129,8 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
  */
 int
 gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
-    const AVPicture * src, int src_pix_fmt, int src_width, int src_height);
+			const AVPicture * src, int src_pix_fmt,
+			int src_width, int src_height);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
 

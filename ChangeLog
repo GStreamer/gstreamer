@@ -1,3 +1,24 @@
+2005-03-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	  Enable muxers (only mp4 muxer for now).
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids), (gst_ffmpeg_caps_to_codecid):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	  Fix a bunch of typos in codec-id lookup (false/true return value
+	  mixup), add a codec-id list retrieval function (because ffmpeg
+	  does not provide one). With that, we can make valid pad templates.
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_init),
+	(gst_ffmpegmux_connect), (gst_ffmpegmux_loop),
+	(gst_ffmpegmux_change_state), (gst_ffmpegmux_get_id_caps),
+	(gst_ffmpegmux_register):
+	  Fix for whatever changed since I last tried this. Works for MP4
+	  muxing.
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_peek), (gst_ffmpegdata_write),
+	(gst_ffmpegdata_seek), (gst_ffmpegdata_close):
+	  Update obviously-untested write code...
+
 2005-03-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_chain_video):

@@ -45,6 +45,8 @@ struct _GstFFMpegMux
   AVFormatContext *context;
   gboolean opened;
 
+  GstTagList *tags;
+
   GstPad *sinkpads[MAX_STREAMS];
   gint videopads, audiopads;
   GstBuffer *bufferqueue[MAX_STREAMS];
@@ -189,6 +191,8 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux)
 
   ffmpegmux->videopads = 0;
   ffmpegmux->audiopads = 0;
+
+  ffmpegmux->tags = NULL;
 }
 
 static void
@@ -269,7 +273,6 @@ gst_ffmpegmux_connect (GstPad * pad, const GstCaps * caps)
 
   /*g_return_val_if_fail (ffmpegmux->opened == FALSE,
      GST_PAD_LINK_REFUSED); */
-
   for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
     if (pad == ffmpegmux->sinkpads[i]) {
       break;
@@ -318,6 +321,16 @@ gst_ffmpegmux_loop (GstElement * element)
             ffmpegmux->eos[i] = TRUE;
             gst_event_unref (event);
             break;
+          case GST_EVENT_TAG:
+            if (ffmpegmux->tags) {
+              gst_tag_list_insert (ffmpegmux->tags,
+                  gst_event_tag_get_list (event), GST_TAG_MERGE_PREPEND);
+            } else {
+              ffmpegmux->tags =
+                  gst_tag_list_copy (gst_event_tag_get_list (event));
+            }
+            gst_event_unref (event);
+            break;
           default:
             gst_pad_event_default (pad, event);
             break;
@@ -330,6 +343,8 @@ gst_ffmpegmux_loop (GstElement * element)
 
   /* open "file" (gstreamer protocol to next element) */
   if (!ffmpegmux->opened) {
+    const GstTagList *iface_tags;
+
     /* we do need all streams to have started capsnego,
      * or things will go horribly wrong */
     for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
@@ -343,6 +358,58 @@ gst_ffmpegmux_loop (GstElement * element)
                 "video" : "audio"));
         return;
       }
+      if (st->codec.codec_type == CODEC_TYPE_AUDIO) {
+        st->codec.frame_size =
+            st->codec.sample_rate *
+            GST_BUFFER_DURATION (ffmpegmux->bufferqueue[i]) / GST_SECOND;
+      }
+    }
+
+    /* tags */
+    iface_tags = gst_tag_setter_get_list (GST_TAG_SETTER (ffmpegmux));
+    if (ffmpegmux->tags || iface_tags) {
+      GstTagList *tags;
+      gint i;
+      gchar *s;
+
+      if (iface_tags && ffmpegmux->tags) {
+        gst_tag_list_merge (iface_tags, ffmpegmux->tags,
+            GST_TAG_MERGE_APPEND);
+      } else if (iface_tags) {
+        tags = gst_tag_list_copy (iface_tags);
+      } else {
+        tags = gst_tag_list_copy (ffmpegmux->tags);
+      }
+
+      /* get the interesting ones */
+      if (gst_tag_list_get_string (tags, GST_TAG_TITLE, &s)) {
+        strncpy (ffmpegmux->context->title, s,
+            sizeof (ffmpegmux->context->title));
+      }
+      if (gst_tag_list_get_string (tags, GST_TAG_ARTIST, &s)) {
+        strncpy (ffmpegmux->context->author, s,
+            sizeof (ffmpegmux->context->author));
+      }
+      if (gst_tag_list_get_string (tags, GST_TAG_COPYRIGHT, &s)) {
+        strncpy (ffmpegmux->context->copyright, s,
+            sizeof (ffmpegmux->context->copyright));
+      }
+      if (gst_tag_list_get_string (tags, GST_TAG_COMMENT, &s)) {
+        strncpy (ffmpegmux->context->comment, s,
+            sizeof (ffmpegmux->context->comment));
+      }
+      if (gst_tag_list_get_string (tags, GST_TAG_ALBUM, &s)) {
+        strncpy (ffmpegmux->context->album, s,
+            sizeof (ffmpegmux->context->album));
+      }
+      if (gst_tag_list_get_string (tags, GST_TAG_GENRE, &s)) {
+        strncpy (ffmpegmux->context->genre, s,
+            sizeof (ffmpegmux->context->genre));
+      }
+      if (gst_tag_list_get_uint (tags, GST_TAG_TRACK_NUMBER, &i)) {
+        ffmpegmux->context->track = i;
+      }
+      gst_tag_list_free (tags);
     }
 
     if (url_fopen (&ffmpegmux->context->pb,
@@ -352,7 +419,7 @@ gst_ffmpegmux_loop (GstElement * element)
       return;
     }
 
-    if (av_set_parameters (ffmpegmux->context, NULL)) {
+    if (av_set_parameters (ffmpegmux->context, NULL) < 0) {
       GST_ELEMENT_ERROR (element, LIBRARY, INIT, (NULL),
           ("Failed to initialize muxer"));
       return;
@@ -362,7 +429,11 @@ gst_ffmpegmux_loop (GstElement * element)
     ffmpegmux->opened = TRUE;
 
     /* now open the mux format */
-    av_write_header (ffmpegmux->context);
+    if (av_write_header (ffmpegmux->context) < 0) {
+      GST_ELEMENT_ERROR (element, LIBRARY, SETTINGS, (NULL),
+          ("Failed to write file header - check codec settings"));
+      return;
+    }
   }
 
   /* take the one with earliest timestamp,
@@ -401,6 +472,7 @@ gst_ffmpegmux_loop (GstElement * element)
 
     /* set time */
     pkt.pts = GST_BUFFER_TIMESTAMP (buf) * AV_TIME_BASE / GST_SECOND;
+    pkt.dts = pkt.pts;
     pkt.data = GST_BUFFER_DATA (buf);
     pkt.size = GST_BUFFER_SIZE (buf);
     pkt.stream_index = bufnum;
@@ -430,6 +502,10 @@ gst_ffmpegmux_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
+      if (ffmpegmux->tags) {
+        gst_tag_list_free (ffmpegmux->tags);
+        ffmpegmux->tags = NULL;
+      }
       if (ffmpegmux->opened) {
         url_fclose (&ffmpegmux->context->pb);
         ffmpegmux->opened = FALSE;
@@ -443,6 +519,20 @@ gst_ffmpegmux_change_state (GstElement * element)
   return GST_STATE_SUCCESS;
 }
 
+GstCaps *
+gst_ffmpegmux_get_id_caps (enum CodecID * id_list)
+{
+  GstCaps *caps, *t;
+  gint i;
+
+  caps = gst_caps_new_empty ();
+  for (i = 0; id_list[i] != CODEC_ID_NONE; i++) {
+    if ((t = gst_ffmpeg_codecid_to_caps (id_list[i], NULL, TRUE)))
+      gst_caps_append (caps, t);
+  }
+
+  return caps;
+}
 
 gboolean
 gst_ffmpegmux_register (GstPlugin * plugin)
@@ -458,6 +548,9 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     0,
     (GInstanceInitFunc) gst_ffmpegmux_init,
   };
+  static const GInterfaceInfo tag_setter_info = {
+      NULL, NULL, NULL
+  };
   GType type;
   AVOutputFormat *in_plugin;
   GstFFMpegMuxClassParams *params;
@@ -471,35 +564,20 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     gchar *type_name;
     gchar *p;
     GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
+    enum CodecID *video_ids = NULL, *audio_ids = NULL;
 
     /* Try to find the caps that belongs here */
     srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
     if (!srccaps) {
       goto next;
     }
-    /* This is a bit ugly, but we just take all formats
-     * for the pad template. We'll get an exact match
-     * when we open the stream */
-    audiosinkcaps = gst_caps_new_empty ();
-    videosinkcaps = gst_caps_new_empty ();
-    for (in_codec = first_avcodec; in_codec != NULL; in_codec = in_codec->next) {
-      GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL, TRUE);
-
-      if (!temp) {
-        continue;
-      }
-      switch (in_codec->type) {
-        case CODEC_TYPE_VIDEO:
-          gst_caps_append (videosinkcaps, temp);
-          break;
-        case CODEC_TYPE_AUDIO:
-          gst_caps_append (audiosinkcaps, temp);
-          break;
-        default:
-          gst_caps_free (temp);
-          break;
-      }
+    if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
+             &video_ids, &audio_ids)) {
+      gst_caps_free (srccaps);
+      goto next;
     }
+    videosinkcaps = video_ids ? gst_ffmpegmux_get_id_caps (video_ids) : NULL;
+    audiosinkcaps = audio_ids ? gst_ffmpegmux_get_id_caps (audio_ids) : NULL;
 
     /* construct the type */
     type_name = g_strdup_printf ("ffmux_%s", in_plugin->name);
@@ -515,6 +593,11 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name)) {
       g_free (type_name);
+      gst_caps_free (srccaps);
+      if (audiosinkcaps)
+        gst_caps_free (audiosinkcaps);
+      if (videosinkcaps)
+        gst_caps_free (videosinkcaps);
       goto next;
     }
 
@@ -530,8 +613,15 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,
+        &tag_setter_info);
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
       g_free (type_name);
+      gst_caps_free (srccaps);
+      if (audiosinkcaps)
+        gst_caps_free (audiosinkcaps);
+      if (videosinkcaps)
+        gst_caps_free (videosinkcaps);
       return FALSE;
     }
 

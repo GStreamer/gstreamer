@@ -39,7 +39,6 @@ struct _GstProtocolInfo
 {
   GstPad *pad;
 
-  int flags;
   GstByteStream *bs;
   gboolean eos;
 };
@@ -53,7 +52,6 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   GST_LOG ("Opening %s", filename);
 
   info = g_new0 (GstProtocolInfo, 1);
-  info->flags = flags;
 
   /* we don't support R/W together */
   if (flags != URL_RDONLY && flags != URL_WRONLY) {
@@ -85,7 +83,6 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
 
   h->priv_data = (void *) info;
   h->is_streamed = FALSE;
-  h->flags = 0;
   h->max_packet_size = 0;
 
   return 0;
@@ -102,7 +99,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 
   info = (GstProtocolInfo *) h->priv_data;
 
-  g_return_val_if_fail (info->flags == URL_RDONLY, AVERROR_IO);
+  g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
 
   bs = info->bs;
 
@@ -202,7 +199,7 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
 
   info = (GstProtocolInfo *) h->priv_data;
 
-  g_return_val_if_fail (info->flags == URL_WRONLY, -EIO);
+  g_return_val_if_fail (h->flags == URL_WRONLY, -EIO);
 
   /* create buffer and push data further */
   outbuf = gst_buffer_new_and_alloc (size);
@@ -225,20 +222,22 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 
   info = (GstProtocolInfo *) h->priv_data;
 
-  /* get data (typefind hack) */
-  if (gst_bytestream_tell (info->bs) != gst_bytestream_length (info->bs)) {
-    gchar buf;
-    gst_ffmpegdata_peek (h, &buf, 1);
-  }
+  if (h->flags == URL_RDONLY) {
+    /* get data (typefind hack) */
+    if (gst_bytestream_tell (info->bs) != gst_bytestream_length (info->bs)) {
+      gchar buf;
+      gst_ffmpegdata_peek (h, &buf, 1);
+    }
 
-  /* hack in ffmpeg to get filesize... */
-  if (whence == SEEK_END && pos == -1)
-    return gst_bytestream_length (info->bs) - 1;
-  else if (whence == SEEK_END && pos == 0)
-    return gst_bytestream_length (info->bs);
-  /* another hack to get the current position... */
-  else if (whence == SEEK_CUR && pos == 0)
-    return gst_bytestream_tell (info->bs);
+    /* hack in ffmpeg to get filesize... */
+    if (whence == SEEK_END && pos == -1)
+      return gst_bytestream_length (info->bs) - 1;
+    else if (whence == SEEK_END && pos == 0)
+      return gst_bytestream_length (info->bs);
+    /* another hack to get the current position... */
+    else if (whence == SEEK_CUR && pos == 0)
+      return gst_bytestream_tell (info->bs);
+  }
 
   switch (whence) {
     case SEEK_SET:
@@ -255,7 +254,7 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
       break;
   }
 
-  switch (info->flags) {
+  switch (h->flags) {
     case URL_RDONLY: {
       GstEvent *event;
       guint8 *data;
@@ -303,7 +302,8 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
     }
 
     case URL_WRONLY:
-      gst_pad_push (info->pad, GST_DATA (gst_event_new_seek (seek_type, pos)));
+      gst_pad_push (info->pad,
+          GST_DATA (gst_event_new_seek (seek_type | GST_FORMAT_BYTES, pos)));
       /* this is screwy because there might be queues or scheduler-queued
        * buffers... Argh! */
       if (whence == SEEK_SET) {
@@ -331,7 +331,7 @@ gst_ffmpegdata_close (URLContext * h)
 
   GST_LOG ("Closing file");
 
-  switch (info->flags) {
+  switch (h->flags) {
     case URL_WRONLY:{
       /* send EOS - that closes down the stream */
       GstEvent *event = gst_event_new (GST_EVENT_EOS);
