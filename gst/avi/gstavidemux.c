@@ -66,7 +66,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   GST_CAPS_NEW (
     "avidemux_sink",
      "video/avi",
-      "RIFF", GST_PROPS_STRING ("AVI")
+      "RIFF",    GST_PROPS_STRING ("AVI")
   )
 )
 
@@ -75,23 +75,73 @@ GST_PADTEMPLATE_FACTORY (src_video_templ,
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "src_video",
+    "avidemux_src_video",
     "video/avi",
       "format",  GST_PROPS_LIST (
 	           GST_PROPS_STRING ("strf_vids"),
 	           GST_PROPS_STRING ("strf_iavs")
       		 )
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_video",
+    "video/raw",
+      "format",  GST_PROPS_LIST (
+                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
+                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('I','4','2','0'))
+                 ),
+      "width",          GST_PROPS_INT_RANGE (16, 4096),
+      "height",         GST_PROPS_INT_RANGE (16, 4096)
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_video",
+    "video/jpeg",
+      "width",   GST_PROPS_INT_RANGE (16, 4096),
+      "height",  GST_PROPS_INT_RANGE (16, 4096)
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_video",
+    "video/dv",
+      "format",  GST_PROPS_LIST (
+                   GST_PROPS_STRING ("NTSC"),
+                   GST_PROPS_STRING ("PAL")
+                 )
   )
 )
 
 GST_PADTEMPLATE_FACTORY (src_audio_templ,
-  "src",
+  "audio_[00-32]",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "src_audio",
+    "avidemux_src_audio",
     "video/avi",
-      "format", GST_PROPS_STRING ("strf_auds")
+      "format",  GST_PROPS_STRING ("strf_auds")
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_audio",
+    "audio/raw",
+      "format",           GST_PROPS_STRING ("int"),
+      "law",              GST_PROPS_INT (0),
+      "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",           GST_PROPS_LIST (
+      			    GST_PROPS_BOOLEAN (TRUE),
+      			    GST_PROPS_BOOLEAN (FALSE)
+			  ),
+      "width",            GST_PROPS_LIST (
+      			    GST_PROPS_INT (8),
+      			    GST_PROPS_INT (16)
+			  ),
+      "depth",            GST_PROPS_LIST (
+      			    GST_PROPS_INT (8),
+      			    GST_PROPS_INT (16)
+			  ),
+      "rate",             GST_PROPS_INT_RANGE (11025, 44100),
+      "channels",         GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_audio",
+    "audio/mp3",
+      NULL
   )
 )
 
@@ -281,6 +331,7 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
   gst_riff_strf_vids *strf;
   GstPad *srcpad;
   GstByteStream *bs = avi_demux->bs;
+  GstCaps *newcaps = NULL, *capslist = NULL;
 
   strf = (gst_riff_strf_vids *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strf_vids));
 
@@ -302,9 +353,8 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 		  GST_PADTEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
 			  avi_demux->num_video_pads));
 
-  gst_pad_try_set_caps (srcpad, 
-		        GST_CAPS_NEW (
-			  "avidec_video_src",
+  capslist = gst_caps_append(NULL, GST_CAPS_NEW (
+			  "avidemux_video_src",
 			  "video/avi",
 			    "format",    	GST_PROPS_STRING ("strf_vids"),
 			      "size", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->size)),
@@ -320,6 +370,42 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 			      "imp_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->imp_colors))
 			      ));
 
+  /* whoa, it doesn't fit, let's try some gstreamer-like mime-type caps */
+  switch (GUINT32_FROM_LE(strf->compression))
+  {
+    case GST_MAKE_FOURCC('I','4','2','0'):
+    case GST_MAKE_FOURCC('Y','U','Y','2'):
+      newcaps = GST_CAPS_NEW (
+                  "avidemux_video_src",
+                  "video/raw",
+                    "format",  GST_PROPS_FOURCC(GUINT32_FROM_LE(strf->compression)),
+                    "width",   GST_PROPS_INT(strf->width),
+                    "height",  GST_PROPS_INT(strf->height)
+                );
+      break;
+    case GST_MAKE_FOURCC('M','J','P','G'):
+      newcaps = GST_CAPS_NEW (
+                  "avidemux_video_src",
+                  "video/jpeg",
+                    "width",   GST_PROPS_INT(strf->width),
+                    "height",  GST_PROPS_INT(strf->height)
+                );
+      break;
+    case GST_MAKE_FOURCC('d','v','s','d'):
+      newcaps = GST_CAPS_NEW (
+                  "avidemux_video_src",
+                  "video/dv",
+                    "format",  GST_PROPS_STRING("NTSC"), /* FIXME??? */
+                    "width",   GST_PROPS_INT(strf->width),
+                    "height",  GST_PROPS_INT(strf->height)
+                );
+      break;
+  }
+
+  if (newcaps) capslist = gst_caps_append(capslist, newcaps);
+
+  gst_pad_try_set_caps(srcpad, newcaps);
+
   avi_demux->video_pad[avi_demux->num_video_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
 }
@@ -330,6 +416,7 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
   gst_riff_strf_auds *strf;
   GstPad *srcpad;
   GstByteStream *bs = avi_demux->bs;
+  GstCaps *newcaps = NULL, *capslist = NULL;
 
   strf = (gst_riff_strf_auds *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strf_auds));
 
@@ -345,9 +432,8 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
 		  GST_PADTEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d", 
 			  avi_demux->num_audio_pads));
 
-  gst_pad_try_set_caps (srcpad, 
-		        GST_CAPS_NEW (
-			  "avidec_audio_src",
+  capslist = gst_caps_append(NULL, GST_CAPS_NEW (
+			  "avidemux_audio_src",
 			  "video/avi",
 			    "format",    	GST_PROPS_STRING ("strf_auds"),
 			      "fmt", 		GST_PROPS_INT (GUINT16_FROM_LE (strf->format)),
@@ -357,6 +443,37 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
 			      "blockalign",	GST_PROPS_INT (GUINT16_FROM_LE (strf->blockalign)),
 			      "size",		GST_PROPS_INT (GUINT16_FROM_LE (strf->size))
 			  ));
+
+  /* let's try some gstreamer-formatted mime types */
+  switch (GUINT16_FROM_LE(strf->format))
+  {
+    case 0x0050:
+    case 0x0055: /* mp3 */
+      newcaps = gst_caps_new ("avidemux_audio_src",
+                              "audio/mp3",
+                                NULL);
+      break;
+    case 0x0001: /* PCM/wav */
+      newcaps = gst_caps_new ("avidemux_audio_src",
+                              "audio/raw",
+                              gst_props_new (
+                                "format",     GST_PROPS_STRING ("int"),
+                                "law",        GST_PROPS_INT (0),
+                                "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                                "signed",     GST_PROPS_BOOLEAN ((GUINT16_FROM_LE (strf->size) != 8)),
+                                "width",      GST_PROPS_INT ((GUINT16_FROM_LE (strf->blockalign)*8) /
+                                                                GUINT16_FROM_LE (strf->channels)),
+                                "depth",      GST_PROPS_INT (GUINT16_FROM_LE (strf->size)),
+                                "rate",       GST_PROPS_INT (GUINT32_FROM_LE (strf->rate)),
+                                "channels",   GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
+                                NULL
+                              ));
+      break;
+  }
+
+  if (newcaps) capslist = gst_caps_append(capslist, newcaps);
+
+  gst_pad_try_set_caps(srcpad, newcaps);
 
   avi_demux->audio_pad[avi_demux->num_audio_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
@@ -368,6 +485,7 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   gst_riff_strf_iavs *strf;
   GstPad *srcpad;
   GstByteStream *bs = avi_demux->bs;
+  GstCaps *newcaps = NULL, *capslist = NULL;
 
   strf = (gst_riff_strf_iavs *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strf_iavs));
 
@@ -385,9 +503,8 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
 		  GST_PADTEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
 			  avi_demux->num_video_pads));
 
-  gst_pad_try_set_caps (srcpad, 
-		        GST_CAPS_NEW (
-			  "avidec_iav_src",
+  capslist = gst_caps_append(NULL, GST_CAPS_NEW (
+			  "avidemux_video_src",
 			  "video/avi",
 			    "format",    	GST_PROPS_STRING ("strf_iavs"),
                               "DVAAuxSrc", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxSrc)),
@@ -399,6 +516,16 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
                               "DVReserved1", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved1)),
                               "DVReserved2", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved2))
 			 ));
+
+  newcaps = gst_caps_new ("avi_type_dv", 
+                          "video/dv", 
+                          gst_props_new (
+                            "format",		GST_PROPS_STRING ("NTSC"), /* FIXME??? */
+                            NULL));
+
+  if (newcaps) capslist = gst_caps_append(capslist, newcaps);
+
+  gst_pad_try_set_caps(srcpad, newcaps);
 
   avi_demux->video_pad[avi_demux->num_video_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
