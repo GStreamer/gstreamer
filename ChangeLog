@@ -1,3 +1,22 @@
+2004-06-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
+	(gst_multifdsink_class_init), (gst_multifdsink_add),
+	(gst_multifdsink_remove), (gst_multifdsink_clear),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_client_queue_data),
+	(gst_multifdsink_client_queue_caps),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_thread),
+	(gst_multifdsink_init_send), (gst_multifdsink_close):
+	Fix wrong GList iteration that could crash the server when
+	more then 2 clients disconnect at the same time. Read all the
+	pending commands in one batch to recover from command storms under
+	very heavy load.
+
 2004-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_pad_get_type),
