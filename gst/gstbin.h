@@ -74,6 +74,9 @@ struct _GstBin {
   gint 		 numchildren;
   GList 	*children;
 
+  GMutex        *iterate_mutex;
+  GCond         *iterate_cond;
+
   GstElementState child_states[GST_NUM_STATES];
 
   gpointer 	 sched_private;
