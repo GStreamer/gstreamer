@@ -45,7 +45,7 @@ endif
 EXTRA_libgstreamer_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
 SUBDIRS = parse registries . $(GST_AUTOPLUG_DIRS) elements schedulers types 
-DIST_SUBDIRS = autoplug elements parse types schedulers
+DIST_SUBDIRS = autoplug elements parse registries schedulers types
 
 libcothreads_la_SOURCES = cothreads.c
 libgstreamer_la_SOURCES =		\
