@@ -1,6 +1,6 @@
-## libdir = $(libdir)/gst
+librarydir = $(libdir)/gst
 
-lib_LTLIBRARIES = libgstresample.la
+library_LTLIBRARIES = libgstresample.la
 
 if HAVE_CPU_I386
 ARCHCFLAGS = -march=i486
