@@ -585,7 +585,6 @@ gst_asfmux_request_new_pad (GstElement * element,
       G_CALLBACK (gst_asfmux_pad_unlink), (gpointer) asfmux);
   gst_pad_set_link_function (newpad, linkfunc);
   gst_element_add_pad (element, newpad);
-  gst_pad_set_event_function (newpad, gst_asfmux_handle_event);
   gst_pad_set_event_mask_function (newpad, gst_asfmux_get_event_masks);
 
   return newpad;

@@ -1,3 +1,24 @@
+2004-10-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_handle_sink_event):
+	  Set EOS on the element when processing an EOS event.
+	* ext/speex/gstspeexdec.h:
+	* ext/speex/gstspeexenc.h:
+	  Only keep a const ptr to the mode
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_caps_with_data),
+	(gst_riff_create_audio_template_caps):
+	  Allow WMAV3, with up to 6 channels. 
+	* gst/asfdemux/gstasfmux.c: (gst_asfmux_request_new_pad):
+	  Don't call gst_pad_set_event_function on a sink pad.
+	* gst/mpegstream/gstdvddemux.c:
+	(gst_dvd_demux_get_subpicture_stream),
+	(gst_dvd_demux_set_cur_audio), (gst_dvd_demux_set_cur_subpicture):
+          Copy the explicit caps that were set across to the cur_* pads,
+          instead of trying to use a possibly non-existent negotiated caps.
+	  Reset the type of subpicture pads to UNKNOWN after calling init_stream, 
+	  so that the caps get set.
+
 2004-10-29  Martin Pitt  <martin.pitt@canonical.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

@@ -645,11 +645,11 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
 
   if (str == NULL) {
     str = g_new0 (GstMPEGStream, 1);
-    str->type = GST_DVD_DEMUX_SUBP_UNKNOWN;
 
     name = g_strdup_printf ("subpicture_%02d", stream_nr);
     DEMUX_CLASS (dvd_demux)->init_stream (mpeg_demux, type, str, stream_nr,
         name, CLASS (dvd_demux)->subpicture_template);
+    str->type = GST_DVD_DEMUX_SUBP_UNKNOWN;
     g_free (name);
     add_pad = TRUE;
 
@@ -886,7 +886,7 @@ gst_dvd_demux_set_cur_audio (GstDVDDemux * dvd_demux, gint stream_nr)
   str = mpeg_demux->audio_stream[stream_nr];
   if (str != NULL) {
     /* (Re)set the caps in the "current" pad. */
-    caps = gst_pad_get_negotiated_caps (str->pad);
+    caps = GST_RPAD_EXPLICIT_CAPS (str->pad);
     if (caps != NULL) {
       gst_pad_set_explicit_caps (dvd_demux->cur_audio, caps);
     }
@@ -898,7 +898,6 @@ static void
 gst_dvd_demux_set_cur_subpicture (GstDVDDemux * dvd_demux, gint stream_nr)
 {
   GstMPEGStream *str;
-  const GstCaps *caps = NULL;
 
   g_return_if_fail (stream_nr >= -1 &&
       stream_nr < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS);
@@ -914,11 +913,11 @@ gst_dvd_demux_set_cur_subpicture (GstDVDDemux * dvd_demux, gint stream_nr)
 
   str = dvd_demux->subpicture_stream[stream_nr];
   if (str != NULL) {
+    GstCaps *caps = NULL;
+
     /* (Re)set the caps in the "current" pad. */
-    caps = gst_pad_get_negotiated_caps (str->pad);
-    if (caps != NULL) {
-      gst_pad_set_explicit_caps (dvd_demux->cur_subpicture, caps);
-    }
+    caps = GST_RPAD_EXPLICIT_CAPS (str->pad);
+    gst_pad_set_explicit_caps (dvd_demux->cur_subpicture, caps);
   }
 }
 
