@@ -1,3 +1,8 @@
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event):
+	  Fix warning (#161191).
+
 2005-01-09  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dvdread/stream_labels.c:

@@ -500,9 +500,8 @@ gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
       //gst_bytestream_flush_fast(qtdemux->bs, remaining);
       break;
     default:
-      res = FALSE;
-      g_warning ("unhandled event %d", type);
-      break;
+      gst_pad_event_default (qtdemux->sinkpad, event);
+      return TRUE;
   }
 
   gst_event_unref (event);
