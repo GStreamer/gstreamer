@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 import glob
+import os
 import sys
 import unittest
 
 SKIP_FILES = ['common', 'runtests']
+
+dir = os.path.split(os.path.abspath(__file__))[0]
+os.chdir(dir)
 
 def gettestnames():
     files = glob.glob('*.py')

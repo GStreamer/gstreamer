@@ -1,3 +1,8 @@
+2004-06-18  Johan Dahlin  <johan@gnome.org>
+
+	* testsuite/runtests.py (dir): Change to srcdir before running the
+	test, should make it pass distcheck
+
 2004-06-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/__init__.py:
