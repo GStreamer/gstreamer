@@ -267,7 +267,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       break;
     case G_TYPE_ENUM: {
       GEnumValue *en;
-      gchar **endptr = NULL;
+      gchar *endptr = NULL;
       GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_PARAM_SPEC_VALUE_TYPE (pspec));
       if (klass == NULL) goto error;
       if (!(en = g_enum_get_value_by_name (klass, pos)))
@@ -275,8 +275,8 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       if (en) {
         g_value_set_enum (&v, en->value);
       } else {
-        gint i = strtol (value, endptr, 0);
-	if (**endptr == '\0') {
+        gint i = strtol (value, &endptr, 0);
+	if (*endptr == '\0') {
           g_value_set_enum (&v, i);
 	} else {
 	  goto error;
