@@ -1233,7 +1233,7 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
 static GstPadConnectReturn
 gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 {
-  GstCaps *oldcaps;
+  GstCaps *oldcaps, *allowed = NULL;
   GstPadTemplate *template;
   GstElement *parent = GST_PAD_PARENT (pad);
 
@@ -1251,16 +1251,33 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 	  
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
             caps, GST_DEBUG_PAD_NAME (pad));
+
+  /* first see if we have to check against a filter */
+  if (!(allowed = GST_RPAD_FILTER (pad))) {
+    /* no filter, make sure we check against the padtemplate then */
+    if ((template = gst_pad_get_pad_template (GST_PAD_CAST (pad)))) {
+      allowed = gst_pad_template_get_caps (template);
+    }
+  }
   
-  if ((template = gst_pad_get_pad_template (GST_PAD_CAST (pad)))) {
-    if (!gst_caps_intersect (caps, gst_pad_template_get_caps (template))) {
-      GST_INFO (GST_CAT_CAPS, "caps did not intersect with %s:%s's padtemplate",
+  /* do we have to check the caps against something? */
+  if (allowed) {
+    GstCaps *intersection;
+
+    /* check against calculated caps */
+    intersection = gst_caps_intersect (caps, allowed);
+
+    /* oops, empty intersection, caps don"t have anything in common */
+    if (!intersection) {
+      GST_INFO (GST_CAT_CAPS, "caps did not intersect with %s:%s's allowed caps",
                 GST_DEBUG_PAD_NAME (pad));
       gst_caps_debug (caps, "caps themselves (attemped to set)");
-      gst_caps_debug (gst_pad_template_get_caps (template),
-                      "pad template caps that did not agree with caps");
+      gst_caps_debug (allowed,
+                      "allowed caps that did not agree with caps");
       return GST_PAD_CONNECT_REFUSED;
     }
+    /* caps checks out fine, we can unref the intersection now */
+    gst_caps_unref (intersection);
     /* given that the caps are fixed, we know that their intersection with the
      * padtemplate caps is the same as caps itself */
   }
