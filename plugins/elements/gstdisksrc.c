@@ -67,7 +67,8 @@ static void		gst_disksrc_get_property	(GObject *object, guint prop_id,
 static GstBuffer *	gst_disksrc_get			(GstPad *pad);
 static GstBuffer *	gst_disksrc_get_region		(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
 
-static GstElementStateReturn	gst_disksrc_change_state	(GstElement *element);
+static GstElementStateReturn	
+                 	gst_disksrc_change_state	(GstElement *element);
 
 static gboolean		gst_disksrc_open_file		(GstDiskSrc *src);
 static void		gst_disksrc_close_file		(GstDiskSrc *src);
@@ -351,13 +352,15 @@ gst_disksrc_open_file (GstDiskSrc *src)
     lseek (src->fd, 0, SEEK_SET);
     /* map the file into memory */
     src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED, src->fd, 0);
-    madvise (src->map,src->size, 2);
     /* collapse state if that failed */
-    if (src->map == NULL) {
+    if (src->map == MAP_FAILED) {
+      perror ("disksrc:mmap");
       close (src->fd);
       gst_element_error (GST_ELEMENT (src),"mmapping file");
       return FALSE;
     }
+    madvise (src->map,src->size, 2);
+
     GST_FLAG_SET (src, GST_DISKSRC_OPEN);
     src->new_seek = TRUE;
   }
