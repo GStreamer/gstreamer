@@ -1,3 +1,8 @@
+2004-02-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/manual/debugging.xml:
+        fix manual for new debugging system
+
 2004-02-25  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_link_prepare): Re-add

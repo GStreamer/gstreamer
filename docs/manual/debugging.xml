@@ -9,94 +9,143 @@
     <title>Command line options</title>
     <para> 
       Applications using the GStreamer libraries accept the following set
-      of command line argruments to enable the debugging system.
+      of command line argruments that help in debugging.
     </para>
       
     <para> 
      <itemizedlist>
        <listitem>
          <para>
-          <option>--gst-debug-mask=<replaceable>mask</replaceable></option> 
-	  Sets the mask for the debugging output.
+          <option>--gst-debug-help</option> 
+	  Print available debug categories and exit
          </para>
        </listitem>
        <listitem>
          <para>
-          <option>--gst-info-mask=<replaceable>mask</replaceable></option> 
-	  Sets the mask for the info output.
+          <option>--gst-debug-level=<replaceable>LEVEL</replaceable></option> 
+	  Sets the default debug level from 0 (no output) to 5 (everything)
          </para>
        </listitem>
        <listitem>
          <para>
-          <option>--gst-mask=<replaceable>mask</replaceable></option> 
-	  Sets the mask for the info *and* the debug output.
+          <option>--gst-debug=<replaceable>LIST</replaceable></option> 
+	  Comma-separated list of category_name:level pairs to set specific
+          levels for the individual categories. 
+          Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3
          </para>
        </listitem>
        <listitem>
          <para>
-          <option>--gst-mask-help</option> 
-	  Print out the meaning of gst-mask-* values.
+          <option>--gst-debug-no-color</option> 
+	  Disable color debugging output
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+          <option>--gst-debug-disable</option> 
+	  Disable debugging
          </para>
        </listitem>
        <listitem>
          <para>
           <option>--gst-plugin-spew</option> 
-	  Enable printout of errors while loading GST plugins.
-         </para>
-       </listitem>
-       <listitem>
-         <para>
-          <option>--gst-plugin-path=<replaceable>PATH</replaceable></option> 
-	  Add a directory to the plugin search path.
-         </para>
-       </listitem>
-       <listitem>
-         <para>
-           <option>--help</option> Print the a short desciption of the
-	   options
+	  Enable printout of errors while loading GStreamer plugins.
          </para>
        </listitem>
      </itemizedlist>
     </para>
-    <para>
-      The following table gives an overview of the mask values and their meaning. (enabled) means
-      that the corresponding flag is set by default. This table is available to any GStreamer
-      application by the --gst-mask-help option.
-    </para>
-    <programlisting>
-Mask (to be OR'ed)   info/debug         FLAGS   
---------------------------------------------------------
-0x00000001     (enabled)/              GST_INIT
-0x00000002              /              COTHREADS
-0x00000004              /              COTHREAD_SWITCH
-0x00000008              /              AUTOPLUG
-0x00000010              /              AUTOPLUG_ATTEMPT
-0x00000020              /              PARENTAGE
-0x00000040              /              STATES
-0x00000080              /              PLANING
-0x00000100              /              SCHEDULING
-0x00000200              /              OPERATION
-0x00000400              /              BUFFER
-0x00000800              /              CAPS
-0x00001000              /              CLOCK
-0x00002000              /              ELEMENT_PADS
-0x00004000              /              ELEMENT_FACTORY
-0x00008000              /              PADS
-0x00010000              /              PIPELINE
-0x00020000              /              PLUGIN_LOADING
-0x00040000              /              PLUGIN_ERRORS
-0x00080000              /              PLUGIN_INFO
-0x00100000              /              PROPERTIES
-0x00200000              /              THREAD
-0x00400000              /              TYPES
-0x00800000              /              XML
-0x01000000              /              NEGOTIATION
-0x02000000              /              REFCOUNTING
-    </programlisting>
   </sect1>
-  <sect1 id="section-debugging-adding-handler">
-    <title>Adding a custom debug handler</title>
+
+  <sect1 id="section-debugging-adding">
+    <title>Adding debugging to a plugin</title>
     <para> 
+Plugins can define their own categories for the debugging system.
+Three things need to happen:
+      <itemizedlist>
+        <listitem>
+          <para>
+The debugging variable needs to be defined somewhere.
+If you only have one source file, you can Use GST_DEBUG_CATEGORY_STATIC to
+define a static debug category variable.
+          </para>
+          <para>
+If you have multiple source files, you should define the variable using
+GST_DEBUG_CATEGORY in the source file where you're initializing the debug
+category.  The other source files should use GST_DEBUG_CATEGORY_EXTERN to
+declare the debug category variable, possibly by including a common header
+that has this statement.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+The debugging category needs to be initialized.  This is done through
+GST_DEBUG_CATEGORY_INIT.
+If you're using a global debugging category for the complete plugin,
+you can call this in the
+plugin's <function>plugin_init</function>.
+If the debug category is only used for one of the elements, you can call it
+from the element's <function>_class_init</function> function.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+You should also define a default category to be used for debugging.  This is
+done by defining GST_CAT_DEFAULT for the source files where you're using
+debug macros.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para> 
+    <para> 
+Elements can then log debugging information using the set of macros.  There
+are five levels of debugging information:
+      <orderedlist>
+        <listitem>
+<para>ERROR for fatal errors (for example, internal errors)</para>
+        </listitem>
+        <listitem>
+<para>WARNING for warnings</para>
+        </listitem>
+        <listitem>
+<para>INFO for normal information</para>
+        </listitem>
+        <listitem>
+<para>DEBUG for debug information (for example, device parameters)</para>
+        </listitem>
+        <listitem>
+<para>LOG for regular operation information (for example, chain handlers)</para>
+        </listitem>
+      </orderedlist>
+    </para> 
+    <para>
+For each of these levels, there are four macros to log debugging information.
+Taking the LOG level as an example, there is
+      <itemizedlist>
+        <listitem>
+          <para>
+          GST_CAT_LOG_OBJECT logs debug information in the given GstCategory
+          and for the given GstObject
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+          GST_CAT_LOG logs debug information in the given GstCategory
+          but without a GstObject (this is useful for libraries, for example)
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+          GST_LOG_OBJECT logs debug information in the default GST_CAT_DEFAULT
+          category (as defined somewhere in the source), for the given GstObject
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+          GST_LOG logs debug information in the default GST_CAT_DEFAULT
+          category, without a GstObject
+          </para>
+        </listitem>
+      </itemizedlist>
     </para> 
   </sect1>
 
