@@ -1,5 +1,11 @@
 2004-03-05  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstelement.c: (gst_element_error_full):
+	  revert recent recursive state changing commit - messing with other
+	  elements' states is evil and should be done by apps only.
+
+2004-03-05  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstelement.c: (gst_element_get_compatible_pad_template):
 	  check for empty intersection instead of NULL caps
 	(gst_element_get_compatible_pad_filtered):

@@ -2399,7 +2399,6 @@ gst_element_error_full
  const gchar *file, const gchar *function, gint line)
 {
   GError *error = NULL;
-  GstElement *e = NULL;
   gchar *name;
   gchar *sent_message;
   gchar *sent_debug;
@@ -2463,22 +2462,14 @@ gst_element_error_full
     gst_scheduler_error (element->sched, element);
   }
 
-  /* recursively leave PLAYING state */
-  e = element;
-  while (e)
-  {
-    if (GST_STATE (e) == GST_STATE_PLAYING) {
-      GstElementStateReturn ret;
+  if (GST_STATE (element) == GST_STATE_PLAYING) {
+    GstElementStateReturn ret;
 
-      ret = gst_element_set_state (e, GST_STATE_PAUSED);
-      /* only check if this worked for current element, not parents, since
-         this is likely to fail anyway */
-      if (ret != GST_STATE_SUCCESS && e == element) {
-        g_warning ("could not PAUSE element \"%s\" after error, help!",
-                   GST_ELEMENT_NAME (e));
-      }
+    ret = gst_element_set_state (element, GST_STATE_PAUSED);
+    if (ret != GST_STATE_SUCCESS) {
+      g_warning ("could not PAUSE element \"%s\" after error, help!",
+                 GST_ELEMENT_NAME (element));
     }
-    e = GST_ELEMENT (GST_ELEMENT_PARENT (e));
   }
 
   GST_FLAG_UNSET (element, GST_ELEMENT_IN_ERROR);
