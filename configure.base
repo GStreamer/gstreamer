@@ -1190,6 +1190,7 @@ libs/idct/Makefile
 libs/audio/Makefile
 libs/bytestream/Makefile
 libs/control/Makefile
+libs/resample/Makefile
 plugins/Makefile
 plugins/a52dec/Makefile
 plugins/aasink/Makefile
