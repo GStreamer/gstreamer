@@ -503,9 +503,9 @@ static int
 _wrap_gst_element_factory_make_element(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "factoryname", "name", NULL };
-    char *factoryname, *name;
+    char *factoryname, *name = NULL;
                                                                                 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ss:GstElement.__init__", kwlist, &factoryname, &name))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|s:GstElement.__init__", kwlist, &factoryname, &name))
         return -1;
     self->obj = (GObject *)gst_element_factory_make(factoryname, name);
                                                                                 

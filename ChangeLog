@@ -1,3 +1,9 @@
+2003-12-07  Gustavo J. A. M. Carneiro  <gustavo@users.sourceforge.net>
+
+	* gstreamer/common.override
+	(_wrap_gst_element_factory_make_element): Make name argument
+	optional.
+
 2003-10-10  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac, gstreamer/Makefile.am, gstreamer/*: Mass change to
