@@ -34,6 +34,20 @@ GstStaticCaps rawcaps8 =
     GST_STATIC_CAPS
     ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240");
 
+GstStaticCaps rawcaps9 =
+    GST_STATIC_CAPS
+    ("audio/x-raw-float, "
+    "channel-positions=(int)< "
+    "{ 1, 2, 3, 4, 5, 6 }, "
+    "{ 1, 2 }, "
+    "{ 1, 2, 3, 4, 5, 6 }, " "{ 1, 2, 3, 4, 5, 6 }, " "{ 4, 5, 6 }, " "6 >");
+
+GstStaticCaps rawcaps10 =
+    GST_STATIC_CAPS
+    ("audio/x-raw-float, "
+    "channel-positions=(int)< 1, { 2, 3, 4, 5, 6 }, 3, 4, {4, 5, 6 }, "
+    "{ 4, 5, 6 } >");
+
 
 int
 main (int argc, char *argv[])
@@ -87,6 +101,15 @@ main (int argc, char *argv[])
 
   caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps7));
   caps2 = gst_caps_copy (gst_static_caps_get (&rawcaps8));
+  caps = gst_caps_intersect (caps1, caps2);
+  g_print ("caps %s\n", gst_caps_to_string (caps));
+  if (gst_caps_is_empty (caps))
+    return 1;
+  gst_caps_free (caps1);
+  gst_caps_free (caps2);
+
+  caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps9));
+  caps2 = gst_caps_copy (gst_static_caps_get (&rawcaps10));
   caps = gst_caps_intersect (caps1, caps2);
   g_print ("caps %s\n", gst_caps_to_string (caps));
   if (gst_caps_is_empty (caps))

@@ -1525,6 +1525,32 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   return ret;
 }
 
+static gboolean
+gst_value_intersect_fixed_list (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  gint size, n;
+  GValue val = { 0 };
+
+  /* only works on similar-sized arrays */
+  size = gst_value_list_get_size (src1);
+  if (size != gst_value_list_get_size (src2))
+    return FALSE;
+  g_value_init (dest, GST_TYPE_FIXED_LIST);
+
+  for (n = 0; n < size; n++) {
+    if (!gst_value_intersect (&val, gst_value_list_get_value (src1, n),
+            gst_value_list_get_value (src2, n))) {
+      g_value_unset (dest);
+      return FALSE;
+    }
+    gst_value_list_append_value (dest, &val);
+    g_value_unset (&val);
+  }
+
+  return TRUE;
+}
+
 /***************
  * subtraction *
  ***************/
@@ -2800,6 +2826,8 @@ _gst_value_initialize (void)
       gst_value_intersect_double_double_range);
   gst_value_register_intersect_func (GST_TYPE_DOUBLE_RANGE,
       GST_TYPE_DOUBLE_RANGE, gst_value_intersect_double_range_double_range);
+  gst_value_register_intersect_func (GST_TYPE_FIXED_LIST,
+      GST_TYPE_FIXED_LIST, gst_value_intersect_fixed_list);
 
   gst_value_register_subtract_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_subtract_int_int_range);

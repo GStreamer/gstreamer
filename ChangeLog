@@ -1,3 +1,13 @@
+2004-07-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/random/ds/0.9-suggested-changes:
+	  Make note about renaming fixed-list to array.
+	* gst/gstvalue.c: (gst_value_intersect_fixed_list),
+	(_gst_value_initialize):
+	  Add array intersections.
+	* testsuite/caps/intersect2.c: (main):
+	  Add test for array intersections.
+
 2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to cvs
