@@ -24,11 +24,11 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstprops.h>
-#include <libs/control/gstdparamcommon.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
 
 #define GST_TYPE_DPARAM			(gst_dparam_get_type ())
 #define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDParam))
@@ -40,7 +40,6 @@ extern "C" {
 #define GST_DPARAM_PARENT(dparam)			 (GST_OBJECT_PARENT(dparam))
 #define GST_DPARAM_VALUE(dparam)				 ((dparam)->value)
 #define GST_DPARAM_SPEC(dparam)				 ((dparam)->spec)
-#define GST_DPARAM_MANAGER(dparam)				 ((dparam)->manager)
 #define GST_DPARAM_TYPE(dparam)				 ((dparam)->type)
 
 #define GST_DPARAM_LOCK(dparam)		(g_mutex_lock((dparam)->lock))
@@ -79,7 +78,9 @@ typedef enum {
   GST_DPARAM_FOUND_CLOSEST,
 } GstDParamSearchResult;
 
+typedef struct _GstDParam GstDParam;
 typedef struct _GstDParamClass GstDParamClass;
+typedef struct _GstDParamSpec GstDParamSpec;
 
 typedef GValue** (*GstDParamInsertPointFunction) (GstDParam *dparam, guint64 timestamp);
 typedef void (*GstDParamRemovePointFunction) (GstDParam *dparam, GValue** point);
@@ -101,7 +102,6 @@ struct _GstDParam {
 	
 	GMutex *lock;
 	GValue *value;
-	GstDParamManager *manager;
 	GstDParamSpec *spec;
 	GValue **point;
 	GType type;
@@ -129,8 +129,7 @@ struct _GstDParamSpec {
 
 GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new (GType type);
-void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GValue *value, GstDParamSpec *spec);
-void gst_dparam_detach (GstDParam *dparam);
+void gst_dparam_attach (GstDParam *dparam, GstObject *parent, GValue *value, GstDParamSpec *spec);
 GValue** gst_dparam_new_value_array(GType type, ...);
 void gst_dparam_set_value_from_string(GValue *value, const gchar *value_str);
 

@@ -383,6 +383,8 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
 
         g_signal_connect (G_OBJECT (previous), "new_pad",
 			  G_CALLBACK (dynamic_connect), connect);
+        g_signal_connect (G_OBJECT (previous), "new_ghost_pad",
+			  G_CALLBACK (dynamic_connect), connect);
       }
       else {
         for (j=0; (j<numsrcpads) && (j<numsinkpads); j++){

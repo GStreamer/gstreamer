@@ -9,6 +9,11 @@ static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
   return FALSE;
 }
 
+//static void volume_changed(GtkAdjustment *adj,GstElement *element) {
+  //fprintf(stderr,"setting volume to %f\n",adj->value);
+//  gtk_object_set(GTK_OBJECT(element),"volume",adj->value,NULL);
+//}
+
 static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
   GValue **point;
   g_return_if_fail(dparam != NULL);
@@ -56,7 +61,6 @@ int main(int argc,char *argv[]) {
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
-  gst_control_init(&argc,&argv);
 
   /***** construct the pipeline *****/
   

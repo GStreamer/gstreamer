@@ -64,6 +64,7 @@ typedef enum {
 
 //typedef struct _GstBin GstBin;
 //typedef struct _GstBinClass GstBinClass;
+typedef struct __GstBinChain _GstBinChain;
 
 struct _GstBin {
   GstElement element;
@@ -75,8 +76,16 @@ struct _GstBin {
   GList *eos_providers;
   GCond *eoscond;
 
-  GstElementState child_states[GST_NUM_STATES];
-  
+  /* iteration state */
+  gboolean need_cothreads;
+  GList *managed_elements;
+  gint num_managed_elements;
+
+  GList *chains;
+  gint num_chains;
+  GList *entries;
+  gint num_entries;
+
   cothread_context *threadcontext;
 };
 
@@ -95,20 +104,37 @@ struct _GstBinClass {
   gboolean	(*iterate)		(GstBin *bin);
 };
 
+struct __GstBinChain {
+  GList *elements;
+  gint num_elements;
+
+  GList *entries;
+
+  gboolean need_cothreads;
+  gboolean need_scheduling;
+};
+
+
 GType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 #define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
 /* add and remove elements from the bin */
-void		gst_bin_add			(GstBin *bin, GstElement *element);
-void		gst_bin_remove			(GstBin *bin, GstElement *element);
+void		gst_bin_add			(GstBin *bin,
+						 GstElement *element);
+void		gst_bin_remove			(GstBin *bin,
+						 GstElement *element);
 
 /* retrieve a single element or the list of children */
-GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
-GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin, const gchar *name);
+GstElement*	gst_bin_get_by_name		(GstBin *bin,
+						 const gchar *name);
+GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin,
+						 const gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
-gboolean	gst_bin_set_state_type		(GstBin *bin, GstElementState state, GType type);
+gboolean	gst_bin_set_state_type		(GstBin *bin,
+						 GstElementState state,
+						 GType type);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
 

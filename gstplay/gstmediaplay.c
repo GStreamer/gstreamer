@@ -316,7 +316,7 @@ on_load_file_selected (GtkWidget *button,
 	gst_media_play_start_uri (play, file_name);
 	gdk_threads_enter();
 
-	//gst_media_play_addto_playlist (play, file_name);
+	gst_media_play_addto_playlist (play, file_name);
 	
 	g_free (data);
 }
@@ -506,19 +506,6 @@ gst_media_play_set_fullscreen (GstMediaPlay *mplay)
 	gint width, height, source_width, source_height;
 	GstPlay *play;
 	GtkWidget *video_widget;
-	GdkCursor* cursor;
-	GdkPixmap *source;
-	GdkPixmap *mask;
-	GdkColor fg = {0, 0, 0, 0};
-	GdkColor bg = {0, 0, 0, 0};
-	static unsigned char cursor_bits[] = {
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-	static unsigned char cursormask_bits[] = {
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 
 	gdk_window = mplay->window->window;
 	play = mplay->play;
@@ -543,16 +530,6 @@ gst_media_play_set_fullscreen (GstMediaPlay *mplay)
 			gtk_widget_set_usize (video_widget, gdk_screen_width () + 1,
 					      gdk_screen_height () + 1);
 			
-			source = gdk_bitmap_create_from_data (NULL, cursor_bits,
-							      16, 16);
-			mask = gdk_bitmap_create_from_data (NULL, cursormask_bits,
-							    16, 16);
-			cursor = gdk_cursor_new_from_pixmap (source, mask, &fg, &bg, 8, 8);
-			gdk_pixmap_unref (source);
-			gdk_pixmap_unref (mask);
-
-			gdk_window_set_cursor (mplay->window->window, cursor);
-
 			mplay->x = root_x - client_x;
 			mplay->y = root_y - client_y;
 			mplay->width = width;
@@ -573,8 +550,6 @@ gst_media_play_set_fullscreen (GstMediaPlay *mplay)
 			gdk_window_move (gdk_window, mplay->x, mplay->y);
 			gtk_widget_set_usize (video_widget,  source_width,
 					      source_height);
-
-			gdk_window_set_cursor (mplay->window->window, NULL);
 			
 			gtk_signal_disconnect (GTK_OBJECT (mplay->window), mplay->fullscreen_connection_id);
 			

@@ -13,14 +13,7 @@ libgststaticautoplugrender_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 libgstautoplugcache_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 libgstautoplugger_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
-libgststaticautoplug_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS)
-libgststaticautoplugrender_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS)
-libgstautoplugcache_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS)
-libgstautoplugger_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS)
-
 noinst_HEADERS = gststaticautoplug.h gststaticautoplugrender.h
 
 noinst_PROGRAMS = autoplugtest
-
-autoplugtest_CFLAGS = $(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS)
-autoplugtest_LDADD = $(GST_LIBS) $(GLIB_LIBS) $(XML_LIBS)
+autoplugtest_LDADD = $(GST_LIBS)

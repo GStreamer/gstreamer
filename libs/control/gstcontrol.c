@@ -20,8 +20,3 @@
  */
  
 #include "gstcontrol.h"
-
-void
-gst_control_init (int *argc, char **argv[]) {
-	_gst_dpman_initialize ();
-}

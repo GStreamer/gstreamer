@@ -21,7 +21,6 @@
  */
 
 //#define GST_DEBUG_ENABLED
-#include <glib.h>
 #include "gst_private.h"
 
 #include "gstelement.h"
@@ -35,6 +34,8 @@ enum {
   STATE_CHANGE,
   NEW_PAD,
   PAD_REMOVED,
+  NEW_GHOST_PAD,
+  GHOST_PAD_REMOVED,
   ERROR,
   EOS,
   LAST_SIGNAL
@@ -102,44 +103,54 @@ gst_element_class_init (GstElementClass *klass)
 
   gst_element_signals[STATE_CHANGE] =
     g_signal_new ("state_change", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass, state_change), NULL, NULL,
-		  gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
-                  G_TYPE_INT, G_TYPE_INT);
+                    G_STRUCT_OFFSET (GstElementClass, state_change), NULL, NULL,
+		  gst_marshal_VOID__INT, G_TYPE_NONE, 1,
+                    G_TYPE_INT);
   gst_element_signals[NEW_PAD] =
     g_signal_new ("new_pad", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
-                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                  GST_TYPE_PAD);
+                    G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
   gst_element_signals[PAD_REMOVED] =
     g_signal_new ("pad_removed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
-                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                   GST_TYPE_PAD);
+                    G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
+  gst_element_signals[NEW_GHOST_PAD] =
+    g_signal_new ("new_ghost_pad", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstElementClass, new_ghost_pad), NULL, NULL,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
+  gst_element_signals[GHOST_PAD_REMOVED] =
+    g_signal_new ("ghost_pad_removed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstElementClass, ghost_pad_removed), NULL, NULL,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
   gst_element_signals[ERROR] =
     g_signal_new ("error", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-                  gst_marshal_VOID__STRING, G_TYPE_NONE,1,
-                   G_TYPE_STRING);
+                    G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
+                    gst_marshal_VOID__STRING, G_TYPE_NONE,1,
+                    G_TYPE_STRING);
   gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
-                  gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
+                    G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
+                    gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 
 
-  gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_set_property);
-  gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_get_property);
-  gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_element_dispose);
+  gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_set_property);
+  gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_get_property);
+  gobject_class->dispose =		GST_DEBUG_FUNCPTR(gst_element_dispose);
 
 #ifndef GST_DISABLE_LOADSAVE
-  gstobject_class->save_thyself 	= GST_DEBUG_FUNCPTR (gst_element_save_thyself);
-  gstobject_class->restore_thyself 	= GST_DEBUG_FUNCPTR (gst_element_restore_thyself);
+  gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
+  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_element_restore_thyself);
 #endif
 
-  klass->change_state 			= GST_DEBUG_FUNCPTR (gst_element_change_state);
-  klass->elementfactory 	= NULL;
-  klass->padtemplates 		= NULL;
-  klass->numpadtemplates 	= 0;
+  klass->change_state =			GST_DEBUG_FUNCPTR(gst_element_change_state);
+  klass->elementfactory = NULL;
+  klass->padtemplates = NULL;
+  klass->numpadtemplates = 0;
 }
 
 static void
@@ -173,8 +184,12 @@ gst_element_set_property (GObject *object, guint prop_id, const GValue *value, G
 {
   GstElementClass *oclass = (GstElementClass *)G_OBJECT_GET_CLASS(object);
 
+  GST_SCHEDULE_LOCK_ELEMENT ( GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
+
   if (oclass->set_property)
     (oclass->set_property)(object,prop_id,value,pspec);
+
+  GST_SCHEDULE_UNLOCK_ELEMENT ( GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
 }
 
 
@@ -183,8 +198,12 @@ gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 {
   GstElementClass *oclass = (GstElementClass *)G_OBJECT_GET_CLASS(object);
 
+  GST_SCHEDULE_LOCK_ELEMENT (GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
+
   if (oclass->get_property)
     (oclass->get_property)(object,prop_id,value,pspec);
+
+  GST_SCHEDULE_UNLOCK_ELEMENT (GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
 }
 
 
@@ -366,7 +385,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
 
   /* emit the NEW_GHOST_PAD signal */
-  g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, ghostpad);
+  g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_GHOST_PAD], 0, ghostpad);
 }
 
 /**
@@ -791,27 +810,6 @@ gst_element_get_state (GstElement *element)
   return GST_STATE (element);
 }
 
-static void
-gst_element_wait_done (GstElement *element, GstElementState old, GstElementState new, GCond *cond)
-{
-  g_signal_handlers_disconnect_by_func (G_OBJECT (element), gst_element_wait_done, cond);
-  g_cond_signal (cond);
-}
-
-void
-gst_element_wait_state_change (GstElement *element)
-{
-  GCond *cond = g_cond_new ();
-  GMutex *mutex = g_mutex_new ();
-
-  g_mutex_lock (mutex);
-  g_signal_connect (G_OBJECT (element), "state_change", gst_element_wait_done, cond);
-  g_cond_wait (cond, mutex);
-  g_mutex_unlock (mutex);
-
-  g_mutex_free (mutex);
-  g_cond_free (cond);
-}
 /**
  * gst_element_set_state:
  * @element: element to change state of
@@ -844,7 +842,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
   curpending = GST_STATE(element);
 
   /* loop until the final requested state is set */
-  while (GST_STATE(element) != state && GST_STATE (element) != GST_STATE_VOID_PENDING) {
+  while (GST_STATE(element) != state) {
     /* move the curpending state in the correct direction */
     if (curpending < state) curpending<<=1;
     else curpending>>=1;
@@ -861,78 +859,22 @@ gst_element_set_state (GstElement *element, GstElementState state)
     if (oclass->change_state)
       return_val = (oclass->change_state)(element);
 
-    switch (return_val) {
-      case GST_STATE_FAILURE:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"have failed change_state return\n");
-	return return_val;
-      case GST_STATE_ASYNC:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"element will change state async\n");
-	return return_val;
-      default:
-        /* Last thing we do is verify that a successful state change really
-         * did change the state... */
-        if (GST_STATE(element) != curpending) {
-          GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element claimed state-change success, but state didn't change\n");
-          return GST_STATE_FAILURE;
-	}
-        break;
+    /* if that outright didn't work, we need to bail right away */
+    /* NOTE: this will bail on ASYNC as well! */
+    if (return_val == GST_STATE_FAILURE) {
+      GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"have failed change_state return\n");
+      return return_val;
+    }
+
+    /* Last thing we do is verify that a successful state change really
+     * did change the state... */
+    if (GST_STATE(element) != curpending) {
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element claimed state-change success, but state didn't change\n");
+      return GST_STATE_FAILURE;
     }
   }
 
   return return_val;
-}
-
-static GstElementStateReturn
-gst_element_change_state (GstElement *element)
-{
-  GstElementState old_state;
-
-  g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
-
-  old_state = GST_STATE (element);
-
-  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING || old_state == GST_STATE_PENDING (element)) {
-    g_warning ("no state change needed for element %s (VOID_PENDING)\n", GST_ELEMENT_NAME (element));
-    return GST_STATE_SUCCESS;
-  }
-  
-  GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %d", GST_ELEMENT_NAME (element),
-                     gst_element_statename (old_state),
-                     gst_element_statename (GST_STATE_PENDING (element)),
-		     GST_STATE_TRANSITION (element));
-
-  if (GST_STATE_TRANSITION (element) == GST_STATE_PAUSED_TO_PLAYING) {
-    g_return_val_if_fail (GST_ELEMENT_SCHED (element), GST_STATE_FAILURE);
-    
-    if (GST_ELEMENT_PARENT (element)) {
-      GST_DEBUG (GST_CAT_STATES, "PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
-                 GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (GST_ELEMENT_PARENT (element)), 
-		 GST_ELEMENT_SCHED (element));
-    }
-    gst_scheduler_enable_element (element->sched, element);
-  }
-  else if (GST_STATE_TRANSITION (element) == GST_STATE_PLAYING_TO_PAUSED) {
-    if (GST_ELEMENT_PARENT (element)) {
-      GST_DEBUG (GST_CAT_STATES, "PLAYING->PAUSED: element \"%s\" has parent \"%s\" and sched %p\n",
-                 GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (GST_ELEMENT_PARENT (element)),
-		 GST_ELEMENT_SCHED (element));
-    }
-    gst_scheduler_disable_element (element->sched, element);
-  }
-
-  GST_STATE (element) = GST_STATE_PENDING (element);
-  GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
-
-  // note: queues' state_change is a special case because it needs to lock
-  // for synchronization (from another thread).  since this signal may block
-  // or (worse) make another state change, the queue needs to unlock before
-  // calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
-  // unlocks, then emits this. 
-  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0,
-                   old_state, GST_STATE (element));
-
-  return GST_STATE_SUCCESS;
 }
 
 /**
@@ -954,6 +896,53 @@ gst_element_get_factory (GstElement *element)
   oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
 
   return oclass->elementfactory;
+}
+
+
+/**
+ * gst_element_change_state:
+ * @element: element to change state of
+ *
+ * Changes the state of the element, but more importantly fires off a signal
+ * indicating the new state.
+ * The element will have no pending states anymore.
+ *
+ * Returns: whether or not the state change was successfully set.
+ */
+GstElementStateReturn
+gst_element_change_state (GstElement *element)
+{
+  g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
+
+//  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "default handler sets state to %s\n",
+//                     gst_element_statename(GST_STATE_PENDING(element)));
+
+  if (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING) {
+    g_return_val_if_fail(GST_ELEMENT_SCHED(element), GST_STATE_FAILURE);
+    if (GST_ELEMENT_PARENT(element))
+      GST_DEBUG(GST_CAT_STATES,"PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
+GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
+    GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);
+  }
+  else if (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_PAUSED) {
+    if (GST_ELEMENT_PARENT(element))
+      GST_DEBUG(GST_CAT_STATES,"PLAYING->PAUSED: element \"%s\" has parent \"%s\" and sched %p\n",
+GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
+    GST_SCHEDULE_DISABLE_ELEMENT (element->sched,element);
+  }
+
+  GST_STATE (element) = GST_STATE_PENDING (element);
+  GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+
+  // note: queues' state_change is a special case because it needs to lock
+  // for synchronization (from another thread).  since this signal may block
+  // or (worse) make another state change, the queue needs to unlock before
+  // calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
+  // unlocks, then emits this. 
+  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0,
+                   GST_STATE (element));
+  return GST_STATE_SUCCESS;
 }
 
 static void
@@ -1194,14 +1183,14 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 /**
  * gst_element_set_sched:
  * @element: Element to set manager of.
- * @sched: @GstScheduler to set.
+ * @sched: @GstSchedule to set.
  *
  * Sets the scheduler of the element.  For internal use only, unless you're
  * writing a new bin subclass.
  */
 void
 gst_element_set_sched (GstElement *element,
-		         GstScheduler *sched)
+		         GstSchedule *sched)
 {
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p",sched);
   element->sched = sched;
@@ -1215,7 +1204,7 @@ gst_element_set_sched (GstElement *element,
  *
  * Returns: Element's scheduler
  */
-GstScheduler*
+GstSchedule*
 gst_element_get_sched (GstElement *element)
 {
   return element->sched;
@@ -1281,7 +1270,7 @@ gst_element_statename (GstElementState state)
     case GST_STATE_READY: return "\033[01;31mREADY\033[00m";break;
     case GST_STATE_PLAYING: return "\033[01;32mPLAYING\033[00m";break;
     case GST_STATE_PAUSED: return "\033[01;33mPAUSED\033[00m";break;
-    default: return g_strdup_printf ("\033[01;37;41mUNKNOWN!\033[00m(%d)", state);
+    default: return "\033[01;37;41mUNKNOWN!\033[00m";
 #else
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;
     case GST_STATE_NULL: return "NULL";break;

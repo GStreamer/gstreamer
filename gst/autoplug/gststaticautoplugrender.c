@@ -95,9 +95,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   if (factory != NULL) {
      gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   }
-  else {
-    g_warning ("could not register autoplugger: staticrender");
-  }
   return TRUE;
 }
 
@@ -234,6 +231,8 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
     GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connect (G_OBJECT(src),"new_pad",
+                       G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
+    g_signal_connect (G_OBJECT(src),"new_ghost_pad",
                        G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
   }
 }
@@ -399,7 +398,7 @@ next:
 
     GST_DEBUG (0,"common factory \"%s\"\n", GST_OBJECT_NAME (factory));
 
-    element = gst_elementfactory_create (factory, g_strdup (GST_OBJECT_NAME (factory)));
+    element = gst_elementfactory_create (factory, GST_OBJECT_NAME (factory));
     gst_bin_add (GST_BIN(result), element);
 
     if (srcelement != NULL) {
@@ -458,7 +457,7 @@ differ:
         factory = (GstElementFactory *)(factories[i]->data);
 
         GST_DEBUG (0,"factory \"%s\"\n", GST_OBJECT_NAME (factory));
-        element = gst_elementfactory_create(factory, g_strdup (GST_OBJECT_NAME (factory)));
+        element = gst_elementfactory_create(factory, GST_OBJECT_NAME (factory));
       }
       else {
 	element = sinkelement;
@@ -469,7 +468,6 @@ differ:
       if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
         GstElement *queue;
         GstPad *srcpad;
-	GstElement *current_bin = thebin;
 
 	use_thread = FALSE;
 
@@ -493,7 +491,7 @@ differ:
         gst_bin_add(GST_BIN(thebin), element);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
 	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
-        gst_bin_add(GST_BIN(current_bin), thebin);
+        gst_bin_add(GST_BIN(result), thebin);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (thebin));
         thesrcelement = queue;
       }

@@ -89,7 +89,7 @@ gst_pipeline_class_init (GstPipelineClass *klass)
 
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref (gst_bin_get_type ());
+  parent_class = g_type_class_ref(gst_bin_get_type());
 
   gstelement_class->change_state = gst_pipeline_change_state;
 }
@@ -100,8 +100,8 @@ gst_pipeline_init (GstPipeline *pipeline)
   // we're a manager by default
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
-  GST_ELEMENT_SCHED (pipeline) = gst_schedulerfactory_make ("basic", GST_ELEMENT (pipeline));
-  GST_DEBUG (GST_CAT_PIPELINE, "pipeline's scheduler is %p\n", GST_ELEMENT_SCHED (pipeline));
+  GST_ELEMENT_SCHED(pipeline) = gst_schedule_new(GST_ELEMENT(pipeline));
+  GST_DEBUG(GST_CAT_PIPELINE, "pipeline's scheduler is %p\n",GST_ELEMENT_SCHED(pipeline));
 }
 
 

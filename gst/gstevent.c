@@ -43,7 +43,6 @@ _gst_event_initialize (void)
     0, 
     0,
     NULL,
-    NULL,
   };
 
   // round up to the nearest 32 bytes for cache-line and other efficiencies

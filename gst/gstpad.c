@@ -539,7 +539,9 @@ gst_pad_disconnect (GstPad *srcpad,
 
   // now tell the scheduler
   if (realsrc->sched)
-    gst_scheduler_pad_connect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+    GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+//  if (realsink->sched)
+//    GST_SCHEDULE_PAD_DISCONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -649,9 +651,9 @@ gst_pad_try_connect (GstPad *srcpad,
 
   // now tell the scheduler(s)
   if (realsrc->sched)
-    gst_scheduler_pad_connect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+    GST_SCHEDULE_PAD_CONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
   else if (realsink->sched)
-    gst_scheduler_pad_connect (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
+    GST_SCHEDULE_PAD_CONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -721,7 +723,7 @@ gst_pad_get_padtemplate (GstPad *pad)
  * Set the sceduler for the pad
  */
 void
-gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
+gst_pad_set_sched (GstPad *pad, GstSchedule *sched)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -737,7 +739,7 @@ gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
  *
  * Returns: the scheduler of the pad.
  */
-GstScheduler*
+GstSchedule*
 gst_pad_get_sched (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
@@ -1578,7 +1580,7 @@ gst_pad_select (GList *padlist)
 {
   GstPad *pad;
 
-  pad = gst_scheduler_pad_select (gst_pad_get_sched (GST_PAD (padlist->data)), padlist);
+  pad = gst_schedule_pad_select (gst_pad_get_sched (GST_PAD (padlist->data)), padlist);
 
   return pad;
 }
@@ -1969,7 +1971,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 	GList *pads = element->pads;
 
 	while (pads) {
-          if (GST_PAD_DIRECTION (pads->data) == GST_PAD_SRC && GST_PAD_CONNECTED (pads->data)) {
+          if (GST_PAD_DIRECTION (pads->data) == GST_PAD_SRC) {
             gst_pad_push (GST_PAD (pads->data), GST_BUFFER (gst_event_new (GST_EVENT_TYPE (event))));
 	  }
           pads = g_list_next (pads);

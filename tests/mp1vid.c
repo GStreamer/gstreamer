@@ -59,7 +59,7 @@ int main(int argc,char *argv[]) {
 
   gst_bin_add(GST_BIN(pipeline),sourcethread);
 
-  gst_scheduler_show(GST_ELEMENT_SCHED(pipeline));
+  gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
 
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
   sleep(1);

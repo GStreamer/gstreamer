@@ -25,15 +25,15 @@
 
 #include "gstelement.h"
 
-static void 		gst_elementfactory_class_init 		(GstElementFactoryClass *klass);
-static void 		gst_elementfactory_init 		(GstElementFactory *factory);
+static void 			gst_elementfactory_class_init 		(GstElementFactoryClass *klass);
+static void 			gst_elementfactory_init 		(GstElementFactory *factory);
 
 #ifndef GST_DISABLE_REGISTRY
-static void 		gst_elementfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
-static xmlNodePtr 	gst_elementfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+static void 			gst_elementfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
+static xmlNodePtr 		gst_elementfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
 #endif
 
-static void 		gst_elementfactory_unload_thyself 	(GstPluginFeature *feature);
+static void 			gst_elementfactory_unload_thyself 	(GstPluginFeature *feature);
 
 /* global list of registered elementfactories */
 static GList* _gst_elementfactories;

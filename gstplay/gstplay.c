@@ -147,7 +147,6 @@ gst_play_init (GstPlay *play)
 				   "sink");
 	}
 	else {
-	  GST_FLAG_SET (priv->video_element, GST_ELEMENT_THREAD_SUGGESTED);
 	  gst_bin_add (GST_BIN (priv->video_element), colorspace);
 	  gst_element_connect (colorspace, "src", priv->video_show, "sink");
 	  gst_element_add_ghost_pad (priv->video_element, 
@@ -179,11 +178,7 @@ gst_play_new ()
 static gboolean
 gst_play_idle_func (gpointer data)
 {
- 	gboolean busy;
-
-	busy = gst_bin_iterate (GST_BIN (data));
-
-	return busy;
+	return gst_bin_iterate (GST_BIN (data));
 }
 
 static void

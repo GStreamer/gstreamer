@@ -22,6 +22,9 @@
 #ifndef __GST_CONTROL_H__
 #define __GST_CONTROL_H__
 
+#include <gst/gstobject.h>
+#include <gst/gstprops.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -30,8 +33,6 @@ extern "C" {
 #include <libs/control/gstdparam.h>
 
 #include <libs/control/gstdplinearinterp.h>
-
-void gst_control_init (int *argc, char **argv[]);
 
 #ifdef __cplusplus
 }

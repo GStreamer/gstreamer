@@ -46,7 +46,6 @@ AM_MAINTAINER_MODE
 
 AC_PROG_CC
 AM_PROG_CC_STDC
-dnl you need automake 1.5 for AM_PROG_AS to work !
 AM_PROG_AS
 AC_PROG_CXX
 AC_PROG_CXXCPP
@@ -1059,17 +1058,16 @@ PLUGINS_BUILDDIR=${builddir}
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
 AC_SUBST(PLUGINS_BUILDDIR)
 
-dnl Vars for everyone else
-GST_LIBS="\$(top_builddir)/gst/libgst.la"
-GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include"
-AC_SUBST(GST_LIBS)
-AC_SUBST(GST_CFLAGS)
-
 dnl Private vars for libgst only
-LIBGST_CFLAGS="$GST_CFLAGS"
+LIBGST_LIBS="$GST_LIBS $XML_LIBS $GLIB_LIBS"
+LIBGST_CFLAGS="$GST_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
+dnl Vars for everyone else
+GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
+GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
+AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
 dnl #############################
@@ -1105,7 +1103,6 @@ dnl #########################
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
-dnl wtay fix this: testsuite/threads/Makefile
 SUBSTFOR configure.ac:AC_OUTPUT(
 SUBSTFOR configure.ac:Makefile
 SUBSTFOR configure.in:AC_OUTPUT([Makefile
@@ -1115,7 +1112,6 @@ gst/gstversion.h
 gst/types/Makefile
 gst/elements/Makefile
 gst/autoplug/Makefile
-gst/schedulers/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/getbits/Makefile
@@ -1188,7 +1184,6 @@ plugins/filters/cutter/Makefile
 plugins/filters/deinterlace/Makefile
 plugins/filters/volume/Makefile
 plugins/filters/speed/Makefile
-plugins/filters/playondemand/Makefile
 plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile

@@ -8,6 +8,8 @@ else
 GSTHTTPSRC=
 endif
 
+#CFLAGS += -O2 -Wall -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
+
 libgstelements_la_DEPENDENCIES = ../libgst.la
 libgstelements_la_SOURCES =	\
 	gstelements.c		\
@@ -41,6 +43,8 @@ noinst_HEADERS =		\
 	gstaggregator.h		\
 	gststatistics.h	
 
-libgstelements_la_CFLAGS = $(GHTTP_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS)
-libgstelements_la_LIBADD = $(GHTTP_LIBS) $(GLIB_LIBS) $(XML_LIBS)
+CFLAGS += -O2 -Wall 
+LDFLAGS += -lm
+
+libgstelements_la_LIBADD = $(GHTTP_LIBS)
 libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)

@@ -7,5 +7,5 @@ endif
 dynamic_pipeline_SOURCES = dynamic-pipeline.c
 
 # nothing but apps here, this is safe
-LIBS = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+LIBS += $(GST_LIBS)
+CFLAGS += $(GST_CFLAGS)

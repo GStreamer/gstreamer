@@ -28,7 +28,6 @@
 
 static void gst_dparam_class_init (GstDParamClass *klass);
 static void gst_dparam_init (GstDParam *dparam);
-static void gst_dparam_dispose (GObject *object);
 
 static void gst_dparam_do_update_realtime (GstDParam *dparam, gint64 timestamp);
 static GValue** gst_dparam_get_point_realtime (GstDParam *dparam, gint64 timestamp);
@@ -64,8 +63,7 @@ gst_dparam_class_init (GstDParamClass *klass)
 	gobject_class = (GObjectClass*)klass;
 	dparam_class = (GstDParamClass*)klass;
 	gstobject_class = (GstObjectClass*) klass;
-	
-	gobject_class->dispose = gst_dparam_dispose;
+
 	//gstobject_class->save_thyself = gst_dparam_save_thyself;
 
 }
@@ -103,42 +101,23 @@ gst_dparam_new (GType type)
 	return dparam;
 }
 
-static void
-gst_dparam_dispose (GObject *object)
-{
-	GstDParam *dparam = GST_DPARAM(object);
-	GValue **point = dparam->point;
-	guint i = 0;
-	gchar *dparam_name = g_strdup(GST_DPARAM_NAME(dparam));
-	
-	g_print("disposing of %s\n", dparam_name);
-	if (GST_DPARAM_MANAGER(dparam)){
-		gst_dpman_detach_dparam(GST_DPARAM_MANAGER(dparam), dparam_name);
-	}
-	point = dparam->point;
-	while (point[i]){
-		g_value_unset(point[i]);
-		g_free(point[i]);
-		i++;
-	}
-	g_free(dparam_name);
-	
-}
-
 /**
  * gst_dparam_attach
  * @dparam: GstDParam instance
- * @manager: the GstDParamManager that this dparam belongs to
+ * @parent: the GstDParamManager that this dparam belongs to
  *
  */
 void
-gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GValue *value, GstDParamSpec *spec)
+gst_dparam_attach (GstDParam *dparam, GstObject *parent, GValue *value, GstDParamSpec *spec)
 {
 	
 	g_return_if_fail (dparam != NULL);
 	g_return_if_fail (GST_IS_DPARAM (dparam));
-	g_return_if_fail (manager != NULL);
-	g_return_if_fail (GST_IS_DPMAN (manager));
+	g_return_if_fail (GST_DPARAM_PARENT (dparam) == NULL);
+	g_return_if_fail (parent != NULL);
+	g_return_if_fail (G_IS_OBJECT (parent));
+	g_return_if_fail (GST_IS_DPMAN (parent));
+	g_return_if_fail ((gpointer)dparam != (gpointer)parent);
 	g_return_if_fail (value != NULL);
 	g_return_if_fail (spec != NULL);
 	g_return_if_fail (GST_DPARAM_TYPE(dparam) == G_VALUE_TYPE(value));
@@ -146,26 +125,7 @@ gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GValue *value, 
 	GST_DPARAM_NAME(dparam) = spec->dparam_name;
 	GST_DPARAM_VALUE(dparam) = value;
 	GST_DPARAM_SPEC(dparam) = spec;
-	GST_DPARAM_MANAGER(dparam) = manager;
-}
-
-/**
- * gst_dparam_detach
- * @dparam: GstDParam instance
- * @manager: the GstDParamManager that this dparam belongs to
- *
- */
-void
-gst_dparam_detach (GstDParam *dparam)
-{
-	
-	g_return_if_fail (dparam != NULL);
-	g_return_if_fail (GST_IS_DPARAM (dparam));
-	
-	GST_DPARAM_NAME(dparam) = NULL;
-	GST_DPARAM_VALUE(dparam) = NULL;
-	GST_DPARAM_SPEC(dparam) = NULL;
-	GST_DPARAM_MANAGER(dparam) = NULL;
+	gst_object_set_parent (GST_OBJECT (dparam), parent);
 }
 
 /**

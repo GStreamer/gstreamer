@@ -27,7 +27,6 @@ static GHashTable *_element_registry;
 
 static void gst_dpman_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_init (GstDParamManager *dpman);
-static void gst_dpman_dispose (GObject *object);
 static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, GstDPMUpdateMethod update_method);
 static GstDParamWrapper* gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name);
 static void gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman);
@@ -35,12 +34,6 @@ static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager
 static guint gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
 static guint gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
 static guint gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
-
-void 
-_gst_dpman_initialize()
-{
-	_element_registry = g_hash_table_new(NULL,NULL);
-}
 
 GType
 gst_dpman_get_type (void)
@@ -72,9 +65,9 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 
 	gstobject_class = (GstObjectClass*) klass;
 	gobject_class = (GObjectClass*) klass;
-	gobject_class->dispose = gst_dpman_dispose;
 
 	klass->modes = g_hash_table_new(g_str_hash,g_str_equal);
+	_element_registry = g_hash_table_new(NULL,NULL);
 
 	gst_dpman_register_mode (klass, "synchronous", 
 	                       gst_dpman_preprocess_synchronous, gst_dpman_process_noop, NULL, NULL);
@@ -119,15 +112,6 @@ gst_dpman_new (gchar *name, GstElement *parent)
 	gst_dpman_set_mode(dpman, "disabled");
 
 	return dpman;
-}
-
-
-static void
-gst_dpman_dispose (GObject *object)
-{
-	GstDParamManager *dpman = GST_DPMAN(object);
-	
-
 }
 
 /**
@@ -284,19 +268,19 @@ gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam 
 	g_return_val_if_fail(dpwrap->value != NULL, FALSE);
 
 	dpwrap->dparam = dparam;
-	gst_dparam_attach(dparam, dpman, dpwrap->value, dpwrap->spec);
+	gst_dparam_attach(dparam, GST_OBJECT(dpman), dpwrap->value, dpwrap->spec);
 
 	return TRUE;
 }
 
 /**
- * gst_dpman_detach_dparam:
+ * gst_dpman_dettach_dparam:
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of a parameter with a previously attached GstDParam
  *
  */
 void 
-gst_dpman_detach_dparam (GstDParamManager *dpman, gchar *dparam_name)
+gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name)
 {
 	GstDParamWrapper* dpwrap;
 
@@ -308,7 +292,10 @@ gst_dpman_detach_dparam (GstDParamManager *dpman, gchar *dparam_name)
 
 	g_return_if_fail(dpwrap);
 	
-	gst_dparam_detach(dpwrap->dparam);
+	GST_DPARAM_VALUE(dpwrap->dparam) = NULL;
+	GST_DPARAM_NAME(dpwrap->dparam)	= NULL;
+	gst_object_unparent (GST_OBJECT(dpwrap->dparam));
+
 	dpwrap->dparam = NULL;
 	
 }
@@ -455,12 +442,6 @@ gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename)
 	
 	mode = g_hash_table_lookup(oclass->modes, modename);
 	g_return_val_if_fail (mode != NULL, FALSE);
-	
-	if (GST_DPMAN_MODE(dpman) == mode) {
-		GST_DEBUG(GST_CAT_PARAMS, "mode %s already set\n", modename);
-		return TRUE;
-	}
-	
 	GST_DEBUG(GST_CAT_PARAMS, "setting mode to %s\n", modename);
 	if (GST_DPMAN_MODE(dpman) && GST_DPMAN_TEARDOWNFUNC(dpman)){
 		GST_DPMAN_TEARDOWNFUNC(dpman)(dpman);
@@ -510,6 +491,7 @@ gst_dpman_get_manager (GstElement *parent)
 	g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
 	
 	dpman = (GstDParamManager*)g_hash_table_lookup(_element_registry, parent);
+	g_return_val_if_fail (dpman != NULL, NULL);
 	return dpman;
 }
 

@@ -52,8 +52,8 @@ endif
 
 EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gobject2gtk.c gobject2gtk.h gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
-SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS) schedulers
-DIST_SUBDIRS = types elements autoplug schedulers
+SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS)
+DIST_SUBDIRS = types elements autoplug
 
 libgst_la_SOURCES =		\
 	cothreads.c		\
@@ -202,19 +202,21 @@ noinst_HEADERS = 	\
 	gstarch.h	\
 	gstpropsprivate.h
 
-libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
-	$(LIBGST_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) \
+CFLAGS = \
+	$(LIBGST_CFLAGS) \
 	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+	\
 	-W -Wpointer-arith -Wbad-function-cast \
 	-Wcast-align -Wsign-compare \
 	-Wmissing-prototypes -Wmissing-declarations \
 	-Wnested-externs \
 	-Winline -Wno-unused
 
-libgst_la_LIBADD = $(XML_LIBS) $(GLIB_LIBS)
-
+CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" -Wall
+LIBS = $(LIBGST_LIBS)
+LDFLAGS = ""
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 EXTRA_DIST = ROADMAP

@@ -9,5 +9,5 @@ test1_LDFLAGS = -L$(top_builddir)/libs/bytestream/ -lgstbytestream
 
 
 # we have nothing but apps here, we can do this safely
-LIBS = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+LIBS += $(GST_LIBS)
+CFLAGS += $(GST_CFLAGS)
