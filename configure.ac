@@ -21,7 +21,7 @@ AC_SUBST(GST_LIBVERSION)
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="cat m4/*.m4 >acinclude.m4;$ACLOCAL $ACLOCAL_FLAGS"
+ACLOCAL="cat m4/*.m4>acinclude.m4;$ACLOCAL $ACLOCAL_FLAGS"
 
 AM_MAINTAINER_MODE
 
@@ -458,7 +458,10 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   if test "x$HAVE_MAD" = "xyes"; then
     # installed with mad >= 0.14
     HAVE_MAD="no"
+    save_libs=$LIBS
+    LIBS="-lz"
     AC_CHECK_LIB(id3tag, id3_tag_query, HAVE_MAD="yes" MAD_LIBS="$MAD_LIBS -lid3tag")
+    LIBS=$save_libs
   fi    
 ])
 AC_SUBST(MAD_LIBS)
