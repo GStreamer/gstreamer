@@ -153,8 +153,8 @@ gst_x_window_listener_set_xid (GstXWindowListener * xwin, XID id)
  * <kraxel@bytesex.org>, it was relicensed to LGPL.
  */
 
-#define DEBUG(format, args...) \
-  GST_DEBUG ("XWL: " format, ##args)
+#define DEBUG(...) \
+  GST_DEBUG ("XWL: " __VA_ARGS__)
 
 static void
 gst_xwin_set_overlay (GstXWindowListener * xwin, gboolean on)
@@ -232,7 +232,7 @@ gst_xwin_set_clips (GstXWindowListener * xwin)
   guint numkids;
   gint i;
   gint x1, y1, w1, h1;
-  void *old_handler;
+  XErrorHandler old_handler;
 
   old_handler = XSetErrorHandler (x11_error_dev_null);
 
