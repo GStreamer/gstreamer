@@ -424,9 +424,6 @@ GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
   if test "x$HAVE_CXX" != "xyes"; then
     AC_MSG_WARN([No C++ compiler found, avifile test will fail compilation])
   fi
-  AC_CHECK_LIB(stdc++, cout,,
-               [AC_MSG_WARN([no libstdc++ found, avifile test will fail])]
-              )
   AS_AVIFILE(0.7.0)
 ])
 
