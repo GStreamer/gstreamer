@@ -158,6 +158,63 @@ gst_props_register (GstPropsFactory factory)
   return props;
 }
 
+GstProps *
+gst_props_new (GstPropsFactoryEntry entry, ...)
+{
+  va_list var_args;
+  GstPropsFactoryEntry value;
+  gint i = 0;
+  gint size;
+  GstPropsFactoryEntry *factory;
+
+
+  size = 16;
+  factory = (GstPropsFactoryEntry *) g_malloc (size*sizeof(GstPropsFactoryEntry));
+
+  va_start (var_args, entry);
+
+  value = (GstPropsFactoryEntry) entry;
+
+  while (value) {
+    DEBUG ("%p\n", value);
+
+    factory[i++] = value;
+
+    if (i >= size) {
+      size += 16;
+      factory = (GstPropsFactoryEntry *) g_realloc (factory, size*sizeof(GstPropsFactoryEntry));
+    }
+
+    value = va_arg (var_args, GstPropsFactoryEntry);
+  }
+  factory[i++] = NULL;
+
+  return gst_props_register (factory);
+}
+
+GstProps*
+gst_props_merge (GstProps *props, GstProps *tomerge)
+{
+  GSList *merge_props;
+
+  g_return_val_if_fail (props != NULL, NULL);
+  g_return_val_if_fail (tomerge != NULL, NULL);
+
+  merge_props = tomerge->properties;
+
+  // FIXME do proper merging here...
+  while (merge_props) {
+    GstPropsEntry *entry = (GstPropsEntry *)merge_props->data;
+
+    props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+	  
+    merge_props = g_slist_next (merge_props);
+  }
+
+  return props;
+}
+
+
 /* entry2 is always a list, entry1 never is */
 static gboolean
 gst_props_entry_check_list_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry2)

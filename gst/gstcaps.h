@@ -44,7 +44,11 @@ struct _GstCaps {
 void 		_gst_caps_initialize		(void);
 
 GstCaps*	gst_caps_new			(gchar *mime);
+GstCaps*	gst_caps_new_with_props		(gchar *mime, GstProps *props);
 GstCaps*	gst_caps_register		(GstCapsFactory *factory);
+
+GstCaps*	gst_caps_set_props		(GstCaps *caps, GstProps *props);
+GstProps*	gst_caps_get_props		(GstCaps *caps);
 
 gboolean 	gst_caps_check_compatibility 	(GstCaps *caps1, GstCaps *caps2);
 

@@ -19,6 +19,7 @@
 
 //#define DEBUG_ENABLED
 
+#include "gstdebug.h"
 #include "gstcaps.h"
 #include "gsttype.h"
 
@@ -68,6 +69,17 @@ gst_caps_new (gchar *mime)
   return caps;
 }
 
+GstCaps*
+gst_caps_new_with_props (gchar *mime, GstProps *props)
+{
+  GstCaps *caps;
+  
+  caps = gst_caps_new (mime);
+  caps->properties = props;
+
+  return caps;
+}
+
 /**
  * gst_caps_register:
  * @factory: the factory to register
@@ -101,6 +113,25 @@ gst_caps_register (GstCapsFactory *factory)
   return caps;
 }
 
+GstCaps*
+gst_caps_set_props (GstCaps *caps, GstProps *props)
+{
+  g_return_val_if_fail (caps != NULL, caps);
+  g_return_val_if_fail (props != NULL, caps);
+  g_return_val_if_fail (caps->properties == NULL, caps);
+
+  caps->properties = props;
+  
+  return caps;
+}
+
+GstProps*
+gst_caps_get_props (GstCaps *caps)
+{
+  g_return_val_if_fail (caps != NULL, caps);
+
+  return caps->properties;
+}
 
 /**
  * gst_caps_check_compatibility:
@@ -118,24 +149,22 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   g_return_val_if_fail (tocaps != NULL, FALSE);
 	
   if (fromcaps->id != tocaps->id) {
-    //g_print ("gstcaps: mime types wrong\n");
+    DEBUG ("gstcaps: mime types wrong\n");
     return FALSE;
   }
 
   if (tocaps->properties) {
-    GstPropsEntry *entry = (GstPropsEntry *)tocaps->properties;
-
     if (fromcaps->properties) {
       return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
     }
     else {
-      //g_print ("gstcaps: no source caps\n");
+      DEBUG ("gstcaps: no source caps\n");
       return FALSE;
     }
   }
   else {
     // assume it accepts everything
-    //g_print ("gstcaps: no caps\n");
+    DEBUG ("gstcaps: no caps\n");
     return TRUE;
   }
 }

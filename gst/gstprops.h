@@ -53,13 +53,17 @@ typedef enum {
 
 
 struct _GstProps {
-  GSList *properties;		/* properties for this capability */
+  GSList *properties;		/* real properties for this property */
 };
 
 /* initialize the subsystem */
 void 		_gst_props_initialize		(void);
 
 GstProps*	gst_props_register		(GstPropsFactory factory);
+
+GstProps*	gst_props_new			(GstPropsFactoryEntry entry, ...);
+
+GstProps*	gst_props_merge			(GstProps *props, GstProps *tomerge);
 
 gboolean 	gst_props_check_compatibility 	(GstProps *props1, GstProps *props2);
 
