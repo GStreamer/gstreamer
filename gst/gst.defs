@@ -1558,6 +1558,7 @@
 (define-function element_factory_make
   (c-name "gst_element_factory_make")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "factoryname")
     '("const-gchar*" "name" (null-ok) (default "NULL"))
@@ -3144,6 +3145,7 @@
 (define-method get_caps
   (of-object "GstPad")
   (c-name "gst_pad_get_caps")
+  (caller-owns-return #t)
   (return-type "GstCaps*")
 )
 
