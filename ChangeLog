@@ -1,3 +1,11 @@
+2004-01-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/Makefile.am:
+          Fix nas DIST_SUBDIRS
+          Uraeus:
+          Fix bug where make distcheck doesn't get run on adding stuff to
+          the build.
+
 2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/divx/gstdivxdec.c: (gst_divxdec_init), (gst_divxdec_setup):

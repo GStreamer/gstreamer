@@ -383,8 +383,6 @@ DIST_SUBDIRS=\
 	dvdread \
 	dvdnav \
 	esd \
-	nas \
-	mas \
 	faac \
 	faad \
 	ffmpeg \
@@ -404,6 +402,7 @@ DIST_SUBDIRS=\
 	libpng \
 	librfb \
 	mad \
+	mas \
 	mikmod \
 	mpeg2dec \
 	mpeg2enc \
