@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-16 00:32+0100\n"
+"POT-Creation-Date: 2004-07-30 15:38+0200\n"
 "PO-Revision-Date: 2004-04-19 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -15,241 +15,268 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не вдається відкрити файл \"%s\" для запису."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:372
+#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:319
+#: ext/audiofile/gstafsrc.c:320
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
 
-#: ext/cdparanoia/gstcdparanoia.c:643 ext/cdparanoia/gstcdparanoia.c:659
+#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
 msgid "Could not open CD device for reading."
 msgstr "Не вдається відкрити пристрій компакт-дисків для читання."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1054 ext/gnomevfs/gstgnomevfssrc.c:1077
+#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Не вдається відкрити файл віртуальної файлової системи \"%s\" для читання."
+msgstr ""
+"Не вдається відкрити файл віртуальної файлової системи \"%s\" для читання."
 
-#: ext/gnomevfs/gstgnomevfssink.c:293
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing."
-msgstr "Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису."
+#: ext/gnomevfs/gstgnomevfssink.c:344
+#, fuzzy, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr ""
+"Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису."
 
-#: ext/gnomevfs/gstgnomevfssink.c:318
+#: ext/gnomevfs/gstgnomevfssink.c:351
+#, fuzzy
+msgid "No filename given"
+msgstr "Не вказаний файл."
+
+#: ext/gnomevfs/gstgnomevfssink.c:377
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:582
 msgid "No filename specified."
 msgstr "Не вказаний файл."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:835
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не вдається записати у файл \"%s\"."
 
-#: gst/avi/gstavimux.c:1051
+#: gst/avi/gstavimux.c:1052
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: gst-libs/gst/play/play.c:110
+#, c-format
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
+msgstr ""
+
+#: gst-libs/gst/play/play.c:139
+msgid ""
+"No usable colorspace element could be found.\n"
+"Please install one and restart."
+msgstr ""
+
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Не вдається відкрити звуковий пристрій \"%s\" для запису."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Не вдається відкрити пристрій керування \"%s\" для запису."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Не вдається настроїти звуковий пристрій \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Не вдається встановити частоту \"%s\" у %d Гц."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Не вдається закрити звуковий пристрій \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Не вдається закрити пристрій керування \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:270
+#: sys/dxr3/dxr3videosink.c:271
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Не вдається відкрити відео пристрій \"%s\" для запису."
 
-#: sys/dxr3/dxr3videosink.c:300
+#: sys/dxr3/dxr3videosink.c:301
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Не вдається закрити відео пристрій \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:452 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Не вдається записати у пристрій \"%s\"."
 
-#: sys/oss/gstosselement.c:700
+#: sys/oss/gstosselement.c:725
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS пристрій \"%s\" вже використовується іншою програмою."
 
-#: sys/oss/gstosselement.c:707 sys/oss/gstosselement.c:711
+#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
-msgstr "Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу до нього."
+msgstr ""
+"Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу до "
+"нього."
 
-#: sys/oss/gstosselement.c:718
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Пристрій \"%s\" не існує."
 
-#: sys/oss/gstosselement.c:725
+#: sys/oss/gstosselement.c:750
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для запису."
 
-#: sys/oss/gstosselement.c:729
+#: sys/oss/gstosselement.c:754
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання."
 
-#: sys/oss/gstossmixer.c:83
+#: sys/oss/gstosselement.c:1131
+msgid "Your OSS device could not be probed correctly"
+msgstr ""
+
+#: sys/oss/gstossmixer.c:98
 msgid "Volume"
 msgstr "Гучність"
 
-#: sys/oss/gstossmixer.c:84
+#: sys/oss/gstossmixer.c:100
 msgid "Bass"
 msgstr "Низькі"
 
-#: sys/oss/gstossmixer.c:85
+#: sys/oss/gstossmixer.c:102
 msgid "Treble"
 msgstr "Високі"
 
-#: sys/oss/gstossmixer.c:86
+#: sys/oss/gstossmixer.c:104
 msgid "Synth"
 msgstr "Синтезатор"
 
-#: sys/oss/gstossmixer.c:87
+#: sys/oss/gstossmixer.c:106
 msgid "PCM"
 msgstr "КІМ"
 
-#: sys/oss/gstossmixer.c:88
+#: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Гучномовець"
 
-#: sys/oss/gstossmixer.c:89
+#: sys/oss/gstossmixer.c:110
 msgid "Line-in"
 msgstr "Лінійний вхід"
 
-#: sys/oss/gstossmixer.c:90
+#: sys/oss/gstossmixer.c:112
 msgid "Microphone"
 msgstr "Мікрофон"
 
-#: sys/oss/gstossmixer.c:91
+#: sys/oss/gstossmixer.c:114
 msgid "CD"
 msgstr "Компакт-диск"
 
-#: sys/oss/gstossmixer.c:92
+#: sys/oss/gstossmixer.c:116
 msgid "Mixer"
 msgstr "Мікшер"
 
-#: sys/oss/gstossmixer.c:93
+#: sys/oss/gstossmixer.c:118
 msgid "PCM-2"
 msgstr "КІМ-2"
 
-#: sys/oss/gstossmixer.c:94
+#: sys/oss/gstossmixer.c:120
 msgid "Record"
 msgstr "Запис"
 
-#: sys/oss/gstossmixer.c:95
+#: sys/oss/gstossmixer.c:122
 msgid "In-gain"
 msgstr "Вх. підсилення"
 
-#: sys/oss/gstossmixer.c:96
+#: sys/oss/gstossmixer.c:124
 msgid "Out-gain"
 msgstr "Вих. підсилення"
 
-#: sys/oss/gstossmixer.c:97
+#: sys/oss/gstossmixer.c:126
 msgid "Line-1"
 msgstr "Лінія-1"
 
-#: sys/oss/gstossmixer.c:98
+#: sys/oss/gstossmixer.c:128
 msgid "Line-2"
 msgstr "Лінія-2"
 
-#: sys/oss/gstossmixer.c:99
+#: sys/oss/gstossmixer.c:130
 msgid "Line-3"
 msgstr "Лінія-3"
 
-#: sys/oss/gstossmixer.c:100
+#: sys/oss/gstossmixer.c:132
 msgid "Digital-1"
 msgstr "Цифровий-1"
 
-#: sys/oss/gstossmixer.c:101
+#: sys/oss/gstossmixer.c:134
 msgid "Digital-2"
 msgstr "Цифровий-2"
 
-#: sys/oss/gstossmixer.c:102
+#: sys/oss/gstossmixer.c:136
 msgid "Digital-3"
 msgstr "Цифровий-3"
 
-#: sys/oss/gstossmixer.c:103
+#: sys/oss/gstossmixer.c:138
 msgid "Phone-in"
 msgstr "Вх. телефону"
 
-#: sys/oss/gstossmixer.c:104
+#: sys/oss/gstossmixer.c:140
 msgid "Phone-out"
 msgstr "Вих. телефону"
 
-#: sys/oss/gstossmixer.c:105
+#: sys/oss/gstossmixer.c:142
 msgid "Video"
 msgstr "Відео"
 
-#: sys/oss/gstossmixer.c:106
+#: sys/oss/gstossmixer.c:144
 msgid "Radio"
 msgstr "Радіо"
 
-#: sys/oss/gstossmixer.c:107
+#: sys/oss/gstossmixer.c:146
 msgid "Monitor"
 msgstr "Монітор"
 
-#: sys/v4l/v4l_calls.c:114
+#: sys/v4l/v4l_calls.c:158
 msgid "No device specified."
 msgstr "Пристрій не вказано."
 
-#: sys/v4l/v4l_calls.c:122 sys/v4l2/v4l2_calls.c:395
+#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
 
-#: sys/v4l/v4l_calls.h:47
+#: sys/v4l/v4l_calls.h:50
 msgid "Device is not open."
 msgstr "Пристрій не відкритий."
 
-#: sys/v4l/v4l_calls.h:56
+#: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Пристрій відкритий."
 
-#: sys/v4l2/v4l2_calls.c:409
+#: sys/v4l2/v4l2_calls.c:411
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Пристрій \"%s\" не є пристроєм захоплення."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-22 16:47+0200\n"
+"POT-Creation-Date: 2004-07-30 15:38+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -65,6 +65,20 @@ msgstr "Nem lehet írni a(z) \"%s\" fájlba."
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
 
+#: gst-libs/gst/play/play.c:110
+#, c-format
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
+msgstr ""
+
+#: gst-libs/gst/play/play.c:139
+msgid ""
+"No usable colorspace element could be found.\n"
+"Please install one and restart."
+msgstr ""
+
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
@@ -110,33 +124,35 @@ msgstr "Nem lehet lezárni a(z) \"%s\" videoeszközt."
 msgid "Could not write to device \"%s\"."
 msgstr "Nem lehet írni a(z) \"%s\" eszközre."
 
-#: sys/oss/gstosselement.c:723
+#: sys/oss/gstosselement.c:725
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "A(z) \"%s\" OSS-eszközt már használja egy másik program."
 
-#: sys/oss/gstosselement.c:730 sys/oss/gstosselement.c:734
+#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
-msgstr "Nem lehet hozzáférni a(z) \"%s\" eszközhöz, ellenőrizze a jogosultságait."
+msgstr ""
+"Nem lehet hozzáférni a(z) \"%s\" eszközhöz, ellenőrizze a jogosultságait."
 
-#: sys/oss/gstosselement.c:741 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "A(z) \"%s\" eszköz nem létezik."
 
-#: sys/oss/gstosselement.c:748
+#: sys/oss/gstosselement.c:750
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" eszközt."
 
-#: sys/oss/gstosselement.c:752
+#: sys/oss/gstosselement.c:754
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" eszközt."
 
-#: sys/oss/gstosselement.c:1129
-msgid "Your oss device could not be probed correctly"
+#: sys/oss/gstosselement.c:1131
+#, fuzzy
+msgid "Your OSS device could not be probed correctly"
 msgstr "Az Ön OSS-eszközét nem lehet megfelelően ellenőrizni"
 
 #: sys/oss/gstossmixer.c:98

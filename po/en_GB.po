@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-14 20:54+0200\n"
+"POT-Creation-Date: 2004-07-30 15:38+0200\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,49 +14,49 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Could not open file \"%s\" for writing."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:372
+#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Error closing file \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:319
+#: ext/audiofile/gstafsrc.c:320
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Could not open file \"%s\" for reading."
 
-#: ext/cdparanoia/gstcdparanoia.c:643 ext/cdparanoia/gstcdparanoia.c:659
+#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
 msgid "Could not open CD device for reading."
 msgstr "Could not open CD device for reading."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
+#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Could not open vfs file \"%s\" for reading."
 
-#: ext/gnomevfs/gstgnomevfssink.c:343
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing."
+#: ext/gnomevfs/gstgnomevfssink.c:344
+#, fuzzy, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Could not open vfs file \"%s\" for writing."
 
-#: ext/gnomevfs/gstgnomevfssink.c:350
+#: ext/gnomevfs/gstgnomevfssink.c:351
 msgid "No filename given"
 msgstr "No filename given"
 
-#: ext/gnomevfs/gstgnomevfssink.c:375
+#: ext/gnomevfs/gstgnomevfssink.c:377
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Could not close vfs file \"%s\"."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:582
 msgid "No filename specified."
 msgstr "No filename specified."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:835
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Could not write to file \"%s\"."
@@ -65,198 +65,213 @@ msgstr "Could not write to file \"%s\"."
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "No or invalid input audio, AVI stream will be corrupt."
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: gst-libs/gst/play/play.c:110
+#, c-format
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
+msgstr ""
+
+#: gst-libs/gst/play/play.c:139
+msgid ""
+"No usable colorspace element could be found.\n"
+"Please install one and restart."
+msgstr ""
+
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Could not open audio device \"%s\" for writing."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Could not open control device \"%s\" for writing."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Could not configure audio device \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Could not set audio device \"%s\" to %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Could not close audio device \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Could not close control device \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:270
+#: sys/dxr3/dxr3videosink.c:271
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Could not open video device \"%s\" for writing."
 
-#: sys/dxr3/dxr3videosink.c:300
+#: sys/dxr3/dxr3videosink.c:301
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Could not close video device \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:452 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Could not write to device \"%s\"."
 
-#: sys/oss/gstosselement.c:700
+#: sys/oss/gstosselement.c:725
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS device \"%s\" is already in use by another program."
 
-#: sys/oss/gstosselement.c:707 sys/oss/gstosselement.c:711
+#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Could not access device \"%s\", check its permissions."
 
-#: sys/oss/gstosselement.c:718
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Device \"%s\" does not exist."
 
-#: sys/oss/gstosselement.c:725
+#: sys/oss/gstosselement.c:750
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Could not open device \"%s\" for writing."
 
-#: sys/oss/gstosselement.c:729
+#: sys/oss/gstosselement.c:754
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Could not open device \"%s\" for reading."
 
-#: sys/oss/gstosselement.c:1092
-msgid "Your oss device could not be probed correctly"
+#: sys/oss/gstosselement.c:1131
+#, fuzzy
+msgid "Your OSS device could not be probed correctly"
 msgstr "Your oss device could not be probed correctly"
 
-#: sys/oss/gstossmixer.c:83
+#: sys/oss/gstossmixer.c:98
 msgid "Volume"
 msgstr "Volume"
 
-#: sys/oss/gstossmixer.c:84
+#: sys/oss/gstossmixer.c:100
 msgid "Bass"
 msgstr "Bass"
 
-#: sys/oss/gstossmixer.c:85
+#: sys/oss/gstossmixer.c:102
 msgid "Treble"
 msgstr "Treble"
 
-#: sys/oss/gstossmixer.c:86
+#: sys/oss/gstossmixer.c:104
 msgid "Synth"
 msgstr "Synth"
 
-#: sys/oss/gstossmixer.c:87
+#: sys/oss/gstossmixer.c:106
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:88
+#: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Speaker"
 
-#: sys/oss/gstossmixer.c:89
+#: sys/oss/gstossmixer.c:110
 msgid "Line-in"
 msgstr "Line-in"
 
-#: sys/oss/gstossmixer.c:90
+#: sys/oss/gstossmixer.c:112
 msgid "Microphone"
 msgstr "Microphone"
 
-#: sys/oss/gstossmixer.c:91
+#: sys/oss/gstossmixer.c:114
 msgid "CD"
 msgstr "CD"
 
-#: sys/oss/gstossmixer.c:92
+#: sys/oss/gstossmixer.c:116
 msgid "Mixer"
 msgstr "Mixer"
 
-#: sys/oss/gstossmixer.c:93
+#: sys/oss/gstossmixer.c:118
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:94
+#: sys/oss/gstossmixer.c:120
 msgid "Record"
 msgstr "Record"
 
-#: sys/oss/gstossmixer.c:95
+#: sys/oss/gstossmixer.c:122
 msgid "In-gain"
 msgstr "In-gain"
 
-#: sys/oss/gstossmixer.c:96
+#: sys/oss/gstossmixer.c:124
 msgid "Out-gain"
 msgstr "Out-gain"
 
-#: sys/oss/gstossmixer.c:97
+#: sys/oss/gstossmixer.c:126
 msgid "Line-1"
 msgstr "Line-1"
 
-#: sys/oss/gstossmixer.c:98
+#: sys/oss/gstossmixer.c:128
 msgid "Line-2"
 msgstr "Line-2"
 
-#: sys/oss/gstossmixer.c:99
+#: sys/oss/gstossmixer.c:130
 msgid "Line-3"
 msgstr "Line-3"
 
-#: sys/oss/gstossmixer.c:100
+#: sys/oss/gstossmixer.c:132
 msgid "Digital-1"
 msgstr "Digital-1"
 
-#: sys/oss/gstossmixer.c:101
+#: sys/oss/gstossmixer.c:134
 msgid "Digital-2"
 msgstr "Digital-2"
 
-#: sys/oss/gstossmixer.c:102
+#: sys/oss/gstossmixer.c:136
 msgid "Digital-3"
 msgstr "Digital-3"
 
-#: sys/oss/gstossmixer.c:103
+#: sys/oss/gstossmixer.c:138
 msgid "Phone-in"
 msgstr "Phone-in"
 
-#: sys/oss/gstossmixer.c:104
+#: sys/oss/gstossmixer.c:140
 msgid "Phone-out"
 msgstr "Phone-out"
 
-#: sys/oss/gstossmixer.c:105
+#: sys/oss/gstossmixer.c:142
 msgid "Video"
 msgstr "Video"
 
-#: sys/oss/gstossmixer.c:106
+#: sys/oss/gstossmixer.c:144
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixer.c:107
+#: sys/oss/gstossmixer.c:146
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/v4l/v4l_calls.c:114
+#: sys/v4l/v4l_calls.c:158
 msgid "No device specified."
 msgstr "No device specified."
 
-#: sys/v4l/v4l_calls.c:122 sys/v4l2/v4l2_calls.c:395
+#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Could not open device \"%s\" for reading and writing."
 
-#: sys/v4l/v4l_calls.h:47
+#: sys/v4l/v4l_calls.h:50
 msgid "Device is not open."
 msgstr "Device is not open."
 
-#: sys/v4l/v4l_calls.h:56
+#: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Device is open."
 
-#: sys/v4l2/v4l2_calls.c:409
+#: sys/v4l2/v4l2_calls.c:411
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Device \"%s\" is not a capture device."
