@@ -69,9 +69,9 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
     g_return_val_if_fail(chunk != NULL,0);
     chunk->offset = riff->nextlikely+8;	/* point to the actual data */
     chunk->id = words[0];
-    chunk->size = words[1];
+    chunk->size = GUINT32_FROM_LE(words[1]);
 /*    g_print("chunk id is 0x%08x '%s' and is 0x%08x long\n",words[0], */
-/*            gst_riff_id_to_fourcc(words[0]),words[1]); */
+/*            gst_riff_id_to_fourcc(words[0]),chunk->size); */
     riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
     riff->chunks = g_list_prepend(riff->chunks,chunk);
   }
@@ -82,15 +82,15 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 
 gulong gst_riff_fourcc_to_id(gchar *fourcc) {
   g_return_val_if_fail(fourcc != NULL,0);
-
-  return (fourcc[0] << 0) | (fourcc[1] << 8) |
-         (fourcc[2] << 16) | (fourcc[3] << 24);
+  return GUINT32_FROM_LE((gulong)(fourcc[0] << 0) | (fourcc[1] << 8) |
+         (fourcc[2] << 16) | (fourcc[3] << 24));
 }
 
 gchar *gst_riff_id_to_fourcc(gulong id) {
   gchar *fourcc = (gchar *)malloc(5);
 
   g_return_val_if_fail(fourcc != NULL, NULL);
+  id = GUINT32_FROM_LE(id);
 
   fourcc[0] = (id >> 0) & 0xff;
   fourcc[1] = (id >> 8) & 0xff;

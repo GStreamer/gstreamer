@@ -73,7 +73,10 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
       "format",            GST_PROPS_STRING ("int"),
        "law",              GST_PROPS_INT (0),
        "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-       "signed",           GST_PROPS_BOOLEAN (TRUE),
+       "signed",           GST_PROPS_LIST (
+       			     GST_PROPS_BOOLEAN (FALSE),
+       			     GST_PROPS_BOOLEAN (TRUE)
+			   ),
        "width",            GST_PROPS_LIST (
 	                     GST_PROPS_INT (8),
 	                     GST_PROPS_INT (16)
@@ -290,6 +293,11 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       /* we can gather format information now */
       format = (GstWavParseFormat *)((guchar *) GST_BUFFER_DATA (buf) + fmt->offset);
 
+      wavparse->bps      = GUINT16_FROM_LE(format->wBlockAlign);
+      wavparse->rate     = GUINT32_FROM_LE(format->dwSamplesPerSec);
+      wavparse->channels = GUINT16_FROM_LE(format->wChannels);
+      wavparse->width    = GUINT16_FROM_LE(format->wBitsPerSample);
+      
       /* set the caps on the src pad */
       caps = GST_CAPS_NEW (
 			"parsewav_src",
@@ -297,11 +305,11 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 			"format",	GST_PROPS_STRING ("int"),
 			  "law",	GST_PROPS_INT (0),		/*FIXME */
 			  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-        		  "signed",     GST_PROPS_BOOLEAN (TRUE), /*FIXME */
-			  "width",	GST_PROPS_INT (format->wBitsPerSample),
-			  "depth",	GST_PROPS_INT (format->wBitsPerSample),
-			  "rate",	GST_PROPS_INT (format->dwSamplesPerSec),
-			  "channels",	GST_PROPS_INT (format->wChannels)
+        		  "signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
+			  "width",	GST_PROPS_INT (wavparse->width),
+			  "depth",	GST_PROPS_INT (wavparse->width),
+			  "rate",	GST_PROPS_INT (wavparse->rate),
+			  "channels",	GST_PROPS_INT (wavparse->channels)
 		      );
 
       if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
@@ -309,13 +317,8 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
         return;
       }
 
-      wavparse->bps = format->wBlockAlign;
-      wavparse->rate = format->dwSamplesPerSec;
-      wavparse->channels = format->wChannels;
-      wavparse->width = format->wBitsPerSample;
-      
       GST_DEBUG (0, "frequency %d, channels %d",
-		 format->dwSamplesPerSec, format->wChannels); 
+		 wavparse->rate, wavparse->channels); 
 
       /* we're now looking for the data chunk */
       wavparse->state = GST_WAVPARSE_CHUNK_DATA;
