@@ -105,6 +105,9 @@ cp $RPM_BUILD_DIR/%{name}-%{version}/docs/devhelp/*.devhelp $RPM_BUILD_ROOT/usr/
 # This is the recommended way of dealing with it for RH8
 rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
@@ -162,7 +165,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %files devel
 %defattr(-, root, root)
 %{_includedir}/%{name}-%{version}/gst
-%{_libdir}/libgstreamer.a
+# %{_libdir}/libgstreamer.a
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/gstreamer*.pc
 ## we specify the API docs as regular files since %docs doesn't fail when
@@ -221,6 +224,11 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Sat Oct 12 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Updated to work better with default RH8 rpm
+- Added missing unspeced files
+- Removed .a and .la files from buildroot
+
 * Sat Sep 21 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added gst-md5sum
 
