@@ -79,6 +79,7 @@ static void gst_pad_init(GstPad *pad) {
   pad->direction = GST_PAD_UNKNOWN;
   pad->peer = NULL;
   pad->chain = NULL;
+  pad->pull = NULL;
   pad->parent = NULL;
   pad->ghostparents = NULL;
 }
@@ -128,6 +129,15 @@ gchar *gst_pad_get_name(GstPad *pad) {
   return pad->name;
 }
 
+void gst_pad_set_pull_function(GstPad *pad,GstPadPullFunction pull) {
+  g_return_if_fail(pad != NULL);
+  g_return_if_fail(GST_IS_PAD(pad));
+
+	fprintf(stderr, "pad setting pull function\n");
+  
+  pad->pull = pull;
+}
+
 void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -163,7 +173,11 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
 
-  if (pad->bufpen == NULL) {
+	// if the pull function exists for the pad, call it directly
+	if (pad->pull) {
+		return (pad->pull)(pad->peer);
+  // else we're likely going to have to coroutine it
+	} else if (pad->bufpen == NULL) {
     g_print("no buffer available, will have to do something about it\n");
     peerparent = GST_ELEMENT(pad->peer->parent);
     // if they're a cothread too, we can just switch to them
@@ -221,6 +235,8 @@ void gst_pad_connect(GstPad *srcpad,GstPad *sinkpad) {
 
   /* now copy the chain pointer from sink to src */
   srcpad->chain = sinkpad->chain;
+  /* and the pull function */
+  srcpad->pull = sinkpad->pull;
 
   /* set the connected flag */
   /* FIXME: set connected flag */

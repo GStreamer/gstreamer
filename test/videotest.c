@@ -5,17 +5,22 @@ extern gboolean _gst_plugin_spew;
 
 gboolean idle_func(gpointer data);
 
-GtkWidget *drawingarea;
+GstElement *src;
 
 void eof(GstSrc *src) {
   g_print("have eos, quitting\n");
   exit(0);
 }
 
+void resize(GstSink *sink) {
+  g_print("have resize\n");
+  gtk_object_set(GTK_OBJECT(src),"width",640,"height",480,NULL);
+}
+
+
 int main(int argc,char *argv[]) {
   GstElement *bin;
   GstElementFactory *srcfactory;
-  GstElement *src;
   GstElementFactory *videosinkfactory;
   GstElement *videosink;
 
@@ -37,7 +42,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_create(srcfactory,"src");
   videosink = gst_elementfactory_create(videosinkfactory,"videosink");
-  gtk_object_set(GTK_OBJECT(videosink),"width",320,"height",240,NULL);
+  gtk_object_set(GTK_OBJECT(videosink),"width",640,"height",480,NULL);
 
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
@@ -50,7 +55,6 @@ int main(int argc,char *argv[]) {
 							         GTK_SIGNAL_FUNC(eof),NULL);
 
   appwindow = gnome_app_new("Videotest","Videotest");
-  drawingarea = gtk_drawing_area_new();
   gnome_app_set_contents(GNOME_APP(appwindow),
 									gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"));
   gtk_widget_show_all(appwindow);

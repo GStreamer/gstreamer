@@ -45,6 +45,7 @@ extern "C" {
 
 // quick test to see if the pad is connected
 #define GST_PAD_CONNECTED(pad) ((pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) ((pad)->pull != NULL)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
@@ -53,6 +54,7 @@ typedef struct _GstPadClass GstPadClass;
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
+typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
 typedef void (*GstPadPushFunction) (GstPad *pad);
 
 typedef enum {
@@ -77,6 +79,7 @@ struct _GstPad {
   GstBuffer *bufpen;
 
   GstPadChainFunction chain;
+  GstPadPullFunction pull;
 
   GstObject *parent;
   GList *ghostparents;
@@ -92,6 +95,7 @@ void gst_pad_destroy(GstPad *pad);
 
 GstPadDirection gst_pad_get_direction(GstPad *pad);
 void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain);
+void gst_pad_set_pull_function(GstPad *pad, GstPadPullFunction pull);
 
 guint32 gst_pad_get_type_id(GstPad *pad);
 void gst_pad_set_type_id(GstPad *pad,guint16 id);
