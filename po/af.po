@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-09 21:16+0200\n"
+"POT-Creation-Date: 2004-09-26 19:50+0200\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -607,19 +607,19 @@ msgstr "Lêer \"%s\" is nie 'n gewone lêer nie."
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gsttypefindelement.c:154
 msgid "caps"
 msgstr "caps"
 
-#: gst/elements/gsttypefindelement.c:153
+#: gst/elements/gsttypefindelement.c:155
 msgid "detected capabilities in stream"
 msgstr "vermoëns wat bespeur kon word in die stroom"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:160
+#: gst/elements/gsttypefindelement.c:162
 msgid "maximum"
 msgstr "maksimum"
 

@@ -1,4 +1,14 @@
-2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+=== release 0.8.6 ===
+
+2004-09-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  releasing 0.8.6, "Narc"
+
+	2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
 	  prerel bump
@@ -209,7 +219,7 @@
 2004-08-16  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/GStreamer.vcproj:
-	  temporary local files are .gmo not .mo
+	  temporary locale files are .gmo not .mo
 
 2004-08-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 

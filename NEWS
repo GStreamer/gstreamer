@@ -1,4 +1,26 @@
-This is GStreamer 0.8.5
+This is GStreamer 0.8.6:
+
+Changes since 0.8.5:
+
+      * spider, queue fixes
+      * fakesrc and identity now have a datarate property
+      * dataprotocol threadsafety fix
+
+Bugs fixed since 0.8.5:
+
+      * 136962 : crc error when decoding flac with typefind and threads
+      * 150001 : [PATCH] Mem leaks in gstpad.c, gstxml.c and gstelement.c
+      * 150262 : gstreamer.spec file needs correction to work with rpmbuil...
+      * 150626 : bug trying to play a theora web stream
+      * 153657 : make typefind prevent unneeded discont element
+      * 153881 : [PATCH] in-code C declarations
+
+API changes since 0.8.5:
+
+- API additions:
+
+* The "fakesrc" element now has a datarate property.
+* The "identity" element now has a datarate property.
 
 Changes since 0.8.4:
 

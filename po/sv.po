@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-09 21:16+0200\n"
+"POT-Creation-Date: 2004-09-26 19:50+0200\n"
 "PO-Revision-Date: 2004-08-03 20:48+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -609,19 +609,19 @@ msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gsttypefindelement.c:154
 msgid "caps"
 msgstr "förmågor"
 
-#: gst/elements/gsttypefindelement.c:153
+#: gst/elements/gsttypefindelement.c:155
 msgid "detected capabilities in stream"
 msgstr "detekterade förmågor i flödet"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:160
+#: gst/elements/gsttypefindelement.c:162
 msgid "maximum"
 msgstr "maximum"
 

@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.5 "Stuttgart"
+GStreamer: Release notes for GStreamer 0.8.6 "Narc"
         
 
 The GStreamer team is happy to announce a new release
@@ -9,10 +9,6 @@ in the 0.8.x stable series of the GStreamer streaming-media framework.
 The 0.8.x series is a stable series aimed at end users.
 It is not API or ABI compatible with the stable 0.6.x series.
 It is, however, parallel installable with the 0.6.x series.
-
-
-This is the first GStreamer release that compiles with MSVC7 with full
-debug support. Installation of the binaries and the locales are also handled.
 
 
 This module only contains core functionality.  For actual media playback,
@@ -26,37 +22,26 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * New Translation: Albanian (sq), Laurent Dhima
-      * Translations: af, az, cs, en_GB, fr, nl, sq, sr, sv, tr, uk
-      * first release that works on Windows with MSVC7
-      * fixed lists can now be intersected
-      * transform functions from fraction to double added
-      * optimal scheduler fixes
-      * fixation fixes
-      * filesrc fixes
-      * typefind fixes
+      * spider, queue fixes
+      * fakesrc and identity now have a datarate property
+      * dataprotocol threadsafety fix
 
 Bugs fixed in this release
     
-      * 145100 : segfault in gst_pad_call_get_function
-      * 147889 : gst_element_link_pads_filtered may ignore named dest pad ...
-      * 148692 : GstQueue binary compatibility breakage
-      * 149981 : Win32 not included in the source distribution
-      * 150242 : GStreamer doesn't copy some buffer flags correctly
+      * 136962 : crc error when decoding flac with typefind and threads
+      * 150001 : [PATCH] Mem leaks in gstpad.c, gstxml.c and gstelement.c
+      * 150262 : gstreamer.spec file needs correction to work with rpmbuil...
+      * 150626 : bug trying to play a theora web stream
+      * 153657 : make typefind prevent unneeded discont element
+      * 153881 : [PATCH] in-code C declarations
 
 API changed in this release
      
 
 - API additions:
     
-* A new function, gst_scheduler_register, has been added.
-* A new enum member of GstBufferFlag, GST_BUFFER_DELTA_UNIT has been added.
-
-- API depreciations:
-    
-* GstBufferFlag has a deprecated enum member, GST_BUFFER_KEY_UNIT.
-Buffers should be marked with GST_BUFFER_DELTA_UNIT when they're not
-key units instead, since key units are the more common case.
+* The "fakesrc" element now has a datarate property.
+* The "identity" element now has a datarate property.
 
 Download
 
@@ -92,12 +77,10 @@ GNOME applications including sound-juicer, totem and RhythmBox.
 Contributors to this release
     
       * Benjamin Otte
-      * Colin Walters
       * David Schleef
-      * Laurent Dhima
+      * Luca Ognibene
       * Ronald Bultje
       * Steve Lhomme
       * Thomas Vander Stichele
       * Wim Taymans
-      * Zaheer Abbas Merali
  
