@@ -87,7 +87,7 @@ GstMusepackReader::seek (mpc_int32_t offset)
 
   /* hacky hack - if we're after typefind, we'll fail because
    * typefind is still typefinding (heh :) ). So read first. */
-  if (this->tell () == 0) {
+  if (this->tell () != this->get_size ()) {
     guint8 dummy2[1];
     this->read (dummy2, 1);
   }

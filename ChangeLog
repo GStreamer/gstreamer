@@ -1,5 +1,10 @@
 2004-11-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/musepack/gstmusepackreader.cpp:
+	  Workaround for older core.
+
+2004-11-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/ffmpegcolorspace/imgconvert.c: (yuv420p_to_yuv422):
 	  Actually test for odd width/height rather than testing whether
 	  a temporary variable that was 0 before we subtracted 1 is now
