@@ -1,0 +1,15 @@
+
+Ideas for a new registry system:
+
+- each plugin has an associated registry XML file.  Each xml file in
+  a plugin directory is loaded to create the in-core registry.
+
+- needed for avidemux:
+
+  <Company> plugin x create some registry information that says stuff like:
+  <Company> "caps x are fourcc FOOO in avi"
+  <Company> or "caps y may be contained in id3 tagged files"
+  <Company> or "caps z is a valid format to put in an ogg container"
+
+
+
