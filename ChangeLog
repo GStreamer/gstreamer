@@ -1,5 +1,19 @@
 2004-06-16  Wim Taymans  <wim@fluendo.com>
 
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_sync_mode_get_type),
+	(gst_v4lsrc_class_init), (gst_v4lsrc_init), (gst_v4lsrc_get_fps),
+	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
+	(gst_v4lsrc_get_property):
+	* sys/v4l/gstv4lsrc.h:
+	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay):
+	Added a sync mode enum property to control v4lsrc timestamp method
+	Removed the use-fixed-fps property and moved functionality in
+	the enum. 
+	Don't error on an error value from v4l-conf, it might not always
+	be a real error.
+
+2004-06-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videorate/Makefile.am:
 	* gst/videorate/gstvideorate.c: (gst_videorate_get_type),
 	(gst_videorate_base_init), (gst_videorate_class_init),
