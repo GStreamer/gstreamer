@@ -745,7 +745,7 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 
     if (!gst_props_entry_check_compatibility (entry1, entry2)) {
 	compatible = FALSE;
-	GST_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible: ",
+	GST_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible: \n",
 		   g_quark_to_string (entry1->propid));
 	gst_props_debug_entry (entry1);
 	gst_props_debug_entry (entry2);

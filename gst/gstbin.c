@@ -221,6 +221,9 @@ gst_bin_unset_element_sched (GstElement *element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT(element));
 
+  GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from it sched %p",
+            GST_ELEMENT_NAME(element),GST_ELEMENT_SCHED(element));
+
   // if it's actually a Bin
   if (GST_IS_BIN(element)) {
 

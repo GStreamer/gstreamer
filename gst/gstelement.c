@@ -383,13 +383,13 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   while (walk) {
     GstPad *pad = GST_PAD(walk->data);
     if (!strcmp (GST_PAD_NAME(pad), name)) {
-      GST_INFO(GST_CAT_ELEMENT_PADS,"found pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+      GST_INFO(GST_CAT_ELEMENT_PADS,"found pad %s:%s",GST_DEBUG_PAD_NAME(pad));
       return pad;
     }
     walk = g_list_next (walk);
   }
 
-  GST_INFO(GST_CAT_ELEMENT_PADS,"no such pad '%s' in element \"%s\"\n",name,GST_ELEMENT_NAME(element));
+  GST_INFO(GST_CAT_ELEMENT_PADS,"no such pad '%s' in element \"%s\"",name,GST_ELEMENT_NAME(element));
   return NULL;
 }
 
@@ -1016,7 +1016,7 @@ gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type != NULL, NULL);
 
-  GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"\n", name, type);
+  GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"", name, type);
 
   element = gst_elementfactory_make (type, name);
 

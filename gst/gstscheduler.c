@@ -902,7 +902,7 @@ gst_schedule_chain_new (GstSchedule *sched)
 void
 gst_schedule_chain_destroy (GstScheduleChain *chain)
 {
-  GST_INFO (GST_CAT_SCHEDULING, "destroying chain %p",chain);
+  GstSchedule *sched = chain->sched;
 
   // remove the chain from the schedules' list of chains
   chain->sched->chains = g_list_remove (chain->sched->chains, chain);
@@ -912,6 +912,8 @@ gst_schedule_chain_destroy (GstScheduleChain *chain)
   g_list_free (chain->disabled);	// should be empty...
   g_list_free (chain->elements);	// ditto
   g_free (chain);
+
+  GST_INFO (GST_CAT_SCHEDULING, "destroyed chain %p, now are %d chains in sched %p",chain,sched->num_chains,sched);
 }
 
 void
@@ -1022,7 +1024,7 @@ gst_schedule_chain_elements (GstSchedule *sched, GstElement *element1, GstElemen
 
   // otherwise if both have chains already, join them
   } else if ((chain1 != NULL) && (chain2 != NULL)) {
-    GST_INFO (GST_CAT_SCHEDULING, "merging chain %p into chain %p\n",chain2,chain1);
+    GST_INFO (GST_CAT_SCHEDULING, "merging chain %p into chain %p",chain2,chain1);
     // take the contents of chain2 and merge them into chain1
     chain1->disabled = g_list_concat (chain1->disabled, g_list_copy(chain2->disabled));
     chain1->elements = g_list_concat (chain1->elements, g_list_copy(chain2->elements));
@@ -1098,15 +1100,20 @@ gst_schedule_chain_recursive_add (GstScheduleChain *chain, GstElement *element)
   // add the element to the chain
   gst_schedule_chain_add_element (chain, element);
 
+  GST_DEBUG(GST_CAT_SCHEDULING, "recursing on element \"%s\"\n",GST_ELEMENT_NAME(element));
   // now go through all the pads and see which peers can be added
   pads = element->pads;
   while (pads) {
     pad = GST_PAD(pads->data);
     pads = g_list_next (pads);
 
+    GST_DEBUG(GST_CAT_SCHEDULING, "have pad %s:%s, checking for valid peer\n",GST_DEBUG_PAD_NAME(pad));
     // if the peer exists and could be in the same chain
     if (GST_PAD_PEER(pad)) {
-      if (GST_ELEMENT_SCHED(GST_PAD_PARENT(pad)) == GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(pad)))) {
+      GST_DEBUG(GST_CAT_SCHEDULING, "has peer %s:%s\n",GST_DEBUG_PAD_NAME(GST_PAD_PEER(pad)));
+      peerelement = GST_PAD_PARENT(GST_PAD_PEER(pad));
+      if (GST_ELEMENT_SCHED(GST_PAD_PARENT(pad)) == GST_ELEMENT_SCHED(peerelement)) {
+        GST_DEBUG(GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain\n",GST_ELEMENT_NAME(peerelement));
         // if it's not already in a chain, add it to this one
         if (gst_schedule_find_chain (chain->sched, peerelement) == NULL) {
           gst_schedule_chain_recursive_add (chain, peerelement);

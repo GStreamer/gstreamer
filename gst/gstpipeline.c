@@ -101,7 +101,7 @@ gst_pipeline_init (GstPipeline *pipeline)
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
   GST_ELEMENT_SCHED(pipeline) = gst_schedule_new(GST_ELEMENT(pipeline));
-  g_print("pipeline's scheduler is %p\n",GST_ELEMENT_SCHED(pipeline));
+  GST_DEBUG(GST_CAT_PIPELINE, "pipeline's scheduler is %p\n",GST_ELEMENT_SCHED(pipeline));
 //  gst_element_set_manager(GST_ELEMENT(pipeline),GST_ELEMENT(pipeline));
 }
 

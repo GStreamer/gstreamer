@@ -130,7 +130,7 @@ static void
 gst_thread_init (GstThread *thread)
 {
 
-  GST_DEBUG (GST_CAT_THREAD,"initializing thread '%s'\n",GST_ELEMENT_NAME (thread));
+  GST_DEBUG (GST_CAT_THREAD,"initializing thread\n");
 
   // we're a manager by default
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
@@ -143,7 +143,7 @@ gst_thread_init (GstThread *thread)
   thread->cond = g_cond_new();
 
   GST_ELEMENT_SCHED(thread) = gst_schedule_new(GST_ELEMENT(thread));
-  g_print("thread's scheduler is %p\n",GST_ELEMENT_SCHED(thread));
+  GST_DEBUG(GST_CAT_THREAD, "thread's scheduler is %p\n",GST_ELEMENT_SCHED(thread));
 
 //  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread));
 }
