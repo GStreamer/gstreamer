@@ -357,7 +357,7 @@ gst_siddec_loop (GstElement *element)
 	  break;
 	default:
 	  // bail out, we're not going to do anything
-	  gst_element_set_state (element, GST_STATE_PAUSED);
+	  gst_element_set_eos (element);
 	  gst_pad_send_event (siddec->srcpad, gst_event_new (GST_EVENT_EOS));
 	  break;
       }

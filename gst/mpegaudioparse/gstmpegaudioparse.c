@@ -247,13 +247,14 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 
   last_ts = GST_BUFFER_TIMESTAMP(buf);
 
-  if (GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
+  /* FIXME, do flush */
+  /*
     if (mp3parse->partialbuf) {
       gst_buffer_unref(mp3parse->partialbuf);
       mp3parse->partialbuf = NULL;
     }
     mp3parse->in_flush = TRUE;
-  }
+    */
 
   // if we have something left from the previous frame
   if (mp3parse->partialbuf) {
@@ -329,11 +330,8 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 	if (mp3parse->skip == 0) {
           GST_DEBUG (0,"mp3parse: pushing buffer of %d bytes\n",GST_BUFFER_SIZE(outbuf));
 	  if (mp3parse->in_flush) {
-	    GST_BUFFER_FLAG_SET(outbuf, GST_BUFFER_FLUSH);
+	    /* FIXME do some sort of flush event */
 	    mp3parse->in_flush = FALSE;
-	  }
-	  else {
-	    GST_BUFFER_FLAG_UNSET(outbuf, GST_BUFFER_FLUSH);
 	  }
 	  GST_BUFFER_TIMESTAMP(outbuf) = last_ts;
           gst_pad_push(mp3parse->srcpad,outbuf);

@@ -472,14 +472,6 @@ dvdsrc_loop (GstElement *element)
 
           g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
 
-          /*
-          if (priv->new_seek) {
-            _seek(priv, priv->titleid, priv->chapid, priv->angle);
-            GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
-            priv->new_seek = FALSE;
-          }
-          */
-
           /**
            * Read NAV packet.
            */
@@ -697,7 +689,6 @@ dvdsrc_get (GstPad *pad)
 
   if (priv->new_seek) {
     _seek(priv, priv->titleid, priv->chapid, priv->angle);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
   }
 
   /* read it in from the file */
