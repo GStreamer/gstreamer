@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -53,18 +53,18 @@ struct _GstJpegDec {
   GstPad *sinkpad,*srcpad;
 
   int parse_state;
-  // the timestamp of the next frame
+  /* the timestamp of the next frame */
   guint64 next_time;
-  // the interval between frames
+  /* the interval between frames */
   guint64 time_interval;
 
-  // video state
+  /* video state */
   gint format;
   gint width;
   gint height;
-  // the size of the output buffer
+  /* the size of the output buffer */
   gint outsize;
-  // the jpeg line buffer
+  /* the jpeg line buffer */
   guchar **line[3];
 
   struct jpeg_decompress_struct cinfo;

@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -123,7 +123,7 @@ gst_jpegenc_init (GstJpegEnc *jpegenc)
   jpegenc->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->srcpad);
 
-  // reset the initial video state
+  /* reset the initial video state */
   jpegenc->width = -1;
   jpegenc->height = -1;
 
@@ -163,8 +163,8 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
 
   jpeg_set_defaults(&jpegenc->cinfo);
   jpegenc->cinfo.dct_method = JDCT_FASTEST;
-  //jpegenc->cinfo.dct_method = JDCT_DEFAULT;
-  //jpegenc->cinfo.smoothing_factor = 10;
+  /*jpegenc->cinfo.dct_method = JDCT_DEFAULT; */
+  /*jpegenc->cinfo.smoothing_factor = 10; */
   jpeg_set_quality(&jpegenc->cinfo, 85, TRUE);
 
   /*
@@ -243,7 +243,7 @@ gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
   guchar *data, *outdata;
   gulong size, outsize;
   GstBuffer *outbuf;
-//  GstMeta *meta;
+/*  GstMeta *meta; */
   guint height, width, width2;
   guchar *base[3];
   gint i,j, k;
@@ -251,9 +251,9 @@ gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
-  //g_return_if_fail(GST_IS_BUFFER(buf));
+  /*g_return_if_fail(GST_IS_BUFFER(buf)); */
 
-  //usleep(10000);
+  /*usleep(10000); */
   jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
 
   data = GST_BUFFER_DATA(buf);

@@ -52,15 +52,15 @@ struct _GstJpegEnc {
   /* pads */
   GstPad *sinkpad,*srcpad;
 
-  // video state
+  /* video state */
   gint format;
   gint width;
   gint height;
-  // the video buffer
+  /* the video buffer */
   gint bufsize;
   GstBuffer *buffer;
   guint row_stride;
-  // the jpeg line buffer
+  /* the jpeg line buffer */
   guchar **line[3];
 
   struct jpeg_compress_struct cinfo;

@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED*/
 #include "gstjpegdec.h"
 
 extern GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
@@ -52,7 +52,7 @@ static void	gst_jpegdec_init	(GstJpegDec *jpegdec);
 static void	gst_jpegdec_chain	(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_jpegdec_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_jpegdec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_jpegdec_get_type(void) {
@@ -129,7 +129,7 @@ gst_jpegdec_init (GstJpegDec *jpegdec)
   /* initialize the jpegdec decoder state */
   jpegdec->next_time = 0;
 
-  // reset the initial video state
+  /* reset the initial video state */
   jpegdec->format = -1;
   jpegdec->width = -1;
   jpegdec->height = -1;
@@ -160,7 +160,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
   guchar *data, *outdata;
   gulong size, outsize;
   GstBuffer *outbuf;
-  //GstMeta *meta;
+  /*GstMeta *meta;*/
   gint width, height, width2;
   guchar *base[3];
   gint i,j, k;
@@ -169,7 +169,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
-  //g_return_if_fail(GST_IS_BUFFER(buf));
+  /*g_return_if_fail(GST_IS_BUFFER(buf));*/
 
   jpegdec = GST_JPEGDEC (GST_OBJECT_PARENT (pad));
 
@@ -193,9 +193,9 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
   r_h = jpegdec->cinfo.cur_comp_info[0]->h_samp_factor;
   r_v = jpegdec->cinfo.cur_comp_info[0]->v_samp_factor;
 
-  //g_print ("%d %d\n", r_h, r_v);
-  //g_print ("%d %d\n", jpegdec->cinfo.cur_comp_info[1]->h_samp_factor, jpegdec->cinfo.cur_comp_info[1]->v_samp_factor);
-  //g_print ("%d %d\n", jpegdec->cinfo.cur_comp_info[2]->h_samp_factor, jpegdec->cinfo.cur_comp_info[2]->v_samp_factor);
+  /*g_print ("%d %d\n", r_h, r_v);*/
+  /*g_print ("%d %d\n", jpegdec->cinfo.cur_comp_info[1]->h_samp_factor, jpegdec->cinfo.cur_comp_info[1]->v_samp_factor);*/
+  /*g_print ("%d %d\n", jpegdec->cinfo.cur_comp_info[2]->h_samp_factor, jpegdec->cinfo.cur_comp_info[2]->v_samp_factor);*/
 
   jpegdec->cinfo.do_fancy_upsampling = FALSE;
   jpegdec->cinfo.do_block_smoothing = FALSE;
@@ -250,7 +250,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
          base[1] += width2; base[2] += width2;
       }
     }
-    //g_print ("%d\n", jpegdec->cinfo.output_scanline);
+    /*g_print ("%d\n", jpegdec->cinfo.output_scanline);*/
     jpeg_read_raw_data(&jpegdec->cinfo, jpegdec->line, r_v*DCTSIZE);
   }
 
