@@ -1,3 +1,10 @@
+2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/colorspace/gstcolorspace.c:
+	* gst/colorspace/yuv2yuv.c: (gst_colorspace_yuy2_to_i420),
+	(gst_colorspace_i420_to_yv12):
+	  Fix compiling... Didn't test if it actually works.
+
 2004-01-15  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
