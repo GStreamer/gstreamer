@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-19 18:15+0200\n"
+"POT-Creation-Date: 2004-06-04 10:57+0200\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,89 +16,89 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: gst/gst.c:129
+#: gst/gst.c:160
 msgid "Print the GStreamer version"
 msgstr "GStreamer buraxılışını göstər"
 
-#: gst/gst.c:131
+#: gst/gst.c:162
 msgid "Make all warnings fatal"
 msgstr "Bütün xətaları ölümcül et"
 
-#: gst/gst.c:135
+#: gst/gst.c:166
 msgid "Print available debug categories and exit"
 msgstr ""
 
-#: gst/gst.c:138
+#: gst/gst.c:169
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 
-#: gst/gst.c:140
+#: gst/gst.c:171
 msgid "LEVEL"
 msgstr "SƏVİYYƏ"
 
-#: gst/gst.c:142
+#: gst/gst.c:173
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 
-#: gst/gst.c:145
+#: gst/gst.c:176
 msgid "LIST"
 msgstr "SİYAHI"
 
-#: gst/gst.c:147
+#: gst/gst.c:178
 msgid "Disable colored debugging output"
 msgstr ""
 
-#: gst/gst.c:149
+#: gst/gst.c:180
 msgid "Disable debugging"
 msgstr "Xəta ayırmasını bağla"
 
-#: gst/gst.c:153
+#: gst/gst.c:184
 msgid "Disable accelerated CPU instructions"
 msgstr ""
 
-#: gst/gst.c:155
+#: gst/gst.c:186
 msgid "Enable verbose plugin loading diagnostics"
 msgstr ""
 
-#: gst/gst.c:157
+#: gst/gst.c:188
 msgid "PATHS"
 msgstr "CIĞIRLAR"
 
-#: gst/gst.c:160
+#: gst/gst.c:191
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "envronment variable GST_PLUGIN_PATH"
 msgstr ""
 
-#: gst/gst.c:162
+#: gst/gst.c:193
 msgid "PLUGINS"
 msgstr "ƏLAVƏLƏR"
 
-#: gst/gst.c:165
+#: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 
-#: gst/gst.c:168
+#: gst/gst.c:199
 msgid "SCHEDULER"
 msgstr "VAXTLAŞDIRICI"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "Registry to use"
 msgstr "İşlədiləcək qeyd bazası"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "REGISTRY"
 msgstr "QEYDBAZASI"
 
-#: gst/gst.c:183
+#: gst/gst.c:214
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr ""
 
-#: gst/gst.c:187
+#: gst/gst.c:218
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr ""
@@ -669,14 +669,6 @@ msgstr ""
 
 #: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
-msgstr ""
-
-#: tools/gst-inspect.c:937
-msgid "Show plugin details"
-msgstr ""
-
-#: tools/gst-inspect.c:940
-msgid "Show scheduler details"
 msgstr ""
 
 #: tools/gst-launch.c:91

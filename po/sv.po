@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-19 18:15+0200\n"
+"POT-Creation-Date: 2004-06-04 10:57+0200\n"
 "PO-Revision-Date: 2004-03-20 18:41+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:129
+#: gst/gst.c:160
 msgid "Print the GStreamer version"
 msgstr "Skriv ut Gstreamer-versionen"
 
-#: gst/gst.c:131
+#: gst/gst.c:162
 msgid "Make all warnings fatal"
 msgstr "Gör alla varningar ödesdigra"
 
-#: gst/gst.c:135
+#: gst/gst.c:166
 msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
-#: gst/gst.c:138
+#: gst/gst.c:169
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
 "ingen utmatning"
 
-#: gst/gst.c:140
+#: gst/gst.c:171
 msgid "LEVEL"
 msgstr "NIVÅ"
 
-#: gst/gst.c:142
+#: gst/gst.c:173
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,31 @@ msgstr ""
 "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
 "nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:145
+#: gst/gst.c:176
 msgid "LIST"
 msgstr "LISTA"
 
-#: gst/gst.c:147
+#: gst/gst.c:178
 msgid "Disable colored debugging output"
 msgstr "Inaktivera färglagd felsökningsutmatning"
 
-#: gst/gst.c:149
+#: gst/gst.c:180
 msgid "Disable debugging"
 msgstr "Inaktivera felsökning"
 
-#: gst/gst.c:153
+#: gst/gst.c:184
 msgid "Disable accelerated CPU instructions"
 msgstr "Inaktivera accelererade processorinstruktioner"
 
-#: gst/gst.c:155
+#: gst/gst.c:186
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivera utförlig diagnostik vid inläsning av insticksmoduler"
 
-#: gst/gst.c:157
+#: gst/gst.c:188
 msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
-#: gst/gst.c:160
+#: gst/gst.c:191
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -80,35 +80,35 @@ msgstr ""
 "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
 "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
-#: gst/gst.c:162
+#: gst/gst.c:193
 msgid "PLUGINS"
 msgstr "INSTICKSMODULER"
 
-#: gst/gst.c:165
+#: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
-#: gst/gst.c:168
+#: gst/gst.c:199
 msgid "SCHEDULER"
 msgstr "SCHEMALÄGGARE"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "Registry to use"
 msgstr "Register att använda"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "REGISTRY"
 msgstr "REGISTER"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: gst/gst.c:183
+#: gst/gst.c:214
 #, fuzzy, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \""
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: gst/gst.c:187
+#: gst/gst.c:218
 #, fuzzy, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Schemaläggare att använda (\""
@@ -697,14 +697,6 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: tools/gst-inspect.c:937
-msgid "Show plugin details"
-msgstr "Visa detaljer för insticksmodul"
-
-#: tools/gst-inspect.c:940
-msgid "Show scheduler details"
-msgstr "Visa detaljer för schemaläggare"
-
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
@@ -841,6 +833,12 @@ msgstr "KÖR rörledning...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
+
+#~ msgid "Show plugin details"
+#~ msgstr "Visa detaljer för insticksmodul"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Visa detaljer för schemaläggare"
 
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-19 18:15+0200\n"
+"POT-Creation-Date: 2004-06-04 10:57+0200\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:129
+#: gst/gst.c:160
 msgid "Print the GStreamer version"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:131
+#: gst/gst.c:162
 msgid "Make all warnings fatal"
 msgstr "Rendre tout les avertissements bloquants"
 
-#: gst/gst.c:135
+#: gst/gst.c:166
 msgid "Print available debug categories and exit"
 msgstr "Afficher les catégories de deboguage disponibles et quitter"
 
-#: gst/gst.c:138
+#: gst/gst.c:169
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Niveau de deboguage par defaut de 1 (que les erreurs) a 5 (tout) ou 0 pour "
 "n'avoir aucun affichage"
 
-#: gst/gst.c:140
+#: gst/gst.c:171
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:142
+#: gst/gst.c:173
 #, fuzzy
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -48,32 +48,32 @@ msgstr ""
 "des niveaux spécifiques pour chaque catégorie.\n"
 "Exemple: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:145
+#: gst/gst.c:176
 msgid "LIST"
 msgstr ""
 
-#: gst/gst.c:147
+#: gst/gst.c:178
 #, fuzzy
 msgid "Disable colored debugging output"
 msgstr "Désactiver la couleur dans la sortie de deboguage"
 
-#: gst/gst.c:149
+#: gst/gst.c:180
 msgid "Disable debugging"
 msgstr "Désactiver la sortie de deboguage"
 
-#: gst/gst.c:153
+#: gst/gst.c:184
 msgid "Disable accelerated CPU instructions"
 msgstr "Désactiver les instructions accélerées du processeur"
 
-#: gst/gst.c:155
+#: gst/gst.c:186
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Activer un diagnostique détaillé du chargement des plugins"
 
-#: gst/gst.c:157
+#: gst/gst.c:188
 msgid "PATHS"
 msgstr "CHEMINS"
 
-#: gst/gst.c:160
+#: gst/gst.c:191
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -82,34 +82,34 @@ msgstr ""
 "Liste séparée par des virgules de plugins a precharger en plus de la liste "
 "contenue dans la variable d'environnement GST_PLUGIN_PATH"
 
-#: gst/gst.c:162
+#: gst/gst.c:193
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:165
+#: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Désactiver la detection des erreurs de segmentation pendant le chargement "
 "des plugins"
 
-#: gst/gst.c:168
+#: gst/gst.c:199
 msgid "SCHEDULER"
 msgstr "PLANIFICATEUR"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "Registry to use"
 msgstr "Registre a utiliser"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "REGISTRY"
 msgstr "REGISTRE"
 
-#: gst/gst.c:183
+#: gst/gst.c:214
 #, fuzzy, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "liste de chemins pour le chargement des plugins (séparés par '"
 
-#: gst/gst.c:187
+#: gst/gst.c:218
 #, fuzzy, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Planificateur a utiliser ('"
@@ -714,14 +714,6 @@ msgstr "impossible de lier un element destination pour l'URI \"%s\""
 #: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
-
-#: tools/gst-inspect.c:937
-msgid "Show plugin details"
-msgstr ""
-
-#: tools/gst-inspect.c:940
-msgid "Show scheduler details"
-msgstr ""
 
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"

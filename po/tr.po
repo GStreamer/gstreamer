@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-19 18:15+0200\n"
+"POT-Creation-Date: 2004-06-04 10:57+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -14,30 +14,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:129
+#: gst/gst.c:160
 msgid "Print the GStreamer version"
 msgstr "GStreamer sürünümü yazdır"
 
-#: gst/gst.c:131
+#: gst/gst.c:162
 msgid "Make all warnings fatal"
 msgstr "Tüm uyarıları ölümcül yap"
 
-#: gst/gst.c:135
+#: gst/gst.c:166
 msgid "Print available debug categories and exit"
 msgstr "Geçerli hata ayıklama sınıflarını yazdır ve çık"
 
-#: gst/gst.c:138
+#: gst/gst.c:169
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 5'e (her şey) kadar "
 "ya da çıktı olmaması için 0"
 
-#: gst/gst.c:140
+#: gst/gst.c:171
 msgid "LEVEL"
 msgstr "SEVİYE"
 
-#: gst/gst.c:142
+#: gst/gst.c:173
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -45,31 +45,31 @@ msgstr ""
 "Ayrı sınıfların belirli seviyeleri için sınıf_ismi:seviye çiftlerinin virgül "
 "ile ayrılmış listesi. Örnek: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:145
+#: gst/gst.c:176
 msgid "LIST"
 msgstr "LİSTE"
 
-#: gst/gst.c:147
+#: gst/gst.c:178
 msgid "Disable colored debugging output"
 msgstr "Renkli hata ayıklama çıktısını kapat"
 
-#: gst/gst.c:149
+#: gst/gst.c:180
 msgid "Disable debugging"
 msgstr "Hata ayıklamayı kapat"
 
-#: gst/gst.c:153
+#: gst/gst.c:184
 msgid "Disable accelerated CPU instructions"
 msgstr "Hızlandırılmış CPU işlemlerini kapat"
 
-#: gst/gst.c:155
+#: gst/gst.c:186
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Ayrıntılı eklenti yükleme detaylarını etkinleştir"
 
-#: gst/gst.c:157
+#: gst/gst.c:188
 msgid "PATHS"
 msgstr "YOLLAR"
 
-#: gst/gst.c:160
+#: gst/gst.c:191
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -78,32 +78,32 @@ msgstr ""
 "Çevre değişkeni GST_PLUGIN_PATH içinde saklanan listeye ek olarak önceden "
 "yüklenecek eklentilerin virgün ile ayırılmış listesi"
 
-#: gst/gst.c:162
+#: gst/gst.c:193
 msgid "PLUGINS"
 msgstr "EKLENTİLER"
 
-#: gst/gst.c:165
+#: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Eklenti yüklenirken kesimleme hatalarını yakalamayı kapat"
 
-#: gst/gst.c:168
+#: gst/gst.c:199
 msgid "SCHEDULER"
 msgstr "ZAMANLANDIRICI"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "Registry to use"
 msgstr "Kullanılacak kayıt"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "REGISTRY"
 msgstr "KAYIT"
 
-#: gst/gst.c:183
+#: gst/gst.c:214
 #, fuzzy, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "eklenti yüklemek için yol listesi (' ile ayırılmış"
 
-#: gst/gst.c:187
+#: gst/gst.c:218
 #, fuzzy, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Kullanılacak zamanlandırıcı ('"
@@ -687,14 +687,6 @@ msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
-#: tools/gst-inspect.c:937
-msgid "Show plugin details"
-msgstr "Eklenti detaylarını göster"
-
-#: tools/gst-inspect.c:940
-msgid "Show scheduler details"
-msgstr "Zamanlandırıcı detaylarını göster"
-
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
 msgstr "Çalıştırma % sonrası bitti"
@@ -823,6 +815,12 @@ msgstr "BORUHATTI çalıştırılıyor ...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "HATA: boruhattı çalmak istemiyor.\n"
+
+#~ msgid "Show plugin details"
+#~ msgstr "Eklenti detaylarını göster"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Zamanlandırıcı detaylarını göster"
 
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-19 18:15+0200\n"
+"POT-Creation-Date: 2004-06-04 10:57+0200\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,29 +14,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:129
+#: gst/gst.c:160
 msgid "Print the GStreamer version"
 msgstr "Print the GStreamer version"
 
-#: gst/gst.c:131
+#: gst/gst.c:162
 msgid "Make all warnings fatal"
 msgstr "Make all warnings fatal"
 
-#: gst/gst.c:135
+#: gst/gst.c:166
 msgid "Print available debug categories and exit"
 msgstr "Print available debug categories and exit"
 
-#: gst/gst.c:138
+#: gst/gst.c:169
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 
-#: gst/gst.c:140
+#: gst/gst.c:171
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:142
+#: gst/gst.c:173
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -44,31 +44,31 @@ msgstr ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:145
+#: gst/gst.c:176
 msgid "LIST"
 msgstr "LIST"
 
-#: gst/gst.c:147
+#: gst/gst.c:178
 msgid "Disable colored debugging output"
 msgstr "Disable coloured debugging output"
 
-#: gst/gst.c:149
+#: gst/gst.c:180
 msgid "Disable debugging"
 msgstr "Disable debugging"
 
-#: gst/gst.c:153
+#: gst/gst.c:184
 msgid "Disable accelerated CPU instructions"
 msgstr "Disable accelerated CPU instructions"
 
-#: gst/gst.c:155
+#: gst/gst.c:186
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Enable verbose plugin loading diagnostics"
 
-#: gst/gst.c:157
+#: gst/gst.c:188
 msgid "PATHS"
 msgstr "PATHS"
 
-#: gst/gst.c:160
+#: gst/gst.c:191
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "envronment variable GST_PLUGIN_PATH"
@@ -76,32 +76,32 @@ msgstr ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 
-#: gst/gst.c:162
+#: gst/gst.c:193
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:165
+#: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Disable trapping of segmentation faults during plugin loading"
 
-#: gst/gst.c:168
+#: gst/gst.c:199
 msgid "SCHEDULER"
 msgstr "SCHEDULER"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "Registry to use"
 msgstr "Registry to use"
 
-#: gst/gst.c:170
+#: gst/gst.c:201
 msgid "REGISTRY"
 msgstr "REGISTRY"
 
-#: gst/gst.c:183
+#: gst/gst.c:214
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "path list for loading plugins (separated by '%s')"
 
-#: gst/gst.c:187
+#: gst/gst.c:218
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Scheduler to use (default is '%s')"
@@ -678,14 +678,6 @@ msgstr "could not link sink element for URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: tools/gst-inspect.c:937
-msgid "Show plugin details"
-msgstr "Show plugin details"
-
-#: tools/gst-inspect.c:940
-msgid "Show scheduler details"
-msgstr "Show scheduler details"
-
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
 msgstr "Execution ended after %"
@@ -814,6 +806,12 @@ msgstr "RUNNING pipeline ...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: pipeline doesn't want to play.\n"
+
+#~ msgid "Show plugin details"
+#~ msgstr "Show plugin details"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Show scheduler details"
 
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
