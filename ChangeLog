@@ -1,4 +1,10 @@
 2004-02-02  Jeremy Simon  <jesimon@libertysurf.fr>
+
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add),
+	(gst_tag_to_vorbis_comments):
+	Add replaygain support to vorbistag
+
+2004-02-02  Jeremy Simon  <jesimon@libertysurf.fr>
 																				         * ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_caps_to_extradata):
 	  Fix SVQ3 caps flag properties
