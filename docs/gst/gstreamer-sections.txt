@@ -665,20 +665,6 @@ gst_disksrc_details
 </SECTION>
 
 <SECTION>
-<FILE>gstesdsink</FILE>
-<TITLE>GstEsdSink</TITLE>
-<SUBSECTION Standard>
-GstEsdSink
-GstEsdSinkClass
-gst_esdsink_get_type
-GST_TYPE_ESDSINK
-GST_ESDSINK
-GST_ESDSINK_CLASS
-GST_IS_ESDSINK
-GST_IS_ESDSINK_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gstfakesink</FILE>
 <TITLE>GstFakeSink</TITLE>
 <SUBSECTION Standard>

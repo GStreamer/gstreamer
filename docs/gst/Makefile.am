@@ -12,7 +12,7 @@ DOC_SOURCE_DIR=$(top_srcdir)/gst
 CFLAGS = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)
 LDFLAGS = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/.libs/libgst.so $(top_srcdir)/gst/elements/.libs/libgstelements.so
 
-EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt
+EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt $(DOC_MAIN_SGML_FILE)
 
 HTML_DIR=$(datadir)/gstreamer/html
 
