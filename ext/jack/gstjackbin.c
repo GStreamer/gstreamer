@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
     Copyright (C) 2002 Andy Wingo <wingo@pobox.com>
 
@@ -37,23 +38,23 @@ static void shutdown (void *arg);
 GType
 gst_jack_bin_get_type (void) 
 {
-  static GType jack_bin_type = 0;
+    static GType jack_bin_type = 0;
 
-  if (!jack_bin_type) {
-    static const GTypeInfo jack_bin_info = {
-      sizeof(GstJackBinClass),
-      NULL,
-      NULL,
-      (GClassInitFunc)gst_jack_bin_class_init,
-      NULL,
-      NULL,
-      sizeof(GstJackBin),
-      0,
-      (GInstanceInitFunc)gst_jack_bin_init,
-    };
-    jack_bin_type = g_type_register_static (GST_TYPE_BIN, "GstJackBin", &jack_bin_info, 0);
-  }
-  return jack_bin_type;
+    if (!jack_bin_type) {
+        static const GTypeInfo jack_bin_info = {
+            sizeof(GstJackBinClass),
+            NULL,
+            NULL,
+            (GClassInitFunc)gst_jack_bin_class_init,
+            NULL,
+            NULL,
+            sizeof(GstJackBin),
+            0,
+            (GInstanceInitFunc)gst_jack_bin_init,
+        };
+        jack_bin_type = g_type_register_static (GST_TYPE_BIN, "GstJackBin", &jack_bin_info, 0);
+    }
+    return jack_bin_type;
 }
 
 static void
@@ -73,6 +74,14 @@ gst_jack_bin_class_init(GstJackClass *klass)
 static void
 gst_jack_bin_init(GstJack *this)
 {
+    GST_DEBUG (GST_CAT_THREAD, "initializing jack bin");
+    
+    /* jack bins are managing bins and iterate themselves */
+    GST_FLAG_SET (this, GST_BIN_FLAG_MANAGER);
+    GST_FLAG_SET (this, GST_BIN_SELF_SCHEDULABLE);
+    
+    /* make a new scheduler and associate it with the bin */
+    gst_scheduler_factory_make (NULL, GST_ELEMENT (this));
 }
 
 static GstElementStateReturn
@@ -237,6 +246,12 @@ sample_rate (nframes_t nframes, void *arg)
     GstJackBin *bin = (GstJackBin*) arg;
     printf ("the sample rate is now %lu/sec\n", nframes);
     bin->rate = nframes;
+
+    if (!bin->sched_setup) {
+        gst_scheduler_setup (GST_ELEMENT_SCHED (bin));
+        bin->sched_setup = TRUE;
+    }
+    
     return 0;
 }
 

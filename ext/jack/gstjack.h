@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
     Copyright (C) 2002 Andy Wingo <wingo@pobox.com>
                             
@@ -109,6 +110,10 @@ struct _GstJackBin {
 
     guint rate;
     nframes_t nframes;
+
+    /* the scheduler needs to be setup from within the jack client thread; this
+       variable is to keep track of whether or not we have been set up yet */
+    gboolean sched_setup;
 };
 
 struct _GstJackBinClass {

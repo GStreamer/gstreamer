@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
     Copyright (C) 2002 Andy Wingo <wingo@pobox.com>
 
