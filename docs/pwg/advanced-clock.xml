@@ -1,6 +1,141 @@
 <chapter id="chapter-advanced-clock">
   <title>Clocking</title>
+
   <para>
-    WRITEME
+    When playing complex media, each sound and video sample must be played in a
+    specific order at a specific time. For this purpose, GStreamer provides a
+    syncrhonization mechanism.
   </para>
+
+  <sect1 id="clock-time-types"> 
+    <title> Types of time </title>
+
+    <para>
+      There are kinds of time in GStreamer. <emphasis
+	role="strong">Clock time</emphasis> is an absolute time. By contrast,
+      <emphasis role="strong">element time</emphasis> is the relative time,
+      usually to the start of the current media stream. The element time
+      represents the time that should have a media sample that is being
+      processed by the element at this time. The element time is calculated by
+      adding an offset to the clock time.
+    </para>
+  </sect1>
+  <sect1 id="clocks">
+    <title>Clocks</title>
+    <para>
+      A clock is a source of time measurements. Though the system time can be used
+      as a clock, soundcards and other devices provides a better time source. For
+      this reason some elements provide a clock. The method
+      <function>get_clock</function> is implemented in elements that provide
+      one.
+    </para>
+    
+    <para>
+      As clocks return an absolute measure of time, they are not usually used
+      directly. Instead, a reference to a clock is stored in any element that needs
+      it, and it is used internaly by GStreamer to calculate the element time.
+    </para>
+  </sect1>
+  
+  <sect1>
+    <title>
+      Flow control of data and time
+    </title>
+    <para>
+      Now we will see how time is used in a pipeline in its different states. We
+      will assume that this is a real time playing.
+    </para>
+    
+    <para>
+      The pipeline starts playing.
+      The source element typically knows the time of each sample. 
+      <footnote> 
+	<para>
+	  Sometimes it
+	  is a parser element the one that knows the time, for instance if a pipeline
+	  contains a filesrc element connected to a MPEG decoder element, the former 
+	  is the one that knows the time of each sample, because the knowledge of
+	  when to play each sample is embedded in the MPEG format. In this case this
+	  element will be regarded as the source element for this discussion.
+	</para>
+      </footnote> 
+      First, the source element sends a discontinous event. This event carries information
+      about the current relative time of the next sample. This relative time is
+      arbitrary, but it must be consistent with the timestamp that will be
+      placed in buffers. It is expected to be the relative time to the start
+      of the media stream, or whatever makes sense in the case of each media.
+      When receiving it, the other elements adjust their offset of the element time so that this
+      time matches the time written in the event.
+    </para>
+
+    <para>
+      Then the source element sends media samples in buffers. This element places a
+      timestamp in each buffer saying when the sample should be played. When the
+      buffer reachs the sink pad of the last element, this element compares the
+      current element time with the timestamp of the buffer. If the timestamp is
+      higher or equal it plays the buffer, otherwise it waits until the time to
+      place the buffer arrives with <function>gst_element_wait()</function>.
+    </para>
+    
+    
+    <para>
+      If the stream is seeked, the next samples sent will have a timestamp that
+      is not adjusted with the element time. Therefore, the source element must
+      send a discontinous event.
+    </para>
+  </sect1>
+  <sect1 id="clock-obligations-of-each-element">
+    <title>
+      Obligations of each element.
+    </title>
+    
+    <para>
+      Let us clarify the contract between GStreamer and each element in the
+      pipeline.
+    </para>
+    
+    <sect2> 
+      <title>Source elements </title>
+      <para>
+	Source elements (or parsers of formats that provide notion of time, such
+	as MPEG, as explained above). must place a timestamp in each buffer that
+	they deliver. The origin of the time used is arbitrary, but it must match
+	the time delivered in the discontinous event (see bellow). However, it is 
+	expected that the origin is the origin of the media stream.
+      </para>
+      <para>
+	In order to initialize the element time of the rest of the pipeline, a
+	source element must send a discontinous event before starting to play.
+	In addition, after seeking, a discontinious event must be sent, because 
+	the timestamp of the next element does not match the element time of the
+	rest of the pipeline.
+      </para>
+      
+    </sect2>
+    
+    <sect2> <title> Sink elements </title>
+      <para>
+	If the element is intended to emit samples at a specific time (real time
+	playing), the element should require a clock, and thus implement the
+	method <function>set_clock</function>.
+      </para>
+      
+      <para>
+	In addition, before playing each sample, if the current element time is
+	less than the timestamp in the sample, it wait until the current time
+	arrives should call <function>gst_element_wait()</function>
+	<footnote>
+	  <para>
+	    With some schedulers, <function>gst_element_wait()</function> 
+	    blocks the pipeline. For instance, if there is one audio sink element
+	    and one video sink element, while the audio element is waiting for a
+	    sample the video element cannot play other sample. This behaviour is
+	    under discussion, and might change in a future release.
+	  </para>
+	</footnote>
+	See an example in <xref linkend="other-sink-processing"/>
+      </para>
+    </sect2>
+  </sect1>
+  
 </chapter>
