@@ -24,17 +24,6 @@
  */
 
 #include <string.h>
-#include <endian.h>
-
-# define SWAP(n) (n)
-#ifdef _LIBC
-# include <endian.h>
-# if __BYTE_ORDER == __BIG_ENDIAN
-# undef SWAP
-# define SWAP(n)							\
-    (((n) << 24) | (((n) & 0xff00) << 8) | (((n) >> 8) & 0xff00) | ((n) >> 24))
-# endif
-#endif
 
 #include <config.h>
 #include <gst/gst.h>
@@ -124,8 +113,8 @@ md5_finish_ctx (GstMD5Sink *ctx, gpointer resbuf)
   memcpy (&ctx->buffer[bytes], fillbuf, pad);
 
   /* Put the 64-bit file length in *bits* at the end of the buffer.  */
-  *(guint32 *) &ctx->buffer[bytes + pad] = SWAP (ctx->total[0] << 3);
-  *(guint32 *) &ctx->buffer[bytes + pad + 4] = SWAP ((ctx->total[1] << 3) |
+  *(guint32 *) &ctx->buffer[bytes + pad] = GUINT32_TO_LE (ctx->total[0] << 3);
+  *(guint32 *) &ctx->buffer[bytes + pad + 4] = GUINT32_TO_LE ((ctx->total[1] << 3) |
 							(ctx->total[0] >> 29));
 
   /* Process last bytes.  */
@@ -141,10 +130,10 @@ md5_finish_ctx (GstMD5Sink *ctx, gpointer resbuf)
 gpointer
 md5_read_ctx (GstMD5Sink *ctx, gpointer resbuf)
 {
-  ((guint32 *) resbuf)[0] = SWAP (ctx->A);
-  ((guint32 *) resbuf)[1] = SWAP (ctx->B);
-  ((guint32 *) resbuf)[2] = SWAP (ctx->C);
-  ((guint32 *) resbuf)[3] = SWAP (ctx->D);
+  ((guint32 *) resbuf)[0] = GUINT32_TO_LE (ctx->A);
+  ((guint32 *) resbuf)[1] = GUINT32_TO_LE (ctx->B);
+  ((guint32 *) resbuf)[2] = GUINT32_TO_LE (ctx->C);
+  ((guint32 *) resbuf)[3] = GUINT32_TO_LE (ctx->D);
 
   return resbuf;
 }
@@ -257,7 +246,7 @@ md5_process_block (const void *buffer, size_t len, GstMD5Sink *ctx)
 #define OP(a, b, c, d, s, T)						\
       do								\
         {								\
-	  a += FF (b, c, d) + (*cwp++ = SWAP (*words)) + T;		\
+	  a += FF (b, c, d) + (*cwp++ = GUINT32_TO_LE (*words)) + T;		\
 	  ++words;							\
 	  CYCLIC (a, s);						\
 	  a += b;							\
