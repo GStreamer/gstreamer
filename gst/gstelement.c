@@ -986,9 +986,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, const gchar *name)
 void
 gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
 {
-  g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_GHOST_PAD (pad));
 
   /* FIXME this is redundant?
@@ -996,8 +994,10 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
    * from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
    * the real pad's ghost pad list
    */
-  gst_pad_remove_ghost_pad (GST_PAD (GST_PAD_REALIZE (pad)), pad);
+  gst_object_ref (GST_OBJECT (pad));
   gst_element_remove_pad (element, pad);
+  gst_pad_remove_ghost_pad (GST_PAD (GST_PAD_REALIZE (pad)), pad);
+  gst_object_unref (GST_OBJECT (pad));
 }
 
 
