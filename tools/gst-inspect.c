@@ -393,7 +393,6 @@ print_element_info (GstElementFactory *factory)
   GstElement *element;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
-  GList *pads;
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
@@ -423,6 +422,8 @@ print_element_info (GstElementFactory *factory)
 
   g_print ("Pad Templates:\n");
   if (factory->numpadtemplates) {
+    const GList *pads;
+
     pads = factory->padtemplates;
     while (pads) {
       padtemplate = (GstPadTemplate*)(pads->data);

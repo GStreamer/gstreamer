@@ -25,6 +25,9 @@ listed in the REQUIREMENTS document in the gst-plugins package.
 Required tools:
 ===============
 
+bison >= 1.35
+flex
+
 An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):
 

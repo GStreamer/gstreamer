@@ -1,3 +1,12 @@
+2004-03-05  David Schleef  <ds@schleef.org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* REQUIREMENTS: Add bison and flex.
+	* configure.ac: Fix comment about bison.
+	* docs/random/ds/0.9-suggested-changes: yer ma
+	* tools/gst-inspect.c: (print_element_info):  Fix warning.
+
 2004-03-05  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.c: (gst_element_error_full):

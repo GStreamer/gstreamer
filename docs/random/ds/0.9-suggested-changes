@@ -11,7 +11,7 @@ API:
  - make GstPadLinkReturn internal (to either plugins+core or just core)
    and return gboolean to apps.
 
- - rewrite GstIndex
+ - rewrite GstIndex (it's gross)
 
  - gst_init() et al. need to work correctly when called multiple times
    and from libraries, etc.
@@ -27,6 +27,12 @@ API:
    object property combination.
 
  - remove gst_element_yield()
+
+ - read/write locks on buffers
+
+ - be able to send events to unlinked pads (bug #114442)
+
+ - caps should have a flag on fields to indicate that the field is optional
 
 
 caps:

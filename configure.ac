@@ -118,7 +118,7 @@ if test x$PERL_PATH = xno; then
   AC_MSG_ERROR(Could not find perl)
 fi
 
-dnl we require bison for building of some of the marshal files
+dnl we require bison for building the parser
 dnl FIXME: check if AC_PROG_YACC is suitable here
 AC_PATH_PROG(BISON_PATH, bison, no)
 if test x$BISON_PATH = xno; then
