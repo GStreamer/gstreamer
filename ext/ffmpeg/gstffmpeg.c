@@ -69,7 +69,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   FFMPEG_VERSION,
   "LGPL",
-  "(c) 2003 The FFMPEG team",
   "FFMpeg",
   "http://ffmpeg.sourceforge.net/"
 )
