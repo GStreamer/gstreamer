@@ -1,4 +1,4 @@
-examples = seek spider_seek
+examples = seek spider_seek cdplayer cdparanoia
 
 noinst_PROGRAMS = $(examples)
 
