@@ -346,8 +346,8 @@ gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 
 GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
-/* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
+GstElement*		gst_element_factory_make_or_warn	(const gchar *factoryname, const gchar *name);
 
 void			gst_element_factory_set_rank		(GstElementFactory *factory, guint16 rank);
 

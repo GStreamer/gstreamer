@@ -260,6 +260,28 @@ gst_element_factory_make (const gchar *factoryname, const gchar *name)
 }
 
 /**
+ * gst_element_factory_make_or_warn:
+ * @factoryname: a named factory to instantiate
+ * @name: name of new element
+ *
+ * Create a new element of the type defined by the given element factory
+ * using #gst_element_factory_make.
+ * Will use g_warning if the element could not be created.
+ *
+ * Returns: new #GstElement (or NULL if unable to create element)
+ */
+GstElement*
+gst_element_factory_make_or_warn (const gchar *factoryname, const gchar *name)
+{
+  GstElement *element = gst_element_factory_make (factoryname, name);
+
+  if (element == NULL) 
+    g_warning ("Could not create element from factory %s !\n", factoryname);
+
+  return element;
+}
+    
+/**
  * gst_element_factory_add_pad_template :
  * @elementfactory: factory to add the src id to
  * @templ: the padtemplate to add
