@@ -141,7 +141,7 @@ G_STMT_START { 					     	\
 #define		gst_buffer_unref(buf)		gst_data_unref (GST_DATA (buf))
 /* copy buffer */
 #define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
-#define		gst_buffer_is_writeable(buf)	GST_BUFFER (gst_data_is_writeable (GST_DATA (buf)))
+#define		gst_buffer_is_writable(buf)	GST_BUFFER (gst_data_is_writable (GST_DATA (buf)))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
 #define		gst_buffer_free(buf)		gst_data_free (GST_DATA (buf))
 
@@ -182,7 +182,7 @@ void		gst_buffer_pool_set_active		(GstBufferPool *pool, gboolean active);
 
 /* bufferpool operations */
 #define		gst_buffer_pool_copy(pool)		GST_BUFFER_POOL (gst_data_copy (GST_DATA (pool)))
-#define		gst_buffer_pool_is_writeable(pool)	GST_BUFFER_POOL (gst_data_is_writeable (GST_DATA (pool)))
+#define		gst_buffer_pool_is_writable(pool)	GST_BUFFER_POOL (gst_data_is_writable (GST_DATA (pool)))
 #define		gst_buffer_pool_copy_on_write(pool)	GST_BUFFER_POOL (gst_data_copy_on_write (GST_DATA (pool)))
 #define		gst_buffer_pool_free(pool)		gst_data_free (GST_DATA (pool))
 
