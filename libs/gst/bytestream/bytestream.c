@@ -50,7 +50,7 @@
 
 #endif
 
-guint8 *gst_bytestream_assemble (GstByteStream * bs, guint32 len);
+static guint8 *gst_bytestream_assemble (GstByteStream * bs, guint32 len);
 
 /**
  * gst_bytestream_new:
@@ -132,7 +132,7 @@ gst_bytestream_destroy (GstByteStream * bs)
  * else add it onto the head of the 
  */
 static gboolean
-gst_bytestream_get_next_buf (GstByteStream * bs)
+gst_bytestream_get_next_buf (GstByteStream *bs)
 {
   GstBuffer *nextbuf, *lastbuf, *headbuf;
   GSList *end;
@@ -211,7 +211,7 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 }
 
 static gboolean
-gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
+gst_bytestream_fill_bytes (GstByteStream *bs, guint32 len)
 {
   /* as long as we don't have enough, we get more buffers */
   while (bs->listavail < len) {
@@ -223,9 +223,8 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
   return TRUE;
 }
 
-
 guint32
-gst_bytestream_peek (GstByteStream * bs, GstBuffer **buf, guint32 len)
+gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
 {
   GstBuffer *headbuf, *retbuf = NULL;
 
@@ -281,7 +280,7 @@ gst_bytestream_peek (GstByteStream * bs, GstBuffer **buf, guint32 len)
 }
 
 guint32
-gst_bytestream_peek_bytes (GstByteStream * bs, guint8** data, guint32 len)
+gst_bytestream_peek_bytes (GstByteStream *bs, guint8** data, guint32 len)
 {
   GstBuffer *headbuf;
 
@@ -336,8 +335,8 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint8** data, guint32 len)
   return len;
 }
 
-guint8 *
-gst_bytestream_assemble (GstByteStream * bs, guint32 len)
+static guint8*
+gst_bytestream_assemble (GstByteStream *bs, guint32 len)
 {
   guint8 *data = g_malloc (len);
   GSList *walk;
@@ -372,9 +371,12 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
 }
 
 gboolean
-gst_bytestream_flush (GstByteStream * bs, guint32 len)
+gst_bytestream_flush (GstByteStream *bs, guint32 len)
 {
   bs_print ("flush: flushing %d bytes", len);
+
+  if (len == 0)
+    return TRUE;
 
   /* make sure we have enough */
   bs_print ("flush: there are %d bytes in the list", bs->listavail);
@@ -390,10 +392,13 @@ gst_bytestream_flush (GstByteStream * bs, guint32 len)
 }
 
 void
-gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
+gst_bytestream_flush_fast (GstByteStream *bs, guint32 len)
 {
   GstBuffer *headbuf;
 
+  if (len == 0)
+    return;
+		  
   g_assert (len <= bs->listavail);
 
   if (bs->assembled) {
@@ -457,10 +462,10 @@ gst_bytestream_seek (GstByteStream *bs, gint64 offset, GstSeekType method)
 
   bs_print ("bs: send event\n");
   if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (
-				  GST_FORMAT_BYTES | 
-				  (method & GST_SEEK_METHOD_MASK) | 
-				  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 
-				  offset))) 
+			  GST_FORMAT_BYTES | 
+			  (method & GST_SEEK_METHOD_MASK) | 
+			  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 
+			  offset))) 
   {
     gst_bytestream_flush_fast (bs, bs->listavail);
 
@@ -507,7 +512,7 @@ gst_bytestream_length (GstByteStream *bs)
 }
 
 guint32
-gst_bytestream_read (GstByteStream * bs, GstBuffer** buf, guint32 len)
+gst_bytestream_read (GstByteStream *bs, GstBuffer** buf, guint32 len)
 {
   guint32 len_peeked;
 
@@ -559,17 +564,16 @@ gst_bytestream_size_hint (GstByteStream *bs, guint32 size)
  */
 void
 gst_bytestream_get_status (GstByteStream *bs,
-			   guint32 *avail_out,
-			   GstEvent **event_out)
+			   guint32 	 *avail_out,
+			   GstEvent 	**event_out)
 {
   if (avail_out)
     *avail_out = bs->listavail;
 
-  if (event_out)
-    {
-      *event_out = bs->event;
-      bs->event = NULL;
-    }
+  if (event_out) {
+    *event_out = bs->event;
+    bs->event = NULL;
+  }
 }
 
 /**
