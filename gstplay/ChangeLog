@@ -1,3 +1,8 @@
+2001-06-06  Arik Devens  <arik@gnome.org>
+
+	* gstmediaplay.glade: Dissabled full-screen for the moment till it
+	gets fixed.
+
 2001-05-20  Arik Devens  <arik@gnome.org>
 
 	General code cleanup and moving bits around as well.
