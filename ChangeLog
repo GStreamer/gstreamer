@@ -1,3 +1,10 @@
+2004-03-19  David Schleef  <ds@schleef.org>
+
+	* ext/librfb/gstrfbsrc.c: (gst_rfbsrc_change_state),
+	(gst_rfbsrc_init), (gst_rfbsrc_getcaps), (gst_rfbsrc_fixate),
+	(gst_rfbsrc_link), (gst_rfbsrc_paint_rect), (gst_rfbsrc_get):
+	Improvements in caps negotiation.
+
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:
