@@ -67,11 +67,14 @@ static void gst_videoscale_16bit (GstVideoscale * scale, unsigned char *dest,
     unsigned char *src);
 
 static void gst_videoscale_scale_nearest_str1 (GstVideoscale * scale,
-    unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
+    unsigned char *dest, unsigned char *src, int sw, int sh, int ss, int dw,
+    int dh, int ds);
 static void gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
-    unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
+    unsigned char *dest, unsigned char *src, int sw, int sh, int ss, int dw,
+    int dh, int ds);
 static void gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
-    unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
+    unsigned char *dest, unsigned char *src, int sw, int sh, int ss, int dw,
+    int dh, int ds);
 static void gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
     unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
 static void gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
@@ -289,25 +292,37 @@ gst_videoscale_planar411 (GstVideoscale * scale, unsigned char *dest,
   int sh = scale->from_height;
   int dw = scale->to_width;
   int dh = scale->to_height;
+  int ss, ds;                   /* strides */
 
   GST_LOG_OBJECT (scale, "scaling planar 4:1:1 %dx%d to %dx%d", sw, sh, dw, dh);
 
-  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, dw, dh);
+  /* Y */
 
-  src += sw * sh;
-  dest += dw * dh;
+  ss = ROUND_UP_4 (sw);
+  ds = ROUND_UP_4 (dw);
 
-  dh = dh >> 1;
-  dw = dw >> 1;
-  sh = sh >> 1;
-  sw = sw >> 1;
+  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, ss, dw, dh, ds);
 
-  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, dw, dh);
+  src += ss * sh;
+  dest += ds * dh;
 
-  src += sw * sh;
-  dest += dw * dh;
+  /* Cb and Cr are 2x2, so divide widths and heights in half */
 
-  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, dw, dh);
+  /* we want to round up, so we add 1 before shifting */
+  dh = (dh + 1) >> 1;
+  dw = (dw + 1) >> 1;
+  sh = (sh + 1) >> 1;
+  sw = (sw + 1) >> 1;
+
+  ss = ROUND_UP_4 (sw);
+  ds = ROUND_UP_4 (dw);
+
+  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, ss, dw, dh, ds);
+
+  src += ss * sh;
+  dest += ds * dh;
+
+  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, ss, dw, dh, ds);
 }
 
 static void
@@ -318,10 +333,13 @@ gst_videoscale_planar400 (GstVideoscale * scale, unsigned char *dest,
   int sh = scale->from_height;
   int dw = scale->to_width;
   int dh = scale->to_height;
+  int ss, ds;                   /* strides */
 
   GST_LOG_OBJECT (scale, "scaling Y-only %dx%d to %dx%d", sw, sh, dw, dh);
 
-  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, dw, dh);
+  ss = ROUND_UP_4 (sw);
+  ds = ROUND_UP_4 (dw);
+  gst_videoscale_scale_nearest_str1 (scale, dest, src, sw, sh, ss, dw, dh, ds);
 }
 
 static void
@@ -332,15 +350,20 @@ gst_videoscale_packed422 (GstVideoscale * scale, unsigned char *dest,
   int sh = scale->from_height;
   int dw = scale->to_width;
   int dh = scale->to_height;
+  int ss, ds;                   /* strides */
 
   GST_LOG_OBJECT (scale, "scaling 4:2:2 %dx%d to %dx%d", sw, sh, dw, dh);
 
-  gst_videoscale_scale_nearest_str2 (scale, dest, src, sw, sh, dw, dh);
-  gst_videoscale_scale_nearest_str4 (scale, dest + 1, src + 1, sw / 2, sh,
-      dw / 2, dh);
-  gst_videoscale_scale_nearest_str4 (scale, dest + 3, src + 3, sw / 2, sh,
-      dw / 2, dh);
+  /* Y */
+  ss = ROUND_UP_4 (sw * 2);
+  ds = ROUND_UP_4 (dw * 2);
+  gst_videoscale_scale_nearest_str2 (scale, dest, src, sw, sh, ss, dw, dh, ds);
 
+  /* Cb and Cr */
+  gst_videoscale_scale_nearest_str4 (scale, dest + 1, src + 1, sw / 2, sh, ss,
+      dw / 2, dh, ds);
+  gst_videoscale_scale_nearest_str4 (scale, dest + 3, src + 3, sw / 2, sh, ss,
+      dw / 2, dh, ds);
 }
 
 static void
@@ -351,15 +374,21 @@ gst_videoscale_packed422rev (GstVideoscale * scale, unsigned char *dest,
   int sh = scale->from_height;
   int dw = scale->to_width;
   int dh = scale->to_height;
+  int ss, ds;                   /* strides */
 
   GST_LOG_OBJECT (scale, "scaling 4:2:2 %dx%d to %dx%d", sw, sh, dw, dh);
 
-  gst_videoscale_scale_nearest_str2 (scale, dest + 1, src, sw, sh, dw, dh);
-  gst_videoscale_scale_nearest_str4 (scale, dest, src + 1, sw / 2, sh, dw / 2,
-      dh);
-  gst_videoscale_scale_nearest_str4 (scale, dest + 2, src + 3, sw / 2, sh,
-      dw / 2, dh);
+  /* Y */
+  ss = ROUND_UP_4 (sw * 2);
+  ds = ROUND_UP_4 (dw * 2);
+  gst_videoscale_scale_nearest_str2 (scale, dest + 1, src + 1, sw, sh, ss, dw,
+      dh, ds);
 
+  /* Cb and Cr */
+  gst_videoscale_scale_nearest_str4 (scale, dest, src, sw / 2, sh, ss,
+      dw / 2, dh, ds);
+  gst_videoscale_scale_nearest_str4 (scale, dest + 2, src + 2, sw / 2, sh, ss,
+      dw / 2, dh, ds);
 }
 
 static void
@@ -567,13 +596,13 @@ gst_videoscale_scale_point_sample (GstVideoscale * scale, unsigned char *src,
 
 static void
 gst_videoscale_scale_nearest_str1 (GstVideoscale * scale,
-    unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh)
+    unsigned char *dest, unsigned char *src, int sw, int sh, int ss,
+    int dw, int dh, int ds)
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
   guchar *destp;
   guchar *srcp;
-  int sstride, dstride;
 
   GST_LOG_OBJECT (scale, "scaling nearest from %p to %p with dest width %d",
       src, dest, dw);
@@ -581,12 +610,10 @@ gst_videoscale_scale_nearest_str1 (GstVideoscale * scale,
   ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
-  sstride = sw;
-  dstride = dw;
 
   for (y = dh; y; y--) {
     if (ypos >= 0x10000) {
-      src += (ypos >> 16) * sstride;
+      src += (ypos >> 16) * ss;
       ypos &= 0xffff;
     }
 
@@ -603,7 +630,7 @@ gst_videoscale_scale_nearest_str1 (GstVideoscale * scale,
       *destp++ = *srcp;
       xpos += xinc;
     }
-    dest += dstride;
+    dest += ds;
 
     ypos += yinc;
   }
@@ -611,13 +638,13 @@ gst_videoscale_scale_nearest_str1 (GstVideoscale * scale,
 
 static void
 gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
-    unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh)
+    unsigned char *dest, unsigned char *src, int sw, int sh, int ss,
+    int dw, int dh, int ds)
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
   guchar *destp;
   guchar *srcp;
-  int sstride, dstride;
 
   GST_LOG_OBJECT (scale, "scaling nearest from %p to %p with dest width %d",
       src, dest, dw);
@@ -625,13 +652,11 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
   ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
-  sstride = sw * 2;
-  dstride = dw * 2;
 
   for (y = dh; y; y--) {
 
     if (ypos >= 0x10000) {
-      src += (ypos >> 16) * sstride;
+      src += (ypos >> 16) * ss;
       ypos &= 0xffff;
     }
 
@@ -649,7 +674,7 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
       destp += 2;
       xpos += xinc;
     }
-    dest += dstride;
+    dest += ds;
 
     ypos += yinc;
   }
@@ -657,13 +682,13 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
 
 static void
 gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
-    unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh)
+    unsigned char *dest, unsigned char *src, int sw, int sh, int ss,
+    int dw, int dh, int ds)
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
   guchar *destp;
   guchar *srcp;
-  int sstride, dstride;
 
   GST_LOG_OBJECT (scale, "scaling nearest from %p to %p with dest width %d",
       src, dest, dw);
@@ -671,13 +696,11 @@ gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
   ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
-  sstride = sw * 4;
-  dstride = dw * 4;
 
   for (y = dh; y; y--) {
 
     if (ypos >= 0x10000) {
-      src += (ypos >> 16) * sstride;
+      src += (ypos >> 16) * ss;
       ypos &= 0xffff;
     }
 
@@ -695,7 +718,7 @@ gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
       destp += 4;
       xpos += xinc;
     }
-    dest += dstride;
+    dest += ds;
 
     ypos += yinc;
   }
@@ -709,19 +732,19 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
   int xpos, xinc, x;
   guchar *destp;
   guchar *srcp;
-  int sstride, dstride;         /* row strides in bytes */
+  int ss, ds;                   /* row strides in bytes */
 
   GST_LOG_OBJECT (scale, "scaling nearest from %p to %p, destination width %d",
       src, dest, dw);
 
   /* FIXME: strides should be gotten from caps; for now we do it Just Like
      videotestsrc, which means round off to next multiple of 4 bytes */
-  sstride = sw * 2;
+  ss = sw * 2;
   if (sw % 2 == 1)
-    sstride += 2;
-  dstride = dw * 2;
+    ss += 2;
+  ds = dw * 2;
   if (dw % 2 == 1)
-    dstride += 2;
+    ds += 2;
 
   ypos = 0;
   yinc = (sh << 16) / dh;       /* 16 bit fixed point arithmetic */
@@ -731,7 +754,7 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
   for (y = dh; y; y--) {        /* faster than 0 .. dh */
 
     if (ypos >= 0x10000) {      /* ypos >= 1 ? */
-      src += (ypos >> 16) * sstride;    /* go down round(ypos) src lines */
+      src += (ypos >> 16) * ss; /* go down round(ypos) src lines */
       ypos &= 0xffff;           /* ypos %= 1 */
     }
 
@@ -751,7 +774,7 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
       destp += 2;               /* go right one destination pixel */
       xpos += xinc;
     }
-    dest += dstride;            /* go down one destination line */
+    dest += ds;                 /* go down one destination line */
 
     ypos += yinc;
   }
@@ -765,14 +788,14 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
   int xpos, xinc, x;
   guchar *destp;
   guchar *srcp;
-  int sstride, dstride;         /* row strides in bytes */
+  int ss, ds;                   /* row strides in bytes */
 
   GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
   /* FIXME: strides should be gotten from caps; for now we do it Just Like
      videotestsrc, which means round off to next multiple of 4 bytes */
-  sstride = ROUND_UP_4 (sw * 3);
-  dstride = ROUND_UP_4 (dw * 3);
+  ss = ROUND_UP_4 (sw * 3);
+  ds = ROUND_UP_4 (dw * 3);
 
   ypos = 0;
   yinc = (sh << 16) / dh;
@@ -781,7 +804,7 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
   for (y = dh; y; y--) {
 
     if (ypos >= 0x10000) {
-      src += (ypos >> 16) * sstride;
+      src += (ypos >> 16) * ss;
       ypos &= 0xffff;
     }
 
@@ -801,7 +824,7 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
       destp += 3;
       xpos += xinc;
     }
-    dest += dstride;
+    dest += ds;
 
     ypos += yinc;
   }
