@@ -161,6 +161,65 @@ name_pad_compare (gconstpointer a, gconstpointer b)
   return strcmp (name, gst_pad_get_name (pad)); /* returns 0 if match */
 }
 
+static GstCaps *
+gst_tee_getcaps (GstPad * pad)
+{
+  GstTee *tee = GST_TEE (gst_pad_get_parent (pad));
+
+  if (pad == tee->sinkpad) {
+    GstCaps *caps = gst_caps_new_any (), *tmp, *res;
+    const GList *pads;
+
+    for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+        pads != NULL; pads = pads->next) {
+      if (!GST_PAD_IS_SRC (pads->data))
+        continue;
+
+      tmp = gst_pad_get_allowed_caps (GST_PAD (pads->data));
+      res = gst_caps_intersect (caps, tmp);
+      gst_caps_free (tmp);
+      gst_caps_free (caps);
+      caps = res;
+    }
+
+    return caps;
+  } else {
+    return gst_pad_get_allowed_caps (tee->sinkpad);
+  }
+}
+
+static GstPadLinkReturn
+gst_tee_link (GstPad * pad, const GstCaps * caps)
+{
+  GstTee *tee = GST_TEE (gst_pad_get_parent (pad));
+
+  if (pad == tee->sinkpad) {
+    GstPadLinkReturn res;
+    const GList *pads;
+
+    GST_DEBUG_OBJECT (tee, "Forwarding link to all source pads");
+
+    for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+        pads != NULL; pads = pads->next) {
+      if (!GST_PAD_IS_SRC (pads->data))
+        continue;
+
+      res = gst_pad_try_set_caps (GST_PAD (pads->data), caps);
+      GST_DEBUG_OBJECT (tee, "Pad %s:%s gave response %d",
+          GST_DEBUG_PAD_NAME (GST_PAD (pads->data)), res);
+      if (GST_PAD_LINK_FAILED (res))
+        return res;
+    }
+
+    return GST_PAD_LINK_OK;
+  } else {
+    GST_DEBUG_OBJECT (tee, "Forwarding negotiation from source pad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
+
+    return gst_pad_try_set_caps (tee->sinkpad, caps);
+  }
+}
+
 static GstPad *
 gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * unused)
@@ -202,10 +261,8 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
-  gst_pad_set_link_function (srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
-  gst_pad_set_getcaps_function (srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_link_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_link));
+  gst_pad_set_getcaps_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_getcaps));
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 

@@ -1,3 +1,9 @@
+2005-01-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gsttee.c: (gst_tee_getcaps), (gst_tee_link),
+	(gst_tee_request_new_pad):
+	  Fix negotiation.
+
 2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* docs/random/omega/caps2:
