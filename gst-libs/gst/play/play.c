@@ -572,7 +572,8 @@ gst_play_get_sink_element (GstPlay * play,
     return element;
   }
 
-  elements = (GList *) gst_bin_get_list (GST_BIN (element));
+  /* FIXME, not MT safe */
+  elements = (GList *) GST_BIN (element)->children;
 
   /* traverse all elements looking for one without src pad */
 
@@ -588,7 +589,8 @@ gst_play_get_sink_element (GstPlay * play,
       if (GST_IS_ELEMENT (element))
         return element;
     } else {
-      pads = gst_element_get_pad_list (element);
+      /* FIXME, not MT safe */
+      pads = element->pads;
       has_src = FALSE;
       has_correct_type = FALSE;
       while (pads) {
@@ -631,7 +633,7 @@ gst_play_get_sink_element (GstPlay * play,
             }
           }
 
-          gst_caps_free (caps);
+          gst_caps_unref (caps);
 
           switch (sink_type) {
             case GST_PLAY_SINK_TYPE_AUDIO:
@@ -678,6 +680,8 @@ gst_play_get_sink_element (GstPlay * play,
  * Returns all elements that are used by @play implementing the given interface.
  *
  * Returns: a #GList of #GstElement implementing the interface.
+ *
+ * Not MT safe.
  */
 
 GList *
@@ -685,16 +689,24 @@ gst_play_get_all_by_interface (GstPlay * play, GType interface_type)
 {
   GstElement *videosink = NULL, *audiosink = NULL;
   GList *res = NULL;
+  GstIterator *it = NULL;
 
   g_object_get (G_OBJECT (play->priv->playbin),
       "video-sink", &videosink, "audio-sink", &audiosink, NULL);
 
   /* ehw... */
   if (videosink && GST_IS_BIN (videosink)) {
-    res = gst_bin_get_all_by_interface (GST_BIN (videosink), interface_type);
+    it = gst_bin_iterate_all_by_interface (GST_BIN (videosink), interface_type);
   }
   if (!res && audiosink && GST_IS_BIN (audiosink)) {
-    res = gst_bin_get_all_by_interface (GST_BIN (audiosink), interface_type);
+    it = gst_bin_iterate_all_by_interface (GST_BIN (audiosink), interface_type);
+  }
+  if (it != NULL) {
+    gpointer data;
+
+    while (gst_iterator_next (it, &data) == GST_ITERATOR_OK) {
+      res = g_list_prepend (res, data);
+    }
   }
 
   return res;

@@ -91,12 +91,11 @@ static GstElementStateReturn buffer_frames_convert_change_state (GstElement *
     element);
 
 static GstCaps *buffer_frames_convert_getcaps (GstPad * pad);
-static GstPadLinkReturn buffer_frames_convert_link (GstPad * pad,
-    const GstCaps * caps);
-static GstCaps *buffer_frames_convert_fixate (GstPad * pad,
-    const GstCaps * caps);
+static gboolean buffer_frames_convert_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *buffer_frames_convert_fixate (GstPad * pad, GstCaps * caps);
 
-static void buffer_frames_convert_chain (GstPad * sinkpad, GstData * _data);
+static GstFlowReturn buffer_frames_convert_chain (GstPad * sinkpad,
+    GstBuffer * buffer);
 
 static GstElementClass *parent_class = NULL;
 
@@ -153,17 +152,17 @@ buffer_frames_convert_init (BufferFramesConvert * this)
   this->sinkpad = gst_pad_new_from_template
       (gst_static_pad_template_get (&sink_static_template), "sink");
   gst_element_add_pad (GST_ELEMENT (this), this->sinkpad);
-  gst_pad_set_link_function (this->sinkpad, buffer_frames_convert_link);
+  gst_pad_set_setcaps_function (this->sinkpad, buffer_frames_convert_setcaps);
   gst_pad_set_getcaps_function (this->sinkpad, buffer_frames_convert_getcaps);
   gst_pad_set_chain_function (this->sinkpad, buffer_frames_convert_chain);
-  gst_pad_set_fixate_function (this->sinkpad, buffer_frames_convert_fixate);
+  gst_pad_set_fixatecaps_function (this->sinkpad, buffer_frames_convert_fixate);
 
   this->srcpad = gst_pad_new_from_template
       (gst_static_pad_template_get (&src_static_template), "src");
   gst_element_add_pad (GST_ELEMENT (this), this->srcpad);
-  gst_pad_set_link_function (this->srcpad, buffer_frames_convert_link);
+  gst_pad_set_setcaps_function (this->srcpad, buffer_frames_convert_setcaps);
   gst_pad_set_getcaps_function (this->srcpad, buffer_frames_convert_getcaps);
-  gst_pad_set_fixate_function (this->sinkpad, buffer_frames_convert_fixate);
+  gst_pad_set_fixatecaps_function (this->sinkpad, buffer_frames_convert_fixate);
 
   this->in_buffer_samples = -1;
   this->out_buffer_samples = -1;
@@ -221,7 +220,7 @@ buffer_frames_convert_getcaps (GstPad * pad)
 }
 
 static GstCaps *
-buffer_frames_convert_fixate (GstPad * pad, const GstCaps * caps)
+buffer_frames_convert_fixate (GstPad * pad, GstCaps * caps)
 {
   GstCaps *newcaps;
   GstStructure *structure;
@@ -235,14 +234,15 @@ buffer_frames_convert_fixate (GstPad * pad, const GstCaps * caps)
     return newcaps;
   }
 
-  gst_caps_free (newcaps);
+  gst_caps_unref (newcaps);
 
   return NULL;
 }
 
-static GstPadLinkReturn
-buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+buffer_frames_convert_setcaps (GstPad * pad, GstCaps * caps)
 {
+#if 0
   BufferFramesConvert *this;
   GstCaps *othercaps;
   GstPad *otherpad;
@@ -255,7 +255,7 @@ buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
   otherpad = pad == this->srcpad ? this->sinkpad : this->srcpad;
 
   /* first try to act as a passthrough */
-  ret = gst_pad_try_set_caps (otherpad, caps);
+  ret = gst_pad_set_caps (otherpad, caps);
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     this->passthrough = TRUE;
     return ret;
@@ -266,10 +266,8 @@ buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
   gst_caps_set_simple (othercaps, "buffer-frames", GST_TYPE_INT_RANGE, 0,
       G_MAXINT, NULL);
   ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
-  gst_caps_free (othercaps);
   if (GST_PAD_LINK_FAILED (ret))
     return ret;
-  othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
 
   /* it's ok, let's record our data */
   sinkstructure =
@@ -284,16 +282,16 @@ buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (sinkstructure, "channels", &numchannels);
   this->in_buffer_samples *= numchannels;
   this->out_buffer_samples *= numchannels;
-  gst_caps_free (othercaps);
 
   if (this->out_buffer_samples == 0)
     this->passthrough = TRUE;
+#endif
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
-static void
-buffer_frames_convert_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+buffer_frames_convert_chain (GstPad * pad, GstBuffer * buf)
 {
   BufferFramesConvert *this;
   GstBuffer *buf_in, *buf_out;
@@ -305,11 +303,10 @@ buffer_frames_convert_chain (GstPad * pad, GstData * _data)
   this = (BufferFramesConvert *) GST_OBJECT_PARENT (pad);
 
   if (this->passthrough) {
-    gst_pad_push (this->srcpad, _data);
-    return;
+    return gst_pad_push (this->srcpad, buf);
   }
 
-  buf_in = (GstBuffer *) _data;
+  buf_in = buf;
   data_in = (gfloat *) GST_BUFFER_DATA (buf_in);
   samples_in = samples_in_remaining =
       GST_BUFFER_SIZE (buf_in) / sizeof (gfloat);
@@ -331,12 +328,12 @@ buffer_frames_convert_chain (GstPad * pad, GstData * _data)
     if (!samples_out_remaining) {
       this->buf_out = NULL;
       this->samples_out_remaining = 0;
-      gst_pad_push (this->srcpad, (GstData *) buf_out);
+      gst_pad_push (this->srcpad, buf_out);
     } else {
       /* we used up the incoming samples, but didn't fill our buffer */
       this->samples_out_remaining = samples_out_remaining;
       gst_buffer_unref (buf_in);
-      return;
+      return GST_FLOW_OK;
     }
   }
 
@@ -347,7 +344,7 @@ buffer_frames_convert_chain (GstPad * pad, GstData * _data)
         out_buffer_samples * sizeof (gfloat));
     data_in += out_buffer_samples;
     samples_in_remaining -= out_buffer_samples;
-    gst_pad_push (this->srcpad, (GstData *) buf_out);
+    gst_pad_push (this->srcpad, buf_out);
   }
 
   /* if there's an event coming next, just push what we have */
@@ -357,13 +354,13 @@ buffer_frames_convert_chain (GstPad * pad, GstData * _data)
         gst_buffer_create_sub (buf_in,
         (samples_in - samples_in_remaining) * sizeof (gfloat),
         samples_in_remaining * sizeof (gfloat));
-    gst_pad_push (this->srcpad, (GstData *) buf_out);
+    gst_pad_push (this->srcpad, buf_out);
   } else {
     /* otherwise make a leftover buffer if it's necessary */
     if (samples_in_remaining) {
       buf_out =
           gst_pad_alloc_buffer (this->srcpad, 0,
-          out_buffer_samples * sizeof (gfloat));
+          out_buffer_samples * sizeof (gfloat), GST_PAD_CAPS (this->srcpad));
       data_out = (gfloat *) GST_BUFFER_DATA (buf_out);
       this->buf_out = buf_out;
       this->samples_out_remaining = out_buffer_samples - samples_in_remaining;
@@ -373,4 +370,6 @@ buffer_frames_convert_chain (GstPad * pad, GstData * _data)
   }
 
   gst_buffer_unref (buf_in);
+
+  return GST_FLOW_OK;
 }

@@ -27,17 +27,6 @@
 
 static GstElementClass *parent_class = NULL;
 
-/* Private methods */
-
-static void
-gst_videosink_set_clock (GstElement * element, GstClock * clock)
-{
-  GstVideoSink *videosink;
-
-  videosink = GST_VIDEOSINK (element);
-
-  videosink->clock = clock;
-}
 
 /* Initing stuff */
 
@@ -46,7 +35,6 @@ gst_videosink_init (GstVideoSink * videosink)
 {
   videosink->width = 0;
   videosink->height = 0;
-  videosink->clock = NULL;
 }
 
 static void
@@ -59,8 +47,6 @@ gst_videosink_class_init (GstVideoSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gstelement_class->set_clock = gst_videosink_set_clock;
 }
 
 /* Public methods */
@@ -83,7 +69,7 @@ gst_videosink_get_type (void)
       (GInstanceInitFunc) gst_videosink_init,
     };
 
-    videosink_type = g_type_register_static (GST_TYPE_ELEMENT,
+    videosink_type = g_type_register_static (GST_TYPE_BASESINK,
         "GstVideoSink", &videosink_info, 0);
   }
 

@@ -9,4 +9,4 @@ libgstvideoinclude_HEADERS = video.h videosink.h
 
 libgstvideo_la_LIBADD =
 libgstvideo_la_CFLAGS = $(GST_CFLAGS)
-libgstvideo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstvideo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) ../../../../gstreamer-NEWHEAD/gst/base/libgstbase.la

@@ -65,12 +65,12 @@ main (gint argc, gchar ** argv)
     g_assert (caps);
     if (!gst_element_link_filtered (src, GST_ELEMENT (c), caps))
       g_assert_not_reached ();
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
     caps = gst_caps_from_string (tests[i].srccaps);
     g_assert (caps);
     if (!gst_element_link_filtered (GST_ELEMENT (c), sink, caps))
       g_assert_not_reached ();
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
     if (!gst_element_set_state (bin, GST_STATE_PLAYING))
       g_assert_not_reached ();
     g_assert (c->srccaps.channels <= 6);

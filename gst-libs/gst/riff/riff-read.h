@@ -24,90 +24,58 @@
 
 #include <glib.h>
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+
+#include "riff-ids.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RIFF_READ \
-  (gst_riff_read_get_type ())
-#define GST_RIFF_READ(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_RIFF_READ, GstRiffRead))
-#define GST_RIFF_READ_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_RIFF_READ, GstRiffReadClass))
-#define GST_IS_RIFF_READ(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RIFF_READ))
-#define GST_IS_RIFF_READ_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RIFF_READ))
-#define GST_RIFF_READ_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RIFF_READ, GstRiffReadClass))
-
-typedef struct _GstRiffLevel {
-  guint64 start,
-	  length;
-} GstRiffLevel;
-
-typedef struct _GstRiffRead {
-  GstElement parent;
-
-  GstPad *sinkpad;
-  GstByteStream *bs;
-
-  GList *level;
-} GstRiffRead;
-
-typedef struct _GstRiffReadClass {
-  GstElementClass parent;
-} GstRiffReadClass;
-
-GType    gst_riff_read_get_type  (void);
-
-guint32  gst_riff_peek_tag       (GstRiffRead *riff,
-				  guint       *level_up);
-guint32  gst_riff_peek_list      (GstRiffRead *riff);
-gboolean gst_riff_peek_head      (GstRiffRead *riff,
-				  guint32     *tag,
-				  guint32     *length,
-				  guint       *level_up);
-
-GstEvent *gst_riff_read_seek      (GstRiffRead *riff,
-				  guint64      offset);
-gboolean gst_riff_read_skip      (GstRiffRead *riff);
-gboolean gst_riff_read_data      (GstRiffRead *riff,
-				  guint32     *tag,
-				  GstBuffer  **buf);
-gboolean gst_riff_read_ascii     (GstRiffRead *riff,
-				  guint32     *tag,
-				  gchar      **str);
-gboolean gst_riff_read_list      (GstRiffRead *riff,
-				  guint32     *tag);
-gboolean gst_riff_read_header    (GstRiffRead *read,
-				  guint32     *doctype);
-GstBuffer *gst_riff_read_element_data (GstRiffRead *riff,
-				       guint        length,
-				       guint       *got_bytes);
-GstBuffer *gst_riff_peek_element_data (GstRiffRead *riff,
-				       guint        length,
-				       guint       *got_bytes);
 /*
- * Utility functions (including byteswapping).
+ * Operate using pull_range().
  */
-gboolean gst_riff_read_strh      (GstRiffRead *riff,
-				  gst_riff_strh **header);
-gboolean gst_riff_read_strf_vids (GstRiffRead *riff,
-				  gst_riff_strf_vids **header);
-gboolean gst_riff_read_strf_vids_with_data
-				 (GstRiffRead *riff,
-				  gst_riff_strf_vids **header,
-				  GstBuffer  **extradata);
-gboolean gst_riff_read_strf_auds (GstRiffRead *riff,
-				  gst_riff_strf_auds **header);
-gboolean gst_riff_read_strf_auds_with_data
-				 (GstRiffRead *riff,
-				  gst_riff_strf_auds **header,
-				  GstBuffer **extradata);
-gboolean gst_riff_read_strf_iavs (GstRiffRead *riff,
-				  gst_riff_strf_iavs **header);
-gboolean gst_riff_read_info      (GstRiffRead *riff);
+
+GstFlowReturn gst_riff_read_chunk   (GstElement * element,
+				     GstPad     * pad,
+				     guint64    * offset,
+				     guint32    * fourcc,
+				     GstBuffer ** chunk_data);
+
+/*
+ * These functions operate on provided data (the caller is
+ * supposed to strip the chunk headers). The buffer is
+ * provided by the caller, the strf/strh/data are filled in
+ * by the function.
+ */
+
+gboolean gst_riff_parse_chunk	    (GstElement * element,
+				     GstBuffer  * buf,
+				     guint      * offset,
+				     guint32    * fourcc,
+				     GstBuffer ** chunk_data);
+
+gboolean gst_riff_parse_file_header (GstElement * element,
+				     GstBuffer  * buf,
+				     guint32    * doctype);
+
+gboolean gst_riff_parse_strh	    (GstElement     * element,
+				     GstBuffer      * buf,
+				     gst_riff_strh ** strh);
+
+gboolean gst_riff_parse_strf_vids   (GstElement          * element,
+				     GstBuffer           * buf,
+				     gst_riff_strf_vids ** strf,
+				     GstBuffer          ** data);
+gboolean gst_riff_parse_strf_auds   (GstElement          * element,
+				     GstBuffer           * buf,
+				     gst_riff_strf_auds ** strf,
+				     GstBuffer          ** data);
+gboolean gst_riff_parse_strf_iavs   (GstElement          * element,
+				     GstBuffer           * buf,
+				     gst_riff_strf_iavs ** strf,
+				     GstBuffer          ** data);
+
+void gst_riff_parse_info	    (GstElement  * element,
+				     GstBuffer   * buf,
+				     GstTagList ** taglist);
 
 G_END_DECLS
 

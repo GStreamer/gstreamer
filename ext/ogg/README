@@ -1,9 +1,110 @@
+ogg demuxer
+-----------
+
+This ogg demuxer has two modes of operation, which both share a significant
+amount of code. The first mode is the streaming mode which is automatically 
+selected when the demuxer is connected to a non-getrange based element. When 
+connected to a getrange based element the ogg demuxer can do full seeking
+with great efficiency.
+
+1) the streaming mode.
+
+  In this mode, the ogg demuxer receives buffers in the _chain() function which
+  are then simply submited to the ogg sync layer. Pages are then processed when the
+  sync layer detects them, pads are created for new chains and packets are sent to
+  the peer elements of the pads.
+
+  In this mode, no seeking is possible. This is the typical case when the stream is
+  read from a network source.
+
+  In this mode, no setup is done at startup, the pages are just read and decoded.
+  A new logical chain is detected when one of the pages has the BOS flag set. At this
+  point the existing pads are removed and new pads are created for all the logical
+  streams in this new chain.
+  
+
+2) the random access mode.
+
+  In this mode, the ogg file is first scanned to detect the position and length of
+  all chains. This scanning is performed using a recursive binary search algorithm
+  that is explained below.
+
+    find_chains(start, end)
+    {
+      ret1 = read_next_pages (start);
+      ret2 = read_prev_page (end);
+      
+      if (WAS_HEADER (ret1)) {
+      }
+      else {
+      }
+
+    }
+
+  a) read first and last pages
+
+   start                                                      end
+    V                                                          V 
+    +-----------------------+-------------+--------------------+
+    |  111                  |  222        |  333               |
+   BOS                     BOS           BOS                  EOS
+
+   
+   after reading start, serial 111, BOS, chain[0] = 111
+   after reading end,   serial 333, EOS
+
+   start serialno != end serialno, binary search start, (end-start)/2
+
+   start                    bisect                            end
+    V                         V                                V 
+    +-----------------------+-------------+--------------------+
+    |  111                  |  222        |  333               |
+
+   
+   after reading start, serial 111, BOS, chain[0] = 111
+   after reading end,   serial 222, EOS
+
+   while (
+
+
+
+testcases
+---------
+    
+ a) stream without BOS
+
+    +----------------------------------------------------------+
+       111                                                     |
+                                                              EOS
+
+ b) chained stream, first chain without BOS
+  
+    +-------------------+--------------------------------------+
+       111              | 222                                  |
+                       BOS                                    EOS
+
+
+ c) chained stream
+  
+    +-------------------+--------------------------------------+
+    |  111              | 222                                  |
+   BOS                 BOS                                    EOS
+
+
+ d) chained stream, second without BOS
+
+    +-------------------+--------------------------------------+
+    |  111              | 222                                  |
+   BOS                                                        EOS
+
+
+
 ogg and the granulepos
 ----------------------
 
 an ogg streams contains pages with a serial number and a granule pos. The granulepos
-is a number that is codec specific and denotes the 'position' of the last packet
-in that page.
+is a number that is codec specific and denotes the 'position' of the last sample in
+the last packet in that page.
 
 ogg has therefore no notion about time, it only knows about bytes and granule positions.
 

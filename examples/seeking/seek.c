@@ -1,6 +1,3 @@
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -20,11 +17,17 @@ static gboolean elem_seek = FALSE;
 static gboolean verbose = FALSE;
 
 static guint update_id;
+static guint seek_timeout_id = 0;
+static gulong changed_id;
 
 //#define SOURCE "gnomevfssrc"
-#define SOURCE "filesrc"
+#define SOURCE "gnomevfssrc"
 
 #define UPDATE_INTERVAL 500
+
+/* number of milliseconds to play for after a seek */
+#define SCRUB_TIME 250
+#define SCRUB
 
 #define THREAD
 #define PAD_SEEK
@@ -54,13 +57,13 @@ dynamic_link (GstPadTemplate * templ, GstPad * newpad, gpointer data)
 {
   dyn_link *connect = (dyn_link *) data;
 
-  if (!strcmp (gst_pad_get_name (newpad), connect->padname)) {
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gst_bin_add (GST_BIN (pipeline), connect->bin);
+  if (connect->padname == NULL ||
+      !strcmp (gst_pad_get_name (newpad), connect->padname)) {
+    if (connect->bin)
+      gst_bin_add (GST_BIN (pipeline), connect->bin);
     gst_pad_link (newpad, connect->target);
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    seekable_pads = g_list_prepend (seekable_pads, newpad);
+    //seekable_pads = g_list_prepend (seekable_pads, newpad);
     rate_pads = g_list_prepend (rate_pads, newpad);
   }
 }
@@ -91,7 +94,7 @@ make_mod_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("modplug", "decoder");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -122,8 +125,8 @@ make_dv_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("dvdec", "decoder");
-  videosink = gst_element_factory_make_or_warn (DEFAULT_VIDEOSINK, "v_sink");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "a_sink");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -159,7 +162,7 @@ make_wav_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("wavparse", "decoder");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -190,7 +193,7 @@ make_flac_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("flacdec", "decoder");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -221,7 +224,7 @@ make_sid_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("siddec", "decoder");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -276,25 +279,35 @@ make_parse_pipeline (const gchar * location)
 static GstElement *
 make_vorbis_pipeline (const gchar * location)
 {
-  GstElement *pipeline;
-  GstElement *src, *decoder, *audiosink;
+  GstElement *pipeline, *audio_bin;
+  GstElement *src, *demux, *decoder, *convert, *audiosink;
   GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
-  decoder = gst_element_factory_make_or_warn ("vorbisfile", "decoder");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "sink");
+  demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
+  decoder = gst_element_factory_make_or_warn ("vorbisdec", "decoder");
+  convert = gst_element_factory_make_or_warn ("audioconvert", "convert");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   g_object_set (G_OBJECT (audiosink), "sync", TRUE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
-  gst_bin_add (GST_BIN (pipeline), src);
-  gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (pipeline), audiosink);
+  audio_bin = gst_bin_new ("a_decoder_bin");
 
-  gst_element_link (src, decoder);
-  gst_element_link (decoder, audiosink);
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), demux);
+  gst_bin_add (GST_BIN (audio_bin), decoder);
+  gst_bin_add (GST_BIN (audio_bin), convert);
+  gst_bin_add (GST_BIN (audio_bin), audiosink);
+  gst_bin_add (GST_BIN (pipeline), audio_bin);
+
+  gst_element_link (src, demux);
+  gst_element_link (decoder, convert);
+  gst_element_link (convert, audiosink);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (decoder, "sink"), NULL);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -305,10 +318,184 @@ make_vorbis_pipeline (const gchar * location)
 }
 
 static GstElement *
+make_theora_pipeline (const gchar * location)
+{
+  GstElement *pipeline, *video_bin;
+  GstElement *src, *demux, *decoder, *convert, *videosink;
+  GstElement *queue;
+  GstPad *seekable;
+
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
+  queue = gst_element_factory_make_or_warn ("queue", "queue");
+  decoder = gst_element_factory_make_or_warn ("theoradec", "decoder");
+  convert = gst_element_factory_make_or_warn ("ffmpegcolorspace", "convert");
+  videosink = gst_element_factory_make_or_warn ("xvimagesink", "sink");
+
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  video_bin = gst_bin_new ("v_decoder_bin");
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), demux);
+  gst_bin_add (GST_BIN (pipeline), queue);
+  gst_bin_add (GST_BIN (video_bin), decoder);
+  gst_bin_add (GST_BIN (video_bin), convert);
+  gst_bin_add (GST_BIN (video_bin), videosink);
+  gst_bin_add (GST_BIN (pipeline), video_bin);
+
+  gst_element_link (src, demux);
+  gst_element_link (queue, decoder);
+  gst_element_link (decoder, convert);
+  gst_element_link (convert, videosink);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (queue, "sink"), NULL);
+
+  seekable = gst_element_get_pad (decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement *
+make_vorbis_theora_pipeline (const gchar * location)
+{
+  GstElement *pipeline, *audio_bin, *video_bin;
+  GstElement *src, *demux, *a_decoder, *a_convert, *v_decoder, *v_convert;
+  GstElement *audiosink, *videosink;
+  GstElement *a_queue, *v_queue;
+  GstPad *seekable;
+
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), demux);
+  gst_element_link (src, demux);
+
+  audio_bin = gst_bin_new ("a_decoder_bin");
+  a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
+  a_decoder = gst_element_factory_make_or_warn ("vorbisdec", "a_dec");
+  a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+
+  gst_element_link (a_queue, a_decoder);
+  gst_element_link (a_decoder, a_convert);
+  gst_element_link (a_convert, audiosink);
+
+  gst_bin_add (GST_BIN (audio_bin), a_queue);
+  gst_bin_add (GST_BIN (audio_bin), a_decoder);
+  gst_bin_add (GST_BIN (audio_bin), a_convert);
+  gst_bin_add (GST_BIN (audio_bin), audiosink);
+
+  gst_bin_add (GST_BIN (pipeline), audio_bin);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (a_queue, "sink"), NULL);
+
+  video_bin = gst_bin_new ("v_decoder_bin");
+  v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
+  v_decoder = gst_element_factory_make_or_warn ("theoradec", "v_dec");
+  v_convert =
+      gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
+  videosink = gst_element_factory_make_or_warn ("xvimagesink", "v_sink");
+  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
+
+  gst_bin_add (GST_BIN (video_bin), v_queue);
+  gst_bin_add (GST_BIN (video_bin), v_decoder);
+  gst_bin_add (GST_BIN (video_bin), v_convert);
+  gst_bin_add (GST_BIN (video_bin), videosink);
+
+  gst_bin_add (GST_BIN (pipeline), video_bin);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (v_queue, "sink"), NULL);
+
+  seekable = gst_element_get_pad (a_decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads =
+      g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement *
+make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
+{
+  GstElement *pipeline, *audio_bin, *video_bin;
+  GstElement *src, *demux, *a_decoder, *a_convert, *v_decoder, *v_convert;
+  GstElement *audiosink, *videosink;
+  GstElement *a_queue, *v_queue;
+  GstPad *seekable;
+
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  demux = gst_element_factory_make_or_warn ("avidemux", "demux");
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), demux);
+  gst_element_link (src, demux);
+
+  audio_bin = gst_bin_new ("a_decoder_bin");
+  a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
+  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
+  a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+
+  gst_element_link (a_queue, a_decoder);
+  gst_element_link (a_decoder, a_convert);
+  gst_element_link (a_convert, audiosink);
+
+  gst_bin_add (GST_BIN (audio_bin), a_queue);
+  gst_bin_add (GST_BIN (audio_bin), a_decoder);
+  gst_bin_add (GST_BIN (audio_bin), a_convert);
+  gst_bin_add (GST_BIN (audio_bin), audiosink);
+
+  gst_bin_add (GST_BIN (pipeline), audio_bin);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (a_queue, "sink"), NULL);
+
+  video_bin = gst_bin_new ("v_decoder_bin");
+  v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
+  v_decoder = gst_element_factory_make_or_warn ("ffdec_msmpeg4", "v_dec");
+  v_convert =
+      gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
+  videosink = gst_element_factory_make_or_warn ("xvimagesink", "v_sink");
+  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
+
+  gst_bin_add (GST_BIN (video_bin), v_queue);
+  gst_bin_add (GST_BIN (video_bin), v_decoder);
+  gst_bin_add (GST_BIN (video_bin), v_convert);
+  gst_bin_add (GST_BIN (video_bin), videosink);
+
+  gst_bin_add (GST_BIN (pipeline), video_bin);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (v_queue, "sink"), NULL);
+
+  seekable = gst_element_get_pad (a_decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads =
+      g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement *
 make_mp3_pipeline (const gchar * location)
 {
   GstElement *pipeline;
-  GstElement *src, *decoder, *audiosink, *queue, *audio_thread;
+  GstElement *src, *decoder, *osssink, *queue;
   GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
@@ -316,24 +503,21 @@ make_mp3_pipeline (const gchar * location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("mad", "dec");
   queue = gst_element_factory_make_or_warn ("queue", "queue");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "sink");
+  osssink = gst_element_factory_make_or_warn ("osssink", "sink");
 
-  audio_thread = gst_thread_new ("a_decoder_thread");
-
-  seekable_elements = g_list_prepend (seekable_elements, audiosink);
+  seekable_elements = g_list_prepend (seekable_elements, osssink);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
-  g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
+  g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (audio_thread), queue);
-  gst_bin_add (GST_BIN (audio_thread), audiosink);
-  gst_bin_add (GST_BIN (pipeline), audio_thread);
+  gst_bin_add (GST_BIN (pipeline), queue);
+  gst_bin_add (GST_BIN (pipeline), osssink);
 
   gst_element_link (src, decoder);
   gst_element_link (decoder, queue);
-  gst_element_link (queue, audiosink);
+  gst_element_link (queue, osssink);
 
   seekable = gst_element_get_pad (queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -348,8 +532,7 @@ make_avi_pipeline (const gchar * location)
 {
   GstElement *pipeline, *audio_bin, *video_bin;
   GstElement *src, *demux, *a_decoder, *v_decoder, *audiosink, *videosink;
-  GstElement *a_queue = NULL, *audio_thread = NULL, *v_queue =
-      NULL, *video_thread = NULL;
+  GstElement *a_queue = NULL, *v_queue = NULL;
   GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
@@ -366,16 +549,14 @@ make_avi_pipeline (const gchar * location)
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
-  audio_thread = gst_thread_new ("a_decoder_thread");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
-  gst_bin_add (GST_BIN (audio_bin), audio_thread);
-  gst_bin_add (GST_BIN (audio_thread), a_queue);
-  gst_bin_add (GST_BIN (audio_thread), audiosink);
+  gst_bin_add (GST_BIN (audio_bin), a_queue);
+  gst_bin_add (GST_BIN (audio_bin), audiosink);
   gst_element_set_state (audio_bin, GST_STATE_PAUSED);
 
   setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
@@ -391,8 +572,7 @@ make_avi_pipeline (const gchar * location)
   //v_decoder = gst_element_factory_make_or_warn ("identity", "v_dec");
   //v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
   v_decoder = gst_element_factory_make_or_warn ("ffmpegdecall", "v_dec");
-  video_thread = gst_thread_new ("v_decoder_thread");
-  videosink = gst_element_factory_make_or_warn (DEFAULT_VIDEOSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   //videosink = gst_element_factory_make_or_warn ("fakesink", "v_sink");
   //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
@@ -400,9 +580,8 @@ make_avi_pipeline (const gchar * location)
   gst_element_link (v_decoder, v_queue);
   gst_element_link (v_queue, videosink);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
-  gst_bin_add (GST_BIN (video_bin), video_thread);
-  gst_bin_add (GST_BIN (video_thread), v_queue);
-  gst_bin_add (GST_BIN (video_thread), videosink);
+  gst_bin_add (GST_BIN (video_bin), v_queue);
+  gst_bin_add (GST_BIN (video_bin), videosink);
 
   gst_element_set_state (video_bin, GST_STATE_PAUSED);
 
@@ -424,7 +603,7 @@ make_mpeg_pipeline (const gchar * location)
   GstElement *pipeline, *audio_bin, *video_bin;
   GstElement *src, *demux, *a_decoder, *v_decoder, *v_filter;
   GstElement *audiosink, *videosink;
-  GstElement *a_queue, *audio_thread, *v_queue, *video_thread;
+  GstElement *a_queue, *v_queue;
   GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
@@ -443,16 +622,14 @@ make_mpeg_pipeline (const gchar * location)
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
-  audio_thread = gst_thread_new ("a_decoder_thread");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
-  gst_bin_add (GST_BIN (audio_bin), audio_thread);
-  gst_bin_add (GST_BIN (audio_thread), a_queue);
-  gst_bin_add (GST_BIN (audio_thread), audiosink);
+  gst_bin_add (GST_BIN (audio_bin), a_queue);
+  gst_bin_add (GST_BIN (audio_bin), audiosink);
 
   setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
           "sink"), audio_bin);
@@ -465,16 +642,15 @@ make_mpeg_pipeline (const gchar * location)
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
-  video_thread = gst_thread_new ("v_decoder_thread");
   //g_object_set (G_OBJECT (video_thread), "priority", 2, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn (DEFAULT_VIDEOSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   gst_element_link_many (v_decoder, v_queue, v_filter, NULL);
 
   gst_element_link (v_filter, videosink);
-  gst_bin_add_many (GST_BIN (video_bin), v_decoder, video_thread, NULL);
-  gst_bin_add_many (GST_BIN (video_thread), v_queue, v_filter, videosink, NULL);
+  gst_bin_add_many (GST_BIN (video_bin), v_decoder, NULL);
+  gst_bin_add_many (GST_BIN (video_bin), v_queue, v_filter, videosink, NULL);
 
   setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder,
           "sink"), video_bin);
@@ -494,7 +670,7 @@ make_mpegnt_pipeline (const gchar * location)
   GstElement *pipeline, *audio_bin, *video_bin;
   GstElement *src, *demux, *a_decoder, *v_decoder, *v_filter;
   GstElement *audiosink, *videosink;
-  GstElement *a_queue, *audio_thread;
+  GstElement *a_queue;
   GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
@@ -513,17 +689,15 @@ make_mpegnt_pipeline (const gchar * location)
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
-  audio_thread = gst_thread_new ("a_decoder_thread");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  audiosink = gst_element_factory_make_or_warn (DEFAULT_AUDIOSINK, "a_sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
-  gst_bin_add (GST_BIN (audio_bin), audio_thread);
-  gst_bin_add (GST_BIN (audio_thread), a_queue);
-  gst_bin_add (GST_BIN (audio_thread), audiosink);
+  gst_bin_add (GST_BIN (audio_bin), a_queue);
+  gst_bin_add (GST_BIN (audio_bin), audiosink);
 
   setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
           "sink"), audio_bin);
@@ -537,7 +711,7 @@ make_mpegnt_pipeline (const gchar * location)
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn (DEFAULT_VIDEOSINK, "v_sink");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   gst_element_link_many (v_decoder, v_filter, videosink, NULL);
 
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
@@ -554,45 +728,15 @@ make_mpegnt_pipeline (const gchar * location)
   return pipeline;
 }
 
-static GstCaps *
-fixate (GstPad * pad, const GstCaps * in_caps, gpointer data)
-{
-  GstCaps *caps;
-  GstStructure *s;
-
-  if (gst_caps_get_size (in_caps) > 1)
-    return NULL;
-
-  /* nothing if fixed already */
-  s = gst_caps_get_structure (in_caps, 0);
-  if (gst_structure_has_field_typed (s, "width", G_TYPE_INT) &&
-      gst_structure_has_field_typed (s, "height", G_TYPE_INT) &&
-      gst_structure_has_field_typed (s, "framerate", G_TYPE_DOUBLE))
-    return NULL;
-
-  /* fixate */
-  caps = gst_caps_copy (in_caps);
-  s = gst_caps_get_structure (caps, 0);
-  gst_caps_structure_fixate_field_nearest_int (s, "width", 200);
-  gst_caps_structure_fixate_field_nearest_int (s, "height", 150);
-  gst_caps_structure_fixate_field_nearest_double (s, "framerate", 10.0);
-
-  return caps;
-}
-
 static GstElement *
 make_playerbin_pipeline (const gchar * location)
 {
-  GstElement *player, *vis;
+  GstElement *player;
 
   player = gst_element_factory_make ("playbin", "player");
-  vis = gst_element_factory_make ("synaesthesia", "vis");
   g_assert (player);
-  g_assert (vis);
 
-  g_signal_connect (gst_element_get_pad (vis, "src"), "fixate",
-      G_CALLBACK (fixate), NULL);
-  g_object_set (G_OBJECT (player), "uri", location, "vis-plugin", vis, NULL);
+  g_object_set (G_OBJECT (player), "uri", location, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, player);
 
@@ -791,7 +935,7 @@ update_scale (gpointer data)
   gboolean res;
 
   duration = 0;
-  clock = gst_bin_get_clock (GST_BIN (pipeline));
+  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
 
   if (elem_seek) {
     if (seekable_elements) {
@@ -843,36 +987,21 @@ update_scale (gpointer data)
   return TRUE;
 }
 
+static void do_seek (GtkWidget * widget);
+
+#ifdef SCRUB
 static gboolean
-iterate (gpointer data)
-{
-  gboolean res;
-
-  if (!GST_FLAG_IS_SET (GST_OBJECT (data), GST_BIN_SELF_SCHEDULABLE)) {
-    res = gst_bin_iterate (GST_BIN (data));
-  } else {
-    g_usleep (500);
-    res = gst_element_get_state (GST_ELEMENT (data)) == GST_STATE_PLAYING;
-  }
-
-  if (!res) {
-    gtk_timeout_remove (update_id);
-    g_print ("stopping iterations\n");
-  }
-  return res;
-}
-
-static gboolean
-start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
+end_scrub (GtkWidget * widget)
 {
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gtk_timeout_remove (update_id);
+  seek_timeout_id = 0;
 
   return FALSE;
 }
+#endif
 
-static gboolean
-stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
+static void
+do_seek (GtkWidget * widget)
 {
   gint64 real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
   gboolean res;
@@ -884,8 +1013,8 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     while (walk) {
       GstPad *seekable = GST_PAD (walk->data);
 
-      g_print ("seek to %" G_GINT64_FORMAT " on pad %s:%s\n", real,
-          GST_DEBUG_PAD_NAME (seekable));
+      g_print ("seek to %" GST_TIME_FORMAT " on pad %s:%s\n",
+          GST_TIME_ARGS (real), GST_DEBUG_PAD_NAME (seekable));
       s_event =
           gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
           GST_SEEK_FLAG_FLUSH, real);
@@ -912,8 +1041,57 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     }
   }
 
+  GST_PIPELINE (pipeline)->stream_time = real;
+}
+
+static void
+seek_cb (GtkWidget * widget)
+{
+#ifdef SCRUB
+  /* If the timer hasn't expired yet, then the pipeline is running */
+  if (seek_timeout_id != 0) {
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  }
+#endif
+
+  do_seek (widget);
+
+#ifdef SCRUB
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gtk_idle_add ((GtkFunction) iterate, pipeline);
+
+  if (seek_timeout_id == 0) {
+    seek_timeout_id =
+        gtk_timeout_add (SCRUB_TIME, (GSourceFunc) end_scrub, widget);
+  }
+#endif
+}
+
+static gboolean
+start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
+{
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gtk_timeout_remove (update_id);
+
+  if (changed_id == 0) {
+    changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
+        "value_changed", G_CALLBACK (seek_cb), pipeline);
+  }
+
+  return FALSE;
+}
+
+static gboolean
+stop_seek (GtkWidget * widget, gpointer user_data)
+{
+  g_signal_handler_disconnect (GTK_OBJECT (hscale), changed_id);
+  changed_id = 0;
+  if (seek_timeout_id != 0) {
+    gtk_timeout_remove (seek_timeout_id);
+    seek_timeout_id = 0;
+    /* Still scrubbing, so the pipeline is already playing */
+  } else
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
   update_id =
       gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
 
@@ -923,9 +1101,11 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 static void
 play_cb (GtkButton * button, gpointer data)
 {
-  if (gst_element_get_state (pipeline) != GST_STATE_PLAYING) {
+  GstElementState state;
+
+  gst_element_get_state (pipeline, &state, NULL, NULL);
+  if (state != GST_STATE_PLAYING) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    gtk_idle_add ((GtkFunction) iterate, pipeline);
     update_id =
         gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
@@ -934,7 +1114,10 @@ play_cb (GtkButton * button, gpointer data)
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  if (gst_element_get_state (pipeline) != GST_STATE_PAUSED) {
+  GstElementState state;
+
+  gst_element_get_state (pipeline, &state, NULL, NULL);
+  if (state != GST_STATE_PAUSED) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gtk_timeout_remove (update_id);
   }
@@ -943,7 +1126,10 @@ pause_cb (GtkButton * button, gpointer data)
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  if (gst_element_get_state (pipeline) != GST_STATE_READY) {
+  GstElementState state;
+
+  gst_element_get_state (pipeline, &state, NULL, NULL);
+  if (state != GST_STATE_READY) {
     gst_element_set_state (pipeline, GST_STATE_READY);
     gtk_adjustment_set_value (adjustment, 0.0);
     gtk_timeout_remove (update_id);
@@ -963,6 +1149,9 @@ static Pipeline pipelines[] = {
   {"mpeg1", make_mpeg_pipeline},
   {"mpegparse", make_parse_pipeline},
   {"vorbis", make_vorbis_pipeline},
+  {"theora", make_theora_pipeline},
+  {"ogg/v/t", make_vorbis_theora_pipeline},
+  {"avi/msmpeg4v3/mp3", make_avi_msmpeg4v3_mp3_pipeline},
   {"sid", make_sid_pipeline},
   {"flac", make_flac_pipeline},
   {"wav", make_wav_pipeline},
@@ -1065,18 +1254,13 @@ main (int argc, char **argv)
 
   if (verbose) {
     g_signal_connect (pipeline, "deep_notify",
-        G_CALLBACK (gst_element_default_deep_notify), NULL);
+        G_CALLBACK (gst_object_default_deep_notify), NULL);
   }
-  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error),
-      NULL);
-
   gtk_main ();
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  //gst_object_unref (GST_OBJECT (pipeline));
-
-  //g_mem_chunk_info();
+  gst_object_unref (GST_OBJECT (pipeline));
 
   return 0;
 }

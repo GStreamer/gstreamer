@@ -125,7 +125,7 @@ update_scale (gpointer data)
   GstFormat format = GST_FORMAT_TIME;
 
   duration = 0;
-  clock = gst_bin_get_clock (GST_BIN (pipeline));
+  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
 
   if (seekable_elements) {
     GstElement *element = GST_ELEMENT (seekable_elements->data);
@@ -146,20 +146,6 @@ update_scale (gpointer data)
   }
 
   return TRUE;
-}
-
-static gboolean
-iterate (gpointer data)
-{
-  gboolean res = TRUE;
-
-  g_print ("iterate\n");
-  res = gst_bin_iterate (GST_BIN (data));
-  if (!res) {
-    gtk_timeout_remove (update_id);
-    g_print ("stopping iterations\n");
-  }
-  return res;
 }
 
 static gboolean
@@ -194,8 +180,6 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   }
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
-    gtk_idle_add ((GtkFunction) iterate, pipeline);
   update_id =
       gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
 
@@ -205,10 +189,11 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 static void
 play_cb (GtkButton * button, gpointer data)
 {
-  if (gst_element_get_state (pipeline) != GST_STATE_PLAYING) {
+  GstElementState state;
+
+  gst_element_get_state (pipeline, &state, NULL, NULL);
+  if (state != GST_STATE_PLAYING) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
-      gtk_idle_add ((GtkFunction) iterate, pipeline);
     update_id =
         gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
@@ -217,7 +202,10 @@ play_cb (GtkButton * button, gpointer data)
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  if (gst_element_get_state (pipeline) != GST_STATE_PAUSED) {
+  GstElementState state;
+
+  gst_element_get_state (pipeline, &state, NULL, NULL);
+  if (state != GST_STATE_PAUSED) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gtk_timeout_remove (update_id);
   }
@@ -226,7 +214,10 @@ pause_cb (GtkButton * button, gpointer data)
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  if (gst_element_get_state (pipeline) != GST_STATE_READY) {
+  GstElementState state;
+
+  gst_element_get_state (pipeline, &state, NULL, NULL);
+  if (state != GST_STATE_READY) {
     gst_element_set_state (pipeline, GST_STATE_READY);
     gtk_timeout_remove (update_id);
   }
@@ -249,9 +240,7 @@ main (int argc, char **argv)
   pipeline = make_cdaudio_pipeline ();
 
   g_signal_connect (pipeline, "deep_notify",
-      G_CALLBACK (gst_element_default_deep_notify), NULL);
-  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error),
-      NULL);
+      G_CALLBACK (gst_object_default_deep_notify), NULL);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

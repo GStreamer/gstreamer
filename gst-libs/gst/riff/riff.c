@@ -25,10 +25,14 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY (riff_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_library_load ("gstbytestream");
+  GST_DEBUG_CATEGORY_INIT (riff_debug, "riff", 0, "RIFF I/O");
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

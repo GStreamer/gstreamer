@@ -266,7 +266,8 @@ gst_media_info_read_idler (GstMediaInfo * info, GstMediaInfoStream ** streamp,
       gchar *mime;
 
       GST_LOG ("STATE_TYPEFIND");
-      if ((priv->type == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline))) {
+      //if ((priv->type == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline))) {
+      if ((priv->type == NULL)) {
         GST_DEBUG ("iterating while in STATE_TYPEFIND");
         GMI_DEBUG ("?");
         return TRUE;
@@ -298,7 +299,8 @@ gst_media_info_read_idler (GstMediaInfo * info, GstMediaInfoStream ** streamp,
     case GST_MEDIA_INFO_STATE_STREAM:
     {
       GST_LOG ("STATE_STREAM");
-      if ((priv->format == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline))) {
+      //if ((priv->format == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline))) {
+      if ((priv->format == NULL)) {
         GMI_DEBUG ("?");
         return TRUE;
       }
@@ -317,7 +319,7 @@ gst_media_info_read_idler (GstMediaInfo * info, GstMediaInfoStream ** streamp,
     case GST_MEDIA_INFO_STATE_METADATA:
     {
       if ((priv->metadata == NULL) &&
-          gst_bin_iterate (GST_BIN (priv->pipeline)) &&
+          //gst_bin_iterate (GST_BIN (priv->pipeline)) &&
           priv->metadata_iters < MAX_METADATA_ITERS) {
         GMI_DEBUG ("?");
         priv->metadata_iters++;
@@ -338,8 +340,9 @@ gst_media_info_read_idler (GstMediaInfo * info, GstMediaInfoStream ** streamp,
     }
     case GST_MEDIA_INFO_STATE_STREAMINFO:
     {
-      if ((priv->streaminfo == NULL) &&
-          gst_bin_iterate (GST_BIN (priv->pipeline))) {
+      if ((priv->streaminfo == NULL)
+          //&& gst_bin_iterate (GST_BIN (priv->pipeline))
+          ) {
         GMI_DEBUG ("?");
         return TRUE;
       }
@@ -355,7 +358,9 @@ gst_media_info_read_idler (GstMediaInfo * info, GstMediaInfoStream ** streamp,
     }
     case GST_MEDIA_INFO_STATE_FORMAT:
     {
-      if ((priv->format == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline))) {
+      if ((priv->format == NULL)
+          // && gst_bin_iterate (GST_BIN (priv->pipeline))
+          ) {
         GMI_DEBUG ("?");
         return TRUE;
       }

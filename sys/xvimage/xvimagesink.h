@@ -142,21 +142,15 @@ struct _GstXvImageSink {
   gboolean cb_changed;
 
   GMutex *x_lock;
-  GMutex *stream_lock;
 
   guint video_width, video_height;     /* size of incoming video;
                                         * used as the size for XvImage */
   GValue *par;                         /* object-set pixel aspect ratio */
 
-  GstClockTime time;
-
   GMutex *pool_lock;
   GSList *image_pool;
 
   gboolean synchronous;
-
-  GMutex *nav_lock;
-  GSList *pend_nav_events;
 };
 
 struct _GstXvImageSinkClass {

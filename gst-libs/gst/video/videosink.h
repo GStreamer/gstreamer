@@ -23,6 +23,7 @@
 #define __GST_VIDEOSINK_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
   
@@ -38,28 +39,24 @@ G_BEGIN_DECLS
 #define GST_VIDEOSINK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VIDEOSINK, GstVideoSinkClass))
   
-#define GST_VIDEOSINK_PAD(obj) (GST_VIDEOSINK (obj)->sinkpad)
+#define GST_VIDEOSINK_PAD GST_BASESINK_PAD
+#define GST_VIDEOSINK_CLOCK GST_BASESINK_CLOCK
 #define GST_VIDEOSINK_WIDTH(obj) (GST_VIDEOSINK (obj)->width)
 #define GST_VIDEOSINK_HEIGHT(obj) (GST_VIDEOSINK (obj)->height)
-#define GST_VIDEOSINK_CLOCK(obj) (GST_VIDEOSINK (obj)->clock)
   
 typedef struct _GstVideoSink GstVideoSink;
 typedef struct _GstVideoSinkClass GstVideoSinkClass;
 
 struct _GstVideoSink {
-  GstElement element;
-  
-  GstPad *sinkpad;
+  GstBaseSink element;
   
   gint width, height;
-  
-  GstClock *clock;
   
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstVideoSinkClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
       
   gpointer _gst_reserved[GST_PADDING];
 };

@@ -96,7 +96,7 @@ static void gst_vorbis_tag_base_init (gpointer g_class);
 static void gst_vorbis_tag_class_init (gpointer g_class, gpointer class_data);
 static void gst_vorbis_tag_init (GTypeInstance * instance, gpointer g_class);
 
-static void gst_vorbis_tag_chain (GstPad * pad, GstData * data);
+static GstFlowReturn gst_vorbis_tag_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementStateReturn gst_vorbis_tag_change_state (GstElement * element);
 
@@ -571,13 +571,13 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
 
   return buffer;
 }
-static void
-gst_vorbis_tag_chain (GstPad * pad, GstData * data)
+
+static GstFlowReturn
+gst_vorbis_tag_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVorbisTag *tag;
-  GstBuffer *buffer;
+  GstBuffer *out = NULL;
 
-  buffer = GST_BUFFER (data);
   tag = GST_VORBIS_TAG (gst_pad_get_parent (pad));
 
   if (tag->output == OUTPUT_UNKNOWN) {
@@ -586,6 +586,7 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
 
     /* caps nego */
     do {
+#if 0
       if (gst_pad_try_set_caps (tag->srcpad, vorbis_caps) >= 0) {
         tag->output = OUTPUT_DATA;
       } else if (gst_pad_try_set_caps (tag->srcpad, tags_caps) >= 0) {
@@ -595,14 +596,15 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
             gst_static_caps_get (&gst_vorbis_tag_src_template.static_caps);
         if (gst_pad_recover_caps_error (tag->srcpad, caps))
           continue;
-        gst_caps_free (vorbis_caps);
-        gst_caps_free (tags_caps);
-        return;
+        gst_caps_unref (vorbis_caps);
+        gst_caps_unref (tags_caps);
+        return GST_FLOW_ERROR;
       }
+#endif
     } while (FALSE);
 
-    gst_caps_free (vorbis_caps);
-    gst_caps_free (tags_caps);
+    gst_caps_unref (vorbis_caps);
+    gst_caps_unref (tags_caps);
   }
 
   if (GST_BUFFER_SIZE (buffer) == 0)
@@ -616,31 +618,32 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
         &vendor);
     const GstTagList *found_tags;
 
-    gst_data_unref (data);
+    gst_data_unref (GST_DATA (buffer));
     if (list == NULL) {
       GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
           ("invalid data in vorbis comments"));
-      return;
+      return GST_FLOW_ERROR;
     }
-    gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0,
-        gst_tag_list_copy (list));
+    //gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0,
+    //    gst_tag_list_copy (list));
+
     found_tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
     if (found_tags)
       gst_tag_list_insert (list, found_tags,
           gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
-    data =
-        GST_DATA (gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7,
-            vendor));
+    out = gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7, vendor);
     gst_tag_list_free (list);
     g_free (vendor);
   }
 
   if (tag->output == OUTPUT_DATA) {
-    gst_pad_push (tag->srcpad, data);
+    gst_pad_push (tag->srcpad, out);
   } else {
-    gst_data_unref (data);
+    gst_data_unref (GST_DATA (out));
   }
+  return GST_FLOW_OK;
 }
+
 static GstElementStateReturn
 gst_vorbis_tag_change_state (GstElement * element)
 {

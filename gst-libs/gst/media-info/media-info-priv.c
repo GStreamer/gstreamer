@@ -273,7 +273,7 @@ G_STMT_START {			\
 
 #define CAPS_RESET(target)		\
 G_STMT_START {				\
-  if (target) gst_caps_free (target);	\
+  if (target) gst_caps_unref (target);	\
   target = NULL;			\
 } G_STMT_END
   CAPS_RESET (priv->type);
@@ -509,7 +509,9 @@ gmip_find_type (GstMediaInfoPriv * priv, GError ** error)
   if (!gmip_find_type_pre (priv, error))
     return FALSE;
   GST_DEBUG ("gmip_find_type: iterating");
-  while ((priv->type == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
+  while ((priv->type == NULL)
+      // && gst_bin_iterate (GST_BIN (priv->pipeline))
+      )
     GMI_DEBUG ("+");
   GMI_DEBUG ("\n");
   return gmip_find_type_post (priv);
@@ -616,7 +618,7 @@ gmip_find_stream (GstMediaInfoPriv * priv)
   /* iterate until caps are found */
   /* FIXME: this should be done through the plugin sending some signal
    * that it is ready for queries */
-  while (gst_bin_iterate (GST_BIN (priv->pipeline)) && priv->format == NULL);
+  //while (gst_bin_iterate (GST_BIN (priv->pipeline)) && priv->format == NULL);
   if (gst_element_set_state (priv->pipeline, GST_STATE_PAUSED)
       == GST_STATE_FAILURE)
     g_warning ("Couldn't set to paused");
@@ -659,7 +661,9 @@ gmip_find_track_metadata (GstMediaInfoPriv * priv)
 {
   gmip_find_track_metadata_pre (priv);
   GST_DEBUG ("gmip_find_metadata: iterating");
-  while ((priv->metadata == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
+  while ((priv->metadata == NULL)
+      //&& gst_bin_iterate (GST_BIN (priv->pipeline))
+      )
     GMI_DEBUG ("+");
   GMI_DEBUG ("\n");
   gmip_find_track_metadata_post (priv);
@@ -729,8 +733,9 @@ gmip_find_track_streaminfo (GstMediaInfoPriv * priv)
 {
   gmip_find_track_streaminfo_pre (priv);
   GST_DEBUG ("DEBUG: gmip_find_streaminfo: iterating");
-  while ((priv->streaminfo == NULL) &&
-      gst_bin_iterate (GST_BIN (priv->pipeline)))
+  while ((priv->streaminfo == NULL)
+      // && gst_bin_iterate (GST_BIN (priv->pipeline))
+      )
     GMI_DEBUG ("+");
   GMI_DEBUG ("\n");
   gmip_find_track_streaminfo_post (priv);
@@ -766,7 +771,9 @@ gmip_find_track_format (GstMediaInfoPriv * priv)
 {
   gmip_find_track_format_pre (priv);
   GST_DEBUG ("DEBUG: gmip_find_format: iterating");
-  while ((priv->format == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
+  while ((priv->format == NULL)
+      //&& gst_bin_iterate (GST_BIN (priv->pipeline))
+      )
     GMI_DEBUG ("+");
   GMI_DEBUG ("\n");
   gmip_find_track_format_post (priv);

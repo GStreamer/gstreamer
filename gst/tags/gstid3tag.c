@@ -279,7 +279,6 @@ gst_tag_extract_id3v1_string (GstTagList * list, const gchar * tag,
       }
     }
   }
-
   /* Try current locale (if not UTF-8) */
   if (!g_get_charset (&env)) {
     if ((utf8 = g_locale_to_utf8 (start, size, &bytes_read, NULL, NULL))) {

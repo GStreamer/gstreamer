@@ -1,3 +1,162 @@
+2005-03-31  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/Makefile.am:
+	* examples/seeking/cdparanoia.c: (main):
+	* examples/seeking/cdplayer.c: (update_scale), (stop_seek),
+	(play_cb), (pause_cb), (stop_cb), (main):
+	* examples/seeking/playbin.c:
+	* examples/seeking/seek.c: (dynamic_link), (make_mod_pipeline),
+	(make_dv_pipeline), (make_wav_pipeline), (make_flac_pipeline),
+	(make_sid_pipeline), (make_vorbis_pipeline),
+	(make_theora_pipeline), (make_vorbis_theora_pipeline),
+	(make_avi_msmpeg4v3_mp3_pipeline), (make_mp3_pipeline),
+	(make_avi_pipeline), (make_mpeg_pipeline), (make_mpegnt_pipeline),
+	(make_playerbin_pipeline), (update_scale), (end_scrub), (do_seek),
+	(seek_cb), (start_seek), (stop_seek), (play_cb), (pause_cb),
+	(stop_cb), (main):
+	* examples/seeking/spider_seek.c:
+	* examples/seeking/vorbisfile.c:
+	* ext/gnomevfs/Makefile.am:
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_base_init),
+	(gst_gnomevfssrc_class_init), (gst_gnomevfssrc_init),
+	(gst_gnomevfssrc_get_property), (gst_gnomevfssrc_get),
+	(gst_gnomevfssrc_open_file), (gst_gnomevfssrc_close_file),
+	(gst_gnomevfssrc_getrange), (gst_gnomevfssrc_loop),
+	(gst_gnomevfssrc_activate), (gst_gnomevfssrc_change_state),
+	(gst_gnomevfssrc_srcpad_query), (gst_gnomevfssrc_srcpad_event):
+	* ext/ogg/README:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_get_type),
+	(gst_ogg_pad_class_init), (gst_ogg_pad_init),
+	(gst_ogg_pad_dispose), (gst_ogg_pad_finalize),
+	(gst_ogg_pad_formats), (gst_ogg_pad_event_masks),
+	(gst_ogg_pad_query_types), (gst_ogg_pad_getcaps),
+	(gst_ogg_pad_src_convert), (gst_ogg_pad_src_query),
+	(gst_ogg_pad_event), (gst_ogg_pad_reset),
+	(gst_ogg_demux_factory_filter), (compare_ranks),
+	(gst_ogg_pad_internal_chain), (gst_ogg_pad_typefind),
+	(gst_ogg_pad_submit_packet), (gst_ogg_pad_submit_page),
+	(gst_ogg_chain_new), (gst_ogg_chain_free),
+	(gst_ogg_chain_new_stream), (gst_ogg_chain_get_stream),
+	(gst_ogg_chain_has_stream), (gst_ogg_demux_base_init),
+	(gst_ogg_demux_class_init), (gst_ogg_demux_init),
+	(gst_ogg_demux_finalize), (gst_ogg_demux_handle_event),
+	(gst_ogg_demux_submit_buffer), (gst_ogg_demux_seek),
+	(gst_ogg_demux_get_data), (gst_ogg_demux_get_next_page),
+	(gst_ogg_demux_get_prev_page),
+	(gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_bisect_forward_serialno),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_read_end_chain),
+	(gst_ogg_demux_find_pad), (gst_ogg_demux_find_chain),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_chain_unlocked),
+	(gst_ogg_demux_chain), (gst_ogg_demux_send_eos),
+	(gst_ogg_demux_loop), (gst_ogg_demux_sink_activate),
+	(gst_ogg_demux_change_state), (gst_ogg_print):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init),
+	(gst_ogg_mux_init), (gst_ogg_mux_sinkconnect),
+	(gst_ogg_mux_next_buffer), (gst_ogg_mux_buffer_from_page),
+	(gst_ogg_mux_push_page), (gst_ogg_mux_send_headers),
+	(gst_ogg_mux_loop):
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	* ext/theora/theoradec.c: (gst_theora_dec_init), (_inc_granulepos),
+	(theora_dec_src_convert), (theora_dec_sink_convert),
+	(theora_dec_src_query), (theora_dec_src_event),
+	(theora_dec_sink_event), (theora_dec_chain),
+	(theora_dec_change_state):
+	* ext/theora/theoraenc.c: (gst_theora_enc_init),
+	(theora_enc_sink_setcaps), (theora_buffer_from_packet),
+	(theora_push_buffer), (theora_enc_sink_event), (theora_enc_chain),
+	(theora_enc_change_state):
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/oggvorbisenc.c:
+	* ext/vorbis/oggvorbisenc.h:
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init),
+	(vorbis_dec_src_query), (vorbis_dec_src_event),
+	(vorbis_dec_sink_event), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_class_init),
+	(gst_vorbisenc_sink_setcaps), (gst_vorbisenc_init),
+	(gst_vorbisenc_buffer_from_packet), (gst_vorbisenc_push_buffer),
+	(gst_vorbisenc_sink_event), (gst_vorbisenc_chain),
+	(gst_vorbisenc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	* ext/vorbis/vorbisparse.c: (vorbis_parse_chain):
+	* gst-libs/gst/audio/audioclock.c:
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audiofilter_link),
+	(gst_audiofilter_init), (gst_audiofilter_chain):
+	* gst-libs/gst/audio/testchannels.c: (main):
+	* gst-libs/gst/gconf/gconf.c: (gst_bin_find_unconnected_pad):
+	* gst-libs/gst/media-info/media-info-priv.c: (gmip_reset),
+	(gmip_find_type), (gmip_find_stream), (gmip_find_track_metadata),
+	(gmip_find_track_streaminfo), (gmip_find_track_format):
+	* gst-libs/gst/media-info/media-info.c:
+	(gst_media_info_read_idler):
+	* gst-libs/gst/play/play.c: (gst_play_get_sink_element),
+	(gst_play_get_all_by_interface):
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk),
+	(gst_riff_parse_chunk), (gst_riff_parse_file_header),
+	(gst_riff_parse_strh), (gst_riff_parse_strf_vids),
+	(gst_riff_parse_strf_auds), (gst_riff_parse_strf_iavs),
+	(gst_riff_parse_info):
+	* gst-libs/gst/riff/riff-read.h:
+	* gst-libs/gst/riff/riff.c: (plugin_init):
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/gstvideosink.c: (gst_videosink_init),
+	(gst_videosink_class_init), (gst_videosink_get_type):
+	* gst-libs/gst/video/videosink.h:
+	* gst/audioconvert/bufferframesconvert.c:
+	(buffer_frames_convert_init), (buffer_frames_convert_fixate),
+	(buffer_frames_convert_setcaps), (buffer_frames_convert_chain):
+	* gst/audioconvert/channelmixtest.c: (main):
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_init),
+	(gst_audio_convert_chain),
+	(gst_audio_convert_caps_remove_format_info),
+	(gst_audio_convert_getcaps), (gst_audio_convert_parse_caps),
+	(gst_audio_convert_setcaps), (_fixate_caps_to_int),
+	(gst_audio_convert_fixate), (gst_audio_convert_get_buffer),
+	(gst_audio_convert_buffer_to_default_format),
+	(gst_audio_convert_buffer_from_default_format),
+	(gst_audio_convert_channels):
+	* gst/audioconvert/gstchannelmix.h:
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_caps_remove_format_info), (gst_ffmpegcsp_getcaps),
+	(gst_ffmpegcsp_configure_context), (gst_ffmpegcsp_setcaps),
+	(gst_ffmpegcsp_init), (gst_ffmpegcsp_chain):
+	* gst/tags/gstid3tag.c: (gst_tag_extract_id3v1_string):
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_chain):
+	* gst/typefind/gsttypefindfunctions.c: (aac_type_find),
+	(mp3_type_find), (mpeg2_sys_type_find), (mpeg1_sys_type_find),
+	(mpeg_video_type_find), (mpeg_video_stream_type_find),
+	(dv_type_find):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_class_init), (gst_videotestsrc_src_negotiate),
+	(gst_videotestsrc_src_link), (gst_videotestsrc_parse_caps),
+	(gst_videotestsrc_src_accept_caps), (gst_videotestsrc_setcaps),
+	(gst_videotestsrc_src_unlink), (gst_videotestsrc_activate),
+	(gst_videotestsrc_change_state), (gst_videotestsrc_getcaps),
+	(gst_videotestsrc_init), (gst_videotestsrc_src_query),
+	(gst_videotestsrc_handle_src_event), (gst_videotestsrc_loop):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_xcontext_clear), (gst_xvimagesink_fixate),
+	(gst_xvimagesink_getcaps), (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_get_times),
+	(gst_xvimagesink_show_frame), (gst_xvimagesink_chain),
+	(gst_xvimagesink_buffer_free), (gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_navigation_send_event),
+	(gst_xvimagesink_set_xwindow_id), (gst_xvimagesink_expose),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_finalize),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
+	* sys/xvimage/xvimagesink.h:
+	Plugin port to 0.9, ogg/theora playback should work in the seek
+	example now.
+	Removed old examples.
+	Removed old oggvorbisenc, renamed rawvorbisenc to vorbisenc as
+	explained in 0.9 TODO doc.
+
+
 2005-02-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* autogen.sh:

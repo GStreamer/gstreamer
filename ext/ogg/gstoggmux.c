@@ -219,6 +219,9 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->get_property = gst_ogg_mux_get_property;
+  gobject_class->set_property = gst_ogg_mux_set_property;
+
   gstelement_class->request_new_pad = gst_ogg_mux_request_new_pad;
 
   g_object_class_install_property (gobject_class, ARG_MAX_DELAY,
@@ -232,8 +235,6 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
 
   gstelement_class->change_state = gst_ogg_mux_change_state;
 
-  gstelement_class->get_property = gst_ogg_mux_get_property;
-  gstelement_class->set_property = gst_ogg_mux_set_property;
 }
 
 static const GstEventMask *
@@ -259,7 +260,6 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   gst_pad_set_event_function (ogg_mux->srcpad, gst_ogg_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (ogg_mux), ogg_mux->srcpad);
 
-  GST_FLAG_SET (GST_ELEMENT (ogg_mux), GST_ELEMENT_EVENT_AWARE);
   GST_FLAG_SET (GST_ELEMENT (ogg_mux), GST_OGG_FLAG_BOS);
 
   /* seed random number generator for creation of serial numbers */
@@ -273,23 +273,19 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
 
   ogg_mux->delta_pad = NULL;
 
-  gst_element_set_loop_function (GST_ELEMENT (ogg_mux), gst_ogg_mux_loop);
+  //gst_element_set_loop_function (GST_ELEMENT (ogg_mux), gst_ogg_mux_loop);
+  gst_ogg_mux_loop (GST_ELEMENT (ogg_mux));
 }
 
 static GstPadLinkReturn
-gst_ogg_mux_sinkconnect (GstPad * pad, const GstCaps * vscaps)
+gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
 {
   GstOggMux *ogg_mux;
-  GstStructure *structure;
-  const gchar *mimetype;
 
   ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (ogg_mux, "sinkconnect triggered on %s",
       gst_pad_get_name (pad));
-
-  structure = gst_caps_get_structure (vscaps, 0);
-  mimetype = gst_structure_get_name (structure);
 
   return GST_PAD_LINK_OK;
 }
@@ -412,9 +408,10 @@ static GstBuffer *
 gst_ogg_mux_next_buffer (GstOggPad * pad, gboolean * interrupt)
 {
   GstData *data = NULL;
+  GstBuffer *buffer = NULL;
 
-  while (data == NULL) {
-    data = gst_pad_pull (pad->pad);
+  while (buffer == NULL) {
+    //gst_pad_pull (pad->pad, &buffer);
     GST_DEBUG ("muxer: pulled %s:%s %p", GST_DEBUG_PAD_NAME (pad->pad), data);
     /* if it's an event, handle it */
     if (GST_IS_EVENT (data)) {
@@ -430,23 +427,18 @@ gst_ogg_mux_next_buffer (GstOggPad * pad, gboolean * interrupt)
           pad->eos = TRUE;
           gst_event_unref (event);
           return NULL;
-        case GST_EVENT_INTERRUPT:
-          *interrupt = TRUE;
-          return NULL;
         case GST_EVENT_DISCONTINUOUS:
         {
-          guint64 value;
+          guint64 start_value, end_value;
 
-          if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-            gst_pad_event_default (pad->pad, event);
-            break;
-          }
-          if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+          if (gst_event_discont_get_value (event, GST_FORMAT_TIME,
+                  &start_value, &end_value)) {
             GST_DEBUG_OBJECT (ogg_mux,
-                "got discont of %" G_GUINT64_FORMAT " on pad %s:%s",
-                value, GST_DEBUG_PAD_NAME (pad->pad));
+                "got discont of %" G_GUINT64_FORMAT " and %" G_GUINT64_FORMAT
+                " on pad %s:%s", start_value, end_value,
+                GST_DEBUG_PAD_NAME (pad->pad));
           }
-          pad->offset = value;
+          pad->offset = start_value;
           gst_event_unref (event);
 
         }
@@ -489,7 +481,7 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
 
   /* allocate space for header and body */
   buffer = gst_pad_alloc_buffer (mux->srcpad, GST_BUFFER_OFFSET_NONE,
-      page->header_len + page->body_len);
+      page->header_len + page->body_len, NULL);
   memcpy (GST_BUFFER_DATA (buffer), page->header, page->header_len);
   memcpy (GST_BUFFER_DATA (buffer) + page->header_len,
       page->body, page->body_len);
@@ -511,7 +503,7 @@ gst_ogg_mux_push_page (GstOggMux * mux, ogg_page * page, gboolean delta)
   if (GST_PAD_IS_USABLE (mux->srcpad)) {
     GstBuffer *buffer = gst_ogg_mux_buffer_from_page (mux, page, delta);
 
-    gst_pad_push (mux->srcpad, GST_DATA (buffer));
+    gst_pad_push (mux->srcpad, buffer);
   }
 }
 
@@ -817,7 +809,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   caps = gst_pad_get_caps (mux->srcpad);
   if (caps) {
     gst_ogg_mux_set_header_on_caps (caps, hbufs);
-    gst_pad_try_set_caps (mux->srcpad, caps);
+    //gst_pad_try_set_caps (mux->srcpad, caps);
   }
   /* and send the buffers */
   hwalk = hbufs;
@@ -827,7 +819,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     hwalk = hwalk->next;
 
     if (GST_PAD_IS_USABLE (mux->srcpad)) {
-      gst_pad_push (mux->srcpad, GST_DATA (buf));
+      gst_pad_push (mux->srcpad, buf);
     } else {
       gst_buffer_unref (buf);
     }
@@ -897,9 +889,8 @@ gst_ogg_mux_loop (GstElement * element)
     } else {
       /* no pad to pull on, send EOS */
       if (GST_PAD_IS_USABLE (ogg_mux->srcpad))
-        gst_pad_push (ogg_mux->srcpad,
-            GST_DATA (gst_event_new (GST_EVENT_EOS)));
-      gst_element_set_eos (element);
+        gst_pad_push_event (ogg_mux->srcpad, gst_event_new (GST_EVENT_EOS));
+      //gst_element_set_eos (element);
       return;
     }
   }
@@ -1013,11 +1004,6 @@ gst_ogg_mux_loop (GstElement * element)
     pad->prev_delta = delta_unit;
 
     /* swap the packet in */
-    if (packet.e_o_s == 1)
-      GST_DEBUG_OBJECT (pad, "swapping in EOS packet");
-    if (packet.b_o_s == 1)
-      GST_DEBUG_OBJECT (pad, "swapping in BOS packet");
-
     ogg_stream_packetin (&pad->stream, &packet);
 
     /* don't need the old buffer anymore */

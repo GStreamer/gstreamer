@@ -49,7 +49,7 @@ main (gint argc, gchar * argv[])
   str = gst_caps_to_string (caps);
   g_print ("Test caps #2: %s\n", str);
   g_free (str);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   return 0;
 }

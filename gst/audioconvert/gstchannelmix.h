@@ -68,6 +68,9 @@ struct _GstAudioConvert
   GstAudioConvertCaps srccaps;
   GstAudioConvertCaps sinkcaps;
 
+  GstCaps *src_prefered;
+  GstCaps *sink_prefered;
+
   /* channel conversion matrix, m[in_channels][out_channels].
    * If identity matrix, passthrough applies. */
   gfloat **matrix;

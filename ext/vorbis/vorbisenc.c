@@ -103,7 +103,8 @@ static void gst_vorbisenc_base_init (gpointer g_class);
 static void gst_vorbisenc_class_init (VorbisEncClass * klass);
 static void gst_vorbisenc_init (VorbisEnc * vorbisenc);
 
-static void gst_vorbisenc_chain (GstPad * pad, GstData * _data);
+static gboolean gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_vorbisenc_setup (VorbisEnc * vorbisenc);
 
 static void gst_vorbisenc_get_property (GObject * object, guint prop_id,
@@ -197,6 +198,9 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = gst_vorbisenc_set_property;
+  gobject_class->get_property = gst_vorbisenc_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_BITRATE,
       g_param_spec_int ("max-bitrate", "Maximum Bitrate",
           "Specify a maximum bitrate (in bps). Useful for streaming "
@@ -226,14 +230,11 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_vorbisenc_set_property;
-  gobject_class->get_property = gst_vorbisenc_get_property;
-
   gstelement_class->change_state = gst_vorbisenc_change_state;
 }
 
-static GstPadLinkReturn
-gst_vorbisenc_sinkconnect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_vorbisenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   VorbisEnc *vorbisenc;
   GstStructure *structure;
@@ -248,9 +249,9 @@ gst_vorbisenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   gst_vorbisenc_setup (vorbisenc);
 
   if (vorbisenc->setup)
-    return GST_PAD_LINK_OK;
+    return TRUE;
 
-  return GST_PAD_LINK_REFUSED;
+  return FALSE;
 }
 
 static gboolean
@@ -447,8 +448,9 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->sinkpad =
       gst_pad_new_from_template (gst_vorbisenc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
+  gst_pad_set_event_function (vorbisenc->sinkpad, gst_vorbisenc_sink_event);
   gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
-  gst_pad_set_link_function (vorbisenc->sinkpad, gst_vorbisenc_sinkconnect);
+  gst_pad_set_setcaps_function (vorbisenc->sinkpad, gst_vorbisenc_sink_setcaps);
   gst_pad_set_convert_function (vorbisenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vorbisenc_convert_sink));
   gst_pad_set_formats_function (vorbisenc->sinkpad,
@@ -482,11 +484,6 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->header_sent = FALSE;
 
   vorbisenc->tags = gst_tag_list_new ();
-
-  vorbisenc->initial_delay = 0;
-
-  /* we're chained and we can deal with events */
-  GST_FLAG_SET (vorbisenc, GST_ELEMENT_EVENT_AWARE);
 }
 
 
@@ -718,32 +715,16 @@ static GstBuffer *
 gst_vorbisenc_buffer_from_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
-  guint64 granulepos_delta, timestamp_delta;
-
-  /* header packets always need to have granulepos 0, 
-   * regardless of the initial delay */
-  if (packet->granulepos == 0) {
-    granulepos_delta = 0;
-    timestamp_delta = 0;
-  } else {
-    granulepos_delta =
-        vorbisenc->initial_delay * vorbisenc->frequency / GST_SECOND;
-    timestamp_delta = vorbisenc->initial_delay;
-  }
 
   outbuf = gst_buffer_new_and_alloc (packet->bytes);
   memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
-  GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos + granulepos_delta;
+  GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos;
   GST_BUFFER_TIMESTAMP (outbuf) =
       vorbis_granule_time_copy (&vorbisenc->vd,
-      packet->granulepos) * GST_SECOND + timestamp_delta;
+      packet->granulepos) * GST_SECOND;
 
-  GST_DEBUG ("encoded buffer of %d bytes. granulepos = %" G_GINT64_FORMAT
-      " + %" G_GINT64_FORMAT " = %" G_GINT64_FORMAT, GST_BUFFER_SIZE (outbuf),
-      packet->granulepos, granulepos_delta,
-      packet->granulepos + granulepos_delta);
-
+  GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
   return outbuf;
 }
 
@@ -754,7 +735,7 @@ gst_vorbisenc_push_buffer (VorbisEnc * vorbisenc, GstBuffer * buffer)
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
   if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
-    gst_pad_push (vorbisenc->srcpad, GST_DATA (buffer));
+    gst_pad_push (vorbisenc->srcpad, buffer);
   } else {
     gst_buffer_unref (buffer);
   }
@@ -800,63 +781,49 @@ gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   g_value_unset (&list);
 }
 
-static void
-gst_vorbisenc_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  gboolean res = TRUE;
   VorbisEnc *vorbisenc;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
-  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
-
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        /* end of file.  this can be done implicitly in the mainline,
-           but it's easier to see here in non-clever fashion.
-           Tell the library we're at end of stream so that it can handle
-           the last frame and mark end of stream in the output properly */
-        vorbis_analysis_wrote (&vorbisenc->vd, 0);
-        vorbisenc->eos = TRUE;
-        gst_event_unref (event);
-        break;
-      case GST_EVENT_TAG:
-        if (vorbisenc->tags) {
-          gst_tag_list_insert (vorbisenc->tags, gst_event_tag_get_list (event),
-              gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
-        } else {
-          g_assert_not_reached ();
-        }
-        gst_pad_event_default (pad, event);
-        return;
-      case GST_EVENT_DISCONTINUOUS:
-      {
-        guint64 val;
-
-        if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &val)) {
-          /* vorbis does not support discontinuities in the middle of
-           * a stream so we can't just increase the granulepos to reflect
-           * the new position, or can we? would that still be according
-           * to spec? */
-          if (vorbisenc->samples_in == 0) {
-            vorbisenc->initial_delay = val;
-            GST_DEBUG ("initial delay = %" G_GUINT64_FORMAT, val);
-          } else {
-            GST_DEBUG ("mid stream discont: val = %" G_GUINT64_FORMAT, val);
-          }
-        }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* end of file.  this can be done implicitly in the mainline,
+         but it's easier to see here in non-clever fashion.
+         Tell the library we're at end of stream so that it can handle
+         the last frame and mark end of stream in the output properly */
+      vorbis_analysis_wrote (&vorbisenc->vd, 0);
+      vorbisenc->eos = TRUE;
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_TAG:
+      if (vorbisenc->tags) {
+        gst_tag_list_insert (vorbisenc->tags, gst_event_tag_get_list (event),
+            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
+      } else {
+        g_assert_not_reached ();
       }
-        /* fall through */
-      default:
-        gst_pad_event_default (pad, event);
-        return;
-    }
-  } else {
+      res = gst_pad_event_default (pad, event);
+      break;
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+  return res;
+}
+
+static GstFlowReturn
+gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  VorbisEnc *vorbisenc;
+
+  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
+
+  {
     gfloat *data;
     gulong size;
     gulong i, j;
@@ -866,7 +833,7 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (vorbisenc, CORE, NEGOTIATION, (NULL),
           ("encoder not initialized (input is not audio?)"));
-      return;
+      return GST_FLOW_UNEXPECTED;
     }
 
     if (!vorbisenc->header_sent) {
@@ -899,7 +866,7 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
 
       /* negotiate with these caps */
       GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
-      gst_pad_try_set_caps (vorbisenc->srcpad, caps);
+      gst_pad_set_caps (vorbisenc->srcpad, caps);
 
       /* push out buffers */
       gst_vorbisenc_push_buffer (vorbisenc, buf1);
@@ -951,9 +918,10 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
     vorbis_block_clear (&vorbisenc->vb);
     vorbis_dsp_clear (&vorbisenc->vd);
     vorbis_info_clear (&vorbisenc->vi);
-    gst_pad_push (vorbisenc->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    gst_element_set_eos (GST_ELEMENT (vorbisenc));
+    gst_pad_push_event (vorbisenc->srcpad, gst_event_new (GST_EVENT_EOS));
+    //gst_element_set_eos (GST_ELEMENT (vorbisenc));
   }
+  return GST_FLOW_OK;
 }
 
 static void
@@ -1069,23 +1037,29 @@ static GstElementStateReturn
 gst_vorbisenc_change_state (GstElement * element)
 {
   VorbisEnc *vorbisenc = GST_VORBISENC (element);
+  GstElementState transition;
+  GstElementStateReturn res;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_PAUSED:
       vorbisenc->eos = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+    default:
+      break;
+  }
+
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
       vorbisenc->setup = FALSE;
       vorbisenc->header_sent = FALSE;
-      vorbisenc->initial_delay = 0;
-      vorbisenc->samples_in = 0;
-      vorbisenc->bytes_out = 0;
-      vorbisenc->channels = -1;
-      vorbisenc->frequency = -1;
       gst_tag_list_free (vorbisenc->tags);
       vorbisenc->tags = gst_tag_list_new ();
       break;
@@ -1094,8 +1068,5 @@ gst_vorbisenc_change_state (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return res;
 }

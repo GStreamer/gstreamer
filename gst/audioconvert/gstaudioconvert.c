@@ -60,10 +60,9 @@ static void gst_audio_convert_init (GstAudioConvert * audio_convert);
 static void gst_audio_convert_dispose (GObject * obj);
 
 /* gstreamer functions */
-static void gst_audio_convert_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_audio_convert_link (GstPad * pad,
-    const GstCaps * caps);
-static GstCaps *gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps);
+static GstFlowReturn gst_audio_convert_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_audio_convert_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_audio_convert_fixate (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_audio_convert_getcaps (GstPad * pad);
 static GstElementStateReturn gst_audio_convert_change_state (GstElement *
     element);
@@ -187,8 +186,8 @@ gst_audio_convert_init (GstAudioConvert * this)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_audio_convert_sink_template), "sink");
   gst_pad_set_getcaps_function (this->sink, gst_audio_convert_getcaps);
-  gst_pad_set_link_function (this->sink, gst_audio_convert_link);
-  gst_pad_set_fixate_function (this->sink, gst_audio_convert_fixate);
+  gst_pad_set_setcaps_function (this->sink, gst_audio_convert_setcaps);
+  gst_pad_set_fixatecaps_function (this->sink, gst_audio_convert_fixate);
   gst_element_add_pad (GST_ELEMENT (this), this->sink);
 
   /* srcpad */
@@ -196,8 +195,8 @@ gst_audio_convert_init (GstAudioConvert * this)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_audio_convert_src_template), "src");
   gst_pad_set_getcaps_function (this->src, gst_audio_convert_getcaps);
-  gst_pad_set_link_function (this->src, gst_audio_convert_link);
-  gst_pad_set_fixate_function (this->src, gst_audio_convert_fixate);
+  gst_pad_set_setcaps_function (this->src, gst_audio_convert_setcaps);
+  gst_pad_set_fixatecaps_function (this->src, gst_audio_convert_fixate);
   gst_element_add_pad (GST_ELEMENT (this), this->src);
 
   gst_pad_set_chain_function (this->sink, gst_audio_convert_chain);
@@ -228,34 +227,28 @@ gst_audio_convert_dispose (GObject * obj)
 
 /*** GSTREAMER FUNCTIONS ******************************************************/
 
-static void
-gst_audio_convert_chain (GstPad * pad, GstData * data)
+static GstFlowReturn
+gst_audio_convert_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (data);
   GstAudioConvert *this;
 
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-  g_return_if_fail (GST_IS_AUDIO_CONVERT (GST_OBJECT_PARENT (pad)));
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
 
   /* FIXME */
-  if (GST_IS_EVENT (buf)) {
-    gst_pad_event_default (pad, GST_EVENT (buf));
-    return;
-  }
-  g_return_if_fail (GST_IS_BUFFER (buf));
 
-  if (!gst_pad_is_negotiated (this->sink)) {
+#if 0
+  if (!GST_PAD_CAPS (this->sink)) {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
         ("Sink pad (connected to %s:%s) not negotiated before chain function",
             GST_DEBUG_PAD_NAME (gst_pad_get_peer (this->sink))));
-    return;
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
   }
-  if (!gst_pad_is_negotiated (this->src)) {
-    gst_data_unref (data);
-    return;
+  if (!GST_PAD_CAPS (this->src)) {
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
   }
+#endif
 
   /**
    * Theory of operation:
@@ -271,35 +264,25 @@ gst_audio_convert_chain (GstPad * pad, GstData * data)
 
   buf = gst_audio_convert_buffer_from_default_format (this, buf);
 
-  gst_pad_push (this->src, GST_DATA (buf));
+  return gst_pad_push (this->src, buf);
 }
 
-/* this function is complicated now, but it will be unnecessary when we convert
- * rate. */
 static GstCaps *
-gst_audio_convert_getcaps (GstPad * pad)
+gst_audio_convert_caps_remove_format_info (GstPad * pad, GstCaps * caps)
 {
-  GstAudioConvert *this;
-  GstPad *otherpad;
-  GstStructure *structure;
-  GstCaps *othercaps, *caps;
-  const GstCaps *templcaps;
   int i, size;
+  GstAudioConvert *this;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-  g_return_val_if_fail (GST_IS_AUDIO_CONVERT (GST_OBJECT_PARENT (pad)), NULL);
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
 
-  otherpad = (pad == this->src) ? this->sink : this->src;
+  size = gst_caps_get_size (caps);
 
-  /* all we want to find out is the rate */
-  templcaps = gst_pad_get_pad_template_caps (pad);
-  othercaps = gst_pad_get_allowed_caps (otherpad);
-
-  size = gst_caps_get_size (othercaps);
+  caps = gst_caps_make_writable (caps);
 
   for (i = size - 1; i >= 0; i--) {
-    structure = gst_caps_get_structure (othercaps, i);
+    GstStructure *structure;
+
+    structure = gst_caps_get_structure (caps, i);
     gst_structure_remove_field (structure, "channels");
     gst_structure_remove_field (structure, "channel-positions");
     gst_structure_remove_field (structure, "endianness");
@@ -319,10 +302,34 @@ gst_audio_convert_getcaps (GstPad * pad)
       gst_structure_set_name (structure, "audio/x-raw-int");
       gst_structure_remove_field (structure, "buffer-frames");
     }
-    gst_caps_append_structure (othercaps, structure);
+    gst_caps_append_structure (caps, structure);
   }
+
+  return caps;
+}
+
+/* this function is complicated now, but it will be unnecessary when we convert
+ * rate. */
+static GstCaps *
+gst_audio_convert_getcaps (GstPad * pad)
+{
+  GstAudioConvert *this;
+  GstPad *otherpad;
+  GstCaps *othercaps, *caps;
+  const GstCaps *templcaps;
+
+  this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
+
+  otherpad = (pad == this->src) ? this->sink : this->src;
+
+  /* we can do all our peer can */
+  othercaps = gst_pad_peer_get_caps (otherpad);
+  /* without the format info even */
+  othercaps = gst_audio_convert_caps_remove_format_info (pad, othercaps);
+  /* but filtered against our template */
+  templcaps = gst_pad_get_pad_template_caps (pad);
   caps = gst_caps_intersect (othercaps, templcaps);
-  gst_caps_free (othercaps);
+  gst_caps_unref (othercaps);
 
   /* Get the channel positions in as well. */
   gst_audio_set_caps_channel_positions_list (caps, supported_positions,
@@ -336,6 +343,8 @@ gst_audio_convert_parse_caps (const GstCaps * gst_caps,
     GstAudioConvertCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (gst_caps, 0);
+
+  GST_DEBUG ("parse caps %p and %" GST_PTR_FORMAT, gst_caps, gst_caps);
 
   g_return_val_if_fail (gst_caps_is_fixed (gst_caps), FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
@@ -375,76 +384,72 @@ gst_audio_convert_parse_caps (const GstCaps * gst_caps,
   return TRUE;
 }
 
-static GstPadLinkReturn
-gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_audio_convert_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstAudioConvert *this;
   GstPad *otherpad;
-  GstAudioConvertCaps ac_caps = { 0 }, other_ac_caps = {
-  0};
-  GstCaps *othercaps;
-  guint i;
-  GstPadLinkReturn ret;
+  GstAudioConvertCaps ac_caps = { 0 };
+  GstAudioConvertCaps other_ac_caps = { 0 };
+  GstCaps **other_prefered, **prefered;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_AUDIO_CONVERT (GST_OBJECT_PARENT (pad)),
-      GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_CONVERT (GST_OBJECT_PARENT (pad)), FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
-  otherpad = (pad == this->src ? this->sink : this->src);
 
   /* we'll need a new matrix after every new negotiation */
   gst_audio_convert_unset_matrix (this);
 
   ac_caps.pos = NULL;
   if (!gst_audio_convert_parse_caps (caps, &ac_caps))
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
 
-  /* ok, not those - try setting "any" caps */
-  othercaps = gst_pad_get_allowed_caps (otherpad);
-  for (i = 0; i < gst_caps_get_size (othercaps); i++) {
-    GstStructure *structure = gst_caps_get_structure (othercaps, i);
+  otherpad = (pad == this->src ? this->sink : this->src);
+  prefered = (pad == this->src) ? &this->src_prefered : &this->sink_prefered;
+  other_prefered =
+      (pad == this->src) ? &this->sink_prefered : &this->src_prefered;
 
-    gst_structure_set (structure, "rate", G_TYPE_INT, ac_caps.rate, NULL);
-    if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float") == 0) {
-      if (!ac_caps.is_int) {
-        gst_structure_set (structure, "buffer-frames", G_TYPE_INT,
-            ac_caps.buffer_frames, NULL);
-      } else {
-        gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 0,
-            G_MAXINT, NULL);
+  *prefered = caps;
+
+  /* check passthrough */
+  if (gst_pad_peer_accept_caps (otherpad, caps)) {
+    /* great, so that will be our suggestion then */
+    *other_prefered = gst_caps_ref (caps);
+  } else {
+    /* nope, find something we can convert to and the peer can
+     * accept. */
+    GstCaps *othercaps = gst_pad_peer_get_caps (otherpad);
+
+    if (othercaps) {
+      /* peel off first one */
+      GstCaps *targetcaps = gst_caps_copy_nth (othercaps, 0);
+      GstStructure *structure = gst_caps_get_structure (targetcaps, 0);
+
+      gst_caps_unref (othercaps);
+
+      /* set the rate on the caps */
+      gst_structure_set (structure, "rate", G_TYPE_INT, ac_caps.rate, NULL);
+      gst_structure_set (structure, "channels", G_TYPE_INT, ac_caps.channels,
+          NULL);
+      if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float") == 0) {
+        if (!ac_caps.is_int) {
+          gst_structure_set (structure, "buffer-frames", G_TYPE_INT,
+              ac_caps.buffer_frames, NULL);
+        } else {
+          gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 0,
+              G_MAXINT, NULL);
+        }
       }
+
+      /* this will be our suggestion */
+      *other_prefered = targetcaps;
+      if (!gst_audio_convert_parse_caps (targetcaps, &other_ac_caps))
+        return FALSE;
+      GST_RPAD_CAPS (otherpad) = targetcaps;
     }
   }
-  if (this->sink == pad) {
-    g_free (this->sinkcaps.pos);
-    this->sinkcaps = ac_caps;
-  } else {
-    g_free (this->srccaps.pos);
-    this->srccaps = ac_caps;
-  }
-  GST_LOG_OBJECT (this, "trying to set caps to %" GST_PTR_FORMAT, othercaps);
-
-  ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
-  gst_caps_free (othercaps);
-  if (ret < GST_PAD_LINK_OK)
-    return ret;
-
-  /* woohoo, got it */
-  othercaps = (GstCaps *) gst_pad_get_negotiated_caps (otherpad);
-  if (othercaps) {
-    other_ac_caps.pos = NULL;
-
-    if (!gst_audio_convert_parse_caps (othercaps, &other_ac_caps)) {
-      g_critical ("internal negotiation error");
-      return GST_PAD_LINK_REFUSED;
-    }
-  } else {
-    other_ac_caps = ac_caps;
-    other_ac_caps.pos = g_memdup (ac_caps.pos,
-        ac_caps.channels * sizeof (GstAudioChannelPosition));
-  }
-
   if (this->sink == pad) {
     g_free (this->srccaps.pos);
     this->srccaps = other_ac_caps;
@@ -457,7 +462,7 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
 
   GST_DEBUG_OBJECT (this, "negotiated pad to %" GST_PTR_FORMAT, caps);
   gst_audio_convert_setup_matrix (this);
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 /* tries to fixate the given field of the given caps to the given int value */
@@ -475,7 +480,7 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
   gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
           GST_TYPE_INT_RANGE, G_MININT, value - 1, NULL));
   isect_lower = gst_caps_intersect (*caps, try);
-  gst_caps_free (try);
+  gst_caps_unref (try);
 
   if (!gst_caps_is_empty (isect_lower)) {
     try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
@@ -483,18 +488,18 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
     gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
             GST_TYPE_INT_RANGE, value, G_MAXINT, NULL));
     isect_higher = gst_caps_intersect (*caps, try);
-    gst_caps_free (try);
+    gst_caps_unref (try);
     /* FIXME: why choose to end up with the higher range, and not the fixed
      * value ? */
     if (!gst_caps_is_empty (isect_higher)) {
-      gst_caps_free (*caps);
+      gst_caps_unref (*caps);
       *caps = isect_higher;
       ret = TRUE;
     } else {
-      gst_caps_free (isect_higher);
+      gst_caps_unref (isect_higher);
     }
   }
-  gst_caps_free (isect_lower);
+  gst_caps_unref (isect_lower);
 
   /* FIXME: why don't we already return here when ret == TRUE ? */
   for (i = 0; i < gst_caps_get_size (*caps); i++) {
@@ -508,27 +513,29 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
 }
 
 static GstCaps *
-gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
+gst_audio_convert_fixate (GstPad * pad, GstCaps * caps)
 {
   const GValue *pos_val;
   GstAudioConvert *this =
       GST_AUDIO_CONVERT (gst_object_get_parent (GST_OBJECT (pad)));
-  GstPad *otherpad = (pad == this->sink ? this->src : this->sink);
+  //GstPad *otherpad = (pad == this->sink ? this->src : this->sink);
   GstAudioConvertCaps try, ac_caps =
       (pad == this->sink ? this->srccaps : this->sinkcaps);
   GstCaps *copy = gst_caps_copy (caps);
 
-  if (!GST_PAD_IS_NEGOTIATING (otherpad)) {
-    try.channels = 2;
-    try.width = 16;
-    try.depth = 16;
-    try.endianness = G_BYTE_ORDER;
-  } else {
-    try.channels = ac_caps.channels;
-    try.width = ac_caps.is_int ? ac_caps.width : 16;
-    try.depth = ac_caps.is_int ? ac_caps.depth : 16;
-    try.endianness = ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER;
-  }
+  //if (!GST_PAD_IS_NEGOTIATING (otherpad)) {
+  try.channels = 2;
+  try.width = 16;
+  try.depth = 16;
+  try.endianness = G_BYTE_ORDER;
+  /*
+     } else {
+     try.channels = ac_caps.channels;
+     try.width = ac_caps.is_int ? ac_caps.width : 16;
+     try.depth = ac_caps.is_int ? ac_caps.depth : 16;
+     try.endianness = ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER;
+     }
+   */
 
   if (_fixate_caps_to_int (&copy, "channels", try.channels)) {
     int n, c;
@@ -591,7 +598,7 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
     }
   }
 
-  gst_caps_free (copy);
+  gst_caps_unref (copy);
   return NULL;
 }
 
@@ -639,7 +646,7 @@ gst_audio_convert_get_buffer (GstBuffer * buf, guint size)
   } else {
     ret = gst_buffer_new_and_alloc (size);
     g_assert (ret);
-    gst_buffer_stamp (ret, buf);
+    //gst_buffer_stamp (ret, buf);
     GST_LOG ("returning new buffer. data: %p - size: %u - maxsize: %u",
         ret->data, ret->size, ret->maxsize);
     return ret;
@@ -690,6 +697,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
     ret =
         gst_audio_convert_get_buffer (buf,
         buf->size * 32 / this->sinkcaps.width);
+    gst_buffer_set_caps (ret, GST_RPAD_CAPS (this->src));
 
     count = ret->size / 4;
     src = buf->data + (count - 1) * (this->sinkcaps.width / 8);
@@ -757,6 +765,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
     /* should just give the same buffer, unless it's not writable -- float is
      * already 32 bits */
     ret = gst_audio_convert_get_buffer (buf, buf->size);
+    gst_buffer_set_caps (ret, GST_RPAD_CAPS (this->src));
 
     in = (gfloat *) GST_BUFFER_DATA (buf);
     out = (gint32 *) GST_BUFFER_DATA (ret);
@@ -816,6 +825,7 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert * this,
     ret =
         gst_audio_convert_get_buffer (buf,
         buf->size * this->srccaps.width / 32);
+    gst_buffer_set_caps (ret, GST_RPAD_CAPS (this->src));
 
     dest = ret->data;
     src = (gint32 *) buf->data;
@@ -881,6 +891,7 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert * this,
     ret =
         gst_audio_convert_get_buffer (buf,
         buf->size * this->srccaps.width / 32);
+    gst_buffer_set_caps (ret, GST_RPAD_CAPS (this->src));
 
     dest = (gfloat *) ret->data;
     src = (gint32 *) buf->data;
@@ -902,6 +913,7 @@ gst_audio_convert_channels (GstAudioConvert * this, GstBuffer * buf)
   gint count;
 
   g_assert (this->matrix != NULL);
+
   /* check for passthrough */
   if (gst_audio_convert_passthrough (this))
     return buf;
@@ -909,6 +921,7 @@ gst_audio_convert_channels (GstAudioConvert * this, GstBuffer * buf)
   /* convert */
   count = GST_BUFFER_SIZE (buf) / 4 / this->sinkcaps.channels;
   ret = gst_audio_convert_get_buffer (buf, count * 4 * this->srccaps.channels);
+  gst_buffer_set_caps (ret, GST_RPAD_CAPS (this->src));
   gst_audio_convert_mix (this, (gint32 *) GST_BUFFER_DATA (buf),
       (gint32 *) GST_BUFFER_DATA (ret), count);
   gst_buffer_unref (buf);

@@ -90,7 +90,6 @@ enum SampleFormat {
 
 #define DEFAULT_FRAME_RATE_BASE 1001000
 
-
 /* thomas: extracted from imgconvert.c since it's also used in
  * gstffmpegcodecmap.c */
 

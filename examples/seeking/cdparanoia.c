@@ -159,7 +159,7 @@ main (int argc, char **argv)
   gst_element_link_pads (cdparanoia, "src", audiosink, "sink");
 
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
-      G_CALLBACK (gst_element_default_deep_notify), NULL);
+      G_CALLBACK (gst_object_default_deep_notify), NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -184,10 +184,9 @@ main (int argc, char **argv)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   count = 0;
-  while (gst_bin_iterate (GST_BIN (pipeline))) {
+  while (count++ < 500) {
     get_position_info (cdparanoia);
-    if (count++ > 500)
-      break;
+    g_usleep (G_USEC_PER_SEC / 2);
   }
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -202,8 +201,10 @@ main (int argc, char **argv)
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (pipeline))) {
+  count = 0;
+  while (count++ < 500) {
     get_position_info (cdparanoia);
+    g_usleep (G_USEC_PER_SEC / 2);
   }
   g_print ("\n");
 

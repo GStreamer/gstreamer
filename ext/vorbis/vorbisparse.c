@@ -62,7 +62,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstVorbisParse, gst_vorbis_parse, GstElement,
     GST_TYPE_ELEMENT);
 
-static void vorbis_parse_chain (GstPad * pad, GstData * data);
+static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn vorbis_parse_change_state (GstElement * element);
 
 static void
@@ -143,23 +143,22 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
   g_value_unset (&list);
 }
 
-static void
-vorbis_parse_chain (GstPad * pad, GstData * data)
+static GstFlowReturn
+vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *buf;
   GstVorbisParse *parse;
 
-  parse = GST_VORBIS_PARSE (gst_pad_get_parent (pad));
-  g_assert (parse);
+  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
 
-  buf = GST_BUFFER (data);
+  buf = GST_BUFFER (buffer);
   parse->packetno++;
 
   /* if 1 <= packetno <= 3, it's streamheader,
    * so put it on the streamheader list and return */
   if (parse->packetno <= 3) {
     parse->streamheader = g_list_append (parse->streamheader, buf);
-    return;
+    return GST_FLOW_OK;
   }
 
   /* else, if we haven't sent streamheader buffers yet,
@@ -172,7 +171,7 @@ vorbis_parse_chain (GstPad * pad, GstData * data)
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
-    gst_pad_try_set_caps (parse->srcpad, caps);
+    gst_pad_set_caps (parse->srcpad, caps);
 
     /* push out buffers */
     gst_pad_push (parse->srcpad, parse->streamheader->data);
@@ -182,7 +181,9 @@ vorbis_parse_chain (GstPad * pad, GstData * data)
     parse->streamheader_sent = TRUE;
   }
   /* just send on buffer by default */
-  gst_pad_push (parse->srcpad, data);
+  gst_pad_push (parse->srcpad, buf);
+
+  return GST_FLOW_OK;
 }
 
 static GstElementStateReturn

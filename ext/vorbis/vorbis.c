@@ -22,7 +22,6 @@
 #endif
 
 #include "vorbisenc.h"
-#include "oggvorbisenc.h"
 #include "vorbisdec.h"
 #include "vorbisparse.h"
 
@@ -33,15 +32,10 @@ GST_DEBUG_CATEGORY (vorbisparse_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream") ||
-      !gst_library_load ("gstaudio") || !gst_library_load ("gsttags"))
+  if (!gst_library_load ("gstaudio") || !gst_library_load ("gsttags"))
     return FALSE;
 
   if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE,
-          GST_TYPE_OGGVORBISENC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "rawvorbisenc", GST_RANK_NONE,
           GST_TYPE_VORBISENC))
     return FALSE;
 
