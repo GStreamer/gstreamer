@@ -17,9 +17,9 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: gstreamer >= %{version}
-BuildRequires: nasm => 0.90
-BuildRequires: gstreamer-devel >= %{version} 
+Requires: 	gstreamer >= %{version}
+BuildRequires: 	nasm => 0.90
+BuildRequires: 	gstreamer-devel >= %{version} 
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -463,7 +463,8 @@ fi
 @USE_OPENQUICKTIME_TRUE@Summary: GStreamer OpenQuicktime video Plugin
 @USE_OPENQUICKTIME_TRUE@Group: Libraries/Multimedia
 @USE_OPENQUICKTIME_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_OPENQUICKTIME_TRUE@Requires: openquicktime => 0.9
+@USE_OPENQUICKTIME_TRUE@Requires: openquicktime => 1.0
+@USE_OPENQUICKTIME_TRUE@BuildRequires: openquicktime-devel => 1.0
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%description -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@Plugin which uses the OpenQuicktime library
@@ -848,9 +849,10 @@ Summary: GStreamer audio format plugin
 Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
 Requires: gstreamer-plugin-libs = %{version}
+BuildRequires: gcc-c++
 
 %description -n gstreamer-audio-formats
-Plugin for playback of wav, au and mp3 audio files
+Plugin for playback of wav, au and mod audio files as well as mp3 type
 
 %files -n gstreamer-audio-formats
 %defattr(-, root, root)
