@@ -10,7 +10,7 @@ AM_DISABLE_STATIC
 dnl when going to/from release please set the nano (fourth number) right !
 dnl We disable static building for development, for time savings
 AM_DISABLE_STATIC
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 2)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
