@@ -63,7 +63,6 @@ BuildRequires:	gstreamer-tools >= 0.6.1
 @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 # Snapshot plugin
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:	libpng
-@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:	gstreamer-colorspace = %{version}
 
 Obsoletes:	gstreamer-plugin-libs
 Obsoletes:	gstreamer-arts
@@ -164,6 +163,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
 rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
+rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/gst_loader.la
 
 
 %clean
@@ -426,7 +426,6 @@ GStreamer support libraries header files.
 Summary:       GStreamer plug-in for AVI movie playback.
 Group:         Libraries/Multimedia
 Requires:      gstreamer-plugins = %{version}
-Requires:      gstreamer-colorspace = %{version}
 
 %description -n gstreamer-avi
 Plug-ins for playback of AVI format media files.
@@ -823,7 +822,6 @@ Plug-ins for playback of AVI format media files.
 Summary:        GStreamer plug-in for asf video format.
 Group:          Libraries/Multimedia
 Requires:       gstreamer-plugins = %{version}
-Requires:       gstreamer-colorspace = %{version}
 %description -n gstreamer-asf
 Plug-in for playing ASF movies under GStreamer.
                                                                                 
