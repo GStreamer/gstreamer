@@ -1,3 +1,13 @@
+2004-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstvalue.c: (gst_value_transform_double_fraction),
+	(gst_value_transform_fraction_double), (_gst_value_initialize):
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/fraction-convert.c: (check_from_double_convert),
+	(check_from_fraction_convert), (transform_test), (main):
+	Added transform functions between double and fraction.
+	Added testcase to verify transforms
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/GStreamer.vcproj:
