@@ -1,23 +1,38 @@
 #include <gst/gst.h>
 
 void new_pad(GstElement *parse,GstPad *pad,GstElement *pipeline) {
+  GstElement *audiothread;
+  GstElement *audioqueue;
   GstElement *audiodecode;
   GstElement *audiosink;
 
   if (!strncmp(gst_pad_get_name(pad), "audio_", 6)) {
     fprintf(stderr,"have audio pad\n");
 
-    gst_element_set_state(pipeline,GST_STATE_PAUSED);
+//    fprintf(stderr,"setting state to PAUSED\n");
+//    gst_element_set_state(pipeline,GST_STATE_PAUSED);
 
+    fprintf(stderr,"creating thread\n");
+    audiothread = gst_elementfactory_make("thread","audiothread");
+    gst_bin_add(GST_BIN(pipeline),audiothread);
+
+    fprintf(stderr,"creating queue\n");
+    audioqueue = gst_elementfactory_make("queue","audioqueue");
+    gst_bin_add(GST_BIN(audiothread),audioqueue);
+    gst_pad_connect(pad,gst_element_get_pad(audioqueue,"sink"));
+
+    fprintf(stderr,"creating decoder\n");
     audiodecode = gst_elementfactory_make("mad","audiodecode");
-    gst_bin_add(GST_BIN(pipeline),audiodecode);
-    gst_pad_connect(pad,gst_element_get_pad(audiodecode,"sink"));
+    gst_bin_add(GST_BIN(audiothread),audiodecode);
+    gst_element_connect(audioqueue,"src",audiodecode,"sink");
 
+    fprintf(stderr,"creating esdsink\n");
     audiosink = gst_elementfactory_make("esdsink","audiosink");
-    gst_bin_add(GST_BIN(pipeline),audiosink);
+    gst_bin_add(GST_BIN(audiothread),audiosink);
     gst_element_connect(audiodecode,"src",audiosink,"sink");
 
-    gst_element_set_state(pipeline,GST_STATE_PLAYING);
+    fprintf(stderr,"setting state to PLAYING\n");
+    gst_element_set_state(audiothread,GST_STATE_PLAYING);
 
     fprintf(stderr,"done dealing with new audio pad\n");
   }
