@@ -54,3 +54,5 @@ Optional debian packages:
 (This is an incomplete list, made only of problems which have been reported,
 rather than by an audit.)
 task-helix-gnome-dev   OR libgnome-dev
+
+gtk-doc-tools 0.4-0.2  -- needed to build documentation

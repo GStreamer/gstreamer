@@ -79,7 +79,7 @@ if test x$NASM_PATH = xno; then
   AC_MSG_WARN(Couldn't find nasm)
   HAVE_NASM="no"
 else
-  AC_DEFINE(HAVE_NASM)
+  AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is available])
   HAVE_NASM="yes"
 fi
 
@@ -124,7 +124,7 @@ dnl ==============================================
 dnl Determine CPU
 case "x${target_cpu}" in
   xi?86 | k?) HAVE_CPU_I386=yes
-              AC_DEFINE(HAVE_CPU_I386)
+              AC_DEFINE(HAVE_CPU_I386, 1, [Define if the target CPU is an x86])
               dnl FIXME could use some better detection
               dnl       (ie CPUID)
               case "x${target_cpu}" in
@@ -132,13 +132,13 @@ case "x${target_cpu}" in
                 *)             AC_DEFINE(HAVE_RDTSC) ;;
               esac ;;
   xpowerpc)   HAVE_CPU_PPC=yes
-              AC_DEFINE(HAVE_CPU_PPC) ;;
+              AC_DEFINE(HAVE_CPU_PPC, 1, [Define if the target CPU is a PPC]) ;;
   xalpha)     HAVE_CPU_ALPHA=yes
-              AC_DEFINE(HAVE_CPU_ALPHA) ;;
+              AC_DEFINE(HAVE_CPU_ALPHA, 1, [Define if the target CPU is an Alpha]) ;;
   xarm*)      HAVE_CPU_ARM=yes
-              AC_DEFINE(HAVE_CPU_ARM) ;;
+              AC_DEFINE(HAVE_CPU_ARM, 1, [Define if the target CPU is an ARM]) ;;
   xsparc*)    HAVE_CPU_SPARC=yes
-              AC_DEFINE(HAVE_CPU_SPARC) ;;
+              AC_DEFINE(HAVE_CPU_SPARC, 1, [Define if the target CPU is a PPC]) ;;
 esac
 
 dnl Determine endianness
@@ -438,7 +438,7 @@ AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS=yes, HAVE_OSS=no)
 
 dnl Check for xaudio
 AC_CHECK_HEADER(xaudio/decoder.h,
-  AC_DEFINE(HAVE_XAUDIO)
+  AC_DEFINE(HAVE_XAUDIO, 1, [Define if xaudio is available])
   HAVE_XAUDIO="yes",
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: gstxa
@@ -450,7 +450,7 @@ dnl Check for libmad
 AC_MSG_CHECKING(MAD library)
 AC_CHECK_LIB(mad, mad_decoder_finish,
   HAVE_LIBMAD=yes
-  AC_DEFINE(HAVE_LIBMAD),
+  AC_DEFINE(HAVE_LIBMAD, 1, [Define if libmad is available]),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: mad
 )
@@ -461,7 +461,7 @@ dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
 AC_CHECK_LIB(vorbis, ogg_sync_init,
   HAVE_VORBIS=yes
-  AC_DEFINE(HAVE_VORBIS),
+  AC_DEFINE(HAVE_VORBIS, 1, [Define if vorbis library is available]),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: vorbisdec vorbisenc
 )
@@ -472,7 +472,7 @@ dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
 AC_CHECK_LIB(jpeg, jpeg_set_defaults,
   HAVE_LIBJPEG=yes
-  AC_DEFINE(HAVE_LIBJPEG),
+  AC_DEFINE(HAVE_LIBJPEG, 1, [Define if libjpeg is available]),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: jpegdec jpegenc
 )
@@ -483,7 +483,7 @@ dnl Check for libHermes
 AC_MSG_CHECKING(Hermes library)
 AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
   HAVE_LIBHERMES=yes
-  AC_DEFINE(HAVE_LIBHERMES),
+  AC_DEFINE(HAVE_LIBHERMES, 1, [Define if Hermes library is available]),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: colorspace
 )
@@ -495,7 +495,7 @@ dnl Check for libgsm
 AC_MSG_CHECKING(GSM library)
 AC_CHECK_LIB(gsm, gsm_create,
   HAVE_LIBGSM=yes
-  AC_DEFINE(HAVE_LIBGSM),
+  AC_DEFINE(HAVE_LIBGSM, 1, [Define if GSM library is available]),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: gsmdec, gsmenc
 )
@@ -679,7 +679,7 @@ esac],
 [USE_DEBUG_VERBOSE=no]) dnl Default value
 
 AC_ARG_ENABLE(info,
-[  --enable-info                spews lots of info at runtime for plugin writers],
+[  --enable-info                turns verbose info at runtime on by default],
 [case "${enableval}" in
   yes) USE_DEBUG_INFO_VERBOSE=yes ;;
   no)  USE_DEBUG_INFO_VERBOSE=no ;;
@@ -688,7 +688,7 @@ esac],
 [USE_DEBUG_INFO_VERBOSE=no]) dnl Default value
 
 AC_ARG_ENABLE(info-system,
-[  --disable-info-system        disables the info debugging system],
+[  --disable-info-system        entirely disables the info debugging system],
 [case "${enableval}" in
   yes) DISABLE_DEBUG_INFO=no ;;
   no)  DISABLE_DEBUG_INFO=yes ;;
@@ -766,23 +766,23 @@ dnl ################################################
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
 if test "x$USE_GDK_PIXBUF" = xyes; then
-  AC_DEFINE(HAVE_GDK_PIXBUF)
+  AC_DEFINE(HAVE_GDK_PIXBUF, 1, [Define if GDK pixbuf library is available])
 fi
 
 if test "x$USE_LIBGHTTP" = xyes; then
-  AC_DEFINE(HAVE_LIBGHTTP)
+  AC_DEFINE(HAVE_LIBGHTTP, 1, [Define if ghttp library is available])
 fi
 
 if test "x$USE_LIBMMX" = xyes; then
-  AC_DEFINE(HAVE_LIBMMX)
+  AC_DEFINE(HAVE_LIBMMX, 1, [Define if libmmx is available])
 fi
 
 if test "x$USE_ATOMIC_H" = xyes; then
-  AC_DEFINE(HAVE_ATOMIC_H)
+  AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
 
 if test "x$PLUGINS_USE_SRCDIR" = xyes; then
-  AC_DEFINE(PLUGINS_USE_SRCDIR)
+  AC_DEFINE(PLUGINS_USE_SRCDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
 
 if test "x$USE_DEBUG" = xyes; then
@@ -790,22 +790,18 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 
 if test "x$USE_DEBUG_VERBOSE" = xyes; then
-  AC_DEFINE(GST_DEBUG_ENABLED)
+  AC_DEFINE(GST_DEBUG_ENABLED, 1, [Define if code to assist debugging should be compiled in])
 fi
 
-if test "x$USE_DEBUG_INFO_VERBOSE" = xyes; then
-  AC_DEFINE(GST_INFO_ENABLED_VERBOSE)
-  AC_DEFINE(GST_INFO_ENABLED)
-else
-  AC_DEFINE(GST_INFO_ENABLED)
-fi
-
-if test "x$DISABLE_DEBUG_INFO" = xyes; then
-  AC_DEFINE(GST_INFO_FORCE_DISABLE)
+if test "x$DISABLE_DEBUG_INFO" = xno; then
+  AC_DEFINE(GST_INFO_ENABLED, 1, [Define if code to produce informative messages should be compiled])
+  if test "x$USE_DEBUG_INFO_VERBOSE" = xyes; then
+    AC_DEFINE(GST_INFO_ENABLED_VERBOSE, 1, [Define if default should be to display all informative messages])
+  fi
 fi
 
 if test "x$DISABLE_DEBUG_COLOR" = xno; then
-  AC_DEFINE(GST_DEBUG_COLOR)
+  AC_DEFINE(GST_DEBUG_COLOR, 1, [Define if debugging messages should be colorised])
 fi
 
 if test "x$USE_PROFILING" = xyes; then
