@@ -974,7 +974,12 @@ AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
+dnl thomas : the next line gives errors, this is how it is in CVS
 AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
+dnl thomas : the next line gives errors as well, I commented it
+dnl AM_CONDITIONAL(HAVE_LAC,      	    test "x$HAVE_FAC" = "xyes")
+dnl thomas: the next line doesn't give errors
+dnl AM_CONDITIONAL(HAVE_FLC,      	    test "x$HAVE_FLC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
@@ -1105,6 +1110,7 @@ libs/getbits/Makefile
 libs/putbits/Makefile
 libs/idct/Makefile
 libs/audio/Makefile
+libs/colorspace/Makefile
 plugins/Makefile
 plugins/aasink/Makefile
 plugins/alsa/Makefile
