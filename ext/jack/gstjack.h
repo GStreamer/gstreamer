@@ -51,7 +51,7 @@
 #define GST_IS_JACK_BIN_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_JACK_BIN)
 #define GST_TYPE_JACK_BIN gst_jack_bin_get_type()
 
-#define GST_JACK_PAD(l) ((GstJackPad*)l->data) /* l is a GList */
+#define GST_JACK_PAD(l) ((GstJackPad*)l->data)	/* l is a GList */
 
 
 typedef struct _GstJack GstJack;
@@ -64,59 +64,65 @@ typedef GstJack GstJackSrc;
 typedef GstJackClass GstJackSrcClass;
 
 
-enum {
-    GST_JACK_OPEN = GST_BIN_FLAG_LAST,
-    GST_JACK_ACTIVE,
-    GST_JACK_FLAG_LAST = GST_BIN_FLAG_LAST + 3,
+enum
+{
+  GST_JACK_OPEN = GST_BIN_FLAG_LAST,
+  GST_JACK_ACTIVE,
+  GST_JACK_FLAG_LAST = GST_BIN_FLAG_LAST + 3,
 };
 
 
 typedef jack_default_audio_sample_t sample_t;
 
-typedef struct {
-    GstPad *pad;
-    void *data;
-    const gchar *name;
-    const gchar *peer_name;
-    jack_port_t *port;
+typedef struct
+{
+  GstPad *pad;
+  void *data;
+  const gchar *name;
+  const gchar *peer_name;
+  jack_port_t *port;
 } GstJackPad;
 
-struct _GstJack {
-    GstElement element;
+struct _GstJack
+{
+  GstElement element;
 
-    /* list of GstJackPads */
-    GList *pads;
+  /* list of GstJackPads */
+  GList *pads;
 
-    /* for convenience */
-    GstPadDirection direction;
+  /* for convenience */
+  GstPadDirection direction;
 
-    gchar *port_name_prefix;
+  gchar *port_name_prefix;
 
-    GstJackBin *bin;
+  GstJackBin *bin;
 };
 
-struct _GstJackClass {
-    GstElementClass parent_class;
+struct _GstJackClass
+{
+  GstElementClass parent_class;
 };
 
-struct _GstJackBin {
-    GstBin bin;
+struct _GstJackBin
+{
+  GstBin bin;
 
-    jack_client_t *client;
-    gint default_new_port_number;
+  jack_client_t *client;
+  gint default_new_port_number;
 
-    /* lists of GstJackPads */
-    GList *sink_pads;
-    GList *src_pads;
+  /* lists of GstJackPads */
+  GList *sink_pads;
+  GList *src_pads;
 
-    gchar *client_name;
+  gchar *client_name;
 
-    guint rate;
-    jack_nframes_t nframes;
+  guint rate;
+  jack_nframes_t nframes;
 };
 
-struct _GstJackBinClass {
-    GstBinClass parent_class;
+struct _GstJackBinClass
+{
+  GstBinClass parent_class;
 };
 
 
