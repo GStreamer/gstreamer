@@ -26,9 +26,8 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   /* mpegdemux needs the bytestream package */
-  if (!gst_library_load ("gstbytestream")) {
-      gst_info ("mpeg_demux:: could not load support library: 'gstbytestream'\n");    return FALSE;
-  }
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   /* short-circuit here; this is potentially dangerous since if the second
    * or third init fails then the whole plug-in will be placed on the register

@@ -636,14 +636,12 @@ gst_mpeg_parse_plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* this filter needs the bytestream package */
-  if (!gst_library_load("gstbytestream")) {
-    gst_info("mpeg_parse:: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   /* create an elementfactory for the mpeg_parse element */
-  factory = gst_element_factory_new("mpegparse",GST_TYPE_MPEG_PARSE,
-                                   &mpeg_parse_details);
+  factory = gst_element_factory_new ("mpegparse", GST_TYPE_MPEG_PARSE,
+                                     &mpeg_parse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));

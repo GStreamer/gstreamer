@@ -855,14 +855,12 @@ gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream")) {
-    gst_info ("mpegdemux: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   /* create an elementfactory for the mpeg_demux element */
   factory = gst_element_factory_new ("mpegdemux", GST_TYPE_MPEG_DEMUX,
-                                    &mpeg_demux_details);
+                                     &mpeg_demux_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
