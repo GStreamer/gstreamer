@@ -238,6 +238,12 @@ else
 TARKIN_DIR=
 endif
 
+if USE_IVORBIS
+IVORBIS_DIR=ivorbis
+else
+IVORBIS_DIR=
+endif
+
 if USE_VORBIS
 VORBIS_DIR=vorbis
 else
@@ -268,7 +274,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) $(RTP_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
-	$(VORBIS_DIR) $(XMMS_DIR) $(SNAPSHOT_DIR)
+	$(IVORBIS_DIR) $(VORBIS_DIR) $(XMMS_DIR) $(SNAPSHOT_DIR)
 
 DIST_SUBDIRS=\
 	a52dec aalib alsa \
@@ -276,7 +282,7 @@ DIST_SUBDIRS=\
 	audiofile cdparanoia dv \
 	dvdread dvdnav esd mas ffmpeg \
 	flac gnomevfs gsm \
-	hermes http jack jpeg \
+	hermes http ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
