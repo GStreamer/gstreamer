@@ -265,8 +265,8 @@ GstPluginDesc plugin_desc = {
   plugin_init
 };
 
-static int
-gst_basic_scheduler_loopfunc_wrapper (int argc, char *argv[])
+static void
+gst_basic_scheduler_loopfunc_wrapper (int argc, void **argv)
 {
   GstElement *element = GST_ELEMENT_CAST (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
@@ -294,11 +294,10 @@ gst_basic_scheduler_loopfunc_wrapper (int argc, char *argv[])
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   gst_object_unref (GST_OBJECT (element));
-  return 0;
 }
 
-static int
-gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
+static void
+gst_basic_scheduler_chain_wrapper (int argc, void **argv)
 {
   GstElement *element = GST_ELEMENT_CAST (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
@@ -357,11 +356,10 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   gst_object_unref (GST_OBJECT (element));
-  return 0;
 }
 
-static int
-gst_basic_scheduler_src_wrapper (int argc, char *argv[])
+static void
+gst_basic_scheduler_src_wrapper (int argc, void **argv)
 {
   GstElement *element = GST_ELEMENT_CAST (argv);
   GList *pads;
@@ -383,7 +381,7 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
       pads = g_list_next (pads);
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC && GST_PAD_IS_USABLE (realpad)) {
 	GST_DEBUG (GST_CAT_DATAFLOW, "calling _getfunc for %s:%s", GST_DEBUG_PAD_NAME (realpad));
-	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
+	g_return_if_fail (GST_RPAD_GETFUNC (realpad) != NULL);
 	buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
 	if (buf) {
 	  GST_DEBUG (GST_CAT_DATAFLOW, "calling gst_pad_push on pad %s:%s %p",
@@ -403,7 +401,6 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
   SCHED (element)->current = NULL;
 
   GST_DEBUG_LEAVE ("");
-  return 0;
 }
 
 static void
@@ -524,6 +521,43 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
 }
 
 static gboolean
+gst_basic_scheduler_eventhandler_proxy (GstPad *srcpad, GstEvent *event)
+{
+  gboolean flush;
+
+  GST_INFO (GST_CAT_SCHEDULING, "intercepting event %d on pad %s:%s",
+                      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (srcpad));
+
+  /* figure out if we need to flush */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      flush = TRUE;
+      break;
+    case GST_EVENT_SEEK:
+    case GST_EVENT_SEEK_SEGMENT:
+      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+      break;
+    default:
+      flush = FALSE;
+      break;
+  }
+
+  if (flush) {
+    GstData *data = GST_DATA (GST_RPAD_BUFPEN (srcpad));
+
+    GST_INFO (GST_CAT_SCHEDULING, "event is flush");
+
+    if (data) {
+      GST_INFO (GST_CAT_SCHEDULING, "need to clear some buffers");
+      
+      gst_data_unref (data);
+      GST_RPAD_BUFPEN (srcpad) = NULL;
+    }
+  }
+  return GST_RPAD_EVENTFUNC (srcpad) (srcpad, event);
+}
+
+static gboolean
 gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 {
   GList *elements;
@@ -627,6 +661,8 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	    }
 	  }
 	}
+	/* in any case we need to copy the eventfunc into the handler */
+	GST_RPAD_EVENTHANDLER (peerpad) = GST_RPAD_EVENTFUNC (peerpad);
       }
 
       /* if the element is DECOUPLED or outside the manager, we have to chain */
@@ -652,12 +688,16 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	             "setting cothreaded push proxy for sinkpad %s:%s",
 	     GST_DEBUG_PAD_NAME (pad));
 	  GST_RPAD_CHAINHANDLER (pad) = GST_DEBUG_FUNCPTR (gst_basic_scheduler_chainhandler_proxy);
+          GST_RPAD_EVENTHANDLER (pad) = GST_RPAD_EVENTFUNC (pad);
 	}
 	else {
 	  GST_DEBUG (GST_CAT_SCHEDULING, 
 	             "setting cothreaded pull proxy for srcpad %s:%s",
 	     GST_DEBUG_PAD_NAME (pad));
 	  GST_RPAD_GETHANDLER (pad) = GST_DEBUG_FUNCPTR (gst_basic_scheduler_gethandler_proxy);
+	  /* the gethandler proxy function can queue a buffer in the bufpen, we need
+	   * to remove this buffer when a flush event is sent on the pad */
+          GST_RPAD_EVENTHANDLER (pad) = GST_DEBUG_FUNCPTR (gst_basic_scheduler_eventhandler_proxy);
 	}
       }
     }
