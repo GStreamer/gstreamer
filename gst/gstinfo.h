@@ -107,6 +107,7 @@ enum {
   GST_CAT_REFCOUNTING,		/* Ref Counting stuff */
   GST_CAT_EVENT,		/* Event system */
   GST_CAT_PARAMS,		/* Dynamic parameters */
+  GST_CAT_APPLICATION,		/* Application-defined debugging */
 
   GST_CAT_CALL_TRACE = 30,	/* Call tracing */
 

@@ -84,7 +84,7 @@ static gchar *_gst_info_category_strings[] = {
   /* [GST_CAT_REFCOUNTING]	= */ "REFCOUNTING",
   /* [GST_CAT_EVENT]		= */ "EVENT",
   /* [GST_CAT_PARAMS]		= */ "PARAMS",
-  "",
+  /* [GST_CAT_APPLICATION]	= */ "APPLICATION",
   "",
   /* [GST_CAT_CALL_TRACE]	= */ "CALL_TRACE",
   /* [31]			= */ 
@@ -145,7 +145,7 @@ const gchar *_gst_category_colors[32] = {
   /* [GST_CAT_REFCOUNTING]	= */ "00;34;42",
   /* [GST_CAT_EVENT]		= */ "01;37;41",	/* !! */
   /* [GST_CAT_PARAMS]		= */ "00;30;43",	/* !! */
-  				     "",
+  /* [GST_CAT_APPLICATION]	= */ "07;36",
   				     "",
   /* [GST_CAT_CALL_TRACE]	= */ "",
   /* [31]			= */ "05;31",
