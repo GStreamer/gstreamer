@@ -366,6 +366,8 @@ GstPadGetFunction
 GstPadGetRegionFunction
 GstPadQoSFunction
 GstPadEOSFunction
+GstPadNewCapsFunction
+
 
 GstPadNegotiateReturn
 GstPadNegotiateFunction
@@ -388,6 +390,7 @@ gst_pad_set_getregion_function
 gst_pad_set_negotiate_function
 gst_pad_set_qos_function
 gst_pad_set_eos_function
+gst_pad_set_newcaps_function
 gst_pad_set_caps
 gst_pad_get_caps
 gst_pad_check_compatibility
@@ -435,6 +438,7 @@ GST_RPAD_PULLREGIONFUNC
 GST_RPAD_QOSFUNC
 GST_RPAD_EOSFUNC
 GST_RPAD_NEGOTIATEFUNC
+GST_RPAD_NEWCAPSFUNC
 
 GST_GPAD_REALPAD
 GstGhostPad

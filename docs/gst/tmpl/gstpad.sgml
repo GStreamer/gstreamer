@@ -155,6 +155,15 @@ The function that will be called in an EOS case.
 @Returns: TRUE if EOS was successful, FALSE otherwise
 
 
+<!-- ##### USER_FUNCTION GstPadNewCapsFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+
+
 <!-- ##### ENUM GstPadNegotiateReturn ##### -->
 <para>
 The possible results from padnegotiation.
@@ -171,8 +180,10 @@ The function that will be called when negotiating.
 
 @pad: The pad that is being negotiated
 @caps: The current caps that are being negotiated
-@count: A counter to keep track of the negotiation process
+@data: 
 @Returns: The result of the negotiation process
+<!-- # Unused Parameters # -->
+@count: A counter to keep track of the negotiation process
 
 
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
@@ -327,6 +338,15 @@ Destroy the pad.
 
 @pad: 
 @eos: 
+
+
+<!-- ##### FUNCTION gst_pad_set_newcaps_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@newcaps: 
 
 
 <!-- ##### FUNCTION gst_pad_set_caps ##### -->
@@ -556,9 +576,9 @@ Call the EOS function of the pad
 @srcpad: 
 @destpad: 
 @caps: 
-@counter: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@counter: 
 @count: 
 
 
@@ -636,6 +656,7 @@ Call the EOS function of the pad
 @pullfunc: 
 @pullregionfunc: 
 @negotiatefunc: 
+@newcapsfunc: 
 @ghostpads: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
@@ -735,6 +756,14 @@ Get the EOS function of the real pad.
 
 
 <!-- ##### MACRO GST_RPAD_NEGOTIATEFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_NEWCAPSFUNC ##### -->
 <para>
 
 </para>

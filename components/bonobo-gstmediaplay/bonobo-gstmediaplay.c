@@ -307,11 +307,15 @@ bonobo_gstmediaplay_factory (BonoboGenericFactory *this, void *data)
 
   control_data->play = gst_play_new ();
 
+
   vbox = gtk_vbox_new (TRUE, 0);
 
   gtk_box_pack_start (GTK_BOX (vbox), GTK_WIDGET (control_data->play),
 			    TRUE, TRUE, 0);
   gtk_widget_show_all (vbox);
+
+  gst_play_set_uri (control_data->play, "/opt/data/armageddon1.mpg");
+  gst_play_play (control_data->play);
 
   /*
    * Create the BonoboControl object.
@@ -403,6 +407,7 @@ init_server_factory (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
+  //g_thread_init (NULL);
   /*
    * Setup the factory.
    */

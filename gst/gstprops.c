@@ -68,7 +68,7 @@ gst_props_debug_entry (GstPropsEntry *entry)
       GST_DEBUG (0, "%d\n", entry->data.int_data);
       break;
     case GST_PROPS_FOURCC_ID_NUM:
-      GST_DEBUG (0, "%s\n", (gchar*)&entry->data.fourcc_data);
+      GST_DEBUG (0, "%4.4s\n", (gchar*)&entry->data.fourcc_data);
       break;
     case GST_PROPS_BOOL_ID_NUM:
       GST_DEBUG (0, "%d\n", entry->data.bool_data);
@@ -563,6 +563,9 @@ gst_props_get_int (GstProps *props, const gchar *name)
   GList *lentry;
   GQuark quark;
   
+  g_return_val_if_fail (props != NULL, 0);
+  g_return_val_if_fail (name != NULL, 0);
+
   quark = g_quark_from_string (name);
 
   lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
@@ -593,6 +596,9 @@ gst_props_get_fourcc_int (GstProps *props, const gchar *name)
   GList *lentry;
   GQuark quark;
   
+  g_return_val_if_fail (props != NULL, 0);
+  g_return_val_if_fail (name != NULL, 0);
+
   quark = g_quark_from_string (name);
 
   lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
@@ -623,6 +629,9 @@ gst_props_get_boolean (GstProps *props, const gchar *name)
   GList *lentry;
   GQuark quark;
   
+  g_return_val_if_fail (props != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
   quark = g_quark_from_string (name);
 
   lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
@@ -653,6 +662,9 @@ gst_props_get_string (GstProps *props, const gchar *name)
   GList *lentry;
   GQuark quark;
   
+  g_return_val_if_fail (props != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
   quark = g_quark_from_string (name);
 
   lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
@@ -886,7 +898,6 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 		   g_quark_to_string (entry1->propid));
 	gst_props_debug_entry (entry1);
 	gst_props_debug_entry (entry2);
-	GST_DEBUG (0, "\n");
     }
 
     sourcelist = g_list_next (sourcelist);

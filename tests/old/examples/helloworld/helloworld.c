@@ -13,7 +13,7 @@ void eos(GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *bin, *disksrc, *parse, *decoder, *downmix, *mulaw, *osssink;
+  GstElement *bin, *disksrc, *parse, *decoder, *downmix, *mulaw, *mulawdec, *osssink;
 
   gst_init(&argc,&argv);
 
@@ -36,6 +36,7 @@ int main(int argc,char *argv[])
   decoder = gst_elementfactory_make("mpg123","decoder");
   downmix = gst_elementfactory_make("stereo2mono","stereo2mono");
   mulaw = gst_elementfactory_make("mulawencode","mulaw");
+  mulawdec = gst_elementfactory_make("mulawdecode","mulawdec");
   /* and an audio sink */
   osssink = gst_elementfactory_make("osssink", "play_audio");
 
@@ -45,6 +46,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(bin), decoder);
   gst_bin_add(GST_BIN(bin), downmix);
   gst_bin_add(GST_BIN(bin), mulaw);
+  gst_bin_add(GST_BIN(bin), mulawdec);
   gst_bin_add(GST_BIN(bin), osssink);
 
   /* connect src to sink */
@@ -57,6 +59,8 @@ int main(int argc,char *argv[])
   gst_pad_connect(gst_element_get_pad(downmix,"src"),
                   gst_element_get_pad(mulaw,"sink"));
   gst_pad_connect(gst_element_get_pad(mulaw,"src"),
+                  gst_element_get_pad(mulawdec,"sink"));
+  gst_pad_connect(gst_element_get_pad(mulawdec,"src"),
                   gst_element_get_pad(osssink,"sink"));
 
   /* start playing */
@@ -76,6 +80,7 @@ int main(int argc,char *argv[])
   gst_object_destroy(GST_OBJECT(decoder));
   gst_object_destroy(GST_OBJECT(downmix));
   gst_object_destroy(GST_OBJECT(mulaw));
+  gst_object_destroy(GST_OBJECT(mulawdec));
   gst_object_destroy(GST_OBJECT(disksrc));
   gst_object_destroy(GST_OBJECT(bin));
 

@@ -67,14 +67,6 @@ Query the element for the current mime type
 </para>
 
 
-<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
-<para>
-
-</para>
-
-@pad: 
-@parent: 
-
 <!-- ##### FUNCTION gst_fdsink_chain ##### -->
 <para>
 
@@ -83,7 +75,23 @@ Query the element for the current mime type
 @pad: 
 @buf: 
 
+<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
 <!-- ##### FUNCTION gst_identity_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_audiosink_chain ##### -->
 <para>
 
 </para>
@@ -97,14 +105,6 @@ Query the element for the current mime type
 </para>
 
 @Returns: 
-
-<!-- ##### FUNCTION gst_audiosink_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
 
 <!-- ##### MACRO GST_PIPELINE_CLASS ##### -->
 <para>
@@ -349,14 +349,14 @@ subclass use this to start their flag enumeration
 @audiosink: 
 @channels: 
 
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Short_Description ##### -->
-Generic connection between elements.
-
-
 <!-- ##### STRUCT GstSinkClass ##### -->
 <para>
 
 </para>
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Short_Description ##### -->
+Generic connection between elements.
 
 
 <!-- ##### STRUCT GstFilterClass ##### -->
@@ -632,13 +632,13 @@ Specify the current offset in the file.
 @sheight: 
 @bytes_per_line: 
 
-<!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
+<!-- ##### ARG GstAudioSink:format ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### ARG GstAudioSink:format ##### -->
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
 <para>
 
 </para>
@@ -672,24 +672,17 @@ Specify the current offset in the file.
 @name: 
 @Returns: 
 
-<!-- ##### STRUCT GstConnection ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### STRUCT GstQueueClass ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### FUNCTION gst_fakesrc_push ##### -->
+<!-- ##### STRUCT GstConnection ##### -->
 <para>
 
 </para>
 
-@src: 
 
 <!-- ##### FUNCTION gst_type_add_sink ##### -->
 <para>
@@ -698,6 +691,13 @@ Specify the current offset in the file.
 
 @id: 
 @sink: 
+
+<!-- ##### FUNCTION gst_fakesrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
 
 <!-- ##### MACRO GST_IS_IDENTITY_CLASS ##### -->
 <para>
@@ -1096,19 +1096,19 @@ GstFilter
 
 @obj: 
 
-<!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### FUNCTION gst_fdsrc_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### FUNCTION gst_pad_get_type_id ##### -->
 <para>
@@ -1117,13 +1117,6 @@ GstFilter
 
 @pad: 
 @Returns: 
-
-<!-- ##### FUNCTION gst_thread_iterate ##### -->
-<para>
-
-</para>
-
-@thread: 
 
 <!-- ##### STRUCT OverlayClip ##### -->
 <para>
@@ -1134,6 +1127,13 @@ GstFilter
 @x2: 
 @y1: 
 @y2: 
+
+<!-- ##### FUNCTION gst_thread_iterate ##### -->
+<para>
+
+</para>
+
+@thread: 
 
 <!-- ##### ENUM GstSrcFlags ##### -->
 <para>
@@ -1204,19 +1204,19 @@ GstColorSpace
 
 @obj: 
 
-<!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_AUDIOSINK_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
+
+<!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### MACRO GST_SRC_CLASS ##### -->
 <para>
@@ -1247,12 +1247,6 @@ GstColorSpace
 @pad: 
 @Returns: 
 
-<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_esdsink_new ##### -->
 <para>
 
@@ -1260,6 +1254,12 @@ GstColorSpace
 
 @name: 
 @Returns: 
+
+<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gst_element_request_pad ##### -->
 <para>
@@ -1397,14 +1397,14 @@ This macro sets the given flags.
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
-GstSink
-
-
 <!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
 <para>
 A flag indicating that MMX instructions are supported.
 </para>
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
+GstSink
 
 
 <!-- ##### FUNCTION gst_object_get_type ##### -->
@@ -1690,19 +1690,19 @@ or a video card.
 </para>
 
 
-<!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### FUNCTION gst_esdsink_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### SECTION ./tmpl/GstElement.sgml:See_Also ##### -->
 <para>
@@ -1724,12 +1724,6 @@ Query whether this object has multiple input pads.
 
 @obj: Element to query for multiple input pads.
 
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO DEBUG_NOPREFIX ##### -->
 <para>
 
@@ -1737,6 +1731,12 @@ Query whether this object has multiple input pads.
 
 @format: 
 @args...: 
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### ARG GstAudioSink:frequency ##### -->
 <para>
@@ -2117,13 +2117,6 @@ The start point of a filter graph
 
 @audiosink: 
 
-<!-- ##### MACRO GST_IS_FAKESINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_STATE_UNSET ##### -->
 <para>
 This macro unsets the given state on the element.
@@ -2131,6 +2124,13 @@ This macro unsets the given state on the element.
 
 @obj: Element to unset state of.
 @flag: State to unset, can be any number of bits in guint32.
+
+<!-- ##### MACRO GST_IS_FAKESINK ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### MACRO GST_QUEUE_CLASS ##### -->
 <para>
@@ -2197,6 +2197,13 @@ The number of bytes per read.
 
 @obj: 
 
+<!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### MACRO ERROR_OBJECT ##### -->
 <para>
 
@@ -2206,13 +2213,6 @@ The number of bytes per read.
 @object: 
 @format: 
 @args...: 
-
-<!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### MACRO GST_IS_IDENTITY ##### -->
 <para>
@@ -2318,17 +2318,6 @@ This macro sets the given state on the element.
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/videoraw.sgml:Short_Description ##### -->
-Information about video buffers.
-
-
-<!-- ##### FUNCTION gst_fdsink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_src_push_region ##### -->
 <para>
 
@@ -2337,6 +2326,17 @@ Information about video buffers.
 @src: 
 @offset: 
 @size: 
+
+<!-- ##### FUNCTION gst_fdsink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Short_Description ##### -->
+Information about video buffers.
+
 
 <!-- ##### STRUCT GstPipelineClass ##### -->
 <para>
@@ -2428,13 +2428,13 @@ A flag indicating that SSE instructions are supported.
 
 @obj: 
 
-<!-- ##### ARG GstAsyncDiskSrc:size ##### -->
+<!-- ##### STRUCT GstDiskSrcClass ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### STRUCT GstDiskSrcClass ##### -->
+<!-- ##### ARG GstAsyncDiskSrc:size ##### -->
 <para>
 
 </para>
@@ -2577,6 +2577,13 @@ the offset.
 </para>
 
 
+<!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### FUNCTION gst_sinesrc_new ##### -->
 <para>
 
@@ -2584,13 +2591,6 @@ the offset.
 
 @name: 
 @Returns: 
-
-<!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
 
 <!-- ##### ARG GstAudioSrc:curoffset ##### -->
 <para>
@@ -2640,19 +2640,19 @@ plugin
 
 @klass: 
 
-<!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_ASYNCDISKSRC ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
 
 <!-- ##### ARG GstPad:active ##### -->
 <para>

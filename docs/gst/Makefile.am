@@ -52,8 +52,7 @@ tmpl_sources =				\
 	tmpl/gsttype.sgml               \
 	tmpl/gstutils.sgml              \
 	tmpl/gstxml.sgml                \
-	tmpl/spectrum.sgml              \
-	tmpl/videoraw.sgml
+	tmpl/spectrum.sgml              
 
 gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\

@@ -89,16 +89,17 @@ typedef enum {
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
-typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
-typedef GstBuffer *(*GstPadGetFunction) (GstPad *pad);
-typedef GstBuffer *(*GstPadGetRegionFunction) (GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
-typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
+typedef void 		(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
+typedef GstBuffer*	(*GstPadGetFunction) 		(GstPad *pad);
+typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
+typedef void 		(*GstPadQoSFunction) 		(GstPad *pad, glong qos_message);
 
-typedef void (*GstPadPushFunction) (GstPad *pad, GstBuffer *buf);
-typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
-typedef GstBuffer *(*GstPadPullRegionFunction) (GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
-typedef gboolean (*GstPadEOSFunction) (GstPad *pad);
-typedef GstPadNegotiateReturn (*GstPadNegotiateFunction) (GstPad *pad, GstCaps **caps, gint count);
+typedef void 		(*GstPadPushFunction) 		(GstPad *pad, GstBuffer *buf);
+typedef GstBuffer*	(*GstPadPullFunction) 		(GstPad *pad);
+typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
+typedef gboolean 	(*GstPadEOSFunction) 		(GstPad *pad);
+typedef GstPadNegotiateReturn (*GstPadNegotiateFunction) 	(GstPad *pad, GstCaps **caps, gpointer *data);
+typedef void 		(*GstPadNewCapsFunction) 	(GstPad *pad, GstCaps *caps);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -114,11 +115,11 @@ typedef enum {
 } GstPadFlags;
 
 struct _GstPad {
-  GstObject object;
+  GstObject 		object;
 
-  gpointer element_private;
+  gpointer 		element_private;
 
-  GstPadTemplate *padtemplate;	/* the template for this pad */
+  GstPadTemplate 	*padtemplate;	/* the template for this pad */
 };
 
 struct _GstPadClass {
@@ -126,31 +127,32 @@ struct _GstPadClass {
 };
 
 struct _GstRealPad {
-  GstPad pad;
+  GstPad 			pad;
 
-  GstCaps *caps;
-  GstPadDirection direction;
+  GstCaps 			*caps;
+  GstPadDirection 		direction;
 
-  cothread_state *threadstate;
+  cothread_state 		*threadstate;
 
-  GstRealPad *peer;
+  GstRealPad 			*peer;
 
-  GstBuffer *bufpen;
-  GstRegionType regiontype;
-  guint64 offset;
-  guint64 len;
+  GstBuffer 			*bufpen;
+  GstRegionType 		regiontype;
+  guint64 			offset;
+  guint64 			len;
 
-  GstPadChainFunction chainfunc;
-  GstPadGetFunction getfunc;
-  GstPadGetRegionFunction getregionfunc;
-  GstPadQoSFunction qosfunc;
-  GstPadEOSFunction eosfunc;
+  GstPadChainFunction 		chainfunc;
+  GstPadGetFunction 		getfunc;
+  GstPadGetRegionFunction 	getregionfunc;
+  GstPadQoSFunction 		qosfunc;
+  GstPadEOSFunction 		eosfunc;
 
-  GstPadPushFunction pushfunc;
-  GstPadPullFunction pullfunc;
-  GstPadPullRegionFunction pullregionfunc;
+  GstPadPushFunction 		pushfunc;
+  GstPadPullFunction		pullfunc;
+  GstPadPullRegionFunction 	pullregionfunc;
 
-  GstPadNegotiateFunction negotiatefunc;
+  GstPadNegotiateFunction 	negotiatefunc;
+  GstPadNewCapsFunction 	newcapsfunc;
 
   GList *ghostpads;
 };
@@ -196,6 +198,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_QOSFUNC(pad)		(((GstRealPad *)(pad))->qosfunc)
 #define GST_RPAD_EOSFUNC(pad)		(((GstRealPad *)(pad))->eosfunc)
 #define GST_RPAD_NEGOTIATEFUNC(pad)	(((GstRealPad *)(pad))->negotiatefunc)
+#define GST_RPAD_NEWCAPSFUNC(pad)	(((GstRealPad *)(pad))->newcapsfunc)
 
 #define GST_RPAD_REGIONTYPE(pad)	(((GstRealPad *)(pad))->regiontype)
 #define GST_RPAD_OFFSET(pad)		(((GstRealPad *)(pad))->offset)
@@ -281,6 +284,7 @@ void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getr
 void			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
 void			gst_pad_set_negotiate_function	(GstPad *pad, GstPadNegotiateFunction nego);
+void			gst_pad_set_newcaps_function	(GstPad *pad, GstPadNewCapsFunction newcaps);
 
 gboolean		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
 GstCaps*		gst_pad_get_caps		(GstPad *pad);
@@ -309,7 +313,7 @@ gboolean		gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
 gboolean		gst_pad_renegotiate		(GstPad *pad);
-GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *srcpad, GstPad *destpad, GstCaps **caps, gint counter);
+GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *srcpad, GstPad *destpad, GstCaps **caps);
 
 #if 1
 void			gst_pad_push			(GstPad *pad, GstBuffer *buf);

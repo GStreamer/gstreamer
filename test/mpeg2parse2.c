@@ -29,7 +29,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
   GstElement *src, *parse;
-  GstElement *decode, *show, *thread;
+  GstElement *decode, *show, *thread, *color;
   GtkWidget  *gtk_socket;
 
   g_print("have %d args\n",argc);
@@ -75,6 +75,9 @@ int main(int argc,char *argv[]) {
   decode = gst_elementfactory_make("mpeg2dec","decode_video");
   g_return_val_if_fail(decode != NULL, -1);
 
+  color = gst_elementfactory_make("colorspace","color");
+  g_return_val_if_fail(color != NULL, -1);
+
   show = gst_elementfactory_make("xvideosink","show");
   //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
   g_return_val_if_fail(show != NULL, -1);
@@ -97,6 +100,7 @@ int main(int argc,char *argv[]) {
 
   //gst_bin_add(GST_BIN(thread),GST_ELEMENT(parse2));
   gst_bin_add(GST_BIN(thread),GST_ELEMENT(decode));
+  gst_bin_add(GST_BIN(thread),GST_ELEMENT(color));
   gst_bin_add(GST_BIN(thread),GST_ELEMENT(show));
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(thread));
@@ -113,6 +117,8 @@ int main(int argc,char *argv[]) {
   //gst_pad_connect(gst_element_get_pad(parse2,"src"),
                   gst_element_get_pad(decode,"sink"));
   gst_pad_connect(gst_element_get_pad(decode,"src"),
+                  gst_element_get_pad(color,"sink"));
+  gst_pad_connect(gst_element_get_pad(color,"src"),
                   gst_element_get_pad(show,"sink"));
 
   gtk_widget_show_all(appwindow);

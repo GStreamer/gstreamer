@@ -66,8 +66,8 @@ static void			gst_queue_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void			gst_queue_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
 static gboolean			gst_queue_handle_eos	(GstPad *pad);
-static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gint count);
-static GstPadNegotiateReturn	gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gint count);
+static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data);
+static GstPadNegotiateReturn	gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
 static void			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
 static GstBuffer *		gst_queue_get		(GstPad *pad);
 
@@ -153,20 +153,20 @@ gst_queue_init (GstQueue *queue)
 }
 
 static GstPadNegotiateReturn
-gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gint counter)
+gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
   GstQueue *queue;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  return gst_pad_negotiate_proxy (pad, queue->sinkpad, caps, counter);
+  return gst_pad_negotiate_proxy (pad, queue->sinkpad, caps);
   
 
   //return GST_PAD_NEGOTIATE_FAIL;
 }
 
 static GstPadNegotiateReturn
-gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
+gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
 {
   GstQueue *queue;
 
@@ -179,7 +179,7 @@ gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
   }
   if (*caps) {
   */
-    return gst_pad_negotiate_proxy (pad, queue->srcpad, caps, counter);
+    return gst_pad_negotiate_proxy (pad, queue->srcpad, caps);
     /*
   }
 

@@ -261,10 +261,10 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
 
   while (targetelement) {
     GList *elements;
-    GstPad *pad;
+    GstRealPad *pad;
     GstPadTemplate *templ;
 
-    pad = GST_PAD (gst_element_get_pad_list (targetelement)->data);
+    pad = GST_PAD_REALIZE (gst_element_get_pad_list (targetelement)->data);
     templ = GST_PAD_PADTEMPLATE (pad);
 
     caps.sink = GST_PADTEMPLATE_CAPS (templ);

@@ -94,6 +94,7 @@ GstProps*	gst_caps_get_props			(GstCaps *caps);
 #define		gst_caps_get_int(caps, name)		gst_props_get_int ((caps)->properties, name)
 #define		gst_caps_get_fourcc_int(caps, name)	gst_props_get_fourcc_int ((caps)->properties, name)
 #define		gst_caps_get_boolean(caps, name)	gst_props_get_boolean ((caps)->properties, name)
+#define		gst_caps_get_string(caps, name)		gst_props_get_string ((caps)->properties, name)
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 

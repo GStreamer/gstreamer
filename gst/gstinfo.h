@@ -271,10 +271,12 @@ enum {
   GST_CAT_PIPELINE,		// Pipeline stuff
   GST_CAT_PLUGIN_LOADING,	// Plugin loading
   GST_CAT_PLUGIN_ERRORS,	// Errors during plugin loading
+  GST_CAT_PLUGIN_INFO,		// Plugin state information
   GST_CAT_PROPERTIES,		// Properties
   GST_CAT_THREAD,		// Thread creation/management
   GST_CAT_TYPES,		// Typing
   GST_CAT_XML,			// XML load/save of everything
+  GST_CAT_NEGOTIATION,		// Caps Negotiation stuff
 
   GST_CAT_MAX_CATEGORY,
 };

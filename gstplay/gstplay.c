@@ -17,6 +17,7 @@ static void gst_play_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 static void gst_play_realize		(GtkWidget *play);
 
 static void gst_play_frame_displayed	(GstElement *element, GstPlay *play);
+static void gst_play_have_size 		(GstElement *element, guint width, guint height, GstPlay *play);
 static void gst_play_audio_handoff	(GstElement *element, GstPlay *play);
 
 /* signals and args */
@@ -116,6 +117,7 @@ static void
 gst_play_init (GstPlay *play)
 {
   GstPlayPrivate *priv = g_new0 (GstPlayPrivate, 1);
+  GstElement *colorspace;
 
   play->priv = priv;
 
@@ -130,11 +132,24 @@ gst_play_init (GstPlay *play)
   gtk_signal_connect (GTK_OBJECT (priv->audio_element), "handoff",
 		  GTK_SIGNAL_FUNC (gst_play_audio_handoff), play);
 
-  priv->video_element = gst_elementfactory_make ("xvideosink", "show");
-  g_return_if_fail (priv->video_element != NULL);
+  priv->video_element = gst_elementfactory_make ("bin", "video_bin");
+  
+  priv->video_show = gst_elementfactory_make ("xvideosink", "show");
+  g_return_if_fail (priv->video_show != NULL);
   //gtk_object_set (GTK_OBJECT (priv->video_element), "xv_enabled", FALSE, NULL);
-  gtk_signal_connect (GTK_OBJECT (priv->video_element), "frame_displayed",
+  gtk_signal_connect (GTK_OBJECT (priv->video_show), "frame_displayed",
 		  GTK_SIGNAL_FUNC (gst_play_frame_displayed), play);
+  gtk_signal_connect (GTK_OBJECT (priv->video_show), "have_size",
+		  GTK_SIGNAL_FUNC (gst_play_have_size), play);
+
+  colorspace = gst_elementfactory_make ("colorspace", "colorspace");
+  gst_bin_add (GST_BIN (priv->video_element), colorspace);
+  gst_bin_add (GST_BIN (priv->video_element), priv->video_show);
+
+  gst_element_connect (colorspace, "src", priv->video_show, "sink");
+  gst_element_add_ghost_pad (priv->video_element, 
+  		             gst_element_get_pad (colorspace, "sink"),
+			     "sink");
 
   play->state = GST_PLAY_STOPPED;
   play->flags = 0;
@@ -158,8 +173,19 @@ static void
 gst_play_eos (GstElement *element,
 	      GstPlay *play)
 {
-  g_print("gstplay: eos reached\n");
+  GST_DEBUG(0, "gstplay: eos reached\n");
   gst_play_stop(play);
+}
+
+static void
+gst_play_have_size (GstElement *element, guint width, guint height,
+		    GstPlay *play)
+{
+  GstPlayPrivate *priv;
+
+  priv = (GstPlayPrivate *)play->priv;
+
+  gtk_widget_set_usize (priv->video_widget, width, height);
 }
 
 static void
@@ -175,7 +201,7 @@ gst_play_frame_displayed (GstElement *element,
   if (!stolen) {
     gtk_widget_realize (priv->video_widget);
     gtk_socket_steal (GTK_SOCKET (priv->video_widget),
-               gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid"));
+               gst_util_get_int_arg (GTK_OBJECT(priv->video_show), "xid"));
     gtk_widget_show (priv->video_widget);
     stolen = TRUE;
   }
@@ -214,7 +240,7 @@ gst_play_object_introspect (GstObject *object,
   }
   else {
     *target = element;
-    g_print("gstplay: using element \"%s\" for %s property\n",
+    GST_DEBUG(0, "gstplay: using element \"%s\" for %s property\n",
 		    gst_element_get_name(element), property);
   }
 }
@@ -396,7 +422,6 @@ gst_play_realize (GtkWidget *widget)
   GstPlayPrivate *priv;
 
   g_return_if_fail (GST_IS_PLAY (widget));
-  g_print ("gst_play: realize\n");
 
   play = GST_PLAY (widget);
   priv = (GstPlayPrivate *)play->priv;
