@@ -1149,19 +1149,19 @@ gst_bin_iterate (GstBin * bin)
   g_return_val_if_fail (bin != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, bin, "starting iteration");
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "starting iteration");
 
   gst_object_ref (GST_OBJECT (bin));
 
   running = FALSE;
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ITERATE], 0, &running);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, bin, "finished iteration");
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "finished iteration");
 
   if (!running) {
     if (GST_STATE (bin) == GST_STATE_PLAYING &&
         GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
-      GST_CAT_DEBUG (GST_CAT_DATAFLOW,
+      GST_CAT_DEBUG (GST_CAT_SCHEDULING,
           "[%s]: polling for child shutdown after useless iteration",
           GST_ELEMENT_NAME (bin));
       g_usleep (1);

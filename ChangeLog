@@ -1,3 +1,27 @@
+2004-05-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_mmap):
+	  compute mapsize correctly
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_mmap):
+	  use correct datatypes when calling a varargs function
+	* gst/elements/gsttypefindelement.c: (stop_typefinding):
+	  push a DISCONT event as first thing
+	* gst/gst_private.h:
+	* gst/gstinfo.c: (_gst_debug_init):
+	  remove GST_DATAFLOW debugging category
+	* gst/gstbin.c: (gst_bin_iterate):
+	  use GST_SCHEDULING category
+	* gst/gstpad.c: (gst_pad_get_type), (_invent_event),
+	(gst_pad_push), (gst_pad_pull), (gst_pad_call_chain_function),
+	(gst_pad_call_get_function):
+	  add GST_DATAFLOW to easily track flow of buffers or events.
+	* gst/gstqueue.c: (gst_queue_get_type),
+	(gst_queue_handle_pending_events), (gst_queue_chain),
+	(gst_queue_get), (gst_queue_handle_src_event):
+	  use own static debugging category GST_DATAFLOW for dataflow,
+	  use DEBUG category for showing which path events go, use LOG
+	  category for buffers.
+
 2004-05-10  David Schleef  <ds@schleef.org>
 
 	* docs/gst/gstreamer-sections.txt: Add gst_element_no_more_pads.

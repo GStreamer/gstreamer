@@ -137,7 +137,6 @@ GstDebugCategory *GST_CAT_PARENTAGE = NULL;
 GstDebugCategory *GST_CAT_STATES = NULL;
 GstDebugCategory *GST_CAT_PLANNING = NULL;
 GstDebugCategory *GST_CAT_SCHEDULING = NULL;
-GstDebugCategory *GST_CAT_DATAFLOW = NULL;
 GstDebugCategory *GST_CAT_BUFFER = NULL;
 GstDebugCategory *GST_CAT_CAPS = NULL;
 GstDebugCategory *GST_CAT_CLOCK = NULL;
@@ -237,8 +236,6 @@ _gst_debug_init (void)
       GST_DEBUG_BOLD | GST_DEBUG_FG_MAGENTA, NULL);
   GST_CAT_SCHEDULING = _gst_debug_category_new ("GST_SCHEDULING",
       GST_DEBUG_BOLD | GST_DEBUG_FG_MAGENTA, NULL);
-  GST_CAT_DATAFLOW = _gst_debug_category_new ("GST_DATAFLOW",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, NULL);
   GST_CAT_BUFFER = _gst_debug_category_new ("GST_BUFFER",
       GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, NULL);
   GST_CAT_CAPS = _gst_debug_category_new ("GST_CAPS",

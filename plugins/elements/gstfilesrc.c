@@ -585,7 +585,7 @@ gst_filesrc_get_mmap (GstFileSrc * src)
       mapsize = src->mapsize;
 
       /* double the mapsize as long as the readsize is smaller */
-      while (readsize - (src->curoffset - nextmap) > mapsize) {
+      while (readsize + src->curoffset > nextmap + mapsize) {
         GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d",
             readsize, (int) mapsize);
         mapsize <<= 1;
@@ -693,7 +693,7 @@ gst_filesrc_get (GstPad * pad)
     GST_DEBUG_OBJECT (src, "sending discont");
     event =
         gst_event_new_discontinuous (src->need_discont > 1, GST_FORMAT_BYTES,
-        src->curoffset, NULL);
+        (guint64) src->curoffset, GST_FORMAT_UNDEFINED);
     src->need_discont = 0;
     return GST_DATA (event);
   }

@@ -54,7 +54,6 @@ extern GstDebugCategory *GST_CAT_PARENTAGE;
 extern GstDebugCategory *GST_CAT_STATES;
 extern GstDebugCategory *GST_CAT_PLANNING;
 extern GstDebugCategory *GST_CAT_SCHEDULING;
-extern GstDebugCategory *GST_CAT_DATAFLOW;
 extern GstDebugCategory *GST_CAT_BUFFER;
 extern GstDebugCategory *GST_CAT_CAPS;
 extern GstDebugCategory *GST_CAT_CLOCK;

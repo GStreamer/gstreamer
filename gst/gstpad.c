@@ -33,8 +33,17 @@
 #include "gsterror.h"
 #include "gstvalue.h"
 
+GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
+#define DEBUG_DATA(obj,data,notice) G_STMT_START{\
+  if (GST_IS_EVENT (data)) { \
+    GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "%s event %p (type %d)", notice, data, \
+	GST_EVENT_TYPE (data)); \
+  } else { \
+    GST_CAT_LOG_OBJECT (debug_dataflow, obj, "%s buffer %p (size %d)", notice, data, \
+	GST_BUFFER_SIZE (data)); \
+  } \
+}G_STMT_END
 #define GST_CAT_DEFAULT GST_CAT_PADS
-
 
 struct _GstPadLink
 {
@@ -102,6 +111,9 @@ gst_pad_get_type (void)
 
     _gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
         &pad_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW",
+        GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
   }
   return _gst_pad_type;
 }
@@ -3088,14 +3100,14 @@ _invent_event (GstPad * pad, GstBuffer * buffer)
 
     event = gst_event_new_discontinuous (TRUE,
         GST_FORMAT_TIME, timestamp, event_type, offset, GST_FORMAT_UNDEFINED);
-    GST_CAT_WARNING (GST_CAT_DATAFLOW,
+    GST_CAT_WARNING (GST_CAT_SCHEDULING,
         "needed to invent a DISCONT (time %" G_GUINT64_FORMAT
         ") for %s:%s => %s:%s", timestamp,
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   } else {
     event = gst_event_new_discontinuous (TRUE,
         event_type, offset, GST_FORMAT_UNDEFINED);
-    GST_CAT_WARNING (GST_CAT_DATAFLOW,
+    GST_CAT_WARNING (GST_CAT_SCHEDULING,
         "needed to invent a DISCONT (no time) for %s:%s => %s:%s",
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   }
@@ -3120,17 +3132,18 @@ gst_pad_push (GstPad * pad, GstData * data)
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
   g_return_if_fail (data != NULL);
 
+  DEBUG_DATA (pad, data, "gst_pad_push");
   if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), &data))
     return;
 
   if (!GST_PAD_IS_LINKED (pad)) {
-    GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "not pushing data %p as pad is unconnected", data);
     gst_data_unref (data);
     return;
   }
 
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pushing");
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing");
   peer = GST_RPAD_PEER (pad);
 
   if (!peer) {
@@ -3145,7 +3158,7 @@ gst_pad_push (GstPad * pad, GstData * data)
 
     if (peer->chainhandler) {
       if (data) {
-        GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
+        GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
             "calling chainhandler &%s of peer pad %s:%s",
             GST_DEBUG_FUNCPTR_NAME (peer->chainhandler),
             GST_DEBUG_PAD_NAME (GST_PAD (peer)));
@@ -3182,8 +3195,7 @@ GstData *
 gst_pad_pull (GstPad * pad)
 {
   GstRealPad *peer;
-
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pulling");
+  GstData *data;
 
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
       GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
@@ -3197,9 +3209,8 @@ gst_pad_pull (GstPad * pad)
   restart:
     if (peer->gethandler) {
       GstPadLink *link = GST_RPAD_LINK (pad);
-      GstData *data;
 
-      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
           "calling gethandler %s of peer pad %s:%s",
           GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
 
@@ -3225,13 +3236,14 @@ gst_pad_pull (GstPad * pad)
               GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS &&
               GST_EVENT_DISCONT_NEW_MEDIA (data)) {
             link->engaged = TRUE;
-            GST_CAT_LOG (GST_CAT_DATAFLOW,
+            GST_CAT_LOG (GST_CAT_SCHEDULING,
                 "link engaged by discont event for pad %s:%s",
                 GST_DEBUG_PAD_NAME (pad));
           }
         }
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           goto restart;
+        DEBUG_DATA (pad, data, "gst_pad_pull returned");
         return data;
       }
 
@@ -3244,7 +3256,9 @@ gst_pad_pull (GstPad * pad)
               GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     }
   }
-  return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+  data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+  DEBUG_DATA (pad, data, "gst_pad_pull returned created");
+  return data;
 }
 
 GstData *
@@ -4272,6 +4286,7 @@ gst_pad_get_formats (GstPad * pad)
 
 #define CALL_CHAINFUNC(pad, data) G_STMT_START {\
   GstData *__temp = (data); \
+  DEBUG_DATA (pad, __temp, "calling chain function with "); \
   if (GST_IS_EVENT (__temp) && \
       !GST_FLAG_IS_SET (gst_pad_get_parent (pad), GST_ELEMENT_EVENT_AWARE)) { \
     gst_pad_send_event (pad, GST_EVENT (__temp)); \
@@ -4312,7 +4327,7 @@ gst_pad_call_chain_function (GstPad * pad, GstData * data)
         GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS &&
         GST_EVENT_DISCONT_NEW_MEDIA (data)) {
       link->engaged = TRUE;
-      GST_CAT_LOG (GST_CAT_DATAFLOW,
+      GST_CAT_LOG (GST_CAT_SCHEDULING,
           "link engaged by discont event for pad %s:%s",
           GST_DEBUG_PAD_NAME (pad));
     }
@@ -4333,9 +4348,13 @@ gst_pad_call_chain_function (GstPad * pad, GstData * data)
 GstData *
 gst_pad_call_get_function (GstPad * pad)
 {
+  GstData *data;
+
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
   g_return_val_if_fail (GST_RPAD_GETFUNC (pad) != NULL, NULL);
 
-  return GST_RPAD_GETFUNC (pad) (pad);
+  data = GST_RPAD_GETFUNC (pad) (pad);
+  DEBUG_DATA (pad, data, "getfunction returned");
+  return data;
 }

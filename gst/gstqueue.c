@@ -30,6 +30,8 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 
+GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
+
 static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
     "Simple data queue",
@@ -138,6 +140,8 @@ gst_queue_get_type (void)
 
     queue_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstQueue", &queue_info, 0);
+    GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0,
+        "dataflow inside the queue element");
   }
 
   return queue_type;
@@ -388,16 +392,16 @@ gst_queue_handle_pending_events (GstQueue * queue)
   while (!g_queue_is_empty (queue->events)) {
     GstQueueEventResponse *er = g_queue_pop_head (queue->events);
 
-    GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "sending event upstream");
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "sending event upstream");
     er->ret = gst_pad_event_default (queue->srcpad, er->event);
     er->handled = TRUE;
     g_cond_signal (queue->event_done);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "event sent");
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "event sent");
   }
 }
 
 #define STATUS(queue, msg) \
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, \
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
 		      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
 		      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
 		      "-%" G_GUINT64_FORMAT " ns, %u elements", \
@@ -426,10 +430,9 @@ gst_queue_chain (GstPad * pad, GstData * data)
 
 restart:
   /* we have to lock the queue since we span threads */
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "locking t:%p",
-      g_thread_self ());
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locking t:%p", g_thread_self ());
   g_mutex_lock (queue->qlock);
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "locked t:%p", g_thread_self ());
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locked t:%p", g_thread_self ());
 
   gst_queue_handle_pending_events (queue);
 
@@ -448,14 +451,14 @@ restart:
         break;
       default:
         /* we put the event in the queue, we don't have to act ourselves */
-        GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue,
+        GST_CAT_LOG_OBJECT (queue_dataflow, queue,
             "adding event %p of type %d", data, GST_EVENT_TYPE (data));
         break;
     }
   }
 
   if (GST_IS_BUFFER (data))
-    GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue,
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "adding buffer %p of size %d", data, GST_BUFFER_SIZE (data));
 
   /* We make space available if we're "full" according to whatever
@@ -476,7 +479,7 @@ restart:
     switch (queue->leaky) {
         /* leak current buffer */
       case GST_QUEUE_LEAK_UPSTREAM:
-        GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue,
+        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on upstream end");
         /* now we can clean up and exit right away */
         g_mutex_unlock (queue->qlock);
@@ -490,7 +493,7 @@ restart:
         GList *item;
         GstData *leak = NULL;
 
-        GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue,
+        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on downstream end");
 
         for (item = queue->queue->head; item != NULL; item = item->next) {
@@ -541,7 +544,7 @@ restart:
            * or its manager, switch back to iterator so bottom
            * half of state change executes */
           if (queue->interrupt) {
-            GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "interrupted");
+            GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
             g_mutex_unlock (queue->qlock);
             if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->sinkpad),
                     GST_ELEMENT (queue))) {
@@ -551,11 +554,11 @@ restart:
              * flush, we don't need to add the buffer to the
              * queue again */
             if (queue->flush) {
-              GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue,
+              GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
                   "not adding pending buffer after flush");
               goto out_unref;
             }
-            GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue,
+            GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
                 "adding pending buffer after interrupt");
             goto restart;
           }
@@ -572,7 +575,7 @@ restart:
                * unref the buffer *before* calling GST_ELEMENT_ERROR */
               return;
             } else {
-              GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW, queue,
+              GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
                   "%s: waiting for the app to restart "
                   "source pad elements", GST_ELEMENT_NAME (queue));
             }
@@ -616,7 +619,7 @@ restart:
 
   STATUS (queue, "+ level");
 
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "signalling item_add");
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_add");
   g_cond_signal (queue->item_add);
   g_mutex_unlock (queue->qlock);
 
@@ -640,10 +643,9 @@ gst_queue_get (GstPad * pad)
 
 restart:
   /* have to lock for thread-safety */
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue,
-      "locking t:%p", g_thread_self ());
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locking t:%p", g_thread_self ());
   g_mutex_lock (queue->qlock);
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "locked t:%p", g_thread_self ());
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "locked t:%p", g_thread_self ());
 
   if (queue->queue->length == 0 ||
       (queue->min_threshold.buffers > 0 &&
@@ -668,7 +670,7 @@ restart:
        * manager, switch back to iterator so bottom half of state
        * change executes. */
       if (queue->interrupt) {
-        GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "interrupted");
+        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
         g_mutex_unlock (queue->qlock);
         if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->srcpad),
                 GST_ELEMENT (queue)))
@@ -683,7 +685,7 @@ restart:
               ("deadlock found, shutting down sink pad elements"));
           goto restart;
         } else {
-          GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW, queue,
+          GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
               "%s: waiting for the app to restart "
               "source pad elements", GST_ELEMENT_NAME (queue));
         }
@@ -698,7 +700,7 @@ restart:
         g_time_val_add (&timeout, queue->block_timeout / 1000);
         if (!g_cond_timed_wait (queue->item_add, queue->qlock, &timeout)) {
           g_mutex_unlock (queue->qlock);
-          GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW, queue,
+          GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
               "Sending filler event");
           return GST_DATA (gst_event_new_filler ());
         }
@@ -716,7 +718,7 @@ restart:
 
   /* There's something in the list now, whatever it is */
   data = g_queue_pop_head (queue->queue);
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue,
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue,
       "retrieved data %p from queue", data);
 
   if (data == NULL)
@@ -736,7 +738,7 @@ restart:
 
   STATUS (queue, "after _get()");
 
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "signalling item_del");
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_del");
   g_cond_signal (queue->item_del);
   g_mutex_unlock (queue->qlock);
 
@@ -748,7 +750,7 @@ restart:
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-        GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue,
+        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue \"%s\" eos", GST_ELEMENT_NAME (queue));
         gst_element_set_eos (GST_ELEMENT (queue));
         break;
@@ -776,7 +778,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
     er.event = event;
     er.handled = FALSE;
     g_queue_push_tail (queue->events, &er);
-    GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW, queue,
+    GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
         "Preparing for loop for event handler");
     /* see the chain function on why this is here - it prevents a deadlock */
     g_cond_signal (queue->item_del);
@@ -787,7 +789,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
       g_time_val_add (&timeout, 500 * 1000);    /* half a second */
       if (!g_cond_timed_wait (queue->event_done, queue->qlock, &timeout) &&
           !er.handled) {
-        GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW, queue,
+        GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
             "timeout in upstream event handling");
         /* remove ourselves from the pending list. Since we're
          * locked, others cannot reference this anymore. */
@@ -799,14 +801,14 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
         goto handled;
       }
     }
-    GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW, queue, "Event handled");
+    GST_CAT_WARNING_OBJECT (queue_dataflow, queue, "Event handled");
     res = er.ret;
   } else {
     res = gst_pad_event_default (pad, event);
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_FLUSH:
-        GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue,
+        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "FLUSH event, flushing queue\n");
         gst_queue_locked_flush (queue);
         break;

@@ -359,6 +359,9 @@ stop_typefinding (GstTypeFindElement * typefind)
       GST_WARNING_OBJECT (typefind,
           "could not seek to required position %u, hope for the best", size);
     }
+    gst_pad_push (typefind->src, GST_DATA (gst_event_new_discontinuous (TRUE,
+                GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
+                GST_FORMAT_UNDEFINED)));
     if (size
         && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
       GST_DEBUG_OBJECT (typefind, "pushing cached data (%u bytes)", size);
