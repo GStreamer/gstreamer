@@ -24,9 +24,9 @@
 #ifndef __GST_XML_REGISTRY_H__
 #define __GST_XML_REGISTRY_H__
 
-G_BEGIN_DECLS
-
 #include <gst/gstregistry.h>
+
+G_BEGIN_DECLS
 
 #define GST_TYPE_XML_REGISTRY \
   (gst_xml_registry_get_type())
