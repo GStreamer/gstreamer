@@ -221,7 +221,7 @@ cothread_create (cothread_context *ctx)
 
   if (ctx->ncothreads == COTHREAD_MAXTHREADS) {
     /* this is pretty fatal */
-    g_warning ("cothread_create: attempt to create > COTHREAD_MAXTHREADS\n");
+    g_warning ("cothread_create: attempt to create > COTHREAD_MAXTHREADS");
     return NULL;
   }
   /* find a free spot in the stack, note slot 0 has the main thread */
@@ -448,7 +448,7 @@ cothread_stub (void)
 
   GST_DEBUG_ENTER ("");
 
-  GST_DEBUG (GST_CAT_COTHREADS, "stack addr %p\n", &ctx);
+  GST_DEBUG (GST_CAT_COTHREADS, "stack addr %p", &ctx);
 
   cothread->flags |= COTHREAD_STARTED;
 
@@ -647,17 +647,17 @@ cothread_switch (cothread_state *cothread)
 
 #ifdef COTHREAD_PARANOID
 nothread:
-  g_warning ("cothread: can't switch to NULL cothread!\n");
+  g_warning ("cothread: can't switch to NULL cothread!");
   return;
 nocontext:
-  g_warning ("cothread: there's no context, help!\n");
+  g_warning ("cothread: there's no context, help!");
   exit (2);
 nocurrent:
-  g_warning ("cothread: there's no current thread, help!\n");
+  g_warning ("cothread: there's no current thread, help!");
   exit (2);
 #endif /* COTHREAD_PARANOID */
 selfswitch:
-  g_warning ("cothread: trying to switch to same thread, legal but not necessary\n");
+  g_warning ("cothread: trying to switch to same thread, legal but not necessary");
   return;
 }
 

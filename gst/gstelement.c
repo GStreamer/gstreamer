@@ -2036,7 +2036,8 @@ gst_element_error (GstElement *element, const gchar *error, ...)
     gst_scheduler_error (element->sched, element); 
   } 
 
-  gst_element_set_state (element, GST_STATE_PAUSED);
+  if (GST_STATE (element) == GST_STATE_PLAYING)
+    gst_element_set_state (element, GST_STATE_PAUSED);
 
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));

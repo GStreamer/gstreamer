@@ -77,6 +77,8 @@ struct _GstOptScheduler {
 
   GList			*runqueue;
   gint			 recursion;
+
+  gint			 max_recursion;
 };
 
 struct _GstOptSchedulerClass {
@@ -176,6 +178,7 @@ enum
 {
   ARG_0,
   ARG_ITERATIONS,
+  ARG_MAX_RECURSION,
 };
  
 
@@ -254,8 +257,15 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
   gobject_class->dispose	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_dispose);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ITERATIONS,
-    g_param_spec_int ("iterations", "Iterations", "Number of groups to schedule in one iteration (-1 == until EOS/error)",
+    g_param_spec_int ("iterations", "Iterations", 
+	    	      "Number of groups to schedule in one iteration (-1 == until EOS/error)",
                       -1, G_MAXINT, 1, G_PARAM_READWRITE));
+#ifndef USE_COTHREADS
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_RECURSION,
+    g_param_spec_int ("max_recursion", "Max recursion", 
+	    	      "Maximum number of recursions",
+                      1, G_MAXINT, 100, G_PARAM_READWRITE));
+#endif
 
   gstscheduler_class->setup             = GST_DEBUG_FUNCPTR (gst_opt_scheduler_setup);
   gstscheduler_class->reset             = GST_DEBUG_FUNCPTR (gst_opt_scheduler_reset);
@@ -281,6 +291,7 @@ gst_opt_scheduler_init (GstOptScheduler *scheduler)
 {
   scheduler->elements = NULL;
   scheduler->iterations = 1;
+  scheduler->max_recursion = 100;
 }
 
 static void
@@ -430,19 +441,33 @@ chain_group_set_enabled (GstOptSchedulerChain *chain, GstOptSchedulerGroup *grou
   g_assert (chain != NULL);
   g_assert (group != NULL);
 
+  GST_INFO (GST_CAT_SCHEDULING, "request to %d group %p in chain %p, have %d groups enabled out of %d", 
+		  enabled, group, chain, chain->num_enabled, chain->num_groups);
+
+  if (enabled)
+    GST_OPT_SCHEDULER_GROUP_ENABLE (group);
+  else 
+    GST_OPT_SCHEDULER_GROUP_DISABLE (group);
+
   if (enabled) {
-    chain->num_enabled++;
+    if (chain->num_enabled < chain->num_groups)
+      chain->num_enabled++;
+
     GST_INFO (GST_CAT_SCHEDULING, "enable group %p in chain %p, now %d groups enabled out of %d", group, chain,
 		    chain->num_enabled, chain->num_groups);
+
     if (chain->num_enabled == chain->num_groups) {
       GST_INFO (GST_CAT_SCHEDULING, "enable chain %p", chain);
       GST_OPT_SCHEDULER_CHAIN_ENABLE (chain);
     }
   }
   else {
-    chain->num_enabled--;
+    if (chain->num_enabled > 0)
+      chain->num_enabled--;
+
     GST_INFO (GST_CAT_SCHEDULING, "disable group %p in chain %p, now %d groups enabled out of %d", group, chain,
 		    chain->num_enabled, chain->num_groups);
+
     if (chain->num_enabled == 0) {
       GST_INFO (GST_CAT_SCHEDULING, "disable chain %p", chain);
       GST_OPT_SCHEDULER_CHAIN_DISABLE (chain);
@@ -594,23 +619,30 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
   g_assert (group != NULL);
   g_assert (element != NULL);
 
+  GST_INFO (GST_CAT_SCHEDULING, "request to %d element %s in group %p, have %d elements enabled out of %d", 
+		    enabled, GST_ELEMENT_NAME (element), group, group->num_enabled, group->num_elements);
+
   if (enabled) {
-    group->num_enabled++;
+    if (group->num_enabled < group->num_elements)
+      group->num_enabled++;
+
     GST_INFO (GST_CAT_SCHEDULING, "enable element %s in group %p, now %d elements enabled out of %d", 
 		    GST_ELEMENT_NAME (element), group, group->num_enabled, group->num_elements);
+
     if (group->num_enabled == group->num_elements) {
       GST_INFO (GST_CAT_SCHEDULING, "enable group %p", group);
-      GST_OPT_SCHEDULER_GROUP_ENABLE (group);
       chain_group_set_enabled (group->chain, group, TRUE);
     }
   }
   else {
-    group->num_enabled--;
+    if (group->num_enabled > 0)
+      group->num_enabled--;
+
     GST_INFO (GST_CAT_SCHEDULING, "disable element %s in group %p, now %d elements enabled out of %d", 
 		    GST_ELEMENT_NAME (element), group, group->num_enabled, group->num_elements);
+
     if (group->num_enabled == 0) {
       GST_INFO (GST_CAT_SCHEDULING, "disable group %p", group);
-      GST_OPT_SCHEDULER_GROUP_DISABLE (group);
       chain_group_set_enabled (group->chain, group, FALSE);
     }
   }
@@ -643,6 +675,12 @@ static void
 gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 {
   GST_INFO (GST_CAT_SCHEDULING, "entering scheduler run queue recursion %d", osched->recursion);
+
+  /* make sure we don't exceed max_recursion */
+  if (osched->recursion > osched->max_recursion) {
+    osched->state = GST_OPT_SCHEDULER_STATE_ERROR;
+    return;
+  }
 
   osched->recursion++;
 
@@ -1558,6 +1596,9 @@ gst_opt_scheduler_show (GstScheduler *sched)
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   GSList *chains;
 
+  g_print ("iterations:    %d\n", osched->iterations);
+  g_print ("max recursion: %d\n", osched->max_recursion);
+
   chains = osched->chains;
   while (chains) {
     GstOptSchedulerChain *chain = (GstOptSchedulerChain *) chains->data;
@@ -1600,6 +1641,9 @@ gst_opt_scheduler_get_property (GObject *object, guint prop_id,
     case ARG_ITERATIONS:
       g_value_set_int (value, osched->iterations);
       break;
+    case ARG_MAX_RECURSION:
+      g_value_set_int (value, osched->max_recursion);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1619,6 +1663,9 @@ gst_opt_scheduler_set_property (GObject *object, guint prop_id,
   switch (prop_id) {
     case ARG_ITERATIONS:
       osched->iterations = g_value_get_int (value);
+      break;
+    case ARG_MAX_RECURSION:
+      osched->max_recursion = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
