@@ -187,7 +187,7 @@ gst_osssrc_get (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_OSSSRC(gst_pad_get_parent (pad));
 
-  GST_DEBUG (0, "attempting to read something from soundcard\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from soundcard\n");
 
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
@@ -227,7 +227,7 @@ gst_osssrc_get (GstPad *pad)
   
   src->curoffset += readbytes;
 
-  GST_DEBUG (0, "pushed buffer from soundcard of %ld bytes\n", readbytes);
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes\n", readbytes);
   return buf;
 }
 
@@ -304,46 +304,26 @@ gst_osssrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 static GstElementStateReturn 
 gst_osssrc_change_state (GstElement *element) 
 {
-  GstPad *pad = NULL;
-  GstOssSrc *src = GST_OSSSRC (element);
+  /* GstOssSrc *src = GST_OSSSRC (element); */
   
   g_return_val_if_fail (GST_IS_OSSSRC (element), FALSE);
-  GST_DEBUG (0, "osssrc: state change\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: state change\n");
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
       gst_osssrc_close_audio (GST_OSSSRC (element));
   /* otherwise (READY or higher) we need to open the sound card */
   } else {
-    GST_DEBUG (0, "DEBUG: osssrc: ready or higher\n");
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "DEBUG: osssrc: ready or higher\n");
 
     if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
       if (!gst_osssrc_open_audio (GST_OSSSRC (element)))
         return GST_STATE_FAILURE;
       else
       {
-        /* set the caps here instead of after first iteration */
-	pad = gst_element_get_pad (element, "src");
-        if (! (GST_PAD_CAPS (pad))) 
-	{
-          /* set caps on src pad */
-          if (!gst_pad_try_set_caps (pad, 
-		    GST_CAPS_NEW (
-    		      "oss_src",
-		      "audio/raw",
-        		"format",       GST_PROPS_STRING ("int"),
-		          "law",        GST_PROPS_INT (0),              //FIXME
-		          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
-		          "signed",     GST_PROPS_BOOLEAN (TRUE),	//FIXME
-		          "width",      GST_PROPS_INT (src->format),
-		          "depth",      GST_PROPS_INT (src->format),
-		          "rate",       GST_PROPS_INT (src->frequency),
-		          "channels",   GST_PROPS_INT (src->channels)
-        	   ))) 
-           {
-             gst_element_error (GST_ELEMENT (element), "could not set caps");
-           }      
-	}
+	GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: device opened successfully\n");
+	/* thomas: we can't set caps here because the element is
+	 * not actually ready yet */
       }
     }
   }
@@ -367,7 +347,7 @@ gst_osssrc_open_audio (GstOssSrc *src)
 
     /* set card state */
     gst_osssrc_sync_parms (src);
-    GST_DEBUG (0,"opened audio: %s\n",src->device);
+    GST_DEBUG (GST_CAT_PLUGIN_INFO,"opened audio: %s\n",src->device);
     
     GST_FLAG_SET (src, GST_OSSSRC_OPEN);
     return TRUE;

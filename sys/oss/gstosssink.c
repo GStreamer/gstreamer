@@ -511,7 +511,7 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_MUTE:
       osssink->mute = g_value_get_boolean (value);
-      g_object_notify (osssink, "mute");
+      g_object_notify (G_OBJECT (osssink), "mute");
       break;
     case ARG_FORMAT:
       osssink->format = g_value_get_int (value);
