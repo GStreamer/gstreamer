@@ -161,6 +161,8 @@ static GstSchedulerClass *parent_class = NULL;
     entry->pre_run_func (entry);				\
   SCHED (entry)->current = entry;				\
   do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));		\
+  if (entry->post_run_func)					\
+    entry->post_run_func (entry);				\
 }G_STMT_END
 
 static GType
