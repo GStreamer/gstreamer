@@ -1,0 +1,275 @@
+# Czech translations of gst-plugins.
+# Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
+# Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>
+# This file is put in the public domain.
+# Miloslav Trmac <mitr@volny.cz>, 2004.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins 0.8.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-06-22 16:47+0200\n"
+"PO-Revision-Date: 2004-07-06 02:29+0200\n"
+"Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
+"Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
+
+#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Chyba při zavírání souboru \"%s\"."
+
+#: ext/audiofile/gstafsrc.c:320
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nemohu otevřít soubor \"%s\" pro čtení."
+
+#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+msgid "Could not open CD device for reading."
+msgstr "Nemohu otevřít zařízení CD pro čtení."
+
+#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#, c-format
+msgid "Could not open vfs file \"%s\" for reading."
+msgstr "Nemohu otevřít soubor vfs \"%s\" pro čtení."
+
+#: ext/gnomevfs/gstgnomevfssink.c:344
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "Nemohu otevřít soubor vfs \"%s\" pro zápis: %s."
+
+#: ext/gnomevfs/gstgnomevfssink.c:351
+msgid "No filename given"
+msgstr "Nezadán název souboru"
+
+#: ext/gnomevfs/gstgnomevfssink.c:377
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "Nemohu zavřít soubor vfs \"%s\"."
+
+#: ext/sndfile/gstsf.c:582
+msgid "No filename specified."
+msgstr "Nezadán název souboru."
+
+#: ext/sndfile/gstsf.c:835
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Nemohu zapisovat do souboru \"%s\"."
+
+#: gst/avi/gstavimux.c:1052
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
+
+#: sys/dxr3/dxr3audiosink.c:298
+#, c-format
+msgid "Could not open audio device \"%s\" for writing."
+msgstr "Nemohu otevřít zařízení zvuku \"%s\" pro zápis."
+
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
+#, c-format
+msgid "Could not open control device \"%s\" for writing."
+msgstr "Nemohu otevřít řídicí zařízení \"%s\" pro zápis."
+
+#: sys/dxr3/dxr3audiosink.c:343
+#, c-format
+msgid "Could not configure audio device \"%s\"."
+msgstr "Nemohu nastavit zařízení zvuku \"%s\"."
+
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
+#, c-format
+msgid "Could not set audio device \"%s\" to %d Hz."
+msgstr "Nemohu nastavit zařízení zvuku \"%s\" na %d Hz."
+
+#: sys/dxr3/dxr3audiosink.c:422
+#, c-format
+msgid "Could not close audio device \"%s\"."
+msgstr "Nemohu zavřít zařízení zvuku \"%s\"."
+
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
+#, c-format
+msgid "Could not close control device \"%s\"."
+msgstr "Nemohu zavřít řídicí zařízení \"%s\"."
+
+#: sys/dxr3/dxr3videosink.c:271
+#, c-format
+msgid "Could not open video device \"%s\" for writing."
+msgstr "Nemohu otevřít zařízení videa \"%s\" pro zápis."
+
+#: sys/dxr3/dxr3videosink.c:301
+#, c-format
+msgid "Could not close video device \"%s\"."
+msgstr "Nemohu zavřít zařízení videa \"%s\"."
+
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#, c-format
+msgid "Could not write to device \"%s\"."
+msgstr "Nemohu zapisovat do zařízení \"%s\"."
+
+#: sys/oss/gstosselement.c:723
+#, c-format
+msgid "OSS device \"%s\" is already in use by another program."
+msgstr "Zařízení OSS \"%s\" již používá jiný program."
+
+#: sys/oss/gstosselement.c:730 sys/oss/gstosselement.c:734
+#, c-format
+msgid "Could not access device \"%s\", check its permissions."
+msgstr "Nemohu přistupovat k zařízení \"%s\", zkontrolujte jeho oprávnění."
+
+#: sys/oss/gstosselement.c:741 sys/v4l/v4l_calls.c:167
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Zařízení \"%s\" neexistuje."
+
+#: sys/oss/gstosselement.c:748
+#, c-format
+msgid "Could not open device \"%s\" for writing."
+msgstr "Nemohu otevřít zažízení \"%s\" pro zápis."
+
+#: sys/oss/gstosselement.c:752
+#, c-format
+msgid "Could not open device \"%s\" for reading."
+msgstr "Nemohu otevřít zažízení \"%s\" pro čtení."
+
+#: sys/oss/gstosselement.c:1129
+msgid "Your oss device could not be probed correctly"
+msgstr "Vaše zařízení oss nebyl možné správně najít"
+
+#: sys/oss/gstossmixer.c:98
+msgid "Volume"
+msgstr "Hlasitost"
+
+#: sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Basy"
+
+#: sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Výšky"
+
+#: sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Synth"
+
+#: sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "PCM"
+
+#: sys/oss/gstossmixer.c:108
+msgid "Speaker"
+msgstr "Reproduktor"
+
+#: sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Line-in"
+
+#: sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "CD"
+
+#: sys/oss/gstossmixer.c:116
+msgid "Mixer"
+msgstr "Mixér"
+
+#: sys/oss/gstossmixer.c:118
+msgid "PCM-2"
+msgstr "PCM-2"
+
+#: sys/oss/gstossmixer.c:120
+msgid "Record"
+msgstr "Nahrávání"
+
+#: sys/oss/gstossmixer.c:122
+msgid "In-gain"
+msgstr "Vstupní-zisk"
+
+#: sys/oss/gstossmixer.c:124
+msgid "Out-gain"
+msgstr "Výstupní-zisk"
+
+#: sys/oss/gstossmixer.c:126
+msgid "Line-1"
+msgstr "Line-1"
+
+#: sys/oss/gstossmixer.c:128
+msgid "Line-2"
+msgstr "Line-2"
+
+#: sys/oss/gstossmixer.c:130
+msgid "Line-3"
+msgstr "Line-3"
+
+#: sys/oss/gstossmixer.c:132
+msgid "Digital-1"
+msgstr "Digitální-1"
+
+#: sys/oss/gstossmixer.c:134
+msgid "Digital-2"
+msgstr "Digitální-2"
+
+#: sys/oss/gstossmixer.c:136
+msgid "Digital-3"
+msgstr "Digitální-3"
+
+#: sys/oss/gstossmixer.c:138
+msgid "Phone-in"
+msgstr "Telefon-in"
+
+#: sys/oss/gstossmixer.c:140
+msgid "Phone-out"
+msgstr "Telefon-out"
+
+#: sys/oss/gstossmixer.c:142
+msgid "Video"
+msgstr "Video"
+
+#: sys/oss/gstossmixer.c:144
+msgid "Radio"
+msgstr "Rádio"
+
+#: sys/oss/gstossmixer.c:146
+msgid "Monitor"
+msgstr "Monitor"
+
+#: sys/v4l/v4l_calls.c:158
+msgid "No device specified."
+msgstr "Nezadáno zařízení."
+
+#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Nemohu otevřít zařízení \"%s\" pro čtení a zápis."
+
+#: sys/v4l/v4l_calls.h:50
+msgid "Device is not open."
+msgstr "Zařízení není otevřeno."
+
+#: sys/v4l/v4l_calls.h:59
+msgid "Device is open."
+msgstr "Zařízení je otevřeno."
+
+#: sys/v4l2/v4l2_calls.c:411
+#, c-format
+msgid "Device \"%s\" is not a capture device."
+msgstr "Zařízení \"%s\" není zachytávací zařízení."
+
+#: sys/v4l2/v4l2src_calls.c:255
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Nemohu od zařízení \"%s\" získat vyrovnávací paměti."
+
+#: sys/v4l2/v4l2src_calls.c:264
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Nemohu od zařízení \"%s\" získat dost vyrovnávacích pamětí."
