@@ -253,7 +253,7 @@ GST_PLUGINS_ALL="\
 	filter flx goom intfloat law level median mixmatrix \
 	mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub \
 	mpegaudio mpegaudioparse mpegstream mpegtypes \
-        monoscope oneton passthrough playondemand qtdemux \
+        monoscope oneton overlay passthrough playondemand qtdemux \
 	realmedia rtp rtjpeg silence sine smooth smpte \
 	spectrum speed stereo synaesthesia udp vbidec \
 	videocrop videofilter videoflip videoscale videotestsrc \
@@ -1171,6 +1171,7 @@ gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
 gst/oneton/Makefile
+gst/overlay/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
 gst/qtdemux/Makefile
