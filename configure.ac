@@ -635,6 +635,23 @@ return 0;
                          [ AC_MSG_WARN([video4linux2 was not found])])
        ])
   fi
+  dnl check for missing v4l2_buffer declaration (see #135919)
+  if [ test x$HAVE_V4L2 = xyes ]; then
+    MISSING_DECL=0
+    AC_MSG_CHECKING(struct v4l2_buffer declaration)
+    AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <linux/types.h>
+#define _LINUX_TIME_H
+#include <linux/videodev2.h>
+    ],[
+struct v4l2_buffer buf;
+return 0;
+    ], [ AC_MSG_RESULT(yes) ], [ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
+    if [ test x$MISSING_DECL = x1 ]; then
+      AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
+    fi
+  fi
 ])
 
 dnl Next, check for the optional libraries:

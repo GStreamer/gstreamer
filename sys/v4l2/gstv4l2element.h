@@ -40,6 +40,36 @@
 #define _LINUX_TIME_H
 #include <linux/videodev2.h>
 
+/*
+ * See bug #135919, the Suse9 (and Mandrake10) videodev2 headers
+ * contain a bug where (for userspace applications) the v4l2_buffer
+ * struct is not declared, so applications have to declare it.
+ * Declaration straightly ripped out from <linux/videodev2.h>.
+ */
+#ifdef GST_V4L2_MISSING_BUFDECL
+struct v4l2_buffer
+{
+	__u32			index;
+	enum v4l2_buf_type      type;
+	__u32			bytesused;
+	__u32			flags;
+	enum v4l2_field		field;
+	struct timeval		timestamp;
+	struct v4l2_timecode	timecode;
+	__u32			sequence;
+
+	/* memory location */
+	enum v4l2_memory        memory;
+	union {
+		__u32           offset;
+		unsigned long   userptr;
+	} m;
+	__u32			length;
+
+	__u32			reserved[2];
+};
+#endif /* GST_V4L2_MISSING_BUFDECL */
+
 
 #define GST_TYPE_V4L2ELEMENT \
 		(gst_v4l2element_get_type())
