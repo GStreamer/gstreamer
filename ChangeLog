@@ -1,3 +1,17 @@
+2004-05-15  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init):
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	Add new pixbufscale element to scale RGB video
+	using gdk_pixbuf, because gdk_pixbuf does BILINEAR
+	and HYPER interpolation correctly.
+	* ext/theora/theoraenc.c: (theora_enc_chain),
+	Discard buffer and return if explicit caps could not be set
+	(theora_enc_get_property):
+	Make _get return kbps for the bitrate consistent with
+	the _set function.
+
+
 2004-05-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/libvisual/visual.c: (gst_visual_chain):
