@@ -750,6 +750,8 @@ Makefile
 gstreamer-libs.pc
 gstreamer-libs-uninstalled.pc
 gst-plugins.spec
+common/Makefile
+common/m4/Makefile
 gst/Makefile
 gst/ac3parse/Makefile
 gst/adder/Makefile
