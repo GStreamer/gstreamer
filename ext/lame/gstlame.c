@@ -32,55 +32,35 @@ static GstElementDetails gst_lame_details =
   "Erik Walthinsen <omega@cse.ogi.edu>",
 };
 
-GST_PAD_TEMPLATE_FACTORY (gst_lame_sink_factory,
+static GstStaticPadTemplate gst_lame_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "gstlame_sink",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_LIST (
-	              GST_PROPS_INT (8000), 
-	              GST_PROPS_INT (11025), 
-	              GST_PROPS_INT (12000), 
-	              GST_PROPS_INT (16000), 
-	              GST_PROPS_INT (22050),
-	              GST_PROPS_INT (24000),
-	              GST_PROPS_INT (32000),
-	              GST_PROPS_INT (44100),
-	              GST_PROPS_INT (48000)
-	            ),
-      "channels",   GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+      "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (gst_lame_src_factory,
+static GstStaticPadTemplate gst_lame_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "gstlame_src",
-    "audio/mpeg",
-      "mpegversion", GST_PROPS_INT (1),
-      "layer",      GST_PROPS_INT (3),
-      "rate",       GST_PROPS_LIST (
-	              GST_PROPS_INT (8000), 
-	              GST_PROPS_INT (11025), 
-	              GST_PROPS_INT (12000), 
-	              GST_PROPS_INT (16000), 
-	              GST_PROPS_INT (22050),
-	              GST_PROPS_INT (24000),
-	              GST_PROPS_INT (32000),
-	              GST_PROPS_INT (44100),
-	              GST_PROPS_INT (48000)
-	            ),
-      "channels",   GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS (
+    "audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) 3, "
+      "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+      "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
 /********** Define useful types for non-programmatic interfaces **********/
 #define GST_TYPE_LAME_MODE (gst_lame_mode_get_type())
@@ -235,8 +215,10 @@ gst_lame_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_lame_src_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_lame_sink_factory));
+  gst_element_class_add_pad_template (element_class, 
+      gst_static_pad_template_get (&gst_lame_src_template));
+  gst_element_class_add_pad_template (element_class, 
+      gst_static_pad_template_get (&gst_lame_sink_template));
   gst_element_class_set_details (element_class, &gst_lame_details);
 }
 
@@ -358,21 +340,18 @@ gst_lame_class_init (GstLameClass *klass)
 }
 
 static GstPadLinkReturn
-gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_lame_sink_link (GstPad *pad, const GstCaps *caps)
 {
   GstLame *lame;
   gint out_samplerate;
+  GstStructure *structure;
+  GstCaps *othercaps;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
+  structure = gst_caps_get_structure (caps, 0);
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    GST_DEBUG ("caps on lame pad %s:%s not fixed, delayed",
-	       GST_DEBUG_PAD_NAME (pad));
-    return GST_PAD_LINK_DELAYED;
-  }
-
-  gst_caps_get_int (caps, "rate", &lame->samplerate);
-  gst_caps_get_int (caps, "channels", &lame->num_channels);
+  gst_structure_get_int (structure, "rate", &lame->samplerate);
+  gst_structure_get_int (structure, "channels", &lame->num_channels);
 
   if (!gst_lame_setup (lame)) {
     gst_element_error (GST_ELEMENT (lame), 
@@ -381,14 +360,17 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   }
 
   out_samplerate = lame_get_out_samplerate (lame->lgf);
-  caps = GST_CAPS_NEW ("lame_src_caps",
-		       "audio/mpeg",
-                         "mpegversion", GST_PROPS_INT (1),
-			 "layer",    GST_PROPS_INT (3),
-			 "channels", GST_PROPS_INT (lame->num_channels),
-			 "rate",     GST_PROPS_INT (out_samplerate));
+  othercaps = 
+	  gst_caps_new_simple (
+		                "audio/mpeg",
+                                "mpegversion", G_TYPE_INT, 1,
+			        "layer", G_TYPE_INT, 3,
+			        "channels", G_TYPE_INT, lame->num_channels,
+			        "rate", G_TYPE_INT, out_samplerate,
+			        NULL
+			      );
 
-  return gst_pad_try_set_caps (lame->srcpad, caps);
+  return gst_pad_try_set_caps (lame->srcpad, othercaps);
 }
 
 static void
@@ -396,12 +378,14 @@ gst_lame_init (GstLame *lame)
 {
   GST_DEBUG_OBJECT (lame, "starting initialization");
 
-  lame->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_sink_factory), "sink");
+  lame->sinkpad = gst_pad_new_from_template (
+		    gst_static_pad_template_get (&gst_lame_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
   gst_pad_set_chain_function (lame->sinkpad, gst_lame_chain);
-  gst_pad_set_link_function (lame->sinkpad, gst_lame_sinkconnect);
+  gst_pad_set_link_function (lame->sinkpad, gst_lame_sink_link);
 
-  lame->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_src_factory), "src");
+  lame->srcpad = gst_pad_new_from_template (
+		    gst_static_pad_template_get (&gst_lame_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
 
   GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
