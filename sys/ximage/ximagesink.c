@@ -187,25 +187,25 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
   if (ximagesink->xcontext->use_xshm)
     {
       if (ximage->SHMInfo.shmaddr)
-        XShmDetach(ximagesink->xcontext->disp, &ximage->SHMInfo);
+        XShmDetach (ximagesink->xcontext->disp, &ximage->SHMInfo);
   
       if (ximage->ximage)
-        XDestroyImage(ximage->ximage);
+        XDestroyImage (ximage->ximage);
   
       if (ximage->SHMInfo.shmaddr)
-        shmdt(ximage->SHMInfo.shmaddr);
+        shmdt (ximage->SHMInfo.shmaddr);
   
       if (ximage->SHMInfo.shmid > 0)
-        shmctl(ximage->SHMInfo.shmid, IPC_RMID, 0);
+        shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
     }
   else
     {
       if (ximage->ximage)
-        XDestroyImage(ximage->ximage);
+        XDestroyImage (ximage->ximage);
     }
 #else
   if (ximage->ximage)
-    XDestroyImage(ximage->ximage);
+    XDestroyImage (ximage->ximage);
 #endif /* HAVE_XSHM */ 
   
   g_mutex_unlock (ximagesink->x_lock);
@@ -367,11 +367,16 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             if ( (ximagesink->xwindow->width != e.xconfigure.width) ||
                  (ximagesink->xwindow->height != e.xconfigure.height) )
               gst_pad_try_set_caps (ximagesink->sinkpad,
-                                    GST_CAPS_NEW ("ximagesink_videoscaling",
-                                                  "video/x-raw-rgb",
-                                                  "framerate", GST_PROPS_FLOAT (30),
-                                                  "width", GST_PROPS_INT (e.xconfigure.width),
-                                                  "height", GST_PROPS_INT (e.xconfigure.height)));
+                                    GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
+                                                  "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
+                                                  "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
+                                                  "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
+                                                  "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
+                                                  "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
+                                                  "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
+                                                  "width",      GST_PROPS_INT (e.xconfigure.width),
+                                                  "height",     GST_PROPS_INT (e.xconfigure.height),
+                                                  "framerate",  GST_PROPS_FLOAT (30)));
             break;
           case MotionNotify:
             /* Mouse pointer moved over our window. We send upstream
@@ -439,17 +444,21 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   XPixmapFormatValues *px_formats = NULL;
   gint nb_formats = 0, i;
   
+  g_return_val_if_fail (ximagesink != NULL, NULL);
+  g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
+  
   xcontext = g_new0 (GstXContext, 1);
   
   g_mutex_lock (ximagesink->x_lock);
   
   xcontext->disp = XOpenDisplay (NULL);
   
-  if (!xcontext->disp) {
-    g_mutex_unlock (ximagesink->x_lock);
-    g_free (xcontext);
-    return NULL;
-  }
+  if (!xcontext->disp)
+    {
+      g_mutex_unlock (ximagesink->x_lock);
+      g_free (xcontext);
+      return NULL;
+    }
   
   xcontext->screen = DefaultScreenOfDisplay (xcontext->disp);
   xcontext->screen_num = DefaultScreen (xcontext->disp);
@@ -495,12 +504,15 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     }
 #endif /* HAVE_XSHM */
   
-  if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24) {
-    xcontext->endianness = G_BIG_ENDIAN;
-    xcontext->visual->red_mask = GUINT32_SWAP_LE_BE (xcontext->visual->red_mask);
-    xcontext->visual->green_mask = GUINT32_SWAP_LE_BE (xcontext->visual->green_mask);
-    xcontext->visual->blue_mask = GUINT32_SWAP_LE_BE (xcontext->visual->blue_mask);
-  }
+  /* What the hell is that ? */
+  if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24)
+    {
+      xcontext->endianness = G_BIG_ENDIAN;
+      xcontext->visual->red_mask = GUINT32_SWAP_LE_BE (xcontext->visual->red_mask);
+      xcontext->visual->green_mask = GUINT32_SWAP_LE_BE (xcontext->visual->green_mask);
+      xcontext->visual->blue_mask = GUINT32_SWAP_LE_BE (xcontext->visual->blue_mask);
+    }
+    
   xcontext->caps = GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
       "bpp",        GST_PROPS_INT (xcontext->bpp),
       "depth",      GST_PROPS_INT (xcontext->depth),
@@ -997,10 +1009,9 @@ gst_ximagesink_get_type (void)
         NULL,
       };*/
       
-      ximagesink_type = g_type_register_static(GST_TYPE_ELEMENT,
-                                               "GstXImageSink",
-                                               &ximagesink_info,
-                                               0);
+      ximagesink_type = g_type_register_static (GST_TYPE_ELEMENT,
+                                                "GstXImageSink",
+                                                &ximagesink_info, 0);
       
       g_type_add_interface_static (ximagesink_type, GST_TYPE_INTERFACE,
         &iface_info);
@@ -1016,7 +1027,8 @@ gst_ximagesink_get_type (void)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  if (!gst_element_register (plugin, "ximagesink", GST_RANK_NONE, GST_TYPE_XIMAGESINK))
+  if (!gst_element_register (plugin, "ximagesink",
+                             GST_RANK_SECONDARY, GST_TYPE_XIMAGESINK))
     return FALSE;
 
   return TRUE;
