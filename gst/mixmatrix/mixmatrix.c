@@ -503,7 +503,7 @@ gst_mixmatrix_get_property (GObject *object, guint prop_id, GValue *value, GPara
   }
 }
 
-gboolean
+static gboolean
 plugin_init (GstPlugin *plugin)
 {
   if (!gst_library_load ("gstbytestream"))
