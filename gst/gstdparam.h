@@ -110,9 +110,10 @@ struct _GstDParamClass {
 };
 
 GType gst_dparam_get_type (void);
-GstDParam* gst_dparam_new ();
+GstDParam* gst_dparam_new (GType type);
 void gst_dparam_set_parent (GstDParam *dparam, GstObject *parent);
 GValue** gst_dparam_new_value_array(GType type, ...);
+void gst_dparam_set_value_from_string(GValue *value, const gchar *value_str);
 
 #ifdef __cplusplus
 }

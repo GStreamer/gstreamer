@@ -89,7 +89,7 @@ gst_dparam_init (GstDParam *dparam)
  * Returns: a new instance of GstDParam
  */
 GstDParam* 
-gst_dparam_new ()
+gst_dparam_new (GType type)
 {
 	GstDParam *dparam;
 
@@ -97,7 +97,7 @@ gst_dparam_new ()
 	dparam->do_update_func = gst_dparam_do_update_realtime;
 	dparam->get_point_func = gst_dparam_get_point_realtime;
 	
-	dparam->point = gst_dparam_new_value_array(G_TYPE_NONE, 0);	
+	dparam->point = gst_dparam_new_value_array(type, 0);	
 	
 	return dparam;
 }
@@ -139,24 +139,27 @@ gst_dparam_new_value_array(GType type, ...)
 	guint x;
 	gint values_length = 0;
 	va_list var_args;
+	GType each_type;
 
 	va_start (var_args, type);
-	while (type){
+	each_type = type;
+	while (each_type){
 		values_length++;
-		type = va_arg (var_args, GType);
+		each_type = va_arg (var_args, GType);
 	}
 	va_end (var_args);
 	
 	point = g_new0(GValue*,values_length + 1);
 
 	va_start (var_args, type);
+	each_type = type;
 	for (x=0 ; x < values_length ; x++){
 		value = g_new0(GValue,1);
-		if (type != G_TYPE_NONE){
-			g_value_init(value, type);
+		if (each_type != G_TYPE_NONE){
+			g_value_init(value, each_type);
 		}
 		point[x] = value;
-		type = va_arg (var_args, GType);
+		each_type = va_arg (var_args, GType);
 	}
 	point[values_length] = NULL;
 	va_end (var_args);
@@ -166,13 +169,85 @@ gst_dparam_new_value_array(GType type, ...)
 	return point;
 }
 
+void
+gst_dparam_set_value_from_string(GValue *value, const gchar *value_str)
+{
+
+	g_return_if_fail(value != NULL);
+	g_return_if_fail(value_str != NULL);
+	
+	GST_DEBUG(GST_CAT_PARAMS, "parsing '%s' to type %s\n", value_str, g_type_name(G_VALUE_TYPE(value)));
+
+	switch (G_VALUE_TYPE(value)) {
+		case G_TYPE_STRING:
+			g_value_set_string(value, value_str);
+			break;
+		case G_TYPE_ENUM: 
+		case G_TYPE_INT: {
+			gint i;
+			sscanf (value_str, "%d", &i);
+			g_value_set_int(value, i);
+			break;
+		}
+		case G_TYPE_UINT: {
+			guint i;
+			sscanf (value_str, "%u", &i);
+			g_value_set_uint(value, i);
+			break;
+		}
+		case G_TYPE_LONG: {
+			glong i;
+			sscanf (value_str, "%ld", &i);
+			g_value_set_long(value, i);
+			break;
+		}
+		case G_TYPE_ULONG: {
+			gulong i;
+			sscanf (value_str, "%lu", &i);
+			g_value_set_ulong(value, i);
+			break;
+		}
+		case G_TYPE_BOOLEAN: {
+			gboolean i = FALSE;
+			if (!strncmp ("true", value_str, 4)) i = TRUE;
+			g_value_set_boolean(value, i);
+			break;
+		}
+		case G_TYPE_CHAR: {
+			gchar i;
+			sscanf (value_str, "%c", &i);
+			g_value_set_char(value, i);
+			break;
+		}
+		case G_TYPE_UCHAR: {
+			guchar i;
+			sscanf (value_str, "%c", &i);
+			g_value_set_uchar(value, i);
+			break;
+		}
+		case G_TYPE_FLOAT: {
+			gfloat i;
+			sscanf (value_str, "%f", &i);
+			g_value_set_float(value, i);
+			break;
+		}
+		case G_TYPE_DOUBLE: {
+			gfloat i;
+			sscanf (value_str, "%g", &i);
+			g_value_set_double(value, (gdouble)i);
+			break;
+		}
+		default:
+	  		break;
+	}
+}
+
 static void
 gst_dparam_do_update_realtime (GstDParam *dparam, gint64 timestamp)
 {
-	GST_DEBUG(GST_CAT_PARAMS, "updating point for %s(%p)\n",GST_DPARAM_NAME (dparam),dparam);
-	
 	GST_DPARAM_LOCK(dparam);
 	GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
+	GST_DEBUG(GST_CAT_PARAMS, "updating value for %s(%p)\n",GST_DPARAM_NAME (dparam),dparam);
 	g_value_copy(dparam->point[0], GST_DPARAM_VALUE(dparam));
 	GST_DPARAM_UNLOCK(dparam);
 }
