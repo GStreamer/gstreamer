@@ -172,8 +172,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %files
 %defattr(-, root, root)
 %doc AUTHORS COPYING README RELEASE REQUIREMENTS
-%{_bindir}/gst-launch-ext
-%{_bindir}/gst-visualise
+%{_bindir}/gst-launch-ext-%{majorminor}
+%{_bindir}/gst-visualise-%{majorminor}
 %{_mandir}/man1/gst-launch-ext.*
 %{_mandir}/man1/gst-visualise.1.*
 %{_libdir}/libgstplay-%{majorminor}.so.*
@@ -182,6 +182,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstidct.so
 %{_libdir}/gstreamer-%{majorminor}/libgstriff.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo.so
+%{_libdir}/libgstmixer.so
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsinesrc.so
@@ -304,7 +305,8 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audioclock.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
