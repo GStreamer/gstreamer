@@ -40,7 +40,7 @@ enum {
 };
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (gst_ffmpegenc_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegenc_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -52,7 +52,7 @@ GST_PADTEMPLATE_FACTORY (gst_ffmpegenc_src_factory,
 )
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (gst_ffmpegenc_audio_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegenc_audio_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -71,7 +71,7 @@ GST_PADTEMPLATE_FACTORY (gst_ffmpegenc_audio_sink_factory,
 )
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (gst_ffmpegenc_video_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegenc_video_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -235,7 +235,7 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     ffmpegenc->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_ffmpegenc_video_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegenc_video_sink_factory), "sink");
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
     ffmpegenc->context->bit_rate = 300000;
     ffmpegenc->context->gop_size = 15;
@@ -245,7 +245,7 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
   }
   else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     ffmpegenc->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_ffmpegenc_audio_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegenc_audio_sink_factory), "sink");
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_audio);
     ffmpegenc->context->bit_rate = 128000;
     ffmpegenc->context->sample_rate = -1;
@@ -255,7 +255,7 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
 
   ffmpegenc->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_ffmpegenc_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegenc_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->srcpad);
 
   /* Initialization of element's private variables. */
@@ -533,18 +533,18 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 			 (gpointer) in_plugin);
 
     /* register the plugin with gstreamer */
-    factory = gst_elementfactory_new(type_name,type,details);
+    factory = gst_element_factory_new(type_name,type,details);
     g_return_val_if_fail(factory != NULL, FALSE);
 
-    gst_elementfactory_add_padtemplate (factory, 
-		    GST_PADTEMPLATE_GET (gst_ffmpegenc_src_factory));
+    gst_element_factory_add_pad_template (factory, 
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegenc_src_factory));
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      gst_elementfactory_add_padtemplate (factory, 
-		    GST_PADTEMPLATE_GET (gst_ffmpegenc_video_sink_factory));
+      gst_element_factory_add_pad_template (factory, 
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegenc_video_sink_factory));
     }
     else if (in_plugin->type == CODEC_TYPE_AUDIO) {
-      gst_elementfactory_add_padtemplate (factory, 
-		    GST_PADTEMPLATE_GET (gst_ffmpegenc_audio_sink_factory));
+      gst_element_factory_add_pad_template (factory, 
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegenc_audio_sink_factory));
     }
 
     /* The very last thing is to register the elementfactory with the plugin. */

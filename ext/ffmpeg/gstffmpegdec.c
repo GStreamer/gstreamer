@@ -32,7 +32,7 @@ enum {
 };
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (gst_ffmpegdec_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -44,7 +44,7 @@ GST_PADTEMPLATE_FACTORY (gst_ffmpegdec_sink_factory,
 )
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -63,7 +63,7 @@ GST_PADTEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
 )
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (gst_ffmpegdec_video_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_video_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -150,17 +150,17 @@ gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
   ffmpegdec->context = g_malloc0 (sizeof (AVCodecContext));
 
   ffmpegdec->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_ffmpegdec_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_sink_factory), "sink");
   gst_pad_set_connect_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     ffmpegdec->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_ffmpegdec_video_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_video_src_factory), "src");
     gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain_video);
   }
   else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     ffmpegdec->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_ffmpegdec_audio_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_audio_src_factory), "src");
     gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain_audio);
   }
 
@@ -358,19 +358,19 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 			 (gpointer) in_plugin);
 
     /* register the plugin with gstreamer */
-    factory = gst_elementfactory_new(type_name,type,details);
+    factory = gst_element_factory_new(type_name,type,details);
     g_return_val_if_fail(factory != NULL, FALSE);
 
-    gst_elementfactory_add_padtemplate (factory, 
-		    GST_PADTEMPLATE_GET (gst_ffmpegdec_sink_factory));
+    gst_element_factory_add_pad_template (factory, 
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_sink_factory));
 
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      gst_elementfactory_add_padtemplate (factory, 
-		    GST_PADTEMPLATE_GET (gst_ffmpegdec_video_src_factory));
+      gst_element_factory_add_pad_template (factory, 
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_video_src_factory));
     }
     else if (in_plugin->type == CODEC_TYPE_AUDIO) {
-      gst_elementfactory_add_padtemplate (factory, 
-		    GST_PADTEMPLATE_GET (gst_ffmpegdec_audio_src_factory));
+      gst_element_factory_add_pad_template (factory, 
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_audio_src_factory));
     }
 
     /* The very last thing is to register the elementfactory with the plugin. */
