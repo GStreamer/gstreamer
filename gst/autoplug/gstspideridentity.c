@@ -185,7 +185,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
       {
 	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
 	list = g_list_next (list);
-	if (conn->sink == ident && (GstElement *) conn->src != conn->current)
+	if (conn->sink == ident)
 	{
 	  gst_element_set_eos (GST_ELEMENT (conn->src));
           gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
@@ -317,16 +317,16 @@ gst_spider_identity_change_state (GstElement *element)
   
   /* element check */
   ident = GST_SPIDER_IDENTITY (element);
-  g_return_val_if_fail (ident != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_SPIDER_IDENTITY (ident), GST_PAD_CONNECT_REFUSED);
-  
-  /* autoplugger check */
-  spider = GST_SPIDER (GST_ELEMENT_PARENT (ident));
-  g_return_val_if_fail (spider != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_SPIDER (spider), GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (ident != NULL, GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_SPIDER_IDENTITY (ident), GST_STATE_FAILURE);
   
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_PLAYING:
+      /* autoplugger check */
+      spider = GST_SPIDER (GST_ELEMENT_PARENT (ident));
+      g_return_val_if_fail (spider != NULL, GST_STATE_FAILURE);
+      g_return_val_if_fail (GST_IS_SPIDER (spider), GST_STATE_FAILURE);
+  
       /* start typefinding or plugging */
       if ((GST_RPAD_PEER (ident->sink) != NULL) && (GST_RPAD_PEER (ident->src) == NULL))
       {
