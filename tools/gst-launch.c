@@ -81,27 +81,63 @@ event_func (GstElement *element, GstEvent *event)
 }
 
 static GstElement*
-xmllaunch_parse_cmdline (gint argc, const gchar **argv) 
+xmllaunch_parse_cmdline (const gchar *argv[]) 
 {
-  GstElement *pipeline = NULL;
+  GstElement *pipeline = NULL, *e;
   GstXML *xml;
   gboolean err;
+  const gchar *arg;
+  gchar *element, *property, *value;
   GList *l;
+  gint i = 0;
   
-  if (argc < 2) {
-    g_print ("usage: %s <file.xml> [ element.property=value ... ]\n", argv[0]);
+  if (!(arg = argv[0])) {
+    g_print ("usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n", arg[0]);
     exit (1);
   }
   
   xml = gst_xml_new ();
-  err = gst_xml_parse_file(xml, argv[1], NULL);
+  err = gst_xml_parse_file(xml, arg, NULL);
   
   if (err != TRUE) {
-    fprintf (stderr, "ERROR: parse of xml file '%s' failed\n", argv[1]);
+    fprintf (stderr, "ERROR: parse of xml file '%s' failed\n", arg);
     exit (1);
   }
   
   l = gst_xml_get_topelements (xml);
+  if (!l) {
+    fprintf (stderr, "ERROR: no toplevel pipeline element in file '%s'\n", arg);
+    exit (1);
+  }
+    
+  if (l->next)
+    g_warning ("only one toplevel element is supported at this time");
+  
+  pipeline = GST_ELEMENT (l->data);
+  
+  while ((arg = argv[++i])) {
+    element = g_strdup (arg);
+    property = strchr (element, '.');
+    value = strchr (element, '=');
+    
+    if (!(element < property && property < value)) {
+      fprintf (stderr, "ERROR: could not parse command line argument %d: %s", i, element);
+      g_free (element);
+      exit (1);
+    }
+    
+    *property++ = '\0';
+    *value++ = '\0';
+    
+    g_print ("%s, %s, %s\n", element, property, value);
+    e = gst_bin_get_by_name (GST_BIN (pipeline), element);
+    if (!e) {
+      g_warning ("element named '%s' not found", element);
+    } else {
+      gst_util_set_object_arg (G_OBJECT (e), property, value);
+    }
+  }
+  
   if (!l)
     return NULL;
   else
@@ -112,7 +148,7 @@ int
 main(int argc, char *argv[])
 {
   GstElement *pipeline;
-  char **argvn;
+  gchar **argvn;
   gchar *cmdline;
   int i;
   gboolean save_pipeline = FALSE;
@@ -135,12 +171,12 @@ main(int argc, char *argv[])
   launch_argc = argc;
   launch_argv = argv;
 
+  /* make a null-terminated version of argv */
+  argvn = g_new0 (char *,argc);
+  memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
   if (strstr (argv[0], "gst-xmllaunch")) {
-    pipeline = xmllaunch_parse_cmdline (argc, argv);
+    pipeline = xmllaunch_parse_cmdline (argvn);
   } else {
-    /* make a null-terminated version of argv */
-    argvn = g_new0 (char *,argc);
-    memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
     pipeline = (GstElement*) gst_parse_launchv (argvn);
   }
 

@@ -7,7 +7,7 @@ endif
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 else
-GST_LOADSAVE_SRC = gst-compprep
+GST_LOADSAVE_SRC = gst-compprep gst-xmllaunch
 endif
 
 bin_PROGRAMS = 	gst-launch 	\
@@ -36,6 +36,10 @@ gst_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\"
 if !GST_DISABLE_LOADSAVE
 gst_compprep_LDADD = $(GST_LIBS)
 gst_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+
+gst_xmllaunch_SOURCES = gst-launch.c
+gst_xmllaunch_LDADD = $(GST_LIBS)
+gst_xmllaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
 
 EXTRA_DIST = $(man_MANS)
