@@ -1170,7 +1170,8 @@ schedule_group (GstOptSchedulerGroup * group)
 
       gst_object_unref (GST_OBJECT (e));
     }
-    gst_object_unref (GST_OBJECT (entry));
+    if (entry)
+      gst_object_unref (GST_OBJECT (entry));
     g_slist_free (lcopy);
   }
   return TRUE;
