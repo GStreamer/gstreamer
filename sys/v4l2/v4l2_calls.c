@@ -34,6 +34,8 @@
 #include "gstv4l2xoverlay.h"
 #include "gstv4l2colorbalance.h"
 
+#include "gstv4l2src.h"
+
 #define DEBUG(format, args...) \
 	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4l2element), \
@@ -369,6 +371,15 @@ gst_v4l2_open (GstV4l2Element *v4l2element)
 
 	/* get capabilities */
 	if (!gst_v4l2_get_capabilities(v4l2element)) {
+		goto error;
+	}
+
+	/* do we need to be a capture device? */
+	if (GST_IS_V4L2SRC(v4l2element) &&
+	    !(v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+		gst_element_error(GST_ELEMENT(v4l2element),
+				  "Not a capture device (0x%x)",
+				  v4l2element->vcap.capabilities);
 		goto error;
 	}
 
