@@ -122,14 +122,14 @@ GStreamer support libraries header files.
 
 %files -n gstreamer-plugins-devel
 %defattr(-, root, root)
-%{_includedir}/gstreamer-%{major_minor}/gst/audio/audio.h
-%{_includedir}/gstreamer-%{major_minor}/gst/floatcast/floatcast.h
-%{_includedir}/gstreamer-%{major_minor}/gst/gconf/gconf.h
-%{_includedir}/gstreamer-%{major_minor}/gst/idct/idct.h
-%{_includedir}/gstreamer-%{major_minor}/gst/resample/resample.h
-%{_includedir}/gstreamer-%{major_minor}/gst/riff/riff.h
-%{_includedir}/gstreamer-%{major_minor}/gst/video/video.h
-%{_includedir}/gstreamer-%{major_minor}/gst/play/play.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
+%{_includedir}/gstreamer-%{majorminor}/gst/floatcast/floatcast.h
+%{_includedir}/gstreamer-%{majorminor}/gst/gconf/gconf.h
+%{_includedir}/gstreamer-%{majorminor}/gst/idct/idct.h
+%{_includedir}/gstreamer-%{majorminor}/gst/resample/resample.h
+%{_includedir}/gstreamer-%{majorminor}/gst/riff/riff.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
+%{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
