@@ -318,8 +318,18 @@ gst_ossprobe_needs_probe (GstPropertyProbe *probe,
 			  const GParamSpec *pspec)
 {
   GstOssElementClass *klass = GST_OSSELEMENT_GET_CLASS (probe);
+  gboolean ret = FALSE;
 
-  return !gst_osselement_class_probe_devices (klass, TRUE);
+  switch (prop_id) {
+    case ARG_DEVICE:
+      ret = !gst_osselement_class_probe_devices (klass, TRUE);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return ret;
 }
 
 static GValueArray *
