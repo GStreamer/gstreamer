@@ -8,7 +8,7 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
-GST_VERSION_MICRO=02
+GST_VERSION_MICRO=1
 
 dnl we use the release tag during CVS development
 GST_VERSION_RELEASE=`date +%Y%m%d`
