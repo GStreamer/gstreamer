@@ -143,7 +143,8 @@ EXTRA_DIST = \
 	gst-register.1.in \
 	gst-typefind.1.in \
 	gst-xmllaunch.1.in \
-	gst-feedback-m.m
+	gst-feedback-m.m \
+	gst-indent
 
 %-@GST_MAJORMINOR@.1: %.1.in
 	sed \
