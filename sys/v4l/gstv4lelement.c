@@ -85,8 +85,6 @@ static void                  gst_v4lelement_get_property (GObject            *ob
                                                           GValue             *value,
                                                           GParamSpec         *pspec);
 static GstElementStateReturn gst_v4lelement_change_state (GstElement         *element);
-static gboolean              plugin_init                 (GModule            *module,
-                                                          GstPlugin          *plugin);
 
 
 static GstElementClass *parent_class = NULL;
@@ -554,9 +552,8 @@ gst_v4lelement_change_state (GstElement *element)
 }
 
 
-static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+gboolean
+gst_v4lelement_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
@@ -568,11 +565,3 @@ plugin_init (GModule   *module,
 
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "v4lelement",
-  plugin_init
-};

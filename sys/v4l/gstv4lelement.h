@@ -117,6 +117,8 @@ struct _GstV4lElementClass {
 
 GType gst_v4lelement_get_type(void);
 
+gboolean gst_v4lelement_factory_init (GstPlugin *plugin);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -470,9 +470,8 @@ gst_v4lmjpegsink_change_state (GstElement *element)
 }
 
 
-static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+gboolean
+gst_v4lmjpegsink_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstCaps *caps;
@@ -504,11 +503,3 @@ plugin_init (GModule   *module,
 
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "v4lmjpegsink",
-  plugin_init
-};

@@ -827,9 +827,8 @@ gst_v4lsrc_set_clock (GstElement *element,
 }
 
 
-static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+gboolean
+gst_v4lsrc_init_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
@@ -850,11 +849,3 @@ plugin_init (GModule   *module,
 
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "v4lsrc",
-  plugin_init
-};

@@ -1,27 +1,16 @@
 
-plugin_LTLIBRARIES = libgstv4lelement.la libgstv4lsrc.la \
-	libgstv4lmjpegsrc.la libgstv4lmjpegsink.la
+plugin_LTLIBRARIES = libgstvideo4linux.la
 
-libgstv4lelement_la_SOURCES = gstv4lelement.c v4l_calls.c \
-		v4l-overlay_calls.c gstv4lelement-marshal.c
-libgstv4lelement_la_CFLAGS = $(GST_CFLAGS)
-libgstv4lelement_la_LIBADD =
-libgstv4lelement_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-libgstv4lsrc_la_SOURCES = gstv4lsrc.c v4lsrc_calls.c
-libgstv4lsrc_la_CFLAGS = $(GST_CFLAGS)
-libgstv4lsrc_la_LIBADD = libgstv4lelement.la
-libgstv4lsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-libgstv4lmjpegsrc_la_SOURCES = gstv4lmjpegsrc.c v4lmjpegsrc_calls.c
-libgstv4lmjpegsrc_la_CFLAGS = $(GST_CFLAGS)
-libgstv4lmjpegsrc_la_LIBADD = libgstv4lelement.la
-libgstv4lmjpegsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-libgstv4lmjpegsink_la_SOURCES = gstv4lmjpegsink.c v4lmjpegsink_calls.c
-libgstv4lmjpegsink_la_CFLAGS = $(GST_CFLAGS)
-libgstv4lmjpegsink_la_LIBADD = libgstv4lelement.la
-libgstv4lmjpegsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstvideo4linux_la_SOURCES = \
+	gstv4lelement.c v4l_calls.c \
+	v4l-overlay_calls.c \
+	gstv4lelement-marshal.c \
+	gstv4lsrc.c v4lsrc_calls.c \
+	gstv4lmjpegsrc.c v4lmjpegsrc_calls.c \
+	gstv4lmjpegsink.c v4lmjpegsink_calls.c
+libgstvideo4linux_la_CFLAGS = $(GST_CFLAGS)
+libgstvideo4linux_la_LIBADD =
+libgstvideo4linux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstv4lelement.h v4l_calls.h \
 		gstv4lsrc.h v4lsrc_calls.h \
@@ -29,7 +18,7 @@ noinst_HEADERS = gstv4lelement.h v4l_calls.h \
 		gstv4lmjpegsink.h v4lmjpegsink_calls.h \
 		videodev_mjpeg.h gstv4lelement-marshal.h
 
-EXTRA_libgstv4lelement_la_SOURCES = \
+EXTRA_libgstvideo4linux_la_SOURCES = \
 	gstv4lelement-marshal.list
 
 BUILT_SOURCES = \

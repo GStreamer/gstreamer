@@ -848,8 +848,8 @@ gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_
 }
 
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_v4lmjpegsrc_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstCaps *caps;
@@ -881,11 +881,3 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "v4lmjpegsrc",
-  plugin_init
-};

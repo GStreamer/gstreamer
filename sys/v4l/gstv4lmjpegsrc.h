@@ -112,6 +112,8 @@ struct _GstV4lMjpegSrcClass {
 
 GType gst_v4lmjpegsrc_get_type(void);
 
+gboolean gst_v4lmjpegsrc_factory_init (GstPlugin *plugin);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
