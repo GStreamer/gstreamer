@@ -1,3 +1,8 @@
+2004-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	I swear, this is the last time I touch this.
+
 2004-10-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
