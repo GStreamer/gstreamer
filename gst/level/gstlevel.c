@@ -406,7 +406,7 @@ gst_level_class_init (GstLevelClass * klass)
   gst_filter_signals[SIGNAL_LEVEL] =
       g_signal_new ("level", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstLevelClass, level), NULL, NULL,
-      gstlevel_cclosure_marshal_VOID__DOUBLE_INT_DOUBLE_DOUBLE_DOUBLE,
+      gst_level_marshal_VOID__DOUBLE_INT_DOUBLE_DOUBLE_DOUBLE,
       G_TYPE_NONE, 5,
       G_TYPE_DOUBLE, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
 }

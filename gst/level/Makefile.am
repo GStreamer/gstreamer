@@ -1,8 +1,18 @@
-
 plugin_LTLIBRARIES = libgstlevel.la
 
+# variables used for enum/marshal generation
+glib_enum_define = GST_LEVEL
+glib_enum_prefix = gst_level
+
+include $(top_srcdir)/common/glib-gen.mak
+                                                                                
+built_sources = gstlevel-marshal.c
+built_headers = gstlevel-marshal.h
+                                                                                
+BUILT_SOURCES = $(built_sources) $(built_headers)
+
 libgstlevel_la_SOURCES = gstlevel.c
-nodist_libgstlevel_la_SOURCES = gstlevel-marshal.c gstlevel-marshal.h
+nodist_libgstlevel_la_SOURCES = $(built_sources)
 libgstlevel_la_CFLAGS = $(GST_CFLAGS)
 libgstlevel_la_LIBADD =
 libgstlevel_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -21,23 +31,6 @@ endif
 
 EXTRA_libgstlevel_la_SOURCES = gstlevel-marshal.list
 
-BUILT_SOURCES = \
-	gstlevel-marshal.c \
-	gstlevel-marshal.h
-CLEANFILES = \
-	gstlevel-marshal.c \
-	gstlevel-marshal.h
-			     
-
-gstlevel-marshal.h: gstlevel-marshal.list
-	glib-genmarshal --header --prefix=gstlevel_cclosure_marshal $(srcdir)/gstlevel-marshal.list > gstlevel-marshal.h.tmp
-	mv gstlevel-marshal.h.tmp gstlevel-marshal.h
-                                                                                
-gstlevel-marshal.c: gstlevel-marshal.list
-	echo "#include \"glib.h\"" > gstlevel-marshal.c.tmp
-	echo "#include \"glib-object.h\"" >> gstlevel-marshal.c.tmp
-	echo "#include \"gstlevel-marshal.h\"" >> gstlevel-marshal.c.tmp
-	glib-genmarshal --body --prefix=gstlevel_cclosure_marshal $(srcdir)/gstlevel-marshal.list >> gstlevel-marshal.c.tmp
-	mv gstlevel-marshal.c.tmp gstlevel-marshal.c
-                                                                                
+CLEANFILES = $(BUILT_SOURCES)
+                                                                        
 EXTRA_DIST = README
