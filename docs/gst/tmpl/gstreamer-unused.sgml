@@ -2423,6 +2423,14 @@ Get the size of the file.
 </para>
 
 
+<!-- ##### STRUCT GstElementFactory ##### -->
+<para>
+This factory is used when registering the element, and contains the name
+of the element, the GtkType value for it, as well as a pointer to the
+GstElementDetails struct for the element.
+</para>
+
+
 <!-- ##### STRUCT GstEsdSink ##### -->
 <para>
 

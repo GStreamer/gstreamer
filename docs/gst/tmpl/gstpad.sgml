@@ -11,38 +11,12 @@ connections. After two pad are retrieved from an element with gst_element_get_pa
 can be connected with gst_pad_connect().
 </para>
 <para>
-PedTemplates are use to describe the runtime behaviour of an element and what pads it
-will have during its lifetime. Pads are typically created from a padtemplate with 
-GST_PADTEMPLATE_NEW() or with the factory macro GST_PADTEMPLATE_FACTORY().
+Pads are typically created from a #GstPadTemplate with gst_pad_new_from_template().
 </para>
 <para>
-Pad and PadTemplates have #GstCaps attached to it to describe the media type they
+Pad have #GstCaps attached to it to describe the media type they
 are capable of dealing with. gst_pad_get_caps() and gst_pad_set_caps() are used to
-manipulate the caps of the pads. gst_padtemplate_get_caps() is used to get the
-caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
-creation. The following code example shows the code to create a pad from a padtemplate.
-<programlisting>
-GST_PADTEMPLATE_FACTORY (my_factory,
-  "sink",		/* the name of the pad */
-  GST_PAD_SINK,		/* the direction of the pad */
-  GST_PAD_ALWAYS, 	/* when this pad will be present */
-  GST_CAPS_NEW (	/* the capabilities of the padtemplate */
-    "my_caps",
-    "audio/raw",
-      "format",		GST_PROPS_STRING ("int"),
-      "channels",	GST_PROPS_INT_RANGE (1, 6)
-  )
-)
-
-void
-my_method (void) 
-{
-  GstPad *pad;
-  
-  pad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (my_factory), "sink");
-  ...
-}
-</programlisting>
+manipulate the caps of the pads. 
 Pads created from a padtemplate cannot set capabilities that are incompatible with
 the padtemplates capabilities.
 </para>
@@ -51,7 +25,7 @@ Pads without padtemplates can be created with gst_pad_new() which takes a direct
 a name as an argument.
 </para>
 <para>
-gst_pad_get_parent() will retrieve the GstElement that owns the pad.
+gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
 </para>
 <para>
 GstElements creating a pad will typicilally use the various gst_pad_set_*_function() calls
@@ -61,7 +35,7 @@ to register callbacks for various events on the pads.
 GstElements will use gst_pad_push() and gst_pad_pull() to push out or pull a buffer in. The
 gst_pad_pullregion() function can be used to request for a buffer with a specific offset (in
 time or in bytes). gst_pad_select() and gst_pad_selectv() are use by plugins to wait on a set
-of pads for a new GstBuffer or GstEvent.
+of pads for a new #GstBuffer or #GstEvent.
 </para>
 <para>
 To send an event on a pad, use gst_pad_send_event().
@@ -69,7 +43,7 @@ To send an event on a pad, use gst_pad_send_event().
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstCaps, #GstElement, #GstEvent
+#GstPadTemplate, #GstElement, #GstEvent
 </para>
 
 <!-- ##### MACRO GST_PAD_NAME ##### -->
@@ -908,142 +882,6 @@ Get the real pad of this ghost pad.
 
 @name: 
 @pad: 
-@Returns: 
-
-
-<!-- ##### ENUM GstPadPresence ##### -->
-<para>
-Indicates when this pad will become available.
-</para>
-
-@GST_PAD_ALWAYS: the pad is always available
-@GST_PAD_SOMETIMES: the pad will become available depending on the media stream
-@GST_PAD_REQUEST: th pad is only available on request with 
-gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
-
-<!-- ##### STRUCT GstPadTemplate ##### -->
-<para>
-
-</para>
-
-@object: 
-@name_template: 
-@direction: 
-@presence: 
-@caps: 
-
-<!-- ##### MACRO GST_PADTEMPLATE_CAPS ##### -->
-<para>
-Get a handle to the padtemplate #GstCaps
-</para>
-
-@templ: the template to query
-
-
-<!-- ##### MACRO GST_PADTEMPLATE_DIRECTION ##### -->
-<para>
-Get the direction of the padtemplate.
-</para>
-
-@templ: the template to query
-
-
-<!-- ##### MACRO GST_PADTEMPLATE_NAME_TEMPLATE ##### -->
-<para>
-Get the nametemplate of the padtemplate.
-</para>
-
-@templ: the template to query
-
-
-<!-- ##### MACRO GST_PADTEMPLATE_PRESENCE ##### -->
-<para>
-Get the presence of the padtemplate.
-</para>
-
-@templ: the template to query
-
-
-<!-- ##### MACRO GST_PADTEMPLATE_NEW ##### -->
-<para>
-Create a new padtemplate.
-</para>
-
-@padname: the nametemplate for the pads that will be created with this template
-@dir: the direction of the pads.
-@pres: the presence of the pads.
-@a...: the capabilities of this padtemplate usually created with GST_CAPS_NEW()
-
-
-<!-- ##### MACRO GST_PADTEMPLATE_FACTORY ##### -->
-<para>
-Create a factory for a padtemplate. This can be used if you only want one instance
-of the padtemplate. Use GST_PADTEMPLATE_GET() to get the unique padtemplate.
-</para>
-
-@name: th name of the factory
-@padname: the nametemplate of the pads
-@dir: the direction of the pads.
-@pres: the presence of the pads.
-@a...: the capabilities of this padtemplate, usually created with GST_CAPS_NEW()
-
-
-<!-- ##### MACRO GST_PADTEMPLATE_GET ##### -->
-<para>
-Get the padtemplate of the factory created with GST_PADTEMPLATE_FACTORY()
-</para>
-
-@fact: the factory name to get the padtemplate from.
-
-
-<!-- ##### FUNCTION gst_padtemplate_new ##### -->
-<para>
-
-</para>
-
-@name_template: 
-@direction: 
-@presence: 
-@caps: 
-@Varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_padtemplate_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_padtemplate_save_thyself ##### -->
-<para>
-
-</para>
-
-@templ: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_padtemplate_get_caps ##### -->
-<para>
-
-</para>
-
-@templ: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_padtemplate_get_caps_by_name ##### -->
-<para>
-
-</para>
-
-@templ: 
-@name: 
 @Returns: 
 
 

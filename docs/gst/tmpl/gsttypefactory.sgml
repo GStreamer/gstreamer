@@ -20,8 +20,8 @@ gst_plugin_add_feature() as shown in the example:
   {
     gchar *data = GST_BUFFER_DATA (buf);
 		      
-    if (strncmp (&data[0], "RIFF", 4)) return NULL;
-    if (strncmp (&data[8], "AVI ", 4)) return NULL;
+    if (strncmp (&amp;data[0], "RIFF", 4)) return NULL;
+    if (strncmp (&amp;data[8], "AVI ", 4)) return NULL;
 			      
     return gst_caps_new ("avi_typefind","video/avi", NULL);
   }
@@ -94,6 +94,14 @@ performed by a plugin.
 </para>
 
 @name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_typefactory_get_list ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 

@@ -47,6 +47,7 @@ GtkObject
         GstQueue
         GstTypeFind
       GstPad
+      GstPadTemplate
       GstPluginFeature
         GstAutoplugFactory
         GstTypeFactory

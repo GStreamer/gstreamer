@@ -13,12 +13,10 @@ non renderer ones do.
 </para>
 
 <para>
-You first need to create a suitable autoplugger with gst_autoplugfactory_make().
+You first need to create a suitable autoplugger with gst_autoplugfactory_make() 
+(see #GstAutoplugFactory).
 The name of the autoplugger must be one of the registered autopluggers 
 (see #GstStaticAutoplug and #GstStaticAutoplugRender).
-</para>
-<para>
-A list of all available autopluggers can be obtained with gst_autoplugfactory_get_list().
 </para>
 <para>
 If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() call to
@@ -83,7 +81,7 @@ compatible with the provided sink caps.
 
 <para>
 Optionally you can get a notification when a new object is added to the created
-pipeline with a gtk_signal_connect to the "new_object" signal.
+pipeline with a g_signal_connect to the "new_object" signal.
 </para>
 
 <para>
@@ -109,12 +107,6 @@ The type of the autoplugger.
 @GST_AUTOPLUG_TO_CAPS: 
 @GST_AUTOPLUG_TO_RENDERER: 
 @GST_AUTOPLUG_FLAG_LAST: 
-
-<!-- ##### STRUCT GstAutoplugFactory ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### FUNCTION gst_autoplug_signal_new_object ##### -->
 <para>
@@ -146,60 +138,6 @@ The type of the autoplugger.
 @srccaps: 
 @target: 
 @Varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@longdesc: 
-@type: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_destroy ##### -->
-<para>
-
-</para>
-
-@factory: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_find ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_get_list ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_create ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_make ##### -->
-<para>
-
-</para>
-
-@name: 
 @Returns: 
 
 

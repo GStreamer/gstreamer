@@ -485,8 +485,6 @@ GST_ELEMENT_PADS
 GST_ELEMENT_SCHED
 GST_ELEMENT_MANAGER
 GstElement
-GstElementDetails
-GstElementFactory
 GstElementLoopFunction
 gst_element_class_add_padtemplate
 gst_element_destroy
@@ -516,14 +514,6 @@ gst_element_error
 gst_element_get_factory
 gst_element_signal_eos
 gst_element_restore_thyself
-gst_elementfactory_new
-gst_elementfactory_add_padtemplate
-gst_elementfactory_find
-gst_elementfactory_get_list
-gst_elementfactory_can_src_caps
-gst_elementfactory_can_sink_caps
-gst_elementfactory_create
-gst_elementfactory_make
 <SUBSECTION Standard>
 GstElementClass
 GST_TYPE_ELEMENT
@@ -534,12 +524,27 @@ GST_ELEMENT_CLASS_FAST
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
-gst_elementfactory_get_type
-GstElementFactoryClass
-GST_TYPE_ELEMENTFACTORY
+</SECTION>
+
+<SECTION>
+<FILE>gstelementfactory</FILE>
+<TITLE>GstElementFactory</TITLE>
+GstElementDetails
+gst_elementfactory_new
+gst_elementfactory_find
+gst_elementfactory_get_list
+gst_elementfactory_add_padtemplate
+gst_elementfactory_can_src_caps
+gst_elementfactory_can_sink_caps
+gst_elementfactory_create
+gst_elementfactory_make
+<SUBSECTION Standard>
+GstElementFactory
 GST_ELEMENTFACTORY
-GST_ELEMENTFACTORY_CLASS
 GST_IS_ELEMENTFACTORY
+GST_TYPE_ELEMENTFACTORY
+gst_elementfactory_get_type
+GST_ELEMENTFACTORY_CLASS
 GST_IS_ELEMENTFACTORY_CLASS
 </SECTION>
 
@@ -549,16 +554,9 @@ GST_IS_ELEMENTFACTORY_CLASS
 <TITLE>GstAutoplug</TITLE>
 GstAutoplug
 GstAutoplugFlags
-GstAutoplugFactory
 gst_autoplug_signal_new_object
 gst_autoplug_to_caps
 gst_autoplug_to_renderers
-gst_autoplugfactory_new
-gst_autoplugfactory_destroy
-gst_autoplugfactory_find
-gst_autoplugfactory_get_list
-gst_autoplugfactory_create
-gst_autoplugfactory_make
 <SUBSECTION Standard>
 GST_AUTOPLUG
 GST_IS_AUTOPLUG
@@ -566,6 +564,19 @@ GST_TYPE_AUTOPLUG
 gst_autoplug_get_type
 GST_AUTOPLUG_CLASS
 GST_IS_AUTOPLUG_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstautoplugfactory</FILE>
+<TITLE>GstAutoplugFactory</TITLE>
+GstAutoplugFactory
+gst_autoplugfactory_new
+gst_autoplugfactory_destroy
+gst_autoplugfactory_find
+gst_autoplugfactory_get_list
+gst_autoplugfactory_create
+gst_autoplugfactory_make
+<SUBSECTION Standard>
 gst_autoplugfactory_get_type
 GstAutoplugFactoryClass
 GST_TYPE_AUTOPLUGFACTORY
@@ -745,21 +756,6 @@ GST_GPAD_REALPAD
 GstGhostPad
 gst_ghost_pad_new
 
-GstPadPresence
-GstPadTemplate
-GST_PADTEMPLATE_CAPS
-GST_PADTEMPLATE_DIRECTION
-GST_PADTEMPLATE_NAME_TEMPLATE
-GST_PADTEMPLATE_PRESENCE
-GST_PADTEMPLATE_NEW
-GST_PADTEMPLATE_FACTORY
-GST_PADTEMPLATE_GET
-gst_padtemplate_new
-gst_padtemplate_load_thyself
-gst_padtemplate_save_thyself
-gst_padtemplate_get_caps
-gst_padtemplate_get_caps_by_name
-
 <SUBSECTION Standard>
 GstPadClass
 GST_TYPE_PAD
@@ -793,7 +789,27 @@ GST_IS_GHOST_PAD
 GST_IS_GHOST_PAD_CLASS
 GST_IS_GHOST_PAD_FAST
 gst_ghost_pad_get_type
+</SECTION>
 
+<SECTION>
+<FILE>gstpadtemplate</FILE>
+<TITLE>GstPadTemplate</TITLE>
+GstPadPresence
+GstPadTemplate
+GST_PADTEMPLATE_CAPS
+GST_PADTEMPLATE_DIRECTION
+GST_PADTEMPLATE_NAME_TEMPLATE
+GST_PADTEMPLATE_PRESENCE
+GST_PADTEMPLATE_NEW
+GST_PADTEMPLATE_FACTORY
+GST_PADTEMPLATE_GET
+gst_padtemplate_new
+gst_padtemplate_load_thyself
+gst_padtemplate_save_thyself
+gst_padtemplate_get_caps
+gst_padtemplate_get_caps_by_name
+
+<SUBSECTION Standard>
 GstPadTemplateClass
 GST_TYPE_PADTEMPLATE
 GST_PADTEMPLATE
@@ -938,6 +954,7 @@ GstTypeDefinition
 GstTypeFindFunc
 gst_typefactory_new
 gst_typefactory_find
+gst_typefactory_get_list
 <SUBSECTION Standard>
 GST_TYPEFACTORY
 GST_IS_TYPEFACTORY

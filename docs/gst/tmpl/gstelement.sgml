@@ -25,7 +25,7 @@ simpler to connect pads of two elements together.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstElementFactory
 </para>
 
 <!-- ##### ENUM GstElementState ##### -->
@@ -202,27 +202,6 @@ Get the manager of this element.
 <!-- ##### STRUCT GstElement ##### -->
 <para>
 
-</para>
-
-
-<!-- ##### STRUCT GstElementDetails ##### -->
-<para>
-This struct is used to define public information about the element.  It
-describes the element, mostly for the benefit of editors.
-</para>
-
-@longname: 
-@klass: 
-@description: 
-@version: 
-@author: 
-@copyright: 
-
-<!-- ##### STRUCT GstElementFactory ##### -->
-<para>
-This factory is used when registering the element, and contains the name
-of the element, the GtkType value for it, as well as a pointer to the
-GstElementDetails struct for the element.
 </para>
 
 
@@ -499,86 +478,6 @@ instead.
 
 @self: 
 @parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@type: 
-@details: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_add_padtemplate ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-@templ: 
-<!-- # Unused Parameters # -->
-@temp: 
-@pad: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_find ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_get_list ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_can_src_caps ##### -->
-<para>
-
-</para>
-
-@factory: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_can_sink_caps ##### -->
-<para>
-
-</para>
-
-@factory: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_create ##### -->
-<para>
-
-</para>
-
-@factory: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_make ##### -->
-<para>
-
-</para>
-
-@factoryname: 
-@name: 
 @Returns: 
 
 

@@ -1,6 +1,8 @@
 <!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
 
 <!entity Gst SYSTEM "sgml/gst.sgml">
+<!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
+<!entity GstAutoplugFactory SYSTEM "sgml/gstautoplugfactory.sgml">
 <!entity GstInfo SYSTEM "sgml/gstinfo.sgml">
 <!entity GstBin SYSTEM "sgml/gstbin.sgml">
 <!entity GstData SYSTEM "sgml/gstdata.sgml">
@@ -9,12 +11,13 @@
 <!entity GstBufferPool SYSTEM "sgml/gstbufferpool.sgml">
 <!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
+<!entity GstElementFactory SYSTEM "sgml/gstelementfactory.sgml">
 <!entity GstLog SYSTEM "sgml/gstlog.sgml">
 <!entity GstObject SYSTEM "sgml/gstobject.sgml">
 <!entity GstPad SYSTEM "sgml/gstpad.sgml">
-<!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
-<!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
+<!entity GstPadTemplate SYSTEM "sgml/gstpadtemplate.sgml">
 <!entity GstParse SYSTEM "sgml/gstparse.sgml">
+<!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
@@ -65,6 +68,7 @@ with some more specialized elements.</para>
 
     &Gst;
     &GstAutoplug;
+    &GstAutoplugFactory;
     &GstBin;
     &GstBuffer;
     &GstBufferPool;
@@ -73,10 +77,12 @@ with some more specialized elements.</para>
     &GstCpu;
     &GstData;
     &GstElement;
+    &GstElementFactory;
     &GstEvent;
     &GstInfo;
     &GstObject;
     &GstPad;
+    &GstPadTemplate;
     &GstParse;
     &GstPipeline;
     &GstPlugin;
@@ -100,32 +106,8 @@ with some more specialized elements.</para>
 
     <para>
       libgstelements.la provide some basic elements like a disk source
-      and sink. The use of these elements is strictly though the gtk_object_get() and
-      gtk_object_set() functions and the GStreamer Core Library functions.
-    </para>
-    <para>
-      Use the gst_elementfactory_find() and gst_elementfactory_create() functions
-      to create these elements. 
-    </para>
-    <para>
-      The following code example shows you how to create a GstDiskSrc element.
-    </para>
-
-    <para>
-    <programlisting role="C">
-      #include &lt;gst/gst.h&gt;
-
-      GstElement *src;
-      GstElementFactory *srcfactory;
-
-      gst_init(&amp;argc,&amp;argv);
-
-      srcfactory = gst_elementfactory_find("disksrc");
-      g_return_if_fail(srcfactory != NULL);
-      src = gst_elementfactory_create(srcfactory,"src");
-      g_return_if_fail(src != NULL);
-      ...
-    </programlisting>
+      and sink. The use of these elements is strictly though the g_object_get() and
+      g_object_set() functions and the GStreamer Core Library functions.
     </para>
 
     &GstAggregator;
