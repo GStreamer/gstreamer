@@ -67,6 +67,8 @@ static GstBuffer *	gst_disksrc_get_region	(GstPad *pad,GstRegionType type,guint6
 
 static GstElementStateReturn	gst_disksrc_change_state	(GstElement *element);
 
+static gboolean		gst_disksrc_open_file	(GstDiskSrc *src);
+static void		gst_disksrc_close_file	(GstDiskSrc *src);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
@@ -151,8 +153,9 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   switch(id) {
     case ARG_LOCATION:
-      /* the element must be stopped in order to do this */
-      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
+      /* the element must be stopped or paused in order to do this */
+      g_return_if_fail ((GST_STATE (src) < GST_STATE_PLAYING)
+		      || (GST_STATE (src) == GST_STATE_PAUSED));
 
       if (src->filename) g_free (src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -162,6 +165,11 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       /* otherwise set the new filename */
       } else {
         src->filename = g_strdup (GTK_VALUE_STRING (*arg));
+      }
+      if ((GST_STATE (src) == GST_STATE_PAUSED) && (src->filename != NULL))
+      {
+	      gst_disksrc_close_file(src);
+	      gst_disksrc_open_file(src);
       }
       break;
     case ARG_BYTESPERREAD:
