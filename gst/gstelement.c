@@ -2113,6 +2113,14 @@ gst_element_change_state (GstElement *element)
                      gst_element_state_get_name (old_state),
                      gst_element_state_get_name (GST_STATE (element)));
 
+  /* tell the scheduler if we have one */
+  if (element->sched) {
+    if (gst_scheduler_state_transition (element->sched, element, 
+	                                old_transition) != GST_STATE_SUCCESS) {
+      goto failure;
+    }
+  }
+
   g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
 		 0, old_state, GST_STATE (element));
 
@@ -2122,19 +2130,10 @@ gst_element_change_state (GstElement *element)
 	                        GST_STATE (element), element);
   }
 
-
   /* signal the state change in case somebody is waiting for us */
   g_mutex_lock (element->state_mutex);
   g_cond_signal (element->state_cond);
   g_mutex_unlock (element->state_mutex);
-
-  /* tell the scheduler if we have one */
-  if (element->sched) {
-    if (gst_scheduler_state_transition (element->sched, element, 
-	                                old_transition) != GST_STATE_SUCCESS) {
-      goto failure;
-    }
-  }
 
   return GST_STATE_SUCCESS;
 

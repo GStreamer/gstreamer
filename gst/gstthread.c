@@ -197,6 +197,14 @@ gst_thread_dispose (GObject *object)
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose");
 
+  g_mutex_lock (thread->lock);
+  if (GST_STATE (thread) != GST_STATE_NULL) {
+    GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+  }
+  g_mutex_unlock (thread->lock);
+
+  gst_element_set_state (GST_ELEMENT (thread), GST_STATE_NULL);
+
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
 
@@ -659,7 +667,7 @@ gst_thread_main_loop (void *arg)
               GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
           }
 	  /* looks like we were stopped because of a statechange */
-	  if (GST_STATE_PENDING (thread)) {
+	  if (GST_STATE_PENDING (thread) != GST_STATE_VOID_PENDING) {
             gst_thread_update_state (thread);
 	  }
           /* once we're here, SPINNING has stopped, we should signal that we're done */
