@@ -346,15 +346,18 @@ gst_alsa_src_loop (GstElement * element)
   g_assert (avail >= this->period_size);
   /* make sure every pad has a buffer */
   for (i = 0; i < element->numpads; i++) {
-    if (!src->buf[i]) {
-      src->buf[i] = gst_buffer_new_and_alloc (4096);
-    }
+    if (src->buf[i])
+      gst_data_unref (GST_DATA (src->buf[i]));
+    src->buf[i] =
+        gst_buffer_new_and_alloc (gst_alsa_samples_to_bytes (this, avail));
   }
   /* fill buffer with data */
   if ((copied = this->transmit (this, &avail)) <= 0)
     return;
   /* push the buffers out and let them have fun */
   for (i = 0; i < element->numpads; i++) {
+    GstBuffer *buf;
+
     if (!src->buf[i])
       return;
     if (copied != this->period_size)
@@ -363,8 +366,9 @@ gst_alsa_src_loop (GstElement * element)
         gst_alsa_samples_to_timestamp (this, this->transmitted);
     GST_BUFFER_DURATION (src->buf[i]) =
         gst_alsa_samples_to_timestamp (this, copied);
-    gst_pad_push (this->pad[i], GST_DATA (src->buf[i]));
+    buf = src->buf[i];
     src->buf[i] = NULL;
+    gst_pad_push (this->pad[i], GST_DATA (buf));
   }
   this->transmitted += copied;
 }
