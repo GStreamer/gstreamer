@@ -1,3 +1,17 @@
+2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_renegotiate_size),
+	(gst_ximagesink_calculate_pixel_aspect_ratio),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_getcaps),
+	(gst_ximagesink_sink_link), (gst_ximagesink_change_state),
+	(gst_ximagesink_set_xwindow_id), (gst_ximagesink_set_property),
+	(gst_ximagesink_get_property), (gst_ximagesink_init):
+	* sys/ximage/ximagesink.h:
+	  allocate PAR's dynamically.
+	  use autodetected PAR if no object-set PAR is given.
+	  add workaround for directfb's X not setting physical size.
+	  fix to xvimagesink will follow tomorrow.
+
 2004-07-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_chain): send tag events downstream
