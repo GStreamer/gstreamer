@@ -41,6 +41,9 @@ typedef struct _GstSystemClockClass GstSystemClockClass;
 
 struct _GstSystemClock {
   GstClock 	 clock;
+
+  GMutex *	 mutex;
+  GCond *	 cond;
 };
 
 struct _GstSystemClockClass {
