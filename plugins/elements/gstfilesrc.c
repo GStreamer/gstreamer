@@ -435,13 +435,17 @@ gst_filesrc_get (GstPad *pad)
   GstFileSrc *src;
   GstBuffer *buf = NULL, *map;
   off_t readend,readsize,mapstart,mapend;
-  gboolean eof = FALSE;
   GstFileSrcRegion region;
   int i;
 
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_FILESRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
+
+  // check for EOF
+  if (src->curoffset == src->filelen) {
+    return gst_event_empty_new(GST_EVENT_EOS);
+  }
 
   // calculate end pointers so we don't have to do so repeatedly later
   readsize = src->block_size;
@@ -453,7 +457,6 @@ gst_filesrc_get (GstPad *pad)
   if (readend > src->filelen) {
     readsize = src->filelen - src->curoffset;
     readend = src->curoffset;
-    eof = TRUE;
   }
 
   // if the start is past the mapstart
@@ -527,8 +530,6 @@ gst_filesrc_get (GstPad *pad)
     for (i=0;i<GST_BUFFER_SIZE(buf);i+=src->pagesize)
       *(GST_BUFFER_DATA(buf)+i) = *(GST_BUFFER_DATA(buf)+i);
   }
-
-  // if we hit EOF, 
 
   /* we're done, return the buffer */
   src->curoffset += GST_BUFFER_SIZE(buf);
