@@ -416,6 +416,16 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 AC_CONFIG_SUBDIRS(libs/ext/cothreads)
 
 dnl ##################################################
+dnl # deps for examples from manual                  #
+dnl ##################################################
+
+PKG_CHECK_MODULES(LIBGNOMEUI, libgnomeui-2.0,
+                  HAVE_LIBGNOMEUI="yes", HAVE_LIBGNOMEUI="no")
+AC_SUBST(LIBGNOMEUI_CFLAGS)
+AC_SUBST(LIBGNOMEUI_LIBS)
+AM_CONDITIONAL(HAVE_LIBGNOMEUI, test "x$HAVE_LIBGNOMEUI" = "xyes")
+
+dnl ##################################################
 dnl # Prepare informative messages to display at end #
 dnl ##################################################
 
@@ -477,22 +487,21 @@ testsuite/refcounting/Makefile
 testsuite/threads/Makefile
 examples/Makefile
 examples/autoplug/Makefile
+examples/cutter/Makefile
 examples/helloworld/Makefile
 examples/helloworld2/Makefile
 examples/launch/Makefile
+examples/manual/Makefile
+examples/mixer/Makefile
+examples/pingpong/Makefile
+examples/plugins/Makefile
 examples/queue/Makefile
 examples/queue2/Makefile
 examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
-examples/mixer/Makefile
-examples/cutter/Makefile
-examples/launch/Makefile
-examples/xml/Makefile
-examples/plugins/Makefile
 examples/typefind/Makefile
-examples/mixer/Makefile
-examples/pingpong/Makefile
+examples/xml/Makefile
 tools/Makefile
 docs/Makefile
 docs/gst/Makefile
