@@ -103,8 +103,8 @@ read_config ($0);
 %pipes = ( 
   "ac3", "a52dec ! $cfg{AUDIOSINK}",
   "au", "auparse ! $cfg{AUDIOSINK}",
-  "avi", "avidemux name=demux ! { queue ! jpegdec ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
-  "asf", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
+  "avi", "avidemux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
+  "asf", "asfdemux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
   "flac", "flacdec ! $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "m1v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
@@ -120,10 +120,12 @@ read_config ($0);
   "swf", "swfdec name=swfdec ! { queue ! colorspace ! $cfg{VIDEOSINK} }  { swfdec. ! queue ! $cfg{AUDIOSINK} }",
   "vob", "mpegdemux name=demux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  { demux. ! queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
-  "wm", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
+  "wm", "asfdemux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
 ### a wma file can use wmav1 or wmav2 codec so we must use spider to decode it  
   "wma", "asfdemux name=demux ! spider ! $cfg{AUDIOSINK}",
-  "wmv", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
+  "wmv", "asfdemux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
+  "mkv", "matroskademux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
+  "mka", "matroskademux ! spider ! $cfg{AUDIOSINK}",
 );
 
 if ($cfg{VISUALIZER}) {
