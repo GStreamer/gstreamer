@@ -459,19 +459,19 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   GstBuffer *inbuf = GST_BUFFER (_data), *outbuf;
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
-  gint ret_size = 0;
+  gint ret_size = 0, frame_size;
 
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
 
-  outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
-
-  gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
+  frame_size = gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
       GST_BUFFER_DATA (inbuf),
       ffmpegenc->context->pix_fmt,
       ffmpegenc->context->width, ffmpegenc->context->height);
+  g_return_if_fail (frame_size == GST_BUFFER_SIZE (inbuf));
 
   ffmpegenc->picture->pts = GST_BUFFER_TIMESTAMP (inbuf) / 1000;
 
+  outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
   ret_size = avcodec_encode_video (ffmpegenc->context,
       GST_BUFFER_DATA (outbuf),
       GST_BUFFER_MAXSIZE (outbuf), ffmpegenc->picture);
