@@ -1,5 +1,10 @@
 2004-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+          add calls to AM_CONDITIONAL for subsystems for automake 1.6.x
+
+2004-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac: pass required libxml version as argument
           (bug reported by Christophe Fergeau)
 
