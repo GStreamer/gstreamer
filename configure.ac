@@ -422,6 +422,12 @@ GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc, [
   AC_CHECK_HEADER(linux/videodev.h, HAVE_V4L="yes", HAVE_V4L="no")
 ])
 
+dnl *** Video CD ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
+GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
+  AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
+])
+
 dnl *** VGA ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VGA, true)
 GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
@@ -762,11 +768,6 @@ AC_CHECK_LIB(Xv, XvQueryExtension,
 LIBS=${xvsave_LIBS}
 AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
 AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
-
-dnl Check for linux/cdrom.h
-AC_CHECK_HEADER(linux/cdrom.h,
-  HAVE_LINUX_CDROM=yes, HAVE_LINUX_CDROM=no
-)
 
 
 dnl ######################################################################
