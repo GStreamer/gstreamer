@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     gtk_object_set(GTK_OBJECT(osssink), "fragment", 0x00180008, NULL);
     
     gtk_signal_connect(GTK_OBJECT(gtk_range_get_adjustment(GTK_RANGE(hscale))),
-                       "value_changed", set_speed, speed);
+                       "value_changed", G_CALLBACK (set_speed), speed);
     
     pipeline = gst_pipeline_new("app");
     gst_bin_add(GST_BIN(pipeline), filesrc);
@@ -64,4 +64,6 @@ int main(int argc, char **argv)
     gtk_idle_add((GtkFunction)gst_bin_iterate, pipeline);
     
     gtk_main();
+    
+    return 0;
 }

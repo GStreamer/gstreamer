@@ -76,7 +76,7 @@ static fixed gst_spectrum_fix_mpy(fixed a, fixed b);
  */
 int gst_spectrum_fix_fft(fixed fr[], fixed fi[], int m, int inverse) {
 	int mr, nn, i, j, l, k, istep, n, scale, shift;
-	fixed qr, qi, tr, ti, wr, wi, t;
+	fixed qr, qi, tr, ti, wr, wi;
 
 	n = 1 << m;
 
@@ -268,10 +268,9 @@ int gst_spectrum_iscale(int value, int numer, int denom) {
    fix_dot() - dot product of two fixed arrays
  */
 fixed gst_spectrum_fix_dot(fixed * hpa, fixed * pb, int n) {
-	fixed *pa;
+	fixed *pa = hpa; /* FIXME */
 	long sum;
 	register fixed a, b;
-	unsigned int seg, off;
 
 /*      seg = FP_SEG(hpa);
    off = FP_OFF(hpa);

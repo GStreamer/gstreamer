@@ -30,15 +30,6 @@ static GstElementDetails gst_spectrum_details = {
   "(C) 1999",
 };
 
-
-static GstTypeDefinition spectrumdefinition = {
-  "spectrum_spectrum_raw",
-  "spectrum/raw",
-  NULL,
-  NULL,
-};
-
-
 /* Spectrum signals and args */
 enum {
   /* FILL ME */
@@ -141,7 +132,7 @@ gst_spectrum_chain (GstPad *pad, GstBuffer *buf)
   gint spec_base, spec_len;
   gint16 *re, *im, *loud;
   gint16 *samples;
-  gint samplecount,step,pos,i;
+  gint step,pos,i;
   guchar *spect;
   GstBuffer *newbuf;
 
