@@ -23,14 +23,16 @@ gchar *
 __gst_parse_strdup (gchar *org)
 {
   __strings++;
-  /* g_print ("ALLOCATED: %p %s\n", org, org); */
-  return g_strdup (org);
+  gchar *ret;
+  ret = g_strdup (org);
+  /* g_print ("ALLOCATED STR   (%3u): %p %s\n", __strings, ret, ret); */
+  return ret;
 }
 void
 __gst_parse_strfree (gchar *str)
 {
   if (str) {
-    /* g_print ("FREEING  : %p %s\n", str, str); */
+    /* g_print ("FREEING STR     (%3u): %p %s\n", __strings - 1, str, str); */
     g_free (str);
     g_return_if_fail (__strings > 0);
     __strings--;
@@ -38,13 +40,17 @@ __gst_parse_strfree (gchar *str)
 }
 link_t *__gst_parse_link_new ()
 {
+  link_t *ret;
   __links++;
-  return g_new0 (link_t, 1);
+  ret = g_new0 (link_t, 1);
+  /* g_print ("ALLOCATED LINK  (%3u): %p\n", __links, ret); */
+  return ret;
 }
 void
 __gst_parse_link_free (link_t *data)
 {
   if (data) {
+    /* g_print ("FREEING LINK    (%3u): %p\n", __links - 1, data); */
     g_free (data);
     g_return_if_fail (__links > 0);
     __links--;
@@ -53,13 +59,17 @@ __gst_parse_link_free (link_t *data)
 chain_t *
 __gst_parse_chain_new ()
 {
+  chain_t *ret;
   __chains++;
-  return g_new0 (chain_t, 1);
+  ret = g_new0 (chain_t, 1);
+  /* g_print ("ALLOCATED CHAIN (%3u): %p\n", __chains, ret); */
+  return ret;
 }
 void
 __gst_parse_chain_free (chain_t *data)
 {
   if (data) {
+    /* g_print ("FREEING CHAIN   (%3u): %p\n", __chains - 1, data); */
     g_free (data);
     g_return_if_fail (__chains > 0);
     __chains--;
@@ -419,7 +429,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   GST_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u", 
             GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
             GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks));
-  
+
   if (!srcs || !sinks) {
     if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
                                         sink, sinks ? (const gchar *) sinks->data : NULL,
@@ -593,21 +603,22 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						} else if ($1->back) {
 						  if (!$1->back->sink_name) {
 						    $1->back->sink = $2->first;
-						  } else {
-						    ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $1->back);
-						    $1->back = NULL;
 						  }
 						} else if ($2->front) {
 						  if (!$2->front->src_name) {
 						    $2->front->src = $1->last;
-						    $1->back = $2->front;
-						  } else {
-						    ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $2->front);
 						  }
+						  $1->back = $2->front;
 						}
 						
-						if ($1->back)
-						  gst_parse_perform_link ($1->back, (graph_t *) graph);
+						if ($1->back) {
+						  if (!$1->back->sink || !$1->back->src) {
+						    ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $1->back);
+						    $1->back = NULL;
+						  } else {
+						    gst_parse_perform_link ($1->back, (graph_t *) graph);
+						  }
+						}
 						$1->last = $2->last;
 						$1->back = $2->back;
 						$1->elements = g_slist_concat ($1->elements, $2->elements);
@@ -642,7 +653,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						while (walk) {
 						  link_t *link = (link_t *) walk->data;
 						  walk = walk->next;
-						  if (!link->sink_name) {
+						  if (!link->sink_name && walk) {
 						    ERROR (GST_PARSE_ERROR_LINK, "link without sink element");
 						    gst_parse_free_link (link);
 						  } else if (!link->src_name && !link->src) {

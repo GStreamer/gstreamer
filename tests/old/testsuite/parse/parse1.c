@@ -71,15 +71,17 @@ static gchar *s;
   } \
   g_print ("TEST %2d line %3d STOPPED  : %u iterations\n", test, __LINE__, iterations); \
 }G_STMT_END 
-#define PIPELINE1 "fakesrc"
-#define PIPELINE2 "fakesrc name=donald num-buffers= 27 silent =TruE sizetype = 3 eos  =    yesyo data=   Subbuffer\\ data"
-#define PIPELINE3 "fakesrc identity fakesink"
-#define PIPELINE4 "fakesrc num-buffers=4 .src ! identity !.sink identity .src ! .sink fakesink"
-#define PIPELINE5 "fakesrc num-buffers=4 name=src identity name=id1 identity name = id2 fakesink name =sink src. ! id1. id1.! id2.sink id2.src!sink.sink"
-#define PIPELINE6 "pipeline.(name=\"john\" fakesrc num-buffers=4 ( thread. ( ! queue ! identity !{ queue ! fakesink }) ))"
-#define PIPELINE7 "fakesrc num-buffers=4 ! tee name=tee .src%d! fakesink tee.src%d ! fakesink fakesink name =\"foo\" tee.src%d ! foo."
-#define PIPELINE8 "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink"
-#define PIPELINE9 "fakesrc num-buffers=4 ! test. fakesink name=test"
+#define PIPELINE1  "fakesrc"
+#define PIPELINE2  "fakesrc name=donald num-buffers= 27 silent =TruE sizetype = 3 eos  =    yesyo data=   Subbuffer\\ data"
+#define PIPELINE3  "fakesrc identity fakesink"
+#define PIPELINE4  "fakesrc num-buffers=4 .src ! identity !.sink identity .src ! .sink fakesink"
+#define PIPELINE5  "fakesrc num-buffers=4 name=src identity name=id1 identity name = id2 fakesink name =sink src. ! id1. id1.! id2.sink id2.src!sink.sink"
+#define PIPELINE6  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( thread. ( ! queue ! identity !{ queue ! fakesink }) ))"
+#define PIPELINE7  "fakesrc num-buffers=4 ! tee name=tee .src%d! fakesink tee.src%d ! fakesink fakesink name =\"foo\" tee.src%d ! foo."
+#define PIPELINE8  "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink"
+#define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink name=test"
+#define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity ! fakesink"
+
 
 gint 
 main (gint argc, gchar *argv[]) 
@@ -177,6 +179,14 @@ main (gint argc, gchar *argv[])
    * - failed in grammar.y cvs version 1.17
    */
   TEST_START (PIPELINE9);
+  TEST_RUN;
+  TEST_OK;
+  
+  /**
+   * checks:
+   * - failed in grammar.y cvs version 1.17
+   */
+  TEST_START (PIPELINE10);
   TEST_RUN;
   TEST_OK;
   
