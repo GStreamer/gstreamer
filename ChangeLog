@@ -1,5 +1,10 @@
 2005-03-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbus.c: (gst_bus_post):
+	Fix copy-and-paste error.
+
+2005-03-21  Wim Taymans  <wim@fluendo.com>
+
 	* check/Makefile.am:
 	* gst/Makefile.am:
 	* gst/elements/Makefile.am:

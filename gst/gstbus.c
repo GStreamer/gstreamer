@@ -229,8 +229,6 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_queue_push_tail (bus->queue, message);
       g_mutex_unlock (bus->queue_lock);
 
-      if (g_queue_get_length (bus->queue) == 0)
-        need_write = TRUE;
       if (need_write) {
         c = 'p';
         errno = EAGAIN;
