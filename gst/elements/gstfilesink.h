@@ -59,17 +59,14 @@ struct _GstFileSink {
   gchar *filename;
   FILE *file;
 
-  gint filenum;
-
   guint64 data_written;
-  gint maxfilesize;
 };
 
 struct _GstFileSinkClass {
   GstElementClass parent_class;
 
   /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
+  void (*handoff) (GstElement *element, GstPad *pad);
 };
 
 GType gst_filesink_get_type(void);
