@@ -634,14 +634,12 @@ Other known (and unused) 'text/unicode' metadata available :
  WM/MediaPrimaryClassID = {D1607DBC-E323-4BE2-86A1-48A42A28441E}
  WMFSDKVersion = 9.00.00.2980
  WMFSDKNeeded = 0.0.0.0000
- WM/Year = 1990
  WM/UniqueFileIdentifier = AMGa_id=R    15334;AMGp_id=P     5149;AMGt_id=T  2324984
- WM/Composer = Frank Black
  WM/Publisher = 4AD
  WM/Provider = AMG
  WM/ProviderRating = 8
- WM/ProviderStyle = Rock
- WM/GenreID
+ WM/ProviderStyle = Rock (similar to WM/Genre)
+ WM/GenreID (similar to WM/Genre)
 
 Other known (and unused) 'non-text' metadata available :
 
@@ -652,11 +650,8 @@ IsVBR
 
 */
 
-  const guchar *tags[5] =
-      { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, GST_TAG_TRACK_NUMBER,
-        NULL };
-  const guchar *tags_label[5] =
-      { "WM/Genre", "WM/AlbumTitle", "WM/AlbumArtist", "WM/TrackNumber", NULL };
+  const guchar *tags[] = { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, GST_TAG_TRACK_NUMBER, GST_TAG_DATE, NULL };    // GST_TAG_COMPOSER
+  const guchar *tags_label[] = { "WM/Genre", "WM/AlbumTitle", "WM/AlbumArtist", "WM/TrackNumber", "WM/Year", NULL };    // "WM/Composer"
 
   GstTagList *taglist;
   GValue tag_value = { 0 };
