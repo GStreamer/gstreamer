@@ -1,3 +1,20 @@
+2005-03-03  Andy Wingo  <wingo@pobox.com>
+
+	* tools/gst-launch.c: Update to use the new message-parsing API.
+
+	* tools/gst-md5sum.c: Update to new spiffy poll API. Not that
+	md5sum is ported though!
+
+	* gst/gstmessage.c:
+	* gst/gstmessage.h (struct _GstMessage): Changed so the message
+	data is just a GstStructure, not a union.
+	(gst_message_get_structure): New function, gets the structure
+	backing the message. Owned by the message.
+	(gst_message_parse_tag, gst_message_parse_state_changed)
+	(gst_message_parse_error, gst_message_parse_warning): New
+	functions, parse the message into their components. Return values
+	are copies, and so must be freed by the caller.
+
 2005-03-01  Andy Wingo  <wingo@pobox.com>
 
 	* tests/complexity.c: Adjust to lack of gst_bin_iterate, boolean

@@ -73,16 +73,8 @@ _gst_message_copy (GstMessage * message)
     gst_object_ref (GST_MESSAGE_SRC (copy));
   }
 
-  /* FIXME copy/ref additional fields */
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_TAG:
-      copy->message_data.structure.structure =
-          gst_tag_list_copy ((GstTagList *) message->message_data.structure.
-          structure);
-      break;
-    default:
-      break;
-  }
+  if (copy->structure)
+    copy->structure = gst_structure_copy (copy->structure);
 
   return copy;
 }
@@ -95,34 +87,16 @@ _gst_message_free (GstMessage * message)
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
   }
+
   if (message->lock) {
     GST_MESSAGE_LOCK (message);
     GST_MESSAGE_SIGNAL (message);
     GST_MESSAGE_UNLOCK (message);
   }
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
-    case GST_MESSAGE_WARNING:
-      g_error_free (GST_MESSAGE_ERROR_GERROR (message));
-      g_free (GST_MESSAGE_ERROR_DEBUG (message));
-      break;
-    case GST_MESSAGE_TAG:
-      if (GST_IS_TAG_LIST (message->message_data.tag.list)) {
-        gst_tag_list_free (message->message_data.tag.list);
-      } else {
-        g_warning ("tag message %p didn't contain a valid tag list!", message);
-        GST_ERROR ("tag message %p didn't contain a valid tag list!", message);
-      }
-      break;
-    case GST_MESSAGE_APPLICATION:
-      if (message->message_data.structure.structure) {
-        gst_structure_free (message->message_data.structure.structure);
-        message->message_data.structure.structure = NULL;
-      }
-      break;
-    default:
-      break;
-  }
+
+  if (message->structure)
+    gst_structure_free (message->structure);
+
   _GST_DATA_DISPOSE (GST_DATA (message));
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_message_trace, message);
@@ -196,8 +170,12 @@ gst_message_new_eos (GstObject * src)
 
 /**
  * gst_message_new_error:
+ * @src: The object originating the message.
+ * @error: The GError for this message.
+ * @debug: A debugging string for something or other.
  *
- * Create a new error message.
+ * Create a new error message. The message will take ownership of @error and
+ * @debug.
  *
  * Returns: The new error message.
  *
@@ -207,18 +185,24 @@ GstMessage *
 gst_message_new_error (GstObject * src, GError * error, gchar * debug)
 {
   GstMessage *message;
+  GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_ERROR, src);
-  GST_MESSAGE_ERROR_GERROR (message) = error;
-  GST_MESSAGE_ERROR_DEBUG (message) = debug;
+  s = gst_structure_new ("GstMessageError", "gerror", G_TYPE_POINTER, error,
+      "debug", G_TYPE_STRING, debug, NULL);
+  message->structure = s;
 
   return message;
 }
 
 /**
  * gst_message_new_warning:
+ * @src: The object originating the message.
+ * @error: The GError for this message.
+ * @debug: A debugging string for something or other.
  *
- * Create a new warning message.
+ * Create a new warning message. The message will take ownership of @error and
+ * @debug.
  *
  * Returns: The new warning message.
  *
@@ -228,18 +212,22 @@ GstMessage *
 gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
 {
   GstMessage *message;
+  GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_WARNING, src);
-  GST_MESSAGE_WARNING_GERROR (message) = error;
-  GST_MESSAGE_WARNING_DEBUG (message) = debug;
+  s = gst_structure_new ("GstMessageWarning", "gerror", G_TYPE_POINTER, error,
+      "debug", G_TYPE_STRING, debug, NULL);
+  message->structure = s;
 
   return message;
 }
 
 /**
  * gst_message_new_tag:
+ * @src: The object originating the message.
+ * @tag_list: The tag list for the message.
  *
- * Create a new tag message.
+ * Create a new tag message. The message will take ownership of the tag list.
  *
  * Returns: The new tag message.
  *
@@ -251,13 +239,16 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
   GstMessage *message;
 
   message = gst_message_new (GST_MESSAGE_TAG, src);
-  GST_MESSAGE_TAG_LIST (message) = tag_list;
+  message->structure = tag_list;
 
   return message;
 }
 
 /**
  * gst_message_new_state_change:
+ * @src: The object originating the message.
+ * @old: The previous state.
+ * @new: The new (current) state.
  *
  * Create a state change message.
  *
@@ -270,10 +261,12 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
     GstElementState new)
 {
   GstMessage *message;
+  GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
-  message->message_data.state_changed.old = old;
-  message->message_data.state_changed.new = new;
+  s = gst_structure_new ("GstMessageError", "old-state", G_TYPE_INT, old,
+      "new-state", G_TYPE_INT, new, NULL);
+  message->structure = s;
 
   return message;
 }
@@ -296,7 +289,114 @@ gst_message_new_application (GstStructure * structure)
   GstMessage *message;
 
   message = gst_message_new (GST_MESSAGE_APPLICATION, NULL);
-  message->message_data.structure.structure = structure;
+  message->structure = structure;
 
   return message;
+}
+
+/**
+ * gst_message_get_structure:
+ * @message: The #GstMessage.
+ *
+ * Access the structure of the message.
+ *
+ * Returns: The structure of the message, owned by the message.
+ *
+ * MT safe.
+ */
+const GstStructure *
+gst_message_get_structure (GstMessage * message)
+{
+  g_return_val_if_fail (GST_IS_MESSAGE (message), NULL);
+  return message->structure;
+}
+
+/**
+ * gst_message_parse_tag:
+ * @message: A valid #GstMessage of type GST_MESSAGE_TAG.
+ *
+ * Extracts the tag list from the GstMessage. The tag list returned in the
+ * output argument is a copy; the caller must free it when done.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TAG);
+
+  *tag_list = (GstTagList *) gst_structure_copy (message->structure);
+}
+
+/**
+ * gst_message_parse_tag:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STATE_CHANGED.
+ *
+ * Extracts the old and new states from the GstMessage.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_state_changed (GstMessage * message, GstElementState * old,
+    GstElementState * new)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
+
+  if (!gst_structure_get_int (message->structure, "old-state", (gint *) old))
+    g_assert_not_reached ();
+  if (!gst_structure_get_int (message->structure, "new-state", (gint *) new))
+    g_assert_not_reached ();
+}
+
+/**
+ * gst_message_parse_error:
+ * @message: A valid #GstMessage of type GST_MESSAGE_ERROR.
+ *
+ * Extracts the GError and debug strung from the GstMessage. The values returned
+ * in the output arguments are copies; the caller must free them when done.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
+{
+  const GValue *error_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
+
+  error_gvalue = gst_structure_get_value (message->structure, "gerror");
+  g_return_if_fail (error_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_POINTER);
+
+  *gerror = g_error_copy (g_value_get_pointer (error_gvalue));
+  *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
+}
+
+/**
+ * gst_message_parse_warning:
+ * @message: A valid #GstMessage of type GST_MESSAGE_WARNING.
+ *
+ * Extracts the GError and debug strung from the GstMessage. The values returned
+ * in the output arguments are copies; the caller must free them when done.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_warning (GstMessage * message, GError ** gerror,
+    gchar ** debug)
+{
+  const GValue *error_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
+
+  error_gvalue = gst_structure_get_value (message->structure, "gerror");
+  g_return_if_fail (error_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_POINTER);
+
+  *gerror = g_error_copy (g_value_get_pointer (error_gvalue));
+  *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
 }

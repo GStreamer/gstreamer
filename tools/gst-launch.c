@@ -339,7 +339,6 @@ event_loop (GstElement * pipeline, gboolean blocking)
   GstBus *bus;
   GstMessageType revent;
   GstMessage *message = NULL;
-  GstElementState old, new;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
@@ -361,21 +360,32 @@ event_loop (GstElement * pipeline, gboolean blocking)
         return FALSE;
       case GST_MESSAGE_TAG:
         if (tags) {
+          GstTagList *tags;
+
+          gst_message_parse_tag (message, &tags);
           g_print (_("FOUND TAG      : found by element \"%s\".\n"),
               GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
-          gst_tag_list_foreach (GST_MESSAGE_TAG_LIST (message), print_tag,
-              NULL);
+          gst_tag_list_foreach (tags, print_tag, NULL);
+          gst_tag_list_free (tags);
         }
         gst_message_unref (message);
         break;
-      case GST_MESSAGE_ERROR:
-        gst_object_default_error (GST_MESSAGE_SRC (message),
-            GST_MESSAGE_ERROR_GERROR (message),
-            GST_MESSAGE_ERROR_DEBUG (message));
+      case GST_MESSAGE_WARNING:
+      case GST_MESSAGE_ERROR:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_error (message, &gerror, &debug);
         gst_message_unref (message);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        g_error_free (gerror);
+        g_free (debug);
         return TRUE;
-      case GST_MESSAGE_STATE_CHANGED:
-        GST_MESSAGE_PARSE_STATE_CHANGED (message, &old, &new);
+      }
+      case GST_MESSAGE_STATE_CHANGED:{
+        GstElementState old, new;
+
+        gst_message_parse_state_changed (message, &old, &new);
         gst_message_unref (message);
         if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED))
           break;
@@ -384,6 +394,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
             GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
         /* cut out of the event loop if check_intr set us to PAUSED */
         return FALSE;
+      }
       default:
         /* just be quiet by default */
         gst_message_unref (message);

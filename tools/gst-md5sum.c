@@ -7,63 +7,66 @@
 #include <gst/gst.h>
 #include <locale.h>
 
-static GMainLoop *loop;
-
+/* blocking */
 static gboolean
-message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+event_loop (GstElement * pipeline)
 {
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:
-      if (g_main_loop_is_running (loop))
-        g_main_loop_quit (loop);
-      break;
-    case GST_MESSAGE_ERROR:
-      gst_object_default_error (GST_MESSAGE_SRC (message),
-          GST_MESSAGE_ERROR_GERROR (message),
-          GST_MESSAGE_ERROR_DEBUG (message));
-      if (g_main_loop_is_running (loop))
-        g_main_loop_quit (loop);
-      break;
-    default:
-      break;
-  }
-  gst_message_unref (message);
+  GstBus *bus;
+  GstMessageType revent;
+  GstMessage *message = NULL;
 
+  bus = gst_element_get_bus (GST_ELEMENT (pipeline));
+
+  while (TRUE) {
+    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
+
+    message = gst_bus_pop (bus);
+    g_return_val_if_fail (message != NULL, TRUE);
+
+    switch (revent) {
+      case GST_MESSAGE_EOS:
+        gst_message_unref (message);
+        return FALSE;
+      case GST_MESSAGE_WARNING:
+      case GST_MESSAGE_ERROR:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_error (message, &gerror, &debug);
+        gst_message_unref (message);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        g_error_free (gerror);
+        g_free (debug);
+        return TRUE;
+      }
+      default:
+        gst_message_unref (message);
+        break;
+    }
+  }
+
+  g_assert_not_reached ();
   return TRUE;
 }
-
 
 int
 main (int argc, char *argv[])
 {
-  /* options */
-  gboolean verbose = FALSE;
-  gchar *exclude_args = NULL;
-  struct poptOption options[] = {
-    {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
-        "do not output status information", NULL},
-    POPT_TABLEEND
-  };
-
   GstElement *pipeline = NULL;
-  gchar **argvn;
   GError *error = NULL;
   GstElement *md5sink;
+  gchar **argvn;
   gchar *md5string = g_malloc0 (33);
 
   free (malloc (8));            /* -lefence */
 
   setlocale (LC_ALL, "");
 
-  gst_init_with_popt_table (&argc, &argv, options);
+  gst_init (&argc, &argv);
 
-  /* make a parseable argvn array */
   argvn = g_new0 (char *, argc);
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-
-  /* Check if we have an element already that is called md5sink0
-     in the pipeline; if not, add one */
-  //pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
+  pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
   if (!pipeline) {
     if (error) {
       g_warning ("pipeline could not be constructed: %s\n", error->message);
@@ -75,17 +78,9 @@ main (int argc, char *argv[])
 
   md5sink = gst_bin_get_by_name (GST_BIN (pipeline), "md5sink0");
   if (md5sink == NULL) {
-    g_print ("adding an md5sink element to the pipeline\n");
-    /* make a null-terminated version of argv with ! md5sink appended
-     * ! is stored in argvn[argc - 1], md5sink in argvn[argc],
-     * NULL pointer in argvn[argc + 1] */
-    g_free (argvn);
-    argvn = g_new0 (char *, argc + 2);
-    memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-    argvn[argc - 1] = g_strdup_printf ("!");
-    argvn[argc] = g_strdup_printf ("md5sink");
-    pipeline =
-        (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
+    g_print ("ERROR: pipeline has no element named md5sink0.\n");
+    g_print ("Did you forget to put an md5sink in the pipeline?\n");
+    return 1;
   }
 
   if (!pipeline) {
@@ -97,26 +92,12 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  if (verbose) {
-    gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0)
-        : NULL;
-
-    g_signal_connect (pipeline, "deep_notify",
-        G_CALLBACK (gst_object_default_deep_notify), exclude_list);
-  }
-  //g_signal_connect (pipeline, "error",
-  //    G_CALLBACK (gst_object_default_error), NULL);
-
-  loop = g_main_loop_new (NULL, FALSE);
-  gst_bus_add_watch (gst_element_get_bus (GST_ELEMENT (pipeline)),
-      (GstBusHandler) message_received, pipeline);
-
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
     g_warning ("pipeline doesn't want to play\n");
-    return 0;
+    return 1;
   }
 
-  g_main_loop_run (loop);
+  event_loop (pipeline);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

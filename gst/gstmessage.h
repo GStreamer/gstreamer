@@ -89,19 +89,6 @@ typedef enum
 #define GST_MESSAGE_TIMESTAMP(message)	(GST_MESSAGE(message)->timestamp)
 #define GST_MESSAGE_SRC(message)	(GST_MESSAGE(message)->src)
 
-#define GST_MESSAGE_TAG_LIST(message)	(GST_MESSAGE(message)->message_data.tag.list)
-
-/* this is terribly nasty cause I'm going to make these all functions soon */
-#define GST_MESSAGE_PARSE_STATE_CHANGED(message, pold, pnew) G_STMT_START{	\
-  *pold = GST_MESSAGE(message)->message_data.state_changed.old;			\
-  *pnew = GST_MESSAGE(message)->message_data.state_changed.new;			\
-}G_STMT_END
-
-#define GST_MESSAGE_ERROR_GERROR(message)	(GST_MESSAGE(message)->message_data.error.gerror)
-#define GST_MESSAGE_ERROR_DEBUG(message)	(GST_MESSAGE(message)->message_data.error.debug)
-#define GST_MESSAGE_WARNING_GERROR(message)	(GST_MESSAGE(message)->message_data.error.gerror)
-#define GST_MESSAGE_WARNING_DEBUG(message)	(GST_MESSAGE(message)->message_data.error.debug)
-
 struct _GstMessage
 {
   GstData data;
@@ -115,28 +102,8 @@ struct _GstMessage
   guint64 timestamp;
   GstObject *src;
 
-  union
-  {
-    struct
-    {
-      GError *gerror;
-      gchar *debug;
-    } error;
-    struct
-    {
-      GstStructure *structure;
-    } structure;
-    struct
-    {
-      GstTagList *list;
-    } tag;
-    struct
-    {
-      GstElementState old;
-      GstElementState new;
-    } state_changed;
-  } message_data;
-
+  GstStructure *structure;
+  
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -160,6 +127,15 @@ GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old,
                                                  GstElementState new);
 GstMessage *	gst_message_new_application 	(GstStructure *structure);
+
+const GstStructure *  gst_message_get_structure	(GstMessage *message);
+
+void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
+void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old,
+                                                 GstElementState *new);
+void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
+void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
+
 
 G_END_DECLS
 #endif /* __GST_MESSAGE_H__ */
