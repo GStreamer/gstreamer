@@ -47,6 +47,7 @@ sub check_typo();
 sub check_explicit_caps();
 sub check_signals();
 sub check_gettext();
+sub check_padtemplate();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -76,6 +77,7 @@ foreach $filename (<FIND>) {
 	check_explicit_caps();
 	check_signals();
 	check_gettext();
+	check_padtemplate();
 
 	# less important stuff
 	check_license();
@@ -536,6 +538,19 @@ sub check_gettext()
 	           /\b_\(.*GST_TIME_FORMAT/ ||
 	           /\b_\(.*GST_FOURCC_FORMAT/ } @lines) {
 		print "E: gettext doesn't handle format strings that are defines\n"
+	}
+}
+
+#
+# Check that pad templates are statically scoped
+#
+sub check_padtemplate()
+{
+	foreach $line (@lines){
+		if ($line =~ /GstStaticPadTemplate/ && !($line =~ /static/)) {
+			print "W: pad template definitions should be static\n"
+			return;
+		}
 	}
 }
 
