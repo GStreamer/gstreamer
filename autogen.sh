@@ -78,18 +78,15 @@ EOF
 	if test "x$PATCHED" == "x1"; then
 	  echo "A patched version of automake is available at:"
 	  echo "$patchedfile"
-	  echo "You should put this in an appropriate place, or modify $PATH, so that it is"
+	  echo "You should put this in an appropriate place, or modify \$PATH, so that it is"
 	  echo "used in preference to this installed version of automake."
 	fi
       fi
-      echo "You should abort the build now.  Read the README file for an explanation."
+      echo "It is not safe to perform the build without a patched automake."
+      echo "Read the README file for an explanation."
       echo "***************************************************************************"
       echo
-      # Give user time to respond
-      sleep 5;
-      echo "Continuing anyway: I recommend keeping a check on the amount of memory used"
-      echo "while running automake - it is likely to grow extremely large."
-      echo
+      DIE=1
     else
       # Reversed patch failed: incompatibly patched.
       echo
