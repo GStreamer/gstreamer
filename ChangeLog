@@ -1,5 +1,13 @@
 2004-07-07  Wim Taymans  <wim@fluendo.com>
 
+	* sys/oss/gstosselement.c: (gst_osselement_reset),
+	(gst_osselement_parse_caps):
+	* sys/oss/gstosselement.h:
+	* sys/oss/gstosssrc.c: (gst_osssrc_get):
+	Fix offset on osssrc.
+
+2004-07-07  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theora.c: (plugin_init):
 	* ext/theora/theoradec.c: (theora_dec_from_granulepos),
 	(theora_dec_src_query), (theora_dec_chain):
