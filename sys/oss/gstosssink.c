@@ -329,31 +329,63 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
     if (osssink->width == 16) {
       if (sign == TRUE) {
         if (endianness == G_LITTLE_ENDIAN)
+	{
 	  format = AFMT_S16_LE;
+	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	             "gst_osssink_sinkconnect: 16 bit signed LE, no law (%d)",
+		     format);
+	}
         else if (endianness == G_BIG_ENDIAN)
+	{
 	  format = AFMT_S16_BE;
+	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	             "gst_osssink_sinkconnect: 16 bit signed BE, no law (%d)",
+		     format);
+	}
       }
       else {
         if (endianness == G_LITTLE_ENDIAN)
+	{
 	  format = AFMT_U16_LE;
+	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	             "gst_osssink_sinkconnect: 16 bit unsigned LE, no law (%d)",
+		     format);
+	}
         else if (endianness == G_BIG_ENDIAN)
+	{
 	  format = AFMT_U16_BE;
+	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	             "gst_osssink_sinkconnect: 16 bit unsigned BE, no law (%d)",
+		     format);
+	}
       }
       osssink->bps = 2;
     }
     else if (osssink->width == 8) {
       if (sign == TRUE) {
 	format = AFMT_S8;
+	GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	           "gst_osssink_sinkconnect: 8 bit signed, no law (%d)",
+	           format);
       }
       else {
         format = AFMT_U8;
+	GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	           "gst_osssink_sinkconnect: 8 bit unsigned, no law (%d)",
+	           format);
       }
       osssink->bps = 1;
     }
   } else if (law == 1) {
     format = AFMT_MU_LAW;
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	       "gst_osssink_sinkconnect: mu law (%d)",
+	       format);
   } else if (law == 2) {
     format = AFMT_A_LAW;
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	       "gst_osssink_sinkconnect: a law (%d)",
+	       format);
   } else {
     g_critical ("unknown law");
     return GST_PAD_CONNECT_REFUSED;
@@ -398,9 +430,10 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   else
     frag = 0x7FFF0000 | osssink->fragment;
   
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: trying to set sound card to %dHz %d bit %s (%08x fragment)",
-           osssink->frequency, osssink->format,
-           (osssink->channels == 2) ? "stereo" : "mono",frag);
+  GST_INFO (GST_CAT_PLUGIN_INFO, 
+            "osssink: setting sound card to %dHz %d format %s (%08x fragment)",
+            osssink->frequency, osssink->format,
+            (osssink->channels == 2) ? "stereo" : "mono", frag);
 
   ioctl (osssink->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
 
@@ -426,9 +459,12 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   }
   osssink->fragment = ospace.fragstotal << 16 | frag_ln;
 	  
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: set sound card to %dHz %d bit %s (%d bytes buffer, %08x fragment)",
-           osssink->frequency, osssink->format,
-           (osssink->channels == 2) ? "stereo" : "mono", ospace.bytes, osssink->fragment);
+  GST_INFO (GST_CAT_PLUGIN_INFO, 
+            "osssink: set sound card to %dHz %d format %s "
+	    "(%d bytes buffer, %08x fragment)",
+            osssink->frequency, osssink->format,
+            (osssink->channels == 2) ? "stereo" : "mono", 
+	    ospace.bytes, osssink->fragment);
 
   object = G_OBJECT (osssink);
   g_object_freeze_notify (object);
@@ -439,13 +475,14 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   g_object_thaw_notify (object);
 
   osssink->fragment_time = (GST_SECOND * osssink->fragment_size) / osssink->bps;
-  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %llu\n", osssink->bps, osssink->fragment_time);
+  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %llu\n", 
+            osssink->bps, osssink->fragment_time);
 
   if (target_format != osssink->format ||
       target_channels != osssink->channels ||
       target_frequency != osssink->frequency) 
   {
-    g_warning ("could not configure oss with required parameters, enjoy the noise :)");
+    g_warning ("couldn't set requested OSS parameters, enjoy the noise :)");
     /* we could eventually return FALSE here, or just do some additional tests
      * to see that the frequencies don't differ too much etc.. */
   }
@@ -484,8 +521,9 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
 
   delay = gst_osssink_get_delay (osssink);
 
-  /* sometimes delay is bigger than the number of bytes sent to the device, which screws
-   * up this calculation, we assume that everything is still in the device then */
+  /* sometimes delay is bigger than the number of bytes sent to the device, 
+   * which screws up this calculation, we assume that everything is still 
+   * in the device then */
   if (((guint64)delay) > osssink->handled) {
     delay = osssink->handled;
   }
