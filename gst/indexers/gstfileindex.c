@@ -864,12 +864,8 @@ gst_file_index_get_assoc_entry (GstIndex *index,
   return entry;
 }
 
-//////////////////////////////////////////////////////////////////////
-// [UNTESTED] i don't understand the following plugin stuff [UNTESTED]
-//////////////////////////////////////////////////////////////////////
-
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_file_index_plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstIndexFactory *factory;
 
@@ -887,11 +883,3 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
   return TRUE;
 }
-
-GstPluginDesc plugin_desc2 = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstindexs",
-  plugin_init
-};
-

@@ -401,8 +401,8 @@ gst_mem_index_get_assoc_entry (GstIndex *index, gint id,
   return entry;
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_mem_index_plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstIndexFactory *factory;
 
@@ -420,11 +420,3 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
   return TRUE;
 }
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstindexs",
-  plugin_init
-};
-
