@@ -80,7 +80,7 @@ int main(int argc,char *argv[]) {
       for (i=0;i<num_properties;i++) {
         GParamSpec *param = property_specs[i];
         argnode = xmlNewChild (factorynode, NULL, "argument", param->name);
-        if (param->value_type == GST_TYPE_FILENAME) {
+        if (param->value_type == GST_TYPE_URI) {
           xmlNewChild (argnode, NULL, "filename", NULL);
         } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
           GEnumValue *values;
