@@ -165,6 +165,8 @@ gst_sinesrc_init (GstSineSrc *src)
 
   src->format = 16;
   src->samplerate = 44100;
+  src->volume = 1.0;
+  src->freq = 440.0;
   
   src->newcaps = TRUE;
   
