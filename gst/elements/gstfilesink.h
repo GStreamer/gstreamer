@@ -45,7 +45,8 @@ typedef enum
   GST_FILESINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_FILESINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-} GstFileSinkFlags;
+}
+GstFileSinkFlags;
 
 struct _GstFileSink
 {

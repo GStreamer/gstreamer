@@ -129,7 +129,8 @@ typedef enum
 
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST = GST_OBJECT_FLAG_LAST + 16
-} GstElementFlags;
+}
+GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))

@@ -53,7 +53,8 @@ typedef struct
   GList *path;
   GstElement *current;
   gulong signal_id;
-} GstSpiderConnection;
+}
+GstSpiderConnection;
 
 #define GST_TYPE_SPIDER \
   (gst_spider_get_type())

@@ -43,7 +43,8 @@ G_BEGIN_DECLS
   GST_PIPEFILTER_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_PIPEFILTER_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-} GstPipeFilterFlags;
+}
+GstPipeFilterFlags;
 
 typedef struct _GstPipefilter GstPipefilter;
 typedef struct _GstPipefilterClass GstPipefilterClass;

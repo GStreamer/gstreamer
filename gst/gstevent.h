@@ -51,7 +51,8 @@ typedef enum
   GST_EVENT_INTERRUPT = 14,
   GST_EVENT_NAVIGATION = 15,
   GST_EVENT_TAG = 16
-} GstEventType;
+}
+GstEventType;
 
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
@@ -78,13 +79,15 @@ typedef enum
 
   /* indicates negative rates are supported */
   GST_RATE_FLAG_NEGATIVE = (1 << 1)
-} GstEventFlag;
+}
+GstEventFlag;
 
 typedef struct
 {
   GstEventType type;
   GstEventFlag flags;
-} GstEventMask;
+}
+GstEventMask;
 
 #ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
@@ -128,19 +131,22 @@ typedef enum
   GST_SEEK_FLAG_KEY_UNIT = (1 << (GST_SEEK_FLAGS_SHIFT + 2)),
   GST_SEEK_FLAG_SEGMENT_LOOP = (1 << (GST_SEEK_FLAGS_SHIFT + 3))
 
-} GstSeekType;
+}
+GstSeekType;
 
 typedef enum
 {
   GST_SEEK_CERTAIN,
   GST_SEEK_FUZZY
-} GstSeekAccuracy;
+}
+GstSeekAccuracy;
 
 typedef struct
 {
   GstFormat format;
   gint64 value;
-} GstFormatValue;
+}
+GstFormatValue;
 
 #define GST_EVENT_SEEK_TYPE(event)		(GST_EVENT(event)->event_data.seek.type)
 #define GST_EVENT_SEEK_FORMAT(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_FORMAT_MASK)
@@ -175,27 +181,33 @@ struct _GstEvent
       gint64 offset;
       gint64 endoffset;
       GstSeekAccuracy accuracy;
-    } seek;
+    }
+    seek;
     struct
     {
       GstFormatValue offsets[8];
       gint noffsets;
       gboolean new_media;
-    } discont;
+    }
+    discont;
     struct
     {
       GstFormat format;
       gint64 value;
-    } size;
+    }
+    size;
     struct
     {
       gdouble value;
-    } rate;
+    }
+    rate;
     struct
     {
       GstStructure *structure;
-    } structure;
-  } event_data;
+    }
+    structure;
+  }
+  event_data;
 
   gpointer _gst_reserved[GST_PADDING];
 };

@@ -64,7 +64,8 @@ typedef struct
 {
   const gchar *name;
   GType type;
-} GstTypeNameData;
+}
+GstTypeNameData;
 
 /* filter */
 typedef gboolean (*GstPluginFeatureFilter) (GstPluginFeature * feature,

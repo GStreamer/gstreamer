@@ -410,7 +410,8 @@ gst_atomic_int_dec_and_test (GstAtomicInt * aint)
     typedef struct
 {
   volatile int counter;
-} atomic_t __attribute__ ((aligned (4)));
+}
+atomic_t __attribute__ ((aligned (4)));
 
 GST_INLINE_FUNC void
 gst_atomic_int_init (GstAtomicInt * aint, gint val)

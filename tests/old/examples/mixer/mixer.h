@@ -9,4 +9,5 @@ typedef struct
 
   char *location;
   int channel_id;
-} input_channel_t;
+}
+input_channel_t;

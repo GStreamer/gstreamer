@@ -42,7 +42,8 @@ G_BEGIN_DECLS
 {
   SHAPER_POLICY_TIMESTAMPS = 1,
   SHAPER_POLICY_BUFFERSIZE
-} GstShaperPolicyType;
+}
+GstShaperPolicyType;
 
 typedef struct _GstShaper GstShaper;
 typedef struct _GstShaperClass GstShaperClass;

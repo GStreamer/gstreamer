@@ -49,7 +49,8 @@ typedef enum
   GST_TYPE_FIND_LIKELY = 80,
   GST_TYPE_FIND_NEARLY_CERTAIN = 99,
   GST_TYPE_FIND_MAXIMUM = 100,
-} GstTypeFindProbability;
+}
+GstTypeFindProbability;
 
 struct _GstTypeFind
 {

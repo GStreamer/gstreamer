@@ -53,13 +53,15 @@ typedef enum
   GST_XML_REGISTRY_CAPS,
   GST_XML_REGISTRY_STRUCTURE,
   GST_XML_REGISTRY_PROPERTIES
-} GstXMLRegistryState;
+}
+GstXMLRegistryState;
 
 typedef enum
 {
   GST_XML_REGISTRY_READ,
   GST_XML_REGISTRY_WRITE
-} GstXMLRegistryMode;
+}
+GstXMLRegistryMode;
 
 typedef void (*GstXMLRegistryGetPerms) (GstXMLRegistry * registry);
 typedef void (*GstXMLRegistryAddPathList) (GstXMLRegistry * registry);

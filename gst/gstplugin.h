@@ -39,7 +39,8 @@ typedef enum
   GST_PLUGIN_ERROR_MODULE,
   GST_PLUGIN_ERROR_DEPENDENCIES,
   GST_PLUGIN_ERROR_NAME_MISMATCH
-} GstPluginError;
+}
+GstPluginError;
 
 #define GST_PLUGIN(plugin)		((GstPlugin *) (plugin))
 

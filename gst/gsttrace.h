@@ -74,7 +74,8 @@ typedef enum
 {
   GST_ALLOC_TRACE_LIVE = (1 << 0),
   GST_ALLOC_TRACE_MEM_LIVE = (1 << 1)
-} GstAllocTraceFlags;
+}
+GstAllocTraceFlags;
 
 typedef struct _GstAllocTrace GstAllocTrace;
 

@@ -51,7 +51,8 @@ typedef enum
   GST_FLOATING,
 
   GST_OBJECT_FLAG_LAST = 4
-} GstObjectFlags;
+}
+GstObjectFlags;
 
 struct _GstObject
 {

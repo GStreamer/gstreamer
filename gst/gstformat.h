@@ -35,7 +35,8 @@ G_BEGIN_DECLS typedef enum
   GST_FORMAT_TIME = 3,
   GST_FORMAT_BUFFERS = 4,
   GST_FORMAT_PERCENT = 5
-} GstFormat;
+}
+GstFormat;
 
 /* a percentage is always relative to 1000000 */
 #define	GST_FORMAT_PERCENT_MAX		G_GINT64_CONSTANT (1000000)

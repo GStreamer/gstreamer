@@ -31,7 +31,8 @@ G_BEGIN_DECLS typedef enum
   AGGREGATOR_LOOP = 1,
   AGGREGATOR_LOOP_SELECT,
   AGGREGATOR_CHAIN
-} GstAggregatorSchedType;
+}
+GstAggregatorSchedType;
 
 #define GST_TYPE_AGGREGATOR \
   (gst_aggregator_get_type())

@@ -40,7 +40,8 @@ typedef enum
   GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
   GST_PARSE_ERROR_EMPTY_BIN,
   GST_PARSE_ERROR_EMPTY
-} GstParseError;
+}
+GstParseError;
 
 
 GstElement *gst_parse_launch (const gchar * pipeline_description,

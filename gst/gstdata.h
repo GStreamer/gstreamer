@@ -51,7 +51,8 @@ typedef enum
 
   /* insert more */
   GST_DATA_FLAG_LAST = 8
-} GstDataFlags;
+}
+GstDataFlags;
 
 /* refcount */
 #define GST_DATA_REFCOUNT(data)			((GST_DATA(data))->refcount)

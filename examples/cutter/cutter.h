@@ -11,4 +11,5 @@ typedef struct
 
   char *location;
   int channel_id;
-} output_channel_t;
+}
+output_channel_t;

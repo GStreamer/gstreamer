@@ -46,7 +46,8 @@ typedef enum
   GST_INDEX_UNKNOWN,
   GST_INDEX_CERTAIN,
   GST_INDEX_FUZZY
-} GstIndexCertainty;
+}
+GstIndexCertainty;
 
 typedef enum
 {
@@ -54,14 +55,16 @@ typedef enum
   GST_INDEX_ENTRY_ASSOCIATION,
   GST_INDEX_ENTRY_OBJECT,
   GST_INDEX_ENTRY_FORMAT
-} GstIndexEntryType;
+}
+GstIndexEntryType;
 
 typedef enum
 {
   GST_INDEX_LOOKUP_EXACT,
   GST_INDEX_LOOKUP_BEFORE,
   GST_INDEX_LOOKUP_AFTER
-} GstIndexLookupMethod;
+}
+GstIndexLookupMethod;
 
 #define GST_INDEX_NASSOCS(entry)		((entry)->data.assoc.nassocs)
 #define GST_INDEX_ASSOC_FLAGS(entry)		((entry)->data.assoc.flags)
@@ -83,7 +86,8 @@ typedef enum
 
   /* new flags should start here */
   GST_ASSOCIATION_FLAG_LAST = (1 << 8)
-} GstAssocFlags;
+}
+GstAssocFlags;
 
 #define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)
 #define GST_INDEX_FORMAT_KEY(entry)		((entry)->data.format.key)
@@ -102,25 +106,30 @@ struct _GstIndexEntry
     struct
     {
       gchar *description;
-    } id;
+    }
+    id;
     struct
     {
       gint nassocs;
         GstIndexAssociation * assocs;
       GstAssocFlags flags;
-    } assoc;
+    }
+    assoc;
     struct
     {
       gchar *key;
       GType type;
       gpointer object;
-    } object;
+    }
+    object;
     struct
     {
       GstFormat format;
       gchar *key;
-    } format;
-  } data;
+    }
+    format;
+  }
+  data;
 };
 
 struct _GstIndexGroup
@@ -145,7 +154,8 @@ typedef enum
   GST_INDEX_RESOLVER_CUSTOM,
   GST_INDEX_RESOLVER_GTYPE,
   GST_INDEX_RESOLVER_PATH
-} GstIndexResolverMethod;
+}
+GstIndexResolverMethod;
 
 typedef gboolean (*GstIndexResolver) (GstIndex * index,
     GstObject * writer, gchar ** writer_string, gpointer user_data);
@@ -155,7 +165,8 @@ typedef enum
   GST_INDEX_READABLE,
 
   GST_INDEX_FLAG_LAST = GST_OBJECT_FLAG_LAST + 8
-} GstIndexFlags;
+}
+GstIndexFlags;
 
 #define GST_INDEX_IS_READABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_READABLE))
 #define GST_INDEX_IS_WRITABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_WRITABLE))

@@ -81,7 +81,8 @@ typedef enum
   GST_BUFFER_KEY_UNIT,
   GST_BUFFER_DONTKEEP,
   GST_BUFFER_FLAG_LAST = GST_DATA_FLAG_LAST + 8
-} GstBufferFlag;
+}
+GstBufferFlag;
 
 struct _GstBuffer
 {

@@ -46,7 +46,8 @@
 typedef union
 {
   float sf[4];			/* Single-precision (32-bit) value */
-} __attribute__ ((aligned (16))) sse_t;	/* On a 16 byte (128-bit) boundary */
+}
+__attribute__ ((aligned (16))) sse_t;	/* On a 16 byte (128-bit) boundary */
 
 
 #if 0

@@ -44,7 +44,8 @@ G_BEGIN_DECLS
   GST_FILESRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-} GstFileSrcFlags;
+}
+GstFileSrcFlags;
 
 typedef struct _GstFileSrc GstFileSrc;
 typedef struct _GstFileSrcClass GstFileSrcClass;

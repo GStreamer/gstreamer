@@ -42,7 +42,8 @@ G_BEGIN_DECLS
 
   /* padding */
   GST_SCHEDULER_FLAG_LAST = GST_OBJECT_FLAG_LAST + 4
-} GstSchedulerFlags;
+}
+GstSchedulerFlags;
 
 #define GST_SCHEDULER_PARENT(sched)		((sched)->parent)
 #define GST_SCHEDULER_STATE(sched)		((sched)->state)
@@ -55,7 +56,8 @@ typedef enum
   GST_SCHEDULER_STATE_RUNNING,
   GST_SCHEDULER_STATE_STOPPED,
   GST_SCHEDULER_STATE_ERROR
-} GstSchedulerState;
+}
+GstSchedulerState;
 
 struct _GstScheduler
 {

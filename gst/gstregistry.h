@@ -50,7 +50,8 @@ G_BEGIN_DECLS typedef enum
   GST_REGISTRY_SAVE_ERROR = (1 << 2),
   GST_REGISTRY_PLUGIN_LOAD_ERROR = (1 << 3),
   GST_REGISTRY_PLUGIN_SIGNATURE_ERROR = (1 << 4)
-} GstRegistryReturn;
+}
+GstRegistryReturn;
 
 typedef enum
 {
@@ -59,7 +60,8 @@ typedef enum
   GST_REGISTRY_EXISTS = (1 << 3),
   GST_REGISTRY_REMOTE = (1 << 4),
   GST_REGISTRY_DELAYED_LOADING = (1 << 5)
-} GstRegistryFlags;
+}
+GstRegistryFlags;
 
 
 #define GST_TYPE_REGISTRY 		(gst_registry_get_type ())

@@ -52,7 +52,8 @@ typedef enum
 
   /* padding */
   GST_BIN_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 5
-} GstBinFlags;
+}
+GstBinFlags;
 
 /*typedef struct _GstBin GstBin; */
 /*typedef struct _GstBinClass GstBinClass; */

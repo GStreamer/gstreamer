@@ -88,7 +88,8 @@ typedef enum
   GST_PAD_LINK_DELAYED = 0,
   GST_PAD_LINK_OK = 1,
   GST_PAD_LINK_DONE = 2
-} GstPadLinkReturn;
+}
+GstPadLinkReturn;
 
 #define GST_PAD_LINK_FAILED(ret) (ret < GST_PAD_LINK_OK)
 #define GST_PAD_LINK_SUCCESSFUL(ret) (ret >= GST_PAD_LINK_OK)
@@ -138,7 +139,8 @@ typedef enum
   GST_PAD_UNKNOWN,
   GST_PAD_SRC,
   GST_PAD_SINK
-} GstPadDirection;
+}
+GstPadDirection;
 
 typedef enum
 {
@@ -146,7 +148,8 @@ typedef enum
   GST_PAD_NEGOTIATING,
 
   GST_PAD_FLAG_LAST = GST_OBJECT_FLAG_LAST + 4
-} GstPadFlags;
+}
+GstPadFlags;
 
 struct _GstPad
 {
@@ -308,7 +311,8 @@ typedef enum
   GST_PAD_ALWAYS,
   GST_PAD_SOMETIMES,
   GST_PAD_REQUEST
-} GstPadPresence;
+}
+GstPadPresence;
 
 #define GST_PAD_TEMPLATE_NAME_TEMPLATE(templ)	(((GstPadTemplate *)(templ))->name_template)
 #define GST_PAD_TEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
@@ -320,7 +324,8 @@ typedef enum
   GST_PAD_TEMPLATE_FIXED = GST_OBJECT_FLAG_LAST,
 
   GST_PAD_TEMPLATE_FLAG_LAST = GST_OBJECT_FLAG_LAST + 4
-} GstPadTemplateFlags;
+}
+GstPadTemplateFlags;
 
 #define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_FLAG_IS_SET(templ, GST_PAD_TEMPLATE_FIXED))
 

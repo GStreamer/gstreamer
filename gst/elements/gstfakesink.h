@@ -46,7 +46,8 @@ G_BEGIN_DECLS
   FAKESINK_STATE_ERROR_PLAYING_PAUSED,
   FAKESINK_STATE_ERROR_PAUSED_READY,
   FAKESINK_STATE_ERROR_READY_NULL,
-} GstFakeSinkStateError;
+}
+GstFakeSinkStateError;
 
 typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;

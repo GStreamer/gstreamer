@@ -42,7 +42,8 @@ G_BEGIN_DECLS
   GST_MULTIFILESRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_MULTIFILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-} GstMultiFileSrcFlags;
+}
+GstMultiFileSrcFlags;
 
 typedef struct _GstMultiFileSrc GstMultiFileSrc;
 typedef struct _GstMultiFileSrcClass GstMultiFileSrcClass;

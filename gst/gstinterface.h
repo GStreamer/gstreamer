@@ -55,7 +55,8 @@ typedef struct _GstImplementsInterfaceClass
     gboolean (*supported) (GstImplementsInterface * iface, GType iface_type);
 
   gpointer _gst_reserved[GST_PADDING];
-} GstImplementsInterfaceClass;
+}
+GstImplementsInterfaceClass;
 
 #define GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \
   ((cast_t *) gst_implements_interface_cast ((obj), (type)))

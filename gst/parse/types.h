@@ -17,7 +17,8 @@ typedef struct
   GSList *src_pads;
   GSList *sink_pads;
   GstCaps *caps;
-} link_t;
+}
+link_t;
 
 typedef struct
 {
@@ -26,7 +27,8 @@ typedef struct
   GstElement *last;
   link_t *front;
   link_t *back;
-} chain_t;
+}
+chain_t;
 
 typedef struct _graph_t graph_t;
 struct _graph_t

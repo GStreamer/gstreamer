@@ -41,7 +41,8 @@ typedef enum
 
   /* padding */
   GST_THREAD_FLAG_LAST = GST_BIN_FLAG_LAST + 4
-} GstThreadState;
+}
+GstThreadState;
 
 #define GST_TYPE_THREAD 		(gst_thread_get_type())
 #define GST_THREAD(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_THREAD,GstThread))

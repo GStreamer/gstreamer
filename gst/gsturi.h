@@ -33,7 +33,8 @@ G_BEGIN_DECLS typedef enum
   GST_URI_UNKNOWN,
   GST_URI_SINK,
   GST_URI_SRC
-} GstURIType;
+}
+GstURIType;
 
 #define GST_URI_TYPE_IS_VALID(type) ((type) == GST_URI_SRC || (type) == GST_URI_SINK)
 

@@ -94,7 +94,8 @@ typedef union
   char b[8];			/* 8 Byte (8-bit) values */
   unsigned char ub[8];		/* 8 Unsigned Byte */
   float s[2];			/* Single-precision (32-bit) value */
-} mmx_t;
+}
+mmx_t;
 
 
 

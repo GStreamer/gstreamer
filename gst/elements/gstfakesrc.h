@@ -36,20 +36,23 @@ G_BEGIN_DECLS typedef enum
   FAKESRC_PATTERN_LOOP,
   FAKESRC_PING_PONG_PATTERN,
   FAKESRC_GET_ALWAYS_SUCEEDS
-} GstFakeSrcOutputType;
+}
+GstFakeSrcOutputType;
 
 typedef enum
 {
   FAKESRC_DATA_ALLOCATE = 1,
   FAKESRC_DATA_SUBBUFFER,
-} GstFakeSrcDataType;
+}
+GstFakeSrcDataType;
 
 typedef enum
 {
   FAKESRC_SIZETYPE_NULL = 1,
   FAKESRC_SIZETYPE_FIXED,
   FAKESRC_SIZETYPE_RANDOM
-} GstFakeSrcSizeType;
+}
+GstFakeSrcSizeType;
 
 typedef enum
 {
@@ -58,7 +61,8 @@ typedef enum
   FAKESRC_FILLTYPE_RANDOM,
   FAKESRC_FILLTYPE_PATTERN,
   FAKESRC_FILLTYPE_PATTERN_CONT
-} GstFakeSrcFillType;
+}
+GstFakeSrcFillType;
 
 #define GST_TYPE_FAKESRC \
   (gst_fakesrc_get_type())

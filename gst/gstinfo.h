@@ -48,7 +48,8 @@ G_BEGIN_DECLS
   GST_LEVEL_LOG,
   /* add more */
   GST_LEVEL_COUNT
-} GstDebugLevel;
+}
+GstDebugLevel;
 
 /* we can now override this to be more general in maintainer builds or cvs checkouts */
 #ifndef GST_LEVEL_DEFAULT
@@ -86,7 +87,8 @@ typedef enum
   /* other formats */
   GST_DEBUG_BOLD = 0x0100,
   GST_DEBUG_UNDERLINE = 0x0200
-} GstDebugColorFlags;
+}
+GstDebugColorFlags;
 
 #define GST_DEBUG_FG_MASK	(0x000F)
 #define GST_DEBUG_BG_MASK	(0x00F0)

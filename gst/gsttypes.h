@@ -43,21 +43,24 @@ typedef enum
   GST_STATE_READY = (1 << 1),
   GST_STATE_PAUSED = (1 << 2),
   GST_STATE_PLAYING = (1 << 3)
-} GstElementState;
+}
+GstElementState;
 
 typedef enum
 {
   GST_STATE_FAILURE = 0,
   GST_STATE_SUCCESS = 1,
   GST_STATE_ASYNC = 2
-} GstElementStateReturn;
+}
+GstElementStateReturn;
 
 typedef enum
 {
   GST_RESULT_OK,
   GST_RESULT_NOK,
   GST_RESULT_NOT_IMPL
-} GstResult;
+}
+GstResult;
 
 #define GST_RANK_PRIMARY    256
 #define GST_RANK_SECONDARY  128

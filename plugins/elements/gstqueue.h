@@ -64,7 +64,8 @@ struct _GstQueue
     guint buffers;		/* no. of buffers */
     guint bytes;		/* no. of bytes */
     guint64 time;		/* amount of time */
-  } cur_level,			/* currently in the queue */
+  }
+  cur_level,			/* currently in the queue */
     max_size,			/* max. amount of data allowed in the queue */
     min_threshold;		/* min. amount of data required to wake reader */
 
