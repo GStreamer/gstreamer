@@ -184,7 +184,7 @@ gst_props_register_count (GstPropsFactory factory, guint *counter)
 	break;
       }
     }
-    props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+    props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
      
     tag = factory[i++];
   }
@@ -284,7 +284,7 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
 GstProps*
 gst_props_merge (GstProps *props, GstProps *tomerge)
 {
-  GSList *merge_props;
+  GList *merge_props;
 
   g_return_val_if_fail (props != NULL, NULL);
   g_return_val_if_fail (tomerge != NULL, NULL);
@@ -295,9 +295,9 @@ gst_props_merge (GstProps *props, GstProps *tomerge)
   while (merge_props) {
     GstPropsEntry *entry = (GstPropsEntry *)merge_props->data;
 
-    props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+    props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
 	  
-    merge_props = g_slist_next (merge_props);
+    merge_props = g_list_next (merge_props);
   }
 
   return props;
@@ -412,8 +412,8 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 gboolean
 gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 {
-  GSList *sourcelist;
-  GSList *sinklist;
+  GList *sourcelist;
+  GList *sinklist;
   gint missing = 0;
   gint more = 0;
   gboolean compatible = TRUE;
@@ -434,22 +434,22 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     while (entry1->propid < entry2->propid) {
       GST_DEBUG (0,"source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
       more++;
-      sourcelist = g_slist_next (sourcelist);
+      sourcelist = g_list_next (sourcelist);
       if (sourcelist) entry1 = (GstPropsEntry *)sourcelist->data;
       else goto end;
     }
     while (entry1->propid > entry2->propid) {
       GST_DEBUG (0,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
       missing++;
-      sinklist = g_slist_next (sinklist);
+      sinklist = g_list_next (sinklist);
       if (sinklist) entry2 = (GstPropsEntry *)sinklist->data;
       else goto end;
     }
 
     compatible &= gst_props_entry_check_compatibility (entry1, entry2);
 
-    sourcelist = g_slist_next (sourcelist);
-    sinklist = g_slist_next (sinklist);
+    sourcelist = g_list_next (sourcelist);
+    sinklist = g_list_next (sinklist);
   }
   if (sinklist) {
     GstPropsEntry *entry2;
@@ -512,7 +512,7 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
 xmlNodePtr
 gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
 {
-  GSList *proplist;
+  GList *proplist;
   xmlNodePtr subtree;
 
   g_return_val_if_fail (props != NULL, NULL);
@@ -531,7 +531,7 @@ gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
     	gst_props_save_thyself_func (entry, parent);
     }
 
-    proplist = g_slist_next (proplist);
+    proplist = g_list_next (proplist);
   }
   
   return parent;
@@ -601,14 +601,14 @@ gst_props_load_thyself (xmlNodePtr parent)
         subfield = subfield->next;
       }
       entry->data.list_data.entries = g_list_reverse (entry->data.list_data.entries);
-      props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+      props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
     }
     else {
       GstPropsEntry *entry;
 
       entry = gst_props_load_thyself_func (field);
 
-      props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+      props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
     }
     field = field->next;
   }

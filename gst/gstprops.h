@@ -60,7 +60,7 @@ typedef enum {
 
 
 struct _GstProps {
-  GSList *properties;		/* real properties for this property */
+  GList *properties;		/* real properties for this property */
 };
 
 /* initialize the subsystem */

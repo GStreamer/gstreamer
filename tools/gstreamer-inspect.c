@@ -46,15 +46,13 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
 }
 
 void print_props(GstProps *properties,gchar *pfx) {
-  GSList *props;
+  GList *props;
   GstPropsEntry *prop;
 
   props = properties->properties;
   while (props) {
     prop = (GstPropsEntry*)(props->data);
-    props = g_slist_next(props);
-
-    if (prop->propstype == GST_PROPS_END_ID_NUM) continue;
+    props = g_list_next(props);
 
     print_prop(prop,TRUE,pfx);
   }
@@ -98,6 +96,11 @@ int main(int argc,char *argv[]) {
   gst_init(&argc,&argv);
 
   factory = gst_elementfactory_find(argv[1]);
+  if (!factory) {
+    g_print ("no elementfactory for element '%s' exists\n", argv[1]);
+    return -1;
+  }
+	  
   element = gst_elementfactory_create(factory,argv[1]);
   gstelement_class = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
 
@@ -135,10 +138,21 @@ int main(int argc,char *argv[]) {
         printf("    Capabilities:\n");
         caps = padtemplate->caps;
         while (caps) {
+ 	  GstType *type;
+
           cap = (GstCaps*)(caps->data);
           caps = g_list_next(caps);
+
           printf("      '%s':\n",cap->name);
-          print_props(cap->properties,"        ");
+
+	  type = gst_type_find_by_id (cap->id);
+	  if (type) 
+            printf("        MIME type: '%s':\n",type->mime);
+	  else
+            printf("        MIME type: 'unknown/unknown':\n");
+
+	  if (cap->properties)
+            print_props(cap->properties,"        ");
         }
       }
 
@@ -218,7 +232,8 @@ int main(int argc,char *argv[]) {
           cap = (GstCaps*)(caps->data);
           caps = g_list_next(caps);
           printf("      '%s':\n",cap->name);
-          print_props(cap->properties,"        ");
+	  if (cap->properties)
+            print_props(cap->properties,"        ");
         }
       }
 
@@ -251,6 +266,7 @@ int main(int argc,char *argv[]) {
     }
     printf("\n");
   }
+  if (num_args == 0) g_print ("  none");
   printf("\n");
 
   return 0;
