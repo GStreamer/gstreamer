@@ -373,7 +373,7 @@ gst_debug_print_object (gpointer ptr)
     return gst_structure_to_string ((GstStructure *)ptr);
   }
 #ifdef USE_POISONING
-  if (*(unsigned int *)ptr == 0xffffffff) {
+  if (*(int *)ptr == 0xffffffff) {
     return g_strdup_printf ("<poisoned@%p>", ptr);
   }
 #endif

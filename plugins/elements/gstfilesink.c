@@ -415,7 +415,7 @@ gst_filesink_chain (GstPad *pad, GstData *_data)
   if (GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))
   {
     guint bytes_written = 0, back_pending = 0;
-    if ((guint64) ftell(filesink->file) < filesink->data_written)
+    if (ftell(filesink->file) < filesink->data_written)
       back_pending = filesink->data_written - ftell(filesink->file);
     while (bytes_written < GST_BUFFER_SIZE (buf)) {
       size_t wrote = fwrite (GST_BUFFER_DATA (buf) + bytes_written, 1,

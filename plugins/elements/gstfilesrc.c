@@ -457,7 +457,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   GstBuffer *buf = NULL;
   size_t readsize, mapsize;
   off_t readend,mapstart,mapend;
-  unsigned int i;
+  int i;
 
   /* calculate end pointers so we don't have to do so repeatedly later */
   readsize = src->block_size;
@@ -484,7 +484,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
     /* ('cause by definition if readend is in the buffer, so's readstart) */
     if (readend <= mapend) {
       GST_LOG_OBJECT (src, "read buf %llu+%d lives in current mapbuf %lld+%d, creating subbuffer of mapbuf",
-             src->curoffset, readsize, mapstart, mapsize);
+             src->curoffset, (int)readsize, mapstart, mapsize);
       buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - mapstart,
                                    readsize);
       GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -517,12 +517,12 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   if (buf == NULL) {
     /* first check to see if there's a map that covers the right region already */
     GST_LOG_OBJECT (src, "searching for mapbuf to cover %llu+%d",
-	src->curoffset,readsize);
+        src->curoffset,(int)readsize);
     
     /* if the read buffer crosses a mmap region boundary, create a one-off region */
     if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
       GST_LOG_OBJECT (src, "read buf %llu+%d crosses a %d-byte boundary, creating a one-off",
-	     src->curoffset,readsize,src->mapsize);
+	     src->curoffset,(int)readsize,(int)src->mapsize);
       buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
       if (buf == NULL)
 	return NULL;
@@ -540,7 +540,8 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
       /* double the mapsize as long as the readsize is smaller */
       while (readsize - (src->curoffset - nextmap) > mapsize) {
-	GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d", readsize, mapsize);
+	GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d",
+            readsize, (int)mapsize);
 	mapsize <<=1;
       }
       /* create a new one */
@@ -563,7 +564,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   }
 
   /* we're done, return the buffer */
-  g_assert ((guint64) src->curoffset == GST_BUFFER_OFFSET (buf));
+  g_assert (src->curoffset == GST_BUFFER_OFFSET (buf));
   src->curoffset += GST_BUFFER_SIZE(buf);
   return buf;
 }
@@ -590,7 +591,7 @@ gst_filesrc_get_read (GstFileSrc *src)
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return NULL;
   }
-  if ((unsigned int) ret < readsize) {
+  if (ret < readsize) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), ("unexpected end of file."));
     return NULL;
   }
