@@ -333,13 +333,22 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
    * with our incomming caps */
   peercaps = gst_caps_intersect (caps, ourcaps); 
   if (peercaps) {
-    /* see if the peer likes it too, it should as the caps say so.. */
-    if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
-      space->type = GST_COLORSPACE_NONE;
-      space->disabled = FALSE;
-      gst_caps_unref (peercaps);
-      res = GST_PAD_LINK_DONE;
-      goto success;
+    GstCaps *trycaps;
+
+    trycaps = peercaps;
+    while(trycaps){
+      GstCaps *caps1 = gst_caps_copy_1(trycaps);
+
+      /* see if the peer likes it too, it should as the caps say so.. */
+      if (gst_pad_try_set_caps (space->srcpad, caps1) > 0) {
+	space->type = GST_COLORSPACE_NONE;
+	space->disabled = FALSE;
+	gst_caps_unref (peercaps);
+	peercaps = caps1;
+	res = GST_PAD_LINK_DONE;
+	goto success;
+      }
+      trycaps = trycaps->next;
     }
     gst_caps_unref (peercaps);
   }
@@ -371,8 +380,10 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   /* loop over all possibilities and select the first one we can convert and
    * is accepted by the peer */
   while (peercaps) {
-    if (colorspace_setup_converter (space, ourcaps, peercaps)) {
-      if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
+    GstCaps *peer1 = gst_caps_copy_1(peercaps);
+
+    if (colorspace_setup_converter (space, ourcaps, peer1)) {
+      if (gst_pad_try_set_caps (space->srcpad, peer1) > 0) {
         space->disabled = FALSE;
         gst_caps_unref (try_peercaps);
 	res = GST_PAD_LINK_DONE;
@@ -632,9 +643,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
                        "video/x-raw-rgb",
                        GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32));
   caps = gst_caps_append (caps,
-         gst_caps_new ("csp_templ_rgb15_16",
+         gst_caps_new ("csp_templ_rgb15",
                        "video/x-raw-rgb",
-                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16));
+                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15));
+  caps = gst_caps_append (caps,
+         gst_caps_new ("csp_templ_rgb16",
+                       "video/x-raw-rgb",
+                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_16));
 
   /* build templates */
   srctempl  = gst_pad_template_new ("src",
