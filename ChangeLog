@@ -1,3 +1,12 @@
+2004-02-10  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_init),
+	(gst_mikmod_srcfixate), (gst_mikmod_srclink), (gst_mikmod_loop):
+	* ext/mikmod/gstmikmod.h:
+	  fix caps negotiation in mikmod
+	* ext/ogg/gstoggdemux.c: (gst_ogg_print):
+	  output debug information
+
 2004-02-08  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst-libs/gst/colorbalance/Makefile.am:
@@ -5,12 +14,6 @@
 	* gst-libs/gst/xoverlay/Makefile.am:
 	  remove unused GST_OPT_CFLAGS from Makefiles
 	  include X_CFLAGS and X_LIBS in xoverlay. (#131948)
-
-2004-02-08  Benjamin Otte  <in7y118@public.uni-hamburg.de>
-
-	* gst-libs/gst/colorbalance/Makefile.am:
-	* gst-libs/gst/navigation/Makefile.am:
-	* gst-libs/gst/xoverlay/Makefile.am:
 
 2004-02-07  David Schleef  <ds@schleef.org>
 

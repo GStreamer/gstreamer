@@ -916,19 +916,17 @@ GST_PLUGIN_DEFINE (
 static void
 gst_ogg_print (GstOggDemux *ogg)
 {
-#if 0
   guint i;
   GSList *walk;
   
   for (i = 0; i < ogg->chains->len; i++) {
     GstOggChain *chain = &g_array_index (ogg->chains, GstOggChain, i);
-    g_print ("chain %d (%u streams):\n", i, g_slist_length (chain->pads));
+    GST_INFO_OBJECT (ogg, "chain %d (%u streams):", i, g_slist_length (chain->pads));
     for (walk = chain->pads; walk; walk = g_slist_next (walk)) {
       GstOggPad *pad = (GstOggPad *) walk->data;
-      g_print ("  stream %d:\n", pad->serial);
-      g_print ("    length %"G_GUINT64_FORMAT"\n", pad->length);
-      g_print ("    pages %ld\n", pad->pages);
+      GST_INFO_OBJECT (ogg, "  stream %d:", pad->serial);
+      GST_INFO_OBJECT (ogg, "    length %"G_GUINT64_FORMAT, pad->length);
+      GST_INFO_OBJECT (ogg, "    pages %ld", pad->pages);
     }
   }
-#endif
 }
