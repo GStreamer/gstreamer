@@ -1,5 +1,13 @@
 2004-10-07  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (play_base_bin_mute_pad),
+	(gst_play_base_bin_mute_stream), (gst_play_base_bin_link_stream):
+	* gst/playback/gstplaybin.c: (setup_sinks):
+	Implement muting/unmuting of streams, mute streams that are not
+	used.
+
+2004-10-07  Wim Taymans  <wim@fluendo.com>
+
 	* gst/typefind/gsttypefindfunctions.c: (ac3_type_find),
 	(plugin_init):
 	Added lame audio/x-ac3 typefind function.
