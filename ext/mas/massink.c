@@ -34,17 +34,6 @@
 #define  BUFFER_SIZE           640
 
 
-/* elementfactory information */
-static GstElementDetails massink_details = {
-  "Esound audio sink",
-  "Sink/Audio",
-  "LGPL",
-  "Plays audio to a MAS server",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
-};
-
 /* Signals and args */
 enum {
   /* FILL ME */
@@ -71,6 +60,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   )
 );
 
+static void                     gst_massink_base_init           (gpointer g_class);
 static void			gst_massink_class_init		(GstMassinkClass *klass);
 static void			gst_massink_init		(GstMassink *massink);
 static void 			gst_massink_set_clock 		(GstElement *element, GstClock *clock);
@@ -113,7 +103,8 @@ gst_massink_get_type (void)
 
   if (!massink_type) {
     static const GTypeInfo massink_info = {
-      sizeof(GstMassinkClass),      NULL,
+      sizeof(GstMassinkClass),
+      gst_massink_base_init,
       NULL,
       (GClassInitFunc)gst_massink_class_init,
       NULL,
@@ -125,6 +116,22 @@ gst_massink_get_type (void)
     massink_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMassink", &massink_info, 0);
   }
   return massink_type;
+}
+
+static void
+gst_massink_base_init (gpointer g_class)
+{
+  static GstElementDetails massink_details = GST_ELEMENT_DETAILS (
+    "Esound audio sink",
+    "Sink/Audio",
+    "Plays audio to a MAS server",
+    "Zeeshan Ali <zak147@yahoo.com>"
+  );
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &massink_details);
 }
 
 static void
@@ -330,27 +337,28 @@ gst_massink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("massink", GST_TYPE_MASSINK,
-				   &massink_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template(factory, GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "massink", GST_RANK_NONE,
+        GST_TYPE_MASSINK)){
+    return FALSE;
+  }
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "massink",
-  plugin_init
-};
+  "uses MAS for audio output",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
 
 static gboolean
 gst_massink_open_audio (GstMassink *massink)
