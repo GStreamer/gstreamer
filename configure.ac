@@ -1267,6 +1267,7 @@ ext/mas/Makefile
 ext/matroska/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
+ext/mplex/Makefile
 ext/pango/Makefile
 ext/raw1394/Makefile
 ext/sdl/Makefile
