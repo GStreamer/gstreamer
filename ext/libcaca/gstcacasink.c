@@ -62,6 +62,7 @@ static void gst_cacasink_base_init (gpointer g_class);
 static void gst_cacasink_class_init (GstCACASinkClass * klass);
 static void gst_cacasink_init (GstCACASink * cacasink);
 static void gst_cacasink_interface_init (GstImplementsInterfaceClass * klass);
+static void gst_cacasink_set_clock (GstElement * element, GstClock * clock);
 static gboolean gst_cacasink_interface_supported (GstImplementsInterface *
     iface, GType type);
 static void gst_cacasink_navigation_init (GstNavigationInterface * iface);
@@ -189,6 +190,8 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gobject_class->get_property = gst_cacasink_get_property;
 
   gstelement_class->change_state = gst_cacasink_change_state;
+
+  gstelement_class->set_clock = gst_cacasink_set_clock;
 }
 
 static void
@@ -288,6 +291,14 @@ gst_cacasink_sinkconnect (GstPad * pad, const GstCaps * caps)
 }
 
 static void
+gst_cacasink_set_clock (GstElement * element, GstClock * clock)
+{
+  GstCACASink *cacasink = GST_CACASINK (element);
+
+  cacasink->clock = clock;
+}
+
+static void
 gst_cacasink_init (GstCACASink * cacasink)
 {
   GST_VIDEOSINK_PAD (cacasink) =
@@ -305,6 +316,8 @@ gst_cacasink_init (GstCACASink * cacasink)
   cacasink->green_mask = GST_CACA_DEFAULT_GREEN_MASK;
   cacasink->blue_mask = GST_CACA_DEFAULT_BLUE_MASK;
 
+  cacasink->clock = NULL;
+
   GST_FLAG_SET (cacasink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
@@ -313,8 +326,6 @@ gst_cacasink_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstCACASink *cacasink;
-  GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
-  gint64 jitter;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -325,10 +336,10 @@ gst_cacasink_chain (GstPad * pad, GstData * _data)
   if (!GST_FLAG_IS_SET (GST_ELEMENT (cacasink), GST_CACASINK_OPEN))
     return;
 
-  if (cacasink->id && GST_CLOCK_TIME_IS_VALID (time)) {
-    GST_DEBUG ("videosink: clock %s wait: %" G_GUINT64_FORMAT " %u",
-        GST_OBJECT_NAME (GST_VIDEOSINK_CLOCK (cacasink)),
-        time, GST_BUFFER_SIZE (buf));
+  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT,
+      GST_BUFFER_TIMESTAMP (buf));
+
+  if (cacasink->clock && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     gst_element_wait (GST_ELEMENT (cacasink), GST_BUFFER_TIMESTAMP (buf));
   }
 
@@ -336,13 +347,6 @@ gst_cacasink_chain (GstPad * pad, GstData * _data)
   caca_draw_bitmap (0, 0, cacasink->screen_width - 1,
       cacasink->screen_height - 1, cacasink->bitmap, GST_BUFFER_DATA (buf));
   caca_refresh ();
-
-  if (GST_VIDEOSINK_CLOCK (cacasink)) {
-    jitter = gst_clock_get_time (GST_VIDEOSINK_CLOCK (cacasink)) - time;
-
-    cacasink->correction = (cacasink->correction + jitter) >> 1;
-    cacasink->correction = 0;
-  }
 
   gst_buffer_unref (buf);
 }
