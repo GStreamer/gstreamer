@@ -42,6 +42,18 @@ dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################
 
+dnl Check for tools:
+dnl ================
+
+dnl Check for nasm
+AC_PATH_PROG(NASM_PATH, nasm, no)
+if test x$NASM_PATH = xno; then
+  AC_MSG_WARN(Couldn't find nasm)
+else
+  AC_DEFINE(HAVE_NASM)
+  AC_SUBST(NASM_PATH)
+fi
+
 dnl Check for essential libraries first:
 dnl ====================================
 
