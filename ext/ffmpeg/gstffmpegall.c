@@ -261,6 +261,7 @@ static void
 gst_ffmpegdecall_destroy (GObject *obj)
 {
   GstFFMpegDecAll *ffmpegdec = GST_FFMPEGDECALL(obj);
+  g_print ("ffmpeg: destroying codec\n");
   avcodec_close(ffmpegdec->context);
   av_free(ffmpegdec->context);
 }
