@@ -1,0 +1,63 @@
+Negotiation
+-----------
+
+Negotiation happens when elements want to push buffers and need to decide
+on the format. 
+
+For any two linked pads there are different ways to agree on the format but
+in general the source pad will propose a format and the sink format accepts
+or rejects.
+
+             src              sink
+              |                 |
+              |  accepts?       |
+	      |---------------->|
+              |      yes        |
+              |<----------------|
+              |                 |
+ get buffer   |  alloc_buf      |
+ from pool    |---------------->| 
+ with type    |                 | Create buffer of type.
+              |                 |
+ check type   |<----------------|
+ and use      |                 |
+              |  push           |
+ push buffer  |---------------->| Receive type, reconfigure to
+ with new type|                 | process type.
+              |                 |
+
+Use case:
+
+
+videotestsrc ! xvimagesink
+
+  1) Who decides what format to use?
+   - src pad always decides, by convention. sinkpad can suggest a format
+     by putting it high in the getcaps function GstCaps. 
+   - since the src decides, it can always choose something that it can do,
+     so this step can only fail if the sinkpad stated it could accept
+     something while it later on couldn't.
+
+  2) When does negotiation happen?
+   - before srcpad does a push, it figures out a type as stated in 1), then 
+     it calls the pad alloc function with the type. The sinkpad has to 
+     create a buffer of that type, src fills the buffer and sends it to sink.
+   - since the sink stated in 1) it could accept the type, it will be able to
+     create a buffer of the type and handle it.
+   - sink checks media type of buffer and configures itself for this type.
+     
+  3) How can sink request another format?
+   - sink asks if new format is possible for the source.
+   - sink returns buffer with new type in allocfunction.
+   - src receives buffer with new type, reconfigures and pushes.
+   - sink can always select something it can create and handle since it takes
+     the initiative. src should be able to handle the new type since it said
+     it could accept it.
+
+videotestsrc ! queue ! xvimagesink
+
+  - queue implements an allocfunction, proxying all calls to its srcpad peer.
+  - queue proxies all accept and getcaps to the other peer pad.
+
+   
+
