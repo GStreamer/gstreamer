@@ -357,17 +357,17 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
             }
             l = l->next;
         }
+        newname = g_strdup (name);
     } else {
         l = this->pads;
         channel = 0;
         while (l) {
-            if (GST_ALSA_PAD(l)->channel > channel)
-                channel = GST_ALSA_PAD(l)->channel;
+            if (GST_ALSA_PAD(l)->channel >= channel)
+                channel = GST_ALSA_PAD(l)->channel + 1;
             l = l->next;
         }
+        newname = g_strdup_printf (templ->name_template, channel);
     }
-    
-    newname = g_strdup (name);
     
     pad = g_new0(GstAlsaPad, 1);
     pad->channel = channel;
