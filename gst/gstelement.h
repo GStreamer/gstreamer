@@ -315,6 +315,8 @@ void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
 
 const GstEventMask*	gst_element_get_event_masks	(GstElement *element);
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
+gboolean		gst_element_seek		(GstElement *element, GstSeekType seek_type,
+							 guint64 offset);
 const GstQueryType*	gst_element_get_query_types	(GstElement *element);
 gboolean		gst_element_query		(GstElement *element, GstQueryType type,
 			                                 GstFormat *format, gint64 *value);

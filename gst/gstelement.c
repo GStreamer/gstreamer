@@ -1901,6 +1901,26 @@ gst_element_send_event (GstElement *element, GstEvent *event)
 }
 
 /**
+ * gst_element_seek:
+ * @element: a #GstElement to send the event to.
+ * @seek_type: the method to use for seeking.
+ * @offset: the offset to seek to.
+ *
+ * Sends a seek event to an element.
+ *
+ * Returns: TRUE if the event was handled.
+ */
+gboolean
+gst_element_seek (GstElement  *element,
+		  GstSeekType  seek_type,
+		  guint64      offset)
+{
+  GstEvent *event = gst_event_new_seek (seek_type, offset);
+
+  return gst_element_send_event (element, event);
+}
+
+/**
  * gst_element_get_query_types:
  * @element: a #GstElement to query
  *
