@@ -217,7 +217,7 @@ Plugin for playback of the SUN au audio format.
 
 
 %changelog
-* Sar Jun 09 2001 Christian Schaller <Uraeus@linuxrising.org>
+* Sat Jun 09 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Continue regrouping files with
 - Visualisation plugins bundled out togheter
 
@@ -260,6 +260,60 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 
 %post -n gstreamer-esd
 %{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-visualisation
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-gsm
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-cdparanoia
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-aalib
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-gnomevfs
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-flx
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-avi
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-vorbis
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-sdl
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-oss
+%{prefix}/bin/gstreamer-register
+
+%post -n  gstreamer-ac3dec
+%{prefix}/bin/gstreamer-register
+
+%post -n  gstreamer-afs
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-ladspa
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-mad
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-au
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-v4l
+%{prefix}/bin/gstreamer-register
+
+%post -n gstreamer-vcd
+%{prefix}/bin/gstreamer-register
+
+# %post -n gstreamer-alsa
+# %{prefix}/bin/gstreamer-register
 
 %postun
 /sbin/ldconfig
