@@ -589,7 +589,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 
 	  if (mpeg2dec->index) {
             gst_index_add_association (mpeg2dec->index, mpeg2dec->index_id,
-	                               (key_frame ? GST_ACCOCIATION_FLAG_KEY_UNIT : 0),
+	                               (key_frame ? GST_ASSOCIATION_FLAG_KEY_UNIT : 0),
 	                               GST_FORMAT_BYTES, GST_BUFFER_OFFSET (outbuf),
 	                               GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf), 0);
 	  }
@@ -889,7 +889,7 @@ index_seek (GstPad *pad, GstEvent *event)
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
   
   entry = gst_index_get_assoc_entry (mpeg2dec->index, mpeg2dec->index_id,
-		             GST_INDEX_LOOKUP_BEFORE, GST_ACCOCIATION_FLAG_KEY_UNIT,
+		             GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
 			     GST_EVENT_SEEK_FORMAT (event),
 			     GST_EVENT_SEEK_OFFSET (event));
 

@@ -381,7 +381,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   if (mpeg_parse->index && GST_INDEX_IS_WRITABLE (mpeg_parse->index)) {
     /* update index if any */
     gst_index_add_association (mpeg_parse->index, mpeg_parse->index_id, 
-		    	       GST_ACCOCIATION_FLAG_KEY_UNIT,
+		    	       GST_ASSOCIATION_FLAG_KEY_UNIT,
 		               GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer), 
 			       GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 0);
   }
