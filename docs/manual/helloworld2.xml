@@ -11,18 +11,94 @@
     <para> 
       We will create a second version of the helloworld application using
       autoplugging. Its source code is a bit more complicated but 
-      it can handle many more data types.
+      it can handle many more data types.  It can even play the audio track
+      of a video file.
     </para>
     <para> 
-      We start by creating the main() of our program:
+      Here is the full program listing.  Start by looking at the main ()
+      function.
     </para>
 
     <programlisting>
-/* example-begin helloworld.c */
+/* example-begin helloworld2.c */
 #include &lt;gst/gst.h&gt;
 
 static void 	gst_play_have_type 	(GstElement *typefind, GstCaps *caps, GstElement *pipeline);
 static void 	gst_play_cache_empty 	(GstElement *element, GstElement *pipeline);
+
+static void
+gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
+{
+  GstElement *osssink;
+  GstElement *new_element;
+  GstAutoplug *autoplug;
+  GstElement *autobin;
+  GstElement *filesrc;
+  GstElement *cache;
+
+  GST_DEBUG (0,"GstPipeline: play have type");
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
+  autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
+  cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
+
+  // disconnect the typefind from the pipeline and remove it
+  gst_element_disconnect (cache, typefind);
+  gst_bin_remove (GST_BIN (autobin), typefind);
+      
+  /* and an audio sink */
+  osssink = gst_element_factory_make ("osssink", "play_audio");
+  g_assert(osssink != NULL);
+
+  autoplug = gst_autoplug_factory_make ("staticrender");
+  g_assert (autoplug != NULL);
+
+  new_element = gst_autoplug_to_renderers (autoplug, caps, osssink, NULL);
+
+  if (!new_element) {
+    g_print ("could not autoplug, no suitable codecs found...\n");
+    exit (-1);
+  }
+
+  gst_element_set_name (new_element, "new_element");
+
+  gst_bin_add (GST_BIN (autobin), new_element);
+
+  g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
+
+  gst_element_connect (cache, new_element);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+}
+
+static void
+gst_play_cache_empty (GstElement *element, GstElement *pipeline)
+{
+  GstElement *autobin;
+  GstElement *filesrc;
+  GstElement *cache;
+  GstElement *new_element;
+
+  fprintf (stderr, "have cache empty\n");
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
+  autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
+  cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
+  new_element = gst_bin_get_by_name (GST_BIN (autobin), "new_element");
+
+  gst_element_disconnect (filesrc, cache);
+  gst_element_disconnect (cache, new_element);
+  gst_bin_remove (GST_BIN (autobin), cache);
+  gst_element_connect (filesrc, new_element);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  fprintf (stderr, "done with cache_empty\n");
+}
 
 int 
 main (int argc, char *argv[]) 
@@ -61,11 +137,12 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);
 
-  gst_element_connect (cache, "src", typefind, "sink");
-  gst_element_add_ghost_pad (autobin, gst_element_get_pad (cache, "sink"), "sink");
+  gst_element_connect (cache, typefind);
+  gst_element_add_ghost_pad (autobin, 
+                             gst_element_get_pad (cache, "sink"), "sink");
 
   gst_bin_add (GST_BIN( pipeline), autobin);
-  gst_element_connect (filesrc, "src", autobin, "sink");
+  gst_element_connect (filesrc, autobin);
 
   /* start playing */
   gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);
@@ -79,7 +156,7 @@ main (int argc, char *argv[])
 
   exit(0);
 }
-/* example-end helloworld.c */
+/* example-end helloworld2.c */
     </programlisting>
     <para>
       We start by constructing a 'filesrc' element and an 'autobin' element that
@@ -87,64 +164,13 @@ main (int argc, char *argv[])
     </para>
     <para>
       We attach the "cache_empty" signal to gst_play_cache_empty and the 
-      "have_type" to our gst_play_have_type function (defined below).
+      "have_type" to our gst_play_have_type function.
     </para>
 
-    <programlisting>
-static void
-gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
-{
-  GstElement *osssink;
-  GstElement *new_element;
-  GstAutoplug *autoplug;
-  GstElement *autobin;
-  GstElement *filesrc;
-  GstElement *cache;
-
-  GST_DEBUG (0,"GstPipeline: play have type");
-
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-
-  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
-  autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
-  cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
-
-  // disconnect the typefind from the pipeline and remove it
-  gst_element_disconnect (cache, "src", typefind, "sink");
-  gst_bin_remove (GST_BIN (autobin), typefind);
-      
-  /* and an audio sink */
-  osssink = gst_element_factory_make("osssink", "play_audio");
-  g_assert(osssink != NULL);
-
-  autoplug = gst_autoplug_factory_make ("staticrender");
-  g_assert (autoplug != NULL);
-
-  new_element = gst_autoplug_to_renderers (autoplug,
-           caps,
-           osssink,
-           NULL);
-
-  if (!new_element) {
-    g_print ("could not autoplug, no suitable codecs found...\n");
-    exit (-1);
-  }
-
-  gst_element_set_name (new_element, "new_element");
-
-  gst_bin_add (GST_BIN (autobin), new_element);
-
-  g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
-
-  gst_element_connect (cache, "src", new_element, "sink");
-
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-}
-    </programlisting>
     <para>
-      The _have_type function first sets the pipeline to the PAUSED state so that
-      it can safely modify the pipeline. It then finds the elements it is going to
-      manipulate in the pipeline with:
+      The _have_type function first sets the pipeline to the PAUSED state
+      so that it can safely modify the pipeline. It then finds the elements 
+      it is going to manipulate in the pipeline with:
     </para>
     <programlisting>
   filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
@@ -157,10 +183,11 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
       the next step.
     </para>
     <para>
-      We don't need the typefind element anymore so we remove it from the pipeline: 
+      We don't need the typefind element anymore so we remove it from 
+      the pipeline: 
     </para>
     <programlisting>
-  // disconnect the typefind from the pipeline and remove it
+  /* disconnect the typefind from the pipeline and remove it */
   gst_element_disconnect (cache, "src", typefind, "sink");
   gst_bin_remove (GST_BIN (autobin), typefind);
     </programlisting>
@@ -208,37 +235,8 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
     <para>
      Finally we set the pipeline back to the playing state. At this point the
      cache will replay the buffers. We will be notified when the cache is empty 
-     with the gst_play_cache_empty callback function:
+     by the gst_play_cache_empty callback function.
     </para>
-
-    <programlisting>
-static void
-gst_play_cache_empty (GstElement *element, GstElement *pipeline)
-{
-  GstElement *autobin;
-  GstElement *filesrc;
-  GstElement *cache;
-  GstElement *new_element;
-
-  fprintf (stderr, "have cache empty\n");
-
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-
-  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
-  autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
-  cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
-  new_element = gst_bin_get_by_name (GST_BIN (autobin), "new_element");
-
-  gst_element_disconnect (filesrc, "src", cache, "sink");
-  gst_element_disconnect (cache, "src", new_element, "sink");
-  gst_bin_remove (GST_BIN (autobin), cache);
-  gst_element_connect (filesrc, "src", new_element, "sink");
-
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-
-  fprintf (stderr, "done with cache_empty\n");
-}
-    </programlisting>
 
     <para>
       The cache empty function simply removes the autoplugcache element from
@@ -249,19 +247,23 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
       To compile the helloworld2 example, use: 
     </para>
     <programlisting>
-       gcc -Wall `gstreamer-config --cflags --libs` helloworld2.c \
+       gcc -Wall `pkg-config gstreamer --cflags --libs` helloworld2.c \
              -o helloworld2 
     </programlisting>
     <para>
-      You can run the example with (substitute helloworld.mp3 with you favorite MP3 file):
+      You can run the example with 
+      (substitute helloworld.mp3 with you favorite audio file):
     </para>
     <programlisting>
       ./helloworld2 helloworld.mp3
     </programlisting>
     <para>
-      You can also try to use an AVI or MPEG file as its input. Using autoplugging,
-      <application>GStreamer</application> will automatically figure out how to 
-      handle the stream. Remember that only the audio part will be played because 
+      You can also try to use an AVI or MPEG file as its input. 
+      Using autoplugging,
+      <application>GStreamer</application> 
+      will automatically figure out how to 
+      handle the stream. 
+      Remember that only the audio part will be played because 
       we have only added an osssink to the pipeline.
     </para>
     <programlisting>

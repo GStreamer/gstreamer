@@ -242,12 +242,14 @@ main (int argc, char *argv[])
              -o helloworld 
     </programlisting>
     <para>
-      We use pkg-config to get the compiler flags needed to compile this application.
-      make sure to have your PKG_CONFIG_PATH environment variable set to the correct
-      location if you are building this application against the uninstalled location.
+      We use pkg-config to get the compiler flags needed to compile 
+      this application.  Make sure to have your PKG_CONFIG_PATH environment 
+      variable set to the correct location if you are building this 
+      application against the uninstalled location.
     </para>
     <para>
-      You can run the example with (substitute helloworld.mp3 with you favorite MP3 file):
+      You can run the example with 
+      (substitute helloworld.mp3 with you favorite MP3 file):
     </para>
     <programlisting>
       ./helloworld helloworld.mp3
