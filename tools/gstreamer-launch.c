@@ -89,12 +89,6 @@ xid_handler (GstElement *element, gint xid, void *priv)
 #endif
 }
 
-gboolean
-idle_func (gpointer data)
-{
-  return gst_bin_iterate (GST_BIN (data));
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -157,15 +151,7 @@ main(int argc, char *argv[])
     fprintf(stderr,"RUNNING pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    g_idle_add(idle_func,pipeline);
-#ifdef USE_GLIB2
-    g_main_loop_run (g_main_loop_new (NULL, FALSE));
-#else
-    gtk_main();
-#endif
-
-    while (1)
-      gst_bin_iterate (GST_BIN (pipeline));
+    while (gst_bin_iterate (GST_BIN (pipeline)));
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
