@@ -42,7 +42,7 @@ DOC_SOURCE_DIR=$(top_srcdir)/gst
 SCAN_OPTIONS=
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --ignore-files=trio
+MKDB_OPTIONS=--sgml-mode --ignore-files=parse
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=
