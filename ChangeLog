@@ -1,3 +1,12 @@
+2004-05-24  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_get_type),
+	(gst_id3_tag_class_init), (gst_id3_tag_init),
+	(gst_id3_tag_set_property), (gst_id3_tag_get_tag_to_render),
+	(gst_id3_tag_handle_event), (gst_id3_tag_do_caps_nego),
+	(gst_id3_tag_send_tag_event):
+	  lots of fixes to make id3mux work and id3demux work correctly
+
 2004-05-24  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* ext/Makefile.am:

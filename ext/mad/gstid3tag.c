@@ -132,8 +132,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate id3_tag_src_id3_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-  /* FIXME: for spider - should be GST_PAD_ALWAYS, */
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3")
     );
 
@@ -209,7 +208,7 @@ gst_id3_tag_get_type (guint type)
         (type == GST_ID3_TAG_PARSE_BASE) ? GST_TYPE_ELEMENT :
         GST_TYPE_ID3_TAG, name[type], &id3_tag_info, 0);
 
-    if (type & GST_ID3_TAG_PARSE_DEMUX) {
+    if (type & GST_ID3_TAG_PARSE_MUX) {
       g_type_add_interface_static (id3_tag_type[type], GST_TYPE_TAG_SETTER,
           &tag_setter_info);
     }
@@ -251,13 +250,9 @@ gst_id3_tag_class_init (gpointer g_class, gpointer class_data)
   }
 
   if (tag_class->type & GST_ID3_TAG_PARSE_DEMUX) {
-    g_object_class_install_property (gobject_class, ARG_V2_TAG,
-        g_param_spec_boolean ("v2-tag", "add version 2 tag",
-            "Add version 2 tag at start of file", TRUE,
-            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-    g_object_class_install_property (gobject_class, ARG_V1_TAG,
-        g_param_spec_boolean ("v1-tag", "add version 1 tag",
-            "Add version 1 tag at end of file", FALSE,
+    g_object_class_install_property (gobject_class, ARG_PREFER_V1,
+        g_param_spec_boolean ("prefer-v1", "prefer version 1 tag",
+            "Prefer tags from tag at end of file", FALSE,
             G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     gst_element_class_add_pad_template (gstelement_class,
         gst_static_pad_template_get (&id3_tag_src_any_template_factory));
@@ -267,9 +262,13 @@ gst_id3_tag_class_init (gpointer g_class, gpointer class_data)
   }
 
   if (tag_class->type & GST_ID3_TAG_PARSE_MUX) {
-    g_object_class_install_property (gobject_class, ARG_PREFER_V1,
-        g_param_spec_boolean ("prefer-v1", "prefer version 1 tag",
-            "Prefer tags from tag at end of file", FALSE,
+    g_object_class_install_property (gobject_class, ARG_V2_TAG,
+        g_param_spec_boolean ("v2-tag", "add version 2 tag",
+            "Add version 2 tag at start of file", TRUE,
+            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (gobject_class, ARG_V1_TAG,
+        g_param_spec_boolean ("v1-tag", "add version 1 tag",
+            "Add version 1 tag at end of file", FALSE,
             G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   }
   if (tag_class->type == GST_ID3_TAG_PARSE_MUX) {
@@ -338,7 +337,10 @@ gst_id3_tag_init (GTypeInstance * instance, gpointer g_class)
     gst_pad_set_chain_function (tag->sinkpad,
         GST_DEBUG_FUNCPTR (gst_id3_tag_chain));
   }
-
+  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_MUX) {
+    /* only the muxer class here, all other use sometimes pads */
+    gst_id3_tag_add_src_pad (tag);
+  }
   /* FIXME: for the alli^H^H^H^Hspider - gst_id3_tag_add_src_pad (tag); */
   tag->parse_mode = GST_ID3_TAG_PARSE_BASE;
   tag->buffer = NULL;
@@ -356,15 +358,12 @@ gst_id3_tag_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_V1_TAG:
       tag->v1tag_render = g_value_get_boolean (value);
-      g_object_notify (object, "v1-tag");
       break;
     case ARG_V2_TAG:
       tag->v2tag_render = g_value_get_boolean (value);
-      g_object_notify (object, "v2-tag");
       break;
     case ARG_PREFER_V1:
       tag->prefer_v1tag = g_value_get_boolean (value);
-      g_object_notify (object, "prefer-v1");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -372,7 +371,7 @@ gst_id3_tag_set_property (GObject * object, guint prop_id, const GValue * value,
   }
 
   /* make sure we render at least one tag */
-  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_DEMUX &&
+  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_MUX &&
       !tag->v1tag_render && !tag->v2tag_render) {
     g_object_set (object, prop_id == ARG_V1_TAG ? "v2-tag" : "v1-tag", TRUE,
         NULL);
@@ -730,7 +729,8 @@ gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
   if (tag->event_tags)
     ret = gst_tag_list_copy (tag->event_tags);
   if (ret) {
-    gst_tag_list_insert (ret, tag->parsed_tags, GST_TAG_MERGE_KEEP);
+    if (tag->parsed_tags)
+      gst_tag_list_insert (ret, tag->parsed_tags, GST_TAG_MERGE_KEEP);
   } else if (tag->parsed_tags) {
     ret = gst_tag_list_copy (tag->parsed_tags);
   }
@@ -784,9 +784,15 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
           gst_data_unref (GST_DATA (event));
           break;
         case GST_ID3_TAG_STATE_NORMAL_START:
-          GST_ERROR_OBJECT (tag, "tag event not sent, FIXME");
-          gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL);
-          /* fall through */
+          if (!CAN_BE_DEMUXER (tag)) {
+            /* initial discont, ignore */
+            gst_data_unref (GST_DATA (event));
+            break;
+          } else {
+            GST_ERROR_OBJECT (tag, "tag event not sent, FIXME");
+            gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL);
+            /* fall through */
+          }
         case GST_ID3_TAG_STATE_NORMAL:{
           gint64 value;
           GstEvent *new;
@@ -816,7 +822,7 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
       gst_data_unref (GST_DATA (event));
       break;
     case GST_EVENT_EOS:
-      if (tag->v1tag_render && !tag->parse_mode) {
+      if (tag->v1tag_render && IS_MUXER (tag)) {
         GstTagList *merged;
         struct id3_tag *id3;
 
@@ -920,9 +926,11 @@ gst_id3_tag_do_caps_nego (GstID3Tag * tag, GstBuffer * buffer)
   if (!tag->srcpad)
     gst_id3_tag_add_src_pad (tag);
   if (!gst_pad_is_linked (tag->srcpad)) {
+    GST_DEBUG_OBJECT (tag, "srcpad not linked, not proceeding");
     tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
     return TRUE;
   } else {
+    GST_DEBUG_OBJECT (tag, "renegotiating");
     return gst_pad_renegotiate (tag->srcpad) != GST_PAD_LINK_REFUSED;
   }
 }
@@ -964,8 +972,13 @@ gst_id3_tag_send_tag_event (GstID3Tag * tag)
   GstTagList *merged = gst_tag_list_merge (tag->event_tags, tag->parsed_tags,
       GST_TAG_MERGE_KEEP);
 
+  if (tag->parsed_tags)
+    gst_element_found_tags (GST_ELEMENT (tag), tag->parsed_tags);
   if (merged) {
-    gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0, merged);
+    GstEvent *event = gst_event_new_tag (merged);
+
+    GST_EVENT_TIMESTAMP (event) = 0;
+    gst_pad_push (tag->srcpad, GST_DATA (event));
   }
 }
 static void
