@@ -38,7 +38,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
+        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
         "signed = (boolean) true, "
         "width = (int) 16, "
         "depth = (int) 16, "
