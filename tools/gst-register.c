@@ -35,22 +35,9 @@
 
 #include "config.h"
 
-#define GLOBAL_REGISTRY_DIR      GST_CONFIG_DIR
-#define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/reg.xml"
-#define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.reg.xml.tmp"
-
-#define REGISTRY_DIR_PERMS (S_ISGID | \
-			    S_IRUSR | S_IWUSR | S_IXUSR | \
-			    S_IRGRP | S_IXGRP | \
-			    S_IROTH | S_IXOTH)
-#define REGISTRY_TMPFILE_PERMS (S_IRUSR | S_IWUSR)
-#define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR | \
-			     S_IRGRP | S_IWGRP | \
-			     S_IROTH | S_IWOTH)
-
-
 extern gboolean _gst_plugin_spew;
 extern gboolean _gst_warn_old_registry;
+extern gboolean _gst_init_registry_write; /* we ask post_init to be delayed */
 
 static void error_perm() {
     g_print("\n(%s)\n"
@@ -184,6 +171,7 @@ int main(int argc,char *argv[])
 {
     xmlDocPtr doc;
     xmlNodePtr node;
+    GstRegistryWrite *gst_reg;
 
     /* Mode of the file we're saving the repository to; */
     mode_t newmode;
@@ -195,35 +183,65 @@ int main(int argc,char *argv[])
 	newmode = REGISTRY_FILE_PERMS & ~ theumask;
     }
 
-    /* remove the old registry file first
-       If this fails, we simply ignore it since we'll overwrite it later
-        anyway. */
-    unlink(GLOBAL_REGISTRY_FILE);
-
     /* Init gst */
     _gst_plugin_spew = TRUE;
     _gst_warn_old_registry = FALSE;
     gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
+    _gst_init_registry_write = TRUE; /* signal that we're writing registry */
     gst_init(&argc,&argv);
+
+    /* remove the old registry file first
+     * if a local is returned, then do that, else remove the global one
+     * If this fails, we simply ignore it since we'll overwrite it later
+     * anyway */
+    gst_reg = gst_registry_write_get ();
+    unlink (gst_reg->file);
+
+    GST_INFO (GST_CAT_PLUGIN_LOADING, " Writing to registry %s", gst_reg->file);
 
     /* Check args */
     if (argc != 1) usage(argv[0]);
 
-    /* Check that directory for config exists */
-    check_dir(GLOBAL_REGISTRY_DIR);
-    
     /* Read the plugins */
     doc = xmlNewDoc("1.0");
     node = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
     xmlDocSetRootElement (doc, node);
     gst_plugin_save_thyself(doc->xmlRootNode);
-
+    
+    if (gst_reg->dir)
+      check_dir(gst_reg->dir);
+    
     /* Save the registry to a tmp file. */
-    save_registry(GLOBAL_REGISTRY_FILE_TMP, &doc);
+    save_registry(gst_reg->tmp_file, &doc);
 
     /* Make the tmp file live. */
-    move_file(GLOBAL_REGISTRY_FILE_TMP, GLOBAL_REGISTRY_FILE, &newmode);
+    move_file(gst_reg->tmp_file, gst_reg->file, &newmode);
+#ifdef THOMAS
+    }
+    else
+    {
+      gchar *homedir;
+      gchar *reg_dir, *reg_file_tmp, *reg_file;
 
+      homedir = (gchar *) g_get_home_dir ();
+      reg_dir      = g_strjoin ("/", homedir, LOCAL_REGISTRY_DIR,      NULL);
+      reg_file_tmp = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE_TMP, NULL);
+      reg_file     = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE,     NULL);
+
+      /* try to make the dir; we'll find out if it fails anyway */
+      mkdir(reg_dir, S_IRWXU);
+      g_free(reg_dir);
+
+      /* Save the registry to a tmp file. */
+      save_registry(reg_file_tmp, &doc);
+
+      /* Make the tmp file live. */
+      move_file(reg_file_tmp, reg_file, &newmode);
+      g_free(reg_file_tmp);
+      g_free(reg_file);
+    }
+#endif
+    g_free (gst_reg);
     return(0);
 }
 

@@ -31,8 +31,6 @@ Reviewing the registry (thomasvs, April 8 2002)
   - use gst_registry_read_get to get a GstRegistryRead struct back
     listing the path of global and local file to read
 
-* QUESTIONS
-  - maybe it's better to try the global registry first (if unspecified),
-    and see if you have write permissions ? Because if you do, you might
-    as well do it there - the system gave you the permission.
-    useful for doing garnome installs as a user
+* gst-register signals it's going to write to the registry (causing it to
+  be unlinked before the read in post_init ()) by setting a global variable,
+  _gst_init_write_registry

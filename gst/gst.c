@@ -40,7 +40,6 @@ gchar *_gst_progname;
 extern gint _gst_trace_on;
 extern gboolean _gst_plugin_spew;
 
-
 static void 		load_plugin_func 	(gpointer data, gpointer user_data);
 static void		init_popt_callback	(poptContext context, enum poptCallbackReason reason,
                                                  const struct poptOption *option, const char *arg, void *data);
@@ -70,7 +69,8 @@ enum {
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
-  ARG_SCHEDULER
+  ARG_SCHEDULER,
+  ARG_REGISTRY
 };
 
 #ifndef NUL
@@ -88,6 +88,7 @@ static const struct poptOption options[] = {
   {"gst-plugin-path", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH, "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
   {"gst-plugin-load", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD, "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
   {"gst-scheduler",   NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,   "scheduler to use ('basic' is the default)", "SCHEDULER"},
+  {"gst-registry",   NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,   "registry to use" , "REGISTRY"},
   POPT_TABLEEND
 };
 
@@ -339,6 +340,7 @@ gst_mask_help (void)
   
   for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
     if (gst_get_category_name(i)) {
+
 #if GST_DEBUG_COLOR
       g_print ("   0x%08x     %s%s     \033[%sm%s\033[00m\n", 1<<i, 
                (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
@@ -394,6 +396,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       break;
     case ARG_SCHEDULER:
       gst_scheduler_factory_set_default_name (arg);
+      break;
+    case ARG_REGISTRY:
+      gst_registry_option_set (arg);
       break;
     default:
       g_warning ("option %d not recognized", option->val);

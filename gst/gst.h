@@ -52,6 +52,7 @@
 #include <gst/gstevent.h>
 
 #include <gst/gstparse.h>
+#include <gst/gstregistry.h>
 #include <gst/gstextratypes.h>
 
 #ifdef __cplusplus

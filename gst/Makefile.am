@@ -77,6 +77,7 @@ libgstreamer_la_SOURCES =		\
 	gsttype.c		\
 	$(GST_TYPEFIND_SRC)	\
 	gstutils.c		\
+	gstregistry.c		\
 	gsttimecache.c		\
 	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
@@ -136,6 +137,7 @@ libgstreamerinclude_HEADERS =		\
 	gsttype.h		\
 	gsttypefind.h		\
 	gstutils.h		\
+	gstregistry.h		\
 	gsttimecache.h		\
 	gstparse.h		\
 	gstversion.h		\

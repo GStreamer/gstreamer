@@ -1,3 +1,12 @@
+2002-04-12  Thomas Vander Stichele <thomas@apestaart.org>
+
+  	* gst/gst*.[ch]: commited GUAD3C code review comments (marked CR1)
+
+	* gst/gstregistry.[ch]: added to handle registry stuff
+	  gst/gst.c: changed to use new --gst-registry option
+	  tools/gst-register.c: use new registry functions
+          for more info, check docs/random/thomasvs/registry
+
 2002-03-01  Michael Meeks  <michael@ximian.com>                                
        * docs/manual/Makefile.am: use $(wildcard) instead of                   
        strange shell stuff.                                                    

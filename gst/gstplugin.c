@@ -28,6 +28,7 @@
 #include "gst_private.h"
 #include "gstplugin.h"
 #include "gstversion.h"
+#include "gstregistry.h"
 #include "config.h"
 
 static GModule *main_module;
@@ -49,6 +50,8 @@ gboolean _gst_plugin_spew = FALSE;
 /* whether or not to warn if registry needs rebuild (gst-register sets
  * this to false.) */
 gboolean _gst_warn_old_registry = TRUE;
+/* whether or not the main app will be writing to the registry */
+gboolean _gst_init_registry_write = FALSE;
 
 #ifndef GST_DISABLE_REGISTRY
 static gboolean 	plugin_times_older_than		(time_t regtime);
@@ -57,13 +60,14 @@ static time_t 		get_time			(const char * path);
 static void 		gst_plugin_register_statics 	(GModule *module);
 static GstPlugin* 	gst_plugin_register_func 	(GstPluginDesc *desc, GstPlugin *plugin, 
 							 GModule *module);
-
 void
 _gst_plugin_initialize (void)
 {
   GList *gst_plugin_default_paths = NULL;
   struct stat stat_buf;
 #ifndef GST_DISABLE_REGISTRY
+  GstRegistryRead *gst_reg;
+  gchar *gst_registry;
   xmlDocPtr doc = NULL;
 #endif
 
@@ -86,8 +90,27 @@ _gst_plugin_initialize (void)
 #endif /* PLUGINS_USE_BUILDDIR */
 
 #ifndef GST_DISABLE_REGISTRY
-  if (stat (GST_CONFIG_DIR"/reg.xml", &stat_buf) == 0)
-    doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
+  /* FIXME:
+   * we want to check both the global and the local registry here
+   * at first, we check if there is a local one, and if there is only use
+   * that one.
+   * Later, we would like to read the global one first, then have each
+   * plugin also in the local one override the global one.
+   */
+  
+  gst_reg = gst_registry_read_get ();
+  if (gst_reg->local_reg)
+    gst_registry = gst_reg->local_reg;
+  else
+    gst_registry = gst_reg->global_reg;
+  
+  if (_gst_init_registry_write)
+  {
+    /* delete it before writing */
+    unlink (gst_registry);
+  }
+  if (stat (gst_registry, &stat_buf) == 0)
+    doc = xmlParseFile (gst_registry);
   else
     doc = NULL;
 
@@ -95,9 +118,10 @@ _gst_plugin_initialize (void)
       !doc->xmlRootNode ||
       doc->xmlRootNode->name == 0 ||
       strcmp (doc->xmlRootNode->name, "GST-PluginRegistry") ||
-      !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) 
+      !plugin_times_older_than(get_time(gst_registry))) 
   {
-    if (_gst_warn_old_registry)
+    if (_gst_warn_old_registry &&
+	!plugin_times_older_than(get_time(gst_registry))) 
 	g_warning ("gstplugin: registry needs rebuild: run gst-register\n");
     _gst_plugin_paths = g_list_concat (_gst_plugin_paths, gst_plugin_default_paths);
 #ifdef PLUGINS_USE_BUILDDIR
@@ -269,7 +293,7 @@ gst_plugin_load_recurse (gchar *directory, gchar *name)
 /**
  * gst_plugin_load_all:
  *
- * Load all plugins in the path.
+ * Load all plugins in the path (in the global GList* _gst_plugin_paths).
  */
 void
 gst_plugin_load_all (void)
@@ -277,6 +301,7 @@ gst_plugin_load_all (void)
   GList *path;
 
   path = _gst_plugin_paths;
+  if (path == NULL) { g_warning ("gst_plugin_load_all: path is NULL !"); }
   while (path != NULL) {
     GST_DEBUG (GST_CAT_PLUGIN_LOADING,"loading plugins from %s",(gchar *)path->data);
     gst_plugin_load_recurse(path->data,NULL);
@@ -718,6 +743,8 @@ gst_plugin_find_feature (const gchar *name, GType type)
  * @feature: feature to add
  *
  * Add feature to the list of those provided by the plugin.
+ * There is a separate namespace for each plugin feature type.
+ * See #gst_plugin_get_feature_list
  */
 void
 gst_plugin_add_feature (GstPlugin *plugin, GstPluginFeature *feature)
@@ -872,7 +899,7 @@ gst_plugin_load_thyself (xmlNodePtr parent)
     
     kinderen = kinderen->next;
   }
-  GST_INFO (GST_CAT_PLUGIN_LOADING, "added %d features ", featurecount);
+  GST_INFO (GST_CAT_PLUGIN_LOADING, " added %d features ", featurecount);
 }
 #endif /* GST_DISABLE_REGISTRY */
 

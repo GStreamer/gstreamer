@@ -22,3 +22,11 @@ ATM, most of us have at least these versions :
 
 autogen.sh will check for these versions and complain if you don't have 
 them.	
+
+Check autogen.sh options by running autogen.sh --help
+
+autogen.sh can pass on arguments to configure - you just need to separate them
+from autogen.sh with -- between the two.
+prefix has been added to autogen.sh but will be passed on to configure because
+some build scripts like that.
+
