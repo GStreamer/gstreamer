@@ -76,7 +76,7 @@ gst_cpuid_i386 (int x, unsigned long *eax, unsigned long *ebx,
       "=o" (regs[1]),
       "=o" (regs[2]), "=o" (regs[3])
 :    "a" (x)
-:    "ebx", "ecx", "edx");
+:    "ecx", "edx");
 
   *eax = regs[0];
   *ebx = regs[1];

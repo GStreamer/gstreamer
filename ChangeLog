@@ -1,3 +1,9 @@
+2004-04-26  David Schleef  <ds@schleef.org>
+
+	* gst/gstcpu.c: (gst_cpuid_i386): Don't clobber ebx in inline
+	assembly.  gcc doesn't handle it correctly. (bug #141083)
+	* gst/gsttrashstack.h: same
+
 2004-04-25  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.c: (gst_element_change_state):

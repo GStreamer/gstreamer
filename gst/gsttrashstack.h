@@ -101,6 +101,7 @@ gst_trash_stack_pop (GstTrashStack *stack)
    * inlikely that we manage to grab the wrong head->next value.
    */
   __asm__ __volatile__ (
+    "  pushl %%ebx;             \n\t"
     "  testl %%eax, %%eax;      \n\t"	/* if (head == NULL) return */
     "  jz 20f;                  \n\t"
     "10:                        \n\t"
@@ -110,12 +111,13 @@ gst_trash_stack_pop (GstTrashStack *stack)
     SMP_LOCK "cmpxchg8b %1;     \n\t"	/* if eax:edx == *stack, move ebx:ecx to *stack,
 					 * else *stack is moved into eax:edx again... */
     "  jnz 10b;                 \n\t"	/* ... and we retry */
-    "20:                        \n"
+    "20:                        \n\t"
+    "  popl %%ebx               \n"
       : "=a" (head)
       :  "m" (*stack),
          "a" (stack->head),
          "d" (stack->count)
-      :  "ecx", "ebx"
+      :  "ecx"
   );
 
   return head;
