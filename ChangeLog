@@ -1,5 +1,13 @@
 2004-06-20  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstdata.c: (gst_data_is_writable):
+	  whoops, return values were wrong, so writable data was marked as
+	  non-writable and vice versa. (fixes #143953, spotted by Francis
+	  Labonte)
+	  Shows how rarely we need to copy data ;)
+
+2004-06-20  Benjamin Otte  <otte@gnome.org>
+
 	* testsuite/schedulers/.cvsignore:
 	* testsuite/schedulers/Makefile.am:
 	* testsuite/schedulers/143777-2.c: (main):
