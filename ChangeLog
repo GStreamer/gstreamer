@@ -1,3 +1,12 @@
+2004-12-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
+	(remove_from_group), (group_elements_set_visited),
+	(normalize_group), (gst_opt_scheduler_iterate):
+	Fix bug where a flag was not updated on a decoupled entry point 
+	because we were just checking the group element list and decoupled
+	elements are not in that list..
+
 2004-12-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/advanced-autoplugging.xml:

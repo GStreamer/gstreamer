@@ -922,6 +922,8 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
   /* if the element was an entry point in the group, clear the group's
    * entry point, and mark it as unknown */
   if (group->entry == element) {
+    GST_DEBUG ("clearing element %p \"%s\" as entry from group %p",
+        element, GST_ELEMENT_NAME (element), group);
     group->entry = NULL;
     group->type = GST_OPT_SCHEDULER_GROUP_UNKNOWN;
   }
@@ -2142,6 +2144,15 @@ group_elements_set_visited (GstOptSchedulerGroup * group, gboolean visited)
       GST_ELEMENT_SET_VISITED (element);
     } else {
       GST_ELEMENT_UNSET_VISITED (element);
+    }
+  }
+  /* don't forget to set any decoupled entry points that are not accounted for in the
+   * element list (since they belong to two groups). */
+  if (group->entry) {
+    if (visited) {
+      GST_ELEMENT_SET_VISITED (group->entry);
+    } else {
+      GST_ELEMENT_UNSET_VISITED (group->entry);
     }
   }
 }
