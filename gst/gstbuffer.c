@@ -73,7 +73,7 @@ void
 gst_buffer_print_stats (void)
 {
   g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, 
-		  "%d live buffers", _gst_buffer_live);
+		  "%d live buffer(s)", _gst_buffer_live);
 }
 
 /**

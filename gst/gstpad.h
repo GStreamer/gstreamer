@@ -131,10 +131,10 @@ typedef void 			(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
 typedef GstBuffer*		(*GstPadGetFunction) 		(GstPad *pad);
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad, 
-		 						 GstSeekType src_format,  gint64  src_value,
-								 GstSeekType *dest_format, gint64 *dest_value);
+		 						 GstFormat src_format,  gint64  src_value,
+								 GstFormat *dest_format, gint64 *dest_value);
 typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstPadQueryType type,
-		 						 GstSeekType *format, gint64  *value);
+		 						 GstFormat *format, gint64  *value);
 typedef GList*			(*GstPadIntConnFunction)	(GstPad *pad);
 
 typedef GstPadConnectReturn	(*GstPadConnectFunction) 	(GstPad *pad, GstCaps *caps);
