@@ -1,3 +1,11 @@
+2004-10-01  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/README:
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_factory_filter),
+	(gst_decode_bin_init), (find_compatibles), (close_pad_link),
+	(try_to_link_1), (no_more_pads), (close_link), (type_found):
+	Add some debug info to decodebin, update README
+
 2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/dvdnav/dvdnavsrc.c: (dvdnav_handle_navigation_event):
