@@ -63,29 +63,16 @@ enum {
   ARG_IRC,         /* IRC server (shoutcast only) */
 };
 
-static GstPadTemplate*
-sink_template_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-  
-  if (!template) {
-    template = gst_pad_template_new (
-      "sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      gst_caps_new (
-        "icecastsend_sink",
-        "audio/mpeg",
-	gst_props_new (
-	  "mpegversion", GST_PROPS_INT (1),
-	  "layer", GST_PROPS_INT_RANGE (1, 3),
-	  NULL
-	)),
-      NULL);
-  }
-
-  return template;
-}
+static GstStaticPadTemplate sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("audio/mpeg, "
+	  "mpegversion = (int) 1, "
+	  "layer = (int) [ 1, 3 ]"
+  )
+);
 
 static void		gst_icecastsend_class_init	(GstIcecastSendClass *klass);
 static void		gst_icecastsend_base_init	(GstIcecastSendClass *klass);
@@ -125,7 +112,8 @@ gst_icecastsend_base_init (GstIcecastSendClass *klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class, sink_template_factory());
+  gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&sink_template_factory));
   gst_element_class_set_details (element_class, &icecastsend_details);
 }
 
@@ -204,7 +192,10 @@ gst_icecastsend_class_init (GstIcecastSendClass *klass)
 static void
 gst_icecastsend_init (GstIcecastSend *icecastsend)
 {
-  icecastsend->sinkpad = gst_pad_new_from_template (sink_template_factory (), "sink");
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (icecastsend);
+  
+  icecastsend->sinkpad = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "sink"), "sink");
   gst_element_add_pad(GST_ELEMENT(icecastsend),icecastsend->sinkpad);
   gst_pad_set_chain_function(icecastsend->sinkpad,gst_icecastsend_chain);
 
