@@ -1940,6 +1940,8 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
            }
            GST_WARNING ("FIXME: implement support for ReferenceBlock");
          */
+        if (!gst_ebml_read_skip (ebml))
+          res = FALSE;
         break;
       }
 
