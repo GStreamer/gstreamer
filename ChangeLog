@@ -1,3 +1,9 @@
+2004-03-24  David Schleef  <ds@schleef.org>
+
+	* testsuite/elements/Makefile.am:
+	* testsuite/elements/gst-inspect-check.in: Add gst-inspect-check
+	to the testsuite.
+
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
 	* libs/gst/control/dparam.c: (gst_dparam_attach),
