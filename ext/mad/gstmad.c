@@ -752,10 +752,17 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
       break;
       /* the all-formats seek logic */
     case GST_EVENT_SEEK:
-      if (mad->index)
-        res = index_seek (mad, pad, event);
-      else
-        res = normal_seek (mad, pad, event);
+      GST_DEBUG ("forwarding seek event to sink pad");
+      gst_event_ref (event);
+      if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), event)) {
+        /* seek worked, we're done, loop will exit */
+        res = TRUE;
+      } else {
+        if (mad->index)
+          res = index_seek (mad, pad, event);
+        else
+          res = normal_seek (mad, pad, event);
+      }
       break;
 
     default:
