@@ -21,6 +21,8 @@
 #ifndef __RESAMPLE_H__
 #define __RESAMPLE_H__
 
+#include <config.h>
+
 typedef struct resample_s resample_t;
 
 struct resample_s {
@@ -149,6 +151,9 @@ void conv_short_double_ppcasm(short *dest, double *src, int n);
 #define conv_double_short conv_double_short_ref
 #define conv_short_double conv_short_double_ref
 #endif
+
+void conv_double_short_dstr(double *dest, short *src, int n, int dstr);
+void conv_short_double_sstr(short *dest, double *src, int n, int dstr);
 
 #endif /* __RESAMPLE_H__ */
 

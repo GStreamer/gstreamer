@@ -145,9 +145,8 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 			r->i_start, r->i_end, r->o_start);
 	}
 
-	if ((r->filter_length + r->i_samples)*2*r->channels > r->buffer_len) {
-		//int size = taps * 2 * r->channels;
-		int size = (r->filter_length + r->i_samples) * sizeof(double) * r->channels;
+	if ((r->filter_length + r->i_samples)*2*2 > r->buffer_len) {
+		int size = (r->filter_length + r->i_samples) * sizeof(double) * 2;
 
 		if(r->verbose){
 			printf("resample temp buffer size=%d\n",size);
@@ -158,15 +157,21 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 		memset(r->buffer, 0, size);
 	}
 
-	conv_double_short(
-		r->buffer + r->filter_length * sizeof(double) * r->channels,
-		r->i_buf, r->i_samples * r->channels);
+	if(r->channels==2){
+		conv_double_short(
+			r->buffer + r->filter_length * sizeof(double) * 2,
+			r->i_buf, r->i_samples * 2);
+	}else{
+		conv_double_short_dstr(
+			r->buffer + r->filter_length * sizeof(double) * 2,
+			r->i_buf, r->i_samples, sizeof(double) * 2);
+	}
 
 	r->scale(r);
 
 	memcpy(r->buffer,
-		r->buffer + r->i_samples * sizeof(double) * r->channels,
-		r->filter_length * sizeof(double) * r->channels);
+		r->buffer + r->i_samples * sizeof(double) * 2,
+		r->filter_length * sizeof(double) * 2);
 
 	/* updating times */
 	r->i_start += r->i_samples * r->i_inc;
@@ -516,8 +521,10 @@ static void resample_sinc_ft(resample_t * r)
 		}
 	}
 
-	conv_short_double(r->o_buf,out_tmp,2 * r->o_samples);
-	//o_ptr[0] = double_to_s16(c0);
-	//o_ptr[1] = double_to_s16(c1);
+	if(r->channels==2){
+		conv_short_double(r->o_buf,out_tmp,2 * r->o_samples);
+	}else{
+		conv_short_double_sstr(r->o_buf,out_tmp,r->o_samples,2 * sizeof(double));
+	}
 }
 

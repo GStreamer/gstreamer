@@ -95,6 +95,7 @@ void conv_double_short_ref(double *dest, short *src, int n)
 }
 
 #ifdef HAVE_CPU_PPC
+#if 0
 static union { int i[4]; float f[4]; } av_tmp __attribute__ ((__aligned__ (16)));
 
 void conv_double_short_altivec(double *dest, short *src, int n)
@@ -122,6 +123,7 @@ void conv_double_short_altivec(double *dest, short *src, int n)
 		dest += 4;
 	}
 }
+#endif
 #endif
 
 
@@ -171,4 +173,29 @@ void conv_short_double_ppcasm(short *dest, double *src, int n)
 }
 #endif
 
+
+void conv_double_short_dstr(double *dest, short *src, int n, int dstr)
+{
+	int i;
+	void *d = dest;
+	for(i=0;i<n;i++){
+		(*(double *)d)=*src++;
+		d += dstr;
+	}
+}
+
+void conv_short_double_sstr(short *dest, double *src, int n, int sstr)
+{
+	int i;
+	double x;
+	void *s = src;
+
+	for(i=0;i<n;i++){
+		x = *(double *)s;
+		if(x<-32768.0)x=-32768.0;
+		if(x>32767.0)x=32767.0;
+		*dest++ = rint(x);
+		s += sstr;
+	}
+}
 

@@ -30,12 +30,13 @@ void test_res3(void);
 void test_res4(void);
 void test_res5(void);
 void test_res6(void);
+void test_res7(void);
 
 int main(int argc,char *argv[])
 {
 	out = fopen("out","w");
 
-	test_res1();
+	test_res7();
 
 	return 0;
 }
@@ -276,5 +277,76 @@ void test_res6(void)
 	for(i=0;i<1000;i++){
 		fprintf(out,"%d %d %g %d\n",i,i_buf[i],res6_tmp[i],o_buf[i]);
 	}
+}
+
+void test_res7(void)
+{
+	resample_t *r;
+	int i;
+	double sum10k,sum22k;
+	double f;
+	int n10k,n22k;
+	double x;
+
+	for(i=0;i<I_RATE;i++){
+		i_buf[i] = rint(AMP * test_func((double)i/I_RATE));
+	}
+
+	r = malloc(sizeof(resample_t));
+	memset(r,0,sizeof(resample_t));
+
+	r->i_rate = I_RATE;
+	r->o_rate = O_RATE;
+	//r->method = RESAMPLE_SINC_SLOW;
+	r->method = RESAMPLE_SINC;
+	r->channels = 1;
+	//r->verbose = 1;
+	r->filter_length = 64;
+	r->get_buffer = get_buffer;
+
+	resample_init(r);
+
+	start_timer();
+#define blocked
+#ifdef blocked
+	for(i=0;i+256<I_RATE;i+=256){
+		resample_scale(r,i_buf+i,256*2);
+	}
+	if(I_RATE-i){
+		resample_scale(r,i_buf+i,(I_RATE-i)*2);
+	}
+#else
+	resample_scale(r,i_buf,I_RATE*2);
+#endif
+	end_timer();
+
+	for(i=0;i<O_RATE;i++){
+		f = AMP*test_func((double)i/O_RATE);
+		//f = rint(AMP*test_func((double)i/O_RATE));
+		fprintf(out,"%d %d %d %g %g\n",i,
+			o_buf[i],0,
+			f,o_buf[i]-f);
+	}
+
+	sum10k=0;
+	sum22k=0;
+	n10k=0;
+	n22k=0;
+	for(i=0;i<O_RATE;i++){
+		f = AMP*test_func((double)i/O_RATE);
+		//f = rint(AMP*test_func((double)i/O_RATE));
+		x = o_buf[i]-f;
+		if(((0.5*i)/O_RATE*I_RATE)<10000){
+			sum10k += x*x;
+			n10k++;
+		}
+		if(((0.5*i)/O_RATE*I_RATE)<22050){
+			sum22k += x*x;
+			n22k++;
+		}
+	}
+	printf("average error 10k=%g 22k=%g\n",
+		sqrt(sum10k/n10k),
+		sqrt(sum22k/n22k));
 }
 
