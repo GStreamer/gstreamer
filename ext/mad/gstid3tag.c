@@ -514,10 +514,13 @@ tag_list_to_id3_tag_foreach (const GstTagList *list, const gchar *tag_name, gpoi
     GST_WARNING ("could not attach frame (%s) to id3 tag", id);
     return;
   }
+  /* encode in UTF-8 - libid3tag uses Latin1 by default... */
+  field = id3_frame_field (frame, 0);
+  id3_field_settextencoding (field, ID3_FIELD_TEXTENCODING_UTF_8);
   field = id3_frame_field (frame, 1);
   g_assert (field);
   while (values-- > 0) {
-    id3_ucs4_t *put;
+    gunichar *put;
 
     if (strcmp (tag_name, GST_TAG_DATE) == 0) {
       gchar *str;
@@ -527,7 +530,7 @@ tag_list_to_id3_tag_foreach (const GstTagList *list, const gchar *tag_name, gpoi
       g_assert (gst_tag_list_get_uint_index (list, tag_name, values, &u));
       d = g_date_new_julian (u);
       str = g_strdup_printf ("%u", (guint) (g_date_get_year (d)));
-      put = id3_utf8_ucs4duplicate (str);
+      put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_date_free (d);
       g_free (str);
     } else if (strcmp (tag_name, GST_TAG_TRACK_NUMBER) == 0) {
@@ -536,7 +539,7 @@ tag_list_to_id3_tag_foreach (const GstTagList *list, const gchar *tag_name, gpoi
       
       g_assert (gst_tag_list_get_uint_index (list, tag_name, values, &u));
       str = g_strdup_printf ("%u", u);
-      put = id3_utf8_ucs4duplicate (str);
+      put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_free (str);
     } else {
       gchar *str;
@@ -546,14 +549,15 @@ tag_list_to_id3_tag_foreach (const GstTagList *list, const gchar *tag_name, gpoi
 	return;
       }
       g_assert (gst_tag_list_get_string_index (list, tag_name, values, &str));
-      put = id3_utf8_ucs4duplicate (str);
+      put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_free (str);
     }
-    if (id3_field_addstring (field, put) != 0) {
+    if (id3_field_addstring (field, (id3_ucs4_t *) put) != 0) {
       GST_WARNING ("could not add a string to id3 tag field");
       return;
     }
   }
+  id3_field_settextencoding (field, ID3_FIELD_TEXTENCODING_UTF_8);
 }
 struct id3_tag *
 gst_mad_tag_list_to_id3_tag (GstTagList *list)
