@@ -29,7 +29,13 @@ int main(int argc,char *argv[]) {
 
 //  gst_init(&argc,&argv);
 
-  doc = xmlParseFile("registry.xml");
+  if (argc < 2) {
+    fprintf(stderr,"Usage: %s <registry.xml> [element] [element] ...\n",
+            argv[0]);
+    exit(1);
+  }
+
+  doc = xmlParseFile(argv[1]);
   g_assert(doc != NULL);
 
   cur = doc->root;
@@ -93,15 +99,15 @@ int main(int argc,char *argv[]) {
           element->details.copyright = getcontents(doc,field);
         field = field->next;
       }
-      g_print("new element '%s'in '%s'\n",element->name,element->plugin->name);
+      g_print("new element '%s' in '%s'\n",element->name,element->plugin->name);
       elements = g_slist_prepend(elements,element);
     }
     cur = cur->next;
   }
 
-  for (i=1;i<argc;i++) {
+  for (i=2;i<argc;i++) {
     GSList *list;
-    g_print("searching for element '%s'\n",argv[i]);
+    g_print("\nsearching for element '%s'\n",argv[i]);
     list = elements;
     while (list) {
       GstRegistryElement *element = (GstRegistryElement *)list->data;
