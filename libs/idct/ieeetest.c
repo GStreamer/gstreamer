@@ -39,6 +39,7 @@ char * meets (double val, double limit)
   return ((fabs(val) <= limit) ? "meets" : "FAILS");
 }
 
+#ifdef HAVE_RDTS
 __inline__ void read_tsc(guint64 *dst) {
   __asm__ __volatile__
     ("rdtsc"
@@ -46,6 +47,10 @@ __inline__ void read_tsc(guint64 *dst) {
      :
      : "eax", "edx");
 }
+#else
+__inline__ void read_tsc(guint64 *dst) {
+}
+#endif
 
 
 int
