@@ -1287,6 +1287,7 @@ ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/colorbalance/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/gconf/Makefile
 gst-libs/gst/idct/Makefile
@@ -1296,7 +1297,10 @@ gst-libs/gst/navigation/Makefile
 gst-libs/gst/play/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
+gst-libs/gst/tuner/Makefile
 gst-libs/gst/video/Makefile
+gst-libs/gst/xoverlay/Makefile
+gst-libs/gst/xwindowlistener/Makefile
 gst-libs/ext/Makefile
 gst-libs/ext/ffmpeg/Makefile
 gst-libs/ext/mplex/Makefile
