@@ -1,3 +1,10 @@
+2004-04-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/monoscope/gstmonoscope.c:
+	  make sure we only provide 256x128
+	* gst/monoscope/monoscope.c: (monoscope_init):
+	  assert size of 256x128
+
 2004-04-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
