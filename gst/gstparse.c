@@ -37,7 +37,8 @@ struct _gst_parse_delayed_pad
 typedef struct
 {
   gchar *srcpadname;
-  GstPad *target;
+  GstPad *target_pad;
+  GstElement *target_element;
   GstElement *pipeline;
 }
 dynamic_connection_t;
@@ -56,12 +57,27 @@ G_GNUC_UNUSED static void
 dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
 {
   dynamic_connection_t *dc = (dynamic_connection_t *) data;
+  gboolean warn = TRUE;
 
-  if (!strcmp (gst_pad_get_name (newpad), dc->srcpadname)) {
+  /* do we know the exact srcpadname? */
+  if (dc->srcpadname) {
+    /* see if this is the one */
+    if (strcmp (gst_pad_get_name (newpad), dc->srcpadname)) {
+      return;
+    }
+  }
+  /* try to find a target pad if we don't know it yet */
+  if (!dc->target_pad) {
+    dc->target_pad = gst_element_get_compatible_pad (dc->target_element, newpad);
+    warn = FALSE;
+  }
+
+  if (!GST_PAD_IS_CONNECTED (newpad)) {
     gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
-    if (!gst_pad_connect (newpad, dc->target))
+    if (!gst_pad_connect (newpad, dc->target_pad) && warn) {
       g_warning ("could not connect %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
-                 GST_DEBUG_PAD_NAME (dc->target));
+                 GST_DEBUG_PAD_NAME (dc->target_pad));
+    }
     gst_element_set_state (dc->pipeline, GST_STATE_PLAYING);
   }
 }
@@ -249,7 +265,8 @@ make_connections (graph_t *g, GError **error)
             pt1->presence == GST_PAD_SOMETIMES) {
           dc = g_new0 (dynamic_connection_t, 1);
           dc->srcpadname = (gchar*)a->data;
-          dc->target = p2;
+          dc->target_pad = p2;
+          dc->target_element = sink;
           dc->pipeline = g->bin;
           
           GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
@@ -277,7 +294,8 @@ make_connections (graph_t *g, GError **error)
 //                g_print ("got the pad\n");
                 dc = g_new0 (dynamic_connection_t, 1);
                 dc->srcpadname = (gchar*)a->data;
-                dc->target = p2;
+                dc->target_pad = p2;
+                dc->target_element = NULL;
                 dc->pipeline = g->bin;
               
                 GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
@@ -285,17 +303,29 @@ make_connections (graph_t *g, GError **error)
                            (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
               
                 g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+		goto next;
               } else {
                 /* both pt1 and pt2 are sometimes templates. sheesh. */
                 goto both_templates_have_sometimes_presence;
               }
             } else {
-              goto could_not_get_compatible_to_a;
+	      /* if the target pad has no padtemplate we will figure out a target 
+	       * pad later on */
+              dc = g_new0 (dynamic_connection_t, 1);
+              dc->srcpadname = NULL;
+              dc->target_pad = NULL;
+              dc->target_element = sink;
+              dc->pipeline = g->bin;
+              
+              GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s, and some pad in %s",
+                           GST_OBJECT_NAME (GST_OBJECT (src)),
+                           (gchar*)a->data, GST_OBJECT_NAME (sink));
+              
+              g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+   	      goto next;
             }
           } else {
-            if (!(p2 = gst_element_get_compatible_pad (sink, p1))) {
-              goto could_not_get_compatible_to_a;
-            }
+            goto could_not_get_compatible_to_a;
           }
         } else {
           goto could_not_get_pad_a;
@@ -323,6 +353,7 @@ make_connections (graph_t *g, GError **error)
         goto could_not_connect_elements;
       }
     }
+next:
     l = g_list_next (l);
   }
   
