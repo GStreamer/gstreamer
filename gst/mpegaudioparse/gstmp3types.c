@@ -33,9 +33,9 @@ mp3_typefind(GstBuffer *buf, gpointer private)
 {
   gchar *data;
   gulong head;
-  
-  data = GST_BUFFER_DATA(buf);
   GstCaps *caps;
+
+  data = GST_BUFFER_DATA(buf);
 
   GST_DEBUG (0,"mp3typefind: typefind\n");
  
