@@ -641,6 +641,13 @@ gst_play_init (GstPlay *play)
 /*                                             */
 /* =========================================== */
 
+/**
+ * gst_play_seek_to_time:
+ * @play: a #GstPlay.
+ * @time_nanos: a #gint64 indicating a time position.
+ *
+ * Performs a seek on @play until @time_nanos.
+ */
 void
 gst_play_seek_to_time (	GstPlay *play,
 						gint64 time_nanos)
@@ -685,6 +692,12 @@ gst_play_seek_to_time (	GstPlay *play,
 	gst_element_set_state(play->pipeline, prev_state);
 }
 
+/**
+ * gst_play_need_new_video_window:
+ * @play: a #GstPlay.
+ *
+ * Request a new video window for @play.
+ */
 void
 gst_play_need_new_video_window (GstPlay *play)
 {
@@ -705,6 +718,15 @@ gst_play_set_idle_timeout_funcs (	GstPlay *play,
 	play->idle_add_func = idle_add_func;
 }
 
+/**
+ * gst_play_get_sink_element:
+ * @play: a #GstPlay.
+ * @element: a #GstElement.
+ *
+ * Searches for the sink #GstElement of @element in @play.
+ *
+ * Returns: the sink #GstElement of @element.
+ */
 GstElement*
 gst_play_get_sink_element (	GstPlay *play,
 							GstElement *element)
@@ -752,6 +774,15 @@ gst_play_get_sink_element (	GstPlay *play,
 /*                                             */
 /* =========================================== */
 
+/**
+ * gst_play_set_state:
+ * @play: a #GstPlay.
+ * @state: a #GstElementState.
+ *
+ * Set state of @play 's pipeline to @state.
+ *
+ * Returns: a #GstElementStateReturn indicating if the operation succeeded.
+ */
 GstElementStateReturn
 gst_play_set_state (	GstPlay *play,
 						GstElementState state)
@@ -763,6 +794,14 @@ gst_play_set_state (	GstPlay *play,
 	return gst_element_set_state(play->pipeline, state);
 }
 
+/**
+ * gst_play_get_state:
+ * @play: a #GstPlay.
+ *
+ * Get state of @play 's pipeline.
+ *
+ * Returns: a #GstElementState indicating @play 's pipeline current state.
+ */
 GstElementState
 gst_play_get_state (GstPlay *play)
 {
@@ -772,6 +811,15 @@ gst_play_get_state (GstPlay *play)
 	return gst_element_get_state(play->pipeline);
 }
 
+/**
+ * gst_play_set_location:
+ * @play: a #GstPlay.
+ * @location: a const #gchar indicating location to play
+ *
+ * Set location of @play to @location.
+ *
+ * Returns: TRUE if location was set successfully.
+ */
 gboolean
 gst_play_set_location (	GstPlay *play,
 						const gchar *location)
@@ -806,6 +854,14 @@ gst_play_set_location (	GstPlay *play,
 	return TRUE;
 }
 
+/**
+ * gst_play_get_location:
+ * @play: a #GstPlay.
+ *
+ * Get current location of @play.
+ *
+ * Returns: a #gchar pointer to current location.
+ */
 gchar*
 gst_play_get_location (GstPlay *play)
 {
@@ -816,7 +872,13 @@ gst_play_get_location (GstPlay *play)
 	return location;
 }
 
-
+/**
+ * gst_play_set_volume:
+ * @play: a #GstPlay.
+ * @volume: a #gfloat indicating volume level.
+ *
+ * Set current volume of @play.
+ */
 void
 gst_play_set_volume (	GstPlay *play,
 						gfloat volume)
@@ -826,6 +888,14 @@ gst_play_set_volume (	GstPlay *play,
 	g_object_set(G_OBJECT(play->vol_dparam), "value_float", volume, NULL);
 }
 
+/**
+ * gst_play_get_volume:
+ * @play: a #GstPlay.
+ *
+ * Get current volume of @play.
+ *
+ * Returns: a #gfloat indicating current volume level.
+ */
 gfloat
 gst_play_get_volume (GstPlay *play)
 {
@@ -838,6 +908,13 @@ gst_play_get_volume (GstPlay *play)
 	return volume;
 }
 
+/**
+ * gst_play_set_mute:
+ * @play: a #GstPlay.
+ * @mute: a #gboolean indicating wether audio is muted or not.
+ *
+ * Mutes/Unmutes audio playback of @play.
+ */
 void
 gst_play_set_mute (	GstPlay *play,
 					gboolean mute)
@@ -846,7 +923,15 @@ gst_play_set_mute (	GstPlay *play,
 
 	g_object_set (G_OBJECT (play->volume), "mute", mute, NULL);
 }
-	
+
+/**
+ * gst_play_get_mute:
+ * @play: a #GstPlay.
+ *
+ * Get current muted status of @play.
+ *
+ * Returns: a #gboolean indicating if audio is muted or not.
+ */
 gboolean
 gst_play_get_mute (GstPlay *play)
 {
@@ -865,6 +950,15 @@ gst_play_get_mute (GstPlay *play)
 /*                                             */
 /* =========================================== */
 
+/**
+ * gst_play_set_data_src:
+ * @play: a #GstPlay.
+ * @data_src: a #GstElement.
+ *
+ * Set @data_src as the source element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
 gboolean
 gst_play_set_data_src (	GstPlay *play,
 						GstElement *data_src)
@@ -884,6 +978,15 @@ gst_play_set_data_src (	GstPlay *play,
 	return FALSE;
 }
 
+/**
+ * gst_play_set_video_sink:
+ * @play: a #GstPlay.
+ * @video_sink: a #GstElement.
+ *
+ * Set @video_sink as the video sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
 gboolean
 gst_play_set_video_sink (	GstPlay *play,
 							GstElement *video_sink)
@@ -903,6 +1006,15 @@ gst_play_set_video_sink (	GstPlay *play,
 	return FALSE;
 }
 
+/**
+ * gst_play_set_audio_sink:
+ * @play: a #GstPlay.
+ * @audio_sink: a #GstElement.
+ *
+ * Set @audio_sink as the audio sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
 gboolean
 gst_play_set_audio_sink (	GstPlay *play,
 							GstElement *audio_sink)
