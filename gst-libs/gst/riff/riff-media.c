@@ -514,7 +514,7 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
     }
     if (block_align) {
       gst_caps_set_simple (caps,
-          "block_align", GST_TYPE_INT_RANGE, 1, 8192, NULL);
+          "block_align", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
     }
   }
 
