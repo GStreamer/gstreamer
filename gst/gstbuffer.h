@@ -182,7 +182,7 @@ void		gst_buffer_pool_set_active		(GstBufferPool *pool, gboolean active);
 
 /* bufferpool operations */
 #define		gst_buffer_pool_copy(pool)		GST_BUFFER_POOL (gst_data_copy (GST_DATA (pool)))
-#define		gst_buffer_pool_needs_copy_on_write(pool)	GST_BUFFER_POOL (gst_data_needs_copy_on_write (GST_DATA (pool)))
+#define		gst_buffer_pool_is_readonly(pool)	GST_BUFFER_POOL (gst_data_is_readonly (GST_DATA (pool)))
 #define		gst_buffer_pool_copy_on_write(pool)	GST_BUFFER_POOL (gst_data_copy_on_write (GST_DATA (pool)))
 #define		gst_buffer_pool_free(pool)		gst_data_free (GST_DATA (pool))
 
