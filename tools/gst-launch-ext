@@ -47,7 +47,7 @@ sub read_config
     print "No configuration file $config_file found.  You might want to create one.\n";
   }
   if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
-  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "sdlvideosink"; }
+  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "xvideosink"; }
   if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
 }
 
@@ -88,7 +88,7 @@ read_config ();
   "mpg", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
-  "vob", "mpegdemux video_%02d! { queue max_level=500 ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.private_stream_1_%02d! { queue max_level=500 ! a52dec ! $cfg{AUDIOSINK} }",
+  "vob", "mpegdemux name=foo video_%02d! { queue ! mpeg2dec ! {queue $cfg{VIDEOSINK} } } foo.audio_%02d! { queue ! a52dec ! { queue $cfg{AUDIOSINK} } }",
 );
 
 if ($cfg{VISUALIZER}) {
