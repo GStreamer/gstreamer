@@ -276,6 +276,8 @@ gst_init_check (int     *argc,
       }
       else if (!strncmp ("--help", (*argv)[i], 6)) {
 	showhelp = TRUE;
+
+        (*argv)[i] = NULL;
       }
     }
 
@@ -337,8 +339,6 @@ gst_init_check (int     *argc,
 #endif
       }
     }
-
-    ret = FALSE;
   }
 
   return ret;
