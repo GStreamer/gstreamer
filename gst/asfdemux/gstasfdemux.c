@@ -518,7 +518,9 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
     
     /* It's uncompressed with replic data*/
     if (replic_size < 8) {
-      gst_element_error (GST_ELEMENT (asf_demux), "The payload has replicated data but the size is less than 8");
+      gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("The payload has replicated data but the size is less than 8"));
       return FALSE;
     }
     gst_asf_demux_read_object_header_rest (asf_demux, &ptr, 8);
@@ -567,7 +569,9 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
       segment_info.segment_size = segment_info.chunk_size;
 
       if (segment_info.chunk_size > packet_info->size_left) {
-	gst_element_error (GST_ELEMENT (asf_demux), "Payload chunk overruns packet size.");
+	gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+	  g_strdup ("unconverted error, file a bug"),
+	  g_strdup_printf("Payload chunk overruns packet size."));
 	return FALSE;
       }
 
@@ -759,7 +763,9 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
     case ASF_CORRECTION_OFF:
       break;
     default:
-      gst_element_error (GST_ELEMENT (asf_demux), "Audio stream using unknown error correction");
+      gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("Audio stream using unknown error correction"));
       return FALSE;
     }
 
@@ -793,7 +799,9 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
     }
     break;
   default:
-    gst_element_error (GST_ELEMENT (asf_demux), "Object is a stream of unrecognised type");
+    gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("Object is a stream of unrecognised type"));
     return FALSE;
   }
 
@@ -841,7 +849,9 @@ gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint
 
   if (*obj_id == ASF_OBJ_UNDEFINED) {
     GST_INFO ( "Object found with unknown GUID %08x %08x %08x %08x", guid->v1, guid->v2, guid->v3, guid->v4);
-    gst_element_error (GST_ELEMENT (asf_demux), "Could not identify object");
+    gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("Could not identify object"));
     return FALSE;
   }
   
@@ -911,7 +921,9 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
   case ASF_OBJ_BITRATE_MUTEX:
     return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
   default:
-    gst_element_error (GST_ELEMENT (asf_demux), "Unknown ASF object");
+    gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("Unknown ASF object"));
     return FALSE;
   }
 
@@ -935,7 +947,9 @@ gst_asf_demux_get_stream (GstASFDemux *asf_demux,
   }
 
   /* Base case if we haven't found one at all */
-  gst_element_error (GST_ELEMENT (asf_demux), "Segment found for undefined stream: (%d)", id);
+  gst_element_gerror(GST_ELEMENT (asf_demux), GST_ERROR_UNKNOWN,
+    g_strdup ("unconverted error, file a bug"),
+    g_strdup_printf("Segment found for undefined stream: (%d)", id));
   return NULL;
 }
 

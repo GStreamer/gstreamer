@@ -360,8 +360,9 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
                                     "channels", GST_PROPS_INT (channels),
                                     "rate",     GST_PROPS_INT (rate));
     if (gst_pad_try_set_caps(parse->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (parse),
-                         "mp3parse: failed to negotiate format with next element");
+      gst_element_gerror(GST_ELEMENT (parse), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf ("mp3parse: failed to negotiate format with next element"));
     }
 
     parse->channels = channels;

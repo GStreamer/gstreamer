@@ -294,7 +294,9 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 		   );
 
     if (gst_pad_try_set_caps (synaesthesia->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (synaesthesia), "could not set caps");
+      gst_element_gerror(GST_ELEMENT (synaesthesia), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("could not set caps"));
       return;
     }
     synaesthesia->first_buffer = FALSE;

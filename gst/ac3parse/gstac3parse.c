@@ -337,8 +337,9 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
 				    "channels", GST_PROPS_INT (channels),
 				    "rate",     GST_PROPS_INT (sample_rate));
           if (gst_pad_try_set_caps (ac3parse->srcpad, newcaps) <= 0) {
-            gst_element_error (GST_ELEMENT (ac3parse),
-			       "Ac3parse: failed to negotiate format with next element");
+            gst_element_gerror(GST_ELEMENT (ac3parse), GST_ERROR_UNKNOWN,
+              g_strdup ("unconverted error, file a bug"),
+              g_strdup_printf ("Ac3parse: failed to negotiate format with next element"));
             return;
           }
         }
