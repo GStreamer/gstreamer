@@ -262,7 +262,8 @@ gst_play_have_video_size (GstElement *element, gint width,
 static gboolean
 gst_play_tick_callback (GstPlay *play)
 {
-  GstClock *clock = NULL;
+  GstElement* audio_sink_element;
+  GstClockTime time;
   
   g_return_val_if_fail (play != NULL, FALSE);
   
@@ -271,8 +272,10 @@ gst_play_tick_callback (GstPlay *play)
     return FALSE;
   }
   
-  clock = gst_bin_get_clock (GST_BIN (play));
-  play->priv->time_nanos = gst_clock_get_time (clock);
+  audio_sink_element = g_hash_table_lookup (play->priv->elements,
+                                            "audio_sink_element");
+  time = gst_element_get_time (audio_sink_element);
+  play->priv->time_nanos = GST_CLOCK_TIME_IS_VALID (time) ? time : 0;
   
   g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
                  0,play->priv->time_nanos);
