@@ -39,7 +39,6 @@ static guint gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
 void 
 _gst_dpman_initialize()
 {
-	_element_registry = g_hash_table_new(NULL,NULL);
 }
 
 GType
@@ -83,6 +82,7 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 	gst_dpman_register_mode (klass, "disabled", 
 	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
 
+	_element_registry = g_hash_table_new(NULL,NULL);
 }
 
 static void
