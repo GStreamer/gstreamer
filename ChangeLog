@@ -1,3 +1,7 @@
+2005-02-21  Jan Schmidt <thaytan@mad.scientist.com>
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain):
+          Make sure we only write to writable buffers
+
 2005-02-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c:
