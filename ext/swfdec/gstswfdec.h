@@ -24,11 +24,9 @@
 
 #include <gst/gst.h>
 #include <swfdec.h>
+#include <swfdec_render.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_SWFDEC \
   (gst_swfdec_get_type())
@@ -44,7 +42,8 @@ extern "C" {
 typedef struct _GstSwfdec GstSwfdec;
 typedef struct _GstSwfdecClass GstSwfdecClass;
 
-struct _GstSwfdec {
+struct _GstSwfdec
+{
   GstElement element;
 
   /* pads */
@@ -52,12 +51,14 @@ struct _GstSwfdec {
   GstPad *videopad;
   GstPad *audiopad;
 
-  SwfdecDecoder *state;
+  SwfdecDecoder *decoder;
   gboolean closed;
 
-  /* the timestamp of the next frame */
   gboolean first;
   gboolean have_format;
+
+  gboolean send_discont;
+  int seek_frame;
 
   double rate;
   gint64 timestamp;
@@ -72,16 +73,13 @@ struct _GstSwfdec {
 
 };
 
-struct _GstSwfdecClass {
+struct _GstSwfdecClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_swfdec_get_type(void);
+GType gst_swfdec_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SWFDEC_H__ */

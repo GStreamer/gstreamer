@@ -24,6 +24,7 @@
 #include "gstswfdec.h"
 #include <string.h>
 #include <gst/video/video.h>
+#include <swfdec_buffer.h>
 
 /* elementfactory information */
 static GstElementDetails gst_swfdec_details =
@@ -83,18 +84,11 @@ static void gst_swfdec_set_property (GObject * object, guint prop_id,
 static void gst_swfdec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-#if 0
 static gboolean gst_swfdec_src_event (GstPad * pad, GstEvent * event);
-#endif
 static gboolean gst_swfdec_src_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
-
-#if 0
-static gboolean gst_swfdec_convert_sink (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-static gboolean gst_swfdec_convert_src (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-#endif
+static const GstQueryType *gst_swfdec_get_query_types (GstPad * pad);
+static const GstEventMask *gst_swfdec_get_event_masks (GstPad * pad);
 
 static GstElementStateReturn gst_swfdec_change_state (GstElement * element);
 
@@ -193,11 +187,8 @@ gst_swfdec_video_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
 
-  if (swfdec->height == height && swfdec->width == width) {
-    return GST_PAD_LINK_OK;
-  }
-
-  ret = swfdec_decoder_set_image_size (swfdec->state, width, height);
+  g_print ("setting size to %d x %d\n", width, height);
+  ret = swfdec_decoder_set_image_size (swfdec->decoder, width, height);
   if (ret == SWF_OK) {
     swfdec->width = width;
     swfdec->height = height;
@@ -209,23 +200,22 @@ gst_swfdec_video_link (GstPad * pad, const GstCaps * caps)
 }
 
 static void
-copy_image (void *dest, void *src, int width, int height)
+gst_swfdec_buffer_free (SwfdecBuffer * buf, void *priv)
 {
-  guint8 *d = dest;
-  guint8 *s = src;
-  int x, y;
+  gst_buffer_unref (GST_BUFFER (priv));
+}
 
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      d[0] = s[2];
-      d[1] = s[1];
-      d[2] = s[0];
-      d[3] = 0;
-      d += 4;
-      s += 3;
-    }
-  }
+static SwfdecBuffer *
+gst_swfdec_buffer_to_swf (GstBuffer * buffer)
+{
+  SwfdecBuffer *sbuf;
 
+  sbuf = swfdec_buffer_new_with_data (GST_BUFFER_DATA (buffer),
+      GST_BUFFER_SIZE (buffer));
+  sbuf->free = gst_swfdec_buffer_free;
+  sbuf->priv = buffer;
+
+  return sbuf;
 }
 
 static void
@@ -243,16 +233,17 @@ gst_swfdec_loop (GstElement * element)
   if (!swfdec->videopad) {
   }
 
-  ret = swfdec_decoder_parse (swfdec->state);
+  ret = swfdec_decoder_parse (swfdec->decoder);
   if (ret == SWF_NEEDBITS) {
     buf = GST_BUFFER (gst_pad_pull (swfdec->sinkpad));
     if (GST_IS_EVENT (buf)) {
       switch (GST_EVENT_TYPE (buf)) {
         case GST_EVENT_EOS:
+          swfdec_decoder_eof (swfdec->decoder);
           GST_DEBUG ("got eos");
           break;
         default:
-          GST_DEBUG ("got event");
+          GST_DEBUG ("got other event");
           break;
       }
 
@@ -260,22 +251,20 @@ gst_swfdec_loop (GstElement * element)
       if (!GST_BUFFER_DATA (buf)) {
         GST_DEBUG ("expected non-null buffer");
       }
-      ret = swfdec_decoder_addbits (swfdec->state,
-          GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      swfdec_decoder_add_buffer (swfdec->decoder,
+          gst_swfdec_buffer_to_swf (buf));
     }
-  }
-
-  if (ret == SWF_CHANGE) {
+  } else if (ret == SWF_CHANGE) {
     GstCaps *caps;
     GstPadLinkReturn link_ret;
 
-    swfdec_decoder_get_image_size (swfdec->state,
+    swfdec_decoder_get_image_size (swfdec->decoder,
         &swfdec->width, &swfdec->height);
-    swfdec_decoder_get_rate (swfdec->state, &swfdec->rate);
+    swfdec_decoder_get_rate (swfdec->decoder, &swfdec->rate);
     swfdec->interval = GST_SECOND / swfdec->rate;
 
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (swfdec->videopad));
-    swfdec_decoder_get_rate (swfdec->state, &swfdec->frame_rate);
+    swfdec_decoder_get_rate (swfdec->decoder, &swfdec->frame_rate);
     gst_caps_set_simple (caps,
         "framerate", G_TYPE_DOUBLE, swfdec->frame_rate,
         "height", G_TYPE_INT, swfdec->height,
@@ -288,51 +277,61 @@ gst_swfdec_loop (GstElement * element)
       return;
     }
     swfdec->have_format = TRUE;
+  } else if (ret == SWF_EOF) {
+    SwfdecBuffer *audio_buffer;
+    SwfdecBuffer *video_buffer;
+    GstBuffer *videobuf;
+    GstBuffer *audiobuf;
+    gboolean ret;
 
-    return;
-  }
+    ret = swfdec_render_iterate (swfdec->decoder);
+    if (!ret) {
+      gst_pad_push (swfdec->videopad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+      gst_pad_push (swfdec->audiopad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
 
-  if (ret == SWF_IMAGE) {
-    GstBuffer *newbuf = NULL;
-    unsigned char *data;
-    int len;
+      gst_element_set_eos (GST_ELEMENT (swfdec));
 
-    /* video stuff */
-    //newbuf = gst_buffer_new();
-    //GST_BUFFER_SIZE(newbuf) = swfdec->width * swfdec->height * 3;
+      return;
+    }
 
-    newbuf = gst_pad_alloc_buffer (swfdec->videopad, GST_BUFFER_OFFSET_NONE,
-        swfdec->width * 4 * swfdec->height);
+    if (swfdec->send_discont) {
+      GstEvent *event;
 
-    swfdec_decoder_get_image (swfdec->state, &data);
-    copy_image (GST_BUFFER_DATA (newbuf), data, swfdec->width, swfdec->height);
-    free (data);
-    //GST_BUFFER_DATA(newbuf) = data;
+      swfdec->timestamp = swfdec_render_get_frame_index (swfdec->decoder) *
+          swfdec->interval;
+
+      GST_DEBUG ("sending discont %" G_GINT64_FORMAT, swfdec->timestamp);
+
+      event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+          swfdec->timestamp, GST_FORMAT_UNDEFINED);
+      gst_pad_push (swfdec->videopad, GST_DATA (event));
+
+      event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+          swfdec->timestamp, GST_FORMAT_UNDEFINED);
+      gst_pad_push (swfdec->audiopad, GST_DATA (event));
+
+      swfdec->send_discont = FALSE;
+    }
+
+    GST_DEBUG ("pushing image/sound %" G_GINT64_FORMAT, swfdec->timestamp);
+
+    video_buffer = swfdec_render_get_image (swfdec->decoder);
+    videobuf = gst_buffer_new ();
+    GST_BUFFER_DATA (videobuf) = video_buffer->data;
+    GST_BUFFER_SIZE (videobuf) = video_buffer->length;
+    GST_BUFFER_TIMESTAMP (videobuf) = swfdec->timestamp;
+
+    gst_pad_push (swfdec->videopad, GST_DATA (videobuf));
+
+    audio_buffer = swfdec_render_get_audio (swfdec->decoder);
+    audiobuf = gst_buffer_new ();
+    GST_BUFFER_DATA (audiobuf) = audio_buffer->data;
+    GST_BUFFER_SIZE (audiobuf) = audio_buffer->length;
+    GST_BUFFER_TIMESTAMP (audiobuf) = swfdec->timestamp;
+
+    gst_pad_push (swfdec->audiopad, GST_DATA (audiobuf));
 
     swfdec->timestamp += swfdec->interval;
-    GST_BUFFER_TIMESTAMP (newbuf) = swfdec->timestamp;
-
-    gst_pad_push (swfdec->videopad, GST_DATA (newbuf));
-
-    /* audio stuff */
-
-    data = swfdec_decoder_get_sound_chunk (swfdec->state, &len);
-    while (data) {
-      newbuf = gst_buffer_new ();
-
-      GST_BUFFER_SIZE (newbuf) = len;
-      GST_BUFFER_DATA (newbuf) = data;
-      GST_BUFFER_TIMESTAMP (newbuf) = swfdec->timestamp;
-
-      gst_pad_push (swfdec->audiopad, GST_DATA (newbuf));
-
-      data = swfdec_decoder_get_sound_chunk (swfdec->state, &len);
-    }
-  }
-
-  if (ret == SWF_EOF) {
-    gst_pad_push (swfdec->videopad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    gst_pad_push (swfdec->audiopad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
   }
 }
 
@@ -348,27 +347,34 @@ gst_swfdec_init (GstSwfdec * swfdec)
   swfdec->videopad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&video_template_factory), "video_00");
-  gst_pad_set_query_function (swfdec->videopad,
-      GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
+  gst_pad_set_query_function (swfdec->videopad, gst_swfdec_src_query);
   gst_pad_set_getcaps_function (swfdec->videopad, gst_swfdec_video_getcaps);
   gst_pad_set_link_function (swfdec->videopad, gst_swfdec_video_link);
+  gst_pad_set_event_function (swfdec->videopad, gst_swfdec_src_event);
+  gst_pad_set_event_mask_function (swfdec->videopad,
+      gst_swfdec_get_event_masks);
+  gst_pad_set_query_type_function (swfdec->videopad,
+      gst_swfdec_get_query_types);
   gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->videopad);
 
   swfdec->audiopad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&audio_template_factory), "audio_00");
-  gst_pad_set_query_function (swfdec->audiopad,
-      GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
-
+  gst_pad_set_query_function (swfdec->audiopad, gst_swfdec_src_query);
+  gst_pad_set_event_function (swfdec->audiopad, gst_swfdec_src_event);
+  gst_pad_set_event_mask_function (swfdec->audiopad,
+      gst_swfdec_get_event_masks);
+  gst_pad_set_query_type_function (swfdec->audiopad,
+      gst_swfdec_get_query_types);
   gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->audiopad);
 
   gst_element_set_loop_function (GST_ELEMENT (swfdec), gst_swfdec_loop);
 
   /* initialize the swfdec decoder state */
-  swfdec->state = swfdec_decoder_new ();
-  g_return_if_fail (swfdec->state != NULL);
+  swfdec->decoder = swfdec_decoder_new ();
+  g_return_if_fail (swfdec->decoder != NULL);
 
-  swfdec_decoder_set_colorspace (swfdec->state, SWF_COLORSPACE_RGB888);
+  swfdec_decoder_set_colorspace (swfdec->decoder, SWF_COLORSPACE_RGB888);
 
   GST_FLAG_SET (GST_ELEMENT (swfdec), GST_ELEMENT_EVENT_AWARE);
 
@@ -378,104 +384,24 @@ gst_swfdec_init (GstSwfdec * swfdec)
 static void
 gst_swfdec_dispose (GObject * object)
 {
-  //GstSwfdec *swfdec = GST_SWFDEC (object);
+  GstSwfdec *swfdec = GST_SWFDEC (object);
 
-  /* FIXME */
-  //swfdec_decoder_free(swfdec->state);
+  swfdec_decoder_free (swfdec->decoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-#if 0
-static gboolean
-gst_swfdec_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+static const GstQueryType *
+gst_swfdec_get_query_types (GstPad * pad)
 {
-  gboolean res = TRUE;
-  GstSwfdec *swfdec;
+  static const GstQueryType gst_swfdec_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
 
-  swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
-  return res;
+  return gst_swfdec_query_types;
 }
-#endif
-
-#if 0
-static gboolean
-gst_swfdec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = TRUE;
-  GstSwfdec *swfdec;
-
-  swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * 6 * (swfdec->width * swfdec->height >> 2) *
-              video_rates[swfdec->decoder->frame_rate_code] / GST_SECOND;
-          break;
-        case GST_FORMAT_DEFAULT:
-          *dest_value =
-              src_value * video_rates[swfdec->decoder->frame_rate_code] /
-              GST_SECOND;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          if (video_rates[swfdec->decoder->frame_rate_code] != 0.0) {
-            *dest_value = src_value * GST_SECOND /
-                video_rates[swfdec->decoder->frame_rate_code];
-          } else
-            res = FALSE;
-          break;
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * 6 * (swfdec->width * swfdec->height >> 2);
-          break;
-        case GST_FORMAT_DEFAULT:
-          *dest_value = src_value;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
-  return res;
-}
-#endif
 
 static gboolean
 gst_swfdec_src_query (GstPad * pad, GstQueryType type,
@@ -496,7 +422,7 @@ gst_swfdec_src_query (GstPad * pad, GstQueryType type,
           int ret;
 
           res = FALSE;
-          ret = swfdec_decoder_get_n_frames (swfdec->state, &n_frames);
+          ret = swfdec_decoder_get_n_frames (swfdec->decoder, &n_frames);
           if (ret == SWF_OK) {
             *value = n_frames * swfdec->interval;
             res = TRUE;
@@ -512,6 +438,10 @@ gst_swfdec_src_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_POSITION:
     {
       switch (*format) {
+        case GST_FORMAT_TIME:
+          *value = swfdec_render_get_frame_index (swfdec->decoder) *
+              swfdec->interval;
+          res = TRUE;
         default:
           res = FALSE;
           break;
@@ -526,16 +456,27 @@ gst_swfdec_src_query (GstPad * pad, GstQueryType type,
   return res;
 }
 
-#if 0
+static const GstEventMask *
+gst_swfdec_get_event_masks (GstPad * pad)
+{
+  static const GstEventMask gst_swfdec_event_masks[] = {
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
+    {0,}
+  };
+
+  return gst_swfdec_event_masks;
+}
+
 static gboolean
 gst_swfdec_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstSwfdec *swfdec;
-  static const GstFormat formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES };
+
+  //static const GstFormat formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES };
 
 #define MAX_SEEK_FORMATS 1      /* we can only do time seeking for now */
-  gint i;
+  //gint i;
 
   swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
@@ -543,50 +484,30 @@ gst_swfdec_src_event (GstPad * pad, GstEvent * event)
       /* the all-formats seek logic */
     case GST_EVENT_SEEK:
     {
-      gint64 src_offset;
-      gboolean flush;
-      GstFormat format;
+      int new_frame;
+      int ret;
+      int n_frames;
 
-      format = GST_FORMAT_TIME;
+      new_frame = event->event_data.seek.offset / swfdec->interval;
+      ret = swfdec_decoder_get_n_frames (swfdec->decoder, &n_frames);
 
-      /* first bring the src_format to TIME */
-      if (!gst_pad_convert (pad,
-              GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
-              &format, &src_offset)) {
-        /* didn't work, probably unsupported seek format then */
-        res = FALSE;
-        break;
+      if (new_frame >= 0 && new_frame < n_frames) {
+        GstEvent *event;
+
+        GST_DEBUG ("seeking to frame %d\n", new_frame);
+        swfdec_render_seek (swfdec->decoder, new_frame);
+
+        GST_DEBUG ("sending flush event\n");
+        event = gst_event_new (GST_EVENT_FLUSH);
+        gst_pad_push (swfdec->videopad, GST_DATA (event));
+        event = gst_event_new (GST_EVENT_FLUSH);
+        gst_pad_push (swfdec->audiopad, GST_DATA (event));
+
+        swfdec->send_discont = TRUE;
+        swfdec->seek_frame = new_frame;
       }
 
-      /* shave off the flush flag, we'll need it later */
-      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-
-      /* assume the worst */
-      res = FALSE;
-
-      /* while we did not exhaust our seek formats without result */
-      for (i = 0; i < MAX_SEEK_FORMATS && !res; i++) {
-        gint64 desired_offset;
-
-        format = formats[i];
-
-        /* try to convert requested format to one we can seek with on the sinkpad */
-        if (gst_pad_convert (swfdec->sinkpad, GST_FORMAT_TIME, src_offset,
-                &format, &desired_offset)) {
-          GstEvent *seek_event;
-
-          /* conversion succeeded, create the seek */
-          seek_event =
-              gst_event_new_seek (formats[i] | GST_SEEK_METHOD_SET | flush,
-              desired_offset);
-          /* do the seekk */
-          if (gst_pad_send_event (GST_PAD_PEER (swfdec->sinkpad), seek_event)) {
-            /* seek worked, we're done, loop will exit */
-            res = TRUE;
-          }
-        }
-        /* at this point, either the seek worked or res == FALSE */
-      }
+      res = TRUE;
       break;
     }
     default:
@@ -596,7 +517,6 @@ gst_swfdec_src_event (GstPad * pad, GstEvent * event)
   gst_event_unref (event);
   return res;
 }
-#endif
 
 static GstElementStateReturn
 gst_swfdec_change_state (GstElement * element)
@@ -678,6 +598,12 @@ gst_swfdec_get_property (GObject * object, guint prop_id, GValue * value,
     default:
       break;
   }
+}
+
+void
+art_warn (const char *fmt, ...)
+{
+  GST_ERROR ("caught art_warn");
 }
 
 static gboolean

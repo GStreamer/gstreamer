@@ -306,7 +306,7 @@ if test "x$HAVE_GDK_LOADERS" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GDK_LOADERS" = "xyes")
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_CFLAGS)
 AC_SUBST(LIBOIL_LIBS)
 if test "x${HAVE_LIBOIL}" = xyes ; then
@@ -1490,7 +1490,7 @@ GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
-  PKG_CHECK_MODULES(SWFDEC, swfdec >= 0.1.3.1, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
+  PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.0, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
   AC_SUBST(SWFDEC_CFLAGS)
   AC_SUBST(SWFDEC_LIBS)
 ])
