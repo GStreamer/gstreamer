@@ -25,7 +25,6 @@
 
 #include <config.h>
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
 
 
 #ifdef __cplusplus
@@ -65,30 +64,46 @@ struct _GstPlayOnDemand {
      size. */
   gchar    *buffer;
   guint     buffer_size;
+  guint     buffer_samples;
 
+  guint    *plays;
   guint     write;
   guint     start;
 
-  guint    *plays;
+  gboolean  play_from_beginning;
+  gboolean  buffer_filled_once;
 
   gboolean  eos;
-
-  gboolean  follow_stream_tail;
-  
   gboolean  silent;
-  
+
+  /* the playondemand filter needs to keep track of a number of 'measures'
+     consisting of 'beats'. these are represented as an array of guint64s, with
+     each guint64 being one measure, and the bits in each measure being beats
+     (lower order bits come first). each measure can therefore have a maximum of
+     64 beats, though there are a potentially unlimited number of measures.
+
+     this is basically a way to figure out when incoming clock signals should
+     add a play pointer. */
+  GstClock *clock;
+  guint     last_time;
+
+  guint64  *times;
+  guint     num_measures;
+  guint     num_beats;
+  guint     total_beats;
+
   /* the next three are valid for both int and float */
   GstPlayOnDemandFormat format;
   guint                 rate;
   guint                 channels;
-  
+
   /* the next five are valid only for format == GST_PLAYONDEMAND_FORMAT_INT */
   guint    width;
   guint    depth;
   guint    endianness;
   guint    law;
   gboolean is_signed;
-  
+
   /* the next three are valid only for format == GST_PLAYONDEMAND_FORMAT_FLOAT */
   const gchar *layout;
   gfloat       slope;
@@ -103,6 +118,17 @@ struct _GstPlayOnDemandClass {
 };
 
 GType gst_play_on_demand_get_type(void);
+
+void gst_play_on_demand_set_beat     (GstPlayOnDemand *filter,
+                                      const guint measure,
+                                      const guint beat,
+                                      const gboolean value);
+gboolean gst_play_on_demand_get_beat (GstPlayOnDemand *filter,
+                                      const guint measure,
+                                      const guint beat);
+void gst_play_on_demand_toggle_beat  (GstPlayOnDemand *filter,
+                                      const guint measure,
+                                      const guint beat);
 
 #ifdef __cplusplus
 }

@@ -4,6 +4,7 @@ _TYPE_ *data_in, *data_out, *filter_data;
 
 filter_data = (_TYPE_ *) filter->buffer;
 num_filter = filter->buffer_size / sizeof(_TYPE_);
+max_filter = (filter->play_from_beginning) ? num_filter : G_MAXUINT;
 
 /******************************************************************************/
 /* see if we've got any events coming through ... */
@@ -21,7 +22,7 @@ do {
     in = gst_pad_pull(filter->sinkpad);
   }
 
-  /******************************************************************************/
+  /****************************************************************************/
   /* first handle data from the input buffer. */
 
   GST_DEBUG(0, "--- done with events, going to input");
@@ -34,44 +35,47 @@ do {
     w = filter->write;
 
     /* copy the input data to the filter's internal buffer. */
-    if (filter->follow_stream_tail) {
-      for (j = 0; j < num_in; j++) {
-        filter_data[(w + j) % num_filter] = data_in[j];
-      }
+    for (j = 0; (j < num_in) && ((w + j) < max_filter); j++) {
+      filter_data[(w + j) % num_filter] = data_in[j];
+    }
 
-      filter->write = (w + j) % num_filter;
-      
-      /* update the start pointer */
-      if ((filter->start != 0) || ((w + j) >= num_filter)) {
-        filter->start = (filter->write + 1) % num_filter;
-      }
-    } else {
-      for (j = 0; (j < num_in) && ((w + j) < num_filter); j++) {
-        filter_data[w + j] = data_in[j];
-      }
+    filter->write = (w + j) % num_filter;
 
-      filter->write += j;
+    if ((w + j) >= num_filter) {
+      filter->buffer_filled_once = TRUE;
 
-      /* if we're not following the stream tail, the buffer is just a straight
-         buffer. so we need to set eos if we've passed the limit of the internal
-         buffer size. */
-      if ((w + j) >= num_filter) {
+      /* if we're not playing from the end of the stream, the buffer is not a
+         ring buffer, so it has a fixed size. we need to set eos here because
+         we've passed that limit. */
+      if (filter->play_from_beginning) {
         filter->eos = TRUE;
       }
     }
 
+    /* update the start pointer */
+    if ((! filter->play_from_beginning) && filter->buffer_filled_once) {
+      filter->start = (filter->write + 1) % num_filter;
+    }
+
     out = in;
   } else {
-    j = 0;
+    j = num_filter;
     w = 0;
-    
+
     out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
   }
 
-  /******************************************************************************/
+  /****************************************************************************/
+  /* check to see if we have to add a new play pointer. */
+
+  GST_DEBUG(0, "--- done with input, checking clock before output");
+
+  play_on_demand_update_plays_from_clock(filter);
+
+  /****************************************************************************/
   /* now handle output data. */
 
-  GST_DEBUG(0, "--- done with input, going to output");
+  GST_DEBUG(0, "--- done with clock, going to output");
 
   data_out = (_TYPE_ *) GST_BUFFER_DATA(out);
   num_out = GST_BUFFER_SIZE(out) / sizeof(_TYPE_);
@@ -79,29 +83,32 @@ do {
   for (k = 0; k < num_out; k++) {
     data_out[k] = zero;
   }
-  
+
   /* output play pointer data. */
-  for (t = 0; t < POD_MAX_PLAYS; t++) {
+  for (t = 0; t < GST_POD_MAX_PLAY_PTRS; t++) {
     offset = filter->plays[t];
 
     if (offset != G_MAXUINT) {
-      if (filter->follow_stream_tail) {
+      if (! filter->play_from_beginning) {
         for (k = 0; k < num_out; k++) {
           data_out[k] = CLAMP(data_out[k] + filter_data[(offset + k) % num_filter], min, max);
         }
       } else {
-        for (k = 0; (k < num_out) && ((offset + k) < (w + j)); k++) {
+        for (k = 0; (k < num_out) && (k < (w + j - offset)); k++) {
           data_out[k] = CLAMP(data_out[k] + filter_data[offset + k], min, max);
         }
       }
 
-      if ((offset < w) && ((offset + k) >= (w + j))) {
-        filter->plays[t] = G_MAXUINT;
+      if ((! filter->play_from_beginning) || ((offset + k) < (w + j))) {
+        filter->plays[t] = (offset + k) % num_filter;
       } else {
-        filter->plays[t] = (filter->plays[t] + k) % num_filter;
+        filter->plays[t] = G_MAXUINT;
       }
     }
   }
+
+  /****************************************************************************/
+  /* push out the buffer. */
 
   GST_DEBUG(0, "--- done with output, pushing buffer %p", out);
 
@@ -110,6 +117,7 @@ do {
   if (! filter->eos) {
     in = gst_pad_pull(filter->sinkpad);
   }
+
   gst_element_yield (GST_ELEMENT (filter));
 
 } while (TRUE);
