@@ -59,7 +59,7 @@
       </row>
       <row>
         <entry><literal>GST_STATE_PAUSED</literal></entry>
-        <entry>temporary stops the data flow.
+        <entry>temporarily stops the data flow.
         </entry>
       </row>
       <row>
