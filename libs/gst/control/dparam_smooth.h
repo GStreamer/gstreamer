@@ -40,9 +40,19 @@ typedef struct _GstDParamSmooth GstDParamSmooth;
 struct _GstDParamSmooth {
 	GstDParam		dparam;
 
+	gint64 start_interp;
+	gint64 end_interp;
+	gint64 duration_interp;
+
+	gfloat start_float;
+	gfloat diff_float;
+	gfloat current_float;
+
 	gint64 update_period;
 	gint64 slope_time;
 	gfloat slope_delta_float;
+
+	gboolean need_interp_times;
 };
 
 struct _GstDParamSmoothClass {
