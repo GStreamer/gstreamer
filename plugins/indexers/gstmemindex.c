@@ -106,7 +106,7 @@ static void 		gst_mem_index_dispose 		(GObject *object);
 
 static void 		gst_mem_index_add_entry 	(GstIndex *index, GstIndexEntry *entry);
 static GstIndexEntry* 	gst_mem_index_get_assoc_entry 	(GstIndex *index, gint id,
-                              				 GstIndexLookupMethod method,
+                              				 GstIndexLookupMethod method, GstAssocFlags flags,
                               				 GstFormat format, gint64 value,
                               				 GCompareDataFunc func,
                               				 gpointer user_data);
@@ -332,7 +332,8 @@ mem_index_search (gconstpointer a,
 
 static GstIndexEntry*
 gst_mem_index_get_assoc_entry (GstIndex *index, gint id,
-                               GstIndexLookupMethod method,
+                               GstIndexLookupMethod method, 
+			       GstAssocFlags flags,
                                GstFormat format, gint64 value,
                                GCompareDataFunc func,
                                gpointer user_data)
@@ -372,6 +373,28 @@ gst_mem_index_get_assoc_entry (GstIndex *index, gint id,
       entry = data.lower;
     else if (method == GST_INDEX_LOOKUP_AFTER) {
       entry = data.higher;
+    }
+  }
+
+  if (entry) {
+    if ((GST_INDEX_ASSOC_FLAGS (entry) & flags) != flags) {
+      GList *l_entry = g_list_find (memindex->associations, entry);
+
+      entry = NULL;
+
+      while (l_entry) {
+	entry = (GstIndexEntry *) l_entry->data;
+
+        if (entry->id == id &&
+	    (GST_INDEX_ASSOC_FLAGS (entry) & flags) == flags)
+          break;
+
+        if (method == GST_INDEX_LOOKUP_BEFORE)
+          l_entry = g_list_next (l_entry);
+        else if (method == GST_INDEX_LOOKUP_AFTER) {
+          l_entry = g_list_previous (l_entry);
+        }
+      }
     }
   }
 

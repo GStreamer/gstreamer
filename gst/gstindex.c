@@ -557,12 +557,12 @@ gst_index_compare_func (gconstpointer a,
  */
 GstIndexEntry*
 gst_index_get_assoc_entry (GstIndex *index, gint id,
-		           GstIndexLookupMethod method,
+		           GstIndexLookupMethod method, GstAssocFlags flags,
 			   GstFormat format, gint64 value)
 {
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
 
-  return gst_index_get_assoc_entry_full (index, id, method, format, value, 
+  return gst_index_get_assoc_entry_full (index, id, method, flags, format, value, 
 		                  gst_index_compare_func, NULL);
 }
 
@@ -584,7 +584,7 @@ gst_index_get_assoc_entry (GstIndex *index, gint id,
  */
 GstIndexEntry*
 gst_index_get_assoc_entry_full (GstIndex *index, gint id,
-		                GstIndexLookupMethod method,
+		                GstIndexLookupMethod method, GstAssocFlags flags,
 			        GstFormat format, gint64 value,
 			        GCompareDataFunc func,
 			        gpointer user_data)
@@ -596,7 +596,7 @@ gst_index_get_assoc_entry_full (GstIndex *index, gint id,
   iclass = GST_INDEX_GET_CLASS (index);
 
   if (iclass->get_assoc_entry)
-    return iclass->get_assoc_entry (index, id, method, format, value, func, user_data);
+    return iclass->get_assoc_entry (index, id, method, flags, format, value, func, user_data);
   
   return NULL;
 }

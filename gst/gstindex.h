@@ -76,6 +76,9 @@ struct _GstIndexAssociation {
 typedef enum {
   GST_ACCOCIATION_FLAG_NONE 	= 0,
   GST_ACCOCIATION_FLAG_KEY_UNIT = (1 << 0),
+
+  /* new flags should start here */
+  GST_ACCOCIATION_FLAG_LAST	= (1 << 8),
 } GstAssocFlags;
 
 #define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)
@@ -172,7 +175,7 @@ struct _GstIndexClass {
   void		(*add_entry)		(GstIndex *index, GstIndexEntry *entry);
 
   GstIndexEntry* (*get_assoc_entry)	(GstIndex *index, gint id, 
-		                         GstIndexLookupMethod method,
+		                         GstIndexLookupMethod method, GstAssocFlags flags,
 		                         GstFormat format, gint64 value,
 					 GCompareDataFunc func,
 					 gpointer user_data); 
@@ -210,10 +213,10 @@ GstIndexEntry*		gst_index_add_id		(GstIndex *index, gint id,
 							 gchar *description); 
 
 GstIndexEntry*		gst_index_get_assoc_entry	(GstIndex *index, gint id, 
-		 					 GstIndexLookupMethod method,
+		 					 GstIndexLookupMethod method, GstAssocFlags flags,
 		                                         GstFormat format, gint64 value);
 GstIndexEntry*		gst_index_get_assoc_entry_full	(GstIndex *index, gint id, 
-							 GstIndexLookupMethod method,
+							 GstIndexLookupMethod method, GstAssocFlags flags,
 		                                         GstFormat format, gint64 value,
 							 GCompareDataFunc func,
 							 gpointer user_data);
