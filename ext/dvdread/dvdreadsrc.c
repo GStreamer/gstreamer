@@ -89,11 +89,8 @@ struct _DVDReadSrcPrivate {
 GstElementDetails dvdreadsrc_details = {
   "DVD Source",
   "Source/File/DVD",
-  "GPL",
   "Access a DVD title/chapter/angle using libdvdread",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 2001",
 };
 
 
@@ -111,7 +108,7 @@ enum {
   ARG_ANGLE
 };
 
-
+static void             dvdreadsrc_base_init    (gpointer g_class);
 static void 		dvdreadsrc_class_init	(DVDReadSrcClass *klass);
 static void 		dvdreadsrc_init		(DVDReadSrc *dvdreadsrc);
 
@@ -135,7 +132,8 @@ dvdreadsrc_get_type (void)
 
   if (!dvdreadsrc_type) {
     static const GTypeInfo dvdreadsrc_info = {
-      sizeof(DVDReadSrcClass),      NULL,
+      sizeof(DVDReadSrcClass),
+      dvdreadsrc_base_init,
       NULL,
       (GClassInitFunc)dvdreadsrc_class_init,
       NULL,
@@ -147,6 +145,14 @@ dvdreadsrc_get_type (void)
     dvdreadsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "DVDReadSrc", &dvdreadsrc_info, 0);
   }
   return dvdreadsrc_type;
+}
+
+static void
+dvdreadsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &dvdreadsrc_details);
 }
 
 static void
@@ -771,24 +777,23 @@ dvdreadsrc_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
+  if (!gst_element_register (plugin, "dvdreadsrc", GST_RANK_NONE, GST_TYPE_DVDREADSRC))
+    return FALSE;
 
-  /* create an elementfactory for the dvdreadsrc element */
-  factory = gst_element_factory_new ("dvdreadsrc", GST_TYPE_DVDREADSRC,
-                                    &dvdreadsrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "dvdreadsrc",
-  plugin_init
-};
+  "Access a DVD with dvdread",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 
