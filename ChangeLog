@@ -1,3 +1,10 @@
+2004-06-29  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	* ext/ogg/gstoggmux.c:
+	Fix memleak in oggdemux when running unconnected pads.
+	doc update in mux, start working on keyframe mode.
+
 2004-06-29  Benjamin Otte  <otte@gnome.org>
 
 	* sys/oss/gstosssink.c:
