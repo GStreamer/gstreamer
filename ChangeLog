@@ -1,5 +1,12 @@
 2004-06-22  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(theora_enc_sink_link), (theora_buffer_from_packet),
+	(theora_push_packet), (theora_enc_chain):
+	Some cleanups, make sure the timestamps are correct.
+
+2004-06-22  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_get_time), (gst_alsa_clock_update),
 	(gst_alsa_change_state), (gst_alsa_update_avail),
 	(gst_alsa_xrun_recovery):
