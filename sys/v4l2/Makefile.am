@@ -6,7 +6,8 @@ libgstvideo4linux2_la_SOURCES = \
 	gstv4l2element.c v4l2_calls.c \
 	v4l2-overlay_calls.c \
 	gstv4l2element-marshal.c \
-	gstv4l2src.c v4l2src_calls.c
+	gstv4l2src.c v4l2src_calls.c \
+	gstv4l2.c
 libgstvideo4linux2_la_CFLAGS = $(GST_CFLAGS)
 libgstvideo4linux2_la_LIBADD =
 libgstvideo4linux2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
