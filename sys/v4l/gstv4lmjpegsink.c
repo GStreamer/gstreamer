@@ -184,7 +184,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   v4lmjpegsink->bufferpool = gst_buffer_pool_new(
 				  NULL, 
 				  NULL,
-				  gst_v4lmjpegsink_buffer_new,
+				  (GstBufferPoolBufferNewFunction)gst_v4lmjpegsink_buffer_new,
 				  NULL,
 				  NULL,
 				  v4lmjpegsink);

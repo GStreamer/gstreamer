@@ -191,9 +191,9 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   v4lmjpegsrc->bufferpool = gst_buffer_pool_new(
 		  			NULL,
 					NULL,
-					gst_v4lmjpegsrc_buffer_new,
+					(GstBufferPoolBufferNewFunction)gst_v4lmjpegsrc_buffer_new,
 					NULL,
-					gst_v4lmjpegsrc_buffer_free,
+					(GstBufferPoolBufferFreeFunction)gst_v4lmjpegsrc_buffer_free,
 					v4lmjpegsrc);
 
   v4lmjpegsrc->frame_width = 0;

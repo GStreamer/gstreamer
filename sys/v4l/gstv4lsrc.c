@@ -168,9 +168,9 @@ gst_v4lsrc_init (GstV4lSrc *v4lsrc)
   v4lsrc->bufferpool = gst_buffer_pool_new(
 		  NULL, 
 		  NULL,
-		  gst_v4lsrc_buffer_new,
+		  (GstBufferPoolBufferNewFunction)gst_v4lsrc_buffer_new,
 		  NULL,
-		  gst_v4lsrc_buffer_free,
+		  (GstBufferPoolBufferFreeFunction)gst_v4lsrc_buffer_free,
 		  v4lsrc);
 
   v4lsrc->palette = 0; /* means 'any' - user can specify a specific palette */
