@@ -54,7 +54,6 @@ typedef struct _GstFFMpegDemuxClassParams {
   GstPadTemplate	*sinktempl;
   GstPadTemplate	*videosrctempl;
   GstPadTemplate	*audiosrctempl;
-  GstPluginFeature	*typefind_feature;
 } GstFFMpegDemuxClassParams;
 
 typedef struct _GstFFMpegDemuxClass GstFFMpegDemuxClass;
@@ -66,7 +65,6 @@ struct _GstFFMpegDemuxClass {
   GstPadTemplate	*sinktempl;
   GstPadTemplate	*videosrctempl;
   GstPadTemplate	*audiosrctempl;
-  GstPluginFeature	*typefind_feature;
 };
 
 #define GST_TYPE_FFMPEGDEC \
@@ -90,7 +88,7 @@ enum {
   /* FILL ME */
 };
 
-static GHashTable *global_plugins, *typefind;
+static GHashTable *global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
 static void	gst_ffmpegdemux_class_init	(GstFFMpegDemuxClass *klass);
@@ -122,7 +120,6 @@ gst_ffmpegdemux_class_init (GstFFMpegDemuxClass *klass)
 		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
 
   klass->in_plugin = params->in_plugin;
-  klass->typefind_feature = params->typefind_feature;
   klass->videosrctempl = params->videosrctempl;
   klass->audiosrctempl = params->audiosrctempl;
   klass->sinktempl = params->sinktempl;
@@ -160,45 +157,32 @@ gst_ffmpegdemux_dispose (GObject *object)
   }
 }
 
-static GstCaps*
-gst_ffmpegdemux_typefind (GstByteStream *bs,
-			  gpointer       priv)
+#define GST_FFMPEG_TYPE_FIND_SIZE 4096
+static void
+gst_ffmpegdemux_type_find (GstTypeFind *tf, gpointer priv)
 {
-  GstFFMpegDemuxClassParams *params;
-  AVInputFormat *in_plugin;
+  guint8 *data;
+  GstFFMpegDemuxClassParams *params = (GstFFMpegDemuxClassParams *) priv;
+  AVInputFormat *in_plugin = params->in_plugin;
   gint res = 0;
-  gint required = AVPROBE_SCORE_MAX * 0.8; /* 80% certainty enough? */
-  gint size_required = 4096;
-  GstBuffer *buf = NULL;
   
-  params = g_hash_table_lookup (typefind, priv);
-
-  in_plugin = params->in_plugin;
-
   if (in_plugin->read_probe &&
-      gst_bytestream_peek (bs, &buf, size_required) == size_required) {
+      (data = gst_type_find_peek (tf, 0, GST_FFMPEG_TYPE_FIND_SIZE)) != NULL) {
     AVProbeData probe_data;
 
     probe_data.filename = "";
-    probe_data.buf = GST_BUFFER_DATA (buf);
-    probe_data.buf_size = GST_BUFFER_SIZE (buf);
+    probe_data.buf = data;
+    probe_data.buf_size = GST_FFMPEG_TYPE_FIND_SIZE;
 
     res = in_plugin->read_probe (&probe_data);
-    if (res >= required) {
-      GstCaps *caps;
-      caps = GST_PAD_TEMPLATE_CAPS (params->sinktempl);
+    res = res * GST_TYPE_FIND_MAXIMUM / AVPROBE_SCORE_MAX;
+    if (res > 0) {
+      GstCaps *caps = GST_PAD_TEMPLATE_CAPS (params->sinktempl);
       /* make sure we still hold a refcount to this caps */
       gst_caps_ref (caps);
-      gst_buffer_unref (buf);
-      return caps;
+      gst_type_find_suggest (tf, res, caps);
     }
   }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return NULL;
 }
 
 static void
@@ -362,8 +346,6 @@ gboolean
 gst_ffmpegdemux_register (GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type_factory;
-  GstTypeDefinition *type_definition;
   GTypeInfo typeinfo = {
     sizeof(GstFFMpegDemuxClass),      
     NULL,
@@ -380,11 +362,11 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
   AVInputFormat *in_plugin;
   GstFFMpegDemuxClassParams *params;
   AVCodec *in_codec;
+  gchar **extensions;
   
   in_plugin = first_iformat;
 
   global_plugins = g_hash_table_new (NULL, NULL);
-  typefind = g_hash_table_new (NULL, NULL);
 
   while (in_plugin) {
     gchar *type_name;
@@ -456,20 +438,9 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
     factory = gst_element_factory_new(type_name,type,details);
     g_return_val_if_fail(factory != NULL, FALSE);
 
-    /* typefind info */
-    type_definition = g_new0 (GstTypeDefinition, 1);
-    type_definition->name = g_strdup_printf ("fftype_%s",
-					     in_plugin->name);
-    type_definition->mime = g_strdup (gst_caps_get_mime (sinkcaps));
-    type_definition->exts = g_strdup (in_plugin->extensions);
-    type_definition->typefindfunc = gst_ffmpegdemux_typefind;
-
-    type_factory = gst_type_factory_new (type_definition);
-
     /* create a cache for these properties */
     params = g_new0 (GstFFMpegDemuxClassParams, 1);
     params->in_plugin = in_plugin;
-    params->typefind_feature = GST_PLUGIN_FEATURE (type_factory);
     params->sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
 					      GST_PAD_ALWAYS,
 					      sinkcaps, NULL);
@@ -488,19 +459,21 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
     gst_element_factory_add_pad_template (factory,
 					  params->videosrctempl);
 
+    /* typefind registering */
+    extensions = g_strsplit (in_plugin->extensions, " ", 0);
+    gst_type_find_factory_register (plugin, g_strdup_printf ("fftype_%s", in_plugin->name),
+	    GST_ELEMENT_RANK_MARGINAL, gst_ffmpegdemux_type_find, 
+	    extensions, GST_CAPS_ANY, params);
+    g_strfreev (extensions);
+
     g_hash_table_insert (global_plugins, 
 		         GINT_TO_POINTER (type), 
-			 (gpointer) params);
-
-    g_hash_table_insert (typefind,
-			 (gpointer) type_factory,
 			 (gpointer) params);
 
     gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_MARGINAL);
 
     /* The very last thing is to register the elementfactory with the plugin. */
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type_factory));
 
 next:
     in_plugin = in_plugin->next;

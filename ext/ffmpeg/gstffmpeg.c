@@ -42,6 +42,9 @@ extern URLProtocol gstreamer_protocol;
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   avcodec_init ();
   avcodec_register_all ();
   av_register_all ();
