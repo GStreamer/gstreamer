@@ -1,5 +1,5 @@
 
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstidentity2.la
 
