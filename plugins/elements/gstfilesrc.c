@@ -358,6 +358,9 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 #endif
   /* now unmap the memory */
   munmap (GST_BUFFER_DATA (buf), GST_BUFFER_MAXSIZE (buf));
+  GST_DEBUG (0, "unmapped region %08llx+%08llx at %p\n", 
+		  GST_BUFFER_OFFSET (buf), GST_BUFFER_MAXSIZE (buf), 
+		  GST_BUFFER_DATA (buf));
 
   GST_BUFFER_DATA (buf) = NULL;
 
@@ -385,6 +388,8 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
  	     size, src->fd, offset, strerror (errno));
     return NULL;
   }
+  GST_DEBUG (0, "mapped region %08llx+%08x from file into memory at %p\n", 
+		  offset, size, mmapregion);
 
   /* time to allocate a new mapbuf */
   buf = gst_buffer_new ();
@@ -518,6 +523,9 @@ gst_filesrc_get (GstPad *pad)
     readend = src->curoffset + readsize;
   }
 
+  GST_DEBUG (0, "attempting to read %08x, %08llx, %08llx, %08llx", 
+		  readsize, readend, mapstart, mapend);
+
   /* if the start is past the mapstart */
   if (src->curoffset >= mapstart) {
     /* if the end is before the mapend, the buffer is in current mmap region... */
@@ -533,6 +541,8 @@ gst_filesrc_get (GstPad *pad)
       fs_print ("read buf %llu+%d starts in mapbuf %d+%d but ends outside, creating new mmap\n",
              src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
       buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
+      if (buf == NULL)
+        return NULL;
     }
 
     /* the only other option is that buffer is totally outside, which means we search for it */
@@ -546,6 +556,8 @@ gst_filesrc_get (GstPad *pad)
     fs_print ("read buf %llu+%d starts before mapbuf %d+%d, but overlaps it\n",
              src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
     buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
+    if (buf == NULL)
+      return NULL;
   }
 
   /* then deal with the case where the read buffer is totally outside */
@@ -570,6 +582,8 @@ gst_filesrc_get (GstPad *pad)
         fs_print ("read buf %llu+%d crosses a %d-byte boundary, creating a one-off\n",
                src->curoffset,readsize,src->mapsize);
         buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
+	if (buf == NULL)
+          return NULL;
 
       /* otherwise we will create a new mmap region and set it to the default */
       } else {
@@ -668,8 +682,10 @@ gst_filesrc_close_file (GstFileSrc *src)
   src->filelen = 0;
   src->curoffset = 0;
 
-  if (src->mapbuf)
+  if (src->mapbuf) {
     gst_buffer_unref (src->mapbuf);
+    src->mapbuf = NULL;
+  }
 
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
