@@ -1606,7 +1606,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
   gint i = 0;
 
   /* this filter needs bytestream */
@@ -1620,8 +1619,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                     &gst_asf_demux_details);
 
   while (asf_type_definitions[i].name) {
+    GstTypeFactory *type;
+
     type = gst_type_factory_new (&asf_type_definitions[i]);
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
+    //gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
     i++;
   }
 
