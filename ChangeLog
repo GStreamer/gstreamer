@@ -1,5 +1,11 @@
 2004-03-31  David Schleef  <ds@schleef.org>
 
+	* gst/gstbuffer.c: (gst_buffer_join):  Add function gst_buffer_join()
+	to eventually deprecate gst_buffer_merge().  (bug: #136408)
+	* gst/gstbuffer.h:
+
+2004-03-31  David Schleef  <ds@schleef.org>
+
 	* gst/gstvalue.c: (gst_value_union_int_int_range),
 	(gst_value_union_int_range_int_range), (gst_value_can_union),
 	(gst_value_union), (_gst_value_initialize):  Add some union

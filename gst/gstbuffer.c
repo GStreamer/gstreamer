@@ -318,8 +318,11 @@ gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
  * buffers.  The original source buffers will not be modified or
  * unref'd.
  *
- * Internally is nothing more than a specialized gst_buffer_span(),
- * so the same optimizations can occur.
+ * WARNING: Incorrect use of this function can lead to memory leaks.
+ * It is recommended to use gst_buffer_join() instead of this function.
+ *
+ * If the buffers point to contiguous areas of memory, the buffer
+ * is created without copying the data.
  *
  * Returns: the new #GstBuffer that's the concatenation of the source buffers.
  */
@@ -330,6 +333,33 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
 
   /* we're just a specific case of the more general gst_buffer_span() */
   result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+
+  return result;
+}
+
+/**
+ * gst_buffer_join:
+ * @buf1: a first source #GstBuffer to merge.
+ * @buf2: the second source #GstBuffer to merge.
+ *
+ * Create a new buffer that is the concatenation of the two source
+ * buffers.  The original buffers are unreferenced.
+ *
+ * If the buffers point to contiguous areas of memory, the buffer
+ * is created without copying the data.
+ *
+ * Returns: the new #GstBuffer that's the concatenation of the source buffers.
+ */
+GstBuffer *
+gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
+{
+  GstBuffer *result;
+
+  /* we're just a specific case of the more general gst_buffer_span() */
+  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (buf2);
 
   return result;
 }
