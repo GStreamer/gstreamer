@@ -64,9 +64,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_BITRATE,
-  ARG_MEDIA_TIME,
-  ARG_CURRENT_TIME,
   /* FILL ME */
 };
 
@@ -135,16 +132,6 @@ gst_cdxa_parse_class_init (GstCDXAParseClass *klass)
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-
-  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_BITRATE,
-    g_param_spec_long ("bitrate","bitrate","bitrate",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_MEDIA_TIME,
-    g_param_spec_long ("media_time","media_time","media_time",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CURRENT_TIME,
-    g_param_spec_long ("current_time","current_time","current_time",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
