@@ -45,11 +45,6 @@ enum {
 enum {
   ARG_0,
   ARG_LOCATION,
-  ARG_CLOSED/*,
-  ARG_SILENT,
-  ARG_BYTESPERWRITE,
-  ARG_NUM_SOURCES,
-  */
 };
 
 
@@ -59,7 +54,12 @@ static void	gst_disksink_init	(GstDiskSink *disksink);
 static void	gst_disksink_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void	gst_disksink_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
+static gboolean gst_disksink_open_file 	(GstDiskSink *sink);
+static void 	gst_disksink_close_file (GstDiskSink *sink);
+
 static void	gst_disksink_chain	(GstPad *pad,GstBuffer *buf);
+
+static GstElementStateReturn gst_disksink_change_state (GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_disksink_signals[LAST_SIGNAL] = { 0 };
@@ -78,7 +78,7 @@ gst_disksink_get_type (void)
       (GtkObjectInitFunc)gst_disksink_init,
       (GtkArgSetFunc)gst_disksink_set_arg,
       (GtkArgGetFunc)gst_disksink_get_arg,
-      (GtkClassInitFunc)NULL,		/* QUESTION : why null ? otherwise coredump */
+      (GtkClassInitFunc)NULL,	/* deprecated, do not use ! */
     };
     disksink_type = gtk_type_unique (GST_TYPE_ELEMENT, &disksink_info);
   }
@@ -89,21 +89,15 @@ static void
 gst_disksink_class_init (GstDiskSinkClass *klass) 
 {
   GtkObjectClass *gtkobject_class;
+  GstElementClass *gstelement_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
 
   parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
-
   gtk_object_add_arg_type ("GstDiskSink::location", GST_TYPE_FILENAME,
                            GTK_ARG_READWRITE, ARG_LOCATION);
-/*
-  gtk_object_add_arg_type ("GstDiskSink::silent", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_SILENT);
-*/
-  gtk_object_add_arg_type ("GstDiskSink::closed", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_CLOSED);
-
 
   gst_disksink_signals[SIGNAL_HANDOFF] =
     gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
@@ -113,9 +107,10 @@ gst_disksink_class_init (GstDiskSinkClass *klass)
   gtk_object_class_add_signals (gtkobject_class, gst_disksink_signals,
                                     LAST_SIGNAL);
 
-
   gtkobject_class->set_arg = gst_disksink_set_arg;
   gtkobject_class->get_arg = gst_disksink_get_arg;
+
+  gstelement_class->change_state = gst_disksink_change_state;
 }
 
 static void 
@@ -125,11 +120,9 @@ gst_disksink_init (GstDiskSink *disksink)
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (disksink), pad);
   gst_pad_set_chain_function (pad, gst_disksink_chain);
-  disksink->opened = FALSE;
+
   disksink->filename = NULL;
   disksink->file = NULL;
-  
-//  disksink->silent = FALSE;  ? what's this ? it's for output !
 }
 
 static void
@@ -142,38 +135,10 @@ gst_disksink_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   switch(id) {
     case ARG_LOCATION:
-     /* the element must be stopped in order to do this */
-      g_return_if_fail (GST_STATE (sink) < GST_STATE_PLAYING);  
-
-      if (sink->filename) g_free (sink->filename);
-      
+      if (sink->filename)
+	g_free (sink->filename);
       sink->filename = g_strdup (GTK_VALUE_STRING (*arg));
-      sink->file = fopen (GTK_VALUE_STRING (*arg), "w");
-      if (sink->file == NULL)
-      {
-        g_error ("Cannot open %s for writing !\n", GTK_VALUE_STRING (*arg));
-		//exit (-2);
-      }
-      else sink->opened = TRUE;
-      gst_element_set_state(GST_ELEMENT(sink),GST_STATE_READY);
       break;
-      /*
-    case ARG_SILENT:
-      sink->silent = GTK_VALUE_BOOL (*arg);
-      break;
-      */
-    case ARG_CLOSED:
-      if (GTK_VALUE_BOOL (*arg) == TRUE)
-      {
-        /* close the file descriptor */
-        sink->opened = FALSE;
-        if (! (fclose (sink->file)))
-        {
-          g_warning ("Cannot close file !\n");
-        }
-      }
-      break;
-      
     default:
       break;
   }
@@ -190,20 +155,45 @@ gst_disksink_get_arg (GtkObject *object, GtkArg *arg, guint id)
   sink = GST_DISKSINK (object);
   
   switch (id) {
-  /*
-    case ARG_SILENT:
-      GTK_VALUE_BOOL (*arg) = sink->silent;
-      break;
-      */
-    case ARG_CLOSED:
-      GTK_VALUE_BOOL (*arg) = !sink->opened;
-      break;
     case ARG_LOCATION:
       GTK_VALUE_STRING (*arg) = sink->filename;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
+  }
+}
+
+static gboolean
+gst_disksink_open_file (GstDiskSink *sink)
+{
+  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_DISKSINK_OPEN), FALSE);
+
+  /* open the file */
+  sink->file = fopen (sink->filename, "w");
+  if (sink->file == NULL) {
+    perror ("open");
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
+    return FALSE;
+  } 
+
+  GST_FLAG_SET (sink, GST_DISKSINK_OPEN);
+
+  return TRUE;
+}
+
+static void
+gst_disksink_close_file (GstDiskSink *sink)
+{
+  g_return_if_fail (GST_FLAG_IS_SET (sink, GST_DISKSINK_OPEN));
+
+  if (fclose (sink->file) != 0)
+  {
+    perror ("close");
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("closing file \"", sink->filename, "\"", NULL));
+  }
+  else {
+    GST_FLAG_UNSET (sink, GST_DISKSINK_OPEN);
   }
 }
 
@@ -225,11 +215,8 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   disksink = GST_DISKSINK (gst_pad_get_parent (pad));
-/*
-  if (!disksink->silent)
-    g_print("disksink: ******* (%s:%s)< \n",GST_DEBUG_PAD_NAME(pad));
-*/
-  if (disksink->opened)
+
+  if (GST_FLAG_IS_SET (disksink, GST_DISKSINK_OPEN))
   {
     bytes_written = fwrite (GST_BUFFER_DATA (buf), 1, GST_BUFFER_SIZE (buf), disksink->file);
     if (bytes_written < GST_BUFFER_SIZE (buf))
@@ -243,3 +230,25 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
   gtk_signal_emit (GTK_OBJECT (disksink), gst_disksink_signals[SIGNAL_HANDOFF],
 	                      disksink);
 }
+
+static GstElementStateReturn
+gst_disksink_change_state (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_DISKSINK (element), GST_STATE_FAILURE);
+
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET (element, GST_DISKSINK_OPEN))
+      gst_disksink_close_file (GST_DISKSINK (element));
+  } else {
+    if (!GST_FLAG_IS_SET (element, GST_DISKSINK_OPEN)) {
+      if (!gst_disksink_open_file (GST_DISKSINK (element)))
+        return GST_STATE_FAILURE;
+    }
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+

@@ -133,7 +133,6 @@ GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
 GST_BUFFER_FLAG_UNSET
-GST_BUFFER_TYPE
 GST_BUFFER_DATA
 GST_BUFFER_SIZE
 GST_BUFFER_OFFSET
@@ -144,12 +143,15 @@ GST_BUFFER_POOL_PRIVATE
 GST_BUFFER_LOCK
 GST_BUFFER_TRYLOCK
 GST_BUFFER_UNLOCK
+GST_BUFFER_PARENT
+GST_BUFFER_MAXAGE
 
 
 GstBufferFlags
 GstBuffer
 gst_buffer_new
 gst_buffer_new_from_pool
+gst_buffer_copy
 gst_buffer_create_sub
 gst_buffer_append
 gst_buffer_ref
@@ -524,8 +526,8 @@ gst_pipeline_details
 <FILE>gstplugin</FILE>
 <TITLE>GstPlugin</TITLE>
 GstPlugin
-GstPluginElement
 GstPluginInitFunc
+GstPluginDesc
 gst_plugin_new
 gst_plugin_set_name
 gst_plugin_get_name
@@ -668,6 +670,7 @@ GST_CAPS
 <TITLE>GstProps</TITLE>
 GstProps
 GST_MAKE_FOURCC
+GST_STR_FOURCC
 GST_PROPS_LIST
 GST_PROPS_INT
 GST_PROPS_INT_RANGE
@@ -925,6 +928,20 @@ GST_TYPEFIND
 GST_TYPEFIND_CLASS
 GST_IS_TYPEFIND
 GST_IS_TYPEFIND_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstdisksink</FILE>
+<TITLE>GstDiskSink</TITLE>
+GstDiskSinkFlags
+<SUBSECTION Standard>
+GstDiskSink
+GST_DISKSINK
+GST_IS_DISKSINK
+GST_TYPE_DISKSINK
+gst_disksink_get_type
+GST_DISKSINK_CLASS
+GST_IS_DISKSINK_CLASS
 </SECTION>
 
 <SECTION>

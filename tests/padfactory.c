@@ -30,7 +30,7 @@ GST_CAPS_FACTORY (mpeg2dec_src_caps,
       "width",	  GST_PROPS_INT_RANGE (16, 4096),
       "height",	  GST_PROPS_INT_RANGE (16, 4096)
   ),
-  GST_CAPS_NEW (
+  GST_CAPS_NEW(
     "mpeg2dec_src_caps",
     "video/raw",
       "foo",   GST_PROPS_BOOLEAN (TRUE)

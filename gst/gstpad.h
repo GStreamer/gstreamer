@@ -260,7 +260,7 @@ struct _GstPadTemplateClass {
     padname,                                    \
     dir,                                        \
     pres,                                       \
-    ##a,						\
+    a ,						\
     NULL)
 
 #define GST_PADTEMPLATE_FACTORY(name, padname, dir, pres, a...)         \
@@ -273,7 +273,7 @@ name (void)                                     \
       padname,                          	\
       dir,                                      \
       pres,                                     \
-      ##a);                                     \
+      a );                                     \
   }                                             \
   return templ;                              	\
 }

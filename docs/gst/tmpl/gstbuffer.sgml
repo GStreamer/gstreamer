@@ -95,14 +95,6 @@ Clear a flag in a buffer.
 @flag: the flag to clear
 
 
-<!-- ##### MACRO GST_BUFFER_TYPE ##### -->
-<para>
-Retrieves the type id of the data in the buffer.
-</para>
-
-@buf: GstBuffer
-
-
 <!-- ##### MACRO GST_BUFFER_DATA ##### -->
 <para>
 Retrieves a pointer to the data element of this buffer
@@ -188,6 +180,22 @@ This macro releases a lock on the object.
 @buf: GstBuffer to unlock.
 
 
+<!-- ##### MACRO GST_BUFFER_PARENT ##### -->
+<para>
+Get the parent of this buffer. The parent is set on subbuffers.
+</para>
+
+@buf: GstBuffer to get the parent of.
+
+
+<!-- ##### MACRO GST_BUFFER_MAXAGE ##### -->
+<para>
+Get the maximun age of a buffer.
+</para>
+
+@buf: GstBuffer to get the maxage of.
+
+
 <!-- ##### ENUM GstBufferFlags ##### -->
 <para>
 
@@ -207,7 +215,6 @@ used when data in a stream has been skipped
 </para>
 
 @lock: 
-@flags: 
 @data: 
 @size: 
 @maxsize: 
@@ -233,6 +240,15 @@ used when data in a stream has been skipped
 </para>
 
 @pool: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_copy ##### -->
+<para>
+
+</para>
+
+@buffer: 
 @Returns: 
 
 

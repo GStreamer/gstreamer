@@ -28,12 +28,30 @@ are usually used in conjunction with GstCaps.
 <para>
 Create a FOURCC value that can easily be used to construct
 a fourcc property.
+<programlisting>
+  ...
+  "format", GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
+  ...
+</programlisting>
 </para>
 
 @a: first fourcc byte
 @b: second fourcc byte
 @c: third fourcc byte
 @d: fourth fourcc byte
+
+
+<!-- ##### MACRO GST_STR_FOURCC ##### -->
+<para>
+Create a FOURCC value from a string. example:
+<programlisting>
+  ...
+  "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
+  ...
+</programlisting>
+</para>
+
+@f: the string describing the fourcc value.
 
 
 <!-- ##### MACRO GST_PROPS_LIST ##### -->

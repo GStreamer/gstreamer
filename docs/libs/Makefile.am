@@ -41,7 +41,7 @@ sgml/$(DOC_MODULE)-doc.bottom: tmpl/$(DOC_MODULE)-unused.sgml
 all-local: html
 
 clean-local:
-	$(RM) -rf *~ *.bak *.signals *-unused.txt *.args tmpl html sgml tmpl/*.bak $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
+	$(RM) -rf *~ *.bak *.signals *-unused.txt *.args html sgml tmpl/*.bak $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
 
 install-data-local: html
 	@$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)

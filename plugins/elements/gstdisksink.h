@@ -51,14 +51,17 @@ GstElementDetails gst_disksink_details;
 typedef struct _GstDiskSink GstDiskSink;
 typedef struct _GstDiskSinkClass GstDiskSinkClass;
 
+typedef enum {
+  GST_DISKSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+
+  GST_DISKSINK_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
+} GstDiskSinkFlags;
+
 struct _GstDiskSink {
   GstElement element;
 
   gchar *filename;
   FILE *file;
-  
-  gboolean opened;
-  gboolean silent;
 };
 
 struct _GstDiskSinkClass {

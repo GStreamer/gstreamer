@@ -69,12 +69,6 @@ to bring it into memory.
 @numautopluggers: 
 @loaded: 
 
-<!-- ##### STRUCT GstPluginElement ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
 A plugin should implement this function called plugin_init. It will be called
@@ -82,8 +76,19 @@ by the loader at statup.
 </para>
 
 @module: The <classname>GModule</classname> it was loaded from
+@plugin: 
 @Returns: The plugin or NULL is an error was detected.
 
+
+<!-- ##### STRUCT GstPluginDesc ##### -->
+<para>
+
+</para>
+
+@major_version: 
+@minor_version: 
+@name: 
+@plugin_init: 
 
 <!-- ##### FUNCTION gst_plugin_new ##### -->
 <para>
@@ -91,6 +96,8 @@ by the loader at statup.
 </para>
 
 @name: 
+@major: 
+@minor: 
 @Returns: 
 
 
