@@ -947,16 +947,32 @@ gst_structure_to_string(const GstStructure *structure)
   g_string_append_printf(s, "\"%s\"", g_quark_to_string(structure->name));
   for(i=0;i<structure->fields->len;i++){
     GValue s_val = { 0 };
+    GType type;
 
     field = GST_STRUCTURE_FIELD(structure, i);
 
     g_value_init(&s_val, G_TYPE_STRING);
+    g_value_transform (&field->value, &s_val);
 
-    g_value_transform(&field->value, &s_val);
+    type = G_VALUE_TYPE (&field->value);
+
+    if (type == GST_TYPE_LIST) {
+      GPtrArray *ptr_array = g_value_peek_pointer (&field->value);
+      if (ptr_array->len > 0){
+        GValue *value = g_ptr_array_index (ptr_array, 0);
+
+	type = G_VALUE_TYPE (value);
+      } else {
+	type = G_TYPE_INT;
+      }
+    } else if (G_VALUE_TYPE(&field->value) == GST_TYPE_INT_RANGE) {
+      type = G_TYPE_INT;
+    } else if (G_VALUE_TYPE(&field->value) == GST_TYPE_DOUBLE_RANGE) {
+      type = G_TYPE_DOUBLE;
+    }
     g_string_append_printf(s, ", %s:%s=%s", g_quark_to_string(field->name),
-	_gst_structure_to_abbr(G_VALUE_TYPE(&field->value)),
-	g_value_get_string(&s_val));
-    g_value_unset(&s_val);
+	_gst_structure_to_abbr(type), g_value_get_string(&s_val));
+    g_value_unset (&s_val);
   }
   return g_string_free(s, FALSE);
 }
@@ -1028,14 +1044,218 @@ error:
 }
 
 static gboolean
+_gst_structure_parse_value (gchar *s, gchar **after, GType type,
+    GValue *value)
+{
+  gboolean ret = FALSE;
+  gchar *val;
+  gchar *end;
+
+  if (type == G_TYPE_INVALID) return FALSE;
+
+  while (g_ascii_isspace (*s)) s++;
+
+  g_value_init(value, type);
+
+  val = s;
+  switch (type) {
+    case G_TYPE_INT:
+      {
+	int x;
+	x = strtol (val, &s, 0);
+	if (val != s) {
+	  g_value_set_int (value, x);
+	  ret = TRUE;
+	}
+      }
+      break;
+    case G_TYPE_FLOAT:
+      {
+	double x;
+	x = g_ascii_strtod (val, &s);
+	if (val != s) {
+	  g_value_set_float (value, x);
+	  ret = TRUE;
+	}
+      }
+      break;
+    case G_TYPE_DOUBLE:
+      {
+	double x;
+	x = g_ascii_strtod (val, &s);
+	if (val != s) {
+	  g_value_set_double (value, x);
+	  ret = TRUE;
+	}
+      }
+      break;
+    case G_TYPE_BOOLEAN:
+      {
+	int len;
+
+	ret = _gst_structure_parse_string (val, &end, &s);
+	len = end - val;
+	if (ret && len > 0) {
+	  if (g_ascii_strncasecmp (val, "true", len) == 0 ||
+	      g_ascii_strncasecmp (val, "yes", len) == 0 ||
+	      g_ascii_strncasecmp (val, "t", len) == 0 ||
+	      strncmp (val, "1", len)) {
+	    g_value_set_boolean (value, TRUE);
+	  } else if (g_ascii_strncasecmp (val, "false", len) == 0 ||
+	      g_ascii_strncasecmp (val, "no", len) == 0 ||
+	      g_ascii_strncasecmp (val, "f", len) == 0 ||
+	      strncmp (val, "0", len)) {
+	    g_value_set_boolean (value, FALSE);
+	  } else {
+	    ret = FALSE;
+	  }
+	}
+      }
+      break;
+    case G_TYPE_STRING:
+      {
+	ret = _gst_structure_parse_string (val, &end, &s);
+	if (ret) {
+	  g_value_set_string_take_ownership (value,
+	      g_strndup(val, end - val));
+	  ret = TRUE;
+	}
+      }
+      break;
+    default:
+      /* FIXME: make more general */
+      if (type == GST_TYPE_FOURCC) {
+	guint32 fourcc = 0;
+	if (g_ascii_isdigit (*s)) {
+	  fourcc = strtoul (val, &s, 0);
+	  if (val != s) {
+	    ret = TRUE;
+	  }
+	} else {
+	  ret = _gst_structure_parse_string (val, &end, &s);
+g_print("end - val = %d\n", end - val);
+	  if (end - val >= 4) {
+	    fourcc = GST_MAKE_FOURCC(val[0], val[1], val[2], val[3]);
+	    ret = TRUE;
+	  }
+	}
+	gst_value_set_fourcc (value, fourcc);
+      } else {
+	g_critical("type %s not handled", g_type_name(type));
+      }
+      break;
+  }
+
+  *after = s;
+
+  return ret;
+}
+
+static gboolean
+_gst_structure_parse_range (gchar *s, gchar **after, GType type,
+    GValue *value)
+{
+  GValue value1 = { 0 };
+  GValue value2 = { 0 };
+  GType range_type;
+  gboolean ret;
+
+  if (type == G_TYPE_DOUBLE) {
+    range_type = GST_TYPE_DOUBLE_RANGE;
+  } else if (type == G_TYPE_INT) {
+    range_type = GST_TYPE_INT_RANGE;
+  } else {
+    return FALSE;
+  }
+
+g_print("%d \"%s\"\n", __LINE__, s);
+  if (*s != '[') return FALSE;
+  s++;
+
+g_print("%d \"%s\"\n", __LINE__, s);
+  ret = _gst_structure_parse_value(s, &s, type, &value1);
+  if (ret == FALSE) return FALSE;
+
+  while (g_ascii_isspace (*s)) s++;
+    
+g_print("%d \"%s\"\n", __LINE__, s);
+  if (*s != ',') return FALSE;
+  s++;
+
+  while (g_ascii_isspace (*s)) s++;
+
+g_print("%d \"%s\"\n", __LINE__, s);
+  ret = _gst_structure_parse_value(s, &s, type, &value2);
+  if (ret == FALSE) return FALSE;
+
+  while (g_ascii_isspace (*s)) s++;
+
+g_print("%d \"%s\"\n", __LINE__, s);
+  if (*s != ']') return FALSE;
+  s++;
+
+  g_value_init(value, range_type);
+  if (range_type == GST_TYPE_DOUBLE_RANGE) {
+    gst_value_set_double_range(value, g_value_get_double(&value1),
+	g_value_get_double(&value2));
+  } else {
+    gst_value_set_int_range(value, g_value_get_int(&value1),
+	g_value_get_int(&value2));
+  }
+
+  *after = s;
+  return TRUE;
+}
+
+static gboolean
+_gst_structure_parse_list (gchar *s, gchar **after, GType type, GValue *value)
+{
+  GValue list_value = { 0 };
+  gboolean ret;
+
+  g_value_init(value, GST_TYPE_LIST);
+
+  if (*s != '(') return FALSE;
+  s++;
+
+  while (g_ascii_isspace (*s)) s++;
+  if (*s == ')') {
+    s++;
+    *after = s;
+    return TRUE;
+  }
+
+  ret = _gst_structure_parse_value(s, &s, type, &list_value);
+  if (ret == FALSE) return FALSE;
+
+  while (g_ascii_isspace (*s)) s++;
+    
+  while (*s != ')') {
+    if (*s != ',') return FALSE;
+    s++;
+
+    while (g_ascii_isspace (*s)) s++;
+
+    memset (&list_value, 0, sizeof (list_value));
+    ret = _gst_structure_parse_value(s, &s, type, &list_value);
+    if (ret == FALSE) return FALSE;
+
+    while (g_ascii_isspace (*s)) s++;
+  }
+
+  s++;
+
+  *after = s;
+  return TRUE;
+}
+
+static gboolean
 _gst_structure_parse_field (gchar *str, gchar **after, GstStructureField *field)
 {
   /* NAME[:TYPE]=VALUE */
   gchar *name;
   gchar *type_name;
   gchar *s, *del;
-  gchar *val;
-  gchar *end;
   gboolean have_type = FALSE;
   GType type = G_TYPE_INVALID;
   int ret;
@@ -1071,7 +1291,8 @@ g_print("type n is \"%s\"\n",g_type_name(type));
     if (type == G_TYPE_INVALID) return FALSE;
 
   } else {
-    if (g_ascii_isdigit (*s)) {
+    if (g_ascii_isdigit (*s) ||
+	((*s == '-' || *s == '+') && g_ascii_isdigit (s[1]))) {
       char *t = s;
       while (g_ascii_isdigit (*t)) t++;
       if (*t == '.'){
@@ -1081,99 +1302,15 @@ g_print("type n is \"%s\"\n",g_type_name(type));
       }
     } else if (g_ascii_isalpha (*s) || *s == '"' || *s == '\'') {
       type = G_TYPE_STRING;
-    } else {
-      /* FIXME */
-      return FALSE;
     }
   }
 
-  g_value_init(&field->value, type);
-
-  ret = FALSE;
-  val = s;
-  switch (type) {
-    case G_TYPE_INT:
-      {
-	int x;
-	x = strtol (val, &s, 0);
-	if (val != s) {
-	  g_value_set_int (&field->value, x);
-	  ret = TRUE;
-	}
-      }
-      break;
-    case G_TYPE_FLOAT:
-      {
-	double x;
-	x = g_ascii_strtod (val, &s);
-	if (val != s) {
-	  g_value_set_float (&field->value, x);
-	  ret = TRUE;
-	}
-      }
-      break;
-    case G_TYPE_DOUBLE:
-      {
-	double x;
-	x = g_ascii_strtod (val, &s);
-	if (val != s) {
-	  g_value_set_double (&field->value, x);
-	  ret = TRUE;
-	}
-      }
-      break;
-    case G_TYPE_BOOLEAN:
-      {
-	int len;
-	ret = _gst_structure_parse_string (val, &end, &s);
-	len = end - val;
-	if (ret) {
-	  if (strncmp (val, "true", len) == 0 ||
-	      strncmp (val, "yes", len) == 0 ||
-	      (len == 1 && (*val == 't' || *val == '1'))) {
-	    g_value_set_boolean (&field->value, TRUE);
-	  } else if (strncmp (val, "false", len) == 0 ||
-	      strncmp (val, "no", len) == 0 ||
-	      (len == 1 && (*val == 'f' || *val == '0'))) {
-	    g_value_set_boolean (&field->value, FALSE);
-	  } else {
-	    ret = FALSE;
-	  }
-	}
-      }
-      break;
-    case G_TYPE_STRING:
-      {
-	ret = _gst_structure_parse_string (val, &end, &s);
-	if (ret) {
-	  g_value_set_string_take_ownership (&field->value,
-	      g_strndup(val, end - val));
-	  ret = TRUE;
-	}
-      }
-      break;
-    default:
-      /* FIXME: make more general */
-      if (type == GST_TYPE_FOURCC) {
-	guint32 fourcc = 0;
-	if (g_ascii_isdigit (*s)) {
-	  fourcc = strtoul (val, &s, 0);
-	  if (val != s) {
-	    ret = TRUE;
-	  }
-	} else {
-	  ret = _gst_structure_parse_string (val, &end, &s);
-g_print("end - val = %d\n", end - val);
-	  if (end - val >= 4) {
-	    fourcc = GST_MAKE_FOURCC(val[0], val[1], val[2], val[3]);
-	    ret = TRUE;
-	  }
-	}
-	gst_value_set_fourcc (&field->value, fourcc);
-      } else {
-	g_critical("not handled");
-      }
-      break;
+  if (*s == '[') {
+    ret = _gst_structure_parse_range (s, &s, type, &field->value);
+  } else if (*s == '(') {
+    ret = _gst_structure_parse_list (s, &s, type, &field->value);
+  } else {
+    ret = _gst_structure_parse_value(s, &s, type, &field->value);
   }
   
   *after = s;
@@ -1210,18 +1347,22 @@ gst_structure_from_string (const gchar *string, gchar **end)
   res = _gst_structure_parse_string (r, &w, &r);
   if (!res) return NULL;
   
-  while (*r && g_ascii_isspace(*r)) r++;
-  if(!*r) return NULL;
-  if(*r != ';' && *r != ',') return NULL;
-  if(*r == ',') r++;
+  while (g_ascii_isspace(*r)) r++;
+  if(*r != 0 && *r != ';' && *r != ',') return NULL;
 
   save = *w;
   *w = 0;
   structure = gst_structure_empty_new(name);
   *w = save;
 
-  while (*r && g_ascii_isspace(*r)) r++;
   while (*r && (*r != ';')){
+    if(*r != ',') {
+      return NULL;
+    }
+    r++;
+    while (*r && g_ascii_isspace(*r)) r++;
+
+    memset(&field,0,sizeof(field));
     res = _gst_structure_parse_field (r, &r, &field);
 g_print("returned %d \"%s\"\n", res, r);
     if (!res) {
@@ -1229,6 +1370,7 @@ g_print("returned %d \"%s\"\n", res, r);
       return NULL;
     }
     gst_structure_set_field(structure, &field);
+    while (*r && g_ascii_isspace(*r)) r++;
   }
 
   if (end) *end = (char *)string + (r - copy);
