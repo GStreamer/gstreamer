@@ -221,7 +221,7 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
       head++;
 
     } else {
-      g_warning ("help, dunno what I'm looking at!\n");
+      GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
       gst_buffer_unref (buf);
       return;
     }
