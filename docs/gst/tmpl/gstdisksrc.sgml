@@ -47,8 +47,8 @@ Specify how many bytes to read at a time.
 Get/set the current offset in the file.
 </para>
 
-<!-- ##### ARG GstDiskSrc:size ##### -->
+<!-- ##### ARG GstDiskSrc:filesize ##### -->
 <para>
-Get the size of the file.
+
 </para>
 

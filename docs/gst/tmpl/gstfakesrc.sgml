@@ -22,12 +22,12 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 @gstfakesrc: the object which received the signal.
 @arg1: 
 
-<!-- ##### ARG GstFakeSrc:num_sources ##### -->
+<!-- ##### ARG GstFakeSrc:num-sources ##### -->
 <para>
 
 </para>
 
-<!-- ##### ARG GstFakeSrc:loop_based ##### -->
+<!-- ##### ARG GstFakeSrc:loop-based ##### -->
 <para>
 
 </para>
@@ -42,7 +42,7 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 
 </para>
 
-<!-- ##### ARG GstFakeSrc:num_buffers ##### -->
+<!-- ##### ARG GstFakeSrc:num-buffers ##### -->
 <para>
 
 </para>

@@ -16,7 +16,7 @@ gboolean idle_func(gpointer data) {
 
 void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
-  g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  g_print("***** a new pad %s was created %p\n", gst_pad_get_name(pad), pipeline);
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {

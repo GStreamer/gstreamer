@@ -925,7 +925,7 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 
 if test "x$USE_PROFILING" = xyes; then
-  CFLAGS="$CFLAGS -pg"
+  CFLAGS="$CFLAGS -pg -fprofile-arcs"
   FOMIT_FRAME_POINTER=""
 else
   FOMIT_FRAME_POINTER="-fomit-frame-pointer"
@@ -1287,6 +1287,7 @@ test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
 test/misc/Makefile
+test/memchunk/Makefile
 tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile

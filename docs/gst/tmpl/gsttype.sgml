@@ -71,13 +71,14 @@ A type.
 @id: 
 @mime: 
 @exts: 
-@typefindfuncs: 
+@factories: 
 
 <!-- ##### STRUCT GstTypeFactory ##### -->
 <para>
 The struct with the typefactory information.
 </para>
 
+@feature: 
 @mime: 
 @exts: 
 @typefindfunc: 
@@ -123,25 +124,6 @@ The struct with the typefactory information.
 
 </para>
 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_typefactory_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_typefactory_save_thyself ##### -->
-<para>
-
-</para>
-
-@factory: 
-@parent: 
 @Returns: 
 
 

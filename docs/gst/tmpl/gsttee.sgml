@@ -14,7 +14,7 @@ A tee can be used to split out the filter graph.
 
 </para>
 
-<!-- ##### ARG GstTee:num_pads ##### -->
+<!-- ##### ARG GstTee:num-pads ##### -->
 <para>
 
 </para>

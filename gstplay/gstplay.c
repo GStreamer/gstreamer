@@ -402,7 +402,7 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	}
 	
 	if (priv->src == NULL) {
-		priv->src = gst_elementfactory_make ("disksrc", "srcelement");
+		priv->src = gst_elementfactory_make ("filesrc", "srcelement");
 	}
 	
 	priv->uri = g_strdup (uri);

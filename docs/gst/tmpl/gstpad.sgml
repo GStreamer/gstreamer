@@ -189,24 +189,6 @@ a start/stop timecode pair.
 @size: the size of the region to get
 
 
-<!-- ##### USER_FUNCTION GstPadQoSFunction ##### -->
-<para>
-The function that will be called when a QoS message is sent.
-</para>
-
-@pad: the pad that sent the QoS message
-@qos_message: the message
-
-
-<!-- ##### USER_FUNCTION GstPadEOSFunction ##### -->
-<para>
-The function that will be called in an EOS case.
-</para>
-
-@pad: the pad that needs to be set to EOS state
-@Returns: TRUE if EOS was successful, FALSE otherwise
-
-
 <!-- ##### USER_FUNCTION GstPadNewCapsFunction ##### -->
 <para>
 The function that will be called when the caps of the pad has
@@ -245,25 +227,6 @@ The function that will be called when negotiating.
 @caps: The current caps that are being negotiated
 @data: A generic gpointer that can be used to store user_data
 @Returns: The result of the negotiation process
-
-
-<!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
-<para>
-
-The function that will be called when pushing a buffers.
-</para>
-
-@pad: the pad to push
-@buf: a GstBuffer to push
-
-
-<!-- ##### USER_FUNCTION GstPadPullFunction ##### -->
-<para>
-The function that will be called when pulling buffers.
-</para>
-
-@pad: the pad to pull
-@Returns: a GstBuffer
 
 
 <!-- ##### ENUM GstRegionType ##### -->
@@ -381,24 +344,6 @@ Destroy the pad.
 
 @pad: 
 @nego: 
-
-
-<!-- ##### FUNCTION gst_pad_set_qos_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@qos: 
-
-
-<!-- ##### FUNCTION gst_pad_set_eos_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@eos: 
 
 
 <!-- ##### FUNCTION gst_pad_set_newcaps_function ##### -->
@@ -627,32 +572,6 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_eos ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_handle_qos ##### -->
-<para>
-
-</para>
-
-@pad: 
-@qos_message: 
-
-
-<!-- ##### MACRO gst_pad_eos ##### -->
-<para>
-Call the EOS function of the pad
-</para>
-
-@pad: the pad to call the eos function of.
-
-
 <!-- ##### FUNCTION gst_pad_load_and_connect ##### -->
 <para>
 
@@ -706,15 +625,6 @@ Call the EOS function of the pad
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_eos_func ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### STRUCT GstRealPad ##### -->
 <para>
 
@@ -731,12 +641,12 @@ Call the EOS function of the pad
 @len: 
 @sched: 
 @chainfunc: 
+@chainhandler: 
 @getfunc: 
+@gethandler: 
+@eventfunc: 
+@eventhandler: 
 @getregionfunc: 
-@qosfunc: 
-@eosfunc: 
-@pushfunc: 
-@pullfunc: 
 @pullregionfunc: 
 @negotiatefunc: 
 @newcapsfunc: 
@@ -831,41 +741,9 @@ Get the getregion function of the real pad.
 @pad: the real pad to query.
 
 
-<!-- ##### MACRO GST_RPAD_PUSHFUNC ##### -->
-<para>
-Get the pushfunction of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_PULLFUNC ##### -->
-<para>
-Get the pullfunction of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
 <!-- ##### MACRO GST_RPAD_PULLREGIONFUNC ##### -->
 <para>
 Get the pullregion function of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_QOSFUNC ##### -->
-<para>
-Get the QoS function of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_EOSFUNC ##### -->
-<para>
-Get the EOS function of the real pad.
 </para>
 
 @pad: the real pad to query.

@@ -35,7 +35,7 @@ The queue blocks by default.
 Get the number of buffers in the queue.
 </para>
 
-<!-- ##### ARG GstQueue:max_level ##### -->
+<!-- ##### ARG GstQueue:max-level ##### -->
 <para>
 Specify the maximum number of buffers in the queue before the queue
 blocks.

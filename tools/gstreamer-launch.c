@@ -61,7 +61,11 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 gboolean
 idle_func (gpointer data)
 {
-  return gst_bin_iterate (GST_BIN (data));
+  if (!gst_bin_iterate (GST_BIN (data))) {
+    gtk_main_quit ();
+    return FALSE;
+  }
+  return TRUE;
 }
 
 void 

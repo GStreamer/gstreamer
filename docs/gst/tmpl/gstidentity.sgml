@@ -22,12 +22,12 @@ Pass data without modification.
 @gstidentity: the object which received the signal.
 @arg1: 
 
-<!-- ##### ARG GstIdentity:loop_based ##### -->
+<!-- ##### ARG GstIdentity:loop-based ##### -->
 <para>
 
 </para>
 
-<!-- ##### ARG GstIdentity:sleep_time ##### -->
+<!-- ##### ARG GstIdentity:sleep-time ##### -->
 <para>
 
 </para>

@@ -239,6 +239,7 @@ used when data in a stream has been skipped
 
 </para>
 
+@data_type: 
 @lock: 
 @data: 
 @size: 
@@ -265,6 +266,8 @@ used when data in a stream has been skipped
 </para>
 
 @pool: 
+@location: 
+@size: 
 @Returns: 
 
 
@@ -293,9 +296,12 @@ used when data in a stream has been skipped
 
 </para>
 
+@buf: 
+@buf2: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @buffer: 
 @append: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_buffer_ref ##### -->
