@@ -50,12 +50,14 @@ typedef enum {
   GST_LEVEL_COUNT
 } GstDebugLevel;
 
-/* we can now override this to be more general in maintainer builds or cvs checkouts */
+/* we can now override this to be more general in maintainer builds
+ * or cvs checkouts */
 #ifndef GST_LEVEL_DEFAULT
 #define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 #endif
 
-/* defines for format (colors etc) - don't change them around, it uses terminal layout 
+/* defines for format (colors etc)
+ * don't change them around, it uses terminal layout
  * Terminal color strings:
  * 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
  * Text color codes:
@@ -132,7 +134,7 @@ typedef void (*GstLogFunction)	(GstDebugCategory *	category,
 				 const gchar *		function,
 				 gint			line,
 				 GObject *		object,
-				 GstDebugMessage *    	message,
+				 GstDebugMessage *	message,
 				 gpointer		data);
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -141,33 +143,33 @@ void		_gst_debug_init			(void);
 
 /* note we can't use G_GNUC_PRINTF (7, 8) because gcc chokes on %P, which
  * we use for GST_PTR_FORMAT. */
-void		gst_debug_log			(GstDebugCategory *	category,
-						 GstDebugLevel		level,
-						 const gchar *		file,
-						 const gchar *		function,
-						 gint			line,
-						 GObject *		object,
-						 const gchar *		format,
-						 ...) G_GNUC_NO_INSTRUMENT;
-void		gst_debug_log_valist  		(GstDebugCategory *	category,
-						 GstDebugLevel		level,
-						 const gchar *		file,
-						 const gchar *		function,
-						 gint			line,
-						 GObject *		object,
-						 const gchar *		format,
-						 va_list		args) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log		(GstDebugCategory *	category,
+					 GstDebugLevel		level,
+					 const gchar *		file,
+					 const gchar *		function,
+					 gint			line,
+					 GObject *		object,
+					 const gchar *		format,
+					 ...) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log_valist	(GstDebugCategory *	category,
+					 GstDebugLevel		level,
+					 const gchar *		file,
+					 const gchar *		function,
+					 gint			line,
+					 GObject *		object,
+					 const gchar *		format,
+					 va_list		args) G_GNUC_NO_INSTRUMENT;
 
-const gchar *	gst_debug_message_get		(GstDebugMessage *	message);
+const gchar *	gst_debug_message_get	(GstDebugMessage *	message);
 
-void		gst_debug_log_default		(GstDebugCategory *	category,
-						 GstDebugLevel		level,
-						 const gchar *		file,
-						 const gchar *		function,
-						 gint			line,
-						 GObject *		object,
-						 GstDebugMessage *    	message,
-						 gpointer		unused) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log_default	(GstDebugCategory *	category,
+					 GstDebugLevel		level,
+					 const gchar *		file,
+					 const gchar *		function,
+					 gint			line,
+					 GObject *		object,
+					 GstDebugMessage *	message,
+					 gpointer		unused) G_GNUC_NO_INSTRUMENT;
 
 G_CONST_RETURN gchar *
 		gst_debug_level_get_name	(GstDebugLevel		level);
@@ -214,9 +216,9 @@ void		gst_debug_unset_threshold_for_name (const gchar *	name);
  */
 #define GST_DEBUG_CATEGORY_STATIC(cat) static GstDebugCategory *cat = NULL
 /* do not use this function, use the macros below */
-GstDebugCategory *_gst_debug_category_new	(gchar *		name,
-						 guint			color,
-						 gchar *		description);
+GstDebugCategory *_gst_debug_category_new	(gchar *	name,
+						 guint		color,
+						 gchar *	description);
 /**
  * GST_DEBUG_CATEGORY_INIT:
  * @cat: the category to initialize.
@@ -252,24 +254,26 @@ GstDebugCategory *_gst_debug_category_new	(gchar *		name,
  * </para>
  * </note>
  */
-#define GST_DEBUG_CATEGORY_INIT(cat,name,color,description) G_STMT_START{	\
-  if (cat == NULL)								\
-    cat = _gst_debug_category_new (name,color,description);			\
+#define GST_DEBUG_CATEGORY_INIT(cat,name,color,description) G_STMT_START{\
+  if (cat == NULL)							\
+    cat = _gst_debug_category_new (name,color,description);		\
 }G_STMT_END
 
-void		gst_debug_category_free		(GstDebugCategory *	category);
-void		gst_debug_category_set_threshold (GstDebugCategory *	category,
-						 GstDebugLevel		level);
-void		gst_debug_category_reset_threshold (GstDebugCategory *	category);
-GstDebugLevel	gst_debug_category_get_threshold (GstDebugCategory *	category);
+void	gst_debug_category_free		(GstDebugCategory *	category);
+void	gst_debug_category_set_threshold (GstDebugCategory *	category,
+					 GstDebugLevel		level);
+void	gst_debug_category_reset_threshold(GstDebugCategory *	category);
+GstDebugLevel
+	gst_debug_category_get_threshold (GstDebugCategory *	category);
 G_CONST_RETURN gchar *
-		gst_debug_category_get_name	(GstDebugCategory *	category);
-guint		gst_debug_category_get_color	(GstDebugCategory *	category);
+	gst_debug_category_get_name	(GstDebugCategory *	category);
+guint	gst_debug_category_get_color	(GstDebugCategory *	category);
 G_CONST_RETURN gchar *
-		gst_debug_category_get_description (GstDebugCategory *	category);
-GSList *	gst_debug_get_all_categories	(void);
+	gst_debug_category_get_description (GstDebugCategory *	category);
+GSList *
+        gst_debug_get_all_categories	(void);
 
-gchar *		gst_debug_construct_term_color	(guint colorinfo);
+gchar *	gst_debug_construct_term_color	(guint colorinfo);
 
 
 extern GstDebugCategory *	GST_CAT_DEFAULT;
@@ -277,17 +281,19 @@ extern GstDebugCategory *	GST_CAT_DEFAULT;
 extern gboolean			__gst_debug_enabled;
 
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{			\
-  if (__gst_debug_enabled) {				\
-    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__, (GObject *) (object), __VA_ARGS__); \
-  }										\
+#define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
+  if (__gst_debug_enabled) {						\
+    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
+        (GObject *) (object), __VA_ARGS__);				\
+  }									\
 }G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
-#define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{			\
-  if (__gst_debug_enabled) {				\
-    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__, (GObject *) (object), ##args ); \
-  }										\
+#define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{	\
+  if (__gst_debug_enabled) {						\
+    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
+        (GObject *) (object), ##args );					\
+  }									\
 }G_STMT_END
 #else /* no variadic macros, use inline */
 static inline void
@@ -587,10 +593,10 @@ GST_LOG (const char *format, ...)
 
 
 /********** function pointer stuff **********/
-void* 		_gst_debug_register_funcptr	(void *			ptr,
-						 gchar *		ptrname);
-G_CONST_RETURN gchar*
-		_gst_debug_nameof_funcptr 	(void *			ptr);
+void *	_gst_debug_register_funcptr	(void *			ptr,
+					 gchar *		ptrname);
+G_CONST_RETURN gchar *
+	_gst_debug_nameof_funcptr	(void *			ptr);
 
 #define GST_DEBUG_FUNCPTR(ptr) (_gst_debug_register_funcptr((void *)(ptr), #ptr) , ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)

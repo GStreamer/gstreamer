@@ -1,5 +1,10 @@
 2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* gst/gstinfo.h:
+	  clean up layout a little.
+
+2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* configure.ac:
 	* testsuite/Makefile.am:
 	* testsuite/states/Makefile.am:
