@@ -277,7 +277,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
 	$(MAD_DIR) $(MATROSKA_DIR) $(MIKMOD_DIR) \
-	$(MPEG2DEC_DIR) $(PANGO_DIR) $(RAW1394_DIR) \
+	$(MPEG2DEC_DIR) mplex $(PANGO_DIR) $(RAW1394_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(SNDFILE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
 	$(VORBIS_DIR) $(XVID_DIR) $(SNAPSHOT_DIR) $(SPEEX_DIR)
@@ -290,7 +290,7 @@ DIST_SUBDIRS=\
 	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
 	mad matroska mikmod \
-	mpeg2dec pango raw1394 \
+	mpeg2dec mplex pango raw1394 \
 	sdl snapshot sndfile \
 	shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
