@@ -1,5 +1,10 @@
 2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  Implement FILLER event awareness.
+
+2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_convert):
 	  Fix track calculations (#166208).
 
