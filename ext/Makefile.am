@@ -46,7 +46,7 @@ else
 CDPARANOIA_DIR=
 endif
 
-if USE_LIBDV
+if USE_DV
 LIBDV_DIR=dv
 else
 LIBDV_DIR=
