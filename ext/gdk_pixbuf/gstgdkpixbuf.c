@@ -413,10 +413,13 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
   format = gdk_pixbuf_loader_get_format (pixbuf_loader);
 
   if (format != NULL) {
+    GstCaps *caps;
     gchar **mlist = gdk_pixbuf_format_get_mime_types(format);
 
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM,
-        gst_caps_new_simple (mlist[0], NULL));
+    caps = gst_caps_new_simple (mlist[0], NULL);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, caps);
+    gst_caps_free (caps);
+    g_strfreev (mlist);
   }
 
   gdk_pixbuf_loader_close (pixbuf_loader, NULL);
