@@ -21,9 +21,9 @@
 #include <gst/gst.h>
 
 GstCaps *
-gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context)
+gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
 {
-  switch (context->codec_id) {
+  switch (codec_id) {
     case CODEC_ID_NONE:
       return GST_CAPS_NEW ("ffmpeg_none",
 		           "unkown/unkown",
@@ -72,13 +72,24 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context)
 			   NULL);
       break;
     case CODEC_ID_MPEG4:
-      return GST_CAPS_NEW ("ffmpeg_mpeg4",
-		           "video/avi",
-			     "format",  GST_PROPS_STRING ("strf_vids"),
-			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
-			      "width",   GST_PROPS_INT (context->width),
-			      "height",  GST_PROPS_INT (context->height)
-			  );
+      if (context) {
+        return GST_CAPS_NEW ("ffmpeg_mpeg4",
+		             "video/avi",
+			       "format",  GST_PROPS_STRING ("strf_vids"),
+			        "compression",  GST_PROPS_FOURCC (context->fourcc),
+			        "width",   GST_PROPS_INT (context->width),
+			        "height",  GST_PROPS_INT (context->height)
+			    );
+      }
+      else {
+        return GST_CAPS_NEW ("ffmpeg_mpeg4",
+		             "video/avi",
+			       "format",  GST_PROPS_STRING ("strf_vids"),
+			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("DIV3")),
+			        "width",   GST_PROPS_INT_RANGE (0, 4096),
+			        "height",  GST_PROPS_INT_RANGE (0, 4096)
+			    );
+      }
       break;
     case CODEC_ID_RAWVIDEO:
       return GST_CAPS_NEW ("ffmpeg_rawvideo",
@@ -86,40 +97,81 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context)
 			   NULL);
       break;
     case CODEC_ID_MSMPEG4V1:
-      return GST_CAPS_NEW ("ffmpeg_msmpeg4v1",
-		           "video/avi",
-			     "format",  GST_PROPS_STRING ("strf_vids"),
-			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
-			      "width",   GST_PROPS_INT (context->width),
-			      "height",  GST_PROPS_INT (context->height)
-			  );
+      if (context) {
+        return GST_CAPS_NEW ("ffmpeg_msmpeg4v1",
+		             "video/avi",
+			       "format",  	GST_PROPS_STRING ("strf_vids"),
+			        "compression", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("MPG4")),
+			        "width",   	GST_PROPS_INT (context->width),
+			        "height",  	GST_PROPS_INT (context->height)
+			    );
+      }
+      else {
+        return GST_CAPS_NEW ("ffmpeg_msmpeg4v1",
+		             "video/avi",
+			       "format",  	GST_PROPS_STRING ("strf_vids"),
+			        "compression", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("MPG4")),
+			        "width",   	GST_PROPS_INT_RANGE (0, 4096),
+			        "height",  	GST_PROPS_INT_RANGE (0, 4096)
+			    );
+      }
       break;
     case CODEC_ID_MSMPEG4V2:
-      return GST_CAPS_NEW ("ffmpeg_msmpeg4v2",
-		           "video/avi",
-			     "format",  GST_PROPS_STRING ("strf_vids"),
-			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
-			      "width",   GST_PROPS_INT (context->width),
-			      "height",  GST_PROPS_INT (context->height)
-			  );
+      if (context) {
+        return GST_CAPS_NEW ("ffmpeg_msmpeg4v2",
+		             "video/avi",
+			       "format",  GST_PROPS_STRING ("strf_vids"),
+			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("MP42")),
+			        "width",   GST_PROPS_INT (context->width),
+			        "height",  GST_PROPS_INT (context->height)
+			    );
+      }
+      else {
+        return GST_CAPS_NEW ("ffmpeg_msmpeg4v2",
+		             "video/avi",
+			       "format",  GST_PROPS_STRING ("strf_vids"),
+			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("MP42")),
+			        "width",   GST_PROPS_INT_RANGE (0, 4096),
+			        "height",  GST_PROPS_INT_RANGE (0, 4096)
+			    );
+      }
       break;
     case CODEC_ID_MSMPEG4V3:
-      return GST_CAPS_NEW ("ffmpeg_msmpeg4v3",
-		           "video/avi",
-			     "format",  GST_PROPS_STRING ("strf_vids"),
-			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
-			      "width",   GST_PROPS_INT (context->width),
-			      "height",  GST_PROPS_INT (context->height)
-			  );
+      if (context) {
+        return GST_CAPS_NEW ("ffmpeg_msmpeg4v3",
+		             "video/avi",
+			       "format",  GST_PROPS_STRING ("strf_vids"),
+			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("DIV3")),
+			        "width",   GST_PROPS_INT (context->width),
+			        "height",  GST_PROPS_INT (context->height)
+			    );
+      }
+      else {
+        return GST_CAPS_NEW ("ffmpeg_msmpeg4v3",
+		             "video/avi",
+			       "format",  GST_PROPS_STRING ("strf_vids"),
+			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("DIV3")),
+			        "width",   GST_PROPS_INT_RANGE (0, 4096),
+			        "height",  GST_PROPS_INT_RANGE (0, 4096)
+			    );
+      }
       break;
     case CODEC_ID_WMV1:
-      return GST_CAPS_NEW ("ffmpeg_wmv1",
-		           "video/avi",
-			     "format",  GST_PROPS_STRING ("strf_vids"),
-			      "fourcc",  GST_PROPS_FOURCC (GST_STR_FOURCC ("WMV1")),
-			      "width",   GST_PROPS_INT (context->width),
-			      "height",  GST_PROPS_INT (context->height)
-			  );
+      if (context) {
+        return GST_CAPS_NEW ("ffmpeg_wmv1",
+		             "video/avi",
+			       "format",  	GST_PROPS_STRING ("strf_vids"),
+			        "compression", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("WMV1")),
+			        "width",   	GST_PROPS_INT (context->width),
+			        "height",  	GST_PROPS_INT (context->height)
+			    );
+      }
+      else {
+        return GST_CAPS_NEW ("ffmpeg_wmv1",
+		             "video/x-wmv1",
+			     NULL
+			    );
+      }
       break;
     case CODEC_ID_WMV2:
       return GST_CAPS_NEW ("ffmpeg_wmv2",
@@ -229,7 +281,7 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context)
 			   NULL);
       break;
     default:
-      g_warning ("no caps found for codec id %d\n", context->codec_id);
+      g_warning ("no caps found for codec id %d\n", codec_id);
       break;
   }
 

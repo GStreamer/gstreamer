@@ -29,6 +29,9 @@
 extern gboolean gst_ffmpegdemux_register (GstPlugin *plugin);
 extern gboolean gst_ffmpegdec_register (GstPlugin *plugin);
 extern gboolean gst_ffmpegenc_register (GstPlugin *plugin);
+extern gboolean gst_ffmpegtypes_register (GstPlugin *plugin);
+	
+extern URLProtocol gstreamer_protocol;
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
@@ -43,6 +46,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_ffmpegenc_register (plugin);
   gst_ffmpegdec_register (plugin);
   gst_ffmpegdemux_register (plugin);
+  gst_ffmpegtypes_register (plugin);
+
+  register_protocol (&gstreamer_protocol);
 
   /* Now we can return the pointer to the newly created Plugin object. */
   return TRUE;

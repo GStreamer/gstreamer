@@ -23,13 +23,11 @@
 
 #include <gst/gst.h>
 
-extern URLProtocol gstreamer_protocol;
+extern GstCaps*	gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id);
 
 typedef enum {
   STATE_OPEN,
-  STATE_STREAM_INFO,
   STATE_DEMUX,
-  STATE_END,
 } DemuxState;
 
 typedef struct _GstFFMpegDemux GstFFMpegDemux;
@@ -164,9 +162,6 @@ gst_ffmpegdemux_loop (GstElement *element)
 		            0,
 		            NULL);
 
-      /* this doesn't work */
-      av_set_pts_info (ffmpegdemux->context, 33, 1, 100000);
-
       ffmpegdemux->state = STATE_DEMUX;
       break;
     }
@@ -180,44 +175,53 @@ gst_ffmpegdemux_loop (GstElement *element)
       
       res = av_read_packet(ct, &pkt);
       if (res < 0) {
-	gint i;
+	if (url_feof (&ct->pb)) {
+	  gint i;
 
-	for (i = 0; i < ct->nb_streams; i++) {
-          GstPad *pad;
+	  for (i = 0; i < ct->nb_streams; i++) {
+            GstPad *pad;
 
-	  pad = ffmpegdemux->srcpads[i];
+	    pad = ffmpegdemux->srcpads[i];
 
-	  if (GST_PAD_IS_USABLE (pad)) {
-	    gst_pad_push (pad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+	    if (GST_PAD_IS_USABLE (pad)) {
+	      gst_pad_push (pad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+	    }
 	  }
+	  gst_element_set_eos (element);
 	}
-	gst_element_set_eos (element);
 	return;
       }
 
       st = ct->streams[pkt.stream_index];
 
       if (st->codec_info_state == 0) {
-	gchar *padname = NULL;
-	GstPadTemplate *templ = NULL;
+	gchar *templname = NULL;
 	
         st->codec_info_state = 1;
 
 	if (st->codec.codec_type == CODEC_TYPE_VIDEO) {
-	  padname = g_strdup_printf ("video_%02d", pkt.stream_index);
-	  templ = GST_PAD_TEMPLATE_GET (gst_ffmpegdemux_video_src_factory);
+	  templname = "video_%02d";
 	}
 	else if (st->codec.codec_type == CODEC_TYPE_AUDIO) {
-	  padname = g_strdup_printf ("audio_%02d", pkt.stream_index);
-	  templ = GST_PAD_TEMPLATE_GET (gst_ffmpegdemux_audio_src_factory);
+	  templname = "audio_%02d";
 	}
 
-	if (padname != NULL) {
+	if (templname != NULL) {
+	  gchar *padname;
+          GstCaps *caps;
+	  GstPadTemplate *templ;
+
+	  caps = gst_ffmpegcodec_codec_context_to_caps (&st->codec, st->codec.codec_id);
+	  templ = gst_pad_template_new (templname,
+			                GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					caps, NULL);
+
+	  padname = g_strdup_printf (templname, pkt.stream_index);
           pad = gst_pad_new_from_template (templ, padname);
 
 	  ffmpegdemux->srcpads[pkt.stream_index] = pad;
           gst_element_add_pad (GST_ELEMENT (ffmpegdemux), pad);
-	  g_print ("new pad\n");
 	}
 	else {
           g_warning ("unkown pad type %d", st->codec.codec_type);
@@ -234,8 +238,9 @@ gst_ffmpegdemux_loop (GstElement *element)
         outbuf = gst_buffer_new ();
         GST_BUFFER_DATA (outbuf) = pkt.data;
         GST_BUFFER_SIZE (outbuf) = pkt.size;
-	if (pkt.pts != 0) {
-          GST_BUFFER_TIMESTAMP (outbuf) = pkt.pts * GST_SECOND / 90000LL;
+
+	if (pkt.pts != AV_NOPTS_VALUE && ct->pts_den) {
+          GST_BUFFER_TIMESTAMP (outbuf) = pkt.pts * GST_SECOND * ct->pts_num / ct->pts_den;
 	}
 	else {
           GST_BUFFER_TIMESTAMP (outbuf) = -1;
@@ -363,8 +368,6 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
 next:
     in_plugin = in_plugin->next;
   }
-
-  register_protocol (&gstreamer_protocol);
 
   return TRUE;
 }

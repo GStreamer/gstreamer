@@ -23,6 +23,9 @@
 
 #include <gst/gst.h>
 
+extern GstCaps*	gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *ctx, int id);
+
+	
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 struct _GstFFMpegDec {
@@ -42,7 +45,13 @@ struct _GstFFMpegDecClass {
   GstElementClass parent_class;
 
   AVCodec *in_plugin;
+  GstPadTemplate *templ;
 };
+
+typedef struct {
+  AVCodec *in_plugin;
+  GstPadTemplate *templ;
+} GstFFMpegClassParams;
 
 #define GST_TYPE_FFMPEGDEC \
   (gst_ffmpegdec_get_type())
@@ -64,23 +73,6 @@ enum {
   ARG_0,
   /* FILL ME */
 };
-
-/* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_sink_factory,
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "ffmpegdec_sink",
-    "video/avi",
-      "format",		GST_PROPS_STRING ("strf_vids")
-  ),
-  GST_CAPS_NEW (
-    "ffmpegdec_sink",
-    "video/mpeg",
-    NULL
-  )
-)
 
 /* This factory is much simpler, and defines the source pad. */
 GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
@@ -140,14 +132,18 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstFFMpegClassParams *params;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  klass->in_plugin = g_hash_table_lookup (global_plugins,
+  params = g_hash_table_lookup (global_plugins,
 		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+
+  klass->in_plugin = params->in_plugin;
+  klass->templ = params->templ;
 
   gobject_class->set_property = gst_ffmpegdec_set_property;
   gobject_class->get_property = gst_ffmpegdec_get_property;
@@ -168,7 +164,6 @@ gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
     gst_caps_get_int (caps, "height", &ffmpegdec->context->height);
 
   ffmpegdec->context->pix_fmt = PIX_FMT_YUV420P;
-  ffmpegdec->context->frame_rate = 23 * FRAME_RATE_BASE;
   ffmpegdec->context->bit_rate = 0;
 
   /* FIXME bug in ffmpeg */
@@ -191,8 +186,7 @@ gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
 
   ffmpegdec->context = g_malloc0 (sizeof (AVCodecContext));
 
-  ffmpegdec->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_sink_factory), "sink");
+  ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->templ, "sink");
   gst_pad_set_connect_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
@@ -367,6 +361,9 @@ gst_ffmpegdec_register (GstPlugin *plugin)
   while (in_plugin) {
     gchar *type_name;
     gchar *codec_type;
+    GstPadTemplate *sinktempl;
+    GstCaps *sinkcaps;
+    GstFFMpegClassParams *params;
 
     if (in_plugin->decode) {
       codec_type = "dec";
@@ -396,18 +393,23 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     details->author = g_strdup("The FFMPEG crew, GStreamer plugin by Wim Taymans <wim.taymans@chello.be>");
     details->copyright = g_strdup("(c) 2001");
 
-    g_hash_table_insert (global_plugins, 
-		         GINT_TO_POINTER (type), 
-			 (gpointer) in_plugin);
-
     /* register the plugin with gstreamer */
     factory = gst_element_factory_new(type_name,type,details);
     g_return_val_if_fail(factory != NULL, FALSE);
 
     gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
 
-    gst_element_factory_add_pad_template (factory, 
-		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_sink_factory));
+    sinkcaps = gst_ffmpegcodec_codec_context_to_caps (NULL, in_plugin->id);
+    sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sinkcaps, NULL);
+    gst_element_factory_add_pad_template (factory, sinktempl);
+
+    params = g_new0 (GstFFMpegClassParams, 1);
+    params->in_plugin = in_plugin;
+    params->templ = sinktempl;
+
+    g_hash_table_insert (global_plugins, 
+		         GINT_TO_POINTER (type), 
+			 (gpointer) params);
 
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
       gst_element_factory_add_pad_template (factory, 

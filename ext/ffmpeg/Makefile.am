@@ -3,12 +3,13 @@ plugindir = $(libdir)/gst
 plugin_LTLIBRARIES = libgstffmpeg.la
 
 libgstffmpeg_la_SOURCES = gstffmpeg.c 		\
-			  gstffmpegenc.c 	\
+			  gstffmpegcodecmap.c	\
 			  gstffmpegdec.c 	\
 			  gstffmpegdemux.c 	\
+			  gstffmpegenc.c 	\
 			  gstffmpegmux.c 	\
 			  gstffmpegprotocol.c 	\
-			  gstffmpegcodecmap.c
+			  gstffmpegtypes.c 	
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) -I/opt/src/sourceforge/ffmpeg/ -I/opt/src/sourceforge/ffmpeg/libavcodec/
 libgstffmpeg_la_LIBADD = 

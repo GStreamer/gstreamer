@@ -28,10 +28,11 @@ typedef struct _GstProtocolInfo GstProtocolInfo;
 
 struct _GstProtocolInfo
 {
-  GstPad *pad;
+  GstPad 	*pad;
 
-  int flags;
+  int 		 flags;
   GstByteStream *bs;
+  gboolean 	 eos;
 };
 
 static int 
@@ -54,6 +55,7 @@ gst_open (URLContext *h, const char *filename, int flags)
   }
 
   info->bs = gst_bytestream_new (pad);
+  info->eos = FALSE;
   
   h->priv_data = (void *) info;
 
@@ -71,10 +73,36 @@ gst_read (URLContext *h, unsigned char *buf, int size)
   info = (GstProtocolInfo *) h->priv_data;
   bs = info->bs;
 
-  total = gst_bytestream_peek_bytes (bs, &data, size);
-  memcpy (buf, data, total);
+  if (info->eos) 
+    return 0;
 
-  gst_bytestream_flush_fast (bs, total);
+  total = gst_bytestream_peek_bytes (bs, &data, size);
+
+  if (total < size) {
+    GstEvent *event;
+    guint32 remaining;
+
+    gst_bytestream_get_status (bs, &remaining, &event);
+
+    if (!event) {
+      g_warning ("gstffmpegprotocol: no bytestream event");
+      return total;
+    }
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+        gst_bytestream_flush_fast (bs, remaining);
+      case GST_EVENT_EOS:
+	info->eos = TRUE;
+	break;
+      default:
+        break;
+    }
+    gst_event_unref (event);
+  }
+  
+  memcpy (buf, data, total);
+  gst_bytestream_flush (bs, total);
 
   return total;
 }
