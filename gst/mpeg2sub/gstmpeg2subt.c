@@ -362,7 +362,7 @@ gst_mpeg2subt_chain_subtitle (GstPad *pad, GstBuffer *buf)
     mpeg2subt->have_title = FALSE;
   }
 
-  GST_DEBUG (0,"presentation time %llu", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"presentation time %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
 
   /* deal with partial frame from previous buffer */
   if (mpeg2subt->partialbuf) {

@@ -434,8 +434,8 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
 	offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-	g_print ("sdl discont %lld\n", offset);
-	//gst_clock_handle_discont (sdlvideosink->clock, (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value);
+	g_print ("sdl discont %" G_GINT64_FORMAT "\n", offset);
+	/*gst_clock_handle_discont (sdlvideosink->clock, (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value);*/
 	break;
       default:
 	gst_pad_event_default (pad, event);
@@ -445,7 +445,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
     return;
   }
 
-  GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
   if (sdlvideosink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
 

@@ -321,7 +321,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
   GST_DEBUG (0, "input buffer has %d samples", samples_in);
   if (chart->next_time <= GST_BUFFER_TIMESTAMP (bufin)) {
     chart->next_time = GST_BUFFER_TIMESTAMP (bufin);
-    GST_DEBUG (0, "in:  %lld", GST_BUFFER_TIMESTAMP (bufin));
+    GST_DEBUG (0, "in:  %" G_GINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufin));
   }
 
   chart->samples_since_last_frame += samples_in;

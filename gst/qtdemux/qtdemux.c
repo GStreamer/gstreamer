@@ -322,7 +322,7 @@ gst_qtdemux_loop (GstElement *element)
   }
 
   gst_qtp_read_bytes_atom_head(qtdemux,&atom);
-  GST_INFO (GST_CAT_PLUGIN_INFO,"gst_qtdemux_loop: atom(%c%c%c%c,%llu,%llu)\n",GST_FOURCC_TO_CHARSEQ(atom.type),atom.start,atom.size);
+  GST_INFO (GST_CAT_PLUGIN_INFO,"gst_qtdemux_loop: atom(%c%c%c%c,%" G_GUINT64_FORMAT ",%" G_GUINT64_FORMAT")\n",GST_FOURCC_TO_CHARSEQ(atom.type),atom.start,atom.size);
 
   atom_type = g_hash_table_lookup (gst_qtp_type_registry,&atom.type);
   if (!atom_type) {

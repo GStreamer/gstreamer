@@ -276,7 +276,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   data = GST_BUFFER_DATA(mp1videoparse->partialbuf);
   size = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
 
-  GST_DEBUG (0,"mp1videoparse: received buffer of %ld bytes %lld",size, GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"mp1videoparse: received buffer of %ld bytes %" G_GINT64_FORMAT,size, GST_BUFFER_TIMESTAMP(buf));
 
   head = GULONG_FROM_BE(*((gulong *)data));
 
@@ -359,7 +359,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       mp1videoparse->in_flush = FALSE;
     }
 
-    GST_DEBUG (0,"mp1videoparse: pushing  %d bytes %llu", GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
+    GST_DEBUG (0,"mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
     gst_pad_push(outpad, outbuf);
     GST_DEBUG (0,"mp1videoparse: pushing  done");
     mp1videoparse->picture_in_buffer = 0;

@@ -529,7 +529,7 @@ gst_afparse_vf_tell   (AFvirtualfile *vfile)
   guint64 offset;
 
   offset = gst_bytestream_tell(bs);
-  g_print("doing tell: %llu\n", offset);
+  g_print("doing tell: %" G_GUINT64_FORMAT "\n", offset);
   return offset;
 }
 

@@ -217,7 +217,7 @@ gst_system_encode_pick_streams (GList *mta, GstMPEG1SystemEncode *system_encode)
 {
   guint64 lowest = ~1;
 
-  GST_DEBUG (0, "pick_streams: %lld, %lld", system_encode->video_buffer->next_frame_time,
+  GST_DEBUG (0, "pick_streams: %" G_GINT64_FORMAT ", %" G_GINT64_FORMAT, system_encode->video_buffer->next_frame_time,
 		  			    system_encode->audio_buffer->next_frame_time);
 
   if (system_encode->which_streams & STREAMS_VIDEO) {
@@ -327,7 +327,7 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode *system_encode)
   video_tc = MPEG1MUX_BUFFER_FIRST_TIMECODE(system_encode->video_buffer);
   audio_tc = MPEG1MUX_BUFFER_FIRST_TIMECODE(system_encode->audio_buffer);
 
-  GST_DEBUG (0,"system_encode::video tc %lld, audio tc %lld:", video_tc->DTS, audio_tc->DTS);
+  GST_DEBUG (0,"system_encode::video tc %" G_GINT64_FORMAT ", audio tc %" G_GINT64_FORMAT ":", video_tc->DTS, audio_tc->DTS);
 
   system_encode->delay = ((double)system_encode->sectors_delay +
           ceil((double)video_tc->length/(double)system_encode->min_packet_data)  +

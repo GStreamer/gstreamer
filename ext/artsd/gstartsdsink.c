@@ -228,7 +228,7 @@ gst_artsdsink_chain (GstPad *pad, GstBuffer *buf)
   artsdsink = GST_ARTSDSINK (gst_pad_get_parent (pad));
 
   if (GST_BUFFER_DATA (buf) != NULL) {
-    gst_trace_add_entry(NULL, 0, buf, "artsdsink: writing to server");
+    gst_trace_add_entry(NULL, 0, GPOINTER_TO_INT(buf), "artsdsink: writing to server");
     if (!artsdsink->mute && artsdsink->connected) {
       int bytes;
       void * bufptr = GST_BUFFER_DATA (buf);

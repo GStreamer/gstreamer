@@ -142,7 +142,7 @@ gulong mpeg1mux_buffer_update_queued(Mpeg1MuxBuffer *mb, guint64 scr) {
   Mpeg1MuxTimecode *tc;
   gulong total_queued = 0;
   
-  GST_DEBUG (0,"queued in buffer on SCR=%llu", scr);
+  GST_DEBUG (0,"queued in buffer on SCR=%" G_GUINT64_FORMAT, scr);
   queued_list = g_list_first(mb->queued_list);
 
   while (queued_list) {
@@ -153,7 +153,7 @@ gulong mpeg1mux_buffer_update_queued(Mpeg1MuxBuffer *mb, guint64 scr) {
       queued_list = g_list_first(mb->queued_list);
     }
     else {
-      GST_DEBUG (0,"queued in buffer %ld, %llu", tc->original_length, tc->DTS);
+      GST_DEBUG (0,"queued in buffer %ld, %" G_GUINT64_FORMAT, tc->original_length, tc->DTS);
       total_queued += tc->original_length;
       queued_list = g_list_next(queued_list);
     }
@@ -190,13 +190,13 @@ void mpeg1mux_buffer_shrink(Mpeg1MuxBuffer *mb, gulong size) {
   else {
     consumed += tc->length;
     while (size >= consumed) {
-      GST_DEBUG (0,"removing timecode: %llu %llu %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
+      GST_DEBUG (0,"removing timecode: %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT " %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
       mb->timecode_list = g_list_remove_link(mb->timecode_list, timecode_list);
       mb->queued_list = g_list_append(mb->queued_list, tc);
       timecode_list = g_list_first(mb->timecode_list);
       tc = (Mpeg1MuxTimecode *) timecode_list->data;
       consumed += tc->length;
-      GST_DEBUG (0,"next timecode: %llu %llu %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
+      GST_DEBUG (0,"next timecode: %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT " %lu %lu", tc->DTS, tc->PTS, tc->length, consumed);
     }
     mb->new_frame = TRUE;
     GST_DEBUG (0,"leftover frame size from %lu to %lu ", tc->length, consumed-size);
@@ -212,7 +212,7 @@ void mpeg1mux_buffer_shrink(Mpeg1MuxBuffer *mb, gulong size) {
     mb->info.audio.PTS = tc->PTS;
     mb->next_frame_time = tc->PTS;
   }
-  GST_DEBUG (0,"next frame time timecode: %llu %lu", mb->next_frame_time, tc->length);
+  GST_DEBUG (0,"next frame time timecode: %" G_GUINT64_FORMAT " %lu", mb->next_frame_time, tc->length);
 
   /* check buffer consistency */
   timecode_list = g_list_first(mb->timecode_list);
@@ -301,7 +301,7 @@ static void mpeg1mux_buffer_update_video_info(Mpeg1MuxBuffer *mb) {
 	  /* skip the first access unit */
 	  if (mb->info.video.decoding_order != 0) {
 	    Mpeg1MuxTimecode *tc;
-            GST_DEBUG (0,"mpeg1mux::update_video_info: PTS %llu, DTS %llu, length %lu", mb->info.video.current_PTS, 
+            GST_DEBUG (0,"mpeg1mux::update_video_info: PTS %" G_GUINT64_FORMAT ", DTS %" G_GUINT64_FORMAT ", length %lu", mb->info.video.current_PTS, 
 			    mb->info.video.current_DTS, offset - mb->current_start-3);
 
 	    tc = (Mpeg1MuxTimecode *) g_malloc(sizeof(Mpeg1MuxTimecode));
@@ -427,7 +427,7 @@ static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
       mb->info.audio.current_PTS = mb->info.audio.decoding_order * samples [mb->info.audio.layer] /
                mb->info.audio.samples_per_second * 90. + startup_delay;
 
-      GST_DEBUG (0,"mpeg1mux::update_audio_info: PTS %llu, length %u", mb->info.audio.current_PTS, mb->info.audio.framesize);
+      GST_DEBUG (0,"mpeg1mux::update_audio_info: PTS %" G_GUINT64_FORMAT ", length %u", mb->info.audio.current_PTS, mb->info.audio.framesize);
       tc->PTS = mb->info.audio.current_PTS;
       tc->DTS = mb->info.audio.current_PTS;
       mb->timecode_list = g_list_append(mb->timecode_list, tc);
@@ -474,7 +474,7 @@ static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
              mb->info.audio.samples_per_second * 90. ;
 
     tc->DTS = tc->PTS = mb->info.audio.current_PTS;
-    GST_DEBUG (0,"mpeg1mux::update_audio_info: PTS %llu, %llu length %lu", mb->info.audio.current_PTS, tc->PTS, tc->length);
+    GST_DEBUG (0,"mpeg1mux::update_audio_info: PTS %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT " length %lu", mb->info.audio.current_PTS, tc->PTS, tc->length);
     mb->timecode_list = g_list_append(mb->timecode_list, tc);
 
     mb->info.audio.decoding_order++;
