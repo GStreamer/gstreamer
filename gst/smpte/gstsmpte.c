@@ -318,20 +318,30 @@ gst_smpte_loop (GstElement *element)
 
   ts = smpte->position * GST_SECOND / smpte->fps;
 
-  if (GST_PAD_IS_USABLE (smpte->sinkpad1)) {
+  while (GST_PAD_IS_USABLE (smpte->sinkpad1) && in1 == NULL) {
     in1 = gst_pad_pull (smpte->sinkpad1);
-    ts = GST_BUFFER_TIMESTAMP (in1);
+    if (GST_IS_EVENT (in1)) {
+      gst_pad_push (smpte->srcpad, in1);
+      in1 = NULL;
+    }
+    else 
+      ts = GST_BUFFER_TIMESTAMP (in1);
   }
-  else {
+  if (GST_PAD_IS_USABLE (smpte->sinkpad2) && in2 == NULL) {
+    in2 = gst_pad_pull (smpte->sinkpad2);
+    if (GST_IS_EVENT (in2)) {
+      gst_pad_push (smpte->srcpad, in2);
+      in2 = NULL;
+    }
+    else 
+      ts = GST_BUFFER_TIMESTAMP (in2);
+  }
+
+  if (in1 == NULL) {
     in1 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
     fill_i420 (GST_BUFFER_DATA (in1), smpte->width, smpte->height, 7);
   }
-    
-  if (GST_PAD_IS_USABLE (smpte->sinkpad2)) {
-    in2 = gst_pad_pull (smpte->sinkpad2);
-    ts = GST_BUFFER_TIMESTAMP (in2);
-  }
-  else {
+  if (in2 == NULL) {
     in2 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
     fill_i420 (GST_BUFFER_DATA (in2), smpte->width, smpte->height, 0);
   }
