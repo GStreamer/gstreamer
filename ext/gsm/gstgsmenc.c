@@ -123,7 +123,7 @@ gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps)) 
     return GST_PAD_CONNECT_DELAYED;
 
-  gsmenc->rate = gst_caps_get_int (caps, "rate");
+  gst_caps_get_int (caps, "rate", &gsmenc->rate);
   if (gst_pad_try_set_caps (gsmenc->srcpad, GST_CAPS_NEW (
                               "gsm_gsm",
                               "audio/x-gsm",

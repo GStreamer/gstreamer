@@ -236,7 +236,7 @@ gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
   GstChart *chart;
   chart = GST_CHART (gst_pad_get_parent (pad));
 
-  chart->samplerate = gst_caps_get_int (caps, "rate");
+  gst_caps_get_int (caps, "rate", &chart->samplerate);
   chart->samples_between_frames = chart->samplerate / chart->framerate;
 
   GST_DEBUG (0, "CHART: new sink caps: rate %d",

@@ -130,8 +130,8 @@ gst_tarkinenc_sinkconnect (GstPad *pad, GstCaps *caps)
   tarkinenc->layer[0].bitstream_len = tarkinenc->bitrate;
   tarkinenc->layer[0].a_moments = tarkinenc->a_moments;
   tarkinenc->layer[0].s_moments = tarkinenc->s_moments;
-  tarkinenc->layer[0].width = gst_caps_get_int (caps, "width");
-  tarkinenc->layer[0].height = gst_caps_get_int (caps, "height");
+  gst_caps_get_int (caps, "width", &tarkinenc->layer[0].width);
+  gst_caps_get_int (caps, "height", &tarkinenc->layer[0].height);
   tarkinenc->layer[0].format = TARKIN_RGB24;
   tarkinenc->layer[0].frames_per_buf = TARKIN_RGB24;
 

@@ -139,7 +139,7 @@ extern int      tarkin_analysis_add_layer(TarkinStream *s,
    }
    /*
    max_bitstream_len += layer->desc.bitstream_len
-        + 2 * 10 * sizeof(uint32_t) * layer->n_comp;    /* truncation tables  */
+        + 2 * 10 * sizeof(uint32_t) * layer->n_comp;    
    */
    return (TARKIN_OK);
 }

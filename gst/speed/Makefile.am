@@ -10,7 +10,7 @@ libgstspeed_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = gstspeed.h filter.func
 
 if HAVE_GTK
-noinst_PROGRAMS = demo-mp3
+noinst_PROGRAMS = demo_mp3
 endif
 
 demo_mp3_SOURCES = demo-mp3.c

@@ -106,12 +106,15 @@ static GstPadConnectReturn
 gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstGSMDec *gsmdec;
+  gint rate;
   
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
   
+  gst_caps_get_int (caps, "rate", &rate);
+
   if (gst_pad_try_set_caps (gsmdec->srcpad, 
 		      GST_CAPS_NEW (
 	  		"gsm_raw",
@@ -122,7 +125,7 @@ gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 			    "signed",     GST_PROPS_BOOLEAN (TRUE),
 			    "width",      GST_PROPS_INT (16),
 			    "depth",      GST_PROPS_INT (16),
-			    "rate",       GST_PROPS_INT (gst_caps_get_int (caps, "rate")),
+			    "rate",       GST_PROPS_INT (rate),
 			    "channels",   GST_PROPS_INT (1)
 			   )))
   {

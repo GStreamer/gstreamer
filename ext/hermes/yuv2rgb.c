@@ -100,7 +100,7 @@ static GstColorSpaceYUVTables * gst_colorspace_init_yuv(long depth,
 GstColorSpaceConverter* 
 gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to) 
 {
-  gulong from_space, to_space;
+  guint32 from_space, to_space;
   GstColorSpaceConverter *new;
   gint to_bpp;
   
@@ -108,13 +108,13 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
 
   new = g_malloc (sizeof (GstColorSpaceConverter));
 
-  new->width = gst_caps_get_int (from, "width");
-  new->height = gst_caps_get_int (from, "height");
+  gst_caps_get_int (from, "width", &new->width);
+  gst_caps_get_int (from, "height", &new->height);
   new->color_tables = NULL;
 
-  from_space = gst_caps_get_fourcc_int (from, "format");
-  to_space = gst_caps_get_fourcc_int (to, "format");
-  to_bpp = gst_caps_get_int (to, "bpp");
+  gst_caps_get_fourcc_int (from, "format", &from_space);
+  gst_caps_get_fourcc_int (to, "format", &to_space);
+  gst_caps_get_int (to, "bpp", &to_bpp);
 
   /* FIXME we leak new here. */
   g_return_val_if_fail (to_space == GST_STR_FOURCC ("RGB "), NULL);
@@ -122,17 +122,17 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
   switch(from_space) {
     case GST_MAKE_FOURCC ('I','4','2','0'):
     {
-      gulong red_mask;
-      gulong green_mask;
-      gulong blue_mask;
+      gint red_mask;
+      gint green_mask;
+      gint blue_mask;
 
-      red_mask   = gst_caps_get_int (to, "red_mask");
-      green_mask = gst_caps_get_int (to, "green_mask");
-      blue_mask  = gst_caps_get_int (to, "blue_mask");
+      gst_caps_get_int (to, "red_mask",   &red_mask);
+      gst_caps_get_int (to, "green_mask", &green_mask);
+      gst_caps_get_int (to, "blue_mask",  &blue_mask);
 
-      GST_INFO (GST_CAT_PLUGIN_INFO, "red_mask    %08lx", red_mask);
-      GST_INFO (GST_CAT_PLUGIN_INFO, "green_mask  %08lx", green_mask);
-      GST_INFO (GST_CAT_PLUGIN_INFO, "blue_mask   %08lx", blue_mask);
+      GST_INFO (GST_CAT_PLUGIN_INFO, "red_mask    %08x", red_mask);
+      GST_INFO (GST_CAT_PLUGIN_INFO, "green_mask  %08x", green_mask);
+      GST_INFO (GST_CAT_PLUGIN_INFO, "blue_mask   %08x", blue_mask);
 
       new->insize 	   = new->width * new->height + new->width * new->height/2;
       new->color_tables    = gst_colorspace_init_yuv (to_bpp, red_mask, green_mask, blue_mask);

@@ -311,11 +311,11 @@ gst_afsink_open_file (GstAFSink *sink)
   }
   else
   {
-    sink->channels        = gst_caps_get_int (caps, "channels");
-    sink->width           = gst_caps_get_int (caps, "width");
-    sink->rate            = gst_caps_get_int (caps, "rate");
-    sink->is_signed       = gst_caps_get_int (caps, "signed");
-    sink->endianness_data = gst_caps_get_int (caps, "endianness");
+    gst_caps_get_int (caps, "channels",   &sink->channels);
+    gst_caps_get_int (caps, "width",      &sink->width);
+    gst_caps_get_int (caps, "rate",       &sink->rate);
+    gst_caps_get_int (caps, "signed",     &sink->is_signed);
+    gst_caps_get_int (caps, "endianness", &sink->endianness_data);
   }
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "channels %d, width %d, rate %d, signed %s",
   	   		sink->channels, sink->width, sink->rate,

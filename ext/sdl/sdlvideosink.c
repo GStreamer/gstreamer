@@ -365,8 +365,12 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
 
   for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
+    guint32 format;
+
+    gst_caps_get_fourcc_int(caps, "format", &format);
+
     /* check whether it's in any way compatible */
-    switch (gst_caps_get_fourcc_int(caps, "format"))
+    switch (format)
     {
       case GST_MAKE_FOURCC('I','4','2','0'):
       case GST_MAKE_FOURCC('I','Y','U','V'):
@@ -374,10 +378,9 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
       case GST_MAKE_FOURCC('Y','U','Y','2'):
       case GST_MAKE_FOURCC('Y','V','Y','U'):
       case GST_MAKE_FOURCC('U','Y','V','Y'):
-        sdlvideosink->format = gst_sdlvideosink_get_sdl_from_fourcc(sdlvideosink,
-                                     gst_caps_get_fourcc_int(caps, "format"));
-        sdlvideosink->image_width = gst_caps_get_int(caps, "width");
-        sdlvideosink->image_height = gst_caps_get_int(caps, "height");
+        sdlvideosink->format = gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, format);
+        gst_caps_get_int(caps, "width", &sdlvideosink->image_width);
+        gst_caps_get_int(caps, "height", &sdlvideosink->image_height);
 
         /* try it out */
         if (!gst_sdlvideosink_create(sdlvideosink, TRUE))

@@ -124,28 +124,34 @@ colorspace_get_bufferpool (GstPad *pad)
 static gboolean 
 colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *to_caps)
 {
-  gulong from_space, to_space;
+  guint32 from_space, to_space;
 
   g_return_val_if_fail (to_caps != NULL, FALSE);
   g_return_val_if_fail (from_caps != NULL, FALSE);
 
-  from_space = gst_caps_get_fourcc_int (from_caps, "format");
-  to_space = gst_caps_get_fourcc_int (to_caps, "format");
+  gst_caps_get_fourcc_int (from_caps, "format", &from_space);
+  gst_caps_get_fourcc_int (to_caps,   "format", &to_space);
 
-  GST_INFO (GST_CAT_NEGOTIATION, "set up converter for %08lx to %08lx", from_space, to_space);
+  GST_INFO (GST_CAT_NEGOTIATION, "set up converter for %08x to %08x", from_space, to_space);
 
   switch (from_space) {
     case GST_MAKE_FOURCC ('R','G','B',' '):
     {
-      gint from_bpp = gst_caps_get_int (from_caps, "bpp");
+      gint from_bpp;
+      
+      gst_caps_get_int (from_caps, "bpp", &from_bpp);
 
       switch (to_space) {
         case GST_MAKE_FOURCC ('R','G','B',' '):
 #ifdef HAVE_HERMES
         {
-	  space->source.r = gst_caps_get_int (from_caps, "red_mask");
-	  space->source.g = gst_caps_get_int (from_caps, "green_mask");
-	  space->source.b = gst_caps_get_int (from_caps, "blue_mask");
+          gint to_bpp;
+      
+          gst_caps_get_int (to_caps, "bpp", &to_bpp);
+
+	  gst_caps_get_int (from_caps, "red_mask",   &space->source.r);
+	  gst_caps_get_int (from_caps, "green_mask", &space->source.g);
+	  gst_caps_get_int (from_caps, "blue_mask",  &space->source.b);
 	  space->source.a = 0;
 	  space->srcbpp = space->source.bits = from_bpp;
 	  space->source.indexed = 0;
@@ -156,11 +162,11 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  GST_INFO (GST_CAT_PLUGIN_INFO, "source blue mask  %08x", space->source.b);
 	  GST_INFO (GST_CAT_PLUGIN_INFO, "source bpp        %08x", space->srcbpp);
 
-	  space->dest.r = gst_caps_get_int (to_caps, "red_mask");
-	  space->dest.g = gst_caps_get_int (to_caps, "green_mask");
-	  space->dest.b = gst_caps_get_int (to_caps, "blue_mask");
+	  gst_caps_get_int (to_caps, "red_mask",   &space->dest.r);
+	  gst_caps_get_int (to_caps, "green_mask", &space->dest.g);
+	  gst_caps_get_int (to_caps, "blue_mask",  &space->dest.b);
 	  space->dest.a = 0;
-	  space->destbpp = space->dest.bits = gst_caps_get_int (to_caps, "bpp");
+	  space->destbpp = space->dest.bits = to_bpp;
 	  space->dest.indexed = 0;
 	  space->dest.has_colorkey = 0;
 
@@ -204,7 +210,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
         case GST_MAKE_FOURCC ('R','G','B',' '):
           GST_INFO (GST_CAT_NEGOTIATION, "colorspace: YUV to RGB");
 
-	  space->destbpp = gst_caps_get_int (to_caps, "bpp");
+	  gst_caps_get_int (to_caps, "bpp", &space->destbpp);
 	  space->converter = gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
           space->type = GST_COLORSPACE_YUV_RGB;
 	  return TRUE;
@@ -264,8 +270,8 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_DELAYED;
   }
 
-  space->width = gst_caps_get_int (caps, "width");
-  space->height = gst_caps_get_int (caps, "height");
+  gst_caps_get_int (caps, "width", &space->width);
+  gst_caps_get_int (caps, "height", &space->height);
 
   GST_INFO (GST_CAT_PROPERTIES, "size: %dx%d", space->width, space->height);
 
@@ -355,7 +361,8 @@ gst_colorspace_get_type (void)
 
   if (!colorspace_type) {
     static const GTypeInfo colorspace_info = {
-      sizeof(GstColorspaceClass),      NULL,
+      sizeof(GstColorspaceClass),      
+      NULL,
       NULL,
       (GClassInitFunc)gst_colorspace_class_init,
       NULL,
