@@ -450,7 +450,7 @@ GST_PLUGIN_DEFINE (
 void
 gst_cutter_get_caps (GstPad *pad, GstCutter* filter)
 {
-  GstCaps *caps = NULL;
+  const GstCaps *caps = NULL;
   GstStructure *structure;
 
   caps = GST_PAD_CAPS (pad);
