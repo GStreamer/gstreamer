@@ -1,3 +1,13 @@
+2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* tools/Makefile.am:
+	* tools/gst-run.c: (popt_callback), (hash_print_key),
+	(find_highest_version), (unmangle_libtool), (get_dir_of_binary),
+	(get_candidates), (main):
+          add new source file to generate non-versioned wrapper binaries
+          for our tools.
+
 2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstevent.c: (_gst_event_free):
