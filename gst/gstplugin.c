@@ -27,6 +27,7 @@
 
 #include "gst_private.h"
 #include "gstplugin.h"
+#include "gstversion.h"
 #include "config.h"
 
 
@@ -347,7 +348,7 @@ gboolean
 gst_plugin_load_absolute (const gchar *name)
 {
   GModule *module;
-  GstPluginInitFunc initfunc;
+  GstPluginDesc *desc;
   GstPlugin *plugin;
   struct stat file_status;
 
@@ -363,10 +364,19 @@ gst_plugin_load_absolute (const gchar *name)
 
   module = g_module_open(name,G_MODULE_BIND_LAZY);
   if (module != NULL) {
-    if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
-      GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugin \"%s\"...",
-           name);
-      if ((plugin = (initfunc)(module))) {
+    if (g_module_symbol(module,"plugin_desc",(gpointer *)&desc)) {
+      GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugin \"%s\"...", name);
+      plugin = gst_plugin_new(desc->name, desc->major_version, desc->minor_version);
+      if (plugin != NULL) {
+	if (!((desc->plugin_init)(module, plugin))) {
+          GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" failed to initialise",
+             plugin->name);
+	  g_free(plugin);
+	  plugin = NULL;
+	}
+      }
+
+      if (plugin != NULL) {
         GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" loaded: %d elements, %d types",
              plugin->name,plugin->numelements,plugin->numtypes);
         plugin->filename = g_strdup(name);
@@ -392,15 +402,22 @@ gst_plugin_load_absolute (const gchar *name)
 /**
  * gst_plugin_new:
  * @name: name of new plugin
+ * @major: major version number of core that plugin is compatible with
+ * @minor: minor version number of core that plugin is compatible with
  *
  * Create a new plugin with given name.
  *
- * Returns: new plugin
+ * Returns: new plugin, or NULL if plugin couldn't be created, due to
+ * incompatible version number, or name already being allocated)
  */
 GstPlugin*
-gst_plugin_new (const gchar *name)
+gst_plugin_new (const gchar *name, gint major, gint minor)
 {
   GstPlugin *plugin;
+
+  // return NULL if the major and minor version numbers are not compatible
+  // with ours.
+  if (major != GST_VERSION_MAJOR || minor != GST_VERSION_MINOR) return NULL;
 
   // return NULL if the plugin is allready loaded
   plugin = gst_plugin_find (name);

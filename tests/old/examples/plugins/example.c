@@ -335,23 +335,17 @@ gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
 /* This is the entry into the plugin itself.  When the plugin loads,
  * this function is called to register everything that the plugin provides.
  */
-GstPlugin*
-plugin_init (GModule *module)
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstPlugin *plugin;
   GstElementFactory *factory;
-
-  /* First we try to create a new Plugin structure. */
-  plugin = gst_plugin_new("example");
-  /* If we get a NULL back, chances are we're already loaded. */
-  g_return_val_if_fail(plugin != NULL, NULL);
 
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GtkType identifier,
    * and a pointer to the details structure at the top of the file.
    */
   factory = gst_elementfactory_new("example", GST_TYPE_EXAMPLE, &example_details);
-  g_return_val_if_fail(factory != NULL, NULL);
+  g_return_val_if_fail(factory != NULL, FALSE);
 
   /* The pad templates can be easily generated from the factories above,
    * and then added to the list of padtemplates for the elementfactory.
@@ -367,10 +361,27 @@ plugin_init (GModule *module)
   /* The very last thing is to register the elementfactory with the plugin. */
   gst_plugin_add_factory (plugin, factory);
 
-  /* Now we can return the pointer to the newly created Plugin object. */
-  return plugin;
+  /* Now we can return successfully. */
+  return TRUE;
 
   /* At this point, the GStreamer core registers the plugin, its
    * elementfactories, padtemplates, etc., for use in you application.
    */
 }
+
+/* This structure describes the plugin to the system for dynamically loading
+ * plugins, so that the version number and name can be checked in a uniform
+ * way.
+ *
+ * The symbol pointing to this structure is the only symbol looked up when
+ * loading the plugin.
+ */
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR, /* The major version of the core that this was built with */
+  GST_VERSION_MINOR, /* The minor version of the core that this was built with */
+  "example",         /* The name of the plugin.  This must be unique: plugins with
+		      * the same name will be assumed to be identical, and only
+		      * one will be loaded. */
+  plugin_init        /* Pointer to the initialisation function for the plugin. */
+};
+
