@@ -55,6 +55,8 @@ enum
       /* FILL ME */
 };
 
+static GstCaps *capslist = NULL;
+
 static void gst_videotestsrc_base_init (gpointer g_class);
 static void gst_videotestsrc_class_init (GstVideotestsrcClass * klass);
 static void gst_videotestsrc_init (GstVideotestsrc * videotestsrc);
@@ -294,22 +296,30 @@ gst_videotestsrc_change_state (GstElement * element)
 static GstCaps *
 gst_videotestsrc_get_capslist (void)
 {
-  GstCaps *caps;
-  GstStructure *structure;
-  int i;
+  return gst_caps_copy (capslist);
+}
 
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < n_fourccs; i++) {
-    structure = paint_get_structure (fourcc_list + i);
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
-    gst_caps_append_structure (caps, structure);
+static void
+generate_capslist (void)
+{
+  if (!capslist) {
+    GstCaps *caps;
+    GstStructure *structure;
+    int i;
+
+    caps = gst_caps_new_empty ();
+    for (i = 0; i < n_fourccs; i++) {
+      structure = paint_get_structure (fourcc_list + i);
+      gst_structure_set (structure,
+          "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+          "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+      gst_caps_append_structure (caps, structure);
+    }
+
+    capslist = caps;
   }
-
-  return caps;
 }
 
 #if 0
@@ -663,6 +673,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_LIBOIL
   oil_init ();
 #endif
+
+  generate_capslist ();
 
   return gst_element_register (plugin, "videotestsrc", GST_RANK_NONE,
       GST_TYPE_VIDEOTESTSRC);
