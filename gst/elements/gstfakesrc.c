@@ -221,17 +221,22 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
 {
   GSList *pads;
 
+  if (src->loop_based) {
+    gst_element_set_loop_function (GST_ELEMENT (src), GST_DEBUG_FUNCPTR (gst_fakesrc_loop));
+  }
+  else {
+    gst_element_set_loop_function (GST_ELEMENT (src), NULL);
+  }
+
   pads = src->srcpads;
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
 
     if (src->loop_based) {
-      gst_element_set_loop_function (GST_ELEMENT (src), gst_fakesrc_loop);
       gst_pad_set_get_function (pad, NULL);
     }
     else {
-      gst_pad_set_get_function (pad, gst_fakesrc_get);
-      gst_element_set_loop_function (GST_ELEMENT (src), NULL);
+      gst_pad_set_get_function (pad, GST_DEBUG_FUNCPTR (gst_fakesrc_get));
     }
     pads = g_slist_next (pads);
   }

@@ -33,6 +33,13 @@ extern "C" {
 
 extern GstElementDetails gst_aggregator_details;
 
+typedef enum {
+  AGGREGATOR_LOOP 		= 1,
+  AGGREGATOR_LOOP_PEEK,
+  AGGREGATOR_LOOP_SELECT,
+  AGGREGATOR_CHAIN,
+} GstAggregatorSchedType;
+
 #define GST_TYPE_AGGREGATOR \
   (gst_aggregator_get_type())
 #define GST_AGGREGATOR(obj) \
@@ -53,8 +60,10 @@ struct _GstAggregator {
   GstPad *srcpad;
 
   gboolean silent;
+  GstAggregatorSchedType sched;
+
   gint numsinkpads;
-  GSList *sinkpads;
+  GList *sinkpads;
 };
 
 struct _GstAggregatorClass {

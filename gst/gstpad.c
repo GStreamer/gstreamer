@@ -1566,6 +1566,72 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
 }
 #endif
 
+/**
+ * gst_pad_peek:
+ * @pad: the pad to peek
+ *
+ * Peek for a buffer from the peer pad.
+ *
+ * Returns: a from the peer pad or NULL if the peer has no buffer.
+ */
+GstBuffer*
+gst_pad_peek (GstPad *pad)
+{
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
+
+  return GST_RPAD_BUFPEN (GST_RPAD_PEER (pad));
+}
+
+/**
+ * gst_pad_select:
+ * @padlist: A list of pads 
+ *
+ * Wait for a buffer on the list of pads.
+ *
+ * Returns: The pad that has a buffer available, use 
+ * #gst_pad_pull to get the buffer.
+ */
+GstPad*
+gst_pad_select (GList *padlist)
+{
+  // FIXME implement me
+  return NULL;
+}
+
+/**
+ * gst_pad_selectv:
+ * @pad: The first pad to perform the select on 
+ * @...: More pads
+ *
+ * Wait for a buffer on the given of pads.
+ *
+ * Returns: The pad that has a buffer available, use 
+ * #gst_pad_pull to get the buffer.
+ */
+GstPad*
+gst_pad_selectv (GstPad *pad, ...)
+{
+  GstPad *result;
+  GList *padlist = NULL;
+  va_list var_args;
+
+  if (pad == NULL)
+    return NULL;
+
+  va_start (var_args, pad);
+
+  while (pad) {
+    padlist = g_list_prepend (padlist, pad);
+    pad = va_arg (var_args, GstPad *);
+  }
+  result = gst_pad_select (padlist);
+  g_list_free (padlist);
+
+  va_end (var_args);
+  
+  return result;
+}
+
 /************************************************************************
  *
  * templates

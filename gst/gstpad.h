@@ -287,7 +287,6 @@ name (void)                                     \
 
 #define GST_PADTEMPLATE_GET(fact) (fact)()
 
-
 GType			gst_pad_get_type		(void);
 GType			gst_real_pad_get_type		(void);
 GType			gst_ghost_pad_get_type		(void);
@@ -362,6 +361,9 @@ NULL )
 (((GstRealPad *)(pad))->peer->pullregionfunc)((GstPad *)(((GstRealPad *)(pad))->peer),(type),(offset),(len)) : \
 NULL )
 #endif
+GstBuffer*		gst_pad_peek			(GstPad *pad);
+GstPad*			gst_pad_select			(GList *padlist);
+GstPad*			gst_pad_selectv			(GstPad *pad, ...);
 
 #define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);
@@ -373,8 +375,7 @@ void			gst_pad_load_and_connect	(xmlNodePtr self, GstObject *parent);
 
 
 /* ghostpads */
-GstPad *		gst_ghost_pad_new		(gchar *name,GstPad *pad);
-
+GstPad*			gst_ghost_pad_new		(gchar *name,GstPad *pad);
 
 
 /* templates and factories */

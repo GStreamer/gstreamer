@@ -70,6 +70,7 @@ struct _GstSchedule {
   void (*unlock_element)	(GstSchedule *sched, GstElement *element);
   void (*pad_connect)		(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
   void (*pad_disconnect)	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+  void (*pad_select)		(GstSchedule *sched, GList *padlist);
   gboolean (*iterate)		(GstSchedule *sched);
 };
 

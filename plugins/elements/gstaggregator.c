@@ -42,6 +42,7 @@ enum {
   ARG_0,
   ARG_NUM_PADS,
   ARG_SILENT,
+  ARG_SCHED,
   /* FILL ME */
 };
 
@@ -51,6 +52,26 @@ GST_PADTEMPLATE_FACTORY (aggregator_src_factory,
   GST_PAD_REQUEST,
   NULL			/* no caps */
 );
+
+#define GST_TYPE_AGGREGATOR_SCHED (gst_aggregator_sched_get_type())
+static GType
+gst_aggregator_sched_get_type (void)
+{
+  static GType aggregator_sched_type = 0;
+  static GEnumValue aggregator_sched[] = {
+    { AGGREGATOR_LOOP,   	"1", "Loop Based"},
+    { AGGREGATOR_LOOP_PEEK,    	"2", "Loop Based Peek"},
+    { AGGREGATOR_LOOP_SELECT,   "3", "Loop Based Select"},
+    { AGGREGATOR_CHAIN,      	"4", "Chain Based"},
+    {0, NULL, NULL},
+  };
+  if (!aggregator_sched_type) {
+    aggregator_sched_type = g_enum_register_static ("GstAggregatorSched", aggregator_sched);
+  }
+  return aggregator_sched_type;
+}
+
+#define AGGREGATOR_IS_LOOP_BASED(ag)	((ag)->sched != AGGREGATOR_CHAIN)
 
 static void 	gst_aggregator_class_init	(GstAggregatorClass *klass);
 static void 	gst_aggregator_init		(GstAggregator *aggregator);
@@ -63,6 +84,7 @@ static void 	gst_aggregator_get_property 	(GObject *object, guint prop_id,
 						 GValue *value, GParamSpec *pspec);
 
 static void  	gst_aggregator_chain 		(GstPad *pad, GstBuffer *buf);
+static void 	gst_aggregator_loop 		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_aggregator_signals[LAST_SIGNAL] = { 0 };
@@ -106,6 +128,9 @@ gst_aggregator_class_init (GstAggregatorClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
                       FALSE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCHED,
+    g_param_spec_enum ("sched", "sched", "sched",
+                      GST_TYPE_AGGREGATOR_SCHED, AGGREGATOR_CHAIN, G_PARAM_READWRITE)); 
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_aggregator_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_aggregator_get_property);
@@ -146,10 +171,36 @@ gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ)
   gst_pad_set_chain_function (sinkpad, gst_aggregator_chain);
   gst_element_add_pad (GST_ELEMENT (aggregator), sinkpad);
   
-  aggregator->sinkpads = g_slist_prepend (aggregator->sinkpads, sinkpad);
+  aggregator->sinkpads = g_list_prepend (aggregator->sinkpads, sinkpad);
   aggregator->numsinkpads++;
   
   return sinkpad;
+}
+
+static void
+gst_aggregator_update_functions (GstAggregator *aggregator)
+{
+  GList *pads;
+
+  if (AGGREGATOR_IS_LOOP_BASED (aggregator)) {
+    gst_element_set_loop_function (GST_ELEMENT (aggregator), GST_DEBUG_FUNCPTR (gst_aggregator_loop));
+  }
+  else {
+    gst_element_set_loop_function (GST_ELEMENT (aggregator), NULL);
+  }
+
+  pads = aggregator->sinkpads;
+  while (pads) {
+    GstPad *pad = GST_PAD (pads->data);
+		          
+    if (AGGREGATOR_IS_LOOP_BASED (aggregator)) {
+      gst_pad_set_get_function (pad, NULL);
+    }
+    else {
+      gst_element_set_loop_function (GST_ELEMENT (aggregator), NULL);
+    }
+    pads = g_list_next (pads);
+  }
 }
 
 static void
@@ -165,6 +216,10 @@ gst_aggregator_set_property (GObject *object, guint prop_id, const GValue *value
   switch (prop_id) {
     case ARG_SILENT:
       aggregator->silent = g_value_get_boolean (value);
+      break;
+    case ARG_SCHED:
+      aggregator->sched = g_value_get_enum (value);
+      gst_aggregator_update_functions (aggregator);
       break;
     default:
       break;
@@ -188,9 +243,73 @@ gst_aggregator_get_property (GObject *object, guint prop_id, GValue *value, GPar
     case ARG_SILENT:
       g_value_set_boolean (value, aggregator->silent);
       break;
+    case ARG_SCHED:
+      g_value_set_enum (value, aggregator->sched);
+      break;
     default:
       break;
   }
+}
+
+static void 
+gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstBuffer *buf, guchar *debug) 
+{
+  if (!aggregator->silent)
+    g_print("aggregator: %10.10s ******* (%s:%s)a (%d bytes, %llu) \n",
+            debug, GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+  gst_pad_push (aggregator->srcpad, buf);
+}
+
+static void 
+gst_aggregator_loop (GstElement *element) 
+{
+  GstAggregator *aggregator;
+  GstBuffer *buf;
+  guchar *debug;
+
+  aggregator = GST_AGGREGATOR (element);
+
+  do {
+    if (aggregator->sched == AGGREGATOR_LOOP ||
+        aggregator->sched == AGGREGATOR_LOOP_PEEK) {
+      GList *pads = aggregator->sinkpads;
+
+      while (pads) {
+	GstPad *pad = GST_PAD (pads->data);
+	pads = g_list_next (pads);
+
+        if (aggregator->sched == AGGREGATOR_LOOP_PEEK) {
+	  buf = gst_pad_peek (pad);
+	  if (buf == NULL)
+	    continue;
+
+	  g_assert (buf == gst_pad_pull (pad));
+	  debug = "loop_peek";
+        }
+	else {
+	  buf = gst_pad_pull (pad);
+	  debug = "loop";
+	}
+	gst_aggregator_push (aggregator, pad, buf, debug);
+      }
+    }
+    else {
+      if (aggregator->sched == AGGREGATOR_LOOP_SELECT) {
+	GstPad *pad;
+
+	debug = "loop_select";
+
+	pad = gst_pad_select (aggregator->sinkpads);
+	buf = gst_pad_pull (pad);
+
+	gst_aggregator_push (aggregator, pad, buf, debug);
+      }
+      else {
+	g_assert_not_reached ();
+      }
+    }
+  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
 
 /**
@@ -212,11 +331,7 @@ gst_aggregator_chain (GstPad *pad, GstBuffer *buf)
   aggregator = GST_AGGREGATOR (gst_pad_get_parent (pad));
   gst_trace_add_entry (NULL, 0, buf, "aggregator buffer");
 
-  if (!aggregator->silent)
-    g_print("aggregator: chain ******* (%s:%s)a (%d bytes, %llu) \n",
-               GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
-
-  gst_pad_push (aggregator->srcpad, buf);
+  gst_aggregator_push (aggregator, pad, buf, "chain");
 }
 
 gboolean
