@@ -82,7 +82,7 @@ echo timestamp > stamp-h.in 2> /dev/null
 
 tool_run "$autoconf"
 debug "automake: $automake"
-tool_run "$automake" "-a -c"
+tool_run "$automake" "--add-missing --copy"
 
 test -n "$NOCONFIGURE" && {
   echo "skipping configure stage for package $package, as requested."
