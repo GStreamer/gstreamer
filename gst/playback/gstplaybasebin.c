@@ -1207,7 +1207,7 @@ gst_play_base_bin_change_state (GstElement * element)
             /* We're no audio/video and the only stream... We could
              * be something not-media that's detected because then our
              * typefind doesn't mess up with mp3 (bz2, gz, elf, ...) */
-            if (info->caps) {
+            if (info->caps && !gst_caps_is_empty (info->caps)) {
               const gchar *mime =
                   gst_structure_get_name (gst_caps_get_structure (info->caps,
                       0));
