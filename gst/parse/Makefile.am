@@ -2,12 +2,13 @@
 
 #libgstparse_la_SOURCES = parse.c grammar.c
 
-BISON = bison -d
+BISON = bison -d -v
 
 noinst_PROGRAMS = grammar
 
 grammar_SOURCES = lex.yy.c grammar.tab.c
 grammar_CFLAGS = $(GLIB_CFLAGS)
+grammar_LDADD = $(GLIB_LIBS)
 
 noinst_HEADERS = grammar.tab.h
 

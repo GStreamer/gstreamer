@@ -2,7 +2,7 @@
 #include <math.h>
 #include <ctype.h>
 #include <string.h>
-#include <glib.h>
+#include "types.h"
 #include <grammar.tab.h>
 
 #ifdef DEBUG
