@@ -1,3 +1,14 @@
+2004-02-11  David Schleef  <ds@schleef.org>
+
+	* docs/gst/tmpl/gstcaps.sgml:  Fix stuff that mentions GstProps
+	* docs/gst/tmpl/gstpadtemplate.sgml: same
+	* docs/gst/tmpl/gstreamer-unused.sgml: Remove GstProps
+	* gst/gstobject.c: (gst_object_set_name_default): Do the memleak
+	fixing dance.
+	* gst/gstutils.c: Remove disabled code that uses GstProps.
+	* gst/registries/gstxmlregistry.h: same
+	* docs/random/ds/0.9-suggested-changes: random notes
+
 2004-02-11  kost@imn.htwk-leipzig.de
 
 	reviewed by: David Schleef  <ds@schleef.org>

@@ -16,6 +16,9 @@ API:
  - gst_init() et al. need to work correctly when called multiple times
    and from libraries, etc.
 
+ - gst_pad_get_pad_template_caps -> gst_pad_get_template_caps()
+
+
 caps:
 
   (Company:)

@@ -104,8 +104,6 @@ struct _GstXMLRegistry {
 
   gchar			*caps_name;
   gchar			*structure_name;
-  //gchar			*caps_mime;
-  //GstProps		*props;
 
   gboolean		 in_list;
   GList			*entry_list;

@@ -2163,13 +2163,6 @@ Set or get the flush flag of the discont event.
 
 @event: The event to operate on
 
-<!-- ##### MACRO GST_EVENT_INFO_PROPS ##### -->
-<para>
-The properties of the info event
-</para>
-
-@event: The event to query
-
 <!-- ##### MACRO GST_EVENT_SEEK_FLUSH ##### -->
 <para>
 Qeury wether the seek event also needs a flush.
@@ -3035,65 +3028,6 @@ A macro used to define a statically linked plugin.
 @name: The name of the plugin.
 @init: The init function of this plugin.
 
-<!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_ENTRY_IS_VARIABLE ##### -->
-<para>
-
-</para>
-
-@a: 
-
-<!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-
-<!-- ##### MACRO GST_PROPS_FLOAT_STRING ##### -->
-<para>
-
-</para>
-
-@a: 
-
-<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
-<para>
-Create a fourcc property out of an integer value.
-</para>
-
-@a: the integer value
-
-<!-- ##### MACRO GST_PROPS_INT_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_INT_RANGE_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_LIST_ID ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_QUEUE ##### -->
 <para>
 
@@ -3786,12 +3720,6 @@ A type that can be used to indicate a filename.
 
 
 <!-- ##### MACRO GST_TYPE_PLUGIN_ERROR ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_PROPS_TYPE ##### -->
 <para>
 
 </para>
@@ -5572,36 +5500,6 @@ Sets the command to be executed.
 
 
 <!-- ##### STRUCT GstPluginElement ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstPropsFactory[] ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstPropsId ##### -->
-<para>
-
-</para>
-
-@GST_PROPS_END_ID_NUM: 
-@GST_PROPS_LIST_ID_NUM: 
-@GST_PROPS_INT_ID_NUM: 
-@GST_PROPS_INT_RANGE_ID_NUM: 
-@GST_PROPS_FOURCC_ID_NUM: 
-@GST_PROPS_BOOL_ID_NUM: 
-
-<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
 <para>
 
 </para>

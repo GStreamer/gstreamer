@@ -11,32 +11,24 @@ a mime-type and a set of properties. GstCaps can be named and chained into
 a list, which is then a GstCaps on its own.
 </para>
 <para>
-GstCaps are created with gst_caps_new(), which takes a name, a mime type and
-a pointer to a #GstProps. A convenience macro with a cleaner syntax is 
-available to create a caps with GST_CAPS_NEW(). The following example shows how
-to create a GstCaps.
+GstCaps are created with gst_caps_new_simpl(), which takes a mime type and
+a list of arguments in sets of 3, terminated with NULL.  Each set of 3
+arguments is the name of a field, the GType of the field, and the value
+of the field.  The following example shows how to create a GstCaps.
 <programlisting>
   GstCaps *caps;
 
   caps = gst_caps_new (
-          "my_caps",		/* capability name */
-	  "audio/raw",		/* mime type */
-	  gst_props_new (	/* properties */
-	    "format",   GST_PROPS_STRING ("float"),
-	    "channels",   GST_PROPS_INT (5),
-	    NULL));
+      "audio/x-raw-int",		/* mime type */
+      "channels", G_TYPE_INT, 5,
+      NULL);
 </programlisting>
 
 The following code example is equivalent to the above example:
 <programlisting>
   GstCaps *caps;
 
-  caps = GST_CAPS_NEW (
-          "my_caps",		/* capability name */
-	  "audio/raw",		/* mime type */
-	    "format",   GST_PROPS_STRING ("float"),
-	    "channels", GST_PROPS_INT (5)
-	  );
+  caps = gst_caps_from_string ("audio/x-raw-int, channels = (int) 5");
 </programlisting>
 </para>
 <para>
@@ -53,15 +45,16 @@ gst_caps_get_boolean(), gst_caps_get_fourcc_int(), gst_caps_get_int(),
 gst_caps_get_string(), gst_caps_get_float(), which all take a property name as an argument.
 </para>
 <para>
-The properties of the caps structure can be modified with gst_caps_set, which
-takes a list of key value pairs in the #GstProps syntax as shown by this example:
+The fields of the caps structure can be modified with gst_caps_set_simple,
+which takes the caps structure to be modified, a list of arguments in
+sets of 3, terminated by NULL.  The format of these arguments is the
+same as above.
 
 <programlisting>
   GstCaps *caps;
    ....
 
-  gst_caps_set (caps, "format", GST_PROPS_STRING ("int"), NULL);
-  gst_caps_set (caps, "channels", GST_PROPS_INT (20), NULL);
+  gst_caps_set_simple (caps, "channels", G_TYPE_INT, 20, NULL);
  
 </programlisting>
 </para>
@@ -73,25 +66,18 @@ gst_caps_copy_on_write(). This will copy the GstCaps if the refcount is &gt;1.
 If you need a unique instance of a GstCaps you can use the convenient 
 GST_CAPS_FACTORY() macro as shown below. 
 <programlisting>
-  GST_CAPS_FACTORY (my_caps,
-    GST_CAPS_NEW (
-      "caps1",
-      "audio/raw",
-        "format",   GST_PROPS_STRING ("float"),
-        "channels", GST_PROPS_INT (5)
-    ),
-    GST_CAPS_NEW (
-      "caps2",
-      "audio/raw",
-        "format",   GST_PROPS_STRING ("int"),
-        "channels", GST_PROPS_INT (5)
+  GstStaticCaps my_caps = GST_STATIC_CAPS (
+      "audio/x-raw-float, "
+        "channels = (int) 5; "
+      "audio/x-raw-int, "
+        "channels = (int) 5"
     )
   )
 
   void
   some_function (void)
   {
-    GstCaps *caps = GST_CAPS_GET (my_caps);
+    GstCaps *caps = gst_caps_copy (gst_static_caps_get (&amp;my_caps));
 
     ...
   }
@@ -108,7 +94,7 @@ of the capabilities.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstProps, #GstPad
+#GstStructure, #GstPad
 </para>
 
 <!-- ##### MACRO GST_TYPE_CAPS ##### -->

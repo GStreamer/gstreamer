@@ -23,15 +23,14 @@ to add to an elementfactory.
 <para>
 The following code example shows the code to create a pad from a padtemplate.
 <programlisting>
-  GST_PAD_TEMPLATE_FACTORY (my_template_factory,
+  GstStaticPadTemplate my_template =
+  GST_STATIC_PAD_TEMPLATE (
     "sink",		/* the name of the pad */
     GST_PAD_SINK,	/* the direction of the pad */
     GST_PAD_ALWAYS, 	/* when this pad will be present */
-    GST_CAPS_NEW (	/* the capabilities of the padtemplate */
-      "my_caps",
-      "audio/raw",
-        "format",	GST_PROPS_STRING ("int"),
-        "channels",	GST_PROPS_INT_RANGE (1, 6)
+    GST_STATIC_CAPS (	/* the capabilities of the padtemplate */
+      "audio/x-raw-int, "
+        "channels = (int) [ 1, 6 ]"
     )
   )
 

@@ -432,8 +432,10 @@ gst_object_set_name_default (GstObject *object)
    * may ever assign a name */
   G_LOCK (object_name_mutex);
 
-  if (!object_name_counts)
-    object_name_counts = g_hash_table_new (g_str_hash, g_str_equal);
+  if (!object_name_counts) {
+    object_name_counts = g_hash_table_new_full (g_str_hash, g_str_equal,
+        g_free, NULL);
+  }
 
   count = GPOINTER_TO_INT (g_hash_table_lookup (object_name_counts, type_name));
   g_hash_table_insert (object_name_counts, g_strdup (type_name), 
