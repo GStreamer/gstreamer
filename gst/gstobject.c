@@ -246,6 +246,8 @@ gst_object_sink (GstObject *object)
 void
 gst_object_replace (GstObject **oldobj, GstObject *newobj)
 {
+  GST_DEBUG (GST_CAT_REFCOUNTING, "replace %p %p", *oldobj, newobj);
+
   if (*oldobj != newobj) {
     if (newobj)  gst_object_ref (newobj);
     if (*oldobj) gst_object_unref (*oldobj);

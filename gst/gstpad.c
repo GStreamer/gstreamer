@@ -1065,6 +1065,11 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     gst_scheduler_pad_link (src_sched, 
 	                    GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
   }
+  else {
+    GST_INFO (GST_CAT_PADS, "not telling link to scheduler %s:%s and %s:%s, %p %p",
+            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad),
+	    src_sched, sink_sched);
+  }
 
   GST_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
