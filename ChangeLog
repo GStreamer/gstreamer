@@ -1,3 +1,11 @@
+2004-10-14  David Schleef  <ds@schleef.org>
+
+	* configure.ac: update for swfdec-0.3 and liboil-0.2
+	* ext/swfdec/gstswfdec.c: update for swfdec-0.3
+	* ext/swfdec/gstswfdec.h: same
+	* gst/videofilter/gstvideobalance.c: update for liboil-0.2
+	* gst/videotestsrc/videotestsrc.c: same
+
 2004-10-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
