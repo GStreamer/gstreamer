@@ -1,5 +1,10 @@
 2004-06-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay):
+          check if v4l-conf is in path
+
+2004-06-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/media-info/media-info-priv.c: (gmi_set_mime):
           change assert to a more readable error message
 

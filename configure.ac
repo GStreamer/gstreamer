@@ -1340,9 +1340,10 @@ main (int   argc,
 
 dnl *** musicbrainz ***
 dnl libmusicbrainz <= 2.0.2 has symbol clashes with ffmpeg
+dnl however, our ffmpeg patch was accepted upstream
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSICBRAINZ, true)
 GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz], musicbrainz, [
-  PKG_CHECK_MODULES(MUSICBRAINZ, libmusicbrainz > 2.0.2,
+  PKG_CHECK_MODULES(MUSICBRAINZ, libmusicbrainz >= 2.0.2,
       HAVE_MUSICBRAINZ="yes", HAVE_MUSICBRAINZ="no")
   AC_SUBST(MUSICBRAINZ_CFLAGS)
   AC_SUBST(MUSICBRAINZ_LIBS)
