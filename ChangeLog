@@ -1,5 +1,22 @@
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstinfo.c:
+	* gst/gstregistrypool.c: (gst_registry_pool_plugin_filter),
+	(gst_registry_pool_feature_filter):
+	* gst/gstthread.c: (gst_thread_class_init):
+	* gst/gstvalue.c:
+          add includes exposed by building without libxml
+	* gst/indexers/Makefile.am:
+          do not build fileindex when LOADSAVE disabled; we should have
+          a better libxml check later since fileindex depends on xml, not
+          LOADSAVE or REGISTRY
+	* libs/gst/control/Makefile.am:
+          link with m
+	* tools/Makefile.am:
+          fix wrong source code for gst-xmlinspect
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
           fix gcov help output
           move calls to and use new GST_CHECK_DISABLE_SUBSYSTEM

@@ -52,7 +52,7 @@ gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
 gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
 gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
 gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
-gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
+gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c
 
 # make sure each unversioned tool comes from gst-run.c
 if !GST_DISABLE_REGISTRY

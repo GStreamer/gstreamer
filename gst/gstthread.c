@@ -143,7 +143,9 @@ static void
 gst_thread_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+#ifndef GST_DISABLE_LOADSAVE
   GstObjectClass *gstobject_class = GST_OBJECT_CLASS (g_class);
+#endif
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   GstBinClass *gstbin_class = GST_BIN_CLASS (g_class);
   GstThreadClass *klass = GST_THREAD_CLASS (g_class);

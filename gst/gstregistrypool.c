@@ -152,9 +152,11 @@ GList*
 gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first, gpointer user_data)
 {
   GList *result = NULL;
-  GList *walk, *temp;
+  GList *temp;
   
 #ifndef GST_DISABLE_REGISTRY
+  GList *walk;
+
   walk = _gst_registry_pool;
 
   while (walk) {
@@ -216,9 +218,10 @@ GList*
 gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
 {
   GList *result = NULL;
-  GList *walk, *temp;
+  GList *temp;
   
 #ifndef GST_DISABLE_REGISTRY
+  GList *walk;
   walk = _gst_registry_pool;
 
   while (walk) {

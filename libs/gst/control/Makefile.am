@@ -22,5 +22,6 @@ libgstcontrol_@GST_MAJORMINOR@_la_SOURCES = \
 
 libgstcontrol_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
 libgstcontrol_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
-libgstcontrol_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS)
+# control uses log and exp, so we need -lm if xml is disabled
+libgstcontrol_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) -lm
 

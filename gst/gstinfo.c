@@ -33,6 +33,7 @@
 #ifdef HAVE_PRINTF_EXTENSION
 #include <printf.h>
 #endif
+#include <stdio.h> /* fprintf */
 #include <unistd.h>
 #include <string.h> /* G_VA_COPY */
 #include "gstinfo.h"
