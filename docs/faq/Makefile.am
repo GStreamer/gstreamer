@@ -1,37 +1,56 @@
-DOC=gstreamer-faq
-MAIN=$(DOC).xml
-XML=$(wildcard *.xml)
-XSLFO=$(srcdir)/../xsl/fo.xsl
-XSLFOMODS=$(srcdir)/../xsl/ulink.xsl $(srcdir)/../xsl/keycombo.xsl
-XSLHTML=$(srcdir)/../xsl/html.xsl
-XSLHTMLMODS=$(srcdir)/../xsl/fileext.xsl $(srcdir)/../xsl/admon.xsl \
-	$(srcdir)/../xsl/keycombo.xsl $(srcdir)/../xsl/css.xsl
-XSLS=$(XSLFO) $(XSLFOMODS) $(XSLHTML) $(XSLHTMLMODS)
-SRC=$(XML)
-CSS=base.css
+### this is the part you can customize if you need to
 
-EXTRA_DIST = $(XML) $(CSS) magic-png magic-pdf
+# base name of doc
+DOC = gstreamer-faq
 
+# main xml file
+MAIN = $(DOC).xml
+# all xml sources
+XML = $(notdir $(wildcard $(srcdir)/*.xml))
+# base style sheet
+CSS = base.css
+
+# image sources
+PNG_SRC = 
+FIG_SRC = $(notdir $(wildcard $(srcdir)/*.fig))
+
+### this is the generic bit and you shouln't need to change this
+
+# get the generic docbuilding Makefile stuff
 include $(srcdir)/../manuals.mak
 
-# target for building the faq dir to be put on the website and rsync-ing it
-www:	www-faq
-	export RSYNC_RSH=ssh
-	cd www-faq && rsync -arv * thomasvs@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/faq/
+### this is standard automake stuff
+                                                                                
+# package up all the source
+EXTRA_DIST = $(SRC)
+                                                                                
+# install documentation
+docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/$(DOC)
+doc_DATA = $(PDF_DAT) $(PS_DAT)
+                                                                                
+include $(srcdir)/../htmlinstall.mak
 
-www-faq: gstreamer-faq
-	mkdir -p www-faq
-	cp gstreamer-faq/base.css www-faq
-	cd gstreamer-faq && for a in *.html; do \
+### these are website updating targets
+# target for building the faq dir to be put on the website and rsync-ing it
+upload:   www
+	export RSYNC_RSH=ssh
+	cd www && rsync -arv * thomasvs@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/faq/
+
+www: html
+	mkdir -p www
+	cp html/base.css www
+	cd html && for a in *.html; do \
 		xmllint --format --htmlout $$a 2> /dev/null | \
-                        tail +3 > ../www-faq/$$a; \
+		tail +3 > ../www/$$a; \
 	done
-	cd www-faq && rename html php *.html && for a in *.php; do \
+	cd www && rename html php *.html && for a in *.php; do \
 		perl -i -p -e's@^.*\<head.*@\<?php include "../../lib/template.php"; echo get_header ("GStreamer: FAQ", "../.."); \?\>@' $$a; \
 		perl -i -p -e's@^.*\</body.*@\<?php echo get_footer(); \?\>@' $$a; \
 		perl -i -p -e's@^.*\</html.*@@' $$a; \
 	done
-	cd www-faq && for a in *.php; do \
+	cd www && for a in *.php; do \
 		perl -i -p -e's@href="index\.html@href="index.php@' $$a; \
 		perl -i -p -e's@href="(ar.*)\.html@href="$$1.php@' $$a; \
 	done
+	@-cp -pr html/images www 2> /dev/null
+

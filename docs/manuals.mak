@@ -1,110 +1,164 @@
+# rewritten by Thomas to be more simple and working
 
-# taken from selfdocbookx, http://cyberelk.net/tim/docbook/selfdocbookx/index.html
+### These are all generic; we set all the variables we need
 
-# modified by andy wingo <apwingo@eos.ncsu.edu> 14 dec 2001 for use by gstreamer
-# and a little bit by thomas as well
+# intermediary build path
+BUILDDIR = build
+# same for images
+BUILDIMAGESDIR = $(BUILDDIR)/images
 
+# images
+# right now, we only allow .png and .fig as source
+# we might add more later if we feel the need
+
+# PNG's can be source or built from .fig
+PNG = $(strip $(PNG_SRC) $(FIG_SRC:.fig=.png))
+# EPS .ps files can be built from .png or .fig
+EPS = $(strip $(FIG_SRC:.fig=.ps) $(PNG_SRC:.png=.ps))
+# PDF .pdf files can be built from .png or .fig
+PDF = $(strip $(FIG_SRC:.fig=.pdf) $(PNG_SRC:.png=.pdf))
+
+# where we expect to find images during building, whether by copying
+# or by generating them
+PNG_BUILT = $(foreach file, $(PNG), $(BUILDIMAGESDIR)/$(file))
+EPS_BUILT = $(foreach file, $(EPS), $(BUILDIMAGESDIR)/$(file))
+PDF_BUILT = $(foreach file, $(PDF), $(BUILDIMAGESDIR)/$(file))
+
+# everything considered source
+SRC = $(XML) $(PNG_SRC) $(FIG_SRC) $(CSS)
+
+# generate A4 docs
+PAPER_LOCALE = nl_NL
+
+### generate all documentation by default
 all: html ps pdf
 
-check:
-	xmllint -noout -valid $(MAIN)
-
-if     HAVE_XSLTPROC
-
-if     HAVE_FIG2DEV_PNG
-html: $(DOC)
-else  #!HAVE_FIG2DEV_PNG
+# can we generate HTML ?
+if     DOC_HTML
+HTML_DAT = html
+html: html/index.html
+else  #!DOC_HTML
+HTML_DAT =
 html:
-endif #!HAVE_FIG2DEV_PNG
+endif #DOC_HTML
 
-if     HAVE_FIG2DEV_PDF
-if     HAVE_PDFXMLTEX
-pdf: $(DOC).pdf
-
-if     HAVE_PDFTOPS
+# can we generate PS ?
+if     DOC_PS
+PS_DAT = $(DOC).ps
 ps: $(DOC).ps
-else  #!HAVE_PDFTOPS
+else  #!DOC_PS
+PS_DAT =
 ps:
-endif #!HAVE_PDFTOPS
+endif #DOC_PS
 
-else  #!HAVE_PDFXMLTEX
+# can we generate PDF ?
+if     DOC_PDF
+PDF_DAT = $(DOC).pdf
+pdf: $(DOC).pdf
+else  #!DOC_PDF
+PDF_DAT =
 pdf:
-ps:
-endif #!HAVE_PDFXMLTEX
+endif #DOC_PDF
 
-else  #!HAVE_FIG2DEV_PDF
-pdf:
-ps:
-endif #!HAVE_FIG2DEV_PDF
+debug:
+	@echo "outputting some useful debug information"
+	@echo "Source XML:"
+	@echo "XML: '$(XML)'"
+	@echo "CSS: '$(CSS)'"
+	@echo "Source image files:"
+	@echo "PNG_SRC: '$(PNG_SRC)'"
+	@echo "FIG_SRC: '$(FIG_SRC)'"
+	@echo "All used image files:"
+	@echo "PNG: '$(PNG)'"
+	@echo "EPS: '$(EPS)'"
+	@echo "PDF: '$(PDF)'"
+	@echo "All used image files in their built path:"
+	@echo "PNG_BUILT: '$(PNG_BUILT)'"
+	@echo "EPS_BUILT: '$(EPS_BUILT)'"
+	@echo "PDF_BUILT: '$(PDF_BUILT)'"
+	@echo "End result products:"
+	@echo "HTML_DAT: '$(HTML_DAT)'"
+	@echo "PS_DAT:   '$(PS_DAT)'"
+	@echo "PDF_DAT:  '$(PDF_DAT)'"
 
-else  #!HAVE_XSLTPROC
-html:
-ps:
-pdf:
-endif #!HAVE_XSLTPROC
+# a rule to copy all of the source for docs into $(builddir)/build
+$(BUILDDIR)/$(MAIN): $(XML) $(CSS)
+	@-mkdir -p $(BUILDDIR)
+	@for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done
+	@for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done
 
-#$(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
-#	cp magic-pdf magic
-#	xsltproc $(XSLTPROC_OPTIONS) $(XSLFO) $(MAIN) > $@-t
-#	mv -f $@-t $@
-#
-#$(DOC).pdf: $(DOC).fo
-#	pdfxmltex $< || true
-#	pdfxmltex $< || true
-#
-#$(DOC).ps: $(DOC).pdf
-#	pdftops $< $@
+html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
+	@echo "*** Generating HTML output ***"
+	@-mkdir -p html
+	@cp $(srcdir)/../image-png $(BUILDDIR)/image.entities
+	@cd $(BUILDDIR) && xmlto html -o ../html $(MAIN)
+	@test "x$(CSS)" != "x" && \
+          echo "Copying .css files: $(CSS)" && \
+          cp $(srcdir)/$(CSS) html
+	@test "x$(PNG)" != "x" && \
+          echo "Copying .png images: $(PNG_BUILT)" && \
+	  mkdir -p html/images && \
+          cp $(PNG_BUILT) html/images || true
 
-# thomasvs: use db2 because it seems a lot better
-# this ought to be checked for in configure, and the old stuff removed
-$(DOC).pdf: $(DOC).xml
-	db2pdf $(DOC).xml
+$(DOC).ps: $(BUILDDIR)/$(MAIN) $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
+	@echo "*** Generating PS output ***"
+	@cp $(srcdir)/../image-eps $(BUILDDIR)/image.entities
+	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
 
-$(DOC).ps: $(DOC).xml
-	db2ps $(DOC).xml
+$(DOC).pdf: $(DOC).ps
+	@echo "*** Generating PDF output ***"
+	@ps2pdf $(DOC).ps
 
-$(DOC): $(XML) $(PNGS) $(XSLHTML) $(XSLHTMLMODS)
-	-$(RM) *.html
-	-$(RM) -r $@
-	mkdir $@
-	cp magic-png magic
-	xsltproc $(XSLTPROC_OPTIONS) $(XSLHTML) $(MAIN)
-	mv *.html $@
-	cp $(CSS) $@
-	test "x$(PNGS)" != "x" && mkdir $@/images && cp $(PNGS) $@/images || true
-
-builddate:
-	echo -n $$(date "+%e %B %Y") > $@
+#$(DOC).pdf: $(MAIN) $(PDF) $(FIG_SRC)
+#	@echo "*** Generating PDF output ***"
+#	@cp $(srcdir)/../image-pdf image.entities
+#	@export LC_PAPER=$(PAPER_LOCALE) && xmlto pdf $(MAIN)
+#	@rm image.entities
 
 clean:
-	-$(RM) -f *.log *.dvi *.aux *.tex *.out *-t
-	-$(RM) -f $(PNGS) $(PDFS) builddate *.html
-	-$(RM) -rf $(DOC) $(DOC).ps $(DOC).pdf $(DOC).fo
-	-$(RM) -f magic
+	-$(RM) -r $(BUILDDIR)
+	-$(RM) -r html
+	-$(RM) $(DOC).ps
+	-$(RM) $(DOC).pdf
+	-$(RM) -r www
 
-distclean: clean
-	-$(RM) -f *~ $(DOC).tar.gz docbook.tar.gz
-#	-$(RM) -r docbook
+### image generation
 
-$(DOC).tar.gz: distclean
-	(cd ..; tar zcf /tmp/$(DOC).tar.gz $(DOC) )
-	mv /tmp/$(DOC).tar.gz .
+# copy png from source dir png
+$(BUILDIMAGESDIR)/%.png: $(srcdir)/%.png
+	@echo "Copying $< to $@"
+	@mkdir -p $(BUILDIMAGESDIR)
+	@cp $< $@
+# make png from fig
+$(BUILDIMAGESDIR)/%.png: %.fig
+	@echo "Generating $@ from $<"
+	@mkdir -p $(BUILDIMAGESDIR)
+	@fig2dev -Lpng $< $@
 
-#docbook: $(DOC).tar.gz all
-#	-$(RM) -r $@
-#	mkdir $@
-#	cp $(DOC).tar.gz $(DOC).ps $(DOC).pdf $@
-#	tar cf - $(DOC) | (cd $@; tar xf -)
+# make ps(EPS) from fig
+$(BUILDIMAGESDIR)/%.ps: %.fig
+	@echo "Generating $@ from $<"
+	@mkdir -p $(BUILDIMAGESDIR)
+	@fig2dev -Leps $< $@
 
-#docbook.tar.gz: docbook
-#	tar zcf docbook.tar.gz docbook
+# make pdf from fig
+$(BUILDIMAGESDIR)/%.pdf: %.fig
+	@echo "Generating $@ from $<"
+	@mkdir -p $(BUILDIMAGESDIR)
+	@fig2dev -Lpdf $< $@
 
-# Make png from xfig
-%.png: %.fig
-	fig2dev -Lpng $< $@
+# make pdf from png
+$(BUILDIMAGESDIR)/%.pdf: %.png
+	@echo "Generating $@ from $<"
+	@mkdir -p $(BUILDIMAGESDIR)
+	@cat $< | pngtopnm | pnmtops -noturn 2> /dev/null | epstopdf --filter --outfile $@ 2> /dev/null
 
-# Make pdf from xfig
-%.pdf: %.fig
-	fig2dev -Lpdf $< images/$@
+# make ps(EPS) from png
+$(BUILDIMAGESDIR)/%.ps: %.png
+	@echo "Generating $@ from $<"
+	@mkdir -p $(BUILDIMAGESDIR)
+	@cat $< | pngtopnm | pnmtops -noturn > $@ 2> /dev/null
 
-.PHONY: distclean clean all builddate
+# make sure xml validates properly
+check-local:
+	xmllint -noout -valid $(MAIN)
