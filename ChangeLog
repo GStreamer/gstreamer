@@ -1,5 +1,12 @@
 2004-05-06  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(theora_enc_sink_link), (theora_push_packet), (theora_enc_chain),
+	(theora_enc_set_property), (theora_enc_get_property):
+	Also encode the first frame, cleanup some code.
+
+2004-05-06  Wim Taymans  <wim@fluendo.com>
+
 	* ext/mpeg2enc/gstmpeg2enc.cc:
 	Forward events first before deciding that negotiation was
 	not performed.

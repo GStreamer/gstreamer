@@ -241,6 +241,8 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
   if (GST_PAD_IS_USABLE (enc->srcpad))
     gst_pad_push (enc->srcpad, GST_DATA (buf));
+
+  enc->packetno++;
 }
 
 static void
@@ -255,6 +257,7 @@ theora_enc_chain (GstPad * pad, GstData * data)
     return;
   }
 
+  /* no packets written yet, setup headers */
   if (enc->packetno == 0) {
     GstCaps *caps;
 
@@ -265,41 +268,39 @@ theora_enc_chain (GstPad * pad, GstData * data)
     /* first packet will get its own page automatically */
     theora_encode_header (&enc->state, &op);
     theora_push_packet (enc, &op);
-    enc->packetno++;
-  }
-  if (enc->packetno == 1) {
+
     /* create the remaining theora headers */
     theora_comment_init (&enc->comment);
     theora_encode_comment (&enc->comment, &op);
     theora_push_packet (enc, &op);
     theora_encode_tables (&enc->state, &op);
     theora_push_packet (enc, &op);
-    enc->packetno++;
-  } else if (enc->packetno > 1) {
-    yuv_buffer yuv;
-    gint y_size;
-    guchar *pixels;
-
-    pixels = GST_BUFFER_DATA (GST_BUFFER (data));
-
-    yuv.y_width = enc->width;
-    yuv.y_height = enc->height;
-    yuv.y_stride = enc->width;
-
-    yuv.uv_width = enc->width / 2;
-    yuv.uv_height = enc->height / 2;
-    yuv.uv_stride = yuv.uv_width;
-
-    y_size = enc->width * enc->height;
-
-    yuv.y = pixels;
-    yuv.u = pixels + y_size;
-    yuv.v = pixels + y_size * 5 / 4;
-
-    theora_encode_YUVin (&enc->state, &yuv);
-    theora_encode_packetout (&enc->state, 0, &op);
-    theora_push_packet (enc, &op);
   }
+
+  yuv_buffer yuv;
+  gint y_size;
+  guchar *pixels;
+
+  pixels = GST_BUFFER_DATA (GST_BUFFER (data));
+
+  yuv.y_width = enc->width;
+  yuv.y_height = enc->height;
+  yuv.y_stride = enc->width;
+
+  yuv.uv_width = enc->width / 2;
+  yuv.uv_height = enc->height / 2;
+  yuv.uv_stride = yuv.uv_width;
+
+  y_size = enc->width * enc->height;
+
+  yuv.y = pixels;
+  yuv.u = pixels + y_size;
+  yuv.v = pixels + y_size * 5 / 4;
+
+  theora_encode_YUVin (&enc->state, &yuv);
+  theora_encode_packetout (&enc->state, 0, &op);
+  theora_push_packet (enc, &op);
+
   gst_data_unref (data);
 }
 
