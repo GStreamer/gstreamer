@@ -331,7 +331,7 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
   GstFileSrc *src = GST_FILESRC(GST_BUFFER_POOL_PRIVATE(buf));
 
-  fprintf(stderr,"freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
+  // fprintf(stderr,"freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
 
   // remove the buffer from the list of available mmap'd regions
   g_mutex_lock(src->map_regions_lock);
