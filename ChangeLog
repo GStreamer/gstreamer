@@ -1,3 +1,12 @@
+2004-10-25  James Morrison  <ja2morri@csclub.uwaterloo.ca>
+
+	Reviewd by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_chunk):
+	  Don't push incomplete packets.
+	* gst/typefind/gsttypefindfunctions.c: (m4a_type_find):
+	  Fix MPEG-4 audio typefinding.
+
 2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/Makefile.am:
