@@ -557,6 +557,8 @@ gst_bin_change_state (GstElement * element)
 		   GST_ELEMENT_NAME (child));
 	have_async = TRUE;
 	break;
+      case GST_STATE_SUCCESS:
+        break;	
     }
   }
 
