@@ -85,6 +85,9 @@ TODO :
   - run www-update.sh on sourceforge
   - make a text copy of the release notes to be included in the tarball :
     lynx -dump http://gstreamer.net/releases/current/notice.php?clean=1 > RELEASE
+    or
+    links -dump "http://gstreamer.net/releases/current/notice.php?clean=1" > RELEASE
+
   - update web site docs
     - release-specific docs should go in CVS
     - change docs/current symlink
