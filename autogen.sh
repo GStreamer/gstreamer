@@ -58,7 +58,6 @@ version_check ()
   test -z "$NOCHECK" && {
       echo -n "+ checking for $1 >= $VERSION ... "
   } || {
-      echo "+ NOT checking for $1 >= $VERSION, as requested ..."
       return 0
   }
   
