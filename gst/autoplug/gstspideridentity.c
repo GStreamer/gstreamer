@@ -373,13 +373,8 @@ callback_typefind_have_type (GstElement *typefind, GstCaps *caps, GstSpiderIdent
   gboolean restart_spider = FALSE;
   
   GST_INFO (GST_CAT_AUTOPLUG, "element %s has found caps\n", GST_ELEMENT_NAME(ident));
-  /* checks */
-  
-  /* we have to ref the typefind, because if me remove it the scheduler segfaults 
-   * FIXME: get rid of the typefinder
-   */
-  gst_object_ref (GST_OBJECT (typefind));
-  
+
+  /* checks */  
   g_assert (GST_IS_ELEMENT (typefind));
   g_assert (GST_IS_SPIDER_IDENTITY (ident));
   
