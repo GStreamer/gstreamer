@@ -1,5 +1,11 @@
 2004-10-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/asfdemux/gstasfmux.c:
+	* gst/avi/gstavimux.c:
+	  Framerate.
+
+2004-10-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/v4l2/gstv4l2element.c: (gst_v4l2element_set_property):
 	  Fix properties (channel, norm, frequency).
 
