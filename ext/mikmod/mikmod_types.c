@@ -203,7 +203,7 @@ gboolean Xm_CheckType( GstBuffer *buf )
 {
 gchar *data;
 	
-	data = GST_BUFFER_DATA( buf ) + 0x2c;
+	data = GST_BUFFER_DATA( buf );
 
 	if( memcmp( data, "Extended Module: ", 17 ))
 		return FALSE;
