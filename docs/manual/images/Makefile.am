@@ -1,4 +1,4 @@
-fig_pngs= \
+pngfiles= \
 	  bin-element.png \
 	  connected-elements.png \
 	  filter-element-multi.png \
@@ -11,7 +11,7 @@ fig_pngs= \
 	  state-diagram.png \
 	  thread.png
 
-fig_epss= \
+epsfiles= \
 	  bin-element.eps \
 	  connected-elements.eps \
 	  filter-element-multi.eps \
@@ -24,9 +24,6 @@ fig_epss= \
 	  state-diagram.eps \
 	  thread.eps
 
-png_images: $(fig_pngs)
-eps_images: $(fig_epss)
-
 %.png : ../fig/%.fig
 	fig2dev -L png -s 16 $< $@
 
@@ -34,5 +31,8 @@ eps_images: $(fig_epss)
 	fig2dev -L eps -s 16 $< $@
 
 
-all-local: png_images eps_images
+all-local: $(epsfiles)
+
+pngdatadir   = $(datadir)/gstreamer/gstreamer-manual/images
+pngdata_DATA = $(pngfiles)
 

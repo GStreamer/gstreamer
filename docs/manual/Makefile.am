@@ -79,12 +79,14 @@ htmlinst:
 	@if [ -r gstreamer-manual/gstreamer.html ] ; then \
 	echo "Installing HTML documentation" ; \
 	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/gstreamer-manual ; \
-	    $(INSTALL_DATA) gstreamer-manual/* $(DESTDIR)$(docdatadir)/gstreamer-manual ; \
+	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/gstreamer-manual/images ; \
+	    $(INSTALL_DATA) gstreamer-manual/*.html $(DESTDIR)$(docdatadir)/gstreamer-manual ; \
 	else \
 	    if [ -r $(srcdir)/gstreamer-manual/gstreamer.html ] ; then \
 	        echo "Installing HTML documentation" ; \
 	        $(mkinstalldirs) $(DESTDIR)$(docdatadir)/gstreamer-manual ; \
-	        $(INSTALL_DATA) $(srcdir)/gstreamer-manual/* $(DESTDIR)$(docdatadir)/gstreamer-manual ; \
+	        $(mkinstalldirs) $(DESTDIR)$(docdatadir)/gstreamer-manual/images ; \
+	        $(INSTALL_DATA) $(srcdir)/gstreamer-manual/*.html $(DESTDIR)$(docdatadir)/gstreamer-manual ; \
 	    else \
 	        echo "NOT installing HTML documentation: not present, and can't generate" ; \
 	    fi \

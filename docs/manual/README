@@ -2,6 +2,8 @@ For now use:
 
   db2html gstreamer-manual 
 
+(On debian, db2html is in the cygnus-stylesheets package)
+
 You will need the png support for docbook (see GNOME documentation project)
 
 convert the fig images to png with:
