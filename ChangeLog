@@ -1,5 +1,11 @@
 2004-10-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/flx/gstflxdec.c: (gst_flxdec_init), (gst_flxdec_loop):
+	Actually _do_ negotiation. Pass gdouble as arg instead
+	of guint64 for the framerate.
+
+2004-10-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
 	(find_compatibles), (close_pad_link), (try_to_link_1),
 	(no_more_pads), (close_link), (type_found):
