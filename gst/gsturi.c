@@ -170,23 +170,24 @@ GstURIHandler*
 gst_uri_handler_find_by_uri (const gchar *uri)
 {
   GList *walk, *orig;
-  GstURIHandler *handler = NULL;
+  GstURIHandler *result = NULL;
   
   g_return_val_if_fail (uri != NULL, NULL);
 
   orig = walk = gst_registry_pool_feature_list (GST_TYPE_URI_HANDLER);
 
   while (walk) {
-    handler = GST_URI_HANDLER (walk->data);
+    GstURIHandler *handler = GST_URI_HANDLER (walk->data);
 
-    if (g_str_has_prefix_glib22 ((gchar *) uri, handler->uri))
+    if (g_str_has_prefix_glib22 ((gchar *) uri, handler->uri)) {
+      result = handler;
       break;
-
+    }
     walk = g_list_next (walk);
   }
   g_list_free (orig);
 
-  return handler;
+  return result;
 }
 
 /**
