@@ -1003,8 +1003,8 @@ gst_alsa_adjust_rate (gint rate, gboolean aggressive)
   if (aggressive)
     return rate;
   
-  for (i = 0; i < G_N_ELEMENTS (rates); i--) {
-    if (rate > rates[i])
+  for (i = 0; i < G_N_ELEMENTS (rates); i++) {
+    if (rate >= rates[i])
       return rates[i];
   }
 
@@ -1067,9 +1067,9 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
       gst_caps_set (caps, "rate", GST_PROPS_INT (rate));
       for (channels = aggressive ? max_channels : MIN (max_channels, 2); channels >= min_channels; channels--) {
         gst_caps_set (caps, "channels", GST_PROPS_INT (channels));
-        g_print ("trying new caps: law %d, %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d\n",
-                 law, sign ? "" : "un", endian, width, depth, channels, rate);
-        if (gst_pad_try_set_caps (this->pad[0], caps))
+        GST_DEBUG (0, "trying new caps: law %d, %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d\n",
+                   law, sign ? "" : "un", endian, width, depth, channels, rate);
+        if (gst_pad_try_set_caps (this->pad[0], caps) != GST_PAD_LINK_REFUSED)
           gst_alsa_link (this->pad[0], caps);
       
         if (this->format) {	  
