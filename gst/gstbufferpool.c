@@ -249,7 +249,8 @@ gst_buffer_pool_get_default (GstBufferPool *oldpool, guint buffer_size, guint po
   GstBufferPool *pool;
   GMemChunk *data_chunk;
   guint real_buffer_size;
-
+  GstBufferPoolDefault *def;
+  
   // round up to the nearest 32 bytes for cache-line and other efficiencies
   real_buffer_size = (((buffer_size-1) / 32) + 1) * 32;
   
@@ -278,13 +279,17 @@ gst_buffer_pool_get_default (GstBufferPool *oldpool, guint buffer_size, guint po
   gst_buffer_pool_set_buffer_create_function (pool, gst_buffer_pool_default_buffer_create, data_chunk);
   gst_buffer_pool_set_buffer_destroy_function (pool, gst_buffer_pool_default_buffer_destroy, data_chunk);
   gst_buffer_pool_set_pool_destroy_hook (pool, gst_buffer_pool_default_pool_destroy_hook, data_chunk);
-
+  
+  def = g_new0 (GstBufferPoolDefault, 1);
+  def->size = buffer_size;
+  pool->private_data = def;
+  
   g_mutex_lock (_default_pool_lock);
   g_hash_table_insert(_default_pools,GINT_TO_POINTER(real_buffer_size),pool);
   g_mutex_unlock (_default_pool_lock);
 
   GST_DEBUG(GST_CAT_BUFFER,"new buffer pool %p bytes:%d size:%d\n", pool, real_buffer_size, pool_size);
-
+  
   if (oldpool != NULL){
     gst_buffer_pool_unref(oldpool);
   }
@@ -297,16 +302,20 @@ gst_buffer_pool_default_buffer_create (GstBufferPool *pool, guint64 location /*u
 {
   GMemChunk *data_chunk = (GMemChunk*)user_data;
   GstBuffer *buffer;
+  GstBufferPoolDefault *def = (GstBufferPoolDefault*) pool->private_data;
   
   gst_buffer_pool_ref(pool);
   buffer = gst_buffer_new();
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p from pool %p",buffer,pool);
-  GST_BUFFER_FLAG_SET(buffer,GST_BUFFER_DONTFREE);
   
   g_mutex_lock (pool->lock);
   GST_BUFFER_DATA(buffer) = g_mem_chunk_alloc(data_chunk);
   g_mutex_unlock (pool->lock);
-    
+  
+  GST_BUFFER_FLAG_SET(buffer,GST_BUFFER_DONTFREE);
+  GST_BUFFER_SIZE(buffer)    = def->size;
+  GST_BUFFER_MAXSIZE(buffer) = def->size;
+  
   return buffer;
 }
 
@@ -331,7 +340,10 @@ gst_buffer_pool_default_pool_destroy_hook (GstBufferPool *pool, gpointer user_da
   GMemChunk *data_chunk = (GMemChunk*)user_data;
   
   GST_DEBUG(GST_CAT_BUFFER,"destroying default buffer pool %p\n", pool);
+  
+  if (pool->private_data)
+      g_free (pool->private_data);
+  
   g_mem_chunk_reset(data_chunk);
   g_free(data_chunk);
 }
-
