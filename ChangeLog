@@ -1,3 +1,21 @@
+2004-02-27  David Schleef  <ds@schleef.org>
+
+	patches from jmmv@menta.net (Julio M. Merino Vidal)
+
+	* gst/interleave/deinterleave.c: (deinterleave_chain): Fix
+	GST_ELEMENT_ERROR call (bug #135634)
+	* gst/interleave/interleave.c: (interleave_buffered_loop),
+	(interleave_bytestream_loop): Don't use alloca() (bug #135640)
+	* sys/cdrom/gstcdplayer_ioctl_bsd.h: Fix ioctls on NetBSD (bug #135645)
+	* sys/oss/gstosssink.c: (gst_osssink_get_delay),
+	(gst_osssink_chain): Fix ioctls on NetBSD. (bug #135644)
+	* sys/v4l/v4lmjpegsrc_calls.c: (gst_v4lmjpegsrc_sync_next_frame),
+	(gst_v4lmjpegsrc_set_capture), (gst_v4lmjpegsrc_set_capture_m),
+	(gst_v4lmjpegsrc_capture_init), (gst_v4lmjpegsrc_requeue_frame):
+	Fix GST_ELEMENT_ERROR call.
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_try_palette): Fix
+	GST_ELEMENT_ERROR call.
+
 2004-02-27  Benjamin Otte  <otte@gnome.org>
 
 	* gst-libs/gst/audio/audio.h:
