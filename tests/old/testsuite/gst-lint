@@ -333,7 +333,7 @@ sub check_debugging()
 sub m_check_plugindir()
 {
 	if (grep { /plugindir\s*=/; } @lines) {
-		print "E: plugindir= is no longer necessary\n"
+		print "E: plugindir= is no longer necessary\n";
 	}
 }
 
@@ -343,7 +343,7 @@ sub m_check_plugindir()
 sub check_old_typefind()
 {
 	if (grep { /GstTypeDefinition/ || /GstTypeFactory/ } @lines) {
-		print "E: old typefind interface has been removed\n"
+		print "E: old typefind interface has been removed\n";
 	}
 }
 
@@ -356,8 +356,12 @@ sub check_bad_casts()
 			/GClassInitFunc/ || /GClassFinalizeFunc/ ||
 			/GInstanceInitFunc/ || /GInterfaceInitFunc/ ||
 			/GInterfaceFinalizeFunc/ } @lines) {
-		print "W: bad casts (fix prototype)\n"
+		print "W: bad casts (fix prototype)\n";
 	}
+	if (grep { /\(\s*Gst[A-Z][A-Za-z]*\s*\*\s*\)/ } @lines ) {
+		print "W: use GST_XXX() instead of (GstXxx *)\n";
+	}
+
 }
 
 #
@@ -366,10 +370,10 @@ sub check_bad_casts()
 sub check_old_plugin()
 {
 	if (grep { /plugin_init.*GModule.*GstPlugin/ } @lines) {
-		print "E: old plugin interface detected\n"
+		print "E: old plugin interface detected\n";
 	}
 	if (grep { /GstPluginDesc.*plugin_desc/ } @lines) {
-		print "W: should use GST_PLUGIN_DEFINE() instead of GstPluginDesc\n"
+		print "W: should use GST_PLUGIN_DEFINE() instead of GstPluginDesc\n";
 	}
 }
 
