@@ -24,5 +24,5 @@ noinst_HEADERS = mem.h
 
 # we have nothing but apps here, we can do this safely
 LIBS = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+AM_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 

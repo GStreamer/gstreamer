@@ -6,4 +6,4 @@ test1_SOURCES = test1.c $(top_srcdir)/gst/gstbuffer.c gstmempool.c
 EXTRA_DIST = gstbuffer.h gstmempool.h
 
 LDADD = $(GST_LIBS)
-CFLAGS = $(GST_CFLAGS) 
+AM_CFLAGS = $(GST_CFLAGS) 

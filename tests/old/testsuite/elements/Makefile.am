@@ -15,5 +15,5 @@ check_PROGRAMS = $(tests_failing) $(tests_working)
 
 EXTRA_DIST = property.h
 LDADD = $(GST_LIBS) 
-CFLAGS = $(GST_CFLAGS)
+AM_CFLAGS = $(GST_CFLAGS)
 

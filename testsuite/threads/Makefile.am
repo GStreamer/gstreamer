@@ -5,7 +5,7 @@ TESTS = $(testprogs)
 check_PROGRAMS = $(testprogs)
 
 LDADD = $(GST_LIBS) 
-CFLAGS = $(GST_CFLAGS)
+AM_CFLAGS = $(GST_CFLAGS)
 
 thread1_SOURCES = thread.c
 thread1_CFLAGS = -DTESTNUM=1
