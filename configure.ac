@@ -4,20 +4,12 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
+AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
+AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
 dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
-
-dnl libtool
-GST_CURRENT=0
-GST_REVISION=0
-GST_AGE=0
-GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
-AC_SUBST(GST_CURRENT)
-AC_SUBST(GST_REVISION)
-AC_SUBST(GST_AGE)
-AC_SUBST(GST_LIBVERSION)
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
@@ -36,8 +28,6 @@ AC_ISC_POSIX
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
 AM_DISABLE_STATIC
-AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
 
 AC_HEADER_STDC([])
 
