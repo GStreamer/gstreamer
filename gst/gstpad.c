@@ -1982,12 +1982,14 @@ gst_pad_event_default(GstPad *pad, GstEventType event, guint64 timestamp, guint3
  *
  * Send the event to the pad.
  *
- * Returns: TRUe if the event was handled.
+ * Returns: TRUE if the event was handled.
  */
 gboolean
 gst_pad_send_event (GstPad *pad, GstEvent *event)
 {
   gboolean handled = FALSE;
+
+  g_return_val_if_fail (event, FALSE);
 
   GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s\n",
 		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
@@ -2002,5 +2004,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
     GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
     //gst_pad_event_default (pad, event);
   }
+
+  return handled;
 }
 

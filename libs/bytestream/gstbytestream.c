@@ -407,6 +407,21 @@ gst_bytestream_read (GstByteStream * bs, guint32 len)
   return buf;
 }
 
+
+/**
+ * gst_bytestream_get_status
+ * @bs: a bytestream
+ * @avail_out: total number of bytes buffered
+ * @event_out: an event
+ *
+ * When an event occurs, the bytestream will return NULL.  You must
+ * retrieve the event using this API before reading more bytes from
+ * the stream.
+ *
+ * It is possible for the bytestream to return NULL due to running
+ * out of buffers, however, this indicates a bug because an EOS
+ * event should have been sent.
+ */
 void
 gst_bytestream_get_status (GstByteStream *bs,
 			   guint32 *avail_out,
