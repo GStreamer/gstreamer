@@ -252,6 +252,7 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
   GstBuffer *headbuf, *retbuf = NULL;
 
   g_return_val_if_fail (bs != NULL, 0);
+  g_return_val_if_fail (buf != NULL, 0);
   g_return_val_if_fail (len > 0, 0);
 
   GST_DEBUG ("peek: asking for %d bytes", len);
@@ -323,6 +324,7 @@ gst_bytestream_peek_bytes (GstByteStream *bs, guint8** data, guint32 len)
   GstBuffer *headbuf;
 
   g_return_val_if_fail (bs != NULL, 0);
+  g_return_val_if_fail (data != NULL, 0);
   g_return_val_if_fail (len > 0, 0);
 
   GST_DEBUG ("peek_bytes: asking for %d bytes", len);
