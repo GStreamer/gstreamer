@@ -80,16 +80,28 @@ struct _GstTCPServerSink {
 
   size_t data_written; /* how much bytes have we written ? */
 
-  fd_set clientfds; /* all the client file descriptors that are open */
-  fd_set caps_sent; /* all the client file descriptors
-                     * that have had caps sent */
-  fd_set streamheader_sent; /* all the client file descriptors that have had
-                             * streamheader sent */
+  GMutex *clientslock;
+  GList *clients;	/* list of clients we are serving */
+  
+  fd_set readfds; /* all the client file descriptors that we can read from */
+  fd_set writefds; /* all the client file descriptors that we can write to */
+
+  int control_sock[2];	/* sockets for controlling the select call */
 
   GList *streamheader; /* GList of GstBuffers to use as streamheader */
   GstTCPProtocolType protocol;
   guint mtu;
   GstClock *clock;
+
+  GArray *bufqueue;
+  GMutex *queuelock;
+  GCond *queuecond;
+
+  gboolean running;
+  GThread *thread;
+
+  gint buffers_max;
+  gint buffers_soft_max;
 };
 
 struct _GstTCPServerSinkClass {
