@@ -1,3 +1,8 @@
+2004-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_getcaps):
+          use GST_PAD_CAPS if they exist so we don't renegotiate needlessly
+
 2004-04-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
