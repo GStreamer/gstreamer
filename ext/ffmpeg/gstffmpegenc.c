@@ -214,7 +214,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass *klass)
                       0, G_MAXINT, 128000, G_PARAM_READWRITE)); 
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_SAMPLE_RATE,
       g_param_spec_int ("sample_rate","rate","rate",
-                      0, G_MAXINT, -1, G_PARAM_READWRITE)); 
+                      -1, G_MAXINT, -1, G_PARAM_READWRITE)); 
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_HQ,
       g_param_spec_boolean ("hq","hq","hq",
                       FALSE, G_PARAM_READWRITE)); 
