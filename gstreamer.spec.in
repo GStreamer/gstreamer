@@ -112,8 +112,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %post
 /sbin/ldconfig
-# registry handling is now done automatically
-# %{_prefix}/bin/gst-register --gst-mask=0
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 
 %post devel
 # adding devhelp links to work around different base not working
