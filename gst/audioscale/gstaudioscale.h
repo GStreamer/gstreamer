@@ -63,6 +63,7 @@ struct _Audioscale {
   gint channels;
   gint frequency;
   gint targetfrequency;
+  gint64 offset;
 
   resample_t *resample;
 

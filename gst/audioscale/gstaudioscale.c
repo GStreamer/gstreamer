@@ -81,25 +81,25 @@ src_template (void)
   }
   return template;
 }
-/* defined but not used
+
 #define GST_TYPE_AUDIOSCALE_METHOD (gst_audioscale_method_get_type())
 static GType
 gst_audioscale_method_get_type (void)
 {
   static GType audioscale_method_type = 0;
   static GEnumValue audioscale_methods[] = {
-    { GST_AUDIOSCALE_NEAREST,  "0", "Nearest" },
-    { GST_AUDIOSCALE_BILINEAR, "1", "Bilinear" },
-    { GST_AUDIOSCALE_SINC,     "2", "Sinc" },
+    { RESAMPLE_NEAREST,  "0", "Nearest" },
+    { RESAMPLE_BILINEAR, "1", "Bilinear" },
+    { RESAMPLE_SINC,     "2", "Sinc" },
     { 0, NULL, NULL },
   };
   if(!audioscale_method_type){
     audioscale_method_type = g_enum_register_static("GstAudioscaleMethod",
-		    audioscale_methods);
+                                                    audioscale_methods);
   }
   return audioscale_method_type;
 }
-*/
+
 static void	gst_audioscale_class_init	(AudioscaleClass *klass);
 static void	gst_audioscale_init		(Audioscale *audioscale);
 
@@ -145,14 +145,14 @@ gst_audioscale_class_init (AudioscaleClass *klass)
   gstelement_class = (GstElementClass*)klass;
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
+        g_param_spec_int ("frequency","frequency","frequency",
+                          0,G_MAXINT,44100,G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
 	g_param_spec_int ("filter_length", "filter_length", "filter_length",
-		G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+                          0, G_MAXINT, 16, G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
-	g_param_spec_int ("method", "method", "method",
-		G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+	g_param_spec_enum ("method", "method", "method", GST_TYPE_AUDIOSCALE_METHOD,
+                           RESAMPLE_SINC, G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
@@ -166,6 +166,7 @@ gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   Audioscale *audioscale;
   resample_t *r;
+  GstCaps *newcaps;
   gint rate;
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
@@ -177,9 +178,17 @@ gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
   r->i_rate = rate;
   
   resample_reinit(r);
-  /*g_print("audioscale: unsupported scaling method %d\n", audioscale->method); */
   
-  return GST_PAD_CONNECT_OK;
+  newcaps = gst_caps_copy (caps);
+  gst_caps_set (newcaps, "rate", GST_PROPS_INT_TYPE, audioscale->targetfrequency, NULL);
+
+  if (GST_CAPS_IS_FIXED (caps))
+    if (gst_pad_try_set_caps (audioscale->srcpad, newcaps))
+      return GST_PAD_CONNECT_OK;
+    else
+      return GST_PAD_CONNECT_REFUSED;
+  else
+    return GST_PAD_CONNECT_DELAYED;
 }
 
 static void *
@@ -190,6 +199,8 @@ gst_audioscale_get_buffer (void *priv, unsigned int size)
   audioscale->outbuf = gst_buffer_new();
   GST_BUFFER_SIZE(audioscale->outbuf) = size;
   GST_BUFFER_DATA(audioscale->outbuf) = g_malloc(size);
+  GST_BUFFER_TIMESTAMP(audioscale->outbuf) = audioscale->offset * GST_SECOND / audioscale->targetfrequency;
+  audioscale->offset += size / sizeof(gint16) / audioscale->resample->channels;
 
   return GST_BUFFER_DATA(audioscale->outbuf);
 }
@@ -218,9 +229,12 @@ gst_audioscale_init (Audioscale *audioscale)
   r->filter_length = 16;
   r->i_rate = -1;
   r->o_rate = -1;
+  r->format = RESAMPLE_S16;
   /*r->verbose = 1; */
 
   resample_init(r);
+
+  /* we will be reinitialized when the G_PARAM_CONSTRUCTs hit */
 }
 
 static void
@@ -272,12 +286,14 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
       g_print ("new filter length %d\n", r->filter_length);
       break;
     case ARG_METHOD:
-      r->method = g_value_get_int (value);
+      r->method = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  resample_reinit (r);
 }
 
 static void
@@ -286,9 +302,7 @@ gst_audioscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
   Audioscale *src;
   resample_t *r;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_AUDIOSCALE(object));
-  src = GST_AUDIOSCALE(object);
+  src = GST_AUDIOSCALE (object);
   r = src->resample;
 
   switch (prop_id) {
@@ -299,7 +313,7 @@ gst_audioscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
       g_value_set_int (value, r->filter_length);
       break;
     case ARG_METHOD:
-      g_value_set_int (value, r->method);
+      g_value_set_enum (value, r->method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
