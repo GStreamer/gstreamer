@@ -35,6 +35,8 @@
   <allow_shrink>True</allow_shrink>
   <allow_grow>True</allow_grow>
   <auto_shrink>True</auto_shrink>
+  <wmclass_name>gstmediaplay</wmclass_name>
+  <wmclass_class>GstMediaPlay</wmclass_class>
   <enable_layout_config>True</enable_layout_config>
 
   <widget>
@@ -465,12 +467,14 @@
   <class>GnomeAbout</class>
   <name>about</name>
   <modal>True</modal>
-  <copyright>(C) 1999-2000 Erik Walthinsen</copyright>
-  <authors>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;,
-Wim Taymans &lt;wim.taymans@tvd.be&gt;,
-Richard Boulton &lt;richard@tartarus.org&gt;,
-Chris Emerson (PPC port),
-Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;,
+  <wmclass_name>about</wmclass_name>
+  <wmclass_class>GstMediaPlay</wmclass_class>
+  <copyright>(C) 1999-2001 Erik Walthinsen</copyright>
+  <authors>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+Wim Taymans &lt;wim.taymans@tvd.be&gt;
+Richard Boulton &lt;richard@tartarus.org&gt;
+Chris Emerson (PPC port)
+Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
 Arik Devens &lt;arik@gnome.org&gt;
 </authors>
   <comments>A generic media player for the gstreamer streaming media framework.</comments>
@@ -487,6 +491,8 @@ Arik Devens &lt;arik@gnome.org&gt;
   <allow_shrink>False</allow_shrink>
   <allow_grow>True</allow_grow>
   <auto_shrink>False</auto_shrink>
+  <wmclass_name>filesel</wmclass_name>
+  <wmclass_class>GstMediaPlay</wmclass_class>
   <show_file_op_buttons>True</show_file_op_buttons>
 
   <widget>
