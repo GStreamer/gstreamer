@@ -913,6 +913,7 @@ AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
+AM_CONDITIONAL(PLUGINS_USE_SRCDIR,  test "x$PLUGINS_USE_SRCDIR" = "xyes")
 
 
 dnl ############################
