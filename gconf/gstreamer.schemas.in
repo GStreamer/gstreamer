@@ -1,8 +1,8 @@
 <gconfschemafile>
   <schemalist>
     <schema>
-      <key>/schemas/system/gstreamer-@GST_MAJORMINOR@/default/audiosink</key>
-      <applyto>/system/gstreamer-@GST_MAJORMINOR@/default/audiosink</applyto>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/audiosink</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosink</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>osssink</default>
@@ -12,8 +12,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer-@GST_MAJORMINOR@/default/videosink</key>
-      <applyto>/system/gstreamer-@GST_MAJORMINOR@/default/videosink</applyto>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/videosink</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/videosink</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>xvimagesink</default>
@@ -23,8 +23,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer-@GST_MAJORMINOR@/default/audiosrc</key>
-      <applyto>/system/gstreamer-@GST_MAJORMINOR@/default/audiosrc</applyto>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>osssrc</default>
@@ -34,8 +34,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer-@GST_MAJORMINOR@/default/videosrc</key>
-      <applyto>/system/gstreamer-@GST_MAJORMINOR@/default/videosrc</applyto>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/videosrc</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/videosrc</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>v4lsrc</default>
@@ -45,8 +45,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer-@GST_MAJORMINOR@/default/visualization</key>
-      <applyto>/system/gstreamer-@GST_MAJORMINOR@/default/visualization</applyto>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/visualization</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/visualization</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>goom</default>

@@ -1,3 +1,13 @@
+2004-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gconf/gstreamer.schemas.in:
+	* gst-libs/gst/gconf/Makefile.am:
+          version installation path the same way as for 0.6
+	* pkgconfig/gstreamer-interfaces-uninstalled.pc.in:
+	* pkgconfig/gstreamer-libs-uninstalled.pc.in:
+	* pkgconfig/gstreamer-play-uninstalled.pc.in:
+          remove comment that was fixed
+
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_src_formats),

@@ -10,7 +10,7 @@ libgstgconf_@GST_MAJORMINOR@include_HEADERS = gconf.h
 noinst_PROGRAMS = test-gconf
 
 # add define for GST_GCONF_DIR
-DIR_CFLAGS=-DGST_GCONF_DIR=\"/system/gstreamer-@GST_MAJORMINOR@\"
+DIR_CFLAGS=-DGST_GCONF_DIR=\"/system/gstreamer/@GST_MAJORMINOR@\"
 
 test_gconf_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS) $(DIR_CFLAGS)
 test_gconf_LDADD = $(GST_LIBS) $(GCONF_LIBS) libgstgconf-@GST_MAJORMINOR@.la
