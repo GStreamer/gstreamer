@@ -1513,7 +1513,6 @@ examples/capsfilter/Makefile
 examples/seeking/Makefile
 examples/indexing/Makefile
 examples/Makefile
-testsuite/autoplug/Makefile
 testsuite/spider/Makefile
 testsuite/alsa/Makefile
 testsuite/Makefile
