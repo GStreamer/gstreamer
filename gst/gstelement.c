@@ -26,6 +26,7 @@
 #include "gstelement.h"
 #include "gstextratypes.h"
 #include "gstbin.h"
+#include "gstutils.h"
 
 
 /* Element signals and args */
