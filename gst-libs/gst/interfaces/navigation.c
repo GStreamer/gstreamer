@@ -25,7 +25,7 @@
 
 #include <gst/navigation/navigation.h>
 
-static void gst_navigation_class_init (GstNavigationClass *klass);
+static void gst_navigation_class_init (GstNavigationIface *iface);
 
 GType
 gst_navigation_get_type (void)
@@ -34,7 +34,7 @@ gst_navigation_get_type (void)
 
   if (!gst_navigation_type) {
     static const GTypeInfo gst_navigation_info = {
-      sizeof (GstNavigationClass),
+      sizeof (GstNavigationIface),
       (GBaseInitFunc) gst_navigation_class_init,
       NULL,
       NULL,
@@ -54,19 +54,19 @@ gst_navigation_get_type (void)
 }
 
 static void
-gst_navigation_class_init (GstNavigationClass *klass)
+gst_navigation_class_init (GstNavigationIface *iface)
 {
   /* default virtual functions */
-  klass->send_event = NULL;
+  iface->send_event = NULL;
 }
 
 void
 gst_navigation_send_event (GstNavigation *navigation, GstCaps *caps)
 {
-  GstNavigationClass *klass = GST_NAVIGATION_GET_CLASS (navigation);
+  GstNavigationIface *iface = GST_NAVIGATION_GET_IFACE (navigation);
 
-  if (klass->send_event) {
-    klass->send_event (navigation, caps);
+  if (iface->send_event) {
+    iface->send_event (navigation, caps);
   }
 }
 
