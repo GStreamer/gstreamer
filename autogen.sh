@@ -5,6 +5,7 @@ DIE=0
 package=GStreamer
 srcfile=gst/gstobject.h
 #DEBUG=defined
+if test "x$1" = "x-d"; then echo "DEBUG output wanted."; DEBUG=defined; fi
 
 debug ()
 # print out a debug message if DEBUG is a defined variable
