@@ -475,7 +475,7 @@ GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
-  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, , cdda_interface., CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
+  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, , cdda_interface.h, CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
 ])
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
