@@ -486,8 +486,6 @@ gst_vorbisfile_loop (GstElement *element)
   VorbisFile *vorbisfile = GST_VORBISFILE (element);
   GstBuffer *outbuf;
   long ret;
-  GstClockTime time = 0;
-  gint64 samples;
   gint link;
 
   /* this function needs to go first since you don't want to be messing
@@ -514,7 +512,6 @@ gst_vorbisfile_loop (GstElement *element)
 
   if (vorbisfile->seek_pending) {
     /* get time to seek to in seconds */
-
     switch (vorbisfile->seek_format) {
       case GST_FORMAT_TIME:
       {
@@ -575,9 +572,6 @@ gst_vorbisfile_loop (GstElement *element)
 
   outbuf = gst_buffer_new_and_alloc (vorbisfile->blocksize);
 
-  /* get current time for discont and buffer timestamp */
-  time = (GstClockTime) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
-
   ret = ov_read (&vorbisfile->vf, 
 		 GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), 
 		 (G_BYTE_ORDER == G_LITTLE_ENDIAN ? 0 : 1), 
@@ -603,6 +597,13 @@ gst_vorbisfile_loop (GstElement *element)
     return;
   }
   else {
+    GstClockTime time;
+    gint64 samples;
+    
+   /* get stream stats */
+    samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
+    time = (GstClockTime) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+
     if (vorbisfile->need_discont) {
       GstEvent *discont;
 
@@ -610,8 +611,6 @@ gst_vorbisfile_loop (GstElement *element)
 
       /* if the pad is not usable, don't push it out */
       if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
-        /* get stream stats */
-        samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
 
         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
 		    			     GST_FORMAT_DEFAULT, samples, NULL); 
@@ -622,12 +621,22 @@ gst_vorbisfile_loop (GstElement *element)
 
     GST_BUFFER_SIZE (outbuf) = ret;
     GST_BUFFER_TIMESTAMP (outbuf) = time;
-    GST_BUFFER_OFFSET (outbuf) = ov_pcm_tell (&vorbisfile->vf);
+    GST_BUFFER_OFFSET (outbuf) = samples;
+    {
+      GstClockTime duration;
+      GstFormat format;
+
+      format = GST_FORMAT_TIME;
+      gst_pad_convert (vorbisfile->srcpad,
+			     GST_FORMAT_BYTES, ret,
+			     &format, &duration);
+      GST_BUFFER_DURATION (outbuf) = duration;
+    }
 
     vorbisfile->may_eos = TRUE;
 
     if (!vorbisfile->vf.seekable) {
-      vorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
+      vorbisfile->total_bytes += ret;
     }
   
     if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) 
