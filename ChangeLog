@@ -1,3 +1,8 @@
+2004-04-05  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	  fix --export-symblos-regex to a working regex.
+
 2004-04-03  Tim-Philipp Müller <t.i.m@zen.co.uk>
 
 	reviewed by: David Schleef  <ds@schleef.org>
