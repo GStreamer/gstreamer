@@ -425,6 +425,7 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
 
       switch (type) {
         case GST_EVENT_EOS:
+          pad->eos = TRUE;
           gst_event_unref (event);
           return NULL;
         case GST_EVENT_DISCONTINUOUS:
@@ -568,6 +569,9 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
     GstOggPad *pad = (GstOggPad *) walk->data;
 
     walk = walk->next;
+
+    if (pad->eos)
+      continue;
 
     /* try to get a new buffer for this pad if needed and possible */
     if (pad->buffer == NULL && GST_PAD_IS_USABLE (pad->pad)) {
