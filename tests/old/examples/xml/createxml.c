@@ -9,10 +9,14 @@ object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
   xmlNodePtr child;
   xmlNsPtr ns;
   
-  /* i'm not sure why both of these Ns things are necessary, but they are */
-  ns = xmlNewNs (NULL, "http://gstreamer.net/gst-test/1.0/", "test");
+  /* first see if the namespace is already known */
+  ns = xmlSearchNsByHref (parent->doc, parent, "http://gstreamer.net/gst-test/1.0/");
+  if (ns == NULL) {
+    xmlNodePtr root = xmlDocGetRootElement (parent->doc);
+    /* add namespace to root node */
+    ns = xmlNewNs (root, "http://gstreamer.net/gst-test/1.0/", "test");
+  }
   child = xmlNewChild(parent, ns, "comment", NULL);
-  xmlNewNs (child, "http://gstreamer.net/gst-test/1.0/", "test");
   
   xmlNewChild(child, NULL, "text", (gchar *)data);
 }
