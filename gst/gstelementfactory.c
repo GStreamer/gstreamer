@@ -373,30 +373,30 @@ gst_element_factory_get_author (GstElementFactory *factory)
   return factory->details.author;
 }
 /**
- * gst_element_factory_get_num_padtemplates:
+ * gst_element_factory_get_num_pad_templates:
  * @factory: a #GstElementFactory
  * 
- * Gets the number of padtemplates in this factory.
+ * Gets the number of pad_templates in this factory.
  *
- * Returns: the number of padtemplates
+ * Returns: the number of pad_templates
  */
 guint
-gst_element_factory_get_num_padtemplates (GstElementFactory *factory)
+gst_element_factory_get_num_pad_templates (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), 0);
 
   return factory->numpadtemplates;
 }
 /**
- * gst_element_factory_get_padtemplates:
+ * gst_element_factory_get_pad_templates:
  * @factory: a #GstElementFactory
  * 
- * Gets the #Glist of padtemplates for this factory.
+ * Gets the #Glist of pad templates for this factory.
  *
  * Returns: the padtemplates
  */
 G_CONST_RETURN GList *
-gst_element_factory_get_padtemplates (GstElementFactory *factory)
+gst_element_factory_get_pad_templates (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 

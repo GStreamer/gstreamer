@@ -417,8 +417,8 @@ G_CONST_RETURN gchar *	gst_element_factory_get_klass		(GstElementFactory *factor
 G_CONST_RETURN gchar *	gst_element_factory_get_description  	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_version      	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_author		(GstElementFactory *factory);
-guint			gst_element_factory_get_num_padtemplates (GstElementFactory *factory);
-G_CONST_RETURN GList *	gst_element_factory_get_padtemplates	(GstElementFactory *factory);
+guint			gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
+G_CONST_RETURN GList *	gst_element_factory_get_pad_templates	(GstElementFactory *factory);
 
 GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
