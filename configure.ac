@@ -559,10 +559,7 @@ GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
 
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
-GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2 -lmpeg2dec")
-  AC_SUBST(MPEG2DEC_LIBS)
-])
+GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [ GST_CHECK_MPEG2DEC() ])
 
 dnl *** openquicktime ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENQUICKTIME, true)
