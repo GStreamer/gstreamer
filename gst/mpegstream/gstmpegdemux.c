@@ -135,6 +135,9 @@ static gboolean gst_mpeg_demux_parse_packet 	(GstMPEGParse *mpeg_parse, GstBuffe
 static gboolean gst_mpeg_demux_parse_pes 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
 static void	gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse, GstData *data);
 
+static GstElementStateReturn
+		gst_mpeg_demux_change_state 	(GstElement *element);
+
 static GstMPEGParseClass *parent_class = NULL;
 /*static guint gst_mpeg_demux_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -164,16 +167,21 @@ static void
 gst_mpeg_demux_class_init (GstMPEGDemuxClass *klass) 
 {
   GstMPEGParseClass *mpeg_parse_class;
+  GstElementClass *gstelement_class;
 
   parent_class = g_type_class_ref (GST_TYPE_MPEG_PARSE);
 
   mpeg_parse_class = (GstMPEGParseClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
+  gstelement_class->change_state = gst_mpeg_demux_change_state;
 
   mpeg_parse_class->parse_packhead	= gst_mpeg_demux_parse_packhead;
   mpeg_parse_class->parse_syshead	= gst_mpeg_demux_parse_syshead;
   mpeg_parse_class->parse_packet	= gst_mpeg_demux_parse_packet;
   mpeg_parse_class->parse_pes		= gst_mpeg_demux_parse_pes;
   mpeg_parse_class->send_data		= gst_mpeg_demux_send_data;
+
 }
 
 static void
@@ -508,10 +516,6 @@ done:
     GST_DEBUG (0,"mpeg_demux::parse_packet: 0x%02X: we have an audio packet\n", id);
     outpad = &mpeg_demux->audio_pad[id & 0x1F];
     outoffset = mpeg_demux->audio_offset[id & 0x1F];
-    if (pts == -1) 
-      pts = mpeg_demux->audio_PTS[id & 0x1F];
-    else 
-      mpeg_demux->audio_PTS[id & 0x1F] = pts;
     mpeg_demux->audio_offset[id & 0x1F] += datalen;
   /* video */
   } else if ((id >= 0xE0) && (id <= 0xEF)) {
@@ -547,10 +551,15 @@ done:
     outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
 
     GST_BUFFER_OFFSET (outbuf) = outoffset;
-    GST_BUFFER_TIMESTAMP (outbuf) = (pts * 100LL)/9LL;
+    if (pts != -1) {
+      GST_BUFFER_TIMESTAMP (outbuf) = (pts * 100LL)/9LL;
+    }
+    else {
+      GST_BUFFER_TIMESTAMP (outbuf) = -1LL;
+    }
     GST_DEBUG (0,"mpeg_demux::parse_packet: pushing buffer of len %d id %d, ts %lld\n", 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
-    gst_pad_push ((*outpad),outbuf);
+    gst_pad_push ((*outpad), outbuf);
   }
 
   return TRUE;
@@ -816,6 +825,35 @@ _forall_pads (GstMPEGDemux *mpeg_demux, GFunc fun, gpointer user_data)
     }
 }
 
+static GstElementStateReturn
+gst_mpeg_demux_change_state (GstElement *element)
+{ 
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (element);
+  gint i;
+	    
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      for (i=0;i<NUM_VIDEO_PADS;i++) {
+        mpeg_demux->video_offset[i] = 0;
+        mpeg_demux->video_PTS[i] = 0;
+      }
+      for (i=0;i<NUM_AUDIO_PADS;i++) {
+        mpeg_demux->audio_offset[i] = 0;
+        mpeg_demux->audio_PTS[i] = 0;
+      }
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+}
+
+
 gboolean
 gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
 {
@@ -833,12 +871,12 @@ gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail (factory != NULL, FALSE);
 
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (audio_factory));
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (video_mpeg1_factory));
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (video_mpeg2_factory));
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (private1_factory));
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (private2_factory));
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (subtitle_factory));
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (audio_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

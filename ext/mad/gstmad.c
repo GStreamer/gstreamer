@@ -17,8 +17,52 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <gst/gst.h>
+
 #include <string.h>
-#include "gstmad.h"
+#include <mad.h>
+
+#define GST_TYPE_MAD \
+  (gst_mad_get_type())
+#define GST_MAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MAD,GstMad))
+#define GST_MAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MAD,GstMad))
+#define GST_IS_MAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MAD))
+#define GST_IS_MAD_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MAD))
+
+typedef struct _GstMad GstMad;
+typedef struct _GstMadClass GstMadClass;
+
+struct _GstMad {
+  GstElement element;
+
+  /* pads */
+  GstPad *sinkpad,*srcpad;
+
+  /* state */
+  struct mad_stream stream;
+  struct mad_frame frame;
+  struct mad_synth synth;
+  guchar *tempbuffer;
+  glong tempsize;
+  gboolean need_sync;
+  guint64 last_time;
+  guint64 framestamp;	/* timestamp-like, but counted in frames */
+  guint64 sync_point; 
+  guint64 total_samples; /* the number of samples since the sync point */
+
+  /* info */
+  struct mad_header header;
+  gboolean new_header;
+  gint channels;
+};
+
+struct _GstMadClass {
+  GstElementClass parent_class;
+};
 
 /* elementfactory information */
 static GstElementDetails gst_mad_details = {
@@ -140,6 +184,8 @@ gst_mad_init (GstMad *mad)
   mad->need_sync = TRUE;
   mad->last_time = 0;
   mad->framestamp = 0;
+  mad->total_samples = 0;
+  mad->sync_point = 0;
   mad->new_header = TRUE;
 }
 
@@ -213,6 +259,11 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
+  if (!GST_PAD_IS_CONNECTED (mad->srcpad)) {
+    gst_buffer_unref (buffer);
+    return;
+  }
+
   while (size > 0) {
     gint tocopy;
     guchar *mad_input_buffer;
@@ -259,8 +310,18 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       outbuffer = gst_buffer_new ();
       outdata = (gint16 *) GST_BUFFER_DATA (outbuffer) = g_malloc (nsamples * nchannels * 2);
       GST_BUFFER_SIZE (outbuffer) = nsamples * nchannels * 2;
-      GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
-  
+
+      mad->total_samples += nsamples;
+
+      if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
+        if (GST_BUFFER_TIMESTAMP (buffer) > mad->sync_point) {
+          mad->sync_point = GST_BUFFER_TIMESTAMP (buffer);
+	  mad->total_samples = 0;
+	}
+      }
+      GST_BUFFER_TIMESTAMP (outbuffer) = mad->sync_point + 
+	      				 mad->total_samples * 1000000LL / mad->frame.header.samplerate;
+
       /* end of new bit */
       while (nsamples--) {
         /* output sample(s) in 16-bit signed native-endian PCM */
@@ -291,10 +352,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	         NULL)));
       }
 
-      if (GST_PAD_IS_CONNECTED (mad->srcpad))
-        gst_pad_push (mad->srcpad, outbuffer);
-      else
-        gst_buffer_unref (outbuffer);
+      gst_pad_push (mad->srcpad, outbuffer);
 next:
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
@@ -323,6 +381,7 @@ gst_mad_change_state (GstElement *element)
       mad_stream_init (&mad->stream);
       mad_frame_init (&mad->frame);
       mad_synth_init (&mad->synth);
+      mad->tempsize=0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */

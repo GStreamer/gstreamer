@@ -763,6 +763,7 @@ gst/chart/Makefile
 gst/cutter/Makefile
 gst/deinterlace/Makefile
 gst/flx/Makefile
+gst/goom/Makefile
 gst/intfloat/Makefile
 gst/law/Makefile
 gst/level/Makefile
@@ -835,6 +836,7 @@ ext/shout/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
 ext/vorbis/Makefile
+ext/tarkin/Makefile
 ext/xmms/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
