@@ -1,3 +1,8 @@
+2004-07-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  give different names to typefind functions
+
 2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_renegotiate_size),
