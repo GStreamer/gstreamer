@@ -305,7 +305,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       break;
 
     case CODEC_ID_AAC:
-      /* .. */
+      caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mpeg2aac",
+				  "audio/mpeg",
+				    "systemstream", GST_PROPS_BOOLEAN (FALSE),
+				    "mpegversion",  GST_PROPS_INT (2)
+				 );
       break;
 
     case CODEC_ID_MPEG4AAC:
@@ -433,7 +437,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       /* .. */
       break;
 
-    /*case CODEC_ID_RA_144:
+    case CODEC_ID_RA_144:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_realaudio_144",
                                   "audio/x-pn-realaudio",
                                     "bitrate", GST_PROPS_INT (14400)
@@ -445,7 +449,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
                                   "audio/x-pn-realaudio",
                                     "bitrate", GST_PROPS_INT (28800)
                                  );
-      break;*/
+      break;
 
     default:
       /* .. */

@@ -469,7 +469,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 
     /* construct the element details struct */
     details = g_new0 (GstElementDetails, 1);
-    details->longname = g_strdup(in_plugin->name);
+    details->longname = g_strdup_printf("FFMPEG %s decoder", in_plugin->name);
     details->klass = g_strdup_printf("Codec/%s/Decoder",
 				     (in_plugin->type == CODEC_TYPE_VIDEO) ?
 				     "Video" : "Audio");
