@@ -34,7 +34,7 @@ main (int argc, char **argv)
           { NULL, '\0', POPT_ARG_INCLUDE_TABLE, NULL, 0, "GStreamer", NULL },
             POPT_TABLEEND
         };
-  GNOMEProgram *program;
+  GnomeProgram *program;
   poptContext context;
   const gchar **argvn;
 
