@@ -70,7 +70,7 @@ gst_src_class_init(GstSrcClass *klass) {
   gst_src_signals[EOS] =
     gtk_signal_new("eos",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstSrcClass,eos),
-                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
+                   gtk_marshal_NONE__NONE,GTK_TYPE_NONE,0,
                    GST_TYPE_SRC);
   gtk_object_class_add_signals(gtkobject_class,gst_src_signals,LAST_SIGNAL);
 }
@@ -90,7 +90,7 @@ void gst_src_signal_eos(GstSrc *src) {
   g_return_if_fail(src != NULL);
   g_return_if_fail(GST_IS_SRC(src));
 
-  gtk_signal_emit(GTK_OBJECT(src),gst_src_signals[EOS],src);
+  gtk_signal_emit(GTK_OBJECT(src),gst_src_signals[EOS]);
 }
 
 /**

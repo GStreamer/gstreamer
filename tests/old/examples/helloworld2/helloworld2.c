@@ -2,7 +2,7 @@
 
 static gboolean playing;
 
-/* eos will be called when the src element has an end os stream */
+/* eos will be called when the src element has an end of stream */
 void eos(GstSrc *src) 
 {
   g_print("have eos, quitting\n");
@@ -13,7 +13,7 @@ void eos(GstSrc *src)
 int main(int argc,char *argv[]) 
 {
   GstElement *disksrc, *audiosink;
-  GstPipeline *pipeline;
+  GstElement *pipeline;
 
   if (argc != 2) {
     g_print("usage: %s <filename>\n", argv[0]);
@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(pipeline), disksrc);
   gst_bin_add(GST_BIN(pipeline), audiosink);
 
-  if (!gst_pipeline_autoplug(pipeline)) {
+  if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("unable to handle stream\n");
     exit(-1);
   }

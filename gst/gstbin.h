@@ -32,7 +32,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GstElementDetails gst_bin_details;
+extern GstElementDetails gst_bin_details;
 
 
 #define GST_TYPE_BIN \

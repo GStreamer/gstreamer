@@ -1,6 +1,142 @@
 <chapter id="cha-threads">
   <title>Threads</title>
   <para> 
+    GStreamer has support for multithreading throught the use of
+    the <classname>GstThread</classname> object. This object is in fact
+    a special <classname>GstBin</classname> that will become a thread when started.
   </para>
+
+  <para> 
+    To construct a new thread you will perform something like:
+  </para>
+
+  <programlisting>
+  GstElement *my_thread;
+
+  // create the thread object
+  my_thread = gst_thread_new("my_thread");
+  g_return_if_fail(audio_thread != NULL);
+
+  // add some plugins
+  gst_bin_add(GST_BIN(my_thread),GST_ELEMENT(funky_src));
+  gst_bin_add(GST_BIN(my_thread),GST_ELEMENT(cool_effect));
+
+  // connect the elements here...
+  ...
+  
+  // prepare the thread
+  gst_element_set_state(GST_ELEMENT(my_thread),GST_STATE_READY);
+
+  // start playing
+  gst_element_set_state(GST_ELEMENT(my_thread),GST_STATE_PLAYING);
+
+  </programlisting>
+
+  <para> 
+    The above program will create a thread with two elements in it. As soon
+    as it is set to the PLAYING state, the thread will start to iterate.
+  </para>
+  
+  <note> 
+    <para> 
+      The thread must contain at least one element of type <classname>GstSrc</classname>
+      or <classname>GstConnection</classname> in order to work.
+    </para> 
+  </note>
+  
+  <para> 
+    A thread will be visualised as below
+  </para>
+  <figure float="1" id="sec-threads-img">
+    <title>a thread</title>
+    <graphic fileref="images/thread" format="png"></graphic>
+  </figure>
+
+  <para> 
+    As an example we show the helloworld program using a thread.
+  </para>
+  
+  <programlisting>
+#include &lt;gst/gst.h&gt;
+
+/* eos will be called when the src element has an end os stream */
+void eos(GstSrc *src, gpointer data) 
+{
+  GstThread *thread = GST_THREAD(data);
+  g_print("have eos, quitting\n");
+
+  /* stop the bin */
+  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_NULL);
+
+  gst_main_quit();
+}
+
+int main(int argc,char *argv[]) 
+{
+  GstElement *disksrc, *audiosink;
+  GstElement *pipeline;
+  GstElement *thread;
+
+  if (argc != 2) {
+    g_print("usage: %s &lt;filename&gt;\n", argv[0]);
+    exit(-1);
+  }
+
+  gst_init(&amp;argc,&amp;argv);
+
+  /* create a new thread to hold the elements */
+  thread = gst_thread_new("thread");
+  g_assert(thread != NULL);
+
+  /* create a new bin to hold the elements */
+  pipeline = gst_pipeline_new("pipeline");
+  g_assert(pipeline != NULL);
+
+  /* create a disk reader */
+  disksrc = gst_elementfactory_make("disksrc", "disk_source");
+  g_assert(disksrc != NULL);
+  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
+                     GTK_SIGNAL_FUNC(eos), thread);
+
+  /* and an audio sink */
+  audiosink = gst_elementfactory_make("audiosink", "play_audio");
+  g_assert(audiosink != NULL);
+
+  /* add objects to the main pipeline */
+  gst_bin_add(GST_BIN(pipeline), disksrc);
+  gst_bin_add(GST_BIN(pipeline), audiosink);
+
+  /* automatically setup the pipeline */
+  if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
+    g_print("unable to handle stream\n");
+    exit(-1);
+  }
+
+  /* remove the source element from the pipeline */
+  gst_bin_remove(GST_BIN(pipeline), disksrc);
+
+  /* insert the source element in the thread, remember a thread needs at
+     least one source or connection element */
+  gst_bin_add(GST_BIN(thread), disksrc);
+  
+  /* add the pipeline to the thread too */
+  gst_bin_add(GST_BIN(thread), GST_ELEMENT(pipeline));
+
+  /* make it ready */
+  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_READY);
+  /* start playing */
+  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
+
+  /* do whatever you want here, the thread will be playing */
+  ...
+  
+  gst_main();
+
+  gst_pipeline_destroy(thread);
+
+  exit(0);
+}
+  </programlisting>
 
 </chapter>

@@ -253,7 +253,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
     return TRUE;
   } else if (_gst_plugin_spew) {
 //    if (strstr(g_module_error(),"No such") == NULL)
-      gst_info("error loading plugin: %s\n",g_module_error());
+      gst_info("error loading plugin: %s, reasion: %s\n", name, g_module_error());
   }
 
   return FALSE;

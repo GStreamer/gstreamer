@@ -23,15 +23,16 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
   GstElement *audio_thread;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
   if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
     mpeg2_setup_video_thread(pad, video_render_queue, pipeline);
     gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
     return;
   }
   else if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
     gst_plugin_load("ac3parse");
     gst_plugin_load("ac3dec");
     // construct internal pipeline elements
@@ -40,12 +41,14 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
   } else if (strncmp(gst_pad_get_name(pad), "subtitle_stream_4", 17) == 0) {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
     gst_pad_connect(pad,
                     gst_element_get_pad(merge_subtitles,"subtitle"));
     gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
     return;
   }
   else if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
     gst_plugin_load("mp3parse");
     gst_plugin_load("mpg123");
     // construct internal pipeline elements
@@ -55,7 +58,6 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     g_return_if_fail(decode != NULL);
   }
   else {
-    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
     return;
   }
 

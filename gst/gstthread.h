@@ -30,7 +30,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GstElementDetails gst_thread_details;
+extern GstElementDetails gst_thread_details;
 
 
 typedef enum {

@@ -37,6 +37,7 @@ int main(int argc,char *argv[]) {
   _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
   gst_plugin_load_all();
+  gst_plugin_load("gstelements");
   gnome_init("GST Graph Editor",VERSION,argc,argv);
 
   appwindow = gnome_app_new("gst-editor","GST Graph Editor");

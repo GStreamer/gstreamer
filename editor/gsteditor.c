@@ -120,7 +120,7 @@ static void gst_editor_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_NAME:
       gtk_object_set(GTK_OBJECT(editor),"label",GTK_VALUE_STRING(*arg),NULL);
-      gst_element_set_name(GST_OBJECT(editor->pipeline),
+      gst_element_set_name(GST_ELEMENT(editor->pipeline),
                            GTK_VALUE_STRING(*arg));
       break;
     default:
@@ -135,7 +135,7 @@ static void gst_editor_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_NAME:
       GTK_VALUE_STRING(*arg) =
-        gst_element_get_name(GST_OBJECT(editor->pipeline));
+        gst_element_get_name(GST_ELEMENT(editor->pipeline));
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

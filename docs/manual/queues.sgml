@@ -1,6 +1,32 @@
 <chapter id="cha-queues">
   <title>Queues</title>
   <para> 
+    A <classname>GstQueue</classname> is an implementation of a <classname>GstConnection</classname>.
+    Queues can be used to connect two elements in such way that the data can 
+    be buffered.
   </para>
+  <para> 
+    A buffer that is sinked to a Queue will not automatically be pushed to the
+    next connected element but will be buffered. It will be pushed to the next
+    element as soon as gst_connection_push() is called.
+  </para>
+  <para> 
+    Queues are mostly used in conjunction with a <classname>GstThread</classname> to
+    provide an external connection for the thread elements. You could have one
+    thread feeding buffers into a <classname>GstQueue</classname> and another
+    thread repeadedly calling gst_connection_push() on the queue to feed its 
+    internal elements.
+  </para>
+
+  <para> 
+    Below is a figure of a two-threaded decoder. We have one thread (the main execution
+    thread) reading the data from a file, and another thread decoding the data.
+  </para>
+  <figure float="1" id="sec-queues-img">
+    <title>a two-threaded decoder with a queue</title>
+    <graphic fileref="images/queue" format="png"></graphic>
+  </figure>
+
+
 
 </chapter>

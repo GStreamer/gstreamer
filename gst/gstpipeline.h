@@ -29,7 +29,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GstElementDetails gst_pipeline_details;
+extern GstElementDetails gst_pipeline_details;
 
 
 #define GST_TYPE_PIPELINE \
@@ -55,7 +55,7 @@ struct _GstPipelineClass {
 };
 
 GtkType gst_pipeline_get_type(void);
-GstPipeline *gst_pipeline_new(guchar *name);
+GstElement *gst_pipeline_new(guchar *name);
 #define gst_pipeline_destroy(pipeline) gst_object_destroy(GST_OBJECT(pipeline))
 
 gboolean gst_pipeline_autoplug(GstPipeline *pipeline);

@@ -70,8 +70,6 @@ GstPlugin *plugin_init(GModule *module) {
   GstElementFactory *factory;
   int i = 0;
 
-  if (gst_plugin_find("gstelements") != NULL) return NULL;
-
   plugin = gst_plugin_new("gstelements");
   g_return_val_if_fail(plugin != NULL,NULL);
 

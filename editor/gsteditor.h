@@ -56,7 +56,7 @@ struct _GstEditor {
   GtkFrame frame;
 
   /* the actual pipeline to be associated with this thing */
-  GstPipeline *pipeline;
+  GstElement *pipeline;
 
   /* the editor canvas */
   GstEditorCanvas *canvas;

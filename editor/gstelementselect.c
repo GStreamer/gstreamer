@@ -201,6 +201,7 @@ GstElementFactory *element_select_dialog() {
   elements = gst_elementfactory_get_list();
   while (elements) {
     element = (GstElementFactory *)(elements->data);
+    printf("%s %s\n", element->name, element->details->class);
     /* split up the factory's class */
     classes = g_strsplit(element->details->class,"/",0);
     class = classes;

@@ -66,7 +66,7 @@ void parse(int argc,char *argv[],GstElement *parent,gint offset,gchar endchar) {
       // snag the length in advance;
       len = strlen(argv[i]);
       // if it's just a connection, pick the 'src' pad and move on
-      if ((ptr = strchr(argv[i],'|')) != 0) {
+      if ((ptr = strchr(argv[i],'!')) != 0) {
         // if there's a previous pad name
         if (ptr != argv[i]) {
           ptr[0] = '\0';
@@ -91,29 +91,18 @@ void parse(int argc,char *argv[],GstElement *parent,gint offset,gchar endchar) {
 }
 
 int main(int argc,char *argv[]) {
-  int t;
   GstElement *pipeline;
 
   gst_init(&argc,&argv);
-  gst_plugin_load_all();
 
-  gst_info("\n\n");
+  pipeline = gst_thread_new("launch");
 
-  pipeline = gst_elementfactory_make("thread","launch");
-  if ((t = atoi(argv[1])))
-    parse(argc,argv,pipeline,2,0);
-  else
-    parse(argc,argv,pipeline,1,0);
-
-  xmlSaveFile("launch.xml",gst_xml_write(pipeline));
+  parse(argc,argv,pipeline,1,0);
 
   gst_element_set_state(pipeline,GST_STATE_READY);
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
 
-  if (t)
-    sleep(t);
-  else
-    sleep(5);
+  gst_main();
 
-  return 1;
+  return 0;
 }

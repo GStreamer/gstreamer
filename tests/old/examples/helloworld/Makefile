@@ -2,7 +2,7 @@
 CC = gcc
 
 helloworld: helloworld.c 
-	$(CC) -Wall `gstreamer-config --cflags` `gtk-config --cflags` helloworld.c -o helloworld `gstreamer-config --libs` `gtk-config --libs`
+	$(CC) -Wall `gstreamer-config --cflags --libs` helloworld.c -o helloworld 
 
 clean: 
 	rm -f *.o helloworld

@@ -57,3 +57,13 @@ void gst_init(int *argc,char **argv[]) {
     gst_trace_set_default(gst_trace);
   }
 }
+
+void gst_main() {
+  gdk_threads_enter();
+  gtk_main();
+  gdk_threads_leave();
+}
+
+void gst_main_quit() {
+  gtk_main_quit();
+}

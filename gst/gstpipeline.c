@@ -102,12 +102,12 @@ static void gst_pipeline_init(GstPipeline *pipeline) {
  *
  * Returns: newly created GstPipeline
  */
-GstPipeline *gst_pipeline_new(guchar *name) {
+GstElement *gst_pipeline_new(guchar *name) {
   GstPipeline *pipeline;
 
   pipeline = gtk_type_new(gst_pipeline_get_type());
   gst_element_set_name(GST_ELEMENT(pipeline),name);
-  return pipeline;
+  return GST_ELEMENT(pipeline);
 }
 
 static void gst_pipeline_prepare(GstPipeline *pipeline) {
@@ -157,6 +157,7 @@ static guint16 gst_pipeline_typefind(GstPipeline *pipeline, GstElement *element)
   gst_pad_disconnect(gst_element_get_pad(element,"src"),
                     gst_element_get_pad(typefind,"sink"));
   gst_bin_remove(GST_BIN(pipeline), typefind);
+  gst_object_unref(GST_OBJECT(typefind));
 
   return type_id;
 }
@@ -223,7 +224,7 @@ end:
 
 gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GList *elements;
-  GstElement *element, *srcelement, *sinkelement;
+  GstElement *element, *srcelement = NULL, *sinkelement= NULL;
   GList *factories;
   GstElementFactory *factory;
   GList *src_types, *sink_types;

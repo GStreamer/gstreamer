@@ -2,7 +2,7 @@
 
 gboolean playing;
 
-/* eos will be called when the src element has an end os stream */
+/* eos will be called when the src element has an end of stream */
 void eos(GstSrc *src) 
 {
   g_print("have eos, quitting\n");
@@ -20,8 +20,6 @@ int main(int argc,char *argv[])
   }
 
   gst_init(&argc,&argv);
-  gst_plugin_load_all();
-  g_print("\n");
 
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");
@@ -40,6 +38,7 @@ int main(int argc,char *argv[])
 
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), parse);
   gst_bin_add(GST_BIN(bin), decoder);
   gst_bin_add(GST_BIN(bin), audiosink);
 
@@ -69,6 +68,7 @@ int main(int argc,char *argv[])
   gst_element_set_state(bin, GST_STATE_NULL);
 
   gst_object_destroy(GST_OBJECT(audiosink));
+  gst_object_destroy(GST_OBJECT(parse));
   gst_object_destroy(GST_OBJECT(decoder));
   gst_object_destroy(GST_OBJECT(disksrc));
   gst_object_destroy(GST_OBJECT(bin));

@@ -20,17 +20,20 @@ void mpeg1_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
 {
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0 && audio_render_queue) {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
     mpeg1_setup_audio_thread(pad, audio_render_queue, pipeline);
 
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
     mpeg1_setup_video_thread(pad, video_render_queue, pipeline);
   }
+  else return;
+
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 }
 

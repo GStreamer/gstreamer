@@ -39,8 +39,6 @@ int main(int argc,char *argv[])
   }
 
   gst_init(&amp;argc,&amp;argv);
-  gst_plugin_load_all();
-  g_print("\n");
 
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");
@@ -89,6 +87,7 @@ int main(int argc,char *argv[])
   gst_element_set_state(bin, GST_STATE_NULL);
 
   gst_object_destroy(GST_OBJECT(audiosink));
+  gst_object_destroy(GST_OBJECT(parse));
   gst_object_destroy(GST_OBJECT(decoder));
   gst_object_destroy(GST_OBJECT(disksrc));
   gst_object_destroy(GST_OBJECT(bin));
@@ -118,16 +117,6 @@ int main(int argc,char *argv[])
   gst_init(&amp;argc,&amp;argv);
   ...
 
-    </programlisting>
-
-    <para>
-      For simplicity, we are going to load all known plugins. This has the effect
-      that all the codecs known to GStreamer are registered to the system.
-    </para>
-    <programlisting>
-  ...
-  gst_plugin_load_all();
-  ...
     </programlisting>
 
     <para>
@@ -318,8 +307,8 @@ void eos(GstSrc *src)
       To compile the helloworld example, use: 
     </para>
     <programlisting>
-       gcc -Wall `gstreamer-config --cflags` `gtk-config --cflags` helloworld.c \
-             -o helloworld `gstreamer-config --libs` `gtk-config --libs`
+       gcc -Wall `gstreamer-config --cflags --libs` helloworld.c \
+             -o helloworld 
     </programlisting>
     <para>
       This uses the program gstreamer-config, which comes with GStreamer. This program "knows" 

@@ -31,7 +31,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-GstElementDetails gst_disksrc_details;
+extern GstElementDetails gst_disksrc_details;
 
 
 #define GST_TYPE_DISKSRC \
@@ -43,7 +43,7 @@ GstElementDetails gst_disksrc_details;
 #define GST_IS_DISKSRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_DISKSRC))
 #define GST_IS_DISKSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC))
 
 // NOTE: per-element flags start with 16 for now
 typedef enum {

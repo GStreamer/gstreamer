@@ -51,7 +51,7 @@
       </para>
     </legalnotice>
 
-    <title>GStreamer Application Development Manual</title>
+    <title><application>GStreamer</application> Application Development Manual</title>
 
   </bookinfo>
       
@@ -60,10 +60,10 @@
   <part id="overview"><title>Overview</title>
     <partintro>
       <para> 
-        The first chapter of the book gives you an overview of GStreamer
-        design goals. Chapter 2 rapidly covers the basics of GStreamer
+        The first chapter of the book gives you an overview of <application>GStreamer</application>
+        design goals. Chapter 2 rapidly covers the basics of <application>GStreamer</application>
         programming. In chapter 3 we will move on to the examples. 
-        Since GStreamer adheres to the GTK+ programming model, the reader is 
+        Since <application>GStreamer</application> adheres to the GTK+ programming model, the reader is 
         assumed to understand the basics of GTK+.
         For a gentle introduction to GTK+, you may wish to read the <emphasis>GTK+
         Tutorial</emphasis> or Eric Harlow's book <emphasis>Developing Linux
@@ -84,7 +84,7 @@
   <part id="basic-concepts"><title>Basic concepts</title>
     <partintro>
       <para> 
-        We will first describe the basics of the GStreamer programming by
+        We will first describe the basics of the <application>GStreamer</application> programming by
         introducing the different objects needed to create a media pipeline.
       </para>
       <para> 
@@ -111,7 +111,7 @@
     <partintro>
       <para>
         With the basic concepts out of the way, you're ready to start building a
-        full-scale GStreamer application. 
+        full-scale <application>GStreamer</application> application. 
       </para>
       <para>
         We assume the reader is familiar with GTK+/GNOME programming.
@@ -127,15 +127,15 @@
 
 <!-- ############ Advanced GStreamer - part ############# -->
 
-  <part id="advanced"><title>Advanced GStreamer concepts</title>
+  <part id="advanced"><title>Advanced <application>GStreamer</application> concepts</title>
 
     <partintro>
       <para>
-        In this part we will cover the more advanced features of GStreamer.
+        In this part we will cover the more advanced features of <application>GStreamer</application>.
 	With the basics you learned in the prevous part you should be 
 	able to create a 'simple' pipeline. If you want more control over
 	the media types and the pipeline you should use the more
-	low-level features of GStreamer.
+	low-level features of <application>GStreamer</application>.
       </para>      
     </partintro>
 
@@ -156,11 +156,11 @@
 
 <!-- ############ XML in GStreamer - part ############# -->
 
-  <part id="xml-gstreamer"><title>XML in GStreamer</title>
+  <part id="xml-gstreamer"><title>XML in <application>GStreamer</application></title>
 
     <partintro>
       <para>
-        GStreamer has the posibility to externalize the pipelines
+        <application>GStreamer</application> has the posibility to externalize the pipelines
 	you create using an XML format. You can load a previously
 	created pipeline by loading the XML file.
       </para>      
@@ -171,12 +171,12 @@
 
 <!-- ############ XML in GStreamer - part ############# -->
 
-  <part id="plugins"><title>plugin development in GStreamer</title>
+  <part id="plugins"><title>plugin development in <application>GStreamer</application></title>
 
     <partintro>
       <para>
         In this part we will describe how you create a new plugin
-	to be used in GStreamer.
+	to be used in <application>GStreamer</application>.
       </para>      
     </partintro>
 
@@ -190,7 +190,7 @@
 
     <partintro>
       <para>
-        GStreamer comes prepackaged with a few programs.
+        <application>GStreamer</application> comes prepackaged with a few programs.
       </para>
     </partintro>
 
