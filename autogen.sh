@@ -88,6 +88,10 @@ if test -f disable; then
   done
 fi
 
+# remove ffmpeg's configure, it's going to get created anyway and it probably
+# conflicted before this too
+rm -f gst-libs/ext/ffmpeg/configure
+
 # now, run ffmpeg's autogen
 echo "+ running autogen.sh in gst-libs/ext/ffmpeg"
 cd gst-libs/ext/ffmpeg
