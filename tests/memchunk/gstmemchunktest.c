@@ -37,15 +37,17 @@ run_test (void *threadid)
     free_chunk (chunk);
   }
 
-  pthread_exit(NULL);
+  g_thread_exit(NULL);
+  return NULL;
 }
 
 
 gint 
 main (gint argc, gchar *argv[]) 
 {
-  pthread_t threads[MAX_THREADS];
-  int rc, t;
+  GThread * threads[MAX_THREADS];
+  GError * error;
+  int t;
  
   gst_init (&argc, &argv);
 
@@ -60,17 +62,17 @@ main (gint argc, gchar *argv[])
   _chunks = gst_mem_chunk_new ("test", 32, 32 * 16, G_ALLOC_AND_FREE);
 
   for(t=0; t < num_threads; t++) {
-    rc = pthread_create (&threads[t], NULL, run_test, (void *)t);
-    if (rc) {
-      printf ("ERROR: return code from pthread_create() is %d\n", rc);
-      printf ("Code %d= %s\n", rc, strerror(rc));
+    error = NULL;
+    threads[t] = g_thread_create (run_test, (void *)t, TRUE, &error);
+    if (error) {
+      printf ("ERROR: g_thread_create() %s\n", error->message);
       exit (-1);
     }
   }
   printf ("main(): Created %d threads.\n", t);
 
   for(t=0; t < num_threads; t++) {
-    pthread_join (threads[t], NULL);
+    g_thread_join (threads[t]);
   }
   g_mem_chunk_info();
 
