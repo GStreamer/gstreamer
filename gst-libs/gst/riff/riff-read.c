@@ -180,7 +180,7 @@ gst_riff_read_use_event (GstRiffRead * riff, GstEvent * event)
 
     case GST_EVENT_DISCONTINUOUS:
       GST_WARNING_OBJECT (riff, "Unexpected discont - might lose sync");
-      gst_pad_event_default (riff->sinkpad, event);
+      gst_event_unref (event);
       return TRUE;
 
     case GST_EVENT_FLUSH:
