@@ -59,6 +59,7 @@ struct _VorbisFile {
   guint64 offset;
 
   GstCaps *metadata;
+  GstCaps *tags;
 };
 
 struct _VorbisFileClass {
@@ -93,6 +94,7 @@ enum
 {
   ARG_0,
   ARG_METADATA,
+  ARG_TAGS
 };
 
 static void
@@ -173,6 +175,9 @@ gst_vorbisfile_class_init (VorbisFileClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  g_object_class_install_property (gobject_class, ARG_TAGS,
+    g_param_spec_boxed ("tags", "Tags", "(logical) Stream tags",
+                         GST_TYPE_CAPS, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
                          GST_TYPE_CAPS, G_PARAM_READABLE));
@@ -210,6 +215,7 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   vorbisfile->seek_pending = 0;
   vorbisfile->need_discont = FALSE;
   vorbisfile->metadata = NULL;
+  vorbisfile->tags = NULL;
   vorbisfile->current_link = -1;
 }
 
@@ -345,24 +351,23 @@ ov_callbacks vorbisfile_ov_callbacks =
   gst_vorbisfile_tell,
 };
 
-/* retrieve the comment field and put tags in metadata GstCaps
- * returns TRUE if caps were still valid or could be set,
+/* retrieve the comment field (or tags) and put in tags GstCaps
+ * returns TRUE if caps could be set,
  * FALSE if they couldn't be read somehow */
 static gboolean
-gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
+gst_vorbisfile_update_tags (VorbisFile *vorbisfile, gint link)
 {
   OggVorbis_File *vf = &vorbisfile->vf;
   gchar **ptr;
-  vorbis_info *vi;
   vorbis_comment *vc;
   GstProps *props = NULL;
   GstPropsEntry *entry;
   gchar *name, *value;
 
   /* clear old one */
-  if (vorbisfile->metadata) {
-    gst_caps_unref (vorbisfile->metadata);
-    vorbisfile->metadata = NULL;
+  if (vorbisfile->tags) {
+    gst_caps_unref (vorbisfile->tags);
+    vorbisfile->tags = NULL;
   }
 
   /* create props to hold the key/value pairs */
@@ -380,24 +385,53 @@ gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
     }
     ptr++;
   }
-  entry = gst_props_entry_new ("vendor", GST_PROPS_STRING_TYPE, vc->vendor);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  vorbisfile->tags = gst_caps_new ("vorbisfile_tags",
+		                   "application/x-gst-tags",
+		                   props);
 
-  /* grab some more random properties */
+  g_object_notify (G_OBJECT (vorbisfile), "tags");
+
+  return TRUE;
+}
+
+/* retrieve logical stream properties and put them in metadata GstCaps
+ * returns TRUE if caps could be set,
+ * FALSE if they couldn't be read somehow */
+static gboolean
+gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
+{
+  OggVorbis_File *vf = &vorbisfile->vf;
+  vorbis_info *vi;
+  GstProps *props = NULL;
+  GstPropsEntry *entry;
+
+  /* clear old one */
+  if (vorbisfile->metadata) {
+    gst_caps_unref (vorbisfile->metadata);
+    vorbisfile->metadata = NULL;
+  }
+
+  /* create props to hold the key/value pairs */
+  props = gst_props_empty_new ();
+
   vi = ov_info (vf, link);
   entry = gst_props_entry_new ("version", GST_PROPS_INT_TYPE, vi->version);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_upper", GST_PROPS_INT_TYPE, vi->bitrate_upper);
+  entry = gst_props_entry_new ("bitrate_upper", GST_PROPS_INT_TYPE, 
+		               vi->bitrate_upper);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_nominal", GST_PROPS_INT_TYPE, vi->bitrate_nominal);
+  entry = gst_props_entry_new ("bitrate_nominal", GST_PROPS_INT_TYPE, 
+		               vi->bitrate_nominal);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_lower", GST_PROPS_INT_TYPE, vi->bitrate_lower);
+  entry = gst_props_entry_new ("bitrate_lower", GST_PROPS_INT_TYPE, 
+		               vi->bitrate_lower);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-  /* some more properties */
-  entry = gst_props_entry_new ("serial", GST_PROPS_INT_TYPE, ov_serialnumber (vf, link));
+  entry = gst_props_entry_new ("serial", GST_PROPS_INT_TYPE, 
+		               ov_serialnumber (vf, link));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT_TYPE, ov_bitrate (vf, link));
+  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT_TYPE, 
+		               ov_bitrate (vf, link));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
   vorbisfile->metadata = gst_caps_new ("vorbisfile_metadata",
@@ -418,6 +452,7 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
   vorbisfile->current_link = link;
 
   gst_vorbisfile_update_metadata (vorbisfile, link);
+  gst_vorbisfile_update_tags (vorbisfile, link);
       
   if (gst_pad_try_set_caps (vorbisfile->srcpad,
                    GST_CAPS_NEW ("vorbisdec_src",
@@ -1013,10 +1048,12 @@ gst_vorbisfile_get_property (GObject *object, guint prop_id,
 
   vorbisfile = GST_VORBISFILE (object);
 
-  /* FIXME: the reupdate could be expensive */
   switch (prop_id) {
     case ARG_METADATA:
       g_value_set_boxed (value, vorbisfile->metadata);
+      break;
+    case ARG_TAGS:
+      g_value_set_boxed (value, vorbisfile->tags);
       break;
     default:
       g_warning ("Unknown property id\n");
