@@ -36,7 +36,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   GstElement *filesrc;
   GstElement *cache;
 
-  GST_DEBUG (0,"GstPipeline: play have type");
+  g_print ("GstPipeline: play have type\n");
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -44,13 +44,13 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
 
-  // disconnect the typefind from the pipeline and remove it
+  /* disconnect the typefind from the pipeline and remove it */
   gst_element_disconnect (cache, typefind);
   gst_bin_remove (GST_BIN (autobin), typefind);
       
   /* and an audio sink */
   osssink = gst_element_factory_make ("osssink", "play_audio");
-  g_assert(osssink != NULL);
+  g_assert (osssink != NULL);
 
   autoplug = gst_autoplug_factory_make ("staticrender");
   g_assert (autoplug != NULL);
@@ -81,7 +81,7 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
   GstElement *cache;
   GstElement *new_element;
 
-  fprintf (stderr, "have cache empty\n");
+  g_print (have cache empty\n");
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -97,7 +97,7 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  fprintf (stderr, "done with cache_empty\n");
+  g_print ("done with cache_empty\n");
 }
 
 int 
@@ -112,7 +112,7 @@ main (int argc, char *argv[])
   gst_init (&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: %s &lt;filename with audio&gt;\n", argv[0]);
     exit (-1);
   }
 
