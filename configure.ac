@@ -1029,6 +1029,16 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   AC_SUBST(MPEG2DEC_LIBS)
 ])
 
+dnl *** mpeg2enc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2ENC, true)
+GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
+  PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.92,
+      HAVE_MPEG2ENC="yes", HAVE_MPEG2ENC="no")
+  MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp"
+  AC_SUBST(MPEG2ENC_CFLAGS)
+  AC_SUBST(MPEG2ENC_LIBS)
+])
+
 dnl *** mplex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
 GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [HAVE_MPLEX=$HAVE_CXX])
@@ -1460,6 +1470,7 @@ ext/mad/Makefile
 ext/mas/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
+ext/mpeg2enc/Makefile
 ext/mplex/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile
