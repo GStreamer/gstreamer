@@ -373,7 +373,6 @@ GstBuffer
 gst_buffer_new
 gst_buffer_new_and_alloc
 gst_buffer_set_data
-gst_buffer_new_from_pool
 gst_buffer_default_free
 gst_buffer_default_copy
 gst_buffer_ref
@@ -390,33 +389,6 @@ gst_buffer_span
 GST_TYPE_BUFFER
 GST_TYPE_BUFFER_FLAG
 gst_buffer_flag_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstbufferpool</FILE>
-<TITLE>GstBufferPool</TITLE>
-GST_BUFFER_POOL
-GST_BUFFER_POOL_TRACE_NAME
-GST_IS_BUFFER_POOL
-GstBufferPool
-GstBufferPoolBufferNewFunction
-GstBufferPoolBufferCopyFunction
-GstBufferPoolBufferFreeFunction
-gst_buffer_pool_new
-gst_buffer_pool_is_active
-gst_buffer_pool_set_active
-gst_buffer_pool_ref
-gst_buffer_pool_ref_by_count
-gst_buffer_pool_unref
-gst_buffer_pool_copy
-gst_buffer_pool_copy_on_write
-gst_buffer_pool_free
-gst_buffer_pool_set_user_data
-gst_buffer_pool_get_user_data
-gst_buffer_pool_get_default
-gst_buffer_pool_default_free
-<SUBSECTION Standard>
-GST_TYPE_BUFFER_POOL
 </SECTION>
 
 <SECTION>
@@ -876,7 +848,6 @@ GST_PAD_IS_USABLE
 GstPad
 GstPadChainFunction
 GstPadGetFunction
-GstPadBufferPoolFunction
 GstPadGetCapsFunction
 
 GstPadEventFunction
@@ -904,7 +875,6 @@ gst_pad_new_from_template
 gst_pad_get_direction
 gst_pad_set_chain_function
 gst_pad_set_get_function
-gst_pad_set_bufferpool_function
 gst_pad_set_link_function
 gst_pad_set_getcaps_function
 gst_pad_try_set_caps
@@ -930,7 +900,6 @@ gst_pad_can_link
 gst_pad_can_link_filtered
 gst_pad_push
 gst_pad_pull
-gst_pad_get_bufferpool
 gst_pad_load_and_link
 gst_pad_proxy_link
 gst_pad_get_pad_template

@@ -1,3 +1,9 @@
+2003-12-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * docs/gst/gstreamer-sections.txt:
+        * docs/gst/tmpl/gstreamer-bufferpool.sgml:
+          David removed bufferpool code, so let's remove docs as well.
+
 2003-12-22  Colin Walters  <walters@verbum.org>
 
 	* gst/gsttaginterface.c, gst/gsttaginterface.h,
