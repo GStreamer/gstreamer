@@ -136,7 +136,6 @@ typedef enum {
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
-#define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)

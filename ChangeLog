@@ -1,3 +1,8 @@
+2004-06-22  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.h:
+	  remove define that referenced a nonexisting GstElement struct member
+
 2004-06-20  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstdata.c: (gst_data_is_writable):
