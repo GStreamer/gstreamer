@@ -801,6 +801,8 @@ gst_scheduler_factory_class_init (GstSchedulerFactoryClass *klass)
 
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
+  /* this is the default scheduler, if you change this please also change
+   * the description in popt in gst.c */
   if (!_default_name)
     _default_name = g_strdup ("opt");
 }
