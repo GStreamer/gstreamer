@@ -37,7 +37,13 @@ typedef struct _GstAtomicInt GstAtomicInt;
 
 struct _GstAtomicInt {
 #ifdef HAVE_ATOMIC_H
-  atomic_t               value;
+  union {
+    atomic_t               value;
+    struct {
+      int                    value;
+      GMutex                *lock;
+    } unused;
+  } v;
 #else
   int                    value;
   GMutex                *lock;
@@ -47,15 +53,15 @@ struct _GstAtomicInt {
 #ifdef HAVE_ATOMIC_H
 
 /* atomic functions */
-#define GST_ATOMIC_INT_INIT(ref, val)		(atomic_set(&((ref)->value), (val)))
+#define GST_ATOMIC_INT_INIT(ref, val)		(atomic_set(&((ref)->v.value), (val)))
 #define GST_ATOMIC_INT_FREE(ref)		
 
-#define GST_ATOMIC_INT_SET(ref,val)  		(atomic_set(&((ref)->value), (val)))
-#define GST_ATOMIC_INT_VALUE(ref)  		(atomic_read(&((ref)->value)))
-#define GST_ATOMIC_INT_READ(ref,res)  		(*res = atomic_read(&((ref)->value)))
-#define GST_ATOMIC_INT_INC(ref)  		(atomic_inc (&((ref)->value)))
-#define GST_ATOMIC_INT_DEC_AND_TEST(ref,zero)  	(*zero = atomic_dec_and_test (&((ref)->value)))
-#define GST_ATOMIC_INT_ADD(ref, count)	  	(atomic_add ((count), &((ref)->value)))
+#define GST_ATOMIC_INT_SET(ref,val)  		(atomic_set(&((ref)->v.value), (val)))
+#define GST_ATOMIC_INT_VALUE(ref)  		(atomic_read(&((ref)->v.value)))
+#define GST_ATOMIC_INT_READ(ref,res)  		(*res = atomic_read(&((ref)->v.value)))
+#define GST_ATOMIC_INT_INC(ref)  		(atomic_inc (&((ref)->v.value)))
+#define GST_ATOMIC_INT_DEC_AND_TEST(ref,zero)  	(*zero = atomic_dec_and_test (&((ref)->v.value)))
+#define GST_ATOMIC_INT_ADD(ref, count)	  	(atomic_add ((count), &((ref)->v.value)))
 
 #else
 
@@ -152,8 +158,6 @@ G_STMT_START {							\
                         "  movl %%edx, %%ecx;"			\
                         "  incl %%ecx;"				\
                         GST_ATOMIC_LOCK "cmpxchg8b %1;"		\
-                        "  jz 20f;"				\
-                        "  testl %%eax, %%eax;"			\
                         "  jnz 10b;"				\
                         "20:\t"					\
                           : "=a" (*res)				\
