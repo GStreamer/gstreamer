@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <string.h>
 
 
 /**********************************************************************
@@ -327,10 +328,10 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   /* mmap() the data into this new buffer */
   GST_BUFFER_DATA(buf) = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
   if (GST_BUFFER_DATA(buf) == NULL) {
-    fprintf (stderr, "ERROR: gstfilesrc couldn't map file!\n");
+    gst_element_error (GST_ELEMENT (src), "couldn't map file");
   } else if (GST_BUFFER_DATA(buf) == MAP_FAILED) {
-    g_error ("gstfilesrc mmap(0x%x, %d, 0x%llx) : %s",
- 	     size, src->fd, offset, sys_errlist[errno]);
+    gst_element_error (GST_ELEMENT (src), "mmap (0x%x, %d, 0x%llx) : %s",
+ 	     size, src->fd, offset, strerror (errno));
   }
 #ifdef MADV_SEQUENTIAL
   /* madvise to tell the kernel what to do with it */
@@ -533,8 +534,8 @@ gst_filesrc_open_file (GstFileSrc *src)
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
   if (src->fd < 0) {
-    perror ("open");
-    gst_element_error (GST_ELEMENT (src), g_strconcat("opening file \"", src->filename, "\"", NULL));
+    gst_element_error (GST_ELEMENT (src), "opening file \"%s\" (%s)", 
+    		       src->filename, strerror (errno), NULL);
     return FALSE;
   } else {
     /* find the file length */
@@ -557,7 +558,6 @@ gst_filesrc_close_file (GstFileSrc *src)
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN));
 
-  g_print ("close\n");
   /* close the file */
   close (src->fd);
 
@@ -565,6 +565,8 @@ gst_filesrc_close_file (GstFileSrc *src)
   src->fd = 0;
   src->filelen = 0;
   src->curoffset = 0;
+  if (src->mapbuf)
+    gst_buffer_unref (src->mapbuf);
 
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
@@ -575,17 +577,22 @@ gst_filesrc_change_state (GstElement *element)
 {
   GstFileSrc *src = GST_FILESRC(element);
 
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
-      gst_filesrc_close_file (GST_FILESRC (element));
-  } if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    src->curoffset = 0;
-  } else {
-
-    if (!GST_FLAG_IS_SET (element, GST_FILESRC_OPEN)) {
-      if (!gst_filesrc_open_file (GST_FILESRC (element)))
-        return GST_STATE_FAILURE;
-    }
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (!GST_FLAG_IS_SET (element, GST_FILESRC_OPEN)) {
+        if (!gst_filesrc_open_file (GST_FILESRC (element)))
+          return GST_STATE_FAILURE;
+      }
+      break;
+    case GST_STATE_READY_TO_NULL:
+      if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
+        gst_filesrc_close_file (GST_FILESRC (element));
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_PAUSED_TO_READY:
+      src->curoffset = 0;
+    default:
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

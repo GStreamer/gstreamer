@@ -58,8 +58,8 @@ extern GType _gst_element_type;
 
 #define GST_TYPE_ELEMENT		(_gst_element_type)
 
-#define GST_ELEMENT_FAST(obj)		((GstElement*)(obj))
-#define GST_ELEMENT_CLASS_FAST(klass)	((GstElementClass*)(klass))
+#define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
+#define GST_ELEMENT_CLASS_CAST(klass)	((GstElementClass*)(klass))
 #define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
 
@@ -67,8 +67,8 @@ extern GType _gst_element_type;
 # define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
 # define GST_ELEMENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 #else
-# define GST_ELEMENT                    GST_ELEMENT_FAST
-# define GST_ELEMENT_CLASS              GST_ELEMENT_CLASS_FAST
+# define GST_ELEMENT                    GST_ELEMENT_CAST
+# define GST_ELEMENT_CLASS              GST_ELEMENT_CLASS_CAST
 #endif
 
 typedef enum {
@@ -82,18 +82,16 @@ typedef enum {
   /* this element is incable of seeking (FIXME: does this apply to filters?) */
   GST_ELEMENT_NO_SEEK,
 
-  /***** !!!!! need to have a flag that says that an element must
-    *not* be an entry into a scheduling chain !!!!! *****/
-  /* this element for some reason doesn't obey COTHREAD_STOPPING, or
-     has some other reason why it can't be the entry */
-  GST_ELEMENT_NO_ENTRY,
+  /* this element, for some reason, has a loop function that performs
+   * an infinite loop without calls to gst_element_yield () */
+  GST_ELEMENT_INFINITE_LOOP,
+
+  /* private flags that can be used by the scheduler */
+  GST_ELEMENT_SCHEDULER_PRIVATE1,
+  GST_ELEMENT_SCHEDULER_PRIVATE2,
 
   /* there is a new loopfunction ready for placement */
   GST_ELEMENT_NEW_LOOPFUNC,
-  /* the cothread holding this element needs to be stopped */
-  GST_ELEMENT_COTHREAD_STOPPING,
-  /* the element has to be scheduled as a cothread for any sanity */
-  GST_ELEMENT_USE_COTHREAD,
 
   /* if this element can handle events */
   GST_ELEMENT_EVENT_AWARE,
@@ -103,7 +101,6 @@ typedef enum {
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
-#define GST_ELEMENT_IS_COTHREAD_STOPPING(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_COTHREAD_STOPPING))
 #define GST_ELEMENT_IS_EOS(obj)			(GST_FLAG_IS_SET(obj,GST_ELEMENT_EOS))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))
 
@@ -127,9 +124,10 @@ struct _GstElement {
   guint8 		current_state;
   guint8 		pending_state;
   GstElement 		*manager;
-  GstScheduler 		*sched;
   GstElementLoopFunction loopfunc;
-  cothread_state 	*threadstate;
+
+  GstScheduler 		*sched;
+  gpointer		sched_private;
 
   /* element pads */
   guint16 		numpads;
@@ -185,6 +183,8 @@ const gchar*            gst_element_get_name            (GstElement *element);
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
 
+#define			gst_element_yield(element)	gst_scheduler_yield(GST_ELEMENT_SCHED(element),element)
+#define			gst_element_interrupt(element)	gst_scheduler_interrupt(GST_ELEMENT_SCHED(element),element)
 void			gst_element_set_sched		(GstElement *element, GstScheduler *sched);
 GstScheduler*		gst_element_get_sched		(GstElement *element);
 

@@ -38,15 +38,15 @@ extern GType _gst_bin_type;
 # define GST_IS_BIN(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BIN))
 # define GST_IS_BIN_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_BIN))
 
-#define GST_BIN_FAST(obj)            ((GstBin*)(obj))
-#define GST_BIN_CLASS_FAST(klass)    ((GstBinClass*)(klass))
+#define GST_BIN_CAST(obj)            ((GstBin*)(obj))
+#define GST_BIN_CLASS_CAST(klass)    ((GstBinClass*)(klass))
 
 #ifdef GST_TYPE_PARANOID
 # define GST_BIN(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BIN, GstBin))
 # define GST_BIN_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BIN, GstBinClass))
 #else
-# define GST_BIN                     GST_BIN_FAST
-# define GST_BIN_CLASS               GST_BIN_CLASS_FAST
+# define GST_BIN                     GST_BIN_CAST
+# define GST_BIN_CLASS               GST_BIN_CLASS_CAST
 #endif
 
 typedef enum {
@@ -71,11 +71,10 @@ struct _GstBin {
   /* our children */
   gint numchildren;
   GList *children;
-  GCond *eoscond;
 
   GstElementState child_states[GST_NUM_STATES];
   
-  cothread_context *threadcontext;
+  gpointer sched_private;
 };
 
 struct _GstBinClass {
@@ -113,6 +112,7 @@ gboolean	gst_bin_iterate			(GstBin *bin);
 /* internal */
 void 		gst_bin_child_state_change 	(GstBin *bin, GstElementState oldstate, 
 						 GstElementState newstate, GstElement *child);
+void 		gst_bin_child_error	 	(GstBin *bin, GstElement *child);
 
 #ifdef __cplusplus
 }

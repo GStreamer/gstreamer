@@ -192,6 +192,9 @@ gst_real_pad_init (GstRealPad *pad)
   pad->direction = GST_PAD_UNKNOWN;
   pad->peer = NULL;
 
+  pad->sched = NULL;
+  pad->sched_private = NULL;
+
   pad->chainfunc = NULL;
   pad->getfunc = NULL;
   pad->getregionfunc = NULL;
@@ -564,13 +567,11 @@ void
 gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
-  if (!gst_pad_try_connect (srcpad, sinkpad))
-/* FIXME: g_critical is glib-2.0, not glib-1.2
-    g_critical ("couldn't connect %s:%s and %s:%s",
-*/
+  if (!gst_pad_try_connect (srcpad, sinkpad)) {
     g_warning ("couldn't connect %s:%s and %s:%s",
 		GST_DEBUG_PAD_NAME (srcpad),
 		GST_DEBUG_PAD_NAME (sinkpad));
+  }
 }
 
 /**
@@ -1451,18 +1452,33 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+
   if (!peer) {
-    g_warning ("gst_pad_push but %s:%s is unconnected", GST_DEBUG_PAD_NAME (pad));
-    return;
+    g_warning ("push on pad %s:%s but it is unconnected", GST_DEBUG_PAD_NAME (pad));
   }
-  
-  if (peer->chainhandler) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "calling chainhandler &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-    (peer->chainhandler) (GST_PAD_FAST (peer), buf);
-  } 
   else {
-    g_warning ("gst_pad_push but %s:%s has but no chainhandler", GST_DEBUG_PAD_NAME (peer));
+    if (peer->chainhandler) {
+      if (buf) {
+        GST_DEBUG (GST_CAT_DATAFLOW, "calling chainhandler &%s of peer pad %s:%s\n",
+            GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (GST_PAD (peer)));
+        (peer->chainhandler) (GST_PAD_CAST (peer), buf);
+	return;
+      }
+      else {
+        g_warning ("trying to push a NULL buffer on pad %s:%s", GST_DEBUG_PAD_NAME (peer));
+	return;
+      }
+    } 
+    else {
+      g_warning ("(internal error) push on pad %s:%s but it has no chainhandler", GST_DEBUG_PAD_NAME (peer));
+    }
+  }
+  /* clean up the mess here */
+  if (buf != NULL) {
+    if (GST_IS_BUFFER (buf))
+      gst_buffer_unref (buf);
+    else
+      gst_pad_event_default (pad, GST_EVENT (buf));
   }
 }
 #endif
@@ -1486,18 +1502,33 @@ gst_pad_pull (GstPad *pad)
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
 
   if (!peer) {
-    g_warning ("gst_pad_pull but %s:%s is unconnected", GST_DEBUG_PAD_NAME(pad));
-    return NULL;
+    gst_element_error (GST_PAD_PARENT (pad), 
+		    "pull on pad %s:%s but it was unconnected", 
+		    GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), GST_PAD_NAME (pad),
+		    NULL);
   }
+  else {
+    if (peer->gethandler) {
+      GstBuffer *buf;
 
-  if (peer->gethandler) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "calling gethandler %s of peer pad %s:%s\n",
-      GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
-    return (peer->gethandler) (GST_PAD_FAST (peer));
-  } else {
-    g_warning ("gst_pad_pull but %s:%s has no gethandler", GST_DEBUG_PAD_NAME (peer));
-    return NULL;
+      GST_DEBUG (GST_CAT_DATAFLOW, "calling gethandler %s of peer pad %s:%s\n",
+        GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
+
+      buf = (peer->gethandler) (GST_PAD_CAST (peer));
+      if (buf)
+        return buf;
+      /* no null buffers allowed */
+      gst_element_error (GST_PAD_PARENT (pad), 
+		    "NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad), NULL);
+	  
+    } else {
+      gst_element_error (GST_PAD_PARENT (pad), 
+		    "(internal error) pull on pad %s:%s but the peer pad %s:%s has no gethandler", 
+		    GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer),
+		    NULL);
+    }
   }
+  return NULL;
 }
 #endif
 
@@ -1535,8 +1566,8 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
 
     if (peer->pullregionfunc) {
       GST_DEBUG (GST_CAT_DATAFLOW, "calling pullregionfunc &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME (peer->pullregionfunc), GST_DEBUG_PAD_NAME(GST_PAD_FAST (peer)));
-      result = (peer->pullregionfunc) (GST_PAD_FAST (peer), type, offset, len);
+          GST_DEBUG_FUNCPTR_NAME (peer->pullregionfunc), GST_DEBUG_PAD_NAME(GST_PAD_CAST (peer)));
+      result = (peer->pullregionfunc) (GST_PAD_CAST (peer), type, offset, len);
     } else {
       GST_DEBUG (GST_CAT_DATAFLOW,"no pullregionfunc\n");
       result = NULL;
@@ -1986,6 +2017,8 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
           pads = g_list_next (pads);
 	}
       }
+      /* we have to try to schedule another element because this one is deisabled */
+      gst_element_yield (element);
       break;
     default:
       g_warning ("no default handler for event\n");

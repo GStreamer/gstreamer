@@ -272,46 +272,44 @@ gst_aggregator_loop (GstElement *element)
 
   aggregator = GST_AGGREGATOR (element);
 
-  do {
-    if (aggregator->sched == AGGREGATOR_LOOP ||
-        aggregator->sched == AGGREGATOR_LOOP_PEEK) {
-      GList *pads = aggregator->sinkpads;
+  if (aggregator->sched == AGGREGATOR_LOOP ||
+      aggregator->sched == AGGREGATOR_LOOP_PEEK) {
+    GList *pads = aggregator->sinkpads;
 
-      while (pads) {
-	GstPad *pad = GST_PAD (pads->data);
-	pads = g_list_next (pads);
+    while (pads) {
+      GstPad *pad = GST_PAD (pads->data);
+      pads = g_list_next (pads);
 
-        if (aggregator->sched == AGGREGATOR_LOOP_PEEK) {
-	  buf = gst_pad_peek (pad);
-	  if (buf == NULL)
-	    continue;
+      if (aggregator->sched == AGGREGATOR_LOOP_PEEK) {
+	buf = gst_pad_peek (pad);
+	if (buf == NULL)
+	  continue;
 
-	  g_assert (buf == gst_pad_pull (pad));
-	  debug = "loop_peek";
-        }
-	else {
-	  buf = gst_pad_pull (pad);
-	  debug = "loop";
-	}
-	gst_aggregator_push (aggregator, pad, buf, debug);
-      }
-    }
-    else {
-      if (aggregator->sched == AGGREGATOR_LOOP_SELECT) {
-	GstPad *pad;
-
-	debug = "loop_select";
-
-	pad = gst_pad_select (aggregator->sinkpads);
-	buf = gst_pad_pull (pad);
-
-	gst_aggregator_push (aggregator, pad, buf, debug);
+	g_assert (buf == gst_pad_pull (pad));
+	debug = "loop_peek";
       }
       else {
-	g_assert_not_reached ();
+	buf = gst_pad_pull (pad);
+	debug = "loop";
       }
+      gst_aggregator_push (aggregator, pad, buf, debug);
     }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  }
+  else {
+    if (aggregator->sched == AGGREGATOR_LOOP_SELECT) {
+      GstPad *pad;
+
+      debug = "loop_select";
+
+      pad = gst_pad_select (aggregator->sinkpads);
+      buf = gst_pad_pull (pad);
+
+      gst_aggregator_push (aggregator, pad, buf, debug);
+    }
+    else {
+      g_assert_not_reached ();
+    }
+  }
 }
 
 /**

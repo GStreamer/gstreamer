@@ -104,6 +104,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
   GList *pads;
   gint elementcount = 0;
   gint retval = 0;
+  gboolean backref = FALSE;
 
   priv->binlevel++;
 
@@ -174,13 +175,14 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	GstElement *new;
 
 	GST_DEBUG (0, "have pad for element %s\n", element_name);
-	new = gst_bin_get_by_name (parent, element_name);
+	new = gst_bin_get_by_name_recurse_up (parent, element_name);
 	if (!new) {
           GST_DEBUG (0, "element %s does not exist! trying to continue\n", element_name);
 	}
 	else {
           previous = new;
 	  srcpadname = ptr + 1;
+	  backref = TRUE;
 	}
       }
       
@@ -321,6 +323,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	  i++;
 	  continue;
 	}
+        gst_bin_add (GST_BIN (parent), element);
 
 	j = gst_parse_launch_cmdline (argc - i, argv + i + 1, GST_BIN (element), priv);
 	/* check for parse error */
@@ -347,9 +350,9 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	  return GST_PARSE_ERROR_NOSUCH_ELEMENT;
 	}
 	GST_DEBUG (0, "CREATED element %s\n", GST_ELEMENT_NAME (element));
+        gst_bin_add (GST_BIN (parent), element);
       }
 
-      gst_bin_add (GST_BIN (parent), element);
       elementcount++;
 
       g_slist_free (sinkpads);
@@ -412,7 +415,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       else
 	GST_DEBUG (0, "have sink pad %s:%s\n", GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (sinkpads)));
 
-      if (!srcpads && sinkpads && previous) {
+      if (!srcpads && sinkpads && previous && srcpadname) {
 	dyn_connect *connect = g_malloc (sizeof (dyn_connect));
 
 	connect->srcpadname = srcpadname;
@@ -442,7 +445,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       sinkpads = NULL;
 
       /* if we're the first element, ghost all the sinkpads */
-      if (elementcount == 1) {
+      if (elementcount == 1 && !backref) {
 	DEBUG ("first element, ghosting all of %s's sink pads to parent %s\n",
 	       GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (GST_ELEMENT (parent)));
 	pads = gst_element_get_pad_list (element);

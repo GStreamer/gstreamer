@@ -167,6 +167,8 @@ GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
 
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 
+void		gst_buffer_print_stats		(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -31,6 +31,7 @@ GType _gst_buffer_type;
 
 static GMemChunk *_gst_buffer_chunk;
 static GMutex *_gst_buffer_chunk_lock;
+static gint _gst_buffer_live;
 
 void 
 _gst_buffer_initialize (void) 
@@ -58,6 +59,20 @@ _gst_buffer_initialize (void)
   _gst_buffer_chunk_lock = g_mutex_new ();
 
   _gst_buffer_type = g_type_register_static (G_TYPE_INT, "GstBuffer", &buffer_info, 0);
+
+  _gst_buffer_live = 0;
+}
+
+/**
+ * gst_buffer_print_stats:
+ *
+ * Print statistics about live buffers.
+ */
+void
+gst_buffer_print_stats (void)
+{
+  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, 
+		  "%d live buffers", _gst_buffer_live);
 }
 
 /**
@@ -74,6 +89,7 @@ gst_buffer_new (void)
 
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
+  _gst_buffer_live++;
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
 
@@ -153,11 +169,12 @@ gst_buffer_create_sub (GstBuffer *parent,
 
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  GST_DATA_TYPE(buffer) = _gst_buffer_type;
+  _gst_buffer_live++;
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
 		  buffer, parent, size, offset);
 
+  GST_DATA_TYPE(buffer) = _gst_buffer_type;
   buffer->lock = g_mutex_new ();
 #ifdef HAVE_ATOMIC_H
   atomic_set (&buffer->refcount, 1);
@@ -292,6 +309,7 @@ gst_buffer_destroy (GstBuffer *buffer)
   /* remove it entirely from memory */
   g_mutex_lock (_gst_buffer_chunk_lock);
   g_mem_chunk_free (_gst_buffer_chunk,buffer);
+  _gst_buffer_live--;
   g_mutex_unlock (_gst_buffer_chunk_lock);
 }
 

@@ -387,7 +387,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_OUTPUT:
       break;
     case ARG_DATA:
-      src->data = g_value_get_int (value);
+      src->data = g_value_get_enum (value);
       switch (src->data) {
 	case FAKESRC_DATA_ALLOCATE:
           if (src->parent) {
@@ -403,7 +403,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       }
       break;
     case ARG_SIZETYPE:
-      src->sizetype = g_value_get_int (value);
+      src->sizetype = g_value_get_enum (value);
       break;
     case ARG_SIZEMIN:
       src->sizemin = g_value_get_int (value);
@@ -415,7 +415,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->parentsize = g_value_get_int (value);
       break;
     case ARG_FILLTYPE:
-      src->filltype = g_value_get_int (value);
+      src->filltype = g_value_get_enum (value);
       break;
     case ARG_PATTERN:
       break;
@@ -455,13 +455,13 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_boolean (value, src->loop_based);
       break;
     case ARG_OUTPUT:
-      g_value_set_int (value, src->output);
+      g_value_set_enum (value, src->output);
       break;
     case ARG_DATA:
-      g_value_set_int (value, src->data);
+      g_value_set_enum (value, src->data);
       break;
     case ARG_SIZETYPE:
-      g_value_set_int (value, src->sizetype);
+      g_value_set_enum (value, src->sizetype);
       break;
     case ARG_SIZEMIN:
       g_value_set_int (value, src->sizemin);
@@ -473,7 +473,7 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_int (value, src->parentsize);
       break;
     case ARG_FILLTYPE:
-      g_value_set_int (value, src->filltype);
+      g_value_set_enum (value, src->filltype);
       break;
     case ARG_PATTERN:
       g_value_set_string (value, src->pattern);
@@ -689,49 +689,46 @@ static void
 gst_fakesrc_loop(GstElement *element)
 {
   GstFakeSrc *src;
+  GList *pads;
 
   g_return_if_fail(element != NULL);
   g_return_if_fail(GST_IS_FAKESRC(element));
 
   src = GST_FAKESRC (element);
 
-  do {
-    GList *pads;
+  pads = gst_element_get_pad_list (element);
 
-    pads = GST_ELEMENT (src)->pads;
+  while (pads) {
+    GstPad *pad = GST_PAD (pads->data);
+    GstBuffer *buf;
 
-    while (pads) {
-      GstPad *pad = GST_PAD (pads->data);
-      GstBuffer *buf;
-
-      if (src->rt_num_buffers == 0) {
-	src->eos = TRUE;
-      }
-      else {
-        if (src->rt_num_buffers > 0)
-          src->rt_num_buffers--;
-      }
-
-      if (src->eos) {
-        gst_pad_push(pad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
-	return;
-      }
-
-      buf = gst_fakesrc_create_buffer (src);
-      GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
-
-      if (!src->silent) {
-        gst_element_info (element, "fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
-                            GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
-      }
-
-      g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-                       buf, pad);
-      gst_pad_push (pad, buf);
-
-      pads = g_list_next (pads);
+    if (src->rt_num_buffers == 0) {
+      src->eos = TRUE;
     }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+    else {
+      if (src->rt_num_buffers > 0)
+        src->rt_num_buffers--;
+    }
+
+    if (src->eos) {
+      gst_pad_push(pad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
+      return;
+    }
+
+    buf = gst_fakesrc_create_buffer (src);
+    GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
+
+    if (!src->silent) {
+      gst_element_info (element, "fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
+                          GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+    }
+
+    g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
+                       buf, pad);
+    gst_pad_push (pad, buf);
+
+    pads = g_list_next (pads);
+  }
 }
 
 static GstElementStateReturn

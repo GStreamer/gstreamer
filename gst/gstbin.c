@@ -138,7 +138,6 @@ gst_bin_init (GstBin * bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
-  bin->eoscond = g_cond_new ();
 }
 
 /**
@@ -364,8 +363,8 @@ gst_bin_remove (GstBin * bin, GstElement * element)
 }
 
 void
-gst_bin_child_state_change (GstBin * bin, GstElementState old, GstElementState new,
-			    GstElement * child)
+gst_bin_child_state_change (GstBin *bin, GstElementState old, GstElementState new,
+			    GstElement *child)
 {
   gint old_idx = 0, new_idx = 0, i;
 
@@ -392,6 +391,22 @@ gst_bin_child_state_change (GstBin * bin, GstElementState old, GstElementState n
     }
   }
   GST_UNLOCK (bin);
+}
+
+void
+gst_bin_child_error (GstBin *bin, GstElement *child)
+{
+  if (GST_STATE (bin) != GST_STATE_NULL) {
+	/*
+    GST_STATE_PENDING (bin) = ((GST_STATE (bin) >> 1));
+    if (gst_element_set_state (bin, GST_STATE (bin)>>1) != GST_STATE_SUCCESS) {
+      gst_element_error (GST_ELEMENT (bin), "bin \"%s\" couldn't change state on error from child \"%s\"", 
+		    GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (child));
+    }
+  */
+    gst_element_info (GST_ELEMENT (bin), "bin \"%s\" stopped because child \"%s\" signalled an error",
+		    GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (child));
+  }
 }
 
 static void
@@ -437,6 +452,9 @@ gst_bin_change_state (GstElement * element)
 
 	gst_element_set_state (child, old_state);
 	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
+          /* reset to what is was */
+          GST_STATE_PENDING (element) = old_state;
+          gst_bin_change_state (element);
 	  return GST_STATE_FAILURE;
 	}
 	break;
@@ -550,8 +568,6 @@ gst_bin_dispose (GObject * object)
   }
   bin->children = NULL;
   bin->numchildren = 0;
-
-  g_cond_free (bin->eoscond);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

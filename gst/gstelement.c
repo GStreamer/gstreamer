@@ -173,8 +173,8 @@ gst_element_init (GstElement *element)
   element->numsinkpads = 0;
   element->pads = NULL;
   element->loopfunc = NULL;
-  element->threadstate = NULL;
   element->sched = NULL;
+  element->sched_private = NULL;
   element->state_mutex = g_mutex_new ();
   element->state_cond = g_cond_new ();
 }
@@ -798,10 +798,25 @@ void
 gst_element_error (GstElement *element, const gchar *error, ...)
 {
   va_list var_args;
+  GstObject *parent;
   
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (error != NULL);
+
   va_start (var_args, error);
   gst_element_message (element, "error", error, var_args);
   va_end (var_args);
+
+  parent = GST_ELEMENT_PARENT (element);
+
+  if (parent && GST_IS_BIN (parent)) {
+    gst_bin_child_error (GST_BIN (parent), element);
+  }
+
+  if (element->sched) {
+    gst_scheduler_error (element->sched, element); 
+  }
+
 }
 
 /**
@@ -817,6 +832,9 @@ gst_element_info (GstElement *element, const gchar *info, ...)
 {
   va_list var_args;
   
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (info != NULL);
+
   va_start (var_args, info);
   gst_element_message (element, "info", info, var_args);
   va_end (var_args);
@@ -965,7 +983,7 @@ static GstElementStateReturn
 gst_element_change_state (GstElement *element)
 {
   GstElementState old_state;
-  //GstEvent *event;
+  GstObject *parent;
 
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
@@ -973,7 +991,7 @@ gst_element_change_state (GstElement *element)
   old_state = GST_STATE (element);
 
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING || old_state == GST_STATE_PENDING (element)) {
-    GST_INFO (GST_CAT_STATES, "no state change needed for element %s (VOID_PENDING)\n", GST_ELEMENT_NAME (element));
+    GST_INFO (GST_CAT_STATES, "no state change needed for element %s (VOID_PENDING)", GST_ELEMENT_NAME (element));
     return GST_STATE_SUCCESS;
   }
   
@@ -983,8 +1001,12 @@ gst_element_change_state (GstElement *element)
 		     GST_STATE_TRANSITION (element));
 
   /* tell the scheduler if we have one */
-  if (element->sched)
-    gst_scheduler_state_transition (element->sched, element, GST_STATE_TRANSITION (element));
+  if (element->sched) {
+    if (gst_scheduler_state_transition (element->sched, element, GST_STATE_TRANSITION (element)) 
+		    != GST_STATE_SUCCESS) {
+      return GST_STATE_FAILURE;
+    }
+  }
 
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
@@ -993,11 +1015,11 @@ gst_element_change_state (GstElement *element)
   g_cond_signal (element->state_cond);
   g_mutex_unlock (element->state_mutex);
 
-  if (GST_ELEMENT_PARENT (element)) {
-    gst_bin_child_state_change (GST_BIN (GST_ELEMENT_PARENT (element)), old_state, GST_STATE (element), element);
+  parent = GST_ELEMENT_PARENT (element);
+
+  if (parent && GST_IS_BIN (parent)) {
+    gst_bin_child_state_change (GST_BIN (parent), old_state, GST_STATE (element), element);
   }
-  //event = gst_event_new_state_change (old_state, GST_STATE (element));
-  //gst_element_send_event (element, event);
 
   return GST_STATE_SUCCESS;
 }
@@ -1328,7 +1350,6 @@ gst_element_signal_eos (GstElement *element)
 
   GST_DEBUG(GST_CAT_EVENT, "signaling EOS on element %s\n",GST_OBJECT_NAME(element));
   g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
-  GST_FLAG_SET(element,GST_ELEMENT_COTHREAD_STOPPING);
 }
 
 

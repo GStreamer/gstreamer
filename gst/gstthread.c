@@ -147,8 +147,6 @@ gst_thread_init (GstThread *thread)
 
   thread->ppid = getpid();
   thread->thread_id = -1;
-
-/*  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread)); */
 }
 
 static void
@@ -303,7 +301,8 @@ gst_thread_change_state (GstElement * element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     {
-      GList *elements = (element->sched)->elements;
+      //GList *elements = (element->sched)->elements;
+      GList *elements = gst_bin_get_list(GST_BIN (thread));
 
       THR_INFO ("pausing thread");
 
@@ -313,7 +312,7 @@ gst_thread_change_state (GstElement * element)
        * + the pending state was already set by gstelement.c::set_state()
        * + find every queue we manage, and signal its empty and full conditions
        */ 
-	 g_mutex_lock (thread->lock);
+      g_mutex_lock (thread->lock);
 
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 

@@ -166,7 +166,6 @@ cothread_create (cothread_context *ctx)
       cothread_destroy (ctx->threads[slot]);
       break;
     }
-	    
   }
 
   sp = CURRENT_STACK_FRAME;

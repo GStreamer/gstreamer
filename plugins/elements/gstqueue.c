@@ -65,11 +65,13 @@ enum {
   ARG_LEAKY,
   ARG_LEVEL,
   ARG_MAX_LEVEL,
+  ARG_MAY_DEADLOCK,
 };
 
 
 static void			gst_queue_class_init		(GstQueueClass *klass);
 static void			gst_queue_init			(GstQueue *queue);
+static void 			gst_queue_dispose 		(GObject *object);
 
 static void			gst_queue_set_property		(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
@@ -141,18 +143,22 @@ gst_queue_class_init (GstQueueClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LEAKY,
-    g_param_spec_enum("leaky","Leaky","Where the queue leaks, if at all.",
-                      GST_TYPE_QUEUE_LEAKY,GST_QUEUE_NO_LEAK,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LEVEL,
-    g_param_spec_int("level","Level","How many buffers are in the queue.",
-                     0,G_MAXINT,0,G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAX_LEVEL,
-    g_param_spec_int("max_level","Maximum Level","How many buffers the queue holds.",
-                     0,G_MAXINT,100,G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEAKY,
+    g_param_spec_enum ("leaky", "Leaky", "Where the queue leaks, if at all.",
+                       GST_TYPE_QUEUE_LEAKY, GST_QUEUE_NO_LEAK, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEVEL,
+    g_param_spec_int ("level", "Level", "How many buffers are in the queue.",
+                      0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_LEVEL,
+    g_param_spec_int ("max_level", "Maximum Level", "How many buffers the queue holds.",
+                      0, G_MAXINT, 100, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAY_DEADLOCK,
+    g_param_spec_boolean ("may_deadlock", "May Deadlock", "The queue may deadlock if it's full and not PLAYING",
+                      TRUE, G_PARAM_READWRITE));
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_queue_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_queue_get_property);
+  gobject_class->dispose                = GST_DEBUG_FUNCPTR (gst_queue_dispose);
+  gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_queue_set_property);
+  gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_queue_get_property);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_queue_change_state);
 }
@@ -182,6 +188,7 @@ gst_queue_init (GstQueue *queue)
   queue->size_buffers = 100;		/* 100 buffers */
   queue->size_bytes = 100 * 1024;	/* 100KB */
   queue->size_time = 1000000000LL;	/* 1sec */
+  queue->may_deadlock = TRUE;
 
   queue->qlock = g_mutex_new ();
   queue->reader = FALSE;
@@ -189,6 +196,18 @@ gst_queue_init (GstQueue *queue)
   queue->not_empty = g_cond_new ();
   queue->not_full = g_cond_new ();
   GST_DEBUG_ELEMENT (GST_CAT_THREAD, queue, "initialized queue's not_empty & not_full conditions\n");
+}
+
+static void
+gst_queue_dispose (GObject *object)
+{
+  GstQueue *queue = GST_QUEUE (object);
+
+  g_mutex_free (queue->qlock);
+  g_cond_free (queue->not_empty);
+  g_cond_free (queue->not_full);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstBufferPool*
@@ -334,10 +353,21 @@ restart:
       while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
         g_mutex_unlock (queue->qlock);
-        cothread_switch(cothread_current_main());
+	gst_element_interrupt (GST_ELEMENT (queue));
 	goto restart;
       }
-      g_assert (GST_STATE (queue) == GST_STATE_PLAYING);
+      if (GST_STATE (queue) != GST_STATE_PLAYING) {
+	/* this means the other end is shut down */
+	/* try to signal to resolve the error */
+	if (!queue->may_deadlock) {
+          g_mutex_unlock (queue->qlock);
+          gst_element_error (GST_ELEMENT (queue), "deadlock found, source pad elements are shut down");
+	  return;
+	}
+	else {
+          gst_element_info (GST_ELEMENT (queue), "waiting for the app to restart source pad elements");
+	}
+      }
 
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_full, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
       if (queue->writer)
@@ -402,10 +432,20 @@ restart:
     while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
       g_mutex_unlock (queue->qlock);
-      cothread_switch(cothread_current_main());
+      gst_element_interrupt (GST_ELEMENT (queue));
       goto restart;
     }
-    g_assert (GST_STATE (queue) == GST_STATE_PLAYING);
+    if (GST_STATE (queue) != GST_STATE_PLAYING) {
+      /* this means the other end is shut down */
+      if (!queue->may_deadlock) {
+        g_mutex_unlock (queue->qlock);
+        gst_element_error (GST_ELEMENT (queue), "deadlock found, sink pad elements are shut down");
+        return NULL;
+      }
+      else {
+        gst_element_info (GST_ELEMENT (queue), "waiting for the app to restart sink pad elements");
+      }
+    }
 
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_empty, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
     if (queue->reader)
@@ -513,10 +553,13 @@ gst_queue_set_property (GObject *object, guint prop_id, const GValue *value, GPa
 
   switch (prop_id) {
     case ARG_LEAKY:
-      queue->leaky = g_value_get_int(value);
+      queue->leaky = g_value_get_int (value);
       break;
     case ARG_MAX_LEVEL:
-      queue->size_buffers = g_value_get_int(value);
+      queue->size_buffers = g_value_get_int (value);
+      break;
+    case ARG_MAY_DEADLOCK:
+      queue->may_deadlock = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -536,13 +579,16 @@ gst_queue_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 
   switch (prop_id) {
     case ARG_LEAKY:
-      g_value_set_int(value, queue->leaky);
+      g_value_set_int (value, queue->leaky);
       break;
     case ARG_LEVEL:
-      g_value_set_int(value, queue->level_buffers);
+      g_value_set_int (value, queue->level_buffers);
       break;
     case ARG_MAX_LEVEL:
-      g_value_set_int(value, queue->size_buffers);
+      g_value_set_int (value, queue->size_buffers);
+      break;
+    case ARG_MAY_DEADLOCK:
+      g_value_set_boolean (value, queue->may_deadlock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

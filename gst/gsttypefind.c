@@ -197,7 +197,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
         if (GST_STATE(typefind) != oldstate) {
 	  gst_object_unref (GST_OBJECT (typefind));
           GST_DEBUG(0, "state changed during signal, aborting\n");
-          cothread_switch(cothread_current_main());
+	  gst_element_yield (typefind);
         }
 	gst_object_unref (GST_OBJECT (typefind));
 }

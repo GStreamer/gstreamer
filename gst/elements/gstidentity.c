@@ -205,27 +205,24 @@ gst_identity_loop (GstElement *element)
 
   identity = GST_IDENTITY (element);
   
-  do {
-    buf = gst_pad_pull (identity->sinkpad);
+  buf = gst_pad_pull (identity->sinkpad);
     
-    for (i=identity->duplicate; i; i--) {
-      if (!identity->silent)
-        g_print("identity: loop    ******* (%s:%s)i (%d bytes, %llu) \n",
+  for (i=identity->duplicate; i; i--) {
+    if (!identity->silent)
+      g_print("identity: loop    ******* (%s:%s)i (%d bytes, %llu) \n",
 		      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
-      g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
 	                       buf);
 
-      if (i>1) 
-	gst_buffer_ref (buf);
+    if (i>1) 
+      gst_buffer_ref (buf);
 
-      gst_pad_push (identity->srcpad, buf);
+    gst_pad_push (identity->srcpad, buf);
 
-      if (identity->sleep_time)
-        usleep (identity->sleep_time);
-    }
-
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
+    if (identity->sleep_time)
+      usleep (identity->sleep_time);
+  }
 }
 
 static void 

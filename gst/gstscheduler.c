@@ -76,6 +76,8 @@ gst_scheduler_init (GstScheduler *sched)
 void
 gst_scheduler_setup (GstScheduler *sched)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
   if (CLASS (sched)->setup)
     CLASS (sched)->setup (sched);
 }
@@ -89,6 +91,8 @@ gst_scheduler_setup (GstScheduler *sched)
 void
 gst_scheduler_reset (GstScheduler *sched)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
   if (CLASS (sched)->reset)
     CLASS (sched)->reset (sched);
 }
@@ -104,6 +108,10 @@ gst_scheduler_reset (GstScheduler *sched)
 void
 gst_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_PAD (srcpad));
+  g_return_if_fail (GST_IS_PAD (sinkpad));
+
   if (CLASS (sched)->pad_connect)
     CLASS (sched)->pad_connect (sched, srcpad, sinkpad);
 }
@@ -119,6 +127,10 @@ gst_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 void
 gst_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_PAD (srcpad));
+  g_return_if_fail (GST_IS_PAD (sinkpad));
+
   if (CLASS (sched)->pad_disconnect)
     CLASS (sched)->pad_disconnect (sched, srcpad, sinkpad);
 }
@@ -135,6 +147,9 @@ gst_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 GstPad *
 gst_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (padlist != NULL);
+
   if (CLASS (sched)->pad_select)
     CLASS (sched)->pad_select (sched, padlist);
 }
@@ -149,6 +164,9 @@ gst_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 void
 gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
   if (CLASS (sched)->add_element)
     CLASS (sched)->add_element (sched, element);
 }
@@ -161,11 +179,16 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
  *
  * Tell the scheduler that an element changed its state.
  */
-void
+GstElementStateReturn
 gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint transition)
 {
+  g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
+
   if (CLASS (sched)->state_transition)
-    CLASS (sched)->state_transition (sched, element, transition);
+    return CLASS (sched)->state_transition (sched, element, transition);
+
+  return GST_STATE_SUCCESS;
 }
 
 /**
@@ -178,6 +201,9 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
 void
 gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
   if (CLASS (sched)->remove_element)
     CLASS (sched)->remove_element (sched, element);
 }
@@ -192,6 +218,9 @@ gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 void
 gst_scheduler_lock_element (GstScheduler *sched, GstElement *element)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
   if (CLASS (sched)->lock_element)
     CLASS (sched)->lock_element (sched, element);
 }
@@ -206,8 +235,62 @@ gst_scheduler_lock_element (GstScheduler *sched, GstElement *element)
 void
 gst_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
   if (CLASS (sched)->unlock_element)
     CLASS (sched)->unlock_element (sched, element);
+}
+
+/**
+ * gst_scheduler_error:
+ * @sched: the schedulerr
+ * @element: the element with the error
+ *
+ * Tell the scheduler an element was in error
+ */
+void
+gst_scheduler_error (GstScheduler *sched, GstElement *element)
+{
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (CLASS (sched)->error)
+    CLASS (sched)->error (sched, element);
+}
+
+/**
+ * gst_scheduler_yield:
+ * @sched: the schedulerr
+ * @element: the element requesting a yield
+ *
+ * Tell the scheduler to schedule another element.
+ */
+void
+gst_scheduler_yield (GstScheduler *sched, GstElement *element)
+{
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (CLASS (sched)->yield)
+    CLASS (sched)->yield (sched, element);
+}
+
+/**
+ * gst_scheduler_interrupt:
+ * @sched: the schedulerr
+ * @element: the element requesting an interrupt
+ *
+ * Tell the scheduler to interrupt execution of this element.
+ */
+void
+gst_scheduler_interrupt (GstScheduler *sched, GstElement *element)
+{
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (CLASS (sched)->interrupt)
+    CLASS (sched)->interrupt (sched, element);
 }
 
 /**
@@ -221,6 +304,8 @@ gst_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
 gboolean
 gst_scheduler_iterate (GstScheduler *sched)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
   if (CLASS (sched)->iterate)
     CLASS (sched)->iterate (sched);
 }
@@ -235,6 +320,8 @@ gst_scheduler_iterate (GstScheduler *sched)
 void
 gst_scheduler_show (GstScheduler *sched)
 {
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
   if (CLASS (sched)->show)
     CLASS (sched)->show (sched);
 }

@@ -203,72 +203,69 @@ gst_autoplugcache_loop (GstElement *element)
    * the playout pointer hits the end of cache again it has to start pulling.
    */
 
-  do {
-    /* the first time through, the current_playout pointer is going to be NULL */
-    if (cache->current_playout == NULL) {
-      /* get a buffer */
-      buf = gst_pad_pull (cache->sinkpad);
+  /* the first time through, the current_playout pointer is going to be NULL */
+  if (cache->current_playout == NULL) {
+    /* get a buffer */
+    buf = gst_pad_pull (cache->sinkpad);
 
-      /* add it to the cache, though cache == NULL */
-      gst_buffer_ref (buf);
-      cache->cache = g_list_prepend (cache->cache, buf);
-      cache->buffer_count++;
+    /* add it to the cache, though cache == NULL */
+    gst_buffer_ref (buf);
+    cache->cache = g_list_prepend (cache->cache, buf);
+    cache->buffer_count++;
 
-      /* set the current_playout pointer */
-      cache->current_playout = cache->cache;
+    /* set the current_playout pointer */
+    cache->current_playout = cache->cache;
 
-      g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
+    g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
 
-      /* send the buffer on its way */
-      gst_pad_push (cache->srcpad, buf);
-    }
+    /* send the buffer on its way */
+    gst_pad_push (cache->srcpad, buf);
+  }
+  /* the steady state is where the playout is at the front of the cache */
+  else if (g_list_previous(cache->current_playout) == NULL) {
 
-    /* the steady state is where the playout is at the front of the cache */
-    else if (g_list_previous(cache->current_playout) == NULL) {
-
-      /* if we've been told to fire an empty signal (after a reset) */
-      if (cache->fire_empty) {
-        int oldstate = GST_STATE(cache);
-        GST_DEBUG(0,"at front of cache, about to pull, but firing signal\n");
+    /* if we've been told to fire an empty signal (after a reset) */
+    if (cache->fire_empty) {
+      int oldstate = GST_STATE(cache);
+      GST_DEBUG(0,"at front of cache, about to pull, but firing signal\n");
+      gst_object_ref (GST_OBJECT (cache));
+      g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], 0, NULL);
+      if (GST_STATE(cache) != oldstate) {
         gst_object_ref (GST_OBJECT (cache));
-        g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], 0, NULL);
-        if (GST_STATE(cache) != oldstate) {
-          gst_object_ref (GST_OBJECT (cache));
-          GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
-          cothread_switch(cothread_current_main());
-        }
-        gst_object_unref (GST_OBJECT (cache));
+        GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
+        cothread_switch(cothread_current_main());
       }
-
-      /* get a buffer */
-      buf = gst_pad_pull (cache->sinkpad);
-
-      /* add it to the front of the cache */
-      gst_buffer_ref (buf);
-      cache->cache = g_list_prepend (cache->cache, buf);
-      cache->buffer_count++;
-
-      /* set the current_playout pointer */
-      cache->current_playout = cache->cache;
-
-      /* send the buffer on its way */
-      gst_pad_push (cache->srcpad, buf);
+      gst_object_unref (GST_OBJECT (cache));
     }
 
-    /* otherwise we're trundling through existing cached buffers */
-    else {
-      /* move the current_playout pointer */
-      cache->current_playout = g_list_previous (cache->current_playout);
+    /* get a buffer */
+    buf = gst_pad_pull (cache->sinkpad);
 
-      if (cache->fire_first) {
-        g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
-        cache->fire_first = FALSE;
-      }
+    /* add it to the front of the cache */
+    gst_buffer_ref (buf);
+    cache->cache = g_list_prepend (cache->cache, buf);
+    cache->buffer_count++;
 
-      /* push that buffer */
-      gst_pad_push (cache->srcpad, GST_BUFFER(cache->current_playout->data));
+    /* set the current_playout pointer */
+    cache->current_playout = cache->cache;
+
+    /* send the buffer on its way */
+    gst_pad_push (cache->srcpad, buf);
+  }
+
+  /* otherwise we're trundling through existing cached buffers */
+  else {
+    /* move the current_playout pointer */
+    cache->current_playout = g_list_previous (cache->current_playout);
+
+    if (cache->fire_first) {
+      g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
+      cache->fire_first = FALSE;
     }
-  } while (!GST_FLAG_IS_SET (element, GST_ELEMENT_COTHREAD_STOPPING));
+
+    /* push that buffer */
+    gst_pad_push (cache->srcpad, GST_BUFFER(cache->current_playout->data));
+  }
 }
 
 static GstPadNegotiateReturn
