@@ -544,8 +544,72 @@
       <para>
         A new element is defined by creating an element factory.  This is a
 	structure containing all the information needed to create an instance
-	of the element.
+	of the element.  Creating a factory requires two things: a type for
+	the element to be created
+	(this was defined in the boilerplate above: FIXME - reorganise),
+	and a GstElementDetails structure, which contains some
+	general information about the element to be created.
       </para>
+
+      <sect1 id="sect-defineelt-eltdetails">
+        <title>GstElementDetails</title>
+	<para>
+	  The GstElementDetails structure gives a heirarchical type for
+	  the element, a human-readable description of the element, as
+	  well as author and version data.  The entries are:
+	</para>
+	<itemizedlist>
+	  <listitem><para>
+	      A long, english, name for the element.
+	  </para></listitem><listitem><para>
+	      The type of the element, as a heirarchy.  The heirarchy is defined
+	      by specifying the top level category, followed by a "/", followed
+	      by the next level category, etc.  The type should be defined
+	      according to the guidelines elsewhere in this document.
+	      (FIXME: write the guidelines, and give a better reference to them)
+	  </para></listitem><listitem><para>
+	      A brief description of the purpose of the element.
+	  </para></listitem><listitem><para>
+	      The version number of the element.  For elements in the main
+	      GStreamer source code, this will often simply be VERSION, which is
+	      a macro defined to be the version number of the current GStreamer
+	      version.  The only requirement, however, is that the version
+	      number should increase monotonically.
+	    </para><para>
+	      Version numbers should be stored in major.minor.patch form: ie, 3
+	      (decimal) numbers, separated by ".".
+	  </para></listitem><listitem><para>
+	      The name of the author of the element, optionally followed by
+	      a contact email address in angle brackets.
+	  </para></listitem><listitem><para>
+	      The copyright details for the element.
+	  </para></listitem>
+	</itemizedlist>
+	<para>
+	  For example:
+	</para>
+	<programlisting>
+  static GstElementDetails example_details = {
+      "An example plugin",
+      "Example/FirstExample",
+      "Shows the basic structure of a plugin",
+      VERSION,
+      "your name &lt;your.name@your.isp&gt;",
+      "(C) 2001",
+  };
+        </programlisting>
+      </sect1>
+
+      <sect1 id="sect-defineelt-constructors">
+        <title>Constructor functions</title>
+	<para>
+	  Each element has two functions which are used for construction of
+	  an element.  These are the _class_init() function, which is used to
+	  initialise the class (specifying what signals and arguments the class
+	  has and setting up global state), and the _init() function, which
+	  is used to initialise a specific instance of the class.
+	</para>
+      </sect1>
 
       <sect1 id="sect-defineelt-pads">
         <title>Specifying the pads</title>
@@ -562,6 +626,22 @@
       <sect1 id="sect-defineelt-chainfn">
         <title>The chain function</title>
         <para>
+        </para>
+      </sect1>
+	
+      <sect1 id="sect-defineelt-arguments">
+        <title>Adding arguments</title>
+        <para>
+	  Define arguments in enum.
+	  
+        </para>
+      </sect1>
+
+      <sect1 id="sect-defineelt-signals">
+        <title>Signals</title>
+        <para>
+	  Define signals in enum.
+
         </para>
       </sect1>
     </chapter>
