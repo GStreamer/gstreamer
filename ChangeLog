@@ -1,3 +1,19 @@
+2005-02-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain),
+	(gst_ximagesink_send_pending_navigation),
+	(gst_ximagesink_navigation_send_event), (gst_ximagesink_finalize),
+	(gst_ximagesink_init):
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain),
+	(gst_xvimagesink_send_pending_navigation),
+	(gst_xvimagesink_navigation_send_event),
+	(gst_xvimagesink_finalize), (gst_xvimagesink_init):
+	* sys/xvimage/xvimagesink.h:
+	  Use a mutex protected list to marshal navigation
+	  events into the stream thread from whichever thread
+	  sends them.
+
 2005-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/speed/demo-mp3.c: (time_tick_cb), (main):
