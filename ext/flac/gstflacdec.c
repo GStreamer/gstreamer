@@ -467,26 +467,24 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
 
     flacdec->need_discont = FALSE;
 
-    if (GST_PAD_CAPS (flacdec->srcpad)) {
-      if (flacdec->seek_pending) {
-        flacdec->total_samples = flacdec->seek_value;
-      }
+    if (flacdec->seek_pending) {
+      flacdec->total_samples = flacdec->seek_value;
+    }
 
-      if (GST_PAD_IS_USABLE (flacdec->srcpad)) {
-        GST_DEBUG ("send discont");
+    if (GST_PAD_IS_USABLE (flacdec->srcpad)) {
+      GST_DEBUG ("send discont");
 
-        format = GST_FORMAT_TIME;
-        gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT,
-            flacdec->total_samples, &format, &time);
-        format = GST_FORMAT_BYTES;
-        gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT,
-            flacdec->total_samples, &format, &bytes);
-        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time,
-            GST_FORMAT_BYTES, bytes,
-            GST_FORMAT_DEFAULT, flacdec->total_samples, NULL);
+      format = GST_FORMAT_TIME;
+      gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT,
+          flacdec->total_samples, &format, &time);
+      format = GST_FORMAT_BYTES;
+      gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT,
+          flacdec->total_samples, &format, &bytes);
+      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time,
+          GST_FORMAT_BYTES, bytes,
+          GST_FORMAT_DEFAULT, flacdec->total_samples, NULL);
 
-        gst_pad_push (flacdec->srcpad, GST_DATA (discont));
-      }
+      gst_pad_push (flacdec->srcpad, GST_DATA (discont));
     }
   }
 
