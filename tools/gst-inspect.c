@@ -206,14 +206,16 @@ print_element_properties (GstElement *element)
       case G_TYPE_FLOAT: 
       {
 	GParamSpecFloat *pfloat = G_PARAM_SPEC_FLOAT (param);
-	printf("%-23.23s Float. Range: %f - %f (Default %f)", "", 
-			pfloat->minimum, pfloat->maximum, g_value_get_float (&value));
+	printf("%-23.23s Float. Default: %-8.8s %15.7g\n", "", "", 
+		g_value_get_float (&value));
+	printf("%-23.23s Range: %15.7g - %15.7g", "", 
+	       pfloat->minimum, pfloat->maximum);
 	break;
       }
       case G_TYPE_DOUBLE: 
       {
 	GParamSpecDouble *pdouble = G_PARAM_SPEC_DOUBLE (param);
-	printf("%-23.23s Double. Default: %15.7g\n", "", 
+	printf("%-23.23s Double. Default: %-8.8s %15.7g\n", "", "", 
 		g_value_get_double (&value));
 	printf("%-23.23s Range: %15.7g - %15.7g", "", 
 	       pdouble->minimum, pdouble->maximum);
@@ -477,8 +479,8 @@ print_element_info (GstElementFactory *factory)
     if((dpman = gst_dpman_get_manager (element))){
       specs = gst_dpman_list_dparam_specs(dpman);
       for (x=0; specs[x] != NULL; x++){
-        printf("  %-40.40s: ",g_param_spec_get_name(specs[x]));
-        
+        printf("  %-20.20s: ", g_param_spec_get_name (specs[x]));
+
         switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
           case G_TYPE_INT64: 
             printf("64 Bit Integer (Default %lld, Range %lld -> %lld)", 
@@ -493,12 +495,13 @@ print_element_info (GstElementFactory *factory)
             ((GParamSpecInt*)specs[x])->maximum);
             break;
           case G_TYPE_FLOAT: 
-            printf("Float (Default %f, Range %f -> %f)", 
-            ((GParamSpecFloat*)specs[x])->default_value,
-            ((GParamSpecFloat*)specs[x])->minimum, 
-            ((GParamSpecFloat*)specs[x])->maximum);
+	    printf("Float. Default: %-8.8s %15.7g\n", "",
+              ((GParamSpecFloat*)specs[x])->default_value);
+	    printf("%-23.23s Range: %15.7g - %15.7g", "", 
+              ((GParamSpecFloat*)specs[x])->minimum, 
+              ((GParamSpecFloat*)specs[x])->maximum);
             break;
-          default: printf("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
+        default: printf("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
         }
         printf("\n");
       }
