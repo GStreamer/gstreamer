@@ -236,7 +236,7 @@ gst_thread_change_state (GstElement *element)
   GST_INFO (GST_CAT_THREAD,"thread \"%s\" changing state to %s from %s",
                GST_ELEMENT_NAME (GST_ELEMENT (element)),
 	       _gst_print_statename(GST_STATE_PENDING (element)),
-	       _gst_print_statename(GST_STATE_PENDING (element)));
+	       _gst_print_statename(GST_STATE (element)));
 
   //GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
@@ -293,6 +293,17 @@ gst_thread_change_state (GstElement *element)
 
       //GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread,GST_THREAD_STATE_SPINNING,FALSE);
+      gst_thread_wait_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
+      g_mutex_lock(thread->lock);
+      GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
+      g_mutex_unlock(thread->lock);
+      break;
+    case GST_STATE_PLAYING_TO_READY:
+      gst_thread_signal_thread (thread,GST_THREAD_STATE_SPINNING,FALSE);
+      gst_thread_wait_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
+      g_mutex_lock(thread->lock);
+      GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
+      g_mutex_unlock(thread->lock);
       break;
     case GST_STATE_READY_TO_NULL:
       GST_INFO (GST_CAT_THREAD,"stopping thread \"%s\"",
@@ -331,6 +342,7 @@ gst_thread_main_loop (void *arg)
 {
   GstThread *thread = GST_THREAD (arg);
   gint stateset;
+  gboolean isSpinning = FALSE;
 
   GST_INFO (GST_CAT_THREAD,"thread \"%s\" is running with PID %d",
 		  GST_ELEMENT_NAME (GST_ELEMENT (thread)), getpid ());
@@ -353,20 +365,34 @@ gst_thread_main_loop (void *arg)
 
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
     if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
+      isSpinning=TRUE;
       if (!gst_bin_iterate (GST_BIN (thread))) {
 	/*g_mutex_lock(thread->lock);
 	GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 	GST_DEBUG(0,"sync: removed spinning state due to failed iteration\n");
 	g_mutex_unlock(thread->lock);*/
-	gst_thread_wait_thread(thread,GST_THREAD_STATE_REAPING,TRUE);
+	gst_thread_wait_two_thread(thread,GST_THREAD_STATE_REAPING,TRUE,
+				   GST_THREAD_STATE_SPINNING,FALSE);
       }
     }
     else {
+      if (isSpinning==TRUE) {
+	GST_DEBUG(0,"sync: got a pause or playing to ready transition");
+	isSpinning=FALSE;
+        // check for state change
+        if (GST_STATE_PENDING(thread)) {
+          // punt and change state on all the children
+          if (GST_ELEMENT_CLASS (parent_class)->change_state)
+            stateset = GST_ELEMENT_CLASS (parent_class)->change_state (thread);
+        }
+	gst_thread_signal_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
+      }
+
       GST_DEBUG (0, "sync: thread \"%s\" waiting\n", GST_ELEMENT_NAME (GST_ELEMENT (thread)));
       gst_thread_wait_two_thread (thread,GST_THREAD_STATE_SPINNING,TRUE,
 				  GST_THREAD_STATE_REAPING,TRUE);
       GST_DEBUG (0, "sync: done waiting\n");
-
+      isSpinning=TRUE;
       // if reaping was returned, break outof while loop
       if (GST_FLAG_IS_SET(thread,GST_THREAD_STATE_REAPING)) {
 	break;
