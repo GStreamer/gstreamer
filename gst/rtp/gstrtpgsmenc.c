@@ -137,7 +137,7 @@ gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
       (&gst_rtpgsmenc_sink_template), "sink");
   rtpgsmenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpgsmenc_sink_template), "src");
+      (&gst_rtpgsmenc_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->srcpad);
   gst_pad_set_chain_function (rtpgsmenc->sinkpad, gst_rtpgsmenc_chain);

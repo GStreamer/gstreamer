@@ -1,5 +1,10 @@
 2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/rtp/gstrtpgsmenc.c: (gst_rtpgsmenc_init):
+	  Use the src template for creating the src pad (#162330).
+
+2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	* ext/musepack/Makefile.am:
 	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_class_init),
