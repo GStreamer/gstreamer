@@ -19,13 +19,11 @@
 
 
 #include <vorbisenc.h>
-#include <vorbisdec.h>
 
 extern GType vorbisfile_get_type(void);
 
 extern GstElementDetails vorbisfile_details;
 extern GstElementDetails vorbisenc_details;
-extern GstElementDetails vorbisdec_details;
 
 static GstCaps* 	vorbis_type_find 	(GstBuffer *buf, gpointer private);
 
@@ -98,7 +96,7 @@ vorbis_type_find (GstBuffer *buf, gpointer private)
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstElementFactory *enc, *dec, *file;
+  GstElementFactory *enc, *file;
   GstTypeFactory *type;
   GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
 
@@ -127,26 +125,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
-  /* create an elementfactory for the vorbisdec element */
-  dec = gst_element_factory_new ("vorbisdec", GST_TYPE_VORBISDEC,
-                                 &vorbisdec_details);
-  g_return_val_if_fail (dec != NULL, FALSE);
- 
   /* register sink pads */
   gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                                      GST_PAD_ALWAYS, 
 					              vorbis_caps, NULL);
-  gst_element_factory_add_pad_template (dec, gst_vorbisdec_sink_template);
-
   raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
   /* register src pads */
   gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                                     GST_PAD_ALWAYS, 
 					             raw_caps, NULL);
-  gst_element_factory_add_pad_template (dec, gst_vorbisdec_src_template);
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
-
   /* create an elementfactory for the vorbisfile element */
   file = gst_element_factory_new ("vorbisfile", vorbisfile_get_type(),
                                   &vorbisfile_details);
