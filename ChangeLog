@@ -1,5 +1,12 @@
 2004-11-06  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
+	reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/vorbis/vorbisenc.c: (raw_caps_factory):
+	  Fix weird caps (#157548).
+
+2004-11-06  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/rtp/gstrtpgsmparse.c: (gst_rtpgsm_caps_nego):
