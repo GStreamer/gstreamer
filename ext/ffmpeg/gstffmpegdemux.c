@@ -573,7 +573,7 @@ gst_ffmpegdemux_loop (GstElement * element)
   }
 
   /* read a package */
-  res = av_read_packet (demux->context, &pkt);
+  res = av_read_frame (demux->context, &pkt);
   if (res < 0) {
 #if 0
     /* This doesn't work - FIXME */

@@ -219,7 +219,8 @@ gst_ffmpegdec_close (GstFFMpegDec *ffmpegdec)
   if (!ffmpegdec->opened)
     return;
 
-  avcodec_close (ffmpegdec->context);
+  if (ffmpegdec->context->priv_data)
+    avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
   if (ffmpegdec->context->palctrl) {
@@ -293,6 +294,9 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
 
   /* do *not* draw edges */
   ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+
+  /* workaround encoder bugs */
+  ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -395,9 +399,11 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
           data = GST_BUFFER_DATA (inbuf);
           size = GST_BUFFER_SIZE (inbuf);
         }
+
         len = avcodec_decode_video (ffmpegdec->context,
             ffmpegdec->picture, &have_data, data, size);
-        if (have_data) {
+
+        if (len >= 0 && have_data) {
           /* libavcodec constantly crashes on stupid buffer allocation
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */

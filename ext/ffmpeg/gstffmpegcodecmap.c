@@ -295,7 +295,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       do {
         gint version = (codec_id == CODEC_ID_WMV1) ? 1 : 2;
 
-        if (context)
+        if (context && context->extradata_size)
         {
           GstBuffer *buffer;
 
@@ -343,7 +343,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       do {
         gint version = (codec_id == CODEC_ID_WMAV1) ? 1 : 2;
     
-        if (context)
+        if (context && context->extradata_size)
         {
           GstBuffer *buffer;
 
@@ -355,9 +355,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
              "codec_data", GST_TYPE_BUFFER, buffer,
              "block_align", G_TYPE_INT, context->block_align,
              "bitrate", G_TYPE_INT, context->bit_rate, NULL);
-        }
-        else
-        {
+        } else {
           caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
              "wmaversion", G_TYPE_INT, version,
              "block_align", GST_TYPE_INT_RANGE, 0, G_MAXINT,
@@ -1167,6 +1165,8 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
     case CODEC_ID_WMAV1:
     case CODEC_ID_WMAV2:
+    case CODEC_ID_WMV1:
+    case CODEC_ID_WMV2:
       do {
         const GValue *value;
         const GstBuffer *buf;

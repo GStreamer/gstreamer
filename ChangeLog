@@ -1,3 +1,18 @@
+2004-09-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid):
+	  WMV extradata (make #152798 work). J-frames are only available
+	  in the bitstream if the J-frame bit has been set in the extradata.
+	  If not (or if extradata is not provided), the movie won't play.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
+	(gst_ffmpegdec_connect), (gst_ffmpegdec_chain):
+	  Only close ffmpeg if privdata was allocated (else it segfaults).
+	  Autodetect encoding bugs and workaround it. Don't copy data if
+	  decoding failed.
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	  Use read_frame() instead of read_packet() which is obsolete.
+
 2004-09-16 Iain <iaingnome@gmail.com>
 
 	* ext/ffmpeg/gstffmpegmux.c (gst_ffmpegmux_register): Free name fix 
