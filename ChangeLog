@@ -1,3 +1,5 @@
+=== release 0.7.92 ===
+
 2004-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/Makefile.am:
@@ -156,7 +158,7 @@
 	* examples/gstplay/videoplayer.py: New example, simple video
 	player embedded in a gtk+ widget.
 
-== gst-python 0.7.91 ==
+=== release 0.7.91 ===
 
 2004-03-31  Johan Dahlin  <johan@gnome.org>
 
@@ -172,7 +174,7 @@
 
 	* Makefile.am (EXTRA_DIST): Add codegen/* Can't believe distcheck passed
 
-== gst-python 0.7.90 ==
+=== release 0.7.90 ===
 
 2004-03-30  Johan Dahlin  <johan@gnome.org>
 

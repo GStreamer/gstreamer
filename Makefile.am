@@ -38,5 +38,4 @@ EXTRA_DIST = \
         codegen/override.py \
         codegen/scmexpr.py
 
-snap:
-	$(MAKE) dist distdir=$(PACKAGE)-`date +"%Y%m%d"`
+include $(top_srcdir)/common/release.mak
