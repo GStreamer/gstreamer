@@ -55,7 +55,8 @@
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="del gst.def"/>
+				CommandLine="del gst.def
+copy /Y $(TargetPath) c:\gstreamer\bin"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -128,7 +129,8 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="del gst.def"/>
+				CommandLine="del gst.def
+copy /Y $(TargetPath) c:\gstreamer\bin"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h

@@ -47,7 +47,8 @@
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				CommandLine="copy /Y $(TargetPath) c:\gstreamer\bin"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
@@ -98,7 +99,8 @@
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				CommandLine="copy /Y $(TargetPath) c:\gstreamer\bin"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

@@ -1,5 +1,19 @@
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/gstbytestream.vcproj:
+	* win32/gstelements.vcproj:
+	* win32/gst-inspect.vcproj:
+	* win32/gst-launch.vcproj:
+	* win32/gstoptimalscheduler.vcproj:
+	* win32/GStreamer.vcproj:
+	* win32/gst-register.vcproj:
+	* win32/gstspider.vcproj:
+	* win32/msvc71.sln:
+	  Copy the files where needed after building, The testsuite will be built
+	  separately
+
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/config.h:
 	* win32/README.txt:
 	* docs/manual/win32.xml:
