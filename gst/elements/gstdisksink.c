@@ -222,7 +222,8 @@ gst_disksink_open_file (GstDiskSink *sink)
   /* open the file */
   if (!gst_disksink_getcurrentfilename(sink))
   {
-    gst_element_error(GST_ELEMENT(sink), "Out of files");
+    /* Out of files */
+    gst_element_set_eos(GST_ELEMENT(sink));
     return FALSE;
   }
   sink->file = fopen (gst_disksink_getcurrentfilename(sink), "w");
@@ -359,6 +360,7 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
     }
   }
   disksink->data_written += GST_BUFFER_SIZE(buf);
+
   gst_buffer_unref (buf);
 
   g_signal_emit (G_OBJECT (disksink), gst_disksink_signals[SIGNAL_HANDOFF], 0,
