@@ -401,6 +401,7 @@ gst/elements/Makefile
 gst/parse/Makefile
 gst/schedulers/Makefile
 gst/types/Makefile
+gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
 libs/gst/bytestream/Makefile

@@ -181,7 +181,7 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
       GstCaps *caps;
 
-      GST_DEBUG (0,"try type :%d \"%s\"", type->id, type->mime);
+      GST_DEBUG (0,"try type (%p) :%d \"%s\" %p", factory, type->id, type->mime, typefindfunc);
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
         GST_DEBUG (0,"found type :%d \"%s\" \"%s\"", caps->id, type->mime, 
 			gst_caps_get_name (caps));

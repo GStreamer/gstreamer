@@ -254,6 +254,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 
   GST_DEBUG (GST_CAT_DATAFLOW, "stepping through pads");
 
+  gst_object_ref (GST_OBJECT (element));
   do {
     GList *pads = element->pads;
 
@@ -292,6 +293,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
+  gst_object_unref (GST_OBJECT (element));
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   return 0;

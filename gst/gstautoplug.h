@@ -110,11 +110,10 @@ struct _GstAutoplugFactoryClass {
 
 GType			gst_autoplug_factory_get_type		(void);
 
-GstAutoplugFactory*	gst_autoplug_factory_new			(const gchar *name, const gchar *longdesc, GType type);
+GstAutoplugFactory*	gst_autoplug_factory_new		(const gchar *name, const gchar *longdesc, GType type);
 void                    gst_autoplug_factory_destroy		(GstAutoplugFactory *factory);
 
 GstAutoplugFactory*	gst_autoplug_factory_find		(const gchar *name);
-const GList*		gst_autoplug_factory_get_list		(void);
 
 GstAutoplug*		gst_autoplug_factory_create		(GstAutoplugFactory *factory);
 GstAutoplug*		gst_autoplug_factory_make		(const gchar *name);

@@ -23,14 +23,10 @@
 #include "gst_private.h"
 #include "gstpluginfeature.h"
 #include "gstplugin.h"
+#include "gstregistry.h"
 
 static void		gst_plugin_feature_class_init		(GstPluginFeatureClass *klass);
 static void		gst_plugin_feature_init			(GstPluginFeature *feature);
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr 	gst_plugin_feature_save_thyself 	(GstObject *object, xmlNodePtr parent);
-static void 		gst_plugin_feature_restore_thyself 	(GstObject *object, xmlNodePtr parent);
-#endif /* GST_DISABLE_REGISTRY */
 
 static GstObjectClass *parent_class = NULL;
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
@@ -42,18 +38,18 @@ gst_plugin_feature_get_type (void)
 
   if (!plugin_feature_type) {
     static const GTypeInfo plugin_feature_info = {
-      sizeof (GstObjectClass),
+      sizeof (GObjectClass),
       NULL,
       NULL,
       (GClassInitFunc) gst_plugin_feature_class_init,
       NULL,
       NULL,
-      sizeof (GstObject),
+      sizeof (GObject),
       32,
       (GInstanceInitFunc) gst_plugin_feature_init,
       NULL
     };
-    plugin_feature_type = g_type_register_static (GST_TYPE_OBJECT, "GstPluginFeature", 
+    plugin_feature_type = g_type_register_static (G_TYPE_OBJECT, "GstPluginFeature", 
 		    				  &plugin_feature_info, G_TYPE_FLAG_ABSTRACT);
   }
   return plugin_feature_type;
@@ -63,17 +59,10 @@ static void
 gst_plugin_feature_class_init (GstPluginFeatureClass *klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
 
   gobject_class = (GObjectClass*) klass;
-  gstobject_class = (GstObjectClass*) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
-
-#ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_plugin_feature_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_plugin_feature_restore_thyself);
-#endif /* GST_DISABLE_REGISTRY */
+  parent_class = g_type_class_ref (G_TYPE_OBJECT);
 }
 
 static void
@@ -81,34 +70,6 @@ gst_plugin_feature_init (GstPluginFeature *feature)
 {
   feature->manager = NULL;
 }
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr
-gst_plugin_feature_save_thyself (GstObject *object, xmlNodePtr parent)
-{
-  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (object), parent);
-
-  xmlNewChild (parent, NULL, "name", GST_OBJECT_NAME (object));
-
-  return parent;
-}
-
-static void
-gst_plugin_feature_restore_thyself (GstObject *object, xmlNodePtr parent)
-{
-  xmlNodePtr field = parent->xmlChildrenNode;
-
-  g_return_if_fail (GST_IS_PLUGIN_FEATURE (object));
-
-  while (field) {
-    if (!strcmp (field->name, "name")) {
-      gst_object_set_name (object, xmlNodeGetContent (field));
-      break;
-    }
-    field = field->next;
-  }
-}
-#endif /* GST_DISABLE_REGISTRY */
 
 /**
  * gst_plugin_feature_ensure_loaded:
@@ -125,9 +86,14 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)
   GstPlugin *plugin = (GstPlugin *) (feature->manager);
 
   if (plugin && !gst_plugin_is_loaded (plugin)) {
-    GST_DEBUG (GST_CAT_PLUGIN_LOADING, "loading plugin %s for feature", plugin->name);
-    
-    return gst_plugin_load_plugin (plugin);
+    if (GST_IS_REGISTRY (plugin->manager)) {
+      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "loading plugin %s for feature", plugin->name);
+
+      if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager), plugin) != GST_REGISTRY_OK)
+	return FALSE;
+    }
+    else
+      return FALSE;
   }
   return TRUE;
 }

@@ -6,6 +6,7 @@ static guint64 iterations = 0;
 static guint64 sum = 0;
 static guint64 min = G_MAXINT;
 static guint64 max = 0;
+static GstClock *s_clock;
 
 gboolean
 idle_func (gpointer data)
@@ -13,6 +14,10 @@ idle_func (gpointer data)
   gboolean busy;
   GTimeVal tfthen, tfnow;
   GstClockTimeDiff diff;
+
+  if (s_clock) {
+    //g_print ("%lld\n", gst_clock_get_time (s_clock));
+  }
 
   g_get_current_time (&tfthen);
   busy = gst_bin_iterate (GST_BIN (data));
@@ -192,6 +197,8 @@ main(int argc, char *argv[])
       fprintf(stderr,"pipeline doesn't want to play\n");
       exit (-1);
     }
+
+    s_clock = gst_bin_get_clock (GST_BIN (pipeline));
 
     if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
         g_idle_add (idle_func, pipeline);

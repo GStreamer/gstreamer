@@ -249,7 +249,7 @@ const gchar*		gst_element_state_get_name	(GstElementState state);
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
 void                    gst_element_class_install_std_props	(GstElementClass *klass,
-							 const char      *first_name, ...);
+								 const char      *first_name, ...);
 
 GstBin*			gst_element_get_managing_bin	(GstElement *element);
 
@@ -297,16 +297,14 @@ struct _GstElementFactoryClass {
 
 GType 			gst_element_factory_get_type 		(void);
 
-GstElementFactory*	gst_element_factory_new			(const gchar *name,GType type,
+GstElementFactory*	gst_element_factory_new			(const gchar *name, GType type,
                                                                  GstElementDetails *details);
-
-GstElementFactory*	gst_element_factory_find			(const gchar *name);
-const GList*		gst_element_factory_get_list		(void);
+GstElementFactory*	gst_element_factory_find		(const gchar *name);
 
 void			gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);
 
-gboolean		gst_element_factory_can_src_caps		(GstElementFactory *factory,
+gboolean		gst_element_factory_can_src_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
 gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
@@ -314,7 +312,7 @@ gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
-GstElement*		gst_element_factory_make			(const gchar *factoryname, const gchar *name);
+GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 
 #ifdef __cplusplus
 }

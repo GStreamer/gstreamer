@@ -44,7 +44,6 @@ struct _GstType {
   gchar *exts;			/* space-delimited list of extensions */
 
   GSList *factories;		/* factories providing this type */
-
 };
 
 struct _GstTypeDefinition {
@@ -83,7 +82,6 @@ GType			gst_type_factory_get_type	(void);
 GstTypeFactory*		gst_type_factory_new		(GstTypeDefinition *definition);
 
 GstTypeFactory*		gst_type_factory_find		(const gchar *name);
-const GList*		gst_type_factory_get_list 	(void);
 
 
 /* create a new type, or find/merge an existing one */

@@ -41,17 +41,21 @@ extern "C" {
 #define GST_IS_PLUGIN_FEATURE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLUGIN_FEATURE))
 
+#define GST_PLUGIN_FEATURE_NAME(feature)  (GST_PLUGIN_FEATURE (feature)->name)
+
 typedef struct _GstPluginFeature GstPluginFeature;
 typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 
 struct _GstPluginFeature {
-  GstObject object;
+  GObject object;
+
+  gchar *name;
 
   gpointer manager;
 };
 
 struct _GstPluginFeatureClass {
-  GstObjectClass	parent_class;
+  GObjectClass	parent_class;
 
   void          (*unload_thyself)      (GstPluginFeature *feature);
 };

@@ -30,15 +30,18 @@
 #ifndef GST_DISABLE_TYPE_FIND
 #include "gsttypefind.h"
 #endif
+#include "registries/gstxmlregistry.h"
 
 #define MAX_PATH_SPLIT	16
 #define GST_PLUGIN_SEPARATOR ","
 
 gchar *_gst_progname;
 
+gboolean _gst_registry_auto_load = TRUE;
+static GstRegistry *_global_registry;
+static GstRegistry *_user_registry;
 
 extern gint _gst_trace_on;
-extern gboolean _gst_plugin_spew;
 
 static void 		load_plugin_func 	(gpointer data, gpointer user_data);
 static void		init_popt_callback	(poptContext context, enum poptCallbackReason reason,
@@ -141,14 +144,14 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
   const struct poptOption *options;
   /* this is probably hacky, no? */
   const struct poptOption options_with[] = {
-    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 		0, "Help options:", NULL},
-    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
-    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		0, "Application options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		 0, "Application options:", NULL},
     POPT_TABLEEND
   };
   const struct poptOption options_without[] = {
-    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 		0, "Help options:", NULL},
-    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
     POPT_TABLEEND
   };
 
@@ -199,8 +202,10 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
 static void 
 add_path_func (gpointer data, gpointer user_data)
 {
+  GstRegistry *registry = GST_REGISTRY (user_data);
+  
   GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", (gchar *)data);
-  gst_plugin_add_path ((gchar *)data);
+  gst_registry_add_path (registry, (gchar *)data);
 }
 
 static void 
@@ -213,7 +218,9 @@ static void
 load_plugin_func (gpointer data, gpointer user_data)
 {
   gboolean ret;
-  ret = gst_plugin_load ((gchar *)data);
+  //ret = gst_plugin_load ((gchar *)data);
+  ret = FALSE;
+
   if (ret)
     GST_INFO (GST_CAT_GST_INIT, "Loaded plugin: \"%s\"", (gchar *)data);
   else
@@ -234,7 +241,7 @@ parse_number (const gchar *number, guint32 *val)
 }
 
 static void
-split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator) 
+split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gpointer user_data) 
 {
   gchar **strings;
   gint j = 0;
@@ -246,7 +253,7 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator)
     lastlist = NULL;
 
     while (strings[j]) {
-      iterator (strings[j], NULL);
+      iterator (strings[j], user_data);
       if (++j == MAX_PATH_SPLIT) {
         lastlist = g_strdup (strings[j]);
         g_strfreev (strings); 
@@ -260,11 +267,66 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator)
 static void
 init_pre (void)
 {
+  const gchar *homedir;
+  gchar *user_reg;
+
   if (!g_thread_supported ())
     g_thread_init (NULL);
   
   g_type_init();
+
+  _global_registry = gst_xml_registry_new ("global_registry", GLOBAL_REGISTRY_FILE);
+
+#ifdef PLUGINS_USE_BUILDDIR
+  /* location libgstelements.so */
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/libs");
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/elements");
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/schedulers");
+#else
+  /* add the main (installed) library path */
+  gst_registry_add_path (_global_registry, PLUGINS_DIR);
+#endif /* PLUGINS_USE_BUILDDIR */
+
+  gst_registry_pool_add (_global_registry, 100);
+
+  homedir = g_get_home_dir ();
+  user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
+  _user_registry = gst_xml_registry_new ("user_registry", user_reg);
+  gst_registry_pool_add (_user_registry, 50);
+
+  g_free (user_reg);
 }
+
+static gboolean
+gst_register_core_elements (GModule *module, GstPlugin *plugin)
+{
+  GstElementFactory *factory;
+
+  /* register some standard builtin types */
+  factory = gst_element_factory_new ("bin", gst_bin_get_type (), &gst_bin_details);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  factory = gst_element_factory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  factory = gst_element_factory_new ("thread", gst_thread_get_type (), &gst_thread_details);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  factory = gst_element_factory_new ("queue", gst_queue_get_type (), &gst_queue_details);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+#ifndef GST_DISABLE_TYPE_FIND
+  factory = gst_element_factory_new ("typefind", gst_type_find_get_type (), &gst_type_find_details);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+#endif
+
+  return TRUE;
+}
+
+static GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,           
+  GST_VERSION_MINOR,  
+  "gst_core_plugins",
+  gst_register_core_elements
+};                         
 
 static void
 init_post (void)
@@ -294,8 +356,12 @@ init_post (void)
   gst_autoplug_factory_get_type ();
 #endif
 
+
   plugin_path = g_getenv("GST_PLUGIN_PATH");
-  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
+  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _global_registry);
+
+  /* register core plugins */
+  _gst_plugin_register_static (&plugin_desc);
  
   _gst_cpu_initialize ();
   _gst_props_initialize ();
@@ -305,21 +371,16 @@ init_post (void)
   _gst_buffer_initialize ();
   _gst_buffer_pool_initialize ();
 
+  if (_gst_registry_auto_load) {
+    gst_registry_pool_load_all ();
+  }
+
   /* if we need to preload plugins */
   if (preload_plugins) {
     g_slist_foreach (preload_plugins, load_plugin_func, NULL);
     g_slist_free (preload_plugins);
     preload_plugins = NULL;
   }
-
-  /* register some standard builtin types */
-  gst_element_factory_new ("bin", gst_bin_get_type (), &gst_bin_details);
-  gst_element_factory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
-  gst_element_factory_new ("thread", gst_thread_get_type (), &gst_thread_details);
-  gst_element_factory_new ("queue", gst_queue_get_type (), &gst_queue_details);
-#ifndef GST_DISABLE_TYPE_FIND
-  gst_element_factory_new ("typefind", gst_type_find_get_type (), &gst_type_find_details);
-#endif
 
 #ifndef GST_DISABLE_TRACE
   _gst_trace_on = 0;
@@ -395,13 +456,12 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       gst_mask_help ();
       exit (0);
     case ARG_PLUGIN_SPEW:
-      _gst_plugin_spew = TRUE;
       break;
     case ARG_PLUGIN_PATH:
-      split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func);
+      split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func, _user_registry);
       break;
     case ARG_PLUGIN_LOAD:
-      split_and_iterate (arg, ",", prepare_for_load_plugin_func);
+      split_and_iterate (arg, ",", prepare_for_load_plugin_func, NULL);
       break;
     case ARG_SCHEDULER:
       gst_scheduler_factory_set_default_name (arg);

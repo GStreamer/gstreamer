@@ -154,7 +154,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       if (desttemp->direction == GST_PAD_SINK && desttemp->presence != GST_PAD_REQUEST) {
 	if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (srctemp), GST_PAD_TEMPLATE_CAPS (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can connect with factory \"%s\"\n", 
+			  "factory \"%s\" can connect with factory \"%s\"", 
 			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
           return TRUE;
 	}
@@ -163,7 +163,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot connect with factory \"%s\"\n", 
+		  "factory \"%s\" cannot connect with factory \"%s\"", 
 			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
   return FALSE;
 }
@@ -240,7 +240,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 static GList*
 gst_autoplug_element_factory_get_list (gpointer data)
 {
-  return (GList *) gst_element_factory_get_list ();
+  return (GList *) gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY);
 }
 
 typedef struct {

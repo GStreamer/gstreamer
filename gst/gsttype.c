@@ -30,23 +30,17 @@
 #include "gst_private.h"
 
 #include "gsttype.h"
+#include "gstregistry.h"
 
 
 /* global list of registered types */
 static GList *_gst_types;
 static guint16 _gst_maxtype;
 
-static GList *_gst_typefactories;
-
 static void 		gst_type_factory_class_init 	(GstTypeFactoryClass *klass);
 static void 		gst_type_factory_init 		(GstTypeFactory *factory);
 
 static GstCaps*		gst_type_type_find_dummy		(GstBuffer *buffer, gpointer priv);
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr 	gst_type_factory_save_thyself 	(GstObject *object, xmlNodePtr parent);
-static void 		gst_type_factory_restore_thyself (GstObject *object, xmlNodePtr parent);
-#endif /* GST_DISABLE_REGISTRY */
 
 static void 		gst_type_factory_unload_thyself 	(GstPluginFeature *feature);
 
@@ -90,23 +84,16 @@ gst_type_factory_class_init (GstTypeFactoryClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
-#ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_type_factory_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_type_factory_restore_thyself);
-#endif /* GST_DISABLE_REGISTRY */
-
   gstpluginfeature_class->unload_thyself = GST_DEBUG_FUNCPTR (gst_type_factory_unload_thyself);
 
   _gst_types = NULL;
   _gst_maxtype = 1;		/* type 0 is undefined */
 
-  _gst_typefactories = NULL;
 }
 
 static void
 gst_type_factory_init (GstTypeFactory *factory)
 {
-  _gst_typefactories = g_list_prepend (_gst_typefactories, factory);
 }
 
 /**
@@ -132,7 +119,8 @@ gst_type_factory_new (GstTypeDefinition *definition)
     factory = GST_TYPE_FACTORY (g_object_new (GST_TYPE_TYPE_FACTORY, NULL));
   }
 
-  gst_object_set_name (GST_OBJECT (factory), definition->name);
+
+  GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (definition->name);
   factory->mime = g_strdup (definition->mime);
   factory->exts = g_strdup (definition->exts);
   factory->typefindfunc = definition->typefindfunc;
@@ -291,19 +279,6 @@ gst_type_get_list (void)
 }
 
 /**
- * gst_type_factory_get_list:
- *
- * Return a list of all typefactories
- *
- * Returns: a list of GstTypeFactories
- */
-const GList*
-gst_type_factory_get_list (void)
-{
-  return _gst_typefactories;
-}
-
-/**
  * gst_type_factory_find:
  * @name: the name of the typefactory to find
  *
@@ -314,15 +289,14 @@ gst_type_factory_get_list (void)
 GstTypeFactory*
 gst_type_factory_find (const gchar *name)
 {
-  GList *walk = _gst_typefactories;
-  GstTypeFactory *factory;
+  GstPluginFeature *feature;
 
-  while (walk) {
-    factory = GST_TYPE_FACTORY (walk->data);
-    if (!strcmp (GST_OBJECT_NAME (factory), name))
-      return factory;
-    walk = g_list_next (walk);
-  }
+  g_return_val_if_fail (name != NULL, NULL);
+
+  feature = gst_registry_pool_find_feature (name, GST_TYPE_TYPE_FACTORY);
+  if (feature)
+    return GST_TYPE_FACTORY (feature);
+
   return NULL;
 }
 
@@ -356,64 +330,3 @@ gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
 
   return NULL;
 }
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr
-gst_type_factory_save_thyself (GstObject *object, xmlNodePtr parent)
-{
-  GstTypeFactory *factory;
-
-  g_return_val_if_fail (GST_IS_TYPE_FACTORY (object), parent);
-
-  factory = GST_TYPE_FACTORY (object);
-
-  if (GST_OBJECT_CLASS (parent_class)->save_thyself) {
-    GST_OBJECT_CLASS (parent_class)->save_thyself (object, parent);
-  }
-
-  xmlNewChild (parent, NULL, "mime", factory->mime);
-  if (factory->exts) {
-    xmlNewChild (parent, NULL, "extensions", factory->exts);
-  }
-  if (factory->typefindfunc) {
-    xmlNewChild (parent, NULL, "typefind", NULL);
-  }
-
-  return parent;
-}
-
-/**
- * gst_type_factory_restore_thyself:
- * @parent: the parent node to load from
- *
- * Load a typefactory from an XML representation.
- *
- * Returns: the new typefactory
- */
-static void
-gst_type_factory_restore_thyself (GstObject *object, xmlNodePtr parent)
-{
-  GstTypeFactory *factory = GST_TYPE_FACTORY (object);
-  xmlNodePtr field = parent->xmlChildrenNode;
-  factory->typefindfunc = NULL;
-
-  if (GST_OBJECT_CLASS (parent_class)->restore_thyself) {
-    GST_OBJECT_CLASS (parent_class)->restore_thyself (object, parent);
-  }
-
-  while (field) {
-    if (!strcmp (field->name, "mime")) {
-      factory->mime = xmlNodeGetContent (field);
-    }
-    else if (!strcmp (field->name, "extensions")) {
-      factory->exts = xmlNodeGetContent (field);
-    }
-    else if (!strcmp (field->name, "typefind")) {
-      factory->typefindfunc = gst_type_type_find_dummy;
-    }
-    field = field->next;
-  }
-
-  gst_type_register (factory);
-}
-#endif /* GST_DISABLE_REGISTRY */

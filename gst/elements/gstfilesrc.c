@@ -569,15 +569,17 @@ gst_filesrc_open_file (GstFileSrc *src)
     		       src->filename, strerror (errno), NULL);
     return FALSE;
   } else {
-		/* check if it is a regular file, otherwise bail out */
-		struct stat stat_results;
-		fstat(src->fd, &stat_results);
-		if (!S_ISREG(stat_results.st_mode)) {
-			gst_element_error (GST_ELEMENT (src), "opening file \"%s\" failed. it isn't a regular file", 
-												 src->filename, NULL);
-			close(src->fd);
-			return FALSE;
-		}
+    /* check if it is a regular file, otherwise bail out */
+    struct stat stat_results;
+
+    fstat(src->fd, &stat_results);
+
+    if (!S_ISREG(stat_results.st_mode)) {
+      gst_element_error (GST_ELEMENT (src), "opening file \"%s\" failed. it isn't a regular file", 
+      					src->filename, NULL);
+      close(src->fd);
+      return FALSE;
+    }
 		
     /* find the file length */
     src->filelen = lseek (src->fd, 0, SEEK_END);

@@ -26,7 +26,7 @@
 #include <gst/gstinfo.h>
 #include "bytestream.h"
 
-/*#define BS_DEBUG */
+/* #define BS_DEBUG */
 
 #ifdef BS_DEBUG
 # define bs_print(format,args...)	GST_DEBUG (GST_CAT_BUFFER,  format, ## args)
@@ -403,7 +403,15 @@ gst_bytestream_seek (GstByteStream *bs, GstSeekType type, gint64 offset)
   GstRealPad *peer = GST_RPAD_PEER (bs->pad);
 
   if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (type, offset, TRUE))) {
+    GstBuffer *nextbuf;
+    
     gst_bytestream_flush_fast (bs, bs->listavail);
+    
+    do {
+      nextbuf = gst_pad_pull (bs->pad);
+    }
+    while (!GST_IS_EVENT (nextbuf));
+    
     return TRUE;
   }
   return FALSE;

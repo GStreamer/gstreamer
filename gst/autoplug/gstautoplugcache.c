@@ -237,6 +237,7 @@ gst_autoplugcache_loop (GstElement *element)
         gst_object_ref (GST_OBJECT (cache));
         GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting");
         gst_element_yield (GST_ELEMENT (cache));
+	return;
       }
       gst_object_unref (GST_OBJECT (cache));
     }

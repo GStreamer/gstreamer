@@ -124,9 +124,6 @@ gst_event_free (GstEvent* event)
     gst_object_unref (GST_EVENT_SRC (event));
   }
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_INFO:
-      gst_props_unref (GST_EVENT_INFO_PROPS (event));
-      break;
     default:
       break;
   }
@@ -153,31 +150,6 @@ gst_event_new_seek (GstSeekType type, gint64 offset, gboolean flush)
   GST_EVENT_SEEK_TYPE (event) = type;
   GST_EVENT_SEEK_OFFSET (event) = offset;
   GST_EVENT_SEEK_FLUSH (event) = flush;
-
-  return event;
-}
-
-/**
- * gst_event_new_info:
- * @firstname: the first property name
- * @...: properties
- *
- * Allocate a new info event with the given props.
- *
- * Returns: A new info event.
- */
-GstEvent*       
-gst_event_new_info (const gchar *firstname, ...)
-{
-  GstEvent *event;
-  va_list var_args;
-      
-  event = gst_event_new (GST_EVENT_INFO);
-  va_start (var_args, firstname); 
-
-  GST_EVENT_INFO_PROPS (event) = gst_props_newv (firstname, var_args);
-	  
-  va_end (var_args);
 
   return event;
 }

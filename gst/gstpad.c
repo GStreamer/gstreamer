@@ -2066,7 +2066,7 @@ name_is_valid (const gchar *name, GstPadPresence presence)
  * Returns: the new padtemplate
  */
 GstPadTemplate*
-gst_pad_template_new (gchar *name_template,
+gst_pad_template_new (const gchar *name_template,
 		     GstPadDirection direction, GstPadPresence presence,
 		     GstCaps *caps, ...)
 {
@@ -2083,7 +2083,7 @@ gst_pad_template_new (gchar *name_template,
                       "name", name_template,
                       NULL);
 
-  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = name_template;
+  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
   GST_PAD_TEMPLATE_DIRECTION (new) = direction;
   GST_PAD_TEMPLATE_PRESENCE (new) = presence;
 
@@ -2116,111 +2116,6 @@ gst_pad_template_get_caps (GstPadTemplate *templ)
 
   return GST_PAD_TEMPLATE_CAPS (templ);
 }
-
-#ifndef GST_DISABLE_LOADSAVE
-/**
- * gst_pad_template_save_thyself:
- * @templ: the padtemplate to save
- * @parent: the parent XML tree
- *
- * Saves the padtemplate into XML.
- *
- * Returns: the new XML tree
- */
-xmlNodePtr
-gst_pad_template_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
-{
-  xmlNodePtr subtree;
-  guchar *presence;
-
-  GST_DEBUG (GST_CAT_XML,"saving padtemplate %s", templ->name_template);
-
-  xmlNewChild(parent,NULL,"nametemplate", templ->name_template);
-  xmlNewChild(parent,NULL,"direction", (templ->direction == GST_PAD_SINK? "sink":"src"));
-
-  switch (templ->presence) {
-    case GST_PAD_ALWAYS:
-      presence = "always";
-      break;
-    case GST_PAD_SOMETIMES:
-      presence = "sometimes";
-      break;
-    case GST_PAD_REQUEST:
-      presence = "request";
-      break;
-    default:
-      presence = "unknown";
-      break;
-  }
-  xmlNewChild(parent,NULL,"presence", presence);
-
-  if (GST_PAD_TEMPLATE_CAPS (templ)) {
-    subtree = xmlNewChild (parent, NULL, "caps", NULL);
-    gst_caps_save_thyself (GST_PAD_TEMPLATE_CAPS (templ), subtree);
-  }
-
-  return parent;
-}
-
-/**
- * gst_pad_template_load_thyself:
- * @parent: the source XML tree
- *
- * Loads a padtemplate from the XML tree.
- *
- * Returns: the new padtemplate
- */
-GstPadTemplate*
-gst_pad_template_load_thyself (xmlNodePtr parent)
-{
-  xmlNodePtr field = parent->xmlChildrenNode;
-  GstPadTemplate *factory;
-  gchar *name_template = NULL;
-  GstPadDirection direction = GST_PAD_UNKNOWN;
-  GstPadPresence presence = GST_PAD_ALWAYS;
-  GstCaps *caps = NULL;
-
-  while (field) {
-    if (!strcmp(field->name, "nametemplate")) {
-      name_template = xmlNodeGetContent(field);
-    }
-    if (!strcmp(field->name, "direction")) {
-      gchar *value = xmlNodeGetContent(field);
-
-      if (!strcmp(value, "sink")) {
-        direction = GST_PAD_SINK;
-      }
-      else if (!strcmp(value, "src")) {
-        direction = GST_PAD_SRC;
-      }
-      g_free (value);
-    }
-    if (!strcmp(field->name, "presence")) {
-      gchar *value = xmlNodeGetContent(field);
-
-      if (!strcmp(value, "always")) {
-        presence = GST_PAD_ALWAYS;
-      }
-      else if (!strcmp(value, "sometimes")) {
-        presence = GST_PAD_SOMETIMES;
-      }
-      else if (!strcmp(value, "request")) {
-        presence = GST_PAD_REQUEST;
-      }
-      g_free (value);
-    }
-    else if (!strcmp(field->name, "caps")) {
-      caps = gst_caps_load_thyself (field);
-    }
-    field = field->next;
-  }
-
-  factory = gst_pad_template_new (name_template, direction, presence, caps, NULL);
-
-  return factory;
-}
-#endif /* !GST_DISABLE_LOADSAVE */
-
 
 /**
  * gst_pad_set_element_private:

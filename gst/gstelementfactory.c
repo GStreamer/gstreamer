@@ -24,19 +24,12 @@
 #include "gst_private.h"
 
 #include "gstelement.h"
+#include "gstregistry.h"
 
 static void 		gst_element_factory_class_init 		(GstElementFactoryClass *klass);
 static void 		gst_element_factory_init 		(GstElementFactory *factory);
 
-#ifndef GST_DISABLE_REGISTRY
-static void 		gst_element_factory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
-static xmlNodePtr 	gst_element_factory_save_thyself 	(GstObject *object, xmlNodePtr parent);
-#endif
-
 static void 		gst_element_factory_unload_thyself 	(GstPluginFeature *feature);
-
-/* global list of registered elementfactories */
-static GList* _gst_elementfactories;
 
 static GstPluginFeatureClass *parent_class = NULL;
 /* static guint gst_element_factory_signals[LAST_SIGNAL] = { 0 }; */
@@ -78,14 +71,8 @@ gst_element_factory_class_init (GstElementFactoryClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
-#ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_element_factory_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_element_factory_restore_thyself);
-#endif
-
   gstpluginfeature_class->unload_thyself = 	GST_DEBUG_FUNCPTR (gst_element_factory_unload_thyself);
 
-  _gst_elementfactories = NULL;
 }
 
 static void
@@ -93,8 +80,6 @@ gst_element_factory_init (GstElementFactory *factory)
 {
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
-
-  _gst_elementfactories = g_list_prepend (_gst_elementfactories, factory);
 }
 
 /**
@@ -108,35 +93,17 @@ gst_element_factory_init (GstElementFactory *factory)
 GstElementFactory*
 gst_element_factory_find (const gchar *name)
 {
-  GList *walk;
-  GstElementFactory *factory;
+  GstPluginFeature *feature;
 
   g_return_val_if_fail(name != NULL, NULL);
 
-  walk = _gst_elementfactories;
-  while (walk) {
-    factory = (GstElementFactory *)(walk->data);
-    if (!strcmp(name, GST_OBJECT_NAME (factory)))
-      return factory;
-    walk = g_list_next(walk);
-  }
+  feature = gst_registry_pool_find_feature (name, GST_TYPE_ELEMENT_FACTORY);
+  if (feature)
+    return GST_ELEMENT_FACTORY (feature);
 
   /* this should be an ERROR */
   GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"", name);
   return NULL;
-}
-
-/**
- * gst_element_factory_get_list:
- *
- * Get the global list of element factories.
- *
- * Returns: GList of type #GstElementFactory
- */
-const GList*
-gst_element_factory_get_list (void)
-{
-  return _gst_elementfactories;
 }
 
 static void
@@ -185,11 +152,10 @@ gst_element_factory_new (const gchar *name, GType type,
   if (!factory)
     factory = GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
 
-  if (factory->details_dynamic)
-    {
-      gst_element_details_free (factory->details);
-      factory->details_dynamic = FALSE;
-    }
+  if (factory->details_dynamic) {
+    gst_element_details_free (factory->details);
+    factory->details_dynamic = FALSE;
+  }
 
   factory->details = details;
 
@@ -198,7 +164,7 @@ gst_element_factory_new (const gchar *name, GType type,
   else if (factory->type != type)
     g_critical ("`%s' requested type change (!)", name);
 
-  gst_object_set_name (GST_OBJECT (factory), name);
+  GST_PLUGIN_FEATURE (factory)->name = g_strdup (name);
 
   return factory;
 }
@@ -231,7 +197,7 @@ gst_element_factory_create (GstElementFactory *factory,
 
   if (factory->type == 0) {
       g_critical ("Factory for `%s' has no type",
-		  gst_object_get_name (GST_OBJECT (factory)));
+		  GST_PLUGIN_FEATURE_NAME (factory));
       return NULL;
   }
 
@@ -246,7 +212,8 @@ gst_element_factory_create (GstElementFactory *factory,
     oclass->elementfactory = factory;
 
     /* copy pad template pointers to the element class, allow for custom padtemplates */
-    oclass->padtemplates = g_list_concat (oclass->padtemplates, factory->padtemplates);
+    oclass->padtemplates = g_list_concat (oclass->padtemplates, 
+		    g_list_copy (factory->padtemplates));
     oclass->numpadtemplates += factory->numpadtemplates;
   }
 
@@ -402,93 +369,3 @@ gst_element_factory_unload_thyself (GstPluginFeature *feature)
 
   factory->type = 0;
 }
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr
-gst_element_factory_save_thyself (GstObject *object,
-		                 xmlNodePtr parent)
-{
-  GList *pads;
-  GstElementFactory *factory;
-
-  factory = GST_ELEMENT_FACTORY (object);
-  
-  if (GST_OBJECT_CLASS (parent_class)->save_thyself) {
-    GST_OBJECT_CLASS (parent_class)->save_thyself (object, parent);
-  }
-
-  g_return_val_if_fail(factory != NULL, NULL);
-
-  if (factory->details)
-    {
-      xmlNewChild(parent,NULL,"longname", factory->details->longname);
-      xmlNewChild(parent,NULL,"class", factory->details->klass);
-      xmlNewChild(parent,NULL,"description", factory->details->description);
-      xmlNewChild(parent,NULL,"version", factory->details->version);
-      xmlNewChild(parent,NULL,"author", factory->details->author);
-      xmlNewChild(parent,NULL,"copyright", factory->details->copyright);
-    }
-  else
-    g_warning ("elementfactory `%s' is missing details",
-	       object->name);
-
-  pads = factory->padtemplates;
-  if (pads) {
-    while (pads) {
-      xmlNodePtr subtree;
-      GstPadTemplate *padtemplate = (GstPadTemplate *)pads->data;
-
-      subtree = xmlNewChild(parent, NULL, "padtemplate", NULL);
-      gst_pad_template_save_thyself(padtemplate, subtree);
-
-      pads = g_list_next (pads);
-    }
-  }
-  return parent;
-}
-
-static void
-gst_element_factory_restore_thyself (GstObject *object, xmlNodePtr parent)
-{
-  GstElementFactory *factory = GST_ELEMENT_FACTORY (object);
-  xmlNodePtr children = parent->xmlChildrenNode;
-  
-  factory->details_dynamic = TRUE;
-  factory->details = g_new0(GstElementDetails, 1);
-  factory->padtemplates = NULL;
-
-  if (GST_OBJECT_CLASS (parent_class)->restore_thyself) {
-    GST_OBJECT_CLASS (parent_class)->restore_thyself (object, parent);
-  }
-
-  while (children) {
-    if (!strcmp(children->name, "longname")) {
-      factory->details->longname = xmlNodeGetContent(children);
-    }
-    if (!strcmp(children->name, "class")) {
-      factory->details->klass = xmlNodeGetContent(children);
-    }
-    if (!strcmp(children->name, "description")) {
-      factory->details->description = xmlNodeGetContent(children);
-    }
-    if (!strcmp(children->name, "version")) {
-      factory->details->version = xmlNodeGetContent(children);
-    }
-    if (!strcmp(children->name, "author")) {
-      factory->details->author = xmlNodeGetContent(children);
-    }
-    if (!strcmp(children->name, "copyright")) {
-      factory->details->copyright = xmlNodeGetContent(children);
-    }
-    if (!strcmp(children->name, "padtemplate")) {
-       GstPadTemplate *template;
-
-       template = gst_pad_template_load_thyself (children);
-
-       gst_element_factory_add_pad_template (factory, template);
-    }
-
-    children = children->next;
-  }
-}
-#endif /* GST_DISABLE_REGISTRY */

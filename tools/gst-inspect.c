@@ -132,6 +132,107 @@ output_hierarchy (GType type, gint level, gint *maxlevel)
     g_print ("\n");
 }
 
+static void
+print_element_properties (GstElement *element) 
+{
+  GParamSpec **property_specs;
+  gint num_properties,i;
+
+  property_specs = g_object_class_list_properties 
+	             (G_OBJECT_GET_CLASS (element), &num_properties);
+  printf("\nElement Arguments:\n");
+
+  for (i = 0; i < num_properties; i++) {
+    GValue value = { 0, };
+    GParamSpec *param = property_specs[i];
+
+    if (param->flags & G_PARAM_READABLE) {
+      g_value_init (&value, param->value_type);
+      g_object_get_property (G_OBJECT (element), param->name, &value);
+    }
+
+    printf("  %-40.40s: %s\n", g_param_spec_get_name (param),
+		               g_param_spec_get_blurb (param));
+
+    switch (G_VALUE_TYPE (&value)) {
+      case G_TYPE_STRING: 
+	printf ("%-43.43s String (Default \"%s\")", "", g_value_get_string (&value));
+	break;
+      case G_TYPE_BOOLEAN: 
+	printf ("%-43.43s Boolean (Default %s)", "", (g_value_get_boolean (&value) ? "true" : "false"));
+	break;
+      case G_TYPE_ULONG: 
+      {
+	GParamSpecULong *pulong = G_PARAM_SPEC_ULONG (param);
+	printf("%-43.43s Unsigned Long. Range: %lu - %lu (Default %lu)", "", 
+			pulong->minimum, pulong->maximum, g_value_get_long (&value));
+	break;
+      }
+      case G_TYPE_LONG: 
+      {
+	GParamSpecLong *plong = G_PARAM_SPEC_LONG (param);
+	printf("%-43.43s Long. Range: %ld - %ld (Default %ld)", "", 
+			plong->minimum, plong->maximum, g_value_get_long (&value));
+	break;
+      }
+      case G_TYPE_UINT: 
+	printf("%-43.43s Unsigned Integer (Default %u)", "", g_value_get_uint (&value));
+	break;
+      {
+	GParamSpecUInt *puint = G_PARAM_SPEC_UINT (param);
+	printf("%-43.43s Unsigned Integer. Range: %u - %u (Default %u)", "", 
+			puint->minimum, puint->maximum, g_value_get_uint (&value));
+	break;
+      }
+      case G_TYPE_INT: 
+      {
+	GParamSpecInt *pint = G_PARAM_SPEC_INT (param);
+	printf("%-43.43s Integer. Range: %d - %d (Default %d)", "", 
+			pint->minimum, pint->maximum, g_value_get_int (&value));
+	break;
+      }
+      case G_TYPE_FLOAT: 
+      {
+	GParamSpecFloat *pfloat = G_PARAM_SPEC_FLOAT (param);
+	printf("%-43.43s Float. Range: %f - %f (Default %f)", "", 
+			pfloat->minimum, pfloat->maximum, g_value_get_float (&value));
+	break;
+      }
+      case G_TYPE_DOUBLE: 
+      {
+	GParamSpecDouble *pdouble = G_PARAM_SPEC_DOUBLE (param);
+	printf("%-43.43s Double. Range: %f - %f (Default %f)", "", 
+			pdouble->minimum, pdouble->maximum, g_value_get_double (&value));
+	break;
+      }
+      default:
+        if (param->value_type == GST_TYPE_FILENAME)
+          printf("Filename");
+        else if (G_IS_PARAM_SPEC_ENUM (param)) {
+          GEnumValue *values;
+	  guint j = 0;
+
+          printf("%-43.43s Enum \"%s\" (default %d)", "", 
+			  g_type_name (G_VALUE_TYPE (&value)),
+			  g_value_get_enum (&value));
+	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+
+	  while (values[j].value_name) {
+            printf("\n%-43.43s    (%d): \t%s", "", values[j].value, values[j].value_nick);
+	    j++; 
+	  }
+	  /* g_type_class_unref (ec); */
+	}
+        else
+          printf("unknown %ld", param->value_type);
+        break;
+    }
+    printf("\n");
+  }
+  if (num_properties == 0) 
+    g_print ("  none\n");
+}
+
 static gint
 print_element_info (GstElementFactory *factory)
 {
@@ -143,8 +244,6 @@ print_element_info (GstElementFactory *factory)
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  gint num_properties,i;
-  GParamSpec **property_specs;
   GList *children;
   GstElement *child;
   gboolean have_flags;
@@ -354,84 +453,7 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n");
 
-  property_specs = g_object_class_list_properties(G_OBJECT_GET_CLASS (element), &num_properties);
-  printf("\nElement Arguments:\n");
-
-  for (i=0;i<num_properties;i++) {
-    GValue value = { 0, };
-    GParamSpec *param = property_specs[i];
-
-    if (param->flags & G_PARAM_READABLE) {
-      g_value_init (&value, param->value_type);
-      g_object_get_property (G_OBJECT (element), param->name, &value);
-    }
-
-    printf("  %-40.40s: ",param->name);
-    switch (G_VALUE_TYPE (&value)) {
-      case G_TYPE_STRING: 
-        printf("String (Default \"%s\")", g_value_get_string (&value));
-        break;
-      case G_TYPE_POINTER: 
-        printf("Pointer (Default \"%p\")", g_value_get_pointer (&value));
-        break;
-      case G_TYPE_BOOLEAN: 
-        printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));
-        break;
-      case G_TYPE_ULONG: 
-        printf("Unsigned Long (Default %lu, Range %lu -> %lu)", g_value_get_ulong (&value), 
-        ((GParamSpecULong*)param)->minimum, ((GParamSpecULong*)param)->maximum);
-        break;
-      case G_TYPE_LONG: 
-        printf("Long (Default %ld, Range %ld -> %ld)", g_value_get_long (&value), 
-        ((GParamSpecLong*)param)->minimum, ((GParamSpecLong*)param)->maximum);
-        break;
-      case G_TYPE_UINT: 
-        printf("Unsigned Integer (Default %u, Range %u -> %u)", g_value_get_uint (&value), 
-        ((GParamSpecUInt*)param)->minimum, ((GParamSpecUInt*)param)->maximum);
-        break;
-      case G_TYPE_INT: 
-        printf("Integer (Default %d, Range %d -> %d)", g_value_get_int (&value), 
-        ((GParamSpecInt*)param)->minimum, ((GParamSpecInt*)param)->maximum);
-        break;
-      case G_TYPE_INT64: 
-        printf("64 Bit Integer (Default %lld, Range %lld -> %lld)", g_value_get_int64 (&value), 
-        ((GParamSpecInt64*)param)->minimum, ((GParamSpecInt64*)param)->maximum);
-        break;
-      case G_TYPE_FLOAT: 
-        printf("Float (Default %f, Range %f -> %f)", g_value_get_float (&value), 
-        ((GParamSpecFloat*)param)->minimum, ((GParamSpecFloat*)param)->maximum);
-        break;
-      case G_TYPE_DOUBLE: 
-        printf("Double (Default %f, Range %f -> %f)", g_value_get_double (&value), 
-        ((GParamSpecDouble*)param)->minimum, ((GParamSpecDouble*)param)->maximum);
-        break;
-      default:
-        if (param->value_type == GST_TYPE_FILENAME)
-          printf("Filename");
-        else if (G_IS_PARAM_SPEC_ENUM (param)) {
-          GEnumValue *values;
-	  guint j = 0;
-
-          printf("Enum \"%s\" (default %d)", g_type_name (G_VALUE_TYPE (&value)),
-				  g_value_get_enum (&value));
-	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
-
-	  while (values[j].value_name) {
-            printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
-	    j++; 
-	  }
-	  /* g_type_class_unref (ec); */
-	}
-        else
-          printf("unknown %ld", param->value_type);
-        break;
-    }
-    printf("\n");
-  }
-    /*
-  g_free (args);
-  */
-  if (num_properties == 0) g_print ("  none\n");
+  print_element_properties (element);
 
   /* Dynamic Parameters block */
   {
@@ -505,6 +527,8 @@ print_element_info (GstElementFactory *factory)
         printf ("    \t\t\t\t%s arg%d,\n", g_type_name (param_types[j]), j);
       }
       printf ("    \t\t\t\tgpointer user_data);\n");
+
+      g_free (query);
     }
     if (nsignals == 0) g_print ("  none\n");
   }
@@ -534,7 +558,7 @@ print_element_list (void)
 {
   GList *plugins;
 
-  plugins = (GList *) gst_plugin_get_list();
+  plugins = gst_registry_pool_plugin_list();
   while (plugins) {
     GList *features;
     GstPlugin *plugin;
@@ -552,13 +576,13 @@ print_element_list (void)
         GstElementFactory *factory;
 
         factory = GST_ELEMENT_FACTORY (feature);
-        printf("%s element:  %s: %s\n",plugin->name, GST_OBJECT_NAME (factory) ,factory->details->longname);
+        printf("%s:  %s: %s\n",plugin->name, GST_PLUGIN_FEATURE_NAME (factory) ,factory->details->longname);
       }
       else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
         GstAutoplugFactory *factory;
 
         factory = GST_AUTOPLUG_FACTORY (feature);
-        printf("%s autoplug:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
+        printf("%s:  %s: %s\n", plugin->name, GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
       else if (GST_IS_TYPE_FACTORY (feature)) {
         GstTypeFactory *factory;
@@ -573,10 +597,10 @@ print_element_list (void)
         GstSchedulerFactory *factory;
 
         factory = GST_SCHEDULER_FACTORY (feature);
-        printf("%s scheduler:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
+        printf("%s:  %s: %s\n", plugin->name, GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
       else {
-        printf("%s:  %s (%s)\n", plugin->name, gst_object_get_name (GST_OBJECT (feature)), 
+        printf("%s:  %s (%s)\n", plugin->name, GST_PLUGIN_FEATURE_NAME (feature), 
 	  	      g_type_name (G_OBJECT_TYPE (feature)));
       }
 
@@ -680,7 +704,7 @@ main (int argc, char *argv[])
     }
 
     /* otherwise assume it's a plugin */
-    plugin = gst_plugin_find (argv[1]);
+    plugin = gst_registry_pool_find_plugin (argv[1]);
 
     /* if there is such a plugin, print out info */
 

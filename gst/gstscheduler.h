@@ -174,7 +174,6 @@ GstSchedulerFactory*	gst_scheduler_factory_new		(const gchar *name, const gchar 
 void                    gst_scheduler_factory_destroy		(GstSchedulerFactory *factory);
 
 GstSchedulerFactory*	gst_scheduler_factory_find		(const gchar *name);
-const GList*		gst_scheduler_factory_get_list		(void);
 
 GstScheduler*		gst_scheduler_factory_create		(GstSchedulerFactory *factory, GstElement *parent);
 GstScheduler*		gst_scheduler_factory_make		(const gchar *name, GstElement *parent);

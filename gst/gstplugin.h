@@ -30,18 +30,22 @@
 
 #include <gst/gstpluginfeature.h>
 
+#define GST_PLUGIN(plugin)		((GstPlugin *) (plugin))
+
 typedef struct _GstPlugin		GstPlugin;
 typedef struct _GstPluginDesc		GstPluginDesc;
 
 struct _GstPlugin {
-  gchar *name;			/* name of the plugin */
-  gchar *longname;		/* long name of plugin */
-  gchar *filename;		/* filename it came from */
+  gchar 	*name;			/* name of the plugin */
+  gchar 	*longname;		/* long name of plugin */
+  gchar 	*filename;		/* filename it came from */
 
-  GList *features;		/* list of features provided */
-  gint numfeatures;
+  GList 	*features;		/* list of features provided */
+  gint 		 numfeatures;
 
-  GModule *module;		/* contains the module if the plugin is loaded */
+  gpointer 	 manager;		/* managing registry */
+  GModule 	*module;		/* contains the module if the plugin is loaded */
+  gboolean	 init_called;		/* if the init function has been called */
 };
 
 /* Initialiser function: returns TRUE if plugin initialised successfully */
@@ -85,38 +89,24 @@ _gst_plugin_static_init__ ##init (void)				\
 void			_gst_plugin_initialize		(void);
 void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 
-void			gst_plugin_add_path		(const gchar *path);
-
 const gchar*		gst_plugin_get_name		(GstPlugin *plugin);
 void			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
 const gchar*		gst_plugin_get_longname		(GstPlugin *plugin);
 void			gst_plugin_set_longname		(GstPlugin *plugin, const gchar *longname);
-
 const gchar*		gst_plugin_get_filename		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
+GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);
 
-void 			gst_plugin_load_all		(void);
-void 			gst_plugin_unload_all 		(void);
-
-gboolean 		gst_plugin_load			(const gchar *name);
-gboolean 		gst_plugin_load_absolute	(const gchar *name);
-gboolean 		gst_library_load		(const gchar *name);
 gboolean 		gst_plugin_load_plugin		(GstPlugin *plugin);
+gboolean 		gst_plugin_unload_plugin	(GstPlugin *plugin);
 
 void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);
 
-GstPlugin*		gst_plugin_find			(const gchar *name);
-const GList*		gst_plugin_get_list		(void);
+/* shortcuts to load from the registry pool */
+gboolean 		gst_plugin_load			(const gchar *name);
+gboolean 		gst_library_load		(const gchar *name);
 
-
-#ifndef GST_DISABLE_REGISTRY
-xmlNodePtr		gst_plugin_save_thyself		(xmlNodePtr parent);
-void			gst_plugin_load_thyself		(xmlNodePtr parent);
-#else
-#pragma GCC poison gst_plugin_save_thyself
-#pragma GCC poison gst_plugin_load_thyself
-#endif
 
 #endif /* __GST_PLUGIN_H__ */

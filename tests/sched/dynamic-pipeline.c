@@ -20,7 +20,6 @@ int main (int argc, char *argv[])
     fakesink1 = gst_element_factory_make("fakesink", "fakesink1");
     fakesink2 = gst_element_factory_make("fakesink", "fakesink2");
     pipe1 = gst_pipeline_new("pipe1");
-    pipe2 = gst_pipeline_new("pipe2");
     
     /* make the first pipeline */
     gst_bin_add (GST_BIN(pipe1), fakesrc);
@@ -37,8 +36,10 @@ int main (int argc, char *argv[])
     gst_object_ref(GST_OBJECT(fakesrc));
     gst_bin_remove(GST_BIN(pipe1), fakesrc);
     gst_bin_remove(GST_BIN(pipe1), fakesink1);
-    gst_object_unref(GST_OBJECT(pipe1));
+
+    gst_object_unref (GST_OBJECT (pipe1));
     
+    pipe2 = gst_pipeline_new("pipe2");
     /* make a new pipeline */
     gst_bin_add (GST_BIN(pipe2), fakesink2);
     

@@ -26,6 +26,7 @@
 
 #include "gstsystemclock.h"
 #include "gstscheduler.h"
+#include "gstregistry.h"
 
 static void 	gst_scheduler_class_init 	(GstSchedulerClass *klass);
 static void 	gst_scheduler_init 		(GstScheduler *sched);
@@ -181,9 +182,11 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 
   if (element->getclockfunc) {
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
+    GST_DEBUG (GST_CAT_CLOCK, "added clock provider %s", GST_ELEMENT_NAME (element));
   }
   if (element->setclockfunc) {
     sched->clock_receivers = g_list_prepend (sched->clock_receivers, element);
+    GST_DEBUG (GST_CAT_CLOCK, "added clock receiver %s", GST_ELEMENT_NAME (element));
   }
 
   if (CLASS (sched)->add_element)
@@ -247,11 +250,21 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         if (clock)
           gst_clock_reset (clock);
 
+        GST_DEBUG (GST_CAT_CLOCK, "scheduler READY to PAUSED clock is %p (%s)", clock, 
+			(clock ? GST_OBJECT_NAME (clock) : "nil"));
+
 	sched->current_clock = clock;
         break;
       }
       case GST_STATE_PAUSED_TO_PLAYING:
       {
+        GstClock *clock = gst_scheduler_get_clock (sched);
+
+        GST_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
+			(clock ? GST_OBJECT_NAME (clock) : "nil"));
+
+	sched->current_clock = clock;
+
 	gst_scheduler_set_clock (sched, sched->current_clock);
         if (sched->current_clock)
           gst_clock_set_active (sched->current_clock, TRUE);
@@ -415,20 +428,21 @@ gst_scheduler_get_clock (GstScheduler *sched)
   
   if (GST_FLAG_IS_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK)) {
     clock = sched->clock;  
+
+    GST_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
+			(clock ? GST_OBJECT_NAME (clock) : "nil"));
   }
   else {
-    if (sched->schedulers) {
-      GList *schedulers = sched->schedulers;
+    GList *schedulers = sched->schedulers;
 
-      while (schedulers) {
-        GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
+    while (schedulers) {
+      GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
       
-        clock = gst_scheduler_get_clock (scheduler);
-        if (clock)
-	  break;
+      clock = gst_scheduler_get_clock (scheduler);
+      if (clock)
+        break;
 
-        schedulers = g_list_next (schedulers);
-      }
+      schedulers = g_list_next (schedulers);
     }
     if (!clock && sched->clock_providers) {
       clock = gst_element_get_clock (GST_ELEMENT (sched->clock_providers->data));
@@ -437,6 +451,8 @@ gst_scheduler_get_clock (GstScheduler *sched)
       clock = gst_system_clock_obtain ();
     }
   }
+  GST_DEBUG (GST_CAT_CLOCK, "scheduler selected clock %p (%s)", clock, 
+		(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
   return clock;
 }
@@ -458,6 +474,9 @@ gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
 
   GST_FLAG_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
   sched->clock = clock;
+
+  GST_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
+		(clock ? GST_OBJECT_NAME (clock) : "nil"));
 }
 
 /**
@@ -481,6 +500,9 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
   schedulers = sched->schedulers;
 
   sched->current_clock = clock;
+
+  GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s)", clock, 
+		(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
   while (receivers) {
     GstElement *element = GST_ELEMENT (receivers->data);
@@ -510,6 +532,8 @@ gst_scheduler_auto_clock (GstScheduler *sched)
 
   GST_FLAG_UNSET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
   sched->clock = NULL;
+
+  GST_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
 }
 
 /**
@@ -573,16 +597,8 @@ gst_scheduler_show (GstScheduler *sched)
  * Factory stuff starts here
  *
  */
-
-static GList* _gst_schedulerfactories;
-
 static void 		gst_scheduler_factory_class_init		(GstSchedulerFactoryClass *klass);
 static void 		gst_scheduler_factory_init 		(GstSchedulerFactory *factory);
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr 	gst_scheduler_factory_save_thyself 	(GstObject *object, xmlNodePtr parent);
-static void 		gst_scheduler_factory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
-#endif
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
 /* static guint gst_scheduler_factory_signals[LAST_SIGNAL] = { 0 }; */
@@ -624,12 +640,6 @@ gst_scheduler_factory_class_init (GstSchedulerFactoryClass *klass)
 
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
-#ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_scheduler_factory_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_scheduler_factory_restore_thyself);
-#endif
-
-  _gst_schedulerfactories = NULL;
   if (!_default_name)
     _default_name = g_strdup ("basic");
 }
@@ -637,7 +647,6 @@ gst_scheduler_factory_class_init (GstSchedulerFactoryClass *klass)
 static void
 gst_scheduler_factory_init (GstSchedulerFactory *factory)
 {
-  _gst_schedulerfactories = g_list_prepend (_gst_schedulerfactories, factory);
 }
 	
 
@@ -662,7 +671,7 @@ gst_scheduler_factory_new (const gchar *name, const gchar *longdesc, GType type)
     factory = GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
   }
 
-  gst_object_set_name (GST_OBJECT (factory), name);
+  GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
   if (factory->longdesc)
     g_free (factory->longdesc);
   factory->longdesc = g_strdup (longdesc);
@@ -682,8 +691,6 @@ gst_scheduler_factory_destroy (GstSchedulerFactory *factory)
 {
   g_return_if_fail (factory != NULL);
 
-  _gst_schedulerfactories = g_list_remove (_gst_schedulerfactories, factory);
-
   /* we don't free the struct bacause someone might  have a handle to it.. */
 }
 
@@ -698,35 +705,17 @@ gst_scheduler_factory_destroy (GstSchedulerFactory *factory)
 GstSchedulerFactory*
 gst_scheduler_factory_find (const gchar *name)
 {
-  GList *walk;
-  GstSchedulerFactory *factory;
+  GstPluginFeature *feature;
 
   g_return_val_if_fail(name != NULL, NULL);
 
   GST_DEBUG (0,"gstscheduler: find \"%s\"", name);
 
-  walk = _gst_schedulerfactories;
-  while (walk) {
-    factory = (GstSchedulerFactory *)(walk->data);
-    if (!strcmp (name, GST_OBJECT_NAME (factory)))
-      return factory;
-    walk = g_list_next (walk);
-  }
+  feature = gst_registry_pool_find_feature (name, GST_TYPE_SCHEDULER_FACTORY);
+  if (feature)
+    return GST_SCHEDULER_FACTORY (feature);
 
   return NULL;
-}
-
-/**
- * gst_scheduler_factory_get_list:
- *
- * Get the global list of schedulerfactories.
- *
- * Returns: GList of type #GstSchedulerFactory
- */
-const GList*
-gst_scheduler_factory_get_list (void)
-{
-  return _gst_schedulerfactories;
 }
 
 /**
@@ -820,52 +809,3 @@ gst_scheduler_factory_get_default_name (void)
 {
   return _default_name;
 }
-
-#ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr
-gst_scheduler_factory_save_thyself (GstObject *object, xmlNodePtr parent)
-{
-  GstSchedulerFactory *factory;
-
-  g_return_val_if_fail (GST_IS_SCHEDULER_FACTORY (object), parent);
-
-  factory = GST_SCHEDULER_FACTORY (object);
-
-  if (GST_OBJECT_CLASS (factory_parent_class)->save_thyself) {
-    GST_OBJECT_CLASS (factory_parent_class)->save_thyself (object, parent);
-  }
-
-  xmlNewChild (parent, NULL, "longdesc", factory->longdesc);
-
-  return parent;
-}
-
-/**
- * gst_scheduler_factory_load_thyself:
- * @parent: the parent XML node pointer
- *
- * Load an schedulerfactory from the given XML parent node.
- *
- * Returns: A new factory based on the XML node.
- */
-static void
-gst_scheduler_factory_restore_thyself (GstObject *object, xmlNodePtr parent)
-{
-  GstSchedulerFactory *factory = GST_SCHEDULER_FACTORY (object);
-  xmlNodePtr children = parent->xmlChildrenNode;
-
-  if (GST_OBJECT_CLASS (factory_parent_class)->restore_thyself) {
-    GST_OBJECT_CLASS (factory_parent_class)->restore_thyself (object, parent);
-  }
-
-  while (children) {
-    if (!strcmp(children->name, "name")) {
-      gst_object_set_name (GST_OBJECT (factory), xmlNodeGetContent (children));
-    }
-    if (!strcmp(children->name, "longdesc")) {
-      factory->longdesc = xmlNodeGetContent (children);
-    }
-    children = children->next;
-  }
-}
-#endif /* GST_DISABLE_REGISTRY */

@@ -178,7 +178,8 @@ gst_spider_init (GstSpider *spider)
 {
   /* use only elements which have sources and sinks and where the sinks have caps */
   /* FIXME: How do we handle factories that are added after the spider was constructed? */
-  spider->factories = gst_autoplug_factories_filters_with_sink_caps ((GList *) gst_element_factory_get_list ());
+  spider->factories = gst_autoplug_factories_filters_with_sink_caps ((GList *) 
+		  gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY));
 
   spider->connections = NULL;
 }

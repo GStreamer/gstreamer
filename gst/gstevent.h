@@ -36,16 +36,12 @@ extern "C" {
 
 typedef enum {
   GST_EVENT_UNKNOWN,
-  /* horizontal events */
   GST_EVENT_EOS,
   GST_EVENT_FLUSH,
   GST_EVENT_EMPTY,
   GST_EVENT_SEEK,
   GST_EVENT_DISCONTINUOUS,
   GST_EVENT_NEW_MEDIA,
-  /* vertical events */
-  GST_EVENT_INFO,
-  GST_EVENT_ERROR,
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -61,7 +57,9 @@ extern GType _gst_event_type;
 /* seek events */
 typedef enum {
   GST_SEEK_ANY,
+  GST_SEEK_TIMEOFFSET_CUR,
   GST_SEEK_TIMEOFFSET_SET,
+  GST_SEEK_TIMEOFFSET_END,
   GST_SEEK_BYTEOFFSET_SET,
   GST_SEEK_BYTEOFFSET_CUR,
   GST_SEEK_BYTEOFFSET_END,
@@ -70,8 +68,6 @@ typedef enum {
 #define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT(event)->event_data.seek.type)
 #define GST_EVENT_SEEK_OFFSET(event)	(GST_EVENT(event)->event_data.seek.offset)
 #define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT(event)->event_data.seek.flush)
-
-#define GST_EVENT_INFO_PROPS(event)	(GST_EVENT(event)->event_data.info.props)
 
 struct _GstEvent {
   GstData data;
@@ -86,13 +82,6 @@ struct _GstEvent {
       gint64      offset;
       gboolean	  flush;
     } seek;
-    struct {
-      GstProps *props;
-    } info;
-    struct {
-      GstElementState old_state;
-      GstElementState new_state;
-    } state;
   } event_data;
 };
 
@@ -107,9 +96,6 @@ GstEvent*	gst_event_new_seek	(GstSeekType type, gint64 offset, gboolean flush);
 
 /* flush events */
 #define		gst_event_new_flush()	gst_event_new(GST_EVENT_FLUSH)
-
-/* info events */
-GstEvent*	gst_event_new_info	(const gchar *firstname, ...);
 
 #ifdef __cplusplus
 }

@@ -62,12 +62,13 @@ extern "C" {
 #endif /* __cplusplus */
 
 /* initialize GST */
-void 			 gst_init		 (int *argc, char **argv[]);
-void 			 gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *popt_options);
-const struct poptOption *gst_init_get_popt_table (void);
+void 			 	gst_init		 	(int *argc, char **argv[]);
+void 			 	gst_init_with_popt_table 	(int *argc, char **argv[], 
+								 const struct poptOption *popt_options);
+const struct poptOption*	gst_init_get_popt_table 	(void);
 
-void 			 gst_main		 (void);
-void 			 gst_main_quit		 (void);
+void 			 	gst_main		 	(void);
+void 			 	gst_main_quit		 	(void);
 
 #ifdef __cplusplus
 }
