@@ -58,15 +58,15 @@ gst_elementfactory_register (GstElementFactory *elementfactory)
 void 
 gst_elementfactory_unregister (GstElementFactory *factory) 
 {
-  GList *padfactories;
+  GList *padtemplates;
 
   g_return_if_fail (factory != NULL);
 
-  padfactories = factory->padfactories;
+  padtemplates = factory->padtemplates;
 
-  while (padfactories) {
-    GstPadFactory *padfactory = (GstPadFactory *)padfactories->data;
-    GstCaps *caps = gst_padfactory_get_caps (padfactory);
+  while (padtemplates) {
+    GstPadTemplate *padfactory = (GstPadTemplate *)padtemplates->data;
+    GstCaps *caps = padfactory->caps;
 
     if (caps) {
       switch (padfactory->direction) {
@@ -80,7 +80,7 @@ gst_elementfactory_unregister (GstElementFactory *factory)
 	  break;
       }
     }
-    padfactories = g_list_next (padfactories);
+    padtemplates = g_list_next (padtemplates);
   }
 
   _gst_elementfactories = g_list_remove (_gst_elementfactories, factory);
@@ -148,7 +148,7 @@ gst_elementfactory_new (gchar *name, GtkType type,
   factory->name = g_strdup(name);
   factory->type = type;
   factory->details = details;
-  factory->padfactories = NULL;
+  factory->padtemplates = NULL;
 
   return factory;
 }
@@ -224,28 +224,27 @@ gst_elementfactory_make (gchar *factoryname, gchar *name)
 }
 
 /**
- * gst_elementfactory_add_pad :
+ * gst_elementfactory_add_padtemplate :
  * @elementfactory: factory to add the src id to
- * @pad: the padfactory to add
+ * @template: the padtemplate to add
  *
- * Add the given padfactory to this element. 
- * 
+ * Add the given padtemplate to this elementfactory. 
  */
 void 
-gst_elementfactory_add_pad (GstElementFactory *factory, 
-			    GstPadFactory *padfactory) 
+gst_elementfactory_add_padtemplate (GstElementFactory *factory, 
+			            GstPadTemplate *template) 
 {
   GstCaps *caps;
   
   g_return_if_fail(factory != NULL);
-  g_return_if_fail(padfactory != NULL);
+  g_return_if_fail(template != NULL);
 
-  factory->padfactories = g_list_append (factory->padfactories, padfactory); 
+  factory->padtemplates = g_list_append (factory->padtemplates, template); 
 
-  caps = gst_padfactory_get_caps (padfactory);
+  caps = template->caps;
 
   if (caps) {
-    switch (padfactory->direction) {
+    switch (template->direction) {
       case GST_PAD_SRC:
         _gst_type_add_src (caps->id, factory);
 	break;
@@ -282,14 +281,14 @@ gst_elementfactory_save_thyself (GstElementFactory *factory,
   xmlNewChild(parent,NULL,"author", factory->details->author);
   xmlNewChild(parent,NULL,"copyright", factory->details->copyright);
 
-  pads = factory->padfactories;
+  pads = factory->padtemplates;
   if (pads) {
     while (pads) {
       xmlNodePtr subtree;
-      GstPadFactory *padfactory = (GstPadFactory *)pads->data;
+      GstPadTemplate *padtemplate = (GstPadTemplate *)pads->data;
 
-      subtree = xmlNewChild(parent, NULL, "padfactory", NULL);
-      gst_padfactory_save_thyself(padfactory, subtree);
+      subtree = xmlNewChild(parent, NULL, "padtemplate", NULL);
+      gst_padtemplate_save_thyself(padtemplate, subtree);
 
       pads = g_list_next (pads);
     }
@@ -311,7 +310,7 @@ gst_elementfactory_load_thyself (xmlNodePtr parent)
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
   xmlNodePtr children = parent->childs;
   factory->details = g_new0(GstElementDetails, 1);
-  factory->padfactories = NULL;
+  factory->padtemplates = NULL;
 
   while (children) {
     if (!strcmp(children->name, "name")) {
@@ -335,12 +334,12 @@ gst_elementfactory_load_thyself (xmlNodePtr parent)
     if (!strcmp(children->name, "copyright")) {
       factory->details->copyright = g_strdup(xmlNodeGetContent(children));
     }
-    if (!strcmp(children->name, "padfactory")) {
-       GstPadFactory *padfactory;
+    if (!strcmp(children->name, "padtemplate")) {
+       GstPadTemplate *template;
        
-       padfactory = gst_padfactory_load_thyself (children);
+       template = gst_padtemplate_load_thyself (children);
 
-       gst_elementfactory_add_pad (factory, padfactory);
+       gst_elementfactory_add_padtemplate (factory, template);
     }
 
     children = children->next;

@@ -122,7 +122,7 @@ static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
   httpsrc->bytes_per_read = 4096;
 }
 
-static void gst_httpsrc_push(GstPad *pad) {
+static void gst_httpsrc_pull(GstPad *pad) {
   GstHttpSrc *src;
   GstBuffer *buf;
   glong readbytes;

@@ -46,6 +46,27 @@ get_type_for_mime (gchar *mime)
 }
 
 /**
+ * gst_caps_new:
+ * @mime: the mime type to attach to the capability
+ *
+ * create a new capability with the given mime type
+ *
+ * Returns: a new capability
+ */
+GstCaps*
+gst_caps_new (gchar *mime)
+{
+  GstCaps *caps;
+
+  g_return_val_if_fail (mime != NULL, NULL);
+  
+  caps = g_new0 (GstCaps, 1);
+  caps->id = get_type_for_mime (mime);
+  
+  return caps;
+}
+
+/**
  * gst_caps_register:
  * @factory: the factory to register
  *
@@ -53,7 +74,7 @@ get_type_for_mime (gchar *mime)
  *
  * Returns: The registered capability
  */
-GstCaps *
+GstCaps*
 gst_caps_register (GstCapsFactory *factory)
 {
   GstCapsFactoryEntry tag;

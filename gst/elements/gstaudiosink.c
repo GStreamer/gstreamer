@@ -67,7 +67,10 @@ enum {
   /* FILL ME */
 };
 
-static GstCapsFactory audiosink_sink_caps = {
+static GstPadFactory audiosink_sink_factory = {
+  "sink",
+  GST_PAD_FACTORY_SINK,
+  GST_PAD_FACTORY_ALWAYS,
   "audio/raw",
   "format",   GST_PROPS_INT (AFMT_S16_LE),
   "depth",    GST_PROPS_LIST (
@@ -115,7 +118,7 @@ gst_audiosink_channels_get_type(void) {
 static GstSinkClass *parent_class = NULL;
 static guint gst_audiosink_signals[LAST_SIGNAL] = { 0 };
 
-static GstCaps *gst_audiosink_sink_caps = NULL;
+static GstPadTemplate *gst_audiosink_sink_template;
 
 GtkType
 gst_audiosink_get_type (void) 
@@ -176,9 +179,8 @@ gst_audiosink_class_init (GstAudioSinkClass *klass)
 static void 
 gst_audiosink_init (GstAudioSink *audiosink) 
 {
-  audiosink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  audiosink->sinkpad = gst_pad_new_from_template (gst_audiosink_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (audiosink), audiosink->sinkpad);
-  gst_pad_set_caps (audiosink->sinkpad, gst_audiosink_sink_caps);
 
   gst_pad_set_chain_function (audiosink->sinkpad, gst_audiosink_chain);
 
@@ -410,7 +412,8 @@ gst_audiosink_change_state (GstElement *element)
 gboolean 
 gst_audiosink_factory_init (GstElementFactory *factory) 
 { 
-  gst_audiosink_sink_caps = gst_caps_register (audiosink_sink_caps);
+  gst_audiosink_sink_template = gst_padtemplate_new (&audiosink_sink_factory);
+  gst_elementfactory_add_padtemplate (factory, gst_audiosink_sink_template);
 
   return TRUE;
 }

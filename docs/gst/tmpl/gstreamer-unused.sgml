@@ -17,6 +17,14 @@
 </para>
 
 
+<!-- ##### FUNCTION gst_type_add_sink ##### -->
+<para>
+
+</para>
+
+@id: 
+@sink: 
+
 <!-- ##### FUNCTION gst_tee_get_type ##### -->
 <para>
 
@@ -171,13 +179,6 @@
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_object_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
 
@@ -185,18 +186,18 @@
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
+<!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_QUEUE_CLASS ##### -->
 <para>
@@ -204,6 +205,13 @@
 </para>
 
 @klass: 
+
+<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### MACRO GST_IS_QUEUE ##### -->
 <para>
@@ -329,6 +337,14 @@
 @pad: 
 @buf: 
 
+<!-- ##### FUNCTION gst_type_add_src ##### -->
+<para>
+
+</para>
+
+@id: 
+@src: 
+
 <!-- ##### FUNCTION gst_esdsink_get_type ##### -->
 <para>
 
@@ -356,18 +372,18 @@
 </para>
 
 
-<!-- ##### STRUCT GstFakeSink ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_THREAD_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
+
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_BIN_CLASS ##### -->
 <para>
@@ -403,14 +419,14 @@
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Title ##### -->
-GstColorSpace
-
-
 <!-- ##### STRUCT GstEsdSink ##### -->
 <para>
 
 </para>
+
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Title ##### -->
+GstColorSpace
 
 
 <!-- ##### MACRO GST_PAD ##### -->
@@ -471,6 +487,13 @@ GstColorSpace
 
 @obj: 
 
+<!-- ##### FUNCTION gst_src_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
 <!-- ##### STRUCT GstThreadClass ##### -->
 <para>
 
@@ -501,6 +524,15 @@ GstGetbits
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_src_push_region ##### -->
+<para>
+
+</para>
+
+@src: 
+@offset: 
+@size: 
 
 <!-- ##### MACRO GST_SINESRC_CLASS ##### -->
 <para>
@@ -703,14 +735,14 @@ This macro unsets the given state on the element.
 
 
 
-<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
+<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
 
-<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
+<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
 <para>
 
 </para>
@@ -938,6 +970,14 @@ A flag indicating that SSE instructions are supported.
 </para>
 
 
+<!-- ##### FUNCTION gst_pad_set_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@id: 
+
 <!-- ##### STRUCT GstAudioSrcClass ##### -->
 <para>
 
@@ -1103,6 +1143,13 @@ This macro checks to see if the given state is set.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_connection_push ##### -->
+<para>
+
+</para>
+
+@connection: 
 
 <!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
 <para>
@@ -1276,11 +1323,27 @@ Get the size of the current file.
 
 @obj: 
 
+<!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@id: 
+
 <!-- ##### FUNCTION gst_fakesrc_get_type ##### -->
 <para>
 
 </para>
 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_queue_chain ##### -->
@@ -1366,19 +1429,19 @@ Get the size of the current file.
 </para>
 
 
-<!-- ##### MACRO GST_META ##### -->
-<para>
-
-</para>
-
-@meta: 
-
 <!-- ##### FUNCTION gst_audiosink_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_META ##### -->
+<para>
+
+</para>
+
+@meta: 
 
 <!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
 <para>
@@ -1421,18 +1484,18 @@ Get the size of the current file.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_FILTER ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_IS_SINESRC_CLASS ##### -->
 <para>
 
 </para>
 
 @obj: 
-
-<!-- ##### MACRO GST_TYPE_FILTER ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO GST_IS_AUDIOSRC_CLASS ##### -->
 <para>
@@ -1511,16 +1574,16 @@ GstElement
 
 @obj: 
 
+<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+
+
+
 <!-- ##### FUNCTION gst_audiosrc_push ##### -->
 <para>
 
 </para>
 
 @src: 
-
-<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
-
-
 
 <!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
 <para>
@@ -1571,6 +1634,14 @@ GstElement
 @name: 
 @fd: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_elementfactory_add_src ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@id: 
 
 <!-- ##### MACRO GST_BUFFER_POOL ##### -->
 <para>
@@ -1637,15 +1708,15 @@ GstElement
 @name: 
 @Returns: 
 
-<!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
-<para>
-A flag indicating that MMX instructions are supported.
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
+<para>
+A flag indicating that MMX instructions are supported.
 </para>
 
 

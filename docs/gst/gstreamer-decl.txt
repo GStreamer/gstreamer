@@ -71,6 +71,11 @@ cothread_context *ctx
 cothread_state *thread, cothread_func func,int argc, char **argv
 </FUNCTION>
 <FUNCTION>
+<NAME>cothread_getcurrent</NAME>
+<RETURNS>int 	</RETURNS>
+void
+</FUNCTION>
+<FUNCTION>
 <NAME>cothread_switch</NAME>
 <RETURNS>void  </RETURNS>
 cothread_state *thread
@@ -105,14 +110,6 @@ void
 <RETURNS>void  </RETURNS>
 void
 </FUNCTION>
-<MACRO>
-<NAME>DEBUG</NAME>
-#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
-</MACRO>
-<MACRO>
-<NAME>DEBUG</NAME>
-#define DEBUG(format, args...)
-</MACRO>
 <VARIABLE>
 <NAME>gst_bin_details</NAME>
 extern GstElementDetails gst_bin_details;
@@ -164,6 +161,7 @@ struct GstBin {
 
   cothread_context *threadcontext;
   gboolean use_cothreads;
+  GList *outside_schedules;
 };
 </STRUCT>
 <FUNCTION>
@@ -506,11 +504,6 @@ void
 <RETURNS>GstElement *</RETURNS>
 gchar *name
 </FUNCTION>
-<FUNCTION>
-<NAME>gst_connection_push</NAME>
-<RETURNS>void  </RETURNS>
-GstConnection *connection
-</FUNCTION>
 <ENUM>
 <NAME>GstElementState</NAME>
 typedef enum {
@@ -568,15 +561,22 @@ typedef enum {
   GST_ELEMENT_MULTI_IN		= (1 << 4),
   GST_ELEMENT_THREAD_SUGGESTED	= (1 << 5),
   GST_ELEMENT_NO_SEEK		= (1 << 6),
+
+  GST_ELEMENT_NEW_LOOPFUNC	= (1 << 16),
+  GST_ELEMENT_COTHREAD_STOPPING	= (1 << 17),
 } GstElementFlags;
 </ENUM>
 <MACRO>
 <NAME>GST_ELEMENT_IS_MULTI_IN</NAME>
-#define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
+#define GST_ELEMENT_IS_MULTI_IN(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_MULTI_IN))
 </MACRO>
 <MACRO>
 <NAME>GST_ELEMENT_IS_THREAD_SUGGESTED</NAME>
-#define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAGS(obj) & GST_ELEMENT_THREAD_SUGGESTED)
+#define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
+</MACRO>
+<MACRO>
+<NAME>GST_ELEMENT_IS_COTHREAD_STOPPING</NAME>
+#define GST_ELEMENT_IS_COTHREAD_STOPPING(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_COTHREAD_STOPPING))
 </MACRO>
 <STRUCT>
 <NAME>GstElement</NAME>
@@ -618,7 +618,7 @@ struct GstElement {
 <NAME>GstElementDetails</NAME>
 struct GstElementDetails {
   gchar *longname;              /* long, english name */
-  gchar *class;                 /* type of element, kinda */
+  gchar *klass;                 /* type of element, kinda */
   gchar *description;           /* insights of one form or another */
   gchar *version;               /* version of the element */
   gchar *author;                /* who wrote this thing? */
@@ -633,8 +633,7 @@ struct GstElementFactory {
 
   GstElementDetails *details;	/* pointer to details struct */
 
-  GList *src_types;
-  GList *sink_types;
+  GList *padfactories;
 };
 </STRUCT>
 <FUNCTION>
@@ -742,14 +741,14 @@ gchar *name,GtkType type,GstElementDetails *details
 GstElementFactory *elementfactory
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_elementfactory_add_src</NAME>
+<NAME>gst_elementfactory_unregister</NAME>
 <RETURNS>void  </RETURNS>
-GstElementFactory *elementfactory, guint16 id
+GstElementFactory *elementfactory
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_elementfactory_add_sink</NAME>
+<NAME>gst_elementfactory_add_pad</NAME>
 <RETURNS>void  </RETURNS>
-GstElementFactory *elementfactory, guint16 id
+GstElementFactory *elementfactory,GstPadFactory *pad
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_elementfactory_find</NAME>
@@ -1053,11 +1052,11 @@ GstObject *object
 </MACRO>
 <MACRO>
 <NAME>GST_PAD_CONNECTED</NAME>
-#define GST_PAD_CONNECTED(pad) 		(pad && (pad)->peer != NULL)
+#define GST_PAD_CONNECTED(pad) 		((pad) && (pad)->peer != NULL)
 </MACRO>
 <MACRO>
 <NAME>GST_PAD_CAN_PULL</NAME>
-#define GST_PAD_CAN_PULL(pad) 		(pad && (pad)->pullfunc != NULL)
+#define GST_PAD_CAN_PULL(pad) 		((pad) && (pad)->pullfunc != NULL)
 </MACRO>
 <STRUCT>
 <NAME>GstPad</NAME>
@@ -1098,13 +1097,21 @@ typedef enum {
   GST_PAD_SINK,
 } GstPadDirection;
 </ENUM>
+<ENUM>
+<NAME>GstPadFlags</NAME>
+typedef enum {
+  GST_PAD_DISABLED		= (1 << 4),
+} GstPadFlags;
+</ENUM>
 <STRUCT>
 <NAME>GstPad</NAME>
 struct GstPad {
   GstObject object;
 
   gchar *name;
-  guint16 type;
+  GstCaps *caps;
+
+  cothread_state *threadstate;
 
   GstPadDirection direction;
 
@@ -1113,13 +1120,33 @@ struct GstPad {
   GstBuffer *bufpen;
 
   GstPadChainFunction chainfunc;
+  GstPadPushFunction pushfunc;
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
-  GstPadPushFunction pushfunc;
   GstPadQoSFunction qosfunc;
 
   GstObject *parent;
   GList *ghostparents;
+};
+</STRUCT>
+<ENUM>
+<NAME>GstPadPresence</NAME>
+typedef enum {
+  GST_PAD_ALWAYS,
+  GST_PAD_SOMETIMES,
+} GstPadPresence;
+</ENUM>
+<STRUCT>
+<NAME>GstPadFactory</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstPadFactory</NAME>
+struct GstPadFactory {
+  gchar           *nametemplate;
+  GstCapsFactory  *caps;
+  GstPadDirection direction;
+  GstPadPresence  presence;
+  gpointer	  priv;
 };
 </STRUCT>
 <FUNCTION>
@@ -1152,19 +1179,24 @@ GstPad *pad, GstPadChainFunction chain
 GstPad *pad, GstPadPullFunction pull
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_pad_set_pullregion_function</NAME>
+<RETURNS>void 	</RETURNS>
+GstPad *pad, GstPadPullRegionFunction pullregion
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_pad_set_qos_function</NAME>
 <RETURNS>void  </RETURNS>
 GstPad *pad, GstPadQoSFunction qos
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_pad_get_type_id</NAME>
-<RETURNS>guint16  </RETURNS>
-GstPad *pad
+<NAME>gst_pad_set_caps</NAME>
+<RETURNS>void 	</RETURNS>
+GstPad *pad, GstCaps *caps
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_pad_set_type_id</NAME>
-<RETURNS>void  </RETURNS>
-GstPad *pad, guint16 id
+<NAME>gst_pad_get_caps</NAME>
+<RETURNS>GstCaps *</RETURNS>
+GstPad *pad
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_pad_set_name</NAME>
@@ -1245,6 +1277,26 @@ GstPad *pad, xmlNodePtr parent
 <NAME>gst_pad_load_and_connect</NAME>
 <RETURNS>void  </RETURNS>
 xmlNodePtr parent, GstObject *element, GHashTable *elements
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_padfactory_create</NAME>
+<RETURNS>GstPad *</RETURNS>
+GstPadFactory *factory, gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_padfactory_get_caps</NAME>
+<RETURNS>GstCaps *</RETURNS>
+GstPadFactory *factory
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_padfactory_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+GstPadFactory *pad, xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_padfactory_load_thyself</NAME>
+<RETURNS>GstPadFactory *</RETURNS>
+xmlNodePtr parent
 </FUNCTION>
 <VARIABLE>
 <NAME>gst_pipeline_details</NAME>
@@ -1354,6 +1406,11 @@ GModule *module
 gchar *name
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_plugin_set_longname</NAME>
+<RETURNS>void  </RETURNS>
+GstPlugin *plugin, gchar *longname
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_plugin_load_all</NAME>
 <RETURNS>void  </RETURNS>
 void
@@ -1364,19 +1421,14 @@ void
 gchar *name
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_library_load</NAME>
-<RETURNS>gboolean  </RETURNS>
-gchar *name
-</FUNCTION>
-<FUNCTION>
 <NAME>gst_plugin_load_absolute</NAME>
 <RETURNS>gboolean  </RETURNS>
 gchar *name
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_plugin_set_longname</NAME>
-<RETURNS>void  </RETURNS>
-GstPlugin *plugin, gchar *longname
+<NAME>gst_library_load</NAME>
+<RETURNS>gboolean  </RETURNS>
+gchar *name
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_plugin_add_factory</NAME>
@@ -1520,8 +1572,8 @@ typedef enum {
 <STRUCT>
 <NAME>GstSrc</NAME>
 struct GstSrc {
-  GstElement element;
-  gint32 flags;
+  GstElement			element;
+  gint32			flags;
 };
 </STRUCT>
 <MACRO>
@@ -1538,16 +1590,6 @@ struct GstSrc {
 <NAME>gst_src_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
 void
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_src_push</NAME>
-<RETURNS>void  </RETURNS>
-GstSrc *src
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_src_push_region</NAME>
-<RETURNS>void  </RETURNS>
-GstSrc *src, gulong offset, gulong size
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_src_signal_eos</NAME>
@@ -1778,7 +1820,7 @@ struct GstType {
   gchar *mime;			/* MIME type */
   gchar *exts;			/* space-delimited list of extensions */
 
-  GstTypeFindFunc typefindfunc;	/* typefind function */
+  GSList *typefindfuncs;	/* typefind functions */
 
   GList *srcs;			/* list of src objects for this type */
   GList *sinks;			/* list of sink objects for type */
@@ -1810,16 +1852,6 @@ gchar *mime
 <NAME>gst_type_find_by_ext</NAME>
 <RETURNS>guint16  </RETURNS>
 gchar *ext
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_type_add_src</NAME>
-<RETURNS>void 	</RETURNS>
-guint16 id, GstElementFactory *src
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_type_add_sink</NAME>
-<RETURNS>void  </RETURNS>
-guint16 id, GstElementFactory *sink
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_type_get_srcs</NAME>
@@ -1970,6 +2002,56 @@ const guchar *fname, const guchar *root
 <RETURNS>GstElement *</RETURNS>
 GstXML *xml, const guchar *name
 </FUNCTION>
+<STRUCT>
+<NAME>GstCaps</NAME>
+</STRUCT>
+<TYPEDEF>
+<NAME>GstCapsFactoryEntry</NAME>
+typedef gpointer GstCapsFactoryEntry;
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstCapsFactory[]</NAME>
+typedef GstCapsFactoryEntry GstCapsFactory[];
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstCapsListFactory[]</NAME>
+typedef GstCapsFactory *GstCapsListFactory[];
+</TYPEDEF>
+<ENUM>
+<NAME>GstCapsDefinition</NAME>
+typedef enum {
+  GST_CAPS_ALWAYS	= 1,
+  GST_CAPS_MAYBE	= 2,
+} GstCapsDefinition;
+</ENUM>
+<STRUCT>
+<NAME>GstCaps</NAME>
+struct GstCaps {
+  guint16 id;			/* type id (major type) */
+
+  GstProps *properties;		/* properties for this capability */
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_caps_register</NAME>
+<RETURNS>GstCaps *</RETURNS>
+GstCapsFactory *factory
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_caps_check_compatibility</NAME>
+<RETURNS>gboolean  </RETURNS>
+GstCaps *caps1, GstCaps *caps2
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_caps_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+GstCaps *caps, xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_caps_load_thyself</NAME>
+<RETURNS>GstCaps *</RETURNS>
+xmlNodePtr parent
+</FUNCTION>
 <MACRO>
 <NAME>GST_BUFFER_POOL</NAME>
 #define GST_BUFFER_POOL(buf) \
@@ -2091,6 +2173,198 @@ void
 <RETURNS>GtkType  </RETURNS>
 void
 </FUNCTION>
+<MACRO>
+<NAME>GST_DEBUG_ENABLED</NAME>
+#define GST_DEBUG_ENABLED
+</MACRO>
+<MACRO>
+<NAME>GST_DEBUG_PREFIX</NAME>
+#define GST_DEBUG_PREFIX(format,args...) \
+"DEBUG(%d:%d)" __PRETTY_FUNCTION__ ":%d" format , getpid() , cothread_getcurrent() , __LINE__ , ## args
+</MACRO>
+<USER_FUNCTION>
+<NAME>_debug_function_f</NAME>
+<RETURNS>void </RETURNS>
+
+</USER_FUNCTION>
+<MACRO>
+<NAME>DEBUG</NAME>
+#define DEBUG(format,args...) \
+  (_debug_string != NULL) ? \
+    fprintf(stderr,GST_DEBUG_PREFIX("%s: "format , _debug_string , ## args )) : \
+    fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args ))
+</MACRO>
+<MACRO>
+<NAME>DEBUG_ENTER</NAME>
+#define DEBUG_ENTER(format, args...) \
+  fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args ))
+</MACRO>
+<MACRO>
+<NAME>DEBUG_SET_STRING</NAME>
+#define DEBUG_SET_STRING(format, args...) \
+  gchar *_debug_string = g_strdup_printf(format , ## args )
+</MACRO>
+<MACRO>
+<NAME>DEBUG_ENTER_STRING</NAME>
+#define DEBUG_ENTER_STRING DEBUG_ENTER("%s",_debug_string)
+</MACRO>
+<MACRO>
+<NAME>DEBUG_LEAVE</NAME>
+#define DEBUG_LEAVE(format, args...) \
+  if (_debug_string != NULL) g_free(_debug_string),\
+    fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
+</MACRO>
+<MACRO>
+<NAME>DEBUG_LEAVE_STRING</NAME>
+#define DEBUG_LEAVE_STRING DEBUG_LEAVE("%s",_debug_string)
+</MACRO>
+<MACRO>
+<NAME>DEBUG</NAME>
+#define DEBUG(format, args...)
+</MACRO>
+<MACRO>
+<NAME>DEBUG_ENTER</NAME>
+#define DEBUG_ENTER(format, args...)
+</MACRO>
+<MACRO>
+<NAME>DEBUG_LEAVE</NAME>
+#define DEBUG_LEAVE(format, args...)
+</MACRO>
+<MACRO>
+<NAME>DEBUG_SET_STRING</NAME>
+#define DEBUG_SET_STRING(format, args...)
+</MACRO>
+<MACRO>
+<NAME>DEBUG_ENTER_STRING</NAME>
+#define DEBUG_ENTER_STRING
+</MACRO>
+<MACRO>
+<NAME>GST_DEBUG_PAD_NAME</NAME>
+#define GST_DEBUG_PAD_NAME(pad) \
+  ((pad)->parent != NULL) ? gst_element_get_name(GST_ELEMENT((pad)->parent)) : "''", gst_pad_get_name(pad)
+</MACRO>
+<STRUCT>
+<NAME>GstProps</NAME>
+</STRUCT>
+<TYPEDEF>
+<NAME>GstPropsFactoryEntry</NAME>
+typedef gpointer GstPropsFactoryEntry;
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstPropsFactory[]</NAME>
+typedef GstPropsFactoryEntry GstPropsFactory[];
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstPropsListFactory[]</NAME>
+typedef GstPropsFactory *GstPropsListFactory[];
+</TYPEDEF>
+<ENUM>
+<NAME>GstPropsId</NAME>
+typedef enum {
+   GST_PROPS_END_ID_NUM = 0,
+   GST_PROPS_LIST_ID_NUM,
+   GST_PROPS_INT_ID_NUM,
+   GST_PROPS_INT_RANGE_ID_NUM,
+   GST_PROPS_FOURCC_ID_NUM,
+   GST_PROPS_BOOL_ID_NUM,
+} GstPropsId;
+</ENUM>
+<MACRO>
+<NAME>GST_PROPS_LIST_ID</NAME>
+#define GST_PROPS_LIST_ID GINT_TO_POINTER(GST_PROPS_LIST_ID_NUM)
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_INT_ID</NAME>
+#define GST_PROPS_INT_ID GINT_TO_POINTER(GST_PROPS_INT_ID_NUM)
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_INT_RANGE_ID</NAME>
+#define GST_PROPS_INT_RANGE_ID GINT_TO_POINTER(GST_PROPS_INT_RANGE_ID_NUM)
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_FOURCC_ID</NAME>
+#define GST_PROPS_FOURCC_ID GINT_TO_POINTER(GST_PROPS_FOURCC_ID_NUM)
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_BOOL_ID</NAME>
+#define GST_PROPS_BOOL_ID GINT_TO_POINTER(GST_PROPS_BOOL_ID_NUM)
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_LIST</NAME>
+#define GST_PROPS_LIST(a...) GST_PROPS_LIST_ID,##a,NULL
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_INT</NAME>
+#define GST_PROPS_INT(a) GST_PROPS_INT_ID,(GINT_TO_POINTER(a))
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_INT_RANGE</NAME>
+#define GST_PROPS_INT_RANGE(a,b) GST_PROPS_INT_RANGE_ID,(GINT_TO_POINTER(a)),(GINT_TO_POINTER(b))
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_FOURCC</NAME>
+#define GST_PROPS_FOURCC(a,b,c,d) GST_PROPS_FOURCC_ID,(GINT_TO_POINTER((a)|(b)<<8|(c)<<16|(d)<<24))
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_FOURCC_INT</NAME>
+#define GST_PROPS_FOURCC_INT(a) GST_PROPS_FOURCC_ID,(GINT_TO_POINTER(a))
+</MACRO>
+<MACRO>
+<NAME>GST_PROPS_BOOLEAN</NAME>
+#define GST_PROPS_BOOLEAN(a) GST_PROPS_BOOL_ID,(GINT_TO_POINTER(a))
+</MACRO>
+<STRUCT>
+<NAME>GstProps</NAME>
+struct GstProps {
+  GSList *properties;		/* properties for this capability */
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_props_register</NAME>
+<RETURNS>GstProps *</RETURNS>
+GstPropsFactory factory
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_props_check_compatibility</NAME>
+<RETURNS>gboolean  </RETURNS>
+GstProps *props1, GstProps *props2
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_props_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+GstProps *props, xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_props_load_thyself</NAME>
+<RETURNS>GstProps *</RETURNS>
+xmlNodePtr parent
+</FUNCTION>
+<STRUCT>
+<NAME>GstPropsEntry</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstPropsEntry</NAME>
+struct GstPropsEntry {
+  GQuark    propid;
+  GstPropsId propstype;		
+
+  union {
+    /* flat values */
+    gboolean bool_data;
+    guint32  fourcc_data;
+    gint     int_data;
+
+    /* structured values */
+    struct {
+      GList *entries;
+    } list_data;
+    struct {
+      gint min;
+      gint max;
+    } int_range_data;
+  } data;
+};
+</STRUCT>
 <MACRO>
 <NAME>GST_TYPE_ASYNCDISKSRC</NAME>
 #define GST_TYPE_ASYNCDISKSRC \
@@ -2245,7 +2519,7 @@ GstElementFactory *factory
 <MACRO>
 <NAME>GST_IS_AUDIOSRC_CLASS</NAME>
 #define GST_IS_AUDIOSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC))
 </MACRO>
 <ENUM>
 <NAME>GstAudioSrcFlags</NAME>
@@ -2377,7 +2651,7 @@ void
 <MACRO>
 <NAME>GST_IS_ESDSINK_CLASS</NAME>
 #define GST_IS_ESDSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDSINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDSINK))
 </MACRO>
 <STRUCT>
 <NAME>GstEsdSink</NAME>
@@ -2428,7 +2702,7 @@ void
 <MACRO>
 <NAME>GST_IS_FAKESINK_CLASS</NAME>
 #define GST_IS_FAKESINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK))
 </MACRO>
 <STRUCT>
 <NAME>GstFakeSink</NAME>
@@ -2472,7 +2746,7 @@ void
 <MACRO>
 <NAME>GST_IS_FAKESRC_CLASS</NAME>
 #define GST_IS_FAKESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESRC))
 </MACRO>
 <STRUCT>
 <NAME>GstFakeSrc</NAME>
@@ -2516,7 +2790,7 @@ void
 <MACRO>
 <NAME>GST_IS_FDSINK_CLASS</NAME>
 #define GST_IS_FDSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK))
 </MACRO>
 <STRUCT>
 <NAME>GstFdSink</NAME>
@@ -2562,7 +2836,7 @@ void
 <MACRO>
 <NAME>GST_IS_FDSRC_CLASS</NAME>
 #define GST_IS_FDSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC))
 </MACRO>
 <STRUCT>
 <NAME>GstFdSrc</NAME>
@@ -2614,7 +2888,7 @@ void
 <MACRO>
 <NAME>GST_IS_HTTPSRC_CLASS</NAME>
 #define GST_IS_HTTPSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC))
 </MACRO>
 <ENUM>
 <NAME>GstHttpSrcFlags</NAME>
@@ -2671,7 +2945,7 @@ void
 <MACRO>
 <NAME>GST_IS_IDENTITY_CLASS</NAME>
 #define GST_IS_IDENTITY_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY))
 </MACRO>
 <STRUCT>
 <NAME>GstIdentity</NAME>
@@ -2777,7 +3051,7 @@ void
 <MACRO>
 <NAME>GST_IS_SINESRC_CLASS</NAME>
 #define GST_IS_SINESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINESRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINESRC))
 </MACRO>
 <STRUCT>
 <NAME>GstSineSrc</NAME>

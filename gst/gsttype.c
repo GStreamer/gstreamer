@@ -266,28 +266,26 @@ gst_type_handle_src (guint16 id, GstElementFactory *src, gboolean remove)
   g_return_if_fail (type != NULL);
   g_return_if_fail (src != NULL);
 
-  g_print ("gsttype: handle src \"%s\" %d\n", src->name, remove);
-
   if (remove) 
     type->srcs = g_list_remove (type->srcs, src);
   else 
     type->srcs = g_list_prepend (type->srcs, src);
 
   // find out if the element has to be indexed in the matrix
-  walk = src->padfactories;
+  walk = src->padtemplates;
 
   while (walk) {
-    GstPadFactory *factory;
+    GstPadTemplate *template;
 
-    factory = (GstPadFactory *) walk->data;
+    template = (GstPadTemplate *) walk->data;
 
-    if (factory->direction == GST_PAD_SINK) {
+    if (template->direction == GST_PAD_SINK) {
       GstType *type2;
       GList *converters;
       GList *orig;
       GstCaps *caps;
 
-      caps = gst_padfactory_get_caps (factory);
+      caps = template->caps;
 
       if (caps)
         type2 = gst_type_find_by_id (caps->id);
@@ -353,28 +351,26 @@ gst_type_handle_sink (guint16 id, GstElementFactory *sink, gboolean remove)
   g_return_if_fail (type != NULL);
   g_return_if_fail (sink != NULL);
 
-  g_print ("gsttype: handle sink \"%s\" %d\n", sink->name, remove);
-
   if (remove) 
     type->sinks = g_list_remove (type->sinks, sink);
   else 
     type->sinks = g_list_prepend (type->sinks, sink);
 
   // find out if the element has to be indexed in the matrix
-  walk = sink->padfactories;
+  walk = sink->padtemplates;
 
   while (walk) {
-    GstPadFactory *factory;
+    GstPadTemplate *template;
 
-    factory = (GstPadFactory *) walk->data;
+    template = (GstPadTemplate *) walk->data;
 
-    if (factory->direction == GST_PAD_SRC) {
+    if (template->direction == GST_PAD_SRC) {
       guint16 id2;
       GList *converters;
       GList *orig;
       GstCaps *caps;
 
-      caps = gst_padfactory_get_caps (factory);
+      caps = template->caps;
 
       if (caps)
         id2 = caps->id;

@@ -84,24 +84,6 @@ This macro usets the given flags.
 @src: 
 
 
-<!-- ##### FUNCTION gst_src_push ##### -->
-<para>
-
-</para>
-
-@src: 
-
-
-<!-- ##### FUNCTION gst_src_push_region ##### -->
-<para>
-
-</para>
-
-@src: 
-@offset: 
-@size: 
-
-
 <!-- ##### SIGNAL GstSrc::eos ##### -->
 <para>
 An eos signal is triggered whenever the GstSrc has reached the end of 

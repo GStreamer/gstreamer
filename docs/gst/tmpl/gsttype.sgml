@@ -71,7 +71,7 @@ A type
 @id: 
 @mime: 
 @exts: 
-@typefindfunc: 
+@typefindfuncs: 
 @srcs: 
 @sinks: 
 @converters: 
@@ -110,24 +110,6 @@ The struct with the typefactory information
 
 @ext: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_type_add_src ##### -->
-<para>
-
-</para>
-
-@id: 
-@src: 
-
-
-<!-- ##### FUNCTION gst_type_add_sink ##### -->
-<para>
-
-</para>
-
-@id: 
-@sink: 
 
 
 <!-- ##### FUNCTION gst_type_get_srcs ##### -->

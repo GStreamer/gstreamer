@@ -31,11 +31,3 @@ elements. A connection is typically a bas class for queues.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_connection_push ##### -->
-<para>
-
-</para>
-
-@connection: 
-
-

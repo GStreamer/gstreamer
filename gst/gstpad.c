@@ -175,6 +175,31 @@ gst_pad_new (gchar *name,
   pad = GST_PAD (gtk_type_new (gst_pad_get_type ()));
   pad->name = g_strdup (name);
   pad->direction = direction;
+
+  return pad;
+}
+
+/**
+ * gst_pad_new_from_template:
+ * @temp: the pad template to use
+ * @name: the name of the element
+ *
+ * Create a new pad with given name from the given template.
+ *
+ * Returns: new pad
+ */
+GstPad*
+gst_pad_new_from_template (GstPadTemplate *temp,
+		           gchar *name) 
+{
+  GstPad *pad;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (temp != NULL, NULL);
+
+  pad = gst_pad_new (name, temp->direction);
+  pad->caps = temp->caps;
+
   return pad;
 }
 
@@ -848,73 +873,65 @@ gst_pad_ghost_save_thyself (GstPad *pad,
   return self;
 }
 
-/**
- * gst_padfactory_create:
- * @factory: the pad factory
- * @name: the name of the new pad
- *
- * crrates a new pad form the given factory
- *
- * Returns: the new pad;
- */
-GstPad*
-gst_padfactory_create (GstPadFactory *factory, 
-		       gchar *name)
+GstPadTemplate*   
+gst_padtemplate_new (GstPadFactory *factory) 
 {
-  GstPad *newpad;
-  GstCaps *caps;
+  GstPadTemplate *new;
+  GstPadFactoryEntry tag;
+  gint i = 0;
 
-  newpad = gst_pad_new (name, factory->direction);
+  g_return_val_if_fail (factory != NULL, NULL);
 
-  caps = gst_padfactory_get_caps (factory);
+  new = g_new0 (GstPadTemplate, 1);
 
-  gst_pad_set_caps (newpad, caps);
+  tag = (*factory)[i++];
+  g_return_val_if_fail (tag != NULL, new);
+  new->name_template = g_strdup ((gchar *)tag);
 
-  return newpad;
+  tag = (*factory)[i++];
+  new->direction = GPOINTER_TO_UINT (tag);
+
+  tag = (*factory)[i++];
+  new->presence = GPOINTER_TO_UINT (tag);
+
+  new->caps = gst_caps_register ((GstCapsFactory *)&(*factory)[i]);
+
+  return new;
 }
 
-GstCaps*
-gst_padfactory_get_caps (GstPadFactory *factory)
+GstPadTemplate*
+gst_padtemplate_create (gchar *name_template,
+		        GstPadDirection direction, GstPadPresence presence,
+		        GstCaps *caps, ...)
 {
-  if (factory->priv) {
-    return (GstCaps *) factory->priv;
-  }
-  else if (factory->caps) {
-    GstCaps *caps;
-    
-    caps = gst_caps_register (factory->caps);
-   
-    factory->priv = caps;
-
-    return caps;
-  }
-  else return NULL;
+  return NULL;
 }
+
 
 xmlNodePtr
-gst_padfactory_save_thyself (GstPadFactory *pad, xmlNodePtr parent)
+gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
 
-  xmlNewChild(parent,NULL,"nametemplate", pad->nametemplate);
+  xmlNewChild(parent,NULL,"nametemplate", pad->name_template);
   xmlNewChild(parent,NULL,"direction", (pad->direction == GST_PAD_SINK? "sink":"src"));
   xmlNewChild(parent,NULL,"presence", (pad->presence == GST_PAD_ALWAYS? "always":"sometimes"));
   subtree = xmlNewChild(parent,NULL,"caps", NULL);
 
-  gst_caps_save_thyself (gst_padfactory_get_caps (pad), subtree);
+  gst_caps_save_thyself (pad->caps, subtree);
 
   return parent;
 }
 
-GstPadFactory*   
-gst_padfactory_load_thyself (xmlNodePtr parent)
+GstPadTemplate*   
+gst_padtemplate_load_thyself (xmlNodePtr parent)
 {
   xmlNodePtr field = parent->childs;
-  GstPadFactory *factory = g_new0 (GstPadFactory, 1);
+  GstPadTemplate *factory = g_new0 (GstPadTemplate, 1);
 
   while (field) {
     if (!strcmp(field->name, "nametemplate")) {
-      factory->nametemplate = g_strdup(xmlNodeGetContent(field));
+      factory->name_template = g_strdup(xmlNodeGetContent(field));
     }
     if (!strcmp(field->name, "direction")) {
       gchar *value = xmlNodeGetContent(field);
@@ -938,7 +955,7 @@ gst_padfactory_load_thyself (xmlNodePtr parent)
       }
     }
     else if (!strcmp(field->name, "caps")) {
-      factory->priv = gst_caps_load_thyself (field);
+      factory->caps = gst_caps_load_thyself (field);
     }
     field = field->next;
   }

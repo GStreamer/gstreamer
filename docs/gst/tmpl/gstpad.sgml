@@ -137,24 +137,6 @@ the function that will be called when a QoS message is sent.
 @pull: 
 
 
-<!-- ##### FUNCTION gst_pad_get_type_id ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_set_type_id ##### -->
-<para>
-
-</para>
-
-@pad: 
-@id: 
-
-
 <!-- ##### FUNCTION gst_pad_set_name ##### -->
 <para>
 
@@ -311,4 +293,9 @@ the function that will be called when a QoS message is sent.
 @element: 
 @elements: 
 
+
+<!-- ##### ARG GstPad:active ##### -->
+<para>
+
+</para>
 

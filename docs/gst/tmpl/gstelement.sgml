@@ -143,6 +143,8 @@ may have.
 @GST_ELEMENT_MULTI_IN: 
 @GST_ELEMENT_THREAD_SUGGESTED: 
 @GST_ELEMENT_NO_SEEK: 
+@GST_ELEMENT_NEW_LOOPFUNC: 
+@GST_ELEMENT_COTHREAD_STOPPING: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
 <para>
@@ -174,7 +176,7 @@ describes the element, mostly for the benefit of editors.
 </para>
 
 @longname: 
-@class: 
+@klass: 
 @description: 
 @version: 
 @author: 
@@ -190,8 +192,7 @@ GstElementDetails struct for the element.
 @name: 
 @type: 
 @details: 
-@src_types: 
-@sink_types: 
+@padfactories: 
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>
@@ -377,24 +378,6 @@ circumstances.
 </para>
 
 @elementfactory: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-@id: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_add_src ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-@id: 
 
 
 <!-- ##### FUNCTION gst_elementfactory_find ##### -->

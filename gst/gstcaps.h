@@ -43,6 +43,7 @@ struct _GstCaps {
 /* initialize the subsystem */
 void 		_gst_caps_initialize		(void);
 
+GstCaps*	gst_caps_new			(gchar *mime);
 GstCaps*	gst_caps_register		(GstCapsFactory *factory);
 
 gboolean 	gst_caps_check_compatibility 	(GstCaps *caps1, GstCaps *caps2);

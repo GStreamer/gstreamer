@@ -103,22 +103,30 @@ typedef enum {
   GST_PAD_SOMETIMES,
 } GstPadPresence;
 
-typedef struct _GstPadFactory GstPadFactory;
+typedef struct _GstPadTemplate GstPadTemplate;
 
-/* factory */
-struct _GstPadFactory {
-  gchar           *nametemplate;
-  GstCapsFactory  *caps;
+/* template */
+struct _GstPadTemplate {
+  gchar           *name_template;
   GstPadDirection direction;
   GstPadPresence  presence;
-  gpointer	  priv;
+  GstCaps  	  *caps;
 };
 
+/* factory */
+typedef gpointer GstPadFactoryEntry;
+typedef GstPadFactoryEntry GstPadFactory[];
+#define GST_PAD_FACTORY_ALWAYS 		GINT_TO_POINTER(GST_PAD_ALWAYS)
+#define GST_PAD_FACTORY_SOMETIMES 	GINT_TO_POINTER(GST_PAD_SOMETIMES)
+
+#define GST_PAD_FACTORY_SRC	 	GINT_TO_POINTER(GST_PAD_SRC)
+#define GST_PAD_FACTORY_SINK 		GINT_TO_POINTER(GST_PAD_SINK)
 
 GtkType 		gst_pad_get_type		(void);
 
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
 #define 		gst_pad_destroy(pad) 		gst_object_destroy (GST_OBJECT (pad))
+GstPad*			gst_pad_new_from_template	(GstPadTemplate *temp, gchar *name);
 
 GstPadDirection 	gst_pad_get_direction		(GstPad *pad);
 
@@ -154,12 +162,13 @@ void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTa
 
 
 /* factory */
-GstPad*			gst_padfactory_create		(GstPadFactory *factory, gchar *name);
+GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
+GstPadTemplate*		gst_padtemplate_create		(gchar *name_template, 
+		                                         GstPadDirection direction, GstPadPresence presence,
+							 GstCaps *caps, ...);
 
-GstCaps*		gst_padfactory_get_caps		(GstPadFactory *factory);
-
-xmlNodePtr 		gst_padfactory_save_thyself	(GstPadFactory *pad, xmlNodePtr parent);
-GstPadFactory*		gst_padfactory_load_thyself	(xmlNodePtr parent);
+xmlNodePtr 		gst_padtemplate_save_thyself	(GstPadTemplate *pad, xmlNodePtr parent);
+GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }
