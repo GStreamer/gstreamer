@@ -105,28 +105,6 @@ static void gst_audiofilter_class_init (gpointer g_class, gpointer class_data)
   gobject_class->get_property = gst_audiofilter_get_property;
 }
 
-static GstCaps *
-gst_audiofilter_getcaps (GstPad *pad)
-{
-  GstAudiofilter *audiofilter;
-  GstCaps *othercaps;
-  GstAudiofilterClass *audiofilter_class;
-
-  GST_DEBUG("gst_audiofilter_sink_getcaps");
-  audiofilter = GST_AUDIOFILTER (gst_pad_get_parent (pad));
-
-  audiofilter_class = GST_AUDIOFILTER_CLASS (
-      G_OBJECT_GET_CLASS (audiofilter));
-  
-  if (pad == audiofilter->srcpad) {
-    othercaps = gst_pad_get_allowed_caps (audiofilter->sinkpad);
-  } else {
-    othercaps = gst_pad_get_allowed_caps (audiofilter->srcpad);
-  }
-
-  return gst_caps_intersect (othercaps, audiofilter_class->caps);
-}
-
 static GstPadLinkReturn
 gst_audiofilter_link (GstPad *pad, const GstCaps *caps)
 {
@@ -148,7 +126,9 @@ gst_audiofilter_link (GstPad *pad, const GstCaps *caps)
     link_ret = gst_pad_try_set_caps (audiofilter->srcpad, caps);
   }
 
-  if (link_ret != GST_PAD_LINK_OK) return link_ret;
+  if (GST_PAD_LINK_FAILED (link_ret)) {
+    return link_ret;
+  }
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -184,7 +164,7 @@ gst_audiofilter_init (GTypeInstance *instance, gpointer g_class)
   gst_element_add_pad(GST_ELEMENT(audiofilter),audiofilter->sinkpad);
   gst_pad_set_chain_function(audiofilter->sinkpad,gst_audiofilter_chain);
   gst_pad_set_link_function(audiofilter->sinkpad,gst_audiofilter_link);
-  gst_pad_set_getcaps_function(audiofilter->sinkpad,gst_audiofilter_getcaps);
+  gst_pad_set_getcaps_function(audiofilter->sinkpad,gst_pad_proxy_getcaps);
 
   pad_template = gst_element_class_get_pad_template(GST_ELEMENT_CLASS(g_class),
       "src");
@@ -192,7 +172,7 @@ gst_audiofilter_init (GTypeInstance *instance, gpointer g_class)
   audiofilter->srcpad = gst_pad_new_from_template(pad_template, "src");
   gst_element_add_pad(GST_ELEMENT(audiofilter),audiofilter->srcpad);
   gst_pad_set_link_function(audiofilter->srcpad,gst_audiofilter_link);
-  gst_pad_set_getcaps_function(audiofilter->srcpad,gst_audiofilter_getcaps);
+  gst_pad_set_getcaps_function(audiofilter->srcpad,gst_pad_proxy_getcaps);
 
   audiofilter->inited = FALSE;
 }

@@ -117,22 +117,27 @@ volume_connect (GstPad *pad, const GstCaps *caps)
   GstVolume *filter;
   GstPad *otherpad;
   gint rate;
-  GstPadLinkReturn set_retval;
+  GstPadLinkReturn link_ret;
   GstStructure *structure;
   
   filter = GST_VOLUME (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_IS_VOLUME (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
+
   structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "rate", &rate);
   
+  link_ret = gst_pad_try_set_caps (otherpad, caps);
+  if (GST_PAD_LINK_FAILED (link_ret)){
+    return link_ret;
+  }
+
   if (!volume_parse_caps (filter, structure))
     return GST_PAD_LINK_REFUSED;
 
-  if ((set_retval = gst_pad_try_set_caps(otherpad, caps)) > 0)
-    if (gst_structure_get_int  (structure, "rate", &rate)){
-      gst_dpman_set_rate(filter->dpman, rate);
-    }
-  return set_retval;
+  gst_dpman_set_rate(filter->dpman, rate);
+  
+  return GST_PAD_LINK_OK;
 }
 
 static gboolean
