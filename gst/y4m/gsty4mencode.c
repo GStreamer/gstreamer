@@ -148,21 +148,19 @@ gst_y4mencode_sinkconnect (GstPad * pad, const GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "width", &filter->width);
-  gst_structure_get_int (structure, "height", &filter->height);
-  gst_structure_get_double (structure, "framerate", &fps);
+  if (!gst_structure_get_int (structure, "width", &filter->width) ||
+      !gst_structure_get_int (structure, "height", &filter->height) ||
+      !gst_structure_get_double (structure, "framerate", &fps))
+    return GST_PAD_LINK_REFUSED;
 
   /* find fps idx */
+  idx = 0;
   for (i = 1; i < 9; i++) {
-    if (idx == -1) {
-      idx = i;
-    } else {
-      gdouble old_diff = fabs (framerates[idx] - fps),
-          new_diff = fabs (framerates[i] - fps);
+    gdouble old_diff = fabs (framerates[idx] - fps),
+        new_diff = fabs (framerates[i] - fps);
 
-      if (new_diff < old_diff) {
-        idx = i;
-      }
+    if (new_diff < old_diff) {
+      idx = i;
     }
   }
   filter->fps_idx = idx;
@@ -209,7 +207,7 @@ gst_y4mencode_chain (GstPad * pad, GstData * _data)
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (buf) + 256);
 
   if (filter->init) {
-    header = "YUV4MPEG %d %d %d\nFRAME\n";
+    header = "YUV4MPEG W%d H%d I? %d\nFRAME\n";
     filter->init = FALSE;
   } else {
     header = "FRAME\n";
