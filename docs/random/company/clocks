@@ -1,0 +1,93 @@
+TIME
+In this document, the word "time" is not meant to represent a representation of
+time that is close to reality. Though that is the idea in most cases, it is not
+the focus. Time in this document is meant to represent time inside a stream that
+is played back by GStreamer. There might be reasons to represent time in non-
+realtime, for example when the processor is too slow to allow for video playback
+in realtime, the clock might not update fast enough. Or one might want to use
+a clock that purposefully increases/reduces the speed of time.
+Time in this document is not meant to be linear either. Whereas elements can set
+time freely by seeking, clocks should do their best to supply linear time. It is
+not a requirement however, there might for example be slight inconsistencies 
+when audio clocks have buffer over/underruns.
+
+TIME IN A CLOCK
+The job of a clock is to report the time as exactly as possible that has elapsed
+in the stream since the stream was started.
+A Clock does never seek, so if someone seeks the stream back to the beginning, 
+the clock will still represent the time since a start.
+The state of the clock is managed by all elements using its time as a state of a
+bin is changed according to its children. A clock will try to synchronize its 
+state with its provider. (FIXME: or with all its children like a bin? FIXME: 
+What to do in the case of a providerless clock like _a_ systemclock (we might 
+use multiple systemclocks)? Attach to one element that uses it and reattach if 
+element is removed? FIXME: What do we do when a provider is removed from a 
+scheduler? Sounds like a good time to get a new clock to take over. FIXME: 
+Write a test that does exactly this in Gst-Player when changing the GConf Key.)
+- NULL / READY
+  Nobody cares about time reported by the clock.
+- PLAYING
+  Clock is supposed to present the time elapsed since it was started.
+- PAUSED
+  The clock has to remember the time it was stopped and resume with that time
+  when it restarts playing.
+
+TIME IN AN ELEMENT
+An element only can request time information if it uses a clock. The element can
+query functions that give information about the elements time. Time information
+for the element is always in relation to the timestamps the element expects on 
+its buffers.
+Example: XVideosink will output a new frame, when xvideosinks time matches the 
+         timestamps of the buffer.
+The elements time is in no relation to the time of its clock because of seeks.
+If an element seeks, it adjusts its time by the difference the seek has
+introduced.
+Example: Playback of a song with duration 1000 that is looping. Clock and 
+         element start at time offset 0, when the element is first set to 
+         PLAYING. After the first loop, the elements time is (by request of that
+         element) reset to 0. The clock's time stays at 1000.
+Note: If an element goes into the PAUSED state the elements time will continue
+      running. (FIXME: possibility to change that needed? Why would you want to
+      pause an element that should be synced while the others continue running?
+      FIXME: What happens if a clock provider and therefore the clock are 
+      already at EOS while other elements are still playing? I'd vote for make
+      all other elements go as fast as possible. FIXME: Ask some video people if
+      that sounds reasonable or if we gotta force the clock to go on, which
+      would make it difficult to detect the difference between EOS and pause.
+      
+PROVIDERS
+Providers are elements that can provide timing information and therefore provide
+a clock to other elements. These elements have to update the clock, when it is
+used. When a clock is used (state != NULL - FIXME: or other states?), the 
+provider is guaranteed to use this clock. (FIXME: necessary?). The element is
+however required to synchronize to the clock it was assigned to, wether it is
+its own clock or not.
+
+SYNC POINTS
+FIXME: Is it necessary to have sync points? This would allow to supply a fixed
+time between sync point "SOURCE" and "SINK" so one could buffer the time
+inbetween. Or is there another solution for this problem? It's possibly easier
+to use an element that does TIMESTAMP = TIMESTAMP - x inside the pipeline and 
+drops every buffer before.
+
+FUNCTIONS
+FIXME: Use GstTime(Diff) instead of GstClockTime(Diff) ?
+
+GstClockTime	gst_clock_get_time	(GstClock *clock);
+GstElementState	gst_clock_get_state 	(GstClock *clock); /* setting works internally */
+GstClockReturn	gst_clock_wait		(GstClock *clock, GstClockTime until, GstClockTimeDiff *jitter);
+
+GST_FLAG	GST_ELEMENT_NEEDS_CLOCK; /* wether we want a clock or not */
+GstClockTime	gst_element_get_time	(GstElement *element);
+void		gst_element_(clock_)seek (GstElement *element, GstClockTimeDiff diff);
+GstClock *	gst_element_get_clock	(GstElement *element);
+GstClockReturn	gst_element_(clock_)wait (GstElement *element, GstClockTime until, GstClockTimeDiff *jitter);
+
+possible extensions:
+GstClockTime	gst_clock_get_resolution (GstClock *clock); /* sounds interesting */
+void		gst_clock_wait_async	(GstClock *clock, GFunc callback, gpointer data); /* useless IMO */
+void		gst_clock_unlock	(GstClock *clock); /* dunno what for */
+void		gst_clock_set_state	(GstClock *clock, GstElementState state); /* might be needed, but screw up alot */
+
+Hm, this looks to easy when you only need an API of 8 functions. But it's quite
+a bit of internal hacking because of the state changes.
