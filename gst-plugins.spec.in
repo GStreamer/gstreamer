@@ -77,7 +77,6 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MAD_TRUE@Requires: gstreamer = %{ver}
 @USE_MAD_TRUE@Requires: gstreamer-plugin-libs = %{ver}
 @USE_MAD_TRUE@Requires: mad >= 0.13.0
-@USE_MAD_TRUE@Requires: gstreamer-plugin-libs = %{ver}
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%description -n gstreamer-mad
 @USE_MAD_TRUE@Plugin for playback of mp3 songs using the very good MAD library
