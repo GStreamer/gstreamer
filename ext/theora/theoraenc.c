@@ -60,6 +60,7 @@ struct _GstTheoraEnc
   gint width, height;
 
   guint packetno;
+  guint64 bytes_out;
 };
 
 struct _GstTheoraEncClass
@@ -218,21 +219,76 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-static void
-theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
+/* prepare a buffer for transmission by passing data through libtheora */
+static GstBuffer *
+theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet)
 {
   GstBuffer *buf;
 
   buf = gst_pad_alloc_buffer (enc->srcpad,
       GST_BUFFER_OFFSET_NONE, packet->bytes);
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
+  GST_BUFFER_OFFSET (buf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
   GST_BUFFER_TIMESTAMP (buf) =
       theora_granule_time (&enc->state, packet->granulepos) * GST_SECOND;
-  if (GST_PAD_IS_USABLE (enc->srcpad))
-    gst_pad_push (enc->srcpad, GST_DATA (buf));
 
   enc->packetno++;
+
+  return buf;
+}
+
+/* push out the buffer and do internal bookkeeping */
+static void
+theora_push_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
+{
+  enc->bytes_out += GST_BUFFER_SIZE (buffer);
+
+  if (GST_PAD_IS_USABLE (enc->srcpad)) {
+    gst_pad_push (enc->srcpad, GST_DATA (buffer));
+  } else {
+    gst_buffer_unref (buffer);
+  }
+}
+
+static void
+theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
+{
+  GstBuffer *buf;
+
+  buf = theora_buffer_from_packet (enc, packet);
+  theora_push_buffer (enc, buf);
+}
+
+static void
+theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
+    GstBuffer * buf2, GstBuffer * buf3)
+{
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GValue list = { 0 };
+  GValue value = { 0 };
+
+  /* mark buffers */
+  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_IN_CAPS);
+
+  /* put buffers in a fixed list */
+  g_value_init (&list, GST_TYPE_FIXED_LIST);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_set_boxed (&value, buf1);
+  gst_value_list_append_value (&list, &value);
+  g_value_unset (&value);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_set_boxed (&value, buf2);
+  gst_value_list_append_value (&list, &value);
+  g_value_unset (&value);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_set_boxed (&value, buf3);
+  gst_value_list_append_value (&list, &value);
+  gst_structure_set_value (structure, "streamheader", &list);
+  g_value_unset (&value);
+  g_value_unset (&list);
 }
 
 static void
@@ -255,10 +311,38 @@ theora_enc_chain (GstPad * pad, GstData * data)
   }
 
   /* no packets written yet, setup headers */
+  /* Theora streams begin with three headers; the initial header (with
+     most of the codec setup parameters) which is mandated by the Ogg
+     bitstream spec.  The second header holds any comment fields.  The
+     third header holds the bitstream codebook.  We merely need to
+     make the headers, then pass them to libtheora one at a time;
+     libtheora handles the additional Ogg bitstream constraints */
+
   if (enc->packetno == 0) {
     GstCaps *caps;
+    GstBuffer *buf1, *buf2, *buf3;
 
+
+    /* first packet will get its own page automatically */
+    theora_encode_header (&enc->state, &op);
+    buf1 = theora_buffer_from_packet (enc, &op);
+
+    /* create the remaining theora headers */
+    theora_comment_init (&enc->comment);
+    theora_encode_comment (&enc->comment, &op);
+    buf2 = theora_buffer_from_packet (enc, &op);
+    theora_encode_tables (&enc->state, &op);
+    buf3 = theora_buffer_from_packet (enc, &op);
+
+    /* create caps */
     caps = gst_caps_new_simple ("video/x-theora", NULL);
+
+    /* mark buffers and put on caps */
+    caps = gst_pad_get_caps (enc->srcpad);
+    theora_set_header_on_caps (caps, buf1, buf2, buf3);
+
+    /* negotiate with these caps */
+    GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     if (!gst_pad_set_explicit_caps (enc->srcpad, caps)) {
       gst_caps_free (caps);
       gst_data_unref (data);
@@ -266,16 +350,10 @@ theora_enc_chain (GstPad * pad, GstData * data)
     }
     gst_caps_free (caps);
 
-    /* first packet will get its own page automatically */
-    theora_encode_header (&enc->state, &op);
-    theora_push_packet (enc, &op);
-
-    /* create the remaining theora headers */
-    theora_comment_init (&enc->comment);
-    theora_encode_comment (&enc->comment, &op);
-    theora_push_packet (enc, &op);
-    theora_encode_tables (&enc->state, &op);
-    theora_push_packet (enc, &op);
+    /* push out the header buffers */
+    theora_push_buffer (enc, buf1);
+    theora_push_buffer (enc, buf2);
+    theora_push_buffer (enc, buf3);
   }
 
   {
