@@ -16,7 +16,8 @@ gboolean done = FALSE;
 static void
 construct_pipeline (GstElement *pipeline, gint identities)
 {
-  GstElement *src, *sink, *identity;
+  GstElement *src, *sink;
+  GstElement *identity = NULL;
   GstElement *from;
   int i;
 
@@ -49,7 +50,7 @@ thread (void)
   int i;
   GstElement *pipeline;
 
-  for (i = 50; i < runs; ++i)
+  for (i = 30; i < runs; ++i)
   {
     pipeline = gst_pipeline_new ("main_pipeline");
     g_assert (pipeline);

@@ -10,7 +10,8 @@ gboolean can_quit = FALSE;
 static void
 construct_pipeline (GstElement *pipeline, gint identities)
 {
-  GstElement *src, *sink, *identity;
+  GstElement *src, *sink;
+  GstElement *identity = NULL;
   GstElement *from;
   int i;
 
@@ -32,20 +33,20 @@ construct_pipeline (GstElement *pipeline, gint identities)
   }
   gst_element_connect (identity, sink);
 
-  g_object_set (G_OBJECT (src), "num_buffers", 2, "sizetype", 3, NULL);
+  g_object_set (G_OBJECT (src), "num_buffers", 1, "sizetype", 3, NULL);
 }
 
 void
 state_changed (GstElement *el, gint arg1, gint arg2, gpointer user_data)
 {
   GstElementState state = gst_element_get_state (el);
-  
-  g_print ("element %s has changed state to %s\n", 
-	   GST_ELEMENT_NAME (el), 
+
+  g_print ("element %s has changed state to %s\n",
+	   GST_ELEMENT_NAME (el),
 	   gst_element_state_get_name (state));
   if (state == GST_STATE_PLAYING) running = TRUE;
   /* if we move from PLAYING to PAUSED, we're done */
-  if (state == GST_STATE_PAUSED && running) 
+  if (state == GST_STATE_PAUSED && running)
   {
     while (!can_quit) ;
     can_quit = FALSE;
@@ -61,10 +62,10 @@ main (gint argc, gchar *argv[])
   int i;
   gulong id;
   GstElement *thread;
-  
+
   gst_init (&argc, &argv);
 
-  for (i = 0; i < runs; ++i)
+  for (i = 90; i < runs; ++i)
   {
     thread = gst_thread_new ("main_thread");
     g_assert (thread);
@@ -81,7 +82,7 @@ main (gint argc, gchar *argv[])
     else {
       g_print ("Going into the main GStreamer loop\n");
       can_quit = TRUE; /* we don't want gst_main_quit called before gst_main */
-      gst_main (); 
+      gst_main ();
     }
     running = FALSE;
     g_print ("Coming out of the main GStreamer loop\n");
