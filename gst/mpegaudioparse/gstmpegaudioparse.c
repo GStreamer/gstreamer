@@ -95,7 +95,7 @@ static GstElementClass *parent_class = NULL;
 //static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 };
 
 GType
-mp3parse_get_type(void) {
+gst_mp3parse_get_type(void) {
   static GType mp3parse_type = 0;
 
   if (!mp3parse_type) {

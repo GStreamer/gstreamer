@@ -1097,6 +1097,7 @@ ext/audiofile/Makefile
 ext/esd/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
+ext/mpeg2dec/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile
