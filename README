@@ -94,7 +94,6 @@ the last passed options as a handy shortcut.  Use it.
 After the autogen.sh stage, you can follow the directions listed in
 "COMPILING FROM SOURCE"
 
-
 PLUG-IN DEPENDENCIES AND LICENSES
 ---------------------------------
 GStreamer is developed under the terms of the LGPL (see LICENSE file for 

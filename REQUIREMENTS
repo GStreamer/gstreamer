@@ -11,8 +11,9 @@ Required tools:
 An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):
 
-autoconf 2.52 or better
+autoconf 2.52 or better 
 automake 1.5
+gettext 0.11.5
 libtool v1.4 or better
 pkgconfig 0.9.0 or better (http://www.freedesktop.org/software/pkgconfig/)
 
