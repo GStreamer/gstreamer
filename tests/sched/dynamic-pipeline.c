@@ -2,7 +2,7 @@
 
 /* This test will fail because it tries to allocate two cothread_context's in
  * one thread. This will cause a segfault. This is a problem with gstreamer's
- * cothreading that will be fixed in the future.
+ * cothreading that is fixed in the newer cothreads package.
  */
 
 int main (int argc, char *argv[]) 
@@ -19,7 +19,11 @@ int main (int argc, char *argv[])
     fakesrc = gst_element_factory_make("fakesrc", "fakesrc");
     fakesink1 = gst_element_factory_make("fakesink", "fakesink1");
     fakesink2 = gst_element_factory_make("fakesink", "fakesink2");
+
+    /* a crucial part of this test (and one that the old cothreads fails on) is
+       having two active pipelines in the same thread. */
     pipe1 = gst_pipeline_new("pipe1");
+    pipe2 = gst_pipeline_new("pipe2");
     
     /* make the first pipeline */
     gst_bin_add (GST_BIN(pipe1), fakesrc);
@@ -39,7 +43,6 @@ int main (int argc, char *argv[])
 
     gst_object_unref (GST_OBJECT (pipe1));
     
-    pipe2 = gst_pipeline_new("pipe2");
     /* make a new pipeline */
     gst_bin_add (GST_BIN(pipe2), fakesink2);
     
