@@ -141,15 +141,12 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
-%{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstautoplugger*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
