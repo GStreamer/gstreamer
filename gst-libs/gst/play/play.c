@@ -235,7 +235,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     }
     g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
     gst_bin_add_many (GST_BIN (output_bin), identity, identity_cs, NULL);
-    if (!gst_element_link_many (autoplugger, identity, identity_cs, NULL))
+    if (!gst_element_link (identity, identity_cs))
       GST_PLAY_ERROR_RETURN (error, "Could not link work thread elements");
     /* we ref the output bin so we can put it in and out the work_thread
      * whenever we want */
