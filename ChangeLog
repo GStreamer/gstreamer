@@ -1,3 +1,8 @@
+2004-01-14  Colin Walters  <walters@verbum.org>
+
+	* ext/mad/gstid3tag.c (gst_id3_tag_chain): Don't nego caps if
+	they've already been.
+
 2004-01-15  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_do_caps_nego):
