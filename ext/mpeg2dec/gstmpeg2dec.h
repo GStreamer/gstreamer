@@ -41,6 +41,8 @@ G_BEGIN_DECLS
 #define MPEG_TIME_TO_GST_TIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
 #define GST_TIME_TO_MPEG_TIME(time) (((time) * 9LL) / (GST_MSECOND/10))
 
+#define GST_MPEG2DEC_NUM_BUFS 3
+
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
@@ -71,6 +73,8 @@ struct _GstMpeg2dec {
   gboolean	 closed;
   gboolean	 have_fbuf;
 
+  GstBuffer  *buffers[GST_MPEG2DEC_NUM_BUFS];
+
   DiscontState	 discont_state;
 
   /* the timestamp of the next frame */
@@ -89,6 +93,8 @@ struct _GstMpeg2dec {
   gint		 frame_rate_code;
   gint64	 total_frames;
   gint64	 frame_period;
+  
+  guint64  offset;
   gdouble	 frame_rate;
   gboolean	 need_sequence;
 
