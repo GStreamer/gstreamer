@@ -7,6 +7,8 @@ API:
  - events should all use GstStructure
 
  - reorganize headers (split app headers vs plugin headers maybe)
+   while at it also make sure to only allow including of the main headers like
+   glib, so we can freely shuffle stuff around
 
  - make GstPadLinkReturn internal (to either plugins+core or just core)
    and return gboolean to apps.
