@@ -103,8 +103,8 @@ read_config ($0);
 %pipes = ( 
   "ac3", "a52dec ! $cfg{AUDIOSINK}",
   "au", "auparse ! $cfg{AUDIOSINK}",
-  "avi", "decodebin name=demux ! { demux.video_00 ! queue ! ! ffmpegcolorspace !  $cfg{VIDEOSINK} } { demux.audio_00 ! queue ! ! $cfg{AUDIOSINK} }",
-  "asf", "decodebin name=demux ! { demux.video_00 ! queue ! ffmpegcolorspace ! $cfg{VIDEOSINK} } { demux.audio_00 ! queue ! audioconvert ! audioscale ! $cfg{AUDIOSINK} }",
+  "avi", "decodebin name=d ! { d. ! queue ! ffmpegcolorspace !  $cfg{VIDEOSINK} } { d. ! queue ! ! $cfg{AUDIOSINK} }",
+  "asf", "decodebin name=d ! { d. ! queue ! ffmpegcolorspace ! $cfg{VIDEOSINK} } { d. ! queue ! audioconvert ! audioscale ! $cfg{AUDIOSINK} }",
   "flac", "flacdec ! $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "m1v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
