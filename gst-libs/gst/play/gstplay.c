@@ -108,11 +108,14 @@ gst_play_pipeline_setup (GstPlay *play)
   g_hash_table_insert (play->priv->elements, "video_queue", video_queue);
   
   /* Colorspace conversion */
-  /* FIXME: Use ffcolorspace and fallback to Hermes on failure ?*/
-  video_colorspace = gst_element_factory_make ("colorspace",
+  video_colorspace = gst_element_factory_make ("ffcolorspace",
                                                "video_colorspace");
-  if (!GST_IS_ELEMENT (video_colorspace))
-    return FALSE;
+  if (!GST_IS_ELEMENT (video_colorspace)) {
+    video_colorspace = gst_element_factory_make ("colorspace",
+                                                 "video_colorspace");
+    if (!GST_IS_ELEMENT (video_colorspace))
+      return FALSE;
+  }
   
   g_hash_table_insert (play->priv->elements, "video_colorspace",
                        video_colorspace);
@@ -147,7 +150,7 @@ gst_play_pipeline_setup (GstPlay *play)
   
   g_hash_table_insert (play->priv->elements, "video_switch", video_switch);
   
-  gst_bin_add (GST_BIN (work_thread), video_switch);
+  /*gst_bin_add (GST_BIN (work_thread), video_switch);*/
   
   /* Connecting autoplugger to video switch and video switch to video output 
   gst_element_link (autoplugger, video_switch);
