@@ -63,6 +63,10 @@ gst_probe_destroy (GstProbe *probe)
 {
   g_return_if_fail (probe);
 
+#ifdef USE_POISONING
+  memset(probe, 0xff, sizeof(*probe));
+#endif
+
   g_free (probe);
 }
 
@@ -119,6 +123,10 @@ gst_probe_dispatcher_destroy (GstProbeDispatcher *disp)
 {
   g_return_if_fail (disp);
   
+#ifdef USE_POISONING
+  memset(disp, 0xff, sizeof(*disp));
+#endif
+
   /* FIXME, free pending probes */
   g_free (disp);
 }

@@ -837,6 +837,9 @@ gst_props_entry_clean (GstPropsEntry *entry)
 static inline void
 gst_props_entry_free (GstPropsEntry *entry)
 {
+#ifdef USE_POISONING
+  memset (entry, 0xff, sizeof(*entry));
+#endif
   gst_mem_chunk_free (_gst_props_entries_chunk, entry);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_entries_trace, entry);
@@ -1416,6 +1419,9 @@ gst_props_destroy (GstProps *props)
   g_list_foreach (props->properties, (GFunc) gst_props_entry_destroy, NULL);
   g_list_free (props->properties);
 
+#ifdef USE_POISONING
+  memset(props, 0xff, sizeof(*props));
+#endif
   gst_mem_chunk_free (_gst_props_chunk, props);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_props_trace, props);

@@ -349,6 +349,10 @@ gst_caps_destroy (GstCaps *caps)
   gst_props_unref (caps->properties);
   g_free (caps->name);
 
+#ifdef USE_POISONING
+  memset(caps, 0xff, sizeof(*caps));
+#endif
+
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_caps_trace, caps);
 #endif
