@@ -3,7 +3,7 @@
 # FIXME FIXME
 
 LIBADD += $(GNOME_LIBS) $(GST_LIBS)
-CFLAGS += $(GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
+CFLAGS += $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
 
 bin_PROGRAMS = gstmediaplay 
 
