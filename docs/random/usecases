@@ -1,0 +1,44 @@
+Use cases for audio applications
+--------------------------------
+
+ANALYSIS
+========
+
+* find start and end  -x dB boundary
+
+* find overall volume for complete track (peak/RMS/average)
+
+* do level-triggered playback
+
+CUE FILES
+=========
+
+Given a long audio file and a .cue file:
+- an element should be able to read an audio input stream and a cue input
+  stream and send new-media events based on the .cue file information
+- a audiocdsink should be able to record this stream straight to disk
+
+Use cases for core functionality
+--------------------------------
+
+THREADS
+=======
+
+* { sinesrc } ! { queue ! osssink }
+  - play thread
+  - pause input thread
+  - output thread should keep playing as long as queue not empty
+  - play input thread again
+  - no gaps should be heard
+
+Use cases for video applications
+--------------------------------
+
+THUMBNAILING
+============
+- load file
+- figure out if it's playable
+- ask length of file
+- seek to middle
+- snapshot one frame
+- save to disk
