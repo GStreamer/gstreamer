@@ -122,8 +122,11 @@ print_element_info (GstElementFactory *factory)
         printf("    Availability: Always\n");
       else if (padtemplate->presence == GST_PAD_SOMETIMES)
         printf("    Availability: Sometimes\n");
-      else if (padtemplate->presence == GST_PAD_REQUEST)
+      else if (padtemplate->presence == GST_PAD_REQUEST) {
         printf("    Availability: On request\n");
+        printf("      Has request_new_pad() function: %s\n",
+             GST_DEBUG_FUNCPTR_NAME(gstelement_class->request_new_pad));
+      }
       else
         printf("    Availability: UNKNOWN!!!\n");
 
