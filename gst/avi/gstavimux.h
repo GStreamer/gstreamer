@@ -60,8 +60,7 @@ struct _GstAviMux {
   gint num_video_pads;
 
   /* timestamps of first and current frame + num_frames for fps calculation */
-  guint64 first_timestamp;
-  guint64 current_timestamp;
+  gdouble framerate;
 
   /* the AVI header */
   gst_riff_avih avi_hdr;

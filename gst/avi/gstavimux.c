@@ -62,6 +62,7 @@ enum {
 enum {
   ARG_0,
   ARG_BIGFILE,
+  ARG_FRAMERATE,
 };
 
 GST_PADTEMPLATE_FACTORY (src_factory,
@@ -220,6 +221,10 @@ gst_avimux_class_init (GstAviMuxClass *klass)
     g_param_spec_boolean("bigfile","Bigfile Support","Whether to capture large or small AVI files",
     0,G_PARAM_READWRITE));
 
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FRAMERATE,
+    g_param_spec_double("framerate","Framerate","Frames/sec",
+    G_MINDOUBLE,G_MAXDOUBLE,0,G_PARAM_READWRITE));
+
   gstelement_class->request_new_pad = gst_avimux_request_new_pad;
 
   gstelement_class->change_state = gst_avimux_change_state;
@@ -263,6 +268,8 @@ gst_avimux_init (GstAviMux *avimux)
   avimux->write_header = TRUE;
 
   avimux->enable_large_avi = TRUE;
+
+  avimux->framerate = 25.;
 }
 
 static GstPadConnectReturn
@@ -824,7 +831,6 @@ gst_avimux_stop_file (GstAviMux *avimux)
 {
   GstEvent *event;
   GstBuffer *header;
-  gfloat fps = 25.0;
 
   /* if bigfile, rewrite header, else write indexes */
   if (avimux->num_video_pads)
@@ -848,12 +854,12 @@ gst_avimux_stop_file (GstAviMux *avimux)
     avimux->auds_hdr.length = avimux->audio_size/avimux->auds_hdr.scale;
 
   /* TODO: fps calculation!! */
-  avimux->avi_hdr.us_frame = 1000000/fps;
+  avimux->avi_hdr.us_frame = 1000000/avimux->framerate;
   avimux->avi_hdr.max_bps = 0;
   if (avimux->num_audio_pads)
     avimux->avi_hdr.max_bps += avimux->auds.av_bps;
   if (avimux->num_video_pads)
-    avimux->avi_hdr.max_bps += avimux->vids.bit_cnt/8 * fps;
+    avimux->avi_hdr.max_bps += avimux->vids.bit_cnt/8 * avimux->framerate;
 
   /* seek and rewrite the header */
   header = gst_avimux_riff_get_avi_header(avimux);
@@ -925,7 +931,6 @@ gst_avimux_chain (GstPad *pad, GstBuffer *buf)
 
   if (strncmp(padname, "audio_", 6) == 0)
   {
-printf("AUDIODATA GIVEN\n");
     /* write a audio header + index entry */
     newbuf = gst_avimux_riff_get_audio_header(GST_BUFFER_SIZE(buf));
     avimux->total_data += GST_BUFFER_SIZE(newbuf) + GST_BUFFER_SIZE(buf);
@@ -1004,6 +1009,9 @@ gst_avimux_get_property (GObject    *object,
     case ARG_BIGFILE:
       g_value_set_boolean(value, avimux->enable_large_avi);
       break;
+    case ARG_FRAMERATE:
+      g_value_set_double(value, avimux->framerate);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1026,6 +1034,9 @@ gst_avimux_set_property (GObject      *object,
   {
     case ARG_BIGFILE:
       avimux->enable_large_avi = g_value_get_boolean(value);
+      break;
+    case ARG_FRAMERATE:
+      avimux->framerate = g_value_get_double(value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
