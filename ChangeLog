@@ -1,3 +1,9 @@
+2005-02-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/faq/using.xml:
+	  Add -v argument to fakesrc/fakesink gst-launch line,
+	  so that the promised output will actually show up.
+
 2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstthread.c: (gst_thread_change_state):

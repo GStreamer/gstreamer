@@ -26,11 +26,11 @@ It's time to try out a few things.  Start with gst-launch and two plug-ins
 that you really should have : fakesrc and fakesink.  They do nothing except
 pass empty buffers. Type this at the command-line :
 <programlisting>
-$ gst-launch fakesrc num-buffers=3 ! fakesink
+$ gst-launch -v fakesrc num-buffers=3 ! fakesink
 </programlisting>
 This will print out output that looks similar to this :
 <programlisting>
-RUNNING pipeline
+RUNNING pipeline ...
 fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 0) 0x8057510"
 fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 0) 0x8057510"
 fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 1) 0x8057510"
