@@ -348,7 +348,8 @@ gst_alsa_class_probe_devices (GstAlsaClass *klass,
     for (num = 0; num < MAX_DEVICES; num++) {
       dev = g_strdup_printf ("hw:%d", num);
 
-      if (!(res = snd_pcm_open (&pcm, dev, 0, 0))) {
+      if (!(res = snd_pcm_open (&pcm, dev, 0, SND_PCM_NONBLOCK)) ||
+          res == -EBUSY) {
         klass->devices = g_list_append (klass->devices, dev);
 
         snd_pcm_close (pcm);

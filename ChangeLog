@@ -1,3 +1,9 @@
+2004-03-13  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_class_probe_devices):
+	* sys/oss/gstosselement.c: (gst_osselement_class_probe_devices):
+	  Don't block during probing...
+
 2004-03-12  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_get_type), (gst_alsa_class_init),
