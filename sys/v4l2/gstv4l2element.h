@@ -51,6 +51,8 @@
 		(G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_V4L2ELEMENT))
 #define GST_IS_V4L2ELEMENT_CLASS(obj) \
 		(G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_V4L2ELEMENT))
+#define GST_V4L2ELEMENT_GET_CLASS(obj) \
+		(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
 
 
 typedef	struct _GstV4l2Element		GstV4l2Element;
@@ -86,6 +88,9 @@ struct _GstV4l2Element {
 
 struct _GstV4l2ElementClass {
 	GstElementClass parent_class;
+
+	/* probed devices */
+	GList *devices;
 
 	/* signals */
 	void     (*open)            (GstElement  *element,

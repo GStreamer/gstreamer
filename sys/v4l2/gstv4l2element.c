@@ -21,10 +21,17 @@
 #include <config.h>
 #endif
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+
 #include "v4l2_calls.h"
 #include "gstv4l2tuner.h"
 #include "gstv4l2xoverlay.h"
 #include "gstv4l2colorbalance.h"
+
+#include <gst/propertyprobe/propertyprobe.h>
 
 /* elementfactory details */
 static GstElementDetails gst_v4l2element_details = {
@@ -99,6 +106,163 @@ gst_v4l2_interface_init (GstInterfaceClass *klass)
 }
 
 
+static const GList *
+gst_v4l2_probe_get_properties (GstPropertyProbe *probe)
+{
+	GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+	static GList *list = NULL;
+
+	if (!list) {
+		list = g_list_append (NULL,
+				g_object_class_find_property (klass, "device"));
+	}
+
+	return list;
+}
+
+static gboolean
+gst_v4l2_class_probe_devices (GstV4l2ElementClass *klass,
+			      gboolean             check)
+{
+	static gboolean init = FALSE;
+
+	if (!init && !check) {
+		gchar *dev_base[] = { "/dev/video", "/dev/v4l/video", NULL };
+		gint base, n, fd;
+
+		while (klass->devices) {
+			GList *item = klass->devices;
+			gchar *device = item->data;
+
+			klass->devices = g_list_remove (klass->devices, item);
+			g_free (device);
+		}
+
+		/* detect /dev entries */
+		for (n = 0; n < 64; n++) {
+			for (base = 0; dev_base[base] != NULL; base++) {
+				struct stat s;
+				gchar *device = g_strdup_printf ("%s%d",
+							dev_base[base], n);
+
+				/* does the /dev/ entry exist at all? */
+				if (stat (device, &s) == 0) {
+					/* yes: is a device attached? */
+					if ((fd = open (device, O_RDONLY)) > 0 ||
+					    errno == EBUSY) {
+						if (fd > 0)
+							close (fd);
+
+						klass->devices =
+							g_list_append (klass->devices,
+								       device);
+						break;
+					}
+				}
+				g_free (device);
+			}
+		}
+
+		init = TRUE;
+	}
+
+	return init;
+}
+
+static void
+gst_v4l2_probe_probe_property (GstPropertyProbe *probe,
+			       guint             prop_id,
+			       const GParamSpec *pspec)
+{
+	GstV4l2ElementClass *klass = GST_V4L2ELEMENT_GET_CLASS (probe);
+
+	switch (prop_id) {
+		case ARG_DEVICE:
+			gst_v4l2_class_probe_devices (klass, FALSE);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+			break;
+	}
+}
+
+static gboolean
+gst_v4l2_probe_needs_probe (GstPropertyProbe *probe,
+			    guint             prop_id,
+			    const GParamSpec *pspec)
+{
+	GstV4l2ElementClass *klass = GST_V4L2ELEMENT_GET_CLASS (probe);
+	gboolean ret = FALSE;
+
+	switch (prop_id) {
+		case ARG_DEVICE:
+			ret = !gst_v4l2_class_probe_devices (klass, TRUE);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+			break;
+	}
+
+	return ret;
+}
+
+static GValueArray *
+gst_v4l2_class_list_devices (GstV4l2ElementClass *klass)
+{
+	GValueArray *array;
+	GValue value = { 0 };
+	GList *item;
+
+	if (!klass->devices)
+		return NULL;
+
+	array = g_value_array_new (g_list_length (klass->devices));
+	item = klass->devices;
+	g_value_init (&value, G_TYPE_STRING);
+	while (item) {
+		gchar *device = item->data;
+
+		g_value_set_string (&value, device);
+		g_value_array_append (array, &value);
+
+		item = item->next;
+	}
+	g_value_unset (&value);
+
+	return array;
+}
+
+static GValueArray *
+gst_v4l2_probe_get_values (GstPropertyProbe *probe,
+			   guint             prop_id,
+			   const GParamSpec *pspec)
+{
+	GstV4l2ElementClass *klass = GST_V4L2ELEMENT_GET_CLASS (probe);
+	GValueArray *array = NULL;
+
+	switch (prop_id) {
+		case ARG_DEVICE:
+			array = gst_v4l2_class_list_devices (klass);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+			break;
+	}
+
+	return array;
+}
+
+
+static void
+gst_v4l2_property_probe_interface_init (GstPropertyProbeInterface *iface)
+{
+	iface->get_properties = gst_v4l2_probe_get_properties;
+	iface->probe_property = gst_v4l2_probe_probe_property;
+	iface->needs_probe    = gst_v4l2_probe_needs_probe;
+	iface->get_values     = gst_v4l2_probe_get_values;
+}
+
+
 GType
 gst_v4l2element_get_type (void)
 {
@@ -137,6 +301,11 @@ gst_v4l2element_get_type (void)
 			NULL,
 			NULL,
 		};
+		static const GInterfaceInfo v4l2_propertyprobe_info = {
+			(GInterfaceInitFunc) gst_v4l2_property_probe_interface_init,
+			NULL,
+			NULL,
+		};
 
 		v4l2element_type =
 			g_type_register_static(GST_TYPE_ELEMENT,
@@ -154,6 +323,9 @@ gst_v4l2element_get_type (void)
 		g_type_add_interface_static (v4l2element_type,
 					     GST_TYPE_COLOR_BALANCE,
 					     &v4l2_colorbalance_info);
+		g_type_add_interface_static (v4l2element_type,
+					     GST_TYPE_PROPERTY_PROBE,
+					     &v4l2_propertyprobe_info);
 	}
 
 	return v4l2element_type;
@@ -193,7 +365,9 @@ static void
 gst_v4l2element_base_init (GstV4l2ElementClass *klass)
 {
 	GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  
+
+	klass->devices = NULL;
+
 	gst_element_class_set_details (gstelement_class,
 				       &gst_v4l2element_details);
 }
