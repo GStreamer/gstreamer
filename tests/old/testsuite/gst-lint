@@ -38,6 +38,7 @@ sub check_debugging();
 sub check_old_typefind();
 sub check_bad_casts();
 sub check_old_plugin();
+sub check_signal_new();
 
 sub m_check_plugindir();
 
@@ -69,6 +70,7 @@ foreach $filename (<FIND>) {
 	check_old_typefind();
 	check_bad_casts();
 	check_old_plugin();
+	check_signal_new();
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -377,3 +379,23 @@ sub check_old_plugin()
 	}
 }
 
+#
+# Check for calls to g_signal_new() with a callback type of G_TYPE_POINTER
+#
+sub check_signal_new()
+{
+	my $n = 0;
+	my $lineno = 1;
+
+	foreach $line (@lines){
+		if($line =~ /g_signal_new/){
+			$n=5;
+		}
+		if($n>0 && $line =~ /G_TYPE_POINTER/){
+			print "W: ($lineno) g_signal_new() with callback type of G_TYPE_POINTER.  Register and use a boxed type instead.\n";
+			return;
+		}
+		$n--;
+		$lineno++;
+	}
+}
