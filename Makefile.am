@@ -20,7 +20,7 @@ SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools $(GCONF_DIR) testsuite
 
 DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf testsuite
 
-EXTRA_DIST=gst-plugins.spec depcomp \
+EXTRA_DIST=gst-plugins.spec depcomp gst-element-check.m4 \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
 	   AUTHORS COPYING README RELEASE \
 	   ChangeLog autogen.sh common m4
