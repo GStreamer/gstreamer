@@ -872,8 +872,8 @@ gst_plugin_load (const gchar * name)
 
   plugin = gst_registry_pool_find_plugin (name);
   if (plugin) {
-    gst_plugin_load_file (plugin->filename, &error);
-    if (error) {
+    plugin = gst_plugin_load_file (plugin->filename, &error);
+    if (!plugin) {
       GST_WARNING ("load_plugin error: %s\n", error->message);
       g_error_free (error);
       return FALSE;
@@ -892,7 +892,7 @@ gst_plugin_load (const gchar * name)
  * Load the named library.  Name should be given as
  * &quot;liblibrary.so&quot;. (exception to this rule is 'riff', which .so name is 'gstriff')
  *
- * Returns: whether the library was loaded or not (and return FALSE if it was already loaded)
+ * Returns: whether the library was loaded or not (and returns TRUE if it was already loaded)
  */
 gboolean
 gst_library_load (const gchar * name)

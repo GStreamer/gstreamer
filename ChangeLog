@@ -1,3 +1,9 @@
+2005-01-09  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* gst/gstplugin.c: (gst_plugin_load):
+	  Fix plugin loading if plugin/lib was already loaded. Fixes
+	  #163383
+
 2005-01-09  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
