@@ -42,6 +42,7 @@ AM_MAINTAINER_MODE
 
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_CXXCPP
 AC_ISC_POSIX
 AC_STDC_HEADERS
 AC_ARG_PROGRAM
@@ -432,6 +433,14 @@ dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
 
+dnl Check for arts
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(arts)
+dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
+AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
+AC_LANG_RESTORE
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -695,6 +704,7 @@ AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
+AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 
 
 
