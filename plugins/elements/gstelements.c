@@ -49,7 +49,7 @@ struct _elements_entry {
 };
 
 
-extern GtkType gst_filesrc_get_type(void);
+extern GType gst_filesrc_get_type(void);
 
 extern GstElementDetails *gst_filesrc_details;
 
