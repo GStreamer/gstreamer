@@ -1,5 +1,10 @@
 2004-07-02  David Schleef  <ds@schleef.org>
 
+	* ext/flac/gstflacdec.c: (gst_flacdec_write):  Set duration on
+	output buffers.  Fix logic mistake.  (bug #144866)
+
+2004-07-02  David Schleef  <ds@schleef.org>
+
 	* gst-libs/gst/xoverlay/Makefile.am: xoverlay no longer depends
 	on X.  (bug #144753)
 
