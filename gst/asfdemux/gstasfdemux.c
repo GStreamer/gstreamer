@@ -1107,8 +1107,9 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux,
 				 guint32      remaining)
 {
   GstEventType type;
+  gboolean ret = TRUE;
 
-  type = event? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
     case GST_EVENT_EOS: {
@@ -1122,6 +1123,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux,
       gst_event_unref (event);
       gst_bytestream_flush (asf_demux->bs, remaining);
       gst_element_set_eos (GST_ELEMENT (asf_demux));
+      ret = FALSE;
       break;
     }
     case GST_EVENT_DISCONTINUOUS:
@@ -1152,7 +1154,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux,
 
   gst_event_unref (event);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
