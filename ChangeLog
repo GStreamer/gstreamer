@@ -1,3 +1,10 @@
+2004-03-09  David Schleef  <ds@schleef.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_request_new_pad),
+	(gst_alsa_fixate): Add fixate function.  (bug #135719)
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_init):
+
 2004-03-09  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mikmod/gstmikmod.c: (gst_mikmod_init), (gst_mikmod_loop),

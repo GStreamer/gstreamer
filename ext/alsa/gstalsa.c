@@ -332,6 +332,7 @@ found_track:
 
   gst_pad_set_link_function (this->pad[track], gst_alsa_link);
   gst_pad_set_getcaps_function (this->pad[track], gst_alsa_get_caps);
+  gst_pad_set_fixate_function (this->pad[track], gst_alsa_fixate);
 
   gst_element_add_pad (GST_ELEMENT (this), this->pad[track]);
 
@@ -610,6 +611,33 @@ gst_alsa_get_caps (GstPad *pad)
     g_free (str);
     return ret;
   }
+}
+
+GstCaps *
+gst_alsa_fixate (GstPad *pad, const GstCaps *caps)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+
+  newcaps = gst_caps_new_full (gst_structure_copy(gst_caps_get_structure (caps, 0)), NULL);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+
+  return NULL;
 }
 
 /* Negotiates the caps */

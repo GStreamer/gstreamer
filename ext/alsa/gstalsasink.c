@@ -145,6 +145,7 @@ gst_alsa_sink_init (GstAlsaSink *sink)
   this->pad[0] = gst_pad_new_from_template (gst_alsa_sink_pad_factory (), "sink");
   gst_pad_set_link_function (this->pad[0], gst_alsa_link);
   gst_pad_set_getcaps_function (this->pad[0], gst_alsa_get_caps);
+  gst_pad_set_fixate_function (this->pad[0], gst_alsa_fixate);
   gst_element_add_pad (GST_ELEMENT (this), this->pad[0]);
   
   this->clock = gst_alsa_clock_new ("alsasinkclock", gst_alsa_sink_get_time, this);
