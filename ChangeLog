@@ -1,3 +1,9 @@
+2003-07-12  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * gst-plugins.spec.in: fix up spec file
+        * gst/debug/Makefile.am:
+          gst/realmedia/Makefile.am: use proper LD_FLAGS for plugins
+
 2003-02-14  Colin Walters  <walters@verbum.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c (unicodify,
