@@ -56,8 +56,6 @@ DISTFILES = \
 	ffmpeg/libavcodec/ppc/*.h \
 	ffmpeg/libavcodec/ps2/*.c \
 	ffmpeg/libavcodec/ps2/*.h \
-	ffmpeg/libavcodec/libpostproc/*.h \
-	ffmpeg/libavcodec/libpostproc/*.c \
 	ffmpeg/libavcodec/*.c \
 	ffmpeg/libavcodec/*.h \
 	ffmpeg/libavcodec/Makefile \
