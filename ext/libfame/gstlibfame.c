@@ -440,6 +440,7 @@ gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
     GST_BUFFER_SIZE (outbuf) = length;
     GST_BUFFER_DATA (outbuf) = g_malloc (length);
     memcpy (GST_BUFFER_DATA(outbuf), fameenc->buffer, length);
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
     GST_DEBUG (0,"gst_fameenc_chain: pushing buffer of size %d",
                GST_BUFFER_SIZE(outbuf));
