@@ -1001,8 +1001,13 @@ gst_asf_demux_descramble_segment (GstASFDemux        *asf_demux,
     if (!offset) {
       descrambled_buffer = sub_buffer;
     } else {
-      gst_buffer_merge (descrambled_buffer, sub_buffer);
+      GstBuffer *newbuf;
+
+      newbuf = gst_buffer_merge (descrambled_buffer, sub_buffer);
       gst_buffer_unref (sub_buffer);
+      gst_buffer_unref (descrambled_buffer);
+      descrambled_buffer = newbuf;
+
     }
   }
 
