@@ -26,6 +26,8 @@
 
 #include "gsttee.h"
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_tee_debug);
 #define GST_CAT_DEFAULT gst_tee_debug
 
@@ -241,7 +243,7 @@ gint name_pad_compare (gconstpointer a, gconstpointer b)
   
   g_assert (GST_IS_PAD (pad));
 
-  return g_strcasecmp (name, gst_pad_get_name (pad)); /* returns 0 if match */
+  return strcmp (name, gst_pad_get_name (pad)); /* returns 0 if match */
 }
 
 static GstPad*
