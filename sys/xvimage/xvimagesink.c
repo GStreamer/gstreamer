@@ -953,14 +953,14 @@ gst_xvimagesink_get_bufferpool (GstPad *pad)
 /* Interfaces stuff */
 
 static gboolean
-gst_xvimagesink_interface_supported (GstInterface *iface, GType type)
+gst_xvimagesink_interface_supported (GstImplementsInterface *iface, GType type)
 {
   g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY);
   return TRUE;
 }
 
 static void
-gst_xvimagesink_interface_init (GstInterfaceClass *klass)
+gst_xvimagesink_interface_init (GstImplementsInterfaceClass *klass)
 {
   klass->supported = gst_xvimagesink_interface_supported;
 }
@@ -1203,7 +1203,7 @@ gst_xvimagesink_get_type (void)
                                                  "GstXvImageSink",
                                                  &xvimagesink_info, 0);
       
-      g_type_add_interface_static (xvimagesink_type, GST_TYPE_INTERFACE,
+      g_type_add_interface_static (xvimagesink_type, GST_TYPE_IMPLEMENTS_INTERFACE,
                                    &iface_info);
       g_type_add_interface_static (xvimagesink_type, GST_TYPE_NAVIGATION,
                                    &navigation_info);

@@ -71,12 +71,15 @@ typedef struct _GstMixerTrack {
 typedef struct _GstMixerTrackClass {
   GObjectClass parent;
 
+  /* signals */
   void (* mute_toggled)   (GstMixerTrack *channel,
-			   gboolean       on);
+			   gboolean       mute);
   void (* record_toggled) (GstMixerTrack *channel,
-			   gboolean       on);
+			   gboolean       record);
   void (* volume_changed) (GstMixerTrack *channel,
 			   gint          *volumes);
+
+  GST_CLASS_PADDING
 } GstMixerTrackClass;
 
 GType		gst_mixer_track_get_type	(void);

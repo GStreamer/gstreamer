@@ -31,11 +31,12 @@ G_BEGIN_DECLS
 #define GST_TYPE_X_OVERLAY \
   (gst_x_overlay_get_type ())
 #define GST_X_OVERLAY(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_X_OVERLAY, GstXOverlay))
+  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_X_OVERLAY, \
+						 GstXOverlay))
 #define GST_X_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_X_OVERLAY, GstXOverlayClass))
 #define GST_IS_X_OVERLAY(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_X_OVERLAY))
+  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_X_OVERLAY))
 #define GST_IS_X_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_X_OVERLAY))
 #define GST_X_OVERLAY_GET_CLASS(inst) \
@@ -53,6 +54,8 @@ typedef struct _GstXOverlayClass {
   /* signals */
   void (*have_xwindow_id) (GstXOverlay *overlay,
                            XID          xwindow_id);
+
+  GST_CLASS_PADDING
 } GstXOverlayClass;
 
 GType	gst_x_overlay_get_type		(void);
