@@ -483,10 +483,11 @@ plugin_init (GModule   *module,
   g_return_val_if_fail(factory != NULL, FALSE);
 
   caps = gst_caps_new ("v4lmjpegsink_caps",
-                       "video/jpeg",
+                       "video/x-jpeg",
                        gst_props_new (
-                          "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
                           NULL       )
                       );
   capslist = gst_caps_append(capslist, caps);

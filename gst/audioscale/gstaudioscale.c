@@ -54,37 +54,23 @@ enum {
   /* FILL ME */
 };
 
-static GstPadTemplate *
-sink_template (void)
-{
-  static GstPadTemplate *template = NULL;
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  gst_caps_new ("audioscale_sink",
+		"audio/x-raw-int",
+		  GST_AUDIO_INT_PAD_TEMPLATE_PROPS)
+);
 
-  if (!template) {
-    template = gst_pad_template_new ("sink",
-				    GST_PAD_SINK,
-				    GST_PAD_ALWAYS,
-				    gst_caps_new
-				    ("audioscale_sink",
-				     "audio/raw", GST_AUDIO_INT_PAD_TEMPLATE_PROPS), NULL);
-  }
-  return template;
-}
-
-static GstPadTemplate *
-src_template (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template) {
-    template = gst_pad_template_new ("src",
-				    GST_PAD_SRC,
-				    GST_PAD_ALWAYS,
-				    gst_caps_new
-				    ("audioscale_src",
-				     "audio/raw", GST_AUDIO_INT_PAD_TEMPLATE_PROPS), NULL);
-  }
-  return template;
-}
+GST_PAD_TEMPLATE_FACTORY (src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  gst_caps_new ("audioscale_src",
+		"audio/x-raw-int",
+		  GST_AUDIO_INT_PAD_TEMPLATE_PROPS)
+);
 
 #define GST_TYPE_AUDIOSCALE_METHOD (gst_audioscale_method_get_type())
 static GType
@@ -211,12 +197,14 @@ gst_audioscale_init (Audioscale *audioscale)
 {
   resample_t *r;
 
-  audioscale->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template), "sink");
+  audioscale->sinkpad = gst_pad_new_from_template (
+	GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->sinkpad);
   gst_pad_set_chain_function(audioscale->sinkpad,gst_audioscale_chain);
   gst_pad_set_link_function (audioscale->sinkpad, gst_audioscale_sinkconnect);
 
-  audioscale->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template), "src");
+  audioscale->srcpad = gst_pad_new_from_template (
+	GST_PAD_TEMPLATE_GET (src_factory), "src");
 
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->srcpad);
 
@@ -331,6 +319,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
   /* create an elementfactory for the audioscale element */
   factory = gst_element_factory_new ("audioscale", GST_TYPE_AUDIOSCALE, &audioscale_details);
   g_return_val_if_fail(factory != NULL, FALSE);
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (sink_factory));
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   /* load support library */

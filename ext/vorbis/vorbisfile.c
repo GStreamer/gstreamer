@@ -467,9 +467,7 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
   gst_vorbisfile_update_streaminfo (vorbisfile, link);
       
   caps = GST_CAPS_NEW ("vorbisdec_src",
-                       "audio/raw",    
-                         "format",     GST_PROPS_STRING ("int"),
-                         "law",        GST_PROPS_INT (0),
+                       "audio/x-raw-int",    
                          "endianness", GST_PROPS_INT (G_BYTE_ORDER),
                          "signed",     GST_PROPS_BOOLEAN (TRUE),
                          "width",      GST_PROPS_INT (16),

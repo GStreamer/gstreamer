@@ -339,8 +339,6 @@ struct fourcc_list_struct fourcc_list[] = {
   {"YV12", "YV12", 12, paint_setup_YV12, paint_hline_I420},
   /* I420 */
   {"I420", "I420", 12, paint_setup_I420, paint_hline_I420},
-  /* IYUV (same as I420) */
-  {"IYUV", "IYUV", 12, paint_setup_I420, paint_hline_I420},
   /* NV12 */
   /* NV21 */
   /* IMC1 */
@@ -356,8 +354,6 @@ struct fourcc_list_struct fourcc_list[] = {
   /* Y42B */
   /* Y800 grayscale */
   {"Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
-  /* Y8   same as Y800 */
-  {"Y8  ", "Y8  ", 8, paint_setup_Y800, paint_hline_Y800},
 
   /*{ "IYU2", 24, paint_setup_YVYU, paint_hline_YUY2 }, */
 
@@ -442,8 +438,7 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
   if(format->ext_caps){
 #if GST_VERSION_MINOR > 6
     caps = GST_CAPS_NEW ("videotestsrc_filter",
-			 "video/raw",
-			 "format", GST_PROPS_FOURCC (fourcc),
+			 "video/x-raw-rgb",
   			 "bpp", GST_PROPS_INT(format->bitspp),
 			 "endianness", GST_PROPS_INT(G_BIG_ENDIAN),
   			 "depth", GST_PROPS_INT(format->depth),
@@ -480,8 +475,7 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
     }
 
     caps = GST_CAPS_NEW ("videotestsrc_filter",
-			 "video/raw",
-			 "format", GST_PROPS_FOURCC (fourcc),
+			 "video/x-raw-rgb",
   			 "bpp", GST_PROPS_INT(format->bitspp),
 			 "endianness", GST_PROPS_INT(endianness),
   			 "depth", GST_PROPS_INT(format->depth),
@@ -491,7 +485,7 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
 #endif
   }else{
     caps = GST_CAPS_NEW ("videotestsrc_filter",
-			 "video/raw",
+			 "video/x-raw-yuv",
 			 "format", GST_PROPS_FOURCC (fourcc));
   }
 

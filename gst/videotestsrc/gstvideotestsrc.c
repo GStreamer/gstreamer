@@ -86,11 +86,23 @@ videotestsrc_src_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/raw",
-			"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-			"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+    GstCaps *caps;
+    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
-    caps = gst_caps_intersect(caps, gst_videotestsrc_get_capslist ());
+    caps = gst_caps_intersect(caps1, gst_videotestsrc_get_capslist ());
+    gst_caps_unref (caps1);
+    caps1 = caps;
+    caps = gst_caps_intersect(caps2, gst_videotestsrc_get_capslist ());
+    gst_caps_unref (caps2);
+    caps2 = caps;
+    caps = gst_caps_append(caps1, caps2);
 
     templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   }
@@ -158,8 +170,8 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
       g_param_spec_string ("fourcc", "fourcc", "fourcc",
         NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
-      g_param_spec_int ("rate", "Rate", "Frame rate",
-        1, 100, 30, G_PARAM_READWRITE));
+      g_param_spec_float ("fps", "FPS", "Frame rate",
+        0., G_MAXFLOAT, 30., G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
       g_param_spec_enum ("pattern", "Pattern", "Type of test pattern to generate",
         GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE));
@@ -232,6 +244,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 
   gst_caps_get_int (caps, "width", &videotestsrc->width);
   gst_caps_get_int (caps, "height", &videotestsrc->height);
+  gst_caps_get_float (caps, "framerate", &videotestsrc->rate);
 
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
@@ -305,13 +318,25 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
   }
 
   if(vts->width){
-    caps2 = GST_CAPS_NEW("ack","video/raw",
+    caps2 = gst_caps_append(
+            GST_CAPS_NEW("ack","video/x-raw-yuv",
 		"width",GST_PROPS_INT(vts->width),
-		"height",GST_PROPS_INT(vts->height));
+		"height",GST_PROPS_INT(vts->height),
+                "framerate", GST_PROPS_FLOAT(vts->rate)),
+            GST_CAPS_NEW("ack","video/x-raw-rgb",
+		"width",GST_PROPS_INT(vts->width),
+		"height",GST_PROPS_INT(vts->height),
+                "framerate", GST_PROPS_FLOAT(vts->rate)));
   }else{
-    caps2 = GST_CAPS_NEW("ack","video/raw",
+    caps2 = gst_caps_append(
+             GST_CAPS_NEW("ack","video/x-raw-yuv",
 		"width",GST_PROPS_INT_RANGE(16,4096),
-		"height",GST_PROPS_INT_RANGE(16,4096));
+		"height",GST_PROPS_INT_RANGE(16,4096),
+		"framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)),
+             GST_CAPS_NEW("ack","video/x-raw-rgb",
+		"width",GST_PROPS_INT_RANGE(16,4096),
+		"height",GST_PROPS_INT_RANGE(16,4096),
+		"framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)));
   }
 
   /* ref intersection and return it */
@@ -341,7 +366,7 @@ gst_videotestsrc_reset (GstVideotestsrc *videotestsrc)
   videotestsrc->sync = TRUE;
   videotestsrc->width = 640;
   videotestsrc->height = 480;
-  videotestsrc->rate = 30;
+  videotestsrc->rate = 30.;
   videotestsrc->timestamp = 0;
   videotestsrc->interval = GST_SECOND / videotestsrc->rate;
 }
@@ -453,7 +478,7 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
       }
       break;
     case ARG_RATE:
-      src->rate = g_value_get_int (value);
+      src->rate = g_value_get_float (value);
       src->interval = GST_SECOND/src->rate;
       break;
     case ARG_TYPE:
@@ -487,7 +512,7 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
       g_value_set_string (value, src->forced_format);
       break;
     case ARG_RATE:
-      g_value_set_int (value, src->rate);
+      g_value_set_float (value, src->rate);
       break;
     case ARG_TYPE:
       g_value_set_enum (value, src->type);

@@ -409,34 +409,35 @@ dnl FIXME: add check if this platform can support linking to a
 dnl        non-PIC libXv, if not then don not use Xv.
 dnl FIXME: perhaps warn user if they have a shared libXv since
 dnl        this is an error until XFree86 starts shipping one
-translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
-
-GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
-   if test -z $X_DISPLAY_MISSING; then
-     HAVE_XVIDEO=yes
+translit(dnm, m, l) AM_CONDITIONAL(USE_XFREE, true)
+GST_CHECK_FEATURE(XFREE, [X11 XFree86], xvideosink-X, [
+   if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
+     HAVE_XFREE=no
    else
-     HAVE_XVIDEO=no
+     HAVE_XFREE=yes
    fi
 ])
    
 dnl Check for Xv extension
-
-if test x$HAVE_XVIDEO = xyes; then
-  AC_CHECK_LIB(Xv_pic, XvQueryExtension, HAVE_XV="yes", HAVE_XV="no", $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
-
-  if test x$HAVE_XV = xyes; then
-    AC_DEFINE(HAVE_XV, 1, [Define if Xv extension is available])
+translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
+GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink-Xv, [
+  if test x$HAVE_XFREE = xyes; then
+    AC_CHECK_LIB(Xv_pic, XvQueryExtension,
+		 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
+		 $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
     XVIDEO_LIBS="-lXv_pic -lXext"
-    AC_SUBST(XVIDEO_LIBS)
-  else
-    AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_XVIDEO="yes", HAVE_XVIDEO="no", $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
-    if test x$HAVE_XV = xyes; then
-      AC_DEFINE(HAVE_XV, 1, [Define if Xv extension is available])
+
+    dnl try again using something else if we didn't find it first
+    if test x$HAVE_XVIDEO = xno; then
+      AC_CHECK_LIB(Xv, XvQueryExtension,
+		   HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
+		   $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
       XVIDEO_LIBS="-lXv -lXext"
-      AC_SUBST(XVIDEO_LIBS)
     fi
+
+    AC_SUBST(XVIDEO_LIBS)
   fi
-fi
+])
 
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plug-ins

@@ -58,9 +58,9 @@ GST_PAD_TEMPLATE_FACTORY (gst_adder_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new ("int_src", "audio/raw",
+  gst_caps_new ("int_src", "audio/x-raw-int",
                 GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-  gst_caps_new ("float_src", "audio/raw",
+  gst_caps_new ("float_src", "audio/x-raw-float",
                 GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)
 );  
 
@@ -68,9 +68,9 @@ GST_PAD_TEMPLATE_FACTORY (gst_adder_sink_template_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  gst_caps_new ("int_sink", "audio/raw",
+  gst_caps_new ("int_sink", "audio/x-raw-int",
                 GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-  gst_caps_new ("float_sink", "audio/raw",
+  gst_caps_new ("float_sink", "audio/x-raw-float",
                 GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)
 );  
 
@@ -111,29 +111,27 @@ gst_adder_get_type (void) {
 static gboolean
 gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
 {
-  const gchar *format;
+  const gchar *mimetype;
   GstElement *el = GST_ELEMENT (adder);
   
-  gst_caps_get_string (caps, "format", &format);
+  mimetype = gst_caps_get_mime (caps);
 
   if (adder->format == GST_ADDER_FORMAT_UNSET) {
     /* the caps haven't been set yet at all, 
      * so we need to go ahead and set all
        the relevant values. */
-    if (strcmp (format, "int") == 0) {
+    if (strcmp (mimetype, "audio/x-raw-int") == 0) {
       GST_DEBUG ("parse_caps sets adder to format int");
       adder->format     = GST_ADDER_FORMAT_INT;
       gst_caps_get_int     (caps, "width",      &adder->width);
       gst_caps_get_int     (caps, "depth",      &adder->depth);
-      gst_caps_get_int     (caps, "law",        &adder->law);
       gst_caps_get_int     (caps, "endianness", &adder->endianness);
       gst_caps_get_boolean (caps, "signed",     &adder->is_signed);
       gst_caps_get_int     (caps, "channels",   &adder->channels);
       gst_caps_get_int     (caps, "rate",	&adder->rate);
-    } else if (strcmp (format, "float") == 0) {
+    } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
       GST_DEBUG ("parse_caps sets adder to format float");
       adder->format     = GST_ADDER_FORMAT_FLOAT;
-      gst_caps_get_string  (caps, "layout",    &adder->layout);
       gst_caps_get_float   (caps, "intercept", &adder->intercept);
       gst_caps_get_float   (caps, "slope",     &adder->slope);
       gst_caps_get_int     (caps, "channels",  &adder->channels);
@@ -142,7 +140,7 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
   } else {
     /* otherwise, a previously-linked pad has set all the values. we should
        barf if some of the attempted new values don't match. */
-    if (strcmp (format, "int") == 0) {
+    if (strcmp (mimetype, "audio/x-raw-int") == 0) {
       gint width, channels, rate;
       gboolean is_signed;
 
@@ -179,7 +177,7 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
                            is_signed ? "" : "un");
        return FALSE;
       }
-    } else if (strcmp (format, "float") == 0) {
+    } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
       gint channels, rate;
 
       gst_caps_get_int     (caps, "channels",  &channels);
@@ -199,9 +197,6 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
       if (adder->rate != rate) {
         gst_element_error (el, "can't link %d Hz pad with %d Hz adder",
                            rate, adder->rate);
-        return FALSE;
-      } else {
-        /* whoa, we don't know what's trying to link with us ! barf ! */
         return FALSE;
       }
     }
@@ -526,13 +521,11 @@ gst_adder_loop (GstElement *element)
     GstCaps *caps = 
 
     gst_caps_new ("default_adder_caps",
-		    "audio/raw",
-                    gst_props_new ("format",     GST_PROPS_STRING ("int"),
-			           "width",      GST_PROPS_INT (16),
+		    "audio/x-raw-int",
+                    gst_props_new ("width",      GST_PROPS_INT (16),
 				   "depth",      GST_PROPS_INT (16),
 				   "rate",       GST_PROPS_INT (44100),
 				   "channels",   GST_PROPS_INT (2),
-				   "law",        GST_PROPS_INT (0),
 				   "endianness", GST_PROPS_INT (G_BYTE_ORDER),
 				   "signed",     GST_PROPS_BOOLEAN (TRUE),
 				   NULL));
@@ -623,4 +616,3 @@ GstPluginDesc plugin_desc = {
   "adder",
   plugin_init
 };
-

@@ -65,9 +65,7 @@ GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "sinesrc_src",
-    "audio/raw",
-      "format",   	GST_PROPS_STRING ("int"),
-      "law",     	GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
       "signed",   	GST_PROPS_BOOLEAN (TRUE),
       "width",   	GST_PROPS_INT (16),
@@ -423,9 +421,7 @@ gst_sinesrc_force_caps (GstSineSrc *src) {
 
   caps = GST_CAPS_NEW (
 	   "sinesrc_src_caps",
-	   "audio/raw",
-	    "format", 		GST_PROPS_STRING ("int"),
-    	     "law",     	GST_PROPS_INT (0),
+	   "audio/x-raw-int",
     	     "endianness",     	GST_PROPS_INT (G_BYTE_ORDER),
     	     "signed",   	GST_PROPS_BOOLEAN (TRUE),
     	     "width",   	GST_PROPS_INT (16),

@@ -127,9 +127,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_convert_src_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "audio_convert_src",
-    "audio/raw",
-      "format",		GST_PROPS_STRING ("int"),
-      "law",		GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness",	GST_PROPS_LIST (
 				GST_PROPS_INT (G_LITTLE_ENDIAN),
 				GST_PROPS_INT (G_BIG_ENDIAN)
@@ -155,9 +153,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_convert_sink_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "audio_convert_sink",
-    "audio/raw",
-      "format",		GST_PROPS_STRING ("int"),
-      "law",		GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness",	GST_PROPS_LIST (
 				GST_PROPS_INT (G_LITTLE_ENDIAN),
 				GST_PROPS_INT (G_BIG_ENDIAN)
@@ -403,9 +399,7 @@ make_caps (gint endianness, gboolean sign, gint depth, gint width, gint rate, gi
   if (width == 1) {
     return GST_CAPS_NEW (
       "audio_convert_caps",
-      "audio/raw",
-        "format",  	GST_PROPS_STRING ("int"),
-        "law",		GST_PROPS_INT (0),
+      "audio/x-raw-int",
         "signed",	GST_PROPS_BOOLEAN (sign),
         "depth",	GST_PROPS_INT (depth),
         "width",	GST_PROPS_INT (width * 8),
@@ -415,9 +409,7 @@ make_caps (gint endianness, gboolean sign, gint depth, gint width, gint rate, gi
   } else {
     return GST_CAPS_NEW (
       "audio_convert_caps",
-      "audio/raw",
-        "format",  	GST_PROPS_STRING ("int"),
-        "law",		GST_PROPS_INT (0),
+      "audio/x-raw-int",
         "endianness",	GST_PROPS_INT (endianness),
         "signed",	GST_PROPS_BOOLEAN (sign),
         "depth",	GST_PROPS_INT (depth),

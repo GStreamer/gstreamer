@@ -135,11 +135,23 @@ gst_videoscale_src_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/raw",
+    GstCaps *caps;
+    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
-    caps = gst_caps_intersect(caps, gst_videoscale_get_capslist ());
+    caps = gst_caps_intersect(caps1, gst_videoscale_get_capslist ());
+    gst_caps_unref (caps1);
+    caps1 = caps;
+    caps = gst_caps_intersect(caps2, gst_videoscale_get_capslist ());
+    gst_caps_unref (caps2);
+    caps2 = caps;
+    caps = gst_caps_append(caps1, caps2);
 
     templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   }
@@ -152,11 +164,23 @@ gst_videoscale_sink_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("sink","video/raw",
+    GstCaps *caps;
+    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
-    caps = gst_caps_intersect(caps, gst_videoscale_get_capslist ());
+    caps = gst_caps_intersect(caps1, gst_videoscale_get_capslist ());
+    gst_caps_unref (caps1);
+    caps1 = caps;
+    caps = gst_caps_intersect(caps2, gst_videoscale_get_capslist ());
+    gst_caps_unref (caps2);
+    caps2 = caps;
+    caps = gst_caps_append(caps1, caps2);
 
     templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
   }
@@ -190,7 +214,7 @@ gst_videoscale_getcaps (GstPad *pad, GstCaps *caps)
   GstVideoscale *videoscale;
   GstCaps *capslist = NULL;
   GstCaps *peercaps;
-  GstCaps *sizecaps;
+  GstCaps *sizecaps1, *sizecaps2;
   int i;
 
   GST_DEBUG ("gst_videoscale_src_link");
@@ -216,12 +240,22 @@ gst_videoscale_getcaps (GstPad *pad, GstCaps *caps)
   }
   gst_caps_unref (peercaps);
 
-  sizecaps = GST_CAPS_NEW("videoscale_size","video/raw",
+  sizecaps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  sizecaps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
-  caps = gst_caps_intersect(caps, gst_videoscale_get_capslist ());
-  gst_caps_unref (sizecaps);
+  caps = gst_caps_intersect(sizecaps1, gst_videoscale_get_capslist ());
+  gst_caps_unref (sizecaps1);
+  sizecaps1 = caps;
+  caps = gst_caps_intersect(sizecaps2, gst_videoscale_get_capslist ());
+  gst_caps_unref (sizecaps2);
+  sizecaps2 = caps;
+  caps = gst_caps_append(sizecaps1, sizecaps2);
 
   return caps;
 }

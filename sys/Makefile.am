@@ -34,7 +34,7 @@ else
 VCD_DIR=
 endif
 
-if USE_XVIDEO
+if USE_XFREE
 XVIDEO_DIR=xvideo
 else
 XVIDEO_DIR=

@@ -74,9 +74,7 @@ struct videoscale_format_struct videoscale_formats[] = {
 	/* planar */
 	{ "YV12", 12, gst_videoscale_planar411, },
 	{ "I420", 12, gst_videoscale_planar411, },
-	{ "IYUV", 12, gst_videoscale_planar411, },
 	{ "Y800", 8,  gst_videoscale_planar400, },
-	{ "Y8  ", 8,  gst_videoscale_planar400, },
 	/* RGB */
 	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x00ff0000, 0x0000ff00, 0x000000ff },
 	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x000000ff, 0x0000ff00, 0x00ff0000 },
@@ -102,8 +100,7 @@ videoscale_get_caps(struct videoscale_format_struct *format)
   fourcc = GST_MAKE_FOURCC(format->fourcc[0],format->fourcc[1],format->fourcc[2],format->fourcc[3]);
 
   if(format->bpp){
-    caps = GST_CAPS_NEW ("videoscale", "video/raw",
-		"format", GST_PROPS_FOURCC (fourcc),
+    caps = GST_CAPS_NEW ("videoscale", "video/x-raw-rgb",
 		"depth", GST_PROPS_INT(format->bpp),
 		"bpp", GST_PROPS_INT(format->depth),
 		"endianness", GST_PROPS_INT(format->endianness),
@@ -111,7 +108,7 @@ videoscale_get_caps(struct videoscale_format_struct *format)
 		"green_mask", GST_PROPS_INT(format->green_mask),
 		"blue_mask", GST_PROPS_INT(format->blue_mask));
   }else{
-    caps = GST_CAPS_NEW ("videoscale", "video/raw",
+    caps = GST_CAPS_NEW ("videoscale", "video/x-raw-yuv",
 		"format", GST_PROPS_FOURCC (fourcc));
   }
 

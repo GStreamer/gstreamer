@@ -148,7 +148,7 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY, 
     g_param_spec_float ("quality", "Quality", 
 	    "Specify quality instead of specifying a particular bitrate.",
-	    -1.0, 10.0, QUALITY_DEFAULT, G_PARAM_READWRITE));
+	    0.0, 1.0, QUALITY_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SERIAL, 
     g_param_spec_int ("serial", "Serial", "Specify a serial number for the stream. (-1 is random)",
 	    -1, G_MAXINT, -1, G_PARAM_READWRITE));

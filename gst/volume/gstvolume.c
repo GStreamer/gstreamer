@@ -57,27 +57,20 @@ GST_PAD_TEMPLATE_FACTORY (volume_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "volume_float_sink",
-    "audio/raw",
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "format",     GST_PROPS_STRING ("float"),
-    "layout",     GST_PROPS_STRING ("gfloat"),
-    "intercept",  GST_PROPS_FLOAT(0.0),
-    "slope",      GST_PROPS_FLOAT(1.0),
-    "channels",   GST_PROPS_INT (1)
+    "audio/x-raw-float",
+      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
   ),
   GST_CAPS_NEW (
     "volume_int_sink",
-    "audio/raw",
-    "format",     GST_PROPS_STRING ("int"),
-    "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "law",        GST_PROPS_INT (0),
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-    "width",      GST_PROPS_INT (16),
-    "depth",      GST_PROPS_INT (16),
-    "signed",     GST_PROPS_BOOLEAN (TRUE)
+    "audio/x-raw-int",
+      "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
+      "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "width",      GST_PROPS_INT (16),
+      "depth",      GST_PROPS_INT (16),
+      "signed",     GST_PROPS_BOOLEAN (TRUE)
   )
 );
 
@@ -85,27 +78,20 @@ GST_PAD_TEMPLATE_FACTORY (volume_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "volume_float_src",
-    "audio/raw",
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "format",     GST_PROPS_STRING ("float"),
-    "layout",     GST_PROPS_STRING ("gfloat"),
-    "intercept",  GST_PROPS_FLOAT(0.0),
-    "slope",      GST_PROPS_FLOAT(1.0),
-    "channels",   GST_PROPS_INT (1)
+    "audio/x-raw-float",
+      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
   ), 
   GST_CAPS_NEW (
     "volume_int_src",
-    "audio/raw",
-    "format",     GST_PROPS_STRING ("int"),
-    "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "law",        GST_PROPS_INT (0),
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-    "width",      GST_PROPS_INT (16),
-    "depth",      GST_PROPS_INT (16),
-    "signed",     GST_PROPS_BOOLEAN (TRUE)
+    "audio/x-raw-int",
+      "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
+      "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "width",      GST_PROPS_INT (16),
+      "depth",      GST_PROPS_INT (16),
+      "signed",     GST_PROPS_BOOLEAN (TRUE)
   )
 );
 
@@ -165,19 +151,19 @@ volume_connect (GstPad *pad, GstCaps *caps)
 static gboolean
 volume_parse_caps (GstVolume *filter, GstCaps *caps)
 {
-  const gchar *format;
+  const gchar *mimetype;
   
   g_return_val_if_fail(filter!=NULL,FALSE);
   g_return_val_if_fail(caps!=NULL,FALSE);
   
-  gst_caps_get_string (caps, "format", &format);
+  mimetype = gst_caps_get_mime (caps);
   
-  if (strcmp(format, "int")==0) {
+  if (strcmp(mimetype, "audio/x-raw-int")==0) {
     gst_pad_set_chain_function(filter->sinkpad,volume_chain_int16);
     return TRUE;
   }
   
-  if (strcmp(format, "float")==0) {
+  if (strcmp(mimetype, "audio/x-raw-float")==0) {
     gst_pad_set_chain_function(filter->sinkpad,volume_chain_float);
     return TRUE;
   }

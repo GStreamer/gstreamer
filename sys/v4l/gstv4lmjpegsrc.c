@@ -253,11 +253,11 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 }
 
 
-static gdouble
+static gfloat
 gst_v4lmjpegsrc_get_fps (GstV4lMjpegSrc *v4lmjpegsrc)
 {
   gint norm;
-  gdouble fps;
+  gfloat fps;
  
   if (!v4lmjpegsrc->use_fixed_fps &&
       v4lmjpegsrc->clock != NULL &&
@@ -366,6 +366,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
   gint max_w = GST_V4LELEMENT(v4lmjpegsrc)->vcap.maxwidth,
        max_h = GST_V4LELEMENT(v4lmjpegsrc)->vcap.maxheight;
   gulong bufsize;
+  gfloat fps = gst_v4lmjpegsrc_get_fps(v4lmjpegsrc);
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
@@ -381,7 +382,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
 
   /* Note: basically, we don't give a damn about the opposite caps here.
    * that might seem odd, but it isn't. we know that the opposite caps is
-   * either NULL or has mime type video/jpeg, and in both cases, we'll set
+   * either NULL or has mime type video/x-jpeg, and in both cases, we'll set
    * our own mime type back and it'll work. Other properties are to be set
    * by the src, not by the opposite caps */
 
@@ -464,10 +465,11 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
 
   /* we now have an actual width/height - *set it* */
   caps = gst_caps_new("v4lmjpegsrc_caps",
-                      "video/jpeg",
+                      "video/x-jpeg",
                       gst_props_new(
-                        "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
-                        "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
+                        "width",     GST_PROPS_INT(v4lmjpegsrc->end_width),
+                        "height",    GST_PROPS_INT(v4lmjpegsrc->end_height),
+                        "framerate", GST_PROPS_FLOAT(fps),
                         NULL       ) );
   if ((ret_val = gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps)) == GST_PAD_LINK_REFUSED)
     return GST_PAD_LINK_REFUSED;
@@ -603,11 +605,12 @@ gst_v4lmjpegsrc_getcaps (GstPad  *pad,
   }
 
   caps = GST_CAPS_NEW("v4lmjpegsrc_jpeg_caps",
-                      "video/jpeg",
+                      "video/x-jpeg",
                         "width",  GST_PROPS_INT_RANGE(vcap->maxwidth/4,
                                                       vcap->maxwidth),
                         "height", GST_PROPS_INT_RANGE(vcap->maxheight/4,
                                                       vcap->maxheight),
+                        "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
                         NULL);
 
   return caps;
@@ -857,10 +860,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(factory != NULL, FALSE);
 
   caps = gst_caps_new ("v4lmjpegsrc_caps",
-                       "video/jpeg",
+                       "video/x-jpeg",
                        gst_props_new (
-                          "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
                           NULL       )
                       );
   capslist = gst_caps_append(capslist, caps);
