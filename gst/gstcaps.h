@@ -73,6 +73,12 @@ void		gst_caps_set_type_id			(GstCaps *caps, guint16 type_id);
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);
 
+#define		gst_caps_set(caps, name, args...)	gst_props_set ((caps)->properties, name, args)
+
+#define		gst_caps_get_int(caps, name)		gst_props_get_int ((caps)->properties, name)
+#define		gst_caps_get_fourcc_int(caps, name)	gst_props_get_fourcc_int ((caps)->properties, name)
+#define		gst_caps_get_boolean(caps, name)	gst_props_get_boolean ((caps)->properties, name)
+
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 
 GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd); 

@@ -51,8 +51,6 @@ int main(int argc,char *argv[])
   gst_pad_connect(gst_element_get_pad(decoder,"src"),
                   gst_element_get_pad(audiosink,"sink"));
 
-  /* make it ready */
-  gst_element_set_state(bin, GST_STATE_READY);
   /* start playing */
   gst_element_set_state(bin, GST_STATE_PLAYING);
 

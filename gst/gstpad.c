@@ -260,7 +260,7 @@ gst_pad_new_from_template (GstPadTemplate *templ,
 
   pad = gst_pad_new (name, templ->direction);
   GST_PAD_PADTEMPLATE(pad) = templ;
-  GST_PAD_CAPS (pad) = GST_PADTEMPLATE_CAPS (templ);
+  //GST_PAD_CAPS (pad) = GST_PADTEMPLATE_CAPS (templ);
 
   return pad;
 }
@@ -572,9 +572,11 @@ gst_pad_connect (GstPad *srcpad,
   if (GST_PAD_CAPS (srcpad)) {
     negotiated = gst_pad_renegotiate (srcpad);
   }
-  else {
+  else if (GST_PAD_CAPS (sinkpad)) {
     negotiated = gst_pad_renegotiate (sinkpad);
   }
+  else 
+    negotiated = TRUE;
 
   if (!negotiated) {
     gst_pad_disconnect (GST_PAD (realsrc), GST_PAD (realsink));
@@ -728,16 +730,16 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
  *
  * Set the capabilities of this pad.
  */
-void
+gboolean
 gst_pad_set_caps (GstPad *pad,
                   GstCaps *caps)
 {
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_REAL_PAD (pad));		// NOTE this restriction
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);		// NOTE this restriction
 
   GST_PAD_CAPS(pad) = caps;
 
-  gst_pad_renegotiate (pad);
+  return gst_pad_renegotiate (pad);
 }
 
 /**
@@ -754,8 +756,26 @@ gst_pad_get_caps (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_CAPS(pad);
+  if (GST_PAD_CAPS (pad))
+    return GST_PAD_CAPS (pad);
+  else if (GST_PAD_PADTEMPLATE (pad))
+    return GST_PADTEMPLATE_CAPS (GST_PAD_PADTEMPLATE (pad));
+
+  return NULL;
 }
+
+GstCaps*
+gst_pad_get_padtemplate_caps (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  if (GST_PAD_PADTEMPLATE (pad))
+    return GST_PADTEMPLATE_CAPS (GST_PAD_PADTEMPLATE (pad));
+
+  return NULL;
+}
+
 
 /**
  * gst_pad_get_caps_by_name:
@@ -914,8 +934,8 @@ gst_pad_renegotiate (GstPad *pad)
   gint counter = 0;
   GstCaps *newcaps = NULL;
   GstRealPad *peerpad, *currentpad, *otherpad;
-  GstCaps *currentcaps;
   GstPadDirection currentdirection;
+  GstPadNegotiateReturn result;
   
   g_return_val_if_fail (pad != NULL, FALSE);
 
@@ -935,84 +955,56 @@ gst_pad_renegotiate (GstPad *pad)
             GST_DEBUG_PAD_NAME(pad), GST_DEBUG_PAD_NAME(peerpad));
 
   newcaps = GST_PAD_CAPS (pad);
+  g_assert (newcaps != NULL);
+
+  currentdirection = GST_PAD_DIRECTION (currentpad);
 
   do {
-    currentcaps = newcaps;
-    currentdirection = GST_PAD_DIRECTION (currentpad);
+    gboolean matchtempl;
 
-    /* this pad wants to negotiate */
-    if (currentpad->negotiatefunc) {
+    matchtempl = gst_caps_check_compatibility (newcaps, gst_pad_get_padtemplate_caps (GST_PAD (otherpad)));
 
-      GST_DEBUG (GST_CAT_ELEMENT_PADS, "calling negotiate function on pad %s:%s, count=%d\n",
-                 GST_DEBUG_PAD_NAME(currentpad), counter);
-      newcaps = (currentpad->negotiatefunc) (GST_PAD (currentpad), currentcaps, counter);
+    if (matchtempl) {
+      if (otherpad->negotiatefunc) {
+        GstRealPad *temp;
 
-      if (newcaps == NULL && currentcaps != NULL) {
-        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s has refused, negotiation failed :(, count=%d\n",
-                   GST_DEBUG_PAD_NAME(currentpad), counter);
-	return FALSE;
+        temp = currentpad;
+        currentpad = otherpad;
+        otherpad = temp;
       }
-      if (newcaps == currentcaps) {
-        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s aggreed with caps, count=%d\n",
-                   GST_DEBUG_PAD_NAME(currentpad), counter);
-	break;
-      }
-    }
-    /* this pad doesn't want to negotiate, take its caps and that will be it then */
-    else {
-      GST_DEBUG (GST_CAT_ELEMENT_PADS, "getting caps from pad %s:%s, count=%d\n",
-                 GST_DEBUG_PAD_NAME(currentpad), counter);
-      newcaps = GST_PAD_CAPS (currentpad);
-    }
-    /* we have a caps structure now */
-
-    /* check if the other pad wants to negotiate */
-    if (!otherpad->negotiatefunc) {
-      GstCaps *srccaps = newcaps;
-      GstCaps *targetcaps = otherpad->caps;
-      /* the pad doesn't want to negotiate, so we check if the caps
-       * we got from the current pad are compatible */
-      GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s doesn't want to negotiate, count=%d\n",
-                 GST_DEBUG_PAD_NAME(otherpad), counter);
-	
-      // the other pad has no caps, all is ok
-      if (!targetcaps) 
-        break;
-
-      // make sure we check src to sink
-      if (currentdirection == GST_PAD_SINK) {
-        GstCaps *temp;
-
-        GST_DEBUG (GST_CAT_ELEMENT_PADS, "swapping pad caps for comparison, count=%d\n",
-                   counter);
-        temp = srccaps;
-        srccaps = targetcaps;
-	targetcaps = temp;
-      }
-
-      if (gst_caps_check_compatibility (srccaps, targetcaps)) {
-        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s has compatible caps, count=%d\n",
-                   GST_DEBUG_PAD_NAME(otherpad), counter);
-        /* we're lucky */
+      else if (gst_caps_check_compatibility (newcaps, GST_PAD_CAPS (otherpad))) {
         break;
       }
-      /* else, we let the current pad select another caps */
+      else {
+	newcaps = GST_PAD_CAPS (otherpad);
+      }
     }
-    /* if the other pad wants to negotiate, setup the pointers */
     else {
-      GstRealPad *temp;
-
-      GST_DEBUG (GST_CAT_ELEMENT_PADS, "switching pads for next phase\n");
-
-      temp = currentpad;
-      currentpad = otherpad;
-      otherpad = temp;
+      newcaps = GST_PAD_CAPS (otherpad);
     }
 
     counter++;
 
-  } while (counter < 100); // FIXME
+    if (currentpad->negotiatefunc) {
+      result = currentpad->negotiatefunc (GST_PAD (currentpad), &newcaps, counter);
 
+      switch (result) {
+        case GST_PAD_NEGOTIATE_FAIL:
+          return FALSE;
+        case GST_PAD_NEGOTIATE_AGREE:
+          goto succeed;
+        case GST_PAD_NEGOTIATE_TRY:
+          break;
+      }
+    }
+    else {
+      return FALSE;
+    }
+      
+  } while (counter < 100);
+
+succeed:
+  
   GST_DEBUG (GST_CAT_ELEMENT_PADS, "pads aggreed on caps :)\n");
 
   /* here we have some sort of aggreement of the caps */
@@ -1022,61 +1014,27 @@ gst_pad_renegotiate (GstPad *pad)
   return TRUE;
 }
 
-GstCaps*
-gst_pad_negotiate_proxy (GstPad *pad, GstCaps *caps, gint counter)
+GstPadNegotiateReturn
+gst_pad_negotiate_proxy (GstPad *pad, GstCaps **caps, gint counter)
 {
   GstRealPad *peer;
-  GstCaps *newcaps = caps;
 
-  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (pad != NULL, GST_PAD_NEGOTIATE_FAIL);
 
   GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad (%s:%s) proxied\n", GST_DEBUG_PAD_NAME (pad));
 
   peer = GST_RPAD_PEER (pad);
 
-  GST_PAD_CAPS (pad) = caps;
+  //GST_PAD_CAPS (pad) = caps;
 
   if (peer) {
     if (peer->negotiatefunc) {
       GST_DEBUG (GST_CAT_ELEMENT_PADS, "calling negotiate on peer (%s:%s)\n", GST_DEBUG_PAD_NAME (peer));
-      newcaps = peer->negotiatefunc (pad, caps, counter);
-    }
-    else {
-      GstCaps *srccaps = newcaps;
-      GstCaps *targetcaps = peer->caps;
-	
-      if (targetcaps) {
-        if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-	  GstCaps *temp;
-
-           GST_DEBUG (GST_CAT_ELEMENT_PADS, "swapping pad caps for comparison, count=%d\n",
-                      counter);
-	   temp = srccaps;
-	   srccaps = targetcaps;
-	   targetcaps = temp;
-        }
-
-        if (gst_caps_check_compatibility (srccaps, targetcaps)) {
-          GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s has compatible caps\n",
-                     GST_DEBUG_PAD_NAME(peer));
-        }
-        else {
-          GST_DEBUG (GST_CAT_ELEMENT_PADS, "target caps but they didn't match %p %p\n", srccaps, targetcaps);
-	  return NULL;
-        }
-      }
+      return peer->negotiatefunc (peer, caps, counter);
     }
   }
-  else {
-    GST_DEBUG (GST_CAT_ELEMENT_PADS, "no peer\n");
-  }
 
-  if (caps == newcaps) {
-    GST_PAD_CAPS (pad) = newcaps;
-    if (peer) GST_PAD_CAPS (peer) = newcaps;
-  }
-
-  return newcaps;
+  return GST_PAD_NEGOTIATE_AGREE;
 }
 
 /**

@@ -791,6 +791,7 @@ tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
 testsuite/Makefile
+testsuite/capsnego/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile

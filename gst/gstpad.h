@@ -79,6 +79,12 @@ typedef enum {
   GST_REGION_TIME_LEN,
 } GstRegionType;
 
+typedef enum { 
+  GST_PAD_NEGOTIATE_FAIL,
+  GST_PAD_NEGOTIATE_AGREE,
+  GST_PAD_NEGOTIATE_TRY,
+} GstPadNegotiateReturn;
+
 
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
@@ -92,7 +98,7 @@ typedef void (*GstPadPushFunction) (GstPad *pad, GstBuffer *buf);
 typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
 typedef GstBuffer *(*GstPadPullRegionFunction) (GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef gboolean (*GstPadEOSFunction) (GstPad *pad);
-typedef GstCaps* (*GstPadNegotiateFunction) (GstPad *pad, GstCaps *caps, gint count);
+typedef GstPadNegotiateReturn (*GstPadNegotiateFunction) (GstPad *pad, GstCaps **caps, gint count);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -276,8 +282,9 @@ void			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
 void			gst_pad_set_negotiate_function	(GstPad *pad, GstPadNegotiateFunction nego);
 
-void			gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
+gboolean		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
 GstCaps*		gst_pad_get_caps		(GstPad *pad);
+GstCaps*		gst_pad_get_padtemplate_caps	(GstPad *pad);
 gboolean		gst_pad_check_compatibility	(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_element_private	(GstPad *pad, gpointer priv);
@@ -302,7 +309,7 @@ gboolean		gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
 gboolean		gst_pad_renegotiate		(GstPad *pad);
-GstCaps*		gst_pad_negotiate_proxy		(GstPad *pad, GstCaps* caps, gint count);
+GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *pad, GstCaps **caps, gint count);
 
 #if 1
 void			gst_pad_push			(GstPad *pad, GstBuffer *buf);

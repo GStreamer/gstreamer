@@ -296,3 +296,51 @@ pad has caps
 
 
 =====================================
+
+  srccaps = GST_PAD_CAPS (srcpad);
+  srctempl = FALSE;
+
+  do {
+
+    //no caps, get one
+    if (!srccaps) 
+    {
+      if (srcpad->negotiatefunc && !srctempl) 
+      {
+        srccaps = srcpad->negotiatefunc (srpad, srcaps, counter);
+        srctempl = FALSE;
+      }
+      else 
+      {
+        srccaps = gst_pad_get_caps (srcpad);    
+	srctempl = TRUE;
+      }
+    }
+
+    /* check against other pad */
+    
+    // the other pad doesn't want to negotiate
+    if (!sinkpad->negotiatefunc) 
+    {
+      sinkcaps = gst_pad_get_caps (sinkpad);
+
+      if (!sinkcaps)
+        break;
+
+      if (gst_caps_check_compatibility (srccaps, sinkcaps)) 
+      {
+        // cool
+        break;
+      }
+    }
+    else {
+      switch pads;      
+    }
+
+  } while (counter < 100);
+
+
+
+
+
+

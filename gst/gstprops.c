@@ -89,12 +89,22 @@ gst_props_create_entry (GstPropsFactory factory, gint *skipped)
 
 static gint 
 props_compare_func (gconstpointer a,
-		   gconstpointer b) 
+		    gconstpointer b) 
 {
   GstPropsEntry *entry1 = (GstPropsEntry *)a;
   GstPropsEntry *entry2 = (GstPropsEntry *)b;
 
   return (entry1->propid - entry2->propid);
+}
+
+static gint 
+props_find_func (gconstpointer a,
+		 gconstpointer b) 
+{
+  GstPropsEntry *entry2 = (GstPropsEntry *)a;
+  GQuark entry1 = (GQuark) GPOINTER_TO_INT (b);
+
+  return (entry1 - entry2->propid);
 }
 
 /**
@@ -270,6 +280,118 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
   props = gst_props_register (factory);
 
   return props;
+}
+
+GstProps*
+gst_props_set (GstProps *props, const gchar *name, GstPropsFactoryEntry entry, ...)
+{
+  GQuark quark;
+  GList *lentry;
+  va_list var_args;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+    GstPropsFactoryEntry value;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    va_start (var_args, entry);
+    // property name
+    value = (GstPropsFactoryEntry) entry;
+
+    switch (GPOINTER_TO_INT (value)) {
+      case GST_PROPS_INT_ID:
+        thisentry->propstype = GST_PROPS_INT_ID_NUM;
+        value = va_arg (var_args, GstPropsFactoryEntry);
+        thisentry->data.int_data = GPOINTER_TO_INT (value);
+	break;
+      case GST_PROPS_FOURCC_ID_NUM:
+        thisentry->propstype = GST_PROPS_FOURCC_ID_NUM;
+        value = va_arg (var_args, GstPropsFactoryEntry);
+        thisentry->data.fourcc_data = GPOINTER_TO_INT (value);
+        break;
+      case GST_PROPS_BOOL_ID_NUM:
+        thisentry->propstype = GST_PROPS_BOOL_ID_NUM;
+        value = va_arg (var_args, GstPropsFactoryEntry);
+        thisentry->data.bool_data = GPOINTER_TO_INT (value);
+        break;
+      default:
+        g_print("gstprops: type not allowed\n");
+	break;
+    }
+  }
+  else {
+    g_print("gstprops: no property '%s' to change\n", name);
+  }
+
+  return props;
+}
+
+gint
+gst_props_get_int (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    return thisentry->data.int_data;
+  }
+  
+  return 0;
+}
+
+gulong
+gst_props_get_fourcc_int (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    return thisentry->data.fourcc_data;
+  }
+  
+  return 0;
+}
+
+gboolean
+gst_props_get_boolean (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    return thisentry->data.bool_data;
+  }
+  
+  return 0;
 }
 
 /**

@@ -49,7 +49,9 @@ static void 			gst_audiosink_init		(GstAudioSink *audiosink);
 
 static gboolean 		gst_audiosink_open_audio	(GstAudioSink *sink);
 static void 			gst_audiosink_close_audio	(GstAudioSink *sink);
+static void 			gst_audiosink_sync_parms 	(GstAudioSink *audiosink);
 static GstElementStateReturn 	gst_audiosink_change_state	(GstElement *element);
+static GstPadNegotiateReturn	gst_audiosink_negotiate 	(GstPad *pad, GstCaps **caps, gint counter);
 
 static void 			gst_audiosink_set_arg		(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_audiosink_get_arg		(GtkObject *object, GtkArg *arg, guint id);
@@ -188,6 +190,7 @@ gst_audiosink_init (GstAudioSink *audiosink)
 {
   audiosink->sinkpad = gst_pad_new_from_template (gst_audiosink_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (audiosink), audiosink->sinkpad);
+  gst_pad_set_negotiate_function (audiosink->sinkpad, gst_audiosink_negotiate);
 
   gst_pad_set_chain_function (audiosink->sinkpad, gst_audiosink_chain);
 
@@ -200,6 +203,41 @@ gst_audiosink_init (GstAudioSink *audiosink)
   gst_clock_register (audiosink->clock, GST_OBJECT (audiosink));
 
   GST_FLAG_SET (audiosink, GST_ELEMENT_THREAD_SUGGESTED);
+}
+
+static GstPadNegotiateReturn 
+gst_audiosink_negotiate (GstPad *pad, GstCaps **caps, gint counter) 
+{
+  GstAudioSink *audiosink;
+
+  g_return_val_if_fail (pad != NULL, GST_PAD_NEGOTIATE_FAIL);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_NEGOTIATE_FAIL);
+
+  audiosink = GST_AUDIOSINK (gst_pad_get_parent (pad));
+
+  g_print ("audiosink: negotiate\n");
+  // we decide
+  if (counter == 0) {
+    *caps = NULL;
+    return GST_PAD_NEGOTIATE_TRY;
+  }
+  // have we got caps?
+  else if (*caps) {
+    if (audiosink->fd == -1) return GST_PAD_NEGOTIATE_FAIL;
+
+    audiosink->format = gst_caps_get_int (*caps, "format");
+    audiosink->channels = gst_caps_get_int (*caps, "channels");
+    audiosink->frequency = gst_caps_get_int (*caps, "rate");
+
+    gst_audiosink_sync_parms (audiosink);
+
+    // FIXME check if the qound card was really set to these caps,
+    // else send out another caps..
+
+    return GST_PAD_NEGOTIATE_AGREE;
+  }
+  
+  return GST_PAD_NEGOTIATE_FAIL;
 }
 
 static void 
@@ -222,7 +260,7 @@ gst_audiosink_sync_parms (GstAudioSink *audiosink)
 
   ioctl (audiosink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
 
-  g_print("audiosink: setting sound card to %dKHz %d bit %s (%d bytes buffer, %d fragment)\n",
+  g_print("audiosink: setting sound card to %dHz %d bit %s (%d bytes buffer, %d fragment)\n",
           audiosink->frequency, audiosink->format,
           (audiosink->channels == 2) ? "stereo" : "mono", ospace.bytes, frag);
 
@@ -232,7 +270,6 @@ static void
 gst_audiosink_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstAudioSink *audiosink;
-  MetaAudioRaw *meta;
   gboolean in_flush;
   audio_buf_info ospace;
 
@@ -250,22 +287,6 @@ gst_audiosink_chain (GstPad *pad, GstBuffer *buf)
   if ((in_flush = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLUSH))) {
     GST_DEBUG (0,"audiosink: flush\n");
     ioctl (audiosink->fd, SNDCTL_DSP_RESET, 0);
-  }
-
-
-  meta = (MetaAudioRaw *)gst_buffer_get_first_meta (buf);
-  if (meta != NULL) {
-    if ((meta->format != audiosink->format) ||
-        (meta->channels != audiosink->channels) ||
-        (meta->frequency != audiosink->frequency)) 
-    {
-      audiosink->format    = meta->format;
-      audiosink->channels  = meta->channels;
-      audiosink->frequency = meta->frequency;
-      gst_audiosink_sync_parms (audiosink);
-      g_print("audiosink: sound device set to format %d, %d channels, %dHz\n",
-              audiosink->format, audiosink->channels, audiosink->frequency);
-    }
   }
 
   gtk_signal_emit (GTK_OBJECT (audiosink), gst_audiosink_signals[SIGNAL_HANDOFF],
@@ -368,10 +389,6 @@ gst_audiosink_open_audio (GstAudioSink *sink)
   /* if we have it, set the default parameters and go have fun */
   if (sink->fd >= 0) {
     /* set card state */
-    sink->format = AFMT_S16_LE;
-    sink->channels = 2; /* stereo */
-    sink->frequency = 44100;
-    gst_audiosink_sync_parms (sink);
     ioctl(sink->fd, SNDCTL_DSP_GETCAPS, &sink->caps);
 
     g_print("audiosink: Capabilities\n");

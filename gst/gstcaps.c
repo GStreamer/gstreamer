@@ -399,10 +399,21 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 gboolean
 gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
-  if (fromcaps == NULL ||
-      tocaps == NULL) {
-    GST_DEBUG (0,"gstcaps: no caps\n");
-    return TRUE;
+  if (fromcaps == NULL) {
+    if (tocaps == NULL) {
+      GST_DEBUG (0,"gstcaps: no caps\n");
+      return TRUE;
+    }
+    else {
+      GST_DEBUG (0,"gstcaps: no src but destination caps\n");
+      return FALSE;
+    }
+  }
+  else {
+    if (tocaps == NULL) {
+      GST_DEBUG (0,"gstcaps: src caps and no dest caps\n");
+      return TRUE;
+    }
   }
 
   while (fromcaps) {

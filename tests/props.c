@@ -60,6 +60,15 @@ int main(int argc,char *argv[])
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Props3", NULL);
   gst_props_save_thyself (testprops, parent);
 
+  sinkprops = gst_props_set (sinkprops, "mpegtype", GST_PROPS_INT (1));
+  sinkprops = gst_props_set (sinkprops, "foobar", GST_PROPS_FOURCC_INT (0x56565656));
+
+  g_print ("%08lx\n", gst_props_get_fourcc_int (sinkprops, "foobar"));
+  g_print ("%d\n", gst_props_get_int (sinkprops, "mpegtype"));
+
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Props4", NULL);
+  gst_props_save_thyself (sinkprops, parent);
+  
   xmlDocDump(stdout, doc);
 
   return 0;

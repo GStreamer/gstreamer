@@ -50,20 +50,20 @@ typedef enum {
    GST_PROPS_LAST_ID_NUM = GST_PROPS_END_ID_NUM + 16,
 } GstPropsId;
 
-#define GST_PROPS_END_ID GINT_TO_POINTER(GST_PROPS_END_ID_NUM)
-#define GST_PROPS_LIST_ID GINT_TO_POINTER(GST_PROPS_LIST_ID_NUM)
-#define GST_PROPS_INT_ID GINT_TO_POINTER(GST_PROPS_INT_ID_NUM)
-#define GST_PROPS_INT_RANGE_ID GINT_TO_POINTER(GST_PROPS_INT_RANGE_ID_NUM)
-#define GST_PROPS_FOURCC_ID GINT_TO_POINTER(GST_PROPS_FOURCC_ID_NUM)
-#define GST_PROPS_BOOL_ID GINT_TO_POINTER(GST_PROPS_BOOL_ID_NUM)
-#define GST_PROPS_LAST_ID GINT_TO_POINTER(GST_PROPS_LAST_ID_NUM)
+#define GST_PROPS_END_ID 	GINT_TO_POINTER(GST_PROPS_END_ID_NUM)
+#define GST_PROPS_LIST_ID 	GINT_TO_POINTER(GST_PROPS_LIST_ID_NUM)
+#define GST_PROPS_INT_ID 	GINT_TO_POINTER(GST_PROPS_INT_ID_NUM)
+#define GST_PROPS_INT_RANGE_ID 	GINT_TO_POINTER(GST_PROPS_INT_RANGE_ID_NUM)
+#define GST_PROPS_FOURCC_ID 	GINT_TO_POINTER(GST_PROPS_FOURCC_ID_NUM)
+#define GST_PROPS_BOOL_ID 	GINT_TO_POINTER(GST_PROPS_BOOL_ID_NUM)
+#define GST_PROPS_LAST_ID 	GINT_TO_POINTER(GST_PROPS_LAST_ID_NUM)
 
-#define GST_PROPS_LIST(a...) GST_PROPS_LIST_ID,##a,NULL
-#define GST_PROPS_INT(a) GST_PROPS_INT_ID,(GINT_TO_POINTER(a))
-#define GST_PROPS_INT_RANGE(a,b) GST_PROPS_INT_RANGE_ID,(GINT_TO_POINTER(a)),(GINT_TO_POINTER(b))
-#define GST_PROPS_FOURCC(a,b,c,d) GST_PROPS_FOURCC_ID,(GINT_TO_POINTER((a)|(b)<<8|(c)<<16|(d)<<24))
-#define GST_PROPS_FOURCC_INT(a) GST_PROPS_FOURCC_ID,(GINT_TO_POINTER(a))
-#define GST_PROPS_BOOLEAN(a) GST_PROPS_BOOL_ID,(GINT_TO_POINTER(a))
+#define GST_PROPS_LIST(a...) 		GST_PROPS_LIST_ID,##a,NULL
+#define GST_PROPS_INT(a) 		GST_PROPS_INT_ID,(GINT_TO_POINTER(a))
+#define GST_PROPS_INT_RANGE(a,b) 	GST_PROPS_INT_RANGE_ID,(GINT_TO_POINTER(a)),(GINT_TO_POINTER(b))
+#define GST_PROPS_FOURCC(a,b,c,d) 	GST_PROPS_FOURCC_ID,(GINT_TO_POINTER((a)|(b)<<8|(c)<<16|(d)<<24))
+#define GST_PROPS_FOURCC_INT(a) 	GST_PROPS_FOURCC_ID,(GINT_TO_POINTER(a))
+#define GST_PROPS_BOOLEAN(a) 		GST_PROPS_BOOL_ID,(GINT_TO_POINTER(a))
 
 
 struct _GstProps {
@@ -81,6 +81,12 @@ GstProps*	gst_props_new			(GstPropsFactoryEntry entry, ...);
 GstProps*	gst_props_merge			(GstProps *props, GstProps *tomerge);
 
 gboolean 	gst_props_check_compatibility 	(GstProps *fromprops, GstProps *toprops);
+
+GstProps*	gst_props_set			(GstProps *props, const gchar *name, GstPropsFactoryEntry value, ...);
+
+gint 		gst_props_get_int		(GstProps *props, const gchar *name);
+gulong		gst_props_get_fourcc_int	(GstProps *props, const gchar *name);
+gboolean	gst_props_get_boolean		(GstProps *props, const gchar *name);
 
 xmlNodePtr 	gst_props_save_thyself 		(GstProps *props, xmlNodePtr parent);
 GstProps* 	gst_props_load_thyself 		(xmlNodePtr parent);

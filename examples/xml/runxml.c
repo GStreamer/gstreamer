@@ -35,8 +35,6 @@ int main(int argc,char *argv[])
 
   xml = gst_xml_new ();
 
-  //g_print ("%p\n", xml);
-
   gtk_signal_connect (GTK_OBJECT (xml), "object_loaded", xml_loaded, xml);
 
   ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
@@ -46,8 +44,6 @@ int main(int argc,char *argv[])
   g_assert (bin != NULL);
 
   gst_element_set_state(bin, GST_STATE_PLAYING);
-
-  playing = TRUE;
 
   while (gst_bin_iterate(GST_BIN(bin)));
 
