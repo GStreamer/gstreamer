@@ -2638,16 +2638,28 @@ void
 gst_element_set_loop_function (GstElement *element,
                                GstElementLoopFunction loop)
 {
+  gboolean need_notify = FALSE;
+  
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  /* if the element changed from loop based to chain/get based
+   * or vice versa, we need to inform the scheduler about that */
+  if ((element->loopfunc == NULL && loop != NULL) ||
+      (element->loopfunc != NULL && loop == NULL))
+  {
+    need_notify = TRUE;
+  }
+  
   /* set the loop function */
   element->loopfunc = loop;
 
-  /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
-  GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
+  if (need_notify) {
+    /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
+    GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
 
-  if (GST_ELEMENT_SCHED (element)) {
-    gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
+    if (GST_ELEMENT_SCHED (element)) {
+      gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
+    }
   }
 }
 
