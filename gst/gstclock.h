@@ -141,7 +141,7 @@ struct _GstClock {
   GstClockTime	 max_event_diff;
   
   /* weird padding here */  
-  guint8	 padding[sizeof(gpointer) * GST_PADDING - sizeof (GstClockTime) * 2];
+  guint8	 padding[sizeof(gpointer) * GST_PADDING];
   /*gpointer _gst_reserved[GST_PADDING];*/
 };
 
