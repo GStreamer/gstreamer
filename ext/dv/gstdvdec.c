@@ -35,6 +35,16 @@
 #define PAL_BUFFER 144000
 #define PAL_FRAMERATE 25.0
 
+#define PAL_NORMAL_PAR_X	16
+#define PAL_NORMAL_PAR_Y	15
+#define PAL_WIDE_PAR_X		64
+#define PAL_WIDE_PAR_Y		45
+
+#define NTSC_NORMAL_PAR_X	80
+#define NTSC_NORMAL_PAR_Y	89
+#define NTSC_WIDE_PAR_X		320
+#define NTSC_WIDE_PAR_Y		267
+
 /* The ElementDetails structure gives a human-readable description
  * of the plugin, as well as author and version data.
  */
@@ -98,7 +108,13 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
-        " }, " "framerate = (double) [ 1.0, 60.0 ];"
+        " }, "
+        "pixel-aspect-ratio=(fraction) { "
+        G_STRINGIFY (PAL_NORMAL_PAR_X) "/" G_STRINGIFY (PAL_NORMAL_PAR_Y) ","
+        G_STRINGIFY (PAL_WIDE_PAR_X) "/" G_STRINGIFY (PAL_WIDE_PAR_Y) ","
+        G_STRINGIFY (NTSC_NORMAL_PAR_X) "/" G_STRINGIFY (NTSC_NORMAL_PAR_Y) ","
+        G_STRINGIFY (NTSC_WIDE_PAR_X) "/" G_STRINGIFY (NTSC_WIDE_PAR_Y) "},"
+        "framerate = (double) [ 1.0, 60.0 ];"
         //"framerate = (double) { "
         //G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
         //" }; "
@@ -112,7 +128,13 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
-        " }, " "framerate = (double) [ 1.0, 60.0 ];"
+        " }, "
+        "pixel-aspect-ratio=(fraction) { "
+        G_STRINGIFY (PAL_NORMAL_PAR_X) "/" G_STRINGIFY (PAL_NORMAL_PAR_Y) ","
+        G_STRINGIFY (PAL_WIDE_PAR_X) "/" G_STRINGIFY (PAL_WIDE_PAR_Y) ","
+        G_STRINGIFY (NTSC_NORMAL_PAR_X) "/" G_STRINGIFY (NTSC_NORMAL_PAR_Y) ","
+        G_STRINGIFY (NTSC_WIDE_PAR_X) "/" G_STRINGIFY (NTSC_WIDE_PAR_Y) "},"
+        "framerate = (double) [ 1.0, 60.0 ];"
         //"framerate = (double) { "
         //G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
         //" }; "
@@ -126,7 +148,13 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
-        " }, " "framerate = (double) [ 1.0, 60.0 ]"
+        " }, "
+        "pixel-aspect-ratio=(fraction) { "
+        G_STRINGIFY (PAL_NORMAL_PAR_X) "/" G_STRINGIFY (PAL_NORMAL_PAR_Y) ","
+        G_STRINGIFY (PAL_WIDE_PAR_X) "/" G_STRINGIFY (PAL_WIDE_PAR_Y) ","
+        G_STRINGIFY (NTSC_NORMAL_PAR_X) "/" G_STRINGIFY (NTSC_NORMAL_PAR_Y) ","
+        G_STRINGIFY (NTSC_WIDE_PAR_X) "/" G_STRINGIFY (NTSC_WIDE_PAR_Y) "},"
+        "framerate = (double) [ 1.0, 60.0 ]"
         //"framerate = (double) { "
         //G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
         //" }"
@@ -740,7 +768,25 @@ gst_dvdec_video_getcaps (GstPad * pad)
 
   if (dvdec->found_header) {
     int i;
+    gint par_x, par_y;
 
+    if (dvdec->PAL) {
+      if (dv_format_wide (dvdec->decoder)) {
+        par_x = PAL_WIDE_PAR_X;
+        par_y = PAL_WIDE_PAR_Y;
+      } else {
+        par_x = PAL_NORMAL_PAR_X;
+        par_y = PAL_NORMAL_PAR_Y;
+      }
+    } else {
+      if (dv_format_wide (dvdec->decoder)) {
+        par_x = NTSC_WIDE_PAR_X;
+        par_y = NTSC_WIDE_PAR_Y;
+      } else {
+        par_x = NTSC_NORMAL_PAR_X;
+        par_y = NTSC_NORMAL_PAR_Y;
+      }
+    }
     /* set the height */
     for (i = 0; i < gst_caps_get_size (caps); i++) {
       GstStructure *structure = gst_caps_get_structure (caps, i);
@@ -748,7 +794,7 @@ gst_dvdec_video_getcaps (GstPad * pad)
       gst_structure_set (structure,
           "height", G_TYPE_INT, dvdec->height,
           "framerate", G_TYPE_DOUBLE, dvdec->framerate / dvdec->drop_factor,
-          NULL);
+          "pixel-aspect-ratio", GST_TYPE_FRACTION, par_x, par_y, NULL);
     }
   }
 

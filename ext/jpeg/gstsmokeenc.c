@@ -114,7 +114,7 @@ static GstStaticPadTemplate gst_smokeenc_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-smoke, "
+    GST_STATIC_CAPS ("video/x-smoke, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
     );
