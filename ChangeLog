@@ -1,5 +1,21 @@
 2004-07-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/schedulers/gstoptimalscheduler.c: (gst_opt_scheduler_init),
+	(create_chain), (destroy_chain), (create_group), (destroy_group),
+	(add_to_group), (merge_groups), (group_elements), (group_inc_link),
+	(group_dec_link), (gst_opt_scheduler_pad_link),
+	(group_inc_links_for_element), (group_migrate_connected):
+	Call group_inc_link with the proper src->sink ordering -- 
+	break this, and we break sort_chain. patch from wingo for bug
+	147713.
+	Partially revert patch 1.89. When adding a loop based element to 
+	the scheduler, the links to other groups are automatically followed
+	and incremented. This should not happen because the bin will call
+	pad_link explicitly for those connection, resulting in them counted 
+	twice. Results in assertion failure on pipeline cleanup.
+
+2004-07-16  Wim Taymans  <wim@fluendo.com>
+
 	* testsuite/schedulers/143777-2.c: (main):
 	* testsuite/schedulers/147713.c: (handoff_src), (handoff_sink),
 	(main):
