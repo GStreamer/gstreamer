@@ -1,3 +1,8 @@
+2005-03-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/basics-bins.xml:
+	  Fix variable name mismatch (#170464).
+
 2005-03-23  Tristan van Berkom  <tristan.van.berkom@gmail.com>
 
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
