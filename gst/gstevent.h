@@ -215,7 +215,7 @@ GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);
 /* discontinous event */
 GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
 						 GstFormat format1, ...);
-GstEvent*	gst_event_new_discontinuousv	(gboolean new_media,
+GstEvent*	gst_event_new_discontinuous_valist	(gboolean new_media,
 						 GstFormat format1, 
 						 va_list var_args);
 gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);
