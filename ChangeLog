@@ -1,3 +1,9 @@
+2004-04-19  David Schleef  <ds@schleef.org>
+
+	* docs/libs/Makefile.am: Change sinclude to include
+	* docs/gst/Makefile.am: same
+	* pkgconfig/Makefile.am:  Remove GNU-ism from makefile target
+
 2004-04-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:

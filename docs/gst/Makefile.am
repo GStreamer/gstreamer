@@ -8,7 +8,7 @@ DOC_MODULE=gstreamer
 DOC=gstreamer
 FORMATS=html
 html: html-build.stamp
-sinclude $(srcdir)/../upload.mak
+include $(srcdir)/../upload.mak
 
 # generated basefiles
 #basefiles = \
@@ -311,6 +311,7 @@ uninstall-local:
 else
 install-data-local:
 uninstall-local:
+all-local:
 endif
 
 #

@@ -8,7 +8,7 @@ DOC_MODULE=gstreamer-libs
 DOC=gstreamer-libs
 FORMATS=html
 html: html-build.stamp
-sinclude $(srcdir)/../upload.mak
+include $(srcdir)/../upload.mak
 
 # generated basefiles
 #basefiles = \
@@ -186,6 +186,8 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo '-- Fixing Crossreferences' 
 	LANG=C && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	touch html-build.stamp
+else
+all-local:
 endif
 
 clean-local:

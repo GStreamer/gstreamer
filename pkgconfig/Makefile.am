@@ -10,9 +10,9 @@ pcfiles_uninstalled =						\
 all-local: $(pcfiles) $(pcfiles_uninstalled)
 
 ### how to generate pc files
-$(pcfiles): %-@GST_MAJORMINOR@.pc: %.pc
+%-@GST_MAJORMINOR@.pc: %.pc
 	cp $< $@
-$(pcfiles_uninstalled): %-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
+%-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
 	cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig
