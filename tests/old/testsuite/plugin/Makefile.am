@@ -3,7 +3,7 @@ include ../Rules
 
 plugin_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
-tests_pass = dynamic linked loading registry static static2
+tests_pass = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ dynamic linked loading registry static static2
 tests_fail =
 
 
