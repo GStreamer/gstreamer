@@ -33,7 +33,7 @@
 #define DEBUG(format, args...) \
 	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
 		GST_ELEMENT(v4l2element), \
-		"V4L2: " format "\n", ##args)
+		"V4L2: " format, ##args)
 
 
 /******************************************************

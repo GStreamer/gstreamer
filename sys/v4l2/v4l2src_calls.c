@@ -31,7 +31,7 @@
 #define DEBUG(format, args...) \
 	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
 		GST_ELEMENT(v4l2src), \
-		"V4L2SRC: " format "\n", ##args)
+		"V4L2SRC: " format, ##args)
 
 #define MIN_BUFFERS_QUEUED 2
 
