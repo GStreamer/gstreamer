@@ -1,3 +1,20 @@
+2004-07-21  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_renegotiate_size), (gst_ximagesink_sink_link),
+	(gst_ximagesink_chain), (gst_ximagesink_set_xwindow_id): Optimize
+	images creation for both elements. We don't create the image on caps
+	nego or renego, we just destroy the internal one if present if it does
+	not match the needs. The chain function takes care of creating a new
+	image when needed.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_xwindow_decorate), (gst_xvimagesink_sink_link),
+	(gst_xvimagesink_chain), (gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_set_xwindow_id): Additionally xvimage now contains
+	the image format information. The buffer pool checks for the context
+	image format and discard images with different formats.
+	* sys/xvimage/xvimagesink.h: Adding im_format in the xvimage structure.
+
 2004-07-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
