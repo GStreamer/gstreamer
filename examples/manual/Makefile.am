@@ -1,17 +1,17 @@
 if HAVE_LIBGNOMEUI
-GNOME=gnome dynamic
+GNOME=gnome
 else
 GNOME=
 endif
 
-EXAMPLES = $(GNOME) xml-mp3
+EXAMPLES = dynamic $(GNOME) helloworld helloworld2 queue xml-mp3
 noinst_PROGRAMS = $(EXAMPLES)
 
 LDADD = $(GST_LIBS)
 INCLUDES = $(GST_CFLAGS)
 
-dynamic_LDADD = $(GST_LIBS) $(LIBGNOMEUI_LIBS)
-dynamic_CFLAGS = $(GST_CFLAGS) $(LIBGNOMEUI_CFLAGS)
+#dynamic_LDADD = $(GST_LIBS) $(LIBGNOMEUI_LIBS)
+#dynamic_CFLAGS = $(GST_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 gnome_LDADD = $(GST_LIBS) $(LIBGNOMEUI_LIBS)
 gnome_CFLAGS = $(GST_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 
@@ -23,5 +23,5 @@ EXTRA_DIST = extract.pl
 # also, it's a bit irritating that right now a change in any xml file
 # triggers a rebuild of all examples
 #%.c:
-dynamic.c gnome.c xml-mp3.c: $(top_srcdir)/docs/manual/*.xml
+dynamic.c gnome.c helloworld.c helloworld2.c queue.c xml-mp3.c: $(top_srcdir)/docs/manual/*.xml
 	$(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/*.xml

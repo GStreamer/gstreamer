@@ -46,6 +46,7 @@
   </para>
 
   <programlisting>
+/* example-begin queue.c */
 #include &lt;stdlib.h&gt;
 #include &lt;gst/gst.h&gt;
 
@@ -63,14 +64,14 @@ eos (GstElement *element, gpointer data)
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *filesrc, *audiosink, *queue, *parse, *decode;
+  GstElement *filesrc, *audiosink, *queue, *decode;
   GstElement *bin;
   GstElement *thread;
 
   gst_init (&amp;argc,&amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: %s &lt;mp3 filename&gt;\n", argv[0]);
     exit (-1);
   }
 
@@ -87,36 +88,25 @@ main (int argc, char *argv[])
   g_assert (filesrc != NULL);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   g_signal_connect (G_OBJECT (filesrc), "eos",
-                     G_CALLBACK (eos), thread);
+                    G_CALLBACK (eos), thread);
 
   queue = gst_element_factory_make ("queue", "queue");
+  g_assert (queue != NULL);
 
   /* and an audio sink */
-  audiosink = gst_element_factory_make ("audiosink", "play_audio");
+  audiosink = gst_element_factory_make ("osssink", "play_audio");
   g_assert (audiosink != NULL);
 
-  parse = gst_element_factory_make ("mp3parse", "parse");
-  decode = gst_element_factory_make ("mpg123", "decode");
+  decode = gst_element_factory_make ("mad", "decode");
 
   /* add objects to the main bin */
-  gst_bin_add (GST_BIN (bin), filesrc);
-  gst_bin_add (GST_BIN (bin), queue);
+  gst_bin_add_many (GST_BIN (thread), decode, audiosink, NULL);
 
-  gst_bin_add (GST_BIN (thread), parse);
-  gst_bin_add (GST_BIN (thread), decode);
-  gst_bin_add (GST_BIN (thread), audiosink);
+  gst_bin_add_many (GST_BIN (bin), filesrc, queue, thread, NULL);
+
   
-  gst_pad_connect (gst_element_get_pad (filesrc,"src"),
-                   gst_element_get_pad (queue,"sink"));
-
-  gst_pad_connect (gst_element_get_pad (queue, "src"),
-                   gst_element_get_pad (parse, "sink"));
-  gst_pad_connect (gst_element_get_pad (parse, "src"),
-                   gst_element_get_pad (decode, "sink"));
-  gst_pad_connect (gst_element_get_pad (decode, "src"),
-                   gst_element_get_pad (audiosink, "sink"));
-
-  gst_bin_add (GST_BIN (bin), thread);
+  gst_element_connect (filesrc, queue);
+  gst_element_connect_many (queue, decode, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
@@ -129,8 +119,9 @@ main (int argc, char *argv[])
 
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
 
-  exit (0);
+  return 0;
 }
+/* example-end queue.c */
   </programlisting>
 
 
