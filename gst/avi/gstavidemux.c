@@ -705,8 +705,7 @@ gst_avi_demux_stream_avih (GstAviDemux *avi,
   GstRiffRead *riff = GST_RIFF_READ (avi);
   guint32 tag;
   GstBuffer *buf;
-  gst_riff_avih avih;
-  guint32 *data;
+  gst_riff_avih avih, *_avih;
 
   if (!gst_riff_read_data (riff, &tag, &buf))
     return FALSE;
@@ -723,21 +722,21 @@ gst_avi_demux_stream_avih (GstAviDemux *avi,
     return FALSE;
   }
 
-  data = (guint32 *) GST_BUFFER_DATA (buf);
-  avih.us_frame    = GUINT32_FROM_LE (*data); data++;
-  avih.max_bps     = GUINT32_FROM_LE (*data); data++;
-  avih.pad_gran    = GUINT32_FROM_LE (*data); data++;
-  avih.flags       = GUINT32_FROM_LE (*data); data++;
-  avih.tot_frames  = GUINT32_FROM_LE (*data); data++;
-  avih.init_frames = GUINT32_FROM_LE (*data); data++;
-  avih.streams     = GUINT32_FROM_LE (*data); data++;
-  avih.bufsize     = GUINT32_FROM_LE (*data); data++;
-  avih.width       = GUINT32_FROM_LE (*data); data++;
-  avih.height      = GUINT32_FROM_LE (*data); data++;
-  avih.scale       = GUINT32_FROM_LE (*data); data++;
-  avih.rate        = GUINT32_FROM_LE (*data); data++;
-  avih.start       = GUINT32_FROM_LE (*data); data++;
-  avih.length      = GUINT32_FROM_LE (*data); data++;
+  _avih = (gst_riff_avih *) GST_BUFFER_DATA (buf);
+  avih.us_frame    = GUINT32_FROM_LE (_avih->us_frame);
+  avih.max_bps     = GUINT32_FROM_LE (_avih->max_bps);
+  avih.pad_gran    = GUINT32_FROM_LE (_avih->pad_gran);
+  avih.flags       = GUINT32_FROM_LE (_avih->flags);
+  avih.tot_frames  = GUINT32_FROM_LE (_avih->tot_frames);
+  avih.init_frames = GUINT32_FROM_LE (_avih->init_frames);
+  avih.streams     = GUINT32_FROM_LE (_avih->streams);
+  avih.bufsize     = GUINT32_FROM_LE (_avih->bufsize);
+  avih.width       = GUINT32_FROM_LE (_avih->width);
+  avih.height      = GUINT32_FROM_LE (_avih->height);
+  avih.scale       = GUINT32_FROM_LE (_avih->scale);
+  avih.rate        = GUINT32_FROM_LE (_avih->rate);
+  avih.start       = GUINT32_FROM_LE (_avih->start);
+  avih.length      = GUINT32_FROM_LE (_avih->length);
 
   /* debug stuff */
   GST_INFO ("avih tag found:");
@@ -958,7 +957,7 @@ gst_avi_demux_stream_odml (GstAviDemux *avi)
 
     switch (tag) {
       case GST_RIFF_TAG_dmlh: {
-        gst_riff_dmlh dmlh;
+        gst_riff_dmlh dmlh, *_dmlh;
         GstBuffer *buf;
 
         if (!gst_riff_read_data (riff, &tag, &buf))
@@ -969,7 +968,8 @@ gst_avi_demux_stream_odml (GstAviDemux *avi)
           gst_buffer_unref (buf);
           break;
         }
-        dmlh.totalframes = GUINT32_FROM_LE (*((guint32 *) GST_BUFFER_DATA (buf)));
+        _dmlh = (gst_riff_dmlh *) GST_BUFFER_DATA (buf);
+        dmlh.totalframes = GUINT32_FROM_LE (_dmlh->totalframes);
 
         GST_INFO ("dmlh tag found:");
         GST_INFO (" totalframes: %u", dmlh.totalframes);
@@ -1048,18 +1048,17 @@ gst_avi_demux_stream_index (GstAviDemux *avi)
   GST_INFO ("%u index entries", avi->index_size);
 
   for (i = 0; i < avi->index_size; i++) {
-    gst_riff_index_entry entry;
+    gst_riff_index_entry entry, *_entry;
     avi_stream_context *stream;
     gint stream_nr;
     gst_avi_index_entry *target;
     GstFormat format;
-    guint32 *data;
 
-    data = &((guint32 *) GST_BUFFER_DATA (buf))[i * 4];
-    entry.id     = GUINT32_FROM_LE (data);
-    entry.offset = GUINT32_FROM_LE (data + 1);
-    entry.flags  = GUINT32_FROM_LE (data + 2);
-    entry.size   = GUINT32_FROM_LE (data + 3);
+    _entry = &((gst_riff_index_entry *) GST_BUFFER_DATA (buf))[i];
+    entry.id     = GUINT32_FROM_LE (_entry->id);
+    entry.offset = GUINT32_FROM_LE (_entry->offset);
+    entry.flags  = GUINT32_FROM_LE (_entry->flags);
+    entry.size   = GUINT32_FROM_LE (_entry->size);
     target = &avi->index_entries[i];
 
     stream_nr = CHUNKID_TO_STREAMNR (entry.id);
