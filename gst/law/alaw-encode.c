@@ -125,7 +125,7 @@ alawenc_getcaps (GstPad * pad)
 
   if (pad == alawenc->srcpad) {
     otherpad = alawenc->sinkpad;
-    base_caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+    base_caps = gst_caps_new_simple ("audio/x-alaw", NULL);
   } else {
     otherpad = alawenc->srcpad;
     base_caps = gst_caps_new_simple ("audio/x-raw-int",
@@ -168,7 +168,7 @@ alawenc_link (GstPad * pad, const GstCaps * caps)
 
   if (pad == alawenc->sinkpad) {
     otherpad = alawenc->srcpad;
-    base_caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+    base_caps = gst_caps_new_simple ("audio/x-alaw", NULL);
   } else {
     otherpad = alawenc->sinkpad;
     base_caps = gst_caps_new_simple ("audio/x-raw-int",

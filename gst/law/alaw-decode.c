@@ -82,7 +82,7 @@ alawdec_getcaps (GstPad * pad)
 
   if (pad == alawdec->sinkpad) {
     otherpad = alawdec->srcpad;
-    base_caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+    base_caps = gst_caps_new_simple ("audio/x-alaw", NULL);
   } else {
     otherpad = alawdec->sinkpad;
     base_caps = gst_caps_new_simple ("audio/x-raw-int",
@@ -125,7 +125,7 @@ alawdec_link (GstPad * pad, const GstCaps * caps)
 
   if (pad == alawdec->srcpad) {
     otherpad = alawdec->sinkpad;
-    base_caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+    base_caps = gst_caps_new_simple ("audio/x-alaw", NULL);
   } else {
     otherpad = alawdec->srcpad;
     base_caps = gst_caps_new_simple ("audio/x-raw-int",
