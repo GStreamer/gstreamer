@@ -1,3 +1,15 @@
+2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream):
+	  set explicit caps before adding the element, so the autopluggers can
+	  plug correctly.
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find),
+	(mpeg2_sys_type_find), (mpeg1_sys_type_find),
+	(mpeg_video_type_find), (mpeg_video_stream_type_find),
+	(dv_type_find):
+	  fix memleaks in typefind functions. gst_type_find_suggest takes a const
+	  argument.
+
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/colorbalance/Makefile.am:

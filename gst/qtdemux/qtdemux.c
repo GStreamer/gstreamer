@@ -562,10 +562,10 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
   qtdemux->n_streams++;
   GST_DEBUG ("n_streams is now %d", qtdemux->n_streams);
 
+  gst_pad_set_explicit_caps(stream->pad, stream->caps);
+
   GST_DEBUG ("adding pad %p to qtdemux %p", stream->pad, qtdemux);
   gst_element_add_pad(GST_ELEMENT (qtdemux), stream->pad);
-
-  gst_pad_set_explicit_caps(stream->pad, stream->caps);
 }
 
 
