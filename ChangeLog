@@ -1,6 +1,11 @@
 2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
 
 	* gst/registries/gstxmlregistry.c:
+	removing the file doesn't seem to be a good idea on Linux
+
+2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+
+	* gst/registries/gstxmlregistry.c:
 	Remove the registry before renaming the tempfile (needed for Windows)
 
 2004-07-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
