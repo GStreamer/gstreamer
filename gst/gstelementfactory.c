@@ -270,7 +270,7 @@ gst_elementfactory_create (GstElementFactory *factory,
  * It wll be given the name supplied, since all elements require a name as
  * their first argument.
  *
- * Returns: new #GstElement
+ * Returns: new #GstElement (or NULL if unable to create element)
  */
 GstElement*
 gst_elementfactory_make (const gchar *factoryname, const gchar *name)
