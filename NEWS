@@ -1,6 +1,35 @@
-This is GStreamer Plugins 0.7.5
+This is GStreamer Plugins 0.7.6
 
-Changes since 0.7.5: 
+Changes since 0.7.5:
+
+      * uses 0.8 as the major/minor number
+      * dist fixes for generated files
+      * MPEG video playback fixed
+      * error call fixes
+      * videodrop fixes
+      * alsa oss emulation mixer fixes
+      * audioconvert fixes
+      * gconf versioning fixes
+      * mad xing header fixes
+      * vorbisdec fixes
+      * mad leak and stream reporting fixes
+      * media-info fixed
+      * buffer leak fixes
+      * osssink timing fixes
+      * NAS fixes
+      * cdparanoia error
+
+Bugs fixed since 0.7.5:
+                                                                                
+      * 114560 : rfc2250enc produces empty buffers
+      * 122279 : goom's first timestamp is broken
+      * 131128 : aasink and sdlvideosink are broken
+      * 133541 : int2float and int2floatnew conflict should be resolved
+      * 133783 : remove deprecated plugins
+      * 135597 : make gstosselement properly deal with symlinks
+      * 136334 : udpsrc pads / caps error
+                                                                                
+Changes since 0.7.4: 
     
       * Compatible with gstreamer 0.7.5
       * ffmpeg plugin moved to gst-ffmpeg module
@@ -27,7 +56,7 @@ Changes since 0.7.5:
       * qtdemux fixes
       * gamma correction fixes
 
-Bugs fixed since 0.7.5:
+Bugs fixed since 0.7.4:
     
       * 129740 : MP4/M4A files not recognized properly
       * 130507 : Silence/sine don't have a sync property
