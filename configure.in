@@ -153,6 +153,9 @@ dnl =======================================
 dnl Check for libesd
 AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
 
+dnl Check for libasound
+AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
+
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
 if test x$GDK_PIXBUF_CONFIG = xno; then
@@ -287,10 +290,10 @@ HAVE_LIBJPEG=no, )
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
 HAVE_CDPARANOIA=yes
-AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, )
-AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
 AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
+AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
+AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 
 dnl Check for liblame
@@ -497,6 +500,7 @@ AM_CONDITIONAL(HAVE_FIG2DEV,        $HAVE_FIG2DEV)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
+AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 
 
 
