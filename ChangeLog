@@ -1,3 +1,7 @@
+2004-11-29  Johan Dahlin  <johan@gnome.org>
+
+	* configure.ac: Post release version bump
+
 === gst-python 0.8.1 ===
 2004-11-29  Johan Dahlin  <johan@gnome.org>
 
