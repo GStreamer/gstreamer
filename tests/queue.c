@@ -9,10 +9,10 @@ int main(int argc,char *argv[]) {
 
   pipeline = GST_BIN(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(1,pipeline != NULL);
-  //thr1 = GST_BIN(gst_thread_new("thr1"));
-  thr1 = gst_bin_new("thr1");
+  thr1 = GST_BIN(gst_thread_new("thr1"));
+//  thr1 = gst_bin_new("thr1");
   g_return_val_if_fail(2,thr1 != NULL);
-  //thr2 = GST_BIN(gst_thread_new("thr2"));
+//  thr2 = GST_BIN(gst_thread_new("thr2"));
   thr2 = gst_bin_new("thr2");
   g_return_val_if_fail(3,thr2 != NULL);
 fprintf(stderr,"QUEUE: fakesrc\n");
@@ -21,6 +21,7 @@ fprintf(stderr,"QUEUE: fakesrc\n");
 fprintf(stderr,"QUEUE: queue\n");
   queue = gst_elementfactory_make("queue","queue");
   g_return_val_if_fail(4,queue != NULL);
+  gtk_object_set(GTK_OBJECT(queue),"max_level",1,NULL);
 fprintf(stderr,"QUEUE: fakesink\n");
   sink = gst_elementfactory_make("fakesink","sink");
   g_return_val_if_fail(5,sink != NULL);
@@ -39,16 +40,23 @@ fprintf(stderr,"QUEUE: fakesink\n");
   gst_bin_add(pipeline,GST_ELEMENT(thr1));
   gst_bin_add(pipeline,GST_ELEMENT(queue));
   gst_bin_add(pipeline,GST_ELEMENT(thr2));
+  fprintf(stderr,"QUEUE: connecting elements\n");
   gst_element_connect(thr1,"src",queue,"sink");
   gst_element_connect(queue,"src",thr2,"sink");
-  printf("QUEUE: constructed outer pipeline\n");
+//  gst_pad_connect(gst_element_get_pad(src,"src"),gst_element_get_pad(queue,"sink"));
+//  gst_pad_connect(gst_element_get_pad(queue,"src"),gst_element_get_pad(sink,"sink"));
+  fprintf(stderr,"QUEUE: constructed outer pipeline\n");
 
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
+  fprintf(stderr,"\n\nQUEUE: setting state:\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   if (GST_STATE(src) != GST_STATE_PLAYING) fprintf(stderr,"error: state not set\n");
 
+  sleep(1);
   fprintf(stderr,"\n\n");
-  gst_bin_iterate(thr1);
+//  for (i=0;i<1000;i++)
+//    gst_bin_iterate(thr1);
   fprintf(stderr,"\n\n");
+  fflush(stdout);
+  fflush(stderr);
   gst_bin_iterate(thr2);
 }
