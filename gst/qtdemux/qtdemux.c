@@ -2511,6 +2511,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('g', 'i', 'f', ' '):
       return gst_caps_from_string ("image/gif");
     case GST_MAKE_FOURCC ('h', '2', '6', '3'):
+    case GST_MAKE_FOURCC ('s', '2', '6', '3'):
       /* H.263 */
       /* ffmpeg uses the height/width props, don't know why */
       return gst_caps_from_string ("video/x-h263");
