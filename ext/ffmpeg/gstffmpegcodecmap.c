@@ -193,7 +193,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_SVQ3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
-	  "svqversion", G_TYPE_INT, 3,
+	  "svqversion",        G_TYPE_INT,          3,
+	  "halfpel_flag",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
+	  "thirdpel_flag",     GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
+	  "low_delay",         GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
+	  "unknown_svq3_flag", GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
           NULL);
       break;
 
@@ -663,6 +667,45 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
 	g_warning ("Unknown wma version %d\n", wmaversion);
 	break;
     }
+
+    return;
+  }
+
+  if (!strcmp(mimetype, "video/x-svq")) {
+    gint version = 0;
+
+    if (!gst_structure_get_int (structure, "svqversion", &version)) {
+      g_warning ("invalid caps for video/x-svq");
+      return;
+    }
+
+    if (version == 3) {
+      gint halfpel_flag, thirdpel_flag, low_delay, unknown_svq3_flag;
+      guint16 flags;
+
+      if (!gst_structure_get_int (structure, "halfpel_flag", &halfpel_flag) ||
+          !gst_structure_get_int (structure, "thirdpel_flag", &thirdpel_flag) ||
+	  !gst_structure_get_int (structure, "low_delay", &low_delay) ||
+	  !gst_structure_get_int (structure, "unknown_svq3_flag", &unknown_svq3_flag)) {
+	g_warning ("invalid caps for video/x-svq");
+	return;
+      }	  
+
+      context->extradata = (guint8 *) g_malloc0 (0x64);
+      g_stpcpy (context->extradata, "SVQ3");
+      flags = 1 << 3;
+      flags |= low_delay;
+      flags = flags << 2;
+      flags |= unknown_svq3_flag;
+      flags = flags << 6;
+      flags |= halfpel_flag;
+      flags = flags << 1;
+      flags |= thirdpel_flag;
+      flags = flags << 3;
+
+      memcpy (context->extradata + 0x62, &flags, 2);
+      context->extradata_size = 0x64;
+    }
   }
 }
 
@@ -789,6 +832,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps *caps,
       }
     }
   }
+
+  gst_ffmpeg_caps_to_extradata (caps, context);
 }
 
 /* Convert a GstCaps and a FFMPEG codec Type to a
