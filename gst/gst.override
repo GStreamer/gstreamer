@@ -48,6 +48,7 @@ typedef struct {
 } PyGstCustomNotify;
 
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
+static PyObject *_wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs);
 
 %%
 include
@@ -1042,4 +1043,18 @@ _wrap_gst_main(PyObject *self)
         Py_INCREF(Py_None);
         return Py_None;
 
+}
+%%
+override-slot GstElement.tp_init kwargs
+static int
+_wrap_gst_element_tp_init(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	return 1;
+}
+%%
+override-slot GstElement.tp_new kwargs
+static PyObject *
+_wrap_gst_element_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+	return _wrap_gst_element_factory_make(NULL, args, kwargs);
 }

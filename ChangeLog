@@ -1,7 +1,22 @@
+2004-04-16  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.override (_wrap_gst_element_tp_new): New, just pointing
+	to _wrap_gst_element_factory_make
+	(_wrap_gst_element_tp_new): Stub, return 1  so tp_new can be used.
+
+	* gst/gst.defs (element_factory_make): Remove is-constructor-of
+	GstElement.
+
+	* codegen/: Remove and use the codegen from pygtk instead
+
+	* configure.ac (ACLOCAL): Require 2.3.91 of PyGTK
+
 2004-04-06  Johan Dahlin  <johan@gnome.org>
 
 	* examples/gstplay/videoplayer.py: New example, simple video
 	player embedded in a gtk+ widget.
+
+== gst-python 0.7.91 ==
 
 2004-03-31  Johan Dahlin  <johan@gnome.org>
 

@@ -1555,7 +1555,6 @@
 )
 
 (define-function element_factory_make
-  (is-constructor-of "GstElement")
   (c-name "gst_element_factory_make")
   (return-type "GstElement*")
   (parameters

@@ -22,7 +22,7 @@ dnl Add parameters for aclocal
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 dnl required versions of other packages
-AC_SUBST(PYGTK_REQ, 1.99.4) 
+AC_SUBST(PYGTK_REQ, 2.3.91)
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
 AC_SUBST(GST_REQ,   0.8.0)
@@ -71,11 +71,11 @@ AC_SUBST(PYGTK_H2DEF)
 AC_MSG_RESULT($PYGTK_H2DEF)
 
 dnl AC_MSG_CHECKING(for pygtk codegen)
-dnl PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
-dnl AC_SUBST(PYGTK_CODEGEN)
-dnl AC_MSG_RESULT($PYGTK_CODEGEN)
-PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
+PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
 AC_SUBST(PYGTK_CODEGEN)
+AC_MSG_RESULT($PYGTK_CODEGEN)
+dnl PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
+dnl AC_SUBST(PYGTK_CODEGEN)
 
 AC_MSG_CHECKING(for GStreamer interfaces include dir)
 PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR,
