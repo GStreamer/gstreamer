@@ -15,6 +15,12 @@ the data stream, such as buffers/bytes/events etc.
 
 </para>
 
+<!-- ##### STRUCT GstStatistics ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT stats ##### -->
 <para>
 

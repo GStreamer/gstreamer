@@ -810,3 +810,18 @@ Returns: The name of the function
 
 
 
+<!-- ##### MACRO GST_TIME_FORMAT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TIME_ARGS ##### -->
+<para>
+
+</para>
+
+@t: 
+
+

@@ -14,6 +14,12 @@ GstSpiderIdentity
 
 </para>
 
+<!-- ##### STRUCT GstSpiderIdentity ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_spider_identity_new_sink ##### -->
 <para>
 

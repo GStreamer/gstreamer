@@ -15,6 +15,12 @@ in a pipeline.
 #GstIndexFactory
 </para>
 
+<!-- ##### STRUCT GstIndex ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_INDEX_ENTRY ##### -->
 <para>
 
@@ -465,6 +471,20 @@ Check if the index can be written to
 
 @obj: 
 
+
+<!-- ##### STRUCT GstIndexFactory ##### -->
+<para>
+The GstIndexFactory object
+</para>
+
+
+<!-- ##### STRUCT GstIndexFactoryClass ##### -->
+<para>
+
+</para>
+
+@parent: 
+@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_index_factory_get_type ##### -->
 <para>

@@ -16,6 +16,12 @@ with the buffer. (fakesink)
 
 </para>
 
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ENUM GstFakeSinkStateError ##### -->
 <para>
 

@@ -20,6 +20,7 @@ Flags for the scheduler
 </para>
 
 @GST_SCHEDULER_FLAG_FIXED_CLOCK: The scheduler has a fixed clock
+@GST_SCHEDULER_FLAG_NEW_API: 
 @GST_SCHEDULER_FLAG_LAST: subclasses can start numbering their flags starting
                           from here.
 
@@ -320,6 +321,20 @@ The state of the scheduler
 </para>
 
 
+
+<!-- ##### STRUCT GstSchedulerFactory ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSchedulerFactoryClass ##### -->
+<para>
+
+</para>
+
+@parent: 
+@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_scheduler_factory_get_type ##### -->
 <para>

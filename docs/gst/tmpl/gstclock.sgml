@@ -21,6 +21,12 @@ clock so that the clock is always a good measure of the time in the pipeline.
 #GstSystemClock
 </para>
 
+<!-- ##### STRUCT GstClock ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### TYPEDEF GstClockTime ##### -->
 <para>
 A datatype to hold a time, measured in nanoseconds.

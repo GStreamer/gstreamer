@@ -24,3 +24,9 @@ methods to request buffers from its pads.
 @AGGREGATOR_LOOP_SELECT: 
 @AGGREGATOR_CHAIN: 
 
+<!-- ##### STRUCT GstAggregator ##### -->
+<para>
+
+</para>
+
+

@@ -14,6 +14,12 @@ This is a base class for anything that can be added to a #GstPlugin.
 #GstPlugin
 </para>
 
+<!-- ##### STRUCT GstPluginFeature ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_PLUGIN_FEATURE_NAME ##### -->
 <para>
 Get the name of the feature

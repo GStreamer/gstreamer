@@ -15,6 +15,12 @@ buffers from its output.
 
 </para>
 
+<!-- ##### STRUCT GstPipefilter ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ENUM GstPipeFilterFlags ##### -->
 <para>
 

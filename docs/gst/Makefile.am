@@ -63,7 +63,7 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 #SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 
-# Header files to ignore when scanning.
+# Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \
 	gettext.h \
 	gst-i18n-lib.h \
@@ -73,9 +73,10 @@ IGNORE_HFILES= \
 	gstdata_private.h \
 	gstarch.h \
 	cothreads.h \
-	schedulers/cothreads_compat.h \
-	schedulers/gthread-cothreads.h \
-	parse/types.h \
+	cothreads_compat.h \
+	gthread-cothreads.h \
+	types.h \
+	grammar.tab.h \
 	elements/gstaggregator.h \
 	elements/gstbufferstore.h \
 	elements/gstfakesink.h \
@@ -146,8 +147,12 @@ DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
 SCANOBJ_FILES = 		\
 	$(DOC_MODULE).args 	\
 	$(DOC_MODULE).hierarchy \
+	$(DOC_MODULE).interfaces \
+	$(DOC_MODULE).prerequisites \
 	$(DOC_MODULE)-scan.o	\
 	$(DOC_MODULE).signals
+
+CLEANFILES =  $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
 
 if HAVE_GTK_DOC
 all-local: html-build.stamp

@@ -21,6 +21,12 @@ the pipeline, use gst_element_unref() to free its resources.
 #GstBin
 </para>
 
+<!-- ##### STRUCT GstPipeline ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_pipeline_new ##### -->
 <para>
 

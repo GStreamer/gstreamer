@@ -25,3 +25,18 @@ The queue blocks by default.
 
 </para>
 
+<!-- ##### STRUCT GstQueue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstQueueSize ##### -->
+<para>
+
+</para>
+
+@buffers: 
+@bytes: 
+@time: 
+

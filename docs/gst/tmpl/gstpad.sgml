@@ -57,6 +57,38 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 #GstPadTemplate, #GstElement, #GstEvent
 </para>
 
+<!-- ##### STRUCT GstRealPad ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstGhostPad ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstRealPadClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@caps_nego_failed: 
+@linked: 
+@unlinked: 
+@appfixatefunc: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstGhostPadClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@_gst_reserved: 
+
 <!-- ##### MACRO GST_IS_PAD_FAST ##### -->
 <para>
 
@@ -1462,18 +1494,6 @@ Check if the properties of the padtemplate are fixed
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_selectv ##### -->
-<para>
-
-</para>
-
-@padlist: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@pad: 
-@Varargs: 
-
-
 <!-- ##### FUNCTION gst_pad_select ##### -->
 <para>
 
@@ -1486,11 +1506,55 @@ Check if the properties of the padtemplate are fixed
 @padlist: 
 
 
+<!-- ##### FUNCTION gst_pad_selectv ##### -->
+<para>
+
+</para>
+
+@padlist: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@pad: 
+@Varargs: 
+
+
 <!-- ##### FUNCTION gst_pad_select_valist ##### -->
 <para>
 
 </para>
 
+@pad: 
+@varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_collect ##### -->
+<para>
+
+</para>
+
+@selected: 
+@pad: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_collectv ##### -->
+<para>
+
+</para>
+
+@selected: 
+@padlist: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_collect_valist ##### -->
+<para>
+
+</para>
+
+@selected: 
 @pad: 
 @varargs: 
 @Returns: 

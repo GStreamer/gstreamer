@@ -1132,45 +1132,6 @@ Sets the parent of an element.
 <!-- clocking -->
 
 
-<!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_ELEMENT_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GST_IS_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_IS_ELEMENT_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
 <!-- ##### FUNCTION gst_element_factory_get_type ##### -->
 <para>
 
@@ -1321,6 +1282,59 @@ Sets the parent of an element.
 @factory: 
 @caps: 
 @Returns: 
+
+
+<!-- ##### STRUCT GstElementFactory ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstElementFactoryClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@_gst_reserved: 
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_ELEMENT_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO GST_IS_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_IS_ELEMENT_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
 
 
 <!-- ##### SIGNAL GstElement::eos ##### -->

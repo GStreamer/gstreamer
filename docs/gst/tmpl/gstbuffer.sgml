@@ -217,14 +217,6 @@ Gets the timestamp for this buffer.
 @buf: 
 
 
-<!-- ##### MACRO GST_BUFFER_FORMAT ##### -->
-<para>
-
-</para>
-
-@buf: 
-
-
 <!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
 <para>
 Gets the offset in the source file of this buffer.
@@ -426,6 +418,16 @@ If the refcount is 1, this function just returns the original buffer.
 @parent: 
 @offset: 
 @size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_join ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
 @Returns: 
 
 
