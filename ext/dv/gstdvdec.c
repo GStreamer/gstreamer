@@ -798,9 +798,7 @@ gst_dvdec_loop (GstElement *element)
     }
     /* oops list exhausted an nothing was found... */
     if (!trylist) {
-      gst_element_gerror(element, GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("could not negotiate"));
+      gst_element_error (element, "could not negotiate");
       return;
     }
   }

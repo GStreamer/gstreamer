@@ -176,9 +176,7 @@ gst_speexenc_chain (GstPad *pad, GstBuffer *buf)
 			"channels", GST_PROPS_INT (1)
 		      )))
     {
-      gst_element_gerror(GST_ELEMENT (speexenc), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("could not negotiate"));
+      gst_element_error (GST_ELEMENT (speexenc), "could not negotiate");
       return;
     }
   }

@@ -1691,9 +1691,7 @@ gst_avi_demux_loop (GstElement *element)
     case GST_AVI_DEMUX_START:
       if (chunk.id != GST_RIFF_TAG_RIFF && 
           chunk.type != GST_RIFF_RIFF_AVI) {
-        gst_element_gerror(element, GST_ERROR_UNKNOWN,
-          g_strdup ("unconverted error, file a bug"),
-          g_strdup_printf("This doesn't appear to be an AVI file %08x %08x", chunk.id, chunk.type));
+        gst_element_error (element, "This doesn't appear to be an AVI file %08x %08x", chunk.id, chunk.type);
 	return;
       }
       avi_demux->state = GST_AVI_DEMUX_HEADER;

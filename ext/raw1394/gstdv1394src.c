@@ -232,9 +232,7 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
                                       "format", GST_PROPS_STRING("PAL"),
                                       NULL)
               ) <= 0) {
-		gst_element_gerror(GST_ELEMENT(dv1394src), GST_ERROR_UNKNOWN,
-		  g_strdup ("unconverted error, file a bug"),
-		  g_strdup_printf("Could not set source caps for PAL"));
+		gst_element_error (GST_ELEMENT(dv1394src), "Could not set source caps for PAL");
                 return 0;
               }
             } else {
@@ -246,18 +244,14 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
                                       "format", GST_PROPS_STRING ("NTSC"),
                                       NULL)
               ) <= 0) {
-                gst_element_gerror(GST_ELEMENT(dv1394src), GST_ERROR_UNKNOWN,
-                  g_strdup ("unconverted error, file a bug"),
-                  g_strdup_printf("Could not set source caps for NTSC"));
+                gst_element_error (GST_ELEMENT(dv1394src), "Could not set source caps for NTSC");
                 return 0;
               }
             }
 
             dv1394src->pool = gst_buffer_pool_get_default( dv1394src->frameSize, N_BUFFERS_IN_POOL );
             if (dv1394src->pool == NULL) {
-              gst_element_gerror(GST_ELEMENT(dv1394src), GST_ERROR_UNKNOWN,
-                g_strdup ("unconverted error, file a bug"),
-                g_strdup_printf("gst_buffer_pool_get_default returned NULL"));
+              gst_element_error (GST_ELEMENT(dv1394src), "gst_buffer_pool_get_default returned NULL");
             }
           }
   

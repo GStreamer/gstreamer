@@ -300,9 +300,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
   }
 
   if (goom->channels == 0) {
-    gst_element_gerror(GST_ELEMENT (goom), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("sink format not negotiated"));
+    gst_element_error (GST_ELEMENT (goom), "sink format not negotiated");
     goto done;
   }
 
@@ -311,9 +309,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   if (!goom->srcnegotiated) {
     if (!gst_goom_negotiate_default (goom)) {
-      gst_element_gerror(GST_ELEMENT (goom), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("could not negotiate src format"));
+      gst_element_error (GST_ELEMENT (goom), "could not negotiate src format");
       goto done;
     }
   }

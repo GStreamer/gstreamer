@@ -429,43 +429,37 @@ gst_osselement_open_audio (GstOssElement *oss)
   if (oss->fd < 0) {
     switch (errno) {
       case EBUSY:
-	gst_element_gerror(GST_ELEMENT (oss), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("osselement: Unable to open %s (in use ?)",
-			   oss->device));
+	gst_element_error (GST_ELEMENT (oss),
+			   "osselement: Unable to open %s (in use ?)",
+			   oss->device);
 	break;
       case EISDIR:
-	gst_element_gerror(GST_ELEMENT (oss), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("osselement: Device %s is a directory",
-			   oss->device));
+	gst_element_error (GST_ELEMENT (oss),
+			   "osselement: Device %s is a directory",
+			   oss->device);
 	break;
       case EACCES:
       case ETXTBSY:
-	gst_element_gerror(GST_ELEMENT (oss), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("osselement: Cannot access %s, check permissions",
-			   oss->device));
+	gst_element_error (GST_ELEMENT (oss),
+			   "osselement: Cannot access %s, check permissions",
+			   oss->device);
 	break;
       case ENXIO:
       case ENODEV:
       case ENOENT:
-	gst_element_gerror(GST_ELEMENT (oss), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("osselement: Cannot access %s, does it exist ?",
-			   oss->device));
+	gst_element_error (GST_ELEMENT (oss),
+			   "osselement: Cannot access %s, does it exist ?",
+			   oss->device);
 	break;
       case EROFS:
-	gst_element_gerror(GST_ELEMENT (oss), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("osselement: Cannot access %s, read-only filesystem ?",
-			   oss->device));
+	gst_element_error (GST_ELEMENT (oss),
+			   "osselement: Cannot access %s, read-only filesystem ?",
+			   oss->device);
       default:
 	/* FIXME: strerror is not threadsafe */
-	gst_element_gerror(GST_ELEMENT (oss), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("osselement: Cannot open %s, generic error: %s",
-			   oss->device, strerror (errno)));
+	gst_element_error (GST_ELEMENT (oss),
+			   "osselement: Cannot open %s, generic error: %s",
+			   oss->device, strerror (errno));
 	break;
     }
     return FALSE;

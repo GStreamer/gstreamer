@@ -382,9 +382,7 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
   if((ossgst->childpid = fork()) == -1)
   {
     perror("fork");
-    gst_element_gerror(GST_ELEMENT(ossgst), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("forking"));
+    gst_element_error(GST_ELEMENT(ossgst),"forking");
     return FALSE;
   }
   GST_DEBUG ("forked %d", ossgst->childpid);
@@ -417,9 +415,7 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
 
     /* will only reach if error */
     perror("exec");
-    gst_element_gerror(GST_ELEMENT(ossgst), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("starting child process"));
+    gst_element_error(GST_ELEMENT(ossgst),"starting child process");
     return FALSE;
 
   }

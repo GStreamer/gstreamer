@@ -292,16 +292,12 @@ static void wav_new_chunk_callback(GstRiffChunk *chunk, gpointer data)
 	break;
 
       default:
-	gst_element_gerror(GST_ELEMENT (wavparse), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("wavparse: format %d not handled", wavparse->format));
+	gst_element_error (GST_ELEMENT (wavparse), "wavparse: format %d not handled", wavparse->format);
 	return;
     }
 
     if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
-      gst_element_gerror(GST_ELEMENT (wavparse), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("Could not set caps"));
+      gst_element_error (GST_ELEMENT (wavparse), "Could not set caps");
       return;
     }
 

@@ -356,9 +356,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
   if (!GST_OSSELEMENT (osssink)->bps) {
     gst_buffer_unref (buf);
-    gst_element_gerror(GST_ELEMENT (osssink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("capsnego was never performed, unknown data type"));
+    gst_element_error (GST_ELEMENT (osssink), "capsnego was never performed, unknown data type");
     return;
   }
 

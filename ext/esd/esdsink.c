@@ -266,9 +266,7 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
   if (!esdsink->negotiated) {
-    gst_element_gerror(GST_ELEMENT (esdsink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("not negotiated"));
+    gst_element_error (GST_ELEMENT (esdsink), "not negotiated");
     goto done;
   }
 

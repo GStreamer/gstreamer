@@ -322,9 +322,7 @@ gst_wavenc_chain (GstPad *pad,
 
   if (!wavenc->setup) {
     gst_buffer_unref (buf);
-    gst_element_gerror(GST_ELEMENT (wavenc), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("encoder not initialised (input is not audio?)"));
+    gst_element_error (GST_ELEMENT (wavenc), "encoder not initialised (input is not audio?)");
     return;
   }
 
