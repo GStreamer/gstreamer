@@ -60,7 +60,7 @@ extern GType _gst_buffer_pool_type;
 #define GST_BUFFER_BUFFERPOOL(buf)		(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_POOL_PRIVATE(buf)		(GST_BUFFER(buf)->pool_private)
 
-enum {
+typedef enum {
   GST_BUFFER_READONLY   = GST_DATA_FLAG_LAST,
   GST_BUFFER_SUBBUFFER,
   GST_BUFFER_ORIGINAL,
