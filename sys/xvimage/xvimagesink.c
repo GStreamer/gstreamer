@@ -1203,6 +1203,9 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
 
+  if (!xvimagesink->xcontext)
+    return GST_PAD_LINK_DELAYED;
+
   GST_DEBUG_OBJECT (xvimagesink,
       "sinkconnect possible caps %" GST_PTR_FORMAT " with given caps %"
       GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);

@@ -119,6 +119,7 @@ struct _GstXImageSink {
 
   gdouble framerate;
   GMutex *x_lock;
+  GMutex *stream_lock;
 
   /* Unused */
   gint pixel_width, pixel_height;
