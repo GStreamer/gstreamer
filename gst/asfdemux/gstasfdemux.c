@@ -1418,8 +1418,9 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
 			     "audio/a52",
 			     NULL);
     break;
-  case GST_RIFF_WAVE_FORMAT_DIVX:
-  case GST_RIFF_WAVE_FORMAT_divx:
+  case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
+  case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
+  case GST_RIFF_WAVE_FORMAT_WMAV9:
     new_caps = gst_caps_new ("asf_demux_audio_src",
 			     "unknown/unknown",
 			     NULL);
