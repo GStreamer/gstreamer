@@ -324,7 +324,9 @@ void gst_buffer_print_live ()
 
   for (elem = _debug_live; elem; elem = elem->next) {
     GstBuffer *buf = elem->data;
-    g_print ("buffer %p created %s:%d\n", buf, buf->file, buf->line);
+    g_print ("%sbuffer %p created %s:%d data=%p size=0x%lx\n",
+	     buf->parent? "sub":"   ",
+	     buf, buf->file, buf->line, buf->data, buf->size);
   }
 }
 #endif
