@@ -84,6 +84,7 @@ G_BEGIN_DECLS
 /* "standard" float audio is native order, 32 bit mono. */
 #define GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS \
   "audio/x-raw-float, " \
+  "width = (int) 32, " \
   "rate = (int) [ 1, MAX ], " \
   "channels = (int) 1, " \
   "endianness = (int) BYTE_ORDER, " \

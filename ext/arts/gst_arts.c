@@ -59,7 +59,8 @@ static GstStaticPadTemplate sink_temp = GST_STATIC_PAD_TEMPLATE ("sink",
         "depth = (int) 16, "
         "width = (int) 16, "
         "signed = (boolean) true, "
-        "channels = (int) 2, " "endianness = (int) byte_order")
+        "channels = (int) 2, "
+        "rate = (int) 44100, " "endianness = (int) byte_order")
     );
 
 static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",

@@ -69,9 +69,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [ 1, 2 ], "
         "endianness = (int) BYTE_ORDER, "
         "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
-        "signed = (boolean) { true, false }, "
-        "buffer-frames = (int) [ 1, MAX ]")
+        "depth = (int) { 8, 16 }, " "signed = (boolean) { true, false }")
     );
 
 /* we use an enum for the output type arg */

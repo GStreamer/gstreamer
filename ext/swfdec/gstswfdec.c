@@ -61,9 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("audio_00",
         "rate = (int) 44100, "
         "channels = (int) 2, "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (boolean) true, " "buffer-frames = (int) [ 1, MAX ]")
+        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
     );
 
 static GstStaticPadTemplate sink_template_factory =

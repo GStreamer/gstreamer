@@ -61,9 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
         "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
-        "signed = (boolean) { true, false }, "
-        "buffer-frames = (int) [ 1, MAX ]")
+        "depth = (int) { 8, 16 }, " "signed = (boolean) { true, false }")
     );
 
 static GstStaticPadTemplate afparse_sink_factory =
