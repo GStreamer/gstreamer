@@ -1,5 +1,9 @@
 2004-11-03  Christophe Fergeau  <teuf@gnome.org>
 
+	* gst/gstmarshal.list: add missing marshaller, fixes build
+
+2004-11-03  Christophe Fergeau  <teuf@gnome.org>
+
 	* docs/random/signal: added notes about using BOXED for GstBuffer
 	signal marshallers, not POINTER
 
