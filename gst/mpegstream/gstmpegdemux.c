@@ -570,7 +570,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
             stream_id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
       } else {
-        GST_WARNING_OBJECT (mpeg_demux, "unkown stream id 0x%02x", stream_id);
+        GST_WARNING_OBJECT (mpeg_demux, "unknown stream id 0x%02x", stream_id);
       }
 
       GST_DEBUG_OBJECT (mpeg_demux, "STD_buffer_bound_scale %d",
@@ -752,7 +752,7 @@ done:
     CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
         timestamp, headerlen + 4, datalen);
   } else {
-    GST_WARNING_OBJECT (mpeg_demux, "unkown stream id 0x%02x", id);
+    GST_WARNING_OBJECT (mpeg_demux, "unknown stream id 0x%02x", id);
   }
 
   return TRUE;
@@ -881,7 +881,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
         timestamp, headerlen + 4, datalen);
   } else {
-    GST_WARNING_OBJECT (mpeg_demux, "unkown stream id 0x%02x", id);
+    GST_WARNING_OBJECT (mpeg_demux, "unknown stream id 0x%02x", id);
   }
 
   return TRUE;
