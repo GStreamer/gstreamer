@@ -36,6 +36,7 @@ enum
 {
   ARG_0,
   ARG_URI,
+  ARG_SUBURI,
   ARG_THREADED,
   ARG_NSTREAMS,
   ARG_QUEUE_SIZE,
@@ -52,6 +53,7 @@ enum
   SETUP_OUTPUT_PADS_SIGNAL,
   REMOVED_OUTPUT_PAD_SIGNAL,
   BUFFERING_SIGNAL,
+  GROUP_SWITCH_SIGNAL,
   LINK_STREAM_SIGNAL,
   UNLINK_STREAM_SIGNAL,
   LAST_SIGNAL
@@ -136,6 +138,9 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_URI,
       g_param_spec_string ("uri", "URI", "URI of the media to play",
           NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_SUBURI,
+      g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
+          NULL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_NSTREAMS,
       g_param_spec_int ("nstreams", "NStreams", "number of streams",
           0, G_MAXINT, 0, G_PARAM_READABLE));
@@ -182,6 +187,11 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, buffering),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+  gst_play_base_bin_signals[GROUP_SWITCH_SIGNAL] =
+      g_signal_new ("group-switch", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstPlayBaseBinClass, group_switch),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /* action signals */
   gst_play_base_bin_signals[LINK_STREAM_SIGNAL] =
@@ -215,6 +225,7 @@ static void
 gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
 {
   play_base_bin->uri = NULL;
+  play_base_bin->suburi = NULL;
   play_base_bin->need_rebuild = TRUE;
   play_base_bin->source = NULL;
   play_base_bin->decoder = NULL;
@@ -239,6 +250,8 @@ gst_play_base_bin_dispose (GObject * object)
   play_base_bin = GST_PLAY_BASE_BIN (object);
   g_free (play_base_bin->uri);
   play_base_bin->uri = NULL;
+  g_free (play_base_bin->suburi);
+  play_base_bin->suburi = NULL;
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -639,6 +652,8 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
         gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
         /* ok, get rid of the current group then */
         group_destroy (group);
+        g_signal_emit (play_base_bin,
+            gst_play_base_bin_signals[GROUP_SWITCH_SIGNAL], 0);
         /* removing the current group brings the next group
          * active */
         play_base_bin->queued_groups =
@@ -764,8 +779,9 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   /* first see if this pad has interesting caps */
   caps = gst_pad_get_caps (pad);
-  if (caps == NULL || gst_caps_is_empty (caps)) {
-    g_warning ("no type on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+  if (caps == NULL || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
+    g_warning ("no type on pad %s:%s",
+        GST_DEBUG_PAD_NAME (GST_PAD_REALIZE (pad)));
     if (caps)
       gst_caps_free (caps);
     return;
@@ -964,24 +980,20 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
   GstElement *source, *queue, *bin;
   GstProbe *probe;
   gboolean is_stream;
-  gchar **src, *uri;
 
   /* stip subtitle from uri */
-  src = g_strsplit (play_base_bin->uri, "#", 2);
-  if (!src[0])
+  if (!play_base_bin->uri)
     return NULL;
-  if (src[1]) {
+  if (play_base_bin->suburi) {
     /* subtitle specified */
-    *subbin = setup_subtitle (play_base_bin, src[1]);
+    *subbin = setup_subtitle (play_base_bin, play_base_bin->suburi);
   } else {
     /* no subtitle specified */
     *subbin = NULL;
   }
-  uri = src[0];
-  src[0] = NULL;
-  g_strfreev (src);
 
-  source = gst_element_make_from_uri (GST_URI_SRC, uri, "source");
+  source = gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri,
+      "source");
   if (!source)
     return NULL;
 
@@ -1399,6 +1411,19 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case ARG_SUBURI:{
+      const gchar *suburi = g_value_get_string (value);
+
+      if ((!suburi && !play_base_bin->suburi) ||
+          (suburi && play_base_bin->suburi &&
+              !strcmp (play_base_bin->suburi, suburi)))
+        return;
+      g_free (play_base_bin->suburi);
+      play_base_bin->suburi = g_strdup (suburi);
+      GST_DEBUG ("setting new .sub uri to %s", suburi);
+      play_base_bin->need_rebuild = TRUE;
+      break;
+    }
     case ARG_QUEUE_SIZE:
       play_base_bin->queue_size = g_value_get_uint64 (value);
       break;
@@ -1433,6 +1458,9 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case ARG_URI:
       g_value_set_string (value, play_base_bin->uri);
+      break;
+    case ARG_SUBURI:
+      g_value_set_string (value, play_base_bin->suburi);
       break;
     case ARG_NSTREAMS:
     {

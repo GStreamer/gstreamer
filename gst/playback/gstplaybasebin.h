@@ -72,7 +72,7 @@ struct _GstPlayBaseBin {
 
   /* internal thread */
   GstElement	*thread;
-  gchar 	*uri;
+  gchar 	*uri, *suburi;
   GstElement	*source;
   GstElement	*decoder;
   GstElement	*subtitle; /* additional filesrc ! subparse bin */
@@ -100,6 +100,7 @@ struct _GstPlayBaseBinClass {
    * 100: buf=full (overrun) - will flush head of cache (latency) */
   void (*buffering)		(GstPlayBaseBin *play_base_bin,
 				 gint            percentage);
+  void (*group_switch)		(GstPlayBaseBin *play_base_bin);
 
   /* action signals */
   gboolean (*link_stream)	(GstPlayBaseBin *play_base_bin, 
