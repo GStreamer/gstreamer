@@ -28,7 +28,19 @@
 #include <gst/mixer/mixer.h>
 #include "gstvolume.h"
 
+/* some defines for audio processing */
+/* the volume factor is a range from 0.0 to (arbitrary) 4.0
+ * we map 1.0 to VOLUME_UNITY_INT
+ */
+#define VOLUME_UNITY_INT	8192		/* internal int for unity */
+#define VOLUME_UNITY_BIT_SHIFT	13		/* number of bits to shift
+                                                   for unity */
+#define VOLUME_MAX_FLOAT	4.0
+#define VOLUME_MAX_INT16	32767
+#define VOLUME_MIN_INT16	-32768
 
+/* number of steps we use for the mixer interface to go from 0.0 to 1.0 */
+# define VOLUME_STEPS		100
 
 static GstElementDetails volume_details = {
   "Volume",
@@ -150,8 +162,8 @@ gst_volume_set_volume (GstMixer *mixer, GstMixerTrack *track,
   
   gst_dpman_bypass_dparam (filter->dpman, "volume");
   
-  filter->volume_f       = (gfloat) volumes[0] / 10;
-  filter->volume_i       = filter->volume_f * 8192;
+  filter->volume_f       = (gfloat) volumes[0] / VOLUME_STEPS;
+  filter->volume_i       = filter->volume_f * VOLUME_UNITY_INT;
   
   if (filter->mute) {
     filter->real_vol_f = 0.0;
@@ -172,7 +184,7 @@ gst_volume_get_volume (GstMixer *mixer, GstMixerTrack *track,
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_VOLUME (filter));
   
-  volumes[0] = (gint) filter->volume_f * 10;
+  volumes[0] = (gint) filter->volume_f * VOLUME_STEPS;
 }
 
 static void
@@ -346,7 +358,7 @@ volume_class_init (GstVolumeClass *klass)
   
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
     g_param_spec_float("volume","volume","volume",
-                       0.0,4.0,1.0,G_PARAM_READWRITE));
+                       0.0,VOLUME_MAX_FLOAT,1.0,G_PARAM_READWRITE));
   
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
@@ -374,9 +386,9 @@ volume_init (GstVolume *filter)
   gst_pad_set_chain_function (filter->sinkpad, volume_chain_int16);
   
   filter->mute = FALSE;
-  filter->volume_i = 8192;
+  filter->volume_i = VOLUME_UNITY_INT;
   filter->volume_f = 1.0;
-  filter->real_vol_i = 8192;
+  filter->real_vol_i = VOLUME_UNITY_INT;
   filter->real_vol_f = 1.0;
   filter->tracklist = NULL;
 
@@ -392,7 +404,7 @@ volume_init (GstVolume *filter)
   gst_dpman_add_required_dparam_callback (
     filter->dpman, 
     g_param_spec_float("volume","Volume","Volume of the audio",
-                       0.0, 4.0, 1.0, G_PARAM_READWRITE),
+                       0.0, VOLUME_MAX_FLOAT, 1.0, G_PARAM_READWRITE),
     "scalar",
     volume_update_volume, 
     filter
@@ -405,7 +417,7 @@ volume_init (GstVolume *filter)
       track->label = g_strdup ("volume");
       track->num_channels = 1;
       track->min_volume = 0;
-      track->max_volume = 40;
+      track->max_volume = VOLUME_STEPS;
       track->flags = GST_MIXER_TRACK_SOFTWARE;
       filter->tracklist = g_list_append (filter->tracklist, track);
     }
@@ -466,15 +478,17 @@ volume_chain_int16 (GstPad *pad, GstData *_data)
  
   while(GST_DPMAN_PROCESS(filter->dpman, i)) {
     /* only clamp if the gain is greater than 1.0 */
-    if (filter->real_vol_i > 8192){
+    if (filter->real_vol_i > VOLUME_UNITY_INT){
       while (i < GST_DPMAN_NEXT_UPDATE_FRAME(filter->dpman)){
-        data[i] = (gint16)CLAMP(filter->real_vol_i * (gint)data[i] / 8192, -32768, 32767);
+        /* we use bitshifting instead of dividing by UNITY_INT for speed */
+        data[i] = (gint16) CLAMP((filter->real_vol_i * (gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT, VOLUME_MIN_INT16, VOLUME_MAX_INT16);
 	i++;
       }
     }
     else {
       while (i < GST_DPMAN_NEXT_UPDATE_FRAME(filter->dpman)){
-        data[i] = (gint16)(filter->real_vol_i * (gint)data[i] / 8192);
+        /* we use bitshifting instead of dividing by UNITY_INT for speed */
+        data[i] = (gint16) ((filter->real_vol_i * (gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT);
         i++;
       }
     }
@@ -514,7 +528,7 @@ volume_update_volume(const GValue *value, gpointer data)
   g_return_if_fail(GST_IS_VOLUME(filter));
 
   filter->volume_f       = g_value_get_float (value);
-  filter->volume_i       = filter->volume_f*8192;
+  filter->volume_i       = filter->volume_f*VOLUME_UNITY_INT;
   if (filter->mute){
     filter->real_vol_f = 0.0;
     filter->real_vol_i = 0;
