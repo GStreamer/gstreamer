@@ -25,6 +25,7 @@
 #include <gnome-xml/parser.h>
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
+#include <gst/cothreads.h>
 #include <gst/gstcaps.h>
 
 
@@ -71,6 +72,8 @@ struct _GstPad {
   gchar *name;
   GList *types;
   GstCaps *caps;
+
+  cothread_state *threadstate;
 
   GstPadDirection direction;
 

@@ -570,7 +570,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
     while (pads) {
       pad = GST_PAD (pads->data);
       if (pad->direction == GST_PAD_SRC) {
-        region_struct *region = cothread_get_data (element->threadstate, "region");
+        region_struct *region = cothread_get_data (pad->threadstate, "region");
         if (region) {
  	  //gst_src_push_region (GST_SRC (element), region->offset, region->size);
           if (pad->pullregionfunc == NULL) 
@@ -623,11 +623,47 @@ gst_bin_connection_wrapper (int argc,char *argv[])
   return 0;
 }
 
+static int
+gst_bin_sched_wrapper (int argc, char *argv[])
+{
+  _GstBinOutsideSchedule *sched = (_GstBinOutsideSchedule *)argv;
+  GstElement *element = sched->element;
+  GSList *pads;
+  GstPad *pad;
+  region_struct *region;
+  G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
+
+  DEBUG_ENTER("(\"%s\")",name);
+
+  do {
+    pads = sched->padlist;
+    while (pads) {
+      pad = GST_PAD (pads->data);
+      region = cothread_get_data (pad->threadstate, "region");
+      if (region) {
+        //gst_src_push_region (GST_SRC (element), region->offset, region->size);
+        if (pad->pullregionfunc == NULL)
+          fprintf(stderr,"error, no pullregionfunc in \"%s\"\n", name);
+        (pad->pullregionfunc)(pad, region->offset, region->size);
+      }
+      else {
+        if (pad->pullfunc == NULL)
+          fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
+        (pad->pullfunc)(pad);
+      }
+    }
+  } while (!(sched->flags && GST_ELEMENT_COTHREAD_STOPPING));
+  sched->flags &= ~GST_ELEMENT_COTHREAD_STOPPING;
+
+  DEBUG_LEAVE("");
+  return 0;
+}
+
 static void 
 gst_bin_pullfunc_proxy (GstPad *pad) 
 {
-  DEBUG_ENTER("(%s)",gst_element_get_name (GST_ELEMENT (pad->parent)));
-  cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  cothread_switch (pad->threadstate);
 }
 
 static void 
@@ -637,24 +673,91 @@ gst_bin_pullregionfunc_proxy (GstPad *pad,
 {
   region_struct region;
 
-  DEBUG_ENTER("%s",gst_element_get_name (GST_ELEMENT (pad->parent)));
+  DEBUG_ENTER("%s:%s,%ld,%ld",GST_DEBUG_PAD_NAME(pad),offset,size);
 
   region.offset = offset;
   region.size = size;
 
-  cothread_set_data (GST_ELEMENT (pad->parent)->threadstate, "region", &region);
-  cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
-  cothread_set_data (GST_ELEMENT (pad->parent)->threadstate, "region", NULL);
+  cothread_set_data (pad->threadstate, "region", &region);
+  cothread_switch (pad->threadstate);
+  cothread_set_data (pad->threadstate, "region", NULL);
 }
 
 static void 
 gst_bin_pushfunc_proxy (GstPad *pad) 
 {
-  DEBUG_ENTER("%s",gst_element_get_name (GST_ELEMENT (pad->parent)));
-  cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  cothread_switch (pad->threadstate);
 }
 
-static void 
+/* Creates the plan for a src or connection outside the bin. */
+static _GstBinOutsideSchedule *
+gst_bin_create_plan_outside (GstBin *bin, GstElement *element)
+{
+  GList *pads;
+  GstPad *pad;
+  gboolean dedicated = TRUE;
+  cothread_state *threadstate;
+  _GstBinOutsideSchedule *sched;
+
+  // walk through all the pads, find out of this is hard or not
+  pads = gst_element_get_pad_list (element);
+  while (pads) {
+    pad = GST_PAD (pads->data);
+    // if the pad's peer's parent isn't the Bin, it's hard
+    // FIXME gst_pad_get_parent should return a GstElement
+    if (gst_pad_get_parent (pad->peer) != GST_OBJECT (bin))
+      dedicated = FALSE;
+    pads = g_list_next (pads);
+  }
+
+  // if the element is wholely in the Bin, create a plugin context
+  if (dedicated == TRUE) {
+    if (element->threadstate == NULL) {
+      element->threadstate = cothread_create (bin->threadcontext);
+      DEBUG("created element threadstate %p for \"%s\"\n",element->threadstate,
+            gst_element_get_name(element));
+    }
+    // set the cothread loopfunc
+    if (GST_IS_SRC(element))
+      cothread_setfunc (element->threadstate, gst_bin_src_wrapper,
+                        0, (char **)element);
+    else if (GST_IS_CONNECTION(element))
+      cothread_setfunc (element->threadstate, gst_bin_connection_wrapper,
+                        0, (char **)element);
+  }
+  // otherwise, we have some work to do
+  else {
+    // create a cothread state
+    threadstate = cothread_create (bin->threadcontext);
+
+    // construct an outside schedule struct
+    sched = g_new0(_GstBinOutsideSchedule,1);
+    sched->element = element;
+    sched->bin = bin;
+    sched->threadstate = threadstate;
+
+    // loop through the pads again looking for candidates
+    pads = gst_element_get_pad_list (element);
+    while (pads) {
+      pad = GST_PAD (pads->data);
+      // if the pad's peer's parent is this bin, it's a candidate
+      // FIXME gst_pad_get_parent should return a GstElement
+      if (gst_pad_get_parent (pad->peer) == GST_OBJECT(bin))
+        sched->padlist = g_slist_prepend(sched->padlist,pad);
+      pads = g_list_next (pads);
+    }
+
+    // add this schedule to the list of outside schedules
+    bin->outside_schedules = g_list_prepend(bin->outside_schedules,sched);
+
+    // set the cothread loopfunc
+    cothread_setfunc (sched->threadstate, gst_bin_sched_wrapper,
+                      0, (char **)sched);
+  }
+}
+
+static void
 gst_bin_create_plan_func (GstBin *bin) 
 {
   const gchar *binname = gst_element_get_name(GST_ELEMENT(bin));
@@ -750,11 +853,11 @@ gst_bin_create_plan_func (GstBin *bin)
         DEBUG("created element threadstate %p for \"%s\"\n",element->threadstate,
               gst_element_get_name(element));
       }
+
       if (GST_IS_BIN (element)) {
         gst_bin_create_plan (GST_BIN (element));
-      }
 
-      if (GST_IS_SRC (element)) {
+      } else if (GST_IS_SRC (element)) {
         DEBUG("adding '%s' as entry point\n",gst_element_get_name (element));
         bin->entries = g_list_prepend (bin->entries,element);
         bin->numentries++;
@@ -764,8 +867,6 @@ gst_bin_create_plan_func (GstBin *bin)
       pads = gst_element_get_pad_list (element);
       while (pads) {
         pad = GST_PAD(pads->data);
-//        DEBUG("setting push&pull handlers for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-
         if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
           DEBUG("checking/setting push proxy for srcpad %s:%s\n",
                  GST_DEBUG_PAD_NAME(pad));
@@ -774,8 +875,7 @@ gst_bin_create_plan_func (GstBin *bin)
             pad->pushfunc = gst_bin_pushfunc_proxy;
 
         } else if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
-          DEBUG("checking/setting pull proxies for sinkpad %s:%s\n",
-                 GST_DEBUG_PAD_NAME(pad));
+          DEBUG("checking/setting pull proxies for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
           // set the proxy functions
           if (!pad->pullfunc)
             pad->pullfunc = gst_bin_pullfunc_proxy;
@@ -791,45 +891,22 @@ gst_bin_create_plan_func (GstBin *bin)
           outside = GST_ELEMENT (gst_pad_get_parent (peer));
           // FIXME this should *really* be an error condition
           if (!outside) break;
-          /* if it's a connection and it's not ours... */
-          if (GST_IS_CONNECTION (outside) &&
+          /* if it's a source or connection and it's not ours... */
+          if ((GST_IS_SRC (outside) || GST_IS_CONNECTION (outside)) &&
                (gst_object_get_parent (GST_OBJECT (outside)) != GST_OBJECT (bin))) {
 
-/***** this is irrelevant now *****
-	    GList *connection_pads = gst_element_get_pad_list (outside);
-            while (connection_pads) {
-              opad = GST_PAD (connection_pads->data);
-              if (gst_pad_get_direction (opad) == GST_PAD_SRC) {
-                g_print("gstbin: setting push&pull handlers for %s:%s SRC connection %p %p\n",
-                        GST_DEBUG_PAD_NAME(pad), opad, opad->pullfunc);
-
-                opad->pushfunc = gst_bin_pushfunc_proxy;
-                opad->pullfunc = gst_bin_pullfunc_proxy;
-        	opad->pullregionfunc = gst_bin_pullregionfunc_proxy;
-
-                cothread_setfunc (outside->threadstate, gst_bin_loopfunc_wrapper,
-                        1, (char **)outside);
-                }
-	      }
-              connection_pads = g_list_next (connection_pads);
-	    }
-            gst_info("gstbin: element \"%s\" is the external source Connection "
-		    "for internal element \"%s\"\n",
-	                  gst_element_get_name (GST_ELEMENT (outside)),
-	                  gst_element_get_name (GST_ELEMENT (element)));
-*****/
-            DEBUG("connection '%s' outside bin is an entry\n",gst_element_get_name(outside));
+            DEBUG("element '%s' outside bin is an entry\n",gst_element_get_name(outside));
+/*
 	    bin->entries = g_list_prepend (bin->entries,outside);
 	    bin->numentries++;
-// FIXME: this won't work in the case where a connection feeds multiple contexts.
-// have to have a list of internal structures of connection entries, struct passed to
-// the cothread wrapper, struct listing pads that enter that context.
             if (outside->threadstate == NULL) {
               outside->threadstate = cothread_create (bin->threadcontext);
               DEBUG("created element threadstate %p for \"%s\"\n",outside->threadstate,
                     gst_element_get_name(outside));
             }
             cothread_setfunc(outside->threadstate,gst_bin_connection_wrapper,0,(char **)outside);
+*/
+            bin->entries = g_list_prepend (bin->entries, gst_bin_create_plan_outside(bin,outside));
 	  }
 	}
         pads = g_list_next (pads);
@@ -896,6 +973,7 @@ gst_bin_iterate_func (GstBin *bin)
   GstElement *entry;
   GList *pads;
   GstPad *pad;
+  _GstBinOutsideSchedule *sched;
 
   DEBUG_SET_STRING("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
   DEBUG_ENTER_STRING;
@@ -908,11 +986,19 @@ gst_bin_iterate_func (GstBin *bin)
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
 
-    entry = GST_ELEMENT (bin->children->data);
-    GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
-    DEBUG("set COTHREAD_STOPPING flag on \"%s\"(%p)\n",
-          gst_element_get_name(entry),entry);
-    cothread_switch (entry->threadstate);
+    if (GST_IS_ELEMENT(bin->entries->data)) {
+      entry = GST_ELEMENT (bin->entries->data);
+      GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
+      DEBUG("set COTHREAD_STOPPING flag on \"%s\"(%p)\n",
+            gst_element_get_name(entry),entry);
+      cothread_switch (entry->threadstate);
+    } else {
+      sched = (_GstBinOutsideSchedule *) (bin->entries->data);
+      sched->flags |= GST_ELEMENT_COTHREAD_STOPPING;
+      DEBUG("set COTHREAD STOPPING flag on sched for \"%s\"(%p)\n",
+            gst_element_get_name(sched->element),sched->element);
+      cothread_switch (sched->threadstate);
+    }
 
   } else {
     if (bin->numentries <= 0) {

@@ -62,6 +62,7 @@ struct _GstBin {
 
   cothread_context *threadcontext;
   gboolean use_cothreads;
+  GList *outside_schedules;
 };
 
 struct _GstBinClass {
@@ -80,6 +81,17 @@ struct _GstBinClass {
   /* run a full iteration of operation */
   void		(*iterate) 		(GstBin *bin);
 };
+
+/* this struct is used for odd scheduling cases */
+typedef struct __GstBinOutsideSchedule {
+  guint32 flags;
+  GstElement *element;
+  GstBin *bin;
+  cothread_state *threadstate;
+  GSList *padlist;
+} _GstBinOutsideSchedule;
+
+
 
 GtkType 	gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(gchar *name);

@@ -261,8 +261,8 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
 
   /* obtain the pads requested */
   srcpad = gst_element_get_pad (src, srcpadname);
-  destpad = gst_element_get_pad (dest, destpadname);
   g_return_if_fail (srcpad != NULL);
+  destpad = gst_element_get_pad (dest, destpadname);
   g_return_if_fail (destpad != NULL);
 
   /* find the parent elements of each element */
@@ -270,8 +270,7 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
   destparent = gst_object_get_parent (GST_OBJECT (dest));
   
   /* have to make sure that they have the same parents... */
-  if (srcparent != destparent)
-    return;
+  g_return_if_fail (srcparent == destparent);
 
   /* we're satisified they can be connected, let's do it */
   gst_pad_connect(srcpad,destpad);
