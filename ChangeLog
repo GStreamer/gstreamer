@@ -1,5 +1,12 @@
 2004-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_remove_client_link),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_change_state):
+	Don't close the fd in multifdsink as we didn't open it in the
+	first place. Some cleanups.
+
+2004-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
 	(gst_ogg_mux_send_headers), (gst_ogg_mux_loop):
