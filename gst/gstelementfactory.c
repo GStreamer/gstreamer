@@ -315,7 +315,9 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
   g_return_if_fail(templ != NULL);
 
   padtemplates = factory->padtemplates;
-  
+
+  gst_object_ref (GST_OBJECT (templ));
+
   while (padtemplates) {
     GstPadTemplate *oldtempl = GST_PADTEMPLATE (padtemplates->data);
     
