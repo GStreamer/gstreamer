@@ -164,7 +164,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
 rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
-
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -263,6 +263,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgsttagediting.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofilterexample.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgamma.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
 @USE_ARTSC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstartsdsink.so
@@ -375,6 +377,28 @@ GStreamer support libraries header files.
 @USE_AALIB_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%postun -n gstreamer-aalib
+@USE_AALIB_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+### LIBCACA ###
+@USE_AALIB_TRUE@%package -n gstreamer-libcaca
+@USE_AALIB_TRUE@Summary:        GStreamer plug-in for libcaca Ascii-art output.
+@USE_AALIB_TRUE@Group:          Libraries/Multimedia
+@USE_AALIB_TRUE@Requires:       gstreamer-plugins = %{version}
+@USE_AALIB_TRUE@Requires:       libcaca >= 0.7
+@USE_AALIB_TRUE@BuildRequires:  libcaca-devel >= 0.7
+@USE_AALIB_TRUE@
+@USE_AALIB_TRUE@%description -n gstreamer-libcaca
+@USE_AALIB_TRUE@Plug-in for viewing video in Ascii-art using libcaca library.
+@USE_AALIB_TRUE@
+@USE_AALIB_TRUE@%files -n gstreamer-libcaca
+@USE_AALIB_TRUE@%defattr(-, root, root)
+@USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
+@USE_AALIB_TRUE@
+@USE_AALIB_TRUE@%post -n gstreamer-libcaca
+@USE_AALIB_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@
+@USE_AALIB_TRUE@%postun -n gstreamer-libcaca
 @USE_AALIB_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_AALIB_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
@@ -578,7 +602,7 @@ Plug-ins for playback of AVI format media files.
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%files -n gstreamer-colorspace
 @USE_HERMES_TRUE@%defattr(-, root, root)
-@USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
+@USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-colorspace
 @USE_HERMES_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
@@ -863,6 +887,14 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Fri Jan 16 2004 Christian Schaller <uraeus@gnome.org>
+- added libcaca plugin
+- added libgstcolorspace - fixed name of libgsthermescolorspace
+
+* Wed Jan 14 2004 Christian Schaller <uraeus@gnome.org>
+- Add gamma plugin
+- Have the pixbuf plugin deleted for now
+
 * Wed Dec 18 2003 Christian Schaller <Uraeus@gnome.org>
 - remove gsttagediting.h as it is gone
 - replace it with gst/tag/tag.h
