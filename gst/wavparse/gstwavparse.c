@@ -28,10 +28,10 @@ static void		gst_wavparse_init	(GstWavParse *wavparse);
 static GstCaps*		wav_type_find		(GstBuffer *buf, gpointer private);
 
 static const GstFormat*	gst_wavparse_get_formats	(GstPad *pad);
-static const GstPadQueryType *
+static const GstQueryType *
 			gst_wavparse_get_query_types	(GstPad *pad);
 static gboolean		gst_wavparse_pad_query	(GstPad *pad, 
-		                                 GstPadQueryType type,
+		                                 GstQueryType type,
 						 GstFormat *format, 
 						 gint64 *value);
 static gboolean		gst_wavparse_pad_convert (GstPad *pad,
@@ -455,19 +455,19 @@ gst_wavparse_pad_convert (GstPad *pad,
   return TRUE;
 }
       
-static const GstPadQueryType *
+static const GstQueryType *
 gst_wavparse_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION
   };
   return types;
 }
 
 /* handle queries for location and length in requested format */
 static gboolean
-gst_wavparse_pad_query (GstPad *pad, GstPadQueryType type,
+gst_wavparse_pad_query (GstPad *pad, GstQueryType type,
 			GstFormat *format, gint64 *value)
 {
   GstFormat peer_format = GST_FORMAT_BYTES;

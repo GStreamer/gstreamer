@@ -169,9 +169,9 @@ static const GstEventMask*
 			gst_avi_demux_get_event_mask 		(GstPad *pad);
 static gboolean 	gst_avi_demux_handle_src_event 		(GstPad *pad, GstEvent *event);
 static const GstFormat* gst_avi_demux_get_src_formats 		(GstPad *pad); 
-static const GstPadQueryType*
+static const GstQueryType*
 			gst_avi_demux_get_src_query_types 	(GstPad *pad);
-static gboolean 	gst_avi_demux_handle_src_query 		(GstPad *pad, GstPadQueryType type, 
+static gboolean 	gst_avi_demux_handle_src_query 		(GstPad *pad, GstQueryType type, 
 								 GstFormat *format, gint64 *value);
 static gboolean 	gst_avi_demux_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
 	        	          				 GstFormat *dest_format, gint64 *dest_value);
@@ -872,12 +872,12 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_avi_demux_get_src_query_types (GstPad *pad) 
 {
-  static const GstPadQueryType src_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType src_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
 
@@ -885,7 +885,7 @@ gst_avi_demux_get_src_query_types (GstPad *pad)
 }
 
 static gboolean
-gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type, 
+gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type, 
 				GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -893,7 +893,7 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type,
   avi_stream_context *stream = gst_pad_get_element_private (pad);
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
       switch (*format) {
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
@@ -921,7 +921,7 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type,
 	  break;
       }
       break;
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
@@ -1341,7 +1341,7 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 		    chunkid, *chunksize, stream_id);
 
       format = GST_FORMAT_TIME;
-      gst_pad_query (stream->pad, GST_PAD_QUERY_POSITION, &format, &next_ts);
+      gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &next_ts);
 
       if (stream->strh.init_frames == stream->current_frame && stream->delay==0)
 	stream->delay = next_ts;

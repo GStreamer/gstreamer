@@ -189,9 +189,9 @@ gst_dvdec_quality_get_type (void)
 static void		gst_dvdec_class_init		(GstDVDecClass *klass);
 static void		gst_dvdec_init			(GstDVDec *dvdec);
 
-static const GstPadQueryType* 
+static const GstQueryType* 
 			gst_dvdec_get_src_query_types 	(GstPad *pad);
-static gboolean 	gst_dvdec_src_query 		(GstPad *pad, GstPadQueryType type,
+static gboolean 	gst_dvdec_src_query 		(GstPad *pad, GstQueryType type,
                     					 GstFormat *format, gint64 *value);
 static const GstFormat* gst_dvdec_get_formats 		(GstPad *pad);
 static gboolean 	gst_dvdec_sink_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
@@ -458,19 +458,19 @@ gst_dvdec_sink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_dvdec_get_src_query_types (GstPad *pad)
 {   
-  static const GstPadQueryType src_query_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
   return src_query_types;
 }
 
 static gboolean
-gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
+gst_dvdec_src_query (GstPad *pad, GstQueryType type,
                      GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -479,7 +479,7 @@ gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
       switch (*format) {
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
@@ -504,7 +504,7 @@ gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
 	}
       }
       break;
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
@@ -777,7 +777,7 @@ gst_dvdec_loop (GstElement *element)
   }
 
   format = GST_FORMAT_TIME;
-  gst_pad_query (dvdec->videosrcpad, GST_PAD_QUERY_POSITION, &format, &ts);
+  gst_pad_query (dvdec->videosrcpad, GST_QUERY_POSITION, &format, &ts);
 
   /* FIXME this is inaccurate for NTSC */
   dvdec->next_ts += GST_SECOND / dvdec->framerate;

@@ -57,9 +57,9 @@ static GstElementStateReturn
 static const GstFormat* gst_flacdec_get_src_formats 	(GstPad *pad);
 static gboolean 	gst_flacdec_convert_src	 	(GstPad *pad, GstFormat src_format, gint64 src_value,
 		        				 GstFormat *dest_format, gint64 *dest_value);
-static const GstPadQueryType* 
+static const GstQueryType* 
 			gst_flacdec_get_src_query_types (GstPad *pad);
-static gboolean		gst_flacdec_src_query 		(GstPad *pad, GstPadQueryType type,
+static gboolean		gst_flacdec_src_query 		(GstPad *pad, GstQueryType type,
 	               					 GstFormat *format, gint64 *value);
 static const GstEventMask* 
 			gst_flacdec_get_src_event_masks (GstPad *pad);
@@ -476,7 +476,7 @@ gst_flacdec_loop (GstElement *element)
    GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: _loop end");
 }
 
-GST_FORMATS_FUNCTION (gst_flacdec_get_src_formats,
+GST_PAD_FORMATS_FUNCTION (gst_flacdec_get_src_formats,
   GST_FORMAT_UNITS,
   GST_FORMAT_BYTES,
   GST_FORMAT_TIME
@@ -552,19 +552,19 @@ gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 }
 
 GST_PAD_QUERY_TYPE_FUNCTION (gst_flacdec_get_src_query_types,
-  GST_PAD_QUERY_TOTAL,
-  GST_PAD_QUERY_POSITION
+  GST_QUERY_TOTAL,
+  GST_QUERY_POSITION
 )
 
 static gboolean
-gst_flacdec_src_query (GstPad *pad, GstPadQueryType type,
+gst_flacdec_src_query (GstPad *pad, GstQueryType type,
 	               GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
   FlacDec *flacdec = GST_FLACDEC (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       guint64 samples;
 
@@ -579,7 +579,7 @@ gst_flacdec_src_query (GstPad *pad, GstPadQueryType type,
 		       format, value);
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       gst_pad_convert (flacdec->srcpad, 
 		       GST_FORMAT_UNITS, 
 		       flacdec->total_samples, 
@@ -593,7 +593,7 @@ gst_flacdec_src_query (GstPad *pad, GstPadQueryType type,
   return res;
 }
 	  
-GST_EVENT_MASK_FUNCTION (gst_flacdec_get_src_event_masks,
+GST_PAD_EVENT_MASK_FUNCTION (gst_flacdec_get_src_event_masks,
     { GST_EVENT_SEEK, GST_SEEK_FLAG_ACCURATE }
 );
 

@@ -153,7 +153,7 @@ query_durations ()
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &value);
+      res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
       if (res) {
         g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
@@ -183,7 +183,7 @@ query_positions ()
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_element_query (element, GST_PAD_QUERY_POSITION, &format, &value);
+      res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
       if (res) {
         g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
@@ -209,7 +209,7 @@ update_scale (gpointer data)
 
   if (seekable_elements) {
     GstElement *element = GST_ELEMENT (seekable_elements->data);
-    gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &duration);
+    gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
   }
   position = gst_clock_get_time (clock);
 

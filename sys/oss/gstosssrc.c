@@ -100,8 +100,8 @@ static GstElementStateReturn 	gst_osssrc_change_state	(GstElement *element);
 static const GstEventMask* 	gst_osssrc_get_event_masks (GstPad *pad);
 static gboolean 		gst_osssrc_src_event 	(GstPad *pad, GstEvent *event);
 static gboolean                 gst_osssrc_send_event 	(GstElement *element, GstEvent *event);
-static const GstPadQueryType* 	gst_osssrc_get_query_types (GstPad *pad);
-static gboolean 		gst_osssrc_src_query 	(GstPad *pad, GstPadQueryType type, 
+static const GstQueryType* 	gst_osssrc_get_query_types (GstPad *pad);
+static gboolean 		gst_osssrc_src_query 	(GstPad *pad, GstQueryType type, 
 							 GstFormat *format, gint64 *value);
 
 static GstBuffer *		gst_osssrc_get		(GstPad *pad);
@@ -459,18 +459,18 @@ gst_osssrc_send_event (GstElement *element,
   return gst_osssrc_src_event (osssrc->srcpad, event);
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_osssrc_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType query_types[] = {
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType query_types[] = {
+    GST_QUERY_POSITION,
     0,
   };
   return query_types;
 } 
 
 static gboolean
-gst_osssrc_src_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 *value)
+gst_osssrc_src_query (GstPad *pad, GstQueryType type, GstFormat *format, gint64 *value)
 {
   gboolean res = FALSE;
   GstOssSrc *osssrc;
@@ -478,7 +478,7 @@ gst_osssrc_src_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint
   osssrc = GST_OSSSRC (gst_pad_get_parent (pad));
 	        
   switch (type) {
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       res = gst_osscommon_convert (&osssrc->common, 
 		      		   GST_FORMAT_BYTES, osssrc->curoffset,
                                    format, value); 
