@@ -49,9 +49,10 @@ static gboolean
 gst_play_pipeline_setup (GstPlay *play)
 {
   GstElement *work_thread, *video_thread;
+  GstElement *source, *autoplugger;
   GstElement *video_queue, *video_colorspace, *video_scaler, *video_sink;
   GstElement *audio_thread, *audio_queue, *audio_volume, *audio_sink;
-  GstElement *audio_tee, *vis_thread, *vis_queue;
+  GstElement *audio_tee, *vis_thread, *vis_queue, *vis_element;
   GstPad *audio_tee_pad1, *audio_tee_pad2, *vis_thread_pad, *audio_sink_pad;
   
   g_return_val_if_fail (play != NULL, FALSE);
@@ -63,6 +64,22 @@ gst_play_pipeline_setup (GstPlay *play)
   
   g_hash_table_insert (play->elements, "work_thread", work_thread);
   gst_bin_add (GST_BIN (play), work_thread);
+  
+  /* Placeholder for the source and autoplugger { fakesrc ! spider } */ 
+  source = gst_element_factory_make ("fakesrc", "source");
+  if (!GST_IS_ELEMENT (source))
+    return FALSE;
+  
+  g_hash_table_insert (play->elements, "source", source);
+  
+  autoplugger = gst_element_factory_make ("spider", "autoplugger");
+  if (!GST_IS_ELEMENT (autoplugger))
+    return FALSE;
+  
+  g_hash_table_insert (play->elements, "autoplugger", autoplugger);
+  
+  gst_bin_add_many (GST_BIN (work_thread), source, autoplugger, NULL);
+  gst_element_link (source, autoplugger);
   
   /* Creating our video output bin
      { queue ! colorspace ! videoscale ! fakesink } */
@@ -112,6 +129,9 @@ gst_play_pipeline_setup (GstPlay *play)
   gst_element_add_ghost_pad (video_thread,
                              gst_element_get_pad (video_queue, "sink"),
 			     "sink");
+  
+  /* Connecting video output to autoplugger */
+  gst_element_link (autoplugger, video_thread);
   
   /* Creating our audio output bin 
      { queue ! volume ! tee ! { queue ! goom } ! fakesink } */
@@ -170,8 +190,15 @@ gst_play_pipeline_setup (GstPlay *play)
   
   g_hash_table_insert (play->elements, "vis_queue", vis_queue);
   
-  /* Adding, Ghosting in visualization */
-  gst_bin_add (GST_BIN (vis_thread), vis_queue);
+  vis_element = gst_element_factory_make ("identity", "vis_element");
+  if (!GST_IS_ELEMENT (vis_element))
+    return FALSE;
+  
+  g_hash_table_insert (play->elements, "vis_element", vis_element);
+  
+  /* Adding, Linking, Ghosting in visualization */
+  gst_bin_add_many (GST_BIN (vis_thread), vis_queue, vis_element, NULL);
+  gst_element_link (vis_queue, vis_element);
   vis_thread_pad = gst_element_add_ghost_pad (vis_thread,
                                      gst_element_get_pad (vis_queue, "sink"),
 			             "sink");
@@ -182,10 +209,13 @@ gst_play_pipeline_setup (GstPlay *play)
   gst_element_link_many (audio_queue, audio_volume, audio_tee, NULL);
   gst_pad_link (audio_tee_pad1, audio_sink_pad);
   gst_bin_add_many (GST_BIN (audio_thread), audio_queue, audio_volume,
-                    audio_tee, vis_thread, audio_sink);
+                    audio_tee, vis_thread, audio_sink, NULL);
   gst_element_add_ghost_pad (audio_thread,
                              gst_element_get_pad (audio_queue, "sink"),
 			     "sink");
+  
+  /* Connecting audio output to autoplugger */
+  gst_element_link (autoplugger, audio_thread);
   
   return TRUE;
 }
@@ -281,7 +311,10 @@ static void
 gst_play_init (GstPlay *play)
 {
   play->location = NULL;
+  play->length_nanos = 0;
+  play->time_nanos = 0;
   play->elements = g_hash_table_new (g_str_hash, g_str_equal);
+  
   if (!gst_play_pipeline_setup (play))
     g_warning ("libgstplay: failed initializing pipeline");
 }
@@ -330,6 +363,8 @@ gst_play_class_init (GstPlayClass *klass)
 gboolean
 gst_play_set_location (GstPlay *play, const char *location)
 {
+  GstElement *work_thread, *source, *autoplugger, *video_thread, *audio_thread;
+  
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
@@ -340,6 +375,49 @@ gst_play_set_location (GstPlay *play, const char *location)
   
   if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
     gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  
+  work_thread = g_hash_table_lookup (play->elements, "work_thread");
+  if (!GST_IS_THREAD (work_thread))
+    return FALSE;
+  video_thread = g_hash_table_lookup (play->elements, "video_thread");
+  if (!GST_IS_THREAD (video_thread))
+    return FALSE;
+  audio_thread = g_hash_table_lookup (play->elements, "audio_thread");
+  if (!GST_IS_THREAD (audio_thread))
+    return FALSE;
+  source = g_hash_table_lookup (play->elements, "source");
+  if (!GST_IS_ELEMENT (source))
+    return FALSE;
+  autoplugger = g_hash_table_lookup (play->elements, "autoplugger");
+  if (!GST_IS_ELEMENT (autoplugger))
+    return FALSE;
+  
+  /* Spider can autoplugg only once. We remove the actual one and put a new
+     autoplugger */
+  gst_element_unlink (source, autoplugger);
+  gst_element_unlink (autoplugger, video_thread);
+  gst_element_unlink (autoplugger, audio_thread);
+  gst_bin_remove (GST_BIN (work_thread), autoplugger);
+  
+  autoplugger = gst_element_factory_make ("spider", "autoplugger");
+  if (!GST_IS_ELEMENT (autoplugger))
+    return FALSE;
+  
+  gst_bin_add (GST_BIN (work_thread), autoplugger);
+  gst_element_link (source, autoplugger);
+  gst_element_link (autoplugger, video_thread);
+  gst_element_link (autoplugger, audio_thread);
+  
+  g_hash_table_replace (play->elements, "autoplugger", autoplugger);
+  
+  /* FIXME: Why don't we have an interface to do that kind of stuff ? */
+  g_object_set (G_OBJECT (source), "location", play->location, NULL);
+  
+  play->length_nanos = 0LL;
+  play->time_nanos = 0LL;
+  
+  g_signal_emit (G_OBJECT (play), gst_play_signals[STREAM_LENGTH], 0, 0LL);
+  g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK], 0, 0LL);
   
   return TRUE;
 }
@@ -374,6 +452,156 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
   return TRUE;
+}
+
+/**
+ * gst_play_set_data_src:
+ * @play: a #GstPlay.
+ * @data_src: a #GstElement.
+ *
+ * Set @data_src as the source element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_set_data_src (GstPlay *play, GstElement *data_src)
+{
+  GstElement *work_thread, *old_data_src, *autoplugger;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  /* We bring back the pipeline to READY */
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  
+  /* Getting needed objects */
+  work_thread = g_hash_table_lookup (play->elements, "work_thread");
+  if (!GST_IS_THREAD (work_thread))
+    return FALSE;
+  old_data_src = g_hash_table_lookup (play->elements, "source");
+  if (!GST_IS_ELEMENT (old_data_src))
+    return FALSE;
+  autoplugger = g_hash_table_lookup (play->elements, "autoplugger");
+  if (!GST_IS_ELEMENT (autoplugger))
+    return FALSE;
+  
+  /* Unlinking old source from autoplugger, removing it from pipeline, adding
+     the new one and connecting it to autoplugger FIXME: we should put a new
+     autoplugger here as spider can autoplugg only once */
+  gst_element_unlink (old_data_src, autoplugger);
+  gst_bin_remove (GST_BIN (work_thread), old_data_src);
+  gst_bin_add (GST_BIN (work_thread), data_src);
+  gst_element_link (data_src, autoplugger);
+  
+  g_hash_table_replace (play->elements, "source", data_src);
+  
+  return TRUE;
+}
+
+/**
+ * gst_play_set_video_sink:
+ * @play: a #GstPlay.
+ * @video_sink: a #GstElement.
+ *
+ * Set @video_sink as the video sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
+{
+  GstElement *video_thread, *old_video_sink, *video_scaler;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  /* We bring back the pipeline to READY */
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  
+  /* Getting needed objects */
+  video_thread = g_hash_table_lookup (play->elements, "video_thread");
+  if (!GST_IS_THREAD (video_thread))
+    return FALSE;
+  old_video_sink = g_hash_table_lookup (play->elements, "video_sink");
+  if (!GST_IS_ELEMENT (old_video_sink))
+    return FALSE;
+  video_scaler = g_hash_table_lookup (play->elements, "video_scaler");
+  if (!GST_IS_ELEMENT (video_scaler))
+    return FALSE;
+  
+  /* Unlinking old video sink from video scaler, removing it from pipeline,
+     adding the new one and linking it */
+  gst_element_unlink (video_scaler, old_video_sink);
+  gst_bin_remove (GST_BIN (video_thread), old_video_sink);
+  gst_bin_add (GST_BIN (video_thread), video_sink);
+  gst_element_link (video_scaler, video_sink);
+  
+  g_hash_table_replace (play->elements, "video_sink", video_sink);
+  
+  return TRUE;
+}
+
+/**
+ * gst_play_set_audio_sink:
+ * @play: a #GstPlay.
+ * @audio_sink: a #GstElement.
+ *
+ * Set @audio_sink as the audio sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
+{
+  GstElement *old_audio_sink, *audio_thread;
+  GstPad *audio_tee_pad1, *audio_sink_pad, *old_audio_sink_pad;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  /* We bring back the pipeline to READY */
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  
+  /* Getting needed objects */
+  old_audio_sink = g_hash_table_lookup (play->elements, "audio_sink");
+  if (!GST_IS_ELEMENT (old_audio_sink))
+    return FALSE;
+  old_audio_sink_pad = g_hash_table_lookup (play->elements,
+                                            "audio_sink_pad");
+  if (!GST_IS_PAD (old_audio_sink_pad))
+    return FALSE;
+  audio_thread = g_hash_table_lookup (play->elements, "audio_thread");
+  if (!GST_IS_THREAD (audio_thread))
+    return FALSE;
+  audio_tee_pad1 = g_hash_table_lookup (play->elements, "audio_tee_pad1");
+  if (!GST_IS_PAD (audio_tee_pad1))
+    return FALSE;
+  audio_sink_pad = gst_element_get_pad (audio_sink, "sink");
+  if (!GST_IS_PAD (audio_sink_pad))
+    return FALSE;
+  
+  /* Unlinking old audiosink, removing it from pipeline, putting the new one
+     and linking it */
+  gst_pad_unlink (audio_tee_pad1, old_audio_sink_pad);
+  gst_bin_remove (GST_BIN (audio_thread), old_audio_sink);
+  gst_bin_add (GST_BIN (audio_thread), audio_sink);
+  gst_pad_link (audio_tee_pad1, audio_sink_pad);
+  
+  g_hash_table_replace (play->elements, "audio_sink", audio_sink);
+  g_hash_table_replace (play->elements, "audio_sink_pad", audio_sink_pad);
+  
+  return TRUE;
+}
+
+GstPlay *
+gst_play_new (void)
+{
+  GstPlay *play = g_object_new (GST_TYPE_PLAY, NULL);
+  
+  return play;
 }
 
 /* =========================================== */
