@@ -49,6 +49,7 @@
 
 typedef struct PixFmtInfo
 {
+  enum PixelFormat format;
   const char *name;
   uint8_t nb_channels;          /* number of channels (including alpha) */
   uint8_t color_type;           /* color type (see FF_COLOR_xxx constants) */
@@ -63,191 +64,250 @@ typedef struct PixFmtInfo
 /* FIXME, this table is also in ffmpegcodecmap */
 static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
   /* YUV formats */
-  [PIX_FMT_YUV420P] = {
-        .name = "yuv420p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 1,.y_chroma_shift = 1,
+  /* [PIX_FMT_YUV420P] = */ {PIX_FMT_YUV420P,
+        /* .name = */ "yuv420p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 1,
+        /* .y_chroma_shift = */ 1,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUV422P] = {
-        .name = "yuv422p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 1,.y_chroma_shift = 0,
+  /* [PIX_FMT_YUV422P] = */ {PIX_FMT_YUV422P,
+        /* .name = */ "yuv422p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 1,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUV444P] = {
-        .name = "yuv444p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_YUV444P] = */ {PIX_FMT_YUV444P,
+        /* .name = */ "yuv444p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUV422] = {
-        .name = "yuv422",
-        .nb_channels = 1,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 1,.y_chroma_shift = 0,
+  /* [PIX_FMT_YUV422] = */ {PIX_FMT_YUV422,
+        /* .name = */ "yuv422",
+        /* .nb_channels = */ 1,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 1,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_UYVY422] = {
-        .name = "uyvy422",
-        .nb_channels = 1,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 1,.y_chroma_shift = 0,
+  /* [PIX_FMT_UYVY422] = */ {PIX_FMT_UYVY422,
+        /* .name = */ "uyvy422",
+        /* .nb_channels = */ 1,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 1,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUV410P] = {
-        .name = "yuv410p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 2,.y_chroma_shift = 2,
+  /* [PIX_FMT_YUV410P] = */ {PIX_FMT_YUV410P,
+        /* .name = */ "yuv410p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 2,
+        /* .y_chroma_shift = */ 2,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUV411P] = {
-        .name = "yuv411p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 2,.y_chroma_shift = 0,
+  /* [PIX_FMT_YUV411P] = */ {PIX_FMT_YUV411P,
+        /* .name = */ "yuv411p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 2,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
 
   /* JPEG YUV */
-  [PIX_FMT_YUVJ420P] = {
-        .name = "yuvj420p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV_JPEG,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 1,.y_chroma_shift = 1,
+  /* [PIX_FMT_YUVJ420P] = */ {PIX_FMT_YUVJ420P,
+        /* .name = */ "yuvj420p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV_JPEG,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 1,
+        /* .y_chroma_shift = */ 1,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUVJ422P] = {
-        .name = "yuvj422p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV_JPEG,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 1,.y_chroma_shift = 0,
+  /* [PIX_FMT_YUVJ422P] = */ {PIX_FMT_YUVJ422P,
+        /* .name = */ "yuvj422p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV_JPEG,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 1,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_YUVJ444P] = {
-        .name = "yuvj444p",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_YUV_JPEG,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_YUVJ444P] = */ {PIX_FMT_YUVJ444P,
+        /* .name = */ "yuvj444p",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_YUV_JPEG,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
 
   /* RGB formats */
-  [PIX_FMT_RGB24] = {
-        .name = "rgb24",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_RGB24] = */ {PIX_FMT_RGB24,
+        /* .name = */ "rgb24",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_BGR24] = {
-        .name = "bgr24",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_BGR24] = */ {PIX_FMT_BGR24,
+        /* .name = */ "bgr24",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_RGB32] = {
-        .name = "rgb32",
-        .nb_channels = 4,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_RGB32] = */ {PIX_FMT_RGB32,
+        /* .name = */ "rgb32",
+        /* .nb_channels = */ 4,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_RGBA32] = {
-        .name = "rgba32",
-        .nb_channels = 4,.is_alpha = 1,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_RGBA32] = */ {PIX_FMT_RGBA32,
+        /* .name = */ "rgba32",
+        /* .nb_channels = */ 4,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 1,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_RGB565] = {
-        .name = "rgb565",
-        .nb_channels = 3,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 5,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_RGB565] = */ {PIX_FMT_RGB565,
+        /* .name = */ "rgb565",
+        /* .nb_channels = */ 3,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 5,
       },
-  [PIX_FMT_RGB555] = {
-        .name = "rgb555",
-        .nb_channels = 4,.is_alpha = 1,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 5,
-        .x_chroma_shift = 0,.y_chroma_shift = 0,
+  /* [PIX_FMT_RGB555] = */ {PIX_FMT_RGB555,
+        /* .name = */ "rgb555",
+        /* .nb_channels = */ 4,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 1,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 5,
       },
 
   /* gray / mono formats */
-  [PIX_FMT_GRAY8] = {
-        .name = "gray",
-        .nb_channels = 1,
-        .color_type = FF_COLOR_GRAY,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 8,
+  /* [PIX_FMT_GRAY8] = */ {PIX_FMT_GRAY8,
+        /* .name = */ "gray",
+        /* .nb_channels = */ 1,
+        /* .color_type = */ FF_COLOR_GRAY,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_MONOWHITE] = {
-        .name = "monow",
-        .nb_channels = 1,
-        .color_type = FF_COLOR_GRAY,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 1,
+  /* [PIX_FMT_MONOWHITE] = */ {PIX_FMT_MONOWHITE,
+        /* .name = */ "monow",
+        /* .nb_channels = */ 1,
+        /* .color_type = */ FF_COLOR_GRAY,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 1,
       },
-  [PIX_FMT_MONOBLACK] = {
-        .name = "monob",
-        .nb_channels = 1,
-        .color_type = FF_COLOR_GRAY,
-        .pixel_type = FF_PIXEL_PLANAR,
-        .depth = 1,
+  /* [PIX_FMT_MONOBLACK] = */ {PIX_FMT_MONOBLACK,
+        /* .name = */ "monob",
+        /* .nb_channels = */ 1,
+        /* .color_type = */ FF_COLOR_GRAY,
+        /* .pixel_type = */ FF_PIXEL_PLANAR,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 1,
       },
 
   /* paletted formats */
-  [PIX_FMT_PAL8] = {
-        .name = "pal8",
-        .nb_channels = 4,.is_alpha = 1,
-        .color_type = FF_COLOR_RGB,
-        .pixel_type = FF_PIXEL_PALETTE,
-        .depth = 8,
+  /* [PIX_FMT_PAL8] = */ {PIX_FMT_PAL8,
+        /* .name = */ "pal8",
+        /* .nb_channels = */ 4,
+        /* .color_type = */ FF_COLOR_RGB,
+        /* .pixel_type = */ FF_PIXEL_PALETTE,
+        /* .is_alpha = */ 1,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
-  [PIX_FMT_XVMC_MPEG2_MC] = {
-        .name = "xvmcmc",
+  /* [PIX_FMT_XVMC_MPEG2_MC] = */ {PIX_FMT_XVMC_MPEG2_MC,
+        /* .name = */ "xvmcmc",
       },
-  [PIX_FMT_XVMC_MPEG2_IDCT] = {
-        .name = "xvmcidct",
+  /* [PIX_FMT_XVMC_MPEG2_IDCT] = */ {PIX_FMT_XVMC_MPEG2_IDCT,
+        /* .name = */ "xvmcidct",
       },
-  [PIX_FMT_UYVY411] = {
-        .name = "uyvy411",
-        .nb_channels = 1,
-        .color_type = FF_COLOR_YUV,
-        .pixel_type = FF_PIXEL_PACKED,
-        .depth = 8,
-        .x_chroma_shift = 2,.y_chroma_shift = 0,
+  /* [PIX_FMT_UYVY411] = */ {PIX_FMT_UYVY411,
+        /* .name = */ "uyvy411",
+        /* .nb_channels = */ 1,
+        /* .color_type = */ FF_COLOR_YUV,
+        /* .pixel_type = */ FF_PIXEL_PACKED,
+        /* .is_alpha = */ 0,
+        /* .x_chroma_shift = */ 2,
+        /* .y_chroma_shift = */ 0,
+        /* .depth = */ 8,
       },
 };
+
+static PixFmtInfo *
+get_pix_fmt_info (enum PixelFormat format)
+{
+  int i;
+
+  for (i = 0; i < sizeof (pix_fmt_info) / sizeof (pix_fmt_info[0]); i++) {
+    if (pix_fmt_info[i].format == format) {
+      return pix_fmt_info + i;
+    }
+  }
+  return NULL;
+}
 
 void
 avcodec_get_chroma_sub_sample (int pix_fmt, int *h_shift, int *v_shift)
 {
-  *h_shift = pix_fmt_info[pix_fmt].x_chroma_shift;
-  *v_shift = pix_fmt_info[pix_fmt].y_chroma_shift;
+  *h_shift = get_pix_fmt_info (pix_fmt)->x_chroma_shift;
+  *v_shift = get_pix_fmt_info (pix_fmt)->y_chroma_shift;
 }
 
 const char *
@@ -256,7 +316,7 @@ avcodec_get_pix_fmt_name (int pix_fmt)
   if (pix_fmt < 0 || pix_fmt >= PIX_FMT_NB)
     return "???";
   else
-    return pix_fmt_info[pix_fmt].name;
+    return get_pix_fmt_info (pix_fmt)->name;
 }
 
 enum PixelFormat
@@ -267,14 +327,14 @@ avcodec_get_pix_fmt (const char *name)
   for (i = 0; i < PIX_FMT_NB; i++)
     if (!strcmp (pix_fmt_info[i].name, name))
       break;
-  return i;
+  return pix_fmt_info[i].format;
 }
 
 int
 avpicture_layout (const AVPicture * src, int pix_fmt, int width, int height,
     unsigned char *dest, int dest_size)
 {
-  PixFmtInfo *pf = &pix_fmt_info[pix_fmt];
+  PixFmtInfo *pf = get_pix_fmt_info (pix_fmt);
   int i, j, w, h, data_planes;
   const unsigned char *s;
   int size = avpicture_get_size (pix_fmt, width, height);
@@ -340,12 +400,12 @@ avcodec_get_pix_fmt_loss (int dst_pix_fmt, int src_pix_fmt, int has_alpha)
   const PixFmtInfo *pf, *ps;
   int loss;
 
-  ps = &pix_fmt_info[src_pix_fmt];
-  pf = &pix_fmt_info[dst_pix_fmt];
+  ps = get_pix_fmt_info (src_pix_fmt);
+  pf = get_pix_fmt_info (dst_pix_fmt);
 
   /* compute loss */
   loss = 0;
-  pf = &pix_fmt_info[dst_pix_fmt];
+  pf = get_pix_fmt_info (dst_pix_fmt);
   if (pf->depth < ps->depth ||
       (dst_pix_fmt == PIX_FMT_RGB555 && src_pix_fmt == PIX_FMT_RGB565))
     loss |= FF_LOSS_DEPTH;
@@ -392,7 +452,7 @@ avg_bits_per_pixel (int pix_fmt)
   int bits;
   const PixFmtInfo *pf;
 
-  pf = &pix_fmt_info[pix_fmt];
+  pf = get_pix_fmt_info (pix_fmt);
   switch (pf->pixel_type) {
     case FF_PIXEL_PACKED:
       switch (pix_fmt) {
@@ -507,9 +567,9 @@ img_copy (AVPicture * dst, const AVPicture * src,
     int pix_fmt, int width, int height)
 {
   int bwidth, bits, i;
-  PixFmtInfo *pf = &pix_fmt_info[pix_fmt];
+  PixFmtInfo *pf = get_pix_fmt_info (pix_fmt);
 
-  pf = &pix_fmt_info[pix_fmt];
+  pf = get_pix_fmt_info (pix_fmt);
   switch (pf->pixel_type) {
     case FF_PIXEL_PACKED:
       switch (pix_fmt) {
@@ -1645,6 +1705,8 @@ gray_to_monoblack (AVPicture * dst, const AVPicture * src,
 
 typedef struct ConvertEntry
 {
+  enum PixelFormat src;
+  enum PixelFormat dest;
   void (*convert) (AVPicture * dst,
       const AVPicture * src, int width, int height);
 } ConvertEntry;
@@ -1666,205 +1728,118 @@ typedef struct ConvertEntry
 
    The other conversion functions are just optimisations for common cases.
 */
-static ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
-  [PIX_FMT_YUV420P] = {
-        [PIX_FMT_YUV422] = {
-              .convert = yuv420p_to_yuv422,
-            },
-        [PIX_FMT_RGB555] = {
-            .convert = yuv420p_to_rgb555},
-        [PIX_FMT_RGB565] = {
-            .convert = yuv420p_to_rgb565},
-        [PIX_FMT_BGR24] = {
-            .convert = yuv420p_to_bgr24},
-        [PIX_FMT_RGB24] = {
-            .convert = yuv420p_to_rgb24},
-        [PIX_FMT_RGB32] = {
-            .convert = yuv420p_to_rgb32},
-        [PIX_FMT_RGBA32] = {
-            .convert = yuv420p_to_rgba32},
-      },
-  [PIX_FMT_YUV422P] = {
-        [PIX_FMT_YUV422] = {
-              .convert = yuv422p_to_yuv422,
-            },
-        [PIX_FMT_UYVY422] = {
-              .convert = yuv422p_to_uyvy422,
-            },
-      },
-  [PIX_FMT_YUV444P] = {
-        [PIX_FMT_RGB24] = {
-            .convert = yuv444p_to_rgb24},
-      },
-  [PIX_FMT_YUVJ420P] = {
-        [PIX_FMT_RGB555] = {
-            .convert = yuvj420p_to_rgb555},
-        [PIX_FMT_RGB565] = {
-            .convert = yuvj420p_to_rgb565},
-        [PIX_FMT_BGR24] = {
-            .convert = yuvj420p_to_bgr24},
-        [PIX_FMT_RGB24] = {
-            .convert = yuvj420p_to_rgb24},
-        [PIX_FMT_RGB32] = {
-            .convert = yuvj420p_to_rgb32},
-        [PIX_FMT_RGBA32] = {
-            .convert = yuvj420p_to_rgba32},
-      },
-  [PIX_FMT_YUVJ444P] = {
-        [PIX_FMT_RGB24] = {
-            .convert = yuvj444p_to_rgb24},
-      },
-  [PIX_FMT_YUV422] = {
-        [PIX_FMT_YUV420P] = {
-              .convert = yuv422_to_yuv420p,
-            },
-        [PIX_FMT_YUV422P] = {
-              .convert = yuv422_to_yuv422p,
-            },
-      },
-  [PIX_FMT_UYVY422] = {
-        [PIX_FMT_YUV420P] = {
-              .convert = uyvy422_to_yuv420p,
-            },
-        [PIX_FMT_YUV422P] = {
-              .convert = uyvy422_to_yuv422p,
-            },
-      },
-  [PIX_FMT_RGB24] = {
-        [PIX_FMT_YUV420P] = {
-            .convert = rgb24_to_yuv420p},
-        [PIX_FMT_RGB565] = {
-            .convert = rgb24_to_rgb565},
-        [PIX_FMT_RGB555] = {
-            .convert = rgb24_to_rgb555},
-        [PIX_FMT_RGB32] = {
-            .convert = rgb24_to_rgb32},
-        [PIX_FMT_RGBA32] = {
-            .convert = rgb24_to_rgba32},
-        [PIX_FMT_BGR24] = {
-            .convert = rgb24_to_bgr24},
-        [PIX_FMT_GRAY8] = {
-            .convert = rgb24_to_gray},
-        [PIX_FMT_PAL8] = {
-            .convert = rgb24_to_pal8},
-        [PIX_FMT_YUV444P] = {
-            .convert = rgb24_to_yuv444p},
-        [PIX_FMT_YUVJ420P] = {
-            .convert = rgb24_to_yuvj420p},
-        [PIX_FMT_YUVJ444P] = {
-            .convert = rgb24_to_yuvj444p},
-        [PIX_FMT_AYUV4444] = {
-            .convert = rgb24_to_ayuv4444},
-      },
-  [PIX_FMT_RGB32] = {
-        [PIX_FMT_RGB24] = {
-            .convert = rgb32_to_rgb24},
-        [PIX_FMT_RGB555] = {
-            .convert = rgba32_to_rgb555},
-        [PIX_FMT_PAL8] = {
-            .convert = rgb32_to_pal8},
-        [PIX_FMT_YUV420P] = {
-            .convert = rgb32_to_yuv420p},
-        [PIX_FMT_GRAY8] = {
-            .convert = rgb32_to_gray},
-      },
-  [PIX_FMT_RGBA32] = {
-        [PIX_FMT_RGB24] = {
-            .convert = rgba32_to_rgb24},
-        [PIX_FMT_RGB555] = {
-            .convert = rgba32_to_rgb555},
-        [PIX_FMT_PAL8] = {
-            .convert = rgba32_to_pal8},
-        [PIX_FMT_YUV420P] = {
-            .convert = rgba32_to_yuv420p},
-        [PIX_FMT_GRAY8] = {
-            .convert = rgba32_to_gray},
-        [PIX_FMT_AYUV4444] = {
-            .convert = rgba32_to_ayuv4444},
-      },
-  [PIX_FMT_BGR24] = {
-        [PIX_FMT_RGB24] = {
-            .convert = bgr24_to_rgb24},
-        [PIX_FMT_YUV420P] = {
-            .convert = bgr24_to_yuv420p},
-        [PIX_FMT_GRAY8] = {
-            .convert = bgr24_to_gray},
-      },
-  [PIX_FMT_RGB555] = {
-        [PIX_FMT_RGB24] = {
-            .convert = rgb555_to_rgb24},
-        [PIX_FMT_RGB32] = {
-            .convert = rgb555_to_rgba32},
-        [PIX_FMT_RGBA32] = {
-            .convert = rgb555_to_rgba32},
-        [PIX_FMT_YUV420P] = {
-            .convert = rgb555_to_yuv420p},
-        [PIX_FMT_GRAY8] = {
-            .convert = rgb555_to_gray},
-      },
-  [PIX_FMT_RGB565] = {
-        [PIX_FMT_RGB24] = {
-            .convert = rgb565_to_rgb24},
-        [PIX_FMT_YUV420P] = {
-            .convert = rgb565_to_yuv420p},
-        [PIX_FMT_GRAY8] = {
-            .convert = rgb565_to_gray},
-      },
-  [PIX_FMT_GRAY8] = {
-        [PIX_FMT_RGB555] = {
-            .convert = gray_to_rgb555},
-        [PIX_FMT_RGB565] = {
-            .convert = gray_to_rgb565},
-        [PIX_FMT_RGB24] = {
-            .convert = gray_to_rgb24},
-        [PIX_FMT_BGR24] = {
-            .convert = gray_to_bgr24},
-        [PIX_FMT_RGB32] = {
-            .convert = gray_to_rgb32},
-        [PIX_FMT_RGBA32] = {
-            .convert = gray_to_rgba32},
-        [PIX_FMT_MONOWHITE] = {
-            .convert = gray_to_monowhite},
-        [PIX_FMT_MONOBLACK] = {
-            .convert = gray_to_monoblack},
-      },
-  [PIX_FMT_MONOWHITE] = {
-        [PIX_FMT_GRAY8] = {
-            .convert = monowhite_to_gray},
-      },
-  [PIX_FMT_MONOBLACK] = {
-        [PIX_FMT_GRAY8] = {
-            .convert = monoblack_to_gray},
-      },
-  [PIX_FMT_PAL8] = {
-        [PIX_FMT_RGB555] = {
-            .convert = pal8_to_rgb555},
-        [PIX_FMT_RGB565] = {
-            .convert = pal8_to_rgb565},
-        [PIX_FMT_BGR24] = {
-            .convert = pal8_to_bgr24},
-        [PIX_FMT_RGB24] = {
-            .convert = pal8_to_rgb24},
-        [PIX_FMT_RGB32] = {
-            .convert = pal8_to_rgb32},
-        [PIX_FMT_RGBA32] = {
-            .convert = pal8_to_rgba32},
-      },
-  [PIX_FMT_UYVY411] = {
-        [PIX_FMT_YUV411P] = {
-              .convert = uyvy411_to_yuv411p,
-            },
-      },
-  [PIX_FMT_AYUV4444] = {
-        [PIX_FMT_RGBA32] = {
-              .convert = ayuv4444_to_rgba32,
-            },
-        [PIX_FMT_RGB24] = {
-              .convert = ayuv4444_to_rgb24,
-            },
-      },
+static ConvertEntry convert_table[] = {
+  {PIX_FMT_YUV420P, PIX_FMT_YUV422, yuv420p_to_yuv422},
+  {PIX_FMT_YUV420P, PIX_FMT_RGB555, yuv420p_to_rgb555},
+  {PIX_FMT_YUV420P, PIX_FMT_RGB565, yuv420p_to_rgb565},
+  {PIX_FMT_YUV420P, PIX_FMT_BGR24, yuv420p_to_bgr24},
+  {PIX_FMT_YUV420P, PIX_FMT_RGB24, yuv420p_to_rgb24},
+  {PIX_FMT_YUV420P, PIX_FMT_RGB32, yuv420p_to_rgb32},
+  {PIX_FMT_YUV420P, PIX_FMT_RGBA32, yuv420p_to_rgba32},
 
+  {PIX_FMT_YUV422P, PIX_FMT_YUV422, yuv422p_to_yuv422},
+  {PIX_FMT_YUV422P, PIX_FMT_UYVY422, yuv422p_to_uyvy422},
+
+  {PIX_FMT_YUV444P, PIX_FMT_RGB24, yuv444p_to_rgb24},
+
+  {PIX_FMT_YUVJ420P, PIX_FMT_RGB555, yuvj420p_to_rgb555},
+  {PIX_FMT_YUVJ420P, PIX_FMT_RGB565, yuvj420p_to_rgb565},
+  {PIX_FMT_YUVJ420P, PIX_FMT_BGR24, yuvj420p_to_bgr24},
+  {PIX_FMT_YUVJ420P, PIX_FMT_RGB24, yuvj420p_to_rgb24},
+  {PIX_FMT_YUVJ420P, PIX_FMT_RGB32, yuvj420p_to_rgb32},
+  {PIX_FMT_YUVJ420P, PIX_FMT_RGBA32, yuvj420p_to_rgba32},
+
+  {PIX_FMT_YUVJ444P, PIX_FMT_RGB24, yuvj444p_to_rgb24},
+
+  {PIX_FMT_YUV422, PIX_FMT_YUV420P, yuv422_to_yuv420p},
+
+  {PIX_FMT_YUV422, PIX_FMT_YUV422P, yuv422_to_yuv422p},
+
+  {PIX_FMT_UYVY422, PIX_FMT_YUV420P, uyvy422_to_yuv420p},
+
+  {PIX_FMT_UYVY422, PIX_FMT_YUV422P, uyvy422_to_yuv422p},
+
+  {PIX_FMT_RGB24, PIX_FMT_YUV420P, rgb24_to_yuv420p},
+  {PIX_FMT_RGB24, PIX_FMT_RGB565, rgb24_to_rgb565},
+  {PIX_FMT_RGB24, PIX_FMT_RGB555, rgb24_to_rgb555},
+  {PIX_FMT_RGB24, PIX_FMT_RGB32, rgb24_to_rgb32},
+  {PIX_FMT_RGB24, PIX_FMT_RGBA32, rgb24_to_rgba32},
+  {PIX_FMT_RGB24, PIX_FMT_BGR24, rgb24_to_bgr24},
+  {PIX_FMT_RGB24, PIX_FMT_GRAY8, rgb24_to_gray},
+  {PIX_FMT_RGB24, PIX_FMT_PAL8, rgb24_to_pal8},
+  {PIX_FMT_RGB24, PIX_FMT_YUV444P, rgb24_to_yuv444p},
+  {PIX_FMT_RGB24, PIX_FMT_YUVJ420P, rgb24_to_yuvj420p},
+  {PIX_FMT_RGB24, PIX_FMT_YUVJ444P, rgb24_to_yuvj444p},
+  {PIX_FMT_RGB24, PIX_FMT_AYUV4444, rgb24_to_ayuv4444},
+
+  {PIX_FMT_RGB32, PIX_FMT_RGB24, rgb32_to_rgb24},
+  {PIX_FMT_RGB32, PIX_FMT_RGB555, rgba32_to_rgb555},
+  {PIX_FMT_RGB32, PIX_FMT_PAL8, rgb32_to_pal8},
+  {PIX_FMT_RGB32, PIX_FMT_YUV420P, rgb32_to_yuv420p},
+  {PIX_FMT_RGB32, PIX_FMT_GRAY8, rgb32_to_gray},
+
+  {PIX_FMT_RGBA32, PIX_FMT_RGB24, rgba32_to_rgb24},
+  {PIX_FMT_RGBA32, PIX_FMT_RGB555, rgba32_to_rgb555},
+  {PIX_FMT_RGBA32, PIX_FMT_PAL8, rgba32_to_pal8},
+  {PIX_FMT_RGBA32, PIX_FMT_YUV420P, rgba32_to_yuv420p},
+  {PIX_FMT_RGBA32, PIX_FMT_GRAY8, rgba32_to_gray},
+  {PIX_FMT_RGBA32, PIX_FMT_AYUV4444, rgba32_to_ayuv4444},
+
+  {PIX_FMT_BGR24, PIX_FMT_RGB24, bgr24_to_rgb24},
+  {PIX_FMT_BGR24, PIX_FMT_YUV420P, bgr24_to_yuv420p},
+  {PIX_FMT_BGR24, PIX_FMT_GRAY8, bgr24_to_gray},
+
+  {PIX_FMT_RGB555, PIX_FMT_RGB24, rgb555_to_rgb24},
+  {PIX_FMT_RGB555, PIX_FMT_RGB32, rgb555_to_rgba32},
+  {PIX_FMT_RGB555, PIX_FMT_RGBA32, rgb555_to_rgba32},
+  {PIX_FMT_RGB555, PIX_FMT_YUV420P, rgb555_to_yuv420p},
+  {PIX_FMT_RGB555, PIX_FMT_GRAY8, rgb555_to_gray},
+
+  {PIX_FMT_RGB565, PIX_FMT_RGB24, rgb565_to_rgb24},
+  {PIX_FMT_RGB565, PIX_FMT_YUV420P, rgb565_to_yuv420p},
+  {PIX_FMT_RGB565, PIX_FMT_GRAY8, rgb565_to_gray},
+
+  {PIX_FMT_GRAY8, PIX_FMT_RGB555, gray_to_rgb555},
+  {PIX_FMT_GRAY8, PIX_FMT_RGB565, gray_to_rgb565},
+  {PIX_FMT_GRAY8, PIX_FMT_RGB24, gray_to_rgb24},
+  {PIX_FMT_GRAY8, PIX_FMT_BGR24, gray_to_bgr24},
+  {PIX_FMT_GRAY8, PIX_FMT_RGB32, gray_to_rgb32},
+  {PIX_FMT_GRAY8, PIX_FMT_RGBA32, gray_to_rgba32},
+  {PIX_FMT_GRAY8, PIX_FMT_MONOWHITE, gray_to_monowhite},
+  {PIX_FMT_GRAY8, PIX_FMT_MONOBLACK, gray_to_monoblack},
+
+  {PIX_FMT_MONOWHITE, PIX_FMT_GRAY8, monowhite_to_gray},
+
+  {PIX_FMT_MONOBLACK, PIX_FMT_GRAY8, monoblack_to_gray},
+
+  {PIX_FMT_PAL8, PIX_FMT_RGB555, pal8_to_rgb555},
+  {PIX_FMT_PAL8, PIX_FMT_RGB565, pal8_to_rgb565},
+  {PIX_FMT_PAL8, PIX_FMT_BGR24, pal8_to_bgr24},
+  {PIX_FMT_PAL8, PIX_FMT_RGB24, pal8_to_rgb24},
+  {PIX_FMT_PAL8, PIX_FMT_RGB32, pal8_to_rgb32},
+  {PIX_FMT_PAL8, PIX_FMT_RGBA32, pal8_to_rgba32},
+
+  {PIX_FMT_UYVY411, PIX_FMT_YUV411P, uyvy411_to_yuv411p},
+
+  {PIX_FMT_AYUV4444, PIX_FMT_RGBA32, ayuv4444_to_rgba32},
+
+  {PIX_FMT_AYUV4444, PIX_FMT_RGB24, ayuv4444_to_rgb24}
 };
+
+static ConvertEntry *
+get_convert_table_entry (int src_pix_fmt, int dst_pix_fmt)
+{
+  int i;
+
+  for (i = 0; i < sizeof (convert_table) / sizeof (convert_table[0]); i++) {
+    if (convert_table[i].src == src_pix_fmt &&
+        convert_table[i].dest == dst_pix_fmt) {
+      return convert_table + i;
+    }
+  }
+
+  return NULL;
+}
 
 int
 avpicture_alloc (AVPicture * picture, int pix_fmt, int width, int height)
@@ -1922,16 +1897,16 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
   dst_width = src_width;
   dst_height = src_height;
 
-  dst_pix = &pix_fmt_info[dst_pix_fmt];
-  src_pix = &pix_fmt_info[src_pix_fmt];
+  dst_pix = get_pix_fmt_info (dst_pix_fmt);
+  src_pix = get_pix_fmt_info (src_pix_fmt);
   if (src_pix_fmt == dst_pix_fmt) {
     /* no conversion needed: just copy */
     img_copy (dst, src, dst_pix_fmt, dst_width, dst_height);
     return 0;
   }
 
-  ce = &convert_table[src_pix_fmt][dst_pix_fmt];
-  if (ce->convert) {
+  ce = get_convert_table_entry (src_pix_fmt, dst_pix_fmt);
+  if (ce && ce->convert) {
     /* specific conversion routine */
     ce->convert (dst, src, dst_width, dst_height);
     return 0;
@@ -2161,10 +2136,10 @@ get_alpha_info_pal8 (const AVPicture * src, int width, int height)
 int
 img_get_alpha_info (const AVPicture * src, int pix_fmt, int width, int height)
 {
-  PixFmtInfo *pf = &pix_fmt_info[pix_fmt];
+  PixFmtInfo *pf = get_pix_fmt_info (pix_fmt);
   int ret;
 
-  pf = &pix_fmt_info[pix_fmt];
+  pf = get_pix_fmt_info (pix_fmt);
   /* no alpha can be represented in format */
   if (!pf->is_alpha)
     return 0;
