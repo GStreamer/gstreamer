@@ -520,26 +520,15 @@ AC_CHECK_LIB(mad, mad_decoder_finish,
 )
 
 dnl Check for libmikmod
-AC_MSG_CHECKING(Mikmod library)
-AC_CHECK_LIB(mikmod, MikMod_Init,
-  HAVE_LIBMIKMOD=yes
-  AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: mikmod
+AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes,
+  AC_MSG_WARN(***** NOTE: These plugins won't be built: mikmod)
+  HAVE_LIBMIKMOD=no
 )
-  HAVE_LIBMIKMOD=no,
-)
-
 
 dnl Check for libvorbis
-AC_MSG_CHECKING(Vorbis library)
-AC_CHECK_LIB(vorbis, ogg_sync_init,
-  HAVE_VORBIS=yes
-  AC_DEFINE(HAVE_VORBIS, 1, [Define if vorbis library is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: vorbisdec vorbisenc
-)
-  HAVE_VORBIS=no,
+AM_PATH_VORBIS(HAVE_VORBIS=yes,
+  AC_MSG_WARN(***** NOTE: These plugins won't be built: vorbisdec vorbisenc)
+  HAVE_VORBIS=no
 )
 
 dnl Check for libjpeg
