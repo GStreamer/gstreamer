@@ -1,3 +1,8 @@
+2004-04-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Fix typo in divxversion (3 instead of 4 for "DIVX" fourcc).
+
 2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_plugin_init):
