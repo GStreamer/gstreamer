@@ -41,8 +41,8 @@
   </programlisting>
 
   <para> 
-    The following mp3 player shows you how to create the above pipeline using a
-    thread and a queue.
+    The following mp3 player shows you how to create the above pipeline
+    using a thread and a queue.
   </para>
 
   <programlisting>

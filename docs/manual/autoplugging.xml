@@ -9,12 +9,13 @@
     elements needed for the conversion.
   </para>
   <para> 
-    The autoplugger API is implemented in an abstract class. Autoplugger implementations
-    reside in plugins and are therefore optional and can be optimized for a specific
-    task.  Two types of autopluggers exist: renderer ones and non
-    renderer ones. the renderer autopluggers will not have any src pads while the
-    non renderer ones do. The renderer autopluggers are mainly used for media
-    playback while the non renderer ones are used for arbitrary format conversion.
+    The autoplugger API is implemented in an abstract class. Autoplugger
+    implementations reside in plugins and are therefore optional and can be
+    optimized for a specific task.  Two types of autopluggers exist: renderer
+    ones and non renderer ones. the renderer autopluggers will not have any
+    src pads while the non renderer ones do. The renderer autopluggers are
+    mainly used for media playback while the non renderer ones are used for
+    arbitrary format conversion.
   </para>
 
   <sect1>
@@ -27,9 +28,10 @@
       A list of all available autopluggers can be obtained with gst_autoplug_factory_get_list().
     </para>
     <para>
-      If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() call to
-      create a bin that connects the src caps to the specified render elements. You can
-      then add the bin to a pipeline and run it.
+      If the autoplugger supports the RENDERER API, use
+      gst_autoplug_to_renderers() call to create a bin that connects the
+      src caps to the specified render elements. You can then add the bin
+      to a pipeline and run it.
 
       <programlisting>
 
@@ -58,9 +60,9 @@
       </programlisting>
     </para>
     <para>
-      If the autoplugger supports the CAPS API, use the gst_autoplug_to_caps() function to
-      connect the src caps to the destination caps. The created bin will have src and sink
-      pads compatible with the provided caps.
+      If the autoplugger supports the CAPS API, use the gst_autoplug_to_caps()
+      function to connect the src caps to the destination caps. The created
+      bin will have src and sink pads compatible with the provided caps.
 
       <programlisting>
 
@@ -105,14 +107,14 @@
       <orderedlist>
         <listitem>
           <para>
-	    Add the autoplugcache element to a bin and connect the sink pad to the src
-	    pad of an element with unknown caps.
+            Add the autoplugcache element to a bin and connect the sink pad
+            to the src pad of an element with unknown caps.
           </para>
         </listitem>
         <listitem>
           <para>
-	    Connect the src pad of the autoplugcache to the sink pad of the typefind 
-	    element.
+            Connect the src pad of the autoplugcache to the sink pad of the
+            typefind element.
           </para>
         </listitem>
         <listitem>
@@ -122,8 +124,8 @@
         </listitem>
         <listitem>
           <para>
-	    Remove the typefind element and add the plugins needed to play back the discovered
-	    media type to the autoplugcache src pad.
+            Remove the typefind element and add the plugins needed to play
+            back the discovered media type to the autoplugcache src pad.
           </para>
         </listitem>
         <listitem>
@@ -148,9 +150,10 @@
   <sect1>
     <title>Another approach to autoplugging</title>
     <para>
-      The autoplug API is interesting, but often impractical. It is static; it cannot deal with
-      dynamic pipelines (insert ref here). What one often wants is just an element to stick into a
-      pipeline that will DWIM (ref). Enter the spider.
+      The autoplug API is interesting, but often impractical. It is static;
+      it cannot deal with dynamic pipelines (insert ref here). What one
+      often wants is just an element to stick into a pipeline that will DWIM
+      (ref). Enter the spider.
     </para>
     <sect2>
       <title>The spider element</title>
@@ -176,9 +179,11 @@
           </listitem>
          <listitem>
             <para>
-              Has request pads on the src side. This means that it can autoplug one source stream
-              into many sink streams. For example, a MPEG1 system stream can have audio as well as
-              video; that pipeline would be represented in gst-launch syntax as
+              Has request pads on the src side. This means that it can autoplug
+              one source stream into many sink streams. For example, a MPEG1
+              system stream can have audio as well as video; that pipeline
+              would be represented in gst-launch syntax as
+
               <programlisting>
                 $ gst-launch filesrc location=my.mpeg1 ! spider ! { queue ! osssink } spider.src_%d!
                              { queue ! xvideosink }

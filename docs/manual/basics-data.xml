@@ -1,11 +1,11 @@
 <chapter id="cha-buffers">
   <title>Buffers</title>
   <para> 
-    Buffers contain the data that will flow through the pipeline you have created. A source
-    element will typically create a new buffer and pass it through the pad to the next
-    element in the chain.
-    When using the GStreamer infrastructure to create a media pipeline you will not have
-    to deal with buffers yourself; the elements will do that for you. 
+    Buffers contain the data that will flow through the pipeline you have
+    created. A source element will typically create a new buffer and pass
+    it through the pad to the next element in the chain.  When using the
+    GStreamer infrastructure to create a media pipeline you will not have
+    to deal with buffers yourself; the elements will do that for you.
   </para>
   <para> 
     The most important information in the buffer is:
@@ -23,8 +23,9 @@
       </listitem>
       <listitem>
         <para>
-          A refcount that indicates how many elements are using this buffer. This refcount 
-	  will be used to destroy the buffer when no element is having a reference to it.
+          A refcount that indicates how many elements are using this
+          buffer. This refcount will be used to destroy the buffer when no
+          element is having a reference to it.
         </para>
       </listitem>
     </itemizedlist>

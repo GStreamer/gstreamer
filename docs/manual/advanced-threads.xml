@@ -31,22 +31,24 @@
   </programlisting>
 
   <para>
-    The above program will create a thread with two elements in it. As soon as it is set to the
-    PLAYING state, the thread will start to iterate itself. You never need to manually iterate a
-    thread.
+    The above program will create a thread with two elements in it. As soon
+    as it is set to the PLAYING state, the thread will start to iterate
+    itself. You never need to manually iterate a thread.
   </para>
   
   <sect2>
     <title>Constraints placed on the pipeline by the GstThread</title>
     <para>
-      Within the pipeline, everything is the same as in any other bin. The difference lies at the
-      thread boundary, at the connection between the thread and the outside world (containing bin).
-      Since GStreamer is fundamentally buffer-oriented rather than byte-oriented, the natural
-      solution to this problem is an element that can "buffer" the buffers between the threads, in a
-      thread-safe fashion. This element is the queue, described more fully in <xref
-      linkend="cha-queues"/>. It doesn't matter if the queue is placed in the containing bin or in
-      the thread itself, but it needs to be present on one side of the other to enable inter-thread
-      communication.
+      Within the pipeline, everything is the same as in any other bin. The
+      difference lies at the thread boundary, at the connection between the
+      thread and the outside world (containing bin).  Since GStreamer is
+      fundamentally buffer-oriented rather than byte-oriented, the natural
+      solution to this problem is an element that can "buffer" the buffers
+      between the threads, in a thread-safe fashion. This element is the
+      queue, described more fully in <xref linkend="cha-queues"/>. It doesn't
+      matter if the queue is placed in the containing bin or in the thread
+      itself, but it needs to be present on one side of the other to enable
+      inter-thread communication.
     </para>
   </sect2>
   <sect2>

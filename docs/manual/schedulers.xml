@@ -28,15 +28,15 @@
     </itemizedlist>
   </para>
   <para> 
-    The scheduler is a plugable component, this means that alternative schedulers
-    can be written and plugged into GStreamer. The default scheduler uses cothreads
-    to schedule the plugins in a pipeline. Cothreads are fast and lightweight 
-    user-space threads.
+    The scheduler is a plugable component, this means that alternative
+    schedulers can be written and plugged into GStreamer. The default scheduler
+    uses cothreads to schedule the plugins in a pipeline. Cothreads are fast
+    and lightweight user-space threads.
   </para>
   <para> 
-    There is usually no need to interact with the scheduler directly, however it some
-    cases it is feasable to set a specific clock or force a specific plugin as the
-    entry point in the pipeline.
+    There is usually no need to interact with the scheduler directly, however
+    it some cases it is feasable to set a specific clock or force a specific
+    plugin as the entry point in the pipeline.
   </para>
 
 </chapter>

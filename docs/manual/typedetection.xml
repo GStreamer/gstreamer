@@ -1,10 +1,10 @@
 <chapter id="cha-typedetection">
   <title>Typedetection</title>
   <para> 
-    Sometimes the capabilities of a pad are not specificied. The filesrc, for
-    example, does not know what type of file it is reading. Before you can attach
-    an element to the pad of the filesrc, you need to determine the media type in
-    order to be able to choose a compatible element.
+    Sometimes the capabilities of a pad are not specificied. The filesrc,
+    for example, does not know what type of file it is reading. Before you
+    can attach an element to the pad of the filesrc, you need to determine
+    the media type in order to be able to choose a compatible element.
   </para>
   <para> 
     To solve this problem, a plugin can provide the <application>GStreamer</application> 
@@ -102,18 +102,18 @@ main(int argc, char *argv[])
 }
   </programlisting>
   <para>
-    We create a very simple pipeline with only a filesrc and the typefind element
-    in it. The sinkpad of the typefind element has been connected to the src pad
-    of the filesrc.
+    We create a very simple pipeline with only a filesrc and the typefind
+    element in it. The sinkpad of the typefind element has been connected
+    to the src pad of the filesrc.
   </para>
   <para>
     We attached a signal 'have_type' to the typefind element which will be called 
     when the type of the media stream as been detected.
   </para>
   <para>
-    the typefind function will loop over all the registered types and will execute
-    each of the typefind functions. As soon as a function returns a GstCaps pointer,
-    the type_found function will be called:
+    the typefind function will loop over all the registered types and will
+    execute each of the typefind functions. As soon as a function returns
+    a GstCaps pointer, the type_found function will be called:
   </para>
 
   <programlisting>

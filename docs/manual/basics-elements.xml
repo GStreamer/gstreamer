@@ -39,9 +39,9 @@
           </mediaobject>
       </figure>
       <para>
-        Source elements do not accept data, they only generate data. You can see
-	this in the figure because it only has a src pad. A src pad can only 
-	generate data.
+        Source elements do not accept data, they only generate data. You can
+        see this in the figure because it only has a src pad. A src pad can
+        only generate data.
       </para>
     </sect2>
 

@@ -1,17 +1,18 @@
 <chapter id="cha-hello">
   <title>Your first application</title>
   <para> 
-    This chapter describes the most rudimentary aspects of a <application>GStreamer</application> application, 
-    including initializing the libraries, creating elements, packing them into
-    a pipeline and playing, pause and stop the pipeline.
+    This chapter describes the most rudimentary aspects of a
+    <application>GStreamer</application> application, including initializing
+    the libraries, creating elements, packing them into a pipeline and playing,
+    pause and stop the pipeline.
   </para>
 
   <sect1>
     <title>Hello world</title>
     <para>
-      We will create a simple first application, a complete MP3 player, using standard
-      <application>GStreamer</application> components. The player will read from a file that is
-      given as the first argument of the program.
+      We will create a simple first application, a complete MP3 player, using
+      standard <application>GStreamer</application> components. The player
+      will read from a file that is given as the first argument of the program.
     </para>
 
     <programlisting>
@@ -90,8 +91,9 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We are going to create 3 elements and one pipeline. Since all elements share the same base
-      type, <classname>GstElement</classname>, we can define them as:
+      We are going to create 3 elements and one pipeline. Since all elements
+      share the same base type, <classname>GstElement</classname>, we can
+      define them as:
     </para>
     <programlisting>
   ...
@@ -100,9 +102,9 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      Next, we are going to create an empty pipeline. As you have seen in the basic
-      introduction, this pipeline will hold and manage all the elements we are 
-      going to stuff into it.
+      Next, we are going to create an empty pipeline. As you have seen in
+      the basic introduction, this pipeline will hold and manage all the
+      elements we are going to stuff into it.
     </para>
     <programlisting>
   /* create a new pipeline to hold the elements */
@@ -208,9 +210,9 @@ main (int argc, char *argv[])
   while (gst_bin_iterate (GST_BIN (pipeline)));
     </programlisting>
     <para>
-      The gst_bin_iterate() function will return TRUE as long as something interesting
-      happended inside the pipeline. When the end-of-file has been reached the _iterate 
-      function will return FALSE and we can end the loop.
+      The gst_bin_iterate() function will return TRUE as long as something
+      interesting happended inside the pipeline. When the end-of-file has been
+      reached the _iterate function will return FALSE and we can end the loop.
     </para>
     <programlisting>
   /* stop the pipeline */
@@ -259,7 +261,7 @@ main (int argc, char *argv[])
       you can create a custom MP3 element with a more high level API.
     </para>
     <para>
-      It should be clear from the example that we can very easily replace the 
+      It should be clear from the example that we can very easily replace the
       filesrc element with an httpsrc, giving you instant network streaming.
       An element could be build to handle icecast connections, for example.
     </para>

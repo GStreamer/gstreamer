@@ -49,7 +49,8 @@
   <sect1 id="sec-bin-create">
     <title>Creating a bin</title>
     <para>
-      Bins register themselves in the GStreamer registry, so they can be created in the normal way:
+      Bins register themselves in the GStreamer registry, so they can be
+      created in the normal way:
     </para>
     <programlisting>
   GstElement *bin, *thread, *pipeline;
@@ -97,9 +98,9 @@
    ...
     </programlisting>
     <para>
-      You can see that the name of the element becomes very handy for retrieving the
-      element from an bin by using the element's name. gst_bin_get_by_name () will 
-      recursively search nested bins.
+      You can see that the name of the element becomes very handy
+      for retrieving the element from an bin by using the element's
+      name. gst_bin_get_by_name () will recursively search nested bins.
     </para>
     <para>
       To get a list of elements in a bin, use:
@@ -128,8 +129,8 @@
    ...
     </programlisting>
     <para>
-      To add many elements to a bin at the same time, try the gst_bin_add_many () API. Remember to
-      pass NULL as the last argument.
+      To add many elements to a bin at the same time, try the gst_bin_add_many
+      () API. Remember to pass NULL as the last argument.
     </para>
     <programlisting>
   GstElement *filesrc, *decoder, *audiosink;
@@ -144,9 +145,9 @@
   <sect1 id="sec-bin-custom">
     <title>Custom bins</title>
     <para> 
-      The application programmer can create custom bins packed with elements to perform a 
-      specific task. This allow you to write an MPEG audio decoder with just the follwing lines
-      of code:
+      The application programmer can create custom bins packed with elements
+      to perform a specific task. This allow you to write an MPEG audio
+      decoder with just the follwing lines of code:
     </para>
     <programlisting>
 
@@ -164,13 +165,14 @@
   gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_NULL);
     </programlisting>
     <para>
-      Note that the above code assumes that the mp3player bin derives itself from a
-      <classname>GstThread</classname>, which begins to play as soon as its state is set to PLAYING.
-      Other bin types may need explicit iteration. For more information, see <xref
-      linkend="cha-threads"/>.
+      Note that the above code assumes that the mp3player bin derives itself
+      from a <classname>GstThread</classname>, which begins to play as soon
+      as its state is set to PLAYING.  Other bin types may need explicit
+      iteration. For more information, see <xref linkend="cha-threads"/>.
 
-      Custom bins can be created with a plugin or an XML description. You will find more 
-      information about creating custom bin in the Plugin Writers Guide (FIXME ref).
+      Custom bins can be created with a plugin or an XML description. You
+      will find more information about creating custom bin in the Plugin
+      Writers Guide (FIXME ref).
     </para>
   </sect1>
 
@@ -224,9 +226,9 @@
   
     </programlisting>
     <para>
-      In the above example, the bin now also has a pad: the pad called 'sink' of the
-      given element. We can now, for example, connect the srcpad of a filesrc to the 
-      bin with:
+      In the above example, the bin now also has a pad: the pad called 'sink'
+      of the given element. We can now, for example, connect the srcpad of
+      a filesrc to the bin with:
     </para>
     <programlisting>
   GstElement *filesrc;

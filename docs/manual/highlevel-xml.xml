@@ -17,9 +17,10 @@
     <title>Turning GstElements into XML</title>
 
     <para>
-      We create a simple pipeline and write it to stdout with gst_xml_write_file (). The following
-      code constructs an mp3 player pipeline with two threads and then writes out the XML both to
-      stdout and to a file. Use this program with one argument: the mp3 file on disk.
+      We create a simple pipeline and write it to stdout with
+      gst_xml_write_file (). The following code constructs an mp3 player
+      pipeline with two threads and then writes out the XML both to stdout
+      and to a file. Use this program with one argument: the mp3 file on disk.
     </para>
 
     <programlisting>
@@ -167,8 +168,8 @@ main(int argc, char *argv[])
     <para>
       In addition to loading a file, you can also load a from a xmlDocPtr and
       an in memory buffer using gst_xml_parse_doc and gst_xml_parse_memory
-      respectivily. both of these methods return a gboolean indicating success
-      or failure of the requested action.
+      respectivily. both of these methods return a gboolean indicating
+      success or failure of the requested action.
     </para>
   </sect1>
   <sect1 id="sec-xml-custom">
@@ -177,7 +178,7 @@ main(int argc, char *argv[])
     <para>
       It is possible to add custom XML tags to the core XML created with
       gst_xml_write. This feature can be used by an application to add more
-      information to the save plugins. the editor will for example insert 
+      information to the save plugins. the editor will for example insert
       the position of the elements on the screen using the custom XML tags.
     </para>
     <para>
@@ -254,8 +255,8 @@ object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
     </programlisting>
 
     <para>
-      Whenever a new object has been loaded, the xml_loaded function will be
-      called. this function looks like:
+      Whenever a new object has been loaded, the xml_loaded function will
+      be called. this function looks like:
     </para>
     <programlisting>
 static void

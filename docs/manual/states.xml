@@ -1,8 +1,8 @@
 <chapter id="cha-states">
   <title>Element states</title>
   <para> 
-    One you have created a pipeline packed with elements, nothing will happen yet.
-    This is where the different states come into play. 
+    One you have created a pipeline packed with elements, nothing will
+    happen yet.  This is where the different states come into play.
   </para>
 
   <sect1 id="sec-states">
@@ -35,9 +35,10 @@
     </para>
 
     <para> 
-      All elements start with the NULL state. The elements will go throught the following state changes:
-      NULL -&gt; READY -&gt; PAUSED -&gt; PLAYING. Remember when going from PLAYING to READY GStreamer 
-      will internally go throught the intermediate states.
+      All elements start with the NULL state. The elements will go throught
+      the following state changes: NULL -&gt; READY -&gt; PAUSED -&gt;
+      PLAYING. Remember when going from PLAYING to READY GStreamer will
+      internally go throught the intermediate states.
     </para>
     <para> 
       The state of an element can be changed with the following code:
@@ -111,9 +112,9 @@
     </para>
     <note>
       <para> 
-        You can also go from the NULL to PLAYING state directly without going through the READY
-	state. this is a shortcut, the framework will internally go through the READY and the 
-	PAUSED state for you.
+        You can also go from the NULL to PLAYING state directly without
+        going through the READY state. this is a shortcut, the framework
+        will internally go through the READY and the PAUSED state for you.
       </para> 
     </note>
   </sect1>
@@ -137,9 +138,9 @@
     </para>
     <note>
       <para> 
-	The PAUSED state is available for temporarily freezing the pipeline.
-	Elements will typically not free their resources in the PAUSED state.
-	Use the NULL state if you want to stop the data flow permanantly.  
+        The PAUSED state is available for temporarily freezing the pipeline.
+        Elements will typically not free their resources in the PAUSED state.
+        Use the NULL state if you want to stop the data flow permanantly.
       </para> 
     </note>
     <para> 
