@@ -189,7 +189,7 @@ gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   gst_caps_get_fourcc_int (caps, "format", &videoscale->format);
@@ -221,7 +221,7 @@ gst_videoscale_init (GstVideoscale *videoscale)
   /*gst_pad_set_negotiate_function(videoscale->sinkpad,videoscale_negotiate_sink); */
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->sinkpad);
   gst_pad_set_chain_function(videoscale->sinkpad,gst_videoscale_chain);
-  gst_pad_set_connect_function(videoscale->sinkpad,gst_videoscale_sinkconnect);
+  gst_pad_set_link_function(videoscale->sinkpad,gst_videoscale_sinkconnect);
 
   videoscale->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (src_templ), "src");

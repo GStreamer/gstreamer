@@ -213,14 +213,14 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
   GSList *channels;
   GstPad *p;
   
-  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_REFUSED);
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
 
   if (GST_CAPS_IS_FIXED (caps)) {
     if (!gst_adder_parse_caps (adder, caps))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
   
     if (pad == adder->srcpad || gst_pad_try_set_caps (adder->srcpad, caps) > 0) {
       sinkpads = gst_element_get_pad_list ((GstElement *) adder);
@@ -229,11 +229,11 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
         if (p != pad && p != adder->srcpad) {
           if (gst_pad_try_set_caps (p, caps) <= 0) {
             GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-		       "caps mismatch; disconnecting and removing pad %s:%s "
+		       "caps mismatch; unlinking and removing pad %s:%s "
 		       "(peer %s:%s)",
                        GST_DEBUG_PAD_NAME (p), 
 		       GST_DEBUG_PAD_NAME (GST_PAD_PEER (p)));
-            gst_pad_disconnect (GST_PAD (GST_PAD_PEER (p)), p);
+            gst_pad_unlink (GST_PAD (GST_PAD_PEER (p)), p);
             remove = g_list_prepend (remove, p);
           }
         }
@@ -258,12 +258,12 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
         }
         remove = g_list_next (remove);
       }
-      return GST_PAD_CONNECT_OK;
+      return GST_PAD_LINK_OK;
     } else {
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
     }
   } else {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 }
 
@@ -294,7 +294,7 @@ gst_adder_init (GstAdder *adder)
                                              "src");
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
   gst_element_set_loop_function (GST_ELEMENT (adder), gst_adder_loop);
-  gst_pad_set_connect_function (adder->srcpad, gst_adder_connect);
+  gst_pad_set_link_function (adder->srcpad, gst_adder_connect);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
 
@@ -336,7 +336,7 @@ gst_adder_request_new_pad (GstElement *element, GstPadTemplate *templ,
   input->bytestream = gst_bytestream_new (input->sinkpad);
 
   gst_element_add_pad (GST_ELEMENT (adder), input->sinkpad);
-  gst_pad_set_connect_function(input->sinkpad, gst_adder_connect);
+  gst_pad_set_link_function(input->sinkpad, gst_adder_connect);
 
   /* add the input_channel to the list of input channels */
   

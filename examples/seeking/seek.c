@@ -28,17 +28,17 @@ typedef struct
   const gchar 	*padname;
   GstPad 	*target;
   GstElement 	*bin;
-} dyn_connect;
+} dyn_link;
 
 static void
-dynamic_connect (GstPadTemplate *templ, GstPad *newpad, gpointer data)
+dynamic_link (GstPadTemplate *templ, GstPad *newpad, gpointer data)
 {
-  dyn_connect *connect = (dyn_connect *) data;
+  dyn_link *connect = (dyn_link *) data;
 
   if (!strcmp (gst_pad_get_name (newpad), connect->padname)) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gst_bin_add (GST_BIN (pipeline), connect->bin);
-    gst_pad_connect (newpad, connect->target);
+    gst_pad_link (newpad, connect->target);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
     seekable_pads = g_list_prepend (seekable_pads, newpad);
@@ -47,16 +47,16 @@ dynamic_connect (GstPadTemplate *templ, GstPad *newpad, gpointer data)
 }
 
 static void
-setup_dynamic_connection (GstElement *element, const gchar *padname, GstPad *target, GstElement *bin)
+setup_dynamic_linkion (GstElement *element, const gchar *padname, GstPad *target, GstElement *bin)
 {
-  dyn_connect *connect;
+  dyn_link *connect;
 
-  connect = g_new0 (dyn_connect, 1);
+  connect = g_new0 (dyn_link, 1);
   connect->padname 	= g_strdup (padname);
   connect->target 	= target;
   connect->bin 		= bin;
 
-  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_connect), connect);
+  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_link), connect);
 }
 
 static GstElement*
@@ -79,8 +79,8 @@ make_mod_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, audiosink);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -112,9 +112,9 @@ make_dv_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), audiosink);
   gst_bin_add (GST_BIN (pipeline), videosink);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
-  gst_element_connect (decoder, videosink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, audiosink);
+  gst_element_link (decoder, videosink);
 
   seekable = gst_element_get_pad (decoder, "video");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -147,8 +147,8 @@ make_wav_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, audiosink);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -178,8 +178,8 @@ make_flac_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, audiosink);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -209,8 +209,8 @@ make_sid_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, audiosink);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -241,8 +241,8 @@ make_parse_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), parser);
   gst_bin_add (GST_BIN (pipeline), fakesink);
 
-  gst_element_connect (src, parser);
-  gst_element_connect (parser, fakesink);
+  gst_element_link (src, parser);
+  gst_element_link (parser, fakesink);
 
   seekable = gst_element_get_pad (parser, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -272,8 +272,8 @@ make_vorbis_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, audiosink);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -310,9 +310,9 @@ make_mp3_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (audio_thread), osssink);
   gst_bin_add (GST_BIN (pipeline), audio_thread);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (decoder, queue);
-  gst_element_connect (queue, osssink);
+  gst_element_link (src, decoder);
+  gst_element_link (decoder, queue);
+  gst_element_link (queue, osssink);
 
   seekable = gst_element_get_pad (queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -340,7 +340,7 @@ make_avi_pipeline (const gchar *location)
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
-  gst_element_connect (src, demux);
+  gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
@@ -348,15 +348,15 @@ make_avi_pipeline (const gchar *location)
   audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  gst_element_connect (a_decoder, a_queue);
-  gst_element_connect (a_queue, audiosink);
+  gst_element_link (a_decoder, a_queue);
+  gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), audio_thread);
   gst_bin_add (GST_BIN (audio_thread), a_queue);
   gst_bin_add (GST_BIN (audio_thread), audiosink);
   gst_element_set_state (audio_bin, GST_STATE_PAUSED);
 
-  setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+  setup_dynamic_linkion (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -373,8 +373,8 @@ make_avi_pipeline (const gchar *location)
   //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   //g_object_set (G_OBJECT (v_queue), "max_level", 10, NULL);
-  gst_element_connect (v_decoder, v_queue);
-  gst_element_connect (v_queue, videosink);
+  gst_element_link (v_decoder, v_queue);
+  gst_element_link (v_queue, videosink);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
   gst_bin_add (GST_BIN (video_bin), video_thread);
   gst_bin_add (GST_BIN (video_thread), v_queue);
@@ -382,7 +382,7 @@ make_avi_pipeline (const gchar *location)
 
   gst_element_set_state (video_bin, GST_STATE_PAUSED);
 
-  setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+  setup_dynamic_linkion (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -413,7 +413,7 @@ make_mpeg_pipeline (const gchar *location)
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
-  gst_element_connect (src, demux);
+  gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
@@ -421,14 +421,14 @@ make_mpeg_pipeline (const gchar *location)
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
-  gst_element_connect (a_decoder, a_queue);
-  gst_element_connect (a_queue, audiosink);
+  gst_element_link (a_decoder, a_queue);
+  gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), audio_thread);
   gst_bin_add (GST_BIN (audio_thread), a_queue);
   gst_bin_add (GST_BIN (audio_thread), audiosink);
 
-  setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+  setup_dynamic_linkion (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -442,13 +442,13 @@ make_mpeg_pipeline (const gchar *location)
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
-  gst_element_connect_many (v_decoder, v_queue, v_filter, NULL);
+  gst_element_link_many (v_decoder, v_queue, v_filter, NULL);
   
-  gst_element_connect_pads (v_filter, "src", videosink, "sink");
+  gst_element_link (v_filter, videosink);
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, video_thread, NULL);
   gst_bin_add_many (GST_BIN (video_thread), v_queue, v_filter, videosink, NULL);
 
-  setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+  setup_dynamic_linkion (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -479,7 +479,7 @@ make_mpegnt_pipeline (const gchar *location)
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
-  gst_element_connect (src, demux);
+  gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
@@ -488,14 +488,14 @@ make_mpegnt_pipeline (const gchar *location)
   audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
-  gst_element_connect (a_decoder, a_queue);
-  gst_element_connect (a_queue, audiosink);
+  gst_element_link (a_decoder, a_queue);
+  gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), audio_thread);
   gst_bin_add (GST_BIN (audio_thread), a_queue);
   gst_bin_add (GST_BIN (audio_thread), audiosink);
 
-  setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+  setup_dynamic_linkion (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -506,12 +506,11 @@ make_mpegnt_pipeline (const gchar *location)
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
-  gst_element_connect_many (v_decoder, v_filter, NULL);
+  gst_element_link_many (v_decoder, v_filter, videosink, NULL);
   
-  gst_element_connect_pads (v_filter, "src", videosink, "sink");
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
 
-  setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+  setup_dynamic_linkion (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);

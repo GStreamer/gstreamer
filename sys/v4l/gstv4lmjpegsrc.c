@@ -185,7 +185,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_element_add_pad(GST_ELEMENT(v4lmjpegsrc), v4lmjpegsrc->srcpad);
 
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
-  gst_pad_set_connect_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
+  gst_pad_set_link_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
   gst_pad_set_convert_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconvert);
 
   v4lmjpegsrc->bufferpool = gst_buffer_pool_new(
@@ -287,11 +287,11 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
   if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)))
   {
     if (!gst_v4lmjpegsrc_capture_deinit(v4lmjpegsrc))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
   }
   else if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
   {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   /* Note: basically, we don't give a damn about the opposite caps here.
@@ -302,7 +302,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
 
   /* set buffer info */
   if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc, v4lmjpegsrc->numbufs, v4lmjpegsrc->bufsize))
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
   /* set capture parameters and mmap the buffers */
   if (!v4lmjpegsrc->frame_width && !v4lmjpegsrc->frame_height &&
@@ -311,7 +311,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
   {
     if (!gst_v4lmjpegsrc_set_capture(v4lmjpegsrc,
         v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->quality))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
   }
   else
   {
@@ -320,7 +320,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
          v4lmjpegsrc->frame_width, v4lmjpegsrc->frame_height,
          v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->vertical_decimation,
          v4lmjpegsrc->quality))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
   }
   /* we now have an actual width/height - *set it* */
   caps = gst_caps_new("v4lmjpegsrc_caps",
@@ -329,15 +329,15 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                         "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
                         "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
                         NULL       ) );
-  if ((ret_val = gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps)) == GST_PAD_CONNECT_REFUSED)
-    return GST_PAD_CONNECT_REFUSED;
-  else if (ret_val == GST_PAD_CONNECT_DELAYED)
-    return GST_PAD_CONNECT_DELAYED;
+  if ((ret_val = gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps)) == GST_PAD_LINK_REFUSED)
+    return GST_PAD_LINK_REFUSED;
+  else if (ret_val == GST_PAD_LINK_DELAYED)
+    return GST_PAD_LINK_DELAYED;
 
   if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
-  return GST_PAD_CONNECT_DONE;
+  return GST_PAD_LINK_DONE;
 }
 
 

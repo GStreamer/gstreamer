@@ -162,7 +162,7 @@ gst_v4lsrc_init (GstV4lSrc *v4lsrc)
   gst_element_add_pad(GST_ELEMENT(v4lsrc), v4lsrc->srcpad);
 
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);
-  gst_pad_set_connect_function (v4lsrc->srcpad, gst_v4lsrc_srcconnect);
+  gst_pad_set_link_function (v4lsrc->srcpad, gst_v4lsrc_srcconnect);
   gst_pad_set_convert_function (v4lsrc->srcpad, gst_v4lsrc_srcconvert);
 
   v4lsrc->bufferpool = gst_buffer_pool_new(
@@ -255,11 +255,11 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
   if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)))
   {
     if (!gst_v4lsrc_capture_deinit(v4lsrc))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
   }
   else if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
   {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   palette = v4lsrc->palette;
@@ -419,22 +419,22 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
 
     gst_caps_debug (newcaps, "new caps to set on v4lsrc's src pad");
 
-    if ((ret_val = gst_pad_try_set_caps(v4lsrc->srcpad, newcaps)) == GST_PAD_CONNECT_REFUSED)
+    if ((ret_val = gst_pad_try_set_caps(v4lsrc->srcpad, newcaps)) == GST_PAD_LINK_REFUSED)
       continue;
-    else if (ret_val == GST_PAD_CONNECT_DELAYED)
-      return GST_PAD_CONNECT_DELAYED;
+    else if (ret_val == GST_PAD_LINK_DELAYED)
+      return GST_PAD_LINK_DELAYED;
 
     if (!gst_v4lsrc_set_capture(v4lsrc, v4lsrc->width, v4lsrc->height, palette))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
 
     if (!gst_v4lsrc_capture_init(v4lsrc))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
 
-    return GST_PAD_CONNECT_DONE;
+    return GST_PAD_LINK_DONE;
   }
 
   /* still nothing - no good caps */
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 

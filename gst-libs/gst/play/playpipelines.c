@@ -65,7 +65,7 @@ gst_play_audio_setup (GstPlay *play, GError **error)
 			GST_BIN (play->pipeline), play->volume,
 			play->audio_sink, NULL);
 	
-	gst_element_connect (play->volume, play->audio_sink);
+	gst_element_link (play->volume, play->audio_sink);
 	
 	gst_bin_set_pre_iterate_function(
 			GST_BIN (play->pipeline), 
@@ -126,7 +126,7 @@ gst_play_audiot_setup (GstPlay *play, GError **error)
 			GST_BIN (play->pipeline), play->volume,
 			play->audio_sink, NULL);
 	
-	gst_element_connect (play->volume, play->audio_sink);
+	gst_element_link (play->volume, play->audio_sink);
 	
 	gst_bin_set_pre_iterate_function(
 			GST_BIN (play->pipeline), 
@@ -150,13 +150,13 @@ gst_play_audiot_set_audio (GstPlay *play, GstElement *audio_sink)
 	
 	if (play->audio_sink)
 	{
-		gst_element_disconnect (play->volume, play->audio_sink);
+		gst_element_unlink (play->volume, play->audio_sink);
 		gst_bin_remove (GST_BIN (play->pipeline), play->audio_sink);
 	}
 
 	play->audio_sink = audio_sink;
 	gst_bin_add (GST_BIN (play->pipeline), play->audio_sink);
-	gst_element_connect (play->volume, play->audio_sink);
+	gst_element_link (play->volume, play->audio_sink);
 
 	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
 	
@@ -178,8 +178,8 @@ gst_play_audiot_set_auto (GstPlay *play, GstElement *autoplugger)
 	
 	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger before creating a new one */
-		gst_element_disconnect (play->autoplugger, play->volume);
-		gst_element_disconnect (play->autoplugger, play->source);
+		gst_element_unlink (play->autoplugger, play->volume);
+		gst_element_unlink (play->autoplugger, play->source);
 		gst_bin_remove (GST_BIN (play->pipeline), play->autoplugger);
 	}
 	
@@ -187,8 +187,8 @@ gst_play_audiot_set_auto (GstPlay *play, GstElement *autoplugger)
 	g_return_val_if_fail (play->autoplugger != NULL, FALSE);
 
 	gst_bin_add (GST_BIN (play->pipeline), play->autoplugger);
-	gst_element_connect (play->source, play->autoplugger);
-	gst_element_connect (play->autoplugger, play->volume);
+	gst_element_link (play->source, play->autoplugger);
+	gst_element_link (play->autoplugger, play->volume);
 	return TRUE;
 }
 
@@ -260,7 +260,7 @@ gst_play_audioht_setup (GstPlay *play, GError **error)
 				GST_BIN (audio_thread), audio_queue, play->volume,
 				play->audio_sink, NULL);
 	
-	gst_element_connect_many (audio_queue, play->volume, play->audio_sink);
+	gst_element_link_many (audio_queue, play->volume, play->audio_sink);
 	
 	gst_element_add_ghost_pad (
 				audio_thread, gst_element_get_pad (audio_queue, "sink"),
@@ -294,13 +294,13 @@ gst_play_audioht_set_audio (GstPlay *play, GstElement *audio_sink)
 
 	if (play->audio_sink)
 	{
-		gst_element_disconnect (play->volume, play->audio_sink);
+		gst_element_unlink (play->volume, play->audio_sink);
 		gst_bin_remove (GST_BIN (audio_thread), play->audio_sink);
 	}
 
 	play->audio_sink = audio_sink;
 	gst_bin_add (GST_BIN (audio_thread), play->audio_sink);
-	gst_element_connect (play->volume, play->audio_sink);
+	gst_element_link (play->volume, play->audio_sink);
 
 	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
 	
@@ -325,8 +325,8 @@ gst_play_audioht_set_auto (GstPlay *play, GstElement *autoplugger)
 
 	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger before creating a new one */
-		gst_element_disconnect (play->autoplugger, audio_thread);
-		gst_element_disconnect (play->autoplugger, play->source);
+		gst_element_unlink (play->autoplugger, audio_thread);
+		gst_element_unlink (play->autoplugger, play->source);
 		gst_bin_remove (GST_BIN (play->pipeline), play->autoplugger);
 	}
 	
@@ -334,8 +334,8 @@ gst_play_audioht_set_auto (GstPlay *play, GstElement *autoplugger)
 	g_return_val_if_fail (play->autoplugger != NULL, FALSE);
 
 	gst_bin_add (GST_BIN (play->pipeline), play->autoplugger);
-	gst_element_connect (play->source, play->autoplugger);
-	gst_element_connect (play->autoplugger, audio_thread);
+	gst_element_link (play->source, play->autoplugger);
+	gst_element_link (play->autoplugger, audio_thread);
 	return TRUE;
 }
 
@@ -423,7 +423,7 @@ gst_play_video_setup (GstPlay *play, GError **error)
 	gst_bin_add_many (
 		GST_BIN (audio_bin), audio_queue, play->volume, 
 		play->audio_sink, NULL);
-	gst_element_connect_many (audio_queue, play->volume,
+	gst_element_link_many (audio_queue, play->volume,
 		play->audio_sink, NULL);
 	
 	gst_element_add_ghost_pad (
@@ -470,7 +470,7 @@ gst_play_video_setup (GstPlay *play, GError **error)
 	gst_bin_add_many (GST_BIN (video_bin), video_queue, colorspace, 
 			play->video_sink, NULL);
 	
-	gst_element_connect_many (video_queue, colorspace,
+	gst_element_link_many (video_queue, colorspace,
 			play->video_sink, NULL);
 	
 	/* setting up iterate functions */
@@ -508,9 +508,9 @@ gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
 
 	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger before creating a new one */
-		gst_element_disconnect (play->autoplugger, audio_bin);
-		gst_element_disconnect (play->autoplugger, play->source);
-		gst_element_disconnect (play->autoplugger, video_bin);
+		gst_element_unlink (play->autoplugger, audio_bin);
+		gst_element_unlink (play->autoplugger, play->source);
+		gst_element_unlink (play->autoplugger, video_bin);
 
 		gst_bin_remove (GST_BIN (work_thread), play->autoplugger);
 	}
@@ -519,9 +519,9 @@ gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
 	g_return_val_if_fail (play->autoplugger != NULL, FALSE);
 
 	gst_bin_add (GST_BIN (work_thread), play->autoplugger);
-	gst_element_connect (play->source, play->autoplugger);
-	gst_element_connect (play->autoplugger, audio_bin);
-	gst_element_connect (play->autoplugger, video_bin);
+	gst_element_link (play->source, play->autoplugger);
+	gst_element_link (play->autoplugger, audio_bin);
+	gst_element_link (play->autoplugger, video_bin);
 
 	return TRUE;
 }
@@ -539,12 +539,12 @@ gst_play_video_set_video (GstPlay *play, GstElement *video_sink)
 	video_mate = g_hash_table_lookup(play->other_elements, "colorspace");
 
 	if (play->video_sink) {
-		gst_element_disconnect (video_mate, play->video_sink);
+		gst_element_unlink (video_mate, play->video_sink);
 		gst_bin_remove (GST_BIN (video_bin), play->video_sink);
 	}
 	play->video_sink = video_sink;
 	gst_bin_add (GST_BIN (video_bin), play->video_sink);
-	gst_element_connect (video_mate, play->video_sink);
+	gst_element_link (video_mate, play->video_sink);
 
 	play->video_sink_element = gst_play_get_sink_element (play, video_sink);
 
@@ -571,13 +571,13 @@ gst_play_video_set_audio (GstPlay *play, GstElement *audio_sink)
 	
 	if (play->audio_sink)
 	{
-		gst_element_disconnect (play->volume, play->audio_sink);
+		gst_element_unlink (play->volume, play->audio_sink);
 		gst_bin_remove (GST_BIN (audio_bin), play->audio_sink);
 	}
 
 	play->audio_sink = audio_sink;
 	gst_bin_add (GST_BIN (audio_bin), play->audio_sink);
-	gst_element_connect (play->volume, play->audio_sink);
+	gst_element_link (play->volume, play->audio_sink);
 
 	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
 
@@ -679,7 +679,7 @@ gst_play_videots_setup (GstPlay *play, GError **error)
 			GST_BIN (audio_bin), audio_queue,
 			play->volume, play->audio_sink, NULL);
 	
-	gst_element_connect_many (
+	gst_element_link_many (
 			audio_queue, play->volume,
 			play->audio_sink, NULL);
 	
@@ -714,7 +714,7 @@ gst_play_videots_setup (GstPlay *play, GError **error)
 			GST_BIN (play->pipeline), video_queue,
 			play->video_sink, NULL);
 			
-	gst_element_connect (video_queue, play->video_sink);
+	gst_element_link (video_queue, play->video_sink);
 	
 	gst_bin_set_pre_iterate_function(
 			GST_BIN (play->pipeline), 
@@ -726,7 +726,7 @@ gst_play_videots_setup (GstPlay *play, GError **error)
 			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
 			play->video_bin_mutex);
 	
-	gst_element_connect (work_thread, video_queue);
+	gst_element_link (work_thread, video_queue);
 
 	return TRUE;
 }
@@ -748,9 +748,9 @@ gst_play_videots_set_auto (GstPlay *play, GstElement *autoplugger)
 	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger 
 		 * before creating a new one */
-		gst_element_disconnect (play->autoplugger, audio_bin);
-		gst_element_disconnect (play->autoplugger, play->source);
-		gst_element_disconnect (play->autoplugger, auto_identity);
+		gst_element_unlink (play->autoplugger, audio_bin);
+		gst_element_unlink (play->autoplugger, play->source);
+		gst_element_unlink (play->autoplugger, auto_identity);
 
 		gst_bin_remove (GST_BIN (work_thread), play->autoplugger);
 	}
@@ -759,9 +759,9 @@ gst_play_videots_set_auto (GstPlay *play, GstElement *autoplugger)
 	g_return_val_if_fail (play->autoplugger != NULL, FALSE);
 
 	gst_bin_add (GST_BIN (work_thread), play->autoplugger);
-	gst_element_connect (play->source, play->autoplugger);
-	gst_element_connect (play->autoplugger, audio_bin);
-	gst_element_connect (play->autoplugger, auto_identity);
+	gst_element_link (play->source, play->autoplugger);
+	gst_element_link (play->autoplugger, audio_bin);
+	gst_element_link (play->autoplugger, auto_identity);
 
 	return TRUE;
 }
@@ -778,12 +778,12 @@ gst_play_videots_set_video (GstPlay *play, GstElement *video_sink)
 	video_mate = g_hash_table_lookup (play->other_elements, "video_queue");
 
 	if (play->video_sink) {
-		gst_element_disconnect (video_mate, play->video_sink);
+		gst_element_unlink (video_mate, play->video_sink);
 		gst_bin_remove (GST_BIN (play->pipeline), play->video_sink);
 	}
 	play->video_sink = video_sink;
 	gst_bin_add (GST_BIN (play->pipeline), play->video_sink);
-	gst_element_connect (video_mate, play->video_sink);
+	gst_element_link (video_mate, play->video_sink);
 
 	return TRUE;
 }
@@ -801,13 +801,13 @@ gst_play_videots_set_audio (GstPlay *play, GstElement *audio_sink)
 	
 	if (play->audio_sink)
 	{
-		gst_element_disconnect (play->volume, play->audio_sink);
+		gst_element_unlink (play->volume, play->audio_sink);
 		gst_bin_remove (GST_BIN (audio_bin), play->audio_sink);
 	}
 
 	play->audio_sink = audio_sink;
 	gst_bin_add (GST_BIN (audio_bin), play->audio_sink);
-	gst_element_connect (play->volume, play->audio_sink);
+	gst_element_link (play->volume, play->audio_sink);
 
 	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
 	

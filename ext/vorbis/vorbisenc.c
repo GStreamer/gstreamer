@@ -175,7 +175,7 @@ gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "channels", &vorbisenc->channels);
   gst_caps_get_int (caps, "rate",     &vorbisenc->frequency);
@@ -183,9 +183,9 @@ gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
   gst_vorbisenc_setup (vorbisenc);
 
   if (vorbisenc->setup)
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
 
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 static gboolean
@@ -401,7 +401,7 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->sinkpad = gst_pad_new_from_template (gst_vorbisenc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
   gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
-  gst_pad_set_connect_function (vorbisenc->sinkpad, gst_vorbisenc_sinkconnect);
+  gst_pad_set_link_function (vorbisenc->sinkpad, gst_vorbisenc_sinkconnect);
   gst_pad_set_convert_function (vorbisenc->sinkpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_convert_sink));
   gst_pad_set_formats_function (vorbisenc->sinkpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_get_formats));
 

@@ -172,7 +172,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 
 #if 0
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 #endif
 
@@ -186,7 +186,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 	  videotestsrc->format, videotestsrc->forced_format);
 
   if (videotestsrc->forced_format && videotestsrc->format != videotestsrc->forced_format) {
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   printf ("videotestsrc: using FOURCC 0x%08x\n", videotestsrc->format);
@@ -205,7 +205,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG (0, "size %d x %d", videotestsrc->width, videotestsrc->height);
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static GstElementStateReturn
@@ -283,7 +283,7 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_pad_set_getcaps_function (videotestsrc->srcpad, gst_videotestsrc_getcaps);
   gst_element_add_pad (GST_ELEMENT (videotestsrc), videotestsrc->srcpad);
   gst_pad_set_get_function (videotestsrc->srcpad, gst_videotestsrc_get);
-  gst_pad_set_connect_function (videotestsrc->srcpad, gst_videotestsrc_srcconnect);
+  gst_pad_set_link_function (videotestsrc->srcpad, gst_videotestsrc_srcconnect);
 
   videotestsrc->width = 640;
   videotestsrc->height = 480;

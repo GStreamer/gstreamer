@@ -327,7 +327,7 @@ gst_alsa_init(GstAlsa *this)
     
     gst_element_add_pad(GST_ELEMENT(this), GST_ALSA_PAD(this->pads)->pad);
     
-    gst_pad_set_connect_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_connect);
+    gst_pad_set_link_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_connect);
     gst_element_set_loop_function(GST_ELEMENT(this), gst_alsa_loop);
 }
 
@@ -377,7 +377,7 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     pad->channel = channel;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
-    gst_pad_set_connect_function(pad->pad, gst_alsa_connect);
+    gst_pad_set_link_function(pad->pad, gst_alsa_connect);
     
     if (this->data_interleaved && this->pads) {
         gst_element_remove_pad (GST_ELEMENT (this), GST_ALSA_PAD(this->pads)->pad);
@@ -758,15 +758,15 @@ gst_alsa_connect(GstPad *pad, GstCaps *caps)
     GstAlsa *this;
     gboolean need_mmap;
 
-    g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_REFUSED);
-    g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_REFUSED);
+    g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
+    g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_REFUSED);
 
     this = GST_ALSA(gst_pad_get_parent(pad));
     
     if (GST_CAPS_IS_FIXED (caps)) {
         if (this->handle == NULL)
             if (!gst_alsa_open_audio(this))
-                return GST_PAD_CONNECT_REFUSED;
+                return GST_PAD_LINK_REFUSED;
         
         if (gst_alsa_parse_caps(this, caps)) {
             need_mmap = this->mmap_open;
@@ -781,21 +781,21 @@ gst_alsa_connect(GstPad *pad, GstCaps *caps)
             /* FIXME send out another caps if nego fails */
             
             if (!gst_alsa_open_audio(this))
-                return GST_PAD_CONNECT_REFUSED;
+                return GST_PAD_LINK_REFUSED;
             
             if (!gst_alsa_start_audio(this))
-                return GST_PAD_CONNECT_REFUSED;
+                return GST_PAD_LINK_REFUSED;
             
             if (need_mmap && !gst_alsa_get_channel_addresses(this))
-                return GST_PAD_CONNECT_REFUSED;
+                return GST_PAD_LINK_REFUSED;
             
-            return GST_PAD_CONNECT_OK;
+            return GST_PAD_LINK_OK;
         }
         
-        return GST_PAD_CONNECT_REFUSED;
+        return GST_PAD_LINK_REFUSED;
     }
     
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 }
 
 /* shamelessly stolen from pbd's audioengine and jack alsa_driver. thanks, paul! */

@@ -59,7 +59,7 @@ int main(int argc,char *argv[]) {
   osssink = gst_element_factory_make("osssink","sound-sink");
   volfilter = gst_element_factory_make("volume","volume-filter");
   gst_bin_add_many(GST_BIN(thread), sinesrc, volfilter, osssink, NULL);
-  gst_element_connect_many(sinesrc, volfilter, osssink, NULL);
+  gst_element_link_many(sinesrc, volfilter, osssink, NULL);
   /* this breaks with current alsa oss compat lib */
   g_object_set(G_OBJECT(osssink),"fragment",0x00180008,NULL);
   g_object_set(G_OBJECT(osssink),"sync",FALSE,NULL);

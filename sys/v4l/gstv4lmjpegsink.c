@@ -166,7 +166,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   gst_element_add_pad (GST_ELEMENT (v4lmjpegsink), v4lmjpegsink->sinkpad);
 
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
-  gst_pad_set_connect_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
+  gst_pad_set_link_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
 
   v4lmjpegsink->clock = NULL;
 
@@ -202,13 +202,13 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
 
   /* we are not going to act on variable caps */
   if (!GST_CAPS_IS_FIXED (vscapslist) || !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsink)))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
   if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsink)))
     if (!gst_v4lmjpegsink_playback_deinit(v4lmjpegsink))
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
 
   for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
@@ -231,11 +231,11 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
     g_signal_emit (G_OBJECT (v4lmjpegsink), gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE], 0,
       v4lmjpegsink->width, v4lmjpegsink->height);
 
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
   }
 
   /* if we got here - it's not good */
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 

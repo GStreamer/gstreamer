@@ -383,7 +383,7 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
   gst_element_add_pad (fd->input, src_pad);
   gst_element_add_pad (fd->output, sink_pad);
 
-  gst_element_connect_many (fd->input, fd->filter, fd->output, NULL);
+  gst_element_link_many (fd->input, fd->filter, fd->output, NULL);
   
   if (fd->pipe_string) g_free (fd->pipe_string);
   fd->pipe_string = g_strdup_printf ("%s ! %s ! %s", fd->input_pipe,

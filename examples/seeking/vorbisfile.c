@@ -55,14 +55,12 @@ print_caps (GstCaps *caps)
 	default:
           break;
       }
-      
       walk = g_list_next (walk);
     }
   }
   else {
     g_print (" unkown caps type\n");
   }
-  
 }
 
 static void
@@ -92,7 +90,7 @@ static void
 print_lbs_info (struct probe_context *context, gint stream)
 {
   const GstFormat *formats;
-  
+
   /* FIXME: need a better name here */
   g_print ("  stream info:\n");
 
@@ -114,10 +112,10 @@ print_lbs_info (struct probe_context *context, gint stream)
     definition = gst_format_get_details (format);
 
     /* get start and end position of this stream */
-    res = gst_pad_convert  (context->pad, 
+    res = gst_pad_convert  (context->pad,
 		            context->ls_format, stream,
 		            &format, &value_start);
-    res &= gst_pad_convert (context->pad, 
+    res &= gst_pad_convert (context->pad,
 		            context->ls_format, stream + 1,
 		            &format, &value_end);
 
@@ -127,7 +125,7 @@ print_lbs_info (struct probe_context *context, gint stream)
 
       if (format == GST_FORMAT_TIME) {
 	value_end /= (GST_SECOND/100);
-        g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick, 
+        g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick,
 			value_end/6000, (value_end/100)%60, (value_end%100));
       }
       else {
@@ -148,13 +146,13 @@ deep_notify (GObject *object, GstObject *origin,
   GValue value = { 0, };
 
   if (!strcmp (pspec->name, "metadata")) {
-    
+
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     context->metadata = g_value_peek_pointer (&value);
   }
   else if (!strcmp (pspec->name, "streaminfo")) {
-    
+
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     context->streaminfo = g_value_peek_pointer (&value);
@@ -175,7 +173,7 @@ collect_logical_stream_properties (struct probe_context *context, gint stream)
   GstEvent *event;
   gboolean res;
   gint count;
-  
+
   g_print ("info for logical stream %d:\n", stream);
 
   /* seek to stream */
@@ -196,14 +194,14 @@ collect_logical_stream_properties (struct probe_context *context, gint stream)
     count++;
     if (count > 10) break;
   }
-  
+
   print_caps (context->metadata);
   print_caps (context->streaminfo);
   print_format (context->caps);
   print_lbs_info (context, stream);
 
   g_print ("\n");
-  
+
   return TRUE;
 }
 
@@ -226,11 +224,11 @@ collect_stream_properties (struct probe_context *context)
     gint64 value;
     gboolean res;
     GstFormat format;
-    
+
     format = *formats;
     formats++;
 
-    res = gst_pad_query (context->pad, GST_QUERY_TOTAL, 
+    res = gst_pad_query (context->pad, GST_QUERY_TOTAL,
 		         &format, &value);
 
     definition = gst_format_get_details (format);
@@ -238,7 +236,7 @@ collect_stream_properties (struct probe_context *context)
     if (res) {
       if (format == GST_FORMAT_TIME) {
 	value /= (GST_SECOND/100);
-        g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick, 
+        g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick,
 			value/6000, (value/100)%60, (value%100));
       }
       else {
@@ -265,7 +263,7 @@ main (int argc, char **argv)
   GstFormat logical_stream_format;
   struct probe_context *context;
   gint stream;
-  
+
   gst_init (&argc, &argv);
 
   if (argc < 2) {
@@ -286,7 +284,7 @@ main (int argc, char **argv)
   gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), vorbisfile);
 
-  gst_element_connect_pads (filesrc, "src", vorbisfile, "sink");
+  gst_element_link_pads (filesrc, "src", vorbisfile, "sink");
 
   pad = gst_element_get_pad (vorbisfile, "src");
   g_assert (pad);
@@ -300,9 +298,9 @@ main (int argc, char **argv)
   context->pad = pad;
   context->ls_format = logical_stream_format;
 
-  g_signal_connect (G_OBJECT (pipeline), "deep_notify", 
+  g_signal_connect (G_OBJECT (pipeline), "deep_notify",
 		  G_CALLBACK (deep_notify), context);
-  
+
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* at this point we can inspect the stream */
@@ -314,7 +312,7 @@ main (int argc, char **argv)
     collect_logical_stream_properties (context, stream);
     stream++;
   }
-  
+
   /* stop probe */
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

@@ -186,7 +186,7 @@ gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
   if (GST_CAPS_IS_FIXED (caps))
     return gst_pad_try_set_caps (audioscale->srcpad, newcaps);
   else
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 }
 
 static void *
@@ -211,7 +211,7 @@ gst_audioscale_init (Audioscale *audioscale)
   audioscale->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->sinkpad);
   gst_pad_set_chain_function(audioscale->sinkpad,gst_audioscale_chain);
-  gst_pad_set_connect_function (audioscale->sinkpad, gst_audioscale_sinkconnect);
+  gst_pad_set_link_function (audioscale->sinkpad, gst_audioscale_sinkconnect);
 
   audioscale->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template), "src");
 

@@ -112,15 +112,16 @@ get_track_info (GstElement *cdparanoia)
     }
 
     if (res) {
-      /* for the first track (i==0) we wait until we have the 
+      /* for the first track (i==0) we wait until we have the
        * time of the next track */
       if (i > 0) {
 	gint64 length = time - time_count;
 
-        g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n", i-1, 
-			time_count/60, time_count%60,
-			time/60, time%60,
-			length/60, length%60);
+        g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n",
+		 i-1,
+		 time_count / 60, time_count % 60,
+		 time / 60, time % 60,
+		 length / 60, length % 60);
       }
     }
     else {
@@ -142,7 +143,7 @@ main (int argc, char **argv)
   GstEvent *event;
   gint count;
   gboolean res;
-  
+
   gst_init (&argc, &argv);
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -157,11 +158,11 @@ main (int argc, char **argv)
   gst_bin_add (GST_BIN (pipeline), cdparanoia);
   gst_bin_add (GST_BIN (pipeline), osssink);
 
-  gst_element_connect_pads (cdparanoia, "src", osssink, "sink");
+  gst_element_link_pads (cdparanoia, "src", osssink, "sink");
 
-  g_signal_connect (G_OBJECT (pipeline), "deep_notify", 
+  g_signal_connect (G_OBJECT (pipeline), "deep_notify",
 		  G_CALLBACK (gst_element_default_deep_notify), NULL);
-  
+
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   /* now we go into probe mode */
@@ -177,7 +178,7 @@ main (int argc, char **argv)
   /* seek to track3 */
   event = gst_event_new_seek (track_format |
 		              GST_SEEK_METHOD_SET |
-		  	      GST_SEEK_FLAG_FLUSH,
+			      GST_SEEK_FLAG_FLUSH,
 			      3);
 
   res = gst_pad_send_event (pad, event);
@@ -198,7 +199,7 @@ main (int argc, char **argv)
   /* seek to some seconds */
   event = gst_event_new_segment_seek (GST_FORMAT_TIME |
 		                      GST_SEEK_METHOD_SET |
-		  	              GST_SEEK_FLAG_FLUSH,
+			              GST_SEEK_FLAG_FLUSH,
 			              25 * GST_SECOND, 29 * GST_SECOND);
   res = gst_pad_send_event (pad, event);
   if (!res)
