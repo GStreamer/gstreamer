@@ -39,7 +39,11 @@ int main(int argc,char *argv[])
 //  g_signal_connect (G_OBJECT (xml), "object_loaded",
 //		    G_CALLBACK (xml_loaded), xml);
 
-  ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
+  if (argc == 2)
+    ret = gst_xml_parse_file(xml, argv[1], NULL);
+  else
+    ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
+  
   g_assert (ret == TRUE);
 
   pipeline = gst_xml_get_element(xml, "pipeline");
