@@ -1,7 +1,11 @@
 2004-03-15  Johan Dahlin  <johan@gnome.org>
 
-	* tools/Makefile.am (EXTRA_DIST): Add gst-indent
+	* gst/schedulers/gstoptimalscheduler.c
+	(gst_opt_scheduler_pad_unlink): Fix bug that causes totem to
+	crash on MPEG playback. My boolean arithmetic is a bit rusty.
 
+	* tools/Makefile.am (EXTRA_DIST): Add gst-indent
+	
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/Rules:
