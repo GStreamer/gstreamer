@@ -414,10 +414,10 @@ merge_chains (GstOptSchedulerChain *chain1, GstOptSchedulerChain *chain2)
   walk = chain2->groups;
   while (walk) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) walk->data;
+    walk = g_slist_next (walk);
 
     group->chain = NULL;
     add_to_chain (chain1, group);
-    walk = g_slist_next (walk);
   }
   delete_chain (chain2);
 
@@ -1138,7 +1138,6 @@ gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
     chain = group->chain;
     if (chain) {
       remove_from_chain (chain, group);
-      delete_chain (chain);
     }
     delete_group (group);
   }
