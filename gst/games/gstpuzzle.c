@@ -136,7 +136,8 @@ gst_puzzle_base_init (gpointer g_class)
     f->filter_func = draw_puzzle;
     if (gst_video_format_list[i].ext_caps) {
       f->depth = gst_video_format_list[i].depth;
-      f->endianness = G_BYTE_ORDER;
+      f->endianness =
+          gst_video_format_list[i].bitspp < 24 ? G_BYTE_ORDER : G_BIG_ENDIAN;
       f->red_mask = gst_video_format_list[i].red_mask;
       f->green_mask = gst_video_format_list[i].green_mask;
       f->blue_mask = gst_video_format_list[i].blue_mask;
@@ -210,6 +211,18 @@ gst_puzzle_show (GstPuzzle * puzzle)
 }
 #endif
 
+static void
+gst_puzzle_swap (GstPuzzle * puzzle, guint next)
+{
+  guint tmp;
+
+  g_assert (next < puzzle->tiles);
+  tmp = puzzle->permutation[puzzle->position];
+  puzzle->permutation[puzzle->position] = puzzle->permutation[next];
+  puzzle->permutation[next] = tmp;
+  puzzle->position = next;
+}
+
 typedef enum
 {
   DIR_UP,
@@ -246,12 +259,7 @@ gst_puzzle_move (GstPuzzle * puzzle, GstPuzzleDirection dir)
 
   if (next < puzzle->tiles) {
     /* the move was valid */
-    guint tmp = puzzle->permutation[puzzle->position];
-
-    puzzle->permutation[puzzle->position] = puzzle->permutation[next];
-    puzzle->permutation[next] = tmp;
-    puzzle->position = next;
-    puzzle->solved = gst_puzzle_is_solved (puzzle);
+    gst_puzzle_swap (puzzle, next);
   }
 }
 
@@ -272,9 +280,11 @@ static gboolean
 nav_event_handler (GstPad * pad, GstEvent * event)
 {
   GstPuzzle *puzzle;
+  GstVideofilter *filter;
   const gchar *type;
 
   puzzle = GST_PUZZLE (gst_pad_get_parent (pad));
+  filter = GST_VIDEOFILTER (puzzle);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
@@ -284,6 +294,7 @@ nav_event_handler (GstPad * pad, GstEvent * event)
         const gchar *key =
             gst_structure_get_string (event->event_data.structure.structure,
             "key");
+
         if (g_str_equal (key, "space")) {
           if (gst_puzzle_is_solved (puzzle)) {
             gst_puzzle_shuffle (puzzle);
@@ -305,8 +316,48 @@ nav_event_handler (GstPad * pad, GstEvent * event)
             break;
           }
         }
+        puzzle->solved = gst_puzzle_is_solved (puzzle);
         gst_event_unref (event);
         return TRUE;
+      } else if (g_str_equal (type, "mouse-button-press")) {
+        gint button;
+
+        if (gst_structure_get_int (event->event_data.structure.structure,
+                "button", &button)) {
+          if (button == 1) {
+            gdouble x, y;
+
+            if (gst_structure_get_double (event->event_data.structure.structure,
+                    "pointer_x", &x) &&
+                gst_structure_get_double (event->event_data.structure.structure,
+                    "pointer_y", &y)) {
+              gint xpos, ypos;
+
+              xpos =
+                  (int) x / ((gst_videofilter_get_input_width (filter) /
+                      puzzle->columns) & ~3);
+              ypos =
+                  (int) y / ((gst_videofilter_get_input_height (filter) /
+                      puzzle->rows) & ~3);
+              if (xpos >= 0 && xpos < puzzle->columns && ypos >= 0
+                  && ypos < puzzle->rows) {
+                gst_puzzle_swap (puzzle, ypos * puzzle->columns + xpos);
+              }
+              puzzle->solved = gst_puzzle_is_solved (puzzle);
+              gst_event_unref (event);
+              return TRUE;
+            }
+          } else if (button == 2) {
+            if (gst_puzzle_is_solved (puzzle)) {
+              gst_puzzle_shuffle (puzzle);
+            } else {
+              gst_puzzle_solve (puzzle);
+            }
+            puzzle->solved = gst_puzzle_is_solved (puzzle);
+            gst_event_unref (event);
+            return TRUE;
+          }
+        }
       }
       break;
     default:
@@ -424,8 +475,9 @@ draw_puzzle (GstVideofilter * videofilter, void *destp, void *srcp)
     gst_video_image_copy_area (&dest, 0, height - h, &src, 0, height - h, width,
         h);
   }
-  width /= puzzle->columns;
-  height /= puzzle->rows;
+  /* use multiples of 4 here to get around drawing problems with YUV colorspaces */
+  width = (width / puzzle->columns) & ~3;
+  height = (height / puzzle->rows) & ~3;
 
   for (i = 0; i < puzzle->tiles; i++) {
     if (!puzzle->solved && i == puzzle->position) {
