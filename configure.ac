@@ -31,7 +31,7 @@ AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
-AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
+AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4 -I .")
 
 AM_PROG_CC_STDC
 AM_PROG_AS
@@ -169,6 +169,9 @@ int main () { return !(sizeof(off_t) == 8); }
 [
   AC_MSG_RESULT(yes)
   GST_PKG_CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+],
+[
+  AC_MSG_RESULT(no)
 ],
 [
   AC_MSG_RESULT(no)

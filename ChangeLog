@@ -1,3 +1,10 @@
+2004-06-07  Daniel Gazard  <dany42@free.fr>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	  fix cross compiling not working. (fixes #143741)
+
 2004-06-07  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.c: (gst_element_set_time_delay):
