@@ -1,5 +1,15 @@
 2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
+	(gst_dp_packet_from_event), (gst_dp_event_from_packet):
+	* libs/gst/dataprotocol/dp-private.h:
+	  use GST macros to read/write fixed length ints
+	  add some more asserts
+
+2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/libs/gstreamer-libs-docs.sgml:
 	* docs/libs/gstreamer-libs-sections.txt:
 	  remove idct and putbits
