@@ -1,3 +1,24 @@
+2004-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
+	(gst_multifdsink_class_init), (gst_multifdsink_add),
+	(gst_multifdsink_remove), (gst_multifdsink_clear),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_client_queue_data),
+	(gst_multifdsink_client_queue_caps),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_thread),
+	(gst_multifdsink_init_send), (gst_multifdsink_close):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpserversink.c:
+	(gst_tcpserversink_handle_server_read),
+	(gst_tcpserversink_handle_select), (gst_tcpserversink_close):
+	More multifdsink fixes, more recovery policy fixes.
+	Removed stupid g_print
+
 2004-06-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/Makefile.am:
