@@ -363,7 +363,7 @@ gst_mpeg_parse_new_pad (GstElement * element, GstPad * pad)
    * time. This is required because MPEG allows any sort of order of
    * packets, including setting base time before defining streams or
    * even adding streams halfway a stream. */
-  if (!mpeg_parse->scr_pending && !mpeg_parse->do_adjust) {
+  if (!mpeg_parse->scr_pending) {
     GstEvent *event = gst_event_new_discontinuous (FALSE,
         GST_FORMAT_TIME,
         (guint64) MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +

@@ -93,6 +93,9 @@ static void gst_mpeg_demux_send_data (GstMPEGParse * mpeg_parse,
     GstData * data, GstClockTime time);
 static void gst_mpeg_demux_send_discont (GstMPEGParse * mpeg_parse,
     GstClockTime time);
+static void gst_mpeg_demux_handle_discont (GstMPEGParse * mpeg_parse,
+    GstEvent * event);
+
 
 static GstPad *gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
     const gchar * name, GstPadTemplate * temp);
@@ -130,6 +133,8 @@ static gboolean normal_seek (GstPad * pad, GstEvent * event, gint64 * offset);
 
 static gboolean gst_mpeg_demux_handle_src_event (GstPad * pad,
     GstEvent * event);
+static void gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux);
+
 
 static GstElementStateReturn gst_mpeg_demux_change_state (GstElement * element);
 
@@ -207,6 +212,7 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass)
   mpeg_parse_class->parse_pes = gst_mpeg_demux_parse_pes;
   mpeg_parse_class->send_data = gst_mpeg_demux_send_data;
   mpeg_parse_class->send_discont = gst_mpeg_demux_send_discont;
+  mpeg_parse_class->handle_discont = gst_mpeg_demux_handle_discont;
 
   klass->new_output_pad = gst_mpeg_demux_new_output_pad;
   klass->init_stream = gst_mpeg_demux_init_stream;
@@ -299,6 +305,19 @@ gst_mpeg_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
       gst_pad_push (mpeg_demux->private_stream[i]->pad, GST_DATA (discont));
     }
   }
+}
+
+static void
+gst_mpeg_demux_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
+{
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
+
+  if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+    gst_mpeg_demux_reset (mpeg_demux);
+  }
+
+  if (parent_class->handle_discont != NULL)
+    parent_class->handle_discont (mpeg_parse, event);
 }
 
 static gint

@@ -131,6 +131,8 @@ static void gst_dvd_demux_send_data (GstMPEGParse * mpeg_parse,
 
 static void gst_dvd_demux_send_discont
     (GstMPEGParse * mpeg_parse, GstClockTime time);
+static void gst_dvd_demux_handle_discont
+    (GstMPEGParse * mpeg_parse, GstEvent * event);
 static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
 
@@ -158,6 +160,9 @@ static void gst_dvd_demux_set_cur_audio
     (GstDVDDemux * dvd_demux, gint stream_nr);
 static void gst_dvd_demux_set_cur_subpicture
     (GstDVDDemux * dvd_demux, gint stream_nr);
+
+static void gst_dvd_demux_reset (GstDVDDemux * dvd_demux);
+
 
 static GstElementStateReturn gst_dvd_demux_change_state (GstElement * element);
 
@@ -247,6 +252,7 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
   gstelement_class->change_state = gst_dvd_demux_change_state;
 
   mpeg_parse_class->send_discont = gst_dvd_demux_send_discont;
+  mpeg_parse_class->handle_discont = gst_dvd_demux_handle_discont;
 
   mpeg_demux_class->get_audio_stream = gst_dvd_demux_get_audio_stream;
   mpeg_demux_class->get_video_stream = gst_dvd_demux_get_video_stream;
@@ -476,6 +482,20 @@ gst_dvd_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
 
     gst_pad_push (dvd_demux->cur_subpicture, GST_DATA (discont));
   }
+}
+
+static void
+gst_dvd_demux_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
+{
+  GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_parse);
+
+  if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+    gst_dvd_demux_reset (dvd_demux);
+  }
+
+  /* before we reset let parent handle and forward discont */
+  if (GST_MPEG_PARSE_CLASS (parent_class)->handle_discont != NULL)
+    GST_MPEG_PARSE_CLASS (parent_class)->handle_discont (mpeg_parse, event);
 }
 
 static GstMPEGStream *
