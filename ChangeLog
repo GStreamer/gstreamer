@@ -1,5 +1,14 @@
 2004-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (gen_preroll_element),
+	(unknown_type), (setup_source), (gst_play_base_bin_remove_element),
+	(gst_play_base_bin_link_stream):
+	Do not try to autoplug sources that generate raw streams like
+	cdparanoia.
+	disconnect the preroll overrun signal when we don't need it anymore.
+
+2004-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* ext/cdparanoia/gstcdparanoia.c: (_do_init),
 	(cdparanoia_base_init), (cdparanoia_class_init), (cdparanoia_init),
 	(cdparanoia_dispose), (cdparanoia_get), (cdparanoia_change_state),
