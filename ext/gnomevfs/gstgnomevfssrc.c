@@ -217,8 +217,7 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 
 		/* clear the filename if we get a NULL (is that possible?) */
 		if (g_value_get_string (value) == NULL) {
-			gst_element_set_state(GST_ELEMENT(object),
-					      GST_STATE_NULL);
+			gst_element_set_state(GST_ELEMENT(object), GST_STATE_NULL);
 			src->filename = NULL;
 		} else {
 			/* otherwise set the new filename */
@@ -292,7 +291,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	/* deal with EOF state */
 	if ((src->curoffset >= src->size) && (src->size != 0))
 	{
-		gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+		gst_element_set_eos (GST_ELEMENT (src));
 		return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 	}
 
@@ -321,7 +320,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 		if (src->new_seek)
 		{
-			GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+			/* FIXME do a discont, flush event */
 			GST_DEBUG (0,"new seek\n");
 			src->new_seek = FALSE;
 		}
@@ -336,7 +335,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 					GNOME_VFS_SEEK_START, src->curoffset);
 			GST_DEBUG(0, "new_seek: %s\n",
 					gnome_vfs_result_to_string(result));
-			GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+			/* FIXME do a discont, flush event */
 			src->new_seek = FALSE;
 		}
 
@@ -350,7 +349,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		{
 			gst_buffer_unref(buf);
 
-			gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+			gst_element_set_eos (GST_ELEMENT (src));
 
 			return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 		}

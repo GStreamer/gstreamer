@@ -449,20 +449,21 @@ cdparanoia_get (GstPad *pad)
   // update current sector and stop things if appropriate
   src->cur_sector++;
 
-  src->cur_track = cdda_sector_gettrack( src->d, src->cur_sector );
-
   if (src->cur_sector == src->end_sector) {
-    GST_DEBUG (0,"setting EOS flag on outgoing buffer\n");
-    GST_BUFFER_FLAG_SET (buf,GST_BUFFER_EOS);
-    gst_element_signal_eos(GST_ELEMENT(src));
+    GST_DEBUG (0,"setting EOS\n");
+    gst_element_set_eos(GST_ELEMENT(src));
+
+    buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
+  else {
+    src->cur_track = cdda_sector_gettrack( src->d, src->cur_sector );
 
-  // have to copy the buffer for now since we don't own it...
-  // FIXME must ask monty about allowing ownership transfer
-  GST_BUFFER_DATA (buf) = g_malloc(CD_FRAMESIZE_RAW);
-  memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
-  GST_BUFFER_SIZE (buf) = CD_FRAMESIZE_RAW;
-
+    // have to copy the buffer for now since we don't own it...
+    // FIXME must ask monty about allowing ownership transfer
+    GST_BUFFER_DATA (buf) = g_malloc(CD_FRAMESIZE_RAW);
+    memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
+    GST_BUFFER_SIZE (buf) = CD_FRAMESIZE_RAW;
+  }
 
   /* we're done, push the buffer off now */
   return buf;

@@ -979,7 +979,7 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
                      * me know when this is needed ;)
                      * also, for sample accuracy etc, we should play avail
                      * bytes, but hey. */
-                    gst_element_set_state(GST_ELEMENT(this), GST_STATE_PAUSED);
+                    gst_element_set_eos(GST_ELEMENT(this));
                     gst_event_free(event);
                     return TRUE;
                 }

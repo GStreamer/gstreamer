@@ -214,19 +214,17 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
 
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
 
-  if (!GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
-    GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
 
-    jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
+  jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-    if (jitter > 500000 || jitter < -500000)
-    {
-      GST_DEBUG (0, "jitter: %lld\n", jitter);
-      gst_clock_set (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
-    }
-    else {
-      gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(v4lmjpegsink));
-    }
+  if (jitter > 500000 || jitter < -500000)
+  {
+    GST_DEBUG (0, "jitter: %lld\n", jitter);
+    gst_clock_set (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
+  }
+  else {
+    gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(v4lmjpegsink));
   }
 
   /* check size */
