@@ -118,7 +118,6 @@ GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size) 
   return buffer;
 }
 
-
 void gst_buffer_destroy(GstBuffer *buffer) {
   GSList *metas;
 
