@@ -1,3 +1,9 @@
+2004-04-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_class_probe_devices):
+	  Don't probe for playback device if we're a source element. Fixes
+	  #139658.
+
 2004-04-29  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_handle_event),
