@@ -100,13 +100,13 @@ main (int argc, char *argv[])
         </para>
       </sect3>          
       <sect3>
-        <title>Connections</title>
+        <title>Links</title>
         <screen>
           ... !sink ...
         </screen>
         <para>
           An exclamation point, optionally having a qualified pad name (an the name of the pad,
-          optionally preceded by the name of the element) on both sides, will connect two pads. If
+          optionally preceded by the name of the element) on both sides, will link two pads. If
           the source pad is not specified, a source pad from the immediately preceding element
           will be automatically chosen. If the sink pad is not specified, a sink pad from the next
           element to be constructed will be chosen. An attempt will be made to find compatible

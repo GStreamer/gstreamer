@@ -139,8 +139,8 @@ gst_scheduler_unlock_element
 gst_scheduler_yield
 gst_scheduler_interrupt
 gst_scheduler_error
-gst_scheduler_pad_connect
-gst_scheduler_pad_disconnect
+gst_scheduler_pad_link
+gst_scheduler_pad_unlink
 gst_scheduler_pad_select
 gst_scheduler_add_scheduler
 gst_scheduler_remove_scheduler
@@ -454,14 +454,14 @@ gst_element_get_pad_template
 gst_element_get_pad_template_list
 gst_element_class_add_pad_template
 
-gst_element_connect
-gst_element_connect_many
-gst_element_connect_filtered
-gst_element_connect_pads
-gst_element_connect_pads_filtered
-gst_element_disconnect
-gst_element_disconnect_many
-gst_element_disconnect_pads
+gst_element_link
+gst_element_link_many
+gst_element_link_filtered
+gst_element_link_pads
+gst_element_link_pads_filtered
+gst_element_unlink
+gst_element_unlink_many
+gst_element_unlink_pads
 gst_element_get_compatible_pad
 gst_element_get_compatible_pad_filtered
 gst_element_get_compatible_pad_template
@@ -835,7 +835,7 @@ GST_PAD_PEER
 GST_PAD_CAN_PULL
 GST_PAD_IS_SINK
 GST_PAD_IS_SRC
-GST_PAD_IS_CONNECTED
+GST_PAD_IS_LINKED
 GST_PAD_IS_ACTIVE
 GST_PAD_IS_USABLE
 
@@ -846,11 +846,11 @@ GstPadBufferPoolFunction
 GstPadGetCapsFunction
 
 GstPadEventFunction
-GstPadConnectFunction
-GstPadConnectReturn
+GstPadLinkFunction
+GstPadLinkReturn
 GstPadConvertFunction
 GstPadDispatcherFunction
-GstPadIntConnFunction
+GstPadIntLinkFunction
 
 GstPadQueryFunction
 GstPadEventMaskFunction
@@ -872,7 +872,7 @@ gst_pad_get_direction
 gst_pad_set_chain_function
 gst_pad_set_get_function
 gst_pad_set_bufferpool_function
-gst_pad_set_connect_function
+gst_pad_set_link_function
 gst_pad_set_getcaps_function
 gst_pad_try_set_caps
 gst_pad_get_caps
@@ -888,18 +888,18 @@ gst_pad_add_ghost_pad
 gst_pad_remove_ghost_pad
 gst_pad_get_ghost_pad_list
 gst_pad_get_peer
-gst_pad_connect
-gst_pad_connect_filtered
-gst_pad_reconnect_filtered
-gst_pad_try_reconnect_filtered
-gst_pad_disconnect
-gst_pad_can_connect
-gst_pad_can_connect_filtered
+gst_pad_link
+gst_pad_link_filtered
+gst_pad_relink_filtered
+gst_pad_try_relink_filtered
+gst_pad_unlink
+gst_pad_can_link
+gst_pad_can_link_filtered
 gst_pad_push
 gst_pad_pull
 gst_pad_get_bufferpool
-gst_pad_load_and_connect
-gst_pad_proxy_connect
+gst_pad_load_and_link
+gst_pad_proxy_link
 gst_pad_get_pad_template
 gst_pad_get_pad_template_caps
 gst_pad_get_allowed_caps
@@ -925,9 +925,9 @@ gst_pad_get_formats
 gst_pad_get_formats_default
 gst_pad_set_formats_function
 
-gst_pad_get_internal_connections
-gst_pad_get_internal_connections_default
-gst_pad_set_internal_connection_function
+gst_pad_get_internal_links
+gst_pad_get_internal_links_default
+gst_pad_set_internal_link_function
 
 gst_pad_set_query_function
 gst_pad_query
@@ -957,10 +957,10 @@ GST_RPAD_CHAINHANDLER
 GST_RPAD_EVENTFUNC
 GST_RPAD_EVENTHANDLER
 GST_RPAD_GETHANDLER
-GST_RPAD_CONNECTFUNC
+GST_RPAD_LINKFUNC
 GST_RPAD_GETCAPSFUNC
 GST_RPAD_CONVERTFUNC
-GST_RPAD_INTCONNFUNC
+GST_RPAD_INTLINKFUNC
 GST_RPAD_QUERYFUNC
 GST_RPAD_EVENTMASKFUNC
 GST_RPAD_FORMATSFUNC
@@ -1003,8 +1003,8 @@ GST_IS_GHOST_PAD
 GST_IS_GHOST_PAD_CLASS
 GST_IS_GHOST_PAD_FAST
 gst_ghost_pad_get_type
-GST_TYPE_PAD_CONNECT_RETURN
-gst_pad_connect_return_get_type
+GST_TYPE_PAD_LINK_RETURN
+gst_pad_link_return_get_type
 GST_TYPE_PAD_DIRECTION
 gst_pad_direction_get_type
 GST_TYPE_PAD_FLAGS

@@ -155,10 +155,11 @@ Function to resolve ids to writer descriptions.
 
 @index: the index being queried.
 @writer: The object that wants to write
-@writer_id: A pointer to the id that has to be assigned to this writer
 @writer_string: A description of the writer.
 @user_data: user_data as registered
 @Returns: TRUE if an id could be assigned to the writer.
+<!-- # Unused Parameters # -->
+@writer_id: A pointer to the id that has to be assigned to this writer
 
 
 <!-- ##### STRUCT GstIndex ##### -->
@@ -357,4 +358,9 @@ Is emited when a new entry is added to the index.
 
 @gstindex: the object which received the signal.
 @arg1: The entry added to the index.
+
+<!-- ##### ARG GstIndex:resolver ##### -->
+<para>
+
+</para>
 

@@ -276,28 +276,6 @@ GstColorSpace
 gstconfig
 
 
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Long_Description ##### -->
-<para>
-A connection is a bas class for a generic connection between
-elements. A connection is typically a bas class for queues.
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Short_Description ##### -->
-Generic connection between elements.
-
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Title ##### -->
-GstConnection
-
-
 <!-- ##### SECTION ./tmpl/gstdata_private.sgml:Long_Description ##### -->
 <para>
 
@@ -565,7 +543,7 @@ GstFileSrc
 <!-- ##### SECTION ./tmpl/gstfilter.sgml:Long_Description ##### -->
 <para>
 Filters take data in and spit data out. They are the main Element in a filter graph.
-Filters have zero or more inputs and zero or more outputs. Filters are connected
+Filters have zero or more inputs and zero or more outputs. Filters are linked
 together to form filter graphs. A GstFilter is the base class and is not very usefull
 on its own.
 </para>
@@ -643,6 +621,28 @@ Pass data without modification. (identity)
 
 <!-- ##### SECTION ./tmpl/gstidentity.sgml:Title ##### -->
 GstIdentity
+
+
+<!-- ##### SECTION ./tmpl/gstlink.sgml:Long_Description ##### -->
+<para>
+A link is a base class for a generic link between
+elements. A link is typically a base class for queues.
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstlink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstlink.sgml:Short_Description ##### -->
+Generic link between elements.
+
+
+<!-- ##### SECTION ./tmpl/gstlink.sgml:Title ##### -->
+GstLink
 
 
 <!-- ##### SECTION ./tmpl/gstmacros.sgml:Long_Description ##### -->
@@ -723,7 +723,7 @@ adding to the list.
 <para>
 The trick is dealing with these structs as they pass through a pipeline,
 since they have potentially different mutability properties.  For
-instance, if you've got a mp3 decoder connected to a tee, which sends the
+instance, if you've got a mp3 decoder linked to a tee, which sends the
 buffers off to both the decoder and a spectrum analyzer (and then a
 visualization element).  The preferred setup would be where every time a
 audio/raw metadata comes down the pipe (indicating a potential change in
@@ -1238,13 +1238,7 @@ Information about video buffers.
 videoraw
 
 
-<!-- ##### MACRO BCONNECTION ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO CONNECTION ##### -->
+<!-- ##### MACRO BLINK ##### -->
 <para>
 
 </para>
@@ -1271,6 +1265,12 @@ The maximum number of cothreads we are going to support.
 <!-- ##### MACRO COTHREAD_STACKSIZE ##### -->
 <para>
 The default stack size of a cothread.
+</para>
+
+
+<!-- ##### MACRO CURRENT_STACK_FRAME ##### -->
+<para>
+Get the current stack frame.
 </para>
 
 
@@ -1348,7 +1348,7 @@ g_print messages.
 @format: 
 @args...: 
 
-<!-- ##### MACRO FCONNECTION ##### -->
+<!-- ##### MACRO FLINK ##### -->
 <para>
 
 </para>
@@ -1771,20 +1771,6 @@ Unlock the caps structure
 
 @caps: The caps structure to unlock
 
-<!-- ##### MACRO GST_CONNECTION ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_CONNECTION_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
 <para>
 A flag indicating that MMX instructions are supported.
@@ -2197,20 +2183,6 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
-<!-- ##### MACRO GST_IS_CONNECTION ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_CONNECTION_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_IS_DISKSRC ##### -->
 <para>
 
@@ -2380,6 +2352,20 @@ subclass use this to start their flag enumeration
 @obj: 
 
 <!-- ##### MACRO GST_IS_IDENTITY_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_LINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_LINK_CLASS ##### -->
 <para>
 
 </para>
@@ -2568,6 +2554,20 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
+<!-- ##### MACRO GST_LINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_LINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
 <!-- ##### MACRO GST_META ##### -->
 <para>
 
@@ -2668,13 +2668,6 @@ subclasses can use this value to start the enumeration of their flags
 
 @klass: 
 
-<!-- ##### MACRO GST_PAD_CONNECTED ##### -->
-<para>
-Is this pad connected.
-</para>
-
-@pad: the pad to check
-
 <!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
 <para>
 Indicate that this pad will always be available.
@@ -2714,6 +2707,13 @@ on the media type. Use this in the factory definition.
 Indicates a srcpad for the padfactory.
 </para>
 
+
+<!-- ##### MACRO GST_PAD_LINKED ##### -->
+<para>
+Is this pad linked.
+</para>
+
+@pad: the pad to check
 
 <!-- ##### MACRO GST_PAD_TEMPLATE ##### -->
 <para>
@@ -2981,18 +2981,18 @@ Fast macro to lock a given element.
 @sched: The scheduler.
 @element: The element to lock.
 
-<!-- ##### MACRO GST_SCHEDULE_PAD_CONNECT ##### -->
+<!-- ##### MACRO GST_SCHEDULE_PAD_LINK ##### -->
 <para>
-Fast macro to connect two pads.
+Fast macro to link two pads.
 </para>
 
 @sched: The scheduler.
 @srcpad: The source pad.
 @sinkpad: The sink pad.
 
-<!-- ##### MACRO GST_SCHEDULE_PAD_DISCONNECT ##### -->
+<!-- ##### MACRO GST_SCHEDULE_PAD_UNLINK ##### -->
 <para>
-Fast macro to disconnect two pads.
+Fast macro to unlink two pads.
 </para>
 
 @sched: The scheduler.
@@ -3297,12 +3297,6 @@ This macro unsets the given state on the element.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_CPU_FLAGS ##### -->
 <para>
 
@@ -3429,6 +3423,12 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_LINK ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_OBJECT ##### -->
 <para>
 
@@ -3447,12 +3447,6 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_PAD_CONNECT_RETURN ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_PAD_DIRECTION ##### -->
 <para>
 
@@ -3460,6 +3454,12 @@ A type that can be used to indicate a filename.
 
 
 <!-- ##### MACRO GST_TYPE_PAD_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_LINK_RETURN ##### -->
 <para>
 
 </para>
@@ -4398,18 +4398,6 @@ can perform necessary cleanup.
 </para>
 
 
-<!-- ##### STRUCT GstConnection ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstConnectionClass ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### SIGNAL GstDiskSink::handoff ##### -->
 <para>
 Is emited after the buffer has been written to the disk.
@@ -5013,6 +5001,18 @@ Specify the location of the file. The location must be a fully qualified URL.
 </para>
 
 
+<!-- ##### STRUCT GstLink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstLinkClass ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ARG GstMD5Sink:md5 ##### -->
 <para>
 
@@ -5212,7 +5212,7 @@ The different supported query types.
 @GST_PARSE_ERROR_CREATING_ELEMENT: 
 @GST_PARSE_ERROR_NOSUCH_ELEMENT: 
 @GST_PARSE_ERROR_INTERNAL: 
-@GST_PARSE_ERROR_CONNECT: 
+@GST_PARSE_ERROR_LINK: 
 
 <!-- ##### ENUM GstPipeFilterFlags ##### -->
 <para>
@@ -5460,7 +5460,7 @@ The volume as a double 0.0 is silent, 1.0 is loudest.
 </para>
 
 
-<!-- ##### TYPEDEF GstSpiderConnection ##### -->
+<!-- ##### TYPEDEF GstSpiderLink ##### -->
 <para>
 
 </para>
@@ -5809,6 +5809,12 @@ Query the element for the current mime type
 @format: 
 @args...: 
 
+<!-- ##### MACRO LINK ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO LOCAL_REGISTRY_DIR ##### -->
 <para>
 
@@ -5962,12 +5968,6 @@ must be defined to activate the tracing functionality.
 
 @Domain: 
 @Directory: 
-
-<!-- ##### TYPEDEF connection_t ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### TYPEDEF cothread ##### -->
 <para>
@@ -6913,8 +6913,8 @@ must be defined to activate the tracing functionality.
 @parent: 
 @current_bin_type: 
 @elements: 
-@connections: 
-@connections_pending: 
+@links: 
+@links_pending: 
 @bins: 
 @bin: 
 
@@ -7022,7 +7022,7 @@ must be defined to activate the tracing functionality.
 
 @src: 
 
-<!-- ##### FUNCTION gst_autoplug_can_connect_sink ##### -->
+<!-- ##### FUNCTION gst_autoplug_can_link_sink ##### -->
 <para>
 
 </para>
@@ -7031,7 +7031,7 @@ must be defined to activate the tracing functionality.
 @sink: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_autoplug_can_connect_src ##### -->
+<!-- ##### FUNCTION gst_autoplug_can_link_src ##### -->
 <para>
 
 </para>
@@ -7811,25 +7811,6 @@ must be defined to activate the tracing functionality.
 @jitter: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_connection_get_type ##### -->
-=======
-
-
-<!-- ##### FUNCTION gst_connection_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_connection_push ##### -->
-<para>
-
-</para>
-
-@connection: 
-
 <!-- ##### FUNCTION gst_cpu_flags_get_type ##### -->
 <para>
 
@@ -7889,43 +7870,6 @@ must be defined to activate the tracing functionality.
 @klass: 
 @first_name: 
 @Varargs: 
-
-<!-- ##### FUNCTION gst_element_connect_elements ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_connect_elements_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@filtercaps: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_connect_elements_many ##### -->
-<para>
-
-</para>
-
-@element_1: 
-@element_2: 
-@Varargs: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_disconnect_elements ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
 
 <!-- ##### FUNCTION gst_element_factory_add_sink ##### -->
 <para>
@@ -8074,6 +8018,35 @@ must be defined to activate the tracing functionality.
 @element: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_link_elements ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_link_elements_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@filtercaps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_link_elements_many ##### -->
+<para>
+
+</para>
+
+@element_1: 
+@element_2: 
+@Varargs: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_load_thyself ##### -->
 <para>
 
@@ -8173,6 +8146,14 @@ must be defined to activate the tracing functionality.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_element_unlink_elements ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
 
 <!-- ##### FUNCTION gst_esdsink_chain ##### -->
 <para>
@@ -8445,6 +8426,25 @@ must be defined to activate the tracing functionality.
 @format: 
 @args...: 
 
+<!-- ##### FUNCTION gst_link_get_type ##### -->
+=======
+
+
+<!-- ##### FUNCTION gst_link_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_link_push ##### -->
+<para>
+
+</para>
+
+@link: 
+
 <!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
 <para>
 
@@ -8607,13 +8607,6 @@ Create new meta data.
 @pad: 
 @parent: 
 
-<!-- ##### FUNCTION gst_pad_connect_return_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_pad_direction_get_type ##### -->
 <para>
 
@@ -8726,6 +8719,13 @@ Call the EOS function of the pad
 
 @pad: 
 @format: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_link_return_get_type ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 <!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
@@ -8943,7 +8943,7 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_pad_try_connect ##### -->
+<!-- ##### FUNCTION gst_pad_try_link ##### -->
 <para>
 
 </para>
@@ -9230,7 +9230,7 @@ Call the EOS function of the pad
 
 </para>
 
-@connection: 
+@link: 
 
 <!-- ##### FUNCTION gst_real_pad_get_type ##### -->
 <para>
@@ -9321,16 +9321,7 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_schedule_pad_connect ##### -->
-<para>
-
-</para>
-
-@sched: 
-@srcpad: 
-@sinkpad: 
-
-<!-- ##### FUNCTION gst_schedule_pad_disconnect ##### -->
+<!-- ##### FUNCTION gst_schedule_pad_link ##### -->
 <para>
 
 </para>
@@ -9347,6 +9338,15 @@ Call the EOS function of the pad
 @sched: 
 @padlist: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_schedule_pad_unlink ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
 
 <!-- ##### FUNCTION gst_schedule_remove_element ##### -->
 <para>
@@ -9906,6 +9906,12 @@ Call the EOS function of the pad
 @name: 
 @location: 
 @Returns: 
+
+<!-- ##### TYPEDEF link_t ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION plugin_initialize ##### -->
 <para>

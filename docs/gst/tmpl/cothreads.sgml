@@ -20,13 +20,6 @@ of being fed with data. Cothreads are usually used by a #GstScheduler.
 #GstScheduler
 </para>
 
-<!-- ##### MACRO CURRENT_STACK_FRAME ##### -->
-<para>
-Get the current stack frame.
-</para>
-
-
-
 <!-- ##### STRUCT cothread_state ##### -->
 <para>
 The cothread state structure

@@ -16,7 +16,7 @@
     <para>
       Elements, from the perspective of GStreamer, are viewed as "black boxes" 
       with a number of different aspects. One of these aspects is the presence 
-      of "pads", or connection points. This terminology arises from soldering; 
+      of "pads", or link points. This terminology arises from soldering; 
       pads are where wires can be attached.
     </para>
 
@@ -87,7 +87,7 @@
         splitter (demultiplexer). This element will parse the input data and
         extract the audio and video data. Most of these filters dynamically
         send out a signal when a new pad is created so that the application
-        programmer can connect an arbitrary element to the newly created pad.
+        programmer can link an arbitrary element to the newly created pad.
       </para>
     </sect2>
   

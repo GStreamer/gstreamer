@@ -20,8 +20,8 @@ compatibility.
 </para>
 
 <para>
-All elements have pads (of the type #GstPad).  These pads connect to pads on
-other elements.  Buffers flow between these connected pads.
+All elements have pads (of the type #GstPad).  These pads link to pads on
+other elements.  Buffers flow between these linked pads.
 A GstElement has a GList of #GstPad structures for all their input (or sink)
 and output (or source) pads.  
 Core and plug-in writers can add and remove pads with gst_element_add_pad()
@@ -33,14 +33,14 @@ A GList of all pads can be retrieved with gst_element_get_pad_list().
 </para>
 
 <para>
-Elements can be connected through their pads.
-If the connection is straightforward, use the gst_element_connect() 
-convenience function to connect two elements, or gst_element_connect_many() 
+Elements can be linked through their pads.
+If the link is straightforward, use the gst_element_link() 
+convenience function to link two elements, or gst_element_link_many() 
 for more elements in a row.
-Use gst_element_connect_filtered() to connect two elements constrained by
+Use gst_element_link_filtered() to link two elements constrained by
 a specified set of #GstCaps.
-For finer control, use gst_element_connect_pads() and 
-gst_element_connect_pads_filtered() to specify the pads to connect on 
+For finer control, use gst_element_link_pads() and 
+gst_element_link_pads_filtered() to specify the pads to link on 
 each element by name.
 </para>
 
@@ -90,7 +90,7 @@ Gets the name of the element.
 @Returns: the name of the element.
 
 
-<!-- connection -->
+<!-- link -->
 
 
 <!-- ##### MACRO gst_element_set_name ##### -->
@@ -232,7 +232,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @templ: 
 
 
-<!-- ##### FUNCTION gst_element_connect ##### -->
+<!-- ##### FUNCTION gst_element_link ##### -->
 <para>
 
 </para>
@@ -242,7 +242,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_connect_many ##### -->
+<!-- ##### FUNCTION gst_element_link_many ##### -->
 <para>
 
 </para>
@@ -253,7 +253,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_connect_filtered ##### -->
+<!-- ##### FUNCTION gst_element_link_filtered ##### -->
 <para>
 
 </para>
@@ -264,7 +264,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_connect_pads ##### -->
+<!-- ##### FUNCTION gst_element_link_pads ##### -->
 <para>
 
 </para>
@@ -276,7 +276,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_connect_pads_filtered ##### -->
+<!-- ##### FUNCTION gst_element_link_pads_filtered ##### -->
 <para>
 
 </para>
@@ -289,7 +289,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_disconnect ##### -->
+<!-- ##### FUNCTION gst_element_unlink ##### -->
 <para>
 
 </para>
@@ -298,7 +298,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @dest: 
 
 
-<!-- ##### FUNCTION gst_element_disconnect_many ##### -->
+<!-- ##### FUNCTION gst_element_unlink_many ##### -->
 <para>
 
 </para>
@@ -308,7 +308,7 @@ Sets the name of the element, getting rid of the old name if there was one.
 @Varargs: 
 
 
-<!-- ##### FUNCTION gst_element_disconnect_pads ##### -->
+<!-- ##### FUNCTION gst_element_unlink_pads ##### -->
 <para>
 
 </para>

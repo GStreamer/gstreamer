@@ -88,7 +88,7 @@
         </listitem>
         <listitem>
 	  <para>
-	    Extremely light-weight connections between plugins. Data can travel
+	    Extremely light-weight links between plugins. Data can travel
 	    the pipeline with minimal overhead. Data passing between plugins only involves
 	    a pointer dereference in a typical pipeline.
 	  </para>
