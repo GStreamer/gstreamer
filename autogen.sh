@@ -158,6 +158,8 @@ autoheader || {
 	echo "autoheader failed"
 	exit 1
 }
+# touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
+echo timestamp > stamp-h.in 2> /dev/null
 echo "+ running autoconf ... "
 autoconf || {
 	echo
