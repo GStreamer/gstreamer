@@ -39,8 +39,8 @@ GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
     GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "%s event %p (type %d)", notice, data, \
 	GST_EVENT_TYPE (data)); \
   } else { \
-    GST_CAT_LOG_OBJECT (debug_dataflow, obj, "%s buffer %p (size %d)", notice, data, \
-	GST_BUFFER_SIZE (data)); \
+    GST_CAT_LOG_OBJECT (debug_dataflow, obj, "%s buffer %p (size %u, refcount %d)", notice, data, \
+	GST_BUFFER_SIZE (data), GST_BUFFER_REFCOUNT_VALUE (data)); \
   } \
 }G_STMT_END
 #define GST_CAT_DEFAULT GST_CAT_PADS

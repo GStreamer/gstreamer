@@ -173,10 +173,9 @@ gst_spider_identity_chain (GstPad * pad, GstBuffer * buf)
 {
   GstSpiderIdentity *ident;
 
-  /*g_print ("chaining on pad %s:%s with buffer %p\n", GST_DEBUG_PAD_NAME (pad), buf); */
-
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
+
   if (buf == NULL)
     return;
 
@@ -209,8 +208,10 @@ gst_spider_identity_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if ((ident->src != NULL) && (GST_PAD_PEER (ident->src) != NULL)) {
-    /* g_print("pushing buffer %p (refcount %d - buffersize %d) to pad %s:%s\n", buf, GST_BUFFER_REFCOUNT (buf), GST_BUFFER_SIZE (buf), GST_DEBUG_PAD_NAME (ident->src)); */
-    GST_LOG ("push %p %" G_GINT64_FORMAT, buf, GST_BUFFER_OFFSET (buf));
+    GST_LOG_OBJECT (ident, "pushing buffer %p "
+        "(refcount %d, size %u, offset %" G_GINT64_FORMAT ") ",
+        buf, GST_BUFFER_REFCOUNT_VALUE (buf),
+        GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf));
     gst_pad_push (ident->src, GST_DATA (buf));
   } else if (GST_IS_BUFFER (buf)) {
     gst_buffer_unref (buf);

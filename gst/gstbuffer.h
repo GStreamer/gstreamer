@@ -37,10 +37,10 @@ typedef void (*GstBufferFreeDataFunc) (GstBuffer *buffer);
 
 extern GType _gst_buffer_type;
 
-#define GST_TYPE_BUFFER         		(gst_buffer_get_type())
+#define GST_TYPE_BUFFER				(gst_buffer_get_type())
 
-#define GST_BUFFER(buf)         		((GstBuffer *)(buf))
-#define GST_IS_BUFFER(buf)      		(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER)
+#define GST_BUFFER(buf)				((GstBuffer *)(buf))
+#define GST_IS_BUFFER(buf)			(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER)
 
 #define GST_BUFFER_REFCOUNT(buf)		GST_DATA_REFCOUNT(buf)
 #define GST_BUFFER_REFCOUNT_VALUE(buf)		GST_DATA_REFCOUNT_VALUE(buf)
@@ -81,20 +81,20 @@ typedef enum {
   GST_BUFFER_KEY_UNIT,		/* sync point in the stream */
   GST_BUFFER_DONTKEEP,
   GST_BUFFER_IN_CAPS,
-  GST_BUFFER_FLAG_LAST 	= GST_DATA_FLAG_LAST + 8
+  GST_BUFFER_FLAG_LAST	= GST_DATA_FLAG_LAST + 8
 } GstBufferFlag;
 
 struct _GstBuffer {
-  GstData 		 data_type;
+  GstData		 data_type;
 
   /* pointer to data and its size */
-  guint8 		*data;			/* pointer to buffer data */
-  guint 		 size;			/* size of buffer data */
+  guint8		*data;			/* pointer to buffer data */
+  guint			 size;			/* size of buffer data */
   guint			 maxsize;		/* max size of this buffer */
 
   /* timestamp */
-  GstClockTime		 timestamp;		
-  GstClockTime		 duration;		
+  GstClockTime		 timestamp;
+  GstClockTime		 duration;
 
   /* media specific offset
    * for video frames, this could be the number of frames,
@@ -107,18 +107,18 @@ struct _GstBuffer {
   guint64		 offset_end;
 
   GstBufferFreeDataFunc  free_data;
-  gpointer 		 buffer_private;
+  gpointer		 buffer_private;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /* allocation */
 GType		gst_buffer_get_type		(void);
-GstBuffer*	gst_buffer_new	 		(void);
+GstBuffer*	gst_buffer_new			(void);
 GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 
-#define		gst_buffer_set_data(buf, data, size) 	\
-G_STMT_START { 					     	\
+#define		gst_buffer_set_data(buf, data, size)	\
+G_STMT_START {						\
   GST_BUFFER_DATA (buf) = data;				\
   GST_BUFFER_SIZE (buf) = size;				\
 } G_STMT_END
@@ -138,15 +138,15 @@ GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
 
 /* merge, span, or append two buffers, intelligently */
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*	gst_buffer_join 		(GstBuffer *buf1, GstBuffer *buf2);
+GstBuffer*	gst_buffer_join			(GstBuffer *buf1, GstBuffer *buf2);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 
 /* --- private --- */
 void		_gst_buffer_initialize		(void);
 
-void		gst_buffer_default_free 	(GstBuffer *buffer);
-GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
+void		gst_buffer_default_free		(GstBuffer *buffer);
+GstBuffer*	gst_buffer_default_copy		(GstBuffer *buffer);
 
 G_END_DECLS
 

@@ -1,3 +1,10 @@
+2004-07-07  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_chain):
+	* gst/gstbuffer.h:
+	* gst/gstpad.c:
+	  cleanups and debugging
+
 2004-07-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
