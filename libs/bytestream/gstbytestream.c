@@ -52,7 +52,7 @@ gst_bytestream_new (GstPad * pad)
   GstByteStream *bs = g_new (GstByteStream, 1);
 
   bs->pad = pad;
-
+  bs->event = NULL;
   bs->buflist = NULL;
   bs->headbufavail = 0;
   bs->listavail = 0;
@@ -65,6 +65,9 @@ void
 gst_bytestream_destroy (GstByteStream * bs)
 {
   GSList *walk;
+
+  if (bs->event)
+    gst_event_free (bs->event);
 
   walk = bs->buflist;
   while (walk) {
@@ -116,8 +119,16 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
   GstBuffer *nextbuf, *lastbuf;
   GSList *end;
 
+  g_assert (!bs->event);
+
   bs_print ("get_next_buf: pulling buffer\n");
   nextbuf = gst_pad_pull (bs->pad);
+
+  if (GST_IS_EVENT (nextbuf))
+    {
+      bs->event = GST_EVENT (nextbuf);
+      return FALSE;
+    }
 
   if (!nextbuf)
     return FALSE;
@@ -171,7 +182,6 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 
   return TRUE;
 }
-
 
 static gboolean
 gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
@@ -395,6 +405,21 @@ gst_bytestream_read (GstByteStream * bs, guint32 len)
   gst_bytestream_flush_fast (bs, len);
 
   return buf;
+}
+
+void
+gst_bytestream_get_status (GstByteStream *bs,
+			   guint32 *avail_out,
+			   GstEvent **event_out)
+{
+  if (avail_out)
+    *avail_out = bs->listavail;
+
+  if (event_out)
+    {
+      *event_out = bs->event;
+      bs->event = NULL;
+    }
 }
 
 void
