@@ -22,6 +22,7 @@
 #include "gst_private.h"
 
 #include "gstdparam.h"
+#include "gstdparammanager.h"
 
 static void gst_dparam_class_init (GstDParamClass *klass);
 static void gst_dparam_base_class_init (GstDParamClass *klass);
@@ -80,11 +81,16 @@ gst_dparam_init (GstDParam *dparam)
 {
 	g_return_if_fail (dparam != NULL);
 	GST_DPARAM_VALUE(dparam) = NULL;
+	GST_DPARAM_TYPE(dparam) = 0;
+	GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)=0LL;
+	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam)=0LL;
+	GST_DPARAM_READY_FOR_UPDATE(dparam)=FALSE;
 	dparam->lock = g_mutex_new ();
 }
 
 /**
  * gst_dparam_new:
+ * @type: the type that this dparam will store
  *
  * Returns: a new instance of GstDParam
  */
@@ -98,26 +104,34 @@ gst_dparam_new (GType type)
 	dparam->get_point_func = gst_dparam_get_point_realtime;
 	
 	dparam->point = gst_dparam_new_value_array(type, 0);	
+	GST_DPARAM_TYPE(dparam) = type;
 	
 	return dparam;
 }
 
 /**
- * gst_dparam_set_parent
+ * gst_dparam_attach
  * @dparam: GstDParam instance
  * @parent: the GstDParamManager that this dparam belongs to
  *
  */
 void
-gst_dparam_set_parent (GstDParam *dparam, GstObject *parent)
+gst_dparam_attach (GstDParam *dparam, GstObject *parent, gchar *dparam_name, GValue *value)
 {
+	
 	g_return_if_fail (dparam != NULL);
 	g_return_if_fail (GST_IS_DPARAM (dparam));
 	g_return_if_fail (GST_DPARAM_PARENT (dparam) == NULL);
 	g_return_if_fail (parent != NULL);
 	g_return_if_fail (G_IS_OBJECT (parent));
+	g_return_if_fail (GST_IS_DPMAN (parent));
 	g_return_if_fail ((gpointer)dparam != (gpointer)parent);
-
+	g_return_if_fail (dparam_name != NULL);
+	g_return_if_fail (value != NULL);
+	g_return_if_fail (GST_DPARAM_TYPE(dparam) == G_VALUE_TYPE(value));
+	
+	GST_DPARAM_NAME(dparam) = dparam_name;
+	GST_DPARAM_VALUE(dparam) = value;
 	gst_object_set_parent (GST_OBJECT (dparam), parent);
 }
 
@@ -180,7 +194,7 @@ gst_dparam_set_value_from_string(GValue *value, const gchar *value_str)
 
 	switch (G_VALUE_TYPE(value)) {
 		case G_TYPE_STRING:
-			g_value_set_string(value, value_str);
+			g_value_set_string(value, g_strdup(value_str));
 			break;
 		case G_TYPE_ENUM: 
 		case G_TYPE_INT: {
@@ -259,4 +273,89 @@ gst_dparam_get_point_realtime (GstDParam *dparam, gint64 timestamp)
 	return dparam->point;
 }
 
+/**********************
+ * GstDParamSmooth
+ **********************/
 
+static void gst_dparam_do_update_smooth (GstDParam *dparam, gint64 timestamp);
+static GValue** gst_dparam_get_point_smooth (GstDParam *dparam, gint64 timestamp);
+
+/**
+ * gst_dparam_smooth_new:
+ * @type: the type that this dparam will store
+ *
+ * Returns: a new instance of GstDParamSmooth
+ */
+GstDParam* 
+gst_dparam_smooth_new (GType type)
+{
+	GstDParam *dparam;
+
+	dparam = g_object_new (gst_dparam_get_type (), NULL);
+	
+	dparam->do_update_func = gst_dparam_do_update_smooth;
+	dparam->get_point_func = gst_dparam_get_point_smooth;
+	
+	dparam->point = gst_dparam_new_value_array(type, type, G_TYPE_FLOAT, 0);	
+	GST_DPARAM_TYPE(dparam) = type;
+	
+	return dparam;
+}
+
+static void
+gst_dparam_do_update_smooth (GstDParam *dparam, gint64 timestamp)
+{
+	gint64 time_diff;
+	gfloat time_ratio;
+	
+	time_diff = MIN(GST_DPARAM_DEFAULT_UPDATE_PERIOD(dparam), 
+	                timestamp - GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam));
+	                
+	time_ratio = (gfloat)time_diff / g_value_get_float(dparam->point[2]);
+
+	GST_DPARAM_LOCK(dparam);
+
+	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam);  
+	while(GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) <= timestamp){
+		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) += GST_DPARAM_DEFAULT_UPDATE_PERIOD(dparam);
+	}
+	GST_DEBUG(GST_CAT_PARAMS, "last:%lld current:%lld next:%lld\n",
+	                           GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam), timestamp, GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam));
+
+	
+	switch (G_VALUE_TYPE(GST_DPARAM_VALUE(dparam))){
+		case G_TYPE_FLOAT: {
+			gfloat target = g_value_get_float(dparam->point[0]);
+			gfloat current = g_value_get_float(GST_DPARAM_VALUE(dparam));
+			gfloat max_change = time_ratio * g_value_get_float(dparam->point[1]);
+			
+			GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f max_change:%f \n", 
+			          target, current, max_change);
+
+			if (ABS (current - target) < max_change){
+				GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
+				current = target;
+			}
+			else {
+				current += (target < current) ? -max_change : max_change;				
+			}
+			g_value_set_float(GST_DPARAM_VALUE(dparam), current);
+
+		}
+		default:
+			break;
+	}
+
+		                           
+	//GST_DEBUG(GST_CAT_PARAMS, "smooth update for %s(%p): %f\n",
+	//                           GST_DPARAM_NAME (dparam),dparam, g_value_get_float(GST_DPARAM_VALUE(dparam)));
+
+	GST_DPARAM_UNLOCK(dparam);
+}
+
+static GValue** 
+gst_dparam_get_point_smooth (GstDParam *dparam, gint64 timestamp)
+{
+	GST_DEBUG(GST_CAT_PARAMS, "getting point for %s(%p)\n",GST_DPARAM_NAME (dparam),dparam);
+	return dparam->point;
+}

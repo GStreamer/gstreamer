@@ -30,7 +30,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define GST_TYPE_DPARAM			(gst_dparam_get_type ())
-#define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDparam))
+#define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDParam))
 #define GST_DPARAM_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DPARAM,GstDParam))
 #define GST_IS_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DPARAM))
 #define GST_IS_DPARAM_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPARAM))
@@ -38,12 +38,15 @@ extern "C" {
 #define GST_DPARAM_NAME(dparam)				 (GST_OBJECT_NAME(dparam))
 #define GST_DPARAM_PARENT(dparam)			 (GST_OBJECT_PARENT(dparam))
 #define GST_DPARAM_VALUE(dparam)				 ((dparam)->value)
+#define GST_DPARAM_TYPE(dparam)				 ((dparam)->type)
 
 #define GST_DPARAM_LOCK(dparam)		(g_mutex_lock((dparam)->lock))
 #define GST_DPARAM_UNLOCK(dparam)		(g_mutex_unlock((dparam)->lock))
 
 #define GST_DPARAM_READY_FOR_UPDATE(dparam)		((dparam)->ready_for_update)
+#define GST_DPARAM_DEFAULT_UPDATE_PERIOD(dparam)	((dparam)->default_update_period)
 #define GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)	((dparam)->next_update_timestamp)
+#define GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam)	((dparam)->last_update_timestamp)
 
 #define GST_DPARAM_GET_POINT(dparam, timestamp) \
 	((dparam->get_point_func)(dparam, timestamp))
@@ -98,9 +101,11 @@ struct _GstDParam {
 	GMutex *lock;
 	GValue *value;
 	GValue **point;
+	GType type;
+	gint64 last_update_timestamp;
 	gint64 next_update_timestamp;
+	gint64 default_update_period;
 	gboolean ready_for_update;
-	
 };
 
 struct _GstDParamClass {
@@ -111,9 +116,15 @@ struct _GstDParamClass {
 
 GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new (GType type);
-void gst_dparam_set_parent (GstDParam *dparam, GstObject *parent);
+void gst_dparam_attach (GstDParam *dparam, GstObject *parent, gchar *dparam_name, GValue *value);
 GValue** gst_dparam_new_value_array(GType type, ...);
 void gst_dparam_set_value_from_string(GValue *value, const gchar *value_str);
+
+/**********************
+ * GstDParamSmooth
+ **********************/
+
+GstDParam* gst_dparam_smooth_new (GType type);
 
 #ifdef __cplusplus
 }
