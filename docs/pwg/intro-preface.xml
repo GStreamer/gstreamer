@@ -59,9 +59,7 @@
       of &GStreamer;. For a gentle introduction to programming concepts in
       &GStreamer;, you may wish to read the &GstAppDevMan; first. Also check out
       the documentation available on the <ulink type="http"
-      url="http://gstreamer.net/docs/">&GStreamer; web site</ulink>,
-      particularly the documents available in the <ulink type="http"
-      url="http://gstreamer.net/wiki/">&GStreamer; wiki</ulink>.
+      url="http://gstreamer.freedesktop.org/documentation/">&GStreamer; web site</ulink>.
     </para>
     <para>
       Since &GStreamer; adheres to the GObject programming model, this guide
