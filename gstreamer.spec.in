@@ -126,6 +126,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
+%{_bindir}/gst-md5sum
 %{_bindir}/gst-register
 %{_bindir}/gst-feedback
 %{_libdir}/libgstreamer-%{version}.so.*
@@ -147,6 +148,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_mandir}/man1/gst-compprep.*
 %{_mandir}/man1/gst-inspect.*
 %{_mandir}/man1/gst-launch.*
+%{_mandir}/man1/gst-md5sum.*
 %{_mandir}/man1/gst-register.*
 
 %{_libdir}/libgstcontrol*.so*
@@ -213,6 +215,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Sat Sep 21 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added gst-md5sum
+
 * Tue Sep 17 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - adding flex to buildrequires
 
