@@ -41,16 +41,21 @@ typedef struct _GstDVDec GstDVDec;
  * an Element or even an Object.
  */
 struct _GstDVDec {
-  GstElement element;
+  GstElement 	 element;
 
   /* We need to keep track of our pads, so we do so here. */
-  GstPad *sinkpad,*videosrcpad,*audiosrcpad;
+  GstPad 	*sinkpad,
+  		*videosrcpad,
+		*audiosrcpad;
 
-  dv_decoder_t *decoder;
+  dv_decoder_t 	*decoder;
   GstByteStream *bs;
   GstBufferPool *pool;
   dv_color_space_t space;
-  gint bpp;
+  gint 		 bpp;
+  gint 		 length;
+
+  gint16 	*audio_buffers[4];
 };
 
 /* The other half of the object is its class.  The class also derives from

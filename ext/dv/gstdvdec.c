@@ -208,6 +208,8 @@ gst_dvdec_class_init (GstDVDecClass *klass)
 static void
 gst_dvdec_init(GstDVDec *dvdec)
 {
+  gint i;
+
   dvdec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_temp), "sink");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
 
@@ -222,6 +224,11 @@ gst_dvdec_init(GstDVDec *dvdec)
   dvdec->decoder = dv_decoder_new (0, 0, 0);
   dvdec->decoder->quality = DV_QUALITY_BEST;
   dvdec->pool = NULL;
+  dvdec->length = 0;
+
+  for (i = 0; i <4; i++) {
+    dvdec->audio_buffers[i] = (gint16 *)g_malloc (DV_AUDIO_MAX_SAMPLES * sizeof (gint16));
+  }
 }
 
 static gboolean
@@ -272,6 +279,8 @@ gst_dvdec_loop (GstElement *element)
   gboolean PAL;
   gint height;
   guint32 length, got_bytes;
+  gint16 *a_ptr;
+  gint i, j;
 
   dvdec = GST_DVDEC (element);
 
@@ -287,6 +296,11 @@ gst_dvdec_loop (GstElement *element)
 
   height = (PAL ? PAL_HEIGHT : NTSC_HEIGHT);
   length = (PAL ? PAL_BUFFER : NTSC_BUFFER);
+
+  if (length != dvdec->length) {
+    dvdec->length = length;
+    gst_bytestream_size_hint (dvdec->bs, length);
+  }
 
   /* then read the read data */
   got_bytes = gst_bytestream_read (dvdec->bs, &buf, length);
@@ -342,6 +356,39 @@ gst_dvdec_loop (GstElement *element)
       return;
     }
   }
+
+  /* if we did not negotiate yet, do it now */
+  if (!GST_PAD_CAPS (dvdec->audiosrcpad)) {
+    gst_pad_try_set_caps (dvdec->audiosrcpad,
+		          GST_CAPS_NEW (
+				  "dvdec_audio_caps",
+				  "audio/raw",
+    				    "format",   	GST_PROPS_STRING ("int"),
+    				    "rate",   		GST_PROPS_INT (dvdec->decoder->audio->frequency),
+				    "law",      	GST_PROPS_INT (0),
+				    "depth",   		GST_PROPS_INT (16),
+				    "width",    	GST_PROPS_INT (16),
+				    "signed",   	GST_PROPS_BOOLEAN (TRUE),
+				    "channels", 	GST_PROPS_INT (dvdec->decoder->audio->num_channels),
+				    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN)
+  			  ));
+  }
+  
+  dv_decode_full_audio (dvdec->decoder, GST_BUFFER_DATA (buf), dvdec->audio_buffers);
+
+  outbuf = gst_buffer_new ();
+  GST_BUFFER_SIZE (outbuf) = dvdec->decoder->audio->samples_this_frame * sizeof (gint16) * dvdec->decoder->audio->num_channels;
+  GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+
+  a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
+
+  for (i = 0; i < dvdec->decoder->audio->samples_this_frame; i++) {
+    for (j = 0; j < dvdec->decoder->audio->num_channels; j++) {
+      *(a_ptr++) = dvdec->audio_buffers[j][i];
+    }
+  }
+  gst_pad_push (dvdec->audiosrcpad, outbuf);
+
   /* try to grab a pool */
   if (!dvdec->pool) {
     dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
@@ -359,6 +406,7 @@ gst_dvdec_loop (GstElement *element)
     GST_BUFFER_SIZE (outbuf) = (720 * height) * dvdec->bpp;
     GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
   }
+
     
   outframe = GST_BUFFER_DATA (outbuf);
 
