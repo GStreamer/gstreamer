@@ -28,6 +28,10 @@
 
 #include <glib-object.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct _GstProps GstProps;
 extern GType _gst_props_type;
 
@@ -131,5 +135,8 @@ GstProps* 		gst_props_load_thyself 		(xmlNodePtr parent);
 #endif
 
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __GST_PROPS_H__ */

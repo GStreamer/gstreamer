@@ -28,6 +28,10 @@
 
 #include <gst/gstprops.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct _GstCaps GstCaps;
 
 extern GType _gst_caps_type;
@@ -130,5 +134,9 @@ GstCaps*	gst_caps_normalize			(GstCaps *caps);
 xmlNodePtr      gst_caps_save_thyself			(GstCaps *caps, xmlNodePtr parent);
 GstCaps*	gst_caps_load_thyself			(xmlNodePtr parent);
 #endif
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __GST_CAPS_H__ */
