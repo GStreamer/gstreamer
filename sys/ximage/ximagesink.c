@@ -754,9 +754,9 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
   if (!ximagesink->xcontext)
     return GST_PAD_LINK_DELAYED;
 
-  GST_DEBUG_OBJECT (xvimagesink,
+  GST_DEBUG_OBJECT (ximagesink,
       "sinkconnect possible caps %" GST_PTR_FORMAT " with given caps %"
-      GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
+      GST_PTR_FORMAT, ximagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width",
