@@ -14,6 +14,7 @@ libgsteditor_la_SOURCES =	\
 	gsteditorbin.c		\
 	gsteditorcanvas.c	\
 	gsteditorpad.c		\
+	gsteditorpadtemplate.c	\
 	gsteditorconnection.c	\
 	gsteditorimage.c	\
 	gsteditorpalette.c	\

@@ -52,7 +52,9 @@ main (int argc, char *argv[])
 
   gst_editor_project_view_new(project);
 
+  gdk_threads_enter ();
   gtk_main();
+  gdk_threads_leave ();
 
   return(0);
 }

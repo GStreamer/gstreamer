@@ -224,10 +224,10 @@ make_readable_name (gchar *name)
   len = strlen(new);
   inupper = TRUE;
   for (i=0; i<len; i++) {
-   if (inupper) new[i] = toupper(new[i]);
-   inupper = FALSE;
-   if (new[i] == ' ')
-     inupper = TRUE;
+    if (inupper) new[i] = toupper(new[i]);
+    inupper = FALSE;
+    if (new[i] == ' ')
+      inupper = TRUE;
   }
 
   return new;
@@ -255,6 +255,49 @@ gst_editor_props_show_func (GstPropsEntry *entry)
   return g_strdup ("unknown");
 }
 
+static void
+gst_editor_add_caps_to_tree (GstCaps *caps, GtkWidget *tree, GtkCTreeNode *padnode) 
+{
+  if (caps) {
+    GstProps *props = gst_caps_get_props (caps);
+    if (props) {
+      GSList *propslist = props->properties;
+
+      while (propslist) {
+        gchar *data[2];
+        GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+
+        data[0] = g_quark_to_string (entry->propid);
+
+	switch (entry->propstype) {
+ 	  case GST_PROPS_LIST_ID_NUM:
+	  {
+	    GList *list;
+	    guint count = 0;
+	    data[1] = "";
+
+	    list = entry->data.list_data.entries;
+
+	    while (list) {
+	      data[1] = g_strconcat (data[1], (count++?", ":""),
+		      gst_editor_props_show_func ((GstPropsEntry *)list->data), NULL);
+	      list = g_list_next (list);
+	    }
+	    break;
+	  }
+	  default:
+	    data[1] = gst_editor_props_show_func (entry);
+	    break;
+	}
+        gtk_ctree_insert_node (GTK_CTREE (tree), padnode, NULL, data, 0, 
+	      NULL, NULL, NULL, NULL, TRUE, TRUE);
+	
+	propslist = g_slist_next (propslist);
+      }
+    }
+  }
+}
+
 static GtkWidget* 
 gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element) 
 {
@@ -263,8 +306,6 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
   GtkWidget *tree;
   gchar *columns[2];
 
-  pads = gst_element_get_pad_list(realelement);
-
   columns[0] = "name";
   columns[1] = "info";
 
@@ -272,6 +313,9 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
   gtk_clist_set_column_width (GTK_CLIST (tree), 0, 150);
   
   gtk_clist_freeze (GTK_CLIST (tree));
+
+  pads = gst_element_get_pad_list(realelement);
+
   while (pads) {
     GstPad *pad = (GstPad *)pads->data;
     GstCaps *caps = gst_pad_get_caps (pad);
@@ -292,45 +336,39 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
     data[1] = mime;
     padnode = gtk_ctree_insert_node (GTK_CTREE (tree), NULL, NULL, data, 0, 
 		    NULL, NULL, NULL, NULL, FALSE, TRUE);
-    if (caps) {
-      GstProps *props = gst_caps_get_props (caps);
-      if (props) {
-        GSList *propslist = props->properties;
 
-        while (propslist) {
-	  GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+    gst_editor_add_caps_to_tree (caps, tree, padnode);
 
-          data[0] = g_quark_to_string (entry->propid);
-
-	  switch (entry->propstype) {
- 	    case GST_PROPS_LIST_ID_NUM:
-	    {
-	      GList *list;
-	      guint count = 0;
-	      data[1] = "";
-
-	      list = entry->data.list_data.entries;
-
-	      while (list) {
-	        data[1] = g_strconcat (data[1], (count++?", ":""),
-			      gst_editor_props_show_func ((GstPropsEntry *)list->data), NULL);
-	        list = g_list_next (list);
-	      }
-	      break;
-	    }
-	    default:
-	      data[1] = gst_editor_props_show_func (entry);
-	      break;
-	  }
-          gtk_ctree_insert_node (GTK_CTREE (tree), padnode, NULL, data, 0, 
-		      NULL, NULL, NULL, NULL, TRUE, TRUE);
-	
-	  propslist = g_slist_next (propslist);
-	}
-      }
-    }
     pads = g_list_next (pads);
   }
+
+  pads = gst_element_get_padtemplate_list(realelement);
+  while (pads) {
+    GstPadTemplate *templ = (GstPadTemplate *)pads->data;
+    GstCaps *caps = templ->caps;
+    gchar *mime;
+    gchar *data[2];
+    GtkCTreeNode *padnode;
+
+    if (caps) {
+      GstType *type;
+      type = gst_type_find_by_id (caps->id);
+      mime = type->mime;
+    }
+    else {
+      mime = "unknown/unknown";
+    }
+
+    data[0] = g_strdup (templ->name_template);
+    data[1] = mime;
+    padnode = gtk_ctree_insert_node (GTK_CTREE (tree), NULL, NULL, data, 0, 
+		    NULL, NULL, NULL, NULL, FALSE, TRUE);
+
+    gst_editor_add_caps_to_tree (caps, tree, padnode);
+
+    pads = g_list_next (pads);
+  }
+
   gtk_clist_thaw (GTK_CLIST (tree));
 
   gtk_widget_show(tree);
@@ -471,9 +509,20 @@ widget_bool_toggled (GtkToggleButton *button, arg_data *arg)
   toggled = gtk_toggle_button_get_active(button);
   gtk_object_set (GTK_OBJECT (button), "label", (toggled? _("Yes"):_("No")), NULL);
 
+  gdk_threads_leave ();
   gtk_object_set (GTK_OBJECT (arg->element), arg->arg->name, toggled, NULL);
+  gdk_threads_enter ();
 }
   
+static void 
+widget_adjustment_value_changed (GtkAdjustment *adjustment,
+		                 arg_data *arg)
+{
+  gdk_threads_leave ();
+  gtk_object_set (GTK_OBJECT (arg->element), arg->arg->name, (gint) adjustment->value, NULL);
+  gdk_threads_enter ();
+}
+
 static void 
 on_file_selected (GtkEditable *entry, arg_data *fs)
 {
@@ -518,11 +567,16 @@ create_property_entry (GtkArg *arg, GstElement *element)
     {
       gint value;
       GtkAdjustment *spinner_adj;
+      arg_data *data = g_new0(arg_data, 1);
+
+      data->element = element;
+      data->arg = arg;
 
       value = GTK_VALUE_INT(*arg);
       spinner_adj = (GtkAdjustment *) gtk_adjustment_new(50.0, 0.0, 10000000.0, 1.0, 5.0, 5.0);
       entry = gtk_spin_button_new(spinner_adj, 1.0, 0);
       gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry), (gfloat) value);
+      gtk_signal_connect(GTK_OBJECT(spinner_adj), "value_changed", widget_adjustment_value_changed, data);
       break;
     }
     case GTK_TYPE_FLOAT:

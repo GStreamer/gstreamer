@@ -50,19 +50,22 @@ static gint 	gst_editor_element_state_event		(GnomeCanvasItem *item,
                                            		 GdkEvent *event,
                                            		 gpointer data);
 
-/* external events (from GstElement) */
-static void 	gst_editor_element_state_change		(GstElement *element,
-                                            		 gint state,
-                                            		 GstEditorElement *editorelement);
-
 /* utility functions */
 static void 	gst_editor_element_resize		(GstEditorElement *element);
 static void 	gst_editor_element_set_state		(GstEditorElement *element,
                                          		 gint id,gboolean set);
+static void 	gst_editor_element_add_pad_wrapper 	(GstEditorElement *element,
+                            				 GstPad *pad);
+static void 	gst_editor_element_add_pad 		(GstEditorElement *element,
+                            				 GstPad *pad);
+GstEditorPadTemplate* gst_editor_element_add_padtemplate (GstEditorElement *element,
+                                    			GstPadTemplate *pad);
 static void 	gst_editor_element_sync_state		(GstEditorElement *element);
+static void 	gst_editor_element_sync_state_wrapper	(GstEditorElement *element);
 static void 	gst_editor_element_move			(GstEditorElement *element,
                                     			 gdouble dx,gdouble dy);
-
+static void 	gst_editor_element_position_changed 	(GstEditorElement *element,
+                                     			 GstEditorElement *parent);
 
 static gchar *_gst_editor_element_states[] = { "S","R","P","F" };
 
@@ -367,7 +370,6 @@ gst_editor_element_realize (GstEditorElement *element)
   gint i;
   gdouble x1,y1,x2,y2;
   GList *pads;
-  GstPad *pad;
 
 //  g_print("realizing editor element %p\n",element);
 
@@ -375,9 +377,17 @@ gst_editor_element_realize (GstEditorElement *element)
   g_return_if_fail(element->parent != NULL);
 
   // set the state signal of the actual element
-  gtk_signal_connect(GTK_OBJECT(element->element),"state_change",
-                     GTK_SIGNAL_FUNC(gst_editor_element_state_change),
-                     element);
+  gtk_signal_connect_object (GTK_OBJECT(element->element),"state_change",
+                             GTK_SIGNAL_FUNC(gst_editor_element_sync_state_wrapper),
+                             GTK_OBJECT (element));
+
+  gtk_signal_connect_object (GTK_OBJECT(element->element),"new_pad",
+                             GTK_SIGNAL_FUNC(gst_editor_element_add_pad_wrapper),
+                             GTK_OBJECT (element));
+
+  gtk_signal_connect_object (GTK_OBJECT(element->parent),"position_changed",
+                             GTK_SIGNAL_FUNC(gst_editor_element_position_changed),
+                             GTK_OBJECT (element));
 
   // create the bounds if we haven't had them set
 //  g_print("centering element at %.2fx%.2f (%.2fx%.2f)\n",
@@ -454,10 +464,22 @@ gst_editor_element_realize (GstEditorElement *element)
                        GTK_SIGNAL_FUNC(gst_editor_element_state_event),
                        GINT_TO_POINTER(i));
   }
+  
+  // get all the padtemplates
+  pads = gst_element_get_padtemplate_list(element->element);
+  while (pads) {
+    GstPadTemplate *temp = (GstPadTemplate *) pads->data;
+
+    gst_editor_element_add_padtemplate (element,temp);
+
+    pads = g_list_next(pads);
+  }
+
   // get all the pads
   pads = gst_element_get_pad_list(element->element);
   while (pads) {
-    pad = GST_PAD(pads->data);
+    GstPad *pad = GST_PAD(pads->data);
+    
     gst_editor_element_add_pad(element,pad);
     
     pads = g_list_next(pads);
@@ -489,6 +511,7 @@ gst_editor_element_resize (GstEditorElement *element)
   gdouble groupwidth,groupheight;
   GList *pads;
   GstEditorPad *editorpad;
+  GstEditorPadTemplate *editorpadtemplate;
   gint i;
 
   if (element->resize != TRUE) return;
@@ -552,12 +575,28 @@ gst_editor_element_resize (GstEditorElement *element)
     element->srcs++;
     pads = g_list_next(pads);
   }
+  pads = element->sinkpadtemps;
+  while (pads) {
+    editorpadtemplate = GST_EDITOR_PADTEMPLATE(pads->data);
+    element->sinkwidth = MAX(element->sinkwidth,editorpadtemplate->width);
+    element->sinkheight = MAX(element->sinkheight,editorpadtemplate->height);
+    element->sinks++;
+    pads = g_list_next(pads);
+  }
+  pads = element->srcpadtemps;
+  while (pads) {
+    editorpadtemplate = GST_EDITOR_PADTEMPLATE(pads->data);
+    element->srcwidth = MAX(element->srcwidth,editorpadtemplate->width);
+    element->srcheight = MAX(element->srcheight,editorpadtemplate->height);
+    element->srcs++;
+    pads = g_list_next(pads);
+  }
   // add in the needed space
   element->minheight += MAX((element->sinkheight*element->sinks),
                             (element->srcheight*element->srcs)) + 4.0;
   element->minwidth = MAX(element->minwidth,
-                          ((element->sinkwidth*element->sinks) +
-                           (element->srcwidth*element->srcs) + 4.0));
+                          ((element->sinkwidth) +
+                           (element->srcwidth) + 4.0));
 //  g_print("have %d sinks (%.2fx%.2f) and %d srcs (%.2fx%.2f)\n",
 //          element->sinks,element->sinkwidth,element->sinkheight,
 //          element->srcs,element->srcwidth,element->srcheight);
@@ -569,6 +608,8 @@ gst_editor_element_resize (GstEditorElement *element)
   element->width = MAX(element->width,element->minwidth);
   element->height = MAX(element->height,element->minheight);
 //  g_print("is now %.2fx%.2f\n",element->width,element->height);
+
+  gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[SIZE_CHANGED], element);
 }
 
 void 
@@ -576,6 +617,7 @@ gst_editor_element_repack (GstEditorElement *element)
 {
   GList *pads;
   GstEditorPad *editorpad;
+  GstEditorPadTemplate *editorpadtemplate;
   gint sinks;
   gint srcs;
   gdouble x1,y1,x2,y2;
@@ -642,13 +684,25 @@ gst_editor_element_repack (GstEditorElement *element)
     sinks--;
     pads = g_list_next(pads);
   }
+  pads = element->sinkpadtemps;
+  while (pads) {
+    editorpadtemplate = GST_EDITOR_PADTEMPLATE(pads->data);
+    gtk_object_set(GTK_OBJECT(editorpadtemplate),
+                   "x",x1,
+                   "y",y2 - 2.0 - element->stateheight - 
+                       (element->sinkheight * sinks),
+                   NULL);
+    gst_editor_padtemplate_repack(editorpadtemplate);
+    sinks--;
+    pads = g_list_next(pads);
+  }
 
   srcs = element->srcs;
   pads = element->srcpads;
   while (pads) {
     editorpad = GST_EDITOR_PAD(pads->data);
     gtk_object_set(GTK_OBJECT(editorpad),
-                   "x",x2 - element->srcwidth,
+                   "x",x2 - editorpad->width,
                    "y",y2 - 2.0 - element->stateheight -
                        (element->srcheight * srcs),
                    NULL);
@@ -656,14 +710,37 @@ gst_editor_element_repack (GstEditorElement *element)
     srcs--;
     pads = g_list_next(pads);
   }
+  pads = element->srcpadtemps;
+  while (pads) {
+    editorpadtemplate = GST_EDITOR_PADTEMPLATE(pads->data);
+    gtk_object_set(GTK_OBJECT(editorpadtemplate),
+                   "x",x2 - editorpadtemplate->width,
+                   "y",y2 - 2.0 - element->stateheight -
+                       (element->srcheight * srcs),
+                   NULL);
+    gst_editor_padtemplate_repack(editorpadtemplate);
+    srcs--;
+    pads = g_list_next(pads);
+  }
 
+  gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[SIZE_CHANGED], element);
 //  g_print("done resizing element\n");
 }
 
+static void
+gst_editor_element_add_pad_wrapper (GstEditorElement *element,
+                                    GstPad *pad) 
+{
+  gdk_threads_enter ();
+  gst_editor_element_add_pad (element, pad);
+  element->resize = TRUE;
+  gst_editor_element_repack (element);
+  gdk_threads_leave ();
+}
 
-GstEditorPad*
-gst_editor_element_add_pad (GstEditorElement *element,
-                            GstPad *pad) 
+static void
+gst_editor_element_add_pad_func (GstEditorElement *element,
+                                 GstPad *pad) 
 {
   GstEditorPad *editorpad;
 
@@ -681,9 +758,69 @@ gst_editor_element_add_pad (GstEditorElement *element,
     g_print("HUH?!?  Don't know which direction this pad is...\n");
 
   gst_editor_element_repack(element);
-  return editorpad;
 }
 
+static void
+gst_editor_element_add_pad (GstEditorElement *element,
+                            GstPad *pad) 
+{
+  GstPadTemplate *temp;
+    
+  temp = pad->padtemplate;
+  if (!temp) {
+    gst_editor_element_add_pad_func (element,pad);
+  }
+  else {
+    // find the template
+    GList *temppads;
+
+    temppads = element->sinkpadtemps;
+    while (temppads) {
+      GstEditorPadTemplate *editorpadtemp = (GstEditorPadTemplate *) temppads->data;
+ 
+      if (editorpadtemp->padtemplate == temp) {
+        gst_editor_padtemplate_add_pad (editorpadtemp, pad);
+        break;
+      }
+      temppads = g_list_next (temppads);
+    }
+    temppads = element->srcpadtemps;
+    while (temppads) {
+      GstEditorPadTemplate *editorpadtemp = (GstEditorPadTemplate *) temppads->data;
+ 
+      if (editorpadtemp->padtemplate == temp) {
+        gst_editor_padtemplate_add_pad (editorpadtemp, pad);
+        break;
+      }
+      temppads = g_list_next (temppads);
+    }
+  }
+}
+
+GstEditorPadTemplate*
+gst_editor_element_add_padtemplate (GstEditorElement *element,
+                                    GstPadTemplate *pad) 
+{
+  GstEditorPadTemplate *editorpad;
+
+  g_print ("gsteditorelement: new padtemplate\n");
+
+  editorpad = gst_editor_padtemplate_new (element, pad, NULL);
+
+  if (pad->direction == GST_PAD_SINK) {
+    element->sinkpadtemps = g_list_prepend(element->sinkpadtemps,editorpad);
+    element->sinks++;
+//    g_print("added 'new' pad to sink list\n");
+  } else if (pad->direction == GST_PAD_SRC) {
+//    g_print("added 'new' pad to src list\n");
+    element->srcpadtemps = g_list_prepend(element->srcpadtemps,editorpad);
+    element->srcs++;
+  } else
+    g_print("HUH?!?  Don't know which direction this pad is...\n");
+
+  gst_editor_element_repack(element);
+  return editorpad;
+}
 
 static gint 
 gst_editor_element_group_event (GnomeCanvasItem *item,
@@ -717,12 +854,8 @@ gst_editor_element_event(GnomeCanvasItem *item,
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
-      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->border),
-                        "fill_color_rgba", 0xeeeeee80, NULL);
       return TRUE;
     case GDK_LEAVE_NOTIFY:
-      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->border),
-                        "fill_color", "white", NULL);
       return TRUE;
     case GDK_BUTTON_PRESS:
     {
@@ -893,7 +1026,9 @@ gst_editor_element_state_event(GnomeCanvasItem *item,
 	return FALSE;
 
       if (id < 4) {
+        gdk_threads_leave ();
         gst_editor_element_set_state(element,id,TRUE);
+        gdk_threads_enter ();
       } else
         g_warning("Uh, shouldn't have gotten here, unknown state\n");
 //g_print("in element statebox_event, setting inchild");
@@ -919,14 +1054,11 @@ gst_editor_element_set_state(GstEditorElement *element,
 
 
 static void 
-gst_editor_element_state_change(GstElement *element,
-                                gint state,
-                                GstEditorElement *editorelement) 
+gst_editor_element_sync_state_wrapper (GstEditorElement *element) 
 {
-  g_return_if_fail(editorelement != NULL);
-
-  //g_print("gst_editor_element_state_change got state 0x%08x\n",state);
-  gst_editor_element_sync_state(editorelement);
+  gdk_threads_enter ();
+  gst_editor_element_sync_state (element);
+  gdk_threads_leave ();
 }
 
 static void 
@@ -952,34 +1084,20 @@ gst_editor_element_sync_state (GstEditorElement *element)
 }
 
 static void 
+gst_editor_element_position_changed (GstEditorElement *element,
+                                     GstEditorElement *parent) 
+{
+  if (element != parent)
+    gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[POSITION_CHANGED], element);
+}
+
+static void 
 gst_editor_element_move(GstEditorElement *element,
                         gdouble dx,gdouble dy) 
 {
-  GList *pads;
-  GstEditorPad *pad;
-
   // this is a 'little' trick to keep from repacking the whole thing...
   element->x += dx;element->y += dy;
   gnome_canvas_item_move(GNOME_CANVAS_ITEM(element->group),dx,dy);
 
-  pads = element->srcpads;
-  while (pads) {
-    pad = GST_EDITOR_PAD(pads->data);
-    if (pad->connection) {
-//      g_print("updating pad's connection\n");
-      pad->connection->resize = TRUE;
-      gst_editor_connection_resize(pad->connection);
-    }
-    pads = g_list_next(pads);
-  }
-  pads = element->sinkpads;
-  while (pads) {
-    pad = GST_EDITOR_PAD(pads->data);
-    if (pad->connection) {
-//      g_print("updating pad's connection\n");
-      pad->connection->resize = TRUE;
-      gst_editor_connection_resize(pad->connection);
-    }
-    pads = g_list_next(pads);
-  }
+  gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[POSITION_CHANGED], element);
 }

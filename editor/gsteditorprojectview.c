@@ -114,11 +114,11 @@ gst_editor_project_connect_func (const gchar *handler_name,
 
 static void 
 gst_editor_project_element_selected (GstEditorProjectView *view, 
-		                     GtkType type, GstEditorPalette *palette) 
+		                     GstElementFactory *factory, GstEditorPalette *palette) 
 {
   GstElement *element;
 
-  element = gtk_type_new(type);
+  element = gst_elementfactory_create (factory, "new_element");
 
   g_return_if_fail(element != NULL);
   g_return_if_fail(GST_IS_ELEMENT(element));

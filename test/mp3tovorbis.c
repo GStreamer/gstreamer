@@ -32,6 +32,7 @@ int main(int argc,char *argv[]) {
   g_return_val_if_fail(encodefactory != NULL, -1);
   sinkfactory = gst_elementfactory_find("fdsink");
   g_return_val_if_fail(sinkfactory != NULL, -1);
+  sink = gst_elementfactory_create(sinkfactory,"sink");
 
   src = gst_elementfactory_create(srcfactory,"src");
   g_return_val_if_fail(src != NULL, -1);

@@ -30,6 +30,8 @@ static void gst_editor_pad_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_editor_pad_get_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_editor_pad_realize(GstEditorPad *pad);
 
+static void gst_editor_pad_position_changed(GstEditorPad *pad, GstEditorElement *element);
+
 /* class implementation functions */
 //static void gst_editor_pad_update(GnomeCanvasItem *item,double *affine,
 //                                      ArtSVP *clip_path,int flags);
@@ -60,7 +62,9 @@ enum {
 static GtkObjectClass *parent_class;
 //static guint gst_editor_pad_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_editor_pad_get_type() {
+GtkType 
+gst_editor_pad_get_type (void) 
+{
   static GtkType pad_type = 0;
 
   if (!pad_type) {
@@ -79,7 +83,9 @@ GtkType gst_editor_pad_get_type() {
   return pad_type;
 }
 
-static void gst_editor_pad_class_init(GstEditorPadClass *klass) {
+static void 
+gst_editor_pad_class_init (GstEditorPadClass *klass) 
+{
   GtkObjectClass *object_class;
 
   object_class = (GtkObjectClass*)klass;
@@ -103,7 +109,9 @@ static void gst_editor_pad_class_init(GstEditorPadClass *klass) {
   object_class->get_arg = gst_editor_pad_get_arg;
 }
 
-static void gst_editor_pad_init(GstEditorPad *pad) {
+static void 
+gst_editor_pad_init(GstEditorPad *pad) 
+{
 }
 
 GstEditorPad*
@@ -142,12 +150,17 @@ gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
     }
   }
 
+  gtk_signal_connect_object (GTK_OBJECT (parent), "position_changed", 
+		             gst_editor_pad_position_changed, editorpad);
+
   return editorpad;
 }
 
-void gst_editor_pad_construct(GstEditorPad *pad,
-                              GstEditorElement *parent,
-                              const gchar *first_arg_name,va_list args) {
+void 
+gst_editor_pad_construct(GstEditorPad *pad,
+                         GstEditorElement *parent,
+                         const gchar *first_arg_name,va_list args) 
+{
   GtkObject *obj = GTK_OBJECT(pad);
   GSList *arg_list = NULL, *info_list = NULL;
   gchar *error;
@@ -175,7 +188,9 @@ void gst_editor_pad_construct(GstEditorPad *pad,
     (padclass->realize)(pad);
 }
 
-static void gst_editor_pad_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_pad_set_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorPad *pad;
 
   /* get the major types of this object */
@@ -206,7 +221,9 @@ static void gst_editor_pad_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static void gst_editor_pad_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_pad_get_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorPad *pad;
 
   /* get the major types of this object */
@@ -231,7 +248,9 @@ static void gst_editor_pad_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static void gst_editor_pad_realize(GstEditorPad *pad) {
+static void 
+gst_editor_pad_realize (GstEditorPad *pad) 
+{
 //  g_print("realizing editor pad %p\n",pad);
 
   /* we must be attached to an element */
@@ -283,7 +302,9 @@ static void gst_editor_pad_realize(GstEditorPad *pad) {
 }
 
 
-static void gst_editor_pad_resize(GstEditorPad *pad) {
+static void 
+gst_editor_pad_resize (GstEditorPad *pad) 
+{
   gdouble minwidth,minheight;
 
 //  g_print("resizing pad\n");
@@ -311,7 +332,9 @@ static void gst_editor_pad_resize(GstEditorPad *pad) {
     gst_editor_connection_resize(pad->connection);
 }
 
-void gst_editor_pad_repack(GstEditorPad *pad) {
+void 
+gst_editor_pad_repack (GstEditorPad *pad) 
+{
   gdouble x1,y1,x2,y2;
 
   if (!pad->realized) return;
@@ -387,9 +410,11 @@ static gint gst_editor_pad_event(GnomeCanvasItem *item,GdkEvent *event) {
 */
 
 /* FIXME FIXME FIXME */
-static gint gst_editor_pad_padbox_event(GnomeCanvasItem *item,
-                                        GdkEvent *event,
-                                        GstEditorPad *pad) {
+static gint 
+gst_editor_pad_padbox_event(GnomeCanvasItem *item,
+                            GdkEvent *event,
+                            GstEditorPad *pad) 
+{
   GstEditorElement *element;
   GstEditorBin *bin;
 
@@ -403,14 +428,10 @@ static gint gst_editor_pad_padbox_event(GnomeCanvasItem *item,
     case GDK_ENTER_NOTIFY:
       gtk_object_set(GTK_OBJECT(pad->border),
                  "fill_color_rgba", 0xBBDDBB00, NULL);
-//      g_print("entered pad '%s'\n",
-//              gst_pad_get_name(pad->pad));
       break;
     case GDK_LEAVE_NOTIFY:
       gtk_object_set(GTK_OBJECT(pad->border),
                  "fill_color_rgba", 0xCCFFCC00, NULL);
-//      g_print("left pad '%s'\n",
-//              gst_pad_get_name(pad->pad));
       break;
     case GDK_BUTTON_PRESS:
 //      g_print("have button press in pad '%s'\n",
@@ -425,4 +446,17 @@ static gint gst_editor_pad_padbox_event(GnomeCanvasItem *item,
       break;
   }
   return FALSE;
+}
+
+static void
+gst_editor_pad_position_changed(GstEditorPad *pad, 
+		                GstEditorElement *element)
+{
+  GList *pads;
+
+  if (pad->connection) {
+//      g_print("updating pad's connection\n");
+    pad->connection->resize = TRUE;
+    gst_editor_connection_resize(pad->connection);
+  }
 }

@@ -51,7 +51,7 @@ struct _GstEditorPaletteClass {
   GtkObjectClass parent_class;
 
   void (*element_selected)  (GstEditorPalette *palette,
-                             GstEditorElement *element);
+                             GstElementFactory *factory);
   void (*in_selection_mode) (GstEditorPalette *palette,
                              GstEditorElement *element);
 };

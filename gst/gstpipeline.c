@@ -368,7 +368,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
     // check to other paths for mathing elements (factories)
     for (i=1; i<numsinks; i++) {
-      if (factory != (GstElementFactory *)(factories[i]->data)) {
+      if (!factories[i] || (factory != (GstElementFactory *)(factories[i]->data))) {
 	goto differ;
       }
       factories[i] = g_list_next(factories[i]);

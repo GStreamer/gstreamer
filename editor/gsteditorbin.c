@@ -353,6 +353,7 @@ gst_editor_bin_object_added (GstEditorBin *editorbin, GstObject *bin, GstObject 
   g_print ("gsteditorbin: object added\n");
 }
 
+
 void 
 gst_editor_bin_add (GstEditorBin *bin, GstEditorElement *element) 
 {

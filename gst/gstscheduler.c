@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 
 #include "gstscheduler.h"
 #include "gstdebug.h"
@@ -393,6 +393,7 @@ void gst_bin_schedule_func(GstBin *bin) {
           pads = g_list_next (pads);
           DEBUG("have pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
 
+	  DEBUG("peer pad %p\n", pad->peer);
           // only bother with if the pad's peer's parent is this bin or it's DECOUPLED
           // only add it if it's in the list of un-visited elements still
           if ((g_list_find (elements, pad->peer->parent) != NULL) ||

@@ -24,7 +24,7 @@ dump_factories (void)
   while (factories) {
     GstElementFactory *factory = (GstElementFactory *)factories->data;
     
-    g_print ("factory: %s\n", factory->name);
+    g_print ("factory: %s %d\n", factory->name, factory->type);
 
     factories = g_list_next (factories);
   }
@@ -80,8 +80,8 @@ load_something (gchar *name)
   GstElementFactory *factory;
   GstElement *element;
 
-  factory = gst_elementfactory_find ("foo");
-  g_print ("factory \"foo\" %s\n", (factory?"found":"not found"));
+  //factory = gst_elementfactory_find ("foo");
+  //g_print ("factory \"foo\" %s\n", (factory?"found":"not found"));
 
   factory = gst_elementfactory_find (name);
   g_print ("factory \"%s\" %s\n", name, (factory?"found":"not found"));
@@ -129,13 +129,13 @@ int main(int argc,char *argv[])
 
   gst_init(&argc,&argv);
 
-  dump_plugins ();
-  dump_factories ();
-  dump_types ();
+  //dump_plugins ();
+  //dump_factories ();
+  //dump_types ();
 
-  print_some_providers ("audio/mp3");
+  //print_some_providers ("audio/mp3");
 
-  load_something ("mpg123");
+  load_something ("fdsink");
 
   print_some_providers ("audio/mp3");
 

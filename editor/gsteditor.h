@@ -35,6 +35,8 @@ typedef struct _GstEditorCanvas GstEditorCanvas;
 typedef struct _GstEditorCanvasClass GstEditorCanvasClass;
 typedef struct _GstEditorPad GstEditorPad;
 typedef struct _GstEditorPadClass GstEditorPadClass;
+typedef struct _GstEditorPadTemplate GstEditorPadTemplate;
+typedef struct _GstEditorPadTemplateClass GstEditorPadTemplateClass;
 typedef struct _GstEditorConnection GstEditorConnection;
 typedef struct _GstEditorConnectionClass GstEditorConnectionClass;
 
@@ -142,6 +144,9 @@ struct _GstEditorElement {
   GList *srcpads,*sinkpads;
   gboolean padlistchange;
 
+  /* list of padtemplates */
+  GList *srcpadtemps,*sinkpadtemps;
+
   /* interaction state */
   gboolean dragging,resizing,moved,hesitating;
   gdouble offx,offy,dragx,dragy;
@@ -168,8 +173,6 @@ void gst_editor_element_construct(GstEditorElement *element,
                                   const gchar *first_arg_name,
                                   va_list args);
 void gst_editor_element_repack(GstEditorElement *element);
-GstEditorPad *gst_editor_element_add_pad(GstEditorElement *element,
-                                         GstPad *pad);  
 void gst_editor_element_set_name(GstEditorElement *element,
 	                                const gchar *name);
 const gchar *gst_editor_element_get_name(GstEditorElement *element);
@@ -312,6 +315,75 @@ void gst_editor_pad_construct(GstEditorPad *element,
                               const gchar *first_arg_name,va_list args);
 void gst_editor_pad_repack(GstEditorPad *pad);
 
+
+
+#define GST_TYPE_EDITOR_PADTEMPLATE \
+  (gst_editor_padtemplate_get_type())
+#define GST_EDITOR_PADTEMPLATE(obj) \
+  (GTK_CHECK_CAST((obj),GST_TYPE_EDITOR_PADTEMPLATE,GstEditorPadTemplate))
+#define GST_EDITOR_PADTEMPLATE_CLASS(klass) \
+  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EDITOR_PADTEMPLATE,GstEditorPadTemplateClass))
+#define GST_IS_EDITOR_PADTEMPLATE(obj) \
+  (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_PADTEMPLATE))
+#define GST_IS_EDITOR_PADTEMPLATE_CLASS(obj) \
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PADTEMPLATE))
+
+struct _GstEditorPadTemplate {
+  GtkObject object; 
+
+  /* parent element */
+  GstEditorElement *parent;
+
+  /* toplevel canvas */
+  GstEditorCanvas *canvas;
+
+  /* the padtemplate we're associated with */
+  GstPadTemplate *padtemplate;
+
+  /* pads created from this template */
+  GList *pads;
+
+  /* if this is a sink (convenience) */
+  gboolean issrc;
+
+  /* whether we've been realized or not */
+  gboolean realized;
+
+  /* connections */
+  GstEditorConnection *connection;
+  GstEditorConnection *ghostconnection;
+
+  /* visual stuff */
+  GnomeCanvasGroup *group;
+  GnomeCanvasItem *border,*title,*padtemplatebox;
+  gboolean sinkpadtemplate;				// is this a sink padtemplate?
+  gdouble x,y;					// location
+  gdouble width,height;				// actual size
+  gdouble boxwidth,boxheight;			// size of padtemplate box
+  gboolean resize;				// does it need resizing?
+  
+  /* interaction state */
+  gboolean dragging,resizing,moved;
+  gdouble dragx,dragy;
+
+  /* connection */
+//  GnomeCanvasItem *connection;		// can't use
+//GstEditorConnection
+};
+  
+struct _GstEditorPadTemplateClass {
+  GtkObjectClass parent_class;
+
+  void (*realize) (GstEditorPadTemplate *padtemplate);
+};
+  
+GtkType gst_editor_padtemplate_get_type();
+GstEditorPadTemplate *gst_editor_padtemplate_new(GstEditorElement *parent,GstPadTemplate *padtemplate,
+                                 const gchar *first_arg_name, ...);
+void gst_editor_padtemplate_construct(GstEditorPadTemplate *element,
+                              GstEditorElement *parent,
+                              const gchar *first_arg_name,va_list args);
+void gst_editor_padtemplate_repack(GstEditorPadTemplate *padtemplate);
 
 
 #define GST_TYPE_EDITOR_CONNECTION \

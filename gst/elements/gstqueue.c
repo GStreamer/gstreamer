@@ -206,7 +206,7 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   /* put the buffer on the tail of the list */
   queue->queue = g_slist_append (queue->queue, buf);
 //  STATUS("%s: +\n");
-  g_print("(%s:%s)+ ",GST_DEBUG_PAD_NAME(pad));
+  DEBUG("(%s:%s)+ ",GST_DEBUG_PAD_NAME(pad));
 
   /* if we were empty, but aren't any more, signal a condition */
   tosignal = (queue->level_buffers >= 0);
@@ -266,7 +266,7 @@ gst_queue_get (GstPad *pad)
 
   queue->level_buffers--;
 //  STATUS("%s: -\n");
-  g_print("(%s:%s)- ",GST_DEBUG_PAD_NAME(pad));
+  DEBUG("(%s:%s)- ",GST_DEBUG_PAD_NAME(pad));
   tosignal = queue->level_buffers < queue->max_buffers;
   GST_UNLOCK(queue);
 

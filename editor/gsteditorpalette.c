@@ -35,14 +35,15 @@ static void gst_editor_palette_make(GstEditorPalette *palette);
 struct _palette_entry {
   gchar *tooltip;
   GtkType (*type) (void);
+  gchar *factoryname;
 };
 
 #define CORE_ELEMENT_SIZE 4
 struct _palette_entry _palette_contents_core[CORE_ELEMENT_SIZE] = {
-  {"Bin", gst_bin_get_type },
-  {"Thread", gst_thread_get_type },
-  {"Pipeline", gst_pipeline_get_type },
-  {"Tee", gst_tee_get_type },
+  {"Bin", gst_bin_get_type, "bin" },
+  {"Thread", gst_thread_get_type, "thread" },
+  {"Pipeline", gst_pipeline_get_type, "pipeline" },
+  {"Tee", gst_tee_get_type, "tee" },
 };
 
 enum {
@@ -58,7 +59,9 @@ enum {
 static GtkObjectClass *parent_class;
 static guint gst_editor_palette_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_editor_palette_get_type() {
+GtkType 
+gst_editor_palette_get_type (void) 
+{
   static GtkType palette_type = 0;
 
   if (!palette_type) {
@@ -77,7 +80,9 @@ GtkType gst_editor_palette_get_type() {
   return palette_type;
 }
 
-static void gst_editor_palette_class_init(GstEditorPaletteClass *klass) {
+static void 
+gst_editor_palette_class_init (GstEditorPaletteClass *klass) 
+{
   GtkObjectClass *object_class;
 
   object_class = (GtkObjectClass*)klass;
@@ -102,7 +107,9 @@ static void gst_editor_palette_class_init(GstEditorPaletteClass *klass) {
   object_class->get_arg = gst_editor_palette_get_arg;
 }
 
-static void gst_editor_palette_init(GstEditorPalette *palette) {
+static void 
+gst_editor_palette_init (GstEditorPalette *palette) 
+{
   palette->tooltips = gtk_tooltips_new();
 }
 
@@ -112,13 +119,14 @@ typedef struct {
 } connect_struct;
   
 /* we need more control here so... */
-static void gst_editor_palette_connect_func (const gchar *handler_name,
-		             GtkObject *object,
-			     const gchar *signal_name,
-			     const gchar *signal_data,
-			     GtkObject *connect_object,
-			     gboolean after,
-			     gpointer user_data) 
+static void 
+gst_editor_palette_connect_func (const gchar *handler_name,
+		                 GtkObject *object,
+			         const gchar *signal_name,
+			         const gchar *signal_data,
+			         GtkObject *connect_object,
+			         gboolean after,
+			         gpointer user_data) 
 {
   GtkSignalFunc func;
   connect_struct *data = (connect_struct *)user_data;
@@ -133,7 +141,9 @@ static void gst_editor_palette_connect_func (const gchar *handler_name,
   }
 }
 
-GstEditorPalette *gst_editor_palette_new() {
+GstEditorPalette*
+gst_editor_palette_new() 
+{
   GstEditorPalette *palette;
   GtkWidget *palette_window;
   connect_struct data;
@@ -164,11 +174,19 @@ typedef struct {
   struct _palette_entry *entry;
 } _signal_data;
   
-static void gst_editor_palette_element_clicked(GtkButton *button, _signal_data *data) {
-  gtk_signal_emit(GTK_OBJECT(data->palette),gst_editor_palette_signals[SIGNAL_ELEMENT_SELECTED], data->entry->type());
+static void 
+gst_editor_palette_element_clicked(GtkButton *button, _signal_data *data) 
+{
+  GstElementFactory *factory;
+
+  factory = gst_elementfactory_find (data->entry->factoryname);
+
+  gtk_signal_emit(GTK_OBJECT(data->palette),gst_editor_palette_signals[SIGNAL_ELEMENT_SELECTED], factory);
 }
 
-static void gst_editor_palette_make(GstEditorPalette *palette) {
+static void 
+gst_editor_palette_make (GstEditorPalette *palette) 
+{
   GtkWidget *button;
   GstEditorImage *editimage;
   GtkWidget *image;
@@ -212,7 +230,9 @@ static void gst_editor_palette_make(GstEditorPalette *palette) {
   }
 }
 
-static void gst_editor_palette_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_palette_set_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorPalette *palette;
 
   /* get the major types of this object */
@@ -225,7 +245,9 @@ static void gst_editor_palette_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static void gst_editor_palette_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_palette_get_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorPalette *palette;
 
   /* get the major types of this object */
