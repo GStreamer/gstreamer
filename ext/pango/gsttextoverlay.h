@@ -54,8 +54,10 @@ struct _GstTextOverlay {
     GstTextOverlayHAlign  halign;
     gint                  x0;
     gint                  y0;
-    guint64               next_known_text_change;
-    GString              *next_known_text;
+    GstBuffer		 *current_buffer;
+    GstBuffer		 *next_buffer;
+    gchar		 *default_text;
+    gboolean		  need_render;
 };
 
 struct _GstTextOverlayClass {
