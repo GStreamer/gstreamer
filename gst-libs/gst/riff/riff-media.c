@@ -458,6 +458,15 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       if (strf != NULL && strf->size != 8) {
         GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
             strf->size);
+        strf->size = 8;
+        strf->av_bps = 8;
+        strf->blockalign = strf->av_bps * strf->channels;
+      }
+      if (strf != NULL && (strf->av_bps == 0 || strf->blockalign == 0)) {
+        GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
+            strf->av_bps, strf->blockalign);
+        strf->av_bps = strf->size;
+        strf->blockalign = strf->av_bps * strf->channels;
       }
       caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
       if (codec_name)
@@ -468,6 +477,15 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       if (strf != NULL && strf->size != 8) {
         GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
             strf->size);
+        strf->size = 8;
+        strf->av_bps = 8;
+        strf->blockalign = strf->av_bps * strf->channels;
+      }
+      if (strf != NULL && (strf->av_bps == 0 || strf->blockalign == 0)) {
+        GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
+            strf->av_bps, strf->blockalign);
+        strf->av_bps = strf->size;
+        strf->blockalign = strf->av_bps * strf->channels;
       }
       caps = gst_caps_new_simple ("audio/x-alaw", NULL);
       if (codec_name)
