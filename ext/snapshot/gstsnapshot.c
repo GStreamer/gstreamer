@@ -41,7 +41,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YUY2 }"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2 }"))
 );
 
 static GstStaticPadTemplate snapshot_sink_factory =
@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YUY2 }"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2 }"))
 );
 
 /* Snapshot signals and args */

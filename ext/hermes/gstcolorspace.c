@@ -321,11 +321,15 @@ gst_colorspace_base_init (gpointer g_class)
   
   /* create caps for templates */
   caps = gst_caps_from_string (
-        GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YV12, YUY2 }") "; "
-        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32_REVERSE "; "
-        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32 "; "
-        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_15 "; "
-        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_16);
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2 }") "; "
+        GST_VIDEO_CAPS_RGB "; "
+        GST_VIDEO_CAPS_BGR "; "
+        GST_VIDEO_CAPS_xBGR "; "
+        GST_VIDEO_CAPS_xRGB "; "
+        GST_VIDEO_CAPS_BGRx "; "
+        GST_VIDEO_CAPS_RGBx "; "
+        GST_VIDEO_CAPS_RGB_15 "; "
+        GST_VIDEO_CAPS_RGB_16);
   
   /* build templates */
   srctempl  = gst_pad_template_new ("src",

@@ -55,7 +55,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+  GST_STATIC_CAPS ( GST_VIDEO_CAPS_YUV ("I420"))
 );
 
 static GstStaticPadTemplate deinterlace_sink_factory =
@@ -63,7 +63,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+  GST_STATIC_CAPS ( GST_VIDEO_CAPS_YUV ("I420"))
 );
 
 static GType 		gst_deinterlace_get_type		(void);

@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE (
   "video_00",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
 );
 
 static GstStaticPadTemplate audio_template_factory =
