@@ -1034,8 +1034,6 @@ gst_ximagesink_change_state (GstElement * element)
       XSynchronize (ximagesink->xcontext->disp, ximagesink->synchronous);
       break;
     case GST_STATE_READY_TO_PAUSED:
-      if (ximagesink->xwindow)
-        gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
       ximagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -1043,6 +1041,8 @@ gst_ximagesink_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      if (ximagesink->xwindow)
+        gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
       ximagesink->framerate = 0;
       ximagesink->sw_scaling_failed = FALSE;
       GST_VIDEOSINK_WIDTH (ximagesink) = 0;

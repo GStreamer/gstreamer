@@ -497,6 +497,9 @@ gst_xvimagesink_xwindow_clear (GstXvImageSink * xvimagesink,
 
   g_mutex_lock (xvimagesink->x_lock);
 
+  XvStopVideo (xvimagesink->xcontext->disp, xvimagesink->xcontext->xv_port_id,
+      xwindow->win);
+
   XSetForeground (xvimagesink->xcontext->disp, xwindow->gc,
       xvimagesink->xcontext->black);
 
@@ -1340,8 +1343,6 @@ gst_xvimagesink_change_state (GstElement * element)
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
-      if (xvimagesink->xwindow)
-        gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
       xvimagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -1349,6 +1350,8 @@ gst_xvimagesink_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      if (xvimagesink->xwindow)
+        gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
       xvimagesink->framerate = 0;
       GST_VIDEOSINK_WIDTH (xvimagesink) = 0;
       GST_VIDEOSINK_HEIGHT (xvimagesink) = 0;
