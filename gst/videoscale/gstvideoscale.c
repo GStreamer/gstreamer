@@ -321,14 +321,15 @@ gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event)
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
             a*videoscale->from_height/videoscale->to_height, NULL);
       }
+      gst_event_unref (event);
       new_event = gst_event_new (GST_EVENT_NAVIGATION);
       new_event->event_data.structure.structure = structure;
-      gst_pad_send_event (gst_pad_get_peer (videoscale->sinkpad), new_event);
+      return gst_pad_event_default (pad, new_event);
       break;
     default:
+      return gst_pad_event_default (pad, event);
       break;
   }
-  return TRUE;
 }
 
 static void
