@@ -26,7 +26,7 @@
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   gboolean ret;
 
@@ -41,10 +41,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "esdsink",
-  plugin_init
-};
+  "ESD Element Plugins",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 

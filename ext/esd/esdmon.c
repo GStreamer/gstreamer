@@ -32,11 +32,8 @@
 static GstElementDetails esdmon_details = {
   "Esound audio monitor",
   "Source/Audio",
-  "LGPL",
   "Monitors audio from an esound server",
-  VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",
-  "(C) 2002",
 };
 
 /* Signals and args */
@@ -84,6 +81,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   )
 );
 
+static void                     gst_esdmon_base_init    (gpointer g_class);
 static void			gst_esdmon_class_init	(GstEsdmonClass *klass);
 static void			gst_esdmon_init		(GstEsdmon *esdmon);
 
@@ -142,7 +140,8 @@ gst_esdmon_get_type (void)
 
   if (!esdmon_type) {
     static const GTypeInfo esdmon_info = {
-      sizeof(GstEsdmonClass),      NULL,
+      sizeof(GstEsdmonClass),
+      gst_esdmon_base_init,
       NULL,
       (GClassInitFunc)gst_esdmon_class_init,
       NULL,
@@ -154,6 +153,15 @@ gst_esdmon_get_type (void)
     esdmon_type = g_type_register_static(GST_TYPE_ELEMENT, "GstEsdmon", &esdmon_info, 0);
   }
   return esdmon_type;
+}
+
+static void
+gst_esdmon_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_set_details (element_class, &esdmon_details);
 }
 
 static void
@@ -365,16 +373,9 @@ gst_esdmon_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 gboolean
 gst_esdmon_factory_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("esdmon", GST_TYPE_ESDMON,
-				   &esdmon_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template(factory, GST_PAD_TEMPLATE_GET (src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "esdmon", GST_RANK_NONE, GST_TYPE_ESDMON))
+    return FALSE;
+  
   return TRUE;
 }
 

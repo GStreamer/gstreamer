@@ -32,11 +32,8 @@
 static GstElementDetails esdsink_details = {
   "Esound audio sink",
   "Sink/Audio",
-  "LGPL",
   "Plays audio to an esound server",
-  VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",
-  "(C) 2001",
 };
 
 /* Signals and args */
@@ -82,6 +79,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   )
 );
 
+static void                     gst_esdsink_base_init           (gpointer g_class);
 static void			gst_esdsink_class_init		(GstEsdsinkClass *klass);
 static void			gst_esdsink_init		(GstEsdsink *esdsink);
 
@@ -110,7 +108,8 @@ gst_esdsink_get_type (void)
 
   if (!esdsink_type) {
     static const GTypeInfo esdsink_info = {
-      sizeof(GstEsdsinkClass),      NULL,
+      sizeof(GstEsdsinkClass),
+      gst_esdsink_base_init,
       NULL,
       (GClassInitFunc)gst_esdsink_class_init,
       NULL,
@@ -122,6 +121,15 @@ gst_esdsink_get_type (void)
     esdsink_type = g_type_register_static(GST_TYPE_ELEMENT, "GstEsdsink", &esdsink_info, 0);
   }
   return esdsink_type;
+}
+
+static void
+gst_esdsink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &esdsink_details);
 }
 
 static void
@@ -424,16 +432,8 @@ gst_esdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 gboolean
 gst_esdsink_factory_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("esdsink", GST_TYPE_ESDSINK,
-				   &esdsink_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template(factory,
-      GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "esdsink", GST_RANK_NONE, GST_TYPE_ESDSINK))
+    return FALSE;
 
   return TRUE;
 }
