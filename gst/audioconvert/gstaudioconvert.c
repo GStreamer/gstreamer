@@ -373,13 +373,6 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   if (!gst_audio_convert_parse_caps (caps, &ac_caps))
     return GST_PAD_LINK_REFUSED;
 
-  /* try setting our caps on the other side first */
-  if (gst_pad_try_set_caps (otherpad, caps) >= GST_PAD_LINK_OK) {
-    this->srccaps = ac_caps;
-    this->sinkcaps = ac_caps;
-    return GST_PAD_LINK_OK;
-  }
-
   /* ok, not those - try setting "any" caps */
   othercaps = gst_pad_get_allowed_caps (otherpad);
   for (i = 0; i < gst_caps_get_size (othercaps); i++) {
