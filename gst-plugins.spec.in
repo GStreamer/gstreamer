@@ -177,10 +177,10 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_bindir}/gst-visualise
 %{_mandir}/man1/gst-launch-ext.*
 %{_mandir}/man1/gst-visualise.1.*
+%{_libdir}/libgstplay-%{majorminor}.so.*
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudio.so
 %{_libdir}/gstreamer-%{majorminor}/libgstidct.so
-%{_libdir}/gstreamer-%{majorminor}/libgstresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstriff.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo.so
 # non-core plugins without external dependencies
@@ -231,16 +231,27 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.*
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
-%{_libdir}/libgstplay-%{majorminor}.so.*
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
-%{_libdir}/gstreamer-%{majorminor}/libgstefence.so.0.0.0
+%{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
-%{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so.0.0.0
+%{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobalance.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1types.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1encoder.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1systemencode.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmp1videoparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2subt.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2types.so
+
 
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -267,7 +278,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so.*
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
 # Snapshot plugin
-@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
+@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
 
 %post 
 %{_bindir}/gst-register > /dev/null 2> /dev/null
@@ -314,7 +325,7 @@ GStreamer support libraries header files.
 @USE_A52DEC_TRUE@%files -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%defattr(-, root, root)
 @USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
-@USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%post -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%{_bindir}/gst-register > /dev/null 2> /dev/null
@@ -710,18 +721,7 @@ Plug-ins for playback of AVI format media files.
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1types.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1encoder.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1systemencode.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudio.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmp1videoparse.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2subt.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2types.so
-@USE_MPEG2DEC_TRUE@
+@USE_MPEG2DEC_TRUE@/usr/lib/gstreamer-0.7/libgstmpeg2dec.so
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register > /dev/null 2> /dev/null
 @USE_MPEG2DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
@@ -822,14 +822,22 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Sat Jul 12 2003 Thomas Vander Stichele <thomas at apestaart dot org>
+- move gst/ mpeg plugins to base package
+- remove hermes conditional from snapshot
+- remove one instance of resample plugin
+- fix up silly versioned plugins efence and rmdemux
+
 * Sat Jul 05 2003 Christian Schaller <Uraeus@gnome.org>
-- Major overhaul of SPEC file to make it compatible with what Red Hat ships as default
-- Probably a little less sexy, but cross-distro SPEC files are a myth anyway so making
-  it convenient for RH users wins out
-- Keeping conditionals even with new re-org so that developers building the RPMS don't need everything
-  installed
-- Add bunch of obsoletes to easy migration from earlier official GStreamer RPMS
+- Major overhaul of SPEC file to make it compatible with what Red Hat ships
+  as default
+- Probably a little less sexy, but cross-distro SPEC files are a myth anyway
+  so making it convenient for RH users wins out
+- Keeping conditionals even with new re-org so that developers building the
+  RPMS don't need everything installed
+- Add bunch of obsoletes to ease migration from earlier official GStreamer RPMS
 - Remove plugins that doesn't exist anymore
+
 * Sun Mar 02 2003 Christian Schaller <Uraeus@gnome.org>
 - Remove USE_RTP statement from RTP plugin
 - Move RTP plugin to no-deps section
