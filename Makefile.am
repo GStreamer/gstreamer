@@ -43,7 +43,7 @@ DIST_SUBDIRS = include gst libs plugins tools test tests testsuite examples gstp
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer.pc
 
-EXTRA_DIST = gstreamer.spec.in gstreamer.m4 \
+EXTRA_DIST = gstreamer.spec.in \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
 	     configure.ac autogen.sh depcomp \
 	     LICENSE REQUIREMENTS ABOUT-NLS \
