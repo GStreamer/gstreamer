@@ -909,7 +909,7 @@ id3_to_caps(struct id3_tag const *tag)
   unsigned int i;
   struct id3_frame const *frame;
   id3_ucs4_t const *ucs4;
-  id3_latin1_t *latin1;
+  id3_utf8_t *utf8;
   GstProps *props;
   GstPropsEntry *entry;
   GstCaps *caps;
@@ -965,13 +965,13 @@ id3_to_caps(struct id3_tag const *tag)
         if (strcmp(info[i].id, ID3_FRAME_GENRE) == 0)
 	  ucs4 = id3_genre_name(ucs4);
 
-        latin1 = id3_ucs4_latin1duplicate(ucs4);
-        if (latin1 == 0)
+        utf8 = id3_ucs4_utf8duplicate(ucs4);
+        if (utf8 == 0)
 	  goto fail;
 
-        entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, latin1);
+        entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, utf8);
 	values = g_list_prepend (values, entry);
-        free(latin1);
+        free(utf8);
       }
       if (values) {
         values = g_list_reverse (values);
@@ -1000,12 +1000,13 @@ id3_to_caps(struct id3_tag const *tag)
     ucs4 = id3_field_getfullstring(&frame->fields[3]);
     g_assert(ucs4);
 
-    latin1 = id3_ucs4_latin1duplicate(ucs4);
-    if (latin1 == 0)
+    utf8 = id3_ucs4_utf8duplicate(ucs4);
+    if (utf8 == 0)
       goto fail;
 
-    entry = gst_props_entry_new ("Comment", GST_PROPS_STRING_TYPE, latin1);
+    entry = gst_props_entry_new ("Comment", GST_PROPS_STRING_TYPE, utf8);
     values = g_list_prepend (values, entry);
+    free(utf8);
   }
   if (values) {
     values = g_list_reverse (values);
