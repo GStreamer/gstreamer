@@ -225,7 +225,7 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
     if (!gst_v4lmjpegsink_set_playback(v4lmjpegsink,
          v4lmjpegsink->width, v4lmjpegsink->height,
          v4lmjpegsink->x_offset, v4lmjpegsink->y_offset,
-         GST_V4LELEMENT(v4lmjpegsink)->norm, 0)) /* TODO: interlacing */
+         GST_V4LELEMENT(v4lmjpegsink)->vchan.norm, 0)) /* TODO: interlacing */
       continue;
 
     /* set buffer info */
@@ -452,16 +452,6 @@ gst_v4lmjpegsink_change_state (GstElement *element)
     parent_value = GST_ELEMENT_CLASS (parent_class)->change_state (element);
   } else {
     parent_value = GST_STATE_FAILURE;
-  }
-
-  if (GST_STATE_TRANSITION(element) == GST_STATE_NULL_TO_READY)
-  {
-    if ((GST_V4LELEMENT(v4lmjpegsink)->norm >= VIDEO_MODE_PAL ||
-         GST_V4LELEMENT(v4lmjpegsink)->norm < VIDEO_MODE_AUTO) ||
-        GST_V4LELEMENT(v4lmjpegsink)->channel < 0)
-      if (!gst_v4l_set_chan_norm(GST_V4LELEMENT(v4lmjpegsink),
-           0, GST_V4LELEMENT(v4lmjpegsink)->norm))
-        return GST_STATE_FAILURE;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

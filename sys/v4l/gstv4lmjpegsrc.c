@@ -710,7 +710,6 @@ static GstElementStateReturn
 gst_v4lmjpegsrc_change_state (GstElement *element)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
-  GstElementStateReturn parent_value;
   GTimeVal time;
 
   g_return_val_if_fail(GST_IS_V4LMJPEGSRC(element), GST_STATE_FAILURE);
@@ -750,39 +749,8 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    parent_value = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  } else {
-    parent_value = GST_STATE_FAILURE;
-  }
-
-  if (GST_STATE_TRANSITION(element) == GST_STATE_NULL_TO_READY)
-  {
-    /* do autodetection if no input/norm is selected yet */
-    if ((GST_V4LELEMENT(v4lmjpegsrc)->norm < VIDEO_MODE_PAL ||
-         GST_V4LELEMENT(v4lmjpegsrc)->norm == VIDEO_MODE_AUTO) ||
-        (GST_V4LELEMENT(v4lmjpegsrc)->channel < 0 ||
-         GST_V4LELEMENT(v4lmjpegsrc)->channel == V4L_MJPEG_INPUT_AUTO))
-    {
-      gint norm, input;
-
-      if (GST_V4LELEMENT(v4lmjpegsrc)->norm < 0)
-        norm = VIDEO_MODE_AUTO;
-      else
-        norm = GST_V4LELEMENT(v4lmjpegsrc)->norm;
-
-      if (GST_V4LELEMENT(v4lmjpegsrc)->channel < 0)
-        input = V4L_MJPEG_INPUT_AUTO;
-      else
-        input = GST_V4LELEMENT(v4lmjpegsrc)->channel;
-
-      if (!gst_v4lmjpegsrc_set_input_norm(v4lmjpegsrc, input, norm))
-        return GST_STATE_FAILURE;
-    }
-  }
-
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return parent_value;
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
 }

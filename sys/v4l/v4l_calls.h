@@ -91,17 +91,11 @@ typedef enum {
   V4L_PICTURE_SATURATION,
 } GstV4lPictureType;
 
-extern const char *picture_name[];
-
 typedef enum {
   V4L_AUDIO_VOLUME = 0,
   V4L_AUDIO_MUTE,
   V4L_AUDIO_MODE, /* stereo, mono, ... (see videodev.h) */
 } GstV4lAudioType;
-
-extern const char *audio_name[];
-
-extern const char *norm_name[];
 
 
 /* open/close the device */
@@ -109,32 +103,52 @@ gboolean gst_v4l_open           (GstV4lElement *v4lelement);
 gboolean gst_v4l_close          (GstV4lElement *v4lelement);
 
 /* norm control (norm = VIDEO_MODE_{PAL|NTSC|SECAM|AUTO}) */
-gint     gst_v4l_get_num_chans  (GstV4lElement *v4lelement);
-gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement, gint *channel,            gint *norm);
-gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement, gint  channel,            gint  norm);
+gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement,
+				 gint          *channel,
+				 gint          *norm);
+gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement,
+				 gint           channel,
+				 gint           norm);
 GList   *gst_v4l_get_chan_names (GstV4lElement *v4lelement);
 
 /* frequency control */
-gboolean gst_v4l_has_tuner      (GstV4lElement *v4lelement);
-gboolean gst_v4l_get_signal     (GstV4lElement *v4lelement, guint  *signal);
-gboolean gst_v4l_get_frequency  (GstV4lElement *v4lelement, gulong *frequency);
-gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement, gulong  frequency);
+gboolean gst_v4l_get_signal     (GstV4lElement *v4lelement,
+				 gint           tunernum,
+				 guint         *signal);
+gboolean gst_v4l_get_frequency  (GstV4lElement *v4lelement,
+				 gint           tunernum,
+				 gulong        *frequency);
+gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement,
+				 gint           tunernum,
+				 gulong         frequency);
 
 /* picture control */
-gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement, GstV4lPictureType type,   gint *value);
-gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement, GstV4lPictureType type,   gint  value);
+gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement,
+				 GstV4lPictureType type,
+				 gint          *value);
+gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement,	
+				 GstV4lPictureType type,
+				 gint           value);
 
 /* audio control */
-gboolean gst_v4l_has_audio      (GstV4lElement *v4lelement);
-gboolean gst_v4l_get_audio      (GstV4lElement *v4lelement, GstV4lAudioType type,     gint *value);
-gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement, GstV4lAudioType type,     gint  value);
+gboolean gst_v4l_get_audio      (GstV4lElement *v4lelement,
+				 gint           audionum,
+				 GstV4lAudioType type,
+				 gint          *value);
+gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement,
+				 gint           audionum,
+				 GstV4lAudioType type,
+				 gint           value);
 
 /* overlay */
-gboolean gst_v4l_set_overlay    (GstV4lElement *v4lelement, gchar *display);
-gboolean gst_v4l_set_window     (GstElement    *element,    gint x,                   gint y,
-                                                            gint w,                   gint h,
-                                                            struct video_clip *clips, gint num_clips);
-gboolean gst_v4l_enable_overlay (GstV4lElement *v4lelement, gboolean enable);
+gboolean gst_v4l_set_overlay    (GstV4lElement *v4lelement);
+gboolean gst_v4l_set_window     (GstElement    *element,
+				 gint x,        gint y,
+				 gint w,        gint h,
+				 struct video_clip *clips,
+				 gint           num_clips);
+gboolean gst_v4l_enable_overlay (GstV4lElement *v4lelement,
+				 gboolean       enable);
 
 
 #ifdef __cplusplus

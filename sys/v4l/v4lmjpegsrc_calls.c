@@ -42,9 +42,6 @@
 		GST_ELEMENT(v4lmjpegsrc), \
 		"V4LMJPEGSRC: " format, ##args)
 
-
-char *input_name[] = { "Composite", "S-Video", "TV-Tuner", "Autodetect" };
-
 enum {
   QUEUE_STATE_ERROR = -1,
   QUEUE_STATE_READY_FOR_QUEUE,
@@ -116,99 +113,6 @@ gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   v4lmjpegsrc->num_queued--;
 
   return TRUE;
-}
-
-
-/******************************************************
- * gst_v4lmjpegsrc_set_input_norm():
- *   set input/norm (includes autodetection), norm is
- *   VIDEO_MODE_{PAL|NTSC|SECAM|AUTO}
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-gboolean
-gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
-                                GstV4lMjpegInputType input,
-                                gint                 norm)
-{
-  struct mjpeg_status bstat;
-
-  DEBUG("setting input = %d (%s), norm = %d (%s)",
-    input, input_name[input], norm, norm_name[norm]);
-
-  GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
-  GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
-
-  if (input == V4L_MJPEG_INPUT_AUTO)
-  {
-    int n;
-
-    for (n=V4L_MJPEG_INPUT_COMPOSITE;n<V4L_MJPEG_INPUT_AUTO;n++)
-    {
-      gst_info("Trying %s as input...\n",
-        input_name[n]);
-      bstat.input = n;
-
-      if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_STATUS, &bstat) < 0)
-      {
-        gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-          "Error getting device status: %s",
-          g_strerror(errno));
-        return FALSE;
-      }
-
-      if (bstat.signal)
-      {
-        input = bstat.input;
-        if (norm == VIDEO_MODE_AUTO)
-          norm = bstat.norm;
-        gst_info("Signal found: on input %s, norm %s\n",
-          input_name[bstat.input], norm_name[bstat.norm]);
-        break;
-      }
-    }
-
-    /* check */
-    if (input == V4L_MJPEG_INPUT_AUTO || norm == VIDEO_MODE_AUTO)
-    {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-        "Unable to auto-detect an input");
-      return FALSE;
-    }
-
-    /* save */
-    GST_V4LELEMENT(v4lmjpegsrc)->channel = input;
-    GST_V4LELEMENT(v4lmjpegsrc)->norm = norm;
-  }
-  else if (norm == VIDEO_MODE_AUTO && input)
-  {
-    bstat.input = input;
-
-    if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_STATUS, &bstat) < 0)
-    {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-        "Error getting device status: %s",
-        g_strerror(errno));
-      return FALSE;
-    }
-
-    if (bstat.signal)
-    {
-      norm = bstat.norm;
-      gst_info("Norm %s detected on input %s\n",
-        norm_name[bstat.norm], input_name[input]);
-      GST_V4LELEMENT(v4lmjpegsrc)->norm = norm;
-    }
-    else
-    {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-        "No signal found on input %s",
-        input_name[input]);
-      return FALSE;
-    }
-  }
-
-  return gst_v4l_set_chan_norm(GST_V4LELEMENT(v4lmjpegsrc), input, norm);
 }
 
 

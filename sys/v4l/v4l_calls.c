@@ -30,7 +30,13 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <gst/gst.h>
+#include <gst/tuner/tuner.h>
+#include <gst/colorbalance/colorbalance.h>
+
 #include "v4l_calls.h"
+#include "gstv4ltuner.h"
+#include "gstv4lcolorbalance.h"
 
 #define DEBUG(format, args...) \
 	GST_DEBUG_OBJECT (\
@@ -38,7 +44,7 @@
 		"V4L: " format, ##args)
 
 
-const char *picture_name[] = {
+static const char *picture_name[] = {
   "Hue",
   "Brightness",
   "Contrast",
@@ -46,14 +52,14 @@ const char *picture_name[] = {
   NULL
 };
 
-const char *audio_name[] = {
+static const char *audio_name[] = {
   "Volume",
   "Mute",
   "Mode",
   NULL
 };
 
-const char *norm_name[] = {
+static const char *norm_name[] = {
   "PAL",
   "NTSC",
   "SECAM",
@@ -94,15 +100,17 @@ gboolean
 gst_v4l_open (GstV4lElement *v4lelement)
 {
   int num;
-  GParamSpec *spec;
 
   DEBUG("opening device %s", v4lelement->videodev);
   GST_V4L_CHECK_NOT_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
   /* be sure we have a device */
-  if (!v4lelement->videodev)
-    v4lelement->videodev = g_strdup("/dev/video");
+  if (!v4lelement->videodev) {
+    gst_element_error (GST_ELEMENT (v4lelement),
+		       "No device given - open failed");
+    return FALSE;
+  }
 
   /* open the device */
   v4lelement->video_fd = open(v4lelement->videodev, O_RDWR);
@@ -125,22 +133,34 @@ gst_v4l_open (GstV4lElement *v4lelement)
   gst_info("Opened device \'%s\' (\'%s\') successfully\n",
     v4lelement->vcap.name, v4lelement->videodev);
 
-  for (num=0;norm_name[num]!=NULL;num++)
-    v4lelement->norm_names = g_list_append(v4lelement->norm_names, (gpointer)norm_name[num]);
-  v4lelement->input_names = gst_v4l_get_chan_names(v4lelement);
+  /* norms + inputs, for the tuner interface */
+  for (num=0;norm_name[num]!=NULL;num++) {
+    GstV4lTunerNorm *v4lnorm = g_object_new (GST_TYPE_V4L_TUNER_NORM,
+					     NULL);
+    GstTunerNorm *norm = GST_TUNER_NORM (v4lnorm);
+
+    norm->label = g_strdup (norm_name[num]);
+    norm->fps = (num == 1) ? (30000./1001) : 25.;
+    v4lnorm->index = num;
+    v4lelement->norms = g_list_append(v4lelement->norms,
+				      (gpointer) norm);
+  }
+  v4lelement->channels = gst_v4l_get_chan_names(v4lelement);
 
   for (num=0;picture_name[num]!=NULL;num++)
   {
-    spec = g_param_spec_int(picture_name[num], picture_name[num],
-                            picture_name[num], 0, 65535, 32768,
-                            G_PARAM_READWRITE);
-    v4lelement->control_specs = g_list_append(v4lelement->control_specs, spec);
+    GstV4lColorBalanceChannel *v4lchannel =
+	g_object_new (GST_TYPE_V4L_COLOR_BALANCE_CHANNEL, NULL);
+    GstColorBalanceChannel *channel = GST_COLOR_BALANCE_CHANNEL (v4lchannel);
+    channel->label = g_strdup (picture_name[num]);
+    channel->min_value = 0;
+    channel->max_value = 65535;
+    v4lchannel->index = num;
+    v4lelement->colors = g_list_append(v4lelement->colors, channel);
   }
-  spec = g_param_spec_boolean("mute", "mute", "mute", TRUE, G_PARAM_READWRITE);
-  v4lelement->control_specs = g_list_append(v4lelement->control_specs, spec);
-  spec = g_param_spec_int("volume", "volume", "volume",
-                          0, 65535, 0, G_PARAM_READWRITE);
-  v4lelement->control_specs = g_list_append(v4lelement->control_specs, spec);
+
+  DEBUG("Setting default norm/input");
+  gst_v4l_set_chan_norm (v4lelement, 0, 0);
 
   return TRUE;
 }
@@ -162,20 +182,17 @@ gst_v4l_close (GstV4lElement *v4lelement)
   close(v4lelement->video_fd);
   v4lelement->video_fd = -1;
 
-  while (g_list_length(v4lelement->input_names) > 0)
-  {
-    gpointer data = g_list_nth_data(v4lelement->input_names, 0);
-    v4lelement->input_names = g_list_remove(v4lelement->input_names, data);
-    g_free(data);
-  }
-  g_list_free(v4lelement->norm_names);
-  v4lelement->norm_names = NULL;
-  while (g_list_length(v4lelement->control_specs) > 0)
-  {
-    gpointer data = g_list_nth_data(v4lelement->control_specs, 0);
-    v4lelement->control_specs = g_list_remove(v4lelement->control_specs, data);
-    g_param_spec_unref(G_PARAM_SPEC(data));
-  }
+  g_list_foreach (v4lelement->channels, (GFunc) g_object_unref, NULL);
+  g_list_free (v4lelement->channels);
+  v4lelement->channels = NULL;
+
+  g_list_foreach (v4lelement->norms, (GFunc) g_object_unref, NULL);
+  g_list_free (v4lelement->norms);
+  v4lelement->norms = NULL;
+
+  g_list_foreach (v4lelement->colors, (GFunc) g_object_unref, NULL);
+  g_list_free (v4lelement->colors);
+  v4lelement->colors = NULL;
 
   return TRUE;
 }
@@ -205,6 +222,7 @@ GList *
 gst_v4l_get_chan_names (GstV4lElement *v4lelement)
 {
   struct video_channel vchan;
+  const GList *pads = gst_element_get_pad_list (GST_ELEMENT (v4lelement));
   GList *list = NULL;
   gint i;
 
@@ -213,12 +231,58 @@ gst_v4l_get_chan_names (GstV4lElement *v4lelement)
   if (!GST_V4L_IS_OPEN(v4lelement))
     return NULL;
 
+  /* sinks don't have inputs in v4l */
+  if (pads && g_list_length ((GList *) pads) == 1)
+    if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SINK)
+      return NULL;
+
   for (i=0;i<gst_v4l_get_num_chans(v4lelement);i++)
   {
+    GstV4lTunerChannel *v4lchannel = g_object_new (GST_TYPE_V4L_TUNER_CHANNEL,
+						   NULL);
+    GstTunerChannel *channel = GST_TUNER_CHANNEL (v4lchannel);
+
     vchan.channel = i;
     if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
-      return NULL;
-    list = g_list_append(list, (gpointer)g_strdup(vchan.name));
+      return NULL; /* memleak... */
+    channel->label = g_strdup (vchan.name);
+    channel->flags = GST_TUNER_CHANNEL_INPUT;
+    v4lchannel->index = i;
+    if (vchan.flags & VIDEO_VC_TUNER) {
+      struct video_tuner vtun;
+      gint n;
+
+      for (n = 0; ; n++) {
+        vtun.tuner = n;
+        if (ioctl(v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
+          break; /* no more tuners */
+        if (!strcmp(vtun.name, vchan.name)) {
+          v4lchannel->tuner = n;
+          channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
+          channel->min_frequency = vtun.rangelow;
+          channel->max_frequency = vtun.rangehigh;
+          channel->min_signal = 0;
+          channel->max_signal = 0xffff;
+          break;
+        }
+      }
+    }
+    if (vchan.flags & VIDEO_VC_AUDIO) {
+      struct video_audio vaud;
+      gint n;
+
+      for (n = 0; n < v4lelement->vcap.audios; n++) {
+        vaud.audio = n;
+        if (ioctl(v4lelement->video_fd, VIDIOCGAUDIO, &vaud) < 0)
+          continue;
+        if (!strcmp(vaud.name, vchan.name)) {
+          v4lchannel->audio = n;
+          channel->flags |= GST_TUNER_CHANNEL_AUDIO;
+          break;
+        }
+      }
+    }
+    list = g_list_append(list, (gpointer) channel);
   }
 
   return list;
@@ -290,21 +354,6 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
 
 
 /******************************************************
- * gst_v4l_has_tuner():
- * return value: TRUE if it has a tuner, else FALSE
- ******************************************************/
-
-gboolean
-gst_v4l_has_tuner (GstV4lElement *v4lelement)
-{
-  DEBUG("checking whether device has a tuner");
-  GST_V4L_CHECK_OPEN(v4lelement);
-
-  return v4lelement->vcap.type & VID_TYPE_TUNER;
-}
-
-
-/******************************************************
  * gst_v4l_get_signal():
  *   get the current signal
  * return value: TRUE on success, FALSE on error
@@ -312,17 +361,15 @@ gst_v4l_has_tuner (GstV4lElement *v4lelement)
 
 gboolean
 gst_v4l_get_signal (GstV4lElement *v4lelement,
-                       guint        *signal)
+                    gint           tunernum,
+                    guint         *signal)
 {
-	struct video_tuner tuner;
+  struct video_tuner tuner;
 
   DEBUG("getting tuner signal");
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  if (!gst_v4l_has_tuner(v4lelement))
-    return FALSE;
-
-  tuner.tuner = 0;
+  tuner.tuner = tunernum;
   if (ioctl(v4lelement->video_fd, VIDIOCGTUNER, &tuner) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
@@ -345,12 +392,19 @@ gst_v4l_get_signal (GstV4lElement *v4lelement,
 
 gboolean
 gst_v4l_get_frequency (GstV4lElement *v4lelement,
+                       gint           tunernum,
                        gulong        *frequency)
 {
+  struct video_tuner vtun;
+
   DEBUG("getting tuner frequency");
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  if (!gst_v4l_has_tuner(v4lelement))
+  /* check that this is the current input */
+  vtun.tuner = tunernum;
+  if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
+    return FALSE;
+  if (strcmp(vtun.name, v4lelement->vchan.name))
     return FALSE;
 
   if (ioctl(v4lelement->video_fd, VIDIOCGFREQ, frequency) < 0)
@@ -373,12 +427,19 @@ gst_v4l_get_frequency (GstV4lElement *v4lelement,
 
 gboolean
 gst_v4l_set_frequency (GstV4lElement *v4lelement,
-                       gulong        frequency)
+                       gint           tunernum,
+                       gulong         frequency)
 {
+  struct video_tuner vtun;
+
   DEBUG("setting tuner frequency to %lu", frequency);
   GST_V4L_CHECK_OPEN(v4lelement);
-  
-  if (!gst_v4l_has_tuner(v4lelement))
+
+  /* check that this is the current input */
+  vtun.tuner = tunernum;
+  if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
+    return FALSE;
+  if (strcmp(vtun.name, v4lelement->vchan.name))
     return FALSE;
 
   if (ioctl(v4lelement->video_fd, VIDIOCSFREQ, &frequency) < 0)
@@ -502,21 +563,6 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
 
 
 /******************************************************
- * gst_v4l_has_audio():
- * return value: TRUE if it can do audio, else FALSE
- ******************************************************/
-
-gboolean
-gst_v4l_has_audio (GstV4lElement *v4lelement)
-{
-  DEBUG("checking whether device has audio");
-  GST_V4L_CHECK_OPEN(v4lelement);
-
-  return v4lelement->vcap.audios > 0;
-}
-
-
-/******************************************************
  * gst_v4l_get_audio():
  *   get some audio value
  * return value: TRUE on success, FALSE on error
@@ -524,6 +570,7 @@ gst_v4l_has_audio (GstV4lElement *v4lelement)
 
 gboolean
 gst_v4l_get_audio (GstV4lElement   *v4lelement,
+                   gint            audionum,
                    GstV4lAudioType type,
                    gint            *value)
 {
@@ -533,9 +580,7 @@ gst_v4l_get_audio (GstV4lElement   *v4lelement,
     type, audio_name[type]);
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  if (!gst_v4l_has_audio(v4lelement))
-    return FALSE;
-
+  vau.audio = audionum;
   if (ioctl(v4lelement->video_fd, VIDIOCGAUDIO, &vau) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
@@ -574,6 +619,7 @@ gst_v4l_get_audio (GstV4lElement   *v4lelement,
 
 gboolean
 gst_v4l_set_audio (GstV4lElement   *v4lelement,
+                   gint            audionum,
                    GstV4lAudioType type,
                    gint            value)
 {
@@ -583,9 +629,7 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
     type, audio_name[type], value);
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  if (!gst_v4l_has_audio(v4lelement))
-    return FALSE;
-
+  vau.audio = audionum;
   if (ioctl(v4lelement->video_fd, VIDIOCGAUDIO, &vau) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
