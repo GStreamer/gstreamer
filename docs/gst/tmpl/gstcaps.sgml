@@ -57,10 +57,11 @@ templates.
 
 <!-- ##### MACRO GST_CAPS_IS_SIMPLE ##### -->
 <para>
-
+Convinience macro that checks if the number of structures in the gives caps is
+exactly one.
 </para>
 
-@caps: 
+@caps: the #GstCaps instance to check
 
 
 <!-- ##### MACRO gst_caps_is_simple ##### -->
@@ -73,11 +74,11 @@ templates.
 
 <!-- ##### MACRO GST_DEBUG_CAPS ##### -->
 <para>
-
+Convinience macro for prining out the contents of caps with GST_DEBUG().
 </para>
 
-@string: 
-@caps: 
+@string: a string the should be prepend to the caps data.
+@caps: the caps to print
 
 
 <!-- ##### MACRO GST_STATIC_CAPS ##### -->

@@ -14,24 +14,3 @@ various portabillity helper macros
 
 </para>
 
-<!-- ##### MACRO GST_GNUC_CONSTRUCTOR ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_INLINE_FUNC ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_CAN_INLINE ##### -->
-<para>
-
-</para>
-
-
-

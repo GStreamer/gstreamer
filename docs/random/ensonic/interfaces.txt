@@ -56,7 +56,11 @@ $Id$
     - question
       - should this be aware of instruments (voice-groups)
         - no, instruments should auto-generate those
-
+  * GST_TYPE_QUALITY_VS_SPEED
+    - get the name of a property that can be used to switch between
+      - a fast version for e.g. realtime usage
+      - a slower version with higher precission that can be used for off-line
+        rendering
 * new interfaces for audio applications
   * GST_TYPE_MUSIC_GENERATOR
     - add hints so that application can use a element as an instrument

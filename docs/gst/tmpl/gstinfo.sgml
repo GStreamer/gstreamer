@@ -701,23 +701,6 @@ Returns: The name of the function
 @void: 
 
 
-<!-- ##### MACRO gst_debug_category_set_threshold_for_name ##### -->
-<para>
-
-</para>
-
-@name: 
-@level: 
-
-
-<!-- ##### MACRO gst_debug_category_unset_threshold_for_name ##### -->
-<para>
-
-</para>
-
-@name: 
-
-
 <!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
 <para>
 

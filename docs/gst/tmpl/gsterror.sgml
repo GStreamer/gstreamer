@@ -16,7 +16,7 @@ Categorized error messages
 
 <!-- ##### ENUM GstCoreError ##### -->
 <para>
-
+Core errors are anything that can go wrong in or using the core GStreamer library
 </para>
 
 @GST_CORE_ERROR_FAILED: 
@@ -35,7 +35,7 @@ Categorized error messages
 
 <!-- ##### ENUM GstLibraryError ##### -->
 <para>
-
+Library errors are for errors from the library being used by elements initializing, closing, ...
 </para>
 
 @GST_LIBRARY_ERROR_FAILED: 
@@ -48,7 +48,9 @@ Categorized error messages
 
 <!-- ##### ENUM GstResourceError ##### -->
 <para>
-
+Resource errors are for anything external used by an element:
+memory, files, network connections, process space, ...
+They're typically used by source and sink elements
 </para>
 
 @GST_RESOURCE_ERROR_FAILED: 
@@ -68,7 +70,9 @@ Categorized error messages
 
 <!-- ##### ENUM GstStreamError ##### -->
 <para>
-
+Stream errors are for anything related to the stream being processed:
+format errors, media type errors, ...
+They're typically used by decoders, demuxers, converters, ...
 </para>
 
 @GST_STREAM_ERROR_FAILED: 
@@ -114,7 +118,7 @@ Categorized error messages
 
 <!-- ##### MACRO GST_ERROR_SYSTEM ##### -->
 <para>
-
+Generates an human readable error message out of an errno number.
 </para>
 
 

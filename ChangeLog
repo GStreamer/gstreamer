@@ -1,3 +1,15 @@
+2004-11-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gsterror.sgml:
+	* docs/gst/tmpl/gstinfo.sgml:
+	* docs/gst/tmpl/gstmacros.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/random/ensonic/interfaces.txt:
+	* gst/gstinfo.h:
+      added some more docs, removed two obsolete defines
+
 2004-11-02  Kjartan Maraas <as at gnome.org>
 
 	reviewed by: Wim Taymans, Ronald Bultje.

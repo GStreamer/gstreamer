@@ -106,13 +106,6 @@ various utility functions
 @def_return: 
 
 
-<!-- ##### MACRO GST_HAVE_UNALIGNED_ACCESS ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_READ_UINT8 ##### -->
 <para>
 

@@ -614,8 +614,6 @@ G_CONST_RETURN gchar *
 #define gst_debug_reset_log_function(void)		/* NOP */
 #define gst_debug_set_default_threshold(level)		/* NOP */
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
-#define gst_debug_category_set_threshold_for_name(name, level) /* NOP */
-#define gst_debug_category_unset_threshold_for_name(name) /* NOP */
 
 #define gst_debug_level_get_name(level)			("NONE")
 #define gst_debug_add_log_function(func,data)		(FALSE)
