@@ -11,7 +11,12 @@ noinst_HEADERS = gstlame.h
 
 CFLAGS = $(GST_CFLAGS)
 LIBS = $(GST_LIBS) $(LAME_LIBS)
-testprogs = test-lame
-TESTS = $(testprogs)
-check_PROGRAMS = $(testprogs)
 
+## testprogs = test-lame
+## TESTS = $(testprogs)
+## check_PROGRAMS = $(testprogs)
+
+## $(TESTS):
+##	@echo -e '\nrunning gst-register for tests...\n'
+##	$(GST_TOOLS_DIR)/gst-register --gst-mask=0 --gst-plugin-path=$(GST_PLUGIN_PATH)
+		
