@@ -1,5 +1,12 @@
 2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* sys/v4l/gstv4lsrc.c:
+	* sys/v4l/gstv4lsrc.h:
+	* sys/v4l/v4lsrc_calls.c:
+	  Probe less and cache it.  Fixes #159187.
+
+2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/videorate/gstvideorate.c:
 	  Handle all video formats. Fixes #159186. 
 
