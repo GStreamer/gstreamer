@@ -621,7 +621,7 @@ gst_colorspace_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "colorspace", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "colorspace", GST_RANK_PRIMARY - 1,
           GST_TYPE_COLORSPACE))
     return FALSE;
 
