@@ -73,15 +73,12 @@ static struct frmsize_s frmsizecod_tbl[] = {
       { 640 ,{1280 ,1394 ,1920 } }};
 
 /* elementfactory information */
-static GstElementDetails ac3parse_details = {
+static GstElementDetails ac3parse_details = GST_ELEMENT_DETAILS (
   "AC3 Parser",
   "Codec/Parser",
-  "LGPL",
   "Parses and frames AC3 audio streams, provides seek",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 /* GstAc3Parse signals and args */
 enum {
@@ -116,7 +113,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 	       )
 );
 
-static void	gst_ac3parse_class_init	  (GstAc3ParseClass *klass);
+static void	gst_ac3parse_class_init	  (gpointer g_class);
 static void	gst_ac3parse_init	  (GstAc3Parse  *ac3parse);
 
 static void	gst_ac3parse_chain	  (GstPad       *pad,
@@ -159,13 +156,22 @@ ac3parse_get_type (void)
 }
 
 static void
-gst_ac3parse_class_init (GstAc3ParseClass *klass)
+gst_ac3parse_class_init (gpointer g_class)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstAc3ParseClass *klass;
 
+  klass = (GstAc3ParseClass *)g_class;
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+	GST_PAD_TEMPLATE_GET(src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+	GST_PAD_TEMPLATE_GET(sink_factory));
+  gst_element_class_set_details (gstelement_class,
+      &ac3parse_details);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SKIP,
     g_param_spec_int("skip","skip","skip",
@@ -427,29 +433,26 @@ gst_ac3parse_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the ac3parse element */
-  factory = gst_element_factory_new("ac3parse",GST_TYPE_AC3PARSE,
-                                   &ac3parse_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
-
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET(src_factory));
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET(sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if(!gst_element_register(plugin, "ac3parse", GST_RANK_SECONDARY,
+      GST_TYPE_AC3PARSE)){
+    return FALSE;
+  }
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE(
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "ac3parse",
-  plugin_init
-};
+  "ac3 parsing",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
+
