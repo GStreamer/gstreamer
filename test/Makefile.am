@@ -19,7 +19,8 @@ ac3play_SOURCES = ac3play.c mem.c
 
 noinst_HEADERS = mem.h
 
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
+LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
+          $(top_builddir)/plugins/videosink/libvideosink.la
 
 INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
            $(shell gnome-config --cflags gnomeui)

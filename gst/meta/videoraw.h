@@ -21,9 +21,14 @@
 #ifndef __GST_META_VIDEORAW_H__
 #define __GST_META_VIDEORAW_H__
 
+#include <gst/gst.h>
+#include <gdk/gdk.h>
 #include <gst/gstmeta.h>
 
 typedef struct _MetaVideoRaw MetaVideoRaw;
+typedef struct _MetaDGA MetaDGA;
+typedef struct _MetaOverlay MetaOverlay;
+typedef struct _OverlayClip OverlayClip;
 
 enum {
   GST_META_VIDEORAW_RGB555,
@@ -36,15 +41,44 @@ enum {
   GST_META_VIDEORAW_YUV422
 };
 
+struct _OverlayClip {
+	int x1, x2, y1, y2;
+};
+
+struct _MetaDGA {
+	// the base address of the screen
+	void *base;
+	// the dimensions of the screen
+	int swidth, sheight;
+};
+
+struct _MetaOverlay {
+	// the position of the window
+	int wx, wy;
+	// a reference to the object sending overlay change events
+	GstObject *overlay_element;
+	// the number of overlay regions
+	int clip_count;
+	// the overlay regions of the display window
+	struct _OverlayClip overlay_clip[32];
+	
+	gboolean did_overlay;
+};
 
 struct _MetaVideoRaw {
   GstMeta meta;
 
   /* formatting information */
   gint format;
+	GdkVisual *visual;
+  // dimensions of the video buffer
   gint width;
   gint height;
+	// a pointer to the overlay info if the sink supports this
+	MetaOverlay *overlay_info;
+	// a pointer to the DGA info if the sink supports this
+	MetaDGA *dga_info;
 };
 
-#endif /* __GST_META_AUDIORAW_H__ */
+#endif /* __GST_META_VIDEORAW_H__ */
 

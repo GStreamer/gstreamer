@@ -59,8 +59,8 @@ int main(int argc,char *argv[]) {
 									gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"));
   gtk_object_set(GTK_OBJECT(appwindow),"allow_grow",TRUE,NULL);
   gtk_object_set(GTK_OBJECT(appwindow),"allow_shrink",TRUE,NULL);
-	gtk_signal_connect(GTK_OBJECT(appwindow),"size-request",
-						         GTK_SIGNAL_FUNC(resize),videosink);
+//	gtk_signal_connect(GTK_OBJECT(appwindow),"size-request",
+//						         GTK_SIGNAL_FUNC(resize),videosink);
 
   gtk_widget_show_all(appwindow);
 
