@@ -1,3 +1,9 @@
+2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_open),
+	(cdparanoia_event), (cdparanoia_query):
+	  Get rid of hideous lead-in.
+
 2004-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (setup_source):
