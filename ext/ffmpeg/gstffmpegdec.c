@@ -64,6 +64,8 @@ struct _GstFFMpegDec
   GstBuffer *pcache;
 
   GValue *par;		/* pixel aspect ratio of incoming data */
+
+  gint hurry_up, lowres;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -97,14 +99,9 @@ struct _GstFFMpegDecClassParams
 
 enum
 {
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
   ARG_0,
-  /* FILL ME */
+  ARG_LOWRES,
+  ARG_SKIPFRAME
 };
 
 static GHashTable *global_plugins;
@@ -125,6 +122,11 @@ static void gst_ffmpegdec_chain (GstPad * pad, GstData * data);
 
 static GstElementStateReturn gst_ffmpegdec_change_state (GstElement * element);
 
+static void gst_ffmpegdec_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_ffmpegdec_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+
 #if 0
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
@@ -135,7 +137,48 @@ static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_ffmpegdec_signals[LAST_SIGNAL] = { 0 }; */
+#define GST_FFMPEGDEC_TYPE_LOWRES (gst_ffmpegdec_lowres_get_type())
+static GType
+gst_ffmpegdec_lowres_get_type (void)
+{
+  static GType ffmpegdec_lowres_type = 0;
+
+  if (!ffmpegdec_lowres_type) {
+    static GEnumValue ffmpegdec_lowres[] = {
+      {0, "0", "full"},
+      {1, "1", "1/2-size"},
+      {2, "2", "1/4-size"},
+      {0, NULL, NULL},
+    };
+
+    ffmpegdec_lowres_type =
+        g_enum_register_static ("GstFFMpegDecLowres", ffmpegdec_lowres);
+  }
+
+  return ffmpegdec_lowres_type;
+}
+
+#define GST_FFMPEGDEC_TYPE_SKIPFRAME (gst_ffmpegdec_skipframe_get_type())
+static GType
+gst_ffmpegdec_skipframe_get_type (void)
+{
+  static GType ffmpegdec_skipframe_type = 0;
+
+  if (!ffmpegdec_skipframe_type) {
+    static GEnumValue ffmpegdec_skipframe[] = {
+      {0, "0", "Skip nothing"},
+      {1, "1", "Skip B-frames"},
+      {2, "2", "Skip IDCT/Dequantization"},
+      {5, "5", "Skip everything"},
+      {0, NULL, NULL},
+    };
+
+    ffmpegdec_skipframe_type =
+        g_enum_register_static ("GstFFMpegDecSkipFrame", ffmpegdec_skipframe);
+  }
+
+  return ffmpegdec_skipframe_type;
+}
 
 static void
 gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
@@ -183,15 +226,23 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 static void
 gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
+  g_object_class_install_property (gobject_class, ARG_SKIPFRAME,
+      g_param_spec_enum ("skip-frame", "Skip frames",
+          "Which types of frames to skip during decoding",
+          GST_FFMPEGDEC_TYPE_SKIPFRAME, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_LOWRES,
+      g_param_spec_enum ("lowres", "Low resolution",
+          "At which resolution to decode images",
+          GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
+
   gobject_class->dispose = gst_ffmpegdec_dispose;
+  gobject_class->set_property = gst_ffmpegdec_set_property;
+  gobject_class->get_property = gst_ffmpegdec_get_property;
   gstelement_class->change_state = gst_ffmpegdec_change_state;
 }
 
@@ -218,12 +269,11 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   /* some ffmpeg data */
   ffmpegdec->context = avcodec_alloc_context ();
   ffmpegdec->picture = avcodec_alloc_frame ();
-
   ffmpegdec->pctx = NULL;
   ffmpegdec->pcache = NULL;
-
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
+  ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
 
   GST_FLAG_SET (ffmpegdec, GST_ELEMENT_EVENT_AWARE);
 }
@@ -408,6 +458,10 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
 
+  /* for slow cpus */
+  ffmpegdec->context->lowres = ffmpegdec->lowres;
+  ffmpegdec->context->hurry_up = ffmpegdec->hurry_up;
+
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
@@ -571,6 +625,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
   switch (oclass->in_plugin->type) {
     case CODEC_TYPE_VIDEO:
+      ffmpegdec->picture->pict_type = -1; /* in case we skip frames */
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
       GST_DEBUG_OBJECT (ffmpegdec,
@@ -615,6 +670,17 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             ffmpegdec->context->frame_rate_base /
             ffmpegdec->context->frame_rate;
         ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
+      } else if (ffmpegdec->picture->pict_type != -1) {
+        /* update time for skip-frame */
+        if (ffmpegdec->picture->pict_type == FF_I_TYPE &&
+            GST_CLOCK_TIME_IS_VALID (*in_ts) &&
+            ffmpegdec->context->frame_rate > 0) {
+          ffmpegdec->next_ts = *in_ts;
+        } else {
+          ffmpegdec->next_ts += GST_SECOND *
+            ffmpegdec->context->frame_rate_base /
+            ffmpegdec->context->frame_rate;
+        }
       }
       break;
 
@@ -850,6 +916,46 @@ gst_ffmpegdec_change_state (GstElement * element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+static void
+gst_ffmpegdec_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
+
+  switch (prop_id) {
+    case ARG_LOWRES:
+      ffmpegdec->lowres = ffmpegdec->context->lowres =
+          g_value_get_enum (value);
+      break;
+    case ARG_SKIPFRAME:
+      ffmpegdec->hurry_up = ffmpegdec->context->hurry_up =
+          g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_ffmpegdec_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
+
+  switch (prop_id) {
+    case ARG_LOWRES:
+      g_value_set_enum (value, ffmpegdec->context->lowres);
+      break;
+    case ARG_SKIPFRAME:
+      g_value_set_enum (value, ffmpegdec->context->hurry_up);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 gboolean
