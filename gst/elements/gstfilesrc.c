@@ -745,10 +745,18 @@ gst_filesrc_srcpad_query (GstPad *pad, GstPadQueryType type,
       *value = src->filelen;
       break;
     case GST_PAD_QUERY_POSITION:
-      if (*format != GST_FORMAT_BYTES) {
-	return FALSE;
+      switch (*format) {
+	case GST_FORMAT_BYTES:
+          *value = src->curoffset;
+          break;
+	case GST_FORMAT_PERCENT:
+	  if (src->filelen == 0)
+	    return FALSE;
+          *value = src->curoffset * GST_FORMAT_PERCENT_MAX / src->filelen;
+          break;
+        default:
+	  return FALSE;
       }
-      *value = src->curoffset;
       break;
     default:
       return FALSE;

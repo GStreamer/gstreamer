@@ -40,6 +40,10 @@ typedef enum {
   GST_FORMAT_UNITS 	=  6
 } GstFormat;
 
+/* a percentage is always relative to 1000000 */
+#define	GST_FORMAT_PERCENT_MAX		1000000LL
+#define	GST_FORMAT_PERCENT_SCALE	10000LL
+
 typedef struct _GstFormatDefinition GstFormatDefinition;
 
 struct _GstFormatDefinition 
