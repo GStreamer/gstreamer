@@ -198,7 +198,8 @@ gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GP
  * gst_element_default_error:
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.
- * @error: the error message.
+ * @error: the #GError.
+ * @detailed: the detailed string.
  *
  * Adds a default error signal callback to an
  * element. The user data passed to the g_signal_connect is
@@ -2075,12 +2076,16 @@ gst_element_convert (GstElement *element,
 /**
  * gst_element_error:
  * @element: a #GstElement with the error.
+ * @file: file the error happened in (usually __FILE__)
+ * @function: function the error happened in or NULL if the function is not known (usually GST_FUNCTION)
+ * @line: line the error happened in (usually __LINE__)
  * @error: the printf-style string describing the error.
  * @...: the optional arguments for the string.
  *
  * signals an error condition on an element.
- * This function is used internally by elements.
+ * This function is used internally.
  * It results in the "error" signal.
+ * You normally want to use gst_element_error() instead.
  */
 void
 gst_element_error_detailed (GstElement *element, const gchar *file, const gchar *function,
