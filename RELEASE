@@ -1,14 +1,16 @@
 
-            GStreamer "GEPpiness is a warm gun" 0.4.1 released [1]
+                   GStreamer "Toes Wide Open" 0.4.2 released
 
    The  GStreamer  team  is  happy  to  announce  another  release of the
    GStreamer  streaming-media  framework. This release has mainly focused
    on  code  clean-up  and  rounding out of the features. Large chunks of
-   GStreamer  are  API  stable  at this point. In preparation of a stable
-   release,  we have also done a thorough license audit to make sure that
-   the licenses of all plug-ins are properly documented, and that as many
-   of  them  as  possible  are  available  under  the  LGPL  license that
-   GStreamer uses.
+   GStreamer are API stable at this point.
+
+   Our development currently focus on the following items:
+     * Increase stability and portability of scheduler
+     * Add more video editing specific plugins
+     * Improve plugins currently used by existing applications
+     * Create language bindings
 
    We are starting to have a really nice collection of applications under
    development using GStreamer. If you are looking for something specific
@@ -18,46 +20,40 @@ Updates and Enhancements
 
   General
 
-     * Further  work on the Graphical Pipeline Editor, getting to be very
-       stable and well working.
-     * KDE/Qt bindings created for easier creation of KDE applications on
-       top of GStreamer
-     * General  C++  bindings  for  use with gtkmm and other C++ projects
-       added to gst-bind module (in CVS)
-     * Effectv  and  virtualdub  based  plug-ins  relicensed  under  LGPL
-       (previously GPL)
-     * Some   manual   examples   updated   and  extracted  to  code  (in
-       examples/manual)
+     * First release made of the Graphical Pipeline Editor, getting to be
+       very stable and well working.
+     * License field added to factory details field.
+     * Further   work  on  Language  bindings,  with  Web  pages  set  up
+       describing them
+     * gst_caps_check_compatability    ->   gst_caps_is_always_compatible
+       [2]API change.
+     * Designing interactive plugins architecture begun.
+     * Cleanups for SPEC files for use with Red Hat 8
+     * GConf keys provided and extended to set input sources
+     * Converted FAQ to docbook and added it to build
 
   Core
 
-     * Many memleaks plugged
-     * Lots of code cleaning
-     * Many documentation improvements
-     * Small change to [2]Plugin API
-     * Removed  use of -Wall and -Werror from release tarball for non-gcc
-       compilers, more permanent solution upcoming.
-     * Old  schedulers  renamed:  we  now  use  basicomega as the default
-       scheduler,   with  the  others  being  fastomega,  basicwingo  and
-       fastwingo.
-
   Plug-ins
 
-     * BSD and Darwin cd playing
-     * New Mixermatrix plugin added
-     * New Flash plugin added
-     * RTP  plugin  moved  back to librtp and plugin now includes library
-       code (still experimental, check configure --help on how to enable)
-     * New v4l2 plugins
-     * Updated v4l plugins
-     * Improvements to dvdnav plugin
-     * iRadio support added to gnomevfs plugin
-     * Median video plugin updated and now working
-     * Fixed many major bugs in the gnome-vfs library
-     * Got rid of misleading warnings from plugins
-     * Avi muxer much improved
-     * Fix bug in mad plugin that caused loss of frames
-     * mp3 typefind fixed to properly handle id3v2 tags
+     * FLAC plugin updated to work with 1.0.4 release
+     * Metadata support and many fixes for Ogg Vorbis plugin
+     * Lots of fixes to v4l plugin
+     * New wavencoder plugin
+     * New shoutcast2 plugin
+     * RTP plugin enabled by default
+     * Mad plugin now also collects id3 metadata
+     * Lots of minor fixes, code cleanups and updates for new versions of
+       underlying libraries.
+     * Video editing plugins added
+     * Snapshot plugin part of default build
+     * Major updates to v4l plugin
+     * Major updates to avimux plugin
+     * New Mpegmuxer plugin
+     * Many fixes to cdparanoia plugin
+     * Playback of SVCD fixed
+     * Moved generic gstplay library from gst-player into gst-plugins
+     * Added first cut of new ASF demuxer (still not working)
 
 Known Issues
 
@@ -72,7 +68,7 @@ Known Issues
    doesn't use cothreads) is being developed.
 
    As  for  the  bugs  in  the  'omega'  schedulers, we did not feel they
-   warranted not releasing 0.4.1 as they are rather obscure. For instance
+   warranted not releasing 0.4.2 as they are rather obscure. For instance
    if  you are using Rhythmbox you will need to be playing over 500 songs
    nonstop to trigger it. You can choose a different scheduler by passing
    --scheduler=(name) to any GStreamer application.
@@ -114,43 +110,37 @@ Contributors to this release
 
      * Wim Taymans <wim.taymans(AT)chello.be>
      * Thomas Vander Stichele <thomas(AT)apestaart.org>
-     * Andy Wingo <wingo(AT)pobox.com>
-     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
-     * Cameron Hutchison <camh(AT)xdna.net>
-     * Iain Holmes <iain(AT)prettypeople.org>
-     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
 
   Plugins and Sample Applications
 
-     * Richard Boulton <richard(AT)tartarus.org>
+     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
+     * Andy Wingo <wingo(AT)pobox.com>
+     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
      * David Lehn <dlehn(AT)vt.edu>
-     * Jérémy Simon <jsimon13(AT)yahoo.fr>
+     * Cameron Hutchison <camh(AT)xdna.net>
      * Zeeshan Ali Khattak <zak147(AT)yahoo.com>
      * David Schleef <ds(AT)schleef.org>
-     * Charles Schmidt <cbschmid(AT)users.sourceforge.net>
-     * Goraxe <goraxe@ntlworld.com>
      * Colin Walters <walters(AT)gnu.org>
-     * Kristian Rietveld <kris(AT)gtk.org>
+     * Iain Holmes <iain(AT)prettypeople.org>
+     * Pedro CÃ´rte-Real <typo(AT)netcabo.pt>
+     * Jérémy Simon <jsimon13(AT)yahoo.fr>
+     * Julien Moutte <jmoutte(AT)electronic-group.com>
+     * Pedro CÃ´rte-Real <typo(AT)netcabo.pt>
+     * Owen Fraser-Green <owen(AT)discobabe.net>
 
   Misc
 
      * Christian Fredrik Kalager Schaller <Uraeus(AT)gnome.org>
      * Tim Jansen <tim.jansen(AT)kde.org>
      * Leif Morgan Johnson <lmjohns3(AT)eos.ncsu.edu>
+     * Martin Schulze <>
      * Christian Meyer <chrisime(AT)gnome.org>
-
-   [1]  It  is  a  little-known fact that the Beatles decided their track
-   listing  for their albums based on a process called the 'GEP' process.
-   After  some  initial  problems,  this worked very well. The only known
-   failure  of  this  process  happened when George Harrison commited the
-   out-of-place  'Within  You  Without  You'  to  Sergeant Pepper without
-   review  by  the  other  band members. This near split-up led to one of
-   their finest songs on the world-reknowned White Album. 
+     * Alp Toker <pokey(AT)linuxmail.org>
 
 References
 
    1. http://www.gstreamer.net/status/?category=2
-   2. http://www.geocrawler.com/lists/3/SourceForge/1504/0/9557296/
+   2. http://www.geocrawler.com/lists/3/SourceForge/1535/25/9758163/
    3. http://gstreamer.net/
    4. http://bugzilla.gnome.org/
    5. http://gstreamer.sf.net/
