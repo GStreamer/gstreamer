@@ -382,7 +382,8 @@ gst_object_default_deep_notify (GObject *object, GstObject *orig,
       str = g_strdup_value_contents (&value);
     }
     name = gst_object_get_path_string (orig);
-    g_print ("%s: %s = %s\n", name, pspec->name, str);
+/* This should not be done as a default regardless. */
+/*    g_print ("%s: %s = %s\n", name, pspec->name, str); */
     g_free (name);
     g_free (str);
     g_value_unset (&value);
