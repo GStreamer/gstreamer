@@ -66,6 +66,12 @@ _gst_buffer_initialize (void)
   GST_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
 }
 
+GType
+gst_buffer_get_type (void)
+{
+  return _gst_buffer_type;
+}
+
 static void
 _gst_buffer_free_to_pool (GstBuffer *buffer)
 {
@@ -417,6 +423,12 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
 
   return newbuf;
+}
+
+GType
+gst_buffer_pool_get_type (void)
+{
+  return _gst_buffer_pool_type;
 }
 
 /**

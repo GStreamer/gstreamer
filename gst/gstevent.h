@@ -183,11 +183,12 @@ struct _GstEvent {
 
 void 		_gst_event_initialize 		(void);
 	
+GType		gst_event_get_type		(void);
 GstEvent*	gst_event_new	        	(GstEventType type);
 
 /* refcounting */
-#define         gst_event_ref(ev)             	gst_data_ref (GST_DATA (ev))
-#define         gst_event_ref_by_count(ev,c)  	gst_data_ref_by_count (GST_DATA (ev), c)
+#define         gst_event_ref(ev)             	GST_EVENT (gst_data_ref (GST_DATA (ev)))
+#define         gst_event_ref_by_count(ev,c)  	GST_EVENT (gst_data_ref_by_count (GST_DATA (ev), c))
 #define         gst_event_unref(ev)           	gst_data_unref (GST_DATA (ev))
 /* copy buffer */
 #define         gst_event_copy(ev)         	GST_EVENT (gst_data_copy (GST_DATA (ev)))

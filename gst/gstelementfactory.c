@@ -112,6 +112,7 @@ gst_element_details_free (GstElementDetails *dp)
 {
   g_free (dp->longname);
   g_free (dp->klass);
+  g_free (dp->license);
   g_free (dp->description);
   g_free (dp->version);
   g_free (dp->author);

@@ -118,6 +118,7 @@ struct _GstBufferPool {
 };
 
 /* allocation */
+GType		gst_buffer_get_type		(void);
 GstBuffer*	gst_buffer_new	 		(void);
 GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 
@@ -157,6 +158,7 @@ void		gst_buffer_default_free 	(GstBuffer *buffer);
 GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
 
 /* creating a new buffer pools */
+GType		gst_buffer_pool_get_type		(void);
 GstBufferPool*	gst_buffer_pool_new			(GstDataFreeFunction free,
 							 GstDataCopyFunction copy,
 							 GstBufferPoolBufferNewFunction buffer_new,

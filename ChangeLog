@@ -1,3 +1,13 @@
+2003-03-29  Martin Schulze  <MHL.Schulze@t-online.de>
+
+	* gst/gstelementfactory.c: Add "g_free (dp->license)" in
+	gst_element_details_free().
+	* gst/gstevent.[ch]: Add function gst_event_get_type() to
+	support c++ language binding. Make macros gst_event_ref[_by_count]
+	return a GstEvent* instead of a GstData*.
+	* gst/gstbuffer.[ch]: Add functions gst_buffer[_pool]_get_type()
+	to support c++ language binding.
+
 2003-03-16  Christian Meyer  <chrisime@gnome.org>
 
 	* tools/gst-inspect.c
@@ -3102,10 +3112,10 @@
 2001-06-02 22:57  wtay
 
 	* plugins/cdparanoia/: cdparanoia.c, cdparanoia.h: Applied the
-	patch from Apoc: š _ Add properties cur_sector read only ( get
-	current sector ) š _ Add properties last_track read only ( last
-	track of the cd ) š _ Add properties cur_track read only ( get the
-	current track ) š _ Properties end_track writeable ( last track to
+	patch from Apoc: Âš _ Add properties cur_sector read only ( get
+	current sector ) Âš _ Add properties last_track read only ( last
+	track of the cd ) Âš _ Add properties cur_track read only ( get the
+	current track ) Âš _ Properties end_track writeable ( last track to
 	rip/play )
 
 2001-06-02 22:52  wtay

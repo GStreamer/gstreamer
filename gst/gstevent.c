@@ -115,6 +115,12 @@ gst_event_masks_contains (const GstEventMask *masks, GstEventMask *mask)
   return FALSE;
 }
 
+GType
+gst_event_get_type (void)
+{
+  return _gst_event_type;
+}
+
 /**
  * gst_event_new:
  * @type: The type of the new event
