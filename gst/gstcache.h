@@ -25,7 +25,7 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstformat.h>
-#include <gst/gstcaps.h>
+#include <gst/gstpluginfeature.h>
 
 G_BEGIN_DECLS
 
@@ -115,7 +115,10 @@ struct _GstCacheGroup {
   gint peergroup;
 };
 
-typedef gboolean 	(*GstCacheWriterResolver) 	(GstCache *cache, 
+typedef gboolean 	(*GstCacheFilter)	 	(GstCache *cache, 
+							 GstCacheEntry *entry);
+
+typedef gboolean 	(*GstCacheResolver) 		(GstCache *cache, 
 						   	 GstObject *writer, 
 						   	 gint *writer_id,
 						   	 gchar **writer_string,
@@ -127,8 +130,11 @@ struct _GstCache {
   GstCacheGroup		*curgroup;
   gint			 maxgroup;
 
-  GstCacheWriterResolver resolver;
-  gpointer		 user_data;
+  GstCacheResolver 	 resolver;
+  gpointer		 resolver_user_data;
+
+  GstCacheFilter	 filter;
+  gpointer		 filter_user_data;
 
   GHashTable		*writers;
   gint			 last_id;
@@ -142,17 +148,11 @@ struct _GstCacheClass {
 
   /* abstract methods */
   void		(*add_entry)		(GstCache *cache, GstCacheEntry *entry);
-  void		(*remove_entry)		(GstCache *cache, GstCacheEntry *entry);
-  void		(*modify_entry)		(GstCache *cache, GstCacheEntry *oldentry, 
-		        	 	 GstCacheEntry *new_entry);
 
   GstCacheEntry* (*get_entry)		(GstCache *cache); 
 
   /* signals */
   void		(*entry_added)		(GstCache *cache, GstCacheEntry *entry);
-  void		(*entry_removed)	(GstCache *cache, GstCacheEntry *entry);
-  void		(*entry_modified)	(GstCache *cache, GstCacheEntry *oldentry, 
-		        		 GstCacheEntry *new_entry);
 };
 
 GType			gst_cache_get_type		(void);
@@ -166,6 +166,11 @@ void			gst_cache_set_certainty		(GstCache *cache,
 							 GstCacheCertainty certainty);
 GstCacheCertainty	gst_cache_get_certainty		(GstCache *cache);
 
+void			gst_cache_set_filter		(GstCache *cache, 
+		                                         GstCacheFilter filter, gpointer user_data);
+void			gst_cache_set_resolver		(GstCache *cache, 
+		                                         GstCacheResolver resolver, gpointer user_data);
+
 gboolean 		gst_cache_get_writer_id 	(GstCache *cache, GstObject *writer, gint *id);
 
 GstCacheEntry*		gst_cache_add_format		(GstCache *cache, gint id, GstFormat format); 
@@ -176,6 +181,45 @@ GstCacheEntry*		gst_cache_add_object		(GstCache *cache, gint id, gchar *key,
 GstCacheEntry*		gst_cache_add_id		(GstCache *cache, gint id,
 							 gchar *description); 
 
+/*
+ * creating caches
+ *
+ */
+#define GST_TYPE_CACHE_FACTORY \
+  (gst_cache_factory_get_type())
+#define GST_CACHE_FACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CACHE_FACTORY,GstCacheFactory))
+#define GST_CACHE_FACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CACHE_FACTORY,GstCacheFactoryClass))
+#define GST_IS_CACHE_FACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CACHE_FACTORY))
+#define GST_IS_CACHE_FACTORY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CACHE_FACTORY))
+
+typedef struct _GstCacheFactory GstCacheFactory;
+typedef struct _GstCacheFactoryClass GstCacheFactoryClass;
+
+struct _GstCacheFactory {
+  GstPluginFeature feature;
+	    
+  gchar *longdesc;            /* long description of the cache (well, don't overdo it..) */
+  GType type;                 /* unique GType of the cache */
+};
+
+struct _GstCacheFactoryClass {
+  GstPluginFeatureClass parent; 
+};
+
+GType 			gst_cache_factory_get_type 	(void);
+
+GstCacheFactory*	gst_cache_factory_new 		(const gchar *name, 
+							 const gchar *longdesc, GType type);
+void 			gst_cache_factory_destroy	(GstCacheFactory *factory);
+
+GstCacheFactory*	gst_cache_factory_find		(const gchar *name);
+
+GstCache*		gst_cache_factory_create 	(GstCacheFactory *factory);
+GstCache*		gst_cache_factory_make   	(const gchar *name);
 
 G_END_DECLS
 
