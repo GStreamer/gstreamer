@@ -1,9 +1,11 @@
-SUBDIRS = include gst libs plugins tools test tests examples docs
-
 # if libglade is present, build the player and editor
 if HAVE_LIBGLADE_GNOME
-SUBDIRS += gstplay editor
+SUBDIRS_LGG = gstplay editor
+else
+SUBDIRS_LGG =
 endif
+
+SUBDIRS = include gst libs plugins tools test tests examples docs $(SUBDIRS_LGG)
 
 # These are all the possible subdirs
 DIST_SUBDIRS = include gst libs plugins tools test tests examples docs gstplay editor
