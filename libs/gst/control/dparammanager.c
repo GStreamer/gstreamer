@@ -636,7 +636,7 @@ gst_dpman_set_parent (GstDParamManager * dpman, GstElement * parent)
  * Fetch the GstElement that parameters are handled by this manager.
  *
  * Returns: the GstDParamManager which belongs to this element or NULL
- * if it doesn't exist
+ * if it doesn't exist. Do not call g_object_unref() on it.
  */
 GstDParamManager *
 gst_dpman_get_manager (GstElement * parent)
@@ -647,6 +647,7 @@ gst_dpman_get_manager (GstElement * parent)
   g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
 
   dpman = (GstDParamManager *) g_hash_table_lookup (_element_registry, parent);
+  /* FIXME: shouldn't this be g_object_ref(dpman); */
   return dpman;
 }
 

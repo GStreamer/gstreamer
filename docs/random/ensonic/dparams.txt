@@ -13,6 +13,9 @@ $Id$
     dparam_mode_synchronous
     dparam_mode_asynchronous
     dparam_mode_disabled
+  * split dparam manager api
+    * plugin api
+    * application api
 
 * documentation
   * state of unitconvert

@@ -8,6 +8,8 @@
 # <SUBSECTION Private>
 # </SECTION>
 
+<INCLUDE>gst/gst.h</INCLUDE>
+
 <SECTION>
 <FILE>gst</FILE>
 <TITLE>Gst</TITLE>

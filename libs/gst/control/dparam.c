@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *
- * gstdparam.c: Dynamic Parameter functionality
+ * gstdparam.c: Dynamic Parameter
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

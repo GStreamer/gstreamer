@@ -1,3 +1,26 @@
+2005-01-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* docs/libs/tmpl/gstdparam.sgml:
+	* docs/libs/tmpl/gstdplinint.sgml:
+	* docs/libs/tmpl/gstdpman.sgml:
+	* docs/libs/tmpl/gstdpsmooth.sgml:
+	* docs/libs/tmpl/gstputbits.sgml:
+	* docs/libs/tmpl/gstunitconvert.sgml:
+	* libs/gst/control/dparam.c:
+	* libs/gst/control/dparam.h:
+	* libs/gst/control/dparammanager.c:
+	(gst_dpman_add_required_dparam_callback),
+	(gst_dpman_add_required_dparam_direct),
+	(gst_dpman_add_required_dparam_array),
+	(gst_dpman_remove_required_dparam), (gst_dpman_attach_dparam),
+	(gst_dpman_get_dparam), (gst_dpman_get_dparam_type),
+	(gst_dpman_get_manager)
+    restructured DParam docs
+
 2005-01-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-element-check.m4:
