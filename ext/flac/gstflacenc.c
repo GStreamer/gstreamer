@@ -78,12 +78,13 @@ static GstElementStateReturn
 			gst_flacenc_change_state 	(GstElement *element);
 
 static FLAC__StreamEncoderWriteStatus 
-			gst_flacenc_write_callback 	(const FLAC__StreamEncoder *encoder, 
+			gst_flacenc_write_callback 	(const FLAC__SeekableStreamEncoder *encoder, 
 							 const FLAC__byte buffer[], unsigned bytes, 
 				    			 unsigned samples, unsigned current_frame, 
 							 void *client_data);
-static void 		gst_flacenc_metadata_callback 	(const FLAC__StreamEncoder *encoder, 
-							 const FLAC__StreamMetadata *metadata, 
+static FLAC__SeekableStreamEncoderSeekStatus
+			gst_flacenc_seek_callback       (const FLAC__SeekableStreamEncoder *encoder,
+			                                 FLAC__uint64 absolute_byte_offset,
 							 void *client_data);
 
 static GstElementClass *parent_class = NULL;
@@ -272,15 +273,35 @@ gst_flacenc_init (FlacEnc *flacenc)
 
   GST_FLAG_SET (flacenc, GST_ELEMENT_EVENT_AWARE);
 
-  flacenc->encoder = FLAC__stream_encoder_new();
+  flacenc->encoder = FLAC__seekable_stream_encoder_new();
 
-  FLAC__stream_encoder_set_write_callback (flacenc->encoder, 
+  FLAC__seekable_stream_encoder_set_write_callback (flacenc->encoder, 
 		                        gst_flacenc_write_callback);
-  FLAC__stream_encoder_set_metadata_callback (flacenc->encoder, 
-		                        gst_flacenc_metadata_callback);
-  FLAC__stream_encoder_set_client_data (flacenc->encoder, 
+  FLAC__seekable_stream_encoder_set_seek_callback (flacenc->encoder, 
+		                        gst_flacenc_seek_callback);
+  					
+  FLAC__seekable_stream_encoder_set_client_data (flacenc->encoder, 
 		                        flacenc);
 
+  flacenc->metadata = GST_CAPS_NEW (
+                  "flacenc_metadata",
+                  "application/x-gst-metadata",
+                    "DESCRIPTION",      GST_PROPS_STRING ("Track encoded with GStreamer"),
+                    "DATE",             GST_PROPS_STRING (""),
+                    "TRACKNUMBER",      GST_PROPS_STRING (""),
+                    "TITLE",            GST_PROPS_STRING (""),
+                    "ARTIST",           GST_PROPS_STRING (""),
+                    "ALBUM",            GST_PROPS_STRING (""),
+                    "GENRE",            GST_PROPS_STRING (""),
+                    "VERSION",          GST_PROPS_STRING (""),
+                    "COPYRIGHT",        GST_PROPS_STRING (""),
+                    "LICENSE",          GST_PROPS_STRING (""),
+                    "ORGANISATION",     GST_PROPS_STRING (""),
+                    "LOCATION",         GST_PROPS_STRING (""),
+                    "CONTACT",          GST_PROPS_STRING (""),
+                    "ISRC",             GST_PROPS_STRING ("")
+                  );
+		  
   flacenc->negotiated = FALSE;
   flacenc->first = TRUE;
   flacenc->first_buf = NULL;
@@ -293,7 +314,7 @@ gst_flacenc_dispose (GObject *object)
 {
   FlacEnc *flacenc = GST_FLACENC (object);
 
-  FLAC__stream_encoder_delete (flacenc->encoder);
+  FLAC__seekable_stream_encoder_delete (flacenc->encoder);
   
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -311,12 +332,12 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "channels", &flacenc->channels);
   gst_caps_get_int (caps, "depth", &flacenc->depth);
   gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
-
-  FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, 
+  
+  FLAC__seekable_stream_encoder_set_bits_per_sample (flacenc->encoder, 
 		  			    flacenc->depth);
-  FLAC__stream_encoder_set_sample_rate (flacenc->encoder, 
+  FLAC__seekable_stream_encoder_set_sample_rate (flacenc->encoder, 
 		  			flacenc->sample_rate);
-  FLAC__stream_encoder_set_channels (flacenc->encoder, 
+  FLAC__seekable_stream_encoder_set_channels (flacenc->encoder, 
 		  		     flacenc->channels);
 
   flacenc->negotiated = TRUE;
@@ -331,9 +352,9 @@ gst_flacenc_update_quality (FlacEnc *flacenc, gint quality)
 
 #define DO_UPDATE(name, val, str) 	                    	\
   G_STMT_START {                                                \
-    if (FLAC__stream_encoder_get_##name (flacenc->encoder) != 	\
+    if (FLAC__seekable_stream_encoder_get_##name (flacenc->encoder) != 	\
         flacenc_params[quality].val) {        			\
-      FLAC__stream_encoder_set_##name (flacenc->encoder, 	\
+      FLAC__seekable_stream_encoder_set_##name (flacenc->encoder, 	\
           flacenc_params[quality].val);				\
       g_object_notify (G_OBJECT (flacenc), str);                \
     }                                                           \
@@ -360,15 +381,36 @@ gst_flacenc_update_quality (FlacEnc *flacenc, gint quality)
   return TRUE;
 }
 
+static FLAC__SeekableStreamEncoderSeekStatus
+gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder *encoder,
+			   FLAC__uint64 absolute_byte_offset,
+			   void *client_data)
+{
+FlacEnc *flacenc;
+GstEvent *event;
+
+  flacenc = GST_FLACENC (client_data);
+
+  if (flacenc->stopped) 
+    return FLAC__STREAM_ENCODER_OK;
+
+  event = gst_event_new_seek ((GstSeekType)(int)(GST_FORMAT_BYTES | GST_SEEK_METHOD_SET), absolute_byte_offset); 
+
+  if (event)
+    gst_pad_push (flacenc->srcpad, GST_BUFFER (event));
+ 
+  return  FLAC__STREAM_ENCODER_OK;
+}
+
 static FLAC__StreamEncoderWriteStatus 
-gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder, 
+gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder *encoder, 
 			    const FLAC__byte buffer[], unsigned bytes, 
 			    unsigned samples, unsigned current_frame, 
 			    void *client_data)
 {
   FlacEnc *flacenc;
   GstBuffer *outbuf;
-
+  
   flacenc = GST_FLACENC (client_data);
 
   if (flacenc->stopped) 
@@ -389,55 +431,45 @@ gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder,
   return FLAC__STREAM_ENCODER_OK;
 }
 
-static void 
-gst_flacenc_metadata_callback (const FLAC__StreamEncoder *encoder, 
-		               const FLAC__StreamMetadata *metadata, 
-			       void *client_data)
+static void
+gst_flacenc_set_metadata (FlacEnc *flacenc, GstCaps *caps)
 {
-  GstEvent *event;
-  FlacEnc *flacenc;
+  guint indice;
+  guint comments;
+  const gchar *meta_types[] = { "TITLE", "VERSION", "ALBUM", "TRACKNUMBER",
+                                "ARTIST", "PERFORMER", "COPYRIGHT", "LICENSE",
+                                "ORGANISATION", "DESCRIPTION", "GENRE", "DATE",
+                                "LOCATION", "CONTACT", "ISRC", NULL };
 
-  flacenc = GST_FLACENC (client_data);
+  g_return_if_fail (flacenc != NULL);
 
-  if (flacenc->stopped) 
-    return;
+  flacenc->meta = g_malloc (sizeof (FLAC__StreamMetadata **));
 
-  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, (gint64) 0, GST_FORMAT_UNDEFINED);
-  gst_pad_push (flacenc->srcpad, GST_BUFFER (event));
+  flacenc->meta[0] = FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
+  
+  for ( indice = 0, comments=0; meta_types[indice] != NULL; indice++) {
+    if (gst_caps_has_property(caps, meta_types[indice])) {
+      const gchar *entry;
+      gchar *data;
+      FLAC__StreamMetadata_VorbisComment_Entry commment_entry;
+      
+      gst_caps_get_string(caps, (gchar *)meta_types[indice], &entry);
 
-  /* FIXME: the first buffer seems to be 4 bytes only, so this'll never be true */
-  if (flacenc->first_buf && GST_BUFFER_SIZE (flacenc->first_buf) >= 42) {
-    const FLAC__uint64 samples = metadata->data.stream_info.total_samples;
-    const unsigned min_framesize = metadata->data.stream_info.min_framesize;
-    const unsigned max_framesize = metadata->data.stream_info.max_framesize;
+      if (!strcmp (entry, ""))
+	continue;
+   
+      data = g_strdup_printf("%s=%s", meta_types[indice], entry);
+      commment_entry.length = GUINT32_TO_LE (strlen(entry) + strlen(meta_types[indice]) + 1);
+      commment_entry.entry  =  g_convert (data, commment_entry.length, "UTF8", "ISO-8859-1", NULL, NULL, NULL);
 
-    GstBuffer *outbuf = gst_buffer_copy_on_write (flacenc->first_buf);
-    guint8 *data = GST_BUFFER_DATA (outbuf);
-
-    /* this looks evil but is actually how one is supposed to write
-     * the stream stats according to the FLAC examples */
-
-    memcpy (&data[26], metadata->data.stream_info.md5sum, 16);
-    
-    data[21] = (data[21] & 0xf0) | 
-	       (FLAC__byte)((samples >> 32) & 0x0f);
-    data[22] = (FLAC__byte)((samples >> 24) & 0xff);
-    data[23] = (FLAC__byte)((samples >> 16) & 0xff);
-    data[24] = (FLAC__byte)((samples >> 8 ) & 0xff);
-    data[25] = (FLAC__byte)((samples      ) & 0xff);
-
-    data[12] = (FLAC__byte)((min_framesize >> 16) & 0xFF);
-    data[13] = (FLAC__byte)((min_framesize >> 8 ) & 0xFF);
-    data[14] = (FLAC__byte)((min_framesize      ) & 0xFF);
-
-    data[15] = (FLAC__byte)((max_framesize >> 16) & 0xFF);
-    data[16] = (FLAC__byte)((max_framesize >> 8 ) & 0xFF);
-    data[17] = (FLAC__byte)((max_framesize      ) & 0xFF);
-
-    flacenc->first_buf = NULL;
-    gst_pad_push (flacenc->srcpad, outbuf);
+      FLAC__metadata_object_vorbiscomment_insert_comment (flacenc->meta[0], comments++, commment_entry, TRUE);
+    }
   }
+
+  FLAC__seekable_stream_encoder_set_metadata(flacenc->encoder, flacenc->meta, 1);
 }
+
+
 
 static void
 gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
@@ -458,7 +490,7 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	FLAC__stream_encoder_finish(flacenc->encoder);
+	FLAC__seekable_stream_encoder_finish(flacenc->encoder);
       default:
 	gst_pad_event_default (pad, event);
         break;
@@ -477,12 +509,13 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
   insize = GST_BUFFER_SIZE (buf);
   samples = insize / ((depth+7)>>3);
 
-  if (FLAC__stream_encoder_get_state (flacenc->encoder) == 
-		  FLAC__STREAM_ENCODER_UNINITIALIZED) 
+  if (FLAC__seekable_stream_encoder_get_state (flacenc->encoder) == 
+		  FLAC__SEEKABLE_STREAM_ENCODER_UNINITIALIZED) 
   {
-    FLAC__StreamEncoderState state;
+    FLAC__SeekableStreamEncoderState state;
 
-    state = FLAC__stream_encoder_init (flacenc->encoder);
+    gst_flacenc_set_metadata (flacenc, flacenc->metadata);
+    state = FLAC__seekable_stream_encoder_init (flacenc->encoder);
     if (state != FLAC__STREAM_ENCODER_OK) {
       gst_element_error (GST_ELEMENT (flacenc),
 		         "could not initialize encoder (wrong parameters?)");
@@ -497,6 +530,7 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
   if (depth == 8) {
     gint8 *indata = (gint8 *) GST_BUFFER_DATA (buf);
     
+
     for (i=0; i<samples; i++) {
       data[i] = (FLAC__int32) *indata++;
     }
@@ -511,7 +545,7 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
 
   gst_buffer_unref(buf);
 
-  res = FLAC__stream_encoder_process_interleaved (flacenc->encoder, 
+  res = FLAC__seekable_stream_encoder_process_interleaved (flacenc->encoder, 
 	                      (const FLAC__int32 *) data, samples / flacenc->channels);
 
   g_free (flacenc->data);
@@ -535,51 +569,51 @@ gst_flacenc_set_property (GObject *object, guint prop_id,
       gst_flacenc_update_quality (this, g_value_get_enum (value));
       break;
     case ARG_STREAMABLE_SUBSET:
-      FLAC__stream_encoder_set_streamable_subset (this->encoder, 
+      FLAC__seekable_stream_encoder_set_streamable_subset (this->encoder, 
 	                   g_value_get_boolean (value));
       break;
     case ARG_MID_SIDE_STEREO:
-      FLAC__stream_encoder_set_do_mid_side_stereo (this->encoder, 
+      FLAC__seekable_stream_encoder_set_do_mid_side_stereo (this->encoder, 
 	                   g_value_get_boolean (value));
       break;
     case ARG_LOOSE_MID_SIDE_STEREO:
-      FLAC__stream_encoder_set_loose_mid_side_stereo (this->encoder, 
+      FLAC__seekable_stream_encoder_set_loose_mid_side_stereo (this->encoder, 
 	                   g_value_get_boolean (value));
       break;
     case ARG_BLOCKSIZE:
-      FLAC__stream_encoder_set_blocksize (this->encoder, 
+      FLAC__seekable_stream_encoder_set_blocksize (this->encoder, 
 	                   g_value_get_uint (value));
       break;
     case ARG_MAX_LPC_ORDER:
-      FLAC__stream_encoder_set_max_lpc_order (this->encoder, 
+      FLAC__seekable_stream_encoder_set_max_lpc_order (this->encoder, 
 	                   g_value_get_uint (value));
       break;
     case ARG_QLP_COEFF_PRECISION:
-      FLAC__stream_encoder_set_qlp_coeff_precision (this->encoder, 
+      FLAC__seekable_stream_encoder_set_qlp_coeff_precision (this->encoder, 
 	                   g_value_get_uint (value));
       break;
     case ARG_QLP_COEFF_PREC_SEARCH:
-      FLAC__stream_encoder_set_do_qlp_coeff_prec_search (this->encoder, 
+      FLAC__seekable_stream_encoder_set_do_qlp_coeff_prec_search (this->encoder, 
 	                   g_value_get_boolean (value));
       break;
     case ARG_ESCAPE_CODING:
-      FLAC__stream_encoder_set_do_escape_coding (this->encoder, 
+      FLAC__seekable_stream_encoder_set_do_escape_coding (this->encoder, 
 	                   g_value_get_boolean (value));
       break;
     case ARG_EXHAUSTIVE_MODEL_SEARCH:
-      FLAC__stream_encoder_set_do_exhaustive_model_search (this->encoder, 
+      FLAC__seekable_stream_encoder_set_do_exhaustive_model_search (this->encoder, 
 	                   g_value_get_boolean (value));
       break;
     case ARG_MIN_RESIDUAL_PARTITION_ORDER:
-      FLAC__stream_encoder_set_min_residual_partition_order (this->encoder, 
+      FLAC__seekable_stream_encoder_set_min_residual_partition_order (this->encoder, 
 	                   g_value_get_uint (value));
       break;
     case ARG_MAX_RESIDUAL_PARTITION_ORDER:
-      FLAC__stream_encoder_set_max_residual_partition_order (this->encoder, 
+      FLAC__seekable_stream_encoder_set_max_residual_partition_order (this->encoder, 
 	                   g_value_get_uint (value));
       break;
     case ARG_RICE_PARAMETER_SEARCH_DIST:
-      FLAC__stream_encoder_set_rice_parameter_search_dist (this->encoder, 
+      FLAC__seekable_stream_encoder_set_rice_parameter_search_dist (this->encoder, 
 		                                 g_value_get_uint (value));
       break;
     default:
@@ -602,51 +636,51 @@ gst_flacenc_get_property (GObject *object, guint prop_id,
       break;
     case ARG_STREAMABLE_SUBSET:
       g_value_set_boolean (value, 
-	      FLAC__stream_encoder_get_streamable_subset (this->encoder));
+	      FLAC__seekable_stream_encoder_get_streamable_subset (this->encoder));
       break;
     case ARG_MID_SIDE_STEREO:
       g_value_set_boolean (value, 
-	      FLAC__stream_encoder_get_do_mid_side_stereo (this->encoder));
+	      FLAC__seekable_stream_encoder_get_do_mid_side_stereo (this->encoder));
       break;
     case ARG_LOOSE_MID_SIDE_STEREO:
       g_value_set_boolean (value, 
-	      FLAC__stream_encoder_get_loose_mid_side_stereo (this->encoder));
+	      FLAC__seekable_stream_encoder_get_loose_mid_side_stereo (this->encoder));
       break;
     case ARG_BLOCKSIZE:
       g_value_set_uint (value, 
-	      FLAC__stream_encoder_get_blocksize (this->encoder));
+	      FLAC__seekable_stream_encoder_get_blocksize (this->encoder));
       break;
     case ARG_MAX_LPC_ORDER:
       g_value_set_uint (value, 
-	      FLAC__stream_encoder_get_max_lpc_order (this->encoder));
+	      FLAC__seekable_stream_encoder_get_max_lpc_order (this->encoder));
       break;
     case ARG_QLP_COEFF_PRECISION:
       g_value_set_uint (value, 
-	      FLAC__stream_encoder_get_qlp_coeff_precision (this->encoder));
+	      FLAC__seekable_stream_encoder_get_qlp_coeff_precision (this->encoder));
       break;
     case ARG_QLP_COEFF_PREC_SEARCH:
       g_value_set_boolean (value, 
-	      FLAC__stream_encoder_get_do_qlp_coeff_prec_search (this->encoder));
+	      FLAC__seekable_stream_encoder_get_do_qlp_coeff_prec_search (this->encoder));
       break;
     case ARG_ESCAPE_CODING:
       g_value_set_boolean (value, 
-	      FLAC__stream_encoder_get_do_escape_coding (this->encoder));
+	      FLAC__seekable_stream_encoder_get_do_escape_coding (this->encoder));
       break;
     case ARG_EXHAUSTIVE_MODEL_SEARCH:
       g_value_set_boolean (value, 
-	      FLAC__stream_encoder_get_do_exhaustive_model_search (this->encoder));
+	      FLAC__seekable_stream_encoder_get_do_exhaustive_model_search (this->encoder));
       break;
     case ARG_MIN_RESIDUAL_PARTITION_ORDER:
       g_value_set_uint (value, 
-	      FLAC__stream_encoder_get_min_residual_partition_order (this->encoder));
+	      FLAC__seekable_stream_encoder_get_min_residual_partition_order (this->encoder));
       break;
     case ARG_MAX_RESIDUAL_PARTITION_ORDER:
       g_value_set_uint (value, 
-	      FLAC__stream_encoder_get_max_residual_partition_order (this->encoder));
+	      FLAC__seekable_stream_encoder_get_max_residual_partition_order (this->encoder));
       break;
     case ARG_RICE_PARAMETER_SEARCH_DIST:
       g_value_set_uint (value, 
-	      FLAC__stream_encoder_get_rice_parameter_search_dist (this->encoder));
+	      FLAC__seekable_stream_encoder_get_rice_parameter_search_dist (this->encoder));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -669,10 +703,10 @@ gst_flacenc_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      if (FLAC__stream_encoder_get_state (flacenc->encoder) != 
+      if (FLAC__seekable_stream_encoder_get_state (flacenc->encoder) != 
 		        FLAC__STREAM_ENCODER_UNINITIALIZED) {
         flacenc->stopped = TRUE;
-        FLAC__stream_encoder_finish (flacenc->encoder);
+        FLAC__seekable_stream_encoder_finish (flacenc->encoder);
       }
       flacenc->negotiated = FALSE;
       if (flacenc->first_buf)
@@ -680,6 +714,8 @@ gst_flacenc_change_state (GstElement *element)
       flacenc->first_buf = NULL;
       g_free (flacenc->data);
       flacenc->data = NULL;
+      FLAC__metadata_object_delete (flacenc->meta[0]);
+      g_free (flacenc->meta);
       break;
     case GST_STATE_READY_TO_NULL:
     default:
