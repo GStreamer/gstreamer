@@ -36,21 +36,25 @@ idle_func (gpointer data)
 }
 
 static void
-property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
+property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec, gchar **excluded_props)
 {
   GValue value = { 0, }; /* the important thing is that value.type = 0 */
   gchar *str = 0;
 
-  /* let's not print these out for the offset property... */
   if (pspec->flags & G_PARAM_READABLE) {
-    if (strcmp (pspec->name, "offset") != 0) {
-      g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-      g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-      str = g_strdup_value_contents (&value);
-      g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
-      g_free (str);
-      g_value_unset(&value);
+    /* let's not print these out for excluded properties... */
+    while (excluded_props != NULL && *excluded_props != NULL)
+    {
+      if (strcmp (pspec->name, *excluded_props) == 0)
+	return;
+      excluded_props++;
     }
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
+    str = g_strdup_value_contents (&value);
+    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
+    g_value_unset(&value);
   } else {
     g_warning ("Parameter not readable. What's up with that?");
   }
@@ -129,12 +133,15 @@ xmllaunch_parse_cmdline (const gchar **argv)
 int
 main(int argc, char *argv[])
 {
-/* options */
+  /* options */
   gboolean silent = FALSE;
   gchar *savefile = NULL;
+  gchar *exclude_args = NULL;
   struct poptOption options[] = {
     {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   0,
      "do not output status information", NULL},
+    {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
+     "do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
      "save xml representation of pipeline to FILE and exit", "FILE"},
     POPT_TABLEEND
@@ -166,7 +173,10 @@ main(int argc, char *argv[])
   }
   
   if (!silent)
-    g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  {
+    gchar **exclude_list = g_strsplit (exclude_args, ",", 0);
+    g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), exclude_list);
+  }
   g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
   
 #ifndef GST_DISABLE_LOADSAVE
