@@ -75,10 +75,7 @@ enum
 };
 
 GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
-#define DEBUG(...) \
-    GST_CAT_LEVEL_LOG (ladspa_debug, GST_LEVEL_DEBUG, NULL, __VA_ARGS__)
-#define DEBUG_OBJ(obj,...) \
-    GST_CAT_LEVEL_LOG (ladspa_debug, GST_LEVEL_DEBUG, obj, __VA_ARGS__)
+#define GST_CAT_DEFAULT ladspa_debug
 
 static void
 gst_ladspa_base_init (GstLADSPAClass * klass)
@@ -189,7 +186,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
       klass->numcontrols++;
   }
 
-  DEBUG ("ladspa element class: init %s with %d sink, %d src, %d control\n",
+  GST_DEBUG ("ladspa element class: init %s with %d sink, %d src, %d control\n",
       g_type_name (G_TYPE_FROM_CLASS (klass)),
       klass->numsinkpads, klass->numsrcpads, klass->numcontrols);
 
@@ -347,12 +344,25 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
 
     klass->control_info[i].param_name = argname;
 
-    DEBUG ("adding arg %s from %s", argname, klass->control_info[i].name);
+    GST_DEBUG ("adding arg %s from %s with access-mode=%d", argname,
+        klass->control_info[i].name, argperms);
 
     if (argtype == G_TYPE_BOOLEAN) {
       paramspec =
           g_param_spec_boolean (argname, argname, argname, FALSE, argperms);
     } else if (argtype == G_TYPE_INT) {
+      if (klass->control_info[i].lowerbound > klass->control_info[i].upperbound) {
+        gfloat swap;
+
+        GST_ERROR
+            ("  wrong order of parameter bounds %f ... %f ... %f in \"%s\" plugin",
+            klass->control_info[i].lowerbound, klass->control_info[i].def,
+            klass->control_info[i].upperbound, klass->descriptor->Name);
+
+        swap = klass->control_info[i].upperbound;
+        klass->control_info[i].upperbound = klass->control_info[i].lowerbound;
+        klass->control_info[i].lowerbound = swap;
+      }
       paramspec = g_param_spec_int (argname, argname, argname,
           (gint) klass->control_info[i].lowerbound,
           (gint) klass->control_info[i].upperbound,
@@ -361,6 +371,18 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
       paramspec = g_param_spec_float (argname, argname, argname,
           0.0, G_MAXFLOAT, 0.0, argperms);
     } else {
+      if (klass->control_info[i].lowerbound > klass->control_info[i].upperbound) {
+        gfloat swap;
+
+        GST_ERROR
+            ("  wrong order of parameter bounds %f ... %f ... %f in \"%s\" plugin",
+            klass->control_info[i].lowerbound, klass->control_info[i].def,
+            klass->control_info[i].upperbound, klass->descriptor->Name);
+
+        swap = klass->control_info[i].upperbound;
+        klass->control_info[i].upperbound = klass->control_info[i].lowerbound;
+        klass->control_info[i].lowerbound = swap;
+      }
       paramspec = g_param_spec_float (argname, argname, argname,
           klass->control_info[i].lowerbound, klass->control_info[i].upperbound,
           klass->control_info[i].def, argperms);
@@ -453,18 +475,18 @@ gst_ladspa_init (GstLADSPA * ladspa)
 
   if (sinkcount == 0 && srccount == 1) {
     /* get mode (no sink pads) */
-    DEBUG_OBJ (ladspa, "mono get mode with 1 src pad");
+    GST_DEBUG_OBJECT (ladspa, "mono get mode with 1 src pad");
 
     gst_pad_set_get_function (ladspa->srcpads[0], gst_ladspa_get);
   } else if (sinkcount == 1) {
     /* with one sink we can use the chain function */
-    DEBUG_OBJ (ladspa, "chain mode");
+    GST_DEBUG_OBJECT (ladspa, "chain mode");
 
     gst_pad_set_chain_function (ladspa->sinkpads[0], gst_ladspa_chain);
   } else if (sinkcount > 1) {
     /* more than one sink pad needs loop mode */
-    DEBUG_OBJ (ladspa, "loop mode with %d sink pads and %d src pads", sinkcount,
-        srccount);
+    GST_DEBUG_OBJECT (ladspa, "loop mode with %d sink pads and %d src pads",
+        sinkcount, srccount);
 
     gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
   } else if (sinkcount == 0 && srccount == 0) {
@@ -526,7 +548,7 @@ gst_ladspa_force_src_caps (GstLADSPA * ladspa, GstPad * pad)
     ladspa->buffer_frames = 256;        /* 5 ms at 44100 kHz (just a default...) */
   }
 
-  DEBUG_OBJ (ladspa, "forcing caps with rate=%d, buffer-frames=%d",
+  GST_DEBUG_OBJECT (ladspa, "forcing caps with rate=%d, buffer-frames=%d",
       ladspa->samplerate, ladspa->buffer_frames);
 
   gst_pad_try_set_caps (pad,
@@ -570,7 +592,7 @@ gst_ladspa_set_property (GObject * object, guint prop_id, const GValue * value,
   else
     ladspa->controls[prop_id] = g_value_get_float (value);
 
-  DEBUG_OBJ (object, "set arg %s to %f", control_info->name,
+  GST_DEBUG_OBJECT (object, "set arg %s to %f", control_info->name,
       ladspa->controls[prop_id]);
 }
 
@@ -599,7 +621,7 @@ gst_ladspa_get_property (GObject * object, guint prop_id, GValue * value,
   else
     g_value_set_float (value, ladspa->controls[prop_id]);
 
-  DEBUG_OBJ (object, "got arg %s as %f", control_info->name,
+  GST_DEBUG_OBJECT (object, "got arg %s as %f", control_info->name,
       ladspa->controls[prop_id]);
 }
 
@@ -621,7 +643,8 @@ gst_ladspa_instantiate (GstLADSPA * ladspa)
   }
 
   /* instantiate the plugin */
-  DEBUG_OBJ (ladspa, "instantiating the plugin at %d Hz", ladspa->samplerate);
+  GST_DEBUG_OBJECT (ladspa, "instantiating the plugin at %d Hz",
+      ladspa->samplerate);
 
   ladspa->handle = desc->instantiate (desc, ladspa->samplerate);
   g_return_val_if_fail (ladspa->handle != NULL, FALSE);
@@ -673,7 +696,7 @@ gst_ladspa_activate (GstLADSPA * ladspa)
   if (ladspa->activated)
     gst_ladspa_deactivate (ladspa);
 
-  DEBUG_OBJ (ladspa, "activating");
+  GST_DEBUG_OBJECT (ladspa, "activating");
 
   /* activate the plugin (function might be null) */
   if (desc->activate != NULL)
@@ -689,7 +712,7 @@ gst_ladspa_deactivate (GstLADSPA * ladspa)
 
   desc = ladspa->descriptor;
 
-  DEBUG_OBJ (ladspa, "deactivating");
+  GST_DEBUG_OBJECT (ladspa, "deactivating");
 
   /* deactivate the plugin (function might be null) */
   if (ladspa->activated && (desc->deactivate != NULL))
@@ -800,7 +823,8 @@ gst_ladspa_loop (GstElement * element)
     buffers_in[i] = NULL;
   }
   for (i = 0; i < numsrcpads; i++) {
-    DEBUG_OBJ (ladspa, "pushing buffer (%p) on src pad %d", buffers_out[i], i);
+    GST_DEBUG_OBJECT (ladspa, "pushing buffer (%p) on src pad %d",
+        buffers_out[i], i);
     gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
 
     data_out[i] = NULL;
@@ -849,13 +873,13 @@ gst_ladspa_chain (GstPad * pad, GstData * _data)
   if (!ladspa->inplace_broken && numsrcpads) {
     /* reuse the first (chained) buffer */
     buffers_out[i] = buffer_in;
-    DEBUG ("reuse: %d", GST_BUFFER_SIZE (buffer_in));
+    GST_DEBUG ("reuse: %d", GST_BUFFER_SIZE (buffer_in));
     data_out[i] = data_in;
     i++;
   }
   for (; i < numsrcpads; i++) {
     buffers_out[i] = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer_in));
-    DEBUG ("new %d", GST_BUFFER_SIZE (buffer_in));
+    GST_DEBUG ("new %d", GST_BUFFER_SIZE (buffer_in));
     GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
     data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
   }
@@ -890,8 +914,9 @@ gst_ladspa_chain (GstPad * pad, GstData * _data)
 
   if (numsrcpads) {
     for (i = 0; i < numsrcpads; i++) {
-      DEBUG_OBJ (ladspa, "pushing buffer (%p, length %u bytes) on src pad %d",
-          buffers_out[i], GST_BUFFER_SIZE (buffers_out[i]), i);
+      GST_DEBUG_OBJECT (ladspa,
+          "pushing buffer (%p, length %u bytes) on src pad %d", buffers_out[i],
+          GST_BUFFER_SIZE (buffers_out[i]), i);
       gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
     }
 
