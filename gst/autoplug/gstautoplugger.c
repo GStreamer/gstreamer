@@ -55,6 +55,11 @@ struct _GstAutoplugger {
 
   GstPad *sinkpadpeer, *srcpadpeer;
   GstCaps *sinkcaps, *srccaps;
+
+  GstCaps *sinktemplatecaps;
+
+  GstAutoplug *autoplug;
+  GstElement *autobin;
 };
 
 struct _GstAutopluggerClass {
@@ -83,13 +88,12 @@ static void			gst_autoplugger_get_arg		(GtkObject *object, GtkArg *arg, guint id
 
 static void	gst_autoplugger_external_sink_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
-
 static void	gst_autoplugger_external_sink_connected		(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_connected		(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger);
 
-static void	gst_autoplugger_typefind_have_type		(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_cache_first_buffer		(GstElement *element,GstBuffer *buf,GstAutoplugger *autoplugger);
 static void	gst_autoplugger_cache_empty			(GstElement *element, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_typefind_have_type		(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_autoplugger_signals[LAST_SIGNAL] = { 0 };
@@ -203,7 +207,7 @@ gst_autoplugger_external_sink_connected(GstPad *pad, GstPad *peerpad, GstAutoplu
   GstCaps *peercaps, *peertemplatecaps;
 
   GST_INFO(GST_CAT_AUTOPLUG, "have cache:sink connected");
-  autoplugger->sinkpadpeer = peerpad;
+//  autoplugger->sinkpadpeer = peerpad;
 
   if (autoplugger->sinkpadpeer) {
     peercaps = GST_PAD_CAPS(autoplugger->sinkpadpeer);
@@ -232,8 +236,8 @@ gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplug
   GST_INFO(GST_CAT_AUTOPLUG, "have cache:src connected");
 
   // only save this off if it isn't a pad we're using internally...
-  if (peerpad != autoplugger->typefind_sinkpad)
-    autoplugger->srcpadpeer = peerpad;
+//  if (peerpad != autoplugger->typefind_sinkpad)
+//    autoplugger->srcpadpeer = peerpad;
 
   if (autoplugger->srcpadpeer) {
     peercaps = GST_PAD_CAPS(autoplugger->srcpadpeer);
@@ -246,6 +250,7 @@ gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplug
       if (peertemplatecaps) {
         GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s",
                  gst_caps_get_mime(peertemplatecaps));
+        autoplugger->sinktemplatecaps = peertemplatecaps;
         GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
         gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
       }
@@ -256,7 +261,7 @@ gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplug
 static void
 gst_autoplugger_cache_empty(GstElement *element, GstAutoplugger *autoplugger)
 {
-  GstPad *cache_srcpad_peer;
+  GstPad *cache_sinkpad_peer,*cache_srcpad_peer;
 
   GST_INFO(GST_CAT_AUTOPLUG, "autoplugger cache has hit empty, we can now remove it");
 
@@ -265,8 +270,9 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   // disconnect the cache from its peers
   GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting autoplugcache from its peers\n");
-  gst_pad_disconnect(autoplugger->sinkpadpeer,autoplugger->cache_sinkpad);
+  cache_sinkpad_peer = GST_PAD (GST_PAD_PEER(autoplugger->cache_sinkpad));
   cache_srcpad_peer = GST_PAD (GST_PAD_PEER(autoplugger->cache_srcpad));
+  gst_pad_disconnect(cache_sinkpad_peer,autoplugger->cache_sinkpad);
   gst_pad_disconnect(autoplugger->cache_srcpad,cache_srcpad_peer);
 
   // remove the cache from self
@@ -275,10 +281,12 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   // connect the two pads
   GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the autoplugcache's former peers\n");
-  gst_pad_connect(autoplugger->sinkpadpeer,cache_srcpad_peer);
+  gst_pad_connect(cache_sinkpad_peer,cache_srcpad_peer);
 
 // try to PLAY the whole thing
 gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+
+  xmlSaveFile("autoplugger.gst", gst_xml_write(GST_ELEMENT_SCHED(autoplugger)->parent));
 
   GST_INFO(GST_CAT_AUTOPLUG, "autoplugger_cache_empty finished");
 }
@@ -299,11 +307,24 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
   gst_bin_remove(GST_BIN(autoplugger),autoplugger->typefind);
 
   // FIXME FIXME now we'd compare caps and see if we need to autoplug something in the middle, but for 
-  // now we're going to just reconnect where we left off  
+  // now we're going to just reconnect where we left off
+  // FIXME FIXME FIXME!!!: this should really be done in the caps failure!!!
+  if (!autoplugger->autoplug) {
+    autoplugger->autoplug = gst_autoplugfactory_make("static");
+  }
+  autoplugger->autobin = gst_autoplug_to_caps(autoplugger->autoplug,
+      caps,autoplugger->sinktemplatecaps,NULL);
+  g_return_if_fail(autoplugger->autobin != NULL);
+  gst_bin_add(GST_BIN(autoplugger),autoplugger->autobin);
 
-  // re-attach the srcpad's original peer to the cache
-  GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the cache to the downstream peer\n");
-  gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
+//  // re-attach the srcpad's original peer to the cache
+//  GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the cache to the downstream peer\n");
+//  gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
+
+  // attach the autoplugged bin
+  GST_DEBUG(GST_CAT_AUTOPLUG, "attaching the autoplugged bin between cache and downstream peer\n");
+  gst_pad_connect(autoplugger->cache_srcpad,gst_element_get_pad(autoplugger->autobin,"sink"));
+  gst_pad_connect(gst_element_get_pad(autoplugger->autobin,"src_00"),autoplugger->srcpadpeer);
 
   // now reset the autoplugcache
   GST_DEBUG(GST_CAT_AUTOPLUG, "resetting the cache to send first buffer(s) again\n");
@@ -337,6 +358,7 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
     // detach the srcpad
     GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting cache from its downstream peer\n");
+    autoplugger->srcpadpeer = GST_PAD(GST_PAD_PEER(autoplugger->cache_srcpad));
     gst_pad_disconnect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
 
     // instantiate the typefind and set up the signal handlers
