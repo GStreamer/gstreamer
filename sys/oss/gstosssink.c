@@ -176,7 +176,7 @@ gst_osssink_class_init (GstOssSinkClass *klass)
                           TRUE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "If syncing on timestamps should be enabled",
-                          TRUE, G_PARAM_READWRITE)); 
+                          FALSE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
     g_param_spec_int ("fragment", "Fragment", 
 	    	      "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
@@ -220,7 +220,7 @@ gst_osssink_init (GstOssSink *osssink)
 
   osssink->bufsize = 4096;
   osssink->resync = FALSE;
-  osssink->sync = TRUE;
+  osssink->sync = FALSE;
   osssink->sinkpool = NULL;
   osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
   osssink->handled = 0;
