@@ -134,7 +134,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s decoder",
       params->in_plugin->name);
-  details.klass = g_strdup_printf ("Codec/%s/Decoder",
+  details.klass = g_strdup_printf ("Codec/Decoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s decoder",
       params->in_plugin->name);
