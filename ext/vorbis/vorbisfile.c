@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <gst/gst.h>
 #include <vorbis/codec.h>
@@ -240,7 +243,7 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 
   VorbisFile *vorbisfile = GST_VORBISFILE (datasource);
 
-  GST_DEBUG (0, "read %d", read_size);
+  GST_DEBUG ("read %d", read_size);
 
   /* make sure we don't go to EOS */
   if (!vorbisfile->may_eos && vorbisfile->total_bytes && 
@@ -255,7 +258,7 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
   do {
     got_bytes = gst_bytestream_peek_bytes (vorbisfile->bs, &data, read_size);
 
-    GST_DEBUG (0, "peek returned  %d", got_bytes);
+    GST_DEBUG ("peek returned  %d", got_bytes);
 
     if (got_bytes == 0) {
       GstEvent *event;
@@ -265,22 +268,22 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 
       switch (GST_EVENT_TYPE (event)) {
 	case GST_EVENT_EOS:
-	  GST_DEBUG (0, "eos");
+	  GST_DEBUG ("eos");
           vorbisfile->eos = TRUE;
           gst_event_unref (event);
           goto done;
 	case GST_EVENT_DISCONTINUOUS:
-	  GST_DEBUG (0, "discont");
+	  GST_DEBUG ("discont");
 	  vorbisfile->need_discont = TRUE;
 	default:
-	  GST_DEBUG (0, "unknown event %d", GST_EVENT_TYPE (event));
+	  GST_DEBUG ("unknown event %d", GST_EVENT_TYPE (event));
           break;
       }
       gst_event_unref (event);
     }
   } while (got_bytes == 0);
 
-  GST_DEBUG (0, "read %d got %d bytes", read_size, got_bytes);
+  GST_DEBUG ("read %d got %d bytes", read_size, got_bytes);
 
   memcpy (ptr, data, got_bytes);
   gst_bytestream_flush_fast (vorbisfile->bs, got_bytes);
@@ -303,7 +306,7 @@ gst_vorbisfile_seek (void *datasource, int64_t offset, int whence)
     return -1;
   }
   
-  GST_DEBUG (0, "seek %" G_GINT64_FORMAT " %d", offset, whence);
+  GST_DEBUG ("seek %" G_GINT64_FORMAT " %d", offset, whence);
 
   if (whence == SEEK_SET) {
     method = GST_SEEK_METHOD_SET;
@@ -335,7 +338,7 @@ gst_vorbisfile_seek (void *datasource, int64_t offset, int whence)
 static int
 gst_vorbisfile_close (void *datasource)
 {
-  GST_DEBUG (0, "close");
+  GST_DEBUG ("close");
   return 0;
 }
 
@@ -347,7 +350,7 @@ gst_vorbisfile_tell (void *datasource)
 
   result = gst_bytestream_tell (vorbisfile->bs);
 
-  GST_DEBUG (0, "tell %ld", result);
+  GST_DEBUG ("tell %ld", result);
 
   return result;
 }
@@ -501,7 +504,7 @@ gst_vorbisfile_loop (GstElement *element)
     vorbisfile->may_eos = FALSE;
     vorbisfile->vf.seekable = gst_bytestream_seek (vorbisfile->bs, 0, 
 		                                   GST_SEEK_METHOD_SET);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "vorbisfile: seekable: %s",
+    GST_DEBUG ("vorbisfile: seekable: %s",
 	       vorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom vorbisfile data object with the callbacks we provide */
@@ -583,7 +586,7 @@ gst_vorbisfile_loop (GstElement *element)
 		 sizeof (gint16), 1, &link);
 
   if (ret == 0) {
-    GST_DEBUG (0, "eos");
+    GST_DEBUG ("eos");
     /* send EOS event */
     /*ov_clear (&vorbisfile->vf);*/
     vorbisfile->restart = TRUE;
@@ -958,11 +961,11 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
       vorbis_info *vi;
       GstFormat format;
   
-      GST_DEBUG (GST_CAT_EVENT, "vorbisfile: handling seek event on pad %s:%s",
+      GST_DEBUG ("vorbisfile: handling seek event on pad %s:%s",
 		 GST_DEBUG_PAD_NAME (pad));
       if (!vorbisfile->vf.seekable) {
 	gst_event_unref (event);
-	GST_DEBUG (GST_CAT_EVENT, "vorbis stream is not seekable");
+	GST_DEBUG ("vorbis stream is not seekable");
         return FALSE;
       }
 
@@ -980,7 +983,7 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 	case GST_FORMAT_BYTES:
           vi = ov_info (&vorbisfile->vf, -1);
 	  if (vi->channels == 0) {
-	    GST_DEBUG (GST_CAT_EVENT, "vorbis stream has 0 channels ?");
+	    GST_DEBUG ("vorbis stream has 0 channels ?");
 	    res = FALSE;
 	    goto done; 
 	  }
@@ -1003,7 +1006,7 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 	  }
 	  else
 	  {
-	    GST_DEBUG (GST_CAT_EVENT, "unhandled seek format");
+	    GST_DEBUG ("unhandled seek format");
 	    res = FALSE;
 	  }
 	  break;

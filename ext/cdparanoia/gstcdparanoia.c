@@ -20,6 +20,9 @@
 
 /* #define GST_DEBUG_ENABLED */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -451,7 +454,7 @@ cdparanoia_get (GstPad *pad)
 
   /* stop things apropriatly */
   if (src->cur_sector > src->segment_end_sector) {
-    GST_DEBUG (0, "setting EOS");
+    GST_DEBUG ("setting EOS");
 
     buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
     gst_element_set_eos (GST_ELEMENT (src));
@@ -607,7 +610,7 @@ cdparanoia_open (CDParanoia *src)
 
   g_return_val_if_fail (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN), FALSE);
 
-  GST_DEBUG_ENTER ("(\"%s\",...)", gst_element_get_name (GST_ELEMENT (src)));
+  GST_DEBUG_OBJECT (src, "trying to open device...");
 
   /* find the device */
   if (src->generic_device != NULL) {
@@ -622,7 +625,7 @@ cdparanoia_open (CDParanoia *src)
 
   /* fail if the device couldn't be found */
   if (src->d == NULL) {
-    GST_DEBUG (0, "couldn't open device");
+    GST_DEBUG ("couldn't open device");
     return FALSE;
   }
 
@@ -637,7 +640,7 @@ cdparanoia_open (CDParanoia *src)
 
   /* open the disc */
   if (cdda_open (src->d)) {
-    GST_DEBUG (0, "couldn't open disc");
+    GST_DEBUG ("couldn't open disc");
     cdda_close (src->d);
     src->d = NULL;
     return FALSE;
@@ -676,7 +679,7 @@ cdparanoia_open (CDParanoia *src)
   /* create the paranoia struct and set it up */
   src->p = paranoia_init (src->d);
   if (src->p == NULL) {
-    GST_DEBUG (0, "couldn't create paranoia struct");
+    GST_DEBUG ("couldn't create paranoia struct");
     return FALSE;
   }
 
@@ -692,7 +695,7 @@ cdparanoia_open (CDParanoia *src)
 
   src->cur_sector = src->first_sector;
   paranoia_seek (src->p, src->cur_sector, SEEK_SET);
-  GST_DEBUG (0, "successfully seek'd to beginning of disk");
+  GST_DEBUG ("successfully seek'd to beginning of disk");
 
   GST_FLAG_SET (src, CDPARANOIA_OPEN);
 
@@ -700,7 +703,7 @@ cdparanoia_open (CDParanoia *src)
 		add_index_associations (src);
 	}
 	
-  GST_DEBUG_LEAVE ("");
+  GST_DEBUG_OBJECT (src, "device successfully openend");
 
   return TRUE;
 }
@@ -818,7 +821,7 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
       }
       
       if (!res) {
-				GST_DEBUG (0, "could not convert offsets to sectors");
+				GST_DEBUG ("could not convert offsets to sectors");
 				goto error;
       }
       
@@ -851,7 +854,7 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
 																	src->first_sector, src->last_sector);
 				
         if (paranoia_seek (src->p, seg_start_sector, SEEK_SET) > -1) {
-					GST_DEBUG (0, "seeked to %" G_GINT64_FORMAT, seg_start_sector);
+					GST_DEBUG ("seeked to %" G_GINT64_FORMAT, seg_start_sector);
 					
 					src->segment_start_sector = seg_start_sector;;
 					src->cur_sector = src->segment_start_sector;
@@ -865,7 +868,7 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
 																src->first_sector, src->last_sector);
         src->segment_end_sector = seg_end_sector;;
       }
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "configured for %d -> %d sectors\n", 
+      GST_DEBUG ("configured for %d -> %d sectors\n", 
 								 src->segment_start_sector, 
 								 src->segment_end_sector);
       break;

@@ -19,6 +19,9 @@
 
 
 /*#define DEBUG_ENABLED */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gstvideotestsrc.h>
 #include <videotestsrc.h>
 
@@ -192,7 +195,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 {
   GstVideotestsrc *videotestsrc;
 
-  GST_DEBUG (0, "gst_videotestsrc_srcconnect");
+  GST_DEBUG ("gst_videotestsrc_srcconnect");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
   for ( ; caps != NULL; caps = caps->next) {
@@ -219,12 +222,12 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   }
 
   if (caps == NULL) {
-    GST_DEBUG (GST_CAT_PLUGIN_ERRORS,
+    GST_DEBUG (
 	       "videotestsrc: no suitable opposite-side caps found");
     return GST_PAD_LINK_REFUSED;
   }
 
-  GST_DEBUG (0,"videotestsrc: using fourcc element %p %s\n",
+  GST_DEBUG ("videotestsrc: using fourcc element %p %s\n",
 	videotestsrc->fourcc, videotestsrc->fourcc->name);
 
   gst_caps_get_int (caps, "width", &videotestsrc->width);
@@ -232,7 +235,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
-  GST_DEBUG (0, "size %d x %d", videotestsrc->width, videotestsrc->height);
+  GST_DEBUG ("size %d x %d", videotestsrc->width, videotestsrc->height);
 
   return GST_PAD_LINK_DONE;
 }
@@ -318,7 +321,7 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
 static void
 gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
 {
-  GST_DEBUG (0, "gst_videotestsrc_init");
+  GST_DEBUG ("gst_videotestsrc_init");
 
   videotestsrc->srcpad =
     gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (videotestsrc_src_template_factory), "src");
@@ -352,7 +355,7 @@ gst_videotestsrc_get (GstPad * pad)
   GstBuffer *buf;
   GstClockTimeDiff jitter = 0;
 
-  GST_DEBUG (0, "gst_videotestsrc_get");
+  GST_DEBUG ("gst_videotestsrc_get");
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -361,7 +364,7 @@ gst_videotestsrc_get (GstPad * pad)
 
   newsize = (videotestsrc->width * videotestsrc->height * videotestsrc->bpp) >> 3;
 
-  GST_DEBUG (0, "size=%ld %dx%d", newsize, videotestsrc->width, videotestsrc->height);
+  GST_DEBUG ("size=%ld %dx%d", newsize, videotestsrc->width, videotestsrc->height);
 
   buf = NULL;
   if (videotestsrc->pool) {
@@ -405,7 +408,7 @@ gst_videotestsrc_set_pattern (GstVideotestsrc *src, int pattern_type)
 {
   src->type = pattern_type;
 
-  GST_DEBUG (0,"setting pattern to %d\n",pattern_type);
+  GST_DEBUG ("setting pattern to %d\n",pattern_type);
   switch(pattern_type){
     case GST_VIDEOTESTSRC_SMPTE:
       src->make_image = gst_videotestsrc_smpte;
@@ -432,7 +435,7 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
   src = GST_VIDEOTESTSRC (object);
 
-  GST_DEBUG (0, "gst_videotestsrc_set_property");
+  GST_DEBUG ("gst_videotestsrc_set_property");
   switch (prop_id) {
     case ARG_WIDTH:
       src->width = g_value_get_int (value);
@@ -444,9 +447,9 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
       format = g_value_get_string (value);
       if(paintrect_find_name (format) != NULL){
         src->forced_format = g_strdup(format);
-        GST_DEBUG (0,"forcing format to \"%s\"\n", format);
+        GST_DEBUG ("forcing format to \"%s\"\n", format);
       }else{
-        GST_DEBUG (0,"unknown format \"%s\"\n", format);
+        GST_DEBUG ("unknown format \"%s\"\n", format);
       }
       break;
     case ARG_RATE:

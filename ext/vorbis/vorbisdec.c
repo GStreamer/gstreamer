@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <sys/soundcard.h>
 
@@ -156,7 +159,7 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
   GstBuffer *buf;
 
   do {
-    GST_DEBUG (0, "vorbisdec: pull ");
+    GST_DEBUG ("vorbisdec: pull ");
 
     buf = gst_pad_pull (vorbisdec->sinkpad);
 
@@ -176,7 +179,7 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
   } while (buf == NULL);
 
 end:
-  GST_DEBUG (0, "vorbisdec: pull done");
+  GST_DEBUG ("vorbisdec: pull done");
 
   return buf;
 }
@@ -221,7 +224,7 @@ gst_vorbisdec_loop (GstElement * element)
     buf = gst_vorbisdec_pull (vorbisdec, &oy);
     if (!buf) {
       eos = 1;
-      GST_DEBUG (0, "vorbisdec: pulled NULL");
+      GST_DEBUG ("vorbisdec: pulled NULL");
       break;
     }
 
@@ -440,9 +443,9 @@ gst_vorbisdec_loop (GstElement * element)
 		  }
 		}
 
-		GST_DEBUG (0, "vorbisdec: push");
+		GST_DEBUG ("vorbisdec: push");
 		gst_pad_push (vorbisdec->srcpad, outbuf);
-		GST_DEBUG (0, "vorbisdec: push done");
+		GST_DEBUG ("vorbisdec: push done");
 
 		vorbis_synthesis_read (&vd, bout);	/* tell libvorbis how
 							   many samples we
@@ -452,7 +455,7 @@ gst_vorbisdec_loop (GstElement * element)
 	  }
 	  if (ogg_page_eos (&og)) {
 	    eos = 1;
-	    GST_DEBUG (0, "vorbisdec: page_eos");
+	    GST_DEBUG ("vorbisdec: page_eos");
 	  }
 	}
       }
@@ -469,17 +472,17 @@ gst_vorbisdec_loop (GstElement * element)
 	  ogg_sync_wrote (&oy, bytes);
 	  if (bytes == 0) {
 	    eos = 1;
-	    GST_DEBUG (0, "vorbisdec: wrote 0 bytes");
+	    GST_DEBUG ("vorbisdec: wrote 0 bytes");
 	  }
 	}
 	else {
           eos = 1;
-	  GST_DEBUG (0, "vorbisdec: pulled NULL");
+	  GST_DEBUG ("vorbisdec: pulled NULL");
 	}
       }
     }
 
-    GST_DEBUG (0, "vorbisdec: eos flag set");
+    GST_DEBUG ("vorbisdec: eos flag set");
     /* clean up this logical bitstream; before exit we see if we're
        followed by another [chained] */
 
@@ -493,7 +496,7 @@ gst_vorbisdec_loop (GstElement * element)
     vorbis_info_clear (&vorbisdec->vi);	/* must be called last */
   }
 end:
-  GST_DEBUG (0, "vorbisdec: in end");
+  GST_DEBUG ("vorbisdec: in end");
 
   gst_pad_push (vorbisdec->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
   gst_element_set_eos (GST_ELEMENT (vorbisdec));

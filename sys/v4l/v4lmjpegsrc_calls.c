@@ -38,7 +38,7 @@
 #define MIN_BUFFERS_QUEUED 2
 
 #define DEBUG(format, args...) \
-	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lmjpegsrc), \
 		"V4LMJPEGSRC: " format, ##args)
 
@@ -551,7 +551,7 @@ gst_v4lmjpegsrc_grab_frame (GstV4lMjpegSrc *v4lmjpegsrc,
     while (v4lmjpegsrc->frame_queue_state[v4lmjpegsrc->queue_frame] !=
              QUEUE_STATE_READY_FOR_QUEUE &&
            !v4lmjpegsrc->quit) {
-      GST_DEBUG(GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
                 "Waiting for frames to become available (%d < %d)",
                 v4lmjpegsrc->num_queued, MIN_BUFFERS_QUEUED);
       g_cond_wait(v4lmjpegsrc->cond_queue_state,

@@ -28,10 +28,12 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
+
 #include "v4l_calls.h"
 
 #define DEBUG(format, args...) \
-	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lelement), \
 		"V4L: " format, ##args)
 

@@ -41,7 +41,7 @@
 #endif
 
 #define DEBUG(format, args...) \
-	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lsrc), \
 		"V4LSRC: " format, ##args)
 
@@ -296,7 +296,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
     while (v4lsrc->frame_queue_state[v4lsrc->queue_frame] !=
              QUEUE_STATE_READY_FOR_QUEUE &&
            !v4lsrc->quit) {
-      GST_DEBUG(GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
                 "Waiting for frames to become available (%d < %d)",
                 v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
       g_cond_wait(v4lsrc->cond_queue_state,

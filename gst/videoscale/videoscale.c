@@ -123,7 +123,7 @@ videoscale_find_by_caps(GstCaps *caps)
 {
   int i;
 
-  GST_DEBUG (0,"finding %p",caps);
+  GST_DEBUG ("finding %p",caps);
 
   g_return_val_if_fail(caps != NULL, NULL);
 
@@ -146,7 +146,7 @@ videoscale_find_by_caps(GstCaps *caps)
 void
 gst_videoscale_setup (GstVideoscale *videoscale)
 {
-  GST_DEBUG (0,"format=%p \"%s\" from %dx%d to %dx%d",
+  GST_DEBUG ("format=%p \"%s\" from %dx%d to %dx%d",
 		videoscale->format, videoscale->format->fourcc,
 		videoscale->from_width, videoscale->from_height,
 		videoscale->to_width, videoscale->to_height);
@@ -158,13 +158,13 @@ gst_videoscale_setup (GstVideoscale *videoscale)
 
   if(videoscale->to_width == videoscale->from_width &&
 	videoscale->to_height == videoscale->from_height){
-    GST_DEBUG (0,"videoscale: using passthru");
+    GST_DEBUG ("videoscale: using passthru");
     videoscale->passthru = TRUE;
     videoscale->inited = TRUE;
     return;
   }
 
-  GST_DEBUG (0,"videoscale: scaling method POINT_SAMPLE");
+  GST_DEBUG ("videoscale: scaling method POINT_SAMPLE");
 
   videoscale->from_buf_size = (videoscale->from_width * videoscale->from_height
 		  * videoscale->format->depth) / 8;
@@ -182,7 +182,7 @@ gst_videoscale_scale_rgb (GstVideoscale *scale, unsigned char *dest, unsigned ch
   int sh = scale->from_height;
   int dw = scale->to_width;
   int dh = scale->to_height;
-  GST_DEBUG (0,"videoscale: scaling RGB %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling RGB %dx%d to %dx%d", sw, sh, dw, dh);
 
   switch (scale->scale_bytes) {
     case 2:
@@ -197,7 +197,7 @@ gst_videoscale_scale_rgb (GstVideoscale *scale, unsigned char *dest, unsigned ch
      break;
   }
 
-  GST_DEBUG (0,"videoscale: %p %p", src, dest);
+  GST_DEBUG ("videoscale: %p %p", src, dest);
   //scale->scaler(scale, src, dest, sw, sh, dw, dh);
 }
 #endif
@@ -210,7 +210,7 @@ gst_videoscale_planar411 (GstVideoscale *scale, unsigned char *dest, unsigned ch
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling planar 4:1:1 %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling planar 4:1:1 %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest(scale, dest, src, sw, sh, dw, dh);
 
@@ -238,7 +238,7 @@ gst_videoscale_planar400 (GstVideoscale *scale, unsigned char *dest, unsigned ch
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling Y-only %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling Y-only %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest(scale, dest, src, sw, sh, dw, dh);
 }
@@ -251,7 +251,7 @@ gst_videoscale_packed422 (GstVideoscale *scale, unsigned char *dest, unsigned ch
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling 4:2:2 %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling 4:2:2 %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest_str2(scale, dest, src, sw, sh, dw, dh);
   gst_videoscale_scale_nearest_str4(scale, dest+1, src+1, sw/2, sh, dw/2, dh);
@@ -267,7 +267,7 @@ gst_videoscale_packed422rev (GstVideoscale *scale, unsigned char *dest, unsigned
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling 4:2:2 %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling 4:2:2 %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest_str2(scale, dest+1, src, sw, sh, dw, dh);
   gst_videoscale_scale_nearest_str4(scale, dest, src+1, sw/2, sh, dw/2, dh);
@@ -283,7 +283,7 @@ gst_videoscale_32bit (GstVideoscale *scale, unsigned char *dest, unsigned char *
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling 32bit %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling 32bit %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest_32bit(scale, dest, src, sw, sh, dw, dh);
 
@@ -297,7 +297,7 @@ gst_videoscale_24bit (GstVideoscale *scale, unsigned char *dest, unsigned char *
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling 24bit %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling 24bit %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest_24bit(scale, dest, src, sw, sh, dw, dh);
 
@@ -311,7 +311,7 @@ gst_videoscale_16bit (GstVideoscale *scale, unsigned char *dest, unsigned char *
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoscale: scaling 16bit %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoscale: scaling 16bit %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest_16bit(scale, dest, src, sw, sh, dw, dh);
 
@@ -330,7 +330,7 @@ gst_videoscale_bilinear (unsigned char *src, double x, double y, int sw, int sh)
   double dest;
   int color;
 
-  GST_DEBUG(0,"videoscale: scaling bilinear %f %f %dx%d", x, y, sw, sh);
+  GST_DEBUG ("videoscale: scaling bilinear %f %f %dx%d", x, y, sw, sh);
 
   dest=(1-a)*(1-b)*RC(j,k)+
        a*(1-b)*RC(j+1,k);
@@ -359,7 +359,7 @@ gst_videoscale_bicubic (unsigned char *src, double x, double y, int sw, int sh)
   double t1, t2, t3, t4;
   double a1, a2, a3, a4;
 
-  GST_DEBUG (0,"videoscale: scaling bicubic %dx%d", sw, sh);
+  GST_DEBUG ("videoscale: scaling bicubic %dx%d", sw, sh);
 
   a1 = -a*(1-a)*(1-a);
   a2 = (1-2*a*a+a*a*a);
@@ -392,17 +392,17 @@ gst_videoscale_scale_plane_slow (GstVideoscale *scale, unsigned char *src, unsig
   double xr, yr;
   int x, y;
 
-  GST_DEBUG (0,"videoscale: scale plane slow %dx%d %dx%d %g %g %p %p", sw, sh, dw, dh, zoomx, zoomy, src, dest);
+  GST_DEBUG ("videoscale: scale plane slow %dx%d %dx%d %g %g %p %p", sw, sh, dw, dh, zoomx, zoomy, src, dest);
 
   for (y=0; y<dh; y++) {
     yr = ((double)y)/zoomy;
     for (x=0; x<dw; x++) {
       xr = ((double)x)/zoomx;
 
-      GST_DEBUG (0,"videoscale: scale plane slow %g %g %p", xr, yr, (src+(int)(x)+(int)((y)*sw)));
+      GST_DEBUG ("videoscale: scale plane slow %g %g %p", xr, yr, (src+(int)(x)+(int)((y)*sw)));
 
       if (floor(xr) == xr && floor(yr) == yr){
-        GST_DEBUG (0,"videoscale: scale plane %g %g %p %p", xr, yr, (src+(int)(x)+(int)((y)*sw)), dest);
+        GST_DEBUG ("videoscale: scale plane %g %g %p %p", xr, yr, (src+(int)(x)+(int)((y)*sw)), dest);
 	*dest++ = RC(xr, yr);
       }
       else {
@@ -424,7 +424,7 @@ gst_videoscale_scale_point_sample (GstVideoscale *scale, unsigned char *src, uns
   int sum, xcount, ycount, loop;
   unsigned char *srcp, *srcp2;
 
-  GST_DEBUG (0,"videoscale: scaling nearest point sample %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest point sample %p %p %d", src, dest, dw);
 
   ypos = 0x10000;
   yinc = (sh<<16)/dh;
@@ -475,7 +475,7 @@ gst_videoscale_scale_nearest (GstVideoscale *scale,
   guchar *destp = dest;
   guchar *srcp = src;
 
-  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0x10000;
@@ -519,7 +519,7 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale *scale,
   guchar *destp = dest;
   guchar *srcp = src;
 
-  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0x10000;
@@ -564,7 +564,7 @@ gst_videoscale_scale_nearest_str4 (GstVideoscale *scale,
   guchar *destp = dest;
   guchar *srcp = src;
 
-  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0x10000;
@@ -609,7 +609,7 @@ gst_videoscale_scale_nearest_32bit (GstVideoscale *scale,
   guchar *destp = dest;
   guchar *srcp = src;
 
-  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0x10000;
@@ -654,7 +654,7 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale *scale,
   guchar *destp = dest;
   guchar *srcp = src;
 
-  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0x10000;
@@ -701,7 +701,7 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale *scale,
   guchar *destp = dest;
   guchar *srcp = src;
 
-  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+  GST_DEBUG ("videoscale: scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0x10000;

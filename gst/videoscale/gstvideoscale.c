@@ -19,6 +19,9 @@
 
 
 /*#define DEBUG_ENABLED */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gstvideoscale.h>
 #include <videoscale.h>
 
@@ -190,7 +193,7 @@ gst_videoscale_getcaps (GstPad *pad, GstCaps *caps)
   GstCaps *sizecaps;
   int i;
 
-  GST_DEBUG(0,"gst_videoscale_src_link");
+  GST_DEBUG ("gst_videoscale_src_link");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
   
   /* get list of peer's caps */
@@ -231,7 +234,7 @@ gst_videoscale_src_link (GstPad *pad, GstCaps *caps)
   GstPadLinkReturn ret;
   GstCaps *peercaps;
 
-  GST_DEBUG(0,"gst_videoscale_src_link");
+  GST_DEBUG ("gst_videoscale_src_link");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
@@ -244,7 +247,7 @@ gst_videoscale_src_link (GstPad *pad, GstCaps *caps)
 
   gst_videoscale_setup(videoscale);
 
-  GST_DEBUG(0,"width %d height %d",videoscale->to_width,videoscale->to_height);
+  GST_DEBUG ("width %d height %d",videoscale->to_width,videoscale->to_height);
 
   peercaps = gst_caps_copy(caps);
 
@@ -273,7 +276,7 @@ gst_videoscale_sink_link (GstPad *pad, GstCaps *caps)
   GstPadLinkReturn ret;
   GstCaps *peercaps;
 
-  GST_DEBUG(0,"gst_videoscale_src_link");
+  GST_DEBUG ("gst_videoscale_src_link");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
@@ -314,7 +317,7 @@ gst_videoscale_sink_link (GstPad *pad, GstCaps *caps)
 static void
 gst_videoscale_init (GstVideoscale *videoscale)
 {
-  GST_DEBUG(0,"gst_videoscale_init");
+  GST_DEBUG ("gst_videoscale_init");
   videoscale->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (gst_videoscale_sink_template_factory),
 		  "sink");
@@ -347,7 +350,7 @@ gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
   gulong size;
   GstBuffer *outbuf;
 
-  GST_DEBUG (0,"gst_videoscale_chain");
+  GST_DEBUG ("gst_videoscale_chain");
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -364,10 +367,10 @@ gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
     return;
   }
 
-  GST_DEBUG (0,"gst_videoscale_chain: got buffer of %ld bytes in '%s'",size,
+  GST_DEBUG ("gst_videoscale_chain: got buffer of %ld bytes in '%s'",size,
 		              GST_OBJECT_NAME (videoscale));
  
-  GST_DEBUG(0,"size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
+  GST_DEBUG ("size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
 	size,
 	videoscale->from_width, videoscale->from_height,
 	videoscale->to_width, videoscale->to_height,
@@ -383,12 +386,12 @@ gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
   g_return_if_fail(videoscale->format);
-  GST_DEBUG (0,"format %s",videoscale->format->fourcc);
+  GST_DEBUG ("format %s",videoscale->format->fourcc);
   g_return_if_fail(videoscale->format->scale);
 
   videoscale->format->scale(videoscale, GST_BUFFER_DATA(outbuf), data);
 
-  GST_DEBUG (0,"gst_videoscale_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
+  GST_DEBUG ("gst_videoscale_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
 	              GST_OBJECT_NAME (videoscale));
 
   gst_pad_push(videoscale->srcpad, outbuf);
@@ -405,7 +408,7 @@ gst_videoscale_set_property (GObject *object, guint prop_id, const GValue *value
   g_return_if_fail(GST_IS_VIDEOSCALE(object));
   src = GST_VIDEOSCALE(object);
 
-  GST_DEBUG(0,"gst_videoscale_set_property");
+  GST_DEBUG ("gst_videoscale_set_property");
   switch (prop_id) {
     case ARG_WIDTH:
       src->forced_width = g_value_get_int (value);

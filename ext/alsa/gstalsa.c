@@ -19,6 +19,9 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <sys/time.h>
 #include "gstalsa.h"
 
@@ -1013,7 +1016,7 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
   for (i = 0; i < GST_ELEMENT (src)->numpads; i++) {
     all_caps = gst_caps_intersect (all_caps, gst_pad_get_caps (this->pad[i]));
     if (all_caps == NULL) {
-      GST_DEBUG (GST_CAT_NEGOTIATION, "No compatible caps found in alsasrc (%s)", GST_ELEMENT_NAME (this));
+      GST_DEBUG ("No compatible caps found in alsasrc (%s)", GST_ELEMENT_NAME (this));
       return FALSE;
     }
   }
@@ -1054,7 +1057,7 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
       gst_caps_set (caps, "rate", GST_PROPS_INT (rate));
       for (channels = aggressive ? max_channels : MIN (max_channels, 2); channels >= min_channels; channels--) {
         gst_caps_set (caps, "channels", GST_PROPS_INT (channels));
-        GST_DEBUG (0, "trying new caps: law %d, %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d\n",
+        GST_DEBUG ("trying new caps: law %d, %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d\n",
                    law, sign ? "" : "un", endian, width, depth, channels, rate);
         if (gst_pad_try_set_caps (this->pad[0], caps) != GST_PAD_LINK_REFUSED)
           gst_alsa_link (this->pad[0], caps);
@@ -1534,7 +1537,7 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
     if (format == NULL)
       return GST_PAD_LINK_DELAYED;
     
-    GST_DEBUG (GST_CAT_CAPS, "found format %s\n", snd_pcm_format_name (format->format));
+    GST_DEBUG ("found format %s\n", snd_pcm_format_name (format->format));
     
     if (!GST_FLAG_IS_SET (this, GST_ALSA_CAPS_NEGO)) {
       gint i;
@@ -1813,7 +1816,7 @@ gst_alsa_pcm_wait (GstAlsa *this)
     if ((err = snd_pcm_wait (this->handle, 1000)) < 0) {
       if (err == EINTR) {
         /* happens mostly when run under gdb, or when exiting due to a signal */
-        GST_DEBUG (GST_CAT_PLUGIN_INFO, "got interrupted while waiting");
+        GST_DEBUG ("got interrupted while waiting");
         if (gst_element_interrupt (GST_ELEMENT (this))) {
           return TRUE;
         } else {
@@ -1834,7 +1837,7 @@ gst_alsa_pcm_wait (GstAlsa *this)
 inline static gboolean
 gst_alsa_start (GstAlsa *this)
 {
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "Setting state to RUNNING");
+  GST_DEBUG ("Setting state to RUNNING");
 
   switch (snd_pcm_state(this->handle)) {
     case SND_PCM_STATE_XRUN:
@@ -1916,7 +1919,7 @@ gst_alsa_open_audio (GstAlsa *this)
   g_assert (this != NULL);
   g_assert (this->handle == NULL);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Opening alsa device \"%s\"...\n", this->device);
+  GST_INFO ( "Opening alsa device \"%s\"...\n", this->device);
 
   ERROR_CHECK (snd_output_stdio_attach (&this->out, stderr, 0),
                "error opening log output: %s");
@@ -1940,7 +1943,7 @@ gst_alsa_probe_hw_params (GstAlsa *this, GstAlsaFormat *format)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
   
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Probing format: %s %dHz, %d channels\n",
+  GST_INFO ( "Probing format: %s %dHz, %d channels\n",
             snd_pcm_format_name (format->format), format->rate, format->channels);
 
   snd_pcm_hw_params_alloca (&hw_params);
@@ -1985,10 +1988,10 @@ gst_alsa_set_hw_params (GstAlsa *this)
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
   if (this->format) {
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Preparing format: %s %dHz, %d channels",
+    GST_INFO ( "Preparing format: %s %dHz, %d channels",
               snd_pcm_format_name (this->format->format), this->format->rate, this->format->channels);
   } else {
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Preparing format: (none)");
+    GST_INFO ( "Preparing format: (none)");
   }
 
   snd_pcm_hw_params_alloca (&hw_params);
@@ -2087,7 +2090,7 @@ gst_alsa_drain_audio (GstAlsa *this)
   g_assert (this != NULL);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "stopping alsa");
+  GST_DEBUG ("stopping alsa");
   
   switch (snd_pcm_state (this->handle)) {
     case SND_PCM_STATE_XRUN:
@@ -2114,7 +2117,7 @@ gst_alsa_stop_audio (GstAlsa *this)
   g_assert (this != NULL);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "stopping alsa, skipping pending frames");
+  GST_DEBUG ("stopping alsa, skipping pending frames");
   
   switch (snd_pcm_state (this->handle)) {
     case SND_PCM_STATE_XRUN:
@@ -2284,7 +2287,7 @@ gst_alsa_clock_wait (GstClock *clock, GstClockEntry *entry)
   
   target = entry_time + diff;
 
-  GST_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
+  GST_DEBUG ("real_target %" G_GUINT64_FORMAT
 		            " target %" G_GUINT64_FORMAT
 			    " now %" G_GUINT64_FORMAT,
                             target, GST_CLOCK_ENTRY_TIME (entry), entry_time);

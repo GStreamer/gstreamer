@@ -21,6 +21,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstadder.h"
 #include <gst/audio/audio.h>
 #include <string.h> 		/* strcmp */
@@ -118,7 +121,7 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
      * so we need to go ahead and set all
        the relevant values. */
     if (strcmp (format, "int") == 0) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "parse_caps sets adder to format int");
+      GST_DEBUG ("parse_caps sets adder to format int");
       adder->format     = GST_ADDER_FORMAT_INT;
       gst_caps_get_int     (caps, "width",      &adder->width);
       gst_caps_get_int     (caps, "depth",      &adder->depth);
@@ -128,7 +131,7 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
       gst_caps_get_int     (caps, "channels",   &adder->channels);
       gst_caps_get_int     (caps, "rate",	&adder->rate);
     } else if (strcmp (format, "float") == 0) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "parse_caps sets adder to format float");
+      GST_DEBUG ("parse_caps sets adder to format float");
       adder->format     = GST_ADDER_FORMAT_FLOAT;
       gst_caps_get_string  (caps, "layout",    &adder->layout);
       gst_caps_get_float   (caps, "intercept", &adder->intercept);
@@ -230,7 +233,7 @@ gst_adder_link (GstPad *pad, GstCaps *caps)
         p = (GstPad *) sinkpads->data;
         if (p != pad && p != adder->srcpad) {
           if (gst_pad_try_set_caps (p, caps) <= 0) {
-            GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+            GST_DEBUG (
 		       "caps mismatch; unlinking and removing pad %s:%s "
 		       "(peer %s:%s)",
                        GST_DEBUG_PAD_NAME (p), 
@@ -419,7 +422,7 @@ gst_adder_loop (GstElement *element)
   /* get data from all of the sinks */
   inputs = adder->input_channels;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "starting to cycle through channels");
+  GST_DEBUG ("starting to cycle through channels");
 
   while (inputs) {
     guint32 got_bytes;
@@ -430,10 +433,10 @@ gst_adder_loop (GstElement *element)
 
     inputs = inputs->next;
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "looking into channel %p", input);
+    GST_DEBUG ("looking into channel %p", input);
       
     if (!GST_PAD_IS_USABLE (input->sinkpad)) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "adder ignoring pad %s:%s", 
+      GST_DEBUG ("adder ignoring pad %s:%s", 
 	         GST_DEBUG_PAD_NAME (input->sinkpad));
       continue;
     }
@@ -458,12 +461,12 @@ gst_adder_loop (GstElement *element)
 	  case GST_EVENT_EOS:
             /* if we get an EOS event from one of our sink pads, we assume that
                pad's finished handling data. just skip this pad */
-            GST_DEBUG (GST_CAT_PLUGIN_INFO, "got an EOS event");
+            GST_DEBUG ("got an EOS event");
 	    gst_event_unref (event);
             continue;
 	  case GST_EVENT_INTERRUPT:
 	    gst_event_unref (event);
-            GST_DEBUG (GST_CAT_PLUGIN_INFO, "got an interrupt event");
+            GST_DEBUG ("got an interrupt event");
 	    /* we have to call interrupt here, the scheduler will switch out this
 	     * element ASAP or returns TRUE if we need to exit the loop */
 	    if (gst_element_interrupt (GST_ELEMENT (adder))) {
@@ -478,7 +481,7 @@ gst_adder_loop (GstElement *element)
       /* here's where the data gets copied. this is a little nasty looking
          because it's the same code pretty much 3 times, except each time uses
          different data types and clamp limits. */
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+      GST_DEBUG (
 	         "copying %d bytes from channel %p to output data %p "
 	         "in buffer %p",
                  GST_BUFFER_SIZE (buf_out), input, 
@@ -496,9 +499,10 @@ gst_adder_loop (GstElement *element)
           for (i = 0; i < GST_BUFFER_SIZE (buf_out); i++)
             out[i] = CLAMP(out[i] + in[i], -128, 127);
         } else {
-          GST_ERROR (GST_ELEMENT (adder),
-		     "invalid width (%d) for int format in gstadder\n", 
+          gst_element_error (GST_ELEMENT (adder),
+		     "invalid width (%u) for int format in gstadder\n", 
 		     adder->width);
+	  return;
         }
       } else if (adder->format == GST_ADDER_FORMAT_FLOAT) {
         gfloat *in  = (gfloat *) raw_in;
@@ -506,14 +510,15 @@ gst_adder_loop (GstElement *element)
         for (i = 0; i < GST_BUFFER_SIZE (buf_out) / sizeof (gfloat); i++)
           out[i] += in[i];
       } else {
-        GST_ERROR (GST_ELEMENT (adder),
+        gst_element_error (GST_ELEMENT (adder),
 	           "invalid audio format (%d) in gstadder\n", 
 	           adder->format);
+	return;
       }
 
       gst_bytestream_flush (input->bytestream, GST_BUFFER_SIZE (buf_out));
 
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "done copying data");
+      GST_DEBUG ("done copying data");
     }
   }
 
@@ -550,7 +555,7 @@ gst_adder_loop (GstElement *element)
 
   /* send it out */
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushing buf_out");
+  GST_DEBUG ("pushing buf_out");
   gst_pad_push (adder->srcpad, buf_out);
 }
 

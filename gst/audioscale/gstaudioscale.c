@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <math.h>
 
@@ -250,7 +253,7 @@ gst_audioscale_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (0,
+  GST_DEBUG (
 	     "gst_audioscale_chain: got buffer of %ld bytes in '%s'\n",
 	     size, gst_element_get_name (GST_ELEMENT (audioscale)));
 
@@ -281,7 +284,7 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
       break;
     case ARG_FILTERLEN:
       r->filter_length = g_value_get_int (value);
-      GST_DEBUG_ELEMENT (0, GST_ELEMENT(src), "new filter length %d\n", r->filter_length);
+      GST_DEBUG_OBJECT (GST_ELEMENT(src), "new filter length %d\n", r->filter_length);
       break;
     case ARG_METHOD:
       r->method = g_value_get_enum (value);

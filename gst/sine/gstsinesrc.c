@@ -21,6 +21,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -400,7 +403,7 @@ gst_sinesrc_update_freq (const GValue *value, gpointer data)
   src->freq = g_value_get_float (value);
   src->table_inc = src->table_size * src->freq / src->samplerate;
   
-  /*GST_DEBUG(GST_CAT_PARAMS, "freq %f", src->freq); */
+  /*GST_DEBUG ("freq %f", src->freq); */
 }
 
 static inline void 

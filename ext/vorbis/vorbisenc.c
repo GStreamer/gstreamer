@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -647,7 +650,7 @@ gst_vorbisenc_write_page (VorbisEnc *vorbisenc, ogg_page *page)
 			             page->body,
 	        		     page->body_len);
 
-  GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", 
+  GST_DEBUG ("vorbisenc: encoded buffer of %d bytes", 
 			GST_BUFFER_SIZE (outbuf));
 
   vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);

@@ -18,6 +18,9 @@
  */
 
 #ifdef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 #endif
 
@@ -269,12 +272,12 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
   if (v4lmjpegsink->clock) {
     GstClockID id;
 
-    GST_DEBUG (0,"videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
+    GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
 
     jitter = 0; /* FIXME: jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf)); */
 
     if (jitter > 500000 || jitter < -500000)
-      GST_DEBUG (0, "jitter: %" G_GINT64_FORMAT, jitter);
+      GST_DEBUG ("jitter: %" G_GINT64_FORMAT, jitter);
 
     id = gst_clock_new_single_shot_id (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
     gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), id, NULL);
@@ -324,7 +327,7 @@ gst_v4lmjpegsink_buffer_new (GstBufferPool *pool,
   if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsink)))
     return NULL;
   if (v4lmjpegsink->breq.size < size) {
-    GST_DEBUG(GST_CAT_PLUGIN_INFO, "Requested buffer size is too large (%d > %ld)",
+    GST_DEBUG ("Requested buffer size is too large (%d > %ld)",
       size, v4lmjpegsink->breq.size);
     return NULL;
   }
