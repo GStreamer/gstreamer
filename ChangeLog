@@ -1,3 +1,9 @@
+2004-10-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_video_getcaps),
+	(gst_dvdec_video_link), (gst_dvdec_push), (gst_dvdec_loop):
+	Allow a little margin when negotiating the framerate.
+
 2004-10-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c:
