@@ -290,7 +290,8 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImage * ximage)
   x = MAX (0, (ximagesink->xwindow->width - ximage->width) / 2);
   y = MAX (0, (ximagesink->xwindow->height - ximage->height) / 2);
 
-  w = ximage->width, h = ximage->height;
+  w = ximage->width;
+  h = ximage->height;
 
   g_mutex_lock (ximagesink->x_lock);
 #ifdef HAVE_XSHM
