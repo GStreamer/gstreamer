@@ -34,6 +34,8 @@ void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
 		
 extern PyMethodDef pygst_functions[];
 extern GSList *mainloops;
+extern void _pygst_main_quit(void);
+
 
 static gboolean
 python_do_pending_calls(gpointer data)
@@ -41,15 +43,17 @@ python_do_pending_calls(gpointer data)
     gboolean quit = FALSE;
     PyGILState_STATE state;
 
-    state = PyGILState_Ensure();
-    if (PyErr_CheckSignals() == -1) {
-	PyErr_SetNone(PyExc_KeyboardInterrupt);
-	quit = TRUE;
-    }
-    if (quit && mainloops != NULL)
-	gst_main_quit();
+    if (PyOS_InterruptOccurred()) {
+	 state = pyg_gil_state_ensure();
+	 PyErr_SetNone(PyExc_KeyboardInterrupt);
+	 pyg_gil_state_release(state);
+	 quit = TRUE;
+    } 
     
-    PyGILState_Release(state);
+	 
+    if (quit && mainloops != NULL)
+	 _pygst_main_quit();
+    
     return TRUE;
 }
 

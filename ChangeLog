@@ -1,3 +1,10 @@
+2004-09-29  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstmodule.c (python_do_pending_calls): Use
+	PyOS_InterruptOccurred and only hold the GIL during
+	PyErr_SetNone. Use _pygst_main_quit to avoid errors/aborts. Also
+	use the pygtk provided gil macros instead of the python ones.
+
 2004-09-22  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.override: use new threading API
