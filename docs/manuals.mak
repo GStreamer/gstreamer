@@ -10,7 +10,7 @@
 PDFFILES=$(manualname).pdf
 PSFILES=$(manualname).ps
 
-if HAVE_FIG2DEV
+if HAVE_FIG2DEV_PNG
 $(manualname)/$(htmlname): $(sgml_files) $(png_files)
 else
 $(manualname)/$(htmlname): $(sgml_files)
@@ -29,12 +29,12 @@ else
 	echo "Can't build $@: don't have ps2pdf tool"
 endif
 
-if HAVE_FIG2DEV
+if HAVE_FIG2DEV_EPS
 $(manualname).ps: $(sgml_files) $(eps_files)
 else
 $(manualname).ps: $(sgml_files)
 endif
-if HAVE_PS2PDF
+if HAVE_DB2PS
 	@if [ -r $< ] ; then db2ps $(manualname).sgml ; fi
 else
 	echo "Can't build $@: don't have db2ps tool"
@@ -43,11 +43,15 @@ endif
 images :
 	mkdir images
 
+if HAVE_FIG2DEV_PNG
 images/%.png : %.fig images
 	fig2dev -L png -s 16 $< $@
+endif
 
+if HAVE_FIG2DEV_EPS
 images/%.eps : %.fig images
 	fig2dev -L eps -s 16 -m 0.5 $< $@
+endif
 
 $(manualname)/images:
 	@ln -sf ../images $(manualname)/images

@@ -76,6 +76,23 @@ AC_CHECK_PROG(HAVE_PS2PDF, ps2pdf, true, false)
 dnl check for image conversion tool
 AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
 
+dnl The following is a hack: if fig2dev doesn't display an error message
+dnl for the desired type, we assume it supports it.
+HAVE_FIG2DEV_PNG=false
+if test "x$HAVE_FIG2DEV" = "xtrue" ; then
+  fig2dev_quiet=`fig2dev -L png </dev/null 2>&1 >/dev/null`
+  if test "x$fig2dev_quiet" = "x" ; then
+    HAVE_FIG2DEV_PNG=true
+  fi
+fi
+HAVE_FIG2DEV_EPS=false
+if test "x$HAVE_FIG2DEV" = "xtrue" ; then
+  fig2dev_quiet=`fig2dev -L eps </dev/null 2>&1 >/dev/null`
+  if test "x$fig2dev_quiet" = "x" ; then
+    HAVE_FIG2DEV_EPS=true
+  fi
+fi
+
 
 dnl Set up conditionals for (target) architecture:
 dnl ==============================================
@@ -496,7 +513,8 @@ AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
 AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
 AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
-AM_CONDITIONAL(HAVE_FIG2DEV,        $HAVE_FIG2DEV)
+AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
+AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
