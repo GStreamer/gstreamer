@@ -485,6 +485,27 @@ else
   HAVE_CSSAUTH="no"
 fi
 
+dnl Check for SDLlib
+AC_MSG_CHECKING(SDLlib)
+AC_CHECK_LIB(SDL, SDL_Init, HAVE_LIBSDL=yes, HAVE_LIBSDL=no, -L/usr/lib -L/usr/local/lib -lpthread)
+AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
+ 
+dnl Check for SDL
+HAVE_LIBSDL="no"
+AC_MSG_CHECKING(for SDL)
+if sdl-config --libs > /dev/null 2>&1; then
+  HAVE_LIBSDL="yes"
+  AC_MSG_RESULT(found)
+else
+  AC_MSG_RESULT(not found)
+fi
+
+SDL_LIBS="`sdl-config --libs`"
+SDL_CFLAGS="`sdl-config --cflags`"
+ 
+AC_SUBST(SDL_LIBS)
+AC_SUBST(SDL_CFLAGS)
+
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
   HAVE_LINUX_CDROM=yes, []
@@ -725,6 +746,10 @@ if test "x$HAVE_LIBJPEG" = xyes; then
   AC_DEFINE(HAVE_LIBJPEG)
 fi
 
+if test "x$HAVE_LIBSDL" = xyes; then
+  AC_DEFINE(HAVE_LIBSDL)
+fi
+
 if test "x$HAVE_LIBHERMES" = "xyes"; then
   AC_DEFINE(HAVE_LIBHERMES)
 fi
@@ -768,6 +793,7 @@ AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
 AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
+AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
 AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
@@ -969,6 +995,7 @@ plugins/artsd/Makefile
 plugins/xmms/Makefile
 plugins/arts/Makefile
 plugins/1394/Makefile
+plugins/sdlsink/Makefile
 plugins/dv/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
