@@ -52,6 +52,11 @@ typedef struct _GstFaad {
 
   /* FAAD object */
   faacDecHandle handle;
+  gboolean init;
+
+  /* FAAD channel setup */
+  guchar *channel_positions;
+  gboolean need_channel_setup;
 } GstFaad;
 
 typedef struct _GstFaadClass {

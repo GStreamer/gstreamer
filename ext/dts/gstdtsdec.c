@@ -26,6 +26,8 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
+#include <gst/audio/multichannel.h>
+
 #include <dts.h>
 
 #include "gstdtsdec.h"
@@ -180,42 +182,102 @@ gst_dtsdec_init (GstDtsDec * dtsdec)
 }
 
 static gint
-gst_dtsdec_channels (uint32_t flags)
+gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
 {
   gint chans = 0;
 
   switch (flags & DTS_CHANNEL_MASK) {
     case DTS_MONO:
       chans = 1;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 2);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+      }
       break;
-    case DTS_CHANNEL:
+      /* case DTS_CHANNEL: */
     case DTS_STEREO:
     case DTS_STEREO_SUMDIFF:
     case DTS_STEREO_TOTAL:
     case DTS_DOLBY:
       chans = 2;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 3);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      }
       break;
     case DTS_3F:
+      chans = 3;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 4);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      }
+      break;
     case DTS_2F1R:
       chans = 3;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 4);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+      }
       break;
     case DTS_3F1R:
+      chans = 4;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 5);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+      }
+      break;
     case DTS_2F2R:
       chans = 4;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 5);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        *pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      }
       break;
     case DTS_3F2R:
       chans = 5;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 6);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        *pos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      }
       break;
     case DTS_4F2R:
       chans = 6;
+      if (pos) {
+        *pos = g_new (GstAudioChannelPosition, 7);
+        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
+        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
+        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[3] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        *pos[5] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      }
       break;
     default:
       /* error */
       g_warning ("dtsdec: invalid flags 0x%x", flags);
       return 0;
   }
-  if (flags & DTS_LFE)
+  if (flags & DTS_LFE) {
+    if (pos) {
+      *pos[chans] = GST_AUDIO_CHANNEL_POSITION_LFE;
+    }
     chans += 1;
+  }
 
   return chans;
 }
@@ -223,8 +285,12 @@ gst_dtsdec_channels (uint32_t flags)
 static gboolean
 gst_dtsdec_renegotiate (GstDtsDec * dts)
 {
+  GstAudioChannelPosition *pos;
   GstCaps *caps = gst_caps_from_string (DTS_CAPS);
-  gint channels = gst_dtsdec_channels (dts->using_channels);
+  gint channels = gst_dtsdec_channels (dts->using_channels, &pos);
+
+  if (!channels)
+    return FALSE;
 
   GST_INFO ("dtsdec renegotiate, channels=%d, rate=%d",
       channels, dts->sample_rate);
@@ -232,6 +298,8 @@ gst_dtsdec_renegotiate (GstDtsDec * dts)
   gst_caps_set_simple (caps,
       "channels", G_TYPE_INT, channels,
       "rate", G_TYPE_INT, (gint) dts->sample_rate, NULL);
+  gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+  g_free (pos);
 
   return gst_pad_set_explicit_caps (dts->srcpad, caps);
 }
@@ -381,7 +449,7 @@ gst_dtsdec_loop (GstElement * element)
     }
 
     samples = dts_samples (dts->state);
-    num_c = gst_dtsdec_channels (dts->using_channels);
+    num_c = gst_dtsdec_channels (dts->using_channels, NULL);
     out = gst_buffer_new_and_alloc ((SAMPLE_WIDTH / 8) * 256 * num_c);
     GST_BUFFER_TIMESTAMP (out) = timestamp;
     GST_BUFFER_DURATION (out) = GST_SECOND * 256 / dts->sample_rate;
@@ -497,7 +565,7 @@ gst_dtsdec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
+  if (!gst_library_load ("gstbytestream") || !gst_library_load ("gstaudio"))
     return FALSE;
 
   if (!gst_element_register (plugin, "dtsdec", GST_RANK_PRIMARY,
