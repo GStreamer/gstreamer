@@ -23,6 +23,7 @@ dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
 
+AUTOMAKE="$AUTOMAKE"
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL -I m4 -I common/m4 $ACLOCAL_FLAGS"
@@ -76,6 +77,9 @@ dnl ##############################
 
 dnl Check for tools:
 dnl ================
+
+dnl allow for different autotools
+AS_AUTOTOOLS_ALTERNATE()
 
 dnl modify pkg-config path
 AC_ARG_WITH(pkg-config-path, 
