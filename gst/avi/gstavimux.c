@@ -593,6 +593,7 @@ gst_avimux_write_tag (const GstTagList * list, const gchar * tag, gpointer data)
   };
   gint n, len, plen;
   GstBuffer *buf = data;
+  guint8 *buffdata = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
   gchar *str;
 
   for (n = 0; rifftags[n].fcc != 0; n++) {
@@ -603,14 +604,14 @@ gst_avimux_write_tag (const GstTagList * list, const gchar * tag, gpointer data)
       if (plen & 1)
         plen++;
       if (GST_BUFFER_MAXSIZE (buf) >= GST_BUFFER_SIZE (buf) + 8 + plen) {
-        GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf), rifftags[n].fcc);
-        GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 4, len + 1);
-        memcpy (GST_BUFFER_DATA (buf) + 8, str, len);
-        GST_BUFFER_DATA (buf)[8 + len] = 0;
+        GST_WRITE_UINT32_LE (buffdata, rifftags[n].fcc);
+        GST_WRITE_UINT32_LE (buffdata + 4, len + 1);
+        memcpy (buffdata + 8, str, len);
+        buffdata[8 + len] = 0;
         GST_BUFFER_SIZE (buf) += 8 + plen;
       }
+      break;
     }
-    break;
   }
 }
 
@@ -797,13 +798,13 @@ gst_avimux_riff_get_avi_header (GstAviMux * avimux)
     buffdata = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer);
 
     /* update list size */
-    GST_WRITE_UINT32_LE (ptr, GST_BUFFER_SIZE (buffer) - startsize);
+    GST_WRITE_UINT32_LE (ptr, GST_BUFFER_SIZE (buffer) - startsize - 4);
   }
 
   /* avi data header */
   memcpy (buffdata + 0, "LIST", 4);
   GST_WRITE_UINT32_LE (buffdata + 4, avimux->data_size);
-  memcpy (buffdata + 12, "movi", 4);
+  memcpy (buffdata + 8, "movi", 4);
   buffdata += 12;
   GST_BUFFER_SIZE (buffer) += 12;
 
