@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 8, 4, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer, GST_VERSION, 0, 8, 4, 2, GST_CVS="no", GST_CVS="yes")
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
@@ -525,6 +525,7 @@ AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
   *) GST_PACKAGE="${withval}" ;;
 esac], 
 [
+dnl default value
 if test "x$GST_CVS" = "xyes"
 then
   dnl nano >= 1
@@ -533,7 +534,7 @@ else
   GST_PACKAGE="GStreamer source release"
 fi
 ]
-) dnl Default value
+)
 AC_MSG_NOTICE(Using $GST_PACKAGE as package name)
 AC_DEFINE_UNQUOTED(GST_PACKAGE, "$GST_PACKAGE", [package name in plugins])
 
