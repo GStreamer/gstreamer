@@ -1,3 +1,17 @@
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
+	* configure.ac:
+        Add objective-c support if running in Darwin/Mac OS X
+	* sys/Makefile.am:
+        * sys/osxvideo:
+        * sys/osxvideo/Makefile.am:
+        * sys/osxvideo/osxvideosink.h:
+        * sys/osxvideo/osxvideosink.m:
+        * sys/osxvideo/cocoawindow.h:
+        * sys/osxvideo/cocoawindow.m:
+        Add osxvideosink, a cocoa-based osx video sink
+        
+
 2004-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/dvdnav/gst-dvd:
 	Grab the gconf key from the right spot
