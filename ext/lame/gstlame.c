@@ -23,6 +23,10 @@
 #include "string.h"
 #include "gstlame.h"
 
+#ifdef lame_set_preset
+#define GST_LAME_PRESET
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (debug);
 #define GST_CAT_DEFAULT debug
 
@@ -144,6 +148,7 @@ gst_lame_vbrmode_get_type (void)
   return lame_vbrmode_type;
 }
 
+#ifdef GSTLAME_PRESET
 #define GST_TYPE_LAME_PRESET (gst_lame_preset_get_type())
 static GType
 gst_lame_preset_get_type (void)
@@ -165,6 +170,7 @@ gst_lame_preset_get_type (void)
 
   return gst_lame_preset;
 }
+#endif
 
 /********** Standard stuff for signals and arguments **********/
 /* GstLame signals and args */
@@ -208,8 +214,12 @@ enum
   ARG_NO_SHORT_BLOCKS,
   ARG_EMPHASIS,
   ARG_VBR_QUALITY,
+#ifdef GSTLAME_PRESET
   ARG_XINGHEADER,
   ARG_PRESET
+#else
+  ARG_XINGHEADER
+#endif
 };
 
 static void gst_lame_base_init (gpointer g_class);
@@ -392,9 +402,11 @@ gst_lame_class_init (GstLameClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XINGHEADER,
       g_param_spec_boolean ("xingheader", "Output Xing Header",
           "Output Xing Header", FALSE, G_PARAM_READWRITE));
+#ifdef GSTLAME_PRESET
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRESET,
       g_param_spec_enum ("preset", "Lame Preset", "Lame Preset",
           GST_TYPE_LAME_PRESET, 0, G_PARAM_READWRITE));
+#endif
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
 
@@ -771,9 +783,11 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_XINGHEADER:
       lame->xingheader = g_value_get_boolean (value);
       break;
+#ifdef GSTLAME_PRESET
     case ARG_PRESET:
       lame->preset = g_value_get_enum (value);
       break;
+#endif
     default:
       break;
   }
@@ -888,9 +902,11 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_XINGHEADER:
       g_value_set_boolean (value, lame->xingheader);
       break;
+#ifdef GSTLAME_PRESET
     case ARG_PRESET:
       g_value_set_enum (value, lame->preset);
       break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1077,9 +1093,11 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
   CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
   CHECK_ERROR (lame_set_bWriteVbrTag (lame->lgf, lame->xingheader ? 1 : 0));
+#ifdef GSTLAME_PRESET
   if (lame->preset > 0) {
     CHECK_ERROR (lame_set_preset (lame->lgf, lame->preset));
   }
+#endif
   gst_lame_set_metadata (lame);
 
   /* initialize the lame encoder */
