@@ -440,8 +440,13 @@ gst_avi_demux_handle_src_query (GstPad * pad,
       switch (*format) {
         case GST_FORMAT_TIME:
           if (stream->strh->rate && stream->strh->type == GST_RIFF_FCC_auds) {
-            *value = ((gfloat) stream->current_byte) * GST_SECOND /
-                stream->strh->rate;
+            if (stream->strh->rate != 0) {
+              *value = ((gfloat) stream->current_byte) * GST_SECOND /
+                  stream->bitrate;
+            } else {
+              *value = (((gfloat) stream->current_frame) * stream->strh->scale /
+                  (stream->strh->rate * stream->blockalign)) * GST_SECOND;
+            }
           } else {
             *value = (((gfloat) stream->current_frame) * stream->strh->scale /
                 stream->strh->rate) * GST_SECOND;
@@ -747,6 +752,7 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   GstPadTemplate *templ = NULL;
   GstPad *pad;
   avi_stream_context *stream;
+  gint blockalign = 0, bitrate = 0;
   union
   {
     gst_riff_strf_vids *vids;
@@ -870,6 +876,8 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
       gst_tag_list_free (list);
       if (codec_name)
         g_free (codec_name);
+      blockalign = strf.auds->blockalign;
+      bitrate = strf.auds->av_bps;
       g_free (strf.auds);
       avi->num_a_streams++;
       break;
@@ -921,6 +929,8 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   stream->current_byte = 0;
   stream->current_entry = -1;
   stream->skip = 0;
+  stream->blockalign = blockalign;
+  stream->bitrate = bitrate;
   gst_pad_set_element_private (pad, stream);
   avi->num_streams++;
 
@@ -1479,7 +1489,6 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);
         GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
-
         gst_pad_push (stream->pad, GST_DATA (buf));
       }
     }
