@@ -71,59 +71,6 @@ The element object
 </para>
 
 
-<!-- ##### SIGNAL GstElement::eos ##### -->
-<para>
-Signal emited when the element goes to PAUSED due to an end-of-stream
-condition.
-</para>
-
-@gstelement: the object which received the signal.
-
-<!-- ##### SIGNAL GstElement::error ##### -->
-<para>
-This signal is emitted when an element has encountered an error that caused
-it to fail performing its function.
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the original #GstElement that generated the error.
-@arg2: a #GError containing the translated error message.
-@arg3: a debug string providing additional untranslated debug information, or NULL.
-
-<!-- ##### SIGNAL GstElement::found-tag ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
-@arg2: 
-
-<!-- ##### SIGNAL GstElement::new-pad ##### -->
-<para>
-Is triggered whenever a new pad is added to an element.
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new pad that was added
-
-<!-- ##### SIGNAL GstElement::pad-removed ##### -->
-<para>
-Is triggered whenever a pad has been removed from the element.
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: The pad that was removed.
-
-<!-- ##### SIGNAL GstElement::state-change ##### -->
-<para>
-Is triggered whenever the state of an element changes.
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new state of the object
-@arg2: 
-
 <!-- ##### MACRO gst_element_get_name ##### -->
 <para>
 Gets the name of the element.
@@ -1018,4 +965,57 @@ Helper macro to create query type functions
 @functionname: The function name
 @...: list of query types.
 
+
+<!-- ##### SIGNAL GstElement::eos ##### -->
+<para>
+Signal emited when the element goes to PAUSED due to an end-of-stream
+condition.
+</para>
+
+@gstelement: the object which received the signal.
+
+<!-- ##### SIGNAL GstElement::error ##### -->
+<para>
+This signal is emitted when an element has encountered an error that caused
+it to fail performing its function.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the original #GstElement that generated the error.
+@arg2: a #GError containing the translated error message.
+@arg3: a debug string providing additional untranslated debug information, or NULL.
+
+<!-- ##### SIGNAL GstElement::found-tag ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### SIGNAL GstElement::new-pad ##### -->
+<para>
+Is triggered whenever a new pad is added to an element.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new pad that was added
+
+<!-- ##### SIGNAL GstElement::pad-removed ##### -->
+<para>
+Is triggered whenever a pad has been removed from the element.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: The pad that was removed.
+
+<!-- ##### SIGNAL GstElement::state-change ##### -->
+<para>
+Is triggered whenever the state of an element changes.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new state of the object
+@arg2: 
 
