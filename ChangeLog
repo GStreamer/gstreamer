@@ -1,3 +1,7 @@
+2002-02-06  Thomas Vander Stichele <thomas@apestaart.org>
+
+  	* more build cleanup : merging over changes from gst-player
+
 2002-01-17  Bastien Nocera  <hadess@hadess.net>
 
 	* sys/Makefile.am: make the qcam plugin build only

@@ -1,54 +1,28 @@
-dnl autoconf configuration file for plugins 
+dnl autoconf configuration file for gst-plugins 
 AC_INIT
-dnl FIXME take something else ?
-AC_CONFIG_SRCDIR([COPYING])
-
 AC_CANONICAL_TARGET([])
 
+dnl when going to/from release please set the nano (fourth number) right !
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
+
+
+dnl FIXME take something else ?
+AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
-
-GST_VERSION_MAJOR=0
-GST_VERSION_MINOR=3
-GST_VERSION_MICRO=2
-
-dnl we use a datestamped release tag and a fourth version ".1" number
-dnl during CVS development
-GST_VERSION_RELEASE=`date +%Y%m%d`
-GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO.1
-dnl we use a normal release tag increased manually when releasing
-dnl GST_VERSION_RELEASE=1
-dnl GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
-
-PACKAGE=gst-plugins
-VERSION=$GST_VERSION
-
-AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
-AC_SUBST(PACKAGE)
-AC_SUBST(VERSION)
-AC_DEFINE_UNQUOTED(GST_VERSION_RELEASE, "$GST_VERSION_RELEASE")
-AC_SUBST(GST_VERSION_RELEASE)
 
 dnl libtool
 GST_CURRENT=2
 GST_REVISION=0
 GST_AGE=0
 GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
-
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-dnl Add parameters for aclocal
-dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="cat m4/*.m4 >acinclude.m4;$ACLOCAL $ACLOCAL_FLAGS"
-
-AC_SUBST(GST_VERSION_MAJOR)
-AC_SUBST(GST_VERSION_MINOR)
-AC_SUBST(GST_VERSION_MICRO)
-AC_SUBST(GST_VERSION)
-
 AC_SUBST(GST_CURRENT)
 AC_SUBST(GST_REVISION)
 AC_SUBST(GST_AGE)
 AC_SUBST(GST_LIBVERSION)
+
+dnl Add parameters for aclocal
+dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
+ACLOCAL="cat m4/*.m4 >acinclude.m4;$ACLOCAL $ACLOCAL_FLAGS"
 
 AM_MAINTAINER_MODE
 
@@ -424,7 +398,6 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
 ])
 
 dnl *** Gnome VFS ***
-dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
 GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
   PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0, HAVE_GNOME_VFS="yes", HAVE_GNOME_VFS="no")
@@ -543,7 +516,6 @@ GST_CHECK_FEATURE(RTP, [RTP library], rtpenc rtpdec,[
   RTP_LIBS="-lrtp"
   AC_SUBST(RTP_LIBS)
 ])
-
 
 dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
 dnl can use GST_* which should have GLIB_* info
@@ -716,8 +688,6 @@ AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
-AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
-AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
@@ -727,19 +697,10 @@ AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 AM_CONDITIONAL(BUILD_PLUGIN_DOCS,   test "x$BUILD_PLUGIN_DOCS" = "xyes")
-AM_CONDITIONAL(HAVE_PDFXMLTEX,      $HAVE_PDFXMLTEX)
-AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
-AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
-AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
-AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
-AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
-AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
-AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
-
 
 GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs -Wall"
 AC_SUBST(GST_LIBS)
