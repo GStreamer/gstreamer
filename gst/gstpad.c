@@ -1833,8 +1833,13 @@ gst_pad_get_caps (GstPad *pad)
     return GST_PAD_CAPS (realpad);
   }
   else if GST_RPAD_GETCAPSFUNC (realpad) {
+    GstCaps *caps;
+
     GST_CAT_DEBUG (GST_CAT_CAPS, "using pad get function");
-    return GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD_CAST (realpad), NULL);
+    caps = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD_CAST (realpad), NULL);
+    if(caps)g_return_val_if_fail(caps->refcount > 0, NULL);
+
+    return caps;
   }
   else if (GST_PAD_PAD_TEMPLATE (realpad)) {
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
