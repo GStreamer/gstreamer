@@ -57,7 +57,13 @@ sub playfile($$)
     my ($file, $ext) = @_;
 
     my $pipe;
-    if ($pipe = $pipes{$ext})
+    if ($cfg{VISUALIZER} && ($pipe = $pipes{"vis." . $ext}))
+    {
+	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
+	print "Running $command\n";
+	system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
+    }
+    elsif ($pipe = $pipes{$ext})
     {
 	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
 	print "Running $command\n";
@@ -75,11 +81,14 @@ read_config ();
 
 %pipes = ( 
   "mp3", "mad ! $cfg{AUDIOSINK}",
+  "vis.mp3", "mad ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
+  "vis.ogg", "vorbisdec ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
   "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} }",
   "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
+  "vis.wav", "wavparse ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
 
 );
 
