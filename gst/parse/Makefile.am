@@ -21,7 +21,7 @@ noinst_HEADERS = grammar.tab.h
 grammar.tab.c grammar.tab.h: grammar.y ../gstmarshal.h
 	$(BISON_PATH) -d -v -p_gst_parse__yy $(srcdir)/grammar.y -o grammar.tab.c
  
-lex._gst_parse_yy.c: parse.l
+lex._gst_parse_yy.c: parse.l grammar.tab.h
 	$(FLEX_PATH) -P_gst_parse_yy $^
 
 ## this is so make install without a previous make can work, because
