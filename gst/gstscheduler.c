@@ -944,7 +944,7 @@ gst_scheduler_factory_make (const gchar *name, GstElement *parent)
   {
     /* FIXME: do better error handling */
     if (default_name == NULL)
-      g_error ("No default scheduler name - do you have a registry ?");
+      g_warning ("No default scheduler name - do you have a registry ?");
     factory = gst_scheduler_factory_find (default_name);
   }
 
