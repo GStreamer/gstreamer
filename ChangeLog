@@ -1,3 +1,20 @@
+2004-11-27  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/gst.override (_wrap_gst_event_new_any)
+	(_wrap_gst_event_new_discontinuous) 
+	(_wrap_gst_event_any_get_structure)
+	(_wrap_gst_registry_pool_plugin_list):
+	* gst/gst.defs (get_data, event_new_any, any_get_structure):
+	Added basic support for "ANY" (navigation) events.
+	Added basic support for discont events (only one value for now,
+	we are limited by the GStreamer API).
+	Now it is possible to access data in a GstBuffer as a string
+	Added a definition for method get_data of GstBuffer.
+
+	* gst/gst.override (_wrap_gst_structure_set_value): Add an
+	optional parameter to allow selection of the right G_TYPE. If no
+	type is specified, make an educated guess.
+
 2004-11-25  Johan Dahlin  <johan@gnome.org>
 
 	* gst/interfaces.override:

@@ -101,7 +101,6 @@ ignore
   gst_element_get_property
   gst_element_set_property
   gst_error_get_message
-  gst_event_new_discontinuous
   gst_object_default_deep_notify
   gst_object_check_uniqueness
   gst_object_replace
@@ -684,21 +683,64 @@ override gst_structure_set_value kwargs
 static PyObject *
 _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-	static char *kwlist[] = { "field", "value", NULL };
+	static char *kwlist[] = { "field", "value", "type_name", NULL };
 	char *field;
 	PyObject *py_value = NULL;
+        char *type_name = NULL;
+	GType type;
 	GValue value = { 0 };
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "sO:GstStructure.set_value",
-					 kwlist, &field, &py_value))
+                "sO|s:GstStructure.set_value",
+                kwlist, &field, &py_value,
+                &type_name)) {
+            return NULL;
+        }
+
+        if (type_name) {
+            if (strcmp (type_name, "char") == 0) {
+                type = G_TYPE_CHAR;
+            } else if (strcmp (type_name, "uchar") == 0) {
+                type = G_TYPE_UCHAR;
+            } else if (strcmp (type_name, "boolean") == 0) {
+                type = G_TYPE_BOOLEAN;
+            } else if (strcmp (type_name, "int") == 0) {
+                type = G_TYPE_INT;
+            } else if (strcmp (type_name, "uint") == 0) {
+                type = G_TYPE_UINT;
+            } else if (strcmp (type_name, "long") == 0) {
+                type = G_TYPE_LONG;
+            } else if (strcmp (type_name, "ulong") == 0) {
+                type = G_TYPE_ULONG;
+            } else if (strcmp (type_name, "int64") == 0) {
+                type = G_TYPE_INT64;
+            } else if (strcmp (type_name, "uint64") == 0) {
+                type = G_TYPE_UINT64;
+            } else if (strcmp (type_name, "float") == 0) {
+                type = G_TYPE_FLOAT;
+            } else if (strcmp (type_name, "double") == 0) {
+                type = G_TYPE_DOUBLE;
+            } else if (strcmp (type_name, "string") == 0) {
+                type = G_TYPE_STRING;
+            } else {
+                PyErr_SetString(PyExc_TypeError,
+                    "invalid type name");
+                return NULL;
+            }
+        } else {
+            /* Let PyGTK guess a GType for the object. */
+            type = pyg_type_from_object((PyObject *) py_value->ob_type);
+            if (type == 0) {
 		return NULL;
-	
-	g_value_init(&value, G_TYPE_STRING);
+            }
+        }
+
+	g_value_init(&value, type);
 	if (pyg_value_from_pyobject(&value, py_value) != 0) {
 		return NULL;
 	}
-	gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
+	gst_structure_set_value(pyg_boxed_get(self, GstStructure), field,
+            &value);
 
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -1118,6 +1160,83 @@ _wrap_gst_main_quit(PyObject *self)
     
     Py_INCREF(Py_None);
     return Py_None;
+}
+%%
+override gst_event_new_any kwargs
+static PyObject *
+_wrap_gst_event_new_any(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "structure", NULL };
+    PyObject *py_structure;
+    GstStructure *structure = NULL;
+    GstEvent *event;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+            "O:event_new_any", kwlist, &py_structure))
+        return NULL;
+    if (pyg_boxed_check(py_structure, GST_TYPE_STRUCTURE))
+        structure = pyg_boxed_get(py_structure, GstStructure);
+    else {
+        PyErr_SetString(PyExc_TypeError,
+            "structure should be a GstStructure");
+        return NULL;
+    }
+
+    event = gst_event_new (GST_EVENT_ANY);
+    if (!event) {
+        PyErr_SetString(PyExc_RuntimeError,
+            "could not create GstEvent object");
+        return NULL;
+    }
+    event->event_data.structure.structure = gst_structure_copy(structure);
+
+    /* pyg_boxed_new handles NULL checking */
+    return pyg_boxed_new(GST_TYPE_EVENT, event, TRUE, TRUE);
+}
+%%
+override gst_event_any_get_structure noargs
+static PyObject *
+_wrap_gst_event_any_get_structure(PyObject *self)
+{
+    GstStructure *ret;
+    GstEvent *event;
+
+    event = pyg_pointer_get(self, GstEvent);
+    if (GST_EVENT_TYPE(event) == GST_EVENT_ANY) {
+        ret = event->event_data.structure.structure;
+        /* pyg_boxed_new handles NULL checking */
+        return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
+    } else {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+}
+%%
+override gst_event_new_discontinuous kwargs
+static PyObject *
+_wrap_gst_event_new_discontinuous(PyObject *self, PyObject *args,
+    PyObject *kwargs)
+{
+    static char *kwlist[] = { "new_media", "format", "value", NULL };
+    int new_media = FALSE;
+    PyObject *py_format = NULL;
+    gint64 value = 0;
+    GstFormat format;
+    GstEvent *event;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+            "iOL:event_new_discontinuous", kwlist, &new_media, &py_format,
+            &value)) {
+        return NULL;
+    }
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_format, (gint *) &format)) {
+        return NULL;
+    }
+
+    event = gst_event_new_discontinuous (new_media, format, value,
+        GST_FORMAT_UNDEFINED);
+
+    return pyg_boxed_new(GST_TYPE_EVENT, event, TRUE, TRUE);
 }
 %%
 override gst_registry_pool_plugin_list noargs

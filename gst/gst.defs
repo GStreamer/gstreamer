@@ -278,6 +278,12 @@
   )
 )
 
+(define-method get_data
+  (of-object "GstBuffer")
+  (c-name "gst_buffer_get_data")
+  (return-type "char*")
+)
+
 (define-function _gst_buffer_initialize
   (c-name "_gst_buffer_initialize")
   (return-type "none")
@@ -1938,6 +1944,14 @@
   )
 )
 
+(define-function event_new_any
+  (c-name "gst_event_new_any")
+  (return-type "GstEvent*")
+  (parameters
+    '("GstStructure*" "structure")
+  )
+)
+
 (define-function event_new_discontinuous
   (c-name "gst_event_new_discontinuous")
   (return-type "GstEvent*")
@@ -1968,6 +1982,11 @@
   )
 )
 
+(define-method any_get_structure
+  (of-object "GstEvent")
+  (c-name "gst_event_any_get_structure")
+  (return-type "GstStructure*")
+)
 
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstfilter.h
