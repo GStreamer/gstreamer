@@ -1,3 +1,12 @@
+2004-06-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audiorate_link),
+	(gst_audiorate_init), (gst_audiorate_chain),
+	(gst_audiorate_set_property), (gst_audiorate_get_property):
+	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
+	(gst_videorate_chain):
+	Added some logging, fixed an overflow bug in videorate.
+
 2004-06-24  Benjamin Otte  <otte@gnome.org>
 
 	* ext/kio/Makefile.am:
