@@ -6,7 +6,7 @@
 	  make mikmod's loop function not loop infinitely and call
 	  gst_element_yield anymore
 	* gst/modplug/gstmodplug.cc:
-	  fix pad negotiation
+	  fix pad negotiation (fixes #136590)
 
 2004-03-09  David Schleef  <ds@schleef.org>
 
