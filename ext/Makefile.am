@@ -298,6 +298,12 @@ else
 VORBIS_DIR=
 endif
 
+if USE_THEORA
+THEORA_DIR=theora
+else
+THEORA_DIR=
+endif
+
 if USE_XVID
 XVID_DIR=xvid
 else
@@ -366,6 +372,7 @@ SUBDIRS=\
 	$(SPEEX_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
+	$(THEORA_DIR) \
 	$(IVORBIS_DIR) \
 	$(VORBIS_DIR) \
 	$(XVID_DIR)
@@ -422,5 +429,6 @@ DIST_SUBDIRS=\
 	speex \
 	swfdec \
 	tarkin \
+	theora \
 	vorbis \
 	xvid
