@@ -29,6 +29,7 @@
 #include "config.h"
 
 #include <dvdnav/dvdnav.h>
+#include <dvdread/nav_print.h>
 
 #define GST_TYPE_DVDNAVSRC \
   (dvdnavsrc_get_type())
@@ -49,18 +50,27 @@ struct _DVDNavSrc {
 
   /* pads */
   GstPad *srcpad;
+  GstCaps *streaminfo;
 
   /* location */
   gchar *location;
-  gboolean new_seek;
+
+  gboolean did_seek;
+  gboolean need_flush;
   GstBufferPool *bufferpool;
 
   int title, chapter, angle;
   dvdnav_t *dvdnav;
+
+  GstCaps *buttoninfo;
 };
 
 struct _DVDNavSrcClass {
   GstElementClass parent_class;
+
+  void (*button_pressed) (DVDNavSrc *src, int button);
+  void (*pointer_select) (DVDNavSrc *src, int x, int y);
+  void (*pointer_activate) (DVDNavSrc *src, int x, int y);
 };
 
 /* elementfactory information */
@@ -77,13 +87,17 @@ GstElementDetails dvdnavsrc_details = {
 
 /* DVDNavSrc signals and args */
 enum {
-  /* FILL ME */
+  BUTTON_PRESSED_SIGNAL,
+  POINTER_SELECT_SIGNAL,
+  POINTER_ACTIVATE_SIGNAL,
   LAST_SIGNAL
 };
 
 enum {
   ARG_0,
   ARG_LOCATION,
+  ARG_STREAMINFO,
+  ARG_BUTTONINFO,
   ARG_TITLE_STRING,
   ARG_TITLE,
   ARG_CHAPTER,
@@ -104,8 +118,7 @@ static void 		dvdnavsrc_init		(DVDNavSrc *dvdnavsrc);
 static void 		dvdnavsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 		dvdnavsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-/*static GstBuffer *	dvdnavsrc_get		(GstPad *pad); */
-static void     	dvdnavsrc_loop		(GstElement *element);
+static GstBuffer *	dvdnavsrc_get		(GstPad *pad);
 /*static GstBuffer *	dvdnavsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
 static gboolean 	dvdnavsrc_event 		(GstPad *pad, GstEvent *event);
 static const GstEventMask*
@@ -122,15 +135,21 @@ static gboolean 	dvdnavsrc_query 		(GstPad *pad, GstQueryType type,
 static const GstQueryType*
 			dvdnavsrc_get_query_types 	(GstPad *pad);
 
-static gboolean     	dvdnavsrc_close		(DVDNavSrc *src);
-static gboolean     	dvdnavsrc_open		(DVDNavSrc *src);
-static void             dvdnavsrc_print_event   (DVDNavSrc *src, guint8 *data, int event, int len);
+static gboolean		dvdnavsrc_close		(DVDNavSrc *src);
+static gboolean		dvdnavsrc_open		(DVDNavSrc *src);
+static gboolean		dvdnavsrc_is_open	(DVDNavSrc *src);
+static void		dvdnavsrc_print_event	(DVDNavSrc *src, guint8 *data, int event, int len);
+static void		dvdnavsrc_update_streaminfo (DVDNavSrc *src);
+static void		dvdnavsrc_update_buttoninfo (DVDNavSrc *src);
+static void		dvdnavsrc_button_pressed (DVDNavSrc *src, int button);
+static void		dvdnavsrc_pointer_select (DVDNavSrc *src, int x, int y);
+static void		dvdnavsrc_pointer_activate (DVDNavSrc *src, int x, int y);
 
 static GstElementStateReturn 	dvdnavsrc_change_state 	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
-/*static guint dvdnavsrc_signals[LAST_SIGNAL] = { 0 }; */
+static guint dvdnavsrc_signals[LAST_SIGNAL] = { 0 };
 
 static GstFormat sector_format;
 static GstFormat title_format;
@@ -174,21 +193,61 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
-    g_param_spec_string("location","location","location",
+  dvdnavsrc_signals[BUTTON_PRESSED_SIGNAL] =
+    g_signal_new ("button_pressed",
+        G_TYPE_FROM_CLASS (klass),
+        G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+        G_STRUCT_OFFSET (DVDNavSrcClass, button_pressed),
+        NULL, NULL,
+        gst_marshal_VOID__INT,
+        G_TYPE_NONE, 1,
+        G_TYPE_INT);
+
+  dvdnavsrc_signals[POINTER_SELECT_SIGNAL] =
+    g_signal_new ("pointer_select",
+        G_TYPE_FROM_CLASS (klass),
+        G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+        G_STRUCT_OFFSET (DVDNavSrcClass, pointer_select),
+        NULL, NULL,
+        gst_marshal_VOID__INT_INT,
+        G_TYPE_NONE, 2,
+        G_TYPE_INT, G_TYPE_INT);
+
+  dvdnavsrc_signals[POINTER_ACTIVATE_SIGNAL] =
+    g_signal_new ("pointer_activate",
+        G_TYPE_FROM_CLASS (klass),
+        G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+        G_STRUCT_OFFSET (DVDNavSrcClass, pointer_activate),
+        NULL, NULL,
+        gst_marshal_VOID__INT_INT,
+        G_TYPE_NONE, 2,
+        G_TYPE_INT, G_TYPE_INT);
+
+  klass->button_pressed = dvdnavsrc_button_pressed;
+  klass->pointer_select = dvdnavsrc_pointer_select;
+  klass->pointer_activate = dvdnavsrc_pointer_activate;
+    
+  g_object_class_install_property(gobject_class, ARG_LOCATION,
+    g_param_spec_string("location", "location", "location",
                         NULL, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TITLE_STRING,
-    g_param_spec_string("title_string","title string","DVD title string",
+  g_object_class_install_property(gobject_class, ARG_TITLE_STRING,
+    g_param_spec_string("title_string", "title string", "DVD title string",
                         NULL, G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TITLE,
-    g_param_spec_int("title","title","title",
+  g_object_class_install_property(gobject_class, ARG_TITLE,
+    g_param_spec_int("title", "title", "title",
                      0,99,1,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHAPTER,
-    g_param_spec_int("chapter","chapter","chapter",
+  g_object_class_install_property(gobject_class, ARG_CHAPTER,
+    g_param_spec_int("chapter", "chapter", "chapter",
                      1,999,1,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ANGLE,
-    g_param_spec_int("angle","angle","angle",
+  g_object_class_install_property(gobject_class, ARG_ANGLE,
+    g_param_spec_int("angle", "angle", "angle",
                      1,9,1,G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_STREAMINFO,
+    g_param_spec_boxed("streaminfo", "streaminfo", "streaminfo",
+                       GST_TYPE_CAPS, G_PARAM_READABLE));
+  g_object_class_install_property(gobject_class, ARG_BUTTONINFO,
+    g_param_spec_boxed("buttoninfo", "buttoninfo", "buttoninfo",
+                       GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR(dvdnavsrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR(dvdnavsrc_get_property);
@@ -197,29 +256,30 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
 }
 
 static void 
-dvdnavsrc_init (DVDNavSrc *dvdnavsrc) 
+dvdnavsrc_init (DVDNavSrc *src) 
 {
-  gst_element_set_loop_function (GST_ELEMENT(dvdnavsrc), GST_DEBUG_FUNCPTR(dvdnavsrc_loop));
+  src->srcpad = gst_pad_new ("src", GST_PAD_SRC);
 
-  dvdnavsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_get_function (src->srcpad, dvdnavsrc_get);
+  gst_pad_set_event_function (src->srcpad, dvdnavsrc_event);
+  gst_pad_set_event_mask_function (src->srcpad, dvdnavsrc_get_event_mask);
+  /*gst_pad_set_convert_function (src->srcpad, dvdnavsrc_convert);*/
+  gst_pad_set_query_function (src->srcpad, dvdnavsrc_query);
+  gst_pad_set_query_type_function (src->srcpad, dvdnavsrc_get_query_types);
+  gst_pad_set_formats_function (src->srcpad, dvdnavsrc_get_formats);
 
-  //gst_pad_set_get_function (dvdnavsrc->srcpad, dvdnavsrc_get);
-  gst_pad_set_event_function (dvdnavsrc->srcpad, dvdnavsrc_event);
-  gst_pad_set_event_mask_function (dvdnavsrc->srcpad, dvdnavsrc_get_event_mask);
-  /*gst_pad_set_convert_function (dvdnavsrc->srcpad, dvdnavsrc_convert);*/
-  gst_pad_set_query_function (dvdnavsrc->srcpad, dvdnavsrc_query);
-  gst_pad_set_query_type_function (dvdnavsrc->srcpad, dvdnavsrc_get_query_types);
-  gst_pad_set_formats_function (dvdnavsrc->srcpad, dvdnavsrc_get_formats);
+  gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
-  gst_element_add_pad (GST_ELEMENT (dvdnavsrc), dvdnavsrc->srcpad);
+  src->bufferpool = gst_buffer_pool_get_default (DVD_VIDEO_LB_LEN, 2);
 
-  dvdnavsrc->bufferpool = gst_buffer_pool_get_default (DVD_VIDEO_LB_LEN, 2);
-
-  dvdnavsrc->location = g_strdup("/dev/dvd");
-  dvdnavsrc->new_seek = FALSE;
-  dvdnavsrc->title = 0;
-  dvdnavsrc->chapter = 0;
-  dvdnavsrc->angle = 1;
+  src->location = g_strdup("/dev/dvd");
+  src->did_seek = FALSE;
+  src->need_flush = FALSE;
+  src->title = 0;
+  src->chapter = 0;
+  src->angle = 1;
+  src->streaminfo = NULL;
+  src->buttoninfo = NULL;
 }
 
 /* FIXME: this code is not being used */
@@ -268,11 +328,11 @@ dvdnavsrc_set_property (GObject *object, guint prop_id, const GValue *value, GPa
       break;
     case ARG_TITLE:
       src->title = g_value_get_int (value);
-      src->new_seek = TRUE;
+      src->did_seek = TRUE;
       break;
     case ARG_CHAPTER:
       src->chapter = g_value_get_int (value);
-      src->new_seek = TRUE;
+      src->did_seek = TRUE;
       break;
     case ARG_ANGLE:
       src->angle = g_value_get_int (value);
@@ -299,9 +359,18 @@ dvdnavsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
     case ARG_LOCATION:
       g_value_set_string (value, src->location);
       break;
+    case ARG_STREAMINFO:
+      g_value_set_boxed (value, src->streaminfo);
+      break;
+    case ARG_BUTTONINFO:
+      g_value_set_boxed (value, src->buttoninfo);
+      break;
     case ARG_TITLE_STRING:
-      if (dvdnav_get_title_string(src->dvdnav, &title_string) != DVDNAV_STATUS_OK) {
-        g_value_set_string (value, "[error getting DVD title]");
+      if (!dvdnavsrc_is_open(src)) {
+        g_value_set_string (value, "");
+      } else if (dvdnav_get_title_string(src->dvdnav, &title_string) !=
+          DVDNAV_STATUS_OK) {
+        g_value_set_string (value, "UNKNOWN");
       } else {
         g_value_set_string (value, title_string);
       }
@@ -417,15 +486,105 @@ dvdnavsrc_tca_seek(DVDNavSrc *src, int title, int chapter, int angle)
   }
   */
 
+  src->did_seek = TRUE;
+
   return TRUE;
 }
 
-/*
 static void
-dvdnavsrc_event (GstPad *pad, GstElement *element)
+dvdnavsrc_update_streaminfo (DVDNavSrc *src)
+{
+  GstCaps *caps;
+  GstProps *props;
+  GstPropsEntry *entry;
+  gint64 value;
+
+  props = gst_props_empty_new ();
+
+  /*
+  entry = gst_props_entry_new ("title_string", GST_PROPS_STRING (""));
+  gst_props_add_entry (props, entry);
+  */
+
+  if (dvdnavsrc_query(src->srcpad, GST_QUERY_TOTAL, &title_format, &value)) {
+    entry = gst_props_entry_new ("titles", GST_PROPS_INT (value));
+    gst_props_add_entry (props, entry);
+  }
+  if (dvdnavsrc_query(src->srcpad, GST_QUERY_POSITION, &title_format, &value)) {
+    entry = gst_props_entry_new ("title", GST_PROPS_INT (value));
+    gst_props_add_entry (props, entry);
+  }
+
+  if (dvdnavsrc_query(src->srcpad, GST_QUERY_TOTAL, &chapter_format, &value)) {
+    entry = gst_props_entry_new ("chapters", GST_PROPS_INT (value));
+    gst_props_add_entry (props, entry);
+  }
+  if (dvdnavsrc_query(src->srcpad, GST_QUERY_POSITION, &chapter_format, &value)) {
+    entry = gst_props_entry_new ("chapter", GST_PROPS_INT (value));
+    gst_props_add_entry (props, entry);
+  }
+
+  if (dvdnavsrc_query(src->srcpad, GST_QUERY_TOTAL, &angle_format, &value)) {
+    entry = gst_props_entry_new ("angles", GST_PROPS_INT (value));
+    gst_props_add_entry (props, entry);
+  }
+  if (dvdnavsrc_query(src->srcpad, GST_QUERY_POSITION, &angle_format, &value)) {
+    entry = gst_props_entry_new ("angle", GST_PROPS_INT (value));
+    gst_props_add_entry (props, entry);
+  }
+
+  caps = gst_caps_new ("dvdnavsrc_streaminfo",
+      "application/x-gst-streaminfo",
+      props);
+  if (src->streaminfo) {
+    gst_caps_unref (src->streaminfo);
+  }
+  src->streaminfo = caps;
+  g_object_notify (G_OBJECT (src), "streaminfo");
+}
+
+static void
+dvdnavsrc_update_buttoninfo (DVDNavSrc *src)
+{
+  GstCaps *caps;
+  GstProps *props;
+  GstPropsEntry *entry;
+  pci_t *pci;
+
+  pci = dvdnav_get_current_nav_pci(src->dvdnav);
+  fprintf(stderr, "update button info total:%d\n", pci->hli.hl_gi.btn_ns);
+
+  props = gst_props_empty_new ();
+
+  entry = gst_props_entry_new ("total", GST_PROPS_INT (pci->hli.hl_gi.btn_ns));
+  gst_props_add_entry (props, entry);
+
+  caps = gst_caps_new ("dvdnavsrc_buttoninfo",
+      "application/x-gst-dvdnavsrc-buttoninfo",
+      props);
+  if (src->buttoninfo) {
+    gst_caps_unref (src->buttoninfo);
+  }
+  src->buttoninfo = caps;
+  g_object_notify (G_OBJECT (src), "buttoninfo");
+}
+
+static void
+dvdnavsrc_button_pressed (DVDNavSrc *src, int button)
 {
 }
-*/
+
+static void
+dvdnavsrc_pointer_select (DVDNavSrc *src, int x, int y)
+{
+  dvdnav_mouse_select(src->dvdnav, x, y);
+}
+
+static void
+dvdnavsrc_pointer_activate (DVDNavSrc *src, int x, int y)
+{
+  dvdnav_mouse_activate(src->dvdnav, x, y);
+}
 
 static gchar *
 dvdnav_get_event_name(int event)
@@ -513,8 +672,20 @@ dvdnavsrc_print_event (DVDNavSrc *src, guint8 *data, int event, int len)
     case DVDNAV_NAV_PACKET:
       {
         dvdnav_nav_packet_event_t *event = (dvdnav_nav_packet_event_t *)data;
+        pci_t *pci;
+        dsi_t *dsi;
+        /*
+        pci = event->pci;
+        dsi = event->dsi;
+        */
+        pci = dvdnav_get_current_nav_pci(src->dvdnav);
+        dsi = dvdnav_get_current_nav_dsi(src->dvdnav);
         fprintf (stderr, "  pci: %p\n", event->pci);
         fprintf (stderr, "  dsi: %p\n", event->dsi);
+        /*
+        navPrint_PCI(pci);
+        navPrint_DSI(dsi);
+        */
       }
       break;
     case DVDNAV_STOP:
@@ -545,137 +716,100 @@ dvdnavsrc_print_event (DVDNavSrc *src, guint8 *data, int event, int len)
   }
 }
 
-static void
-dvdnavsrc_loop (GstElement *element)
-{
-  DVDNavSrc *src;
-  int done;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_DVDNAVSRC (element));
-
-  src = DVDNAVSRC (element);
-  g_return_if_fail (dvdnavsrc_is_open (src));
-
-  done = 0;
-
-  while (!done) {
-    int event, len;
-    GstBuffer *buf;
-    guint8 *data;
-
-    /* allocate a pool for the buffer data */
-    /* FIXME: mem leak on non BLOCK_OK events */
-    buf = gst_buffer_new_from_pool (src->bufferpool, DVD_VIDEO_LB_LEN, 0);
-    if (!buf) {
-      gst_element_error (GST_ELEMENT(src),
-          "Failed to create a new GstBuffer");
-      return;
-    }
-    data = GST_BUFFER_DATA(buf);
-
-    if (dvdnav_get_next_block (src->dvdnav, data, &event, &len) != DVDNAV_STATUS_OK) {
-      fprintf (stderr, "dvdnav_get_next_block error: %s\n", dvdnav_err_to_string(src->dvdnav));
-      return;
-    }
-
-    switch (event) {
-      case DVDNAV_BLOCK_OK:
-        g_return_if_fail (GST_BUFFER_DATA(buf) != NULL);
-        g_return_if_fail (GST_BUFFER_SIZE(buf) == DVD_VIDEO_LB_LEN);
-        gst_pad_push (src->srcpad, buf);
-        break;
-      case DVDNAV_NOP:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_STILL_FRAME:
-        /* FIXME: we should pause for event->length seconds before dvdnav_still_skip */
-        dvdnavsrc_print_event (src, data, event, len);
-        if (dvdnav_still_skip (src->dvdnav) != DVDNAV_STATUS_OK) {
-          fprintf (stderr, "dvdnav_still_skip error: %s\n", dvdnav_err_to_string(src->dvdnav));
-          /* FIXME: close the stream??? */
-        }
-        break;
-      case DVDNAV_SPU_STREAM_CHANGE:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_AUDIO_STREAM_CHANGE:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_VTS_CHANGE:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_CELL_CHANGE:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_NAV_PACKET:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_STOP:
-        done = 1;
-        gst_element_set_eos (GST_ELEMENT (src));
-        dvdnavsrc_close(src);
-        break;
-      case DVDNAV_HIGHLIGHT:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_SPU_CLUT_CHANGE:
-        /* ignore the change events. I'm dont know what I'm meant to do with them */
-        /* and there's no struct for it */
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_SEEK_DONE:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      case DVDNAV_HOP_CHANNEL:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-      default:
-        dvdnavsrc_print_event (src, data, event, len);
-        break;
-    }
-  }
-}
-
-#if 0
-  static GstBuffer *
+static GstBuffer *
 dvdnavsrc_get (GstPad *pad) 
 {
   DVDNavSrc *src;
+  int event, len;
   GstBuffer *buf;
+  guint8 *data;
+  gboolean have_buf;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   src = DVDNAVSRC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (gstdvdnav_is_open (src), NULL);
+  g_return_val_if_fail (dvdnavsrc_is_open (src), NULL);
 
-  /* create the buffer */
-  /* FIXME: should eventually use a bufferpool for this */
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf, NULL);
+  if (src->did_seek) {
+    GstEvent *event;
 
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA (buf) = g_malloc (1024 * DVD_VIDEO_LB_LEN);
-  g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
-
-  if (src->new_seek) {
-    _seek(src, src->titleid, src->chapid, src->angle);
+    src->did_seek = FALSE;
+    GST_DEBUG (GST_CAT_EVENT, "dvdnavsrc sending discont");
+    event = gst_event_new_discontinuous (FALSE, 0);
+    src->need_flush = FALSE;
+    return GST_BUFFER (event);
+  }
+  if (src->need_flush) {
+    src->need_flush = FALSE;
+    GST_DEBUG (GST_CAT_EVENT, "dvdnavsrc sending flush");
+    return GST_BUFFER (gst_event_new_flush());
   }
 
-  /* read it in from the file */
-  if (_read (src, src->angle, src->new_seek, buf)) {
-    gst_element_signal_eos (GST_ELEMENT (src));
-    return NULL;
-  }
+  /* loop processing blocks until data is pushed */
+  have_buf = FALSE;
+  while (!have_buf) {
+    /* allocate a pool for the buffer data */
+    /* FIXME: mem leak on non BLOCK_OK events */
+    buf = gst_buffer_new_from_pool (src->bufferpool, DVD_VIDEO_LB_LEN, 0);
+    if (!buf) {
+      gst_element_error (GST_ELEMENT (src), "Failed to create a new GstBuffer");
+      return NULL;
+    }
+    data = GST_BUFFER_DATA(buf);
 
-  if (src->new_seek) {
-    src->new_seek = FALSE;
-  }
+    if (dvdnav_get_next_block (src->dvdnav, data, &event, &len) !=
+        DVDNAV_STATUS_OK) {
+      gst_element_error (GST_ELEMENT (src), "dvdnav_get_next_block error: %s\n",
+          dvdnav_err_to_string(src->dvdnav));
+      return NULL;
+    }
 
+    switch (event) {
+      case DVDNAV_NOP:
+        break;
+      case DVDNAV_BLOCK_OK:
+        g_return_val_if_fail (GST_BUFFER_DATA(buf) != NULL, NULL);
+        g_return_val_if_fail (GST_BUFFER_SIZE(buf) == DVD_VIDEO_LB_LEN, NULL);
+        have_buf = TRUE;
+        break;
+      case DVDNAV_STILL_FRAME:
+        /* FIXME: we should pause for event->length seconds before
+         * dvdnav_still_skip */
+        dvdnavsrc_print_event (src, data, event, len);
+        if (dvdnav_still_skip (src->dvdnav) != DVDNAV_STATUS_OK) {
+          gst_element_error (GST_ELEMENT (src), "dvdnav_still_skip error: %s\n",
+              dvdnav_err_to_string(src->dvdnav));
+          /* FIXME: close the stream??? */
+        }
+        break;
+      case DVDNAV_STOP:
+        GST_DEBUG (GST_CAT_EVENT, "dvdnavsrc sending eos");
+        gst_element_set_eos (GST_ELEMENT (src));
+        dvdnavsrc_close(src);
+        buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+        have_buf = TRUE;
+        break;
+      case DVDNAV_CELL_CHANGE:
+        dvdnavsrc_update_streaminfo (src);
+        break;
+      case DVDNAV_NAV_PACKET:
+        if (0) dvdnavsrc_update_buttoninfo (src);
+        break;
+      case DVDNAV_VTS_CHANGE:
+      case DVDNAV_SPU_STREAM_CHANGE:
+      case DVDNAV_AUDIO_STREAM_CHANGE:
+      case DVDNAV_HIGHLIGHT:
+      case DVDNAV_SPU_CLUT_CHANGE:
+      case DVDNAV_SEEK_DONE:
+      case DVDNAV_HOP_CHANNEL:
+      default:
+        dvdnavsrc_print_event (src, data, event, len);
+        break;
+    }
+  }
   return buf;
 }
-#endif
 
 /* open the file, necessary to go to RUNNING state */
 static gboolean 
@@ -775,6 +909,7 @@ dvdnavsrc_change_state (GstElement *element)
           return GST_STATE_FAILURE;
         }
       }
+      src->streaminfo = NULL;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -888,7 +1023,6 @@ dvdnavsrc_event (GstPad *pad, GstEvent *event)
               default:
                 goto error;
             }
-            g_message("seek->chap %d->%d", part, new_part);
             /*if (dvdnav_part_search(src->dvdnav, new_part) !=*/
             if (dvdnav_part_play(src->dvdnav, title, new_part) !=
                 DVDNAV_STATUS_OK) {
@@ -898,8 +1032,6 @@ dvdnavsrc_event (GstPad *pad, GstEvent *event)
                 DVDNAV_STATUS_OK) {
               goto error;
             }
-            g_message("seek->chap after:%d", part);
-            g_message("seek->chap->cur done");
           } else if (format == angle_format) {
             switch (GST_EVENT_SEEK_METHOD (event)) {
               case GST_SEEK_METHOD_SET:
@@ -926,8 +1058,13 @@ dvdnavsrc_event (GstPad *pad, GstEvent *event)
             goto error;
           }
       }
+      src->did_seek = TRUE;
+      src->need_flush = GST_EVENT_SEEK_FLAGS(event) & GST_SEEK_FLAG_FLUSH;
       break;
     }
+    case GST_EVENT_FLUSH:
+      src->need_flush = TRUE;
+      break;
     default:
       goto error;
   }
