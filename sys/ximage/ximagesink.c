@@ -355,10 +355,6 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                                             GST_VIDEOSINK_WIDTH (ximagesink),
                                                             GST_VIDEOSINK_HEIGHT (ximagesink));
                       }
-                      
-                    gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
-                                             GST_VIDEOSINK_WIDTH (ximagesink),
-                                             GST_VIDEOSINK_HEIGHT (ximagesink));
                   }
               }
             break;
