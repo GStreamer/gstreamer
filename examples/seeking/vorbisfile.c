@@ -42,7 +42,7 @@ print_caps (GstCaps *caps)
       GstPropsType type;
 
       name = gst_props_entry_get_name (entry);
-      type = gst_props_entry_get_type (entry);
+      type = gst_props_entry_get_props_type (entry);
       switch (type) {
 	case GST_PROPS_STRING_TYPE:
           gst_props_entry_get_string (entry, &str_val);
