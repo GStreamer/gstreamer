@@ -160,7 +160,6 @@ gst_wavenc_class_init (GstWavEncClass *klass)
 }
 
 static gboolean
-146
 gst_wavenc_setup (GstWavEnc *wavenc)
 {
   struct wave_header wave;
@@ -204,7 +203,6 @@ gst_wavenc_setup (GstWavEnc *wavenc)
   wavenc->setup = TRUE;
   return TRUE;
 }
-190
 static GstPadConnectReturn
 gst_wavenc_sinkconnect (GstPad *pad,
 			GstCaps *caps)
