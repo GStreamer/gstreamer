@@ -59,7 +59,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
 );
 
 static void	gst_y4mencode_base_init		(gpointer g_class);
