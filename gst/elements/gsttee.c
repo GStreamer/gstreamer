@@ -65,6 +65,8 @@ static void 	gst_tee_get_property 	(GObject *object, guint prop_id,
 
 static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
 
+static GstPadNegotiateReturn	gst_tee_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
+
 static GstElementClass *parent_class = NULL;
 /*static guint gst_tee_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -120,6 +122,7 @@ gst_tee_init (GstTee *tee)
   tee->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
+  gst_pad_set_negotiate_function (tee->sinkpad, GST_DEBUG_FUNCPTR(gst_tee_handle_negotiate_sink));
 
   tee->numsrcpads = 0;
   tee->srcpads = NULL;
@@ -146,7 +149,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   
   srcpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
-  
+
   tee->srcpads = g_slist_prepend (tee->srcpads, srcpad);
   tee->numsrcpads++;
   
@@ -239,3 +242,23 @@ gst_tee_factory_init (GstElementFactory *factory)
   return TRUE;
 }
 
+static GstPadNegotiateReturn
+gst_tee_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer* data)
+{
+  GstCaps* tempcaps;
+  gint i;
+  GstTee* tee=GST_TEE (GST_OBJECT_PARENT (pad));
+  
+  if (*caps==NULL) 
+    return GST_PAD_NEGOTIATE_FAIL;
+
+  // go through all the src pads
+  for(i=0;i<tee->numsrcpads;i++) {
+ 
+    if (!(gst_pad_set_caps (GST_PAD(g_slist_nth_data(tee->srcpads,i)), 
+			    *caps))) {
+      return GST_PAD_NEGOTIATE_FAIL;
+    }
+  }
+  return GST_PAD_NEGOTIATE_AGREE;
+}
