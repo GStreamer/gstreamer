@@ -49,6 +49,7 @@
 <!-- Appendices -->
 <!ENTITY CHECKLIST SYSTEM "appendix-checklist.xml">
 <!ENTITY INTEGRATION SYSTEM "appendix-integration.xml">
+<!ENTITY LICENSING SYSTEM "appendix-licensing.xml">
 <!ENTITY WIN32 SYSTEM "appendix-win32.xml">
 <!ENTITY QUOTES SYSTEM "appendix-quotes.xml">
 
@@ -278,6 +279,7 @@ Idea:
 
     &CHECKLIST;
     &INTEGRATION;
+    &LICENSING;
     &WIN32;
     &QUOTES;
 
