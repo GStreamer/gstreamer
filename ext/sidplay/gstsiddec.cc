@@ -50,6 +50,8 @@ enum {
   LAST_SIGNAL
 };
 
+#define DEFAULT_BLOCKSIZE	4096
+
 enum {
   ARG_0,
   ARG_TUNE,
@@ -59,6 +61,7 @@ enum {
   ARG_MEASURED_VOLUME,
   ARG_MOS8580,
   ARG_FORCE_SPEED,
+  ARG_BLOCKSIZE,
   ARG_METADATA,
   /* FILL ME */
 };
@@ -230,9 +233,12 @@ gst_siddec_class_init (GstSidDec *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORCE_SPEED,
     g_param_spec_boolean ("force_speed", "force_speed", "force_speed",
                        TRUE, (GParamFlags)G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
+    g_param_spec_ulong ("blocksize", "Block size", "Size in bytes to output per buffer",
+                        1, G_MAXULONG, DEFAULT_BLOCKSIZE, (GParamFlags)G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
+                        GST_TYPE_CAPS, (GParamFlags)G_PARAM_READABLE));
 
   gobject_class->set_property = gst_siddec_set_property;
   gobject_class->get_property = gst_siddec_get_property;
@@ -287,6 +293,7 @@ gst_siddec_init (GstSidDec *siddec)
   siddec->tune_len = 0;
   siddec->tune_number = 1;
   siddec->total_bytes = 0;
+  siddec->blocksize = DEFAULT_BLOCKSIZE;
 }
 
 static void 
@@ -443,18 +450,28 @@ gst_siddec_loop (GstElement *element)
   if (siddec->state == SID_STATE_PLAY_TUNE) {
     GstBuffer *out;
     GstFormat format;
-    gint64 value;
+    gint64 value, value2;
 
-    out = gst_buffer_new_and_alloc (4096);
+    out = gst_buffer_new_and_alloc (siddec->blocksize);
 
     sidEmuFillBuffer (*siddec->engine, *siddec->tune,
  		      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
 
+    /* get offset in samples */
+    format = GST_FORMAT_DEFAULT;
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
+    GST_BUFFER_OFFSET (out) = value;
+
+    /* get current timestamp */
     format = GST_FORMAT_TIME;
     gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
     GST_BUFFER_TIMESTAMP (out) = value;
 
-    siddec->total_bytes += 4096;
+    /* update position and get new timestamp to calculate duration */
+    siddec->total_bytes += siddec->blocksize;
+    format = GST_FORMAT_TIME;
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value2);
+    GST_BUFFER_DURATION (out) = value2 - value;
 
     gst_pad_push (siddec->srcpad, out);
   }
@@ -578,6 +595,9 @@ gst_siddec_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_MOS8580:
       siddec->config->mos8580 = g_value_get_boolean (value);
       break;
+    case ARG_BLOCKSIZE:
+      siddec->blocksize = g_value_get_ulong (value);
+      break;
     case ARG_FORCE_SPEED:
       siddec->config->forceSongSpeed = g_value_get_boolean (value);
       break;
@@ -618,6 +638,9 @@ gst_siddec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
       break;
     case ARG_FORCE_SPEED:
       g_value_set_boolean (value, siddec->config->forceSongSpeed);
+      break;
+    case ARG_BLOCKSIZE:
+      g_value_set_ulong (value, siddec->blocksize);
       break;
     case ARG_METADATA:
       g_value_set_boxed (value, siddec->metadata);
