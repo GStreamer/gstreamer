@@ -63,7 +63,6 @@ struct _GstBin {
   gint 		 numchildren;
   GList 	*children;
 
-/* FIXME 0.9: important!! make this guint instead of GstElementState */
   GstElementState child_states[GST_NUM_STATES];
 
   gpointer _gst_reserved[GST_PADDING];
@@ -111,9 +110,7 @@ void		gst_bin_use_clock		(GstBin *bin, GstClock *clock);
 GstClock*	gst_bin_get_clock		(GstBin *bin);
 void		gst_bin_auto_clock		(GstBin *bin);
 
-#ifndef GST_DISABLE_DEPRECATED
 GstElementStateReturn gst_bin_sync_children_state (GstBin *bin);
-#endif
 
 /* internal */
 /* one of our childs signaled a state change */

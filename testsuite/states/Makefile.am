@@ -1,5 +1,5 @@
 include ../Rules
 
-tests_pass = locked parent bin
+tests_pass = locked parent
 tests_fail = 
-tests_ignore =
+tests_ignore = bin

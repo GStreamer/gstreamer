@@ -1,3 +1,18 @@
+2004-07-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_class_init),
+	(gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_child_state_change), (gst_bin_child_state_change_func),
+	(set_kid_state_func), (gst_bin_change_state), (gst_bin_set_state),
+	(gst_bin_change_state_norecurse), (gst_bin_dispose),
+	(gst_bin_sync_children_state):
+	* gst/gstbin.h:
+	* gst/gstthread.c: (gst_thread_class_init), (gst_thread_release),
+	(gst_thread_change_state):
+	* testsuite/states/Makefile.am:
+	  revert state change patches as agreed so we can rework them
+	  gradually
+
 2004-07-29  Benjamin Otte  <otte@gnome.org>
 
 	* libs/gst/control/Makefile.am:

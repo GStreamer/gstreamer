@@ -27,7 +27,6 @@
 #include "gstmarshal.h"
 #include "gstscheduler.h"
 #include "gstinfo.h"
-#include "gstutils.h"
 
 #define GST_CAT_DEFAULT GST_CAT_THREAD
 #define STACK_SIZE 0x200000
@@ -72,8 +71,6 @@ static void gst_thread_set_property (GObject * object, guint prop_id,
 static void gst_thread_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstElementStateReturn gst_thread_change_state (GstElement * element);
-static GstElementStateReturn gst_thread_set_state (GstElement * element,
-    GstElementState state);
 static void gst_thread_child_state_change (GstBin * bin,
     GstElementState oldstate, GstElementState newstate, GstElement * element);
 
@@ -184,7 +181,6 @@ gst_thread_class_init (gpointer g_class, gpointer class_data)
 #endif
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_thread_change_state);
-  gstelement_class->set_state = GST_DEBUG_FUNCPTR (gst_thread_set_state);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_thread_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_thread_get_property);
@@ -406,32 +402,9 @@ static void
 gst_thread_release (GstThread * thread)
 {
   if (thread != gst_thread_get_current ()) {
-    GST_DEBUG_OBJECT (thread, "releasing lock");
     g_cond_signal (thread->cond);
     g_mutex_unlock (thread->lock);
   }
-}
-
-static GstElementStateReturn
-gst_thread_set_state (GstElement * element, GstElementState state)
-{
-  GstElementStateReturn result;
-  GstThread *thread = GST_THREAD (element);
-
-  if (thread != gst_thread_get_current ()) {
-    gst_thread_catch (thread);
-    GST_DEBUG_OBJECT (thread, "releasing lock");
-    g_mutex_unlock (thread->lock);
-  }
-  result =
-      GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, set_state, (element,
-          state), GST_STATE_FAILURE);
-  if (thread != gst_thread_get_current ()) {
-    GST_DEBUG_OBJECT (thread, "grabbing lock");
-    g_mutex_lock (thread->lock);
-    gst_thread_release (thread);
-  }
-  return result;
 }
 
 static GstElementStateReturn
@@ -478,13 +451,30 @@ gst_thread_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     {
+      /* FIXME: recurse into sub-bins */
+      GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+
+      while (elements) {
+        gst_element_enable_threadsafe_properties ((GstElement *) elements->
+            data);
+        elements = g_list_next (elements);
+      }
       /* reset self to spinning */
       if (thread == gst_thread_get_current ())
         GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       break;
     }
     case GST_STATE_PLAYING_TO_PAUSED:
+    {
+      GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+
+      while (elements) {
+        gst_element_disable_threadsafe_properties ((GstElement *) elements->
+            data);
+        elements = g_list_next (elements);
+      }
       break;
+    }
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
