@@ -1,3 +1,8 @@
+2004-04-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/mad/gstmad.c: (normal_seek):
+	  fix GST_FORMAT_TIME usage
+
 2004-04-05  David Schleef  <ds@schleef.org>
 
 	* ext/kio/kiosrc.cpp:  Undefine KDE_DEPRECATED so we can use
