@@ -1,4 +1,4 @@
 
-SUBDIRS = riff colorspace getbits putbits idct videoscale audio 
+SUBDIRS = riff getbits putbits idct audio 
 
-DIST_SUBDIRS = riff colorspace getbits putbits videoscale audio idct
+DIST_SUBDIRS = riff getbits putbits audio idct
