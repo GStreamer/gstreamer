@@ -1,5 +1,19 @@
 2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst-libs/gst/tuner/tuner.c: (gst_tuner_class_init),
+	(gst_tuner_find_norm_by_name), (gst_v4l2_find_channel_by_name),
+	(gst_tuner_channel_changed), (gst_tuner_norm_changed),
+	(gst_tuner_frequency_changed), (gst_tuner_signal_changed):
+	* gst-libs/gst/tuner/tuner.h:
+	  GObjects aren't const.
+	  Add find_by_name functions.
+	  Add checks to _changed functions.
+	* sys/v4l/gstv4ltuner.c: (gst_v4l_tuner_get_channel),
+	(gst_v4l_tuner_get_norm):
+	  Fixes for above.
+
+2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst-libs/gst/video/video.h:
 	  Fix caps template names to be understandable.
 	  Prefix everything with GST_VIDEO.
