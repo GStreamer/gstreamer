@@ -1,7 +1,8 @@
 2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbin.c: (gst_bin_iterate_func), (gst_bin_iterate):
-	  don't
+	  don't claim to be more intelligent than a scheduler when the
+	  scheduler claims the pipeline is stopped
 	* gst/schedulers/entryscheduler.c: (safe_cothread_switch),
 	(safe_cothread_destroy),
 	(gst_entry_scheduler_remove_all_cothreads),
