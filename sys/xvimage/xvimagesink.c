@@ -1054,6 +1054,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
   GList *formats_list, *channels_list;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  g_return_if_fail (xvimagesink->xcontext != NULL);
 
   formats_list = xvimagesink->xcontext->formats_list;
 
@@ -1890,9 +1891,18 @@ gst_xvimagesink_finalize (GObject * object)
     xvimagesink->display_name = NULL;
   }
 
-  g_free (xvimagesink->par);
-  g_mutex_free (xvimagesink->x_lock);
-  g_mutex_free (xvimagesink->pool_lock);
+  if (xvimagesink->par) {
+    g_free (xvimagesink->par);
+    xvimagesink->par = NULL;
+  }
+  if (xvimagesink->x_lock) {
+    g_mutex_free (xvimagesink->x_lock);
+    xvimagesink->x_lock = NULL;
+  }
+  if (xvimagesink->pool_lock) {
+    g_mutex_free (xvimagesink->pool_lock);
+    xvimagesink->pool_lock = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -856,6 +856,7 @@ static void
 gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
 {
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  g_return_if_fail (ximagesink->xcontext != NULL);
 
   gst_caps_free (ximagesink->xcontext->caps);
   g_free (ximagesink->xcontext->par);
@@ -868,6 +869,7 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
 
   g_mutex_unlock (ximagesink->x_lock);
 
+  g_free (ximagesink->xcontext);
   ximagesink->xcontext = NULL;
 }
 
@@ -1506,8 +1508,18 @@ gst_ximagesink_finalize (GObject * object)
     ximagesink->display_name = NULL;
   }
 
-  g_mutex_free (ximagesink->x_lock);
-  g_mutex_free (ximagesink->pool_lock);
+  if (ximagesink->par) {
+    g_free (ximagesink->par);
+    ximagesink->par = NULL;
+  }
+  if (ximagesink->x_lock) {
+    g_mutex_free (ximagesink->x_lock);
+    ximagesink->x_lock = NULL;
+  }
+  if (ximagesink->pool_lock) {
+    g_mutex_free (ximagesink->pool_lock);
+    ximagesink->pool_lock = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
