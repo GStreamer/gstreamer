@@ -801,7 +801,7 @@ void
 gst_pad_load_and_connect (xmlNodePtr self,
 		          GstObject *parent)
 {
-  xmlNodePtr field = self->childs;
+  xmlNodePtr field = self->xmlChildrenNode;
   GstPad *pad = NULL, *targetpad;
   guchar *peer = NULL;
   gchar **split;
@@ -1086,7 +1086,7 @@ gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
 GstPadTemplate*
 gst_padtemplate_load_thyself (xmlNodePtr parent)
 {
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = parent->xmlChildrenNode;
   GstPadTemplate *factory = g_new0 (GstPadTemplate, 1);
 
   while (field) {
