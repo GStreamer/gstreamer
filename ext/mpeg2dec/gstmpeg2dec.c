@@ -505,6 +505,11 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  goto exit;
 	}
 
+	/* now that we've negotiated, try to get a bufferpool */
+	mpeg2dec->peerpool = gst_pad_get_bufferpool (mpeg2dec->srcpad);
+	if (mpeg2dec->peerpool)
+	  GST_INFO ( "got pool %p", mpeg2dec->peerpool);
+
 	update_streaminfo (mpeg2dec);
 
 	if (!mpeg2dec->have_fbuf) {
@@ -1062,10 +1067,6 @@ gst_mpeg2dec_change_state (GstElement *element)
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* try to get a bufferpool */
-      mpeg2dec->peerpool = gst_pad_get_bufferpool (mpeg2dec->srcpad);
-      if (mpeg2dec->peerpool)
-        GST_INFO ( "got pool %p", mpeg2dec->peerpool);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* need to clear things we get from other plugins, since we could be reconnected */
