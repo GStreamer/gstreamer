@@ -1,0 +1,35 @@
+
+Howto strip gstreamer
+---------------------
+
+subsystems that can disabled:
+
+ * autoplugging (gstautoplug.h)
+   - autoplugging functions not available
+
+ * registry (gstregistry.h)
+   - can't instantiate registry objects
+   - registry pool only contains statically
+     registered plugins
+
+ * typefind (gsttypefind.h)
+   - typefind element is not compiled in the core
+
+ * enumtypes (gstenumtypes.h)
+   - code not linked into the core
+
+ * index (gstindex.h)
+   - index plugin feature not available
+ 
+ * plugin (gstplugin.h, gstregistry.h, gstpluginfeature.h)
+   - can't group elementfactories in plugins
+   - no pluginfeatures
+   - no registrypool
+ 
+ * URI (gsturi.h)
+   - no urihandler pluginfeature
+
+ * load/save (gstxml.h, various other files)
+   - no object serialisation to XML
+ 
+
