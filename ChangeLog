@@ -1,5 +1,15 @@
 2004-03-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch from: Stephane Loeuillet
+
+	* configure.ac:
+	  use pkg-config for some libraries, falling back to the old .m4 way
+          (fixes #131270)
+	* m4/libdv.m4:
+          removed
+
+2004-03-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* tools/Makefile.am:
 	* tools/Makefile.in:
