@@ -241,6 +241,7 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
   ffmpegenc->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
   gst_pad_set_link_function (ffmpegenc->sinkpad, gst_ffmpegenc_connect);
   ffmpegenc->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
+  gst_pad_use_explicit_caps (ffmpegenc->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->srcpad);
@@ -344,11 +345,11 @@ gst_ffmpegenc_connect (GstPad  *pad,
     return GST_PAD_LINK_REFUSED;
   }
 
-  if ((ret = gst_pad_try_set_caps (ffmpegenc->srcpad, other_caps)) <= 0) {
+  /* FIXME set_explicit_caps is not supposed to be used in a pad link
+   * function. */
+  if (!gst_pad_set_explicit_caps (ffmpegenc->srcpad, other_caps)) {
     avcodec_close (ffmpegenc->context);
-    GST_DEBUG ("Failed to set caps on next element for ffmpeg encoder (%s)",
-               oclass->in_plugin->name);
-    return ret;
+    return GST_PAD_LINK_REFUSED;
   }
 
   /* success! */
