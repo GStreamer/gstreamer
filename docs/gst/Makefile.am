@@ -228,8 +228,25 @@ install-data-local:
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
 	fi) 
+uninstall-local:
+	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
+	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
+	then echo '-- Nothing to uninstall' ; \
+	else \
+	  for i in $$installfiles; do \
+	    rmfile=`basename $$i` ; \
+	    echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/'$$rmfile ; \
+	    rm -f $(DESTDIR)$(TARGET_DIR)/$$rmfile; \
+	  done; \
+	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE).devhelp' ; \
+	  rm -f $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
+	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/index.sgml' ; \
+	  rm -f $(DESTDIR)$(TARGET_DIR)/index.sgml; \
+	fi) 
+	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR) 
 else
 install-data-local:
+uninstall-local:
 endif
 
 #

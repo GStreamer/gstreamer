@@ -119,7 +119,7 @@ $(DOC).pdf: $(DOC).ps
 #	@export LC_PAPER=$(PAPER_LOCALE) && xmlto pdf $(MAIN)
 #	@rm image.entities
 
-clean:
+clean-local:
 	-$(RM) -r $(BUILDDIR)
 	-$(RM) -r html
 	-$(RM) $(DOC).ps
