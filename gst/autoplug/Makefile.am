@@ -8,5 +8,5 @@ libgststaticautoplug_la_SOURCES =	\
 libgststaticautoplugrender_la_SOURCES =	\
 	gststaticautoplugrender.c
 
-libgststaticautoplug_la_LDFLAGS = -version-info $(GSTREAMER_LIBVERSION)
-libgststaticautoplugrender_la_LDFLAGS = -version-info $(GSTREAMER_LIBVERSION)
+libgststaticautoplug_la_LDFLAGS = -version-info $(GST_LIBVERSION)
+libgststaticautoplugrender_la_LDFLAGS = -version-info $(GST_LIBVERSION)
