@@ -1,5 +1,10 @@
 2004-05-18  David Schleef  <ds@schleef.org>
 
+	* sys/sunaudio/Makefile.am:
+	* sys/sunaudio/gstsunaudio.c: New sunaudiosink
+
+2004-05-18  David Schleef  <ds@schleef.org>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
 	(gst_qtdemux_loop_header):  Patch from dcm@acm.org (David Moore)
 	to allow qtdemux to use non-seekable streams. (bug #142272)
