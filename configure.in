@@ -368,51 +368,36 @@ AC_SUBST(X_LIBS)
 
 dnl Check for the Xv library
 xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension, 
-HAVE_LIBXV=yes 
-AC_DEFINE(HAVE_LIBXV),
-HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_LIBXV=yes, HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
 LIBS=${xvsave_LIBS}
+AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
+AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
 dnl Check for OSS audio
-AC_CHECK_HEADER(sys/soundcard.h,
-  AC_DEFINE(HAVE_OSS) 
-  HAVE_OSS=yes, []
-)
+AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS=yes, HAVE_OSS=no)
 
 dnl Check for xaudio
-AC_CHECK_HEADER(xaudio/decoder.h,
-  AC_DEFINE(HAVE_XAUDIO) 
-  HAVE_XAUDIO="yes", []
-)
+AC_CHECK_HEADER(xaudio/decoder.h, HAVE_XAUDIO=yes, HAVE_XAUDIO=no)
 
-dnl Check for libvorbis
+dnl Check for libmad
 AC_MSG_CHECKING(MAD library)
-AC_CHECK_LIB(mad, mad_decoder_finish, 
-HAVE_LIBMAD=yes 
-AC_DEFINE(HAVE_LIBMAD),
-HAVE_LIBMAD=no, )
+AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_LIBMAD=yes, HAVE_LIBMAD=no, )
+AC_CHECK_HEADER(mad.h, :, HAVE_LIBMAD=no)
 
 dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
-AC_CHECK_LIB(vorbis, ogg_sync_init, 
-HAVE_VORBIS=yes 
-AC_DEFINE(HAVE_VORBIS),
-HAVE_VORBIS=no, )
+AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS=yes, HAVE_VORBIS=no, )
+AC_CHECK_HEADER(vorbis/codec.h, :, HAVE_VORBIS=no)
 
-dnl Check for libvorbis
+dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
-AC_CHECK_LIB(jpeg, jpeg_set_defaults, 
-HAVE_LIBJPEG=yes 
-AC_DEFINE(HAVE_LIBJPEG),
-HAVE_LIBJPEG=no, )
+AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_LIBJPEG=yes, HAVE_LIBJPEG=no, )
+AC_CHECK_HEADER(jpeglib.h, :, HAVE_LIBJPEG=no)
 
-dnl Check for libvorbis
+dnl Check for libHermes
 AC_MSG_CHECKING(Hermes library)
-AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, 
-HAVE_LIBHERMES=yes 
-AC_DEFINE(HAVE_LIBHERMES),
-HAVE_LIBHERMES=no, )
+AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, HAVE_LIBHERMES=yes, HAVE_LIBHERMES=no, )
+AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
@@ -440,6 +425,9 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for arts
 AC_LANG_SAVE
@@ -452,14 +440,17 @@ AC_LANG_RESTORE
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
 AC_CHECK_LIB(raw1394, raw1394_get_handle, HAVE_RAW1394=yes, HAVE_RAW1394=no, )
+AC_CHECK_HEADER(libraw1394/raw1394.h, :, HAVE_RAW1394=no)
 
 dnl Check for libdv
 AC_MSG_CHECKING(libdv)
 AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
+AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 
 dnl Check for aalib
 AC_MSG_CHECKING(aalib)
 AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
+AC_CHECK_HEADER(aalib.h, :, HAVE_LIBAA=no)
 
 
 dnl check if css-auth.c exists (FIXME)
@@ -468,7 +459,6 @@ if test -f plugins/dvdsrc/css-auth.c
 then
   AC_MSG_RESULT(yes)
   HAVE_CSSAUTH="yes"
-  AC_DEFINE(HAVE_CSSAUTH) 
 else
   AC_MSG_RESULT(no)
   HAVE_CSSAUTH="no"
@@ -476,13 +466,11 @@ fi
 
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
-  AC_DEFINE(HAVE_LINUX_CDROM) 
   HAVE_LINUX_CDROM=yes, []
 )
 
 dnl Check for linux/videodev.h
 AC_CHECK_HEADER(linux/videodev.h,
-  AC_DEFINE(HAVE_LINUX_VIDEODEV) 
   HAVE_LINUX_VIDEODEV=yes, []
 )
 
@@ -690,6 +678,46 @@ if test "x$USE_PROFILING" = xyes; then
   FOMIT_FRAME_POINTER=""
 else
   FOMIT_FRAME_POINTER="-fomit-frame-pointer"
+fi
+
+if test "x$HAVE_LIBXV" = xyes; then
+  AC_DEFINE(HAVE_LIBXV)
+fi
+
+if test "x$HAVE_OSS" = xyes; then
+  AC_DEFINE(HAVE_OSS)
+fi
+
+if test "x$HAVE_XAUDIO" = xyes; then
+  AC_DEFINE(HAVE_XAUDIO)
+fi
+
+if test "x$HAVE_LIBMAD" = xyes; then
+  AC_DEFINE(HAVE_LIBMAD)
+fi
+
+if test "x$HAVE_VORBIS" = xyes; then
+  AC_DEFINE(HAVE_VORBIS)
+fi
+
+if test "x$HAVE_LIBJPEG" = xyes; then
+  AC_DEFINE(HAVE_LIBJPEG)
+fi
+
+if test "x$HAVE_LIBHERMES" = "xyes"; then
+  AC_DEFINE(HAVE_LIBHERMES)
+fi
+
+if test "x$HAVE_CSSAUTH" = xyes; then
+  AC_DEFINE(HAVE_CSSAUTH)
+fi
+
+if test "x$HAVE_LINUX_CDROM" = xyes; then
+  AC_DEFINE(HAVE_LINUX_CDROM)
+fi
+
+if test "x$HAVE_LINUX_VIDEODEV" = xyes; then
+  AC_DEFINE(HAVE_LINUX_VIDEODEV)
 fi
 
 dnl #############################
