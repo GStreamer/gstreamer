@@ -103,7 +103,7 @@ enum {
 /* default scheduler, can be changed in gstscheduler.h with
  * the GST_SCHEDULER_DEFAULT_NAME define.
  */
-static const struct poptOption options[] = {
+static const struct poptOption gstreamer_options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        "Print the GStreamer version", NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
@@ -134,7 +134,7 @@ static const struct poptOption options[] = {
 const struct poptOption *
 gst_init_get_popt_table (void)
 {
-  return options;
+  return gstreamer_options;
 }
 
 /**
@@ -154,7 +154,7 @@ gst_init_get_popt_table (void)
 gboolean
 gst_init_check (int *argc, char **argv[])
 {
-  return gst_init_with_popt_table (argc, argv, NULL);
+  return gst_init_check_with_popt_table (argc, argv, NULL);
 }
 
 /**
@@ -172,8 +172,7 @@ gst_init_check (int *argc, char **argv[])
 void
 gst_init (int *argc, char **argv[])
 {
-  if (!gst_init_with_popt_table (argc, argv, NULL))
-    g_error ("Could not initialize GStreamer !\n");
+  gst_init_with_popt_table (argc, argv, NULL);
 }
 
 /**
@@ -186,68 +185,50 @@ gst_init (int *argc, char **argv[])
  * setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  *
- * Returns: TRUE when the initialization succeeded.
+ * This function will terminate your program if it was unable to initialize
+ * GStreamer for some reason.  If you want your program to fall back,
+ * use gst_init_check_with_popt_table() instead.
+ */
+void
+gst_init_with_popt_table (int *argc, char **argv[],
+	                  const struct poptOption *popt_options)
+{
+  if (!gst_init_check_with_popt_table (argc, argv, popt_options)) {
+    g_print ("Could not initialize GStreamer !\n");
+    exit (1);
+  }
+}
+/**
+ * gst_init_check_with_popt_table:
+ * @argc: pointer to application's argc
+ * @argv: pointer to application's argv
+ * @popt_options: pointer to a popt table to append
+ *
+ * Initializes the GStreamer library, parsing the options,
+ * setting up internal path lists,
+ * registering built-in elements, and loading standard plugins.
+ *
+ * Returns: TRUE if GStreamer coul be initialized
  */
 gboolean
-gst_init_with_popt_table (int *argc, char **argv[],
-		          const struct poptOption *popt_options)
+gst_init_check_with_popt_table (int *argc, char **argv[],
+		                const struct poptOption *popt_options)
 {
   poptContext context;
   gint nextopt, i, j, nstrip;
   gchar **temp;
   const struct poptOption *options;
-  struct poptOption options_with[] = {
-     POPT_TABLEEND,
-     POPT_TABLEEND,
-     POPT_TABLEEND,
-     POPT_TABLEEND
+  const struct poptOption options_with[] = {
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		 0, "Application options:", NULL},
+    POPT_TABLEEND
   };
-  struct poptOption options_without[] = {
-     POPT_TABLEEND,
-     POPT_TABLEEND,
-     POPT_TABLEEND
+  const struct poptOption options_without[] = {
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
+    POPT_TABLEEND
   };
-
-  /* This used to be done by struct initialization, but most
-   * compilers don't like calling functions in a struct
-   * initialization.  (It's a GCC extension.)  FIXME: This should
-   * be reworked to look better. */
-  options_with[0].longName   = NULL;
-  options_with[0].shortName  = NUL;
-  options_with[0].argInfo    = POPT_ARG_INCLUDE_TABLE;
-  options_with[0].arg        = poptHelpOptions;
-  options_with[0].val        = 0;
-  options_with[0].descrip    = "Help options:";
-  options_with[0].argDescrip = NULL;
-  options_with[1].longName   = NULL;
-  options_with[1].shortName  = NUL;
-  options_with[1].argInfo    = POPT_ARG_INCLUDE_TABLE;
-  options_with[1].arg        = (struct poptOption *) gst_init_get_popt_table();
-  options_with[1].val        = 0;
-  options_with[1].descrip    = "GStreamer options:";
-  options_with[1].argDescrip = NULL;
-  options_with[2].longName   = NULL;
-  options_with[2].shortName  = NUL;
-  options_with[2].argInfo    = POPT_ARG_INCLUDE_TABLE;
-  options_with[2].arg        = (struct poptOption *) popt_options;
-  options_with[2].val        = 0;
-  options_with[2].descrip    = "Application options:";
-  options_with[2].argDescrip = NULL;
-
-  options_without[0].longName   = NULL;
-  options_without[0].shortName  = NUL;
-  options_without[0].argInfo    = POPT_ARG_INCLUDE_TABLE;
-  options_without[0].arg        = poptHelpOptions;
-  options_without[0].val        = 0;
-  options_without[0].descrip    = "Help options:";
-  options_without[0].argDescrip = NULL;
-  options_without[1].longName   = NULL;
-  options_without[1].shortName  = NUL;
-  options_without[1].argInfo    = POPT_ARG_INCLUDE_TABLE;
-  options_without[1].arg        = (struct poptOption *) gst_init_get_popt_table();
-  options_without[1].val        = 0;
-  options_without[1].descrip    = "GStreamer options:";
-  options_without[1].argDescrip = NULL;
 
   if (gst_initialized)
   {

@@ -69,7 +69,10 @@ G_BEGIN_DECLS
 /* initialize GST */
 void		gst_init			(int *argc, char **argv[]);
 gboolean	gst_init_check			(int *argc, char **argv[]);
-gboolean	gst_init_with_popt_table	(int *argc, char **argv[],
+void		gst_init_with_popt_table	(int *argc, char **argv[],
+						 const struct poptOption
+						 *popt_options);
+gboolean	gst_init_check_with_popt_table	(int *argc, char **argv[],
 						 const struct poptOption
 						 *popt_options);
 const struct
