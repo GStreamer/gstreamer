@@ -1,3 +1,11 @@
+2004-07-03  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_xrun_recovery):
+	  use our own functions for restarting the alsa device.
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  I should apply patches myself - use MIN for the third argument, not
+	  the second, this fixes seeking
+
 2004-07-02  David Schleef  <ds@schleef.org>
 
 	* ext/flac/gstflacdec.c: (gst_flacdec_class_init),

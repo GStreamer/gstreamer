@@ -1264,31 +1264,11 @@ gst_alsa_xrun_recovery (GstAlsa * this)
         this->period_count *= 2;
       }
     }
-
-    /* prepare the device again */
-    if ((err = snd_pcm_drop (this->handle)) < 0) {
-      GST_ERROR_OBJECT (this, "drop error: %s", snd_strerror (err));
-      return FALSE;
-    }
-    if ((err = snd_pcm_drain (this->handle)) < 0) {
-      GST_ERROR_OBJECT (this, "drop error: %s", snd_strerror (err));
-      return FALSE;
-    }
-    if (!gst_alsa_start (this)) {
-      GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
-          ("Error starting audio after xrun"));
-      return FALSE;
-    }
-
-    GST_DEBUG_OBJECT (this, "XRun!!!! of at least %.3f msecs, "
-        "pretending we captured %lld samples",
-        diff.tv_sec * 1000 + diff.tv_usec / 1000.0, this->captured);
-  } else {
-    if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
-      GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
-          ("Error restarting audio after xrun"));
-      return FALSE;
-    }
+  }
+  if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
+    GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
+        ("Error restarting audio after xrun"));
+    return FALSE;
   }
 
   return TRUE;
