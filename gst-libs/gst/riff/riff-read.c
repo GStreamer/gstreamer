@@ -714,7 +714,8 @@ gst_riff_read_info (GstRiffRead *riff)
   GstRiffLevel *level;
   GList *last;
   gchar *name, *type;
-  GstCaps *caps;
+  GstTagList *taglist;
+  gboolean have_tags = FALSE;
 
   /* What we're doing here is ugly (oh no!); we look
    * at our LIST tag size and assure that we do not
@@ -726,7 +727,7 @@ gst_riff_read_info (GstRiffRead *riff)
   end = level->start + level->length;
   g_free (level);
 
-  caps = gst_caps_new_simple ("application/x-gst-metadata", NULL);
+  taglist = gst_tag_list_new ();
 
   while (gst_bytestream_tell (riff->bs) < end) {
     if (!gst_riff_peek_head (riff, &tag, NULL, NULL)) {
@@ -736,73 +737,73 @@ gst_riff_read_info (GstRiffRead *riff)
     /* find out the type of metadata */
     switch (tag) {
       case GST_RIFF_INFO_IARL:
-        type = "Location";
+        type = GST_TAG_LOCATION;
         break;
       case GST_RIFF_INFO_IART:
-        type = "Artist";
+        type = GST_TAG_ARTIST;
         break;
       case GST_RIFF_INFO_ICMS:
-        type = "Commissioner";
+        type = NULL; /*"Commissioner";*/
         break;
       case GST_RIFF_INFO_ICMT:
-        type = "Comment";
+        type = GST_TAG_COMMENT;
         break;
       case GST_RIFF_INFO_ICOP:
-        type = "Copyright";
+        type = GST_TAG_COPYRIGHT;
         break;
       case GST_RIFF_INFO_ICRD:
-        type = "Creation Date";
+        type = GST_TAG_DATE;
         break;
       case GST_RIFF_INFO_ICRP:
-        type = "Cropped";
+        type = NULL; /*"Cropped";*/
         break;
       case GST_RIFF_INFO_IDIM:
-        type = "Dimensions";
+        type = NULL; /*"Dimensions";*/
         break;
       case GST_RIFF_INFO_IDPI:
-        type = "Dots per Inch";
+        type = NULL; /*"Dots per Inch";*/
         break;
       case GST_RIFF_INFO_IENG:
-        type = "Engineer";
+        type = NULL; /*"Engineer";*/
         break;
       case GST_RIFF_INFO_IGNR:
-        type = "Genre";
+        type = GST_TAG_GENRE;
         break;
       case GST_RIFF_INFO_IKEY:
-        type = "Keywords";
+        type = NULL; /*"Keywords";*/;
         break;
       case GST_RIFF_INFO_ILGT:
-        type = "Lightness";
+        type = NULL; /*"Lightness";*/
         break;
       case GST_RIFF_INFO_IMED:
-        type = "Medium";
+        type = NULL; /*"Medium";*/
         break;
       case GST_RIFF_INFO_INAM:
-        type = "Title"; /* "Name" */
+        type = GST_TAG_TITLE;
         break;
       case GST_RIFF_INFO_IPLT:
-        type = "Palette";
+        type = NULL; /*"Palette";*/
         break;
       case GST_RIFF_INFO_IPRD:
-        type = "Product";
+        type = NULL; /*"Product";*/
         break;
       case GST_RIFF_INFO_ISBJ:
-        type = "Subject";
+        type = NULL; /*"Subject";*/
         break;
       case GST_RIFF_INFO_ISFT:
-        type = "Encoder"; /* "Software" */
+        type = GST_TAG_APPLICATION;
         break;
       case GST_RIFF_INFO_ISHP:
-        type = "Sharpness";
+        type = NULL; /*"Sharpness";*/
         break;
       case GST_RIFF_INFO_ISRC:
-        type = "Source";
+        type = GST_TAG_ISRC;
         break;
       case GST_RIFF_INFO_ISRF:
-        type = "Source Form";
+        type = NULL; /*"Source Form";*/
         break;
       case GST_RIFF_INFO_ITCH:
-        type = "Technician";
+        type = NULL; /*"Technician";*/
         break;
       default:
         type = NULL;
@@ -812,19 +813,48 @@ gst_riff_read_info (GstRiffRead *riff)
     }
 
     if (type) {
+      name = NULL;
       if (!gst_riff_read_ascii (riff, &tag, &name)) {
         return FALSE;
       }
 
-      gst_caps_set_simple (caps, type, G_TYPE_STRING, name, NULL);
+      if (name && name[0] != '\0') {
+        GValue src = { 0 }, dest = { 0 };
+        GType dest_type = gst_tag_get_type (type);
+
+        have_tags = TRUE;
+        g_value_init (&src, G_TYPE_STRING);
+        g_value_set_string (&src, name);
+        g_value_init (&dest, dest_type);
+        g_value_transform (&src, &dest);
+        g_value_unset (&src);
+        gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+				 type, &dest, NULL);
+        g_value_unset (&dest);
+      }
+      g_free (name);
     } else {
       gst_riff_read_skip (riff);
     }
   }
 
-  /* let the world know about this wonderful thing */
-  gst_caps_replace (&riff->metadata, caps);
-  g_object_notify (G_OBJECT (riff), "metadata");
+  if (have_tags) {
+    GstElement *element = GST_ELEMENT (riff);
+    GstEvent *event = gst_event_new_tag (taglist);
+    const GList *padlist;
+
+    /* let the world know about this wonderful thing */
+    for (padlist = gst_element_get_pad_list (element);
+	 padlist != NULL; padlist = padlist->next) {
+      if (GST_PAD_IS_SRC (padlist->data)) {
+        gst_event_ref (event);
+        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
+      }
+    }
+    gst_event_unref (event);
+    gst_element_found_tags (GST_ELEMENT (riff), taglist);
+  }
+  gst_tag_list_free (taglist);
 
   return TRUE;
 }
