@@ -122,10 +122,7 @@ main (int argc, char *argv[])
   doc = xmlNewDoc ("1.0");
   doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
-  g_thread_init (NULL);
-  gst_typefactory_get_type ();
-  _gst_props_initialize ();
-  _gst_caps_initialize ();
+  gst_init (&argc, &argv);
 
   sinkcaps = mpeg2dec_sink_caps ();
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);

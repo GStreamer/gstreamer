@@ -28,7 +28,7 @@ main(int argc,char *argv[])
   g_return_val_if_fail (pipeline != NULL, 1);
 
   src = gst_elementfactory_make ("fakesrc", "src");
-  g_object_set (G_OBJECT (src), "num_buffers", 4, NULL);
+  g_object_set (G_OBJECT (src), "num_buffers", 40, NULL);
   g_return_val_if_fail (src != NULL, 2);
   tee = gst_elementfactory_make ("tee", "tee");
   g_return_val_if_fail (tee != NULL, 3);
@@ -39,7 +39,7 @@ main(int argc,char *argv[])
   g_object_set (G_OBJECT (identity2), "loop_based", TRUE, NULL);
   g_return_val_if_fail (identity2 != NULL, 3);
   aggregator = gst_elementfactory_make ("aggregator", "aggregator");
-  g_object_set (G_OBJECT (aggregator), "sched", 3, NULL);
+  g_object_set (G_OBJECT (aggregator), "sched", 4, NULL);
   g_return_val_if_fail (aggregator != NULL, 3);
   sink = gst_elementfactory_make ("fakesink", "sink");
   g_return_val_if_fail (sink != NULL, 4);
@@ -69,8 +69,7 @@ main(int argc,char *argv[])
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  while (playing)
-    gst_bin_iterate (pipeline);
+  while (gst_bin_iterate (pipeline));
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 

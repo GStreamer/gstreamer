@@ -4,7 +4,7 @@ int main(int argc,char *argv[])
 {
   xmlDocPtr doc;
   xmlNodePtr parent;
-  GstElement *mpg123;
+  GstElement *mad;
   GstElement *mp3parse;
   GstElement *queue;
   GstPad *sinkpad;
@@ -16,10 +16,10 @@ int main(int argc,char *argv[])
 
   gst_init (&argc, &argv);
 
-  mpg123 = gst_elementfactory_make ("mpg123", "mpg123");
-  g_assert (mpg123 != NULL);
+  mad = gst_elementfactory_make ("mad", "mad");
+  g_assert (mad != NULL);
 
-  sinkpad = gst_element_get_pad (mpg123, "sink");
+  sinkpad = gst_element_get_pad (mad, "sink");
   g_assert (sinkpad != NULL);
 
   queue = gst_elementfactory_make ("queue", "queue");
@@ -30,7 +30,7 @@ int main(int argc,char *argv[])
   qsinkpad = gst_element_get_pad (queue, "sink");
   g_assert (qsinkpad != NULL);
   
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "mpg123 caps", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "mad caps", NULL);
   gst_caps_save_thyself (gst_pad_get_caps (sinkpad), parent);
 
   parent = xmlNewChild (doc->xmlRootNode, NULL, "queue caps", NULL);
@@ -52,7 +52,7 @@ int main(int argc,char *argv[])
   parent = xmlNewChild (doc->xmlRootNode, NULL, "queue caps after connect sink", NULL);
   gst_caps_save_thyself (gst_pad_get_caps (qsinkpad), parent);
 
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "mpg123 caps after connect sink", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "mad caps after connect sink", NULL);
   gst_caps_save_thyself (gst_pad_get_caps (sinkpad), parent);
 
   xmlDocDump(stdout, doc);
