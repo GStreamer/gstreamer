@@ -350,19 +350,21 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
  *
  * Create a ghost pad from the given pad, and add it to the list of pads
  * for this element.
+ * 
+ * Returns: the added ghost pad or NULL, if no ghost pad was created.
  */
-void
+GstPad *
 gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
 {
   GstPad *ghostpad;
 
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   /* then check to see if there's already a pad by that name here */
-  g_return_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE);
+  g_return_val_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE, NULL);
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"creating new ghost pad called %s, from pad %s:%s\n",
             name,GST_DEBUG_PAD_NAME(pad));
@@ -380,6 +382,8 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
 
   /* emit the NEW_GHOST_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, ghostpad);
+	
+  return ghostpad;
 }
 
 /**

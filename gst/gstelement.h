@@ -194,7 +194,7 @@ GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const guchar *name);
-void			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, gchar *name);
+GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, gchar *name);
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
 GstPad*			gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ);
