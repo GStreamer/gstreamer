@@ -3,6 +3,14 @@
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate),
 	(gst_ximagesink_xwindow_new):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate),
+	(gst_xvimagesink_xwindow_new): I prefer locking the mutex in the
+	function directly. We might want to call it from somewhere else one day.
+
+2004-06-27  Julien Moutte  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate),
+	(gst_ximagesink_xwindow_new):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate),
 	(gst_xvimagesink_xwindow_new): Trying to fix the random behaviour of
 	window decorations.
 

@@ -309,6 +309,8 @@ gst_ximagesink_xwindow_decorate (GstXImageSink * ximagesink,
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), FALSE);
   g_return_val_if_fail (window != NULL, FALSE);
 
+  g_mutex_lock (ximagesink->x_lock);
+
   hints_atom = XInternAtom (ximagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
 
   hints = g_malloc0 (sizeof (MotifWmHints));
@@ -325,6 +327,8 @@ gst_ximagesink_xwindow_decorate (GstXImageSink * ximagesink,
       (guchar *) hints, sizeof (MotifWmHints) / sizeof (long));
 
   XSync (ximagesink->xcontext->disp, FALSE);
+
+  g_mutex_unlock (ximagesink->x_lock);
 
   g_free (hints);
 
@@ -359,11 +363,11 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
 
   XMapRaised (ximagesink->xcontext->disp, xwindow->win);
 
-  gst_ximagesink_xwindow_decorate (ximagesink, xwindow);
-
   XSync (ximagesink->xcontext->disp, FALSE);
 
   g_mutex_unlock (ximagesink->x_lock);
+
+  gst_ximagesink_xwindow_decorate (ximagesink, xwindow);
 
   gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (ximagesink), xwindow->win);
 
