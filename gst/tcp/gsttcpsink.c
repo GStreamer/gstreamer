@@ -342,7 +342,7 @@ gst_tcpsink_init_send (GstTCPSink *sink)
   struct hostent *he;
   struct in_addr addr;
 
-  bzero (&sink->theiraddr, sizeof (sink->theiraddr));
+  memset (&sink->theiraddr, 0, sizeof (sink->theiraddr));
   sink->theiraddr.sin_family = AF_INET;         /* host byte order */
   sink->theiraddr.sin_port = htons (sink->port); /* short, network byte order */
 

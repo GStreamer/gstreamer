@@ -863,7 +863,7 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
         if (paranoia_seek (src->p, seg_start_sector, SEEK_SET) > -1) {
 					GST_DEBUG ("seeked to %" G_GINT64_FORMAT, seg_start_sector);
 					
-					src->segment_start_sector = seg_start_sector;;
+					src->segment_start_sector = seg_start_sector;
 					src->cur_sector = src->segment_start_sector;
 				}
 				else {
@@ -873,7 +873,7 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
       if (seg_end_sector != -1) {
         seg_end_sector = CLAMP (seg_end_sector, 
 																src->first_sector, src->last_sector);
-        src->segment_end_sector = seg_end_sector;;
+        src->segment_end_sector = seg_end_sector;
       }
       GST_DEBUG ("configured for %d -> %d sectors\n", 
 								 src->segment_start_sector, 

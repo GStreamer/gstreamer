@@ -42,6 +42,8 @@ sub check_old_plugin();
 sub check_signal_new();
 sub check_gnuc_const();
 sub check_caps();
+sub check_lib_deprecated();
+sub check_typo();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -65,6 +67,8 @@ foreach $filename (<FIND>) {
 	check_old_typefind();
 	check_old_plugin();
 	check_caps();
+	check_lib_deprecated();
+	check_typo();
 
 	# less important stuff
 
@@ -455,6 +459,26 @@ sub check_caps()
 {
 	if (grep { /gst_pad_get_caps/ } @lines) {
 		print "E: elements should not call gst_pad_get_caps(), use gst_pad_get_allowed_caps()\n";
+	}
+}
+
+#
+# Check for use of deprecated functions
+#
+sub check_lib_deprecated()
+{
+	if (grep { /bzero/ } @lines) {
+		print "E: change bzero() to memset()\n";
+	}
+}
+
+#
+# Check for typos
+#
+sub check_typo()
+{
+	if (grep { /;\s*;\s*$/ } @lines) {
+		print "W: typo? \";;\"\n";
 	}
 }
 

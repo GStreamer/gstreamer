@@ -376,7 +376,7 @@ static gboolean
 gst_tcpsrc_init_receive (GstTCPSrc *src)
 {
   guint val=0;
-  bzero (&src->myaddr, sizeof (src->myaddr));
+  memset (&src->myaddr, 0, sizeof (src->myaddr));
   src->myaddr.sin_family = AF_INET;           /* host byte order */
   src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
