@@ -335,7 +335,8 @@ GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *srcpad, GstPad *destpad,
 void			gst_pad_push			(GstPad *pad, GstBuffer *buf);
 #else
 #define gst_pad_push(pad,buf) G_STMT_START{ \
-  if ((pad)->peer->pushfunc) ((pad)->peer->pushfunc)((pad)->peer,(buf)); \
+  if (GST_RPAD_PEER(pad)->pushfunc) \
+    (GST_RPAD_PEER(pad)->pushfunc)((GstPad *)GST_RPAD_PEER(pad),(buf)); \
 }G_STMT_END
 #endif
 #if 1
@@ -343,9 +344,9 @@ GstBuffer*		gst_pad_pull			(GstPad *pad);
 GstBuffer*		gst_pad_pullregion		(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 #else
 #define gst_pad_pull(pad) \
-  (((pad)->peer->pullfunc) ? ((pad)->peer->pullfunc)((pad)->peer) : NULL)
+  ((GST_RPAD_PEER(pad)->pullfunc) ? (GST_RPAD_PEER(pad)->pullfunc)((GstPad *)GST_RPAD_PEER(pad)) : NULL)
 #define gst_pad_pullregion(pad,type,offset,len) \
-  (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(type),(offset),(len)) : NULL)
+  ((GST_RPAD_PEER(pad)->pullregionfunc) ? (GST_RPAD_PEER(pad)->pullregionfunc)((GstPad *)GST_RPAD_PEER(pad),(type),(offset),(len)) : NULL)
 #endif
 
 #define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
