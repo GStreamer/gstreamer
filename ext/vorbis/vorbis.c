@@ -35,7 +35,7 @@ plugin_init (GstPlugin *plugin)
   if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE, GST_TYPE_VORBISENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "vorbisfile", GST_RANK_PRIMARY, vorbisfile_get_type ()))
+  if (!gst_element_register (plugin, "vorbisfile", GST_RANK_PRIMARY + 1, vorbisfile_get_type ()))
     return FALSE;
 
   return TRUE;
