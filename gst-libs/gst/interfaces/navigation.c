@@ -48,8 +48,6 @@ gst_navigation_get_type (void)
     gst_navigation_type = g_type_register_static (G_TYPE_INTERFACE,
 					     "GstNavigation",
 					     &gst_navigation_info, 0);
-    g_type_interface_add_prerequisite (gst_navigation_type,
-				       GST_TYPE_INTERFACE);
   }
 
   return gst_navigation_type;
