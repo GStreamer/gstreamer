@@ -104,9 +104,7 @@ GST_CHECK_FEATURE(BROKEN, [enable building of broken plug-ins],,
 HAVE_BROKEN=yes,disabled,
 [  
   AC_MSG_WARN([building broken plug-ins -- no bug reports on these, only patches :)])
-  USE_SMOOTHWAVE="yes"
 ],[
-  USE_SMOOTHWAVE="no"
   AC_MSG_NOTICE([not building broken plug-ins])
 ])
 
@@ -739,8 +737,14 @@ dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
 GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
-  XIPH_PATH_IVORBIS(HAVE_IVORBIS=yes, HAVE_IVORBIS=no)
-  AS_SCRUB_INCLUDE(IVORBIS_CFLAGS)
+  IVORBIS_LIBS=
+  IVORBIS_CFLAGS=
+  AC_CHECK_LIB(vorbisidec, vorbis_block_init,
+    [IVORBIS_LIBS=-lvorbisidec
+     HAVE_IVORBIS=yes],
+    HAVE_IVORBIS=no)
+  AC_SUBST(IVORBIS_LIBS)
+  AC_SUBST(IVORBIS_CFLAGS)
 ])
 
 dnl *** Jack ***
@@ -840,12 +844,13 @@ AC_SUBST(MAD_LIBS)
 
 dnl *** matroska ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MATROSKA, true)
-GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
-  PATH_EBML([HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
-  if test x$HAVE_MATROSKA = xyes; then
-    PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
-  fi
-])
+#GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
+#  PATH_EBML([HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
+#  if test x$HAVE_MATROSKA = xyes; then
+#    PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
+#  fi
+#])
+GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, HAVE_MATROSKA=no)
 
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MIKMOD, true)
@@ -919,6 +924,14 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
 GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   GST_CHECK_LIBHEADER(LIBPNG, png, png_read_info, -lz -lm, png.h, LIBPNG_LIBS="-lpng -lz -lm")
   AC_SUBST(LIBPNG_LIBS)
+])
+
+dnl *** speex ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
+GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
+  GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, HAVE_SPEEX="yes" SPEEX_LIBS="-lspeex")
+  AC_SUBST(SPEEX_CFLAGS)
+  AC_SUBST(SPEEX_LIBS)
 ])
 
 dnl *** sndfile ***
@@ -1263,6 +1276,7 @@ ext/shout2/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
 ext/snapshot/Makefile
+ext/speex/Makefile
 ext/sndfile/Makefile
 ext/swfdec/Makefile
 ext/vorbis/Makefile
