@@ -29,6 +29,7 @@
 
 static void 	gst_scheduler_class_init 	(GstSchedulerClass *klass);
 static void 	gst_scheduler_init 		(GstScheduler *sched);
+static void 	gst_scheduler_dispose 		(GObject *object);
 
 static GstObjectClass *parent_class = NULL;
 
@@ -62,7 +63,13 @@ gst_scheduler_get_type (void)
 static void
 gst_scheduler_class_init (GstSchedulerClass *klass)
 {
+  GObjectClass *gobject_class;
+      
+  gobject_class = (GObjectClass*) klass;
+      
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_scheduler_dispose);
 }
 
 static void
@@ -75,6 +82,17 @@ gst_scheduler_init (GstScheduler *sched)
   sched->parent = NULL;
   sched->parent_sched = NULL;
   sched->clock = NULL;
+}
+
+static void
+gst_scheduler_dispose (GObject *object)
+{
+  GstScheduler *sched = GST_SCHEDULER (object);
+
+  gst_object_swap ((GstObject **)&sched->current_clock, NULL);
+  gst_object_swap ((GstObject **)&sched->clock, NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**
@@ -274,7 +292,6 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   if (element == sched->parent && sched->parent_sched == NULL) {
-
     switch (transition) {
       case GST_STATE_READY_TO_PAUSED:
       {
@@ -286,7 +303,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         GST_DEBUG (GST_CAT_CLOCK, "scheduler READY to PAUSED clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-	sched->current_clock = clock;
+        gst_object_swap ((GstObject **)&sched->current_clock, (GstObject *)clock);
         break;
       }
       case GST_STATE_PAUSED_TO_PLAYING:
@@ -296,7 +313,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         GST_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-	sched->current_clock = clock;
+        gst_object_swap ((GstObject **)&sched->current_clock, (GstObject *)clock);
 
 	gst_scheduler_set_clock (sched, sched->current_clock);
         if (sched->current_clock) {
@@ -577,7 +594,8 @@ gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
   g_return_if_fail (GST_IS_SCHEDULER (sched));
 
   GST_FLAG_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
-  sched->clock = clock;
+
+  gst_object_swap ((GstObject **)&sched->clock, (GstObject *)clock);
 
   GST_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
 		(clock ? GST_OBJECT_NAME (clock) : "nil"));
@@ -603,7 +621,7 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
   receivers = sched->clock_receivers;
   schedulers = sched->schedulers;
 
-  sched->current_clock = clock;
+  gst_object_swap ((GstObject **)&sched->current_clock, (GstObject *)clock);
 
   while (receivers) {
     GstElement *element = GST_ELEMENT (receivers->data);
@@ -637,7 +655,8 @@ gst_scheduler_auto_clock (GstScheduler *sched)
   g_return_if_fail (GST_IS_SCHEDULER (sched));
 
   GST_FLAG_UNSET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
-  sched->clock = NULL;
+
+  gst_object_swap ((GstObject **)&sched->clock, NULL);
 
   GST_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
 }
@@ -789,14 +808,16 @@ gst_scheduler_factory_new (const gchar *name, const gchar *longdesc, GType type)
   GstSchedulerFactory *factory;
 
   g_return_val_if_fail(name != NULL, NULL);
+
   factory = gst_scheduler_factory_find (name);
+
   if (!factory) {
     factory = GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
   }
-
-  GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
-  if (factory->longdesc)
+  else {
     g_free (factory->longdesc);
+  }
+
   factory->longdesc = g_strdup (longdesc);
   factory->type = type;
 
@@ -835,6 +856,7 @@ gst_scheduler_factory_find (const gchar *name)
   GST_DEBUG (0,"gstscheduler: find \"%s\"", name);
 
   feature = gst_registry_pool_find_feature (name, GST_TYPE_SCHEDULER_FACTORY);
+
   if (feature)
     return GST_SCHEDULER_FACTORY (feature);
 
@@ -920,8 +942,7 @@ gst_scheduler_factory_make (const gchar *name, GstElement *parent)
 void
 gst_scheduler_factory_set_default_name (const gchar* name)
 {
-  if (_default_name)
-    g_free (_default_name);
+  g_free (_default_name);
 
   _default_name = g_strdup (name);
 }

@@ -180,8 +180,10 @@ gst_object_ref (GstObject *object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "ref '%s' %d->%d",GST_OBJECT_NAME(object),
-             G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count+1);
+  GST_DEBUG (GST_CAT_REFCOUNTING, "ref %p '%s' %d->%d", object,
+	     GST_OBJECT_NAME (object),
+             G_OBJECT (object)->ref_count,
+	     G_OBJECT (object)->ref_count + 1);
 
   g_object_ref (G_OBJECT (object));
   return object;
@@ -199,8 +201,10 @@ gst_object_unref (GstObject *object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "unref '%s' %d->%d",GST_OBJECT_NAME(object),
-             G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count-1);
+  GST_DEBUG (GST_CAT_REFCOUNTING, "unref %p '%s' %d->%d", object,
+	     GST_OBJECT_NAME (object),
+             G_OBJECT (object)->ref_count,
+	     G_OBJECT (object)->ref_count - 1);
 
   g_object_unref (G_OBJECT (object));
 }
@@ -220,9 +224,9 @@ gst_object_sink (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "sink '%s'",GST_OBJECT_NAME(object));
-  if (GST_OBJECT_FLOATING (object))
-  {
+  GST_DEBUG (GST_CAT_REFCOUNTING, "sink %p '%s'", object, GST_OBJECT_NAME (object));
+
+  if (GST_OBJECT_FLOATING (object)) {
     GST_FLAG_UNSET (object, GST_FLOATING);
     gst_object_unref (object);
   }
@@ -262,7 +266,8 @@ gst_object_destroy (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy '%s'",GST_OBJECT_NAME(object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy %p '%s'", object, GST_OBJECT_NAME (object));
+
   if (!GST_OBJECT_DESTROYED (object))
   {
     /* need to hold a reference count around all class method
@@ -275,7 +280,8 @@ gst_object_destroy (GstObject *object)
 static void
 gst_object_dispose (GObject *object)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose '%s'",GST_OBJECT_NAME(object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %p '%s'", object, GST_OBJECT_NAME (object));
+  
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
   GST_OBJECT_PARENT (object) = NULL;
 
@@ -288,7 +294,7 @@ gst_object_finalize (GObject *object)
 {
   GstObject *gstobject = GST_OBJECT (object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "finalize '%s'",GST_OBJECT_NAME(object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "finalize %p '%s'", object, GST_OBJECT_NAME (object));
 
   g_signal_handlers_destroy (object);
 

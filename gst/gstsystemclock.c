@@ -109,6 +109,9 @@ gst_system_clock_obtain (void)
     _the_system_clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
     
     gst_object_set_name (GST_OBJECT (_the_system_clock), "GstSystemClock");
+
+    gst_object_ref (GST_OBJECT (_the_system_clock));
+    gst_object_sink (GST_OBJECT (_the_system_clock));
   }
   return _the_system_clock;
 }
