@@ -133,7 +133,7 @@ gst_udpsink_class_init (GstUDPSink *klass)
     g_param_spec_enum ("control", "control", "The type of control",
                        GST_TYPE_UDPSINK_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MTU, 
-		  g_param_spec_int ("mtu", "mtu", "mtu", G_MININT, G_MAXINT, 
+		  g_param_spec_int ("mtu", "mtu", "maximun transmit unit", G_MININT, G_MAXINT, 
 			  0, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_udpsink_set_property;
@@ -197,7 +197,6 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
 		perror("sending");
     	    	return GST_PAD_LINK_REFUSED;
   	    } 
-
 	    close (fd);
 	    break;
     case CONTROL_TCP:
@@ -217,7 +216,6 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
   	    xmlDocDump(f, doc);
   	    fclose (f);
 	    close (fd);
-  	    
 	    break;
     case CONTROL_NONE:
     	    return GST_PAD_LINK_OK;
@@ -262,8 +260,7 @@ static void
 gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstUDPSink *udpsink;
-  guint tolen;
-  /*guint tolen, i;*/
+  guint tolen, i;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -281,13 +278,15 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
   
   tolen = sizeof(udpsink->theiraddr);
   
+ /*
   if (sendto (udpsink->sock, GST_BUFFER_DATA (buf), 
 	 GST_BUFFER_SIZE (buf), 0, (struct sockaddr *) &udpsink->theiraddr, 
 	 tolen) == -1) {
     		perror("sending");
   } 
-  
-  /*for (i = 0; i < GST_BUFFER_SIZE (buf); i += udpsink->mtu) {
+*/
+  /* MTU */ 
+  for (i = 0; i < GST_BUFFER_SIZE (buf); i += udpsink->mtu) {
     if (GST_BUFFER_SIZE (buf) - i > udpsink->mtu) {
   	if (sendto (udpsink->sock, GST_BUFFER_DATA (buf) + i, 
 	    udpsink->mtu, 0, (struct sockaddr *) &udpsink->theiraddr, 
@@ -302,7 +301,7 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
     		perror("sending");
   	} 
     }
-  }*/
+  }
 
   gst_buffer_unref(buf);
 }
