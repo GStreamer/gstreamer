@@ -24,8 +24,7 @@
 #ifndef __GST_H__
 #define __GST_H__
 
-#include <gst/gstdebug.h>
-#include <gst/gstlog.h>
+#include <gst/gstinfo.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
@@ -51,5 +50,7 @@ void gst_init(int *argc,char **argv[]);
 
 void gst_main		(void);
 void gst_main_quit	(void);
+
+#include <gst/gstlog.h>
 
 #endif /* __GST_H__ */

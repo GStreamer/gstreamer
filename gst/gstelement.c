@@ -171,7 +171,6 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
     element->numsinkpads++;
 
   /* emit the NEW_PAD signal */
-//  g_print("emitting NEW_PAD signal, \"%s\"!\n",gst_pad_get_name(pad));
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_PAD], pad);
 }
 
@@ -227,8 +226,8 @@ gst_element_get_pad (GstElement *element, gchar *name)
   /* look through the list, matching by name */ 
   walk = element->pads;
   while (walk) {
-    if (!strcmp (((GstPad *)(walk->data))->name, name))
-      return (GstPad *)(walk->data);
+    if (!strcmp ((GST_PAD(walk->data))->name, name))
+      return GST_PAD(walk->data);
     walk = g_list_next (walk);
   }
 
@@ -305,16 +304,26 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
 
   /* obtain the pads requested */
   srcpad = gst_element_get_pad (src, srcpadname);
-  g_return_if_fail (srcpad != NULL);
+  if (srcpad == NULL) {
+    ERROR(src,"source element has no pad \"%s\"",srcpadname);
+    return;
+  }
   destpad = gst_element_get_pad (dest, destpadname);
-  g_return_if_fail (destpad != NULL);
+  if (srcpad == NULL) {
+    ERROR(dest,"destination element has no pad \"%s\"",destpadname);
+    return;
+  }
 
   /* find the parent elements of each element */
   srcparent = gst_object_get_parent (GST_OBJECT (src));
   destparent = gst_object_get_parent (GST_OBJECT (dest));
-  
+
   /* have to make sure that they have the same parents... */
-  g_return_if_fail (srcparent == destparent);
+  if (srcparent != destparent) {
+    ERROR_OBJECT(srcparent,destparent,"%s and %s have different parents",
+                 gst_element_get_name(src),gst_element_get_name(dest));
+    return;
+  }
 
   /* we're satisified they can be connected, let's do it */
   gst_pad_connect(srcpad,destpad);
@@ -649,12 +658,11 @@ gst_element_load_thyself (xmlNodePtr parent,
   guchar *value = NULL;
   guchar *type = NULL;
 
-  // first get the needed tags to cunstruct the element
+  // first get the needed tags to construct the element
   while (children) {
     if (!strcmp (children->name, "name")) {
       name = g_strdup (xmlNodeGetContent (children));
-    }
-    else if (!strcmp (children->name, "type")) {
+    } else if (!strcmp (children->name, "type")) {
       type = g_strdup (xmlNodeGetContent (children));
     }
     children = children->next;
@@ -662,7 +670,7 @@ gst_element_load_thyself (xmlNodePtr parent,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type != NULL, NULL);
 
-  g_print ("gstelement: loading \"%s\" of type \"%s\"\n", name, type);
+  INFO(0,NULL,"loading \"%s\" of type \"%s\"\n", name, type);
 
   element = gst_elementfactory_make (type, name);
 

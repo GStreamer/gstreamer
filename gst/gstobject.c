@@ -23,6 +23,8 @@
 #include "gst_private.h"
 
 #include "gstobject.h"
+#include "gstpad.h"
+#include "gstelement.h"
 
 /* Object signals and args */
 enum {
@@ -110,10 +112,14 @@ GstObject *gst_object_new() {
 void gst_object_set_parent(GstObject *object,GstObject *parent) {
   g_return_if_fail(object != NULL);
   g_return_if_fail(GST_IS_OBJECT(object));
-  g_return_if_fail(object->parent == NULL);
   g_return_if_fail(parent != NULL);
   g_return_if_fail(GST_IS_OBJECT(parent));
   g_return_if_fail(object != parent);
+
+  if (object->parent != NULL) {
+    ERROR_OBJECT(object,object->parent,"object's parent is already set, must unparent first");
+    return;
+  }
 
   gst_object_ref(object);
   gst_object_sink(object);
@@ -244,4 +250,77 @@ void gst_object_sink(GstObject *object) {
   }
 }
 #endif /* gst_object_sink */
+
+
+
+gchar *gst_object_get_path_string(GstObject *object) {
+  GSList *parentage = NULL;
+  GSList *parents;
+  void *parent;
+  gchar *prevpath, *path = ""; 
+  const char *component;
+  gchar *separator = "";
+  gboolean free_component;
+
+  parentage = g_slist_prepend (NULL, object);
+       
+  // first walk the object hierarchy to build a list of the parents
+  do {
+    if (GST_IS_OBJECT(object)) {
+      if (GST_IS_PAD(object)) {
+        parent = GST_PAD(object)->parent;
+//      } else if (GST_IS_ELEMENT(object)) {
+//        parent = gst_element_get_parent(GST_ELEMENT(object));
+      } else {
+        parent = gst_object_get_parent (object);
+      }
+    } else {
+      parentage = g_slist_prepend (parentage, NULL);
+      parent = NULL;
+    }
+
+    if (parent != NULL) { 
+      parentage = g_slist_prepend (parentage, parent);
+    }
+ 
+    object = parent;
+  } while (object != NULL);
+
+  // then walk the parent list and print them out
+  parents = parentage;
+  while (parents) {
+    if (GST_IS_OBJECT(parents->data)) {
+      if (GST_IS_PAD(parents->data)) {
+        component = gst_pad_get_name(GST_PAD(parents->data));
+        separator = ".";
+        free_component = FALSE;
+      } else if (GST_IS_ELEMENT(parents->data)) {
+        component = gst_element_get_name(GST_ELEMENT(parents->data));
+        separator = "/";
+        free_component = FALSE;
+      } else {
+//        component = g_strdup_printf("a %s",gtk_type_name(gtk_identifier_get_type(parents->data)));
+        component = g_strdup_printf("unknown%p",parents->data);
+        separator = "/";
+        free_component = TRUE;
+      }
+    } else {
+      component = g_strdup_printf("%p",parents->data);  
+      separator = "/";
+      free_component = TRUE;
+    }
+      
+    prevpath = path;
+    path = g_strjoin(separator,prevpath,component,NULL);
+    g_free(prevpath);
+    if (free_component)
+      g_free((gchar *)component);
+
+    parents = g_slist_next(parents);
+  }
+    
+  g_slist_free(parentage);
+              
+  return path;
+}
 

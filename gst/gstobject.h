@@ -35,6 +35,9 @@
 #include <asm/atomic.h>
 #endif
 
+// FIXME
+#include "gstlog.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -109,6 +112,9 @@ void 		gst_object_unparent		(GstObject *object);
 
 /* destroying an object */
 #define 	gst_object_destroy(object) 	gtk_object_destroy(GTK_OBJECT(object))
+
+/* printing out the 'path' of the object */
+gchar *		gst_object_get_path_string	(GstObject *object);
 
 
 #ifdef __cplusplus

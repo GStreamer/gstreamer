@@ -28,7 +28,6 @@
 #include "config.h"
 #endif
 
-#include <gst/gstdebug.h>
-//#include <gst/gstinfo.h>
+#include <gst/gstinfo.h>
 
 #endif /* __GST_PRIVATE_H__ */

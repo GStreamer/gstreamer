@@ -396,6 +396,10 @@ void gst_bin_schedule_func(GstBin *bin) {
           pads = g_list_next (pads);
           DEBUG("have pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
 
+          g_assert(pad->peer != NULL);
+          g_assert(pad->peer->parent != NULL);
+          g_assert(GST_ELEMENT(pad->peer->parent)->manager != NULL);
+
 	  DEBUG("peer pad %p\n", pad->peer);
           // only bother with if the pad's peer's parent is this bin or it's DECOUPLED
           // only add it if it's in the list of un-visited elements still

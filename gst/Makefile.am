@@ -19,6 +19,7 @@ EXTRA_libgst_la_SOURCES =	\
 
 libgst_la_SOURCES =	\
 	gst.c		\
+	gstinfo.c	\
 	$(GSTOBJECT_SRCS)	\
 	gstpad.c	\
 	gstautoplug.c	\
@@ -48,6 +49,7 @@ libgst_la_SOURCES =	\
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =	\
 	gst.h		\
+	gstinfo.h	\
 	gstlog.h	\
 	$(GSTOBJECT_INCLUDES)	\
 	gstpad.h	\
@@ -70,7 +72,6 @@ libgstinclude_HEADERS =	\
 	gstmeta.h	\
 	gsttee.h	\
 	gstxml.h	\
-	gstdebug.h	\
 	cothreads.h	\
 	gstscheduler.h
 

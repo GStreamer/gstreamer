@@ -31,9 +31,13 @@
 #include "gstthread.h"
 
 
+
+gchar *_gst_progname;
+
+
 extern gint _gst_trace_on;
 
-GHashTable *__gst_function_pointers = NULL;
+
 
 /**
  * gst_init:
@@ -49,6 +53,8 @@ gst_init (int *argc, char **argv[])
   GstTrace *gst_trace;
 
   if (!g_thread_supported ()) g_thread_init (NULL);
+
+  _gst_progname = g_strdup(*argv[0]);
 
   gtk_init (argc,argv);
 

@@ -26,7 +26,6 @@
 
 #include <gnome-xml/parser.h>
 
-#include <gst/gstlog.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/cothreads.h>
