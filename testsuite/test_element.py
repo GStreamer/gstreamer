@@ -2,35 +2,54 @@
 #
 # testsuite for gstreamer.Element
 
-import sys
-sys.path.insert(0, '..')
+from common import gst, unittest
 
-import gst
+class ElementTest(unittest.TestCase):
+    name = 'fakesink'
+    alias = 'sink'
+    
+    def testBadConstruct(self):
+        self.assertRaises(TypeError, gst.Element)
+        self.assertRaises(TypeError, gst.Element, None)
 
-def fail(message):
-    'print reason for failing and leave'
-    print "FAILED: %s" % message
-    sys.exit(-1)
+    def testGoodConstructor(self):
+        element = gst.Element(self.name, self.alias)
+        assert element
+        assert element.get_name() == self.alias
+        
+class FakeSinkTest(ElementTest):
+    FAKESINK_STATE_ERROR_NONE           = "0"
+    FAKESINK_STATE_ERROR_NULL_READY,    = "1"
+    FAKESINK_STATE_ERROR_READY_PAUSED,  = "2"
+    FAKESINK_STATE_ERROR_PAUSED_PLAYING = "3"
+    FAKESINK_STATE_ERROR_PLAYING_PAUSED = "4"
+    FAKESINK_STATE_ERROR_PAUSED_READY   = "5"
+    FAKESINK_STATE_ERROR_READY_NULL     = "6"
 
-# create an element we know exists
-src = gst.Element("fakesrc", "source")
-if not src:
-    fail("Can't create fakesrc Element")
+    name = 'fakesink'
+    alias = 'sink'
+    def setUp(self):
+        self.element = gst.Element('fakesink', 'sink')
 
-# create an element we know doesn't exist
-nope = None
-result = 0
-try:
-    nope = gst.Element("idontexist", "none")
-except RuntimeError: result = 1
-if result == 0:
-    fail("creating an unexistant element didn't generate a RuntimeError")
+    def testStateError(self):
+        self.element.set_property('state-error',
+                                  self.FAKESINK_STATE_ERROR_NULL_READY)
+        def error_cb(element, source, pointer, None):
+            assert isinstance(element, gst.Element)
+            assert element == self.element
+            assert isinstance(source, gst.Element)
+            assert source == self.element
+            return False
+        
+        self.element.connect('error', error_cb)
+        self.element.set_state(gst.STATE_READY)
 
-# create a sink
-sink = gst.Element("fakesink", "sink")
-
-# link
-if not src.link(sink):
-    fail("could not link")
-
-sys.exit(0)
+class NonExistentTest(ElementTest):
+    name = 'this-element-does-not-exist'
+    alias = 'no-alias'
+    
+    def testGoodConstructor(self):
+        self.assertRaises(RuntimeError, gst.Element, self.name, self.alias)
+    
+if __name__ == "__main__":
+    unittest.main()
