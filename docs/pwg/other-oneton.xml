@@ -1,16 +1,151 @@
 
 <!-- ############ chapter ############# -->
 
-<chapter id="chapter-other-oneton" xreflabel="Writing a 1-to-N Element">
-  <title>Writing a 1-to-N element</title>
+<chapter id="chapter-other-oneton" xreflabel="Writing a 1-to-N Element, Demuxer or Parser">
+  <title>Writing a 1-to-N Element, Demuxer or Parser</title>
   <para>
-    FIXME: write.
+    1-to-N elements don't have much special needs or requirements that
+    haven't been discussed already. The most important thing to take care
+    of in 1-to-N elements (things like <classname>tee</classname>-elements
+    or so) is to use proper buffer refcounting and caps negotiation. If
+    those two are taken care of (see the <classname>tee</classname> element
+    if you need example code), there's little that can go wrong.
+  </para>
+  <para>
+    Demuxers are the 1-to-N elements that need very special care, though.
+    They are responsible for timestamping raw, unparsed data into
+    elementary video or audio streams, and there are many things that you
+    can optimize or do wrong. Here, several culprits will be mentioned
+    and common solutions will be offered. Parsers are demuxers with only
+    one source pad. Also, they only cut the stream into buffers, they
+    don't touch the data otherwise.
   </para>
 
-  <sect1 id="section-other-demuxer" xreflabel="Writing a Demuxer">
-    <title>Writing a Demuxer</title>
+  <sect1 id="section-oneton-capsnego" xreflabel="Demuxer Caps Negotiation">
+    <title>Demuxer Caps Negotiation</title>
     <para>
-      WRITEME
+      Demuxers will usually contain several elementary streams, and each
+      of those streams' properties will be defined in a stream header at
+      the start of the file (or, rather, stream) that you're parsing.
+      Since those are fixed and there is no possibility to negotiate
+      stream properties with elements earlier in the pipeline, you should
+      always use explicit caps on demuxer source pads. This prevents a
+      whole lot of caps negotiation or re-negotiation errors.
+    </para>
+  </sect1>
+
+  <sect1 id="section-oneton-data" xreflabel="Data processing and downstream events">
+    <title>Data processing and downstream events</title>
+    <para>
+      Data parsing, pulling this into subbuffers and sending that to the
+      source pads of the elementary streams is the one single most
+      important task of demuxers and parsers. Usually, an element will
+      have a <function>_loop ()</function> function using the
+      <classname>bytestream</classname> object to read data. Try to have
+      a single point of data reading from the bytestream object. In this
+      single point, do <emphasis>proper</emphasis> event handling (in
+      case there is any) and <emphasis>proper</emphasis> error handling
+      in case that's needed. Make your element as fault-tolerant as
+      possible, but do not go further than possible.
+    </para>
+  </sect1>
+
+  <sect1 id="section-oneton-parsing" xreflabel="Parsing versus interpreting">
+    <title>Parsing versus interpreting</title>
+    <para>
+      One particular convention that &GStreamer; demuxers follow is that
+      of separation of parsing and interpreting. The reason for this is
+      maintainability, clarity and code reuse. An easy example of this
+      is something like RIFF, which has a chunk header of 4 bytes, then
+      a length indicator of 4 bytes and then the actual data. We write
+      special functions to read one chunk, to peek a chunk ID and all
+      those; that's the <emphasis>parsing</emphasis> part of the demuxer.
+      Then, somewhere else, we like to write the main data processing
+      function, which calls this parse function, reads one chunk and
+      then does with the data whatever it needs to do.
+    </para>
+    <para>
+      Some example code for RIFF-reading to illustrate the above two points:
+    </para>
+    <programlisting>
+static gboolean
+gst_my_demuxer_peek (GstMyDemuxer *demux,
+		     guint32      *id,
+		     guint32      *size)
+{
+  guint8 *data;
+
+  while (gst_bytestream_peek_bytes (demux->bs, &amp;data, 4) != 4) {
+    guint32 remaining;
+    GstEvent *event;
+
+    gst_bytestream_get_status (demux->bs, &amp;remaining, &amp;event);
+    if (event) {
+      GstEventType type = GST_EVENT_TYPE (event);
+
+      /* or maybe custom event handling, up to you - we lose reference! */
+      gst_pad_event_default (demux->sinkpad, event);
+
+      if (type == GST_EVENT_EOS)
+        return FALSE;
+    } else {
+      GST_ELEMENT_ERROR (demux, STREAM, READ, (NULL), (NULL));
+      return FALSE;
+    }
+  }
+
+  *id = GUINT32_FROM_LE (((guint32 *) data)[0]);
+  *size = GUINT32_FROM_LE (((guint32 *) data)[0]);
+
+  return TRUE;
+}
+
+static void
+gst_my_demuxer_loop (GstElement *element)
+{
+  GstMyDemuxer *demux = GST_MY_DEMUXER (element);
+  guint32 id, size;
+
+  if (!gst_my_demuxer_peek (demux, &amp;id, &amp;size))
+    return;
+
+  switch (id) {
+    [.. normal chunk handling ..]
+  }
+}
+    </programlisting>
+    <para>
+      Reason for this is that event handling is now centralized in one
+      place and the <function>_loop ()</function> function is a lot
+      cleaner and more readable. Those are common code practices, but
+      since the mistake of <emphasis>not</emphasis> using such common
+      code practices has been made too often, we explicitely mention
+      this here.
+    </para>
+  </sect1>
+
+  <sect1 id="section-oneton-seeking" xreflabel="Simple seeking and indexes">
+    <title>Simple seeking and indexes</title>
+    <para>
+      Sources will generally receive a seek event in the exact supported
+      format by the element. Demuxers, however, can not seek in
+      themselves directly, but need to convert from one unit (e.g.
+      time) to the other (e.g. bytes) and send a new event to its sink
+      pad. Given this, the <function>_convert ()</function>-function (or,
+      more general: unit conversion) is the most important function in a
+      demuxer. Some demuxers (AVI, Matroska) and parsers will keep an
+      index of all chunks in a stream, firstly to improve seeking
+      precision and secondly so they won't lose sync. Some other demuxers
+      will seek the stream directly without index (e.g. MPEG, Ogg) -
+      usually based on something like a cumulative bitrate - and then
+      find the closest next chunk from their new position. The best
+      choice depends on the format.
+    </para>
+    <para>
+      Note that it is recommended for demuxers to implement event,
+      conversion and query handling functions (using time units or so),
+      in addition to the ones (usually in byte units) provided by the
+      pipeline source element.
     </para>
   </sect1>
 </chapter>

@@ -86,7 +86,66 @@
   <sect1 id="section-types-typefind" xreflabel="Typefind Functions and Autoplugging">
     <title>Typefind Functions and Autoplugging</title>
     <para>
-      WRITEME
+      With only <emphasis>defining</emphasis> the types, we're not yet there.
+      In order for a random data file to be recognized and played back as
+      such, we need a way of recognizing their type out of the blue. For this
+      purpose, <quote>typefinding</quote> was introduced. Typefinding is the
+      process of detecting the type of a datastream. Typefinding consists of
+      two separate parts: first, there's an unlimited number of functions
+      that we call <emphasis>typefind functions</emphasis>, which are each
+      able to recognize one or more types from an input stream. Then,
+      secondly, there's a small engine which registers and calls each of
+      those functions. This is the typefind core. On top of this typefind
+      core, you would normally write an autoplugger, which is able to use
+      this type detection system to dynamically build a pipeline around an
+      input stream. Here, we will focus only on typefind functions.
+    </para>
+    <para>
+      A typefind function ususally lives in
+      <filename>gst-plugins/gst/typefind/gsttypefindfunctions.c</filename>,
+      unless there's a good reason (like library dependencies) to put it
+      elsewhere. The reason for this centralization is to decreate the
+      number of plugins that need to be loaded in order to detect a stream's
+      type. Below is an example that will recognize AVI files, which start
+      with a <quote>RIFF</quote> tag, then the size of the file and then an
+      <quote>AVI </quote> tag:
+    </para>
+    <programlisting>
+static void
+gst_my_typefind_function (GstTypeFind *tf,
+			  gpointer     data)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 12);
+
+  if (data &amp;&amp;
+      GUINT32_FROM_LE ((guint32 *) data)[0] == GST_MAKE_FOURCC ('R','I','F','F') &amp;&amp;
+      GUINT32_FROM_LE ((guint32 *) data)[2] == GST_MAKE_FOURCC ('A','V','I',' ')) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+			   gst_caps_new_simple ("video/x-msvideo", NULL));
+  }
+}
+
+static gboolean
+plugin_init (GstPlugin *plugin)
+{
+  static gchar *exts[] = { "avi", NULL };
+  if (!gst_type_find_register (plugin, "", GST_RANK_PRIMARY,
+			       gst_my_typefind_function, exts,
+			       gst_caps_new_simple ("video/x-msvideo",
+						    NULL), NULL))
+    return FALSE;
+}
+    </programlisting>
+    <para>
+      Note that
+      <filename>gst-plugins/gst/typefind/gsttypefindfunctions.c</filename>
+      has some simplification macros to decrease the amount of code. Make
+      good use of those if you want to submit typefinding patches with new
+      typefind functions.
+    </para>
+    <para>
+      Autoplugging will be discussed in great detail in the chapter called
+      <xref linkend="chapter-other-autoplugger"/>.
     </para>
   </sect1>
 

@@ -1,3 +1,10 @@
+2004-03-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-types.xml:
+	  Document typefinding.
+	* docs/pwg/other-oneton.xml:
+	  Document one-to-n elements, demuxers and parsers.
+
 2004-03-25  Tim-Philipp Müller <t.i.m@zen.co.uk>
 
 	reviewed by: David Schleef  <ds@schleef.org>
