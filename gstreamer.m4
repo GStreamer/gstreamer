@@ -23,14 +23,14 @@ dnl
 		gstreamer_config_args="$gstreamer_config_args --prefix=$gstreamer_config_prefix" ;
 
 		if test "x${GSTREAMER_CONFIG+set}" != "xset" ; then
-			GSTREAMER_CONFIG="$glib_config_prefix/bin/gstreamer-config" 
+			GSTREAMER_CONFIG="$gstreamer_config_prefix/bin/gstreamer-config" 
 		fi
 	fi
 	if test "x$gstreamer_config_exec_prefix" != "x"; then
 		gstreamer_config_args="$gstreamer_config_args --exec-prefix=$gstreamer_config_exec_prefix" ;
 
 		if test "x${GSTREAMER_CONFIG+set}" != "xset" ; then
-			GSTREAMER_CONFIG="$glib_config_exec_prefix/bin/gstreamer-config"
+			GSTREAMER_CONFIG="$gstreamer_config_exec_prefix/bin/gstreamer-config"
 		fi	
 	fi
 
