@@ -1,3 +1,11 @@
+2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/autoplug/gstspideridentity.c:
+	(gst_spider_identity_sink_loop_type_finding):
+	  use get_allowed_caps, not get_caps (fixes #132519)
+	* gst/elements/gsttypefind.c: (stop_typefinding):
+	  use correct order when sending buffers and seeking
+
 2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

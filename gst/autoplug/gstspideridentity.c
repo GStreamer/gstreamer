@@ -471,8 +471,8 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   
   find.buffer = GST_BUFFER (data);
   /* maybe there are already valid caps now? */
-  find.caps = gst_pad_get_caps (ident->sink);
-  if (! gst_caps_is_empty (find.caps) && !gst_caps_is_any (find.caps)) {
+  find.caps = gst_pad_get_allowed_caps (ident->sink);
+  if (!gst_caps_is_empty (find.caps) && !gst_caps_is_any (find.caps)) {
     goto plug;
   } else {
     gst_caps_free (find.caps);
