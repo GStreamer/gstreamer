@@ -82,6 +82,7 @@ struct _GstSineSrc {
 
   gboolean newcaps;
 
+  double accumulator;
 };
 
 struct _GstSineSrcClass {
