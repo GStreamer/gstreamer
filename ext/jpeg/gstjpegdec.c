@@ -25,18 +25,16 @@
 
 /*#define DEBUG_ENABLED*/
 #include "gstjpegdec.h"
+#include <gst/video/video.h>
 
-extern GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
+static GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails gst_jpegdec_details = {
   "jpeg image decoder",
   "Codec/Image",
-  "LGPL",
   ".jpeg",
-  VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",
-  "(C) 2000",
 };
 
 /* JpegDec signals and args */
@@ -50,6 +48,7 @@ enum {
   /* FILL ME */
 };
 
+static void     gst_jpegdec_base_init   (gpointer g_class);
 static void	gst_jpegdec_class_init	(GstJpegDec *klass);
 static void	gst_jpegdec_init	(GstJpegDec *jpegdec);
 
@@ -63,10 +62,11 @@ static GstElementClass *parent_class = NULL;
 GType
 gst_jpegdec_get_type(void) {
   static GType jpegdec_type = 0;
-
+  
   if (!jpegdec_type) {
     static const GTypeInfo jpegdec_info = {
-      sizeof(GstJpegDec),      NULL,
+      sizeof(GstJpegDec),
+      gst_jpegdec_base_init,
       NULL,
       (GClassInitFunc)gst_jpegdec_class_init,
       NULL,
@@ -78,6 +78,51 @@ gst_jpegdec_get_type(void) {
     jpegdec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstJpegDec", &jpegdec_info, 0);
   }
   return jpegdec_type;
+}
+
+static GstCaps*
+jpeg_caps_factory (void) 
+{
+  return
+    gst_caps_new (
+  	"jpeg_jpeg",
+  	"video/x-jpeg",
+  	    gst_props_new (
+		"width",     GST_PROPS_INT_RANGE (16, 4096),
+		"height",    GST_PROPS_INT_RANGE (16, 4096),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+                NULL));
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+    gst_caps_new (
+      "jpeg_raw",
+  	"video/x-raw-yuv",
+	GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+	  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))));
+}
+
+static void
+gst_jpegdec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *jpeg_caps;
+  
+  raw_caps = raw_caps_factory ();
+  jpeg_caps = jpeg_caps_factory ();
+  
+  jpegdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+						GST_PAD_ALWAYS, 
+						jpeg_caps, NULL);
+  jpegdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+					       GST_PAD_ALWAYS, 
+					       raw_caps, NULL);
+  gst_element_class_add_pad_template (element_class, jpegdec_sink_template);
+  gst_element_class_add_pad_template (element_class, jpegdec_src_template);
+  gst_element_class_set_details (element_class, &gst_jpegdec_details);
 }
 
 static void

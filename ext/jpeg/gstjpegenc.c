@@ -24,16 +24,14 @@
 #include <string.h>
 
 #include "gstjpegenc.h"
+#include <gst/video/video.h>
 
 /* elementfactory information */
 GstElementDetails gst_jpegenc_details = {
   "jpeg image encoder",
   "Codec/Image",
-  "LGPL",
   ".jpeg",
-  VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",
-  "(C) 2000",
 };
 
 /* JpegEnc signals and args */
@@ -48,6 +46,7 @@ enum {
   /* FILL ME */
 };
 
+static void             gst_jpegenc_base_init   (gpointer g_class);
 static void		gst_jpegenc_class_init	(GstJpegEnc *klass);
 static void		gst_jpegenc_init	(GstJpegEnc *jpegenc);
 
@@ -60,6 +59,7 @@ static void		gst_jpegenc_resync	(GstJpegEnc *jpegenc);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_jpegenc_signals[LAST_SIGNAL] = { 0 };
+static GstPadTemplate *jpegenc_src_template, *jpegenc_sink_template;
 
 GType
 gst_jpegenc_get_type (void)
@@ -68,7 +68,8 @@ gst_jpegenc_get_type (void)
 
   if (!jpegenc_type) {
     static const GTypeInfo jpegenc_info = {
-      sizeof(GstJpegEnc),      NULL,
+      sizeof(GstJpegEnc),
+      gst_jpegenc_base_init,
       NULL,
       (GClassInitFunc)gst_jpegenc_class_init,
       NULL,
@@ -80,6 +81,52 @@ gst_jpegenc_get_type (void)
     jpegenc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstJpegEnc", &jpegenc_info, 0);
   }
   return jpegenc_type;
+}
+
+static GstCaps*
+jpeg_caps_factory (void) 
+{
+  return
+    gst_caps_new (
+  	"jpeg_jpeg",
+  	"video/x-jpeg",
+  	    gst_props_new (
+		"width",     GST_PROPS_INT_RANGE (16, 4096),
+		"height",    GST_PROPS_INT_RANGE (16, 4096),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+                NULL));
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+    gst_caps_new (
+  	"jpeg_raw",
+  	"video/x-raw-yuv",
+	GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+	  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))));
+}
+
+static void
+gst_jpegenc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *jpeg_caps;
+  
+  raw_caps = raw_caps_factory ();
+  jpeg_caps = jpeg_caps_factory ();
+
+  jpegenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+						GST_PAD_ALWAYS, 
+						raw_caps, NULL);
+  jpegenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+					       GST_PAD_ALWAYS, 
+					       jpeg_caps, NULL);
+
+  gst_element_class_add_pad_template (element_class, jpegenc_sink_template);
+  gst_element_class_add_pad_template (element_class, jpegenc_src_template);
+  gst_element_class_set_details (element_class, &gst_jpegenc_details);
 }
 
 static void
