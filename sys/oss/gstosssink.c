@@ -789,7 +789,9 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_SYNC:
       osssink->sync = g_value_get_boolean (value);
       g_object_notify (G_OBJECT (osssink), "sync");
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -830,6 +832,7 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_boolean (value, osssink->sync);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
