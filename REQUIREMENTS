@@ -9,7 +9,10 @@ Required libraries:
 ===================
 glib v1.2.0 or better
 gtk+ v1.2.0 or better
-libxml
+libxml          (also called gnome-xml, available from http://xmlsoft.org/)
+
+These libraries are all central parts of gnome, and are available from the
+ftp.gnome.org or its mirrors, amongst other places.
 
 Optional libraries:
 ===================
