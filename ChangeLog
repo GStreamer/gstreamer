@@ -1,3 +1,11 @@
+2005-03-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init),
+	(gst_fdsrc_change_state), (gst_fdsrc_release_locks),
+	(gst_fdsrc_get):
+	* gst/elements/gstfdsrc.h:
+	  Fix hang on state-change with blocking input (#149791).
+
 2005-03-25  David Schleef  <ds@schleef.org>
 
 	* gst/gstcpu.c: (illegal_instruction_handler),

@@ -51,6 +51,7 @@ struct _GstFdSrc {
 
   /* fd */
   gint fd;
+  gboolean interrupted;
   gchar *uri;
 
   gulong curoffset; /* current offset in file */

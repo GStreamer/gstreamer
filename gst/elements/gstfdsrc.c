@@ -101,6 +101,7 @@ static void gst_fdsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstElementStateReturn gst_fdsrc_change_state (GstElement * element);
+static gboolean gst_fdsrc_release_locks (GstElement * element);
 static GstData *gst_fdsrc_get (GstPad * pad);
 
 
@@ -142,6 +143,7 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
   gobject_class->dispose = gst_fdsrc_dispose;
 
   gstelement_class->change_state = gst_fdsrc_change_state;
+  gstelement_class->release_locks = gst_fdsrc_release_locks;
 }
 
 static void
@@ -179,18 +181,15 @@ gst_fdsrc_change_state (GstElement * element)
   GstFdSrc *src = GST_FDSRC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_NULL:
-      break;
     case GST_STATE_READY_TO_PAUSED:
       src->curoffset = 0;
-      break;
-    case GST_STATE_PAUSED_TO_READY:
       break;
     default:
       break;
   }
+
+  /* in any case, an interrupt succeeds if we get here */
+  src->interrupted = FALSE;
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
@@ -255,6 +254,16 @@ gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static gboolean
+gst_fdsrc_release_locks (GstElement * element)
+{
+  GstFdSrc *src = GST_FDSRC (element);
+
+  src->interrupted = TRUE;
+
+  return TRUE;
+}
+
 static GstData *
 gst_fdsrc_get (GstPad * pad)
 {
@@ -264,7 +273,7 @@ gst_fdsrc_get (GstPad * pad)
 
 #ifndef HAVE_WIN32
   fd_set readfds;
-  struct timeval t, *tp = &t;
+  struct timeval t;
   gint retval;
 #endif
 
@@ -277,16 +286,24 @@ gst_fdsrc_get (GstPad * pad)
   FD_ZERO (&readfds);
   FD_SET (src->fd, &readfds);
 
-  if (src->timeout != 0) {
-    GST_TIME_TO_TIMEVAL (src->timeout, t);
-  } else
-    tp = NULL;
-
+  /* loop until data is available, or a timeout is set. Re-enter
+   * loop if we got a timeout without a timeout set, or if we
+   * received an interrupt event. */
   do {
-    retval = select (src->fd + 1, &readfds, NULL, NULL, tp);
-  } while (retval == -1 && errno == EINTR);     /* retry if interrupted */
+    if (src->timeout != 0) {
+      GST_TIME_TO_TIMEVAL (src->timeout, t);
+    } else {
+      GST_TIME_TO_TIMEVAL (1000000000, t);
+    }
 
-  if (retval == -1) {
+    retval = select (src->fd + 1, &readfds, NULL, NULL, &t);
+  } while (!src->interrupted &&
+      ((retval == -1 && errno == EINTR) || (retval == 0 && src->timeout == 0)));
+
+  if (src->interrupted) {
+    GST_DEBUG_OBJECT (src, "received interrupt");
+    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+  } else if (retval == -1) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("select on file descriptor: %s.", g_strerror (errno)));
     gst_element_set_eos (GST_ELEMENT (src));
