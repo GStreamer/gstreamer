@@ -371,8 +371,8 @@ main(int argc, char *argv[])
 
   free (malloc (8)); /* -lefence */
 
-  setlocale(LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
 
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
