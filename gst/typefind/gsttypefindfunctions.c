@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 /*** text/plain ****************************************************************/
 
 static GstStaticCaps utf8_caps = GST_STATIC_CAPS ("text/plain");
-#define UTF8_CAPS gst_caps_copy(gst_static_caps_get(&utf8_caps))
+#define UTF8_CAPS gst_static_caps_get(&utf8_caps)
 static void
 utf8_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -131,7 +131,7 @@ uri_type_find (GstTypeFind *tf, gpointer unused)
 /*** video/x-fli **************************************************************/
 
 static GstStaticCaps flx_caps = GST_STATIC_CAPS ("video/x-fli");
-#define FLX_CAPS gst_caps_copy(gst_static_caps_get(&flx_caps))
+#define FLX_CAPS gst_static_caps_get(&flx_caps)
 static void
 flx_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -162,7 +162,7 @@ flx_type_find (GstTypeFind *tf, gpointer unused)
 /*** application/x-id3 **************************************************************/
 
 static GstStaticCaps id3_caps = GST_STATIC_CAPS ("application/x-id3");
-#define ID3_CAPS gst_caps_copy(gst_static_caps_get(&id3_caps))
+#define ID3_CAPS gst_static_caps_get(&id3_caps)
 static void
 id3_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -301,7 +301,7 @@ mp3_type_frame_length_from_header (guint32 header, guint *put_layer,
 
 static GstStaticCaps mp3_caps = GST_STATIC_CAPS ("audio/mpeg, "
     "mpegversion = (int) 1, layer = (int) [ 1, 3 ]");
-#define MP3_CAPS gst_caps_copy(gst_static_caps_get(&mp3_caps))
+#define MP3_CAPS (gst_static_caps_get(&mp3_caps))
 /*
  * random values for typefinding
  * if no more data is available, we will return a probability of
@@ -389,10 +389,11 @@ mp3_type_find (GstTypeFind *tf, gpointer unused)
 	if (probability > 0) {
 	  GstCaps *caps;
 	  g_assert (layer > 0);
-	  caps = MP3_CAPS;
+	  caps = gst_caps_copy (MP3_CAPS);
 	  gst_structure_set (gst_caps_get_structure (caps, 0), "layer",
 	      G_TYPE_INT, layer, 0);
 	  gst_type_find_suggest (tf, probability, caps); 
+	  gst_caps_free (caps);
 	}
 	return;
       }
@@ -407,7 +408,7 @@ mp3_type_find (GstTypeFind *tf, gpointer unused)
 
 static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]");
-#define MPEG_SYS_CAPS gst_caps_copy(gst_static_caps_get(&mpeg_sys_caps))
+#define MPEG_SYS_CAPS gst_static_caps_get(&mpeg_sys_caps)
 #define IS_MPEG_HEADER(data)		((((guint8 *)data)[0] == 0x00) &&	\
 					 (((guint8 *)data)[1] == 0x00) &&	\
 					 (((guint8 *)data)[2] == 0x01) &&	\
@@ -428,16 +429,16 @@ mpeg2_sys_type_find (GstTypeFind *tf, gpointer unused)
   if (data && IS_MPEG_HEADER (data)) {
     if ((data[4] & 0xC0) == 0x40) {
       /* type 2 */
-      GstCaps *caps;
-      caps = MPEG_SYS_CAPS;
+      GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 	  G_TYPE_INT, 2, 0);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
     } else if ((data[4] & 0xF0) == 0x20) {
-      GstCaps *caps = MPEG_SYS_CAPS;
+      GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 			 G_TYPE_INT, 1, 0);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+      gst_caps_free (caps);
     }
   }
 };
@@ -569,10 +570,11 @@ mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
       g_assert (found <= GST_MPEG_TYPEFIND_TRY_HEADERS);
       if (found == GST_MPEG_TYPEFIND_TRY_HEADERS ||
 	  packet_size == 1) {
-	caps = MPEG_SYS_CAPS;
+	caps = gst_caps_copy (MPEG_SYS_CAPS);
 	gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 	    G_TYPE_INT, 1, 0);
 	gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps); 
+	gst_caps_free (caps);
 	return;
       }
     }
@@ -586,7 +588,7 @@ mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
 
 static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) false");
-#define MPEG_VIDEO_CAPS gst_caps_copy(gst_static_caps_get(&mpeg_video_caps))
+#define MPEG_VIDEO_CAPS gst_static_caps_get(&mpeg_video_caps)
 static void
 mpeg_video_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -596,10 +598,11 @@ mpeg_video_type_find (GstTypeFind *tf, gpointer unused)
   data = gst_type_find_peek (tf, 0, 8);
 
   if (data && memcmp(data, sequence_header, 4)==0){
-    GstCaps *caps = MPEG_VIDEO_CAPS;
+    GstCaps *caps = gst_caps_copy (MPEG_VIDEO_CAPS);
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 		       G_TYPE_INT, 1, 0);
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+    gst_caps_free (caps);
   }
 }
 
@@ -625,10 +628,11 @@ mpeg_video_stream_type_find (GstTypeFind *tf, gpointer unused)
 
   while (1) {
     if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES) {
-      GstCaps *caps = MPEG_VIDEO_CAPS;
+      GstCaps *caps = gst_caps_copy (MPEG_VIDEO_CAPS);
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 			 G_TYPE_INT, 1, 0);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 2, caps);
+      gst_caps_free (caps);
       return;
     }
 
@@ -692,7 +696,7 @@ mpeg_video_stream_type_find (GstTypeFind *tf, gpointer unused)
 /*** video/quicktime***********************************************************/
 
 static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
-#define QT_CAPS gst_caps_copy(gst_static_caps_get(&qt_caps))
+#define QT_CAPS gst_static_caps_get(&qt_caps)
 static void
 qt_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -726,7 +730,7 @@ qt_type_find (GstTypeFind *tf, gpointer unused)
 /*** audio/x-aiff *********************************************/
 
 static GstStaticCaps aiff_caps = GST_STATIC_CAPS ("audio/x-aiff");
-#define AIFF_CAPS gst_caps_copy(gst_static_caps_get(&aiff_caps))
+#define AIFF_CAPS gst_static_caps_get(&aiff_caps)
 static void
 aiff_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -742,7 +746,7 @@ aiff_type_find (GstTypeFind *tf, gpointer unused)
 /*** audio/x-shorten ****************************************/
 
 static GstStaticCaps shn_caps = GST_STATIC_CAPS ("audio/x-shorten");
-#define SHN_CAPS gst_caps_copy(gst_static_caps_get(&shn_caps))
+#define SHN_CAPS gst_static_caps_get(&shn_caps)
 static void
 shn_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -759,7 +763,7 @@ shn_type_find (GstTypeFind *tf, gpointer unused)
 /*** audio/x-m4a *********************************************/
 
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/x-m4a");
-#define AAC_CAPS gst_caps_copy(gst_static_caps_get(&aac_caps))
+#define AAC_CAPS (gst_static_caps_get(&aac_caps))
 static void
 m4a_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -772,7 +776,7 @@ m4a_type_find (GstTypeFind *tf, gpointer unused)
 /*** audio/x-mod *********************************************/
 
 static GstStaticCaps mod_caps = GST_STATIC_CAPS ("audio/x-mod");
-#define MOD_CAPS gst_caps_copy(gst_static_caps_get(&mod_caps))
+#define MOD_CAPS gst_static_caps_get(&mod_caps)
 /* FIXME: M15 CheckType to do */
 static void
 mod_type_find (GstTypeFind *tf, gpointer unused)
@@ -890,7 +894,7 @@ mod_type_find (GstTypeFind *tf, gpointer unused)
 /*** application/x-shockwave-flash ********************************************/
 
 static GstStaticCaps swf_caps = GST_STATIC_CAPS ("audio/x-shockwave-flash");
-#define SWF_CAPS gst_caps_copy(gst_static_caps_get(&swf_caps))
+#define SWF_CAPS (gst_static_caps_get(&swf_caps))
 static void
 swf_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -905,7 +909,7 @@ swf_type_find (GstTypeFind *tf, gpointer unused)
 /*** image/jpeg ***************************************************************/
 
 static GstStaticCaps jpeg_caps = GST_STATIC_CAPS ("image/jpeg");
-#define JPEG_CAPS gst_caps_copy(gst_static_caps_get(&jpeg_caps))
+#define JPEG_CAPS (gst_static_caps_get(&jpeg_caps))
 static void
 jpeg_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -926,7 +930,7 @@ jpeg_type_find (GstTypeFind *tf, gpointer unused)
 /*** image/bmp *********************/
 
 static GstStaticCaps bmp_caps = GST_STATIC_CAPS ("image/bmp");
-#define BMP_CAPS gst_caps_copy(gst_static_caps_get(&bmp_caps))
+#define BMP_CAPS (gst_static_caps_get(&bmp_caps))
 static void
 bmp_type_find (GstTypeFind *tf, gpointer unused)
 {
@@ -947,13 +951,13 @@ bmp_type_find (GstTypeFind *tf, gpointer unused)
 /*** image/tiff ********************/
 static GstStaticCaps tiff_caps = GST_STATIC_CAPS ("image/tiff, "
     "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }" );
-#define TIFF_CAPS gst_caps_copy(gst_static_caps_get(&tiff_caps))
+#define TIFF_CAPS (gst_static_caps_get(&tiff_caps))
 static GstStaticCaps tiff_be_caps = GST_STATIC_CAPS ("image/tiff, "
     "endianness = (int) BIG_ENDIAN");
-#define TIFF_BE_CAPS gst_caps_copy(gst_static_caps_get(&tiff_be_caps))
+#define TIFF_BE_CAPS (gst_static_caps_get(&tiff_be_caps))
 static GstStaticCaps tiff_le_caps = GST_STATIC_CAPS ("image/tiff, "
     "endianness = (int) LITTLE_ENDIAN");
-#define TIFF_LE_CAPS gst_caps_copy(gst_static_caps_get(&tiff_le_caps))
+#define TIFF_LE_CAPS (gst_static_caps_get(&tiff_le_caps))
 static void
 tiff_type_find (GstTypeFind *tf, gpointer ununsed)
 {
@@ -972,7 +976,7 @@ tiff_type_find (GstTypeFind *tf, gpointer ununsed)
 
 /*** video/x-matroska ********************/
 static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska" );
-#define MATROSKA_CAPS gst_caps_copy(gst_static_caps_get(&matroska_caps))
+#define MATROSKA_CAPS (gst_static_caps_get(&matroska_caps))
 static void
 matroska_type_find (GstTypeFind *tf, gpointer ununsed)
 {
@@ -1022,7 +1026,7 @@ matroska_type_find (GstTypeFind *tf, gpointer ununsed)
 
 static GstStaticCaps dv_caps = GST_STATIC_CAPS ("video/x-dv, "
     "systemstream = (boolean) true");
-#define DV_CAPS gst_caps_copy(gst_static_caps_get(&dv_caps))
+#define DV_CAPS (gst_static_caps_get(&dv_caps))
 static void
 dv_type_find (GstTypeFind *tf, gpointer private)
 {
@@ -1034,7 +1038,7 @@ dv_type_find (GstTypeFind *tf, gpointer private)
   if (data && (data[0] == 0x1f) && (data[1] == 0x07) && (data[2] == 0x00) &&
       ((data[4]&0x01) == 0)){
     gchar *format;
-    GstCaps *caps = DV_CAPS;
+    GstCaps *caps = gst_caps_copy (DV_CAPS);
 
     if (data[3] & 0x80) {
       format = "PAL";
@@ -1045,13 +1049,14 @@ dv_type_find (GstTypeFind *tf, gpointer private)
 	G_TYPE_STRING, format, NULL);
 
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+    gst_caps_free (caps);
   }
 }
 
 /*** audio/x-vorbis ***********************************************************/
 
 static GstStaticCaps vorbis_caps = GST_STATIC_CAPS ("audio/x-vorbis");
-#define VORBIS_CAPS gst_caps_copy(gst_static_caps_get(&vorbis_caps))
+#define VORBIS_CAPS (gst_static_caps_get(&vorbis_caps))
 static void
 vorbis_type_find (GstTypeFind *tf, gpointer private)
 {
@@ -1087,7 +1092,7 @@ vorbis_type_find (GstTypeFind *tf, gpointer private)
 /*** video/x-theora ***********************************************************/
 
 static GstStaticCaps theora_caps = GST_STATIC_CAPS ("video/x-theora");
-#define THEORA_CAPS gst_caps_copy(gst_static_caps_get(&theora_caps))
+#define THEORA_CAPS (gst_static_caps_get(&theora_caps))
 static void
 theora_type_find (GstTypeFind *tf, gpointer private)
 {
