@@ -18,7 +18,7 @@ Requires: 	glib2 >= %_glib2
 Requires: 	libxml2 >= %_libxml2
 Requires:	popt > 1.6
 
-Provides:	gstreamer =%{version}-%{release}
+# Provides:	gstreamer =%{version}-%{release}
 
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
@@ -151,6 +151,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-register-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
+%{_bindir}/gst-feedback*
 %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
 %{_mandir}/man1/gst-complete-%{majorminor}.*
 %{_mandir}/man1/gst-compprep-%{majorminor}.*
@@ -159,6 +160,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/gst-md5sum-%{majorminor}.*
 %{_mandir}/man1/gst-register-%{majorminor}.*
 %{_mandir}/man1/gst-typefind-%{majorminor}.*
+%{_mandir}/man1/gst-feedback-%{majorminor}.*
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 
 %files -n gstreamer-tools
