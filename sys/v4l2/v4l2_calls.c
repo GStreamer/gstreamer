@@ -28,6 +28,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "v4l2_calls.h"
 
 #define DEBUG(format, args...) \
