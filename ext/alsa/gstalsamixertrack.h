@@ -34,11 +34,14 @@ G_BEGIN_DECLS
 typedef struct _GstAlsaMixerTrack GstAlsaMixerTrack;
 typedef struct _GstAlsaMixerTrackClass GstAlsaMixerTrackClass;
 
+#define GST_ALSA_MIXER_TRACK_CAPTURE  (1<<0)
+#define GST_ALSA_MIXER_TRACK_PLAYBACK (1<<1)
+
 struct _GstAlsaMixerTrack {
   GstMixerTrack		 parent;
   snd_mixer_elem_t	*element; /* the ALSA mixer element for this track */
   gint			track_num;
-  gint			min_rec_volume, max_rec_volume;
+  gint			alsa_flags;
   gint			volumes[GST_ALSA_MAX_CHANNELS];
 };
 
@@ -50,7 +53,8 @@ GType		gst_alsa_mixer_track_get_type	(void);
 GstMixerTrack *	gst_alsa_mixer_track_new	(snd_mixer_elem_t *	element,
 						 gint			track_num,
 						 gint			channels,
-						 gint			flags);
+						 gint			flags,
+						 gint			alsa_flags);
 
 G_END_DECLS
 

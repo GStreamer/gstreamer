@@ -28,9 +28,10 @@
 
 enum
 {
-  MUTE_TOGGLED,
-  RECORD_TOGGLED,
-  VOLUME_CHANGED,
+  SIGNAL_MUTE_TOGGLED,
+  SIGNAL_RECORD_TOGGLED,
+  SIGNAL_VOLUME_CHANGED,
+  SIGNAL_OPTION_CHANGED,
   LAST_SIGNAL
 };
 
@@ -71,27 +72,34 @@ gst_mixer_class_init (GstMixerClass * klass)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
-    gst_mixer_signals[RECORD_TOGGLED] =
+    gst_mixer_signals[SIGNAL_RECORD_TOGGLED] =
         g_signal_new ("record-toggled",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstMixerClass, record_toggled),
         NULL, NULL,
         gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
-    gst_mixer_signals[MUTE_TOGGLED] =
+    gst_mixer_signals[SIGNAL_MUTE_TOGGLED] =
         g_signal_new ("mute-toggled",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstMixerClass, mute_toggled),
         NULL, NULL,
         gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
-    gst_mixer_signals[VOLUME_CHANGED] =
+    gst_mixer_signals[SIGNAL_VOLUME_CHANGED] =
         g_signal_new ("volume-changed",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstMixerClass, volume_changed),
         NULL, NULL,
         gst_mixer_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
+    gst_mixer_signals[SIGNAL_OPTION_CHANGED] =
+        g_signal_new ("option-changed",
+        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET (GstMixerClass, option_changed),
+        NULL, NULL,
+        gst_mixer_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
+        GST_TYPE_MIXER_OPTIONS, G_TYPE_STRING);
 
     initialized = TRUE;
   }
@@ -104,6 +112,8 @@ gst_mixer_class_init (GstMixerClass * klass)
   klass->get_volume = NULL;
   klass->set_mute = NULL;
   klass->set_record = NULL;
+  klass->set_option = NULL;
+  klass->get_option = NULL;
 }
 
 /**
@@ -226,11 +236,52 @@ gst_mixer_set_record (GstMixer * mixer, GstMixerTrack * track, gboolean record)
   }
 }
 
+/**
+ * gst_mixer_set_option:
+ * @mixer: The #GstMixer (a #GstElement) that owns the optionlist.
+ * @opts: The #GstMixerOptions that we operate on.
+ * @value: The requested new option value.
+ *
+ * Sets a name/value option in the mixer to the requested value.
+ */
+
+void
+gst_mixer_set_option (GstMixer * mixer, GstMixerOptions * opts, gchar * value)
+{
+  GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
+
+  if (klass->set_option) {
+    klass->set_option (mixer, opts, value);
+  }
+}
+
+/**
+ * gst_mixer_g_option:
+ * @mixer: The #GstMixer (a #GstElement) that owns the optionlist.
+ * @opts: The #GstMixerOptions that we operate on.
+ *
+ * Get the current value of a name/value option in the mixer.
+ *
+ * Returns: current value of the name/value option.
+ */
+
+const gchar *
+gst_mixer_get_option (GstMixer * mixer, GstMixerOptions * opts)
+{
+  GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
+
+  if (klass->get_option) {
+    return klass->get_option (mixer, opts);
+  }
+
+  return NULL;
+}
+
 void
 gst_mixer_mute_toggled (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 {
   g_signal_emit (G_OBJECT (mixer),
-      gst_mixer_signals[MUTE_TOGGLED], 0, track, mute);
+      gst_mixer_signals[SIGNAL_MUTE_TOGGLED], 0, track, mute);
 
   g_signal_emit_by_name (G_OBJECT (track), "mute_toggled", mute);
 }
@@ -240,7 +291,7 @@ gst_mixer_record_toggled (GstMixer * mixer,
     GstMixerTrack * track, gboolean record)
 {
   g_signal_emit (G_OBJECT (mixer),
-      gst_mixer_signals[RECORD_TOGGLED], 0, track, record);
+      gst_mixer_signals[SIGNAL_RECORD_TOGGLED], 0, track, record);
 
   g_signal_emit_by_name (G_OBJECT (track), "record_toggled", record);
 }
@@ -250,7 +301,17 @@ gst_mixer_volume_changed (GstMixer * mixer,
     GstMixerTrack * track, gint * volumes)
 {
   g_signal_emit (G_OBJECT (mixer),
-      gst_mixer_signals[VOLUME_CHANGED], 0, track, volumes);
+      gst_mixer_signals[SIGNAL_VOLUME_CHANGED], 0, track, volumes);
 
   g_signal_emit_by_name (G_OBJECT (track), "volume_changed", volumes);
+}
+
+void
+gst_mixer_option_changed (GstMixer * mixer,
+    GstMixerOptions * opts, gchar * value)
+{
+  g_signal_emit (G_OBJECT (mixer),
+      gst_mixer_signals[SIGNAL_OPTION_CHANGED], 0, opts, value);
+
+  g_signal_emit_by_name (G_OBJECT (opts), "value_changed", value);
 }

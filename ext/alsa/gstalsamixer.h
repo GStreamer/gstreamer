@@ -20,6 +20,7 @@
 #define __GST_ALSA_MIXER_H__
 
 #include "gstalsa.h"
+#include "gstalsamixeroptions.h"
 #include "gstalsamixertrack.h"
 #include <gst/mixer/mixer.h>
 

@@ -9,6 +9,7 @@ libgstmixerincludedir = \
 
 mixer_headers = \
 	mixer.h \
+	mixeroptions.h \
 	mixertrack.h
 
 built_sources = \
@@ -27,7 +28,9 @@ noinst_LTLIBRARIES = libgstmixer.la
 
 libgstmixer_la_SOURCES = \
 	mixer.c \
+	mixeroptions.c \
 	mixertrack.c
+
 nodist_libgstmixer_la_SOURCES = \
 	mixer-marshal.h \
 	$(built_sources)

@@ -69,10 +69,10 @@ gst_alsa_mixer_track_init (GstAlsaMixerTrack * alsa_track)
 
 GstMixerTrack *
 gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
-    gint track_num, gint channels, gint flags)
+    gint track_num, gint channels, gint flags, gint alsa_flags)
 {
   gint i;
-  long min, max;
+  long min = 0, max = 0;
 
   GstMixerTrack *track = g_object_new (GST_ALSA_MIXER_TRACK_TYPE, NULL);
   GstAlsaMixerTrack *alsa_track = (GstAlsaMixerTrack *) track;
@@ -82,27 +82,43 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   track->num_channels = channels;
   track->flags = flags;
   alsa_track->element = element;
+  alsa_track->alsa_flags = alsa_flags;
   alsa_track->track_num = track_num;
 
   /* set volume information */
-  snd_mixer_selem_get_playback_volume_range (element, &min, &max);
+  if (alsa_flags & GST_ALSA_MIXER_TRACK_PLAYBACK) {
+    snd_mixer_selem_get_playback_volume_range (element, &min, &max);
+  } else if (alsa_flags & GST_ALSA_MIXER_TRACK_CAPTURE) {
+    snd_mixer_selem_get_capture_volume_range (element, &min, &max);
+  }
   track->min_volume = (gint) min;
   track->max_volume = (gint) max;
 
-  snd_mixer_selem_get_capture_volume_range (element, &min, &max);
-  alsa_track->min_rec_volume = (gint) min;
-  alsa_track->max_rec_volume = (gint) max;
-
   for (i = 0; i < channels; i++) {
-    long tmp;
+    long tmp = 0;
 
-    if (snd_mixer_selem_has_playback_channel (element, i)) {
+    if (alsa_flags & GST_ALSA_MIXER_TRACK_PLAYBACK) {
       snd_mixer_selem_get_playback_volume (element, i, &tmp);
-      alsa_track->volumes[i] = (gint) tmp;
-    } else if (snd_mixer_selem_has_capture_channel (element, i)) {
+    } else if (alsa_flags & GST_ALSA_MIXER_TRACK_CAPTURE) {
       snd_mixer_selem_get_capture_volume (element, i, &tmp);
-      alsa_track->volumes[i] = (gint) tmp;
     }
+    alsa_track->volumes[i] = (gint) tmp;
+  }
+
+  if (snd_mixer_selem_has_playback_switch (element)) {
+    int val = 1;
+
+    snd_mixer_selem_get_playback_switch (element, 0, &val);
+    if (!val)
+      track->flags |= GST_MIXER_TRACK_MUTE;
+  }
+
+  if (flags & GST_MIXER_TRACK_INPUT) {
+    int val = 0;
+
+    snd_mixer_selem_get_capture_switch (element, 0, &val);
+    if (val)
+      track->flags |= GST_MIXER_TRACK_RECORD;
   }
 
   return track;
