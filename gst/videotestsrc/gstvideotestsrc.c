@@ -201,12 +201,10 @@ gst_videotestsrc_src_fixate (GstPad * pad, const GstCaps * caps)
 
   /* FIXME this function isn't very intelligent in choosing "good" caps */
 
-  structure = gst_structure_copy(gst_caps_get_structure (caps, 0));
-  newcaps = gst_caps_new_full (structure, NULL);
+  if (gst_caps_get_size (caps) > 1) return NULL;
 
-  if (gst_caps_get_size (caps) > 1) {
-    return newcaps;
-  }
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
 
   if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
     return newcaps;

@@ -1,3 +1,29 @@
+2004-01-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_loop):
+	Fix caps negotiation.
+
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_class_init),
+	(dvdnavsrc_update_buttoninfo), (dvdnavsrc_get),
+	(dvdnavsrc_get_event_mask), (dvdnav_handle_navigation_event),
+	(dvdnavsrc_event):
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* gst-libs/gst/navigation/navigation.c:
+	(gst_navigation_send_key_event), (gst_navigation_send_mouse_event):
+	* gst-libs/gst/navigation/navigation.h:
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_handle_src_event):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents):
+	Super-simple first version of mouse and keyboard events. Clicking
+	on a DVD menu now works, although it may not take you where you
+	expected.
+
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_src_fixate):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_src_fixate):
+	These fixate functions were broken - they never actually
+	fixated :)
+	
 2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/shout/gstshout.c: (gst_icecastsend_base_init),

@@ -352,16 +352,27 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
                        e.xmotion.x, e.xmotion.y);
             gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
+                                             "mouse-move",
+					     0,
                                              e.xmotion.x, e.xmotion.y);
             break;
           case ButtonPress:
-          case ButtonRelease:
-            /* Mouse button pressed/released over our window. We send upstream
-               events for interactivity/navigation */
             GST_DEBUG ("ximagesink button %d pressed over window at %d,%d",
                        e.xbutton.button, e.xbutton.x, e.xbutton.x);
             gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
-                                             e.xmotion.x, e.xmotion.y);
+                                             "mouse-button-press",
+					     e.xbutton.button,
+                                             e.xbutton.x, e.xbutton.y);
+	    break;
+          case ButtonRelease:
+            /* Mouse button pressed/released over our window. We send upstream
+               events for interactivity/navigation */
+            GST_DEBUG ("ximagesink button %d release over window at %d,%d",
+                       e.xbutton.button, e.xbutton.x, e.xbutton.x);
+            gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
+					     "mouse-button-release",
+					     e.xbutton.button,
+                                             e.xbutton.x, e.xbutton.y);
             break;
           case KeyPress:
           case KeyRelease:
@@ -371,11 +382,19 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                        e.xkey.keycode, e.xkey.x, e.xkey.x);
             keysym = XKeycodeToKeysym (ximagesink->xcontext->disp,
                                        e.xkey.keycode, 0);
-            gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
-                                           XKeysymToString (keysym));
-            /* FIXME : What's that ? */
-            gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
-                                           "unknown");
+	    if (keysym != NoSymbol) {
+            	gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
+			    		       e.type == KeyPress ? 
+					   	  "key-press" : "key-release",
+                                               XKeysymToString (keysym));
+	    }
+	    else {
+            	/* FIXME : What's that ? */
+            	gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
+			    		       e.type == KeyPress ? 
+					   	  "key-press" : "key-release",
+                                               "unknown");
+	    }
             break;
           default:
             GST_DEBUG ("ximagesink unhandled X event (%d)", e.type);
