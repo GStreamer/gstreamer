@@ -10,7 +10,10 @@ main (int argc, char *argv[])
   gboolean ret;
 
   module = g_module_open (".libs/libloadgst.so",
-      G_MODULE_BIND_LOCAL | G_MODULE_BIND_LAZY);
+#ifdef HAVE_G_MODULE_BIND_LOCAL
+      G_MODULE_BIND_LOCAL |
+#endif
+      G_MODULE_BIND_LAZY);
   g_assert (module != NULL);
 
   ret = g_module_symbol (module, "gst_init", (gpointer *) & symbol);
