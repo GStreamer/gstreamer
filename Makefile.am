@@ -45,3 +45,6 @@ EXTRA_DIST=gst-plugins.spec depcomp \
 DISTCLEANFILES=_stdint.h
 
 include $(top_srcdir)/common/release.mak
+# a rule to redownload po files
+download-po:
+	cd po && for LI in `cat LINGUAS`; do echo Checking $$LI.po; wget -q -O $$LI.po.tmp http://www.iro.umontreal.ca/translation/maint/gst-plugins/$$LI.po; if ! diff $$LI.po $$LI.po.tmp > /dev/null 2>&1; then echo "Updating $$LI.po"; mv $$LI.po.tmp $$LI.po; else rm $$LI.po.tmp; fi; done
