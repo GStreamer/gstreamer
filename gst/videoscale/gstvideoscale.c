@@ -180,25 +180,43 @@ gst_videoscale_getcaps (GstPad * pad)
   GstPad *otherpad;
   int i;
 
-  GST_DEBUG ("gst_videoscale_getcaps");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
       videoscale->srcpad;
   othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  GST_DEBUG ("othercaps are: %" GST_PTR_FORMAT, othercaps);
+  GST_DEBUG_OBJECT (pad, "othercaps of otherpad %s:%s are: %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (otherpad), othercaps);
 
   caps = gst_caps_copy (othercaps);
   for (i = 0; i < gst_caps_get_size (caps); i++) {
+    const GValue *par;
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+    gst_structure_remove_field (structure, "pixel-aspect-ratio");
+    /* copy the pixel aspect ratio from the previously stored value */
+    if (pad == videoscale->srcpad) {
+      par = videoscale->from_par;
+      g_print ("from_par: %p\n", par);
+    } else {
+      par = videoscale->to_par;
+      g_print ("to_par: %p\n", par);
+    }
+#if 0
+    if (par) {
+      gst_structure_set (structure,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          gst_value_get_fraction_numerator (par),
+          gst_value_get_fraction_denominator (par), NULL);
+    }
+#endif
   }
 
-  GST_DEBUG ("returning caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pad, "returning caps: %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
@@ -209,29 +227,53 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
 {
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
+  int count = 0;
   GstPad *otherpad;
+  GstCaps *othercaps;
   GstStructure *structure;
+  GstStructure *otherstructure;
   struct videoscale_format_struct *format;
-  int height, width;
+  int height = 0, width = 0;
+  const GValue *par = NULL;
+  const GValue *otherpar;
 
-  GST_DEBUG ("gst_videoscale_link %s\n", gst_caps_to_string (caps));
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
+  GST_DEBUG_OBJECT (videoscale, "linking pad %s:%s with caps %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
 
   otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
       videoscale->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "height", &height);
+  if (gst_structure_get_int (structure, "width", &width))
+    count++;
+  if (gst_structure_get_int (structure, "height", &height))
+    count++;
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (par)
+    count++;
 
+  ret = (count == 3 || (count == 2 && !par));
   format = videoscale_find_by_structure (structure);
+
+  /* if we received only two of these three, and the other pad is negotiated,
+   * we can calculate the third and use it for negotiation */
+  g_print ("count me: %d\n", count);
+  if (count == 2 && gst_pad_is_negotiated (otherpad)) {
+    g_print ("OH YEAH; DO YOUR MAGIC\n");
+  }
 
   if (!ret || format == NULL)
     return GST_PAD_LINK_REFUSED;
 
+  GST_DEBUG_OBJECT (videoscale,
+      "trying to set caps %" GST_PTR_FORMAT " on pad %s:%s",
+      caps, GST_DEBUG_PAD_NAME (otherpad));
+
   ret = gst_pad_try_set_caps (otherpad, caps);
   if (ret == GST_PAD_LINK_OK) {
     /* cool, we can use passthru */
+    GST_DEBUG_OBJECT (videoscale, "passthru works");
 
     videoscale->format = format;
     videoscale->to_width = width;
@@ -239,22 +281,42 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
     videoscale->from_width = width;
     videoscale->from_height = height;
 
+    g_print ("_setup");
     gst_videoscale_setup (videoscale);
 
     return GST_PAD_LINK_OK;
   }
 
+  /* no passthru, so try to convert */
+  GST_DEBUG_OBJECT (videoscale, "no passthru");
+
   if (gst_pad_is_negotiated (otherpad)) {
     GstCaps *newcaps = gst_caps_copy (caps);
+
+    GST_DEBUG_OBJECT (videoscale, "otherpad %s:%s is negotiated",
+        GST_DEBUG_PAD_NAME (otherpad));
+
 
     if (pad == videoscale->srcpad) {
       gst_caps_set_simple (newcaps,
           "width", G_TYPE_INT, videoscale->from_width,
           "height", G_TYPE_INT, videoscale->from_height, NULL);
+      if (videoscale->from_par) {
+        gst_structure_set (gst_caps_get_structure (newcaps, 0),
+            "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            gst_value_get_fraction_numerator (videoscale->from_par),
+            gst_value_get_fraction_denominator (videoscale->from_par), NULL);
+      }
     } else {
       gst_caps_set_simple (newcaps,
           "width", G_TYPE_INT, videoscale->to_width,
           "height", G_TYPE_INT, videoscale->to_height, NULL);
+      if (videoscale->to_par) {
+        gst_structure_set (gst_caps_get_structure (newcaps, 0),
+            "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            gst_value_get_fraction_numerator (videoscale->to_par),
+            gst_value_get_fraction_denominator (videoscale->to_par), NULL);
+      }
     }
     ret = gst_pad_try_set_caps (otherpad, newcaps);
     if (GST_PAD_LINK_FAILED (ret)) {
@@ -263,21 +325,146 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   }
 
   videoscale->passthru = FALSE;
+  GST_DEBUG_OBJECT (videoscale,
+      "no passthru, otherpad %s:%s is not negotiated",
+      GST_DEBUG_PAD_NAME (otherpad));
 
+  /* since we're accepting these caps on this pad, we can now check for
+   * pixel-aspect-ratio, and try setting converted caps on the other pad,
+   * Keep one of w,h the same, and scale the other, using the pixel aspect
+   * ratio */
+
+  othercaps = gst_pad_get_caps (otherpad);
+  otherstructure = gst_caps_get_structure (othercaps, 0);
+  structure = gst_caps_get_structure (caps, 0);
+
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  otherpar = gst_structure_get_value (otherstructure, "pixel-aspect-ratio");
+  GST_DEBUG ("othercaps: %" GST_PTR_FORMAT, othercaps);
+  g_print ("par %p, otherpar %p\n", par, otherpar);
+  if (par && otherpar) {
+    g_print ("par %d/%d, otherpar %d/%d\n",
+        gst_value_get_fraction_numerator (par),
+        gst_value_get_fraction_denominator (par),
+        gst_value_get_fraction_numerator (otherpar),
+        gst_value_get_fraction_denominator (otherpar));
+  }
   if (pad == videoscale->srcpad) {
     videoscale->to_width = width;
     videoscale->to_height = height;
+    if (par) {
+      /* FIXME: add finalize to free these */
+      g_print ("storing par %p in to_par\n", par);
+      g_free (videoscale->to_par);
+      videoscale->to_par = g_new0 (GValue, 1);
+      gst_value_init_and_copy (videoscale->to_par, par);
+    }
   } else {
     videoscale->from_width = width;
     videoscale->from_height = height;
+    if (par) {
+      g_print ("storing par %p in from_par\n", par);
+      g_free (videoscale->from_par);
+      videoscale->from_par = g_new0 (GValue, 1);
+      gst_value_init_and_copy (videoscale->from_par, par);
+    }
   }
   videoscale->format = format;
 
   if (gst_pad_is_negotiated (otherpad)) {
+    g_print ("_setup");
     gst_videoscale_setup (videoscale);
   }
-
   return GST_PAD_LINK_OK;
+}
+
+static GstCaps *
+gst_videoscale_src_fixate (GstPad * pad, const GstCaps * caps)
+{
+  GstVideoscale *videoscale;
+  GstCaps *newcaps;
+  int i;
+  gboolean ret = TRUE;
+
+  videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (pad, "asked to fixate caps %" GST_PTR_FORMAT, caps);
+
+  /* fixate using pixel aspect ratio */
+
+  /* don't mess with fixation if we don't have a sink pad PAR */
+  if (!videoscale->from_par)
+    return NULL;
+
+  /* for each structure, if it contains a pixel aspect ratio,
+   * fix width and height */
+
+  newcaps = gst_caps_copy (caps);
+  for (i = 0; i < gst_caps_get_size (newcaps); i++) {
+    const GValue *to_par;
+
+    //int w, h;
+    //int count;
+
+    GstStructure *structure = gst_caps_get_structure (newcaps, i);
+
+    to_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+    if (to_par) {
+      GValue to_ratio = { 0, }; /* w/h of output video */
+      int from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
+
+      int w = 0, h = 0;
+      int num, den;
+
+      g_print ("Going to fixate respecting pars");
+      from_w = videoscale->from_width;
+      from_h = videoscale->from_height;
+      from_par_n = gst_value_get_fraction_numerator (videoscale->from_par);
+      from_par_d = gst_value_get_fraction_denominator (videoscale->from_par);
+      to_par_n = gst_value_get_fraction_numerator (to_par);
+      to_par_d = gst_value_get_fraction_denominator (to_par);
+
+      g_print ("from %dx%d with %d/%d to %d/%d\n",
+          from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d);
+      g_value_init (&to_ratio, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&to_ratio, from_w * from_par_n * to_par_d,
+          from_h * from_par_d * to_par_n);
+      num = gst_value_get_fraction_numerator (&to_ratio);
+      den = gst_value_get_fraction_denominator (&to_ratio);
+      g_print ("scale pixel size to %d/%d\n", num, den);
+
+      /* now find a width x height that respects this display ratio.
+       * prefer those that have one of w/h the same as the incoming video
+       * using wd / hd = num / den */
+
+      /* start with same width
+       * check hd / den is an integer scale factor, and scale num
+       * to VIDEO_WIDTH by this factor */
+      if (from_w % num == 0) {
+        w = from_w;
+        h = w * den / num;
+        GST_DEBUG_OBJECT (videoscale, "keeping video width");
+      } else if (from_h % den == 0) {
+        h = from_h;
+        w = h * num / den;
+        GST_DEBUG_OBJECT (videoscale, "keeping video height");
+      } else
+        g_assert_not_reached ();        /* FIXME, approximate */
+      GST_DEBUG_OBJECT (videoscale, "scaling to %dx%d", w, h);
+
+      /* now fixate */
+      ret &=
+          gst_caps_structure_fixate_field_nearest_int (structure, "width", w);
+      ret &=
+          gst_caps_structure_fixate_field_nearest_int (structure, "height", h);
+    }
+  }
+
+  if (ret)
+    return newcaps;
+
+  gst_caps_free (newcaps);
+  return NULL;
 }
 
 static void
@@ -299,6 +486,7 @@ gst_videoscale_init (GstVideoscale * videoscale)
       gst_videoscale_handle_src_event);
   gst_pad_set_link_function (videoscale->srcpad, gst_videoscale_link);
   gst_pad_set_getcaps_function (videoscale->srcpad, gst_videoscale_getcaps);
+  gst_pad_set_fixate_function (videoscale->srcpad, gst_videoscale_src_fixate);
 
   videoscale->inited = FALSE;
 
@@ -388,7 +576,7 @@ gst_videoscale_chain (GstPad * pad, GstData * _data)
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
   g_return_if_fail (videoscale->format);
-  GST_DEBUG_OBJECT (videoscale, "format " GST_FOURCC_FORMAT,
+  GST_LOG_OBJECT (videoscale, "format " GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (videoscale->format->fourcc));
   g_return_if_fail (videoscale->format->scale);
 
@@ -441,7 +629,6 @@ gst_videoscale_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
 }
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)
