@@ -354,7 +354,7 @@ gst_bin_change_state (GstElement *element)
   GstElement *child;
   GstElementStateReturn ret;
 
-  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
+//  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
 
@@ -364,7 +364,7 @@ gst_bin_change_state (GstElement *element)
 //          gst_element_statename (GST_STATE (element)), GST_STATE_PENDING (element),
 //          gst_element_statename (GST_STATE_PENDING (element)));
 
-  GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing bin's state from %s to %s",
+  GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
                 gst_element_statename (GST_STATE (element)),
                 gst_element_statename (GST_STATE_PENDING (element)));
 
@@ -396,7 +396,7 @@ gst_bin_change_state (GstElement *element)
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    GST_DEBUG (GST_CAT_STATES,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
+//    GST_DEBUG (GST_CAT_STATES,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
     switch (gst_element_set_state (child, GST_STATE_PENDING (element))) {
       case GST_STATE_FAILURE:
         GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
@@ -426,7 +426,7 @@ static GstElementStateReturn
 gst_bin_change_state_norecurse (GstBin *bin)
 {
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    GST_DEBUG(GST_CAT_STATES, "setting bin's own state\n");
+    GST_DEBUG_ELEMENT (GST_CAT_STATES, bin, "setting bin's own state\n");
     return GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (bin));
   } else
     return GST_STATE_FAILURE;

@@ -779,8 +779,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
   g_return_val_if_fail (element->sched != NULL, GST_STATE_FAILURE);
 
-  GST_DEBUG (GST_CAT_STATES,"setting element '%s' to state %s\n",GST_ELEMENT_NAME (element),
-             gst_element_statename(state));
+  GST_DEBUG_ELEMENT (GST_CAT_STATES,element, "setting state from %s to %s\n",
+                     gst_element_statename(GST_STATE(element)),
+                     gst_element_statename(state));
 
   /* start with the current state */
   curpending = GST_STATE(element);
@@ -794,8 +795,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* set the pending state variable */
     // FIXME: should probably check to see that we don't already have one
     GST_STATE_PENDING (element) = curpending;
-    GST_DEBUG (GST_CAT_STATES,"intermediate: setting element '%s' to state %s\n",
-               GST_ELEMENT_NAME (element),gst_element_statename(curpending));
+    if (curpending != state)
+      GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"intermediate: setting state to %s\n",
+                         gst_element_statename(curpending));
 
     /* call the state change function so it can set the state */
     oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
@@ -805,7 +807,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* if that outright didn't work, we need to bail right away */
     /* NOTE: this will bail on ASYNC as well! */
     if (return_val == GST_STATE_FAILURE) {
-      GST_DEBUG (GST_CAT_STATES,"have failed change_state return from '%s'\n",GST_ELEMENT_NAME (element));
+      GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"have failed change_state return\n");
       return return_val;
     }
   }
@@ -852,19 +854,20 @@ gst_element_change_state (GstElement *element)
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
-  GST_DEBUG (GST_CAT_STATES, "default handler sets '%s' state to %s\n",
-             GST_ELEMENT_NAME (element), gst_element_statename(GST_STATE_PENDING(element)));
+//  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "default handler sets state to %s\n",
+//                     gst_element_statename(GST_STATE_PENDING(element)));
 
-  if ((GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING) ||
-      (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING)) {
+  if (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING) {
     g_return_val_if_fail(GST_ELEMENT_SCHED(element), GST_STATE_FAILURE);
     if (GST_ELEMENT_PARENT(element))
       fprintf(stderr,"PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
 GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
     GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);
   }
-  else if ((GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY) ||
-           (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_PAUSED)) {
+  else if (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_PAUSED) {
+    if (GST_ELEMENT_PARENT(element))
+      fprintf(stderr,"PLAYING->PAUSED: element \"%s\" has parent \"%s\" and sched %p\n",
+GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
     GST_SCHEDULE_DISABLE_ELEMENT (element->sched,element);
   }
 

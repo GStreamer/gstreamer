@@ -158,7 +158,11 @@ gst_default_debug_handler (gint category, gboolean incore, gchar *file, gchar *f
 //  if (category != GST_CAT_GST_INIT)
     location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
   if (element && GST_IS_ELEMENT (element))
+#ifdef GST_DEBUG_COLOR
     elementname = g_strdup_printf (" \033[04m[%s]\033[00m", GST_OBJECT_NAME (element));
+#else
+    elementname = g_strdup_printf (" [%s]", GST_OBJECT_NAME (element));
+#endif
 
 #ifdef GST_DEBUG_COLOR
   fprintf(stderr,"DEBUG(\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["

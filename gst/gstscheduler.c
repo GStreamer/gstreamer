@@ -1348,7 +1348,7 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
           GST_INFO (GST_CAT_DATAFLOW,"NO ENTRY INTO CHAIN!");
         }
       } else {
-        GST_INFO (GST_CAT_DATAFLOW,"no entry into chain!");
+        GST_INFO (GST_CAT_DATAFLOW,"NO ENABLED ELEMENTS IN CHAIN!!");
       }
 
 /*                
