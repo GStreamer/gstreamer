@@ -145,8 +145,6 @@ gst_element_class_init (GstElementClass *klass)
   klass->elementfactory 		= NULL;
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
-  klass->send_event	 		= NULL;
-  klass->query		 		= NULL;
 }
 
 static void
@@ -1770,22 +1768,19 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
 	       GST_DEBUG_PAD_NAME (pad));
 
     if (GST_PAD_DIRECTION (pad) == dir) {
-	    /*
-	     * FIXME: for some reason a ghosted pad doesn't get it's flag
-	     * set, which makes this check fail for them.
       if (GST_PAD_IS_USABLE (pad)) {
-      */
 	return pad;
-	/*
       }
-      else
+      else {
         GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not usable",
 	           GST_DEBUG_PAD_NAME (pad));
-		   */
+      }
     }
-    else
+    else {
       GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is in wrong direction",
                  GST_DEBUG_PAD_NAME (pad));
+    }
+
     pads = g_list_next (pads);
   }
   return NULL;

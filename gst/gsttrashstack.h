@@ -50,6 +50,12 @@ GST_INLINE_FUNC gpointer 	gst_trash_stack_pop 	(GstTrashStack *stack);
 
 #if defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2 
 
+#ifdef GST_CONFIG_NO_SMP
+#define SMP_LOCK ""
+#else
+#define SMP_LOCK "lock ; "
+#endif
+
 /*
  * intel ia32 optimized lockfree implementations
  */
@@ -71,7 +77,7 @@ gst_trash_stack_push (GstTrashStack *stack, gpointer mem)
  __asm__ __volatile__ (
    "1:                         \n\t"
    "  movl %2, (%1);           \n\t"	/* mem->next == stack->head */
-   "  lock; cmpxchg %1, %0;    \n\t"	/* if head unchanged, move mem into it */
+   SMP_LOCK "cmpxchg %1, %0;   \n\t"	/* if head unchanged, move mem into it */
    "  jnz 1b;                  \n"	/* head changed, retry */
      :
      : "m" (*stack),
@@ -98,7 +104,7 @@ gst_trash_stack_pop (GstTrashStack *stack)
     "  movl (%%eax), %%ebx;     \n\t"	/* take value pointed to by head (head->next) */
     "  movl %%edx, %%ecx;       \n\t"	/* take counter */
     "  incl %%ecx;              \n\t"	/* and increment */
-    "  lock; cmpxchg8b %1;      \n\t"	/* if eax:edx == *stack, move ebx:ecx to *stack,
+    SMP_LOCK "cmpxchg8b %1;     \n\t"	/* if eax:edx == *stack, move ebx:ecx to *stack,
 					 * else *stack is moved into eax:edx again... */
     "  jnz 10b;                 \n\t"	/* ... and we retry */
     "20:                        \n"
@@ -178,7 +184,7 @@ gst_trash_stack_free (GstTrashStack *stack)
   g_free (stack);
 }
 
-#endif /* defined (G_CAN_INLINE) || defined (__GST_TRASH_STACK_C__)*/
+#endif /* defined (GST_CAN_INLINE) || defined (__GST_TRASH_STACK_C__)*/
 
 G_END_DECLS
 
