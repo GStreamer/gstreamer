@@ -1,5 +1,12 @@
 2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
 
+	* gst-libs/gst/audio/.cvsignore:
+	Ignore generated file.
+	* gst-libs/gst/audio/Makefile.am:
+	Do not install example filter.
+
+2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
+
 	* examples/switch/.cvsignore:
 	Ignore generated file.
 
