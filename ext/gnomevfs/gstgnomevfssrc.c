@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Bastien Nocera <hadess@hadess.net>
  *                    2002 Kristian Rietveld <kris@gtk.org>
- *                    2002 Colin Walters <walters@gnu.org>
+ *                    2002,2003 Colin Walters <walters@gnu.org>
  *
  * gnomevfssrc.c:
  *
@@ -1047,7 +1047,10 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			return FALSE;
 		}
 
-		/* find the file length */
+		/* find the file length (but skip it in iradio mode,
+		 * since it will require a separate request, and we
+		 * know the length is undefined anyways) */
+		if (!src->iradio_mode)
 		{
 			GnomeVFSResult size_result;
 			GnomeVFSFileInfo *info;
@@ -1061,10 +1064,12 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			else
 				src->size = info->size;
 
-		        GST_DEBUG(0, "size %lld", src->size);
-
 			gnome_vfs_file_info_unref(info);
 		}
+		else
+			src->size = 0;
+
+		GST_DEBUG(0, "size %lld", src->size);
 
 		audiocast_do_notifications(src);
 	
