@@ -28,8 +28,8 @@
 
 static GstElementDetails afsrc_details = {
   "Audiofile Src",
-  "Src",
-  "Audiofile src for audio/raw",
+  "Source/Audio",
+  "Read audio files from disk using libaudiofile",
   VERSION,
   "Thomas <thomas@apestaart.org>",
   "(C) 2001"

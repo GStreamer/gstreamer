@@ -25,7 +25,7 @@
 /* elementfactory information */
 static GstElementDetails artsdsink_details = {
   "aRtsd audio sink",
-  "Sink/Artsdsink",
+  "Sink/Audio",
   "Plays audio to an aRts server",
   VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",

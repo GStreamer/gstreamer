@@ -22,7 +22,7 @@
 
 static GstElementDetails stereo_details = {
   "Stereo effect",
-  "Filter/Effect",
+  "Filter/Audio/Effect",
   "Muck with the stereo signal, enhance it's 'stereo-ness'",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -37,7 +37,7 @@
 
 static GstElementDetails gst_jack_bin_details = {  
     "Jack Bin",
-    "Bin/Audio",
+    "Generic/Bin",
     "Jack processing bin: see README for more info",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
@@ -451,6 +451,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
     
     factory = gst_element_factory_new ("jackbin", GST_TYPE_JACK_BIN, &gst_jack_bin_details);
     g_return_val_if_fail (factory != NULL, FALSE);
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
     factory = gst_element_factory_new ("jacksrc", GST_TYPE_JACK_SRC, &gst_jack_src_details);
     g_return_val_if_fail (factory != NULL, FALSE);

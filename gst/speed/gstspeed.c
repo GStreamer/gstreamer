@@ -32,7 +32,7 @@
 
 static GstElementDetails speed_details = {
   "Speed",
-  "Filter/Effect",
+  "Filter/Audio/Effect",
   "Set speed/pitch on audio/raw streams (resampler)",
   VERSION,
   "Andy Wingo <apwingo@eos.ncsu.edu>",

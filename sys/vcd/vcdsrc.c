@@ -36,7 +36,7 @@
 
 static GstElementDetails vcdsrc_details = {
   "VCD Source",
-  "Source/File/VCD",
+  "Source/File",
   "Asynchronous read from VCD disk",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

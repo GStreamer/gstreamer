@@ -27,7 +27,7 @@ extern GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
 /* elementfactory information */
 GstElementDetails gst_gsmenc_details = {
   "gsm audio encoder",
-  "Filter/Encoder/Audio",
+  "Codec/Audio/Encoder",
   ".gsm",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -28,7 +28,7 @@
 
 static GstElementDetails passthrough_details = {
   "Passthrough",
-  "Filter/Effect",
+  "Filter/Audio/Effect",
   "Transparent filter for audio/raw (boilerplate for effects)",
   VERSION,
   "Thomas <thomas@apestaart.org>, "\

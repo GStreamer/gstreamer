@@ -34,7 +34,7 @@
 /* elementfactory information */
 static GstElementDetails mp1videoparse_details = {
   "MPEG 1 Video Parser",
-  "Filter/Parser/Video",
+  "Codec/Parser",
   "Parses and frames MPEG 1 video streams, provides seek",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

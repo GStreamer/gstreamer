@@ -23,9 +23,9 @@
 
 /* elementfactory information */
 static GstElementDetails mp3parse_details = {
-  "MP3 Parser",
-  "Filter/Parser/Audio",
-  "Parses and frames MP3 audio streams, provides seek",
+  "MPEG1 Audio Parser",
+  "Codec/Parser",
+  "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
   "(C) 1999",

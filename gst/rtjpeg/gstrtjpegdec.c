@@ -25,7 +25,7 @@
 /* elementfactory information */
 GstElementDetails gst_rtjpegdec_details = {
   "RTjpeg decoder",
-  "Filter/Video/Decoder",
+  "Codec/Video/Decoder",
   "Decodes video in RTjpeg format",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

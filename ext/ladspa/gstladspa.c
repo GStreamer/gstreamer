@@ -398,6 +398,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
   ladspa->newcaps = FALSE;
   ladspa->activated = FALSE;
   ladspa->bufpool = NULL;
+  ladspa->inplace_broken = LADSPA_IS_INPLACE_BROKEN(ladspa->descriptor->Properties);
 
   if (sinkcount==0 && srccount == 1) {
     /* get mode (no sink pads) */
@@ -719,7 +720,6 @@ gst_ladspa_loop(GstElement *element)
   GstBuffer    **buffers_in, **buffers_out;
   GstBufferPool *bufpool;
   GstByteStream **bytestreams;
-  gboolean inplace_broken;
  
   GstLADSPA       *ladspa = (GstLADSPA *)element;
   GstLADSPAClass  *oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS (ladspa));
@@ -799,7 +799,7 @@ gst_ladspa_loop(GstElement *element)
     /* we now have a full set of buffers_in.
      * now share or create the buffers_out */
     for (i=0 ; i<numsrcpads ; i++){
-      if (i <= numsinkpads && !inplace_broken){
+      if (i <= numsinkpads && !ladspa->inplace_broken){
         /* we can share buffers */
         buffers_out[i] = buffers_in[i];
         data_out[i] = data_in[i];
@@ -845,7 +845,7 @@ gst_ladspa_loop(GstElement *element)
       buffers_out[i] = NULL;
     }
     for (i=0 ; i<numsinkpads ; i++) {
-      if (i > numsrcpads || inplace_broken){
+      if (i > numsrcpads || ladspa->inplace_broken){
         /* we have some buffers to unref */
         gst_buffer_unref(buffers_in[i]);
       }
@@ -873,11 +873,10 @@ static void
 gst_ladspa_chain (GstPad *pad, GstBuffer *buf)
 {
   LADSPA_Descriptor *desc;
-  LADSPA_Data *data_in, **data_out;
-  GstBuffer **buffers_out;
+  LADSPA_Data *data_in, **data_out = NULL;
+  GstBuffer **buffers_out = NULL;
 
   unsigned long num_samples;
-  gboolean inplace_broken;
   guint num_to_process, num_processed, i, numsrcpads;
   
   GstLADSPA *ladspa;
@@ -909,13 +908,12 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buf)
 
   desc = ladspa->descriptor;
 
-  inplace_broken = LADSPA_IS_INPLACE_BROKEN(desc->Properties);
   if (numsrcpads > 0){
     guint num_created_buffers = 0; 
     buffers_out = g_new(GstBuffer*, numsrcpads);
     data_out = g_new(LADSPA_Data*, numsrcpads);
 
-    if (inplace_broken){
+    if (ladspa->inplace_broken){
       num_created_buffers = numsrcpads;
     }
     else {
@@ -1077,7 +1075,7 @@ ladspa_describe_plugin(const char *pcFullFilename,
     /* construct the element details struct */
     details = g_new0(GstElementDetails,1);
     details->longname = g_strdup(desc->Name);
-    details->klass = "Filter/LADSPA";
+    details->klass = "Filter/Audio/LADSPA";
     details->description = details->longname;
     details->version = g_strdup_printf("%ld",desc->UniqueID);
     details->author = g_strdup(desc->Maker);

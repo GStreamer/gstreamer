@@ -27,7 +27,7 @@ extern GstPadTemplate *gsmdec_src_template, *gsmdec_sink_template;
 /* elementfactory information */
 GstElementDetails gst_gsmdec_details = {
   "gsm audio decoder",
-  "Filter/Decoder/Audio",
+  "Codec/Audio/Decoder",
   ".gsm",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -24,8 +24,8 @@
 #include "gstdeinterlace.h"
 
 static GstElementDetails deinterlace_details = {
-  "DeInterlace",
-  "Filter/Effect",
+  "Deinterlace",
+  "Filter/Video",
   "Deinterlace video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

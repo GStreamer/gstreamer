@@ -34,7 +34,7 @@
 
 static GstElementDetails play_on_demand_details = {
   "Play On Demand",
-  "Filter/Effect",
+  "Filter/Audio/Effect",
   "Plays a stream whenever it receives a certain signal",
   VERSION,
   "Leif Morgan Johnson <lmjohns3@eos.ncsu.edu>",

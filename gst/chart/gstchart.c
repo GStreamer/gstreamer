@@ -62,7 +62,7 @@ GType gst_chart_get_type(void);
 /* elementfactory information */
 static GstElementDetails gst_chart_details = {
   "chart drawer",
-  "Filter/Visualization",
+  "Visualization",
   "Takes frames of data and outputs video frames of a chart of data",
   VERSION,
   "Richard Boulton <richard@tartarus.org>",

@@ -27,8 +27,8 @@
 
 static GstElementDetails afsink_details = {
   "Audiofile Sink",
-  "Sink",
-  "Audiofile sink for audio/raw",
+  "Sink/Audio",
+  "Write audio streams to disk using libaudiofile",
   VERSION,
   "Thomas <thomas@apestaart.org>",
   "(C) 2001"

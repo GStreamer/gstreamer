@@ -30,7 +30,7 @@
 /* elementfactory information */
 static GstElementDetails system_encode_details = {
   "MPEG1 Multiplexer",
-  "Filter/Multiplexer/System",
+  "Codec/Muxer",
   "Multiplexes MPEG-1 Streams",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -23,8 +23,8 @@
 
 static GstElementDetails smooth_details = {
   "Smooth effect",
-  "Filter/Effect",
-  "apply a smooth filter to an image",
+  "Filter/Video",
+  "Apply a smooth filter to an image",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2000",
