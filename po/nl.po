@@ -5,10 +5,10 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.0\n"
+"Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-04-14 20:54+0200\n"
-"PO-Revision-Date: 2004-03-31 00:40+0200\n"
+"PO-Revision-Date: 2004-04-30 15:36+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
 "MIME-Version: 1.0\n"
@@ -45,9 +45,8 @@ msgid "Could not open vfs file \"%s\" for writing."
 msgstr "Kon het VFS-bestand \"%s\" niet openen om te schrijven."
 
 #: ext/gnomevfs/gstgnomevfssink.c:350
-#, fuzzy
 msgid "No filename given"
-msgstr "Geen bestandsnaam opgegeven."
+msgstr "Geen bestandsnaam opgegeven"
 
 #: ext/gnomevfs/gstgnomevfssink.c:375
 #, c-format
@@ -120,8 +119,7 @@ msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."
 #: sys/oss/gstosselement.c:707 sys/oss/gstosselement.c:711
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
-msgstr ""
-"Kon geen toegang krijgen tot apparaat \"%s\", controleer de toegangsrechten."
+msgstr "Kon geen toegang krijgen tot apparaat \"%s\", controleer de toegangsrechten."
 
 #: sys/oss/gstosselement.c:718
 #, c-format
@@ -140,7 +138,7 @@ msgstr "Kon apparaat \"%s\" niet openen om te lezen."
 
 #: sys/oss/gstosselement.c:1092
 msgid "Your oss device could not be probed correctly"
-msgstr ""
+msgstr "Uw OSS-apparaat kon niet correct worden gevonden"
 
 #: sys/oss/gstossmixer.c:83
 msgid "Volume"
