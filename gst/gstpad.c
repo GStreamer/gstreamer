@@ -3040,7 +3040,7 @@ _invent_event (GstPad * pad, GstBuffer * buffer)
     data = GST_DATA (gst_event_new_discontinuous (TRUE,
             GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_FORMAT_DEFAULT : 0,
             GST_BUFFER_OFFSET (buffer), 0));
-    GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW,
+    GST_CAT_WARNING (GST_CAT_DATAFLOW,
         "needed to invent a DISCONT (no time) for %s:%s => %s:%s",
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   }
