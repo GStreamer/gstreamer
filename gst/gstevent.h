@@ -37,7 +37,7 @@ typedef enum {
   GST_EVENT_FLUSH		= 2,
   GST_EVENT_EMPTY		= 3,
   GST_EVENT_DISCONTINUOUS	= 4,
-  GST_EVENT_NEW_MEDIA		= 5,
+  /*GST_EVENT_NEW_MEDIA		= 5, <- removed */
   GST_EVENT_QOS			= 6,
   GST_EVENT_SEEK		= 7,
   GST_EVENT_SEEK_SEGMENT	= 8,
@@ -208,7 +208,6 @@ GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);
 GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
 						 GstFormat format1, ...);
 gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);
-gboolean	gst_event_has_new_media         (GstEvent *event);
 
 #define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
 
