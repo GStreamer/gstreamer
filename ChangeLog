@@ -1,5 +1,12 @@
 2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
+	* ext/alsa/gstalsamixertrack.h:
+	  Fix names, fix loop.
+
+2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/speex/gstspeexdec.c: (gst_speex_dec_init),
 	(speex_dec_convert):
 	  sinkconvert function so oggdemux can get the file length (totem).
