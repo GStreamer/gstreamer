@@ -197,11 +197,11 @@ typedef enum {
 #define GST_RIFF_WPY2 MAKE_FOUR_CC( 'W', 'P', 'Y', '2')
 #define GST_RIFF_m263 MAKE_FOUR_CC( 'm', '2', '6', '3')
 #define GST_RIFF_M263 MAKE_FOUR_CC( 'M', '2', '6', '3')
-#define GST_RIFF_s263 MAKE_FOUR_CC( 's', '2', '6', '3')
 #define GST_RIFF_H263 MAKE_FOUR_CC( 'H', '2', '6', '3')
 #define GST_RIFF_i263 MAKE_FOUR_CC( 'i', '2', '6', '3')
 #define GST_RIFF_L263 MAKE_FOUR_CC( 'L', '2', '6', '3')
 #define GST_RIFF_x263 MAKE_FOUR_CC( 'x', '2', '6', '3')
+#define GST_RIFF_VSSH MAKE_FOUR_CC( 'V', 'S', 'S', 'H') /* H2.64 */
 
 #define GST_RIFF_Q1_0 MAKE_FOUR_CC( 'Q', '1',0x2e, '0')
 #define GST_RIFF_SFMC MAKE_FOUR_CC( 'S', 'F', 'M', 'C')
