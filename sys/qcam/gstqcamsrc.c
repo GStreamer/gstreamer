@@ -29,6 +29,7 @@
 
 /*#define DEBUG_ENABLED */
 #include <gstqcamsrc.h>
+#include <gst/video/video.h>
 
 #include "qcamip.h"
 
@@ -63,12 +64,11 @@ GST_PAD_TEMPLATE_FACTORY (gst_qcamsrc_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "gstqcam_src",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-      "width",		GST_PROPS_INT_RANGE (0, 320),
-      "height",		GST_PROPS_INT_RANGE (0, 240)
+    "video/x-raw-yuv",
+      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
@@ -252,10 +252,11 @@ gst_qcamsrc_get (GstPad *pad)
   if (!GST_PAD_CAPS (pad)) {
     gst_pad_try_set_caps (pad, GST_CAPS_NEW (
 			    "qcam_caps",
-			    "video/raw",
+			    "video/x-raw-yuv",
 			      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
 			      "width",		GST_PROPS_INT (qcamsrc->qcam->width / scale),
-			      "height",		GST_PROPS_INT (qcamsrc->qcam->height / scale)
+			      "height",		GST_PROPS_INT (qcamsrc->qcam->height / scale),
+			      "framerate",      GST_PROPS_FLOAT (10.) /* bla? */
 			      ));
   }
   scan = qc_scan (qcamsrc->qcam);

@@ -18,9 +18,6 @@
  */
 
 /*#define GST_DEBUG_ENABLED */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include "gstmp1videoparse.h"
 
 /* Start codes. */
@@ -45,42 +42,34 @@ static GstElementDetails mp1videoparse_details = {
   "(C) 2000",
 };
 
-static GstPadTemplate*
-src_factory (void) 
-{
-  return
-    gst_pad_template_new (
-  	"src",
-  	GST_PAD_SRC,
-  	GST_PAD_ALWAYS,
-	gst_caps_new (
-  	  "mp1videoparse_src",
-    	  "video/mpeg",
-	  gst_props_new (
-    	    "mpegversion",   GST_PROPS_INT (1),
-    	    "systemstream",  GST_PROPS_BOOLEAN (FALSE),
-    	    "sliced",        GST_PROPS_BOOLEAN (TRUE),
-	    NULL)),
-	NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "mp1videoparse_src",
+    "video/mpeg",
+      "mpegversion",   GST_PROPS_INT (1),
+      "systemstream",  GST_PROPS_BOOLEAN (FALSE),
+      "width",         GST_PROPS_INT_RANGE (16, 4096),
+      "height",        GST_PROPS_INT_RANGE (16, 4096),
+      "pixel_width",   GST_PROPS_INT_RANGE (1, 255),
+      "pixel_height",  GST_PROPS_INT_RANGE (1, 255),
+      "framerate",     GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+  )
+);
 
-static GstPadTemplate*
-sink_factory (void)
-{
-  return
-    gst_pad_template_new (
-  	"sink",
-  	GST_PAD_SINK,
-  	GST_PAD_ALWAYS,
-  	gst_caps_new (
-  	  "mp1videoparse_sink",
-    	  "video/mpeg",
-	  gst_props_new (
-    	    "mpegversion",   GST_PROPS_INT (1),
-    	    "systemstream",  GST_PROPS_BOOLEAN (FALSE),
-	    NULL)),
-	NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "mp1videoparse_sink",
+    "video/mpeg",
+      "mpegversion",   GST_PROPS_INT (1),
+      "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+  )
+);
 
 /* Mp1VideoParse signals and args */
 enum {
@@ -98,10 +87,9 @@ static void	gst_mp1videoparse_init		(Mp1VideoParse *mp1videoparse);
 
 static void	gst_mp1videoparse_chain		(GstPad *pad, GstBuffer *buf);
 static void	gst_mp1videoparse_real_chain	(Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstPad *outpad);
-/* defined but not used
 static void	gst_mp1videoparse_flush		(Mp1VideoParse *mp1videoparse);
-*/
-static GstPadTemplate *src_template, *sink_template;
+static GstElementStateReturn
+		gst_mp1videoparse_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mp1videoparse_signals[LAST_SIGNAL] = { 0 }; */
@@ -136,40 +124,100 @@ gst_mp1videoparse_class_init (Mp1VideoParseClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
+  gstelement_class->change_state = gst_mp1videoparse_change_state;
 }
 
 static void
 gst_mp1videoparse_init (Mp1VideoParse *mp1videoparse)
 {
-  mp1videoparse->sinkpad = gst_pad_new_from_template (sink_template, "sink");
+  mp1videoparse->sinkpad = gst_pad_new_from_template (
+	GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->sinkpad);
   gst_pad_set_chain_function(mp1videoparse->sinkpad,gst_mp1videoparse_chain);
 
-  mp1videoparse->srcpad = gst_pad_new_from_template (src_template, "src");
+  mp1videoparse->srcpad = gst_pad_new_from_template (
+	GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->srcpad);
 
   mp1videoparse->partialbuf = NULL;
   mp1videoparse->need_resync = FALSE;
   mp1videoparse->last_pts = 0;
   mp1videoparse->picture_in_buffer = 0;
+  mp1videoparse->width = mp1videoparse->height = -1;
+  mp1videoparse->fps = mp1videoparse->asr = 0.;
+}
+
+static void
+mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
+{
+  gint width, height, asr_idx, fps_idx;
+  gfloat asr_table[] = { 0., 1.,
+			 0.6735, 0.7031, 0.7615, 0.8055, 0.8437, 
+			 0.8935, 0.9157, 0.9815, 1.0255, 1.0695,
+			 1.0950, 1.1575, 1.2015 };
+  gfloat fps_table[] = { 0., 24./1.001, 24., 25.,
+			 30./1.001, 30.,
+			 50., 60./1.001, 60. };
+  guint32 n = GUINT32_FROM_BE (*(guint32 *) GST_BUFFER_DATA (buf));
+
+  width   = (n & 0x00000fff) >>  0;
+  height  = (n & 0x00fff000) >> 12;
+  asr_idx = (n & 0x0f000000) >> 24;
+  fps_idx = (n & 0xf0000000) >> 28;
+
+  if (fps_idx >= 9 || fps_idx <= 0)
+    fps_idx = 3; /* well, we need a default */
+  if (asr_idx >= 15 || asr_idx <= 0)
+    asr_idx = 1; /* no aspect ratio */
+
+  if (asr_table[asr_idx] != mp1videoparse->asr    ||
+      fps_table[fps_idx] != mp1videoparse->fps    ||
+      width              != mp1videoparse->width  ||
+      height             != mp1videoparse->height) {
+    GstCaps *caps;
+
+    mp1videoparse->asr    = asr_table[asr_idx];
+    mp1videoparse->fps    = fps_table[fps_idx];
+    mp1videoparse->width  = width;
+    mp1videoparse->height = height;
+
+    caps = GST_CAPS_NEW ("mp1videoparse_src",
+                         "video/mpeg",
+                           "systemstream", GST_PROPS_BOOLEAN (FALSE),
+                           "mpegversion",  GST_PROPS_INT (1),
+                           "width",        GST_PROPS_INT (width),
+                           "height",       GST_PROPS_INT (height),
+                           "framerate",    GST_PROPS_FLOAT (fps_table[fps_idx]),
+                           "pixel_width",  GST_PROPS_INT (1),
+                           "pixel_height", GST_PROPS_INT (1)); /* FIXME */
+
+    gst_caps_debug (caps, "New mpeg1videoparse caps");
+
+    if (gst_pad_try_set_caps (mp1videoparse->srcpad, caps) <= 0) {
+      gst_element_error (GST_ELEMENT (mp1videoparse),
+                         "mp1videoparse: failed to negotiate a new format");
+      return; 
+    }
+  }
 }
 
 static gboolean
-mp1videoparse_valid_sync (gulong head)
+mp1videoparse_valid_sync (Mp1VideoParse *mp1videoparse, gulong head, GstBuffer *buf)
 {
-  if (head == SEQ_START_CODE)
-    return TRUE;
-  if (head == GOP_START_CODE)
-    return TRUE;
-  if (head == PICTURE_START_CODE)
-    return TRUE;
-  if (head >= SLICE_MIN_START_CODE &&
-      head <= SLICE_MAX_START_CODE)
-    return TRUE;
-  if (head == USER_START_CODE)
-    return TRUE;
-  if (head == EXT_START_CODE)
-    return TRUE;
+  switch (head) {
+    case SEQ_START_CODE:
+      mp1videoparse_parse_seq(mp1videoparse, buf);
+      return TRUE;
+    case GOP_START_CODE:
+    case PICTURE_START_CODE:
+    case USER_START_CODE:
+    case EXT_START_CODE:
+      return TRUE;
+    default:
+      if (head >= SLICE_MIN_START_CODE &&
+	  head <= SLICE_MAX_START_CODE)
+        return TRUE;
+  }
 
   return FALSE;
 }
@@ -207,7 +255,6 @@ mp1videoparse_find_next_gop (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 
   return -1;
 }
-/* defined but not used
 static void
 gst_mp1videoparse_flush (Mp1VideoParse *mp1videoparse)
 {
@@ -220,7 +267,7 @@ gst_mp1videoparse_flush (Mp1VideoParse *mp1videoparse)
   mp1videoparse->in_flush = TRUE;
   mp1videoparse->picture_in_buffer = 0;
 }
-*/
+
 static void
 gst_mp1videoparse_chain (GstPad *pad,GstBuffer *buf)
 {
@@ -249,15 +296,31 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   guint64 time_stamp;
   GstBuffer *temp;
 
-/*  g_return_if_fail(GST_IS_BUFFER(buf)); */
-
-
   time_stamp = GST_BUFFER_TIMESTAMP(buf);
 
-  /* FIXME, handle events here */
-  /*
-    gst_mp1videoparse_flush(mp1videoparse);
-    */
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_FLUSH:
+      case GST_EVENT_DISCONTINUOUS:
+        gst_mp1videoparse_flush(mp1videoparse);
+        break;
+      case GST_EVENT_EOS:
+        gst_mp1videoparse_flush(mp1videoparse);
+        gst_event_ref(event);
+        gst_pad_push(outpad, GST_BUFFER (event));
+        gst_element_set_eos (GST_ELEMENT (mp1videoparse));
+        break;
+      default:
+        GST_DEBUG ("Unhandled event type %d",
+		   GST_EVENT_TYPE (event));
+        break;
+    }
+ 
+    gst_event_unref (event);
+    return;
+  }
  
 
   if (mp1videoparse->partialbuf) {
@@ -285,7 +348,9 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
   GST_DEBUG ("mp1videoparse: head is %08x", (unsigned int)head);
 
-  if (!mp1videoparse_valid_sync(head) || mp1videoparse->need_resync) {
+  if (!mp1videoparse_valid_sync(mp1videoparse, head,
+				mp1videoparse->partialbuf) ||
+      mp1videoparse->need_resync) {
     sync_pos = mp1videoparse_find_next_gop(mp1videoparse, mp1videoparse->partialbuf);
     if (sync_pos != -1) {
       mp1videoparse->need_resync = FALSE;
@@ -362,9 +427,14 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       mp1videoparse->in_flush = FALSE;
     }
 
-    GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
-    gst_pad_push(outpad, outbuf);
-    GST_DEBUG ("mp1videoparse: pushing  done");
+    if (GST_PAD_CAPS (outpad) != NULL) {
+      GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
+      gst_pad_push(outpad, outbuf);
+      GST_DEBUG ("mp1videoparse: pushing  done");
+    } else {
+      GST_DEBUG ("No capsnego yet, delaying buffer push");
+      gst_buffer_unref (outbuf);
+    }
     mp1videoparse->picture_in_buffer = 0;
 
     temp = gst_buffer_create_sub(mp1videoparse->partialbuf, offset, size-offset);
@@ -376,7 +446,6 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   }
 }
 
-/* FIXME
 static GstElementStateReturn 
 gst_mp1videoparse_change_state (GstElement *element) 
 {
@@ -384,20 +453,22 @@ gst_mp1videoparse_change_state (GstElement *element)
   g_return_val_if_fail(GST_IS_MP1VIDEOPARSE(element),GST_STATE_FAILURE);
 
   mp1videoparse = GST_MP1VIDEOPARSE(element);
-  GST_DEBUG ("mp1videoparse: state pending %d", GST_STATE_PENDING(element));
 
-  * if going down into NULL state, clear out buffers *
-  if (GST_STATE_PENDING(element) == GST_STATE_READY) {
-    gst_mp1videoparse_flush(mp1videoparse);
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      gst_mp1videoparse_flush(mp1videoparse);
+      mp1videoparse->width = mp1videoparse->height = -1;
+      mp1videoparse->fps   = mp1videoparse->asr = 0.;
+      break;
+    default:
+      break;
   }
 
-  * if we haven't failed already, give the parent class a chance to ;-) *
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
 
   return GST_STATE_SUCCESS;
 }
-*/
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
@@ -409,11 +480,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                    &mp1videoparse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  src_template = src_factory ();
-  gst_element_factory_add_pad_template (factory, src_template);
-
-  sink_template = sink_factory ();
-  gst_element_factory_add_pad_template (factory, sink_template);
+  gst_element_factory_add_pad_template (factory,
+	GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory,
+	GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -213,8 +213,7 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
 	      if (gst_pad_try_set_caps (tarkindec->srcpad,
 				      GST_CAPS_NEW (
 				        "tarkin_raw",
-				        "video/raw",
-				        "format",     GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+				        "video/x-raw-rgb",
 				        "bpp",        GST_PROPS_INT (24),
 				        "depth",      GST_PROPS_INT (24),
 				        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
@@ -222,7 +221,8 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
 				        "green_mask", GST_PROPS_INT (0xff00),
 				        "blue_mask",  GST_PROPS_INT (0xff),
 				        "width",      GST_PROPS_INT (layer->width),
-				        "height",     GST_PROPS_INT (layer->height)
+				        "height",     GST_PROPS_INT (layer->height),
+					"framerate",  GST_PROPS_FLOAT (0.) /* FIXME!!! */
 				       )) <= 0)
 	      {
 		gst_element_error (GST_ELEMENT (tarkindec), "could not output format");

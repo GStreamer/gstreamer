@@ -22,6 +22,7 @@
 #endif
 #include <string.h>
 #include <gstsmpte.h>
+#include <gst/video/video.h>
 #include "paint.h"
 
 /* elementfactory information */
@@ -39,10 +40,11 @@ GST_PAD_TEMPLATE_FACTORY (smpte_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "smpte_src",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
+	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
@@ -50,12 +52,11 @@ GST_PAD_TEMPLATE_FACTORY (smpte_sink1_factory,
   "sink1",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "smpte_sink1",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-     "width",	 GST_PROPS_INT_RANGE (0, 4096),
-     "height",	 GST_PROPS_INT_RANGE (0, 4096) 
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
+	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
@@ -63,12 +64,11 @@ GST_PAD_TEMPLATE_FACTORY (smpte_sink2_factory,
   "sink2",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "smpte_sink2",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-     "width",	 GST_PROPS_INT_RANGE (0, 4096),
-     "height",	 GST_PROPS_INT_RANGE (0, 4096)
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
+	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
@@ -174,8 +174,8 @@ gst_smpte_class_init (GstSMPTEClass *klass)
     g_param_spec_enum ("type", "Type", "The type of transition to use",
                        GST_TYPE_SMPTE_TRANSITION_TYPE, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
-    g_param_spec_int ("fps", "FPS", "Frames per second if no input files are given",
-                      1, 255, 1, G_PARAM_READWRITE));
+    g_param_spec_float ("fps", "FPS", "Frames per second if no input files are given",
+                      0., G_MAXFLOAT, 25., G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BORDER,
     g_param_spec_int ("border", "Border", "The border width of the transition",
                       0, G_MAXINT, 0, G_PARAM_READWRITE));
@@ -235,6 +235,7 @@ gst_smpte_sinkconnect (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "width", &smpte->width);
   gst_caps_get_int (caps, "height", &smpte->height);
+  gst_caps_get_float (caps, "framerate", &smpte->fps);
 
   gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width, smpte->height);
 
@@ -263,10 +264,10 @@ gst_smpte_init (GstSMPTE *smpte)
 
   smpte->width = 320;
   smpte->height = 200;
+  smpte->fps = 25.;
   smpte->duration = 64;
   smpte->position = 0;
   smpte->type = 1;
-  smpte->fps = 1;
   smpte->border = 0;
   smpte->depth = 16;
   gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width, smpte->height);
@@ -359,7 +360,8 @@ gst_smpte_loop (GstElement *element)
 		    "video/raw",
 		      "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
 		      "width",    GST_PROPS_INT (smpte->width),
-		      "height",   GST_PROPS_INT (smpte->height)
+		      "height",   GST_PROPS_INT (smpte->height),
+                      "framerate", GST_PROPS_FLOAT (smpte->fps)
 		    )))
       {
         gst_element_error (element, "cannot set caps");
@@ -408,11 +410,11 @@ gst_smpte_set_property (GObject *object, guint prop_id,
 		             smpte->width, smpte->height);
       break;
     }
-    case ARG_FPS:
-      smpte->fps = g_value_get_int (value);
-      break;
     case ARG_BORDER:
       smpte->border = g_value_get_int (value);
+      break;
+    case ARG_FPS:
+      smpte->fps = g_value_get_float (value);
       break;
     case ARG_DEPTH:
     {
@@ -443,7 +445,7 @@ gst_smpte_get_property (GObject *object, guint prop_id,
       }
       break;
     case ARG_FPS:
-      g_value_set_int (value, smpte->fps);
+      g_value_set_float (value, smpte->fps);
       break;
     case ARG_BORDER:
       g_value_set_int (value, smpte->border);

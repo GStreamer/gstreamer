@@ -44,28 +44,43 @@ GST_PAD_TEMPLATE_FACTORY(sink_template,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("divxenc_sink",
-               "video/raw",
-                 "format", GST_PROPS_LIST(
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','Y','U','V')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
-                           ),
-                 "width",  GST_PROPS_INT_RANGE(0, G_MAXINT),
-                 "height", GST_PROPS_INT_RANGE(0, G_MAXINT),
-                 NULL)
+  gst_caps_new(
+    "divxdec_src",
+    "video/x-raw-yuv",
+      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
+        GST_PROPS_LIST(
+          GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
+          GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
+          GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
+          GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
+          GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
+        )
+      )
+  ),
+  gst_caps_new(
+    "divxdec_src_rgb1",
+    "video/x-raw-rgb",
+      GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32
+  ),
+  gst_caps_new(
+    "divxdec_src_rgb2",
+    "video/x-raw-rgb",
+      GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16
+  )
 )
 
 GST_PAD_TEMPLATE_FACTORY(src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("divxenc_src",
-               "video/divx",
-                 NULL)
+  GST_CAPS_NEW(
+    "divxenc_sink",
+    "video/x-divx",
+      "divxversion", GST_PROPS_INT(5),
+      "width",       GST_PROPS_INT_RANGE(0, G_MAXINT),
+      "height",      GST_PROPS_INT_RANGE(0, G_MAXINT),
+      "framerate",   GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)
+  )
 )
 
 
@@ -246,10 +261,7 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   void *handle = NULL;
   SETTINGS output;
   DivXBitmapInfoHeader input;
-  gdouble fps;
   int ret;
-
-  fps = gst_video_frame_rate(GST_PAD_PEER(divxenc->sinkpad));
 
   /* set it up */
   memset(&input, 0, sizeof(DivXBitmapInfoHeader));
@@ -266,9 +278,9 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   output.use_bidirect = 0;
   output.input_clock = 0;
   output.input_frame_period = 1000000;
-  output.internal_timescale = fps * 1000000;
+  output.internal_timescale = divxenc->fps * 1000000;
   output.max_key_interval = (divxenc->max_key_interval == -1) ?
-                              (2 * fps) :
+                              (2 * divxenc->fps) :
                               divxenc->max_key_interval;
   output.key_frame_threshold = 0;
   output.vbv_bitrate = 0;
@@ -340,13 +352,6 @@ gst_divxenc_chain (GstPad    *pad,
 
   divxenc = GST_DIVXENC(GST_OBJECT_PARENT(pad));
 
-  if (!divxenc->handle) {
-    if (!gst_divxenc_setup(divxenc)) {
-      gst_buffer_unref(buf);
-      return;
-    }
-  }
-
   outbuf = gst_buffer_new_and_alloc(divxenc->buffer_size);
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
@@ -397,21 +402,21 @@ gst_divxenc_connect (GstPad  *pad,
     return GST_PAD_LINK_DELAYED;
 
   for (caps = vscaps; caps != NULL; caps = caps->next) {
-    int w,h,d;
+    gint w,h,d;
+    gfloat fps;
     guint32 fourcc;
     guint32 divx_cs;
     gint bitcnt = 0;
     gst_caps_get_int(caps, "width", &w);
     gst_caps_get_int(caps, "height", &h);
+    gst_caps_get_float(caps, "framerate", &fps);
     gst_caps_get_fourcc_int(caps, "format", &fourcc);
 
     switch (fourcc) {
       case GST_MAKE_FOURCC('I','4','2','0'):
-      case GST_MAKE_FOURCC('I','Y','U','V'):
         divx_cs = GST_MAKE_FOURCC('I','4','2','0');
         break;
       case GST_MAKE_FOURCC('Y','U','Y','2'):
-      case GST_MAKE_FOURCC('Y','U','Y','V'):
         divx_cs = GST_MAKE_FOURCC('Y','U','Y','2');
         break;
       case GST_MAKE_FOURCC('Y','V','1','2'):
@@ -442,18 +447,32 @@ gst_divxenc_connect (GstPad  *pad,
         goto trynext;
     }
 
-    /* grmbl, we only know the peer pad *after*
-     * linking, so we accept here, get the fps on
-     * the first cycle and set it all up then */
     divxenc->csp = divx_cs;
     divxenc->bitcnt = bitcnt;
     divxenc->width = w;
     divxenc->height = h;
-    return gst_pad_try_set_caps(divxenc->srcpad,
-                                GST_CAPS_NEW("divxenc_src_caps",
-                                             "video/divx",
-                                               "width",  GST_PROPS_INT(w),
-                                               "height", GST_PROPS_INT(h)));
+    divxenc->fps = fps;
+
+    /* try it */
+    if (gst_divxenc_setup(divxenc)) {
+      GstPadLinkReturn ret;
+      GstCaps *new_caps;
+
+      new_caps = GST_CAPS_NEW("divxenc_src_caps",
+                              "video/x-divx",
+			        "divxversion", GST_PROPS_INT(5),
+                                "width",       GST_PROPS_INT(w),
+                                "height",      GST_PROPS_INT(h),
+                                "framerate",   GST_PROPS_FLOAT(fps));
+
+      ret = gst_pad_try_set_caps(divxenc->srcpad, new_caps);
+
+      if (ret <= 0) {
+        gst_divxenc_unset(divxenc);
+      }
+
+      return ret;
+    }
 
 trynext:
     continue;

@@ -82,7 +82,7 @@ GstElementDetails ivorbisfile_details =
   "GPL",
   "Decodes OGG Vorbis audio using the Tremor vorbisfile API",
   VERSION,
-  "Monty <monty@xiph.org>, " 
+  "Monty <monty@xiph.org>\n" 
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2000",
 };
@@ -448,26 +448,24 @@ static gboolean
 gst_ivorbisfile_new_link (Ivorbisfile *ivorbisfile, gint link)
 {
   vorbis_info *vi = ov_info (&ivorbisfile->vf, link);
+  GstCaps *newcaps;
 
   /* new logical bitstream */
   ivorbisfile->current_link = link;
 
   gst_ivorbisfile_update_metadata (ivorbisfile, link);
   gst_ivorbisfile_update_streaminfo (ivorbisfile, link);
-      
-  if (gst_pad_try_set_caps (ivorbisfile->srcpad,
-                   GST_CAPS_NEW ("vorbisdec_src",
-                                   "audio/raw",    
-                                     "format",     GST_PROPS_STRING ("int"),
-                                     "law",        GST_PROPS_INT (0),
-                                     "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                                     "signed",     GST_PROPS_BOOLEAN (TRUE),
-                                     "width",      GST_PROPS_INT (16),
-                                     "depth",      GST_PROPS_INT (16),
-                                     "rate",       GST_PROPS_INT (vi->rate),
-                                     "channels",   GST_PROPS_INT (vi->channels)
-                                )) <= 0) 
-  {
+
+  newcaps = GST_CAPS_NEW ("vorbisdec_src",
+                          "audio/x-raw-int",    
+                            "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                            "signed",     GST_PROPS_BOOLEAN (TRUE),
+                            "width",      GST_PROPS_INT (16),
+                            "depth",      GST_PROPS_INT (16),
+                            "rate",       GST_PROPS_INT (vi->rate),
+                            "channels",   GST_PROPS_INT (vi->channels)
+                          );
+  if (gst_pad_try_set_caps (ivorbisfile->srcpad, newcaps) <= 0) {
      return FALSE;
   }
 

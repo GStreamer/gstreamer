@@ -4,6 +4,7 @@
 #include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 
 #define GST_TYPE_MIXMATRIX \
@@ -75,14 +76,10 @@ GST_PAD_TEMPLATE_FACTORY (mixmatrix_sink_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "float_src",
-    "audio/raw",
-    "format",	GST_PROPS_STRING ("float"),
-    "layout",   GST_PROPS_STRING ("gfloat"),
-    "intercept", GST_PROPS_FLOAT (0.0),
-    "slope",	GST_PROPS_FLOAT (1.0),
-    "channels", GST_PROPS_INT (1)
+    "audio/x-raw-float",
+    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
   )
 );
 
@@ -90,14 +87,10 @@ GST_PAD_TEMPLATE_FACTORY (mixmatrix_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "float_sink",
-    "audio/raw",
-    "format",	GST_PROPS_STRING ("float"),
-    "layout",   GST_PROPS_STRING ("gfloat"),
-    "intercept", GST_PROPS_FLOAT (0.0),
-    "slope",	GST_PROPS_FLOAT (1.0),
-    "channels", GST_PROPS_INT (1)
+    "audio/x-raw-float",
+    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
   )
 );
 
@@ -316,7 +309,7 @@ gst_mixmatrix_connect (GstPad *pad, GstCaps *caps)
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i]) {
       if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->srcpads[i], caps) <= 0) 
+        if (gst_pad_try_set_caps(mix->srcpads[i], gst_caps_ref (caps)) <= 0) 
 	  return GST_PAD_LINK_REFUSED;
     }
   }

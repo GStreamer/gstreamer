@@ -131,7 +131,8 @@ gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
   if (gst_pad_try_set_caps (gsmenc->srcpad, GST_CAPS_NEW (
                               "gsm_gsm",
                               "audio/x-gsm",
-                                "rate",       GST_PROPS_INT (gsmenc->rate)
+                                "rate",     GST_PROPS_INT (gsmenc->rate),
+                                "channels", GST_PROPS_INT (1)
                                )) > 0)
   {
     return GST_PAD_LINK_OK;
@@ -158,7 +159,8 @@ gst_gsmenc_chain (GstPad *pad, GstBuffer *buf)
 		      GST_CAPS_NEW (
     			"gsm_enc",
     			"audio/x-gsm",
-    		 	"rate",  GST_PROPS_INT (gsmenc->rate)
+    		 	"rate",     GST_PROPS_INT (gsmenc->rate),
+                        "channels", GST_PROPS_INT (1)
 		      ));
   }
   

@@ -35,8 +35,8 @@ tarkin_caps_factory (void)
   return
    gst_caps_new (
   	"tarkin_tarkin",
-  	"video/x-ogg",
-  	NULL);
+  	"application/ogg",
+	  NULL);
 }
 
 static GstCaps*
@@ -45,8 +45,7 @@ raw_caps_factory (void)
   return
    GST_CAPS_NEW (
     "tarkin_raw",
-    "video/raw",
-      "format",     GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+    "video/x-raw-rgb",
       "bpp",        GST_PROPS_INT (24),
       "depth",      GST_PROPS_INT (24),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
@@ -54,14 +53,15 @@ raw_caps_factory (void)
       "green_mask", GST_PROPS_INT (0xff00),
       "blue_mask",  GST_PROPS_INT (0xff),
       "width",      GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height",     GST_PROPS_INT_RANGE (0, G_MAXINT)
+      "height",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+      "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
    );
 }
 
 static GstTypeDefinition tarkindefinition = 
 {
   "tarkin_video/x-ogg",
-  "video/x-ogg",
+  "application/ogg",
   ".ogg",
   tarkin_type_find,
 };
@@ -77,7 +77,7 @@ tarkin_type_find (GstBuffer *buf, gpointer private)
   if (head  != 0x4F676753)
     return NULL;
 
-  return gst_caps_new ("tarkin_type_find", "video/x-ogg", NULL);
+  return gst_caps_new ("tarkin_type_find", "application/ogg", NULL);
 }
 
 
@@ -88,7 +88,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
   GstCaps *raw_caps, *tarkin_caps;
 
-  gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
+  gst_plugin_set_longname (plugin, "The OGG Tarkin Codec");
 
   /* create an elementfactory for the tarkinenc element */
   enc = gst_element_factory_new ("tarkinenc", GST_TYPE_TARKINENC,

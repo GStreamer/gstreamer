@@ -43,7 +43,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_FRAME_RATE,
   /* FILL ME */
 };
 
@@ -53,8 +52,7 @@ GST_PAD_TEMPLATE_FACTORY (video_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "swfdec_videosrc",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
+    "video/x-raw-rgb",
       "width",		GST_PROPS_INT_RANGE (16, 4096),
       "height",		GST_PROPS_INT_RANGE (16, 4096),
       "bpp",		GST_PROPS_INT (24),
@@ -62,7 +60,8 @@ GST_PAD_TEMPLATE_FACTORY (video_template_factory,
       "endianness",	GST_PROPS_INT (G_BIG_ENDIAN),
       "red_mask",	GST_PROPS_INT (0xff0000),
       "green_mask",	GST_PROPS_INT (0x00ff00),
-      "blue_mask",	GST_PROPS_INT (0x0000ff)
+      "blue_mask",	GST_PROPS_INT (0x0000ff),
+      "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 );
 
@@ -72,9 +71,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "swfdec_audiosrc",
-    "audio/raw",
-      "format",		GST_PROPS_STRING("int"),
-      "law",		GST_PROPS_INT(0),
+    "audio/x-raw-int",
       "endianness",	GST_PROPS_INT(G_BYTE_ORDER),
       "signed",		GST_PROPS_BOOLEAN(TRUE),
       "width",		GST_PROPS_INT(16),
@@ -156,10 +153,6 @@ gst_swfdec_class_init(GstSwfdecClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_RATE,
-    g_param_spec_float ("frame_rate","frame_rate","frame_rate",
-                        0.0, 1000.0, 0.0, G_PARAM_READABLE)); 
-  
   gobject_class->set_property 	= gst_swfdec_set_property;
   gobject_class->get_property 	= gst_swfdec_get_property;
   gobject_class->dispose 	= gst_swfdec_dispose;
@@ -176,8 +169,7 @@ static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad, GstCaps *caps)
 
   c = GST_CAPS_NEW (
     "swfdec_videosrc",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
+    "video/x-raw-rgb",
       "width",		GST_PROPS_INT_RANGE (16, 4096),
       "height",		GST_PROPS_INT_RANGE (16, 4096),
       "bpp",		GST_PROPS_INT (24),
@@ -185,7 +177,8 @@ static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad, GstCaps *caps)
       "endianness",	GST_PROPS_INT (G_BIG_ENDIAN),
       "red_mask",	GST_PROPS_INT (0xff0000),
       "green_mask",	GST_PROPS_INT (0x00ff00),
-      "blue_mask",	GST_PROPS_INT (0x0000ff)
+      "blue_mask",	GST_PROPS_INT (0x0000ff),
+      "framerate",	GST_PROPS_FLOAT (swfdec->frame_rate)
   );
 
   if(swfdec->height){
@@ -318,6 +311,8 @@ gst_swfdec_init (GstSwfdec *swfdec)
   swfdec_decoder_set_colorspace(swfdec->state, SWF_COLORSPACE_RGB888);
 
   GST_FLAG_SET (GST_ELEMENT (swfdec), GST_ELEMENT_EVENT_AWARE);
+
+  swfdec->frame_rate = 0.;
 }
 
 static void
@@ -626,9 +621,6 @@ gst_swfdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   swfdec = GST_SWFDEC (object);
 
   switch (prop_id) {
-    case ARG_FRAME_RATE:
-      g_value_set_float (value, swfdec->frame_rate);
-      break;
     default:
       break;
   }

@@ -58,10 +58,11 @@ GST_PAD_TEMPLATE_FACTORY (deinterlace_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
    "deinterlace_src",
-   "video/raw",
+   "video/x-raw-yuv",
      "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
      "width",    GST_PROPS_INT_POSITIVE,
-     "height",   GST_PROPS_INT_POSITIVE
+     "height",   GST_PROPS_INT_POSITIVE,
+     "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 )
 
@@ -71,10 +72,11 @@ GST_PAD_TEMPLATE_FACTORY (deinterlace_sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
    "deinterlace_src",
-   "video/raw",
+   "video/x-raw-yuv",
      "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
      "width",    GST_PROPS_INT_POSITIVE,
-     "height",   GST_PROPS_INT_POSITIVE
+     "height",   GST_PROPS_INT_POSITIVE,
+     "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 )
 
@@ -160,7 +162,7 @@ gst_deinterlace_sinkconnect (GstPad *pad, GstCaps *caps)
     filter->picsize = filter->width*filter->height;
     filter->src = g_malloc(filter->picsize);
   }
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+  return gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
 }
 
 static void

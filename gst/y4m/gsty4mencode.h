@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_LAVENCODE_H__
-#define __GST_LAVENCODE_H__
+#ifndef __GST_Y4MENCODE_H__
+#define __GST_Y4MENCODE_H__
 
 
 #include <config.h>
@@ -32,40 +32,41 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_LAVENCODE \
-  (gst_lavencode_get_type())
-#define GST_LAVENCODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LAVENCODE,GstLavEncode))
-#define GST_LAVENCODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstLavEncode))
-#define GST_IS_LAVENCODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LAVENCODE))
-#define GST_IS_LAVENCODE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LAVENCODE))
+#define GST_TYPE_Y4MENCODE \
+  (gst_y4mencode_get_type())
+#define GST_Y4MENCODE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_Y4MENCODE,GstY4mEncode))
+#define GST_Y4MENCODE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstY4mEncode))
+#define GST_IS_Y4MENCODE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_Y4MENCODE))
+#define GST_IS_Y4MENCODE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_Y4MENCODE))
 
-typedef struct _GstLavEncode GstLavEncode;
-typedef struct _GstLavEncodeClass GstLavEncodeClass;
+typedef struct _GstY4mEncode GstY4mEncode;
+typedef struct _GstY4mEncodeClass GstY4mEncodeClass;
 
-struct _GstLavEncode {
+struct _GstY4mEncode {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
 
   gint width, height;
+  gfloat fps_idx;
 
   gboolean init;
 
 };
 
-struct _GstLavEncodeClass {
+struct _GstY4mEncodeClass {
   GstElementClass parent_class;
 };
 
-GType gst_lavencode_get_type(void);
+GType gst_y4mencode_get_type(void);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 
-#endif /* __GST_STEREO_H__ */
+#endif /* __GST_Y4MENCODE_H__ */

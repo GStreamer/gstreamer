@@ -94,6 +94,8 @@ GST_PAD_TEMPLATE_FACTORY (dxr3videosink_sink_factory,
 	                  GST_PROPS_INT (2)
                         ),
       "systemstream",	GST_PROPS_BOOLEAN (FALSE)
+      /* width/height/framerate omitted, we don't
+       * need a parsed stream */
   )
 )
 

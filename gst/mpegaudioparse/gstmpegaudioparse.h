@@ -53,6 +53,7 @@ struct _GstMPEGAudioParse {
   GstBuffer *partialbuf;	/* previous buffer (if carryover) */
   guint skip; /* number of frames to skip */
   guint bit_rate;
+  gint channels, rate, layer;
   gboolean in_flush;
 };
 

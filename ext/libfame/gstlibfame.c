@@ -22,8 +22,10 @@
 #endif
 #include <fame.h>
 #include <string.h>
+#include <math.h>
 
 #include "gstlibfame.h"
+#include <gst/video/video.h>
 
 #define FAMEENC_BUFFER_SIZE (300 * 1024) 
 
@@ -50,7 +52,6 @@ enum {
 enum {
   ARG_0,
   ARG_VERSION,
-  ARG_FRAMERATE,
   ARG_BITRATE,
   ARG_QUALITY,
   ARG_PATTERN,
@@ -66,12 +67,11 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "fameenc_sink_caps",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096)
+    "video/x-raw-yuv",
+      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')))
   )
 )
 
@@ -82,13 +82,27 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_CAPS_NEW (
     "fameenc_src_caps",
     "video/mpeg",
-      "mpegversion", GST_PROPS_LIST (
-	  GST_PROPS_INT (1), GST_PROPS_INT (4)),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
+      "mpegversion",  GST_PROPS_LIST (
+			GST_PROPS_INT (1),
+			GST_PROPS_INT (4)
+		      ),
+      "systemstream", GST_PROPS_BOOLEAN (FALSE),
+      "width",        GST_PROPS_INT_RANGE (16, 4096),
+      "height",       GST_PROPS_INT_RANGE (16, 4096),
+      "framerate",    GST_PROPS_LIST (
+			GST_PROPS_FLOAT (24/1.001),
+			GST_PROPS_FLOAT (24.),
+			GST_PROPS_FLOAT (25.),
+			GST_PROPS_FLOAT (30/1.001),
+			GST_PROPS_FLOAT (30.),
+			GST_PROPS_FLOAT (50.),
+			GST_PROPS_FLOAT (60/1.001),
+			GST_PROPS_FLOAT (60.)
+		      )
   )
 );
 
-#define MAX_FRAME_RATES  16
+#define MAX_FRAME_RATES  9
 typedef struct
 {
   gint num;
@@ -106,46 +120,30 @@ static const frame_rate_entry frame_rates[] =
   { 50, 1 },
   { 60000, 1001 },
   { 60, 1 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
 };
 
 static gint
-framerate_to_index (num, den)
+framerate_to_index (gfloat fps)
 {
   gint i;
+  gint idx = -1;
   
-  for (i = 0; i < MAX_FRAME_RATES; i++) {
-    if (frame_rates[i].num == num && frame_rates[i].den == den)
-      return i;
-  }
-  return 0;
-}
+  for (i = 1; i < MAX_FRAME_RATES; i++) {
+    if (idx == -1) {
+      idx = i;
+    } else {
+      gfloat old_diff = fabs((1. * frame_rates[idx].num /
+				frame_rates[idx].den) - fps),
+             new_diff = fabs((1. * frame_rates[i].num /
+				frame_rates[i].den) - fps);
 
-#define GST_TYPE_FAMEENC_FRAMERATE (gst_fameenc_framerate_get_type())
-static GType
-gst_fameenc_framerate_get_type(void) {
-  static GType fameenc_framerate_type = 0;
-  static GEnumValue fameenc_framerate[] = {
-    {1, "1", "24000/1001 (23.97)"},
-    {2, "2", "24"},
-    {3, "3", "25"},
-    {4, "4", "30000/1001 (29.97)"},
-    {5, "5", "30"},
-    {6, "6", "50"},
-    {7, "7", "60000/1001 (59.94)"},
-    {8, "8", "60"},
-    {0, NULL, NULL},
-  };
-  if (!fameenc_framerate_type) {
-    fameenc_framerate_type = g_enum_register_static("GstFameEncFrameRate", fameenc_framerate);
+      if (new_diff < old_diff) {
+        idx = i;
+      }
+    }
   }
-  return fameenc_framerate_type;
+
+  return idx;
 }
 
 static void	gst_fameenc_class_init		(GstFameEncClass *klass);
@@ -275,9 +273,6 @@ gst_fameenc_class_init (GstFameEncClass *klass)
     }
   }
 
-  g_object_class_install_property (gobject_class, ARG_FRAMERATE,
-    g_param_spec_enum ("framerate", "Frame Rate", "Number of frames per second",
-                       GST_TYPE_FAMEENC_FRAMERATE, 3, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
     g_param_spec_int ("bitrate", "Bitrate", "Target bitrate (0 = VBR)",
                       0, 5000000, 0, G_PARAM_READWRITE));
@@ -302,7 +297,8 @@ gst_fameenc_class_init (GstFameEncClass *klass)
 static GstPadLinkReturn
 gst_fameenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
-  gint width, height;
+  gint width, height, fps_idx;
+  gfloat fps;
   GstFameEnc *fameenc;
 
   fameenc = GST_FAMEENC (gst_pad_get_parent (pad));
@@ -317,10 +313,16 @@ gst_fameenc_sinkconnect (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "width", &width);
   gst_caps_get_int (caps, "height", &height);
+  gst_caps_get_float (caps, "framerate", &fps);
   
   /* fameenc requires width and height to be multiples of 16 */
   if (width % 16 != 0 || height % 16 != 0)
     return GST_PAD_LINK_REFUSED;
+
+  fps_idx = framerate_to_index (fps);
+  fameenc->fp.frame_rate_num = frame_rates[fps_idx].num;
+  fameenc->fp.frame_rate_den = frame_rates[fps_idx].den;
+  fameenc->time_interval = 0;
 
   fameenc->fp.width = width;
   fameenc->fp.height = height;
@@ -445,7 +447,7 @@ gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
       g_warning ("FAMEENC_BUFFER_SIZE is defined too low, encoded slice has size %d !\n", length);
 
     if (!fameenc->time_interval) {
-  	fameenc->time_interval = GST_SECOND / fameenc->fp.frame_rate_num;
+  	fameenc->time_interval = GST_SECOND * fameenc->fp.frame_rate_den / fameenc->fp.frame_rate_num;
     }
 
     fameenc->next_time += fameenc->time_interval;
@@ -482,15 +484,6 @@ gst_fameenc_set_property (GObject *object, guint prop_id,
   }
 
   switch (prop_id) {
-    case ARG_FRAMERATE:
-    {
-      gint index = g_value_get_enum (value);
-
-      fameenc->fp.frame_rate_num = frame_rates[index].num;
-      fameenc->fp.frame_rate_den = frame_rates[index].den;
-      fameenc->time_interval = 0;
-      break;
-    }
     case ARG_BITRATE:
       fameenc->fp.bitrate = g_value_get_int (value);
       break;
@@ -537,13 +530,6 @@ gst_fameenc_get_property (GObject *object, guint prop_id,
   fameenc = GST_FAMEENC (object);
 
   switch (prop_id) {
-    case ARG_FRAMERATE:
-    {
-      gint index = framerate_to_index (fameenc->fp.frame_rate_num, 
-		                       fameenc->fp.frame_rate_den);
-      g_value_set_enum (value, index);
-      break;
-    }
     case ARG_BITRATE:
       g_value_set_int (value, fameenc->fp.bitrate);
       break;

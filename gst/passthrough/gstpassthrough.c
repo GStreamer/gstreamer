@@ -61,9 +61,9 @@ passthrough_sink_factory (void)
   if (! template) {                        
     template = gst_pad_template_new 
       ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_append (gst_caps_new ("sink_int",  "audio/raw",
+      gst_caps_append (gst_caps_new ("sink_int",  "audio/x-raw-int",
                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-                       gst_caps_new ("sink_float", "audio/raw",
+                       gst_caps_new ("sink_float", "audio/x-raw-float",
                                      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)),
       NULL);
   }                                       
@@ -78,9 +78,9 @@ passthrough_src_factory (void)
   if (! template)
     template = gst_pad_template_new 
       ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-       gst_caps_append (gst_caps_new ("src_float", "audio/raw",
+       gst_caps_append (gst_caps_new ("src_float", "audio/x-raw-float",
                                       GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
-                        gst_caps_new ("src_int", "audio/raw",
+                        gst_caps_new ("src_int", "audio/x-raw-float",
                                       GST_AUDIO_INT_PAD_TEMPLATE_PROPS)),
        NULL);
   
@@ -115,7 +115,7 @@ passthrough_get_bufferpool (GstPad *pad)
 static GstPadLinkReturn
 passthrough_connect_sink (GstPad *pad, GstCaps *caps)
 {
-  const gchar *format;
+  const gchar *mimetype;
   GstPassthrough *filter;
   
   g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_DELAYED);
@@ -125,12 +125,12 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PASSTHROUGH (filter), GST_PAD_LINK_REFUSED);
 
-  gst_caps_get_string(caps, "format", &format);
+  mimetype = gst_caps_get_mime(caps);
   
   gst_caps_get_int (caps, "rate", &filter->rate);
   gst_caps_get_int (caps, "channels", &filter->channels);
   
-  if (strcmp (format, "int") == 0) {
+  if (strcmp (mimetype, "audio/x-raw-int") == 0) {
     filter->format        = GST_PASSTHROUGH_FORMAT_INT;
     gst_caps_get_int	 (caps, "width",      &filter->width);
     gst_caps_get_int	 (caps, "depth",      &filter->depth);
@@ -144,7 +144,7 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
       g_print ("Passthrough : format int, bit width %d, endianness %d, signed %s\n",
                filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
     }
-  } else if (strcmp (format, "float") == 0) {
+  } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
     filter->format     = GST_PASSTHROUGH_FORMAT_FLOAT;
     gst_caps_get_string (caps, "layout",    &filter->layout);
     gst_caps_get_float  (caps, "intercept", &filter->intercept);

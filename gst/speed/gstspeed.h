@@ -85,8 +85,6 @@ struct _GstSpeed {
   
   /* the next three are valid only for format==GST_SPEED_FORMAT_FLOAT */
   
-  const gchar *layout;
-  
   gfloat slope;
   
   gfloat intercept;

@@ -68,11 +68,7 @@ GST_PAD_TEMPLATE_FACTORY (dxr3spusink_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dxr3spusink_sink",
-    "video/mpeg",
-    NULL
-  )
+  NULL
 );
 
 

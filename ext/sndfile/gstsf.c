@@ -67,13 +67,13 @@ GST_PAD_TEMPLATE_FACTORY (sf_src_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sf_src",
-    "audio/raw",
+    "audio/x-raw-float",
     "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "format",     GST_PROPS_STRING ("float"),
-    "layout",     GST_PROPS_STRING ("gfloat"),
     "intercept",  GST_PROPS_FLOAT(0.0),
     "slope",      GST_PROPS_FLOAT(1.0),
-    "channels",   GST_PROPS_INT (1)
+    "channels",   GST_PROPS_INT (1),
+    "width",	  GST_PROPS_INT (32),
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
   )
 );
 
@@ -83,13 +83,13 @@ GST_PAD_TEMPLATE_FACTORY (sf_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sf_sink",
-    "audio/raw",
+    "audio/x-raw-float",
     "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "format",     GST_PROPS_STRING ("float"),
-    "layout",     GST_PROPS_STRING ("gfloat"),
     "intercept",  GST_PROPS_FLOAT(0.0),
     "slope",      GST_PROPS_FLOAT(1.0),
-    "channels",   GST_PROPS_INT (1)
+    "channels",   GST_PROPS_INT (1),
+    "width",	  GST_PROPS_INT (32),
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
   )
 );
 

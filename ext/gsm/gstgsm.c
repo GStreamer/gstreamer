@@ -32,16 +32,15 @@ GST_CAPS_FACTORY (gsm_caps_factory,
   GST_CAPS_NEW (
     "gsm_gsm",
     "audio/x-gsm",
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000)
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
   )
 )
 
 GST_CAPS_FACTORY (raw_caps_factory,
   GST_CAPS_NEW (
     "gsm_raw",
-    "audio/raw",
-    "format",       GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_BOOLEAN (TRUE),
       "width",      GST_PROPS_INT (16),

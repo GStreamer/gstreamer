@@ -44,20 +44,29 @@ GST_PAD_TEMPLATE_FACTORY(sink_template,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("xvidenc_sink",
-               "video/raw",
-                 "format", GST_PROPS_LIST(
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','Y','U','V')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','Y','U')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
-                           ),
-                 "width",  GST_PROPS_INT_RANGE(0, G_MAXINT),
-                 "height", GST_PROPS_INT_RANGE(0, G_MAXINT),
-                 NULL)
+  gst_caps_new(
+    "xvidenc_sink",
+    "video/x-raw-yuv",
+    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+      GST_PROPS_LIST(
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','Y','U')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
+      )
+    )
+  ),
+  gst_caps_new(
+    "xvidenc_sink_rgb24_32",
+    "video/x-raw-rgb",
+    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32
+  ),
+  gst_caps_new(
+    "xvidenc_sink_rgb15_16",
+    "video/x-raw-rgb",
+    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16
+  )
 )
 
 GST_PAD_TEMPLATE_FACTORY(src_template,
@@ -65,8 +74,10 @@ GST_PAD_TEMPLATE_FACTORY(src_template,
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW("xvidenc_src",
-               "video/xvid",
-                 NULL)
+               "video/x-xvid",
+                 "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+		 "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
+		 "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT))
 )
 
 
@@ -202,17 +213,14 @@ static gboolean
 gst_xvidenc_setup (GstXvidEnc *xvidenc)
 {
   XVID_ENC_PARAM xenc;
-  gdouble fps;
   int ret;
-
-  fps = gst_video_frame_rate(GST_PAD_PEER(xvidenc->sinkpad));
 
   /* set up xvid codec parameters - grab docs from
    * xvid.org for more info */
   memset(&xenc, 0, sizeof(XVID_ENC_PARAM));
   xenc.width = xvidenc->width;
   xenc.height = xvidenc->height;
-  xenc.fincr = (int)(fps * 1000);
+  xenc.fincr = (int)(xvidenc->fps * 1000);
   xenc.fbase = 1000;
   xenc.rc_bitrate = xvidenc->bitrate;
   xenc.rc_reaction_delay_factor = -1;
@@ -253,13 +261,6 @@ gst_xvidenc_chain (GstPad    *pad,
   g_return_if_fail(buf != NULL);
 
   xvidenc = GST_XVIDENC(GST_OBJECT_PARENT(pad));
-
-  if (!xvidenc->handle) {
-    if (!gst_xvidenc_setup(xvidenc)) {
-      gst_buffer_unref(buf);
-      return;
-    }
-  }
 
   outbuf = gst_buffer_new_and_alloc(xvidenc->buffer_size);
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
@@ -326,11 +327,17 @@ gst_xvidenc_connect (GstPad  *pad,
   for (caps = vscaps; caps != NULL; caps = caps->next)
   {
     int w,h,d;
+    float fps;
     guint32 fourcc;
     gint xvid_cs;
+
     gst_caps_get_int(caps, "width", &w);
     gst_caps_get_int(caps, "height", &h);
-    gst_caps_get_fourcc_int(caps, "format", &fourcc);
+    gst_caps_get_float(caps, "framerate", &fps);
+    if (gst_caps_has_property(caps, "format"))
+      gst_caps_get_fourcc_int(caps, "format", &fourcc);
+    else
+      fourcc = GST_MAKE_FOURCC('R','G','B',' ');
 
     switch (fourcc)
     {
@@ -373,17 +380,32 @@ gst_xvidenc_connect (GstPad  *pad,
         goto trynext;
     }
 
-    /* grmbl, we only know the peer pad *after*
-     * linking, so we accept here, get the fps on
-     * the first cycle and set it all up then */
     xvidenc->csp = xvid_cs;
     xvidenc->width = w;
     xvidenc->height = h;
-    return gst_pad_try_set_caps(xvidenc->srcpad,
-                                GST_CAPS_NEW("xvidenc_src_caps",
-                                             "video/xvid",
-                                               "width",  GST_PROPS_INT(w),
-                                               "height", GST_PROPS_INT(h)));
+    xvidenc->fps = fps;
+
+    if (gst_xvidenc_setup(xvidenc)) {
+      GstPadLinkReturn ret;
+      GstCaps *new_caps;
+
+      new_caps = GST_CAPS_NEW("xvidenc_src_caps",
+                              "video/x-xvid",
+                                 "width",  GST_PROPS_INT(w),
+                                 "height", GST_PROPS_INT(h),
+			         "framerate", GST_PROPS_FLOAT (fps));
+
+      ret = gst_pad_try_set_caps(xvidenc->srcpad, new_caps);
+
+      if (ret <= 0) {
+        if (xvidenc->handle) {
+          xvid_encore(xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
+          xvidenc->handle = NULL;
+        }
+      }
+
+      return ret;
+    }
 
 trynext:
     continue;

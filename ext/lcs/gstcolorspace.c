@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <lcs/lcs.h>
 
 #define GST_TYPE_COLORSPACE \
@@ -51,6 +52,7 @@ struct _GstColorspace {
   
   GstColorSpaceConverterType type;
   gint 		width, height;
+  gfloat	fps;
   gboolean 	disabled;
 
   GstCaps	*sinkcaps;
@@ -86,42 +88,6 @@ enum {
   ARG_DEST,
 };
 
-GST_PAD_TEMPLATE_FACTORY (colorspace_src_template_factory,
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "colorspace_src",
-    "video/raw",
-      "format",		GST_PROPS_LIST (
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
-	                ),
-      "width", 		GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height",		GST_PROPS_INT_RANGE (0, G_MAXINT) 
-  )
-)
-
-GST_PAD_TEMPLATE_FACTORY (colorspace_sink_template_factory,
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "colorspace_sink",
-    "video/raw",
-      "format",		GST_PROPS_LIST (
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
-	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
-	                ),
-      "width", 		GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height",		GST_PROPS_INT_RANGE (0, G_MAXINT) 
-  )
-)
-
 static GType 		gst_colorspace_get_type 		(void);
 
 static void		gst_colorspace_class_init		(GstColorspaceClass *klass);
@@ -142,6 +108,7 @@ static void		gst_colorspace_chain			(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn
 			gst_colorspace_change_state 		(GstElement *element);
 
+static GstPadTemplate *srctempl, *sinktempl;
 static GstElementClass *parent_class = NULL;
 /*static guint gst_colorspace_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -207,8 +174,15 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
   g_return_val_if_fail (to_caps != NULL, FALSE);
   g_return_val_if_fail (from_caps != NULL, FALSE);
 
-  gst_caps_get_fourcc_int (from_caps, "format", &from_space);
-  gst_caps_get_fourcc_int (to_caps, "format", &to_space);
+  if (gst_caps_has_property (from_caps, "format"))
+    gst_caps_get_fourcc_int (from_caps, "format", &from_space);
+  else
+    from_space = GST_MAKE_FOURCC ('R','G','B',' ');
+
+  if (gst_caps_has_property (to_caps, "format"))
+    gst_caps_get_fourcc_int (to_caps, "format", &to_space);
+  else
+    to_space = GST_MAKE_FOURCC ('R','G','B',' ');
 
   from_format 	= colorspace_find_lcs_format (from_caps);
   to_format 	= colorspace_find_lcs_format (to_caps);
@@ -260,6 +234,7 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "width", &space->width);
   gst_caps_get_int (caps, "height", &space->height);
+  gst_caps_get_float (caps, "framerate", &space->fps);
 
   GST_INFO ( "size: %dx%d", space->width, space->height);
 
@@ -313,12 +288,20 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   }
   /* then see what the peer has that matches the size */
   peercaps = gst_caps_intersect (caps,
+		  gst_caps_append (
 		  GST_CAPS_NEW (
 		   "colorspace_filter",
-		   "video/raw",
-		     "width",   GST_PROPS_INT (space->width),
-		     "height",  GST_PROPS_INT (space->height)
-		  ));
+		   "video/x-raw-yuv",
+		     "width",     GST_PROPS_INT (space->width),
+		     "height",    GST_PROPS_INT (space->height),
+		     "framerate", GST_PROPS_FLOAT (space->fps)
+		  ), GST_CAPS_NEW (
+		   "colorspace_filter",
+		   "video/x-raw-rgb",
+		     "width",     GST_PROPS_INT (space->width),
+		     "height",    GST_PROPS_INT (space->height),
+		     "framerate", GST_PROPS_FLOAT (space->fps)
+		  )));
 
   /* we are looping over the caps, so we have to get rid of the lists */
   peercaps = gst_caps_normalize (peercaps);
@@ -384,16 +367,14 @@ gst_colorspace_class_init (GstColorspaceClass *klass)
 static void
 gst_colorspace_init (GstColorspace *space)
 {
-  space->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (colorspace_sink_template_factory), "sink");
+  space->sinkpad = gst_pad_new_from_template (sinktempl, "sink");
   gst_pad_set_link_function (space->sinkpad, gst_colorspace_sinkconnect);
   gst_pad_set_getcaps_function (space->sinkpad, gst_colorspace_getcaps);
   gst_pad_set_bufferpool_function (space->sinkpad, colorspace_get_bufferpool);
   gst_pad_set_chain_function(space->sinkpad,gst_colorspace_chain);
   gst_element_add_pad(GST_ELEMENT(space),space->sinkpad);
 
-  space->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (colorspace_src_template_factory), "src");
+  space->srcpad = gst_pad_new_from_template (srctempl, "src");
   gst_element_add_pad(GST_ELEMENT(space),space->srcpad);
   gst_pad_set_link_function (space->srcpad, gst_colorspace_srcconnect);
 
@@ -511,17 +492,44 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  GstCaps *caps;
 
   lcs_init (NULL, NULL);
 
   factory = gst_element_factory_new ("colorspacelcs", GST_TYPE_COLORSPACE,
                                     &colorspace_details);
   g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (colorspace_src_template_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (colorspace_sink_template_factory));
+
+  /* create caps for templates */
+  caps = gst_caps_new ("csp_templ_yuv",
+                       "video/x-raw-yuv",
+	               GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+                         GST_PROPS_LIST (
+                           GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
+	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")))));
+  caps = gst_caps_append (caps,
+         gst_caps_new ("csp_templ_rgb24_32",
+                       "video/x-raw-rgb",
+                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32));
+  caps = gst_caps_append (caps,
+         gst_caps_new ("csp_templ_rgb15_16",
+                       "video/x-raw-rgb",
+                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16));
+
+  /* build templates */
+  srctempl  = gst_pad_template_new ("src",
+				    GST_PAD_SRC,
+				    GST_PAD_ALWAYS,
+				    caps, NULL);
+  gst_caps_ref (caps);
+  sinktempl = gst_pad_template_new ("sink",
+				    GST_PAD_SINK,
+				    GST_PAD_ALWAYS,
+				    caps, NULL);
+
+  gst_element_factory_add_pad_template (factory, srctempl);
+  gst_element_factory_add_pad_template (factory, sinktempl);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
@@ -534,11 +542,3 @@ GstPluginDesc plugin_desc = {
   "colorspacelcs",
   plugin_init
 };
-
-
-
-
-
-
-
-

@@ -22,6 +22,7 @@
 #endif
 #include <string.h>
 #include <gstsmooth.h>
+#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails smooth_details = {
@@ -53,10 +54,11 @@ GST_PAD_TEMPLATE_FACTORY (smooth_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "smooth_src",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
+	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
@@ -64,10 +66,11 @@ GST_PAD_TEMPLATE_FACTORY (smooth_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "smooth_src",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
+	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
@@ -144,7 +147,7 @@ gst_smooth_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
 
-  return GST_PAD_LINK_OK;
+  return gst_pad_try_set_caps (filter->srcpad, caps);
 }
 
 static void

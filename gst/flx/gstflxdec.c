@@ -24,6 +24,7 @@
 
 #include "flx_fmt.h"
 #include "gstflxdec.h"
+#include <gst/video/video.h>
 
 #define JIFFIE  (GST_SECOND/70)
 
@@ -64,7 +65,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "flxdec_sink",         
-    "video/fli",
+    "video/x-fli",
      NULL
   )
 )
@@ -76,16 +77,16 @@ GST_PAD_TEMPLATE_FACTORY (src_video_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "src_video",
-    "video/raw",
-      "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R', 'G', 'B', ' ')),
+    "video/x-raw-rgb",
         "bpp",        GST_PROPS_INT (32),
         "depth",      GST_PROPS_INT (32),
-        "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN),
-        "red_mask",   GST_PROPS_INT (0x00ff0000),
-        "green_mask", GST_PROPS_INT (0x0000ff00),
-        "blue_mask",  GST_PROPS_INT (0x000000ff),
+        "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+        "red_mask",   GST_PROPS_INT (R_MASK_32),
+        "green_mask", GST_PROPS_INT (G_MASK_32),
+        "blue_mask",  GST_PROPS_INT (B_MASK_32),
         "width",      GST_PROPS_INT_RANGE(320, 1280), 
-        "height",     GST_PROPS_INT_RANGE(200, 1024)
+        "height",     GST_PROPS_INT_RANGE(200, 1024),
+        "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 )
 
@@ -520,20 +521,18 @@ gst_flxdec_loop (GstElement *element)
     }
     
     gst_pad_try_set_caps (flxdec->srcpad,
-  		gst_caps_new (
+  		GST_CAPS_NEW (
   	  	  "src_video",
-	  	  "video/raw",
-		  gst_props_new (
-		    "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R', 'G', 'B', ' ')),
-		      "bpp",        GST_PROPS_INT (32),
-		      "depth",      GST_PROPS_INT (32),
-		      "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN),
-		      "red_mask",   GST_PROPS_INT (0x00ff0000),
-		      "green_mask", GST_PROPS_INT (0x0000ff00),
-		      "blue_mask",  GST_PROPS_INT (0x000000ff),
-  		      "width",      GST_PROPS_INT (flxh->width), 
-  		      "height",     GST_PROPS_INT (flxh->height),
-		    NULL)));
+	  	  "video/x-raw-rgb",
+	            "bpp",        GST_PROPS_INT (32),
+		    "depth",      GST_PROPS_INT (32),
+		    "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+		    "red_mask",   GST_PROPS_INT (R_MASK_32),
+		    "green_mask", GST_PROPS_INT (G_MASK_32),
+		    "blue_mask",  GST_PROPS_INT (B_MASK_32),
+  		    "width",      GST_PROPS_INT (flxh->width), 
+  		    "height",     GST_PROPS_INT (flxh->height),
+		    "framerate",  GST_PROPS_FLOAT (GST_SECOND/flxdec->frame_time)));
 
     if (flxh->depth <= 8) 
       flxdec->converter = flx_colorspace_converter_new(flxh->width, flxh->height);

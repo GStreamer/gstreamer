@@ -20,31 +20,36 @@
 
 #include "video.h"
 
-#define NUM_UNITS 1000000000
-
 /* This is simply a convenience function, nothing more or less */
 
-gdouble
+gfloat
 gst_video_frame_rate (GstPad *pad)
 {
-  GstFormat dest_format = GST_FORMAT_DEFAULT;
-  gint64 dest_value = 0;
-  gdouble fps;
+  gfloat fps = 0.;
+  GstCaps *caps;
 
-  /* do a convert request on the source pad */
-  if (!gst_pad_convert(pad,
-                       GST_FORMAT_TIME, GST_SECOND * NUM_UNITS,
-                       &dest_format, &dest_value))
-  {
-    g_warning("gstvideo: pad %s:%s failed to convert time to unit!\n",
-              GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad));
+  /* get pad caps */
+  caps = GST_PAD_CAPS (pad);
+  if (caps == NULL) {
+    g_warning ("gstvideo: failed to get caps of pad %s:%s",
+               GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
+	       GST_PAD_NAME(pad));
     return 0.;
   }
 
-  fps = ((gdouble) dest_value) / NUM_UNITS;
+  if (!gst_caps_has_property_typed (caps, "framerate",
+				   GST_PROPS_FLOAT_TYPE)) {
+    g_warning ("gstvideo: failed to get framerate property of pad %s:%s",
+               GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
+	       GST_PAD_NAME (pad));
+    return 0.;
+  }
 
-  GST_DEBUG ("Framerate request on pad %s:%s - %f fps",
-            GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad), fps);
+  gst_caps_get_float (caps, "framerate", &fps);
+
+  GST_DEBUG ("Framerate request on pad %s:%s: %f",
+             GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
+	     GST_PAD_NAME(pad), fps);
 
   return fps;
 }
@@ -56,28 +61,37 @@ gst_video_get_size (GstPad *pad,
 {
   GstCaps *caps;
 
-  g_return_val_if_fail(pad != NULL, FALSE);
+  g_return_val_if_fail (pad != NULL, FALSE);
 
-  caps = GST_PAD_CAPS(pad);
-  if (!caps) {
-    g_warning("gstvideo: failed to get caps of pad %s:%s",
-              GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad));
+  caps = GST_PAD_CAPS (pad);
+
+  if (caps == NULL) {
+    g_warning ("gstvideo: failed to get caps of pad %s:%s",
+               GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
+	       GST_PAD_NAME(pad));
     return FALSE;
   }
-  if (!gst_caps_has_property(caps, "width") ||
-      !gst_caps_has_property(caps, "height")) {
-    g_warning("gstvideo: resulting caps doesn't have width/height properties");
+
+  if (!gst_caps_has_property_typed (caps, "width",
+				    GST_PROPS_INT_TYPE) ||
+      !gst_caps_has_property_typed (caps, "height",
+				    GST_PROPS_FLOAT_TYPE)) {
+    g_warning ("gstvideo: failed to get size properties on pad %s:%s",
+               GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
+	       GST_PAD_NAME(pad));
     return FALSE;
   }
 
   if (width)
-    gst_caps_get_int(caps, "width", width);
+    gst_caps_get_int (caps, "width", width);
   if (height)
-    gst_caps_get_int(caps, "height", height);
+    gst_caps_get_int (caps, "height", height);
 
   GST_DEBUG ("size request on pad %s:%s: %dx%d",
-	    GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad),
-            width?*width:0, height?*height:0);
+	     GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
+	     GST_PAD_NAME (pad), 
+             width  ? *width  : -1,
+	     height ? *height : -1);
 
   return TRUE;
 }

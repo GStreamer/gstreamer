@@ -54,8 +54,8 @@ static GstCaps* cdxa_type_find (GstBuffer *buf, gpointer private);
 
 /* typefactory for 'cdxa' */
 static GstTypeDefinition cdxadefinition = {
-  "cdxaparse_video/avi",
-  "video/avi",
+  "cdxaparse_video",
+  "video/x-cdxa",
   ".dat",
   cdxa_type_find,
 };
@@ -77,8 +77,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "cdxaparse_sink",
-     "video/avi",
-      "format", GST_PROPS_STRING ("CDXA")
+     "video/x-cdxa",
+      NULL
   )
 )
 
@@ -89,7 +89,6 @@ GST_PAD_TEMPLATE_FACTORY (src_templ,
   GST_CAPS_NEW (
     "cdxaparse_src",
     "video/mpeg",
-      "mpegversion",   GST_PROPS_INT (1),
       "systemstream",  GST_PROPS_BOOLEAN (TRUE)
   )
 )
@@ -174,8 +173,8 @@ cdxa_type_find (GstBuffer *buf,
     return NULL;
 
   new = GST_CAPS_NEW ("cdxa_type_find",
-		      "video/avi", 
-		        "RIFF", GST_PROPS_STRING ("CDXA"));
+		      "video/x-cdxa", 
+		        NULL);
 
   return new;
 }

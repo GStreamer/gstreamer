@@ -183,7 +183,7 @@ gst_lpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_LINK_DELAYED;
 
-  set_retval = gst_pad_try_set_caps(filter->srcpad, caps);
+  set_retval = gst_pad_try_set_caps(filter->srcpad, gst_caps_ref (caps));
   
   if (set_retval > 0) 
   {

@@ -60,9 +60,10 @@ static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
 static GstElementDetails cdplayer_details = {
   "CD Player",
   "Generic/Bin",
+  "LGPL", /* ? */
   "Play CD audio through the CD Drive",
   VERSION,
-  "Charles Schmidt <cbschmid@uiuc.edu>",
+  "Charles Schmidt <cbschmid@uiuc.edu>\n"
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2002",
 };

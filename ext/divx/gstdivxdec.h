@@ -55,6 +55,7 @@ struct _GstDivxDec {
   guint32 csp;
   int bitcnt, bpp;
   int width, height;
+  float fps;
 };
 
 struct _GstDivxDecClass {

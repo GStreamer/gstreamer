@@ -207,7 +207,6 @@ gst_sdlvideosink_get_sdl_from_fourcc (GstSDLVideoSink *sdlvideosink,
   switch (code)
   {
     case GST_MAKE_FOURCC('I','4','2','0'):
-    case GST_MAKE_FOURCC('I','Y','U','V'):
       return SDL_IYUV_OVERLAY;
     case GST_MAKE_FOURCC('Y','V','1','2'):
       return SDL_YV12_OVERLAY;
@@ -377,7 +376,6 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
     switch (format)
     {
       case GST_MAKE_FOURCC('I','4','2','0'):
-      case GST_MAKE_FOURCC('I','Y','U','V'):
       case GST_MAKE_FOURCC('Y','V','1','2'):
       case GST_MAKE_FOURCC('Y','U','Y','2'):
       case GST_MAKE_FOURCC('Y','V','Y','U'):
@@ -458,8 +456,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 
   /* buf->yuv */
   if (sdlvideosink->format == GST_MAKE_FOURCC('I','4','2','0') ||
-      sdlvideosink->format == GST_MAKE_FOURCC('Y','V','1','2') ||
-      sdlvideosink->format == GST_MAKE_FOURCC('I','Y','U','V'))
+      sdlvideosink->format == GST_MAKE_FOURCC('Y','V','1','2'))
   {
     sdlvideosink->yuv[0] = GST_BUFFER_DATA(buf);
     sdlvideosink->yuv[1] = sdlvideosink->yuv[0] + sdlvideosink->image_width*sdlvideosink->image_height;
@@ -598,7 +595,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstCaps *caps;
   gint i;
   gulong format[6] = { GST_MAKE_FOURCC('I','4','2','0'),
-                       GST_MAKE_FOURCC('I','Y','U','V'),
                        GST_MAKE_FOURCC('Y','V','1','2'),
                        GST_MAKE_FOURCC('Y','U','Y','2'),
                        GST_MAKE_FOURCC('Y','V','Y','U'),
@@ -611,14 +607,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(factory != NULL, FALSE);
 
   /* make a list of all available caps */
-  for (i=0;i<6;i++)
+  for (i=0;i<5;i++)
   {
     caps = gst_caps_new ("sdlvideosink_caps",
-                         "video/raw",
+                         "video/x-raw-yuv",
                          gst_props_new (
                             "format", GST_PROPS_FOURCC(format[i]),
                             "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
                             "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+			    "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
                             NULL       )
                         );
     capslist = gst_caps_append(capslist, caps);

@@ -75,6 +75,7 @@
 #include <arpa/inet.h>
 
 #include "gstfestival.h"
+#include <gst/audio/audio.h>
 
 static void		gst_festival_class_init		(GstFestivalClass *klass);
 static void		gst_festival_init		(GstFestival *festival);
@@ -115,23 +116,10 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   "festival_src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "festival_raw",   
-    "audio/raw",  
-      "format",            GST_PROPS_STRING ("int"),
-       "law",              GST_PROPS_INT (0),
-       "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-       "signed",           GST_PROPS_BOOLEAN (TRUE),
-       "width",            GST_PROPS_LIST (
-	                     GST_PROPS_INT (8),
-	                     GST_PROPS_INT (16)
-			   ),
-       "depth",            GST_PROPS_LIST (
-	                     GST_PROPS_INT (8),
-	                     GST_PROPS_INT (16)
-			   ),
-       "rate",             GST_PROPS_INT_RANGE (8000, 48000), 
-       "channels",         GST_PROPS_INT_RANGE (1, 2)
+    "audio/x-raw-int",  
+    GST_AUDIO_INT_PAD_TEMPLATE_PROPS
   )
 )
 
@@ -287,9 +275,7 @@ gst_festival_chain (GstPad *pad, GstBuffer *buf)
 	gst_pad_try_set_caps (festival->srcpad,
 			GST_CAPS_NEW (
 				"festival_src",
-				"audio/raw",
-				  "format",	GST_PROPS_STRING ("int"),
-       				  "law",	GST_PROPS_INT (0),
+				"audio/x-raw-int",
        				  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
        				  "signed",     GST_PROPS_BOOLEAN (TRUE),
        				  "width",      GST_PROPS_INT (16),

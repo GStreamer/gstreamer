@@ -61,9 +61,9 @@ play_on_demand_sink_factory (void)
   if (!template) {
     template = gst_pad_template_new
       ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-       gst_caps_append(gst_caps_new ("sink_int",  "audio/raw",
+       gst_caps_append(gst_caps_new ("sink_int",  "audio/x-raw-int",
                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-                       gst_caps_new ("sink_float", "audio/raw",
+                       gst_caps_new ("sink_float", "audio/x-raw-float",
                                      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)),
        NULL);
   }
@@ -79,9 +79,9 @@ play_on_demand_src_factory (void)
   if (!template)
     template = gst_pad_template_new
       ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-       gst_caps_append (gst_caps_new ("src_float", "audio/raw",
+       gst_caps_append (gst_caps_new ("src_float", "audio/x-raw-float",
                                       GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
-                        gst_caps_new ("src_int", "audio/raw",
+                        gst_caps_new ("src_int", "audio/x-raw-int",
                                       GST_AUDIO_INT_PAD_TEMPLATE_PROPS)),
        NULL);
 
@@ -370,7 +370,7 @@ play_on_demand_get_bufferpool (GstPad *pad)
 static GstPadLinkReturn
 play_on_demand_pad_link (GstPad *pad, GstCaps *caps)
 {
-  const gchar *format;
+  const gchar *mimetype;
   GstPlayOnDemand *filter;
 
   g_return_val_if_fail(caps != NULL, GST_PAD_LINK_DELAYED);
@@ -378,14 +378,14 @@ play_on_demand_pad_link (GstPad *pad, GstCaps *caps)
 
   filter = GST_PLAYONDEMAND(GST_PAD_PARENT(pad));
 
-  gst_caps_get_string(caps, "format", &format);
+  mimetype = gst_caps_get_mime(caps);
   gst_caps_get_int(caps, "rate", &filter->rate);
   gst_caps_get_int(caps, "channels", &filter->channels);
 
-  if (strcmp(format, "int") == 0) {
+  if (strcmp(mimetype, "audio/x-raw-int") == 0) {
     filter->format = GST_PLAYONDEMAND_FORMAT_INT;
     gst_caps_get_int (caps, "width", &filter->width);
-  } else if (strcmp(format, "float") == 0) {
+  } else if (strcmp(mimetype, "audio/x-raw-float") == 0) {
     filter->format = GST_PLAYONDEMAND_FORMAT_FLOAT;
   }
 

@@ -244,12 +244,12 @@ gst_v4l2src_close (GstElement  *element,
 }
 
 
-static gdouble
+static gfloat
 gst_v4l2src_get_fps (GstV4l2Src *v4l2src)
 {
 	gint norm;
 	struct v4l2_standard *std;
-	gdouble fps;
+	gfloat fps;
 
 	if (!v4l2src->use_fixed_fps &&
 	    v4l2src->clock != NULL &&
@@ -323,6 +323,7 @@ static GstCaps *
 gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
                                 GstPropsEntry *width,
                                 GstPropsEntry *height,
+                                GstPropsEntry *fps,
 				gboolean       compressed)
 {
 	GstCaps *caps = NULL;
@@ -331,7 +332,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 	case V4L2_PIX_FMT_MJPEG: /* Motion-JPEG */
 	case V4L2_PIX_FMT_JPEG:  /* JFIF JPEG */
 		caps = GST_CAPS_NEW("v4l2src_caps",
-				    "video/jpeg",
+				    "video/x-jpeg",
 				      NULL);
 			break;
 	case V4L2_PIX_FMT_RGB332:
@@ -346,7 +347,6 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 		guint depth=0, bpp=0;
 		gint endianness = 0;
 		guint32 r_mask = 0, b_mask = 0, g_mask = 0;
-		guint32 fcc = GST_MAKE_FOURCC('R','G','B',' ');
 
 		switch (fourcc) {
 		case V4L2_PIX_FMT_RGB332:
@@ -357,30 +357,64 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 		case V4L2_PIX_FMT_RGB555:
 		case V4L2_PIX_FMT_RGB555X:
 			bpp = 16; depth = 15;
-			endianness = (fourcc == V4L2_PIX_FMT_RGB332) ?
-				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-			r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
+			endianness = G_BYTE_ORDER;
+			if ((fourcc == V4L2_PIX_FMT_RGB555 &&
+			     G_BYTE_ORDER == G_LITTLE_ENDIAN) ||
+			    (fourcc == V4L2_PIX_FMT_RGB555X &&
+			     G_BYTE_ORDER == G_BIG_ENDIAN)) {
+				r_mask = 0x7c00;
+				g_mask = 0x03e0;
+				b_mask = 0x001f;
+			} else {
+				r_mask = 0x007c;
+				g_mask = 0xe003;
+				b_mask = 0x1f00;
+			}
 			break;
 		case V4L2_PIX_FMT_RGB565:
 		case V4L2_PIX_FMT_RGB565X:
 			bpp = depth = 16;
-			endianness = (fourcc == V4L2_PIX_FMT_RGB565) ?
-				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-			r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
+			endianness = G_BYTE_ORDER;
+			if ((fourcc == V4L2_PIX_FMT_RGB565 &&
+			     G_BYTE_ORDER == G_LITTLE_ENDIAN) ||
+			    (fourcc == V4L2_PIX_FMT_RGB565X &&
+			     G_BYTE_ORDER == G_BIG_ENDIAN)) {
+				r_mask = 0xf800;
+				g_mask = 0x07e0;
+				b_mask = 0x001f;
+			} else {
+				r_mask = 0x00f8;
+				g_mask = 0xe007;
+				b_mask = 0x1f00;
+			}
 			break;
 		case V4L2_PIX_FMT_RGB24:
 		case V4L2_PIX_FMT_BGR24:
 			bpp = depth = 24;
-			endianness = (fourcc == V4L2_PIX_FMT_BGR24) ?
-				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-			r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
+			endianness = G_BIG_ENDIAN;
+			if (fourcc == V4L2_PIX_FMT_RGB24) {
+				r_mask = 0xff0000;
+				g_mask = 0x00ff00;
+				b_mask = 0x0000ff;
+			} else {
+				r_mask = 0x0000ff;
+				g_mask = 0x00ff00;
+				b_mask = 0xff0000;
+			}
 			break;
 		case V4L2_PIX_FMT_RGB32:
 		case V4L2_PIX_FMT_BGR32:
 			bpp = depth = 32;
-			endianness = (fourcc == V4L2_PIX_FMT_BGR32) ?
-				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-			r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
+			endianness = G_BIG_ENDIAN;
+			if (fourcc == V4L2_PIX_FMT_RGB32) {
+				r_mask = 0xff000000;
+				g_mask = 0x00ff0000;
+				b_mask = 0x0000ff00;
+			} else {
+				r_mask = 0x000000ff;
+				g_mask = 0x0000ff00;
+				b_mask = 0x00ff0000;
+			}
 			break;
 		default:
 			g_assert_not_reached();
@@ -388,8 +422,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 		}
 
 		caps = GST_CAPS_NEW("v4l2src_caps",
-				    "video/raw",
-				      "format",     GST_PROPS_FOURCC(fcc),
+				    "video/x-raw-rgb",
 				      "bpp",        GST_PROPS_INT(bpp),
 				      "depth",      GST_PROPS_INT(depth),
 				      "red_mask",   GST_PROPS_INT(r_mask),
@@ -428,7 +461,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 		}
 
 		caps = GST_CAPS_NEW("v4l2src_caps",
-				    "video/raw",
+				    "video/x-raw-yuv",
 				      "format", GST_PROPS_FOURCC(fcc),
 				      NULL);
 		break;
@@ -456,7 +489,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 			g_free(string_format);
 		} else {
 			caps = GST_CAPS_NEW("v4l2src_caps",
-					    "video/raw",
+					    "video/x-raw-yuv",
 					      "format",GST_PROPS_FOURCC(fourcc),
 					      NULL);
 		}
@@ -467,16 +500,19 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 		caps->properties = gst_props_empty_new();
 	gst_props_add_entry(caps->properties, width);
 	gst_props_add_entry(caps->properties, height);
+	gst_props_add_entry(caps->properties, fps);
 
 	return caps;
 }
 
-#define gst_v4l2src_v4l2fourcc_to_caps_fixed(f, width, height,c) \
+#define gst_v4l2src_v4l2fourcc_to_caps_fixed(f, width, height, fps, c) \
 	gst_v4l2src_v4l2fourcc_to_caps(f, \
 				       gst_props_entry_new("width", \
 							   GST_PROPS_INT(width)), \
 				       gst_props_entry_new("height", \
 							   GST_PROPS_INT(height)), \
+				       gst_props_entry_new("framerate", \
+							   GST_PROPS_FLOAT(fps)), \
 				       c)
 
 #define gst_v4l2src_v4l2fourcc_to_caps_range(f, min_w, max_w, min_h, max_h, c) \
@@ -485,6 +521,8 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 							   GST_PROPS_INT_RANGE(min_w, max_w)), \
 				       gst_props_entry_new("height", \
                                                            GST_PROPS_INT_RANGE(min_h, max_h)), \
+				       gst_props_entry_new("framerate", \
+                                                           GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)), \
 				       c)
 
 static struct v4l2_fmtdesc *
@@ -496,9 +534,12 @@ gst_v4l2_caps_to_v4l2fourcc (GstV4l2Src *v4l2src,
 	struct v4l2_fmtdesc *end_fmt = NULL;
 	const gchar *format = gst_caps_get_mime(caps);
 
-	if (!strcmp(format, "video/raw")) {
-		/* non-compressed */
-		gst_caps_get_fourcc_int(caps, "format", &fourcc);
+	if (!strcmp(format, "video/x-raw-yuv") ||
+	    !strcmp(format, "video/x-raw-rgb")) {
+		if (!strcmp(format, "video/x-raw-rgb"))
+			fourcc = GST_MAKE_FOURCC('R','G','B',' ');
+		else
+			gst_caps_get_fourcc_int(caps, "format", &fourcc);
 
 		switch (fourcc) {
 		case GST_MAKE_FOURCC('I','4','2','0'):
@@ -666,6 +707,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 			lastcaps = gst_v4l2src_v4l2fourcc_to_caps_fixed(format->pixelformat,
 						v4l2src->format.fmt.pix.width,
 						v4l2src->format.fmt.pix.height,
+						gst_v4l2src_get_fps(v4l2src),
 			                        format->flags & V4L2_FMT_FLAG_COMPRESSED);
 
 			ret_val = gst_pad_try_set_caps(v4l2src->srcpad,

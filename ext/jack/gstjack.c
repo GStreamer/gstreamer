@@ -167,11 +167,14 @@ gst_jack_src_request_pad_factory(void)
 {
     static GstPadTemplate *template = NULL;
     
-    if (!template)
-        template = gst_pad_template_new("%s", GST_PAD_SRC, GST_PAD_REQUEST, 
-                                       gst_caps_new("src", "audio/raw",
-                                                    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
-                                       NULL);
+    if (!template) {
+	GstCaps *caps;
+	caps = gst_caps_new("src",
+			    "audio/x-raw-float",
+                            GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS);
+        template = gst_pad_template_new("%s", GST_PAD_SRC,
+					GST_PAD_REQUEST, caps, NULL);
+    }
     
     return template;
 }
@@ -181,11 +184,14 @@ gst_jack_sink_request_pad_factory(void)
 {
     static GstPadTemplate *template = NULL;
     
-    if (!template)
-        template = gst_pad_template_new("%s", GST_PAD_SINK, GST_PAD_REQUEST, 
-                                       gst_caps_new("sink", "audio/raw",
-                                                    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
-                                       NULL);
+    if (!template) {
+	GstCaps *caps;
+	caps = gst_caps_new ("sink",
+			     "audio/x-raw-float",
+                             GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS);
+        template = gst_pad_template_new("%s", GST_PAD_SINK,
+					GST_PAD_REQUEST, caps, NULL);
+    }
     
     return template;
 }

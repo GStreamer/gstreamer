@@ -27,7 +27,7 @@ extern GstElementDetails gst_rtjpegdec_details;
 
 GstTypeDefinition rtjpegdefinition = {
   "rtjpeg_video/rtjpeg",
-  "video/rtjpeg",
+  "video/x-rtjpeg",
   ".rtj",
   NULL,
 };

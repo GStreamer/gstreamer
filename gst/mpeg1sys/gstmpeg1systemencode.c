@@ -59,7 +59,6 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   GST_CAPS_NEW (
     "src_video",
     "video/mpeg",
-      "mpegversion",   	GST_PROPS_INT (1),
       "systemstream",   GST_PROPS_BOOLEAN (TRUE)
   )
 )
@@ -72,6 +71,7 @@ GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
     "video/mpeg",
       "mpegversion",   	GST_PROPS_INT (1),
       "systemstream",   GST_PROPS_BOOLEAN (FALSE)
+      /* we don't care about width/height/framerate */
   )
 )
 
@@ -81,8 +81,8 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sink_audio",
-    "audio/x-mp3",
-    NULL
+    "audio/mpeg",
+    NULL /* well, "don't care" */
   )
 )
 

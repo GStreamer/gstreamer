@@ -65,9 +65,9 @@ speed_sink_factory (void)
   if (!template) {                        
     template = gst_pad_template_new 
       ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_append(gst_caps_new ("sink_int",  "audio/raw",
+      gst_caps_append(gst_caps_new ("sink_int",  "audio/x-raw-int",
                                     GST_AUDIO_INT_MONO_PAD_TEMPLATE_PROPS),
-                      gst_caps_new ("sink_float", "audio/raw",
+                      gst_caps_new ("sink_float", "audio/x-raw-float",
                                     GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)),
       NULL);
   }                                       
@@ -82,9 +82,9 @@ speed_src_factory (void)
   if (!template)
     template = gst_pad_template_new 
       ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-       gst_caps_append (gst_caps_new ("src_float", "audio/raw",
+       gst_caps_append (gst_caps_new ("src_float", "audio/x-raw-float",
                                       GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
-                        gst_caps_new ("src_int", "audio/raw",
+                        gst_caps_new ("src_int", "audio/x-raw-int",
                                       GST_AUDIO_INT_MONO_PAD_TEMPLATE_PROPS)),
        NULL);
   
@@ -138,17 +138,17 @@ speed_connect (GstPad *pad, GstCaps *caps)
 static gboolean
 speed_parse_caps (GstSpeed *filter, GstCaps *caps)
 {
-  const gchar *format;
+  const gchar *mimetype;
   
   g_return_val_if_fail(filter!=NULL,-1);
   g_return_val_if_fail(caps!=NULL,-1);
   
-  gst_caps_get_string(caps, "format", &format);
+  mimetype = gst_caps_get_mime (caps);
   
   gst_caps_get_int (caps, "rate", &filter->rate);
   gst_caps_get_int (caps, "channels", &filter->channels);
   
-  if (strcmp(format, "int")==0) {
+  if (strcmp(mimetype, "audio/x-raw-int")==0) {
     filter->format        = GST_SPEED_FORMAT_INT;
     gst_caps_get_int	 (caps, "width", 	  &filter->width);
     gst_caps_get_int	 (caps, "depth",      &filter->depth);
@@ -162,17 +162,16 @@ speed_parse_caps (GstSpeed *filter, GstCaps *caps)
       g_print ("Speed : format int, bit width %d, endianness %d, signed %s\n",
                filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
     }
-  } else if (strcmp(format, "float")==0) {
+  } else if (strcmp(mimetype, "audio/x-raw-float")==0) {
     filter->format     = GST_SPEED_FORMAT_FLOAT;
-    gst_caps_get_string (caps, "layout",    &filter->layout);
     gst_caps_get_float  (caps, "intercept", &filter->intercept);
     gst_caps_get_float  (caps, "slope",     &filter->slope);
 
     if (!filter->silent) {
       g_print ("Speed : channels %d, rate %d\n",  
                filter->channels, filter->rate);
-      g_print ("Speed : format float, layout %s, intercept %f, slope %f\n",
-               filter->layout, filter->intercept, filter->slope);
+      g_print ("Speed : format float, intercept %f, slope %f\n",
+               filter->intercept, filter->slope);
     }
   } else  {
     return FALSE;

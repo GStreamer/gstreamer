@@ -60,6 +60,7 @@ struct _GstXvidEnc {
   void *handle;
   int csp;
   int width, height;
+  float fps;
 };
 
 struct _GstXvidEncClass {

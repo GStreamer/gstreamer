@@ -44,28 +44,39 @@ GST_PAD_TEMPLATE_FACTORY(sink_template,
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW("xviddec_sink",
-               "video/xvid",
-                 NULL)
+               "video/x-xvid",
+                 "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+		 "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
+		 "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT))
 )
 
 GST_PAD_TEMPLATE_FACTORY(src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("xviddec_src",
-               "video/raw",
-                 "format", GST_PROPS_LIST(
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','Y','U','V')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','Y','U')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
-                             GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
-                           ),
-                 "width",  GST_PROPS_INT_RANGE(0, G_MAXINT),
-                 "height", GST_PROPS_INT_RANGE(0, G_MAXINT),
-                 NULL)
+  gst_caps_new(
+    "xviddec_sink",
+    "video/x-raw-yuv",
+    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+      GST_PROPS_LIST(
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','Y','U')),
+        GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
+      )
+    )
+  ),
+  gst_caps_new(
+    "xviddec_sink_rgb24_32",
+    "video/x-raw-rgb",
+    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32
+  ),
+  gst_caps_new(
+    "xviddec_sink_rgb15_16",
+    "video/x-raw-rgb",
+    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16
+  )
 )
 
 
@@ -88,6 +99,7 @@ static void             gst_xviddec_chain        (GstPad          *pad,
                                                   GstBuffer       *buf);
 static GstPadLinkReturn gst_xviddec_connect      (GstPad          *pad,
                                                   GstCaps         *vscapslist);
+static GstPadLinkReturn	gst_xviddec_negotiate	(GstXvidDec *xviddec);
 
 static GstElementClass *parent_class = NULL;
 /* static guint gst_xviddec_signals[LAST_SIGNAL] = { 0 }; */
@@ -216,10 +228,12 @@ gst_xviddec_chain (GstPad    *pad,
   xviddec = GST_XVIDDEC(GST_OBJECT_PARENT(pad));
 
   if (!xviddec->handle) {
-    gst_element_error(GST_ELEMENT(xviddec),
-                      "No format set - aborting");
-    gst_buffer_unref(buf);
-    return;
+    if (!gst_xviddec_negotiate(xviddec)) {
+      gst_element_error(GST_ELEMENT(xviddec),
+                        "No format set - aborting");
+      gst_buffer_unref(buf);
+      return;
+    }
   }
 
   outbuf = gst_buffer_new_and_alloc(xviddec->width *
@@ -252,10 +266,9 @@ gst_xviddec_chain (GstPad    *pad,
 
 
 static GstPadLinkReturn
-gst_xviddec_connect (GstPad  *pad,
-                     GstCaps *vscaps)
+gst_xviddec_negotiate (GstXvidDec *xviddec)
 {
-  GstXvidDec *xviddec;
+  GstPadLinkReturn ret;
   GstCaps *caps;
   struct {
     guint32 fourcc;
@@ -266,7 +279,6 @@ gst_xviddec_connect (GstPad  *pad,
     { GST_MAKE_FOURCC('U','Y','V','Y'), 16, 16, XVID_CSP_UYVY   },
     { GST_MAKE_FOURCC('Y','V','Y','U'), 16, 16, XVID_CSP_YVYU   },
     { GST_MAKE_FOURCC('I','4','2','0'), 12, 12, XVID_CSP_I420   },
-    { GST_MAKE_FOURCC('I','Y','U','V'), 12, 12, XVID_CSP_I420   },
     { GST_MAKE_FOURCC('Y','V','1','2'), 12, 12, XVID_CSP_YV12   },
     { GST_MAKE_FOURCC('R','G','B',' '), 32, 32, XVID_CSP_RGB32  },
     { GST_MAKE_FOURCC('R','G','B',' '), 24, 24, XVID_CSP_RGB24  },
@@ -275,6 +287,74 @@ gst_xviddec_connect (GstPad  *pad,
     { 0, 0, 0 }
   };
   gint i;
+
+  for (i = 0; fmt_list[i].fourcc != 0; i++) {
+    xviddec->csp = fmt_list[i].csp;
+
+    /* try making a caps to set on the other side */
+    if (fmt_list[i].fourcc == GST_MAKE_FOURCC('R','G','B',' ')) {
+      guint32 r_mask = 0, b_mask = 0, g_mask = 0;
+      gint endianness = 0;
+      switch (fmt_list[i].depth) {
+        case 15:
+          endianness = G_BYTE_ORDER;
+          r_mask = 0xf800; g_mask = 0x07c0; b_mask = 0x003e;
+          break;
+        case 16:
+          endianness = G_BYTE_ORDER;
+          r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
+          break;
+        case 24:
+          endianness = G_BIG_ENDIAN;
+          r_mask = R_MASK_24; g_mask = G_MASK_24; b_mask = B_MASK_24;
+          break;
+        case 32:
+          endianness = G_BIG_ENDIAN;
+          r_mask = R_MASK_32; g_mask = G_MASK_32; b_mask = B_MASK_32;
+          break;
+      }
+      caps = GST_CAPS_NEW("xviddec_src_pad_rgb",
+                          "video/x-raw-rgb",
+                            "width",      GST_PROPS_INT(xviddec->width),
+                            "height",     GST_PROPS_INT(xviddec->height),
+                            "depth",      GST_PROPS_INT(fmt_list[i].depth),
+                            "bpp",        GST_PROPS_INT(fmt_list[i].bpp),
+                            "endianness", GST_PROPS_INT(endianness),
+                            "red_mask",   GST_PROPS_INT(r_mask),
+                            "green_mask", GST_PROPS_INT(g_mask),
+                            "blue_mask",  GST_PROPS_INT(b_mask),
+			    "framerate",  GST_PROPS_FLOAT(xviddec->fps),
+                            NULL);
+    } else {
+      caps = GST_CAPS_NEW("xviddec_src_pad_yuv",
+                          "video/x-raw-yuv",
+                            "width",      GST_PROPS_INT(xviddec->width),
+                            "height",     GST_PROPS_INT(xviddec->height),
+                            "format",     GST_PROPS_FOURCC(fmt_list[i].fourcc),
+			    "framerate",  GST_PROPS_FLOAT(xviddec->fps),
+                            NULL);
+    }
+
+    if ((ret = gst_pad_try_set_caps(xviddec->srcpad, caps)) > 0) {
+      xviddec->csp = fmt_list[i].csp;
+      xviddec->bpp = fmt_list[i].bpp;
+      if (gst_xviddec_setup(xviddec))
+        return GST_PAD_LINK_OK;
+    } else if (ret == GST_PAD_LINK_DELAYED) {
+      return ret; /* don't try further (yet) */
+    }
+  }
+
+  /* if we got here - it's not good */
+  return GST_PAD_LINK_REFUSED;
+}
+
+
+static GstPadLinkReturn
+gst_xviddec_connect (GstPad  *pad,
+                     GstCaps *vscaps)
+{
+  GstXvidDec *xviddec;
 
   xviddec = GST_XVIDDEC(gst_pad_get_parent (pad));
 
@@ -291,58 +371,9 @@ gst_xviddec_connect (GstPad  *pad,
    * only need to bother with the output colorspace */
   gst_caps_get_int(vscaps, "width", &xviddec->width);
   gst_caps_get_int(vscaps, "height", &xviddec->height);
+  gst_caps_get_float(vscaps, "framerate", &xviddec->fps);
 
-  for (i = 0; fmt_list[i].fourcc != 0; i++) {
-    xviddec->csp = fmt_list[i].csp;
-
-    /* try making a caps to set on the other side */
-    if (fmt_list[i].fourcc == GST_MAKE_FOURCC('R','G','B',' ')) {
-      guint32 r_mask = 0, b_mask = 0, g_mask = 0;
-      switch (fmt_list[i].depth) {
-        case 15:
-          r_mask = 0xf800; g_mask = 0x07c0; b_mask = 0x003e;
-          break;
-        case 16:
-          r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
-          break;
-        case 24:
-          r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
-          break;
-        case 32:
-          r_mask = 0xff000000; g_mask = 0x00ff0000; b_mask = 0x0000ff00;
-          break;
-      }
-      caps = GST_CAPS_NEW("xviddec_src_pad_rgb",
-                          "video/raw",
-                            "width",      GST_PROPS_INT(xviddec->width),
-                            "height",     GST_PROPS_INT(xviddec->height),
-                            "format",     GST_PROPS_FOURCC(fmt_list[i].fourcc),
-                            "depth",      GST_PROPS_INT(fmt_list[i].depth),
-                            "bpp",        GST_PROPS_INT(fmt_list[i].bpp),
-                            "endianness", GST_PROPS_INT(G_BYTE_ORDER),
-                            "red_mask",   GST_PROPS_INT(r_mask),
-                            "green_mask", GST_PROPS_INT(g_mask),
-                            "blue_mask",  GST_PROPS_INT(b_mask),
-                            NULL);
-    } else {
-      caps = GST_CAPS_NEW("xviddec_src_pad_yuv",
-                          "video/raw",
-                            "width",      GST_PROPS_INT(xviddec->width),
-                            "height",     GST_PROPS_INT(xviddec->height),
-                            "format",     GST_PROPS_FOURCC(fmt_list[i].fourcc),
-                            NULL);
-    }
-
-    if (gst_pad_try_set_caps(xviddec->srcpad, caps) > 0) {
-      xviddec->csp = fmt_list[i].csp;
-      xviddec->bpp = fmt_list[i].bpp;
-      if (gst_xviddec_setup(xviddec))
-        return GST_PAD_LINK_OK;
-    }
-  }
-
-  /* if we got here - it's not good */
-  return GST_PAD_LINK_REFUSED;
+  return gst_xviddec_negotiate(xviddec);
 }
 
 

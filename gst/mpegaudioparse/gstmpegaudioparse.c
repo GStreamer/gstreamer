@@ -46,13 +46,11 @@ mp3_src_factory (void)
   	gst_caps_new (
   	  "mp3parse_src",
     	  "audio/x-mp3",
-	  /*
 	  gst_props_new (
     	    "layer",   GST_PROPS_INT_RANGE (1, 3),
-    	    "bitrate", GST_PROPS_INT_RANGE (8, 320),
-    	    "framed",  GST_PROPS_BOOLEAN (TRUE),
-	    */
-	    NULL),
+            "rate",    GST_PROPS_INT_RANGE (8000, 48000),
+            "channels", GST_PROPS_INT_RANGE (1, 2),
+	    NULL)),
 	NULL);
 }
 
@@ -89,13 +87,14 @@ static GstPadTemplate *sink_temp, *src_temp;
 static void	gst_mp3parse_class_init		(GstMPEGAudioParseClass *klass);
 static void	gst_mp3parse_init		(GstMPEGAudioParse *mp3parse);
 
-static void	gst_mp3parse_loop		(GstElement *element);
 static void	gst_mp3parse_chain		(GstPad *pad,GstBuffer *buf);
 static long	bpf_from_header			(GstMPEGAudioParse *parse, unsigned long header);
 static int	head_check			(unsigned long head);
 
 static void	gst_mp3parse_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_mp3parse_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static GstElementStateReturn
+		gst_mp3parse_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
@@ -133,13 +132,15 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass *klass)
     g_param_spec_int("skip","skip","skip",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BIT_RATE,
-    g_param_spec_int("bit_rate","bit_rate","bit_rate",
+    g_param_spec_int("bitrate","Bitrate","Bit Rate",
                      G_MININT,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME */
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_mp3parse_set_property;
   gobject_class->get_property = gst_mp3parse_get_property;
+
+  gstelement_class->change_state = gst_mp3parse_change_state;
 }
 
 static void
@@ -148,11 +149,8 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
   mp3parse->sinkpad = gst_pad_new_from_template(sink_temp, "sink");
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->sinkpad);
 
-  gst_element_set_loop_function (GST_ELEMENT(mp3parse),gst_mp3parse_loop);
-#if 1	/* set this to one to use the old chaining code */
   gst_pad_set_chain_function(mp3parse->sinkpad,gst_mp3parse_chain);
   gst_element_set_loop_function (GST_ELEMENT(mp3parse),NULL);
-#endif
 
   mp3parse->srcpad = gst_pad_new_from_template(src_temp, "src");
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->srcpad);
@@ -161,6 +159,8 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
   mp3parse->partialbuf = NULL;
   mp3parse->skip = 0;
   mp3parse->in_flush = FALSE;
+
+  mp3parse->rate = mp3parse->channels = mp3parse->layer = -1;
 }
 
 static guint32
@@ -170,7 +170,6 @@ gst_mp3parse_next_header (guchar *buf,guint32 len,guint32 start)
   int f = 0;
 
   while (offset < (len - 4)) {
-    fprintf(stderr,"%02x ",buf[offset]);
     if (buf[offset] == 0xff)
       f = 1;
     else if (f && ((buf[offset] >> 4) == 0x0f))
@@ -180,52 +179,6 @@ gst_mp3parse_next_header (guchar *buf,guint32 len,guint32 start)
     offset++;
   }
   return -1;
-}
-
-static void
-gst_mp3parse_loop (GstElement *element)
-{
-  GstMPEGAudioParse *parse = GST_MP3PARSE(element);
-  GstBuffer *inbuf, *outbuf;
-  guint32 size, offset;
-  guchar *data;
-  guint32 start;
-  guint32 header;
-  gint bpf;
-
-  while (1) {
-    /* get a new buffer */
-    inbuf = gst_pad_pull (parse->sinkpad);
-    size = GST_BUFFER_SIZE (inbuf);
-    data = GST_BUFFER_DATA (inbuf);
-    offset = 0;
-fprintf(stderr, "have buffer of %d bytes\n",size);
-
-    /* loop through it and find all the frames */
-    while (offset < (size - 4)) {
-      start = gst_mp3parse_next_header (data,size,offset);
-fprintf(stderr, "skipped %d bytes searching for the next header\n",start-offset);
-      header = GUINT32_FROM_BE(*((guint32 *)(data+start)));
-fprintf(stderr, "header is 0x%08x\n",header);
-
-      /* figure out how big the frame is supposed to be */
-      bpf = bpf_from_header (parse, header);
-
-      /* see if there are enough bytes in this buffer for the whole frame */
-      if ((start + bpf) <= size) {
-        outbuf = gst_buffer_create_sub (inbuf,start,bpf);
-fprintf(stderr, "sending buffer of %d bytes\n",bpf);
-        gst_pad_push (parse->srcpad, outbuf);
-        offset = start + bpf;
-
-      /* if not, we have to deal with it somehow */
-      } else {
-fprintf(stderr,"don't have enough data for this frame\n");
-        
-        break;
-      }
-    }
-  }
 }
 
 static void
@@ -337,7 +290,13 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 	    mp3parse->in_flush = FALSE;
 	  }
 	  GST_BUFFER_TIMESTAMP(outbuf) = last_ts;
-          gst_pad_push(mp3parse->srcpad,outbuf);
+
+          if (GST_PAD_CAPS (mp3parse->srcpad) != NULL) {
+            gst_pad_push(mp3parse->srcpad,outbuf);
+          } else {
+            GST_DEBUG ("No capsnego yet, delaying buffer push");
+            gst_buffer_unref (outbuf);
+          }
 	}
 	else {
           GST_DEBUG ("mp3parse: skipping buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
@@ -382,8 +341,9 @@ static long mp3parse_freqs[9] =
 static long
 bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
 {
-  int layer_index,layer,lsf,samplerate_index,padding;
+  int layer_index,layer,lsf,samplerate_index,padding,mode;
   long bpf;
+  gint channels, rate;
 
   /*mpegver = (header >> 19) & 0x3; // don't need this for bpf */
   layer_index = (header >> 17) & 0x3;
@@ -392,6 +352,7 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
   parse->bit_rate = mp3parse_tabsel[lsf][layer - 1][((header >> 12) & 0xf)];
   samplerate_index = (header >> 10) & 0x3;
   padding = (header >> 9) & 0x1;
+  mode = (header >> 6) & 0x3;
 
   if (layer == 1) {
     bpf = parse->bit_rate * 12000;
@@ -401,6 +362,26 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
     bpf = parse->bit_rate * 144000;
     bpf /= mp3parse_freqs[samplerate_index];
     bpf += padding;
+  }
+
+  channels = (mode == 3) ? 1 : 2;
+  rate = mp3parse_freqs[samplerate_index];
+  if (channels != parse->channels ||
+      rate     != parse->rate     ||
+      layer    != parse->layer) {
+    GstCaps *caps = GST_CAPS_NEW ("mp3parse_src",
+                                  "audio/mpeg",
+                                    "layer",    GST_PROPS_INT (layer),
+                                    "channels", GST_PROPS_INT (channels),
+                                    "rate",     GST_PROPS_INT (rate));
+    if (gst_pad_try_set_caps(parse->srcpad, caps) <= 0) {
+      gst_element_error (GST_ELEMENT (parse),
+                         "mp3parse: failed to negotiate format with next element");
+    }
+
+    parse->channels = channels;
+    parse->layer    = layer;
+    parse->rate     = rate;
   }
 
   /*g_print("%08x: layer %d lsf %d bitrate %d samplerate_index %d padding %d - bpf %d\n", */
@@ -476,6 +457,28 @@ gst_mp3parse_get_property (GObject *object, guint prop_id, GValue *value, GParam
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstElementStateReturn 
+gst_mp3parse_change_state (GstElement *element) 
+{
+  GstMPEGAudioParse *src;
+
+  g_return_val_if_fail(GST_IS_MP3PARSE(element), GST_STATE_FAILURE);
+  src = GST_MP3PARSE(element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      src->channels = -1; src->rate = -1; src->layer = -1;
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS(parent_class)->change_state)
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+
+  return GST_STATE_SUCCESS;
 }
 
 static gboolean

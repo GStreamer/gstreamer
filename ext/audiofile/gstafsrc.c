@@ -60,9 +60,7 @@ GST_PAD_TEMPLATE_FACTORY (afsrc_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (  
     "audiofile_src",
-    "audio/raw",
-      "format",             GST_PROPS_STRING ("int"),
-        "law",              GST_PROPS_INT (0),
+    "audio/x-raw-int",
         "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
         "signed",           GST_PROPS_LIST (
 				  GST_PROPS_BOOLEAN (TRUE),
@@ -345,9 +343,7 @@ gst_afsrc_open_file (GstAFSrc *src)
   gst_pad_try_set_caps (src->srcpad, 
 		  GST_CAPS_NEW (
     		    "af_src",
-                    "audio/raw",
-                      "format",     GST_PROPS_STRING ("int"),
-                      "law",        GST_PROPS_INT (0),              /*FIXME */
+                    "audio/x-raw-int",
                       "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
                       "signed",     GST_PROPS_BOOLEAN (src->is_signed),
                       "width",      GST_PROPS_INT (src->width),

@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "gstlibfame.h"
+#include <gst/video/video.h>
 
 #define FAMEENC_BUFFER_SIZE (300 * 1024) 
 
@@ -51,7 +52,6 @@ enum {
 enum {
   ARG_0,
   ARG_VERSION,
-  ARG_FRAMERATE,
   ARG_BITRATE,
   ARG_QUALITY,
   ARG_PATTERN,
@@ -67,12 +67,11 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "famedec_sink_caps",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096)
+    "video/x-raw-yuv",
+      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')))
   )
 )
 
@@ -83,71 +82,14 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_CAPS_NEW (
     "famedec_src_caps",
     "video/mpeg",
-      "mpegversion", GST_PROPS_LIST (
-	  GST_PROPS_INT (1), GST_PROPS_INT (4)),
+      /* we don't need width/height/framerate */
+      "mpegversion",  GST_PROPS_LIST (
+			GST_PROPS_INT (1),
+			GST_PROPS_INT (4)
+		      ),
       "systemstream", GST_PROPS_BOOLEAN (FALSE)
   )
 );
-
-#define MAX_FRAME_RATES  16
-typedef struct
-{
-  gint num;
-  gint den;
-} frame_rate_entry;
-
-static const frame_rate_entry frame_rates[] =
-{
-  { 0, 0 },
-  { 24000, 1001 },
-  { 24, 1 },
-  { 25, 1 },
-  { 30000, 1001 },
-  { 30, 1 },
-  { 50, 1 },
-  { 60000, 1001 },
-  { 60, 1 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-};
-
-static gint
-framerate_to_index (num, den)
-{
-  gint i;
-  
-  for (i = 0; i < MAX_FRAME_RATES; i++) {
-    if (frame_rates[i].num == num && frame_rates[i].den == den)
-      return i;
-  }
-  return 0;
-}
-
-#define GST_TYPE_FAMEENC_FRAMERATE (gst_famedec_framerate_get_type())
-static GType
-gst_famedec_framerate_get_type(void) {
-  static GType famedec_framerate_type = 0;
-  static GEnumValue famedec_framerate[] = {
-    {1, "1", "24000/1001 (23.97)"},
-    {2, "2", "24"},
-    {3, "3", "25"},
-    {4, "4", "30000/1001 (29.97)"},
-    {5, "5", "30"},
-    {6, "6", "50"},
-    {7, "7", "60000/1001 (59.94)"},
-    {8, "8", "60"},
-    {0, NULL, NULL},
-  };
-  if (!famedec_framerate_type) {
-    famedec_framerate_type = g_enum_register_static("GstFameEncFrameRate", famedec_framerate);
-  }
-  return famedec_framerate_type;
-}
 
 static void	gst_famedec_class_init		(GstFameEncClass *klass);
 static void	gst_famedec_init		(GstFameEnc *famedec);
@@ -276,9 +218,6 @@ gst_famedec_class_init (GstFameEncClass *klass)
     }
   }
 
-  g_object_class_install_property (gobject_class, ARG_FRAMERATE,
-    g_param_spec_enum ("framerate", "Frame Rate", "Number of frames per second",
-                       GST_TYPE_FAMEENC_FRAMERATE, 3, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
     g_param_spec_int ("bitrate", "Bitrate", "Target bitrate (0 = VBR)",
                       0, 5000000, 0, G_PARAM_READWRITE));
@@ -471,14 +410,6 @@ gst_famedec_set_property (GObject *object, guint prop_id,
   }
 
   switch (prop_id) {
-    case ARG_FRAMERATE:
-    {
-      gint index = g_value_get_enum (value);
-
-      famedec->fp.frame_rate_num = frame_rates[index].num;
-      famedec->fp.frame_rate_den = frame_rates[index].den;
-      break;
-    }
     case ARG_BITRATE:
       famedec->fp.bitrate = g_value_get_int (value);
       break;
@@ -525,13 +456,6 @@ gst_famedec_get_property (GObject *object, guint prop_id,
   famedec = GST_FAMEENC (object);
 
   switch (prop_id) {
-    case ARG_FRAMERATE:
-    {
-      gint index = framerate_to_index (famedec->fp.frame_rate_num, 
-		                       famedec->fp.frame_rate_den);
-      g_value_set_enum (value, index);
-      break;
-    }
     case ARG_BITRATE:
       g_value_set_int (value, famedec->fp.bitrate);
       break;

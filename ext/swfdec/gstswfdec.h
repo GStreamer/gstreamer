@@ -63,7 +63,7 @@ struct _GstSwfdec {
   double rate;
   gint64 timestamp;
   gint64 interval;
-  gdouble frame_rate;
+  gfloat frame_rate;
 
   /* video state */
   gint format;

@@ -37,7 +37,7 @@ vorbis_caps_factory (void)
   return
    gst_caps_new (
   	"tremor_tremor",
-  	"application/x-ogg",
+  	"application/ogg",
   	NULL);
 }
 
@@ -47,10 +47,8 @@ raw_caps_factory (void)
   return
    gst_caps_new (
   	"tremor_raw",
-  	"audio/raw",
+  	"audio/x-raw-int",
 	gst_props_new (
-  	  "format",   		GST_PROPS_STRING ("int"),
-    	    "law",   		GST_PROPS_INT (0),
     	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
     	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
     	    "width", 		GST_PROPS_INT (16),
@@ -66,18 +64,18 @@ raw_caps2_factory (void)
   return
    gst_caps_new (
   	"tremor_raw_float",
-  	"audio/raw",
+  	"audio/x-raw-float",
 	gst_props_new (
-  	  "format",   		GST_PROPS_STRING ("float"),
-    	    "layout",		GST_PROPS_STRING ("IEEE"),
+    	    "depth",		GST_PROPS_INT (32),
+	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
     	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT (2),
+    	    "channels", 	GST_PROPS_INT (2), /* ?? */
 	    NULL));
 }
 
 static GstTypeDefinition vorbisdefinition = {
   "tremor_audio/x-ogg",
-  "application/x-ogg",
+  "application/ogg",
   ".ogg",
   vorbis_type_find,
 };
@@ -90,7 +88,7 @@ vorbis_type_find (GstBuffer *buf, gpointer private)
   if (head  != 0x4F676753)
     return NULL;
 
-  return gst_caps_new ("vorbis_type_find", "application/x-ogg", NULL);
+  return gst_caps_new ("vorbis_type_find", "application/ogg", NULL);
 }
 
 

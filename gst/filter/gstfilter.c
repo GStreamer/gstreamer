@@ -21,6 +21,7 @@
  */
 
 #include "gstfilter.h"
+#include <gst/audio/audio.h>
 
 
 struct _elements_entry {
@@ -46,15 +47,10 @@ gst_filter_src_factory (void)
   		"src",
   		GST_PAD_SRC,
   		GST_PAD_ALWAYS,
-  		GST_CAPS_NEW (
+  		gst_caps_new (
   		  "filter_src",
-  		  "audio/raw",
-  		    "format",		GST_PROPS_STRING ("float"),
-  		    "rate",            	GST_PROPS_INT_RANGE (1, G_MAXINT),
-		    "layout",     	GST_PROPS_STRING ("gfloat"),
-		    "intercept",  	GST_PROPS_FLOAT(0.0),
-		    "slope",      	GST_PROPS_FLOAT(1.0),
-		    "channels",   	GST_PROPS_INT (1)
+  		  "audio/x-raw-float",
+  	          GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
 		)
   	     );
   }
@@ -70,15 +66,10 @@ gst_filter_sink_factory (void)
   		"sink",
   		GST_PAD_SINK,
   		GST_PAD_ALWAYS,
-  		GST_CAPS_NEW (
+  		gst_caps_new (
   		  "filter_src",
-  		  "audio/raw",
-  		    "format",		GST_PROPS_STRING ("float"),
-  		    "rate",            	GST_PROPS_INT_RANGE (1, G_MAXINT),
-		    "layout",     	GST_PROPS_STRING ("gfloat"),
-		    "intercept",  	GST_PROPS_FLOAT(0.0),
-		    "slope",      	GST_PROPS_FLOAT(1.0),
-		    "channels",   	GST_PROPS_INT (1)
+  		  "audio/x-raw-float",
+  		  GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
 		)
   	     );
   }

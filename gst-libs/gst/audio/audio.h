@@ -52,8 +52,6 @@
 
 #define GST_AUDIO_INT_PAD_TEMPLATE_PROPS \
         gst_props_new (\
-          "format",             GST_PROPS_STRING ("int"),\
-            "law",              GST_PROPS_INT (0),\
             "endianness",       GST_PROPS_INT (G_BYTE_ORDER),\
             "signed",           GST_PROPS_LIST (\
             					  GST_PROPS_BOOLEAN (TRUE),\
@@ -70,8 +68,6 @@
 
 #define GST_AUDIO_INT_MONO_PAD_TEMPLATE_PROPS \
         gst_props_new (\
-          "format",             GST_PROPS_STRING ("int"),\
-            "law",              GST_PROPS_INT (0),\
             "endianness",       GST_PROPS_INT (G_BYTE_ORDER),\
             "signed",           GST_PROPS_LIST (\
             					  GST_PROPS_BOOLEAN (TRUE),\
@@ -88,8 +84,8 @@
 
 #define GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS \
         gst_props_new (\
-          "format",             GST_PROPS_STRING ("float"),\
-            "layout",           GST_PROPS_STRING ("gfloat"),\
+            "depth",            GST_PROPS_INT (32),\
+            "endianness",       GST_PROPS_INT (G_BYTE_ORDER),\
             "intercept",        GST_PROPS_FLOAT (0.0),\
             "slope",            GST_PROPS_FLOAT (1.0),\
             "rate",             GST_PROPS_INT_RANGE (GST_AUDIO_MIN_RATE, \

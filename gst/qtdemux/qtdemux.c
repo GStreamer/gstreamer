@@ -59,6 +59,7 @@ struct _QtDemuxSample {
   int size;
   guint32 offset;
   guint64 timestamp;
+  guint64 duration;
 };
 
 struct _QtDemuxStream {
@@ -73,6 +74,7 @@ struct _QtDemuxStream {
 
   int width;
   int height;
+  float fps;
   double rate;
   int n_channels;
 };
@@ -125,25 +127,12 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "qtdemux_sink",
-     "video/quicktime",
-     NULL
+    "video/quicktime",
+      NULL
   )
 )
 
-GST_PAD_TEMPLATE_FACTORY (src_video_templ,
-  "video_%02d",
-  GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
-  NULL
-)
-
-GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
-  "audio_%02d",
-  GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
-  NULL
-)
-
+static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
 
 static void gst_qtdemux_class_init (GstQTDemuxClass *klass);
@@ -223,6 +212,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
+  GstCaps *audiocaps = NULL, *videocaps = NULL, *temp;
+  const guint32 audio_fcc[] = {
+    /* FILLME */
+    0,
+  }, video_fcc[] = {
+    /* FILLME */
+    0,
+  };
+  gint i;
 
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -232,9 +230,27 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
+  for (i = 0; audio_fcc[i] != 0; i++) {
+    temp = qtdemux_audio_caps (NULL, audio_fcc[i]);
+    audiocaps = gst_caps_append (audiocaps, temp);
+  }
+  audiosrctempl = gst_pad_template_new ("audio_%02d",
+					GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					audiocaps, NULL);
+
+  for (i = 0; video_fcc[i] != 0; i++) {
+    temp = qtdemux_video_caps (NULL, video_fcc[i]);
+    videocaps = gst_caps_append (videocaps, temp);
+  }
+  videosrctempl = gst_pad_template_new ("video_%02d",
+					GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					videocaps, NULL);
+
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));
+  gst_element_factory_add_pad_template (factory, videosrctempl);
+  gst_element_factory_add_pad_template (factory, audiosrctempl);
 
   type = gst_type_factory_new (&quicktimedefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
@@ -484,7 +500,20 @@ static void gst_qtdemux_loop_header (GstElement *element)
     }while(TRUE);
 
     if(buf){
+      /* hum... */
+      if(stream->subtype == GST_MAKE_FOURCC('v','i','d','e')){
+        float fps = 1. * GST_SECOND / stream->samples[stream->sample_index].duration;
+        if (fps != stream->fps) {
+          gst_props_remove_entry_by_name(stream->caps->properties, "framerate");
+          gst_props_add_entry(stream->caps->properties,
+                              gst_props_entry_new("framerate", GST_PROPS_FLOAT(fps)));
+          stream->fps = fps;
+          gst_pad_try_set_caps(stream->pad, stream->caps);
+        }
+      }
+
       GST_BUFFER_TIMESTAMP(buf) = stream->samples[stream->sample_index].timestamp;
+      GST_BUFFER_DURATION(buf) = stream->samples[stream->sample_index].duration;
       gst_pad_push(stream->pad, buf);
     }
     stream->sample_index++;
@@ -554,27 +583,31 @@ gst_qtdemux_src_link(GstPad *pad, GstCaps *caps)
 void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
 {
   if(stream->subtype == GST_MAKE_FOURCC('v','i','d','e')){
-    stream->pad = gst_pad_new_from_template (
-        GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d",
-	  qtdemux->n_video_streams));
+    stream->pad = gst_pad_new_from_template (videosrctempl,
+        g_strdup_printf ("video_%02d", qtdemux->n_video_streams));
+    stream->fps = 1. * GST_SECOND / stream->samples[0].duration;
     if(stream->caps){
-      stream->caps->properties = gst_props_intersect(
+      GstProps *properties = gst_props_intersect(
 	  stream->caps->properties,
 	  gst_props_new("width",GST_PROPS_INT(stream->width),
-              "height",GST_PROPS_INT(stream->height), NULL));
+              "height",GST_PROPS_INT(stream->height),
+              "framerate", GST_PROPS_FLOAT(stream->fps), NULL));
+      if (stream->caps->properties != NULL)
+        gst_props_unref (stream->caps->properties);
+      stream->caps->properties = properties;
     }
     qtdemux->n_video_streams++;
   }else{
-    stream->pad = gst_pad_new_from_template (
-        GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d",
-	  qtdemux->n_audio_streams));
+    stream->pad = gst_pad_new_from_template (audiosrctempl,
+        g_strdup_printf ("audio_%02d", qtdemux->n_audio_streams));
     if(stream->caps){
-      g_print("props were %s\n",gst_props_to_string(stream->caps->properties));
-      stream->caps->properties = gst_props_intersect(
+      GstProps *properties = gst_props_intersect(
 	  stream->caps->properties,
 	  gst_props_new("rate",GST_PROPS_INT((int)stream->rate),
               "channels",GST_PROPS_INT(stream->n_channels), NULL));
-      g_print("props now %s\n",gst_props_to_string(stream->caps->properties));
+      if (stream->caps->properties != NULL)
+        gst_props_unref (stream->caps->properties);
+      stream->caps->properties = properties;
     }
     qtdemux->n_audio_streams++;
   }
@@ -1302,6 +1335,7 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
 
     stream->width = QTDEMUX_GUINT16_GET(stsd->data+offset+32);
     stream->height = QTDEMUX_GUINT16_GET(stsd->data+offset+34);
+    stream->fps = 0.; /* this is filled in later */
 
     g_print("frame count:   %u\n", QTDEMUX_GUINT16_GET(stsd->data+offset+48));
     
@@ -1416,6 +1450,7 @@ done:
       time = (GST_SECOND * duration)/stream->timescale;
       for(j=0;j<n;j++){
         samples[index].timestamp = timestamp;
+        samples[index].duration = time;
         timestamp += time;
         index++;
       }
@@ -1487,6 +1522,7 @@ done2:
 	size = samples[index+1].sample_index - samples[index].sample_index;
 	time = (GST_SECOND * duration * samples[index].size)/stream->timescale ;
         timestamp += time;
+        samples[index].duration = time;
       }
     }
   }
@@ -1509,43 +1545,87 @@ static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
   switch(fourcc){
     case GST_MAKE_FOURCC('j','p','e','g'):
       /* JPEG */
-      return GST_CAPS_NEW("jpeg_caps","video/jpeg",NULL);
+      return GST_CAPS_NEW("jpeg_caps","video/x-jpeg",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('m','j','p','a'):
       /* Motion-JPEG (format A) */
-      return GST_CAPS_NEW("mjpa_caps","video/jpeg",NULL);
+      return GST_CAPS_NEW("mjpa_caps","video/x-jpeg",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('m','j','p','b'):
       /* Motion-JPEG (format B) */
-      return GST_CAPS_NEW("mjpa_caps","video/jpeg",NULL);
+      return GST_CAPS_NEW("mjpb_caps","video/x-jpeg",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('S','V','Q','3'):
       return GST_CAPS_NEW("SVQ3_caps","video/x-svq",
-	  "svqversion", GST_PROPS_INT(3),NULL);
+	  "svqversion", GST_PROPS_INT(3),
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('s','v','q','i'):
     case GST_MAKE_FOURCC('S','V','Q','1'):
       return GST_CAPS_NEW("SVQ1_caps","video/x-svq",
-	  "svqversion", GST_PROPS_INT(1),NULL);
+	  "svqversion", GST_PROPS_INT(1),
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('r','a','w',' '):
       /* uncompressed RGB */
-      return GST_CAPS_NEW("raw__caps","video/raw",
-	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')));
+      return GST_CAPS_NEW("raw__caps","video/x-raw-rgb",
+	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
+          /*"bpp", GST_PROPS_INT(x),
+          "depth", GST_PROPS_INT(x),
+          "red_mask", GST_PROPS_INT(x),
+          "green_mask", GST_PROPS_INT(x),
+          "blue_mask", GST_PROPS_INT(x), FIXME! */
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('Y','u','v','2'):
       /* uncompressed YUV2 */
-      return GST_CAPS_NEW("Yuv2_caps","video/raw",
-	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','V','2')));
+      return GST_CAPS_NEW("Yuv2_caps","video/x-raw-yuv",
+	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','V','2')),
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('m','p','e','g'):
       /* MPEG */
-      return GST_CAPS_NEW("mpeg_caps","video/mpeg",NULL);
+      return GST_CAPS_NEW("mpeg_caps","video/mpeg",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096),
+          "systemstream", GST_PROPS_BOOLEAN(FALSE),
+          "mpegversion", GST_PROPS_INT(1));
     case GST_MAKE_FOURCC('g','i','f',' '):
-      return GST_CAPS_NEW("gif__caps","image/gif",NULL);
+      return GST_CAPS_NEW("gif__caps","image/gif",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('h','2','6','3'):
       /* H.263 */
       /* ffmpeg uses the height/width props, don't know why */
-      return GST_CAPS_NEW("h263_caps","video/h263",NULL);
+      return GST_CAPS_NEW("h263_caps","video/x-h263",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('m','p','4','v'):
       /* MPEG-4 */
       return GST_CAPS_NEW("mp4v_caps", "video/mpeg",
-	  "mpegversion",GST_PROPS_INT(4));
+	  "mpegversion",GST_PROPS_INT(4),
+          "systemstream", GST_PROPS_BOOLEAN(FALSE),
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('3','I','V','1'):
-      return GST_CAPS_NEW("3IV1_caps", "video/3ivx",NULL);
+      return GST_CAPS_NEW("3IV1_caps", "video/x-3ivx",
+          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+          "width", GST_PROPS_INT_RANGE (16, 4096),
+          "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('r','p','z','a'):
     case GST_MAKE_FOURCC('c','v','i','d'):
       /* Cinepak */
@@ -1564,12 +1644,10 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 {
   switch(fourcc){
     case GST_MAKE_FOURCC('N','O','N','E'):
-      return GST_CAPS_NEW("NONE_caps","audio/raw",NULL);
+      return NULL; /*GST_CAPS_NEW("NONE_caps","audio/raw",NULL);*/
     case GST_MAKE_FOURCC('r','a','w',' '):
       /* FIXME */
-      return GST_CAPS_NEW("raw__caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(0),
+      return GST_CAPS_NEW("raw__caps","audio/x-raw-int",
 	  "width",GST_PROPS_INT(8),
 	  "depth",GST_PROPS_INT(8),
 	  "signed",GST_PROPS_BOOLEAN(FALSE),
@@ -1577,9 +1655,7 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('t','w','o','s'):
       /* FIXME */
-      return GST_CAPS_NEW("twos_caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(0),
+      return GST_CAPS_NEW("twos_caps","audio/x-raw-int",
 	  "width",GST_PROPS_INT(16),
 	  "depth",GST_PROPS_INT(16),
 	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
@@ -1588,9 +1664,7 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('s','o','w','t'):
       /* FIXME */
-      return GST_CAPS_NEW("sowt_caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(0),
+      return GST_CAPS_NEW("sowt_caps","audio/x-raw-int",
 	  "width",GST_PROPS_INT(16),
 	  "depth",GST_PROPS_INT(16),
 	  "endianness",GST_PROPS_INT(G_LITTLE_ENDIAN),
@@ -1598,22 +1672,24 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('f','l','6','4'):
-      return GST_CAPS_NEW("fl64_caps","audio/raw",
-	  "format",GST_PROPS_STRING("float"),
-	  "layout",GST_PROPS_STRING("gdouble"),
+      return GST_CAPS_NEW("fl64_caps","audio/x-raw-float",
+          "depth",GST_PROPS_INT (64),
+          "endianness",GST_PROPS_INT (G_BIG_ENDIAN),
+          "intercept",GST_PROPS_FLOAT (0.0),
+          "slope",GST_PROPS_FLOAT (1.0),
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('f','l','3','2'):
-      return GST_CAPS_NEW("fl32_caps","audio/raw",
-	  "format",GST_PROPS_STRING("float"),
-	  "layout",GST_PROPS_STRING("gfloat"),
+      return GST_CAPS_NEW("fl32_caps","audio/x-raw-float",
+          "depth",GST_PROPS_INT (32),
+          "endianness",GST_PROPS_INT (G_BIG_ENDIAN),
+          "intercept",GST_PROPS_FLOAT (0.0),
+          "slope",GST_PROPS_FLOAT (1.0),
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('i','n','2','4'):
       /* FIXME */
-      return GST_CAPS_NEW("in24_caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(0),
+      return GST_CAPS_NEW("in24_caps","audio/x-raw-int",
 	  "width",GST_PROPS_INT(24),
 	  "depth",GST_PROPS_INT(32),
 	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
@@ -1622,9 +1698,7 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('i','n','3','2'):
       /* FIXME */
-      return GST_CAPS_NEW("in32_caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(0),
+      return GST_CAPS_NEW("in32_caps","audio/x-raw-int",
 	  "width",GST_PROPS_INT(24),
 	  "depth",GST_PROPS_INT(32),
 	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
@@ -1632,42 +1706,70 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('u','l','a','w'):
       /* FIXME */
-      return GST_CAPS_NEW("ulaw_caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(2),
+      return GST_CAPS_NEW("ulaw_caps","audio/x-mulaw",
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('a','l','a','w'):
       /* FIXME */
-      return GST_CAPS_NEW("alaw_caps","audio/raw",
-	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(1),
+      return GST_CAPS_NEW("alaw_caps","audio/x-alaw",
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case 0x6d730002:
       /* Microsoft ADPCM-ACM code 2 */
-      return GST_CAPS_NEW("msxx_caps","audio/adpcm",NULL);
+      return GST_CAPS_NEW("msxx_caps","audio/x-adpcm",
+	  "layout", GST_PROPS_STRING("microsoft"),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
     case 0x6d730011:
       /* FIXME DVI/Intel IMA ADPCM/ACM code 17 */
-      return GST_CAPS_NEW("msxx_caps","audio/adpcm",NULL);
+      return GST_CAPS_NEW("msxx_caps","audio/x-adpcm",
+	  "layout", GST_PROPS_STRING("quicktime"),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
     case 0x6d730055:
       /* MPEG layer 3, CBR only (pre QT4.1) */
     case GST_MAKE_FOURCC('.','m','p','3'):
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
-      return GST_CAPS_NEW("_mp3_caps","audio/x-mp3",NULL);
+      return GST_CAPS_NEW("_mp3_caps","audio/mpeg",
+	  "layer", GST_PROPS_INT(3),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
     case GST_MAKE_FOURCC('M','A','C','3'):
       /* MACE 3:1 */
       return GST_CAPS_NEW("MAC3_caps","audio/x-mace",
-	  "maceversion",GST_PROPS_INT(3), NULL);
+	  "maceversion",GST_PROPS_INT(3),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
     case GST_MAKE_FOURCC('M','A','C','6'):
       /* MACE 6:1 */
       return GST_CAPS_NEW("MAC3_caps","audio/x-mace",
-	  "maceversion",GST_PROPS_INT(6));
+	  "maceversion",GST_PROPS_INT(6),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
     case GST_MAKE_FOURCC('O','g','g','V'):
       /* Ogg Vorbis */
-      return GST_CAPS_NEW("OggV_caps","application/x-ogg", NULL);
+      return GST_CAPS_NEW("OggV_caps","application/ogg",
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
     case GST_MAKE_FOURCC('d','v','c','a'):
       /* DV audio */
+      return GST_CAPS_NEW("dvca_caps","audio/x-dv",
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  NULL);
+    case GST_MAKE_FOURCC('m','p','4','a'):
+      /* MPEG-4 AAC */
+      return GST_CAPS_NEW("mp4a_caps", "audio/mpeg",
+	   "mpegversion", GST_PROPS_INT(4),
+	   "rate", GST_PROPS_INT_RANGE(1, G_MAXINT),
+	   "channels", GST_PROPS_INT_RANGE(1, G_MAXINT),
+	   "systemstream", GST_PROPS_BOOLEAN(FALSE), NULL);
     case GST_MAKE_FOURCC('q','t','v','r'):
       /* ? */
     case GST_MAKE_FOURCC('Q','D','M','2'):

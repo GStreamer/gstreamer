@@ -41,8 +41,8 @@ GstElementDetails modplug_details = {
   "LGPL",
   "Module decoder based on modplug engine",
   VERSION,
-  "Jeremy SIMON <jsimon13@yahoo.fr> "
-  "Kenton Varda <temporal@gauge3d.org> "
+  "Jeremy SIMON <jsimon13@yahoo.fr>\n"
+  "Kenton Varda <temporal@gauge3d.org>\n"
   "Olivier Lapicque <olivierl@jps.net>",
   "(C) 2001"
 };
@@ -63,13 +63,10 @@ enum {
   ARG_MEGABASS,
   ARG_MEGABASS_AMOUNT,
   ARG_MEGABASS_RANGE,
-  ARG_FREQUENCY,
   ARG_NOISE_REDUCTION,
   ARG_SURROUND,
   ARG_SURROUND_DEPTH,
   ARG_SURROUND_DELAY,
-  ARG_CHANNEL,
-  ARG_16BIT,
   ARG_OVERSAMP,
   ARG_METADATA,
   ARG_STREAMINFO
@@ -79,29 +76,10 @@ GST_PAD_TEMPLATE_FACTORY (modplug_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "modplug_src",
-    "audio/raw",  
-      "format",      GST_PROPS_STRING ("int"),
-      "law",         GST_PROPS_INT (0),
-      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",      GST_PROPS_BOOLEAN (TRUE),
-      "width",       GST_PROPS_INT (16),
-      "depth",       GST_PROPS_INT (16), 
-      "rate",        GST_PROPS_INT_RANGE (11025, 44100),
-      "channels",    GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW ( 
-    "modplug_src",
-    "audio/raw",  
-      "format",      GST_PROPS_STRING ("int"),
-      "law",         GST_PROPS_INT (0),
-      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",      GST_PROPS_BOOLEAN (FALSE),
-      "width",       GST_PROPS_INT (8),
-      "depth",       GST_PROPS_INT (8), 
-      "rate",        GST_PROPS_INT_RANGE (11025, 44100),
-      "channels",    GST_PROPS_INT_RANGE (1, 2)
+    "audio/x-raw-int",  
+    GST_AUDIO_INT_PAD_TEMPLATE_PROPS
   )
 )
 
@@ -113,21 +91,6 @@ GST_PAD_TEMPLATE_FACTORY (modplug_sink_template_factory,
     "modplug_sink",
     "audio/x-mod",
     NULL
-  ),
-  GST_CAPS_NEW (
-    "modplug_sink",
-    "audio/x-xm",
-    NULL
-  ),
-  GST_CAPS_NEW (
-    "modplug_sink",
-    "audio/x-s3m",
-    NULL
-  ),
-  GST_CAPS_NEW (
-    "modplug_sink",
-    "audio/x-it",
-    NULL
   )
 )
 
@@ -138,100 +101,64 @@ enum {
 };
 
 
-static void		gst_modplug_class_init		(GstModPlugClass *klass);
-static void		gst_modplug_init		      (GstModPlug *filter);
-static void		gst_modplug_set_property 	(GObject *object, guint id, const GValue *value, GParamSpec *pspec );
-static void		gst_modplug_get_property	(GObject *object, guint id, GValue *value, GParamSpec *pspec );
-static void  	gst_modplug_loop          (GstElement *element);
-static void		gst_modplug_setup 		    (GstModPlug *modplug);
-static const GstFormat* 
-              gst_modplug_get_formats (GstPad *pad);
-static const GstQueryType*
-              gst_modplug_get_query_types (GstPad *pad);
-static gboolean		
-              gst_modplug_src_event	(GstPad *pad, GstEvent *event);
-static gboolean		
-              gst_modplug_src_query (GstPad *pad, GstQueryType type, GstFormat *format, gint64 *value);
+static void	gst_modplug_class_init		(GstModPlugClass *klass);
+static void	gst_modplug_init		(GstModPlug *filter);
+static void	gst_modplug_set_property 	(GObject *object,
+						 guint id,
+						 const GValue *value,
+						 GParamSpec *pspec );
+static void	gst_modplug_get_property	(GObject *object,
+						 guint id,
+						 GValue *value,
+						 GParamSpec *pspec );
+static GstPadLinkReturn
+		gst_modplug_srclink		(GstPad *pad, GstCaps *caps);
+static void  	gst_modplug_loop          	(GstElement *element);
+static void	gst_modplug_setup 		(GstModPlug *modplug);
+static const GstFormat *
+              gst_modplug_get_formats 		(GstPad *pad);
+static const GstQueryType *
+              gst_modplug_get_query_types	(GstPad *pad);
+static gboolean	gst_modplug_src_event		(GstPad *pad, GstEvent *event);
+static gboolean	gst_modplug_src_query		(GstPad *pad,
+						 GstQueryType type,
+						 GstFormat *format,
+						 gint64 *value);
 static GstElementStateReturn  
-              gst_modplug_change_state   (GstElement *element);
+		gst_modplug_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-
-#define GST_TYPE_MODPLUG_MIXFREQ (gst_modplug_mixfreq_get_type())
-
-static GType 
-gst_modplug_mixfreq_get_type (void)
-{
-  static GType modplug_mixfreq_type = 0;
-  static GEnumValue modplug_mixfreq[] = {
-    { 0, "8000",  "8000 Hz" },
-    { 1, "11025", "11025 Hz" },
-    { 2, "22100", "22100 Hz" },
-    { 3, "44100", "44100 Hz" },
-    { 0, NULL, NULL },
-  };
-  if (! modplug_mixfreq_type ) {
-    modplug_mixfreq_type = g_enum_register_static ("GstModPlugmixfreq", modplug_mixfreq);
-  }
-  return modplug_mixfreq_type;
-}
-
 
 static GstCaps* 
 modplug_type_find (GstBuffer *buf, gpointer priv) 
 {  
-  if (MOD_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Mod_669_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Amf_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Dsm_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Fam_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Gdm_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Imf_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (It_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-it", NULL);
-  
-  if (M15_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  /* FIXME
-  if ( Med_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/x-mod", NULL);
-  */
-  
-  if (Mtm_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (Okt_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
-  
-  if (S3m_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-s3m", NULL);
-  
-  if (Xm_CheckType (buf))
-    return gst_caps_new ("modplug_type_find", "audio/x-xm", NULL);
+  if (MOD_CheckType (buf)     ||
+      Mod_669_CheckType (buf) ||
+      Amf_CheckType (buf)     ||
+      Dsm_CheckType (buf)     ||
+      Fam_CheckType (buf)     ||
+      Gdm_CheckType (buf)     ||
+      Imf_CheckType (buf)     ||
+      It_CheckType (buf)      ||
+      M15_CheckType (buf)     ||
+      /*Med_CheckType (buf)     || <- FIXME */
+      Mtm_CheckType (buf)     ||
+      Okt_CheckType (buf)     ||
+      S3m_CheckType (buf)     ||
+      Xm_CheckType (buf)) {
+    return gst_caps_new ("modplug_type_find",
+			 "audio/x-mod",
+			   NULL);
+  }
   
   return NULL;
 }
 
 static GstTypeDefinition modplug_definitions[] = {
-  { "modplug_audio/mod", "audio/x-mod", ".mod .sam .med .stm .mtm .669 .ult .far .amf  .dsm .imf .gdm .stx .okt", modplug_type_find },
-  { "modplug_audio/xm", "audio/x-xm", ".xm", modplug_type_find },
-  { "modplug_audio/it", "audio/x-it", ".it", modplug_type_find },
-  { "modplug_audio/s3m", "audio/x-s3m", ".s3m", modplug_type_find },
+  { "modplug_audio/mod", "audio/x-mod",
+    ".mod .sam .med .stm .mtm .669 .ult .far .amf "
+    ".dsm .imf .gdm .stx .okt .xm .it .s3m",
+    modplug_type_find },
   { NULL, NULL, NULL, NULL }
 };
 
@@ -272,14 +199,6 @@ gst_modplug_class_init (GstModPlugClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SONGNAME,
     g_param_spec_string("songname","Songname","The song name",
                         "", G_PARAM_READABLE));
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_enum("mixfreq", "mixfreq", "mixfreq",
-                      GST_TYPE_MODPLUG_MIXFREQ, 3,(GParamFlags)G_PARAM_READWRITE ));
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_16BIT,
-    g_param_spec_boolean("use16bit", "use16bit", "use16bit",
-                         TRUE, (GParamFlags)G_PARAM_READWRITE ));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_REVERB,
     g_param_spec_boolean("reverb", "reverb", "reverb",
@@ -347,6 +266,7 @@ gst_modplug_init (GstModPlug *modplug)
 
   modplug->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (modplug_src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT(modplug), modplug->srcpad);
+  gst_pad_set_link_function (modplug->srcpad, gst_modplug_srclink);
   
   gst_pad_set_event_function (modplug->srcpad, (GstPadEventFunction)GST_DEBUG_FUNCPTR(gst_modplug_src_event));
   gst_pad_set_query_function (modplug->srcpad, gst_modplug_src_query);
@@ -375,7 +295,6 @@ gst_modplug_init (GstModPlug *modplug)
   
   modplug->state = MODPLUG_STATE_NEED_TUNE;
 }
-
 
 static void
 gst_modplug_setup (GstModPlug *modplug)
@@ -549,10 +468,10 @@ gst_modplug_update_metadata (GstModPlug *modplug)
 }
 
 
-
-static gboolean
+static GstPadLinkReturn
 modplug_negotiate (GstModPlug *modplug)
 {
+  GstPadLinkReturn ret = GST_PAD_LINK_OK;
   gboolean sign;
   modplug->length = 1152 * modplug->channel;
   
@@ -567,31 +486,48 @@ modplug_negotiate (GstModPlug *modplug)
     sign = FALSE;
   }
     
-  if (!GST_PAD_CAPS (modplug->srcpad)) {
-    if (!gst_pad_try_set_caps (modplug->srcpad, 
-      GST_CAPS_NEW (
-        "modplug_src",
-        "audio/raw",
-          "format",       	GST_PROPS_STRING ("int"),
-            "law",        	GST_PROPS_INT (0),            
-            "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
-            "signed",     	GST_PROPS_BOOLEAN (sign),
-            "width",      	GST_PROPS_INT (modplug->bitsPerSample),
-            "depth",      	GST_PROPS_INT (modplug->bitsPerSample),
-            "rate",       	GST_PROPS_INT (modplug->frequency),
-            "channels",     GST_PROPS_INT (modplug->channel),
-           NULL)
-       ))
-    {
-      return FALSE;
-    }
+  if ((ret = gst_pad_try_set_caps (modplug->srcpad, 
+    GST_CAPS_NEW (
+      "modplug_src",
+      "audio/x-raw-int",
+        "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
+        "signed",     	GST_PROPS_BOOLEAN (sign),
+        "width",      	GST_PROPS_INT (modplug->bitsPerSample),
+        "depth",      	GST_PROPS_INT (modplug->bitsPerSample),
+        "rate",       	GST_PROPS_INT (modplug->frequency),
+        "channels",     GST_PROPS_INT (modplug->channel),
+         NULL)
+     )) <= 0) {
+    return ret;
   }
   
- gst_modplug_setup (modplug);
+  gst_modplug_setup (modplug);
 
-  return TRUE;
+  return ret;
 }
 
+
+static GstPadLinkReturn
+gst_modplug_srclink (GstPad *pad, GstCaps *caps)
+{
+  GstModPlug *modplug; 
+
+  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
+
+  if (gst_caps_has_property_typed (caps, "depth", GST_PROPS_INT_TYPE)) {
+    gint depth;
+    gst_caps_get_int (caps, "depth", &depth);
+    modplug->_16bit = (depth == 16);
+  }
+  if (gst_caps_has_property_typed (caps, "channels", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "channels", &modplug->channel);
+  }
+  if (gst_caps_has_property_typed (caps, "rate", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "rate", &modplug->frequency);
+  }
+
+  return modplug_negotiate(modplug);
+}
 
 static void
 gst_modplug_handle_event (GstModPlug *modplug)
@@ -684,7 +620,8 @@ gst_modplug_loop (GstElement *element)
   {            
     modplug->mSoundFile = new CSoundFile;
     
-    if (!modplug_negotiate (modplug)) {
+    if (!GST_PAD_CAPS (modplug->srcpad) &&
+        modplug_negotiate (modplug) <= 0) {
       gst_element_error (GST_ELEMENT (modplug), "could not negotiate format");
       return;
     }
@@ -839,12 +776,6 @@ gst_modplug_set_property (GObject *object, guint id, const GValue *value, GParam
     case ARG_MEGABASS_RANGE:
       modplug->megabass_range = g_value_get_int (value);
       break;
-    case ARG_FREQUENCY:
-      modplug->frequency = g_value_get_enum (value);
-      break;
-    case ARG_CHANNEL:
-      modplug->channel = g_value_get_int (value);
-      break;
     case ARG_NOISE_REDUCTION:
       modplug->noise_reduction = g_value_get_boolean (value);
       break;
@@ -856,9 +787,6 @@ gst_modplug_set_property (GObject *object, guint id, const GValue *value, GParam
       break;
     case ARG_SURROUND_DELAY:
       modplug->surround_delay = g_value_get_int (value);
-      break;
-    case ARG_16BIT:
-      modplug->_16bit = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -892,15 +820,6 @@ gst_modplug_get_property (GObject *object, guint id, GValue *value, GParamSpec *
       break;
     case ARG_MEGABASS_RANGE:
       g_value_set_int (value, modplug->megabass_range);
-      break;
-    case ARG_FREQUENCY:
-      g_value_set_enum (value, modplug->frequency);
-      break;
-    case ARG_CHANNEL:
-      g_value_set_int (value, modplug->channel);
-      break;
-    case ARG_16BIT:
-      g_value_set_boolean (value, modplug->_16bit);
       break;
     case ARG_SURROUND:
       g_value_set_boolean (value, modplug->surround);

@@ -75,9 +75,7 @@ GST_PAD_TEMPLATE_FACTORY (dxr3audiosink_pcm_sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "dxr3audiosink_pcm_sink",
-    "audio/raw",
-      "format",            GST_PROPS_STRING ("int"),
-       "law",              GST_PROPS_INT (0),
+    "audio/x-raw-int",
        "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
        "signed",           GST_PROPS_BOOLEAN (TRUE),
        "width",            GST_PROPS_INT (16),
@@ -98,8 +96,9 @@ GST_PAD_TEMPLATE_FACTORY (dxr3audiosink_ac3_sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "dxr3audiosink_ac3_sink",
-    "audio/a52",
+    "audio/x-ac3",
     NULL
+    /* no parameters needed, we don't need a parsed stream */
   )
 )
 
@@ -507,7 +506,7 @@ dxr3audiosink_pcm_sinklink (GstPad *pad, GstCaps *caps)
   }
 
   mimetype = gst_caps_get_mime(caps);
-  if (strcmp (mimetype, "audio/raw") != 0) {
+  if (strcmp (mimetype, "audio/x-raw-int") != 0) {
     return GST_PAD_LINK_REFUSED;
   }
 

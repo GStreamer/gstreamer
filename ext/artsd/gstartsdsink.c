@@ -45,9 +45,6 @@ enum {
 enum {
   ARG_0,
   ARG_MUTE,
-  ARG_DEPTH,
-  ARG_CHANNELS,
-  ARG_RATE,
   ARG_NAME,
 };
 
@@ -57,27 +54,24 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
     "artsdsink_sink",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
+    "audio/x-raw-int",				/* the mime type of the caps */
       "format",     GST_PROPS_STRING ("int"),
       "law",        GST_PROPS_INT (0),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_BOOLEAN (FALSE),
-      "width",      GST_PROPS_INT (8),
-      "depth",      GST_PROPS_INT (8),
+      "width",      GST_PROPS_LIST (
+		      GST_PROPS_INT (8),
+		      GST_PROPS_INT (16)
+                    ),
+      "depth",      GST_PROPS_LIST (
+		      GST_PROPS_INT (8),
+		      GST_PROPS_INT (16)
+                    ),
       "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_LIST (GST_PROPS_INT (1), GST_PROPS_INT (2))
-  ),
-  GST_CAPS_NEW (
-    "artsdsink_sink",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_LIST (GST_PROPS_INT (1), GST_PROPS_INT (2))
+      "channels",   GST_PROPS_LIST (
+		      GST_PROPS_INT (1),
+		      GST_PROPS_INT (2)
+		    )
   )
 );
 
@@ -88,46 +82,13 @@ static gboolean			gst_artsdsink_open_audio		(GstArtsdsink *sink);
 static void			gst_artsdsink_close_audio		(GstArtsdsink *sink);
 static GstElementStateReturn	gst_artsdsink_change_state		(GstElement *element);
 static gboolean			gst_artsdsink_sync_parms		(GstArtsdsink *artsdsink);
-
+static GstPadLinkReturn		gst_artsdsink_link			(GstPad *pad, GstCaps *caps);
 static void			gst_artsdsink_chain			(GstPad *pad, GstBuffer *buf);
 
 static void			gst_artsdsink_set_property		(GObject *object, guint prop_id, 
 									 const GValue *value, GParamSpec *pspec);
 static void			gst_artsdsink_get_property		(GObject *object, guint prop_id, 
 									 GValue *value, GParamSpec *pspec);
-
-#define GST_TYPE_ARTSDSINK_DEPTHS (gst_artsdsink_depths_get_type())
-static GType
-gst_artsdsink_depths_get_type (void)
-{
-  static GType artsdsink_depths_type = 0;
-  static GEnumValue artsdsink_depths[] = {
-    {8, "8", "8 Bits"},
-    {16, "16", "16 Bits"},
-    {0, NULL, NULL},
-  };
-  if (!artsdsink_depths_type) {
-    artsdsink_depths_type = g_enum_register_static("GstArtsdsinkDepths", artsdsink_depths);
-  }
-  return artsdsink_depths_type;
-}
-
-#define GST_TYPE_ARTSDSINK_CHANNELS (gst_artsdsink_channels_get_type())
-static GType
-gst_artsdsink_channels_get_type (void)
-{
-  static GType artsdsink_channels_type = 0;
-  static GEnumValue artsdsink_channels[] = {
-    {1, "1", "Mono"},
-    {2, "2", "Stereo"},
-    {0, NULL, NULL},
-  };
-  if (!artsdsink_channels_type) {
-    artsdsink_channels_type = g_enum_register_static("GstArtsdsinkChannels", artsdsink_channels);
-  }
-  return artsdsink_channels_type;
-}
-
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_artsdsink_signals[LAST_SIGNAL] = { 0 }; */
@@ -167,15 +128,7 @@ gst_artsdsink_class_init (GstArtsdsinkClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
                          TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
-    g_param_spec_enum("depth","depth","depth",
-                      GST_TYPE_ARTSDSINK_DEPTHS,16,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_enum("channels","channels","channels",
-                      GST_TYPE_ARTSDSINK_CHANNELS,2,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
-    g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
     g_param_spec_string("name","name","name",
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
@@ -193,15 +146,10 @@ gst_artsdsink_init(GstArtsdsink *artsdsink)
 		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(artsdsink), artsdsink->sinkpad);
   gst_pad_set_chain_function(artsdsink->sinkpad, gst_artsdsink_chain);
+  gst_pad_set_link_function(artsdsink->sinkpad, gst_artsdsink_link);
 
   artsdsink->connected = FALSE;
   artsdsink->mute = FALSE;
-
-  /* FIXME: get default from somewhere better than just putting them inline. */
-  artsdsink->signd = TRUE;
-  artsdsink->depth = 16;
-  artsdsink->channels = 2;
-  artsdsink->frequency = 44100;
   artsdsink->connect_name = NULL;
 }
 
@@ -218,6 +166,26 @@ gst_artsdsink_sync_parms (GstArtsdsink *artsdsink)
   return gst_artsdsink_open_audio (artsdsink);
 }
 
+static GstPadLinkReturn
+gst_artsdsink_link (GstPad *pad, GstCaps *caps)
+{
+  GstArtsdsink *artsdsink = GST_ARTSDSINK (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;
+
+  gst_caps_get (caps,
+		"rate",     &artsdsink->frequency,
+		"depth",    &artsdsink->depth,
+		"signed",   &artsdsink->signd,
+		"channels", &artsdsink->channels,
+		NULL);
+
+  if (gst_artsdsink_sync_parms (artsdsink))
+    return GST_PAD_LINK_OK;
+
+  return GST_PAD_LINK_REFUSED;
+}
 
 static void
 gst_artsdsink_chain (GstPad *pad, GstBuffer *buf)
@@ -267,18 +235,6 @@ gst_artsdsink_set_property (GObject *object, guint prop_id, const GValue *value,
     case ARG_MUTE:
       artsdsink->mute = g_value_get_boolean (value);
       break;
-    case ARG_DEPTH:
-      artsdsink->depth = g_value_get_enum (value);
-      gst_artsdsink_sync_parms (artsdsink);
-      break;
-    case ARG_CHANNELS:
-      artsdsink->channels = g_value_get_enum (value);
-      gst_artsdsink_sync_parms (artsdsink);
-      break;
-    case ARG_RATE:
-      artsdsink->frequency = g_value_get_int (value);
-      gst_artsdsink_sync_parms (artsdsink);
-      break;
     case ARG_NAME:
       if (artsdsink->connect_name != NULL) g_free(artsdsink->connect_name);
       if (g_value_get_string (value) == NULL)
@@ -303,15 +259,6 @@ gst_artsdsink_get_property (GObject *object, guint prop_id, GValue *value, GPara
   switch (prop_id) {
     case ARG_MUTE:
       g_value_set_boolean (value, artsdsink->mute);
-      break;
-    case ARG_DEPTH:
-      g_value_set_enum (value, artsdsink->depth);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_enum (value, artsdsink->channels);
-      break;
-    case ARG_RATE:
-      g_value_set_int (value, artsdsink->frequency);
       break;
     case ARG_NAME:
       g_value_set_string (value, artsdsink->connect_name);

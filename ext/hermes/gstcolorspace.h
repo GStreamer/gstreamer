@@ -76,6 +76,7 @@ struct _GstColorspace {
 
   GstColorSpaceConverterType type;
   gint width, height;
+  gfloat fps;
   gint srcbpp, destbpp;
   gboolean disabled;
 

@@ -59,9 +59,7 @@ GST_PAD_TEMPLATE_FACTORY (afparse_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (  
     "audiofile_src",
-    "audio/raw",
-      "format",             GST_PROPS_STRING ("int"),
-        "law",              GST_PROPS_INT (0),
+    "audio/x-raw-int",
         "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
         "signed",           GST_PROPS_LIST (GST_PROPS_BOOLEAN (TRUE), GST_PROPS_BOOLEAN (FALSE)),
         "width",            GST_PROPS_INT_RANGE (8, 16),
@@ -87,7 +85,7 @@ GST_PAD_TEMPLATE_FACTORY (afparse_sink_factory,
   ),
   GST_CAPS_NEW (
     "afparse_sink_snd",
-    "audio/basic",
+    "audio/x-au",
     NULL
   )
 )
@@ -215,7 +213,7 @@ gst_afparse_loop(GstElement *element)
   }
 
   if (bypass_afread){
-    g_print("will bypass afReadFrames\n");
+    GST_DEBUG("will bypass afReadFrames\n");
   }
   
   frames_to_bytes = afparse->channels * afparse->width / 8;
@@ -352,7 +350,7 @@ gst_afparse_open_file (GstAFParse *afparse)
 
 
   /* open the file */
-  g_print("opening vfile %p\n", afparse->vfile);
+  GST_DEBUG("opening vfile %p\n", afparse->vfile);
   afparse->file = afOpenVirtualFile (afparse->vfile, "r", AF_NULL_FILESETUP);
   if (afparse->file == AF_NULL_FILEHANDLE)
   {
@@ -361,7 +359,7 @@ gst_afparse_open_file (GstAFParse *afparse)
     return FALSE;
   }
 
-  g_print("vfile opened\n");
+  GST_DEBUG("vfile opened\n");
   /* get the audiofile audio parameters */
   {
     int sampleFormat, sampleWidth;
@@ -393,9 +391,7 @@ gst_afparse_open_file (GstAFParse *afparse)
   gst_pad_try_set_caps (afparse->srcpad, 
     GST_CAPS_NEW (
       "af_src",
-      "audio/raw",
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),              /*FIXME */
+      "audio/x-raw-int",
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
       "signed",     GST_PROPS_BOOLEAN (afparse->is_signed),
       "width",      GST_PROPS_INT (afparse->width),
@@ -444,22 +440,19 @@ gst_afparse_vf_read (AFvirtualfile *vfile, void *data, size_t nbytes)
       /*g_print("no event found with %u bytes\n", got_bytes);*/
       return 0;
     }
-    if (event){
-      g_print("got event\n");
-      if (GST_EVENT_TYPE(event) == GST_EVENT_EOS){
+    switch (GST_EVENT_TYPE(event)) {
+      case GST_EVENT_EOS:
         return 0;
-      }
-      else if (GST_EVENT_TYPE(event) == GST_EVENT_FLUSH){
-        g_print("flush\n");
-      }
-      else if (GST_EVENT_TYPE(event) == GST_EVENT_DISCONTINUOUS){
-        g_print("seek done\n");
+      case GST_EVENT_FLUSH:
+        GST_DEBUG("flush");
+        break;
+      case GST_EVENT_DISCONTINUOUS:
+        GST_DEBUG("seek done");
         got_bytes = gst_bytestream_peek_bytes(bs, &bytes, nbytes);
-      }
-      else {
-        g_print("unknown event %d", GST_EVENT_TYPE(event));
+        break;
+      default:
+        g_warning("unknown event %d", GST_EVENT_TYPE(event));
         got_bytes = gst_bytestream_peek_bytes(bs, &bytes, nbytes);
-      }
     }
   }
   
@@ -493,7 +486,7 @@ gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative)
   }
   
   if (gst_bytestream_seek(bs, (gint64)offset, method)){
-    g_print("doing seek to %d\n", (gint)offset);
+    GST_DEBUG("doing seek to %d", (gint)offset);
     return offset;
   }
   return 0;
@@ -502,11 +495,12 @@ gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative)
 static long 
 gst_afparse_vf_length (AFvirtualfile *vfile)
 {
-  /*GstByteStream *bs = (GstByteStream*)vfile->closure;*/
-  /* FIXME there is currently no practical way to do this.
-   * wait for the events rewrite to drop */
-  g_warning("cannot get length at the moment");
-  return G_MAXLONG;
+  GstByteStream *bs = (GstByteStream*)vfile->closure;
+  guint64 length;
+
+  length = gst_bytestream_length(bs);
+  GST_DEBUG("doing length: %" G_GUINT64_FORMAT, length);
+  return length;
 }
 
 static ssize_t 
@@ -522,7 +516,7 @@ gst_afparse_vf_destroy(AFvirtualfile *vfile)
 {
   /* GstByteStream *bs = (GstByteStream*)vfile->closure;*/
 
-  g_print("doing destroy\n");
+  GST_DEBUG("doing destroy");
 }
 
 static long 
@@ -532,7 +526,7 @@ gst_afparse_vf_tell   (AFvirtualfile *vfile)
   guint64 offset;
 
   offset = gst_bytestream_tell(bs);
-  g_print("doing tell: %" G_GUINT64_FORMAT "\n", offset);
+  GST_DEBUG("doing tell: %" G_GUINT64_FORMAT, offset);
   return offset;
 }
 

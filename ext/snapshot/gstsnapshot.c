@@ -24,6 +24,7 @@
 #include <inttypes.h>
 
 #include "gstsnapshot.h"
+#include <gst/video/video.h>
 
 #define MAX_HEIGHT	2048
 
@@ -42,15 +43,14 @@ GST_PAD_TEMPLATE_FACTORY (snapshot_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "snapshot_src",
-   "video/raw",
-     "format",     GST_PROPS_LIST (
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+		   GST_PROPS_LIST (
                      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
 		     GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2"))
-                   ),	          
-     "width",      GST_PROPS_INT_RANGE(0, G_MAXINT),
-     "height",     GST_PROPS_INT_RANGE(0, G_MAXINT) 
+                   )) 
   )
 )
 
@@ -58,15 +58,14 @@ GST_PAD_TEMPLATE_FACTORY (snapshot_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "snapshot_src",
-   "video/raw",
-       "format",     GST_PROPS_LIST (
-                       GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-                       GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2"))
-                     ),
-       "width",      GST_PROPS_INT_RANGE(0, G_MAXINT),
-       "height",     GST_PROPS_INT_RANGE(0, G_MAXINT)
+   "video/x-raw-yuv",
+     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+		   GST_PROPS_LIST (
+                     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+		     GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2"))
+                   )) 
   )
 )
 
@@ -172,6 +171,7 @@ gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstSnapshot *filter;
   GstCaps *from_caps, *to_caps;
+  gfloat fps;
 
   filter = GST_SNAPSHOT (gst_pad_get_parent (pad));
 
@@ -180,20 +180,21 @@ gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
+  gst_caps_get_float (caps, "framerate", &fps);
   gst_caps_get_fourcc_int (caps, "format", &filter->format);
   filter->to_bpp = 24;
 
 
   to_caps = GST_CAPS_NEW (
     "snapshot_conversion",
-    "video/raw",
-      "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-      "width",    GST_PROPS_INT( filter->width ),
-      "height",   GST_PROPS_INT( filter->height ),
+    "video/x-raw-rgb",
+      "width",      GST_PROPS_INT( filter->width ),
+      "height",     GST_PROPS_INT( filter->height ),
       "red_mask",   GST_PROPS_INT (0x0000FF),
       "green_mask", GST_PROPS_INT (0x00FF00),
       "blue_mask",  GST_PROPS_INT (0xFF0000),
-      "bpp",        GST_PROPS_INT( 24 ) 
+      "bpp",        GST_PROPS_INT( 24 ),
+      "framerate",  GST_PROPS_FLOAT (fps)
   );
 
   switch ( filter->format )
@@ -202,10 +203,11 @@ gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
     case GST_MAKE_FOURCC('I','4','2','0'):
        from_caps = GST_CAPS_NEW (
          "snapshot_from", 
-         "video/raw",
-         "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-         "width",    GST_PROPS_INT( filter->width ),
-         "height",   GST_PROPS_INT( filter->height )
+         "video/x-raw-yuv",
+         "format",    GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+         "width",     GST_PROPS_INT( filter->width ),
+         "height",    GST_PROPS_INT( filter->height ),
+	 "framerate", GST_PROPS_FLOAT (fps)
        );
 
        filter->converter = gst_colorspace_yuv2rgb_get_converter ( from_caps, to_caps );

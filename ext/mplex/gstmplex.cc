@@ -86,8 +86,8 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sink_audio",
-    "audio/mp3",
-       NULL
+    "audio/mpeg",
+      "layer", GST_PROPS_RANGE (1, 3)
   )
 )
 
@@ -97,7 +97,7 @@ GST_PAD_TEMPLATE_FACTORY (private_1_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sink_private1",
-    "audio/ac3",
+    "audio/x-ac3",
        NULL
   )
 )

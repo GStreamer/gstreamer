@@ -21,14 +21,16 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <math.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include "gsty4mencode.h"
 
-static GstElementDetails lavencode_details = {
-  "LavEncode",
+static GstElementDetails y4mencode_details = {
+  "Y4mEncode",
   "Codec/Video/Encoder",
   "LGPL",
-  "Encodes a YUV frame into the lav format (mjpeg_tools)",
+  "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2001",
@@ -45,65 +47,75 @@ enum {
   ARG_0
 };
 
-GST_PAD_TEMPLATE_FACTORY (lavencode_src_factory,
+GST_PAD_TEMPLATE_FACTORY (y4mencode_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "test_src",
-    "application/x-lav",
-    NULL
+    "application/x-yuv4mpeg",
+      "y4mversion", GST_PROPS_INT (1)
   )
 )
 
-GST_PAD_TEMPLATE_FACTORY (lavencode_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (y4mencode_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "test_src",
-    "video/raw",
-      "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-      "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height", GST_PROPS_INT_RANGE (0, G_MAXINT)
+    "video/x-raw-yuv",
+      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
 
-static void			gst_lavencode_class_init	(GstLavEncodeClass *klass);
-static void			gst_lavencode_init		(GstLavEncode *filter);
+static void	gst_y4mencode_class_init	(GstY4mEncodeClass *klass);
+static void	gst_y4mencode_init		(GstY4mEncode *filter);
 
-static void			gst_lavencode_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_lavencode_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_y4mencode_set_property	(GObject       *object,
+						 guint          prop_id,
+						 const GValue  *value,
+						 GParamSpec    *pspec);
+static void	gst_y4mencode_get_property	(GObject       *object,
+						 guint          prop_id,
+						 GValue        *value,
+						 GParamSpec    *pspec);
 
-static void			gst_lavencode_chain		(GstPad *pad, GstBuffer *buf);
-static GstElementStateReturn 	gst_lavencode_change_state 	(GstElement *element);
+static void	gst_y4mencode_chain		(GstPad        *pad,
+						 GstBuffer     *buf);
+static GstElementStateReturn
+		gst_y4mencode_change_state 	(GstElement    *element);
 
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_lavencode_get_type(void) {
-  static GType lavencode_type = 0;
+gst_y4mencode_get_type(void) {
+  static GType y4mencode_type = 0;
 
-  if (!lavencode_type) {
-    static const GTypeInfo lavencode_info = {
-      sizeof(GstLavEncodeClass),      NULL,
-      NULL,
-      (GClassInitFunc)gst_lavencode_class_init,
+  if (!y4mencode_type) {
+    static const GTypeInfo y4mencode_info = {
+      sizeof(GstY4mEncodeClass),
       NULL,
       NULL,
-      sizeof(GstLavEncode),
+      (GClassInitFunc)gst_y4mencode_class_init,
+      NULL,
+      NULL,
+      sizeof(GstY4mEncode),
       0,
-      (GInstanceInitFunc)gst_lavencode_init,
+      (GInstanceInitFunc)gst_y4mencode_init,
     };
-    lavencode_type = g_type_register_static(GST_TYPE_ELEMENT, "GstLavEncode", &lavencode_info, 0);
+    y4mencode_type = g_type_register_static(GST_TYPE_ELEMENT,
+					     "GstY4mEncode",
+					     &y4mencode_info, 0);
   }
-  return lavencode_type;
+  return y4mencode_type;
 }
 
 static void
-gst_lavencode_class_init (GstLavEncodeClass *klass)
+gst_y4mencode_class_init (GstY4mEncodeClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -113,48 +125,74 @@ gst_lavencode_class_init (GstLavEncodeClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gstelement_class->change_state = gst_lavencode_change_state;
+  gstelement_class->change_state = gst_y4mencode_change_state;
 
-  gobject_class->set_property = gst_lavencode_set_property;
-  gobject_class->get_property = gst_lavencode_get_property;
+  gobject_class->set_property = gst_y4mencode_set_property;
+  gobject_class->get_property = gst_y4mencode_get_property;
 }
 
 static GstPadLinkReturn
-gst_lavencode_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_y4mencode_sinkconnect (GstPad *pad, GstCaps *caps)
 {
-  GstLavEncode *filter;
+  GstY4mEncode *filter;
+  gint idx = -1, i;
+  gfloat fps;
+  float framerates[] = {
+    00.000,
+    23.976, 24.000,              /* 24fps movie */
+    25.000,                      /* PAL */
+    29.970, 30.000,              /* NTSC */
+    50.000,
+    59.940, 60.000
+  };
 
-  filter = GST_LAVENCODE (gst_pad_get_parent (pad));
+  filter = GST_Y4MENCODE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
+  gst_caps_get_float (caps, "framerate", &fps);
+
+  /* find fps idx */
+  for (i = 1; i < 9; i++) {
+    if (idx == -1) {
+       idx = i;
+    } else {
+      gfloat old_diff = fabs(framerates[idx] - fps),
+             new_diff = fabs(framerates[i]   - fps);
+
+      if (new_diff < old_diff) {
+        idx = i;
+      }
+    }
+  }
+  filter->fps_idx = idx;
 
   return GST_PAD_LINK_OK;
 }
 
 static void
-gst_lavencode_init (GstLavEncode *filter)
+gst_y4mencode_init (GstY4mEncode *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (lavencode_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (y4mencode_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_pad_set_chain_function (filter->sinkpad, gst_lavencode_chain);
-  gst_pad_set_link_function (filter->sinkpad, gst_lavencode_sinkconnect);
+  gst_pad_set_chain_function (filter->sinkpad, gst_y4mencode_chain);
+  gst_pad_set_link_function (filter->sinkpad, gst_y4mencode_sinkconnect);
 
   filter->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (lavencode_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (y4mencode_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->init = TRUE;
 }
 
 static void
-gst_lavencode_chain (GstPad *pad,GstBuffer *buf)
+gst_y4mencode_chain (GstPad *pad,GstBuffer *buf)
 {
-  GstLavEncode *filter;
+  GstY4mEncode *filter;
   GstBuffer* outbuf;
   gchar *header;
   gint len;
@@ -163,9 +201,9 @@ gst_lavencode_chain (GstPad *pad,GstBuffer *buf)
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
 
-  filter = GST_LAVENCODE (gst_pad_get_parent (pad));
+  filter = GST_Y4MENCODE (gst_pad_get_parent (pad));
   g_return_if_fail(filter != NULL);
-  g_return_if_fail(GST_IS_LAVENCODE(filter));
+  g_return_if_fail(GST_IS_Y4MENCODE(filter));
 
   outbuf = gst_buffer_new ();
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (buf) + 256);
@@ -178,7 +216,8 @@ gst_lavencode_chain (GstPad *pad,GstBuffer *buf)
     header = "FRAME\n";
   }
 
-  snprintf (GST_BUFFER_DATA (outbuf), 255, header, filter->width, filter->height, 3);
+  snprintf (GST_BUFFER_DATA (outbuf), 255, header,
+	    filter->width, filter->height, filter->fps_idx);
   len = strlen (GST_BUFFER_DATA (outbuf));
 
   memcpy (GST_BUFFER_DATA (outbuf) + len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
@@ -190,13 +229,13 @@ gst_lavencode_chain (GstPad *pad,GstBuffer *buf)
 }
 
 static void
-gst_lavencode_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_y4mencode_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstLavEncode *filter;
+  GstY4mEncode *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_LAVENCODE(object));
-  filter = GST_LAVENCODE(object);
+  g_return_if_fail(GST_IS_Y4MENCODE(object));
+  filter = GST_Y4MENCODE(object);
 
   switch (prop_id) {
     default:
@@ -205,13 +244,13 @@ gst_lavencode_set_property (GObject *object, guint prop_id, const GValue *value,
 }
 
 static void
-gst_lavencode_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_y4mencode_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstLavEncode *filter;
+  GstY4mEncode *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_LAVENCODE(object));
-  filter = GST_LAVENCODE(object);
+  g_return_if_fail(GST_IS_Y4MENCODE(object));
+  filter = GST_Y4MENCODE(object);
 
   switch (prop_id) {
     default:
@@ -221,13 +260,13 @@ gst_lavencode_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 static GstElementStateReturn
-gst_lavencode_change_state (GstElement *element)
+gst_y4mencode_change_state (GstElement *element)
 {
-  GstLavEncode *filter;
+  GstY4mEncode *filter;
 
-  g_return_val_if_fail (GST_IS_LAVENCODE (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_Y4MENCODE (element), GST_STATE_FAILURE);
 
-  filter = GST_LAVENCODE(element);
+  filter = GST_Y4MENCODE(element);
 
   if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY) {
     filter->init = TRUE;
@@ -244,14 +283,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_element_factory_new("lavenc",GST_TYPE_LAVENCODE,
-                                   &lavencode_details);
+  factory = gst_element_factory_new("y4menc",GST_TYPE_Y4MENCODE,
+                                   &y4mencode_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
   gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (lavencode_src_factory));
+		  GST_PAD_TEMPLATE_GET (y4mencode_src_factory));
   gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (lavencode_sink_factory));
+		  GST_PAD_TEMPLATE_GET (y4mencode_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
@@ -261,6 +300,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "lavenc",
+  "y4menc",
   plugin_init
 };

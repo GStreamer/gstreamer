@@ -57,6 +57,8 @@ struct _Mp1VideoParse {
   guint64 last_pts;
   gint picture_in_buffer;
 
+  gint width, height;
+  gfloat fps, asr;
 };
 
 struct _Mp1VideoParseClass {

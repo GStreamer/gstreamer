@@ -45,8 +45,7 @@ gst_virtualdub_src_factory (void)
   		GST_PAD_ALWAYS,
   		GST_CAPS_NEW (
   		  "virtualdub_src",
-  		  "video/raw",
-  		    "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+  		  "video/x-raw-rgb",
   		    "bpp",            GST_PROPS_INT (32),
   		    "depth",          GST_PROPS_INT (32),
   		    "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
@@ -54,7 +53,8 @@ gst_virtualdub_src_factory (void)
   		    "green_mask",     GST_PROPS_INT (0xff00),
   		    "blue_mask",      GST_PROPS_INT (0xff),
   		    "width",          GST_PROPS_INT_RANGE (16, 4096),
-  		    "height",         GST_PROPS_INT_RANGE (16, 4096)
+  		    "height",         GST_PROPS_INT_RANGE (16, 4096),
+		    "framerate",      GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
 		)
   	     );
   }
@@ -72,8 +72,7 @@ gst_virtualdub_sink_factory (void)
   		GST_PAD_ALWAYS,
   		GST_CAPS_NEW (
   		  "virtualdub_sink",
-  		  "video/raw",
-  		    "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+  		  "video/x-raw-rgb",
   		    "bpp",            GST_PROPS_INT (32),
   		    "depth",          GST_PROPS_INT (32),
   		    "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
@@ -81,7 +80,8 @@ gst_virtualdub_sink_factory (void)
   		    "green_mask",     GST_PROPS_INT (0xff00),
   		    "blue_mask",      GST_PROPS_INT (0xff),
   		    "width",          GST_PROPS_INT_RANGE (16, 4096),
-  		    "height",         GST_PROPS_INT_RANGE (16, 4096)
+  		    "height",         GST_PROPS_INT_RANGE (16, 4096),
+		    "framerate",      GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
 		)
   	     );
   }
