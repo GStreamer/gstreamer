@@ -29,6 +29,7 @@
 #include <gst/gsttypes.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
+#include <gst/gstclock.h>
 #include <gst/gstpluginfeature.h>
 
 #ifdef __cplusplus
@@ -108,6 +109,7 @@ typedef enum {
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
 #define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
+#define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
 /*typedef struct _GstElement GstElement;*/
@@ -115,7 +117,9 @@ typedef enum {
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
-typedef void (*GstElementLoopFunction) (GstElement *element);
+typedef void 		(*GstElementLoopFunction) 	(GstElement *element);
+typedef void 		(*GstElementSetClockFunction) 	(GstElement *element, GstClock *clock);
+typedef GstClock* 	(*GstElementGetClockFunction) 	(GstElement *element);
 
 struct _GstElement {
   GstObject 		object;
@@ -128,6 +132,8 @@ struct _GstElement {
 
   GstScheduler 		*sched;
   gpointer		sched_private;
+  GstElementSetClockFunction setclockfunc;
+  GstElementGetClockFunction getclockfunc;
 
   /* element pads */
   guint16 		numpads;
@@ -182,6 +188,10 @@ const gchar*            gst_element_get_name            (GstElement *element);
 
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
+
+GstClock*		gst_element_get_clock 		(GstElement *element);
+void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
+GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, GstClockTime time);
 
 void			gst_element_yield		(GstElement *element);
 gboolean		gst_element_interrupt		(GstElement *element);

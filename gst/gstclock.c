@@ -25,176 +25,153 @@
 /* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
-#include "gstelement.h"
 #include "gstclock.h"
 
+#define CLASS(clock)  GST_CLOCK_CLASS (G_OBJECT_GET_CLASS (clock))
 
-static GstClock *the_system_clock = NULL;
 
-/**
- * gst_clock_new:
- * @name: the name of the new clock
- *
- * create a new clock element
- *
- * Returns: the new clock element
- */
-GstClock*
-gst_clock_new (gchar *name)
+static void		gst_clock_class_init		(GstClockClass *klass);
+static void		gst_clock_init			(GstClock *clock);
+
+static GstObjectClass *parent_class = NULL;
+/* static guint gst_clock_signals[LAST_SIGNAL] = { 0 }; */
+
+GType
+gst_clock_get_type (void)
 {
-  GstClock *clock = (GstClock *) g_malloc(sizeof(GstClock));
+  static GType clock_type = 0;
 
-  clock->name = g_strdup (name);
-  clock->sinkobjects = NULL;
-  clock->sinkmutex = g_mutex_new ();
-  clock->lock = g_mutex_new ();
-  g_mutex_lock (clock->sinkmutex);
-
-  clock->num = 0;
-  clock->num_locked = 0;
-  clock->locking = FALSE;
-
-  return clock;
-}
-
-/**
- * gst_clock_get_system:
- *
- * Get the global system clock
- *
- * Returns: the global clock
- */
-GstClock*
-gst_clock_get_system(void)
-{
-  if (the_system_clock == NULL) {
-    the_system_clock = gst_clock_new ("system_clock");
-    gst_clock_reset (the_system_clock);
+  if (!clock_type) {
+    static const GTypeInfo clock_info = {
+      sizeof (GstObjectClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_clock_class_init,
+      NULL,
+      NULL,
+      sizeof (GstObject),
+      4,
+      (GInstanceInitFunc) gst_clock_init,
+      NULL
+    };
+    clock_type = g_type_register_static (GST_TYPE_OBJECT, "GstClock", 
+		    			 &clock_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return the_system_clock;
+  return clock_type;
 }
 
-/**
- * gst_clock_register:
- * @clock: the name of the clock to register to
- * @obj: the object registering to the clock
- *
- * State that an object is interested in listening to the
- * given clock
- */
-void
-gst_clock_register (GstClock *clock, GstObject *obj)
+static void
+gst_clock_class_init (GstClockClass *klass)
 {
-  if ((GST_ELEMENT(obj))->numsrcpads == 0) {
-    GST_DEBUG (GST_CAT_CLOCK,"gst_clock: setting registered sink object 0x%p\n", obj);
-    clock->sinkobjects = g_list_append (clock->sinkobjects, obj);
-    clock->num++;
-  }
+  GObjectClass *gobject_class;
+  GstObjectClass *gstobject_class;
+
+  gobject_class = (GObjectClass*) klass;
+  gstobject_class = (GstObjectClass*) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 }
 
-/**
- * gst_clock_set:
- * @clock: The clock to set
- * @time: the time to set
- *
- * Set the time of the given clock to time.
- */
-void
-gst_clock_set (GstClock *clock, GstClockTime time)
+static void
+gst_clock_init (GstClock *clock)
 {
-  struct timeval tfnow;
-  GstClockTime now;
+  clock->speed = 1.0;
+  clock->active = FALSE;
+  clock->start_time = 0;
 
-  gettimeofday (&tfnow, (struct timezone *)NULL);
-  now = tfnow.tv_sec*1000000LL+tfnow.tv_usec;
-  g_mutex_lock (clock->lock);
-  clock->start_time = now - time;
-  g_mutex_unlock (clock->lock);
-  GST_DEBUG (GST_CAT_CLOCK,"gst_clock: setting clock to %llu %llu %llu\n",
-             time, now, clock->start_time);
+  clock->active_mutex = g_mutex_new ();
+  clock->active_cond = g_cond_new ();
 }
 
-/**
- * gst_clock_current_diff:
- * @clock: the clock to calculate the diff against
- * @time: the time
- *
- * Calculate the difference between the given clock and the
- * given time
- *
- * Returns: the clock difference
- */
-GstClockTimeDiff
-gst_clock_current_diff (GstClock *clock, GstClockTime time)
-{
-  struct timeval tfnow;
-  GstClockTime now;
-
-  gettimeofday (&tfnow, (struct timezone *)NULL);
-  g_mutex_lock (clock->lock);
-  now = ((guint64)tfnow.tv_sec*1000000LL+tfnow.tv_usec) - (guint64)clock->start_time;
-  g_mutex_unlock (clock->lock);
-
-  return GST_CLOCK_DIFF (time, now);
-}
-
-/**
- * gst_clock_reset:
- * @clock: the clock to reset
- *
- * Reset the given clock. The of the clock will be adjusted back
- * to 0.
- */
 void
 gst_clock_reset (GstClock *clock)
 {
-  struct timeval tfnow;
+  g_return_if_fail (GST_IS_CLOCK (clock));
 
-  gettimeofday (&tfnow, (struct timezone *)NULL);
-  g_mutex_lock (clock->lock);
-  clock->start_time = ((guint64)tfnow.tv_sec)*1000000LL+tfnow.tv_usec;
-  clock->current_time = clock->start_time;
-  clock->adjust = 0LL;
-  GST_DEBUG (GST_CAT_CLOCK,"gst_clock: setting start clock %llu\n", clock->start_time);
-  g_mutex_unlock (clock->lock);
+  clock->start_time = 0;
+  clock->active = FALSE;
+
+  if (CLASS (clock)->reset)
+    CLASS (clock)->reset (clock);
 }
 
-/**
- * gst_clock_wait:
- * @clock: the clock to wait on
- * @time: the time to wait for
- * @obj: the object performing the wait
- *
- * Wait for a specific clock tick on the given clock.
- */
 void
-gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
+gst_clock_activate (GstClock *clock, gboolean active)
 {
-  struct timeval tfnow;
-  GstClockTime now;
-  GstClockTimeDiff diff;
+  g_return_if_fail (GST_IS_CLOCK (clock));
 
+  clock->active = active;
 
-  gettimeofday (&tfnow, (struct timezone *)NULL);
-  g_mutex_lock (clock->lock);
-  now = tfnow.tv_sec*1000000LL+tfnow.tv_usec - clock->start_time;
+  if (CLASS (clock)->activate)
+    CLASS (clock)->activate (clock, active);
 
-  diff = GST_CLOCK_DIFF (time, now);
-  /* if we are not behind wait a bit */
-  GST_DEBUG (GST_CAT_CLOCK,"gst_clock: %s waiting for time %08llu %08llu %08lld\n",
-             GST_OBJECT_NAME (obj), time, now, diff);
+  g_mutex_lock (clock->active_mutex);	
+  g_cond_signal (clock->active_cond);	
+  g_mutex_unlock (clock->active_mutex);	
 
-  g_mutex_unlock (clock->lock);
-  if (diff > 10000 ) {
-    tfnow.tv_usec = (diff % 1000000);
-    tfnow.tv_sec = diff / 1000000;
-    /* FIXME, this piece of code does not work with egcs optimisations on, had to use the following line */
-    if (!tfnow.tv_sec) {
-      select(0, NULL, NULL, NULL, &tfnow);
-    }
-    else GST_DEBUG (GST_CAT_CLOCK,"gst_clock: %s waiting %u %llu %llu %llu seconds\n",
-                    GST_OBJECT_NAME (obj), (int)tfnow.tv_sec, now, diff, time);
-  }
-  GST_DEBUG (GST_CAT_CLOCK,"gst_clock: %s waiting for time %08llu %08llu %08lld done \n", 
-             GST_OBJECT_NAME (obj), time, now, diff);
 }
+
+gboolean
+gst_clock_is_active (GstClock *clock)
+{
+  g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
+
+  return clock->active;
+}
+
+void
+gst_clock_set_time (GstClock *clock, GstClockTime time)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
+
+  if (CLASS (clock)->set_time)
+    CLASS (clock)->set_time (clock, time);
+}
+
+GstClockTime
+gst_clock_get_time (GstClock *clock)
+{
+  g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
+
+  if (CLASS (clock)->get_time)
+    return CLASS (clock)->get_time (clock);
+
+  return 0LL;
+}
+
+GstClockReturn
+gst_clock_wait (GstClock *clock, GstClockTime time)
+{
+  g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_STOPPED);
+
+  if (!clock->active) {
+    g_mutex_lock (clock->active_mutex);	
+    g_cond_wait (clock->active_cond, clock->active_mutex);	
+    g_mutex_unlock (clock->active_mutex);	
+  }
+  if (CLASS (clock)->wait)
+    return CLASS (clock)->wait (clock, time);
+
+  return GST_CLOCK_TIMEOUT;
+}
+
+void
+gst_clock_set_resolution (GstClock *clock, guint64 resolution)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
+
+  if (CLASS (clock)->set_resolution)
+    CLASS (clock)->set_resolution (clock, resolution);
+}
+
+guint64
+gst_clock_get_resolution (GstClock *clock)
+{
+  g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
+
+  if (CLASS (clock)->get_resolution)
+    return CLASS (clock)->get_resolution (clock);
+
+  return 0LL;
+}
+

@@ -79,6 +79,7 @@ libgst_la_SOURCES =		\
 	gstprops.c		\
 	gstqueue.c		\
 	gstscheduler.c		\
+	gstsystemclock.c	\
 	gstthread.c		\
 	$(GST_TRACE_SRC)	\
 	gsttype.c		\
@@ -187,6 +188,7 @@ libgstinclude_HEADERS =		\
 	gstprops.h		\
 	gstqueue.h		\
 	gstscheduler.h		\
+	gstsystemclock.h	\
 	gstthread.h		\
 	gsttrace.h		\
 	gsttype.h		\

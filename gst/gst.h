@@ -34,7 +34,7 @@
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstcpu.h>
-#include <gst/gstclock.h>
+#include <gst/gstsystemclock.h>
 #include <gst/gstelement.h>
 #include <gst/gstbin.h>
 #include <gst/gstpipeline.h>

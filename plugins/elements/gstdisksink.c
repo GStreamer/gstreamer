@@ -304,7 +304,7 @@ gst_disksink_handle_event (GstPad *pad, GstEvent *event)
           gst_disksink_getcurrentfilename(disksink), sys_errlist[errno]);
       break;
     default:
-      g_warning("Unhandled event %d\n", type);
+      gst_pad_event_default (pad, event);
       break;
   }
 

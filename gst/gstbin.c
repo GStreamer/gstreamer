@@ -25,6 +25,8 @@
 
 #include "gstevent.h"
 #include "gstbin.h"
+#include "gstxml.h"
+#include "gstsystemclock.h"
 
 #include "gstscheduler.h"
 
@@ -158,6 +160,93 @@ gst_bin_reset_element_sched (GstElement * element, GstScheduler * sched)
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "resetting element's scheduler");
 
   gst_element_set_sched (element, sched);
+}
+
+
+static void
+gst_bin_get_clock_elements (GstBin *bin, GList **needing, GList **providing) 
+{
+  GList *children = gst_bin_get_list (bin);
+
+  while (children) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    if (GST_IS_BIN (child)) {
+      gst_bin_get_clock_elements (GST_BIN (child), needing, providing);
+    }
+    if (child->getclockfunc) {
+      *providing = g_list_prepend (*providing, child);
+    }
+    if (child->setclockfunc) {
+      *needing = g_list_prepend (*needing, child);
+    }
+	
+    children = g_list_next (children);
+  }
+}
+
+static void
+gst_bin_distribute_clock (GstBin *bin, GList *needing, GstClock *clock)
+{
+  while (needing) {
+    GST_DEBUG (GST_CAT_CLOCK, "setting clock on %s\n", GST_ELEMENT_NAME (needing->data));
+    gst_element_set_clock (GST_ELEMENT (needing->data), clock);
+
+    needing = g_list_next (needing);
+  }
+}
+
+static void
+gst_bin_distribute_clocks (GstBin *bin)
+{
+  GList *needing = NULL, *providing = NULL;
+  GstElement *provider;
+  GstClock *clock;
+      
+  gst_bin_get_clock_elements (bin, &needing, &providing);
+
+  if (GST_FLAG_IS_SET (bin, GST_BIN_FLAG_FIXED_CLOCK)) {
+    clock = bin->clock;
+  }
+  else if (providing) {
+    clock = gst_element_get_clock (GST_ELEMENT (providing->data));	
+  }
+  else {
+    GST_DEBUG (GST_CAT_CLOCK, "no clock provided, using default clock\n");
+    clock = gst_system_clock_obtain ();
+  }
+
+  GST_BIN_CLOCK (bin) = clock;
+  gst_bin_distribute_clock (bin, needing, clock);
+}
+
+GstClock*
+gst_bin_get_clock (GstBin *bin)
+{
+  g_return_val_if_fail (bin != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  return GST_BIN_CLOCK (bin);
+}
+
+void
+gst_bin_use_clock (GstBin *bin, GstClock *clock)
+{
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+
+  GST_FLAG_SET (bin, GST_BIN_FLAG_FIXED_CLOCK);
+  GST_BIN_CLOCK (bin) = clock;
+}
+
+void
+gst_bin_auto_clock (GstBin *bin)
+{
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+
+  GST_FLAG_UNSET (bin, GST_BIN_FLAG_FIXED_CLOCK);
+  GST_BIN_CLOCK (bin) = NULL;
 }
 
 static void
@@ -412,14 +501,9 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
 void
 gst_bin_child_error (GstBin *bin, GstElement *child)
 {
+  g_return_if_fail (GST_IS_BIN (bin));
+
   if (GST_STATE (bin) != GST_STATE_NULL) {
-	/*
-    GST_STATE_PENDING (bin) = ((GST_STATE (bin) >> 1));
-    if (gst_element_set_state (bin, GST_STATE (bin)>>1) != GST_STATE_SUCCESS) {
-      gst_element_error (GST_ELEMENT (bin), "bin \"%s\" couldn't change state on error from child \"%s\"", 
-		    GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (child));
-    }
-  */
     gst_element_info (GST_ELEMENT (bin), "bin \"%s\" stopped because child \"%s\" signalled an error",
 		    GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (child));
   }
@@ -443,6 +527,7 @@ gst_bin_change_state (GstElement * element)
   GstElement *child;
   GstElementStateReturn ret;
   GstElementState old_state, pending;
+  gint transition;
   gboolean have_async = FALSE;
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
@@ -451,6 +536,7 @@ gst_bin_change_state (GstElement * element)
 
   old_state = GST_STATE (element);
   pending = GST_STATE_PENDING (element);
+  transition = GST_STATE_TRANSITION (element);
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
 		    gst_element_statename (old_state), gst_element_statename (pending));
@@ -482,6 +568,28 @@ gst_bin_change_state (GstElement * element)
     }
   }
 
+  if (GST_ELEMENT_SCHED (bin) != NULL && GST_ELEMENT_PARENT (bin) == NULL) {
+    switch (transition) {
+      case GST_STATE_NULL_TO_READY:
+        gst_bin_distribute_clocks (bin);
+	break;
+      case GST_STATE_READY_TO_PAUSED:
+        if (GST_BIN_CLOCK (bin))
+          gst_clock_reset (GST_BIN_CLOCK (bin));
+        break;
+      case GST_STATE_PAUSED_TO_PLAYING:
+        gst_bin_distribute_clocks (bin);
+        if (GST_BIN_CLOCK (bin))
+          gst_clock_activate (GST_BIN_CLOCK (bin), TRUE);
+        break;
+      case GST_STATE_PLAYING_TO_PAUSED:
+        if (GST_BIN_CLOCK (bin))
+          gst_clock_activate (GST_BIN_CLOCK (bin), FALSE);
+        break;
+    }
+  }
+
+
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s, now in %s",
                 gst_element_statename (old_state),
                 gst_element_statename (pending),
@@ -499,9 +607,13 @@ gst_bin_change_state (GstElement * element)
 static GstElementStateReturn
 gst_bin_change_state_norecurse (GstBin * bin)
 {
+  GstElementStateReturn ret;
+
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     GST_DEBUG_ELEMENT (GST_CAT_STATES, bin, "setting bin's own state\n");
-    return GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (bin));
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (bin));
+
+    return ret;
   }
   else
     return GST_STATE_FAILURE;

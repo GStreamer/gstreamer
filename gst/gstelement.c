@@ -187,7 +187,7 @@ gst_element_set_property (GObject *object, guint prop_id, const GValue *value, G
   GstElementClass *oclass = CLASS (object);
 
   if (oclass->set_property)
-    (oclass->set_property)(object,prop_id,value,pspec);
+    (oclass->set_property) (object, prop_id, value, pspec);
 }
 
 
@@ -197,7 +197,7 @@ gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   GstElementClass *oclass = CLASS (object);
 
   if (oclass->get_property)
-    (oclass->get_property)(object,prop_id,value,pspec);
+    (oclass->get_property) (object, prop_id, value, pspec);
 }
 
 
@@ -274,6 +274,61 @@ gst_element_get_parent (GstElement *element)
 }
 
 /**
+ * gst_element_set_clock:
+ * @element: GstElement to set the clock to
+ * @clock: the clock to set for the element
+ *
+ * Set the clock for the element
+ */
+void
+gst_element_set_clock (GstElement *element, GstClock *clock)
+{
+  GstElementClass *oclass;
+  
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (element->setclockfunc)
+    element->setclockfunc (element, clock);
+}
+
+/**
+ * gst_element_get_clock:
+ * @element: GstElement to get the clock of
+ *
+ * Get the clock of the element
+ */
+GstClock*
+gst_element_get_clock (GstElement *element)
+{
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  
+  if (element->getclockfunc)
+    return element->getclockfunc (element);
+
+  return NULL;
+}
+
+/**
+ * gst_element_clock_wait:
+ * @element: GstElement to wait for the clock
+ * @clock: the clock to wait for
+ * @time: the time to wait for
+ *
+ * Wait for a specific time on the clock
+ */
+GstClockReturn
+gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time)
+{
+  g_return_val_if_fail (element != NULL, GST_CLOCK_ERROR);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
+
+  /* FIXME inform the scheduler */
+  return gst_clock_wait (clock, time);
+}
+
+/**
  * gst_element_add_pad:
  * @element: element to add pad to
  * @pad: pad to add
@@ -328,11 +383,11 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_PAD (pad));
 
   g_return_if_fail (GST_PAD_PARENT (pad) == element);
+
   /* check to see if the pad is still connected */
   /* FIXME: what if someone calls _remove_pad instead of 
-     _remove_ghost_pad? */
-  if (GST_IS_REAL_PAD (pad))
-  {
+    _remove_ghost_pad? */
+  if (GST_IS_REAL_PAD (pad)) {
     g_return_if_fail (GST_RPAD_PEER (pad) == NULL);
   }
   
@@ -1364,12 +1419,14 @@ gst_element_dispose (GObject *object)
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      if (GST_PAD_PEER (pad))
-      {
-        GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
+
+      if (GST_PAD_PEER (pad)) {
+        GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'\n",
+			GST_OBJECT_NAME (GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
         gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
       }
       gst_element_remove_pad (element, pad);
+
       pads = g_list_next (pads);
     }
     g_list_free (orig);
