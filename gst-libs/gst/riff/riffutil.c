@@ -20,17 +20,6 @@
 
 #include <riff.h>
 
-/*#define debug(format,args...) g_print(format,##args) */
-
-#ifdef G_HAVE_ISO_VARARGS
-
-#define debug(...)
-
-#elif defined(G_HAVE_GNUC_VARARGS)
-
-#define debug(format,args...)
-
-#endif
 
 gulong gst_riff_fourcc_to_id(gchar *fourcc) {
   g_return_val_if_fail(fourcc != NULL, 0);
