@@ -98,10 +98,6 @@ enum {
   ARG_LAYER,
   ARG_MODE,
   ARG_EMPHASIS,
-  ARG_BITRATE,
-  ARG_SAMPLERATE,
-  ARG_CHANNELS,
-  ARG_AVERAGE_BITRATE,
   ARG_METADATA,
   /* FILL ME */
 };
@@ -207,22 +203,6 @@ gst_mad_layer_get_type(void) {
   return mad_layer_type;
 }
 
-#define GST_TYPE_MAD_CHANNELS (gst_mad_channels_get_type())
-static GType
-gst_mad_channels_get_type(void) {
-  static GType mad_channels_type = 0;
-  static GEnumValue mad_channels[] = {
-    {0, "0", "Unknown"},
-    {1, "1", "Mono"},
-    {2, "2", "Stereo"},
-    { 0, NULL, NULL},
-  };
-  if (!mad_channels_type) {
-    mad_channels_type = g_enum_register_static("GstMadChannels", mad_channels);
-  }
-  return mad_channels_type;
-}
-
 #define GST_TYPE_MAD_MODE (gst_mad_mode_get_type())
 static GType
 gst_mad_mode_get_type(void) {
@@ -287,18 +267,6 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_EMPHASIS,
     g_param_spec_enum ("emphasis", "Emphasis", "Emphasis",
 		       GST_TYPE_MAD_EMPHASIS, -1, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_BITRATE,
-    g_param_spec_int ("bitrate", "Bitrate", "current bitrate of the stream",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_AVERAGE_BITRATE,
-    g_param_spec_int ("average-bitrate", "average bitrate", "average bitrate of the stream",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_SAMPLERATE,
-    g_param_spec_int ("samplerate", "Samplerate", "current samplerate of the stream",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_CHANNELS,
-    g_param_spec_enum ("channels", "Channels", "number of channels",
-                       GST_TYPE_MAD_CHANNELS, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "Metadata",
                         GST_TYPE_CAPS, G_PARAM_READABLE));
@@ -601,6 +569,13 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
   mad = GST_MAD (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK_SEGMENT:
+      gst_event_ref (event);
+      if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), event)) {
+        /* seek worked, we're done, loop will exit */
+        res = TRUE;
+      }
+      break;
     /* the all-formats seek logic */
     case GST_EVENT_SEEK:
     {
@@ -719,18 +694,6 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
     case ARG_EMPHASIS:
       g_value_set_enum (value, mad->header.emphasis);
       break;
-    case ARG_BITRATE:
-      g_value_set_int (value, mad->header.bitrate);
-      break;
-    case ARG_AVERAGE_BITRATE:
-      g_value_set_int (value, mad->vbr_average);
-      break;
-    case ARG_SAMPLERATE:
-      g_value_set_int (value, mad->header.samplerate);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_enum (value, mad->channels);
-      break;
     case ARG_METADATA:
       g_value_set_boxed (value, mad->metadata);
       break;
@@ -766,18 +729,16 @@ G_STMT_START{							\
     mad->vbr_rate += header->bitrate;
   }
   mad->vbr_average = (gint) (mad->vbr_rate / mad->framecount);
-  if (abr != mad->vbr_average) {
-    g_object_notify (G_OBJECT (mad), "average_bitrate");
-  }
 
   CHECK_HEADER (layer, 	    "layer");
   CHECK_HEADER (mode, 	    "mode");
   CHECK_HEADER (emphasis,   "emphasis");
-  CHECK_HEADER (bitrate,    "bitrate");
-  CHECK_HEADER (samplerate, "samplerate");
+
+  if (header->bitrate != mad->header.bitrate || mad->new_header) {
+    mad->header.bitrate = header->bitrate;
+  }
   if (mad->channels != MAD_NCHANNELS (header) || mad->new_header) {
     mad->channels = MAD_NCHANNELS (header);
-    g_object_notify (G_OBJECT (mad), "channels");
   }
   mad->new_header = FALSE;
   
@@ -1121,11 +1082,15 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 #if MAD_VERSION_MINOR <= 12
                   "rate",        GST_PROPS_INT (mad->header.sfreq),
 #else
-                  "rate",        GST_PROPS_INT (mad->header.samplerate),
+                  "rate",        GST_PROPS_INT (mad->frame.header.samplerate),
 #endif
                   "channels",    GST_PROPS_INT (nchannels),
-                  NULL))) <= 0) {
+                  NULL))) <= 0) 
+	  {
+	    gst_buffer_unref (outbuffer);
+	    gst_buffer_unref (buffer);
             gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
+	    return;
           }
           mad->caps_set = TRUE;
         }
