@@ -39,7 +39,7 @@
           while (GST_IS_EVENT(in)) {
             switch (GST_EVENT_TYPE(in)) {
             case GST_EVENT_EOS:
-              gst_element_set_state((GstElement*)filter, GST_STATE_PAUSED);
+              gst_element_set_eos((GstElement*)filter);
               gst_pad_push(filter->srcpad, in);
               return;
             default:

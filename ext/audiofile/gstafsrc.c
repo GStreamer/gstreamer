@@ -215,8 +215,8 @@ gst_afsrc_get (GstPad *pad)
  	                    frameCount);
   readbytes = readframes * (src->channels * src->width / 8);
   if (readbytes == 0) {
-    gst_element_signal_eos (GST_ELEMENT (src));
-      return NULL;  
+    gst_element_set_eos (GST_ELEMENT (src));
+    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));  
   }
   
   GST_BUFFER_SIZE (buf) = readbytes;

@@ -571,7 +571,6 @@ gst_flxdec_loop (GstElement *element)
              GST_BUFFER_DATA(flxdec->frame),
              GST_BUFFER_DATA(flxdec->out));
 
-        //GST_BUFFER_FLAG_SET(flxdec->out, GST_BUFFER_FLUSH);
         gst_pad_push(flxdec->srcpad, flxdec->out);
         
         break;

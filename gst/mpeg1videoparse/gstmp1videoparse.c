@@ -252,10 +252,11 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
   time_stamp = GST_BUFFER_TIMESTAMP(buf);
 
-
-  if (GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
+  /* FIXME, handle events here */
+  /*
     gst_mp1videoparse_flush(mp1videoparse);
-  }
+    */
+ 
 
   if (mp1videoparse->partialbuf) {
     offset = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
@@ -349,7 +350,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
     GST_BUFFER_TIMESTAMP(outbuf) = mp1videoparse->last_pts;
 
     if (mp1videoparse->in_flush) {
-      GST_BUFFER_FLAG_SET(outbuf, GST_BUFFER_FLUSH);
+      /* FIXME, send a flush event here */
       mp1videoparse->in_flush = FALSE;
     }
 

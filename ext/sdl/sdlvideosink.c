@@ -239,19 +239,17 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
-  if (!GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
-    GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
 
-    jitter = gst_clock_current_diff(sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
+  jitter = gst_clock_current_diff(sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-    if (jitter > 500000 || jitter < -500000)
-    {
-      GST_DEBUG (0, "jitter: %lld\n", jitter);
-      gst_clock_set (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
-    }
-    else {
-      gst_clock_wait(sdlvideosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(sdlvideosink));
-    }
+  if (jitter > 500000 || jitter < -500000)
+  {
+    GST_DEBUG (0, "jitter: %lld\n", jitter);
+    gst_clock_set (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
+  }
+  else {
+    gst_clock_wait(sdlvideosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(sdlvideosink));
   }
 
   /* Lock SDL/yuv-overlay */

@@ -262,12 +262,6 @@ vcdsrc_get (GstPad *pad)
     goto read_sector;
   }
 
-/*  if (readbytes == 0) { */
-/*    gst_src_signal_eos(GST_SRC(vcdsrc)); */
-/*    gst_element_set_state(GST_ELEMENT(vcdsrc),~GST_STATE_PLAYING); */
-/*    gst_element_set_state(GST_ELEMENT(vcdsrc),~GST_STATE_RUNNING); */
-/*    return;							     */
-/*  }								     */
 
   GST_BUFFER_OFFSET(buf) = vcdsrc->curoffset;
   GST_BUFFER_SIZE(buf) = vcdsrc->bytes_per_read;
