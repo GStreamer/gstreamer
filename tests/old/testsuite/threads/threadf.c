@@ -34,11 +34,11 @@ construct_pipeline (GstElement *pipeline, gint identities)
     identity = gst_element_factory_make ("identity", NULL);
     g_assert (identity);
     gst_bin_add (GST_BIN (pipeline), identity);
-    if (!(gst_element_connect (from, identity)))
-      g_print ("Warning: can't connect identity with previous element\n");
+    if (!(gst_element_link (from, identity)))
+      g_print ("Warning: can't link identity with previous element\n");
     from = identity;
   }
-  gst_element_connect (identity, sink);
+  gst_element_link (identity, sink);
 
   g_object_set (G_OBJECT (src), "num_buffers", 10, "sizetype", 3, NULL);
 }

@@ -60,19 +60,8 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(thread), queue2);
 
   gst_bin_add(GST_BIN(thread2), osssink);
-  
-  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
-                  gst_element_get_pad(queue,"sink"));
 
-  gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(parse,"sink"));
-  gst_pad_connect(gst_element_get_pad(parse,"src"),
-                  gst_element_get_pad(decode,"sink"));
-  gst_pad_connect(gst_element_get_pad(decode,"src"),
-                  gst_element_get_pad(queue2,"sink"));
-
-  gst_pad_connect(gst_element_get_pad(queue2,"src"),
-                  gst_element_get_pad(osssink,"sink"));
+  gst_element_link_many (filesrc, queue, parse, decode, queue2, osssink, NULL);
 
   gst_bin_add(GST_BIN(bin), thread);
   gst_bin_add(GST_BIN(bin), thread2);

@@ -93,8 +93,8 @@ gst_pad_init (GstPad *pad)
 /* Pad signals and args */
 enum {
   REAL_CAPS_NEGO_FAILED,
-  REAL_CONNECTED,
-  REAL_DISCONNECTED,
+  REAL_LINKED,
+  REAL_DISLINKED,
   /* FILL ME */
   REAL_LAST_SIGNAL
 };
@@ -159,12 +159,12 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                   G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
-  gst_real_pad_signals[REAL_CONNECTED] =
+  gst_real_pad_signals[REAL_LINKED] =
     g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
-  gst_real_pad_signals[REAL_DISCONNECTED] =
+  gst_real_pad_signals[REAL_DISLINKED] =
     g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
@@ -746,7 +746,7 @@ gst_pad_set_link_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_CONNECTFUNC (pad) = link;
+  GST_RPAD_LINKFUNC (pad) = link;
   GST_DEBUG (GST_CAT_PADS, "linkfunc for %s:%s set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (link));
 }
@@ -859,9 +859,9 @@ gst_pad_unlink (GstPad *srcpad,
 
   /* fire off a signal to each of the pads telling them 
    * that they've been unlinked */
-  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 
+  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_DISLINKED], 
                  0, realsink);
-  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_DISCONNECTED], 
+  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_DISLINKED], 
                  0, realsrc);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
@@ -1052,9 +1052,9 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
   /* fire off a signal to each of the pads telling them 
    * that they've been linked */
-  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_CONNECTED], 
+  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_LINKED], 
                  0, realsink);
-  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_CONNECTED], 
+  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_LINKED], 
                  0, realsrc);
 
   src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
@@ -1275,8 +1275,8 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   GstPadTemplate *template;
   GstElement *parent = GST_PAD_PARENT (pad);
 
-  g_return_val_if_fail (pad != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
 
   /* if this pad has a parent and the parent is not READY, delay the
    * negotiation */
@@ -1284,7 +1284,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   {
     GST_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not READY",
 	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (pad));
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 	  
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
@@ -1312,7 +1312,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
       gst_caps_debug (caps, "caps themselves (attemped to set)");
       gst_caps_debug (allowed,
                       "allowed caps that did not agree with caps");
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
     }
     /* caps checks out fine, we can unref the intersection now */
     gst_caps_unref (intersection);
@@ -1321,7 +1321,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   }
 
   /* we need to notify the link function */
-  if (notify && GST_RPAD_CONNECTFUNC (pad)) {
+  if (notify && GST_RPAD_LINKFUNC (pad)) {
     GstPadConnectReturn res;
     gchar *debug_string;
     gboolean negotiating;
@@ -1336,29 +1336,29 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
       GST_FLAG_SET (pad, GST_PAD_NEGOTIATING);
     
     /* call the link function */
-    res = GST_RPAD_CONNECTFUNC (pad) (GST_PAD (pad), caps);
+    res = GST_RPAD_LINKFUNC (pad) (GST_PAD (pad), caps);
 
     /* unset again after negotiating only if we set it  */
     if (!negotiating)
       GST_FLAG_UNSET (pad, GST_PAD_NEGOTIATING);
 
     switch (res) {
-      case GST_PAD_CONNECT_REFUSED:
+      case GST_PAD_LINK_REFUSED:
 	debug_string = "REFUSED";
 	break;
-      case GST_PAD_CONNECT_OK:
+      case GST_PAD_LINK_OK:
 	debug_string = "OK";
 	break;
-      case GST_PAD_CONNECT_DONE:
+      case GST_PAD_LINK_DONE:
 	debug_string = "DONE";
 	break;
-      case GST_PAD_CONNECT_DELAYED:
+      case GST_PAD_LINK_DELAYED:
 	debug_string = "DELAYED";
 	break;
       default:
 	g_warning ("unknown return code from link function of pad %s:%s %d",
                    GST_DEBUG_PAD_NAME (pad), res);
-        return GST_PAD_CONNECT_REFUSED;
+        return GST_PAD_LINK_REFUSED;
     }
 
     GST_INFO (GST_CAT_CAPS, 
@@ -1367,14 +1367,14 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 
     /* done means the link function called another caps negotiate function
      * on this pad that succeeded, we dont need to continue */
-    if (res == GST_PAD_CONNECT_DONE) {
+    if (res == GST_PAD_LINK_DONE) {
       GST_INFO (GST_CAT_CAPS, "pad %s:%s is done", GST_DEBUG_PAD_NAME (pad));
-      return GST_PAD_CONNECT_DONE;
+      return GST_PAD_LINK_DONE;
     }
-    if (res == GST_PAD_CONNECT_REFUSED) {
+    if (res == GST_PAD_LINK_REFUSED) {
       GST_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
 		GST_DEBUG_PAD_NAME (pad));
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
     }
   }
   /* we can only set caps on the pad if they are fixed */
@@ -1395,7 +1395,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 	      "caps are not fixed on pad %s:%s, not setting them yet",
               GST_DEBUG_PAD_NAME (pad));
   }
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 /**
@@ -1430,7 +1430,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
     g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
                GST_DEBUG_PAD_NAME (realpad));
     gst_caps_debug (caps, "unfixed caps");
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   /* if we have a peer try to set the caps, notifying the peerpad
@@ -1605,15 +1605,15 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
     GstPadConnectReturn res;
 
     res = gst_pad_try_set_caps_func (realsrc, intersection, TRUE);
-    if (res == GST_PAD_CONNECT_REFUSED) 
+    if (res == GST_PAD_LINK_REFUSED) 
       return FALSE;
-    if (res == GST_PAD_CONNECT_DONE) 
+    if (res == GST_PAD_LINK_DONE) 
       return TRUE;
 
     res = gst_pad_try_set_caps_func (realsink, intersection, TRUE);
-    if (res == GST_PAD_CONNECT_REFUSED) 
+    if (res == GST_PAD_LINK_REFUSED) 
       return FALSE;
-    if (res == GST_PAD_CONNECT_DONE) 
+    if (res == GST_PAD_LINK_DONE) 
       return TRUE;
   }
   return TRUE;
@@ -1706,11 +1706,11 @@ gst_pad_proxy_link (GstPad *pad, GstCaps *caps)
             GST_DEBUG_PAD_NAME (realpad));
 
   if (peer && gst_pad_try_set_caps_func (peer, caps, TRUE) < 0)
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   if (gst_pad_try_set_caps_func (realpad, caps, FALSE) < 0)
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 /**
@@ -2651,7 +2651,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
 
     /* for all pads in the opposite direction that are linked */
     if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) 
-     && GST_PAD_IS_CONNECTED (eventpad)) {
+     && GST_PAD_IS_LINKED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
 	/* increase the refcount */
         gst_event_ref (event);

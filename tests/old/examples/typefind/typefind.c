@@ -46,8 +46,7 @@ main(int argc, char *argv[])
   g_signal_connect (G_OBJECT (typefind), "have_type", 
 		    G_CALLBACK (type_found), NULL);
 
-  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
-                  gst_element_get_pad(typefind,"sink"));
+  gst_element_link (filesrc, typefind);
 
   /* start playing */
   gst_element_set_state(GST_ELEMENT(bin), GST_STATE_PLAYING);

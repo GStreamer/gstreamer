@@ -166,7 +166,7 @@ gst_identity_link (GstPad *pad, GstCaps *caps)
   if (GST_CAPS_IS_FIXED (caps))
     return gst_pad_try_set_caps (otherpad, caps);
   else
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 }
 
 static void 

@@ -4,14 +4,14 @@
 gboolean playing;
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstElement *element, gpointer data) 
+void eos(GstElement *element, gpointer data)
 {
   g_print("have eos, quitting\n");
 
   playing = FALSE;
 }
 
-int main(int argc,char *argv[]) 
+int main(int argc,char *argv[])
 {
   GstElement *filesrc, *osssink, *queue, *parse, *decode;
   GstElement *bin;
@@ -55,18 +55,8 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(thread), parse);
   gst_bin_add(GST_BIN(thread), decode);
   gst_bin_add(GST_BIN(thread), osssink);
-  
-  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
-                  gst_element_get_pad(queue,"sink"));
 
-  gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(parse,"sink"));
-  gst_pad_connect(gst_element_get_pad(parse,"src"),
-                  gst_element_get_pad(decode,"sink"));
-  gst_pad_connect(gst_element_get_pad(decode,"src"),
-                  gst_element_get_pad(osssink,"sink"));
-
-  gst_bin_add(GST_BIN(bin), thread);
+  gst_element_link_many (filesrc, queue, parse, decode, osssink, NULL);
 
   /* make it ready */
   gst_element_set_state(GST_ELEMENT(bin), GST_STATE_READY);

@@ -94,7 +94,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h gstenumtypes.c
 
 libgstreamer_@GST_MAJORMINOR@_la_CFLAGS = -D_GNU_SOURCE \
-	$(LIBGST_CFLAGS) \
+	$(GST_CFLAGS) \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 libgstreamer_@GST_MAJORMINOR@_la_LIBADD = $(LIBGST_LIBS) parse/libgstparse.la registries/libgstxmlregistry.la

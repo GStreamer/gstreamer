@@ -37,23 +37,12 @@ int main(int argc,char *argv[])
   g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(bin), filesrc);
-  gst_bin_add(GST_BIN(bin), parse);
-  gst_bin_add(GST_BIN(bin), decode);
-  gst_bin_add(GST_BIN(bin), queue);
+  gst_bin_add_many (GST_BIN (bin), filesrc, parse, decode, queue, NULL);
 
   gst_bin_add(GST_BIN(thread), osssink);
-
   gst_bin_add(GST_BIN(bin), thread);
-  
-  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
-                  gst_element_get_pad(parse,"sink"));
-  gst_pad_connect(gst_element_get_pad(parse,"src"),
-                  gst_element_get_pad(decode,"sink"));
-  gst_pad_connect(gst_element_get_pad(decode,"src"),
-                  gst_element_get_pad(queue,"sink"));
-  gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(osssink,"sink"));
+
+  gst_element_link_many (filesrc, parse, decode, queue, osssink, NULL);
 
   /* start playing */
   gst_element_set_state(GST_ELEMENT(bin), GST_STATE_PLAYING);

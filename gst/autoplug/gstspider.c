@@ -2,7 +2,7 @@
  * Copyright (C) 2002 Erik Walthinsen <omega@cse.ogi.edu>
  *               2002 Wim Taymans <wtay@chello.be>
  *
- * gstspider.c: element to automatically connect sinks and sources
+ * gstspider.c: element to automatically link sinks and sources
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,7 @@
  * - handle automatic removal of unneeded elements
  * - make the spider handle and send events (esp. new media)
  * - decide if we plug pads or elements, currently it's a mess
- * - allow disconnecting
+ * - allow unlinking
  * - implement proper saving/loading from xml
  * - implement a way to allow merging/splitting (aka tee)
  * - find ways to define which elements to use when plugging
@@ -276,7 +276,7 @@ gst_spider_unused_elementname (GstBin *bin, const gchar *startwith)
   return name;
 }
 static void
-gst_spider_connect_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection *conn)
+gst_spider_link_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection *conn)
 {
   gboolean restart = FALSE;
   gulong signal_id = conn->signal_id;
@@ -291,7 +291,7 @@ gst_spider_connect_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection 
   }
   
   /* try to autoplug the elements */
-  if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_CONNECT_REFUSED) {
+  if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_LINK_REFUSED) {
     GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s:%s was autoplugged to %s:%s, removing callback", GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
     g_signal_handler_disconnect (src, signal_id);
     signal_id = 0;
@@ -405,8 +405,8 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
   {
     if (GST_PAD_PEER (ident->src))
     {
-      /* Hey, the ident is connected on both sides */
-      g_warning ("Trying to autoplug a connected element. Aborting...");
+      /* Hey, the ident is linked on both sides */
+      g_warning ("Trying to autoplug a linked element. Aborting...");
       return;
     } else {
       dir = GST_PAD_SINK;
@@ -416,13 +416,13 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
     {
       dir = GST_PAD_SRC;
     } else {
-      /* the ident isn't connected on either side */
-      g_warning ("Trying to autoplug an unconnected element. Aborting...");
+      /* the ident isn't linked on either side */
+      g_warning ("Trying to autoplug an unlinked element. Aborting...");
       return;
     }
   }
 
-  /* now iterate all possible pads and connect when needed */
+  /* now iterate all possible pads and link when needed */
   padlist = gst_element_get_pad_list (GST_ELEMENT (spider));
   while (padlist)
   {
@@ -432,10 +432,10 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
     g_assert (GST_IS_PAD (padlist->data));
     otherpad = (GstPad *) GST_GPAD_REALPAD (padlist->data);
     peer = (GstSpiderIdentity *) GST_PAD_PARENT (otherpad);
-    /* we only want to connect to the other side */
+    /* we only want to link to the other side */
     if (dir != GST_PAD_DIRECTION (otherpad))
     {
-      /* we only connect to plugged in elements */
+      /* we only link to plugged in elements */
       if (peer->plugged == TRUE) 
       {
         /* plug in the right direction */
@@ -487,7 +487,7 @@ gst_spider_identity_unplug (GstSpiderIdentity *ident)
   }
   ident->plugged = FALSE;
 }
-/* connects src to sink using the elementfactories in plugpath
+/* links src to sink using the elementfactories in plugpath
  * plugpath will be removed afterwards */
 static GstPadConnectReturn
 gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
@@ -498,7 +498,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
   
   /* exit if plugging is already done */
   if ((GstElement *) conn->src == conn->current)
-    return GST_PAD_CONNECT_DONE;
+    return GST_PAD_LINK_DONE;
   
   /* try to shorten the list at the end and not duplicate link code */
   if (plugpath != NULL)
@@ -514,7 +514,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
     }
   }
   
-  /* do the connecting */
+  /* do the linking */
   while (conn->current != (GstElement *) (endelements == NULL ? conn->src : endelements->data))
   {
     /* get sink element to plug, src is conn->current */
@@ -525,13 +525,13 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
       element = gst_element_factory_create ((GstElementFactory *) plugpath->data, NULL);
       gst_bin_add (GST_BIN (spider), element);
     }
-    /* insert and connect new element */
-    if (!gst_element_connect (conn->current, element))
+    /* insert and link new element */
+    if (!gst_element_link (conn->current, element))
     {
-      /* check if the src has SOMETIMES templates. If so, connect a callback */
+      /* check if the src has SOMETIMES templates. If so, link a callback */
       GList *templs = gst_element_get_pad_template_list (conn->current);
 	 
-      /* remove element that couldn't be connected, if it wasn't the endpoint */
+      /* remove element that couldn't be linked, if it wasn't the endpoint */
       if (element != (GstElement *) conn->src)
         gst_bin_remove (GST_BIN (spider), element);
     
@@ -539,17 +539,17 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
         GstPadTemplate *templ = (GstPadTemplate *) templs->data;
         if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
         {
-          GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to connect element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+          GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to link element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
           conn->signal_id = g_signal_connect (G_OBJECT (conn->current), "new_pad", 
-					      G_CALLBACK (gst_spider_connect_sometimes), conn);
+					      G_CALLBACK (gst_spider_link_sometimes), conn);
 	  g_list_free (plugpath);
-	  return GST_PAD_CONNECT_DELAYED;
+	  return GST_PAD_LINK_DELAYED;
         }
         templs = g_list_next (templs);
       }
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to connect element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to link element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
       g_list_free (plugpath);
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
     }
     GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "added element %s and attached it to element %s", GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
     gst_spider_link_add (conn, element);
@@ -564,9 +564,9 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
     endelements = g_list_delete_link (endelements, endelements);
   }
   
-  return GST_PAD_CONNECT_DONE;
+  return GST_PAD_LINK_DONE;
 }
-/* checks, if src is already connected to an element from factory fac on direction dir */
+/* checks, if src is already linked to an element from factory fac on direction dir */
 static GstElement *
 gst_spider_find_element_to_plug (GstElement *src, GstElementFactory *fac, GstPadDirection dir)
 {
@@ -575,10 +575,10 @@ gst_spider_find_element_to_plug (GstElement *src, GstElementFactory *fac, GstPad
   while (padlist)
   {
     GstPad *pad = (GstPad *) GST_PAD_REALIZE (padlist->data);
-    /* is the pad on the right side and is it connected? */
+    /* is the pad on the right side and is it linked? */
     if ((GST_PAD_DIRECTION (pad) == dir) && (pad = (GstPad *) (GST_RPAD_PEER (pad))))
     {
-      /* is the element the pad is connected to of the right type? */
+      /* is the element the pad is linked to of the right type? */
       GstElement *element = GST_PAD_PARENT (pad);
       if (GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element))->elementfactory == fac) {
         return element;
@@ -595,11 +595,11 @@ gst_spider_plug	(GstSpiderConnection *conn)
 {
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
   if ((GstElement *) conn->src == conn->current)
-    return GST_PAD_CONNECT_DONE;
+    return GST_PAD_LINK_DONE;
   if ((GstElement *) spider->sink_ident == conn->current)
     return gst_spider_plug_from_srcpad (conn, spider->sink_ident->src);
   g_warning ("FIXME: autoplugging only possible from GstSpiderIdentity conn->sink yet (yep, that's technical)\n");
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 /* try to establish the link using this pad */
 static GstPadConnectReturn
@@ -637,7 +637,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   /* if there is no way to plug: return */
   if (plugpath == NULL) {
     GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to plug from %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a link that needs %d elements", g_list_length (plugpath));
 
@@ -657,7 +657,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   result = gst_spider_create_and_plug (conn, plugpath);
   
   /* reset the "current" element */
-  if (result == GST_PAD_CONNECT_REFUSED)
+  if (result == GST_PAD_LINK_REFUSED)
   {
      gst_spider_link_reset (conn, startelement);
   }
@@ -669,7 +669,7 @@ GstElementDetails gst_spider_details = {
   "Spider",
   "Generic",
   "LGPL",
-  "Automatically connect sinks and sources",
+  "Automatically link sinks and sources",
   VERSION,
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
   "(C) 2002",

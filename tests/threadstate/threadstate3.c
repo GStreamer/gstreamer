@@ -4,7 +4,7 @@
  * { { fakesrc ! fakesink } }
  */
 
-int main(int argc,char *argv[]) 
+int main(int argc,char *argv[])
 {
   GstElement *fakesrc, *fakesink;
   GstElement *thread, *thread2;
@@ -27,7 +27,7 @@ int main(int argc,char *argv[])
   g_assert(fakesink != NULL);
 
   gst_bin_add_many (GST_BIN(thread2), fakesrc, fakesink, NULL);
-  gst_element_connect (fakesrc, fakesink);
+  gst_element_link (fakesrc, fakesink);
 
   for (x = 0 ; x < 10 ; x++){
     g_print("playing %d\n", x);

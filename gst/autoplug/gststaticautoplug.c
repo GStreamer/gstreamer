@@ -125,7 +125,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 	if (gst_caps_is_always_compatible (gst_pad_template_get_caps (srctemp), 
 				gst_pad_template_get_caps (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can connect with factory \"%s\"\n", GST_OBJECT_NAME (src), 
+			  "factory \"%s\" can link with factory \"%s\"\n", GST_OBJECT_NAME (src), 
 			  GST_OBJECT_NAME (dest));
           return TRUE;
 	}
@@ -136,7 +136,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     srctemps = g_list_next (srctemps);
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot connect with factory \"%s\"\n", GST_OBJECT_NAME (src),
+		  "factory \"%s\" cannot link with factory \"%s\"\n", GST_OBJECT_NAME (src),
 			  GST_OBJECT_NAME (dest));
   return FALSE;
 }
@@ -145,26 +145,26 @@ static gboolean
 gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 {
   const GList *sinkpads;
-  gboolean connected = FALSE;
+  gboolean linked = FALSE;
 
-  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"",
+  GST_DEBUG (0,"gstpipeline: autoplug pad link function for \"%s\" to \"%s\"",
 		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
-    /* if we have a match, connect the pads */
+    /* if we have a match, link the pads */
     if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
-        !GST_PAD_IS_CONNECTED(sinkpad))
+        !GST_PAD_IS_LINKED(sinkpad))
     {
       if (gst_caps_is_always_compatible (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
-        gst_pad_connect(pad, sinkpad);
-        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
+        gst_pad_link(pad, sinkpad);
+        GST_DEBUG (0,"gstpipeline: autolink pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
 		       GST_ELEMENT_NAME(src));
         GST_DEBUG (0,"pad \"%s\" in element %s", GST_PAD_NAME (sinkpad),
 		      GST_ELEMENT_NAME(sink));
-        connected = TRUE;
+        linked = TRUE;
         break;
       }
       else {
@@ -174,10 +174,10 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     sinkpads = g_list_next(sinkpads);
   }
 
-  if (!connected) {
+  if (!linked) {
     GST_DEBUG (0,"gstpipeline: no path to sinks for type");
   }
-  return connected;
+  return linked;
 }
 
 typedef struct {
@@ -217,21 +217,21 @@ static void
 gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 {
   const GList *srcpads;
-  gboolean connected = FALSE;
+  gboolean linked = FALSE;
 
   srcpads = gst_element_get_pad_list(src);
 
-  while (srcpads && !connected) {
+  while (srcpads && !linked) {
     GstPad *srcpad = (GstPad *)srcpads->data;
 
     if (gst_pad_get_direction(srcpad) == GST_PAD_SRC)
-      connected = gst_autoplug_pads_autoplug_func (src, srcpad, sink);
+      linked = gst_autoplug_pads_autoplug_func (src, srcpad, sink);
 
     srcpads = g_list_next(srcpads);
   }
 
-  if (!connected) {
-    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"",
+  if (!linked) {
+    GST_DEBUG (0,"gstpipeline: delaying pad links for \"%s\" to \"%s\"",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connect (G_OBJECT(src), "new_pad", 
 		    G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);

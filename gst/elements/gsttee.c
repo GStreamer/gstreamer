@@ -129,7 +129,7 @@ gst_tee_sinklink (GstPad *pad, GstCaps *caps)
   tee = GST_TEE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   /* go through all the src pads */
@@ -146,7 +146,7 @@ gst_tee_sinklink (GstPad *pad, GstCaps *caps)
       return set_retval;
     }
   }
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void 

@@ -50,8 +50,23 @@
 #define gst_pad_set_connect_function(a,b) \
 					gst_pad_set_link_function(a,b)
 
+/* pad macros */
+#define GST_PAD_IS_CONNECTED(a)		GST_PAD_IS_LINKED(a)
+
+/* pad enums */
+#define GST_PAD_CONNECT_REFUSED		GST_PAD_LINK_REFUSED
+#define GST_PAD_CONNECT_DELAYED		GST_PAD_LINK_DELAYED
+#define GST_PAD_CONNECT_OK		GST_PAD_LINK_OK
+#define GST_PAD_CONNECT_DONE		GST_PAD_LINK_DONE
+typedef GstPadConnectReturn		GstPadLinkReturn;
+
+/* pad function types */
 typedef GstPadConnectFunction		GstPadLinkFunction;
 
+/* probably not used */
+/*
+ * GST_RPAD_LINKFUNC
+ */
 #endif /* not GST_DISABLE_DEPRECATED */
 
 #endif /* __GSTCOMPAT_H__ */

@@ -35,8 +35,8 @@ char            buffer[255];
 void cut_start (GstElement *element)
 {
   g_print ("\nDEBUG: main: cut start\n");
-  /* we should pause the pipeline, disconnect cutter and disksink
-   * create a new disksink to a real file, reconnect, and set to play
+  /* we should pause the pipeline, unlink cutter and disksink
+   * create a new disksink to a real file, relink, and set to play
    */
   g_print ("DEBUG: cut_start: main_bin pausing\n");
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
@@ -71,8 +71,8 @@ void cut_start_signal (GstElement *element)
 void cut_stop (GstElement *element)
 {
   g_print ("\nDEBUG: main: cut stop\n");
-  /* we should pause the pipeline, disconnect disksink, create a fake disksink,
-   * connect to pipeline, and set to play
+  /* we should pause the pipeline, unlink disksink, create a fake disksink,
+   * link to pipeline, and set to play
    */
   g_print ("DEBUG: cut_stop: main_bin paused\n");
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
@@ -154,22 +154,9 @@ int main (int argc, char *argv[])
   gst_bin_add (GST_BIN (main_bin), audiosrc);
   gst_bin_add (GST_BIN (thread), queue);
 
-  gst_bin_add (GST_BIN (thread), cutter);
-  gst_bin_add (GST_BIN (thread), encoder);
-  gst_bin_add (GST_BIN (thread), disksink);
+  gst_bin_add_many (GST_BIN (thread), cutter, encoder, disksink, NULL);
 
-  /* connect adder and disksink */
-
-  gst_pad_connect (gst_element_get_pad (audiosrc, "src"),
-                   gst_element_get_pad (queue, "sink"));
-
-  gst_pad_connect (gst_element_get_pad (queue, "src"),
-                   gst_element_get_pad (cutter, "sink"));
-  gst_pad_connect (gst_element_get_pad (cutter, "src"),
-                   gst_element_get_pad (encoder, "sink"));
-  gst_pad_connect (gst_element_get_pad (encoder, "src"),
-                   gst_element_get_pad (disksink, "sink"));
-
+  gst_element_link_many (audiosrc, queue, cutter, encoder, disksink, NULL);
   gst_bin_add (GST_BIN (main_bin), thread);
 
   /* set signal handlers */
@@ -186,7 +173,7 @@ int main (int argc, char *argv[])
   g_print ("setting thread to play\n");
   gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
 */
-  while (playing) 
+  while (playing)
   {
 /*      g_print ("> "); */
       gst_bin_iterate (GST_BIN (main_bin));

@@ -235,7 +235,7 @@ gst_spider_identity_link (GstPad *pad, GstCaps *caps)
   if (otherpad != NULL)
     return gst_pad_proxy_link (otherpad, caps);
   
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static GstCaps*

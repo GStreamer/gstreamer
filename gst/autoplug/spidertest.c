@@ -118,12 +118,12 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(bin), osssink);
   gst_bin_add(GST_BIN(bin), videosink);
 
-  /* connect objects */
-  if (!(gst_element_connect(filesrc, decoder) &&
-	gst_element_connect(decoder, osssink) &&
-	gst_element_connect(decoder, videosink)))
+  /* link objects */
+  if (!(gst_element_link(filesrc, decoder) &&
+	gst_element_link(decoder, osssink) &&
+	gst_element_link(decoder, videosink)))
   {
-    g_print ("the pipeline could not be connected\n");
+    g_print ("the pipeline could not be linked\n");
     exit (-4);
   }
 

@@ -46,7 +46,7 @@ GstElement *identity_add(GstPipeline *pipeline, GstElement *first, int count) {
     g_return_val_if_fail(ident != NULL,NULL);
     g_object_set(G_OBJECT(ident),"silent",TRUE,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(ident));
-    gst_pad_connect(gst_element_get_pad(last,"src"),
+    gst_pad_link(gst_element_get_pad(last,"src"),
                     gst_element_get_pad(ident,"sink"));
     last = ident;
   }
@@ -101,7 +101,7 @@ GstPipeline *simple(int argc, int argi, char *argv[]) {
   last = identity_add(pipeline, src, idents);
   sink = fakesink();
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(sink));
-  gst_pad_connect(gst_element_get_pad(last,"src"),
+  gst_pad_link(gst_element_get_pad(last,"src"),
                   gst_element_get_pad(sink,"sink"));
 
   return pipeline;
@@ -135,7 +135,7 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
   src_q = gst_element_factory_make("queue","src_q");
   g_return_val_if_fail(src_q != NULL,NULL);
   gst_bin_add(GST_BIN(src_thr),GST_ELEMENT(src_q));
-  gst_pad_connect(gst_element_get_pad(src,"src"),
+  gst_pad_link(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(src_q,"sink"));
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src_thr));
@@ -145,7 +145,7 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
   sink_q = gst_element_factory_make("queue","sink_q");
   g_return_val_if_fail(sink_q != NULL,NULL);
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(sink_q));
-  gst_pad_connect(gst_element_get_pad(last,"src"),
+  gst_pad_link(gst_element_get_pad(last,"src"),
                   gst_element_get_pad(sink_q,"sink"));
 
   sink_thr = GST_ELEMENT(gst_thread_new("sink_thread"));
@@ -157,7 +157,7 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(sink_thr));
 
-  gst_pad_connect(gst_element_get_pad(sink_q,"src"),
+  gst_pad_link(gst_element_get_pad(sink_q,"src"),
                   gst_element_get_pad(sink,"sink"));
 
   return pipeline;

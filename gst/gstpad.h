@@ -112,10 +112,10 @@ typedef struct _GstGhostPadClass GstGhostPadClass;
 
 
 typedef enum {
-  GST_PAD_CONNECT_REFUSED = -1,
-  GST_PAD_CONNECT_DELAYED =  0,
-  GST_PAD_CONNECT_OK      =  1,
-  GST_PAD_CONNECT_DONE    =  2
+  GST_PAD_LINK_REFUSED = -1,
+  GST_PAD_LINK_DELAYED =  0,
+  GST_PAD_LINK_OK      =  1,
+  GST_PAD_LINK_DONE    =  2
 } GstPadConnectReturn;
 
 /* convenience functions */
@@ -262,7 +262,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_QUERYTYPEFUNC(pad)	(((GstRealPad *)(pad))->querytypefunc)
 #define GST_RPAD_EVENTMASKFUNC(pad)	(((GstRealPad *)(pad))->eventmaskfunc)
 
-#define GST_RPAD_CONNECTFUNC(pad)	(((GstRealPad *)(pad))->linkfunc)
+#define GST_RPAD_LINKFUNC(pad)		(((GstRealPad *)(pad))->linkfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
 
@@ -276,9 +276,9 @@ struct _GstGhostPadClass {
 #define GST_PAD_PEER(pad)		GST_PAD_CAST(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
 
 /* Some check functions (unused?) */
-#define GST_PAD_IS_CONNECTED(pad)	(GST_PAD_PEER(pad) != NULL)
+#define GST_PAD_IS_LINKED(pad)	(GST_PAD_PEER(pad) != NULL)
 #define GST_PAD_IS_ACTIVE(pad)		(!GST_FLAG_IS_SET(GST_PAD_REALIZE(pad), GST_PAD_DISABLED))
-#define GST_PAD_IS_USABLE(pad)		(GST_PAD_IS_CONNECTED (pad) && \
+#define GST_PAD_IS_USABLE(pad)		(GST_PAD_IS_LINKED (pad) && \
 		                         GST_PAD_IS_ACTIVE(pad) && GST_PAD_IS_ACTIVE(GST_PAD_PEER (pad)))
 #define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->gethandler != NULL)
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)

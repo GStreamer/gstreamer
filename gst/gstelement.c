@@ -1768,7 +1768,7 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
 	       GST_DEBUG_PAD_NAME (pad));
 
     if (GST_PAD_DIRECTION (pad) == dir) {
-      if (GST_PAD_IS_CONNECTED (pad)) {
+      if (GST_PAD_IS_LINKED (pad)) {
 	return pad;
       }
       else {
@@ -2179,7 +2179,7 @@ gst_element_negotiate_pads (GstElement *element)
 
     /* if we have a link on this pad and it doesn't have caps
      * allready, try to negotiate */
-    if (GST_PAD_IS_CONNECTED (srcpad) && !GST_PAD_CAPS (srcpad)) {
+    if (GST_PAD_IS_LINKED (srcpad) && !GST_PAD_CAPS (srcpad)) {
       GstRealPad *sinkpad;
       GstElementState otherstate;
       GstElement *parent;

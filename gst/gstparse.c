@@ -73,7 +73,7 @@ dynamic_link (GstElement * element, GstPad * newpad, gpointer data)
 
   /* try to find a target pad if we don't know it yet */
   if (!dc->target_pad) {
-    if (!GST_PAD_IS_CONNECTED (newpad)) {
+    if (!GST_PAD_IS_LINKED (newpad)) {
       dc->target_pad = gst_element_get_compatible_pad (dc->target_element, newpad);
       warn = FALSE;
     }
@@ -81,7 +81,7 @@ dynamic_link (GstElement * element, GstPad * newpad, gpointer data)
       return;
     }
   }
-  if (!GST_PAD_IS_CONNECTED (dc->target_pad) && !GST_PAD_IS_CONNECTED (newpad)) {
+  if (!GST_PAD_IS_LINKED (dc->target_pad) && !GST_PAD_IS_LINKED (newpad)) {
     gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
     if (!gst_pad_link (newpad, dc->target_pad) && warn) {
       g_warning ("could not link %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
@@ -378,42 +378,42 @@ next:
 could_not_get_pad_a:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Could not get a pad %s from element %s",
                (gchar*)a->data, GST_OBJECT_NAME (src));
   return FALSE;
 could_not_get_pad_b:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Could not get a pad %s from element %s",
                (gchar*)b->data, GST_OBJECT_NAME (sink));
   return FALSE;
 could_not_get_compatible_to_a:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Could not find a compatible pad in element %s to for %s:%s",
                GST_OBJECT_NAME (sink), GST_OBJECT_NAME (src), (gchar*)a->data);
   return FALSE;
 could_not_get_compatible_to_b:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Could not find a compatible pad in element %s to for %s:%s",
                GST_OBJECT_NAME (src), GST_OBJECT_NAME (sink), (gchar*)b->data);
   return FALSE;
 both_templates_have_sometimes_presence:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Both %s:%s and %s:%s have GST_PAD_SOMETIMES presence, operation not supported",
                GST_OBJECT_NAME (src), pt1->name_template, GST_OBJECT_NAME (sink), pt2->name_template);
   return FALSE;
 could_not_link_pads:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Could not link %s:%s to %s:%s",
                GST_DEBUG_PAD_NAME (p1),
                GST_DEBUG_PAD_NAME (p2));
@@ -421,7 +421,7 @@ could_not_link_pads:
 could_not_link_elements:
   g_set_error (error,
                GST_PARSE_ERROR,
-               GST_PARSE_ERROR_CONNECT,
+               GST_PARSE_ERROR_LINK,
                "Could not link element %s to %s",
                GST_OBJECT_NAME (src),
                GST_OBJECT_NAME (sink));

@@ -88,6 +88,9 @@ dnl this is so we can make GST_CFLAGS for external modules available
 dnl without mixing in internal (uninstalled) CFLAGS
 dnl
 
+dnl disable deprecated functions internally
+GST_INT_CFLAGS="-DGST_DISABLE_DEPRECATED"
+
 AC_MSG_CHECKING(for large file support)
 AC_TRY_RUN([
 #define _LARGEFILE_SOURCE
