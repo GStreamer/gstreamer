@@ -20,6 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <string.h>
 #include <cdaudio.h>
 
 #include <gst/gst.h>
@@ -39,6 +40,7 @@ struct _GstCDAudio
 
   /* properties */
   gchar *device;
+  gchar *uri;
 
   gint cd_desc;
   gulong discid;
@@ -99,51 +101,48 @@ static const GstQueryType *gst_cdaudio_get_query_types (GstElement * element);
 static gboolean gst_cdaudio_query (GstElement * element, GstQueryType type,
     GstFormat * format, gint64 * value);
 
+static void cdaudio_uri_handler_init (gpointer g_iface, gpointer iface_data);
+
 static GstFormat track_format;
 static GstFormat sector_format;
 
-static GstElementClass *parent_class;
+static GstBinClass *parent_class;
 static guint gst_cdaudio_signals[LAST_SIGNAL] = { 0 };
 
 static GstElementDetails gst_cdaudio_details = {
   "CD Player",
   "Generic/Bin",
-  "LGPL",
   "Play CD audio through the CD Drive",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
+  "Wim Taymans <wim@fluendo.com>",
 };
 
 
-GType
-gst_cdaudio_get_type (void)
+static void
+_do_init (GType cdaudio_type)
 {
-  static GType gst_cdaudio_type = 0;
+  static const GInterfaceInfo urihandler_info = {
+    cdaudio_uri_handler_init,
+    NULL,
+    NULL,
+  };
 
-  if (!gst_cdaudio_type) {
-    static const GTypeInfo gst_cdaudio_info = {
-      sizeof (GstCDAudioClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_cdaudio_class_init,
-      NULL,
-      NULL,
-      sizeof (GstCDAudio),
-      0,
-      (GInstanceInitFunc) gst_cdaudio_init,
-      NULL
-    };
+  g_type_add_interface_static (cdaudio_type, GST_TYPE_URI_HANDLER,
+      &urihandler_info);
+}
 
-    gst_cdaudio_type =
-        g_type_register_static (GST_TYPE_BIN, "GstCDAudio", &gst_cdaudio_info,
-        0);
 
-    track_format = gst_format_register ("track", "CD track");
-    sector_format = gst_format_register ("sector", "CD sector");
-  }
+GST_BOILERPLATE_FULL (GstCDAudio, gst_cdaudio, GstBin, GST_TYPE_BIN, _do_init);
 
-  return gst_cdaudio_type;
+static void
+gst_cdaudio_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_cdaudio_details);
+
+  /* Register the track and sector format */
+  track_format = gst_format_register ("track", "CD track");
+  sector_format = gst_format_register ("sector", "CD sector");
 }
 
 static void
@@ -289,13 +288,15 @@ print_track_info (GstCDAudio * cdaudio)
 {
   gint i;
 
-  for (i = 0; i < cdaudio->info.disc_total_tracks; i++) {
-    g_print ("%d %d %d %d:%02d\n", i,
-        cdaudio->info.disc_track[i].track_length.frames,
-        cdaudio->info.disc_track[i].track_pos.frames,
-        cdaudio->info.disc_track[i].track_length.minutes,
-        cdaudio->info.disc_track[i].track_length.seconds);
-  }
+  /*
+     for (i = 0; i < cdaudio->info.disc_total_tracks; i++) {
+     g_print ("%d %d %d %d:%02d\n", i,
+     cdaudio->info.disc_track[i].track_length.frames,
+     cdaudio->info.disc_track[i].track_pos.frames,
+     cdaudio->info.disc_track[i].track_length.minutes,
+     cdaudio->info.disc_track[i].track_length.seconds);
+     }
+   */
 }
 
 static GstElementStateReturn
@@ -367,16 +368,21 @@ gst_cdaudio_change_state (GstElement * element)
   return GST_STATE_SUCCESS;
 }
 
-GST_ELEMENT_EVENT_MASK_FUNCTION (gst_cdaudio_get_event_masks,
-    {
-    GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH}
+static const GstEventMask *
+gst_cdaudio_get_event_masks (GstElement * element)
+{
+  static const GstEventMask masks[] = {
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET |
+          GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
+    {GST_EVENT_SEEK_SEGMENT, GST_SEEK_METHOD_SET |
+          GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
+    {0,}
+  };
 
-    , {
-    GST_EVENT_SEEK_SEGMENT, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP}
+  return masks;
+}
 
-)
-
-    gboolean
+static gboolean
 gst_cdaudio_send_event (GstElement * element, GstEvent * event)
 {
   GstCDAudio *cdaudio;
@@ -389,8 +395,9 @@ gst_cdaudio_send_event (GstElement * element, GstEvent * event)
       switch (GST_EVENT_SEEK_FORMAT (event)) {
         case GST_FORMAT_TIME:
         {
-          cd_play_pos (cdaudio->cd_desc, 1,
-              GST_EVENT_SEEK_OFFSET (event) / (60 * GST_SECOND));
+          if (cd_play_pos (cdaudio->cd_desc, 1,
+                  (gint) (GST_EVENT_SEEK_OFFSET (event) / (GST_SECOND))) == -1)
+            res = FALSE;
           break;
         }
         default:
@@ -457,9 +464,9 @@ gst_cdaudio_query (GstElement * element, GstQueryType type,
 
   cdaudio = GST_CDAUDIO (element);
 
-  /* take new snapshot every 100000 miliseconds */
+  /* take new snapshot every 1000 miliseconds */
   seconds = g_timer_elapsed (cdaudio->timer, &micros);
-  if (micros > 100000 || seconds > 1) {
+  if (micros > 1000 || seconds > 1) {
     cd_stat (cdaudio->cd_desc, &cdaudio->info);
     g_timer_start (cdaudio->timer);
   }
@@ -507,24 +514,79 @@ gst_cdaudio_query (GstElement * element, GstQueryType type,
 }
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
-
-  factory =
-      gst_element_factory_new ("cdaudio", GST_TYPE_CDAUDIO,
-      &gst_cdaudio_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  gst_plugin_set_longname (plugin, "CD Player");
+  if (!gst_element_register (plugin, "cdaudio", GST_RANK_NONE,
+          GST_TYPE_CDAUDIO))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "cdaudio",
-  plugin_init
-};
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+cdaudio_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+cdaudio_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "cd", NULL };
+
+  return protocols;
+}
+static const gchar *
+cdaudio_uri_get_uri (GstURIHandler * handler)
+{
+  GstCDAudio *cdaudio = GST_CDAUDIO (handler);
+
+  return cdaudio->uri;
+}
+
+static gboolean
+cdaudio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gchar *protocol, *location;
+  gboolean ret;
+
+  ret = TRUE;
+
+  //GstCDAudio *cdaudio = GST_CDAUDIO(handler);
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "cd") != 0) {
+    g_free (protocol);
+    return FALSE;
+  }
+  g_free (protocol);
+
+  location = gst_uri_get_location (uri);
+  /*
+     cdaudio->uri_track = strtol(location,NULL,10);
+     if (cdaudio->uri_track > 0) {
+     cdaudio->seek_request = cdaudio->uri_track;
+     }
+   */
+  g_free (location);
+
+  return ret;
+}
+
+static void
+cdaudio_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = cdaudio_uri_get_type;
+  iface->get_protocols = cdaudio_uri_get_protocols;
+  iface->get_uri = cdaudio_uri_get_uri;
+  iface->set_uri = cdaudio_uri_set_uri;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "cdaudio",
+    "Play CD audio through the CD Drive",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
