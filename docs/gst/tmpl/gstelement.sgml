@@ -981,7 +981,7 @@ condition.
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>
-Is trigered whenever an error occured
+Is triggered whenever an error occured.
 
 </para>
 
@@ -991,7 +991,7 @@ Is trigered whenever an error occured
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->
 <para>
-Is trigered whenever a new pad is added to an element
+Is triggered whenever a new pad is added to an element.
 </para>
 
 @gstelement: the object which received the signal.
@@ -999,7 +999,7 @@ Is trigered whenever a new pad is added to an element
 
 <!-- ##### SIGNAL GstElement::pad-removed ##### -->
 <para>
-
+Is triggered whenever a pad has been removed from the element.
 </para>
 
 @gstelement: the object which received the signal.
@@ -1007,7 +1007,7 @@ Is trigered whenever a new pad is added to an element
 
 <!-- ##### SIGNAL GstElement::state-change ##### -->
 <para>
-Is trigered whenever the state of an element changes
+Is triggered whenever the state of an element changes.
 </para>
 
 @gstelement: the object which received the signal.
