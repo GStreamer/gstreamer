@@ -1311,8 +1311,8 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry * registry,
     const gchar * directory)
 {
   GDir *dir;
-  gchar *temp;
   GList *ret = NULL;
+  gint dr_len, sf_len;
 
   dir = g_dir_open (directory, 0, NULL);
 
@@ -1335,8 +1335,10 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry * registry,
     }
     g_dir_close (dir);
   } else {
-    if ((temp = strstr (directory, G_MODULE_SUFFIX)) &&
-        (!strcmp (temp, G_MODULE_SUFFIX))) {
+    dr_len = strlen (directory);
+    sf_len = strlen (G_MODULE_SUFFIX);
+    if (dr_len >= sf_len &&
+        strcmp (directory + dr_len - sf_len, G_MODULE_SUFFIX) == 0) {
       ret = g_list_prepend (ret, g_strdup (directory));
     }
   }

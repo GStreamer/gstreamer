@@ -1,3 +1,11 @@
+2004-04-01  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/registries/gstxmlregistry.c
+	(gst_xml_registry_rebuild_recurse): Fix the algorithm to
+	determine if a file is a G_MODULE. The old one discards paths
+	containing "so" somewhere in the middle. My home directory is
+	called "soto". Go figure...
+
 2004-03-31  David Schleef  <ds@schleef.org>
 
 	* gst/gstbuffer.c: (gst_buffer_join):  Add function gst_buffer_join()
