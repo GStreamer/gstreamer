@@ -81,7 +81,7 @@ clock providers and receivers are collected in the bins on element
 add/remove, recursing bins if needed. 
 
 the toplevel bin with a scheduler selects the global clock and calls
-set_clock on itself.
+set_clock on itself. This happens in the NULL->READY state.
 
 bins dispatch the set_clock to to all of the reveivers. Bins with
 a scheduler and another use_clock do nothing.
@@ -134,6 +134,13 @@ set to 0.
 When the clock is enabled again, it should start counting from where
 it was last disabled.
 
+NULL->READY     : distribute clock, clock_reset, 
+READY->PAUSED   : clock_activate (FALSE)
+PAUSED->PLAYING : clock_activate (TRUE)
+PLAYING->PAUSED : clock_activate (FALSE);
+PAUSED->READY   : clock_reset
+READY->NULL     : delete clock;
+
 
 automatic Clock selection
 -------------------------
@@ -153,6 +160,39 @@ ossrc ! osssink can cause clock drift if osssink doesn't process the bytes
 at the same rate osssrc provides them (different hardware). Things will
 stutter and cracle if this is the case.	QoS and a resampler could solve
 this.
+
+
+Use Cases
+---------
+                     -- queue ! mpeg2dec ! videosink
+                    /
+filesrc ! mpegdemux 
+                    \
+                     -- queue ! mad ! osssink
+
+
+videosink is a receiver
+osssink is a provider
+
+osssink is selected as a clock provider since it is a Sink. The global
+pipeline distributes the clock to videosink and osssink.
+osssink sees that it receives its own clock.
+
+osssink uses the OSS ioctls to determine the number of bytes processed
+by the hardware. using the audio rate it can figure out the exact time
+and updates its clock with a resolution that matches the resolution 
+as closely as possible. 
+
+videosink blocks on the clock. with each update of the clock videosink
+is unblocked if the current time >= wait time and shows the frame.
+
+when osssink is PAUSED, the clock will not be updated anymore. osssink
+instructs its clock to convert all requests to select() calls.
+When it is set to PLAYING again, it resumes normal operation.
+
+
+
+
 
 
 

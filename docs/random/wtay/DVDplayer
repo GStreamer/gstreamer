@@ -1,0 +1,41 @@
+A DVDplayer
+-----------
+
+1) set up a pipeline
+
+ <draw pipeline schematics here>
+
+2) set to playing
+
+ - dvdnav reads the ifo file. A set of events are generated to configure
+   various elements in the pipeline. These would include:
+     - SPU colors
+     - whatmore..
+
+ - first the src will read the DVD menu. this will contain mpeg2 data
+   and spu/nav info. after the menu is sent down the pipeline
+   the nav decoder waits for input somehow. The pipeline keeps on 
+   playing to animate the menus.
+
+ - somehow a button is pressed on the menu: a method is triggered in
+   the dvdnav plugin to tell it button X was pressed (event? app?).
+
+ - dvdnav reacts and starts to stream other data.
+
+ - nav packets in the stream indicate what can happen next.
+   - update the menu
+   - keep the menu
+   - hide the menu
+   - show the menu
+
+ - pressing the hotkey to bring up the menu triggers a method in dvdnav
+   which will send down nav info downstream to bring up the menu. 
+   A background picture (I frame) is sent downstream too.
+
+ - nav info can also happen while playing the movie. This can highlite 
+   some buttons the user can press.
+   
+ - selecting a button triggers some color/compositing changes in SPU/NAVdec
+   and an action on dvdnav.
+
+   

@@ -1,12 +1,33 @@
-This talk will present the GStreamer Media framework. We will
+This paper will present the GStreamer Media framework. We 
 explain briefly what a media framework is and what its advantages
-are. This introduction will present the basic design of GStreamer
-and how the modularity can provide many benefits.
+are. This introduction presents the basic design of GStreamer
+and how the modularity can provide many benefits when building 
+multimedia applications ranging from simple audio/video players 
+to complex audio/video mixing and non linear editing.
 
-We will then go into more detail about the different components of
-the framework and how specific problems were solved, such as 
-pipelines, scheduling, state changes, buffers, type negotiation and
-events.
+We then go into more detail about the different components of
+the framework and how specific problems were solved.
+State changes are covered first as they bring the pipeline with
+all its components from a sleeping to a running state. The most
+interesting problem here is error recovery and thread interlocking.
 
-We will conclude the presentation with a little demonstration of 
-the provided tools and applications.
+We expand on the scheduler that is responsible for making sure all 
+of the components don't step on eachothers toes as they pass along 
+data. We explain one of the possible scheduling methods using
+cothreads and expand on how the number of cothread switches can
+be reduced in order to make the data flow as fast as possible.
+
+Since GStreamer is a very open system that can basically handle
+any media type, a mechanism is provided to negotiate the media
+types between plugins. We continue with an explanation of how
+this type negotiation is done.
+
+Events are the mechanism to indicate changes in the data that is
+flowing through the pipeline, such as End Of Stream notification
+or seek and flush events. We explain how these events work and
+how they interact with the scheduler.
+
+We finally cover some of the interesting libraries that are 
+provided with GStreamer, such as the bytestream library. We 
+explain how all the pieces fit together and how we combine different
+techniques to create a very fast read API.

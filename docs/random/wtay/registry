@@ -20,6 +20,42 @@ user/system registry
 
 first query the user registry, then fall back to system registry.
 
+model:
+------
+
+registry_pool
+ !
+ !---> registry (name, priority)
+ !
+ !
+ !---> registry (name, priority)
+ !        !
+ !	  !-> plugin
+ !	  !
+ !	  !-> plugin
+ !       ...    !
+ !              !-> feature ...
+ !
+ ...
+
+
+A registrypool holds a list of registries each with a priority
+
+A registry contains a list of plugins (or libraries)
+
+A plugin contains a list of features (elementfactories, typefacories, ...)
+
+Loading the registry will do
+
+ - instantiate empty GstPlugin objects (loaded flag == FALSE)
+ - instantiate empty plugin features
+
+
+
+
+
+
+ 
 API
 ---
 
