@@ -330,13 +330,16 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
     return FALSE;
   }
 
+  GST_LOG ("Opened ffmpeg codec %s", oclass->in_plugin->name);
+
   /* open a parser if we can - exclude mpeg4, because it is already
    * framed (divx), mp3 because it doesn't work (?) and mjpeg because
    * of $(see mpeg4)... */
   if (oclass->in_plugin->id != CODEC_ID_MPEG4 &&
       oclass->in_plugin->id != CODEC_ID_MJPEG &&
-      oclass->in_plugin->id != CODEC_ID_MP3)
+      oclass->in_plugin->id != CODEC_ID_MP3) {
     ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+  }
 
   switch (oclass->in_plugin->type) {
     case CODEC_TYPE_VIDEO:
@@ -394,9 +397,10 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* we dont send complete frames - FIXME: we need a 'framed' property
    * in caps */
   if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED &&
-      (ffmpegdec->context->codec_id == CODEC_ID_MPEG1VIDEO ||
-          ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO))
+      (oclass->in_plugin->id == CODEC_ID_MPEG1VIDEO ||
+          oclass->in_plugin->id == CODEC_ID_MPEG2VIDEO)) {
     ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
+  }
 
   /* do *not* draw edges */
   ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
@@ -486,12 +490,26 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
           ffmpegdec->format.video.fps_base ==
               ffmpegdec->context->frame_rate_base)
         return TRUE;
+      GST_DEBUG ("Renegotiating video from %dx%d@%d/%dfps to %dx%d@%d/%dfps",
+          ffmpegdec->format.video.width, ffmpegdec->format.video.height,
+          ffmpegdec->format.video.fps, ffmpegdec->format.video.fps_base,
+          ffmpegdec->context->width, ffmpegdec->context->height,
+          ffmpegdec->context->frame_rate, ffmpegdec->context->frame_rate_base);
+      ffmpegdec->format.video.width = ffmpegdec->context->width;
+      ffmpegdec->format.video.height = ffmpegdec->context->height;
+      ffmpegdec->format.video.fps = ffmpegdec->context->frame_rate;
+      ffmpegdec->format.video.fps_base = ffmpegdec->context->frame_rate_base;
       break;
     case CODEC_TYPE_AUDIO:
       if (ffmpegdec->format.audio.samplerate ==
               ffmpegdec->context->sample_rate &&
           ffmpegdec->format.audio.channels == ffmpegdec->context->channels)
         return TRUE;
+      GST_DEBUG ("Renegotiating audio from %dHz@%dchannels to %dHz@%dchannels",
+          ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
+          ffmpegdec->context->sample_rate, ffmpegdec->context->channels);
+      ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
+      ffmpegdec->format.audio.channels == ffmpegdec->context->channels;
       break;
     default:
       break;
@@ -635,7 +653,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     *got_data = 0;
     return 0;
   } else {
-    *got_data = 1;
+    *got_data = have_data ? 1 : 0;
   }
 
   if (have_data) {
@@ -658,6 +676,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 static void
 gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
 {
+  GST_DEBUG ("Handling event of type %d", GST_EVENT_TYPE (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       if (ffmpegdec->opened) {
