@@ -686,8 +686,9 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
   return TRUE;
 }
 
-static void
-gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
+/* prepare a buffer for transmission by passing data through libvorbis */
+static GstBuffer *
+gst_vorbisenc_buffer_from_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
@@ -699,15 +700,30 @@ gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
       vorbis_granule_time_copy (&vorbisenc->vd,
       packet->granulepos) * GST_SECOND;
 
-  GST_DEBUG ("vorbisenc: encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  return outbuf;
+}
 
-  vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);
+/* push out the buffer and do internal bookkeeping */
+static void
+gst_vorbisenc_push_buffer (VorbisEnc * vorbisenc, GstBuffer * buffer)
+{
+  vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
   if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
-    gst_pad_push (vorbisenc->srcpad, GST_DATA (outbuf));
+    gst_pad_push (vorbisenc->srcpad, GST_DATA (buffer));
   } else {
-    gst_buffer_unref (outbuf);
+    gst_buffer_unref (buffer);
   }
+}
+
+static void
+gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
+{
+  GstBuffer *outbuf;
+
+  outbuf = gst_vorbisenc_buffer_from_packet (vorbisenc, packet);
+  gst_vorbisenc_push_buffer (vorbisenc, outbuf);
 }
 
 static void
@@ -773,13 +789,17 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
       ogg_packet header;
       ogg_packet header_comm;
       ogg_packet header_code;
+      GstBuffer *buf;
 
       gst_vorbisenc_set_metadata (vorbisenc);
       vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
           &header_comm, &header_code);
-      gst_vorbisenc_push_packet (vorbisenc, &header);
-      gst_vorbisenc_push_packet (vorbisenc, &header_comm);
-      gst_vorbisenc_push_packet (vorbisenc, &header_code);
+      buf = gst_vorbisenc_buffer_from_packet (vorbisenc, &header);
+      gst_vorbisenc_push_buffer (vorbisenc, buf);
+      buf = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_comm);
+      gst_vorbisenc_push_buffer (vorbisenc, buf);
+      buf = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_code);
+      gst_vorbisenc_push_buffer (vorbisenc, buf);
 
       vorbisenc->header_sent = TRUE;
     }
