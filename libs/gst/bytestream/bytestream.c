@@ -466,11 +466,27 @@ gst_bytestream_tell (GstByteStream *bs)
   GstFormat format;
   gint64 value;
   
-  g_return_val_if_fail (bs != NULL, 0);
+  g_return_val_if_fail (bs != NULL, -1);
 
   format = GST_FORMAT_BYTES;
 
   if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_PAD_QUERY_POSITION, &format, &value)) 
+    return value;
+  
+  return -1;
+}
+
+guint64
+gst_bytestream_length (GstByteStream *bs)
+{
+  GstFormat format;
+  gint64 value;
+  
+  g_return_val_if_fail (bs != NULL, -1);
+
+  format = GST_FORMAT_BYTES;
+
+  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_PAD_QUERY_TOTAL, &format, &value)) 
     return value;
   
   return -1;
