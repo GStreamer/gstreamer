@@ -117,6 +117,8 @@ nas		(for the NAS sound server sink)
 			(http://radscan.com/nas.html)
 libtheora	(for Ogg Theora video support)
 			(http://www.theora.org)
+libmms		(for MMS protocol support)
+			(http://www.sf.net/projects/libmms)
 
 
 Optional debian packages:
