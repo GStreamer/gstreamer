@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2004 Wim Taymans <wim@fluendo.com>
  *
  * gstcompat.h: backwards compatibility stuff
  *
@@ -28,57 +28,6 @@
 G_BEGIN_DECLS
 
 #ifndef GST_DISABLE_DEPRECATED
-/* 0.5.2 changes; remove these ASAP */
-
-/* element functions */
-#define	gst_element_connect(a,b)	gst_element_link(a,b)
-#define	gst_element_connect_pads(a,b,c,d) \
-					gst_element_link_pads(a,b,c,d)
-#ifdef G_HAVE_ISO_VARARGS
-#define	gst_element_connect_many(a,...)	gst_element_link_many(a,__VA_ARGS__)
-#elif defined(G_HAVE_GNUC_VARARGS)
-#define gst_element_connect_many(a,args...) \
-					gst_element_link_many(a, ## args)
-#else
-/* FIXME: need an inline function */
-#endif
-#define	gst_element_connect_filtered(a,b,c) \
-					gst_element_link_filtered(a,b,c)
-#define	gst_element_disconnect(a,b)	gst_element_unlink(a,b)
-
-/* pad functions */
-#define gst_pad_connect(a,b)		gst_pad_link(a,b)
-#define gst_pad_connect_filtered(a,b,c)	gst_pad_link_filtered(a,b,c)
-#define gst_pad_disconnect(a,b)		gst_pad_unlink(a,b)
-#define gst_pad_proxy_connect(a,b)	gst_pad_proxy_link(a,b)
-#define gst_pad_set_connect_function(a,b) \
-					gst_pad_set_link_function(a,b)
-
-/* pad macros */
-#define GST_PAD_IS_CONNECTED(a)		GST_PAD_IS_LINKED(a)
-
-/* pad enums */
-#define GST_PAD_CONNECT_REFUSED		GST_PAD_LINK_REFUSED
-#define GST_PAD_CONNECT_DELAYED		GST_PAD_LINK_DELAYED
-#define GST_PAD_CONNECT_OK		GST_PAD_LINK_OK
-#define GST_PAD_CONNECT_DONE		GST_PAD_LINK_DONE
-typedef GstPadLinkReturn		GstPadConnectReturn;
-
-/* pad function types */
-typedef GstPadLinkFunction		GstPadConnectFunction;
-
-/* probably not used */
-/*
- * GST_RPAD_LINKFUNC
- */
-
-/* 0.8.1.1 removal; remove completely in 0.9 */
-/* information messages */
-#  ifdef G_HAVE_ISO_VARARGS
-#define gst_info(...) GST_INFO(__VA_ARGS__)
-#  elif defined(G_HAVE_GNUC_VARARGS)
-#define gst_info(format,args...) GST_INFO(format,##args)
-#  endif
 
 #endif /* not GST_DISABLE_DEPRECATED */
 

@@ -94,7 +94,7 @@ gst_type_find_factory_dispose (GObject * object)
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (object);
 
   if (factory->caps) {
-    gst_caps_free (factory->caps);
+    gst_caps_unref (factory->caps);
     factory->caps = NULL;
   }
   if (factory->extensions) {

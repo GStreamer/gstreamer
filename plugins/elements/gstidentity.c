@@ -203,14 +203,14 @@ gst_identity_init (GstIdentity * identity)
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad,
       GST_DEBUG_FUNCPTR (gst_identity_chain));
-  gst_pad_set_link_function (identity->sinkpad, gst_pad_proxy_pad_link);
+  //gst_pad_set_link_function (identity->sinkpad, gst_pad_proxy_pad_link);
   gst_pad_set_getcaps_function (identity->sinkpad, gst_pad_proxy_getcaps);
 
   identity->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
-  gst_pad_set_link_function (identity->srcpad, gst_pad_proxy_pad_link);
+  //gst_pad_set_link_function (identity->srcpad, gst_pad_proxy_pad_link);
   gst_pad_set_getcaps_function (identity->srcpad, gst_pad_proxy_getcaps);
 
   identity->loop_based = DEFAULT_LOOP_BASED;

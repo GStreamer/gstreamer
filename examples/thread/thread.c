@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
+static GMainLoop *loop;
+
 /* eos will be called when the src element has an end of stream */
 void
 eos (GstElement * element, gpointer data)
@@ -12,7 +14,8 @@ eos (GstElement * element, gpointer data)
   /* stop the bin */
   gst_element_set_state (GST_ELEMENT (thread), GST_STATE_NULL);
 
-  gst_main_quit ();
+  g_main_loop_quit (loop);
+  g_main_loop_unref (loop);
 }
 
 int
@@ -68,7 +71,7 @@ main (int argc, char *argv[])
   /* start playing */
   gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
 
-  gst_main ();
+  loop = g_main_loop_new (NULL, FALSE);
 
   gst_object_unref (GST_OBJECT (thread));
 

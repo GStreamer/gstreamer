@@ -141,8 +141,7 @@ gst_tee_init (GstTee * tee)
       "sink");
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
-  gst_pad_set_link_function (tee->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  //gst_pad_set_link_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
   gst_pad_set_getcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
@@ -169,16 +168,15 @@ gst_tee_getcaps (GstPad * _pad)
   GstPad *pad;
   const GList *pads;
 
-  for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
-      pads != NULL; pads = pads->next) {
+  for (pads = GST_ELEMENT (tee)->pads; pads != NULL; pads = pads->next) {
     pad = GST_PAD (pads->data);
     if (pad == _pad)
       continue;
 
     tmp = gst_pad_get_allowed_caps (pad);
     res = gst_caps_intersect (caps, tmp);
-    gst_caps_free (tmp);
-    gst_caps_free (caps);
+    gst_caps_unref (tmp);
+    gst_caps_unref (caps);
     caps = res;
   }
 
@@ -195,8 +193,7 @@ gst_tee_link (GstPad * _pad, const GstCaps * caps)
 
   GST_DEBUG_OBJECT (tee, "Forwarding link to all other pads");
 
-  for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
-      pads != NULL; pads = pads->next) {
+  for (pads = GST_ELEMENT (tee)->pads; pads != NULL; pads = pads->next) {
     pad = GST_PAD (pads->data);
     if (pad == _pad)
       continue;
@@ -231,7 +228,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   tee = GST_TEE (element);
 
   /* try names in order and find one that's not in use atm */
-  pads = gst_element_get_pad_list (element);
+  pads = element->pads;
 
   name = NULL;
   while (!name) {
@@ -335,7 +332,7 @@ gst_tee_chain (GstPad * pad, GstData * _data)
 
   gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads - 1);
 
-  pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+  pads = GST_ELEMENT (tee)->pads;
 
   while (pads) {
     GstPad *outpad = GST_PAD (pads->data);

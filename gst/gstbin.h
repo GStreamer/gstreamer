@@ -25,6 +25,7 @@
 #define __GST_BIN_H__
 
 #include <gst/gstelement.h>
+#include <gst/gstiterator.h>
 
 G_BEGIN_DECLS
 
@@ -36,6 +37,7 @@ GST_EXPORT GType _gst_bin_type;
 #define GST_BIN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BIN, GstBinClass))
 #define GST_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BIN, GstBin))
 #define GST_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BIN, GstBinClass))
+#define GST_BIN_CAST(obj)        ((GstBin*)(obj))
 
 /**
  * GstBinFlags:
@@ -58,45 +60,58 @@ GST_EXPORT GType _gst_bin_type;
  * and (un)set using GST_FLAG_SET () and GST_FLAG_UNSET ().
  */
 typedef enum {
-  GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
+  GST_BIN_FLAG_FIXED_CLOCK		= GST_ELEMENT_FLAG_LAST,
+  GST_BIN_FLAG_MANAGER,
   GST_BIN_SELF_SCHEDULABLE,
-  GST_BIN_FLAG_PREFER_COTHREADS,
-  GST_BIN_FLAG_FIXED_CLOCK,
   GST_BIN_STATE_LOCKED,
+  /* padding */
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
 
 /*typedef struct _GstBin GstBin; */
 /*typedef struct _GstBinClass GstBinClass; */
 
+#define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren);
+#define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children);
+#define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie);
+
 struct _GstBin {
   GstElement 	 element;
 
-  /* our children */
+  /*< public >*/ /* with LOCK */
+  /* our children, subclass are supposed to update these
+   * fields to reflect their state with _iterate_*() */
   gint 		 numchildren;
   GList 	*children;
+  guint32	 children_cookie;
 
   GstElementState child_states[GST_NUM_STATES];
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBinClass {
   GstElementClass parent_class;
 
-  /* vtable */
-  void		(*add_element)		(GstBin *bin, GstElement *element);
-  void		(*remove_element)	(GstBin *bin, GstElement *element);
-  void		(*child_state_change)	(GstBin *bin, GstElementState oldstate, 
-					 GstElementState newstate, GstElement *element);
+  /*< public >*/
 
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
+  void		(*child_state_change)	(GstBin *bin, GstElementState oldstate, 
+					 GstElementState newstate, GstElement *element);
+
 
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
 
+  /*< protected >*/
+  /* vtable */
+  gboolean	(*add_element)		(GstBin *bin, GstElement *element);
+  gboolean	(*remove_element)	(GstBin *bin, GstElement *element);
+
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -104,24 +119,23 @@ GType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 
 /* add and remove elements from the bin */
-void		gst_bin_add			(GstBin *bin, GstElement *element);
-void		gst_bin_add_many 		(GstBin *bin, GstElement *element_1, ...);
-void		gst_bin_remove			(GstBin *bin, GstElement *element);
-void		gst_bin_remove_many		(GstBin *bin, GstElement *element_1, ...);
+gboolean	gst_bin_add			(GstBin *bin, GstElement *element);
+gboolean	gst_bin_remove			(GstBin *bin, GstElement *element);
 
-/* retrieve a single element or the list of children */
-GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
-GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin, const gchar *name);
-G_CONST_RETURN GList*
-		gst_bin_get_list		(GstBin *bin);
-GstElement*	gst_bin_get_by_interface	(GstBin *bin, GType interface);
-GList *		gst_bin_get_all_by_interface	(GstBin *bin, GType interface);
+/* retrieve a single child */
+GstElement*	gst_bin_get_by_name		 (GstBin *bin, const gchar *name);
+GstElement*	gst_bin_get_by_name_recurse_up	 (GstBin *bin, const gchar *name);
+GstElement*	gst_bin_get_by_interface	 (GstBin *bin, GType interface);
+
+/* retrieve multiple children */
+GstIterator*    gst_bin_iterate_elements	 (GstBin *bin);
+GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
+GstIterator*    gst_bin_iterate_recurse_up	 (GstBin *bin);
+
+GstIterator*	gst_bin_iterate_sinks	 	 (GstBin *bin);
+GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType interface);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
-
-void		gst_bin_use_clock		(GstBin *bin, GstClock *clock);
-GstClock*	gst_bin_get_clock		(GstBin *bin);
-void		gst_bin_auto_clock		(GstBin *bin);
 
 GstElementStateReturn gst_bin_sync_children_state (GstBin *bin);
 

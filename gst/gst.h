@@ -42,6 +42,7 @@
 #include <gst/gstindex.h>
 #include <gst/gstinfo.h>
 #include <gst/gstinterface.h>
+#include <gst/gstiterator.h>
 #include <gst/gstmarshal.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
@@ -94,14 +95,6 @@ gboolean	gst_init_check_with_popt_table	(int *argc, char **argv[],
 						 *popt_options);
 
 const GstPoptOption *	gst_init_get_popt_table		(void);
-
-#ifndef GST_DISABLE_DEPRECATED
-void		gst_use_threads			(gboolean use_threads);
-gboolean	gst_has_threads			(void);
-#endif
-
-void		gst_main			(void);
-void		gst_main_quit			(void);
 
 G_END_DECLS
 

@@ -227,14 +227,14 @@ gst_scheduler_add_element (GstScheduler * sched, GstElement * element)
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   /* if it's already in this scheduler, don't bother doing anything */
-  if (GST_ELEMENT_SCHED (element) == sched) {
+  if (GST_ELEMENT_SCHEDULER (element) == sched) {
     GST_CAT_DEBUG (GST_CAT_SCHEDULING, "element %s already in scheduler %p",
         GST_ELEMENT_NAME (element), sched);
     return;
   }
 
   /* if it's not inside this scheduler, it has to be NULL */
-  g_assert (GST_ELEMENT_SCHED (element) == NULL);
+  g_assert (GST_ELEMENT_SCHEDULER (element) == NULL);
 
   if (gst_element_provides_clock (element)) {
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
@@ -970,7 +970,7 @@ gst_scheduler_factory_create (GstSchedulerFactory * factory,
     sched = GST_SCHEDULER (g_object_new (factory->type, NULL));
     sched->parent = parent;
 
-    GST_ELEMENT_SCHED (parent) = sched;
+    GST_ELEMENT_SCHEDULER (parent) = sched;
 
     /* let's refcount the scheduler */
     gst_object_ref (GST_OBJECT (sched));

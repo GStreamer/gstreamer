@@ -30,6 +30,7 @@
 #include <gst/gstinfo.h>
 #include <gst/gstplugin.h>
 #include <gst/gstversion.h>
+#include <gst/gstutils.h>
 #include "bytestream.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug_bs);

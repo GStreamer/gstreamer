@@ -12,6 +12,7 @@ static guint64 sum = 0;
 static guint64 min = G_MAXINT64;
 static guint64 max = 0;
 static GstClock *s_clock;
+static GMainLoop *loop;
 
 gboolean
 idle_func (gpointer data)
@@ -36,7 +37,8 @@ idle_func (gpointer data)
   max = MAX (max, diff);
 
   if (!busy) {
-    gst_main_quit ();
+    g_main_loop_quit (loop);
+    g_main_loop_unref (loop);
     /*
        g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
        iterations, sum, sum/iterations, min, max);
@@ -127,7 +129,8 @@ main (int argc, char *argv[])
 
   if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
     g_idle_add (idle_func, pipeline);
-    gst_main ();
+    loop = g_main_loop_new (NULL, FALSE);
+    g_main_loop_run (loop);
   } else {
     gst_element_wait_state_change (pipeline);
   }

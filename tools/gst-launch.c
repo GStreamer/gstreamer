@@ -69,6 +69,7 @@ static gboolean caught_intr = FALSE;
 static gboolean caught_error = FALSE;
 static gboolean need_new_state = FALSE;
 static GstElementState new_state;
+static GMainLoop *loop;
 
 gboolean
 idle_func (gpointer data)
@@ -101,7 +102,8 @@ idle_func (gpointer data)
     char *s_min;
     char *s_max;
 
-    gst_main_quit ();
+    g_main_loop_quit (loop);
+    g_main_loop_unref (loop);
 
     /* We write these all to strings first because 
      * G_GUINT64_FORMAT and gettext mix very poorly */
@@ -544,11 +546,12 @@ main (int argc, char *argv[])
       goto end;
     }
 
-    s_clock = gst_bin_get_clock (GST_BIN (pipeline));
+    s_clock = gst_element_get_clock (GST_ELEMENT (pipeline));
 
     if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
       g_idle_add (idle_func, pipeline);
-      gst_main ();
+      loop = g_main_loop_new (NULL, FALSE);
+      g_main_loop_run (loop);
     } else {
       g_print ("Waiting for the state change... ");
       gst_element_wait_state_change (pipeline);

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2004 Wim Taymans <wim@fluendo.com>
  *
  * gstelement.h: Header for GstElement
  *
@@ -32,6 +33,7 @@
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gstindex.h>
+#include <gst/gstiterator.h>
 #include <gst/gsttag.h>
 
 G_BEGIN_DECLS
@@ -39,14 +41,18 @@ G_BEGIN_DECLS
 typedef struct _GstElementDetails GstElementDetails;
 
 /* FIXME: need translatable stuff in here (how handle in registry)? */
-struct _GstElementDetails {
+struct _GstElementDetails
+{
+  /*< public > */
   gchar *longname;              /* long, english name */
   gchar *klass;                 /* type of element, as hierarchy */
   gchar *description;           /* insights of one form or another */
   gchar *author;                /* who wrote this thing? */
 
+  /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
+
 #define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
   { longname, klass, description, author, GST_PADDING_INIT }
 #define GST_IS_ELEMENT_DETAILS(details) (					\
@@ -60,6 +66,7 @@ struct _GstElementDetails {
  */
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
+#define GST_STATE_ERROR(obj)		(GST_ELEMENT(obj)->state_error)
 
 /* Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g> */
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
@@ -78,6 +85,7 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ELEMENT, GstElementClass))
 #define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
 #define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
+#define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 
 /* convenience functions */
 #ifndef GST_DISABLE_DEPRECATED
@@ -98,14 +106,11 @@ GST_EXPORT GType _gst_element_type;
 #endif
 #endif
 
-typedef enum {
-  /* element is complex (for some def.) and generally require a cothread */
-  GST_ELEMENT_COMPLEX		= GST_OBJECT_FLAG_LAST,
+typedef enum
+{
   /* input and output pads aren't directly coupled to each other
      examples: queues, multi-output async readers, etc. */
   GST_ELEMENT_DECOUPLED,
-  /* this element should be placed in a thread if at all possible */
-  GST_ELEMENT_THREAD_SUGGESTED,
   /* this element, for some reason, has a loop function that performs
    * an infinite loop without calls to gst_element_yield () */
   GST_ELEMENT_INFINITE_LOOP,
@@ -115,6 +120,7 @@ typedef enum {
   GST_ELEMENT_EVENT_AWARE,
   /* use threadsafe property get/set implementation */
   GST_ELEMENT_USE_THREADSAFE_PROPERTIES,
+
 
   /* private flags that can be used by the scheduler */
   GST_ELEMENT_SCHEDULER_PRIVATE1,
@@ -136,7 +142,7 @@ typedef enum {
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
-#define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
+#define GST_ELEMENT_SCHEDULER(obj)		(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
@@ -186,11 +192,15 @@ struct _GstElement {
   GstClock		*clock;
   GstClockTimeDiff    	base_time; /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
 
-  /* element pads */
-  guint16 		numpads;
-  guint16 		numsrcpads;
-  guint16 		numsinkpads;
-  GList 		*pads;
+   /* element pads, these lists can only be iterated while holding
+   * the LOCK or checking the cookie after each LOCK. */
+  guint16   numpads;
+  GList    *pads;
+  guint16   numsrcpads;
+  GList    *srcpads;
+  guint16   numsinkpads;
+  GList    *sinkpads;
+  guint32   pads_cookie;
 
   GMutex 		*state_mutex;
   GCond 		*state_cond;
@@ -203,9 +213,11 @@ struct _GstElement {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstElementClass {
-  GstObjectClass 	parent_class;
+struct _GstElementClass
+{
+  GstObjectClass parent_class;
 
+  /*< public > */
   /* the element details */
   GstElementDetails 	details;
 
@@ -213,9 +225,10 @@ struct _GstElementClass {
   GstElementFactory	*elementfactory;
 
   /* templates for our pads */
-  GList 		*padtemplates;
-  gint 			numpadtemplates;
-  
+  GList *padtemplates;
+  gint numpadtemplates;
+  guint32 pad_templ_cookie;
+
   /* signal callbacks */
   void (*state_change)	(GstElement *element, GstElementState old, GstElementState state);
   void (*new_pad)	(GstElement *element, GstPad *pad);
@@ -256,6 +269,9 @@ struct _GstElementClass {
   /* index */
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
+
+  /* scheduler */
+  void			(*set_scheduler)	(GstElement *element, GstScheduler *scheduler);
 
   GstElementStateReturn	(*set_state)		(GstElement *element, GstElementState state);
 
@@ -327,12 +343,9 @@ gboolean		gst_element_interrupt		(GstElement *element);
 void			gst_element_set_scheduler	(GstElement *element, GstScheduler *sched);
 GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 
-void			gst_element_add_pad		(GstElement *element, GstPad *pad);
-void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
+gboolean		gst_element_add_pad		(GstElement *element, GstPad *pad);
+gboolean		gst_element_remove_pad		(GstElement *element, GstPad *pad);
 GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, const gchar *name);
-#ifndef GST_DISABLE_DEPRECATED
-void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
-#endif
 void			gst_element_no_more_pads	(GstElement *element);
 
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
@@ -340,8 +353,8 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-G_CONST_RETURN GList*
-			gst_element_get_pad_list	(GstElement *element);
+GstIterator *gst_element_iterate_pads (GstElement * element);
+
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 const GstCaps *filtercaps);
@@ -396,7 +409,7 @@ void			gst_element_error_full		(GstElement *element, GQuark domain, gint code,
 							 const gchar *file, const gchar *function, gint line);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
-void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
+gboolean		gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
 gboolean		gst_element_sync_state_with_parent (GstElement *element);
 
 GstElementState         gst_element_get_state           (GstElement *element);

@@ -114,7 +114,7 @@ gst_plugin_error_quark (void)
  * plugin description in a list to initialize it when we open the main
  * module later on.
  * When the main module is known, we can register the plugin right away.
- * */
+ */
 void
 _gst_plugin_register_static (GstPluginDesc * desc)
 {

@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2004 Wim Taymans <wim@fluendo.com>
  *
  * gstsystemclock.c: Default clock, uses the system clock
  *
@@ -20,13 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <time.h>
-
 #include "gst_private.h"
 #include "gstinfo.h"
 
 #include "gstsystemclock.h"
 
+/* the one instance of the systemclock */
 static GstClock *_the_system_clock = NULL;
 
 static void gst_system_clock_class_init (GstSystemClockClass * klass);
@@ -35,9 +34,15 @@ static void gst_system_clock_dispose (GObject * object);
 
 static GstClockTime gst_system_clock_get_internal_time (GstClock * clock);
 static guint64 gst_system_clock_get_resolution (GstClock * clock);
-static GstClockEntryStatus gst_system_clock_wait (GstClock * clock,
+static GstClockReturn gst_system_clock_id_wait (GstClock * clock,
     GstClockEntry * entry);
-static void gst_system_clock_unlock (GstClock * clock, GstClockEntry * entry);
+static GstClockReturn gst_system_clock_id_wait_unlocked
+    (GstClock * clock, GstClockEntry * entry);
+static GstClockReturn gst_system_clock_id_wait_async (GstClock * clock,
+    GstClockEntry * entry);
+static void gst_system_clock_id_unschedule (GstClock * clock,
+    GstClockEntry * entry);
+static void gst_system_clock_async_thread (GstClock * clock);
 
 static GStaticMutex _gst_sysclock_mutex = G_STATIC_MUTEX_INIT;
 
@@ -87,22 +92,43 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
 
   gstclock_class->get_internal_time = gst_system_clock_get_internal_time;
   gstclock_class->get_resolution = gst_system_clock_get_resolution;
-  gstclock_class->wait = gst_system_clock_wait;
-  gstclock_class->unlock = gst_system_clock_unlock;
+  gstclock_class->wait = gst_system_clock_id_wait;
+  gstclock_class->wait_async = gst_system_clock_id_wait_async;
+  gstclock_class->unschedule = gst_system_clock_id_unschedule;
 }
 
 static void
 gst_system_clock_init (GstSystemClock * clock)
 {
-  clock->mutex = g_mutex_new ();
-  clock->cond = g_cond_new ();
+  GError *error = NULL;
+
+  GST_CLOCK_FLAGS (clock) =
+      GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC |
+      GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC |
+      GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC |
+      GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC;
+
+  GST_LOCK (clock);
+  clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,
+      clock, TRUE, &error);
+  if (error)
+    goto no_thread;
+
+  /* wait for it to spin up */
+  GST_CLOCK_WAIT (clock);
+  GST_UNLOCK (clock);
+  return;
+
+no_thread:
+  {
+    g_warning ("could not create async clock thread: %s", error->message);
+  }
 }
 
 static void
 gst_system_clock_dispose (GObject * object)
 {
   GstClock *clock = (GstClock *) object;
-  GstSystemClock *sysclock = (GstSystemClock *) object;
 
   /* there are subclasses of GstSystemClock running around... */
   if (_the_system_clock == clock) {
@@ -111,19 +137,19 @@ gst_system_clock_dispose (GObject * object)
     /* no parent dispose here, this is bad enough already */
   } else {
     G_OBJECT_CLASS (parent_class)->dispose (object);
-
-    /* FIXME: Notifying before freeing? */
-    g_cond_free (sysclock->cond);
-    g_mutex_free (sysclock->mutex);
   }
 }
 
 /**
  * gst_system_clock_obtain
  *
- * Get a handle to the default system clock.
+ * Get a handle to the default system clock. The refcount of the
+ * clock will be increased so you need to unref the clock after 
+ * usage.
  *
  * Returns: the default clock.
+ *
+ * MT safe.
  */
 GstClock *
 gst_system_clock_obtain (void)
@@ -164,6 +190,105 @@ have_clock:
   return clock;
 }
 
+/* this thread reads the sorted clock entries from the queue. 
+ *
+ * It waits on each of them and fires the callback when the timeout occurs.
+ *
+ * When an entry in the queue was canceled, it is simply skipped.
+ *
+ * When waiting for an entry, it can become canceled, in that case we don't 
+ * call the callback but move to the next item in the queue.
+ *
+ * MT safe.
+ */
+static void
+gst_system_clock_async_thread (GstClock * clock)
+{
+  GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
+
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "enter system clock thread");
+  GST_LOCK (clock);
+  /* signal spinup */
+  GST_CLOCK_SIGNAL (clock);
+  /* now enter our infinite loop */
+  while (!sysclock->stopping) {
+    GstClockEntry *entry;
+    GstClockReturn res;
+
+    /* check if something to be done */
+    while (clock->entries == NULL) {
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "nothing to wait for");
+      /* wait for work to do */
+      GST_CLOCK_WAIT (clock);
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "got signal");
+      /* clock was stopping, exit */
+      if (sysclock->stopping)
+        goto exit;
+    }
+
+    /* pick the next entry */
+    entry = clock->entries->data;
+    /* if it was unscheduled, just move on to the next entry */
+    if (entry->status == GST_CLOCK_UNSCHEDULED) {
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p was unscheduled", entry);
+      goto next_entry;
+    }
+
+    /* now wait for the entry, we already hold the lock */
+    res = gst_system_clock_id_wait_unlocked (clock, (GstClockID) entry);
+
+    switch (res) {
+      case GST_CLOCK_UNSCHEDULED:
+        /* entry was unscheduled, move to the next */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unscheduled", entry);
+        goto next_entry;
+      case GST_CLOCK_OK:
+      case GST_CLOCK_EARLY:
+      {
+        /* entry timed out normally, fire the callback and move to the next
+         * entry */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unlocked", entry);
+        if (entry->func) {
+          entry->func (clock, entry->time, (GstClockID) entry,
+              entry->user_data);
+        }
+        if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
+          /* adjust time now */
+          entry->time += entry->interval;
+          /* and resort the list now */
+          clock->entries =
+              g_list_sort (clock->entries, gst_clock_id_compare_func);
+          /* and restart */
+          continue;
+        } else {
+          goto next_entry;
+        }
+      }
+      case GST_CLOCK_BUSY:
+        /* somebody unlocked the entry but is was not canceled, This means that
+         * either a new entry was added in front of the queue or some other entry 
+         * was canceled. Whatever it is, pick the head entry of the list and
+         * continue waiting. */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p needs restart", entry);
+        continue;
+      default:
+        GST_CAT_DEBUG (GST_CAT_CLOCK,
+            "strange result %d waiting for %p, skipping", res, entry);
+        goto next_entry;
+    }
+  next_entry:
+    /* we remove the current entry and unref it */
+    clock->entries = g_list_remove (clock->entries, entry);
+    gst_clock_id_unref ((GstClockID) entry);
+  }
+exit:
+  /* signal exit */
+  GST_CLOCK_SIGNAL (clock);
+  GST_UNLOCK (clock);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "exit system clock thread");
+}
+
+/* MT safe */
 static GstClockTime
 gst_system_clock_get_internal_time (GstClock * clock)
 {
@@ -180,49 +305,128 @@ gst_system_clock_get_resolution (GstClock * clock)
   return 1 * GST_USECOND;
 }
 
-static GstClockEntryStatus
-gst_system_clock_wait (GstClock * clock, GstClockEntry * entry)
+/* synchronously wait on the given GstClockEntry.
+ *
+ * We do this by blocking on the global clock GCond variable with
+ * the requested time as a timeout. This allows us to unblock the
+ * entry by signaling the GCond variable.
+ *
+ * Note that signaling the global GCond unlocks all waiting entries. So
+ * we need to check if an unlocked entry has changed when it unlocks.
+ *
+ * Entries that arrive too late are simply not waited on and a
+ * GST_CLOCK_EARLY result is returned.
+ *
+ * MT safe.
+ */
+static GstClockReturn
+gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
 {
-  GstClockEntryStatus res;
-  GstClockTime current, target;
-  gint64 diff;
-  GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
+  GstClockTime real, current, target;
+  GstClockTimeDiff diff;
 
-  current = gst_clock_get_time (clock);
-  diff = GST_CLOCK_ENTRY_TIME (entry) - current;
+  /* need to call the overridden method */
+  real = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock);
+  target = GST_CLOCK_ENTRY_TIME (entry);
 
-  if (diff + clock->max_diff < 0) {
-    GST_WARNING_OBJECT (clock, "clock is way behind: %" G_GINT64_FORMAT
-        "s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
-    return GST_CLOCK_ENTRY_EARLY;
-  }
-
+  current = gst_clock_adjust_unlocked (clock, real);
+  diff = target - current;
   target = gst_system_clock_get_internal_time (clock) + diff;
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
-      " target %" G_GUINT64_FORMAT
-      " now %" G_GUINT64_FORMAT, target, GST_CLOCK_ENTRY_TIME (entry), current);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p"
+      " target %" GST_TIME_FORMAT
+      " now %" GST_TIME_FORMAT
+      " real %" GST_TIME_FORMAT
+      " diff %" G_GINT64_FORMAT,
+      entry,
+      GST_TIME_ARGS (target),
+      GST_TIME_ARGS (current), GST_TIME_ARGS (real), diff);
 
-  if (((gint64) target) > 0) {
+  if (diff > 0) {
     GTimeVal tv;
 
     GST_TIME_TO_TIMEVAL (target, tv);
-    g_mutex_lock (sysclock->mutex);
-    g_cond_timed_wait (sysclock->cond, sysclock->mutex, &tv);
-    g_mutex_unlock (sysclock->mutex);
-    res = entry->status;
+
+    while (TRUE) {
+      /* now wait on the entry, it either times out or the cond is signaled. */
+      if (!GST_CLOCK_TIMED_WAIT (clock, &tv)) {
+        /* timeout, this is fine, we can report success now */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked after timeout", entry);
+        entry->status = GST_CLOCK_OK;
+        break;
+      } else {
+        /* the waiting is interrupted because the GCond was signaled. This can
+         * be because this or some other entry was unscheduled. */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked with signal", entry);
+        /* if the entry is unscheduled, we can stop waiting for it */
+        if (entry->status == GST_CLOCK_UNSCHEDULED)
+          break;
+      }
+    }
   } else {
-    res = GST_CLOCK_ENTRY_EARLY;
+    entry->status = GST_CLOCK_EARLY;
   }
-  return res;
+  return entry->status;
 }
 
-static void
-gst_system_clock_unlock (GstClock * clock, GstClockEntry * entry)
+static GstClockReturn
+gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
 {
-  GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
+  GstClockReturn ret;
 
-  g_mutex_lock (sysclock->mutex);
-  g_cond_broadcast (sysclock->cond);
-  g_mutex_unlock (sysclock->mutex);
+  GST_LOCK (clock);
+  ret = gst_system_clock_id_wait_unlocked (clock, entry);
+  GST_UNLOCK (clock);
+
+  return ret;
+}
+
+/* Add an entry to the list of pending async waits. The entry is inserted
+ * in sorted order. If we inserted the entry at the head of the list, we
+ * need to signal the thread as it might either be waiting on it or waiting
+ * for a new entry. 
+ *
+ * MT safe.
+ */
+static GstClockReturn
+gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
+{
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "adding entry %p", entry);
+
+  GST_LOCK (clock);
+  /* need to take a ref */
+  gst_clock_id_ref ((GstClockID) entry);
+  /* insert the entry in sorted order */
+  clock->entries = g_list_insert_sorted (clock->entries, entry,
+      gst_clock_id_compare_func);
+
+  /* only need to send the signal if the entry was added to the
+   * front, else the thread is just waiting for another entry and
+   * will get to this entry automatically. */
+  if (clock->entries->data == entry) {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
+    GST_CLOCK_SIGNAL (clock);
+  }
+  GST_UNLOCK (clock);
+
+  return GST_CLOCK_OK;
+}
+
+/* unschedule an entry. This will set the state of the entry to GST_CLOCK_UNSCHEDULED
+ * and will signal any thread waiting for entries to recheck their entry. 
+ * We cannot really decide if the signal is needed or not because the entry
+ * could be waited on in async or sync mode.
+ *
+ * MT safe.
+ */
+static void
+gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
+{
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
+
+  GST_LOCK (clock);
+  entry->status = GST_CLOCK_UNSCHEDULED;
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
+  GST_CLOCK_SIGNAL (clock);
+  GST_UNLOCK (clock);
 }

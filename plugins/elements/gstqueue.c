@@ -434,6 +434,8 @@ gst_queue_link_sink (GstPad * pad, const GstCaps * caps)
     GST_QUEUE_MUTEX_UNLOCK;
   }
 
+  link_ret = GST_PAD_LINK_OK;
+#if 0
   link_ret = gst_pad_proxy_pad_link (pad, caps);
 
   if (GST_PAD_LINK_SUCCESSFUL (link_ret)) {
@@ -441,6 +443,7 @@ gst_queue_link_sink (GstPad * pad, const GstCaps * caps)
      * the pads become unnegotiated while we have buffers */
     gst_caps_replace (&queue->negotiated_caps, gst_caps_copy (caps));
   }
+#endif
 
   return link_ret;
 }
@@ -459,8 +462,10 @@ gst_queue_link_src (GstPad * pad, const GstCaps * caps)
     }
     return GST_PAD_LINK_REFUSED;
   }
-
+#if 0
   link_ret = gst_pad_proxy_pad_link (pad, caps);
+#endif
+  link_ret = GST_PAD_LINK_OK;
 
   if (GST_PAD_LINK_SUCCESSFUL (link_ret)) {
     /* we store an extra copy of the negotiated caps, just in case

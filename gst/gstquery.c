@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstquery.c: GstQueryType registration
  *
@@ -25,10 +26,11 @@
 #include "gst_private.h"
 #include "gstquery.h"
 
+static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_queries = NULL;
 static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
-static gint _n_values = 1;      /* we start from 1 because 0 reserved for NONE */
+static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
 
 static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_TOTAL, "total", "Total length"},
@@ -46,6 +48,7 @@ _gst_query_type_initialize (void)
 {
   GstQueryTypeDefinition *standards = standard_definitions;
 
+  g_static_mutex_lock (&mutex);
   if (_nick_to_query == NULL) {
     _nick_to_query = g_hash_table_new (g_str_hash, g_str_equal);
     _query_type_to_nick = g_hash_table_new (NULL, NULL);
@@ -60,6 +63,7 @@ _gst_query_type_initialize (void)
     standards++;
     _n_values++;
   }
+  g_static_mutex_unlock (&mutex);
 }
 
 /**
@@ -91,11 +95,13 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   query->nick = g_strdup (nick);
   query->description = g_strdup (description);
 
+  g_static_mutex_lock (&mutex);
   g_hash_table_insert (_nick_to_query, query->nick, query);
   g_hash_table_insert (_query_type_to_nick, GINT_TO_POINTER (query->value),
       query);
   _gst_queries = g_list_append (_gst_queries, query);
   _n_values++;
+  g_static_mutex_unlock (&mutex);
 
   return query->value;
 }
@@ -116,7 +122,9 @@ gst_query_type_get_by_nick (const gchar * nick)
 
   g_return_val_if_fail (nick != NULL, 0);
 
+  g_static_mutex_lock (&mutex);
   query = g_hash_table_lookup (_nick_to_query, nick);
+  g_static_mutex_unlock (&mutex);
 
   if (query != NULL)
     return query->value;
@@ -160,18 +168,32 @@ gst_query_types_contains (const GstQueryType * types, GstQueryType type)
 const GstQueryTypeDefinition *
 gst_query_type_get_details (GstQueryType type)
 {
-  return g_hash_table_lookup (_query_type_to_nick, GINT_TO_POINTER (type));
+  const GstQueryTypeDefinition *result;
+
+  g_static_mutex_lock (&mutex);
+  result = g_hash_table_lookup (_query_type_to_nick, GINT_TO_POINTER (type));
+  g_static_mutex_unlock (&mutex);
+
+  return result;
 }
 
 /**
- * gst_query_type_get_definitions:
+ * gst_query_type_iterate_definitions:
  *
- * Get a list of all the registered query types.
+ * Get an Iterator of all the registered query types. The querytype
+ * definition is read only.
  *
- * Returns: A GList of #GstQueryTypeDefinition.
+ * Returns: A #GstIterator of #GstQueryTypeDefinition.
  */
-const GList *
-gst_query_type_get_definitions (void)
+GstIterator *
+gst_query_type_iterate_definitions (void)
 {
-  return _gst_queries;
+  GstIterator *result;
+
+  g_static_mutex_lock (&mutex);
+  result = gst_iterator_new_list (g_static_mutex_get_mutex (&mutex),
+      &_n_values, &_gst_queries, NULL, NULL, NULL);
+  g_static_mutex_unlock (&mutex);
+
+  return result;
 }

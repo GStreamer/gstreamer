@@ -155,6 +155,45 @@ gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
 }
 
 /**
+ * gst_plugin_feature_set_name:
+ * @feature: a feature
+ * @name: the name to set
+ *
+ * Sets the name of a plugin feature. The name uniquely identifies a feature
+ * within all features of the same type. Renaming a plugin feature is not 
+ * allowed. A copy is made of the name so you should free the supplied @name
+ * after calling this function.
+ */
+void
+gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
+{
+  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
+  g_return_if_fail (name != NULL);
+
+  if (feature->name) {
+    g_return_if_fail (strcmp (feature->name, name) == 0);
+  } else {
+    feature->name = g_strdup (name);
+  }
+}
+
+/**
+ * gst_plugin_feature_get_name:
+ * @feature: a feature
+ *
+ * Gets the name of a plugin feature.
+ *
+ * Returns: the name
+ */
+G_CONST_RETURN gchar *
+gst_plugin_feature_get_name (GstPluginFeature * feature)
+{
+  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);
+
+  return feature->name;
+}
+
+/**
  * gst_plugin_feature_set_rank:
  * @feature: feature to rank
  * @rank: rank value - higher number means more priority rank
@@ -172,28 +211,6 @@ gst_plugin_feature_set_rank (GstPluginFeature * feature, guint rank)
 }
 
 /**
- * gst_plugin_feature_set_name:
- * @feature: a feature
- * @name: the name to set
- *
- * Sets the name of a plugin feature. The name uniquely identifies a feature
- * within all features of the same type. Renaming a plugin feature is not 
- * allowed.
- */
-void
-gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
-{
-  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
-  g_return_if_fail (name != NULL);
-
-  if (feature->name) {
-    g_return_if_fail (strcmp (feature->name, name) == 0);
-  } else {
-    feature->name = g_strdup (name);
-  }
-}
-
-/**
  * gst_plugin_feature_get rank:
  * @feature: a feature
  *
@@ -207,20 +224,4 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), GST_RANK_NONE);
 
   return feature->rank;
-}
-
-/**
- * gst_plugin_feature_get_name:
- * @feature: a feature
- *
- * Gets the name of a plugin feature.
- *
- * Returns: the name
- */
-G_CONST_RETURN gchar *
-gst_plugin_feature_get_name (GstPluginFeature * feature)
-{
-  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);
-
-  return feature->name;
 }

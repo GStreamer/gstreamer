@@ -39,22 +39,22 @@ G_BEGIN_DECLS
 #define GST_DATA_FLAG_SHIFT(flag)	(1<<(flag))
 #define GST_DATA_FLAG_IS_SET(data,flag)	(GST_DATA_FLAGS(data) & (1<<(flag)))
 #define GST_DATA_FLAG_SET(data,flag)	G_STMT_START{ (GST_DATA_FLAGS(data) |= (1<<(flag))); }G_STMT_END
-#define GST_DATA_FLAG_UNSET(data,flag) 	G_STMT_START{ (GST_DATA_FLAGS(data) &= ~(1<<(flag))); }G_STMT_END
+#define GST_DATA_FLAG_UNSET(data,flag)	G_STMT_START{ (GST_DATA_FLAGS(data) &= ~(1<<(flag))); }G_STMT_END
 
 /* Macros for the GType */
 #define GST_TYPE_DATA                   (gst_data_get_type ())
 
 typedef struct _GstData GstData;
 
-typedef void       	(*GstDataFreeFunction)		(GstData *data);
+typedef void		(*GstDataFreeFunction)		(GstData *data);
 typedef GstData*	(*GstDataCopyFunction)		(const GstData *data);
 
 typedef enum
 {
-  GST_DATA_READONLY 	= 1,
+  GST_DATA_READONLY	= 1,
 
   /* insert more */
-  GST_DATA_FLAG_LAST 	= 8
+  GST_DATA_FLAG_LAST	= 8
 } GstDataFlags;
 
 /* refcount */
@@ -62,22 +62,25 @@ typedef enum
 #define GST_DATA_REFCOUNT_VALUE(data)		(gst_atomic_int_read (&(GST_DATA(data))->refcount))
 
 /* copy/free functions */
-#define GST_DATA_COPY_FUNC(data) 		(GST_DATA(data)->copy)
-#define GST_DATA_FREE_FUNC(data) 		(GST_DATA(data)->free)
+#define GST_DATA_COPY_FUNC(data)		(GST_DATA(data)->copy)
+#define GST_DATA_FREE_FUNC(data)		(GST_DATA(data)->free)
 
 
 struct _GstData {
-  GType 		 type;
+  GType			 type;
 
+  /*< public >*/ /* with COW */
   /* refcounting */
   GstAtomicInt		 refcount;
 
   guint16		 flags;
  
+  /*< protected >*/
   /* utility function pointers, can override default */
-  GstDataFreeFunction 	 free;		/* free the data */
-  GstDataCopyFunction 	 copy;		/* copy the data */
+  GstDataFreeFunction	 free;		/* free the data */
+  GstDataCopyFunction	 copy;		/* copy the data */
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -89,9 +92,9 @@ void			gst_data_dispose		(GstData *data);
 void			gst_data_copy_into		(const GstData *data, GstData *target);
 
 /* basic operations on data */
-GstData*		gst_data_copy	 		(const GstData *data);
-gboolean 		gst_data_is_writable	 	(GstData *data);
-GstData* 		gst_data_copy_on_write 		(GstData *data);
+GstData*		gst_data_copy			(const GstData *data);
+gboolean		gst_data_is_writable		(GstData *data);
+GstData*		gst_data_copy_on_write		(GstData *data);
 
 /* reference counting */
 GstData*		gst_data_ref			(GstData* data);

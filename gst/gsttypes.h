@@ -22,7 +22,7 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
+G_BEGIN_DECLS 
 
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
@@ -34,6 +34,10 @@ typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
+typedef struct _GstPipeline GstPipeline;
+typedef struct _GstPipelineClass GstPipelineClass;
+typedef struct _GstBus GstBus;
+typedef struct _GstBusClass GstBusClass;
 typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
 typedef struct _GstEvent GstEvent;
@@ -67,7 +71,6 @@ typedef enum {
 
 #define GST_PADDING 4
 #define GST_PADDING_INIT	{ 0 }
-
 
 G_END_DECLS
 

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstobject.c: Fundamental class used for all of GStreamer
  *
@@ -25,9 +26,30 @@
 #include "gstobject.h"
 #include "gstmarshal.h"
 #include "gstinfo.h"
+#include "gstatomic_impl.h"
 
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"
+#endif
+
+#define DEBUG_REFCOUNT
+#define REFCOUNT_HACK
+
+/* Refcount hack: since glib is not threadsafe, the glib refcounter can be
+ * screwed up and the object can be freed unexpectedly. We use an evil hack
+ * to work around this problem. We set the glib refcount to a high value so
+ * that glib will never unref the object under realistic circumstances. Then
+ * we use our own atomic refcounting to do proper MT safe refcounting.
+ *
+ * A proper fix is of course to make the glib refcounting threadsafe which is
+ * planned.
+ */
+#ifdef REFCOUNT_HACK
+#define PATCH_REFCOUNT(obj)    ((GObject*)(obj))->ref_count = 100000;
+#define PATCH_REFCOUNT1(obj)    ((GObject*)(obj))->ref_count = 1;
+#else
+#define PATCH_REFCOUNT(obj)
+#define PATCH_REFCOUNT1(obj)
 #endif
 
 /* Object signals and args */
@@ -89,7 +111,7 @@ static void gst_object_dispatch_properties_changed (GObject * object,
 static void gst_object_dispose (GObject * object);
 static void gst_object_finalize (GObject * object);
 
-static void gst_object_set_name_default (GstObject * object,
+static gboolean gst_object_set_name_default (GstObject * object,
     const gchar * type_name);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
@@ -165,6 +187,7 @@ gst_object_class_init (GstObjectClass * klass)
       G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
+  klass->lock = g_mutex_new ();
 
   klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
 
@@ -187,10 +210,12 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
+  gst_atomic_int_init (&(object)->refcount, 1);
+  PATCH_REFCOUNT (object);
   gst_object_set_name_default (object, G_OBJECT_CLASS_NAME (g_class));
 
   object->flags = 0;
-  GST_FLAG_SET (object, GST_FLOATING);
+  GST_FLAG_SET (object, GST_OBJECT_FLOATING);
 }
 
 #ifndef GST_DISABLE_TRACE
@@ -219,7 +244,13 @@ gst_object_constructor (GType type, guint n_construct_properties,
  * gst_object_ref:
  * @object: GstObject to reference
  *
- * Increments the refence count on the object.
+ * Increments the refence count on the object. This function
+ * does not take the lock on the object because it relies on
+ * atomic refcounting.
+ *
+ * This object returns the input parameter to ease writing
+ * constructs like :
+ *  result = gst_object_ref (object->parent);
  *
  * Returns: A pointer to the object
  */
@@ -228,10 +259,25 @@ gst_object_ref (GstObject * object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
+#ifdef DEBUG_REFCOUNT
+#ifdef REFCOUNT_HACK
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
-      G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count + 1);
+      GST_OBJECT_REFCOUNT_VALUE (object),
+      GST_OBJECT_REFCOUNT_VALUE (object) + 1);
+#else
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
+      ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
+#endif
+#endif
 
-  g_object_ref (G_OBJECT (object));
+#ifdef REFCOUNT_HACK
+  gst_atomic_int_inc (&object->refcount);
+  PATCH_REFCOUNT (object);
+#else
+  /* FIXME, not MT safe because glib is not MT safe */
+  g_object_ref (object);
+#endif
+
   return object;
 }
 
@@ -240,18 +286,53 @@ gst_object_ref (GstObject * object)
  * @object: GstObject to unreference
  *
  * Decrements the refence count on the object.  If reference count hits
- * zero, destroy the object.
+ * zero, destroy the object. This function does not take the lock
+ * on the object as it relies on atomic refcounting.
+ *
+ * The unref method should never be called with the LOCK held since
+ * this might deadlock the dispose function.
+ * 
+ * Returns: NULL, so that constructs like
+ *
+ *   object = gst_object_unref (object);
+ *
+ *  automatically clear the input object pointer.
  */
-void
+GstObject *
 gst_object_unref (GstObject * object)
 {
-  g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (G_OBJECT (object)->ref_count > 0);
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
+#ifdef REFCOUNT_HACK
+  g_return_val_if_fail (GST_OBJECT_REFCOUNT_VALUE (object) > 0, NULL);
+#else
+  g_return_val_if_fail (((GObject *) object)->ref_count > 0, NULL);
+#endif
+
+#ifdef DEBUG_REFCOUNT
+#ifdef REFCOUNT_HACK
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
-      G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count - 1);
+      GST_OBJECT_REFCOUNT_VALUE (object),
+      GST_OBJECT_REFCOUNT_VALUE (object) - 1);
+#else
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
+      ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
+#endif
+#endif
 
-  g_object_unref (G_OBJECT (object));
+#ifdef REFCOUNT_HACK
+  if (G_UNLIKELY (gst_atomic_int_dec_and_test (&object->refcount))) {
+    PATCH_REFCOUNT1 (object);
+    g_object_unref (object);
+  } else {
+    PATCH_REFCOUNT (object);
+  }
+#else
+  /* FIXME, not MT safe because glib is not MT safe */
+  g_object_unref (object);
+#endif
+
+  return NULL;
 }
 
 /**
@@ -262,18 +343,25 @@ gst_object_unref (GstObject * object)
  * a refcount of 1 and is FLOATING.  This function should be used when
  * creating a new object to symbolically 'take ownership' of the object.
  * Use #gst_object_set_parent to have this done for you.
+ *
+ * This function takes the object lock.
+ *
+ * MT safe.
  */
 void
 gst_object_sink (GstObject * object)
 {
-  g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
 
-  if (GST_OBJECT_FLOATING (object)) {
-    GST_FLAG_UNSET (object, GST_FLOATING);
+  GST_LOCK (object);
+  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
+    GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_UNLOCK (object);
     gst_object_unref (object);
+  } else {
+    GST_UNLOCK (object);
   }
 }
 
@@ -283,7 +371,10 @@ gst_object_sink (GstObject * object)
  * @newobj: new GstObject
  *
  * Unrefs the object pointer to by oldobj, refs the newobj and
- * puts the newobj in *oldobj.
+ * puts the newobj in *oldobj. Be carefull when calling this
+ * function, it does not take any locks. You might want to lock
+ * the object owning the oldobj pointer before calling this
+ * function.
  */
 void
 gst_object_replace (GstObject ** oldobj, GstObject * newobj)
@@ -292,13 +383,23 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
 
+#ifdef DEBUG_REFCOUNT
+#ifdef REFCOUNT_HACK
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
+      *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
+      *oldobj ? GST_OBJECT_REFCOUNT_VALUE (*oldobj) : 0,
+      newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
+      newobj ? GST_OBJECT_REFCOUNT_VALUE (newobj) : 0);
+#else
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
       *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
       *oldobj ? G_OBJECT (*oldobj)->ref_count : 0,
       newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
       newobj ? G_OBJECT (newobj)->ref_count : 0);
+#endif
+#endif
 
-  if (*oldobj != newobj) {
+  if (G_LIKELY (*oldobj != newobj)) {
     if (newobj)
       gst_object_ref (newobj);
     if (*oldobj)
@@ -308,15 +409,22 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   }
 }
 
+/* dispose is called when the object has to release all links
+ * to other objects */
 static void
 gst_object_dispose (GObject * object)
 {
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
+  GST_LOCK (object);
+  GST_FLAG_SET (GST_OBJECT (object), GST_OBJECT_DESTROYED);
   GST_OBJECT_PARENT (object) = NULL;
+  GST_UNLOCK (object);
 
-  parent_class->dispose (object);
+  /* need to patch refcount so it is finalized */
+  PATCH_REFCOUNT1 (object)
+
+      parent_class->dispose (object);
 }
 
 /* finalize is called when the object has to free its resources */
@@ -330,7 +438,6 @@ gst_object_finalize (GObject * object)
   g_signal_handlers_destroy (object);
 
   g_free (gstobject->name);
-
   g_mutex_free (gstobject->lock);
 
 #ifndef GST_DISABLE_TRACE
@@ -352,34 +459,67 @@ gst_object_finalize (GObject * object)
  * signals being emitted by the object itself, as well as in each parent
  * object. This is so that an application can connect a listener to the
  * top-level bin to catch property-change notifications for all contained
- * elements. */
+ * elements. 
+ *
+ * This function is not MT safe in glib so we need to lock it with a 
+ * classwide mutex.
+ *
+ * MT safe.
+ */
 static void
 gst_object_dispatch_properties_changed (GObject * object,
     guint n_pspecs, GParamSpec ** pspecs)
 {
-  GstObject *gst_object;
+  GstObject *gst_object, *parent, *old_parent;
   guint i;
+  gchar *name, *debug_name;
+  GstObjectClass *klass;
 
+  /* we fail when this is not a GstObject */
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  klass = GST_OBJECT_GET_CLASS (object);
+
+  GST_CLASS_LOCK (klass);
   /* do the standard dispatching */
+  PATCH_REFCOUNT (object);
   G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
       pspecs);
+  PATCH_REFCOUNT (object);
+
+  gst_object = GST_OBJECT_CAST (object);
+  name = gst_object_get_name (gst_object);
+  debug_name = GST_STR_NULL (name);
 
   /* now let the parent dispatch those, too */
-  gst_object = GST_OBJECT_PARENT (object);
-  while (gst_object) {
+  parent = gst_object_get_parent (gst_object);
+  while (parent) {
+    /* for debugging ... */
+    gchar *parent_name = gst_object_get_name (parent);
+    gchar *debug_parent_name = GST_STR_NULL (parent_name);
+
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
-      GST_CAT_LOG (GST_CAT_SIGNAL, "deep notification from %s to %s (%s)",
-          GST_OBJECT_NAME (object) ? GST_OBJECT_NAME (object) : "(null)",
-          GST_OBJECT_NAME (gst_object) ? GST_OBJECT_NAME (gst_object) :
-          "(null)", pspecs[i]->name);
-      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY],
-          g_quark_from_string (pspecs[i]->name), (GstObject *) object,
-          pspecs[i]);
-    }
+      GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
+          debug_name, debug_parent_name, pspecs[i]->name);
 
-    gst_object = GST_OBJECT_PARENT (gst_object);
+      /* not MT safe because of glib, fixed by taking class lock higher up */
+      PATCH_REFCOUNT (parent);
+      PATCH_REFCOUNT (object);
+      g_signal_emit (parent, gst_object_signals[DEEP_NOTIFY],
+          g_quark_from_string (pspecs[i]->name), GST_OBJECT_CAST (object),
+          pspecs[i]);
+      PATCH_REFCOUNT (parent);
+      PATCH_REFCOUNT (object);
+    }
+    g_free (parent_name);
+
+    old_parent = parent;
+    parent = gst_object_get_parent (old_parent);
+    gst_object_unref (old_parent);
   }
+  g_free (name);
+  GST_CLASS_UNLOCK (klass);
 }
 
 /** 
@@ -395,6 +535,8 @@ gst_object_dispatch_properties_changed (GObject * object,
  * strings that should be excluded from the notify.
  * The default handler will print the new value of the property 
  * using g_print.
+ *
+ * MT safe.
  */
 void
 gst_object_default_deep_notify (GObject * object, GstObject * orig,
@@ -438,11 +580,12 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
   }
 }
 
-static void
+static gboolean
 gst_object_set_name_default (GstObject * object, const gchar * type_name)
 {
   gint count;
   gchar *name, *tmp;
+  gboolean result;
 
   /* to ensure guaranteed uniqueness across threads, only one thread
    * may ever assign a name */
@@ -466,47 +609,133 @@ gst_object_set_name_default (GstObject * object, const gchar * type_name)
   name = g_ascii_strdown (tmp, strlen (tmp));
   g_free (tmp);
 
-  gst_object_set_name (object, name);
+  result = gst_object_set_name (object, name);
   g_free (name);
+
+  return result;
 }
 
 /**
  * gst_object_set_name:
- * @object: GstObject to set the name of
- * @name: new name of object
+ * @object: a #GstObject to set the name of
+ * @name:   new name of object
  *
- * Sets the name of the object, or gives the element a guaranteed unique
+ * Sets the name of the object, or gives the object a guaranteed unique
  * name (if @name is NULL).
+ * This function makes a copy of the provided name, so the caller
+ * retains ownership of the name it sent.
+ *
+ * Returns: TRUE if the name could be set. Objects that have
+ * a parent cannot be renamed.
+ *
+ * MT safe.  This function grabs and releases the object's LOCK.
  */
-void
+gboolean
 gst_object_set_name (GstObject * object, const gchar * name)
 {
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
+  gboolean result;
 
-  if (object->name != NULL)
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+
+  GST_LOCK (object);
+
+  /* parented objects cannot be renamed */
+  if (G_UNLIKELY (object->parent != NULL))
+    goto had_parent;
+
+  if (name != NULL) {
     g_free (object->name);
-
-  if (name != NULL)
     object->name = g_strdup (name);
-  else
-    gst_object_set_name_default (object, G_OBJECT_TYPE_NAME (object));
+    GST_UNLOCK (object);
+    result = TRUE;
+  } else {
+    GST_UNLOCK (object);
+    result = gst_object_set_name_default (object, G_OBJECT_TYPE_NAME (object));
+  }
+  return result;
+
+  /* error */
+had_parent:
+  {
+    GST_UNLOCK (object);
+    return FALSE;
+  }
 }
 
 /**
  * gst_object_get_name:
- * @object: GstObject to get the name of
+ * @object: a #GstObject to get the name of
  *
- * Get the name of the object.
+ * Returns a copy of the name of the object.
+ * Caller should g_free() the return value after usage.
+ * For a nameless object, this returns NULL, which you can safely g_free()
+ * as well.
  *
- * Returns: name of the object
+ * Returns: the name of the object. g_free() after usage.
+ *
+ * MT safe.
  */
-const gchar *
+gchar *
 gst_object_get_name (GstObject * object)
 {
+  gchar *result = NULL;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  return object->name;
+  GST_LOCK (object);
+  result = g_strdup (object->name);
+  GST_UNLOCK (object);
+
+  return result;
+}
+
+/**
+ * gst_object_set_name_prefix:
+ * @object:      a #GstObject to set the name prefix of
+ * @name_prefix: new name prefix of object
+ *
+ * Sets the name prefix of the object.
+ * This function makes a copy of the provided name prefix, so the caller
+ * retains ownership of the name prefix it sent.
+ *
+ * MT safe.  This function grabs and releases the object's LOCK.
+ */
+void
+gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  GST_LOCK (object);
+  g_free (object->name_prefix);
+  object->name_prefix = g_strdup (name_prefix); /* NULL gives NULL */
+  GST_UNLOCK (object);
+}
+
+/**
+ * gst_object_get_name_prefix:
+ * @object: a #GstObject to get the name prefix of
+ *
+ * Returns a copy of the name prefix of the object.
+ * Caller should g_free() the return value after usage.
+ * For a prefixless object, this returns NULL, which you can safely g_free()
+ * as well.
+ *
+ * Returns: the name prefix of the object. g_free() after usage.
+ *
+ * MT safe.
+ */
+gchar *
+gst_object_get_name_prefix (GstObject * object)
+{
+  gchar *result = NULL;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+
+  GST_LOCK (object);
+  result = g_strdup (object->name_prefix);
+  GST_UNLOCK (object);
+
+  return result;
 }
 
 /**
@@ -517,41 +746,78 @@ gst_object_get_name (GstObject * object)
  * Sets the parent of @object. The object's reference count will be incremented,
  * and any floating reference will be removed (see gst_object_sink()).
  *
+ * This function takes the object lock.
+ *
  * Causes the parent-set signal to be emitted.
+ *
+ * Returns: TRUE if the parent could be set or FALSE when the object
+ * already had a parent, the object and parent are the same or wrong
+ * parameters were provided.
+ *
+ * MT safe.
  */
-void
+gboolean
 gst_object_set_parent (GstObject * object, GstObject * parent)
 {
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (parent != NULL);
-  g_return_if_fail (GST_IS_OBJECT (parent));
-  g_return_if_fail (object != parent);
-  g_return_if_fail (object->parent == NULL);
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_IS_OBJECT (parent), FALSE);
+  g_return_val_if_fail (object != parent, FALSE);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "set parent (ref and sink)");
-  gst_object_ref (object);
-  gst_object_sink (object);
+
+  GST_LOCK (object);
+  if (G_UNLIKELY (object->parent != NULL))
+    goto had_parent;
+
+  /* sink object, we don't call our own function because we don't
+   * need to release/acquire the lock needlessly or touch the refcount
+   * in the floating case. */
   object->parent = parent;
+  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
+    GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_UNLOCK (object);
+  } else {
+    GST_UNLOCK (object);
+    gst_object_ref (object);
+  }
 
   g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_SET], 0, parent);
+  return TRUE;
+
+  /* ERROR */
+had_parent:
+  {
+    GST_UNLOCK (object);
+    return FALSE;
+  }
 }
 
 /**
  * gst_object_get_parent:
  * @object: GstObject to get parent of
  *
- * Returns the parent of @object.
+ * Returns the parent of @object. This function increases the refcount
+ * of the parent object so you should gst_object_unref() it after usage.
  *
- * Returns: parent of the object
+ * Returns: parent of the object, this can be NULL if the object has no
+ *   parent. unref after usage.
+ *
+ * MT safe.
  */
 GstObject *
 gst_object_get_parent (GstObject * object)
 {
-  g_return_val_if_fail (object != NULL, NULL);
+  GstObject *result = NULL;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  return object->parent;
+  GST_LOCK (object);
+  result = object->parent;
+  if (G_LIKELY (result))
+    gst_object_ref (result);
+  GST_UNLOCK (object);
+
+  return result;
 }
 
 /**
@@ -559,22 +825,33 @@ gst_object_get_parent (GstObject * object)
  * @object: GstObject to unparent
  *
  * Clear the parent of @object, removing the associated reference.
+ * This function decreases the refcount of the object so the object
+ * might not point to valid memory anymore after calling this function.
+ *
+ * MT safe.
  */
 void
 gst_object_unparent (GstObject * object)
 {
-  g_return_if_fail (object != NULL);
+  GstObject *parent;
+
   g_return_if_fail (GST_IS_OBJECT (object));
-  if (object->parent == NULL)
-    return;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
+  GST_LOCK (object);
+  parent = object->parent;
 
-  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
-      object->parent);
+  if (G_LIKELY (parent != NULL)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
+    object->parent = NULL;
+    GST_UNLOCK (object);
 
-  object->parent = NULL;
-  gst_object_unref (object);
+    g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
+        parent);
+
+    gst_object_unref (object);
+  } else {
+    GST_UNLOCK (object);
+  }
 }
 
 /**
@@ -582,25 +859,39 @@ gst_object_unparent (GstObject * object)
  * @list: a list of #GstObject to check through
  * @name: the name to search for
  *
- * Checks to see if there is any object named @name in @list.
+ * Checks to see if there is any object named @name in @list. This function
+ * does not do any locking of any kind. You might want to protect the
+ * provided list with the lock of the owner of the list. This function
+ * will lock each GstObject in the list to compare the name, so be
+ * carefull when passing a list with a locked object.
  *
  * Returns: TRUE if the name does not appear in the list, FALSE if it does.
+ *
+ * MT safe.
  */
 gboolean
 gst_object_check_uniqueness (GList * list, const gchar * name)
 {
+  gboolean result = TRUE;
+
   g_return_val_if_fail (name != NULL, FALSE);
 
-  while (list) {
-    GstObject *child = GST_OBJECT (list->data);
+  for (; list; list = g_list_next (list)) {
+    GstObject *child;
+    gboolean eq;
 
-    list = g_list_next (list);
+    child = GST_OBJECT (list->data);
 
-    if (strcmp (GST_OBJECT_NAME (child), name) == 0)
-      return FALSE;
+    GST_LOCK (child);
+    eq = strcmp (GST_OBJECT_NAME (child), name) == 0;
+    GST_UNLOCK (child);
+
+    if (G_UNLIKELY (eq)) {
+      result = FALSE;
+      break;
+    }
   }
-
-  return TRUE;
+  return result;
 }
 
 
@@ -619,7 +910,6 @@ gst_object_save_thyself (GstObject * object, xmlNodePtr parent)
 {
   GstObjectClass *oclass;
 
-  g_return_val_if_fail (object != NULL, parent);
   g_return_val_if_fail (GST_IS_OBJECT (object), parent);
   g_return_val_if_fail (parent != NULL, parent);
 
@@ -646,7 +936,6 @@ gst_object_restore_thyself (GstObject * object, xmlNodePtr self)
 {
   GstObjectClass *oclass;
 
-  g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);
 
@@ -659,7 +948,6 @@ gst_object_restore_thyself (GstObject * object, xmlNodePtr self)
 static void
 gst_object_real_restore_thyself (GstObject * object, xmlNodePtr self)
 {
-  g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);
 
@@ -672,9 +960,6 @@ gst_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstObject *gstobject;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_OBJECT (object));
 
   gstobject = GST_OBJECT (object);
 
@@ -694,14 +979,11 @@ gst_object_get_property (GObject * object, guint prop_id,
 {
   GstObject *gstobject;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_OBJECT (object));
-
   gstobject = GST_OBJECT (object);
 
   switch (prop_id) {
     case ARG_NAME:
-      g_value_set_string (value, (gchar *) GST_OBJECT_NAME (gstobject));
+      g_value_take_string (value, gst_object_get_name (gstobject));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -716,69 +998,69 @@ gst_object_get_property (GObject * object, guint prop_id,
  * Generates a string describing the path of the object in
  * the object hierarchy. Only useful (or used) for debugging.
  *
- * Returns: a string describing the path of the object
+ * Returns: a string describing the path of the object. You must
+ *          g_free() the string after usage. 
+ *
+ * MT safe.
  */
 gchar *
 gst_object_get_path_string (GstObject * object)
 {
-  GSList *parentage = NULL;
+  GSList *parentage;
   GSList *parents;
   void *parent;
   gchar *prevpath, *path;
-  const char *component;
-  gchar *separator = "";
-  gboolean free_component;
+  gchar *component;
+  gchar *separator;
 
+  /* ref object before adding to list */
+  gst_object_ref (object);
   parentage = g_slist_prepend (NULL, object);
 
   path = g_strdup ("");
 
-  /* first walk the object hierarchy to build a list of the parents */
+  /* first walk the object hierarchy to build a list of the parents,
+   * be carefull here with refcounting. */
   do {
     if (GST_IS_OBJECT (object)) {
       parent = gst_object_get_parent (object);
+      /* add parents to list, refcount remains increased while
+       * we handle the object */
+      if (parent)
+        parentage = g_slist_prepend (parentage, parent);
     } else {
-      parentage = g_slist_prepend (parentage, NULL);
-      parent = NULL;
+      break;
     }
-
-    if (parent != NULL) {
-      parentage = g_slist_prepend (parentage, parent);
-    }
-
     object = parent;
   } while (object != NULL);
 
-  /* then walk the parent list and print them out */
-  parents = parentage;
-  while (parents) {
+  /* then walk the parent list and print them out. we need to
+   * decrease the refcounting on each element after we handled
+   * it. */
+  for (parents = parentage; parents; parents = g_slist_next (parents)) {
     if (GST_IS_OBJECT (parents->data)) {
-      GstObjectClass *oclass = GST_OBJECT_GET_CLASS (parents->data);
+      GstObject *item = GST_OBJECT_CAST (parents->data);
+      GstObjectClass *oclass = GST_OBJECT_GET_CLASS (item);
 
-      component = gst_object_get_name (parents->data);
+      component = gst_object_get_name (item);
       separator = oclass->path_string_separator;
-      free_component = FALSE;
+      /* and unref now */
+      gst_object_unref (item);
     } else {
       component = g_strdup_printf ("%p", parents->data);
       separator = "/";
-      free_component = TRUE;
     }
 
     prevpath = path;
     path = g_strjoin (separator, prevpath, component, NULL);
     g_free (prevpath);
-    if (free_component)
-      g_free ((gchar *) component);
-
-    parents = g_slist_next (parents);
+    g_free (component);
   }
 
   g_slist_free (parentage);
 
   return path;
 }
-
-
 
 struct _GstSignalObject
 {

@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2004,2005 Wim Taymans <wim@fluendo.com>
  *
  * gstpipeline.c: Overall pipeline management element
  *
@@ -30,7 +30,7 @@ static GstElementDetails gst_pipeline_details =
 GST_ELEMENT_DETAILS ("Pipeline object",
     "Generic/Bin",
     "Complete pipeline object",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
+    "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 
 /* Pipeline signals and args */
 enum
@@ -39,6 +39,8 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_DELAY 0
+#define DEFAULT_PLAY_TIMEOUT  (2*GST_SECOND)
 enum
 {
   ARG_0
@@ -134,8 +136,8 @@ gst_pipeline_dispose (GObject * object)
   GstPipeline *pipeline = GST_PIPELINE (object);
   GstScheduler *sched;
 
-  g_assert (GST_IS_SCHEDULER (GST_ELEMENT_SCHED (pipeline)));
-  sched = GST_ELEMENT_SCHED (pipeline);
+  g_assert (GST_IS_SCHEDULER (GST_ELEMENT_SCHEDULER (pipeline)));
+  sched = GST_ELEMENT_SCHEDULER (pipeline);
 
   gst_scheduler_reset (sched);
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -148,6 +150,8 @@ gst_pipeline_dispose (GObject * object)
  * Create a new pipeline with the given name.
  *
  * Returns: newly created GstPipeline
+ *
+ * MT safe.
  */
 GstElement *
 gst_pipeline_new (const gchar * name)
@@ -160,7 +164,7 @@ gst_pipeline_change_state (GstElement * element)
 {
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      gst_scheduler_setup (GST_ELEMENT_SCHED (element));
+      gst_scheduler_setup (GST_ELEMENT_SCHEDULER (element));
       break;
     case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_PLAYING:

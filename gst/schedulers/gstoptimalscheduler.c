@@ -1386,7 +1386,7 @@ get_group_schedule_function (int argc, char *argv[])
 
   osched = group->chain->sched;
 
-  pads = gst_element_get_pad_list (entry);
+  pads = entry->pads;
 
   GST_LOG ("executing get-based group %p", group);
 
@@ -1725,7 +1725,7 @@ gst_opt_scheduler_state_transition (GstScheduler * sched, GstElement * element,
       break;
     case GST_STATE_PAUSED_TO_READY:
     {
-      GList *pads = (GList *) gst_element_get_pad_list (element);
+      GList *pads = (GList *) element->pads;
 
       g_list_foreach (pads, (GFunc) pad_clear_queued, NULL);
       break;
@@ -1994,7 +1994,7 @@ gst_opt_scheduler_add_element (GstScheduler * sched, GstElement * element)
    * in _link, it can be overruled if need be */
   /* FIXME: we should also do this when new pads on the element are created;
      but there are no hooks, so we do it again in _link */
-  pads = gst_element_get_pad_list (element);
+  pads = element->pads;
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
 
@@ -2327,7 +2327,7 @@ element_get_reachables_func (GstElement * element, GstOptSchedulerGroup * group,
 
   result = g_list_prepend (result, element);
 
-  pads = gst_element_get_pad_list (element);
+  pads = element->pads;
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
     GstPad *peer;

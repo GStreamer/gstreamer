@@ -91,7 +91,7 @@ main (int argc, char *argv[])
               padtemplate->name_template);
       }
 
-      pads = gst_element_get_pad_list (element);
+      pads = element->pads;
       while (pads) {
         pad = (GstPad *) (pads->data);
         pads = g_list_next (pads);

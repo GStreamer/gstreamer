@@ -98,7 +98,7 @@ gst_trash_stack_pop (GstTrashStack *stack)
    * problem that arises when a pop and push of the same element happens
    * right between when we read head->next and try to swing the new pointer
    * into place. This is usually solved using a counter which makes it highly
-   * inlikely that we manage to grab the wrong head->next value.
+   * unlikely that we manage to grab the wrong head->next value.
    */
   __asm__ __volatile__ (
     "  pushl %%ebx;             \n\t"
@@ -124,6 +124,7 @@ gst_trash_stack_pop (GstTrashStack *stack)
 }
 
 #else
+#warning "using fallback trashstack implementation, performance may suffer"
 
 /*
  * generic implementation

@@ -58,6 +58,7 @@ struct _GstPluginFeatureClass {
 
   void          (*unload_thyself)      (GstPluginFeature *feature);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

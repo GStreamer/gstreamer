@@ -75,7 +75,7 @@ struct _GstSchedulerChain
 #define GST_IS_BASIC_SCHEDULER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASIC_SCHEDULER))
 
-#define SCHED(element) GST_BASIC_SCHEDULER (GST_ELEMENT_SCHED (element))
+#define SCHED(element) GST_BASIC_SCHEDULER (GST_ELEMENT_SCHEDULER (element))
 
 typedef enum
 {
@@ -651,7 +651,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
     }
 
     /* now we have to walk through the pads to set up their state */
-    pads = gst_element_get_pad_list (element);
+    pads = element->pads;
     while (pads) {
       GstPad *peerpad;
 
@@ -1046,8 +1046,8 @@ gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain,
     if (GST_PAD_PEER (pad)) {
       GST_DEBUG ("has peer %s:%s", GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
       peerelement = GST_PAD_PARENT (GST_PAD_PEER (pad));
-      if (GST_ELEMENT_SCHED (GST_PAD_PARENT (pad)) ==
-          GST_ELEMENT_SCHED (peerelement)) {
+      if (GST_ELEMENT_SCHEDULER (GST_PAD_PARENT (pad)) ==
+          GST_ELEMENT_SCHEDULER (peerelement)) {
         GST_DEBUG ("peer \"%s\" is valid for same chain",
             GST_ELEMENT_NAME (peerelement));
         gst_basic_scheduler_chain_recursive_add (chain, peerelement, remove);
@@ -1247,7 +1247,7 @@ gst_basic_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
   GST_INFO ("have pad linked callback on %s:%s to %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   GST_DEBUG ("srcpad sched is %p, sinkpad sched is %p",
-      GST_ELEMENT_SCHED (srcelement), GST_ELEMENT_SCHED (sinkelement));
+      GST_ELEMENT_SCHEDULER (srcelement), GST_ELEMENT_SCHEDULER (sinkelement));
 
   gst_basic_scheduler_chain_elements (bsched, srcelement, sinkelement);
 }

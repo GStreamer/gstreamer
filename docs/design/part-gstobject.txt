@@ -1,42 +1,72 @@
 GstObject
 =========
 
-The base class for the entire GStreamer hierarchy is the GstObject.  It is currently a bit of a hack caused by the
-fact that GStreamer is built on top of GtkObject.  GObject should help, if it's designed properly.  Currently the 
-capabilities provided by GstObject are quite underutilized, this will be fixed with a refactoring of the 
-object system and a code cleanup at some point in the future.  If nothing else, it serves as an easy check to see if a 
-given object belongs to GStreamer.
+The base class for the entire GStreamer hierarchy is the GstObject.
 
 Parentage
 ---------
 
-A pointer is available to store the current parent of the object.  This one of the two fundamental requires for a 
-hierarchical system such as GStreamer (for the other, read up on GstBin).  Three functions are provided: _set_parent(), 
-_get_parent(), and _unparent().  The third is required because there is an explicit check in _set_parent(): an object 
-must not already have a parent if you wish to set one.  You must unparent the object first.  This allows for new 
-additions later.
+A pointer is available to store the current parent of the object.  This is one
+of the two fundamental requires for a hierarchical system such as GStreamer
+(for the other, read up on GstBin).  Three functions are provided:
+_set_parent(), _get_parent(), and _unparent().  The third is required because
+there is an explicit check in _set_parent(): an object must not already have a
+parent if you wish to set one.  You must unparent the object first.  This
+allows for new additions later.
+
+- GstObject's that can be parented:
+  GstElement (inside a bin)
+  GstPad (inside an element)
 
 Refcounting
 -----------
+- GObject refcount is not threadsafe.
+  GStreamer sets it to a constant value on each _ref/_unref()
+  and uses an atomic int "refcount" instead for threadsafe refcounting
+  This implies you should always use gst_object_ref() and gst_object_unref() !
 
-A reference count is kept for the object.  When this is fully utilized, it will enable generic destruction of objects 
-by simply reducing the reference count to zero.  GObject should provide these capabilities, however.
+Naming
+------
+- names of objects cannot be changed when they are parented 
+- names of objects should be unique across parent
+- set_name() can fail because of this
+- as can gst_element_add_pad()/gst_bin_add_element()
+- gst_object_set_name() only changes the object's name
+
+- objects also have a name_prefix that is used to prefix the object name
+  during debugging and identification
+- there are object-specific set_name's() which also set the name_prefix
+  on the object.  This is useful for debugging purposes to give the object
+  a more identifiable name.  Typically a parent will call _set_name_prefix
+  on children, taking a lock on them to do so.
 
 Locking
 -------
 
-The GstObject contains the necessary primitives to lock the object in a thread-safe manner.  This will be used to 
-provide general thread-safety as needed.  However, this lock is generic, i.e. it covers the whole object.  Note that 
-this does *not* mean that no other thread can modify the object at the same time that the lock is held.  It only means 
-that any two sections of code that obey the lock are guaranteed to not be running simultaneously.
+The GstObject contains the necessary primitives to lock the object in a
+thread-safe manner.  This will be used to provide general thread-safety as
+needed.  However, this lock is generic, i.e. it covers the whole object.
 
-This lock will ideally be used for parentage and refcounting, which is reasonable, since they are the only possible 
-things to protect in the GstObject.
+All members of the GstObject structure marked as
+/*< public >*/ /* with LOCK */
+are protected by this lock.  These members can only be accessed for reading
+or writing while the lock is held.
+
+Note that this does *not* mean that no other thread can modify the object at
+the same time that the lock is held.  It only means that any two sections of
+code that obey the lock are guaranteed to not be running simultaneously.  "The
+lock is voluntary and cooperative".
+
+This lock will ideally be used for parentage and refcounting, which is
+reasonable, since they are the only possible things to protect in the
+GstObject.
 
 Path Generation
 ---------------
+FIXME: rethink this ?
 
-Due to the base nature of the GstObject, it becomes the only reasonable place to put this particular function
-(_get_path_string).  It will generate a string describing the parent hierarchy of a given GstObject.  Currently it is
-forced to use several child-class-specific functions, because we do not properly use the base capabilities (parentage,
-etc.) of GstObject properly.
+Due to the base nature of the GstObject, it becomes the only reasonable place
+to put this particular function (_get_path_string).  It will generate a string
+describing the parent hierarchy of a given GstObject.  Currently it is forced
+to use several child-class-specific functions, because we do not properly use
+the base capabilities (parentage, etc.) of GstObject properly.

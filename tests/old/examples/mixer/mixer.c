@@ -187,7 +187,7 @@ main (int argc, char *argv[])
     gst_element_set_state (main_bin, GST_STATE_PLAYING);
 
     /* write out the schedule */
-    gst_scheduler_show (GST_ELEMENT_SCHED (main_bin));
+    gst_scheduler_show (GST_ELEMENT_SCHEDULER (main_bin));
     playing = TRUE;
 
     j = 0;

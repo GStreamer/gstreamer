@@ -15,8 +15,6 @@ eos (GstElement * element, gpointer data)
 
   /* stop the bin */
   gst_element_set_state (GST_ELEMENT (thread), GST_STATE_NULL);
-
-  gst_main_quit ();
 }
 
 int

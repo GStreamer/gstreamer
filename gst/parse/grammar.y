@@ -13,6 +13,7 @@
 #include "../gstinfo.h"
 #include "../gsterror.h"
 #include "../gsturi.h"
+#include "../gstutils.h"
 #include "../gstvalue.h"
 #include "types.h"
 
@@ -285,28 +286,56 @@ gst_parse_free_link (link_t *link)
   g_slist_foreach (link->sink_pads, (GFunc) gst_parse_strfree, NULL);
   g_slist_free (link->src_pads);
   g_slist_free (link->sink_pads);
-  if (link->caps) gst_caps_free (link->caps);
+  if (link->caps) gst_caps_unref (link->caps);
   gst_parse_link_free (link);  
 }
+
 static void
 gst_parse_element_lock (GstElement *element, gboolean lock)
 {
   GstPad *pad;
-  GList *walk = (GList *) gst_element_get_pad_list (element);
+  GstIterator *pads;
   gboolean unlocked_peer = FALSE;
+  gboolean done = FALSE;
+  GList *walk;
   
   if (gst_element_is_locked_state (element) == lock)
     return;
+
+  return;
+
   /* check if we have an unlocked peer */
-  for (; walk; walk = walk->next) {
-    pad = (GstPad *) GST_PAD_REALIZE (walk->data);
-    if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
-        !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
-      unlocked_peer = TRUE;
-      break;
+  pads = gst_element_iterate_pads (element);
+  while (!done) {
+    gpointer data;
+    switch (gst_iterator_next (pads, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = GST_PAD_CAST (data);
+
+	pad = gst_pad_realize (pad);
+        if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
+            !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
+          unlocked_peer = TRUE;
+	  done = TRUE;
+        }
+	gst_object_unref (GST_OBJECT (pad));
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        unlocked_peer = FALSE;
+        gst_iterator_resync (pads);
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
-  }  
-  
+  }
+  gst_iterator_free (pads);
+
   if (!(lock && unlocked_peer)) {
     GST_CAT_DEBUG (GST_CAT_PIPELINE, "setting locked state on element");
     gst_element_set_locked_state (element, lock);
@@ -324,7 +353,7 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   }
   
   /* check if there are other pads to (un)lock */
-  walk = (GList *) gst_element_get_pad_list (element);
+  walk = (GList *) element->pads;
   for  (; walk; walk = walk->next) {
     pad = (GstPad *) GST_PAD_REALIZE (walk->data);
     if (GST_PAD_IS_SRC (pad) && GST_PAD_PEER (pad)) {
@@ -351,7 +380,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
-    if (link->caps) gst_caps_free (link->caps);
+    if (link->caps) gst_caps_unref (link->caps);
     if (!gst_element_is_locked_state (src))
       gst_parse_element_lock (link->sink, FALSE);
     g_free (link);
@@ -362,7 +391,7 @@ static gboolean
 gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad, 
                                 GstElement *sink, const gchar *sink_pad, GstCaps *caps)
 {
-  GList *templs = gst_element_get_pad_template_list (src);
+  GList *templs = gst_element_class_get_pad_template_list (GST_ELEMENT_GET_CLASS (src));
 	 
   for (; templs; templs = templs->next) {
     GstPadTemplate *templ = (GstPadTemplate *) templs->data;

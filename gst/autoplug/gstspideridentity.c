@@ -289,7 +289,7 @@ gst_spider_identity_getcaps (GstPad * pad)
       if (ident->caps) {
         GstCaps *ret2 = gst_caps_intersect (ident->caps, ret);
 
-        gst_caps_free (ret);
+        gst_caps_unref (ret);
         ret = ret2;
       }
       return ret;
@@ -388,12 +388,12 @@ gst_spider_identity_change_state (GstElement * element)
             gst_pad_get_caps ((GstPad *) GST_PAD_PEER (ident->sink));
         if (gst_caps_is_any (caps) || gst_caps_is_empty (caps)) {
           gst_spider_identity_start_type_finding (ident);
-          gst_caps_free (caps);
+          gst_caps_unref (caps);
           break;
         } else {
           gst_spider_identity_plug (ident);
         }
-        gst_caps_free (caps);
+        gst_caps_unref (caps);
       }
       /* autoplug on src */
       if ((GST_RPAD_PEER (ident->src) != NULL)
@@ -528,7 +528,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity * ident)
   if (!gst_caps_is_empty (find.caps) && !gst_caps_is_any (find.caps)) {
     goto plug;
   } else {
-    gst_caps_free (find.caps);
+    gst_caps_unref (find.caps);
     find.caps = NULL;
   }
 

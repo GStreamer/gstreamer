@@ -24,12 +24,15 @@
 #include <signal.h>
 
 #include "gst_private.h"
+#include "gstatomic_impl.h"
 #include <gst/gst.h>
+
+//#define DEBUG_REFCOUNT
 
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \
     GstCaps *_newcaps = gst_caps_copy (caps); \
-    gst_caps_free(caps); \
+    gst_caps_unref(caps); \
     caps = _newcaps; \
   } \
 } G_STMT_END
@@ -40,13 +43,15 @@
     structure = _newstruct; \
   } \
 } G_STMT_END
+#define IS_WRITABLE(caps) \
+  (gst_atomic_int_read(&(caps)->refcount) == 1)
 
 
 static void gst_caps_transform_to_string (const GValue * src_value,
     GValue * dest_value);
 static gboolean gst_caps_from_string_inplace (GstCaps * caps,
     const gchar * string);
-static GstCaps *gst_caps_copy_conditional (const GstCaps * src);
+static GstCaps *gst_caps_copy_conditional (GstCaps * src);
 
 GType
 gst_caps_get_type (void)
@@ -56,7 +61,7 @@ gst_caps_get_type (void)
   if (!gst_caps_type) {
     gst_caps_type = g_boxed_type_register_static ("GstCaps",
         (GBoxedCopyFunc) gst_caps_copy_conditional,
-        (GBoxedFreeFunc) gst_caps_free);
+        (GBoxedFreeFunc) gst_caps_unref);
 
     g_value_register_transform_func (gst_caps_type,
         G_TYPE_STRING, gst_caps_transform_to_string);
@@ -80,8 +85,13 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps = g_new0 (GstCaps, 1);
 
+  gst_atomic_int_init (&(caps)->refcount, 1);
   caps->type = GST_TYPE_CAPS;
   caps->structs = g_ptr_array_new ();
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
+#endif
 
   return caps;
 }
@@ -188,8 +198,14 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
  * gst_caps_copy:
  * @caps: the #GstCaps to copy
  *
- * Deeply copies a #GstCaps, including all structures and all the
- * structures' values.
+ * Creates a new #GstCaps as a copy of the old @caps. The new caps will have a
+ * refcount of 1, owned by the caller. The structures are copied as well.
+ *
+ * Note that this function is the semantic equivalent of a gst_caps_ref()
+ * followed by a gst_caps_make_writable(). If you only want to hold on to a
+ * reference to the data, you should use gst_caps_ref().
+ *
+ * When you are finished with the caps, call gst_caps_unref() on it.
  *
  * Returns: the new #GstCaps
  */
@@ -213,30 +229,116 @@ gst_caps_copy (const GstCaps * caps)
   return newcaps;
 }
 
-/**
- * gst_caps_free:
- * @caps: the #GstCaps to free
- *
- * Frees a #GstCaps and all its structures and the structures'
- * values.
- */
-void
-gst_caps_free (GstCaps * caps)
+static void
+_gst_caps_free (GstCaps * caps)
 {
   GstStructure *structure;
   int i;
 
-  g_return_if_fail (GST_IS_CAPS (caps));
+  /* The refcount must be 0, but since we're only called by gst_caps_unref,
+   * don't bother testing. */
 
   for (i = 0; i < caps->structs->len; i++) {
-    structure = gst_caps_get_structure (caps, i);
+    structure = (GstStructure *) gst_caps_get_structure (caps, i);
+    gst_structure_set_parent_refcount (structure, NULL);
     gst_structure_free (structure);
   }
   g_ptr_array_free (caps->structs, TRUE);
 #ifdef USE_POISONING
   memset (caps, 0xff, sizeof (GstCaps));
 #endif
+  gst_atomic_int_destroy (&(caps)->refcount);
   g_free (caps);
+}
+
+/**
+ * gst_caps_make_writable:
+ * @caps: the #GstCaps to make writable
+ *
+ * Returns a writable copy of @caps.
+ *
+ * If there is only one reference count on @caps, the caller must be the owner,
+ * and so this function will return the caps object unchanged. If on the other
+ * hand there is more than one reference on the object, a new caps object will
+ * be returned. The caller's reference on @caps will be removed, and instead the
+ * caller will own a reference to the returned object.
+ *
+ * In short, this function unrefs the caps in the argument and refs the caps
+ * that it returns. Don't access the argument after calling this function. See
+ * also: gst_caps_ref().
+ *
+ * Returns: the same #GstCaps object.
+ */
+GstCaps *
+gst_caps_make_writable (GstCaps * caps)
+{
+  GstCaps *copy;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  /* we are the only instance reffing this caps */
+  if (gst_atomic_int_read (&caps->refcount) == 1)
+    return caps;
+
+  /* else copy */
+  copy = gst_caps_copy (caps);
+  gst_caps_unref (caps);
+
+  return copy;
+}
+
+/**
+ * gst_caps_ref:
+ * @caps: the #GstCaps to reference
+ *
+ * Add a reference to a #GstCaps object.
+ *
+ * From this point on, until the caller calls gst_caps_unref() or
+ * gst_caps_make_writable(), it is guaranteed that the caps object will not
+ * change. This means its structures won't change, etc. To use a #GstCaps
+ * object, you must always have a refcount on it -- either the one made
+ * implicitly by gst_caps_new(), or via taking one explicitly with this
+ * function.
+ *
+ * Returns: the same #GstCaps object.
+ */
+GstCaps *
+gst_caps_ref (GstCaps * caps)
+{
+  g_return_val_if_fail (caps != NULL, NULL);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + 1);
+#endif
+
+  gst_atomic_int_inc (&caps->refcount);
+
+  return caps;
+}
+
+/**
+ * gst_caps_unref:
+ * @caps: the #GstCaps to unref
+ *
+ * Unref a #GstCaps and and free all its structures and the 
+ * structures' values when the refcount reaches 0.
+ */
+void
+gst_caps_unref (GstCaps * caps)
+{
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) - 1);
+#endif
+
+  /* if we ended up with the refcount at zero, free the caps */
+  if (gst_atomic_int_dec_and_test (&caps->refcount)) {
+    _gst_caps_free (caps);
+  }
 }
 
 /**
@@ -255,12 +357,18 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
   if (caps->type == 0) {
     caps->type = GST_TYPE_CAPS;
+    /* initialize the caps to a refcount of 1 so the caps can be writable... */
+    gst_atomic_int_init (&(caps)->refcount, 1);
     caps->structs = g_ptr_array_new ();
     ret = gst_caps_from_string_inplace (caps, static_caps->string);
 
     if (!ret) {
       g_critical ("Could not convert static caps \"%s\"", static_caps->string);
     }
+    /* and now that we return it to the user, keep a ref for ourselves. This
+     * makes the caps immutable... AND INVINCIBLE! WOULD YOU LIKE TO TRY MY
+     * IMMUTABLE CAPS STYLE? I AM A CAPS WARRIOR!!! */
+    gst_caps_ref (caps);
   }
 
   return caps;
@@ -268,14 +376,24 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
 /* manipulation */
 
+static GstStructure *
+gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
+{
+  /* don't use index_fast, gst_caps_simplify relies on the order */
+  GstStructure *s = g_ptr_array_remove_index (caps->structs, idx);
+
+  gst_structure_set_parent_refcount (s, NULL);
+  return s;
+}
+
 /**
  * gst_caps_append:
  * @caps1: the #GstCaps that will be appended to
  * @caps2: the #GstCaps to append
  *
- * Appends the structures contained in @caps2 to @caps1.  The structures
- * in @caps2 are not copied -- they are transferred to @caps1, and then
- * @caps2 is freed.
+ * Appends the structures contained in @caps2 to @caps1. The structures in
+ * @caps2 are not copied -- they are transferred to @caps1, and then @caps2 is
+ * freed. If either caps is ANY, the resulting caps will be ANY.
  */
 void
 gst_caps_append (GstCaps * caps1, GstCaps * caps2)
@@ -285,6 +403,8 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 
   g_return_if_fail (GST_IS_CAPS (caps1));
   g_return_if_fail (GST_IS_CAPS (caps2));
+  g_return_if_fail (IS_WRITABLE (caps1));
+  g_return_if_fail (IS_WRITABLE (caps2));
 
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
@@ -292,21 +412,19 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)) {
     /* FIXME: this leaks */
     caps1->flags |= GST_CAPS_FLAGS_ANY;
-    for (i = 0; i < caps2->structs->len; i++) {
-      structure = gst_caps_get_structure (caps2, i);
-      gst_structure_remove_all_fields (structure);
+    for (i = caps2->structs->len - 1; i >= 0; i--) {
+      structure = gst_caps_remove_and_get_structure (caps2, i);
+      gst_structure_free (structure);
     }
   } else {
-    for (i = 0; i < caps2->structs->len; i++) {
-      structure = gst_caps_get_structure (caps2, i);
+    int len = caps2->structs->len;
+
+    for (i = 0; i < len; i++) {
+      structure = gst_caps_remove_and_get_structure (caps2, 0);
       gst_caps_append_structure (caps1, structure);
     }
   }
-  g_ptr_array_free (caps2->structs, TRUE);
-#ifdef USE_POISONING
-  memset (caps2, 0xff, sizeof (GstCaps));
-#endif
-  g_free (caps2);
+  gst_caps_unref (caps2);       /* guaranteed to free it */
 }
 
 /**
@@ -321,22 +439,18 @@ void
 gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
 {
   g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
 
   if (structure) {
+    g_return_if_fail (structure->parent_refcount == NULL);
 #if 0
 #ifdef USE_POISONING
     STRUCTURE_POISON (structure);
 #endif
 #endif
+    gst_structure_set_parent_refcount (structure, &caps->refcount);
     g_ptr_array_add (caps->structs, structure);
   }
-}
-
-static GstStructure *
-gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
-{
-  /* don't use index_fast, gst_caps_simplify relies on the order */
-  return g_ptr_array_remove_index (caps->structs, idx);
 }
 
 /*
@@ -354,6 +468,7 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
   g_return_if_fail (caps != NULL);
   g_return_if_fail (idx <= gst_caps_get_size (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
 
   structure = gst_caps_remove_and_get_structure (caps, idx);
   gst_structure_free (structure);
@@ -417,17 +532,18 @@ gst_caps_get_structure (const GstCaps * caps, int index)
   return g_ptr_array_index (caps->structs, index);
 }
 
-/**
- * gst_caps_copy_1:
- * @caps: the @GstCaps to copy
- *
- * Creates a new @GstCaps and appends a copy of the first structure
- * contained in @caps.
- *
- * Returns: the new @GstCaps
+/** 	 
+ * gst_caps_copy_nth: 	 
+ * @caps: the @GstCaps to copy 	 
+ * @nth: the nth structure to copy
+ * 	 
+ * Creates a new @GstCaps and appends a copy of the nth structure 	 
+ * contained in @caps. 	 
+ * 	 
+ * Returns: the new @GstCaps 	 
  */
 GstCaps *
-gst_caps_copy_1 (const GstCaps * caps)
+gst_caps_copy_nth (const GstCaps * caps, gint nth)
 {
   GstCaps *newcaps;
   GstStructure *structure;
@@ -437,8 +553,8 @@ gst_caps_copy_1 (const GstCaps * caps)
   newcaps = gst_caps_new_empty ();
   newcaps->flags = caps->flags;
 
-  if (caps->structs->len > 0) {
-    structure = gst_caps_get_structure (caps, 0);
+  if (caps->structs->len > nth) {
+    structure = gst_caps_get_structure (caps, nth);
     gst_caps_append_structure (newcaps, gst_structure_copy (structure));
   }
 
@@ -463,6 +579,7 @@ gst_caps_set_simple (GstCaps * caps, char *field, ...)
 
   g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (caps->structs->len == 1);
+  g_return_if_fail (IS_WRITABLE (caps));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -488,6 +605,7 @@ gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
 
   g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (caps->structs->len != 1);
+  g_return_if_fail (IS_WRITABLE (caps));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -531,27 +649,9 @@ gst_caps_is_empty (const GstCaps * caps)
   return (caps->structs == NULL) || (caps->structs->len == 0);
 }
 
-/**
- * gst_caps_is_chained:
- * @caps: the @GstCaps to test
- *
- * Determines if @caps contains multiple #GstStructures.
- *
- * This function is deprecated, and should not be used in new code.
- * Use #gst_caps_is_simple() instead.
- *
- * Returns: TRUE if @caps contains more than one structure
- */
-gboolean
-gst_caps_is_chained (const GstCaps * caps)
-{
-  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
-
-  return (caps->structs->len > 1);
-}
-
 static gboolean
-gst_caps_is_fixed_foreach (GQuark field_id, GValue * value, gpointer unused)
+gst_caps_is_fixed_foreach (GQuark field_id, const GValue * value,
+    gpointer unused)
 {
   return gst_value_is_fixed (value);
 }
@@ -582,7 +682,8 @@ gst_caps_is_fixed (const GstCaps * caps)
 }
 
 static gboolean
-gst_structure_is_equal_foreach (GQuark field_id, GValue * val2, gpointer data)
+gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
+    gpointer data)
 {
   GstStructure *struct1 = (GstStructure *) data;
   const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
@@ -675,7 +776,7 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 
   caps = gst_caps_subtract (subset, superset);
   ret = gst_caps_is_empty (caps);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
   return ret;
 }
 
@@ -711,7 +812,8 @@ typedef struct
 IntersectData;
 
 static gboolean
-gst_caps_structure_intersect_field (GQuark id, GValue * val1, gpointer data)
+gst_caps_structure_intersect_field (GQuark id, const GValue * val1,
+    gpointer data)
 {
   IntersectData *idata = (IntersectData *) data;
   GValue dest_value = { 0 };
@@ -818,10 +920,11 @@ gst_caps_structure_union (const GstStructure * struct1,
 GstCaps *
 gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 {
-  int i, j;
+  int i, j, k;
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
+  GstStructure *istruct;
 
   g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
@@ -835,18 +938,44 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
     return gst_caps_copy (caps1);
 
   dest = gst_caps_new_empty ();
-  for (i = 0; i < caps1->structs->len; i++) {
-    struct1 = gst_caps_get_structure (caps1, i);
-    for (j = 0; j < caps2->structs->len; j++) {
-      GstStructure *istruct;
 
-      struct2 = gst_caps_get_structure (caps2, j);
+  /* run zigzag on top line then right line, this preserves the caps order
+   * much better than a simple loop. 
+   * 
+   * This algorithm zigzags over the caps structures as demonstrated in
+   * the folowing matrix:
+   *
+   *          caps1
+   *       +-------------
+   *       | 1  2  4  7
+   * caps2 | 3  5  8 10
+   *       | 6  9 11 12
+   *       
+   * First we iterate over the caps1 structures (top line) intersecting
+   * the structures diagonally down, then we iterate over the caps2
+   * structures. 
+   */
+  for (i = 0; i < caps1->structs->len + caps2->structs->len - 1; i++) {
+    /* caps1 index goes from 0 to caps1->structs->len-1 */
+    j = MIN (i, caps1->structs->len - 1);
+    /* caps2 index stays 0 until i reaches caps1->structs->len, then it counts
+     * up from 1 to caps2->structs->len - 1 */
+    k = MAX (0, i - j);
+
+    /* now run the diagonal line, end condition is the left or bottom
+     * border */
+    while (k < caps2->structs->len && j >= 0) {
+      struct1 = gst_caps_get_structure (caps1, j);
+      struct2 = gst_caps_get_structure (caps2, k);
+
       istruct = gst_caps_structure_intersect (struct1, struct2);
 
       gst_caps_append_structure (dest, istruct);
+      /* move down left */
+      k++;
+      j--;
     }
   }
-
   gst_caps_do_simplify (dest);
   return dest;
 }
@@ -859,8 +988,8 @@ typedef struct
 SubtractionEntry;
 
 
-gboolean
-gst_caps_structure_subtract_field (GQuark field_id, GValue * value,
+static gboolean
+gst_caps_structure_subtract_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   SubtractionEntry *e = user_data;
@@ -951,7 +1080,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   for (i = 0; i < subtrahend->structs->len; i++) {
     sub = gst_caps_get_structure (subtrahend, i);
     if (dest) {
-      gst_caps_free (src);
+      gst_caps_unref (src);
       src = dest;
     }
     dest = gst_caps_new_empty ();
@@ -975,12 +1104,12 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
       }
     }
     if (gst_caps_is_empty (dest)) {
-      gst_caps_free (src);
+      gst_caps_unref (src);
       return dest;
     }
   }
 
-  gst_caps_free (src);
+  gst_caps_unref (src);
   gst_caps_do_simplify (dest);
   return dest;
 }
@@ -1020,7 +1149,7 @@ typedef struct _NormalizeForeach
 NormalizeForeach;
 
 static gboolean
-gst_caps_normalize_foreach (GQuark field_id, GValue * value, gpointer ptr)
+gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
 {
   NormalizeForeach *nf = (NormalizeForeach *) ptr;
   GValue val = { 0 };
@@ -1090,7 +1219,7 @@ gst_caps_compare_structures (gconstpointer one, gconstpointer two)
   if (ret)
     return ret;
 
-  return gst_structure_n_fields (struct1) - gst_structure_n_fields (struct2);
+  return gst_structure_n_fields (struct2) - gst_structure_n_fields (struct1);
 }
 
 /**
@@ -1126,7 +1255,7 @@ typedef struct
 UnionField;
 
 static gboolean
-gst_caps_structure_figure_out_union (GQuark field_id, GValue * value,
+gst_caps_structure_figure_out_union (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   UnionField *u = user_data;
@@ -1214,6 +1343,16 @@ gst_caps_structure_simplify (GstStructure ** result,
   return FALSE;
 }
 
+static void
+gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
+    GstStructure * new, gint i)
+{
+  gst_structure_set_parent_refcount (old, NULL);
+  gst_structure_free (old);
+  gst_structure_set_parent_refcount (new, &caps->refcount);
+  g_ptr_array_index (caps->structs, i) = new;
+}
+
 /**
  * gst_caps_do_simplify:
  * @caps: a #GstCaps to simplify
@@ -1233,6 +1372,7 @@ gst_caps_do_simplify (GstCaps * caps)
   gboolean changed = FALSE;
 
   g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (IS_WRITABLE (caps), FALSE);
 
   if (gst_caps_get_size (caps) < 2)
     return FALSE;
@@ -1261,9 +1401,7 @@ gst_caps_do_simplify (GstCaps * caps)
             result ? gst_structure_to_string (result) : "---");
 #endif
         if (result) {
-          gst_structure_free (simplify);
-          g_ptr_array_index (caps->structs, i) = result;
-          simplify = result;
+          gst_caps_switch_structures (caps, simplify, result, i);
         } else {
           gst_caps_remove_structure (caps, i);
           start--;
@@ -1340,7 +1478,7 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 #endif
 #endif
   if (*caps)
-    gst_caps_free (*caps);
+    gst_caps_unref (*caps);
   *caps = newcaps;
 }
 
@@ -1454,7 +1592,7 @@ gst_caps_from_string (const gchar * string)
   if (gst_caps_from_string_inplace (caps, string)) {
     return caps;
   } else {
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
     return NULL;
   }
 }
@@ -1473,140 +1611,11 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
 }
 
 static GstCaps *
-gst_caps_copy_conditional (const GstCaps * src)
+gst_caps_copy_conditional (GstCaps * src)
 {
   if (src) {
-    return gst_caps_copy (src);
+    return gst_caps_ref (src);
   } else {
     return NULL;
   }
-}
-
-/* fixate utility functions */
-
-/**
- * gst_caps_structure_fixate_field_nearest_int:
- * @structure: a #GstStructure
- * @field_name: a field in @structure
- * @target: the target value of the fixation
- *
- * Fixates a #GstStructure by changing the given field to the nearest
- * integer to @target that is a subset of the existing field.
- *
- * Returns: TRUE if the structure could be fixated
- */
-gboolean
-gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
-    const char *field_name, int target)
-{
-  const GValue *value;
-
-  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
-
-  value = gst_structure_get_value (structure, field_name);
-
-  if (G_VALUE_TYPE (value) == G_TYPE_INT) {
-    /* already fixed */
-    return FALSE;
-  } else if (G_VALUE_TYPE (value) == GST_TYPE_INT_RANGE) {
-    int x;
-
-    x = gst_value_get_int_range_min (value);
-    if (target < x)
-      target = x;
-    x = gst_value_get_int_range_max (value);
-    if (target > x)
-      target = x;
-    gst_structure_set (structure, field_name, G_TYPE_INT, target, NULL);
-    return TRUE;
-  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
-    const GValue *list_value;
-    int i, n;
-    int best = 0;
-    int best_index = -1;
-
-    n = gst_value_list_get_size (value);
-    for (i = 0; i < n; i++) {
-      list_value = gst_value_list_get_value (value, i);
-      if (G_VALUE_TYPE (list_value) == G_TYPE_INT) {
-        int x = g_value_get_int (list_value);
-
-        if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
-          best_index = i;
-          best = x;
-        }
-      }
-    }
-    if (best_index != -1) {
-      gst_structure_set (structure, field_name, G_TYPE_INT, best, NULL);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  return FALSE;
-}
-
-/**
- * gst_caps_structure_fixate_field_nearest_double:
- * @structure: a #GstStructure
- * @field_name: a field in @structure
- * @target: the target value of the fixation
- *
- * Fixates a #GstStructure by changing the given field to the nearest
- * double to @target that is a subset of the existing field.
- *
- * Returns: TRUE if the structure could be fixated
- */
-gboolean
-gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
-    const char *field_name, double target)
-{
-  const GValue *value;
-
-  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
-
-  value = gst_structure_get_value (structure, field_name);
-
-  if (G_VALUE_TYPE (value) == G_TYPE_DOUBLE) {
-    /* already fixed */
-    return FALSE;
-  } else if (G_VALUE_TYPE (value) == GST_TYPE_DOUBLE_RANGE) {
-    double x;
-
-    x = gst_value_get_double_range_min (value);
-    if (target < x)
-      target = x;
-    x = gst_value_get_double_range_max (value);
-    if (target > x)
-      target = x;
-    gst_structure_set (structure, field_name, G_TYPE_DOUBLE, target, NULL);
-    return TRUE;
-  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
-    const GValue *list_value;
-    int i, n;
-    double best = 0;
-    int best_index = -1;
-
-    n = gst_value_list_get_size (value);
-    for (i = 0; i < n; i++) {
-      list_value = gst_value_list_get_value (value, i);
-      if (G_VALUE_TYPE (list_value) == G_TYPE_DOUBLE) {
-        double x = g_value_get_double (list_value);
-
-        if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
-          best_index = i;
-          best = x;
-        }
-      }
-    }
-    if (best_index != -1) {
-      gst_structure_set (structure, field_name, G_TYPE_DOUBLE, best, NULL);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  return FALSE;
-
 }

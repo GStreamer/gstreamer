@@ -41,6 +41,7 @@
 #include "gstpad.h"
 #include "gstscheduler.h"
 #include "gst_private.h"
+#include "gstatomic_impl.h"
 #ifdef HAVE_VALGRIND
 #include <valgrind/valgrind.h>
 #endif

@@ -28,6 +28,7 @@
 #include "gstcpu.h"
 #include "gstinfo.h"
 
+static GStaticMutex _cpu_mutex = G_STATIC_MUTEX_INIT;
 static guint32 _gst_cpu_flags = 0;
 
 #if defined(HAVE_CPU_I386) && defined(__GNUC__)
@@ -89,7 +90,9 @@ _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
 {
   gboolean AMD;
   gulong eax = 0, ebx = 0, ecx = 0, edx = 0;
+  gboolean res = FALSE;
 
+  g_static_mutex_lock (&_cpu_mutex);
   gst_cpuid_i386 (0, &eax, &ebx, &ecx, &edx);
 
   AMD = (ebx == 0x68747541) && (ecx == 0x444d4163) && (edx == 0x69746e65);
@@ -124,13 +127,21 @@ _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
   }
   *flags = eax;
   if (_gst_cpu_flags)
-    return TRUE;
-  return FALSE;
+    res = TRUE;
+  g_static_mutex_unlock (&_cpu_mutex);
+
+  return res;
 }
 #endif
 
 GstCPUFlags
 gst_cpu_get_flags (void)
 {
-  return _gst_cpu_flags;
+  GstCPUFlags res;
+
+  g_static_mutex_lock (&_cpu_mutex);
+  res = _gst_cpu_flags;
+  g_static_mutex_unlock (&_cpu_mutex);
+
+  return res;
 }

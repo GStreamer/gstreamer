@@ -28,7 +28,7 @@
 #include "gstmemchunk.h"
 #include "gstinfo.h"
 
-GType _gst_buffer_type;
+GType _gst_buffer_type = 0;
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE  */
@@ -60,7 +60,7 @@ _gst_buffer_initialize (void)
 GType
 gst_buffer_get_type (void)
 {
-  if (_gst_buffer_type == 0) {
+  if (G_UNLIKELY (_gst_buffer_type == 0)) {
     _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
         (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
   }
@@ -74,6 +74,8 @@ _gst_buffer_sub_free (GstBuffer * buffer)
 
   GST_BUFFER_DATA (buffer) = NULL;
   GST_BUFFER_SIZE (buffer) = 0;
+  if (GST_BUFFER_CAPS (buffer))
+    gst_caps_unref (GST_BUFFER_CAPS (buffer));
 
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
@@ -86,6 +88,8 @@ _gst_buffer_sub_free (GstBuffer * buffer)
  *
  * Frees the memory associated with the buffer including the buffer data,
  * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
+ * 
+ * MT safe.
  */
 void
 gst_buffer_default_free (GstBuffer * buffer)
@@ -102,39 +106,26 @@ gst_buffer_default_free (GstBuffer * buffer)
   /* set to safe values */
   GST_BUFFER_DATA (buffer) = NULL;
   GST_BUFFER_SIZE (buffer) = 0;
+  if (GST_BUFFER_CAPS (buffer))
+    gst_caps_unref (GST_BUFFER_CAPS (buffer));
 
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
   gst_buffer_free_chunk (buffer);
 }
 
-/**
- * gst_buffer_stamp:
- * @dest: buffer to stamp
- * @src: buffer to stamp from
- *
- * Copies additional information (timestamps and offsets) from one buffer to
- * the other.
- */
-void
-gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
-{
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (src != NULL);
-
-  GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
-  GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
-  GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
-  GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
-}
 
 /**
  * gst_buffer_default_copy:
  * @buffer: a #GstBuffer to make a copy of.
  *
  * Make a full newly allocated copy of the given buffer, data and all.
+ * Note that the caps on the buffer are not copied but their refcount
+ * is increased.
  *
  * Returns: the new #GstBuffer.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_default_copy (GstBuffer * buffer)
@@ -147,8 +138,10 @@ gst_buffer_default_copy (GstBuffer * buffer)
   /* create a fresh new buffer */
   copy = gst_buffer_alloc_chunk ();
 
+  GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", buffer, copy);
+
   /* copy relevant flags */
-  flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_KEY_UNIT) |
+  flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_PREROLL) |
       GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS) |
       GST_DATA_FLAG_SHIFT (GST_BUFFER_DELTA_UNIT);
   flags = GST_BUFFER_FLAGS (buffer) & flags;
@@ -165,9 +158,15 @@ gst_buffer_default_copy (GstBuffer * buffer)
   GST_BUFFER_SIZE (copy) = GST_BUFFER_SIZE (buffer);
   GST_BUFFER_MAXSIZE (copy) = GST_BUFFER_SIZE (buffer);
 
-  gst_buffer_stamp (copy, buffer);
+  GST_BUFFER_TIMESTAMP (copy) = GST_BUFFER_TIMESTAMP (buffer);
+  GST_BUFFER_DURATION (copy) = GST_BUFFER_DURATION (buffer);
+  GST_BUFFER_OFFSET (copy) = GST_BUFFER_OFFSET (buffer);
+  GST_BUFFER_OFFSET_END (copy) = GST_BUFFER_OFFSET_END (buffer);
+
   GST_BUFFER_FREE_DATA_FUNC (copy) = NULL;
   GST_BUFFER_PRIVATE (copy) = NULL;
+  if (GST_BUFFER_CAPS (buffer))
+    GST_BUFFER_CAPS (copy) = gst_caps_ref (GST_BUFFER_CAPS (buffer));
 
   return copy;
 }
@@ -200,6 +199,8 @@ gst_buffer_free_chunk (GstBuffer * buffer)
  * Creates a newly allocated buffer without any data.
  *
  * Returns: the new #GstBuffer.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_new (void)
@@ -225,6 +226,7 @@ gst_buffer_new (void)
   GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_FREE_DATA_FUNC (newbuf) = NULL;
   GST_BUFFER_PRIVATE (newbuf) = NULL;
+  GST_BUFFER_CAPS (newbuf) = NULL;
 
   return newbuf;
 }
@@ -236,6 +238,8 @@ gst_buffer_new (void)
  * Creates a newly allocated buffer with data of the given size.
  *
  * Returns: the new #GstBuffer.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_new_and_alloc (guint size)
@@ -251,6 +255,62 @@ gst_buffer_new_and_alloc (guint size)
   return newbuf;
 }
 
+
+/**
+ * gst_buffer_get_caps:
+ * @buffer: a #GstBuffer to get the caps of.
+ *
+ * Gets the media type of the buffer. This can be NULL if there
+ * is not media type attached to this buffer or when the media
+ * type is the same as the previous received buffer.
+ *
+ * This function does not increment the refcount of the caps. The
+ * caps pointer will therefore remain valid until the buffer is 
+ * unreffed.
+ *
+ * Returns: the #GstCaps, or NULL if there was an error or there
+ * were no caps on this buffer.
+ */
+/* FIXME can we make this threadsafe without a lock on the buffer? */
+GstCaps *
+gst_buffer_get_caps (GstBuffer * buffer)
+{
+  g_return_val_if_fail (buffer != NULL, NULL);
+
+  return GST_BUFFER_CAPS (buffer);
+}
+
+/**
+ * gst_buffer_set_caps:
+ * @buffer: a #GstBuffer to set the caps of.
+ * @caps: a #GstCaps to set.
+ *
+ * Sets the media type on the buffer. The caps' refcount will
+ * be increased and any previous caps on the buffer will be
+ * unreffed.
+ */
+/* FIXME can we make this threadsafe without a lock on the buffer? */
+void
+gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
+{
+  GstCaps *oldcaps;
+
+  g_return_if_fail (buffer != NULL);
+
+  /* get old caps */
+  oldcaps = GST_BUFFER_CAPS (buffer);
+  /* ref new caps if any */
+  if (caps)
+    caps = gst_caps_ref (caps);
+  /* set caps */
+  GST_BUFFER_CAPS (buffer) = caps;
+
+  /* unref old caps if any */
+  if (oldcaps) {
+    gst_caps_unref (oldcaps);
+  }
+}
+
 /**
  * gst_buffer_create_sub:
  * @parent: a parent #GstBuffer to create a subbuffer from.
@@ -264,6 +324,8 @@ gst_buffer_new_and_alloc (guint size)
  * The duration field of the new buffer are set to GST_CLOCK_TIME_NONE.
  *
  * Returns: the new #GstBuffer, or NULL if there was an error.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
@@ -318,70 +380,12 @@ gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
 
-  if (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_DONTKEEP)) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_DONTKEEP);
-  }
   if (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_READONLY)) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_READONLY);
   }
+  GST_BUFFER_CAPS (buffer) = NULL;
 
   return buffer;
-}
-
-
-/**
- * gst_buffer_merge:
- * @buf1: a first source #GstBuffer to merge.
- * @buf2: the second source #GstBuffer to merge.
- *
- * Create a new buffer that is the concatenation of the two source
- * buffers.  The original source buffers will not be modified or
- * unref'd.
- *
- * WARNING: Incorrect use of this function can lead to memory leaks.
- * It is recommended to use gst_buffer_join() instead of this function.
- *
- * If the buffers point to contiguous areas of memory, the buffer
- * is created without copying the data.
- *
- * Returns: the new #GstBuffer that's the concatenation of the source buffers.
- */
-GstBuffer *
-gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
-{
-  GstBuffer *result;
-
-  /* we're just a specific case of the more general gst_buffer_span() */
-  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
-
-  return result;
-}
-
-/**
- * gst_buffer_join:
- * @buf1: a first source #GstBuffer to merge.
- * @buf2: the second source #GstBuffer to merge.
- *
- * Create a new buffer that is the concatenation of the two source
- * buffers.  The original buffers are unreferenced.
- *
- * If the buffers point to contiguous areas of memory, the buffer
- * is created without copying the data.
- *
- * Returns: the new #GstBuffer that's the concatenation of the source buffers.
- */
-GstBuffer *
-gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
-{
-  GstBuffer *result;
-
-  /* we're just a specific case of the more general gst_buffer_span() */
-  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
-
-  gst_buffer_unref (buf1);
-  gst_buffer_unref (buf2);
-
-  return result;
 }
 
 /**
@@ -394,6 +398,8 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  *
  * Returns: TRUE if the buffers are contiguous, 
  * FALSE if a copy would be required.
+ * 
+ * MT safe.
  */
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
@@ -428,6 +434,8 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
  * Returns: the new #GstBuffer that spans the two source buffers.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,

@@ -54,18 +54,30 @@ G_BEGIN_DECLS
 typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
+/* refcount */
+#define GST_CAPS_REFCOUNT(caps)                 ((GST_CAPS(caps))->refcount)
+#define GST_CAPS_REFCOUNT_VALUE(caps)           (gst_atomic_int_read (&(GST_CAPS(caps))->refcount))
+
 struct _GstCaps {
   GType type;
+
+  /*< public >*/ /* with COW */
+  /* refcounting */
+  GstAtomicInt           refcount;
 
   guint16 flags;
   GPtrArray *structs;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstStaticCaps {
+  /*< public >*/
   GstCaps caps;
   const char *string;
+
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -79,8 +91,13 @@ GstCaps *                gst_caps_new_full                              (GstStru
 									                 ...);
 GstCaps *                gst_caps_new_full_valist                       (GstStructure  *structure,
 									 va_list        var_args);
-GstCaps *                gst_caps_copy                                  (const GstCaps *caps);
-void                     gst_caps_free                                  (GstCaps       *caps);
+
+/* reference counting */
+GstCaps *                gst_caps_ref                    		(GstCaps* caps);
+GstCaps *                gst_caps_copy					(const GstCaps * caps);
+GstCaps *                gst_caps_make_writable          		(GstCaps *caps);
+void                     gst_caps_unref                  		(GstCaps* caps);
+
 G_CONST_RETURN GstCaps * gst_static_caps_get                            (GstStaticCaps *static_caps);
 
 /* manipulation */
@@ -91,10 +108,7 @@ void                     gst_caps_append_structure                      (GstCaps
 int                      gst_caps_get_size                              (const GstCaps *caps);
 GstStructure *           gst_caps_get_structure                         (const GstCaps *caps,
 									 int            index);
-#ifndef GST_DISABLE_DEPRECATED
-GstCaps *                gst_caps_split_one                             (GstCaps       *caps);
-GstCaps *                gst_caps_copy_1                                (const GstCaps *caps);
-#endif
+GstCaps * 		 gst_caps_copy_nth                              (const GstCaps * caps, gint nth);
 void                     gst_caps_set_simple                            (GstCaps       *caps,
 									 char          *field, ...);
 void                     gst_caps_set_simple_valist                     (GstCaps       *caps,
@@ -104,11 +118,6 @@ void                     gst_caps_set_simple_valist                     (GstCaps
 /* tests */
 gboolean                 gst_caps_is_any                                (const GstCaps *caps);
 gboolean                 gst_caps_is_empty                              (const GstCaps *caps);
-#ifndef GST_DISABLE_DEPRECATED
-gboolean                 gst_caps_is_chained                            (const GstCaps *caps);
-gboolean                 gst_caps_is_equal_fixed                        (const GstCaps *caps1,
-									 const GstCaps *caps2);
-#endif
 gboolean                 gst_caps_is_fixed                              (const GstCaps *caps);
 gboolean                 gst_caps_is_always_compatible                  (const GstCaps *caps1,
 						                 	 const GstCaps *caps2);
@@ -125,9 +134,6 @@ GstCaps *                gst_caps_subtract				(const GstCaps *minuend,
 GstCaps *                gst_caps_union                                 (const GstCaps *caps1,
 									 const GstCaps *caps2);
 GstCaps *                gst_caps_normalize                             (const GstCaps *caps);
-#ifndef GST_DISABLE_DEPRECATED
-GstCaps *                gst_caps_simplify                              (const GstCaps *caps);
-#endif
 gboolean                 gst_caps_do_simplify                           (GstCaps *caps);
 
 #ifndef GST_DISABLE_LOADSAVE

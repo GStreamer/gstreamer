@@ -42,8 +42,9 @@ typedef struct _GstSystemClockClass GstSystemClockClass;
 struct _GstSystemClock {
   GstClock 	 clock;
 
-  GMutex *	 mutex;
-  GCond *	 cond;
+  /*< private >*/
+  GThread	*thread;	/* thread for async notify */
+  gboolean 	 stopping;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -51,6 +52,7 @@ struct _GstSystemClock {
 struct _GstSystemClockClass {
   GstClockClass  parent_class;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

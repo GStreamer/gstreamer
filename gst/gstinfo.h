@@ -109,6 +109,7 @@ struct _GstDebugCategory {
 #define GST_STR_NULL(str) ((str) ? (str) : "(NULL)")
 
 /* easier debugging for pad names */
+/* FIXME, not MT safe */
 #define GST_DEBUG_PAD_NAME(pad) \
   (GST_OBJECT_PARENT(pad) != NULL) ? \
   GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \
@@ -823,15 +824,6 @@ GST_LOG (const char *format, ...)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 void gst_debug_print_stack_trace (void);
-
-/* timestamp debugging macros */
-/* FIXME 0.9: move into the correct header (gstclock.h) */
-#define GST_TIME_FORMAT "u:%02u:%02u.%09u"
-#define GST_TIME_ARGS(t) \
-	(guint) ((t) / (GST_SECOND * 60 * 60)), \
-	(guint) (((t) / (GST_SECOND * 60)) % 60), \
-	(guint) (((t) / GST_SECOND) % 60), \
-	(guint) ((t) % GST_SECOND)
 
 G_END_DECLS
 

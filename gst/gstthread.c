@@ -233,7 +233,7 @@ gst_thread_dispose (GObject * object)
   g_cond_free (thread->cond);
   g_mutex_free (thread->iterate_lock);
 
-  gst_object_replace ((GstObject **) & GST_ELEMENT_SCHED (thread), NULL);
+  gst_object_replace ((GstObject **) & GST_ELEMENT_SCHEDULER (thread), NULL);
 }
 
 /**
@@ -321,7 +321,9 @@ gst_thread_release_children_locks (GstThread * thread)
 {
   GstRealPad *peer = NULL;
   GstElement *peerelement;
-  GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+
+  /* not MT safe but gstthread is going away soon */
+  GList *elements = (GList *) GST_BIN (thread)->children;
 
   while (elements) {
     GstElement *element = GST_ELEMENT (elements->data);
@@ -354,7 +356,7 @@ gst_thread_release_children_locks (GstThread * thread)
       if (!peerelement)
         continue;               /* FIXME: deal with case where there's no peer */
 
-      if (GST_ELEMENT_SCHED (peerelement) != GST_ELEMENT_SCHED (thread)) {
+      if (GST_ELEMENT_SCHEDULER (peerelement) != GST_ELEMENT_SCHEDULER (thread)) {
         GST_LOG_OBJECT (thread, "element \"%s\" has pad cross sched boundary",
             GST_ELEMENT_NAME (element));
         GST_LOG_OBJECT (thread, "waking element \"%s\"",
@@ -473,8 +475,9 @@ revert:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     {
-      /* FIXME: recurse into sub-bins */
-      GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+      /* FIXME: recurse into sub-bins. not MT safe but gstthread is going
+       * away soon. */
+      GList *elements = (GList *) GST_BIN (thread)->children;
 
       while (elements) {
         gst_element_enable_threadsafe_properties ((GstElement *) elements->
@@ -491,7 +494,7 @@ revert:
 
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
-      elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+      elements = (GList *) GST_BIN (thread)->children;
 
       while (elements) {
         gst_element_disable_threadsafe_properties ((GstElement *) elements->
@@ -664,7 +667,7 @@ gst_thread_main_loop (void *arg)
   g_private_set (gst_thread_current, thread);
 
   /* set up the element's scheduler */
-  gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
+  gst_scheduler_setup (GST_ELEMENT_SCHEDULER (thread));
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_WAITING);
 
@@ -726,7 +729,7 @@ gst_thread_main_loop (void *arg)
 
   /* we need to destroy the scheduler here because it might have 
    * mapped it's stack into the threads stack space */
-  sched = GST_ELEMENT_SCHED (thread);
+  sched = GST_ELEMENT_SCHEDULER (thread);
   if (sched)
     gst_scheduler_reset (sched);
 

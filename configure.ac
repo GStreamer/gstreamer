@@ -24,7 +24,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST, 5, 0, 4)
+AS_LIBTOOL(GST, 6, 0, 0)
 AM_PROG_LIBTOOL
 
 AC_CONFIG_SRCDIR([gst/gst.c])
@@ -313,6 +313,10 @@ AC_SUBST(POPT_LIBS)
 
 dnl Check for ucontext.h
 AC_CHECK_HEADER(ucontext.h, AC_DEFINE(HAVE_UCONTEXT_H, 1, [defined if we have ucontext.h]))
+
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
@@ -664,6 +668,7 @@ libs/gst/control/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/getbits/Makefile
 po/Makefile.in
+check/Makefile
 tests/Makefile
 tests/bufspeed/Makefile
 tests/instantiate/Makefile

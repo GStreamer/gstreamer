@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2000 Wim Taymans <wim@fluendo.com>
  *
  * gstdata.c: Data operations
  *
@@ -43,11 +43,12 @@ gst_data_get_type (void)
  * @data: a #GstData to initialize
  * @type: the type of this data
  * @flags: flags for this data
- * @free: a free function 
- * @copy: a copy function 
+ * @free: a free function
+ * @copy: a copy function
  *
- * Initialize the given data structure with the given parameters. The free and copy 
- * function will be called when this data is freed or copied respectively.
+ * Initialize the given data structure with the given parameters.
+ * The free and copy function will be called when this data is freed
+ * or copied, respectively.
  */
 void
 gst_data_init (GstData * data, GType type, guint16 flags,
@@ -64,7 +65,7 @@ gst_data_init (GstData * data, GType type, guint16 flags,
  * @target: the target #GstData to copy into
  *
  * Copy the GstData into the specified target GstData structure.
- * Thos method is mainly used by subclasses when they want to copy
+ * This method is mainly used by subclasses when they want to copy
  * the relevant GstData info.
  */
 void
@@ -77,7 +78,7 @@ gst_data_copy_into (const GstData * data, GstData * target)
  * gst_data_dispose:
  * @data: a #GstData to dispose
  *
- * Free all the resources allocated in the gst_data_init() function, 
+ * Free all the resources allocated in the gst_data_init() function,
  * mainly used by subclass implementors.
  */
 void
@@ -95,9 +96,11 @@ gst_data_dispose (GstData * data)
  * Copies the given #GstData. This function will call the custom subclass
  * copy function or return NULL if no function was provided by the subclass.
  *
- * Returns: a copy of the data or NULL if the data cannot be copied. The refcount
- * of the original buffer is not changed so you should unref it when you don't
- * need it anymore.
+ * Returns: a copy of the data or NULL if the data cannot be copied.
+ * The refcount of the original buffer is not changed so you should unref it
+ * when you don't need it anymore.
+ *
+ * MT safe.
  */
 GstData *
 gst_data_copy (const GstData * data)
@@ -112,12 +115,14 @@ gst_data_copy (const GstData * data)
 
 /**
  * gst_data_is_writable:
- * @data: a #GstData to copy
+ * @data: a #GstData to check
  *
- * Query if the gstdata needs to be copied before it can safely be modified.
+ * Query if the data needs to be copied before it can safely be modified.
  *
  * Returns: FALSE if the given #GstData is potentially shared and needs to
  * be copied before it can be modified safely.
+ *
+ * MT safe.
  */
 gboolean
 gst_data_is_writable (GstData * data)
@@ -128,12 +133,12 @@ gst_data_is_writable (GstData * data)
 
   refcount = gst_atomic_int_read (&data->refcount);
 
-  if (refcount > 1)
-    return FALSE;
-  if (GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
-    return FALSE;
+  /* if we have the only ref and the data is not readonly, we can
+   * safely write */
+  if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
+    return TRUE;
 
-  return TRUE;
+  return FALSE;
 }
 
 /**
@@ -143,11 +148,14 @@ gst_data_is_writable (GstData * data)
  * Copies the given #GstData if the refcount is greater than 1 so that the
  * #GstData object can be written to safely.
  *
- * Returns: a copy of the data if the refcount is > 1 or the buffer is 
+ * Returns: a copy of the data if the refcount is > 1 or the buffer is
  * marked READONLY, data if the refcount == 1,
- * or NULL if the data could not be copied. The refcount of the original buffer
- * is decreased when a copy is made, so you are not supposed to use it after a
- * call to this function.
+ * or NULL if the data could not be copied.
+ *
+ * The refcount of the passed @data is decreased when a copy is made, so
+ * you are not supposed to use it anymore after a call to this function.
+ *
+ * MT safe.
  */
 GstData *
 gst_data_copy_on_write (GstData * data)
@@ -158,6 +166,8 @@ gst_data_copy_on_write (GstData * data)
 
   refcount = gst_atomic_int_read (&data->refcount);
 
+  /* if we have the only ref and the data is not readonly, we can
+   * safely write, so we return the input data */
   if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return GST_DATA (data);
 
@@ -178,6 +188,8 @@ gst_data_copy_on_write (GstData * data)
  * Increments the reference count of this data.
  *
  * Returns: the data
+ *
+ * MT safe.
  */
 GstData *
 gst_data_ref (GstData * data)
@@ -201,6 +213,8 @@ gst_data_ref (GstData * data)
  * Increments the reference count of this data by the given number.
  *
  * Returns: the data
+ *
+ * MT safe.
  */
 GstData *
 gst_data_ref_by_count (GstData * data, gint count)
@@ -224,9 +238,12 @@ gst_data_ref_by_count (GstData * data, gint count)
  * Decrements the refcount of this data. If the refcount is
  * zero, the data will be freed.
  *
- * When you add data to a pipeline, the pipeline takes ownership of the
- * data.  When the data has been used by some plugin, it must unref()s it.
- * Applications usually don't need to unref() anything.
+ * When you move data out of your element into the pipeline,
+ * the pipeline takes ownership of the
+ * data.  When the data has been consumed by some element, it must unref() it.
+ * Applications usually don't need to unref() @data.
+ *
+ * MT safe.
  */
 void
 gst_data_unref (GstData * data)

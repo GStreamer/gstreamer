@@ -350,7 +350,7 @@ free_entry (TypeFindEntry * entry)
   free_entry_buffers (entry);
 
   if (entry->caps)
-    gst_caps_free (entry->caps);
+    gst_caps_unref (entry->caps);
   g_free (entry);
 }
 static void

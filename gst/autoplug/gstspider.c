@@ -464,11 +464,11 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
 
         GST_ELEMENT_ERROR (spider, STREAM, CODEC_NOT_FOUND,
             (_("There is no element present to handle the stream's mime type %s."), mime), (NULL));
-        gst_caps_free (src_caps);
+        gst_caps_unref (src_caps);
         return;
       }
     }
-    gst_caps_free (src_caps);
+    gst_caps_unref (src_caps);
   }
 
   /* get the direction of our ident */
@@ -491,7 +491,7 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
   }
 
   /* now iterate all possible pads and link when needed */
-  padlist = gst_element_get_pad_list (GST_ELEMENT (spider));
+  padlist = GST_ELEMENT (spider)->pads;
   for (; padlist; padlist = padlist->next) {
     GstPad *otherpad;
     GstSpiderIdentity *peer;
@@ -697,8 +697,8 @@ gst_spider_plug_from_srcpad (GstSpiderConnection * conn, GstPad * srcpad)
   caps1 = gst_pad_get_caps (srcpad);
   caps2 = gst_pad_get_caps (conn->src->sink);
   plugpath = gst_autoplug_sp (caps1, caps2, spider->factories);
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   /* prints out the path that was found for plugging */
   /* g_print ("found path from %s to %s:\n", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));

@@ -533,14 +533,8 @@ print_element_info (GstElementFactory * factory)
   PUT_END_TAG (1, "pad-templates");
 
   PUT_START_TAG (1, "element-flags");
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_COMPLEX)) {
-    PUT_ESCAPED (2, "flag", "GST_ELEMENT_COMPLEX");
-  }
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
     PUT_ESCAPED (2, "flag", "GST_ELEMENT_DECOUPLED");
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_THREAD_SUGGESTED)) {
-    PUT_ESCAPED (2, "flag", "GST_ELEMENT_THREADSUGGESTED");
   }
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
     PUT_ESCAPED (2, "flag", "GST_ELEMENT_EVENT_AWARE");
@@ -555,9 +549,6 @@ print_element_info (GstElementFactory * factory)
     }
     if (GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE)) {
       PUT_ESCAPED (2, "flag", "GST_BIN_SELF_SCHEDULABLE");
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_PREFER_COTHREADS)) {
-      PUT_ESCAPED (2, "flag", "GST_BIN_FLAG_PREFER_COTHREADS");
     }
     PUT_END_TAG (1, "bin-flags");
   }
@@ -602,7 +593,7 @@ print_element_info (GstElementFactory * factory)
   if (element->numpads) {
     const GList *pads;
 
-    pads = gst_element_get_pad_list (element);
+    pads = element->pads;
     while (pads) {
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
@@ -683,7 +674,7 @@ print_element_info (GstElementFactory * factory)
   /* for compound elements */
   if (GST_IS_BIN (element)) {
     PUT_START_TAG (1, "children");
-    children = (GList *) gst_bin_get_list (GST_BIN (element));
+    children = (GList *) GST_BIN (element)->children;
     while (children) {
       child = GST_ELEMENT (children->data);
       children = g_list_next (children);

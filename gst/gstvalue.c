@@ -1343,7 +1343,7 @@ gst_value_deserialize_string (GValue * dest, const char *s)
 
     if (!str)
       return FALSE;
-    g_value_set_string_take_ownership (dest, str);
+    g_value_take_string (dest, str);
   }
 
   return TRUE;

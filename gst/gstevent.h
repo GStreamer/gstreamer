@@ -161,6 +161,7 @@ typedef struct
 struct _GstEvent {
   GstData data;
 
+  /*< public >*/ /* with COW */
   GstEventType  type;
   guint64	timestamp;
   GstObject	*src;
@@ -189,6 +190,7 @@ struct _GstEvent {
     } structure;
   } event_data;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

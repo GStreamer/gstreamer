@@ -887,7 +887,7 @@ gst_fakesrc_loop (GstElement * element)
 
   src = GST_FAKESRC (element);
 
-  pads = gst_element_get_pad_list (element);
+  pads = element->pads;
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);

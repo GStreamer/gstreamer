@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstformat.c: GstFormat registration
  *
@@ -25,10 +26,11 @@
 #include "gst_private.h"
 #include "gstformat.h"
 
+static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_formats = NULL;
 static GHashTable *_nick_to_format = NULL;
 static GHashTable *_format_to_nick = NULL;
-static gint _n_values = 1;      /* we start from 1 because 0 reserved for UNDEFINED */
+static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for UNDEFINED */
 
 static GstFormatDefinition standard_definitions[] = {
   {GST_FORMAT_DEFAULT, "default", "Default format for the media type"},
@@ -44,6 +46,7 @@ _gst_format_initialize (void)
 {
   GstFormatDefinition *standards = standard_definitions;
 
+  g_static_mutex_lock (&mutex);
   if (_nick_to_format == NULL) {
     _nick_to_format = g_hash_table_new (g_str_hash, g_str_equal);
     _format_to_nick = g_hash_table_new (NULL, NULL);
@@ -58,6 +61,7 @@ _gst_format_initialize (void)
     standards++;
     _n_values++;
   }
+  g_static_mutex_unlock (&mutex);
 }
 
 /**
@@ -66,10 +70,12 @@ _gst_format_initialize (void)
  * @description: The description of the new format
  *
  * Create a new GstFormat based on the nick or return an
- * allrady registered format with that nick
+ * already registered format with that nick.
  *
  * Returns: A new GstFormat or an already registered format
  * with the same nick.
+ *
+ * MT safe.
  */
 GstFormat
 gst_format_register (const gchar * nick, const gchar * description)
@@ -89,11 +95,13 @@ gst_format_register (const gchar * nick, const gchar * description)
   format->nick = g_strdup (nick);
   format->description = g_strdup (description);
 
+  g_static_mutex_lock (&mutex);
   g_hash_table_insert (_nick_to_format, format->nick, format);
   g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (format->value),
       format);
   _gst_formats = g_list_append (_gst_formats, format);
   _n_values++;
+  g_static_mutex_unlock (&mutex);
 
   return format->value;
 }
@@ -114,7 +122,9 @@ gst_format_get_by_nick (const gchar * nick)
 
   g_return_val_if_fail (nick != NULL, 0);
 
+  g_static_mutex_lock (&mutex);
   format = g_hash_table_lookup (_nick_to_format, nick);
+  g_static_mutex_unlock (&mutex);
 
   if (format != NULL)
     return format->value;
@@ -154,22 +164,38 @@ gst_formats_contains (const GstFormat * formats, GstFormat format)
  * Get details about the given format.
  *
  * Returns: The #GstFormatDefinition for @format or NULL on failure.
+ *
+ * MT safe.
  */
 const GstFormatDefinition *
 gst_format_get_details (GstFormat format)
 {
-  return g_hash_table_lookup (_format_to_nick, GINT_TO_POINTER (format));
+  const GstFormatDefinition *result;
+
+  g_static_mutex_lock (&mutex);
+  result = g_hash_table_lookup (_format_to_nick, GINT_TO_POINTER (format));
+  g_static_mutex_unlock (&mutex);
+
+  return result;
 }
 
 /**
- * gst_format_get_definitions:
+ * gst_format_iterate_definitions:
  *
- * Get a list of all the registered formats.
+ * Iterate all the registered formats. The format definition is read 
+ * only.
  *
- * Returns: A GList of #GstFormatDefinition.
+ * Returns: A GstIterator of #GstFormatDefinition.
  */
-const GList *
-gst_format_get_definitions (void)
+GstIterator *
+gst_format_iterate_definitions (void)
 {
-  return _gst_formats;
+  GstIterator *result;
+
+  g_static_mutex_lock (&mutex);
+  result = gst_iterator_new_list (g_static_mutex_get_mutex (&mutex),
+      &_n_values, &_gst_formats, NULL, NULL, NULL);
+  g_static_mutex_unlock (&mutex);
+
+  return result;
 }

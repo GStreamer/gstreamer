@@ -446,7 +446,7 @@ typedef struct
 GstTagCopyData;
 static void
 gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
-    GQuark tag, GValue * value)
+    GQuark tag, const GValue * value)
 {
   GstTagInfo *info = gst_tag_lookup (tag);
   const GValue *value2;
@@ -500,7 +500,7 @@ gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
   }
 }
 static gboolean
-gst_tag_list_copy_foreach (GQuark tag, GValue * value, gpointer user_data)
+gst_tag_list_copy_foreach (GQuark tag, const GValue * value, gpointer user_data)
 {
   GstTagCopyData *copy = (GstTagCopyData *) user_data;
 
@@ -770,7 +770,8 @@ typedef struct
 }
 TagForeachData;
 static int
-structure_foreach_wrapper (GQuark field_id, GValue * value, gpointer user_data)
+structure_foreach_wrapper (GQuark field_id, const GValue * value,
+    gpointer user_data)
 {
   TagForeachData *data = (TagForeachData *) user_data;
 

@@ -8,13 +8,23 @@ SUBDIRS_DOCS =
 endif
 
 if BUILD_TESTS
-SUBDIRS_TESTS = tests testsuite
+## SUBDIRS_TESTS = tests testsuite
+## FIXME: write tests from scratch
+SUBDIRS_TESTS =
+if HAVE_CHECK
+SUBDIRS_CHECK = check
+else
+SUBDIRS_CHECK =
+endif
 else
 SUBDIRS_TESTS =
+SUBDIRS_CHECK =
 endif
 
 if BUILD_EXAMPLES
-SUBDIRS_EXAMPLES = examples
+## FIXME: write examples from scratch
+# SUBDIRS_EXAMPLES = examples
+SUBDIRS_EXAMPLES =
 else
 SUBDIRS_EXAMPLES =
 endif
@@ -31,7 +41,9 @@ aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
 SUBDIRS = \
 	include gst libs tools \
-	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
+	$(SUBDIRS_CHECK) \
+	$(SUBDIRS_TESTS) \
+	$(SUBDIRS_EXAMPLES) \
 	pkgconfig po \
 	common \
 	$(SUBDIRS_DOCS)
@@ -40,6 +52,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
 	include libs gst \
 	tools \
+	check \
 	tests testsuite \
 	examples \
 	pkgconfig \

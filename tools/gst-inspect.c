@@ -54,7 +54,7 @@ n_print (const char *format, ...)
 }
 
 static gboolean
-print_field (GQuark field, GValue * value, gpointer pfx)
+print_field (GQuark field, const GValue * value, gpointer pfx)
 {
   gchar *str = gst_value_serialize (value);
 
@@ -505,16 +505,8 @@ print_element_flag_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Flags:\n");
 
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_COMPLEX)) {
-    n_print ("  GST_ELEMENT_COMPLEX\n");
-    have_flags = TRUE;
-  }
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
     n_print ("  GST_ELEMENT_DECOUPLED\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_THREAD_SUGGESTED)) {
-    n_print ("  GST_ELEMENT_THREADSUGGESTED\n");
     have_flags = TRUE;
   }
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
@@ -533,10 +525,6 @@ print_element_flag_info (GstElement * element)
     }
     if (GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE)) {
       n_print ("  GST_BIN_SELF_SCHEDULABLE\n");
-      have_flags = TRUE;
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_PREFER_COTHREADS)) {
-      n_print ("  GST_BIN_FLAG_PREFER_COTHREADS\n");
       have_flags = TRUE;
     }
     if (!have_flags)
@@ -635,7 +623,7 @@ print_pad_info (GstElement * element)
     return;
   }
 
-  pads = gst_element_get_pad_list (element);
+  pads = element->pads;
   while (pads) {
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
@@ -854,7 +842,7 @@ print_children_info (GstElement * element)
   if (!GST_IS_BIN (element))
     return;
 
-  children = (GList *) gst_bin_get_list (GST_BIN (element));
+  children = (GList *) GST_BIN (element)->children;
   if (children) {
     n_print ("\n");
     g_print ("Children:\n");

@@ -65,12 +65,12 @@ gst_autoplug_caps_intersect (const GstCaps * src, const GstCaps * sink)
 
   /* if the caps can't link, there is no intersection */
   if (gst_caps_is_empty (caps)) {
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
     return FALSE;
   }
 
   /* hurrah, we can link, now remove the intersection */
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
   return TRUE;
 }
 

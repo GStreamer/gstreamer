@@ -1,5 +1,9 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *               <2005> Wim Taymans <wim@fluendo.com>
+ *
+ * gstmemchunk.c: implementation of lockfree allocation of fixed
+ *                size memory chunks.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,7 +31,6 @@
 #include <sys/mman.h>
 #include <valgrind/valgrind.h>
 #endif
-
 
 #define GST_MEM_CHUNK_AREA(chunk) 	(((GstMemChunkElement*)(chunk))->area)
 #define GST_MEM_CHUNK_DATA(chunk) 	((gpointer)(((GstMemChunkElement*)(chunk)) + 1))
@@ -105,6 +108,8 @@ populate (GstMemChunk * mem_chunk)
  * when it is too small (with a small overhead when that happens)
  *
  * Returns: a new #GstMemChunk
+ *
+ * MT safe.
  */
 GstMemChunk *
 gst_mem_chunk_new (gchar * name, gint atom_size, gulong area_size, gint type)
@@ -152,7 +157,9 @@ free_area (gpointer key, gpointer value, gpointer user_data)
  * gst_mem_chunk_destroy:
  * @mem_chunk: the GstMemChunk to destroy
  *
- * Free the memory allocated by the memchunk
+ * Free the memory allocated by the memchunk. This function
+ * is not Threadsafe as it does not wait for all outstanding
+ * allocations to be freed.
  */
 void
 gst_mem_chunk_destroy (GstMemChunk * mem_chunk)
@@ -186,6 +193,8 @@ gst_mem_chunk_destroy (GstMemChunk * mem_chunk)
  * was created.
  *
  * Returns: a pointer to the allocated memory region.
+ *
+ * MT safe.
  */
 gpointer
 gst_mem_chunk_alloc (GstMemChunk * mem_chunk)
@@ -197,15 +206,20 @@ gst_mem_chunk_alloc (GstMemChunk * mem_chunk)
 again:
   chunk = gst_trash_stack_pop (&mem_chunk->stack);
   /* chunk is empty, try to refill */
-  if (!chunk) {
-    if (populate (mem_chunk))
+  if (G_UNLIKELY (!chunk)) {
+    if (G_LIKELY (populate (mem_chunk))) {
       goto again;
-    else
+    } else {
+      /* this happens when we are in cleanup mode and we
+       * allocate all remaining chunks for cleanup */
       return NULL;
+    }
   }
 #ifdef HAVE_VALGRIND
-  VALGRIND_MALLOCLIKE_BLOCK (GST_MEM_CHUNK_DATA (chunk), mem_chunk->atom_size,
-      0, 0);
+  if (G_UNLIKELY (__gst_in_valgrind ())) {
+    VALGRIND_MALLOCLIKE_BLOCK (GST_MEM_CHUNK_DATA (chunk), mem_chunk->atom_size,
+        0, 0);
+  }
 #endif
   return GST_MEM_CHUNK_DATA (chunk);
 }
@@ -219,13 +233,15 @@ again:
  * was created. The memory will be set to all zeroes.
  *
  * Returns: a pointer to the allocated memory region.
+ *
+ * MT safe.
  */
 gpointer
 gst_mem_chunk_alloc0 (GstMemChunk * mem_chunk)
 {
   gpointer mem = gst_mem_chunk_alloc (mem_chunk);
 
-  if (mem)
+  if (G_LIKELY (mem))
     memset (mem, 0, mem_chunk->atom_size);
 
   return mem;
@@ -237,6 +253,8 @@ gst_mem_chunk_alloc0 (GstMemChunk * mem_chunk)
  * @mem: the memory region to hand back to the chunk
  *
  * Free the memeory region allocated from the chunk.
+ *
+ * MT safe.
  */
 void
 gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem)
@@ -249,7 +267,9 @@ gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem)
   chunk = GST_MEM_CHUNK_LINK (mem);
 
 #ifdef HAVE_VALGRIND
-  VALGRIND_FREELIKE_BLOCK (mem, 0);
+  if (G_UNLIKELY (__gst_in_valgrind ())) {
+    VALGRIND_FREELIKE_BLOCK (mem, 0);
+  }
 #endif
   gst_trash_stack_push (&mem_chunk->stack, chunk);
 }

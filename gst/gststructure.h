@@ -33,13 +33,21 @@ G_BEGIN_DECLS
 typedef struct _GstStructure GstStructure;
 
 typedef gboolean (*GstStructureForeachFunc) (GQuark   field_id,
+					     const GValue * value,
+					     gpointer user_data);
+
+typedef gboolean (*GstStructureMapFunc)     (GQuark   field_id,
 					     GValue * value,
 					     gpointer user_data);
 
 struct _GstStructure {
   GType type;
 
+  /*< private >*/
   GQuark name;
+
+  /* owned by parent structure, NULL if no parent */
+  GstAtomicInt *parent_refcount;
 
   GArray *fields;
 
@@ -57,6 +65,8 @@ GstStructure *          gst_structure_new_valist           (const gchar *       
 						            const gchar *            firstfield,
 							    va_list                  varargs);
 GstStructure *          gst_structure_copy                 (const GstStructure      *structure);
+void			gst_structure_set_parent_refcount  (GstStructure            *structure,
+                                                            GstAtomicInt            *refcount);
 void                    gst_structure_free                 (GstStructure            *structure);
 
 G_CONST_RETURN gchar *  gst_structure_get_name             (const GstStructure      *structure);
@@ -92,8 +102,11 @@ void                    gst_structure_remove_all_fields    (GstStructure        
 
 GType                   gst_structure_get_field_type       (const GstStructure      *structure,
 							    const gchar             *fieldname);
-gboolean                gst_structure_foreach              (GstStructure            *structure,
+gboolean                gst_structure_foreach              (const GstStructure      *structure,
 							    GstStructureForeachFunc  func,
+							    gpointer                 user_data);
+gboolean                gst_structure_map_in_place         (GstStructure            *structure,
+							    GstStructureMapFunc      func,
 							    gpointer                 user_data);
 gint                    gst_structure_n_fields             (const GstStructure      *structure);
 gboolean                gst_structure_has_field            (const GstStructure      *structure,
@@ -121,6 +134,14 @@ G_CONST_RETURN gchar *  gst_structure_get_string           (const GstStructure  
 gchar *                 gst_structure_to_string            (const GstStructure      *structure);
 GstStructure *          gst_structure_from_string          (const gchar             *string,
 							    gchar                  **end);
+
+gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStructure *structure,
+									 const char   *field_name,
+									 int           target);
+gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
+									 const char   *field_name,
+									 double        target);
+
 
 G_END_DECLS
 

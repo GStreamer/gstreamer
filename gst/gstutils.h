@@ -25,7 +25,7 @@
 #define __GST_UTILS_H__
 
 #include <glib.h>
-#include <gst/gstelement.h>
+#include <gst/gstbin.h>
 
 G_BEGIN_DECLS
 
@@ -223,6 +223,62 @@ type_as_function ## _get_type (void)						\
 					} while (0)
 
 #endif /* GST_HAVE_UNALIGNED_ACCESS */
+
+void 			gst_object_default_error 	(GstObject * source, 
+							 GError * error, gchar * debug);
+
+
+/* element functions */
+GstFlowReturn 		gst_element_abort_preroll 	(GstElement *element);
+GstFlowReturn 		gst_element_finish_preroll 	(GstElement *element, GstPad *pad);
+
+GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad);
+GstPad*                 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
+		                                         const GstCaps *filtercaps);
+
+GstPadTemplate*         gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
+
+G_CONST_RETURN gchar*   gst_element_state_get_name      (GstElementState state);
+
+gboolean		gst_element_link                (GstElement *src, GstElement *dest);
+gboolean		gst_element_link_many           (GstElement *element_1,
+		                                         GstElement *element_2, ...);
+gboolean		gst_element_link_filtered       (GstElement *src, GstElement *dest,
+		                                         const GstCaps *filtercaps);
+void                    gst_element_unlink              (GstElement *src, GstElement *dest);
+void                    gst_element_unlink_many         (GstElement *element_1,
+		                                         GstElement *element_2, ...);
+
+gboolean		gst_element_link_pads           (GstElement *src, const gchar *srcpadname,
+		                                         GstElement *dest, const gchar *destpadname);
+gboolean		gst_element_link_pads_filtered  (GstElement *src, const gchar *srcpadname,
+		                                         GstElement *dest, const gchar *destpadname,
+							 const GstCaps *filtercaps);
+void                    gst_element_unlink_pads         (GstElement *src, const gchar *srcpadname,
+		                                         GstElement *dest, const gchar *destpadname);
+
+/* element class functions */
+void gst_element_class_install_std_props (GstElementClass * klass,
+    const gchar * first_name, ...);
+
+/* pad functions */
+gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
+gboolean                gst_pad_can_link_filtered       (GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
+
+void			gst_pad_use_fixed_caps		(GstPad *pad);
+GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);
+GstCaps*		gst_pad_proxy_getcaps		(GstPad * pad);
+gboolean		gst_pad_proxy_setcaps		(GstPad * pad, GstCaps * caps);
+
+/* bin functions */
+void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
+void            	gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
+
+/* buffer functions */
+GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
+void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
+void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
+
 
 G_END_DECLS
 
