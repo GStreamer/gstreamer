@@ -46,7 +46,7 @@ struct _GstFlxDec {
 
   gboolean active, new_meta;
 
-  GstBuffer *buf, *out, *delta, *frame;
+  GstBuffer *delta, *frame;
   GstByteStream *bs;
   gulong size;
   GstFlxDecState state;

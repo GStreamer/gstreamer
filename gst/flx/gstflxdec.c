@@ -180,7 +180,6 @@ gst_flxdec_init(GstFlxDec *flxdec)
 		  GST_PADTEMPLATE_GET (src_video_factory), "src");
   gst_element_add_pad(GST_ELEMENT(flxdec),flxdec->srcpad);
 
-  flxdec->buf = NULL;
   flxdec->bs = NULL;
   flxdec->frame = NULL;
   flxdec->delta = NULL;
@@ -545,8 +544,11 @@ gst_flxdec_loop (GstElement *element)
     flxdec->state = GST_FLXDEC_PLAYING;
   }
   else if (flxdec->state == GST_FLXDEC_PLAYING) {
+    GstBuffer *out;
 
     databuf = flx_get_data(flxdec, FlxFrameChunkSize);
+    if (!databuf)
+      return;
 
     flxfh = (FlxFrameChunk *) GST_BUFFER_DATA(databuf);
     
@@ -560,10 +562,9 @@ gst_flxdec_loop (GstElement *element)
           break;
 
         /* create 32 bits output frame */
-        flxdec->out = gst_buffer_new();
-        GST_BUFFER_DATA(flxdec->out) = g_malloc(flxdec->size * 4);
-        GST_BUFFER_SIZE(flxdec->out) = flxdec->size * 4;
-
+        out = gst_buffer_new();
+        GST_BUFFER_DATA(out) = g_malloc(flxdec->size * 4);
+        GST_BUFFER_SIZE(out) = flxdec->size * 4;
 
         /* decode chunks */
         flx_decode_chunks(flxdec, 
@@ -582,12 +583,12 @@ gst_flxdec_loop (GstElement *element)
         /* convert current frame. */
         flx_colorspace_convert(flxdec->converter,
              GST_BUFFER_DATA(flxdec->frame),
-             GST_BUFFER_DATA(flxdec->out));
+             GST_BUFFER_DATA(out));
 
-	GST_BUFFER_TIMESTAMP (flxdec->out) = flxdec->next_time;
+	GST_BUFFER_TIMESTAMP (out) = flxdec->next_time;
 	flxdec->next_time += flxdec->frame_time;
 
-        gst_pad_push(flxdec->srcpad, flxdec->out);
+        gst_pad_push(flxdec->srcpad, out);
         
         break;
     }
@@ -617,7 +618,9 @@ gst_flxdec_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_buffer_unref (flxdec->frame);
+      flxdec->frame = NULL;
       gst_buffer_unref (flxdec->delta);
+      flxdec->delta = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
       gst_bytestream_destroy (flxdec->bs);
