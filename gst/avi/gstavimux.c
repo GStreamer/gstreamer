@@ -44,19 +44,6 @@
 #define LE_FROM_GUINT32 GUINT32_FROM_LE
 #endif
 
-/* elementfactory information */
-static GstElementDetails 
-gst_avimux_details = 
-{
-  "Avi multiplexer",
-  "Codec/Muxer",
-  "LGPL",
-  "Muxes audio and video into an avi stream",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2002",
-};
-
 /* AviMux signals and args */
 enum {
   /* FILL ME */
@@ -202,6 +189,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
 )
     
 
+static void 	gst_avimux_base_init		     (gpointer g_class);
 static void 	gst_avimux_class_init		     (GstAviMuxClass *klass);
 static void 	gst_avimux_init			     (GstAviMux      *avimux);
 
@@ -232,7 +220,7 @@ gst_avimux_get_type (void)
   if (!avimux_type) {
     static const GTypeInfo avimux_info = {
       sizeof(GstAviMuxClass),      
-      NULL,
+      gst_avimux_base_init,
       NULL,
       (GClassInitFunc)gst_avimux_class_init,
       NULL,
@@ -244,6 +232,27 @@ gst_avimux_get_type (void)
     avimux_type = g_type_register_static(GST_TYPE_ELEMENT, "GstAviMux", &avimux_info, 0);
   }
   return avimux_type;
+}
+
+static void
+gst_avimux_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  static GstElementDetails gst_avimux_details = GST_ELEMENT_DETAILS (
+    "Avi multiplexer",
+    "Codec/Muxer",
+    "Muxes audio and video into an avi stream",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+  );
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (audio_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (video_sink_factory));
+
+  gst_element_class_set_details (element_class, &gst_avimux_details);
 }
 
 static void
@@ -1381,31 +1390,3 @@ gst_avimux_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
-{
-  GstElementFactory *factory;
-
-  if (!gst_library_load("gstvideo"))
-    return FALSE;
-
-  /* create an elementfactory for the avimux element */
-  factory = gst_element_factory_new ("avimux", GST_TYPE_AVIMUX,
-                                     &gst_avimux_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_sink_factory));
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
-}
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "avimux",
-  plugin_init
-};
