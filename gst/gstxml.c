@@ -87,6 +87,7 @@ xmlDocPtr gst_xml_write(GstElement *element) {
  */
 GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
   xmlDocPtr doc;
+  xmlNodePtr field;
   GstXML *xml;
 
   g_return_val_if_fail(fname != NULL, NULL);
@@ -104,6 +105,17 @@ GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
 
   xml = GST_XML(gtk_type_new(GST_TYPE_XML));
 
+  xml->elements = g_hash_table_new(g_str_hash, g_str_equal);
+
+  field = doc->root->childs;
+  
+  while (field) {
+    if (!strcmp(field->name, "element")) {
+      gst_element_load_thyself(field, xml->elements);
+    }
+    field = field->next;
+  }
+
   return xml;
 }
 
@@ -119,11 +131,14 @@ GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
  * Returns: a pointer to a new GstElement
  */
 GstElement *gst_xml_get_element(GstXML *xml, const guchar *name) {
+  GstElement *element;
 
   g_return_val_if_fail(xml != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  g_print("gstxml: getting element \"%s\" (implement me)\n", name);
+  g_print("gstxml: getting element \"%s\"\n", name);
 
-  return NULL;
+  element = g_hash_table_lookup(xml->elements, name);
+
+  return element;
 }

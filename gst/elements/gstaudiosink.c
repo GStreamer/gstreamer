@@ -153,7 +153,8 @@ void gst_audiosink_sync_parms(GstAudioSink *audiosink) {
 
   g_return_if_fail(audiosink != NULL);
   g_return_if_fail(GST_IS_AUDIOSINK(audiosink));
-  g_return_if_fail(audiosink->fd > 0);
+
+  if (audiosink->fd == -1) return;
 
   ioctl(audiosink->fd,SNDCTL_DSP_RESET,0);
 

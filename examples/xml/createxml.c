@@ -16,9 +16,11 @@ int main(int argc,char *argv[])
   gst_init(&argc,&argv);
 
   /* create a new thread to hold the elements */
-  thread = gst_thread_new("thread");
+  //thread = gst_thread_new("thread");
+  thread = gst_elementfactory_make("thread", "thread");
   g_assert(thread != NULL);
-  thread2 = gst_thread_new("thread2");
+  thread2 = gst_elementfactory_make("thread", "thread2");
+  //thread2 = gst_thread_new("thread2");
   g_assert(thread2 != NULL);
 
   /* create a new bin to hold the elements */

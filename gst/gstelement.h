@@ -127,7 +127,7 @@ struct _GstElementClass {
 
   /* create or read XML representation of self */
   xmlNodePtr (*save_thyself)(GstElement *element,xmlNodePtr parent);
-  void (*restore_thyself)(GstElement *element,xmlNodePtr *self);
+  void (*restore_thyself)(GstElement *element, xmlNodePtr self, GHashTable *elements);
 };
 
 struct _GstElementDetails {
@@ -148,7 +148,6 @@ struct _GstElementFactory {
   GList *src_types;
   GList *sink_types;
 };
-
 
 GtkType gst_element_get_type(void);
 GstElement *gst_element_new(void);
@@ -181,7 +180,7 @@ GstElementFactory *gst_element_get_factory(GstElement *element);
 
 /* XML write and read */
 xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent);
-
+GstElement *gst_element_load_thyself(xmlNodePtr parent, GHashTable *elements);
 
 GstElementFactory *gst_elementfactory_new(gchar *name,GtkType type,
                                           GstElementDetails *details);

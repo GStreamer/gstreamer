@@ -424,23 +424,72 @@ static void gst_pad_real_destroy(GtkObject *object) {
   g_list_free(pad->ghostparents);
 }
 
+
+/**
+ * gst_pad_handle_qos:
+ * @parent: the parent XML node to read the description from
+ * @element: the element that has the source pad
+ * @elements: a hashtable with elements
+ *
+ * Read the pad definition from the XML node and connect the given pad
+ * in element to a pad of an element in the hashtable.
+ *
+ * Returns: the new Pad definition.
+ */
+void gst_pad_load_and_connect(xmlNodePtr parent, GstObject *element, GHashTable *elements) {
+  xmlNodePtr field = parent->childs;
+  GstPad *pad, *targetpad;
+  guchar *peer;
+  gchar **split;
+  GstElement *target;
+
+  while (field) {
+    if (!strcmp(field->name, "name")) {
+      pad = gst_element_get_pad(GST_ELEMENT(element), xmlNodeGetContent(field));
+    }
+    else if (!strcmp(field->name, "peer")) {
+      peer = g_strdup(xmlNodeGetContent(field));
+    }
+    field = field->next;
+  }
+  g_return_if_fail(pad != NULL);
+  g_return_if_fail(peer != NULL);
+
+  split = g_strsplit(peer, ".", 2);
+
+  g_return_if_fail(split[0] != NULL);
+  g_return_if_fail(split[1] != NULL);
+
+  target = (GstElement *)g_hash_table_lookup(elements, split[0]);
+
+  if (target == NULL) goto cleanup;
+
+  targetpad = gst_element_get_pad(target, split[1]);
+
+  g_return_if_fail(targetpad != NULL);
+
+  gst_pad_connect(pad, targetpad);
+
+cleanup:
+  g_strfreev(split);
+}
+
+
 xmlNodePtr gst_pad_save_thyself(GstPad *pad,xmlNodePtr parent) {
-  xmlNodePtr self;
   GstPad *peer;
 
-  self = xmlNewChild(parent,NULL,"pad",NULL);
-  xmlNewChild(self,NULL,"name",pad->name);
+  xmlNewChild(parent,NULL,"name",pad->name);
   if (pad->peer != NULL) {
     peer = pad->peer;
     // first check to see if the peer's parent's parent is the same
-    if (pad->parent->parent == peer->parent->parent)
+    //if (pad->parent->parent == peer->parent->parent)
       // we just save it off
-      xmlNewChild(self,NULL,"peer",g_strdup_printf("%s.%s",
+      xmlNewChild(parent,NULL,"peer",g_strdup_printf("%s.%s",
                     GST_ELEMENT(peer->parent)->name,peer->name));
   } else
-    xmlNewChild(self,NULL,"peer","");
+    xmlNewChild(parent,NULL,"peer","");
 
-  return self;
+  return parent;
 }
 
 xmlNodePtr gst_pad_ghost_save_thyself(GstPad *pad,GstElement *bin,xmlNodePtr parent) {

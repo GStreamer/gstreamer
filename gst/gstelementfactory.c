@@ -17,6 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+//#define DEBUG_ENABLED
+
+#include <gst/gst.h>
+
 #include <gst/gstelement.h>
 #include <gst/gstplugin.h>
 
@@ -52,6 +56,8 @@ void gst_elementfactory_register(GstElementFactory *elementfactory) {
 GstElementFactory *gst_elementfactory_find(gchar *name) {
   GList *walk;
   GstElementFactory *factory;
+
+  DEBUG("gstelementfactory: find \"%s\"\n", name);
 
   gst_plugin_load_elementfactory(name);
 
@@ -118,11 +124,13 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
 
   g_return_val_if_fail(factory != NULL, NULL);
 
-  factory = gst_plugin_load_elementfactory(factory->name);
+  DEBUG("gstelementfactory: create \"%s\" \"%s\"\n", factory->name, name);
 
   if (factory->type == 0) {
-    factory = gst_elementfactory_find(name);
+    factory = gst_plugin_load_elementfactory(factory->name);
+    //factory = gst_elementfactory_find(factory->name);
   }
+  g_return_val_if_fail(factory != NULL, NULL);
   g_return_val_if_fail(factory->type != 0, NULL);
 
   // create an instance of the element
@@ -154,6 +162,8 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
 GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
   GstElementFactory *factory;
   GstElement *element;
+
+  DEBUG("gstelementfactory: make \"%s\" \"%s\"\n", factoryname, name);
 
   //gst_plugin_load_elementfactory(factoryname);
   factory = gst_elementfactory_find(factoryname);

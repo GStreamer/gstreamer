@@ -44,6 +44,8 @@ typedef struct _GstXMLClass GstXMLClass;
 
 struct _GstXML {
   GtkObject object;
+
+  GHashTable *elements;
 };
 
 struct _GstXMLClass {
@@ -59,6 +61,7 @@ xmlDocPtr gst_xml_write(GstElement *element);
 GstXML *gst_xml_new(const guchar *fname, const guchar *root);
 
 GstElement *gst_xml_get_element(GstXML *xml, const guchar *name);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -45,6 +45,7 @@ static void gst_bin_create_plan_func(GstBin *bin);
 static void gst_bin_iterate_func(GstBin *bin);
 
 static xmlNodePtr gst_bin_save_thyself(GstElement *element,xmlNodePtr parent);
+static void gst_bin_restore_thyself(GstElement *element, xmlNodePtr parent, GHashTable *elements);
 
 /* Bin signals and args */
 enum {
@@ -108,6 +109,7 @@ gst_bin_class_init(GstBinClass *klass) {
 
   gstelement_class->change_state = gst_bin_change_state;
   gstelement_class->save_thyself = gst_bin_save_thyself;
+  gstelement_class->restore_thyself = gst_bin_restore_thyself;
   gstelement_class->elementfactory = gst_elementfactory_find("bin");
 
   gtkobject_class->destroy = gst_bin_real_destroy;
@@ -337,11 +339,17 @@ GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name) {
   g_return_val_if_fail(GST_IS_BIN(bin), NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
+  g_print("gstbin: lookup element \"%s\" in \"%s\"\n", name, gst_element_get_name(bin));
   children = bin->children;
   while (children) {
     child = GST_ELEMENT(children->data);
     if (!strcmp(child->name,name))
       return child;
+    if (GST_IS_BIN(child)) {
+      GstElement *res = gst_bin_get_by_name(GST_BIN(child), name);
+      if (res) 
+        return res;
+    }
     children = g_list_next(children);
   }
 
@@ -363,7 +371,7 @@ GList *gst_bin_get_list(GstBin *bin) {
   return bin->children;
 }
 
-static xmlNodePtr gst_bin_save_thyself(GstElement *element,xmlNodePtr parent) {
+static xmlNodePtr gst_bin_save_thyself(GstElement *element, xmlNodePtr parent) {
   GstBin *bin = GST_BIN(element);
   xmlNodePtr childlist;
   GList *children;
@@ -380,7 +388,32 @@ static xmlNodePtr gst_bin_save_thyself(GstElement *element,xmlNodePtr parent) {
     gst_element_save_thyself(child,childlist);
     children = g_list_next(children);
   }
-	return childlist;
+  return childlist;
+}
+
+static void gst_bin_restore_thyself(GstElement *element, xmlNodePtr parent, GHashTable *elements) {
+  GstBin *bin = GST_BIN(element);
+  xmlNodePtr field = parent->childs;
+  xmlNodePtr childlist;
+
+  g_print("gstbin: restore \"%s\"\n", gst_element_get_name(element));
+
+  while (field) {
+    if (!strcmp(field->name, "children")) {
+      childlist = field->childs;
+      while (childlist) {
+        if (!strcmp(childlist->name, "element")) {
+          GstElement *element = gst_element_load_thyself(childlist, elements);
+
+	  gst_bin_add(bin, element);
+	}
+        childlist = childlist->next;
+      }
+    }
+
+    field = field->next;
+  }
+  
 }
 
 void gst_bin_use_cothreads(GstBin *bin, gboolean enabled) {
@@ -692,6 +725,8 @@ void gst_bin_iterate_func(GstBin *bin) {
     else {
       entries = bin->entries;
     }
+
+    g_assert(entries != NULL);
 
     while (entries) {
       entry = GST_ELEMENT(entries->data);

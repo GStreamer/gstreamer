@@ -119,6 +119,7 @@ GstBuffer *gst_pad_pull(GstPad *pad);
 void gst_pad_handle_qos(GstPad *pad, glong qos_message);
 
 xmlNodePtr gst_pad_save_thyself(GstPad *pad,xmlNodePtr parent);
+void gst_pad_load_and_connect(xmlNodePtr parent, GstObject *element, GHashTable *elements);
 
 
 #ifdef __cplusplus

@@ -52,6 +52,7 @@ static void gst_thread_get_arg(GtkObject *object,GtkArg *arg,guint id);
 static GstElementStateReturn gst_thread_change_state(GstElement *element);
 
 static xmlNodePtr gst_thread_save_thyself(GstElement *element,xmlNodePtr parent);
+static void gst_thread_restore_thyself(GstElement *element,xmlNodePtr parent, GHashTable *elements);
 
 static void gst_thread_prepare(GstThread *thread);
 static void gst_thread_signal_thread(GstThread *thread);
@@ -76,7 +77,7 @@ gst_thread_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    thread_type = gtk_type_unique(gst_bin_get_type(),&thread_info);
+    thread_type = gtk_type_unique(GST_TYPE_BIN,&thread_info);
   }
   return thread_type;
 }
@@ -93,13 +94,14 @@ gst_thread_class_init(GstThreadClass *klass) {
   gstelement_class = (GstElementClass*)klass;
   gstbin_class = (GstBinClass*)klass;
 
-  parent_class = gtk_type_class(gst_bin_get_type());
+  parent_class = gtk_type_class(GST_TYPE_BIN);
 
   gtk_object_add_arg_type("GstThread::create_thread", GTK_TYPE_BOOL,
                           GTK_ARG_READWRITE, ARG_CREATE_THREAD);
 
   gstelement_class->change_state = gst_thread_change_state;
   gstelement_class->save_thyself = gst_thread_save_thyself;
+  gstelement_class->restore_thyself = gst_thread_restore_thyself;
   gstelement_class->elementfactory = gst_elementfactory_find("thread");
 
   gstbin_class->create_plan = gst_thread_create_plan_dummy;
@@ -285,10 +287,17 @@ static void gst_thread_signal_thread(GstThread *thread) {
   g_mutex_unlock(thread->lock);
 }
 
+static void gst_thread_restore_thyself(GstElement *element,xmlNodePtr parent, GHashTable *elements) {
+
+  g_print("gstthread: restore\n");
+
+  if (GST_ELEMENT_CLASS(parent_class)->restore_thyself)
+    GST_ELEMENT_CLASS(parent_class)->restore_thyself(element,parent, elements);
+}
+
 static xmlNodePtr gst_thread_save_thyself(GstElement *element,xmlNodePtr parent) {
-  xmlNewChild(parent,NULL,"type","thread");
 
   if (GST_ELEMENT_CLASS(parent_class)->save_thyself)
     GST_ELEMENT_CLASS(parent_class)->save_thyself(element,parent);
-	return NULL;
+  return NULL;
 }

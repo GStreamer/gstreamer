@@ -14,6 +14,7 @@ int main(int argc,char *argv[])
 {
   GstXML *xml;
   GstElement *bin;
+  GstElement *disk;
 
   gst_init(&argc,&argv);
 

@@ -18,7 +18,7 @@
  */
 
 #include <gst/gstelement.h>
-
+#include <gst/gstxml.h>
 
 /* Element signals and args */
 enum {
@@ -429,7 +429,7 @@ static gchar *_gst_element_type_names[] = {
  * Returns: the new xml node
  */
 xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
-  xmlNodePtr self, arglist;
+  xmlNodePtr self;
   GList *pads;
   GstPad *pad;
   GstElementClass *oclass;
@@ -448,15 +448,15 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
 
   pads = element->pads;
   while (pads) {
+    xmlNodePtr padtag = xmlNewChild(self,NULL,"pad",NULL);
     pad = GST_PAD(pads->data);
     // figure out if it's a direct pad or a ghostpad
     if (GST_ELEMENT(pad->parent) == element)
-      gst_pad_save_thyself(pad,self);
+      gst_pad_save_thyself(pad,padtag);
     pads = g_list_next(pads);
   }
 
   // output all args to the element
-  arglist = xmlNewChild(self,NULL,"args",NULL);
   type = GTK_OBJECT_TYPE(element);
   while (type != GTK_TYPE_INVALID) {
     GtkArg *args;
@@ -470,7 +470,7 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
           (flags && GTK_ARG_READABLE)) {
         xmlNodePtr arg;
         gtk_object_getv(GTK_OBJECT(element),1,&args[i]);
-        arg = xmlNewChild(arglist,NULL,"arg",NULL);
+        arg = xmlNewChild(self,NULL,"arg",NULL);
         xmlNewChild(arg,NULL,"name",args[i].name);
         switch (args[i].type) {
           case GTK_TYPE_CHAR:
@@ -495,7 +495,7 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
             break;
           case GTK_TYPE_ULONG:
             xmlNewChild(arg,NULL,"value",
-                        g_strdup_printf("%ld",GTK_VALUE_ULONG(args[i])));
+                        g_strdup_printf("%lu",GTK_VALUE_ULONG(args[i])));
             break;
           case GTK_TYPE_FLOAT:
             xmlNewChild(arg,NULL,"value",
@@ -518,6 +518,143 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
     (oclass->save_thyself)(element,self);
 
   return self;
+}
+
+/**
+ * gst_element_load_thyself:
+ * @parent: the xml parent node
+ *
+ * load the element based on the XML description
+ *
+ * Returns: the new element
+ */
+GstElement *gst_element_load_thyself(xmlNodePtr parent, GHashTable *elements) {
+  xmlNodePtr children = parent->childs;
+  GstElement *element;
+  GstElementClass *oclass;
+  guchar *name = NULL;
+  guchar *value = NULL;
+  guchar *type = NULL;
+
+  // first get the needed tags to cunstruct the element
+  while (children) {
+    if (!strcmp(children->name, "name")) {
+      name = g_strdup(xmlNodeGetContent(children));
+    }
+    else if (!strcmp(children->name, "type")) {
+      type = g_strdup(xmlNodeGetContent(children));
+    }
+    children = children->next;
+  }
+  g_assert(name != NULL);
+  g_assert(type != NULL);
+
+  g_print("gstelement: loading \"%s\" of type \"%s\"\n", name, type);
+
+  element = gst_elementfactory_make(type, name);
+
+  g_assert(element != NULL);
+
+  g_hash_table_insert(elements, gst_element_get_name(element), element);
+
+  // we have the element now, set the arguments and pads
+  children = parent->childs;
+
+  while (children) {
+    if (!strcmp(children->name, "pad")) {
+      gst_pad_load_and_connect(children, GST_OBJECT(element), elements);
+    }
+    else if (!strcmp(children->name, "arg")) {
+      xmlNodePtr child = children->childs;
+
+      while (child) {
+        if (!strcmp(child->name, "name")) {
+          name = g_strdup(xmlNodeGetContent(child));
+	}
+	else if (!strcmp(child->name, "value")) {
+          value = g_strdup(xmlNodeGetContent(child));
+	}
+        child = child->next;
+      }
+      if (name && value) {
+        GtkType type = GTK_OBJECT_TYPE(element);
+	GtkArgInfo *info;
+	gchar *result;
+
+	result = gtk_object_arg_get_info(type, name, &info);
+
+	if (result) {
+          g_print("gstelement: %s\n", result);
+	}
+	else if (info->arg_flags & GTK_ARG_WRITABLE) {
+          switch (info->type) {
+            case GTK_TYPE_STRING:
+              gtk_object_set(GTK_OBJECT(element), name, value, NULL);
+	      break;
+            case GTK_TYPE_INT: {
+	      gint i;
+	      sscanf(value, "%d", &i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_LONG: {
+	      glong i;
+	      sscanf(value, "%ld", &i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_ULONG: {
+	      gulong i;
+	      sscanf(value, "%lu", &i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_BOOL: {
+	      gboolean i = FALSE;
+	      if (!strcmp("true", value)) i = TRUE;
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_CHAR: {
+	      gchar i;
+	      sscanf(value, "%c", &i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_UCHAR: {
+	      guchar i;
+	      sscanf(value, "%c", &i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_FLOAT: {
+	      gfloat i;
+	      sscanf(value, "%f", &i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            case GTK_TYPE_DOUBLE: {
+	      gdouble i;
+	      sscanf(value, "%g", (float *)&i);
+              gtk_object_set(GTK_OBJECT(element), name, i, NULL);
+	      break; 
+	    }
+            default:
+	      break;
+	  }
+
+	}
+      }
+    }
+    children = children->next;
+  }
+
+  oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
+
+  if (oclass->restore_thyself)
+    (oclass->restore_thyself)(element, parent, elements);
+
+  return element;
 }
 
 /**
