@@ -47,6 +47,7 @@ GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint32 len);
 GstBuffer*		gst_bytestream_peek		(GstByteStream *bs, guint32 len);
 guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
+void                    gst_bytestream_flush_fast       (GstByteStream * bs, guint32 len);
 
 void 			gst_bytestream_print_status	(GstByteStream *bs);
 

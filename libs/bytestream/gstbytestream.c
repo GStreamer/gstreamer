@@ -118,6 +118,10 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 
   bs_print ("get_next_buf: pulling buffer\n");
   nextbuf = gst_pad_pull (bs->pad);
+
+  if (!nextbuf)
+    return FALSE;
+
   bs_print ("get_next_buf: got buffer of %d bytes\n", GST_BUFFER_SIZE (nextbuf));
 
   // first see if there are any buffers in the list at all
@@ -175,7 +179,8 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
   // as long as we don't have enough, we get more buffers
   while (bs->listavail < len) {
     bs_print ("fill_bytes: there are %d bytes in the list, we need %d\n", bs->listavail, len);
-    gst_bytestream_get_next_buf (bs);
+    if (!gst_bytestream_get_next_buf (bs))
+      return FALSE;
   }
 
   return TRUE;
@@ -195,7 +200,8 @@ gst_bytestream_peek (GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("peek: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    gst_bytestream_fill_bytes (bs, len);
+    if (!gst_bytestream_fill_bytes (bs, len))
+      return NULL;
     bs_print ("peek: there are now %d bytes in the list\n", bs->listavail);
   }
   bs_status (bs);
@@ -243,7 +249,8 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("peek_bytes: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    gst_bytestream_fill_bytes (bs, len);
+    if (!gst_bytestream_fill_bytes (bs, len))
+      return NULL;
     bs_print ("peek_bytes: there are now %d bytes in the list\n", bs->listavail);
   }
   bs_status (bs);
@@ -309,19 +316,31 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
 gboolean
 gst_bytestream_flush (GstByteStream * bs, guint32 len)
 {
-  GstBuffer *headbuf;
-
   bs_print ("flush: flushing %d bytes\n", len);
-  if (bs->assembled) {
-    g_free (bs->assembled);
-    bs->assembled = NULL;
-  }
 
   // make sure we have enough
   bs_print ("flush: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    gst_bytestream_fill_bytes (bs, len);
+    if (!gst_bytestream_fill_bytes (bs, len))
+      return FALSE;
     bs_print ("flush: there are now %d bytes in the list\n", bs->listavail);
+  }
+
+  gst_bytestream_flush_fast (bs, len);
+
+  return TRUE;
+}
+
+void
+gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
+{
+  GstBuffer *headbuf;
+
+  g_assert (len <= bs->listavail);
+
+  if (bs->assembled) {
+    g_free (bs->assembled);
+    bs->assembled = NULL;
   }
 
   // repeat until we've flushed enough data
@@ -364,15 +383,17 @@ gst_bytestream_flush (GstByteStream * bs, guint32 len)
 
     bs_print ("flush: bottom of while(), len is now %d\n", len);
   }
-
-  return TRUE;
 }
 
 GstBuffer *
 gst_bytestream_read (GstByteStream * bs, guint32 len)
 {
   GstBuffer *buf = gst_bytestream_peek (bs, len);
-  gst_bytestream_flush (bs, len);
+  if (!buf)
+    return NULL;
+
+  gst_bytestream_flush_fast (bs, len);
+
   return buf;
 }
 
