@@ -181,7 +181,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   while (sinkpads) {
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
-    // if we have a match, connect the pads
+    /* if we have a match, connect the pads */
     if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
         !GST_PAD_CONNECTED (pad) && !GST_PAD_CONNECTED(sinkpad))
     {
@@ -258,7 +258,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
     res = gst_caps_check_compatibility ((GstCaps *)src, (GstCaps *)dest);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
+    /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res); */
   }
   else if (IS_CAPS (src)) {
     GstPadTemplate *templ;
@@ -270,7 +270,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
     else
       res = FALSE;
     
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
+    /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);*/
   }
   else if (IS_CAPS (dest)) {
     GstPadTemplate *templ;
@@ -281,7 +281,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
       res = TRUE;
     else
       res = FALSE;
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
+    /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);*/
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
@@ -368,7 +368,7 @@ next:
 
     chains = g_list_next (chains);
   }
-  //FIXME, free the list
+  /*FIXME, free the list */
 
   result = gst_bin_new ("autoplug_bin");
 
@@ -387,10 +387,10 @@ next:
     GstElementFactory *factory;
     GstElement *element;
 
-    // fase 3: add common elements
+    /* fase 3: add common elements */
     factory = (GstElementFactory *) (factories[0]->data);
 
-    // check to other paths for matching elements (factories)
+    /* check to other paths for matching elements (factories) */
     for (i=1; i<numsinks; i++) {
       if (factory != (GstElementFactory *) (factories[i]->data)) {
 	goto differ;
@@ -405,7 +405,7 @@ next:
     if (srcelement != NULL) {
       gst_autoplug_pads_autoplug (srcelement, element);
     }
-    // this is the first element, find a good ghostpad
+    /* this is the first element, find a good ghostpad */
     else {
       GList *pads;
 
@@ -427,7 +427,7 @@ next:
 
     srcelement = element;
 
-    // advance the pointer in all lists
+    /* advance the pointer in all lists */
     for (i=0; i<numsinks; i++) {
       factories[i] = g_list_next (factories[i]);
     }
@@ -437,7 +437,7 @@ next:
 
 differ:
 
-  // loop over all the sink elements
+  /* loop over all the sink elements */
   for (i = 0; i < numsinks; i++) {
     GstElement *thesrcelement = srcelement;
     GstElement *thebin = GST_ELEMENT(result);
@@ -450,7 +450,7 @@ differ:
     use_thread = have_common;
 
     while (factories[i] || sinkelement) {
-      // fase 4: add other elements...
+      /* fase 4: add other elements... */
       GstElementFactory *factory;
       GstElement *element;
 
@@ -465,7 +465,7 @@ differ:
 	sinkelement = NULL;
       }
 
-      // this element suggests the use of a thread, so we set one up...
+      /* this element suggests the use of a thread, so we set one up... */
       if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
         GstElement *queue;
         GstPad *srcpad;
@@ -475,11 +475,11 @@ differ:
 
         GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
 
-	// create a new queue and add to the previous bin
+	/* create a new queue and add to the previous bin */
         queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
         GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
 
-	// this will be the new bin for all following elements
+	/* this will be the new bin for all following elements */
         thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
 
         gst_bin_add(GST_BIN(thebin), queue);
@@ -497,7 +497,7 @@ differ:
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (thebin));
         thesrcelement = queue;
       }
-      // no thread needed, easy case
+      /* no thread needed, easy case */
       else {
 	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
@@ -505,7 +505,7 @@ differ:
       }
       gst_autoplug_pads_autoplug(thesrcelement, element);
 
-      // this element is now the new source element
+      /* this element is now the new source element */
       thesrcelement = element;
 
       factories[i] = g_list_next(factories[i]);

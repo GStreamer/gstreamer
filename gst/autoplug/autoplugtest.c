@@ -28,7 +28,7 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  // disconnect the typefind from the pipeline and remove it
+  /* disconnect the typefind from the pipeline and remove it */
   gst_element_disconnect(cache,"src",typefind,"sink");
   gst_bin_remove(GST_BIN(autobin),typefind);
 

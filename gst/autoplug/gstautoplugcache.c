@@ -134,13 +134,13 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_COUNT,
     g_param_spec_int("buffer_count","buffer_count","buffer_count",
-                     0,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME!
+                     0,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CAPS_PROXY,
     g_param_spec_boolean("caps_proxy","caps_proxy","caps_proxy",
-                         FALSE,G_PARAM_READWRITE)); // CHECKME!
+                         FALSE,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RESET,
     g_param_spec_boolean("reset","reset","reset",
-                         FALSE,G_PARAM_WRITABLE)); // CHECKME!
+                         FALSE,G_PARAM_WRITABLE)); /* CHECKME! */
 
   gst_autoplugcache_signals[FIRST_BUFFER] =
     g_signal_new ("first_buffer", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -164,16 +164,16 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
   gst_element_set_loop_function(GST_ELEMENT(cache), GST_DEBUG_FUNCPTR(gst_autoplugcache_loop));
 
   cache->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-//  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink);
+/*  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink); */
   gst_element_add_pad (GST_ELEMENT(cache), cache->sinkpad);
 
   cache->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-//  gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src);
+/*  gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src); */
   gst_element_add_pad (GST_ELEMENT(cache), cache->srcpad);
 
   cache->caps_proxy = FALSE;
 
-  // provide a zero basis for the cache
+  /* provide a zero basis for the cache */
   cache->cache = g_list_prepend(NULL, NULL);
   cache->cache_start = cache->cache;
   cache->buffer_count = 0;
@@ -204,29 +204,29 @@ gst_autoplugcache_loop (GstElement *element)
    */
 
   do {
-    // the first time through, the current_playout pointer is going to be NULL
+    /* the first time through, the current_playout pointer is going to be NULL */
     if (cache->current_playout == NULL) {
-      // get a buffer
+      /* get a buffer */
       buf = gst_pad_pull (cache->sinkpad);
 
-      // add it to the cache, though cache == NULL
+      /* add it to the cache, though cache == NULL */
       gst_buffer_ref (buf);
       cache->cache = g_list_prepend (cache->cache, buf);
       cache->buffer_count++;
 
-      // set the current_playout pointer
+      /* set the current_playout pointer */
       cache->current_playout = cache->cache;
 
       g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
 
-      // send the buffer on its way
+      /* send the buffer on its way */
       gst_pad_push (cache->srcpad, buf);
     }
 
-    // the steady state is where the playout is at the front of the cache
+    /* the steady state is where the playout is at the front of the cache */
     else if (g_list_previous(cache->current_playout) == NULL) {
 
-      // if we've been told to fire an empty signal (after a reset)
+      /* if we've been told to fire an empty signal (after a reset) */
       if (cache->fire_empty) {
         int oldstate = GST_STATE(cache);
         GST_DEBUG(0,"at front of cache, about to pull, but firing signal\n");
@@ -240,24 +240,24 @@ gst_autoplugcache_loop (GstElement *element)
         gst_object_unref (GST_OBJECT (cache));
       }
 
-      // get a buffer
+      /* get a buffer */
       buf = gst_pad_pull (cache->sinkpad);
 
-      // add it to the front of the cache
+      /* add it to the front of the cache */
       gst_buffer_ref (buf);
       cache->cache = g_list_prepend (cache->cache, buf);
       cache->buffer_count++;
 
-      // set the current_playout pointer
+      /* set the current_playout pointer */
       cache->current_playout = cache->cache;
 
-      // send the buffer on its way
+      /* send the buffer on its way */
       gst_pad_push (cache->srcpad, buf);
     }
 
-    // otherwise we're trundling through existing cached buffers
+    /* otherwise we're trundling through existing cached buffers */
     else {
-      // move the current_playout pointer
+      /* move the current_playout pointer */
       cache->current_playout = g_list_previous (cache->current_playout);
 
       if (cache->fire_first) {
@@ -265,7 +265,7 @@ gst_autoplugcache_loop (GstElement *element)
         cache->fire_first = FALSE;
       }
 
-      // push that buffer
+      /* push that buffer */
       gst_pad_push (cache->srcpad, GST_BUFFER(cache->current_playout->data));
     }
   } while (!GST_FLAG_IS_SET (element, GST_ELEMENT_COTHREAD_STOPPING));
@@ -291,7 +291,7 @@ gst_autoplugcache_nego_sink (GstPad *pad, GstCaps **caps, gpointer *data)
 static GstElementStateReturn
 gst_autoplugcache_change_state (GstElement *element)
 {
-  // FIXME this should do something like free the cache on ->NULL
+  /* FIXME this should do something like free the cache on ->NULL */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
@@ -318,14 +318,14 @@ GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
       }
       break;
     case ARG_RESET:
-      // no idea why anyone would set this to FALSE, but just in case ;-)
+      /* no idea why anyone would set this to FALSE, but just in case ;-) */
       if (g_value_get_boolean (value)) {
         GST_DEBUG(0,"resetting playout pointer\n");
-        // reset the playout pointer to the begining again
+        /* reset the playout pointer to the begining again */
         cache->current_playout = cache->cache_start;
-        // now we can fire a signal when the cache runs dry
+        /* now we can fire a signal when the cache runs dry */
         cache->fire_empty = TRUE;
-        // also set it up to fire the first_buffer signal again
+        /* also set it up to fire the first_buffer signal again */
         cache->fire_first = TRUE;
       }
       break;

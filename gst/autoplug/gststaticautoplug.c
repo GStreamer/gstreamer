@@ -154,7 +154,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   while (sinkpads) {
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
-    // if we have a match, connect the pads
+    /* if we have a match, connect the pads */
     if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
         !GST_PAD_CONNECTED(sinkpad))
     {
@@ -336,7 +336,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 
     chains = g_list_next (chains);
   }
-  //FIXME, free the list
+  /*FIXME, free the list */
 
   result = gst_bin_new ("autoplug_bin");
 
@@ -356,10 +356,10 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
     GstElement *element;
     gchar *name;
 
-    // fase 3: add common elements
+    /* fase 3: add common elements */
     factory = (GstElementFactory *) (factories[0]->data);
 
-    // check to other paths for matching elements (factories)
+    /* check to other paths for matching elements (factories) */
     for (i=1; i<numsinks; i++) {
       if (factory != (GstElementFactory *) (factories[i]->data)) {
 	goto differ;
@@ -384,7 +384,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
     if (srcelement != NULL) {
       gst_autoplug_pads_autoplug (srcelement, element);
     }
-    // this is the first element, find a good ghostpad
+    /* this is the first element, find a good ghostpad */
     else {
       GList *pads;
 
@@ -406,7 +406,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 
     srcelement = element;
 
-    // advance the pointer in all lists
+    /* advance the pointer in all lists */
     for (i=0; i<numsinks; i++) {
       factories[i] = g_list_next (factories[i]);
     }
@@ -416,13 +416,13 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 
 differ:
 
-  // loop over all the sink elements
+  /* loop over all the sink elements */
   for (i = 0; i < numsinks; i++) {
     GstElement *thesrcelement = srcelement;
     GstElement *thebin = GST_ELEMENT(result);
 
     while (factories[i]) {
-      // fase 4: add other elements...
+      /* fase 4: add other elements... */
       GstElementFactory *factory;
       GstElement *element;
 
@@ -437,7 +437,7 @@ differ:
       
       gst_autoplug_pads_autoplug(thesrcelement, element);
 
-      // this element is now the new source element
+      /* this element is now the new source element */
       thesrcelement = element;
 
       factories[i] = g_list_next(factories[i]);
