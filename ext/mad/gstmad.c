@@ -21,6 +21,7 @@
 
 #include <string.h>
 #include <mad.h>
+#include "id3tag.h"
 
 #define GST_TYPE_MAD \
   (gst_mad_get_type())
@@ -64,6 +65,8 @@ struct _GstMad {
   gint		 vbr_average; /* average bitrate */
   guint64	 vbr_rate; /* average * framecount */
 
+  GstCaps	*metadata;
+
   /* caps */
   gboolean	 caps_set;
 };
@@ -98,6 +101,7 @@ enum {
   ARG_SAMPLERATE,
   ARG_CHANNELS,
   ARG_AVERAGE_BITRATE,
+  ARG_METADATA,
   /* FILL ME */
 };
 
@@ -294,6 +298,9 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_CHANNELS,
     g_param_spec_enum ("channels", "Channels", "number of channels",
                        GST_TYPE_MAD_CHANNELS, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_METADATA,
+    g_param_spec_boxed ("metadata", "Metadata", "Metadata",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
 }
 
 static void
@@ -723,6 +730,9 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
     case ARG_CHANNELS:
       g_value_set_enum (value, mad->channels);
       break;
+    case ARG_METADATA:
+      g_value_set_boxed (value, mad->metadata);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -735,7 +745,7 @@ gst_mad_update_info (GstMad *mad)
   gint abr = mad->vbr_average;
   struct mad_header *header = &mad->frame.header;
 
-#define CHECK_HEADER(h1,str) 				\
+#define CHECK_HEADER(h1,str) 					\
 G_STMT_START{							\
   if (mad->header.h1 != header->h1 || mad->new_header) {	\
     mad->header.h1 = header->h1;				\
@@ -773,6 +783,139 @@ G_STMT_START{							\
   g_object_thaw_notify (G_OBJECT (mad));
   
 #undef CHECK_HEADER
+}
+
+/* gracefuly ripped from madplay */
+static GstCaps* 
+id3_to_caps(struct id3_tag const *tag)
+{
+  unsigned int i;
+  struct id3_frame const *frame;
+  id3_ucs4_t const *ucs4;
+  id3_latin1_t *latin1;
+  GstProps *props;
+  GstPropsEntry *entry;
+  GstCaps *caps;
+  GList *values;
+
+  struct {
+    char const *id;
+    char const *name;
+  } const info[] = {
+    { ID3_FRAME_TITLE,   "Title"        },
+    { "TIT3",            "Subtitle"     },
+    { "TCOP",            "Copyright"    },
+    { "TPRO",            "Produced"     },
+    { "TCOM",            "Composer"     },
+    { ID3_FRAME_ARTIST,  "Artist"       },
+    { "TPE2",            "Orchestra"    },
+    { "TPE3",            "Conductor"    },
+    { "TEXT",            "Lyricist"     },
+    { ID3_FRAME_ALBUM,   "Album"        },
+    { ID3_FRAME_YEAR,    "Year"         },
+    { ID3_FRAME_TRACK,   "Track"        },
+    { "TPUB",            "Publisher"    },
+    { ID3_FRAME_GENRE,   "Genre"        },
+    { "TRSN",            "Station"      },
+    { "TENC",            "Encoder"      },
+  };
+
+  /* text information */
+  props = gst_props_empty_new ();
+
+  for (i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+    union id3_field const *field;
+    unsigned int nstrings, namelen, j;
+    char const *name;
+
+    frame = id3_tag_findframe(tag, info[i].id, 0);
+    if (frame == 0)
+      continue;
+
+    field    = &frame->fields[1];
+    nstrings = id3_field_getnstrings(field);
+
+    name = info[i].name;
+
+    if (name) {
+      namelen = name ? strlen(name) : 0;
+
+      values = NULL;
+      for (j = 0; j < nstrings; ++j) {
+        ucs4 = id3_field_getstrings(field, j);
+        g_assert(ucs4);
+
+        if (strcmp(info[i].id, ID3_FRAME_GENRE) == 0)
+	  ucs4 = id3_genre_name(ucs4);
+
+        latin1 = id3_ucs4_latin1duplicate(ucs4);
+        if (latin1 == 0)
+	  goto fail;
+
+        entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, latin1, NULL);
+	values = g_list_prepend (values, entry);
+        free(latin1);
+      }
+      if (values) {
+        values = g_list_reverse (values);
+
+        if (g_list_length (values) == 1) {
+          gst_props_add_entry (props, (GstPropsEntry *) values->data);
+        }
+        else {
+          entry = gst_props_entry_new(name, GST_PROPS_LIST_TYPE, values, NULL);
+          gst_props_add_entry (props, (GstPropsEntry *) entry);
+        }
+        g_list_free (values);
+      }
+    }
+  }
+
+  values = NULL;
+  i = 0;
+  while ((frame = id3_tag_findframe(tag, ID3_FRAME_COMMENT, i++))) {
+    ucs4 = id3_field_getstring(&frame->fields[2]);
+    g_assert(ucs4);
+
+    if (*ucs4)
+      continue;
+
+    ucs4 = id3_field_getfullstring(&frame->fields[3]);
+    g_assert(ucs4);
+
+    latin1 = id3_ucs4_latin1duplicate(ucs4);
+    if (latin1 == 0)
+      goto fail;
+
+    entry = gst_props_entry_new ("Comment", GST_PROPS_STRING_TYPE, latin1, NULL);
+    values = g_list_prepend (values, entry);
+  }
+  if (values) {
+    values = g_list_reverse (values);
+
+    if (g_list_length (values) == 1) {
+      gst_props_add_entry (props, (GstPropsEntry *) values->data);
+    }
+    else {
+      entry = gst_props_entry_new("Comment", GST_PROPS_LIST_TYPE, values, NULL);
+      gst_props_add_entry (props, (GstPropsEntry *) entry);
+    }
+    g_list_free (values);
+  }
+
+  gst_props_debug (props);
+
+  caps = gst_caps_new ("mad_metadata",
+		       "application/x-gst-metadata",
+		       props);
+  if (0) {
+fail:
+    g_warning("mad: could not parse ID3 tag");
+
+    return NULL;
+  }
+
+  return caps;
 }
 
 static void
@@ -877,6 +1020,33 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
           gst_element_error (GST_ELEMENT (mad), "fatal error decoding stream");
           return;
         }
+	else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
+	  signed long tagsize;
+
+	  tagsize = id3_tag_query (mad->stream.this_frame,
+	                          mad->stream.bufend - mad->stream.this_frame);
+
+	  if (tagsize > mad->tempsize) {
+            GST_INFO (GST_CAT_PLUGIN_INFO, "mad: got partial id3 tag in buffer, skipping");
+	  }
+	  else if (tagsize > 0) {
+	    struct id3_tag *tag;
+	    id3_byte_t const *data;
+
+            GST_INFO (GST_CAT_PLUGIN_INFO, "mad: got ID3 tag size %ld", tagsize);
+
+	    data = mad->stream.this_frame;
+	  
+	    mad_stream_skip(&mad->stream, tagsize);
+
+	    tag = id3_tag_parse (data, tagsize);
+	    if (tag) {
+	      mad->metadata = id3_to_caps (tag);
+	      id3_tag_delete (tag);
+	      g_object_notify (G_OBJECT (mad), "metadata");
+	    }
+	  }
+	}
 	mad_frame_mute (&mad->frame);
 	mad_synth_mute (&mad->synth);
 	mad_stream_sync (&mad->stream);
@@ -896,32 +1066,35 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
       gst_mad_update_info (mad);
 
-      outbuffer = gst_buffer_new ();
-      outdata = (gint16 *) GST_BUFFER_DATA (outbuffer) = g_malloc (nsamples * nchannels * 2);
-      GST_BUFFER_SIZE (outbuffer) = nsamples * nchannels * 2;
+      if (GST_PAD_IS_CONNECTED (mad->srcpad)) {
 
+        outbuffer = gst_buffer_new_and_alloc (nsamples * nchannels * 2);
+        outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
-      if (mad->frame.header.samplerate == 0) {
-	g_warning ("mad->frame.header.samplerate is 0 !");
-      }
-      else {
-        GST_BUFFER_TIMESTAMP (outbuffer) = mad->base_time + 
-			 mad->total_samples * GST_SECOND / mad->frame.header.samplerate;
-      }
-
-      mad->total_samples += nsamples;
-
-      /* end of new bit */
-      while (nsamples--) {
-        /* output sample(s) in 16-bit signed native-endian PCM */
-        *outdata++ = scale(*left_ch++) & 0xffff;
-
-        if (nchannels == 2) {
-          *outdata++ = scale(*right_ch++) & 0xffff;
+        if (mad->frame.header.samplerate == 0) {
+	  g_warning ("mad->frame.header.samplerate is 0 !");
         }
-      }
-      if (mad->caps_set == FALSE) {
-        if (gst_pad_try_set_caps (mad->srcpad,
+        else {
+          GST_BUFFER_TIMESTAMP (outbuffer) = mad->base_time + 
+			 mad->total_samples * GST_SECOND / mad->frame.header.samplerate;
+        }
+
+        mad->total_samples += nsamples;
+
+        /* output sample(s) in 16-bit signed native-endian PCM */
+        if (nchannels == 1) {
+          while (nsamples--) {
+            *outdata++ = scale(*left_ch++) & 0xffff;
+          }
+	}
+	else {
+          while (nsamples--) {
+            *outdata++ = scale(*left_ch++) & 0xffff;
+            *outdata++ = scale(*right_ch++) & 0xffff;
+          }
+        }
+        if (mad->caps_set == FALSE) {
+          if (gst_pad_try_set_caps (mad->srcpad,
   	      gst_caps_new (
   	        "mad_src",
                 "audio/raw",
@@ -939,16 +1112,15 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 #endif
                   "channels",    GST_PROPS_INT (nchannels),
                   NULL))) <= 0) {
-          gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
+            gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
+          }
+          mad->caps_set = TRUE;
         }
-        mad->caps_set = TRUE;
-      }
 
-      if (GST_PAD_IS_CONNECTED (mad->srcpad)) {
         gst_pad_push (mad->srcpad, outbuffer);
       }
       else {
-	gst_buffer_unref (outbuffer);
+        mad->total_samples += nsamples;
       }
 
       if (mad->restart) {
