@@ -1,5 +1,21 @@
 /* GStreamer
  * Copyright (C) <2002> Iain Holmes <iain@prettypeople.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
  */
 
 #include <string.h>
@@ -49,7 +65,7 @@ struct wave_header {
 static GstElementDetails gst_wavenc_details = {
   "WAV encoder",
   "Codec/Encoder",
-  "GPL",
+  "LGPL",
   "Encode raw audio into WAV",
   VERSION,
   "Iain Holmes <iain@prettypeople.org>",
@@ -144,6 +160,7 @@ gst_wavenc_class_init (GstWavEncClass *klass)
 }
 
 static gboolean
+146
 gst_wavenc_setup (GstWavEnc *wavenc)
 {
   struct wave_header wave;
@@ -187,7 +204,7 @@ gst_wavenc_setup (GstWavEnc *wavenc)
   wavenc->setup = TRUE;
   return TRUE;
 }
-
+190
 static GstPadConnectReturn
 gst_wavenc_sinkconnect (GstPad *pad,
 			GstCaps *caps)
