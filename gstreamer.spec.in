@@ -148,7 +148,7 @@ Plugin for supporting reading and writing all files audiofile support
 Summary: Gstreamer plugin for AVI format movie playback
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
-Requires: avifile = 0.53.5
+Requires: avifile = 0.6.20011111DD
 
 %description -n gstreamer-avi
 Plugins for playback of AVI format media files.
