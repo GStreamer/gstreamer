@@ -1,5 +1,11 @@
 2004-05-18  David Schleef  <ds@schleef.org>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_header):  Patch from dcm@acm.org (David Moore)
+	to allow qtdemux to use non-seekable streams. (bug #142272)
+
+2004-05-18  David Schleef  <ds@schleef.org>
+
 	* gst-libs/gst/resample/resample.c: (gst_resample_sinc_ft_s16),
 	(gst_resample_sinc_ft_float): Remove use of static temporary
 	buffer.  This code was obviously not supposed to last long, but
