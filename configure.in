@@ -269,14 +269,13 @@ AC_PATH_PROG(AUDIOFILE_CONFIG, audiofile-config, no)
 if test x$AUDIOFILE_CONFIG = xno; then
   AC_MSG_WARN(Couldn't find audiofile-config: can't build afsink)
   AUDIOFILE_LIBS=
-  HAVE_LIBAUDIOFILE=false
+  HAVE_LIBAUDIOFILE=no
 else
   AC_MSG_WARN(did find audiofile-config: delete this msg)
   AUDIOFILE_LIBS=`audiofile-config --libs`
-  HAVE_LIBAUDIOFILE=true
+  HAVE_LIBAUDIOFILE=yes
 fi
 AC_SUBST(AUDIOFILE_LIBS)
-AC_SUBST(HAVE_LIBAUDIOFILE)
 
 alsa_save_LIBS=$LIBS
 alsa_save_CFLAGS=$CFLAGS
@@ -952,6 +951,7 @@ plugins/Makefile
 plugins/aasink/Makefile
 plugins/alsa/Makefile
 plugins/au/Makefile
+plugins/audiofile/Makefile
 plugins/audioscale/Makefile
 plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
@@ -1026,6 +1026,7 @@ plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
 plugins/artsd/Makefile
+plugins/quicktime/Makefile
 plugins/xmms/Makefile
 plugins/arts/Makefile
 plugins/1394/Makefile
