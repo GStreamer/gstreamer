@@ -1123,11 +1123,13 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
       for (i = 0; i < avi_demux->num_streams; i++) {
         avi_stream_context *stream = &avi_demux->stream[i];
 
-	GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
+	if (GST_PAD_IS_USABLE (stream->pad)) {
+	  GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
 			avi_demux->last_seek, stream->delay, avi_demux->last_seek + stream->delay);
-        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			avi_demux->last_seek + stream->delay , NULL);
-	gst_pad_push (stream->pad, GST_BUFFER (discont));
+	  gst_pad_push (stream->pad, GST_BUFFER (discont));
+	}
       }
       break;
     }
