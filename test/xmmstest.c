@@ -18,9 +18,9 @@ main (int argc,char *argv[])
 
   bin = gst_bin_new("bin");
 
-  //src = gst_elementfactory_make("XMMS_INPUT_mpeg_layer_1/2/3_player_1.2.4", "xmms_plugin");
+  src = gst_elementfactory_make("XMMS_INPUT_mpeg_layer_1/2/3_player_1.2.4", "xmms_plugin");
   //src = gst_elementfactory_make("XMMS_INPUT_oggvorbis_player_0.1", "xmms_plugin");
-  src = gst_elementfactory_make("XMMS_INPUT_mikmod_player_1.2.4", "xmms_plugin");
+  //src = gst_elementfactory_make("XMMS_INPUT_mikmod_player_1.2.4", "xmms_plugin");
   //src = gst_elementfactory_make("XMMS_INPUT_tone_generator_1.2.4", "xmms_plugin");
   g_return_val_if_fail(src != NULL, -1);
 

@@ -378,6 +378,13 @@ AC_CHECK_HEADER(xaudio/decoder.h,
 )
 
 dnl Check for libvorbis
+AC_MSG_CHECKING(MAD library)
+AC_CHECK_LIB(mad, mad_decoder_finish, 
+HAVE_LIBMAD=yes 
+AC_DEFINE(HAVE_LIBMAD),
+HAVE_LIBMAD=no, )
+
+dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
 AC_CHECK_LIB(vorbis, ogg_sync_init, 
 HAVE_VORBIS=yes 
@@ -391,6 +398,12 @@ HAVE_LIBJPEG=yes
 AC_DEFINE(HAVE_LIBJPEG),
 HAVE_LIBJPEG=no, )
 
+dnl Check for libvorbis
+AC_MSG_CHECKING(Hermes library)
+AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, 
+HAVE_LIBHERMES=yes 
+AC_DEFINE(HAVE_LIBHERMES),
+HAVE_LIBHERMES=no, )
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
@@ -654,11 +667,13 @@ AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_OSS,            test "x$HAVE_OSS" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
+AM_CONDITIONAL(HAVE_LIBMAD,         test "x$HAVE_LIBMAD" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
 AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
+AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
@@ -784,6 +799,7 @@ plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
 plugins/mp3decode/xa/Makefile
 plugins/mp3decode/mpg123/Makefile
+plugins/mp3decode/mad/Makefile
 plugins/mp3decode/parse/Makefile
 plugins/mp3encode/Makefile
 plugins/mp3encode/lame/Makefile
