@@ -1,0 +1,190 @@
+<sect1 id="chapter-developing">
+  <title id="title-developing">Developing applications with GStreamer</title>
+
+  <qandaset defaultlabel="qandaset-developing">
+
+    <qandaentry>
+      <question id="developing-compile-programs">
+        <para>How do I compile programs that use GStreamer ?</para>
+      </question>
+
+      <answer>
+        <para>
+GStreamer uses pkg-config to assist applications with compilationa and 
+linking flags. 
+pkg-config is already used by GTK+, GNOME, SDL, and others; so if you are 
+familiar with using it for any of those, you're set.
+        </para>
+        <para>
+If you're not familiar with pkg-config to compile and link a small 
+one-file program, pass the --cflags and --libs arguments to pkg-config.
+For example:
+<programlisting>
+$ gcc `pkg-config --cflags --libs gstreamer` -o myprog myprog.c
+</programlisting>
+would be sufficient for a gstreamer-only program. 
+If (for example) your app also used GTK+ 2.0, you could use
+<programlisting>
+$ gcc `pkg-config --cflags --libs gstreamer gtk+-2.0` -o myprog myprog.c
+</programlisting>
+Those are back-ticks (on the same key with the tilde on US keyboards), 
+not single quotes.
+        </para>
+        <para>
+For bigger projects, you should integrate pkg-config use in your Makefile,
+or integrate with autoconf using the pkg.m4 macro.
+        </para>
+      </answer>
+    </qandaentry>
+
+     <qandaentry>
+      <question id="developing-gconf">
+        <para>How can I use GConf to get the system-wide defaults ?</para>
+      </question>
+
+      <answer>
+        <para>
+It's a good idea to use GConf to use default ways of outputting audio and
+video.  Since GStreamer's GConf keys can be more than
+just one element, but a whole pipeline, it would be a good idea
+to use the gstgconf library.  It provides functions to parse the GConf key
+to a usable pipeline.
+        </para>
+        <para>
+To link against gstgconf, use pkg-config to query the gstreamer-libs.pc file
+for link flags, and add -lgstgconf to the link flags.
+This fragment of configure.ac shows how to use pkg-config to get the LIBS:
+        </para>
+<programlisting>
+dnl check for GStreamer helper libs
+PKG_CHECK_MODULES(GST_HELPLIBS, gstreamer-libs >= $GSTREAMER_REQ,,exit)
+AC_SUBST(GST_HELPLIBS_LIBS)
+AC_SUBST(GST_HELPLIBS_CFLAGS)
+</programlisting>
+        <para>
+This fragment of a Makefile.am file shows how to make your application link
+to it:
+        </para>
+<programlisting>
+bin_PROGRAMS = application
+
+application_LDADD = $(GST_LIBS) $(GST_HELPLIBS_LIBS) -lgstgconf
+application_CFLAGS = $(GST_CFLAGS) $(GST_HELPLIBS_CFLAGS)
+</programlisting>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="developing-libtool-scripts">
+        <para>
+How do I debug these funny shell scripts that libtool makes ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+When you link a program against uninstalled GStreamer using libtool, 
+funny shell scripts are made to modify your shared object search path 
+and then run your program. For instance, to debug gst-launch, try 
+<programlisting>
+libtool gdb /path/to/gstreamer-launch
+</programlisting>. 
+If this does not work, you're probably using a broken version of libtool. 
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="developing-mail-gstreamer-devel">
+        <para>Why is mail traffic so low on gstreamer-devel ?</para>
+      </question>
+
+      <answer>
+        <para>
+Our main arena for coordination and discussion is IRC, not email. 
+Join us in #gstreamer on irc.freenode.net
+For larger picture questions or getting more input from more persons,
+a mail to gstreamer-devel is never a bad idea.
+However, we do archive our IRC discussions, which you may find in the 
+gstreamer-daily mailing list archives.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="developing-versioning">
+        <para>What kind of versioning scheme does GStreamer use ?</para>
+      </question>
+
+      <answer>
+        <para>
+For public releases, GStreamer uses a standard MAJOR.MINOR.MICRO version 
+scheme.  If the release consists of mostly bug fixes or incremental changes, 
+the MICRO version is incremented.
+If the release contains big changes, the MINOR version is incremented.
+If we're particularly giddy, we might even increase the MAJOR number.  
+Don't hold your breath for that though.
+        </para>
+        <para>
+During the development cycle, GStreamer also uses a fourth or NANO number.
+If this number is 1, then it's a CVS version.  
+Any tarball or package that has a nano number of 1 is made from CVS and thus 
+not supported.  Additionally, if you didn't get this package or tarball from
+the GStreamer team, don't have high hopes on it doing whatever you want it
+to do.
+        </para>
+        <para>
+If the number is 2 or higher, it's an official pre-release in preparation 
+of an actual complete release.  Your help in testing these tarballs and
+packages is very much appreciated.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="developing-coding-style">
+        <para>What is the coding style for GStreamer core ?</para>
+      </question>
+
+      <answer>
+        <para>
+The core is basically coded in K&amp;R with 2-space indenting. 
+Just follow what's already there and you'll be fine. 
+The core could use a code cleanup though at this point.
+        </para>
+        <para>
+Individual plugins in gst-plugins or plugins that you want considered for
+addition to the gst-plugins module should be coded in the same style.
+It's easier if everything is consistent. Consistency is, of course, the goal. 
+        </para>
+        <para>
+If you use emacs, try these lines:
+<programlisting>
+(defun gstreamer-c-mode ()
+  "C mode with adjusted defaults for use with GStreamer."
+  (interactive)
+  (c-mode)
+  (c-set-style "K&amp;R")
+  (setq c-basic-offset 2))
+
+(setq auto-mode-alist (cons '("gst.*/.*\\.[ch]$" . gstreamer-c-mode)
+                       auto-mode-alist))
+</programlisting>
+        </para>
+        <para>
+Or, run your code through 
+<programlisting>
+indent -br -bad -cbi0 -cli2 -bls -l100 -ut -ce
+</programlisting>
+before submitting a patch (FIXME: check if these are indeed the proper options).
+        </para>
+        <para>
+As for the code itself, the 
+<ulink url="http://developer.gnome.org/doc/guides/programming-guidelines/book1.html">GNOME coding guidelines</ulink> is a good read.
+Where possible, we try to adhere to the spirit of GObject and use similar
+coding idioms.
+        </para>
+      </answer>
+    </qandaentry>
+  </qandaset>
+</sect1>

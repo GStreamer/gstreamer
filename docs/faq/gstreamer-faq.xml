@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+          "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+
+<!ENTITY START SYSTEM "start.xml">
+<!ENTITY GENERAL SYSTEM "general.xml">
+<!ENTITY DEPENDENCIES SYSTEM "dependencies.xml">
+<!ENTITY GETTING SYSTEM "getting.xml">
+<!ENTITY USING SYSTEM "using.xml">
+<!ENTITY DEVELOPING SYSTEM "developing.xml">
+<!ENTITY TROUBLESHOOTING SYSTEM "troubleshooting.xml">
+
+]>
+
+<article class="faq">
+  <articleinfo>
+    <title>GStreamer FAQ</title>
+    <abstract>
+      <para>
+        This is the FAQ for GStreamer, a multimedia framework.
+        Questions and answers range from general information to
+        deep-down-and-dirty compilation issues.
+      </para>
+    </abstract>
+    
+    <revhistory>
+      <revision>
+        <revnumber>0.1</revnumber>
+        <date>2002-10-01</date>
+        <revremark>Initial conversion from FAQ database.</revremark>
+      </revision>
+    </revhistory>
+
+  </articleinfo>
+
+  &START;
+  &GENERAL;
+  &DEPENDENCIES;
+  &GETTING;
+  &USING;
+  &DEVELOPING;
+  &TROUBLESHOOTING;
+
+</article>

@@ -1,0 +1,130 @@
+<sect1 id="chapter-dependencies">
+  <title id="title-dependencies">Dependencies</title>
+  <qandaset>
+
+    <qandaentry>
+      <question id="dependencies-why-so-many">
+        <para>Why are there so many dependencies ?</para>
+      </question>
+
+      <answer>
+        <para>
+Making a full-featured media framework is a huge undertaking in itself.
+By using the work done by others, we both reduce the amount of redundant work 
+being done and leave ourselves free to work on the architecture itself 
+instead of working on the low-level stuff.  We would be stupid not to reuse
+the code others have written.
+        </para>
+        <para>
+However, do realize that in no way you are forced to have all dependencies
+installed.  Nono of the core developers has all of them installed.  GStreamer
+has only a few obligate dependencies : GLib 2.0, popt >= 1.6.0, and very
+common stuff like glibc, a C compiler, and so on.  All of the other
+dependencies are optional.
+        </para>
+        <para>
+So, in closing, let's rephrase the question to 
+<quote>Why are you giving me so many choices and such a rich environment ?
+</quote>
+        </para>
+      </answer>
+    </qandaentry>
+
+<qandaentry>
+      <question id="dependencies-glib">
+        <para>
+Does GStreamer use GTK+ 1.2/GLib 1.2 or GLib 2.0 ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+Since the 0.3.3 release of GStreamer, we use GLib 2.0 as the core library 
+for GStreamer, which features a move of GObject from GTK+ 2.0 to GLib 2.0.
+If you want to compile using GTK+ 1.2/GLib 1.2,  you need to get the 
+0.3.1 or earlier release.   It is of course not supported.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="dependencies-dxr">
+        <para>
+Does GStreamer offer support for DVD decoder cards like dxr2/3 ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+We do have support for the dxr3, although dxr2 support is unkown. 
+GStreamer can easily accomodate hardware acceleration by writing new 
+device-specific elements.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="dependencies-x">
+        <para>Is GStreamer X independent ?</para>
+      </question>
+
+      <answer>
+        <para>
+Yes, we have no X dependency in any of our core modules. There are GStreamer
+applications that run fine without any need for X.  However, until our Linux 
+Framebuffer or libsvga plugin is ready, you will not be able to play videos 
+without X. In the future, there will probably be lots of different output 
+plugins for video available.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="dependencies-ladspa">
+        <para>What is GStreamer's position on efforts such as LADSPA ?</para>
+      </question>
+
+      <answer>
+        <para>
+GStreamer actively supports such efforts, and in the case of 
+<ulink url="http://ladspa.org/"><citetitle>LADPSA</citetitle></ulink>,
+we already have a wrapper plugin.  This wrapper plug-in detects the LADSPA
+plugins present on your system at register time.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="dependencies-midi">
+        <para>Does GStreamer support MIDI ?</para>
+      </question>
+
+      <answer>
+        <para>
+Not yet. The GStreamer architecture should be able to support the needs of 
+MIDI applications very well however. If you are a developer interested in 
+adding MIDI support to GStreamer we are very interested in getting in touch 
+with you.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="dependencies-gnome">
+        <para>Does GStreamer depend on GNOME ?</para>
+      </question>
+
+      <answer>
+        <para>
+No. But many of the applications developed for GStreamer do, including our 
+sample applications. There is nothing hindering people from developing 
+applications using other toolkits however and we would happily help promote 
+such efforts. A good example of an application using GStreamer, but which is 
+not using GNOME is the 
+<ulink url="http://mozstreamer.mozdev.org"><citetitle>
+Mozstreamer</citetitle></ulink> which uses Mozilla XUL.
+        </para>
+      </answer>
+    </qandaentry>
+  </qandaset>
+</sect1>

@@ -1,0 +1,189 @@
+<sect1 id="chapter-general">
+  <title id="title-general">General</title>
+  <qandaset>
+
+    <qandaentry>
+      <question id="general-media-player">
+        <para>Is GStreamer a media player ?</para>
+      </question>
+
+      <answer>
+        <para>
+No, GStreamer is a development framework for creating applications like 
+media players, video editors, streaming media broadcasters and so on. 
+That said, very good media players can easily be built on top
+of GStreamer and we even include a simple yet functional media player 
+with GStreamer, called gst-player.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-why-c">
+        <para>
+Why is GStreamer written in C ? Why not C++/Objective-C/... ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+We like C. Aside from "personal preference", there are a number of technical 
+reasons why C is nice in this project:
+<itemizedlist>
+<listitem>C is extremely portable.</listitem>
+<listitem>C is fast.</listitem>
+<listitem>It is easy to make language bindings for libraries written in C.
+</listitem>
+<listitem>The GObject object system provided by GLib implements objects in C, 
+in a portable, powerful way. This library provides for introspection and 
+runtime dynamic typing. It is a full OO system, but without the syntactic 
+sugar. If you want sugar, take a look at 
+<ulink url="http://www.5z.com/jirka/gob.html">GOB</ulink>.</listitem>
+<listitem>Use of C integrates nicely with Gtk+ and GNOME. Some people like 
+this a lot, but neither Gtk+ nor GNOME are required by GStreamer.</listitem>
+</itemizedlist>
+</para>
+<para>
+So, in closing, we like C. If you don't, that's fine; if you still want to 
+help out on GStreamer, we always need more language binding people. And if 
+not, don't bother us; we're working :-)
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-applications">
+        <para>What applications are available for GStreamer ?</para>
+      </question>
+      <answer>
+        <para>
+GStreamer is still very early in its development, but already we see some 
+really nice applications being developed in parallel with GStreamer. 
+Both gst-player and gst-editor are very closely linked to GStreamer itself
+for obvious reasons.
+For a list of some of the more advanced projects, look at the list
+in our <ulink url="http://gstreamer.net/status/">Status table</ulink>.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-licensing">
+        <para>
+What are the exact licensing terms for GStreamer and its plugins ?
+        </para>
+      </question>
+      <answer>
+        <para>
+All of GStreamer, including our own plugin code, is licensed under the 
+<ulink url="http://www.gnu.org/licenses/lgpl.html">GNU LGPL</ulink> license.
+Some of the libraries we use for some of the plugins are however under the 
+GPL, which means that those plugins can not be used by a non-GPL-compatible 
+application. 
+        </para>
+        <para>
+As part of the GStreamer source download you find a file called 
+license_README. That file contains information in the exact licensing 
+terms of the libraries we use. As a general rule, GStreamer aims at using 
+only LGPL or BSD licensed libraries if available and only use GPL or 
+proprietary libraries where no good LGPL or BSD alternatives are available.
+        </para>
+From GStreamer 0.4.2 on, we implemented a license field for all of the plugins,
+and in the future we might have the application enforce a stricter policy
+(much like tainting in the kernel).
+        <para>
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-sound-server">
+        <para>Is GStreamer a sound server ?</para>
+      </question>
+      <answer>
+        <para>
+No, GStreamer is not a soundserver. GStreamer does however have plugins
+supporting most of the major soundservers available today, including 
+ESD, aRTSd, and to some extent Jack. Support for MAS is also planned.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-platforms">
+        <para>
+Will GStreamer be available for platforms other than Unix ?
+        </para>
+      </question>
+      <answer>
+        <para>
+Depends. Our main target is the Unix platform. That said, interest has been 
+expressed in porting GStreamer to other platforms and the GStreamer core 
+team will gladly accept patches to accomplish this.
+Please refer to the
+<ulink url="http://gstreamer.net/status/?category=7">
+platform support status table</ulink>
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-gnome">
+        <para>What is GStreamer's relationship with the GNOME community ?</para>
+      </question>
+      <answer>
+        <para>
+While GStreamer is operated as an independent project, we do have a close 
+relationship with the GNOME community. Many of our hackers consider 
+themselves also to be members of the GNOME community. There are plans to 
+make (some part of) GStreamer an official part of the development framework 
+of GNOME.  This does not exclude use of GStreamer by other communities at
+all, of course.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-kde">
+        <para>What is GStreamer's relationship with the KDE community ?</para>
+      </question>
+      <answer>
+        <para>
+The GStreamer community wants to have as good a relationship as possible 
+with KDE, and we hope that someday KDE decides to adopt GStreamer as their 
+multimedia API, just like the GNOME community plans on doing. 
+There have been contacts from time to time between the GStreamer community 
+and KDE and we do already have support for the aRTSd sound server used by KDE.
+Also, some of the KDE hackers have created Qt bindings of GStreamer 
+and made a simple video player.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="general-my-application">
+        <para>
+I'm considering adding GStreamer output to my application...
+        </para>
+      </question>
+
+      <answer>
+        <para>
+That doesn't really make sense. GStreamer is not a sound server, so you don't 
+output directly to GStreamer, and it's not an intermediate API between 
+audio data and different kinds of audio sinks. It is a fundamental design 
+decision to use GStreamer in your app; there are no easy ways of somehow 
+'transfering' data from your app to GStreamer. Instead, your app would have 
+to use or implement a number of GStreamer elements, string them together, and 
+tell them to run. In that manner the data would all be internal to the 
+GStreamer pipeline.
+        </para>
+        <para>
+That said, it is possible to write a plugin specific to your app that can get
+at the audio data.
+        </para>
+      </answer>
+    </qandaentry>
+  </qandaset>
+
+</sect1>

@@ -1,0 +1,17 @@
+<sect1 id="chapter-getting">
+  <title id="title-getting">Getting GStreamer</title>
+  <qandaset>
+
+    <qandaentry>
+      <question id="getting-gstreamer">
+        <para>How do I get GStreamer ?</para>
+      </question>
+
+      <answer>
+        <para>
+You either ask us nicely for it or pay us big bucks.
+        </para>
+      </answer>
+    </qandaentry>
+  </qandaset>
+</sect1>

@@ -1,0 +1,105 @@
+<sect1 id="chapter-using">
+  <title id="title-using">Using GStreamer</title>
+  <qandaset>
+
+    <qandaentry>
+      <question id="using-gst-inspect">
+        <para>How do I tell what GStreamer plugins I have on my system ?</para>
+      </question>
+
+      <answer>
+        <para>
+To do this you use the gst-inspect
+command-line tool, which comes standard with GStreamer.
+Invoked without any arguments,
+<programlisting>
+$ gst-inspect
+</programlisting>
+will print out a listing of installed plugins.
+To learn more about a particular plugin, pass its name on the command line. 
+For example,
+<programlisting>
+$ gst-inspect volume
+</programlisting>
+will give you information about the volume plugin.
+        </para>
+        <para>
+Also, if you install the gst-editor package, you will have a graphical 
+plugin browser available, gst-inspect-gui.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="using-bugs">
+        <para>Where should I report bugs ?</para>
+      </question>
+
+      <answer>
+        <para>
+Bug management is now hosted on GNOME's Bugzilla at
+<ulink url="http://bugzilla.gnome.org">http://bugzilla.gnome.org</ulink>,
+under the product GStreamer. 
+Using bugzilla you can view past bug history, report new bugs, etc.
+Bugzilla requires you to make an account here, which might seem cumbersome,
+but allows us to at least have a chance at contacting you for further
+information, as we will most likely have to.
+        </para>
+        <para>
+When doing a bug report, you should at least describe
+<itemizedlist>
+<listitem>your distribution</listitem>
+<listitem>
+how you installed GStreamer (from cvs, source, packages, which ?)</listitem>
+<listitem>if you installed GStreamer before</listitem>
+</itemizedlist>
+        </para>
+        <para>
+If you're new to GStreamer, it also is useful for us if you attach output of
+the gst-feedback command to your bug report.
+If you're having problem with a specific application (either one of ours,
+somebody else's, or your own), please also provide a log of gst-mask by
+running
+<programlisting>
+myapp --gst-mask=-1 > mask.log 2>&amp;1
+gzip mask.log
+</programlisting>
+(interrupting the program if it doesn't stop by itself)
+and attach mask.log.gz to your bug report
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="using-gst-launch">
+        <para>How do I use the GStreamer command line interface ?</para>
+      </question>
+      <answer>
+        <para>
+You access the GStreamer command line interface using the command gst-launch.
+To decode an mp3 and play it through OSS, you could use
+<programlisting>
+gst-launch filesrc location=thesong.mp3 ! mad ! osssink
+</programlisting>.
+More examples can be found in the gst-launch man page.
+        </para>
+        <para>
+To automatically detect the right codec in a pipeline, try 
+<programlisting>
+gst-launch filesrc location=my-random-media-file.mpeg ! spider ! osssink
+</programlisting>.
+Try replacing osssink with sdlvideosink and see what happens.
+        </para>
+        <para>
+We also have a simple tool called gst-launch-ext used for debugging,
+which has predefined pipelines for you. This means you can just write
+<programlisting>
+gst-launch-ext (filename)
+</programlisting>
+and it will play the file if the extension is supported.  Note that no effort
+has been made for uninterrupted synchronized playback using this tool.
+        </para>
+      </answer>
+    </qandaentry>
+  </qandaset>
+</sect1>
