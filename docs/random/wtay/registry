@@ -1,0 +1,27 @@
+Requirements
+------------
+
+- plugable backends:
+
+  - XML
+  - flat file
+  - GConf/bonobo conf
+  - web registry
+  - in memory (trivial?)
+  - SQL backend (gda?)
+
+- provide API to the core to load/inspect/save plugins.
+- provide user/system registry
+- provide combination of backends
+- provide backend specific queries
+
+user/system registry
+--------------------
+
+first query the user registry, then fall back to system registry.
+
+API
+---
+
+
+
