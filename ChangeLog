@@ -1,3 +1,11 @@
+2004-03-05  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_src_formats),
+	(gst_qtdemux_src_convert), (gst_qtdemux_get_src_query_types),
+	(gst_qtdemux_get_event_mask), (gst_qtdemux_handle_src_query),
+	(gst_qtdemux_handle_src_event), (gst_qtdemux_add_stream):
+	Add prototype code for handling seeking and querying.
+
 2004-03-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* examples/gstplay/player.c: (main):
