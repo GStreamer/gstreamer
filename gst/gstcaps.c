@@ -530,6 +530,35 @@ gst_caps_get_structure (const GstCaps * caps, int index)
   return g_ptr_array_index (caps->structs, index);
 }
 
+/** 	 
+ * gst_caps_copy_nth: 	 
+ * @caps: the @GstCaps to copy 	 
+ * @nth: the nth structure to copy
+ * 	 
+ * Creates a new @GstCaps and appends a copy of the nth structure 	 
+ * contained in @caps. 	 
+ * 	 
+ * Returns: the new @GstCaps 	 
+ */
+GstCaps *
+gst_caps_copy_nth (const GstCaps * caps, gint nth)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+
+  newcaps = gst_caps_new_empty ();
+  newcaps->flags = caps->flags;
+
+  if (caps->structs->len > nth) {
+    structure = gst_caps_get_structure (caps, nth);
+    gst_caps_append_structure (newcaps, gst_structure_copy (structure));
+  }
+
+  return newcaps;
+}
+
 /**
  * gst_caps_set_simple:
  * @caps: the @GstCaps to set

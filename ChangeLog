@@ -1,3 +1,32 @@
+2005-02-16  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* gst/elements/gstfakesink.c: (gst_fakesink_event),
+	(gst_fakesink_chain):
+	* gst/elements/gstfakesink.h:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_loop),
+	(gst_fakesrc_activate):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_open_file), (gst_filesrc_loop),
+	(gst_filesrc_activate), (gst_filesrc_change_state),
+	(filesrc_find_peek), (gst_filesrc_type_find):
+	* gst/gstcaps.c: (gst_caps_copy_nth):
+	* gst/gstcaps.h:
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_remove_pad), (iterate_pad),
+	(gst_element_get_state_func), (gst_element_commit_state),
+	(gst_element_set_state), (gst_element_pads_activate),
+	(gst_element_change_state), (gst_element_dispose):
+	* gst/gstutils.c: (gst_element_finish_preroll):
+	* gst/gstutils.h:
+	* tools/gst-launch.c: (check_intr):
+	add gst_caps_copy_nth as a more general replacement for
+	copy_1.
+	Slightly change the finish_preroll helper function to 
+	include pad flush/active.
+	Small cleanups in fakesrc.
+	Add STREAM_LOCK in filesrc.
+
 2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/Makefile.am:

@@ -279,6 +279,7 @@ check_intr (user_data)
   } else {
     g_print ("Pausing pipeline.\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    g_print ("Paused pipeline.\n");
     g_main_loop_quit (loop);
     return FALSE;
   }

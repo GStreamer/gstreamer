@@ -388,7 +388,7 @@ gst_element_abort_preroll (GstElement * element)
 
 /* call with stream lock held */
 GstFlowReturn
-gst_element_finish_preroll (GstElement * element, GMutex * streamlock)
+gst_element_finish_preroll (GstElement * element, GstPad * pad)
 {
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -403,19 +403,20 @@ gst_element_finish_preroll (GstElement * element, GMutex * streamlock)
     GST_CAT_DEBUG (GST_CAT_STATES,
         "element %s wants to finish preroll", GST_ELEMENT_NAME (element));
 
-    /* FIXME, release streaming lock? */
-    if (streamlock)
-      g_mutex_unlock (streamlock);
-
     /* here we wait for the next state change */
     while (GST_STATE (element) == GST_STATE_PAUSED) {
+      if (GST_RPAD_IS_FLUSHING (pad) || !GST_RPAD_IS_ACTIVE (pad)) {
+        GST_CAT_DEBUG (GST_CAT_STATES, "pad is flushing");
+        result = GST_FLOW_UNEXPECTED;
+        goto done;
+      }
+
       GST_CAT_DEBUG (GST_CAT_STATES, "waiting for next state change");
 
       GST_STATE_WAIT (element);
+      GST_CAT_DEBUG (GST_CAT_STATES, " got state change");
     }
 
-    if (streamlock)
-      g_mutex_lock (streamlock);
     /* check if we got playing */
     if (GST_STATE (element) != GST_STATE_PLAYING) {
       /* not playing, we can't accept the buffer */
@@ -423,6 +424,7 @@ gst_element_finish_preroll (GstElement * element, GMutex * streamlock)
     }
     GST_CAT_DEBUG (GST_CAT_STATES, "done preroll");
   }
+done:
   GST_STATE_UNLOCK (element);
 
   return result;

@@ -1731,6 +1731,7 @@ gst_element_commit_state (GstElement * element)
 
     GST_STATE (element) = pending;
     GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+    GST_STATE_ERROR (element) = FALSE;
 
     g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
         0, old_state, pending);

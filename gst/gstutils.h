@@ -230,7 +230,7 @@ void 			gst_object_default_error 	(GstObject * source,
 
 /* element functions */
 GstFlowReturn 		gst_element_abort_preroll 	(GstElement *element);
-GstFlowReturn 		gst_element_finish_preroll 	(GstElement *element, GMutex *streamlock);
+GstFlowReturn 		gst_element_finish_preroll 	(GstElement *element, GstPad *pad);
 
 GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad);
 GstPad*                 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,

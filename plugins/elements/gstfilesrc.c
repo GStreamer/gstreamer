@@ -907,15 +907,19 @@ gst_filesrc_loop (GstPad * pad)
 
   filesrc = GST_FILESRC (GST_PAD_PARENT (pad));
 
+  GST_STREAM_LOCK (pad);
+
   result = gst_filesrc_get (pad, &buffer);
   if (result != GST_FLOW_OK) {
     gst_task_pause (GST_RPAD_TASK (pad));
-    return;
+    goto done;
   }
   result = gst_pad_push (pad, buffer);
   if (result != GST_FLOW_OK) {
     gst_task_pause (GST_RPAD_TASK (pad));
   }
+done:
+  GST_STREAM_UNLOCK (pad);
 }
 
 
@@ -978,9 +982,9 @@ gst_filesrc_change_state (GstElement * element)
           return GST_STATE_FAILURE;
       }
       src->need_discont = 2;
-
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      gst_task_start (GST_RPAD_TASK (src->srcpad));
       break;
   }
 
@@ -988,6 +992,7 @@ gst_filesrc_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PLAYING_TO_PAUSED:
+      gst_task_start (GST_RPAD_TASK (src->srcpad));
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))

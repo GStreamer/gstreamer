@@ -10,3 +10,7 @@
 - only emit EOS in PLAYING.
 
 - implement state change order on get<->loop-get<->loop elements.
+
+- unlinking pads in the PAUSED state needs to make sure the stream thread is not
+  executing code. Can this be done with a flush to unlock all downstream chain
+  functions?

@@ -330,8 +330,7 @@ gst_fakesink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      gst_element_finish_preroll (GST_ELEMENT (fakesink),
-          GST_STREAM_GET_LOCK (pad));
+      gst_element_finish_preroll (GST_ELEMENT (fakesink), pad);
       gst_element_post_message (GST_ELEMENT (fakesink),
           gst_message_new_eos (GST_OBJECT (fakesink)));
       break;
@@ -367,9 +366,7 @@ gst_fakesink_chain (GstPad * pad, GstBuffer * buffer)
   /* grab streaming lock to synchronize with event method */
   GST_STREAM_LOCK (pad);
 
-  result =
-      gst_element_finish_preroll (GST_ELEMENT (fakesink),
-      GST_STREAM_GET_LOCK (pad));
+  result = gst_element_finish_preroll (GST_ELEMENT (fakesink), pad);
   if (result != GST_FLOW_OK)
     goto exit;
 
