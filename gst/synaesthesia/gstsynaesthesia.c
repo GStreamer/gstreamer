@@ -17,11 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #include "config.h"
 
 #include "gstsynaesthesia.h"
 #include "core.h"
+
+#warning hi, i'm synaesthesia. i'm severely broken. somebody please fix me.
 
 static gboolean gst_synaesthesia_start(GstElement *element);
 
@@ -170,11 +171,11 @@ static void gst_synaesthesia_chain(GstPad *pad,GstBuffer *buf) {
 	GDK_RGB_DITHER_NORMAL,
 	syna->sp.output,syna->width,
 	&syna->cmap);*/
-  gdk_draw_gray_image(syna->image->window,
+/*  gdk_draw_gray_image(syna->image->window,
 	syna->image->style->fg_gc[GTK_STATE_NORMAL],
 	0,0,syna->width,syna->height,
 	GDK_RGB_DITHER_NORMAL,
-	syna->sp.output,syna->width);
+	syna->sp.output,syna->width); */
 
   gst_trace_add_entry(NULL,0,buf,"synaesthesia: calculated syna");
 
@@ -209,7 +210,7 @@ gst_synaesthesia_get_property(GObject *object, guint prop_id, GValue *value, GPa
   g_return_if_fail(GST_IS_SYNAESTHESIA(object));
   synaesthesia = GST_SYNAESTHESIA(object);
 
-  GST_DEBUG (0,"have synaesthesia get_property(%d), wanting %d\n",id,ARG_WIDGET);
+  GST_DEBUG (0,"have synaesthesia get_property(%d), wanting %d\n",prop_id,ARG_WIDGET);
 
   switch (prop_id) {
     case ARG_WIDTH: {
@@ -222,11 +223,11 @@ gst_synaesthesia_get_property(GObject *object, guint prop_id, GValue *value, GPa
       GST_DEBUG (0,"returning height value %d\n",g_value_get_int (value));
       break;
     }
-    case ARG_WIDGET: {
+/*    case ARG_WIDGET: {
       g_value_set_object (value, G_OBJECT(synaesthesia->image));
       GST_DEBUG (0,"returning widget value %p\n",g_value_get_object (value));
       break;
-    }
+      }*/
     default: {
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       GST_DEBUG (0,"returning invalid type\n");
@@ -276,15 +277,15 @@ gst_synaesthesia_start(GstElement *element)
   coreInit(&syna->sp, syna->width, syna->height);
   setStarSize(&syna->sp, syna->starsize);
 
-  setupPalette(&syna->sp, syna->cmap.colors);
+/*  setupPalette(&syna->sp, syna->cmap.colors); */
 
   gdk_rgb_init();
-  syna->image = gtk_drawing_area_new();
+/*  syna->image = gtk_drawing_area_new();
   GST_DEBUG (0,"image is %p\n",syna->image);
   gtk_drawing_area_size(GTK_DRAWING_AREA(syna->image),
 			syna->width,
                         syna->height);
-  gtk_widget_show(syna->image);
+                        gtk_widget_show(syna->image);*/
 
   GST_DEBUG (0,"started synaesthesia\n");
   return TRUE;

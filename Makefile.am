@@ -1,5 +1,5 @@
-SUBDIRS=gst sys ext gst-libs
+SUBDIRS=gst-libs gst sys ext
 
-DIST_SUBDIRS=gst sys ext gst-libs
+DIST_SUBDIRS=gst-libs gst sys ext
 
 EXTRA_DIST=gst-plugins.spec AUTHORS COPYING README ChangeLog
