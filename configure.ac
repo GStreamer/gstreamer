@@ -335,15 +335,16 @@ dnl Check for artsc
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
 GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
 
-dnl Check for artsc
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
+dnl Check for arts
+dnl FIXME: thomasvs: I don't understand this, have replaced the check
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
+dnl GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl Check for xmms
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
-GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
-  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
-], disabled)
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
+dnl GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
+dnl  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
+dnl ], disabled)
 
 dnl Check for alsa
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
@@ -404,6 +405,12 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   AC_SUBST(GHTTP_LIBS)
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
+
+dnl thomas : adding an arts check taken from xine with it's own .m4
+AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
+
+dnl Check for xmms
+AM_PATH_XMMS(0.9.4, HAVE_XXMS=yes, HAVE_XMMS=no)
 
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
@@ -633,19 +640,20 @@ AC_CHECK_HEADER(a52dec/a52.h, :, HAVE_A52DEC=no)
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
+dnl Check for librtp
+AC_MSG_CHECKING(rtp library)
+AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
+AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
+
 dnl Check for FLAC
 dnl thomas : checking for compile with main instead of actual function,
 dnl since that made autoconf break (for version 2.13)
 AC_MSG_CHECKING(FLAC library)
 AC_CHECK_LIB(FLAC, main, HAVE_FLACLIB=yes, HAVE_FLACLIB=no, -lm)
 AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLACLIB=no)
-
-dnl Check for librtp
-AC_MSG_CHECKING(rtp library)
-AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
