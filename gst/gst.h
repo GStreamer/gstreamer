@@ -50,6 +50,8 @@
 #include <gst/gstscheduler.h>
 #include <gst/gsttimecache.h>
 #include <gst/gstevent.h>
+#include <gst/gstclock.h>
+#include <gst/gstsystemclock.h>
 
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
