@@ -82,7 +82,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --infodir=%{_infodir} \
   --enable-debug \
   --with-configdir=/etc/gstreamer \
-  --disable-tests --disable-examples --disable-debug-color \
+  --disable-tests --disable-examples \
   --enable-docs-build --with-html-dir=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 
 if [ "$SMP" != "" ]; then
