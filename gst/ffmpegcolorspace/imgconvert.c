@@ -290,6 +290,7 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
       },
 };
 
+/* returns NULL if not found */
 static PixFmtInfo *
 get_pix_fmt_info (enum PixelFormat format)
 {
@@ -300,6 +301,11 @@ get_pix_fmt_info (enum PixelFormat format)
       return pix_fmt_info + i;
     }
   }
+
+  /* since this doesn't get checked *anywhere*, we might as well warn
+     here if we return NULL so you have *some* idea what's going on */
+  g_warning ("Could not find info for pixel format %d, one segfault coming up",
+      format);
   return NULL;
 }
 
@@ -405,7 +411,6 @@ avcodec_get_pix_fmt_loss (int dst_pix_fmt, int src_pix_fmt, int has_alpha)
 
   /* compute loss */
   loss = 0;
-  pf = get_pix_fmt_info (dst_pix_fmt);
   if (pf->depth < ps->depth ||
       (dst_pix_fmt == PIX_FMT_RGB555 && src_pix_fmt == PIX_FMT_RGB565))
     loss |= FF_LOSS_DEPTH;
