@@ -1,3 +1,13 @@
+2004-03-16  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.defs (element_make_from_uri): Remove const from enum
+	here, should be fixed upstream too.
+
+	* gst/gst.override (_wrap_gst_bin_remove_many) 
+	(_wrap_gst_element_unlink_many): Impl.
+	(_wrap_gst_element_get_pad_list): Impl.
+	: Add a number of new ignores for functions/methods we won't wrap anyway
+
 2004-03-15  Johan Dahlin  <johan@gnome.org>
 
 	* gst/*: Move interfaces over here, make it build, remove gstreamer.py

@@ -62,15 +62,46 @@ import gobject.GObject as PyGObject_Type
 %%
 ignore-glob
   _*
-  gstreamer_*init
-  *_get_type
   *_copy
+  *_error_quark
   *_free
-  *_valist
+  *_get_type
   *_private
+  *_thyself
+  *_valist
+  gst_class_*
+  gst_debug_*
+  gst_init*
+  gst_interface_*
   gst_registry_*
-  gst_value_*
   gst_tag_list_get_*
+  gst_value_*
+  gst_xml_*
+%%
+ignore
+  gst_alloc_trace_list
+  gst_alloc_trace_get
+  gst_caps_new_simple
+  gst_caps_new_full
+  gst_caps_set_simple
+  gst_element_get
+  gst_element_set
+  gst_element_get_property
+  gst_element_set_property
+  gst_error_get_message
+  gst_event_new_discontinuous
+  gst_object_default_deep_notify
+  gst_object_check_uniqueness
+  gst_object_replace
+  gst_pad_select
+  gst_pad_selectv
+  gst_pad_load_and_link
+  gst_parse_launchv
+  gst_tag_list_add
+  gst_tag_list_add_values
+  gst_tag_list_add_valist_values
+  gst_tag_list_copy_value
+  gst_trace_read_tsc
 %%
 override gst_buffer_get_data
 static PyObject*
@@ -123,6 +154,24 @@ _wrap_gst_bin_iterate(PyGObject *self)
 	ret = gst_bin_iterate(GST_BIN(self->obj));
 	pyg_block_threads();
 	return PyInt_FromLong(ret);
+}
+%%
+override gst_element_get_pad_list noargs
+static PyObject *
+_wrap_gst_element_get_pad_list(PyGObject *self)
+{
+	GList *l, *pads;
+	PyObject *list;
+	
+	pads = GST_ELEMENT_PADS(GST_ELEMENT(self->obj));
+
+	list = PyList_New(0);
+	for (l = pads; l; l = l->next) {
+		GstPad *pad = (GstPad*)l->data;
+		PyList_Append(list, pygobject_new(G_OBJECT(pad)));
+	}
+		
+	return list;
 }
 %%
 override gst_element_set_state kwargs
@@ -246,6 +295,38 @@ _wrap_gst_bin_add_many(PyGObject *self, PyObject *args)
 	return Py_None;
 }
 %%
+override gst_bin_remove_many args
+static PyObject *
+_wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
+{
+	PyGObject *element;
+	int i, len;
+
+	len = PyTuple_Size(args);
+	if (len == 0) {
+		PyErr_SetString(PyExc_TypeError, "GstBin.remove_many requires at least one argument");
+		return NULL;
+	}
+       
+    
+	for (i = 0; i < len; i++) {
+		element = (PyGObject*)PyTuple_GetItem(args, i);
+		if (!pygobject_check(element, &PyGstElement_Type))
+		{
+			PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
+			return NULL;
+		}
+	}
+	
+	for (i = 0; i < len; i++) {
+		element = (PyGObject*)PyTuple_GetItem(args, i);
+		gst_bin_remove(GST_BIN(self->obj), GST_ELEMENT(element->obj));
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
 override gst_element_link_many args
 static PyObject *
 _wrap_gst_element_link_many(PyObject *self, PyObject *args)
@@ -280,6 +361,51 @@ _wrap_gst_element_link_many(PyObject *self, PyObject *args)
 
 		if (!gst_element_link(GST_ELEMENT(element->obj), GST_ELEMENT(element2->obj)))
 			return PyInt_FromLong(0);
+
+		if (i >= len)
+			break;
+		
+		element = element2;
+		element2 = (PyGObject*)PyTuple_GetItem(args, i);
+	
+		i++;
+	}
+
+	return PyInt_FromLong(1);
+}
+%%
+override gst_element_unlink_many args
+static PyObject *
+_wrap_gst_element_unlink_many(PyObject *self, PyObject *args)
+{
+	PyGObject *element, *element2;
+	int i, len;
+
+	len = PyTuple_Size(args);
+	if (len < 2)
+	{
+		PyErr_SetString(PyExc_TypeError, "gst.element_unlink_many requires at least two argument");
+		return NULL;
+	}
+       
+
+	for (i = 0; i < len; i++)
+	{
+		element = (PyGObject*)PyTuple_GetItem(args, i);
+		if (!pygobject_check(element, &PyGstElement_Type))
+		{
+			PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
+			return NULL;
+		}
+	}
+
+	/* Mimic the real gst_element_unlink_many */
+	element = (PyGObject*)PyTuple_GetItem(args, 0);
+	element2 = (PyGObject*)PyTuple_GetItem(args, 1);
+
+	i = 2;
+	while (1) {
+		gst_element_unlink(GST_ELEMENT(element->obj), GST_ELEMENT(element2->obj));
 
 		if (i >= len)
 			break;

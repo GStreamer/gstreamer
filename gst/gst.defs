@@ -5646,7 +5646,7 @@
   (c-name "gst_element_make_from_uri")
   (return-type "GstElement*")
   (parameters
-    '("const-GstURIType" "type")
+    '("GstURIType" "type")
     '("const-gchar*" "uri")
     '("const-gchar*" "elementname")
   )
