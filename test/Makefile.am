@@ -1,5 +1,7 @@
 # FIXME FIXME
 
+INCLUDES = $(LIBGST_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) -I..
+
 if HAVE_GNOME
 GNOME_PROGS = spectrum wave mp1parse videotest aviparse \
 		videotest2 video2mp1 dvshow dv2mp1 \

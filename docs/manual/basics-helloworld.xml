@@ -201,7 +201,12 @@ main (int argc, char *argv[])
     </para>
     <figure float="1" id="sec-hello-img">
       <title>The Hello world pipeline</title>
-      <graphic fileref="images/hello-world" format="png"></graphic>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/hello-world.&magic;" format="&magic;" />
+        </imageobject>
+      </mediaobject>  
+
     </figure>
 
     <para>

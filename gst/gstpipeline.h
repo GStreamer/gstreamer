@@ -26,13 +26,11 @@
 
 #include <gst/gstbin.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 extern GstElementDetails gst_pipeline_details;
-
 
 #define GST_TYPE_PIPELINE \
   (gst_pipeline_get_type())

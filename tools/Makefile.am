@@ -12,9 +12,21 @@ GST_LOADSAVE_SRC = gstreamer-compprep
 endif
 
 if USE_GLIB2
+if HAVE_LIBGLADE_GNOME
+GST_GUI_LAUNCH = gstreamer-guilaunch
+gstreamer_guilaunch_CFLAGS = \
+	$(LIBGLADE_GNOME_CFLAGS) $(CFLAGS)
+gstreamer_guilaunch_LDADD = \
+	$(LIBGLADE_GNOME_LIBS) $(LDADD)
+else
 GST_GUI_LAUNCH = 
+endif
 else
 GST_GUI_LAUNCH = gstreamer-guilaunch
+gstreamer_guilaunch_CFLAGS = \
+	$(LIBGLADE_GNOME_CFLAGS) $(CFLAGS)
+gstreamer_guilaunch_LDADD = \
+	$(LIBGLADE_GNOME_LIBS) $(LDADD)
 endif
 
 bin_PROGRAMS = 	gstreamer-launch 	\
@@ -50,5 +62,11 @@ if !GST_DISABLE_LOADSAVE
 gstreamer_compprep_LDADD = $(GST_LIBS)
 gstreamer_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
+
+### FIXME DELETEME
+### these flags are from the original branch
+### wrobell reckons we don't need them
+### LDADD = $(GST_LIBS)
+### CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" $(GLIB_CFLAGS) $(XML_CFLAGS)
 
 EXTRA_DIST = $(man_MANS)

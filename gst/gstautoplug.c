@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 
 #include <gst/gstconfig.h>
 
@@ -177,7 +177,7 @@ static void 		gst_autoplugfactory_restore_thyself 	(GstObject *object, xmlNodePt
 #endif
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
-//static guint gst_autoplugfactory_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_autoplugfactory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType 
 gst_autoplugfactory_get_type (void) 
@@ -274,7 +274,7 @@ gst_autoplugfactory_destroy (GstAutoplugFactory *factory)
 
   _gst_autoplugfactories = g_list_remove (_gst_autoplugfactories, factory);
 
-  // we don't free the struct bacause someone might  have a handle to it..
+  /* we don't free the struct bacause someone might  have a handle to it.. */
 }
 
 /**

@@ -85,8 +85,6 @@ struct _GstFakeSrc {
 
   gboolean 	loop_based;
   gboolean 	eos;
-  gint 		numsrcpads;
-  GSList 	*srcpads;
 
   GstFakeSrcOutputType output;
   GstFakeSrcDataType data;
@@ -102,6 +100,7 @@ struct _GstFakeSrc {
   gchar 	*pattern;
   GList 	*patternlist;
   gint 		num_buffers;
+  gint 		rt_num_buffers; /* we are going to change this at runtime */
   guint64 	buffer_count;
   gboolean 	silent;
   gboolean 	dump;

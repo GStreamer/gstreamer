@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstcaps.h"
@@ -496,7 +496,7 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
     }
   }
   else {
-    // assume it accepts everything
+    /* assume it accepts everything */
     GST_DEBUG (GST_CAT_CAPS,"no caps\n");
     return TRUE;
   }

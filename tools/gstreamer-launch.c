@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-static int launch_argc;
+static int    launch_argc;
 static char **launch_argv;
 
 #ifndef USE_GLIB2
@@ -62,9 +62,7 @@ gboolean
 idle_func (gpointer data)
 {
   if (!gst_bin_iterate (GST_BIN (data))) {
-#ifndef USE_GLIB2
-    gtk_main_quit ();
-#endif
+    gst_main_quit ();
     g_print ("iteration ended\n");
     return FALSE;
   }
@@ -113,6 +111,8 @@ main(int argc, char *argv[])
   gboolean run_pipeline = TRUE;
   gchar *savefile = "";
 
+  free (malloc (8)); /* -lefence */
+
   gst_init (&argc, &argv);
 
   if (argc >= 3 && !strcmp(argv[1], "-o")) {
@@ -129,11 +129,11 @@ main(int argc, char *argv[])
 
   pipeline = gst_pipeline_new ("launch");
 
-  // make a null-terminated version of argv
+  /* make a null-terminated version of argv */
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
 
-  // escape spaces
+  /* escape spaces */
   for (i=0; i<argc-1; i++) {
     gchar **split;
 
@@ -142,12 +142,12 @@ main(int argc, char *argv[])
     argvn[i] = g_strjoinv ("\\ ", split);
     g_strfreev (split);
   }
-  // join the argvs together
+  /* join the argvs together */
   cmdline = g_strjoinv (" ", argvn);
-  // free the null-terminated argv
+  /* free the null-terminated argv */
   g_free (argvn);
 
-  // fail if there are no pipes in it (needs pipes for a pipeline
+  /* fail if there are no pipes in it (needs pipes for a pipeline */
   if (!strchr(cmdline,'!')) {
     fprintf(stderr,"ERROR: no pipeline description found on commandline\n");
     exit(1);
@@ -167,14 +167,13 @@ main(int argc, char *argv[])
     arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
 
     fprintf(stderr,"RUNNING pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
+      fprintf(stderr,"pipeline doesn't want to play\n");
+      exit (-1);
+    }
 
-    g_idle_add(idle_func,pipeline);
-#ifdef USE_GLIB2
-    g_main_loop_run (g_main_loop_new (NULL, FALSE));
-#else
-    gtk_main();
-#endif
+    g_idle_add (idle_func, pipeline);
+    gst_main ();
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }

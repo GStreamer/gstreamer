@@ -8,3 +8,6 @@
 - deal with clocking issues
 - use real chaining where possible
 - factory aliases?
+- fix plugins :
+wtay : the proper fix is of course to fix the plugins and 
+implement the cleanup in the state change function..

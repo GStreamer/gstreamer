@@ -6,7 +6,7 @@
 #include "gobject2gtk.h"
 
 
-// list functions not in glib 1.2
+/* list functions not in glib 1.2 */
 GList *
 g_list_delete_link (GList *list, GList *llink)
 {
@@ -23,7 +23,7 @@ g_slist_delete_link (GSList *list, GSList *llink)
   return temp;
 }
 
-// string helper functions not in glib 1.2
+/* string helper functions not in glib 1.2 */
 
 gchar*
 g_strcanon (gchar       *string,
@@ -44,7 +44,7 @@ g_strcanon (gchar       *string,
   return string;
 }
 
-// GObject dummy implementation
+/* GObject dummy implementation */
 static void
 g_object_set_arg(GtkObject *object, GtkArg *arg, guint id)
 {
@@ -133,7 +133,7 @@ g2g_object_class_install_property(GObjectClass *oclass,guint property_id,GParamS
   gchar *arg_fullname;
  
   arg_fullname = g_strdup_printf("%s::%s",gtk_type_name(oclass->type),pspec->name);
-  //fprintf(stderr,"installing arg \"%s\" into class \"%s\"\n",arg_fullname,"");
+  /* fprintf(stderr,"installing arg \"%s\" into class \"%s\"\n",arg_fullname,""); */
   gtk_object_add_arg_type(arg_fullname,pspec->value_type,pspec->flags,property_id);
   g_free(pspec);
 }
@@ -144,9 +144,9 @@ g2g_object_class_find_property(GObjectClass *class, const gchar *name)
   GtkArgInfo *info;
   GParamSpec *spec;
 
-  //fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
+  /* fprintf(stderr,"class name is %s\n",gtk_type_name(class->type)); */
 
-  // the return value NULL if no error
+  /* the return value NULL if no error */
   if (gtk_object_arg_get_info(class->type,name,&info) != NULL) {
     return NULL;
   }
@@ -170,7 +170,7 @@ g2g_object_class_list_properties(GObjectClass *oclass,guint *n_properties) {
   int i;
 
   args = gtk_object_query_args (type, &flags, &num_args);
-  // FIXME: args and flags need to be freed. 
+  /* FIXME: args and flags need to be freed. */
 
   params = g_new0(GParamSpec *,num_args);
   for (i=0;i<num_args;i++) {
@@ -302,7 +302,7 @@ g2g_signal_new (const gchar       *name,
 		GtkType            object_type,
 		GtkSignalRunType   signal_flags,
 		guint              function_offset,
-		gpointer           accumulator,  // GSignalAccumulator
+		gpointer           accumulator,  /* GSignalAccumulator */
 		gpointer           accu_data,
 		GtkSignalMarshaller  marshaller,
 		GType              return_val,
@@ -317,7 +317,7 @@ g2g_signal_new (const gchar       *name,
   if (strcmp (name, "destroy") == 0)
     name = "g2gdestroy";
 
-#define MAX_SIGNAL_PARAMS		(31)		// from gtksignal.c
+#define MAX_SIGNAL_PARAMS		(31)		/* from gtksignal.c */
   g_return_val_if_fail (nparams < MAX_SIGNAL_PARAMS, 0);
      
   if (nparams > 0) 
@@ -345,7 +345,7 @@ g2g_signal_new (const gchar       *name,
           
   g_free (params);
 
-  // now register it.
+  /* now register it. */
   gtk_object_class_add_signals(gtk_type_class(object_type), &signal_id, 1);
     
   return signal_id;

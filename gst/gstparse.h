@@ -39,11 +39,11 @@ typedef enum {
   
 gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
 
-#else // GST_DISABLE_PARSE
+#else /* GST_DISABLE_PARSE */
 
 #pragma GCC poison gst_parse_launch
 
-#endif // GST_DISABLE_PARSE
+#endif /* GST_DISABLE_PARSE */
 
 #ifdef __cplusplus
 }

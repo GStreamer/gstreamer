@@ -1,0 +1,49 @@
+<chapter id="cha-intro">
+  <title>Introduction</title>
+  <para> 
+    This chapter gives you an overview of the technologies described in this
+    book.  
+  </para>
+
+  <sect1 id="sec-intro-what">
+    <title>What is GStreamer?</title>
+    <para> 
+      GStreamer is a framework for creating streaming media applications.
+      The fundamental design comes from the video pipeline at Oregon Graduate
+      Institute, as well as some ideas from DirectShow.  
+    </para>
+ 
+    <para>
+      GStreamer's development framework makes it possible to write any 
+      streaming multimedia application. The framework includes several
+      components to build a full featured media player capable of playing
+      MPEG1, MPEG2, AVI, MP3, WAV, AU, ...
+    </para> 
+
+    <para>
+      GStreamer, however, is much more than just another media player. Its
+      main advantages are that the pluggable components also make it possible
+      to write a full flegded video or audio editing application. 
+    </para> 
+
+    <para>
+      The framework is based on plug-ins that will provide the various codec 
+      and other functionality. The plugins can be connected and arranged in
+      a pipeline. This pipeline defines the flow of the data. Pipelines can 
+      also be edited with a GUI editor and saved as XML so that pipeline
+      libraries can be made with a minimum of effort.
+    </para> 
+
+    <para>
+      The GStreamer core function is to provide a framework for plugins, data flow 
+      and media type handling/negotiation. 
+      It also provides an API to write applications using the various plugins.
+    </para> 
+
+    <para>
+      This book is about GStreamer from a developer's point of view; it describes
+      how to write a GStreamer application using the GStreamer libraries and tools.
+    </para> 
+
+  </sect1>
+</chapter>

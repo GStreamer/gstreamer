@@ -107,12 +107,12 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
     g_param_spec_int ("num_sinks", "num_sinks", "num_sinks",
                       1, G_MAXINT, 1, G_PARAM_READABLE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-    g_param_spec_boolean ("silent", "silent", "silent",
-                          FALSE, G_PARAM_READWRITE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
-    g_param_spec_boolean ("dump", "dump", "dump",
-                          FALSE, G_PARAM_READWRITE)); 
+
+  gst_element_install_std_props (
+	  GST_ELEMENT_CLASS (klass),
+	  "silent", ARG_SILENT, G_PARAM_READWRITE,
+	  "dump",   ARG_DUMP,   G_PARAM_READWRITE,
+	  NULL);
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -134,8 +134,6 @@ gst_fakesink_init (GstFakeSink *fakesink)
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
 
-  fakesink->sinkpads = g_slist_prepend (NULL, pad);
-  fakesink->numsinkpads = 1;
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
 }
@@ -156,13 +154,10 @@ gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ, const 
 
   fakesink = GST_FAKESINK (element);
 
-  name = g_strdup_printf ("sink%d", fakesink->numsinkpads);
+  name = g_strdup_printf ("sink%d", GST_ELEMENT (fakesink)->numsinkpads);
 
   sinkpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (fakesink), sinkpad);
-
-  fakesink->sinkpads = g_slist_prepend (fakesink->sinkpads, sinkpad);
-  fakesink->numsinkpads++;
 
   return sinkpad;
 }
@@ -199,7 +194,7 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
   
   switch (prop_id) {
     case ARG_NUM_SINKS:
-      g_value_set_int (value, sink->numsinkpads);
+      g_value_set_int (value, GST_ELEMENT (sink)->numsinkpads);
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, sink->silent);

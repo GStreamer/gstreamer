@@ -7,9 +7,9 @@ type_found (GstElement *typefind, GstCaps* caps)
   xmlNodePtr parent;
   
   doc = xmlNewDoc ("1.0");  
-  doc->root = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
-  parent = xmlNewChild (doc->root, NULL, "Caps1", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Caps1", NULL);
   gst_caps_save_thyself (caps, parent);
 
   xmlDocDump (stdout, doc);
@@ -44,7 +44,7 @@ main(int argc, char *argv[])
   gst_bin_add(GST_BIN(bin), typefind);
 
   g_signal_connect (G_OBJECT (typefind), "have_type", 
-		  type_found, NULL);
+		    G_CALLBACK (type_found), NULL);
 
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(typefind,"sink"));

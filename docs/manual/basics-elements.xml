@@ -34,7 +34,11 @@
       </para>
       <figure float="1" id="sec-element-srcimg">
         <title>Visualisation of a source element</title>
-        <graphic fileref="images/src-element" format="png"></graphic>
+          <mediaobject>  
+            <imageobject>
+              <imagedata fileref="images/src-element.&magic;" format="&magic;" />
+            </imageobject>
+          </mediaobject>
       </figure>
       <para>
         Source elements do not accept data, they only generate data. You can see
@@ -59,7 +63,11 @@
       </para> 
       <figure float="1" id="sec-element-filterimg">
         <title>Visualisation of a filter element</title>
-        <graphic fileref="images/filter-element" format="png"></graphic>
+          <mediaobject>  
+            <imageobject>
+              <imagedata fileref="images/filter-element.&magic;" format="&magic;" />
+            </imageobject>
+          </mediaobject>
       </figure>
       <para>
         The above figure shows the visualisation of a filter element. This element has 
@@ -69,7 +77,11 @@
       <figure float="1" id="sec-element-multifilterimg">
         <title>Visualisation of a filter element with
 	  more than one output pad</title>
-        <graphic fileref="images/filter-element-multi" format="png"></graphic>
+        <mediaobject>  
+          <imageobject>
+            <imagedata fileref="images/filter-element-multi.&magic;" format="&magic;" />
+          </imageobject>
+        </mediaobject>
       </figure>
       <para>
         The above figure shows the visualisation of a filter element with more than one
@@ -89,7 +101,11 @@
       </para> 
       <figure float="1" id="sec-element-sinkimg">
         <title>Visualisation of a sink element</title>
-        <graphic fileref="images/sink-element" format="png"></graphic>
+        <mediaobject>  
+          <imageobject>
+            <imagedata fileref="images/sink-element.&magic;" format="&magic;" />
+          </imageobject>
+        </mediaobject>
       </figure>
     </sect2>
   </sect1>

@@ -16,9 +16,9 @@ static void 	gst_editor_connection_destroy		(GtkObject *object);
 static void 	gst_editor_connection_realize		(GstEditorConnection *connection);
 
 /* events fired by items within self */
-//static gint gst_editor_connection_line_event(GnomeCanvasItem *item,
-//                                             GdkEvent *event,
-//                                             GstEditorConnection *connection);
+/* static gint gst_editor_connection_line_event(GnomeCanvasItem *item, */
+/*                                             GdkEvent *event, */
+/*                                             GstEditorConnection *connection); */
 
 /* utility functions */
 
@@ -37,7 +37,7 @@ enum {
 };
 
 static GtkObjectClass *parent_class;
-//static guint gst_editor_connection_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_editor_connection_signals[LAST_SIGNAL] = { 0 }; */
 
 GtkType 
 gst_editor_connection_get_type (void) 
@@ -215,8 +215,8 @@ gst_editor_connection_resize (GstEditorConnection *connection)
   if (connection->resize != TRUE) return;
   connection->resize = FALSE;
 
-//  g_print("resizing connection, frompad is %p, topad is %p\n",
-//          connection->frompad,connection->topad);
+/*  g_print("resizing connection, frompad is %p, topad is %p\n", */
+/*          connection->frompad,connection->topad); */
 
   /* calculate the new endpoints */
   if (connection->topad == NULL) {
@@ -283,10 +283,10 @@ void
 gst_editor_connection_set_endpad (GstEditorConnection *connection,
                                   GstEditorPad *pad) 
 {
-  // first check for the trivial case
+  /* first check for the trivial case */
   if (connection->topad == pad) return;
 
-  // now clean up if we've changed pads
+  /* now clean up if we've changed pads */
   if (connection->topad) {
     if (connection->ghost)
       connection->topad->ghostconnection = NULL;

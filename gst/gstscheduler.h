@@ -47,8 +47,8 @@ extern "C" {
 
 #define GST_SCHED_PARENT(sched)		((sched)->parent)
 
-//typedef struct _GstScheduler GstScheduler;
-//typedef struct _GstSchedulerClass GstSchedulerClass;
+/*typedef struct _GstScheduler GstScheduler; */
+/*typedef struct _GstSchedulerClass GstSchedulerClass; */
 
 struct _GstScheduler {
   GstObject object;
@@ -81,6 +81,8 @@ struct _GstSchedulerClass {
 };
 
 GType			gst_scheduler_get_type		(void);
+
+#define         	gst_scheduler_destroy(sched)	gst_object_destroy(GST_OBJECT(sched))
 
 void			gst_scheduler_add_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_remove_element	(GstScheduler *sched, GstElement *element);

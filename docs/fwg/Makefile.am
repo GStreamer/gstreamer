@@ -1,21 +1,23 @@
-manualname = gst-plugin-writers-guide
-htmlname = index.html
+DOC=gst-plugin-writers-guide
+MAIN=$(DOC).xml
+XML=$(shell echo *.xml)
+XSLFO=$(srcdir)/../xsl/fo.xsl
+XSLFOMODS=$(srcdir)/../xsl/ulink.xsl $(srcdir)/../xsl/keycombo.xsl
+XSLHTML=$(srcdir)/../xsl/html.xsl
+XSLHTMLMODS=$(srcdir)/../xsl/fileext.xsl $(srcdir)/../xsl/admon.xsl \
+	$(srcdir)/../xsl/keycombo.xsl $(srcdir)/../xsl/css.xsl
+XSLS=$(XSLFO) $(XSLFOMODS) $(XSLHTML) $(XSLHTMLMODS)
+FIGS= # $(shell echo *.fig) (uncomment when pngs are added)
+PNGS=$(FIGS:.fig=.png)
+PDFS=$(FIGS:.fig=.pdf)
+SRC=$(XML)
+CSS=base.css
 
-sgml_files = gst-plugin-writers-guide.sgml \
-	     titlepage.sgml \
-	     intro.sgml \
-	     testapp.sgml \
-	     loopbased.sgml \
-	     buffers.sgml \
-	     srcnsink.sgml \
-	     statemanage.sgml \
-	     checklist.sgml
+EXTRA_DIST = $(XML) $(FIGS)
 
-fig_files = 
-eps_files = 
-png_files = 
-
-EXTRA_DIST = $(sgml_files) $(fig_files)
+## FIXME if we don't do this they don't get cleaned up in make distcheck
+## but maybe this is not the best way to do it
+CONFIG_CLEAN_FILES = $(XML) $(FIGS)
 
 include $(srcdir)/../manuals.mak
 

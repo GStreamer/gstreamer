@@ -62,36 +62,36 @@ gint _gst_debug_stringhash_color(gchar *file);
 const gchar *	gst_get_category_name	(gint category);
 
 enum {
-  GST_CAT_GST_INIT = 0,		// Library initialization
-  GST_CAT_COTHREADS,		// Cothread creation, etc.
-  GST_CAT_COTHREAD_SWITCH,	// Cothread switching
-  GST_CAT_AUTOPLUG,		// Successful autoplug results
-  GST_CAT_AUTOPLUG_ATTEMPT,	// Attempted autoplug operations
-  GST_CAT_PARENTAGE,		// GstBin parentage issues
-  GST_CAT_STATES,		// State changes and such
-  GST_CAT_PLANNING,		// Plan generation
-  GST_CAT_SCHEDULING,		// Schedule construction
-  GST_CAT_DATAFLOW,		// Events during actual data movement
-  GST_CAT_BUFFER,		// Buffer creation/destruction
-  GST_CAT_CAPS,			// Capabilities matching
-  GST_CAT_CLOCK,		// Clocking
-  GST_CAT_ELEMENT_PADS,		// Element pad management
-  GST_CAT_ELEMENTFACTORY,	// Elementfactory stuff
-  GST_CAT_PADS,			// Pad creation/connection
-  GST_CAT_PIPELINE,		// Pipeline stuff
-  GST_CAT_PLUGIN_LOADING,	// Plugin loading
-  GST_CAT_PLUGIN_ERRORS,	// Errors during plugin loading
-  GST_CAT_PLUGIN_INFO,		// Plugin state information
-  GST_CAT_PROPERTIES,		// Properties
-  GST_CAT_THREAD,		// Thread creation/management
-  GST_CAT_TYPES,		// Typing
-  GST_CAT_XML,			// XML load/save of everything
-  GST_CAT_NEGOTIATION,		// Caps Negotiation stuff
-  GST_CAT_REFCOUNTING,		// Ref Counting stuff
-  GST_CAT_EVENT,		// Event system
-  GST_CAT_PARAMS,		// Dynamic parameters
+  GST_CAT_GST_INIT = 0,		/* Library initialization */
+  GST_CAT_COTHREADS,		/* Cothread creation, etc. */
+  GST_CAT_COTHREAD_SWITCH,	/* Cothread switching */
+  GST_CAT_AUTOPLUG,		/* Successful autoplug results */
+  GST_CAT_AUTOPLUG_ATTEMPT,	/* Attempted autoplug operations */
+  GST_CAT_PARENTAGE,		/* GstBin parentage issues */
+  GST_CAT_STATES,		/* State changes and such */
+  GST_CAT_PLANNING,		/* Plan generation */
+  GST_CAT_SCHEDULING,		/* Schedule construction */
+  GST_CAT_DATAFLOW,		/* Events during actual data movement */
+  GST_CAT_BUFFER,		/* Buffer creation/destruction */
+  GST_CAT_CAPS,			/* Capabilities matching */
+  GST_CAT_CLOCK,		/* Clocking */
+  GST_CAT_ELEMENT_PADS,		/* Element pad management */
+  GST_CAT_ELEMENTFACTORY,	/* Elementfactory stuff */
+  GST_CAT_PADS,			/* Pad creation/connection */
+  GST_CAT_PIPELINE,		/* Pipeline stuff */
+  GST_CAT_PLUGIN_LOADING,	/* Plugin loading */
+  GST_CAT_PLUGIN_ERRORS,	/* Errors during plugin loading */
+  GST_CAT_PLUGIN_INFO,		/* Plugin state information */
+  GST_CAT_PROPERTIES,		/* Properties */
+  GST_CAT_THREAD,		/* Thread creation/management */
+  GST_CAT_TYPES,		/* Typing */
+  GST_CAT_XML,			/* XML load/save of everything */
+  GST_CAT_NEGOTIATION,		/* Caps Negotiation stuff */
+  GST_CAT_REFCOUNTING,		/* Ref Counting stuff */
+  GST_CAT_EVENT,		/* Event system */
+  GST_CAT_PARAMS,		/* Dynamic parameters */
 
-  GST_CAT_CALL_TRACE = 30,	// Call tracing
+  GST_CAT_CALL_TRACE = 30,	/* Call tracing */
 
   GST_CAT_MAX_CATEGORY = 31
 };
@@ -113,11 +113,11 @@ extern const gchar *_gst_category_colors[32];
 #define GST_DEBUG_ENABLED
 #endif
 
-//#ifdef GST_DEBUG_ENABLED
+/*#ifdef GST_DEBUG_ENABLED */
 #define GST_DEBUG_ENABLE_CATEGORIES 0xffffffff
-//#else
-//#define GST_DEBUG_ENABLE_CATEGORIES 0x00000000
-//#endif
+/*#else */
+/*#define GST_DEBUG_ENABLE_CATEGORIES 0x00000000 */
+/*#endif */
 
 
 typedef void (*GstDebugHandler) (gint category,gboolean core,

@@ -1,20 +1,17 @@
-<!DOCTYPE book PUBLIC "-//GNOME//DTD DocBook PNG Variant V1.0//EN" "" [ 
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                  "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % magic-entities SYSTEM "magic">
+%magic-entities;
+
 <!ENTITY TITLEPAGE SYSTEM "titlepage.sgml">
-
 <!ENTITY INTRO SYSTEM "intro.sgml">
-
 <!ENTITY TESTAPP SYSTEM "testapp.sgml">
-
 <!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
-
 <!ENTITY BUFFERS SYSTEM "buffers.sgml">
-
 <!ENTITY SRCNSINK SYSTEM "srcnsink.sgml">
-
 <!ENTITY STATEMANAGE SYSTEM "statemanage.sgml">
-
 <!ENTITY CHECKLIST SYSTEM "checklist.sgml">
-
 <!ENTITY GStreamer "<application>GStreamer</application>">
 ]>
 

@@ -1,5 +1,6 @@
 #undef PACKAGE
 #undef VERSION
+#undef GST_VERSION_RELEASE
 
 /* Gettext stuff */
 #undef ENABLE_NLS
@@ -9,6 +10,7 @@
 #undef HAVE_STPCPY
 
 #undef USE_GLIB2
+#undef HAVE_LIBXML2
 
 #undef PLUGINS_DIR
 #undef PLUGINS_BUILDDIR

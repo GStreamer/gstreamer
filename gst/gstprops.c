@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstlog.h"
@@ -211,7 +211,7 @@ gst_props_merge_int_entries(GstPropsEntry * newentry, GstPropsEntry * oldentry)
     old_max = oldentry->data.int_range_data.max;
   }
 
-  // Put range which starts lower into (new_min, new_max)
+  /* Put range which starts lower into (new_min, new_max) */
   if (old_min < new_min) {
     gint tmp;
     tmp = old_min;
@@ -222,10 +222,10 @@ gst_props_merge_int_entries(GstPropsEntry * newentry, GstPropsEntry * oldentry)
     new_max = tmp;
   }
 
-  // new_min is min of either entry - second half of the following conditional
-  // is to avoid overflow problems.
+  /* new_min is min of either entry - second half of the following conditional */
+  /* is to avoid overflow problems. */
   if (new_max >= old_min - 1 && old_min - 1 < old_min) {
-    // ranges overlap, or are adjacent.  Pick biggest maximum.
+    /* ranges overlap, or are adjacent.  Pick biggest maximum. */
     can_merge = TRUE;
     if (old_max > new_max) new_max = old_max;
   }
@@ -268,15 +268,15 @@ gst_props_add_to_int_list (GList * entries, GstPropsEntry * newentry)
     gboolean merged = gst_props_merge_int_entries(newentry, oldentry);
 
     if (merged) {
-      // replace the existing one with the merged one
+      /* replace the existing one with the merged one */
       g_mutex_lock (_gst_props_entries_chunk_lock);
       g_mem_chunk_free (_gst_props_entries_chunk, oldentry);
       g_mutex_unlock (_gst_props_entries_chunk_lock);
       entries = g_list_remove_link (entries, i);
       g_list_free_1 (i);
 
-      // start again: it's possible that this change made an earlier entry
-      // mergeable, and the pointer is now invalid anyway.
+      /* start again: it's possible that this change made an earlier entry */
+      /* mergeable, and the pointer is now invalid anyway. */
       i = entries;
     }
 
@@ -310,9 +310,9 @@ gst_props_newv (const gchar *firstname, va_list var_args)
       GST_PROPS_LIST_T_MISC,
   } list_types;
 
-  // type of the list
+  /* type of the list */
   list_types list_type = GST_PROPS_LIST_T_UNSET;
-  // type of current item
+  /* type of current item */
   list_types entry_type = GST_PROPS_LIST_T_UNSET;
 
   if (firstname == NULL)
@@ -327,7 +327,7 @@ gst_props_newv (const gchar *firstname, va_list var_args)
 
   prop_name = firstname;
 
-  // properties
+  /* properties */
   while (prop_name) {
     GstPropsEntry *entry;
     
@@ -362,7 +362,7 @@ gst_props_newv (const gchar *firstname, va_list var_args)
       case GST_PROPS_END_ID:
 	g_return_val_if_fail (inlist == TRUE, NULL);
 
-	// if list was of size 1, replace the list by a the item it contains
+	/* if list was of size 1, replace the list by a the item it contains */
 	if (g_list_length(list_entry->data.list_data.entries) == 1) {
 	  GstPropsEntry * subentry = (GstPropsEntry *)(list_entry->data.list_data.entries->data);
 	  list_entry->propstype = subentry->propstype;
@@ -504,7 +504,7 @@ gst_props_destroy (GstProps *props)
   while (entries) {
     GstPropsEntry *entry = (GstPropsEntry *)entries->data;
 
-    // FIXME also free the lists
+    /* FIXME also free the lists */
     g_mutex_lock (_gst_props_entries_chunk_lock);
     g_mem_chunk_free (_gst_props_entries_chunk, entry);
     g_mutex_unlock (_gst_props_entries_chunk_lock);
@@ -548,7 +548,7 @@ gst_props_copy (GstProps *props)
     newentry = g_mem_chunk_alloc (_gst_props_entries_chunk);
     g_mutex_unlock (_gst_props_entries_chunk_lock);
 
-    // FIXME copy lists too
+    /* FIXME copy lists too */
     memcpy (newentry, entry, sizeof (GstPropsEntry));
 
     new->properties = g_list_prepend (new->properties, newentry);
@@ -764,7 +764,7 @@ gst_props_merge (GstProps *props, GstProps *tomerge)
 
   merge_props = tomerge->properties;
 
-  // FIXME do proper merging here...
+  /* FIXME do proper merging here... */
   while (merge_props) {
     GstPropsEntry *entry = (GstPropsEntry *)merge_props->data;
 
@@ -806,7 +806,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
     case GST_PROPS_LIST_ID:
     {
       GList *entrylist = entry1->data.list_data.entries;
-      gboolean valid = TRUE;    // innocent until proven guilty
+      gboolean valid = TRUE;    /* innocent until proven guilty */
 
       while (entrylist && valid) {
 	GstPropsEntry *entry = (GstPropsEntry *) entrylist->data;
@@ -820,7 +820,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
     }
     case GST_PROPS_INT_RANGE_ID:
       switch (entry2->propstype) {
-	// a - b   <--->   a - c
+	/* a - b   <--->   a - c */
         case GST_PROPS_INT_RANGE_ID:
 	  return (entry2->data.int_range_data.min <= entry1->data.int_range_data.min &&
 	          entry2->data.int_range_data.max >= entry1->data.int_range_data.max);
@@ -832,7 +832,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       break;
     case GST_PROPS_FLOAT_RANGE_ID:
       switch (entry2->propstype) {
-	// a - b   <--->   a - c
+	/* a - b   <--->   a - c */
         case GST_PROPS_FLOAT_RANGE_ID:
 	  return (entry2->data.float_range_data.min <= entry1->data.float_range_data.min &&
 	          entry2->data.float_range_data.max >= entry1->data.float_range_data.max);
@@ -844,10 +844,10 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       break;
     case GST_PROPS_FOURCC_ID:
       switch (entry2->propstype) {
-	// b   <--->   a
+	/* b   <--->   a */
         case GST_PROPS_FOURCC_ID:
 	  return (entry2->data.fourcc_data == entry1->data.fourcc_data);
-	// b   <--->   a,b,c
+	/* b   <--->   a,b,c */
         case GST_PROPS_LIST_ID:
 	  return gst_props_entry_check_list_compatibility (entry1, entry2);
         default:
@@ -856,17 +856,17 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       break;
     case GST_PROPS_INT_ID:
       switch (entry2->propstype) {
-	// b   <--->   a - d
+	/* b   <--->   a - d */
         case GST_PROPS_INT_RANGE_ID:
           GST_DEBUG(GST_CAT_PROPERTIES,"%d <= %d <= %d ?\n",entry2->data.int_range_data.min,
                     entry1->data.int_data,entry2->data.int_range_data.max);
 	  return (entry2->data.int_range_data.min <= entry1->data.int_data &&
 	          entry2->data.int_range_data.max >= entry1->data.int_data);
-	// b   <--->   a
+	/* b   <--->   a */
         case GST_PROPS_INT_ID:
           GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?\n",entry1->data.int_data,entry2->data.int_data);
 	  return (entry2->data.int_data == entry1->data.int_data);
-	// b   <--->   a,b,c
+	/* b   <--->   a,b,c */
         case GST_PROPS_LIST_ID:
 	  return gst_props_entry_check_list_compatibility (entry1, entry2);
         default:
@@ -875,14 +875,14 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       break;
     case GST_PROPS_FLOAT_ID:
       switch (entry2->propstype) {
-	// b   <--->   a - d
+	/* b   <--->   a - d */
         case GST_PROPS_FLOAT_RANGE_ID:
 	  return (entry2->data.float_range_data.min <= entry1->data.float_data &&
 	          entry2->data.float_range_data.max >= entry1->data.float_data);
-	// b   <--->   a
+	/* b   <--->   a */
         case GST_PROPS_FLOAT_ID:
 	  return (entry2->data.float_data == entry1->data.float_data);
-	// b   <--->   a,b,c
+	/* b   <--->   a,b,c */
         case GST_PROPS_LIST_ID:
 	  return gst_props_entry_check_list_compatibility (entry1, entry2);
         default:
@@ -891,7 +891,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       break;
     case GST_PROPS_BOOL_ID:
       switch (entry2->propstype) {
-	// t   <--->   t
+	/* t   <--->   t */
         case GST_PROPS_BOOL_ID:
           return (entry2->data.bool_data == entry1->data.bool_data);
         case GST_PROPS_LIST_ID:
@@ -901,7 +901,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       }
     case GST_PROPS_STRING_ID:
       switch (entry2->propstype) {
-	// t   <--->   t
+	/* t   <--->   t */
         case GST_PROPS_STRING_ID:
           return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
         case GST_PROPS_LIST_ID:

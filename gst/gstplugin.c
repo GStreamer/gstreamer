@@ -63,6 +63,7 @@ _gst_plugin_initialize (void)
 {
 #ifndef GST_DISABLE_REGISTRY
   xmlDocPtr doc;
+  xmlNodePtr root;
 #endif
 
   main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);
@@ -97,11 +98,12 @@ _gst_plugin_initialize (void)
       !doc->xmlRootNode ||
       doc->xmlRootNode->name == 0 ||
       strcmp (doc->xmlRootNode->name, "GST-PluginRegistry") ||
-      !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) {
+      !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) 
+  {
     if (_gst_warn_old_registry)
-	g_warning ("gstplugin: registry needs rebuild: run gstreamer-register\n");
+	g_error ("gstplugin: registry needs rebuild: run gstreamer-register\n");
     gst_plugin_load_all ();
-    //gst_plugin_unload_all ();
+    /* gst_plugin_unload_all (); */
     return;
   }
   gst_plugin_load_thyself (doc->xmlRootNode);
@@ -200,8 +202,10 @@ plugin_times_older_than_recurse(gchar *path, time_t regtime)
 static gboolean
 plugin_times_older_than(time_t regtime)
 {
-  // return true iff regtime is more recent than the times of all the files
-  // in the plugin dirs.
+  /* return true iff regtime is more recent than the times of all the files
+   * in the plugin dirs.
+   */
+
   GList *path;
   path = _gst_plugin_paths;
   while (path != NULL) {
@@ -224,7 +228,7 @@ gst_plugin_load_recurse (gchar *directory, gchar *name)
   gboolean loaded = FALSE;
   gchar *dirname;
 
-  //g_print("recursive load of '%s' in '%s'\n", name, directory);
+  /* g_print("recursive load of '%s' in '%s'\n", name, directory); */
   dir = opendir(directory);
   if (dir) {
     while ((dirent = readdir(dir))) {
@@ -334,7 +338,7 @@ gst_library_load (const gchar *name)
     libraries = g_list_next(libraries);
   }
 
-  // for now this is the same
+  /* for now this is the same */
   res = gst_plugin_load(name);
 
   if (res) {
@@ -377,7 +381,7 @@ gst_plugin_load (const gchar *name)
     }
     g_free(pluginname);
     libspath = g_strconcat(path->data,"/.libs",NULL);
-    //g_print("trying to load '%s'\n",g_module_build_path(libspath,name));
+    /* g_print("trying to load '%s'\n",g_module_build_path(libspath,name)); */
     pluginname = g_module_build_path(libspath,name);
     g_free(libspath);
     if (gst_plugin_load_absolute(pluginname)) {
@@ -385,7 +389,7 @@ gst_plugin_load (const gchar *name)
       return TRUE;
     }
     g_free(pluginname);
-    //g_print("trying to load '%s' from '%s'\n",name,path->data);
+    /* g_print("trying to load '%s' from '%s'\n",name,path->data); */
     pluginname = g_module_build_path("",name);
     if (gst_plugin_load_recurse(path->data,pluginname)) {
       g_free(pluginname);
@@ -440,8 +444,8 @@ gst_plugin_load_absolute (const gchar *filename)
 static gboolean
 gst_plugin_check_version (gint major, gint minor)
 {
-  // return NULL if the major and minor version numbers are not compatible
-  // with ours.
+  /* return NULL if the major and minor version numbers are not compatible */
+  /* with ours. */
   if (major != GST_VERSION_MAJOR || minor != GST_VERSION_MINOR) 
     return FALSE;
 
@@ -501,7 +505,7 @@ gst_plugin_load_plugin (GstPlugin *plugin)
   }
 
   if (stat (filename, &file_status)) {
-    //g_print("problem opening file %s\n",filename);
+    /* g_print("problem opening file %s\n",filename); */
     return FALSE;
   }
 
@@ -523,7 +527,7 @@ gst_plugin_load_plugin (GstPlugin *plugin)
     }
     return TRUE;
   } else if (_gst_plugin_spew) {
-    // FIXME this should be some standard gst mechanism!!!
+    /* FIXME this should be some standard gst mechanism!!! */
     g_printerr ("error loading plugin %s, reason: %s\n", filename, g_module_error());
   }
   else {
@@ -799,7 +803,7 @@ gst_plugin_load_thyself (xmlNodePtr parent)
   gint featurecount = 0;
   gchar *pluginname;
 
-  kinderen = parent->xmlChildrenNode; // Dutch invasion :-)
+  kinderen = parent->xmlChildrenNode; /* Dutch invasion :-) */
   while (kinderen) {
     if (!strcmp (kinderen->name, "plugin")) {
       xmlNodePtr field = kinderen->xmlChildrenNode;

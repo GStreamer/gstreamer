@@ -46,7 +46,11 @@
   </para>
   <figure float="1" id="sec-threads-img">
     <title>a thread</title>
-    <graphic fileref="images/thread" format="png"></graphic>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/thread.&magic;" format="&magic;" />
+      </imageobject>
+    </mediaobject>  
   </figure>
 
   <para> 

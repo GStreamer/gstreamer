@@ -10,26 +10,15 @@ release the source.
 Developer note:  When building from CVS sources, you will need to run
 autogen.sh to generate the build system files.
 
-Unfortunately, there is a bug in automake which causes it to use a large
-amount of memory when generating plugins/Makefile.in.  The following patch,
-which you may wish to apply to automake (version 1.4), fixes this problem.
-It is also fixed in versions of automake 1.4f and later.
-Alternatively, ensure that you have at least 512Mb of memory on your system,
-and be prepared to wait a little while when running automake (or autogen.sh).
+GStreamer is cutting-edge stuff.  To be a CVS developer, you need 
+cutting-edge tools.
 
-The autogen.sh script will automatically detect an unpatched automake and give
-a warning.  It will also generate a patched version of automake in the top
-build directory, which you can use by putting it in a directory in your $PATH
-ahead of the unpatched version of automake.
+ATM, most of us have at least these versions :
 
-@@ -2383,8 +2383,8 @@
- 	# to all possible directories, and use it.  If DIST_SUBDIRS is
- 	# defined, just use it.
- 	local ($dist_subdir_name);
--	if (&variable_conditions ('SUBDIRS')
--	    || &variable_defined ('DIST_SUBDIRS'))
-+	if (&variable_defined ('DIST_SUBDIRS')
-+	    || &variable_conditions ('SUBDIRS'))
- 	{
- 	    $dist_subdir_name = 'DIST_SUBDIRS';
- 	    if (! &variable_defined ('DIST_SUBDIRS'))
+* autoconf	2.52	(NOT 2.52d)
+* automake	1.5
+* libtool	1.4
+* pkg-config    0.8.0
+
+autogen.sh will check for these versions and complain if you don't have 
+them.	

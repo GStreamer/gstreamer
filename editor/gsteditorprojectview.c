@@ -46,7 +46,7 @@ enum {
 };
 
 static GtkObjectClass *parent_class;
-//static guint gst_editor_project_view_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_editor_project_view_signals[LAST_SIGNAL] = { 0 }; */
 
 GtkType 
 gst_editor_project_view_get_type(void) 
@@ -159,7 +159,8 @@ view_on_element_added (GstEditorProjectView *view, GstElement *element)
   row = gtk_clist_append(GTK_CLIST(view->list), &name);
   editor =  gst_editor_new(element);
 
-  gtk_signal_connect_object(GTK_OBJECT(editor), "name_changed", on_name_change, GTK_OBJECT(view));
+  g_signal_connect_swapped(G_OBJECT (editor), "name_changed",
+			   G_CALLBACK (on_name_change), G_OBJECT(view));
   gtk_clist_set_row_data(GTK_CLIST(view->list), row, editor);
   gtk_clist_set_pixtext(GTK_CLIST(view->list), row, 0, name, 3, image->pixmap, image->bitmap);
 }
@@ -214,10 +215,12 @@ static void
 on_load_file_selected (GtkWidget *button,
 		          file_select *data) 
 {
-  GtkWidget *selector = data->selection;
+  GtkWidget            *selector = data->selection;
+  const gchar          *file_name;
   GstEditorProjectView *view = data->view;
 
-  gchar *file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION(selector));
+  file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION(selector));
+
   gst_editor_project_load (view->project, file_name);
 
   g_free (data);

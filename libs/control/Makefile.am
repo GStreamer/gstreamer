@@ -19,3 +19,4 @@ libgstcontrolinclude_HEADERS = \
 
 libgstcontrol_la_LIBADD = $(GST_LIBS)
 libgstcontrol_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
+

@@ -62,8 +62,8 @@ typedef enum {
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 4,
 } GstBinFlags;
 
-//typedef struct _GstBin GstBin;
-//typedef struct _GstBinClass GstBinClass;
+/*typedef struct _GstBin GstBin; */
+/*typedef struct _GstBinClass GstBinClass; */
 
 struct _GstBin {
   GstElement element;
@@ -71,8 +71,6 @@ struct _GstBin {
   /* our children */
   gint numchildren;
   GList *children;
-  gint num_eos_providers;
-  GList *eos_providers;
   GCond *eoscond;
 
   GstElementState child_states[GST_NUM_STATES];

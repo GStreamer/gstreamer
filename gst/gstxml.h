@@ -83,7 +83,7 @@ GList*		gst_xml_get_topelements (GstXML *xml);
 }
 #endif /* __cplusplus */
 
-#else // GST_DISABLE_LOADSAVE
+#else /* GST_DISABLE_LOADSAVE */
 
 #pragma GCC poison gst_xml_write
 #pragma GCC poison gst_xml_new
@@ -93,6 +93,6 @@ GList*		gst_xml_get_topelements (GstXML *xml);
 #pragma GCC poison gst_xml_get_element
 #pragma GCC poison gst_xml_get_topelements
 
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 #endif /* __GST_XML_H__ */

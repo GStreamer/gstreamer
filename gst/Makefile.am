@@ -203,7 +203,7 @@ noinst_HEADERS = 	\
 	gstpropsprivate.h
 
 libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
-	$(LIBGST_CFLAGS) \
+	$(LIBGST_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS) \
 	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
@@ -213,7 +213,8 @@ libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	-Wnested-externs \
 	-Winline -Wno-unused
 
-libgst_la_LIBADD = $(LIBGST_LIBS)
+libgst_la_LIBADD = $(XML_LIBS) $(GLIB_LIBS)
+
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 EXTRA_DIST = ROADMAP

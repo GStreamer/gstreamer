@@ -31,9 +31,9 @@ static void gst_editor_padtemplate_get_arg(GtkObject *object,GtkArg *arg,guint i
 static void gst_editor_padtemplate_realize(GstEditorPadTemplate *padtemplate);
 
 /* class implementation functions */
-//static void gst_editor_pad_update(GnomeCanvasItem *item,double *affine,
-//                                      ArtSVP *clip_path,int flags);
-//static gint gst_editor_pad_event(GnomeCanvasItem *item,GdkEvent *event);
+/* static void gst_editor_pad_update(GnomeCanvasItem *item,double *affine, */
+/*                                      ArtSVP *clip_path,int flags); */
+/* static gint gst_editor_pad_event(GnomeCanvasItem *item,GdkEvent *event); */
 
 /* events fired by items within self */
 static gint gst_editor_padtemplate_padbox_event(GnomeCanvasItem *item,
@@ -58,7 +58,7 @@ enum {
 };
 
 static GtkObjectClass *parent_class;
-//static guint gst_editor_padtemplate_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_editor_padtemplate_signals[LAST_SIGNAL] = { 0 }; */
 
 GtkType 
 gst_editor_padtemplate_get_type (void) 
@@ -126,7 +126,7 @@ gst_editor_padtemplate_new (GstEditorElement *parent,
 
   editorpadtemplate = GST_EDITOR_PADTEMPLATE(gtk_type_new(GST_TYPE_EDITOR_PADTEMPLATE));
   editorpadtemplate->padtemplate = padtemplate;
-  //GST_EDITOR_SET_OBJECT(padtemplate, editorpadtemplate);
+  /* GST_EDITOR_SET_OBJECT(padtemplate, editorpadtemplate); */
 
   va_start(args,first_arg_name);
   gst_editor_padtemplate_construct(editorpadtemplate,parent,first_arg_name,args);
@@ -145,7 +145,7 @@ gst_editor_padtemplate_construct (GstEditorPadTemplate *padtemplate,
   gchar *error;
   GstEditorPadTemplateClass *padtemplateclass;
   
-//  g_print("in gst_editor_padtemplate_construct()\n");
+/*  g_print("in gst_editor_padtemplate_construct()\n"); */
       
   error = gtk_object_args_collect(GTK_OBJECT_TYPE(obj),&arg_list,
                                   &info_list,first_arg_name,args);
@@ -154,7 +154,7 @@ gst_editor_padtemplate_construct (GstEditorPadTemplate *padtemplate,
     g_free(error);
   } else {
     GSList *arg,*info;
-//    g_print("setting all the arguments on the padtemplate\n");
+/*    g_print("setting all the arguments on the padtemplate\n"); */
     for (arg=arg_list,info=info_list;arg;arg=arg->next,info=info->next)
       gtk_object_arg_set(obj,arg->data,info->data);
     gtk_args_collect_cleanup(arg_list,info_list);
@@ -298,7 +298,7 @@ gst_editor_padtemplate_resize (GstEditorPadTemplate *padtemplate)
 {
   gdouble minwidth,minheight;
 
-//  g_print("resizing padtemplate\n");
+/*  g_print("resizing padtemplate\n"); */
 
   minwidth = 0;minheight = 0;
 
@@ -318,7 +318,7 @@ gst_editor_padtemplate_resize (GstEditorPadTemplate *padtemplate)
   padtemplate->height = MAX(padtemplate->height,minheight);
 
   /* update the connection if there is one */
-//  g_print("connection is %p\n",padtemplate->connection);
+/*  g_print("connection is %p\n",padtemplate->connection); */
   if (padtemplate->connection != NULL)
     gst_editor_connection_resize(padtemplate->connection);
 }
@@ -335,7 +335,7 @@ gst_editor_padtemplate_repack (GstEditorPadTemplate *padtemplate)
 
   x1 = 0;y1 = 0;
   x2 = x1 + padtemplate->width;y2 = y1 + padtemplate->height;
-//  g_print("repacking padtemplate at %.2fx%.2f %.2fx%.2f - %.2fx%.2f\n",padtemplate->x, padtemplate->y,x1,y1,x2,y2);
+/*  g_print("repacking padtemplate at %.2fx%.2f %.2fx%.2f - %.2fx%.2f\n",padtemplate->x, padtemplate->y,x1,y1,x2,y2); */
 
   /* move the group */
   gtk_object_set(GTK_OBJECT(padtemplate->group),"x",padtemplate->x,"y",padtemplate->y,NULL);
@@ -404,10 +404,10 @@ static gint gst_editor_padtemplate_event(GnomeCanvasItem *item,GdkEvent *event) 
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
-//      g_print("entered padtemplate\n");
+/*      g_print("entered padtemplate\n"); */
       break;
     case GDK_LEAVE_NOTIFY:
-//      g_print("left padtemplate\n");
+/*      g_print("left padtemplate\n"); */
       break;
     default:
       break;
@@ -425,7 +425,7 @@ gst_editor_padtemplate_padbox_event(GnomeCanvasItem *item,
   GstEditorElement *element;
   GstEditorBin *bin;
 
-//  g_print("padtemplatebox has event %d\n",event->type);
+/*  g_print("padtemplatebox has event %d\n",event->type); */
   g_return_val_if_fail(GST_IS_EDITOR_PADTEMPLATE(padtemplate), FALSE);
 
   element = padtemplate->parent;
@@ -435,23 +435,23 @@ gst_editor_padtemplate_padbox_event(GnomeCanvasItem *item,
     case GDK_ENTER_NOTIFY:
       gtk_object_set(GTK_OBJECT(padtemplate->border),
                  "fill_color_rgba", 0xDDBBBB00, NULL);
-//      g_print("entered padtemplate '%s'\n",
-//              gst_padtemplate_get_name(padtemplate->padtemplate));
+/*      g_print("entered padtemplate '%s'\n", */
+/*              gst_padtemplate_get_name(padtemplate->padtemplate)); */
       break;
     case GDK_LEAVE_NOTIFY:
       gtk_object_set(GTK_OBJECT(padtemplate->border),
                  "fill_color_rgba", 0xFFCCCC00, NULL);
-//      g_print("left padtemplate '%s'\n",
-//              gst_padtemplate_get_name(padtemplate->padtemplate));
+/*      g_print("left padtemplate '%s'\n", */
+/*              gst_padtemplate_get_name(padtemplate->padtemplate)); */
       break;
     case GDK_BUTTON_PRESS:
-//      g_print("have button press in padtemplate '%s'\n",
-//              gst_padtemplate_get_name(padtemplate->padtemplate));
-      //gst_editor_bin_start_banding(bin,padtemplate);
+/*      g_print("have button press in padtemplate '%s'\n", */
+/*              gst_padtemplate_get_name(padtemplate->padtemplate)); */
+      /* gst_editor_bin_start_banding(bin,padtemplate); */
       return TRUE;
       break;
     case GDK_MOTION_NOTIFY:
-//      g_print("have motion in padtemplate\n");
+/*      g_print("have motion in padtemplate\n"); */
       break;
     default:
       break;

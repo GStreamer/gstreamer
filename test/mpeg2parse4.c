@@ -45,7 +45,7 @@ int mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_element_connect(v_decode_queue,"src",v_decode,"sink");
     gst_element_connect(v_decode,"src",v_color,"sink");
 
-    gst_schedule_show(GST_ELEMENT_SCHED(v_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_decode_thread));
 
 
     // build the show thread
@@ -67,15 +67,15 @@ int mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(v_decode_thread),v_show_thread);
     gst_element_connect(v_color,"src",v_show_queue,"sink");
 
-    gst_schedule_show(GST_ELEMENT_SCHED(v_decode_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(v_show_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_show_thread));
 
     // connect the whole thing to the main pipeline
     gst_pad_connect(pad, gst_element_get_pad(v_decode_queue,"sink"));
     gst_bin_add(GST_BIN(pipeline),v_decode_thread);
 
-    gst_schedule_show(GST_ELEMENT_SCHED(v_decode_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(v_show_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_show_thread));
 
     // start it playing
     gst_element_set_state(v_decode_thread,GST_STATE_PLAYING);
@@ -96,7 +96,7 @@ int mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     gst_element_connect(a_decode_queue,"src",a_decode,"sink");
 
-    gst_schedule_show(GST_ELEMENT_SCHED(a_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_decode_thread));
 
 
     // build the sink thread
@@ -119,15 +119,15 @@ int mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(a_decode_thread),a_sink_thread);
     gst_element_connect(a_decode,"src",a_sink_queue,"sink");
 
-    gst_schedule_show(GST_ELEMENT_SCHED(a_decode_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(a_sink_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_sink_thread));
 
     // connect the whole thing to the main pipeline
     gst_pad_connect(pad, gst_element_get_pad(a_decode_queue,"sink"));
     gst_bin_add(GST_BIN(pipeline),a_decode_thread);
 
-    gst_schedule_show(GST_ELEMENT_SCHED(a_decode_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(a_sink_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_sink_thread));
 
     // start it playing
     gst_element_set_state(a_decode_thread,GST_STATE_PLAYING);
@@ -137,11 +137,11 @@ int mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   if (v_decode_thread && a_decode_thread) {
     xmlSaveFile("mpeg2parse4.gst", gst_xml_write(GST_ELEMENT(pipeline)));
 fprintf(stderr,"DUMP OF ALL SCHEDULES!!!:\n");
-    gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
-    gst_schedule_show(GST_ELEMENT_SCHED(v_decode_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(v_show_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(a_decode_thread));
-    gst_schedule_show(GST_ELEMENT_SCHED(a_sink_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(pipeline));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(v_show_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_decode_thread));
+    gst_scheduler_show(GST_ELEMENT_SCHED(a_sink_thread));
   }
 
   return 0;

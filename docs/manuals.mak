@@ -1,107 +1,97 @@
-# Included by directories containing manuals.
-# Expects the following to be defined:
-# manualname
-# htmlname
-# sgml_files
-# fig_files
-# eps_files
-# png_files
 
-PDFFILES=$(manualname).pdf
-PSFILES=$(manualname).ps
+# taken from selfdocbookx, http://cyberelk.net/tim/docbook/selfdocbookx/index.html
 
-if HAVE_FIG2DEV_PNG
-PNGS_TO_MAKE=$(png_files)
-else
-PNGS_TO_MAKE=
-endif
+# modified by andy wingo <apwingo@eos.ncsu.edu> 14 dec 2001 for use by gstreamer
 
-$(manualname)/$(htmlname): $(sgml_files) $(PNGS_TO_MAKE)
-if HAVE_DB2HTML
-	db2html $(manualname).sgml
-else
-	@echo "Can't build $@: don't have db2html tool"
-endif
+all: html ps pdf
 
-$(manualname).pdf: $(manualname).ps
-if HAVE_PS2PDF
-	@if [ -r $< ] ; then ps2pdf $< $@ ; fi
-else
-	@echo "Can't build $@: don't have ps2pdf tool"
-endif
+if     HAVE_XSLTPROC
 
-if HAVE_FIG2DEV_EPS
-$(manualname).ps: $(sgml_files) $(eps_files)
-else
-$(manualname).ps: $(sgml_files)
-endif
-if HAVE_DB2PS
-	@if [ -r $< ] ; then db2ps $(manualname).sgml ; fi
-else
-	@echo "Can't build $@: don't have db2ps tool"
-endif
+if     HAVE_FIG2DEV_PNG
+html: $(DOC)
+else  !HAVE_FIG2DEV_PNG
+html:
+endif !HAVE_FIG2DEV_PNG
 
-images :
-	mkdir images
+if     HAVE_FIG2DEV_PDF
+if     HAVE_PDFXMLTEX
+pdf: $(DOC).pdf
 
-if HAVE_FIG2DEV_PNG
-images/%.png : %.fig images
-	fig2dev -L png -s 16 $< $@
-endif
+if     HAVE_PDFTOPS
+ps: $(DOC).ps
+else  !HAVE_PDFTOPS
+ps:
+endif !HAVE_PDFTOPS
 
-if HAVE_FIG2DEV_EPS
-images/%.eps : %.fig images
-	fig2dev -L eps -s 16 -m 0.5 $< $@
-endif
+else  !HAVE_PDFXMLTEX
+pdf:
+ps:
+endif !HAVE_PDFXMLTEX
 
-$(manualname)/images:
-	@if [ -d $(manualname) ] ; then \
-	   if [ -d images ] ; then \
-	      ln -sf ../images $(manualname)/images ;\
-	   fi \
-	fi
+else  !HAVE_FIG2DEV_PDF
+pdf:
+ps:
+endif !HAVE_FIG2DEV_PDF
 
-htmldocs: $(manualname)/$(htmlname) $(manualname)/images
-pdfdocs: $(PDFFILES)
-psdocs: $(PSFILES)
+else  !HAVE_XSLTPROC
+html:
+ps:
+pdf:
+endif !HAVE_XSLTPROC
 
-# Data to install, in the usual automake way
-docdatadir   = $(datadir)/gstreamer
-docdata_DATA = $(PDFFILES) $(PSFILES)
+$(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
+	cp magic-pdf magic
+	xsltproc $(XSLFO) $(MAIN) > $@-t
+	mv -f $@-t $@
 
-htmlinst: htmldocs
-	@if [ -r $(manualname)/$(htmlname) ] ; then \
-	    echo "Installing $(manualname)" ; \
-	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
-	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
-	    $(INSTALL_DATA) $(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
-	    for a in "x" $(png_files); do \
-	    if [ "x$$a" != "xx" ] ; then \
-	    if [ -r $$a ] ; then \
-	    $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
-	    fi; fi; done \
-	else \
-	    if [ -r $(srcdir)/$(manualname)/$(htmlname) ] ; then \
-	        echo "Installing $(srcdir)/$(manualname)" ; \
-	        $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
-		$(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
-	        $(INSTALL_DATA) $(srcdir)/$(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
-		for a in "x" $(png_files); do \
-		if [ "x$$a" != "xx" ] ; then \
-		if [ -r $$a ] ; then \
-		$(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
-		fi; fi; done \
-	    else \
-	        echo "NOT installing HTML documentation: not present, and can't generate" ; \
-	    fi \
-	fi
+$(DOC).pdf: $(DOC).fo
+	pdfxmltex $<
+	pdfxmltex $<
 
-htmluninst:
-	$(RM) -rf $(DESTDIR)$(docdatadir)/$(manualname)
+$(DOC).ps: $(DOC).pdf
+	pdftops $< $@
 
-all-local: htmldocs pdfdocs psdocs
-clean-local:
-	$(RM) -rf $(manualname)/ $(manualname).junk/ images/*.eps images/*.png *.eps *.png *.ps *.pdf *.aux *.dvi *.log *.tex DBTOHTML_OUTPUT_DIR*
-install-data-local: htmlinst
-uninstall-local: htmluninst
+$(DOC): $(XML) $(PNGS) $(XSLHTML) $(XSLHTMLMODS)
+	-$(RM) *.html
+	-$(RM) -r $@
+	mkdir $@
+	cp magic-png magic
+	xsltproc $(XSLHTML) $(MAIN)
+	mv *.html $@
+	cp $(CSS) $@
+	test "x$(PNGS)" != "x" && mkdir $@/images && cp $(PNGS) $@/images || true
 
+builddate:
+	echo -n $$(date "+%e %B %Y") > $@
+
+clean:
+	-$(RM) -f *.log *.dvi *.aux *.tex *.out *-t
+	-$(RM) -f $(PNGS) $(PDFS) builddate *.html
+	-$(RM) -rf $(DOC) $(DOC).ps $(DOC).pdf $(DOC).fo
+
+distclean: clean
+	-$(RM) -f *~ $(DOC).tar.gz docbook.tar.gz
+#	-$(RM) -r docbook
+
+$(DOC).tar.gz: distclean
+	(cd ..; tar zcf /tmp/$(DOC).tar.gz $(DOC) )
+	mv /tmp/$(DOC).tar.gz .
+
+#docbook: $(DOC).tar.gz all
+#	-$(RM) -r $@
+#	mkdir $@
+#	cp $(DOC).tar.gz $(DOC).ps $(DOC).pdf $@
+#	tar cf - $(DOC) | (cd $@; tar xf -)
+
+#docbook.tar.gz: docbook
+#	tar zcf docbook.tar.gz docbook
+
+# Make png from xfig
+%.png: %.fig
+	fig2dev -Lpng $< $@
+
+# Make pdf from xfig
+%.pdf: %.fig
+	fig2dev -Lpdf $< $@
+
+.PHONY: distclean clean all builddate

@@ -36,8 +36,8 @@ enum {
 static void 	gst_editor_bin_class_init	(GstEditorBinClass *klass);
 static void 	gst_editor_bin_init		(GstEditorBin *bin);
 
-//static void gst_editor_bin_set_arg(GtkObject *object,GtkArg *arg,guint id);
-//static void gst_editor_bin_get_arg(GtkObject *object,GtkArg *arg,guint id);
+/* static void gst_editor_bin_set_arg(GtkObject *object,GtkArg *arg,guint id); */
+/* static void gst_editor_bin_get_arg(GtkObject *object,GtkArg *arg,guint id); */
 
 static void 	gst_editor_bin_realize 		(GstEditorElement *bin);
 static void 	gst_editor_bin_repack 		(GstEditorBin *bin);
@@ -187,13 +187,13 @@ gst_editor_bin_event(GnomeCanvasItem *item,
 {
   GstEditorBin *bin = GST_EDITOR_BIN(element);
 
-//  g_print("bin got %d event at %.2fx%.2f\n",event->type,
-//          event->button.x,event->button.y);
+/*  g_print("bin got %d event at %.2fx%.2f\n",event->type, */
+/*          event->button.x,event->button.y); */
 
   switch (event->type) {
     case GDK_BUTTON_RELEASE:
       if (bin->connecting) {
-//        g_print("bin got release event during drag\n");
+/*        g_print("bin got release event during drag\n"); */
         gnome_canvas_item_ungrab(
           GNOME_CANVAS_ITEM(element->group),
           event->button.time);
@@ -206,8 +206,8 @@ gst_editor_bin_event(GnomeCanvasItem *item,
           bin->connection = NULL;
         }
         bin->connecting = FALSE;
-//g_print("in bin, setting inchild for button release\n");
-        //element->canvas->inchild = TRUE;
+/* g_print("in bin, setting inchild for button release\n"); */
+        /* element->canvas->inchild = TRUE; */
         return TRUE;
       }
       break;
@@ -215,8 +215,8 @@ gst_editor_bin_event(GnomeCanvasItem *item,
       if (bin->connecting) {
         gdouble x,y;
         x = event->button.x;y = event->button.y;
-//        g_print("bin has motion during connection draw at %.2fx%.2f\n",
-//                x,y);
+/*        g_print("bin has motion during connection draw at %.2fx%.2f\n", */
+/*                x,y); */
         gst_editor_bin_connection_drag(bin,x,y);
         return TRUE;
       }
@@ -241,7 +241,7 @@ gst_editor_bin_button_event(GnomeCanvasItem *item,
   GstEditorElement *newelement;
   GdkEventButton *buttonevent;
 
-//  g_print("bin got button event\n");
+/*  g_print("bin got button event\n"); */
 
   if (event->type != GDK_BUTTON_RELEASE) return FALSE;
 
@@ -250,8 +250,8 @@ gst_editor_bin_button_event(GnomeCanvasItem *item,
   if (buttonevent->button != 1) return FALSE;
 
   gnome_canvas_item_w2i(item,&event->button.x,&event->button.y);
-//  g_print("calling gst_editor_create_item(,%.2f,%.2f)\n",
-//          event->button.x,event->button.y);
+/*  g_print("calling gst_editor_create_item(,%.2f,%.2f)\n", */
+/*          event->button.x,event->button.y); */
   newelement = gst_editor_create_item(event->button.x,event->button.y);
   if (newelement != NULL) {
     GstEditorElementClass *elementclass;
@@ -273,7 +273,7 @@ gst_editor_bin_start_banding (GstEditorBin *bin,GstEditorPad *pad)
 {
   GdkCursor *cursor;
 
-//  g_print("starting to band\n");
+/*  g_print("starting to band\n"); */
 
   g_return_if_fail(GST_IS_EDITOR_PAD(pad));
 
@@ -304,7 +304,7 @@ gst_editor_bin_connection_drag (GstEditorBin *bin,
   bx = wx;by = wy;
   gnome_canvas_item_w2i(GNOME_CANVAS_ITEM(GST_EDITOR_ELEMENT(bin)->group),&bx,&by);
 
-  // first see if we're on top of an interesting pad
+  /* first see if we're on top of an interesting pad */
   underitem = gnome_canvas_get_item_at(
     &GST_EDITOR_ELEMENT(bin)->canvas->canvas,wx,wy);
   if (underitem != NULL)

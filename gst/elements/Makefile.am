@@ -14,7 +14,6 @@ libgstelements_la_SOURCES =	\
 	gstfakesrc.c		\
 	gstidentity.c		\
 	gstfakesink.c		\
-	gstdisksrc.c		\
 	gstfilesrc.c		\
 	gstdisksink.c		\
 	gstfdsrc.c		\
@@ -30,7 +29,6 @@ noinst_HEADERS =		\
 	gstfakesrc.h		\
 	gstidentity.h		\
 	gstfakesink.h		\
-	gstdisksrc.h		\
 	gstdisksink.h		\
 	gstfdsrc.h		\
 	gstmultidisksrc.h	\
@@ -39,8 +37,9 @@ noinst_HEADERS =		\
 	gstpipefilter.h		\
 	gsttee.h		\
 	gstaggregator.h		\
-	gststatistics.h	
+	gststatistics.h	        \
+	gstfilesrc.h
 
 libgstelements_la_CFLAGS = $(GHTTP_CFLAGS) $(GST_CFLAGS)
 libgstelements_la_LIBADD = $(GHTTP_LIBS) $(GST_LIBS)
-libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)
+## left from merging, FIXME or DELETEME libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)

@@ -254,9 +254,11 @@ main (int argc,char *argv[])
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (mux));
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (fdsink));
 
-  g_signal_connect (G_OBJECT (parse), "new_pad", mp2tomp1_new_pad, pipeline);
+  g_signal_connect (G_OBJECT (parse), "new_pad",
+		    G_CALLBACK (mp2tomp1_new_pad), pipeline);
 
-  g_signal_connect (G_OBJECT (src), "eos", eof, NULL);
+  g_signal_connect (G_OBJECT (src), "eos",
+		    G_CALLBACK (eof), NULL);
 
   gst_element_connect (src, "src", parse, "sink");
   gst_element_connect (mux, "src", fdsink, "sink");

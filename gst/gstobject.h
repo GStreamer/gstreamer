@@ -27,7 +27,7 @@
 #include <gst/gstconfig.h>
 
 #ifdef USE_GLIB2
-#include <glib-object.h>	// note that this gets wrapped in __GST_OBJECT_H__ 
+#include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
 #include <gst/gstmarshal.h>
 #else
 #include <gst/gobject2gtk.h>
@@ -40,7 +40,7 @@
 #include <gst/gsttrace.h>
 #include <gst/gsttypes.h>
 
-// FIXME
+/* FIXME */
 #include "gstlog.h"
 
 #ifdef __cplusplus
@@ -64,9 +64,9 @@ extern GType _gst_object_type;
 # define GST_OBJECT_CLASS               GST_OBJECT_CLASS_FAST
 #endif
 
-//typedef struct _GstObject GstObject;
-//typedef struct _GstObjectClass GstObjectClass;
-//
+/*typedef struct _GstObject GstObject; */ 
+/*typedef struct _GstObjectClass GstObjectClass; */
+
 typedef enum
 {
   GST_DESTROYED   = 0,

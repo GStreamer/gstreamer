@@ -1,3 +1,20 @@
+2001-12-14  Michael Meeks  <michael@ximian.com>
+
+	* gstplay.c (gst_play_set_uri): remove bogus
+	priv->offset_element set.
+
+	* gstplayprivate.h: kill, move into
+
+	* gstplay.c: here & lots of cleanup.
+
+	* gstplay.h: use an opaque typedef for GstPlayPrivate,
+	lots of ugly casts die.
+
+	* main.c (main): use gtk_main; gst_main no longer hits
+	the GUI mainloop.
+
+	* gstmediaplay.c (gst_media_play_init): show the toplevel
+
 2001-12-06  Arik Devens  <arik@gnome.org>
 
 	* gstmediaplay.c (window_key_press_event): Added a case for
@@ -30,6 +47,7 @@
 
 	* main.c (main): Commented out adding to the playlist for now to
 	get rid of the GtkCList warning.
+
 
 2001-08-15  Arik Devens  <arik@gnome.org>
 

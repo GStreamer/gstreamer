@@ -1,10 +1,13 @@
-gstreamer (0.2.1.20010907-1) unstable; urgency=low
+gstreamer (0.3.0-1) unstable; urgency=low
 
-  * Sync to latest CVS
-  * Added plugin packages: -a52dec, -mikmod, -sid
+  * New upstream release (lots of changes)
+  * Update Build-Depends versions as needed
+  * Added plugin packages: -a52dec, -dvd, -mikmod, -sid
   * Added speed and qcam to -common
+  * Added gstreamer-guilaunch to gstreamer-tools package
+  * Added dependencies on unofficial LAME packages
 
- -- David I. Lehn <dlehn@vt.edu>  Fri,  7 Sep 2001 03:33:43 -0400
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 11 Dec 2001 21:27:22 -0500
 
 gstreamer (0.2.1-4) unstable; urgency=low
 

@@ -27,7 +27,7 @@
 
 #include "gsttypefind.h"
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 
 GstElementDetails gst_typefind_details = {
   "TypeFind",

@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace common elements esd festival flac gnomevfs gsm jpeg lame mad mikmod mpeg2dec mpg123 oss sdl sid vorbis x
+PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace common dvd elements esd festival flac gnomevfs gsm jpeg lame mad mikmod mpeg2dec mpg123 oss sdl sid vorbis x
 
 setup-links:
 	for i in $(PLUGINS); do \
@@ -28,12 +28,16 @@ setup-links:
 		) \
 	done
 
+export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
 	./configure \
-		--host=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE) \
+		--build=$(DEB_BUILD_GNU_TYPE) \
+		--host=$(DEB_HOST_GNU_TYPE) \
 		--prefix=/usr \
 		--mandir=\$${prefix}/share/man \
 		--infodir=\$${prefix}/share/info \
@@ -160,7 +164,7 @@ binary-arch: build install setup-links
 	dh_makeshlibs
 	dh_installdeb
 #	dh_perl
-	dh_shlibdeps -l`pwd`/debian/libgst0/usr/lib:`pwd`/debian/libgstmediaplay0/usr/lib:`pwd`/debian/libgsteditor0/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgst1/usr/lib:`pwd`/debian/libgstmediaplay0/usr/lib:`pwd`/debian/libgsteditor0/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

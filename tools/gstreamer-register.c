@@ -109,7 +109,7 @@ static void move_file(const char * nameold,
 	g_print("Cannot move `%s' to `%s'", nameold, namenew);
 	error_perm();
     }
-    // set mode again, to make this public
+    /* set mode again, to make this public */
     set_filemode(namenew, *newmode);
 }
 
@@ -151,13 +151,14 @@ static void save_registry(const char *destfile,
 	g_print("Cannot fopen `%s' to save new registry to.", destfile);
 	error_perm();
     }
-    // set mode to make this private
+    /* set mode to make this private */
     set_filemode(destfile, tmpmode);
 
-    // FIXME: no way to check success of xmlDocDump, which is why
-    // this piece of code is ifdefed out.
-    // The version of libxml currently (Jan 2001) in their CVS tree fixes
-    // this problem. 
+    /*  FIXME: no way to check success of xmlDocDump, which is why
+       this piece of code is ifdefed out.
+       The version of libxml currently (Jan 2001) in their CVS tree fixes
+       this problem. */
+
     xmlDocDump(fp, *doc);
 
     if (!fclose(fp)) {
@@ -177,43 +178,45 @@ static void save_registry(const char *destfile,
 int main(int argc,char *argv[]) 
 {
     xmlDocPtr doc;
+    xmlNodePtr node;
 
-    // Mode of the file we're saving the repository to;
+    /* Mode of the file we're saving the repository to; */
     mode_t newmode;
 
-    // Get mode of old repository, or a default.
+    /* Get mode of old repository, or a default. */
     if (!get_filemode(GLOBAL_REGISTRY_FILE, &newmode)) {
 	mode_t theumask = umask(0);
 	umask(theumask);
 	newmode = REGISTRY_FILE_PERMS & ~ theumask;
     }
 
-    // remove the old registry file first
-    // If this fails, we simply ignore it since we'll overwrite it later
-    // anyway.
+    /* remove the old registry file first
+       If this fails, we simply ignore it since we'll overwrite it later
+        anyway. */
     unlink(GLOBAL_REGISTRY_FILE);
 
-    // Init gst
+    /* Init gst */
     _gst_plugin_spew = TRUE;
     _gst_warn_old_registry = FALSE;
     gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
     gst_init(&argc,&argv);
 
-    // Check args
+    /* Check args */
     if (argc != 1) usage(argv[0]);
 
-    // Check that directory for config exists
+    /* Check that directory for config exists */
     check_dir(GLOBAL_REGISTRY_DIR);
     
-    // Read the plugins
+    /* Read the plugins */
     doc = xmlNewDoc("1.0");
-    doc->xmlRootNode = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
+    node = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
+    xmlDocSetRootElement (doc, node);
     gst_plugin_save_thyself(doc->xmlRootNode);
 
-    // Save the registry to a tmp file.
+    /* Save the registry to a tmp file. */
     save_registry(GLOBAL_REGISTRY_FILE_TMP, &doc);
 
-    // Make the tmp file live.
+    /* Make the tmp file live. */
     move_file(GLOBAL_REGISTRY_FILE_TMP, GLOBAL_REGISTRY_FILE, &newmode);
 
     return(0);

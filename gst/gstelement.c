@@ -20,8 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include <glib.h>
+#include <stdarg.h>
 #include "gst_private.h"
 
 #include "gstelement.h"
@@ -276,10 +277,10 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  // first check to make sure the pad's parent is already set
+  /* first check to make sure the pad's parent is already set */
   g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
 
-  // then check to see if there's already a pad by that name here
+  /* then check to see if there's already a pad by that name here */
   g_return_if_fail (gst_object_check_uniqueness (element->pads, GST_PAD_NAME(pad)) == TRUE);
 
   /* set the pad's parent */
@@ -326,7 +327,9 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
+  //gst_object_ref (GST_OBJECT (pad));
   gst_object_unparent (GST_OBJECT (pad));
+  //gst_object_unref (GST_OBJECT (pad));
 }
 
 /**
@@ -348,7 +351,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  // then check to see if there's already a pad by that name here
+  /* then check to see if there's already a pad by that name here */
   g_return_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE);
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"creating new ghost pad called %s, from pad %s:%s\n",
@@ -360,7 +363,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
             name, GST_ELEMENT_NAME (element));
   element->pads = g_list_append (element->pads, ghostpad);
   element->numpads++;
-  // set the parent of the ghostpad
+  /* set the parent of the ghostpad */
   gst_object_set_parent (GST_OBJECT (ghostpad), GST_OBJECT (element));
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
@@ -385,10 +388,11 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_GHOST_PAD (pad));
 
-  // FIXME this is redundant?
-  // wingo 10-july-2001: I don't think so, you have to actually remove the pad
-  // from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
-  // the real pad's ghost pad list
+  /* FIXME this is redundant?
+   * wingo 10-july-2001: I don't think so, you have to actually remove the pad
+   * from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
+   * the real pad's ghost pad list
+   */
   gst_pad_remove_ghost_pad (GST_PAD (GST_PAD_REALIZE (pad)), pad);
   gst_element_remove_pad (element, pad);
 }
@@ -412,11 +416,11 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  // if there aren't any pads, well, we're not likely to find one
+  /* if there aren't any pads, well, we're not likely to find one */
   if (!element->numpads)
     return NULL;
 
-  // look through the list, matching by name
+  /* look through the list, matching by name */
   walk = element->pads;
   while (walk) {
     GstPad *pad = GST_PAD(walk->data);
@@ -552,11 +556,11 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
     gboolean compat = FALSE;
 
-    // Ignore name
-    // Ignore presence
-    // Check direction (must be opposite)
-    // Check caps
-
+    /* Ignore name
+     * Ignore presence
+     * Check direction (must be opposite)
+     * Check caps
+     */
     GST_DEBUG(GST_CAT_CAPS,"checking direction and caps\n");
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
@@ -811,7 +815,8 @@ gst_element_wait_state_change (GstElement *element)
   GMutex *mutex = g_mutex_new ();
 
   g_mutex_lock (mutex);
-  g_signal_connect (G_OBJECT (element), "state_change", gst_element_wait_done, cond);
+  g_signal_connect (G_OBJECT (element), "state_change",
+		    G_CALLBACK (gst_element_wait_done), cond);
   g_cond_wait (cond, mutex);
   g_mutex_unlock (mutex);
 
@@ -835,8 +840,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
   GstElementState curpending;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
-//  g_print("gst_element_set_state(\"%s\",%08lx)\n",
-//          element->name,state);
+/*  g_print("gst_element_set_state(\"%s\",%08lx)\n", */
+/*          element->name,state); */
 
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
@@ -856,7 +861,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     else curpending>>=1;
 
     /* set the pending state variable */
-    // FIXME: should probably check to see that we don't already have one
+    /* FIXME: should probably check to see that we don't already have one */
     GST_STATE_PENDING (element) = curpending;
     if (curpending != state)
       GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"intermediate: setting state to %s\n",
@@ -930,11 +935,12 @@ gst_element_change_state (GstElement *element)
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
-  // note: queues' state_change is a special case because it needs to lock
-  // for synchronization (from another thread).  since this signal may block
-  // or (worse) make another state change, the queue needs to unlock before
-  // calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
-  // unlocks, then emits this. 
+  /* note: queues' state_change is a special case because it needs to lock
+   * for synchronization (from another thread).  since this signal may block
+   * or (worse) make another state change, the queue needs to unlock before
+   * calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
+   * unlocks, then emits this. 
+   */
   g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0,
                    old_state, GST_STATE (element));
 
@@ -966,22 +972,19 @@ static void
 gst_element_dispose (GObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
-  GList *pads;
+  GList *pads, *test;
   GstPad *pad;
+  gint i;
   
   GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose\n");
 
-  if (GST_IS_BIN (GST_OBJECT_PARENT (element)))
-    gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
-
-
+  /* first we break all our connections with the ouside */
   if (element->pads) {
     GList *orig;
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      // the gst_object_unparent will do the unreffing
-      gst_element_remove_pad(element, pad);
+      gst_object_destroy (GST_OBJECT (pad));
       pads = g_list_next (pads);
     }
     g_list_free (orig);
@@ -991,6 +994,7 @@ gst_element_dispose (GObject *object)
 
   element->numsrcpads = 0;
   element->numsinkpads = 0;
+  element->numpads = 0;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1011,7 +1015,8 @@ gst_element_save_thyself (GstObject *object,
 {
   GList *pads;
   GstElementClass *oclass;
-//  GType type;
+  /* FIXME : this is needed for glib2 */
+  /* GType type; */
   GstElement *element;
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
@@ -1029,11 +1034,12 @@ gst_element_save_thyself (GstObject *object,
     xmlNewChild (parent, NULL, "version", factory->details->version);
   }
 
-//  if (element->manager)
-//    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager));
+/*  if (element->manager) */
+/*    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager)); */
 
-/* FIXME FIXME FIXME!
-  // output all args to the element
+/* FIXME FIXME FIXME! */
+  /* output all args to the element */
+  /*
   type = G_OBJECT_TYPE (element);
   while (type != G_TYPE_INVALID) {
     GtkArg *args;
@@ -1058,7 +1064,7 @@ gst_element_save_thyself (GstObject *object,
             xmlNewChild (arg, NULL, "value",
                          g_strdup_printf ("%d", G_VALUE_UCHAR (args[i])));
             break;
-          case G_TYPE_BOOL:
+          case G_TYPE_BOOLEAN:
             xmlNewChild (arg, NULL, "value",
                         G_VALUE_BOOL (args[i]) ? "true" : "false");
             break;
@@ -1101,7 +1107,7 @@ gst_element_save_thyself (GstObject *object,
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    // figure out if it's a direct pad or a ghostpad
+    /* figure out if it's a direct pad or a ghostpad */
     if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
       xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
       gst_object_save_thyself (GST_OBJECT (pad), padtag);
@@ -1131,7 +1137,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
   guchar *value = NULL;
   guchar *type = NULL;
 
-  // first get the needed tags to construct the element
+  /* first get the needed tags to construct the element */
   while (children) {
     if (!strcmp (children->name, "name")) {
       name = xmlNodeGetContent (children);
@@ -1149,12 +1155,12 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  // ne need to set the parent on this object bacause the pads
-  // will go through the hierarchy to connect to thier peers
+  /* ne need to set the parent on this object bacause the pads */
+  /* will go through the hierarchy to connect to thier peers */
   if (parent)
     gst_object_set_parent (GST_OBJECT (element), parent);
 
-  // we have the element now, set the arguments
+  /* we have the element now, set the arguments */
   children = self->xmlChildrenNode;
 
   while (children) {
@@ -1174,7 +1180,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
     }
     children = children->next;
   }
-  // we have the element now, set the pads
+  /* we have the element now, set the pads */
   children = self->xmlChildrenNode;
 
   while (children) {
@@ -1299,3 +1305,136 @@ gst_element_statename (GstElementState state)
   }
   return "";
 }
+
+static void
+gst_element_populate_std_props (GObjectClass * klass,
+				const char *prop_name, guint arg_id, GParamFlags flags)
+{
+  GQuark prop_id = g_quark_from_string (prop_name);
+  GParamSpec *pspec;
+
+  static GQuark fd_id = 0;
+  static GQuark blocksize_id;
+  static GQuark bytesperread_id;
+  static GQuark dump_id;
+  static GQuark filesize_id;
+  static GQuark mmapsize_id;
+  static GQuark location_id;
+  static GQuark offset_id;
+  static GQuark silent_id;
+  static GQuark touch_id;
+
+  if (!fd_id) {
+    fd_id = g_quark_from_static_string ("fd");
+    blocksize_id = g_quark_from_static_string ("blocksize");
+    bytesperread_id = g_quark_from_static_string ("bytesperread");
+    dump_id = g_quark_from_static_string ("dump");
+    filesize_id = g_quark_from_static_string ("filesize");
+    mmapsize_id = g_quark_from_static_string ("mmapsize");
+    location_id = g_quark_from_static_string ("location");
+    offset_id = g_quark_from_static_string ("offset");
+    silent_id = g_quark_from_static_string ("silent");
+    touch_id = g_quark_from_static_string ("touch");
+  }
+
+  if (prop_id == fd_id) {
+    pspec = g_param_spec_int ("fd", "File-descriptor",
+			      "File-descriptor for the file being read",
+			      0, G_MAXINT, 0, flags);
+  }
+  else if (prop_id == blocksize_id) {
+    pspec = g_param_spec_ulong ("blocksize", "Block Size",
+				"Block size to read per buffer",
+				0, G_MAXULONG, 4096, flags);
+
+  }
+  else if (prop_id == bytesperread_id) {
+    pspec = g_param_spec_int ("bytesperread", "bytesperread",
+			      "bytesperread",
+			      G_MININT, G_MAXINT, 0, flags);
+
+  }
+  else if (prop_id == dump_id) {
+    pspec = g_param_spec_boolean ("dump", "dump", "dump", FALSE, flags);
+
+  }
+  else if (prop_id == filesize_id) {
+    pspec = g_param_spec_int64 ("filesize", "File Size",
+				"Size of the file being read",
+				0, G_MAXINT64, 0, flags);
+
+  }
+  else if (prop_id == mmapsize_id) {
+    pspec = g_param_spec_ulong ("mmapsize", "mmap() Block Size",
+				"Size in bytes of mmap()d regions",
+				0, G_MAXULONG, 4 * 1048576, flags);
+
+  }
+  else if (prop_id == location_id) {
+    pspec = g_param_spec_string ("location", "File Location",
+				 "Location of the file to read",
+				 NULL, flags);
+
+  }
+  else if (prop_id == offset_id) {
+    pspec = g_param_spec_int64 ("offset", "File Offset",
+				"Byte offset of current read pointer",
+				0, G_MAXINT64, 0, flags);
+
+  }
+  else if (prop_id == silent_id) {
+    pspec = g_param_spec_boolean ("silent", "silent", "silent",
+				  FALSE, flags);
+
+  }
+  else if (prop_id == touch_id) {
+    pspec = g_param_spec_boolean ("touch", "Touch read data",
+				  "Touch data to force disk read before "
+				  "push ()", TRUE, flags);
+  }
+  else {
+    g_warning ("Unknown - 'standard' property '%s' id %d from klass %s",
+               prop_name, arg_id, g_type_name (G_OBJECT_CLASS_TYPE (klass)));
+    pspec = NULL;
+  }
+
+  if (pspec) {
+    g_object_class_install_property (klass, arg_id, pspec);
+  }
+}
+
+/**
+ * gst_element_install_std_props:
+ * @klass: the class to add the properties to
+ * @first_name: the first in a NULL terminated
+ * 'name', 'id', 'flags' triplet list.
+ * 
+ * Add a list of standardized properties with types to the @klass.
+ * the id is for the property switch in your get_prop method, and
+ * the flags determine readability / writeability.
+ **/
+void
+gst_element_install_std_props (GstElementClass * klass, const char *first_name, ...)
+{
+  const char *name;
+
+  va_list args;
+
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+
+  va_start (args, first_name);
+
+  name = first_name;
+
+  while (name) {
+    int arg_id = va_arg (args, int);
+    int flags = va_arg (args, int);
+
+    gst_element_populate_std_props ((GObjectClass *) klass, name, arg_id, flags);
+
+    name = va_arg (args, char *);
+  }
+
+  va_end (args);
+}
+

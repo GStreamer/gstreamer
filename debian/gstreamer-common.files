@@ -12,7 +12,6 @@ usr/lib/gst/libavitypes.*
 usr/lib/gst/libchart.*
 usr/lib/gst/libcutter.*
 usr/lib/gst/libdeinterlace.*
-usr/lib/gst/libdvdsrc.*
 usr/lib/gst/libflxdec.*
 usr/lib/gst/libgstaudio.*
 usr/lib/gst/libgstautoplugcache.*

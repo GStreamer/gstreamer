@@ -22,7 +22,9 @@
 
 #include <gst/gst.h>
 
-#include <sys/types.h>
+#include "gstfilesrc.h"
+
+#include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -77,55 +79,6 @@ GstElementDetails gst_filesrc_details = {
 
 //#define fs_print(format,args...) g_print(format, ## args)
 #define fs_print(format,args...)
-
-
-#define GST_TYPE_FILESRC \
-  (gst_filesrc_get_type())
-#define GST_FILESRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILESRC,GstFileSrc))
-#define GST_FILESRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILESRC,GstFileSrcClass)) 
-#define GST_IS_FILESRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILESRC))
-#define GST_IS_FILESRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESRC))
-
-typedef enum {
-  GST_FILESRC_OPEN              = GST_ELEMENT_FLAG_LAST,
-
-  GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstFileSrcFlags;
-
-typedef struct _GstFileSrc GstFileSrc;
-typedef struct _GstFileSrcClass GstFileSrcClass;
-
-struct _GstFileSrc {
-  GstElement element;
-  GstPad *srcpad;
-
-  guint pagesize;			// system page size
- 
-  gchar *filename;			// filename
-  gint fd;				// open file descriptor
-  off_t filelen;			// what's the file length?
-
-  off_t curoffset;			// current offset in file
-  off_t block_size;			// bytes per read
-  gboolean touch;			// whether to touch every page
-
-  GstBuffer *mapbuf;
-  size_t mapsize;
-
-  GTree *map_regions;
-  GMutex *map_regions_lock;
-
-  gboolean seek_happened;
-};
-
-struct _GstFileSrcClass {
-  GstElementClass parent_class;
-};
-
 
 /* FileSrc signals and args */
 enum {
@@ -194,27 +147,16 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
-    g_param_spec_string("location","File Location","Location of the file to read",
-                        NULL,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILESIZE,
-    g_param_spec_int64("filesize","File Size","Size of the file being read",
-                       0,G_MAXINT64,0,G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FD,
-    g_param_spec_int("fd","File-descriptor","File-descriptor for the file being read",
-                     0,G_MAXINT,0,G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BLOCKSIZE,
-    g_param_spec_ulong("blocksize","Block Size","Block size to read per buffer",
-                       0,G_MAXULONG,4096,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
-    g_param_spec_int64("offset","File Offset","Byte offset of current read pointer",
-                       0,G_MAXINT64,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAPSIZE,
-    g_param_spec_ulong("mmapsize","mmap() Block Size","Size in bytes of mmap()d regions",
-                       0,G_MAXULONG,4*1048576,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOUCH,
-    g_param_spec_boolean("touch","Touch read data","Touch data to force disk read before push()",
-                         TRUE,G_PARAM_READWRITE));
+  gst_element_install_std_props (
+	  GST_ELEMENT_CLASS (klass),
+	  "fd",           ARG_FD,           G_PARAM_READABLE,
+	  "offset",       ARG_OFFSET,       G_PARAM_READWRITE,
+	  "filesize",     ARG_FILESIZE,     G_PARAM_READABLE,
+	  "location",     ARG_LOCATION,     G_PARAM_READWRITE,
+	  "blocksize",    ARG_BLOCKSIZE,    G_PARAM_READWRITE,
+	  "mmapsize",     ARG_MAPSIZE,      G_PARAM_READWRITE,
+	  "touch",        ARG_TOUCH,        G_PARAM_READWRITE,
+	  NULL);
 
   gobject_class->set_property = gst_filesrc_set_property;
   gobject_class->get_property = gst_filesrc_get_property;
@@ -570,8 +512,9 @@ gst_filesrc_get (GstPad *pad)
 
   /* if we need to touch the buffer (to bring it into memory), do so */
   if (src->touch) {
+    volatile guchar *p = GST_BUFFER_DATA (buf), c;
     for (i=0;i<GST_BUFFER_SIZE(buf);i+=src->pagesize)
-      *(GST_BUFFER_DATA(buf)+i) = *(GST_BUFFER_DATA(buf)+i);
+      c = p[i];
   }
 
   /* we're done, return the buffer */

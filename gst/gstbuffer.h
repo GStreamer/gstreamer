@@ -24,16 +24,16 @@
 #ifndef __GST_BUFFER_H__
 #define __GST_BUFFER_H__
 
-//
-// Define this to add file:line info to each GstBuffer showing
-// the location in the source code where the buffer was created.
-// 
-// #define GST_BUFFER_WHERE
-//
-// Then in gdb, you can `call gst_buffer_print_live()' to get a list
-// of allocated GstBuffers and also the file:line where they were
-// allocated.
-//
+/*
+ * Define this to add file:line info to each GstBuffer showing
+ * the location in the source code where the buffer was created.
+ * 
+ * #define GST_BUFFER_WHERE
+ *
+ * Then in gdb, you can `call gst_buffer_print_live()' to get a list
+ * of allocated GstBuffers and also the file:line where they were
+ * allocated.
+ */
 
 #include <gst/gstdata.h>
 

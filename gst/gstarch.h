@@ -37,7 +37,7 @@
 #define GST_ARCH_CALL(target) \
     __asm__("call *%0" : : "r"(target) );
 
-// assuming the stackframe is 16 bytes
+/* assuming the stackframe is 16 bytes */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
 
@@ -45,7 +45,7 @@
 /***** PowerPC *****/
 #elif defined (HAVE_CPU_PPC)
 
-// should bring this in line with others and use an "r"
+/* should bring this in line with others and use an "r" */
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__("lwz 1,%0" : : "m"(stackpointer))
   
@@ -77,8 +77,9 @@ struct minimal_ppc_stackframe {
     __asm__( "bis $31,%0,$27\n\t" \
              "jsr $26,($27),0" : : "r"(target) );
 
-// Need to get more information about the stackframe format
-// and get the fields more correct.  Check GDB sources maybe?
+/* Need to get more information about the stackframe format
+ * and get the fields more correct.  Check GDB sources maybe?
+ */
 struct minimal_stackframe {
     unsigned long back_chain;
     unsigned long LR_save;
@@ -101,9 +102,9 @@ struct minimal_stackframe {
 #define GST_ARCH_CALL(target) \
     __asm__( "mov pc, %0" : : "r"(target) );
 
-// Need to get more information about the stackframe format
-// and get the fields more correct.  Check GDB sources maybe?
-
+/* Need to get more information about the stackframe format 
+ * and get the fields more correct.  Check GDB sources maybe?
+ */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
 
@@ -122,9 +123,9 @@ struct minimal_stackframe {
 #define GST_ARCH_PRESETJMP() \
     __asm__( "ta 3" );
 
-// Need to get more information about the stackframe format
-// and get the fields more correct.  Check GDB sources maybe?
-
+/* Need to get more information about the stackframe format 
+ * and get the fields more correct.  Check GDB sources maybe?
+ */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
 
@@ -139,7 +140,7 @@ struct minimal_stackframe {
     __asm__("move $25,%1\n\t"	/* call via $25 */ \
             "jal  $25\n\t" : : "r"(target));
 
-// assuming the stackframe is 16 bytes
+/* assuming the stackframe is 16 bytes */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
     
 
@@ -155,7 +156,7 @@ struct minimal_stackframe {
             ".CALL\n\t"			/* call pseudo insn (why?) */ \
             "bl $$dyncall,%%r31\n\t" : : "r"(target));
 
-// assume stackframe is 16 bytes
+/* assume stackframe is 16 bytes */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
 

@@ -1,7 +1,16 @@
 #ifndef __GSTPLAY_H__
 #define __GSTPLAY_H__
 
+#include <config.h>
+
+#ifdef USE_GLIB2
+#define gst_glade_xml_new(path,misc) (glade_xml_new (path "2", (misc), NULL))
+#else
+#define gst_glade_xml_new(path,misc) (glade_xml_new (path, (misc)))
+#endif
+
 #include <gst/gst.h>
+#include <gtk/gtkhbox.h>
 
 #define GST_TYPE_PLAY          (gst_play_get_type ())
 #define GST_PLAY(obj)          (GTK_CHECK_CAST ((obj), GST_TYPE_PLAY, GstPlay))
@@ -30,13 +39,14 @@ typedef enum {
 	GST_PLAY_TYPE_VIDEO = (1 << 1),
 } GstPlayMediaTypeFlags;
 
+typedef struct _GstPlayPrivate GstPlayPrivate;
+
 struct _GstPlay {
 	GtkHBox parent;
 	
-	GstPlayState state;
+	GstPlayState          state;
 	GstPlayMediaTypeFlags flags;
-	
-	gpointer priv;
+	GstPlayPrivate       *priv;
 };
 
 #define GST_PLAY_STATE(play)         ((play)->state)

@@ -21,6 +21,7 @@ EXTRA_DIST = \
 	gstreamer-colorspace.files \
 	gstreamer-common.files \
 	gstreamer-doc.files \
+	gstreamer-dvd.files \
 	gstreamer-elements.files \
 	gstreamer-esd.files \
 	gstreamer-festival.files \
@@ -40,15 +41,15 @@ EXTRA_DIST = \
 	gstreamer-runtime.manpages \
 	gstreamer-runtime.postinst \
 	gstreamer-runtime.postrm \
-	gstreamer-sid.files \
 	gstreamer-sdl.files \
+	gstreamer-sid.files \
 	gstreamer-tools.files \
 	gstreamer-tools.manpages \
 	gstreamer-vorbis.files \
 	gstreamer-x.files \
 	libgst-dev.files \
 	libgst-dev.manpages \
-	libgst0.files \
+	libgst1.files \
 	libgsteditor-dev.files \
 	libgsteditor0.files \
 	libgstmediaplay-dev.files \

@@ -18,7 +18,11 @@
 
   <figure float="1" id="sec-bin-img">
     <title>Visualisation of a <classname>GstBin</classname> element with some elements in it</title>
-    <graphic fileref="images/bin-element" format="png"></graphic>
+      <mediaobject>  
+        <imageobject>
+          <imagedata fileref="images/bin-element.&magic;" format="&magic;" />
+        </imageobject>
+      </mediaobject>
   </figure>
 
   <para> 
@@ -170,7 +174,11 @@
     
     <figure float="1" id="sec-bin-ghost-img">
       <title>Visualisation of a <classname>GstBin</classname> element with a ghostpad</title>
-      <graphic fileref="images/bin-element-ghost" format="png"></graphic>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/bin-element-ghost.&magic;" format="&magic;" />
+        </imageobject>
+      </mediaobject>  
     </figure>
     <para>
       Above is a representation of a ghostpad. the sinkpad of element one is now also a pad

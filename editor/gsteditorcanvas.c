@@ -42,7 +42,7 @@ static void 	gst_editor_canvas_get_arg	(GtkObject *object,GtkArg *arg,guint id);
 static void 	gst_editor_canvas_realize 	(GtkWidget *widget);
 
 
-//gint gst_editor_canvas_verbose_event(GtkWidget *widget,GdkEvent *event);
+/* gint gst_editor_canvas_verbose_event(GtkWidget *widget,GdkEvent *event); */
 
 
 static GstEditorBinClass *parent_class = NULL;

@@ -1,4 +1,4 @@
-dnl Note: this file is generated from configure.base by autogen.sh
+dnl Note: this file is now the main autoconf file
 AC_INIT
 AC_CONFIG_SRCDIR([gst/gstobject.h])
 
@@ -9,6 +9,10 @@ AM_CONFIG_HEADER(config.h)
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
 GST_VERSION_MICRO=11
+
+dnl we use the release tag during CVS development
+GST_VERSION_RELEASE=`date +%Y%m%d`
+
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
@@ -18,9 +22,11 @@ AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
+AC_DEFINE_UNQUOTED(GST_VERSION_RELEASE, "$GST_VERSION_RELEASE")
+AC_SUBST(GST_VERSION_RELEASE)
 
 dnl libtool
-GST_CURRENT=0
+GST_CURRENT=1
 GST_REVISION=0
 GST_AGE=0
 GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
@@ -89,19 +95,42 @@ export PKG_CONFIG_PATH
 dnl Check for pkgconfig
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
 
-dnl check for gtkdoc
+dnl check for gtk-doc
+AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
+
+if test "x$with_html_dir" = "x" ; then
+  HTML_DIR='${datadir}/gst/html'
+else
+  HTML_DIR=$with_html_dir
+fi
+
+AC_SUBST(HTML_DIR)
+
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
+gtk_doc_min_version=0.6
+if $HAVE_GTK_DOC ; then 
+    gtk_doc_version=`gtkdoc-mkdb --version`
+    AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
+    if perl <<EOF ; then
+      exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
+            ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
+EOF
+      AC_MSG_RESULT(yes)
+   else
+      AC_MSG_RESULT(no)
+      HAVE_GTK_DOC=false
+   fi
+fi
+GTK_DOC_SCANOBJ=gtkdoc-scanobj
+
+AC_SUBST(HAVE_GTK_DOC)
+AC_SUBST(GTK_DOC_SCANOBJ)
 
 dnl check for docbook tools
-AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
-AC_CHECK_PROG(HAVE_DB2PS, db2ps, true, false)
-AC_CHECK_PROG(HAVE_PS2PDF, ps2pdf, true, false)
+AC_CHECK_PROG(HAVE_XSLTPROC, xsltproc, true, false)
+AC_CHECK_PROG(HAVE_PDFTOPS, pdftops, true, false)
+dnl this does not yet work properly, at least on debain -- wingo
+HAVE_PDFXMLTEX=false
 
 dnl check for image conversion tool
 AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
@@ -115,11 +144,11 @@ if test "x$HAVE_FIG2DEV" = "xtrue" ; then
     HAVE_FIG2DEV_PNG=true
   fi
 fi
-HAVE_FIG2DEV_EPS=false
+HAVE_FIG2DEV_PDF=false
 if test "x$HAVE_FIG2DEV" = "xtrue" ; then
-  fig2dev_quiet=`fig2dev -L eps </dev/null 2>&1 >/dev/null`
+  fig2dev_quiet=`fig2dev -L pdf </dev/null 2>&1 >/dev/null`
   if test "x$fig2dev_quiet" = "x" ; then
-    HAVE_FIG2DEV_EPS=true
+    HAVE_FIG2DEV_PDF=true
   fi
 fi
 
@@ -237,6 +266,13 @@ else
 
   GTK_FLAGS=$GTK2_CFLAGS
   GTK_LIBS=$GTK2_LIBS
+  
+  if $HAVE_GTK_DOC; then  
+    AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
+    if $HAVE_GTK_DOC; then
+      GTK_DOC_SCANOBJ=gtkdoc-scangobj
+    fi;
+  fi
 
   dnl FIXME: check for  gnome2 - this conditional is currently
   dnl always false.
@@ -248,10 +284,21 @@ AC_SUBST(GST_PKG_DEPS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
+if test x$USE_GLIB2 = xno; then
+  LIBXML_PKG='libxml >= 1.8.1'
+else
+  LIBXML_PKG='libxml-2.0'
+  AC_DEFINE(HAVE_LIBXML2)
+fi
+AC_SUBST(LIBXML_PKG)
+
 dnl Check for libxml
 AC_PATH_PROG(XML_CONFIG, xml-config, no)
+dnl Thomas tries to convert this to pkg-config
+dnl PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
+dnl AC_PATH_PROG(XML_CONFIG, xml-config, no)
 if test x$XML_CONFIG = xno; then
-  AC_MSG_ERROR(Couldn't find xml-config)
+  AC_MSG_ERROR(Couldn't find $LIBXML_PKG)
 fi
 XML_LIBS="`xml-config --libs`"
 XML_CFLAGS="`xml-config --cflags`"
@@ -411,7 +458,7 @@ dnl *** Hermes ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBHERMES, true)
 GST_CHECK_FEATURE(LIBHERMES, [Hermes library], colorspace, [
 GST_CHECK_LIBHEADER(LIBHERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, LIBHERMES_LIBS="-lHermes")
-])
+], AC_SUBST(LIBHERMES_LIBS))
 
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBLAME, true)
@@ -519,6 +566,7 @@ else
   dnl Check for libgnome
   GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
 fi
+AC_SUBST(HAVE_GNOME)
 
 dnl Check for libghttp
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
@@ -540,26 +588,58 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
 ])
 
 
+dnl thomas : adding an arts check taken from xine with it's own .m4
+AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
+
+dnl also define ARTS_MCOPFLAGS
+ARTS_MCOPFLAGS="$ARTS_CFLAGS"
+AC_SUBST(ARTS_MCOPFLAGS)   
+
 dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
 if test x$USE_GLIB2 = xyes; then
   AC_MSG_WARN(libglade disabled for glib2.0)
+  PKG_CHECK_MODULES(LIBGLADE_GNOME, libglade-2.0 libgnomeui-2.0, HAVE_LIBGLADE_GNOME=yes, HAVE_LIBGLADE_GNOME=no)
+  if test x$HAVE_LIBGLADE_GNOME = xno; then
+    AC_MSG_WARN(Couldn't find libglade-2.0 - Can't build gstplay)
+    LIBGLADE_GNOME_LIBS=
+    LIBGLADE_GNOME_CFLAGS=
+  fi;
 else
-  AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME=yes, , gnome)
+  AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME="yes", HAVE_LIBGLADE_GNOME="no", gnome)
+  if test x$HAVE_LIBGLADE_GNOME = xno; then
+    AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
+  else
+    LIBGLADE_GNOME_LIBS=$LIBGLADE_LIBS
+    LIBGLADE_GNOME_CFLAGS=$LIBGLADE_CFLAGS
+        AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
+                HAVE_LIBGLADE_GNOME="yes"
+                AC_MSG_WARN(
+        [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
+               )
+  fi
+fi
+AC_SUBST(HAVE_LIBGLADE_GNOME)
+AC_SUBST(LIBGLADE_GNOME_LIBS)
+AC_SUBST(LIBGLADE_GNOME_CFLAGS)
+
+dnl Check for Avifile
+HAVE_AVIFILE="no"
+AC_MSG_CHECKING(for Avifile)
+if avifile-config --libs > /dev/null 2>&1; then
+        HAVE_AVIFILE="yes"
+        AC_MSG_RESULT(found)
+else
+        AC_MSG_WARN(Did not find Avifile installed)
 fi
 
-if test "x$HAVE_LIBGLADE_GNOME" = "xno"; then
-  AC_MSG_WARN(
-    [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor]
-  )
-else
-  dnl found libglade with gnome support
-  dnl save flags - it is needed only for editor and player
-  LIBGLADE_GNOME_LIBS="$LIBGLADE_LIBS"  
-  LIBGLADE_GNOME_CFLAGS="$LIBGLADE_CFLAGS"  
-  AC_SUBST(LIBGLADE_GNOME_LIBS)
-  AC_SUBST(LIBGLADE_GNOME_CFLAGS)
-fi
+AVIFILE_LIBS="`avifile-config --libs`"
+AVIFILE_CFLAGS="`avifile-config --cflags`"
+AC_SUBST(AVIFILE_LIBS)
+AC_SUBST(AVIFILE_CFLAGS)
+dnl HAVE_AVIFILE is needed in a Makefile.am
+
+AC_SUBST(HAVE_AVIFILE)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -629,15 +709,17 @@ AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
-dnl Check for librtp
+nl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
+dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
+dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 
-dnl Check for linux/cdrom.h
+nl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
   HAVE_LINUX_CDROM=yes, HAVE_LINUX_CDROM=no
 )
@@ -763,7 +845,7 @@ esac],
 AC_ARG_ENABLE(docs-build,
 [  --enable-docs-build          enable building of documentation],
 [case "${enableval}" in
-  yes) BUILD_DOCS=yes ;;
+  yes) if $HAVE_GTK_DOC; then BUILD_DOCS=yes; else AC_MSG_ERROR([you don't have gtk-doc, so don't use --docs-build]); fi; ;;
   no)  BUILD_DOCS=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
 esac], 
@@ -978,11 +1060,11 @@ AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 AM_CONDITIONAL(BUILD_PLUGIN_DOCS,   test "x$BUILD_PLUGIN_DOCS" = "xyes")
-AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
-AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
-AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
+AM_CONDITIONAL(HAVE_PDFXMLTEX,      $HAVE_PDFXMLTEX)
+AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
+AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
-AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
+AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
@@ -996,6 +1078,7 @@ dnl thomas: the next line doesn't give errors
 AM_CONDITIONAL(HAVE_FLACLIB,        test "x$HAVE_FLACLIB" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
+AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_AALIB,          test "x$HAVE_AALIB" = "xyes")
@@ -1132,9 +1215,7 @@ plugins/mpeg2/videoparse/Makefile
 plugins/mpeg2/mpegtypes/Makefile
 plugins/mpeg1/Makefile
 plugins/mpeg1/mpegtypes/Makefile
-plugins/mpeg1/mpeg_play/Makefile
 plugins/mpeg1/mpegaudio/Makefile
-plugins/mpeg1/parse/Makefile
 plugins/mpeg1/system_encode/Makefile
 plugins/mpeg1/mpeg1encoder/Makefile
 plugins/mpeg1video/Makefile

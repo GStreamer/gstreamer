@@ -48,7 +48,7 @@ int main(int argc,char *argv[]) {
         return 1;
       }
 
-      // write out the padtemplates
+      /* write out the padtemplates */
       padtemplates = factory->padtemplates;
       while (padtemplates) {
         padtemplate = (GstPadTemplate *)(padtemplates->data);
@@ -71,7 +71,7 @@ int main(int argc,char *argv[]) {
           padnode = xmlNewChild (factorynode, NULL, "sinkpad", GST_PAD_NAME(pad));
       }
 
-      // write out the args
+      /* write out the args */
       property_specs = g_object_class_list_properties(G_OBJECT_GET_CLASS (element), &num_properties);
       for (i=0;i<num_properties;i++) {
         GParamSpec *param = property_specs[i];

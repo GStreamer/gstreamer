@@ -32,13 +32,13 @@ gst_extra_get_filename_type (void)
 
   if (!filename_type) {
     static const GTypeInfo filename_info = {
-      0, //sizeof(GstElementClass),
+      0, /* sizeof(GstElementClass), */
       NULL,
       NULL,
       NULL,
       NULL,
       NULL,
-      0, //sizeof(GstElement),
+      0, /* sizeof(GstElement), */
       0,
       NULL,
       NULL

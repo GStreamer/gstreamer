@@ -52,12 +52,13 @@ typedef enum {
 } GstElementStateReturn;
 
 
-// NOTE: this probably should be done with an #ifdef to decide whether to safe-cast
-// or to just do the non-checking cast.
+/* NOTE: this probably should be done with an #ifdef to decide 
+ * whether to safe-cast or to just do the non-checking cast.
+ */
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 
-// Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g>
+/* Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g> */
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
 #define GST_STATE_NULL_TO_READY		((GST_STATE_NULL<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_PAUSED	((GST_STATE_READY<<8) | GST_STATE_PAUSED)
@@ -125,8 +126,8 @@ typedef enum {
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
-//typedef struct _GstElement GstElement;
-//typedef struct _GstElementClass GstElementClass;
+/*typedef struct _GstElement GstElement;*/
+/*typedef struct _GstElementClass GstElementClass;*/
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
@@ -169,7 +170,7 @@ struct _GstElementClass {
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-  void (*get_property)	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+  void (*get_property)	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
@@ -224,6 +225,10 @@ const gchar*		gst_element_statename		(GstElementState state);
 void			gst_element_error		(GstElement *element, const gchar *error);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
+
+void                    gst_element_install_std_props   (GstElementClass *klass,
+							 const char      *first_name, ...);
+
 
 #ifndef GST_DISABLE_LOADSAVE
 /* XML write and read */
@@ -292,7 +297,6 @@ GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
-
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,7 @@ endif
 
 libgstgetbits_la_SOURCES = gstgetbits.c gstgetbits_inl.h gstgetbits_generic.c $(GSTARCH_SRCS)
 EXTRA_libgstgetbits_la_SOURCES = gstgetbits_i386.s
+libgstgetbits_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 
 libgstgetbitsincludedir = $(includedir)/gst/libs/gstgetbits
 libgstgetbitsinclude_HEADERS = gstgetbits.h

@@ -123,7 +123,7 @@ GstAutoplug*		gst_autoplugfactory_make		(const gchar *name);
 }
 #endif /* __cplusplus */
 
-#else // GST_DISABLE_AUTOPLUG
+#else /* GST_DISABLE_AUTOPLUG */
 
 #pragma GCC poison	gst_autoplug_get_type	
 #pragma GCC poison	gst_autoplug_signal_new_object	
@@ -140,7 +140,7 @@ GstAutoplug*		gst_autoplugfactory_make		(const gchar *name);
 #pragma GCC poison	gst_autoplugfactory_create
 #pragma GCC poison	gst_autoplugfactory_make
 
-#endif // GST_DISABLE_AUTOPLUG
+#endif /* GST_DISABLE_AUTOPLUG */
 
 #endif /* __GST_AUTOPLUG_H__ */
 

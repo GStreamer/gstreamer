@@ -86,7 +86,7 @@ struct _GstTimeCache {
 };
 
 GType			gst_timecache_get_type		(void);
-GstTimeCache*		gst_timecache_new		();
+GstTimeCache*		gst_timecache_new		(void);
 
 gint			gst_timecache_get_group		(GstTimeCache *tc);
 gint			gst_timecache_new_group		(GstTimeCache *tc);

@@ -22,7 +22,7 @@
 
 #include <unistd.h>
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstthread.h"
@@ -75,7 +75,7 @@ static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 static void*			gst_thread_main_loop		(void *arg);
 
 static GstBinClass *parent_class = NULL;
-//static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_thread_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_thread_get_type(void) {
@@ -123,7 +123,7 @@ gst_thread_class_init (GstThreadClass *klass)
 
   gstelement_class->change_state =	GST_DEBUG_FUNCPTR (gst_thread_change_state);
 
-//  gstbin_class->schedule = gst_thread_schedule_dummy;
+/*  gstbin_class->schedule = gst_thread_schedule_dummy; */
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_thread_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_thread_get_property);
@@ -136,7 +136,7 @@ gst_thread_init (GstThread *thread)
 
   GST_DEBUG (GST_CAT_THREAD,"initializing thread\n");
 
-  // we're a manager by default
+  /* we're a manager by default */
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
 
   thread->lock = g_mutex_new();
@@ -148,7 +148,7 @@ gst_thread_init (GstThread *thread)
   thread->ppid = getpid();
   thread->thread_id = -1;
 
-//  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread));
+/*  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread)); */
 }
 
 static void
@@ -227,9 +227,9 @@ gst_thread_new (const gchar *name)
 static GstElementStateReturn 
 gst_thread_update_state (GstThread *thread)
 {
-  // check for state change
+  /* check for state change */
   if (GST_STATE_PENDING(thread) != GST_STATE_VOID_PENDING) {
-    // punt and change state on all the children
+    /* punt and change state on all the children */
     if (GST_ELEMENT_CLASS (parent_class)->change_state)
       return GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));
   }
@@ -265,17 +265,17 @@ gst_thread_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      // set the state to idle
+      /* set the state to idle */
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
       THR_DEBUG ("creating thread \"%s\"\n", GST_ELEMENT_NAME (element));
 
       g_mutex_lock (thread->lock);
 
-      // create the thread
+      /* create the thread */
       pthread_create (&thread->thread_id, NULL, gst_thread_main_loop, thread);
 
-      // wait for it to 'spin up'
+      /* wait for it to 'spin up' */
       THR_DEBUG ("waiting for child thread spinup\n");
       g_cond_wait (thread->cond, thread->lock);
       THR_DEBUG ("thread claims to be up\n");
@@ -307,12 +307,13 @@ gst_thread_change_state (GstElement * element)
 
       THR_INFO ("pausing thread");
 
-      // the following code ensures that the bottom half of thread will run
-      // to perform each elements' change_state() (by calling gstbin.c::
-      // change_state()).
-      // + the pending state was already set by gstelement.c::set_state()
-      // + find every queue we manage, and signal its empty and full conditions
-      g_mutex_lock (thread->lock);
+      /* the following code ensures that the bottom half of thread will run
+       * to perform each elements' change_state() (by calling gstbin.c::
+       * change_state()).
+       * + the pending state was already set by gstelement.c::set_state()
+       * + find every queue we manage, and signal its empty and full conditions
+       */ 
+	 g_mutex_lock (thread->lock);
 
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
@@ -323,11 +324,11 @@ gst_thread_change_state (GstElement * element)
 	THR_DEBUG ("  element \"%s\"\n", GST_ELEMENT_NAME (e));
 	elements = g_list_next (elements);
 	if (GST_IS_QUEUE (e)) {
-	  //FIXME make this more efficient by only waking queues that are asleep
-	  //FIXME and only waking the appropriate condition (depending on if it's
-	  //FIXME on up- or down-stream side)
-	  //
-	  //FIXME also make this more efficient by keeping list of managed queues
+  /* FIXME make this more efficient by only waking queues that are asleep
+   *  FIXME and only waking the appropriate condition (depending on if it's
+   *  FIXME on up- or down-stream side)
+   * FIXME also make this more efficient by keeping list of managed queues
+   */
 	  THR_DEBUG ("waking queue \"%s\"\n", GST_ELEMENT_NAME (e));
 	  gst_element_set_state (e, GST_STATE_PAUSED);
 	}
@@ -347,14 +348,14 @@ gst_thread_change_state (GstElement * element)
 
 	    peerelement = GST_PAD_PARENT (peer);
 	    if (!peerelement)
-	      continue;		// deal with case where there's no peer
+	      continue;		/* deal with case where there's no peer */
 
 	    if (!GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED)) {
 	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't DECOUPLED\n");
 	      continue;
 	    }
 
-	    // FIXME this needs to go away eventually
+	    /* FIXME this needs to go away eventually */
 	    if (!GST_IS_QUEUE (peerelement)) {
 	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't a Queue\n");
 	      continue;
@@ -364,7 +365,7 @@ gst_thread_change_state (GstElement * element)
 	      GstQueue *queue = GST_QUEUE (peerelement);
 
 	      THR_DEBUG ("  element \"%s\" has pad cross sched boundary\n", GST_ELEMENT_NAME (e));
-	      // FIXME!!
+	      /* FIXME!! */
 	      g_mutex_lock (queue->qlock);
 	      g_cond_signal (queue->not_full);
 	      g_cond_signal (queue->not_empty);
@@ -383,7 +384,7 @@ gst_thread_change_state (GstElement * element)
     }
     case GST_STATE_READY_TO_NULL:
       THR_DEBUG ("telling thread to pause (null) - and joining\n");
-      //MattH FIXME revisit
+      /* MattH FIXME revisit */
       g_mutex_lock (thread->lock);
       THR_DEBUG ("signaling\n");
       g_cond_signal (thread->cond);
@@ -438,7 +439,7 @@ gst_thread_main_loop (void *arg)
   thread->pid = getpid();
   THR_INFO_MAIN("thread is running");
 
-  // first we need to change the state of all the children
+  /* first we need to change the state of all the children */
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     stateset = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));
 
@@ -450,18 +451,18 @@ gst_thread_main_loop (void *arg)
 
   THR_DEBUG_MAIN ("indicating spinup\n");
   g_cond_signal (thread->cond);
-  // don't unlock the mutex because we hold it into the top of the while loop
+  /* don't unlock the mutex because we hold it into the top of the while loop */
   THR_DEBUG_MAIN ("thread has indicated spinup to parent process\n");
 
   /***** THREAD IS NOW IN READY STATE *****/
 
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
-    // NOTE we hold the thread lock at this point
-    // what we do depends on what state we're in
+    /* NOTE we hold the thread lock at this point */
+    /* what we do depends on what state we're in */
     switch (GST_STATE (thread)) {
-      // NOTE: cannot be in NULL, we're not running in that state at all
+      /* NOTE: cannot be in NULL, we're not running in that state at all */
       case GST_STATE_READY:
-        // wait to be set to either the NULL or PAUSED states
+        /* wait to be set to either the NULL or PAUSED states */
         THR_DEBUG_MAIN ("thread in %s state, waiting for either %s or %s\n",
                         gst_element_statename (GST_STATE_READY),
                         gst_element_statename (GST_STATE_NULL),
@@ -471,18 +472,18 @@ gst_thread_main_loop (void *arg)
 	g_assert (GST_STATE_PENDING (thread) == GST_STATE_NULL ||
 	          GST_STATE_PENDING (thread) == GST_STATE_PAUSED);
 
-        // been signaled, we need to state transition now and signal back
+        /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
         THR_DEBUG_MAIN ("done with state transition, signaling back to parent process\n");
         g_cond_signal (thread->cond);
-        // now we decide what to do next 
+        /* now we decide what to do next */
         if (GST_STATE (thread) == GST_STATE_NULL) {
-          // REAPING must be set, we can simply break this iteration
+          /* REAPING must be set, we can simply break this iteration */
           GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
 	}
         continue;
       case GST_STATE_PAUSED:
-        // wait to be set to either the READY or PLAYING states
+        /* wait to be set to either the READY or PLAYING states */
         THR_DEBUG_MAIN("thread in %s state, waiting for either %s or %s\n",
                        gst_element_statename (GST_STATE_PAUSED),
                        gst_element_statename (GST_STATE_READY),
@@ -492,17 +493,17 @@ gst_thread_main_loop (void *arg)
 	g_assert (GST_STATE_PENDING (thread) == GST_STATE_READY ||
 	          GST_STATE_PENDING (thread) == GST_STATE_PLAYING);
 
-        // been signaled, we need to state transition now and signal back
+        /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
-        // now we decide what to do next
+        /* now we decide what to do next */
         if (GST_STATE (thread) != GST_STATE_PLAYING) {
-          // either READY or the state change failed for some reason
+          /* either READY or the state change failed for some reason */
           g_cond_signal (thread->cond);
           continue;
         } 
 	else {
           GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
-          // PLAYING is coming up, so we can now start spinning
+          /* PLAYING is coming up, so we can now start spinning */
           while (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
 	    gboolean status;
 
@@ -510,33 +511,33 @@ gst_thread_main_loop (void *arg)
             g_mutex_unlock (thread->lock);
             status = gst_bin_iterate (GST_BIN (thread));
             g_mutex_lock (thread->lock);
-            //g_cond_signal(thread->cond);
+            /* g_cond_signal(thread->cond); */
 
 	    if (!status || GST_STATE_PENDING (thread) != GST_STATE_VOID_PENDING)
               GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
           }
-	  // looks like we were stopped because of a statechange
+	  /* looks like we were stopped because of a statechange */
 	  if (GST_STATE_PENDING (thread)) {
             gst_thread_update_state (thread);
 	  }
-          // once we're here, SPINNING has stopped, we should signal that we're done
+          /* once we're here, SPINNING has stopped, we should signal that we're done */
           THR_DEBUG_MAIN ("SPINNING stopped, signaling back to parent process\n");
           g_cond_signal (thread->cond);
-          // now we can wait for PAUSED
+          /* now we can wait for PAUSED */
           continue;
         }
       case GST_STATE_PLAYING:
-        // wait to be set to PAUSED
+        /* wait to be set to PAUSED */
         THR_DEBUG_MAIN ("thread in %s state, waiting for %s\n",
                         gst_element_statename(GST_STATE_PLAYING),
                         gst_element_statename(GST_STATE_PAUSED));
         g_cond_wait (thread->cond,thread->lock);
 
-        // been signaled, we need to state transition now and signal back
+        /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
         g_cond_signal (thread->cond);
-        // now we decide what to do next
-        // there's only PAUSED, we we just wait for it
+        /* now we decide what to do next */
+        /* there's only PAUSED, we we just wait for it */
         continue;
       case GST_STATE_NULL:
         THR_DEBUG_MAIN ("thread in %s state, preparing to die\n",
@@ -548,7 +549,7 @@ gst_thread_main_loop (void *arg)
         break;
     }
   }
-  // since we don't unlock at the end of the while loop, do it here
+  /* since we don't unlock at the end of the while loop, do it here */
   g_mutex_unlock (thread->lock);
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
@@ -575,4 +576,4 @@ gst_thread_restore_thyself (GstObject *object,
   if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
     GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */

@@ -93,32 +93,32 @@ const gchar *_gst_category_colors[32] = {
   [GST_CAT_COTHREAD_SWITCH]	= "00;37;42",
   [GST_CAT_AUTOPLUG]		= "00;34",
   [GST_CAT_AUTOPLUG_ATTEMPT]	= "00;36;44",
-  [GST_CAT_PARENTAGE]		= "01;37;41",		// !!
+  [GST_CAT_PARENTAGE]		= "01;37;41",		/* !! */
   [GST_CAT_STATES]		= "00;31",
   [GST_CAT_PLANNING]		= "07;35",
   [GST_CAT_SCHEDULING]		= "00;35",
   [GST_CAT_DATAFLOW]		= "00;32",
   [GST_CAT_BUFFER]		= "00;32",
   [GST_CAT_CAPS]		= "04;34",
-  [GST_CAT_CLOCK]		= "00;33",		// !!
-  [GST_CAT_ELEMENT_PADS]	= "01;37;41",		// !!
-  [GST_CAT_ELEMENTFACTORY]	= "01;37;41",		// !!
-  [GST_CAT_PADS]		= "01;37;41",		// !!
-  [GST_CAT_PIPELINE]		= "01;37;41",		// !!
+  [GST_CAT_CLOCK]		= "00;33",		/* !! */
+  [GST_CAT_ELEMENT_PADS]	= "01;37;41",		/* !! */
+  [GST_CAT_ELEMENTFACTORY]	= "01;37;41",		/* !! */
+  [GST_CAT_PADS]		= "01;37;41",		/* !! */
+  [GST_CAT_PIPELINE]		= "01;37;41",		/* !! */
   [GST_CAT_PLUGIN_LOADING]	= "00;36",
   [GST_CAT_PLUGIN_ERRORS]	= "05;31",
   [GST_CAT_PLUGIN_INFO]		= "00;36",
-  [GST_CAT_PROPERTIES]		= "00;37;44",		// !!
+  [GST_CAT_PROPERTIES]		= "00;37;44",		/* !! */
   [GST_CAT_THREAD]		= "00;31",
-  [GST_CAT_TYPES]		= "01;37;41",		// !!
-  [GST_CAT_XML]			= "01;37;41",		// !!
+  [GST_CAT_TYPES]		= "01;37;41",		/* !! */
+  [GST_CAT_XML]			= "01;37;41",		/* !! */
   [GST_CAT_NEGOTIATION]		= "07;34",
   [GST_CAT_REFCOUNTING]		= "00;34:42",
-  [GST_CAT_EVENT]		= "01;37;41",		// !!
-  [GST_CAT_PARAMS]		= "00;30;43",		// !!
+  [GST_CAT_EVENT]		= "01;37;41",		/* !! */
+  [GST_CAT_PARAMS]		= "00;30;43",		/* !! */
 
   [GST_CAT_CALL_TRACE]		= "",
-  [31]				= "",
+  [31]				= "05;31",
 };
 
 /* colorization hash - DEPRACATED in favor of above */
@@ -173,7 +173,7 @@ gst_default_debug_handler (gint category, gboolean incore,
 #endif
 
   if (debug_string == NULL) debug_string = "";
-//  if (category != GST_CAT_GST_INIT)
+/*  if (category != GST_CAT_GST_INIT) */
     location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
   if (element && GST_IS_ELEMENT (element))
 #ifdef GST_DEBUG_COLOR
@@ -307,7 +307,7 @@ gst_default_info_handler (gint category, gboolean incore,
   #else
     fprintf(stderr,"INFO (%5d:%2d)%s%s %s\n",
             pthread_id,cothread_id,location,elementname,string);
-  #endif // GST_DEBUG_COLOR
+  #endif /* GST_DEBUG_COLOR */
 /*
 #else
   #ifdef GST_DEBUG_COLOR
@@ -316,7 +316,8 @@ gst_default_info_handler (gint category, gboolean incore,
   #else
     fprintf(stderr,"INFO:%s%s %s\n",
             location,elementname,string);
-  #endif // GST_DEBUG_COLOR
+  #endif /* GST_DEBUG_COLOR */
+/*
 #endif
 */
 
@@ -413,15 +414,15 @@ gst_default_error_handler (gchar *file, gchar *function,
   gchar *path;
   int i;
 
-  // if there are NULL pointers, point them to null strings to clean up output
+  /* if there are NULL pointers, point them to null strings to clean up output */
   if (!debug_string) debug_string = "";
   if (!string) string = "";
 
-  // print out a preamble
+  /* print out a preamble */
   fprintf(stderr,"***** GStreamer ERROR ***** in file %s at %s:%d%s\n",
           file,function,line,debug_string);
 
-  // if there's an element, print out the pertinent information
+  /* if there's an element, print out the pertinent information */
   if (element) {
     if (GST_IS_OBJECT(element)) {
       path = gst_object_get_path_string(element);
@@ -434,9 +435,9 @@ gst_default_error_handler (gchar *file, gchar *function,
     }
   }
 
-  // if there's an object, print it out as well
+  /* if there's an object, print it out as well */
   if (object) {
-    // attempt to pad the line, or create a new one
+    /* attempt to pad the line, or create a new one */
     if (chars < 40)
       for (i=0;i<(40-chars)/8+1;i++) fprintf(stderr,"\t");
     else
@@ -467,8 +468,8 @@ gst_default_error_handler (gchar *file, gchar *function,
 
 /***** DEBUG system *****/
 GHashTable *__gst_function_pointers = NULL;
-// FIXME make this thread specific
-static GSList* stack_trace = NULL;
+/* FIXME make this thread specific */
+static GSList *stack_trace = NULL;
 
 gchar *_gst_debug_nameof_funcptr (void *ptr) __attribute__ ((no_instrument_function));
 
@@ -535,7 +536,7 @@ gst_debug_print_stack_trace (void)
 void 
 gst_debug_print_stack_trace (void)
 {
-  //nothing because it's compiled out
+  /* nothing because it's compiled out */
 }
 
 #endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */

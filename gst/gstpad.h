@@ -41,7 +41,7 @@ extern GType _gst_pad_type;
 extern GType _gst_real_pad_type;
 extern GType _gst_ghost_pad_type;
 
-//#define GST_TYPE_PARANOID
+/*#define GST_TYPE_PARANOID */
 
 /* 
  * Pad base class
@@ -102,14 +102,14 @@ extern GType _gst_ghost_pad_type;
 #endif
 
 
-//typedef struct _GstPad GstPad;
-//typedef struct _GstPadClass GstPadClass;
+/*typedef struct _GstPad GstPad; */
+/*typedef struct _GstPadClass GstPadClass;*/
 typedef struct _GstRealPad GstRealPad;
 typedef struct _GstRealPadClass GstRealPadClass;
 typedef struct _GstGhostPad GstGhostPad;
 typedef struct _GstGhostPadClass GstGhostPadClass;
-//typedef struct _GstPadTemplate GstPadTemplate;
-//typedef struct _GstPadTemplateClass GstPadTemplateClass;
+/*typedef struct _GstPadTemplate GstPadTemplate;*/
+/*typedef struct _GstPadTemplateClass GstPadTemplateClass;*/
 
 
 typedef enum {

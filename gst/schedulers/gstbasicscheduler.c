@@ -44,6 +44,8 @@ static GType _gst_basic_scheduler_type = 0;
 static void 	gst_basic_scheduler_class_init 		(GstSchedulerClass * klass);
 static void 	gst_basic_scheduler_init 		(GstScheduler * scheduler);
 
+static void 	gst_basic_scheduler_dispose 		(GObject *object);
+
 static void	gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
 static void     gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
 static void     gst_basic_scheduler_enable_element	(GstScheduler *sched, GstElement *element);
@@ -92,6 +94,8 @@ gst_basic_scheduler_class_init (GstSchedulerClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_SCHEDULER);
 
+  gobject_class->dispose	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_dispose);
+
   klass->add_element 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_add_element);
   klass->remove_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_remove_element);
   klass->enable_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_enable_element);
@@ -107,6 +111,12 @@ gst_basic_scheduler_class_init (GstSchedulerClass * klass)
 static void
 gst_basic_scheduler_init (GstScheduler *scheduler)
 {
+}
+
+static void
+gst_basic_scheduler_dispose (GObject *object)
+{
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
@@ -290,8 +300,6 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 static void
 gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
 {
-  GstRealPad *peer = GST_RPAD_PEER (pad);
-
   g_print ("select proxy (%s:%s)\n", GST_DEBUG_PAD_NAME (pad));
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
@@ -553,16 +561,17 @@ gst_basic_scheduler_chain_destroy (GstSchedulerChain * chain)
   GstScheduler *sched = chain->sched;
 
   // remove the chain from the schedulers' list of chains
-  chain->sched->chains = g_list_remove (chain->sched->chains, chain);
-  chain->sched->num_chains--;
+  sched->chains = g_list_remove (sched->chains, chain);
+  sched->num_chains--;
 
   // destroy the chain
   g_list_free (chain->disabled);	// should be empty...
   g_list_free (chain->elements);	// ditto
-  g_free (chain);
 
   GST_INFO (GST_CAT_SCHEDULING, "destroyed chain %p, now are %d chains in sched %p", chain,
 	    sched->num_chains, sched);
+
+  g_free (chain);
 }
 
 static void
@@ -948,11 +957,11 @@ gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPa
   if (chain) {
     GST_INFO (GST_CAT_SCHEDULING, "destroying chain");
     gst_basic_scheduler_chain_destroy (chain);
-  }
 
-  // now create a new chain to hold element1 and build it from scratch
-  chain1 = gst_basic_scheduler_chain_new (sched);
-  gst_basic_scheduler_chain_recursive_add (chain1, element1);
+    // now create a new chain to hold element1 and build it from scratch
+    chain1 = gst_basic_scheduler_chain_new (sched);
+    gst_basic_scheduler_chain_recursive_add (chain1, element1);
+  }
 
   // check the other element to see if it landed in the newly created chain
   if (gst_basic_scheduler_find_chain (sched, element2) == NULL) {
@@ -1011,7 +1020,6 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
   GList *chains;
   GstSchedulerChain *chain;
   GstElement *entry;
-  gint num_basic_schedulerd = 0;
   gboolean eos = FALSE;
   GList *elements;
 
