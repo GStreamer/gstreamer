@@ -120,11 +120,24 @@ if test x$PERL_PATH = xno; then
   AC_MSG_ERROR(Could not find perl)
 fi
 
+AC_PROG_AWK
+
 dnl we require bison for building the parser
 dnl FIXME: check if AC_PROG_YACC is suitable here
 AC_PATH_PROG(BISON_PATH, bison, no)
 if test x$BISON_PATH = xno; then
   AC_MSG_ERROR(Could not find bison)
+fi
+
+dnl check bison version
+AC_MSG_CHECKING([bison version])
+
+if $BISON_PATH --version | head -n 1 | $AWK '{ if ($4 < 1.35) exit 1; else exit 0;}'; 
+then 
+  AC_MSG_RESULT([ok])
+else 
+  AC_MSG_RESULT([too old.])
+  AC_MSG_ERROR([Your bison version is too old, v1.35 or later is required.])
 fi
 
 dnl we require flex for building the parser

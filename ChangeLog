@@ -1,3 +1,9 @@
+2004-03-25  Tim-Philipp Müller <t.i.m@zen.co.uk>
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	* configure.ac: Check bison version (bug #127838)
+
 2004-03-25  David Schleef  <ds@schleef.org>
 
 	* docs/gst/gstreamer-docs.sgml: More fine tuning.
