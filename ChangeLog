@@ -7,7 +7,8 @@
 	* ext/theora/Makefile.am:
 	* ext/theora/theoradec.c: 
 	  add theora video decoder. Does just do simple decoding for now and
-	  has been tested against Theora cvs only.
+	  has been tested against Theora cvs only. It only works when theora
+	  is compiled with --enable-static.
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_event):
 	  always reset packetno on DISCONT
 
