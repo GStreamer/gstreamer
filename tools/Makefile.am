@@ -1,4 +1,4 @@
-bin_PROGRAMS = gstreamer-launch gstreamer-register
+bin_PROGRAMS = gstreamer-launch gstreamer-register gstreamer-inspect
 
 CFLAGS = -Wall -O2
 

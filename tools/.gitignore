@@ -8,4 +8,5 @@ Makefile.in
 
 gstreamer-launch
 gstreamer-register
+gstreamer-inspect
 *.xml
