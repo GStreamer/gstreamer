@@ -689,6 +689,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
             gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
 	    gint64 time;
 	    GstFormat format;
+	    GstEvent *new_event;
 
 	    /* see how long the input bytes take */
 	    format = GST_FORMAT_TIME;
@@ -702,7 +703,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	    mad->base_time = time;
 
             gst_event_free (event);
-	    event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
+	    new_event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
+	    gst_pad_event_default (pad, new_event);
 	    break;
 	  }
 	}
@@ -710,6 +712,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         mad->tempsize = 0;
 	/* we don't need to restart when we get here */
         mad->restart = FALSE;
+	break;
       }
       default:
 	gst_pad_event_default (pad, event);
