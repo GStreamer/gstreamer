@@ -299,8 +299,10 @@ gst_riff_read_seek (GstRiffRead * riff, guint64 offset)
       GST_WARNING ("No discontinuity event after seek - seek failed");
       break;
     } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
+      GstEventType type = GST_EVENT_TYPE (event);
+
       gst_pad_event_default (riff->sinkpad, event);
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+      if (type == GST_EVENT_EOS)
         return NULL;
       event = NULL;
     }
