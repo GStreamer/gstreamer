@@ -857,7 +857,6 @@ gst_ogg_mux_loop (GstElement * element)
         ogg_mux->pulling->first_delta = TRUE;
       }
       ogg_mux->pulling = NULL;
-      ogg_mux->pulling->new_page = TRUE;
     }
   }
 
