@@ -458,15 +458,13 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
 static void
 gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
 {
-  GstBuffer *inbuf = GST_BUFFER (_data);
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
+  GstBuffer *inbuf = GST_BUFFER (_data), *old_cache = ffmpegenc->cache;
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0;
 
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
-  if (NULL != ffmpegenc->cache) 
-    gst_buffer_unref (ffmpegenc->cache);
 
   ffmpegenc->cache = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
 
@@ -481,6 +479,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   ret_size = avcodec_encode_video (ffmpegenc->context,
       GST_BUFFER_DATA (ffmpegenc->cache),
       GST_BUFFER_MAXSIZE (ffmpegenc->cache), ffmpegenc->picture);
+  if (old_cache)
+    gst_buffer_unref (old_cache);
 
   if (ret_size < 0) {
     GST_ELEMENT_ERROR (ffmpegenc, LIBRARY, ENCODE, (NULL),
