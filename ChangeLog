@@ -1,3 +1,25 @@
+2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/colorbalance/colorbalance-marshal.list:
+	* gst-libs/gst/colorbalance/colorbalance.c:
+	* gst-libs/gst/colorbalance/colorbalance.h:
+	* gst-libs/gst/colorbalance/colorbalancemarshal.list:
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/mixer/mixer-marshal.list:
+	* gst-libs/gst/mixer/mixer.c:
+	* gst-libs/gst/mixer/mixer.h:
+	* gst-libs/gst/mixer/mixermarshal.list:
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/play/play.h:
+	* gst-libs/gst/tuner/Makefile.am:
+	* gst-libs/gst/tuner/tuner-marshal.list:
+	* gst-libs/gst/tuner/tuner.c:
+	* gst-libs/gst/tuner/tuner.h:
+	* gst-libs/gst/tuner/tunermarshal.list:
+          use new glib-gen.mak snippet to clean up Makefile.am
+          fix various bugs in Makefile.am's
+
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain):
