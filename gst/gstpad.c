@@ -1080,9 +1080,9 @@ static void gst_pad_link_intersect (GstPadLink *link)
 
   GST_DEBUG ("intersecting link from %s:%s to %s:%s",
       GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad));
-  GST_DEBUG ("srccaps %" GST_PTR_FORMAT, link->srccaps);
-  GST_DEBUG ("sinkcaps %" GST_PTR_FORMAT, link->sinkcaps);
-  GST_DEBUG ("filtercaps %" GST_PTR_FORMAT, link->filtercaps);
+  GST_DEBUG ("... srccaps %" GST_PTR_FORMAT, link->srccaps);
+  GST_DEBUG ("... sinkcaps %" GST_PTR_FORMAT, link->sinkcaps);
+  GST_DEBUG ("... filtercaps %" GST_PTR_FORMAT, link->filtercaps);
 
   pad_intersection = gst_caps_intersect (link->srccaps, link->sinkcaps);
 
@@ -1153,6 +1153,10 @@ gst_pad_link_fixate (GstPadLink *link)
 		GST_PAD (link->srcpad), caps);
 	    GST_DEBUG ("srcpad fixated to %" GST_PTR_FORMAT, newcaps);
 	  }
+          else
+	    GST_DEBUG ("srcpad %s:%s doesn't have a fixate function",
+                       GST_DEBUG_PAD_NAME (link->srcpad));
+
 	  break;
 	case 3:
           if (GST_RPAD_FIXATEFUNC(link->sinkpad)) {
@@ -1160,6 +1164,9 @@ gst_pad_link_fixate (GstPadLink *link)
 		GST_PAD (link->sinkpad), caps);
 	    GST_DEBUG ("sinkpad fixated to %" GST_PTR_FORMAT, newcaps);
 	  }
+          else
+	    GST_DEBUG ("sinkpad %s:%s doesn't have a fixate function",
+                       GST_DEBUG_PAD_NAME (link->sinkpad));
 	  break;
 	case 4:
           newcaps = _gst_pad_default_fixate_func (
@@ -2264,7 +2271,7 @@ gst_pad_proxy_pad_link (GstPad *pad, const GstCaps *caps)
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
 
-  GST_DEBUG ("proxying pad link for %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG ("proxying pad link for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   element = gst_pad_get_parent (pad);
 
