@@ -1,6 +1,6 @@
 %define name    gstreamer
 %define ver     @VERSION@
-%define rel     1
+%define rel     @GST_VERSION_RELEASE@
 %define prefix  /usr
 %define sysconfdir /etc
 
