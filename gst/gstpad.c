@@ -2605,7 +2605,7 @@ gst_pad_alloc_buffer (GstPad *pad, guint64 offset, gint size)
   peer = GST_RPAD_PEER (pad);
 
   if (!peer)
-    return NULL;
+    return gst_buffer_new_and_alloc(size);
 
   GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting buffer",
       GST_DEBUG_PAD_NAME (pad));
