@@ -264,7 +264,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_object (value, play_bin->visualisation);
       break;
     case ARG_VOLUME:
-      g_value_set_float (value, play_bin->volume);
+      g_value_set_double (value, play_bin->volume);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
