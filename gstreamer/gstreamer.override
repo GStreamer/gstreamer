@@ -278,7 +278,9 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 	value = 0;
 	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-	return Py_BuildValue("(bl)", ret, value);
+        g_print ("HOI THOMAS\n");
+        g_print ("THOMAS: value: %lld\n", value);
+	return Py_BuildValue("(bL)", ret, value);
 }
 %%
 override gst_element_query kwargs
