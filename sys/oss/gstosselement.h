@@ -91,9 +91,6 @@ struct _GstOssElementClass {
 
 GType		gst_osselement_get_type		(void);
 
-/* factory register function */
-gboolean 	gst_osselement_factory_init	(GstPlugin *plugin);
-
 /* some useful functions */
 gboolean 	gst_osselement_parse_caps 	(GstOssElement *oss,
 						 GstCaps       *caps);

@@ -77,8 +77,6 @@ struct _GstOssGstClass {
 
 GType gst_ossgst_get_type(void);
 
-gboolean gst_ossgst_factory_init(GstPlugin *plugin);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

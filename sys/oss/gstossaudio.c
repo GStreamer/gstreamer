@@ -26,26 +26,48 @@
 #include "gstosssrc.h"
 #include "gstossgst.h"
 
+extern gchar *__gst_oss_plugin_dir;
+
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
+  guint i = 0;
+  gchar **path;
+
   if (!gst_library_load ("gstaudio"))
     return FALSE;
 
-  if (!gst_osselement_factory_init (plugin) ||
-      !gst_osssrc_factory_init (plugin) ||
-      !gst_osssink_factory_init (plugin) ||
-      !gst_ossgst_factory_init (plugin)) {
-    g_warning ("Failed to register OSS elements!");
+  /* get the path of this plugin, we assume the helper progam lives in the */
+  /* same directory. */
+  path = g_strsplit (plugin->filename, G_DIR_SEPARATOR_S, 0);
+  while (path[i]) {
+    i++;
+    if (path[i] == NULL) {
+      g_free (path[i-1]);
+      path[i-1] = NULL;
+    }
+  }
+  __gst_oss_plugin_dir = g_strjoinv (G_DIR_SEPARATOR_S, path);
+  g_strfreev (path);
+
+  if (!gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY, GST_TYPE_OSSSRC) ||
+      !gst_element_register (plugin, "osssink", GST_RANK_PRIMARY, GST_TYPE_OSSSINK) ||
+      !gst_element_register (plugin, "ossgst", GST_RANK_MARGINAL, GST_TYPE_OSSGST)) {
     return FALSE;
   }
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "ossaudio",
-  plugin_init
-};
+  "OSS (Open Sound System) support for GStreamer",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

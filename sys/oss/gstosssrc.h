@@ -72,8 +72,6 @@ struct _GstOssSrcClass {
 
 GType gst_osssrc_get_type(void);
 
-gboolean gst_osssrc_factory_init (GstPlugin *plugin);
-
 G_END_DECLS
 
 #endif /* __GST_OSSSRC_H__ */

@@ -31,17 +31,15 @@
 #include "gstosssink.h"
 
 /* elementfactory information */
-static GstElementDetails gst_osssink_details = {  
+static GstElementDetails gst_osssink_details = GST_ELEMENT_DETAILS (
   "Audio Sink (OSS)",
   "Sink/Audio",
-  "LGPL",
   "Output to a sound card via OSS",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>, "
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
+static void 			gst_osssink_base_init		(gpointer g_class);
 static void 			gst_osssink_class_init		(GstOssSinkClass *klass);
 static void 			gst_osssink_init		(GstOssSink *osssink);
 static void 			gst_osssink_dispose		(GObject *object);
@@ -121,7 +119,7 @@ gst_osssink_get_type (void)
   if (!osssink_type) {
     static const GTypeInfo osssink_info = {
       sizeof(GstOssSinkClass),
-      NULL,
+      gst_osssink_base_init,
       NULL,
       (GClassInitFunc)gst_osssink_class_init,
       NULL,
@@ -160,6 +158,14 @@ gst_osssink_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+static void
+gst_osssink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (element_class, &gst_osssink_details);
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (osssink_sink_factory));
+}
 static void
 gst_osssink_class_init (GstOssSinkClass *klass) 
 {
@@ -599,19 +605,4 @@ gst_osssink_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-gboolean 
-gst_osssink_factory_init (GstPlugin *plugin) 
-{ 
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("osssink", GST_TYPE_OSSSINK, &gst_osssink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (osssink_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }

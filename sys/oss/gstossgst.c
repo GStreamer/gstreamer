@@ -37,16 +37,14 @@
 
 #include "gstosshelper.h"
 
-static GstElementDetails gst_ossgst_details = {  
+static GstElementDetails gst_ossgst_details = GST_ELEMENT_DETAILS ( 
   "Audio Wrapper (OSS)",
   "Source/Audio",
-  "LGPL",
   "Hijacks /dev/dsp to get the output of OSS apps into GStreamer",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
+static void			gst_ossgst_base_init		(gpointer g_class);
 static void 			gst_ossgst_class_init		(GstOssGstClass *klass);
 static void 			gst_ossgst_init		(GstOssGst *ossgst);
 
@@ -118,7 +116,7 @@ ossgst_src_factory (void)
 static GstElementClass *parent_class = NULL;
 static GstPadTemplate *gst_ossgst_src_template;
 
-static gchar *plugin_dir = NULL;
+gchar *__gst_oss_plugin_dir = NULL;
 
 GType
 gst_ossgst_get_type (void) 
@@ -128,7 +126,7 @@ gst_ossgst_get_type (void)
   if (!ossgst_type) {
     static const GTypeInfo ossgst_info = {
       sizeof(GstOssGstClass),
-      NULL,
+      gst_ossgst_base_init,
       NULL,
       (GClassInitFunc)gst_ossgst_class_init,
       NULL,
@@ -143,6 +141,14 @@ gst_ossgst_get_type (void)
   return ossgst_type;
 }
 
+static void
+gst_ossgst_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (element_class, &gst_ossgst_details);
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (ossgst_src_factory));
+}
 static void
 gst_ossgst_class_init (GstOssGstClass *klass) 
 {
@@ -399,7 +405,7 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
       ld_preload = "";
     }
 
-    ld_preload = g_strconcat (ld_preload, " ", plugin_dir, G_DIR_SEPARATOR_S, 
+    ld_preload = g_strconcat (ld_preload, " ", __gst_oss_plugin_dir, G_DIR_SEPARATOR_S, 
 		    "libgstosshelper.so", NULL);
 
     setenv ("LD_PRELOAD", ld_preload, TRUE);
@@ -449,36 +455,5 @@ gst_ossgst_change_state (GstElement *element)
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
   return GST_STATE_SUCCESS;
-}
-
-gboolean 
-gst_ossgst_factory_init (GstPlugin *plugin) 
-{ 
-  GstElementFactory *factory;
-  gchar **path;
-  gint i =0;
-
-  /* get the path of this plugin, we assume the helper progam lives in the */
-  /* same directory. */
-  path = g_strsplit (plugin->filename, G_DIR_SEPARATOR_S, 0);
-  while (path[i]) {
-    i++;
-    if (path[i] == NULL) {
-      g_free (path[i-1]);
-      path[i-1] = NULL;
-    }
-  }
-  plugin_dir = g_strjoinv (G_DIR_SEPARATOR_S, path);
-  g_strfreev (path);
-
-  factory = gst_element_factory_new ("ossgst", GST_TYPE_OSSGST, &gst_ossgst_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_ossgst_src_template = ossgst_src_factory ();
-  gst_element_factory_add_pad_template (factory, gst_ossgst_src_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }
 

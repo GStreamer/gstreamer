@@ -78,8 +78,6 @@ struct _GstOssSinkClass {
 
 GType gst_osssink_get_type(void);
 
-gboolean gst_osssink_factory_init(GstPlugin *plugin);
-
 G_END_DECLS
 
 #endif /* __GST_OSSSINK_H__ */

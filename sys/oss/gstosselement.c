@@ -43,17 +43,6 @@ enum {
   ARG_DEVICE_NAME,
 };
 
-/* elementfactory information */
-static GstElementDetails gst_osselement_details = {
-  "Audio Element (OSS)",
-  "Generic/Audio",
-  "LGPL",
-  "Generic OSS element",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
-
 static void 			gst_osselement_class_init	(GstOssElementClass *klass);
 static void 			gst_osselement_init		(GstOssElement *oss);
 static void 			gst_osselement_dispose		(GObject *object);
@@ -677,17 +666,3 @@ gst_osselement_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-gboolean 
-gst_osselement_factory_init (GstPlugin *plugin) 
-{ 
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("ossmixer",
-				     GST_TYPE_OSSELEMENT,
-				     &gst_osselement_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
-}

@@ -37,15 +37,12 @@
 #include <gst/audio/audioclock.h>
 
 /* elementfactory information */
-static GstElementDetails gst_osssrc_details = {
+static GstElementDetails gst_osssrc_details = GST_ELEMENT_DETAILS (
   "Audio Source (OSS)",
   "Source/Audio",
-  "LGPL",
   "Read from the sound card",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* OssSrc signals and args */
@@ -85,6 +82,7 @@ GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
   )
 )
 
+static void			gst_osssrc_base_init	(gpointer g_class);
 static void 			gst_osssrc_class_init	(GstOssSrcClass *klass);
 static void 			gst_osssrc_init		(GstOssSrc *osssrc);
 static void 			gst_osssrc_dispose	(GObject *object);
@@ -125,7 +123,7 @@ gst_osssrc_get_type (void)
   if (!osssrc_type) {
     static const GTypeInfo osssrc_info = {
       sizeof(GstOssSrcClass),
-      NULL,
+      gst_osssrc_base_init,
       NULL,
       (GClassInitFunc)gst_osssrc_class_init,
       NULL,
@@ -139,6 +137,14 @@ gst_osssrc_get_type (void)
   return osssrc_type;
 }
 
+static void
+gst_osssrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (element_class, &gst_osssrc_details);
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (osssrc_src_factory));
+}
 static void
 gst_osssrc_class_init (GstOssSrcClass *klass) 
 {
@@ -538,21 +544,3 @@ gst_osssrc_src_query (GstPad *pad, GstQueryType type, GstFormat *format, gint64 
   }
   return res;
 } 
-
-gboolean
-gst_osssrc_factory_init (GstPlugin *plugin)
-{
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("osssrc", 
-		  		     GST_TYPE_OSSSRC, 
-				     &gst_osssrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, 
-		  			GST_PAD_TEMPLATE_GET (osssrc_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
-}
