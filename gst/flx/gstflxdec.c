@@ -509,7 +509,7 @@ gst_flxdec_loop (GstElement *element)
       flxdec->frame_time = JIFFIE * flxh->speed;
     }
     else {
-      flxdec->frame_time = flxh->speed * GST_USECOND;
+      flxdec->frame_time = flxh->speed * GST_MSECOND;
     }
     
     gst_pad_try_set_caps (flxdec->srcpad,
