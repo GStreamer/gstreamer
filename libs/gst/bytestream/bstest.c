@@ -130,6 +130,7 @@ gst_identity_class_init (GstIdentityClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
 
+/*
 static GstPadNegotiateReturn
 gst_identity_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -149,17 +150,18 @@ gst_identity_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
 
   return gst_pad_negotiate_proxy (pad, identity->srcpad, caps);
 }
+*/
 
 static void 
 gst_identity_init (GstIdentity *identity) 
 {
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
-  gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink);
+  //gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink);
   
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
-  gst_pad_set_negotiate_function (identity->srcpad, gst_identity_negotiate_src);
+  //gst_pad_set_negotiate_function (identity->srcpad, gst_identity_negotiate_src);
 
   gst_element_set_loop_function (GST_ELEMENT (identity), gst_identity_loop);
 
