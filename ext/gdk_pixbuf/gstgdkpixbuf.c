@@ -83,6 +83,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
+gboolean pixbufscale_init (GstPlugin * plugin);
+
 static void gst_gdk_pixbuf_base_init (gpointer g_class);
 static void gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass);
 static void gst_gdk_pixbuf_init (GstGdkPixbuf * filter);
@@ -459,6 +461,9 @@ plugin_init (GstPlugin * plugin)
       gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
 #endif
 
+  if (!pixbufscale_init (plugin))
+    return FALSE;
+
   /* plugin initialisation succeeded */
   return TRUE;
 }
@@ -468,4 +473,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gdkpixbuf",
-    "GDK Pixbuf decoder", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    "GDK Pixbuf decoder & scaler", plugin_init, VERSION, "LGPL", GST_PACKAGE,
+    GST_ORIGIN)

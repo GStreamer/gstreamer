@@ -64,7 +64,7 @@ struct _GstGdkPixbufClass
   GstElementClass parent_class;
 };
 
-GType gst_gdk_pixbuf_get_type (void);
+static GType gst_gdk_pixbuf_get_type (void);
 
 G_END_DECLS
 
