@@ -43,15 +43,221 @@
   <sect1 id="sect1-iface-general" xreflabel="How to Implement Interfaces">
     <title>How to Implement Interfaces</title>
     <para>
-      WRITEME
+      Implementing interfaces is intiated in the <function>_get_type ()</function>
+      of your element. You can register one or more interfaces after having
+      registered the type itself. Some interfaces have dependencies on other
+      interfaces or can only be registered by certain types of elements. You
+      will be notified of doing that wrongly when using the element: it will
+      quit with failed assertions, which will explain what went wrong. In the
+      case of GStreamer, the only dependency that <emphasis>some</emphasis>
+      interfaces have is <classname>GstImplementsInterface</classname>. Per
+      interface, we will indicate clearly when it depends on this extension.
+      If it does, you need to register support for <emphasis>that</emphasis>
+      interface before registering support for the interface that you're
+      wanting to support. The example below explains how to add support for a
+      simple interface with no further dependencies. For a small explanation
+      on <classname>GstImplementsInterface</classname>, see the next section
+      about the mixer interface: <xref linkend="sect1-iface-mixer"/>.
     </para>
+    <programlisting>
+static void	gst_my_filter_some_interface_init	(GstSomeInterface *iface);
+
+GType
+gst_my_filter_get_type (void)
+{
+  static GType my_filter_type = 0;
+                                                                                
+  if (!my_filter_type) {
+    static const GTypeInfo my_filter_info = {
+      sizeof (GstMyFilterClass),
+      (GBaseInitFunc) gst_my_filter_base_init,
+      NULL,
+      (GClassInitFunc) gst_my_filter_class_init,
+      NULL,
+      NULL,
+      sizeof (GstMyFilter),
+      0,
+      (GInstanceInitFunc) gst_my_filter_init
+    };
+    static const GInterfaceInfo some_interface_info = {
+      (GInterfaceInitFunc) gst_my_filter_some_interface_init,
+      NULL,
+      NULL
+    };
+
+    my_filter_type =
+	g_type_register_static (GST_TYPE_MY_FILTER,
+				"GstMyFilter",
+				&amp;my_filter_info, 0);
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_SOME_INTERFACE,
+                                 &amp;some_interface_info);
+  }
+
+  return my_filter_type;
+}
+
+static void
+gst_my_filter_some_interface_init (GstSomeInterface *iface)
+{
+  /* here, you would set virtual function pointers in the interface */
+}
+    </programlisting>
   </sect1>
 
   <sect1 id="sect1-iface-mixer" xreflabel="Mixer Interface">
     <title>Mixer Interface</title>
     <para>
-      WRITEME
+      The goal of the mixer interface is to provide a simple yet powerful API
+      to applications for audio hardware mixer/volume control. Most soundcards
+      have hardware mixers, where volume can be changed, they can be muted,
+      inputs can be modified to mix their content into what will be read from
+      the device by applications (in our case: audio source plugins). The
+      mixer interface is the way to control those. The mixer interface can
+      also be used for volume control in software (e.g. the <quote>volume</quote>
+      element). The end goal of this interface is to allow development of
+      hardware volume control applications and for the control of audio volume
+      and input/output settings.
     </para>
+    <para>
+      The mixer interface requires the <classname>GstImplementsInterface</classname>
+      interface to be implemented by the element. The example below will
+      feature both, so it serves as an example for the
+      <classname>GstImplementsInterface</classname>, too. In the
+      <classname>GstImplementsInterface</classname>, it is required to set a
+      function pointer for the <function>supported ()</function> function. If
+      you don't, this function will always return FALSE (default
+      implementation) and the mixer interface implementation will not work. For
+      the mixer interface, the only required function is
+      <function>list_tracks ()</function>. All other function pointers in the
+      mixer interface are optional, although it is strongly recommended to set
+      function pointers for at least the <function>get_volume ()</function> and
+      <function>set_volume ()</function> functions. The API reference for this
+      interface documents the goal of each function, so we will limit ourselves
+      to the implementation here.
+    </para>
+    <programlisting>
+typedef struct _GstMyFilter {
+[..]
+  gint volume;
+  GList *tracks;
+} GstMyFilter;
+
+static void	gst_my_filter_implements_interface_init	(GstImplementsInterfaceClass *iface);
+static void	gst_my_filter_mixer_interface_init	(GstMixerClass *iface);
+
+GType
+gst_my_filter_get_type (void)
+{
+[..]
+    static const GInterfaceInfo implements_interface_info = {
+      (GInterfaceInitFunc) gst_my_filter_implements_interface_init,
+      NULL,
+      NULL
+    };
+    static const GInterfaceInfo mixer_interface_info = {
+      (GInterfaceInitFunc) gst_my_filter_mixer_interface_init,
+      NULL,
+      NULL
+    };
+[..]
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_IMPLEMENTS_INTERFACE,
+				 &amp;implements_interface_info);
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_MIXER,
+				 &amp;mixer_interface_info);
+[..]
+}
+
+static void
+gst_my_filter_init (GstMyFilter *filter)
+{
+  GstMixerTrack *track = NULL;
+[..]
+  filter->volume = 100;
+  filter->tracks = NULL;
+  track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
+  track->label = g_strdup ("MyTrack");
+  track->num_channels = 1;
+  track->min_volume = 0;
+  track->max_volume = 100;
+  track->flags = GST_MIXER_TRACK_SOFTWARE;
+  filter->tracks = g_list_append (filter->tracks, track);
+}
+
+static gboolean
+gst_my_filter_interface_supported (GstImplementsInterface *iface,
+				   GType                   iface_type)
+{
+  g_return_val_if_fail (iface_type == GST_TYPE_MIXER, FALSE);
+
+  /* for the sake of this example, we'll always support it. However, normally,
+   * you would check whether the device you've opened supports mixers. */
+  return TRUE;
+}
+
+static void
+gst_my_filter_implements_interface_init (GstImplementsInterfaceClass *iface)
+{
+  iface->supported = gst_my_filter_interface_supported;
+}
+
+/*
+ * This function returns the list of support tracks (inputs, outputs)
+ * on this element instance. Elements usually build this list during
+ * _init () or when going from NULL to READY.
+ */
+
+static const GList *
+gst_my_filter_mixer_list_tracks (GstMixer *mixer)
+{
+  GstMyFilter *filter = GST_MY_FILTER (mixer);
+
+  return filter->tracks;
+}
+
+/*
+ * Set volume. volumes is an array of size track->num_channels, and
+ * each value in the array gives the wanted volume for one channel
+ * on the track.
+ */
+
+static void
+gst_my_filter_mixer_set_volume (GstMixer      *mixer,
+				GstMixerTrack *track,
+				gint          *volumes)
+{
+  GstMyFilter *filter = GST_MY_FILTER (mixer);
+
+  filter->volume = volumes[0];
+
+  g_print ("Volume set to %d\n", filter->volume);
+}
+
+static void
+gst_my_filter_mixer_get_volume (GstMixer      *mixer,
+				GstMixerTrack *track,
+				gint          *volumes)
+{
+  GstMyFilter *filter = GST_MY_FILTER (mixer);
+
+  volumes[0] = filter->volume;
+}
+
+static void
+gst_my_filter_mixer_interface_init (GstMixerClass *iface)
+{
+  /* the mixer interface requires a definition of the mixer type:
+   * hardware or software? */
+  GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
+
+  /* virtual function pointers */
+  iface->list_tracks = gst_my_filter_mixer_list_tracks;
+  iface->set_volume  = gst_my_filter_mixer_set_volume;
+  iface->get_volume  = gst_my_filter_mixer_get_volume;
+}
+    </programlisting>
   </sect1>
 
   <sect1 id="sect1-iface-tuner" xreflabel="Tuner Interface">
