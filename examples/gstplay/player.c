@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#include <gst/play/gstplay.h>
+#include <gst/play/play.h>
 
 static GMainLoop *loop = NULL;
 static gint64 length = 0;
