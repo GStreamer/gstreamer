@@ -94,6 +94,10 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('H', 'F', 'Y', 'U'):
       caps = gst_caps_new_simple ("video/x-huffyuv", NULL);
+      if (strf) {
+        gst_caps_set_simple (caps, "bpp",
+            G_TYPE_INT, (int) strf->bit_cnt, NULL);
+      }
       if (codec_name)
         *codec_name = g_strdup ("Huffman Lossless Codec");
       break;

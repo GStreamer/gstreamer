@@ -1,3 +1,12 @@
+2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data):
+	  Add extradata to huffyuv (fixes #165013).
+	* gst-libs/gst/riff/riff-read.c:
+	(gst_riff_read_strf_vids_with_data):
+	  Fix extradata extraction if it is in the chunk size.
+
 2005-01-25  Edward Hervey  <bilboed@bilboed.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
