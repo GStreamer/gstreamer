@@ -188,9 +188,10 @@ gst_element_factory_create (GstElementFactory *factory,
   GstElement *element;
   GstElementClass *oclass;
 
-  g_return_val_if_fail(factory != NULL, NULL);
+  g_return_val_if_fail (factory != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"creating element from factory \"%s\" with name \"%s\" and type %d", 
+  GST_DEBUG (GST_CAT_ELEMENT_FACTORY,
+             "creating element from factory \"%s\" (name \"%s\", type %d)", 
              GST_OBJECT_NAME (factory), name, (gint) factory->type);
 
   if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory)))
@@ -203,16 +204,17 @@ gst_element_factory_create (GstElementFactory *factory,
   }
 
   /* create an instance of the element */
-  element = GST_ELEMENT(g_object_new(factory->type,NULL));
-  g_assert(element != NULL);
+  element = GST_ELEMENT (g_object_new (factory->type, NULL));
+  g_assert (element != NULL);
 
   /* attempt to set the elemenfactory class pointer if necessary */
-  oclass = GST_ELEMENT_CLASS(G_OBJECT_GET_CLASS(element));
+  oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
   if (oclass->elementfactory == NULL) {
-    GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"class %s", GST_OBJECT_NAME (factory));
+    GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "class %s", GST_OBJECT_NAME (factory));
     oclass->elementfactory = factory;
 
-    /* copy pad template pointers to the element class, allow for custom padtemplates */
+    /* copy pad template pointers to the element class, 
+     * allow for custom padtemplates */
     oclass->padtemplates = g_list_concat (oclass->padtemplates, 
 		    g_list_copy (factory->padtemplates));
     oclass->numpadtemplates += factory->numpadtemplates;
@@ -243,17 +245,21 @@ gst_element_factory_make (const gchar *factoryname, const gchar *name)
 
   g_return_val_if_fail (factoryname != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "gstelementfactory: make \"%s\" \"%s\"", factoryname, name);
+  GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "gstelementfactory: make \"%s\" \"%s\"", 
+             factoryname, name);
 
-  /* gst_plugin_load_element_factory(factoryname); */
-  factory = gst_element_factory_find(factoryname);
+  /* gst_plugin_load_element_factory (factoryname); */
+  factory = gst_element_factory_find (factoryname);
   if (factory == NULL) {
-    GST_INFO (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"!",factoryname);
+    GST_INFO (GST_CAT_ELEMENT_FACTORY,"no such element factory \"%s\"!",
+	      factoryname);
     return NULL;
   }
   element = gst_element_factory_create (factory, name);
   if (element == NULL) {
-    GST_INFO (GST_CAT_ELEMENT_FACTORY,"couldn't create instance of elementfactory \"%s\"!",factoryname);
+    GST_INFO (GST_CAT_ELEMENT_FACTORY,
+	      "couldn't create instance of element factory \"%s\"!",
+	      factoryname);
     return NULL;
   }
 

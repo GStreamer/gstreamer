@@ -274,13 +274,16 @@ gst_object_set_name_default (GstObject *object)
   
   type_name = G_OBJECT_TYPE_NAME (object);
 
+  /* to ensure guaranteed uniqueness across threads, only one thread
+   * may ever assign a name */
   G_LOCK (object_name_mutex);
 
   if (!object_name_counts)
     object_name_counts = g_hash_table_new (g_str_hash, g_str_equal);
 
   count = GPOINTER_TO_INT (g_hash_table_lookup (object_name_counts, type_name));
-  g_hash_table_insert (object_name_counts, g_strdup (type_name), GINT_TO_POINTER (count+1));
+  g_hash_table_insert (object_name_counts, g_strdup (type_name), 
+                       GINT_TO_POINTER (count + 1));
   
   G_UNLOCK (object_name_mutex);
 
@@ -300,7 +303,8 @@ gst_object_set_name_default (GstObject *object)
  * @object: GstObject to set the name of
  * @name: new name of object
  *
- * Set the name of the object.
+ * Sets the name of the object, or gives the element a guaranteed unique
+ * name (if @name is NULL).
  */
 void
 gst_object_set_name (GstObject *object, const gchar *name)
