@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "../version.entities">
+%version-entities;
+<!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
@@ -69,7 +72,7 @@
 ]>
 <book>
   <bookinfo>
-    <title>GStreamer Core Reference Manual</title>
+    <title>GStreamer &GST_MAJORMINOR; Core API Reference (&GST_VERSION;)</title>
   </bookinfo>
 
   <chapter id="gstreamer">

@@ -1,5 +1,12 @@
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+          version API docs
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstinfo.c:
 	* gst/gstregistrypool.c: (gst_registry_pool_plugin_filter),
 	(gst_registry_pool_feature_filter):
