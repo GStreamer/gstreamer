@@ -1,3 +1,11 @@
+2004-01-31  Jeremy Simon  <jesimon@libertysurf.fr>
+
+	* ext/flac/gstflac.c: (plugin_init):
+	* ext/flac/gstflacdec.c: (gst_flacdec_class_init):
+	* ext/flac/gstflacdec.h:
+	* ext/flac/gstflacenc.h:
+	  Fix typos
+
 2004-01-30  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* examples/gstplay/player.c: s/gstplay.h/play.h/

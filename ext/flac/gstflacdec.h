@@ -74,5 +74,4 @@ GType flacdec_get_type(void);
 }
 #endif /* __cplusplus */
 
-
 #endif /* __FLACDEC_H__ */

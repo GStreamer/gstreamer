@@ -72,5 +72,4 @@ GType flacenc_get_type(void);
 }
 #endif /* __cplusplus */
 
-
 #endif /* __FLACENC_H__ */

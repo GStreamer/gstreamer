@@ -163,10 +163,10 @@ static void
 gst_flacdec_class_init (FlacDecClass *klass) 
 {
   GstElementClass *gstelement_class;
-	GObjectClass *gobject_class;
+  GObjectClass *gobject_class;
 
   gstelement_class = (GstElementClass*)klass;
-	gobject_class = (GObjectClass*) klass;
+  gobject_class = (GObjectClass*) klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
