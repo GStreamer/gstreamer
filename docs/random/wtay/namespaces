@@ -1,0 +1,219 @@
+XML namespaces
+==============
+
+1) requirements
+---------------
+
+GStreamer uses XML to save a complete media pipeline. This
+opens a lot of possibilities for end user apps, eg: save
+constructed pipelines for later reuse, send pipelines over
+the wire to render data elsewhere etc...
+
+We will also allow the end user app to insert its own tags
+into the GStreamer generated XML in order to give more
+context to the elements. An example of such an app would be
+gsteditor; while the GStreamer core will save the plain 
+element hierarchy, the editor will insert its own tags into
+the XML tree to describe the elements positions, the 
+signals and other project data that might need to be 
+externalised.
+
+And inherent problem with XML is that the use and naming of
+the tags can be done in an arbitrary way. The GStreamer core
+will, for example, use the 'element' and 'pad' tags to store
+the element and pad objects. The description and the nesting 
+of the tags are described in a DTD (document type definition) 
+or soon with the proposed 'new' standard of the W3C; Schemas.
+
+We can see obvious problems when a user app (unaware of the
+core tags) is also trying to use the 'element' tag for its 
+own purposes. The core might try to load the 'element' tag
+desscribing the user app data and the user app might get fed
+with XML data of the GStreamer core.
+
+In this document we try to describe how we will solve this problem
+using namespaces.
+
+
+2) namespaces
+-------------
+
+To avoid the tag conflicts we mentioned, the W3C has incorporated 
+XML namescapes.
+
+Were a typical XML document without namespaces would look like:
+
+<?xml version="1.0"?>
+<GST-Pipeline>
+ <element>
+  <name>bin</name>
+  <children>
+   ...
+  </children>
+ </element>
+</GST-Pipeline>
+
+Tha same document with namespaces look like this:
+
+<?xml version="1.0"?>
+<gst:GST-Pipeline xmlns:gst="http://gstreamer.net/gst-core/1.0/">
+ <gst:element>
+   <gst:name>bin</gst:name>
+   <gst:children>
+    ...
+   </gst:children>
+ </gst:element>
+</gst:GST-Pipeline>
+
+In front of each tag we add, in this case, gst:. gst: is called the
+namespace of the document and is declared with a statement:
+
+<... xmlns:gst="http://gstreamer.net/gst-core/1.0/">
+
+In this case we define a new namespace 'gst:' that is tied to the URL
+http://gstreamer.net/gst-core/1.0/. This URL is typically based on
+a domain you control and doesn't have to point to something valid on
+the internet. Note that the following document is exactly the same
+as the one mentioned above:
+
+<?xml version="1.0"?>
+<core:GST-Pipeline xmlns:core="http://gstreamer.net/gst-core/1.0/">
+ <core:element>
+   <core:name>bin</gst:name>
+   <core:children>
+    ...
+   </core:children>
+ </core:element>
+</core:GST-Pipeline>
+
+GStreamer currently uses xmlns:gst="http://gstreamer.net/gst-core/1.0" as
+the namespace used for saving the core pipeline.
+
+3) multi-namespace documents
+----------------------------
+
+Suppose we have a user app that wants to insert its own XML tags into
+the core GStreamer XML pipelines, for the examples sake we will use the
+editor as an example.  The editor will insert XML tags inside each
+element that describes the position and size of the element as it was
+laid out in the editor.
+
+For the examples sake, the tags that are used to descibe this meta data
+will also be names 'element' in order to demonstrate the namespaces.
+
+The editor will use its own namespace, being: 
+xmlns:editor="http://gstreamer.net/gst-editor/1.0". This namespace is
+added to the XML documents header and all the elements the editor will
+save will have this namespace attached to it. Our interleaved XML
+document might look like this:
+
+<?xml version="1.0"?>
+<gst:GST-Pipeline xmlns:gst="http://gstreamer.net/gst-core/1.0/"
+                  xmlns:editor="http://gstreamer.net/gst-editor/1.0/">
+  <gst:element>
+    <gst:name>bin</gst:name>
+    <gst:children>
+      ...
+    </gst:children>
+    <editor:element>
+      <editor:position x="100" y="50"/>
+    </editor:element>
+  </gst:element>
+</gst:GST-Pipeline>
+
+As you can see, the namespaces clearly separate the same XML tags
+'element'. 
+
+
+4) implementation considerations
+--------------------------------
+
+The GStreamer core doesn't know about user apps inserting data into the 
+XML, it does not look at XML tags not within its namespace when it 
+performs the parsing of the XML tree. The core, however, must be
+able to hand over the XML tree to the user app so it can perform the
+parsing of its tags inside its namespace. We therefore need hooks inside
+the framework to accomplish this.
+
+We also need hooks inside the GStreamer core to signal a user app that
+it can now insert its tags into the XML tree.
+
+4.1) XML save hooks
+-------------------
+
+GstObject has an abstract class method 
+
+  xmlNodePtr (*save_thyself) (GstObject *object, xmlNodePtr parent)
+
+A real element or pad will implement this function and construct an XML
+representation of itself with the parent xmlNodePtr as the parent.
+An element will typically call the save_thyself function of its
+parent class before saving itself.
+
+The XML save procedure on a GstObject is performed with:
+
+  gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
+
+Wich will call the elements implementation of the save_thyself function.
+
+An app that wants to insert its XML tags has to connect to a signal of
+the GstObject object called xml_saved. The object and the parent
+xmlNodePtr will be passed to the signal handler of the user app, which
+can then insert its tags.
+
+The user app has no problem inserting its namespace into the xmlDoc and
+neither will the GStreamer core.
+
+4.2) XML load hooks
+-------------------
+
+The real problem lies in the loading of the XML tree. Before we load
+the objects, we don't have anything to connect a signal to, so 
+another method has to be invented to signal the user app of the
+freshly loaded objects.
+
+One obvious solution would be to attach a class signal to the 
+GstObject class that would be fired whenever an object is created from
+an XML document. Unfortunatly Gtk+ (or glib2.0) doesn't have class
+signals so we need something else. Another problem with the class 
+signals would be that the user app would also be notified of object
+creation outside its context. For example, if two threads perform an 
+XML load at the same time, the objects created in the first thread
+would also notify the listener in the second thread. Both threads then
+have to take care of not trying to parse XML documents that are from 
+the other thread, this obvously can get messy and we have to deal
+with it without bothering the user app.
+
+We'll continue with some random ramblings...
+
+solution 1
+----------
+To solve this problem we can create a special method in gstobject
+
+gst_object_loaded_notify_add (GstObjectLoadedCallback *callback,
+                              xmlNodePtr doc)
+
+this method would add the specified callback function to a list of 
+listeners and would perform the callback function if an object is 
+created (this can be done in the init method). The problem remains
+though because we do not know the xmlNodePtr when we call the 
+callback. This seems messy.
+
+sultion 2
+---------
+After the object has performed its restore_thyself, it is responsible
+for signaling a object_loaded signal with the object and the xmlNodePtr
+as an argument.
+
+At object creation, the signal is connected to a singleton object managed
+by GstObject that can proxy the signal to the user app. This looks a
+lot like a class signal. apps could also specify the xmlNodePtr they
+are interested in and the signal would only be proxied to the app
+if the xmlNodePtrs are from the same xmlDoc.
+
+Solution 2 seems like a reasonable solution for now...
+
+comments?
+
+wtay
+
