@@ -1,6 +1,17 @@
 2004-05-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_chain),
+	(remove_from_chain), (chain_group_set_enabled),
+	(setup_group_scheduler), (group_element_set_enabled),
+	(gst_opt_scheduler_state_transition), (gst_opt_scheduler_iterate),
+	(gst_opt_scheduler_show):
+	Elements without a group can do a state change as well, just wait
+	with the setup of the scheduling function when it is added to a
+	chain.
+
+2004-05-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_chain),
 	(remove_from_chain), (chain_group_set_enabled), (add_to_group),
 	(merge_groups), (setup_group_scheduler),
 	(group_inc_links_for_element), (gst_opt_scheduler_iterate),

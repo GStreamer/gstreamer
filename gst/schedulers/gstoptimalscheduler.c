@@ -544,6 +544,9 @@ add_to_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
   enabled = GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group);
 
   if (enabled) {
+    /* we can now setup the scheduling of the group */
+    setup_group_scheduler (chain->sched, group);
+
     chain->num_enabled++;
     if (chain->num_enabled == chain->num_groups) {
       GST_LOG ("enabling chain %p after adding of enabled group", chain);
@@ -1035,8 +1038,9 @@ group_element_set_enabled (GstOptSchedulerGroup * group, GstElement * element,
      group->chain==NULL. */
 
   if (enabled) {
-    if (group->num_enabled < group->num_elements)
-      group->num_enabled++;
+    g_assert (group->num_enabled < group->num_elements);
+
+    group->num_enabled++;
 
     GST_DEBUG
         ("enable element %s in group %p, now %d elements enabled out of %d",
@@ -1053,8 +1057,9 @@ group_element_set_enabled (GstOptSchedulerGroup * group, GstElement * element,
       }
     }
   } else {
-    if (group->num_enabled > 0)
-      group->num_enabled--;
+    g_assert (group->num_enabled > 0);
+
+    group->num_enabled--;
 
     GST_DEBUG
         ("disable element %s in group %p, now %d elements enabled out of %d",
@@ -1508,11 +1513,10 @@ gst_opt_scheduler_state_transition (GstScheduler * sched, GstElement * element,
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* an element withut a group has to be an unlinked src, sink
+      /* an element without a group has to be an unlinked src, sink
        * filter element */
       if (!group) {
         GST_INFO ("element \"%s\" has no group", GST_ELEMENT_NAME (element));
-        res = GST_STATE_FAILURE;
       }
       /* else construct the scheduling context of this group and enable it */
       else {
@@ -2360,7 +2364,7 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
 
   osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
 
-  /* gst_opt_scheduler_show (sched); */
+  //gst_opt_scheduler_show (sched);
 
   GST_DEBUG_OBJECT (sched, "iterating");
 
