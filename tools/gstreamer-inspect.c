@@ -80,9 +80,9 @@ print_element_info (GstElementFactory *factory)
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  GtkArg *args, *args2;
   guint32 *flags;
-  gint num_args,i;
+  gint num_properties,i;
+  GParamSpec **property_specs;
   GList *children;
   GstElement *child;
   gboolean have_flags;
@@ -93,8 +93,8 @@ print_element_info (GstElementFactory *factory)
     return -1;
   }
 
-  gstobject_class = GST_OBJECT_CLASS (GTK_OBJECT (element)->klass);
-  gstelement_class = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
+  gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
+  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   printf("Factory Details:\n");
   printf("  Long name:\t%s\n",factory->details->longname);
@@ -254,34 +254,37 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n");
 
-
+  // FIXME accessing private data of GObjectClass !!!
 
   printf("\nElement Arguments:\n");
-  args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
-  args2 = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
-  for (i=0;i<num_args;i++) {
+  num_properties = G_OBJECT_GET_CLASS (element)->n_property_specs;
+  property_specs = G_OBJECT_GET_CLASS (element)->property_specs;
 
-// FIXME should say whether it's read-only or not
-    gtk_object_getv (GTK_OBJECT (element), num_args, args2);
+  for (i=0;i<num_properties;i++) {
+    GParamSpec *param = property_specs[i];
+    GValue value;
 
-    printf("  %-40.40s: ",args[i].name);
-    switch (args[i].type) {
-      case GTK_TYPE_STRING: printf("String (Default \"%s\")", GTK_VALUE_STRING (args2[i]));break;
-      case GTK_TYPE_BOOL: printf("Boolean (Default %s)", (GTK_VALUE_BOOL (args2[i])?"true":"false"));break;
-      case GTK_TYPE_ULONG: printf("Unsigned Long (Default %lu)", GTK_VALUE_ULONG (args2[i]));break;
-      case GTK_TYPE_LONG: printf("Long (Default %ld)", GTK_VALUE_LONG (args2[i]));break;
-      case GTK_TYPE_UINT: printf("Unsigned Integer (Default %u)", GTK_VALUE_UINT (args2[i]));break;
-      case GTK_TYPE_INT: printf("Integer (Default %d)", GTK_VALUE_INT (args2[i]));break;
-      case GTK_TYPE_FLOAT: printf("Float (Default %f)", GTK_VALUE_FLOAT (args2[i]));break;
-      case GTK_TYPE_DOUBLE: printf("Double (Default %lf)", GTK_VALUE_DOUBLE (args2[i]));break;
+    g_object_get (G_OBJECT (element), param->name, &value, NULL);
+
+    printf("  %-40.40s: %d",param->name, value.g_type);
+    switch (value.g_type) {
+      case G_TYPE_STRING: printf("String (Default \"%s\")", g_value_get_string (&value));break;
+      case G_TYPE_BOOLEAN: printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));break;
+      case G_TYPE_ULONG: printf("Unsigned Long (Default %lu)", g_value_get_ulong (&value));break;
+      case G_TYPE_LONG: printf("Long (Default %ld)", g_value_get_long (&value));break;
+      case G_TYPE_UINT: printf("Unsigned Integer (Default %u)", g_value_get_uint (&value));break;
+      case G_TYPE_INT: printf("Integer (Default %d)", g_value_get_int (&value));break;
+      case G_TYPE_FLOAT: printf("Float (Default %f)", g_value_get_float (&value));break;
+      case G_TYPE_DOUBLE: printf("Double (Default %lf)", g_value_get_double (&value));break;
       default:
+			  /*
         if (args[i].type == GST_TYPE_FILENAME)
           printf("Filename");
-        else if (GTK_FUNDAMENTAL_TYPE (args[i].type) == GTK_TYPE_ENUM) {
+        else if (G_FUNDAMENTAL_TYPE (args[i].type) == G_TYPE_ENUM) {
           GtkEnumValue *values;
 	  guint j = 0;
 
-          printf("Enum (default %d)", GTK_VALUE_ENUM (args[i]));
+          printf("Enum (default %d)", G_VALUE_ENUM (args[i]));
 	  values = gtk_type_enum_get_values (args[i].type);
 	  while (values[j].value_name) {
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
@@ -293,13 +296,16 @@ print_element_info (GstElementFactory *factory)
         else
           printf("unknown %d", args[i].type);
         break;
+	*/
     }
     printf("\n");
   }
+    /*
   g_free (args);
   if (num_args == 0) g_print ("  none");
   printf("\n");
 
+  */
 
 
   // for compound elements
