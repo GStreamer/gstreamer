@@ -1,3 +1,13 @@
+2004-03-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_post):
+          change so that GST_REGISTRY now is where the global registry gets
+          saved, since that is where plugins now get attached to first, and
+          spilled over to the user registry.  Note that in the case of using
+          GST_REGISTRY env var, we don't want to affect any real registries
+          beyond the one given by this var, and thus we don't set a user
+          registry to spill to.  So make sure GST_REGISTRY is writable.
+
 2004-03-01  David Schleef  <ds@schleef.org>
 
 	* AUTHORS:  Added some names.  Add yourself if you're missing.

@@ -551,7 +551,7 @@ init_post (void)
   if (!_gst_registry_fixed) {
     /* don't override command-line options */
     if (g_getenv ("GST_REGISTRY")) {
-      g_object_set (_user_registry, "location", g_getenv ("GST_REGISTRY"), NULL);
+      g_object_set (_global_registry, "location", g_getenv ("GST_REGISTRY"), NULL);
       _gst_registry_fixed = TRUE;
     }
   }
@@ -560,7 +560,7 @@ init_post (void)
     gst_registry_pool_add (_global_registry, 100);
     gst_registry_pool_add (_user_registry, 50);
   } else {
-    gst_registry_pool_add (_user_registry, 50);
+    gst_registry_pool_add (_global_registry, 100);
   }
 
   if (_gst_registry_auto_load) {
