@@ -167,6 +167,13 @@ HAVE_LIBMMX="no"
 AC_MSG_RESULT(no)
 )
 
+dnl
+dnl We should really use AC_SYS_LARGEFILE, but the problem is
+dnl many of the plugins don't include "config.h".  To assure
+dnl binary compatibility, it is necessary that all gstreamer
+dnl code be compiled with the same sizeof(off_t), so we use
+dnl the following crude hack.
+dnl
 
 AC_MSG_CHECKING(for large file support)
 AC_TRY_RUN([
