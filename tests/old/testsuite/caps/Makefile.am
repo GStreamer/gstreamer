@@ -17,7 +17,7 @@ tests_pass = \
 	audioscale
 
 tests_fail =
-
+tests_ignore =
 
 app_fixate_LDADD = $(GST_LIBS) 
 app_fixate_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)

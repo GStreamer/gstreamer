@@ -5,6 +5,7 @@ plugin_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
 tests_pass = dynamic linked loading registry static static2
 tests_fail =
+tests_ignore =
 
 
 libtestplugin_la_SOURCES = testplugin.c

@@ -33,25 +33,25 @@ gst_debug_log_one (GstDebugCategory * category,
     GstDebugLevel level,
     const gchar * file,
     const gchar * function,
-    gint line, GObject * object, gchar * message, gpointer thread)
+    gint line, GObject * object, GstDebugMessage * message, gpointer data)
     G_GNUC_NO_INSTRUMENT;
      static void gst_debug_log_two (GstDebugCategory * category,
     GstDebugLevel level,
     const gchar * file,
     const gchar * function,
-    gint line,
-    GObject * object, gchar * message, gpointer thread) G_GNUC_NO_INSTRUMENT;
+    gint line, GObject * object, GstDebugMessage * message, gpointer thread)
+  G_GNUC_NO_INSTRUMENT;
 
      static void
          gst_debug_log_one (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
-    gchar * message, gpointer thread)
+    GstDebugMessage * message, gpointer data)
 {
 }
 static void
 gst_debug_log_two (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
-    gchar * message, gpointer thread)
+    GstDebugMessage * message, gpointer data)
 {
 }
 

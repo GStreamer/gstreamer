@@ -22,6 +22,7 @@ DIST_SUBDIRS = bins bytestream caps cleanup clock dynparams elements indexers \
 
 tests_pass = test_gst_init
 tests_fail = 
+tests_ignore =
 
 # we makes them, we gots to clean them
 CLEANFILES += test-registry.xml

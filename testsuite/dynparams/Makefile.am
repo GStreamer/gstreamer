@@ -2,6 +2,7 @@ include ../Rules
 
 tests_pass =
 tests_fail = dparamstest 
+tests_ignore =
 
 dparamstest_CFLAGS = $(GST_CFLAGS)
 dparamstest_LDFLAGS = $(GST_LIBS)

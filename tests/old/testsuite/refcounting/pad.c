@@ -150,5 +150,5 @@ main (int argc, gchar * argv[])
 
   //gst_alloc_trace_print_all ();
 
-  return vmsize () - usage1;
+  return 0;
 }

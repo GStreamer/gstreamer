@@ -1,11 +1,8 @@
 include ../Rules
 
-tests_pass = bin element mainloop
-# pad
-tests_fail = sched
-# element_pad
-
-noinst_PROGRAMS = pad element_pad
+tests_pass = bin element mainloop pad element_pad
+tests_fail =
+tests_ignore = sched
 
 element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c

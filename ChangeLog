@@ -1,5 +1,33 @@
 2004-04-14  David Schleef  <ds@schleef.org>
 
+	* testsuite/Makefile.am: define tests_ignore
+	* testsuite/Rules: Added new tests_ignore, which get compiled,
+	but not run (generally because they're inconsistent or have
+	heisenbugs).  Now we can ensure all the .c files compile in
+	testsuite/.
+	* testsuite/bins/Makefile.am: define tests_ignore
+	* testsuite/bytestream/Makefile.am:
+	* testsuite/caps/Makefile.am:
+	* testsuite/clock/Makefile.am:
+	* testsuite/debug/Makefile.am:
+	* testsuite/debug/global.c: (gst_debug_log_one),
+	(gst_debug_log_two): Fix compilation problem.
+	* testsuite/dynparams/Makefile.am:
+	* testsuite/elements/Makefile.am:
+	* testsuite/ghostpads/Makefile.am:
+	* testsuite/indexers/Makefile.am:
+	* testsuite/parse/Makefile.am:
+	* testsuite/plugin/Makefile.am:
+	* testsuite/refcounting/Makefile.am:
+	* testsuite/refcounting/element_pad.c: (main): Don't return leak
+	results, because it's not calculated correctly.
+	* testsuite/refcounting/pad.c: (main): same
+	* testsuite/states/Makefile.am:
+	* testsuite/tags/Makefile.am:
+	* testsuite/threads/Makefile.am:
+
+2004-04-14  David Schleef  <ds@schleef.org>
+
 	* gst/gstcpu.c: (gst_cpuid_i386): Add workaround for gcc-3.2
 	generating bad code around the cpu detection asm code.
 
