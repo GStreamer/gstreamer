@@ -704,7 +704,7 @@ gst_element_get_pad_template (GstElement *element, const guchar *name)
 }
 
 /**
- * gst_element_get_pad_template_by_compatible:
+ * gst_element_get_compatible_pad_template:
  * @element: element to get padtemplate of
  * @templ: a template to find a compatible template for
  *
@@ -713,8 +713,8 @@ gst_element_get_pad_template (GstElement *element, const guchar *name)
  *
  * Returns: the padtemplate. No unreferencing is necessary.
  */
-static GstPadTemplate*
-gst_element_get_pad_template_by_compatible (GstElement *element, GstPadTemplate *compattempl)
+GstPadTemplate*
+gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl)
 {
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
@@ -784,7 +784,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (templ != NULL, NULL);
 
-  templ_new = gst_element_get_pad_template_by_compatible (element, templ);
+  templ_new = gst_element_get_compatible_pad_template (element, templ);
   if (templ_new != NULL)
       pad = gst_element_request_pad (element, templ_new, NULL);
 

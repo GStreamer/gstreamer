@@ -198,9 +198,10 @@ make_connections (graph_t *g, GError **error)
 {
   GList *l, *a, *b;
   connection_t *c;
+  dynamic_connection_t *dc;
   GstElement *src, *sink;
   GstPad *p1, *p2;
-  GstPadTemplate *pt1;
+  GstPadTemplate *pt1, *pt2;
   
   l = g->connections;
   while (l) {
@@ -239,10 +240,13 @@ make_connections (graph_t *g, GError **error)
       while (a && b) {
         p1 = gst_element_get_pad (src, (gchar*)a->data);
         p2 = gst_element_get_pad (sink, (gchar*)b->data);
+
+        if (!p2)
+          goto could_not_get_pad_b;
         
         if (!p1 && p2 && (pt1 = gst_element_get_pad_template (src, (gchar*)a->data)) &&
             pt1->presence == GST_PAD_SOMETIMES) {
-          dynamic_connection_t *dc = g_new0 (dynamic_connection_t, 1);
+          dc = g_new0 (dynamic_connection_t, 1);
           dc->srcpadname = (gchar*)a->data;
           dc->target = p2;
           dc->pipeline = g->bin;
@@ -252,14 +256,10 @@ make_connections (graph_t *g, GError **error)
                      (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
           
           g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
-        } else if (!p1 || !p2 || !gst_pad_connect (p1, p2)) {
-          g_set_error (error,
-                       GST_PARSE_ERROR,
-                       GST_PARSE_ERROR_CONNECT,
-                       "Could not connect %s:%s to %s:%s",
-                       GST_OBJECT_NAME (src), (gchar*)a->data,
-                       GST_OBJECT_NAME (sink), (gchar*)b->data);
-          return FALSE;
+        } else if (!p1) {
+          goto could_not_get_pad_a;
+        } else if (!gst_pad_connect (p1, p2)) {
+          goto could_not_connect_pads;
         }
         a = g_list_next (a);
         b = g_list_next (b);
@@ -268,88 +268,55 @@ make_connections (graph_t *g, GError **error)
       if ((pt1 = gst_element_get_pad_template (src, (gchar*)a->data))) {
         if ((p1 = gst_element_get_pad (src, (gchar*)a->data)) || pt1->presence == GST_PAD_SOMETIMES) {
           if (!p1) {
-/*
-          if ((p2 = gst_element_get_pad (sink, (gchar*)a->data))) {
-            dynamic_connection_t *dc = g_new0 (dynamic_connection_t, 1);
-            dc->srcpadname = (gchar*)a->data;
-            dc->target = p2;
-            dc->pipeline = g->bin;
-            
-            GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
-                       GST_OBJECT_NAME (GST_OBJECT (src)),
-                       (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
-            
-            g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
-*/
+            /* sigh, a hack until i fix the gstelement api... */
+            if ((pt2 = gst_element_get_compatible_pad_template (sink, pt1))) {
+              if ((p2 = gst_element_get_pad (sink, pt2->name_template))) {
+                dc = g_new0 (dynamic_connection_t, 1);
+                dc->srcpadname = (gchar*)a->data;
+                dc->target = p2;
+                dc->pipeline = g->bin;
+              
+                GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
+                           GST_OBJECT_NAME (GST_OBJECT (src)),
+                           (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
+              
+                g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+              } else {
+                /* both pt1 and pt2 are sometimes templates. sheesh. */
+                goto both_templates_have_sometimes_presence;
+              }
+            } else {
+              goto could_not_get_compatible_to_a;
+            }
+          } else {
+            if (!(p2 = gst_element_get_compatible_pad (sink, p1))) {
+              goto could_not_get_compatible_to_a;
+            }
           }
         } else {
-          g_set_error (error,
-                       GST_PARSE_ERROR,
-                       GST_PARSE_ERROR_CONNECT,
-                       "Could not get a pad %s from element %s",
-                       (gchar*)a->data, GST_OBJECT_NAME (src));
-          return FALSE;
+          goto could_not_get_pad_a;
         }
       } else {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not get a pad %s from element %s",
-                     (gchar*)a->data, GST_OBJECT_NAME (src));
-        return FALSE;
+        goto could_not_get_pad_a;
       }
       
-      if (!(p2 = gst_element_get_compatible_pad (sink, p1))) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not find a compatible pad in element %s to for %s:%s",
-                     GST_OBJECT_NAME (sink), GST_OBJECT_NAME (src), (gchar*)a->data);
-        return FALSE;
-      }
       if (!gst_pad_connect (p1, p2)) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not connect %s:%s to %s:%s",
-                     GST_OBJECT_NAME (src), GST_OBJECT_NAME (p1),
-                     GST_OBJECT_NAME (sink), GST_OBJECT_NAME (p1));
-        return FALSE;
+        goto could_not_connect_pads;
       }
     } else if (b) {
+      /* we don't support dynamic connections on this side yet, if ever */
       if (!(p2 = gst_element_get_pad (sink, (gchar*)b->data))) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not get a pad %s from element %s",
-                     (gchar*)b->data, GST_OBJECT_NAME (sink));
-        return FALSE;
+        goto could_not_get_pad_b;
       }
       if (!(p1 = gst_element_get_compatible_pad (src, p2))) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not find a compatible pad in element %s to for %s:%s",
-                     GST_OBJECT_NAME (src), GST_OBJECT_NAME (sink), (gchar*)b->data);
-        return FALSE;
+        goto could_not_get_compatible_to_b;
       }
       if (!gst_pad_connect (p1, p2)) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not connect %s:%s to %s:%s",
-                     GST_OBJECT_NAME (src), GST_OBJECT_NAME (p1),
-                     GST_OBJECT_NAME (sink), GST_OBJECT_NAME (p1));
-        return FALSE;
+        goto could_not_connect_pads;
       }
     } else {
       if (!gst_element_connect (src, sink)) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_CONNECT,
-                     "Could not connect %s to %s",
-                     GST_OBJECT_NAME (src), GST_OBJECT_NAME (sink));
-        return FALSE;
+        goto could_not_connect_elements;
       }
     }
     l = g_list_next (l);
@@ -363,6 +330,58 @@ make_connections (graph_t *g, GError **error)
   }
   
   return TRUE;
+
+could_not_get_pad_a:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Could not get a pad %s from element %s",
+               (gchar*)a->data, GST_OBJECT_NAME (src));
+  return FALSE;
+could_not_get_pad_b:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Could not get a pad %s from element %s",
+               (gchar*)b->data, GST_OBJECT_NAME (sink));
+  return FALSE;
+could_not_get_compatible_to_a:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Could not find a compatible pad in element %s to for %s:%s",
+               GST_OBJECT_NAME (sink), GST_OBJECT_NAME (src), (gchar*)a->data);
+  return FALSE;
+could_not_get_compatible_to_b:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Could not find a compatible pad in element %s to for %s:%s",
+               GST_OBJECT_NAME (src), GST_OBJECT_NAME (sink), (gchar*)b->data);
+  return FALSE;
+both_templates_have_sometimes_presence:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Both %s:%s and %s:%s have GST_PAD_SOMETIMES presence, operation not supported",
+               GST_OBJECT_NAME (src), pt1->name_template, GST_OBJECT_NAME (sink), pt2->name_template);
+  return FALSE;
+could_not_connect_pads:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Could not connect %s:%s to %s:%s",
+               GST_DEBUG_PAD_NAME (p1),
+               GST_DEBUG_PAD_NAME (p2));
+  return FALSE;
+could_not_connect_elements:
+  g_set_error (error,
+               GST_PARSE_ERROR,
+               GST_PARSE_ERROR_CONNECT,
+               "Could not connect element %s to %s",
+               GST_OBJECT_NAME (src),
+               GST_OBJECT_NAME (sink));
+  return FALSE;
 }
 
 static GstBin*

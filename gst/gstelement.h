@@ -205,14 +205,17 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 
 GList*			gst_element_get_pad_list	(GstElement *element);
-GList*			gst_element_get_pad_template_list	(GstElement *element);
-GstPadTemplate*		gst_element_get_pad_template	(GstElement *element, const guchar *name);
-
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 GstCaps *filtercaps);
+/* unimplemented
 GstPad*			gst_element_get_compatible_request_pad (GstElement *element, GstPadTemplate *templ);
 GstPad*			gst_element_get_compatible_static_pad (GstElement *element, GstPadTemplate *templ);
+*/
+
+GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const guchar *name);
+GList*			gst_element_get_pad_template_list	(GstElement *element);
+GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 
 gboolean		gst_element_connect		(GstElement *src, GstElement *dest);
 gboolean		gst_element_connect_many 	(GstElement *element_1, GstElement *element_2, ...);
