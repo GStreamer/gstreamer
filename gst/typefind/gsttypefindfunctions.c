@@ -569,17 +569,10 @@ mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
       g_assert (found <= GST_MPEG_TYPEFIND_TRY_HEADERS);
       if (found == GST_MPEG_TYPEFIND_TRY_HEADERS ||
 	  packet_size == 1) {
-	guint probability = found * GST_TYPE_FIND_MAXIMUM * 
-			    (GST_MPEG_TYPEFIND_TRY_SYNC - skipped) /
-			    GST_MPEG_TYPEFIND_TRY_HEADERS / GST_MPEG_TYPEFIND_TRY_SYNC;
-	
-	if (probability < GST_TYPE_FIND_MINIMUM)
-	  probability = GST_TYPE_FIND_MINIMUM;
-	g_assert (probability <= GST_TYPE_FIND_MAXIMUM);
 	caps = MPEG_SYS_CAPS;
 	gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 	    G_TYPE_INT, 1, 0);
-	gst_type_find_suggest (tf, probability, caps); 
+	gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps); 
 	return;
       }
     }
@@ -603,7 +596,96 @@ mpeg_video_type_find (GstTypeFind *tf, gpointer unused)
   data = gst_type_find_peek (tf, 0, 8);
 
   if (data && memcmp(data, sequence_header, 4)==0){
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MPEG_VIDEO_CAPS);
+    GstCaps *caps = MPEG_VIDEO_CAPS;
+    gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
+		       G_TYPE_INT, 1, 0);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+  }
+}
+
+/*
+ * Idea is the same as MPEG system stream typefinding: We check each
+ * byte of the stream to see if - from that point on - the stream
+ * matches a predefined set of marker bits as defined in the MPEG
+ * video specs.
+ *
+ * I'm sure someone will do a chance calculation here too.
+ */
+
+#define GST_MPEGVID_TYPEFIND_TRY_PICTURES 6
+#define GST_MPEGVID_TYPEFIND_TRY_SYNC (100 * 1024) /* 100 kB */
+#define GST_MPEGVID_TYPEFIND_SYNC_SIZE 2048
+
+static void
+mpeg_video_stream_type_find (GstTypeFind *tf, gpointer unused)
+{
+  gint size = 0, found = 0;
+  guint64 skipped = 0;
+  guint8 *data = NULL;
+
+  while (1) {
+    if (found >= GST_MPEGVID_TYPEFIND_TRY_PICTURES) {
+      GstCaps *caps = MPEG_VIDEO_CAPS;
+      gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
+			 G_TYPE_INT, 1, 0);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 2, caps);
+      return;
+    }
+
+    if (skipped > GST_MPEGVID_TYPEFIND_TRY_SYNC)
+      break;
+
+    if (size < 4) {
+      data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
+      if (!data)
+        break;
+      size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
+    }
+
+    /* are we a sequence (0xB3) or GOP (0xB8) header? */
+    if (data[0] == 0x0 && data[1] == 0x0 && data[2] == 0x1 &&
+        (data[3] == 0xB3 || data[3] == 0xB8)) {
+      size -= 8;
+      data += 8;
+      skipped += 8;
+      if (data[3] == 0xB3)
+        continue;
+      else if (size < 4) {
+        data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
+        size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
+        if (!data)
+          break;
+      }
+      /* else, we should now see an image */
+    }
+
+    /* image header (and, when found, slice header) */
+    if (data[0] == 0x0 && data[1] == 0x0 &&
+        data[2] == 0x1 && data[4] == 0x0) {
+      size -= 8;
+      data += 8;
+      skipped += 8;
+      if (size < 5) {
+        data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
+        size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
+        if (!data)
+          break;
+      }
+      if ((data[0] == 0x0 && data[1] == 0x0 &&
+           data[2] == 0x1 && data[3] == 0x1) ||
+          (data[1] == 0x0 && data[2] == 0x0 &&
+           data[3] == 0x1 && data[4] == 0x1)) {
+        size -= 4;
+        data += 4;
+        skipped += 4;
+        found += 1;
+        continue;
+      }
+    }
+
+    size--;
+    data++;
+    skipped++;
   }
 }
 
@@ -1141,6 +1223,8 @@ plugin_init (GstPlugin *plugin)
 	  ogg_exts, "OggS", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_SECONDARY,
 	  mpeg_video_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_MARGINAL,
+          mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
 	  qt_type_find, qt_exts, QT_CAPS, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/vnd.rn-realmedia", GST_RANK_SECONDARY, 
