@@ -205,7 +205,7 @@ in a pipeline.
 @GST_SEEK_METHOD_SET: Seek to an absolute position
 @GST_SEEK_METHOD_END: Seek relative to the end of the stream
 @GST_SEEK_FLAG_FLUSH: Flush any pending data while seeking
-@GST_SEEK_FLAG_ACCURATE: Seek as accuratly as possible
+@GST_SEEK_FLAG_ACCURATE: Seek as accurately as possible
 @GST_SEEK_FLAG_KEY_UNIT: Seek to a nearby key unit
 @GST_SEEK_FLAG_SEGMENT_LOOP: Loop between start and stop in a segmented seek
 
@@ -285,7 +285,7 @@ type.
 
 <!-- ##### MACRO GST_EVENT_DISCONT_OFFSET ##### -->
 <para>
-The offset of the discont event. A discont evetn can hold up to 8 different
+The offset of the discont event. A discont event can hold up to 8 different
 format/value pairs.
 </para>
 
