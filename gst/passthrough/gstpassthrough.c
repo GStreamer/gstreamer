@@ -33,12 +33,9 @@
 static GstElementDetails passthrough_details = {
   "Passthrough",
   "Filter/Audio/Effect",
-  "LGPL",
   "Transparent filter for audio/raw (boilerplate for effects)",
-  VERSION,
   "Thomas <thomas@apestaart.org>, "\
-  "Andy Wingo <apwingo@eos.ncsu.edu>",
-  "(C) 2001",
+  "Andy Wingo <apwingo@eos.ncsu.edu>"
 };
 
 enum {
@@ -88,6 +85,7 @@ passthrough_src_factory (void)
 }
 
 static void		passthrough_class_init		(GstPassthroughClass *klass);
+static void		passthrough_base_init		(GstPassthroughClass *klass);
 static void		passthrough_init		(GstPassthrough *filter);
 
 static void		passthrough_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -164,7 +162,8 @@ gst_passthrough_get_type (void)
 
   if (!passthrough_type) {
     static const GTypeInfo passthrough_info = {
-      sizeof (GstPassthroughClass),      NULL,
+      sizeof (GstPassthroughClass),
+      (GBaseInitFunc) passthrough_base_init,
       NULL,
       (GClassInitFunc) passthrough_class_init,
       NULL,
@@ -176,6 +175,16 @@ gst_passthrough_get_type (void)
     passthrough_type = g_type_register_static (GST_TYPE_ELEMENT, "GstPassthrough", &passthrough_info, 0);
   }
   return passthrough_type;
+}
+
+static void
+passthrough_base_init (GstPassthroughClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, passthrough_src_factory ());
+  gst_element_class_add_pad_template (element_class, passthrough_sink_factory ());
+  gst_element_class_set_details (element_class, &passthrough_details);
 }
 
 static void
@@ -307,24 +316,21 @@ passthrough_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("passthrough", GST_TYPE_PASSTHROUGH, &passthrough_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, passthrough_src_factory ());
-  gst_element_factory_add_pad_template (factory, passthrough_sink_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "passthrough",
+			       GST_RANK_NONE, GST_TYPE_PASSTHROUGH);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "passthrough",
-  plugin_init
-};
+  "Transparent filter for audio/raw (boilerplate for effects)",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
