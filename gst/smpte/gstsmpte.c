@@ -29,11 +29,8 @@
 static GstElementDetails smpte_details = {
   "SMPTE transitions",
   "Filter/Video",
-  "LGPL",
   "Apply the standard SMPTE transitions on video images",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 GST_PAD_TEMPLATE_FACTORY (smpte_src_factory,
@@ -120,6 +117,7 @@ gst_smpte_transition_type_get_type (void)
 
 
 static void	gst_smpte_class_init		(GstSMPTEClass *klass);
+static void	gst_smpte_base_init		(GstSMPTEClass *klass);
 static void	gst_smpte_init			(GstSMPTE *smpte);
 
 static void	gst_smpte_loop			(GstElement *element);
@@ -140,7 +138,7 @@ gst_smpte_get_type (void)
   if (!smpte_type) {
     static const GTypeInfo smpte_info = {
       sizeof(GstSMPTEClass),      
-      NULL,
+      (GBaseInitFunc)gst_smpte_base_init,
       NULL,
       (GClassInitFunc)gst_smpte_class_init,
       NULL,
@@ -152,6 +150,20 @@ gst_smpte_get_type (void)
     smpte_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSMPTE", &smpte_info, 0);
   }
   return smpte_type;
+}
+
+static void
+gst_smpte_base_init (GstSMPTEClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (smpte_sink1_factory));
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (smpte_sink2_factory));
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (smpte_src_factory));
+  gst_element_class_set_details (element_class, &smpte_details);
 }
 
 static void
@@ -461,30 +473,21 @@ gst_smpte_get_property (GObject *object, guint prop_id,
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("smpte",GST_TYPE_SMPTE,
-                                   &smpte_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (smpte_sink1_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (smpte_sink2_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (smpte_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "smpte",
+			      GST_RANK_NONE, GST_TYPE_SMPTE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "smpte",
-  plugin_init
-};
-
+  "Apply the standard SMPTE transitions on video images",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
