@@ -948,9 +948,29 @@ m4a_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/x-3gp *********************************************/
+
+/*
+ * The Q is there because variables can't start with a number.
+ */
+
+static GstStaticCaps q3gp_caps = GST_STATIC_CAPS ("application/x-3gp");
+
+#define Q3GP_CAPS (gst_static_caps_get(&q3gp_caps))
+static void
+q3gp_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 4, 8);
+
+  if (data && memcmp (data, "ftyp3gp4", 8) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, Q3GP_CAPS);
+  }
+}
+
 /*** audio/x-mod *********************************************/
 
 static GstStaticCaps mod_caps = GST_STATIC_CAPS ("audio/x-mod");
+
 
 #define MOD_CAPS gst_static_caps_get(&mod_caps)
 /* FIXME: M15 CheckType to do */
@@ -1485,6 +1505,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *zip_exts[] = { "zip", NULL };
   static gchar *compress_exts[] = { "Z", NULL };
   static gchar *m4a_exts[] = { "m4a", NULL };
+  static gchar *q3gp_exts[] = { "3gp", NULL };
   static gchar *aac_exts[] = { "aac", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
@@ -1598,6 +1619,8 @@ plugin_init (GstPlugin * plugin)
       speex_type_find, NULL, SPEEX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
       m4a_exts, M4A_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
+      q3gp_type_find, q3gp_exts, Q3GP_CAPS, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-executable",
       GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "adts_mpeg_stream", GST_RANK_SECONDARY,
