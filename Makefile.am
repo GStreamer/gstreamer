@@ -33,7 +33,7 @@ DIST_SUBDIRS=gst-libs \
 	pkgconfig
 
 EXTRA_DIST=gst-plugins.spec depcomp \
-	   AUTHORS COPYING README RELEASE REQUIREMENTS \
+	   AUTHORS COPYING COPYING.LIB README RELEASE REQUIREMENTS \
 	   ChangeLog autogen.sh common m4
 
 dist-hook:
