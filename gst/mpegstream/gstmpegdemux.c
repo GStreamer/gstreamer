@@ -188,9 +188,6 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
   gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->sinkpad);
   gst_element_remove_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->srcpad);
 
-  /* zero counters (should be done at RUNNING?)*/
-  mpeg_demux->last_pts = 0;
-
   /* i think everything is already zero'd, but oh well*/
   for (i=0;i<NUM_PRIVATE_1_PADS;i++) {
     mpeg_demux->private_1_pad[i] = NULL;
@@ -205,10 +202,12 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
   for (i=0;i<NUM_VIDEO_PADS;i++) {
     mpeg_demux->video_pad[i] = NULL;
     mpeg_demux->video_offset[i] = 0;
+    mpeg_demux->video_PTS[i] = 0;
   }
   for (i=0;i<NUM_AUDIO_PADS;i++) {
     mpeg_demux->audio_pad[i] = NULL;
     mpeg_demux->audio_offset[i] = 0;
+    mpeg_demux->audio_PTS[i] = 0;
   }
 
   GST_FLAG_SET (mpeg_demux, GST_ELEMENT_EVENT_AWARE);
@@ -388,6 +387,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint16 STD_buffer_size_bound;
   guint64 dts;
   guint8 ps_id_code;
+  gint64 pts = -1;
 
   guint16 datalen;
   gulong outoffset = 0;   /* wrong XXX FIXME */
@@ -436,22 +436,22 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         switch (bits & 0x30) {
 	  case 0x20:
             /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-            mpeg_demux->last_pts  = (bits & 0x0E)   << 29;
-            mpeg_demux->last_pts |=  *buf++         << 22;
-            mpeg_demux->last_pts |= (*buf++ & 0xFE) << 14;
-            mpeg_demux->last_pts |=  *buf++         <<  7;
-            mpeg_demux->last_pts |= (*buf++ & 0xFE) >>  1;
+            pts  = (bits & 0x0E)   << 29;
+            pts |=  *buf++         << 22;
+            pts |= (*buf++ & 0xFE) << 14;
+            pts |=  *buf++         <<  7;
+            pts |= (*buf++ & 0xFE) >>  1;
 
-            GST_DEBUG (0,"mpeg_demux::parse_packet: PTS = %llu\n", mpeg_demux->last_pts);
+            GST_DEBUG (0,"mpeg_demux::parse_packet: PTS = %llu\n", pts);
             headerlen += 5;
 	    goto done;
 	  case 0x30:
             /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-            mpeg_demux->last_pts  = (bits & 0x0E)   << 29;
-            mpeg_demux->last_pts |=  *buf++         << 22;
-            mpeg_demux->last_pts |= (*buf++ & 0xFE) << 14;
-            mpeg_demux->last_pts |=  *buf++         <<  7;
-            mpeg_demux->last_pts |= (*buf++ & 0xFE) >>  1;
+            pts  = (bits & 0x0E)   << 29;
+            pts |=  *buf++         << 22;
+            pts |= (*buf++ & 0xFE) << 14;
+            pts |=  *buf++         <<  7;
+            pts |= (*buf++ & 0xFE) >>  1;
 
             /* sync:4 ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
             dts  = (*buf++ & 0x0E) << 29;
@@ -460,7 +460,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
             dts |=  *buf++         <<  7;
             dts |= (*buf++ & 0xFE) >>  1;
 
-            GST_DEBUG (0,"mpeg_demux::parse_packet: PTS = %llu, DTS = %llu\n", mpeg_demux->last_pts, dts);
+            GST_DEBUG (0,"mpeg_demux::parse_packet: PTS = %llu, DTS = %llu\n", pts, dts);
             headerlen += 10;
 	    goto done;
 	  case 0x00:
@@ -508,6 +508,10 @@ done:
     GST_DEBUG (0,"mpeg_demux::parse_packet: 0x%02X: we have an audio packet\n", id);
     outpad = &mpeg_demux->audio_pad[id & 0x1F];
     outoffset = mpeg_demux->audio_offset[id & 0x1F];
+    if (pts == -1) 
+      pts = mpeg_demux->audio_PTS[id & 0x1F];
+    else 
+      mpeg_demux->audio_PTS[id & 0x1F] = pts;
     mpeg_demux->audio_offset[id & 0x1F] += datalen;
   /* video */
   } else if ((id >= 0xE0) && (id <= 0xEF)) {
@@ -515,6 +519,10 @@ done:
     outpad = &mpeg_demux->video_pad[id & 0x0F];
     outoffset = mpeg_demux->video_offset[id & 0x1F];
     mpeg_demux->video_offset[id & 0x1F] += datalen;
+    if (pts == -1) 
+      pts = mpeg_demux->video_PTS[id & 0x1F];
+    else 
+      mpeg_demux->video_PTS[id & 0x1F] = pts;
   }
 
   /* if we don't know what it is, bail */
@@ -539,7 +547,7 @@ done:
     outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
 
     GST_BUFFER_OFFSET (outbuf) = outoffset;
-    GST_BUFFER_TIMESTAMP (outbuf) = (mpeg_demux->last_pts * 100LL)/9LL;
+    GST_BUFFER_TIMESTAMP (outbuf) = (pts * 100LL)/9LL;
     GST_DEBUG (0,"mpeg_demux::parse_packet: pushing buffer of len %d id %d, ts %lld\n", 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
     gst_pad_push ((*outpad),outbuf);
@@ -553,6 +561,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 {
   GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
   guint8 id;
+  gint64 pts = -1;
 
   guint16 packet_length;
   guint8 header_data_length = 0;
@@ -598,12 +607,12 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     /* check for PTS */
     if ((flags2 & 0x80)) {
     /*if ((flags2 & 0x80) && id == 0xe0) { */
-      mpeg_demux->last_pts  = (*buf++ & 0x0E) << 29;
-      mpeg_demux->last_pts |=  *buf++         << 22;
-      mpeg_demux->last_pts |= (*buf++ & 0xFE) << 14;
-      mpeg_demux->last_pts |=  *buf++         <<  7;
-      mpeg_demux->last_pts |= (*buf++ & 0xFE) >>  1;
-      GST_DEBUG (0, "mpeg_demux::parse_packet: %x PTS = %llu\n", id, (mpeg_demux->last_pts*1000000LL)/90000LL);
+      pts  = (*buf++ & 0x0E) << 29;
+      pts |=  *buf++         << 22;
+      pts |= (*buf++ & 0xFE) << 14;
+      pts |=  *buf++         <<  7;
+      pts |= (*buf++ & 0xFE) >>  1;
+      GST_DEBUG (0, "mpeg_demux::parse_packet: %x PTS = %llu\n", id, (pts*1000000LL)/90000LL);
     }
     if ((flags2 & 0x40)) {
       GST_DEBUG (0, "mpeg_demux::parse_packet: %x DTS foundu\n", id);
@@ -669,12 +678,20 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     outpad = &mpeg_demux->audio_pad[id - 0xC0];
     outoffset = mpeg_demux->audio_offset[id & 0x1F];
     mpeg_demux->audio_offset[id & 0x1F] += datalen;
+    if (pts == -1) 
+      pts = mpeg_demux->audio_PTS[id & 0x1F];
+    else 
+      mpeg_demux->audio_PTS[id & 0x1F] = pts;
   /* video */
   } else if ((id >= 0xE0) && (id <= 0xEF)) {
     GST_DEBUG (0,"mpeg_demux: we have a video packet\n");
     outpad = &mpeg_demux->video_pad[id - 0xE0];
     outoffset = mpeg_demux->video_offset[id & 0x0F];
     mpeg_demux->video_offset[id & 0x0F] += datalen;
+    if (pts == -1) 
+      pts = mpeg_demux->video_PTS[id & 0x1F];
+    else 
+      mpeg_demux->video_PTS[id & 0x1F] = pts;
   }
 
   /* if we don't know what it is, bail */
@@ -737,7 +754,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
     outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
     GST_BUFFER_OFFSET(outbuf) = outoffset;
-    GST_BUFFER_TIMESTAMP(outbuf) = (mpeg_demux->last_pts*100LL)/9LL;
+    GST_BUFFER_TIMESTAMP(outbuf) = (pts*100LL)/9LL;
 
     gst_pad_push((*outpad),outbuf);
   }

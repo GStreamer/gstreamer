@@ -85,8 +85,6 @@ struct _GstMPEGDemux {
   gboolean packet_rate_restriction;
   struct _MPEG1Stream STD_buffer_info[48];
 
-  guint64 last_pts;
-
 #define NUM_PRIVATE_1_PADS 8
 #define NUM_SUBTITLE_PADS 16
 #define NUM_VIDEO_PADS 16
@@ -104,9 +102,11 @@ struct _GstMPEGDemux {
 
   GstPad *video_pad[NUM_VIDEO_PADS];
   gulong video_offset[NUM_VIDEO_PADS];
+  gint64 video_PTS[NUM_VIDEO_PADS];
 
   GstPad *audio_pad[NUM_AUDIO_PADS];
   gulong audio_offset[NUM_AUDIO_PADS];
+  gint64 audio_PTS[NUM_AUDIO_PADS];
 
 };
 
