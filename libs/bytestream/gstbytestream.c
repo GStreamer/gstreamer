@@ -26,8 +26,15 @@
 #include <gst/gstinfo.h>
 #include "gstbytestream.h"
 
-//#define bs_print(format,args...) g_print(format, ## args)
-#define bs_print(format,args...)
+//#define BS_DEBUG
+
+#ifdef BS_DEBUG
+# define bs_print(format,args...) 	GST_DEBUG (GST_CAT_BUFFER,  format, ## args)
+# define bs_status(bs) 			gst_bytestream_print_status(bs)
+#else
+# define bs_print(format,args...)
+# define bs_status(bs)
+#endif
 
 //static void gst_bytestream_print_status(GstByteStream *bs);
 guint8 *gst_bytestream_assemble (GstByteStream * bs, guint32 len);
@@ -198,7 +205,7 @@ gst_bytestream_peek_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
       return NULL;
     bs_print ("peek: there are now %d bytes in the list\n", bs->listavail);
   }
-  gst_bytestream_print_status (bs);
+  bs_status (bs);
 
   // extract the head buffer
   headbuf = GST_BUFFER (bs->buflist->data);
@@ -243,7 +250,7 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
       return NULL;
     bs_print ("peek_bytes: there are now %d bytes in the list\n", bs->listavail);
   }
-  gst_bytestream_print_status (bs);
+  bs_status (bs);
 
   // extract the head buffer
   headbuf = GST_BUFFER (bs->buflist->data);
