@@ -607,6 +607,8 @@ merge_groups (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
 static void
 group_error_handler (GstOptSchedulerGroup *group) 
 {
+  GST_INFO (GST_CAT_SCHEDULING, "group %p has errored", group);
+
   chain_group_set_enabled (group->chain, group, FALSE);
   group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
 }
@@ -993,8 +995,10 @@ gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gi
     case GST_STATE_PAUSED_TO_PLAYING:
       /* an element withut a group has to be an unlinked src, sink
        * filter element */
-      if (!group)
+      if (!group) {
+        GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" has no group", GST_ELEMENT_NAME (element));
 	res = GST_STATE_FAILURE;
+      }
       /* else construct the scheduling context of this group and enable it */
       else {
         setup_group_scheduler (osched, group);
@@ -1517,8 +1521,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
     /* if there is still a link, we don't need to break this group */
     if (still_link1 && still_link2) {
       GST_INFO (GST_CAT_SCHEDULING, "elements still have links with other elements in the group");
-
-      /* FIXME, need to check for breaking up the group */
+      /* FIXME it's possible that we have to break the chain */
       return;
     }
 
@@ -1591,8 +1594,10 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
       }
 
       /* don't schedule any more chains when in error */
-      if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR)
+      if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR) {
+        GST_INFO (GST_CAT_SCHEDULING, "scheduler %p is in error", sched);
         break;
+      }
     }
 
     /* at this point it's possible that the scheduler state is
