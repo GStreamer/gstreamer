@@ -65,7 +65,7 @@ struct _GstQueue {
     guint64 time;	/* amount of time */
   } cur_level,		/* currently in the queue */
     max_size,		/* max. amount of data allowed in the queue */
-    min_treshold;	/* min. amount of data required to wake reader */
+    min_threshold;	/* min. amount of data required to wake reader */
 
   /* whether we leak data, and at which end */
   gint leaky;

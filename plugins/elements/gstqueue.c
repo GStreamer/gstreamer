@@ -55,9 +55,9 @@ enum {
   ARG_MAX_SIZE_BUFFERS,
   ARG_MAX_SIZE_BYTES,
   ARG_MAX_SIZE_TIME,
-  ARG_MIN_TRESHOLD_BUFFERS,
-  ARG_MIN_TRESHOLD_BYTES,
-  ARG_MIN_TRESHOLD_TIME,
+  ARG_MIN_THRESHOLD_BUFFERS,
+  ARG_MIN_THRESHOLD_BYTES,
+  ARG_MIN_THRESHOLD_TIME,
   ARG_LEAKY,
   ARG_MAY_DEADLOCK,
   ARG_BLOCK_TIMEOUT
@@ -205,16 +205,16 @@ gst_queue_class_init (GstQueueClass *klass)
 			 "Max. amount of data in the queue (in ns, 0=disable)",
 			 0, G_MAXUINT64, 0, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, ARG_MIN_TRESHOLD_BYTES,
-    g_param_spec_uint ("min-treshold-bytes", "Min. treshold (kB)",
+  g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_BYTES,
+    g_param_spec_uint ("min-threshold-bytes", "Min. threshold (kB)",
 		       "Min. amount of data in the queue to allow reading (bytes, 0=disable)",
 		       0, G_MAXUINT, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MIN_TRESHOLD_BUFFERS,
-    g_param_spec_uint ("min-treshold-buffers", "Min. treshold (buffers)",
+  g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_BUFFERS,
+    g_param_spec_uint ("min-threshold-buffers", "Min. threshold (buffers)",
 		       "Min. number of buffers in the queue to allow reading (0=disable)",
 		       0, G_MAXUINT, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MIN_TRESHOLD_TIME,
-    g_param_spec_uint64 ("min-treshold-time", "Min. treshold (ns)",
+  g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_TIME,
+    g_param_spec_uint64 ("min-threshold-time", "Min. threshold (ns)",
 			 "Min. amount of data in the queue to allow reading (in ns, 0=disable)",
 			 0, G_MAXUINT64, 0, G_PARAM_READWRITE));
 
@@ -269,9 +269,9 @@ gst_queue_init (GstQueue *queue)
   queue->max_size.buffers	= 250; /* high limit */
   queue->max_size.bytes		= 0; /* unlimited */
   queue->max_size.time		= 0; /* unlimited */
-  queue->min_treshold.buffers	= 0; /* no treshold */
-  queue->min_treshold.bytes	= 0; /* no treshold */
-  queue->min_treshold.time	= 0; /* no treshold */
+  queue->min_threshold.buffers	= 0; /* no threshold */
+  queue->min_threshold.bytes	= 0; /* no threshold */
+  queue->min_threshold.time	= 0; /* no threshold */
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->may_deadlock = TRUE;
@@ -395,13 +395,13 @@ gst_queue_handle_pending_events (GstQueue *queue)
 		      "-%" G_GUINT64_FORMAT " ns, %u elements", \
 		      GST_DEBUG_PAD_NAME (pad), \
 		      queue->cur_level.buffers, \
-		      queue->min_treshold.buffers, \
+		      queue->min_threshold.buffers, \
 		      queue->max_size.buffers, \
 		      queue->cur_level.bytes, \
-		      queue->min_treshold.bytes, \
+		      queue->min_threshold.bytes, \
 		      queue->max_size.bytes, \
 		      queue->cur_level.time, \
-		      queue->min_treshold.time, \
+		      queue->min_threshold.time, \
 		      queue->max_size.time, \
 		      queue->queue->length)
 
@@ -509,6 +509,7 @@ restart:
          * to make things read-only. Also keep our list uptodate. */
         queue->cur_level.bytes -= GST_BUFFER_SIZE (data);
         queue->cur_level.buffers --;
+        g_object_notify (G_OBJECT (queue), "current-level-buffers");
         if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
           queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
@@ -604,6 +605,7 @@ restart:
   /* Note that we only add buffers (not events) to the statistics */
   if (GST_IS_BUFFER (data)) {
     queue->cur_level.buffers++;
+    g_object_notify (G_OBJECT (queue), "current-level-buffers");
     queue->cur_level.bytes += GST_BUFFER_SIZE (data);
     if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
       queue->cur_level.time += GST_BUFFER_DURATION (data);
@@ -642,24 +644,24 @@ restart:
 		      "locked t:%p", g_thread_self ());
 
   if (queue->queue->length == 0 ||
-      (queue->min_treshold.buffers > 0 &&
-       queue->cur_level.buffers < queue->min_treshold.buffers) ||
-      (queue->min_treshold.bytes > 0 &&
-       queue->cur_level.bytes < queue->min_treshold.bytes) ||
-      (queue->min_treshold.time > 0 &&
-       queue->cur_level.time < queue->min_treshold.time)) {
+      (queue->min_threshold.buffers > 0 &&
+       queue->cur_level.buffers < queue->min_threshold.buffers) ||
+      (queue->min_threshold.bytes > 0 &&
+       queue->cur_level.bytes < queue->min_threshold.bytes) ||
+      (queue->min_threshold.time > 0 &&
+       queue->cur_level.time < queue->min_threshold.time)) {
     g_mutex_unlock (queue->qlock);
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_UNDERRUN], 0);
     g_mutex_lock (queue->qlock);
 
     STATUS (queue, "pre-empty wait");
     while (queue->queue->length == 0 ||
-           (queue->min_treshold.buffers > 0 &&
-            queue->cur_level.buffers < queue->min_treshold.buffers) ||
-           (queue->min_treshold.bytes > 0 &&
-            queue->cur_level.bytes < queue->min_treshold.bytes) ||
-           (queue->min_treshold.time > 0 &&
-            queue->cur_level.time < queue->min_treshold.time)) {
+           (queue->min_threshold.buffers > 0 &&
+            queue->cur_level.buffers < queue->min_threshold.buffers) ||
+           (queue->min_threshold.bytes > 0 &&
+            queue->cur_level.bytes < queue->min_threshold.bytes) ||
+           (queue->min_threshold.time > 0 &&
+            queue->cur_level.time < queue->min_threshold.time)) {
       /* if there's a pending state change for this queue or its
        * manager, switch back to iterator so bottom half of state
        * change executes. */
@@ -930,14 +932,14 @@ gst_queue_set_property (GObject      *object,
     case ARG_MAX_SIZE_TIME:
       queue->max_size.time = g_value_get_uint64 (value);
       break;
-    case ARG_MIN_TRESHOLD_BYTES:
-      queue->max_size.bytes = g_value_get_uint (value);
+    case ARG_MIN_THRESHOLD_BYTES:
+      queue->min_threshold.bytes = g_value_get_uint (value);
       break;
-    case ARG_MIN_TRESHOLD_BUFFERS:
-      queue->max_size.buffers = g_value_get_uint (value);
+    case ARG_MIN_THRESHOLD_BUFFERS:
+      queue->min_threshold.buffers = g_value_get_uint (value);
       break;
-    case ARG_MIN_TRESHOLD_TIME:
-      queue->max_size.time = g_value_get_uint64 (value);
+    case ARG_MIN_THRESHOLD_TIME:
+      queue->min_threshold.time = g_value_get_uint64 (value);
       break;
     case ARG_LEAKY:
       queue->leaky = g_value_get_enum (value);
@@ -983,14 +985,14 @@ gst_queue_get_property (GObject    *object,
     case ARG_MAX_SIZE_TIME:
       g_value_set_uint64 (value, queue->max_size.time);
       break;
-    case ARG_MIN_TRESHOLD_BYTES:
-      g_value_set_uint (value, queue->min_treshold.bytes);
+    case ARG_MIN_THRESHOLD_BYTES:
+      g_value_set_uint (value, queue->min_threshold.bytes);
       break;
-    case ARG_MIN_TRESHOLD_BUFFERS:
-      g_value_set_uint (value, queue->min_treshold.buffers);
+    case ARG_MIN_THRESHOLD_BUFFERS:
+      g_value_set_uint (value, queue->min_threshold.buffers);
       break;
-    case ARG_MIN_TRESHOLD_TIME:
-      g_value_set_uint64 (value, queue->min_treshold.time);
+    case ARG_MIN_THRESHOLD_TIME:
+      g_value_set_uint64 (value, queue->min_threshold.time);
       break;
     case ARG_LEAKY:
       g_value_set_enum (value, queue->leaky);

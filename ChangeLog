@@ -1,5 +1,12 @@
 2004-01-15  David Schleef  <ds@schleef.org>
 
+	* gst/gstqueue.c:
+	* gst/gstqueue.h:
+	Fix the spelling of "treshold" and make min_threshold actually
+	affect the queue.
+
+2004-01-15  David Schleef  <ds@schleef.org>
+
 	* gst/gstcaps.c:
 	Add lots of documentation.
 	* gst/gstcaps.h:
