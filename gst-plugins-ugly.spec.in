@@ -66,10 +66,10 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ESD_TRUE@%{prefix}/lib/gst/libesd*
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%post -n gstreamer-esd
-@USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%postun -n gstreamer-esd
-@USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_ESD_TRUE@/sbin/ldconfig
 
 ### FESTIVAL ###
@@ -87,7 +87,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_FESTIVAL_TRUE@%{prefix}/lib/gst/libgstfestival*
 @USE_FESTIVAL_TRUE@
 @USE_FESTIVAL_TRUE@%post -n gstreamer-festival
-@USE_FESTIVAL_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_FESTIVAL_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 ### HERMES ###
 @USE_HERMES_TRUE@%package -n gstreamer-xvideosink
@@ -103,7 +103,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_HERMES_TRUE@%{prefix}/lib/gst/libxvideosink*
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-xvideosink
-@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_HERMES_TRUE@%package -n gstreamer-colorspace
 @USE_HERMES_TRUE@Summary: Gstreamer colorspace conversion plugin
@@ -118,7 +118,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_HERMES_TRUE@%{prefix}/lib/gst/libgstcolorspace*
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-colorspace
-@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 
 ### LAME ###
@@ -135,7 +135,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_LAME_TRUE@%{prefix}/lib/gst/libgstlame*
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%post -n gstreamer-lame
-@USE_LAME_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_LAME_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
@@ -153,10 +153,10 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MAD_TRUE@%{prefix}/lib/gst/libgstmad*
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%post -n gstreamer-mad
-@USE_MAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_MAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%postun -n gstreamer-mad
-@USE_MAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_MAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_MAD_TRUE@/sbin/ldconfig
 
 ### OSS ###
@@ -175,10 +175,10 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_OSS_TRUE@%{prefix}/lib/gst/libgstoss*
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%post -n gstreamer-oss
-@USE_OSS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_OSS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%postun -n gstreamer-oss
-@USE_OSS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_OSS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_OSS_TRUE@/sbin/ldconfig
 
 ### Vorbis ###
@@ -197,10 +197,10 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_VORBIS_TRUE@%{prefix}/lib/gst/libgstvorbis*
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%post -n gstreamer-vorbis
-@USE_VORBIS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_VORBIS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%postun -n gstreamer-vorbis
-@USE_VORBIS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_VORBIS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 @USE_VORBIS_TRUE@/sbin/ldconfig
 
 @USE_AALIB_TRUE@%package -n gstreamer-aalib
@@ -218,7 +218,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AALIB_TRUE@%{prefix}/lib/gst/libgstaa*
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%post -n gstreamer-aalib
-@USE_AALIB_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_AALIB_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_AUDIOFILE_TRUE@%package -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@Summary: GStreamer plugin audiofile support
@@ -235,7 +235,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AUDIOFILE_TRUE@%{prefix}/lib/gst/libafs*
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
-@USE_AUDIOFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_AUDIOFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_AVIFILE_TRUE@%package -n gstreamer-avi
 @USE_AVIFILE_TRUE@Summary: Gstreamer plugin for AVI format movie playback
@@ -254,7 +254,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AVIFILE_TRUE@%{prefix}/lib/gst/libwin*
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%post -n gstreamer-avi
-@USE_AVIFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_AVIFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@Summary: Gstreamer plugin for CD audio input using CDParanoia IV
@@ -271,7 +271,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_CDPARANOIA_TRUE@%{prefix}/lib/gst/libgstcdparanoia*
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_CDPARANOIA_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_FLAC_TRUE@%package -n gstreamer-flac
 @USE_FLAC_TRUE@Summary: Gstreamer plugin for FLAC lossless audio format
@@ -286,7 +286,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_FLAC_TRUE@%{prefix}/lib/gst/libgstflac*
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%post -n gstreamer-flac
-@USE_FLAC_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_FLAC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@Summary: GStreamer plugins for GNOME VFS input and output
@@ -303,7 +303,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GNOME_VFS_TRUE@%{prefix}/lib/gst/libgstgnomevfs*
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
-@USE_GNOME_VFS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_GNOME_VFS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_GSM_TRUE@%package -n gstreamer-gsm
 @USE_GSM_TRUE@Summary: Gstreamer plugin for GSM lossy audio format
@@ -319,7 +319,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GSM_TRUE@%{prefix}/lib/gst/libgstgsm*
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%post -n gstreamer-gsm
-@USE_GSM_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_GSM_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@Summary: Gstreamer mjpegtools
@@ -334,7 +334,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MJPEGTOOLS_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
-@USE_MJPEGTOOLS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_MJPEGTOOLS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@Summary: GStreamer plugins for MPEG video playback and encoding
@@ -362,7 +362,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 # @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp2videoparse*
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
-@USE_MPEG2DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_MPEG2DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg2dec
 @USE_MPEG2DEC_TRUE@Summary: GStreamer plugins for Mpeg level 2 playback
@@ -378,7 +378,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2dec*
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg2dec
-@USE_MPEG2DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_MPEG2DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_SDL_TRUE@%package -n gstreamer-sdl
 @USE_SDL_TRUE@Summary: Gstreamer plugin for outputing to SDL
@@ -396,7 +396,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SDL_TRUE@%{prefix}/lib/gst/libsdl*
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%post -n gstreamer-sdl
-@USE_SDL_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_SDL_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_OPENQUICKTIME_TRUE@%package -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@Summary: GStreamer OpenQuicktime video Plugin
@@ -414,7 +414,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libgstopenquicktime*
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
-@USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 # Video 4 Linux
 @USE_V4L_TRUE@%package -n gstreamer-v4l
@@ -430,7 +430,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_V4L_TRUE@%{prefix}/lib/gst/libv4l*
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%post -n gstreamer-v4l
-@USE_V4L_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_V4L_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 # ALSA Audio plugin
 @USE_ALSA_TRUE@%package -n gstreamer-alsa
@@ -446,7 +446,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ALSA_TRUE@%{prefix}/lib/gst/libgstalsa*
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
-@USE_ALSA_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_ALSA_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvd
 @USE_DVDREAD_TRUE@Summary: GStreamer plugins for DVD playback
@@ -461,7 +461,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_DVDREAD_TRUE@%{prefix}/lib/gst/libdvd*
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%post -n gstreamer-libdvd
-@USE_DVDREAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_DVDREAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_A52DEC_TRUE@%package -n gstreamer-a52dec
 @USE_A52DEC_TRUE@Summary: GStreamer VOB decoder plugin
@@ -477,7 +477,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_A52DEC_TRUE@%{prefix}/lib/gst/libgsta52dec*
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%post -n gstreamer-a52dec
-@USE_A52DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_A52DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_MIKMOD_TRUE@%package -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@Summary: GStreamer Mikmod plugin
@@ -492,7 +492,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MIKMOD_TRUE@%{prefix}/lib/gst/libgstmikmod*
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
-@USE_MIKMOD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_MIKMOD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
 @USE_SIDPLAY_TRUE@Summary: GStreamer Sid C64 music plugin
@@ -507,7 +507,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SIDPLAY_TRUE@%{prefix}/lib/gst/libgstsid*
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%post -n gstreamer-sid
-@USE_SIDPLAY_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_SIDPLAY_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_RTP_TRUE@%package -n gstreamer-rtp
 @USE_RTP_TRUE@Summary: GStreamer RTP plugin
@@ -523,7 +523,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_RTP_TRUE@%{prefix}/lib/gst/libgstrtp*
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%post -n gstreamer-rtp
-@USE_RTP_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_RTP_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_ARTS_TRUE@%package -n gstreamer-artsd
 @USE_ARTS_TRUE@Summary: GStreamer artsd output plugin
@@ -538,7 +538,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ARTS_TRUE@%{prefix}/lib/gst/libartsd*
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%post -n gstreamer-artsd
-@USE_ARTS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_ARTS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_RAW1394_TRUE@%package -n gstreamer-dv
 @USE_RAW1394_TRUE@Summary: GStreamer dv plugin
@@ -553,18 +553,18 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_RAW1394_TRUE@%{prefix}/lib/gst/gstdv*
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%post -n gstreamer-dv
-@USE_RAW1394_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_RAW1394_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
-%package -n gstreamer-audioeffects
-Summary: GStreamer audioeffects plugin
+%package -n gstreamer-audio-effects
+Summary: GStreamer audio effects plugin
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
-%description -n gstreamer-audioeffects
+%description -n gstreamer-audio-effects
 Plugin with various audio effects including resampling, 
 sine waves generation, silence generation plugin
 
-%files -n gstreamer-audioeffects
+%files -n gstreamer-audio-effects
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstresample*
 %{prefix}/lib/gst/libgstsine*
@@ -574,8 +574,8 @@ sine waves generation, silence generation plugin
 %{prefix}/lib/gst/libgstplayondemand*
 %{prefix}/lib/gst/libgstspeed*
 
-%post -n gstreamer-audioeffects
-%{prefix}/bin/gst-register --gst-mask=0
+%post -n gstreamer-audio-effects
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-lavencode
 Summary: GStreamer YUV to LAV converter
@@ -590,7 +590,7 @@ It takes YUV video frames and adds a header in front of it so it can be processe
 %{prefix}/lib/gst/libgsty4m*
 
 %post -n gstreamer-lavencode
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-qcam
 Summary: GStreamer QuickCam plugin
@@ -605,7 +605,7 @@ Plugin for accessing a Quickcam source
 %{prefix}/lib/gst/libgstqcam*
 
 %post -n gstreamer-qcam
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-vcd
 Summary: GStreamer Video CD plugin
@@ -633,10 +633,10 @@ Requires: gstreamer >= %{ver}
 Plugin which wraps LADSPA plugins for use by GStreamer applications.
 
 %post -n gstreamer-ladspa
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-udp
-Summary: Gstreamer pluginis for UDP tranport
+Summary: GStreamer plugins for UDP tranport
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
@@ -648,10 +648,10 @@ Plugins for UDP transport
 %{prefix}/lib/gst/libgstudp*
 
 %post -n gstreamer-udp
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-flx
-Summary: Gstreamer plugin for FLI/FLX animation format
+Summary: GStreamer plugin for FLI/FLX animation format
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 Requires: gstreamer-plugin-libs = %{ver}
@@ -664,7 +664,7 @@ Plugin for playing FLI/FLX animations under GStreamer
 %{prefix}/lib/gst/libgstflx*
 
 %post -n gstreamer-flx
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-deinterlace
 Summary: GStreamer Video deinterlacer
@@ -679,10 +679,10 @@ Video deinterlace plugin
 %{prefix}/lib/gst/libgstdeinterlace*
 
 %post -n gstreamer-deinterlace
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-visualisation
-Summary: Gstreamer visualisations plugins
+Summary: GStreamer visualisations plugins
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
@@ -698,7 +698,7 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libchart*
 
 %post -n gstreamer-visualisation
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 %package -n gstreamer-plugin-libs
 Summary: GStreamer support libraries
@@ -738,27 +738,27 @@ and so on.
 %{prefix}/lib/gst/libgstrtjpe*
 
 %post -n gstreamer-misc
-%{prefix}/bin/gst-register --gst-mask=0
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
-%package -n gstreamer-audioformats
-Summary: Gstreamer audio format plugin
+%package -n gstreamer-audio-formats
+Summary: GStreamer audio format plugin
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 Requires: gstreamer-plugin-libs = %{ver}
 %description -n gstreamer-audioformats
 Plugin for playback of wav, au and mp3 audio files
 
-%files -n gstreamer-audioformats
+%files -n gstreamer-audio-formats
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstwavparse*
 %{prefix}/lib/gst/libgstparseau*
 %{prefix}/lib/gst/libgstmp3types*
 
-%post -n gstreamer-audioformats
-%{prefix}/bin/gst-register --gst-mask=0
+%post -n gstreamer-audio-formats
+%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
 
 @USE_SHOUT_TRUE@%package -n gstreamer-icecast
-@USE_SHOUT_TRUE@Summary: Gstreamer Icecast broadcasting plugin
+@USE_SHOUT_TRUE@Summary: GStreamer Icecast broadcasting plugin
 @USE_SHOUT_TRUE@Group: Libraries/Multimedia
 @USE_SHOUT_TRUE@Requires: gstreamer >= %{ver}
 @USE_SHOUT_TRUE@Requires: gstreamer-plugin-libs = %{ver}
@@ -771,4 +771,4 @@ Plugin for playback of wav, au and mp3 audio files
 @USE_SHOUT_TRUE@%{prefix}/lib/gst/libgstshout*
 
 @USE_SHOUT_TRUE@%post -n gstreamer-icecast
-@USE_SHOUT_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_SHOUT_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2>&1 /dev/null
