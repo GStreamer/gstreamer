@@ -233,11 +233,11 @@ gst_udpsrc_get (GstPad *pad)
       if (udpsrc->first_buf) {
   	if (udpsrc->clock) {
 	   GstClockTime current_time;
+      	   GstEvent *discont;
 
 	   current_time = gst_clock_get_time (udpsrc->clock);
       	   
 	   GST_BUFFER_TIMESTAMP (outbuf) = current_time;
-      	   GstEvent *discont;
 
       	   discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 				current_time, NULL);
