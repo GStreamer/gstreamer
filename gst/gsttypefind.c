@@ -36,7 +36,7 @@ GstElementDetails gst_type_find_details = {
   "LGPL",
   "Finds the media type of a stream",
   VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>"
+  "Erik Walthinsen <omega@cse.ogi.edu>,"
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 1999",
 };
@@ -54,13 +54,15 @@ enum {
 };
 
 
-static void	gst_type_find_class_init		(GstTypeFindClass *klass);
+static void	gst_type_find_class_init	(GstTypeFindClass *klass);
 static void	gst_type_find_init		(GstTypeFind *typefind);
 
-static void	gst_type_find_set_property	(GObject *object, guint prop_id, 
-						 const GValue *value, GParamSpec *pspec);
-static void	gst_type_find_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
+static void	gst_type_find_set_property	(GObject *object, guint prop_id,
+						 const GValue *value, 
+						 GParamSpec *pspec);
+static void	gst_type_find_get_property	(GObject *object, guint prop_id,
+						 GValue *value, 
+						 GParamSpec *pspec);
 
 static void	gst_type_find_chain		(GstPad *pad, GstBuffer *buf);
 
@@ -121,11 +123,11 @@ gst_type_find_init (GstTypeFind *typefind)
 }
 
 static void
-gst_type_find_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_type_find_set_property (GObject *object, guint prop_id, 
+		            const GValue *value, GParamSpec *pspec)
 {
   GstTypeFind *typefind;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TYPE_FIND (object));
 
   typefind = GST_TYPE_FIND (object);
@@ -137,11 +139,11 @@ gst_type_find_set_property (GObject *object, guint prop_id, const GValue *value,
 }
 
 static void
-gst_type_find_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_type_find_get_property (GObject *object, guint prop_id, 
+		            GValue *value, GParamSpec *pspec)
 {
   GstTypeFind *typefind;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TYPE_FIND (object));
 
   typefind = GST_TYPE_FIND (object);
@@ -174,7 +176,7 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
 
   while (type_list) {
     GSList *factories;
-    type = (GstType *)type_list->data;
+    type = (GstType *) type_list->data;
 
     factories = type->factories;
 
@@ -183,10 +185,11 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
       GstCaps *caps;
 
-      GST_DEBUG (0,"try type (%p) :%d \"%s\" %p", factory, type->id, type->mime, typefindfunc);
+      GST_DEBUG (GST_CAT_TYPES, "try type (%p) :%d \"%s\" %p", 
+		 factory, type->id, type->mime, typefindfunc);
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
-        GST_DEBUG (0,"found type :%d \"%s\" \"%s\"", caps->id, type->mime, 
-			gst_caps_get_name (caps));
+        GST_DEBUG (GST_CAT_TYPES, "found type: %d \"%s\" \"%s\"", 
+		   caps->id, type->mime, gst_caps_get_name (caps));
 	typefind->caps = caps;
 
 	if (gst_pad_try_set_caps (pad, caps) <= 0) {
