@@ -1,3 +1,18 @@
+2003-12-24  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_getcaps),
+	(gst_ffmpegcsp_srcconnect_func), (gst_ffmpegcsp_sinkconnect),
+	(gst_ffmpegcsp_srcconnect), (gst_ffmpegcsp_get_type),
+	(gst_ffmpegcsp_base_init), (gst_ffmpegcsp_class_init),
+	(gst_ffmpegcsp_init), (gst_ffmpegcsp_chain),
+	(gst_ffmpegcsp_change_state), (gst_ffmpegcsp_set_property),
+	(gst_ffmpegcsp_get_property), (gst_ffmpegcsp_register):
+	  fix typo in RGB masks, and move back to "old" colorspace
+	  capsnego code until whoever wrote this new crap has actually
+	  tested it so that it works.
+	  And yes, this works, keep it that way please.
+
 2003-12-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/divx/gstdivxdec.c: (gst_divxdec_base_init),
