@@ -110,6 +110,9 @@ Time to bring the new version under the eyes of the public.
 TODO :
   - FIXME: should we md5 the tarballs?
   - upload to sourceforge
+      upload.sourceforge.net/incoming
+      administer the release
+
   - FIXME: announcements
     - gstreamer-{devel, announce} : a simple mail with RELEASE
     - freshmeat
