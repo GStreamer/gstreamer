@@ -112,7 +112,7 @@ cothread_create (cothread_context *ctx)
                            COTHREAD_STACKSIZE));
     GST_DEBUG (0,"new stack (case 2) at %p\n",s);
     if (mmap((char *)s,COTHREAD_STACKSIZE*(sizeof(int)),
-             PROT_READ|PROT_WRITE|PROT_EXEC,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,
+             PROT_READ|PROT_WRITE|PROT_EXEC,MAP_FIXED|MAP_PRIVATE|MAP_ANON,
              -1,0) < 0) {
       perror("mmap'ing cothread stack space");
       return NULL;
