@@ -1,5 +1,12 @@
 2004-07-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_new_output_pad),
+	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_process_private):
+	Add pad to element *after* setting the pad functions so that
+	the scheduler can use the correct ones.
+
+2004-07-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (theora_dec_from_granulepos),
 	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_chain):
 	Sync to keyframe after seek
