@@ -563,3 +563,14 @@ gst_debug_print_stack_trace (void)
 }
 
 #endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */
+
+inline void *
+_gst_debug_register_funcptr (void *ptr, gchar *ptrname)
+{
+  if (!__gst_function_pointers)
+    __gst_function_pointers = g_hash_table_new (g_direct_hash, g_direct_equal);
+  if (!g_hash_table_lookup (__gst_function_pointers, ptr))
+    g_hash_table_insert (__gst_function_pointers, ptr, ptrname);
+  return ptr;
+}
+

@@ -458,6 +458,8 @@ dnl # Make the output files #
 dnl #########################
 
 dnl libs/ext/Makefile
+dnl nothing there yet !
+dnl testsuite/indexers/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
@@ -486,7 +488,6 @@ tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
-testsuite/indexers/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
