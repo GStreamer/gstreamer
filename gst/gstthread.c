@@ -406,6 +406,7 @@ static void
 gst_thread_release (GstThread * thread)
 {
   if (thread != gst_thread_get_current ()) {
+    GST_DEBUG_OBJECT (thread, "releasing lock");
     g_cond_signal (thread->cond);
     g_mutex_unlock (thread->lock);
   }
@@ -419,12 +420,14 @@ gst_thread_set_state (GstElement * element, GstElementState state)
 
   if (thread != gst_thread_get_current ()) {
     gst_thread_catch (thread);
+    GST_DEBUG_OBJECT (thread, "releasing lock");
     g_mutex_unlock (thread->lock);
   }
   result =
       GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, set_state, (element,
           state), GST_STATE_FAILURE);
   if (thread != gst_thread_get_current ()) {
+    GST_DEBUG_OBJECT (thread, "grabbing lock");
     g_mutex_lock (thread->lock);
     gst_thread_release (thread);
   }

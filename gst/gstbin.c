@@ -793,6 +793,7 @@ gst_bin_foreach (GstBin * bin, GstBinForeachFunc func, gpointer data)
 
 typedef struct
 {
+  GstElementState intermediate;
   GstElementState pending;
   GstElementStateReturn result;
 }
@@ -810,17 +811,49 @@ set_kid_state_func (GstBin * bin, GstElement * child, gpointer user_data)
 
   old_child_state = GST_STATE (child);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-      "changing state of child %s from current %s to pending %s",
-      GST_ELEMENT_NAME (child), gst_element_state_get_name (old_child_state),
-      gst_element_state_get_name (data->pending));
+  /* are we moving up or down? */
+  if (data->intermediate < data->pending) {
+    /* up, check if we are already closer to target */
+    if (old_child_state >= data->intermediate &&
+        old_child_state < data->pending) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+          "state of child %s is %s, inbetween intermediate %s and pending %s",
+          GST_ELEMENT_NAME (child),
+          gst_element_state_get_name (old_child_state),
+          gst_element_state_get_name (data->intermediate),
+          gst_element_state_get_name (data->pending));
+      return TRUE;
+    }
+  } else if (data->intermediate > data->pending) {
+    /* down, check if we are already closer to target */
+    if (old_child_state < data->intermediate) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+          "state of child %s is %s, inbetween intermediate %s and pending %s",
+          GST_ELEMENT_NAME (child),
+          gst_element_state_get_name (old_child_state),
+          gst_element_state_get_name (data->intermediate),
+          gst_element_state_get_name (data->pending));
+      return TRUE;
+    }
+  } else {
+    /* same state */
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+        "setting final state on child %s, now in %s, going to %s",
+        GST_ELEMENT_NAME (child), gst_element_state_get_name (old_child_state),
+        gst_element_state_get_name (data->intermediate));
+  }
 
-  switch (gst_element_set_state (child, data->pending)) {
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+      "changing state of child %s from current %s to intermediate %s",
+      GST_ELEMENT_NAME (child), gst_element_state_get_name (old_child_state),
+      gst_element_state_get_name (data->intermediate));
+
+  switch (gst_element_set_state (child, data->intermediate)) {
     case GST_STATE_FAILURE:
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
           "child '%s' failed to go to state %d(%s)",
           GST_ELEMENT_NAME (child),
-          data->pending, gst_element_state_get_name (data->pending));
+          data->intermediate, gst_element_state_get_name (data->intermediate));
 
       gst_element_set_state (child, old_child_state);
       return FALSE;             /* error out to the caller */
@@ -834,8 +867,8 @@ set_kid_state_func (GstBin * bin, GstElement * child, gpointer user_data)
     case GST_STATE_SUCCESS:
       GST_CAT_DEBUG (GST_CAT_STATES,
           "child '%s' changed state to %d(%s) successfully",
-          GST_ELEMENT_NAME (child), data->pending,
-          gst_element_state_get_name (data->pending));
+          GST_ELEMENT_NAME (child), data->intermediate,
+          gst_element_state_get_name (data->intermediate));
       data->result = GST_STATE_SUCCESS;
       return TRUE;
 
@@ -850,14 +883,49 @@ gst_bin_set_state (GstElement * element, GstElementState state)
 {
   GstBin *bin = GST_BIN (element);
   SetKidStateData data;
+  GstElementStateReturn ret = GST_STATE_FAILURE;
+  GstElementState intermediate;
+  GstElementState pending;
 
-  data.pending = state;
-  data.result = GST_STATE_ASYNC;
-  if (!gst_bin_foreach (bin, set_kid_state_func, &data)) {
-    return GST_STATE_FAILURE;
-  } else {
-    return data.result;
+  /* we start with the state of the bin */
+  intermediate = GST_STATE (element);
+  pending = state;
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+      "setting state of bin %s from current %s to pending %s",
+      GST_ELEMENT_NAME (element), gst_element_state_get_name (intermediate),
+      gst_element_state_get_name (pending));
+
+  do {
+    data.intermediate = intermediate;
+    data.pending = pending;
+    data.result = GST_STATE_ASYNC;
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+        "setting state of children to intermediate %s",
+        gst_element_state_get_name (intermediate));
+
+    if (!gst_bin_foreach (bin, set_kid_state_func, &data)) {
+      ret = GST_STATE_FAILURE;
+      /* break out of the loop after failure */
+      break;
+    } else {
+      ret = data.result;
+    }
+
+    /* if we have reached the target state, we can stop */
+    if (intermediate == pending)
+      break;
+
+    /* move intermediate state closer to target state */
+    if (intermediate < pending)
+      intermediate <<= 1;
+    else
+      intermediate >>= 1;
   }
+  while (TRUE);
+
+  return ret;
 }
 
 static GstElementStateReturn

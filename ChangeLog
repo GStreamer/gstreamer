@@ -1,3 +1,11 @@
+2004-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (set_kid_state_func), (gst_bin_set_state):
+	* gst/gstthread.c: (gst_thread_release), (gst_thread_set_state):
+	Make sure that a bin state change tries to keep the children
+	in sync. 
+	Added debug logging to the thread.
+
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/GStreamer.vcproj:
