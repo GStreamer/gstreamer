@@ -64,7 +64,6 @@ gst_buffer_new(void)
   buffer->refcount = 1;
 #endif
   buffer->flags = 0;
-  buffer->type = 0;
   buffer->data = NULL;
   buffer->size = 0;
   buffer->maxsize = 0;
@@ -126,7 +125,6 @@ gst_buffer_create_sub (GstBuffer *parent,
 
   // copy flags and type from parent, for lack of better
   buffer->flags = parent->flags;
-  buffer->type = parent->type;
 
   // set the data pointer, size, offset, and maxsize
   buffer->data = parent->data + offset;
@@ -414,7 +412,7 @@ gst_buffer_copy (GstBuffer *buffer)
   newbuf = gst_buffer_new();
   GST_BUFFER_SIZE(newbuf) = GST_BUFFER_SIZE(buffer);
   GST_BUFFER_DATA(newbuf) = malloc(GST_BUFFER_SIZE(buffer));
-  memcpy(GST_BUFFER_DATA(newbuf),GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buffer));
+  memcpy(GST_BUFFER_DATA(newbuf),GST_BUFFER_DATA(buffer),GST_BUFFER_SIZE(buffer));
   GST_BUFFER_MAXSIZE(newbuf) = GST_BUFFER_MAXSIZE(buffer);
   GST_BUFFER_OFFSET(newbuf) = GST_BUFFER_OFFSET(buffer);
   GST_BUFFER_TIMESTAMP(newbuf) = GST_BUFFER_TIMESTAMP(buffer);
