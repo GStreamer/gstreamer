@@ -196,8 +196,11 @@ gst_play_base_bin_dispose (GObject * object)
 static void
 queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
+  GST_DEBUG ("queue %s overrun", gst_element_get_name (element));
   g_mutex_lock (play_base_bin->preroll_lock);
+  GST_DEBUG ("signal preroll done");
   g_cond_signal (play_base_bin->preroll_cond);
+  GST_DEBUG ("signaled preroll done");
   g_mutex_unlock (play_base_bin->preroll_lock);
 }
 
@@ -259,7 +262,9 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   GST_DEBUG ("no more pads");
   g_mutex_lock (play_base_bin->preroll_lock);
+  GST_DEBUG ("signal preroll done");
   g_cond_signal (play_base_bin->preroll_cond);
+  GST_DEBUG ("signaled preroll done");
   g_mutex_unlock (play_base_bin->preroll_lock);
 }
 
@@ -384,7 +389,9 @@ setup_source (GstPlayBaseBin * play_base_bin)
      */
     g_mutex_lock (play_base_bin->preroll_lock);
     gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
+    GST_DEBUG ("waiting for preroll...");
     g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
+    GST_DEBUG ("preroll done !");
     g_mutex_unlock (play_base_bin->preroll_lock);
 
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig3);
@@ -416,9 +423,13 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
         g_warning ("cannot set NULL uri");
         return;
       }
-      if (!play_base_bin->uri || strcmp (play_base_bin->uri, uri) != 0) {
+      /* if we have no previous uri, or the new uri is different from the
+       * old one, replug */
+      if (play_base_bin->uri == NULL || strcmp (play_base_bin->uri, uri) != 0) {
         g_free (play_base_bin->uri);
         play_base_bin->uri = g_strdup (uri);
+
+        GST_DEBUG ("setting new uri to %s", uri);
 
         play_base_bin->need_rebuild = TRUE;
       }
@@ -562,11 +573,15 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), element);
 
+    /* hack */
     sched = gst_element_get_scheduler (GST_ELEMENT (play_base_bin->thread));
     clock = gst_scheduler_get_clock (sched);
     gst_scheduler_set_clock (sched, clock);
 
-    //gst_element_sync_state_with_parent (element);
+    /* FIXME set element to READY so that negotiation can happen. This
+     * currently fails because of weird negotiation problems. */
+    /* gst_element_set_state (element, GST_STATE_READY); */
+
   } else {
     g_warning ("adding elements is not allowed in NULL");
   }

@@ -458,8 +458,16 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
   gboolean res = FALSE;
   GList *s;
   GstPlayBin *play_bin;
+  GstElementState state;
+  gboolean need_pause = FALSE;
 
   play_bin = GST_PLAY_BIN (element);
+
+  state = gst_element_get_state (element);
+  if (state == GST_STATE_PLAYING) {
+    need_pause = TRUE;
+    gst_element_set_state (element, GST_STATE_PAUSED);
+  }
 
   s = play_bin->seekables;
 
@@ -472,6 +480,10 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
     res |= ok;
   }
   gst_event_unref (event);
+
+  if (need_pause)
+    gst_element_set_state (element, GST_STATE_PLAYING);
+
   return res;
 }
 
