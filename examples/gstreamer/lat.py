@@ -93,7 +93,6 @@ def simple(argv):
       gst_schedulerfactory_set_default_name (argv[1])
 
    pipeline = Pipeline('pipeline')
-   assert pipeline
 
    src = fakesrc()
    pipeline.add(src)
@@ -114,13 +113,10 @@ def queue(argv):
       gst_schedulerfactory_set_default_name (argv[1])
 
    pipeline = Pipeline('pipeline')
-   assert pipeline
 
    src_thr = Thread('src_thread')
-   assert src_thr
 
    src = fakesrc()
-   assert src
    src_thr.add(src)
 
    src_q = Element('queue','src_q')
@@ -136,10 +132,8 @@ def queue(argv):
    last.get_pad('src').link(sink_q.get_pad('sink'))
 
    sink_thr = Thread('sink_thread')
-   assert sink_thr
 
    sink = fakesink()
-   assert sink
 
    sink_thr.add(sink)
 

@@ -57,7 +57,6 @@ class BPS(object):
 
     def build_pipeline(self, buffers):
         pipeline = Pipeline('pipeline')
-        assert pipeline
 
         src = self.fakesrc(buffers)
         pipeline.add(src)

@@ -106,7 +106,6 @@ class DVDPlayer(object):
    def build_video_thread(self):
       # ***** pre-construct the video thread *****
       self.v_thread = Thread('v_thread')
-      assert self.v_thread
 
       self.v_queue = Element('queue','v_queue')
 
@@ -151,7 +150,6 @@ class DVDPlayer(object):
    def build_audio_thread(self):
       # ***** pre-construct the audio thread *****
       self.a_thread = Thread('a_thread')
-      assert self.a_thread
 
       self.a_queue = Element('queue','a_queue')
 
@@ -171,7 +169,6 @@ class DVDPlayer(object):
    def build(self):
       # ***** construct the main pipeline *****
       self.pipeline = Pipeline('pipeline')
-      assert self.pipeline
 
       self.src = Element('dvdreadsrc','src');
 

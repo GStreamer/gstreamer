@@ -31,7 +31,6 @@ def main():
    # create a new bin to hold the elements
    #gst_debug_set_categories(-1)
    bin = Pipeline('pipeline')
-   assert bin
 
    src = Element('fakesrc', 'src')
    src.connect('handoff', handoff)
