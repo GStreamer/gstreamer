@@ -418,6 +418,14 @@ cdparanoia_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
       g_value_set_enum (value, src->paranoia_mode);
       break;
     case ARG_DISCID:
+      /**
+       * Due to possible autocorrections of start sectors of audio tracks on 
+       * multisession cds, we can maybe not compute the correct discid.
+       * So issue a warning.
+       * See cdparanoia/interface/common-interface.c:FixupTOC
+       */
+      if (src->d->cd_extra)
+	g_warning("DiscID on multisession discs might be broken. Use at own risk.");
       g_value_set_string (value, src->discid);
       break;
     default:
