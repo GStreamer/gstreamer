@@ -154,6 +154,7 @@ gst_tcpsrc_init (GstTCPSrc *tcpsrc)
   tcpsrc->clock = NULL;
   tcpsrc->sock = -1;
   tcpsrc->control_sock = -1;
+  tcpsrc->client_sock = -1;
 
   GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_OPEN);
   GST_FLAG_SET (tcpsrc, GST_TCPSRC_1ST_BUF);
@@ -180,11 +181,20 @@ gst_tcpsrc_get (GstPad *pad)
   FD_ZERO (&read_fds);
   FD_SET (tcpsrc->sock, &read_fds);
 
+  max_sock = tcpsrc->sock;
+
   if (tcpsrc->control_sock >= 0) {
     FD_SET (tcpsrc->control_sock, &read_fds);
+    max_sock = MAX(tcpsrc->sock, tcpsrc->control_sock);	
   }
-  
-  max_sock = MAX(tcpsrc->sock, tcpsrc->control_sock);
+
+  /* Add to FD_SET client socket, when connection has been established */ 
+  if (tcpsrc->client_sock >= 0)  
+  {
+   FD_SET (tcpsrc->client_sock, &read_fds);
+   max_sock = MAX(tcpsrc->client_sock , max_sock);
+  }
+   
 
   if (select (max_sock+1, &read_fds, NULL, NULL, NULL) > 0) {
     if ((tcpsrc->control_sock != -1) && FD_ISSET (tcpsrc->control_sock, &read_fds)) 
@@ -282,6 +292,7 @@ gst_tcpsrc_get (GstPad *pad)
         gst_buffer_unref (outbuf);
         outbuf = NULL;
 	close (tcpsrc->client_sock);
+	tcpsrc->client_sock = -1;
 	GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_CONNECTED);
       }
     }
@@ -410,6 +421,10 @@ gst_tcpsrc_close (GstTCPSrc *src)
     close (src->control_sock);
     src->control_sock = -1;
   }
+  if (src->client_sock != -1) {
+    close(src->client_sock);
+    src->client_sock = -1;
+  } 
 
   GST_FLAG_UNSET (src, GST_TCPSRC_OPEN);
 }
