@@ -47,6 +47,7 @@ gst_avimux_details =
 {
   "Avi multiplexer",
   "Codec/Muxer",
+  "LGPL",
   "Muxes audio and video into an avi stream",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
