@@ -28,7 +28,7 @@
 /* elementfactory information */
 GstElementDetails gst_speexenc_details = {
   "speex audio encoder",
-  "Codec/Audio/Encoder",
+  "Codec/Encoder/Audio",
   ".speex",
   "Wim Taymans <wim.taymans@chello.be>",
 };
