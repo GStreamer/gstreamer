@@ -557,13 +557,23 @@ static gboolean
 gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
 {
   GstQueue *queue;
+  gboolean res;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  /* push the event to the queue for upstream consumption */
-  g_async_queue_push(queue->events, event);
-
   g_mutex_lock (queue->qlock);
+
+  if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
+    /* push the event to the queue for upstream consumption */
+    g_async_queue_push(queue->events, event);
+    g_mutex_unlock (queue->qlock);
+    g_warning ("FIXME: sending event in a running queue");
+    /* FIXME wait for delivery of the event here, then return the result
+     * instead of FALSE */
+    return FALSE;
+  }
+
+  res = gst_pad_event_default (pad, event); 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
