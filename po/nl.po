@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-11-12 19:06+0100\n"
+"POT-Creation-Date: 2004-12-30 20:49+0100\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -75,15 +75,15 @@ msgstr "Fout bij sluiten bestand \"%s\"."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon \"%s\" niet openen om te lezen."
 
-#: ext/cdparanoia/gstcdparanoia.c:273
+#: ext/cdparanoia/gstcdparanoia.c:278
 msgid "discid"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:273
+#: ext/cdparanoia/gstcdparanoia.c:278
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "Kon het CD-apparaat niet openen om te lezen."
 
@@ -120,7 +120,7 @@ msgstr "Geen bestandsnaam opgegeven."
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
 
-#: gst/avi/gstavimux.c:1052
+#: gst/avi/gstavimux.c:1056
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
@@ -188,33 +188,38 @@ msgstr "Kon videoapparaat \"%s\" niet sluiten."
 msgid "Could not write to device \"%s\"."
 msgstr "Kon niet schrijven naar apparaat \"%s\"."
 
-#: sys/oss/gstosselement.c:725
+#: sys/oss/gstosselement.c:726
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."
 
-#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
+#: sys/oss/gstosselement.c:733 sys/oss/gstosselement.c:737
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr ""
 "Kon geen toegang krijgen tot apparaat \"%s\", controleer de toegangsrechten."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
+#: sys/oss/gstosselement.c:744 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/oss/gstosselement.c:750
+#: sys/oss/gstosselement.c:751
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Kon apparaat \"%s\" niet openen om te schrijven."
 
-#: sys/oss/gstosselement.c:754
+#: sys/oss/gstosselement.c:755
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Kon apparaat \"%s\" niet openen om te lezen."
 
-#: sys/oss/gstosselement.c:1131
+#: sys/oss/gstosselement.c:1153
+#, fuzzy
+msgid "Your OSS device doesn't support mono or stereo."
+msgstr "Uw OSS-apparaat kon niet correct worden gevonden"
+
+#: sys/oss/gstosselement.c:1167
 msgid "Your OSS device could not be probed correctly"
 msgstr "Uw OSS-apparaat kon niet correct worden gevonden"
 

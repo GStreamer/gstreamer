@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.15 2004/11/25 18:55:57 thomasvs Exp $
+# $Id: sv.po,v 1.16 2005/01/03 16:16:27 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-11-12 19:06+0100\n"
+"POT-Creation-Date: 2004-12-30 20:49+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -78,16 +78,16 @@ msgstr "Fel vid stängning av filen \"%s\"."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: ext/cdparanoia/gstcdparanoia.c:273
+#: ext/cdparanoia/gstcdparanoia.c:278
 #, fuzzy
 msgid "discid"
 msgstr "Ingen skiva"
 
-#: ext/cdparanoia/gstcdparanoia.c:273
+#: ext/cdparanoia/gstcdparanoia.c:278
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
@@ -124,7 +124,7 @@ msgstr "Inget filnamn angivet."
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
 
-#: gst/avi/gstavimux.c:1052
+#: gst/avi/gstavimux.c:1056
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
@@ -192,32 +192,37 @@ msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."
 
-#: sys/oss/gstosselement.c:725
+#: sys/oss/gstosselement.c:726
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS-enheten \"%s\" används redan av ett annat program."
 
-#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
+#: sys/oss/gstosselement.c:733 sys/oss/gstosselement.c:737
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Kunde inte komma åt enheten \"%s\". Kontrollera dess rättigheter."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
+#: sys/oss/gstosselement.c:744 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheten \"%s\" finns inte."
 
-#: sys/oss/gstosselement.c:750
+#: sys/oss/gstosselement.c:751
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Kunde inte öppna enheten \"%s\" för skrivning."
 
-#: sys/oss/gstosselement.c:754
+#: sys/oss/gstosselement.c:755
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning."
 
-#: sys/oss/gstosselement.c:1131
+#: sys/oss/gstosselement.c:1153
+#, fuzzy
+msgid "Your OSS device doesn't support mono or stereo."
+msgstr "Din OSS-enhet kunde inte undersökas korrekt"
+
+#: sys/oss/gstosselement.c:1167
 msgid "Your OSS device could not be probed correctly"
 msgstr "Din OSS-enhet kunde inte undersökas korrekt"
 
