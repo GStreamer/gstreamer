@@ -162,62 +162,53 @@ name_pad_compare (gconstpointer a, gconstpointer b)
 }
 
 static GstCaps *
-gst_tee_getcaps (GstPad * pad)
+gst_tee_getcaps (GstPad * _pad)
 {
-  GstTee *tee = GST_TEE (gst_pad_get_parent (pad));
+  GstTee *tee = GST_TEE (gst_pad_get_parent (_pad));
+  GstCaps *caps = gst_caps_new_any (), *tmp, *res;
+  GstPad *pad;
+  const GList *pads;
 
-  if (pad == tee->sinkpad) {
-    GstCaps *caps = gst_caps_new_any (), *tmp, *res;
-    const GList *pads;
+  for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+      pads != NULL; pads = pads->next) {
+    pad = GST_PAD (pads->data);
+    if (pad == _pad)
+      continue;
 
-    for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
-        pads != NULL; pads = pads->next) {
-      if (!GST_PAD_IS_SRC (pads->data))
-        continue;
-
-      tmp = gst_pad_get_allowed_caps (GST_PAD (pads->data));
-      res = gst_caps_intersect (caps, tmp);
-      gst_caps_free (tmp);
-      gst_caps_free (caps);
-      caps = res;
-    }
-
-    return caps;
-  } else {
-    return gst_pad_get_allowed_caps (tee->sinkpad);
+    tmp = gst_pad_get_allowed_caps (pad);
+    res = gst_caps_intersect (caps, tmp);
+    gst_caps_free (tmp);
+    gst_caps_free (caps);
+    caps = res;
   }
+
+  return caps;
 }
 
 static GstPadLinkReturn
-gst_tee_link (GstPad * pad, const GstCaps * caps)
+gst_tee_link (GstPad * _pad, const GstCaps * caps)
 {
-  GstTee *tee = GST_TEE (gst_pad_get_parent (pad));
+  GstTee *tee = GST_TEE (gst_pad_get_parent (_pad));
+  GstPadLinkReturn res;
+  GstPad *pad;
+  const GList *pads;
 
-  if (pad == tee->sinkpad) {
-    GstPadLinkReturn res;
-    const GList *pads;
+  GST_DEBUG_OBJECT (tee, "Forwarding link to all other pads");
 
-    GST_DEBUG_OBJECT (tee, "Forwarding link to all source pads");
+  for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+      pads != NULL; pads = pads->next) {
+    pad = GST_PAD (pads->data);
+    if (pad == _pad)
+      continue;
 
-    for (pads = gst_element_get_pad_list (GST_ELEMENT (tee));
-        pads != NULL; pads = pads->next) {
-      if (!GST_PAD_IS_SRC (pads->data))
-        continue;
-
-      res = gst_pad_try_set_caps (GST_PAD (pads->data), caps);
-      GST_DEBUG_OBJECT (tee, "Pad %s:%s gave response %d",
-          GST_DEBUG_PAD_NAME (GST_PAD (pads->data)), res);
-      if (GST_PAD_LINK_FAILED (res))
-        return res;
-    }
-
-    return GST_PAD_LINK_OK;
-  } else {
-    GST_DEBUG_OBJECT (tee, "Forwarding negotiation from source pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-
-    return gst_pad_try_set_caps (tee->sinkpad, caps);
+    res = gst_pad_try_set_caps (pad, caps);
+    GST_DEBUG_OBJECT (tee, "Pad %s:%s gave response %d",
+        GST_DEBUG_PAD_NAME (pad), res);
+    if (GST_PAD_LINK_FAILED (res))
+      return res;
   }
+
+  return GST_PAD_LINK_OK;
 }
 
 static GstPad *

@@ -1,3 +1,8 @@
+2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gsttee.c: (gst_tee_getcaps), (gst_tee_link):
+	  I think this is actually moer correct...
+
 2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstprobe.c: (gst_probe_dispatcher_dispatch):
