@@ -105,6 +105,17 @@ transform_func (const GValue *src_value,
         case GST_PROPS_STRING_TYPE:
 	  g_string_append_printf (result, "%s=(string) '%s'", name, entry->data.string_data.string);
 	  break;
+        case GST_PROPS_INT_RANGE_TYPE:
+  	  g_string_append_printf (result, "%s=(int range) %d-%d", name, 
+			  entry->data.int_range_data.min, entry->data.int_range_data.max);
+	  break;
+        case GST_PROPS_FLOAT_RANGE_TYPE:
+  	  g_string_append_printf (result, "%s=(float range) %f-%f", name, 
+			  entry->data.float_range_data.min, entry->data.float_range_data.max);
+	  break;
+        case GST_PROPS_LIST_TYPE:
+  	  g_string_append_printf (result, "%s=(list) %p", name, entry->data.list_data.entries);
+	  break;
         default:
 	  break;
       }
