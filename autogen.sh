@@ -74,7 +74,7 @@ patch -p0 < common/gettext.patch
 if test -f acinclude.m4; then rm acinclude.m4; fi
 tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 
-tool_run "$libtoolize" "--force"
+tool_run "$libtoolize" "--copy --force"
 tool_run "$autoheader"
 
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
