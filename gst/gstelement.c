@@ -1362,7 +1362,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
     if (templcaps == NULL)
       return NULL;
   } else {
-    templcaps = gst_caps_copy (gst_pad_get_caps (pad));
+    templcaps = gst_pad_get_caps (pad);
   }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
@@ -2238,9 +2238,8 @@ gst_element_clear_pad_caps (GstElement *element)
   while (pads) {
     GstRealPad *pad = GST_PAD_REALIZE (pads->data);
 
-    if (GST_PAD_CAPS (pad)) {
-      GST_PAD_CAPS (pad) = NULL;
-    }
+    gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
+
     pads = g_list_next (pads);
   }
 }
@@ -2639,16 +2638,28 @@ void
 gst_element_set_loop_function (GstElement *element,
                                GstElementLoopFunction loop)
 {
+  gboolean need_notify = FALSE;
+
   g_return_if_fail (GST_IS_ELEMENT (element));
+
+  /* if the element changed from loop based to chain/get based
+   * or vice versa, we need to inform the scheduler about that */
+  if ((element->loopfunc == NULL && loop != NULL) ||
+      (element->loopfunc != NULL && loop == NULL))
+  {
+    need_notify = TRUE;
+  }
 
   /* set the loop function */
   element->loopfunc = loop;
 
-  /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
-  GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
+  if (need_notify) {
+    /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
+    GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
 
-  if (GST_ELEMENT_SCHED (element)) {
-    gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
+    if (GST_ELEMENT_SCHED (element)) {
+      gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
+    }
   }
 }
 
