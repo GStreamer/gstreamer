@@ -685,7 +685,7 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
     return FALSE;
   }
 
-  GST_DEBUG ("seek to time " GST_TIME_FORMAT, GST_TIME_ARGS (src_offset));
+  GST_DEBUG ("seek to time %" GST_TIME_FORMAT, GST_TIME_ARGS (src_offset));
   /* shave off the flush flag, we'll need it later */
   flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 
