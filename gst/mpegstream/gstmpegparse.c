@@ -440,11 +440,11 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         (double) mpeg_parse->bytes_since_scr /
         MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr -
         prev_scr) / 50 * 1000000000;
-    mpeg_parse->bytes_since_scr = 0;
 
     //gst_mpeg_parse_update_streaminfo (mpeg_parse);
     GST_DEBUG ("stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
   }
+  mpeg_parse->bytes_since_scr = 0;
 
   return TRUE;
 }

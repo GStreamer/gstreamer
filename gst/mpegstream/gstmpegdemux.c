@@ -680,9 +680,9 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
           case 0x20:
             /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
             pts = ((guint64) (bits & 0x0E)) << 29;
-            pts |= ((guint64) * buf++) << 22;
+            pts |= ((guint64) (*buf++)) << 22;
             pts |= ((guint64) (*buf++ & 0xFE)) << 14;
-            pts |= ((guint64) * buf++) << 7;
+            pts |= ((guint64) (*buf++)) << 7;
             pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
             GST_DEBUG_OBJECT (mpeg_demux, "PTS = %" G_GUINT64_FORMAT, pts);
@@ -691,9 +691,9 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
           case 0x30:
             /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
             pts = ((guint64) (bits & 0x0E)) << 29;
-            pts |= ((guint64) * buf++) << 22;
+            pts |= ((guint64) (*buf++)) << 22;
             pts |= ((guint64) (*buf++ & 0xFE)) << 14;
-            pts |= ((guint64) * buf++) << 7;
+            pts |= ((guint64) (*buf++)) << 7;
             pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
             /* sync:4 ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
@@ -824,8 +824,8 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       pts |= ((guint64) * buf++) << 7;
       pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
-      GST_DEBUG_OBJECT (mpeg_demux, "0x%02x PTS = %" G_GUINT64_FORMAT,
-          id, MPEGTIME_TO_GSTTIME (pts));
+      GST_DEBUG_OBJECT (mpeg_demux, "0x%02x (%lld) PTS = %" G_GUINT64_FORMAT,
+          id, pts, MPEGTIME_TO_GSTTIME (pts));
 
       pts += mpeg_parse->adjust;
       timestamp = MPEGTIME_TO_GSTTIME (pts) + mpeg_demux->adjust;;
