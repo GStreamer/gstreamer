@@ -734,7 +734,8 @@ gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
     // have we got caps?
     else if (*caps) {
         if (this->handle == NULL)
-            return GST_PAD_NEGOTIATE_FAIL;
+            if (!gst_alsa_open_audio(this))
+                return GST_PAD_NEGOTIATE_FAIL;
         
         if (gst_alsa_parse_caps(this, *caps)) {
             need_mmap = this->mmap_open;
