@@ -150,15 +150,26 @@ gst_buffer_default_copy (GstBuffer *buffer)
   g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
-  copy = gst_buffer_new ();
+  copy = gst_mem_chunk_alloc (chunk);
+#ifndef GST_DISABLE_TRACE
+  gst_alloc_trace_new (_gst_buffer_trace, copy);
+#endif
+
+  _GST_DATA_INIT (GST_DATA (copy), 
+		  _gst_buffer_type,
+		  0,
+		  (GstDataFreeFunction) gst_buffer_default_free,
+		  (GstDataCopyFunction) gst_buffer_default_copy);
 
   /* we simply copy everything from our parent */
-  GST_BUFFER_DATA (copy) 	= g_memdup (GST_BUFFER_DATA (buffer), 
-                                            GST_BUFFER_SIZE (buffer));
-  GST_BUFFER_SIZE (copy)  	= GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_MAXSIZE (copy) 	= GST_BUFFER_MAXSIZE (buffer);
-  GST_BUFFER_TIMESTAMP (copy) 	= GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_OFFSET (copy) 	= GST_BUFFER_OFFSET (buffer);
+  GST_BUFFER_DATA (copy) 	 = g_memdup (GST_BUFFER_DATA (buffer), 
+                                             GST_BUFFER_SIZE (buffer));
+  GST_BUFFER_SIZE (copy)  	 = GST_BUFFER_SIZE (buffer);
+  GST_BUFFER_MAXSIZE (copy) 	 = GST_BUFFER_MAXSIZE (buffer);
+  GST_BUFFER_TIMESTAMP (copy) 	 = GST_BUFFER_TIMESTAMP (buffer);
+  GST_BUFFER_OFFSET (copy) 	 = GST_BUFFER_OFFSET (buffer);
+  GST_BUFFER_BUFFERPOOL (copy)   = NULL;
+  GST_BUFFER_POOL_PRIVATE (copy) = NULL;
 
   return copy;
 }
@@ -188,7 +199,13 @@ gst_buffer_new (void)
 		  (GstDataFreeFunction) gst_buffer_default_free,
 		  (GstDataCopyFunction) gst_buffer_default_copy);
 
-  GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DATA (buf)         = NULL;
+  GST_BUFFER_SIZE (buf)         = 0;
+  GST_BUFFER_MAXSIZE (buf)      = 0;
+  GST_BUFFER_TIMESTAMP (buf)    = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buf)       = 0;
+  GST_BUFFER_BUFFERPOOL (buf)   = NULL;
+  GST_BUFFER_POOL_PRIVATE (buf) = NULL;
 
   return buf;
 }
@@ -285,7 +302,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   GST_DATA_FLAG_SET (parent, GST_DATA_READONLY);
 
   /* create the new buffer */
-  buffer = gst_mem_chunk_alloc0 (chunk);
+  buffer = gst_mem_chunk_alloc (chunk);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_buffer_trace, buffer);
 #endif
@@ -301,14 +318,14 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 		  (GstDataFreeFunction) _gst_buffer_sub_free,
 		  (GstDataCopyFunction) gst_buffer_default_copy);
 
-  GST_BUFFER_OFFSET (buffer) = parent_offset + offset;
-  GST_BUFFER_TIMESTAMP (buffer) = -1;
-  GST_BUFFER_BUFFERPOOL (buffer) = NULL;
-  GST_BUFFER_POOL_PRIVATE (buffer) = parent;
-
   /* set the right values in the child */
-  buffer->data = buffer_data;
-  buffer->size = size;
+  GST_BUFFER_DATA (buffer)         = buffer_data;
+  GST_BUFFER_SIZE (buffer)         = size;
+  GST_BUFFER_MAXSIZE (buffer)      = size;
+  GST_BUFFER_TIMESTAMP (buffer)    = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buffer)       = parent_offset + offset;
+  GST_BUFFER_BUFFERPOOL (buffer)   = NULL;
+  GST_BUFFER_POOL_PRIVATE (buffer) = parent;
 
   return buffer;
 }
