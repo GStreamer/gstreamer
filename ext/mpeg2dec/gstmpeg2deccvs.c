@@ -93,6 +93,8 @@ static void		gst_mpeg2dec_set_property	(GObject *object, guint prop_id,
 							 const GValue *value, GParamSpec *pspec);
 static void		gst_mpeg2dec_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
+static void 		gst_mpeg2dec_set_cache 		(GstElement *element, GstCache *cache);
+static GstCache*	gst_mpeg2dec_get_cache 		(GstElement *element);
 
 static const GstFormat*
 			gst_mpeg2dec_get_src_formats 	(GstPad *pad);
@@ -161,6 +163,8 @@ gst_mpeg2dec_class_init(GstMpeg2decClass *klass)
   gobject_class->dispose 	= gst_mpeg2dec_dispose;
 
   gstelement_class->change_state = gst_mpeg2dec_change_state;
+  gstelement_class->set_cache 	 = gst_mpeg2dec_set_cache;
+  gstelement_class->get_cache 	 = gst_mpeg2dec_get_cache;
 }
 
 static void
@@ -199,6 +203,24 @@ gst_mpeg2dec_dispose (GObject *object)
     mpeg2_close (mpeg2dec->decoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_mpeg2dec_set_cache (GstElement *element, GstCache *cache)
+{
+  GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
+  
+  mpeg2dec->cache = cache;
+
+  gst_cache_get_writer_id (cache, GST_OBJECT (element), &mpeg2dec->cache_id);
+}
+
+static GstCache*
+gst_mpeg2dec_get_cache (GstElement *element)
+{
+  GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
+
+  return mpeg2dec->cache;
 }
 
 static gboolean
@@ -389,11 +411,16 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       case STATE_GOP:
         break;
       case STATE_PICTURE:
+      {
+	gboolean key_frame = FALSE;
+
+	
+        if (info->current_picture)
+	  key_frame = (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
+
 	gst_mpeg2dec_alloc_buffer (mpeg2dec, info);
-        if (info->current_picture && 
-	    (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && 
-	    mpeg2dec->discont_pending) 
-	{
+
+        if (key_frame && mpeg2dec->discont_pending) {
 	  mpeg2dec->discont_pending = FALSE;
 	  mpeg2dec->first = TRUE;
           if (pts != -1 && mpeg2dec->last_PTS == -1) {
@@ -401,7 +428,15 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
             mpeg2dec->next_time = pts;
           }
 	}
+
+	if (mpeg2dec->cache && pts != GST_CLOCK_TIME_NONE) {
+          gst_cache_add_association (mpeg2dec->cache, mpeg2dec->cache_id,
+	                             (key_frame ? GST_ACCOCIATION_FLAG_KEY_UNIT : 0),
+	                             GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buf),
+	                             GST_FORMAT_TIME, pts, 0);
+	}
         break;
+      }
       case STATE_SLICE_1ST:
 	GST_DEBUG (0, "slice 1st");
         break;
