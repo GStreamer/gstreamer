@@ -58,10 +58,12 @@ struct _GstStaticCaps {
 
 #define GST_TYPE_CAPS gst_caps_get_type()
 
-#ifndef GST_DISABLE_DEPRECATED
-#define GST_DEBUG_CAPS(string, caps) \
-  GST_DEBUG ( string "%s: " GST_PTR_FORMAT, caps)
-#endif
+/* FIXME Company should decide the best way to do this */
+#define GST_DEBUG_CAPS(string, caps) do {		\
+  char *s = gst_caps_to_string(caps);			\
+  GST_DEBUG ( "%s: %s", (string), s);			\
+  g_free(s);						\
+}while(0)
 
 
 void _gst_caps_initialize (void);

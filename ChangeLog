@@ -1,3 +1,16 @@
+2004-02-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstcaps.h:
+	* gst/gstelement.c: (gst_element_base_class_init),
+	(gst_element_class_set_details), (gst_element_clear_pad_caps):
+	* gst/gstpad.c: (gst_pad_link_intersect), (gst_pad_link_fixate),
+	(gst_pad_try_set_caps), (gst_pad_can_link_filtered),
+	(gst_real_pad_dispose):
+	* gst/gststructure.c: (gst_structure_free),
+	(gst_structure_from_string):
+          revert patch that breaks applications, reapply after release
+          to get this fixed properly
+
 2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gsttag.c: (_gst_tag_initialize):

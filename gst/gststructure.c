@@ -237,6 +237,8 @@ void gst_structure_free(GstStructure *structure)
   GstStructureField *field;
   int i;
 
+  return;
+
   g_return_if_fail(structure != NULL);
 
   for(i=0;i<structure->fields->len;i++){
@@ -1335,8 +1337,9 @@ gst_structure_from_string (const gchar *string, gchar **end)
   char *w;
   char *r;
   char save;
-  GstStructure *structure = NULL;
+  GstStructure *structure;
   GstStructureField field = { 0 };
+  gboolean res;
 
   g_return_val_if_fail(string != NULL, NULL);
 
@@ -1344,11 +1347,11 @@ gst_structure_from_string (const gchar *string, gchar **end)
   r = copy;
 
   name = r;
-  if (!_gst_structure_parse_string (r, &w, &r))
-    goto error;
+  res = _gst_structure_parse_string (r, &w, &r);
+  if (!res) return NULL;
   
   while (g_ascii_isspace(*r)) r++;
-  if(*r != 0 && *r != ';' && *r != ',') goto error;
+  if(*r != 0 && *r != ';' && *r != ',') return NULL;
 
   save = *w;
   *w = 0;
@@ -1356,28 +1359,24 @@ gst_structure_from_string (const gchar *string, gchar **end)
   *w = save;
 
   while (*r && (*r != ';')){
-    if(*r != ',')
-      goto error;
+    if(*r != ',') {
+      return NULL;
+    }
     r++;
     while (*r && g_ascii_isspace(*r)) r++;
 
     memset(&field,0,sizeof(field));
-    if (!_gst_structure_parse_field (r, &r, &field))
-      goto error;
+    res = _gst_structure_parse_field (r, &r, &field);
+    if (!res) {
+      gst_structure_free (structure);
+      return NULL;
+    }
     gst_structure_set_field(structure, &field);
     while (*r && g_ascii_isspace(*r)) r++;
   }
 
   if (end) *end = (char *)string + (r - copy);
-
-  g_free (copy);
   return structure;
-
-error:
-  if (structure)
-    gst_structure_free (structure);
-  g_free (copy);
-  return NULL;
 }
 
 static void
