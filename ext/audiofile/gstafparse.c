@@ -224,10 +224,12 @@ gst_afparse_loop(GstElement *element)
   if (bypass_afread){
     GstEvent     *event = NULL;
     guint32       waiting;
+    guint32       got_bytes;
+
     do {
 
-      buf = gst_bytestream_read (bs, bytes_per_read);
-      if (buf == NULL) {
+      got_bytes = gst_bytestream_read (bs, &buf, bytes_per_read);
+      if (got_bytes == 0) {
         /* we need to check for an event. */
         gst_bytestream_get_status (bs, &waiting, &event);
         if (event && GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
@@ -237,8 +239,16 @@ gst_afparse_loop(GstElement *element)
         }
       }
       else {
+        GST_BUFFER_TIMESTAMP(buf) = afparse->timestamp;
         gst_pad_push (afparse->srcpad, buf);
-        afparse->timestamp += numframes * 1E9 / afparse->rate;
+	if (got_bytes != bytes_per_read){
+	  /* this shouldn't happen very often */
+	  /* FIXME calculate the timestamps based on the fewer bytes received */
+
+	}
+	else {
+          afparse->timestamp += frames_per_read * 1E9 / afparse->rate;
+	}
       }
     }
     while (TRUE);
@@ -424,29 +434,49 @@ static ssize_t
 gst_afparse_vf_read (AFvirtualfile *vfile, void *data, size_t nbytes)
 {
   GstByteStream *bs = (GstByteStream*)vfile->closure;
-  guint8 *bytes;
+  guint8       *bytes = NULL;
   GstEvent     *event = NULL;
   guint32       waiting; 
+  guint32       got_bytes;
+  /*gchar        *debug_str;*/
   
-  while (!(bytes = gst_bytestream_peek_bytes(bs, nbytes))){
+  got_bytes = gst_bytestream_peek_bytes(bs, &bytes, nbytes);
+
+  while (got_bytes != nbytes){
     /* handle events */
     gst_bytestream_get_status (bs, &waiting, &event);
 
-    if (!event) return 0;
+    /* FIXME this event handling isn't right yet */
+    if (!event){
+      /*g_print("no event found with %u bytes\n", got_bytes);*/
+      return 0;
+    }
     if (event){
-      if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) return 0;
-      if (GST_EVENT_TYPE(event) == GST_EVENT_DISCONTINUOUS){
+      g_print("got event\n");
+      if (GST_EVENT_TYPE(event) == GST_EVENT_EOS){
+        return 0;
+      }
+      else if (GST_EVENT_TYPE(event) == GST_EVENT_FLUSH){
+        g_print("flush\n");
+      }
+      else if (GST_EVENT_TYPE(event) == GST_EVENT_DISCONTINUOUS){
         g_print("seek done\n");
+        got_bytes = gst_bytestream_peek_bytes(bs, &bytes, nbytes);
+      }
+      else {
+        g_print("unknown event %d", GST_EVENT_TYPE(event));
+        got_bytes = gst_bytestream_peek_bytes(bs, &bytes, nbytes);
       }
     }
   }
   
-  memcpy(data, bytes, nbytes);
-  gst_bytestream_flush_fast(bs, nbytes);
-  
-  /*g_print("read %d bytes\n", nbytes);*/
+  memcpy(data, bytes, got_bytes);
+  gst_bytestream_flush_fast(bs, got_bytes);
 
-  return nbytes;
+  /*  debug_str = g_strndup((gchar*)bytes, got_bytes);
+  g_print("read %u bytes: %s\n", got_bytes, debug_str);
+  */
+  return got_bytes;
 }
 
 static long 
@@ -468,9 +498,10 @@ gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative)
     if (offset == 0) return current_offset;
     type = GST_SEEK_BYTEOFFSET_CUR; 
   }
-  
+
+  g_print("doing seek to %d, current offset %lld\n", (gint)offset, current_offset);  
   if (gst_bytestream_seek(bs, type, (gint64)offset)){
-    g_print("doing seek to %d\n", (gint)offset);
+
     return offset;
   }
   return 0;
