@@ -85,6 +85,12 @@ for mpeg2 with both audio and video (glib2):
  gstreamer-launch filesrc location=video.mpg ! mpegdemux name=demux video_00! { queue ! mpeg2dec ! sdlvideosink } demux.private_stream_1.0! { queue ! a52dec ! osssink }
 
 Note: The types of audio streams in the mpeg files can vary!
+
+For an avi file (DivX, mjpeg,...)
+
+ gstreamer-launch filesrc location=video.avi ! avidecoder video_00! { queue ! sdlvideosink } avidecoder0.audio_00! { queue ! osssink }
+
+
  
 gstreamer-complete
 ==================
