@@ -1036,6 +1036,7 @@ gst_avimux_stop_file (GstAviMux *avimux)
   gst_pad_push(avimux->srcpad, header);
   event = gst_event_new_seek (GST_FORMAT_BYTES |
 		  	      GST_SEEK_METHOD_SET, avimux->total_data);
+  gst_pad_push(avimux->srcpad, header);
 
   avimux->write_header = TRUE;
 }
