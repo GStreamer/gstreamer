@@ -508,18 +508,19 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
 
   sched->current_clock = clock;
 
-  GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s)", clock, 
-		(clock ? GST_OBJECT_NAME (clock) : "nil"));
-
   while (receivers) {
     GstElement *element = GST_ELEMENT (receivers->data);
 
+    GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on element %s", clock, 
+		(clock ? GST_OBJECT_NAME (clock) : "nil"), GST_ELEMENT_NAME (element));
     gst_element_set_clock (element, clock);
     receivers = g_list_next (receivers);
   }
   while (schedulers) {
     GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
 
+    GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on scheduler %p", clock, 
+		(clock ? GST_OBJECT_NAME (clock) : "nil"), scheduler);
     gst_scheduler_set_clock (scheduler, clock);
     schedulers = g_list_next (schedulers);
   }
@@ -563,6 +564,8 @@ gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *cl
 
   if (CLASS (sched)->clock_wait)
     return CLASS (sched)->clock_wait (sched, element, clock, time, jitter);
+  else
+    return gst_clock_wait (clock, time, jitter);
 
   return GST_CLOCK_TIMEOUT;
 }
