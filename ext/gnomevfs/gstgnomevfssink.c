@@ -163,7 +163,8 @@ _gst_boolean_allow_overwrite_accumulator (GSignalInvocationHint * ihint,
   gboolean allow_overwrite;
 
   allow_overwrite = g_value_get_boolean (handler_return);
-  g_value_set_boolean (return_accu, allow_overwrite);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boolean (return_accu, allow_overwrite);
 
   /* stop emission if signal doesn't allow overwriting */
   return allow_overwrite;
@@ -192,7 +193,7 @@ gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass)
 
   gst_gnomevfssink_signals[SIGNAL_ERASE_ASK] =
       g_signal_new ("allow-overwrite", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstGnomeVFSSinkClass, erase_ask),
+      G_SIGNAL_RUN_CLEANUP, G_STRUCT_OFFSET (GstGnomeVFSSinkClass, erase_ask),
       _gst_boolean_allow_overwrite_accumulator, NULL,
       gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
 
@@ -340,8 +341,8 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
           GNOME_VFS_URI_HIDE_PASSWORD);
 
       GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-          (_("Could not open vfs file \"%s\" for writing."), filename),
-          GST_ERROR_SYSTEM);
+          (_("Could not open vfs file \"%s\" for writing: %s."),
+              filename, gnome_vfs_result_to_string (result)), GST_ERROR_SYSTEM);
       g_free (filename);
       return FALSE;
     }
