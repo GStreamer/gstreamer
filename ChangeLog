@@ -1,3 +1,19 @@
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/gstmad.c: (gst_mad_check_caps_reset), (gst_mad_chain):
+	  Fail if caps negotiation fails. Should fix #162184, and should
+	  definately be in there regardless of it fixing the actual bug.
+	* gst/avi/gstavimux.c: (gst_avimux_get_type), (gst_avimux_init),
+	(gst_avimux_write_tag), (gst_avimux_riff_get_avi_header),
+	(gst_avimux_riff_get_avix_header),
+	(gst_avimux_riff_get_video_header),
+	(gst_avimux_riff_get_audio_header), (gst_avimux_write_index),
+	(gst_avimux_start_file), (gst_avimux_handle_event),
+	(gst_avimux_change_state):
+	* gst/avi/gstavimux.h:
+	  Refactor structure writing to use GST_WRITE_UINT macros, add
+	  metadata writing support.
+
 2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gststreaminfo.c: (gst_stream_info_dispose):
