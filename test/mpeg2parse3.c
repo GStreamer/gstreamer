@@ -108,7 +108,7 @@ int main(int argc,char *argv[]) {
   a_queue = gst_elementfactory_make("queue","a_queue");
   g_return_val_if_fail(a_queue != NULL, -1);
   
-  a_decode = gst_elementfactory_make("ac3dec","decode_audio");
+  a_decode = gst_elementfactory_make("a52dec","decode_audio");
   g_return_val_if_fail(a_decode != NULL, -1);
 
   osssink = gst_elementfactory_make("osssink","osssink");

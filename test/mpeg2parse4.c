@@ -88,7 +88,7 @@ int mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     a_decode_queue = gst_elementfactory_make("queue","a_decode_queue");
     g_return_val_if_fail(a_decode_queue != NULL, -1);
 
-    a_decode = gst_elementfactory_make("ac3dec","a_decode");
+    a_decode = gst_elementfactory_make("a52dec","a_decode");
     g_return_val_if_fail(a_decode != NULL, -1);
 
     gst_bin_add(GST_BIN(a_decode_thread),GST_ELEMENT(a_decode_queue));
