@@ -364,6 +364,7 @@ gst_flacenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   caps = gst_caps_new_simple ("audio/x-flac",
       "channels", G_TYPE_INT, flacenc->channels,
       "rate", G_TYPE_INT, flacenc->sample_rate, NULL);
+
   ret = gst_pad_try_set_caps (flacenc->srcpad, caps);
   if (ret <= 0) {
     return ret;
@@ -398,8 +399,11 @@ gst_flacenc_update_quality (FlacEnc * flacenc, gint quality)
 
   g_object_freeze_notify (G_OBJECT (flacenc));
 
-  DO_UPDATE (do_mid_side_stereo, mid_side, "mid_side_stereo");
-  DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side");
+  if (flacenc->channels == 2) {
+    DO_UPDATE (do_mid_side_stereo, mid_side, "mid_side_stereo");
+    DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side");
+  }
+
   DO_UPDATE (blocksize, blocksize, "blocksize");
   DO_UPDATE (max_lpc_order, max_lpc_order, "max_lpc_order");
   DO_UPDATE (qlp_coeff_precision, qlp_coeff_precision, "qlp_coeff_precision");
