@@ -58,6 +58,45 @@ START_TEST (test_link)
   fail_unless (ret == GST_PAD_LINK_OK);
 }
 
+END_TEST
+/* threaded link/unlink */
+/* use globals */
+    GstPad * src, *sink;
+
+void
+thread_link_unlink (gpointer data)
+{
+  THREAD_START ();
+
+  while (THREAD_TEST_RUNNING ()) {
+    gst_pad_link (src, sink);
+    gst_pad_unlink (src, sink);
+    THREAD_SWITCH ();
+  }
+}
+
+START_TEST (test_link_unlink_threaded)
+{
+  GstCaps *caps;
+  int i;
+
+  src = gst_pad_new ("source", GST_PAD_SRC);
+  fail_if (src == NULL);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+
+  caps = gst_caps_new_any ();
+  gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+
+  MAIN_START_THREADS (5, thread_link_unlink, NULL);
+  for (i = 0; i < 1000; ++i) {
+    gst_pad_is_linked (src);
+    gst_pad_is_linked (sink);
+    THREAD_SWITCH ();
+  }
+  MAIN_STOP_THREADS ();
+}
 END_TEST Suite * gst_pad_suite (void)
 {
   Suite *s = suite_create ("GstPad");
@@ -65,6 +104,7 @@ END_TEST Suite * gst_pad_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_link);
+  tcase_add_test (tc_chain, test_link_unlink_threaded);
   return s;
 }
 

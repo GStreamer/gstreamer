@@ -139,7 +139,7 @@ END_TEST
   while (THREAD_TEST_RUNNING ()) {
     gst_object_set_name (object, thread_id);
     /* a minimal sleep invokes a thread switch */
-    g_usleep (1);
+    THREAD_SWITCH ();
   }
 
   /* thread is done, so let's return */
@@ -171,7 +171,7 @@ START_TEST (test_fake_object_name_threaded_wrong)
   /* start looping and set/get name repeatedly */
   for (i = 0; i < 1000; ++i) {
     gst_object_set_name (object, "main");
-    g_usleep (1);               /* switch */
+    THREAD_SWITCH ();
     name = gst_object_get_name (object);
     if (strcmp (name, "main") != 0) {
       g_message ("MAIN: expected failure during run %d\n", i);
@@ -209,7 +209,7 @@ START_TEST (test_fake_object_name_threaded_right)
     GST_LOCK (object);
     g_free (GST_OBJECT_NAME (object));
     GST_OBJECT_NAME (object) = g_strdup ("main");
-    g_usleep (1);               /* switch */
+    THREAD_SWITCH ();
     name = g_strdup (GST_OBJECT_NAME (object));
     GST_UNLOCK (object);
 
@@ -244,8 +244,7 @@ thread_name_object_default (int *i)
     /* g_message ("THREAD %p: setting default name on object %d\n",
        g_thread_self (), j); */
     gst_object_set_name (o, NULL);
-    /* a minimal sleep invokes a thread switch */
-    g_usleep (1);
+    THREAD_SWITCH ();
   }
 
   /* thread is done, so let's return */
