@@ -30,13 +30,10 @@
 
 /* elementfactory information */
 static GstElementDetails gst_aasink_details = {
-  "Video sink",
+  "AA sink",
   "Sink/Video",
-  "GPL",
   "An ASCII art videosink",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 /* aasink signals and args */
@@ -73,7 +70,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
-    
+
+static void	gst_aasink_base_init	(gpointer g_class);
 static void	gst_aasink_class_init	(GstAASinkClass *klass);
 static void	gst_aasink_init		(GstAASink *aasink);
 
@@ -98,7 +96,7 @@ gst_aasink_get_type (void)
   if (!aasink_type) {
     static const GTypeInfo aasink_info = {
       sizeof(GstAASinkClass),
-      NULL,
+      gst_aasink_base_init,
       NULL,
       (GClassInitFunc) gst_aasink_class_init,
       NULL,
@@ -172,6 +170,16 @@ gst_aasink_dither_get_type (void)
     dither_type = g_enum_register_static ("GstAASinkDitherers", ditherers);
   }
   return dither_type;
+}
+
+static void
+gst_aasink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_set_details (element_class, &gst_aasink_details);
 }
 
 static void
@@ -534,26 +542,23 @@ gst_aasink_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the aasink element */
-  factory = gst_element_factory_new("aasink",GST_TYPE_AASINK,
-                                   &gst_aasink_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (sink_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "aasink", GST_RANK_NONE, GST_TYPE_AASINK))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "aasink",
-  plugin_init
-};
+  "ASCII Art video sink",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
