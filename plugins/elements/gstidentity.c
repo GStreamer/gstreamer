@@ -96,11 +96,12 @@ static void gst_identity_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_identity_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_identity_change_state (GstElement * element);
 
 static gboolean gst_identity_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_identity_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf);
+static gboolean gst_identity_start (GstBaseTransform * trans);
+static gboolean gst_identity_stop (GstBaseTransform * trans);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -186,11 +187,10 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
 
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_identity_change_state);
-
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
   gstbasetrans_class->transform = GST_DEBUG_FUNCPTR (gst_identity_transform);
+  gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_identity_start);
+  gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_identity_stop);
 }
 
 static void
@@ -443,47 +443,30 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_identity_change_state (GstElement * element)
+static gboolean
+gst_identity_start (GstBaseTransform * trans)
 {
   GstIdentity *identity;
-  GstElementState transition;
-  GstElementStateReturn result;
 
-  g_return_val_if_fail (GST_IS_IDENTITY (element), GST_STATE_FAILURE);
+  identity = GST_IDENTITY (trans);
 
-  identity = GST_IDENTITY (element);
-  transition = GST_STATE_TRANSITION (element);
+  identity->offset = 0;
+  identity->prev_timestamp = GST_CLOCK_TIME_NONE;
+  identity->prev_duration = GST_CLOCK_TIME_NONE;
+  identity->prev_offset_end = -1;
 
-  switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-      identity->offset = 0;
-      identity->prev_timestamp = GST_CLOCK_TIME_NONE;
-      identity->prev_duration = GST_CLOCK_TIME_NONE;
-      identity->prev_offset_end = -1;
-      break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
+  return TRUE;
+}
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+static gboolean
+gst_identity_stop (GstBaseTransform * trans)
+{
+  GstIdentity *identity;
 
-  switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      g_free (identity->last_message);
-      identity->last_message = NULL;
-      break;
-    case GST_STATE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
+  identity = GST_IDENTITY (trans);
 
-  return result;
+  g_free (identity->last_message);
+  identity->last_message = NULL;
+
+  return TRUE;
 }

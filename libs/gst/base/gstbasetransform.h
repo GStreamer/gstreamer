@@ -56,6 +56,9 @@ struct _GstBaseTransformClass {
 
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *caps);
 
+  gboolean      (*start)        (GstBaseTransform *trans);
+  gboolean      (*stop)         (GstBaseTransform *trans);
+
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf, GstBuffer **outbuf);
 };

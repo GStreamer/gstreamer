@@ -324,22 +324,23 @@ gst_base_transform_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_base_transform_sink_activate (GstPad * pad, GstActivateMode mode)
 {
-  gboolean result = FALSE;
+  gboolean result = TRUE;
   GstBaseTransform *trans;
+  GstBaseTransformClass *bclass;
 
   trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:
-      result = TRUE;
-      break;
     case GST_ACTIVATE_PULL:
-      result = TRUE;
+      if (bclass->start)
+        result = bclass->start (trans);
       break;
     case GST_ACTIVATE_NONE:
-      result = TRUE;
       break;
   }
+
   return result;
 }
 
@@ -370,10 +371,13 @@ static GstElementStateReturn
 gst_base_transform_change_state (GstElement * element)
 {
   GstBaseTransform *trans;
+  GstBaseTransformClass *bclass;
   GstElementState transition;
   GstElementStateReturn result;
 
   trans = GST_BASE_TRANSFORM (element);
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
   transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
@@ -393,6 +397,8 @@ gst_base_transform_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      if (bclass->stop)
+        result = bclass->stop (trans);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
