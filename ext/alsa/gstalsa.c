@@ -1302,7 +1302,7 @@ gst_alsa_get_channel_addresses (GstAlsa *this)
         return FALSE;
     }
     
-    GST_DEBUG(0, "got %d mmap'd frames\n", (int)this->avail);
+    GST_DEBUG(0, "got %d mmap'd frames", (int)this->avail);
     
 /*    g_print ("snd_pcm_mmap_begin() sets avail = %d\n", this->avail); */
     
@@ -1333,7 +1333,7 @@ gst_alsa_release_channel_addresses (GstAlsa *this)
     
     g_return_if_fail (this->mmap_open == TRUE);
     
-    GST_DEBUG(0, "releasing mmap'd data region: %d frames\n", (int)this->avail);
+    GST_DEBUG(0, "releasing mmap'd data region: %d frames", (int)this->avail);
     
     if ((err = snd_pcm_mmap_commit (this->handle, this->offset, this->avail)) < 0) {
         g_warning("gstalsa: mmap commit failed: %s", snd_strerror(err));

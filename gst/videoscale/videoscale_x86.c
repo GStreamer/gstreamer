@@ -42,7 +42,7 @@ gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w, int ds
   unsigned char *eip;
   unsigned char load, store;
 
-  GST_DEBUG (0,"videoscale: setup scaling %p\n", copy_row);
+  GST_DEBUG (0,"videoscale: setup scaling %p", copy_row);
 
   switch (bpp) {
     case 1:
@@ -75,6 +75,6 @@ gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w, int ds
     pos += inc;
   }
   *eip++ = RETURN;
-  GST_DEBUG (0,"scaler start/end %p %p %p\n", copy_row, eip, (void*)(eip-copy_row));
+  GST_DEBUG (0,"scaler start/end %p %p %p", copy_row, eip, (void*)(eip-copy_row));
 }
 

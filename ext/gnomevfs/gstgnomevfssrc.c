@@ -342,7 +342,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		if (src->new_seek)
 		{
 			/* FIXME do a discont, flush event */
-			GST_DEBUG (0,"new seek\n");
+			GST_DEBUG (0,"new seek");
 			src->new_seek = FALSE;
 		}
 	} else {
@@ -354,7 +354,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		{
 			result = gnome_vfs_seek(src->handle,
 					GNOME_VFS_SEEK_START, src->curoffset);
-			GST_DEBUG(0, "new_seek: %s\n",
+			GST_DEBUG(0, "new_seek: %s",
 					gnome_vfs_result_to_string(result));
 			/* FIXME do a discont, flush event */
 			src->new_seek = FALSE;
@@ -363,7 +363,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		result = gnome_vfs_read(src->handle, GST_BUFFER_DATA(buf),
 				   src->bytes_per_read, &readbytes);
 
-		GST_DEBUG(0, "read: %s, readbytes: %Lu\n",
+		GST_DEBUG(0, "read: %s, readbytes: %Lu",
 				gnome_vfs_result_to_string(result), readbytes);
 		/* deal with EOS */
 		if (readbytes == 0)
@@ -466,7 +466,7 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			gnome_vfs_file_info_unref(info);
 		}
 
-		GST_DEBUG(0, "open %s\n", gnome_vfs_result_to_string(result));
+		GST_DEBUG(0, "open %s", gnome_vfs_result_to_string(result));
 	}
 
 	GST_FLAG_SET(src, GST_GNOMEVFSSRC_OPEN);

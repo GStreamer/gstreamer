@@ -449,7 +449,7 @@ cdparanoia_get (GstPad *pad)
   src->cur_sector++;
 
   if (src->cur_sector == src->end_sector) {
-    GST_DEBUG (0,"setting EOS\n");
+    GST_DEBUG (0,"setting EOS");
     gst_element_set_eos(GST_ELEMENT(src));
 
     buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
@@ -492,7 +492,7 @@ cdparanoia_open (CDParanoia *src)
 
   /* fail if the device couldn't be found */
   if (src->d == NULL) {
-    GST_DEBUG (0,"couldn't open device\n");
+    GST_DEBUG (0,"couldn't open device");
     return FALSE;
   }
 
@@ -502,7 +502,7 @@ cdparanoia_open (CDParanoia *src)
   /* set various other parameters */
   if (src->default_sectors != -1) {
     if ((src->default_sectors < 0) || (src->default_sectors > 100)) {
-      GST_DEBUG (0,"default sector read size must be 1 <= n <= 100\n");
+      GST_DEBUG (0,"default sector read size must be 1 <= n <= 100");
       cdda_close (src->d);
       src->d = NULL;
       return FALSE;
@@ -513,7 +513,7 @@ cdparanoia_open (CDParanoia *src)
   }
   if (src->search_overlap != -1) {
     if ((src->search_overlap < 0) || (src->search_overlap > 75)) {
-      GST_DEBUG (0,"search overlap must be 0 <= n <= 75\n");
+      GST_DEBUG (0,"search overlap must be 0 <= n <= 75");
       cdda_close (src->d);
       src->d = NULL;
       return FALSE;
@@ -522,7 +522,7 @@ cdparanoia_open (CDParanoia *src)
 
   /* open the disc */
   if (cdda_open (src->d)) {
-    GST_DEBUG (0,"couldn't open disc\n");
+    GST_DEBUG (0,"couldn't open disc");
     cdda_close (src->d);
     src->d = NULL;
     return FALSE;
@@ -561,7 +561,7 @@ cdparanoia_open (CDParanoia *src)
   /* create the paranoia struct and set it up */
   src->p = paranoia_init (src->d);
   if (src->p == NULL) {
-    GST_DEBUG (0,"couldn't create paranoia struct\n");
+    GST_DEBUG (0,"couldn't create paranoia struct");
     return FALSE;
   }
 
@@ -577,7 +577,7 @@ cdparanoia_open (CDParanoia *src)
 
   src->cur_sector = src->start_sector;
   paranoia_seek (src->p, src->cur_sector, SEEK_SET);
-  GST_DEBUG (0,"successfully seek'd to beginning of disk\n");
+  GST_DEBUG (0,"successfully seek'd to beginning of disk");
 
   GST_FLAG_SET (src, CDPARANOIA_OPEN);
 

@@ -380,7 +380,7 @@ gst_sinesrc_update_freq(GValue *value, gpointer data)
   src->freq = g_value_get_float(value);
   src->table_inc = src->table_size * src->freq / src->samplerate;
   
-  /*GST_DEBUG(GST_CAT_PARAMS, "freq %f\n", src->freq); */
+  /*GST_DEBUG(GST_CAT_PARAMS, "freq %f", src->freq); */
 }
 
 static inline void 

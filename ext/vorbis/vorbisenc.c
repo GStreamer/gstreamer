@@ -287,7 +287,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
       memcpy (GST_BUFFER_DATA (outbuf) + vorbisenc->og.header_len, vorbisenc->og.body,
 	      vorbisenc->og.body_len);
 
-      GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes\n", GST_BUFFER_SIZE (outbuf));
+      GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
 
       gst_pad_push (vorbisenc->srcpad, outbuf);
 

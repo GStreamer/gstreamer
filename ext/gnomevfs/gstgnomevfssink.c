@@ -254,7 +254,7 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
       GNOME_VFS_OPEN_WRITE, sink->erase,
       GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
         | GNOME_VFS_PERM_GROUP_READ);
-  GST_DEBUG (0, "open: %s\n", gnome_vfs_result_to_string(result));
+  GST_DEBUG (0, "open: %s", gnome_vfs_result_to_string(result));
   if (result != GNOME_VFS_OK) {
     if (sink->erase == FALSE) {
       g_signal_emit (G_OBJECT (sink),
@@ -316,7 +316,7 @@ gst_gnomevfssink_chain (GstPad *pad, GstBuffer *buf)
   if (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN))
   {
     result = gnome_vfs_write(sink->handle, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE (buf), &bytes_written);
-    GST_DEBUG (0, "write: %s, written_bytes: %Lu\n", gnome_vfs_result_to_string(result), bytes_written);
+    GST_DEBUG (0, "write: %s, written_bytes: %Lu", gnome_vfs_result_to_string(result), bytes_written);
     if (bytes_written < GST_BUFFER_SIZE (buf))
     {
       printf ("gnomevfssink : Warning : %d bytes should be written, only %Lu bytes written\n",

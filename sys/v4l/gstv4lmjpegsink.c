@@ -235,12 +235,12 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
 
   if (v4lmjpegsink->clock) {
-    GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+    GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
     jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
 
     if (jitter > 500000 || jitter < -500000)
-      GST_DEBUG (0, "jitter: %lld\n", jitter);
+      GST_DEBUG (0, "jitter: %lld", jitter);
 
     gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
   }

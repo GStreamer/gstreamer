@@ -58,8 +58,8 @@ GST_PADTEMPLATE_FACTORY (gst_adder_src_template_factory,
         "law",              GST_PROPS_INT (0),
         "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
         "signed",           GST_PROPS_BOOLEAN (TRUE),
-        "width",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
-        "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
+        "width",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)),
+        "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)),
         "rate",             GST_PROPS_INT_RANGE (4000, 48000), /* FIXME */
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   ),
@@ -86,8 +86,8 @@ GST_PADTEMPLATE_FACTORY (gst_adder_sink_template_factory,
         "law",              GST_PROPS_INT (0),
         "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
         "signed",           GST_PROPS_BOOLEAN (TRUE),
-        "width",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
-        "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
+        "width",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)),
+        "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)),
         "rate",             GST_PROPS_INT_RANGE (4000, 48000), /* FIXME */
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   ),
@@ -207,7 +207,7 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
         p = (GstPad*) sinkpads->data;
         if (p != pad && p != adder->srcpad) {
           if (!gst_pad_try_set_caps (p, caps)) {
-            GST_DEBUG (0, "caps mismatch; disconnecting and removing pad %s:%s (peer %s:%s)\n",
+            GST_DEBUG (0, "caps mismatch; disconnecting and removing pad %s:%s (peer %s:%s)",
                        GST_DEBUG_PAD_NAME (p), GST_DEBUG_PAD_NAME (GST_PAD_PEER (p)));
             gst_pad_disconnect (GST_PAD (GST_PAD_PEER (p)), p);
             remove = g_list_prepend (remove, p);
@@ -386,12 +386,12 @@ gst_adder_loop (GstElement *element)
     /* get data from all of the sinks */
     inputs = adder->input_channels;
 
-    GST_DEBUG (0, "starting to cycle through channels\n");
+    GST_DEBUG (0, "starting to cycle through channels");
 
     while (inputs) {
       input = (GstAdderInputChannel *) inputs->data;
 
-      GST_DEBUG (0, "looking into channel %p\n", input);
+      GST_DEBUG (0, "looking into channel %p", input);
       
       /* get data from the bytestream of each input channel. we need to check for
          events before passing on the data to the output buffer. */
@@ -406,7 +406,7 @@ gst_adder_loop (GstElement *element)
             /* if we get an EOS event from one of our sink pads, we assume that
                pad's finished handling data. delete the bytestream, free up the
                pad, and free up the memory associated with the input channel. */
-            GST_DEBUG (0, "got an EOS event\n");
+            GST_DEBUG (0, "got an EOS event");
 
             gst_bytestream_destroy (input->bytestream);
             /* gst_object_unref (GST_OBJECT (input->sinkpad)); this causes problems */
@@ -422,7 +422,7 @@ gst_adder_loop (GstElement *element)
         /* here's where the data gets copied. this is a little nasty looking
            because it's the same code pretty much 3 times, except each time uses
            different data types and clamp limits. */
-        GST_DEBUG (0, "copying %d bytes from channel %p to output data %p in buffer %p\n",
+        GST_DEBUG (0, "copying %d bytes from channel %p to output data %p in buffer %p",
                    GST_BUFFER_SIZE (buf_out), input, GST_BUFFER_DATA (buf_out), buf_out);
 
         if (adder->format == GST_ADDER_FORMAT_INT) {
@@ -450,7 +450,7 @@ gst_adder_loop (GstElement *element)
 
         gst_bytestream_flush (input->bytestream, GST_BUFFER_SIZE (buf_out));
 
-        GST_DEBUG (0, "done copying data\n");
+        GST_DEBUG (0, "done copying data");
       }
       
       inputs = g_slist_next (inputs);
@@ -458,7 +458,7 @@ gst_adder_loop (GstElement *element)
 
     /* send it out */
 
-    GST_DEBUG (0, "pushing buf_out\n");
+    GST_DEBUG (0, "pushing buf_out");
     gst_pad_push (adder->srcpad, buf_out);
 
   } while (TRUE);

@@ -155,7 +155,7 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
   GstBuffer *buf;
 
   do {
-    GST_DEBUG (0, "vorbisdec: pull \n");
+    GST_DEBUG (0, "vorbisdec: pull ");
 
     buf = gst_pad_pull (vorbisdec->sinkpad);
 
@@ -172,7 +172,7 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
     }
   } while (buf == NULL);
 
-  GST_DEBUG (0, "vorbisdec: pull done\n");
+  GST_DEBUG (0, "vorbisdec: pull done");
 
   return buf;
 }
@@ -429,9 +429,9 @@ gst_vorbisdec_loop (GstElement * element)
 		  }
 		}
 
-		GST_DEBUG (0, "vorbisdec: push\n");
+		GST_DEBUG (0, "vorbisdec: push");
 		gst_pad_push (vorbisdec->srcpad, outbuf);
-		GST_DEBUG (0, "vorbisdec: push done\n");
+		GST_DEBUG (0, "vorbisdec: push done");
 
 		vorbis_synthesis_read (&vd, bout);	/* tell libvorbis how
 							   many samples we
