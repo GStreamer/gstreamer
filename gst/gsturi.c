@@ -67,13 +67,12 @@ gst_uri_handler_base_init (gpointer g_class)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
-    g_signal_new ("new_uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
+    g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
 	    G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
 	    gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
     initialized = TRUE;
   }
 }
-                                                                                                                    
 
 static void
 gst_uri_protocol_check_internal (const gchar *uri, gchar **endptr)

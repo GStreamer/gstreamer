@@ -115,17 +115,17 @@ gst_element_class_init (GstElementClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
   gst_element_signals[STATE_CHANGE] =
-    g_signal_new ("state_change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("state-change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, state_change), NULL, NULL,
 		  gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
                   G_TYPE_INT, G_TYPE_INT);
   gst_element_signals[NEW_PAD] =
-    g_signal_new ("new_pad", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("new-pad", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
                   gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
   gst_element_signals[PAD_REMOVED] =
-    g_signal_new ("pad_removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("pad-removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
                   gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);

@@ -1,0 +1,2 @@
+* signals should use dashes in their names, not underscores, so ::notify
+  works correctly

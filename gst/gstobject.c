@@ -130,19 +130,19 @@ gst_object_class_init (GstObjectClass *klass)
                          NULL, G_PARAM_READWRITE));
 
   gst_object_signals[PARENT_SET] =
-    g_signal_new ("parent_set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
   gst_object_signals[PARENT_UNSET] =
-    g_signal_new ("parent_unset", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER */
   gst_object_signals[OBJECT_SAVED] =
-    g_signal_new ("object_saved", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("object-saved", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
@@ -150,7 +150,7 @@ gst_object_class_init (GstObjectClass *klass)
   klass->restore_thyself = gst_object_real_restore_thyself;
 #endif
   gst_object_signals[DEEP_NOTIFY] =
-    g_signal_new ("deep_notify", G_TYPE_FROM_CLASS (klass),
+    g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (GstObjectClass, deep_notify), NULL, NULL,
                   gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE,
@@ -808,7 +808,7 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_signal_object_signals[SO_OBJECT_LOADED] =
-    g_signal_new ("object_loaded", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded), NULL, NULL,
                   gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
                   G_TYPE_OBJECT, G_TYPE_POINTER);

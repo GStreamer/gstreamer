@@ -94,7 +94,7 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass *klass)
 
 
   gst_multifilesrc_signals[NEW_FILE] =
-    g_signal_new ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("new-file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
                     g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
                     G_TYPE_STRING);

@@ -82,7 +82,7 @@ gst_registry_class_init (GstRegistryClass *klass)
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   gst_registry_signals[PLUGIN_ADDED] =
-    g_signal_new ("plugin_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRegistryClass, plugin_added), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);

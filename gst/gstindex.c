@@ -138,7 +138,7 @@ gst_index_class_init (GstIndexClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
   gst_index_signals[ENTRY_ADDED] =
-    g_signal_new ("entry_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("entry-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstIndexClass, entry_added), NULL, NULL,
                   gst_marshal_VOID__BOXED, G_TYPE_NONE, 1,
                   GST_TYPE_INDEX_ENTRY);

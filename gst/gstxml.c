@@ -74,7 +74,7 @@ gst_xml_class_init (GstXMLClass *klass)
 
   /* FIXME G_TYPE_POINTER should be GType of xmlNodePtr */
   gst_xml_signals[OBJECT_LOADED] =
-    g_signal_new ("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("object-loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstXMLClass, object_loaded), NULL, NULL,
                     gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
                     GST_TYPE_OBJECT, G_TYPE_POINTER);

@@ -112,11 +112,10 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 
 
 	gst_dpman_signals[NEW_REQUIRED_DPARAM] =
-		g_signal_new ("new_required_dparam", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+		g_signal_new ("new-required-dparam", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
 		              G_STRUCT_OFFSET (GstDParamManagerClass, new_required_dparam), NULL, NULL,
 		              gst_marshal_VOID__STRING, G_TYPE_NONE, 1,
 		              G_TYPE_STRING);
-		                              
 }
 
 static void

@@ -105,11 +105,11 @@ gst_dparam_class_init (GstDParamClass *klass)
 		g_param_spec_int64("value_int64","64 bit Integer Value",
 		             "The value that should be changed if gint64 is the type",
                      G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE));
-                     
+
 	gobject_class->dispose = gst_dparam_dispose;
-	
+
 	gst_dparam_signals[VALUE_CHANGED] =
-		g_signal_new ("value_changed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+		g_signal_new ("value-changed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
 		              G_STRUCT_OFFSET (GstDParamClass, value_changed), NULL, NULL,
 		              gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	/*gstobject_class->save_thyself = gst_dparam_save_thyself; */
