@@ -30,6 +30,7 @@
 
 G_BEGIN_DECLS
 
+/* uri handler functions */
 #define GST_TYPE_URI_HANDLER		(gst_uri_handler_get_type ())
 #define GST_URI_HANDLER(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_URI_HANDLER, GstURIHandler))
 #define GST_IS_URI_HANDLER(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_URI_HANDLER))
@@ -59,7 +60,6 @@ GType			gst_uri_handler_get_type	(void);
 GstURIHandler*		gst_uri_handler_new		(const gchar *name, 
 		          				 const gchar *uri, const gchar *longdesc, 
 							 const gchar *element, gchar *property);
-void                    gst_uri_handler_destroy		(GstURIHandler *handler);
 
 GstURIHandler*		gst_uri_handler_find		(const gchar *name);
 GstURIHandler*		gst_uri_handler_find_by_uri	(const gchar *uri);
@@ -69,4 +69,4 @@ GstElement*		gst_uri_handler_make_by_uri	(const gchar *uri, const gchar *name);
 
 G_END_DECLS
 
-#endif /* __GST_SCHEDULER_H__ */
+#endif /* __GST_URI_H__ */
