@@ -42,7 +42,7 @@ typedef enum {
 
 typedef enum {
   FAKESRC_DATA_ALLOCATE = 1,
-  FAKESRC_DATA_SUBBUFFER,
+  FAKESRC_DATA_SUBBUFFER
 } GstFakeSrcDataType;
 
 typedef enum {

@@ -931,7 +931,7 @@ gst_element_set_time_delay (GstElement * element, GstClockTime time,
 /**
  * gst_element_adjust_time:
  * @element: element to adjust time on
- * @difference: difference to adjust
+ * @diff: difference to adjust
  *
  * Adjusts the current time of the element by the specified difference. This 
  * function can be used when handling discont events. You can only call this 
@@ -2446,8 +2446,11 @@ _gst_element_error_printf (const gchar * format, ...)
  * @code: the error code belonging to the domain
  * @message: an allocated message to be used as a replacement for the default
  *           message connected to code, or NULL
- * debug: an allocated debug message to be used as a replacement for the
+ * @debug: an allocated debug message to be used as a replacement for the
  *        default debugging information, or NULL
+ * @file: source filename
+ * @function: source function
+ * @line: source line
  *
  * Signals an error condition on an element.
  * This function is used internally by elements.

@@ -116,7 +116,7 @@ gst_uri_protocol_is_valid (const gchar * protocol)
 
 /**
  * gst_uri_is_valid:
- * @protocol: string to check
+ * @uri: string to check
  *
  * Tests if the given string is a valid URI identifier. URIs start with a valid
  * protocol followed by "://" and a string identifying the location.

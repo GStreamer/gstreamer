@@ -64,7 +64,34 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES=
+IGNORE_HFILES= \
+	gettext.h \
+	gst-i18n-lib.h \
+	gst-i18n-app.h \
+	gst_private.h \
+	gstatomic_impl.h \
+	gstdata_private.h \
+	gstarch.h \
+	cothreads.h \
+	schedulers/cothreads_compat.h \
+	schedulers/gthread-cothreads.h \
+	parse/types.h \
+	elements/gstaggregator.h \
+	elements/gstbufferstore.h \
+	elements/gstfakesink.h \
+	elements/gstfakesrc.h \
+	elements/gstfdsink.h \
+	elements/gstfdsrc.h \
+	elements/gstfilesink.h \
+	elements/gstfilesrc.h \
+	elements/gstidentity.h \
+	elements/gstmd5sink.h \
+	elements/gstmultifilesrc.h \
+	elements/gstpipefilter.h \
+	elements/gstshaper.h \
+	elements/gststatistics.h \
+	elements/gsttee.h \
+	elements/gsttypefind.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

@@ -277,7 +277,7 @@ static void _gst_plugin_fault_handler_setup ();
 
 /**
  * gst_plugin_load_file:
- * @plugin: The plugin to load
+ * @filename: The file to load
  * @error: Pointer to a NULL-valued GError.
  *
  * Load the given plugin.

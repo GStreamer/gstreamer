@@ -81,12 +81,12 @@ GstCaps *                gst_caps_new_full_valist                       (GstStru
 									 va_list        var_args);
 GstCaps *                gst_caps_copy                                  (const GstCaps *caps);
 void                     gst_caps_free                                  (GstCaps       *caps);
-G_CONST_RETURN GstCaps * gst_static_caps_get                            (GstStaticCaps *caps);
+G_CONST_RETURN GstCaps * gst_static_caps_get                            (GstStaticCaps *static_caps);
 
 /* manipulation */
 void                     gst_caps_append                                (GstCaps       *caps1,
 									 GstCaps       *caps2);
-void                     gst_caps_append_structure                      (GstCaps       *caps1,
+void                     gst_caps_append_structure                      (GstCaps       *caps,
 									 GstStructure  *structure);
 GstCaps *                gst_caps_split_one                             (GstCaps       *caps);
 int                      gst_caps_get_size                              (const GstCaps *caps);

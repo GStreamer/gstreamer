@@ -381,7 +381,7 @@ GList*			gst_pad_get_ghost_pad_list		(GstPad *pad);
 
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
-void			gst_pad_set_bufferalloc_function		(GstPad *pad, GstPadBufferAllocFunction bufferalloc);
+void			gst_pad_set_bufferalloc_function		(GstPad *pad, GstPadBufferAllocFunction bufalloc);
 GstBuffer*		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size);
 
 /* data passing setup functions */
@@ -504,7 +504,7 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
 								 GstCaps *caps);
 
-GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *templ);
+GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
 const GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 const GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 

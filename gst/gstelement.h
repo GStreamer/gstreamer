@@ -433,7 +433,7 @@ struct _GstElementFactoryClass {
 GType 			gst_element_factory_get_type 		(void);
 
 gboolean		gst_element_register			(GstPlugin *plugin,
-								 const gchar *elementname,
+								 const gchar *name,
 								 guint rank,
 								 GType type);
 

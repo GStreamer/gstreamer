@@ -107,6 +107,7 @@ gst_caps_new_any (void)
 /**
  * gst_caps_new_simple:
  * @media_type: the media type of the structure
+ * @fieldname: first field to set
  * @...: additional arguments
  *
  * Creates a new #GstCaps that contains one #GstStructure.  The
@@ -161,7 +162,7 @@ gst_caps_new_full (GstStructure * struct1, ...)
 
 /**
  * gst_caps_new_full_valist:
- * @struct1: the first structure to add
+ * @structure: the first structure to add
  * @var_args: additional structures to add
  *
  * Creates a new #GstCaps and adds all the structures listed as
@@ -310,7 +311,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
  * @caps: the #GstCaps that will be appended to
  * @structure: the #GstStructure to append
  *
- * Appends @structure to @caps1.  The structure is not copied; @caps1
+ * Appends @structure to @caps.  The structure is not copied; @caps
  * becomes the owner of @structure.
  */
 void
@@ -1164,7 +1165,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
 
 /**
  * gst_caps_from_string:
- * @caps: a string to convert to #GstCaps
+ * @string: a string to convert to #GstCaps
  *
  * Converts @caps from a string representation.
  *

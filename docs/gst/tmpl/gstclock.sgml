@@ -329,6 +329,16 @@ Get the clock flags
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_clock_get_event_time_delay ##### -->
+<para>
+
+</para>
+
+@clock: 
+@delay: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_clock_get_next_id ##### -->
 <para>
 

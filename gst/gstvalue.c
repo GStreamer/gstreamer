@@ -157,7 +157,7 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 /**
  * gst_value_list_append_value:
  * @value: a GstValueList to append a value to
- * @apppend_value: the value to append
+ * @append_value: the value to append
  *
  * Appends @append_value to the GstValueList in @value.
  */
@@ -188,7 +188,7 @@ gst_value_list_get_size (const GValue * value)
 /**
  * gst_value_list_get_value:
  * @value: a GstValueList
- * @index
+ * @index: the index
  *
  * Gets the value that is a member of the list contained in @value and
  * has the index @index.
@@ -1285,7 +1285,10 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
 
 /**
  * gst_value_can_intersect:
+ * @value1:
+ * @value2:
  *
+ * Returns:
  */
 gboolean
 gst_value_can_intersect (const GValue * value1, const GValue * value2)
@@ -1357,6 +1360,9 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 
 /**
  * gst_value_register_intersection_func:
+ * @type1:
+ * @type2:
+ * @func:
  *
  */
 void
@@ -1374,6 +1380,7 @@ gst_value_register_intersect_func (GType type1, GType type2,
 
 /**
  * gst_value_register:
+ * @table:
  *
  */
 void
@@ -1384,6 +1391,8 @@ gst_value_register (const GstValueTable * table)
 
 /**
  * gst_value_init_and_copy:
+ * @dest:
+ * @src:
  *
  */
 void
@@ -1395,7 +1404,9 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
 
 /**
  * gst_value_serialize:
+ * @value:
  *
+ * Returns:
  */
 gchar *
 gst_value_serialize (const GValue * value)
@@ -1423,7 +1434,10 @@ gst_value_serialize (const GValue * value)
 
 /**
  * gst_value_deserialize:
+ * @dest:
+ * @src:
  *
+ * Returns:
  */
 gboolean
 gst_value_deserialize (GValue * dest, const gchar * src)

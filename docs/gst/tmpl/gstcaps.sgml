@@ -170,8 +170,10 @@ Structure describing sets of media formats
 
 </para>
 
-@caps: 
+@static_caps: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@caps: 
 
 
 <!-- ##### FUNCTION gst_caps_append ##### -->
@@ -188,8 +190,10 @@ Structure describing sets of media formats
 
 </para>
 
-@caps1: 
+@caps: 
 @structure: 
+<!-- # Unused Parameters # -->
+@caps1: 
 
 
 <!-- ##### FUNCTION gst_caps_split_one ##### -->

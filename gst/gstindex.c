@@ -412,6 +412,8 @@ gst_index_set_resolver (GstIndex * index,
  * @entry: the entry to copy
  *
  * Copies an entry and returns the result.
+ *
+ * Returns:
  */
 GstIndexEntry *
 gst_index_entry_copy (GstIndexEntry * entry)

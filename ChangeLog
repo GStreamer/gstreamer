@@ -1,3 +1,33 @@
+2004-03-29  David Schleef  <ds@schleef.org>
+
+	* docs/gst/Makefile.am:  Disable a bunch of headers from being scanned
+	* docs/gst/gstreamer-docs.sgml:  More hacking
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/cothreads_compat.sgml:
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstevent.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* docs/gst/tmpl/gthread-cothreads.sgml:
+	* docs/random/ds/0.9-suggested-changes:
+	* gst/elements/gstfakesink.h: doc fixes
+	* gst/elements/gstfakesrc.h: doc fixes
+	* gst/gstcaps.c: doc fixes
+	* gst/gstcaps.h: doc fixes
+	* gst/gstelement.c: doc fixes
+	* gst/gstelement.h: doc fixes
+	* gst/gstindex.c: doc fixes
+	* gst/gstinfo.c: doc fixes
+	* gst/gstpad.c: doc fixes
+	* gst/gstpad.h: doc fixes
+	* gst/gstplugin.c: doc fixes
+	* gst/gsttypefind.h: doc fixes
+	* gst/gsturi.c: doc fixes
+	* gst/gstvalue.c: doc fixes
+
 2004-03-29  Colin Walters  <walters@redhat.com>
 
 	* gst/registries/gstxmlregistry.c (get_time)

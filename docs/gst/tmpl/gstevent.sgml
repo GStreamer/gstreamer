@@ -50,6 +50,13 @@ The different major types of events.
 @GST_EVENT_NAVIGATION: 
 @GST_EVENT_TAG: 
 
+<!-- ##### MACRO GST_EVENT_ANY ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GST_EVENT_TRACE_NAME ##### -->
 <para>
 The name used for memory allocation tracing

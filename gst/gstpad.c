@@ -2262,6 +2262,7 @@ gst_pad_proxy_getcaps (GstPad * pad)
 /**
  * gst_pad_proxy_pad_link:
  * @pad: a #GstPad to proxy.
+ * @caps: the #GstCaps to link with
  *
  * Calls gst_pad_try_set_caps() for every other pad belonging to the
  * same element as @pad.  If gst_pad_try_set_caps() fails on any pad,
@@ -2303,6 +2304,7 @@ gst_pad_proxy_pad_link (GstPad * pad, const GstCaps * caps)
 /**
  * gst_pad_proxy_fixate:
  * @pad: a #GstPad to proxy.
+ * @caps: the #GstCaps to fixate
  *
  * Implements a default fixate function based on the caps set on the other
  * pads in the element.  This function should only be used if every pad
@@ -2756,13 +2758,14 @@ gst_pad_recover_caps_error (GstPad * pad, const GstCaps * allowed)
   return FALSE;
 }
 
-/* FIXME 0.9: Is it so difficult to write SOURCE? */
 /**
  * gst_pad_alloc_buffer:
  * @pad: a source #GstPad.
+ * @offset: the offset of the new buffer in the stream
+ * @size: the size of the new buffer
  *
  * Allocates a new, empty buffer optimized to push to pad @pad.  This
- * function only works if @pad is a src pad.
+ * function only works if @pad is a source pad.
  *
  * Returns: a new, empty #GstBuffer, or NULL if there is an error
  */

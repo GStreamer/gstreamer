@@ -1048,6 +1048,8 @@ Check if the properties of the padtemplate are fixed
 </para>
 
 @pad: 
+@bufalloc: 
+<!-- # Unused Parameters # -->
 @bufferalloc: 
 
 
@@ -1718,8 +1720,10 @@ Remove the probe from the pad
 
 </para>
 
-@templ: 
+@pad_template: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@templ: 
 
 
 <!-- ##### FUNCTION gst_pad_template_get_caps ##### -->

@@ -47,7 +47,6 @@
 <!-- these are elements without API docs
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 -->
-<!ENTITY cothreads SYSTEM "xml/cothreads.xml">
 
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
@@ -125,7 +124,6 @@ with some more specialized elements.</para>
     <para>
     </para>
 
-    &cothreads;
     &GstAtomic;
     &GstMemChunk;
 

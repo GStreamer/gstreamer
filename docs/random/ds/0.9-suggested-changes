@@ -34,6 +34,8 @@ API:
 
  - caps should have a flag on fields to indicate that the field is optional
 
+ - remove gst_pad_select() and add gst_pad_pull_many(), which pulls one
+   buffer from one of many pads
 
 caps:
 

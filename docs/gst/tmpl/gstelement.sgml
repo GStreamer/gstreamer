@@ -591,6 +591,16 @@ Sets the parent of an element.
 @time: 
 
 
+<!-- ##### FUNCTION gst_element_set_time_delay ##### -->
+<para>
+
+</para>
+
+@element: 
+@time: 
+@delay: 
+
+
 <!-- ##### FUNCTION gst_element_adjust_time ##### -->
 <para>
 
@@ -1175,10 +1185,12 @@ Sets the parent of an element.
 </para>
 
 @plugin: 
-@elementname: 
+@name: 
 @rank: 
 @type: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@elementname: 
 
 
 <!-- ##### FUNCTION gst_element_factory_find ##### -->

@@ -174,6 +174,7 @@ gst_clock_reset
 gst_clock_handle_discont
 gst_clock_get_time
 gst_clock_get_event_time
+gst_clock_get_event_time_delay
 gst_clock_get_next_id
 gst_clock_new_single_shot_id
 gst_clock_new_periodic_id
@@ -307,6 +308,7 @@ gst_element_clock_wait
 gst_element_get_time
 gst_element_wait
 gst_element_set_time
+gst_element_set_time_delay
 gst_element_adjust_time
 gst_element_is_indexable
 gst_element_set_index
@@ -394,6 +396,7 @@ GST_ELEMENT_GET_CLASS
 <SECTION>
 <FILE>gstevent</FILE>
 GstEventType
+GST_EVENT_ANY
 GST_EVENT_TRACE_NAME
 GST_EVENT_TYPE
 GST_EVENT_TIMESTAMP
@@ -1466,32 +1469,6 @@ GST_IS_XML_REGISTRY_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>cothreads</FILE>
-cothread_state
-cothread_context
-cothread_func
-COTHREAD_STARTED
-COTHREAD_DESTROYED
-cothread_context_init
-cothread_context_free
-cothread_context_set_data
-cothread_context_get_data
-cothread_create
-cothread_free
-cothread_setfunc
-cothread_stop
-cothread_switch
-cothread_set_private
-cothread_get_private
-cothread_lock
-cothread_trylock
-cothread_unlock
-cothread_main
-cothread_current_main
-cothread_current
-</SECTION>
-
-<SECTION>
 <FILE>gst</FILE>
 gst_init
 gst_init_check
@@ -1505,46 +1482,6 @@ gst_main_quit
 </SECTION>
 
 <SECTION>
-<FILE>gst_private</FILE>
-GST_CAT_GST_INIT
-GST_CAT_COTHREADS
-GST_CAT_COTHREAD_SWITCH
-GST_CAT_AUTOPLUG
-GST_CAT_AUTOPLUG_ATTEMPT
-GST_CAT_PARENTAGE
-GST_CAT_STATES
-GST_CAT_PLANNING
-GST_CAT_SCHEDULING
-GST_CAT_DATAFLOW
-GST_CAT_BUFFER
-GST_CAT_CAPS
-GST_CAT_CLOCK
-GST_CAT_ELEMENT_PADS
-GST_CAT_PADS
-GST_CAT_PIPELINE
-GST_CAT_PLUGIN_LOADING
-GST_CAT_PLUGIN_INFO
-GST_CAT_PROPERTIES
-GST_CAT_THREAD
-GST_CAT_XML
-GST_CAT_NEGOTIATION
-GST_CAT_REFCOUNTING
-GST_CAT_ERROR_SYSTEM
-GST_CAT_EVENT
-GST_CAT_PARAMS
-GST_CAT_CALL_TRACE
-</SECTION>
-
-<SECTION>
-<FILE>gstarch</FILE>
-GST_ARCH_SET_SP
-GST_ARCH_CALL
-GST_ARCH_SETUP_STACK
-GST_ARCH_PRESETJMP
-USE_MAKECONTEXT
-</SECTION>
-
-<SECTION>
 <FILE>gstatomic</FILE>
 gst_vgint
 GstAtomicInt
@@ -1555,14 +1492,6 @@ gst_atomic_int_read
 gst_atomic_int_add
 gst_atomic_int_inc
 gst_atomic_int_dec_and_test
-</SECTION>
-
-<SECTION>
-<FILE>gstatomic_impl</FILE>
-SMP_LOCK
-SMP_SYNC
-SMP_ISYNC
-PPC405_ERR77
 </SECTION>
 
 <SECTION>
@@ -1694,10 +1623,6 @@ gst_marshal_BOXED__BOXED
 <FILE>gstcpu</FILE>
 GstCPUFlags
 gst_cpu_get_flags
-</SECTION>
-
-<SECTION>
-<FILE>gstdata_private</FILE>
 </SECTION>
 
 <SECTION>
@@ -2081,20 +2006,6 @@ gst_version
 </SECTION>
 
 <SECTION>
-<FILE>gettext</FILE>
-gettext
-dgettext
-dcgettext
-ngettext
-dngettext
-dcngettext
-textdomain
-bindtextdomain
-bind_textdomain_codeset
-gettext_noop
-</SECTION>
-
-<SECTION>
 <FILE>gsterror</FILE>
 GstCoreError
 GstLibraryError
@@ -2112,18 +2023,6 @@ gst_stream_error_quark
 gst_core_error_quark
 gst_resource_error_quark
 gst_library_error_quark
-</SECTION>
-
-<SECTION>
-<FILE>gst-i18n-app</FILE>
-_
-N_
-</SECTION>
-
-<SECTION>
-<FILE>gst-i18n-lib</FILE>
-_
-N_
 </SECTION>
 
 <SECTION>
@@ -2161,6 +2060,7 @@ gst_parse_chain_free
 
 <SECTION>
 <FILE>cothreads_compat</FILE>
+COTHREADS_TYPE
 COTHREADS_NAME
 COTHREADS_NAME_CAPITAL
 cothread
@@ -2180,6 +2080,7 @@ do_cothread_get_main
 
 <SECTION>
 <FILE>gthread-cothreads</FILE>
+COTHREADS_TYPE
 COTHREADS_NAME
 COTHREADS_NAME_CAPITAL
 cothread_func
@@ -2190,5 +2091,6 @@ do_cothread_lock
 do_cothread_unlock
 do_cothread_get_current
 do_cothread_get_main
+do_cothread_setfunc
 </SECTION>
 
