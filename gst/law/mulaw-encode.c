@@ -46,35 +46,36 @@ static void		gst_mulawenc_chain			(GstPad *pad, GstBuffer *buf);
 static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
-/*
-static GstPadNegotiateReturn
-mulawenc_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
+static GstPadLinkReturn
+mulawenc_link (GstPad *pad, GstCaps *caps)
 {
   GstCaps* tempcaps;
+  gint rate, channels;
   
-  GstMuLawEnc* mulawenc=GST_MULAWENC (GST_OBJECT_PARENT (pad));
+  GstMuLawEnc* mulawenc = GST_MULAWENC (GST_OBJECT_PARENT (pad));
   
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  tempcaps = gst_caps_copy(*caps);
-
-  gst_caps_set(tempcaps,"format",GST_PROPS_STRING("int"));
-  gst_caps_set(tempcaps,"law",GST_PROPS_INT(1));
-  gst_caps_set(tempcaps,"depth",GST_PROPS_INT(8));
-  gst_caps_set(tempcaps,"width",GST_PROPS_INT(8));
-  gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(FALSE));
-
-  if (gst_pad_try_set_caps (mulawenc->srcpad, tempcaps) > 0)
-  {
-    return GST_PAD_NEGOTIATE_AGREE;
-  }
-  else {
-    gst_caps_unref (tempcaps);
-    return GST_PAD_NEGOTIATE_FAIL;
-  }
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;  
+  
+  if (!gst_caps_get (caps, "rate", &rate,
+                           "channels", &channels,
+                           NULL))
+    return GST_PAD_LINK_REFUSED;
+  
+  tempcaps = GST_CAPS_NEW (
+	      "sinesrc_src_caps",
+	      "audio/raw",
+          "format",   GST_PROPS_STRING ("int"),
+          "law",      GST_PROPS_INT (1),
+          "depth",    GST_PROPS_INT (8),
+          "width",    GST_PROPS_INT (8),
+          "signed",   GST_PROPS_BOOLEAN (FALSE),
+          "rate",     GST_PROPS_INT (rate),
+          "channels", GST_PROPS_INT (channels),
+        NULL);
+  
+  return gst_pad_try_set_caps (mulawenc->srcpad, tempcaps);
 }		
-*/
 
 GType
 gst_mulawenc_get_type(void) {
@@ -116,7 +117,7 @@ gst_mulawenc_init (GstMuLawEnc *mulawenc)
 {
   mulawenc->sinkpad = gst_pad_new_from_template(mulawenc_sink_template,"sink");
   mulawenc->srcpad = gst_pad_new_from_template(mulawenc_src_template,"src");
-  /*gst_pad_set_negotiate_function(mulawenc->sinkpad, mulawenc_negotiate_sink);*/
+  gst_pad_set_link_function (mulawenc->sinkpad, mulawenc_link);
 
   gst_element_add_pad(GST_ELEMENT(mulawenc),mulawenc->sinkpad);
   gst_pad_set_chain_function(mulawenc->sinkpad,gst_mulawenc_chain);
