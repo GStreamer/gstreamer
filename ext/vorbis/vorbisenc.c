@@ -763,7 +763,7 @@ gst_vorbisenc_chain (GstPad * pad, GstData *_data)
 	break;
       case GST_EVENT_TAG:
 	if (vorbisenc->tags) {
-	  gst_tag_list_merge (vorbisenc->tags, gst_event_tag_get_list (event), 
+	  gst_tag_list_insert (vorbisenc->tags, gst_event_tag_get_list (event), 
 		  gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
 	} else {
 	  g_assert_not_reached ();
