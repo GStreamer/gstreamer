@@ -3,5 +3,5 @@ examples = seek spider_seek
 noinst_PROGRAMS = $(examples)
 
 # we have nothing but apps here, we can do this safely
-LIBS = $(GST_LIBS) $(GTK_LIBS)
+LIBS = $(GST_LIBS) $(GTK_LIBS) -lfreetype
 CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS)
