@@ -1,3 +1,19 @@
+2004-01-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxdec.c:
+	* ext/divx/gstdivxenc.c:
+	  Set category to divx4linux instead of divx (too generic).
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_init),
+	(gst_wavparse_parse_fmt), (gst_wavparse_handle_sink_event),
+	(gst_wavparse_loop), (gst_wavparse_change_state):
+	* gst/wavparse/gstwavparse.h:
+	  fix parsing of WAV files with non-standard fmt-tag size and fix
+	  skipping of unrecognized chunks... Someone please fix this thing
+	  to use rifflib so all this is automated.
+	* sys/v4l/Makefile.am:
+	* sys/v4l2/Makefile.am:
+	  Add X_CFLAGS because we depend on X (for overlay).
+
 2004-01-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c:

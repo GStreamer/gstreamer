@@ -47,7 +47,6 @@ static gboolean		gst_wavparse_pad_convert 	(GstPad *pad,
 							 gint64 *dest_value);
 
 static void             gst_wavparse_loop               (GstElement *element);
-static GstCaps *        gst_wavparse_getcaps            (GstPad *pad);
 static const GstEventMask*
 			gst_wavparse_get_event_masks 	(GstPad *pad);
 static gboolean 	gst_wavparse_srcpad_event 	(GstPad *pad, GstEvent *event);
@@ -195,6 +194,7 @@ gst_wavparse_init (GstWavParse *wavparse)
 
   /* source */
   wavparse->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (&src_template_factory), "src");
+  gst_pad_use_explicit_caps (wavparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
   gst_pad_set_formats_function (wavparse->srcpad, gst_wavparse_get_formats);
   gst_pad_set_convert_function (wavparse->srcpad, gst_wavparse_pad_convert);
@@ -203,8 +203,6 @@ gst_wavparse_init (GstWavParse *wavparse)
   gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
   gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
   gst_pad_set_event_mask_function (wavparse->srcpad, gst_wavparse_get_event_masks);
-  gst_pad_set_getcaps_function (wavparse->srcpad, gst_wavparse_getcaps);
-  wavparse->caps = NULL;
 
   gst_element_set_loop_function (GST_ELEMENT (wavparse), gst_wavparse_loop);
 
@@ -598,7 +596,7 @@ gst_wavparse_parse_cues (GstWavParse *wavparse,
 #endif
 
 static void
-gst_wavparse_parse_fmt (GstWavParse *wavparse)
+gst_wavparse_parse_fmt (GstWavParse *wavparse, guint size)
 {
   GstWavParseFormat *format;
   GstCaps *caps = NULL;
@@ -610,7 +608,7 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
   format = (GstWavParseFormat *) fmtdata;
 
   if (got_bytes == sizeof (GstWavParseFormat)) {
-    gst_bytestream_flush (bs, got_bytes);
+    gst_bytestream_flush (bs, size);
     wavparse->bps = GUINT16_FROM_LE (format->wBlockAlign);
     wavparse->rate = GUINT32_FROM_LE (format->dwSamplesPerSec);
     wavparse->channels = GUINT16_FROM_LE (format->wChannels);
@@ -664,28 +662,12 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
       return;
     }
 
-    if (wavparse->caps)
-        gst_caps_free (wavparse->caps);
-    wavparse->caps = caps ? gst_caps_copy (caps) : gst_caps_new_empty ();
     if (caps)
-        gst_pad_try_set_caps (wavparse->srcpad, caps);
+        gst_pad_set_explicit_caps (wavparse->srcpad, caps);
 
     GST_DEBUG ("frequency %d, channels %d",
 							 wavparse->rate, wavparse->channels);
   }
-}
-
-static GstCaps *
-gst_wavparse_getcaps (GstPad *pad)
-{
-  GstWavParse *wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
-  GstPadTemplate *templ;
-
-  if (wavparse->caps)
-    return gst_caps_copy (wavparse->caps);
-
-  templ = gst_static_pad_template_get (&src_template_factory);
-  return gst_caps_copy (gst_pad_template_get_caps (templ));
 }
 
 static gboolean
@@ -697,14 +679,12 @@ gst_wavparse_handle_sink_event (GstWavParse *wavparse)
   gboolean res = TRUE;
 	
   gst_bytestream_get_status (wavparse->bs, &remaining, &event);
-g_print ("Handle sink event\n");
 	
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
   GST_DEBUG ("wavparse: event %p %d", event, type);
 	
   switch (type) {
   case GST_EVENT_EOS:
-g_print ("EOS\n");
     gst_bytestream_flush (wavparse->bs, remaining);
     gst_pad_event_default (wavparse->sinkpad, event);
     res = FALSE;
@@ -871,7 +851,8 @@ gst_wavparse_loop (GstElement *element)
       break;
       
     case GST_RIFF_TAG_fmt:
-      gst_wavparse_parse_fmt (wavparse);
+      gst_wavparse_parse_fmt (wavparse, chunk.size);
+      flush = 0;
       break;
 
     case GST_RIFF_TAG_cue:
@@ -883,23 +864,26 @@ gst_wavparse_loop (GstElement *element)
       switch (chunk.type) {
       case GST_RIFF_LIST_INFO:
 	//gst_wavparse_parse_info (wavparse, chunk.size - 4);
-	flush = 0;
+	//flush = 0;
 
 	break;
 				
       case GST_RIFF_LIST_adtl:
 	//gst_wavparse_parse_adtl (wavparse, chunk.size - 4);
-	flush = 0;
+	//flush = 0;
 	break;
 
       default:
-	flush = 0;
+	//flush = 0;
 	break;
       }
       
-      flush = 0;
+    default:
+      GST_DEBUG ("  *****  unknown chunkid %08x", chunk.id);
+      //flush = 0;
       break;      
     }
+    break;
 		
   case GST_WAVPARSE_DATA:
 		/* Should have been handled up there ^^^^ */
@@ -908,7 +892,8 @@ gst_wavparse_loop (GstElement *element)
 		
   default:
     /* Unknown */
-    GST_DEBUG ("  *****  unknown chunkid %08x", chunk.id);
+    g_warning ("Unknown state %d\n", wavparse->state);
+    //GST_DEBUG ("  *****  unknown chunkid %08x", chunk.id);
     break;
   }
 
@@ -1118,10 +1103,6 @@ gst_wavparse_change_state (GstElement *element)
       wavparse->bps = 0;
       wavparse->seek_pending = FALSE;
       wavparse->seek_offset = 0;
-      if (wavparse->caps) {
-        gst_caps_free (wavparse->caps);
-        wavparse->caps = NULL;
-      }
       break;
     case GST_STATE_READY_TO_NULL:
       break;
