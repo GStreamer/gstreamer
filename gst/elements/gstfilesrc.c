@@ -345,7 +345,7 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 static void
 gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
-  GstFileSrc *src = GST_FILESRC (GST_BUFFER_POOL_PRIVATE (buf));
+  GstFileSrc *src = GST_FILESRC (GST_BUFFER_PRIVATE (buf));
 
   GST_LOG_OBJECT (src, "freeing mmap()d buffer at %"G_GUINT64_FORMAT"+%u", 
 		  GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
@@ -418,7 +418,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   GST_BUFFER_MAXSIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_POOL_PRIVATE (buf) = src;
+  GST_BUFFER_PRIVATE (buf) = src;
   g_object_ref (src);
   GST_BUFFER_FREE_FUNC (buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
 

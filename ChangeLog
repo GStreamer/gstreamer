@@ -1,3 +1,19 @@
+2004-01-11  David Schleef  <ds@schleef.org>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_free_parent_mmap),
+	(gst_filesrc_map_region):
+	* gst/gstbuffer.c: (_gst_buffer_initialize),
+	(_gst_buffer_sub_free), (gst_buffer_default_copy),
+	(gst_buffer_new), (gst_buffer_create_sub),
+	(gst_buffer_is_span_fast), (gst_buffer_span):
+	* gst/gstbuffer.h:
+	Change GstBuffer private structure element names. (all files)
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
+	(gst_queue_link):
+	* gst/gstqueue.h:
+	Implement getcaps/pad_link functions that handle the case where
+	there are data in the queue.
+
 2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/elements/gstbufferstore.c:

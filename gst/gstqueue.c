@@ -90,6 +90,10 @@ static GstData *gst_queue_get			(GstPad        *pad);
 static gboolean gst_queue_handle_src_event 	(GstPad        *pad,
 						 GstEvent      *event);
 
+static GstCaps *gst_queue_getcaps               (GstPad *pad);
+static GstPadLinkReturn
+                gst_queue_link                  (GstPad *pad,
+                                                 const GstCaps *caps);
 static void	gst_queue_locked_flush		(GstQueue      *queue);
 
 static GstElementStateReturn
@@ -247,15 +251,15 @@ gst_queue_init (GstQueue *queue)
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
-  gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
-  gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_link));
+  gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_active (queue->sinkpad, TRUE);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
-  gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
-  gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));
+  gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
   gst_pad_set_active (queue->srcpad, TRUE);
 
@@ -309,6 +313,46 @@ gst_queue_dispose (GObject *object)
 
   if (G_OBJECT_CLASS (parent_class)->dispose)
     G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static GstCaps *
+gst_queue_getcaps (GstPad *pad)
+{
+  GstQueue *queue;
+
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+
+  if (queue->queue->length > 0) {
+    return gst_caps_copy (queue->negotiated_caps);
+  }
+
+  return gst_pad_proxy_getcaps (pad);
+}
+
+static GstPadLinkReturn
+gst_queue_link (GstPad *pad, const GstCaps *caps)
+{
+  GstQueue *queue;
+  GstPadLinkReturn link_ret;
+
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+
+  if (queue->queue->length > 0) {
+    if (gst_caps_is_equal_fixed (caps, queue->negotiated_caps)) {
+      return GST_PAD_LINK_OK;
+    }
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  link_ret = gst_pad_proxy_pad_link (pad, caps);
+
+  if (GST_PAD_LINK_SUCCESSFUL (link_ret)) {
+    /* we store an extra copy of the negotiated caps, just in case
+     * the pads become unnegotiated while we have buffers */
+    gst_caps_replace (&queue->negotiated_caps, gst_caps_copy (caps));
+  }
+
+  return link_ret;
 }
 
 static void

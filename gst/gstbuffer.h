@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstBuffer GstBuffer;
 
+typedef void (*GstBufferFreeDataFunc) (GstBuffer *buffer);
+
 #define GST_BUFFER_TRACE_NAME		"GstBuffer"
 
 extern GType _gst_buffer_type;
@@ -39,7 +41,6 @@ extern GType _gst_buffer_type;
 
 #define GST_BUFFER(buf)         		((GstBuffer *)(buf))
 #define GST_IS_BUFFER(buf)      		(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER)
-#define GST_IS_BUFFER_POOL(buf) 		(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER_POOL)
 
 #define GST_BUFFER_REFCOUNT(buf)		GST_DATA_REFCOUNT(buf)
 #define GST_BUFFER_REFCOUNT_VALUE(buf)		GST_DATA_REFCOUNT_VALUE(buf)
@@ -59,8 +60,8 @@ extern GType _gst_buffer_type;
 #define GST_BUFFER_FORMAT(buf)			(GST_BUFFER(buf)->format)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER(buf)->offset_end)
-#define GST_BUFFER_BUFFERPOOL(buf)		(GST_BUFFER(buf)->pool)
-#define GST_BUFFER_POOL_PRIVATE(buf)		(GST_BUFFER(buf)->pool_private)
+#define GST_BUFFER_FREE_DATA_FUNC(buf)          (GST_BUFFER(buf)->free_data)
+#define GST_BUFFER_PRIVATE(buf)                 (GST_BUFFER(buf)->buffer_private)
 
 #define GST_BUFFER_OFFSET_NONE	((guint64)-1)
 #define GST_BUFFER_MAXSIZE_NONE	((guint)0)
@@ -76,9 +77,8 @@ typedef enum {
   GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
-  GST_BUFFER_DISCONTINUOUS,
   GST_BUFFER_KEY_UNIT,
-  GST_BUFFER_PREROLL,
+  GST_BUFFER_DONTKEEP,
   GST_BUFFER_FLAG_LAST 	= GST_DATA_FLAG_LAST + 8
 } GstBufferFlag;
 
@@ -105,9 +105,9 @@ struct _GstBuffer {
   guint64		 offset_end;
 
   /* this is a pointer to the buffer pool (if any) */
-  gpointer               pool;
+  GstBufferFreeDataFunc  free_data;
   /* pointer to pool private data of parent buffer in case of a subbuffer */
-  gpointer 		 pool_private;
+  gpointer 		 buffer_private;
 
   gpointer _gst_reserved[GST_PADDING];
 };

@@ -29,7 +29,6 @@
 #include "gstinfo.h"
 
 GType _gst_buffer_type;
-GType _gst_buffer_pool_type;
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE  */
@@ -46,10 +45,6 @@ _gst_buffer_initialize (void)
   _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
 		       (GBoxedCopyFunc) gst_data_ref,
 		       (GBoxedFreeFunc) gst_data_unref);
-
-  _gst_buffer_pool_type = g_boxed_type_register_static ("GstBufferPool",
-		            (GBoxedCopyFunc) gst_data_ref,
-			    (GBoxedFreeFunc) gst_data_unref);
 
 #ifndef GST_DISABLE_TRACE
   _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
@@ -70,7 +65,7 @@ gst_buffer_get_type (void)
 static void
 _gst_buffer_sub_free (GstBuffer *buffer)
 {
-  gst_data_unref (GST_DATA (buffer->pool_private));
+  gst_data_unref (GST_DATA (buffer->buffer_private));
 
   GST_BUFFER_DATA (buffer) = NULL;
   GST_BUFFER_SIZE (buffer) = 0;
@@ -89,7 +84,6 @@ _gst_buffer_sub_free (GstBuffer *buffer)
  *
  * Frees the memory associated with the buffer including the buffer data,
  * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
- * This function is used by buffer pools.
  */
 void
 gst_buffer_default_free (GstBuffer *buffer)
@@ -136,7 +130,6 @@ gst_buffer_stamp (GstBuffer *dest, const GstBuffer *src)
  * @buffer: a #GstBuffer to make a copy of.
  *
  * Make a full newly allocated copy of the given buffer, data and all.
- * This function is used by buffer pools.
  *
  * Returns: the new #GstBuffer.
  */
@@ -166,8 +159,8 @@ gst_buffer_default_copy (GstBuffer *buffer)
   GST_BUFFER_MAXSIZE (copy) 	 = GST_BUFFER_SIZE (buffer);
 
   gst_buffer_stamp (copy, buffer);
-  GST_BUFFER_BUFFERPOOL (copy)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (copy) = NULL;
+  GST_BUFFER_FREE_DATA_FUNC (copy) = NULL;
+  GST_BUFFER_PRIVATE (copy) = NULL;
 
   return copy;
 }
@@ -204,8 +197,8 @@ gst_buffer_new (void)
   GST_BUFFER_DURATION (newbuf)     = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (newbuf)       = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (newbuf)   = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_BUFFERPOOL (newbuf)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (newbuf) = NULL;
+  GST_BUFFER_FREE_DATA_FUNC (newbuf) = NULL;
+  GST_BUFFER_PRIVATE (newbuf) = NULL;
 
   return newbuf;
 }
@@ -261,7 +254,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   buffer_data = parent->data + offset;
   /* make sure we're child not child from a child buffer */
   while (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_SUBBUFFER)) {
-    parent = GST_BUFFER (parent->pool_private);
+    parent = GST_BUFFER (parent->buffer_private);
   }
   /* ref the real parent */
   gst_data_ref (GST_DATA (parent));
@@ -287,8 +280,8 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   GST_BUFFER_DATA (buffer)         = buffer_data;
   GST_BUFFER_SIZE (buffer)         = size;
   GST_BUFFER_MAXSIZE (buffer)      = size;
-  GST_BUFFER_BUFFERPOOL (buffer)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (buffer) = parent;
+  GST_BUFFER_FREE_DATA_FUNC (buffer) = NULL;
+  GST_BUFFER_PRIVATE (buffer) = parent;
   /* we can copy the timestamp and offset if the new buffer starts at
    * offset 0 */
   if (offset == 0) {
@@ -356,7 +349,7 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
   /* it's only fast if we have subbuffers of the same parent */
   return ((GST_BUFFER_FLAG_IS_SET (buf1, GST_BUFFER_SUBBUFFER)) &&
           (GST_BUFFER_FLAG_IS_SET (buf2, GST_BUFFER_SUBBUFFER)) &&
- 	  (buf1->pool_private == buf2->pool_private) &&
+ 	  (buf1->buffer_private == buf2->buffer_private) &&
           ((buf1->data + buf1->size) == buf2->data));
 }
 
@@ -393,7 +386,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 
   /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast (buf1, buf2)) {
-    GstBuffer *parent = GST_BUFFER (buf1->pool_private);
+    GstBuffer *parent = GST_BUFFER (buf1->buffer_private);
     /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (parent, 
 	                            buf1->data - parent->data + offset, len);
@@ -432,11 +425,5 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   }
 
   return newbuf;
-}
-
-GType
-gst_buffer_pool_get_type (void)
-{
-  return _gst_buffer_pool_type;
 }
 

@@ -88,7 +88,9 @@ struct _GstQueue {
   GTimeVal *timeval;	/* the timeout for the queue locking */
   GQueue *events;	/* upstream events get decoupled here */
 
-  gpointer _gst_reserved[GST_PADDING];
+  GstCaps *negotiated_caps;
+
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstQueueClass {
