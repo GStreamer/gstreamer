@@ -4,6 +4,19 @@ gint i = 0;
 GstElement *pipeline;
 GstPadChainFunction oss_chain;
 
+static GstElement *
+make_and_check_element (gchar *type, gchar *name)
+{
+  GstElement *element = gst_element_factory_make (type, name);
+
+  if (element == NULL) {
+    g_warning ("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Asysuming it works for now...", type);
+    exit (0);
+  }
+
+  return element;
+}
+
 static void
 create_pipeline (void)
 {
@@ -12,12 +25,13 @@ create_pipeline (void)
   GstElement *id;
   
   pipeline = gst_pipeline_new ("pipeline");
-  src = gst_element_factory_make ("sinesrc", "src");
+  src = make_and_check_element ("sinesrc", "src");
   /**
    * You need a sink with a loop-based element in here, if you want to kill opt, too.
    * Osssink (chain-based) only breaks the basic scheduler.
    */
-  sink = gst_element_factory_make ("alsasink", "sink");
+  sink = make_and_check_element ("alsasink", "sink");
+  
 
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
@@ -30,7 +44,7 @@ create_pipeline (void)
    * And no, it's not because of identity, you may use any other element.
    */
   gst_element_unlink (src, sink);
-  id = gst_element_factory_make ("identity", "id");
+  id = make_and_check_element ("identity", "id");
   gst_bin_add (GST_BIN (pipeline), id);
   gst_element_link_many (src, id, sink, NULL);
   
