@@ -865,7 +865,8 @@ gst_ximagesink_change_state (GstElement *element)
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
-      gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
+      if (ximagesink->xwindow)
+        gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
       ximagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
