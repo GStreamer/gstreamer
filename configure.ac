@@ -457,9 +457,10 @@ GST_CHECK_FEATURE(ESD, [esound plugins], esdsrc esdsink, [
 dnl *** FLAC ***
 dnl thomas : checking for compile with main instead of actual function,
 dnl since that made autoconf break (for version 2.13)
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFLAC, true)
-GST_CHECK_FEATURE(FLACLIB, [FLAC lossless audio], flacenc flacdec, [
-  GST_CHECK_LIBHEADER(FLACLIB, FLAC, main, -lm, FLAC/all.h, LIBFLAC_LIBS="-lFLAC")
+translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
+GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
+  GST_CHECK_LIBHEADER(FLAC, FLAC, main, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC")
+  AC_SUBST(FLAC_LIBS)
 ])
 
 dnl *** Gnome VFS ***
@@ -478,10 +479,10 @@ GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm")
 ])
 
 dnl *** Hermes ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBHERMES, true)
-GST_CHECK_FEATURE(LIBHERMES, [Hermes library], colorspace, [
-GST_CHECK_LIBHEADER(LIBHERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, LIBHERMES_LIBS="-lHermes")
-], AC_SUBST(LIBHERMES_LIBS))
+translit(dnm, m, l) AM_CONDITIONAL(USE_HERMES, true)
+GST_CHECK_FEATURE(HERMES, [Hermes library], colorspace, [
+  GST_CHECK_LIBHEADER(HERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, HERMES_LIBS="-lHermes")
+], AC_SUBST(HERMES_LIBS))
 
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
@@ -871,10 +872,6 @@ if test "x$HAVE_A52DEC" = xyes; then
   AC_DEFINE(HAVE_A52DEC)
 fi
 
-if test "x$HAVE_FLACLIB" = xyes; then
-  AC_DEFINE(HAVE_FLACLIB)
-fi
-
 if test "x$HAVE_LIBGSM" = xyes; then
   AC_DEFINE(HAVE_LIBGSM)
 fi
@@ -916,14 +913,6 @@ AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
-AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
-AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
-dnl thomas : the next line gives errors, this is how it is in CVS
-dnl AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
-dnl thomas : the next line gives errors as well, I commented it
-dnl AM_CONDITIONAL(HAVE_LAC,      	    test "x$HAVE_FAC" = "xyes")
-dnl thomas: the next line doesn't give errors
-AM_CONDITIONAL(HAVE_FLACLIB,        test "x$HAVE_FLACLIB" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
@@ -1086,6 +1075,7 @@ ext/avifile/Makefile
 ext/cdparanoia/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
+ext/flac/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile

@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gst/gstarch.h>
 #include <gstflacenc.h>
 
 extern GstPadTemplate *enc_src_template, *enc_sink_template;
