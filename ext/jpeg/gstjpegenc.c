@@ -34,6 +34,11 @@ GstElementDetails gst_jpegenc_details = {
   "Wim Taymans <wim.taymans@tvd.be>",
 };
 
+GST_DEBUG_CATEGORY (jpegenc_debug);
+#define GST_CAT_DEFAULT jpegenc_debug
+
+#define JPEG_DEFAULT_QUALITY 85
+
 /* JpegEnc signals and args */
 enum
 {
@@ -138,7 +143,7 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
-          0, 100, 85, G_PARAM_READWRITE));
+          0, 100, JPEG_DEFAULT_QUALITY, G_PARAM_READWRITE));
 #if 0
   /* disabled, since it doesn't seem to work */
   g_object_class_install_property (gobject_class, ARG_SMOOTHING,
@@ -148,6 +153,9 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   gobject_class->set_property = gst_jpegenc_set_property;
   gobject_class->get_property = gst_jpegenc_get_property;
+
+  GST_DEBUG_CATEGORY_INIT (jpegenc_debug, "jpegenc", 0,
+      "JPEG encoding element");
 }
 
 static void
@@ -210,7 +218,7 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->jdest.term_destination = gst_jpegenc_term_destination;
   jpegenc->cinfo.dest = &jpegenc->jdest;
 
-  jpegenc->quality = 85;
+  jpegenc->quality = JPEG_DEFAULT_QUALITY;
   jpegenc->smoothing = 0;
 }
 

@@ -35,6 +35,9 @@ GstElementDetails gst_jpegdec_details = {
   "Wim Taymans <wim.taymans@tvd.be>",
 };
 
+GST_DEBUG_CATEGORY (jpegdec_debug);
+#define GST_CAT_DEFAULT jpegdec_debug
+
 /* JpegDec signals and args */
 enum
 {
@@ -120,6 +123,8 @@ gst_jpegdec_class_init (GstJpegDec * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  GST_DEBUG_CATEGORY_INIT (jpegdec_debug, "jpegdec", 0, "JPEG decoder");
 }
 
 static void
