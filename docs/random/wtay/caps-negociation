@@ -120,14 +120,15 @@ has been processed by the element.
 
 pads are usually created from the templates. When the pad is created
 it has no GstCaps* attached to it yet. The possible caps this pad
-can have is exposed in the padtemplate.
+can have is exposed in the padtemplate. The caps are filled in by
+the element when it knows the values for the caps.
 
 
 4) the connect function
 -----------------------
 
 when two pads are connected the following steps will take
-place: 
+placei (not sure, FIXME): 
 
  - if both pads have caps, the caps are checked. If the caps
    are incompatible, the padtemplates are checked, if they
@@ -157,115 +158,182 @@ These caps must follow the following rules:
 
   - the caps cannot contain ranges or lists.
 
-by setting the caps of the src pad, the following procedure
-happens:
+when the element wants to change the caps of a pad, it has to 
+perform gst_pad_renegotiate (GstPad *pad). this will trigger
+the caps negotiation procedure.
 
-  - if the peer pad has a negotiate function, it is called and
-    negotiation is performed (see later)
+this will trigger the class method of the pad and calls the pads
+gst_pad_negotiate function:
 
-  - if the peer pad has no negotiate function, the padtemplate
-    is checked:
+  GstCaps *gst_pad_negotiate (GstPad *pad, GstCaps *caps, guint count);
 
-    - if the caps are compatible with the template, the peer pad
-      receives the same caps as the src pad.
+This function takes a GstCaps *structure as an argument (typically the
+current caps of the pad) and a negotiation counter. this counter can be
+used to keep track of the negotiation process.
 
-    - if the caps are not compatible, the negotiation fails and
-      the elements are disconnected. A signal is emitted to inform
-      the user app or the manager of the element to find a solution.
- 
-the caps can be set with the gst_pad_set_caps function, which accepts
-the following parameters:
+The pad then creates a new caps structure with the desired caps.
+If the caps are accepted, it just returns the provided input caps. the
+_renegotiate function will set the caps of both pads whenever the
+input caps are the same (pointer wise) as the input caps.
 
-   - the pad to set the caps to
-   - a GstCaps* structure
+the caps structure is checked against the padtemplate of the peer pad,
+if it is incompatible the gst_pad_negotiate function is called again
+and the element is supposed to create another caps structure.
 
-example4:
-!
-!  an audio element setting its src pad caps (need something easier):
-!
-!     gst_pad_set_caps (
-!       pad,
-!       gst_caps_new_with_props (
-!         "src_caps",                       /* name */
-!         "audio/raw",                      /* mime */
-!         gst_props_new (
-!           "format",   GST_PROPS_INT (AFMT_S16_LE),
-!           "depth",    GST_PROPS_INT (16),
-!           "rate",     GST_PROPS_INT (44100),
-!           "channels", GST_PROPS_INT (2),
-!           NULL
-!         )
-!       )
-!     );
+the gst_pad_renegotiate function then calls the gst_pad_negotiate
+function of the peer pad with the new caps as the argument. The peer
+pad can adjust or create a new caps if it doesn't accept it. 
 
-The _set_caps method will trigger the caps negotiation with the
-peer pad (if connected). 
+the caps structure keeps on bouncing between the two pads until one
+of the pads negotiation functions returns the caps unmodified. 
+
+The element can also return a NULL pointer if it has run out of
+options for the caps structure. When this happens, both pads are set
+the the NULL caps again and the pad connnection is broken.
+
+The negotiation process is stopped after a fixed number of tries,
+when the counter has reached some limit. This limit is typically
+checked by the pads negotiate function.
 
 
 6) caps negotiation function
 ----------------------------
 
-the negotiate function of a pad is called whenever the peer pad 
-modifies the caps using the gst_pad_set_caps function.
-
-The negotiate function has to return a gboolean indicating the 
-new caps are acceptable. When it accepts the caps, both pads will
-be set to the negotiated caps.
+the negotiate function of a pad is called whenever the pad or
+peer pad has performed _renegotiate.
 
 example5:
 !
 ! this is the caps negotiation function implemented by an element on
 ! one of its sink pads.
 !
-!  static gboolean
-!  gst_pad_caps_negotiate (GstPad *pad, GstCaps *caps)
+!  static GstCaps*
+!  gst_pad_negotiate (GstPad *pad, GstCaps *caps, guint counter)
 !  {
 !    /* we don't accept anything else than audio/raw */
 !    if (strcmp (gst_caps_get_mime (caps), "audio/raw"))
-!      return FALSE;
+!      return NULL;
 !
 !    if (gst_caps_get_int_prop (caps, "format") != AFMT_S16_LE)
-!      return FALSE;
+!      return NULL;
 !      
 !    /* we accept everything else */
-!    return TRUE;
+!    return caps;
 !  }
 
-When the negotiate function returns FALSE (it does not accept the
-specified caps of the peer pad), 
-
-
-figure1
-!
-!
-!  element             pad                pad->peer
-!   !
-!   ! _negotiate(pad)   
-!   !------------------>!
-!                       ! gst_pad_negotiate()
-!                       !------. 
-!                       !<-----'               
-!                       ! _caps_negotiate()
-!                       !--------------------->!
-!
-!
-
-
-the element has some of its internal properties changed. It wants
-to renegotiate the caps with its peer element. The element does:
-
-  gst_pad_renegotiate (element->srcpad);
-
-this will trigger the class method of the pad and 
+When the negotiate function returns NULL (it does not accept the
+specified caps of the peer pad), the negotiation process is stopped.
 
 
 
+APPENDIX A: use cases
+=====================
 
-7) use cases
-------------
+1) mpg123 src!sink audiosink
+----------------------------
+
+When the pads are connected the padtemplates are checked and it 
+turns out that the pads might be incompatible (mpg123 can do
+48000Hz while audiosink can do 44000Hz). Nothing happens at 
+connect time except for the user app that can mark this connection
+as possibly dangerous and keep some spare elements ready for when 
+the pads turn out to be incompatible.
+
+both elements start out with no caps at all (NULL). mpg123 wants
+to output a buffer with specific properties. It calls 
+gst_pad_renegotiate (mpg123->srcpad). 
+
+The _renegotiate functions calls the negotiate function of the
+mpg123->srcpad. the negotiate function would look like this:
 
 
+/*
+ * The mpg123 element cannot convert the decoded type into something
+ * else so it has to force the caps of the src pad into the specific
+ * type as defined by the mp3.
+ */
+static GstCaps*
+gst_mpeg123_src_negotiate (GstPad *pad, GstCaps *caps, guint counter)
+{
+  GstMpg123 *mpg123;
 
+  mpg123 = GST_MPG123 (gst_pad_get_parent (pad));
+
+  /* we got caps in, check them */
+  if (caps != NULL) {
+    if (!strcmp (gst_caps_get_mime (caps), "audio/raw") &&
+        (gst_caps_get_int_prop (caps, "format") == AFMT_S16_LE) &&
+        (gst_caps_get_int_prop (caps, "depth") == 16) &&
+        (gst_caps_get_int_prop (caps, "rate") == mpg123->rate) &&
+        (gst_caps_get_int_prop (caps, "channels") == mpg123->channels)) {
+      return caps;
+    }
+  }
+  /* we didn't get caps, so we decide */
+  else if (counter != 2) {
+    GstCaps *new;
+
+    /* fill in our desired caps */
+    new = gst_caps_new_with_props (
+            "src_caps",                       /* name */
+            "audio/raw",                      /* mime */
+            gst_props_new (
+              "format",   GST_PROPS_INT (AFMT_S16_LE),
+              "depth",    GST_PROPS_INT (16),
+              "rate",     GST_PROPS_INT (mpg123->rate),
+              "channels", GST_PROPS_INT (mpg123->channels),
+              NULL
+            )
+          );
+    return caps;
+  }
+  /* too many attempts at nogotiation, bail out */
+  return NULL;
+}
+
+
+The audiosink pad negotiate function would look like this:
+
+/*
+ * The audiosink has a wide range of possible parameters for
+ * its sink pad, based on the audio card capabilities and 
+ * possibly the element configuration.
+ * we assume the audiosink element can be both the initiator of 
+ * the negotiations and the negotiated one.
+ */
+static GstCaps*
+gst_audiosink_sink_negotiate (GstPad *pad, GstCaps *caps, guint counter)
+{
+  GstAudiosink *audiosink;
+  gboolean accepted = TRUE;
+
+  audiosink = GST_AUDIOSINK (gst_pad_get_parent (pad));
+
+  /* we got caps in, we know they will match the padtemplate */
+  if (caps != NULL) {
+    return caps;
+  }
+  /* we didn't get caps, so we decide */
+  else if (counter != 2) {
+    GstCaps *new;
+
+    /* fill in our desired caps */
+    new = gst_caps_new_with_props (
+            "sink_caps",                      /* name */
+            "audio/raw",                      /* mime */
+            gst_props_new (
+              "format",   GST_PROPS_INT (audiosink->format),
+              "depth",    GST_PROPS_INT (audiosink->depth),
+              "rate",     GST_PROPS_INT (audiosink->rate),
+              "channels", GST_PROPS_INT (audiosink->channels),
+              NULL
+            )
+          );
+    return caps;
+  }
+  /* too many attempts at nogotiation, bail out */
+  return NULL;
+}
 
 
 
