@@ -288,7 +288,8 @@ Plugins for playing mpeg level 1 encoded movies
 
 %files -n gstreamer-mpeg1
 %defattr(-, root, root)
-%{prefix}/lib/gst/libmpeg1*
+%{prefix}/lib/gst/libmpeg1types*
+%{prefix}/lib/gst/libmpeg1encoder*
 %{prefix}/lib/gst/libmpegaudio*
 %{prefix}/lib/gst/libmp1*
 %{prefix}/lib/gst/libmpeg_play*
