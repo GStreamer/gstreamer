@@ -1664,7 +1664,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* this filter needs bytestream */
   if (!gst_library_load ("gstbytestream")) {
-    gst_info("asfdemux: could not load support library: 'gstbytestream'\n");
+    GST_INFO ("asfdemux: could not load support library: 'gstbytestream'\n");
     return FALSE;
   }
   
