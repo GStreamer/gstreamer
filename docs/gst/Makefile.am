@@ -196,8 +196,9 @@ distclean-local: clean
 	rm -f *.stamp || true
 
 # thomas: make docs parallel installable; devhelp requires majorminor too
+if DOC_HTML
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
+	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR) 
 	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
 	then echo '-- Nothing to install' ; \
@@ -211,7 +212,10 @@ install-data-local:
 	    $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
-	fi)
+	fi) 
+else
+install-data-local:
+endif
 
 #
 # Require gtk-doc when making dist
