@@ -1470,7 +1470,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
-                               GST_PAD_ALWAYS, templcaps, NULL);
+                               GST_PAD_ALWAYS, templcaps);
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (GST_OBJECT (templ)); /* this will take care of the caps too */
 
@@ -1478,7 +1478,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
      have caps on their source padtemplates (spider) can link... */
   if (!foundpad && !filtercaps) {
     templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
-                                 GST_PAD_ALWAYS, NULL, NULL);
+                                 GST_PAD_ALWAYS, gst_caps2_new_any());
     foundpad = gst_element_request_compatible_pad (element, templ);
     gst_object_unref (GST_OBJECT (templ));
   }

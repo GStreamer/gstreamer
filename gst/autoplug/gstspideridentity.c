@@ -41,18 +41,20 @@ static GstElementDetails gst_spider_identity_details = GST_ELEMENT_DETAILS (
 /* generic templates 
  * delete me when meging with spider.c
  */
-GST_PAD_TEMPLATE_FACTORY (spider_src_factory,
+static GstStaticPadTemplate spider_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  NULL      /* no caps */
+  GST_STATIC_CAPS2_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (spider_sink_factory,
+static GstStaticPadTemplate spider_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  NULL      /* no caps */
+  GST_STATIC_CAPS2_ANY
 );
 
 /* SpiderIdentity signals and args */
@@ -121,8 +123,10 @@ gst_spider_identity_class_init (GstSpiderIdentityClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
   /* add our two pad templates */
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_src_factory));
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&spider_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&spider_sink_factory));
   gst_element_class_set_details (gstelement_class, &gst_spider_identity_details);
   
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_spider_identity_change_state);
@@ -143,13 +147,15 @@ static void
 gst_spider_identity_init (GstSpiderIdentity *ident) 
 {
   /* sink */
-  ident->sink = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (spider_sink_factory), "sink");
+  ident->sink = gst_pad_new_from_template (
+      gst_static_pad_template_get (&spider_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
   gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
   gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
   /* src */
-  ident->src = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (spider_src_factory), "src");
+  ident->src = gst_pad_new_from_template (
+      gst_static_pad_template_get (&spider_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (ident), ident->src);
   gst_pad_set_link_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));

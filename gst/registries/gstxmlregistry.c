@@ -1104,7 +1104,7 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
         template = gst_pad_template_new (xmlregistry->name_template,
 					 xmlregistry->direction,
 					 xmlregistry->presence,
-					 xmlregistry->caps, NULL);
+					 xmlregistry->caps);
 
 	g_free (xmlregistry->name_template);
 	xmlregistry->name_template = NULL;
