@@ -55,7 +55,7 @@ enum
 {
   ARG_0,
   ARG_BUFFERSIZE,
-  ARG_FRAGMENT,
+  ARG_FRAGMENT
 };
 
 static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",

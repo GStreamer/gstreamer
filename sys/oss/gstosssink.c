@@ -84,8 +84,8 @@ enum
   ARG_FRAGMENT,
   ARG_BUFFER_SIZE,
   ARG_SYNC,
-  ARG_CHUNK_SIZE,
-  /* FILL ME */
+  ARG_CHUNK_SIZE
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate osssink_sink_factory =

@@ -44,7 +44,7 @@ enum
   ARG_0,
   ARG_DEVICE,
   ARG_MIXERDEV,
-  ARG_DEVICE_NAME,
+  ARG_DEVICE_NAME
 };
 
 /* elementfactory information */

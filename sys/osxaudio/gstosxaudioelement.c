@@ -36,7 +36,7 @@
 enum
 {
   ARG_0,
-  ARG_DEVICE,
+  ARG_DEVICE
 };
 
 /* elementfactory information */
