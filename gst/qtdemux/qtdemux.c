@@ -242,6 +242,9 @@ plugin_init (GstPlugin *plugin)
 					videocaps, NULL);
 #endif
 
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   return gst_element_register (plugin, "qtdemux",
 			       GST_RANK_PRIMARY, GST_TYPE_QTDEMUX);
 }
