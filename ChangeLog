@@ -1,5 +1,10 @@
 2004-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/audioconvert/gstchannelmix.c:
+	  fix for GLIB < 2.4
+
+2004-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* configure.ac:
 	  disable docs again until it actually passes make distcheck.
