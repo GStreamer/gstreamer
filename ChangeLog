@@ -1,3 +1,10 @@
+2004-07-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* testsuite/threads/Makefile.am:
+	* testsuite/threads/threadg.c:
+	  added test to check if problem when removing all elements from a
+	  GstThread before setting GstThread state to NULL
+
 2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* docs/gst/tmpl/gstelement.sgml:

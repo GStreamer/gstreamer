@@ -1,7 +1,7 @@
 include ../Rules
 
 tests_pass = thread1 thread2 thread3 thread4 threadf
-tests_fail = thread5 threadd queue
+tests_fail = thread5 threadd queue threadg
 
 tests_ignore = threade threadb threadc
 
