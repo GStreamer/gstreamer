@@ -15,7 +15,7 @@ if ( x )
   AC_MSG_RESULT($GST_FIONREAD_IN_SYS_IOCTL)
 
   if test "$GST_FIONREAD_IN_SYS_IOCTL" = "yes"; then
-    AC_DEFINE([FIONREAD_IN_SYS_IOCTL], 1, [FIONREAD ioctl found in sys/ioclt.h])
+    AC_DEFINE([HAVE_FIONREAD_IN_SYS_IOCTL], 1, [FIONREAD ioctl found in sys/ioclt.h])
 
   else
 
@@ -34,7 +34,7 @@ if ( x )
     AC_MSG_RESULT($GST_FIONREAD_IN_SYS_FILIO)
 
     if test "$GST_FIONREAD_IN_SYS_FILIO" = "yes"; then   
-      AC_DEFINE([FIONREAD_IN_SYS_FILIO], 1, [FIONREAD ioctl found in sys/filio.h])
+      AC_DEFINE([HAVE_FIONREAD_IN_SYS_FILIO], 1, [FIONREAD ioctl found in sys/filio.h])
     fi
 
   fi
