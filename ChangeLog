@@ -1,3 +1,14 @@
+2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/play/play.c: (gst_play_error_quark),
+	(gst_play_error_create), (gst_play_error_plugin),
+	(gst_play_pipeline_setup), (gst_play_init), (gst_play_new):
+	* gst-libs/gst/play/play.h:
+          add error handling during creation
+	* examples/gstplay/player.c: (main):
+          use new gst_play_new
+          
+
 2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/theora/theoradec.c: (theora_dec_chain):

@@ -23,6 +23,11 @@
 #include <gst/gst.h>
 #include <gst/xoverlay/xoverlay.h>
 
+/* GError stuff */
+
+#define GST_PLAY_ERROR		gst_play_error_quark ()
+/* GObject stuff */
+
 #define GST_TYPE_PLAY            (gst_play_get_type())
 #define GST_PLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLAY, GstPlay))
 #define GST_PLAY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLAY, GstPlayClass))
@@ -62,7 +67,7 @@ struct _GstPlayClass
 };
 
 GType                 gst_play_get_type              (void);
-GstPlay *             gst_play_new                   (void);
+GstPlay *             gst_play_new                   (GError **error);
 
 gboolean              gst_play_set_data_src          (GstPlay *play,
                                                       GstElement *data_src);
@@ -82,7 +87,7 @@ char *                gst_play_get_location          (GstPlay *play);
 
 gboolean              gst_play_seek_to_time          (GstPlay *play,
                                                       gint64 time_nanos);
-                                                      
+
 GstElement *          gst_play_get_sink_element      (GstPlay *play,
 				                      GstElement *element,
 				                      GstPlaySinkType sink_type);

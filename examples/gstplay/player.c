@@ -99,6 +99,7 @@ main (int argc, char *argv[])
 {
   GstPlay *play;
   GstElement *data_src, *video_sink, *audio_sink, *vis_element;
+  GError *error;
 
   /* Initing GStreamer library */
   gst_init (&argc, &argv);
@@ -111,7 +112,13 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
 
   /* Creating the GstPlay object */
-  play = gst_play_new ();
+  play = gst_play_new (&error);
+  if (error)
+  {
+    g_print ("Error: could not create play object:\n%s\n", error->message);
+    g_error_free (error);
+    return 1;
+  }
 
   /* Getting default audio and video plugins from GConf */
   audio_sink = gst_element_factory_make ("osssink", "audio_sink");
