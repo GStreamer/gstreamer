@@ -416,7 +416,8 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
         g_free (encoder);
       }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_ENCODER_VERSION, vd->vi.version, NULL);
+          GST_TAG_ENCODER_VERSION, vd->vi.version,
+          GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
       if (vd->vi.bitrate_upper > 0)
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
             GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);

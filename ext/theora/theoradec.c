@@ -594,7 +594,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
       }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_ENCODER_VERSION, dec->info.version_major,
-          GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
+          GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate,
+          GST_TAG_VIDEO_CODEC, "Theora", NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
 
       dec->packetno++;

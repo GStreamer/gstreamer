@@ -1,3 +1,11 @@
+2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/flac/gstflacdec.c: (gst_flacdec_update_metadata):
+	* ext/speex/gstspeexdec.c: (speex_dec_chain):
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+	  Add codec-name metadata.
+
 2004-10-25  Takao Fujiwara  <Takao.Fujiwara@Sun.COM>
 
 	Reviewd by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
