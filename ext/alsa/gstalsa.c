@@ -1124,6 +1124,7 @@ gst_alsa_src_loop (GstElement *element)
     if (copied != this->period_size)
       GST_BUFFER_SIZE (src->buf[i]) = gst_alsa_samples_to_bytes (this, copied);
     GST_BUFFER_TIMESTAMP (src->buf[i]) = gst_alsa_samples_to_timestamp (this, this->transmitted);
+    GST_BUFFER_DURATION (src->buf[i]) = gst_alsa_samples_to_timestamp (this, copied);
     gst_pad_push (this->pad[i], src->buf[i]);
     src->buf[i] = NULL;
   }
