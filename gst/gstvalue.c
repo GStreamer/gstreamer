@@ -1398,7 +1398,9 @@ gst_value_subtract_double_range_double_range (GValue * dest,
     pv2 = &v2;
   } else if (min1 < max1) {
     pv1 = dest;
+    pv2 = NULL;
   } else if (min2 < max2) {
+    pv1 = NULL;
     pv2 = dest;
   } else {
     return FALSE;
