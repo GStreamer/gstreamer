@@ -157,11 +157,11 @@ with some more specialized elements.</para>
     -->
 
 
-  <chapter>
+  <chapter id="gstreamer-hierarchy">
     <title>Object Hierarchy</title>
     &gstreamer-tree-index;
   </chapter>
 
-  <index/>
+  <index id="index"/>
 
 </book>

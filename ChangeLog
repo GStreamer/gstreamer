@@ -1,3 +1,9 @@
+2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	  doc fixes
+
 2004-06-24  David Schleef  <ds@schleef.org>
 
 	* autogen.sh:  Remove call to env, since the buildbot isn't
