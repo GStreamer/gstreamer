@@ -103,3 +103,23 @@ Some convenience functions
 @size: 
 
 
+<!-- ##### FUNCTION gst_print_element_args ##### -->
+<para>
+
+</para>
+
+@buf: 
+@indent: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_print_pad_caps ##### -->
+<para>
+
+</para>
+
+@buf: 
+@indent: 
+@pad: 
+
+

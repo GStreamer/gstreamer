@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-gstlog
+GObject
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -13,13 +13,4 @@ gstlog
 <para>
 
 </para>
-
-<!-- ##### MACRO gst_info ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
 

@@ -57,8 +57,24 @@ regardless of the refcount (dangerous).
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstBufferPool, #GstPad
+#GstBufferPool, #GstPad, #GstData
 </para>
+
+<!-- ##### MACRO GST_IS_BUFFER ##### -->
+<para>
+Check if the object is a buffer.
+</para>
+
+@buf: The object to check
+
+
+<!-- ##### MACRO GST_BUFFER ##### -->
+<para>
+Cast an object to a GstBuffer
+</para>
+
+@buf: The object to cast.
+
 
 <!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
 <para>
@@ -151,14 +167,6 @@ Get the bufferpool private data.
 @buf: GstBuffer
 
 
-<!-- ##### MACRO GST_BUFFER_POOL_LOCK ##### -->
-<para>
-
-</para>
-
-@pool: 
-
-
 <!-- ##### MACRO GST_BUFFER_LOCK ##### -->
 <para>
 This macro will obtain a lock on the object, making serialization
@@ -204,12 +212,30 @@ Get the maximun age of a buffer.
 @buf: GstBuffer to get the maxage of.
 
 
+<!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
+<para>
+Call the buffer specific copy function on the given buffer.
+</para>
+
+@buf: the buffer to copy.
+
+
+<!-- ##### MACRO GST_BUFFER_FREE_FUNC ##### -->
+<para>
+Call the buffer specific free function on the given buffer.
+</para>
+
+@buf: the buffer to free.
+
+
 <!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
 <para>
 This function is used to copy the buffer contents.
 </para>
 
 @srcbuf: the src buffer
+@Returns: 
+<!-- # Unused Parameters # -->
 @dstbuf: the destination buffer
 
 
@@ -266,9 +292,11 @@ used when data in a stream has been skipped
 </para>
 
 @pool: 
-@location: 
+@offset: 
 @size: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@location: 
 
 
 <!-- ##### FUNCTION gst_buffer_copy ##### -->
@@ -312,15 +340,6 @@ used when data in a stream has been skipped
 @buffer: 
 
 
-<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@count: 
-
-
 <!-- ##### FUNCTION gst_buffer_unref ##### -->
 <para>
 
@@ -335,5 +354,37 @@ used when data in a stream has been skipped
 </para>
 
 @buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_is_span_fast ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_merge ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_span ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@offset: 
+@buf2: 
+@len: 
+@Returns: 
 
 

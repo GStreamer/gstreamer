@@ -57,6 +57,43 @@ A bufferpool can be requested from a pad with the gst_pad_get_bufferpool() funct
 @destroy_hook: 
 @user_data: 
 
+<!-- ##### USER_FUNCTION GstBufferPoolBufferNewFunction ##### -->
+<para>
+
+</para>
+
+@pool: 
+@location: 
+@size: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstBufferPoolDestroyHook ##### -->
+<para>
+
+</para>
+
+@pool: 
+@user_data: 
+
+
+<!-- ##### MACRO GST_BUFFER_POOL_UNLOCK ##### -->
+<para>
+Lock the given bufferpool.
+</para>
+
+@pool: The pool to lock.
+
+
+<!-- ##### MACRO GST_BUFFER_POOL_LOCK ##### -->
+<para>
+Unlock the given bufferpool.
+</para>
+
+@pool: the bufferpool to unlock.
+
+
 <!-- ##### FUNCTION gst_buffer_pool_new ##### -->
 <para>
 
@@ -110,5 +147,60 @@ A bufferpool can be requested from a pad with the gst_pad_get_bufferpool() funct
 @Returns: 
 <!-- # Unused Parameters # -->
 @oldpool: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_user_data ##### -->
+<para>
+
+</para>
+
+@pool: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_get_user_data ##### -->
+<para>
+
+</para>
+
+@pool: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_buffer_copy_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@copy: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_buffer_free_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@destroy: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_buffer_new_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@create: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_destroy_hook ##### -->
+<para>
+
+</para>
+
+@pool: 
+@destroy: 
 
 

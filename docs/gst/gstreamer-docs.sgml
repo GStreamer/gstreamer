@@ -1,10 +1,11 @@
 <!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
 
-<!entity gstreamer-cothreads SYSTEM "sgml/cothreads.sgml">
 <!entity Gst SYSTEM "sgml/gst.sgml">
 <!entity GstInfo SYSTEM "sgml/gstinfo.sgml">
 <!entity GstBin SYSTEM "sgml/gstbin.sgml">
+<!entity GstData SYSTEM "sgml/gstdata.sgml">
 <!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
+<!entity GstEvent SYSTEM "sgml/gstevent.sgml">
 <!entity GstBufferPool SYSTEM "sgml/gstbufferpool.sgml">
 <!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
@@ -15,33 +16,36 @@
 <!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
 <!entity GstParse SYSTEM "sgml/gstparse.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
+<!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
 <!entity GstType SYSTEM "sgml/gsttype.sgml">
+<!entity GstTypeFactory SYSTEM "sgml/gsttypefactory.sgml">
 <!entity GstCaps SYSTEM "sgml/gstcaps.sgml">
 <!entity GstProps SYSTEM "sgml/gstprops.sgml">
+<!entity GstClock SYSTEM "sgml/gstclock.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
 <!entity GstXML SYSTEM "sgml/gstxml.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
 <!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
+<!entity GstTimeCache SYSTEM "sgml/gsttimecache.sgml">
 <!entity cothreads SYSTEM "sgml/cothreads.sgml">
 
 <!entity GstStaticAutoplug SYSTEM "sgml/gststaticautoplug.sgml">
 <!entity GstStaticAutoplugRender SYSTEM "sgml/gststaticautoplugrender.sgml">
+<!entity GstAggregator SYSTEM "sgml/gstaggregator.sgml">
 <!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
 <!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
+<!entity GstFileSrc SYSTEM "sgml/gstfilesrc.sgml">
 <!entity GstDiskSrc SYSTEM "sgml/gstdisksrc.sgml">
 <!entity GstDiskSink SYSTEM "sgml/gstdisksink.sgml">
 <!entity GstHttpSrc SYSTEM "sgml/gsthttpsrc.sgml">
 <!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
-<!entity GstSineSrc SYSTEM "sgml/gstsinesrc.sgml">
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
-
-<!entity spectrum SYSTEM "sgml/spectrum.sgml">
 
 <!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
 ]>
@@ -65,20 +69,26 @@ with some more specialized elements.</para>
     &GstBuffer;
     &GstBufferPool;
     &GstCaps;
+    &GstClock;
     &GstCpu;
+    &GstData;
     &GstElement;
+    &GstEvent;
     &GstInfo;
     &GstObject;
     &GstPad;
     &GstParse;
     &GstPipeline;
     &GstPlugin;
+    &GstPluginFeature;
     &GstProps;
     &GstQueue;
-    &GstThread;
     &GstScheduler;
+    &GstThread;
+    &GstTimeCache;
     &GstTrace;
     &GstType;
+    &GstTypeFactory;
     &GstTypeFind;
     &GstUtils;
     &GstXML;
@@ -119,16 +129,17 @@ with some more specialized elements.</para>
     </programlisting>
     </para>
 
+    &GstAggregator;
+
     &GstFakeSrc;
     &GstFakeSink;
 
+    <!-- &GstFileSrc; -->
     &GstDiskSrc;
     &GstDiskSink;
 
     &GstHttpSrc;
     
-    &GstSineSrc;
-
     &GstFdSrc;
     &GstFdSink;
 

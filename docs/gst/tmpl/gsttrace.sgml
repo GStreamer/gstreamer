@@ -111,7 +111,7 @@ Tracing functionality
 
 <!-- ##### MACRO TRACE_ENABLE ##### -->
 <para>
-
+must be defined to activate the tracing functionality.
 </para>
 
 

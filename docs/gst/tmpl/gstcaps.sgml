@@ -67,7 +67,7 @@ takes a list of key value pairs in the #GstProps syntax as shown by this example
 </para>
 <para>
 before modifying a GstCaps, it is a good idea to make a copy if it first with
-gst_caps_copy_on_write(). This will copy thr GstCaps if the refcount is &gt;1.
+gst_caps_copy_on_write(). This will copy the GstCaps if the refcount is &gt;1.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

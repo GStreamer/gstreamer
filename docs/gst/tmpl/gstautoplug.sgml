@@ -7,7 +7,7 @@ Automatically create and connect elements
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GstAutoplug is an abstract class that is used for constructing and 
-connecting elements. Two types og autopluggers exist: renderer ones and non
+connecting elements. Two types of autopluggers exist: renderer ones and non
 renderer ones. the renderer autopluggers will not have any src pads while the
 non renderer ones do.
 </para>
@@ -92,7 +92,7 @@ Use the regular gst_object_destroy() call to destroy the autoplugger.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-GstStaticAutoplug, GstStaticAutoplugRender
+#GstStaticAutoplug, #GstStaticAutoplugRender
 </para>
 
 <!-- ##### STRUCT GstAutoplug ##### -->

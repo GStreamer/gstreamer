@@ -23,7 +23,7 @@ of data out of their src element.
 
 <!-- ##### MACRO CURRENT_STACK_FRAME ##### -->
 <para>
-
+Get the current stack frame.
 </para>
 
 

@@ -37,6 +37,36 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 
 </para>
 
+<!-- ##### ARG GstFakeSrc:data ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizetype ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizemin ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizemax ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:parentsize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:filltype ##### -->
+<para>
+
+</para>
+
 <!-- ##### ARG GstFakeSrc:pattern ##### -->
 <para>
 
@@ -53,6 +83,11 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 </para>
 
 <!-- ##### ARG GstFakeSrc:silent ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:dump ##### -->
 <para>
 
 </para>

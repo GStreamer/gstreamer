@@ -1,0 +1,130 @@
+<!-- ##### SECTION Title ##### -->
+GstTimeCache
+
+<!-- ##### SECTION Short_Description ##### -->
+Cache time and byteoffsets.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This clas is used by plugins to manage time vs byte offsets. It is mainly
+used for efficient seeking.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstTimeCacheEntry ##### -->
+<para>
+
+</para>
+
+@location: 
+@timestamp: 
+
+<!-- ##### STRUCT GstTimeCacheGroup ##### -->
+<para>
+
+</para>
+
+@minlocation: 
+@maxlocation: 
+
+<!-- ##### ENUM GstTimeCacheCertainty ##### -->
+<para>
+
+</para>
+
+@GST_TIMECACHE_UNKNOWN: 
+@GST_TIMECACHE_CERTAIN: 
+@GST_TIMECACHE_FUZZY_LOCATION: 
+@GST_TIMECACHE_FUZZY_TIMESTAMP: 
+@GST_TIMECACHE_FUZZY: 
+
+<!-- ##### FUNCTION gst_timecache_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_timecache_get_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_timecache_new_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_timecache_set_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@groupnum: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_timecache_set_certainty ##### -->
+<para>
+
+</para>
+
+@tc: 
+@certainty: 
+
+
+<!-- ##### FUNCTION gst_timecache_get_certainty ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_timecache_add_entry ##### -->
+<para>
+
+</para>
+
+@tc: 
+@location: 
+@timestamp: 
+
+
+<!-- ##### FUNCTION gst_timecache_find_location ##### -->
+<para>
+
+</para>
+
+@tc: 
+@location: 
+@timestamp: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_timecache_find_timestamp ##### -->
+<para>
+
+</para>
+
+@tc: 
+@timestamp: 
+@location: 
+@Returns: 
+
+

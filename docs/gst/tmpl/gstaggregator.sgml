@@ -1,0 +1,42 @@
+<!-- ##### SECTION Title ##### -->
+GstAggregator
+
+<!-- ##### SECTION Short_Description ##### -->
+Combine buffers.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+The aggregator is mainly used for testing purposes. It has several
+methods to request buffers from its pads.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstAggregatorSchedType ##### -->
+<para>
+
+</para>
+
+@AGGREGATOR_LOOP: 
+@AGGREGATOR_LOOP_PEEK: 
+@AGGREGATOR_LOOP_SELECT: 
+@AGGREGATOR_CHAIN: 
+
+<!-- ##### ARG GstAggregator:num-pads ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAggregator:silent ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAggregator:sched ##### -->
+<para>
+
+</para>
+

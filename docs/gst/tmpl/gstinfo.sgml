@@ -159,11 +159,12 @@ in addition to the given string.
 
 <!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
 <para>
-
+Called at the end of a function, it simply prints out a DEBUG string of "leaving"
+in addition to the given string.
 </para>
 
-@format: 
-@args...: 
+@format: printf-stype format string
+@args...: printf arguments
 
 
 <!-- ##### MACRO GST_DEBUG ##### -->
@@ -176,75 +177,55 @@ Print out debugging information.
 @args...: printf arguments
 
 
-<!-- ##### MACRO GST_DEBUG_ENABLE_CATEGORIES ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
 <para>
-
+Add a function to the global function pointer table used for debugging.
 </para>
 
-@ptr: 
-
-
-<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
-<para>
-
-</para>
-
+@ptr: The pointer to add to the function table.
 
 
 <!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
 <para>
-
+Get the name of the given function pointer by looking up its name in the global
+function table.
 </para>
 
-@ptr: 
+@ptr: The pointer to look up.
 
 
 <!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
 <para>
-
+Print out debugging statements for a pad.
 </para>
 
-@pad: 
+@pad: The pad to debug.
 
 
 <!-- ##### MACRO GST_DEBUG_THREAD_ARGS ##### -->
 <para>
-
+Part of the colorized debug functions for threads
 </para>
 
-@id: 
+@id: The thread id.
 
 
 <!-- ##### MACRO GST_DEBUG_THREAD_FORMAT ##### -->
 <para>
-
+Part of the colorized debug functions for threads
 </para>
 
 
 
 <!-- ##### MACRO GST_DEBUG_ELEMENT ##### -->
 <para>
-
+Print out usefull debugging info of an element.
 </para>
 
-@cat: 
-@element: 
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
-<para>
-
-</para>
-
+@cat: The category of this debugging statement.
+@element: The element to debug.
+@format: A printf-like string.
+@args...: The argument for the printf-like string.
 
 
 <!-- ##### MACRO GST_ERROR ##### -->
@@ -310,6 +291,13 @@ Print out an error condition and abort the application.
 @element: 
 @object: 
 @string: 
+
+
+<!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
+<para>
+
+</para>
+
 
 
 <!-- ##### USER_FUNCTION GstInfoHandler ##### -->

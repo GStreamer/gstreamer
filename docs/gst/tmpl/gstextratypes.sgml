@@ -16,7 +16,7 @@ GstExtraTypes
 
 <!-- ##### MACRO GST_TYPE_FILENAME ##### -->
 <para>
-
+A type that can be used to indicate a filename.
 </para>
 
 

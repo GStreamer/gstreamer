@@ -313,6 +313,26 @@ Provide context for buffers
 GstMeta
 
 
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Long_Description ##### -->
+<para>
+Create a sine wave of a given frequency and volume.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Short_Description ##### -->
+Create a sine wave of a given frequency and volume. (sinesrc)
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Title ##### -->
+GstSineSrc
+
+
 <!-- ##### SECTION ./tmpl/gstsink.sgml:Long_Description ##### -->
 <para>
 The sink is the end of the filter graph. A typical sink would be an audio
@@ -504,6 +524,57 @@ g_print messages.
 @format: 
 @args...: 
 
+<!-- ##### MACRO GBaseInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GCallback ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GClassInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GEnumValue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GInstanceInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GObject ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GParamFlags ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GParamSpec ##### -->
+<para>
+
+</para>
+
+@name: 
+@value_type: 
+@flags: 
+
 <!-- ##### MACRO GST_ASYNCDISKSRC ##### -->
 <para>
 
@@ -560,13 +631,6 @@ g_print messages.
 
 @klass: 
 
-<!-- ##### MACRO GST_BUFFER ##### -->
-<para>
-
-</para>
-
-@buf: 
-
 <!-- ##### MACRO GST_BUFFER_POOL ##### -->
 <para>
 
@@ -604,6 +668,38 @@ A flag indicating that MMX instructions are supported.
 <!-- ##### MACRO GST_CPU_FLAG_SSE ##### -->
 <para>
 A flag indicating that SSE instructions are supported.
+</para>
+
+
+<!-- ##### MACRO GST_DATA ##### -->
+<para>
+
+</para>
+
+@data: 
+
+<!-- ##### MACRO GST_DATA_TYPE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+<!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_ENABLE_CATEGORIES ##### -->
+<para>
+
 </para>
 
 
@@ -1357,6 +1453,12 @@ Get the QoS function of the real pad.
 
 @pad: the real pad to query.
 
+<!-- ##### MACRO GST_SHOW_INFO ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
 
@@ -1652,6 +1754,423 @@ This macro unsets the given state on the element.
 
 </para>
 
+
+<!-- ##### MACRO GType ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GTypeFlags ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GTypeInfo ##### -->
+<para>
+
+</para>
+
+@class_size: 
+@base_init: 
+@base_finalize: 
+@class_init: 
+@class_finalize: 
+@class_data: 
+@instance_size: 
+@n_preallocs: 
+@instance_init: 
+@value_table: 
+
+<!-- ##### MACRO GValue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_BEGIN_DECLS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_CALLBACK ##### -->
+<para>
+
+</para>
+
+@f: 
+
+<!-- ##### MACRO G_E ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_END_DECLS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_IS_PARAM_SPEC_ENUM ##### -->
+<para>
+
+</para>
+
+@pspec: 
+
+<!-- ##### MACRO G_LN10 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_LN2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_MAXUINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_MAXULONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO G_OBJECT_CLASS_TYPE ##### -->
+<para>
+
+</para>
+
+@gclass: 
+
+<!-- ##### MACRO G_OBJECT_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_OBJECT_WARN_INVALID_PROPERTY_ID ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+
+<!-- ##### MACRO G_PARAM_READABLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PARAM_READWRITE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PARAM_WRITABLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PI_2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PI_4 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_NO_HOOKS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_NO_RECURSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_RUN_CLEANUP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_RUN_FIRST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_RUN_LAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SQRT2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_BOXED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_CLASS_CAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_CLASS_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_INSTANCE_CAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_INSTANCE_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_DOUBLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_ENUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FLAG_ABSTRACT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FLOAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FROM_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO G_TYPE_INSTANCE_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@o: 
+@t: 
+@c: 
+
+<!-- ##### MACRO G_TYPE_INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_LONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_NONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_PARAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_UCHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_UINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_ULONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_VALUE_HOLDS_BOOLEAN ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_CHAR ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_DOUBLE ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_FLOAT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_INT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_LONG ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_POINTER ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_STRING ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_UCHAR ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_UINT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_ULONG ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_TYPE ##### -->
+<para>
+
+</para>
+
+@v: 
 
 <!-- ##### STRUCT GstAsyncDiskSrc ##### -->
 <para>
@@ -2173,15 +2692,51 @@ Specify wether the queue blocks or not.
 </para>
 
 
+<!-- ##### ARG GstSineSrc:buffersize ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ARG GstSineSrc:channels ##### -->
 <para>
 The number of channels.
 </para>
 
 
+<!-- ##### ARG GstSineSrc:format ##### -->
+<para>
+The format ad defined in soundcard.h
+</para>
+
+
+<!-- ##### ARG GstSineSrc:freq ##### -->
+<para>
+The frequency.
+</para>
+
+
 <!-- ##### ARG GstSineSrc:frequency ##### -->
 <para>
 The fequency.
+</para>
+
+
+<!-- ##### ARG GstSineSrc:samplerate ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstSineSrc:tablesize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstSineSrc:volume ##### -->
+<para>
+The volume as a double 0.0 is silent, 1.0 is loudest.
 </para>
 
 
@@ -2357,6 +2912,794 @@ Is trigered whenever the state of an element changes
 @y2: 
 
 <!-- ##### MACRO STACK_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION g2g_object_class_find_property ##### -->
+<para>
+
+</para>
+
+@oclass: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_class_install_property ##### -->
+<para>
+
+</para>
+
+@oclass: 
+@property_id: 
+@pspec: 
+
+<!-- ##### FUNCTION g2g_object_class_list_properties ##### -->
+<para>
+
+</para>
+
+@oclass: 
+@n_properties: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@blah_varargs_stuff: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_run_dispose ##### -->
+<para>
+
+</para>
+
+@object: 
+
+<!-- ##### FUNCTION g2g_param_spec_boolean ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_double ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_enum ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@e: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_float ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_int ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_long ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_pointer ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_string ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_uint ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_ulong ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_signal_new ##### -->
+<para>
+
+</para>
+
+@signal_name: 
+@object_type: 
+@signal_flags: 
+@function_offset: 
+@accumulator: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_type_register_static ##### -->
+<para>
+
+</para>
+
+@parent_type: 
+@type_name: 
+@info: 
+@flags: 
+@Returns: 
+
+<!-- ##### MACRO g_cclosure_marshal_STRING__OBJECT_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__BOXED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__CHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__DOUBLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__ENUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__FLOAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__LONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__PARAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__UCHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__UINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__UINT_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__ULONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__VOID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_enum_register_static ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION g_list_delete_link ##### -->
+<para>
+
+</para>
+
+@list: 
+@llink: 
+@Returns: 
+
+<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_class_find_property ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_class_install_property ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_class_list_properties ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_get_property ##### -->
+<para>
+
+</para>
+
+@obj: 
+@argname: 
+@pspec: 
+
+<!-- ##### FUNCTION g_object_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO g_object_new ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_ref ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO g_object_run_dispose ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_set ##### -->
+<para>
+
+</para>
+
+@o: 
+@args...: 
+
+<!-- ##### MACRO g_object_unref ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO g_param_spec_boolean ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_double ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_enum ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_float ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_int ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_long ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_pointer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_string ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_uint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_ulong ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_signal_handler_block ##### -->
+<para>
+
+</para>
+
+@o: 
+@id: 
+
+<!-- ##### MACRO g_signal_handler_unblock ##### -->
+<para>
+
+</para>
+
+@o: 
+@id: 
+
+<!-- ##### MACRO g_signal_handlers_destroy ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### FUNCTION g_signal_list_ids ##### -->
+<para>
+
+</para>
+
+@type: 
+@n_ids: 
+@Returns: 
+
+<!-- ##### MACRO g_signal_lookup ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_signal_new ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION g_slist_delete_link ##### -->
+<para>
+
+</para>
+
+@list: 
+@llink: 
+@Returns: 
+
+<!-- ##### MACRO g_string_printf ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_string_printfa ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_class_peek_parent ##### -->
+<para>
+
+</para>
+
+@c: 
+
+<!-- ##### MACRO g_type_class_ref ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_class_unref ##### -->
+<para>
+
+</para>
+
+@c: 
+
+<!-- ##### MACRO g_type_from_name ##### -->
+<para>
+
+</para>
+
+@t: 
+
+<!-- ##### MACRO g_type_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_is_a ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_name ##### -->
+<para>
+
+</para>
+
+@t: 
+
+<!-- ##### MACRO g_type_parent ##### -->
+<para>
+
+</para>
+
+@t: 
+
+<!-- ##### MACRO g_type_register_static ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_value_copy ##### -->
+<para>
+
+</para>
+
+@src_val: 
+@dest_val: 
+
+<!-- ##### MACRO g_value_get_boolean ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_char ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_double ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_enum ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_float ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_int ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_long ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_pointer ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_string ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_uchar ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_uint ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_ulong ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_init ##### -->
+<para>
+
+</para>
+
+@value: 
+@t: 
+
+<!-- ##### MACRO g_value_set_boolean ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_char ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_double ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_enum ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_float ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_int ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_long ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_pointer ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_string ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_uchar ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_uint ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_ulong ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_unset ##### -->
+<para>
+
+</para>
+
+@val: 
+
+<!-- ##### VARIABLE gst_aggregator_details ##### -->
 <para>
 
 </para>
@@ -2584,6 +3927,14 @@ Is trigered whenever the state of an element changes
 @pool: 
 @destroy: 
 @user_data: 
+
+<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@count: 
 
 <!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
 <para>
@@ -2967,6 +4318,54 @@ Is trigered whenever the state of an element changes
 @name: 
 @Returns: 
 
+<!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__INT_INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__OBJECT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__OBJECT_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__VOID ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO gst_meta_new ##### -->
 <para>
 Create new meta data.
@@ -3116,15 +4515,6 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_pad_select ##### -->
-<para>
-
-</para>
-
-@nextpad: 
-@Varargs: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_pad_set_caps_list ##### -->
 <para>
 
@@ -3214,6 +4604,13 @@ Call the EOS function of the pad
 
 @plugin: 
 @factory: 
+
+<!-- ##### FUNCTION gst_plugin_feature_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_plugin_get_autoplug_list ##### -->
 <para>

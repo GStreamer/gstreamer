@@ -86,14 +86,14 @@ The Element is going from the NULL state to the READY state.
 
 <!-- ##### MACRO GST_STATE_READY_TO_PAUSED ##### -->
 <para>
-
+The Element is going from the READY state to the PAUSED state.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PAUSED_TO_READY ##### -->
 <para>
-
+The Element is going from the PAUSED state to the READY state.
 </para>
 
 
@@ -185,18 +185,18 @@ Get the pads of this elements.
 
 <!-- ##### MACRO GST_ELEMENT_SCHED ##### -->
 <para>
-
+Get the scheduler of this element.
 </para>
 
-@obj: 
+@obj: The element to query
 
 
 <!-- ##### MACRO GST_ELEMENT_MANAGER ##### -->
 <para>
-
+Get the manager of this element.
 </para>
 
-@obj: 
+@obj: The element to query
 
 
 <!-- ##### STRUCT GstElement ##### -->
@@ -227,6 +227,7 @@ GstElementDetails struct for the element.
 
 @feature: 
 @type: 
+@details_dynamic: 
 @details: 
 @padtemplates: 
 @numpadtemplates: 
@@ -239,6 +240,15 @@ circumstances.
 </para>
 
 @element: The element in question.
+
+
+<!-- ##### FUNCTION gst_element_class_add_padtemplate ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
 
 
 <!-- ##### MACRO gst_element_destroy ##### -->
@@ -439,6 +449,15 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_get_state ##### -->
+<para>
+
+</para>
+
+@elem: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_statename ##### -->
 <para>
 
@@ -586,7 +605,7 @@ Is trigered whenever a new pad is added to an element
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: 
+@arg1: The pad that was removed.
 
 <!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
 <para>
@@ -603,7 +622,7 @@ Is trigered whenever a new ghost pad is added to an element
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: 
+@arg1: The ghost pad that was removed.
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>

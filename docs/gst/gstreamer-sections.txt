@@ -2,6 +2,9 @@
 
 <SECTION>
 <FILE>gobject2gtk</FILE>
+<TITLE>GObject</TITLE>
+<SUBSECTION Standard>
+g_object_get_type
 GObject
 G_MAXUINT
 G_MAXULONG
@@ -30,6 +33,30 @@ G_TYPE_STRING
 G_TYPE_POINTER
 G_TYPE_BOXED
 G_TYPE_PARAM
+G_BEGIN_DECLS
+G_E
+G_END_DECLS
+G_LN10
+G_LN2
+G_PI
+G_PI_2
+G_PI_4
+G_SIGNAL_NO_HOOKS
+G_SIGNAL_NO_RECURSE
+G_SIGNAL_RUN_CLEANUP
+G_SQRT2
+G_TYPE_INSTANCE_GET_CLASS
+G_VALUE_HOLDS_BOOLEAN
+G_VALUE_HOLDS_CHAR
+G_VALUE_HOLDS_DOUBLE
+G_VALUE_HOLDS_FLOAT
+G_VALUE_HOLDS_INT
+G_VALUE_HOLDS_LONG
+G_VALUE_HOLDS_POINTER
+G_VALUE_HOLDS_STRING
+G_VALUE_HOLDS_UCHAR
+G_VALUE_HOLDS_UINT
+G_VALUE_HOLDS_ULONG
 g_cclosure_marshal_VOID__VOID
 g_cclosure_marshal_VOID__BOOLEAN
 g_cclosure_marshal_VOID__CHAR
@@ -50,6 +77,31 @@ g_cclosure_marshal_STRING__OBJECT_POINTER
 g_cclosure_marshal_VOID__UINT_POINTER
 gst_marshal_VOID__OBJECT_POINTER
 gst_marshal_VOID__INT_INT
+gst_marshal_VOID__POINTER
+gst_marshal_VOID__VOID
+gst_marshal_VOID__INT
+gst_marshal_VOID__STRING
+gst_marshal_VOID__OBJECT
+gst_marshal_VOID__BOOLEAN
+g2g_object_run_dispose
+g_list_delete_link
+g_log_domain_gstreamer
+g_object_run_dispose
+g_signal_handlers_destroy
+g_signal_list_ids
+g_slist_delete_link
+g_string_printf
+g_string_printfa
+g_type_class_peek_parent
+g_type_init
+g_type_is_a
+g_type_parent
+g_value_copy
+g_value_get_char
+g_value_get_uchar
+g_value_set_char
+g_value_set_uchar
+g_value_unset
 g_object_get_property
 g_object_set
 GType
@@ -135,9 +187,6 @@ g_value_set_string
 g_value_get_pointer
 g_value_set_pointer
 G_OBJECT
-<TITLE>GObject</TITLE>
-g_object_get_type
-<SUBSECTION Standard>
 g_cclosure_marshal_VOID__OBJECT
 G_IS_OBJECT
 G_TYPE_OBJECT
@@ -173,11 +222,12 @@ cothread_trylock
 <FILE>gst</FILE>
 <TITLE>Gst</TITLE>
 gst_init
+gst_version
 gst_main
 gst_main_quit
-GST_VERSION_MICRO
 GST_VERSION_MAJOR
 GST_VERSION_MINOR
+GST_VERSION_MICRO
 <SUBSECTION Standard>
 </SECTION>
 
@@ -200,22 +250,24 @@ gst_debug_disable_category
 GST_DEBUG_ENTER
 GST_DEBUG_LEAVE
 GST_DEBUG
-GST_DEBUG_ENABLE_CATEGORIES
 GST_DEBUG_FUNCPTR
-GST_DEBUG_ENABLED
 GST_DEBUG_FUNCPTR_NAME
 GST_DEBUG_PAD_NAME
 GST_DEBUG_THREAD_ARGS
 GST_DEBUG_THREAD_FORMAT
 GST_DEBUG_ELEMENT
-GST_DEBUG_CHAR_MODE
 GST_ERROR
 GST_ERROR_OBJECT
 GstDebugHandler
 gst_default_debug_handler
 gst_default_error_handler
+gst_debug_print_stack_trace
 GstInfoHandler
 GstErrorHandler
+<SUBSECTION Standard>
+GST_DEBUG_CHAR_MODE
+GST_DEBUG_ENABLED
+GST_DEBUG_ENABLE_CATEGORIES
 </SECTION>
 
 <SECTION>
@@ -224,6 +276,7 @@ GstErrorHandler
 GST_TYPE_FILENAME
 gst_extra_get_filename_type
 <SUBSECTION Standard>
+GST_DISABLE_LOADSAVE_REGISTRY
 </SECTION>
 
 <SECTION>
@@ -248,6 +301,7 @@ gst_schedule_enable_element
 gst_schedule_disable_element
 gst_schedule_pad_connect
 gst_schedule_pad_disconnect
+gst_schedule_pad_select
 gst_schedule_iterate
 gst_schedule_show
 <SUBSECTION Standard>
@@ -301,8 +355,19 @@ GST_ARCH_PRESETJMP
 </SECTION>
 
 <SECTION>
+<FILE>gstdata</FILE>
+<TITLE>GstData</TITLE>
+GstData
+<SUBSECTION Standard>
+GST_DATA
+GST_DATA_TYPE
+</SECTION>
+
+<SECTION>
 <FILE>gstbuffer</FILE>
 <TITLE>GstBuffer</TITLE>
+GST_IS_BUFFER
+GST_BUFFER
 GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
@@ -314,14 +379,13 @@ GST_BUFFER_MAXSIZE
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_BUFFERPOOL
 GST_BUFFER_POOL_PRIVATE
-GST_BUFFER_POOL_LOCK
 GST_BUFFER_LOCK
 GST_BUFFER_TRYLOCK
 GST_BUFFER_UNLOCK
 GST_BUFFER_PARENT
 GST_BUFFER_MAXAGE
-
-
+GST_BUFFER_COPY_FUNC
+GST_BUFFER_FREE_FUNC
 GstBufferCopyFunc
 GstBufferFreeFunc
 GstBufferFlags
@@ -335,27 +399,57 @@ gst_buffer_ref
 gst_buffer_ref_by_count
 gst_buffer_unref
 gst_buffer_destroy
+gst_buffer_is_span_fast
+gst_buffer_merge
+gst_buffer_span
+
 <SUBSECTION Standard>
-GST_BUFFER
+GST_TYPE_BUFFER
 </SECTION>
 
 <SECTION>
 <FILE>gstbufferpool</FILE>
+<TITLE>GstBufferPool</TITLE>
 GstBufferPool
-GstBufferPoolCreateFunction
-GstBufferPoolDestroyFunction
+GstBufferPoolBufferNewFunction
+GstBufferPoolDestroyHook
+GST_BUFFER_POOL_UNLOCK
+GST_BUFFER_POOL_LOCK
 gst_buffer_pool_new
-gst_buffer_pool_new_buffer
-gst_buffer_pool_destroy_buffer
 gst_buffer_pool_ref
 gst_buffer_pool_ref_by_count
 gst_buffer_pool_unref
-gst_buffer_pool_set_create_function
-gst_buffer_pool_set_destroy_function
 gst_buffer_pool_destroy
 gst_buffer_pool_get_default
+gst_buffer_pool_set_user_data
+gst_buffer_pool_get_user_data
+gst_buffer_pool_set_buffer_copy_function
+gst_buffer_pool_set_buffer_free_function
+gst_buffer_pool_set_buffer_new_function
+gst_buffer_pool_set_destroy_hook
 <SUBSECTION Standard>
 GST_BUFFER_POOL
+</SECTION>
+
+<SECTION>
+<FILE>gstevent</FILE>
+<TITLE>GstEvent</TITLE>
+GstEventType
+GST_EVENT_TYPE
+GST_EVENT_TIMESTAMP
+GstSeekType
+GST_EVENT_SEEK_TYPE
+GST_EVENT_SEEK_OFFSET
+GST_EVENT_SEEK_FLUSH
+GstEvent
+gst_event_new
+gst_event_free
+gst_event_new_seek
+gst_event_new_flush
+<SUBSECTION Standard>
+GST_EVENT
+GST_IS_EVENT
+GST_TYPE_EVENT
 </SECTION>
 
 <SECTION>
@@ -385,7 +479,7 @@ GstElement
 GstElementDetails
 GstElementFactory
 GstElementLoopFunction
-gst_element_new
+gst_element_class_add_padtemplate
 gst_element_destroy
 gst_element_set_loop_function
 gst_element_set_name
@@ -407,13 +501,13 @@ gst_element_request_pad_by_name
 gst_element_connect
 gst_element_disconnect
 gst_element_set_state
+gst_element_get_state
 gst_element_statename
 gst_element_error
 gst_element_get_factory
 gst_element_signal_eos
 gst_element_restore_thyself
 gst_elementfactory_new
-gst_elementfactory_destroy
 gst_elementfactory_add_padtemplate
 gst_elementfactory_find
 gst_elementfactory_get_list
@@ -421,16 +515,23 @@ gst_elementfactory_can_src_caps
 gst_elementfactory_can_sink_caps
 gst_elementfactory_create
 gst_elementfactory_make
-gst_elementfactory_save_thyself
-gst_elementfactory_load_thyself
 <SUBSECTION Standard>
 GstElementClass
 GST_TYPE_ELEMENT
 GST_ELEMENT
 GST_ELEMENT_CLASS
+GST_ELEMENT_FAST
+GST_ELEMENT_CLASS_FAST
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
+gst_elementfactory_get_type
+GstElementFactoryClass
+GST_TYPE_ELEMENTFACTORY
+GST_ELEMENTFACTORY
+GST_ELEMENTFACTORY_CLASS
+GST_IS_ELEMENTFACTORY
+GST_IS_ELEMENTFACTORY_CLASS
 </SECTION>
 
 
@@ -449,8 +550,6 @@ gst_autoplugfactory_find
 gst_autoplugfactory_get_list
 gst_autoplugfactory_create
 gst_autoplugfactory_make
-gst_autoplugfactory_save_thyself
-gst_autoplugfactory_load_thyself
 <SUBSECTION Standard>
 GST_AUTOPLUG
 GST_IS_AUTOPLUG
@@ -458,10 +557,18 @@ GST_TYPE_AUTOPLUG
 gst_autoplug_get_type
 GST_AUTOPLUG_CLASS
 GST_IS_AUTOPLUG_CLASS
+gst_autoplugfactory_get_type
+GstAutoplugFactoryClass
+GST_TYPE_AUTOPLUGFACTORY
+GST_AUTOPLUGFACTORY
+GST_AUTOPLUGFACTORY_CLASS
+GST_IS_AUTOPLUGFACTORY
+GST_IS_AUTOPLUGFACTORY_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstclock</FILE>
+<TITLE>GstClock</TITLE>
 GstClockTime
 GstClockTimeDiff
 GST_CLOCK_DIFF
@@ -477,9 +584,9 @@ gst_clock_current_diff
 
 <SECTION>
 <FILE>gstlog</FILE>
-GST_SHOW_INFO
 gst_info
 <SUBSECTION Standard>
+GST_SHOW_INFO
 </SECTION>
 
 <SECTION>
@@ -499,7 +606,6 @@ GST_OBJECT_PARENT
 GST_OBJECT_NAME
 GST_OBJECT_FLOATING
 GST_OBJECT_DESTROYED
-gst_object_new
 gst_object_check_uniqueness
 gst_object_set_parent
 gst_object_get_parent
@@ -511,6 +617,7 @@ gst_object_unref
 gst_object_sink
 gst_object_destroy
 gst_object_save_thyself
+gst_object_restore_thyself
 gst_object_get_path_string
 gst_class_signal_emit_by_name
 gst_class_signal_connect
@@ -522,6 +629,8 @@ GST_OBJECT
 GST_OBJECT_CLASS
 GST_IS_OBJECT
 GST_IS_OBJECT_CLASS
+GST_OBJECT_FAST
+GST_OBJECT_CLASS_FAST
 </SECTION>
 
 <SECTION>
@@ -542,18 +651,15 @@ GstPad
 GstPadChainFunction
 GstPadGetFunction
 GstPadGetRegionFunction
-GstPadQoSFunction
-GstPadEOSFunction
 GstPadNewCapsFunction
 GstPadBufferPoolFunction
 
 GstPadNegotiateReturn
 GstPadNegotiateFunction
 
-GstPadPushFunction
-GstPadPullFunction
 GstRegionType
 GstPadPullRegionFunction
+GstPadEventFunction
 
 GstPadDirection
 GstPadFlags
@@ -565,8 +671,6 @@ gst_pad_set_chain_function
 gst_pad_set_get_function
 gst_pad_set_getregion_function
 gst_pad_set_negotiate_function
-gst_pad_set_qos_function
-gst_pad_set_eos_function
 gst_pad_set_newcaps_function
 gst_pad_set_bufferpool_function
 gst_pad_set_caps
@@ -586,20 +690,25 @@ gst_pad_remove_ghost_pad
 gst_pad_get_ghost_pad_list
 gst_pad_get_peer
 gst_pad_connect
+gst_pad_try_connect
 gst_pad_disconnect
 gst_pad_push
 gst_pad_pull
 gst_pad_pullregion
 gst_pad_get_bufferpool
-gst_pad_set_eos
-gst_pad_handle_qos
-gst_pad_eos
 gst_pad_load_and_connect
 gst_pad_negotiate_proxy
 gst_pad_renegotiate
 gst_pad_get_padtemplate
 gst_pad_get_padtemplate_caps
-gst_pad_eos_func
+gst_pad_event
+gst_pad_ghost_save_thyself
+gst_pad_peek
+gst_pad_select
+gst_pad_selectv
+gst_pad_send_event
+gst_pad_set_event_function
+
 
 
 GstRealPad
@@ -614,14 +723,15 @@ GST_RPAD_BUFPEN
 GST_RPAD_CHAINFUNC
 GST_RPAD_GETFUNC
 GST_RPAD_GETREGIONFUNC
-GST_RPAD_PUSHFUNC
-GST_RPAD_PULLFUNC
 GST_RPAD_PULLREGIONFUNC
-GST_RPAD_QOSFUNC
-GST_RPAD_EOSFUNC
 GST_RPAD_NEGOTIATEFUNC
 GST_RPAD_NEWCAPSFUNC
 GST_RPAD_BUFFERPOOLFUNC
+GST_RPAD_CHAINHANDLER
+GST_RPAD_EVENTFUNC
+GST_RPAD_EVENTHANDLER
+GST_RPAD_GETHANDLER
+
 
 GST_GPAD_REALPAD
 GstGhostPad
@@ -647,24 +757,33 @@ GstPadClass
 GST_TYPE_PAD
 GST_PAD
 GST_PAD_CLASS
+GST_PAD_FAST
+GST_PAD_CLASS_FAST
 GST_IS_PAD
 GST_IS_PAD_CLASS
+GST_IS_PAD_FAST
 gst_pad_get_type
 
 GstRealPadClass
 GST_TYPE_REAL_PAD
 GST_REAL_PAD
 GST_REAL_PAD_CLASS
+GST_REAL_PAD_FAST
+GST_REAL_PAD_CLASS_FAST
 GST_IS_REAL_PAD
 GST_IS_REAL_PAD_CLASS
+GST_IS_REAL_PAD_FAST
 gst_real_pad_get_type
 
 GstGhostPadClass
 GST_TYPE_GHOST_PAD
 GST_GHOST_PAD
 GST_GHOST_PAD_CLASS
+GST_GHOST_PAD_FAST
+GST_GHOST_PAD_CLASS_FAST
 GST_IS_GHOST_PAD
 GST_IS_GHOST_PAD_CLASS
+GST_IS_GHOST_PAD_FAST
 gst_ghost_pad_get_type
 
 GstPadTemplateClass
@@ -700,6 +819,9 @@ gst_pipeline_details
 GstPlugin
 GstPluginInitFunc
 GstPluginDesc
+GST_PLUGIN_DESC
+GST_PLUGIN_DESC_DYNAMIC
+GST_PLUGIN_DESC_STATIC
 gst_plugin_new
 gst_plugin_set_name
 gst_plugin_get_name
@@ -712,20 +834,31 @@ gst_plugin_load
 gst_plugin_load_absolute
 gst_plugin_add_path
 gst_library_load
-gst_plugin_add_factory
-gst_plugin_add_type
-gst_plugin_add_autoplugger
 gst_plugin_find
 gst_plugin_get_list
-gst_plugin_get_factory_list
-gst_plugin_get_type_list
-gst_plugin_get_autoplug_list
-gst_plugin_load_elementfactory
-gst_plugin_load_typefactory
-gst_plugin_load_autoplugfactory
 gst_plugin_load_thyself
 gst_plugin_save_thyself
+gst_plugin_add_feature
+gst_plugin_get_feature_list
+gst_plugin_load_plugin
+gst_plugin_unload_all
+
 <SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
+<FILE>gstpluginfeature</FILE>
+<TITLE>GstPluginFeature</TITLE>
+gst_plugin_feature_ensure_loaded
+gst_plugin_feature_unload_thyself
+<SUBSECTION Standard>
+GstPluginFeature
+GST_PLUGIN_FEATURE
+GST_IS_PLUGIN_FEATURE
+GST_TYPE_PLUGIN_FEATURE
+gst_plugin_feature_get_type
+GST_PLUGIN_FEATURE_CLASS
+GST_IS_PLUGIN_FEATURE_CLASS
 </SECTION>
 
 <SECTION>
@@ -783,17 +916,30 @@ gst_trace_add_entry
 <SECTION>
 <FILE>gsttype</FILE>
 <TITLE>GstType</TITLE>
-GstTypeFindFunc
 GstType
-GstTypeFactory
 gst_type_register
 gst_type_find_by_mime
 gst_type_find_by_ext
 gst_type_find_by_id
 gst_type_get_list
-gst_typefactory_load_thyself
-gst_typefactory_save_thyself
 <SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
+<FILE>gsttypefactory</FILE>
+<TITLE>GstTypeFactory</TITLE>
+GstTypeFactory
+GstTypeDefinition
+GstTypeFindFunc
+gst_typefactory_new
+gst_typefactory_find
+<SUBSECTION Standard>
+GST_TYPEFACTORY
+GST_IS_TYPEFACTORY
+GST_TYPE_TYPEFACTORY
+gst_typefactory_get_type
+GST_TYPEFACTORY_CLASS
+GST_IS_TYPEFACTORY_CLASS
 </SECTION>
 
 <SECTION>
@@ -888,6 +1034,8 @@ gst_util_get_double_arg
 gst_util_get_string_arg
 gst_util_get_pointer_arg
 gst_util_dump_mem
+gst_print_element_args
+gst_print_pad_caps
 <SUBSECTION Standard>
 </SECTION>
 
@@ -922,6 +1070,31 @@ gst_cpu_get_flags
 </SECTION>
 
 <SECTION>
+<FILE>gsttimecache</FILE>
+<TITLE>GstTimeCache</TITLE>
+GstTimeCacheEntry
+GstTimeCacheGroup
+GstTimeCacheCertainty
+gst_timecache_new
+gst_timecache_get_group
+gst_timecache_new_group
+gst_timecache_set_group
+gst_timecache_set_certainty
+gst_timecache_get_certainty
+gst_timecache_add_entry
+gst_timecache_find_location
+gst_timecache_find_timestamp
+<SUBSECTION Standard>
+GstTimeCache
+GST_TIMECACHE
+GST_IS_TIMECACHE
+GST_TYPE_TIMECACHE
+gst_timecache_get_type
+GST_TIMECACHE_CLASS
+GST_IS_TIMECACHE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gststaticautoplug</FILE>
 <TITLE>GstStaticAutoplug</TITLE>
 <SUBSECTION Standard>
@@ -945,6 +1118,28 @@ GST_TYPE_STATIC_AUTOPLUG_RENDER
 gst_static_autoplug_render_get_type
 GST_STATIC_AUTOPLUG_RENDER_CLASS
 GST_IS_STATIC_AUTOPLUG_RENDER_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstaggregator</FILE>
+<TITLE>GstAggregator</TITLE>
+GstAggregatorSchedType
+<SUBSECTION Standard>
+gst_aggregator_details
+GstAggregator
+gst_aggregator_factory_init
+GST_AGGREGATOR
+GST_IS_AGGREGATOR
+GST_TYPE_AGGREGATOR
+gst_aggregator_get_type
+GST_AGGREGATOR_CLASS
+GST_IS_AGGREGATOR_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstfilesrc</FILE>
+<TITLE>GstFileSrc</TITLE>
+<SUBSECTION Standard>
 </SECTION>
 
 <SECTION>
@@ -974,6 +1169,7 @@ GST_FAKESINK
 GST_FAKESINK_CLASS
 GST_IS_FAKESINK
 GST_IS_FAKESINK_CLASS
+gst_fakesink_factory_init
 </SECTION>
 
 <SECTION>
@@ -989,6 +1185,10 @@ GST_FAKESRC
 GST_FAKESRC_CLASS
 GST_IS_FAKESRC
 GST_IS_FAKESRC_CLASS
+GstFakeSrcDataType
+GstFakeSrcFillType
+GstFakeSrcSizeType
+gst_fakesrc_factory_init
 </SECTION>
 
 <SECTION>
@@ -1060,21 +1260,6 @@ GST_QUEUE
 GST_QUEUE_CLASS
 GST_IS_QUEUE
 GST_IS_QUEUE_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gstsinesrc</FILE>
-<TITLE>GstSineSrc</TITLE>
-<SUBSECTION Standard>
-GstSineSrc
-GstSineSrcClass
-gst_sinesrc_get_type
-gst_sinesrc_factory_init
-GST_TYPE_SINESRC
-GST_SINESRC
-GST_SINESRC_CLASS
-GST_IS_SINESRC
-GST_IS_SINESRC_CLASS
 </SECTION>
 
 <SECTION>

@@ -7,7 +7,7 @@ Media library supporting arbitrary formats and filter graphs.
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GStreamer is a framework for constructing graphs of various filters
-(termed elements here) that will handly streaming media.  Any discreet
+(termed elements here) that will handle streaming media.  Any discreet
 (packetizable) media type is supported, with provisions for automatically
 determining source type.  Metadata can be passed with all data to provide
 formatting/framing information.  Plugins are heavily used to provide for
@@ -39,6 +39,16 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 
 
+<!-- ##### FUNCTION gst_version ##### -->
+<para>
+
+</para>
+
+@major: 
+@minor: 
+@micro: 
+
+
 <!-- ##### FUNCTION gst_main ##### -->
 <para>
 
@@ -53,23 +63,23 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 
 
 
-<!-- ##### MACRO GST_VERSION_MICRO ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_VERSION_MAJOR ##### -->
 <para>
-
+The major version of GStreamer at compile time
 </para>
 
 
 
 <!-- ##### MACRO GST_VERSION_MINOR ##### -->
 <para>
+The minor version of GStreamer at compile time
+</para>
 
+
+
+<!-- ##### MACRO GST_VERSION_MICRO ##### -->
+<para>
+The micro version of GStreamer at compile time
 </para>
 
 

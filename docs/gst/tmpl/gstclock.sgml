@@ -1,12 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-gstclock
+GstClock
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Clocking and synchronisation.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+GstClock provides an easy way to synchonize against a global clock.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -28,11 +28,13 @@ gstclock
 
 <!-- ##### MACRO GST_CLOCK_DIFF ##### -->
 <para>
-
+Calculate the difference between to timestamps. This does not create
+and absolute difference so the result might be negative if the first 
+timestamp is less than the second timestamp.
 </para>
 
-@s: 
-@e: 
+@s: first timestamp
+@e: second timestamp
 
 
 <!-- ##### STRUCT GstClock ##### -->

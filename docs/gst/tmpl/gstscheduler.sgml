@@ -6,7 +6,7 @@ An abstract class for plugable schedulers.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+This is a base class for custom schedulers.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -16,10 +16,11 @@ An abstract class for plugable schedulers.
 
 <!-- ##### MACRO GST_SCHED_PARENT ##### -->
 <para>
+Get the parent #GstElement of this scheduler.
 
 </para>
 
-@sched: 
+@sched: the scheduler to query.
 
 
 <!-- ##### STRUCT GstScheduleChain ##### -->
@@ -37,92 +38,93 @@ An abstract class for plugable schedulers.
 
 <!-- ##### MACRO GST_SCHEDULE_SAFETY ##### -->
 <para>
-
+Handy macro to check for a non NULL scheduler. The next block of statements
+will only be axecuted if the scheduler is not NULL.
 </para>
 
-@sched: 
+@sched: the scheduler to query.
 
 
 <!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
 <para>
-
+Fast macro to add an element to the scheduler.
 </para>
 
-@sched: 
-@element: 
+@sched: The scheduler to add the element to.
+@element: The element to add to the scheduler.
 
 
 <!-- ##### MACRO GST_SCHEDULE_REMOVE_ELEMENT ##### -->
 <para>
-
+Fast macro to remove an element from the scheduler.
 </para>
 
-@sched: 
-@element: 
+@sched: The scheduler to remove the element from.
+@element: The element to remove from the scheduler.
 
 
 <!-- ##### MACRO GST_SCHEDULE_ENABLE_ELEMENT ##### -->
 <para>
-
+Fast macro to enable the element in the scheduler.
 </para>
 
-@sched: 
-@element: 
+@sched: The scheduler.
+@element: The element to activate.
 
 
 <!-- ##### MACRO GST_SCHEDULE_DISABLE_ELEMENT ##### -->
 <para>
-
+Fast macro to disable the element.
 </para>
 
-@sched: 
-@element: 
+@sched: The scheduler.
+@element: The element to disable.
 
 
 <!-- ##### MACRO GST_SCHEDULE_LOCK_ELEMENT ##### -->
 <para>
-
+Fast macro to lock a given element.
 </para>
 
-@sched: 
-@element: 
+@sched: The scheduler.
+@element: The element to lock.
 
 
 <!-- ##### MACRO GST_SCHEDULE_UNLOCK_ELEMENT ##### -->
 <para>
-
+Fast macro to unlock a given element.
 </para>
 
-@sched: 
-@element: 
+@sched: The scheduler.
+@element: The element to unlock.
 
 
 <!-- ##### MACRO GST_SCHEDULE_PAD_CONNECT ##### -->
 <para>
-
+Fast macro to connect two pads.
 </para>
 
-@sched: 
-@srcpad: 
-@sinkpad: 
+@sched: The scheduler.
+@srcpad: The source pad.
+@sinkpad: The sink pad.
 
 
 <!-- ##### MACRO GST_SCHEDULE_PAD_DISCONNECT ##### -->
 <para>
-
+Fast macro to disconnect two pads.
 </para>
 
-@sched: 
-@srcpad: 
-@sinkpad: 
+@sched: The scheduler.
+@srcpad: The source pad.
+@sinkpad: The sink pad.
 
 
 <!-- ##### MACRO GST_SCHEDULE_ITERATE ##### -->
 <para>
-
+Fast macro to perform one iteration of the scheduler.
 </para>
 
-@sched: 
+@sched: The scheduler to iterate.
 
 
 <!-- ##### FUNCTION gst_schedule_new ##### -->
@@ -188,6 +190,16 @@ An abstract class for plugable schedulers.
 @sched: 
 @srcpad: 
 @sinkpad: 
+
+
+<!-- ##### FUNCTION gst_schedule_pad_select ##### -->
+<para>
+
+</para>
+
+@sched: 
+@padlist: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_schedule_iterate ##### -->

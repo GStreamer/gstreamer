@@ -1,0 +1,67 @@
+<!-- ##### SECTION Title ##### -->
+GstTypeFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+Add types to plugins.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+A GstTypeFactory is used to add a new type and a typedetection function 
+to a plugin.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstPluginFeature
+</para>
+
+<!-- ##### STRUCT GstTypeFactory ##### -->
+<para>
+The struct with the typefactory information.
+</para>
+
+@feature: 
+@mime: 
+@exts: 
+@typefindfunc: 
+
+<!-- ##### STRUCT GstTypeDefinition ##### -->
+<para>
+
+</para>
+
+@name: The name of this factory
+@mime: The mime type of the new type.
+@exts: The extensions of this type.
+@typefindfunc: An optional typefind function.
+
+<!-- ##### USER_FUNCTION GstTypeFindFunc ##### -->
+<para>
+This is the function that will be called when a typefind has to be
+performed by a plugin.
+</para>
+
+@buf: the buffer with media on which to perform the typefind
+@priv: private; don't touch
+@Returns: A #GstCaps structure describing the type or NULL if the
+	  type was not recognized by this function;
+
+
+<!-- ##### FUNCTION gst_typefactory_new ##### -->
+<para>
+
+</para>
+
+@definition: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_typefactory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

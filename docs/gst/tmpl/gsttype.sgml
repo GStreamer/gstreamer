@@ -49,19 +49,8 @@ valid mp3 decoder, and thus the whole point of the type system.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstTypeFactory
 </para>
-
-<!-- ##### USER_FUNCTION GstTypeFindFunc ##### -->
-<para>
-This is the function that will be called when a typefind has to be
-performed by a plugin.
-</para>
-
-@buf: the buffer with media on which to perform the typefind
-@priv: private; don't touch
-@Returns: a boolean indicating if the typedetection was successfull
-
 
 <!-- ##### STRUCT GstType ##### -->
 <para>
@@ -72,16 +61,6 @@ A type.
 @mime: 
 @exts: 
 @factories: 
-
-<!-- ##### STRUCT GstTypeFactory ##### -->
-<para>
-The struct with the typefactory information.
-</para>
-
-@feature: 
-@mime: 
-@exts: 
-@typefindfunc: 
 
 <!-- ##### FUNCTION gst_type_register ##### -->
 <para>

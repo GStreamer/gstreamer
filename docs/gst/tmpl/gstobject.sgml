@@ -238,6 +238,15 @@ Check if the object has been destroyed.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_object_restore_thyself ##### -->
+<para>
+
+</para>
+
+@object: 
+@parent: 
+
+
 <!-- ##### FUNCTION gst_object_get_path_string ##### -->
 <para>
 

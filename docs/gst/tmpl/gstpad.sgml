@@ -185,8 +185,6 @@ a start/stop timecode pair.
 @offset: the offset of the region to get
 @len: the length of the region to get
 @Returns: a #GstBuffer
-<!-- # Unused Parameters # -->
-@size: the size of the region to get
 
 
 <!-- ##### USER_FUNCTION GstPadNewCapsFunction ##### -->
@@ -250,7 +248,16 @@ a start/stop timecode pair.
 @offset: the offset of the region to get
 @len: the length of the region to get
 @Returns: a #GstBuffer
+
+
+<!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
+<para>
+
 </para>
+
+@pad: 
+@event: 
+@Returns: 
 
 
 <!-- ##### ENUM GstPadDirection ##### -->
@@ -517,6 +524,17 @@ Destroy the pad.
 
 @srcpad: 
 @sinkpad: 
+<!-- # Unused Parameters # -->
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_try_connect ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
 @Returns: 
 
 
@@ -625,6 +643,76 @@ Destroy the pad.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_pad_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@timestamp: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_ghost_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@bin: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_peek ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_select ##### -->
+<para>
+
+</para>
+
+@padlist: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_selectv ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_send_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_event_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+
+
 <!-- ##### STRUCT GstRealPad ##### -->
 <para>
 
@@ -671,10 +759,10 @@ Get the offset of the region that is being pulled.
 
 <!-- ##### MACRO GST_RPAD_SCHED ##### -->
 <para>
-
+Get the scheduler of this real pad.
 </para>
 
-@pad: 
+@pad: the real pad to query.
 
 
 <!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
@@ -768,6 +856,38 @@ Get the newcaps function from the real pad.
 <!-- ##### MACRO GST_RPAD_BUFFERPOOLFUNC ##### -->
 <para>
 Get the bufferpoolfunction from the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CHAINHANDLER ##### -->
+<para>
+Get the eventhandler function from the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_EVENTFUNC ##### -->
+<para>
+Get the event function of this real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_EVENTHANDLER ##### -->
+<para>
+Get the eventhandler function of this real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_GETHANDLER ##### -->
+<para>
+Get the gethandler function of this real pad.
 </para>
 
 @pad: the real pad to query.
