@@ -1,6 +1,11 @@
 2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
 	* configure.ac:
+	Whoops, my fault...fixed build issues
+
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
+	* configure.ac:
         Add objective-c support if running in Darwin/Mac OS X
 	* sys/Makefile.am:
         * sys/osxvideo:
