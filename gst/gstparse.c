@@ -62,8 +62,11 @@ dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
 
   /* do we know the exact srcpadname? */
   if (dc->srcpadname) {
+    GstPadTemplate *templ = gst_pad_get_pad_template (newpad);
+
     /* see if this is the one */
-    if (strcmp (gst_pad_get_name (newpad), dc->srcpadname)) {
+    if (strcmp (gst_pad_get_name (newpad), dc->srcpadname) && 
+        strcmp (gst_object_get_name (GST_OBJECT (templ)), dc->srcpadname)) {
       return;
     }
   }
@@ -315,7 +318,7 @@ make_connections (graph_t *g, GError **error)
 	      /* if the target pad has no padtemplate we will figure out a target 
 	       * pad later on */
               dc = g_new0 (dynamic_connection_t, 1);
-              dc->srcpadname = NULL;
+              dc->srcpadname = (gchar*)a->data;
               dc->target_pad = NULL;
               dc->target_element = sink;
               dc->pipeline = g->bin;
