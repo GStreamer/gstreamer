@@ -65,6 +65,7 @@ gst_x_overlay_get_type (void)
 static void
 gst_x_overlay_base_init (gpointer g_class)
 {
+  GstXOverlayClass *overlay_class = (GstXOverlayClass *) g_class;
   static gboolean initialized = FALSE;
   
   if (! initialized)
@@ -80,7 +81,7 @@ gst_x_overlay_base_init (gpointer g_class)
       initialized = TRUE;
     }
 
-  GST_X_OVERLAY_CLASS (g_class)->set_xwindow_id = NULL;
+  overlay_class->set_xwindow_id = NULL;
 }
 
 /**
