@@ -5255,6 +5255,14 @@ must be defined to activate the tracing functionality.
 @Returns: 
 @count: 
 
+<!-- ##### FUNCTION gst_clock_activate ##### -->
+<para>
+
+</para>
+
+@clock: 
+@active: 
+
 <!-- ##### FUNCTION gst_clock_current_diff ##### -->
 <para>
 

@@ -14,13 +14,18 @@
     </para>
  
     <para>
-      GStreamer's development framework makes it possible to write any 
-      streaming multimedia application. The framework includes several
-      components to build a full featured media player capable of playing
-      MPEG1, MPEG2, AVI, MP3, WAV, AU, ...
+      GStreamer's development framework makes it possible to write any type of
+      streaming multimedia application. The GStreamer framework is designed to make it easy to
+      write applications that handle either audio or video or both. The pipeline design is made to have 
+      no extra overhead above what the applied filters induce. This makes GStreamer a good framework for designing
+      even high-end audio applications which puts high demands on latency. 
     </para> 
 
     <para>
+      One of the the most obvious uses of GStreamer is using it to build a media player.
+      GStreamer already includes components for building a media player that can support a
+      very wide variety of formats including mp3, Ogg Vorbis, Mpeg1, Mpeg2, Avi, Quicktime, mod
+      and so on. 
       GStreamer, however, is much more than just another media player. Its
       main advantages are that the pluggable components also make it possible
       to write a full fledged video or audio editing application. 
