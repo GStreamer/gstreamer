@@ -436,7 +436,7 @@ gst_ac3parse_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "ac3parse", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "ac3parse", GST_RANK_NONE,
           GST_TYPE_AC3PARSE)) {
     return FALSE;
   }
