@@ -59,11 +59,14 @@ struct _GstCaps {
 
   guint16 flags;
   GPtrArray *structs;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstStaticCaps {
   GstCaps caps;
   const char *string;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                    gst_caps_get_type                              (void) G_GNUC_CONST;

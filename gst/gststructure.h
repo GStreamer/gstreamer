@@ -41,6 +41,8 @@ struct _GstStructure {
   GQuark name;
 
   GArray *fields;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                   gst_structure_get_type             (void) G_GNUC_CONST;
