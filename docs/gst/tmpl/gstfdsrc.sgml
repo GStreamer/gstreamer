@@ -19,11 +19,4 @@ Read buffers from a file descriptor.
 
 </para>
 
-@element: 
-@srcpad: 
-@fd: 
-@curoffset: 
-@blocksize: 
-@timeout: 
-@seq: 
 

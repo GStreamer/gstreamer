@@ -19,7 +19,4 @@ Write data to a file descriptor.
 
 </para>
 
-@element: 
-@sinkpad: 
-@fd: 
 

@@ -19,12 +19,6 @@ GstShaper
 
 </para>
 
-@element: 
-@connections: 
-@nconnections: 
-@policy: 
-@silent: 
-@last_message: 
 
 <!-- ##### ENUM GstShaperPolicyType ##### -->
 <para>

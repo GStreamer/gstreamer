@@ -19,13 +19,4 @@ GstMD5Sink
 
 </para>
 
-@element: 
-@A: 
-@B: 
-@C: 
-@D: 
-@total: 
-@buflen: 
-@buffer: 
-@md5: 
 

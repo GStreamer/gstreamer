@@ -19,11 +19,6 @@ GstFileSink
 
 </para>
 
-@element: 
-@filename: 
-@uri: 
-@file: 
-@data_written: 
 
 <!-- ##### ENUM GstFileSinkFlags ##### -->
 <para>

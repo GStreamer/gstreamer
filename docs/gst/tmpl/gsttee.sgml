@@ -19,8 +19,4 @@ A tee can be used to split out the filter graph.
 
 </para>
 
-@element: 
-@sinkpad: 
-@silent: 
-@last_message: 
 
