@@ -27,7 +27,7 @@ AC_DEFUN(AS_SLURP_FFMPEG,
   if test ! -e ffmpeg/README; then
     # check out cvs code
     AC_MSG_NOTICE(checking out ffmpeg cvs code from $2 into $1)
-    cvs -Q -d:pserver:anonymous@cvs.ffmpeg.sourceforge.net:/cvsroot/ffmpeg co -D '$2' ffmpeg || FAILED=yes
+    cvs -Q -z4 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg co -D '$2' ffmpeg || FAILED=yes
   else
     # compare against Tag file and see if it needs updating
     if test "`cat Tag`" == "$2"; then
@@ -35,7 +35,7 @@ AC_DEFUN(AS_SLURP_FFMPEG,
     else
       cd ffmpeg 
       AC_MSG_NOTICE(updating ffmpeg cvs code to $2)
-      cvs -Q update -dP -D '$2' || FAILED=yes
+      cvs -Q -z4 update -dP -D '$2' || FAILED=yes
       cd ..
     fi
   fi
