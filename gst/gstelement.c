@@ -580,6 +580,7 @@ gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
 
+    /* hi, please use me to get your buffer overflow */
     if (!strcmp (padtempl->name_template, name))
       return padtempl;
 
@@ -718,6 +719,7 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 
   if (strstr (name, "%d")) {
       templ = gst_element_get_padtemplate_by_name (element, name);
+      templ_found = (templ != NULL);
       req_name = NULL;
   } else {
       list = gst_element_get_padtemplate_list(element);
