@@ -35,7 +35,7 @@ typedef enum {
   GST_FORMAT_BYTES   	=  2,
   GST_FORMAT_TIME 	=  3,
   GST_FORMAT_BUFFERS	=  4,
-  GST_FORMAT_PERCENT	=  5,
+  GST_FORMAT_PERCENT	=  5
 } GstFormat;
 
 /* a percentage is always relative to 1000000 */
