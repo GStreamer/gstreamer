@@ -23,7 +23,7 @@
 
 #include <mpeg2dec/mm_accel.h>
 #include <mpeg2dec/video_out.h>
-#include "gstmpeg2dec.h"
+#include "gstmpeg2deccvs.h"
 
 /* elementfactory information */
 static GstElementDetails gst_mpeg2dec_details = {
@@ -51,6 +51,13 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "mpeg2dec_src",
+    "video/raw",
+      "format",    GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+      "width",     GST_PROPS_INT_RANGE (16, 4096),
+      "height",    GST_PROPS_INT_RANGE (16, 4096)
+  ),
   GST_CAPS_NEW (
     "mpeg2dec_src",
     "video/raw",
@@ -196,8 +203,14 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, mpeg2_info_t *info)
   out = GST_BUFFER_DATA (outbuf);
 
   buf[0] = out;
-  buf[1] = buf[0] + size;
-  buf[2] = buf[1] + size/4;
+  if (mpeg2dec->format == MPEG2DEC_FORMAT_I420) {
+    buf[1] = buf[0] + size;
+    buf[2] = buf[1] + size/4;
+  }
+  else {
+    buf[2] = buf[0] + size;
+    buf[1] = buf[2] + size/4;
+  }
 
   gst_buffer_ref (outbuf);
   mpeg2_set_buf (mpeg2dec->decoder, buf, outbuf);
@@ -207,6 +220,53 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, mpeg2_info_t *info)
   else
     GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_KEY_UNIT);
 
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
+{
+  GstCaps *allowed;
+  GstCaps *trylist;
+
+  /* we what we are allowed to do */
+  allowed = gst_pad_get_allowed_caps (mpeg2dec->srcpad);
+
+  /* try to fix our height */
+  trylist = gst_caps_intersect (allowed,
+                                GST_CAPS_NEW (
+                                  "mpeg2dec_negotiate",
+                                     "video/raw",
+                          	     "width",  GST_PROPS_INT (mpeg2dec->width),
+ 	                             "height", GST_PROPS_INT (mpeg2dec->height)
+                                ));
+  /* prepare for looping */
+  trylist = gst_caps_normalize (trylist);
+
+  while (trylist) {
+    GstCaps *to_try = gst_caps_copy_1 (trylist);
+
+    /* try each format */
+    if (gst_pad_try_set_caps (mpeg2dec->srcpad, to_try)) {
+      guint32 fourcc;
+
+      /* it worked, try to find what it was again */
+      gst_caps_get_fourcc_int (to_try, "format", &fourcc);
+								      
+      if (fourcc == GST_STR_FOURCC ("I420")) {
+	mpeg2dec->format = MPEG2DEC_FORMAT_I420;
+      }
+      else {
+	mpeg2dec->format = MPEG2DEC_FORMAT_YV12;
+      }
+      break;
+    }
+    trylist = trylist->next;
+  }
+  /* oops list exhausted an nothing was found... */
+  if (!trylist) {
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -270,14 +330,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	mpeg2dec->height = info->sequence->height;
 	mpeg2dec->total_frames = 0;
 
-        gst_pad_try_set_caps (mpeg2dec->srcpad,
-                    GST_CAPS_NEW (
-                      "mpeg2dec_caps",
-                      "video/raw",
-                        "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-                          "width",  GST_PROPS_INT (mpeg2dec->width),
-                          "height", GST_PROPS_INT (mpeg2dec->height)
-                    ));
+	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
+          gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
+	  return;
+	}
 
 	gst_mpeg2dec_alloc_buffer (mpeg2dec, info);
         break;
@@ -605,7 +661,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       mpeg2dec->closed = FALSE;
 
       /* reset the initial video state */
-      mpeg2dec->format = -1;
+      mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
       mpeg2dec->width = -1;
       mpeg2dec->height = -1;
       mpeg2dec->first = TRUE;

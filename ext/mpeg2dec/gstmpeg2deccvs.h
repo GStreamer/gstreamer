@@ -46,31 +46,39 @@ extern "C" {
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
+typedef enum
+{
+  MPEG2DEC_FORMAT_NONE,
+  MPEG2DEC_FORMAT_I420,
+  MPEG2DEC_FORMAT_YV12,
+} Mpeg2decFormat;
+
 struct _GstMpeg2dec {
-  GstElement element;
+  GstElement 	 element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad 	*sinkpad,
+  		*srcpad;
   GstBufferPool *peerpool;
 
-  mpeg2dec_t *decoder;
-  guint32 accel;
-  gboolean closed;
+  mpeg2dec_t 	*decoder;
+  guint32	 accel;
+  gboolean	 closed;
 
   /* the timestamp of the next frame */
-  gboolean first;
-  gboolean discont_pending;
-  gint64 next_time;
-  gint64 last_PTS;
-  gint frames_per_PTS;
-  gint adjust;
+  gboolean	 first;
+  gboolean	 discont_pending;
+  gint64	 next_time;
+  gint64	 last_PTS;
+  gint		 frames_per_PTS;
+  gint		 adjust;
 
   /* video state */
-  gint format;
-  gint width;
-  gint height;
-  gint frame_rate_code;
-  gint64 total_frames;
+  Mpeg2decFormat format;
+  gint		 width;
+  gint		 height;
+  gint		 frame_rate_code;
+  gint64	 total_frames;
 };
 
 struct _GstMpeg2decClass {
