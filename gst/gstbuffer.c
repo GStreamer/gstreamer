@@ -160,6 +160,7 @@ gst_buffer_create_sub_loc (GST_WHERE_ARGS_
   GstBuffer *buffer;
 
   g_return_val_if_fail (parent != NULL, NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(parent) > 0, NULL);
   g_return_val_if_fail (size > 0, NULL);
   g_return_val_if_fail ((offset+size) <= parent->size, NULL);
 
@@ -238,6 +239,8 @@ gst_buffer_append_loc (GST_WHERE_ARGS_
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (append != NULL, NULL);
   g_return_val_if_fail (buffer->pool == NULL, NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0, NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(append) > 0, NULL);
 
   GST_INFO (GST_CAT_BUFFER,"appending buffers %p and %p",buffer,append);
 
@@ -304,7 +307,7 @@ gst_buffer_destroy (GstBuffer *buffer)
 
 #ifdef GST_DEBUG_ENABLED
   // make it hard to reuse by mistake
-  memset (buffer, ~0, sizeof (GstBuffer));
+  memset (buffer, 0, sizeof (GstBuffer));
 #endif
 
   // remove it entirely from memory
@@ -342,7 +345,7 @@ void gst_buffer_print_live ()
     GstBuffer *buf = elem->data;
     g_print ("%sbuffer %p created %s:%d data=%p size=0x%x\n",
 	     buf->parent? "sub":"   ",
-	     buf, (!buf->file || buf->file == ~0)? "?" : buf->file,
+	     buf, (!buf->file || buf->file == NULL)? "?" : buf->file,
 	     buf->line, buf->data, buf->size);
   }
 
@@ -364,14 +367,13 @@ void
 gst_buffer_ref (GstBuffer *buffer) 
 {
   g_return_if_fail (buffer != NULL);
+  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
   GST_INFO (GST_CAT_BUFFER, "ref buffer %p\n", buffer);
 
 #ifdef HAVE_ATOMIC_H
-  //g_return_if_fail(atomic_read(&(buffer->refcount)) > 0);
   atomic_inc (&(buffer->refcount));
 #else
-  g_return_if_fail (buffer->refcount > 0);
   GST_BUFFER_LOCK (buffer);
   buffer->refcount++;
   GST_BUFFER_UNLOCK (buffer);
@@ -391,14 +393,13 @@ gst_buffer_unref (GstBuffer *buffer)
   gint zero;
 
   g_return_if_fail (buffer != NULL);
+  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
   GST_INFO (GST_CAT_BUFFER, "unref buffer %p\n", buffer);
 
 #ifdef HAVE_ATOMIC_H
-  g_return_if_fail (atomic_read (&(buffer->refcount)) > 0);
   zero = atomic_dec_and_test (&(buffer->refcount));
 #else
-  g_return_if_fail (buffer->refcount > 0);
   GST_BUFFER_LOCK (buffer);
   buffer->refcount--;
   zero = (buffer->refcount == 0);
@@ -423,6 +424,8 @@ GstBuffer *
 gst_buffer_copy_loc (GST_WHERE_ARGS_ GstBuffer *buffer)
 {
   GstBuffer *newbuf;
+
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0, NULL);
 
   // if a copy function exists, use it, else copy the bytes
   if (buffer->copy != NULL) {
@@ -463,6 +466,9 @@ gst_buffer_copy_loc (GST_WHERE_ARGS_ GstBuffer *buffer)
 gboolean
 gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
 {
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf1) > 0, FALSE);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf2) > 0, FALSE);
+
   return (buf1->parent && buf2->parent && 
 	  (buf1->parent == buf2->parent) &&
           ((buf1->data + buf1->size) == buf2->data));
@@ -493,6 +499,9 @@ gst_buffer_span_loc (GST_WHERE_ARGS_
 		     GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 {
   GstBuffer *newbuf;
+
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf1) > 0, NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf2) > 0, NULL);
 
   // make sure buf1 has a lower address than buf2
   if (buf1->data > buf2->data) {
