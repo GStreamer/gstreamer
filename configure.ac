@@ -206,6 +206,9 @@ main() {atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0;
   ])
 fi
 
+dnl Check for ucontext.h
+AC_CHECK_HEADER(ucontext.h, AC_DEFINE(HAVE_UCONTEXT_H, 1, [defined if we have ucontext.h]))
+
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
