@@ -133,7 +133,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 /sbin/ldconfig
 
 %files
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
@@ -158,6 +158,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 
 %files tools
+%defattr(-, root, root, -)
 %{_bindir}/gst-xmlinspect
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
@@ -176,9 +177,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_mandir}/man1/gst-md5sum.*
 %{_mandir}/man1/gst-register.*
 
-
 %files devel
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %dir %{_includedir}/%{name}-%{majorminor}
 %dir %{_includedir}/%{name}-%{majorminor}/gst
 %{_includedir}/%{name}-%{majorminor}/gst/*.h
