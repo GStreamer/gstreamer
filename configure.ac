@@ -305,9 +305,9 @@ if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
 
-dnl if test "x$USE_DEBUG" = xyes; then
-dnl   CFLAGS="$CFLAGS -g"
-dnl fi
+if test "x$USE_DEBUG" = xyes; then
+   GST_INT_CFLAGS="$GST_INT_CFLAGS -g"
+fi
 
 if test "x$USE_PROFILING" = xyes; then
 dnl  CFLAGS="$CFLAGS -pg -fprofile-arcs"
@@ -379,7 +379,7 @@ AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
 GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer.la"
-GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
+GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")

@@ -105,7 +105,8 @@ cp $RPM_BUILD_DIR/%{name}-%{version}/docs/devhelp/*.devhelp $RPM_BUILD_ROOT/usr/
 
 %post
 /sbin/ldconfig
-%{_prefix}/bin/gst-register --gst-mask=0
+# registry handling is now done automatically
+# %{_prefix}/bin/gst-register --gst-mask=0
 
 %post devel
 # adding devhelp links to work around different base not working
@@ -118,12 +119,13 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING 
+%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-register
+%{_bindir}/gst-feedback
 %{_libdir}/libgstreamer-%{version}.so.*
 %{_libdir}/gst/libgstautoplugcache*.so*
 %{_libdir}/gst/libgstautoplugger*.so*
@@ -176,7 +178,6 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstevent.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gst.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstinfo.html
-# %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstpad-template.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstparse.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstplugin.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstprops.html

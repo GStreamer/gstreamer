@@ -1,4 +1,4 @@
-GStreamer use a *large* array of tools and libraries, most of which are
+GStreamer uses a *large* array of tools and libraries, most of which are
 optional.  We have attempted to make sure that any code that depends on
 optional libraries doesn't get built unless you have those libraries.  If
 you find this not to be the case, please, let us know by filing a bug
@@ -7,92 +7,45 @@ report at http://sourceforge.net/bugs/?group_id=1936.
 
 Required libraries:
 ===================
-the latest glib2, currently at v1.3.13
+
+the latest glib2, currently at v2.0.4
 libxml2         (also called gnome-xml, available from http://xmlsoft.org/)
 
 These libraries are all central parts of gnome, and are available from the
 ftp.gnome.org or its mirrors, amongst other places.
 
+
 Optional libraries:
 ===================
-gdk_pixbuf
-libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
-libglade	(for gstplay, gsteditor)
-libHermes	(for colorspace conversions; you need this for any video work)
-			http://www.clanlib.org/hermes/
-libghttp	(for httpsrc)
-			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
-libaudiofile    (for afsrc/afsink)
-			http://oss.sgi.com/projects/audiofile/
-libmad          (for the mad mp3 decoder plugin)
-			http://www.mars.org/home/rob/proj/mpeg/
-libjpeg         (for jpegenc/jpegdec)
-			http://www.ijg.org/
-libopenquicktime (for the QT plugin)
-			http://sourceforge.net/projects/openquicktime/
-libXv		(for videosink)
-libxaudio	(for xa mp3 decoder)
-			http://www.xaudio.com/
-libvorbis	(for vorbisenc, vorbisdec)
-			http://www.xiph.org/ogg/vorbis/index.html
-libcdparanoia	(for cdparanoia ripper)
-			http://www.xiph.org/paranoia/index.html
-liblame		(for lame mp3 encoder)
-			http://www.mp3dev.org/mp3/
-libshout	(for the shoutcast plugin)
-			http://www.icecast.org
-libasound	(for the alsa src/sink plugin)
-			http://alsa-project.org/
-ortp		(for the rtp sink plugin)
-			http://www.linphone.org/ortp/
-aalib		(for the aa sink plugin)
-			http://aa-project.sourceforge.net/aalib/
-aRts		(for the arts plugin wrapper, and the artsd sink)
-			http://www.arts-project.org
-raw1394/linux1394	(for the dv plugin)
-			http://linux1394.sourceforge.net
-libdvdread	(for the dvdsrc)
-			http://www.dtek.chalmers.se/groups/dvd/
-			(optional: libcss for encrypted DVDs)
-libesound	(for the esd sink 
-			ftp.gnome.org/pub/GNOME/stable/sources/esound)
-gnome-vfs	(for the gnome-vfs src)
-libgsm		(for the gsm plugin)
-			http://kbs.cs.tu-berlin.de/~jutta/toast.html
-sdl		(for the sdl sink)
-			http://www.libsdl.org
-xmms		(for the xmms plugins wrapper)
-			http://www.xmms.org
-mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
-			http://libmpeg2.sourceforge.net/
-			and http://liba52.sourceforge.net/
-avifile		(for the avi windows decoder plugins)
-                        http://avifile.sourceforge.net/
-			you might want to get the windows libraries 
-			from http://divx.euro.ru/ and put the .dll files 
-			in /usr/lib/win32/
-flac		(for the FLAC lossless audio format)
-			http://flac.sourceforge.net
+
+The vast number of optional libraries that can be used for plugins are
+listed in the REQUIREMENTS document in the gst-plugins package.
+
+
+Required tools:
+===============
 
 An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):
 
-Required tools:
-===============
 autoconf 2.52
 automake 1.5
 libtool v1.4 or better
-pkgconfig 0.8.0 (http://www.freedesktop.org/software/pkgconfig/)
+pkgconfig 0.9.0 (http://www.freedesktop.org/software/pkgconfig/)
+
 
 Optional tools:
 ===============
+
 gtkdoc
 db2html
 fig2dev
 xsltproc
 
+
 Optional debian packages:
 =========================
+
 (This is an incomplete list, made only of problems which have been reported,
 rather than by an audit.)
 task-helix-gnome-dev   OR libgnome-dev
