@@ -398,7 +398,7 @@ NOTES:
 - We probably need to set a limit on the maximum number of
   recursions and size of the bufpen list.
 
-- elements run non-preemtively, a group is done scheduling when all
+- elements run non-preemptively, a group is done scheduling when all
   elements in that group complete their chain/loop function.
 
 - can we only have a stack overflow when there is a loop in the
@@ -424,11 +424,59 @@ NOTES:
   The time it takes for the first buffer to arrive at osssink equals
   the time needed to decode the N-1 other buffers.
 
-  Of course, given the right buffersize for filesrc N can be reduced
+  Of course, given the right buffersize for filesrc, N can be reduced
   to 1. mad can also suggest a buffersize to filesrc with the 
   BUFFER_SIZE event.
 
 
+
+Ungrouping
+----------
+
+Ungrouping might be the hardest part. especially in the case where
+an element is still running (state changes and pipeline modifications
+in element callbacks).
+
+Ungrouping involves two tasks:
+
+ - breaking up groups. This can happen when a pad connection is broken
+   so that the group contains two clusters of unconnected elements.
+ - breaking up chains. This happens when a pad connection is broken
+   so that the chains contains two clusters of unconnected groups.
+
+
+case1
+-----
+
+The most simple case is where two elements are disconnected and one
+of the elements does not belong to a group. In this case, we don't need
+to do anything at all.
+
+case2
+-----
+
+if the elements are part of different groups, we need to check if the
+chain needs to be broken. A chain is broken if it contains two sets
+of unconnected groups.
+
+To test this case, we will create a new chain and recursively move
+one of the groups with all of its connected groups to it. If the
+origial chain is empty after this operation, there was still a connection
+and the new chain replaces the old one, else we end up with two chains.
+
+case3
+-----
+
+When the elements are part of the same group we check if both elements
+still have a connection to some other element in that group. The elements
+without connections are removed from the group. 
+
+It is possible that when an element still has a connection with some other
+element in the group, the group has to be split up anyway. This can happen
+in fakesrc ! indentity ! identity ! fakesink when we break the connection
+between the two identity elements. We have to be careful here in the cothread
+case that we don't take away the running cothread from under the elements.
+In the non-cothread case we can just move the elements to another new group.
 
 
 
