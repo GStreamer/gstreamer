@@ -982,7 +982,7 @@ gst_mad_check_restart (GstMad * mad)
  * This code has been kindly relicensed to LGPL by Thibaut Mattern and 
  * Bastien Nocera
  */
-#define BE_32(x) GINT32_FROM_BE(*(gint*)(x))
+#define BE_32(x) GST_READ_UINT32_BE(x)
 
 #define FOURCC_TAG( ch0, ch1, ch2, ch3 )		\
 	( (long)(unsigned char)(ch3) |			\
