@@ -523,6 +523,8 @@ gst_audioscale_init (Audioscale * audioscale)
   audioscale->offsets = NULL;
   audioscale->gst_resample_offset = 0;
   audioscale->increase = FALSE;
+
+  GST_FLAG_SET (audioscale, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -562,6 +564,45 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
   if (audioscale->passthru && audioscale->num_iterations == 0) {
     gst_pad_push (audioscale->srcpad, GST_DATA (buf));
     return;
+  }
+
+  if (GST_IS_EVENT (_data)) {
+    GstEvent *e = GST_EVENT (_data);
+
+    switch (GST_EVENT_TYPE (e)) {
+      case GST_EVENT_DISCONTINUOUS:{
+        gint64 new_off;
+
+        if (gst_event_discont_get_value (e, GST_FORMAT_TIME, &new_off)) {
+          /* time -> out-sample */
+          new_off = new_off * audioscale->gst_resample->o_rate / GST_SECOND;
+        } else if (gst_event_discont_get_value (e,
+                GST_FORMAT_DEFAULT, &new_off)) {
+          /* in-sample -> out-sample */
+          new_off *= audioscale->gst_resample->o_rate;
+          new_off /= audioscale->gst_resample->i_rate;
+        } else if (gst_event_discont_get_value (e, GST_FORMAT_BYTES, &new_off)) {
+          new_off /= audioscale->gst_resample->channels;
+          new_off /=
+              (audioscale->gst_resample->format == GST_RESAMPLE_S16) ? 2 : 4;
+          new_off *= audioscale->gst_resample->o_rate;
+          new_off /= audioscale->gst_resample->i_rate;
+        } else {
+          /* *sigh* */
+          new_off = 0;
+        }
+        audioscale->gst_resample_offset = new_off;
+        /* fall-through */
+      }
+      default:
+        gst_pad_event_default (pad, e);
+        break;
+    }
+    return;
+  } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    /* update time for out-sample */
+    audioscale->gst_resample_offset = GST_BUFFER_TIMESTAMP (buf) *
+        audioscale->gst_resample->o_rate / GST_SECOND;
   }
 
   data = GST_BUFFER_DATA (buf);
