@@ -1,3 +1,9 @@
+=== release 0.8.3 ===
+
+2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: releasing 0.8.3, "Water"
+
 2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/xvimage/xvimagesink.c:
@@ -1013,7 +1019,7 @@
 	(gst_riff_read_strf_auds_with_data):
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
 	(gst_avi_demux_add_stream), (gst_avi_demux_stream_header):
-	Make sure we don't create 0 sized subbufers in riff-read.
+	Make sure we don't create 0 sized subbuffers in riff-read.
 	Signal the no more pads signal after reading the avi header.
 
 2004-07-16  Wim Taymans  <wim@fluendo.com>
@@ -1128,8 +1134,8 @@
 2004-07-12  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_get_capslist),
 	(gst_gdk_pixbuf_chain):
-	  Add svg and pcx to template caps, and ensure that getcaps returns a subset
-	  of the template caps.
+	  Add svg and pcx to template caps, and ensure that getcaps returns a
+	  subset of the template caps.
 	  Copy each row manually for output, as gdkpixbuf may pad the
 	  rowstride to a 32-bit word boundary.
 
@@ -1384,7 +1390,7 @@
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_flush_decoder):
 	* ext/mpeg2dec/gstmpeg2dec.h:
 	  various debugging improvements.  Reset stream to next picture
-	  instead of sequence header, otherwise seeks cannot work. */
+	  instead of sequence header, otherwise seeks cannot work.
 
 2004-07-07  Wim Taymans  <wim@fluendo.com>
 
@@ -1706,15 +1712,6 @@
 	(gst_v4lsrc_get_property):
 	* sys/v4l/gstv4lsrc.h:
 	  add latency offset property 
-
-2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_queue_buffer):
-	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
-	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init), (gst_v4lsrc_init),
-	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
-	(gst_v4lsrc_get_property):
-	* sys/v4l/gstv4lsrc.h:
 
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
