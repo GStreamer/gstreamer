@@ -1,3 +1,15 @@
+2004-07-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_add), (gst_multifdsink_remove),
+	(gst_multifdsink_clear), (gst_multifdsink_get_stats),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients):
+	* gst/tcp/gstmultifdsink.h:
+	Recover from a select with a bad file descriptor by removing
+	the client.
+
 2004-07-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

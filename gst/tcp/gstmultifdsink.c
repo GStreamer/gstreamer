@@ -302,9 +302,12 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   GstTCPClient *client;
   GTimeVal now;
 
+  GST_DEBUG_OBJECT (sink, "adding client on fd %d", fd);
+
   /* create client datastructure */
   client = g_new0 (GstTCPClient, 1);
   client->fd = fd;
+  client->bad = FALSE;
   client->bufpos = -1;
   client->bufoffset = 0;
   client->sending = NULL;
@@ -340,6 +343,8 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
 {
   GList *clients;
 
+  GST_DEBUG_OBJECT (sink, "removing client on fd %d", fd);
+
   g_mutex_lock (sink->clientslock);
   /* loop over the clients to find the one with the fd */
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
@@ -358,6 +363,8 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
 void
 gst_multifdsink_clear (GstMultiFdSink * sink)
 {
+  GST_DEBUG_OBJECT (sink, "clearing all clients");
+
   g_mutex_lock (sink->clientslock);
   while (sink->clients) {
     GstTCPClient *client;
@@ -918,41 +925,70 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 
     /* < 0 is an error, 0 just means a timeout happened */
     if (result < 0) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
-          ("select failed: %s", g_strerror (errno)));
-      return;
-    }
+      GST_WARNING_OBJECT (sink, "select failed: %s", g_strerror (errno));
+      if (errno == EBADF) {
+        /* ok, so one of the fds is invalid. We loop over them to find one
+         * that gives an error to the F_GETFL fcntl. 
+         */
+        g_mutex_lock (sink->clientslock);
+        for (clients = sink->clients; clients; clients = g_list_next (clients)) {
+          GstTCPClient *client;
+          int fd;
+          long flags;
+          int res;
 
-    GST_LOG_OBJECT (sink, "%d sockets had action", result);
-    GST_LOG_OBJECT (sink, "done select on server/client fds for reads");
-    gst_multifdsink_debug_fdset (sink, &testreadfds);
-    GST_LOG_OBJECT (sink, "done select on client fds for writes");
-    gst_multifdsink_debug_fdset (sink, &testwritefds);
+          client = (GstTCPClient *) clients->data;
+          fd = client->fd;
 
-    /* read all commands */
-    if (FD_ISSET (READ_SOCKET (sink), &testreadfds)) {
-      while (TRUE) {
-        gchar command;
-        int res;
-
-        READ_COMMAND (sink, command, res);
-        if (res < 0) {
-          /* no more commands */
-          break;
+          res = fcntl (fd, F_GETFL, &flags);
+          if (res == -1) {
+            GST_WARNING_OBJECT (sink, "fnctl failed for %d, marking as bad: %s",
+                fd, g_strerror (errno));
+            if (errno == EBADF) {
+              client->bad = TRUE;
+            }
+          }
         }
+        g_mutex_unlock (sink->clientslock);
+      } else if (errno == EINTR) {
+        try_again = TRUE;
+      } else {
+        GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
+            ("select failed: %s", g_strerror (errno)));
+        return;
+      }
+    } else {
+      GST_LOG_OBJECT (sink, "%d sockets had action", result);
+      GST_LOG_OBJECT (sink, "done select on server/client fds for reads");
+      gst_multifdsink_debug_fdset (sink, &testreadfds);
+      GST_LOG_OBJECT (sink, "done select on client fds for writes");
+      gst_multifdsink_debug_fdset (sink, &testwritefds);
 
-        switch (command) {
-          case CONTROL_RESTART:
-            /* need to restart the select call as the fd_set changed */
-            try_again = TRUE;
+      /* read all commands */
+      if (FD_ISSET (READ_SOCKET (sink), &testreadfds)) {
+        while (TRUE) {
+          gchar command;
+          int res;
+
+          READ_COMMAND (sink, command, res);
+          if (res < 0) {
+            /* no more commands */
             break;
-          case CONTROL_STOP:
-            /* stop this function */
-            stop = TRUE;
-            break;
-          default:
-            g_warning ("multifdsink: unknown control message received");
-            break;
+          }
+
+          switch (command) {
+            case CONTROL_RESTART:
+              /* need to restart the select call as the fd_set changed */
+              try_again = TRUE;
+              break;
+            case CONTROL_STOP:
+              /* stop this function */
+              stop = TRUE;
+              break;
+            default:
+              g_warning ("multifdsink: unknown control message received");
+              break;
+          }
         }
       }
     }
@@ -971,6 +1007,11 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
     int fd;
 
     client = (GstTCPClient *) clients->data;
+    if (client->bad) {
+      error = g_list_prepend (error, client);
+      continue;
+    }
+
     fd = client->fd;
 
     if (FD_ISSET (fd, &testreadfds)) {

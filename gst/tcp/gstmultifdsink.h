@@ -81,6 +81,8 @@ typedef struct {
   int fd;
   gint bufpos;                  /* position of this client in the global queue */
 
+  gboolean bad;
+
   GList *sending;               /* the buffers we need to send */
   gint bufoffset;               /* offset in the first buffer */
 
