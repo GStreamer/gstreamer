@@ -164,7 +164,7 @@ static void
 gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data)
 {
   if (GST_IS_EVENT (data)) {
-    gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
+    gst_pad_event_default (mpeg_parse->sinkpad, GST_EVENT (data));
   }
   else {
     guint64 size = GST_BUFFER_SIZE (data);
@@ -251,7 +251,6 @@ gst_mpeg_parse_loop (GstElement *element)
   GstData *data;
   guint id;
   gboolean mpeg2;
-  gboolean to_send = TRUE;
 
   data = gst_mpeg_packetize_read (mpeg_parse->packetize);
 
@@ -293,7 +292,7 @@ gst_mpeg_parse_loop (GstElement *element)
     }
   }
 
-  if (CLASS (mpeg_parse)->send_data && to_send)
+  if (CLASS (mpeg_parse)->send_data)
     CLASS (mpeg_parse)->send_data (mpeg_parse, data);
 }
 
