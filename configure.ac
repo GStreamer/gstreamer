@@ -947,10 +947,6 @@ if test "x$HAVE_LIBJPEG" = xyes; then
   AC_DEFINE(HAVE_LIBJPEG)
 fi
 
-if test "x$HAVE_LIBSDL" = xyes; then
-  AC_DEFINE(HAVE_LIBSDL)
-fi
-
 if test "x$HAVE_LIBHERMES" = "xyes"; then
   AC_DEFINE(HAVE_LIBHERMES)
 fi
@@ -959,6 +955,7 @@ if test "x$HAVE_LIBDVDREAD" = xyes; then
   AC_DEFINE(HAVE_LIBDVDREAD)
 fi
 
+dnl FIXME: I think these can go
 if test "x$HAVE_LINUX_CDROM" = xyes; then
   AC_DEFINE(HAVE_LINUX_CDROM)
 fi
