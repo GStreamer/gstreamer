@@ -1516,7 +1516,7 @@ GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
 
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
-GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec, [
+GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec theoraenc, [
   PKG_CHECK_MODULES(THEORA, theora, [
     HAVE_THEORA="yes"
     AC_SUBST(THEORA_LIBS)
