@@ -1,104 +1,124 @@
-Release should be done on branches from the trunk so that the package version
-in CVS can always be date-generated and core hacking isn't discouraged during
-the release cycle.
+GStreamer Release Policies (or: why we should become a country and pass laws)
+--------------------------
 
-Note: commands used to make a new branch are as follows:
-(for example, for version 0.3.3)
+Development Period
+------------------
+Development period is marked by having a fourth (nano) version number of 1.
+During development anything goes short of wiping the tree.
+Just try doing a few basic things :
+- make sure it builds for you !
+- check what you're about to commit with cvs -Q diff -r
+- preferably, keep an anonymous checkout around as well so you can
+  immediately update and check if your changes work in a clean tree as well
 
-cvs tag BRANCH-RELEASE-0_3_3-ROOT
-cvs tag -b BRANCH-RELEASE-0_3_3
-cvs update -r BRANCH-RELEASE-0_3_3
+Prerelease Period
+-----------------
+After a bit of development, people want a new release.  This generally happens
+when :
+- core developers get anxious to apply massive changes to the core bound
+  to break everything
+- a few important plugins decide, as if by magic, to work again (avi, mad, ...)
+- Uraeus and thomasvs get tired of the general laziness
 
-Release TODO
-------------
+Also, this should only be allowed after passing a few sanity checks :
+- make distcheck should pass
+- rpms should build
+- FIXME: should debs be built here ? If so, how ?
 
-* make distcheck should pass
-* rpms should build
-* debs should build
+At this time, we need to do a few prereleases for general checking by all
+interested developers.  To minimize the impact on the rest of the core hacking,
+we create a new CVS branch which will go through the pre-releases and finally
+contain the definitive tarball for that version.
 
-Packaging issues will hopefully be less difficult in the future as the build
-system stabilizes.
-
-* after a release, we move in cvs mode and use a .1 nano version number
-
-* close to the next release, we make prereleases by upping the nano version
-
-* update web site release notes
-
-* add release notes to cvs -- why?
-
-* take a FRESH cvs checkout
-
-* make distcheck should pass
-
-* test suite should pass
-
-* rpms should build and install
-
-* autotools have latest config.{guess,sub}
-  This is needed in order to support newer platforms.
-  On Debian install the autotools-dev package to get these.
-
-* depending on how the API has changed update the libtool versioning
-  in configure.ac.  Look at the libtool info page about versioning for
-  guidelines.
-
-* update package version
-
-* roll a preliminary distribution tarball, make sure that it installs fine,
-registers fine, runs the media tests fine, and uninstalls as well
-
-* tag tree
-  http://gstreamer.net/dev/cvs.php
-  add tag to above page
-
-* relink current and cvs in the redhat dir and copy the symlinks from the
-  current to the new release treee
-
-* update web site release notes: added to cvs
-  - change the releases/current symbolic link
-  - text version of release announcement can be made from 
-    lynx -dump http://gstreamer.net/releases/current/notice.php?clean=1
-
-* update web site docs
-  - release-specific docs should go in CVS
-  - change docs/current symlink
-
-* update status table cvs status and then click on the release link
-  http://gstreamer.net/admin.php is the portal to all of this
-
-* update web site news items for release
-  again, the admin.php page
-
-* upload to sourceforge
-  - should we md5 the tarballs?
-
-* announce to:
-  freshmeat
-  gstreamer-{devel, announce}
-  linux-audio-dev (if it's a big release)
-  gnome lists (?)
-  lwn (if it's a big release)
+TODO :
+  - Decide on the next version number (major, minor or micro upgrade ?)
+  - Create branch; with 0.3.3 as an example, tag is BRANCH-RELEASE-0_3_3
+      cvs tag BRANCH-RELEASE-0_3_3-ROOT
+      cvs tag -b BRANCH-RELEASE-0_3_3
+      cvs update -r BRANCH-RELEASE-0_3_3
+  - Set the nano to 2 (in configure.ac, AS_VERSION)
+  - Do all updates/patches/changes for the release tarball in this branch
+  - Think of a good codename for the release
+  - create a new version dir in www/releases
+  - Start updating the release notes on the www cvs tree
+  - depending on how the API has changed update the libtool versioning
+    in configure.ac, AS_LIBTOOL 
+    (Look at the libtool info page about versioning for guidelines)
+  - FIXME: autotools have latest config.{guess,sub}
+           This is needed in order to support newer platforms.
+           On Debian install the autotools-dev package to get these.
+           Someone please add some more useful info here on how to do this
+  - while (IS_PRERELEASE)
+    {
+      - increase the nano number (starting with 2)
+      - make distcheck, rpm build should pass, from a FRESH cvs tree
+      - media tests should be done
+      - source tarball should be installed and tested
+      - rpms should be installed and tested
+      - put up tarball for a day
+    }
 
 
-Should work:
+Release Period
+--------------
+When we're satisfied with the prereleases, it's time to make the final tarball.
+It's very important that the tarball we put out is fully checked, works as
+planned, and generally is generated only ONCE by someone with a relatively
+clean (and reference) system.  We don't want to put out more than one tarball
+with the same name.
 
-* autoconf feature to allow building outside source dir
+TODO :
+  - give the latest prerelease another good testing
+  - proofread the release notes
+  - change the symlinks on the website :
+    - change the releases/current symbolic link to point to the new release dir
+    - change the releases/cvs symlink to point to the next release dir
+  - make a text copy of the release notes to be included in the tarball :
+    lynx -dump http://gstreamer.net/releases/current/notice.php?clean=1 > RELEASE
+  - update web site docs
+    - release-specific docs should go in CVS
+    - change docs/current symlink
+  - remove the nano version number in configure.ac, AS_VERSION
+  - tag tree
+    - policy is at http://gstreamer.net/dev/cvs.php
+    - decide on a tag name : RELEASE_(VERSION)_(CODE)
+    - tag; for example for 0.3.3 :
+      FIXME: add commands
+  - add tag codename in www/dev/cvs.php
+  - roll the tarball, build rpms
+  - FIXME: update status table cvs status and then click on the release link
+           http://gstreamer.net/admin.php is the portal to all of this
+           where to get the password, what should we do here ?
 
+Post-Release Period
+-------------------
+Time to bring the new version under the eyes of the public.
 
+TODO :
+  - FIXME: should we md5 the tarballs?
+  - upload to sourceforge
+  - FIXME: announcements
+    - gstreamer-{devel, announce} : a simple mail with RELEASE
+    - freshmeat
+    - linux-audio-dev (if it's a big release) : a simple mail with RELEASE
+    - gnome lists (?)
+    - lwn (if it's a big release)
+  - Kick back, have a party, enjoy people coming in on IRC telling us how
+    GStreamer rocks.
+  - Later on, if necessary, merge back latest release branch to current dev
+    branch (if patches to source were made)
+    FIXME: add commands and guide for this
 
-Package version policy
-----------------------
+Some various random comments that might or might not make sense :
 
-Use major.minor.micro versioning
+- Should work:
+  * autoconf feature to allow building outside source dir
 
-Before 1.0.0
-
-Update micro until code and API are fairly stable, then update minor.
-
-
-After 1.0.0
-
-Update major when code and api hit new level of stability or major features.
-Update minor on API changes.
-Update micro on API-compatible changes.
+- Package version policy
+  - Use major.minor.micro versioning
+  - Before 1.0.0, Update micro until code and API are fairly stable,
+    then update minor.
+  - After 1.0.0,
+    Update major when code and api hit new level of stability or major features.
+    Update minor on API changes.
+    Update micro on API-compatible changes.
