@@ -411,7 +411,8 @@ GST_PLUGINS_SELECTED=""
 AC_ARG_WITH(plugins,
     AC_HELP_STRING([--with-plugins],[comma-separated list of plug-ins to compile]),
     [for i in `echo $withval | tr , ' '`; do
-        if test -n `echo $i | grep $GST_PLUGINS_ALL`; then
+        if echo $GST_PLUGINS_ALL | grep $i > /dev/null
+        then
             GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
         else
             echo "plug-in $i not recognized, ignoring..."
