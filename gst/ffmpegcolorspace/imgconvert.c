@@ -280,6 +280,7 @@ avcodec_get_pix_fmt (const char *name)
   return i;
 }
 
+#ifdef FFMPEG_NOSTRIDE
 /* Picture field are filled with 'ptr' addresses. Also return size */
 int
 avpicture_fill (AVPicture * picture, uint8_t * ptr,
@@ -359,6 +360,109 @@ avpicture_fill (AVPicture * picture, uint8_t * ptr,
       return -1;
   }
 }
+
+#else
+/* Sets bytes per video line and plane pointers, taking stride into account.
+ * Stride for each format is the expected image line size rounded up by 4.
+ * FIXME: instead of hardcoding here, set the default strides in the picture
+ * definition and allow caller to override first. */
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+int
+avpicture_fill (AVPicture * picture, uint8_t * ptr,
+    int pix_fmt, int width, int height)
+{
+  int size, w2, h2, size2;
+  int stride, stride2;
+  PixFmtInfo *pinfo;
+
+  pinfo = &pix_fmt_info[pix_fmt];
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+  switch (pix_fmt) {
+    case PIX_FMT_YUV420P:
+    case PIX_FMT_YUV422P:
+    case PIX_FMT_YUV444P:
+    case PIX_FMT_YUV410P:
+    case PIX_FMT_YUV411P:
+    case PIX_FMT_YUVJ420P:
+    case PIX_FMT_YUVJ422P:
+    case PIX_FMT_YUVJ444P:
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      w2 = (width + (1 << pinfo->x_chroma_shift) - 1) >> pinfo->x_chroma_shift;
+      stride2 = ROUND_UP_4 (w2);
+      h2 = (height + (1 << pinfo->y_chroma_shift) - 1) >> pinfo->y_chroma_shift;
+      size2 = stride2 * h2;
+      picture->data[0] = ptr;
+      picture->data[1] = picture->data[0] + size;
+      picture->data[2] = picture->data[1] + size2;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = stride2;
+      picture->linesize[2] = stride2;
+      return size + 2 * size2;
+    case PIX_FMT_RGB24:
+    case PIX_FMT_BGR24:
+      stride = ROUND_UP_4 (width * 3);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_RGBA32:
+      stride = width * 4;
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_RGB555:
+    case PIX_FMT_RGB565:
+    case PIX_FMT_YUV422:
+      stride = ROUND_UP_4 (width * 2);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_GRAY8:
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_MONOWHITE:
+    case PIX_FMT_MONOBLACK:
+      stride = ROUND_UP_4 ((width + 7) >> 3);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_PAL8:
+      /* already forced to be with stride, so same result as other function */
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = ptr + size;    /* palette is stored here as 256 32 bit words */
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = 4;
+      return size + 256 * 4;
+    default:
+      picture->data[0] = NULL;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->data[3] = NULL;
+      return -1;
+  }
+}
+#endif
 
 int
 avpicture_layout (const AVPicture * src, int pix_fmt, int width, int height,

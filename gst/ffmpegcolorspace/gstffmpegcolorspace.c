@@ -28,6 +28,9 @@
 
 #include "gstffmpegcodecmap.h"
 
+GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
+#define GST_CAT_DEFAULT ffmpegcolorspace_debug
+
 #define GST_TYPE_FFMPEGCOLORSPACE \
   (gst_ffmpegcolorspace_get_type())
 #define GST_FFMPEGCOLORSPACE(obj) \
@@ -280,6 +283,9 @@ gst_ffmpegcolorspace_class_init (GstFFMpegColorspaceClass * klass)
   gobject_class->get_property = gst_ffmpegcolorspace_get_property;
 
   gstelement_class->change_state = gst_ffmpegcolorspace_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
+      "FFMPEG-based colorspace converter");
 }
 
 static void
@@ -339,19 +345,30 @@ gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
     outbuf = inbuf;
   } else {
     /* use bufferpool here */
+    AVPicture *from_p, *to_p;
+
     guint size = avpicture_get_size (space->to_pixfmt,
         space->width,
         space->height);
 
+    GST_LOG_OBJECT (space, "convert from format %d, %dx%d, buffer size %d",
+        space->from_pixfmt, space->width, space->height,
+        GST_BUFFER_SIZE (inbuf));
+    GST_LOG_OBJECT (space, "convert to format %d, %dx%d, buffer size %d",
+        space->to_pixfmt, space->width, space->height, size);
+
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
-    avpicture_fill ((AVPicture *) & space->from_frame, GST_BUFFER_DATA (inbuf),
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+    from_p = &(space->from_frame);
+    avpicture_fill (from_p, GST_BUFFER_DATA (inbuf),
         space->from_pixfmt, space->width, space->height);
-    avpicture_fill ((AVPicture *) & space->to_frame, GST_BUFFER_DATA (outbuf),
+    to_p = &(space->to_frame);
+    avpicture_fill (to_p, GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
-    img_convert ((AVPicture *) & space->to_frame, space->to_pixfmt,
-        (AVPicture *) & space->from_frame, space->from_pixfmt,
+
+    img_convert (to_p, space->to_pixfmt, from_p, space->from_pixfmt,
         space->width, space->height);
 
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
