@@ -1,3 +1,11 @@
+2004-09-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_loop):
+	Fix the case where the muxer would mark pages as delta
+	frames when they are not (vorbis only ogg).
+
 2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (state_change), (setup_source),
