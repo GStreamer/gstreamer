@@ -4,7 +4,7 @@ else
 SUBDIRS_DOCS =
 endif
 
-UNCONDDIRS = gst pkgconfig testsuite
+UNCONDDIRS = examples gst pkgconfig testsuite
 SUBDIRS = \
 	$(UNCONDDIRS) \
 	$(SUBDIRS_DOCS)

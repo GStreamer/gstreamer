@@ -8,4 +8,4 @@ examples_DATA = 	\
 	play.py		\
 	vorbisplay.py
 
-EXTRA_DIST = $(examples)
+EXTRA_DIST = $(examples_DATA)
