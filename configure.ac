@@ -31,6 +31,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 AS_LIBTOOL(GST_PLUGINS, 2, 0, 0)
+AM_PROG_LIBTOOL
 
 dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
