@@ -141,7 +141,7 @@ int main(int argc,char *argv[]) {
   g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
-  parse = gst_elementfactory_make("parseavi","parse");
+  parse = gst_elementfactory_make("avidecoder","parse");
   g_return_val_if_fail(parse != NULL, -1);
 
   mux = gst_elementfactory_make("system_encode","mux");

@@ -79,23 +79,8 @@ autoheader
 autoconf
 automake --add-missing
 
-if [ "x$1" = "x--autogen-recurse" ];then
-  exit	# the rest will happen later
-fi
-
-#for dir in `find * -name autogen.sh -print | grep -v '^autogen.sh$' | \
-#            sed 's/autogen.sh$//'`;do
-#  echo "Recursively running autogen.sh in $dir"
-#  pushd $dir > /dev/null
-#  ./autogen.sh --autogen-recurse "$@"
-#  popd > /dev/null
-#done
-
 # now remove the cache, because it can be considered dangerous in this case
 rm -f config.cache
-
-# For busy application developers (Hadess)
-# ./configure --enable-maintainer-mode --enable-debug --enable-debug-verbose --disable-docs-build "$@"
 
 ./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug --enable-debug-verbose "$@"
 

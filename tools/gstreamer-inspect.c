@@ -83,6 +83,8 @@ print_element_info (GstElementFactory *factory)
   GtkArg *args;
   guint32 *flags;
   gint num_args,i;
+  GList *children;
+  GstElement *child;
   gboolean have_flags;
 
   element = gst_elementfactory_create(factory,"element");
@@ -150,7 +152,7 @@ print_element_info (GstElementFactory *factory)
       printf("\n");
     }
   } else
-    printf("  none\n\n");
+    printf("  none\n");
 
   have_flags = FALSE;
 
@@ -173,39 +175,44 @@ print_element_info (GstElementFactory *factory)
   }
   if (!have_flags)
     printf("  no flags set\n");
-  printf("\n");
 
 
-  printf("Element Implementation:\n");
+
+  printf("\nElement Implementation:\n");
+
   if (element->loopfunc)
-    printf("  loopfunc()-based element\n");
+    printf("  loopfunc()-based element: %s\n",GST_DEBUG_FUNCPTR_NAME(element->loopfunc));
   else
     printf("  No loopfunc(), must be chain-based or not configured yet\n");
-  if (gstelement_class->change_state)
-    printf("  Has change_state() function\n");
-  else
-    printf("  No change_state() class function\n");
-  if (gstobject_class->save_thyself)
-    printf("  Has custom save_thyself() class function\n");
-  if (gstobject_class->restore_thyself)
-    printf("  Has custom restore_thyself() class function\n");
-  printf("\n");
+
+  printf("  Has change_state() function: %s\n",
+         GST_DEBUG_FUNCPTR_NAME(gstelement_class->change_state));
+  printf("  Has custom save_thyself() function: %s\n",
+         GST_DEBUG_FUNCPTR_NAME(gstobject_class->save_thyself));
+  printf("  Has custom restore_thyself() function: %s\n",
+         GST_DEBUG_FUNCPTR_NAME(gstobject_class->restore_thyself));
 
 
-  printf("Pads:\n");
+
+  printf("\nPads:\n");
   if (element->numpads) {
     pads = gst_element_get_pad_list(element);
     while (pads) {
       pad = GST_PAD(pads->data);
       pads = g_list_next(pads);
-      realpad = GST_REAL_PAD(pad);
+      realpad = GST_PAD_REALIZE(pad);
 
       if (gst_pad_get_direction(pad) == GST_PAD_SRC)
-        printf("  SRC: '%s'\n",gst_pad_get_name(pad));
+        printf("  SRC: '%s'",gst_pad_get_name(pad));
       else if (gst_pad_get_direction(pad) == GST_PAD_SINK)
-        printf("  SINK: '%s'\n",gst_pad_get_name(pad));
+        printf("  SINK: '%s'",gst_pad_get_name(pad));
       else
         printf("  UNKNOWN!!!: '%s'\n",gst_pad_get_name(pad));
+
+      if (GST_IS_GHOST_PAD(pad))
+        printf(", ghost of real pad %s:%s\n",GST_DEBUG_PAD_NAME(realpad));
+      else
+        printf("\n");
 
       printf("    Implementation:\n");
       if (realpad->chainfunc)
@@ -216,7 +223,7 @@ print_element_info (GstElementFactory *factory)
         printf("      Has getregionfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getregionfunc));
       if (realpad->qosfunc)
         printf("      Has qosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->qosfunc));
-      if (realpad->eosfunc) {
+      if (realpad->eosfunc != gst_pad_eos_func) {
         printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->eosfunc));
       }
 
@@ -243,13 +250,13 @@ print_element_info (GstElementFactory *factory)
 	  caps = caps->next;
         }
       }
-
-      printf("\n");
     }
   } else
-    printf("  none\n\n");
+    printf("  none\n");
 
-  printf("Element Arguments:\n");
+
+
+  printf("\nElement Arguments:\n");
   args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
   for (i=0;i<num_args;i++) {
 
@@ -290,6 +297,20 @@ print_element_info (GstElementFactory *factory)
   g_free (args);
   if (num_args == 0) g_print ("  none");
   printf("\n");
+
+
+
+  // for compound elements
+  if (GST_IS_BIN(element)) {
+    printf("\nChildren:\n");
+    children = gst_bin_get_list(GST_BIN(element));
+    while (children) {
+      child = GST_ELEMENT (children->data);
+      children = g_list_next (children);
+
+      g_print("  %s\n",GST_ELEMENT_NAME(child));
+    }
+  }
 
   return 0;
 }

@@ -448,7 +448,7 @@ gst_buffer_copy (GstBuffer *buffer)
     // copy the absolute size
     newbuf->size = buffer->size;
     // allocate space for the copy
-    newbuf->data = (guchar *)g_malloc (buffer->data);
+    newbuf->data = (guchar *)g_malloc (buffer->size);
     // copy the data straight across
     memcpy(newbuf,buffer->data,buffer->size);
     // the new maxsize is the same as the size, since we just malloc'd it

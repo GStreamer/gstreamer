@@ -84,3 +84,4 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/include/*
 %{prefix}/lib/lib*.a
 %{prefix}/lib/lib*.so
+%{prefix}/lib/pkgconfig/*

@@ -1,20 +1,22 @@
 #include <config.h>
 
+#include <string.h>
+
 #include "gstplay.h"
 #include "gstplayprivate.h"
 #include "full-screen.h"
 
-static void gst_play_class_init       (GstPlayClass *klass);
-static void gst_play_init             (GstPlay *play);
+static void gst_play_class_init		(GstPlayClass *klass);
+static void gst_play_init		(GstPlay *play);
 
-static void gst_play_set_arg	      (GtkObject *object, GtkArg *arg, guint id);
-static void gst_play_get_arg	      (GtkObject *object, GtkArg *arg, guint id);
+static void gst_play_set_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void gst_play_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
-static void gst_play_realize	      (GtkWidget *play);
+static void gst_play_realize		(GtkWidget *play);
 
-static void gst_play_frame_displayed  (GstElement *element, GstPlay *play);
-static void gst_play_have_size 	      (GstElement *element, guint width, guint height, GstPlay *play);
-static void gst_play_audio_handoff    (GstElement *element, GstPlay *play);
+static void gst_play_frame_displayed	(GstElement *element, GstPlay *play);
+static void gst_play_have_size 		(GstElement *element, guint width, guint height, GstPlay *play);
+static void gst_play_audio_handoff	(GstElement *element, GstPlay *play);
 
 /* signals and args */
 enum {
@@ -118,10 +120,8 @@ gst_play_init (GstPlay *play)
 	play->priv = priv;
 
 	/* create a new bin to hold the elements */
-	priv->thread = gst_thread_new ("main_thread");
-	g_assert (priv->thread != NULL);
-	priv->bin = gst_bin_new ("main_bin");
-	g_assert (priv->bin != NULL);
+	priv->pipeline = gst_pipeline_new ("main_pipeline");
+	g_assert (priv->pipeline != NULL);
 
 	priv->audio_element = gst_elementfactory_make ("osssink", "play_audio");
 	g_return_if_fail (priv->audio_element != NULL);
@@ -163,6 +163,12 @@ GstPlay *
 gst_play_new ()
 {
 	return GST_PLAY (gtk_type_new (GST_TYPE_PLAY));
+}
+
+static gboolean
+gst_play_idle_func (gpointer data)
+{
+	return gst_bin_iterate (GST_BIN (data));
 }
 
 static void
@@ -273,53 +279,68 @@ gst_play_object_added (GstAutoplug* autoplug, GstObject *object, GstPlay *play)
 }
 
 static void
-gst_play_have_type (GstElement *sink, GstElement *sink2, gpointer data)
+gst_play_cache_empty (GstElement *element, GstPlay *play)
 {
-	GST_DEBUG (0,"GstPipeline: play have type %p\n", (gboolean *)data);
+	GstPlayPrivate *priv;
+	GstElement *new_element;
 
-	*(gboolean *)data = TRUE;
+	priv = (GstPlayPrivate *)play->priv;
+
+	gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+
+	new_element = gst_bin_get_by_name (GST_BIN (priv->pipeline), "new_element");
+
+	gst_element_disconnect (priv->src, "src", priv->cache, "sink");
+	gst_element_disconnect (priv->cache, "src", new_element, "sink");
+	gst_bin_remove (GST_BIN (priv->pipeline), priv->cache);
+	gst_element_connect (priv->src, "src", new_element, "sink");
+
+	gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
 }
 
-static GstCaps*
-gst_play_typefind (GstBin *bin, GstElement *element)
+static void
+gst_play_have_type (GstElement *sink, GstCaps *caps, GstPlay *play)
 {
-	gboolean found = FALSE;
-	GstElement *typefind;
-	GstCaps *caps = NULL;
+	GstPlayPrivate *priv;
+	GstElement *new_element;
+	GstAutoplug *autoplug;
 
-	GST_DEBUG (0, "GstPipeline: typefind for element \"%s\" %p\n",
-		   GST_ELEMENT_NAME (element), &found);
+	GST_DEBUG (0,"GstPipeline: play have type\n");
 
-	typefind = gst_elementfactory_make ("typefind", "typefind");
-	g_return_val_if_fail (typefind != NULL, FALSE);
+	priv = (GstPlayPrivate *)play->priv;
 
-	gtk_signal_connect (GTK_OBJECT (typefind), "have_type",
-			    GTK_SIGNAL_FUNC (gst_play_have_type), &found);
+	gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
 
-	gst_pad_connect (gst_element_get_pad (element, "src"),
-			 gst_element_get_pad (typefind, "sink"));
+	gst_element_disconnect (priv->cache, "src", priv->typefind, "sink");
+	gst_bin_remove (GST_BIN (priv->pipeline), priv->typefind);
 
-	gst_bin_add (bin, typefind);
+	autoplug = gst_autoplugfactory_make ("staticrender");
+	g_assert (autoplug != NULL);
 
-	gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+	gtk_signal_connect (GTK_OBJECT (autoplug), "new_object", gst_play_object_added, play);
 
-	// push a buffer... the have_type signal handler will set the found flag
-	gst_bin_iterate (bin);
+	new_element = gst_autoplug_to_renderers (autoplug,
+						 caps,
+						 priv->video_element,
+						 priv->audio_element,
+						 NULL);
 
-	gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
-
-	if (found) {
-		caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
-
-		gst_pad_set_caps (gst_element_get_pad (element, "src"), caps);
+	if (!new_element) {
+		// FIXME, signal a suitable error
+		return;
 	}
 
-	gst_pad_disconnect (gst_element_get_pad (element, "src"),
-			    gst_element_get_pad (typefind, "sink"));
-	gst_bin_remove (bin, typefind);
-	gst_object_unref (GST_OBJECT (typefind));
+	gst_element_set_name (new_element, "new_element");
 
-	return caps;
+	gst_bin_add (GST_BIN (priv->pipeline), new_element);
+
+	gtk_object_set (GTK_OBJECT (priv->cache), "reset", TRUE, NULL);
+
+	gst_element_connect (priv->cache, "src", new_element, "sink");
+
+	gtk_signal_connect (GTK_OBJECT (priv->pipeline), "eos", GTK_SIGNAL_FUNC (gst_play_eos), play);
+
+	gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
 }
 
 static gboolean
@@ -349,9 +370,7 @@ GstPlayReturn
 gst_play_set_uri (GstPlay *play, const guchar *uri)
 {
 	GstPlayPrivate *priv;
-	GstCaps *src_caps;
-	GstElement *new_element;
-	GstAutoplug *autoplug;
+	gchar* uriloc;
 
 	g_return_val_if_fail (play != NULL, GST_PLAY_ERROR);
 	g_return_val_if_fail (GST_IS_PLAY (play), GST_PLAY_ERROR);
@@ -362,47 +381,51 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	if (priv->uri)
 		g_free (priv->uri);
 
+
+	/* see if it looks like a ARI */
+	if ((uriloc = strstr (uri, ":/"))) {
+	  priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
+
+	  if (!priv->src) {
+	    if (strstr (uri, "file:/")) {
+	      uri += strlen ("file:/");
+	    }
+	    else
+	      return GST_PLAY_CANNOT_PLAY;
+	  }
+	}
+
+	if (priv->src == NULL) {
+	  priv->src = gst_elementfactory_make ("disksrc", "srcelement");
+	}
+
 	priv->uri = g_strdup (uri);
 
-	priv->src = gst_elementfactory_make ("disksrc", "disk_src");
 	//priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
 	priv->offset_element = priv->src;
+	g_return_val_if_fail (priv->src != NULL, GST_PLAY_CANNOT_PLAY);
 
-	g_return_val_if_fail (priv->src != NULL, -1);
-	gtk_object_set (GTK_OBJECT (priv->src), "location", uri, NULL);
+	gtk_object_set (GTK_OBJECT (priv->src), "location", priv->uri, NULL);
 
-	gst_bin_add (GST_BIN (priv->bin), priv->src);
 
-	src_caps = gst_play_typefind (GST_BIN (priv->bin), priv->src);
+	priv->cache = gst_elementfactory_make ("autoplugcache", "cache");
+	g_return_val_if_fail (priv->cache != NULL, GST_PLAY_CANNOT_PLAY);
 
-	if (!src_caps) {
-		return GST_PLAY_UNKNOWN_MEDIA;
-	}
+	gtk_signal_connect (GTK_OBJECT (priv->cache), "cache_empty", 
+			GTK_SIGNAL_FUNC (gst_play_cache_empty), play);
 
-	autoplug = gst_autoplugfactory_make ("staticrender");
-	g_assert (autoplug != NULL);
+	priv->typefind = gst_elementfactory_make ("typefind", "typefind");
+	g_return_val_if_fail (priv->typefind != NULL, GST_PLAY_CANNOT_PLAY);
+	gtk_signal_connect (GTK_OBJECT (priv->typefind), "have_type", 
+				GTK_SIGNAL_FUNC (gst_play_have_type), play);
 
-	gtk_signal_connect (GTK_OBJECT (autoplug), "new_object", gst_play_object_added, play);
 
-	new_element = gst_autoplug_to_renderers (autoplug,
-						 gst_pad_get_caps (gst_element_get_pad (priv->src, "src")),
-						 priv->video_element,
-						 priv->audio_element,
-						 NULL);
+	gst_bin_add (GST_BIN (priv->pipeline), priv->src);
+	gst_bin_add (GST_BIN (priv->pipeline), priv->cache);
+	gst_bin_add (GST_BIN (priv->pipeline), priv->typefind);
 
-	if (!new_element) {
-		return GST_PLAY_CANNOT_PLAY;
-	}
-
-	gst_bin_remove (GST_BIN (priv->bin), priv->src);
-	gst_bin_add (GST_BIN (priv->thread), priv->src);
-
-	gst_bin_add (GST_BIN (priv->bin), new_element);
-
-	gst_element_connect (priv->src, "src", new_element, "sink");
-
-	gst_bin_add (GST_BIN (priv->thread), priv->bin);
-	gtk_signal_connect (GTK_OBJECT (priv->thread), "eos", GTK_SIGNAL_FUNC (gst_play_eos), play);
+	gst_element_connect (priv->src, "src", priv->cache, "sink");
+	gst_element_connect (priv->cache, "src", priv->typefind, "sink");
 
 	return GST_PLAY_OK;
 }
@@ -449,10 +472,11 @@ gst_play_play (GstPlay *play)
 	if (play->state == GST_PLAY_PLAYING) return;
 
 	if (play->state == GST_PLAY_STOPPED)
-		gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_READY);
-	gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_PLAYING);
+		gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_READY);
+	gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_PLAYING);
 
 	play->state = GST_PLAY_PLAYING;
+	gtk_idle_add (gst_play_idle_func, priv->pipeline);
 
 	gtk_signal_emit (GTK_OBJECT (play), gst_play_signals[SIGNAL_STATE_CHANGED],
 			 play->state);
@@ -470,9 +494,10 @@ gst_play_pause (GstPlay *play)
 
 	if (play->state != GST_PLAY_PLAYING) return;
 
-	gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_PAUSED);
+	gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_PAUSED);
 
 	play->state = GST_PLAY_PAUSED;
+	g_idle_remove_by_data (priv->pipeline);
 
 	gtk_signal_emit (GTK_OBJECT (play), gst_play_signals[SIGNAL_STATE_CHANGED],
 			 play->state);
@@ -491,11 +516,12 @@ gst_play_stop (GstPlay *play)
 	priv = (GstPlayPrivate *)play->priv;
 
 	// FIXME until state changes are handled properly
-	gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_READY);
+	gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_READY);
 	gtk_object_set (GTK_OBJECT (priv->src),"offset",0,NULL);
-	//gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_NULL);
+	//gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_NULL);
 
 	play->state = GST_PLAY_STOPPED;
+	g_idle_remove_by_data (priv->pipeline);
 
 	gtk_signal_emit (GTK_OBJECT (play), gst_play_signals[SIGNAL_STATE_CHANGED],
 			 play->state);
@@ -653,7 +679,7 @@ gst_play_get_pipeline (GstPlay *play)
 
 	priv = (GstPlayPrivate *)play->priv;
 
-	return GST_ELEMENT (priv->bin);
+	return GST_ELEMENT (priv->pipeline);
 }
 
 static void

@@ -39,12 +39,11 @@ target_drag_data_received  (GtkWidget          *widget,
                             guint               time,
 			    GstMediaPlay       *play)
 {
-	if (strstr (data->data, "file:")) {
-		g_print ("Got: %s\n", &data->data[5]);
-		gdk_threads_leave ();
-		gst_media_play_start_uri (play, g_strchomp (&data->data[5]));
-		gdk_threads_enter ();
-	}
+	g_print ("Got: %s\n", data->data);
+	gdk_threads_leave ();
+	gst_media_play_start_uri (play, g_strchomp (data->data));
+	gdk_threads_enter ();
+
 }
 
 static GtkTargetEntry target_table[] = {

@@ -46,8 +46,8 @@ typedef enum {
   GST_STATE_NONE_PENDING	= 0,
   GST_STATE_NULL		= (1 << 0),
   GST_STATE_READY		= (1 << 1),
-  GST_STATE_PLAYING		= (1 << 2),
-  GST_STATE_PAUSED		= (1 << 3),
+  GST_STATE_PAUSED		= (1 << 2),
+  GST_STATE_PLAYING		= (1 << 3),
 } GstElementState;
 
 typedef enum {
@@ -56,28 +56,19 @@ typedef enum {
   GST_STATE_ASYNC		= 2,
 } GstElementStateReturn;
 
-static inline char *_gst_print_statename(int state) {
-  switch (state) {
-    case GST_STATE_NONE_PENDING: return "NONE_PENDING";break;
-    case GST_STATE_NULL: return "NULL";break;
-    case GST_STATE_READY: return "READY";break;
-    case GST_STATE_PLAYING: return "PLAYING";break;
-    case GST_STATE_PAUSED: return "PAUSED";break;
-    default: return "";
-  }
-  return "";
-}
 
+// NOTE: this probably should be done with an #ifdef to decide whether to safe-cast
+// or to just do the non-checking cast.
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 
 // Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g>
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
 #define GST_STATE_NULL_TO_READY		((GST_STATE_NULL<<8) | GST_STATE_READY)
-#define GST_STATE_READY_TO_PLAYING	((GST_STATE_READY<<8) | GST_STATE_PLAYING)
-#define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<8) | GST_STATE_PAUSED)
+#define GST_STATE_READY_TO_PAUSED	((GST_STATE_READY<<8) | GST_STATE_PAUSED)
 #define GST_STATE_PAUSED_TO_PLAYING	((GST_STATE_PAUSED<<8) | GST_STATE_PLAYING)
-#define GST_STATE_PLAYING_TO_READY	((GST_STATE_PLAYING<<8) | GST_STATE_READY)
+#define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<8) | GST_STATE_PAUSED)
+#define GST_STATE_PAUSED_TO_READY	((GST_STATE_PAUSED<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
 
 #define GST_TYPE_ELEMENT \
@@ -104,6 +95,9 @@ typedef enum {
 
   /***** !!!!! need to have a flag that says that an element must
     *not* be an entry into a scheduling chain !!!!! *****/
+  /* this element for some reason doesn't obey COTHREAD_STOPPING, or
+     has some other reason why it can't be the entry */
+  GST_ELEMENT_NO_ENTRY,
 
   /* there is a new loopfunction ready for placement */
   GST_ELEMENT_NEW_LOOPFUNC,
@@ -116,7 +110,7 @@ typedef enum {
   GST_ELEMENT_EOS,
 
   /* use some padding for future expansion */
-  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8,
+  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 12,
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
@@ -125,10 +119,12 @@ typedef enum {
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
+#define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
+#define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
-typedef struct _GstElement GstElement;
-typedef struct _GstElementClass GstElementClass;
+//typedef struct _GstElement GstElement;
+//typedef struct _GstElementClass GstElementClass;
 typedef struct _GstElementDetails GstElementDetails;
 typedef struct _GstElementFactory GstElementFactory;
 
@@ -149,6 +145,7 @@ struct _GstElement {
   GList *pads;
 
   GstElement *manager;
+  GstSchedule *sched;
 };
 
 struct _GstElementClass {
@@ -158,11 +155,21 @@ struct _GstElementClass {
   GstElementFactory *elementfactory;
 
   /* signal callbacks */
-  void (*state_change)	(GstElement *element,GstElementState state);
-  void (*new_pad)	(GstElement *element,GstPad *pad);
-  void (*new_ghost_pad) (GstElement *element,GstPad *pad);
-  void (*error)		(GstElement *element,gchar *error);
-  void (*eos)		(GstElement *element);
+  void (*state_change)		(GstElement *element,GstElementState state);
+  void (*new_pad)		(GstElement *element,GstPad *pad);
+  void (*pad_removed)		(GstElement *element,GstPad *pad);
+  void (*new_ghost_pad) 	(GstElement *element,GstPad *pad);
+  void (*ghost_pad_removed)	(GstElement *element,GstPad *pad);
+  void (*error)			(GstElement *element,gchar *error);
+  void (*eos)			(GstElement *element);
+
+  /* local pointers for get/set */
+  void (*set_arg) (GtkObject *object,
+                   GtkArg    *arg,
+                   guint      arg_id);
+  void (*get_arg) (GtkObject *object,
+                   GtkArg    *arg,
+                   guint      arg_id);      
 
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
@@ -202,10 +209,11 @@ const gchar*            gst_element_get_name            (GstElement *element);
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
 
-void			gst_element_set_manager		(GstElement *element, GstElement *manager);
-GstElement*		gst_element_get_manager		(GstElement *element);
+void			gst_element_set_sched		(GstElement *element, GstSchedule *sched);
+GstSchedule*		gst_element_get_sched		(GstElement *element);
 
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
+void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);
@@ -232,7 +240,7 @@ void			gst_element_error		(GstElement *element, const gchar *error);
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
 /* XML write and read */
-GstElement*		gst_element_load_thyself	(xmlNodePtr self, GstObject *parent);
+GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
 
 
 /*
@@ -264,8 +272,12 @@ GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
 
+
 xmlNodePtr		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent);
 GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);
+
+
+const gchar *		gst_element_statename			(int state);
 
 #ifdef __cplusplus
 }

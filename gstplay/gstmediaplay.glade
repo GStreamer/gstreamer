@@ -508,6 +508,7 @@ Arik Devens &lt;arik@gnome.org&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:55:52 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
+    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 
   <widget>
@@ -523,6 +524,7 @@ Arik Devens &lt;arik@gnome.org&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:53:48 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
+    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 </widget>
 

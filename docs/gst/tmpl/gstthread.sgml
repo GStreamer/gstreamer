@@ -24,8 +24,10 @@ Thread flags:
 </para>
 
 @GST_THREAD_CREATE: The thread is being created.
+@GST_THREAD_STATE_STARTED: 
 @GST_THREAD_STATE_SPINNING: The thread is runnning
 @GST_THREAD_STATE_REAPING: The thread is ending.
+@GST_THREAD_STATE_ELEMENT_CHANGED: 
 @GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
 
 <!-- ##### STRUCT GstThread ##### -->

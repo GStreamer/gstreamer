@@ -167,7 +167,7 @@ gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
     if (!strcmp(field->name, "element") && (field->ns == xml->ns)) {
       GstElement *element;
 
-      element = gst_element_load_thyself(field, NULL);
+      element = gst_element_restore_thyself(field, NULL);
 
       xml->topelements = g_list_prepend (xml->topelements, element);
     }

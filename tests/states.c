@@ -2,7 +2,7 @@
 
 gboolean state_change(GstElement *element,GstElementState state) {
   g_print(">STATES: element '%s' state set to %d(%s)\n",
-	gst_element_get_name(element),state,_gst_print_statename(state));
+	gst_element_get_name(element),state,gst_element_statename(state));
   g_print(">STATES: element state is actually %d\n",GST_STATE(element));
 
   return TRUE;
@@ -37,15 +37,15 @@ int main(int argc,char *argv[]) {
                      GTK_SIGNAL_FUNC(state_change),NULL);
 
   g_print("STATES: element '%s' starts at state %d(%s)\n",gst_element_get_name(src),
-	GST_STATE(src),_gst_print_statename(GST_STATE(src)));
+	GST_STATE(src),gst_element_statename(GST_STATE(src)));
   g_print("STATES: element '%s' starts at state %d(%s)\n",gst_element_get_name(subbin),
-	GST_STATE(subbin),_gst_print_statename(GST_STATE(subbin)));
+	GST_STATE(subbin),gst_element_statename(GST_STATE(subbin)));
   g_print("STATES: element '%s' starts at state %d(%s)\n",gst_element_get_name(filter),
-	GST_STATE(filter),_gst_print_statename(GST_STATE(filter)));
+	GST_STATE(filter),gst_element_statename(GST_STATE(filter)));
   g_print("STATES: element '%s' starts at state %d(%s)\n",gst_element_get_name(sink),
-	GST_STATE(sink),_gst_print_statename(GST_STATE(sink)));
+	GST_STATE(sink),gst_element_statename(GST_STATE(sink)));
   g_print("STATES: element '%s' starts at state %d(%s)\n",gst_element_get_name(bin),
-	GST_STATE(bin),_gst_print_statename(GST_STATE(bin)));
+	GST_STATE(bin),gst_element_statename(GST_STATE(bin)));
 
   gst_bin_add(GST_BIN(subbin),filter);
   gst_element_add_ghost_pad(GST_ELEMENT(bin),gst_element_get_pad(filter,"sink"),"sink");

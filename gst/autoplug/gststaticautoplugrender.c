@@ -123,7 +123,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
           desttemp->direction == GST_PAD_SINK) {
 	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (srctemp), GST_PADTEMPLATE_CAPS (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
+			  "factory \"%s\" can connect with factory \"%s\"\n", src->name, dest->name);
           return TRUE;
 	}
       }
@@ -133,7 +133,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     srctemps = g_list_next (srctemps);
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
+		  "factory \"%s\" cannot connect with factory \"%s\"\n", src->name, dest->name);
   return FALSE;
 }
 
@@ -154,12 +154,21 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
         !GST_PAD_CONNECTED (pad) && !GST_PAD_CONNECTED(sinkpad))
     {
+      GstElementState state = GST_STATE (gst_element_get_parent (src));
+
+      if (state == GST_STATE_PLAYING)
+        gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PAUSED);
+	
       if ((connected = gst_pad_connect (pad, sinkpad))) {
+        if (state == GST_STATE_PLAYING)
+          gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
 	break;
       }
       else {
         GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
+      if (state == GST_STATE_PLAYING)
+        gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
     }
     sinkpads = g_list_next(sinkpads);
   }
@@ -423,11 +432,12 @@ differ:
 	// create a new queue and add to the previous bin
         queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
         GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), queue);
-        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (queue));
 
 	// this will be the new bin for all following elements
         thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
+
+        gst_bin_add(GST_BIN(thebin), queue);
+        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (queue));
 
         srcpad = gst_element_get_pad(queue, "src");
 

@@ -27,6 +27,7 @@
 #include <glib.h>
 
 #include <gst/gstversion.h>
+#include <gst/gsttypes.h>
 
 #include <gst/gstinfo.h>
 #include <gst/gstobject.h>
@@ -48,6 +49,7 @@
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>
 #include <gst/cothreads.h>
+#include <gst/gstscheduler.h>
 
 #include <gst/gstparse.h>
 

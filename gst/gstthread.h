@@ -24,6 +24,7 @@
 #ifndef __GST_THREAD_H__
 #define __GST_THREAD_H__
 
+#include <unistd.h>
 #include <pthread.h>
 
 #include <gst/gstbin.h>
@@ -38,8 +39,11 @@ extern GstElementDetails gst_thread_details;
 
 typedef enum {
   GST_THREAD_CREATE		= GST_BIN_FLAG_LAST,
+
+  GST_THREAD_STATE_STARTED,
   GST_THREAD_STATE_SPINNING,
   GST_THREAD_STATE_REAPING,
+  GST_THREAD_STATE_ELEMENT_CHANGED,
 
   /* padding */
   GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4,
@@ -64,8 +68,12 @@ struct _GstThread {
   GstBin bin;
 
   pthread_t thread_id;		/* id of the thread, if any */
+  gint pid;			/* the pid of the thread */
+  gint ppid;			/* the pid of the thread's parent process */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */
+
+  gint transition;		/* the current state transition */
 };
 
 struct _GstThreadClass {
@@ -74,7 +82,7 @@ struct _GstThreadClass {
 
 GtkType 	gst_thread_get_type	(void);
 
-GstElement*	gst_thread_new		(guchar *name);
+GstElement*	gst_thread_new		(const guchar *name);
 
 #ifdef __cplusplus
 }

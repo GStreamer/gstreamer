@@ -47,6 +47,12 @@ GstElementDetails gst_queue_details;
 #define GST_IS_QUEUE_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
 
+enum {
+  GST_QUEUE_NO_LEAK		= 0,
+  GST_QUEUE_LEAK_UPSTREAM	= 1,
+  GST_QUEUE_LEAK_DOWNSTREAM	= 2
+};
+
 typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueClass GstQueueClass;
 
@@ -60,12 +66,16 @@ struct _GstQueue {
   GSList *queue;
 
   gint level_buffers;	/* number of buffers queued here */
-  gint max_buffers;	/* maximum number of buffers queued here */
-  gboolean block;	/* if set to FALSE, _get returns NULL if queue empty */
   gint level_bytes;	/* number of bytes queued here */
+  guint64 level_time;	/* amount of time queued here */
+
   gint size_buffers;	/* size of queue in buffers */
   gint size_bytes;	/* size of queue in bytes */
+  guint64 size_time;	/* size of queue in time */
 
+  gint leaky;		/* whether the queue is leaky, and if so at which end */
+
+//  GMutex *lock;	(optimization?)
   GCond *emptycond;
   GCond *fullcond;
 
@@ -74,6 +84,10 @@ struct _GstQueue {
 
 struct _GstQueueClass {
   GstElementClass parent_class;
+
+  /* signal callbacks */
+  void (*low_watermark)		(GstQueue *queue, gint level);
+  void (*high_watermark)	(GstQueue *queue, gint level);
 };
 
 GtkType gst_queue_get_type (void);

@@ -28,6 +28,8 @@
 #include <gst/gsttrace.h>
 #include <parser.h>
 
+#include <gst/gsttypes.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -55,10 +57,16 @@ extern "C" {
 #define GST_IS_OBJECT_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
 
-typedef struct _GstObject GstObject;
-typedef struct _GstObjectClass GstObjectClass;
+//typedef struct _GstObject GstObject;
+//typedef struct _GstObjectClass GstObjectClass;
+//
+typedef enum
+{
+  GST_DESTROYED   = 0,
+  GST_FLOATING,
 
-#define GST_OBJECT_FLAG_LAST 4
+  GST_OBJECT_FLAG_LAST   = 4,
+} GstObjectFlags;
 
 struct _GstObject {
   GtkObject object;
@@ -76,6 +84,8 @@ struct _GstObject {
 
   /* this objects parent */
   GstObject *parent;
+
+  guint32 flags;
 };
 
 struct _GstObjectClass {
@@ -89,18 +99,22 @@ struct _GstObjectClass {
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
 
   /* functions go here */
+  void		(*destroy)		(GstObject *object);
+
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 };
 
-#define GST_OBJECT_NAME(obj)		(const gchar*)(((GstObject *)(obj))->name)
-#define GST_OBJECT_PARENT(obj)		(((GstObject *)(obj))->parent)
-
-
-#define GST_FLAGS(obj)			GTK_OBJECT_FLAGS(obj)
+#define GST_FLAGS(obj)			(GST_OBJECT (obj)->flags)
 #define GST_FLAG_IS_SET(obj,flag)	(GST_FLAGS (obj) & (1<<(flag)))
 #define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
 #define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
+
+#define GST_OBJECT_NAME(obj)		(const gchar*)(((GstObject *)(obj))->name)
+#define GST_OBJECT_PARENT(obj)		(((GstObject *)(obj))->parent)
+
+#define GST_OBJECT_DESTROYED(obj)	(GST_FLAG_IS_SET (obj, GST_DESTROYED))
+#define GST_OBJECT_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_FLOATING))
 
 /* object locking */
 #define GST_LOCK(obj)		(g_mutex_lock(GST_OBJECT(obj)->lock))
@@ -122,15 +136,17 @@ void		gst_object_set_parent		(GstObject *object,GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 
+gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
+
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 
 /* refcounting */
-#define		gst_object_ref(object)		gtk_object_ref(GTK_OBJECT(object));
-#define		gst_object_unref(object)	gtk_object_unref(GTK_OBJECT(object));
-#define		gst_object_sink(object)		gtk_object_sink(GTK_OBJECT(object));
+GstObject *	gst_object_ref			(GstObject *object);		
+void 		gst_object_unref		(GstObject *object);		
+void 		gst_object_sink			(GstObject *object);		
 
 /* destroying an object */
-#define		gst_object_destroy(object)	gtk_object_destroy(GTK_OBJECT(object))
+void 		gst_object_destroy		(GstObject *object);		
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);

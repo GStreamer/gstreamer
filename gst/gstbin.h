@@ -47,6 +47,8 @@ extern GstElementDetails gst_bin_details;
 typedef enum {
   /* this bin is a manager of child elements, i.e. a pipeline or thread */
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
+  /* this bin is actually a meta-bin, and may need to be scheduled */
+  GST_BIN_SELF_SCHEDULABLE,
 
   /* we prefer to have cothreads when its an option, over chain-based */
   GST_BIN_FLAG_PREFER_COTHREADS,
@@ -55,8 +57,8 @@ typedef enum {
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 4,
 } GstBinFlags;
 
-typedef struct _GstBin GstBin;
-typedef struct _GstBinClass GstBinClass;
+//typedef struct _GstBin GstBin;
+//typedef struct _GstBinClass GstBinClass;
 typedef struct __GstBinChain _GstBinChain;
 
 struct _GstBin {
@@ -94,9 +96,6 @@ struct _GstBinClass {
   gboolean	(*change_state_type)	(GstBin *bin,
 					 GstElementState state,
 					 GtkType type);
-  /* create a plan for the execution of the bin */
-  void		(*create_plan)		(GstBin *bin);
-  void		(*schedule)		(GstBin *bin);
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
 };
@@ -116,6 +115,10 @@ GtkType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 #define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
+void		gst_bin_set_element_manager	(GstElement *element, GstElement *manager);
+void		gst_bin_add_managed_element	(GstBin *bin, GstElement *element);
+void		gst_bin_remove_managed_element	(GstBin *bin, GstElement *element);
+
 /* add and remove elements from the bin */
 void		gst_bin_add			(GstBin *bin,
 						 GstElement *element);
@@ -129,8 +132,6 @@ GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin,
 						 const gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
-void		gst_bin_create_plan		(GstBin *bin);
-void		gst_bin_schedule		(GstBin *bin);
 gboolean	gst_bin_set_state_type		(GstBin *bin,
 						 GstElementState state,
 						 GtkType type);

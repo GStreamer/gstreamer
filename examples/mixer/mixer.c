@@ -4,10 +4,13 @@
  * demonstrates the adder plugin and the volume envelope plugin 
  * work in progress but do try it out 
  * 
- * Latest change : 	16/04/2001
- * 					multiple input channels allowed
- * 					volume envelope adapted 
- * Version :		0.3
+ * Latest change : 	28/04/2001
+ * 					trying to adapt to incsched
+ * 					delayed start for channels > 1
+ *					now works by quickhacking the
+ *					adder plugin to set
+ * 					GST_ELEMENT_COTHREAD_STOPPING		
+ * Version :		0.5
  */
 
 #include <stdlib.h>
@@ -15,8 +18,10 @@
 #include "mixer.h"
 #include <unistd.h>
 
+//#define WITH_BUG
+//#define WITH_BUG2
 //#define DEBUG
-
+//#define AUTOPLUG	/* define if you want autoplugging of input channels */
 /* function prototypes */
 
 input_channel_t*	create_input_channel (int id, char* location);
@@ -35,55 +40,50 @@ void eos(GstElement *element)
 //  playing = FALSE;
 }
 
-static void
-gst_play_have_type (GstElement *sink, GstElement *sink2, gpointer data)
-{
-  GST_DEBUG (0,"GstPipeline: play have type %p\n", (gboolean *)data);
- 
-  *(gboolean *)data = TRUE;
-}
-
 static GstCaps*
 gst_play_typefind (GstBin *bin, GstElement *element)
 {
-  gboolean found = FALSE;
   GstElement *typefind;
+  GstElement *pipeline;
   GstCaps *caps = NULL;
 
-  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n",
-             GST_ELEMENT_NAME(element), &found);
+  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\"\n",
+             GST_ELEMENT_NAME(element));
+
+  pipeline = gst_pipeline_new ("autoplug_pipeline");
  
   typefind = gst_elementfactory_make ("typefind", "typefind");
   g_return_val_if_fail (typefind != NULL, FALSE);
 
-  gtk_signal_connect (GTK_OBJECT (typefind), "have_type",  
-                      GTK_SIGNAL_FUNC (gst_play_have_type), &found);
- 
   gst_pad_connect (gst_element_get_pad (element, "src"),
                    gst_element_get_pad (typefind, "sink"));
   gst_bin_add (bin, typefind);
+  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (bin));
   
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
   
   // push a buffer... the have_type signal handler will set the found flag
-  gst_bin_iterate (bin);
+  gst_bin_iterate (GST_BIN (pipeline));
   
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   caps = gst_pad_get_caps (gst_element_get_pad (element, "src"));
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
                       gst_element_get_pad (typefind, "sink"));
   gst_bin_remove (bin, typefind);
+  gst_bin_remove (GST_BIN (pipeline), GST_ELEMENT (bin));
   gst_object_unref (GST_OBJECT (typefind));
+  gst_object_unref (GST_OBJECT (pipeline));
                    
   return caps;
 }
 
 int main(int argc,char *argv[]) 
 {
-  int i;
+  int i, j;
   int num_channels;
+  gboolean done;
   
   char buffer[20];
   
@@ -108,38 +108,41 @@ int main(int argc,char *argv[])
   /* set up output channel and main bin */
   
   /* create adder */
-  adder = gst_elementfactory_make("adder", "adderel");
+  adder = gst_elementfactory_make ("adder", "adderel");
 
   /* create an audio sink */
-  audiosink = gst_elementfactory_make("esdsink", "play_audio");
+  audiosink = gst_elementfactory_make ("esdsink", "play_audio");
 
   /* create main bin */
-  main_bin = gst_bin_new("bin");
+  main_bin = gst_pipeline_new("bin");
 
   /* connect adder and output to bin */
-
-  gst_bin_add(GST_BIN(main_bin), adder);
-  gst_bin_add(GST_BIN(main_bin), audiosink);
+  GST_INFO (0, "main: adding adder to bin");
+  gst_bin_add (GST_BIN(main_bin), adder);
+  GST_INFO (0, "main: adding audiosink to bin");
+  gst_bin_add (GST_BIN(main_bin), audiosink);
 
   /* connect adder and audiosink */
 
   gst_pad_connect(gst_element_get_pad(adder,"src"),
                   gst_element_get_pad(audiosink,"sink"));
   
-  /* create input channels, add to bin and connect */
-
+  /* start looping */
   input_channels = NULL;
   
   for (i = 1; i < argc; ++i)
   {
     printf ("Opening channel %d from file %s...\n", i, argv[i]);
     channel_in = create_input_channel (i, argv[i]);
-    input_channels = g_list_append (input_channels, channel_in);  
-    gst_bin_add(GST_BIN(main_bin), channel_in->pipe);
+    input_channels = g_list_append (input_channels, channel_in);
+
+    if (i > 1) gst_element_set_state (main_bin, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN(main_bin), channel_in->pipe);
 
     /* request pads and connect to adder */
+    GST_INFO (0, "requesting pad\n");
     pad = gst_element_request_pad_by_name (adder, "sink%d");
-    g_print ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
+    printf ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
     sprintf (buffer, "channel%d", i);
     gst_pad_connect (gst_element_get_pad (channel_in->pipe, buffer), pad);
 
@@ -178,24 +181,32 @@ int main(int argc,char *argv[])
       env_register_cp (channel_in->volenv,  num_channels * 10.0 - 5.0, 0.0000001); /* start fade in */
     }   
     env_register_cp (channel_in->volenv,  num_channels * 10.0      , 1.0 / num_channels); /* to end level */
+
+    xmlSaveFile("mixer.xml", gst_xml_write(GST_ELEMENT(main_bin)));
+
+    /* start playing */
+    gst_element_set_state(main_bin, GST_STATE_PLAYING);
+
+    // write out the schedule
+    gst_schedule_show(GST_ELEMENT_SCHED(main_bin));
+    playing = TRUE;
+
+    j = 0;
+    //printf ("main: start iterating from 0");
+    while (playing && j < 100) 
+    {
+//      printf ("main: iterating %d\n", j);
+      gst_bin_iterate(GST_BIN(main_bin));
+     //fprintf(stderr,"after iterate()\n");
+      ++j;
+    }
   }
-
-  /* sleep a few seconds doesn't seem to help anyway */
-
-  printf ("Sleeping a few seconds ...\n");
-  sleep (2);
-  printf ("Waking up ...\n");
-
-  
-  /* start playing */
-  gst_element_set_state(main_bin, GST_STATE_PLAYING);
-
-  playing = TRUE;
-
-  while (playing) {
+  printf ("main: all the channels are open\n");
+  while (playing) 
+  {
     gst_bin_iterate(GST_BIN(main_bin));
+    //fprintf(stderr,"after iterate()\n");
   }
-
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
 
@@ -228,11 +239,10 @@ create_input_channel (int id, char* location)
   GstAutoplug *autoplug;
   GstCaps *srccaps;
   GstElement *new_element;  
+  GstElement *decoder;
 
-#ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating channel with id %d for file %s\n",
+  GST_DEBUG (0, "c_i_p : creating channel with id %d for file %s\n",
   		  id, location);
-#endif
   
   /* allocate channel */
 
@@ -245,23 +255,21 @@ create_input_channel (int id, char* location)
 
   /* create channel */
 
-#ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating pipeline\n");
-#endif
+  GST_DEBUG (0, "c_i_p : creating pipeline\n");
 
-  channel->pipe = gst_bin_new ("pipeline");
+  sprintf (buffer, "pipeline%d", id);
+  channel->pipe = gst_bin_new (buffer);
   g_assert(channel->pipe != NULL);    
     
   /* create elements */
 
-#ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating disksrc\n");
-#endif
+  GST_DEBUG(0, "c_i_p : creating disksrc\n");
 
   sprintf (buffer, "disksrc%d", id);
   channel->disksrc = gst_elementfactory_make ("disksrc", buffer);
   g_assert(channel->disksrc != NULL);    
-  
+
+  GST_DEBUG(0, "c_i_p : setting location\n");
   gtk_object_set(GTK_OBJECT(channel->disksrc),"location", location, NULL);
 
   /* add disksrc to the bin before autoplug */
@@ -286,8 +294,24 @@ create_input_channel (int id, char* location)
   printf ("DEBUG : c_i_p : getting srccaps\n");
 #endif
 
+#ifdef WITH_BUG
   srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->disksrc);
+#endif
+#ifdef WITH_BUG2
+  {
+    GstElement *pipeline;
 
+    pipeline = gst_pipeline_new ("autoplug_pipeline");
+
+    gst_bin_add (GST_BIN (pipeline), channel->pipe);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (pipeline), channel->pipe);
+    
+  }
+#endif
+
+#ifdef AUTOPLUG
   if (!srccaps) {
     g_print ("could not autoplug, unknown media type...\n");
     exit (-1);
@@ -311,7 +335,24 @@ create_input_channel (int id, char* location)
     g_print ("could not autoplug, no suitable codecs found...\n");
     exit (-1);
   }
+
+#else
+
+  new_element = gst_bin_new ("autoplug_bin");
+
+  /* static plug, use mad plugin and assume mp3 input */
+  decoder =  gst_elementfactory_make ("mad", "mpg123");
+
+  gst_bin_add (GST_BIN (new_element), decoder);
+
+  gst_element_add_ghost_pad (new_element, 
+		  gst_element_get_pad (decoder, "sink"), "sink");
+  gst_element_add_ghost_pad (new_element, 
+		  gst_element_get_pad (decoder, "src"), "src_00");
   
+#endif  
+  xmlSaveFile ("mixer.gst", gst_xml_write (new_element));
+
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   

@@ -174,21 +174,6 @@ gst_init_check (int     *argc,
 
 	(*argv)[i] = NULL;
       }
-      else if (!strncmp ("--gst-mask=", (*argv)[i], 11)) {
-	guint32 val;
-
-        // handle either 0xHEX or dec
-        if (*((*argv)[i]+12) == 'x') {
-          sscanf ((*argv)[i]+13, "%08x", &val);
-        } else {
-          sscanf ((*argv)[i]+11, "%d", &val);
-        }
-
-	gst_debug_set_categories (val);
-	gst_info_set_categories (val);
-
-	(*argv)[i] = NULL;
-      }
       else if (!strncmp ("--gst-plugin-spew", (*argv)[i], 17)) {
         _gst_plugin_spew = TRUE;
 
@@ -247,10 +232,19 @@ gst_init_check (int     *argc,
     g_print ("--------------------------------------------------------\n");
 
     for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
-      g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
-                  (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
-                  (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
-		   gst_get_category_name (i));
+      if (gst_get_category_name(i)) {
+#if GST_DEBUG_COLOR
+        g_print ("   0x%08x     %s%s     \033[%sm%s\033[00m\n", 1<<i, 
+                 (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+                 (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
+                 _gst_category_colors[i], gst_get_category_name (i));
+#else
+        g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
+                 (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+                 (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
+                 gst_get_category_name (i));
+#endif
+      }
     }
 
     ret = FALSE;

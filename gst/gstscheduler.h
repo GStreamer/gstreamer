@@ -24,6 +24,7 @@
 #ifndef __GST_SCHEDULER_H__
 #define __GST_SCHEDULER_H__
 
+#include <gst/gstelement.h>
 #include <gst/gstbin.h>
 
 
@@ -32,7 +33,105 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+#define GST_TYPE_SCHEDULE \
+  (gst_schedule_get_type())
+#define GST_SCHEDULE(obj) \
+  (GTK_CHECK_CAST((obj),GST_TYPE_SCHEDULE,GstSchedule))
+#define GST_SCHEDULE_CLASS(klass) \
+  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_SCHEDULE,GstScheduleClass))
+#define GST_IS_SCHEDULE(obj) \
+  (GTK_CHECK_TYPE((obj),GST_TYPE_SCHEDULE))
+#define GST_IS_SCHEDULE_CLASS(klass) \
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULE))
+
+
+#define GST_SCHED_PARENT(sched)		((sched)->parent)
+
+//typedef struct _GstSchedule GstSchedule;
+//typedef struct _GstScheduleClass GstScheduleClass;
+typedef struct _GstScheduleChain GstScheduleChain;
+
+struct _GstSchedule {
+  GstObject object;
+
+  GstElement *parent;
+
+  GList *elements;
+  gint num_elements;
+
+  GList *chains;
+  gint num_chains;
+
+  void (*add_element)		(GstSchedule *sched, GstElement *element);
+  void (*remove_element)	(GstSchedule *sched, GstElement *element);
+  void (*enable_element)	(GstSchedule *sched, GstElement *element);
+  void (*disable_element)	(GstSchedule *sched, GstElement *element);
+  void (*lock_element)		(GstSchedule *sched, GstElement *element);
+  void (*unlock_element)	(GstSchedule *sched, GstElement *element);
+  void (*pad_connect)		(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+  void (*pad_disconnect)	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+  gboolean (*iterate)		(GstSchedule *sched);
+};
+
+struct _GstScheduleClass {
+  GstObjectClass parent_class;
+};
+
+//#define GST_SCHEDULE_SAFETY if (sched)
+#define GST_SCHEDULE_SAFETY
+
+#define GST_SCHEDULE_ADD_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY ((sched)->add_element((sched),(element)))
+#define GST_SCHEDULE_REMOVE_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY ((sched)->remove_element((sched),(element)))
+#define GST_SCHEDULE_ENABLE_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY ((sched)->enable_element((sched),(element)))
+#define GST_SCHEDULE_DISABLE_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY ((sched)->disable_element((sched),(element)))
+#define GST_SCHEDULE_LOCK_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY if ((sched)->lock_element != NULL) \
+    ((sched)->lock_element((sched),(element)))
+#define GST_SCHEDULE_UNLOCK_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY if ((sched)->unlock_element != NULL) \
+    ((sched)->unlock_element((sched),(element)))
+#define GST_SCHEDULE_PAD_CONNECT(sched,srcpad,sinkpad) \
+  GST_SCHEDULE_SAFETY ((sched)->pad_connect((sched),(srcpad),(sinkpad)))
+#define GST_SCHEDULE_PAD_DISCONNECT(sched,srcpad,sinkpad) \
+  GST_SCHEDULE_SAFETY ((sched)->pad_disconnect((sched),(srcpad),(sinkpad)))
+#define GST_SCHEDULE_ITERATE(sched) \
+  ((sched)->iterate((sched)))
+
+
+
+struct _GstScheduleChain {
+  GstSchedule *sched;
+
+  GList *disabled;
+
+  GList *elements;
+  gint num_elements;
+
+  GstElement *entry;
+
+  gint cothreaded_elements;
+  gboolean schedule;
+};
+
+
 void gst_bin_schedule_func(GstBin *bin);
+
+GtkType		gst_schedule_get_type		(void);
+GstSchedule *	gst_schedule_new		(GstElement *parent);
+
+void	gst_schedule_add_element	(GstSchedule *sched, GstElement *element);
+void	gst_schedule_remove_element	(GstSchedule *sched, GstElement *element);
+void	gst_schedule_enable_element	(GstSchedule *sched, GstElement *element);
+void	gst_schedule_disable_element	(GstSchedule *sched, GstElement *element);
+void	gst_schedule_pad_connect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+void	gst_schedule_pad_disconnect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+gboolean	gst_schedule_iterate	(GstSchedule *sched);
+
+void	gst_schedule_show		(GstSchedule *sched);
 
 
 #ifdef __cplusplus   

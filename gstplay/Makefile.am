@@ -37,6 +37,7 @@ noinst_HEADERS = \
 	gstplayprivate.h \
 	full-screen.h
 
+
 libgstmediaplay_la_LDFLAGS = -rdynamic
 
 gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS)

@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: GStreamer Uninstalled
+Description: Streaming-media framework, Not Installed
+Version: @VERSION@
+Requires: glib gtk+
+Libs:  ${pcbuilddir}/${pcfiledir}/gst/libgst.la
+Cflags: -I${pcbuilddir}/${pcfiledir}

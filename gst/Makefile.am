@@ -90,6 +90,7 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	gsttypes.h		\
 	gstautoplug.h		\
 	gstbin.h		\
 	gstbuffer.h		\
@@ -128,7 +129,7 @@ noinst_HEADERS = 	\
 	gstsparc.h	\
 	gstpropsprivate.h
 
-CFLAGS = $(LIBGST_CFLAGS)
+CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE
 LIBS = $(LIBGST_LIBS)
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 

@@ -24,6 +24,11 @@
 #include "gst_private.h"
 
 #include "gstpipeline.h"
+#include "gstthread.h"
+#include "gstutils.h"
+#include "gsttype.h"
+#include "gstautoplug.h"
+#include "gstscheduler.h"
 
 
 GstElementDetails gst_pipeline_details = {
@@ -95,6 +100,10 @@ gst_pipeline_init (GstPipeline *pipeline)
 {
   // we're a manager by default
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
+
+  GST_ELEMENT_SCHED(pipeline) = gst_schedule_new(GST_ELEMENT(pipeline));
+  GST_DEBUG(GST_CAT_PIPELINE, "pipeline's scheduler is %p\n",GST_ELEMENT_SCHED(pipeline));
+//  gst_element_set_manager(GST_ELEMENT(pipeline),GST_ELEMENT(pipeline));
 }
 
 
@@ -107,16 +116,16 @@ gst_pipeline_init (GstPipeline *pipeline)
  * Returns: newly created GstPipeline
  */
 GstElement*
-gst_pipeline_new (const guchar *name)
+gst_pipeline_new (const guchar *name) 
 {
   return gst_elementfactory_make ("pipeline", name);
 }
 
-static void
-gst_pipeline_prepare (GstPipeline *pipeline)
+static void 
+gst_pipeline_prepare (GstPipeline *pipeline) 
 {
-  GST_DEBUG (0,"GstPipeline: preparing pipeline \"%s\" for playing\n",
-		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
+  GST_DEBUG (GST_CAT_PIPELINE,"preparing pipeline \"%s\" for playing (DEPRACATED!!)\n",
+             GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
 }
 
 static GstElementStateReturn

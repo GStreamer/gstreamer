@@ -10,7 +10,7 @@ int main(int argc,char *argv[]) {
 //  _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
 
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("pipeline");
   g_return_if_fail(bin != NULL);
 
   g_print("--- creating src and sink elements\n");
@@ -35,8 +35,6 @@ int main(int argc,char *argv[]) {
   g_print("--- setting up\n");
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
 
-  g_print("--- creating plan\n");
-  gst_bin_create_plan(bin);
   g_print("--- iterating\n");
   gst_bin_iterate(bin);
 }

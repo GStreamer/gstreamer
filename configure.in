@@ -417,35 +417,75 @@ AC_SUBST(X_LIBS)
 
 dnl Check for the Xv library
 xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_LIBXV=yes, HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+AC_CHECK_LIB(Xv, XvQueryExtension, 
+  HAVE_LIBXV=yes 
+  AC_DEFINE(HAVE_LIBXV),
+  HAVE_LIBXV=no,
+  $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS
+)
 LIBS=${xvsave_LIBS}
 AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
 AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
 dnl Check for OSS audio
-AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS=yes, HAVE_OSS=no)
+AC_CHECK_HEADER(sys/soundcard.h,
+  AC_DEFINE(HAVE_OSS) 
+  HAVE_OSS=yes, []
+)
 
 dnl Check for xaudio
-AC_CHECK_HEADER(xaudio/decoder.h, HAVE_XAUDIO=yes, HAVE_XAUDIO=no)
+AC_CHECK_HEADER(xaudio/decoder.h,
+  AC_DEFINE(HAVE_XAUDIO) 
+  HAVE_XAUDIO="yes",
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gstxa
+)
+  HAVE_XAUDIO="no",
+)
 
 dnl Check for libmad
 AC_MSG_CHECKING(MAD library)
-AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_LIBMAD=yes, HAVE_LIBMAD=no, )
-AC_CHECK_HEADER(mad.h, :, HAVE_LIBMAD=no)
+AC_CHECK_LIB(mad, mad_decoder_finish, 
+  HAVE_LIBMAD=yes 
+  AC_DEFINE(HAVE_LIBMAD),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: mad
+)
+  HAVE_LIBMAD=no,
+)
 
 dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
-AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS=yes, HAVE_VORBIS=no, )
-AC_CHECK_HEADER(vorbis/codec.h, :, HAVE_VORBIS=no)
+AC_CHECK_LIB(vorbis, ogg_sync_init, 
+  HAVE_VORBIS=yes 
+  AC_DEFINE(HAVE_VORBIS),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: vorbisdec vorbisenc
+)
+  HAVE_VORBIS=no,
+)
 
 dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
-AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_LIBJPEG=yes, HAVE_LIBJPEG=no, )
-AC_CHECK_HEADER(jpeglib.h, :, HAVE_LIBJPEG=no)
+AC_CHECK_LIB(jpeg, jpeg_set_defaults, 
+  HAVE_LIBJPEG=yes 
+  AC_DEFINE(HAVE_LIBJPEG),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: jpegdec jpegenc
+)
+  HAVE_LIBJPEG=no,
+)
 
-dnl Check for libHermes
+dnl Check for Hermes
 AC_MSG_CHECKING(Hermes library)
-AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, HAVE_LIBHERMES=yes, HAVE_LIBHERMES=no, )
+AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, 
+  HAVE_LIBHERMES=yes 
+  AC_DEFINE(HAVE_LIBHERMES),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: colorspace
+)
+  HAVE_LIBHERMES=no,
+)
 AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
 
 dnl Check for cdparanoia
@@ -672,13 +712,13 @@ esac],
 [:]) dnl Default value
 
 AC_ARG_ENABLE(docs-build,
-[  --disable-docs-build         disable all building of documentation],
+[  --enable-docs-build           enable building of documentation],
 [case "${enableval}" in
   yes) BUILD_DOCS=yes ;;
   no)  BUILD_DOCS=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
 esac], 
-[BUILD_DOCS=yes]) dnl Default value
+[BUILD_DOCS=no]) dnl Default value
 
 AC_ARG_ENABLE(plugin-docs,
 [  --enable-plugin-docs         enable the building of plugin documentation
@@ -889,7 +929,11 @@ dnl ##############################
 dnl # Set up the defaults cflags #
 dnl ##############################
 dnl CC="kgcc"
-CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+if test "x$USE_PROFILING" = xyes; then
+  CFLAGS="$CORE_CFLAGS $CFLAGS -Wall"
+else
+  CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+fi
 LIBS="$CORE_LIBS $LIBS"
 AC_SUBST(CORE_LIBS)
 AC_SUBST(CORE_CFLAGS)
@@ -1041,6 +1085,7 @@ tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
 testsuite/Makefile
+testsuite/refcounting/Makefile
 testsuite/capsnego/Makefile
 tests/nego/Makefile
 examples/Makefile
@@ -1073,5 +1118,7 @@ docs/fwg/Makefile
 debian/Makefile
 stamp.h
 gstreamer-config
-gstreamer.spec])
+gstreamer.spec
+gstreamer.pc
+gstreamer-uninstalled.pc])
 AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])

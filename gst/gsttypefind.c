@@ -180,11 +180,25 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 
       GST_DEBUG (0,"try type :%d \"%s\"\n", type->id, type->mime);
       if (typefindfunc && (caps = typefindfunc (buf, type))) {
-        GST_DEBUG (0,"found type :%d \"%s\"\n", caps->id, type->mime);
+        GST_DEBUG (0,"found type :%d \"%s\" \"%s\"\n", caps->id, type->mime, 
+			gst_caps_get_name (caps));
 	typefind->caps = caps;
+
+	gst_pad_set_caps (pad, caps);
+
+{ /* FIXME: this should all be in an _emit() wrapper eventually */
+        int oldstate = GST_STATE(typefind);
+	gst_object_ref (GST_OBJECT (typefind));
         gtk_signal_emit (GTK_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE],
 	                      typefind->caps);
-	gst_pad_set_caps (pad, caps);
+        if (GST_STATE(typefind) != oldstate) {
+	  gst_object_unref (GST_OBJECT (typefind));
+          GST_DEBUG(0, "state changed during signal, aborting\n");
+          cothread_switch(cothread_current_main());
+        }
+	gst_object_unref (GST_OBJECT (typefind));
+}
+
         goto end;
       }
       funcs = g_slist_next (funcs);

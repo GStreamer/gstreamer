@@ -86,6 +86,7 @@ int main(int argc,char *argv[]) {
 
   gtk_socket = gtk_socket_new ();
   gtk_widget_show (gtk_socket);
+  gtk_widget_set_usize(gtk_socket,320,240);
 
   gnome_app_set_contents(GNOME_APP(appwindow),
       	        GTK_WIDGET(gtk_socket));
