@@ -83,19 +83,22 @@ typedef enum
 #define GST_OBJECT_IS_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
 
 struct _GstObject {
-  GObject 	 object;
+  GObject	 object;
 
   /*< public >*/
   GstAtomicInt	 refcount;
 
   /*< public >*/ /* with LOCK */
-  GMutex	*lock; 		/* locking for all sorts of things */
-  gchar 	*name; 		/* name */
-  GstObject 	*parent; 	/* this object's parent, no refcount is held for the parent. */
-  guint32 	 flags;
+  GMutex    *lock;        /* object LOCK */
+  gchar	    *name;        /* object name */
+  GstObject *parent;      /* this object's parent, weak ref */
+  guint32   flags;
+
+  /* FIXME: in padding, move on up */
+  gchar     *name_prefix; /* used for debugging */
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer  _gst_reserved[GST_PADDING - 1];
 };
 
 
@@ -133,8 +136,10 @@ struct _GstObjectClass {
 GType		gst_object_get_type		(void);
 
 /* name routines */
-gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
-gchar* 		gst_object_get_name		(GstObject *object);
+gboolean	gst_object_set_name		(GstObject *object, const gchar *name_prefix);
+gchar*		gst_object_get_name		(GstObject *object);
+void		gst_object_set_name_prefix	(GstObject *object, const gchar *name_prefix);
+gchar*		gst_object_get_name_prefix	(GstObject *object);
 
 /* parentage routines */
 gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);

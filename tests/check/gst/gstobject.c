@@ -366,6 +366,8 @@ thread_name_object_default (int *i)
   for (j = *i; j < num_objects; j += num_threads) {
     GstObject *o = GST_OBJECT (g_list_nth_data (object_list, j));
 
+    /* g_message ("THREAD %p: setting default name on object %d\n",
+       g_thread_self (), j); */
     gst_object_set_name (o, NULL);
     /* a minimal sleep invokes a thread switch */
     g_usleep (1);
@@ -373,15 +375,42 @@ thread_name_object_default (int *i)
 
   /* thread is done, so let's return */
   g_message ("THREAD %p: set name\n", g_thread_self ());
+  g_free (i);
 
   return NULL;
 }
 
+static gint
+gst_object_name_compare (GstObject * o, GstObject * p)
+{
+  gint result;
+
+  GST_LOCK (o);
+  GST_LOCK (p);
+
+  if (o->name == NULL && p->name == NULL) {
+    result = 0;
+  } else if (o->name == NULL) {
+    result = -1;
+  } else if (p->name == NULL) {
+    result = 1;
+  } else {
+    result = strcmp (o->name, p->name);
+  }
+
+  GST_UNLOCK (p);
+  GST_UNLOCK (o);
+
+  return result;
+}
 
 START_TEST (test_fake_object_name_threaded_unique)
 {
   GstObject *object;
   gint i;
+  gint *ip;
+  gchar *name1, *name2;
+  GList *l;
 
   g_message ("\nTEST: uniqueness of default names\n");
 
@@ -394,7 +423,9 @@ START_TEST (test_fake_object_name_threaded_unique)
 
   mark_point ();
   for (i = 0; i < num_threads; ++i) {
-    MAIN_START_THREAD_FUNCTION (i, thread_name_object_default, &i);
+    ip = g_new (gint, 1);
+    *ip = i;
+    MAIN_START_THREAD_FUNCTION (i, thread_name_object_default, ip);
   }
 
   mark_point ();
@@ -404,6 +435,16 @@ START_TEST (test_fake_object_name_threaded_unique)
 
   /* sort GList based on object name */
   /* FIXME: sort and test */
+  g_list_sort (object_list, (GCompareFunc) gst_object_name_compare);
+
+  name1 = gst_object_get_name (GST_OBJECT (object_list->data));
+  for (l = object_list->next; l->next; l = l->next) {
+    g_message ("object with name %s\n", name1);
+    name2 = gst_object_get_name (GST_OBJECT (l->data));
+    fail_if (strcmp (name1, name2) == 0, "Two objects with name %s", name2);
+    g_free (name1);
+    name1 = name2;
+  }
 
   /* free stuff */
   g_list_foreach (object_list, (GFunc) g_object_unref, NULL);
@@ -417,13 +458,15 @@ END_TEST
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
   tcase_add_test (tc_chain, test_fake_object_new);
   tcase_add_test (tc_chain, test_fake_object_name);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_right);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_unique);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
+
+  /* SEGV tests go last so we can debug the others */
+  tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
   return s;
 }
 

@@ -668,6 +668,63 @@ gst_object_get_name (GstObject * object)
 }
 
 /**
+ * gst_object_set_name_prefix:
+ * @object:      a #GstObject to set the name prefix of
+ * @name_prefix: new name prefix of object
+ *
+ * Sets the name prefix of the object.
+ * This function makes a copy of the provided name prefix, so the caller
+ * retains ownership of the name prefix it sent.
+ *
+ *
+ * MT safe.  This function grabs and releases the object's LOCK.
+ */
+void
+gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  GST_LOCK (object);
+
+  if (object->name_prefix != NULL)
+    g_free (object->name_prefix);
+
+  if (name_prefix == NULL)
+    object->name_prefix = NULL;
+  else
+    object->name_prefix = g_strdup (name_prefix);
+
+  GST_UNLOCK (object);
+}
+
+/**
+ * gst_object_get_name_prefix:
+ * @object: a #GstObject to get the name prefix of
+ *
+ * Returns a copy of the name prefix of the object.
+ * Caller should g_free() the return value after usage.
+ * For a prefixless object, this returns NULL, which you can safely g_free()
+ * as well.
+ *
+ * Returns: the name prefix of the object. g_free() after usage.
+ *
+ * MT safe.
+ */
+gchar *
+gst_object_get_name_prefix (GstObject * object)
+{
+  gchar *result = NULL;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+
+  GST_LOCK (object);
+  result = g_strdup (object->name_prefix);
+  GST_UNLOCK (object);
+
+  return result;
+}
+
+/**
  * gst_object_set_parent:
  * @object: GstObject to set parent of
  * @parent: new parent of object

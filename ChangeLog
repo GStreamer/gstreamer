@@ -1,3 +1,13 @@
+2004-12-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstobject.c:
+	* docs/design/part-gstelement.txt:
+	* docs/design/part-gstobject.txt:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	  add _get/_set_name_prefix() for debugging. Update docs.
+	  Finish unique name unit test
+
 2004-12-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/design/part-conventions.txt:
