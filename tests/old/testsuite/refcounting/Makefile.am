@@ -17,6 +17,7 @@ TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`/test-r
 TESTS = $(tests_working)
 
 check_PROGRAMS = $(TESTS)
+noinst_PROGRAMS = $(tests_failing)
 
 EXTRA_DIST = thread.c object.c
 
