@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/@PACKAGE@-@VERSION@
+
+Name: GStreamer Play Library
+Description: Streaming-media framework, play libraries
+Requires: gstreamer >= @GSTREAMER_REQ@
+Version: @VERSION@
+
+Libs: -L${libdir} -lgstplay -lgstcontrol
+Cflags: -I${includedir}
