@@ -178,7 +178,7 @@ gst_esdsink_init (GTypeInstance * instance, gpointer g_class)
   esdsink->channels = 2;
   esdsink->frequency = 44100;
   esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth / 8);
-  esdsink->host = getenv ("ESPEAKER");
+  esdsink->host = g_strdup (getenv ("ESPEAKER"));
   esdsink->provided_clock =
       gst_audio_clock_new ("esdclock", gst_esdsink_get_time, esdsink);
   gst_object_set_parent (GST_OBJECT (esdsink->provided_clock),
@@ -204,6 +204,9 @@ gst_esdsink_link (GstPad * pad, const GstCaps * caps)
 {
   GstEsdsink *esdsink;
   GstStructure *structure;
+
+  g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
