@@ -2554,6 +2554,60 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext * videocontext,
   return caps;
 }
 
+/*
+ * Some AAC specific code... *sigh*
+ */
+
+static gint
+aac_rate_idx (gint rate)
+{
+  if (92017 <= rate)
+    return 0;
+  else if (75132 <= rate)
+    return 1;
+  else if (55426 <= rate)
+    return 2;
+  else if (46009 <= rate)
+    return 3;
+  else if (37566 <= rate)
+    return 4;
+  else if (27713 <= rate)
+    return 5;
+  else if (23004 <= rate)
+    return 6;
+  else if (18783 <= rate)
+    return 7;
+  else if (13856 <= rate)
+    return 8;
+  else if (11502 <= rate)
+    return 9;
+  else if (9391 <= rate)
+    return 10;
+  else
+    return 11;
+}
+
+static gint
+aac_profile_idx (const gchar * codec_id)
+{
+  gint profile;
+
+  if (strlen (codec_id) <= 12)
+    profile = 3;
+  else if (!strncmp (&codec_id[12], "MAIN", 4))
+    profile = 0;
+  else if (!strncmp (&codec_id[12], "LC", 2))
+    profile = 1;
+  else if (!strncmp (&codec_id[12], "SSR", 3))
+    profile = 2;
+  else
+    profile = 3;
+
+  return profile;
+}
+
+#define AAC_SYNC_EXTENSION_TYPE 0x02b7
+
 static GstCaps *
 gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
     const gchar * codec_id, gpointer data, guint size, GstMatroskaDemux * demux)
@@ -2648,18 +2702,47 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
       !strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4))) {
     gint mpegversion = -1;
+    GstBuffer *priv = NULL;
 
     if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG2,
             strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2)))
       mpegversion = 2;
     else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
-            strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4)))
+            strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4))) {
+      gint rate_idx, profile;
+      guint8 *data;
+
       mpegversion = 4;
-    else
+
+      if (audiocontext) {
+        /* make up decoderspecificdata */
+        priv = gst_buffer_new_and_alloc (5);
+        data = GST_BUFFER_DATA (priv);
+        rate_idx = aac_rate_idx (audiocontext->samplerate);
+        profile = aac_profile_idx (codec_id);
+
+        data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
+        data[1] = ((rate_idx & 0x1) << 7) | (audiocontext->channels << 3);
+
+        if (g_strrstr (codec_id, "SBR")) {
+          /* HE-AAC (aka SBR AAC) */
+          audiocontext->samplerate *= 2;
+          rate_idx = aac_rate_idx (audiocontext->samplerate);
+          data[2] = AAC_SYNC_EXTENSION_TYPE >> 3;
+          data[3] = ((AAC_SYNC_EXTENSION_TYPE & 0x07) << 5) | 5;
+          data[4] = (1 << 7) | (rate_idx << 3);
+        } else {
+          GST_BUFFER_SIZE (priv) = 2;
+        }
+      }
+    } else
       g_assert (0);
 
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, mpegversion, NULL);
+    if (priv) {
+      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
+    }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_TTA)) {
     if (audiocontext != NULL) {
       caps = gst_caps_new_simple ("audio/x-tta",
