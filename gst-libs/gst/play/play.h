@@ -38,26 +38,17 @@ typedef enum
 
 typedef struct _GstPlay GstPlay;
 typedef struct _GstPlayClass GstPlayClass;
+typedef struct _GstPlayPrivate GstPlayPrivate;
   
 struct _GstPlay
 {
   GstPipeline pipeline;
   
-  char *location;
-  
-  GHashTable *elements;
-  
-  gint64 time_nanos;
-  gint64 length_nanos;
-  
-  gint get_length_attempt;
-  
-  guint tick_id;
-  guint length_id;
+  GstPlayPrivate *priv;
   
   gpointer _gst_reserved[GST_PADDING];
 };
-
+  
 struct _GstPlayClass
 {
   GstPipelineClass parent_class;
