@@ -88,7 +88,7 @@ static void		volume_init		(GstVolume *filter);
 static void		volume_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		volume_get_property        (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static gint             volume_parse_caps          (GstVolume *filter, GstCaps *caps);
+static gboolean		volume_parse_caps          (GstVolume *filter, GstCaps *caps);
 
 static void		volume_chain               (GstPad *pad, GstBuffer *buf);
 static void inline 	volume_fast_float_chain    (gfloat* data, guint numsamples, GstVolume *filter);
@@ -108,37 +108,26 @@ volume_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (filter->srcpad);
 }
 
-/*
-static GstPadNegotiateReturn
-volume_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
+static GstPadConnectReturn
+volume_connect_sink (GstPad *pad, GstCaps *caps)
 {
-  GstVolume* filter = GST_VOLUME (gst_pad_get_parent (pad));
+  GstVolume *filter;
   
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
+  filter = GST_VOLUME (gst_pad_get_parent (pad));
+  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (GST_IS_VOLUME (filter), GST_PAD_CONNECT_REFUSED);
+
+  if (GST_CAPS_IS_FIXED (caps)) {
+    if (!volume_parse_caps (filter, caps) || !gst_pad_try_set_caps (filter->srcpad, caps))
+      return GST_PAD_CONNECT_REFUSED;
+    
+    return GST_PAD_CONNECT_OK;
+  }
   
-  if (volume_parse_caps(filter, *caps))
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->sinkpad,caps);
+  return GST_PAD_CONNECT_DELAYED;
 }
 
-static GstPadNegotiateReturn
-volume_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstVolume* filter = GST_VOLUME (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  if (volume_parse_caps(filter, *caps))
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
-}	
-*/
-
-static gint
+static gboolean
 volume_parse_caps (GstVolume *filter, GstCaps *caps)
 {
   const gchar *format;
@@ -176,9 +165,9 @@ volume_parse_caps (GstVolume *filter, GstCaps *caps)
                filter->layout, filter->intercept, filter->slope);
     }
   } else  {
-    return -1;
+    return FALSE;
   }
-  return 0;
+  return TRUE;
 }
 
 
@@ -233,10 +222,9 @@ static void
 volume_init (GstVolume *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(volume_sink_factory (),"sink");
-  //gst_pad_set_negotiate_function(filter->sinkpad,volume_negotiate_sink);
+  gst_pad_set_connect_function(filter->sinkpad,volume_connect_sink);
   gst_pad_set_bufferpool_function(filter->sinkpad,volume_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(volume_src_factory (),"src");
-  //gst_pad_set_negotiate_function(filter->srcpad,volume_negotiate_src);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
