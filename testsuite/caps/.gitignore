@@ -14,9 +14,11 @@ audioscale
 caps
 compatibility
 deserialize
+enumcaps
 eratosthenes
 filtercaps
 fixed
+fraction-convert
 fraction-multiply-and-zero
 intersect2
 intersection
@@ -27,6 +29,7 @@ union
 simplify
 sets
 string-conversions
+structure
 subtract
 value_compare
 value_intersect
