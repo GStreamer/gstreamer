@@ -1,3 +1,15 @@
+2004-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_set_state),
+	(gst_element_change_state):
+	  d'oh.  Set PENDING state correctly before forcing bin to change.
+	* gst/gststructure.c: (gst_structure_value_get_generic_type),
+	(gst_structure_parse_fixed_list):
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_state_transition):
+	* testsuite/states/parent.c: (main):
+	  remove comment now that it's fixed.
+
 2004-07-11  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstclock.h:
@@ -680,7 +692,6 @@
 
 	* autogen.sh: Add a temporary 'env' to test buildbot problems.
 
->>>>>>> 1.652
 2004-06-04  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
@@ -1952,7 +1963,6 @@
           add .po file download snippet
           fix a bug in the doc makefile
 
->>>>>>> 1.566
 2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

@@ -1480,7 +1480,7 @@ gst_opt_scheduler_state_transition (GstScheduler * sched, GstElement * element,
   GstOptSchedulerGroup *group;
   GstElementStateReturn res = GST_STATE_SUCCESS;
 
-  GST_DEBUG ("element \"%s\" state change %d", GST_ELEMENT_NAME (element),
+  GST_DEBUG ("element \"%s\" state change (%04x)", GST_ELEMENT_NAME (element),
       transition);
 
   /* we check the state of the managing pipeline here */

@@ -2730,7 +2730,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
   /* for bins, we allow calls to change_state where old == new
    * for elements, too many of them break with g_assert_not_reached(),
    * so weed those out first.  This is done in gst-plugins CVS and can
-   * be fixed here after a new plugins reelase.
+   * be fixed here after a new plugins release.
    * FIXME: of course this file should not have ties to gstbin.h *at all*,
    * but someone else added a function at the bottom using it.
    * Fix this properly for 0.9 */
@@ -2741,6 +2741,12 @@ gst_element_set_state (GstElement * element, GstElementState state)
   if (state == curpending) {
     if (GST_IS_BIN (element)) {
       /* set current state on it again */
+      GST_STATE_PENDING (element) = curpending;
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+          "%s is a bin, calling class state change on it for %s -> %s",
+          GST_OBJECT_NAME (element),
+          gst_element_state_get_name (curpending),
+          gst_element_state_get_name (state));
       if (oclass->change_state)
         return_val = (oclass->change_state) (element);
       return return_val;
@@ -2945,7 +2951,7 @@ gst_element_change_state (GstElement * element)
   }
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
-      "default handler tries setting state from %s to %s %04x",
+      "default handler tries setting state from %s to %s (%04x)",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (old_pending), old_transition);
 
