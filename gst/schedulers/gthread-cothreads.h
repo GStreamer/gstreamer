@@ -24,6 +24,7 @@
 #include <gst/gstthread.h>
 
 /* the name of this cothreads */
+#define COTHREADS_TYPE		gthread
 #define COTHREADS_NAME		"gthread"
 #define COTHREADS_NAME_CAPITAL	"GThread"
 
@@ -74,11 +75,6 @@ static cothread *       cothread_create                 (cothread_context *conte
     new_cothread = cothread_create ((context), (func), argc, (char**) (argv)); \
   }G_STMT_END
 static void             do_cothread_switch              (cothread *to);
-static void             do_cothread_setfunc             (cothread *thread, 
-                                                         cothread_context *context, 
-                                                         cothread_func func, 
-                                                         int argc, 
-                                                         char **argv);
 static void             do_cothread_destroy             (cothread *thread);
 #define do_cothread_lock(cothread)		/* FIXME */
 #define do_cothread_unlock(cothread)		/* FIXME */
@@ -191,14 +187,12 @@ static void do_cothread_switch (cothread *to)
   }
 }
 
-static void
-do_cothread_setfunc (cothread *thread, cothread_context *context, 
-                     cothread_func func, int argc, char **argv)
-{
-  thread->run = func;
-  thread->argc = argc;
-  thread->argv = argv;
-}
+#define do_cothread_setfunc(thread,context,_func,_argc,_argv) G_STMT_START {\
+  ((cothread *)(thread))->run = (_func); \
+  ((cothread *)(thread))->argc = _argc; \
+  ((cothread *)(thread))->argv = _argv; \
+}G_STMT_END
+
 static void
 do_cothread_destroy (cothread *thread)
 {

@@ -312,7 +312,7 @@ gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
         (GFunc) gst_bin_set_element_sched, sched);
   }
   /* otherwise, if it's just a regular old element */
-  else {
+  else if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
     GList *pads;
 
     gst_scheduler_add_element (sched, element);
@@ -375,9 +375,8 @@ gst_bin_unset_element_sched (GstElement * element, GstScheduler * sched)
         (GFunc) gst_bin_unset_element_sched, sched);
 
     gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
-  }
-  /* otherwise, if it's just a regular old element */
-  else {
+  } else if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
+    /* otherwise, if it's just a regular old element */
     GList *pads;
 
     /* set the sched pointer in all the pads */

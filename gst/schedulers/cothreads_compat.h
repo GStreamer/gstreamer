@@ -26,6 +26,7 @@
 #include "../cothreads.h"
 
 /* the name of this cothreads type */
+#define COTHREADS_TYPE		omega
 #define COTHREADS_NAME		"omega"
 #define COTHREADS_NAME_CAPITAL	"Omega"
 

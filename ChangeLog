@@ -1,3 +1,25 @@
+2004-03-28  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstbin.c: (gst_bin_set_element_sched),
+	(gst_bin_unset_element_sched):
+	  don't add decoupled elements to schedulers - otherwise it's
+	  impossible to control if a link to a decoupled element was already
+	  removed from a scheduler or not.
+	* gst/schedulers/cothreads_compat.h:
+	* gst/schedulers/gthread-cothreads.h:
+	  add COTHREADS_TYPE macro. Make do_cothread_set_func a macro so there
+	  is no "unused" warning.
+	* gst/schedulers/Makefile.am:
+	* gst/schedulers/entryscheduler.c:
+	  add new scheduler, based on ideas from talking to David and Martin.
+	  It's supposed to be small and correct. Currently it's also slow (but
+	  it's not noticable)
+	* examples/retag/retag.c: (main):
+	* testsuite/bytestream/test1.c: (main):
+	  fix missing NULLs at end of variadic functions
+	* testsuite/elements/.cvsignore:
+	  update
+
 2004-03-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstevent.h:

@@ -83,7 +83,8 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (bin), filesrc, tag_changer, filesink, NULL);
 
   /* link the elements */
-  g_assert (gst_element_link_many (filesrc, tag_changer, filesink));
+  if (!gst_element_link_many (filesrc, tag_changer, filesink, NULL))
+    g_assert_not_reached ();
 
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
