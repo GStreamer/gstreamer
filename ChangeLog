@@ -1,3 +1,8 @@
+2001-12-15 Thomas Vander Stichele  <thomas@apestaart.org>
+
+	* configure.ac : major overhaul
+	* m4/ dir added with lots of checks in it
+
 2001-12-14  Michael Meeks  <michael@ximian.com>
 
 	* gst/gst.c (gst_main, gst_main_quit): upd.
@@ -113,6 +118,7 @@
 
 	* lots of build fixes for 0.3.0 release
 
+>>>>>>> 1.3.2.2
 2001-08-15 23:43  cael
 
 	* gstplay/: ChangeLog, gstmediaplay.c, gstplay.c: Added hacky check

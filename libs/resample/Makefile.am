@@ -25,5 +25,5 @@ ARCHCFLAGS =
 endif
 endif
 
-libresample_la_CFLAGS = -O2 -ffast-math $(ARCHCFLAGS) $(GST_CFLAGS)
-
+libresample_la_LIBADD = $(GST_LIBS)
+libresample_la_CFLAGS = $(GST_CFLAGS) -ffast-math $(ARCHCFLAGS)

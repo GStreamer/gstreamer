@@ -40,6 +40,6 @@ noinst_HEADERS =		\
 	gststatistics.h	        \
 	gstfilesrc.h
 
-libgstelements_la_CFLAGS = $(GHTTP_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
-libgstelements_la_LIBADD = $(GHTTP_LIBS) $(GLIB_LIBS) $(XML_LIBS)
-libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)
+libgstelements_la_CFLAGS = $(GHTTP_CFLAGS) $(GST_CFLAGS)
+libgstelements_la_LIBADD = $(GHTTP_LIBS) $(GST_LIBS)
+## left from merging, FIXME or DELETEME libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)

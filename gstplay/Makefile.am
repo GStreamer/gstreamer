@@ -32,9 +32,10 @@ noinst_HEADERS = \
 	gststatusarea.h \
 	callbacks.h
 
+libgstmediaplay_la_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) \
+	-DDATADIR=\""$(gladedir)/"\"
+libgstmediaplay_la_LIBADD = $(GST_LIBS) $(GNOME_LIBS)
 libgstmediaplay_la_LDFLAGS = -rdynamic
-libgstmediaplay_la_CFLAGS = $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
 
-gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
-gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la
-
+gstmediaplay_CFLAGS = $(GST_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GNOME_CFLAGS)
+gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) $(GNOME_LIBS) libgstmediaplay.la

@@ -21,12 +21,6 @@ gstreamer_guilaunch_LDADD = \
 else
 GST_GUI_LAUNCH = 
 endif
-else
-GST_GUI_LAUNCH = gstreamer-guilaunch
-gstreamer_guilaunch_CFLAGS = \
-	$(LIBGLADE_GNOME_CFLAGS) $(CFLAGS)
-gstreamer_guilaunch_LDADD = \
-	$(LIBGLADE_GNOME_LIBS) $(LDADD)
 endif
 
 bin_PROGRAMS = 	gstreamer-launch 	\
@@ -37,9 +31,36 @@ bin_PROGRAMS = 	gstreamer-launch 	\
 		gstreamer-complete
 
 man_MANS = gstreamer-launch.1 gstreamer-register.1 gstreamer-inspect.1 \
-	gstreamer-complete.1 gstreamer-compprep.1 gstreamer-guilaunch.1
+	gstreamer-complete.1 gstreamer-compprep.1
 
-LDADD = $(GST_LIBS)
-CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" $(GLIB_CFLAGS) $(XML_CFLAGS)
+gstreamer_launch_LDADD = $(GST_LIBS)
+gstreamer_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+
+if !USE_GLIB2
+gstreamer_guilaunch_LDADD = $(GST_LIBS)
+gstreamer_guilaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+endif
+
+if !GST_DISABLE_REGISTRY
+gstreamer_register_LDADD = $(GST_LIBS)
+gstreamer_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+endif
+
+gstreamer_inspect_LDADD = $(GST_LIBS)
+gstreamer_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+
+gstreamer_complete_LDADD = $(GST_LIBS)
+gstreamer_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+
+if !GST_DISABLE_LOADSAVE
+gstreamer_compprep_LDADD = $(GST_LIBS)
+gstreamer_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+endif
+
+### FIXME DELETEME
+### these flags are from the original branch
+### wrobell reckons we don't need them
+### LDADD = $(GST_LIBS)
+### CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" $(GLIB_CFLAGS) $(XML_CFLAGS)
 
 EXTRA_DIST = $(man_MANS)

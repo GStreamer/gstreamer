@@ -28,7 +28,6 @@ gsteditor_SOURCES = editor.c
 gsteditor_LDFLAGS = libgsteditor.la $(GST_LIBS) $(LIBGLADE_GNOME_LIBS)
 gsteditor_CFLAGS = $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
 
-
 man_MANS = gsteditor.1
 
 gladedir = $(datadir)/gsteditor

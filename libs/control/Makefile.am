@@ -17,5 +17,6 @@ libgstcontrolinclude_HEADERS = \
     gstdparamcommon.h \
     gstdplinearinterp.h
 
-libgstcontrol_la_LIBADD = -lm
-libgstcontrol_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+libgstcontrol_la_LIBADD = $(GST_LIBS)
+libgstcontrol_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
+

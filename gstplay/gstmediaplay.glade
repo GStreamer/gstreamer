@@ -428,6 +428,14 @@
 	  <icon>stop.xpm</icon>
 	  <active>False</active>
 	</widget>
+
+	<widget>
+	  <class>GtkButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>button1</name>
+	  <label>button1</label>
+	  <icon>play.xpm</icon>
+	</widget>
       </widget>
     </widget>
 

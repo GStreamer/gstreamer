@@ -22,5 +22,5 @@ noinst_HEADERS = gststaticautoplug.h gststaticautoplugrender.h
 
 noinst_PROGRAMS = autoplugtest
 
-autoplugtest_CFLAGS = $(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
-autoplugtest_LDADD = $(GST_LIBS) $(GLIB_LIBS) $(XML_LIBS)
+autoplugtest_CFLAGS = $(GST_CFLAGS)
+autoplugtest_LDADD = $(GST_LIBS)
