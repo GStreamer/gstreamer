@@ -67,7 +67,7 @@ EOF
       if test -e $patchedfile; then 
 	PATCHED=0
       else
-        echo "patching..."
+        echo "making a patched version..."
         patch -R -s -f `which automake` <autogen.patch.tmp -o $patchedfile;
 	chmod +x $patchedfile;
 	PATCHED=1
@@ -78,14 +78,16 @@ EOF
 	if test "x$PATCHED" == "x1"; then
 	  echo "A patched version of automake is available at:"
 	  echo "$patchedfile"
+	  echo "You should put this in an appropriate place, or modify $PATH, so that it is"
+	  echo "used in preference to this installed version of automake."
 	fi
       fi
-      echo "You should abort the build now and read the README file for an explanation."
+      echo "You should abort the build now.  Read the README file for an explanation."
       echo "***************************************************************************"
       echo
       # Give user time to respond
       sleep 5;
-      echo "continuing anyway: I recommend keeping a check on the amount of memory used"
+      echo "Continuing anyway: I recommend keeping a check on the amount of memory used"
       echo "while running automake - it is likely to grow extremely large."
       echo
     else
