@@ -24,6 +24,18 @@
 
 #include <gst/gst.h>
 
+#define CAPS_POISON(caps) do{ \
+  GstCaps *_newcaps = gst_caps_copy (caps); \
+  gst_caps_free(caps); \
+  caps = _newcaps; \
+} while (0)
+#define STRUCTURE_POISON(structure) do{ \
+  GstStructure *_newstruct = gst_structure_copy (structure); \
+  gst_structure_free(structure); \
+  structure = _newstruct; \
+} while (0)
+
+
 static void _gst_caps_transform_to_string (const GValue *src_value,
     GValue *dest_value);
 static void _gst_caps_value_init (GValue *value);
@@ -210,6 +222,9 @@ void gst_caps_append (GstCaps *caps1, GstCaps *caps2)
   g_return_if_fail (caps1 != NULL);
   g_return_if_fail (caps2 != NULL);
 
+#ifdef USE_POISONING
+  CAPS_POISON (caps2);
+#endif
   for(i=0;i<caps2->structs->len;i++){
     structure = gst_caps_get_structure (caps2, i);
     gst_caps_append_structure (caps1, structure);
@@ -225,6 +240,9 @@ void gst_caps_append_structure (GstCaps *caps, GstStructure *structure)
 {
   g_return_if_fail(caps != NULL);
 
+#ifdef USE_POISONING
+  STRUCTURE_POISON (structure);
+#endif
   if (structure){
     g_ptr_array_add (caps->structs, structure);
   }
@@ -233,6 +251,7 @@ void gst_caps_append_structure (GstCaps *caps, GstStructure *structure)
 GstCaps *gst_caps_split_one (GstCaps *caps)
 {
   /* FIXME */
+  g_critical ("unimplemented");
 
   return NULL;
 }
@@ -731,6 +750,9 @@ GstCaps *gst_caps_load_thyself (xmlNodePtr parent)
 /* utility */
 void gst_caps_replace (GstCaps **caps, GstCaps *newcaps)
 {
+#ifdef USE_POISONING
+  if (newcaps) CAPS_POISON (newcaps);
+#endif
   if (*caps) gst_caps_free(*caps);
   *caps = newcaps;
 }

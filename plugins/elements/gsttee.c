@@ -145,7 +145,6 @@ gst_tee_init (GstTee *tee)
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_link_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
   gst_pad_set_getcaps_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_pad_set_fixate_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_fixate));
 
   tee->silent = FALSE;
   tee->last_message = NULL;
@@ -205,7 +204,6 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   g_free (name);
   gst_pad_set_link_function (srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
   gst_pad_set_getcaps_function (srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_pad_set_fixate_function (srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_fixate));
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 

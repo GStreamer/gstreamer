@@ -54,7 +54,7 @@ static void		gst_pad_init			(GstPad *pad);
 static void		gst_pad_dispose			(GObject *object);
 
 static void		gst_pad_set_pad_template	(GstPad *pad, GstPadTemplate *templ);
-static GstCaps *        _gst_pad_default_fixate_func    (GstPad *pad, GstCaps *caps, gpointer unused);
+static GstCaps *        _gst_pad_default_fixate_func    (GstPad *pad, const GstCaps *caps);
 
 static gboolean		gst_pad_link_try		(GstPadLink *link);
 static void             gst_pad_link_free               (GstPadLink *link);
@@ -117,6 +117,7 @@ enum {
   REAL_CAPS_NEGO_FAILED,
   REAL_LINKED,
   REAL_UNLINKED,
+  REAL_FIXATE,
   /* FILL ME */
   REAL_LAST_SIGNAL
 };
@@ -132,6 +133,8 @@ static void	gst_real_pad_class_init		(GstRealPadClass *klass);
 static void	gst_real_pad_init		(GstRealPad *pad);
 static void	gst_real_pad_dispose		(GObject *object);
 
+static gboolean _gst_real_pad_fixate_accumulator (GSignalInvocationHint *ihint,
+    GValue *return_accu, const GValue *handler_return, gpointer dummy);
 static void	gst_real_pad_set_property	(GObject *object, guint prop_id,
                                                  const GValue *value, 
 						 GParamSpec *pspec);
@@ -190,6 +193,12 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                   G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
                   gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   GST_TYPE_PAD);
+  gst_real_pad_signals[REAL_FIXATE] =
+    g_signal_new ("fixate", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstRealPadClass, appfixatefunc), 
+		  _gst_real_pad_fixate_accumulator, NULL,
+		  gst_marshal_POINTER__POINTER, G_TYPE_POINTER, 1,
+                  G_TYPE_POINTER);
 
 /*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
 /*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
@@ -204,6 +213,17 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
 #endif
   gstobject_class->path_string_separator = ".";
+}
+
+static gboolean
+_gst_real_pad_fixate_accumulator (GSignalInvocationHint *ihint,
+    GValue *return_accu, const GValue *handler_return, gpointer dummy)
+{
+  if (g_value_get_pointer (handler_return)) {
+    /* stop emission if something was returned */
+    return FALSE;
+  }
+  return TRUE;
 }
 
 static void
@@ -1059,37 +1079,48 @@ gst_pad_link_fixate (GstPadLink *link)
   GST_DEBUG_CAPS ("trying to fixate caps", caps);
 
   while (!gst_caps_is_fixed (caps)) {
-    if (link->app_fixate) {
-      newcaps = (link->app_fixate) (GST_PAD (link->srcpad), caps, NULL);
-      if (newcaps) {
-        caps = newcaps;
-        GST_DEBUG_CAPS ("app fixated to", caps);
-        continue;
-      }
-    }
-    if (GST_RPAD_FIXATEFUNC(link->srcpad)) {
-      newcaps = GST_RPAD_FIXATEFUNC(link->srcpad) (GST_PAD (link->srcpad),
-          caps, NULL);
-      if (newcaps) {
-        caps = newcaps;
-        GST_DEBUG_CAPS ("src pad fixated to", caps);
-        continue;
-      }
-    }
-    if (GST_RPAD_FIXATEFUNC(link->sinkpad)) {
-      newcaps = GST_RPAD_FIXATEFUNC(link->sinkpad) (GST_PAD (link->sinkpad),
-          caps, NULL);
-      if (newcaps) {
-        caps = newcaps;
-        GST_DEBUG_CAPS ("sink pad fixated to", caps);
-        continue;
-      }
-    }
-    caps = _gst_pad_default_fixate_func (GST_PAD(link->srcpad), caps, NULL);
-    GST_DEBUG_CAPS ("core fixated to", caps);
-  }
+    int i;
 
-  GST_DEBUG_CAPS ("fixate decided on", caps);
+    for (i=0;i<5;i++){
+      newcaps = NULL;
+      switch (i) {
+	case 0:
+	  g_signal_emit (G_OBJECT (link->srcpad),
+	      gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
+	  GST_DEBUG_CAPS ("app srcpad signal fixated to", newcaps);
+	  break;
+	case 1:
+	  g_signal_emit (G_OBJECT (link->sinkpad),
+	      gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
+	  GST_DEBUG_CAPS ("app sinkpad signal fixated to", newcaps);
+	  break;
+	case 2:
+          if (GST_RPAD_FIXATEFUNC(link->srcpad)) {
+	    newcaps = GST_RPAD_FIXATEFUNC(link->srcpad) (
+		GST_PAD (link->srcpad), caps);
+	    GST_DEBUG_CAPS ("srcpad fixated to", newcaps);
+	  }
+	  break;
+	case 3:
+          if (GST_RPAD_FIXATEFUNC(link->sinkpad)) {
+	    newcaps = GST_RPAD_FIXATEFUNC(link->sinkpad) (
+		GST_PAD (link->sinkpad), caps);
+	    GST_DEBUG_CAPS ("sinkpad fixated to", newcaps);
+	  }
+	  break;
+	case 4:
+          newcaps = _gst_pad_default_fixate_func (
+	      GST_PAD(link->srcpad), caps);
+	  GST_DEBUG_CAPS ("core fixated to", newcaps);
+	  break;
+      }
+      if (newcaps) {
+	gst_caps_free (caps);
+	caps = newcaps;
+	break;
+      }
+    }
+  }
 
   link->caps = caps;
 }
@@ -1809,32 +1840,32 @@ _gst_pad_default_fixate_foreach (GQuark field_id, GValue *value,
 }
 
 static GstCaps *
-_gst_pad_default_fixate_func (GstPad *pad, GstCaps *caps, gpointer unused)
+_gst_pad_default_fixate_func (GstPad *pad, const GstCaps *caps)
 {
   static GstStaticCaps octetcaps = GST_STATIC_CAPS (
       "application/octet-stream");
   GstStructure *structure;
+  GstCaps *newcaps;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (!gst_caps_is_empty (caps), NULL);
 
   if (gst_caps_is_any (caps)) {
-    gst_caps_free (caps);
     return gst_caps_copy (gst_static_caps_get (&octetcaps));
   }
 
   if (caps->structs->len > 1) {
     GstCaps *retcaps = gst_caps_copy_1 (caps);
-    gst_caps_free (caps);
     return retcaps;
   }
 
-  structure = gst_caps_get_structure (caps, 0);
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
   gst_structure_foreach (structure, _gst_pad_default_fixate_foreach,
       structure);
 
-  return caps;
+  return newcaps;
 }
 
 /**
@@ -2080,7 +2111,7 @@ gst_pad_proxy_pad_link (GstPad *pad, const GstCaps *caps)
  * Returns: a fixated caps, or NULL if caps cannot be fixed
  */
 GstCaps *
-gst_pad_proxy_fixate (GstPad *pad, const GstCaps *caps, gpointer unused)
+gst_pad_proxy_fixate (GstPad *pad, const GstCaps *caps)
 {
   GstElement *element;
   const GList *pads;
@@ -2132,7 +2163,7 @@ gst_pad_proxy_fixate (GstPad *pad, const GstCaps *caps, gpointer unused)
  * Returns: TRUE if the caps were set correctly, otherwise FALSE
  */
 gboolean
-gst_pad_set_explicit_caps (GstPad *pad, GstCaps *caps)
+gst_pad_set_explicit_caps (GstPad *pad, const GstCaps *caps)
 {
   GstPadLinkReturn link_ret;
 
@@ -2141,12 +2172,13 @@ gst_pad_set_explicit_caps (GstPad *pad, GstCaps *caps)
   GST_CAT_DEBUG (GST_CAT_PADS, "setting explicit caps to %s",
       gst_caps_to_string (caps));
 
-  gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
-
   if (caps == NULL) {
     GST_CAT_DEBUG (GST_CAT_PADS, "caps is NULL");
+    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
     return TRUE;
   }
+
+  gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), gst_caps_copy(caps));
     
   if (!GST_PAD_IS_LINKED (pad)) {
     GST_CAT_DEBUG (GST_CAT_PADS, "pad is not linked");
@@ -3114,6 +3146,15 @@ gst_pad_template_new (const gchar *name_template,
   if (!name_is_valid (name_template, presence))
     return NULL;
 
+#if 0
+#ifdef USE_POISONING
+  if (caps) {
+    GstCaps *newcaps = gst_caps_copy (caps);
+    gst_caps_free(caps);
+    caps = newcaps;
+  }
+#endif
+#endif
   new = g_object_new (gst_pad_template_get_type (),
                       "name", name_template,
                       NULL);

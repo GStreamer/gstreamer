@@ -2,6 +2,7 @@ include ../Rules
 
 
 tests_pass = \
+	app_fixate \
 	intersection \
 	compatibility \
 	normalisation \
@@ -16,6 +17,8 @@ tests_pass = \
 tests_fail =
 
 
+app_fixate_LDADD = $(GST_LIBS) 
+app_fixate_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 intersection_LDADD = $(GST_LIBS) 
 intersection_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 compatibility_LDADD = $(GST_LIBS) 

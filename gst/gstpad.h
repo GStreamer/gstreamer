@@ -124,7 +124,7 @@ typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, const GstCaps *caps);
 typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad);
-typedef GstCaps*		(*GstPadFixateFunction) 	(GstPad *pad, const GstCaps *caps, gpointer user_data);
+typedef GstCaps*		(*GstPadFixateFunction) 	(GstPad *pad, const GstCaps *caps);
 typedef GstBuffer*		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size);
 
 typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
@@ -212,8 +212,9 @@ struct _GstRealPadClass {
 
   void 		(*linked)		(GstPad *pad, GstPad *peer);
   void 		(*unlinked)		(GstPad *pad, GstPad *peer);
+  GstPadFixateFunction		 appfixatefunc;
 
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstGhostPad {
@@ -414,11 +415,11 @@ void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps
 void			gst_pad_set_fixate_function		(GstPad *pad, GstPadFixateFunction fixate);
 GstCaps *	        gst_pad_proxy_getcaps          		(GstPad *pad);
 GstPadLinkReturn        gst_pad_proxy_pad_link                  (GstPad *pad, const GstCaps *caps);
-GstCaps *               gst_pad_proxy_fixate                    (GstPad *pad, const GstCaps *caps, gpointer unused);
+GstCaps *               gst_pad_proxy_fixate                    (GstPad *pad, const GstCaps *caps);
 #ifndef GST_DISABLE_DEPRECATED
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps *caps);
 #endif
-gboolean		gst_pad_set_explicit_caps		(GstPad *pad, GstCaps *caps);
+gboolean		gst_pad_set_explicit_caps		(GstPad *pad, const GstCaps *caps);
 void			gst_pad_use_explicit_caps		(GstPad *pad);
 gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 #ifndef GST_DISABLE_DEPRECATED

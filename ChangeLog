@@ -1,3 +1,22 @@
+2004-01-04  David Schleef  <ds@schleef.org>
+
+	* gst/elements/gsttee.c: (gst_tee_init), (gst_tee_request_new_pad):
+	Remove usage of gst_pad_proxy_fixate.
+	* gst/gstcaps.c: (gst_caps_append), (gst_caps_append_structure),
+	(gst_caps_split_one), (gst_caps_replace):
+	Add poisoning code.
+	* gst/gstmarshal.list:
+	Add pointer__pointer for fixate signal
+	* gst/gstpad.c: (gst_real_pad_class_init),
+	(_gst_real_pad_fixate_accumulator), (gst_pad_link_fixate),
+	(_gst_pad_default_fixate_func), (gst_pad_proxy_fixate),
+	(gst_pad_set_explicit_caps), (gst_pad_template_new):
+	Add poisoning code. Add fixate signal on RealPad. Change
+	set_explicit_caps() to take const GstCaps, like try_set_caps().
+	* gst/gstpad.h:
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/app_fixate.c: Add a test for the fixate signal
+
 2004-01-03  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gsttypefindelement.c:
