@@ -225,12 +225,9 @@ gst_massink_chain (GstPad *pad, GstData *_data)
 
   GstMassink *massink = GST_MASSINK (gst_pad_get_parent (pad));
 
-  if (massink->clock) {
-    GstClockID id = gst_clock_new_single_shot_id (massink->clock, GST_BUFFER_TIMESTAMP (buf));
-
+  if (massink->clock && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     GST_DEBUG ("massink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
-    gst_element_clock_wait (GST_ELEMENT (massink), id, NULL);
-    gst_clock_id_free (id);
+    gst_element_wait (GST_ELEMENT (massink), GST_BUFFER_TIMESTAMP (buf));
   }
 
   if (GST_BUFFER_DATA (buf) != NULL) {

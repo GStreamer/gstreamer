@@ -562,13 +562,8 @@ gst_sdlvideosink_chain (GstPad *pad, GstData *_data)
     return;
   }
 
-  if (GST_VIDEOSINK_CLOCK (sdlvideosink)) {
-    GstClockID id = gst_clock_new_single_shot_id (
-                      GST_VIDEOSINK_CLOCK (sdlvideosink),
-                      GST_BUFFER_TIMESTAMP (buf));
-
-    gst_element_clock_wait (GST_ELEMENT (sdlvideosink), id, NULL);
-    gst_clock_id_free (id);
+  if (GST_VIDEOSINK_CLOCK (sdlvideosink) && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    gst_element_wait (GST_ELEMENT (sdlvideosink), GST_BUFFER_TIMESTAMP (buf));
   }
 
   if (GST_BUFFER_DATA (buf) != sdlvideosink->overlay->pixels[0]) {

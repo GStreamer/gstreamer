@@ -1,5 +1,37 @@
 2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/aalib/gstaasink.c: (gst_aasink_chain):
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	* ext/esd/esdsink.c: (gst_esdsink_chain):
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_chain):
+	* ext/mas/massink.c: (gst_massink_chain):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_chain):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_parse_index),
+	(gst_matroska_demux_parse_metadata):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_loop),
+	(gst_mpeg_parse_release_locks):
+	* gst/tcp/gsttcpsink.c: (gst_tcpsink_chain):
+	* gst/udp/gstudpsink.c: (gst_udpsink_chain):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_get):
+	* sys/oss/gstosssink.c: (gst_osssink_init), (gst_osssink_chain),
+	(gst_osssink_change_state):
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_chain):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain):
+	* sys/xvideo/xvideosink.c: (gst_xvideosink_chain),
+	(gst_xvideosink_release_locks):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain):
+	  use element time.
+	* ext/alsa/gstalsaclock.c: (gst_alsa_clock_start),
+	(gst_alsa_clock_stop):
+	* gst-libs/gst/audio/audioclock.c: (gst_audio_clock_set_active),
+	(gst_audio_clock_get_internal_time):
+	  simplify for use with new clocking code.
+	* testsuite/alsa/Makefile.am:
+	* testsuite/alsa/sinesrc.c: (sinesrc_init), (sinesrc_force_caps):
+	  fix testsuite for new caps system
+
+2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/flac/gstflacdec.c: (gst_flacdec_update_metadata):
 	* ext/flac/gstflacenc.c: (add_one_tag):
 	  length is already host endian, no need to convert. Fixes playback of
