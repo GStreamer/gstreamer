@@ -179,7 +179,16 @@ void gst_default_info_handler (gint category,gchar *file,gchar *function,
 extern GstInfoHandler _gst_info_handler;
 extern guint32 _gst_info_categories;
 
+/* for include files that make too much noise normally */
+#ifdef GST_INFO_FORCE_DISABLE
+#undef GST_INFO_ENABLED
+#endif
+/* for applications that really really want all the noise */
+#ifdef GST_INFO_FORCE_ENABLE
+#define GST_INFO_ENABLED
+#endif
 
+#ifdef GST_INFO_ENABLED
 #define INFO(cat,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
     _gst_info_handler(cat,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
@@ -192,9 +201,13 @@ extern guint32 _gst_info_categories;
                       element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
+#else
+#define INFO(cat,format,args...) 
+#define INFO_ELEMENT(cat,element,format,args...)
+#endif
 
 void		gst_info_set_categories		(guint32 categories);
-guint32		gst_info_get_categories		();
+guint32		gst_info_get_categories		(void);
 const gchar *	gst_info_get_category_name	(gint category);
 void		gst_info_enable_category	(gint category);
 void		gst_info_disable_category	(gint category);

@@ -318,13 +318,31 @@ esac],
 [PLUGINS_USE_SRCDIR=yes]) dnl Default value
 
 AC_ARG_ENABLE(debug,
-[  --enable-debug               spews lots of useless info at runtime],
+[  --enable-debug               compile with -g debugging info],
 [case "${enableval}" in
   yes) USE_DEBUG=yes ;;
   no)  USE_DEBUG=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
 esac], 
 [USE_DEBUG=no]) dnl Default value
+
+AC_ARG_ENABLE(debug-verbose,
+[  --enable-debug-verbose       spews lots of useless debugging info at runtime],
+[case "${enableval}" in
+  yes) USE_DEBUG_VERBOSE=yes ;;
+  no)  USE_DEBUG_VERBOSE=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug-verbose) ;;
+esac], 
+[USE_DEBUG_VERBOSE=no]) dnl Default value
+
+AC_ARG_ENABLE(debug-info,
+[  --enable-debug-info         spews lots of info at runtime for plugin writers],
+[case "${enableval}" in
+  yes) USE_DEBUG_INFO=yes ;;
+  no)  USE_DEBUG_INFO=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug-info) ;;
+esac], 
+[USE_DEBUG_INFO=no]) dnl Default value
 
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling           adds -pg to compiler commandline, for profiling],
@@ -364,7 +382,14 @@ fi
 
 if test "x$USE_DEBUG" = xyes; then
   CFLAGS="$CFLAGS -g"
+fi
+
+if test "x$USE_DEBUG_VERBOSE" = xyes; then
   AC_DEFINE(GST_DEBUG_ENABLED)
+fi
+
+if test "x$USE_DEBUG_INFO" = xyes; then
+  AC_DEFINE(GST_INFO_ENABLED)
 fi
 
 if test "x$USE_PROFILING" = xyes; then
@@ -425,7 +450,6 @@ gst/Makefile
 gst/types/Makefile
 gst/meta/Makefile
 gst/elements/Makefile
-gst/xml/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/colorspace/Makefile

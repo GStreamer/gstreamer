@@ -17,3 +17,4 @@
 #undef HAVE_ATOMIC_H
 
 #undef GST_DEBUG_ENABLED
+#undef GST_INFO_ENABLED
