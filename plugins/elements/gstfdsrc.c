@@ -52,6 +52,7 @@ enum {
   ARG_LOCATION,
   ARG_BYTESPERREAD,
   ARG_OFFSET,
+  ARG_FD,
 };
 
 
@@ -106,6 +107,10 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
 	  "offset",       ARG_OFFSET,       G_PARAM_READABLE,
 	  NULL);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
+    g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE));
+
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
 }
@@ -148,6 +153,9 @@ gst_fdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GPa
           src->fd = fd;
       }
       break;
+    case ARG_FD:
+      src->fd = g_value_get_int (value);
+      break;
     case ARG_BYTESPERREAD:
       src->bytes_per_read = g_value_get_int (value);
       break;
@@ -172,6 +180,9 @@ gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
       break;
     case ARG_OFFSET:
       g_value_set_int64 (value, src->curoffset);
+      break;
+    case ARG_FD:
+      g_value_set_int (value, src->fd);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
