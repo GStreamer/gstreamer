@@ -25,6 +25,7 @@
 #include "libmonkeyaudio/GlobalFunctions.h"
 #include "libmonkeyaudio/MACLib.h"
 #include "libmonkeyaudio/IO.h"
+#include "libmonkeyaudio/APETag.h"
 
 #include <gst/gst.h>
 
@@ -57,9 +58,10 @@ struct _GstMonkeyDec
   guint channels;
   guint frequency;
   guint depth;
-
+	GstCaps *metadata;
+	
   IAPEDecompress *decomp;
-  
+	  
   sinkpad_CIO *io;
 };
 

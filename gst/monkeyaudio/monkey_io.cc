@@ -137,8 +137,7 @@ GstSeekType seek_type;
       return -1;
       break;
   }
-
-  if (gst_bytestream_seek (bs, nDistance, seek_type))
+  if (gst_bytestream_seek (bs, (gint64) ABS (nDistance), seek_type))
       return 0;
 
   return -1;

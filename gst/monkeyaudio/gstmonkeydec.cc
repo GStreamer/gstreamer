@@ -42,7 +42,8 @@ enum
 
 enum
 {
-  ARG_0
+  ARG_0,
+	ARG_METADATA,
 };
 
 static void	gst_monkeydec_class_init      (GstMonkeyDecClass *klass);
@@ -59,6 +60,12 @@ static const GstFormat*
             gst_monkeydec_get_formats     (GstPad *pad);
 static GstElementStateReturn
         		gst_monkeydec_change_state    (GstElement *element);
+static void gst_monkeydec_get_property 		(GObject *object, guint prop_id, 
+																					 GValue *value, 
+						 															 GParamSpec *pspec);
+static void gst_monkeydec_set_property 		(GObject *object, guint prop_id, 
+						 															 const GValue *value, 
+						 															 GParamSpec *pspec);
 
 
 static GstElementClass *parent_class = NULL;
@@ -95,8 +102,14 @@ gst_monkeydec_class_init (GstMonkeyDecClass *klass)
   gstelement_class = (GstElementClass *) klass;
 
   gstelement_class->change_state = gst_monkeydec_change_state;
+	gobject_class->get_property = gst_monkeydec_get_property;
+  gobject_class->set_property = gst_monkeydec_set_property;
 
   parent_class = GST_ELEMENT_CLASS( g_type_class_ref(GST_TYPE_ELEMENT));
+	
+	g_object_class_install_property (gobject_class, ARG_METADATA,
+    g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
+                         GST_TYPE_CAPS, G_PARAM_READABLE));
 }
 
 
@@ -115,6 +128,8 @@ gst_monkeydec_init (GstMonkeyDec * monkeydec)
   gst_pad_set_query_function (monkeydec->srcpad, gst_monkeydec_src_query);
   gst_pad_set_query_type_function (monkeydec->srcpad, (GstPadQueryTypeFunction)(gst_monkeydec_get_query_types));
   gst_pad_set_formats_function (monkeydec->srcpad, (GstPadFormatsFunction)(gst_monkeydec_get_formats));
+	
+	monkeydec->metadata = NULL;
 }
 
 
@@ -166,7 +181,6 @@ gst_monkeydec_src_query (GstPad *pad, GstQueryType type,
             *format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
             *value = monkeydec->decomp->GetInfo (APE_DECOMPRESS_LENGTH_MS) * 1000000LL;
-g_print ("Song lentgh : %lld\n", *value);
             break;
         default:
             res = FALSE;
@@ -179,7 +193,6 @@ g_print ("Song lentgh : %lld\n", *value);
            *format = GST_FORMAT_TIME;
          default:
            *value = monkeydec->decomp->GetInfo (APE_DECOMPRESS_CURRENT_MS) * 1000000LL;  
-//g_print ("Song position : %lld\n", *value);
            break;
       }
     default:
@@ -210,10 +223,8 @@ gst_monkeydec_src_event (GstPad *pad, GstEvent *event)
       /* shave off the flush flag, we'll need it later */
       flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 
-        monkeydec->seek_to = GST_EVENT_SEEK_OFFSET (event) * monkeydec->frequency / GST_SECOND;
-g_print ("Seek to : %lld\n", monkeydec->seek_to);
-
-        monkeydec->io->need_discont = TRUE;
+      monkeydec->seek_to = GST_EVENT_SEEK_OFFSET (event) * monkeydec->frequency / GST_SECOND;
+      monkeydec->io->need_discont = TRUE;
       break;
     }
     default:
@@ -226,6 +237,64 @@ g_print ("Seek to : %lld\n", monkeydec->seek_to);
   return res;
 }
 
+
+static gboolean
+gst_monkeydec_update_metadata (GstMonkeyDec *monkeydec)
+{
+  GstProps *props = NULL;
+  GstPropsEntry *entry;
+  gchar *name, *value;
+  CAPETagField *field;
+  CAPETag *tag;
+  BOOL ret;
+
+  /* clear old one */
+  if (monkeydec->metadata) {
+    gst_caps_unref (monkeydec->metadata);
+    monkeydec->metadata = NULL;
+  }
+	
+  g_return_val_if_fail (monkeydec, FALSE);
+
+  tag = new CAPETag (monkeydec->io, TRUE);
+  g_return_val_if_fail (tag, FALSE);
+
+  if (!tag->GetHasAPETag ())
+    return FALSE;
+
+  ret = tag->GetNextTagField (TRUE, &field);
+  g_return_val_if_fail (ret, FALSE);
+	
+  /* create props to hold the key/value pairs */
+  props = gst_props_empty_new ();
+
+  while (ret)
+  { 		
+    if (field->GetFieldValueSize() != 0)
+    {
+      name = g_strndup (field->GetFieldName(), field->GetFieldSize());
+      value = g_strndup (field->GetFieldValue(), field->GetFieldValueSize());
+		
+      entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value);
+      gst_props_add_entry (props, (GstPropsEntry *) entry);
+		
+      g_print ("%s : %s\n", name, value); 
+    }
+				
+    ret = tag->GetNextTagField (FALSE, &field);
+  }
+	
+  monkeydec->metadata = gst_caps_new ("monkeydec_metadata", "application/x-gst-metadata",
+                                      props);
+
+  g_object_notify (G_OBJECT (monkeydec), "metadata");
+	
+  delete tag;
+  return TRUE;
+}
+
+
+
 static void
 gst_monkeydec_loop (GstElement *element)
 {
@@ -235,7 +304,8 @@ gst_monkeydec_loop (GstElement *element)
   GstFormat format;
   gint64 timestamp;
   gint retval;
-
+	
+	
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_MONKEYDEC (element));
 	
@@ -255,8 +325,23 @@ gst_monkeydec_loop (GstElement *element)
     }    
 
     monkeydec->io->sinkpad = monkeydec->sinkpad;
-
     monkeydec->io->Open ("");
+		
+		gst_monkeydec_update_metadata (monkeydec);
+		/*monkeydec->tag = new CAPETag (monkeydec->io, TRUE);
+		if (monkeydec->tag->GetHasAPETag ())
+			g_print ("Yes APE\n");
+  	else
+			g_print ("No APE\n");
+		
+	  if (monkeydec->tag->GetHasID3Tag ())
+			g_print ("Yes Id3\n");
+  	else
+			g_print ("No Id3\n");
+	
+		if (monkeydec->tag->GetNextTagField(TRUE, &field))
+			g_print ("Champs : %s %.*s\n", field->GetFieldName(), field->GetFieldValueSize(), field->GetFieldValue());
+*/			
     monkeydec->decomp = CreateIAPEDecompressEx (monkeydec->io, &retval);
     if (monkeydec->decomp == NULL)
     {
@@ -267,7 +352,7 @@ gst_monkeydec_loop (GstElement *element)
     monkeydec->channels = monkeydec->decomp->GetInfo (APE_INFO_CHANNELS);
     monkeydec->frequency = monkeydec->decomp->GetInfo (APE_INFO_SAMPLE_RATE);
     monkeydec->depth = monkeydec->decomp->GetInfo (APE_INFO_BITS_PER_SAMPLE);
-
+						
     monkeydec->io->eos = FALSE;
 
     monkeydec->total_samples = 0;
@@ -284,10 +369,14 @@ gst_monkeydec_loop (GstElement *element)
     monkeydec->decomp->Seek (monkeydec->seek_to);
     monkeydec->seek_to = 0;
   }
+	
+  monkeydec->decomp->GetData((char *) GST_BUFFER_DATA (buffer_out), 1024, &blocks_retrieved);
 
   format = GST_FORMAT_TIME;
   gst_monkeydec_src_query (monkeydec->srcpad, GST_QUERY_POSITION, &format, &timestamp);
-
+	
+	GST_BUFFER_SIZE (buffer_out) = blocks_retrieved * monkeydec->decomp->GetInfo(APE_INFO_BLOCK_ALIGN);
+  GST_BUFFER_TIMESTAMP (buffer_out) = timestamp;
 
   if (monkeydec->io->need_discont) 
   {
@@ -304,12 +393,6 @@ gst_monkeydec_loop (GstElement *element)
     }
   }
 
-  monkeydec->decomp->GetData((char *) GST_BUFFER_DATA (buffer_out), 1024, &blocks_retrieved);
-
-  GST_BUFFER_SIZE (buffer_out) = blocks_retrieved * monkeydec->decomp->GetInfo(APE_INFO_BLOCK_ALIGN);
-  GST_BUFFER_TIMESTAMP (buffer_out) = timestamp;
-
-  
   if (!GST_PAD_CAPS (monkeydec->srcpad)) {
     gst_pad_try_set_caps (monkeydec->srcpad,
 		    GST_CAPS_NEW (
@@ -367,4 +450,42 @@ gst_monkeydec_change_state (GstElement *element)
   parent_class->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+static void
+gst_monkeydec_set_property (GObject *object, guint prop_id, 
+		             const GValue *value, GParamSpec *pspec)
+{
+  GstMonkeyDec *monkeydec;
+	      
+  g_return_if_fail (GST_IS_MONKEYDEC (object));
+
+  monkeydec = GST_MONKEYDEC (object);
+
+  switch (prop_id) {
+    default:
+      g_warning ("Unknown property id\n");
+  }
+}
+
+static void 
+gst_monkeydec_get_property (GObject *object, guint prop_id, 
+		             GValue *value, GParamSpec *pspec)
+{
+  GstMonkeyDec *monkeydec;
+	      
+  g_return_if_fail (GST_IS_MONKEYDEC (object));
+
+  monkeydec = GST_MONKEYDEC (object);
+
+  switch (prop_id) {
+    case ARG_METADATA:
+      g_value_set_boxed (value, monkeydec->metadata);
+      break;
+   /* case ARG_STREAMINFO:
+      g_value_set_boxed (value, monkeydec->streaminfo);
+      break;*/
+    default:
+      g_warning ("Unknown property id\n");
+  }
 }
