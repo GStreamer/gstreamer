@@ -524,6 +524,7 @@ gst_multipart_mux_loop (GstElement * element)
 
   gst_pad_push (mux->srcpad, GST_DATA (newbuf));
 
+  gst_buffer_unref (buf);
   pad->buffer = NULL;
 }
 
