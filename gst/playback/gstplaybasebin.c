@@ -206,6 +206,11 @@ queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
   g_mutex_unlock (play_base_bin->preroll_lock);
 }
 
+/* generate a preroll element which is simply a queue. While there
+ * are still dynamic elements in the pipeline, we wait for one
+ * of the queues to fill. The assumption is that all the dynamic
+ * streams will be detected by that time. 
+ */
 static GstElement *
 gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
 {
@@ -217,9 +222,13 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
   element = gst_element_factory_make ("queue", name);
   g_object_set (G_OBJECT (element), "max-size-buffers", 0, NULL);
   g_object_set (G_OBJECT (element), "max-size-bytes", 0, NULL);
-  g_object_set (G_OBJECT (element), "max-size-time", 3 * GST_SECOND, NULL);
-  sig = g_signal_connect (G_OBJECT (element), "overrun",
+  g_object_set (G_OBJECT (element), "max-size-time", play_base_bin->queue_size,
+      NULL);
+  sig =
+      g_signal_connect (G_OBJECT (element), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
+  /* keep a ref to the signal id so that we can disconnect the signal callback
+   * when we are done with the preroll */
   g_object_set_data (G_OBJECT (element), "signal_id", GINT_TO_POINTER (sig));
   g_free (name);
 
@@ -231,6 +240,7 @@ remove_prerolls (GstPlayBaseBin * play_base_bin)
 {
   GList *prerolls, *infos;
 
+  /* remove the preroll queues */
   for (prerolls = play_base_bin->preroll_elems; prerolls;
       prerolls = g_list_next (prerolls)) {
     GstElement *element = GST_ELEMENT (prerolls->data);
@@ -241,6 +251,7 @@ remove_prerolls (GstPlayBaseBin * play_base_bin)
   g_list_free (play_base_bin->preroll_elems);
   play_base_bin->preroll_elems = NULL;
 
+  /* free the streaminfo too */
   for (infos = play_base_bin->streaminfo; infos; infos = g_list_next (infos)) {
     GstStreamInfo *info = GST_STREAM_INFO (infos->data);
 
@@ -254,6 +265,9 @@ remove_prerolls (GstPlayBaseBin * play_base_bin)
   play_base_bin->nunknownpads = 0;
 }
 
+/* signal fired when an unknown stream is found. We create a new
+ * UNKNOWN streaminfo object 
+ */
 static void
 unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
     GstPlayBaseBin * play_base_bin)
@@ -265,12 +279,31 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   g_warning ("don't know how to handle %s", capsstr);
 
   /* add the stream to the list */
-  info = gst_stream_info_new (pad, GST_STREAM_TYPE_UNKNOWN, NULL);
+  info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN, NULL);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   g_free (capsstr);
 }
 
+/* add a streaminfo that indicates that the stream is handled by the
+ * given element. This usually means that a stream without actual data is
+ * produced but one that is sunken by an element. Examples of this are:
+ * cdaudio, a hardware decoder/sink, dvd meta bins etc...
+ */
+static void
+add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
+{
+  GstStreamInfo *info;
+
+  /* add the stream to the list */
+  info =
+      gst_stream_info_new (GST_OBJECT (element), GST_STREAM_TYPE_ELEMENT, NULL);
+  play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
+}
+
+/* when the decoder element signals that no more pads will be generated, we
+ * can stop the preroll
+ */
 static void
 no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
@@ -282,6 +315,9 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
   g_mutex_unlock (play_base_bin->preroll_lock);
 }
 
+/* signal fired when decodebin has found a new raw pad. We create
+ * a preroll element if needed and the appropriate streaminfo.
+ */
 static void
 new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     GstPlayBaseBin * play_base_bin)
@@ -297,13 +333,14 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   GST_DEBUG ("play base: new decoded pad %d", last);
 
+  /* first see if this pad has interesting caps */
   caps = gst_pad_get_caps (pad);
-
-  if (gst_caps_is_empty (caps)) {
+  if (caps == NULL || gst_caps_is_empty (caps)) {
     g_warning ("no type on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
     return;
   }
 
+  /* get the mime type */
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
@@ -352,7 +389,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   }
 
   /* add the stream to the list */
-  info = gst_stream_info_new (srcpad, type, NULL);
+  info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   /* signal the no more pads after adding the stream */
@@ -360,6 +397,10 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     no_more_pads (NULL, play_base_bin);
 }
 
+/* signal fired when the internal thread performed an unexpected  
+ * state change. This usually indicated an error occured. We stop the
+ * preroll stage.
+ */
 static void
 state_change (GstElement * element,
     GstElementState old_state, GstElementState new_state, gpointer data)
@@ -377,6 +418,9 @@ state_change (GstElement * element,
   }
 }
 
+/* construct and run the source and decoder elements until we found
+ * all the streams or until a preroll queue has been filled.
+ */
 static gboolean
 setup_source (GstPlayBaseBin * play_base_bin)
 {
@@ -387,14 +431,15 @@ setup_source (GstPlayBaseBin * play_base_bin)
   if (!play_base_bin->need_rebuild)
     return TRUE;
 
+  /* keep ref to old souce in case creating the new source fails */
   old_src = play_base_bin->source;
 
-  /* create and configure an element that can handle the uri 
-   */
+  /* create and configure an element that can handle the uri */
   play_base_bin->source =
       gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri, "source");
 
   if (!play_base_bin->source) {
+    /* whoops, could not create the source element */
     g_warning ("don't know how to read %s", play_base_bin->uri);
     play_base_bin->source = old_src;
     return FALSE;
@@ -404,26 +449,34 @@ setup_source (GstPlayBaseBin * play_base_bin)
       gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
+    /* make sure the new element has the same state as the parent */
     if (gst_bin_sync_children_state (GST_BIN (play_base_bin->thread)) ==
         GST_STATE_FAILURE) {
       return FALSE;
     }
   }
 
+  /* remove the old decoder now, if any */
   old_dec = play_base_bin->decoder;
   if (old_dec) {
     GST_LOG ("removing old decoder element %s", gst_element_get_name (old_dec));
     gst_bin_remove (GST_BIN (play_base_bin->thread), old_dec);
   }
 
+  /* remove our previous preroll queues */
   remove_prerolls (play_base_bin);
 
   /* now see if the source element emits raw audio/video all by itself,
-   * if so, we can create streams for the pads and be done with it 
+   * if so, we can create streams for the pads and be done with it.
+   * Also check that is has source pads, if now, we assume it will
+   * do everything itself.
    */
   {
     const GList *pads;
     gboolean is_raw = FALSE;
+
+    /* assume we are going to have no output streams */
+    gboolean no_out = TRUE;
 
     for (pads = gst_element_get_pad_list (play_base_bin->source);
         pads; pads = g_list_next (pads)) {
@@ -434,6 +487,8 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
       if (GST_PAD_IS_SINK (pad))
         continue;
+
+      no_out = FALSE;
 
       srcpad = pad;
       caps = gst_pad_get_caps (pad);
@@ -449,28 +504,25 @@ setup_source (GstPlayBaseBin * play_base_bin)
           g_str_has_prefix (mimetype, "video/x-raw")) {
         new_decoded_pad (play_base_bin->source, pad, g_list_next (pads) == NULL,
             play_base_bin);
-
         is_raw = TRUE;
       }
     }
     if (is_raw) {
       return TRUE;
     }
-  }
-
-  if (srcpad == NULL) {
-    /* FIXME we do not handle this yet, but we should just make sure that
-     * we don't error on this because there is no streaminfo. A possible element
-     * without any source pads could be cdaudio, which just plays an audio cd 
-     */
-    GST_DEBUG_OBJECT (play_base_bin, "have source element without source pad");
-    return FALSE;
+    if (no_out) {
+      /* create a stream to indicate that this uri is handled by a self
+       * contained element */
+      add_element_stream (play_base_bin->source, play_base_bin);
+      return TRUE;
+    }
   }
 
   {
     gboolean res;
     gint sig1, sig2, sig3, sig4;
 
+    /* now create the decoder element */
     play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
     if (!play_base_bin->decoder) {
       g_warning ("can't find decoder element");
@@ -710,6 +762,9 @@ gst_play_base_bin_change_state (GstElement * element)
   return ret;
 }
 
+/* virtual function to add elements to this bin. The idea is to
+ * wrap the element in a thread automatically.
+ */
 static void
 gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
 {
@@ -734,7 +789,7 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), element);
 
-    /* hack */
+    /* hack, the clock is not correctly distributed in the core */
     sched = gst_element_get_scheduler (GST_ELEMENT (play_base_bin->thread));
     clock = gst_scheduler_get_clock (sched);
     gst_scheduler_set_clock (sched, clock);
@@ -748,6 +803,10 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
   }
 }
 
+/* virtual function to remove an element from this bin. We have to make
+ * sure that we also remove the thread that we used as a container for
+ * this element.
+ */
 static void
 gst_play_base_bin_remove_element (GstBin * bin, GstElement * element)
 {
@@ -767,14 +826,18 @@ gst_play_base_bin_remove_element (GstBin * bin, GstElement * element)
       if (!thread) {
         g_warning ("cannot find element to remove");
       } else {
-        /* we remove the element from the thread first so that the
-         * state is not affected when someone holds a reference to it */
-        gst_bin_remove (GST_BIN (thread), element);
+        if (gst_element_get_parent (element) == GST_OBJECT (thread)) {
+          /* we remove the element from the thread first so that the
+           * state is not affected when someone holds a reference to it */
+          gst_bin_remove (GST_BIN (thread), element);
+        }
         element = thread;
       }
     }
-    GST_LOG ("removing element %s", gst_element_get_name (element));
-    gst_bin_remove (GST_BIN (play_base_bin->thread), element);
+    if (gst_element_get_parent (element) == GST_OBJECT (play_base_bin->thread)) {
+      GST_LOG ("removing element %s", gst_element_get_name (element));
+      gst_bin_remove (GST_BIN (play_base_bin->thread), element);
+    }
   } else {
     g_warning ("removing elements is not allowed in NULL");
   }
@@ -839,17 +902,20 @@ gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
         streams = g_list_next (streams)) {
       GstStreamInfo *sinfo = (GstStreamInfo *) streams->data;
 
-      if (gst_pad_is_linked (sinfo->pad))
+      if (sinfo->type == GST_STREAM_TYPE_ELEMENT)
         continue;
 
-      if (gst_pad_can_link (sinfo->pad, pad)) {
+      if (gst_pad_is_linked (GST_PAD (sinfo->object)))
+        continue;
+
+      if (gst_pad_can_link (GST_PAD (sinfo->object), pad)) {
         info = sinfo;
         break;
       }
     }
   }
   if (info) {
-    if (!gst_pad_link (info->pad, pad)) {
+    if (!gst_pad_link (GST_PAD (info->object), pad)) {
       GST_DEBUG ("could not link");
       g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
     }

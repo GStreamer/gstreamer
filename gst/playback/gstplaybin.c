@@ -111,7 +111,7 @@ static GstElementDetails gst_play_bin_details = {
   "Player Bin",
   "Generic/Bin/Player",
   "Autoplug and play media from an uri",
-  "Wim Taymans <wim.taymans@chello.be>"
+  "Wim Taymans <wim@fluendo.com>"
 };
 
 
@@ -306,6 +306,9 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+/* signal fired when the identity has received a new buffer. This is used for
+ * making screenshots.
+ */
 static void
 handoff (GstElement * identity, GstBuffer * frame, gpointer data)
 {
@@ -317,6 +320,9 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
   play_bin->frame = gst_buffer_ref (frame);
 }
 
+/* make the element (bin) that contains the elements needed to perform
+ * video display/
+ */
 static GstElement *
 gen_video_element (GstPlayBin * play_bin)
 {
@@ -326,9 +332,12 @@ gen_video_element (GstPlayBin * play_bin)
   GstElement *sink;
   GstElement *identity;
 
+  /* first see if we have it in the cache */
   element = g_hash_table_lookup (play_bin->cache, "vbin");
   if (element != NULL) {
     g_object_ref (G_OBJECT (element));
+    /* need to get the video sink element as we need to add it to the
+     * list of seekable elements */
     sink = g_hash_table_lookup (play_bin->cache, "video_sink");
     goto done;
   }
@@ -492,6 +501,9 @@ remove_sinks (GstPlayBin * play_bin)
   if (element != NULL) {
     parent = gst_element_get_parent (element);
     if (parent != NULL) {
+      /* we remove the element from the parent so that
+       * there is no unwanted state change when the parent
+       * is disposed */
       gst_bin_remove (GST_BIN (parent), element);
     }
   }
@@ -520,6 +532,9 @@ remove_sinks (GstPlayBin * play_bin)
   }
 }
 
+/* loop over the streams and set up the pipeline to play this
+ * media file
+ */
 static void
 setup_sinks (GstPlayBin * play_bin)
 {
@@ -539,8 +554,14 @@ setup_sinks (GstPlayBin * play_bin)
     GstPad *srcpad;
 
     g_object_get (obj, "type", &type, NULL);
-    g_object_get (obj, "pad", &srcpad, NULL);
+    /* we don't care about streams with their own sink */
+    if (type == 4)
+      continue;
 
+    /* else we need to get the pad */
+    g_object_get (obj, "object", &srcpad, NULL);
+
+    /* hmm.. pad is allready linked */
     if (gst_pad_is_linked (srcpad))
       continue;
 
@@ -558,6 +579,7 @@ setup_sinks (GstPlayBin * play_bin)
   num_audio = 0;
   num_video = 0;
 
+  /* now actually connect everything */
   for (s = streaminfo; s; s = g_list_next (s)) {
     GObject *obj = G_OBJECT (s->data);
     gint type;
@@ -565,9 +587,18 @@ setup_sinks (GstPlayBin * play_bin)
     GstElement *sink = NULL;
     gboolean res;
     gboolean mute = FALSE;
+    GstObject *object;
 
     g_object_get (obj, "type", &type, NULL);
-    g_object_get (obj, "pad", &srcpad, NULL);
+    g_object_get (obj, "object", &object, NULL);
+
+    /* use the sink elements as seek entry point */
+    if (type == 4) {
+      play_bin->seekables = g_list_prepend (play_bin->seekables, object);
+      continue;
+    }
+
+    srcpad = GST_PAD (object);
 
     if (gst_pad_is_linked (srcpad))
       continue;
@@ -592,6 +623,8 @@ setup_sinks (GstPlayBin * play_bin)
         sink = gen_video_element (play_bin);
         num_video++;
       }
+    } else if (type == 4) {
+      /* we can ignore these streams here */
     } else {
       g_warning ("unknown stream found");
       mute = TRUE;

@@ -25,13 +25,13 @@
 #include <gst/gst.h>
 
 /* generic templates */
-GstStaticPadTemplate decoder_bin_sink_template =
+static GstStaticPadTemplate decoder_bin_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GstStaticPadTemplate decoder_bin_src_template =
+static GstStaticPadTemplate decoder_bin_src_template =
 GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
@@ -192,6 +192,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&decoder_bin_sink_template));
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_src_template));
 

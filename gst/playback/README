@@ -40,6 +40,7 @@ playbin:
    stream detected. implements seeking and querying on the configured sinks.
 
    TODO
+   - visualisation
    - reuse, refcounting, cleanup in READY state
    - debugging
    - error handling

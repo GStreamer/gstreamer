@@ -39,12 +39,13 @@ typedef enum {
   GST_STREAM_TYPE_AUDIO   = 1,
   GST_STREAM_TYPE_VIDEO   = 2,
   GST_STREAM_TYPE_TEXT    = 3,
+  GST_STREAM_TYPE_ELEMENT = 4,
 } GstStreamType;
 
 struct _GstStreamInfo {
   GObject 	 parent;
 
-  GstPad 	*pad;
+  GstObject 	*object;
   GstStreamType	 type;
   gchar 	*decoder;
   gboolean	 mute;
@@ -59,7 +60,7 @@ struct _GstStreamInfoClass {
 
 GType gst_stream_info_get_type (void);
 
-GstStreamInfo* gst_stream_info_new (GstPad *pad, GstStreamType type, gchar *decoder);
+GstStreamInfo* gst_stream_info_new (GstObject *object, GstStreamType type, gchar *decoder);
 
 G_END_DECLS
 

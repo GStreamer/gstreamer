@@ -53,6 +53,9 @@ gst_stream_type_get_type (void)
     {GST_STREAM_TYPE_UNKNOWN, "GST_STREAM_TYPE_UNKNOWN", "Unknown stream"},
     {GST_STREAM_TYPE_AUDIO, "GST_STREAM_TYPE_AUDIO", "Audio stream"},
     {GST_STREAM_TYPE_VIDEO, "GST_STREAM_TYPE_VIDEO", "Video stream"},
+    {GST_STREAM_TYPE_TEXT, "GST_STREAM_TYPE_TEXT", "Text stream"},
+    {GST_STREAM_TYPE_ELEMENT, "GST_STREAM_TYPE_ELEMENT",
+          "Stream handled by element"},
     {0, NULL, NULL},
   };
 
@@ -113,8 +116,9 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
   gobject_klass->get_property = gst_stream_info_get_property;
 
   g_object_class_install_property (gobject_klass, ARG_PAD,
-      g_param_spec_object ("pad", "Pad", "Source Pad of the stream",
-          GST_TYPE_PAD, G_PARAM_READABLE));
+      g_param_spec_object ("object", "object",
+          "Source Pad or object of the stream", GST_TYPE_OBJECT,
+          G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_TYPE,
       g_param_spec_enum ("type", "Type", "Type of the stream",
           GST_TYPE_STREAM_TYPE, GST_STREAM_TYPE_UNKNOWN, G_PARAM_READABLE));
@@ -137,21 +141,21 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
 static void
 gst_stream_info_init (GstStreamInfo * stream_info)
 {
-  stream_info->pad = NULL;
+  stream_info->object = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   stream_info->decoder = NULL;
   stream_info->mute = FALSE;
 }
 
 GstStreamInfo *
-gst_stream_info_new (GstPad * pad, GstStreamType type, gchar * decoder)
+gst_stream_info_new (GstObject * object, GstStreamType type, gchar * decoder)
 {
   GstStreamInfo *info;
 
   info = g_object_new (GST_TYPE_STREAM_INFO, NULL);
 
-  gst_object_ref (GST_OBJECT (pad));
-  info->pad = pad;
+  gst_object_ref (object);
+  info->object = object;
   info->type = type;
   info->decoder = g_strdup (decoder);
 
@@ -165,8 +169,8 @@ gst_stream_info_dispose (GObject * object)
 
   stream_info = GST_STREAM_INFO (object);
 
-  gst_object_unref (GST_OBJECT (stream_info->pad));
-  stream_info->pad = NULL;
+  gst_object_unref (stream_info->object);
+  stream_info->object = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   g_free (stream_info->decoder);
 
@@ -222,11 +226,16 @@ gst_stream_info_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_MUTE:
     {
+      if (stream_info->type == GST_STREAM_TYPE_ELEMENT) {
+        g_warning ("cannot mute element stream");
+        break;
+      }
       gboolean new_mute = g_value_get_boolean (value);
 
       if (new_mute != stream_info->mute) {
         stream_info->mute = new_mute;
-        stream_info_mute_pad (stream_info, stream_info->pad, new_mute);
+        stream_info_mute_pad (stream_info, GST_PAD (stream_info->object),
+            new_mute);
       }
       break;
     }
@@ -248,7 +257,7 @@ gst_stream_info_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_PAD:
-      g_value_set_object (value, stream_info->pad);
+      g_value_set_object (value, stream_info->object);
       break;
     case ARG_TYPE:
       g_value_set_enum (value, stream_info->type);
