@@ -13,29 +13,29 @@ static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
 }
 
 static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
-  GValue *set_val;
+  GValue set_val;
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
-  set_val = g_object_get_data(G_OBJECT(dparam), "set_val");
-  g_return_if_fail(set_val != NULL);
-  g_value_set_float(set_val, exp(adj->value));
+  ZERO(set_val);
+  g_value_init(&set_val, G_TYPE_FLOAT);
+  g_value_set_float(&set_val, exp(adj->value));
   
-  g_print("setting value to %f\n", g_value_get_float(set_val));  
-  g_object_set_property(G_OBJECT(dparam), "value_float", set_val);
+  g_print("setting value to %f\n", g_value_get_float(&set_val));  
+  g_object_set_property(G_OBJECT(dparam), "value_float", &set_val);
 }
 
 static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
-  GValue *set_val;
+  GValue set_val;
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
-  set_val = g_object_get_data(G_OBJECT(dparam), "set_val");
-  g_return_if_fail(set_val != NULL);
-  g_value_set_float(set_val, adj->value);
+  ZERO(set_val);
+  g_value_init(&set_val, G_TYPE_FLOAT);
+  g_value_set_float(&set_val, adj->value);
   
   g_print("setting value to %f\n", adj->value);  
-  g_object_set_property(G_OBJECT(dparam), "value_float", set_val);
+  g_object_set_property(G_OBJECT(dparam), "value_float", &set_val);
 
 }
 
@@ -53,7 +53,7 @@ int main(int argc,char *argv[]) {
   GstDParam *volume;
   GstDParam *freq;
   GParamSpecFloat *spec;
-  GValue *set_val, temp_val;
+  GValue temp_val;
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
@@ -74,9 +74,6 @@ int main(int argc,char *argv[]) {
   dpman = gst_dpman_get_manager (sinesrc);
 
   freq = gst_dpsmooth_new(G_TYPE_FLOAT);
-  set_val = g_new0(GValue,1);
-  g_value_init(set_val, G_TYPE_FLOAT);
-  g_object_set_data(G_OBJECT(freq), "set_val", set_val);
   
   ZERO(temp_val);
   g_value_init(&temp_val, G_TYPE_INT64);
@@ -108,9 +105,6 @@ int main(int argc,char *argv[]) {
   GST_DPARAM_DEFAULT_UPDATE_PERIOD(freq) = 2000000LL;
   */
   volume = gst_dparam_new(G_TYPE_FLOAT);
-  set_val = g_new0(GValue,1);
-  g_value_init(set_val, G_TYPE_FLOAT);
-  g_object_set_data(G_OBJECT(volume), "set_val", set_val);
   
 /*  vals = GST_DPARAM_GET_POINT(volume, 0LL);
   
