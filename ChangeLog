@@ -1,5 +1,12 @@
 2004-01-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mpeg2enc/Makefile.am:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	  Bugfix with respect to EOS handling.
+
+2004-01-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect):
 	  Link with right caps (else, it segfaults).
 	* ext/mplex/gstmplexjob.cc:

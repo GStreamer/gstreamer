@@ -205,6 +205,8 @@ gst_mpeg2enc_init (GstMpeg2enc *enc)
   GstElement *element = GST_ELEMENT (enc);
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
 
+  GST_FLAG_SET (element, GST_ELEMENT_EVENT_AWARE);
+
   enc->sinkpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "sink"), "sink");
   gst_pad_set_link_function (enc->sinkpad, gst_mpeg2enc_sink_link);
@@ -258,6 +260,7 @@ gst_mpeg2enc_loop (GstElement *element)
   }
 
   enc->encoder->encodePicture ();
+  gst_pad_event_default (enc->sinkpad, gst_event_new (GST_EVENT_EOS));
 }
 
 static GstPadLinkReturn

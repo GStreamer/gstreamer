@@ -79,7 +79,7 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams &strm)
 }
 
 /*
- * Read a frame.
+ * Read a frame. Return true means EOS or error.
  */
 
 bool
@@ -89,19 +89,27 @@ GstMpeg2EncPictureReader::LoadFrame ()
   GstBuffer *buf = NULL;
   gint i, x, y, n;
   guint8 *frame;
+  GstFormat fmt = GST_FORMAT_DEFAULT;
+  gint64 pos = 0, tot = 0;
+  gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_POSITION, &fmt, &pos);
+  gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_TOTAL, &fmt, &tot);
 
   do {
     if ((data = (GstData *) gst_pad_get_element_private (pad))) {
       gst_pad_set_element_private (pad, NULL);
     } else if (!(data = gst_pad_pull (pad))) {
+      gst_element_error (gst_pad_get_parent (pad),
+			 "Failed to read data");
       return true;
     }
+
     if (GST_IS_EVENT (data)) {
       if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-        gst_pad_event_default (pad, GST_EVENT (data));
+        gst_event_unref (GST_EVENT (data));
         return true;
+      } else {
+        gst_pad_event_default (pad, GST_EVENT (data));
       }
-      gst_pad_event_default (pad, GST_EVENT (data));
     } else {
       buf = GST_BUFFER (data);
     }
