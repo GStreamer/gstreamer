@@ -27,22 +27,22 @@ Changes since 0.8.4:
 
 Bugs fixed since 0.8.4:
 
-      * 121809 : [Solaris] Not able to record
-      * 130682 : [alsasink] fails to negotiate with audio decoders
-      * 135407 : [xviddec] shows green frames when decoding packed bitstre...
-      * 140432 : Osssink and alsasink broken on nforce2 (intel8x0) soundcard
-      * 140897 : Incorrect segment duration in files created with matroska...
-      * 140898 : No writing application specified in matroska files create...
-      * 141554 : vorbis in matroska files makes the vorbisdec plugin segfault
-      * 144091 : [Solaris] audio mixer element
-      * 144616 : Infinite loop in wavparse.
-      * 148711 : typefind function for TTA audio files
-      * 148950 : matroskademux doesn't set buffer duration
-      * 148951 : matroskademux misses the tta codec in its codec list
-      * 151232 : [lame] doesn't build with lame-3.90
-      * 151236 : [v4l] compile failure
-      * 151410 : Memory leaks in multifdsink
-      * 151462 : theora plugin Makefile broken
+      * 119376 : Playback out of sync for mpeg videos from DVB
+      * 126922 : [qtdemux] demuxes incorrectly
+      * 135528 : [ximagesink] crashes on resize
+      * 137748 : [ffdec_wmav2] jaggy video for homeShopping.asf
+      * 139194 : [gstplay] doesn't play media with only video
+      * 139588 : In Alsa tab, binary value options appear as a slider and ...
+      * 142268 : avidemux forwards flush events event when not seeking
+      * 147441 : typefind recognizes ELF files as audio/mpeg
+      * 148283 : ** ERROR **: file gst-register.c: line 138 (main): assert...
+      * 148993 : Gstreamer fails to play Faac created aac file
+      * 149742 : [asfdemux] Can't play Shania Twain - Up.wma
+      * 150589 : dirac plugin does not compile with dirac-0.4.0
+      * 151416 : [PATCH] Fix CVS jhbuild build failure of gstadder.c
+      * 151419 : [PATCH] Fix CVS jhbuild build failure of progressreport.c
+      * 151420 : [PATCH] matroska-demux.c build failure on x86_64
+      * 151421 : [PATCH] playback/test3.c build failure on x86_64
       * 151877 : [PATCH] Fix bad casts in ximagesink.c
       * 151879 : [PATCH] fix bad pointer casts in xvimagesink.c
       * 151881 : [PATCH] Fix format strings for amd64 in seek.c
@@ -51,9 +51,21 @@ Bugs fixed since 0.8.4:
       * 151884 : [PATCH] Fix format string warnings in cdparanoia.c
       * 151886 : [PATCH] Fix format string warnings in vorbisfile.c
       * 151887 : [PATCH] Fix format string warnings in player.c
+      * 152091 : aspect-ratio fixes
       * 152102 : wavenc leaks events
+      * 152289 : wavparse pushes buffers on unusable source pad
       * 152341 : patch for ivorbis compile failure
+      * 152671 : file not playing back with BBB's gst-player
+      * 152692 : Compile error with gcc 2.95
+      * 152757 : playes this file in slow motion while other media players...
+      * 152805 : [sunaudiosink] Deselects other input ports
+      * 152806 : [sunaudiomixer]  Mute functionality is broken
+      * 153388 : Mpeg makes Totem hang
+      * 153818 : AVI plays back extremely slowly
+      * 154056 : Small leak in wavparse
       * 154301 : typefind and rmdemux don't use the same mime type for rea...
+      * 154375 : avi index massaging is slow
+      * 154518 : gst-plugins speex support not compatible with speex-1.0.x...
 
 Changes since 0.8.3:
 
