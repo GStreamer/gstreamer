@@ -104,10 +104,10 @@ main (gint argc, gchar *argv[])
 
   caps = GST_CAPS_NEW (
 		  "testcaps",
-		  "unkown/unknown",
+		  "unknown/unknown",
 		  NULL);
 
-  /* newly crrated caps without props is fixed */
+  /* newly created caps without props is fixed */
   g_assert (GST_CAPS_IS_FIXED (caps));
   
   entry = gst_props_entry_new ("foo", GST_PROPS_INT (5));
@@ -134,25 +134,25 @@ main (gint argc, gchar *argv[])
   /* props should be variable now */
   g_assert (!GST_PROPS_IS_FIXED (props));
   /* caps too */
-  g_assert (!GST_CAPS_IS_FIXED (caps));
+  g_assert (!GST_CAPS_IS_FIXED_BP (caps));
 
   gst_props_remove_entry_by_name (props, "bar");
   /* props should be fixed again now */
   g_assert (GST_PROPS_IS_FIXED (props));
   /* caps too */
-  g_assert (GST_CAPS_IS_FIXED (caps));
+  g_assert (GST_CAPS_IS_FIXED_BP (caps));
 
   gst_props_set (props, "foo", GST_PROPS_INT_RANGE (1,5));
   /* props should be variable again now */
   g_assert (!GST_PROPS_IS_FIXED (props));
   /* caps too */
-  g_assert (!GST_CAPS_IS_FIXED (caps));
+  g_assert (!GST_CAPS_IS_FIXED_BP (caps));
 
   gst_props_set (props, "foo", GST_PROPS_INT (5));
   /* props should be fixed again now */
   g_assert (GST_PROPS_IS_FIXED (props));
   /* caps too */
-  g_assert (GST_CAPS_IS_FIXED (caps));
+  g_assert (GST_CAPS_IS_FIXED_BP (caps));
 
 
   return 0;
