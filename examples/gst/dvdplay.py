@@ -43,12 +43,16 @@ class DVDPlay(object):
       print '***** a new pad %s was created' % pad.get_name()
       if pad.get_name()[:6] == 'video_':
          pad.connect(self.v_queue.get_pad('sink'))
+         #self.pipeline.set_state(STATE_PAUSED)
          self.pipeline.add(self.v_thread)
          self.v_thread.set_state(STATE_PLAYING)
+         #self.pipeline.set_state(STATE_PLAYING)
       elif pad.get_name() == 'private_stream_1.0':
          pad.connect(self.a_queue.get_pad('sink'))
+         #self.pipeline.set_state(STATE_PAUSED)
          self.pipeline.add(self.a_thread)
          self.a_thread.set_state(STATE_PLAYING);
+         #self.pipeline.set_state(STATE_PLAYING)
       else:
          print 'unknown pad: %s' % pad.get_name()
 

@@ -28,6 +28,38 @@ headers
 #include "pygobject.h"
 #include <gst/gst.h>
 
+typedef struct {
+	PyGObject *pad;
+	PyObject *connect_function;
+	PyObject *chain_function;
+} PyGstPadPrivate;
+
+static PyGstPadPrivate*
+pad_private(GstPad *pad)
+{
+	return (PyGstPadPrivate*)gst_pad_get_element_private(pad);
+}
+	
+static PyGstPadPrivate*
+py_pad_private(PyGObject *pad)
+{
+	PyGstPadPrivate *private;
+	GstPad *gpad;
+
+	gpad = (GstPad*)pygobject_get(pad);
+	private = (PyGstPadPrivate*)gst_pad_get_element_private(gpad);
+	if (private == NULL) {
+		/* FIXME need to free this somewhere */
+		private = g_new0(PyGstPadPrivate, 1);
+		Py_INCREF(pad);
+		private->pad = pad;
+		gst_pad_set_element_private(gpad, private);
+	}
+	return private;
+}
+	
+%%
+modulename gstreamer
 %%
 import gobject.GObject as PyGObject_Type
 %%
@@ -35,5 +67,222 @@ ignore-glob
  _*
  gstreamer_*init
  *_get_type
- 
 %%
+override gst_pad_set_connect_function kwargs
+
+static GstPadConnectReturn
+call_connect_function (GstPad *pad, GstCaps *caps)
+{
+	PyObject *function;
+	PyObject *retval;
+	
+	function = pad_private(pad)->connect_function;
+	
+	retval = (PyObject*)PyObject_CallFunction (function,
+			"OO",
+			pad_private(pad)->pad,
+			PyCObject_FromVoidPtr (caps, NULL));
+
+	if (PyErr_Occurred ()) {
+		PyErr_Print ();
+		return GST_PAD_CONNECT_REFUSED;
+	}
+
+	return PyInt_AsLong(retval);
+}
+
+static PyObject*
+_wrap_gst_pad_set_connect_function (PyGObject *self,
+		PyObject  *args,
+		PyObject  *kwargs)
+{
+	static char *kwlist[] = { "connect_function", NULL };
+	PyObject *connect_function;
+	GstPad *pad;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+	                                 "O:GstPad.set_connect_funcion",
+					 kwlist,
+					 &connect_function)) {
+		return NULL;
+	}
+	
+	if (!PyCallable_Check(connect_function)) {
+		PyErr_SetString(PyExc_TypeError, "connect_function not callable");
+		return NULL;
+	}
+	
+	Py_INCREF(connect_function);
+	py_pad_private(self)->connect_function = connect_function;
+	pad = (GstPad*)pygobject_get(self);
+	gst_pad_set_connect_function(pad, call_connect_function);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_pad_set_chain_function kwargs
+
+static void
+call_chain_function (GstPad *pad, GstBuffer *buf)
+{
+	PyObject *function;
+	
+	function = pad_private(pad)->chain_function;
+	
+	PyObject_CallFunction (function,
+			"OO", 
+			pad_private(pad)->pad,
+			PyCObject_FromVoidPtr (buf, NULL));
+
+	if (PyErr_Occurred ()) {
+		PyErr_Print ();
+		return;
+	}
+}
+
+static PyObject*
+_wrap_gst_pad_set_chain_function (PyGObject *self,
+				   PyObject  *args,
+				   PyObject  *kwargs)
+{
+	static char *kwlist[] = { "chain_function", NULL };
+	PyObject *chain_function;
+	GstPad *pad;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+	                                 "O:GstPad.set_chain_funcion",
+					 kwlist,
+					 &chain_function)) {
+		return NULL;
+	}
+	
+	if (!PyCallable_Check(chain_function)) {
+		PyErr_SetString(PyExc_TypeError, "chain_function not callable");
+		return NULL;
+	}
+	
+	Py_INCREF(chain_function);
+	py_pad_private(self)->chain_function = chain_function;
+	pad = (GstPad*)pygobject_get(self);
+	gst_pad_set_chain_function(pad, call_chain_function);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_pad_push kwargs
+
+static PyObject*
+_wrap_gst_pad_push (PyGObject *self,
+		PyObject  *args,
+		PyObject  *kwargs)
+{
+	static char *kwlist[] = { "buffer", NULL };
+	PyObject *pybuf;
+	GstBuffer *buf;
+	GstPad *pad;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+	                                 "O:GstPad.push",
+					 kwlist,
+					 &pybuf)) {
+		return NULL;
+	}
+	
+	if (!PyCObject_Check(pybuf)) {
+		PyErr_SetString(PyExc_TypeError, "push expecting a PyCObject");
+		return NULL;
+	}
+	
+	pad = (GstPad*)pygobject_get(self);
+	buf = (GstBuffer*)PyCObject_AsVoidPtr(pybuf);
+	gst_pad_push(pad, buf);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_buffer_get_data
+
+static PyObject*
+_wrap_gst_buffer_get_data (PyObject *self,
+		PyObject  *args)
+{
+	PyObject *pybuf;
+	GstBuffer *buf;
+	
+	if (!PyArg_ParseTuple(args,
+				"O:GstBuffer:get_data",
+				&pybuf)) {
+		return NULL;
+	}
+	
+	if (!PyCObject_Check(pybuf)) {
+		PyErr_SetString(PyExc_TypeError, "get_data expecting a PyCObject");
+		return NULL;
+	}
+	
+	buf = (GstBuffer*)PyCObject_AsVoidPtr(pybuf);
+
+	return PyString_FromStringAndSize(
+			GST_BUFFER_DATA(buf),
+			GST_BUFFER_SIZE(buf));
+}
+%%
+override gst_buffer_set_data
+
+static PyObject*
+_wrap_gst_buffer_set_data (PyObject *self,
+		PyObject  *args)
+{
+	PyObject *pybuf;
+	PyObject *data;
+	GstBuffer *buf;
+	
+	if (!PyArg_ParseTuple(args,
+				"OO:GstBuffer:set_data",
+				&pybuf, &data)) {
+		return NULL;
+	}
+	
+	if (!PyCObject_Check(pybuf)) {
+		PyErr_SetString(PyExc_TypeError, "set_data expecting a PyCObject");
+		return NULL;
+	}
+	if (!PyString_Check(data)) {
+		PyErr_SetString(PyExc_TypeError, "set_data expecting a string");
+		return NULL;
+	}
+	if (GST_BUFFER_FLAGS(buf) & GST_BUFFER_READONLY) {
+		PyErr_SetString(PyExc_TypeError, "set_data can't use a READONLY buffer");
+		return NULL;
+	}
+	
+	buf = (GstBuffer*)PyCObject_AsVoidPtr(pybuf);
+	GST_BUFFER_SIZE(buf) = PyString_Size(data);
+	GST_BUFFER_DATA(buf) = g_new0(char, GST_BUFFER_SIZE(buf));
+
+	memcpy(GST_BUFFER_DATA(buf),
+			PyString_AsString(data),
+			PyString_Size(data));
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_buffer_new
+
+static PyObject*
+_wrap_gst_buffer_new (PyObject *self,
+		PyObject  *args)
+{
+	GstBuffer *newbuf;
+	
+	if (!PyArg_ParseTuple(args, ":GstBuffer:set_data")) {
+		return NULL;
+	}
+	
+	newbuf = gst_buffer_new();
+	return PyCObject_FromVoidPtr (newbuf, NULL);
+}
