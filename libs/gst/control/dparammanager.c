@@ -137,7 +137,6 @@ gst_dpman_init (GstDParamManager * dpman)
 {
   GST_DPMAN_DPARAMS (dpman) = g_hash_table_new (g_str_hash, g_str_equal);
   GST_DPMAN_DPARAMS_LIST (dpman) = NULL;
-  GST_DPMAN_NAME (dpman) = NULL;
   GST_DPMAN_PARENT (dpman) = NULL;
   GST_DPMAN_MODE_NAME (dpman) = NULL;
   GST_DPMAN_MODE (dpman) = NULL;

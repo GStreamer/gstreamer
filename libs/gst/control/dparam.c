@@ -313,7 +313,7 @@ gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
   g_return_if_fail (G_PARAM_SPEC_VALUE_TYPE (param_spec) ==
       GST_DPARAM_TYPE (dparam));
 
-  GST_DPARAM_NAME (dparam) = g_param_spec_get_name (param_spec);
+  gst_object_set_name (GST_OBJECT (dparam), g_param_spec_get_name (param_spec));
   GST_DPARAM_PARAM_SPEC (dparam) = param_spec;
   GST_DPARAM_MANAGER (dparam) = manager;
   GST_DPARAM_UNIT_NAME (dparam) = unit_name;
@@ -337,7 +337,7 @@ gst_dparam_detach (GstDParam * dparam)
 
   GST_DEBUG ("detaching %s from dparam %p", GST_DPARAM_NAME (dparam), dparam);
 
-  GST_DPARAM_NAME (dparam) = NULL;
+  gst_object_set_name (GST_OBJECT (dparam), NULL);
   GST_DPARAM_PARAM_SPEC (dparam) = NULL;
   GST_DPARAM_MANAGER (dparam) = NULL;
 }

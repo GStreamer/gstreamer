@@ -1,5 +1,12 @@
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
+	* libs/gst/control/dparam.c: (gst_dparam_attach),
+	(gst_dparam_detach):
+	* libs/gst/control/dparammanager.c: (gst_dpman_init):
+	  fix lvalue casts for real
+
+2004-03-24  Benjamin Otte  <otte@gnome.org>
+
 	* gst/schedulers/gstbasicscheduler.c:
 	(gst_basic_scheduler_src_wrapper):
 	* gst/schedulers/gstoptimalscheduler.c:
