@@ -28,6 +28,7 @@
 #include "gstinfo.h"
 #include "gstlog.h"
 
+#define GST_CAT_DEFAULT GST_CAT_THREAD
 #define STACK_SIZE 0x200000
 
 GstElementDetails gst_thread_details = {
@@ -177,7 +178,7 @@ gst_thread_init (GstThread *thread)
 {
   GstScheduler *scheduler;
 
-  GST_CAT_DEBUG (GST_CAT_THREAD, "initializing thread");
+  GST_DEBUG ("initializing thread");
 
   /* threads are managing bins and iterate themselves */
   /* CR1: the GstBin code checks these flags */
@@ -301,7 +302,7 @@ gst_thread_release_children_locks (GstThread *thread)
     GList *pads;
 
     g_assert (element);
-    GST_CAT_DEBUG (GST_CAT_THREAD, "waking element \"%s\"", GST_ELEMENT_NAME (element));
+    GST_DEBUG_OBJECT (thread, "waking element \"%s\"", GST_ELEMENT_NAME (element));
     elements = g_list_next (elements);
 
     if (!gst_element_release_locks (element))
@@ -326,8 +327,8 @@ gst_thread_release_children_locks (GstThread *thread)
         continue; /* FIXME: deal with case where there's no peer */
 
       if (GST_ELEMENT_SCHED (peerelement) != GST_ELEMENT_SCHED (thread)) {
-        GST_CAT_DEBUG (GST_CAT_THREAD, "element \"%s\" has pad cross sched boundary", GST_ELEMENT_NAME (element));
-        GST_CAT_DEBUG (GST_CAT_THREAD, "waking element \"%s\"", GST_ELEMENT_NAME (peerelement));
+        GST_LOG_OBJECT (thread, "element \"%s\" has pad cross sched boundary", GST_ELEMENT_NAME (element));
+        GST_LOG_OBJECT (thread, "waking element \"%s\"", GST_ELEMENT_NAME (peerelement));
         if (!gst_element_release_locks (peerelement))
           g_warning ("element %s could not release locks", GST_ELEMENT_NAME (peerelement));
       }
@@ -345,7 +346,7 @@ gst_thread_catch (GstThread *thread)
       g_mutex_lock (thread->lock);
       GST_FLAG_SET (thread, GST_THREAD_MUTEX_LOCKED);
     }
-    GST_CAT_DEBUG (GST_CAT_THREAD, "%s is catching itself", GST_ELEMENT_NAME (thread));
+    GST_DEBUG_OBJECT (thread, "catching itself");
     GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
   } else {
     /* another thread is trying to catch us */
@@ -353,7 +354,7 @@ gst_thread_catch (GstThread *thread)
     wait = !GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING);
     while (!wait) {
       GTimeVal tv;
-      GST_CAT_DEBUG (GST_CAT_THREAD, "catching %s...", GST_ELEMENT_NAME (thread));
+      GST_LOG_OBJECT (thread, "catching thread...");
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
       g_cond_signal (thread->cond);
       gst_thread_release_children_locks (thread);
@@ -361,7 +362,7 @@ gst_thread_catch (GstThread *thread)
       g_time_val_add (&tv, 1000); /* wait a millisecond to catch the thread */
       wait = g_cond_timed_wait (thread->cond, thread->lock, &tv);
     }
-    GST_CAT_DEBUG (GST_CAT_THREAD, "caught %s", GST_ELEMENT_NAME (thread));
+    GST_LOG_OBJECT (thread, "caught thread");
   }
   g_assert (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING));
 }
@@ -408,10 +409,10 @@ gst_thread_change_state (GstElement *element)
 	  thread, STACK_SIZE, FALSE, TRUE, thread->priority,
 	  NULL);
       if (!thread->thread_id){
-        GST_CAT_DEBUG (GST_CAT_THREAD, "g_thread_create_full for %sfailed", GST_ELEMENT_NAME (element));
+        GST_ERROR_OBJECT (element, "g_thread_create_full failed");
         goto error_out;
       }
-      GST_CAT_DEBUG (GST_CAT_THREAD, "GThread created");
+      GST_LOG_OBJECT (element, "GThread created");
 
       /* wait for it to 'spin up' */
       g_cond_wait (thread->cond, thread->lock);
@@ -445,7 +446,7 @@ gst_thread_change_state (GstElement *element)
     case GST_STATE_READY_TO_NULL:
       /* we can't join the threads here, because this could have been triggered
          by ourself (ouch) */
-      GST_CAT_DEBUG (GST_CAT_THREAD, "destroying GThread %p", thread->thread_id);
+      GST_LOG_OBJECT (thread, "destroying GThread %p", thread->thread_id);
       GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
       thread->thread_id = NULL;
       if (thread == gst_thread_get_current()) {
@@ -456,8 +457,7 @@ gst_thread_change_state (GstElement *element)
         /* unlock and signal - we are out */
         gst_thread_release (thread);
 
-  	GST_CAT_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
-	          GST_ELEMENT_NAME (thread));
+  	GST_INFO_OBJECT (thread, "GThread %p is exiting", g_thread_self());
 
   	g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
 
@@ -469,8 +469,8 @@ gst_thread_change_state (GstElement *element)
       /* it should be dead now */
       break;
     default:
-      GST_CAT_DEBUG (GST_CAT_THREAD, "[%s]: UNHANDLED STATE CHANGE! %x", 
-                     GST_ELEMENT_NAME (element), GST_STATE_TRANSITION (element));
+      GST_ERROR_OBJECT (element, "UNHANDLED STATE CHANGE! %x", 
+                        GST_STATE_TRANSITION (element));
       g_assert_not_reached ();
       break;
   }
@@ -500,8 +500,7 @@ static void
 gst_thread_child_state_change (GstBin *bin, GstElementState oldstate, 
 			       GstElementState newstate, GstElement *element)
 {
-  GST_CAT_DEBUG (GST_CAT_THREAD, "%s (from thread %s) child %s changed state from %s to %s",
-              GST_ELEMENT_NAME (bin), 
+  GST_LOG_OBJECT (bin, "(from thread %s) child %s changed state from %s to %s",
               gst_thread_get_current() ? GST_ELEMENT_NAME (gst_thread_get_current()) : "(none)", 
               GST_ELEMENT_NAME (element), gst_element_state_get_name (oldstate),
               gst_element_state_get_name (newstate));
@@ -528,7 +527,7 @@ gst_thread_main_loop (void *arg)
 
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
-  GST_CAT_DEBUG (GST_CAT_THREAD, "Thread %s started main loop", GST_ELEMENT_NAME (thread));
+  GST_LOG_OBJECT (thread, "Started main loop");
 
   /* initialize gst_thread_current */
   g_private_set (gst_thread_current, thread);
@@ -542,7 +541,7 @@ gst_thread_main_loop (void *arg)
     if (GST_STATE (thread) == GST_STATE_PLAYING) {
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       status = TRUE;
-      GST_CAT_DEBUG (GST_CAT_THREAD, "%s starts iterating", GST_ELEMENT_NAME (thread));
+      GST_LOG_OBJECT (thread, "starting to iterate");
       while (status && GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
         g_mutex_unlock (thread->lock);
         status = gst_bin_iterate (GST_BIN (thread));
@@ -556,7 +555,7 @@ gst_thread_main_loop (void *arg)
     }
     if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING))
       break;
-    GST_CAT_DEBUG (GST_CAT_THREAD, "%s was caught", GST_ELEMENT_NAME (thread));
+    GST_LOG_OBJECT (thread, "we're caught");
     g_cond_signal (thread->cond);
     g_cond_wait (thread->cond, thread->lock);
   }
@@ -569,11 +568,11 @@ gst_thread_main_loop (void *arg)
   g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
 
   /* unlock and signal - we are out */
+  
+  GST_LOG_OBJECT (thread, "Thread %p exits main loop", g_thread_self());
   g_cond_signal (thread->cond);
   g_mutex_unlock (thread->lock);
-
-  GST_CAT_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
-	    GST_ELEMENT_NAME (thread));
+  /* don't assume the GstThread object exists anymore now */
 
   return NULL;
 }
@@ -592,7 +591,7 @@ static void
 gst_thread_restore_thyself (GstObject *object,
 		            xmlNodePtr self)
 {
-  GST_CAT_DEBUG (GST_CAT_THREAD,"gstthread: restore");
+  GST_LOG_OBJECT (object, "restoring");
 
   if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
     GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);
