@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2001 Erik Walthinsen <omega@temple-baptist.com>
+ * Copyright (C) 2004 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,7 +27,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 #define GST_CAT_DEFAULT gst_adapter_debug
 
 #define _do_init(thing) \
-  GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "GstAdapter", 0, "object to splice and merge buffers to dewsired size")
+  GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "GstAdapter", 0, "object to splice and merge buffers to desired size")
 GST_BOILERPLATE_FULL (GstAdapter, gst_adapter, GObject, G_TYPE_OBJECT, _do_init)
 
      static void gst_adapter_dispose (GObject * object);

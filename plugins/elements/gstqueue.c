@@ -316,6 +316,7 @@ gst_queue_dispose (GObject * object)
 
     gst_event_unref (event);
   }
+  g_queue_free (queue->events);
 
   if (G_OBJECT_CLASS (parent_class)->dispose)
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -892,6 +893,7 @@ gst_queue_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_queue_locked_flush (queue);
+      gst_caps_replace (&queue->negotiated_caps, NULL);
       break;
     default:
       break;

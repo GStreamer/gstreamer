@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2001 Erik Walthinsen <omega@temple-baptist.com>
+ * Copyright (C) 2004 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

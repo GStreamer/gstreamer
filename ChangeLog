@@ -1,3 +1,11 @@
+2004-06-06  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstqueue.c: (gst_queue_dispose), (gst_queue_change_state):
+	  fix memory leaks (fixes #142795). Initial patch by Sebastien Cote
+	* libs/gst/bytestream/adapter.c:
+	* libs/gst/bytestream/adapter.h:
+	  fix copyright in header and typo in debugging category name
+
 2004-06-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
