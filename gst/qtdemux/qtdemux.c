@@ -1876,6 +1876,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   tkhd = qtdemux_tree_get_child_by_type (trak, FOURCC_tkhd);
   g_assert (tkhd);
 
+  GST_LOG ("track[tkhd] version/flags: 0x%08x",
+      QTDEMUX_GUINT32_GET (tkhd->data + 8));
+
   /* track duration? */
 
   mdia = qtdemux_tree_get_child_by_type (trak, FOURCC_mdia);
@@ -1885,7 +1888,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   g_assert (mdhd);
 
   stream->timescale = QTDEMUX_GUINT32_GET (mdhd->data + 20);
-  GST_INFO ("track timescale: %d", stream->timescale);
+  GST_LOG ("track timescale: %d", stream->timescale);
+  GST_LOG ("track duration: %d", QTDEMUX_GUINT32_GET (mdhd->data + 24));
+
+  /* HACK:
+   * some of those trailers, nowadays, have prologue images that are
+   * themselves vide tracks as well. I haven't really found a way to
+   * identify those yet, except for just looking at their duration. */
+  if ((guint64) QTDEMUX_GUINT32_GET (mdhd->data + 24) *
+      qtdemux->timescale * 10 / (stream->timescale * qtdemux->duration) < 2) {
+    GST_WARNING ("Track shorter than 20%% (%d/%d vs. %d/%d) of the stream "
+        "found, assuming preview image or something; skipping track",
+        QTDEMUX_GUINT32_GET (mdhd->data + 24), stream->timescale,
+        qtdemux->duration, qtdemux->timescale);
+    return;
+  }
 
   hdlr = qtdemux_tree_get_child_by_type (mdia, FOURCC_hdlr);
   g_assert (hdlr);
