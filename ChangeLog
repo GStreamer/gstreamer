@@ -1,6 +1,13 @@
 2004-04-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_init), (gst_v4lsrc_fixate),
+	(gst_v4lsrc_getcaps), (gst_v4lsrc_buffer_free):
+          fixate to max width and height of device
+
+2004-04-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
 	* sys/v4l/gstv4l.c:
 	* sys/v4l/gstv4lsrc.c:
 	* sys/v4l/v4l_calls.c:
