@@ -722,19 +722,21 @@ gst_play_set_idle_timeout_funcs (	GstPlay *play,
  * gst_play_get_sink_element:
  * @play: a #GstPlay.
  * @element: a #GstElement.
+ * @sink_type: a #GstPlaySinkType.
  *
- * Searches for the sink #GstElement of @element in @play.
+ * Searches recursively for a sink #GstElement with
+ * type @sink_type in @element which is supposed to be a #GstBin.
  *
  * Returns: the sink #GstElement of @element.
  */
 GstElement*
 gst_play_get_sink_element (	GstPlay *play,
-							GstElement *element)
+							GstElement *element,
+							GstPlaySinkType sink_type)
 {
-	GstPad *pad = NULL;
 	GList *elements = NULL;
 	const GList *pads = NULL;
-	gboolean has_src;
+	gboolean has_src, has_correct_type;
 
 	g_return_val_if_fail (GST_IS_PLAY (play), NULL);
 	g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -744,23 +746,75 @@ gst_play_get_sink_element (	GstPlay *play,
 		 * element is a sink element */		
 		return element;
 	}
-
+	
 	elements = (GList *) gst_bin_get_list (GST_BIN(element));
+	
 	/* traverse all elements looking for a src pad */
-	while (elements && pad == NULL) {	
+	
+	while (elements) {
+		
 		element = GST_ELEMENT (elements->data);
-		pads = gst_element_get_pad_list (element);
-		has_src = FALSE;
-		while (pads) {
-			/* check for src pad */
-			if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC) {
-				has_src = TRUE;
-				break;
+		
+		/* Recursivity :) */
+		
+		if (GST_IS_BIN(element)) {
+			element = gst_play_get_sink_element(play,element,sink_type);
+			if (GST_IS_ELEMENT (element)) {
+				return element;
 			}
-			pads = g_list_next (pads);
 		}
-		if (!has_src){
-			return element;
+		else {
+		
+			pads = gst_element_get_pad_list (element);
+			has_src = FALSE;
+			has_correct_type = FALSE;
+			while (pads) {
+				/* check for src pad */
+				if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC) {
+					has_src = TRUE;
+					break;
+				}
+				else {
+					/* If not a src pad checking caps */
+					GstCaps *caps;
+					caps = gst_pad_get_caps (GST_PAD (pads->data));
+					while (caps) {
+						gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
+						if (g_ascii_strcasecmp(	gst_caps_get_mime (caps),
+														"audio/raw") == 0)
+						{
+							has_audio_cap = TRUE;
+						}
+						if (g_ascii_strcasecmp(	gst_caps_get_mime (caps),
+														"video/raw") == 0)
+						{
+							has_video_cap = TRUE;
+						}
+					
+						switch (sink_type) {
+							case GST_PLAY_SINK_TYPE_AUDIO:
+								if (has_audio_cap)
+									has_correct_type = TRUE;
+								break;;
+							case GST_PLAY_SINK_TYPE_VIDEO:
+								if (has_video_cap)
+									has_correct_type = TRUE;
+								break;;
+							case GST_PLAY_SINK_TYPE_ANY:
+								if ( (has_video_cap) || (has_audio_cap) )
+									has_correct_type = TRUE;
+								break;;
+							default:
+								has_correct_type = FALSE;
+						}
+						caps = caps->next;
+					}
+				}
+				pads = g_list_next (pads);
+			}
+			if ( (!has_src) && (has_correct_type) ){
+				return element;
+			}
 		}
 		elements = g_list_next (elements);
 	}
