@@ -50,7 +50,7 @@ WMV1		WMV1
 These video stream headers is very similar to that used in the AVI
 format as are the audio stream headers. In addition the content types
 are basically the same also so, for compatibility with existing
-plugins the src pads are set up as video/avi. This enables
+plugins the src pads are set up as video/x-msvideo. This enables
 compatibility with the ffmpeg plugin.
 
 The demuxing process begins with the loop function gst_asf_demux_loop
