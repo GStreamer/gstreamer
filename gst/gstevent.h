@@ -28,6 +28,7 @@
 #include <gst/gstdata.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
+#include <gst/gstcaps.h>
 
 G_BEGIN_DECLS
 
@@ -46,7 +47,8 @@ typedef enum {
   GST_EVENT_RATE		= 11,
   GST_EVENT_FILLER		= 12,
   GST_EVENT_TS_OFFSET		= 13,
-  GST_EVENT_INTERRUPT		= 14
+  GST_EVENT_INTERRUPT		= 14,
+  GST_EVENT_NAVIGATION		= 15
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -178,6 +180,9 @@ struct _GstEvent {
     struct {
       gdouble      	value;
     } rate;
+    struct {
+      GstCaps		*caps;
+    } caps;
   } event_data;
 };
 
