@@ -1,3 +1,8 @@
+2004-12-21  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* sys/oss/README: remove this file, which predates my birth
+	  (and which content is by far outdated)
+
 2004-12-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* Makefile.am:
