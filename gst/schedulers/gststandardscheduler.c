@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <cothreads/cothreads.h>
 
+#include <errno.h>
+
 typedef struct _GstSchedulerChain GstSchedulerChain;
 
 #define GST_PAD_THREADSTATE(pad)	 (cothread*) (GST_PAD_CAST (pad)->sched_private)
