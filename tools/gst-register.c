@@ -37,7 +37,6 @@
 #include <errno.h>
 #include <locale.h>
 
-GSTREAMER_EXPORT gboolean _gst_registry_auto_load;
 static gint num_features = 0;
 static gint num_plugins = 0;
 

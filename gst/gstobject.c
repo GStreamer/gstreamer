@@ -55,7 +55,7 @@ enum
   SO_LAST_SIGNAL
 };
 
-GSTREAMER_EXPORT GType _gst_object_type = 0;
+GType _gst_object_type = 0;
 static GHashTable *object_name_counts = NULL;
 
 G_LOCK_DEFINE_STATIC (object_name_mutex);

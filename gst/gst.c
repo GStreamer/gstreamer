@@ -40,7 +40,7 @@
 #define GST_PLUGIN_SEPARATOR ","
 
 #ifndef GST_DISABLE_REGISTRY
-GSTREAMER_EXPORT gboolean _gst_registry_auto_load = TRUE;
+gboolean _gst_registry_auto_load = TRUE;
 static GstRegistry *_global_registry;
 static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;

@@ -74,6 +74,10 @@ G_BEGIN_DECLS
  * definition is iffy */
 typedef struct poptOption GstPoptOption;
 
+#ifndef GST_DISABLE_REGISTRY
+GSTREAMER_EXPORT gboolean _gst_registry_auto_load;
+#endif
+
 /* initialize GST */
 void		gst_init			(int *argc, char **argv[]);
 gboolean	gst_init_check			(int *argc, char **argv[]);
