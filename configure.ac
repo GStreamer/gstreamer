@@ -523,15 +523,13 @@ AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
 AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for arts
-AC_DIAGNOSE([obsolete],[instead of using `AC_LANG', `AC_DIAGNOSE([obsolete],[instead of using `AC_LANG', `AC_LANG_SAVE',
+AC_DIAGNOSE([obsolete],[instead of using `AC_LANG', `AC_LANG_SAVE',
 and `AC_LANG_RESTORE', you should use `AC_LANG_PUSH' and `AC_LANG_POP'.])
-',
-and `AC_LANG_POP([])', you should use `AC_LANG_PUSH' and `AC_LANG_POP'.])
 
 AC_LANG_PUSH(C++)
 AC_MSG_CHECKING(arts library)
 dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
-AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
+dnl AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
 AC_LANG_POP(C++)
 
 dnl Check for libraw1394
@@ -725,13 +723,13 @@ esac],
 [:]) dnl Default value
 
 AC_ARG_ENABLE(docs-build,
-[  --disable-docs-build         disable all building of documentation],
+[  --enable-docs-build          enable building of documentation],
 [case "${enableval}" in
   yes) BUILD_DOCS=yes ;;
   no)  BUILD_DOCS=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
 esac], 
-[BUILD_DOCS=yes]) dnl Default value
+[BUILD_DOCS=no]) dnl Default value
 
 AC_ARG_ENABLE(plugin-docs,
 [  --enable-plugin-docs         enable the building of plugin documentation

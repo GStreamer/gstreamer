@@ -720,7 +720,7 @@ esac],
 [:]) dnl Default value
 
 AC_ARG_ENABLE(docs-build,
-[  --enable-docs-build           enable building of documentation],
+[  --enable-docs-build          enable building of documentation],
 [case "${enableval}" in
   yes) BUILD_DOCS=yes ;;
   no)  BUILD_DOCS=no ;;
