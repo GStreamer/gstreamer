@@ -258,13 +258,20 @@ dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 dnl Check for libasound
 alsa_save_LIBS=$LIBS
 alsa_save_CFLAGS=$CFLAGS
-AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
-AM_PATH_ALSA(0.9.0,
+AM_PATH_ALSA(0.5.0,
+  HAVE_LIBASOUND=yes,
   HAVE_LIBASOUND=no
-  AC_MSG_WARN(Alsa 0.9.x not yet supported.
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gstalsa
+))
+if test x$HAVE_LIBASOUND = xyes;then
+  AM_PATH_ALSA(0.9.0,
+    HAVE_LIBASOUND=no
+    AC_MSG_WARN(Alsa 0.9.x not yet supported.
 ***** NOTE: These plugins won't be built: gstalsa
 )
-  ,:)
+    ,:)
+fi
 
 LIBS=$alsa_save_LIBS
 CFLAGS=$alsa_save_CFLAGS
