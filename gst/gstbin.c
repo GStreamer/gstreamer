@@ -791,15 +791,15 @@ gst_bin_iterate_func (GstBin * bin)
 
 /**
  * gst_bin_iterate:
- * @bin: #Gstbin to iterate
+ * @bin: a#GstBin to iterate.
  *
  * Iterates over the elements in this bin.
  *
- * Returns: TRUE if the bin did something usefull. This value
+ * Returns: TRUE if the bin did something useful. This value
  *          can be used to determine it the bin is in EOS.
  */
 gboolean
-gst_bin_iterate (GstBin * bin)
+gst_bin_iterate (GstBin *bin)
 {
   GstBinClass *oclass;
   gboolean running = TRUE;
@@ -823,7 +823,8 @@ gst_bin_iterate (GstBin * bin)
   GST_DEBUG_LEAVE ("(\"%s\") %d", GST_ELEMENT_NAME (bin), running);
 
   if (!running) {
-    if (GST_STATE (bin) == GST_STATE_PLAYING && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
+    if (GST_STATE (bin) == GST_STATE_PLAYING && 
+	GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin,
 			 "polling for child shutdown after useless iteration");
       usleep (1);
