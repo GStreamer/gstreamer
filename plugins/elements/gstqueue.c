@@ -103,7 +103,7 @@ static void gst_queue_init(GstQueue *queue) {
   queue->queue = NULL;
   queue->tail = NULL;
   queue->level_buffers = 0;
-  queue->max_buffers = 1;
+  queue->max_buffers = 10;
   queue->level_bytes = 0;
   queue->size_buffers = 0;
   queue->size_bytes = 0;
@@ -200,7 +200,7 @@ void gst_queue_push(GstConnection *connection) {
   gst_pad_push(queue->srcpad,buf);
   g_list_free(front);
   queue->level_buffers--;
-//  g_print("-");
+  //g_print("-");
 
   tosignal = queue->level_buffers < queue->max_buffers;
   GST_UNLOCK(queue);

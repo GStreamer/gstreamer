@@ -151,9 +151,15 @@ int main(int argc,char *argv[]) {
 
   g_print("about to enter loop\n");
 
+	while (1) {
+	  gst_src_push(GST_SRC(src));
+	}
+	// this does not work due to multithreading
+	/*
 	g_idle_add(idle_func,src);
 
 	gtk_main();
+	*/
 }
 
 gboolean idle_func(gpointer data) {
