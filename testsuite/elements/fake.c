@@ -55,6 +55,9 @@ main (int argc, char *argv[])
 
   /* connect */
   g_print ("Connecting elements\n");
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  gst_bin_iterate (GST_BIN (pipeline));
+
   gst_pad_connect (gst_element_get_pad (src, "src"),
       		   gst_element_get_pad (sink, "sink"));
    

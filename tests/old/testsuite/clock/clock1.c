@@ -53,13 +53,14 @@ main (int argc, char *argv[])
   clock = gst_bin_get_clock (GST_BIN (pipeline));
   g_assert (clock != NULL);
   gst_clock_debug (clock);
-  gst_clock_set_active (clock, TRUE);
+  //gst_clock_set_active (clock, TRUE);
   gst_clock_debug (clock);
   //clock = gst_clock_new ("clock");
   //gst_element_set_clock (src, clock);
   //clock = gst_element_get_clock (src);
   //g_assert (clock != NULL);
 
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));
   gst_clock_debug (clock);
   gst_clock_debug (clock);

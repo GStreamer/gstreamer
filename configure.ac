@@ -225,6 +225,9 @@ esac],
 
 AS_AC_EXPAND(GST_CONFIG_DIR, $GST_CONFIG_DIR)
 AC_MSG_NOTICE(Using $GST_CONFIG_DIR as configuration dir)
+
+
+dnl building of tests
 AC_ARG_ENABLE(tests,
 AC_HELP_STRING([--disable-tests][disable building test apps]),
 [case "${enableval}" in
@@ -233,6 +236,18 @@ AC_HELP_STRING([--disable-tests][disable building test apps]),
   *) AC_MSG_ERROR(bad value ${enableval} for --disable-tests) ;;
 esac], 
 [BUILD_TESTS=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
+
+dnl tests known to fail
+AC_ARG_ENABLE(failing-tests,
+AC_HELP_STRING([--disable-failing-tests][disable building tests known to fail]),
+[case "${enableval}" in
+  yes) BUILD_FAILING_TESTS=yes ;;
+  no)  BUILD_FAILING_TESTS=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --disable-failing-tests) ;;
+esac], 
+[BUILD_FAILING_TESTS=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_FAILING_TESTS, test "x$BUILD_FAILING_TESTS" = "xyes")
 
 AC_ARG_ENABLE(examples,
 AC_HELP_STRING([--disable-examples][disable building examples]),
@@ -242,6 +257,7 @@ AC_HELP_STRING([--disable-examples][disable building examples]),
   *) AC_MSG_ERROR(bad value ${enableval} for --disable-examples) ;;
 esac], 
 [BUILD_EXAMPLES=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 
 dnl Next, check for the optional components:
 dnl ========================================
@@ -307,8 +323,6 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
-AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
-AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
