@@ -417,6 +417,25 @@ gst_tag_get_description (const gchar *tag)
   
   return info->blurb;
 }
+
+/**
+ * gst_tag_get_flag:
+ * @tag: the tag
+ *
+ * Returns the flag of this tag.
+ */
+GstTagFlag
+gst_tag_get_flag (const gchar *tag)
+{
+  GstTagInfo *info;
+
+  g_return_val_if_fail (tag != NULL, GST_TAG_FLAG_UNDEFINED);
+  info = gst_tag_lookup (g_quark_from_string (tag));
+  g_return_val_if_fail (info != NULL, GST_TAG_FLAG_UNDEFINED);
+
+  return info->flag;
+}
+
 /**
  * gst_tag_list_is_fixed:
  * @tag: tag to check

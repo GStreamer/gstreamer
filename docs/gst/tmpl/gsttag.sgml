@@ -39,6 +39,25 @@ GstTag
 @GST_TAG_FLAG_DECODED: 
 @GST_TAG_FLAG_COUNT: 
 
+<!-- ##### USER_FUNCTION GstTagForeachFunc ##### -->
+<para>
+
+</para>
+
+@list: 
+@tag: 
+@user_data: 
+
+
+<!-- ##### USER_FUNCTION GstTagMergeFunc ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+
+
 <!-- ##### FUNCTION gst_tag_register ##### -->
 <para>
 
@@ -98,6 +117,15 @@ GstTag
 
 
 <!-- ##### FUNCTION gst_tag_get_description ##### -->
+<para>
+
+</para>
+
+@tag: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tag_get_flag ##### -->
 <para>
 
 </para>

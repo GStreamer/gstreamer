@@ -81,6 +81,7 @@ G_CONST_RETURN gchar *
 		gst_tag_get_nick		(const gchar *		tag);
 G_CONST_RETURN gchar *
 		gst_tag_get_description		(const gchar *		tag);
+GstTagFlag	gst_tag_get_flag		(const gchar *		tag);
 gboolean	gst_tag_is_fixed		(const gchar *		tag);
 
 /* tag lists */
