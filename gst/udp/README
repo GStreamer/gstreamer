@@ -16,6 +16,9 @@ The udp mode should include the caps every five packets
 Perhaps this plugin can be the example of how to do caps negotiation
 via a point-to-point protocol.
 
+Add some example of udpsrc/udpsink .
+Update the man of gst-launch with some interesting pipelines .
+
 12 Sep 2001
 Wim Taymans <wim.taymans@chello.be>
 Joshua N Pritikin <vishnu@pobox.com>
