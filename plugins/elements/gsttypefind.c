@@ -158,8 +158,8 @@ gst_type_find_element_class_init (GstTypeFindElementClass *typefind_class)
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type", 
 	  G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
-          gst_marshal_VOID__UINT_POINTER, G_TYPE_NONE, 2,
-          G_TYPE_UINT, G_TYPE_POINTER);
+          gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
+          G_TYPE_UINT, GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }

@@ -96,8 +96,8 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass *klass)
   gst_multifilesrc_signals[NEW_FILE] =
     g_signal_new ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                    G_TYPE_POINTER);
+                    g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
+                    G_TYPE_STRING);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATIONS,
     g_param_spec_pointer("locations","locations","locations",

@@ -49,10 +49,7 @@ static GstStructureField *gst_structure_id_get_field(const GstStructure *structu
 static void _gst_structure_transform_to_string(const GValue *src_value,
     GValue *dest_value);
 
-static void _gst_structure_value_init (GValue *value);
-static void _gst_structure_value_free (GValue *value);
-static void _gst_structure_value_copy (const GValue *src, GValue *dest);
-static gpointer _gst_structure_value_peek_pointer (const GValue *value);
+static GstStructure *_gst_structure_copy_conditional (const GstStructure *structure);
 
 
 GType gst_structure_get_type(void)
@@ -62,36 +59,9 @@ GType gst_structure_get_type(void)
 
 void _gst_structure_initialize(void)
 {
-  static const GTypeValueTable type_value_table = {
-    _gst_structure_value_init,
-    _gst_structure_value_free,
-    _gst_structure_value_copy,
-    _gst_structure_value_peek_pointer,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
-  static const GTypeInfo structure_info = {
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    0, /* sizeof(GstStructure), */
-    0,
-    NULL, /* _gst_structure_init, */
-    &type_value_table,
-  };
-
-  _gst_structure_type = g_type_register_static(G_TYPE_BOXED, "GstStructure",
-      &structure_info, 0);
-#if 0
   _gst_structure_type = g_boxed_type_register_static("GstStructure",
-      (GBoxedCopyFunc) gst_structure_copy,
+      (GBoxedCopyFunc) _gst_structure_copy_conditional,
       (GBoxedFreeFunc) gst_structure_free);
-#endif
 
   g_value_register_transform_func(_gst_structure_type, G_TYPE_STRING,
       _gst_structure_transform_to_string);
@@ -202,7 +172,7 @@ GstStructure *gst_structure_new_valist(const gchar *name,
  *
  * Returns: a new #GstStructure.
  */
-GstStructure *gst_structure_copy(GstStructure *structure)
+GstStructure *gst_structure_copy(const GstStructure *structure)
 {
   GstStructure *new_structure;
   GstStructureField *field;
@@ -1390,25 +1360,9 @@ _gst_structure_transform_to_string(const GValue *src_value, GValue *dest_value)
     gst_structure_to_string (src_value->data[0].v_pointer);
 }
 
-
-static void _gst_structure_value_init (GValue *value)
+static GstStructure *_gst_structure_copy_conditional (const GstStructure *structure)
 {
-  value->data[0].v_pointer = gst_structure_empty_new("");
-}
-
-static void _gst_structure_value_free (GValue *value)
-{
-  gst_structure_free(value->data[0].v_pointer);
-
-}
-
-static void _gst_structure_value_copy (const GValue *src, GValue *dest)
-{
-  dest->data[0].v_pointer = gst_structure_copy(src->data[0].v_pointer);
-}
-
-static gpointer _gst_structure_value_peek_pointer (const GValue *value)
-{
-  return value->data[0].v_pointer;
+  if (structure) return gst_structure_copy (structure);
+  return NULL;
 }
 

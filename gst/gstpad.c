@@ -113,7 +113,6 @@ gst_pad_dispose (GObject *object)
 /***** Then do the Real Pad *****/
 /* Pad signals and args */
 enum {
-  REAL_CAPS_NEGO_FAILED,
   REAL_LINKED,
   REAL_UNLINKED,
   REAL_FIXATE,
@@ -177,11 +176,6 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gobject_class->set_property  = GST_DEBUG_FUNCPTR (gst_real_pad_set_property);
   gobject_class->get_property  = GST_DEBUG_FUNCPTR (gst_real_pad_get_property);
 
-  gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
-    g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
   gst_real_pad_signals[REAL_LINKED] =
     g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
@@ -196,8 +190,8 @@ gst_real_pad_class_init (GstRealPadClass *klass)
     g_signal_new ("fixate", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, appfixatefunc), 
 		  _gst_real_pad_fixate_accumulator, NULL,
-		  gst_marshal_POINTER__POINTER, G_TYPE_POINTER, 1,
-                  G_TYPE_POINTER);
+		  gst_marshal_BOXED__BOXED, GST_TYPE_CAPS, 1,
+                  GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
 
 /*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
 /*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
@@ -218,7 +212,7 @@ static gboolean
 _gst_real_pad_fixate_accumulator (GSignalInvocationHint *ihint,
     GValue *return_accu, const GValue *handler_return, gpointer dummy)
 {
-  if (g_value_get_pointer (handler_return)) {
+  if (gst_value_get_caps (handler_return)) {
     g_value_copy (handler_return, return_accu);
     /* stop emission if something was returned */
     return FALSE;
@@ -1178,7 +1172,7 @@ gst_pad_link_fixate (GstPadLink *link)
 	case 4:
           newcaps = _gst_pad_default_fixate_func (
 	      GST_PAD(link->srcpad), caps);
-	  GST_DEBUG ("core fixated to % "GST_PTR_FORMAT, newcaps);
+	  GST_DEBUG ("core fixated to %"GST_PTR_FORMAT, newcaps);
 	  break;
       }
       if (newcaps) {
@@ -2723,32 +2717,6 @@ gst_pad_caps_change_notify (GstPad *pad)
 gboolean
 gst_pad_recover_caps_error (GstPad *pad, const GstCaps *allowed)
 {
-#if 0
-  /* FIXME */
-  GstElement *parent;
-  
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-
-  /* see if someone can resolve this */
-  if (g_signal_has_handler_pending (G_OBJECT (pad), 
-	gst_real_pad_signals[REAL_CAPS_NEGO_FAILED], 0, FALSE))
-  {
-    /* clear pad caps first */
-    gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
-
-    /* lets hope some signal manages to set the caps again */
-    g_signal_emit (G_OBJECT (pad), gst_real_pad_signals[REAL_CAPS_NEGO_FAILED], 0, allowed);
-
-    /* if the pad has caps now or is disabled, it's ok */
-    if (GST_PAD_CAPS (pad) != NULL || !GST_PAD_IS_ACTIVE (pad))
-      return TRUE;
-  }
-
-  /* report error */
-  parent = gst_pad_get_parent (pad);
-  GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
-                     ("negotiation failed on pad %s:%s", GST_DEBUG_PAD_NAME (pad)));
-#endif
   return FALSE;
 }
 

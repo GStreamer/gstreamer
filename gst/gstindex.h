@@ -37,6 +37,8 @@ G_BEGIN_DECLS
 #define GST_IS_INDEX_CLASS(klass)	(GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
 #define GST_INDEX_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX, GstIndexClass))
 
+#define GST_TYPE_INDEX_ENTRY            (gst_index_entry_get_type())
+
 typedef struct _GstIndexEntry GstIndexEntry;
 typedef struct _GstIndexGroup GstIndexGroup;
 typedef struct _GstIndex GstIndex;
@@ -229,6 +231,7 @@ GstIndexEntry*		gst_index_get_assoc_entry_full	(GstIndex *index, gint id,
 							 gpointer user_data);
 
 /* working with index entries */
+GType gst_index_entry_get_type (void);
 GstIndexEntry *         gst_index_entry_copy            (GstIndexEntry *entry);
 void			gst_index_entry_free		(GstIndexEntry *entry);
 gboolean		gst_index_entry_assoc_map	(GstIndexEntry *entry,

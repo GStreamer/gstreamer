@@ -51,6 +51,25 @@ static GHashTable *__tags;
 #define TAG_LOCK g_mutex_lock (__tag_mutex)
 #define TAG_UNLOCK g_mutex_unlock (__tag_mutex)
 
+GType
+gst_tag_list_get_type (void)
+{
+  static GType _gst_tag_list_type;
+
+  if (_gst_tag_list_type == 0) {
+    _gst_tag_list_type = g_boxed_type_register_static ("GstTagList",
+        (GBoxedCopyFunc) gst_tag_list_copy,
+        (GBoxedFreeFunc) gst_tag_list_free);
+
+#if 0
+    g_value_register_transform_func(_gst_tag_list_type, G_TYPE_STRING,
+        _gst_structure_transform_to_string);
+#endif
+  }
+
+  return _gst_tag_list_type;
+}
+
 void
 _gst_tag_initialize (void)
 {

@@ -133,7 +133,8 @@ gst_element_class_init (GstElementClass *klass)
     g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
                   gst_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3,
-                  GST_TYPE_ELEMENT, G_TYPE_POINTER, G_TYPE_STRING);
+                  GST_TYPE_ELEMENT, G_TYPE_POINTER,
+                  G_TYPE_STRING);
    gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, eos), NULL, NULL,
@@ -141,8 +142,8 @@ gst_element_class_init (GstElementClass *klass)
   gst_element_signals[FOUND_TAG] =
     g_signal_new ("found-tag", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, found_tag), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
-		  GST_TYPE_ELEMENT, G_TYPE_POINTER);
+                  gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2,
+		  GST_TYPE_ELEMENT, GST_TYPE_TAG_LIST);
 
   gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_real_set_property);
   gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_real_get_property);

@@ -1,3 +1,30 @@
+2004-02-17  David Schleef  <ds@schleef.org>
+
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_class_init):
+	Use G_TYPE_STRING in signal prototype instead of G_TYPE_POINTER.
+	* gst/elements/gsttypefind.c: (gst_type_find_element_class_init):
+	Use GST_TYPE_CAPS in signal prototype.
+	* gst/gstcaps.c: (_gst_caps_initialize), (gst_caps_copy_conditional):
+	Convert GST_TYPE_CAPS to boxed.
+	* gst/gstelement.c: (gst_element_class_init):
+	Use GST_TYPE_TAG_LIST in signal prototype.
+	* gst/gstindex.c: (gst_index_class_init):
+	* gst/gstindex.h:
+	Add GST_TYPE_INDEX_ENTRY type.
+	* gst/gstmarshal.list:
+	Add necessary marshal types.
+	* gst/gstpad.c: (gst_real_pad_class_init),
+	(_gst_real_pad_fixate_accumulator), (gst_pad_link_fixate),
+	(gst_pad_recover_caps_error):
+	Use GST_TYPE_CAPS in signal prototypes.  Fix some debugging strings.
+	* gst/gststructure.c: (_gst_structure_initialize),
+	(gst_structure_copy), (_gst_structure_copy_conditional):
+	* gst/gststructure.h:
+	Convert GST_TYPE_STRUCTURE to boxed.
+	* gst/gsttag.c: (gst_tag_list_get_type):
+	* gst/gsttag.h:
+	Add GST_TYPE_TAG_LIST type.
+
 2004-02-17  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstpad.c: (gst_pad_try_set_caps): Reverting my change according

@@ -53,12 +53,14 @@ typedef enum {
 typedef GstStructure GstTagList;
 #define GST_TAG_LIST(x)		((GstTagList *) (x))
 #define GST_IS_TAG_LIST(x)	(gst_is_tag_list (GST_TAG_LIST (x)))
+#define GST_TYPE_TAG_LIST       (gst_tag_list_get_type ())
 
 typedef void		(* GstTagForeachFunc)	(const GstTagList *list, const gchar *tag, gpointer user_data);
 typedef void		(* GstTagMergeFunc)	(GValue *dest, const GValue *src);
 
 /* initialize tagging system */
 void		_gst_tag_initialize		(void);
+GType           gst_tag_list_get_type           (void);
 
 void		gst_tag_register		(gchar *		name,
 						 GstTagFlag		flag,

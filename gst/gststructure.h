@@ -49,7 +49,7 @@ GstStructure *gst_structure_new(const gchar *name,
     const gchar *firstfield, ...);
 GstStructure *gst_structure_new_valist(const gchar *name,
     const gchar *firstfield, va_list varargs);
-GstStructure *gst_structure_copy(GstStructure *structure);
+GstStructure *gst_structure_copy(const GstStructure *structure);
 void gst_structure_free(GstStructure *structure);
 
 G_CONST_RETURN gchar *gst_structure_get_name(const GstStructure *structure);
