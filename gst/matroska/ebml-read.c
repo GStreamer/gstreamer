@@ -142,7 +142,7 @@ gst_ebml_read_use_event (GstEbmlRead * ebml, GstEvent * event)
       return FALSE;
 
     case GST_EVENT_DISCONTINUOUS:
-      GST_WARNING_OBJECT (ebml, "Unexected discont - might lose sync");
+      GST_WARNING_OBJECT (ebml, "Unexpected discont - might lose sync");
       gst_pad_event_default (ebml->sinkpad, event);
       return TRUE;
 

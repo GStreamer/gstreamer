@@ -91,7 +91,8 @@ static GstStaticPadTemplate src_template_factory =
         "audio/x-adpcm, "
         "layout = (string) dvi, "
         "block_align = (int) [ 1, 8192 ], "
-        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ];"
+        "audio/x-vnd.sony.atrac3")
     );
 
 /* WavParse signals and args */
