@@ -40,27 +40,39 @@ AC_ISC_POSIX
 
 AC_HEADER_STDC([])
 
-dnl ###########################################
-dnl # Super Duper options for plugin building #
-dnl ###########################################
+dnl ############################################
+dnl # Super Duper options for plug-in building #
+dnl ############################################
 
-dnl experimental plugins; stuff that hasn't had the dust settle yet
+dnl ext plug-ins; plug-ins that have external dependencies
+translit(dnm, m, l) AM_CONDITIONAL(BUILD_EXTERNAL, true)
+GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+[HAVE_EXTERNAL=yes],enabled,
+[
+  AC_MSG_WARN(building experimental plug-ins)
+  BUILD_EXTERNAL="yes"
+],[
+  AC_MSG_WARN(all plug-ins with external dependencies will not be built)
+  BUILD_EXTERNAL="no"
+])
+
+dnl experimental plug-ins; stuff that hasn't had the dust settle yet
 dnl read 'builds, but might not work'UTO
-GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
+GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
-  AC_MSG_WARN(building experimental plugins)
+  AC_MSG_WARN(building experimental plug-ins)
   USE_TARKIN="yes"
 ],[
-  AC_MSG_NOTICE(not building experimental plugins)
+  AC_MSG_NOTICE(not building experimental plug-ins)
   USE_TARKIN="no"
 ])
 
-dnl broken plugins; stuff that doesn't seem to build at the moment
-GST_CHECK_FEATURE(BROKEN, [enable building of broken plugins],,
+dnl broken plug-ins; stuff that doesn't seem to build at the moment
+GST_CHECK_FEATURE(BROKEN, [enable building of broken plug-ins],,
 HAVE_BROKEN=yes,disabled,
 [  
-  AC_MSG_WARN([building broken plugins -- no bug reports on these, only patches :)])
+  AC_MSG_WARN([building broken plug-ins -- no bug reports on these, only patches :)])
   USE_SMOOTHWAVE="yes"
   USE_VGA="yes"
   USE_XMMS="yes"
@@ -70,7 +82,7 @@ HAVE_BROKEN=yes,disabled,
   USE_VGA="no"
   USE_XMMS="no"
   USE_ARTS="no"
-  AC_MSG_NOTICE(not building broken plugins)
+  AC_MSG_NOTICE(not building broken plug-ins)
 ])
 
 dnl ##############################
@@ -181,16 +193,17 @@ AC_SUBST(X_PRE_LIBS)
 AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
 
-dnl ==========================================================================
-dnl ============================= gst plugins ================================
-dnl ==========================================================================
+dnl ===========================================================================
+dnl ============================= gst plug-ins ================================
+dnl ===========================================================================
 GST_PLUGIN_LDFLAGS='-module -avoid-version'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
-dnl these are all the gst plugins, compilable without additional libs
+dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi cdxaparse chart\
-        cutter deinterlace effectv festival filter flx goom intfloat law level\
+        cutter deinterlace effectv festival filter flx goom\
+        interleaving intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
@@ -202,12 +215,12 @@ AC_SUBST(GST_PLUGINS_ALL)
 GST_PLUGINS_SELECTED=""
 
 AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],[comma-separated list of plugins to compile]),
+    AC_HELP_STRING([--with-plugins],[comma-separated list of plug-ins to compile]),
     [for i in `echo $withval | tr , ' '`; do
         if test -n `echo $i | grep $GST_PLUGINS_ALL`; then
             GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
         else
-            echo "plugin $i not recognized, ignoring..."
+            echo "plug-in $i not recognized, ignoring..."
         fi
     done],
     [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
@@ -215,7 +228,7 @@ AC_ARG_WITH(plugins,
 AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl ==========================================================================
-dnl ============================= sys plugins ================================
+dnl ============================= sys plug-ins ================================
 dnl ==========================================================================
 
 dnl *** DXR3 card ***
@@ -268,8 +281,8 @@ dnl 20020110:
 dnl At the moment XFree86 doesn't distribute shared libXv due
 dnl to unstable API.  On many platforms you CAN NOT link a shared
 dnl lib to a static non-PIC lib.  This is what the xvideo GStreamer
-dnl plugin wants to do.  So Debian distributes a PIC compiled
-dnl version of the static lib for plugins to link to when it is
+dnl plug-in wants to do.  So Debian distributes a PIC compiled
+dnl version of the static lib for plug-ins to link to when it is
 dnl inappropriate to link the main application to libXv directly.
 dnl FIXME: add check if this platform can support linking to a
 dnl        non-PIC libXv, if not then don not use Xv.
@@ -287,11 +300,13 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink videosink, [
 ])
 
 dnl Next, check for the optional libraries:
-dnl These are all libraries used in building plugins
+dnl These are all libraries used in building plug-ins
 dnl ================================================
 dnl let's try and sort them alphabetically, shall we ?
 
-AC_MSG_NOTICE(Checking for plugin libraries)
+if test "x$BUILD_EXTERNAL" = "xyes"; then
+
+AC_MSG_NOTICE(Checking for plug-in dependency libraries)
 
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
@@ -301,13 +316,13 @@ GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
 
 dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
-GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
+GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
 ])
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
+GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
    AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
@@ -320,13 +335,13 @@ then
 fi
 
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
+GST_CHECK_FEATURE(ARTS, [arts plug-ins], arts, [
   AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
 ])
 
 dnl *** artsc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [
+GST_CHECK_FEATURE(ARTSC, [artsd plug-ins], artsdsink, [
   GST_CHECK_ARTSC()
 ])
 
@@ -385,13 +400,13 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
 
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
-GST_CHECK_FEATURE(ESD, [esound plugins], esdsink esdmon, [
+GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink esdmon, [
   AM_PATH_ESD(0.2.12, HAVE_ESD=yes, HAVE_ESD=no)
 ])
 
 dnl **** festival ****
 dnl translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
-dnl GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsrc, [
+dnl GST_CHECK_FEATURE(FESTIVAL, [festival plug-ins], festivalsrc, [
   dnl NOTE: just using local net connection now, add this lib check
   dnl       in the future if needed
   dnl AC_LANG_PUSH(C++)
@@ -442,7 +457,7 @@ GST_CHECK_FEATURE(HERMES, [Hermes library], colorspace, [
 
 dnl *** http ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_HTTP, true)
-GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
+GST_CHECK_FEATURE(HTTP, [http plug-ins], gsthttpsrc, [
   dnl FIXME: need to check for header
   GHTTP_LIBS=
   GST_HTTPSRC_GET_TYPE=
@@ -497,6 +512,14 @@ GST_CHECK_FEATURE(LCS, Lcs, lcs, [
   AC_SUBST(LCS_LIBS)
 ])
 
+dnl *** libdv ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
+GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
+  PKG_CHECK_MODULES(LIBDV, libdv, HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AC_SUBST(LIBDV_CFLAGS)
+  AC_SUBST(LIBDV_LIBS)
+])
+
 dnl *** libfame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFAME, true)
 GST_CHECK_FEATURE(LIBFAME, [libfame MPEG1/4 encoder], libfame, [
@@ -504,12 +527,6 @@ GST_CHECK_FEATURE(LIBFAME, [libfame MPEG1/4 encoder], libfame, [
   AC_SUBST(LIBFAME_CFLAGS)
   AC_SUBST(LIBFAME_LIBS)
 ])
-
-dnl FIXME : check if these CPP flags can be dealt with otherwise
-dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
-dnl CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
-dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
-dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -529,7 +546,7 @@ AC_SUBST(MAD_LIBS)
 
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MIKMOD, true)
-GST_CHECK_FEATURE(MIKMOD, [mikmod plugin], mikmod, [
+GST_CHECK_FEATURE(MIKMOD, [mikmod plug-in], mikmod, [
   AM_PATH_LIBMIKMOD(, HAVE_MIKMOD=yes, HAVE_MIKMOD=no)
   AC_SUBST(MIKMOD_LIBS, "$LIBMIKMOD_LIBS")
   AC_SUBST(MIKMOD_CFLAGS, "$LIBMIKMODCFLAGS")
@@ -581,39 +598,39 @@ dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
-GST_CHECK_FEATURE(SDL, [SDL plugin], sdlvideosink, [
+GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
  AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
 dnl *** shout ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT, true)
-GST_CHECK_FEATURE(SHOUT, [shout plugin], icecastsend, [
+GST_CHECK_FEATURE(SHOUT, [shout plug-in], icecastsend, [
   GST_CHECK_LIBHEADER(SHOUT, shout, shout_init_connection,, shout/shout.h, SHOUT_LIBS="-lshout")
   AC_SUBST(SHOUT_LIBS)
 ])
 
 dnl *** sidplay ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
-GST_CHECK_FEATURE(SIDPLAY, [sidplay plugin], sidplay, [
+GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
   GST_PATH_SIDPLAY()
 ])
 
 dnl *** smoothwave ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SMOOTHWAVE, true)
-GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plugin], smoothwave, [
+GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plug-in], smoothwave, [
   if test $HAVE_GTK = "yes"; then HAVE_SMOOTHWAVE=yes; fi;
 ])
 
 
 dnl *** snapshot ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
-GST_CHECK_FEATURE(LIBPNG, [snapshot plugin], snapshot, [
+GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   GST_CHECK_LIBHEADER(LIBPNG, png, png_read_info, -lz, png.h, LIBPNG_LIBS="-lpng -lz")
   AC_SUBST(LIBPNG_LIBS)
 ])
 
 dnl *** tarkin ***
-dnl for now the sources are included in the plugin
+dnl for now the sources are included in the plug-in
 dnl and should be moved to ext-libs/ perhaps
 translit(dnm, m, l) AM_CONDITIONAL(USE_TARKIN, true)
 GST_CHECK_FEATURE(TARKIN, [tarkinenc tarkindec], tarkin, [
@@ -623,15 +640,17 @@ GST_CHECK_FEATURE(TARKIN, [tarkinenc tarkindec], tarkin, [
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
-GST_CHECK_FEATURE(VORBIS, [vorbis plugin], vorbisenc vorbisdec, [
+GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
   AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
 ])
 
 dnl *** XMMS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XMMS, true)
-GST_CHECK_FEATURE(XMMS, [xmms plugin], xmms, [
+GST_CHECK_FEATURE(XMMS, [xmms plug-in], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_XMMS=yes, HAVE_XMMS=no)
 ])
+
+fi dnl of EXT plugins
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -798,6 +817,7 @@ gst/festival/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
+gst/interleaving/Makefile
 gst/intfloat/Makefile
 gst/law/Makefile
 gst/level/Makefile
@@ -898,7 +918,10 @@ gconf/Makefile
 
 AC_OUTPUT
 
-echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
+echo -e "configure: *** Plug-ins that will be built : $GST_PLUGINS_YES"
 echo
-echo -e "configure: *** Plugins that will not be built : $GST_PLUGINS_NO"
+echo -e "configure: *** Plug-ins that will not be built : $GST_PLUGINS_NO"
 echo
+if test "x$BUILD_EXTERNAL" = "xno"; then
+  echo "configure: *** No external plug-ins will be built"
+fi
