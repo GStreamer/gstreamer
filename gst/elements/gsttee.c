@@ -200,7 +200,7 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
   pads = gst_element_get_pad_list (GST_ELEMENT (tee));
 
   while (pads) {
-    GstPad *srcpad = GST_PAD_CAST (pads->data);
+    GstPad *srcpad = GST_PAD (pads->data);
     GstPad *peer;
     GstCaps *peercaps;
     GstCaps *newcaps;

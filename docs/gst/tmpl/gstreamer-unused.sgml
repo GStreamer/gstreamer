@@ -5978,6 +5978,15 @@ Query the element for the current mime type
 </para>
 
 
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<para>
+
+</para>
+
+@gstxml: the object which received the signal.
+@arg1: 
+@arg2: 
+
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
 

@@ -36,9 +36,9 @@ GST_DEBUG_CATEGORY_STATIC(debug_scheduler);
 # define COTHREADS_NAME 	""
 #endif
 
-#define GST_ELEMENT_SCHED_CONTEXT(elem)		((GstOptSchedulerCtx*) (GST_ELEMENT_CAST (elem)->sched_private))
+#define GST_ELEMENT_SCHED_CONTEXT(elem)		((GstOptSchedulerCtx*) (GST_ELEMENT (elem)->sched_private))
 #define GST_ELEMENT_SCHED_GROUP(elem)		(GST_ELEMENT_SCHED_CONTEXT (elem)->group)
-#define GST_PAD_BUFLIST(pad)            	((GList*) (GST_REAL_PAD_CAST(pad)->sched_private))
+#define GST_PAD_BUFLIST(pad)            	((GList*) (GST_REAL_PAD(pad)->sched_private))
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
@@ -58,8 +58,6 @@ typedef struct _GstOptSchedulerClass GstOptSchedulerClass;
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPT_SCHEDULER))
 #define GST_IS_OPT_SCHEDULER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPT_SCHEDULER))
-
-#define GST_OPT_SCHEDULER_CAST(sched)	((GstOptScheduler *)(sched))
 
 typedef enum {
   GST_OPT_SCHEDULER_STATE_NONE,
@@ -953,7 +951,7 @@ get_group_schedule_function (int argc, char *argv[])
 
   while (pads) {
     GstData *data;
-    GstPad *pad = GST_PAD_CAST (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
     /* skip sinks and ghostpads */
@@ -1246,7 +1244,7 @@ setup_group_scheduler (GstOptScheduler *osched, GstOptSchedulerGroup *group)
 static GstElementStateReturn
 gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint transition)
 {
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstOptSchedulerGroup *group;
   GstElementStateReturn res = GST_STATE_SUCCESS;
   
@@ -1476,7 +1474,7 @@ static void
 gst_opt_scheduler_setup (GstScheduler *sched)
 {   
 #ifdef USE_COTHREADS
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
 	      
   /* first create thread context */
   if (osched->context == NULL) {
@@ -1490,7 +1488,7 @@ static void
 gst_opt_scheduler_reset (GstScheduler *sched)
 { 
 #ifdef USE_COTHREADS
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GSList *chains = osched->chains;
 
   while (chains) {
@@ -1515,7 +1513,7 @@ gst_opt_scheduler_reset (GstScheduler *sched)
 static void
 gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
 {
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstOptSchedulerCtx *ctx;
   const GList *pads; 
 
@@ -1583,14 +1581,14 @@ gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 static void
 gst_opt_scheduler_lock_element (GstScheduler *sched, GstElement *element)
 {
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   g_warning ("lock element, implement me");
 }
 
 static void
 gst_opt_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
 {
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   g_warning ("unlock element, implement me");
 }
 
@@ -1624,7 +1622,7 @@ gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
   return FALSE;
 #else
   {
-    GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+    GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
  
     GST_INFO ( "scheduler set interrupted state");
     osched->state = GST_OPT_SCHEDULER_STATE_INTERRUPTED;
@@ -1636,7 +1634,7 @@ gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 static void
 gst_opt_scheduler_error (GstScheduler *sched, GstElement *element)
 {
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstOptSchedulerGroup *group;
   get_group (element, &group);
   if (group)
@@ -1649,7 +1647,7 @@ gst_opt_scheduler_error (GstScheduler *sched, GstElement *element)
 static void
 gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   LinkType type = GST_OPT_INVALID;
   GstElement *element1, *element2;
 
@@ -1827,7 +1825,7 @@ element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, G
   /* see if the element has no more links to the peer group */
   pads = gst_element_get_pad_list (element);
   while (pads && !linked) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
     /* we only operate on real pads and on the pad that is not broken */
@@ -1915,7 +1913,7 @@ group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target
 static void
 gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstElement *element1, *element2;
   GstOptSchedulerGroup *group1, *group2;
 
@@ -2039,7 +2037,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 static void
 gst_opt_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 {
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   
   g_warning ("pad select, implement me");
 }
@@ -2056,7 +2054,7 @@ static GstSchedulerState
 gst_opt_scheduler_iterate (GstScheduler *sched)
 {
   GstSchedulerState state = GST_SCHEDULER_STATE_STOPPED;
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   gint iterations = osched->iterations;
 
   osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
@@ -2120,7 +2118,7 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
 static void
 gst_opt_scheduler_show (GstScheduler *sched)
 {
-  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GSList *chains;
 
   g_print ("iterations:    %d\n", osched->iterations);
@@ -2163,7 +2161,7 @@ gst_opt_scheduler_get_property (GObject *object, guint prop_id,
   
   g_return_if_fail (GST_IS_OPT_SCHEDULER (object));
 
-  osched = GST_OPT_SCHEDULER_CAST (object);
+  osched = GST_OPT_SCHEDULER (object);
 
   switch (prop_id) {
     case ARG_ITERATIONS:
@@ -2186,7 +2184,7 @@ gst_opt_scheduler_set_property (GObject *object, guint prop_id,
   
   g_return_if_fail (GST_IS_OPT_SCHEDULER (object));
 
-  osched = GST_OPT_SCHEDULER_CAST (object);
+  osched = GST_OPT_SCHEDULER (object);
 
   switch (prop_id) {
     case ARG_ITERATIONS:

@@ -87,6 +87,15 @@ The padtemplate object.
 </para>
 
 
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+This signal is fired when an element creates a pad from this 
+template.
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: The pad that was created.
+
 <!-- ##### ENUM GstPadTemplateFlags ##### -->
 <para>
 Flags for the padtemplate
@@ -198,13 +207,4 @@ Check if the properties of the padtemplate are fixed
 @name: 
 @Returns: 
 
-
-<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
-<para>
-This signal is fired when an element creates a pad from this 
-template.
-</para>
-
-@gstpadtemplate: the object which received the signal.
-@arg1: The pad that was created.
 

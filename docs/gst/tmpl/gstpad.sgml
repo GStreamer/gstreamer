@@ -1095,6 +1095,7 @@ The realpad object
 @intlinkfunc: 
 @bufferpoolfunc: 
 @probedisp: 
+@_gst_reserved: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>

@@ -34,17 +34,8 @@ extern GType _gst_bin_type;
 #define GST_IS_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BIN))
 #define GST_IS_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_BIN))
 #define GST_BIN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BIN, GstBinClass))
-
-#define GST_BIN_CAST(obj)            ((GstBin*)(obj))
-#define GST_BIN_CLASS_CAST(klass)    ((GstBinClass*)(klass))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_BIN(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BIN, GstBin))
-# define GST_BIN_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BIN, GstBinClass))
-#else
-# define GST_BIN                     GST_BIN_CAST
-# define GST_BIN_CLASS               GST_BIN_CLASS_CAST
-#endif
+#define GST_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BIN, GstBin))
+#define GST_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BIN, GstBinClass))
 
 typedef void 		(*GstBinPrePostIterateFunction) 	(GstBin *bin, gpointer user_data);
 

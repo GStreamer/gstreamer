@@ -799,8 +799,14 @@ gst_scheduler_factory_class_init (GstSchedulerFactoryClass *klass)
 
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
-  if (!_default_name)
-    _default_name = g_strdup (GST_SCHEDULER_DEFAULT_NAME);
+  if (!_default_name) {
+    if (g_getenv ("GST_SCHEDULER")) {
+      _default_name = g_strdup (g_getenv ("GST_SCHEDULER"));
+    } else {
+      _default_name = g_strdup (GST_SCHEDULER_DEFAULT_NAME);
+    }
+  }
+  g_assert (_default_name);
 }
 
 static void

@@ -73,20 +73,11 @@ struct _GstElementDetails {
 extern GType _gst_element_type;
 
 #define GST_TYPE_ELEMENT		(_gst_element_type)
-
-#define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
-#define GST_ELEMENT_CLASS_CAST(klass)	((GstElementClass*)(klass))
 #define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
 #define GST_ELEMENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ELEMENT, GstElementClass))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
-# define GST_ELEMENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
-#else
-# define GST_ELEMENT                    GST_ELEMENT_CAST
-# define GST_ELEMENT_CLASS              GST_ELEMENT_CLASS_CAST
-#endif
+#define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
+#define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 
 /* convenience functions */
 #ifdef G_HAVE_ISO_VARARGS

@@ -558,7 +558,7 @@ gst_pad_get_event_masks (GstPad *pad)
   g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_EVENTMASKFUNC (rpad))
-    return GST_RPAD_EVENTMASKFUNC (rpad) (GST_PAD_CAST (pad));
+    return GST_RPAD_EVENTMASKFUNC (rpad) (GST_PAD (pad));
 
   return NULL;
 }
@@ -671,7 +671,7 @@ gst_pad_get_query_types (GstPad *pad)
   g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_QUERYTYPEFUNC (rpad))
-    return GST_RPAD_QUERYTYPEFUNC (rpad) (GST_PAD_CAST (pad));
+    return GST_RPAD_QUERYTYPEFUNC (rpad) (GST_PAD (pad));
 
   return NULL;
 }
@@ -863,15 +863,15 @@ gst_pad_unlink (GstPad *srcpad,
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
 
   if (GST_RPAD_UNLINKFUNC (realsrc)) {
-    GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD_CAST (realsrc));
+    GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD (realsrc));
   }
   if (GST_RPAD_UNLINKFUNC (realsink)) {
-    GST_RPAD_UNLINKFUNC (realsink) (GST_PAD_CAST (realsink));
+    GST_RPAD_UNLINKFUNC (realsink) (GST_PAD (realsink));
   }
 
   /* get the schedulers before we unlink */
-  src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
-  sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
+  src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
+  sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
   /* first clear peers */
   GST_RPAD_PEER (realsrc) = NULL;
@@ -886,8 +886,8 @@ gst_pad_unlink (GstPad *srcpad,
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
     gst_scheduler_pad_unlink (src_sched, 
-	                      GST_PAD_CAST (realsrc), 
-			      GST_PAD_CAST (realsink));
+	                      GST_PAD (realsrc), 
+			      GST_PAD (realsink));
   }
 
   /* hold a reference, as they can go away in the signal handlers */
@@ -914,8 +914,8 @@ gst_pad_check_schedulers (GstRealPad *realsrc, GstRealPad *realsink)
   GstScheduler *src_sched, *sink_sched;
   gint num_decoupled = 0;
 
-  src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
-  sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
+  src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
+  sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
   if (src_sched && sink_sched) {
     if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
@@ -1095,13 +1095,13 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_LINKED], 
                  0, realsrc);
 
-  src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
-  sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
+  src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
+  sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
     gst_scheduler_pad_link (src_sched, 
-	                    GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
+	                    GST_PAD (realsrc), GST_PAD (realsink));
   }
   else {
     GST_CAT_INFO (GST_CAT_PADS, "not telling link to scheduler %s:%s and %s:%s, %p %p",
@@ -1219,7 +1219,7 @@ gst_pad_get_scheduler (GstPad *pad)
       GstRealPad *peer = GST_RPAD_PEER (pad);
 
       if (peer) {
-        scheduler = gst_element_get_scheduler (gst_pad_get_parent (GST_PAD_CAST (peer)));
+        scheduler = gst_element_get_scheduler (gst_pad_get_parent (GST_PAD (peer)));
       }
     }
     else {
@@ -1344,7 +1344,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
    * going to unref it later on */
   if (!(allowed = gst_caps_ref (GST_RPAD_FILTER (pad)))) {
     /* no filter, make sure we check against the padtemplate then */
-    if ((template = gst_pad_get_pad_template (GST_PAD_CAST (pad)))) {
+    if ((template = gst_pad_get_pad_template (GST_PAD (pad)))) {
       allowed = gst_pad_template_get_caps (template);
     }
   }
@@ -1864,7 +1864,7 @@ gst_pad_get_caps (GstPad *pad)
     GstCaps *caps;
 
     GST_CAT_DEBUG (GST_CAT_CAPS, "using pad get function");
-    caps = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD_CAST (realpad), NULL);
+    caps = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD (realpad), NULL);
     if(caps)g_return_val_if_fail(caps->refcount > 0, NULL);
 
     return caps;
@@ -2344,7 +2344,7 @@ gst_pad_push (GstPad *pad, GstData *data)
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           return;
 
-        (peer->chainhandler) (GST_PAD_CAST (peer), data);
+        (peer->chainhandler) (GST_PAD (peer), data);
 	return;
       }
       else {
@@ -2398,7 +2398,7 @@ restart:
                		  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), 
 			  GST_DEBUG_PAD_NAME (peer));
 
-      data = (peer->gethandler) (GST_PAD_CAST (peer));
+      data = (peer->gethandler) (GST_PAD (peer));
 
       if (data) {
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
@@ -2893,7 +2893,7 @@ gst_pad_get_internal_links (GstPad *pad)
   rpad = GST_PAD_REALIZE (pad);
 
   if (GST_RPAD_INTLINKFUNC (rpad))
-    res = GST_RPAD_INTLINKFUNC (rpad) (GST_PAD_CAST (rpad));
+    res = GST_RPAD_INTLINKFUNC (rpad) (GST_PAD (rpad));
 
   return res;
 }
@@ -2919,7 +2919,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
         gst_pad_push (eventpad, GST_DATA (event));
       }
       else {
-	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
+	GstPad *peerpad = GST_PAD (GST_RPAD_PEER (eventpad));
 
 	/* we only send the event on one pad, multi-sinkpad elements 
 	 * should implement a handler */
@@ -3004,7 +3004,7 @@ gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunction dispatch,
     GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
 
     if (int_peer) {
-      res = dispatch (GST_PAD_CAST (int_peer), data);
+      res = dispatch (GST_PAD (int_peer), data);
       if (res)
         break;
     }
@@ -3043,7 +3043,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
 		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
 
   if (GST_RPAD_EVENTHANDLER (rpad))
-    success = GST_RPAD_EVENTHANDLER (rpad) (GST_PAD_CAST (rpad), event);
+    success = GST_RPAD_EVENTHANDLER (rpad) (GST_PAD (rpad), event);
   else {
     g_warning ("pad %s:%s has no event handler", GST_DEBUG_PAD_NAME (rpad));
     gst_event_unref (event);
@@ -3133,7 +3133,7 @@ gst_pad_convert (GstPad *pad,
   rpad = GST_PAD_REALIZE (pad);
 
   if (GST_RPAD_CONVERTFUNC (rpad)) {
-    return GST_RPAD_CONVERTFUNC (rpad) (GST_PAD_CAST (rpad), src_format, 
+    return GST_RPAD_CONVERTFUNC (rpad) (GST_PAD (rpad), src_format, 
 	                                src_value, dest_format, dest_value);
   }
 
@@ -3212,7 +3212,7 @@ gst_pad_query (GstPad *pad, GstQueryType type,
   g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_QUERYFUNC (rpad))
-    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (pad), type, format, value);
+    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD (pad), type, format, value);
 
   return FALSE;
 }
@@ -3262,7 +3262,7 @@ gst_pad_get_formats (GstPad *pad)
   rpad = GST_PAD_REALIZE (pad);
 
   if (GST_RPAD_FORMATSFUNC (rpad))
-    return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD_CAST (pad));
+    return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD (pad));
 
   return NULL;
 }

@@ -209,6 +209,19 @@ The GstIndex object
 </para>
 
 
+<!-- ##### SIGNAL GstIndex::entry-added ##### -->
+<para>
+Is emited when a new entry is added to the index.
+</para>
+
+@gstindex: the object which received the signal.
+@arg1: The entry added to the index.
+
+<!-- ##### ARG GstIndex:resolver ##### -->
+<para>
+
+</para>
+
 <!-- ##### FUNCTION gst_index_new ##### -->
 <para>
 
@@ -400,17 +413,4 @@ The GstIndex object
 @index: 
 @id: 
 
-
-<!-- ##### SIGNAL GstIndex::entry-added ##### -->
-<para>
-Is emited when a new entry is added to the index.
-</para>
-
-@gstindex: the object which received the signal.
-@arg1: The entry added to the index.
-
-<!-- ##### ARG GstIndex:resolver ##### -->
-<para>
-
-</para>
 

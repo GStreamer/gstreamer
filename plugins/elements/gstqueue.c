@@ -671,8 +671,8 @@ gst_queue_change_state (GstElement *element)
       else {
         GstScheduler *src_sched, *sink_sched;
 	    
-        src_sched = gst_pad_get_scheduler (GST_PAD_CAST (queue->srcpad));
-        sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (queue->sinkpad));
+        src_sched = gst_pad_get_scheduler (GST_PAD (queue->srcpad));
+        sink_sched = gst_pad_get_scheduler (GST_PAD (queue->sinkpad));
 
         if (src_sched == sink_sched) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, queue, "queue %s does not connect different schedulers", 

@@ -69,6 +69,7 @@ The plugin object
 @numfeatures: 
 @manager: 
 @module: 
+@_gst_reserved: 
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
@@ -98,6 +99,7 @@ loaded will use this variable to initialize the plugin.
 @license: 
 @package: 
 @origin: 
+@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_plugin_set_name ##### -->
 <para>

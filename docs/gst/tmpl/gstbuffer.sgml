@@ -265,6 +265,7 @@ The basic structure of a buffer.
 @offset_end: 
 @pool: 
 @pool_private: 
+@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>

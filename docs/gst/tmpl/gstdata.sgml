@@ -85,6 +85,7 @@ The base structure
 @flags: The flags of this GstData
 @free: A pointer to a custom free function
 @copy: A pointer to a custom copy function
+@_gst_reserved: 
 
 <!-- ##### USER_FUNCTION GstDataFreeFunction ##### -->
 <para>

@@ -35,21 +35,12 @@ G_BEGIN_DECLS
 
 extern GType _gst_object_type;
 
-#define GST_TYPE_OBJECT                 (_gst_object_type)
-#define GST_IS_OBJECT(obj)             	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
-#define GST_IS_OBJECT_CLASS(klass)     	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OBJECT))
-#define GST_OBJECT_GET_CLASS(obj)    	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OBJECT, GstObjectClass))
-
-#define GST_OBJECT_CAST(obj)            ((GstObject*)(obj))
-#define GST_OBJECT_CLASS_CAST(klass)    ((GstObjectClass*)(klass))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_OBJECT(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OBJECT, GstObject))
-# define GST_OBJECT_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OBJECT, GstObjectClass))
-#else
-# define GST_OBJECT                     GST_OBJECT_CAST
-# define GST_OBJECT_CLASS               GST_OBJECT_CLASS_CAST
-#endif
+#define GST_TYPE_OBJECT			(_gst_object_type)
+#define GST_IS_OBJECT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
+#define GST_IS_OBJECT_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OBJECT))
+#define GST_OBJECT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OBJECT, GstObjectClass))
+#define GST_OBJECT(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OBJECT, GstObject))
+#define GST_OBJECT_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OBJECT, GstObjectClass))
 
 /* make sure we don't change the object size but stil make it compile
  * without libxml */
@@ -102,7 +93,7 @@ struct _GstObjectClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#define GST_FLAGS(obj)			(GST_OBJECT_CAST (obj)->flags)
+#define GST_FLAGS(obj)			(GST_OBJECT (obj)->flags)
 #define GST_FLAG_IS_SET(obj,flag)	(GST_FLAGS (obj) & (1<<(flag)))
 #define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
 #define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
@@ -114,10 +105,10 @@ struct _GstObjectClass {
 #define GST_OBJECT_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_FLOATING))
 
 /* CR1: object locking - GObject 2.0 doesn't have threadsafe locking */
-#define GST_LOCK(obj)			(g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
-#define GST_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
-#define GST_UNLOCK(obj)			(g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))
-#define GST_GET_LOCK(obj)		(GST_OBJECT_CAST(obj)->lock)
+#define GST_LOCK(obj)			(g_mutex_lock(GST_OBJECT(obj)->lock))
+#define GST_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT(obj)->lock))
+#define GST_UNLOCK(obj)			(g_mutex_unlock(GST_OBJECT(obj)->lock))
+#define GST_GET_LOCK(obj)		(GST_OBJECT(obj)->lock)
 
 
 /* normal GObject stuff */

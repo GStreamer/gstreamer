@@ -1866,7 +1866,7 @@ gst_element_unlink (GstElement *src, GstElement *dest)
   srcpads = gst_element_get_pad_list (src);
 
   while (srcpads) {
-    pad = GST_PAD_CAST (srcpads->data);
+    pad = GST_PAD (srcpads->data);
 
     /* we only care about real src pads */
     if (GST_IS_REAL_PAD (pad) && GST_PAD_IS_SRC (pad)) {
@@ -1908,7 +1908,7 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
   GList *pads = element->pads;
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "getting a random pad");
   while (pads) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
 
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "checking pad %s:%s",
 	       GST_DEBUG_PAD_NAME (pad));
@@ -2521,7 +2521,7 @@ gst_element_pads_activate (GstElement *element, gboolean active)
   GList *pads = element->pads;
 
   while (pads) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
     if (!GST_IS_REAL_PAD (pad))
@@ -3227,10 +3227,10 @@ gst_element_get_managing_bin (GstElement *element)
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  bin = GST_BIN (gst_object_get_parent (GST_OBJECT_CAST (element)));
+  bin = GST_BIN (gst_object_get_parent (GST_OBJECT (element)));
 
-  while (bin && !GST_FLAG_IS_SET (GST_OBJECT_CAST (bin), GST_BIN_FLAG_MANAGER))
-    bin = GST_BIN (gst_object_get_parent (GST_OBJECT_CAST (bin)));
+  while (bin && !GST_FLAG_IS_SET (GST_OBJECT (bin), GST_BIN_FLAG_MANAGER))
+    bin = GST_BIN (gst_object_get_parent (GST_OBJECT (bin)));
   
   return bin;
 }

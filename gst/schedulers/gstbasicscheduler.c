@@ -34,8 +34,8 @@ GST_DEBUG_CATEGORY_STATIC(debug_scheduler);
 
 typedef struct _GstSchedulerChain GstSchedulerChain;
 
-#define GST_ELEMENT_THREADSTATE(elem)	(cothread*) (GST_ELEMENT_CAST (elem)->sched_private)
-#define GST_RPAD_BUFPEN(pad)		(GstData*)  (GST_REAL_PAD_CAST(pad)->sched_private)
+#define GST_ELEMENT_THREADSTATE(elem)	(cothread*) (GST_ELEMENT (elem)->sched_private)
+#define GST_RPAD_BUFPEN(pad)		(GstData*)  (GST_REAL_PAD(pad)->sched_private)
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
@@ -74,8 +74,7 @@ struct _GstSchedulerChain {
 #define GST_IS_BASIC_SCHEDULER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASIC_SCHEDULER))
 
-#define GST_BASIC_SCHEDULER_CAST(sched)	((GstBasicScheduler *)(sched))
-#define SCHED(element) GST_BASIC_SCHEDULER_CAST (GST_ELEMENT_SCHED (element))
+#define SCHED(element) GST_BASIC_SCHEDULER (GST_ELEMENT_SCHED (element))
 
 typedef enum {
   GST_BASIC_SCHEDULER_STATE_NONE,
@@ -280,7 +279,7 @@ GST_PLUGIN_DEFINE (
 static int
 gst_basic_scheduler_loopfunc_wrapper (int argc, char **argv)
 {
-  GstElement *element = GST_ELEMENT_CAST (argv);
+  GstElement *element = GST_ELEMENT (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG("entering loopfunc wrapper of %s", name);
@@ -314,7 +313,7 @@ static int
 gst_basic_scheduler_chain_wrapper (int argc, char **argv)
 {
   GSList *already_iterated = NULL;
-  GstElement *element = GST_ELEMENT_CAST (argv);
+  GstElement *element = GST_ELEMENT (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG ("entered chain wrapper of element %s", name);
@@ -386,7 +385,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
 static int
 gst_basic_scheduler_src_wrapper (int argc, char **argv)
 {
-  GstElement *element = GST_ELEMENT_CAST (argv);
+  GstElement *element = GST_ELEMENT (argv);
   GList *pads;
   GstRealPad *realpad;
   GstData *data = NULL;
@@ -401,17 +400,17 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
       if (!GST_IS_REAL_PAD (pads->data))
 	continue;
 
-      realpad = GST_REAL_PAD_CAST (pads->data);
+      realpad = GST_REAL_PAD (pads->data);
 
       pads = g_list_next (pads);
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC && GST_PAD_IS_USABLE (realpad)) {
 	GST_CAT_DEBUG (debug_dataflow, "calling _getfunc for %s:%s", GST_DEBUG_PAD_NAME (realpad));
 	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
-	data = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
+	data = GST_RPAD_GETFUNC (realpad) (GST_PAD (realpad));
 	if (data) {
 	  GST_CAT_DEBUG (debug_dataflow, "calling gst_pad_push on pad %s:%s %p",
 		     GST_DEBUG_PAD_NAME (realpad), data);
-	  gst_pad_push (GST_PAD_CAST (realpad), data);
+	  gst_pad_push (GST_PAD (realpad), data);
 	}
       }
     }
@@ -603,7 +602,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
   while (elements) {
     gboolean decoupled;
 
-    element = GST_ELEMENT_CAST (elements->data);
+    element = GST_ELEMENT (elements->data);
     elements = g_list_next (elements);
 
     decoupled = GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED);
@@ -649,7 +648,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
       
       peerpad = GST_PAD_PEER (pad);
       if (peerpad) {
-	GstElement *peerelement = GST_ELEMENT_CAST (GST_PAD_PARENT (peerpad));
+	GstElement *peerelement = GST_ELEMENT (GST_PAD_PARENT (peerpad));
 	gboolean different_sched = (peerelement->sched != GST_SCHEDULER (chain->sched));
 	gboolean peer_decoupled = GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED);
 
@@ -1042,9 +1041,9 @@ static void
 gst_basic_scheduler_setup (GstScheduler *sched)
 {
   /* first create thread context */
-  if (GST_BASIC_SCHEDULER_CAST (sched)->context == NULL) {
+  if (GST_BASIC_SCHEDULER (sched)->context == NULL) {
     GST_DEBUG ("initializing cothread context");
-    GST_BASIC_SCHEDULER_CAST (sched)->context = do_cothread_context_init ();
+    GST_BASIC_SCHEDULER (sched)->context = do_cothread_context_init ();
   }
 }
 
@@ -1052,7 +1051,7 @@ static void
 gst_basic_scheduler_reset (GstScheduler *sched)
 {
   cothread_context *ctx;
-  GList *elements = GST_BASIC_SCHEDULER_CAST (sched)->elements;
+  GList *elements = GST_BASIC_SCHEDULER (sched)->elements;
 
   while (elements) {
     GstElement *element = GST_ELEMENT (elements->data);
@@ -1063,11 +1062,11 @@ gst_basic_scheduler_reset (GstScheduler *sched)
     elements = g_list_next (elements);
   }
   
-  ctx = GST_BASIC_SCHEDULER_CAST (sched)->context;
+  ctx = GST_BASIC_SCHEDULER (sched)->context;
 
   do_cothread_context_destroy (ctx);
   
-  GST_BASIC_SCHEDULER_CAST (sched)->context = NULL;
+  GST_BASIC_SCHEDULER (sched)->context = NULL;
 }
 
 static void
@@ -1261,8 +1260,8 @@ gst_basic_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad, GstPad * 
 	    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   /* we need to have the parent elements of each pad */
-  element1 = GST_ELEMENT_CAST (GST_PAD_PARENT (srcpad));
-  element2 = GST_ELEMENT_CAST (GST_PAD_PARENT (sinkpad));
+  element1 = GST_ELEMENT (GST_PAD_PARENT (srcpad));
+  element2 = GST_ELEMENT (GST_PAD_PARENT (sinkpad));
 
   /* first task is to remove the old chain they belonged to.
    * this can be accomplished by taking either of the elements,
@@ -1390,7 +1389,7 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
       GST_DEBUG ("there are %d elements in this chain", chain->num_elements);
       elements = chain->elements;
       while (elements) {
-	entry = GST_ELEMENT_CAST (elements->data);
+	entry = GST_ELEMENT (elements->data);
 	elements = g_list_next (elements);
 	if (GST_FLAG_IS_SET (entry, GST_ELEMENT_DECOUPLED)) {
 	  GST_DEBUG ("entry \"%s\" is DECOUPLED, skipping",
