@@ -71,6 +71,7 @@ struct _GstMPlexStream {
   GstPad 		*pad;
   GstMPlexStreamType	 type;
   GstByteStream		*bytestream;
+  gboolean		 eos;
 };
 
 struct _GstMPlex {
@@ -84,6 +85,8 @@ struct _GstMPlex {
   vector<ElementaryStream *> *strms;
   OutputStream 	*ostrm;
   PS_Stream	*ps_stream;
+  gint		 data_rate;
+  gint 		 sync_offset;
 };
 
 struct _GstMPlexClass {

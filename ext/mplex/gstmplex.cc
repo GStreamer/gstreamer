@@ -186,7 +186,7 @@ gst_mplex_class_init (GstMPlex *klass)
                       20, 2000, 20, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_SYNC_OFFSET,
     g_param_spec_int ("sync_offset", "Sync offset", "Specify offset of timestamps (video-audio) in mSec",
-                      0, G_MAXINT, 0, (GParamFlags) G_PARAM_READWRITE));
+                      G_MININT, G_MAXINT, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_SECTOR_SIZE,
     g_param_spec_int ("sector_size", "Sector size", "Specify sector size in bytes for generic formats",
                       256, 16384, 2028, (GParamFlags) G_PARAM_READWRITE));
@@ -219,7 +219,7 @@ gst_mplex_init (GstMPlex *mplex)
 
   mplex->state = GST_MPLEX_OPEN_STREAMS;
 
-  mplex->ostrm->opt_mux_format = MPEG_FORMAT_DVD;
+  mplex->ostrm->opt_mux_format = 0;
 
   (void)mjpeg_default_handler_verbosity(mplex->ostrm->opt_verbosity);
 }
@@ -252,6 +252,7 @@ gst_mplex_request_new_pad (GstElement     *element,
     stream->pad = pad;
     stream->bitstream = new IBitStream();
     stream->bytestream = gst_bytestream_new (pad);
+    stream->eos = FALSE;
 
     mplex->streams = g_list_prepend (mplex->streams, stream);
 
@@ -271,14 +272,29 @@ gst_mplex_read_callback (BitStream *bitstream, uint8_t *dest, size_t size, void 
 
   stream = (GstMPlexStream *) user_data;
 
+  if (stream->eos)
+    return 0;
+
   len = gst_bytestream_peek_bytes (stream->bytestream, &data, size);
   if (len < size) {
-    g_print ("got %d bytes out of %d\n", len, size);
+    guint32 avail= 0;
+    GstEvent *event = NULL;
+    
+    gst_bytestream_get_status (stream->bytestream, &avail, &event);
+    if (event != NULL) {
+      switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_EOS:
+	  stream->eos = TRUE;
+	  break;
+	default:
+	  break;
+      }
+    }
   }
 
   memcpy (dest, data, len);
   
-  gst_bytestream_flush_fast (stream->bytestream, len);
+  gst_bytestream_flush (stream->bytestream, len);
 
   return len;
 }
@@ -380,20 +396,38 @@ gst_mplex_set_property (GObject *object, guint prop_id, const GValue *value, GPa
 
   switch(prop_id) {
     case ARG_MUX_FORMAT:
+      mplex->ostrm->opt_mux_format = g_value_get_enum (value);
       break;
     case ARG_MUX_BITRATE:
+      mplex->data_rate = g_value_get_int (value);
+      mplex->ostrm->opt_data_rate = ((mplex->data_rate * 1000 / 8 + 49) / 50) * 50;
       break;
     case ARG_VIDEO_BUFFER:
+      mplex->ostrm->opt_buffer_size = g_value_get_int (value);
       break;
     case ARG_SYNC_OFFSET:
+    {
+      mplex->sync_offset = g_value_get_int (value);
+      if (mplex->sync_offset < 0) {
+        mplex->ostrm->opt_audio_offset = -mplex->sync_offset;
+        mplex->ostrm->opt_video_offset = 0;
+      }
+      else {
+        mplex->ostrm->opt_video_offset = mplex->sync_offset;
+      }
       break;
+    }
     case ARG_SECTOR_SIZE:
+      mplex->ostrm->opt_sector_size = g_value_get_int (value);
       break;
     case ARG_VBR:
+      mplex->ostrm->opt_VBR = g_value_get_boolean (value);
       break;
     case ARG_PACKETS_PER_PACK:
+      mplex->ostrm->opt_packets_per_pack = g_value_get_int (value);
       break;
     case ARG_SYSTEM_HEADERS:
+      mplex->ostrm->opt_always_system_headers = g_value_get_boolean (value);
       break;
     default:
       //G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -410,20 +444,28 @@ gst_mplex_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 
   switch(prop_id) {
     case ARG_MUX_FORMAT:
+      g_value_set_enum (value, mplex->ostrm->opt_mux_format);
       break;
     case ARG_MUX_BITRATE:
+      g_value_set_int (value, mplex->data_rate);
       break;
     case ARG_VIDEO_BUFFER:
+      g_value_set_int (value, mplex->ostrm->opt_buffer_size);
       break;
     case ARG_SYNC_OFFSET:
+      g_value_set_int (value, mplex->sync_offset);
       break;
     case ARG_SECTOR_SIZE:
+      g_value_set_int (value, mplex->ostrm->opt_sector_size);
       break;
     case ARG_VBR:
+      g_value_set_boolean (value, mplex->ostrm->opt_VBR);
       break;
     case ARG_PACKETS_PER_PACK:
+      g_value_set_int (value, mplex->ostrm->opt_packets_per_pack);
       break;
     case ARG_SYSTEM_HEADERS:
+      g_value_set_boolean (value, mplex->ostrm->opt_always_system_headers);
       break;
     default:
       //G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -444,7 +486,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new ("mplex",GST_TYPE_MPLEX,
                                     &gst_mplex_details);
   g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_MARGINAL);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
