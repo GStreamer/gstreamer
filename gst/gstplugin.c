@@ -63,7 +63,7 @@ _gst_plugin_initialize (void)
 {
   GList *gst_plugin_default_paths = NULL;
 #ifndef GST_DISABLE_REGISTRY
-  xmlDocPtr doc;
+  xmlDocPtr doc = NULL;
   xmlNodePtr root;
 #endif
 
@@ -90,6 +90,7 @@ _gst_plugin_initialize (void)
 
 #ifndef GST_DISABLE_REGISTRY
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
+  g_assert (doc != NULL);
 
   if (!doc || 
       !doc->xmlRootNode ||
