@@ -92,6 +92,10 @@ struct _GstOggMux
 
   guint64 max_delay;
   guint64 max_page_delay;
+
+  gboolean keyframe_mode;       /* when a delta frame is detected on a stream, we mark
+                                   pages as delta frames up to the page that has the
+                                   keyframe */
 };
 
 typedef enum
@@ -804,11 +808,14 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
  * 1) find a pad to pull on, this is done by pulling on all pads and
  *    looking at the buffers to decide which one should be muxed first.
  * 2) store the selected pad and keep on pulling until we fill a 
- *    complete ogg page. This is needed because the ogg spec says that
+ *    complete ogg page or the ogg page is filled above the max-delay 
+ *    threshold. This is needed because the ogg spec says that
  *    you should fill a complete page with data from the same logical
  *    stream. When the page is filled, go back to 1).
  * 3) before filling a packet, read ahead one more buffer to see if this
- *    packet is the last of the stream.
+ *    packet is the last of the stream. We need to do this because the ogg
+ *    spec mandates that the last packet should have the EOS flag set before
+ *    sending it to ogg.
  */
 static void
 gst_ogg_mux_loop (GstElement * element)
