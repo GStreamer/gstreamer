@@ -1,3 +1,9 @@
+2005-02-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsttaginterface.c:
+	  Fix inline docs: tag setter vararg functions are NULL-terminated,
+	  GST_TAG_INVALID doesn't exist any more.
+
 2005-02-18  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_dump_byte_array):
