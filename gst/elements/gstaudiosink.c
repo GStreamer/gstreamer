@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <sys/soundcard.h>
 #include <unistd.h>
+#include <errno.h>
 
 //#define DEBUG_ENABLED
 
@@ -346,14 +347,22 @@ gst_audiosink_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static gboolean 
-gst_audiosink_open_audio (GstAudioSink *sink) 
+static gboolean
+gst_audiosink_open_audio (GstAudioSink *sink)
 {
   g_return_val_if_fail (sink->fd == -1, FALSE);
 
   g_print ("audiosink: attempting to open sound device\n");
 
   /* first try to open the sound card */
+  sink->fd = open("/dev/dsp", O_WRONLY | O_NONBLOCK);
+  if (errno == EBUSY) {
+    g_print ("audiosink: unable to open the sound device (in use ?)\n");
+    return FALSE;
+  }
+
+  /* re-open the sound device in blocking mode */
+  close(sink->fd);
   sink->fd = open("/dev/dsp", O_WRONLY);
 
   /* if we have it, set the default parameters and go have fun */
@@ -366,33 +375,33 @@ gst_audiosink_open_audio (GstAudioSink *sink)
     ioctl(sink->fd, SNDCTL_DSP_GETCAPS, &sink->caps);
 
     g_print("audiosink: Capabilities\n");
-    
+
     if (sink->caps & DSP_CAP_DUPLEX)   g_print("audiosink:   Full duplex\n");
     if (sink->caps & DSP_CAP_REALTIME) g_print("audiosink:   Realtime\n");
     if (sink->caps & DSP_CAP_BATCH)    g_print("audiosink:   Batch\n");
     if (sink->caps & DSP_CAP_COPROC)   g_print("audiosink:   Has coprocessor\n");
     if (sink->caps & DSP_CAP_TRIGGER)  g_print("audiosink:   Trigger\n");
     if (sink->caps & DSP_CAP_MMAP)     g_print("audiosink:   Direct access\n");
-    
+
     g_print("audiosink: opened audio with fd=%d\n", sink->fd);
     GST_FLAG_SET (sink, GST_AUDIOSINK_OPEN);
-    
+
     return TRUE;
   }
 
   return FALSE;
 }
 
-static void 
-gst_audiosink_close_audio (GstAudioSink *sink) 
+static void
+gst_audiosink_close_audio (GstAudioSink *sink)
 {
   if (sink->fd < 0) return;
 
   close(sink->fd);
   sink->fd = -1;
-  
+
   GST_FLAG_UNSET (sink, GST_AUDIOSINK_OPEN);
-  
+
   g_print("audiosink: closed sound device\n");
 }
 
