@@ -1300,7 +1300,7 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
 
 #elif defined(G_HAVE_GNUC_VARARGS)
 
-#define GST_ASF_AUD_CAPS_NEW(name, mimetype, ...)			\
+#define GST_ASF_AUD_CAPS_NEW(name, mimetype, props...)			\
 	(audio != NULL) ?						\
 	GST_CAPS_NEW (name,						\
 		      mimetype,						\
