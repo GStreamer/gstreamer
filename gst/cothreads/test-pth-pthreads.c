@@ -34,8 +34,7 @@ void pthread (void* unused)
   printf ("1: %d\n", pthread_self());
   
   stackspace = malloc(2 * 1024 * 1024);
-  (pthread_descr) stackspace[2 * 1024 * 1024 - sizeof (pthread_descr) -1] = 
-    (thread_handle (pthread_self()))->h_descr;
+  memset (stackspace + 2 * 1024 * 1024 - sizeof(pthread_descr) - 1, &(thread_handle (pthread_self()))->h_descr, sizeof (pthread_descr));
   
   while (1) {
     skaddr = stackspace;
