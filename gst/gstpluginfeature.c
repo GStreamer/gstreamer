@@ -86,9 +86,11 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)
 {
   GstPlugin *plugin = (GstPlugin *) (feature->manager);
 
+  g_assert (feature);
   if (plugin && !gst_plugin_is_loaded (plugin)) {
     if (GST_IS_REGISTRY (plugin->manager)) {
-      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "loading plugin %s for feature", plugin->name);
+      GST_DEBUG (GST_CAT_PLUGIN_LOADING, 
+	         "loading plugin %s for feature", plugin->name);
 
       if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager), plugin) != GST_REGISTRY_OK)
 	return FALSE;
