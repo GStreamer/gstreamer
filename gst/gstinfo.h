@@ -235,8 +235,9 @@ GstDebugCategory *_gst_debug_category_new	(gchar *		name,
  * @color: the colors to use for a color representation or 0 for no color.
  * @description: optional description of the category.
  *
- * Returns: a new #GstDebugCategory with the given properties and set to
+ * Initializes a new #GstDebugCategory with the given properties and set to
  * the default threshold.
+ *
  * <note>
  * <para>
  * This macro expands to nothing if debugging is disabled.
