@@ -60,7 +60,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "avimux_src_video",
-    "video/avi",
+    "video/x-msvideo",
     NULL
   )
 )

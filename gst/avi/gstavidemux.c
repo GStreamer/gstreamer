@@ -50,7 +50,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "avidemux_sink",
-    "video/avi",
+    "video/x-msvideo",
       NULL
   )
 );

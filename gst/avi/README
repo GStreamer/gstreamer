@@ -16,10 +16,10 @@ raw audio and video.
   ! avidecoder                         !
   !                                 (video/raw)...
   !     (----------)                   !
-  !     ! demuxer (video/avi, auds)..  !
+  !     ! demuxer (video/x-msvideo, auds)..
   !     !          !                   !
   !   -src         !                   !
-  !  /  !         (video/avi, vids)..  !
+  !  /  !         (video/x-msvideo, vids)..
  - src  !          !                   !
   !     (----------)                (audio/raw)...
   !                                    !
@@ -52,10 +52,10 @@ example:
   ! avidecoder               (--------)    (------)                !
   !                          !avitypes!    !windec!       /-- (video/raw)
   !     (----------)     /-sink      src--sink   src -----         !
-  !     !demuxer (video/avi, !        !    !      !                !
+  !     !demuxer (video/x-msvideo,    !    !      !                !
   !     !          ! auds).. (--------)    (------)                !  
   !   -sink        !         (--------)                            !
-  !  /  !        (video/avi, !avitypes!                            !
+  !  /  !        (video/x-..,!avitypes!                            !
  -sink  !          ! vids).. !        !                            !
   !     (----------)     \-sink      src -------------------- (audio/raw)
   !                          (--------)                            !
