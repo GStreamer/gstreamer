@@ -58,8 +58,8 @@ enum
   ARG_0,
   ARG_SYNC,
   ARG_MAX_DISCONT,
-  ARG_DO_ADJUST,
-  /* FILL ME */
+  ARG_DO_ADJUST
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

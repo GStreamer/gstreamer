@@ -80,8 +80,8 @@ enum
   ARG_0,
   ARG_WIDTH,
   ARG_HEIGHT,
-  ARG_FPS,
-  /* FILL ME */
+  ARG_FPS
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_synaesthesia_src_template =

@@ -51,8 +51,8 @@ enum
 {
   ARG_0,
   ARG_BIT_RATE,
-  ARG_MPEG2,
-  /* FILL ME */
+  ARG_MPEG2
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

@@ -58,8 +58,8 @@ enum
 {
   ARG_0,
   ARG_SKIP,
-  ARG_BIT_RATE,
-  /* FILL ME */
+  ARG_BIT_RATE
+      /* FILL ME */
 };
 
 
