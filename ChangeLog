@@ -1,3 +1,9 @@
+2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_chain):
+	  Remove old leftover that shouldn't be there...
+
 2004-12-01  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
