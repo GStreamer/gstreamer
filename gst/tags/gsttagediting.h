@@ -30,7 +30,12 @@ G_BEGIN_DECLS
 
 G_CONST_RETURN gchar *	gst_tag_from_vorbis_tag			(const gchar *		vorbis_tag);
 G_CONST_RETURN gchar *	gst_tag_to_vorbis_tag			(const gchar *		gst_tag);
-void                    gst_vorbis_tag_add                      (GstTagList *list, const gchar *tag, const gchar *value);
+void                    gst_vorbis_tag_add                      (GstTagList *           list, 
+								 const gchar *          tag, 
+								 const gchar *          value);
+
+GList *                 gst_tag_to_vorbis_comments              (const GstTagList *     list, 
+								 const gchar *          tag);
 
 /* functions to convert GstBuffers with vorbiscomment contents to GstTagLists and back */
 GstTagList *		gst_tag_list_from_vorbiscomment_buffer	(const GstBuffer *	buffer,

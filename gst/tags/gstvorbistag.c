@@ -383,15 +383,16 @@ typedef struct {
   guint data_count;
   GList *entries;
 } MyForEach;
-static void
-write_one_tag (const GstTagList *list, const gchar *tag, gpointer user_data)
+
+GList *
+gst_tag_to_vorbis_comments (const GstTagList *list, const gchar *tag)
 {
   gchar *result;
+  GList *l = NULL;
   guint i;
   const gchar *vorbis_tag = gst_tag_to_vorbis_tag (tag);
-  MyForEach *data = (MyForEach *) user_data;
 
-  if (!vorbis_tag) return;
+  if (!vorbis_tag) return NULL;
   for (i = 0; i < gst_tag_list_get_tag_size (list, tag); i++) {
     switch (gst_tag_get_type (tag)) {
       case G_TYPE_UINT: 
@@ -420,11 +421,28 @@ write_one_tag (const GstTagList *list, const gchar *tag, gpointer user_data)
       }
       default:
 	GST_DEBUG ("Couldn't write tag %s", tag);
-	return;
+	continue;
     }
+    l = g_list_prepend (l, result);
+  }
+
+  return g_list_reverse (l);
+}
+
+static void
+write_one_tag (const GstTagList *list, const gchar *tag, gpointer user_data)
+{
+  MyForEach *data = (MyForEach *) user_data;
+  GList *comments;
+  GList *it;
+
+  comments = gst_tag_to_vorbis_comments (list, tag);
+
+  for (it = comments; it != NULL; it = it->next) {
+    gchar *result = it->data;
     data->count ++;
     data->data_count += strlen (result);
-    data->entries = g_list_prepend (data->entries, result);
+    data->entries = g_list_prepend (data->entries, result);    
   }
 }
 /**
