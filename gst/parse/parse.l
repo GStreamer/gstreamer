@@ -11,18 +11,12 @@
 #endif
 
 #ifdef G_HAVE_ISO_VARARGS
-#  ifdef GST_DEBUG_ENABLED
-#    define PRINT(...) GST_DEBUG (GST_CAT_PIPELINE, "flex: "__VA_ARGS__)
-#  endif
+#define PRINT(...) GST_DEBUG (GST_CAT_PIPELINE, "flex: "__VA_ARGS__)
 #elif defined(G_HAVE_GNUC_VARARGS)
-#  ifdef GST_DEBUG_ENABLED
-#    define PRINT(...) GST_DEBUG (GST_CAT_PIPELINE, "flex: "##args)
-#  endif
+#define PRINT(args...) GST_DEBUG (GST_CAT_PIPELINE, "flex: "##args)
 #else
-#  ifdef GST_DEBUG_ENABLED
-#    define PRINT(a...) GST_DEBUG (GST_CAT_PIPELINE, "flex: "##a)
-#  endif
-#endif /* G_HAVE_ISO_VARARGS */
+#define PRINT(args...)
+#endif
 
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
 %}
