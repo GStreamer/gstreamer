@@ -250,7 +250,8 @@ create_input_channel (int id, char* location)
 
   GST_DEBUG (0, "c_i_p : creating pipeline\n");
 
-  channel->pipe = gst_bin_new ("pipeline");
+  sprintf (buffer, "pipeline%d", id);
+  channel->pipe = gst_bin_new (buffer);
   g_assert(channel->pipe != NULL);    
     
   /* create elements */
