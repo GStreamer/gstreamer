@@ -947,10 +947,10 @@ gst_entry_scheduler_iterate (GstScheduler * scheduler)
   if (sched->error || sched->schedule_now) {
     GST_ERROR_OBJECT (sched, "returning error because of %s",
         sched->error ? "element error" : "unschedulable elements");
-    /* gst_entry_scheduler_show (scheduler); */
 #if 0
-    return GST_SCHEDULER_STATE_ERROR;
+    gst_entry_scheduler_show (scheduler);
 #endif
+    return GST_SCHEDULER_STATE_ERROR;
   } else if (GST_STATE (GST_SCHEDULER (sched)->parent) == GST_STATE_PLAYING &&
       ret == GST_SCHEDULER_STATE_STOPPED && scheduler->schedulers == NULL) {
     GST_ERROR_OBJECT (sched,
