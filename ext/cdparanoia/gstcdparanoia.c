@@ -635,7 +635,7 @@ cdparanoia_open (CDParanoia *src)
   /* fail if the device couldn't be found */
   if (src->d == NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-                       (_("Could not open CD device for reading")),
+                       (_("Could not open CD device for reading.")),
                        ("cdda_identify failed"));
     return FALSE;
   }
@@ -652,7 +652,7 @@ cdparanoia_open (CDParanoia *src)
   /* open the disc */
   if (cdda_open (src->d)) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-                       (_("Could not open CD device for reading")),
+                       (_("Could not open CD device for reading.")),
                        ("cdda_open failed"));
     cdda_close (src->d);
     src->d = NULL;

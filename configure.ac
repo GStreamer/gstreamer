@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 5, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 6, 0, GST_CVS="no", GST_CVS="yes")
 
 dnl add a suffix to apps
 if test x$program_suffix = xNONE ; then
@@ -23,6 +23,8 @@ AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR
+dnl we override it for the release candidate
+GST_MAJORMINOR=0.8
 AC_SUBST(GST_MAJORMINOR)
 
 dnl CURRENT, REVISION, AGE
@@ -30,7 +32,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST_PLUGINS, 2, 0, 0)
+AS_LIBTOOL(GST_PLUGINS, 0, 0, 0)
 AM_PROG_LIBTOOL
 
 dnl FIXME take something else ?
