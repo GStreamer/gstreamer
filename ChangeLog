@@ -1,5 +1,15 @@
 2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_client_remove),
+	(gst_tcpserversink_handle_client_read), (gst_tcp_buffer_write),
+	(gst_tcpserversink_handle_client_write), (gst_tcpserversink_chain),
+	(gst_tcpserversink_init_send), (gst_tcpserversink_close):
+	* gst/tcp/gsttcpserversink.h:
+          take streamheader into account
+
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/level/Makefile.am:
 	* gst/level/gstlevel.c: (gst_level_class_init):
 	  clean up marshal generation
