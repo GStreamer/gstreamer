@@ -42,11 +42,13 @@ mp3_src_factory (void)
   	gst_caps_new (
   	  "mp3parse_src",
     	  "audio/mp3",
+	  /*
 	  gst_props_new (
     	    "layer",   GST_PROPS_INT_RANGE (1, 3),
     	    "bitrate", GST_PROPS_INT_RANGE (8, 320),
     	    "framed",  GST_PROPS_BOOLEAN (TRUE),
-	    NULL)),
+	    */
+	    NULL),
 	NULL);
 }
 
