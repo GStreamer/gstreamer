@@ -995,7 +995,7 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
  * Returns: the added ghost pad or NULL, if no ghost pad was created.
  */
 GstPad *
-gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
+gst_element_add_ghost_pad (GstElement *element, GstPad *pad, const gchar *name)
 {
   GstPad *ghostpad;
 
@@ -1007,8 +1007,9 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   /* then check to see if there's already a pad by that name here */
   g_return_val_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE, NULL);
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"creating new ghost pad called %s, from pad %s:%s",
-            name,GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, 
+             "creating new ghost pad called %s, from pad %s:%s",
+             name, GST_DEBUG_PAD_NAME(pad));
   ghostpad = gst_ghost_pad_new (name, pad);
 
   /* add it to the list */

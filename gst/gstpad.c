@@ -2400,7 +2400,7 @@ gst_ghost_pad_init (GstGhostPad *pad)
  * Returns: new ghost pad
  */
 GstPad*
-gst_ghost_pad_new (gchar *name,
+gst_ghost_pad_new (const gchar *name,
                    GstPad *pad)
 {
   GstGhostPad *ghostpad;

@@ -489,7 +489,7 @@ void			gst_pad_load_and_connect		(xmlNodePtr self, GstObject *parent);
 
 
 /* ghostpads */
-GstPad*			gst_ghost_pad_new			(gchar *name,GstPad *pad);
+GstPad*			gst_ghost_pad_new			(const gchar *name, GstPad *pad);
 
 
 /* templates and factories */
