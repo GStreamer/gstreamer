@@ -1,5 +1,8 @@
 2004-05-03  Johan Dahlin  <johan@gnome.org>
 
+	* configure.ac: Use different prefix for the new check of PyGtk so
+	we're not overwriting the good PYGTK_CFLAGS
+
 	* gst/Makefile.am (INCLUDES): Move PYGTK_CFLAGS to common_cflags
 	instead of INCLUDES
 

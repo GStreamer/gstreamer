@@ -60,7 +60,7 @@ dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
 AC_SUBST(PYGTK_CFLAGS)
 
-PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= 2.3.92, ,HAVE_OLD_PYGTK="yes")
+PKG_CHECK_MODULES(_UNUSED_NEW_PYGTK, pygtk-2.0 >= 2.3.92, ,HAVE_OLD_PYGTK="yes")
 if test "x$HAVE_OLD_PYGTK" = "xyes"; then
   AC_DEFINE_UNQUOTED(HAVE_OLD_PYGTK, 1, [Defined if we have an old version of PyGTK])
 fi
