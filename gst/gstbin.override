@@ -94,9 +94,10 @@ _wrap_gst_bin_iterate(PyGObject *self)
 {
 	int ret;
 
-	Py_BEGIN_ALLOW_THREADS;
+        pyg_begin_allow_threads;
+    
 	ret = gst_bin_iterate(GST_BIN(self->obj));
-	Py_END_ALLOW_THREADS;
+        pyg_end_allow_threads;
 	return PyInt_FromLong(ret);
 }
 %%
