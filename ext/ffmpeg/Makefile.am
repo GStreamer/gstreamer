@@ -13,8 +13,8 @@ libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) \
 	-I $(top_builddir)/gst-libs/ext/ffmpeg/ffmpeg/libavcodec \
 	-I $(top_builddir)/gst-libs/ext/ffmpeg/ffmpeg/libavformat
 libgstffmpeg_la_LIBADD = \
-	$(top_builddir)/gst-libs/ext/ffmpeg/ffmpeg/libavcodec/libavcodec.a \
-	$(top_builddir)/gst-libs/ext/ffmpeg/ffmpeg/libavformat/libavformat.a
+	$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec.la \
+	$(top_builddir)/gst-libs/ext/ffmpeg/libavformat.la
 
 libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
