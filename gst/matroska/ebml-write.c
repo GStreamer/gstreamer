@@ -118,7 +118,9 @@ void
 gst_ebml_write_set_cache (GstEbmlWrite *ebml,
 			  guint         size)
 {
+  /* This is currently broken. I don't know why yet. */
   return;
+
   g_return_if_fail (ebml->cache == NULL);
 
   ebml->cache = gst_buffer_new_and_alloc (size);
@@ -276,10 +278,12 @@ gst_ebml_write_element_push (GstEbmlWrite *ebml,
   }
 
   /* if there's no cache, then don't push it! */
-  if (ebml->cache)
+  if (ebml->cache) {
     g_assert (buf == ebml->cache);
-  else
-    gst_pad_push (ebml->srcpad, GST_DATA (buf));
+    return;
+  }
+
+  gst_pad_push (ebml->srcpad, GST_DATA (buf));
 }
 
 /*
@@ -401,7 +405,9 @@ gst_ebml_write_float (GstEbmlWrite *ebml,
 		      guint32       id,
 		      gdouble       num)
 {
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
   gint n;
+#endif
   GstBuffer *buf = gst_ebml_write_element_new (ebml, sizeof (num));
 
   gst_ebml_write_element_id (buf, id);
