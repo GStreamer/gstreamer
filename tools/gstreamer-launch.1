@@ -1,17 +1,82 @@
-.TH GStreamer 1 "March 2001"
-.SH NAME
-gstreamer\-launch - build and run a GStreamer pipeline
-.SH SYNOPSIS
-.B  gstreamer\-launch [OPTION...] PIPELINE\-DESCRIPTION
-.SH DESCRIPTION
-.PP
-\fIgstreamer\-launch\fP is a tool that is used to build and run a basic
-\fIGStreamer\fP pipeline.
+.TH "GStreamer" "1" "March 2001" "¯?@¯?@:" "¯?@¯?@r"
+.SH "NAME"
+gstreamer\-launch \- build and run a GStreamer pipeline
+.SH "SYNOPSIS"
+\fBgstreamer\-launch\fR \fI[OPTION...]\fR PIPELINE\-DESCRIPTION
+.SH "DESCRIPTION"
+.LP 
+\fBgstreamer\-launch\fR is a tool that is used to build and run a basic <fl>GStreamer\fR pipeline.
+
+A simple commandline looks like:
+
+ gstreamer\-launch disksrc location=music.mp3 ! mad ! osssink
+
+This plays an mp3 music file music.mp3 using libmad, and:
+
+ gstreamer\-launch disksrc location=music.mp3 ! mp3parse ! mpg123 ! osssink
+
+Plays and mp3 music file using mpg123
+
+You can also stream files over http:
+
+ gstreamer\-launch httpsrc location=http://domain.com/music.mp3 ! mad ! osssink
+
+And using gnome\-vfs you can do the same with:
+
+ gstreamer\-launch gnomevfssrc location=music.mp3 ! mad ! osssink
+ gstreamer\-launch gnomevfssrc location=http://domain.com/music.mp3 ! mad ! osssink
+
+And too play the same song with gnome\-vfs via smb:
+
+ gstreamer\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! osssink
+
+Here we convert a Mp3 file into an Ogg Vorbis file:
+
+ gstreamer\-launch disksrc location=music.mp3 ! mad ! vorbisenc ! disksink location=music.ogg
+
+And then we can play that file with:
+
+ gstreamer\-launch disksrc location=music.ogg ! vorbisdec ! osssink
+
+Some other useful pipelines are..
+Plays wav files (currently there are no wav encoders):
+
+ gstreamer\-launch disksrc location=music.wav ! parsewav ! osssink
+
+Converts wav files into mp3 and ogg files:
+
+ gstreamer\-launch disksrc location=music.wav ! parsewav ! vorbisenc ! disksink location=music.ogg
+ gstreamer\-launch disksrc location=music.wav ! parsewav ! mpegaudio ! disksink location=music.mp3
+
+You can also use lame for mp3 encoding if you have it installed, it does a 
+much better job than mpegaudio.
+
+Rips all songs from cd and saves them into a mp3 file:
+
+ gstreamer\-launch cdparanoia ! mpegaudio ! disksink location=cd.mp3
+
+You can toy around with gstreamer\-inspect to discover the settings for 
+cdparanoia to rip individual tracks
+
+Record sound from your sound input and encode it into an ogg file:
+
+ gstreamer\-launch osssrc ! vorbisenc ! disksink location=input.ogg
+
+gstreamer\-launch not only handles audio but video as well:
+For mpeg1 files (video and audio streams respectively):
+
+ gstreamer\-launch disksrc location=video.mpg ! mpeg1parse video_00! queue ! { mp1videoparse ! mpeg_play ! sdlvideosink }
+ gstreamer\-launch disksrc location=video.mpg ! mpeg1parse audio_00! queue ! { mad ! osssink }
+
+For mpeg2 files (video and audio streams respectively):
+ 
+ gstreamer\-launch disksrc location=video.mpeg ! mpeg2parse video_0! queue ! { mpeg2dec ! sdlvideosink }
+ gstreamer\-launch disksrc location=video.mpeg ! mpeg2parse private_stream_1.0! queue ! { ac3dec ! osssink }
 .
 See other docs, examples, and the source for description on how to
 create a PIPELINE\-DESCRIPTION.
 .
-.SH OPTIONS
+.SH "OPTIONS"
 .l
 \fIgstreamer\-launch\fP accepts the following options:
 .TP 8
@@ -33,10 +98,10 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 .TP 8
 .B  \-\-gst\-plugin\-path=PATH
 Add directories separated with ':' to the plugin search path
-.SH SEE ALSO
+.SH "SEE ALSO"
 .BR gstreamer\-complete (1),
 .BR gstreamer\-register (1),
 .BR gstreamer\-inspect (1),
 .BR gstreamer\-config (1)
-.SH AUTHOR
+.SH "AUTHOR"
 The GStreamer team at http://gstreamer.net/
