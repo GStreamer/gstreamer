@@ -28,7 +28,7 @@ EXTRA_DIST = caps_strings
 noinst_HEADERS = \
 	caps.h
 
-tests_fail = renegotiate
+tests_fail = 
 tests_ignore =
 
 app_fixate_LDADD = $(GST_OBJ_LIBS) 

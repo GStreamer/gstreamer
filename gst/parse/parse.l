@@ -46,7 +46,7 @@ _mimetype ({_mimechar}+"/"{_mimechar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\
 _capschar ("\\".)|([^\;!])
 _capsstring {_capschar}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
 _caps {_mimetype}(","[^!]|{_capsstring})*
-_link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!")|("!")
+_link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)*"!")|("!")
 
 %x value
 %option noyywrap

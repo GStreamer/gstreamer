@@ -912,7 +912,8 @@ error1:
   g_slist_foreach (g.links, (GFunc)gst_parse_free_link, NULL);
   g_slist_free (g.links);
   
-  g_assert (*error);
+  if (error)
+    g_assert (*error);
   ret = NULL;
   
   goto out;

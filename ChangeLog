@@ -1,3 +1,13 @@
+2004-05-04  Benjamin Otte  <otte@gnome.org>
+
+	* gst/parse/grammar.y:
+	  fix assert to not trigger when there's no error argument
+	* gst/parse/parse.l:
+	  fix definition of caps to allow more than two structures
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/renegotiate.c: (main):
+	  it's sinesrc and works in that case
+
 2004-05-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (remove_from_group),

@@ -60,15 +60,16 @@ main (int argc, char *argv[])
   const GList *l2;
   int i;
   int ret;
+  GError *error = NULL;
 
   gst_init (&argc, &argv);
 
   /* change sinesrk to sinesrc once gst_parse_launch is fixed */
-  pipeline = gst_parse_launch ("sinesrk ! audioconvert ! "
+  pipeline = gst_parse_launch ("sinesrc ! audioconvert ! "
       "audio/x-raw-int, channels=2, rate=48000;"
-      "audio/x-raw-int, channels=1, rate=44100 !" "fakesink", NULL);
+      "audio/x-raw-int, channels=1, rate=44100 !" "fakesink", &error);
 
-  if (pipeline == NULL) {
+  if (error != NULL) {
     g_print
         ("oops, couldn't build pipeline.  You probably don't have audioconvert or sinesrc\n");
     exit (0);
