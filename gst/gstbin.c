@@ -55,6 +55,8 @@ static void 			gst_bin_set_index 		(GstElement *element, GstIndex *index);
 
 static void 			gst_bin_add_func 		(GstBin *bin, GstElement *element);
 static void 			gst_bin_remove_func 		(GstBin *bin, GstElement *element);
+static void			gst_bin_child_state_change_func (GstBin *bin, GstElementState oldstate, 
+                                				 GstElementState newstate, GstElement *child);
 
 static GstClock* 		gst_bin_get_clock_func 		(GstElement *element);
 static void	 		gst_bin_set_clock_func 		(GstElement *element, GstClock *clock);
@@ -144,6 +146,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   klass->add_element 			= GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element 		= GST_DEBUG_FUNCPTR (gst_bin_remove_func);
+  klass->child_state_change		= GST_DEBUG_FUNCPTR (gst_bin_child_state_change_func);
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 }
 
@@ -220,7 +223,6 @@ gst_bin_get_clock (GstBin *bin)
 void
 gst_bin_use_clock (GstBin *bin, GstClock *clock)
 {
-  g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
   gst_bin_set_clock_func (GST_ELEMENT (bin), clock);
@@ -235,7 +237,6 @@ gst_bin_use_clock (GstBin *bin, GstClock *clock)
 void
 gst_bin_auto_clock (GstBin *bin)
 {
-  g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
   if (GST_ELEMENT_SCHED (bin)) 
@@ -384,8 +385,6 @@ gst_bin_add_many (GstBin *bin, GstElement *element_1, ...)
 {
   va_list args;
 
-  g_return_if_fail (bin != NULL);
-  g_return_if_fail (element_1 != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (GST_IS_ELEMENT (element_1));
 
@@ -459,9 +458,7 @@ gst_bin_add (GstBin *bin, GstElement *element)
 {
   GstBinClass *bclass;
   
-  g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"",
@@ -540,9 +537,7 @@ gst_bin_remove (GstBin *bin, GstElement *element)
 
   GST_DEBUG_ELEMENT (GST_CAT_PARENTAGE, bin, "trying to remove child %s", GST_ELEMENT_NAME (element));
 
-  g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (bin->children != NULL);
 
@@ -572,8 +567,6 @@ gst_bin_remove_many (GstBin *bin, GstElement *element_1, ...)
 {
   va_list args;
 
-  g_return_if_fail (bin != NULL);
-  g_return_if_fail (element_1 != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (GST_IS_ELEMENT (element_1));
 
@@ -599,14 +592,34 @@ gst_bin_remove_many (GstBin *bin, GstElement *element_1, ...)
  * of a child.
  */
 void
-gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementState newstate,
-			    GstElement *child)
+gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, 
+                            GstElementState newstate, GstElement *child)
 {
-  gint old_idx = 0, new_idx = 0, i;
+  GstBinClass *bclass;
+  
+  g_return_if_fail (GST_IS_BIN (bin));
+  g_return_if_fail (GST_IS_ELEMENT (child));
 
   GST_INFO (GST_CAT_STATES, "child %s changed state in bin %s from %s to %s",
 	    GST_ELEMENT_NAME (child), GST_ELEMENT_NAME (bin),
 	    gst_element_state_get_name (oldstate), gst_element_state_get_name (newstate));
+
+  bclass = GST_BIN_GET_CLASS (bin);
+
+  if (bclass->child_state_change) {
+    bclass->child_state_change (bin, oldstate, newstate, child);
+  }
+  else {
+    g_warning ("cannot signal state change of child %s to bin %s\n", 
+               GST_ELEMENT_NAME (child), GST_ELEMENT_NAME (bin));
+  }
+}
+
+static void
+gst_bin_child_state_change_func (GstBin *bin, GstElementState oldstate, 
+                                 GstElementState newstate, GstElement *child)
+{
+  gint old_idx = 0, new_idx = 0, i;
 
   while (oldstate >>= 1) old_idx++;
   while (newstate >>= 1) new_idx++;
@@ -843,12 +856,60 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
 const GList *
 gst_bin_get_list (GstBin * bin)
 {
-  g_return_val_if_fail (bin != NULL, NULL);
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   return bin->children;
 }
 
+/**
+ * gst_bin_sync_children_state:
+ * @bin: #Gstbin to sync state
+ *
+ * Tries to set the state of the children of this bin to the same state of the
+ * bin by calling gst_element_set_state for each child not already having a
+ * synchronized state. 
+ *
+ * Returns: The worst return value of any gst_element_set_state. So if one child
+ *          returns #GST_STATE_FAILURE while all others return #GST_STATE_SUCCESS
+ *          this function returns #GST_STATE_FAILURE.
+ */
+GstElementStateReturn
+gst_bin_sync_children_state (GstBin *bin)
+{
+  GList *children;
+  GstElement *element;
+  GstElementState state;
+  GstElementStateReturn ret = GST_STATE_SUCCESS;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), GST_STATE_FAILURE);
+
+  state = GST_STATE (bin);
+  children = bin->children;
+  GST_INFO (GST_CAT_STATES, "syncing state of children with bin \"%s\"'s state %s",
+            GST_ELEMENT_NAME (bin), gst_element_state_get_name (state));
+
+  while (children) {
+    element = GST_ELEMENT (children->data);
+    children = children->next;
+    if (GST_STATE(element) != state) {
+      switch (gst_element_set_state (element, state)) {
+      case GST_STATE_SUCCESS:
+	break;
+      case GST_STATE_ASYNC:
+	if (ret == GST_STATE_SUCCESS)
+	  ret = GST_STATE_ASYNC;
+	break;
+      case GST_STATE_FAILURE:
+	ret = GST_STATE_FAILURE;
+      default:
+        /* make sure gst_element_set_state never returns this */
+        g_assert_not_reached ();
+      }
+    }
+  }
+
+  return ret;
+}
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr
 gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
@@ -1022,4 +1083,3 @@ gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction fun
   bin->post_iterate_func = func;
   bin->post_iterate_data = user_data;
 }
-

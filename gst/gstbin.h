@@ -91,6 +91,8 @@ struct _GstBinClass {
   /* vtable */
   void		(*add_element)		(GstBin *bin, GstElement *element);
   void		(*remove_element)	(GstBin *bin, GstElement *element);
+  void		(*child_state_change)	(GstBin *bin, GstElementState oldstate, 
+					 GstElementState newstate, GstElement *element);
 
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
@@ -122,6 +124,8 @@ void		gst_bin_use_clock		(GstBin *bin, GstClock *clock);
 GstClock*	gst_bin_get_clock		(GstBin *bin);
 void		gst_bin_auto_clock		(GstBin *bin);
 
+GstElementStateReturn gst_bin_sync_children_state (GstBin *bin);
+
 /* internal */
 /* one of our childs signaled a state change */
 void 		gst_bin_child_state_change 		(GstBin *bin, GstElementState oldstate, 
@@ -138,4 +142,3 @@ G_END_DECLS
 
 
 #endif /* __GST_BIN_H__ */
-
