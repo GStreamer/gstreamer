@@ -1,5 +1,11 @@
 2004-05-06  Wim Taymans  <wim@fluendo.com>
 
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	Forward events first before deciding that negotiation was
+	not performed.
+
+2004-05-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain):
 	First process the events before deciding that negotiation
 	was not performed.
