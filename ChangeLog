@@ -1,3 +1,15 @@
+2005-01-09  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_src_getcaps),
+	(gst_pngdec_chain):
+	  Handle only 8-bppc (bits-per-pixel-component) images, better
+	  error handling and correct strides. Fixes #163177.
+	* ext/libpng/gstpngenc.c: (gst_pngenc_sinklink),
+	(gst_pngenc_chain):
+	  Better error handling. Fixes #163348.
+
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_get_type),

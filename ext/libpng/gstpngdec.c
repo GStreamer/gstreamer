@@ -185,6 +185,12 @@ gst_pngdec_src_getcaps (GstPad * pad)
   if (pngdec->color_type != -1) {
     GstCaps *to_inter = NULL;
 
+    if (pngdec->info && pngdec->info->bit_depth != 8) {
+      GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
+          ("pngdec only supports 8 bit images for now"));
+      return NULL;
+    }
+
     switch (pngdec->color_type) {
       case PNG_COLOR_TYPE_RGB:
         to_inter = gst_caps_new_simple ("video/x-raw-rgb",
@@ -269,30 +275,38 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
   pngdec->png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
       (png_voidp) NULL, user_error_fn, user_warning_fn);
 
-  /* FIXME: better error handling */
   if (pngdec->png == NULL) {
-    g_warning ("Failed to initialize png structure");
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
+        ("Failed to initialize png structure"));
     return;
   }
 
   pngdec->info = png_create_info_struct (pngdec->png);
   if (pngdec->info == NULL) {
-    g_warning ("Failed to initialize info structure");
+    gst_buffer_unref (buf);
     png_destroy_read_struct (&(pngdec->png), (png_infopp) NULL,
         (png_infopp) NULL);
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
+        ("Failed to initialize info structure"));
     return;
   }
 
   pngdec->endinfo = png_create_info_struct (pngdec->png);
   if (pngdec->endinfo == NULL) {
-    g_warning ("Failed to initialize endinfo structure");
+    gst_buffer_unref (buf);
+    png_destroy_read_struct (&pngdec->png, &pngdec->info, (png_infopp) NULL);
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
+        ("Failed to initialize endinfo structure"));
     return;
   }
 
   /* non-0 return is from a longjmp inside of libpng */
   if (setjmp (pngdec->png->jmpbuf) != 0) {
-    GST_DEBUG ("returning from longjmp");
+    gst_buffer_unref (buf);
     png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, FAILED, (NULL),
+        ("returning from longjmp"));
     return;
   }
 
@@ -302,8 +316,6 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
   png_get_IHDR (pngdec->png, pngdec->info, &width, &height,
       &depth, &color, NULL, NULL, NULL);
 
-  GST_LOG ("color type: %d\n", pngdec->info->color_type);
-
   if (pngdec->width != width ||
       pngdec->height != height ||
       pngdec->color_type != pngdec->info->color_type) {
@@ -312,6 +324,8 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
     pngdec->color_type = pngdec->info->color_type;
 
     if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (pngdec->srcpad))) {
+      gst_buffer_unref (buf);
+      png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
       GST_ELEMENT_ERROR (pngdec, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
@@ -319,14 +333,13 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
 
   rows = (png_bytep *) g_malloc (sizeof (png_bytep) * height);
 
-  out =
-      gst_pad_alloc_buffer (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
-      width * height * 4);
+  out = gst_pad_alloc_buffer (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
+      height * pngdec->info->rowbytes);
 
   inp = GST_BUFFER_DATA (out);
   for (i = 0; i < height; i++) {
     rows[i] = inp;
-    inp += width * 4;
+    inp += pngdec->info->rowbytes;
   }
 
   png_read_image (pngdec->png, rows);

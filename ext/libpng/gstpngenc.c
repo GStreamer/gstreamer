@@ -160,6 +160,8 @@ gst_pngenc_sinklink (GstPad * pad, const GstCaps * caps)
   GstPngEnc *pngenc;
   gdouble fps;
   GstStructure *structure;
+  GstCaps *pcaps;
+  GstPadLinkReturn ret;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
@@ -169,12 +171,14 @@ gst_pngenc_sinklink (GstPad * pad, const GstCaps * caps)
   gst_structure_get_double (structure, "framerate", &fps);
   gst_structure_get_int (structure, "bpp", &pngenc->bpp);
 
-  caps = gst_caps_new_simple ("image/png",
+  pcaps = gst_caps_new_simple ("image/png",
       "framerate", G_TYPE_DOUBLE, fps,
       "width", G_TYPE_INT, pngenc->width,
       "height", G_TYPE_INT, pngenc->height, NULL);
 
-  return gst_pad_try_set_caps (pngenc->srcpad, caps);
+  ret = gst_pad_try_set_caps (pngenc->srcpad, pcaps);
+  gst_caps_free (pcaps);
+  return ret;
 }
 
 static void
@@ -250,20 +254,28 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
   /* initialize png struct stuff */
   pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
       (png_voidp) NULL, user_error_fn, user_warning_fn);
-  /* FIXME: better error handling */
-  if (pngenc->png_struct_ptr == NULL)
-    g_warning ("Failed to initialize png structure");
+  if (pngenc->png_struct_ptr == NULL) {
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (pngenc, LIBRARY, INIT, (NULL),
+        ("Failed to initialize png structure"));
+    return;
+  }
 
   pngenc->png_info_ptr = png_create_info_struct (pngenc->png_struct_ptr);
   if (!pngenc->png_info_ptr) {
-    png_destroy_read_struct (&(pngenc->png_struct_ptr), (png_infopp) NULL,
-        (png_infopp) NULL);
+    gst_buffer_unref (buf);
+    png_destroy_write_struct (&(pngenc->png_struct_ptr), (png_infopp) NULL);
+    GST_ELEMENT_ERROR (pngenc, LIBRARY, INIT, (NULL),
+        ("Failed to initialize the png info structure"));
+    return;
   }
 
   /* non-0 return is from a longjmp inside of libpng */
   if (setjmp (pngenc->png_struct_ptr->jmpbuf) != 0) {
-    GST_DEBUG ("returning from longjmp");
+    gst_buffer_unref (buf);
     png_destroy_write_struct (&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
+    GST_ELEMENT_ERROR (pngenc, LIBRARY, FAILED, (NULL),
+        ("returning from longjmp"));
     return;
   }
 
@@ -285,7 +297,7 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
 
   for (row_index = 0; row_index < pngenc->height; row_index++)
     row_pointers[row_index] = GST_BUFFER_DATA (buf) +
-        (pngenc->width * row_index * pngenc->bpp / 8);
+        (row_index * pngenc->png_info_ptr->rowbytes);
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);
