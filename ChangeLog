@@ -1,3 +1,15 @@
+2005-02-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_caps_with_data):
+	  Do actually fix invalid RIFF fmt header values for alaw
+	  and mulaw audio instead of just saying so.
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt):
+	  Give gst_riff_create_audio_caps_with_data() a chance to
+	  fix up broken format header fields before extracting any
+	  parameters from the header. (fixes #167633)
+
 2005-02-19  Martin Holters  <martin.holters@gmx.de>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
