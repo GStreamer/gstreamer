@@ -1,3 +1,7 @@
+2004-12-16  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
+
+	* tools/gst-launch-ext-m.m: fix mpeg and vob pipelines
+
 2004-12-16  David Schleef  <ds@schleef.org>
 
 	* gst/audioscale/gstaudioscale.c: the resample library only
