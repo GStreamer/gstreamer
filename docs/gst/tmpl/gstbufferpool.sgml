@@ -51,7 +51,7 @@ A bufferpool can be requested from a pad with the gst_pad_get_bufferpool() funct
 
 </para>
 
-@new_buffer: 
+@lock: 
 @new_user_data: 
 @destroy_user_data: 
 @destroy_buffer: 
@@ -103,6 +103,33 @@ the pool.
 @buffer: 
 
 
+<!-- ##### FUNCTION gst_buffer_pool_ref ##### -->
+<para>
+
+</para>
+
+@pool: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_ref_by_count ##### -->
+<para>
+
+</para>
+
+@pool: 
+@count: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_unref ##### -->
+<para>
+
+</para>
+
+@pool: 
+<!-- # Unused Parameters # -->
+@buffer: 
+
+
 <!-- ##### FUNCTION gst_buffer_pool_set_create_function ##### -->
 <para>
 
@@ -129,5 +156,16 @@ the pool.
 </para>
 
 @pool: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_get_default ##### -->
+<para>
+
+</para>
+
+@oldpool: 
+@buffer_size: 
+@pool_size: 
+@Returns: 
 
 

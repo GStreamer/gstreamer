@@ -9,7 +9,6 @@
 <!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
 <!entity GstLog SYSTEM "sgml/gstlog.sgml">
-<!entity GstMeta SYSTEM "sgml/gstmeta.sgml">
 <!entity GstObject SYSTEM "sgml/gstobject.sgml">
 <!entity GstPad SYSTEM "sgml/gstpad.sgml">
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
@@ -56,7 +55,7 @@
     <title>GStreamer Core Library</title>
 
     <para>libgst.la provides all the core GStreamer services,
-including initialization, plugin management, types and metadata, as 
+including initialization, plugin management and types, as 
 well as the object hiarchy that defines elements and bins, along
 with some more specialized elements.</para>
 
@@ -69,7 +68,6 @@ with some more specialized elements.</para>
     &GstCpu;
     &GstElement;
     &GstInfo;
-    &GstMeta;
     &GstObject;
     &GstPad;
     &GstParse;
@@ -138,14 +136,6 @@ with some more specialized elements.</para>
     &GstIdentity;
 
     &GstTee;
-  </chapter>
-
-  <chapter id="metatdata-types">
-    <title>GStreamer MetaData Types</title>
-
-    <para>MetaData is used to specify the content of buffers. See <classname>GstMeta</classname>. </para>
-
-    &spectrum;
   </chapter>
 
   <chapter id="autopluggers">

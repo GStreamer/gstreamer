@@ -67,9 +67,7 @@ to bring it into memory.
 @numtypes: 
 @elements: 
 @numelements: 
-@autopluggers: 
 @numautopluggers: 
-@loaded: 
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>

@@ -271,7 +271,7 @@ The function that will be called when pulling buffers.
 the region types for #gst_pad_pullregion.
 </para>
 
-@GST_REGION_NONE: no type specified
+@GST_REGION_VOID: 
 @GST_REGION_OFFSET_LEN: an offet/length pair
 @GST_REGION_TIME_LEN: a time start/length pair
 

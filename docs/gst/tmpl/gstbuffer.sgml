@@ -151,6 +151,14 @@ Get the bufferpool private data.
 @buf: GstBuffer
 
 
+<!-- ##### MACRO GST_BUFFER_POOL_LOCK ##### -->
+<para>
+
+</para>
+
+@pool: 
+
+
 <!-- ##### MACRO GST_BUFFER_LOCK ##### -->
 <para>
 This macro will obtain a lock on the object, making serialization

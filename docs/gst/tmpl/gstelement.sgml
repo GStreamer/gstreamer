@@ -35,7 +35,7 @@ use gst_element_set_state() to change the state of an element.
 
 </para>
 
-@GST_STATE_NONE_PENDING: The element is in the desired state.
+@GST_STATE_VOID_PENDING: 
 @GST_STATE_NULL: Reset the state of an element.
 @GST_STATE_READY: will make the element ready to start processing data. some
 elements might have a non trivial way to initialize themselves.

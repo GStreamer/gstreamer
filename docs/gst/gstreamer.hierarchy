@@ -2,23 +2,23 @@ GtkObject
   GtkWidget
     GtkRange
     GtkContainer
-  GstObject
-    GstXML
-    GstElement
-      GstBin
-        GstPipeline
-        GstThread
-      GstTee
-      GstFakeSrc
-      GstFakeSink
-      GstDiskSrc
-      GstHttpSrc
-      GstFdSrc
-      GstSineSrc
-      GstFdSink
-      GstPipefilter
-      GstIdentity
-      GstQueue
-      GstTypeFind
-    GstPad
-  GstSignalObject
+  GObject
+    GstObject
+      GstXml
+      GstElement
+        GstBin
+          GstPipeline
+          GstThread
+        GstTee
+        GstFakeSrc
+        GstFakeSink
+        GstDiskSrc
+        GstHttpSrc
+        GstFdSrc
+        GstSineSrc
+        GstFdSink
+        GstPipefilter
+        GstIdentity
+        GstQueue
+        GstTypeFind
+      GstPad

@@ -94,16 +94,6 @@ Some convenience functions
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_util_get_widget_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_util_dump_mem ##### -->
 <para>
 

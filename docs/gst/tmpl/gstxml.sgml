@@ -20,6 +20,9 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 
 </para>
 
+@object: 
+@topelements: 
+@ns: 
 
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>
@@ -90,4 +93,13 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 @xml: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GstXml::object-loaded ##### -->
+<para>
+
+</para>
+
+@gstxml: the object which received the signal.
+@arg1: 
+@arg2: 
 

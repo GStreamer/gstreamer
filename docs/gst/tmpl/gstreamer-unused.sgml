@@ -220,6 +220,10 @@ the stream.
 
 @obj: 
 
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:Short_Description ##### -->
+Provide context for buffers
+
+
 <!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
 <para>
 
@@ -423,6 +427,13 @@ Generic connection between elements.
 @height: 
 @overlay_info: 
 @dga_info: 
+
+<!-- ##### FUNCTION gst_meta_ref ##### -->
+<para>
+
+</para>
+
+@meta: 
 
 <!-- ##### SECTION ./tmpl/gstaudiosink.sgml:See_Also ##### -->
 <para>
@@ -670,6 +681,13 @@ Specify the current offset in the file.
 </para>
 
 
+<!-- ##### FUNCTION gst_meta_unref ##### -->
+<para>
+
+</para>
+
+@meta: 
+
 <!-- ##### STRUCT GstSineSrc ##### -->
 <para>
 
@@ -685,6 +703,10 @@ Specify the current offset in the file.
 @swidth: 
 @sheight: 
 @bytes_per_line: 
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:Title ##### -->
+spectrum
+
 
 <!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
 <para>
@@ -1325,6 +1347,10 @@ subclasses can use this value to start the enumeration of their flags
 </para>
 
 
+<!-- ##### SECTION ./tmpl/spectrum.sgml:Short_Description ##### -->
+Frequencies of a spectrum analysis.
+
+
 <!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
 <para>
 
@@ -1388,6 +1414,13 @@ Indicates a sinkpad for the padfactory.
 @name: 
 @Returns: 
 
+<!-- ##### MACRO GST_META_FLAGS ##### -->
+<para>
+Retrieve the flags of the given meta information.
+</para>
+
+@meta: the meta information
+
 <!-- ##### FUNCTION gst_element_request_pad ##### -->
 <para>
 
@@ -1439,6 +1472,16 @@ This macro checks to see if the given state is set.
 
 @obj: Element to check for state.
 @flag: State to check for, must be a single bit in guint32.
+
+<!-- ##### STRUCT GstMeta ##### -->
+<para>
+
+</para>
+
+@lock: for locking purposes
+@flags: the flags of the meta data
+@data: the meta data
+@size: the size of the meta data
 
 <!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
 <para>
@@ -1784,6 +1827,12 @@ The Element is going from the READY state to the PLAYING state.
 </para>
 
 
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_IS_TEE_CLASS ##### -->
 <para>
 
@@ -1797,6 +1846,105 @@ The Element is going from the READY state to the PLAYING state.
 </para>
 
 @arg: 
+
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
+<para>
+The point of the metadata is to provide some context for each buffer.  In
+the case of audio data, for instance, it would provide the samplerate, bit
+depth, and channel count.
+</para>
+
+<para>
+The trick is that there may be multiple types of metadata ganged onto a
+single buffer.  This is why they're going to be a GList.  This does mean
+extra overhead in all cases, but I think it's minimal.  The GList type
+uses a chunk allocater so we're not wasting too much memory or time when
+adding to the list.
+</para>
+
+<para>
+The trick is dealing with these structs as they pass through a pipeline,
+since they have potentially different mutability properties.  For
+instance, if you've got a mp3 decoder connected to a tee, which sends the
+buffers off to both the decoder and a spectrum analyzer (and then a
+visualization element).  The preferred setup would be where every time a
+audio/raw metadata comes down the pipe (indicating a potential change in
+audio format), the audiosink and spectrum would just save off pointers.
+</para>
+
+<para>
+So when exactly does this metadata go away (deallocated)?  Well, that
+means metadata has to be refcounted.  But that gets rather hairy.  OK, in
+the simple case you create a metadata struct, it comes with refcount set
+to 1.  You pass it through, it stays one, eventually someone drops the
+last reference on the buffer it's tied to, you free the metadata too.
+Easy.  What if you tee?  You could go through and for every metadata in
+the buffer, increment the refcount by the same as the buffer.  So in the
+above case (tee'd), the audiosink and spectrum would get the buffer with a
+refcount of 2, and it'd have a metadata with refcount 2.  Do they ref it
+each themselves, then unref the buffer?  Or do they remove the metadata?
+Removing the metadata would require a buffer CoW, which would suck, so
+yes, they'd just ref the metadata.
+</para>
+
+<para>
+But....  what if they're all in different threads?  Then we're off into
+the magical world of mutexes.  Everything with a refcount in a threaded
+world must be mutexed, else you can do atomic increment and atomic
+dec and test.  Can this be done from C easily?  Perhaps it needs to be found
+from kernel includes via autoconf?
+</para>
+
+<para>
+The goal in designing the way metadata will be defined and used is to keep
+it as simple as possible.  The basis for accomplishing this is the fact
+that in order to actually use (rather than just pass) the metadata, you
+have to know what the fields are, which means you have to have compiled in
+support for that metadata at build time.  Therefore, if you're using
+metadata, you must have build-time access to the necessary include file
+that defines it.
+</para>
+
+<para>
+So, given that you've got an include file, it would be nice if the whole
+thing could be contained there.  This would limit the need to be linked
+against something, or have load-time requirements as to that has to be
+loaded before you are.
+</para>
+
+<para>
+Given that really all metadata is is a region of memory of a given size
+with a certain signature, this isn't all that hard.  First you lay out the
+struct that defines the metadata.  Then you set up #defines that expand to
+the size of the struct in question, as well as the four-cc code that
+defines the type.
+</para>
+
+<para>
+The work is done by a few #defines, a la the #defines used in all Gtk
+objects.  The first is a NEW() method that allocates the memory for the
+metadata and fills in all the normal fields (type, size, utility
+functions).  Because of the way it's defined (as a #define, no less),
+you'll have to invoke it as META_NEW(meta), since it can't return()
+anything.
+</para>
+
+<para>
+Another #define will check to make sure a meta is indeed that type by
+verifying the type code and size.  Theoretically, meta types can overlap
+with the same fourcc code, as long as they have different sizes.  But I
+probably ought to have a global public registry so people writing things
+don't conflict.  MSFT got that right, at least.
+</para>
+
+<para>
+So, a hairy problem is what to do when there are utility functions
+associated with one of these things.  One option is to not bother with
+them.  This is very likely a possible solution, since metadata is supposed
+to be flat memory of a given size.  Not much to do to either free or copy
+it, is there?
+</para>
+
 
 <!-- ##### SECTION ./tmpl/gstconnection.sgml:Title ##### -->
 GstConnection
@@ -1867,6 +2015,14 @@ GstElement
 
 </para>
 
+
+<!-- ##### MACRO GST_META_FLAG_UNSET ##### -->
+<para>
+Clear a flag in the meta data.
+</para>
+
+@meta: the meta data
+@flag: the flag to clear
 
 <!-- ##### MACRO GST_IS_FAKESRC ##### -->
 <para>
@@ -2484,6 +2640,14 @@ The number of bytes per read.
 
 @obj: 
 
+<!-- ##### FUNCTION gst_meta_new_size ##### -->
+<para>
+
+</para>
+
+@size: 
+@Returns: 
+
 <!-- ##### MACRO ERROR_OBJECT ##### -->
 <para>
 
@@ -2593,6 +2757,19 @@ This macro sets the given state on the element.
 @Returns: 
 
 <!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstMetaFlags ##### -->
+<para>
+Flags indicating properties about the meta data.
+</para>
+
+@GST_META_FREEABLE: the meta data can be freed
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:See_Also ##### -->
 <para>
 
 </para>
@@ -2708,6 +2885,10 @@ This macro checks to see if the GST_SRC_ASYNC flag is set.
 </para>
 
 
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:Title ##### -->
+GstMeta
+
+
 <!-- ##### TYPEDEF GstCapsFactory ##### -->
 <para>
 
@@ -2732,6 +2913,15 @@ A flag indicating that SSE instructions are supported.
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_util_get_widget_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
 
 <!-- ##### ARG GstAsyncDiskSrc:size ##### -->
 <para>
@@ -2775,6 +2965,14 @@ to the current function, i.e. "('element')"
 </para>
 
 
+<!-- ##### MACRO GST_META_FLAG_SET ##### -->
+<para>
+Set a flag in the meta data.
+</para>
+
+@meta: the meta data
+@flag: the flag to set
+
 <!-- ##### MACRO GST_IS_SRC ##### -->
 <para>
 
@@ -2808,6 +3006,14 @@ Information about audio buffers.
 @GST_CAPS_ALWAYS: 
 @GST_CAPS_MAYBE: 
 
+<!-- ##### MACRO GST_META_FLAG_IS_SET ##### -->
+<para>
+Check if a given flag is set.
+</para>
+
+@meta: the meta data to test
+@flag: the flag to test
+
 <!-- ##### STRUCT GstPadClass ##### -->
 <para>
 
@@ -2836,6 +3042,13 @@ Information about audio buffers.
 
 </para>
 
+
+<!-- ##### MACRO gst_meta_new ##### -->
+<para>
+Create new meta data.
+</para>
+
+@type: the type of the meta data to create
 
 <!-- ##### FUNCTION plugin_initialize ##### -->
 <para>
@@ -2886,6 +3099,13 @@ Specify the location of the file to read.
 
 @audiosink: 
 @format: 
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:Long_Description ##### -->
+<para>
+Frequencies of a spectrum analysis.
+
+</para>
+
 
 <!-- ##### SECTION ./tmpl/gstaudiosrc.sgml:Title ##### -->
 GstAudioSrc
@@ -2948,6 +3168,19 @@ Get the current number of bytes read.
 
 </para>
 
+
+<!-- ##### STRUCT MetaAudioSpectrum ##### -->
+<para>
+
+</para>
+
+@meta: 
+@bands: 
+@channels: 
+@interleaved: 
+@lowfreq: 
+@highfreq: 
+@steps: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Title ##### -->
 plugin
