@@ -941,8 +941,15 @@ gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement *
   GList *pads;
   GstPad *pad;
   GstElement *peerelement;
+  GstSchedulerChain *prevchain;
 
-  /* add the element to the chain */
+  /* check to see if it's in a chain already */
+  prevchain = gst_basic_scheduler_find_chain (chain->sched, element);
+  /* if it's already in another chain, we're done */
+  if (prevchain != NULL)
+    return;
+
+  /* add it to this one */
   gst_basic_scheduler_chain_add_element (chain, element);
 
   GST_DEBUG (GST_CAT_SCHEDULING, "recursing on element \"%s\"", GST_ELEMENT_NAME (element));
@@ -959,12 +966,9 @@ gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement *
       GST_DEBUG (GST_CAT_SCHEDULING, "has peer %s:%s", GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
       peerelement = GST_PAD_PARENT (GST_PAD_PEER (pad));
       if (GST_ELEMENT_SCHED (GST_PAD_PARENT (pad)) == GST_ELEMENT_SCHED (peerelement)) {
-	GST_DEBUG (GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain",
+        GST_DEBUG (GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain",
 		   GST_ELEMENT_NAME (peerelement));
-	/* if it's not already in a chain, add it to this one */
-	if (gst_basic_scheduler_find_chain (chain->sched, peerelement) == NULL) {
-	  gst_basic_scheduler_chain_recursive_add (chain, peerelement);
-	}
+        gst_basic_scheduler_chain_recursive_add (chain, peerelement);
       }
     }
   }
