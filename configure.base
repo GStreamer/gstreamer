@@ -1006,6 +1006,24 @@ dnl #############################
 dnl AC_CONFIG_SUBDIRS(gist)
 dnl AC_CONFIG_SUBDIRS(plugins/mp3decode/xing/libxing)
 
+dnl ##################################################
+dnl # Prepare informative messages to display at end #
+dnl ##################################################
+
+infomessages=
+
+if test "x$PLUGINS_USE_SRCDIR" = xyes; then
+  infomessages="$infomessages
+*** Warning: You have configured using the --enable-plugin-srcdir option.
+
+This option is for development purposes only: binaries built with
+it should be used with code in the build tree only.  To build an
+installable version, use ./configure without the --enable-plugin-srcdir
+option.  Note that the autogen.sh script supplies the plugin srcdir
+option automatically - it cannot be used to configure installable builds.
+
+"
+fi
 
 dnl #########################
 dnl # Make the output files #
@@ -1159,7 +1177,9 @@ gstreamer-config
 gstreamer.pc
 gstreamer-uninstalled.pc
 SUBSTFOR configure.in:gstreamer.spec])
-SUBSTFOR configure.in:AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])
+SUBSTFOR configure.in:AC_OUTPUT_COMMANDS([chmod +x gstreamer-config;
+SUBSTFOR configure.in:echo "$infomessages"])
 SUBSTFOR configure.ac:gstreamer.spec,
 SUBSTFOR configure.ac:chmod +x gstreamer-config
+SUBSTFOR configure.ac:echo "$infomessages"
 SUBSTFOR configure.ac:)
