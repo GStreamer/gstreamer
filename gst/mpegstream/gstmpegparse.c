@@ -347,7 +347,7 @@ static gboolean
 gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 {
   guint8 *buf;
-  guint64 scr;
+  guint64 prev_scr, scr;
   guint32 scr1, scr2;
   guint32 new_rate;
 
@@ -391,9 +391,9 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     new_rate |= buf[2] >> 1;
   }
 
+  prev_scr = mpeg_parse->current_scr;
   mpeg_parse->current_scr = scr;
   mpeg_parse->scr_pending = FALSE;
-  mpeg_parse->bytes_since_scr = 0;
 
   if (mpeg_parse->next_scr == -1) {
     mpeg_parse->next_scr = mpeg_parse->current_scr;
@@ -436,7 +436,11 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   }
 
   if (mpeg_parse->mux_rate != new_rate) {
-    mpeg_parse->mux_rate = new_rate;
+    mpeg_parse->mux_rate =
+        (double) mpeg_parse->bytes_since_scr /
+        MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr -
+        prev_scr) / 50 * 1000000000;
+    mpeg_parse->bytes_since_scr = 0;
 
     //gst_mpeg_parse_update_streaminfo (mpeg_parse);
     GST_DEBUG ("stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
