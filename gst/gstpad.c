@@ -2791,15 +2791,16 @@ static gboolean
 gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, 
                                 GstEvent *event)
 {
-  GList *pads = element->pads;
+  GList *orig, *pads;
+
+  orig = pads = gst_pad_get_internal_links (pad);
 
   while (pads) {
     GstPad *eventpad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
     /* for all pads in the opposite direction that are linked */
-    if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) 
-     && GST_PAD_IS_LINKED (eventpad)) {
+    if (GST_PAD_IS_LINKED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
 	/* increase the refcount */
         gst_event_ref (event);
@@ -2810,11 +2811,13 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
 
 	/* we only send the event on one pad, multi-sinkpad elements 
 	 * should implement a handler */
+        g_list_free (orig);
         return gst_pad_send_event (peerpad, event);
       }
     }
   }
   gst_event_unref (event);
+  g_list_free (orig);
   return TRUE;
 }
 
@@ -3152,4 +3155,3 @@ gst_pad_get_formats (GstPad *pad)
 
   return NULL;
 }
-
