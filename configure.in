@@ -193,7 +193,19 @@ dnl =======================================
 
 
 dnl Check for libesd
+esd_save_LIBS=$LIBS
+esd_save_CFLAGS=$CFLAGS 
 AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+LIBS=$esd_save_LIBS
+CFLAGS=$esd_save_CFLAGS
+AC_ARG_ENABLE(esdsink,
+[  --enable-esdsink          enable the building of the esdsink],
+[case "${enableval}" in
+	yes) HAVE_LIBESD=$HAVE_LIBESD ;;
+	no) HAVE_LIBESD=no ;;
+	*) AC_MSG_ERROR(bad value ${enableval} for --enable-esdsink) ;;
+	esac],
+[HAVE_LIBESD=$HAVE_LIBESD])
 
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
@@ -203,6 +215,14 @@ alsa_save_CFLAGS=$CFLAGS
 AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
 LIBS=$alsa_save_LIBS
 CFLAGS=$alsa_save_CFLAGS
+AC_ARG_ENABLE(alsasink,
+[  --enable-alsasink          enable the building of the alsasink],
+[case "${enableval}" in
+	yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
+	no) HAVE_LIBASOUND=no ;;
+	*) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
+esac],
+[HAVE_LIBASOUND=$HAVE_LIBASOUND])
 
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
