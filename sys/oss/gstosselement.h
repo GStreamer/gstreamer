@@ -24,6 +24,7 @@
 #define __GST_OSS_ELEMENT_H__
 
 #include <gst/gst.h>
+#include <sys/types.h>
 
 /* debugging category */
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);

@@ -158,6 +158,7 @@ gst_udpsink_class_init (GstUDPSink * klass)
 static GstPadLinkReturn
 gst_udpsink_sink_link (GstPad * pad, const GstCaps * caps)
 {
+#ifndef GST_DISABLE_LOADSAVE
   GstUDPSink *udpsink;
   struct sockaddr_in serv_addr;
   struct hostent *serverhost;
@@ -165,7 +166,6 @@ gst_udpsink_sink_link (GstPad * pad, const GstCaps * caps)
   FILE *f;
   guint bc_val;
 
-#ifndef GST_DISABLE_LOADSAVE
   xmlDocPtr doc;
   xmlChar *buf;
   int buf_size;

@@ -254,9 +254,9 @@ gst_udpsrc_get (GstPad * pad)
         GST_ELEMENT_ERROR (udpsrc, CORE, NEGOTIATION, (NULL),
             ("Got unfixed caps from peer"));
       }
-
-#endif
       g_free (buf);
+#endif
+
       outbuf = NULL;
     } else {
       outbuf = gst_buffer_new ();
