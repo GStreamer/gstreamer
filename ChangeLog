@@ -1,3 +1,12 @@
+2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstbuffer.c: (gst_buffer_join):
+	* gst/gstbuffer.h:
+	  Re-add gst_buffer_join ().
+	* gst/gsterror.c: (_gst_stream_errors_init):
+	* gst/gsterror.h:
+	  Add 'invalid data' as an extra stream error.
+
 2005-02-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstcaps.c: (gst_caps_intersect):

@@ -416,6 +416,33 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
 }
 
 /**
+ * gst_buffer_join:
+ * @buf1: a first source #GstBuffer to merge.
+ * @buf2: the second source #GstBuffer to merge.
+ *
+ * Create a new buffer that is the concatenation of the two source
+ * buffers.  The original source buffers are dereferenced.
+ *
+ * If the buffers point to contiguous areas of memory, the buffer
+ * is created without copying the data.
+ *
+ * Returns: the new #GstBuffer that's the concatenation of the source buffers.
+ *
+ * MT safe.
+ */
+
+GstBuffer *
+gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
+{
+  GstBuffer *result = gst_buffer_merge (buf1, buf2);
+
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (buf2);
+
+  return result;
+}
+
+/**
  * gst_buffer_is_span_fast:
  * @buf1: a first source #GstBuffer.
  * @buf2: the second source #GstBuffer.
