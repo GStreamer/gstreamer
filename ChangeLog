@@ -1,3 +1,11 @@
+2004-01-27  David Schleef  <ds@schleef.org>
+
+	* ext/esd/esdsink.c: (gst_esdsink_class_init), (gst_esdsink_init),
+	(gst_esdsink_link), (gst_esdsink_get_time), (gst_esdsink_chain),
+	(gst_esdsink_change_state):  Fix sync issues in esdsink.  Also
+	changed esdsink to only use 44100,16,2, since esd sucks at rate
+	conversion and esdsink has had difficulty negotiating.
+
 2004-01-27  Julien MOUTTE <julien@moutte.net>
 
 	* gst-libs/gst/play/gstplay.c: (gst_play_tick_callback),

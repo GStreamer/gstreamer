@@ -64,14 +64,8 @@ GST_STATIC_PAD_TEMPLATE (
       "signed = (boolean) TRUE, "
       "width = (int) 16, "
       "depth = (int) 16, "
-      "rate = [ 8000, 96000 ], "
-      "channels = [ 1, 2 ]; "
-    "audio/x-raw-int, "
-      "signed = (boolean) FALSE, "
-      "width = (int) 8, "
-      "depth = (int) 8, "
-      "rate = [ 8000, 96000 ], "
-      "channels = [ 1, 2 ]"
+      "rate = 44100, "
+      "channels = 2"
   )
 );
 
@@ -82,7 +76,6 @@ static void			gst_esdsink_init		(GTypeInstance *instance, gpointer g_class);
 static gboolean			gst_esdsink_open_audio		(GstEsdsink *sink);
 static void			gst_esdsink_close_audio		(GstEsdsink *sink);
 static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
-static GstPadLinkReturn		gst_esdsink_link		(GstPad *pad, const GstCaps *caps);
 
 static GstClockTime		gst_esdsink_get_time		(GstClock *clock, gpointer data);
 static GstClock *		gst_esdsink_get_clock		(GstElement *element);
@@ -145,7 +138,7 @@ gst_esdsink_class_init (gpointer g_class, gpointer class_data)
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(gobject_class, ARG_SYNC,
     g_param_spec_boolean("sync","sync","Synchronize output to clock",
-                         FALSE,G_PARAM_READWRITE));
+                         TRUE,G_PARAM_READWRITE));
 #if 0
   /* This option is disabled because it is dumb in GStreamer's architecture. */
   g_object_class_install_property(gobject_class, ARG_FALLBACK,
@@ -171,7 +164,6 @@ gst_esdsink_init(GTypeInstance *instance, gpointer g_class)
       "sink");
   gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
   gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
-  gst_pad_set_link_function(esdsink->sinkpad, gst_esdsink_link);
 
   GST_FLAG_SET (esdsink, GST_ELEMENT_EVENT_AWARE);
 
@@ -179,17 +171,19 @@ gst_esdsink_init(GTypeInstance *instance, gpointer g_class)
   esdsink->fd = -1;
   /* FIXME: get default from somewhere better than just putting them inline. */
   esdsink->negotiated = FALSE;
-  esdsink->format = -1;
-  esdsink->depth = -1;
-  esdsink->channels = -1;
-  esdsink->frequency = -1;
+  esdsink->format = 16;
+  esdsink->depth = 16;
+  esdsink->channels = 2;
+  esdsink->frequency = 44100;
+  esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth/8);
   esdsink->host = getenv ("ESPEAKER");
   esdsink->provided_clock = gst_audio_clock_new("esdclock", gst_esdsink_get_time, esdsink);
   gst_object_set_parent(GST_OBJECT(esdsink->provided_clock), GST_OBJECT(esdsink));
-  esdsink->sync = FALSE;
+  esdsink->sync = TRUE;
   esdsink->fallback = FALSE;
 }
 
+#ifdef unused
 static GstPadLinkReturn
 gst_esdsink_link (GstPad *pad, const GstCaps *caps)
 {
@@ -216,17 +210,7 @@ gst_esdsink_link (GstPad *pad, const GstCaps *caps)
   GST_DEBUG ("esd link function could not negotiate, returning delayed");
   return GST_PAD_LINK_REFUSED;
 }
-
-static int
-gst_esdsink_get_latency (GstEsdsink *esdsink)
-{
-  /* esd_get_latency() doesn't actually work.  So we return a
-   * fake value */
-  return 44100/2;
-#if 0
-  return esd_get_latency (esdsink->fd);
 #endif
-}
 
 static GstClockTime
 gst_esdsink_get_time (GstClock *clock, gpointer data)
@@ -234,8 +218,8 @@ gst_esdsink_get_time (GstClock *clock, gpointer data)
   GstEsdsink *esdsink = GST_ESDSINK(data);
   GstClockTime res;
 
-  res = (esdsink->handled - gst_esdsink_get_latency(esdsink))
-    * GST_SECOND / esdsink->frequency;
+  res = (esdsink->handled * GST_SECOND) / esdsink->frequency;
+    //- GST_SECOND * 2;
 
   return res;
 }
@@ -268,12 +252,6 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
-  if (!esdsink->negotiated) {
-    gst_element_error (esdsink, CORE, NEGOTIATION, NULL,
-                       ("element wasn't negotiated before chain function"));
-    goto done;
-  }
-
   if (GST_IS_EVENT(buf)){
     GstEvent *event = GST_EVENT(buf);
 
@@ -283,17 +261,6 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
 	    FALSE);
 	gst_pad_event_default (pad, event);
 	return;
-      case GST_EVENT_DISCONTINUOUS:
-      {
-	gint64 value;
-
-	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-	  gst_element_set_time (GST_ELEMENT (esdsink), value);
-	  esdsink->handled = 0;
-	}
-	esdsink->resync = TRUE;
-	break;
-      }
       default:
 	gst_pad_event_default(pad, event);
 	return;
@@ -308,20 +275,7 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
       gint size = GST_BUFFER_SIZE (buf);
       gint to_write = 0;
 
-      if (esdsink->clock){
-	gint delay = 0;
-	gint64 queued;
-
-	delay = gst_esdsink_get_latency (esdsink);
-	queued = delay * GST_SECOND / esdsink->frequency;
-
-	if (esdsink->resync && esdsink->sync) {
-	  gst_element_wait (GST_ELEMENT (esdsink), GST_BUFFER_TIMESTAMP (buf) - queued); 
-
-	}else{
-	  to_write = size;
-	}
-      }
+      to_write = size;
 
       GST_LOG ("fd=%d data=%p size=%d",
                 esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
@@ -346,7 +300,7 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
   }
 
   gst_audio_clock_update_time ((GstAudioClock *)esdsink->provided_clock,
-      GST_BUFFER_TIMESTAMP (buf));
+      gst_esdsink_get_time (esdsink->provided_clock, esdsink));
 
 done:
   gst_buffer_unref (buf);
@@ -482,10 +436,15 @@ gst_esdsink_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      if (!gst_esdsink_open_audio (GST_ESDSINK (element))) {
+        return GST_STATE_FAILURE;
+      }
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
+	  TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
@@ -493,10 +452,9 @@ gst_esdsink_change_state (GstElement *element)
       esdsink->resync = TRUE;
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_esdsink_close_audio (GST_ESDSINK (element));
-      esdsink->negotiated = FALSE;
       break;
     case GST_STATE_READY_TO_NULL:
+      gst_esdsink_close_audio (GST_ESDSINK (element));
       break;
     default:
       break;
