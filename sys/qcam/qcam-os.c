@@ -3,6 +3,8 @@
 /* Version 0.1, January 2, 1996 */
 /* Version 0.5, August 24, 1996 */
 
+#define LOCALSTATEDIR ""
+//#define LOCALSTATEDIR "/var/run"
 
 /******************************************************************
 
@@ -118,7 +120,7 @@ qc_lock_wait (struct qcam *q, int wait)
   if (-1 == q->fd) {            /* we've yet to open the lock file */
     static char lockfile[128];
 
-    sprintf (lockfile, "/var/run/LOCK.qcam.0x%x", q->port);
+    sprintf (lockfile, LOCALSTATEDIR "LOCK.qcam.0x%x", q->port);
     if (-1 == (q->fd = open (lockfile, O_WRONLY | O_CREAT, 0666))) {
       perror ("open");
       return 1;
@@ -160,7 +162,7 @@ qc_lock_wait (struct qcam *q, int wait)
   char lockfile[128], tmp[128];
   struct stat statbuf;
 
-  sprintf (lockfile, "/var/run/LOCK.qcam.0x%x", q->port);
+  sprintf (lockfile, LOCALSTATEDIR "/LOCK.qcam.0x%x", q->port);
   sprintf (tmp, "%s-%d", lockfile, getpid ());
 
   if ((creat (tmp, 0) == -1) ||
@@ -219,7 +221,7 @@ qc_unlock (struct qcam *q)
 #else
   char lockfile[128];
 
-  sprintf (lockfile, "/var/run/LOCK.qcam.0x%x", q->port);
+  sprintf (lockfile, LOCALSTATEDIR "/LOCK.qcam.0x%x", q->port);
   unlink (lockfile);            /* What would I do with an error? */
 #endif
 
