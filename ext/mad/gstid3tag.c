@@ -220,11 +220,11 @@ gst_id3_tag_get_type (guint type)
 /* elementfactory information */
 GstElementDetails gst_id3_tag_details[3] = {
   GST_ELEMENT_DETAILS ("id3 tag extractor",
-      "Codec/Demuxer",
+      "Codec/Demuxer/Audio",
       "Extract ID3 tagging information",
       "Benjamin Otte <otte@gnome.org>"),
   GST_ELEMENT_DETAILS ("id3 muxer",
-      "Codec/Muxer",
+      "Codec/Muxer/Audio",
       "Add ID3 tagging information",
       "Benjamin Otte <otte@gnome.org>"),
   GST_ELEMENT_DETAILS ("id3 tag extractor",
