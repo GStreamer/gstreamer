@@ -21,8 +21,14 @@
  */
 
 
-#include <gstfakesink.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
+#include "gstfakesink.h"
+
+GST_DEBUG_CATEGORY (gst_fakesink_debug);
+#define GST_CAT_DEFAULT gst_fakesink_debug
 
 GstElementDetails gst_fakesink_details = {
   "Fake Sink",

@@ -23,7 +23,7 @@
 #include "gst_private.h"
 
 #include "gsturi.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 GType
 gst_uri_get_uri_type (void)

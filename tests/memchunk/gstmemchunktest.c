@@ -31,7 +31,8 @@ run_test (void *threadid)
 {
   gint i;
   gpointer chunk;
-  sleep(1);
+  
+  g_usleep(G_USEC_PER_SEC);
 
   for (i = 0; i<num_allocs; i++) {
     chunk = alloc_chunk ();

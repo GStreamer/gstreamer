@@ -21,10 +21,11 @@
  */
 
 #include "gst_private.h"
+
 #include "gstpluginfeature.h"
 #include "gstplugin.h"
 #include "gstregistry.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 static void		gst_plugin_feature_class_init		(GstPluginFeatureClass *klass);
 static void		gst_plugin_feature_init			(GstPluginFeature *feature);
@@ -94,7 +95,7 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)
   if (plugin && !gst_plugin_is_loaded (plugin)) {
 #ifndef GST_DISABLE_REGISTRY 
     if (GST_IS_REGISTRY (plugin->manager)) {
-      GST_DEBUG (GST_CAT_PLUGIN_LOADING, 
+      GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, 
 	         "loading plugin %s for feature", plugin->name);
 
       if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager), plugin) != GST_REGISTRY_OK)
@@ -135,4 +136,3 @@ gst_plugin_feature_type_name_filter (GstPluginFeature *feature,
   return ((data->type == 0    || data->type == G_OBJECT_TYPE (feature)) &&
           (data->name == NULL || !strcmp (data->name, GST_PLUGIN_FEATURE_NAME (feature))));
 }
-

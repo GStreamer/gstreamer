@@ -78,7 +78,7 @@ main (gint argc, gchar *argv[])
 
   g_thread_create ((GThreadFunc) thread, NULL, FALSE, NULL);
   g_print ("main: created GThread\n");
-  while (!done) sleep (1);
+  while (!done) g_usleep (G_USEC_PER_SEC);
   g_print ("main: done\n");
   return 0;
 }

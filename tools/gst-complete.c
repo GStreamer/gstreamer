@@ -2,9 +2,11 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include <gst/gstconfig.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
-#include <glib.h>
+#include <gst/gst.h>
 
 
 typedef struct {

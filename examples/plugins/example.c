@@ -30,7 +30,7 @@ static GstElementDetails example_details = {
   "An example plugin",
   "Example/FirstExample",
   "Shows the basic structure of a plugin",
-  VERSION,
+  "0.1",
   "your name <your.name@your.isp>",
   "(C) 2001",
 };

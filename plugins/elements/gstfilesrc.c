@@ -20,8 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
+#include <gst/gst.h>
 #include "gstfilesrc.h"
 
 #include <stdio.h>
@@ -68,6 +71,9 @@
  * a really good option...), then we can do that.
  */
 
+
+GST_DEBUG_CATEGORY (gst_filesrc_debug);
+#define GST_CAT_DEFAULT gst_filesrc_debug
 
 GstElementDetails gst_filesrc_details = {
   "File Source",
@@ -299,7 +305,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
         src->mapsize = g_value_get_ulong (value);
         g_object_notify (G_OBJECT (src), "mmapsize");
       } else {
-        GST_INFO (0, "invalid mapsize, must a multiple of pagesize, which is %d", 
+        GST_INFO ( "invalid mapsize, must a multiple of pagesize, which is %d", 
 	          src->pagesize);
       }
       break;
@@ -369,7 +375,7 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
   munmap (GST_BUFFER_DATA (buf), GST_BUFFER_MAXSIZE (buf));
   /* cast to unsigned long, since there's no gportable way to print
    * guint64 as hex */
-  GST_DEBUG (0, "unmapped region %08lx+%08lx at %p", 
+  GST_DEBUG ( "unmapped region %08lx+%08lx at %p", 
 		  (unsigned long) GST_BUFFER_OFFSET (buf),
 		  (unsigned long) GST_BUFFER_MAXSIZE (buf), 
 		  GST_BUFFER_DATA (buf));
@@ -400,7 +406,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
  	     size, src->fd, offset, strerror (errno));
     return NULL;
   }
-  GST_DEBUG (0, "mapped region %08lx+%08lx from file into memory at %p", 
+  GST_DEBUG ( "mapped region %08lx+%08lx from file into memory at %p", 
 		  (unsigned long)offset, (unsigned long)size, mmapregion);
 
   /* time to allocate a new mapbuf */
@@ -504,7 +510,7 @@ gst_filesrc_get (GstPad *pad)
     GstEvent *event;
 
     src->seek_happened = FALSE;
-    GST_DEBUG (GST_CAT_EVENT, "filesrc sending discont");
+    GST_DEBUG ("filesrc sending discont");
     event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
     src->need_flush = FALSE;
     return GST_BUFFER (event);
@@ -512,14 +518,14 @@ gst_filesrc_get (GstPad *pad)
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
-    GST_DEBUG (GST_CAT_EVENT, "filesrc sending flush");
+    GST_DEBUG ("filesrc sending flush");
     return GST_BUFFER (gst_event_new_flush ());
   }
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
-    GST_DEBUG (0, "filesrc eos %" G_GINT64_FORMAT
-		  " %" G_GINT64_FORMAT, src->curoffset, src->filelen);
+    GST_DEBUG ("filesrc eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
+               src->curoffset, src->filelen);
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
@@ -537,9 +543,9 @@ gst_filesrc_get (GstPad *pad)
     readend = src->curoffset + readsize;
   }
 
-  GST_DEBUG (0, "attempting to read %08lx, %08lx, %08lx, %08lx", 
-		  (unsigned long)readsize, (unsigned long)readend,
-		  (unsigned long)mapstart, (unsigned long)mapend);
+  GST_LOG ("attempting to read %08lx, %08lx, %08lx, %08lx", 
+	   (unsigned long)readsize, (unsigned long)readend,
+	   (unsigned long)mapstart, (unsigned long)mapend);
 
   /* if the start is past the mapstart */
   if (src->curoffset >= mapstart) {
@@ -649,7 +655,7 @@ gst_filesrc_open_file (GstFileSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
 
-  GST_DEBUG(0, "opening file %s",src->filename);
+  GST_DEBUG ( "opening file %s",src->filename);
 
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
@@ -779,7 +785,7 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 {
   GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
-  GST_DEBUG(0, "event %d", GST_EVENT_TYPE (event));
+  GST_DEBUG ( "event %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -797,19 +803,19 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
           if (offset > src->filelen) 
 	    goto error;
           src->curoffset = offset;
-          GST_DEBUG(0, "seek set pending to %" G_GINT64_FORMAT, src->curoffset);
+          GST_DEBUG ( "seek set pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_CUR:
           if (offset + src->curoffset > src->filelen) 
 	    goto error;
           src->curoffset += offset;
-          GST_DEBUG(0, "seek cur pending to %" G_GINT64_FORMAT, src->curoffset);
+          GST_DEBUG ( "seek cur pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_END:
           if (ABS (offset) > src->filelen) 
 	    goto error;
           src->curoffset = src->filelen - ABS (offset);
-          GST_DEBUG(0, "seek end pending to %" G_GINT64_FORMAT, src->curoffset);
+          GST_DEBUG ( "seek end pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
 	default:
           goto error;

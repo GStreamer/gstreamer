@@ -20,15 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define GST_DEBUG_ENABLED */
-
-#include <gst/gstconfig.h>
 
 #include "gst_private.h"
 
+#include <gst/gstconfig.h>
+
 #include "gstautoplug.h"
 #include "gstregistrypool.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 enum {
   NEW_OBJECT,
@@ -327,7 +326,7 @@ gst_autoplug_factory_find (const gchar *name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  GST_DEBUG (0,"gstautoplug: find \"%s\"", name);
+  GST_DEBUG ("gstautoplug: find \"%s\"", name);
 
   feature = gst_registry_pool_find_feature (name, GST_TYPE_AUTOPLUG_FACTORY);
   if (feature)

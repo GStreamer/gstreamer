@@ -21,10 +21,17 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <errno.h>
 #include "gstfilesink.h"
 #include <string.h>
+
+GST_DEBUG_CATEGORY (gst_filesink_debug);
+#define GST_CAT_DEFAULT gst_filesink_debug
 
 GstElementDetails gst_filesink_details = {
   "File Sink",

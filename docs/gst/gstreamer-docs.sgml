@@ -3,23 +3,21 @@
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY GstAutoplug SYSTEM "xml/gstautoplug.xml">
-<!ENTITY GstAutoplugFactory SYSTEM "xml/gstautoplugfactory.xml">
 <!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
+<!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
 <!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
-<!ENTITY GstBufferPool SYSTEM "xml/gstbufferpool.xml">
+<!ENTITY GstBufferPool SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
-<!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
 <!ENTITY GstLog SYSTEM "xml/gstlog.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
-<!ENTITY GstPadTemplate SYSTEM "xml/gstpadtemplate.xml">
 <!ENTITY GstParse SYSTEM "xml/gstparse.xml">
 <!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
@@ -30,10 +28,9 @@
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
 <!ENTITY GstScheduler SYSTEM "xml/gstscheduler.xml">
-<!ENTITY GstSchedulerFactory SYSTEM "xml/gstschedulerfactory.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstType SYSTEM "xml/gsttype.xml">
-<!ENTITY GstTypeFactory SYSTEM "xml/gsttypefactory.xml">
+<!ENTITY GstTypeFactory SYSTEM "xml/gsttype.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
 <!ENTITY GstProps SYSTEM "xml/gstprops.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
@@ -46,7 +43,6 @@
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 -->
 <!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
-<!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
 <!ENTITY cothreads SYSTEM "xml/cothreads.xml">
 
 <!-- if none of the API is documented, these shouldn't go in
@@ -67,6 +63,8 @@
 <!ENTITY GstTee SYSTEM "xml/gsttee.xml">
 
 <!ENTITY gstreamer-tree-index SYSTEM "xml/tree_index.xml">
+
+<!ENTITY hash "#">
 ]>
 <book>
   <bookinfo>
@@ -92,24 +90,20 @@ with some more specialized elements.</para>
 
     &Gst;
     &GstAutoplug;
-    &GstAutoplugFactory;
     &GstBin;
     &GstBuffer;
-    &GstBufferPool;
+    &GstConfig;
     &GstCaps;
     &GstClock;
     &GstCpu;
     &GstData;
     &GstElement;
-    &GstElementFactory;
     &GstEvent;
     &GstFormat;
     &GstIndex;
-    &GstIndexFactory;
     &GstInfo;
     &GstObject;
     &GstPad;
-    &GstPadTemplate;
     &GstParse;
     &GstPipeline;
     &GstPlugin;
@@ -122,11 +116,9 @@ with some more specialized elements.</para>
     &GstRegistry;
     &GstRegistryPool;
     &GstScheduler;
-    &GstSchedulerFactory;
     &GstSystemClock;
     &GstThread;
     &GstType;
-    &GstTypeFactory;
 <!-- no API docs
     &GstTypeFind; -->
     &GstUri;

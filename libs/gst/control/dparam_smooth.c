@@ -19,12 +19,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <math.h>
 #include <string.h>
 #include <gst/gstinfo.h>
 
 #include "dparam_smooth.h"
 #include "dparammanager.h"
+
+GST_DEBUG_CATEGORY_EXTERN(_gst_control_debug);
 
 static void gst_dpsmooth_class_init (GstDParamSmoothClass *klass);
 static void gst_dpsmooth_init (GstDParamSmooth *dparam);
@@ -157,7 +163,7 @@ gst_dpsmooth_set_property (GObject *object, guint prop_id, const GValue *value, 
 
 		case ARG_SLOPE_TIME:
 			dpsmooth->slope_time = g_value_get_int64 (value);
-			GST_DEBUG(GST_CAT_PARAMS, "dpsmooth->slope_time:%"
+			GST_DEBUG ("dpsmooth->slope_time:%"
 						  G_GINT64_FORMAT,
 				  dpsmooth->slope_time);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
@@ -221,7 +227,7 @@ gst_dpsmooth_value_changed_float (GstDParam *dparam)
 
 	dpsmooth->need_interp_times = TRUE;
 
-	GST_DEBUG(GST_CAT_PARAMS, "%f to %f ratio:%f duration:%"
+	GST_DEBUG ("%f to %f ratio:%f duration:%"
 				  G_GINT64_FORMAT "\n", 
 	          dpsmooth->start_float, dparam->value_float, time_ratio, dpsmooth->duration_interp);
 }
@@ -249,7 +255,7 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 		}
 		dpsmooth->current_float = dparam->value_float;
 		
-		GST_DEBUG(GST_CAT_PARAMS, "interp finished at %"
+		GST_DEBUG ("interp finished at %"
 					  G_GINT64_FORMAT, timestamp); 
 
 		GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;  
@@ -270,7 +276,7 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 		GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;  
 		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = dpsmooth->start_interp + dpsmooth->update_period; 
 		
-		GST_DEBUG(GST_CAT_PARAMS, "interp started at %" G_GINT64_FORMAT, timestamp); 
+		GST_DEBUG ("interp started at %" G_GINT64_FORMAT, timestamp); 
 
 		GST_DPARAM_UNLOCK(dparam);
 		return;
@@ -279,8 +285,8 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 
 	time_ratio = (gfloat)(timestamp - dpsmooth->start_interp) / (gfloat)dpsmooth->duration_interp;
 
-	GST_DEBUG(GST_CAT_PARAMS, "start:%" G_GINT64_FORMAT " current:%" G_GINT64_FORMAT " end:%" G_GINT64_FORMAT " ratio%f", dpsmooth->start_interp, timestamp, dpsmooth->end_interp, time_ratio); 
-	GST_DEBUG(GST_CAT_PARAMS, "pre  start:%f current:%f target:%f", dpsmooth->start_float, dpsmooth->current_float, dparam->value_float);
+	GST_DEBUG ("start:%" G_GINT64_FORMAT " current:%" G_GINT64_FORMAT " end:%" G_GINT64_FORMAT " ratio%f", dpsmooth->start_interp, timestamp, dpsmooth->end_interp, time_ratio); 
+	GST_DEBUG ("pre  start:%f current:%f target:%f", dpsmooth->start_float, dpsmooth->current_float, dparam->value_float);
 	                           
 	dpsmooth->current_float = dpsmooth->start_float + (dpsmooth->diff_float * time_ratio);
 
@@ -298,8 +304,7 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 		g_value_set_float(value, dpsmooth->current_float); 
 	}
 
-	GST_DEBUG(GST_CAT_PARAMS, "post start:%f current:%f target:%f", dpsmooth->start_float, dpsmooth->current_float, dparam->value_float);
+	GST_DEBUG ("post start:%f current:%f target:%f", dpsmooth->start_float, dpsmooth->current_float, dparam->value_float);
 
 	GST_DPARAM_UNLOCK(dparam);
 }
-

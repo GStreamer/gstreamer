@@ -20,7 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define DEBUG_ENABLED */
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -35,6 +38,7 @@
 #include <gst/gstscheduler.h>
 #include <gst/gstautoplug.h>
 #include <gst/gsturi.h>
+#include <gst/gstinfo.h>
 
 #include "gstxmlregistry.h"
 
@@ -422,7 +426,7 @@ plugin_times_older_than_recurse(gchar *path, time_t regtime)
   time_t pathtime = get_time(path);
 
   if (pathtime > regtime) {
-    GST_INFO (GST_CAT_PLUGIN_LOADING,
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
                      "time for %s was %ld; more recent than registry time of %ld\n",
                      path, (long)pathtime, (long)regtime);
     return FALSE;
@@ -455,7 +459,7 @@ plugin_times_older_than(GList *paths, time_t regtime)
    */
 
   while (paths) {
-    GST_DEBUG (GST_CAT_PLUGIN_LOADING,
+    GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
                       "comparing plugin times from %s with %ld\n",
                       (gchar *)paths->data, (long) regtime);
     if(!plugin_times_older_than_recurse(paths->data, regtime))
@@ -485,10 +489,10 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
       /* if it's not writable, then don't bother */
       if (!(gst_registry->flags & GST_REGISTRY_WRITABLE))
       {
-        GST_INFO (GST_CAT_GST_INIT, "Registry isn't writable");
+        GST_CAT_INFO (GST_CAT_GST_INIT, "Registry isn't writable");
 	return FALSE;
       }
-      GST_INFO (GST_CAT_GST_INIT, "Registry doesn't exist, trying to build...");
+      GST_CAT_INFO (GST_CAT_GST_INIT, "Registry doesn't exist, trying to build...");
       gst_registry_rebuild (gst_registry);
       gst_registry_save (gst_registry);
       /* FIXME: verify that the flags actually get updated ! */
@@ -502,18 +506,18 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
       if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
-        GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
+        GST_CAT_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
       
         gst_registry_rebuild (gst_registry);
 
         gst_registry_save (gst_registry);
 
         if (!plugin_times_older_than (paths, get_time (registry->location))) {
-          GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
+          GST_CAT_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
           return FALSE;
         }
       } else {
-        GST_INFO (GST_CAT_PLUGIN_LOADING, "Can't write to this registry and it's out of date, ignoring it");
+        GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "Can't write to this registry and it's out of date, ignoring it");
         return FALSE;
       }
     }
@@ -613,7 +617,7 @@ gst_xml_registry_load (GstRegistry *registry)
   seconds = g_timer_elapsed (timer, NULL);
   g_timer_destroy (timer);
 
-  GST_INFO (0, "registry: loaded %s in %f seconds\n          (%s)", 
+  GST_INFO ( "registry: loaded %s in %f seconds\n          (%s)", 
 	   registry->name, seconds, xmlregistry->location);
 
   CLASS (xmlregistry)->close_func (xmlregistry);
@@ -698,7 +702,7 @@ gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
 {
   GstTypeFactory *factory = (GstTypeFactory *)priv;
 
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
+  GST_CAT_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     if (factory->typefindfunc) {
@@ -1613,7 +1617,7 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   while (walk) {
     gchar *path = (gchar *) walk->data;
     
-    GST_INFO (GST_CAT_PLUGIN_LOADING, 
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, 
 	      "Rebuilding registry %p in directory %s...", registry, path);
 
     plugins = g_list_concat (plugins, 
@@ -1654,7 +1658,7 @@ gst_xml_registry_rebuild (GstRegistry *registry)
       g_warning ("Bizarre behavior: plugin %s actually loaded", 
 	         ((GstPlugin *) walk->data)->filename);
     } else {
-      GST_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s", 
+      GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s", 
                 ((GstPlugin *) walk->data)->filename, error->message);
       g_print ("Plugin %s failed to load\n",
                 ((GstPlugin *) walk->data)->filename);

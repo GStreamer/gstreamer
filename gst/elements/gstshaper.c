@@ -22,7 +22,15 @@
 
 
 #include <stdlib.h>
-#include <gstshaper.h>
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include "gstshaper.h"
+
+GST_DEBUG_CATEGORY (gst_shaper_debug);
+#define GST_CAT_DEFAULT gst_shaper_debug
 
 GstElementDetails gst_shaper_details = {
   "Shaper",
@@ -380,4 +388,3 @@ gst_shaper_factory_init (GstElementFactory *factory)
 
   return TRUE;
 }
-

@@ -24,14 +24,12 @@
 #ifndef __GST_SPIDER_IDENTITY_H__
 #define __GST_SPIDER_IDENTITY_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_spider_identity_details;
-
+extern GstElementDetails gst_spider_identity_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_spider_identity_debug);
 
 #define GST_TYPE_SPIDER_IDENTITY \
   (gst_spider_identity_get_type())

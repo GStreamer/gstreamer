@@ -25,13 +25,12 @@
 #define __GST_IDENTITY_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_identity_details;
-
+extern GstElementDetails gst_identity_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_identity_debug);
 
 #define GST_TYPE_IDENTITY \
   (gst_identity_get_type())

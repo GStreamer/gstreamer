@@ -105,6 +105,7 @@ main (gint argc, gchar *argv[])
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
   if (TESTNUM == 5) {
+    /* I don't this test is supposed to work */
     GstElement *sink;
 
     sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");

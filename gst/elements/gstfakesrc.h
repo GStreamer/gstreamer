@@ -24,13 +24,12 @@
 #ifndef __GST_FAKESRC_H__
 #define __GST_FAKESRC_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fakesrc_details;
+extern GstElementDetails gst_fakesrc_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_fakesrc_debug);
 
 typedef enum {
   FAKESRC_FIRST_LAST_LOOP = 1,

@@ -87,7 +87,7 @@ gst_buffer_new (void)
 
   buffer = gst_mem_pool_alloc (_gst_buffer_pool);
 
-  GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
+  GST_CAT_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
 
 #ifdef HAVE_ATOMIC_H
   atomic_set (&buffer->refcount, 1);
@@ -130,7 +130,7 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint32 offset, guint32 size)
   buffer->free = pool->buffer_free;
   buffer->copy = pool->buffer_copy;
   
-  GST_INFO (GST_CAT_BUFFER,"creating new buffer %p from pool %p (size %x, offset %x)", 
+  GST_CAT_INFO (GST_CAT_BUFFER,"creating new buffer %p from pool %p (size %x, offset %x)", 
 		  buffer, pool, size, offset);
 
   return buffer;
@@ -161,7 +161,7 @@ gst_buffer_create_sub (GstBuffer *parent,
   buffer = gst_mem_pool_alloc (_gst_buffer_pool);
   GST_DATA_TYPE(buffer) = _gst_buffer_type;
 
-  GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
+  GST_CAT_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
 		  buffer, parent, size, offset);
 
 #ifdef HAVE_ATOMIC_H
@@ -226,7 +226,7 @@ gst_buffer_append (GstBuffer *buffer,
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(append) > 0, NULL);
 
-  GST_INFO (GST_CAT_BUFFER,"appending buffers %p and %p",buffer,append);
+  GST_CAT_INFO (GST_CAT_BUFFER,"appending buffers %p and %p",buffer,append);
 
   GST_BUFFER_LOCK (buffer);
   /* the buffer is not used by anyone else */
@@ -265,7 +265,7 @@ gst_buffer_destroy (GstBuffer *buffer)
 
   g_return_if_fail (buffer != NULL);
   
-  GST_INFO (GST_CAT_BUFFER, "freeing %sbuffer %p",
+  GST_CAT_INFO (GST_CAT_BUFFER, "freeing %sbuffer %p",
 	    (buffer->parent?"sub":""),
 	    buffer);
   
@@ -301,7 +301,7 @@ gst_buffer_ref (GstBuffer *buffer)
   g_return_if_fail (buffer != NULL);
   g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
-  GST_INFO (GST_CAT_BUFFER, "ref buffer %p\n", buffer);
+  GST_CAT_INFO (GST_CAT_BUFFER, "ref buffer %p\n", buffer);
 
 #ifdef HAVE_ATOMIC_H
   atomic_inc (&(buffer->refcount));
@@ -327,7 +327,7 @@ gst_buffer_unref (GstBuffer *buffer)
   g_return_if_fail (buffer != NULL);
   g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
-  GST_INFO (GST_CAT_BUFFER, "unref buffer %p\n", buffer);
+  GST_CAT_INFO (GST_CAT_BUFFER, "unref buffer %p\n", buffer);
 
 #ifdef HAVE_ATOMIC_H
   zero = atomic_dec_and_test (&(buffer->refcount));

@@ -22,6 +22,8 @@
 
 #include <string.h>
 
+#include "gst_private.h"
+
 #include "gstinfo.h"
 #include "gstregistrypool.h"
 #include "gstlog.h"
@@ -326,4 +328,3 @@ gst_registry_pool_get_prefered (GstRegistryFlags flags)
 #endif /* GST_DISABLE_REGISTRY */
   return NULL;
 }
-

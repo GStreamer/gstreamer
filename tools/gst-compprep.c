@@ -1,5 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <gst/gst.h>
-#include "config.h"
+
+GST_DEBUG_CATEGORY_STATIC(debug_compprep);
+#define GST_CAT_DEFAULT debug_compprep
 
 int main(int argc,char *argv[]) {
   xmlDocPtr doc;
@@ -12,9 +18,8 @@ int main(int argc,char *argv[]) {
   GParamSpec **property_specs;
   guint num_properties,i;
 
-  gst_debug_set_categories(0);
-  gst_info_set_categories(0);
   gst_init(&argc,&argv);
+  GST_DEBUG_CATEGORY_INIT (debug_compprep, "compprep", GST_DEBUG_BOLD, "gst-compprep application");
 
   doc = xmlNewDoc("1.0");
   doc->xmlRootNode = xmlNewDocNode(doc, NULL, "GST-CompletionRegistry", NULL);
@@ -44,11 +49,10 @@ int main(int argc,char *argv[]) {
 		GST_PLUGIN_FEATURE_NAME(factory));
 
       element = gst_element_factory_create(factory,NULL);
-      GST_DEBUG(GST_CAT_PLUGIN_LOADING, "adding factory %s", 
-              GST_PLUGIN_FEATURE_NAME(factory));
+      GST_DEBUG ("adding factory %s", GST_PLUGIN_FEATURE_NAME(factory));
       if (element == NULL) {
-        fprintf(stderr,"couldn't construct element from factory %s\n", 
-			gst_object_get_name (GST_OBJECT (factory)));
+        GST_ERROR ("couldn't construct element from factory %s\n", 
+		   gst_object_get_name (GST_OBJECT (factory)));
         return 1;
       }
 

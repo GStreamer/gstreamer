@@ -25,7 +25,7 @@
 #include "gstcaps.h"
 #include "gsttype.h"
 #include "gstmemchunk.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
@@ -253,7 +253,7 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
   gst_alloc_trace_new (_gst_caps_trace, caps);
 #endif
 
-  GST_DEBUG (GST_CAT_CAPS, "new %p, props %p", caps, props);
+  GST_CAT_LOG (GST_CAT_CAPS, "new %p, props %p", caps, props);
 
   gst_props_ref (props);
   gst_props_sink (props);
@@ -318,7 +318,7 @@ gst_caps_destroy (GstCaps *caps)
 
   next = caps->next;
 
-  GST_DEBUG (GST_CAT_CAPS, "destroy %p", caps);
+  GST_CAT_LOG (GST_CAT_CAPS, "destroy %p", caps);
 
   gst_props_unref (caps->properties);
   g_free (caps->name);
@@ -342,10 +342,14 @@ gst_caps_destroy (GstCaps *caps)
 void
 gst_caps_debug (GstCaps *caps, const gchar *label)
 {
-  GST_DEBUG_ENTER ("caps debug: %s", label);
+  GST_CAT_DEBUG (GST_CAT_CAPS, "starting caps debug: %s", label);
+  if (caps && caps->refcount == 0) {
+    g_warning ("Warning: refcount of caps %s is 0", label);
+    return;
+  }
 
   while (caps) {
-    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed) (refcount %d) %s", 
+    GST_CAT_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed) (refcount %d) %s", 
 	       caps, caps->name, gst_caps_get_mime (caps), 
                GST_CAPS_IS_FIXED (caps) ? "" : "NOT ", caps->refcount,
                GST_CAPS_IS_FLOATING (caps) ? "FLOATING" : "");
@@ -354,12 +358,12 @@ gst_caps_debug (GstCaps *caps, const gchar *label)
       gst_props_debug (caps->properties);
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS, "no properties");
+      GST_CAT_DEBUG (GST_CAT_CAPS, "no properties");
     }
 
     caps = caps->next;
   }
-  GST_DEBUG_LEAVE ("caps debug");
+  GST_CAT_DEBUG (GST_CAT_CAPS, "finished caps debug");
 }
 
 /**
@@ -381,7 +385,7 @@ gst_caps_unref (GstCaps *caps)
 
   g_return_val_if_fail (caps->refcount > 0, NULL);
 
-  GST_DEBUG (GST_CAT_CAPS, "unref %p (%d->%d) %d", 
+  GST_CAT_LOG (GST_CAT_CAPS, "unref %p (%d->%d) %d", 
 	     caps, caps->refcount, caps->refcount-1, GST_CAPS_FLAGS (caps));
 
   caps->refcount--;
@@ -410,7 +414,7 @@ gst_caps_ref (GstCaps *caps)
 
   g_return_val_if_fail (caps->refcount > 0, NULL);
 
-  GST_DEBUG (GST_CAT_CAPS, "ref %p (%d->%d) %d", 
+  GST_CAT_LOG (GST_CAT_CAPS, "ref %p (%d->%d) %d", 
 	     caps, caps->refcount, caps->refcount+1, GST_CAPS_FLAGS (caps));
 
   caps->refcount++;
@@ -431,7 +435,7 @@ gst_caps_sink (GstCaps *caps)
     return;
 
   if (GST_CAPS_IS_FLOATING (caps)) {
-    GST_DEBUG (GST_CAT_CAPS, "sink %p", caps);
+    GST_CAT_LOG (GST_CAT_CAPS, "sink %p", caps);
 
     GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FLOATING);
     gst_caps_unref (caps);
@@ -785,7 +789,7 @@ static gboolean
 gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps->id != tocaps->id) {
-    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)",
+    GST_CAT_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)",
 	       gst_type_find_by_id (fromcaps->id)->mime, 
 	       gst_type_find_by_id (tocaps->id)->mime);
     return FALSE;
@@ -796,13 +800,13 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
       return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS,"no source caps");
+      GST_CAT_DEBUG (GST_CAT_CAPS,"no source caps");
       return FALSE;
     }
   }
   else {
     /* assume it accepts everything */
-    GST_DEBUG (GST_CAT_CAPS,"no caps");
+    GST_CAT_DEBUG (GST_CAT_CAPS,"no caps");
     return TRUE;
   }
 }
@@ -823,13 +827,13 @@ gst_caps_is_always_compatible (GstCaps *fromcaps, GstCaps *tocaps)
   if (fromcaps == NULL) {
     if (tocaps == NULL) {
       /* if both are NULL, they can always link.  Think filesrc ! filesink */
-      GST_DEBUG (GST_CAT_CAPS, "both caps NULL, compatible");
+      GST_CAT_DEBUG (GST_CAT_CAPS, "both caps NULL, compatible");
       return TRUE;
     }
     else {
       /* if source caps are NULL, it could be sending anything, so the
        * destination can't know if it can accept this.  Think filesrc ! mad */
-      GST_DEBUG (GST_CAT_CAPS, "source caps NULL, not guaranteed compatible");
+      GST_CAT_DEBUG (GST_CAT_CAPS, "source caps NULL, not guaranteed compatible");
       return FALSE;
     }
   }
@@ -837,7 +841,7 @@ gst_caps_is_always_compatible (GstCaps *fromcaps, GstCaps *tocaps)
     if (tocaps == NULL) {
       /* if the dest caps are NULL, the element can accept anything, always,
        * so they're compatible by definition.  Think mad ! filesink */
-      GST_DEBUG (GST_CAT_CAPS,"destination caps NULL");
+      GST_CAT_DEBUG (GST_CAT_CAPS,"destination caps NULL");
       return TRUE;
     }
   }
@@ -868,7 +872,7 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
   GstProps *props;
 
   if (caps1->id != caps2->id) {
-    GST_DEBUG (GST_CAT_CAPS, "mime types differ (%s to %s)",
+    GST_CAT_DEBUG (GST_CAT_CAPS, "mime types differ (%s to %s)",
 	       gst_type_find_by_id (caps1->id)->mime, 
 	       gst_type_find_by_id (caps2->id)->mime);
     return NULL;
@@ -907,14 +911,14 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
   GstCaps *result = NULL, *walk = NULL;
 
   /* printing the name is not useful here since caps can be chained */
-  GST_DEBUG (GST_CAT_CAPS, "intersecting caps %p and %p", caps1, caps2);
+  GST_CAT_DEBUG (GST_CAT_CAPS, "intersecting caps %p and %p", caps1, caps2);
 		  
   if (caps1 == NULL) {
-    GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
+    GST_CAT_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
     return gst_caps_ref (caps2);
   }
   if (caps2 == NULL) {
-    GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
+    GST_CAT_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
     return gst_caps_ref (caps1);
   }
 
@@ -953,14 +957,14 @@ gst_caps_union (GstCaps *caps1, GstCaps *caps2)
   GstCaps *result = NULL;
 
   /* printing the name is not useful here since caps can be chained */
-  GST_DEBUG (GST_CAT_CAPS, "making union of caps %p and %p", caps1, caps2);
+  GST_CAT_DEBUG (GST_CAT_CAPS, "making union of caps %p and %p", caps1, caps2);
 		  
   if (caps1 == NULL) {
-    GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
+    GST_CAT_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
     return gst_caps_ref (caps2);
   }
   if (caps2 == NULL) {
-    GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
+    GST_CAT_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
     return gst_caps_ref (caps1);
   }
 
@@ -986,7 +990,7 @@ gst_caps_normalize (GstCaps *caps)
   if (caps == NULL)
     return caps;
 
-  GST_DEBUG (GST_CAT_CAPS, "normalizing caps %p ", caps);
+  GST_CAT_DEBUG (GST_CAT_CAPS, "normalizing caps %p ", caps);
 
   walk = caps;
 

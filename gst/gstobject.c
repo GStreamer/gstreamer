@@ -23,7 +23,8 @@
 #include "gst_private.h"
 
 #include "gstobject.h"
-#include "gstlog.h"
+#include "gstinfo.h"
+
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"
 #endif
@@ -211,8 +212,7 @@ gst_object_ref (GstObject *object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "ref %p '%s' %d->%d", object,
-	     GST_STR_NULL (GST_OBJECT_NAME (object)),
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
              G_OBJECT (object)->ref_count,
 	     G_OBJECT (object)->ref_count + 1);
 
@@ -233,8 +233,7 @@ gst_object_unref (GstObject *object)
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (G_OBJECT (object)->ref_count > 0);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "unref %p '%s' %d->%d", object,
-	     GST_STR_NULL (GST_OBJECT_NAME (object)),
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
              G_OBJECT (object)->ref_count,
 	     G_OBJECT (object)->ref_count - 1);
 
@@ -256,7 +255,7 @@ gst_object_sink (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "sink %p '%s'", object, GST_STR_NULL (GST_OBJECT_NAME (object)));
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
 
   if (GST_OBJECT_FLOATING (object)) {
     GST_FLAG_UNSET (object, GST_FLOATING);
@@ -275,7 +274,13 @@ gst_object_sink (GstObject *object)
 void
 gst_object_replace (GstObject **oldobj, GstObject *newobj)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "replace %p %p", *oldobj, newobj);
+  g_return_if_fail (oldobj != NULL);
+  g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
+  g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
+	
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s %s", 
+	       *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)", 
+	       newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)");
 
   if (*oldobj != newobj) {
     if (newobj)  gst_object_ref (newobj);
@@ -288,7 +293,7 @@ gst_object_replace (GstObject **oldobj, GstObject *newobj)
 static void
 gst_object_dispose (GObject *object)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %p '%s'", object, GST_STR_NULL (GST_OBJECT_NAME (object)));
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
   
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
   GST_OBJECT_PARENT (object) = NULL;
@@ -302,7 +307,7 @@ gst_object_finalize (GObject *object)
 {
   GstObject *gstobject = GST_OBJECT (object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "finalize %p '%s'", object, GST_STR_NULL (GST_OBJECT_NAME (object)));
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "finalize");
 
   g_signal_handlers_destroy (object);
 
@@ -346,7 +351,7 @@ gst_object_dispatch_properties_changed (GObject     *object,
   while (gst_object) {
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
-      GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object),
+      GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object),
                  GST_OBJECT_NAME (gst_object), pspecs[i]->name);
       g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name),
                      (GstObject *) object, pspecs[i]);
@@ -501,11 +506,7 @@ gst_object_set_parent (GstObject *object, GstObject *parent)
   g_return_if_fail (parent != NULL);
   g_return_if_fail (GST_IS_OBJECT (parent));
   g_return_if_fail (object != parent);
-
-  if (object->parent != NULL) {
-    GST_ERROR_OBJECT (object,object->parent, "object's parent is already set, must unparent first");
-    return;
-  }
+  g_return_if_fail (object->parent == NULL);
 
   gst_object_ref (object);
   gst_object_sink (object);
@@ -545,7 +546,7 @@ gst_object_unparent (GstObject *object)
   if (object->parent == NULL)
     return;
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "unparent '%s'",GST_OBJECT_NAME(object));
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
   
   g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0, object->parent);
 

@@ -23,7 +23,7 @@
 #include "gst_private.h"
 
 #include "gstxml.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "gstbin.h"
 
 enum {
@@ -346,14 +346,14 @@ gst_xml_get_element (GstXML *xml, const guchar *name)
   g_return_val_if_fail(xml != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  GST_DEBUG (0,"gstxml: getting element \"%s\"", name);
+  GST_DEBUG ("gstxml: getting element \"%s\"", name);
 
   topelements = gst_xml_get_topelements (xml);
 
   while (topelements) {
     GstElement *top = GST_ELEMENT (topelements->data);
 
-    GST_DEBUG (0,"gstxml: getting element \"%s\"", name);
+    GST_DEBUG ("gstxml: getting element \"%s\"", name);
     if (!strcmp (GST_ELEMENT_NAME (top), name)) {
       return top;
     }
@@ -399,7 +399,7 @@ gst_xml_make_element (xmlNodePtr cur, GstObject *parent)
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type != NULL, NULL);
 
-  GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"", name, type);
+  GST_CAT_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"", name, type);
 
   element = gst_element_factory_make (type, name);
 

@@ -29,6 +29,7 @@
 G_BEGIN_DECLS
 
 extern GstElementDetails gst_tee_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_tee_debug);
 
 #define GST_TYPE_TEE \
   (gst_tee_get_type())

@@ -27,9 +27,14 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-/*#define GST_DEBUG_ENABLED*/
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include "gstmultidisksrc.h"
+
+GST_DEBUG_CATEGORY (gst_multidisksrc_debug);
+#define GST_CAT_DEFAULT gst_multidisksrc_debug
 
 GstElementDetails gst_multidisksrc_details = {
   "Multi Disk Source",

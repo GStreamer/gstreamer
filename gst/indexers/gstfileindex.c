@@ -17,16 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst_private.h>
-#include <gst/gstversion.h>
-#include <gst/gstplugin.h>
-#include <gst/gstindex.h>
+#include <gst/gst.h>
 
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 
 #define GST_TYPE_FILE_INDEX		\
   (gst_file_index_get_type ())
@@ -193,7 +191,7 @@ gst_file_index_class_init (GstFileIndexClass *klass)
 static void
 gst_file_index_init (GstFileIndex *index)
 {
-  GST_DEBUG(0, "created new file index");
+  GST_DEBUG ( "created new file index");
 
   index->id_index = g_hash_table_new (g_int_hash, g_int_equal);
 }
@@ -789,11 +787,7 @@ show_entry (GstIndexEntry *entry)
 static void
 gst_file_index_add_entry (GstIndex *index, GstIndexEntry *entry)
 {
-  GstFileIndex *fileindex = GST_FILE_INDEX (index);
-
-  GST_DEBUG (0, "adding entry %p\n", fileindex);
-
-  //show_entry (entry);
+  GST_LOG_OBJECT (index, "adding this entry");
 
   switch (entry->type){
      case GST_INDEX_ENTRY_ID:

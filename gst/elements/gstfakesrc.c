@@ -24,11 +24,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gstfakesrc.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include "gstfakesrc.h"
 
 #define DEFAULT_SIZEMIN		0
 #define DEFAULT_SIZEMAX		4096
 #define DEFAULT_PARENTSIZE	4096*10
+
+GST_DEBUG_CATEGORY (gst_fakesrc_debug);
+#define GST_CAT_DEFAULT gst_fakesrc_debug
 
 GstElementDetails gst_fakesrc_details = {
   "Fake Source",
@@ -502,7 +509,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_EOS:
       src->eos = g_value_get_boolean (value);
-      GST_INFO (0, "will EOS on next buffer");
+      GST_INFO ( "will EOS on next buffer");
       break;
     case ARG_SILENT:
       src->silent = g_value_get_boolean (value);
@@ -753,7 +760,7 @@ gst_fakesrc_get(GstPad *pad)
   }
 
   if (src->eos) {
-    GST_INFO (0, "fakesrc is setting eos on pad");
+    GST_INFO ( "fakesrc is setting eos on pad");
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
 
@@ -770,10 +777,10 @@ gst_fakesrc_get(GstPad *pad)
     g_object_notify (G_OBJECT (src), "last_message");
   }
 
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "pre handoff emit");
+  GST_LOG_OBJECT (src, "pre handoff emit");
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                    buf, pad);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "post handoff emit");
+  GST_LOG_OBJECT (src, "post handoff emit");
 
   return buf;
 }
@@ -866,4 +873,3 @@ gst_fakesrc_factory_init (GstElementFactory *factory)
 
   return TRUE;
 }
-

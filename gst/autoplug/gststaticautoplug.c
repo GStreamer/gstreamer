@@ -26,6 +26,9 @@
 
 #define GST_AUTOPLUG_MAX_COST 999999
 
+GST_DEBUG_CATEGORY_STATIC(debug_category);
+#define GST_CAT_DEFAULT debug_category
+
 typedef guint   	(*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
 typedef const GList*  	(*GstAutoplugListFunction) (gpointer data);
 
@@ -86,6 +89,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstAutoplugFactory *factory;
 
+  GST_DEBUG_CATEGORY_INIT (debug_category, "STATIC_AUTOPLUG", 0, "static autoplugger element");
+
   gst_plugin_set_longname (plugin, "A static autoplugger");
 
   factory = gst_autoplug_factory_new ("static",
@@ -124,9 +129,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
           desttemp->direction == GST_PAD_SINK) {
 	if (gst_caps_is_always_compatible (gst_pad_template_get_caps (srctemp), 
 				gst_pad_template_get_caps (desttemp))) {
-	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can link with factory \"%s\"\n", GST_OBJECT_NAME (src), 
-			  GST_OBJECT_NAME (dest));
+	  GST_DEBUG ("factory \"%s\" can link with factory \"%s\"\n", GST_OBJECT_NAME (src), 
+		     GST_OBJECT_NAME (dest));
           return TRUE;
 	}
       }
@@ -135,9 +139,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
     srctemps = g_list_next (srctemps);
   }
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot link with factory \"%s\"\n", GST_OBJECT_NAME (src),
-			  GST_OBJECT_NAME (dest));
+  GST_DEBUG ("factory \"%s\" cannot link with factory \"%s\"\n", GST_OBJECT_NAME (src),
+	     GST_OBJECT_NAME (dest));
   return FALSE;
 }
 
@@ -147,8 +150,8 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   const GList *sinkpads;
   gboolean linked = FALSE;
 
-  GST_DEBUG (0,"gstpipeline: autoplug pad link function for \"%s\" to \"%s\"",
-		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
+  GST_DEBUG ("gstpipeline: autoplug pad link function for \"%s\" to \"%s\"",
+	     GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {
@@ -160,22 +163,22 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     {
       if (gst_caps_is_always_compatible (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
         gst_pad_link(pad, sinkpad);
-        GST_DEBUG (0,"gstpipeline: autolink pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
+        GST_DEBUG ("gstpipeline: autolink pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
 		       GST_ELEMENT_NAME(src));
-        GST_DEBUG (0,"pad \"%s\" in element %s", GST_PAD_NAME (sinkpad),
+        GST_DEBUG ("pad \"%s\" in element %s", GST_PAD_NAME (sinkpad),
 		      GST_ELEMENT_NAME(sink));
         linked = TRUE;
         break;
       }
       else {
-	GST_DEBUG (0,"pads incompatible %s, %s", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
+	GST_DEBUG ("pads incompatible %s, %s", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
     }
     sinkpads = g_list_next(sinkpads);
   }
 
   if (!linked) {
-    GST_DEBUG (0,"gstpipeline: no path to sinks for type");
+    GST_DEBUG ("gstpipeline: no path to sinks for type");
   }
   return linked;
 }
@@ -192,8 +195,8 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
   dynamic_pad_struct *info = (dynamic_pad_struct *)data;
   const GList *pads = gst_element_get_pad_list (element);
 
-  GST_DEBUG (0,"attempting to dynamically create a ghostpad for %s=%s", GST_ELEMENT_NAME (element),
-		  GST_PAD_NAME (pad));
+  GST_DEBUG ("attempting to dynamically create a ghostpad for %s=%s", GST_ELEMENT_NAME (element),
+	     GST_PAD_NAME (pad));
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
@@ -207,7 +210,7 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
       gst_element_add_ghost_pad (info->result, pad, name);
       g_free (name);
       
-      GST_DEBUG (0,"gstpipeline: new dynamic pad %s", GST_PAD_NAME (pad));
+      GST_DEBUG ("gstpipeline: new dynamic pad %s", GST_PAD_NAME (pad));
       break;
     }
   }
@@ -231,7 +234,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   }
 
   if (!linked) {
-    GST_DEBUG (0,"gstpipeline: delaying pad links for \"%s\" to \"%s\"",
+    GST_DEBUG ("gstpipeline: delaying pad links for \"%s\" to \"%s\"",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connect (G_OBJECT(src), "new_pad", 
 		    G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
@@ -302,7 +305,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 
     caps.sink = capslist;
 
-    GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
+    GST_INFO ("autoplugging two caps structures");
 
     elements =  gst_autoplug_func (caps.src, caps.sink,
 				   gst_autoplug_element_factory_get_list,
@@ -371,7 +374,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
       }
     }
 
-    GST_DEBUG (0,"common factory \"%s\"", GST_OBJECT_NAME (factory));
+    GST_DEBUG ("common factory \"%s\"", GST_OBJECT_NAME (factory));
     
     /* it is likely that the plugin is not loaded yet. thus when it loads it
      * will replace the elementfactory that gst built from the cache, and the
@@ -433,10 +436,10 @@ differ:
 
       factory = (GstElementFactory *)(factories[i]->data);
 
-      GST_DEBUG (0,"factory \"%s\"", GST_OBJECT_NAME (factory));
+      GST_DEBUG ("factory \"%s\"", GST_OBJECT_NAME (factory));
       element = gst_element_factory_create(factory, GST_OBJECT_NAME (factory));
 
-      GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
+      GST_DEBUG ("adding element %s", GST_ELEMENT_NAME (element));
       gst_bin_add(GST_BIN(thebin), element);
       gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
       
@@ -457,7 +460,7 @@ differ:
       gboolean have_pad = FALSE;
       endcaps = g_list_next (endcaps);
 
-      GST_DEBUG (0,"attempting to create a ghostpad for %s", GST_ELEMENT_NAME (thesrcelement));
+      GST_DEBUG ("attempting to create a ghostpad for %s", GST_ELEMENT_NAME (thesrcelement));
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
@@ -482,7 +485,7 @@ differ:
 	data->endcap = endcap;
 	data->i = i;
 
-        GST_DEBUG (0,"delaying the creation of a ghostpad for %s", GST_ELEMENT_NAME (thesrcelement));
+        GST_DEBUG ("delaying the creation of a ghostpad for %s", GST_ELEMENT_NAME (thesrcelement));
 	g_signal_connect (G_OBJECT (thesrcelement), "new_pad", 
 			G_CALLBACK (autoplug_dynamic_pad), data);
       }
@@ -525,7 +528,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
 
   current = rgnNodes[find_factory(rgnNodes, factory)].iPrev;
 
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factories found in autoplugging (reversed order)");
+  GST_INFO ("factories found in autoplugging (reversed order)");
 
   while (current != NULL)
   {
@@ -534,7 +537,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
     next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
     if (next) {
       factories = g_list_prepend (factories, current);
-      GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory: \"%s\"", GST_OBJECT_NAME (current));
+      GST_INFO ("factory: \"%s\"", GST_OBJECT_NAME (current));
     }
     current = next;
   }
@@ -642,4 +645,3 @@ gst_autoplug_func (gpointer src, gpointer sink,
 
   return construct_path (rgnNodes, sink);
 }
-

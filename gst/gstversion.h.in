@@ -24,9 +24,15 @@
 #ifndef __GST_VERSION_H__
 #define __GST_VERSION_H__
 
-#define GST_VERSION_MAJOR @GST_VERSION_MAJOR@
-#define GST_VERSION_MINOR @GST_VERSION_MINOR@
-#define GST_VERSION_MICRO @GST_VERSION_MICRO@
+/**
+ * Use these only when you want to know what GStreamer version your stuff was
+ * compiled against.
+ * Use the #gst_version function if you want to know which versiuon of 
+ * GStreamer you are currently linked against.
+ */
+#define GST_VERSION_MAJOR (@GST_VERSION_MAJOR@)
+#define GST_VERSION_MINOR (@GST_VERSION_MINOR@)
+#define GST_VERSION_MICRO (@GST_VERSION_MICRO@)
 
 void    gst_version     (guint *major, guint *minor, guint *micro);
 

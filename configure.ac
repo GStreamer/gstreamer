@@ -255,8 +255,6 @@ AC_HELP_STRING([--enable-plugin-builddir],[allow tests/demos to use non-installe
 esac], 
 [PLUGINS_USE_BUILDDIR=no]) dnl Default value
 
-GST_DEBUGINFO
-
 AC_ARG_ENABLE(profiling,
 AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profiling]),
 [case "${enableval}" in
@@ -327,6 +325,18 @@ AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 dnl Next, check for the optional components:
 dnl ========================================
 
+dnl debugging stuff
+AC_ARG_ENABLE(debug,
+AC_HELP_STRING([--disable-debug],[disable addition of -g debugging info]),
+[case "${enableval}" in
+  yes) USE_DEBUG=yes ;;
+  no)  USE_DEBUG=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+esac],
+[USE_DEBUG=yes]) dnl Default value
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, true)
+GST_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
+
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TYPEFIND, true)
@@ -350,8 +360,6 @@ translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PLUGIN, true)
 GST_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_URI, true)
 GST_SUBSYSTEM_DISABLE(URI,[uri handlers])
-
-GST_EXT_CFLAGS="$GST_EXT_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
 
 dnl ################################################
 dnl # Set defines according to variables set above #
@@ -514,6 +522,7 @@ AC_OUTPUT(
 Makefile
 include/Makefile
 gst/Makefile
+gst/gstconfig.h
 gst/gstversion.h
 gst/autoplug/Makefile
 gst/indexers/Makefile
@@ -541,6 +550,7 @@ testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
+testsuite/debug/Makefile
 testsuite/dynparams/Makefile
 testsuite/elements/Makefile
 testsuite/indexers/Makefile
@@ -569,7 +579,6 @@ tools/Makefile
 docs/Makefile
 docs/faq/Makefile
 docs/gst/Makefile
-docs/gst/gstreamer.types
 docs/libs/Makefile
 docs/manual/Makefile
 docs/pwg/Makefile

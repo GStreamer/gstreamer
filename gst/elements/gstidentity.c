@@ -22,8 +22,15 @@
 
 
 #include <stdlib.h>
-#include <gstidentity.h>
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include "gstidentity.h"
+
+GST_DEBUG_CATEGORY (gst_identity_debug);
+#define GST_CAT_DEFAULT gst_identity_debug
 
 GstElementDetails gst_identity_details = {
   "Identity",
@@ -282,7 +289,7 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
     gst_pad_push (identity->srcpad, buf);
 
     if (identity->sleep_time)
-      usleep (identity->sleep_time);
+      g_usleep (identity->sleep_time);
   }
 }
 

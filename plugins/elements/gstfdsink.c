@@ -20,9 +20,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gstfdsink.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include "gstfdsink.h"
 #include <unistd.h>
 
+GST_DEBUG_CATEGORY (gst_fdsink_debug);
+#define GST_CAT_DEFAULT gst_fdsink_debug
 
 GstElementDetails gst_fdsink_details = {
   "Filedescriptor Sink",
@@ -122,7 +128,7 @@ gst_fdsink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (fdsink->fd >= 0);
   
   if (GST_BUFFER_DATA (buf)) {
-    GST_DEBUG (0,"writing %d bytes to file descriptor %d",GST_BUFFER_SIZE (buf), fdsink->fd);
+    GST_DEBUG ("writing %d bytes to file descriptor %d",GST_BUFFER_SIZE (buf), fdsink->fd);
     write (fdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
   

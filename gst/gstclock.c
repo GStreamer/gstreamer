@@ -23,8 +23,9 @@
 #include <sys/time.h>
 
 #include "gst_private.h"
+
 #include "gstclock.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "gstmemchunk.h"
 
 #ifndef GST_DISABLE_TRACE
@@ -166,7 +167,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
   if (! GST_CLOCK_TIME_IS_VALID (requested)) {
-    GST_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _TIMEOUT");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _TIMEOUT");
     return GST_CLOCK_TIMEOUT;
   }
 
@@ -180,12 +181,12 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
     clock->entries = g_list_prepend (clock->entries, entry);
     GST_UNLOCK (clock);
 
-    GST_DEBUG (GST_CAT_CLOCK, "waiting on clock");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on clock");
     do {
       res = cclass->wait (clock, entry);
     }
     while (res == GST_CLOCK_ENTRY_RESTART);
-    GST_DEBUG (GST_CAT_CLOCK, "done waiting");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "done waiting");
 
     GST_LOCK (clock);
     clock->entries = g_list_remove (clock->entries, entry);
@@ -600,7 +601,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
 {
   GstClockTime itime = G_GINT64_CONSTANT (0);
 
-  GST_DEBUG (GST_CAT_CLOCK, "clock discont %" G_GUINT64_FORMAT
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "clock discont %" G_GUINT64_FORMAT
 		            " %" G_GUINT64_FORMAT " %d",
 			    time, clock->start_time, clock->accept_discont);
 
@@ -619,7 +620,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   }
   else {
     GST_UNLOCK (clock);
-    GST_DEBUG (GST_CAT_CLOCK, "clock discont refused %" G_GUINT64_FORMAT
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "clock discont refused %" G_GUINT64_FORMAT
 		              " %" G_GUINT64_FORMAT,
 			      time, clock->start_time);
     return FALSE;
@@ -631,7 +632,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   g_list_foreach (clock->entries, (GFunc) gst_clock_reschedule_func, NULL);
   GST_UNLOCK (clock);
 
-  GST_DEBUG (GST_CAT_CLOCK, "new time %" G_GUINT64_FORMAT,
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "new time %" G_GUINT64_FORMAT,
 	     gst_clock_get_time (clock));
 
   g_mutex_lock (clock->active_mutex);

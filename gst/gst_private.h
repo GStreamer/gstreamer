@@ -25,7 +25,8 @@
 #define __GST_PRIVATE_H__
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#  include "config.h"
+#endif
 
 /***** until we have gettext set up properly, don't even try this*/
 #if 0
@@ -48,12 +49,44 @@
 # endif /* ENABLE_NLS */
 #endif
 
-#endif /* HAVE_CONFIG_H */
-
-
 #include <stdlib.h>
 #include <string.h>
 
+/*** debugging categories *****************************************************/
+
+#ifndef GST_DISABLE_GST_DEBUG
+
 #include <gst/gstinfo.h>
+
+extern GstDebugCategory *GST_CAT_GST_INIT;
+extern GstDebugCategory *GST_CAT_COTHREADS;
+extern GstDebugCategory *GST_CAT_COTHREAD_SWITCH;
+extern GstDebugCategory *GST_CAT_AUTOPLUG;
+extern GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
+extern GstDebugCategory *GST_CAT_PARENTAGE;
+extern GstDebugCategory *GST_CAT_STATES;
+extern GstDebugCategory *GST_CAT_PLANNING;
+extern GstDebugCategory *GST_CAT_SCHEDULING;
+extern GstDebugCategory *GST_CAT_DATAFLOW;
+extern GstDebugCategory *GST_CAT_BUFFER;
+extern GstDebugCategory *GST_CAT_CAPS;
+extern GstDebugCategory *GST_CAT_CLOCK;
+extern GstDebugCategory *GST_CAT_ELEMENT_PADS;
+extern GstDebugCategory *GST_CAT_ELEMENT_FACTORY;
+extern GstDebugCategory *GST_CAT_PADS;
+extern GstDebugCategory *GST_CAT_PIPELINE;
+extern GstDebugCategory *GST_CAT_PLUGIN_LOADING;
+extern GstDebugCategory *GST_CAT_PLUGIN_INFO;
+extern GstDebugCategory *GST_CAT_PROPERTIES;
+extern GstDebugCategory *GST_CAT_THREAD;
+extern GstDebugCategory *GST_CAT_TYPES;
+extern GstDebugCategory *GST_CAT_XML;
+extern GstDebugCategory *GST_CAT_NEGOTIATION;
+extern GstDebugCategory *GST_CAT_REFCOUNTING;
+extern GstDebugCategory *GST_CAT_EVENT;
+extern GstDebugCategory *GST_CAT_PARAMS;
+extern GstDebugCategory *GST_CAT_CALL_TRACE;
+
+#endif
 
 #endif /* __GST_PRIVATE_H__ */

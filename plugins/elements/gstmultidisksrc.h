@@ -28,7 +28,8 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_multidisksrc_details;
+extern GstElementDetails gst_multidisksrc_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_multidisksrc_debug);
 
 #define GST_TYPE_MULTIDISKSRC \
   (gst_multidisksrc_get_type())

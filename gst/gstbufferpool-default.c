@@ -20,10 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gst_private.h"
+
 #include "gstbuffer.h"
 #include "gstinfo.h"
 #include "gstmemchunk.h"
-
 
 /* methods prefixed with underscores to avoid namespace collisions with
  * gstbuffer.c */
@@ -106,7 +107,7 @@ gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
   g_hash_table_insert (_default_pools, GINT_TO_POINTER (real_buffer_size), pool);
   g_mutex_unlock (_default_pool_lock);
   
-  GST_DEBUG (GST_CAT_BUFFER,"new default buffer pool %p bytes:%d size:%d",
+  GST_CAT_DEBUG (GST_CAT_BUFFER,"new default buffer pool %p bytes:%d size:%d",
              pool, real_buffer_size, pool_size);
   
   return pool;
@@ -121,7 +122,7 @@ _gst_buffer_pool_default_buffer_new (GstBufferPool *pool, guint64 offset,
   GstMemChunk *data_chunk = def->mem_chunk;
   
   buffer = gst_buffer_new ();
-  GST_INFO (GST_CAT_BUFFER, "creating new buffer %p from pool %p", buffer, pool);
+  GST_CAT_INFO (GST_CAT_BUFFER, "creating new buffer %p from pool %p", buffer, pool);
   
   GST_BUFFER_DATA (buffer) = gst_mem_chunk_alloc (data_chunk);
   
@@ -155,7 +156,7 @@ _gst_buffer_pool_default_free (GstData *data)
   
   real_buffer_size = (((def->size-1) / 32) + 1) * 32;
 
-  GST_DEBUG (GST_CAT_BUFFER,"destroying default buffer pool %p bytes:%d size:%d",
+  GST_CAT_DEBUG (GST_CAT_BUFFER,"destroying default buffer pool %p bytes:%d size:%d",
              pool, real_buffer_size, def->size);
   
   g_mutex_lock (_default_pool_lock);

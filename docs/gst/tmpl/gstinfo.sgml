@@ -2,315 +2,668 @@
 GstInfo
 
 <!-- ##### SECTION Short_Description ##### -->
-info/debugging/error handling
+debugging subsystem
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-gstinfo.c contains a number of debuggins subsystems.
+This file describes the debugging subsystem. The debugging subsystem works
+only after GStreamer was initilized - for example by calling #gst_init.
 </para>
 
-<para>The INFO subsystem is used to provide informative printouts to 
-application and plugin developers.  These messages can be enabled and  
-disabled via a category system, which is a bitmask enabling you to turn 
-on and off any subset of categories.</para>
-
-<para>The DEBUG subsystem is similar, but is intended for core developers
-and those writing more complex pipelines or filters.  It uses the same
-category system, but must be enabled at configure time else it's not
-compiled into the library.  autogen.sh automatically enables the DEBUG
-subsystem.
+<para>
+The debugging subsystem is used to send informational strings to the debugging 
+developer. Each messages has some properties attached to it. These properties
+are the debugging category, the severity (called "level" here) and an obtional
+#GObject it belongs to. Each of these messages is sent to all registered
+debugging handlers, which then handle the messages. GStreamer attaches a
+default handler on startup, which outputs requested messages to stderr.
 </para>
 
-<para>The ERROR subsystem doesn't use categories, but will print out a
-more verbose message, and attempt to print out a stack trace of the error
-before aborting the application.
+<para>
+Messages are output by using shortcut macros like #GST_DEBUG, 
+#GST_CAT_ERROR_OBJECT or similar. These all expand to calling #gst_debug_log 
+with the right parameters.
+The only thing a developer will probably want to do is define his own 
+categories. This is easily done with 3 lines. At the top of your code, declare
+the variables and set the default category.
+<informalexample>
+<programlisting>
+GST_DEBUG_CATEGORY (my_category);	/* define category */
+&hash;define GST_CAT_DEFAULT my_category     /* set as default */
+</programlisting>
+</informalexample>
+After that you only need to initialize the category.
+<informalexample>
+<programlisting>
+GST_DEBUG_CATEGORY_INIT (my_category, "my category", 0, "This is my very own");
+</programlisting>
+</informalexample>
+Initialization must be done before the category is used first. Plugins do this 
+in their plugin_init function, libraries and applications should do that
+during their initialization.
+</para>
+
+<para>
+The whole debugging subsystem can be disabled at build time with passing the
+--disable-gst-debug switch to configure. If this is done, every function, macro
+and even structs described in this file evaluate to default values or nothing
+at all. So don't take addresses of these functions or use other tricks.
+If you must do that for some reason, there is still an option. If the debugging
+subsystem was compiled out, #GST_DISABLE_GST_DEBUG is defined in &lt;gst/gst.h&gt;,
+so you can check that before doing your trick.
+Disabling the debugging subsystem will give you a slight (read: unnoticable) 
+speed increase and will reduce the size of your compiled code. The GStreamer 
+library itself becomes around 10% smaller.
+</para>
+
+<para>
+Please note that there are naming conventions for the names of debugging 
+categories. These are explained at GST_DEBUG_CATEGORY_INIT().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="gstreamer-gstconfig">configuration</link>, 
+<link linkend="gstreamer-gst">initialization</link> for command line parameters
+and environment variables that affect the debugging output.
 </para>
 
-<!-- ##### FUNCTION gst_get_category_name ##### -->
+<!-- ##### MACRO GST_STR_NULL ##### -->
 <para>
-
+Macro to use when a string must not be NULL, but may be NULL. If the string is
+NULL, "(NULL)" is printed instead.
+In GStreamer printf string arguments may not be NULL, because on some platforms
+(ie Solaris) the libc crashes in that case. This includes debugging strings.
 </para>
 
-@category: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_info_get_categories ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_info_set_categories ##### -->
-<para>
-
-</para>
-
-@categories: 
-
-
-<!-- ##### FUNCTION gst_info_enable_category ##### -->
-<para>
-
-</para>
-
-@category: 
-
-
-<!-- ##### FUNCTION gst_info_disable_category ##### -->
-<para>
-
-</para>
-
-@category: 
-
-
-<!-- ##### FUNCTION gst_default_info_handler ##### -->
-<para>
-
-</para>
-
-@category: 
-@incore: 
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@string: 
-
-
-<!-- ##### MACRO GST_INFO_ENABLED ##### -->
-<para>
-When defined, INFO printouts are compiled into the library.
-</para>
-
-
-
-<!-- ##### MACRO GST_INFO ##### -->
-<para>
-Print out any information usable at run-time by application developers.
-</para>
-
-@cat: the GST_CAT_... category for the information
-@...: printf arguments
-
-
-<!-- ##### MACRO GST_INFO_ELEMENT ##### -->
-<para>
-Print out information like #GST_INFO, but with an element pointer to clarify things.
-</para>
-
-@cat: the GST_CAT_... category for the information
-@element: pointer to the #GstElement in question
-@...: printf arguments
-
-
-<!-- ##### FUNCTION gst_debug_get_categories ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_debug_set_categories ##### -->
-<para>
-
-</para>
-
-@categories: 
-
-
-<!-- ##### FUNCTION gst_debug_enable_category ##### -->
-<para>
-
-</para>
-
-@category: 
-
-
-<!-- ##### FUNCTION gst_debug_disable_category ##### -->
-<para>
-
-</para>
-
-@category: 
-
-
-<!-- ##### MACRO GST_DEBUG_ENTER ##### -->
-<para>
-Called at the beginning of a function, it simply prints out a DEBUG string of "entering"
-in addition to the given string.
-</para>
-
-@...: printf arguments
-
-
-<!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
-<para>
-Called at the end of a function, it simply prints out a DEBUG string of "leaving"
-in addition to the given string.
-</para>
-
-@...: printf arguments
-
-
-<!-- ##### MACRO GST_DEBUG ##### -->
-<para>
-Print out debugging information.
-</para>
-
-@cat: the GST_CAT_... the debug falls within
-@...: printf arguments
-
-
-<!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
-<para>
-Add a function to the global function pointer table used for debugging.
-</para>
-
-@ptr: The pointer to add to the function table.
-
-
-<!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
-<para>
-Get the name of the given function pointer by looking up its name in the global
-function table.
-</para>
-
-@ptr: The pointer to look up.
+@str: The string to check.
+@Returns: A string that is guaranteed to be not NULL.
 
 
 <!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
 <para>
-Print out debugging statements for a pad.
+Evaluates to 2 strings, that describe the pad. Often used in debugging
+statements.
 </para>
 
 @pad: The pad to debug.
 
 
-<!-- ##### MACRO GST_DEBUG_THREAD_ARGS ##### -->
+<!-- ##### MACRO GST_FUNCTION ##### -->
 <para>
-Part of the colorized debug functions for threads
-</para>
-
-@id: The thread id.
-
-
-<!-- ##### MACRO GST_DEBUG_THREAD_FORMAT ##### -->
-<para>
-Part of the colorized debug functions for threads
+This macro should evaluate to the name of the current function and be should
+be defined when configuring your project, as it is compiler dependant. If it
+is not defined, some default value is used. It is used to provide debugging
+output with the function name of the message.
 </para>
 
 
 
-<!-- ##### MACRO GST_DEBUG_ELEMENT ##### -->
+<!-- ##### ENUM GstDebugLevel ##### -->
 <para>
-Print out usefull debugging info of an element.
+The level defines the importance of a debugging message. The more important a 
+message is, the greater the probability that the debugging system outputs it.
 </para>
 
-@cat: The category of this debugging statement.
-@element: The element to debug.
-@...: printf arguments
+@GST_LEVEL_NONE: No debugging level specified or desired. Used to deactivate
+debugging output.
+@GST_LEVEL_ERROR: Error messages are to be used only when an error occured 
+that stops the application from keeping working correctly.
+An examples is gst_element_error, which outputs a message with this priority.
+It does not mean that the application is terminating as with g_errror.
+@GST_LEVEL_WARNING: Warning messages are to inform about abnormal behaviour
+that could lead to problems or weird behaviour later on. An example of this 
+would be clocking issues ("your computer is pretty slow") or broken input
+data ("Can't synchronize to stream.")
+@GST_LEVEL_INFO: Informational messages should be used to keep the developer
+updated about what is happening.
+Examples where this should be used are when a typefind function has 
+successfully determined the type of the stream or when an mp3 plugin detects
+the format to be used. ("This file has mono sound.")
+@GST_LEVEL_DEBUG: Debugging messages should be used when something common
+happens that is not the expected default behavior. 
+An example would be notifications about state changes or receiving/sending of
+events.
+@GST_LEVEL_LOG: Log messages are messages that are very common but might be 
+useful to know. As a rule of thumb a pipeline that is iterating as expected
+should never output anzthing else but LOG messages.
+Examples for this are referencing/dereferencing of objects or cothread switches.
+@GST_LEVEL_COUNT: The number of defined debugging levels.
 
-
-<!-- ##### MACRO GST_ERROR ##### -->
+<!-- ##### MACRO GST_LEVEL_DEFAULT ##### -->
 <para>
-Print out an error condition and abort the application.
+Defines the default debugging level to be used with GStreamer. It is
+normally set to #GST_LEVEL_ERROR so only errors are printed. Developer
+builds may chose to override that though.
+You can use this as an argument to gst_debug_set_default_threshold() to
+reset the debugging output to default behaviour.
 </para>
 
-@element: the #GstElement in question
-@...: printf arguments
+
+
+<!-- ##### FUNCTION gst_debug_level_get_name ##### -->
+<para>
+
+</para>
+
+@level: 
+@Returns: 
+
+
+<!-- ##### ENUM GstDebugColorFlags ##### -->
+<para>
+These are some terminal-oriented flags you can use when creating your debugging
+categories to make them stand out in debugging output.
+</para>
+
+@GST_DEBUG_FG_BLACK: Use black as foreground color.
+@GST_DEBUG_FG_RED: Use red as foreground color.
+@GST_DEBUG_FG_GREEN: Use green as foreground color.
+@GST_DEBUG_FG_YELLOW: Use yellow as foreground color.
+@GST_DEBUG_FG_BLUE: Use blue as foreground color.
+@GST_DEBUG_FG_MAGENTA: Use magenta as foreground color.
+@GST_DEBUG_FG_CYAN: Use cyan as foreground color.
+@GST_DEBUG_FG_WHITE: Use white as foreground color.
+@GST_DEBUG_BG_BLACK: Use black as background color.
+@GST_DEBUG_BG_RED: Use red as background color.
+@GST_DEBUG_BG_GREEN: Use green as background color.
+@GST_DEBUG_BG_YELLOW: Use yellow as background color.
+@GST_DEBUG_BG_BLUE: Use blue as background color.
+@GST_DEBUG_BG_MAGENTA: Use magenta as background color.
+@GST_DEBUG_BG_CYAN: Use cyan as background color.
+@GST_DEBUG_BG_WHITE: Use white as background color.
+@GST_DEBUG_BOLD: Make the output bold.
+@GST_DEBUG_UNDERLINE: Underline the output.
+
+<!-- ##### FUNCTION gst_debug_construct_term_color ##### -->
+<para>
+
+</para>
+
+@colorinfo: 
+@Returns: 
+
+
+<!-- ##### STRUCT GstDebugCategory ##### -->
+<para>
+This is the struct that describes the categories. Once initialized with
+#GST_DEBUG_CATEGORY_INIT, its values can't be changed anymore.
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_DEFAULT ##### -->
+<para>
+The default category that is used when no other category is defined as the
+default. If you want to define a default category, do it like this:
+<informalexample>
+<programlisting>
+&hash;define GST_CAT_DEFAULT category_to_be_default
+</programlisting>
+</informalexample>
+</para>
+
+
+<!-- ##### USER_FUNCTION GstLogFunction ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+@file: 
+@function: 
+@line: 
+@object: 
+@message: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_debug_log ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+@file: 
+@function: 
+@line: 
+@object: 
+@format: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_debug_logv ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+@file: 
+@function: 
+@line: 
+@object: 
+@format: 
+@args: 
+
+
+<!-- ##### FUNCTION gst_debug_log_default ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+@file: 
+@function: 
+@line: 
+@object: 
+@message: 
+@unused: 
+
+
+<!-- ##### FUNCTION gst_debug_add_log_function ##### -->
+<para>
+
+</para>
+
+@func: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_debug_remove_log_function ##### -->
+<para>
+
+</para>
+
+@func: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_remove_log_function_by_data ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_set_active ##### -->
+<para>
+
+</para>
+
+@active: 
+
+
+<!-- ##### FUNCTION gst_debug_is_active ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_set_colored ##### -->
+<para>
+
+</para>
+
+@colored: 
+
+
+<!-- ##### FUNCTION gst_debug_is_colored ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_set_default_threshold ##### -->
+<para>
+
+</para>
+
+@level: 
+
+
+<!-- ##### FUNCTION gst_debug_get_default_threshold ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_set_threshold_for_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@level: 
+
+
+<!-- ##### FUNCTION gst_debug_unset_threshold_for_name ##### -->
+<para>
+
+</para>
+
+@name: 
+
+
+<!-- ##### MACRO GST_DEBUG_CATEGORY ##### -->
+<para>
+
+</para>
+
+@cat: 
+
+
+<!-- ##### MACRO GST_DEBUG_CATEGORY_EXTERN ##### -->
+<para>
+
+</para>
+
+@cat: 
+
+
+<!-- ##### MACRO GST_DEBUG_CATEGORY_STATIC ##### -->
+<para>
+
+</para>
+
+@cat: 
+
+
+<!-- ##### MACRO GST_DEBUG_CATEGORY_INIT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@name: 
+@color: 
+@description: 
+
+
+<!-- ##### FUNCTION gst_debug_category_free ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_debug_category_set_threshold ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+
+
+<!-- ##### FUNCTION gst_debug_category_reset_threshold ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_debug_category_get_threshold ##### -->
+<para>
+
+</para>
+
+@category: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_category_get_name ##### -->
+<para>
+
+</para>
+
+@category: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_category_get_color ##### -->
+<para>
+
+</para>
+
+@category: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_category_get_description ##### -->
+<para>
+
+</para>
+
+@category: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_get_all_categories ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_CAT_LEVEL_LOG ##### -->
+<para>
+
+</para>
+
+@cat: 
+@level: 
+@object: 
+@...: 
+
+
+<!-- ##### MACRO GST_CAT_ERROR_OBJECT ##### -->
+<para>
+Output an error message belonging to the given object in the given category.
+</para>
+
+@cat: category to use
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_WARNING_OBJECT ##### -->
+<para>
+Output a warning message belonging to the given object in the given category.
+</para>
+
+@cat: category to use
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_INFO_OBJECT ##### -->
+<para>
+Output an informational message belonging to the given object in the given
+category.
+</para>
+
+@cat: category to use
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_DEBUG_OBJECT ##### -->
+<para>
+Output an debugging message belonging to the given object in the given category.
+</para>
+
+@cat: category to use
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_LOG_OBJECT ##### -->
+<para>
+Output an logging message belonging to the given object in the given category.
+</para>
+
+@cat: category to use
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_ERROR ##### -->
+<para>
+Output an error message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_WARNING ##### -->
+<para>
+Output a warning message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_INFO ##### -->
+<para>
+Output an informational message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_DEBUG ##### -->
+<para>
+Output a debuggign message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_LOG ##### -->
+<para>
+Output a logging message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
 
 
 <!-- ##### MACRO GST_ERROR_OBJECT ##### -->
 <para>
-Print out an error condition and abort the application.
+Output an error message belonging to the given object in the default category.
 </para>
 
-@element: the #GstElement in question
-@object: pointer to a 'contributing' object
-@...: printf arguments
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
 
 
-<!-- ##### USER_FUNCTION GstDebugHandler ##### -->
+<!-- ##### MACRO GST_WARNING_OBJECT ##### -->
 <para>
-The debug handler
+Output a warning message belonging to the given object in the default category.
 </para>
 
-@category: 
-@core: 
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@string: 
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
 
 
-<!-- ##### FUNCTION gst_default_debug_handler ##### -->
+<!-- ##### MACRO GST_INFO_OBJECT ##### -->
+<para>
+Output an informational message belonging to the given object in the default 
+category.
+</para>
+
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_DEBUG_OBJECT ##### -->
+<para>
+Output a debugging message belonging to the given object in the default 
+category.
+</para>
+
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_LOG_OBJECT ##### -->
+<para>
+Output a logging message belonging to the given object in the default category.
+</para>
+
+@obj: the #GObject the message belongs to
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_ERROR ##### -->
+<para>
+Output an error message in the default category.
+</para>
+
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_WARNING ##### -->
+<para>
+Output a warning message in the default category.
+</para>
+
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_INFO ##### -->
+<para>
+Output an informational message in the default category.
+</para>
+
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_DEBUG ##### -->
+<para>
+Output a debugging message in the default category.
+</para>
+
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_LOG ##### -->
+<para>
+Output a logging message in the default category.
+</para>
+
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
 <para>
 
 </para>
 
-@category: 
-@incore: 
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@string: 
+@ptr: 
 
 
-<!-- ##### FUNCTION gst_default_error_handler ##### -->
+<!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
 <para>
 
 </para>
 
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@object: 
-@string: 
-
-
-<!-- ##### USER_FUNCTION GstInfoHandler ##### -->
-<para>
-The info handler
-</para>
-
-@category: 
-@incore: 
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@string: 
-
-
-<!-- ##### USER_FUNCTION GstErrorHandler ##### -->
-<para>
-The error handler
-</para>
-
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@object: 
-@string: 
-
-
+@ptr:

@@ -19,12 +19,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <math.h>
 #include <string.h>
 #include <gst/gstinfo.h>
 
 #include "dparam.h"
 #include "dparammanager.h"
+
+GST_DEBUG_CATEGORY_EXTERN(_gst_control_debug);
 
 static void gst_dparam_class_init (GstDParamClass *klass);
 static void gst_dparam_init (GstDParam *dparam);
@@ -170,21 +176,21 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
 	switch (prop_id) {
 		case ARG_VALUE_FLOAT:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %f to %f", dparam->value_float, g_value_get_float (value));
+			GST_DEBUG ("setting value from %f to %f", dparam->value_float, g_value_get_float (value));
 			dparam->value_float = g_value_get_float (value);
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		case ARG_VALUE_INT:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %d to %d", dparam->value_int, g_value_get_int (value));
+			GST_DEBUG ("setting value from %d to %d", dparam->value_int, g_value_get_int (value));
 			dparam->value_int = g_value_get_int (value);
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		case ARG_VALUE_INT64:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %"
+			GST_DEBUG ("setting value from %"
 						  G_GINT64_FORMAT " to %"
 						  G_GINT64_FORMAT,
 				  dparam->value_int64, g_value_get_int64 (value));
@@ -208,7 +214,7 @@ gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value
 	GST_DPARAM_LOCK(dparam);
 	
 	g_return_if_fail (G_VALUE_TYPE(value) == GST_DPARAM_TYPE(dparam));
-	GST_DEBUG(GST_CAT_PARAMS, "updating value for %s(%p)",GST_DPARAM_NAME (dparam),dparam);
+	GST_DEBUG ("updating value for %s(%p)",GST_DPARAM_NAME (dparam),dparam);
 	
 	switch (G_VALUE_TYPE(value)) {
 		case G_TYPE_FLOAT:
@@ -240,7 +246,7 @@ gst_dparam_dispose (GObject *object)
 	GstDParam *dparam = GST_DPARAM(object);
 	gchar *dparam_name = g_strdup(GST_DPARAM_NAME(dparam));
 	
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, "disposing of %s", dparam_name);
+	GST_DEBUG ("disposing of %s", dparam_name);
 	if (GST_DPARAM_MANAGER(dparam)){
 		gst_dpman_detach_dparam(GST_DPARAM_MANAGER(dparam), dparam_name);
 	}
@@ -270,7 +276,7 @@ gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *par
 	GST_DPARAM_MANAGER(dparam) = manager;
 	GST_DPARAM_UNIT_NAME(dparam) = unit_name;
 	GST_DPARAM_IS_LOG(dparam) = gst_unitconv_unit_is_logarithmic(unit_name);
-	GST_DEBUG(GST_CAT_PARAMS, "attaching %s to dparam %p",GST_DPARAM_NAME (dparam),dparam);
+	GST_DEBUG ("attaching %s to dparam %p",GST_DPARAM_NAME (dparam),dparam);
 
 }
 
@@ -287,12 +293,9 @@ gst_dparam_detach (GstDParam *dparam)
 	g_return_if_fail (dparam != NULL);
 	g_return_if_fail (GST_IS_DPARAM (dparam));
 
-	GST_DEBUG(GST_CAT_PARAMS, "detaching %s from dparam %p",GST_DPARAM_NAME (dparam),dparam);
+	GST_DEBUG ("detaching %s from dparam %p",GST_DPARAM_NAME (dparam),dparam);
 	
 	GST_DPARAM_NAME(dparam) = NULL;
 	GST_DPARAM_PARAM_SPEC(dparam) = NULL;
 	GST_DPARAM_MANAGER(dparam) = NULL;
 }
-
-
-

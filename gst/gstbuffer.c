@@ -20,15 +20,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* this file makes too much noise for most debugging sessions */
-#define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
 
 #include "gstatomic_impl.h"
 #include "gstdata_private.h"
 #include "gstbuffer.h"
 #include "gstmemchunk.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "gstbufferpool-default.h"
 
 GType _gst_buffer_type;
@@ -63,7 +61,7 @@ _gst_buffer_initialize (void)
   chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), 
                              sizeof (GstBuffer) * 200, 0);
 
-  GST_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
+  GST_CAT_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
 }
 
 GType
@@ -192,7 +190,7 @@ gst_buffer_new (void)
   gst_alloc_trace_new (_gst_buffer_trace, newbuf);
 #endif
 
-  GST_DEBUG (GST_CAT_BUFFER, "new %p", newbuf);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
   _GST_DATA_INIT (GST_DATA (newbuf), 
 		  _gst_buffer_type,
@@ -312,7 +310,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   gst_alloc_trace_new (_gst_buffer_trace, buffer);
 #endif
 
-  GST_DEBUG (GST_CAT_BUFFER, "new %p", buf);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p", buffer);
 
   /* make sure nobody overwrites data in the new buffer 
    * by setting the READONLY flag */
@@ -435,7 +433,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 	                            buf1->data - parent->data + offset, len);
   }
   else {
-    GST_DEBUG (GST_CAT_BUFFER, "slow path taken while spanning buffers %p and %p", 
+    GST_CAT_DEBUG (GST_CAT_BUFFER, "slow path taken while spanning buffers %p and %p", 
 	       buf1, buf2);
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new_and_alloc (len);
@@ -524,7 +522,7 @@ gst_buffer_pool_new (GstDataFreeFunction free,
   gst_alloc_trace_new (_gst_buffer_pool_trace, pool);
 #endif
 
-  GST_DEBUG (GST_CAT_BUFFER, "allocating new buffer pool %p\n", pool);
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "allocating new buffer pool %p\n", pool);
         
   /* init data struct */
   _GST_DATA_INIT (GST_DATA (pool), 

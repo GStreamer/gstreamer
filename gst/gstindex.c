@@ -20,10 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstlog.h"
 #include "gst_private.h"
-#include "gstregistrypool.h"
 
+#include "gstinfo.h"
+#include "gstregistrypool.h"
 #include "gstpad.h"
 #include "gstindex.h"
 
@@ -152,7 +152,7 @@ gst_index_init (GstIndex *index)
   GST_FLAG_SET (index, GST_INDEX_WRITABLE);
   GST_FLAG_SET (index, GST_INDEX_READABLE);
   
-  GST_DEBUG(0, "created new index");
+  GST_DEBUG ( "created new index");
 }
 
 static void
@@ -203,7 +203,7 @@ gst_index_group_new(guint groupnum)
   indexgroup->certainty = GST_INDEX_UNKNOWN;
   indexgroup->peergroup = -1;
 
-  GST_DEBUG(0, "created new index group %d",groupnum);
+  GST_DEBUG ( "created new index group %d",groupnum);
 
   return indexgroup;
 }
@@ -274,7 +274,7 @@ gst_index_new_group(GstIndex *index)
 {
   index->curgroup = gst_index_group_new(++index->maxgroup);
   index->groups = g_list_append(index->groups,index->curgroup);
-  GST_DEBUG(0, "created new group %d in index",index->maxgroup);
+  GST_DEBUG ( "created new group %d in index",index->maxgroup);
   return index->maxgroup;
 }
 
@@ -305,13 +305,13 @@ gst_index_set_group(GstIndex *index, gint groupnum)
     list = g_list_next(list);
     if (indexgroup->groupnum == groupnum) {
       index->curgroup = indexgroup;
-      GST_DEBUG(0, "switched to index group %d", indexgroup->groupnum);
+      GST_DEBUG ( "switched to index group %d", indexgroup->groupnum);
       return TRUE;
     }
   }
 
   /* couldn't find the group in question */
-  GST_DEBUG(0, "couldn't find index group %d",groupnum);
+  GST_DEBUG ( "couldn't find index group %d",groupnum);
   return FALSE;
 }
 
@@ -892,7 +892,7 @@ gst_index_factory_find (const gchar *name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  GST_DEBUG (0,"gstindex: find \"%s\"", name);
+  GST_DEBUG ("gstindex: find \"%s\"", name);
 
   feature = gst_registry_pool_find_feature (name, GST_TYPE_INDEX_FACTORY);
   if (feature)
@@ -949,4 +949,3 @@ gst_index_factory_make (const gchar *name)
 
   return gst_index_factory_create (factory);
 }
-

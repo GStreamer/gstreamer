@@ -40,11 +40,18 @@
  * - fix bugs
  * ...
  */
- 
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gstspider.h"
 #include "gstspideridentity.h"
 #include "gstsearchfuncs.h"
- 
+
+GST_DEBUG_CATEGORY (gst_spider_debug);
+#define GST_CAT_DEFAULT gst_spider_debug
+
 /* signals and args */
 enum {
   /* FILL ME */
@@ -202,7 +209,7 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   
   returnpad = gst_element_add_ghost_pad (element, returnpad, padname);
   gst_spider_link_new (identity);
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "successuflly created requested pad %s:%s", GST_DEBUG_PAD_NAME (returnpad));
+  GST_DEBUG ("successuflly created requested pad %s:%s", GST_DEBUG_PAD_NAME (returnpad));
   
   return returnpad;
 }
@@ -270,11 +277,11 @@ static void
 gst_spider_link_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection *conn)
 {
   gulong signal_id = conn->signal_id;
-  GstPad *sinkpad = conn->src->sink;
   
   /* try to autoplug the elements */
   if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_LINK_REFUSED) {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s:%s was autoplugged to %s:%s, removing callback", GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
+    GST_DEBUG ("%s:%s was autoplugged to %s:%s, removing callback", 
+	       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (conn->src->sink));
     g_signal_handler_disconnect (src, signal_id);
     signal_id = 0;
   }
@@ -305,7 +312,7 @@ static void
 gst_spider_link_reset (GstSpiderConnection *conn, GstElement *to)
 {
   GstSpider *spider = GST_SPIDER (GST_OBJECT_PARENT (conn->src));
-  GST_DEBUG (GST_CAT_AUTOPLUG, "resetting link from %s to %s, currently at %s to %s", GST_ELEMENT_NAME (spider->sink_ident), 
+  GST_DEBUG ("resetting link from %s to %s, currently at %s to %s", GST_ELEMENT_NAME (spider->sink_ident), 
 	     GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (to));
   while ((conn->path != NULL) && ((GstElement *) conn->path->data != to))
   {
@@ -487,7 +494,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
       element = (GstElement *) (endelements == NULL ? conn->src : endelements->data);
     } else {
       element = gst_element_factory_create ((GstElementFactory *) plugpath->data, NULL);
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "Adding element %s of type %s and syncing state with autoplugger", 
+      GST_DEBUG ("Adding element %s of type %s and syncing state with autoplugger", 
                  GST_ELEMENT_NAME (element), GST_PLUGIN_FEATURE_NAME (plugpath->data));    
       gst_bin_add (GST_BIN (spider), element);
     }
@@ -506,7 +513,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
         GstPadTemplate *templ = (GstPadTemplate *) templs->data;
         if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
         {
-          GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to link element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+          GST_DEBUG ("adding callback to link element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
           conn->signal_id = g_signal_connect (G_OBJECT (conn->current), "new_pad", 
 					      G_CALLBACK (gst_spider_link_sometimes), conn);
 	  g_list_free (plugpath);
@@ -514,11 +521,11 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
         }
         templs = g_list_next (templs);
       }
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to link element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+      GST_DEBUG ("no chance to link element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
       g_list_free (plugpath);
       return GST_PAD_LINK_REFUSED;
     }
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "added element %s and attached it to element %s", GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
+    GST_DEBUG ("added element %s and attached it to element %s", GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
     gst_spider_link_add (conn, element);
     if (plugpath != NULL)
       plugpath = g_list_delete_link (plugpath, plugpath);
@@ -579,7 +586,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   GstElement *startelement = conn->current;
 
   g_assert ((GstElement *) GST_OBJECT_PARENT (srcpad) == conn->current);
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying to plug from %s:%s to %s", 
+  GST_DEBUG ("trying to plug from %s:%s to %s", 
 	     GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
   
   /* find a path from src to sink */
@@ -596,10 +603,10 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
     
   /* if there is no way to plug: return */
   if (plugpath == NULL) {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to plug from %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+    GST_DEBUG ("no chance to plug from %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
     return GST_PAD_LINK_REFUSED;
   }
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a link that needs %d elements", g_list_length (plugpath));
+  GST_DEBUG ("found a link that needs %d elements", g_list_length (plugpath));
 
   /* now remove non-needed elements from the beginning of the path 
    * alter src to point to the new element where we need to start 
@@ -612,7 +619,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
     plugpath = g_list_delete_link (plugpath, plugpath);
   }
   
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%d elements must be inserted to establish the link", g_list_length (plugpath));
+  GST_DEBUG ("%d elements must be inserted to establish the link", g_list_length (plugpath));
   /* create the elements and plug them */
   result = gst_spider_create_and_plug (conn, plugpath);
   
@@ -639,6 +646,9 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+
+  GST_DEBUG_CATEGORY_INIT (gst_spider_debug, "spider", 0, "spider autoplugging element");
+  GST_DEBUG_CATEGORY_INIT (gst_spider_identity_debug, "spideridentity", 0, "spider autoplugging proxy element");
 
   factory = gst_element_factory_new("spider", GST_TYPE_SPIDER,
                                    &gst_spider_details);

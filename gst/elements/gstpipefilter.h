@@ -27,11 +27,10 @@
 #include <sys/types.h>
 #include <gst/gst.h>
 
-#include "config.h"
-
 G_BEGIN_DECLS
 
-GstElementDetails gst_pipefilter_details;
+extern GstElementDetails gst_pipefilter_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_pipefilter_debug);
 
 #define GST_TYPE_PIPEFILTER \
   (gst_pipefilter_get_type())

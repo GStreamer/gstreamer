@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <gst/gst.h>
 
 #include <stdlib.h>
@@ -29,8 +33,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-
-#include "config.h"
 
 extern gboolean _gst_registry_auto_load;
 static gint num_features = 0;
@@ -106,4 +108,3 @@ int main (int argc,char *argv[])
 
   return (0);
 }
-

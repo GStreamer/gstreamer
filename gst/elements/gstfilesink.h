@@ -24,14 +24,12 @@
 #ifndef __GST_FILESINK_H__
 #define __GST_FILESINK_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_filesink_details;
-
+extern GstElementDetails gst_filesink_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_filesink_debug);
 
 #define GST_TYPE_FILESINK \
   (gst_filesink_get_type())

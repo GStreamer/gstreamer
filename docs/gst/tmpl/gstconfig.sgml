@@ -1,0 +1,131 @@
+<!-- ##### SECTION Title ##### -->
+GstConfig
+
+<!-- ##### SECTION Short_Description ##### -->
+configuration options
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This describes the configureation options for GStreamer. When building 
+GStreamer there are a lot of parts (known internally as "subsystems" ) that can 
+be disabled for various reasons. The most common reasons are speed and size, 
+which is important because GStreamer is designed to run on embedded systems.
+</para>
+
+<para>
+If a subsystem is disabled, most of this changes are done in an API compatible
+way, so you don't need to adapt your code in most cases. It is never done in an
+ABI compatible way though. So if you want to disable a suybsystem, you have to
+rebuild all programs depending on GStreamer, too.
+</para>
+
+<para>
+If a subsystem is disabled in GStreamer, a value is defined in 
+&lt;gst/gst.h&gt;. You can check this if you do subsystem-specific stuff.
+<example>
+<title>Doing subsystem specific things</title>
+<programlisting>
+&hash;ifndef GST_DISABLE_GST_DEBUG
+/* do stuff specific to the debugging subsystem */
+&hash;endif /* GST_DISABLE_GST_DEBUG */
+</programlisting>
+</example>
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_DISABLE_LOADSAVE_REGISTRY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_GST_DEBUG ##### -->
+<para>
+If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
+</link> is disabled and debugging messages are not output.
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_LOADSAVE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_TYPEFIND ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_AUTOPLUG ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_PARSE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_TRACE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_ALLOC_TRACE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_REGISTRY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_ENUMTYPES ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_INDEX ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_PLUGIN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_URI ##### -->
+<para>
+
+</para>
+
+
+

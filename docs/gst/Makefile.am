@@ -113,6 +113,7 @@ DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
 SCANOBJ_FILES = 		\
 	$(DOC_MODULE).args 	\
 	$(DOC_MODULE).hierarchy \
+	$(DOC_MODULE)-scan.o	\
 	$(DOC_MODULE).signals
 
 if HAVE_GTK_DOC
@@ -182,12 +183,15 @@ clean-local:
 maintainer-clean-local: clean
 	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
 
+# company: don't delete .sgml and -sections.txt as they're in CVS
 # FIXME : thomas added all sgml files and some other things to make
 # make distcheck work
 distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
-	rm -rf $(DOC_MODULE)-*.txt
-	rm -rf tmpl/*.sgml
+	rm -rf $(DOC_MODULE)-decl.txt
+	rm -rf $(DOC_MODULE)-undocumented.txt
+	rm -rf $(DOC_MODULE)-unused.txt
+	rm -rf tmpl/*.sgml.bak
 	rm -f $(DOC_MODULE).hierarchy
 	rm -f *.stamp || true
 

@@ -23,7 +23,7 @@
 
 #include "gst_private.h"
 #include "gsttype.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "gsttypefind.h"
 
 #define DEFAULT_MAX_BUFFERS	1
@@ -190,7 +190,7 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
 
   typefind = GST_TYPE_FIND (GST_OBJECT_PARENT (pad));
 
-  GST_DEBUG (0,"got buffer of %d bytes in '%s'",
+  GST_DEBUG ("got buffer of %d bytes in '%s'",
         GST_BUFFER_SIZE (buf), GST_OBJECT_NAME (typefind));
 
   type_list = gst_type_get_list ();
@@ -206,10 +206,10 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
       GstCaps *caps;
 
-      GST_DEBUG (GST_CAT_TYPES, "try type (%p) :%d \"%s\" %p", 
+      GST_CAT_DEBUG (GST_CAT_TYPES, "try type (%p) :%d \"%s\" %p", 
 		 factory, type->id, type->mime, typefindfunc);
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
-        GST_DEBUG (GST_CAT_TYPES, "found type: %d \"%s\" \"%s\"", 
+        GST_CAT_DEBUG (GST_CAT_TYPES, "found type: %d \"%s\" \"%s\"", 
 		   caps->id, type->mime, gst_caps_get_name (caps));
 	typefind->caps = caps;
 

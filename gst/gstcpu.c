@@ -24,7 +24,9 @@
 #include <glib.h>
 
 #include "gst_private.h"
+
 #include "gstcpu.h"
+#include "gstinfo.h"
 
 static guint32 _gst_cpu_flags = 0;
 
@@ -50,7 +52,7 @@ _gst_cpu_initialize (gboolean opt)
   } else
     g_string_append (featurelist, "(DISABLED)");
 
-  GST_INFO (GST_CAT_GST_INIT, "CPU features: (%08lx) %s", flags, featurelist->str);
+  GST_CAT_INFO (GST_CAT_GST_INIT, "CPU features: (%08lx) %s", flags, featurelist->str);
   g_string_free (featurelist, TRUE);
 }
 

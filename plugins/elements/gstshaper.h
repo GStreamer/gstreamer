@@ -25,13 +25,12 @@
 #define __GST_SHAPER_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_shaper_details;
-
+extern GstElementDetails gst_shaper_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_shaper_debug);
 
 #define GST_TYPE_SHAPER \
   (gst_shaper_get_type())

@@ -32,7 +32,7 @@
 #include "gsttype.h"
 #include "gstregistrypool.h"
 #include "gstobject.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 
 /* global list of registered types */
@@ -146,7 +146,7 @@ gst_type_register (GstTypeFactory *factory)
 
   g_return_val_if_fail (factory != NULL, 0);
 
-/*  GST_INFO (GST_CAT_TYPES,"type register %s", factory->mime); */
+/*  GST_CAT_INFO (GST_CAT_TYPES,"type register %s", factory->mime); */
   id = gst_type_find_by_mime (factory->mime);
 
   if (!id) {
@@ -168,7 +168,7 @@ gst_type_register (GstTypeFactory *factory)
 
     /* if there is no existing typefind function, try to use new one  */
   }
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: %s(%p) gave new mime type '%s', id %d", 
+  GST_CAT_DEBUG (GST_CAT_TYPES,"gsttype: %s(%p) gave new mime type '%s', id %d", 
 		    GST_OBJECT_NAME (factory), factory, type->mime, type->id);
   type->factories = g_slist_prepend (type->factories, factory);
 
@@ -186,12 +186,12 @@ gst_type_find_by_mime_func (const gchar *mime)
   g_return_val_if_fail (mime != NULL, 0);
 
   walk = _gst_types;
-/*  GST_DEBUG (GST_CAT_TYPES,"searching for '%s'",mime); */
+/*  GST_CAT_DEBUG (GST_CAT_TYPES,"searching for '%s'",mime); */
   mimelen = strlen (mime);
   while (walk) {
     type = (GstType *)walk->data;
     search = type->mime;
-/*    GST_DEBUG (GST_CAT_TYPES,"checking against '%s'",search); */
+/*    GST_CAT_DEBUG (GST_CAT_TYPES,"checking against '%s'",search); */
     typelen = strlen (search);
     while ((search - type->mime) < typelen) {
       found = strstr (search, mime);
@@ -321,7 +321,7 @@ gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
   GstCaps *res = NULL;
   GstTypeFactory *factory = (GstTypeFactory *)priv;
 
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
+  GST_CAT_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     if (factory->typefindfunc == gst_type_type_find_dummy) {

@@ -20,8 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gsttee.h"
 
+GST_DEBUG_CATEGORY (gst_tee_debug);
+#define GST_CAT_DEFAULT gst_tee_debug
 
 GstElementDetails gst_tee_details = {
   "Tee pipe fitting",
@@ -127,7 +133,7 @@ gst_tee_sinklink (GstPad *pad, GstCaps *caps)
   GstPadLinkReturn set_retval;
   GstCaps *caps1;
   
-  GST_DEBUG (0, "gst_tee_sinklink caps=%s", gst_caps_to_string(caps));
+  GST_DEBUG ( "gst_tee_sinklink caps=%s", gst_caps_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
@@ -162,7 +168,7 @@ gst_tee_srclink (GstPad *pad, GstCaps *caps)
 {
   GstTee *tee;
 
-  GST_DEBUG (0, "gst_tee_srclink caps=%s", gst_caps_to_string(caps));
+  GST_DEBUG ( "gst_tee_srclink caps=%s", gst_caps_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
@@ -176,7 +182,7 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
   GstTee *tee;
   const GList *pads;
 
-  GST_DEBUG (0, "gst_tee_getcaps");
+  GST_DEBUG ( "gst_tee_getcaps");
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
@@ -380,4 +386,3 @@ gst_tee_factory_init (GstElementFactory *factory)
 
   return TRUE;
 }
-

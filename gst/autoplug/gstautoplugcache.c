@@ -19,7 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <gst/gst.h>
+
+GST_DEBUG_CATEGORY_STATIC(debug_category);
+#define GST_CAT_DEFAULT debug_category
 
 GstElementDetails gst_autoplugcache_details = {
   "AutoplugCache",
@@ -230,12 +237,12 @@ gst_autoplugcache_loop (GstElement *element)
     /* if we've been told to fire an empty signal (after a reset) */
     if (cache->fire_empty) {
       int oldstate = GST_STATE(cache);
-      GST_DEBUG(0,"at front of cache, about to pull, but firing signal");
+      GST_DEBUG ("at front of cache, about to pull, but firing signal");
       gst_object_ref (GST_OBJECT (cache));
       g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], 0, NULL);
       if (GST_STATE(cache) != oldstate) {
         gst_object_unref (GST_OBJECT (cache));
-        GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting");
+        GST_DEBUG ("state changed during signal, aborting");
 	return;
       }
       gst_object_unref (GST_OBJECT (cache));
@@ -295,7 +302,7 @@ gst_autoplugcache_set_property (GObject *object, guint prop_id, const GValue *va
   switch (prop_id) {
     case ARG_CAPS_PROXY:
       cache->caps_proxy = g_value_get_boolean (value);
-GST_DEBUG(0,"caps_proxy is %d",cache->caps_proxy);
+GST_DEBUG ("caps_proxy is %d",cache->caps_proxy);
       if (cache->caps_proxy) {
       } else {
       }
@@ -303,7 +310,7 @@ GST_DEBUG(0,"caps_proxy is %d",cache->caps_proxy);
     case ARG_RESET:
       /* no idea why anyone would set this to FALSE, but just in case ;-) */
       if (g_value_get_boolean (value)) {
-        GST_DEBUG(0,"resetting playout pointer");
+        GST_DEBUG ("resetting playout pointer");
         /* reset the playout pointer to the begining again */
         cache->current_playout = cache->cache_start;
         /* now we can fire a signal when the cache runs dry */
@@ -342,6 +349,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
+  GST_DEBUG_CATEGORY_INIT (debug_category, "AUTOPLUGCACHE", 0, "autoplugcache element");
+
   factory = gst_element_factory_new ("autoplugcache", GST_TYPE_AUTOPLUGCACHE,
                                     &gst_autoplugcache_details);
   g_return_val_if_fail (factory != NULL, FALSE);
@@ -357,4 +366,3 @@ GstPluginDesc plugin_desc = {
   "autoplugcache",
   plugin_init
 };
-

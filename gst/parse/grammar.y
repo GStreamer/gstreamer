@@ -4,13 +4,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "../gst_private.h"
+
 #include "../gstparse.h"
 #include "../gstinfo.h"
 #include "types.h"
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 #define YYERROR_VERBOSE 1
 #define YYPARSE_PARAM graph
@@ -102,11 +101,11 @@ typedef struct {
 #  define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
-#  define YYFPRINTF(a, ...) GST_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__)
+#  define YYFPRINTF(a, ...) GST_CAT_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__)
  */
 #  define YYFPRINTF(a, ...) G_STMT_START{ \
      gchar *temp = g_strdup_printf (__VA_ARGS__); \
-     GST_DEBUG (GST_CAT_PIPELINE, temp); \
+     GST_CAT_DEBUG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
    }G_STMT_END
 #endif
@@ -127,11 +126,11 @@ typedef struct {
 #  define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
-#  define YYFPRINTF(a, args...) GST_DEBUG (GST_CAT_PIPELINE, ## args )
+#  define YYFPRINTF(a, args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, ## args )
  */
 #  define YYFPRINTF(a, args...) G_STMT_START{ \
      gchar *temp = g_strdup_printf ( ## args ); \
-     GST_DEBUG (GST_CAT_PIPELINE, temp); \
+     GST_CAT_DEBUG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
    }G_STMT_END
 #endif
@@ -400,15 +399,15 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
   DelayedLink *link = (DelayedLink *) data;
   
-  GST_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
-            GST_ELEMENT_NAME (src), link->src_pad,
-            GST_ELEMENT_NAME (link->sink), link->sink_pad);
+  GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
+                GST_ELEMENT_NAME (src), link->src_pad,
+                GST_ELEMENT_NAME (link->sink), link->sink_pad);
 
   if (gst_element_link_pads_filtered (src, link->src_pad, link->sink, link->sink_pad, link->caps)) {
     /* do this here, we don't want to get any problems later on when unlocking states */
-    GST_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
-               GST_ELEMENT_NAME (src), link->src_pad,
-               GST_ELEMENT_NAME (link->sink), link->sink_pad);
+    GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
+               	   GST_ELEMENT_NAME (src), link->src_pad,
+               	   GST_ELEMENT_NAME (link->sink), link->sink_pad);
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
@@ -433,8 +432,8 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       
       /* TODO: maybe we should check if src_pad matches this template's names */
 
-      GST_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s", 
-                 GST_ELEMENT_NAME (src), src_pad, GST_ELEMENT_NAME (sink), sink_pad);
+      GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s", 
+                     GST_ELEMENT_NAME (src), src_pad, GST_ELEMENT_NAME (sink), sink_pad);
 
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
@@ -464,10 +463,10 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
   
-  GST_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%s\"", 
-            GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
-            GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks),
-	    link->caps ? gst_caps_to_string (link->caps) : "-");
+  GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%s\"", 
+                GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
+                GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks),
+	        link->caps ? gst_caps_to_string (link->caps) : "-");
 
   if (!srcs || !sinks) {
     if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
@@ -777,7 +776,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   g.error = error;
   
 #ifdef __GST_PARSE_TRACE
-  GST_DEBUG (GST_CAT_PIPELINE, "TRACE: tracing enabled");
+  GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: tracing enabled");
   __strings = __chains = __links = 0;
 #endif /* __GST_PARSE_TRACE */
 
@@ -795,7 +794,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   }
   g_free (dstr);
   
-  GST_INFO (GST_CAT_PIPELINE, "got %u elements and %u links", g.chain ? g_slist_length (g.chain->elements) : 0, g_slist_length (g.links));
+  GST_CAT_INFO (GST_CAT_PIPELINE, "got %u elements and %u links", g.chain ? g_slist_length (g.chain->elements) : 0, g_slist_length (g.links));
   
   if (!g.chain) {
     ret = NULL;
@@ -860,7 +859,7 @@ _gst_parse_launch (const gchar *str, GError **error)
 
 out:
 #ifdef __GST_PARSE_TRACE
-  GST_DEBUG (GST_CAT_PIPELINE, "TRACE: %u strings, %u chains and %u links left", __strings, __chains, __links);
+  GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: %u strings, %u chains and %u links left", __strings, __chains, __links);
   if (__strings || __chains || __links) {
     g_warning ("TRACE: %u strings, %u chains and %u links left", __strings, __chains, __links);
   }

@@ -39,13 +39,12 @@ int main(int argc,char *argv[])
   for (x = 0 ; x < 10 ; x++){
     g_print("playing %d\n", x);
     gst_element_set_state(thread, GST_STATE_PLAYING);
-    sleep(1);
+    g_usleep (G_USEC_PER_SEC);
 
     g_print("nulling %d\n", x);
     gst_element_set_state(thread, GST_STATE_NULL);
-    sleep(1);
+    g_usleep (G_USEC_PER_SEC);
   }
 
   exit(0);
 }
-

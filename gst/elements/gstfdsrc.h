@@ -24,14 +24,12 @@
 #ifndef __GST_FDSRC_H__
 #define __GST_FDSRC_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fdsrc_details;
-
+extern GstElementDetails gst_fdsrc_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_fdsrc_debug);
 
 #define GST_TYPE_FDSRC \
   (gst_fdsrc_get_type())

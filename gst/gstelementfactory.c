@@ -20,12 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstelement.h"
 #include "gstregistrypool.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 static void 		gst_element_factory_class_init 		(GstElementFactoryClass *klass);
 static void 		gst_element_factory_init 		(GstElementFactory *factory);
@@ -103,7 +102,7 @@ gst_element_factory_find (const gchar *name)
     return GST_ELEMENT_FACTORY (feature);
 
   /* this should be an ERROR */
-  GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"", name);
+  GST_CAT_DEBUG (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"", name);
   return NULL;
 }
 
@@ -212,7 +211,7 @@ gst_element_factory_create (GstElementFactory *factory,
   if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory)))
     return NULL;
 
-  GST_DEBUG (GST_CAT_ELEMENT_FACTORY,
+  GST_CAT_DEBUG (GST_CAT_ELEMENT_FACTORY,
              "creating element from factory \"%s\" (name \"%s\", type %d)", 
              GST_PLUGIN_FEATURE_NAME (factory), GST_STR_NULL (name), (gint) factory->type);
 
@@ -225,7 +224,7 @@ gst_element_factory_create (GstElementFactory *factory,
   /* attempt to set the elementfactory class pointer if necessary */
   oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type));
   if (oclass->elementfactory == NULL) {
-    GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "class %s", GST_PLUGIN_FEATURE_NAME (factory));
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_FACTORY, "class %s", GST_PLUGIN_FEATURE_NAME (factory));
     oclass->elementfactory = factory;
 
     /* copy pad template pointers to the element class, 
@@ -266,19 +265,19 @@ gst_element_factory_make (const gchar *factoryname, const gchar *name)
 
   g_return_val_if_fail (factoryname != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "gstelementfactory: make \"%s\" \"%s\"", 
+  GST_CAT_DEBUG (GST_CAT_ELEMENT_FACTORY, "gstelementfactory: make \"%s\" \"%s\"", 
              factoryname, GST_STR_NULL (name));
 
   /* gst_plugin_load_element_factory (factoryname); */
   factory = gst_element_factory_find (factoryname);
   if (factory == NULL) {
-    GST_INFO (GST_CAT_ELEMENT_FACTORY,"no such element factory \"%s\"!",
+    GST_CAT_INFO (GST_CAT_ELEMENT_FACTORY,"no such element factory \"%s\"!",
 	      factoryname);
     return NULL;
   }
   element = gst_element_factory_create (factory, name);
   if (element == NULL) {
-    GST_INFO (GST_CAT_ELEMENT_FACTORY,
+    GST_CAT_INFO (GST_CAT_ELEMENT_FACTORY,
 	      "couldn't create instance of element factory \"%s\"!",
 	      factoryname);
     return NULL;

@@ -26,13 +26,12 @@ int main (int argc, char *argv[])
   gst_element_link_pads (queue, "src", sink, "sink");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  sleep (1);
+  g_usleep (G_USEC_PER_SEC);
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  sleep (1);
+  g_usleep (G_USEC_PER_SEC);
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   return 0;
 }
-

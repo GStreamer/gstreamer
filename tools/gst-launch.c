@@ -1,6 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 #include <sys/wait.h>
 #include <gst/gst.h>
 
@@ -174,13 +179,13 @@ fault_spin (void)
   /* FIXME how do we know if we were run by libtool? */
   g_print ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
   	   "Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
-  	    getpid ());
-  while (spinning) usleep (1000000);
+  	   (gint) getpid ());
+  while (spinning) g_usleep (1000000);
 #else
   /* This spawns a gdb and attaches it to gst-launch. */
   {
     char str[40];
-    sprintf (str, "gdb -quiet gst-launch %d", getpid ());
+    sprintf (str, "gdb -quiet gst-launch %d", (gint) getpid ());
     system (str);
   }
 

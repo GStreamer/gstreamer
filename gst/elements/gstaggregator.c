@@ -20,8 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gstaggregator.h"
 
+GST_DEBUG_CATEGORY (gst_aggregator_debug);
+#define GST_CAT_DEFAULT gst_aggregator_debug
 
 GstElementDetails gst_aggregator_details = {
   "Aggregator pipe fitting",
@@ -354,4 +360,3 @@ gst_aggregator_factory_init (GstElementFactory *factory)
 
   return TRUE;
 }
-

@@ -24,14 +24,12 @@
 #ifndef __GST_FDSINK_H__
 #define __GST_FDSINK_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fdsink_details;
-
+extern GstElementDetails gst_fdsink_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_fdsink_debug);
 
 #define GST_TYPE_FDSINK \
   (gst_fdsink_get_type())

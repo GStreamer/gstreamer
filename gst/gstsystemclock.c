@@ -23,7 +23,7 @@
 #include <sys/time.h>
 
 #include "gst_private.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 #include "gstsystemclock.h"
 
@@ -178,15 +178,15 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
   current = gst_clock_get_time (clock);
   diff = GST_CLOCK_ENTRY_TIME (entry) - current;
 
-  if (ABS (diff) > clock->max_diff) {
-    g_warning ("abnormal clock request diff: ABS(%" G_GINT64_FORMAT
-               ") > %" G_GINT64_FORMAT, diff, clock->max_diff);
+  if (diff + clock->max_diff < 0) {
+    g_warning ("clock is way behind: %" G_GINT64_FORMAT
+               "s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
   
   target = gst_system_clock_get_internal_time (clock) + diff;
 
-  GST_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
 		            " target %" G_GUINT64_FORMAT
 			    " now %" G_GUINT64_FORMAT,
                             target, GST_CLOCK_ENTRY_TIME (entry), current);

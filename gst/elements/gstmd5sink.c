@@ -25,10 +25,15 @@
 
 #include <string.h>
 
-#include <config.h>
-#include <gst/gst.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
+#include <gst/gst.h>
 #include "gstmd5sink.h"
+
+GST_DEBUG_CATEGORY (gst_md5sink_debug);
+#define GST_CAT_DEFAULT gst_md5sink_debug
 
 /* MD5Sink signals and args */
 enum {
@@ -519,4 +524,3 @@ gst_md5sink_factory_init (GstElementFactory *factory)
 
   return TRUE;
 }
-

@@ -29,11 +29,11 @@ main (int argc, char *argv[])
   g_assert (clock != NULL);
 
   gst_clock_debug (clock);
-  sleep (1);
+  g_usleep (G_USEC_PER_SEC);
   gst_clock_debug (clock);
   gst_clock_set_active (clock, TRUE);
   gst_clock_debug (clock);
-  sleep (1);
+  g_usleep (G_USEC_PER_SEC);
   gst_clock_debug (clock);
 
   id = gst_clock_new_single_shot_id (clock, GST_SECOND * 2);
@@ -46,7 +46,7 @@ main (int argc, char *argv[])
 
   gst_clock_set_active (clock, FALSE);
   gst_clock_debug (clock);
-  sleep (1);
+  g_usleep (G_USEC_PER_SEC);
   gst_clock_debug (clock);
 
   /* success */

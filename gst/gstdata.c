@@ -20,15 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* this file makes too much noise for most debugging sessions */
-
-#define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
 
 #include "gstatomic_impl.h"
 #include "gstdata.h"
 #include "gstdata_private.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 
 /**
  * gst_data_init:
@@ -234,8 +231,8 @@ gst_data_unref (GstData *data)
 
   g_return_if_fail (data != NULL);
 
-  GST_INFO (GST_CAT_BUFFER, "unref data %p, count before unref is %d", 
-            data, GST_DATA_REFCOUNT_VALUE (data));
+  GST_CAT_LOG (GST_CAT_BUFFER, "unref data %p, count before unref is %d", 
+               data, GST_DATA_REFCOUNT_VALUE (data));
   g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
   zero = gst_atomic_int_dec_and_test (&data->refcount);

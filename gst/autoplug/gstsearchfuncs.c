@@ -20,13 +20,23 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gstsearchfuncs.h"
+
+/* FIXME: "evil hack" alarm, we need a better way to get a category in here */
+#ifndef GST_DISABLE_GST_DEBUG
+extern GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
+#define GST_CAT_DEFAULT GST_CAT_AUTOPLUG_ATTEMPT
+#endif
 
 /* function that really misses in GLib
  * though the GLib version should take a function as argument...
  */
-void
+static void
 g_list_free_list_and_elements (GList *list)
 {
   GList *walk = list;
@@ -145,8 +155,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
           desttemp->direction == GST_PAD_SINK) {
           if (gst_autoplug_caps_intersect (gst_pad_template_get_caps (srctemp), 
               gst_pad_template_get_caps (desttemp))) {
-            GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-                       "factory \"%s\" can connect with factory \"%s\"", 
+            GST_DEBUG ("factory \"%s\" can connect with factory \"%s\"", 
                        GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
             return desttemp;
          }
@@ -156,8 +165,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
     srctemps = g_list_next (srctemps);
   }
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-             "factory \"%s\" cannot connect with factory \"%s\"", 
+  GST_DEBUG ("factory \"%s\" cannot connect with factory \"%s\"", 
              GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
   return NULL;
 }
@@ -331,8 +339,7 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   g_return_val_if_fail (srccaps != NULL, NULL);
   g_return_val_if_fail (sinkcaps != NULL, NULL);
   
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, 
-            "attempting to autoplug via shortest path from %s to %s", 
+  GST_INFO ("attempting to autoplug via shortest path from %s to %s", 
 	    gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
   gst_caps_debug (srccaps, "source caps");
   gst_caps_debug (sinkcaps, "sink caps");
@@ -343,18 +350,16 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
     GstAutoplugNode *node = g_new0 (GstAutoplugNode, 1);
     node->prev = NULL;
     node->fac = (GstElementFactory *) factories->data;
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-	       "trying with %s", node->fac->details->longname);
+    GST_DEBUG ("trying with %s", node->fac->details->longname);
     node->templ = gst_autoplug_can_connect_src (node->fac, srccaps);
     node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) 
 		              : GST_AUTOPLUG_MAX_COST);
     node->endpoint = gst_autoplug_can_connect_sink (node->fac, sinkcaps);
     if (node->templ && node->endpoint)
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s makes connection possible",
+      GST_DEBUG ("%s makes connection possible",
 		 node->fac->details->longname);
     else
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, 
-		 "direct connection with %s not possible",
+      GST_DEBUG ("direct connection with %s not possible",
 		 node->fac->details->longname);
     if ((node->endpoint != NULL) && 
 	((bestnode == NULL) || (node->cost < bestnode->cost)))
@@ -370,8 +375,7 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   /* check if we even have possible endpoints */
   if (bestnode == NULL)
   {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, 
-	       "no factory found that could connect to sink caps");
+    GST_DEBUG ("no factory found that could connect to sink caps");
     g_list_free_list_and_elements (factory_nodes);
     return NULL;
   }
@@ -381,12 +385,12 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   {
     GList *nodes = factory_nodes;
     guint nextcost = GST_AUTOPLUG_MAX_COST; /* next cost to check */
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "iterating at current cost %d, bestnode %s at %d", curcost, GST_OBJECT_NAME (bestnode->fac), bestnode->cost);
+    GST_DEBUG ("iterating at current cost %d, bestnode %s at %d", curcost, GST_OBJECT_NAME (bestnode->fac), bestnode->cost);
     /* check if we already have a valid best connection to the sink */
     if (bestnode->cost <= curcost)
     {
       GList *ret;
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a way to connect via %s", GST_OBJECT_NAME ((GstObject *) bestnode->fac));    
+      GST_DEBUG ("found a way to connect via %s", GST_OBJECT_NAME ((GstObject *) bestnode->fac));    
       /* enter all factories into the return list */
       ret = g_list_prepend (NULL, bestnode->fac);
       bestnode = bestnode->prev;
@@ -440,12 +444,7 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
     curcost = nextcost;
   }
   
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found no path from source caps to sink caps");    
+  GST_DEBUG ("found no path from source caps to sink caps");    
   g_list_free_list_and_elements (factory_nodes);
   return NULL;  
 }
-
-
-
-
-

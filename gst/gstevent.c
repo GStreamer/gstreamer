@@ -22,12 +22,13 @@
 
 #include <string.h>		/* memcpy */
 
-#include "gstinfo.h"
+#include "gst_private.h"
 #include "gstdata_private.h"
+
+#include "gstinfo.h"
 #include "gstmemchunk.h"
 #include "gstevent.h"
 #include "gstlog.h"
-
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
 #include "gsttrace.h"
@@ -76,7 +77,7 @@ _gst_event_copy (GstEvent *event)
 static void
 _gst_event_free (GstEvent* event)
 {
-  GST_INFO (GST_CAT_EVENT, "freeing event %p", event);
+  GST_CAT_INFO (GST_CAT_EVENT, "freeing event %p", event);
 
   if (GST_EVENT_SRC (event)) {
     gst_object_unref (GST_EVENT_SRC (event));
@@ -144,7 +145,7 @@ gst_event_new (GstEventType type)
   gst_alloc_trace_new (_event_trace, event);
 #endif
 
-  GST_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
+  GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
 
   _GST_DATA_INIT (GST_DATA (event),
 		  _gst_event_type,

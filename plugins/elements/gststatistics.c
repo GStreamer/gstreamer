@@ -21,8 +21,14 @@
  */
 
 
-#include <gststatistics.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
+#include "gststatistics.h"
+
+GST_DEBUG_CATEGORY (gst_statistics_debug);
+#define GST_CAT_DEFAULT gst_statistics_debug
 
 GstElementDetails gst_statistics_details = {
   "Statistics",
@@ -299,9 +305,9 @@ gst_statistics_chain (GstPad *pad, GstBuffer *buf)
 
   if (update) {
     if (statistics->update) {
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, statistics, "pre update emit\n");
+      GST_DEBUG ("[%s]: pre update emit", GST_ELEMENT_NAME (statistics));
       g_signal_emit (G_OBJECT (statistics), gst_statistics_signals[SIGNAL_UPDATE], 0);
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, statistics, "post update emit\n");
+      GST_DEBUG ("[%s]: post update emit", GST_ELEMENT_NAME (statistics));
     }
     if (!statistics->silent) {
       gst_statistics_print(statistics);

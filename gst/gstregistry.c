@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "gst_private.h"
+
 #include "gstinfo.h"
 #include "gstregistry.h"
 #include "gstlog.h"
@@ -487,4 +489,3 @@ gst_registry_update_plugin (GstRegistry *registry, GstPlugin *plugin)
 
   return GST_REGISTRY_PLUGIN_LOAD_ERROR;
 }
-

@@ -134,7 +134,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	$(GST_LOADSAVE_SRC)
 
 
-BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC) 
+BUILT_SOURCES = gstversion.h gstconfig.h gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC) 
 
 libgstreamer_@GST_MAJORMINOR@_la_CFLAGS = -D_GNU_SOURCE \
 	$(GST_CFLAGS) \
@@ -150,7 +150,6 @@ libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINO
 gst_headers =			\
 	gst.h			\
 	gstatomic.h		\
-	gstconfig.h		\
 	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
@@ -195,6 +194,7 @@ gst_headers =			\
 	gstxml.h
 
 built_headers =			\
+	gstconfig.h		\
 	gstversion.h		\
 	gstmarshal.h		\
 	gstenumtypes.h

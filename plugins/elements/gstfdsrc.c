@@ -27,9 +27,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include <gstfdsrc.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include "gstfdsrc.h"
 
 #define DEFAULT_BLOCKSIZE	4096
+
+GST_DEBUG_CATEGORY (gst_fdsrc_debug);
+#define GST_CAT_DEFAULT gst_fdsrc_debug
 
 GstElementDetails gst_fdsrc_details = 
 {

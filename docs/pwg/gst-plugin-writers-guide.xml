@@ -10,6 +10,7 @@
 <!ENTITY INTRO_BASICS         SYSTEM "intro_basics.xml">
 
 <!ENTITY BUILDING_BOILER      SYSTEM "building_boiler.xml">
+<!ENTITY BUILDING_DEBUG       SYSTEM "building_debug.xml">
 <!ENTITY BUILDING_PADS        SYSTEM "building_pads.xml">
 <!ENTITY BUILDING_CHAINFN     SYSTEM "building_chainfn.xml">
 <!ENTITY BUILDING_STATE       SYSTEM "building_state.xml">

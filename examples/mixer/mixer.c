@@ -47,7 +47,7 @@ gst_play_type_find (GstBin *bin, GstElement *element)
   GstElement *pipeline;
   GstCaps *caps = NULL;
 
-  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\"",
+  GST_DEBUG ("GstPipeline: typefind for element \"%s\"",
              GST_ELEMENT_NAME(element));
 
   pipeline = gst_pipeline_new ("autoplug_pipeline");
@@ -116,9 +116,9 @@ int main(int argc,char *argv[])
   main_bin = gst_pipeline_new("bin");
 
   /* link adder and output to bin */
-  GST_INFO (0, "main: adding adder to bin");
+  GST_INFO ( "main: adding adder to bin");
   gst_bin_add (GST_BIN(main_bin), adder);
-  GST_INFO (0, "main: adding audiosink to bin");
+  GST_INFO ( "main: adding audiosink to bin");
   gst_bin_add (GST_BIN(main_bin), audiosink);
 
   /* link adder and audiosink */
@@ -139,7 +139,7 @@ int main(int argc,char *argv[])
     gst_bin_add (GST_BIN(main_bin), channel_in->pipe);
 
     /* request pads and link to adder */
-    GST_INFO (0, "requesting pad\n");
+    GST_INFO ( "requesting pad\n");
     pad = gst_element_get_request_pad (adder, "sink%d");
     printf ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
     sprintf (buffer, "channel%d", i);
@@ -242,7 +242,7 @@ create_input_channel (int id, char* location)
   GstElement *new_element;  
   GstElement *decoder;
 
-  GST_DEBUG (0, "c_i_p : creating channel with id %d for file %s",
+  GST_DEBUG ( "c_i_p : creating channel with id %d for file %s",
   		  id, location);
   
   /* allocate channel */
@@ -256,7 +256,7 @@ create_input_channel (int id, char* location)
 
   /* create channel */
 
-  GST_DEBUG (0, "c_i_p : creating pipeline");
+  GST_DEBUG ( "c_i_p : creating pipeline");
 
   sprintf (buffer, "pipeline%d", id);
   channel->pipe = gst_bin_new (buffer);
@@ -264,13 +264,13 @@ create_input_channel (int id, char* location)
     
   /* create elements */
 
-  GST_DEBUG(0, "c_i_p : creating filesrc");
+  GST_DEBUG ( "c_i_p : creating filesrc");
 
   sprintf (buffer, "filesrc%d", id);
   channel->filesrc = gst_element_factory_make ("filesrc", buffer);
   g_assert(channel->filesrc != NULL);    
 
-  GST_DEBUG(0, "c_i_p : setting location");
+  GST_DEBUG ( "c_i_p : setting location");
   g_object_set(G_OBJECT(channel->filesrc),"location", location, NULL);
 
   /* add filesrc to the bin before autoplug */

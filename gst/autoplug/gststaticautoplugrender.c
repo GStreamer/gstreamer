@@ -26,6 +26,9 @@
 
 #define GST_AUTOPLUG_MAX_COST 999999
 
+GST_DEBUG_CATEGORY_STATIC(debug_category);
+#define GST_CAT_DEFAULT debug_category
+
 typedef guint   (*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
 typedef GList*  (*GstAutoplugListFunction) (gpointer data);
 
@@ -87,6 +90,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstAutoplugFactory *factory;
 
   gst_plugin_set_longname (plugin, "A static autoplugger");
+
+  GST_DEBUG_CATEGORY_INIT (debug_category, "STATIC_AUTOPLUG", 0, "static autoplug render element");
 
   factory = gst_autoplug_factory_new ("staticrender",
 		  "A static autoplugger, it constructs the complete element before running it",
@@ -153,18 +158,16 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (desttemp->direction == GST_PAD_SINK && desttemp->presence != GST_PAD_REQUEST) {
 	if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (srctemp), GST_PAD_TEMPLATE_CAPS (desttemp))) {
-	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can link with factory \"%s\"", 
-			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
+	  GST_DEBUG ("factory \"%s\" can link with factory \"%s\"", 
+		     GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
           return TRUE;
 	}
       }
 
     }
   }
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot link with factory \"%s\"", 
-			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
+  GST_DEBUG ("factory \"%s\" cannot link with factory \"%s\"", 
+	     GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
   return FALSE;
 }
 
@@ -175,7 +178,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   gboolean linked = FALSE;
   GstElementState state = GST_STATE (gst_element_get_parent (src));
 
-  GST_DEBUG (0,"gstpipeline: autoplug pad link function for %s %s:%s to \"%s\"",
+  GST_DEBUG ("gstpipeline: autoplug pad link function for %s %s:%s to \"%s\"",
 		  GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME(pad), GST_ELEMENT_NAME(sink));
 
   if (state == GST_STATE_PLAYING)
@@ -194,7 +197,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 	break;
       }
       else {
-        GST_DEBUG (0,"pads incompatible %s, %s", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
+        GST_DEBUG ("pads incompatible %s, %s", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
     }
     sinkpads = g_list_next(sinkpads);
@@ -204,7 +207,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
 
   if (!linked) {
-    GST_DEBUG (0,"gstpipeline: no path to sinks for type");
+    GST_DEBUG ("gstpipeline: no path to sinks for type");
   }
   return linked;
 }
@@ -230,7 +233,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   }
 
   if (!linked) {
-    GST_DEBUG (0,"gstpipeline: delaying pad links for \"%s\" to \"%s\"",
+    GST_DEBUG ("gstpipeline: delaying pad links for \"%s\" to \"%s\"",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connect (G_OBJECT(src),"new_pad",
                        G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
@@ -257,7 +260,6 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
     res = gst_caps_is_always_compatible ((GstCaps *)src, (GstCaps *)dest);
-    /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res); */
   }
   else if (IS_CAPS (src)) {
     GstPadTemplate *templ;
@@ -269,7 +271,6 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
     else
       res = FALSE;
     
-    /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);*/
   }
   else if (IS_CAPS (dest)) {
     GstPadTemplate *templ;
@@ -280,12 +281,10 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
       res = TRUE;
     else
       res = FALSE;
-    /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);*/
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
-    GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to factory %s %d", 
-			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest), res);
+    GST_INFO ("factory %s to factory %s %d", GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest), res);
   }
 
   if (res)
@@ -328,7 +327,7 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
     else 
       goto next;
 
-    GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
+    GST_INFO ("autoplugging two caps structures");
 
     elements =  gst_autoplug_func (caps.src, caps.sink,
 				   gst_autoplug_element_factory_get_list,
@@ -396,7 +395,7 @@ next:
       }
     }
 
-    GST_DEBUG (0,"common factory \"%s\"", GST_OBJECT_NAME (factory));
+    GST_DEBUG ("common factory \"%s\"", GST_OBJECT_NAME (factory));
 
     element = gst_element_factory_create (factory, g_strdup (GST_OBJECT_NAME (factory)));
     gst_bin_add (GST_BIN(result), element);
@@ -456,7 +455,7 @@ differ:
       if (factories[i]) {
         factory = (GstElementFactory *)(factories[i]->data);
 
-        GST_DEBUG (0,"factory \"%s\"", GST_OBJECT_NAME (factory));
+        GST_DEBUG ("factory \"%s\"", GST_OBJECT_NAME (factory));
         element = gst_element_factory_create(factory, g_strdup (GST_OBJECT_NAME (factory)));
       }
       else {
@@ -472,11 +471,11 @@ differ:
 
 	use_thread = FALSE;
 
-        GST_DEBUG (0,"sugest new thread for \"%s\" %08x", GST_ELEMENT_NAME (element), GST_FLAGS(element));
+        GST_DEBUG ("sugest new thread for \"%s\" %08x", GST_ELEMENT_NAME (element), GST_FLAGS(element));
 
 	/* create a new queue and add to the previous bin */
         queue = gst_element_factory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
-        GST_DEBUG (0,"adding element \"%s\"", GST_ELEMENT_NAME (element));
+        GST_DEBUG ("adding element \"%s\"", GST_ELEMENT_NAME (element));
 
 	/* this will be the new bin for all following elements */
         thebin = gst_element_factory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
@@ -488,17 +487,17 @@ differ:
 
         gst_autoplug_pads_autoplug(thesrcelement, queue);
 
-	GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
+	GST_DEBUG ("adding element %s", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
-	GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (thebin));
+	GST_DEBUG ("adding element %s", GST_ELEMENT_NAME (thebin));
         gst_bin_add(GST_BIN(current_bin), thebin);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (thebin));
         thesrcelement = queue;
       }
       /* no thread needed, easy case */
       else {
-	GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
+	GST_DEBUG ("adding element %s", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
       }
@@ -547,7 +546,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
 
   current = rgnNodes[find_factory(rgnNodes, factory)].iPrev;
 
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factories found in autoplugging (reversed order)");
+  GST_INFO ("factories found in autoplugging (reversed order)");
 
   while (current != NULL)
   {
@@ -556,7 +555,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
     next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
     if (next) {
       factories = g_list_prepend (factories, current);
-      GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory: \"%s\"", GST_OBJECT_NAME (current));
+      GST_INFO ("factory: \"%s\"", GST_OBJECT_NAME (current));
     }
     current = next;
   }
@@ -664,4 +663,3 @@ gst_autoplug_func (gpointer src, gpointer sink,
 
   return construct_path (rgnNodes, sink);
 }
-

@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
     gst_element_set_state(bin, GST_STATE_PLAYING);
 
     if (GST_IS_THREAD (bin)) {
-      sleep (1);
+      g_usleep (G_USEC_PER_SEC);
     }
     else {
       gst_bin_iterate(GST_BIN(bin));
@@ -95,4 +95,3 @@ int main(int argc,char *argv[])
 
   exit(0);
 }
-

@@ -20,10 +20,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include "gstspideridentity.h"
-
 #include "gstspider.h"
+
+GST_DEBUG_CATEGORY (gst_spider_identity_debug);
+#define GST_CAT_DEFAULT gst_spider_identity_debug
 
 GstElementDetails gst_spider_identity_details = {
   "SpiderIdentity",
@@ -179,7 +184,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
 	list = g_list_next (list);
         if (conn->current != (GstElement *) conn->src) {
-          GST_DEBUG (GST_CAT_AUTOPLUG, "sending EOS to unconnected element %s from %s", 
+          GST_DEBUG ("sending EOS to unconnected element %s from %s", 
 	       GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (ident));
           gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
           gst_element_set_eos (GST_ELEMENT (conn->src));
@@ -194,7 +199,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if ((ident->src != NULL) && (GST_PAD_PEER (ident->src) != NULL)) {
     /* g_print("pushing buffer %p (refcount %d - buffersize %d) to pad %s:%s\n", buf, GST_BUFFER_REFCOUNT (buf), GST_BUFFER_SIZE (buf), GST_DEBUG_PAD_NAME (ident->src)); */
-    GST_DEBUG (0, "push %p %" G_GINT64_FORMAT, buf, GST_BUFFER_OFFSET (buf));
+    GST_LOG ( "push %p %" G_GINT64_FORMAT, buf, GST_BUFFER_OFFSET (buf));
     gst_pad_push (ident->src, buf);
   } else if (GST_IS_BUFFER (buf)) {
     gst_buffer_unref (buf);
@@ -272,7 +277,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
     case GST_PAD_SINK:
       if (ident->sink != NULL) break;
       /* sink */
-      GST_DEBUG(0, "element %s requests new sink pad", GST_ELEMENT_NAME(ident));
+      GST_DEBUG ( "element %s requests new sink pad", GST_ELEMENT_NAME(ident));
       ident->sink = gst_pad_new ("sink", GST_PAD_SINK);
       gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
       gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
@@ -282,7 +287,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
     case GST_PAD_SRC:
       /* src */
       if (ident->src != NULL) break;
-      GST_DEBUG(0, "element %s requests new src pad", GST_ELEMENT_NAME(ident));
+      GST_DEBUG ( "element %s requests new src pad", GST_ELEMENT_NAME(ident));
       ident->src = gst_pad_new ("src", GST_PAD_SRC);
       gst_element_add_pad (GST_ELEMENT (ident), ident->src);
       gst_pad_set_link_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
@@ -293,7 +298,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       break;
   }
   
-  GST_DEBUG(0, "element %s requested a new pad but none could be created", GST_ELEMENT_NAME(ident));
+  GST_DEBUG ( "element %s requested a new pad but none could be created", GST_ELEMENT_NAME(ident));
   return NULL;
 }
 
@@ -354,7 +359,7 @@ gst_spider_identity_start_type_finding (GstSpiderIdentity *ident)
   gchar *name;*/
   gboolean restart = FALSE;
   
-  GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding", GST_ELEMENT_NAME(ident));
+  GST_DEBUG ("element %s starts typefinding", GST_ELEMENT_NAME(ident));
   if (GST_STATE (GST_ELEMENT_PARENT (ident)) == GST_STATE_PLAYING)
   {
     gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT (ident)), GST_STATE_PAUSED);
@@ -481,9 +486,9 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
 
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
+      GST_DEBUG ("trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
-        GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, "typefind function %s found caps", GST_PLUGIN_FEATURE_NAME (factory));
+        GST_INFO ("typefind function %s found caps", GST_PLUGIN_FEATURE_NAME (factory));
         if (gst_pad_try_set_caps (ident->src, caps) <= 0) {
           g_warning ("typefind: found type but peer didn't accept it");
 	  gst_caps_sink (caps);
@@ -526,7 +531,7 @@ gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
   gboolean res = TRUE;
   GstSpiderIdentity *ident;
 
-  GST_DEBUG (0, "spider_identity src_event");
+  GST_DEBUG ( "spider_identity src_event");
 
   ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
 

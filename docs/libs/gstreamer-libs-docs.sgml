@@ -1,10 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY GstGetbits SYSTEM "xml/gstgetbits.xml">
-<!ENTITY GstIDCT SYSTEM "xml/gstidct.xml">
-<!ENTITY GstPutbits SYSTEM "xml/gstputbits.xml">
-<!ENTITY GstControl SYSTEM "xml/gstcontrol.xml">
+<!ENTITY GstGetbits SYSTEM "xml/getbits.xml">
+<!ENTITY GstPutbits SYSTEM "xml/putbits.xml">
+<!ENTITY GstControl SYSTEM "xml/control.xml">
 
 ]>
 
@@ -24,7 +23,6 @@
       GStreamer provides some standard libraries you can use to create plugins.
     </para>
       &GstGetbits;
-      &GstIDCT;
       &GstPutbits;
       &GstControl;
 

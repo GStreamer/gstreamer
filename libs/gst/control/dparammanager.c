@@ -23,6 +23,8 @@
 #include <gst/gstelement.h>
 #include <gst/gstinfo.h>
 
+GST_DEBUG_CATEGORY_EXTERN(_gst_control_debug);
+
 static GHashTable *_element_registry = NULL;
 static gboolean _gst_dpman_init_done = FALSE;
 
@@ -185,7 +187,7 @@ gst_dpman_add_required_dparam_callback (GstDParamManager *dpman,
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required callback dparam '%s'", g_param_spec_get_name(param_spec));
+	GST_DEBUG ("adding required callback dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_func = update_func;
 	dpwrap->update_data = update_data;
@@ -218,7 +220,7 @@ gst_dpman_add_required_dparam_direct (GstDParamManager *dpman,
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required direct dparam '%s'", g_param_spec_get_name(param_spec));
+	GST_DEBUG ("adding required direct dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_data = update_data;
 
@@ -251,7 +253,7 @@ gst_dpman_add_required_dparam_array (GstDParamManager *dpman,
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required array dparam '%s'", g_param_spec_get_name(param_spec));
+	GST_DEBUG ("adding required array dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_data = update_data;
 
@@ -280,7 +282,7 @@ gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name)
 	g_return_if_fail(dpwrap != NULL);
 	g_return_if_fail(dpwrap->dparam == NULL);
 
-	GST_DEBUG(GST_CAT_PARAMS, "removing required dparam: %s", dparam_name);
+	GST_DEBUG ("removing required dparam: %s", dparam_name);
 	
 	g_hash_table_remove(GST_DPMAN_DPARAMS(dpman), dparam_name);
 	GST_DPMAN_DPARAMS_LIST(dpman) = g_list_remove(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
@@ -463,7 +465,7 @@ gst_dpman_register_mode (GstDParamManagerClass *klass,
 	mode->teardownfunc = teardownfunc;
 	
 	g_hash_table_insert(klass->modes, modename, mode);
-	GST_DEBUG(GST_CAT_PARAMS, "mode '%s' registered", modename);
+	GST_DEBUG ("mode '%s' registered", modename);
 }
 
 /**
@@ -489,11 +491,11 @@ gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename)
 	g_return_val_if_fail (mode != NULL, FALSE);
 	
 	if (GST_DPMAN_MODE(dpman) == mode) {
-		GST_DEBUG(GST_CAT_PARAMS, "mode %s already set", modename);
+		GST_DEBUG ("mode %s already set", modename);
 		return TRUE;
 	}
 	
-	GST_DEBUG(GST_CAT_PARAMS, "setting mode to %s", modename);
+	GST_DEBUG ("setting mode to %s", modename);
 	if (GST_DPMAN_MODE(dpman) && GST_DPMAN_TEARDOWNFUNC(dpman)){
 		GST_DPMAN_TEARDOWNFUNC(dpman)(dpman);
 	}
@@ -625,7 +627,7 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 	
 	if (new_state == GST_STATE_PLAYING){
-		GST_DEBUG(GST_CAT_PARAMS, "initialising params");
+		GST_DEBUG ("initialising params");
 
 			
 		/* force all params to be updated */
@@ -688,7 +690,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 				/* direct method - set the value directly in the struct of the element */
 				case GST_DPMAN_DIRECT:
 					GST_DPARAM_DO_UPDATE(dpwrap->dparam, timestamp, dpwrap->value, dpwrap->update_info);
-					GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
+					GST_DEBUG ("doing direct update");
 
 					gst_dpman_inline_direct_update(dpwrap->value, dpwrap->update_data);
 					break;
@@ -696,7 +698,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 				/* callback method - call the element's callback so it can do what it likes */
 				case GST_DPMAN_CALLBACK:
 					GST_DPARAM_DO_UPDATE(dpwrap->dparam, timestamp, dpwrap->value, dpwrap->update_info);
-					GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
+					GST_DEBUG ("doing callback update");
 					
 					GST_DPMAN_CALLBACK_UPDATE(dpwrap, dpwrap->value);
 					break;
@@ -784,13 +786,13 @@ gst_dpman_preprocess_asynchronous(GstDParamManager *dpman, guint frames, gint64 
 
 					/* direct method - set the value directly in the struct of the element */
 					case GST_DPMAN_DIRECT:
-						GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
+						GST_DEBUG ("doing direct update");
 						gst_dpman_inline_direct_update(dpwrap->value, dpwrap->update_data);
 						break;
 
 					/* callback method - call the element's callback so it can do what it likes */
 					case GST_DPMAN_CALLBACK:
-						GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
+						GST_DEBUG ("doing callback update");
 						GST_DPMAN_CALLBACK_UPDATE(dpwrap, dpwrap->value);
 						break;
 					default:
@@ -810,7 +812,7 @@ gst_dpman_preprocess_asynchronous(GstDParamManager *dpman, guint frames, gint64 
 			dpwrap->next_update_frame = (guint)(current_time - timestamp) / dpman->rate_ratio;
 			updates_pending = TRUE;
 
-			GST_DEBUG(GST_CAT_PARAMS, "timestamp start: %"
+			GST_DEBUG ("timestamp start: %"
 				  G_GINT64_FORMAT " end: %"
 				  G_GINT64_FORMAT " current: %"
 				  G_GINT64_FORMAT, 
@@ -827,7 +829,7 @@ gst_dpman_preprocess_asynchronous(GstDParamManager *dpman, guint frames, gint64 
 		dpman->next_update_frame = dpwrap->next_update_frame;
 		dpman->frames_to_process = dpman->next_update_frame;
 
-		GST_DEBUG(GST_CAT_PARAMS, "next update frame %u, frames to process %u", dpman->next_update_frame, dpman->frames_to_process);
+		GST_DEBUG ("next update frame %u, frames to process %u", dpman->next_update_frame, dpman->frames_to_process);
 		return TRUE;
 	}
 	
@@ -847,7 +849,7 @@ gst_dpman_process_asynchronous(GstDParamManager *dpman, guint frame_count)
 	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 	dpwrap = (GstDParamWrapper*)dwraps->data;
 
-	GST_DEBUG(GST_CAT_PARAMS, "in gst_dpman_process_asynchronous");
+	GST_DEBUG ("in gst_dpman_process_asynchronous");
 
 	if (frame_count >= dpman->num_frames){
 		g_warning("there is no more buffer to process");
@@ -869,13 +871,13 @@ gst_dpman_process_asynchronous(GstDParamManager *dpman, guint frame_count)
 
 			/* direct method - set the value directly in the struct of the element */
 			case GST_DPMAN_DIRECT:
-				GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
+				GST_DEBUG ("doing direct update");
 				gst_dpman_inline_direct_update(dpwrap->value, dpwrap->update_data);
 				break;
 
 			/* callback method - call the element's callback so it can do what it likes */
 			case GST_DPMAN_CALLBACK:
-				GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
+				GST_DEBUG ("doing callback update");
 				GST_DPMAN_CALLBACK_UPDATE(dpwrap, dpwrap->value);
 				break;
 			default:
@@ -911,12 +913,12 @@ gst_dpman_process_asynchronous(GstDParamManager *dpman, guint frame_count)
 	if (dpwrap->next_update_frame == dpman->num_frames){
 		dpman->next_update_frame = dpman->num_frames;
 		dpman->frames_to_process = dpman->num_frames - frame_count;
-		GST_DEBUG(GST_CAT_PARAMS, "no more updates, frames to process %u", dpman->frames_to_process);
+		GST_DEBUG ("no more updates, frames to process %u", dpman->frames_to_process);
 	}
 	else {
 		dpman->next_update_frame = dpwrap->next_update_frame;
 		dpman->frames_to_process = dpman->next_update_frame - frame_count;
-		GST_DEBUG(GST_CAT_PARAMS, "next update frame %u, frames to process %u", dpman->next_update_frame, dpman->frames_to_process);
+		GST_DEBUG ("next update frame %u, frames to process %u", dpman->next_update_frame, dpman->frames_to_process);
 	}
 
 	return TRUE;
@@ -972,4 +974,3 @@ gst_dpman_teardown_disabled(GstDParamManager *dpman){
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 
 }
-

@@ -24,14 +24,12 @@
 #ifndef __GST_FAKESINK_H__
 #define __GST_FAKESINK_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fakesink_details;
-
+extern GstElementDetails gst_fakesink_details;
+GST_DEBUG_CATEGORY_EXTERN(gst_fakesink_debug);
 
 #define GST_TYPE_FAKESINK \
   (gst_fakesink_get_type())

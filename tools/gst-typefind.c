@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <gst/gst.h>
@@ -36,7 +40,10 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  if (argc < 2) { g_error ("Please give a filename to typefind"); }
+  if (argc < 2) { 
+    g_print ("Please give a filename to typefind\n\n");
+    exit (1);
+  }
   pipeline = gst_pipeline_new (NULL);
   source = gst_element_factory_make ("filesrc", "source");
   g_assert (GST_IS_ELEMENT (source));
@@ -58,4 +65,3 @@ main (int argc, char *argv[])
   }
   return 0;
 }
-

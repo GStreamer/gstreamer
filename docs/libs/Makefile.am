@@ -185,8 +185,10 @@ maintainer-clean-local: clean
 # make distcheck work
 distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
-	rm -rf $(DOC_MODULE)-*.txt
-	rm -rf tmpl/*.sgml
+	rm -rf $(DOC_MODULE)-decl.txt
+	rm -rf $(DOC_MODULE)-undocumented.txt
+	rm -rf $(DOC_MODULE)-unused.txt
+	rm -rf tmpl/*.sgml.bak
 	rm -f $(DOC_MODULE).hierarchy
 	rm -f *.stamp || true
 

@@ -21,8 +21,13 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <gst/gst.h>
 
+#include "gstfilesrc.h"
 #include "gstfilesink.h"
 #include "gstidentity.h"
 #include "gstfakesink.h"
@@ -75,7 +80,22 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "Standard GST Elements");
 
-  while (_elements[i].name) {
+  GST_DEBUG_CATEGORY_INIT (gst_fakesrc_debug,	"fakesrc",	0,	"fakesrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_fakesink_debug,	"fakesink",	0,	"fakesink element");
+  GST_DEBUG_CATEGORY_INIT (gst_filesrc_debug,	"filesrc",	0,	"filesrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_filesink_debug,	"fakesink",	0,	"filesink element");
+  GST_DEBUG_CATEGORY_INIT (gst_identity_debug,	"identity",	0,	"identity element");
+  GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug,	"fdsrc",	0,	"fdsrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_fdsink_debug,	"fdsink",	0,	"fdsink element");
+  GST_DEBUG_CATEGORY_INIT (gst_multidisksrc_debug, "multidisksrc", 0,	"multidisksrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_pipefilter_debug, "pipefilter",	0,	"pipefilter element");
+  GST_DEBUG_CATEGORY_INIT (gst_tee_debug,	"tee",		0,	"tee element");
+  GST_DEBUG_CATEGORY_INIT (gst_aggregator_debug, "aggregator",	0,	"aggregator element");
+  GST_DEBUG_CATEGORY_INIT (gst_shaper_debug,	"shaper",	0,	"shaper element");
+  GST_DEBUG_CATEGORY_INIT (gst_statistics_debug, "statistics",	0,	"statistics element");
+  GST_DEBUG_CATEGORY_INIT (gst_md5sink_debug,	"md5sink",	0,	"md5sink element");
+
+  while (_elements[i].name) {  
     factory = gst_element_factory_new (_elements[i].name,
                                       (_elements[i].type) (),
                                       _elements[i].details);
@@ -107,4 +127,3 @@ GstPluginDesc plugin_desc = {
   "gstelements",
   plugin_init
 };
-

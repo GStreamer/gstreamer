@@ -56,13 +56,12 @@ int main(int argc,char *argv[])
   for (x = 0 ; x < 10 ; x++){
     g_print ("playing %d\n", x);
     gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
-    sleep (2);
+    g_usleep (G_USEC_PER_SEC * 2);
 
     g_print ("pausing %d\n", x);
     gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PAUSED);
-    sleep (2);
+    g_usleep (G_USEC_PER_SEC * 2);
   }
 
   exit (0);
 }
-

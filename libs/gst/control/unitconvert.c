@@ -19,6 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "unitconvert.h"
 #include <gst/gstinfo.h>
 
@@ -301,7 +305,7 @@ gst_unitconv_register_unit(const gchar *domain_name,
 			g_hash_table_lookup(_gst_unit_domain_defaults, domain_name) == NULL, FALSE);
 	}
 
-	GST_DEBUG (GST_CAT_PARAMS,"creating unit: %s", unit_name);
+	GST_DEBUG ("creating unit: %s", unit_name);
 
 	unit = g_new0(GstUnit,1);
 
@@ -341,7 +345,7 @@ gst_unitconv_register_convert_func(gchar *from_unit_named, gchar *to_unit_named,
 	g_return_val_if_fail (
 		g_hash_table_lookup(convert_funcs, to_unit) == NULL, FALSE);
 		
-	GST_DEBUG (GST_CAT_PARAMS,"adding unit converter from %s to %s\n", 
+	GST_DEBUG ("adding unit converter from %s to %s\n", 
 	           g_param_spec_get_name(from_unit->unit_spec),
 	           g_param_spec_get_name(to_unit->unit_spec));
 
@@ -423,4 +427,3 @@ gst_unitconv_add_core_converters(void){
 	gst_unitconv_register_convert_func("scalar", "percent", gst_unitconv_magnitude_scalar_to_percent);
 	gst_unitconv_register_convert_func("percent", "scalar", gst_unitconv_magnitude_percent_to_scalar);
 }
-

@@ -24,7 +24,7 @@
 
 #include "gstsystemclock.h"
 #include "gstscheduler.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "gstregistrypool.h"
 
 static void 	gst_scheduler_class_init 	(GstSchedulerClass *klass);
@@ -90,7 +90,7 @@ gst_scheduler_dispose (GObject *object)
   GstScheduler *sched = GST_SCHEDULER (object);
 
   /* thse lists should all be NULL */
-  GST_DEBUG (0, "scheduler %p dispose %p %p %p",
+  GST_DEBUG ( "scheduler %p dispose %p %p %p",
 		  object,
 		  sched->clock_providers,
 		  sched->clock_receivers,
@@ -228,7 +228,7 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 
   /* if it's already in this scheduler, don't bother doing anything */
   if (GST_ELEMENT_SCHED (element) == sched) {
-    GST_DEBUG (GST_CAT_SCHEDULING, "element %s already in scheduler %p", 
+    GST_CAT_DEBUG (GST_CAT_SCHEDULING, "element %s already in scheduler %p", 
 		    GST_ELEMENT_NAME (element), sched);
     return;
   }
@@ -238,11 +238,11 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 
   if (gst_element_provides_clock (element)) {
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
-    GST_DEBUG (GST_CAT_CLOCK, "added clock provider %s", GST_ELEMENT_NAME (element));
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "added clock provider %s", GST_ELEMENT_NAME (element));
   }
   if (gst_element_requires_clock (element)) {
     sched->clock_receivers = g_list_prepend (sched->clock_receivers, element);
-    GST_DEBUG (GST_CAT_CLOCK, "added clock receiver %s", GST_ELEMENT_NAME (element));
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "added clock receiver %s", GST_ELEMENT_NAME (element));
   }
 
   gst_element_set_scheduler (element, sched);
@@ -307,7 +307,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         if (clock)
           gst_clock_reset (clock);
 
-        GST_DEBUG (GST_CAT_CLOCK, "scheduler READY to PAUSED clock is %p (%s)", clock, 
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler READY to PAUSED clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
         gst_object_replace ((GstObject **)&sched->current_clock, (GstObject *)clock);
@@ -317,12 +317,12 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
       {
         GstClock *clock = gst_scheduler_get_clock (sched);
 
-        GST_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
 	gst_scheduler_set_clock (sched, clock);
         if (clock) {
-          GST_DEBUG (GST_CAT_CLOCK, "enabling clock %p (%s)", clock, 
+          GST_CAT_DEBUG (GST_CAT_CLOCK, "enabling clock %p (%s)", clock, 
 			GST_OBJECT_NAME (clock));
           gst_clock_set_active (clock, TRUE);
 	}
@@ -330,7 +330,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
       }
       case GST_STATE_PLAYING_TO_PAUSED:
         if (sched->current_clock) {
-          GST_DEBUG (GST_CAT_CLOCK, "disabling clock %p (%s)", sched->current_clock, 
+          GST_CAT_DEBUG (GST_CAT_CLOCK, "disabling clock %p (%s)", sched->current_clock, 
 			GST_OBJECT_NAME (sched->current_clock));
           gst_clock_set_active (sched->current_clock, FALSE);
 	}
@@ -385,7 +385,7 @@ gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
   g_return_if_fail (GST_IS_SCHEDULER (sched2));
   g_return_if_fail (sched2->parent_sched == NULL);
 
-  GST_DEBUG (0,"gstscheduler: %p add scheduler %p", sched, sched2);
+  GST_DEBUG ("gstscheduler: %p add scheduler %p", sched, sched2);
 
   gst_object_ref (GST_OBJECT (sched2));
   gst_object_ref (GST_OBJECT (sched));
@@ -415,7 +415,7 @@ gst_scheduler_remove_scheduler (GstScheduler *sched, GstScheduler *sched2)
   g_return_if_fail (GST_IS_SCHEDULER (sched2));
   g_return_if_fail (sched2->parent_sched == sched);
 
-  GST_DEBUG (0,"gstscheduler: %p remove scheduler %p", sched, sched2);
+  GST_DEBUG ("gstscheduler: %p remove scheduler %p", sched, sched2);
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
@@ -561,7 +561,7 @@ gst_scheduler_get_clock (GstScheduler *sched)
   if (GST_FLAG_IS_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK)) {
     clock = sched->clock;  
 
-    GST_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
   }
   else {
@@ -589,8 +589,8 @@ gst_scheduler_get_clock (GstScheduler *sched)
       clock = gst_system_clock_obtain ();
     }
   }
-  GST_DEBUG (GST_CAT_CLOCK, "scheduler selected clock %p (%s)", clock, 
-		(clock ? GST_OBJECT_NAME (clock) : "nil"));
+  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, sched, "scheduler selected clock %p (%s)", clock, 
+	              clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
 
   return clock;
 }
@@ -614,7 +614,7 @@ gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
 
   gst_object_replace ((GstObject **)&sched->clock, (GstObject *)clock);
 
-  GST_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
 		(clock ? GST_OBJECT_NAME (clock) : "nil"));
 }
 
@@ -643,7 +643,7 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
   while (receivers) {
     GstElement *element = GST_ELEMENT (receivers->data);
 
-    GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on element %s", clock, 
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on element %s", clock, 
 		(clock ? GST_OBJECT_NAME (clock) : "nil"), GST_ELEMENT_NAME (element));
     
     gst_element_set_clock (element, clock);
@@ -652,7 +652,7 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
   while (schedulers) {
     GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
 
-    GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on scheduler %p", clock, 
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on scheduler %p", clock, 
 		(clock ? GST_OBJECT_NAME (clock) : "nil"), scheduler);
     gst_scheduler_set_clock (scheduler, clock);
     schedulers = g_list_next (schedulers);
@@ -675,7 +675,7 @@ gst_scheduler_auto_clock (GstScheduler *sched)
 
   gst_object_replace ((GstObject **)&sched->clock, NULL);
 
-  GST_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
 }
 
 /**
@@ -871,7 +871,7 @@ gst_scheduler_factory_find (const gchar *name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  GST_DEBUG (0,"gstscheduler: find \"%s\"", name);
+  GST_DEBUG ("gstscheduler: find \"%s\"", name);
 
   feature = gst_registry_pool_find_feature (name, GST_TYPE_SCHEDULER_FACTORY);
 

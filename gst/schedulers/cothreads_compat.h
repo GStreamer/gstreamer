@@ -100,15 +100,9 @@ static void do_cothread_switch(cothread *to)
 {
   cothread *from = cothread_self ();
   if (from == (to)) {
-    GST_DEBUG (GST_CAT_COTHREAD_SWITCH,
-               "trying to switch to the same cothread (%p), not allowed",
-               (to));
     g_warning ("trying to switch to the same cothread, not allowed");
   } else {
-    GST_INFO (GST_CAT_COTHREAD_SWITCH,
-              "switching from cothread %p to cothread %p", from, (to));
     cothread_switch (from, (to));
-    GST_INFO (GST_CAT_COTHREAD_SWITCH, "we're in cothread %p now", from);
   }
 }
 

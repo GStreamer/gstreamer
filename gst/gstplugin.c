@@ -26,10 +26,11 @@
 #include <unistd.h>
 
 #include "gst_private.h"
+
 #include "gstplugin.h"
 #include "gstversion.h"
 #include "gstregistrypool.h"
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "config.h"
 #include "gstfilter.h"
 
@@ -98,7 +99,7 @@ static GstPlugin*
 gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *module)
 {
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
-    GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" has incompatible version, not loading",
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" has incompatible version, not loading",
        plugin->filename);
     return NULL;
   }
@@ -107,11 +108,11 @@ gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *modul
   plugin->name = g_strdup(desc->name);
 
   if (!((desc->plugin_init) (module, plugin))) {
-    GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" failed to initialise",
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" failed to initialise",
        plugin->filename);
     return NULL;
   }
-  GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
+  GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
 
   return plugin;
 }
@@ -157,7 +158,7 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
 
   filename = plugin->filename;
 
-  GST_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"", filename);
+  GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"", filename);
 
   if (g_module_supported () == FALSE) {
     g_set_error (error,
@@ -184,13 +185,13 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
     if (g_module_symbol (module, "plugin_desc", &ptr)) {
       desc = (GstPluginDesc *)ptr;
 
-      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded, called entry function...", filename);
+      GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded, called entry function...", filename);
 
       plugin->filename = g_strdup (filename);
       plugin = gst_plugin_register_func (desc, plugin, module);
 
       if (plugin != NULL) {
-        GST_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded", plugin->filename);
+        GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded", plugin->filename);
         plugin->module = module;
         return TRUE;
       }
@@ -242,11 +243,11 @@ gst_plugin_unload_plugin (GstPlugin *plugin)
 
   if (g_module_close (plugin->module)) {
     plugin->module = NULL;
-    GST_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" unloaded", plugin->filename);
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" unloaded", plugin->filename);
     return TRUE;
   }
   else {
-    GST_INFO (GST_CAT_PLUGIN_LOADING, "failed to unload plugin \"%s\"", plugin->filename);
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "failed to unload plugin \"%s\"", plugin->filename);
     return FALSE;
   }
 }
@@ -537,14 +538,14 @@ gst_plugin_load (const gchar *name)
   if (plugin) {
     gboolean result = gst_plugin_load_plugin (plugin, &error);
     if (error) {
-      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "load_plugin error: %s\n",
+      GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "load_plugin error: %s\n",
 	         error->message);
       g_error_free (error);
     }
     return result;
   }
 
-  GST_DEBUG (GST_CAT_PLUGIN_LOADING, "Could not find %s in registry pool",
+  GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "Could not find %s in registry pool",
              name);
 
   return FALSE;

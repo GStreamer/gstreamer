@@ -29,9 +29,14 @@
 #include <unistd.h>
 #include <errno.h>
 
-/*#define DEBUG_ENABLED*/
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gstpipefilter.h"
 
+GST_DEBUG_CATEGORY (gst_pipefilter_debug);
+#define GST_CAT_DEFAULT gst_pipefilter_debug
 
 GstElementDetails gst_pipefilter_details = {
   "Pipefilter",
@@ -141,7 +146,7 @@ gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
 
   pipefilter = GST_PIPEFILTER (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0,"pipefilter: %s received event", GST_ELEMENT_NAME (pipefilter));
+  GST_DEBUG ("pipefilter: %s received event", GST_ELEMENT_NAME (pipefilter));
   if (close (pipefilter->fdin[1]) < 0)
     perror("close");
   if (close (pipefilter->fdout[0]) < 0)
@@ -169,9 +174,9 @@ gst_pipefilter_get (GstPad *pad)
   g_return_val_if_fail(GST_BUFFER_DATA(newbuf) != NULL, NULL);
 
   /* read it in from the file */
-  GST_DEBUG (0,"attemting to read %ld bytes", pipefilter->bytes_per_read);
+  GST_DEBUG ("attemting to read %ld bytes", pipefilter->bytes_per_read);
   readbytes = read(pipefilter->fdout[0], GST_BUFFER_DATA(newbuf), pipefilter->bytes_per_read);
-  GST_DEBUG (0,"read %ld bytes", readbytes);
+  GST_DEBUG ("read %ld bytes", readbytes);
   if (readbytes < 0) {
     perror("read");
     gst_element_error(GST_ELEMENT(pipefilter),"reading");
@@ -207,9 +212,9 @@ gst_pipefilter_chain (GstPad *pad,GstBuffer *buf)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (0,"attemting to write %ld bytes", size);
+  GST_DEBUG ("attemting to write %ld bytes", size);
   writebytes = write(pipefilter->fdin[1],data,size);
-  GST_DEBUG (0,"written %ld bytes", writebytes);
+  GST_DEBUG ("written %ld bytes", writebytes);
   if (writebytes < 0) {
     perror("write");
     gst_element_error(GST_ELEMENT(pipefilter),"writing");

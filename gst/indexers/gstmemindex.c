@@ -17,10 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst_private.h>
-#include <gst/gstversion.h>
-#include <gst/gstplugin.h>
-#include <gst/gstindex.h>
+#include <gst/gst.h>
 
 #define GST_TYPE_MEM_INDEX		\
   (gst_index_get_type ())
@@ -158,7 +155,7 @@ gst_mem_index_class_init (GstMemIndexClass *klass)
 static void
 gst_mem_index_init (GstMemIndex *index)
 {
-  GST_DEBUG(0, "created new mem index");
+  GST_DEBUG ( "created new mem index");
 
   index->associations = NULL;
   index->id_index = g_hash_table_new (g_int_hash, g_int_equal);
@@ -260,9 +257,7 @@ gst_mem_index_add_format (GstIndex *index, GstIndexEntry *entry)
 static void
 gst_mem_index_add_entry (GstIndex *index, GstIndexEntry *entry)
 {
-  GstMemIndex *memindex = GST_MEM_INDEX (index);
-
-  GST_DEBUG (0, "adding entry %p\n", memindex);
+  GST_LOG_OBJECT (index, "added this entry");
 
   switch (entry->type){
      case GST_INDEX_ENTRY_ID:

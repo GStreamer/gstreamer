@@ -23,9 +23,10 @@
 
 #include <string.h>
 
+#include "gst_private.h"
+
 #include "gstparse.h"
 #include "gstinfo.h"
-#include "gstlog.h"
 
 extern GstElement *_gst_parse_launch (const gchar *, GError **);
 
@@ -118,7 +119,7 @@ gst_parse_launch (const gchar * pipeline_description, GError **error)
 
   g_return_val_if_fail (pipeline_description != NULL, NULL);
 
-  GST_INFO (GST_CAT_PIPELINE, "parsing pipeline description %s",
+  GST_CAT_INFO (GST_CAT_PIPELINE, "parsing pipeline description %s",
             pipeline_description);
 
   /* the need for the mutex will go away with flex 2.5.6 */

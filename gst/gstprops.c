@@ -22,7 +22,7 @@
 
 #include "gst_private.h"
 
-#include "gstlog.h"
+#include "gstinfo.h"
 #include "gstprops.h"
 #include "gstmemchunk.h"
 
@@ -589,38 +589,39 @@ _gst_props_initialize (void)
 static void
 gst_props_debug_entry (GstPropsEntry *entry)
 {
-  const gchar *name = g_quark_to_string (entry->propid);
+  /* unused when debugging is disabled */
+  G_GNUC_UNUSED const gchar *name = g_quark_to_string (entry->propid);
 
   switch (entry->propstype) {
     case GST_PROPS_INT_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: int %d", entry, name, entry->data.int_data);
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: int %d", entry, name, entry->data.int_data);
       break;
     case GST_PROPS_FLOAT_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float %f", entry, name, entry->data.float_data);
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float %f", entry, name, entry->data.float_data);
       break;
     case GST_PROPS_FOURCC_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: fourcc %c%c%c%c", entry, name,
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: fourcc %c%c%c%c", entry, name,
 	(entry->data.fourcc_data>>0)&0xff,
 	(entry->data.fourcc_data>>8)&0xff,
 	(entry->data.fourcc_data>>16)&0xff,
 	(entry->data.fourcc_data>>24)&0xff);
       break;
     case GST_PROPS_BOOLEAN_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: bool %d", entry, name, entry->data.bool_data);
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: bool %d", entry, name, entry->data.bool_data);
       break;
     case GST_PROPS_STRING_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: string \"%s\"", entry, name, entry->data.string_data.string);
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: string \"%s\"", entry, name, entry->data.string_data.string);
       break;
     case GST_PROPS_INT_RANGE_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: int range %d-%d", entry, name, entry->data.int_range_data.min,
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: int range %d-%d", entry, name, entry->data.int_range_data.min,
 		      entry->data.int_range_data.max);
       break;
     case GST_PROPS_FLOAT_RANGE_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float range %f-%f", entry, name, entry->data.float_range_data.min,
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float range %f-%f", entry, name, entry->data.float_range_data.min,
 		      entry->data.float_range_data.max);
       break;
     case GST_PROPS_LIST_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%p: [list]", entry);
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: [list]", entry);
       g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_debug_entry, NULL);
       break;
     default:
@@ -746,7 +747,7 @@ gst_props_alloc_entry (void)
   gst_alloc_trace_new (_entries_trace, entry);
 #endif
 
-  GST_DEBUG (GST_CAT_PROPERTIES, "new entry %p", entry);
+  GST_CAT_LOG (GST_CAT_PROPERTIES, "new entry %p", entry);
 
   return entry;
 }
@@ -776,7 +777,7 @@ gst_props_entry_clean (GstPropsEntry *entry)
 void
 gst_props_entry_destroy (GstPropsEntry *entry)
 {
-  GST_DEBUG (GST_CAT_PROPERTIES, "destroy entry %p", entry);
+  GST_CAT_LOG (GST_CAT_PROPERTIES, "destroy entry %p", entry);
 
   gst_props_entry_clean (entry);
 
@@ -809,7 +810,7 @@ gst_props_empty_new (void)
   gst_alloc_trace_new (_props_trace, props);
 #endif
 
-  GST_DEBUG (GST_CAT_PROPERTIES, "new %p", props);
+  GST_CAT_LOG (GST_CAT_PROPERTIES, "new %p", props);
 
   props->properties = NULL;
   props->refcount = 1;
@@ -972,11 +973,11 @@ void
 gst_props_debug (GstProps *props)
 {
   if (!props) {
-    GST_DEBUG (GST_CAT_PROPERTIES, "props (null)");
+    GST_CAT_DEBUG (GST_CAT_PROPERTIES, "props (null)");
     return;
   }
 	  
-  GST_DEBUG (GST_CAT_PROPERTIES, "props %p, refcount %d, flags %d", 
+  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "props %p, refcount %d, flags %d", 
 		  props, props->refcount, props->flags);
 
   g_list_foreach (props->properties, (GFunc) gst_props_debug_entry, NULL);
@@ -1350,7 +1351,7 @@ gst_props_unref (GstProps *props)
 
   g_return_val_if_fail (props->refcount > 0, NULL);
 
-  GST_DEBUG (GST_CAT_PROPERTIES, "unref %p (%d->%d)", props, props->refcount, props->refcount-1);
+  GST_CAT_LOG (GST_CAT_PROPERTIES, "unref %p (%d->%d)", props, props->refcount, props->refcount-1);
   props->refcount--;
 
   if (props->refcount == 0) {
@@ -1377,7 +1378,7 @@ gst_props_ref (GstProps *props)
 
   g_return_val_if_fail (props->refcount > 0, NULL);
 
-  GST_DEBUG (GST_CAT_PROPERTIES, "ref %p (%d->%d)", props, props->refcount, props->refcount+1);
+  GST_CAT_LOG (GST_CAT_PROPERTIES, "ref %p (%d->%d)", props, props->refcount, props->refcount+1);
 
   props->refcount++;
 
@@ -1397,7 +1398,7 @@ gst_props_sink (GstProps *props)
   if (props == NULL)
     return;
 
-  GST_DEBUG (GST_CAT_PROPERTIES, "sink %p", props);
+  GST_CAT_LOG (GST_CAT_PROPERTIES, "sink %p", props);
 
   if (GST_PROPS_IS_FLOATING (props)) {
     GST_PROPS_FLAG_UNSET (props, GST_PROPS_FLOATING);
@@ -1958,7 +1959,7 @@ gst_props_entry_check_list_compatibility (GstPropsEntry *entry1, GstPropsEntry *
 static gboolean
 gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry2)
 {
-  GST_DEBUG (GST_CAT_PROPERTIES,"compare: %s %s", g_quark_to_string (entry1->propid), g_quark_to_string (entry2->propid));
+  GST_CAT_DEBUG (GST_CAT_PROPERTIES,"compare: %s %s", g_quark_to_string (entry1->propid), g_quark_to_string (entry2->propid));
 
   if (entry2->propstype == GST_PROPS_LIST_TYPE && entry1->propstype != GST_PROPS_LIST_TYPE) {
     return gst_props_entry_check_list_compatibility (entry1, entry2);
@@ -2004,7 +2005,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       switch (entry2->propstype) {
 	/* b   <--->   a */
         case GST_PROPS_FOURCC_TYPE:
-          GST_DEBUG(GST_CAT_PROPERTIES,"\"%c%c%c%c\" <--> \"%c%c%c%c\" ?",
+          GST_CAT_DEBUG (GST_CAT_PROPERTIES,"\"%c%c%c%c\" <--> \"%c%c%c%c\" ?",
 	    (entry2->data.fourcc_data>>0)&0xff,
 	    (entry2->data.fourcc_data>>8)&0xff,
 	    (entry2->data.fourcc_data>>16)&0xff,
@@ -2022,13 +2023,13 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       switch (entry2->propstype) {
 	/* b   <--->   a - d */
         case GST_PROPS_INT_RANGE_TYPE:
-          GST_DEBUG(GST_CAT_PROPERTIES,"%d <= %d <= %d ?",entry2->data.int_range_data.min,
+          GST_CAT_DEBUG (GST_CAT_PROPERTIES,"%d <= %d <= %d ?",entry2->data.int_range_data.min,
                     entry1->data.int_data,entry2->data.int_range_data.max);
 	  return (entry2->data.int_range_data.min <= entry1->data.int_data &&
 	          entry2->data.int_range_data.max >= entry1->data.int_data);
 	/* b   <--->   a */
         case GST_PROPS_INT_TYPE:
-          GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?",entry1->data.int_data,entry2->data.int_data);
+          GST_CAT_DEBUG (GST_CAT_PROPERTIES,"%d == %d ?",entry1->data.int_data,entry2->data.int_data);
 	  return (entry2->data.int_data == entry1->data.int_data);
         default:
 	  break;
@@ -2059,7 +2060,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       switch (entry2->propstype) {
 	/* t   <--->   t */
         case GST_PROPS_STRING_TYPE:
-          GST_DEBUG(GST_CAT_PROPERTIES,"\"%s\" <--> \"%s\" ?",
+          GST_CAT_DEBUG (GST_CAT_PROPERTIES,"\"%s\" <--> \"%s\" ?",
 			  entry2->data.string_data.string, entry1->data.string_data.string);
           return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
         default:
@@ -2118,7 +2119,7 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 
     if (!gst_props_entry_check_compatibility (entry1, entry2)) {
 	compatible = FALSE; 
-	GST_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible: ",
+	GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible: ",
 		   g_quark_to_string (entry1->propid));
     }
 
