@@ -181,7 +181,9 @@ gst_queue_init (GstQueue *queue)
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
   gst_pad_set_negotiate_function (queue->srcpad, GST_DEBUG_FUNCPTR(gst_queue_handle_negotiate_src));
 
+  queue->leaky = GST_QUEUE_NO_LEAK;
   queue->queue = NULL;
+  queue->count = 0;
   queue->level_buffers = 0;
   queue->level_bytes = 0;
   queue->level_time = 0LL;
@@ -248,14 +250,17 @@ gst_queue_cleanup_buffers (gpointer data, const gpointer user_data)
   if (GST_IS_BUFFER (data)) {
     gst_buffer_unref (GST_BUFFER (data));
   }
+  else {
+    gst_event_free (GST_EVENT (data));
+  }
 }
 
 static void
 gst_queue_locked_flush (GstQueue *queue)
 {
-  g_slist_foreach (queue->queue, gst_queue_cleanup_buffers,
+  g_list_foreach (queue->queue, gst_queue_cleanup_buffers,
 		  (gpointer) queue);
-  g_slist_free (queue->queue);
+  g_list_free (queue->queue);
 
   queue->queue = NULL;
   queue->level_buffers = 0;
@@ -283,7 +288,6 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  reader = FALSE;
 restart:
   /* we have to lock the queue since we span threads */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
@@ -301,7 +305,7 @@ restart:
 			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
       default:
-	gst_pad_event_default (pad, GST_EVENT (buf));
+	//gst_pad_event_default (pad, GST_EVENT (buf));
 	break;
     }
   }
@@ -327,7 +331,7 @@ restart:
       }
       /* otherwise we have to push a buffer off the other end */
       else {
-        GSList *front;
+        GList *front;
         GstBuffer *leakbuf;
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on downstream end\n");
         front = queue->queue;
@@ -339,8 +343,8 @@ restart:
         queue->level_buffers--;
         queue->level_bytes -= GST_BUFFER_SIZE(leakbuf);
         gst_buffer_unref(leakbuf);
-        queue->queue = g_slist_remove_link (queue->queue, front);
-        g_slist_free (front);
+        queue->queue = g_list_remove_link (queue->queue, front);
+        g_list_free (front);
       }
     }
 
@@ -383,13 +387,18 @@ restart:
         queue->level_buffers, queue->size_buffers);
   }
 
+  GST_BUFFER_OFFSET (buf) = queue->count++;
   /* put the buffer on the tail of the list */
-  queue->queue = g_slist_append (queue->queue, buf);
+  queue->queue = g_list_append (queue->queue, buf);
   queue->level_buffers++;
   queue->level_bytes += GST_BUFFER_SIZE(buf);
+
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "(%s:%s)+ level:%d/%d\n",
       GST_DEBUG_PAD_NAME(pad),
       queue->level_buffers, queue->size_buffers);
+
+  /* this assertion _has_ to hold */
+  g_assert (g_list_length (queue->queue) == queue->level_buffers);
 
   /* reader waiting on an empty queue */
   reader = queue->reader;
@@ -408,7 +417,7 @@ gst_queue_get (GstPad *pad)
 {
   GstQueue *queue;
   GstBuffer *buf = NULL;
-  GSList *front;
+  GList *front;
   gboolean writer;
 
   g_assert(pad != NULL);
@@ -418,7 +427,6 @@ gst_queue_get (GstPad *pad)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  writer = FALSE;
 restart:
   /* have to lock for thread-safety */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
@@ -462,14 +470,18 @@ restart:
   front = queue->queue;
   buf = (GstBuffer *)(front->data);
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "retrieved buffer %p from queue\n", buf);
-  queue->queue = g_slist_remove_link (queue->queue, front);
-  g_slist_free (front);
+  queue->queue = g_list_remove_link (queue->queue, front);
+  g_list_free (front);
 
   queue->level_buffers--;
   queue->level_bytes -= GST_BUFFER_SIZE(buf);
+
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "(%s:%s)- level:%d/%d\n",
       GST_DEBUG_PAD_NAME(pad),
       queue->level_buffers, queue->size_buffers);
+
+  /* this assertion _has_ to hold */
+  g_assert (g_list_length (queue->queue) == queue->level_buffers);
 
   /* writer waiting on a full queue */
   writer = queue->writer;
@@ -518,8 +530,8 @@ gst_queue_change_state (GstElement *element)
   new_state = GST_STATE_PENDING (element);
 
   if (new_state == GST_STATE_PAUSED) {
-    g_cond_signal (queue->not_full);
-    g_cond_signal (queue->not_empty);
+    //g_cond_signal (queue->not_full);
+    //g_cond_signal (queue->not_empty);
   }
   else if (new_state == GST_STATE_READY) {
     gst_queue_locked_flush (queue);
