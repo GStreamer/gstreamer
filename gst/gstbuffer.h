@@ -24,6 +24,13 @@
 #ifndef __GST_BUFFER_H__
 #define __GST_BUFFER_H__
 
+//
+// Define this to add file:line info to each GstBuffer showing
+// the location in the source code where the buffer was created.
+// 
+// #define GST_BUFFER_WHERE
+//
+
 #include <gst/gstdata.h>
 #include <gst/gstobject.h>
 
@@ -89,8 +96,8 @@ typedef enum {
 typedef struct _GstBuffer GstBuffer;
 
 
-typedef void	(*GstBufferFreeFunc)	(GstBuffer *buf);
-typedef void	(*GstBufferCopyFunc)	(GstBuffer *srcbuf,GstBuffer *dstbuf);
+typedef void       (*GstBufferFreeFunc)	(GstBuffer *buf);
+typedef GstBuffer *(*GstBufferCopyFunc)	(GstBuffer *srcbuf);
 
 
 #include <gst/gstbufferpool.h>
@@ -119,9 +126,13 @@ struct _GstBuffer {
   guint32 maxsize;
   guint32 offset;
 
+#ifdef GST_BUFFER_WHERE
+  const gchar *file;
+  gint line;
+#endif
+
   /* timestamp */
   gint64 timestamp;
-  /* max age */
   gint64 maxage;
 
   /* subbuffer support, who's my parent? */
@@ -136,30 +147,76 @@ struct _GstBuffer {
   GstBufferCopyFunc copy;		// copy the data from one buffer to another
 };
 
+#ifdef GST_BUFFER_WHERE
+
+# define GST_WHERE const gchar *where_file, gint where_line
+# define GST_WHERE_ GST_WHERE,
+# define GST_WHERE_VARS  where_file, where_line
+# define GST_WHERE_VARS_ where_file, where_line,
+
+# define gst_buffer_new() \
+    gst_buffer_new_loc(__FILE__, __LINE__)
+# define gst_buffer_create_sub(parent, offset, size) \
+    gst_buffer_create_sub_loc(__FILE__, __LINE__, parent, offset, size)
+# define gst_buffer_copy(buffer) \
+    gst_buffer_copy_loc(__FILE__, __LINE__, buffer)
+# define gst_buffer_merge(buf1, buf2) \
+    gst_buffer_merge_loc(__FILE__, __LINE__, buf1, buf2)
+# define gst_buffer_span(buf1, offset, buf2, len) \
+    gst_buffer_span_loc(__FILE__, __LINE__, buf1, offset, buf2, len)
+# define gst_buffer_append(buf, buf2) \
+    gst_buffer_append_loc(__FILE__, __LINE__, buf, buf2)
+
+#else /* GST_BUFFER_WHERE */
+
+# define GST_WHERE
+# define GST_WHERE_
+# define GST_WHERE_VARS
+# define GST_WHERE_VARS_
+
+# define gst_buffer_new() \
+    gst_buffer_new_loc()
+# define gst_buffer_create_sub(parent, offset, size) \
+    gst_buffer_create_sub_loc(parent, offset, size)
+# define gst_buffer_copy(buffer) \
+    gst_buffer_copy_loc(buffer)
+# define gst_buffer_merge(buf1, buf2) \
+    gst_buffer_merge_loc(buf1, buf2)
+# define gst_buffer_span(buf1, offset, buf2, len) \
+    gst_buffer_span_loc(buf1, offset, buf2, len)
+# define gst_buffer_append(buf, buf2) \
+    gst_buffer_append_loc(buf, buf2)
+
+#endif /* GST_BUFFER_WHERE */
+
 /* initialisation */
 void 		_gst_buffer_initialize		(void);
 /* creating a new buffer from scratch */
-GstBuffer*	gst_buffer_new			(void);
-GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint64 location, gint size);
+GstBuffer*	gst_buffer_new_loc		(GST_WHERE);
+GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint32 offset, guint32 size);
 
 /* creating a subbuffer */
-GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
+GstBuffer*	gst_buffer_create_sub_loc	(GST_WHERE_
+						 GstBuffer *parent, guint32 offset, guint32 size);
 
 /* refcounting */
 void 		gst_buffer_ref			(GstBuffer *buffer);
-void 		gst_buffer_ref_by_count		(GstBuffer *buffer, int count);
 void 		gst_buffer_unref		(GstBuffer *buffer);
 
 /* destroying the buffer */
 void 		gst_buffer_destroy		(GstBuffer *buffer);
 
 /* copy buffer */
-GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
+GstBuffer*	gst_buffer_copy_loc		(GST_WHERE_
+						 GstBuffer *buffer);
 
 /* merge, span, or append two buffers, intelligently */
-GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*	gst_buffer_span			(GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
-GstBuffer*	gst_buffer_append		(GstBuffer *buf, GstBuffer *buf2);
+GstBuffer*	gst_buffer_merge_loc		(GST_WHERE_
+						 GstBuffer *buf1, GstBuffer *buf2);
+GstBuffer*	gst_buffer_span_loc		(GST_WHERE_
+						 GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
+GstBuffer*	gst_buffer_append_loc		(GST_WHERE_
+						 GstBuffer *buf, GstBuffer *buf2);
 
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 
