@@ -234,9 +234,17 @@ gst_udpsrc_get (GstPad *pad)
       buf[ret] = '\0';
       doc = xmlParseMemory(buf, ret);
       caps = gst_caps_load_thyself(doc->xmlRootNode);
+      if (caps == NULL) {
+        return NULL;
+      }
       
       /* foward the connect, we don't signal back the result here... */
-      gst_pad_try_set_caps (udpsrc->srcpad, caps);
+      if (gst_caps_is_fixed (caps)) {
+        gst_pad_try_set_caps (udpsrc->srcpad, caps);
+      } else {
+        GST_ERROR ("caps %" GST_PTR_FORMAT, caps);
+        GST_ELEMENT_ERROR (udpsrc, CORE, NEGOTIATION, (NULL), ("Got unfixed caps from peer"));
+      }
 
 #endif
       g_free (buf);
