@@ -1,6 +1,12 @@
 
 EXTRA_DIST = README INSTRUCT TODO
 
+if USE_MPLEX
+MPLEX_LIB = libmplex.la
+else
+MPLEX_LIB = 
+endif
+
 noinst_LTLIBRARIES = libmplex.la
 
 libmplex_la_SOURCES = \
