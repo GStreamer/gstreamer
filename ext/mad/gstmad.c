@@ -68,6 +68,7 @@ struct _GstMad {
   gboolean	 ignore_crc;
 
   GstCaps	*metadata;
+  GstCaps	*streaminfo;
 
   /* negotiated format */
   gint		 rate;
@@ -104,6 +105,7 @@ enum {
   ARG_HALF,
   ARG_IGNORE_CRC,
   ARG_METADATA,
+  ARG_STREAMINFO
   /* FILL ME */
 };
 
@@ -280,6 +282,9 @@ gst_mad_class_init (GstMadClass *klass)
 		          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "Metadata",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
+    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
                         GST_TYPE_CAPS, G_PARAM_READABLE));
 }
 
@@ -723,6 +728,9 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
     case ARG_METADATA:
       g_value_set_boxed (value, mad->metadata);
       break;
+    case ARG_STREAMINFO:
+      g_value_set_boxed (value, mad->streaminfo);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -902,6 +910,45 @@ fail:
 
   return caps;
 }
+static GstCaps *
+gst_mad_get_streaminfo (GstMad *mad)
+{
+  GstCaps *caps;
+  GstProps *props;
+  GstPropsEntry *entry;
+  GEnumValue *value;
+  GEnumClass *klass;
+
+  props = gst_props_empty_new ();
+
+  entry = gst_props_entry_new ("layer", GST_PROPS_INT (mad->header.layer));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  klass = g_type_class_ref (GST_TYPE_MAD_MODE);
+  value = g_enum_get_value (klass,
+		            mad->header.mode);
+  entry = gst_props_entry_new ("mode", GST_PROPS_STRING (value->value_nick));
+  g_type_class_unref (klass);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  klass = g_type_class_ref (GST_TYPE_MAD_EMPHASIS);
+  value = g_enum_get_value (klass,
+		            mad->header.emphasis);
+  entry = gst_props_entry_new ("emphasis", GST_PROPS_STRING (value->value_nick));
+  g_type_class_unref (klass);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  /*
+  entry = gst_props_entry_new ("emphasis", GST_PROPS_INT ( mad->header.layer));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  */
+ 
+  caps = gst_caps_new ("mad_streaminfo",
+		       "application/x-gst-streaminfo",
+		       props);
+  return caps;
+}
+
 
 static void
 gst_mad_chain (GstPad *pad, GstBuffer *buffer)
@@ -1070,7 +1117,11 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       if (mad->channels != nchannels || mad->rate != rate) {
         if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) 
 	  rate >>=1;
+	mad->streaminfo = gst_mad_get_streaminfo (mad);
+	g_object_notify (G_OBJECT (mad), "streaminfo");
 
+	/* we set the caps even when the pad is not connected so they
+	 * can be gotten for streaminfo */
         if (gst_pad_try_set_caps (mad->srcpad,
   	    gst_caps_new (
   	      "mad_src",
@@ -1087,7 +1138,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
                 NULL))) <= 0) 
 	{
 	  gst_buffer_unref (buffer);
-          gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
+          gst_element_error (GST_ELEMENT (mad), 
+			     "could not set caps on source pad, aborting...");
 	  return;
         }
 	mad->channels = nchannels;
