@@ -1451,7 +1451,7 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET(stsd->data+offset+4)),
         stream->caps);
   }else if(stream->subtype == FOURCC_soun){
-    int version;
+    int version, samplesize;
 
     GST_LOG("st type:          " GST_FOURCC_FORMAT "\n",
 	  GST_FOURCC_ARGS(QTDEMUX_FOURCC_GET(stsd->data+16+4)));
@@ -1463,6 +1463,7 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
     GST_LOG("n_channels:       %d\n", QTDEMUX_GUINT16_GET(stsd->data+offset + 8));
     stream->n_channels = QTDEMUX_GUINT16_GET(stsd->data+offset + 8);
     GST_LOG("sample_size:      %d\n", QTDEMUX_GUINT16_GET(stsd->data+offset + 10));
+    samplesize = QTDEMUX_GUINT16_GET(stsd->data+offset + 10);
     GST_LOG("compression_id:   %d\n", QTDEMUX_GUINT16_GET(stsd->data+offset + 12));
     GST_LOG("packet size:      %d\n", QTDEMUX_GUINT16_GET(stsd->data+offset + 14));
     GST_LOG("sample rate:      %g\n", QTDEMUX_FP32_GET(stsd->data+offset + 16));
@@ -1478,7 +1479,7 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
       GST_LOG("bytes/sample:     %d\n", QTDEMUX_GUINT32_GET(stsd->data+offset + 12));
       offset = 68;
     } else {
-      stream->bytes_per_frame = stream->n_channels * QTDEMUX_GUINT16_GET(stsd->data+offset + 10);
+      stream->bytes_per_frame = stream->n_channels * samplesize / 8;
       stream->samples_per_packet = 1;
     }
 
