@@ -561,6 +561,10 @@ AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
   HAVE_LIBHERMES=no,
 )
 AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
+if test "x$HAVE_LIBHERMES" = "xyes"; then
+  LIBHERMES_LIBADD="-lHermes"
+  AC_SUBST(LIBHERMES_LIBADD)
+fi
 
 dnl Check for libgsm
 AC_MSG_CHECKING(GSM library)
