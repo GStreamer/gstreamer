@@ -1,3 +1,7 @@
+2001-12-29 Rodney Dawes  <dobey@free.fr>
+
+	* gstreamer.spec.in: Fixed up for the splitification
+	
 2001-12-23 Thomas Vander Stichele  <thomas@apestaart.org>
 
 	* moved plugins out of the core to gst-plugins
