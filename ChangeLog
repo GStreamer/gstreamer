@@ -1,5 +1,10 @@
 2004-10-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event):
+	  Silence.
+
+2004-10-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
 	(gst_ogg_demux_src_event), (gst_ogg_pad_populate),
 	(gst_ogg_pad_push):
