@@ -4,6 +4,6 @@ else
 FFMPEG_DIR=
 endif
 
-SUBDIRS = $(FFMPEG_DIR) mplex
+SUBDIRS = $(FFMPEG_DIR)
 
-DIST_SUBDIRS= ffmpeg mplex
+DIST_SUBDIRS= ffmpeg
