@@ -146,26 +146,6 @@ gst_statistics_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (statistics->srcpad);
 }
 
-static GstPadNegotiateReturn
-gst_statistics_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstStatistics *statistics;
-
-  statistics = GST_STATISTICS (gst_pad_get_parent (pad));
-
-  return gst_pad_negotiate_proxy (pad, statistics->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-gst_statistics_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstStatistics *statistics;
-
-  statistics = GST_STATISTICS (gst_pad_get_parent (pad));
-
-  return gst_pad_negotiate_proxy (pad, statistics->srcpad, caps);
-}
-
 static void 
 gst_statistics_init (GstStatistics *statistics) 
 {
@@ -173,11 +153,9 @@ gst_statistics_init (GstStatistics *statistics)
   gst_element_add_pad (GST_ELEMENT (statistics), statistics->sinkpad);
   gst_pad_set_chain_function (statistics->sinkpad, GST_DEBUG_FUNCPTR (gst_statistics_chain));
   gst_pad_set_bufferpool_function (statistics->sinkpad, GST_DEBUG_FUNCPTR (gst_statistics_get_bufferpool));
-  gst_pad_set_negotiate_function (statistics->sinkpad, GST_DEBUG_FUNCPTR (gst_statistics_negotiate_sink));
   
   statistics->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (statistics), statistics->srcpad);
-  gst_pad_set_negotiate_function (statistics->srcpad, GST_DEBUG_FUNCPTR (gst_statistics_negotiate_src));
 
   statistics->timer = NULL;
   statistics->last_timer = NULL;

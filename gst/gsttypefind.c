@@ -187,7 +187,9 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 			gst_caps_get_name (caps));
 	typefind->caps = caps;
 
-	gst_pad_set_caps (pad, caps);
+	if (!gst_pad_try_reconnect_filtered (pad, caps)) {
+          g_warning ("typefind: found type but peer didn't accept it");
+	}
 
 	{
           int oldstate = GST_STATE(typefind);

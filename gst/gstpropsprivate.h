@@ -26,6 +26,8 @@
 
 #include <gst/gstprops.h>
 
+#define GST_PROPS_ENTRY_IS_VARIABLE(a)	(((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_ID)
+
 typedef struct _GstPropsEntry GstPropsEntry;
 
 struct _GstPropsEntry {

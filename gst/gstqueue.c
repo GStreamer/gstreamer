@@ -78,8 +78,6 @@ static void			gst_queue_set_property		(GObject *object, guint prop_id,
 static void			gst_queue_get_property		(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src 	(GstPad *pad, GstCaps **caps, gpointer *data);
-static GstPadNegotiateReturn	gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
 static void			gst_queue_chain			(GstPad *pad, GstBuffer *buf);
 static GstBuffer *		gst_queue_get			(GstPad *pad);
 static GstBufferPool* 		gst_queue_get_bufferpool 	(GstPad *pad);
@@ -163,6 +161,34 @@ gst_queue_class_init (GstQueueClass *klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_queue_change_state);
 }
 
+static GstPadConnectReturn
+gst_queue_connect (GstPad *pad, GstCaps *caps)
+{
+  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+
+  if (pad == queue->srcpad) 
+    otherpad = queue->sinkpad;
+  else
+    otherpad = queue->srcpad;
+
+  return gst_pad_proxy_connect (otherpad, caps);
+}
+
+static GstCaps*
+gst_queue_getcaps (GstPad *pad, GstCaps *caps)
+{
+  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+
+  if (pad == queue->srcpad) 
+    otherpad = queue->sinkpad;
+  else
+    otherpad = queue->srcpad;
+
+  return gst_pad_get_allowed_caps (otherpad);
+}
+
 static void
 gst_queue_init (GstQueue *queue)
 {
@@ -171,15 +197,17 @@ gst_queue_init (GstQueue *queue)
   GST_FLAG_SET (queue, GST_ELEMENT_EVENT_AWARE);
 
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_chain));
+  gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
-  gst_pad_set_negotiate_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_handle_negotiate_sink));
-  gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_get_bufferpool));
+  gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_get_bufferpool));
+  gst_pad_set_connect_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_connect));
+  gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR(gst_queue_get));
+  gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
-  gst_pad_set_negotiate_function (queue->srcpad, GST_DEBUG_FUNCPTR(gst_queue_handle_negotiate_src));
+  gst_pad_set_connect_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_connect));
+  gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->queue = NULL;
@@ -219,26 +247,6 @@ gst_queue_get_bufferpool (GstPad *pad)
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
   return gst_pad_get_bufferpool (queue->srcpad);
-}
-
-static GstPadNegotiateReturn
-gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstQueue *queue;
-
-  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
-
-  return gst_pad_negotiate_proxy (pad, queue->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstQueue *queue;
-
-  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
-
-  return gst_pad_negotiate_proxy (pad, queue->srcpad, caps);
 }
 
 static void
@@ -535,7 +543,7 @@ gst_queue_change_state (GstElement *element)
     gst_queue_locked_flush (queue);
   }
   else if (new_state == GST_STATE_PLAYING) {
-    if (!GST_PAD_CONNECTED (queue->sinkpad)) {
+    if (!GST_PAD_IS_CONNECTED (queue->sinkpad)) {
       /* FIXME can this be? */
       if (queue->reader)
         g_cond_signal (queue->not_empty);

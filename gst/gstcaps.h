@@ -37,16 +37,20 @@ typedef struct _GstCaps GstCaps;
 #define GST_CAPS_TRYLOCK(caps) (g_mutex_trylock(GST_CAPS(caps)->lock))
 #define GST_CAPS_UNLOCK(caps)  (g_mutex_unlock(GST_CAPS(caps)->lock))
 
+#define GST_CAPS_IS_FIXED(caps)		((caps)->fixed)
+#define GST_CAPS_IS_CHAINED(caps)  	((caps)->next)
+
 struct _GstCaps {
-  gchar *name;			/* the name of this caps */
-  guint16 id;			/* type id (major type) */
+  gchar 	*name;			/* the name of this caps */
+  guint16 	id;			/* type id (major type) */
 
-  guint refcount;		
-  GMutex *lock;			/* global lock for this capability */
+  guint 	refcount;		
+  GMutex 	*lock;			/* global lock for this capability */
+  gboolean 	fixed;			/* this caps doesn't contain variable properties */
 
-  GstProps *properties;		/* properties for this capability */
+  GstProps 	*properties;		/* properties for this capability */
 
-  GstCaps *next;
+  GstCaps 	*next;
 };
 
 #define GST_CAPS_NEW(name, type, a...)          \
@@ -75,10 +79,13 @@ factoryname (void)                              \
 void		_gst_caps_initialize			(void);
 
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
+GstCaps*	gst_caps_new_id				(const gchar *name, const guint16 id, GstProps *props);
 
 GstCaps*	gst_caps_unref				(GstCaps *caps);
 GstCaps*	gst_caps_ref				(GstCaps *caps);
 void		gst_caps_destroy			(GstCaps *caps);
+
+void		gst_caps_debug				(GstCaps *caps);
 
 GstCaps*	gst_caps_copy				(GstCaps *caps);
 GstCaps*	gst_caps_copy_on_write			(GstCaps *caps);
@@ -102,6 +109,7 @@ GstProps*	gst_caps_get_props			(GstCaps *caps);
 #define		gst_caps_get_fourcc_int(caps, name)	gst_props_get_fourcc_int ((caps)->properties, name)
 #define		gst_caps_get_boolean(caps, name)	gst_props_get_boolean ((caps)->properties, name)
 #define		gst_caps_get_string(caps, name)		gst_props_get_string ((caps)->properties, name)
+#define		gst_caps_has_property(caps, name)	gst_props_has_property ((caps)->properties, name)
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 
@@ -110,6 +118,8 @@ GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd);
 GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd); 
 
 gboolean	gst_caps_check_compatibility		(GstCaps *fromcaps, GstCaps *tocaps);
+GstCaps*	gst_caps_intersect			(GstCaps *caps1, GstCaps *caps2);
+GstCaps*	gst_caps_normalize			(GstCaps *caps);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr      gst_caps_save_thyself			(GstCaps *caps, xmlNodePtr parent);

@@ -32,14 +32,18 @@ typedef struct _GstProps GstProps;
 
 typedef enum {
    GST_PROPS_END_ID = 0,
-   GST_PROPS_LIST_ID,
    GST_PROPS_INT_ID,
-   GST_PROPS_INT_RANGE_ID,
    GST_PROPS_FLOAT_ID,
-   GST_PROPS_FLOAT_RANGE_ID,
    GST_PROPS_FOURCC_ID,
    GST_PROPS_BOOL_ID,
    GST_PROPS_STRING_ID,
+
+   GST_PROPS_VAR_ID,   /* after this marker start the variable properties */
+
+   GST_PROPS_LIST_ID,
+   GST_PROPS_FLOAT_RANGE_ID,
+   GST_PROPS_INT_RANGE_ID,
+
    GST_PROPS_LAST_ID = GST_PROPS_END_ID + 16,
 } GstPropsId;
 
@@ -55,10 +59,15 @@ typedef enum {
 #define GST_PROPS_BOOLEAN(a) 		GST_PROPS_BOOL_ID,(a)
 #define GST_PROPS_STRING(a) 		GST_PROPS_STRING_ID,(a)
 
+#define GST_PROPS_INT_POSITIVE		GST_PROPS_INT_RANGE(0,G_MAXINT)
+#define GST_PROPS_INT_NEGATIVE		GST_PROPS_INT_RANGE(G_MININT,0)
+#define GST_PROPS_INT_ANY		GST_PROPS_INT_RANGE(G_MININT,G_MAXINT)
+
 
 struct _GstProps {
   gint refcount;
   GMutex *lock;
+  gboolean fixed;
 
   GList *properties;		/* real properties for this property */
 };
@@ -73,14 +82,20 @@ void            gst_props_unref                 (GstProps *props);
 void            gst_props_ref                   (GstProps *props);
 void            gst_props_destroy               (GstProps *props);
 
+void            gst_props_debug 		(GstProps *props);
+
 GstProps*       gst_props_copy                  (GstProps *props);
 GstProps*       gst_props_copy_on_write         (GstProps *props);
 
 GstProps*	gst_props_merge			(GstProps *props, GstProps *tomerge);
 
 gboolean 	gst_props_check_compatibility 	(GstProps *fromprops, GstProps *toprops);
+GstProps* 	gst_props_intersect	 	(GstProps *props1, GstProps *props2);
+GList* 		gst_props_normalize	 	(GstProps *props);
 
 GstProps*	gst_props_set			(GstProps *props, const gchar *name, ...);
+
+gboolean 	gst_props_has_property		(GstProps *props, const gchar *name);
 
 gint 		gst_props_get_int		(GstProps *props, const gchar *name);
 gfloat 		gst_props_get_float		(GstProps *props, const gchar *name);

@@ -200,8 +200,11 @@ void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ);
 GstPad*			gst_element_request_pad_by_name	(GstElement *element, const gchar *name);
 
-void			gst_element_connect		(GstElement *src, const gchar *srcpadname,
+gboolean		gst_element_connect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
+gboolean		gst_element_connect_filtered	(GstElement *src, const gchar *srcpadname,
+							 GstElement *dest, const gchar *destpadname,
+							 GstCaps *filtercaps);
 void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 

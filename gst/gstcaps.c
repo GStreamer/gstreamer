@@ -75,20 +75,40 @@ get_type_for_mime (const gchar *mime)
 GstCaps*
 gst_caps_new (const gchar *name, const gchar *mime, GstProps *props)
 {
-  GstCaps *caps;
-
   g_return_val_if_fail (mime != NULL, NULL);
+
+  return gst_caps_new_id (name, get_type_for_mime (mime), props);
+}
+
+/**
+ * gst_caps_new_id:
+ * @name: the name of this capability
+ * @id: the id of the mime type 
+ * @props: the properties to add to this capability
+ *
+ * Create a new capability with the given mime typeid and properties.
+ *
+ * Returns: a new capability
+ */
+GstCaps*
+gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
+{
+  GstCaps *caps;
 
   g_mutex_lock (_gst_caps_chunk_lock);
   caps = g_mem_chunk_alloc (_gst_caps_chunk);
   g_mutex_unlock (_gst_caps_chunk_lock);
 
   caps->name = g_strdup (name);
-  caps->id = get_type_for_mime (mime);
+  caps->id = id;
   caps->properties = props;
   caps->next = NULL;
   caps->refcount = 1;
   caps->lock = g_mutex_new ();
+  if (props)
+    caps->fixed = props->fixed;
+  else
+    caps->fixed = TRUE;
 
   return caps;
 }
@@ -105,16 +125,41 @@ gst_caps_destroy (GstCaps *caps)
 {
   GstCaps *next;
 
-  g_return_if_fail (caps != NULL);
-
+  if (caps == NULL)
+    return;
+  
   GST_CAPS_LOCK (caps);
   next = caps->next;
-  g_free (caps->name);
-  g_free (caps);
   GST_CAPS_UNLOCK (caps);
+
+  g_mutex_free (caps->lock);
+  gst_props_unref (caps->properties);
+  g_free (caps->name);
+  g_mutex_lock (_gst_caps_chunk_lock);
+  g_mem_chunk_free (_gst_caps_chunk, caps);
+  g_mutex_unlock (_gst_caps_chunk_lock);
 
   if (next) 
     gst_caps_unref (next);
+}
+
+void
+gst_caps_debug (GstCaps *caps)
+{
+  GST_DEBUG_ENTER ("caps debug");
+  while (caps) {
+    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s\n", caps, caps->name, gst_caps_get_mime (caps));
+
+    if (caps->properties) {
+      gst_props_debug (caps->properties);
+    }
+    else {
+      GST_DEBUG (GST_CAT_CAPS, "no properties\n");
+    }
+
+    caps = caps->next;
+  }
+  GST_DEBUG_LEAVE ("caps debug");
 }
 
 /**
@@ -132,7 +177,9 @@ gst_caps_unref (GstCaps *caps)
   gboolean zero;
   GstCaps **next;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  if (caps == NULL)
+    return NULL;
+
   g_return_val_if_fail (caps->refcount > 0, NULL);
 
   GST_CAPS_LOCK (caps);
@@ -182,16 +229,24 @@ gst_caps_ref (GstCaps *caps)
 GstCaps*
 gst_caps_copy (GstCaps *caps)
 {
-  GstCaps *new = caps;;
+  GstCaps *new = NULL, *walk = NULL;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  while (caps) {
+    GstCaps *newcaps;
 
-  GST_CAPS_LOCK (caps);
-  new = gst_caps_new (
+    newcaps = gst_caps_new_id (
 		  caps->name,
-		  (gst_type_find_by_id (caps->id))->mime,
+		  caps->id,
 		  gst_props_copy (caps->properties));
-  GST_CAPS_UNLOCK (caps);
+
+    if (new == NULL) {
+      new = walk = newcaps;
+    }
+    else {
+      walk = walk->next = newcaps;
+    }
+    caps = caps->next;
+  }
 
   return new;
 }
@@ -437,10 +492,10 @@ gst_caps_prepend (GstCaps *caps, GstCaps *capstoadd)
 {
   GstCaps *orig = capstoadd;
   
-  g_return_val_if_fail (caps != capstoadd, caps);
-
   if (capstoadd == NULL)
     return caps;
+
+  g_return_val_if_fail (caps != capstoadd, caps);
 
   while (capstoadd->next) {
     capstoadd = capstoadd->next;
@@ -545,6 +600,118 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   return FALSE;
 }
 
+static GstCaps*
+gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
+{
+  GstCaps *result = NULL;
+  GstProps *props;
+
+  if (caps1->id != caps2->id) {
+    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)\n",
+	       gst_type_find_by_id (caps1->id)->mime, 
+	       gst_type_find_by_id (caps2->id)->mime);
+    return NULL;
+  }
+
+  if (caps1->properties == NULL) {
+    return gst_caps_ref (caps2);
+  }
+  if (caps2->properties == NULL) {
+    return gst_caps_ref (caps1);
+  }
+  
+  props = gst_props_intersect (caps1->properties, caps2->properties);
+  if (props) {
+    result = gst_caps_new_id ("intersect", caps1->id, props);
+  }
+
+  return result;
+}
+
+/**
+ * gst_caps_intersect:
+ * @caps1: a capabilty
+ * @caps2: a capabilty
+ *
+ * Make the intersection between two caps.
+ *
+ * Returns: The intersection of the two caps or NULL if the intersection
+ * is empty.
+ */
+GstCaps*
+gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
+{
+  GstCaps *result = NULL, *walk = NULL;
+
+  if (caps1 == NULL) {
+    GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps\n");
+    return gst_caps_copy (caps2);
+  }
+  if (caps2 == NULL) {
+    GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps\n");
+    return gst_caps_copy (caps1);
+  }
+
+  while (caps1) {
+    GstCaps *othercaps = caps2;
+
+    while (othercaps) {
+      GstCaps *intersection = gst_caps_intersect_func (caps1, othercaps);
+
+      if (intersection) {
+        if (!result) {
+  	  walk = result = intersection;
+        }
+        else {
+	  walk = walk->next = intersection;
+        }
+      }
+      othercaps = othercaps->next;
+    }
+    caps1 =  caps1->next;
+  }
+
+  return result;
+}
+
+GstCaps*
+gst_caps_normalize (GstCaps *caps)
+{
+  GstCaps *result = NULL, *walk = caps;
+
+  if (caps == NULL)
+    return caps;
+
+  while (caps) {
+    GList *proplist;
+
+    proplist = gst_props_normalize (caps->properties);
+    if (proplist && g_list_next (proplist) == NULL) {
+      if (result == NULL)
+	walk = result = caps;
+      else {
+	walk = walk->next = caps;
+      }
+      goto next;
+    }
+
+    while (proplist) {
+      GstProps *props = (GstProps *) proplist->data;
+      GstCaps *newcaps = gst_caps_new_id (caps->name, caps->id, props);
+
+      if (result == NULL)
+	walk = result = newcaps;
+      else {
+	walk = walk->next = newcaps;
+      }
+      proplist = g_list_next (proplist);  
+    }
+next:
+    caps = caps->next;
+  }
+  return result;
+}
+
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 /**
  * gst_caps_save_thyself:
@@ -605,6 +772,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
       caps->refcount = 1;
       caps->lock = g_mutex_new ();
       caps->next = NULL;
+      caps->fixed = TRUE;
 	
       while (subfield) {
         if (!strcmp (subfield->name, "name")) {

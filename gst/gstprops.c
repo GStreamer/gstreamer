@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2000 Wim Taymans <wim.taymans@chello.be>
  *
  * gstprops.c: Properties subsystem for generic usage
  *
@@ -34,6 +34,8 @@ static GMemChunk *_gst_props_chunk;
 static GMutex *_gst_props_chunk_lock;
 
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
+static GList* 		gst_props_list_copy 			(GList *propslist);
+
 	
 void 
 _gst_props_initialize (void) 
@@ -52,33 +54,45 @@ _gst_props_initialize (void)
 static void
 gst_props_debug_entry (GstPropsEntry *entry)
 {
+  gchar *name = g_quark_to_string (entry->propid);
+
   switch (entry->propstype) {
     case GST_PROPS_INT_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%d\n", entry->data.int_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: int %d\n", name, entry->data.int_data);
       break;
     case GST_PROPS_FLOAT_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%f\n", entry->data.float_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: float %f\n", name, entry->data.float_data);
       break;
     case GST_PROPS_FOURCC_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%4.4s\n", (gchar*)&entry->data.fourcc_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: fourcc %4.4s\n", name, (gchar*)&entry->data.fourcc_data);
       break;
     case GST_PROPS_BOOL_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%d\n", entry->data.bool_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: bool %d\n", name, entry->data.bool_data);
       break;
     case GST_PROPS_STRING_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s\n", entry->data.string_data.string);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: string %s\n", name, entry->data.string_data.string);
       break;
     case GST_PROPS_INT_RANGE_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%d-%d\n", entry->data.int_range_data.min,
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: int range %d-%d\n", name, entry->data.int_range_data.min,
 		      entry->data.int_range_data.max);
       break;
     case GST_PROPS_FLOAT_RANGE_ID:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%f-%f\n", entry->data.float_range_data.min,
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: float range %f-%f\n", name, entry->data.float_range_data.min,
 		      entry->data.float_range_data.max);
       break;
     case GST_PROPS_LIST_ID:
       GST_DEBUG (GST_CAT_PROPERTIES, "[list]\n");
+      {
+	GList *entries = entry->data.list_data.entries;
+
+	while (entries) {
+          gst_props_debug_entry ((GstPropsEntry *)entries->data);
+	  entries = g_list_next (entries);
+	}
+      }
+      break;
     default:
+      g_warning ("unknown property type %d", entry->propstype);
       break;
   }
 }
@@ -98,9 +112,9 @@ props_find_func (gconstpointer a,
 		 gconstpointer b) 
 {
   GstPropsEntry *entry2 = (GstPropsEntry *)a;
-  GQuark entry1 = (GQuark) GPOINTER_TO_INT (b);
+  GQuark quark = (GQuark) GPOINTER_TO_INT (b);
 
-  return (entry1 - entry2->propid);
+  return (quark - entry2->propid);
 }
 
 /* This is implemented as a huge macro because we cannot pass
@@ -139,6 +153,72 @@ G_STMT_START { 									\
   }										\
 } G_STMT_END
 
+static GstPropsEntry*
+gst_props_alloc_entry (void)
+{
+  GstPropsEntry *entry;
+
+  g_mutex_lock (_gst_props_entries_chunk_lock);
+  entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
+  g_mutex_unlock (_gst_props_entries_chunk_lock);
+
+  return entry;
+}
+
+static void
+gst_props_entry_destroy (GstPropsEntry *entry)
+{
+  switch (entry->propstype) {
+    case GST_PROPS_STRING_ID:		
+      g_free (entry->data.string_data.string);
+      break;				
+    case GST_PROPS_LIST_ID:		
+    {
+      GList *entries = entry->data.list_data.entries;
+
+      while (entries) {
+	gst_props_entry_destroy ((GstPropsEntry *)entries->data);
+	entries = g_list_next (entries);
+      }
+      g_list_free (entry->data.list_data.entries);
+      break;
+    }
+    default:			
+      break;		
+  }
+  g_mutex_lock (_gst_props_entries_chunk_lock);
+  g_mem_chunk_free (_gst_props_entries_chunk, entry);
+  g_mutex_unlock (_gst_props_entries_chunk_lock);
+}
+
+static GstProps*
+gst_props_alloc (void)
+{
+  GstProps *props;
+
+  g_mutex_lock (_gst_props_chunk_lock);
+  props = g_mem_chunk_alloc (_gst_props_chunk);
+  g_mutex_unlock (_gst_props_chunk_lock);
+
+  props->properties = NULL;
+  props->refcount = 1;
+  props->fixed = TRUE;
+
+  return props;
+}
+
+static void
+gst_props_add_entry (GstProps *props, GstPropsEntry *entry)
+{
+  g_return_if_fail (props);
+  g_return_if_fail (entry);
+
+  if (props->fixed && GST_PROPS_ENTRY_IS_VARIABLE (entry)) {
+    props->fixed = FALSE;
+  }
+  props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
+}
+
 /**
  * gst_props_new:
  * @firstname: the first property name
@@ -163,19 +243,19 @@ gst_props_new (const gchar *firstname, ...)
   return props;
 } 
 
-/**
- * gst_props_add_to_list:
- * @entries: the existing list of entries
- * @entry: the new entry to add to the list
- *
- * Add a property to a list of properties.
- *
- * Returns: a pointer to a list with the new entry added.
- */
-static GList *
-gst_props_add_to_list (GList * entries, GstPropsEntry *entry)
+
+void
+gst_props_debug (GstProps *props)
 {
-  return g_list_prepend (entries, entry);
+  GList *propslist = props->properties;
+
+  while (propslist) { 
+    GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+
+    gst_props_debug_entry (entry);
+    
+    propslist = g_list_next (propslist);
+  }
 }
 
 /**
@@ -283,7 +363,7 @@ gst_props_add_to_int_list (GList * entries, GstPropsEntry * newentry)
     i = g_list_next (i);
   }
 
-  return gst_props_add_to_list (entries, newentry);
+  return g_list_prepend (entries, newentry);
 }
 
 /**
@@ -318,23 +398,15 @@ gst_props_newv (const gchar *firstname, va_list var_args)
   if (firstname == NULL)
     return NULL;
 
-  g_mutex_lock (_gst_props_chunk_lock);
-  props = g_mem_chunk_alloc (_gst_props_chunk);
-  g_mutex_unlock (_gst_props_chunk_lock);
-
-  props->properties = NULL;
-  props->refcount = 1;
+  props = gst_props_alloc ();
 
   prop_name = firstname;
 
   /* properties */
   while (prop_name) {
     GstPropsEntry *entry;
-    
-    g_mutex_lock (_gst_props_entries_chunk_lock);
-    entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
-    g_mutex_unlock (_gst_props_entries_chunk_lock);
-
+   
+    entry = gst_props_alloc_entry ();
     entry->propid = g_quark_from_string (prop_name);
     GST_PROPS_ENTRY_FILL (entry, var_args);
 
@@ -371,6 +443,10 @@ gst_props_newv (const gchar *firstname, va_list var_args)
 	  g_mem_chunk_free (_gst_props_entries_chunk, subentry);
 	  g_mutex_unlock (_gst_props_entries_chunk_lock);
 	}
+	else {
+	  list_entry->data.list_data.entries =
+		    g_list_reverse (list_entry->data.list_data.entries);
+	}
 
         g_mutex_lock (_gst_props_entries_chunk_lock);
         g_mem_chunk_free (_gst_props_entries_chunk, entry);
@@ -399,13 +475,13 @@ gst_props_newv (const gchar *firstname, va_list var_args)
 	    break;
 	  default:
 	    list_entry->data.list_data.entries =
-		    gst_props_add_to_list (list_entry->data.list_data.entries, entry);
+		    g_list_prepend (list_entry->data.list_data.entries, entry);
 	    break;
 	}
       }
     }
     else {
-      props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
+      gst_props_add_entry (props, entry);
     }
     if (!inlist)
       prop_name = va_arg (var_args, gchar*);
@@ -463,7 +539,8 @@ gst_props_set (GstProps *props, const gchar *name, ...)
 void
 gst_props_unref (GstProps *props)
 {
-  g_return_if_fail (props != NULL);
+  if (props == NULL)
+    return;
   
   props->refcount--;
 
@@ -485,6 +562,7 @@ gst_props_ref (GstProps *props)
   props->refcount++;
 }
 
+
 /**
  * gst_props_destroy:
  * @props: the props to destroy
@@ -497,25 +575,13 @@ gst_props_destroy (GstProps *props)
 {
   GList *entries;
 
-  g_return_if_fail (props != NULL);
+  if (props == NULL)
+    return;
   
   entries = props->properties;
 
   while (entries) {
-    GstPropsEntry *entry = (GstPropsEntry *)entries->data;
-
-    switch (entry->propstype) {
-      case GST_PROPS_STRING_ID:		
-        g_free (entry->data.string_data.string);
-        break;				
-      /* FIXME also free the lists */
-      default:			
-        break;		
-    }
-    g_mutex_lock (_gst_props_entries_chunk_lock);
-    g_mem_chunk_free (_gst_props_entries_chunk, entry);
-    g_mutex_unlock (_gst_props_entries_chunk_lock);
-
+    gst_props_entry_destroy ((GstPropsEntry *)entries->data);
     entries = g_list_next (entries);
   }
   g_list_free (props->properties);
@@ -523,6 +589,43 @@ gst_props_destroy (GstProps *props)
   g_mutex_lock (_gst_props_chunk_lock);
   g_mem_chunk_free (_gst_props_chunk, props);
   g_mutex_unlock (_gst_props_chunk_lock);
+}
+
+/* 
+ * copy entries 
+ */
+static GstPropsEntry*
+gst_props_entry_copy (GstPropsEntry *entry)
+{
+  GstPropsEntry *newentry;
+
+  newentry = gst_props_alloc_entry ();
+  memcpy (newentry, entry, sizeof (GstPropsEntry));
+  if (entry->propstype == GST_PROPS_LIST_ID) {
+    newentry->data.list_data.entries = gst_props_list_copy (entry->data.list_data.entries);
+  }
+  else if (entry->propstype == GST_PROPS_STRING_ID) {
+    newentry->data.string_data.string = g_strdup (entry->data.string_data.string);
+  }
+
+  return newentry;
+}
+
+static GList*
+gst_props_list_copy (GList *propslist)
+{
+  GList *new = NULL;
+
+  while (propslist) {
+    GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+
+    new = g_list_prepend (new, gst_props_entry_copy (entry));
+    
+    propslist = g_list_next (propslist);
+  }
+  new = g_list_reverse (new);
+
+  return new;
 }
 
 /**
@@ -540,32 +643,12 @@ gst_props_copy (GstProps *props)
   GstProps *new;
   GList *properties;
 
-  g_return_val_if_fail (props != NULL, NULL);
+  if (props == NULL)
+    return NULL;
 
-  g_mutex_lock (_gst_props_chunk_lock);
-  new = g_mem_chunk_alloc (_gst_props_chunk);
-  g_mutex_unlock (_gst_props_chunk_lock);
-
-  new->properties = NULL;
-
-  properties = props->properties;
-
-  while (properties) {
-    GstPropsEntry *entry = (GstPropsEntry *)properties->data;
-    GstPropsEntry *newentry;
-
-    g_mutex_lock (_gst_props_entries_chunk_lock);
-    newentry = g_mem_chunk_alloc (_gst_props_entries_chunk);
-    g_mutex_unlock (_gst_props_entries_chunk_lock);
-
-    /* FIXME copy lists too */
-    memcpy (newentry, entry, sizeof (GstPropsEntry));
-
-    new->properties = g_list_prepend (new->properties, newentry);
-    
-    properties = g_list_next (properties);
-  }
-  new->properties = g_list_reverse (new->properties);
+  new = gst_props_alloc ();
+  new->properties = gst_props_list_copy (props->properties);
+  new->fixed = props->fixed;
 
   return new;
 }
@@ -614,6 +697,12 @@ gst_props_get_entry_func (GstProps *props, const gchar *name)
   return NULL;
 }
 
+gboolean
+gst_props_has_property (GstProps *props, const gchar *name)
+{
+  return (gst_props_get_entry_func (props, name) != NULL);
+}
+
 /**
  * gst_props_get_int:
  * @props: the props to get the int value from
@@ -632,6 +721,9 @@ gst_props_get_int (GstProps *props, const gchar *name)
 
   if (thisentry) {
     return thisentry->data.int_data;
+  }
+  else {
+    g_warning ("props: property %s not found", name);
   }
   return 0;
 }
@@ -655,6 +747,9 @@ gst_props_get_float (GstProps *props, const gchar *name)
   if (thisentry) {
     return thisentry->data.float_data;
   }
+  else {
+    g_warning ("props: property %s not found", name);
+  }
   return 0.0F;
 }
 
@@ -676,6 +771,9 @@ gst_props_get_fourcc_int (GstProps *props, const gchar *name)
 
   if (thisentry) {
     return thisentry->data.fourcc_data;
+  }
+  else {
+    g_warning ("props: property %s not found", name);
   }
   return 0;
 }
@@ -699,6 +797,9 @@ gst_props_get_boolean (GstProps *props, const gchar *name)
   if (thisentry) {
     return thisentry->data.bool_data;
   }
+  else {
+    g_warning ("props: property %s not found", name);
+  }
   return 0;
 }
 
@@ -720,6 +821,9 @@ gst_props_get_string (GstProps *props, const gchar *name)
 
   if (thisentry) {
     return thisentry->data.string_data.string;
+  }
+  else {
+    g_warning ("props: property %s not found", name);
   }
   return NULL;
 }
@@ -747,7 +851,7 @@ gst_props_merge (GstProps *props, GstProps *tomerge)
   while (merge_props) {
     GstPropsEntry *entry = (GstPropsEntry *)merge_props->data;
 
-    props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
+    gst_props_add_entry (props, entry);
 	  
     merge_props = g_list_next (merge_props);
   }
@@ -779,8 +883,11 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 {
   GST_DEBUG (GST_CAT_PROPERTIES,"compare: %s %s\n", g_quark_to_string (entry1->propid),
 	                     g_quark_to_string (entry2->propid));
-  gst_props_debug_entry (entry1);
-  gst_props_debug_entry (entry2);
+
+  if (entry2->propstype == GST_PROPS_LIST_ID && entry1->propstype != GST_PROPS_LIST_ID) {
+    return gst_props_entry_check_list_compatibility (entry1, entry2);
+  }
+
   switch (entry1->propstype) {
     case GST_PROPS_LIST_ID:
     {
@@ -803,10 +910,6 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
         case GST_PROPS_INT_RANGE_ID:
 	  return (entry2->data.int_range_data.min <= entry1->data.int_range_data.min &&
 	          entry2->data.int_range_data.max >= entry1->data.int_range_data.max);
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
       break;
     case GST_PROPS_FLOAT_RANGE_ID:
@@ -815,22 +918,15 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
         case GST_PROPS_FLOAT_RANGE_ID:
 	  return (entry2->data.float_range_data.min <= entry1->data.float_range_data.min &&
 	          entry2->data.float_range_data.max >= entry1->data.float_range_data.max);
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
       break;
     case GST_PROPS_FOURCC_ID:
       switch (entry2->propstype) {
 	/* b   <--->   a */
         case GST_PROPS_FOURCC_ID:
+          GST_DEBUG(GST_CAT_PROPERTIES,"\"%4.4s\" <--> \"%4.4s\" ?\n",
+			  &entry2->data.fourcc_data, &entry1->data.fourcc_data);
 	  return (entry2->data.fourcc_data == entry1->data.fourcc_data);
-	/* b   <--->   a,b,c */
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
       break;
     case GST_PROPS_INT_ID:
@@ -845,11 +941,6 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
         case GST_PROPS_INT_ID:
           GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?\n",entry1->data.int_data,entry2->data.int_data);
 	  return (entry2->data.int_data == entry1->data.int_data);
-	/* b   <--->   a,b,c */
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
       break;
     case GST_PROPS_FLOAT_ID:
@@ -861,11 +952,6 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	/* b   <--->   a */
         case GST_PROPS_FLOAT_ID:
 	  return (entry2->data.float_data == entry1->data.float_data);
-	/* b   <--->   a,b,c */
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
       break;
     case GST_PROPS_BOOL_ID:
@@ -873,23 +959,13 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	/* t   <--->   t */
         case GST_PROPS_BOOL_ID:
           return (entry2->data.bool_data == entry1->data.bool_data);
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
     case GST_PROPS_STRING_ID:
       switch (entry2->propstype) {
 	/* t   <--->   t */
         case GST_PROPS_STRING_ID:
           return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
-        case GST_PROPS_LIST_ID:
-	  return gst_props_entry_check_list_compatibility (entry1, entry2);
-        default:
-          return FALSE;
       }
-    default:
-      break;
   }
 
   return FALSE;
@@ -927,14 +1003,12 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     entry2 = (GstPropsEntry *)sinklist->data;
 
     while (entry1->propid < entry2->propid) {
-      GST_DEBUG (GST_CAT_PROPERTIES,"source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
       more++;
       sourcelist = g_list_next (sourcelist);
       if (sourcelist) entry1 = (GstPropsEntry *)sourcelist->data;
       else goto end;
     }
     while (entry1->propid > entry2->propid) {
-      GST_DEBUG (GST_CAT_PROPERTIES,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
       missing++;
       sinklist = g_list_next (sinklist);
       if (sinklist) entry2 = (GstPropsEntry *)sinklist->data;
@@ -945,8 +1019,6 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 	compatible = FALSE; 
 	GST_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible: \n",
 		   g_quark_to_string (entry1->propid));
-	gst_props_debug_entry (entry1);
-	gst_props_debug_entry (entry2);
     }
 
     sourcelist = g_list_next (sourcelist);
@@ -956,7 +1028,6 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     GstPropsEntry *entry2;
     entry2 = (GstPropsEntry *)sinklist->data;
     missing++;
-    GST_DEBUG (GST_CAT_PROPERTIES,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
   }
 end:
 
@@ -964,6 +1035,339 @@ end:
     return FALSE;
 
   return compatible;
+}
+
+static GstPropsEntry*
+gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
+{
+  GstPropsEntry *result = NULL;
+
+  /* try to move the ranges and lists first */
+  switch (entry2->propstype) {
+    case GST_PROPS_INT_RANGE_ID:
+    case GST_PROPS_FLOAT_RANGE_ID:
+    case GST_PROPS_LIST_ID:
+    {
+      GstPropsEntry *temp;
+
+      temp = entry1;
+      entry1 = entry2;
+      entry2 = temp;
+    }
+  }
+
+  switch (entry1->propstype) {
+    case GST_PROPS_LIST_ID:
+    {
+      GList *entrylist = entry1->data.list_data.entries;
+      GList *intersection = NULL;
+
+      while (entrylist) {
+	GstPropsEntry *entry = (GstPropsEntry *) entrylist->data;
+	GstPropsEntry *intersectentry;
+
+	intersectentry = gst_props_entry_intersect (entry2, entry);
+
+	if (intersectentry) {
+	  if (intersectentry->propstype == GST_PROPS_LIST_ID) {
+	    intersection = g_list_concat (intersection, intersectentry->data.list_data.entries);
+	    /* set the list to NULL because the entries are concatenated to the above
+	     * list and we don't want to free them */
+	    intersectentry->data.list_data.entries = NULL;
+	    gst_props_entry_destroy (intersectentry);
+	  }
+	  else {
+	    intersection = g_list_prepend (intersection, intersectentry);
+	  }
+	}
+	entrylist = g_list_next (entrylist);
+      }
+      if (intersection) {
+	/* check if the list only contains 1 element, if so, we can just copy it */
+	if (g_list_next (intersection) == NULL) {
+	  result = (GstPropsEntry *) (intersection->data); 
+	  g_list_free (intersection);
+	}
+	/* else we need to create a new entry to hold the list */
+	else {
+	  result = gst_props_alloc_entry ();
+	  result->propid = entry1->propid;
+	  result->propstype = GST_PROPS_LIST_ID;
+	  result->data.list_data.entries = g_list_reverse (intersection);
+	}
+      }
+      return result;
+    }
+    case GST_PROPS_INT_RANGE_ID:
+      switch (entry2->propstype) {
+	/* a - b   <--->   a - c */
+        case GST_PROPS_INT_RANGE_ID:
+        {
+	  gint lower = MAX (entry1->data.int_range_data.min, entry2->data.int_range_data.min);
+	  gint upper = MIN (entry1->data.int_range_data.max, entry2->data.int_range_data.max);
+
+	  if (lower <= upper) {
+            result = gst_props_alloc_entry ();
+	    result->propid = entry1->propid;
+
+	    if (lower == upper) {
+	      result->propstype = GST_PROPS_INT_ID;
+	      result->data.int_data = lower;
+	    }
+	    else {
+	      result->propstype = GST_PROPS_INT_RANGE_ID;
+	      result->data.int_range_data.min = lower;
+	      result->data.int_range_data.max = upper;
+	    }
+	  }
+	  break;
+	}
+        case GST_PROPS_INT_ID:
+	  if (entry1->data.int_range_data.min <= entry2->data.int_data && 
+	      entry1->data.int_range_data.max >= entry2->data.int_data) {
+            result = gst_props_entry_copy (entry2);
+	  }
+      }
+      break;
+    case GST_PROPS_FLOAT_RANGE_ID:
+      switch (entry2->propstype) {
+	/* a - b   <--->   a - c */
+        case GST_PROPS_FLOAT_RANGE_ID:
+        {
+	  gfloat lower = MAX (entry1->data.float_range_data.min, entry2->data.float_range_data.min);
+	  gfloat upper = MIN (entry1->data.float_range_data.max, entry2->data.float_range_data.max);
+
+	  if (lower <= upper) {
+            result = gst_props_alloc_entry ();
+	    result->propid = entry1->propid;
+
+	    if (lower == upper) {
+	      result->propstype = GST_PROPS_FLOAT_ID;
+	      result->data.float_data = lower;
+	    }
+	    else {
+	      result->propstype = GST_PROPS_FLOAT_RANGE_ID;
+	      result->data.float_range_data.min = lower;
+	      result->data.float_range_data.max = upper;
+	    }
+	  }
+	  break;
+	}
+        case GST_PROPS_FLOAT_ID:
+	  if (entry1->data.float_range_data.min <= entry2->data.float_data && 
+	      entry1->data.float_range_data.max >= entry2->data.float_data) {
+            result = gst_props_entry_copy (entry2);
+	  }
+      }
+      break;
+    case GST_PROPS_FOURCC_ID:
+      switch (entry2->propstype) {
+	/* b   <--->   a */
+        case GST_PROPS_FOURCC_ID:
+          if (entry1->data.fourcc_data == entry2->data.fourcc_data)
+	    result = gst_props_entry_copy (entry1);
+      }
+      break;
+    case GST_PROPS_INT_ID:
+      switch (entry2->propstype) {
+	/* b   <--->   a */
+        case GST_PROPS_INT_ID:
+          if (entry1->data.int_data == entry2->data.int_data)
+	    result = gst_props_entry_copy (entry1);
+      }
+      break;
+    case GST_PROPS_FLOAT_ID:
+      switch (entry2->propstype) {
+	/* b   <--->   a */
+        case GST_PROPS_FLOAT_ID:
+          if (entry1->data.float_data == entry2->data.float_data)
+	    result = gst_props_entry_copy (entry1);
+      }
+      break;
+    case GST_PROPS_BOOL_ID:
+      switch (entry2->propstype) {
+	/* t   <--->   t */
+        case GST_PROPS_BOOL_ID:
+          if (entry1->data.bool_data == entry2->data.bool_data)
+	    result = gst_props_entry_copy (entry1);
+      }
+    case GST_PROPS_STRING_ID:
+      switch (entry2->propstype) {
+	/* t   <--->   t */
+        case GST_PROPS_STRING_ID:
+          if (!strcmp (entry1->data.string_data.string, entry2->data.string_data.string))
+	    result = gst_props_entry_copy (entry1);
+      }
+  }
+
+  return result;
+}
+
+/**
+ * gst_props_intersect:
+ * @props1: a property
+ * @props2: another property
+ *
+ * Calculates the intersection bewteen two GstProps.
+ *
+ * Returns: a GstProps with the intersection or NULL if the 
+ * intersection is empty.
+ */
+GstProps*
+gst_props_intersect (GstProps *props1, GstProps *props2)
+{
+  GList *props1list;
+  GList *props2list;
+  GstProps *intersection;
+  GList *leftovers;
+  GstPropsEntry *iprops = NULL;
+
+  intersection = gst_props_alloc ();
+  intersection->fixed = TRUE;
+
+  g_return_val_if_fail (props1 != NULL, NULL);
+  g_return_val_if_fail (props2 != NULL, NULL);
+	
+  props1list = props1->properties;
+  props2list = props2->properties;
+
+  while (props1list && props2list) {
+    GstPropsEntry *entry1;
+    GstPropsEntry *entry2;
+
+    entry1 = (GstPropsEntry *)props1list->data;
+    entry2 = (GstPropsEntry *)props2list->data;
+
+    while (entry1->propid < entry2->propid) {
+      GstPropsEntry *toadd;
+
+      GST_DEBUG (GST_CAT_PROPERTIES,"source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
+
+      toadd = gst_props_entry_copy (entry1);
+      if (GST_PROPS_ENTRY_IS_VARIABLE (toadd))
+	intersection->fixed = FALSE;
+
+      intersection->properties = g_list_prepend (intersection->properties, toadd);
+
+      props1list = g_list_next (props1list);
+      if (props1list) 
+	entry1 = (GstPropsEntry *)props1list->data;
+      else 
+	goto end;
+    }
+    while (entry1->propid > entry2->propid) {
+      GstPropsEntry *toadd;
+
+      toadd = gst_props_entry_copy (entry2);
+      if (GST_PROPS_ENTRY_IS_VARIABLE (toadd))
+	intersection->fixed = FALSE;
+
+      intersection->properties = g_list_prepend (intersection->properties, toadd);
+
+      props2list = g_list_next (props2list);
+      if (props2list)
+	entry2 = (GstPropsEntry *)props2list->data;
+      else 
+	goto end;
+    }
+    /* at this point we are talking about the same property */
+    iprops = gst_props_entry_intersect (entry1, entry2);
+
+    if (iprops) {
+      if (GST_PROPS_ENTRY_IS_VARIABLE (iprops))
+	intersection->fixed = FALSE;
+      intersection->properties = g_list_prepend (intersection->properties, iprops);
+    }
+    else {
+      gst_props_unref (intersection);
+      return NULL;
+    }
+
+    props1list = g_list_next (props1list);
+    props2list = g_list_next (props2list);
+  }
+
+end:
+  /* at this point one of the lists could contain leftover properties */
+  if (props1list)
+    leftovers = props1list;
+  else if (props2list)
+    leftovers = props2list;
+  else 
+    goto finish;
+
+  while (leftovers) {
+    GstPropsEntry *entry;
+
+    entry = (GstPropsEntry *) leftovers->data;
+    if (GST_PROPS_ENTRY_IS_VARIABLE (entry))
+      intersection->fixed = FALSE;
+    intersection->properties = g_list_prepend (intersection->properties, gst_props_entry_copy (entry));
+
+    leftovers = g_list_next (leftovers);
+  }
+
+finish:
+  intersection->properties = g_list_reverse (intersection->properties);
+
+  return intersection;
+}
+
+GList*
+gst_props_normalize (GstProps *props)
+{
+  GList *entries;
+  GList *result = NULL;
+
+  if (!props) 
+    return NULL;
+
+  entries = props->properties;
+
+  while (entries) {
+    GstPropsEntry *entry = (GstPropsEntry *) entries->data;
+
+    if (entry->propstype == GST_PROPS_LIST_ID) {
+      GList *list_entries = entry->data.list_data.entries;
+
+      while (list_entries) {
+        GstPropsEntry *list_entry = (GstPropsEntry *) list_entries->data;
+        GstPropsEntry *new_entry;
+	GstProps *newprops;
+	GList *lentry;
+
+	newprops = gst_props_alloc ();
+	newprops->properties = gst_props_list_copy (props->properties);
+        lentry = g_list_find_custom (newprops->properties, GINT_TO_POINTER (list_entry->propid), props_find_func);
+	if (lentry) {
+          GList *new_list = NULL;
+
+          new_entry = (GstPropsEntry *) lentry->data;
+	  memcpy (new_entry, list_entry, sizeof (GstPropsEntry));
+
+	  new_list = gst_props_normalize (newprops);
+          result = g_list_concat (new_list, result);
+	}
+	else {
+          result = g_list_append (result, newprops);
+	}
+	
+        list_entries = g_list_next (list_entries);	
+      }
+      /* we break out of the loop because the other lists are
+       * unrolled in the recursive call */
+      break;
+    }
+    entries = g_list_next (entries);
+  }
+  if (!result) {
+    result = g_list_prepend (result, props);
+  }
+  else {
+    result = g_list_reverse (result);
+    gst_props_unref (props);
+  }
+  return result;
 }
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
@@ -1029,6 +1433,7 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "value", entry->data.string_data.string);
       break;
     default:
+      g_warning ("trying to save unknown property type %d", entry->propstype);
       break;
   }
 
@@ -1062,6 +1467,7 @@ gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
         subtree = xmlNewChild (parent, NULL, "list", NULL);
         xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
         g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_save_thyself_func, subtree);
+	break;
       default:
     	gst_props_save_thyself_func (entry, parent);
     }
@@ -1078,9 +1484,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
   GstPropsEntry *entry;
   gchar *prop;
 
-  g_mutex_lock (_gst_props_entries_chunk_lock);
-  entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
-  g_mutex_unlock (_gst_props_entries_chunk_lock);
+  entry = gst_props_alloc_entry ();
 
   if (!strcmp(field->name, "int")) {
     entry->propstype = GST_PROPS_INT_ID;
@@ -1175,27 +1579,19 @@ gst_props_load_thyself (xmlNodePtr parent)
   xmlNodePtr field = parent->xmlChildrenNode;
   gchar *prop;
 
-  g_mutex_lock (_gst_props_chunk_lock);
-  props = g_mem_chunk_alloc (_gst_props_chunk);
-  g_mutex_unlock (_gst_props_chunk_lock);
-
-  props->properties = NULL;
-  props->refcount = 1;
+  props = gst_props_alloc ();
 
   while (field) {
     if (!strcmp (field->name, "list")) {
       GstPropsEntry *entry;
       xmlNodePtr subfield = field->xmlChildrenNode;
 
-      g_mutex_lock (_gst_props_entries_chunk_lock);
-      entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
-      g_mutex_unlock (_gst_props_entries_chunk_lock);
-
-      entry->propstype = GST_PROPS_LIST_ID;
-      entry->data.list_data.entries = NULL;
+      entry = gst_props_alloc_entry ();
       prop = xmlGetProp (field, "name");
       entry->propid = g_quark_from_string (prop);
       g_free (prop);
+      entry->propstype = GST_PROPS_LIST_ID;
+      entry->data.list_data.entries = NULL;
 
       while (subfield) {
         GstPropsEntry *subentry = gst_props_load_thyself_func (subfield);
@@ -1206,7 +1602,7 @@ gst_props_load_thyself (xmlNodePtr parent)
         subfield = subfield->next;
       }
       entry->data.list_data.entries = g_list_reverse (entry->data.list_data.entries);
-      props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
+      gst_props_add_entry (props, entry);
     }
     else {
       GstPropsEntry *entry;
@@ -1214,7 +1610,7 @@ gst_props_load_thyself (xmlNodePtr parent)
       entry = gst_props_load_thyself_func (field);
 
       if (entry) 
-	props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
+        gst_props_add_entry (props, entry);
     }
     field = field->next;
   }

@@ -691,6 +691,51 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 }
 
 /**
+ * gst_element_connect_filtered:
+ * @src: element containing source pad
+ * @srcpadname: name of pad in source element
+ * @dest: element containing destination pad
+ * @destpadname: name of pad in destination element
+ * @filtercaps: the caps to use as a filter
+ *
+ * Connect the two named pads of the source and destination elements.
+ * Side effect is that if one of the pads has no parent, it becomes a
+ * child of the parent of the other element.  If they have different
+ * parents, the connection fails.
+ *
+ * Return: TRUE if the pads could be connected.
+ */
+gboolean
+gst_element_connect_filtered (GstElement *src, const gchar *srcpadname,
+                              GstElement *dest, const gchar *destpadname, 
+			      GstCaps *filtercaps)
+{
+  GstPad *srcpad,*destpad;
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT(src), FALSE);
+  g_return_val_if_fail (srcpadname != NULL, FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT(dest), FALSE);
+  g_return_val_if_fail (destpadname != NULL, FALSE);
+
+  /* obtain the pads requested */
+  srcpad = gst_element_get_pad (src, srcpadname);
+  if (srcpad == NULL) {
+    GST_ERROR (src, "source element has no pad \"%s\"", srcpadname);
+    return FALSE;
+  }
+  destpad = gst_element_get_pad (dest, destpadname);
+  if (srcpad == NULL) {
+    GST_ERROR (dest, "destination element has no pad \"%s\"", destpadname);
+    return FALSE;
+  }
+
+  /* we're satisified they can be connected, let's do it */
+  return gst_pad_connect_filtered (srcpad, destpad, filtercaps);
+}
+
+/**
  * gst_element_connect:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element
@@ -701,34 +746,14 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
  * parents, the connection fails.
+ *
+ * Return: TRUE if the pads could be connected.
  */
-void
+gboolean
 gst_element_connect (GstElement *src, const gchar *srcpadname,
                      GstElement *dest, const gchar *destpadname)
 {
-  GstPad *srcpad,*destpad;
-
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_ELEMENT(src));
-  g_return_if_fail (srcpadname != NULL);
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (GST_IS_ELEMENT(dest));
-  g_return_if_fail (destpadname != NULL);
-
-  /* obtain the pads requested */
-  srcpad = gst_element_get_pad (src, srcpadname);
-  if (srcpad == NULL) {
-    GST_ERROR(src,"source element has no pad \"%s\"",srcpadname);
-    return;
-  }
-  destpad = gst_element_get_pad (dest, destpadname);
-  if (srcpad == NULL) {
-    GST_ERROR(dest,"destination element has no pad \"%s\"",destpadname);
-    return;
-  }
-
-  /* we're satisified they can be connected, let's do it */
-  gst_pad_connect(srcpad,destpad);
+  return gst_element_connect_filtered (src, srcpadname, dest, destpadname, NULL);
 }
 
 /**

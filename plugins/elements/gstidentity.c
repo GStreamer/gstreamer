@@ -133,26 +133,6 @@ gst_identity_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (identity->srcpad);
 }
 
-static GstPadNegotiateReturn
-gst_identity_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstIdentity *identity;
-
-  identity = GST_IDENTITY (gst_pad_get_parent (pad));
-
-  return gst_pad_negotiate_proxy (pad, identity->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-gst_identity_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstIdentity *identity;
-
-  identity = GST_IDENTITY (gst_pad_get_parent (pad));
-
-  return gst_pad_negotiate_proxy (pad, identity->srcpad, caps);
-}
-
 static void 
 gst_identity_init (GstIdentity *identity) 
 {
@@ -160,11 +140,9 @@ gst_identity_init (GstIdentity *identity)
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad, GST_DEBUG_FUNCPTR (gst_identity_chain));
   gst_pad_set_bufferpool_function (identity->sinkpad, gst_identity_get_bufferpool);
-  gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink);
   
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
-  gst_pad_set_negotiate_function (identity->srcpad, gst_identity_negotiate_src);
 
   identity->loop_based = FALSE;
   identity->sleep_time = 0;
