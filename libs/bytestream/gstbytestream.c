@@ -125,7 +125,7 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 	bs->headbufavail += GST_BUFFER_SIZE (nextbuf);
       }
 
-      // we can ditch the nextbuf then
+      gst_buffer_unref (lastbuf);
       gst_buffer_unref (nextbuf);
 
       // if we can't, we just append this buffer
