@@ -147,39 +147,39 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ARTSD SOUND SERVER ###
-@USE_ARTS_TRUE@%package -n gstreamer-artsd
-@USE_ARTS_TRUE@Summary: GStreamer artsd output plugin
-@USE_ARTS_TRUE@Group: Libraries/Multimedia
-@USE_ARTS_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_ARTS_TRUE@
-@USE_ARTS_TRUE@%description -n gstreamer-artsd
-@USE_ARTS_TRUE@Plugin for outputing to artsd sound server
-@USE_ARTS_TRUE@
-@USE_ARTS_TRUE@%files -n gstreamer-artsd
-@USE_ARTS_TRUE@%defattr(-, root, root)
-@USE_ARTS_TRUE@%{_libdir}/gst/libgstartsd*
-@USE_ARTS_TRUE@
-@USE_ARTS_TRUE@%post -n gstreamer-artsd
-@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-### ARTS WRAPPER ###
-@USE_ARTSC_TRUE@%package -n gstreamer-arts
-@USE_ARTSC_TRUE@Summary: GStreamer arts wrapper plugin
+@USE_ARTSC_TRUE@%package -n gstreamer-artsd
+@USE_ARTSC_TRUE@Summary: GStreamer artsd output plugin
 @USE_ARTSC_TRUE@Group: Libraries/Multimedia
 @USE_ARTSC_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_ARTSC_TRUE@Requires: kdelibs-sound >= 2
-@USE_ARTSC_TRUE@BuildRequires: kdelibs-sound-devel >= 2
-@USE_ARTSC_TRUE@BuildRequires: gcc-c++
 @USE_ARTSC_TRUE@
-@USE_ARTSC_TRUE@%description -n gstreamer-arts
-@USE_ARTSC_TRUE@Plugin for wrapping arts plugins
+@USE_ARTSC_TRUE@%description -n gstreamer-artsd
+@USE_ARTSC_TRUE@Plugin for outputing to artsd sound server
 @USE_ARTSC_TRUE@
-@USE_ARTSC_TRUE@%files -n gstreamer-arts
+@USE_ARTSC_TRUE@%files -n gstreamer-artsd
 @USE_ARTSC_TRUE@%defattr(-, root, root)
-@USE_ARTSC_TRUE@%{_libdir}/gst/libgstarts.*
+@USE_ARTSC_TRUE@%{_libdir}/gst/libgstartsd*
 @USE_ARTSC_TRUE@
-@USE_ARTSC_TRUE@%post -n gstreamer-arts
+@USE_ARTSC_TRUE@%post -n gstreamer-artsd
 @USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
+### ARTS WRAPPER ###
+@USE_ARTS_TRUE@%package -n gstreamer-arts
+@USE_ARTS_TRUE@Summary: GStreamer arts wrapper plugin
+@USE_ARTS_TRUE@Group: Libraries/Multimedia
+@USE_ARTS_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_ARTS_TRUE@Requires: kdelibs-sound >= 2
+@USE_ARTS_TRUE@BuildRequires: kdelibs-sound-devel >= 2
+@USE_ARTS_TRUE@BuildRequires: gcc-c++
+@USE_ARTS_TRUE@
+@USE_ARTS_TRUE@%description -n gstreamer-arts
+@USE_ARTS_TRUE@Plugin for wrapping arts plugins
+@USE_ARTS_TRUE@
+@USE_ARTS_TRUE@%files -n gstreamer-arts
+@USE_ARTS_TRUE@%defattr(-, root, root)
+@USE_ARTS_TRUE@%{_libdir}/gst/libgstarts.*
+@USE_ARTS_TRUE@
+@USE_ARTS_TRUE@%post -n gstreamer-arts
+@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AUDIOFILE ###
 @USE_AUDIOFILE_TRUE@%package -n gstreamer-audiofile
