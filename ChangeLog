@@ -1,5 +1,11 @@
 2004-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybin.c: (gst_play_bin_set_property),
+	(gen_video_element), (gen_audio_element), (setup_sinks):
+	Don't assume the user provided sinks are named "sink"...
+
+2004-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybasebin.c: (gen_preroll_element),
 	(unknown_type), (setup_source), (gst_play_base_bin_remove_element),
 	(gst_play_base_bin_link_stream):
@@ -16,8 +22,8 @@
 	(cdparanoia_uri_get_protocols), (cdparanoia_uri_get_uri),
 	(cdparanoia_uri_set_uri), (cdparanoia_uri_handler_init):
 	* ext/cdparanoia/gstcdparanoia.h:
-	Added reworked patch from #154903 from milosz derezynski. This
-	adds the cdda://<tracknum> uri.
+	Added reworked patch from #154903 from milosz derezynski (deadchip).
+	This adds the cdda://<tracknum> uri.
 
 2004-10-08  Wim Taymans  <wim@fluendo.com>
 
