@@ -43,8 +43,11 @@ extern "C" {
 
 #define GST_MPEG_PARSE_IS_MPEG2(parse) (GST_MPEG_PACKETIZE_IS_MPEG2 (GST_MPEG_PARSE (parse)->packetize))
 
-#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
-#define GSTTIME_TO_MPEGTIME(time) (((time) * 9) / (GST_MSECOND/10))
+#define CLOCK_BASE 9LL
+#define CLOCK_FREQ CLOCK_BASE * 10000
+
+#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / CLOCK_BASE)
+#define GSTTIME_TO_MPEGTIME(time) (((time) * CLOCK_BASE) / (GST_MSECOND/10))
 
 typedef struct _GstMPEGParse GstMPEGParse;
 typedef struct _GstMPEGParseClass GstMPEGParseClass;

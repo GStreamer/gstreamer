@@ -540,13 +540,13 @@ gst_mpeg_parse_loop (GstElement *element)
           /* 
 	   * The mpeg spec says something like this, but that doesn't really work:
 	   *
-	   * mpeg_parse->next_scr = (scr * br + bss * 90000LL) / (90000LL + br);
+	   * mpeg_parse->next_scr = (scr * br + bss * CLOCK_FREQ) / (CLOCK_FREQ + br);
 	   */
-          mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+          mpeg_parse->next_scr = scr + (bss * CLOCK_FREQ) / br;
         }
         else {
           /* we are interpolating the scr here */
-          mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+          mpeg_parse->next_scr = scr + (bss * CLOCK_FREQ) / br;
         }
       }
       else {
