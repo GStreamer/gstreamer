@@ -29,7 +29,7 @@
 
     </sect2>
     <sect2 id="sec-motivation-goal">
-      <title>'One goal' media players</title>
+      <title>'One goal' media players/libraries</title>
       <para>
         Your typical MPEG player was designed to play MPEG video and audio. Most of
         these players have implemented a complete infrastructure focused on 
@@ -41,6 +41,13 @@
         option would be to take all of the MPEG2 decoding algorithms out
         of the player and duplicate them into my own AVI encoder. These 
         algorithms cannot easily be shared accross applications.
+      </para> 
+      <para>
+        Attempts have been made to create libraries for handling various media types.
+	Because they focus on a very specific media type (avifile, libmpeg2, ...),
+	significant work is needed to integrate them due to a lack of a common API.
+	GStreamer allows you to wrap these libraries with a common API, which 
+	significantly simplifies integration and reuse.
       </para> 
     </sect2>
   
@@ -58,7 +65,9 @@
       </para> 
       <para> 
         While GStreamer also uses it own plugin system it offers a very rich
-	framework for the plugin.
+	framework for the plugin developper and ensures the plugin can be used
+	in a wide range of applications, transparently interacting with other
+	plugins.
       </para> 
     </sect2>
 

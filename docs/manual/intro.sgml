@@ -35,6 +35,12 @@
     </para> 
 
     <para>
+      The GStreamer core function is to provide a framework for plugins, data flow 
+      and media type handling/negotiation. 
+      It also provides an API to write applications using the various plugins.
+    </para> 
+
+    <para>
       This book is about GStreamer from a developer's point of view; it describes
       how to write a GStreamer application using the GStreamer libraries and tools.
     </para> 
