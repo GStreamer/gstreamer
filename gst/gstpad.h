@@ -25,6 +25,7 @@
 #include <gnome-xml/parser.h>
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
+#include <gst/gstcaps.h>
 
 
 #ifdef __cplusplus
@@ -69,6 +70,7 @@ struct _GstPad {
 
   gchar *name;
   GList *types;
+  GstCaps *caps;
 
   GstPadDirection direction;
 
@@ -110,6 +112,9 @@ void	 		gst_pad_set_type_id		(GstPad *pad, guint16 id);
 
 GList*	 		gst_pad_get_type_ids		(GstPad *pad);
 void 			gst_pad_add_type_id		(GstPad *pad, guint16 id);
+
+void	 		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
+GstCaps* 		gst_pad_get_caps		(GstPad *pad);
 
 void 			gst_pad_set_name		(GstPad *pad, const gchar *name);
 const gchar*		gst_pad_get_name		(GstPad *pad);

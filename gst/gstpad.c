@@ -692,6 +692,41 @@ gst_pad_set_type_id (GstPad *pad,
 {
   gst_pad_add_type_id (pad, id);
 }
+
+/**
+ * gst_pad_set_caps:
+ * @pad: the pad to set the caps to
+ * @caps: the caps to attach to this pad 
+ *
+ * set the capabilities of this pad
+ */
+void 
+gst_pad_set_caps (GstPad *pad, 
+		  GstCaps *caps) 
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (caps != NULL);
+
+  pad->caps = caps;
+}
+/**
+ * gst_pad_get_caps:
+ * @pad: the pad to get the capabilities from
+ *
+ * get the capabilities of this pad
+ *
+ * Return; the capabilities of this pad
+ */
+GstCaps * 
+gst_pad_get_caps (GstPad *pad) 
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return pad->caps;
+}
+
 /**
  * gst_pad_set_type_id:
  * @pad: the pad to set the type id to
@@ -783,7 +818,7 @@ gst_pad_load_and_connect (xmlNodePtr parent,
 
   targetpad = gst_element_get_pad(target, split[1]);
 
-  g_return_if_fail(targetpad != NULL);
+  if (targetpad == NULL) goto cleanup;
 
   gst_pad_connect(pad, targetpad);
 

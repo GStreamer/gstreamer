@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+//#define GST_DEBUG_ENABLED
+
 #include <gst/gst.h>
 
 #include "config.h"
@@ -568,8 +570,18 @@ gst_bin_src_wrapper (int argc,char *argv[])
     while (pads) {
       pad = GST_PAD (pads->data);
       if (pad->direction == GST_PAD_SRC) {
-        if (pad->pullfunc == NULL) DEBUG("error, no pullfunc in \"%s\"\n", name);
-        (pad->pullfunc)(pad);
+        region_struct *region = cothread_get_data (element->threadstate, "region");
+        if (region) {
+ 	  //gst_src_push_region (GST_SRC (element), region->offset, region->size);
+          if (pad->pullregionfunc == NULL) 
+	    fprintf(stderr,"error, no pullregionfunc in \"%s\"\n", name);
+          (pad->pullregionfunc)(pad, region->offset, region->size);
+ 	}
+ 	else {
+          if (pad->pullfunc == NULL) 
+ 	    fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
+          (pad->pullfunc)(pad);
+ 	}
       }
       pads = g_list_next(pads);
     }
@@ -763,7 +775,7 @@ gst_bin_create_plan_func (GstBin *bin)
           // set the proxy functions
           if (!pad->pullfunc)
             pad->pullfunc = gst_bin_pullfunc_proxy;
-          if (!pad->pullfunc)
+          if (!pad->pullregionfunc)
             pad->pullregionfunc = gst_bin_pullregionfunc_proxy;
 
           // ***** check for possible connections outside
@@ -909,7 +921,7 @@ gst_bin_iterate_func (GstBin *bin)
 
     while (entries) {
       entry = GST_ELEMENT (entries->data);
-      if (GST_IS_SRC (entry)) {
+      if (GST_IS_SRC (entry) || GST_IS_CONNECTION (entry)) {
         pads = entry->pads;
         while (pads) {
           pad = GST_PAD (pads->data);

@@ -108,6 +108,8 @@ fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
 #define DEBUG(format, args...)
 #define DEBUG_ENTER(format, args...)
 #define DEBUG_LEAVE(format, args...)
+#define DEBUG_SET_STRING(format, args...)
+#define DEBUG_ENTER_STRING
 #endif
 
 
