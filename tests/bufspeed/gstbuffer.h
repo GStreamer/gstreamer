@@ -95,7 +95,6 @@ typedef void       (*GstBufferFreeFunc)	(GstBuffer *buf);
 typedef GstBuffer *(*GstBufferCopyFunc)	(GstBuffer *srcbuf);
 
 
-#include <gst/gstbufferpool.h>
 
 struct _GstBuffer {
   GstData 		data_type;
