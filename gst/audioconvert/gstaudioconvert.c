@@ -598,8 +598,10 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
   }
   if (_fixate_caps_to_int (&copy, "width", try.width))
     return copy;
-  if (_fixate_caps_to_int (&copy, "depth", try.depth))
-    return copy;
+  if (gst_structure_get_name (gst_caps_get_structure (copy, 0))[12] == 'i') {
+    if (_fixate_caps_to_int (&copy, "depth", try.depth))
+      return copy;
+  }
   if (_fixate_caps_to_int (&copy, "endianness", try.endianness))
     return copy;
   if ((pos_val = gst_structure_get_value (gst_caps_get_structure (copy, 0),
