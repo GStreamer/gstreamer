@@ -18,9 +18,9 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
 #include "gstjack.h"
 #include <gst/audio/audio.h>
-
 
 /* TODO:
    
