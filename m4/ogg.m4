@@ -28,7 +28,7 @@ AC_ARG_ENABLE(oggtest, [  --disable-oggtest       Do not try to compile and run 
     OGG_CFLAGS="-I$ogg_includes"
   elif test "x$ogg_prefix" != "x" ; then
     OGG_CFLAGS="-I$ogg_prefix/include"
-  elif test "$prefix" != "xNONE"; then
+  elif test "x$prefix" != "xNONE"; then
     OGG_CFLAGS="-I$prefix/include"
   fi
 
