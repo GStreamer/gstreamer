@@ -110,21 +110,21 @@ enum {
  */
 static const struct poptOption gstreamer_options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, (void *) &init_popt_callback, 0, NULL, NULL},
-  {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        "Print the GStreamer version", NULL},
-  {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
+  {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        N_("Print the GStreamer version"), NULL},
+  {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG 
-  {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  "default debug level from 1 (only error) to 5 (anything) or 0 for no output", "LEVEL"},
-  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          "colon-seperated list of category=name pairs to use specific levels", "CATEGORIES"},
-  {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, "disable color debugging output", NULL},
-  {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  "disable debugging"},
-  {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     "print available debug categories and exit", NULL},
+  {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("default debug level from 1 (only error) to 5 (anything) or 0 for no output"), "LEVEL"},
+  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("colon-seperated list of category=name pairs to use specific levels"), "CATEGORIES"},
+  {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("disable color debugging output"), NULL},
+  {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  N_("disable debugging")},
+  {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     N_("print available debug categories and exit"), NULL},
 #endif
-  {"gst-disable-cpu-opt",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	  NULL, ARG_DISABLE_CPU_OPT,"Disable accelerated CPU instructions", NULL},
-  {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    "enable verbose plugin loading diagnostics", NULL},
-  {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
-  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
-  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      "scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)", "SCHEDULER"},
-  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       "registry to use" , "REGISTRY"},
+  {"gst-disable-cpu-opt",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	  NULL, ARG_DISABLE_CPU_OPT,N_("Disable accelerated CPU instructions"), NULL},
+  {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    N_("enable verbose plugin loading diagnostics"), NULL},
+  {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    N_("'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins"), "PATHS"},
+  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    N_("comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"), "PLUGINS"},
+  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      N_("scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)"), "SCHEDULER"},
+  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       N_("registry to use") , "REGISTRY"},
   POPT_TABLEEND
 };
 
@@ -396,6 +396,9 @@ init_pre (void)
   /* we need threading to be enabled right here */
   _gst_debug_init();
   
+  bindtextdomain (GETTEXT_PACKAGE, GST_LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+
 #ifndef GST_DISABLE_REGISTRY
   {
     const gchar *debug_list;

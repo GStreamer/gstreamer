@@ -29,10 +29,10 @@
 #endif
 
 /***** until we have gettext set up properly, don't even try this*/
-#if 0
+
 # ifdef ENABLE_NLS
 #  include <libintl.h>
-#  define _(String) dgettext(PACKAGE,String)
+#  define _(String) dgettext(GETTEXT_PACKAGE,String)
 #  ifdef gettext_noop
 #   define N_(String) gettext_noop(String)
 #  else /* gettext_noop */
@@ -47,7 +47,6 @@
 #  define dcgettext(Domain,String,Type) (String)
 #  define bindtextdomain(Domain,Directory) (Domain)
 # endif /* ENABLE_NLS */
-#endif
 
 #include <stdlib.h>
 #include <string.h>
