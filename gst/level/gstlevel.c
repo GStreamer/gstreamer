@@ -95,9 +95,9 @@ static void		gst_level_set_property			(GObject *object, guint prop_id, const GVa
 static void		gst_level_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void		gst_level_chain			(GstPad *pad, GstBuffer *buf);
-static void inline 	gst_level_fast_16bit_chain 	(gint16* data, gint16** out_data, 
+static void inline 	gst_level_fast_16bit_chain 	(gint16* data, gint16* out_data, 
 			         				 guint numsamples);
-static void inline 	gst_level_fast_8bit_chain		(gint8* data, gint8** out_data,
+static void inline 	gst_level_fast_8bit_chain		(gint8* data, gint8* out_data,
                                 				 guint numsamples);
 
 static GstElementClass *parent_class = NULL;
@@ -182,12 +182,12 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
   g_print ("%s: ", gst_element_get_name (GST_ELEMENT (filter)));
   switch (width) {
     case 16:
-	gst_level_fast_16bit_chain (in_data, &out_data,
+	gst_level_fast_16bit_chain (in_data, out_data,
 	                            GST_BUFFER_SIZE (buf) / 2);
 	break;
     case 8:
 	gst_level_fast_8bit_chain ((gint8 *) in_data,
-	                           (gint8 **) &out_data, GST_BUFFER_SIZE(buf));
+	                           (gint8 *) out_data, GST_BUFFER_SIZE(buf));
 	break;
   }
   gst_buffer_unref (buf);
@@ -195,12 +195,12 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
 }
 
 static void inline
-gst_level_fast_16bit_chain (gint16* in_data, gint16** out_data, 
+gst_level_fast_16bit_chain (gint16* in_data, gint16* out_data, 
 			    guint num_samples)
 #include "filter.func"
 
 static void inline
-gst_level_fast_8bit_chain (gint8* in_data, gint8** out_data,
+gst_level_fast_8bit_chain (gint8* in_data, gint8* out_data,
                            guint num_samples)
 #include "filter.func"
 

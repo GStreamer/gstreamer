@@ -14,7 +14,7 @@
    */
 /*
   for(j = 0; j < num_samples; j++) {
-     (*out_data)[j] = in_data[j];
+     out_data[j] = in_data[j];
      squaresum += in_data[j] * in_data[j];
   }
   RMS = sqrt (squaresum / (float) num_samples);
@@ -24,7 +24,7 @@
 */
 
   for(j = 0; j < num_samples; j++) {
-     (*out_data)[j] = in_data[j];
+     out_data[j] = in_data[j];
      squaresum += pow ((double) in_data[j] / 32767.0, 2);
   }
   RMS = sqrt (squaresum / (float) num_samples);
