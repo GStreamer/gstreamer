@@ -120,7 +120,7 @@ dnl check for libxml2
 LIBXML_PKG=', libxml-2.0'
 PKG_CHECK_MODULES(XML, libxml-2.0 >= $LIBXML2_REQ, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
 if test "x$HAVE_LIBXML2" = "xyes"; then
-  AC_DEFINE(HAVE_LIBXML2)
+  AC_DEFINE(HAVE_LIBXML2, 1, [Define if libxml2 is available])
 else
   AC_MSG_ERROR([Need libxml2 for glib2 builds -- you should be able to do without it -- this needs fixing])
 fi
@@ -306,7 +306,7 @@ dnl # Set up some more defines #
 dnl ############################
 
 dnl Set location of configuration dir.
-AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
+AC_DEFINE_UNQUOTED(GST_CONFIG_DIR, "$GST_CONFIG_DIR", [Define the configuration directory])
 AC_SUBST(GST_CONFIG_DIR)
 
 dnl Set location of plugin directory
@@ -315,12 +315,12 @@ if test "x${prefix}" = "xNONE"; then
 else
   PLUGINS_DIR=${prefix}/lib/gst
 fi
-AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
+AC_DEFINE_UNQUOTED(PLUGINS_DIR, "$PLUGINS_DIR", [Define the plugin directory])
 AC_SUBST(PLUGINS_DIR)
 
 dnl Set location of uninstalled plugin directory
 PLUGINS_BUILDDIR=`pwd`
-AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
+AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR, "$PLUGINS_BUILDDIR", [Define the uninstalled plugin directory])
 AC_SUBST(PLUGINS_BUILDDIR)
 
 dnl since glib and xml are package deps, there's no need to include their cflags
