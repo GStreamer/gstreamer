@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+#
+
+if(scalar(@ARGV) < 1){
+	print "$0 Objectname\n";
+	print "  creates gstobjectname.{c,h} implementing GstObjectname,\n";
+	print "  subclassing GstVideofilter.\n";
+	exit(0);
+}
+
+$Template = $ARGV[0];
+($TEMPLATE = $Template) =~ tr/a-z/A-Z/;
+($template = $Template) =~ tr/A-Z/a-z/;
+
+open IN, "gstvideotemplate.c";
+open OUT, ">gst$template.c";
+
+@lines = <IN>;
+map { s/Videotemplate/$Template/g;
+	s/videotemplate/$template/g;
+	s/VIDEOTEMPLATE/$TEMPLATE/g;
+} @lines;
+
+print OUT @lines;
+
+close IN;
+close OUT;
+
+open IN, "gstvideotemplate.h";
+open OUT, ">gst$template.h";
+
+@lines = <IN>;
+map { s/Videotemplate/$Template/g;
+	s/videotemplate/$template/g;
+	s/VIDEOTEMPLATE/$TEMPLATE/g;
+} @lines;
+
+print OUT @lines;
+
+close IN;
+close OUT;
+
