@@ -44,6 +44,7 @@ typedef enum
   ALPHA_METHOD_ADD,
   ALPHA_METHOD_GREEN,
   ALPHA_METHOD_BLUE,
+  ALPHA_METHOD_BLACK,
 }
 GstAlphaMethod;
 
@@ -143,6 +144,7 @@ gst_alpha_method_get_type (void)
     {ALPHA_METHOD_ADD, "0", "Add alpha channel"},
     {ALPHA_METHOD_GREEN, "1", "Chroma Key green"},
     {ALPHA_METHOD_BLUE, "2", "Chroma Key blue"},
+    {ALPHA_METHOD_BLACK, "3", "Chroma Key black"},
     {0, NULL, NULL},
   };
 
@@ -327,6 +329,8 @@ static int yuv_colors_U[] = { 128,  46, 255 };
 static int yuv_colors_V[] = { 128,  21, 107 };
 */
 
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+
 static void
 gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
     gdouble alpha)
@@ -335,15 +339,25 @@ gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
   guint8 *srcY;
   guint8 *srcU;
   guint8 *srcV;
-  gint size;
-  gint half_width = width / 2;
   gint i, j;
+  gint w2, h2;
+  gint size, size2;
+  gint stride, stride2;
+  gint wrap, wrap2;
 
-  size = width * height;
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+  w2 = (width + 1) >> 1;
+  stride2 = ROUND_UP_4 (w2);
+  h2 = (height + 1) >> 1;
+  size2 = stride2 * h2;
+
+  wrap = stride - 2 * (width / 2);
+  wrap2 = stride2 - width / 2;
 
   srcY = src;
   srcU = srcY + size;
-  srcV = srcU + size / 4;
+  srcV = srcU + size2;
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width / 2; j++) {
@@ -357,11 +371,18 @@ gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
       *dest++ = *srcV++;
     }
     if (i % 2 == 0) {
-      srcU -= half_width;
-      srcV -= half_width;
+      srcU -= width / 2;
+      srcV -= width / 2;
+    } else {
+      srcU += wrap2;
+      srcV += wrap2;
     }
+    srcY += wrap;
   }
 }
+
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
 
 static void
 gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
@@ -374,17 +395,29 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
   guint8 *dest1, *dest2;
   gint i, j;
   gint x, z, u, v;
-  gint size;
+  gint w2, h2;
+  gint size, size2;
+  gint stride, stride2;
+  gint wrap, wrap2, wrap3;
 
-  size = width * height;
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+  w2 = (width + 1) >> 1;
+  stride2 = ROUND_UP_4 (w2);
+  h2 = (height + 1) >> 1;
+  size2 = stride2 * h2;
 
   srcY1 = src;
-  srcY2 = src + width;
+  srcY2 = src + stride;
   srcU = srcY1 + size;
-  srcV = srcU + size / 4;
+  srcV = srcU + size2;
 
   dest1 = dest;
   dest2 = dest + width * 4;
+
+  wrap = 2 * stride - 2 * (width / 2);
+  wrap2 = stride2 - width / 2;
+  wrap3 = 8 * width - 8 * (ROUND_UP_2 (width) / 2);
 
   for (i = 0; i < height / 2; i++) {
     for (j = 0; j < width / 2; j++) {
@@ -440,10 +473,12 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
       *dest2++ = u;
       *dest2++ = v;
     }
-    dest1 += width * 4;
-    dest2 += width * 4;
-    srcY1 += width;
-    srcY2 += width;
+    dest1 += wrap3;
+    dest2 += wrap3;
+    srcY1 += wrap;
+    srcY2 += wrap;
+    srcU += wrap2;
+    srcV += wrap2;
   }
 }
 
@@ -504,12 +539,19 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
       gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
           GST_BUFFER_DATA (outbuf),
           new_width, new_height,
-          TRUE, alpha->target_cr, alpha->target_cb, 1.0, alpha->alpha);
+          FALSE, alpha->target_cr, alpha->target_cb, 1.0, alpha->alpha);
       break;
     case ALPHA_METHOD_BLUE:
       gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
           GST_BUFFER_DATA (outbuf),
           new_width, new_height, TRUE, 100, 100, 1.0, alpha->alpha);
+      break;
+    case ALPHA_METHOD_BLACK:
+      gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
+          GST_BUFFER_DATA (outbuf),
+          new_width, new_height, TRUE, 129, 129, 1.0, alpha->alpha);
+      break;
+    default:
       break;
   }
 
