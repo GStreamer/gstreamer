@@ -1,6 +1,81 @@
 <chapter id="cha-utility">
   <title>Utility functions</title>
   <para> 
+    while you can use the regular gtk_object_getv () function to
+    query the value of an object property, <application>GStreamer</application>
+    provides some easy wrappers for this common operation.
   </para>
+  <para> 
+    Instead of writing the following Gtk+ code to query the GTK_STRING value
+    of an object:
+  </para>
+  <programlisting>
+  GtkArg arg;
+  guchar *value;
+
+  arg.name = argname;
+  gtk_object_getv (GTK_OBJECT (object), 1, &amp;arg);
+  value = GTK_VALUE_STRING (arg);
+  </programlisting>
+  <para> 
+    You can also use:
+  </para> 
+  <programlisting>
+  value = gst_util_get_string_arg (object, argname);
+  </programlisting>
+  <para> 
+    These convenience functions exist for the following types:
+    <itemizedlist>
+      <listitem>
+        <para>
+         gint: with gst_util_get_int_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         gboolean: with gst_util_get_bool_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         glong: with gst_util_get_long_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         gfloat: with gst_util_get_float_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         gdouble: with gst_util_get_double_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         guchar*: with gst_util_get_string_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         gpointer: with gst_util_get_pointer_arg ();
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+         GtkWidget*: with gst_util_get_widget_arg ();
+        </para>
+      </listitem>
+    </itemizedlist>
+  </para> 
+  <para> 
+    There is also another utility function that can be used to dump a block
+    of memory on the console. This function is very usefull for plugin
+    developers. The function will dump size bytes of the memory pointed
+    to by mem.
+  </para> 
+  <programlisting>
+  void gst_util_dump_mem(guchar *mem, guint size);
+  </programlisting>
 
 </chapter>
