@@ -104,7 +104,7 @@ enum {
  * the GST_SCHEDULER_DEFAULT_NAME define.
  */
 static const struct poptOption gstreamer_options[] = {
-  {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
+  {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, (void *) &init_popt_callback, 0, NULL, NULL},
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        "Print the GStreamer version", NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
   {"gst-info-mask",      NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_INFO_MASK,      "info bitmask", "MASK"},
@@ -216,14 +216,14 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
 {
   poptContext context;
   gint nextopt;
-  const struct poptOption *options;
-  const struct poptOption options_with[] = {
+  struct poptOption *options;
+  struct poptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		 0, "Application options:", NULL},
     POPT_TABLEEND
   };
-  const struct poptOption options_without[] = {
+  struct poptOption options_without[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gstreamer_options,	 0, "GStreamer options:", NULL},
     POPT_TABLEEND
