@@ -227,7 +227,7 @@ gst_thread_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
  * Returns: The new thread
  */
 GstElement*
-gst_thread_new (const guchar *name)
+gst_thread_new (const gchar *name)
 {
   return gst_elementfactory_make ("thread", name);
 }

@@ -82,7 +82,7 @@ struct _GstThreadClass {
 
 GType 	gst_thread_get_type	(void);
 
-GstElement*	gst_thread_new		(const guchar *name);
+GstElement*	gst_thread_new		(const gchar *name);
 
 #ifdef __cplusplus
 }
