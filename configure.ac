@@ -1173,12 +1173,11 @@ GST_CHECK_FEATURE(LIBRFB, [librfb Remote Framebuffer], rfbsrc, [
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization plugins], libvisual, [
-  PKG_CHECK_MODULES(LIBVISUAL, libvisual, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")
+  PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.1.1, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")
   AC_SUBST(LIBVISUAL_CFLAGS)
   AC_SUBST(LIBVISUAL_LIBS)
 ])
 
-dnl *** mad ***
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
