@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-23 19:35+0100\n"
+"POT-Creation-Date: 2004-03-09 19:31+0100\n"
 "PO-Revision-Date: 2004-02-02 23:08+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -29,6 +29,10 @@ msgstr "Kon bestand \"%s\" niet sluiten."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen voor lezen."
+
+#: ext/cdparanoia/gstcdparanoia.c:638 ext/cdparanoia/gstcdparanoia.c:655
+msgid "Could not open CD device for reading."
+msgstr "Kon CD-apparaat niet openen voor lezen."
 
 #: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
 #, c-format
@@ -103,28 +107,28 @@ msgstr "Kon video-apparaat \"%s\" niet sluiten."
 msgid "Could not write to device \"%s\"."
 msgstr "Kon niet schrijven naar apparaat \"%s\"."
 
-#: sys/oss/gstosselement.c:702
+#: sys/oss/gstosselement.c:724
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."
 
-#: sys/oss/gstosselement.c:709 sys/oss/gstosselement.c:713
+#: sys/oss/gstosselement.c:731 sys/oss/gstosselement.c:735
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr ""
 "Kon geen toegang krijgen tot apparaat \"%s\", controleer de permissies."
 
-#: sys/oss/gstosselement.c:720
+#: sys/oss/gstosselement.c:742
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/oss/gstosselement.c:727
+#: sys/oss/gstosselement.c:749
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Kon apparaat \"%s\" niet openen voor schrijven."
 
-#: sys/oss/gstosselement.c:731
+#: sys/oss/gstosselement.c:753
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Kon apparaat \"%s\" niet openen voor lezen."
