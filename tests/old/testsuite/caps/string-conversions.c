@@ -99,6 +99,13 @@ GST_CAPS_FACTORY(caps9,
           "format",		GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2'))
       )
 )
+GST_CAPS_FACTORY(caps10,
+      GST_CAPS_NEW (
+	"my_caps",
+	"video/x-jpeg", 
+	NULL
+      )
+)
 
 static gint test = 0;
 static gint failures = 0;
@@ -185,6 +192,7 @@ bla:
   test_caps (GST_PAD_TEMPLATE_GET (caps7));
   test_caps (GST_PAD_TEMPLATE_GET (caps8));
   test_caps (GST_PAD_TEMPLATE_GET (caps9));
+  test_caps (GST_PAD_TEMPLATE_GET (caps10));
 
   /* mime types */
   test_string ("audio/raw");
