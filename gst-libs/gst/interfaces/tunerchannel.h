@@ -43,7 +43,7 @@ typedef enum {
   GST_TUNER_CHANNEL_INPUT     = (1<<0),
   GST_TUNER_CHANNEL_OUTPUT    = (1<<1),
   GST_TUNER_CHANNEL_FREQUENCY = (1<<2),
-  GST_TUNER_CHANNEL_AUDIO     = (1<<3),
+  GST_TUNER_CHANNEL_AUDIO     = (1<<3)
 } GstTunerChannelFlags;
 
 #define GST_TUNER_CHANNEL_HAS_FLAG(channel, flag) \
@@ -54,6 +54,7 @@ typedef struct _GstTunerChannel {
 
   gchar               *label;
   GstTunerChannelFlags flags;
+  gfloat               freq_multiplicator;
   gulong               min_frequency,
 		       max_frequency;
   gint                 min_signal,

@@ -394,7 +394,7 @@ gst_v4lelement_init (GstV4lElement * v4lelement)
   /* some default values */
   v4lelement->video_fd = -1;
   v4lelement->buffer = NULL;
-  v4lelement->videodev = g_strdup ("/dev/video");
+  v4lelement->videodev = g_strdup ("/dev/video0");
   v4lelement->display = g_strdup (g_getenv ("DISPLAY"));
 
   v4lelement->norms = NULL;

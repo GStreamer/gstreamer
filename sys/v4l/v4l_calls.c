@@ -284,6 +284,8 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
         if (!strcmp (vtun.name, vchan.name)) {
           v4lchannel->tuner = n;
           channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
+          channel->freq_multiplicator =
+              62.5 * ((vtun.flags & VIDEO_TUNER_LOW) ? 1 : 1000);
           channel->min_frequency = vtun.rangelow;
           channel->max_frequency = vtun.rangehigh;
           channel->min_signal = 0;
@@ -408,9 +410,12 @@ gst_v4l_get_frequency (GstV4lElement * v4lelement,
     gint tunernum, gulong * frequency)
 {
   struct video_tuner vtun;
+  GstTunerChannel *channel;
 
   DEBUG ("getting tuner frequency");
   GST_V4L_CHECK_OPEN (v4lelement);
+
+  channel = gst_tuner_get_channel (GST_TUNER (v4lelement));
 
   /* check that this is the current input */
   vtun.tuner = tunernum;
@@ -424,6 +429,8 @@ gst_v4l_get_frequency (GstV4lElement * v4lelement,
         ("Error getting tuner frequency: %s", g_strerror (errno)));
     return FALSE;
   }
+
+  *frequency = *frequency * channel->freq_multiplicator;
 
   return TRUE;
 }
@@ -440,9 +447,12 @@ gst_v4l_set_frequency (GstV4lElement * v4lelement,
     gint tunernum, gulong frequency)
 {
   struct video_tuner vtun;
+  GstTunerChannel *channel;
 
   DEBUG ("setting tuner frequency to %lu", frequency);
   GST_V4L_CHECK_OPEN (v4lelement);
+
+  channel = gst_tuner_get_channel (GST_TUNER (v4lelement));
 
   /* check that this is the current input */
   vtun.tuner = tunernum;
@@ -450,6 +460,8 @@ gst_v4l_set_frequency (GstV4lElement * v4lelement,
     return FALSE;
   if (strcmp (vtun.name, v4lelement->vchan.name))
     return FALSE;
+
+  frequency = frequency / channel->freq_multiplicator;
 
   if (ioctl (v4lelement->video_fd, VIDIOCSFREQ, &frequency) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
