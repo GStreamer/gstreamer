@@ -563,8 +563,14 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 	/* clean up if we still haven't cleaned up our previous
 	 * capture session */
 	if (GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src)))
+	{
 		if (!gst_v4l2src_capture_deinit(v4l2src))
 			return GST_PAD_CONNECT_REFUSED;
+	}
+	else if (!GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src)))
+	{
+		return GST_PAD_CONNECT_DELAYED;
+	}
 
 	/* build our own capslist */
 	if (v4l2src->palette) {
@@ -610,10 +616,17 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 					                        format->flags & V4L2_FMT_FLAG_COMPRESSED);
 					GstCaps *onecaps;
 					for (;lastcaps != NULL; lastcaps = lastcaps->next) {
+						GstPadConnectReturn ret_val;
 						onecaps = gst_caps_copy_1(lastcaps);
-						if (gst_pad_try_set_caps(v4l2src->srcpad, onecaps) > 0)
+						if ((ret_val = gst_pad_try_set_caps(v4l2src->srcpad, onecaps)) > 0)
+						{
 							if (gst_v4l2src_capture_init(v4l2src))
-								return GST_PAD_CONNECT_OK;
+								return GST_PAD_CONNECT_DONE;
+						}
+						else if (ret_val == GST_PAD_CONNECT_DELAYED)
+						{
+							return GST_PAD_CONNECT_DELAYED;
+						}
 					}
 				}
 			}
