@@ -432,7 +432,7 @@ GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
 
-dnl *** Jack ***
+dnl *** libcolorspace ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LCS, true)
 GST_CHECK_FEATURE(LCS, Lcs, lcs, [
   PKG_CHECK_MODULES(LCS, lcs, HAVE_LCS="yes", HAVE_LCS="no")
