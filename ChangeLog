@@ -1,5 +1,11 @@
 2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data):
+	  Add div[3456] as fourccs for DivX 3 (fixes #140137).
+
+2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	reviewed by: <delete if not using a buddy>
 
 	* gst-libs/gst/riff/riff-media.c:
