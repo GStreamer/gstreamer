@@ -15,6 +15,9 @@ void		gst_gconf_set_string 		(const gchar *key,
 GstElement *	gst_gconf_render_bin_from_key		(const gchar *key);
 GstElement *	gst_gconf_render_bin_from_description	(const gchar *description);
 
+GstElement *	gst_gconf_get_default_video_sink (void);
+GstElement *	gst_gconf_get_default_audio_sink (void);
+
 /*
 guint		gst_gconf_notify_add		(const gchar *key,
     						 GConfClientNotifyFunc func,
