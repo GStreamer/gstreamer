@@ -122,6 +122,7 @@ libgstreamerinclude_HEADERS =		\
 	gstelement.h		\
 	gstevent.h		\
 	gstextratypes.h		\
+	gstformat.h		\
 	gstinfo.h		\
 	gstlog.h		\
 	gstpad.h		\
