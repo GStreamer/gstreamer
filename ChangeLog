@@ -1,3 +1,8 @@
+2004-07-16  Johan Dahlin  <johan@gnome.org>
+
+	* pkgconfig/gst-python.pc.in (pyexecdir): Add and remove comments
+	for all other variables.
+
 2004-07-15  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/registry.py: Add some basic tests 
