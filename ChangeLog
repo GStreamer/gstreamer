@@ -1,3 +1,30 @@
+2002-05-09  David I. Lehn  <dlehn@vt.edu>
+
+	* gstreamer/gstreamer.defs: remove
+
+	* gstreamer/gstreamer-base.defs,
+	gstreamer/gstreamer-xtra.defs,
+	Makefile.am:
+	create gstreamer.defs from h2defs.py output and local hacks
+
+2002-04-15  David I. Lehn  <dlehn@vt.edu>
+
+	* examples/gstreamer/*.py: use new element connect api
+
+	* gstreamer/__init__.py: use dl module flags
+	in particular, RTLD_GLOBAL flags is required
+
+2002-04-14  David I. Lehn  <dlehn@vt.edu>
+
+	* configure.ac: depend on gstreamer 0.3.4
+
+	* examples/gstreamer/*.py: s/elementfactory/element_factory/
+
+	* gstreamer/gstreamer-fixes.h, gstreamer/gstreamer-fixes.c:
+	remove defs no longer needed due to upstream changes
+
+	* gstreamer/gstreamer.defs: regen for 0.3.4
+
 2002-03-24  David I. Lehn  <dlehn@vt.edu>
 
 	* examples/gstreamer/: add cp.py oggplay.py f2f.py dvdplay.py

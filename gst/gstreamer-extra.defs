@@ -1,0 +1,28 @@
+;;
+;; HACK
+;;
+
+(define-function gst_buffer_get_data
+  (c-name "gst_buffer_get_data")
+  (return-type "char*")
+  (parameters
+    '("GstBuffer*" "buf")
+  )
+)
+
+(define-function gst_buffer_set_data
+  (c-name "gst_buffer_set_data")
+  (return-type "none")
+  (parameters
+    '("GstBuffer*" "buf")
+    '("char*" "data")
+  )
+)
+
+(define-function gst_info_set_categories
+  (c-name "gst_info_set_categories")
+  (return-type "none")
+  (parameters
+    '("guint32" "categories")
+  )
+)
