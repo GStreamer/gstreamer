@@ -2640,54 +2640,6 @@ gst_static_pad_template_get (GstStaticPadTemplate *pad_template)
 }
 
 /**
- * gst_pad_template_newv:
- * @name_template: the name template.
- * @direction: the #GstPadDirection of the template.
- * @presence: the #GstPadPresence of the pad.
- * @caps: a #GstCaps2 set for the template.
- * @var_args: a NULL-terminated list of #GstCaps2.
- *
- * Creates a new pad template with a name according to the given template
- * and with the given arguments.
- *
- * Returns: a new #GstPadTemplate.
- */
-GstPadTemplate*
-gst_pad_template_newv (const gchar *name_template,
-   		       GstPadDirection direction, GstPadPresence presence,
-		       GstCaps2 *caps, va_list var_args)
-{
-  GstPadTemplate *new;
-  GstCaps2 *thecaps = gst_caps2_new_empty();
-
-  g_return_val_if_fail (name_template != NULL, NULL);
-
-  if (!name_is_valid (name_template, presence))
-    return NULL;
-
-  new = g_object_new (gst_pad_template_get_type (),
-                      "name", name_template,
-                      NULL);
-
-  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
-  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
-  GST_PAD_TEMPLATE_PRESENCE (new) = presence;
-
-  GST_FLAG_SET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
-  while (caps) {
-    if (!gst_caps2_is_fixed (caps)) {
-      GST_FLAG_UNSET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
-    }
-    gst_caps2_append (thecaps, gst_caps2_copy(caps));
-    caps = va_arg (var_args, GstCaps2 *);
-  }
-  
-  GST_PAD_TEMPLATE_CAPS (new) = thecaps;
-
-  return new;
-}
-
-/**
  * gst_pad_template_new:
  * @name_template: the name template.
  * @direction: the #GstPadDirection of the template.
@@ -2703,17 +2655,23 @@ gst_pad_template_newv (const gchar *name_template,
 GstPadTemplate*
 gst_pad_template_new (const gchar *name_template,
 		     GstPadDirection direction, GstPadPresence presence,
-		     GstCaps2 *caps, ...)
+		     GstCaps2 *caps)
 {
   GstPadTemplate *new;
-  va_list var_args;
 
-  va_start (var_args, caps);
+  g_return_val_if_fail (name_template != NULL, NULL);
 
-  new = gst_pad_template_newv (name_template, direction, presence, 
-                               caps, var_args);
+  if (!name_is_valid (name_template, presence))
+    return NULL;
 
-  va_end (var_args);
+  new = g_object_new (gst_pad_template_get_type (),
+                      "name", name_template,
+                      NULL);
+
+  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
+  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
+  GST_PAD_TEMPLATE_PRESENCE (new) = presence;
+  GST_PAD_TEMPLATE_CAPS (new) = caps;
 
   return new;
 }

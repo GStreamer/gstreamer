@@ -365,57 +365,6 @@ struct _GstStaticPadTemplate {
   }
 
 
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_PAD_TEMPLATE_NEW(padname, dir, pres, ...) \
-  gst_pad_template_new (                        \
-    padname,                                    \
-    dir,                                        \
-    pres,                                       \
-    __VA_ARGS__ ,				\
-    NULL)
-
-#define GST_PAD_TEMPLATE_FACTORY(name, padname, dir, pres, ...) \
-static GstPadTemplate*                          \
-name (void)                                     \
-{                                               \
-  static GstPadTemplate *templ = NULL;       	\
-  if (!templ) {                              	\
-    templ = GST_PAD_TEMPLATE_NEW (            	\
-      padname,                          	\
-      dir,                                      \
-      pres,                                     \
-      __VA_ARGS__ );                            \
-  }                                             \
-  return (GstPadTemplate *)g_object_ref((GObject *)templ); \
-}
-#elif defined(G_HAVE_GNUC_VARARGS)
-/* CR1: the space after 'a' is necessary because of preprocessing in gcc */
-#define GST_PAD_TEMPLATE_NEW(padname, dir, pres, a...) \
-  gst_pad_template_new (                        \
-    padname,                                    \
-    dir,                                        \
-    pres,                                       \
-    a ,						\
-    NULL)
-
-#define GST_PAD_TEMPLATE_FACTORY(name, padname, dir, pres, a...)         \
-static GstPadTemplate*                          \
-name (void)                                     \
-{                                               \
-  static GstPadTemplate *templ = NULL;       	\
-  if (!templ) {                              	\
-    templ = GST_PAD_TEMPLATE_NEW (            	\
-      padname,                          	\
-      dir,                                      \
-      pres,                                     \
-      a );                                      \
-  }                                             \
-  return (GstPadTemplate *)g_object_ref((GObject *)templ); \
-}
-#endif
-
-#define GST_PAD_TEMPLATE_GET(fact) (fact)()
-
 GType			gst_pad_get_type			(void);
 GType			gst_real_pad_get_type			(void);
 GType			gst_ghost_pad_get_type			(void);
@@ -554,11 +503,7 @@ GType			gst_pad_template_get_type		(void);
 
 GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
-								 GstCaps2 *caps, ...);
-
-GstPadTemplate*		gst_pad_template_newv			(const gchar *name_template,
-		                                        	 GstPadDirection direction, GstPadPresence presence,
-								 GstCaps2 *caps, va_list var_args);
+								 GstCaps2 *caps);
 
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *templ);
 const GstCaps2*		gst_pad_template_get_caps		(GstPadTemplate *templ);
