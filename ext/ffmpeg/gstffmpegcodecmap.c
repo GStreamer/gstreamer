@@ -831,8 +831,8 @@ gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
 			           GST_PROPS_FLOAT_TYPE)) {
     gfloat fps;
     gst_caps_get_float (caps, "framerate", &fps);
-    context->frame_rate = fps * 1000;
-    context->frame_rate_base = 1000;
+    context->frame_rate = fps * DEFAULT_FRAME_RATE_BASE;
+    context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
   }
 
   if (gst_caps_has_property_typed (caps, "format",
