@@ -1263,6 +1263,10 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
     g_warning ("Stream header mentioned %d streams, but %d available",
         streams, avi->num_streams);
   }
+  /* at this point we know all the streams and we can signal the no more
+   * pads signal */
+  GST_DEBUG ("signaling no more pads");
+  gst_element_no_more_pads (GST_ELEMENT (avi));
 
   /* we've got streaminfo now */
   g_object_notify (G_OBJECT (avi), "streaminfo");
