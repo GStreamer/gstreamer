@@ -93,13 +93,6 @@ GST_STATIC_PAD_TEMPLATE (
 );
 
 
-GST_PAD_EVENT_MASK_FUNCTION (dxr3videosink_get_event_mask,
-  { GST_EVENT_FLUSH, 0 },
-  { GST_EVENT_DISCONTINUOUS, 0 },
-  { GST_EVENT_EOS, 0 }
-)
-
-
 static void	dxr3videosink_class_init	(Dxr3VideoSinkClass *klass);
 static void	dxr3videosink_base_init		(Dxr3VideoSinkClass *klass);
 static void	dxr3videosink_init		(Dxr3VideoSink *dxr3videosink);
@@ -219,8 +212,6 @@ dxr3videosink_init (Dxr3VideoSink *sink)
   gst_pad_set_chain_function (pad, dxr3videosink_chain);
 
   GST_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
-  gst_pad_set_event_function (pad, dxr3videosink_handle_event);
-  gst_pad_set_event_mask_function (pad, dxr3videosink_get_event_mask);
 
   sink->card_number = 0;
 

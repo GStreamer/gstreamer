@@ -93,13 +93,6 @@ GST_STATIC_PAD_TEMPLATE (
 );
 
 
-GST_PAD_EVENT_MASK_FUNCTION(dxr3audiosink_get_event_mask,
-  { GST_EVENT_FLUSH, 0 },
-  { GST_EVENT_DISCONTINUOUS, 0 },
-  { GST_EVENT_EOS, 0 }
-)
-
-
 static void	dxr3audiosink_class_init   	(Dxr3AudioSinkClass *klass);
 static void	dxr3audiosink_base_init   	(Dxr3AudioSinkClass *klass);
 static void	dxr3audiosink_init		(Dxr3AudioSink *sink);
@@ -235,12 +228,6 @@ dxr3audiosink_init (Dxr3AudioSink *sink)
   gst_element_add_pad (GST_ELEMENT (sink), sink->ac3_sinkpad);
 
   GST_FLAG_SET (GST_ELEMENT(sink), GST_ELEMENT_EVENT_AWARE);
-  gst_pad_set_event_function (sink->pcm_sinkpad, dxr3audiosink_handle_event);
-  gst_pad_set_event_mask_function (sink->pcm_sinkpad,
-                                   dxr3audiosink_get_event_mask);
-  gst_pad_set_event_function (sink->ac3_sinkpad, dxr3audiosink_handle_event);
-  gst_pad_set_event_mask_function (sink->ac3_sinkpad,
-                                   dxr3audiosink_get_event_mask);
 
   sink->card_number = 0;
 

@@ -190,7 +190,6 @@ gst_afsink_init (GstAFSink *afsink)
   gst_element_add_pad (GST_ELEMENT (afsink), afsink->sinkpad);
 
   gst_pad_set_chain_function (afsink->sinkpad, gst_afsink_chain);
-  gst_pad_set_event_function (afsink->sinkpad, gst_afsink_handle_event);
 
   afsink->filename = NULL;
   afsink->file = NULL;
@@ -387,14 +386,19 @@ gst_afsink_close_file (GstAFSink *sink)
 static void 
 gst_afsink_chain (GstPad *pad, GstData *_data) 
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstBuffer *buf;
   GstAFSink *afsink;
   int ret = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
 
+  if (GST_IS_EVENT (_data)) {
+    gst_afsink_handle_event (pad, GST_EVENT (_data));
+    return;
+  }
+
+  buf = GST_BUFFER (_data);
   afsink = GST_AFSINK (gst_pad_get_parent (pad));
 /* we use audiofile now
   if (GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN))
@@ -484,7 +488,16 @@ gst_afsink_handle_event (GstPad *pad, GstEvent *event)
 
   afsink = GST_AFSINK (gst_pad_get_parent (pad));
   GST_DEBUG ("DEBUG: afsink: got event");
-  gst_afsink_close_file (afsink);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      gst_afsink_close_file (afsink);
+      break;
+    default:
+      break;
+  }
+
+  gst_pad_event_default (pad, event);
 
   return TRUE;
 }

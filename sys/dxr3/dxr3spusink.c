@@ -70,13 +70,6 @@ GST_STATIC_PAD_TEMPLATE (
 );
 
 
-GST_PAD_EVENT_MASK_FUNCTION (dxr3spusink_get_event_mask,
-  { GST_EVENT_FLUSH, 0 },
-  { GST_EVENT_DISCONTINUOUS, 0 },
-  { GST_EVENT_EOS, 0 }
-)
-
-
 static void	dxr3spusink_class_init   	(Dxr3SpuSinkClass *klass);
 static void	dxr3spusink_base_init   	(Dxr3SpuSinkClass *klass);
 static void	dxr3spusink_init		(Dxr3SpuSink *dxr3spusink);
@@ -228,8 +221,6 @@ dxr3spusink_init (Dxr3SpuSink *sink)
   gst_pad_set_chain_function (pad, dxr3spusink_chain);
 
   GST_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
-  gst_pad_set_event_function (pad, dxr3spusink_handle_event);
-  gst_pad_set_event_mask_function (pad, dxr3spusink_get_event_mask);
 
   sink->card_number = 0;
 
