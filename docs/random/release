@@ -129,6 +129,8 @@ TODO :
     - linux-audio-dev (if it's a big release) : a simple mail with RELEASE
     - gnome lists (?)
     - lwn (if it's a big release)
+  - send mail for translators with URL to .tar.bz2:
+    translation@iro.umontreal.ca 
   - Kick back, have a party, enjoy people coming in on IRC telling us how
     GStreamer rocks.
   - Later on, if necessary, merge back latest release branch to current dev
