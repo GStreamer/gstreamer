@@ -52,8 +52,8 @@ G_BEGIN_DECLS
 
 #else
 	/* use a standard c cast, but do rounding correctly */
-	#define gst_cast_float(x)	((x)>=0?(gint)((x)+0.5):(gint)((x)-0.5))
-	#define gst_cast_double(x)	((x)>=0?(gint)((x)+0.5):(gint)((x)-0.5))
+	#define gst_cast_float(x)	((gint)floor((x)+0.5))
+	#define gst_cast_double(x)	((gint)floor((x)+0.5))
 
 #endif
 

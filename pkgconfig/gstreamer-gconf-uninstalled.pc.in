@@ -6,7 +6,7 @@ includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer GConf Library, uninstalled
 Description: Streaming media framework, GConf support library, not installed
-Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@ gconf-2.0
 Version: @VERSION@
 
 Libs: ${libdir}/libgstgconf-@GST_MAJORMINOR@.la

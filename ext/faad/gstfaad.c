@@ -148,11 +148,7 @@ gst_faad_init (GstFaad *faad)
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
   gst_pad_set_link_function (faad->srcpad, gst_faad_srcconnect);
 
-  /* This was originally intended as a getcaps() function, but
-   * in the end, we needed a srcconnect() function, so this is
-   * not really useful. However, srcconnect() uses it, so it is
-   * still there... */
-  /*gst_pad_set_getcaps_function (faad->srcpad, gst_faad_srcgetcaps);*/
+  gst_pad_set_getcaps_function (faad->srcpad, gst_faad_srcgetcaps);
 }
 
 static GstPadLinkReturn
@@ -244,7 +240,7 @@ gst_faad_srcgetcaps (GstPad  *pad)
     return caps;
   }
 
-  return GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
+  return gst_caps_copy (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
 }
 
 static GstPadLinkReturn
@@ -357,12 +353,16 @@ gst_faad_chain (GstPad  *pad,
 		 &samplerate, &channels);
     faad->samplerate = samplerate;
     faad->channels = channels;
+
+    gst_pad_renegotiate (faad->srcpad);
+#if 0
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
       GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
       gst_buffer_unref (buf);
       return;
     }
+#endif
   }
 
   out = faacDecDecode (faad->handle, &info,
@@ -379,12 +379,19 @@ gst_faad_chain (GstPad  *pad,
       info.channels != faad->channels) {
     faad->samplerate = info.samplerate;
     faad->channels = info.channels;
+    gst_pad_renegotiate (faad->srcpad);
+#if 0
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
       GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
       gst_buffer_unref (buf);
       return;
     }
+#endif
+  }
+
+  if (info.samples == 0) {
+    return;
   }
 
   /* FIXME: did it handle the whole buffer? */

@@ -1445,7 +1445,9 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
     
     stream->caps = qtdemux_video_caps(qtdemux,
         QTDEMUX_FOURCC_GET(stsd->data+offset+4), stsd->data);
-    GST_LOG("caps %s\n",gst_caps_to_string(stream->caps));
+    GST_INFO("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT "\n",
+        GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET(stsd->data+offset+4)),
+        stream->caps);
   }else if(stream->subtype == FOURCC_soun){
     int version;
 
@@ -1480,7 +1482,8 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
 
     stream->caps = qtdemux_audio_caps(qtdemux,
         QTDEMUX_FOURCC_GET(stsd->data+16+4), (QTDEMUX_GUINT32_GET(stsd->data) > offset) ? stsd->data + offset : NULL);
-    GST_LOG("caps %s\n",gst_caps_to_string(stream->caps));
+    GST_INFO("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT "\n",
+        GST_FOURCC_ARGS(QTDEMUX_FOURCC_GET(stsd->data+16+4)), stream->caps);
   }else{
     GST_LOG("unknown subtype\n");
     return;
