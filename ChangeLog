@@ -1,5 +1,19 @@
 2005-03-07  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstiterator.c: (gst_iterator_init), (gst_iterator_new),
+	(gst_list_iterator_next), (gst_list_iterator_resync),
+	(gst_list_iterator_free), (gst_iterator_new_list),
+	(gst_iterator_pop), (gst_iterator_next), (gst_iterator_resync),
+	(gst_iterator_free), (gst_iterator_push), (filter_next),
+	(filter_resync), (filter_uninit), (filter_free),
+	(gst_iterator_filter), (gst_iterator_fold), (foreach_fold_func),
+	(gst_iterator_foreach), (find_custom_fold_func),
+	(gst_iterator_find_custom):
+	* gst/gstiterator.h:
+	Added missing files.
+
+2005-03-07  Wim Taymans  <wim@fluendo.com>
+
 	* Makefile.am:
 	* configure.ac:
 	* docs/design/part-MT-refcounting.txt:
