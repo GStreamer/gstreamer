@@ -72,11 +72,6 @@ struct _GstV4l2Src {
 
 	/* bufferpool for the buffers we're gonna use */
 	GstBufferPool *bufferpool;
-
-	/* caching values */
-	gint width;
-	gint height;
-	gint palette;
 };
 
 struct _GstV4l2SrcClass {

@@ -44,10 +44,6 @@ enum {
 /* arguments */
 enum {
 	ARG_0,
-	ARG_WIDTH,
-	ARG_HEIGHT,
-	ARG_PALETTE,
-	ARG_PALETTE_NAMES,
 	ARG_NUMBUFS,
 	ARG_BUFSIZE,
 	ARG_USE_FIXED_FPS
@@ -148,20 +144,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass *klass)
 
 	parent_class = g_type_class_ref(GST_TYPE_V4L2ELEMENT);
 
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-		g_param_spec_int("width","width","width",
-				 G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-		g_param_spec_int("height","height","height",
-				 G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE,
-		g_param_spec_int("palette","palette","palette",
-				 G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE_NAMES,
-		g_param_spec_pointer("palette_name","palette_name","palette_name",
-				     G_PARAM_READABLE));
-
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
 		g_param_spec_int("num_buffers","num_buffers","num_buffers",
 				 G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
@@ -227,9 +209,6 @@ gst_v4l2src_init (GstV4l2Src *v4l2src)
 					gst_v4l2src_buffer_free,
 					v4l2src);
 
-	v4l2src->palette = 0; /* means 'any' - user can specify a specific palette */
-	v4l2src->width = 160;
-	v4l2src->height = 120;
 	v4l2src->breq.count = 0;
 
 	v4l2src->formats = NULL;
@@ -341,301 +320,295 @@ gst_v4l2src_srcconvert (GstPad    *pad,
 
 
 static GstCaps *
-gst_v4l2src_v4l2fourcc_to_caps (guint32  fourcc,
-                                gint     width,
-                                gint     height,
-                                gboolean compressed)
+gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
+                                GstPropsEntry *width,
+                                GstPropsEntry *height,
+				gboolean       compressed)
 {
-	GstCaps *capslist = NULL, *caps;
+	GstCaps *caps = NULL;
 
 	switch (fourcc) {
-		case V4L2_PIX_FMT_MJPEG: /* v4l2_fourcc('M','J','P','G') */
-			caps = gst_caps_new("v4l2src_caps",
-					"video/jpeg",
-					gst_props_new(
-						"width",	GST_PROPS_INT(width),
-						"height",	GST_PROPS_INT(height),
-						NULL));
-			capslist = gst_caps_append(capslist, caps);
+	case V4L2_PIX_FMT_MJPEG: /* Motion-JPEG */
+	case V4L2_PIX_FMT_JPEG:  /* JFIF JPEG */
+		caps = GST_CAPS_NEW("v4l2src_caps",
+				    "video/jpeg",
+				      NULL);
 			break;
+	case V4L2_PIX_FMT_RGB332:
+	case V4L2_PIX_FMT_RGB555:
+	case V4L2_PIX_FMT_RGB555X:
+	case V4L2_PIX_FMT_RGB565:
+	case V4L2_PIX_FMT_RGB565X:
+	case V4L2_PIX_FMT_RGB24:
+	case V4L2_PIX_FMT_BGR24:
+	case V4L2_PIX_FMT_RGB32:
+	case V4L2_PIX_FMT_BGR32: {
+		guint depth=0, bpp=0;
+		gint endianness = 0;
+		guint32 r_mask = 0, b_mask = 0, g_mask = 0;
+		guint32 fcc = GST_MAKE_FOURCC('R','G','B',' ');
+
+		switch (fourcc) {
 		case V4L2_PIX_FMT_RGB332:
+			bpp = depth = 8;
+			endianness = G_BYTE_ORDER; /* 'like, whatever' */
+			r_mask = 0xe0; g_mask = 0x1c; b_mask = 0x03;
+			break;
 		case V4L2_PIX_FMT_RGB555:
 		case V4L2_PIX_FMT_RGB555X:
+			bpp = 16; depth = 15;
+			endianness = (fourcc == V4L2_PIX_FMT_RGB332) ?
+				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
+			r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
+			break;
 		case V4L2_PIX_FMT_RGB565:
 		case V4L2_PIX_FMT_RGB565X:
+			bpp = depth = 16;
+			endianness = (fourcc == V4L2_PIX_FMT_RGB565) ?
+				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
+			r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
+			break;
 		case V4L2_PIX_FMT_RGB24:
 		case V4L2_PIX_FMT_BGR24:
-		case V4L2_PIX_FMT_RGB32:
-		case V4L2_PIX_FMT_BGR32: {
-			guint depth=0, bpp=0;
-			gint endianness=0;
-			gulong r_mask=0, b_mask=0, g_mask=0;
-			switch (fourcc) {
-				case V4L2_PIX_FMT_RGB332:
-					bpp = depth = 8;
-					endianness = G_BYTE_ORDER; /* 'like, whatever' */
-					r_mask = 0xe0; g_mask = 0x1c; b_mask = 0x03;
-					break;
-				case V4L2_PIX_FMT_RGB555:
-					bpp = 16; depth = 15;
-					endianness = G_LITTLE_ENDIAN;
-					r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
-					break;
-				case V4L2_PIX_FMT_RGB555X:
-					bpp = 16; depth = 15;
-					endianness = G_BIG_ENDIAN;
-					r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
-					break;
-				case V4L2_PIX_FMT_RGB565:
-					bpp = depth = 16;
-					endianness = G_LITTLE_ENDIAN;
-					r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
-					break;
-				case V4L2_PIX_FMT_RGB565X:
-					bpp = depth = 16;
-					endianness = G_BIG_ENDIAN;
-					r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
-					break;
-				case V4L2_PIX_FMT_RGB24:
-					bpp = depth = 24;
-					endianness = G_BIG_ENDIAN;
-					r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
-					break;
-				case V4L2_PIX_FMT_BGR24:
-					bpp = depth = 24;
-					endianness = G_LITTLE_ENDIAN;
-					r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
-					break;
-				case V4L2_PIX_FMT_RGB32:
-					bpp = depth = 32;
-					endianness = G_BIG_ENDIAN;
-					r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
-					break;
-				case V4L2_PIX_FMT_BGR32:
-					endianness = G_LITTLE_ENDIAN;
-					bpp = depth = 32;
-					r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
-					break;
-			}
-			caps = gst_caps_new("v4l2src_caps",
-					"video/raw",
-					gst_props_new(
-						"format",	GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-						"width",	GST_PROPS_INT(width),
-						"height",	GST_PROPS_INT(height),
-						"bpp",		GST_PROPS_INT(bpp),
-						"depth",	GST_PROPS_INT(depth),
-						"red_mask",	GST_PROPS_INT(r_mask),
-						"green_mask",	GST_PROPS_INT(g_mask),
-						"blue_mask",	GST_PROPS_INT(b_mask),
-						"endianness",	GST_PROPS_INT(endianness),
-						NULL));
-			capslist = gst_caps_append(capslist, caps);
-			break; }
-		case V4L2_PIX_FMT_YUV420: /* I420/IYUV */
-			caps = gst_caps_new("v4l2src_caps",
-				"video/raw",
-				gst_props_new(
-					"format",	GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
-					"width",	GST_PROPS_INT(width),
-					"height",	GST_PROPS_INT(height),
-					NULL));
-			capslist = gst_caps_append(capslist, caps);
-			caps = gst_caps_new("v4l2src_caps",
-				"video/raw",
-				gst_props_new(
-					"format",	GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','Y','U','V')),
-					"width",	GST_PROPS_INT(width),
-					"height",	GST_PROPS_INT(height),
-					NULL));
-			capslist = gst_caps_append(capslist, caps);
+			bpp = depth = 24;
+			endianness = (fourcc == V4L2_PIX_FMT_BGR24) ?
+				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
+			r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
 			break;
-		case V4L2_PIX_FMT_YUYV:
-			caps = gst_caps_new("v4l2src_caps",
-				"video/raw",
-				gst_props_new(
-					"format",	GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
-					"width",	GST_PROPS_INT(width),
-					"height",	GST_PROPS_INT(height),
-					NULL));
-			capslist = gst_caps_append(capslist, caps);
+		case V4L2_PIX_FMT_RGB32:
+		case V4L2_PIX_FMT_BGR32:
+			bpp = depth = 32;
+			endianness = (fourcc == V4L2_PIX_FMT_BGR32) ?
+				     G_LITTLE_ENDIAN : G_BIG_ENDIAN;
+			r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
 			break;
 		default:
+			g_assert_not_reached();
 			break;
+		}
+
+		caps = GST_CAPS_NEW("v4l2src_caps",
+				    "video/raw",
+				      "format",     GST_PROPS_FOURCC(fcc),
+				      "bpp",        GST_PROPS_INT(bpp),
+				      "depth",      GST_PROPS_INT(depth),
+				      "red_mask",   GST_PROPS_INT(r_mask),
+				      "green_mask", GST_PROPS_INT(g_mask),
+				      "blue_mask",  GST_PROPS_INT(b_mask),
+				      "endianness", GST_PROPS_INT(endianness),
+				      NULL);
+		break;
 	}
+	case V4L2_PIX_FMT_YUV420: /* I420/IYUV */
+	case V4L2_PIX_FMT_YUYV:
+	case V4L2_PIX_FMT_YVU420:
+	case V4L2_PIX_FMT_UYVY:
+	case V4L2_PIX_FMT_Y41P: {
+		guint32 fcc = 0;
 
-	/* add the standard one */
-	if (compressed) {
-		guint32 print_format = GUINT32_FROM_LE(fourcc);
-		gchar *print_format_str = (gchar *) &print_format, *string_format;
-		gint i;
-		for (i=0;i<4;i++)
-			print_format_str[i] = g_ascii_tolower(print_format_str[i]);
-		string_format = g_strdup_printf("video/%4.4s", print_format_str);
-		caps = gst_caps_new("v4l2src_caps",
-				string_format,
-				gst_props_new(
-					"width",	GST_PROPS_INT(width),
-					"height",	GST_PROPS_INT(height),
-					NULL));
-		capslist = gst_caps_append(capslist, caps);
-		g_free(string_format);
-	} else {
-		caps = gst_caps_new("v4l2src_caps",
-				"video/raw",
-				gst_props_new(
-					"format",	GST_PROPS_FOURCC(fourcc),
-					"width",	GST_PROPS_INT(width),
-					"height",	GST_PROPS_INT(height),
-					NULL));
-		capslist = gst_caps_append(capslist, caps);
+		switch (fourcc) {
+		case V4L2_PIX_FMT_YUV420:
+			fcc = GST_MAKE_FOURCC('I','4','2','0');
+			break;
+		case V4L2_PIX_FMT_YUYV:
+			fcc = GST_MAKE_FOURCC('Y','U','Y','2');
+			break;
+		case V4L2_PIX_FMT_YVU420:
+			fcc = GST_MAKE_FOURCC('Y','V','1','2');
+			break;
+		case V4L2_PIX_FMT_UYVY:
+			fcc = GST_MAKE_FOURCC('U','Y','V','Y');
+			break;
+		case V4L2_PIX_FMT_Y41P:
+			fcc = GST_MAKE_FOURCC('Y','4','1','P');
+			break;
+		default:
+			g_assert_not_reached();
+			break;
+		}
+
+		caps = GST_CAPS_NEW("v4l2src_caps",
+				    "video/raw",
+				      "format", GST_PROPS_FOURCC(fcc),
+				      NULL);
+		break;
 	}
+	default:
+		GST_DEBUG(GST_CAT_PLUGIN_INFO,
+			  "Unknown fourcc 0x%08x " GST_FOURCC_FORMAT ", trying default",
+			  fourcc, GST_FOURCC_ARGS(fourcc));
 
-	return capslist;
-}
-
-
-static GList *
-gst_v4l2_caps_to_v4l2fourcc (GstV4l2Src *v4l2src,
-                             GstCaps    *capslist)
-{
-	GList *fourcclist = NULL;
-	GstCaps *caps;
-	guint32 fourcc;
-	gint i;
-
-	for (caps = capslist;caps != NULL; caps = caps->next) {
-		const gchar *format = gst_caps_get_mime(caps);
-
-		if (!strcmp(format, "video/raw")) {
-			/* non-compressed */
-			gst_caps_get_fourcc_int(caps, "format", &fourcc);
-			switch (fourcc) {
-				case GST_MAKE_FOURCC('I','4','2','0'):
-				case GST_MAKE_FOURCC('I','Y','U','V'):
-					fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_YUV420);
-					break;
-				case GST_MAKE_FOURCC('Y','U','Y','2'):
-					fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_YUYV);
-					break;
-				case GST_MAKE_FOURCC('R','G','B',' '): {
-					gint depth, endianness;
-					gst_caps_get_int(caps, "depth", &depth);
-					gst_caps_get_int(caps, "endianness", &endianness);
-					if (depth == 8) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB332);
-					} else if (depth == 15 && endianness == G_LITTLE_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB555);
-					} else if (depth == 15 && endianness == G_BIG_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB555X);
-					} else if (depth == 16 && endianness == G_LITTLE_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB565);
-					} else if (depth == 16 && endianness == G_BIG_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB565X);
-					} else if (depth == 24 && endianness == G_LITTLE_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_BGR24);
-					} else if (depth == 24 && endianness == G_BIG_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB24);
-					} else if (depth == 32 && endianness == G_LITTLE_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_BGR32);
-					} else if (depth == 32 && endianness == G_BIG_ENDIAN) {
-						fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_RGB32);
-					}
-					break; }
-			}
-
-			for (i=0;i<g_list_length(v4l2src->formats);i++) {
-				struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, i);
-				if (fmt->pixelformat == fourcc)
-					fourcclist = g_list_append(fourcclist, (gpointer)fourcc);
-			}
-		} else {
-			/* compressed */
-			gchar *format_us;
+		/* add the standard one */
+		if (compressed) {
+			guint32 print_format = GUINT32_FROM_LE(fourcc);
+			gchar *print_format_str = (gchar *) &print_format, *string_format;
 			gint i;
-			if (strncmp(format, "video/", 6))
-				continue;
-			format = &format[6];
-			if (strlen(format) != 4)
-				continue;
-			format_us = g_strdup(format);
-			for (i=0;i<4;i++)
-				format_us[i] = g_ascii_toupper(format_us[i]);
-			fourcc = GST_MAKE_FOURCC(format_us[0],format_us[1],format_us[2],format_us[3]);
-			switch (fourcc) {
-				case GST_MAKE_FOURCC('J','P','E','G'):
-					fourcclist = g_list_append(fourcclist, (gpointer)V4L2_PIX_FMT_MJPEG);
-					break;
+
+			for (i=0;i<4;i++) {
+				print_format_str[i] =
+					g_ascii_tolower(print_format_str[i]);
 			}
-			fourcclist = g_list_append(fourcclist, (gpointer)fourcc);
+			string_format = g_strdup_printf("video/%4.4s",
+							print_format_str);
+			caps = GST_CAPS_NEW("v4l2src_caps",
+					    string_format,
+					      NULL);
+			g_free(string_format);
+		} else {
+			caps = GST_CAPS_NEW("v4l2src_caps",
+					    "video/raw",
+					      "format",GST_PROPS_FOURCC(fourcc),
+					      NULL);
 		}
+		break;
 	}
 
-	return fourcclist;
+	if (!caps->properties)
+		caps->properties = gst_props_empty_new();
+	gst_props_add_entry(caps->properties, width);
+	gst_props_add_entry(caps->properties, height);
+
+	return caps;
 }
 
+#define gst_v4l2src_v4l2fourcc_to_caps_fixed(f, width, height,c) \
+	gst_v4l2src_v4l2fourcc_to_caps(f, \
+				       gst_props_entry_new("width", \
+							   GST_PROPS_INT(width)), \
+				       gst_props_entry_new("height", \
+							   GST_PROPS_INT(height)), \
+				       c)
 
-static GstCaps *
-gst_v4l2src_caps_intersect (GstCaps *caps1,
-                            GstCaps *_caps2)
+#define gst_v4l2src_v4l2fourcc_to_caps_range(f, min_w, max_w, min_h, max_h, c) \
+	gst_v4l2src_v4l2fourcc_to_caps(f, \
+				       gst_props_entry_new("width", \
+							   GST_PROPS_INT_RANGE(min_w, max_w)), \
+				       gst_props_entry_new("height", \
+                                                           GST_PROPS_INT_RANGE(min_h, max_h)), \
+				       c)
+
+static struct v4l2_fmtdesc *
+gst_v4l2_caps_to_v4l2fourcc (GstV4l2Src *v4l2src,
+                             GstCaps    *caps)
 {
-	GstCaps *_list = NULL;
+	gint i;
+	guint32 fourcc = 0;
+	struct v4l2_fmtdesc *end_fmt = NULL;
+	const gchar *format = gst_caps_get_mime(caps);
 
-	if (!_caps2)
-		return caps1;
+	if (!strcmp(format, "video/raw")) {
+		/* non-compressed */
+		gst_caps_get_fourcc_int(caps, "format", &fourcc);
 
-	for (;caps1!=NULL;caps1=caps1->next) {
-		GstCaps *caps2 = _caps2;
+		switch (fourcc) {
+		case GST_MAKE_FOURCC('I','4','2','0'):
+		case GST_MAKE_FOURCC('I','Y','U','V'):
+			fourcc = V4L2_PIX_FMT_YUV420;
+			break;
+		case GST_MAKE_FOURCC('Y','U','Y','2'):
+			fourcc = V4L2_PIX_FMT_YUYV;
+			break;
+		case GST_MAKE_FOURCC('Y','4','1','P'):
+			fourcc = V4L2_PIX_FMT_Y41P;
+			break;
+		case GST_MAKE_FOURCC('U','Y','V','Y'):
+			fourcc = V4L2_PIX_FMT_UYVY;
+			break;
+		case GST_MAKE_FOURCC('Y','V','1','2'):
+			fourcc = V4L2_PIX_FMT_YVU420;
+			break;
+		case GST_MAKE_FOURCC('R','G','B',' '): {
+			gint depth, endianness;
 
-		for (;caps2!=NULL;caps2=caps2->next) {
-			if (!strcmp(gst_caps_get_mime(caps1), gst_caps_get_mime(caps2))) {
-				if (!strcmp(gst_caps_get_mime(caps1), "video/raw")) {
-					guint32 fmt1, fmt2;
-					gst_caps_get_fourcc_int(caps1, "format", &fmt1);
-					gst_caps_get_fourcc_int(caps2, "format", &fmt2);
-					if (fmt1 == fmt2)
-						goto try_it_out;
-				} else if (!strncmp(gst_caps_get_mime(caps1), "video/", 6)) {
-					goto try_it_out;
-				}
-				continue;
+			gst_caps_get_int(caps, "depth", &depth);
+			gst_caps_get_int(caps, "endianness", &endianness);
+
+			switch (depth) {
+			case 8:
+				fourcc = V4L2_PIX_FMT_RGB332;
+				break;
+			case 15:
+				fourcc = (endianness == G_LITTLE_ENDIAN) ?
+					 V4L2_PIX_FMT_RGB555 :
+					 V4L2_PIX_FMT_RGB555X;
+				break;
+			case 16:
+				fourcc = (endianness == G_LITTLE_ENDIAN) ?
+					 V4L2_PIX_FMT_RGB565 :
+					 V4L2_PIX_FMT_RGB565X;
+				break;
+			case 24:
+				fourcc = (endianness == G_LITTLE_ENDIAN) ?
+					 V4L2_PIX_FMT_BGR24 :
+					 V4L2_PIX_FMT_RGB24;
+				break;
+			case 32:
+				fourcc = (endianness == G_LITTLE_ENDIAN) ?
+					 V4L2_PIX_FMT_BGR32 :
+					 V4L2_PIX_FMT_RGB32;
+				break;
 			}
-			continue;
-
-		try_it_out:
-			if (!strcmp(gst_caps_get_mime(caps1), "video/raw")) {
-				GstCaps *list = _list;
-				for (;list!=NULL;list=list->next) {
-					if (!strcmp(gst_caps_get_mime(list), gst_caps_get_mime(caps1))) {
-						guint32 fmt1, fmt2;
-						gst_caps_get_fourcc_int(caps1, "format", &fmt1);
-						gst_caps_get_fourcc_int(list, "format", &fmt2);
-						if (fmt1 == fmt2)
-							break;
-					}
-				}
-				if (list == NULL)
-					goto add_it;
-			} else {
-				GstCaps *list = _list;
-				for (;list!=NULL;list=list->next) {
-					if (!strcmp(gst_caps_get_mime(list), gst_caps_get_mime(caps1))) {
-							break;
-					}
-				}
-				if (list == NULL)
-					goto add_it;
-			}
-			continue;
-
-		add_it:
-			_list = gst_caps_append(_list, gst_caps_copy_1(caps1));
+		}
+		default:
 			break;
 		}
+		for (i=0;i<g_list_length(v4l2src->formats);i++) {
+			struct v4l2_fmtdesc *fmt;
+			fmt = (struct v4l2_fmtdesc *)
+				g_list_nth_data(v4l2src->formats, i);
+			if (fmt->pixelformat == fourcc) {
+				end_fmt = fmt;
+				break;
+			}
+		}
+	} else {
+		/* compressed */
+		if (strncmp(format, "video/", 6))
+			return NULL;
+		format = &format[6];
+		if (strlen(format) != 4)
+			return NULL;
+		fourcc = GST_MAKE_FOURCC(g_ascii_toupper(format[0]),
+					 g_ascii_toupper(format[1]),
+					 g_ascii_toupper(format[2]),
+					 g_ascii_toupper(format[3]));
+
+		switch (fourcc) {
+		case GST_MAKE_FOURCC('J','P','E','G'): {
+			struct v4l2_fmtdesc *fmt;
+			for (i=0;i<g_list_length(v4l2src->formats);i++) {
+				fmt = g_list_nth_data(v4l2src->formats, i);
+				if (fmt->pixelformat == V4L2_PIX_FMT_MJPEG ||
+				    fmt->pixelformat == V4L2_PIX_FMT_JPEG) {
+					end_fmt = fmt;
+					break;
+				}
+			}
+			break;
+		}
+		default: {
+			/* FIXME: check for fourcc in list */
+			struct v4l2_fmtdesc *fmt;
+			for (i=0;i<g_list_length(v4l2src->formats);i++) {
+				fmt = g_list_nth_data(v4l2src->formats, i);
+				if (fourcc == fmt->pixelformat) {
+					end_fmt = fmt;
+					break;
+				}
+			}
+			break;
+		}
+		}
 	}
 
-	return _list;
+	return end_fmt;
 }
+
+#define gst_caps_get_int_range(caps, name, min, max) \
+	gst_props_entry_get_int_range(gst_props_get_entry((caps)->properties, \
+							  name), \
+				      min, max)
+
 
 
 static GstPadLinkReturn
@@ -644,10 +617,9 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 {
 	GstV4l2Src *v4l2src;
 	GstV4l2Element *v4l2element;
-	GstCaps *owncapslist;
 	GstCaps *caps;
-	GList *fourccs;
-	gint i;
+	struct v4l2_fmtdesc *format;
+	int w, h;
 
 	v4l2src = GST_V4L2SRC(gst_pad_get_parent (pad));
 	v4l2element = GST_V4L2ELEMENT(v4l2src);
@@ -661,45 +633,50 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 		return GST_PAD_LINK_DELAYED;
 	}
 
-	/* build our own capslist */
-	owncapslist = gst_v4l2src_getcaps(pad, NULL);
+	for (caps = vscapslist; caps != NULL; caps = caps->next) {
+		/* we want our own v4l2 type of fourcc codes */
+		if (!(format = gst_v4l2_caps_to_v4l2fourcc(v4l2src, caps))) {
+			continue;
+		}
+		if (gst_caps_has_property(caps, "width")) {
+			if (gst_caps_has_fixed_property(caps, "width")) {
+				gst_caps_get_int(caps, "width", &w);
+			} else {
+				int max;
+				gst_caps_get_int_range(caps, "width", &w, &max);
+			}
+		}
+		if (gst_caps_has_property(caps, "height")) {
+			if (gst_caps_has_fixed_property(caps, "height")) {
+				gst_caps_get_int(caps, "height", &h);
+			} else {
+				int max;
+				gst_caps_get_int_range(caps, "height", &h, &max);
+			}
+		}
 
-	/* and now, get the caps that we have in common */
-	if (!(caps = gst_v4l2src_caps_intersect(owncapslist, vscapslist)))
-		return GST_PAD_LINK_REFUSED;
+		/* we found the pixelformat! - try it out */
+		if (gst_v4l2src_set_capture(v4l2src, format, w, h)) {
+			/* it fits! Now, get the proper counterpart and retry
+			 * it on the other side (again...) - if it works, we're
+			 * done -> GST_PAD_LINK_OK */
+			GstCaps *lastcaps;
+			GstPadLinkReturn ret_val;
 
-	/* and get them back to V4L2-compatible fourcc codes */
-	if (!(fourccs = gst_v4l2_caps_to_v4l2fourcc(v4l2src, caps)))
-		return GST_PAD_LINK_REFUSED;
+			lastcaps = gst_v4l2src_v4l2fourcc_to_caps_fixed(format->pixelformat,
+						v4l2src->format.fmt.pix.width,
+						v4l2src->format.fmt.pix.height,
+			                        format->flags & V4L2_FMT_FLAG_COMPRESSED);
 
-	/* we now have the fourcc codes. try out each of them */
-	for (i=0;i<g_list_length(fourccs);i++) {
-		guint32 fourcc = (guint32)g_list_nth_data(fourccs, i);
-		gint n;
-		for (n=0;n<g_list_length(v4l2src->formats);n++) {
-			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2src->formats, n);
-			if (format->pixelformat == fourcc) {
-				/* we found the pixelformat! - try it out */
-				if (gst_v4l2src_set_capture(v4l2src, format,
-				            v4l2src->width, v4l2src->height)) {
-					/* it fits! Now, get the proper counterpart and retry
-					 * it on the other side (again...) - if it works, we're
-					 * done -> GST_PAD_LINK_OK */
-					GstCaps *lastcaps = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
-								v4l2src->format.fmt.pix.width, v4l2src->format.fmt.pix.height,
-					                        format->flags & V4L2_FMT_FLAG_COMPRESSED);
-					GstCaps *onecaps;
-					for (;lastcaps != NULL; lastcaps = lastcaps->next) {
-						GstPadLinkReturn ret_val;
-						onecaps = gst_caps_copy_1(lastcaps);
-						if ((ret_val = gst_pad_try_set_caps(v4l2src->srcpad, onecaps)) > 0) {
-							if (gst_v4l2src_capture_init(v4l2src))
-								return GST_PAD_LINK_DONE;
-						} else if (ret_val == GST_PAD_LINK_DELAYED) {
-							return GST_PAD_LINK_DELAYED;
-						}
-					}
+			ret_val = gst_pad_try_set_caps(v4l2src->srcpad,
+						       lastcaps);
+
+			if (ret_val > 0) {
+				if (gst_v4l2src_capture_init(v4l2src)) {
+					return GST_PAD_LINK_DONE;
 				}
+			} else if (ret_val == GST_PAD_LINK_DELAYED) {
+				return GST_PAD_LINK_DELAYED;
 			}
 		}
 	}
@@ -713,32 +690,36 @@ gst_v4l2src_getcaps (GstPad  *pad,
                      GstCaps *caps)
 {
 	GstV4l2Src *v4l2src = GST_V4L2SRC(gst_pad_get_parent (pad));
-	GstV4l2Element *v4l2element = GST_V4L2ELEMENT(v4l2src);
-	GstCaps *owncapslist;
+	GstCaps *list = NULL;
+	gint i;
+	struct v4l2_fmtdesc *format;
+	int min_w, max_w, min_h, max_h;
 
-	if (!GST_V4L2_IS_OPEN(v4l2element)) {
+	if (!GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src))) {
 		return NULL;
 	}
 
 	/* build our own capslist */
-	if (v4l2src->palette) {
-		struct v4l2_fmtdesc *format = g_list_nth_data(v4l2src->formats, v4l2src->palette);
-		owncapslist = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
-						v4l2src->width, v4l2src->height,
-						format->flags & V4L2_FMT_FLAG_COMPRESSED);
-	} else {
-		gint i;
-		owncapslist = NULL;
-		for (i=0;i<g_list_length(v4l2src->formats);i++) {
-			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2src->formats, i);
-			caps = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
-							v4l2src->width, v4l2src->height,
-							format->flags & V4L2_FMT_FLAG_COMPRESSED);
-			owncapslist = gst_caps_append(owncapslist, caps);
+	for (i=0;i<g_list_length(v4l2src->formats);i++) {
+		format = g_list_nth_data(v4l2src->formats, i);
+
+		/* get size delimiters */
+		if (!gst_v4l2src_get_size_limits(v4l2src, format,
+						 &min_w, &max_w,
+						 &min_h, &max_h)) {
+			continue;
 		}
+
+		/* add to list */
+		caps = gst_v4l2src_v4l2fourcc_to_caps_range(format->pixelformat,
+							    min_w, max_w,
+							    min_h, max_h,
+							    format->flags & V4L2_FMT_FLAG_COMPRESSED);
+
+		list = gst_caps_append(list, caps);
 	}
 
-	return owncapslist;
+	return list;
 }
 
 
@@ -866,24 +847,6 @@ gst_v4l2src_set_property (GObject      *object,
 	v4l2src = GST_V4L2SRC(object);
 
 	switch (prop_id) {
-		case ARG_WIDTH:
-			if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src))) {
-				v4l2src->width = g_value_get_int(value);
-			}
-			break;
-
-		case ARG_HEIGHT:
-			if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src))) {
-				v4l2src->height = g_value_get_int(value);
-			}
-			break;
-
-		case ARG_PALETTE:
-			if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src))) {
-				v4l2src->palette = g_value_get_int(value);
-			}
-			break;
-
 		case ARG_NUMBUFS:
 			if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src))) {
 				v4l2src->breq.count = g_value_get_int(value);
@@ -915,22 +878,6 @@ gst_v4l2src_get_property (GObject    *object,
 	v4l2src = GST_V4L2SRC(object);
 
 	switch (prop_id) {
-		case ARG_WIDTH:
-			g_value_set_int(value, v4l2src->width);
-			break;
-
-		case ARG_HEIGHT:
-			g_value_set_int(value, v4l2src->height);
-			break;
-
-		case ARG_PALETTE:
-			g_value_set_int(value, v4l2src->palette);
-			break;
-
-		case ARG_PALETTE_NAMES:
-			g_value_set_pointer(value, v4l2src->format_list);
-			break;
-
 		case ARG_NUMBUFS:
 			g_value_set_int(value, v4l2src->breq.count);
 			break;
