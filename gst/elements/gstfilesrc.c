@@ -111,7 +111,7 @@ static GstBuffer *	gst_filesrc_get			(GstPad *pad);
 static const GstFormat* gst_filesrc_get_formats 	(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
-		         				 GstSeekType *format, gint64 *value);
+		         				 GstFormat *format, gint64 *value);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 

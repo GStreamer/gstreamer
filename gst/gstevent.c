@@ -151,7 +151,7 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
  * Returns: A new discontinuous event.
  */
 GstEvent*
-gst_event_new_discontinuous (gboolean new_media, GstSeekType format1, ...)
+gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 {
   va_list var_args;
   GstEvent *event;
