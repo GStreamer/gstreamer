@@ -578,7 +578,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     prop = xmlGetProp (field, "min");
     sscanf (prop, "%d", &entry->data.int_range_data.min);
     g_free (prop);
-    prop = xmlGetProp (field, "min");
+    prop = xmlGetProp (field, "max");
     sscanf (prop, "%d", &entry->data.int_range_data.max);
     g_free (prop);
   }
