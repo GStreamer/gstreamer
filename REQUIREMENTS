@@ -2,20 +2,25 @@ GStreamer uses a *large* array of tools and libraries, most of which are
 optional.  We have attempted to make sure that any code that depends on
 optional libraries doesn't get built unless you have those libraries.  If
 you find this not to be the case, please, let us know by filing a bug
-report at http://sourceforge.net/bugs/?group_id=1936.
+report at http://bugzilla.gnome.org/.
 
+
+Required tools:
+===============
+
+An extra set of tools is required if you wish to build GStreamer out of
+CVS (using autogen.sh):
+
+autoconf 2.52 or better
+automake 1.5
+libtool v1.4 or better
+pkgconfig 0.9.0 or better (http://www.freedesktop.org/software/pkgconfig/)
 
 Required libraries:
 ===================
 
-The core GStreamer libraries are required which depend on the following:
-
-the latest glib2, currently at v2.0.4
-libxml2         (also called gnome-xml, available from http://xmlsoft.org/)
-
-These libraries are all central parts of gnome, and are available from the
-ftp.gnome.org or its mirrors, amongst other places.
-
+The core GStreamer libraries. See the gstreamer/ module in GStreamer cvs, or
+the version that corresponds to this plugin release.
 
 Optional libraries:
 ===================
@@ -24,9 +29,6 @@ This file lists supporting libraries for which gst-plugins contains plugins,
 as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
-gdk_pixbuf
-libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
-libglade	(for gstplay, gsteditor)
 libHermes	(for colorspace conversions; you need this for any video work)
 			http://www.clanlib.org/hermes/
 libghttp	(for httpsrc)
@@ -86,40 +88,9 @@ avifile		(for the avi windows decoder plugins)
 
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
-
-
-Required tools:
-===============
-
-An extra set of tools is required if you wish to build GStreamer out of
-CVS (using autogen.sh):
-
-autoconf 2.52
-automake 1.5
-libtool v1.4 or better
-pkgconfig 0.8.0 (http://www.freedesktop.org/software/pkgconfig/)
-
-
-Optional tools:
-===============
-
-gtkdoc
-db2html
-fig2dev
-xsltproc
-
+                >= 1.0.3
 
 Optional debian packages:
 =========================
 
-(This is an incomplete list, made only of problems which have been reported,
-rather than by an audit.)
-task-helix-gnome-dev   OR libgnome-dev
-
 gtk-doc-tools 0.4-0.2  -- needed to build documentation
-
-Alternatively, the docbook-gnome-bin package, which is available by adding the
-following lines to apt's sources.list (/etc/apt/sources.list):
-
-deb ftp://ftp.home-of-linux.org/pub/debian gnome/
-deb-src ftp://ftp.home-of-linux.org/pub/debian gnome/
