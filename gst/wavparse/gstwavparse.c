@@ -510,7 +510,8 @@ gst_wavparse_get_query_types (GstPad *pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_TOTAL,
-    GST_QUERY_POSITION
+    GST_QUERY_POSITION,
+    0
   };
   return types;
 }
