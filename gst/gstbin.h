@@ -39,20 +39,30 @@ GST_EXPORT GType _gst_bin_type;
 
 /**
  * GstBinFlags:
- * @GST_BIN_FLAG_MANAGER: This bin has a scheduler and can be used as a toplevel bin.
- * @GST_BIN_SELF_SCHEDULABLE: This bin iterates itself, so no calls to gst_bin_iterate() should be made.
- * @GST_BIN_FLAG_PREFER_COTHREADS: This bin preferes to have its elements scheduled with cothreads
- * @GST_BIN_FLAG_FIXED_CLOCK: This bin uses a fixed clock, possibly the one set with gst_bin_use_clock().
- * @GST_BIN_FLAG_LAST: id of last for chaining flsg definitions
- * 
- * Flags for a #GstBin .
+ * @GST_BIN_FLAG_MANAGER: this bin is a manager of child elements, i.e.
+ * a pipeline or thread.
+ * @GST_BIN_SELF_SCHEDULABLE: the bin iterates itself.
+ * @GST_BIN_FLAG_PREFER_COTHREADS: we prefer to have cothreads when its
+ * an option, over chain-based.
+ * @GST_BIN_FLAG_FIXED_CLOCK: bin has one clock that cannot be changed.
+ * @GST_BIN_STATE_LOCKED: indicator that we are in a non-recursive
+ * state-change on the bin, or that kids should not change parent state.
+ * Both are internally used to prevent infinitely recursive loops of
+ * state changes. Since they are mutually exclusive and serve the same
+ * purpose, we use the same flag for them.
+ * @GST_BIN_FLAG_LAST: the last enum in the series of flags in a bin,
+ * derived classes can use this as first value in a list of flags.
+ *
+ * GstBinFlags are a set of flags specific to bins. Most are set/used
+ * internally. They can be checked using the GST_FLAG_IS_SET () macro,
+ * and (un)set using GST_FLAG_SET () and GST_FLAG_UNSET ().
  */
 typedef enum {
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
   GST_BIN_SELF_SCHEDULABLE,
   GST_BIN_FLAG_PREFER_COTHREADS,
   GST_BIN_FLAG_FIXED_CLOCK,
-  /* padding */
+  GST_BIN_STATE_LOCKED,
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
 

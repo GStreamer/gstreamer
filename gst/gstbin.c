@@ -705,10 +705,14 @@ gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
   bin->child_states[new_idx]++;
 
   for (i = GST_NUM_STATES - 1; i >= 0; i--) {
-    if (bin->child_states[i] != 0) {
+    if (bin->child_states[i] != 0 || i == 0) {
       gint state = (1 << i);
 
-      if (GST_STATE (bin) != state) {
+      /* We only change state on the parent if the state is not locked.
+       * State locking can occur if the bin itself set state on children,
+       * which should not recurse since it leads to infinite loops. */
+      if (GST_STATE (bin) != state &&
+          !GST_FLAG_IS_SET (bin, GST_BIN_STATE_LOCKED)) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
             "highest child state is %s, changing bin state accordingly",
             gst_element_state_get_name (state));
@@ -832,7 +836,6 @@ gst_bin_change_state (GstElement * element)
   GstBin *bin;
   GstElementStateReturn ret;
   GstElementState old_state, pending;
-  SetKidStateData data;
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
 
@@ -849,27 +852,43 @@ gst_bin_change_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
 
-  data.pending = pending;
-  data.result = GST_STATE_SUCCESS;
-  if (!gst_bin_foreach (bin, set_kid_state_func, &data)) {
-    GST_STATE_PENDING (element) = old_state;
-    return GST_STATE_FAILURE;
+  /* If we're changing state non-recursively (see _norecurse()),
+   * this flag is already set and we should not set children states. */
+  if (!GST_FLAG_IS_SET (bin, GST_BIN_STATE_LOCKED)) {
+    SetKidStateData data;
+
+    /* So now we use this flag to make sure that kids don't re-set our
+     * state, which would lead to infinite loops. */
+    GST_FLAG_SET (bin, GST_BIN_STATE_LOCKED);
+    data.pending = pending;
+    data.result = GST_STATE_SUCCESS;
+    if (!gst_bin_foreach (bin, set_kid_state_func, &data)) {
+      GST_FLAG_UNSET (bin, GST_BIN_STATE_LOCKED);
+      GST_STATE_PENDING (element) = old_state;
+      return GST_STATE_FAILURE;
+    }
+    GST_FLAG_UNSET (bin, GST_BIN_STATE_LOCKED);
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "done changing bin's state from %s to %s, now in %s",
+        gst_element_state_get_name (old_state),
+        gst_element_state_get_name (pending),
+        gst_element_state_get_name (GST_STATE (element)));
+
+    /* if we're async, the kids will change state later (when the
+     * lock-state flag is no longer held) and all will be fine. */
+    if (data.result == GST_STATE_ASYNC)
+      return GST_STATE_ASYNC;
+  } else {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "Not recursing state change onto children");
   }
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-      "done changing bin's state from %s to %s, now in %s",
-      gst_element_state_get_name (old_state),
-      gst_element_state_get_name (pending),
-      gst_element_state_get_name (GST_STATE (element)));
-
-  if (data.result == GST_STATE_ASYNC)
-    ret = GST_STATE_ASYNC;
-  else {
-    /* FIXME: this should have been done by the children already, no? */
-    if (parent_class->change_state) {
-      ret = parent_class->change_state (element);
-    } else
-      ret = GST_STATE_SUCCESS;
+  /* FIXME: this should have been done by the children already, no? */
+  if (parent_class->change_state) {
+    ret = parent_class->change_state (element);
+  } else {
+    ret = GST_STATE_SUCCESS;
   }
   return ret;
 }
@@ -900,9 +919,13 @@ gst_bin_change_state_norecurse (GstBin * bin)
 {
   GstElementStateReturn ret;
 
-  if (parent_class->change_state) {
+  if (GST_ELEMENT_GET_CLASS (bin)->change_state) {
     GST_CAT_LOG_OBJECT (GST_CAT_STATES, bin, "setting bin's own state");
-    ret = parent_class->change_state (GST_ELEMENT (bin));
+
+    /* Non-recursive state change flag */
+    GST_FLAG_SET (bin, GST_BIN_STATE_LOCKED);
+    ret = GST_ELEMENT_GET_CLASS (bin)->change_state (GST_ELEMENT (bin));
+    GST_FLAG_UNSET (bin, GST_BIN_STATE_LOCKED);
 
     return ret;
   } else

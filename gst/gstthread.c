@@ -508,24 +508,10 @@ gst_thread_change_state (GstElement * element)
       if (thread->thread_id != NULL) {
         thread->thread_id = NULL;
         if (is_self) {
-          /* or should we continue? */
           GST_LOG_OBJECT (thread,
-              "Thread %s is destroying itself. Function call will not return!",
+              "Thread %s is destroying itself. Returning to mainloop ASAP!",
               GST_ELEMENT_NAME (thread));
-          gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
-
-          /* unlock and signal - we are out */
-          GST_DEBUG_OBJECT (thread, "signal");
-          g_cond_signal (thread->cond);
-          GST_DEBUG_OBJECT (thread, "unlock");
-          g_mutex_unlock (thread->lock);
-
-          GST_INFO_OBJECT (thread, "GThread %p is exiting", g_thread_self ());
-
-          g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
-
-          g_thread_exit (NULL);
-          return GST_STATE_SUCCESS;
+          break;
         } else {
           /* now wait for the thread to destroy itself */
           GST_DEBUG_OBJECT (thread, "signal");
@@ -548,6 +534,17 @@ gst_thread_change_state (GstElement * element)
   } else {
     ret = GST_STATE_SUCCESS;
   }
+
+  g_mutex_lock (thread->lock);
+  if (GST_STATE (thread) == GST_STATE_PLAYING &&
+      GST_FLAG_IS_SET (thread, GST_THREAD_STATE_WAITING)) {
+    GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
+    if (!is_self) {
+      g_cond_signal (thread->cond);
+    }
+  }
+  g_mutex_unlock (thread->lock);
+
   if (!is_self)
     g_mutex_unlock (thread->iterate_lock);
 
@@ -594,6 +591,13 @@ gst_thread_child_state_change (GstBin * bin, GstElementState oldstate,
 
   if (parent_class->child_state_change)
     parent_class->child_state_change (bin, oldstate, newstate, element);
+
+  /* if we're changing from playing to paused, kids will one-by-one go
+   * to paused while we're playing, which is bad if we execute the code
+   * below. We should only do that when a child explicitely changed
+   * state outside our own context. */
+  if (GST_FLAG_IS_SET (bin, GST_BIN_STATE_LOCKED))
+    return;
 
   /* see if we have to wake up the thread now. */
   if (is_self) {

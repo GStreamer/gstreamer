@@ -1,11 +1,11 @@
 include ../Rules
 
-tests_pass = thread1 thread2 thread3 thread4 thread5 threade threadf signal1 159852
+tests_pass = thread1 thread2 thread3 thread4 thread5 threade threadf signal1 159852 threadg threadi
 tests_fail = 159566 signal2 signal3
 
 # threadh
 
-tests_ignore = queue threadb threadc threadd staticrec threadg
+tests_ignore = queue threadb threadc threadd staticrec
 
 thread1_SOURCES = thread.c
 thread1_CFLAGS = -DTESTNUM=1 $(AM_CFLAGS)

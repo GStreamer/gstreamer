@@ -95,6 +95,7 @@ main (gint argc, gchar * argv[])
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
+    g_print ("done ...\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
   if (TESTNUM == 4) {

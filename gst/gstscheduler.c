@@ -98,6 +98,12 @@ gst_scheduler_dispose (GObject * object)
   gst_object_replace ((GstObject **) & sched->current_clock, NULL);
   gst_object_replace ((GstObject **) & sched->clock, NULL);
 
+  /* kids are held reference to, so dereference here. */
+  while (sched->schedulers != NULL) {
+    gst_scheduler_remove_scheduler (sched,
+        GST_SCHEDULER (sched->schedulers->data));
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 

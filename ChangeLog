@@ -1,3 +1,50 @@
+2005-01-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-types.xml:
+	  Fix description for buffer-frames=0.
+	* docs/gst/tmpl/gstbin.sgml:
+	* gst/gstbin.c: (gst_bin_child_state_change_func),
+	(gst_bin_change_state), (gst_bin_change_state_norecurse):
+	* gst/gstbin.h:
+	* testsuite/threads/Makefile.am:
+	* testsuite/threads/threadi.c: (cb_timeout), (cb_quit), (cb_eos),
+	(cb_state), (cb_play), (main):
+	  Fix non-recursive state changes to *really* change the state
+	  of the object, and not just call parent_class->state_change.
+	  Fix a lot of lockups caused by this. Fixes #132775. Add test
+	  for the problem. Also enable test to show #142588 (fixed).
+	* gst/gstthread.c: (gst_thread_change_state),
+	(gst_thread_child_state_change):
+	  Don't exit the thread if we go to NULL and are inside thread
+	  context. Instead, return control to the main thread context
+	  and exit from there.
+	* gst/gstelement.c: (gst_element_disable_threadsafe_properties):
+	  Don't unset virtual functions, since those may still be used.
+	  That's not necessarily correct, but suffices for now.
+	* configure.ac:
+	* testsuite/Makefile.am:
+	* testsuite/pad/Makefile.am:
+	* testsuite/pad/chainnopull.c: (gst_test_sink_class_init),
+	(gst_test_sink_base_init), (gst_test_sink_chain),
+	(gst_test_sink_init), (main):
+	* testsuite/pad/getnopush.c: (gst_test_src_class_init),
+	(gst_test_src_base_init), (gst_test_src_get), (gst_test_src_init),
+	(main):
+	* testsuite/pad/link.c: (gst_test_element_class_init),
+	(gst_test_element_base_init), (gst_test_src_get),
+	(gst_test_src_loop), (gst_test_src_init), (gst_test_filter_chain),
+	(gst_test_filter_loop), (gst_test_filter_init),
+	(gst_test_sink_chain), (gst_test_sink_loop), (gst_test_sink_init),
+	(cb_error), (main):
+	  Add tests to show #150546. Pass, but should fail (currently
+	  disabled from the testsuite).
+	* gst/gstscheduler.c: (gst_scheduler_dispose):
+	  Dereference child schedulers on dispose (#94464).
+	* testsuite/bytestream/filepadsink.c: (gst_fp_sink_init):
+	  Fix typo.
+	* testsuite/threads/thread.c: (main):
+	  Add more debug.
+
 2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (gst_pad_push):

@@ -398,8 +398,9 @@ gst_element_disable_threadsafe_properties (GstElement * element)
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_FLAG_UNSET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
-  element->pre_run_func = NULL;
-  element->post_run_func = NULL;
+
+  //element->pre_run_func = NULL;
+  //element->post_run_func = NULL;
   /* let's keep around that async queue */
 }
 
