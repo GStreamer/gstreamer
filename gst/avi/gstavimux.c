@@ -1145,6 +1145,8 @@ gst_avimux_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_event_unref (event);
+
   return TRUE;
 }
 
