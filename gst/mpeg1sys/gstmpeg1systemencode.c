@@ -575,7 +575,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "GPL",
-  GST_COPYRIGHT,
   GST_PACKAGE,
   GST_ORIGIN
 )

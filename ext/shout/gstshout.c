@@ -473,7 +473,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "GPL",
-  GST_COPYRIGHT,
   "libshout",
   "http://developer.icecast.org/libshout/"
 )

@@ -44,7 +44,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "GPL",
-  "(c) 2000 Justin Schoeman <justin@suntiger.ee.up.ac.za>",
   GST_PACKAGE,
   GST_ORIGIN
 )

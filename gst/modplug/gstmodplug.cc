@@ -840,8 +840,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "LGPL",
-  "(c) 2001 Kenton Varda <temporal@gauge3d.org>\n"
-  "(c) 2001 Olivier Lapicque <olivierl@jps.net>",
   GST_PACKAGE,
   GST_ORIGIN
 )

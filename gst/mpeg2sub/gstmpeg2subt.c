@@ -439,8 +439,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "LGPL",
-  "(c) 2001 Samuel Hocevar <sam@via.ecp.fr>\n"
-  "(c) 2001 Michel Lespinasse <walken@via.ecp.fr>",
   GST_PACKAGE,
   GST_ORIGIN
 )

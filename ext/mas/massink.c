@@ -355,7 +355,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "LGPL",
-  GST_COPYRIGHT,
   GST_PACKAGE,
   GST_ORIGIN
 );
