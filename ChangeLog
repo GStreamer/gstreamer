@@ -1,3 +1,28 @@
+2004-09-12  David Schleef  <ds@schleef.org>
+
+	Fixes: #151879, #151881, #151882, #151883, #151884, #151886,
+	#151887, #152102, #152247.
+	* examples/indexing/indexmpeg.c: 64-bit warning fixes.
+	* examples/seeking/cdparanoia.c: same
+	* examples/seeking/cdplayer.c: same
+	* examples/seeking/seek.c: same
+	* examples/seeking/spider_seek.c: same
+	* examples/seeking/vorbisfile.c: same
+	* examples/stats/mp2ogg.c: same
+	* ext/esd/esdsink.c: (gst_esdsink_class_init),
+	(gst_esdsink_dispose): Dispose of element properly.
+	* ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_seek): 64-bit warning
+	fixes.
+	* ext/nas/nassink.c: (gst_nassink_class_init),
+	(gst_nassink_dispose): Dispose of element correctly.
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain): Fix leak.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new), (gst_ximagesink_ximage_destroy):
+	Fix 64-bit warning.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_new), (gst_xvimagesink_xvimage_destroy):
+	Fix 64-bit warning.
+
 2004-09-12  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* configure.ac : change speex detection as 1.1.6 now uses

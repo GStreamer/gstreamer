@@ -354,7 +354,7 @@ gst_ivorbisfile_seek (void *datasource, int64_t offset, int whence)
     return -1;
   }
 
-  GST_DEBUG ("seek %lld %d", offset, whence);
+  GST_DEBUG ("seek %" G_GINT64_FORMAT " %d", offset, whence);
 
   if (whence == SEEK_SET) {
     method = GST_SEEK_METHOD_SET;

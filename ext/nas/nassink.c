@@ -67,6 +67,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_nassink_base_init (gpointer g_class);
 static void gst_nassink_class_init (GstNassinkClass * klass);
 static void gst_nassink_init (GstNassink * nassink);
+static void gst_nassink_dispose (GObject * object);
 
 static gboolean gst_nassink_open_audio (GstNassink * sink);
 static void gst_nassink_close_audio (GstNassink * sink);
@@ -152,6 +153,7 @@ gst_nassink_class_init (GstNassinkClass * klass)
 
   gobject_class->set_property = gst_nassink_set_property;
   gobject_class->get_property = gst_nassink_get_property;
+  gobject_class->dispose = gst_nassink_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));   /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));    /* CHECKME */
@@ -185,6 +187,14 @@ gst_nassink_init (GstNassink * nassink)
   nassink->size = 0;
   nassink->pos = 0;
   nassink->buf = NULL;
+}
+
+static void
+gst_nassink_dispose (GObject * object)
+{
+  GstNassink *nassink = GST_NASSINK (object);
+
+  g_free (nassink->host);
 }
 
 static GstCaps *

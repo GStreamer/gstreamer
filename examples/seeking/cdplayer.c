@@ -39,8 +39,8 @@ format_value (GtkScale * scale, gdouble value)
   seconds = (gint64) real / GST_SECOND;
   subseconds = (gint64) real / (GST_SECOND / 100);
 
-  return g_strdup_printf ("%02lld:%02lld:%02lld",
-      seconds / 60, seconds % 60, subseconds % 100);
+  return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%02"
+      G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 100);
 }
 
 typedef struct
@@ -77,7 +77,7 @@ query_durations ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -106,7 +106,7 @@ query_positions ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -183,9 +183,11 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   while (walk) {
     GstElement *seekable = GST_ELEMENT (walk->data);
 
-    g_print ("seek to %lld on element %s\n", real, GST_ELEMENT_NAME (seekable));
-    s_event = gst_event_new_seek (GST_FORMAT_TIME |
-        GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, real);
+    g_print ("seek to %" G_GINT64_FORMAT " on element %s\n", real,
+        GST_ELEMENT_NAME (seekable));
+    s_event =
+        gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
+        GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_element_send_event (seekable, s_event);
 

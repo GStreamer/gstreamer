@@ -75,10 +75,11 @@ print_lbs_info (struct probe_context *context, gint stream)
 
       if (format == GST_FORMAT_TIME) {
         value_end /= (GST_SECOND / 100);
-        g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick,
-            value_end / 6000, (value_end / 100) % 60, (value_end % 100));
+        g_print ("    %s: %" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ".%02"
+            G_GINT64_FORMAT "\n", definition->nick, value_end / 6000,
+            (value_end / 100) % 60, (value_end % 100));
       } else {
-        g_print ("    %s: %lld\n", definition->nick, value_end);
+        g_print ("    %s: %" G_GINT64_FORMAT "\n", definition->nick, value_end);
       }
     } else
       g_print ("    could not get logical stream %s\n", definition->nick);
@@ -181,12 +182,13 @@ collect_stream_properties (struct probe_context *context)
     if (res) {
       if (format == GST_FORMAT_TIME) {
         value /= (GST_SECOND / 100);
-        g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick,
-            value / 6000, (value / 100) % 60, (value % 100));
+        g_print ("  total %s: %" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ".%02"
+            G_GINT64_FORMAT "\n", definition->nick, value / 6000,
+            (value / 100) % 60, (value % 100));
       } else {
         if (format == context->ls_format)
           context->total_ls = value;
-        g_print ("  total %s: %lld\n", definition->nick, value);
+        g_print ("  total %s: %" G_GINT64_FORMAT "\n", definition->nick, value);
       }
     }
   }
