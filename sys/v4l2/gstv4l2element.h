@@ -41,21 +41,17 @@
 typedef	struct _GstV4l2Element		GstV4l2Element;
 typedef	struct _GstV4l2ElementClass	GstV4l2ElementClass;
 
-typedef struct _GstV4l2Rect {
-	gint x, y, w, h;
-} GstV4l2Rect;
-
 typedef enum {
-	GST_V4L2_ATTRIBUTE_VALUE_TYPE_INT,
-	GST_V4L2_ATTRIBUTE_VALUE_TYPE_BOOLEAN,
-	GST_V4L2_ATTRIBUTE_VALUE_TYPE_BUTTON,
-	GST_V4L2_ATTRIBUTE_VALUE_TYPE_LIST,
+	GST_V4L2_ATTRIBUTE_VALUE_TYPE_INTEGER = V4L2_CTRL_TYPE_INTEGER,
+	GST_V4L2_ATTRIBUTE_VALUE_TYPE_BOOLEAN = V4L2_CTRL_TYPE_BOOLEAN,
+	GST_V4L2_ATTRIBUTE_VALUE_TYPE_MENU    = V4L2_CTRL_TYPE_MENU,
+	GST_V4L2_ATTRIBUTE_VALUE_TYPE_BUTTON  = V4L2_CTRL_TYPE_BUTTON,
 } GstV4l2AttributeValueType;
 
 typedef enum {
 	GST_V4L2_ATTRIBUTE_TYPE_VIDEO,
 	GST_V4L2_ATTRIBUTE_TYPE_AUDIO,
-	GST_V4L2_ATTRIBUTE_TYPE_EFFECT,
+	GST_V4L2_ATTRIBUTE_TYPE_OTHER,
 } GstV4l2AttributeType;
 
 typedef struct _GstV4l2Attribute {
@@ -83,7 +79,6 @@ struct _GstV4l2Element {
 	struct v4l2_capability vcap;
 
 	/* the toys available to us */
-	GList /*v4l2_fmtdesc*/ *formats; /* list of available capture formats */
 	GList /*v4l2_input*/ *inputs;
 	GList /*v4l2_output*/ *outputs;
 	GList /*v4l2_enumstd*/ *norms;
@@ -99,6 +94,12 @@ struct _GstV4l2Element {
 
 struct _GstV4l2ElementClass {
 	GstElementClass parent_class;
+
+	/* signals */
+	void (*open)	(GstElement  *element,
+			 const gchar *device);
+	void (*close)	(GstElement  *element,
+			 const gchar *device);
 };
 
 

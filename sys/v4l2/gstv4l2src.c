@@ -56,6 +56,12 @@ enum {
 static void			gst_v4l2src_class_init		(GstV4l2SrcClass *klass);
 static void			gst_v4l2src_init		(GstV4l2Src      *v4l2src);
 
+/* signal functions */
+static void			gst_v4l2src_open		(GstElement      *element,
+								 const gchar     *device);
+static void			gst_v4l2src_close		(GstElement      *element,
+								 const gchar     *device);
+
 /* pad/buffer functions */
 static gboolean			gst_v4l2src_srcconvert		(GstPad          *pad,
 								 GstFormat       src_format,
@@ -127,9 +133,11 @@ gst_v4l2src_class_init (GstV4l2SrcClass *klass)
 {
 	GObjectClass *gobject_class;
 	GstElementClass *gstelement_class;
+	GstV4l2ElementClass *v4l2_class;
 
 	gobject_class = (GObjectClass*)klass;
 	gstelement_class = (GstElementClass*)klass;
+	v4l2_class = (GstV4l2ElementClass*)klass;
 
 	parent_class = g_type_class_ref(GST_TYPE_V4L2ELEMENT);
 
@@ -164,6 +172,9 @@ gst_v4l2src_class_init (GstV4l2SrcClass *klass)
 	gobject_class->get_property = gst_v4l2src_get_property;
 
 	gstelement_class->change_state = gst_v4l2src_change_state;
+
+	v4l2_class->open = gst_v4l2src_open;
+	v4l2_class->close = gst_v4l2src_close;
 }
 
 
@@ -188,6 +199,24 @@ gst_v4l2src_init (GstV4l2Src *v4l2src)
 	v4l2src->width = 160;
 	v4l2src->height = 120;
 	v4l2src->breq.count = 0;
+
+	v4l2src->formats = NULL;
+}
+
+
+static void
+gst_v4l2src_open (GstElement  *element,
+                  const gchar *device)
+{
+	gst_v4l2src_fill_format_list(GST_V4L2SRC(element));
+}
+
+
+static void
+gst_v4l2src_close (GstElement  *element,
+                   const gchar *device)
+{
+	gst_v4l2src_empty_format_list(GST_V4L2SRC(element));
 }
 
 
@@ -211,8 +240,8 @@ gst_v4l2src_srcconvert (GstPad    *pad,
 	if (!gst_v4l2_get_norm(GST_V4L2ELEMENT(v4l2src), &norm))
 		return FALSE;
 
-	std = &((struct v4l2_enumstd *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->norms, norm))->std;
-	fps = std->framerate.numerator / std->framerate.denominator;
+	std = ((struct v4l2_standard *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->norms, norm));
+	fps = std->frameperiod.numerator / std->frameperiod.denominator;
 
 	switch (src_format) {
 		case GST_FORMAT_TIME:
@@ -453,8 +482,8 @@ gst_v4l2_caps_to_v4l2fourcc (GstV4l2Src *v4l2src,
 					break; }
 			}
 
-			for (i=0;i<g_list_length(GST_V4L2ELEMENT(v4l2src)->formats);i++) {
-				struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->formats, i);
+			for (i=0;i<g_list_length(v4l2src->formats);i++) {
+				struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, i);
 				if (fmt->pixelformat == fourcc)
 					fourcclist = g_list_append(fourcclist, (gpointer)fourcc);
 			}
@@ -585,8 +614,8 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 	for (i=0;i<g_list_length(fourccs);i++) {
 		guint32 fourcc = (guint32)g_list_nth_data(fourccs, i);
 		gint n;
-		for (n=0;n<g_list_length(v4l2element->formats);n++) {
-			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, n);
+		for (n=0;n<g_list_length(v4l2src->formats);n++) {
+			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2src->formats, n);
 			if (format->pixelformat == fourcc) {
 				/* we found the pixelformat! - try it out */
 				if (gst_v4l2src_set_capture(v4l2src, format,
@@ -631,15 +660,15 @@ gst_v4l2src_getcaps (GstPad  *pad,
 
 	/* build our own capslist */
 	if (v4l2src->palette) {
-		struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, v4l2src->palette);
+		struct v4l2_fmtdesc *format = g_list_nth_data(v4l2src->formats, v4l2src->palette);
 		owncapslist = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
 						v4l2src->width, v4l2src->height,
 						format->flags & V4L2_FMT_FLAG_COMPRESSED);
 	} else {
 		gint i;
 		owncapslist = NULL;
-		for (i=0;i<g_list_length(v4l2element->formats);i++) {
-			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, i);
+		for (i=0;i<g_list_length(v4l2src->formats);i++) {
+			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2src->formats, i);
 			caps = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
 							v4l2src->width, v4l2src->height,
 							format->flags & V4L2_FMT_FLAG_COMPRESSED);
@@ -675,7 +704,8 @@ gst_v4l2src_get (GstPad *pad)
 	GST_BUFFER_DATA(buf) = GST_V4L2ELEMENT(v4l2src)->buffer[num];
 	GST_BUFFER_SIZE(buf) = v4l2src->bufsettings.bytesused;
 	if (!v4l2src->first_timestamp)
-		v4l2src->first_timestamp = v4l2src->bufsettings.timestamp;
+		v4l2src->first_timestamp = v4l2src->bufsettings.timestamp.tv_sec * GST_SECOND +
+			v4l2src->bufsettings.timestamp.tv_usec * (GST_SECOND/1000000);
 	GST_BUFFER_TIMESTAMP(buf) = v4l2src->bufsettings.length - v4l2src->first_timestamp;
 
 	return buf;
@@ -717,8 +747,8 @@ gst_v4l2src_set_property (GObject      *object,
 				gint i;
 				const gchar *formatstr = g_value_get_string(value);
 				guint32 fourcc = GST_MAKE_FOURCC(formatstr[0],formatstr[1],formatstr[2],formatstr[3]);
-				for (i=0;i<g_list_length(GST_V4L2ELEMENT(v4l2src)->formats);i++) {
-					struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->formats, i);
+				for (i=0;i<g_list_length(v4l2src->formats);i++) {
+					struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, i);
 					if (fmt->pixelformat == fourcc)
 						v4l2src->palette = i;
 				}
@@ -767,7 +797,7 @@ gst_v4l2src_get_property (GObject    *object,
 			break;
 
 		case ARG_FOURCC: {
-			struct v4l2_fmtdesc *fmt = g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->formats, v4l2src->palette);
+			struct v4l2_fmtdesc *fmt = g_list_nth_data(v4l2src->formats, v4l2src->palette);
 			guint32 print_format = GUINT32_FROM_LE(fmt->pixelformat);
 			gchar *print_format_str = (gchar *) &print_format;
 			g_value_set_string(value, g_strndup(print_format_str, 4));

@@ -37,6 +37,8 @@ static GstElementDetails gst_v4l2element_details = {
 /* V4l2Element signals and args */
 enum {
 	/* FILL ME */
+	SIGNAL_OPEN,
+	SIGNAL_CLOSE,
 	LAST_SIGNAL
 };
 
@@ -58,7 +60,7 @@ enum {
 	ARG_DEVICE_NAME,
 	ARG_DEVICE_HAS_CAPTURE,
 	ARG_DEVICE_HAS_OVERLAY,
-	ARG_DEVICE_HAS_CODEC,
+	ARG_DEVICE_HAS_PLAYBACK,
 	ARG_DISPLAY,
 	ARG_VIDEOWINDOW,
 	ARG_DO_OVERLAY,
@@ -79,7 +81,7 @@ static GstElementStateReturn	gst_v4l2element_change_state	(GstElement          *
 
 
 static GstElementClass *parent_class = NULL;
-/*static guint gst_v4l2element_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_v4l2element_signals[LAST_SIGNAL] = { 0 };
 
 
 GType
@@ -168,11 +170,11 @@ gst_v4l2element_class_init (GstV4l2ElementClass *klass)
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_CAPTURE,
 		g_param_spec_boolean("can_capture","can_capture","can_capture",
 		0,G_PARAM_READABLE));
+	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_PLAYBACK,
+		g_param_spec_boolean("can_playback","can_playback","can_playback",
+		0,G_PARAM_READABLE));
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_OVERLAY,
 		g_param_spec_boolean("has_overlay","has_overlay","has_overlay",
-		0,G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_CODEC,
-		g_param_spec_boolean("has_compression","has_compression","has_compression",
 		0,G_PARAM_READABLE));
 
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DISPLAY,
@@ -184,6 +186,18 @@ gst_v4l2element_class_init (GstV4l2ElementClass *klass)
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VIDEOWINDOW,
 		g_param_spec_pointer("videowindow","videowindow","videowindow",
 		G_PARAM_WRITABLE));
+
+	/* signals */
+	gst_v4l2element_signals[SIGNAL_OPEN] =
+		g_signal_new("open", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+			G_STRUCT_OFFSET(GstV4l2ElementClass, open),
+			NULL, NULL, g_cclosure_marshal_VOID__STRING,
+			G_TYPE_NONE, 1, G_TYPE_STRING);
+	gst_v4l2element_signals[SIGNAL_CLOSE] =
+		g_signal_new("close", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+			G_STRUCT_OFFSET(GstV4l2ElementClass, close),
+			NULL, NULL, g_cclosure_marshal_VOID__STRING,
+			G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	gobject_class->set_property = gst_v4l2element_set_property;
 	gobject_class->get_property = gst_v4l2element_get_property;
@@ -206,7 +220,6 @@ gst_v4l2element_init (GstV4l2Element *v4l2element)
 	v4l2element->frequency = 0;
 
 	v4l2element->controls = NULL;
-	v4l2element->formats = NULL;
 	v4l2element->outputs = NULL;
 	v4l2element->inputs = NULL;
 	v4l2element->norms = NULL;
@@ -277,7 +290,7 @@ gst_v4l2element_set_property (GObject      *object,
 				GByteArray *array = (GByteArray *) g_value_get_pointer(value);
 				struct v4l2_clip *clips = (struct v4l2_clip *) array->data;
 				gst_v4l2_set_window(v4l2element,
-					clips->x, clips->y, clips->width, clips->height,
+					clips->c.left, clips->c.top, clips->c.width, clips->c.height,
 					&clips[1], array->len/sizeof(struct v4l2_clip)-1);
 			}
 			break;
@@ -342,8 +355,8 @@ gst_v4l2element_get_property (GObject    *object,
 			break;
 		case ARG_HAS_TUNER:
 			if (GST_V4L2_IS_OPEN(v4l2element))
-				temp_i = gst_v4l2_has_tuner(v4l2element);
-			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
+				g_value_set_boolean(value,
+					gst_v4l2_has_tuner(v4l2element, &temp_i));
 			break;
 		case ARG_FREQUENCY:
 			if (GST_V4L2_IS_OPEN(v4l2element))
@@ -376,25 +389,25 @@ gst_v4l2element_get_property (GObject    *object,
 			break;
 		case ARG_DEVICE_NAME:
 			if (GST_V4L2_IS_OPEN(v4l2element))
-				g_value_set_string(value, g_strdup(v4l2element->vcap.name));
+				g_value_set_string(value, g_strdup(v4l2element->vcap.card));
 			break;
 		case ARG_DEVICE_HAS_CAPTURE:
 			if (GST_V4L2_IS_OPEN(v4l2element) &&
-			    (v4l2element->vcap.type == V4L2_TYPE_CODEC ||
-			     v4l2element->vcap.type == V4L2_TYPE_CAPTURE) &&
-			    v4l2element->vcap.flags & V4L2_FLAG_STREAMING)
+			    v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE &&
+			    v4l2element->vcap.capabilities & V4L2_CAP_STREAMING)
 				temp_i = 1;
 			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
 			break;
 		case ARG_DEVICE_HAS_OVERLAY:
 			if (GST_V4L2_IS_OPEN(v4l2element) &&
-			    v4l2element->vcap.flags & V4L2_FLAG_PREVIEW)
+			    v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_OVERLAY)
 				temp_i = 1;
 			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
 			break;
-		case ARG_DEVICE_HAS_CODEC:
+		case ARG_DEVICE_HAS_PLAYBACK:
 			if (GST_V4L2_IS_OPEN(v4l2element) &&
-			    v4l2element->vcap.type == V4L2_TYPE_CODEC)
+			    v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT &&
+			    v4l2element->vcap.capabilities & V4L2_CAP_STREAMING)
 				temp_i = 1;
 			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
 			break;
@@ -422,6 +435,11 @@ gst_v4l2element_change_state (GstElement *element)
 			if (!gst_v4l2_open(v4l2element))
 				return GST_STATE_FAILURE;
 
+			/* emit a signal! whoopie! */
+			g_signal_emit(G_OBJECT(v4l2element),
+				gst_v4l2element_signals[SIGNAL_OPEN], 0,
+				v4l2element->device);
+
 			/* now, sync options */
 			if (v4l2element->norm >= 0)
 				if (!gst_v4l2_set_norm(v4l2element, v4l2element->norm))
@@ -439,6 +457,11 @@ gst_v4l2element_change_state (GstElement *element)
 		case GST_STATE_READY_TO_NULL:
 			if (!gst_v4l2_close(v4l2element))
 				return GST_STATE_FAILURE;
+
+			/* emit yet another signal! wheehee! */
+			g_signal_emit(G_OBJECT(v4l2element),
+				gst_v4l2element_signals[SIGNAL_CLOSE], 0,
+				v4l2element->device);
 			break;
 	}
 

@@ -73,25 +73,6 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 	DEBUG("getting enumerations");
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
-	/* create enumeration lists - let's start with format enumeration */
-	for (n=0;;n++) {
-		struct v4l2_fmtdesc format, *fmtptr;
-		format.index = n;
-		if (ioctl(v4l2element->video_fd, VIDIOC_ENUM_PIXFMT, &format) < 0) {
-			if (errno == EINVAL)
-				break; /* end of enumeration */
-			else {
-				gst_element_error(GST_ELEMENT(v4l2element),
-					"Failed to get no. %d in pixelformat enumeration for %s: %s",
-					n, v4l2element->device, g_strerror(errno));
-				return FALSE;
-			}
-		}
-		fmtptr = g_malloc(sizeof(format));
-		memcpy(fmtptr, &format, sizeof(format));
-		v4l2element->formats = g_list_append(v4l2element->formats, fmtptr);
-	}
-
 	/* and now, the inputs */
 	for (n=0;;n++) {
 		struct v4l2_input input, *inpptr;
@@ -132,7 +113,7 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 
 	/* norms... */
 	for (n=0;;n++) {
-		struct v4l2_enumstd standard, *stdptr;
+		struct v4l2_standard standard, *stdptr;
 		standard.index = n;
 		if (ioctl(v4l2element->video_fd, VIDIOC_ENUMSTD, &standard) < 0) {
 			if (errno == EINVAL)
@@ -150,20 +131,28 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 	}
 
 	/* and lastly, controls+menus (if appropriate) */
-	for (n=0;;n++) {
+	for (n=V4L2_CID_BASE;;n++) {
 		struct v4l2_queryctrl control, *ctrlptr;
 		GList *menus = NULL;
+		/* hacky... */
+		if (n == V4L2_CID_LASTP1)
+			n = V4L2_CID_PRIVATE_BASE;
 		control.id = n;
 		if (ioctl(v4l2element->video_fd, VIDIOC_QUERYCTRL, &control) < 0) {
-			if (errno == EINVAL)
-				break; /* end of enumeration */
-			else {
+			if (errno == EINVAL) {
+				if (n < V4L2_CID_PRIVATE_BASE)
+					continue;
+				else
+					break;
+			} else {
 				gst_element_error(GST_ELEMENT(v4l2element),
 					"Failed to get no. %d in control enumeration for %s: %s",
 					n, v4l2element->device, g_strerror(errno));
 				return FALSE;
 			}
 		}
+		if (control.flags & V4L2_CTRL_FLAG_DISABLED)
+			continue;
 		ctrlptr = g_malloc(sizeof(control));
 		memcpy(ctrlptr, &control, sizeof(control));
 		v4l2element->controls = g_list_append(v4l2element->controls, ctrlptr);
@@ -214,11 +203,6 @@ gst_v4l2_empty_lists (GstV4l2Element *v4l2element)
 	while (g_list_length(v4l2element->norms) > 0) {
 		gpointer data = g_list_nth_data(v4l2element->norms, 0);
 		v4l2element->norms = g_list_remove(v4l2element->norms, data);
-		g_free(data);
-	}
-	while (g_list_length(v4l2element->formats) > 0) {
-		gpointer data = g_list_nth_data(v4l2element->formats, 0);
-		v4l2element->formats = g_list_remove(v4l2element->formats, data);
 		g_free(data);
 	}
 	while (g_list_length(v4l2element->controls) > 0) {
@@ -275,7 +259,7 @@ gst_v4l2_open (GstV4l2Element *v4l2element)
 		goto error;
 
 	gst_info("Opened device '%s' (%s) successfully\n",
-		v4l2element->vcap.name, v4l2element->device);
+		v4l2element->vcap.card, v4l2element->device);
 
 	return TRUE;
 
@@ -326,13 +310,13 @@ gboolean
 gst_v4l2_get_norm (GstV4l2Element *v4l2element,
                    gint           *norm)
 {
-	struct v4l2_standard standard;
+	v4l2_std_id std_id;
 	gint n;
 
 	DEBUG("getting norm");
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_G_STD, &standard) < 0) {
+	if (ioctl(v4l2element->video_fd, VIDIOC_G_STD, &std_id) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to get the current norm for device %s: %s",
 			v4l2element->device, g_strerror(errno));
@@ -341,16 +325,16 @@ gst_v4l2_get_norm (GstV4l2Element *v4l2element,
 
 	/* try to find out what norm number this actually is */
 	for (n=0;n<g_list_length(v4l2element->norms);n++) {
-		struct v4l2_enumstd *stdptr = (struct v4l2_enumstd *) g_list_nth_data(v4l2element->norms, n);
-		if (!strcmp(stdptr->std.name, standard.name)) {
+		struct v4l2_standard *stdptr = (struct v4l2_standard *) g_list_nth_data(v4l2element->norms, n);
+		if (stdptr->id == std_id) {
 			*norm = n;
 			return TRUE;
 		}
 	}
 
 	gst_element_error(GST_ELEMENT(v4l2element),
-		"Failed to find norm '%s' in our list of available norms for device %s",
-		standard.name, v4l2element->device);
+		"Failed to find norm '%llu' in our list of available norms for device %s",
+		std_id, v4l2element->device);
 	return FALSE;
 }
 
@@ -365,7 +349,7 @@ gboolean
 gst_v4l2_set_norm (GstV4l2Element *v4l2element,
                    gint            norm)
 {
-	struct v4l2_enumstd *standard;
+	struct v4l2_standard *standard;
 
 	DEBUG("trying to set norm to %d", norm);
 	GST_V4L2_CHECK_OPEN(v4l2element);
@@ -378,12 +362,12 @@ gst_v4l2_set_norm (GstV4l2Element *v4l2element,
 		return FALSE;
 	}
 
-	standard = (struct v4l2_enumstd *) g_list_nth_data(v4l2element->norms, norm);
+	standard = (struct v4l2_standard *) g_list_nth_data(v4l2element->norms, norm);
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_S_STD, &standard->std) < 0) {
+	if (ioctl(v4l2element->video_fd, VIDIOC_S_STD, &standard->id) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set norm '%s' (%d) for device %s: %s",
-			standard->std.name, norm, v4l2element->device, g_strerror(errno));
+			"Failed to set norm '%s' (%llu) for device %s: %s",
+			standard->name, standard->id, v4l2element->device, g_strerror(errno));
 		return FALSE;
 	}
 
@@ -406,8 +390,8 @@ gst_v4l2_get_norm_names (GstV4l2Element *v4l2element)
 	DEBUG("getting a list of norm names");
 
 	for (n=0;n<g_list_length(v4l2element->norms);n++) {
-		struct v4l2_enumstd *standard = (struct v4l2_enumstd *) g_list_nth_data(v4l2element->norms, n);
-		names = g_list_append(names, g_strdup(standard->std.name));
+		struct v4l2_standard *standard = (struct v4l2_standard *) g_list_nth_data(v4l2element->norms, n);
+		names = g_list_append(names, g_strdup(standard->name));
 	}
 
 	return names;
@@ -586,8 +570,9 @@ gst_v4l2_get_output_names (GstV4l2Element *v4l2element)
  * return value: TRUE if it has a tuner, else FALSE
  ******************************************************/
 
-gboolean
-gst_v4l2_has_tuner (GstV4l2Element *v4l2element)
+gint
+gst_v4l2_has_tuner (GstV4l2Element *v4l2element,
+                    gint           *tuner_num)
 {
 	gint input_num;
 	struct v4l2_input *input;
@@ -600,8 +585,12 @@ gst_v4l2_has_tuner (GstV4l2Element *v4l2element)
 
 	input = (struct v4l2_input *) g_list_nth_data(v4l2element->inputs, input_num);
 
-	return (input->type == V4L2_INPUT_TYPE_TUNER &&
-	        v4l2element->vcap.flags & V4L2_FLAG_TUNER);
+	if (input->type == V4L2_INPUT_TYPE_TUNER &&
+	    v4l2element->vcap.capabilities & V4L2_CAP_TUNER) {
+		*tuner_num = input->tuner;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 
@@ -615,22 +604,24 @@ gboolean
 gst_v4l2_get_frequency (GstV4l2Element *v4l2element,
                         gulong         *frequency)
 {
-	gint n;
+	struct v4l2_frequency freq;
 
 	DEBUG("getting current tuner frequency");
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
-	if (!gst_v4l2_has_tuner(v4l2element))
+	if (!gst_v4l2_has_tuner(v4l2element, &freq.tuner))
 		return FALSE;
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_G_FREQ, &n) < 0) {
+	freq.type = 0;
+
+	if (ioctl(v4l2element->video_fd, VIDIOC_G_FREQUENCY, &freq) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to get current tuner frequency for device %s: %s",
 			v4l2element->device, g_strerror(errno));
 		return FALSE;
 	}
 
-	*frequency = n;
+	*frequency = freq.frequency;
 
 	return TRUE;
 }
@@ -646,16 +637,19 @@ gboolean
 gst_v4l2_set_frequency (GstV4l2Element *v4l2element,
                         gulong          frequency)
 {
-	gint n = frequency;
+	struct v4l2_frequency freq;
 
 	DEBUG("setting current tuner frequency to %lu", frequency);
 	GST_V4L2_CHECK_OPEN(v4l2element);
 	GST_V4L2_CHECK_NOT_ACTIVE(v4l2element);
 
-	if (!gst_v4l2_has_tuner(v4l2element))
+	if (!gst_v4l2_has_tuner(v4l2element, &freq.tuner))
 		return FALSE;
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_G_FREQ, &n) < 0) {
+	freq.frequency = frequency;
+	freq.type = 0;
+
+	if (ioctl(v4l2element->video_fd, VIDIOC_G_FREQUENCY, &freq) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to set tuner frequency to %lu for device %s: %s",
 			frequency, v4l2element->device, g_strerror(errno));
@@ -683,7 +677,7 @@ gst_v4l2_signal_strength (GstV4l2Element *v4l2element,
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_TUNER, &tuner) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set signal strength for device %s: %s",
+			"Failed to get signal strength for device %s: %s",
 			v4l2element->device, g_strerror(errno));
 		return FALSE;
 	}
@@ -714,7 +708,7 @@ gst_v4l2_has_audio (GstV4l2Element *v4l2element)
 
 	input = (struct v4l2_input *) g_list_nth_data(v4l2element->inputs, input_num);
 
-	return (input->capability & V4L2_INPUT_CAP_AUDIO);
+	return (input->audioset != 0);
 }
 
 
@@ -738,36 +732,47 @@ gst_v4l2_get_attributes	(GstV4l2Element *v4l2element)
 		attribute->name = g_strdup(control->name);
 		attribute->index = i;
 		attribute->list_items = NULL;
-		switch (control->type) {
-			case V4L2_CTRL_TYPE_INTEGER:
-				attribute->val_type = GST_V4L2_ATTRIBUTE_VALUE_TYPE_INT;
-				break;
-			case V4L2_CTRL_TYPE_BOOLEAN:
-				attribute->val_type = GST_V4L2_ATTRIBUTE_VALUE_TYPE_BOOLEAN;
-				break;
-			case V4L2_CTRL_TYPE_MENU: {
-				/* list items */
-				gint n;
-				GList *menus = (GList *) g_list_nth_data(v4l2element->menus, i);
-				for (n=0;n<g_list_length(menus);n++) {
-					struct v4l2_querymenu *menu = g_list_nth_data(menus, n);
-					attribute->list_items = g_list_append(attribute->list_items, g_strdup(menu->name));
-				}
-				attribute->val_type = GST_V4L2_ATTRIBUTE_VALUE_TYPE_LIST;
-				break; }
-			case V4L2_CTRL_TYPE_BUTTON:
-				attribute->val_type = GST_V4L2_ATTRIBUTE_VALUE_TYPE_BUTTON;
-				break;
+		attribute->val_type = control->type;
+		if (control->type == V4L2_CTRL_TYPE_MENU) {
+			/* list items */
+			gint n;
+			GList *menus = (GList *) g_list_nth_data(v4l2element->menus, i);
+			for (n=0;n<g_list_length(menus);n++) {
+				struct v4l2_querymenu *menu = g_list_nth_data(menus, n);
+				attribute->list_items = g_list_append(attribute->list_items,
+									g_strdup(menu->name));
+			}
 		}
-		switch (control->category) {
-			case V4L2_CTRL_CAT_VIDEO:
+		switch (control->id) {
+			case V4L2_CID_BRIGHTNESS:
+			case V4L2_CID_CONTRAST:
+			case V4L2_CID_SATURATION:
+			case V4L2_CID_HUE:
+			case V4L2_CID_BLACK_LEVEL:
+			case V4L2_CID_AUTO_WHITE_BALANCE:
+			case V4L2_CID_DO_WHITE_BALANCE:
+			case V4L2_CID_RED_BALANCE:
+			case V4L2_CID_BLUE_BALANCE:
+			case V4L2_CID_GAMMA:
+			case V4L2_CID_EXPOSURE:
+			case V4L2_CID_AUTOGAIN:
+			case V4L2_CID_GAIN:
+			case V4L2_CID_HFLIP:
+			case V4L2_CID_VFLIP:
+			case V4L2_CID_HCENTER:
+			case V4L2_CID_VCENTER:
 				attribute->type = GST_V4L2_ATTRIBUTE_TYPE_VIDEO;
 				break;
-			case V4L2_CTRL_CAT_AUDIO:
+			case V4L2_CID_AUDIO_VOLUME:
+			case V4L2_CID_AUDIO_BALANCE:
+			case V4L2_CID_AUDIO_BASS:
+			case V4L2_CID_AUDIO_TREBLE:
+			case V4L2_CID_AUDIO_MUTE:
+			case V4L2_CID_AUDIO_LOUDNESS:
 				attribute->type = GST_V4L2_ATTRIBUTE_TYPE_AUDIO;
 				break;
-			case V4L2_CTRL_CAT_EFFECT:
-				attribute->type = GST_V4L2_ATTRIBUTE_TYPE_EFFECT;
+			default:
+				attribute->type = GST_V4L2_ATTRIBUTE_TYPE_OTHER;
 				break;
 		}
 		gst_v4l2_get_attribute(v4l2element, i, &attribute->value);

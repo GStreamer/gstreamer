@@ -32,11 +32,11 @@
   (v4l2element->buffer != NULL)
 
 #define GST_V4L2_IS_OVERLAY(v4l2element) \
-  (v4l2element->vcap.flags & V4L2_FLAG_PREVIEW)
+  (v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_OVERLAY)
 
 /* checks whether the current v4lelement has already been open()'ed or not */
 #define GST_V4L2_CHECK_OPEN(v4l2element) \
-  if (v4l2element->video_fd <= 0)               \
+  if (!GST_V4L2_IS_OPEN(v4l2element))           \
   {                                             \
     gst_element_error(GST_ELEMENT(v4l2element), \
       "Device is not open");                    \
@@ -45,7 +45,7 @@
 
 /* checks whether the current v4lelement is close()'ed or whether it is still open */
 #define GST_V4L2_CHECK_NOT_OPEN(v4l2element) \
-  if (v4l2element->video_fd != -1)              \
+  if (GST_V4L2_IS_OPEN(v4l2element))            \
   {                                             \
     gst_element_error(GST_ELEMENT(v4l2element), \
       "Device is open");                        \
@@ -54,16 +54,16 @@
 
 /* checks whether the current v4lelement does video overlay */
 #define GST_V4L2_CHECK_OVERLAY(v4l2element) \
-  if (!(v4l2element->vcap.flags & V4L2_FLAG_PREVIEW)) \
-  {                                                   \
-    gst_element_error(GST_ELEMENT(v4l2element),       \
-      "Device doesn't do overlay");                   \
-    return FALSE;                                     \
+  if (!GST_V4L2_IS_OVERLAY(v4l2element))        \
+  {                                             \
+    gst_element_error(GST_ELEMENT(v4l2element), \
+      "Device doesn't do overlay");             \
+    return FALSE;                               \
   }
 
 /* checks whether we're in capture mode or not */
 #define GST_V4L2_CHECK_ACTIVE(v4l2element) \
-  if (v4l2element->buffer == NULL)              \
+  if (!GST_V4L2_IS_ACTIVE(v4l2element))         \
   {                                             \
     gst_element_error(GST_ELEMENT(v4l2element), \
       "Device is not in streaming mode");       \
@@ -72,7 +72,7 @@
 
 /* checks whether we're out of capture mode or not */
 #define GST_V4L2_CHECK_NOT_ACTIVE(v4l2element) \
-  if (v4l2element->buffer != NULL)              \
+  if (GST_V4L2_IS_ACTIVE(v4l2element))          \
   {                                             \
     gst_element_error(GST_ELEMENT(v4l2element), \
       "Device is in streaming mode");           \
@@ -102,7 +102,8 @@ gboolean	gst_v4l2_set_output		(GstV4l2Element *v4l2element,
 GList *		gst_v4l2_get_output_names	(GstV4l2Element *v4l2element);
 
 /* frequency control */
-gboolean	gst_v4l2_has_tuner		(GstV4l2Element *v4l2element);
+gboolean	gst_v4l2_has_tuner		(GstV4l2Element *v4l2element,
+						 gint           *tuner_num);
 gboolean	gst_v4l2_get_frequency		(GstV4l2Element *v4l2element,
 						 gulong         *frequency);
 gboolean	gst_v4l2_set_frequency		(GstV4l2Element *v4l2element,

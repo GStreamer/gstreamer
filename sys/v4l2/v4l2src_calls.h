@@ -38,6 +38,8 @@ gboolean	gst_v4l2src_requeue_frame	(GstV4l2Src *v4l2src,
 gboolean	gst_v4l2src_capture_stop	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_capture_deinit	(GstV4l2Src *v4l2src);
 
+gboolean	gst_v4l2src_fill_format_list	(GstV4l2Src *v4l2src);
+gboolean	gst_v4l2src_empty_format_list	(GstV4l2Src *v4l2src);
 GList *		gst_v4l2src_get_fourcc_list	(GstV4l2Src *v4l2src);
 GList *		gst_v4l2src_get_format_list	(GstV4l2Src *v4l2src);
 

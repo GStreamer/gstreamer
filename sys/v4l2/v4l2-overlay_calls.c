@@ -89,21 +89,23 @@ gst_v4l2_set_window (GstV4l2Element   *v4l2element,
                      struct v4l2_clip *clips,
                      gint              num_clips)
 {
-	struct v4l2_window vwin;
+	struct v4l2_format fmt;
 
 	DEBUG("trying to set video window to %dx%d,%d,%d", x,y,w,h);
 	GST_V4L2_CHECK_OVERLAY(v4l2element);
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
-	vwin.clipcount = 0;
-	vwin.x = x;
-	vwin.y = y;
-	vwin.width = w;
-	vwin.height = h;
-	vwin.clips = clips;
-	vwin.clipcount = num_clips;
+	fmt.type = V4L2_CAP_VIDEO_OVERLAY;
+	fmt.fmt.win.clipcount = 0;
+	fmt.fmt.win.w.left = x;
+	fmt.fmt.win.w.top = y;
+	fmt.fmt.win.w.width = w;
+	fmt.fmt.win.w.height = h;
+	fmt.fmt.win.clips = clips;
+	fmt.fmt.win.clipcount = num_clips;
+	fmt.fmt.win.bitmap = NULL;
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_S_WIN, &vwin) < 0) {
+	if (ioctl(v4l2element->video_fd, VIDIOC_S_FMT, &fmt) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to set the video window on device %s: %s",
 			v4l2element->device, g_strerror(errno));
@@ -130,7 +132,7 @@ gst_v4l2_enable_overlay (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_OPEN(v4l2element);
 	GST_V4L2_CHECK_OVERLAY(v4l2element);
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_PREVIEW, &doit) < 0) {
+	if (ioctl(v4l2element->video_fd, VIDIOC_OVERLAY, &doit) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to %s overlay display for device %s: %s",
 			enable?"enable":"disable", v4l2element->device, g_strerror(errno));
