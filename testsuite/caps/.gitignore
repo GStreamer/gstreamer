@@ -1,0 +1,12 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+
+compatibility
+intersection
+normalisation
+union
