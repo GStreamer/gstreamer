@@ -210,8 +210,8 @@ _gst_unitconv_initialize (void)
 	                     0, G_MAXFLOAT, 0, 0));
 
 	gst_unitconv_register_unit("frequency", FALSE, TRUE,
-	  g_param_spec_float("rate_proportion", "rate proportion", "Proportion of the sample rate",
-	                     0, 1, 0, 0));
+	  g_param_spec_float("rate-proportion", "rate proportion", "Proportion of the sample rate",
+	                     0.0, 1.0, 0.0, 0));
 
 	gst_unitconv_register_unit("frequency", FALSE, FALSE,
 	  g_param_spec_string("twelve_tone_scale", "note", "Name of the note from the western twelve tone scale",
@@ -245,7 +245,7 @@ _gst_unitconv_initialize (void)
 	                     -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
 
 	gst_unitconv_register_unit("magnitude", FALSE, FALSE,
-	  g_param_spec_int("scalar_int", "scalar int", "Magnitude as an integer scalar",
+	  g_param_spec_int("scalar-int", "scalar int", "Magnitude as an integer scalar",
 	                     G_MININT, G_MAXINT, 0, 0));
 
 	gst_unitconv_register_unit("magnitude", FALSE, TRUE,
