@@ -142,6 +142,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gst/libgstoptomega*.so*
 %{_libdir}/gst/libgstbasicwingo*.so*
 %{_libdir}/gst/libgstfastwingo*.so*
+%{_libdir}/gst/libgstoptwingoscheduler.so
 %{_libdir}/gst/libgstelements*.so*
 %{_libdir}/gst/libgsttypes*.so*
 %{_libdir}/gst/libgststaticautoplug*.so*
@@ -222,6 +223,8 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Tue Nov 05 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Add optwingo scheduler
 * Sat Oct 12 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Updated to work better with default RH8 rpm
 - Added missing unspeced files
