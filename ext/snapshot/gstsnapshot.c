@@ -41,7 +41,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2 }"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR)
 );
 
 static GstStaticPadTemplate snapshot_sink_factory =
@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2 }"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR)
 );
 
 /* Snapshot signals and args */
@@ -167,7 +167,6 @@ static gboolean
 gst_snapshot_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstSnapshot *filter;
-  GstCaps *from_caps, *to_caps;
   gdouble fps;
   GstStructure *structure;
 
@@ -179,35 +178,6 @@ gst_snapshot_sinkconnect (GstPad *pad, const GstCaps *caps)
   gst_structure_get_double  (structure, "framerate", &fps);
   gst_structure_get_fourcc  (structure, "format", &filter->format);
   filter->to_bpp = 24;
-
-
-  to_caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "width",      G_TYPE_INT, filter->width,
-      "height",     G_TYPE_INT, filter->height,
-      "red_mask",   G_TYPE_INT, 0x0000FF,
-      "green_mask", G_TYPE_INT, 0x00FF00,
-      "blue_mask",  G_TYPE_INT, 0xFF0000,
-      "bpp",        G_TYPE_INT, 24,
-      "framerate",  G_TYPE_DOUBLE, fps,
-      NULL);
-
-  switch ( filter->format )
-  {
-    case GST_MAKE_FOURCC('Y','U','Y','2'):
-    case GST_MAKE_FOURCC('I','4','2','0'):
-       from_caps = gst_caps_new_simple ("video/x-raw-yuv",
-         "format",    GST_TYPE_FOURCC, GST_STR_FOURCC ("I420"),
-         "width",     G_TYPE_INT, filter->width,
-         "height",    G_TYPE_INT, filter->height,
-	 "framerate", G_TYPE_DOUBLE, fps,
-	 NULL);
-
-       filter->converter = gst_colorspace_yuv2rgb_get_converter ( from_caps, to_caps );
-       break;
-       
-    default :
-       break;
-  }
 
   filter->png_struct_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL, user_error_fn, user_warning_fn);
   if ( filter->png_struct_ptr == NULL )
@@ -245,9 +215,8 @@ gst_snapshot_chain (GstPad *pad, GstData *_data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstSnapshot *snapshot;
-  guchar *data, *data_to_convert, *buffer_i420, *data_converted;
-  gulong size,image_size;
-  GstBuffer *outbuf;
+  guchar *data;
+  gulong size;
   gint i;
   png_byte *row_pointers[ MAX_HEIGHT ];
   FILE *fp;
@@ -263,28 +232,11 @@ gst_snapshot_chain (GstPad *pad, GstData *_data)
 
   GST_DEBUG ("snapshot: have buffer of %d\n", GST_BUFFER_SIZE(buf));
 
-  outbuf = gst_buffer_new();
-  GST_BUFFER_DATA(outbuf) = g_malloc(GST_BUFFER_SIZE(buf));
-  GST_BUFFER_SIZE(outbuf) = GST_BUFFER_SIZE(buf);
-
   snapshot->cur_frame++;
-  if ( snapshot->cur_frame == snapshot->frame || snapshot->snapshot_asked == TRUE )
+  if (snapshot->cur_frame == snapshot->frame ||
+      snapshot->snapshot_asked == TRUE )
   {
     snapshot->snapshot_asked = FALSE;
-    image_size = snapshot->width * snapshot->height;
-    data_converted = g_malloc ((image_size * (snapshot->to_bpp/8)) );
-
-    if ( snapshot->format == GST_MAKE_FOURCC('Y','U','Y','2') )
-    {
-      GST_DEBUG ("YUY2 => RGB\n");
-      buffer_i420 = g_malloc ((image_size * (snapshot->to_bpp/8)) );
-      gst_colorspace_yuy2_to_i420( data, buffer_i420, snapshot->width, snapshot->height);
-      data_to_convert = buffer_i420;
-    }
-    else
-      data_to_convert = data;
-
-    gst_colorspace_convert (snapshot->converter, data_to_convert, data_converted); 
 
     GST_INFO ("dumpfile : %s\n", snapshot->location );
     fp = fopen( snapshot->location, "wb" );
@@ -308,7 +260,7 @@ gst_snapshot_chain (GstPad *pad, GstData *_data)
       );
   
      for ( i = 0; i < snapshot->height; i++ )
-       row_pointers[i] = data_converted + (snapshot->width * i * snapshot->to_bpp/8 );
+       row_pointers[i] = data + (snapshot->width * i * snapshot->to_bpp/8 );
      
      png_write_info( snapshot->png_struct_ptr, snapshot->png_info_ptr );
      png_write_image( snapshot->png_struct_ptr, row_pointers );
