@@ -1,0 +1,45 @@
+
+
+
+CAPS = STRUCTURE [ ';' STRUCTURE ]*
+
+STRUCTURE = STRUCTURE_NAME [ ',' FIELD ]*
+
+STRUCTURE_NAME = STRING
+
+FIELD = FIELD_NAME '=' TYPED_VALUE
+
+FIELD_NAME = SIMPLE_STRING
+
+TYPED_VALUE = CANONICAL_VALUE | AUTO_VALUE
+
+CANONICAL_VALUE = '{' TYPED_VALUE [ ',' TYPED_VALUE ]* '}'
+                | '[' TYPED_VALUE ',' TYPED_VALUE ']'
+                | '(' TYPE ')' VALUE
+
+AUTO_VALUE = [-+]?[0-9][0-9]*
+           | [-+]?[0-9][0-9]*[.][0-9]*[eE][-+][0-9]*
+	   | STRING
+
+VALUE = STRING
+
+STRING = ["][^"]["]
+       | ['][^'][']
+       | SIMPLE_STRING
+
+SIMPLE_STRING = [A-Za-z][A-Za-z0-9]*
+
+TYPE = "int" | "i" | "float" | "f" | "double" | "d" | "fourcc" | "4"
+     | "boolean" | "bool" | "b"
+     | GTYPE
+       
+
+Canonical Examples:
+
+"audio/raw"
+"audio/raw", rate=(int)44100
+"audio/raw", rate=(int)44100, signed=(boolean)true
+"audio/raw", rate={ (int)44100, (int)48000 }
+"audio/raw", rate=[ (int)8000, (int)48000 ]
+
+
