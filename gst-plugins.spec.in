@@ -191,6 +191,9 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@Group:    Libraries/Multimedia
 @USE_ALSA_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_ALSA_TRUE@
+@USE_ALSA_TRUE@Provides:	gstreamer-audiosrc
+@USE_ALSA_TRUE@Provides:	gstreamer-audiosink
+@USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%description -n gstreamer-alsa
 @USE_ALSA_TRUE@Input and output plug-in for the ALSA soundcard driver system. 
 @USE_ALSA_TRUE@This plug-in depends on Alsa 0.9.x or higher.
@@ -451,6 +454,9 @@ Plug-ins for playback of AVI format media files.
 @USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
 @USE_ESD_TRUE@Obsoletes:     gstreamer-esd
 @USE_ESD_TRUE@
+@USE_ESD_TRUE@Provides:		gstreamer-audiosrc
+@USE_ESD_TRUE@Provides:		gstreamer-audiosink
+@USE_ESD_TRUE@
 @USE_ESD_TRUE@%description -n gstreamer-esound
 @USE_ESD_TRUE@Output and monitoring plug-ins for GStreamer using ESound.
 @USE_ESD_TRUE@
@@ -589,6 +595,9 @@ Plug-ins for playback of AVI format media files.
 @USE_JACK_TRUE@Group:    Libraries/Multimedia
 @USE_JACK_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_JACK_TRUE@Requires: jack-audio-connection-kit => 0.28.0
+@USE_JACK_TRUE@
+@USE_JACK_TRUE@Provides:	gstreamer-audiosrc
+@USE_JACK_TRUE@Provides:	gstreamer-audiosink
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@%description -n gstreamer-jack
 @USE_JACK_TRUE@Plug-in for the JACK professional sound server.
@@ -886,6 +895,9 @@ Plug-ins for playback of AVI format media files.
 @USE_OSS_TRUE@Group:         Libraries/Multimedia
 @USE_OSS_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_OSS_TRUE@BuildRequires: glibc-devel
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@Provides:		gstreamer-audiosrc
+@USE_OSS_TRUE@Provides:		gstreamer-audiosink
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%description -n gstreamer-oss 
 @USE_OSS_TRUE@Plug-ins for output and input to the OpenSoundSytem audio
@@ -1530,8 +1542,12 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
+* Fri Dec 27 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- add virtual provides for audio sources and sinks
+
 * Sun Dec 15 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Update mpeg2dec REQ to be 0.3.1
+
 * Tue Dec 10 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - only install schema once
 - move out devel lib stuff to -devel package
