@@ -8,5 +8,5 @@ libgstvideoincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstvideoinclude_HEADERS = video.h
 
 libgstvideo_la_LIBADD =
-libgstvideo_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
+libgstvideo_la_CFLAGS = $(GST_CFLAGS) $(GST_OPT_CFLAGS)
 libgstvideo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

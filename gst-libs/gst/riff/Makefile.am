@@ -8,5 +8,5 @@ libgstriffincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/riff
 libgstriffinclude_HEADERS = riff.h
 
 libgstriff_la_LIBADD =
-libgstriff_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math
+libgstriff_la_CFLAGS = $(GST_CFLAGS) $(GST_OPT_CFLAGS) $(GST_FUNROLL_CFLAGS)
 libgstriff_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

@@ -14,7 +14,7 @@ libgstvideoscale_la_SOURCES = \
 			gstvideoscale.c \
 			videoscale.c \
 			$(ARCHSRCS)
-libgstvideoscale_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math $(GST_CFLAGS)
+libgstvideoscale_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) $(GST_OPT_CFLAGS) $(GST_FUNROLL_CFLAGS) $(GST_CFLAGS)
 libgstvideoscale_la_LIBADD =
 libgstvideoscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
