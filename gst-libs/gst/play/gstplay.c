@@ -304,8 +304,10 @@ gst_play_get_length_callback (GstPlay *play)
   }
   
   /* Audio first and then Video */
-  q = gst_element_query (audio_sink_element, GST_QUERY_TOTAL, &format, &value);
-  if (!q)
+  if (GST_IS_ELEMENT (audio_sink_element))
+    q = gst_element_query (audio_sink_element, GST_QUERY_TOTAL, &format,
+                           &value);
+  if ( (!q) && (GST_IS_ELEMENT (video_sink_element)) )
     q = gst_element_query (video_sink_element, GST_QUERY_TOTAL, &format,
                            &value);
    
@@ -647,6 +649,8 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  g_return_val_if_fail (video_sink != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
   
   /* We bring back the pipeline to READY */
   if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
@@ -703,6 +707,8 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  g_return_val_if_fail (audio_sink != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
   
   /* We bring back the pipeline to READY */
   if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
@@ -767,6 +773,8 @@ gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  g_return_val_if_fail (vis_element != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (vis_element), FALSE);
   
   /* We bring back the pipeline to READY */
   if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {

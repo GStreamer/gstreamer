@@ -505,7 +505,8 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesink], [
   AC_PATH_XTRA
-  if test "x$X_CFLAGS" == "x" -o "$X_CFLAGS" == "-DX_DISPLAY_MISSING"
+dnl  if test "x$X_CFLAGS" == "x" -o "$X_CFLAGS" == "-DX_DISPLAY_MISSING"
+  if test "x$X_DISPLAY_MISSING" = "x1"
   then
     AC_MSG_NOTICE([cannot find X11 development files])
     HAVE_X="no"
