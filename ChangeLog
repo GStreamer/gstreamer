@@ -1,5 +1,10 @@
 2004-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/uk.po:
+	  updated translation
+
+2004-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get):
 	  add debugging for display PAR calculation
