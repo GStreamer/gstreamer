@@ -1,5 +1,16 @@
 2005-02-13  Benjamin Otte  <otte@gnome.org>
 
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_link),
+	(gst_audio_convert_channels):
+	  create channel conversion matrix when linking
+	* gst/audioconvert/.cvsignore:
+	* gst/audioconvert/Makefile.am:
+	* gst/audioconvert/channelmixtest.c: (main):
+	  add (ugly) test that ensures stereo <=> mono conversion works
+	  correctly
+
+2005-02-13  Benjamin Otte  <otte@gnome.org>
+
 	* gst/audioconvert/gstchannelmix.h:
 	  include missing header file
 	* gst/audioconvert/gstchannelmix.c:
