@@ -23,7 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include <gst/gst.h>
 #include "gstfilesrc.h"
@@ -399,9 +398,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
   if (mmapregion == NULL) {
-    gst_element_gerror (GST_ELEMENT (src), GST_ERROR_DEVICE,
-			g_strdup_printf (_("could not open file %s"), src->filename),
-			g_strdup_printf ("couldn't map file %s", src->filename));
+    gst_element_error (GST_ELEMENT (src), "couldn't map file");
     return NULL;
   }
   else if (mmapregion == MAP_FAILED) {
@@ -638,11 +635,13 @@ gst_filesrc_get_read (GstFileSrc *src)
   g_return_val_if_fail (buf != NULL, NULL);
 
   ret = read (src->fd, GST_BUFFER_DATA (buf), readsize);
-  GST_BUFFER_SIZE (buf) = ret;
   if (ret < 0){
-    gst_element_gerror (GST_ELEMENT (src), GST_ERROR_DEVICE,
-		       g_strdup_printf (_("Could not read file \"%s\""), src->filename),
-		       g_strdup_printf ("Error during file reading: %s", strerror (errno)));
+    gst_element_error (GST_ELEMENT (src), "reading file (%s)",
+        strerror (errno), NULL);
+    return NULL;
+  }
+  if (ret < readsize) {
+    gst_element_error (GST_ELEMENT (src), "unexpected end of file", NULL);
     return NULL;
   }
 
@@ -703,9 +702,8 @@ gst_filesrc_open_file (GstFileSrc *src)
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
   if (src->fd < 0) {
-    gst_element_gerror (GST_ELEMENT (src), GST_ERROR_DEVICE,
-		        g_strdup_printf (_("Could not open file \"%s\""), src->filename),
-		        g_strdup_printf ("Error opening file \"%s\": %s", src->filename, strerror (errno)));
+    gst_element_error (GST_ELEMENT (src), "opening file \"%s\" (%s)", 
+    		       src->filename, strerror (errno), NULL);
     return FALSE;
   } else {
     /* check if it is a regular file, otherwise bail out */
@@ -714,10 +712,8 @@ gst_filesrc_open_file (GstFileSrc *src)
     fstat(src->fd, &stat_results);
 
     if (!S_ISREG(stat_results.st_mode)) {
-      gst_element_gerror (GST_ELEMENT (src), GST_ERROR_DEVICE,
-			  g_strdup_printf (_("Could not open file \"%s\""), src->filename),
-			  g_strdup_printf ("opening file \"%s\" failed. it isn't a regular file", 
-					   src->filename));
+      gst_element_error (GST_ELEMENT (src), "opening file \"%s\" failed. it isn't a regular file", 
+      					src->filename, NULL);
       close(src->fd);
       return FALSE;
     }

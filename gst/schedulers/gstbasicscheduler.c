@@ -23,7 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include <gst/gst.h>
 
@@ -452,9 +451,8 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
   }
 
   if (loop_count == 0) {
-    gst_element_gerror (parent, GST_ERROR_INTERNAL,
-			g_strdup (_("Internal error in GStreamer")),
-			g_strdup ("basic scheduler error: maximum number of switches exceeded"));
+    gst_element_error (parent, 
+		    "(internal error) basic: maximum number of switches exceeded");
     return;
   }
 
@@ -521,9 +519,7 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
       GST_CAT_DEBUG (debug_dataflow, "new pad in mid-switch!");
       pad = (GstPad *) GST_RPAD_PEER (peer);
       if (!pad) {
-	gst_element_gerror (parent, GST_ERROR_PIPELINE,
-			    g_strdup (_("application error")),
-			    g_strdup_printf ("pad %s:%s is unlinked", GST_DEBUG_PAD_NAME (peer)));
+	gst_element_error (parent, "pad unlinked");
       }
       parent = GST_PAD_PARENT (pad);
       peer = GST_RPAD_PEER (pad);
@@ -654,10 +650,10 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	   * either, we have an error */
 	  if (different_sched && !peer_decoupled) 
  	  {
-            gst_element_gerror (element, GST_ERROR_PIPELINE,
-				g_strdup (_("application error")),
-				g_strdup_printf ("element \"%s\" is not decoupled but has pads "
-						 "in different schedulers", GST_ELEMENT_NAME (element)));
+            gst_element_error (element, 
+		               "element \"%s\" is not decoupled but has pads "
+			       "in different schedulers",
+			       GST_ELEMENT_NAME (element), NULL);
 	    return FALSE;
 	  }
 	  /* ok, the peer is in a different scheduler and is decoupled, 
@@ -723,9 +719,8 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	                    chain->sched->context, 
 			    wrapper_function, 0, (char **) element);
 	if (GST_ELEMENT_THREADSTATE (element) == NULL) {
-          gst_element_gerror (element, GST_ERROR_INTERNAL,
-			      g_strdup (_("internal GStreamer error")),
-			      g_strdup_printf ("could not create cothread for \"%s\"", GST_ELEMENT_NAME (element)));
+          gst_element_error (element, "could not create cothread for \"%s\"", 
+			  GST_ELEMENT_NAME (element), NULL);
 	  return FALSE;
 	}
 	GST_DEBUG ("created cothread %p for '%s'", 

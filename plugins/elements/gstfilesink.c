@@ -24,7 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include <gst/gst.h>
 #include <errno.h>
@@ -223,9 +222,9 @@ gst_filesink_open_file (GstFileSink *sink)
 
   sink->file = fopen (sink->filename, "w");
   if (sink->file == NULL) {
-    gst_element_gerror (GST_ELEMENT (sink), GST_ERROR_DEVICE,
-			g_strdup_printf (_("Could not open file \"%s\""), sink->filename),
-			g_strdup_printf ("Error opening file \"%s\": %s", sink->filename, g_strerror(errno)));
+    gst_element_error (GST_ELEMENT (sink),
+		       "Error opening file %s: %s",
+		       sink->filename, g_strerror(errno));
     return FALSE;
   } 
 
@@ -243,9 +242,9 @@ gst_filesink_close_file (GstFileSink *sink)
 
   if (fclose (sink->file) != 0)
   {
-    gst_element_gerror (GST_ELEMENT (sink), GST_ERROR_DEVICE,
-			g_strdup_printf (_("Could not open file \"%s\""), sink->filename),
-			g_strdup_printf ("Error closing file \"%s\": %s", sink->filename, g_strerror(errno)));
+    gst_element_error (GST_ELEMENT (sink),
+		       "Error closing file %s: %s",
+		       sink->filename, g_strerror(errno));
   }
   else {
     GST_FLAG_UNSET (sink, GST_FILESINK_OPEN);
@@ -341,10 +340,9 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
 
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
         if (fflush (filesink->file))
-          gst_element_gerror (GST_ELEMENT (filesink), GST_ERROR_DEVICE,
-			      g_strdup_printf (_("Could not write to file \"%s\""), filesink->filename),
-			      g_strdup_printf ("Error flushing file \"%s\": %s",
-					       filesink->filename, g_strerror(errno)));
+          gst_element_error (GST_ELEMENT (filesink),
+			     "Error flushing file %s: %s",
+			     filesink->filename, g_strerror(errno));
 
       switch (GST_EVENT_SEEK_METHOD(event))
       {
@@ -374,10 +372,9 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
     }
     case GST_EVENT_FLUSH:
       if (fflush (filesink->file)) {
-        gst_element_gerror (GST_ELEMENT (filesink), GST_ERROR_DEVICE,
-			    g_strdup_printf (_("Could not write to file \"%s\""), filesink->filename),
-			    g_strdup_printf ("Error flushing file \"%s\": %s",
-					     filesink->filename, g_strerror(errno)));
+        gst_element_error (GST_ELEMENT (filesink),
+			   "Error flushing file %s: %s",
+			   filesink->filename, g_strerror(errno));
       }
       break;
     case GST_EVENT_EOS:
@@ -426,10 +423,10 @@ gst_filesink_chain (GstPad *pad, GstBuffer *buf)
 			     GST_BUFFER_SIZE (buf) - bytes_written,
 			     filesink->file);
       if (wrote <= 0) {
-	gst_element_gerror (GST_ELEMENT (filesink), GST_ERROR_DEVICE,
-			    g_strdup_printf (_("Could not write to file \"%s\""), filesink->filename),
-			    g_strdup_printf ("Only %d of %d bytes written: %s", bytes_written,
-			    GST_BUFFER_SIZE (buf), strerror (errno)));
+	gst_element_error (GST_ELEMENT (filesink),
+			   "Only %d of %d bytes written: %s",
+			   bytes_written, GST_BUFFER_SIZE (buf),
+			   strerror (errno));
 	break;
       }
       bytes_written += wrote;

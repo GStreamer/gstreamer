@@ -32,7 +32,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include "gstpipefilter.h"
 
@@ -149,9 +148,9 @@ gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
 
   GST_DEBUG ("pipefilter: %s received event", GST_ELEMENT_NAME (pipefilter));
   if (close (pipefilter->fdin[1]) < 0)
-    GST_DEBUG ("close");
+    perror("close");
   if (close (pipefilter->fdout[0]) < 0)
-    GST_DEBUG ("close");
+    perror("close");
 
   return TRUE;
 }
@@ -179,9 +178,8 @@ gst_pipefilter_get (GstPad *pad)
   readbytes = read(pipefilter->fdout[0], GST_BUFFER_DATA(newbuf), pipefilter->bytes_per_read);
   GST_DEBUG ("read %ld bytes", readbytes);
   if (readbytes < 0) {
-    gst_element_gerror (GST_ELEMENT(pipefilter), GST_ERROR_DEVICE,
-			g_strdup (_("Could not process data")),
-			g_strdup_printf ("Error reading from pipe: %s", strerror (errno)));
+    perror("read");
+    gst_element_error(GST_ELEMENT(pipefilter),"reading");
     return NULL;
   }
   /* if we didn't get as many bytes as we asked for, we're at EOF */
@@ -218,7 +216,8 @@ gst_pipefilter_chain (GstPad *pad,GstBuffer *buf)
   writebytes = write(pipefilter->fdin[1],data,size);
   GST_DEBUG ("written %ld bytes", writebytes);
   if (writebytes < 0) {
-    gst_element_gerror (GST_ELEMENT(pipefilter), GST_ERROR_DEVICE, g_strdup (""), g_strdup ("writing"));
+    perror("write");
+    gst_element_error(GST_ELEMENT(pipefilter),"writing");
     return;
   }
   gst_buffer_unref(buf);
@@ -273,7 +272,8 @@ gst_pipefilter_open_file (GstPipefilter *src)
 
   if((src->childpid = fork()) == -1)
   {
-    gst_element_gerror (GST_ELEMENT(src), GST_ERROR_UNKNOWN, g_strdup (""), g_strdup ("forking"));
+    perror("fork");
+    gst_element_error(GST_ELEMENT(src),"forking");
     return FALSE;
   }
 
@@ -286,7 +286,8 @@ gst_pipefilter_open_file (GstPipefilter *src)
     dup2(src->fdout[1], STDOUT_FILENO);  /* set the childs output stream */
     execvp(src->command[0], &src->command[0]);
     /* will only reach if error */
-    gst_element_gerror (GST_ELEMENT(src), GST_ERROR_UNKNOWN, g_strdup (""), g_strdup ("starting child process"));
+    perror("exec");
+    gst_element_error(GST_ELEMENT(src),"starting child process");
     return FALSE;
     
   }

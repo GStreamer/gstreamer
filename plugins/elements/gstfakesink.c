@@ -24,7 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include "gstfakesink.h"
 
@@ -407,9 +406,7 @@ gst_fakesink_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 
 error:
-  gst_element_gerror (element, GST_ERROR_NO_ERROR,
-		      g_strdup (_("user selected error")),
-		      g_strdup ("failed state change as requested"));
+  gst_element_error (element, "failed state change as requested");
   return GST_STATE_FAILURE;
 }
 

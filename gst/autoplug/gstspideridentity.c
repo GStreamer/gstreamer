@@ -23,7 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include "gstspideridentity.h"
 #include "gstspider.h"
@@ -414,14 +413,14 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
 static void
 gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 {
-  GstBuffer *buf = NULL;
+  GstBuffer *buf=NULL;
   GstBuffer *typefindbuf = NULL;
   gboolean getmorebuf = TRUE;
   GList *type_list;
   GstCaps *caps;
 
   /* this should possibly be a property */
-  guint bufsizelimit = 40960;
+  guint bufsizelimit = 4096;
   
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
 
@@ -435,7 +434,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     buf = gst_pad_pull (ident->sink);
   
     /* if it's an event... */
-    if (GST_IS_EVENT (buf)) {
+    while (GST_IS_EVENT (buf)) {
       switch (GST_EVENT_TYPE (GST_EVENT (buf))){
       case GST_EVENT_EOS:
         getmorebuf = FALSE;
@@ -444,26 +443,31 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 	break;
       default:
         gst_pad_event_default (ident->sink, GST_EVENT (buf));
-	buf = gst_pad_pull (ident->sink);
+        buf = gst_pad_pull (ident->sink);
         break;
       }
       /* handle DISCONT events, please */
     }
 
+    typefindbuf = buf;
+    getmorebuf = FALSE;
+    /* FIXME merging doesn't work for some reason so 
+     * we'll just typefind with the first element
     if (!typefindbuf){
       typefindbuf = buf;
-    } else {
+      gst_buffer_ref(buf);
+    }
+    else {
       GstBuffer *oldbuf = typefindbuf;
       typefindbuf = gst_buffer_merge(typefindbuf, buf);
       gst_buffer_unref(oldbuf);
       gst_buffer_unref(buf);
     }
+    */
   }
   
   if (!typefindbuf){
-    return;
-  } else {
-    buf = typefindbuf;
+    goto end;
   }
 
   /* maybe there are already valid caps now? */
@@ -496,10 +500,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     }
     type_list = g_list_next (type_list);
   }
-  gst_element_error(GST_ELEMENT(ident), GST_ERROR_INVALID_DATA,
-		    g_strdup (_("Could not find data type")),
-		    g_strdup_printf ("spider element %s couldn't typefind the data stream", 
-				     GST_ELEMENT_NAME (ident)));
+  gst_element_error(GST_ELEMENT(ident), "Could not find media type", NULL);
   gst_buffer_unref(buf);
   buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 
