@@ -407,7 +407,8 @@ static void gst_gamma_rgb32(GstVideofilter *videofilter, void *dest, void *src)
       *cdest++ = gamma->gamma_table_b[*csrc++];
       *cdest++ = gamma->gamma_table_g[*csrc++];
       *cdest++ = gamma->gamma_table_r[*csrc++];
-      *cdest++; *csrc++;
+      cdest++;
+      csrc++;
       i = i + 4;
     }
   } else {
@@ -416,7 +417,8 @@ static void gst_gamma_rgb32(GstVideofilter *videofilter, void *dest, void *src)
       if ((i % 4) != 3)
         *cdest++ = gamma->gamma_table[*csrc++];
       else {
-        *cdest++; *csrc++;
+        cdest++;
+        csrc++;
       }
       i++;
     }
