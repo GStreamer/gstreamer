@@ -1,3 +1,10 @@
+2004-12-01  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_use_event):
+	  Don't forward DISCONT events (fixes #159684).
+
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybin.c: (remove_sinks), (setup_sinks):
