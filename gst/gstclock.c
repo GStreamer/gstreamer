@@ -478,7 +478,7 @@ gst_clock_wait_id (GstClock *clock, GstClockID id)
   entry->func = gst_clock_unlock_func;
   target = GST_CLOCK_ENTRY_TIME (entry) - current + current_real;
 
-  //g_print ("%lld %lld %lld\n", target, current, current_real);
+  /* g_print ("%lld %lld %lld\n", target, current, current_real); */
   
   if (target > current_real) {
     timeval.tv_usec = target % 1000000;

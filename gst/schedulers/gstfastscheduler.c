@@ -333,7 +333,7 @@ gst_fast_scheduler_chained_element (GstBin *bin, GstElement *element) {
 
   GST_DEBUG (GST_CAT_SCHEDULING,"chain entered\n");
 
-  // walk through all the pads
+  /* walk through all the pads */
   pads = gst_element_get_pad_list (element);
   while (pads) {
     pad = GST_PAD (pads->data);
@@ -536,9 +536,9 @@ gst_fast_scheduler_chain_elements (GstFastScheduler * sched, GstElement * elemen
     /* take the contents of chain2 and merge them into chain1 */
     chain1->disabled = g_list_concat (chain1->disabled, g_list_copy (chain2->disabled));
     chain1->elements = g_list_concat (chain1->elements, g_list_copy (chain2->elements));
-    //chain1->cothreaded_elements = g_list_concat (chain1->cothreaded_elements, g_list_copy (chain2->cothreaded_elements));
+    /* chain1->cothreaded_elements = g_list_concat (chain1->cothreaded_elements, g_list_copy (chain2->cothreaded_elements)); */
     chain1->num_elements += chain2->num_elements;
-    //chain1->num_cothreaded += chain2->num_cothreaded;
+    /* chain1->num_cothreaded += chain2->num_cothreaded; */
 
     gst_fast_scheduler_chain_destroy (chain2);
 
@@ -938,7 +938,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
       continue;
     }
 
-    //if (chain->num_cothreaded > 1) {
+    /* if (chain->num_cothreaded > 1) { */
     if (FALSE) {
       g_warning ("this scheduler can only deal with 1 cothreaded element in a chain");
 

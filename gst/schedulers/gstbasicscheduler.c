@@ -683,7 +683,7 @@ gst_basic_scheduler_chain_enable_element (GstSchedulerChain * chain, GstElement 
 
   /* notify the scheduler that something changed */
   GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
-  //GST_FLAG_UNSET(element, GST_ELEMENT_COTHREAD_STOPPING);
+  /* GST_FLAG_UNSET(element, GST_ELEMENT_COTHREAD_STOPPING); */
 
   /* reschedule the chain */
   return gst_basic_scheduler_cothreaded_chain (GST_BIN (GST_SCHEDULER (chain->sched)->parent), chain);

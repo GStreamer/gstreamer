@@ -50,7 +50,7 @@ gst_registry_option_set (const gchar *registry)
 gboolean
 gst_registry_use_global (void)
 {
-  //struct stat reg_stat;
+  /* struct stat reg_stat; */
   FILE *reg;
   
   if (getuid () == 0) return TRUE; 	/* root always uses global */

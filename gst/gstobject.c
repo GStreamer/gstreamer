@@ -335,8 +335,6 @@ gst_object_set_name (GstObject *object, const gchar *name)
 const gchar*
 gst_object_get_name (GstObject *object)
 {
-  /* CR1: GLib checks for NULL */
-  //FIXME: _REDUNDANT g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
   return object->name;

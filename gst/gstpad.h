@@ -178,7 +178,7 @@ struct _GstRealPad {
   GstRealPad 			*peer;
 
   GstBuffer 			*bufpen;
-  //CR1: FIXME: regiontype should go away
+  /* CR1: FIXME: regiontype should go away */
   GstRegionType 		regiontype;
   guint64 			offset;
   guint64 			len;

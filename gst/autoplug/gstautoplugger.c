@@ -462,7 +462,7 @@ gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
   g_return_if_fail(autoplugger->autobin != NULL);
   gst_bin_add(GST_BIN(autoplugger),autoplugger->autobin);
 
-*  // re-attach the srcpad's original peer to the cache *
+*  * re-attach the srcpad's original peer to the cache *
 *  GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the cache to the downstream peer"); *
 *  gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer); *
 
