@@ -1,3 +1,14 @@
+2004-04-30  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(gst_qtdemux_add_stream), (qtdemux_parse), (qtdemux_type_get),
+	(qtdemux_dump_stsz), (qtdemux_dump_stco), (qtdemux_dump_co64),
+	(qtdemux_dump_unknown), (qtdemux_parse_tree), (qtdemux_parse_udta),
+	(qtdemux_tag_add), (get_size), (gst_qtdemux_handle_esds): More qtdemux
+	hackage -- parse a lot more atoms, extract a few tags.  One might even
+	mistake this for tag support.  Maybe it is.
+	* gst/qtdemux/qtdemux.h:
+
 2004-04-30  Colin Walters  <walters@verbum.org>
 
 	* ext/alsa/gstalsasink.c (gst_alsa_sink_mmap): Plug a memleak.
