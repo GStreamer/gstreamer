@@ -102,6 +102,15 @@ fi
 fi
 
 
+(pkg-config --version) < /dev/null > /dev/null 2>&1 || {
+	echo
+	echo "You must have pkg-config installed to compile $package."
+	echo "Download the appropriate package for your distribution,"
+	echo "or get the source tarball at:"
+	echo "http://www.freedesktop.org/software/pkgconfig/"
+	DIE=1
+}
+
 
 (libtool --version) < /dev/null > /dev/null 2>&1 || {
 	echo
