@@ -623,7 +623,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
         /* subbuffer it */
         buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - nextmap, readsize);
-        GST_BUFFER_OFFSET (buf) = mapstart + src->curoffset - nextmap;
+        GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET (src->mapbuf) + src->curoffset - nextmap;
       }
     }
   }
@@ -637,6 +637,8 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   }
 
   /* we're done, return the buffer */
+  g_assert (src->curoffset == GST_BUFFER_OFFSET (buf));
+  g_print ("offset %u %u\n", (guint) src->curoffset, (guint) GST_BUFFER_OFFSET (buf));
   src->curoffset += GST_BUFFER_SIZE(buf);
   return buf;
 }
