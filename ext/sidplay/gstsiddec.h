@@ -57,6 +57,7 @@ struct _GstSidDec {
   guchar *tune_buffer;
   gint tune_len;
   gint tune_number;
+  guint64 total_bytes;
 
   emuEngine *engine;
   sidTune *tune;

@@ -201,6 +201,11 @@ static void 	gst_siddec_init			(GstSidDec *siddec);
 
 static void 	gst_siddec_loop 		(GstElement *element);
 
+static gboolean gst_siddec_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
+                       				 GstFormat *dest_format, gint64 *dest_value);
+static gboolean gst_siddec_src_query 		(GstPad *pad, GstPadQueryType type,
+                     				 GstFormat *format, gint64 *value);
+
 static void     gst_siddec_get_property         (GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 static void     gst_siddec_set_property         (GObject *object, guint prop_id, 
@@ -301,9 +306,14 @@ gst_siddec_init (GstSidDec *siddec)
   siddec->sinkpad = gst_pad_new_from_template (
   		GST_PAD_TEMPLATE_GET (sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->sinkpad);
+  gst_pad_set_query_function (siddec->sinkpad, NULL);
+  gst_pad_set_convert_function (siddec->sinkpad, NULL);
 
   siddec->srcpad = gst_pad_new_from_template (
   		GST_PAD_TEMPLATE_GET (src_templ), "src");
+  gst_pad_set_event_function (siddec->srcpad, NULL);
+  gst_pad_set_convert_function (siddec->srcpad, gst_siddec_src_convert);
+  gst_pad_set_query_function (siddec->srcpad, gst_siddec_src_query);
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (siddec), gst_siddec_loop);
@@ -337,6 +347,7 @@ gst_siddec_init (GstSidDec *siddec)
   siddec->tune_buffer = (guchar *) g_malloc (maxSidtuneFileLen);
   siddec->tune_len = 0;
   siddec->tune_number = 1;
+  siddec->total_bytes = 0;
 }
 
 static void 
@@ -355,10 +366,12 @@ gst_siddec_loop (GstElement *element)
 	case GST_EVENT_EOS:
           siddec->state = SID_STATE_LOAD_TUNE;
 	  break;
+	case GST_EVENT_DISCONTINUOUS:
+	  break;
 	default:
 	  // bail out, we're not going to do anything
-	  gst_element_set_eos (element);
 	  gst_pad_send_event (siddec->srcpad, gst_event_new (GST_EVENT_EOS));
+	  gst_element_set_eos (element);
 	  break;
       }
     }
@@ -399,6 +412,8 @@ gst_siddec_loop (GstElement *element)
   }
   if (siddec->state == SID_STATE_PLAY_TUNE) {
     GstBuffer *out = gst_buffer_new ();
+    GstFormat format;
+    gint64 value;
 
     GST_BUFFER_SIZE (out) = 4096;
     GST_BUFFER_DATA (out) = (guchar *)g_malloc (4096);
@@ -406,8 +421,110 @@ gst_siddec_loop (GstElement *element)
     sidEmuFillBuffer (*siddec->engine, *siddec->tune,
  		      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
 
+    format = GST_FORMAT_TIME;
+    gst_siddec_src_query (siddec->srcpad, GST_PAD_QUERY_POSITION, &format, &value);
+    GST_BUFFER_TIMESTAMP (out) = value;
+
+    siddec->total_bytes += 4096;
+
     gst_pad_push (siddec->srcpad, out);
   }
+}
+
+static gboolean
+gst_siddec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
+                        GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  guint scale = 1;
+  GstSidDec *siddec;
+  gint bytes_per_sample;
+
+  siddec = GST_SIDDEC (gst_pad_get_parent (pad));
+
+  bytes_per_sample = (siddec->config->bitsPerSample>>3) * siddec->config->channels;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_UNITS:
+          if (bytes_per_sample == 0)
+            return FALSE;
+          *dest_value = src_value / bytes_per_sample;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+        {
+           gint byterate = bytes_per_sample * siddec->config->frequency;
+
+           if (byterate == 0)
+             return FALSE;
+           *dest_value = src_value * GST_SECOND / byterate;
+           break;
+         }
+         default:
+           res = FALSE;
+      }
+      break;
+    case GST_FORMAT_UNITS:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * bytes_per_sample;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+          if (siddec->config->frequency == 0)
+            return FALSE;
+          *dest_value = src_value * GST_SECOND / siddec->config->frequency;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+          scale = bytes_per_sample;
+          /* fallthrough */
+        case GST_FORMAT_UNITS:
+          *dest_value = src_value * scale * siddec->config->frequency / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+
+  return res;
+}
+
+static gboolean
+gst_siddec_src_query (GstPad *pad, GstPadQueryType type,
+                      GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  GstSidDec *siddec;
+
+  siddec = GST_SIDDEC (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_POSITION:
+      /* we only know about our bytes, convert to requested format */
+      res &= gst_pad_convert (pad,
+                        GST_FORMAT_BYTES, siddec->total_bytes,
+                        format, value);
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
 }
 
 static void 
