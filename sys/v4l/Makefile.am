@@ -1,27 +1,27 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libv4lelement.la libv4lsrc.la \
-	libv4lmjpegsrc.la libv4lmjpegsink.la
+plugin_LTLIBRARIES = libgstv4lelement.la libgstv4lsrc.la \
+	libgstv4lmjpegsrc.la libgstv4lmjpegsink.la
 
-libv4lelement_la_SOURCES = gstv4lelement.c v4l_calls.c v4l-overlay_calls.c
-libv4lelement_la_CFLAGS = $(GST_CFLAGS)
-libv4lelement_la_LIBADD = $(GST_LIBS)
-libv4lelement_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstv4lelement_la_SOURCES = gstv4lelement.c v4l_calls.c v4l-overlay_calls.c
+libgstv4lelement_la_CFLAGS = $(GST_CFLAGS)
+libgstv4lelement_la_LIBADD = $(GST_LIBS)
+libgstv4lelement_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
-libv4lsrc_la_SOURCES = gstv4lsrc.c v4lsrc_calls.c
-libv4lsrc_la_CFLAGS = $(GST_CFLAGS)
-libv4lsrc_la_LIBADD = $(GST_LIBS) libv4lelement.la
-libv4lsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstv4lsrc_la_SOURCES = gstv4lsrc.c v4lsrc_calls.c
+libgstv4lsrc_la_CFLAGS = $(GST_CFLAGS)
+libgstv4lsrc_la_LIBADD = $(GST_LIBS) libgstv4lelement.la
+libgstv4lsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
-libv4lmjpegsrc_la_SOURCES = gstv4lmjpegsrc.c v4lmjpegsrc_calls.c
-libv4lmjpegsrc_la_CFLAGS = $(GST_CFLAGS)
-libv4lmjpegsrc_la_LIBADD = $(GST_LIBS) libv4lelement.la
-libv4lmjpegsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstv4lmjpegsrc_la_SOURCES = gstv4lmjpegsrc.c v4lmjpegsrc_calls.c
+libgstv4lmjpegsrc_la_CFLAGS = $(GST_CFLAGS)
+libgstv4lmjpegsrc_la_LIBADD = $(GST_LIBS) libgstv4lelement.la
+libgstv4lmjpegsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
-libv4lmjpegsink_la_SOURCES = gstv4lmjpegsink.c v4lmjpegsink_calls.c
-libv4lmjpegsink_la_CFLAGS = $(GST_CFLAGS)
-libv4lmjpegsink_la_LIBADD = $(GST_LIBS) libv4lelement.la
-libv4lmjpegsink_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstv4lmjpegsink_la_SOURCES = gstv4lmjpegsink.c v4lmjpegsink_calls.c
+libgstv4lmjpegsink_la_CFLAGS = $(GST_CFLAGS)
+libgstv4lmjpegsink_la_LIBADD = $(GST_LIBS) libgstv4lelement.la
+libgstv4lmjpegsink_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
 noinst_HEADERS = gstv4lelement.h v4l_calls.h \
 		gstv4lsrc.h v4lsrc_calls.h \
