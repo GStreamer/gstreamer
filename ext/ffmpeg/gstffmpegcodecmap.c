@@ -41,33 +41,33 @@
  * but I'm too lazy today. Maybe later.
  */
 
-#define GST_FF_VID_CAPS_NEW(mimetype, props...)			\
+#define GST_FF_VID_CAPS_NEW(mimetype, ...)			\
     (context != NULL) ?						\
     gst_caps_new_simple (mimetype,			      	\
 	"width",     G_TYPE_INT,   context->width,	      	\
 	"height",    G_TYPE_INT,   context->height,	  	\
 	"framerate", G_TYPE_DOUBLE, 1. * context->frame_rate /  \
 				   context->frame_rate_base,    \
-	##props, NULL)	  					\
+	__VA_ARGS__, NULL)  					\
     :	  							\
     gst_caps_new_simple (mimetype,			      	\
 	"width",     GST_TYPE_INT_RANGE, 16, 4096,      	\
 	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
 	"framerate", GST_TYPE_DOUBLE_RANGE, 0., G_MAXDOUBLE,	\
-	##props, NULL)
+	__VA_ARGS__, NULL)
 
 /* same for audio - now with channels/sample rate
  */
 
-#define GST_FF_AUD_CAPS_NEW(mimetype, props...)			\
+#define GST_FF_AUD_CAPS_NEW(mimetype, ...)			\
     (context != NULL) ?					      	\
     gst_caps_new_simple (mimetype,	      			\
 	"rate", G_TYPE_INT, context->sample_rate,		\
 	"channels", G_TYPE_INT, context->channels,		\
-	##props, NULL)						\
+	__VA_ARGS__, NULL)					\
     :								\
     gst_caps_new_simple (mimetype,	      			\
-	##props, NULL)
+	__VA_ARGS__, NULL)
 
 /* Convert a FFMPEG codec ID and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
@@ -126,7 +126,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_H263:
     case CODEC_ID_H263P:
     case CODEC_ID_H263I:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-h263");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-h263", NULL);
       break;
 
     case CODEC_ID_RV10:
@@ -181,7 +181,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
        */
       if (encode) {
         /* FIXME: bitrate */
-        caps = GST_FF_AUD_CAPS_NEW ("audio/x-ac3");
+        caps = GST_FF_AUD_CAPS_NEW ("audio/x-ac3", NULL);
       }
       break;
 
@@ -194,7 +194,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MJPEGB:
     case CODEC_ID_LJPEG:
     case CODEC_ID_SP5X:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-jpeg");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-jpeg", NULL);
       break;
 
     case CODEC_ID_MPEG4:
@@ -212,8 +212,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
                 "divxversion", GST_TYPE_INT_RANGE, 4, 5, NULL));
-        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid"));
-        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx"));
+        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid", NULL));
+        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx", NULL));
       }
       break;
 
@@ -267,11 +267,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_DVAUDIO:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-dv");
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-dv", NULL);
       break;
 
     case CODEC_ID_DVVIDEO:
-      caps = GST_FF_VID_CAPS_NEW ("video/dv");
+      caps = GST_FF_VID_CAPS_NEW ("video/dv", NULL);
       break;
 
     case CODEC_ID_WMAV1:
@@ -299,7 +299,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_HUFFYUV:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-huffyuv");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-huffyuv", NULL);
       break;
 
     case CODEC_ID_CYUV:
@@ -307,7 +307,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_H264:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-h264");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-h264", NULL);
       break;
 
     case CODEC_ID_INDEO3:
@@ -316,11 +316,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_VP3:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-vp3");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-vp3", NULL);
       break;
 
     case CODEC_ID_THEORA:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-theora");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-theora", NULL);
       break;
 
     case CODEC_ID_AAC:
@@ -341,7 +341,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_4XM:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-4xm");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-4xm", NULL);
       break;
 
     case CODEC_ID_VCR1:
@@ -351,12 +351,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_INTERPLAY_VIDEO:
     case CODEC_ID_XAN_WC3:
     case CODEC_ID_XAN_WC4:
-    case CODEC_ID_RPZA:
       buildcaps = TRUE;
       break;
 
+    case CODEC_ID_RPZA:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-apple-video", NULL);
+      break;
+
     case CODEC_ID_CINEPAK:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-cinepak");
+      caps = GST_FF_VID_CAPS_NEW ("video/x-cinepak", NULL);
       break;
 
     case CODEC_ID_WS_VQA:
@@ -437,11 +440,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_PCM_MULAW:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-mulaw");
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-mulaw", NULL);
       break;
 
     case CODEC_ID_PCM_ALAW:
-      caps = GST_FF_AUD_CAPS_NEW ("audio/x-alaw");
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-alaw", NULL);
       break;
 
     case CODEC_ID_ADPCM_IMA_QT:
@@ -577,12 +580,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       switch (codec->type) {
         case CODEC_TYPE_VIDEO:
           mime = g_strdup_printf ("video/x-gst_ff-%s", codec->name);
-          caps = GST_FF_VID_CAPS_NEW (mime);
+          caps = GST_FF_VID_CAPS_NEW (mime, NULL);
           g_free (mime);
           break;
         case CODEC_TYPE_AUDIO:
           mime = g_strdup_printf ("audio/x-gst_ff-%s", codec->name);
-          caps = GST_FF_AUD_CAPS_NEW (mime);
+          caps = GST_FF_AUD_CAPS_NEW (mime, NULL);
           g_free (mime);
           break;
         default:
