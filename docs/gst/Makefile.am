@@ -166,10 +166,6 @@ install-data-local:
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
 	fi)
-	## thomas debug hack
-	echo thomas debug start
-	find $(DESTDIR)$(TARGET_DIR)
-	echo thomas debug end
 
 #
 # Require gtk-doc when making dist
