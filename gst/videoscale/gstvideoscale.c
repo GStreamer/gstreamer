@@ -30,7 +30,7 @@
 /* elementfactory information */
 static GstElementDetails videoscale_details = GST_ELEMENT_DETAILS (
   "Video scaler",
-  "Filter/Video",
+  "Filter/Effect/Video",
   "Resizes video",
   "Wim Taymans <wim.taymans@chello.be>"
 );

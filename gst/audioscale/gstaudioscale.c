@@ -32,8 +32,8 @@
 /* elementfactory information */
 static GstElementDetails gst_audioscale_details = GST_ELEMENT_DETAILS (
   "Audio scaler",
-  "Filter/Audio",
-  "Audio resampler",
+  "Filter/Converter/Audio",
+  "Resample audio",
   "David Schleef <ds@schleef.org>"
 );
 
@@ -145,18 +145,18 @@ gst_audioscale_class_init (AudioscaleClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
+  gobject_class->set_property = gst_audioscale_set_property;
+  gobject_class->get_property = gst_audioscale_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
 	g_param_spec_int ("filter_length", "filter_length", "filter_length",
                           0, G_MAXINT, 16, G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
 	g_param_spec_enum ("method", "method", "method", GST_TYPE_AUDIOSCALE_METHOD,
                            RESAMPLE_SINC, G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_audioscale_set_property;
-  gobject_class->get_property = gst_audioscale_get_property;
-
 }
 
 static GstCaps *

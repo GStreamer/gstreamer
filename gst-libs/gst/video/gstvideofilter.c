@@ -79,7 +79,7 @@ static void gst_videofilter_base_init (gpointer g_class)
 {
   static GstElementDetails videofilter_details = {
     "Video scaler",
-    "Filter/Video",
+    "Filter/Effect/Video",
     "Resizes video",
     "David Schleef <ds@schleef.org>"
   };

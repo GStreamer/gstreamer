@@ -98,7 +98,7 @@ gst_timeoverlay_base_init (gpointer g_class)
 {
   static GstElementDetails timeoverlay_details = GST_ELEMENT_DETAILS (
     "Time Overlay",
-    "Filter/Video",
+    "Filter/Editor/Video",
     "Overlays the time on a video stream",
     "David Schleef <ds@schleef.org>"
   );

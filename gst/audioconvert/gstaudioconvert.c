@@ -106,7 +106,7 @@ struct _GstAudioConvertClass {
 
 static GstElementDetails audio_convert_details = {
   "Audio Conversion",
-  "Filter/Convert",
+  "Filter/Converter/Audio",
   "Convert audio to different formats",
   "Benjamin Otte <in7y118@public.uni-hamburg.de",
 };

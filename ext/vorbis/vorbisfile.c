@@ -80,12 +80,12 @@ GType vorbisfile_get_type (void);
 GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
-GstElementDetails vorbisfile_details = 
+GstElementDetails vorbisfile_details =
 {
   "Ogg Vorbis decoder",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Decodes OGG Vorbis audio using the vorbisfile API",
-  "Monty <monty@xiph.org>, " 
+  "Monty <monty@xiph.org>, "
   "Wim Taymans <wim.taymans@chello.be>",
 };
 

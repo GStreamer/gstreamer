@@ -34,7 +34,7 @@
 /* elementfactory information */
 static GstElementDetails adder_details = GST_ELEMENT_DETAILS (
   "Adder",
-  "Filter/Audio",
+  "Generic/Audio",
   "Add N audio channels together",
   "Thomas <thomas@apestaart.org>"
 );
@@ -59,7 +59,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_adder_src_template_factory,
                 GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
   gst_caps_new ("float_src", "audio/x-raw-float",
                 GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS)
-);  
+);
 
 GST_PAD_TEMPLATE_FACTORY (gst_adder_sink_template_factory,
   "sink%d",
@@ -69,7 +69,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_adder_sink_template_factory,
                 GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
   gst_caps_new ("float_sink", "audio/x-raw-float",
                 GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS)
-);  
+);
 
 static void 		gst_adder_class_init		(GstAdderClass *klass);
 static void 		gst_adder_init			(GstAdder *adder);
