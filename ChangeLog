@@ -1,5 +1,14 @@
 2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_try_capture):
+	  Don't actually error out if we get another return value than
+	  -EINVAL. Opposite to what I first thought, drivers have random
+	  return values for this, although -EINVAL is the expected return
+	  value. Since this is not fatal, we shouldn't use
+	  GST_ELEMENT_ERROR() but just GST_ERROR_OBJECT().
+
+2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_class_init),
 	(dvdreadsrc_init), (dvdreadsrc_dispose), (dvdreadsrc_set_property),
 	(dvdreadsrc_get_property), (_open), (_seek), (_read),
