@@ -1,4 +1,4 @@
-Name: 		gstreamer@GST_FFMPEG_VERSION_MAJOR@@GST_FFMPEG_VERSION_MINOR@-ffmpeg
+Name: 		gstreamer-ffmpeg
 Version: 	@VERSION@
 Release:	@GST_FFMPEG_VERSION_RELEASE@	
 Summary: 	GStreamer Streaming-media framework plug-in using FFmpeg.
@@ -14,9 +14,9 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %define		gst_majorminor 	@GST_FFMPEG_VERSION_MAJOR@.@GST_FFMPEG_VERSION_MINOR@
 
 Prereq:		%{_bindir}/gst-register-%{gst_majorminor}
-Requires: 	gstreamer%{versioning} >= 0.7.5
+Requires: 	gstreamer >= 0.7.5
 Requires:	gstreamer-tools >= 0.7.5
-BuildRequires: 	gstreamer%{versioning}-devel >= 0.7.5
+BuildRequires: 	gstreamer-devel >= 0.7.5
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -58,6 +58,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{gst_majorminor}/libgstffmpeg.so
 
 %changelog
+* Wed Oct 05 2004 Christian Schaller <christian at fluendo dot com>
+- Update SPEC file to fit the times
+
 * Sat Feb 14 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - Clean up spec file
 
