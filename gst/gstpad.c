@@ -1216,11 +1216,11 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   g_return_val_if_fail (pad != NULL, GST_PAD_CONNECT_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_CONNECT_REFUSED);
   
-  /* if this pad has a parent and the parent is not PAUSED, delay the
+  /* if this pad has a parent and the parent is not READY, delay the
    * negotiation */
-  if (parent && GST_STATE (parent) < GST_STATE_PAUSED)
+  if (parent && GST_STATE (parent) < GST_STATE_READY)
   {
-    GST_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not paused",
+    GST_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not READY",
 	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_DELAYED;
   }
