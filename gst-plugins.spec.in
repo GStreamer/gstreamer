@@ -234,22 +234,20 @@ fi
 @USE_ESD_TRUE@/sbin/ldconfig
 
 ### FESTIVAL ###
-@USE_FESTIVAL_TRUE@%package -n gstreamer-festival
-@USE_FESTIVAL_TRUE@Summary: GStreamer plugin for text-to-speech support using Festival
-@USE_FESTIVAL_TRUE@Group: Libraries/Multimedia
-@USE_FESTIVAL_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_FESTIVAL_TRUE@Requires: festival >= 1.4.1
-@USE_FESTIVAL_TRUE@BuildRequires: festival-devel >= 1.4.1
-@USE_FESTIVAL_TRUE@
-@USE_FESTIVAL_TRUE@%description -n gstreamer-festival
-@USE_FESTIVAL_TRUE@Element for text-to-speech using the festival server.
-@USE_FESTIVAL_TRUE@
-@USE_FESTIVAL_TRUE@%files -n gstreamer-festival
-@USE_FESTIVAL_TRUE@%defattr(-, root, root)
-@USE_FESTIVAL_TRUE@%{prefix}/lib/gst/libgstfestival*
-@USE_FESTIVAL_TRUE@
-@USE_FESTIVAL_TRUE@%post -n gstreamer-festival
-@USE_FESTIVAL_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%package -n gstreamer-festival
+Summary: GStreamer plugin for text-to-speech support using Festival
+Group: Libraries/Multimedia
+Requires: gstreamer-plugins >= %{version}
+
+%description -n gstreamer-festival
+Element for text-to-speech using the festival server.
+
+%files -n gstreamer-festival
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstfestival*
+
+%post -n gstreamer-festival
+%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
 ### FLAC ###
 @USE_FLAC_TRUE@%package -n gstreamer-flac

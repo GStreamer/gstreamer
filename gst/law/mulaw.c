@@ -60,10 +60,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *mulawenc_factory, *mulawdec_factory;
   GstCaps* mulaw_caps, *linear_caps;
 
-  mulawenc_factory = gst_element_factory_new("mulawencode",GST_TYPE_MULAWENC,
+  mulawenc_factory = gst_element_factory_new("mulawenc",GST_TYPE_MULAWENC,
                                             &mulawenc_details);
   g_return_val_if_fail(mulawenc_factory != NULL, FALSE);
-  mulawdec_factory = gst_element_factory_new("mulawdecode",GST_TYPE_MULAWDEC,
+  mulawdec_factory = gst_element_factory_new("mulawdec",GST_TYPE_MULAWDEC,
 					    &mulawdec_details);
   g_return_val_if_fail(mulawdec_factory != NULL, FALSE);
 

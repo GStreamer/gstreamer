@@ -60,10 +60,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *alawenc_factory, *alawdec_factory;
   GstCaps* alaw_caps, *linear_caps;
 
-  alawenc_factory = gst_element_factory_new("alawencode",GST_TYPE_ALAWENC,
+  alawenc_factory = gst_element_factory_new("alawenc",GST_TYPE_ALAWENC,
                                             &alawenc_details);
   g_return_val_if_fail(alawenc_factory != NULL, FALSE);
-  alawdec_factory = gst_element_factory_new("alawdecode",GST_TYPE_ALAWDEC,
+  alawdec_factory = gst_element_factory_new("alawdec",GST_TYPE_ALAWDEC,
 					    &alawdec_details);
   g_return_val_if_fail(alawdec_factory != NULL, FALSE);
 
