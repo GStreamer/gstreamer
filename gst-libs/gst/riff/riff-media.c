@@ -139,9 +139,13 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
+    case GST_MAKE_FOURCC ('d', 'i', 'v', '3'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', '4'):
+    case GST_MAKE_FOURCC ('d', 'i', 'v', '4'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', '5'):
+    case GST_MAKE_FOURCC ('d', 'i', 'v', '5'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', '6'):
+    case GST_MAKE_FOURCC ('d', 'i', 'v', '6'):
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 3, NULL);
       if (codec_name)
