@@ -222,7 +222,7 @@ GstPluginDesc plugin_desc = {
   plugin_init
 };
 
-static inline cothread* sched_create (GstStandardScheduler *scheduler, GstElement *element, cothread_func func)
+static cothread* sched_create (GstStandardScheduler *scheduler, GstElement *element, cothread_func func)
 {
   cothread *ret = NULL;
 
@@ -235,7 +235,7 @@ static inline cothread* sched_create (GstStandardScheduler *scheduler, GstElemen
   return ret;
 }
 
-static inline void sched_switch (cothread *to)
+static void sched_switch (cothread *to)
 {
   cothread *from = cothread_self ();
   
