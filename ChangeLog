@@ -1,5 +1,16 @@
 2004-11-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_get_time):
+	  This seems to be antique leftover. It needs to pass error
+	  checking.
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_init),
+	(gst_sdlvideosink_deinitsdl), (gst_sdlvideosink_initsdl),
+	(gst_sdlvideosink_destroy), (gst_sdlvideosink_create),
+	(gst_sdlvideosink_sinkconnect), (gst_sdlvideosink_chain):
+	  Fix GstXOverlay implementation (#151059).
+
+2004-11-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):
 	  Don't assert (#157853).
 

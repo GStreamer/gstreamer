@@ -279,7 +279,6 @@ gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
 #endif
 
   GST_FLAG_SET (sdlvideosink, GST_ELEMENT_THREAD_SUGGESTED);
-  GST_FLAG_SET (sdlvideosink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -390,16 +389,22 @@ gst_sdlvideosink_unlock (GstSDLVideoSink * sdlvideosink)
 static void
 gst_sdlvideosink_deinitsdl (GstSDLVideoSink * sdlvideosink)
 {
+  g_mutex_lock (sdlvideosink->lock);
+
   if (sdlvideosink->init) {
     SDL_Quit ();
     sdlvideosink->init = FALSE;
   }
+
+  g_mutex_unlock (sdlvideosink->lock);
 }
 
 static gboolean
 gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
 {
   gst_sdlvideosink_deinitsdl (sdlvideosink);
+
+  g_mutex_lock (sdlvideosink->lock);
 
   if (!sdlvideosink->xwindow_id) {
     unsetenv ("SDL_WINDOWID");
@@ -414,8 +419,13 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
   if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, INIT, (NULL),
         ("Couldn't initialize SDL: %s", SDL_GetError ()));
+    g_mutex_unlock (sdlvideosink->lock);
     return FALSE;
   }
+
+  sdlvideosink->init = TRUE;
+
+  g_mutex_unlock (sdlvideosink->lock);
 
   return TRUE;
 }
@@ -423,6 +433,8 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
 static void
 gst_sdlvideosink_destroy (GstSDLVideoSink * sdlvideosink)
 {
+  g_mutex_lock (sdlvideosink->lock);
+
   if (sdlvideosink->overlay) {
     SDL_FreeYUVOverlay (sdlvideosink->overlay);
     sdlvideosink->overlay = NULL;
@@ -432,6 +444,8 @@ gst_sdlvideosink_destroy (GstSDLVideoSink * sdlvideosink)
     SDL_FreeSurface (sdlvideosink->screen);
     sdlvideosink->screen = NULL;
   }
+
+  g_mutex_unlock (sdlvideosink->lock);
 }
 
 static gboolean
@@ -444,6 +458,8 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
 
   gst_sdlvideosink_destroy (sdlvideosink);
 
+  g_mutex_lock (sdlvideosink->lock);
+
   /* create a SDL window of the size requested by the user */
   sdlvideosink->screen = SDL_SetVideoMode (GST_VIDEOSINK_WIDTH (sdlvideosink),
       GST_VIDEOSINK_HEIGHT (sdlvideosink), 0, SDL_HWSURFACE | SDL_RESIZABLE);
@@ -451,6 +467,7 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
         ("SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
             GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError ()));
+    g_mutex_unlock (sdlvideosink->lock);
     return FALSE;
   }
 
@@ -462,6 +479,7 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
         ("SDL: Couldn't create SDL YUV overlay (%dx%d \'" GST_FOURCC_FORMAT
             "\'): %s", sdlvideosink->width, sdlvideosink->height,
             GST_FOURCC_ARGS (sdlvideosink->format), SDL_GetError ()));
+    g_mutex_unlock (sdlvideosink->lock);
     return FALSE;
   } else {
     GST_DEBUG ("Using a %dx%d %dbpp SDL screen with a %dx%d \'"
@@ -476,13 +494,13 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
   sdlvideosink->rect.w = GST_VIDEOSINK_WIDTH (sdlvideosink);
   sdlvideosink->rect.h = GST_VIDEOSINK_HEIGHT (sdlvideosink);
 
-  SDL_DisplayYUVOverlay (sdlvideosink->overlay, &(sdlvideosink->rect));
+  /*SDL_DisplayYUVOverlay (sdlvideosink->overlay, &(sdlvideosink->rect)); */
 
   GST_DEBUG ("sdlvideosink: setting %08x (" GST_FOURCC_FORMAT ")",
       sdlvideosink->format, GST_FOURCC_ARGS (sdlvideosink->format));
 
-  gst_x_overlay_got_desired_size (GST_X_OVERLAY (sdlvideosink),
-      GST_VIDEOSINK_WIDTH (sdlvideosink), GST_VIDEOSINK_HEIGHT (sdlvideosink));
+  g_mutex_unlock (sdlvideosink->lock);
+
   return TRUE;
 }
 
@@ -532,6 +550,9 @@ gst_sdlvideosink_sinkconnect (GstPad * pad, const GstCaps * vscapslist)
   if (!sdlvideosink->format || !gst_sdlvideosink_create (sdlvideosink))
     return GST_PAD_LINK_REFUSED;
 
+  gst_x_overlay_got_desired_size (GST_X_OVERLAY (sdlvideosink),
+      sdlvideosink->width, sdlvideosink->height);
+
   return GST_PAD_LINK_OK;
 }
 
@@ -539,40 +560,38 @@ gst_sdlvideosink_sinkconnect (GstPad * pad, const GstCaps * vscapslist)
 static void
 gst_sdlvideosink_chain (GstPad * pad, GstData * _data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstBuffer *buf;
   GstSDLVideoSink *sdlvideosink;
   SDL_Event sdl_event;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (_data != NULL);
 
-  sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
-
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
-    gint64 offset;
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-        offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-        /*gst_clock_handle_discont (sdlvideosink->clock,
-           (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value); */
-        break;
-      default:
-        gst_pad_event_default (pad, event);
-        return;
-    }
-    gst_event_unref (event);
+  if (GST_IS_EVENT (_data)) {
+    gst_pad_event_default (pad, GST_EVENT (_data));
     return;
   }
+
+  buf = GST_BUFFER (_data);
+  sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
   if (GST_VIDEOSINK_CLOCK (sdlvideosink) && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     gst_element_wait (GST_ELEMENT (sdlvideosink), GST_BUFFER_TIMESTAMP (buf));
   }
 
+  g_mutex_lock (sdlvideosink->lock);
+  if (!sdlvideosink->init ||
+      !sdlvideosink->overlay || !sdlvideosink->overlay->pixels) {
+    g_warning ("Not init!");
+    gst_buffer_unref (buf);
+    g_mutex_unlock (sdlvideosink->lock);
+    return;
+  }
+
   if (GST_BUFFER_DATA (buf) != sdlvideosink->overlay->pixels[0]) {
     if (!gst_sdlvideosink_lock (sdlvideosink)) {
+      g_mutex_unlock (sdlvideosink->lock);
       return;
     }
 
@@ -611,6 +630,8 @@ gst_sdlvideosink_chain (GstPad * pad, GstData * _data)
         break;
     }
   }
+
+  g_mutex_unlock (sdlvideosink->lock);
 }
 
 
