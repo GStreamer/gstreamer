@@ -811,15 +811,16 @@ gst_ladspa_loop(GstElement *element)
       }
     }
 
-    num_to_process = GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
+    GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
     num_processed = 0;
 
     /* split up processing of the buffer into chunks so that dparams can
      * be updated when required.
      * In many cases the buffer will be processed in one chunk anyway.
      */
-    while(GST_DPMAN_PROCESS_CHUNK(ladspa->dpman, num_to_process, num_processed)) {
+    while(GST_DPMAN_PROCESS(ladspa->dpman, num_processed)) {
 
+      num_to_process = GST_DPMAN_FRAMES_TO_PROCESS(ladspa->dpman);
       for (i=0 ; i<numsinkpads ; i++){
         desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i], data_in[i]);
       }
@@ -834,8 +835,7 @@ gst_ladspa_loop(GstElement *element)
         data_out[i] += num_to_process;
       }
 
-      num_processed = num_to_process;
-      num_to_process = 0;
+      num_processed += num_to_process;
     }
     
     for (i=0 ; i<numsrcpads ; i++) {
@@ -936,14 +936,16 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  num_to_process = GST_DPMAN_PREPROCESS(ladspa->dpman, num_samples, GST_BUFFER_TIMESTAMP(buf));
+  GST_DPMAN_PREPROCESS(ladspa->dpman, num_samples, GST_BUFFER_TIMESTAMP(buf));
   num_processed = 0;
 
   /* split up processing of the buffer into chunks so that dparams can
    * be updated when required.
    * In many cases the buffer will be processed in one chunk anyway.
    */
-  while(GST_DPMAN_PROCESS_CHUNK(ladspa->dpman, num_to_process, num_processed)) {
+  while(GST_DPMAN_PROCESS(ladspa->dpman, num_processed)) {
+    num_to_process = GST_DPMAN_FRAMES_TO_PROCESS(ladspa->dpman);
+
     desc->connect_port(ladspa->handle,oclass->sinkpad_portnums[0],data_in);  
     for (i=0 ; i<numsrcpads ; i++){
       desc->connect_port(ladspa->handle,oclass->srcpad_portnums[i],data_out[i]);
@@ -955,7 +957,6 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buf)
       data_out[i] += num_to_process;
     }
     num_processed += num_to_process;
-    num_to_process = 0;
   }
 
   if (numsrcpads > 0){
@@ -1012,7 +1013,7 @@ gst_ladspa_get(GstPad *pad)
   data = (LADSPA_Data *) GST_BUFFER_DATA(buf);  
 
   desc = ladspa->descriptor;
-  num_to_process = GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
+  GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
   num_processed = 0;
 
   /* update timestamp */  
@@ -1022,13 +1023,14 @@ gst_ladspa_get(GstPad *pad)
    * be updated when required.
    * In many cases the buffer will be processed in one chunk anyway.
    */
-  while(GST_DPMAN_PROCESS_CHUNK(ladspa->dpman, num_to_process, num_processed)) {
+  while(GST_DPMAN_PROCESS(ladspa->dpman, num_processed)) {
+    num_to_process = GST_DPMAN_FRAMES_TO_PROCESS(ladspa->dpman);
+
     desc->connect_port(ladspa->handle,oclass->srcpad_portnums[0],data);  
     desc->run(ladspa->handle, num_to_process);
     
     data += num_to_process;
     num_processed = num_to_process;
-    num_to_process = 0;
   }
   
   return buf;
