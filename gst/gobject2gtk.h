@@ -60,7 +60,12 @@
 //#define set_property set_arg
 //#define get_property get_arg
 
-#define g_object_get_property			gtk_object_get
+#define g_object_get_property(obj,argname,pspec)\
+G_STMT_START{ \
+  (pspec)->name = (gchar*)argname;\
+  gtk_object_getv ((obj),1,(pspec));\
+}G_STMT_END
+
 #define g_object_set				gtk_object_set
 
 
@@ -71,8 +76,18 @@
 #define GInstanceInitFunc			GtkObjectInitFunc
 //#define g_type_register_static			gtk_type_unique
 #define g_type_class_ref			gtk_type_class
+#define g_type_class_unref(c)
+#define g_type_name(t)				gtk_type_name(t)
 #define GEnumValue				GtkEnumValue
 #define g_enum_register_static			gtk_type_register_enum
+
+/*********************************
+ * FIXME API NOT in glib2.0
+ ***********************************/
+
+#define g_type_enum_get_values
+
+
 
 
 // type registration
@@ -148,13 +163,14 @@ gtk_signal_emit_by_name ((GtkObject *)object,name,data,self)
 
 // first define GValue and GParamSpec
 #define GValue			GtkArg
+#define G_VALUE_TYPE(v)		((v)->type)
 #define G_PARAM_READWRITE	GTK_ARG_READWRITE
 #define G_PARAM_READABLE	GTK_ARG_READABLE
 #define G_PARAM_WRITABLE	GTK_ARG_WRITABLE
 #define G_OBJECT_WARN_INVALID_PROPERTY_ID(a,b,c)
 typedef struct _GParamSpec GParamSpec;
 struct _GParamSpec {
-  gchar *shortname;
+  gchar *name;
   gint value_type;
   gint flags;
 };
