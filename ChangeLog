@@ -1,3 +1,14 @@
+2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_query), (gst_ffmpegdec_event), (gst_ffmpegdec_open),
+	(gst_ffmpegdec_negotiate), (gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_init),
+	(gst_ffmpegdemux_close), (gst_ffmpegdemux_src_query),
+	(gst_ffmpegdemux_loop):
+	  Add simple query functions. Seeking is only cosmetic, it's not
+	  actually filled in yet (in ffmpegdec).
+
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_init),

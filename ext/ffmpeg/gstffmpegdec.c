@@ -49,6 +49,14 @@ struct _GstFFMpegDec
   AVCodecContext *context;
   AVFrame *picture;
   gboolean opened;
+  union {
+    struct {
+      gint width, height, fps, fps_base;
+    } video;
+    struct {
+      gint channels, samplerate;
+    } audio;
+  } format; 
 
   /* parsing */
   AVCodecParserContext *pctx;
@@ -105,6 +113,10 @@ static void gst_ffmpegdec_base_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
 static void gst_ffmpegdec_dispose (GObject * object);
+
+static gboolean gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
+    GstFormat * fmt, gint64 * value);
+static gboolean gst_ffmpegdec_event (GstPad * pad, GstEvent * event);
 
 static GstPadLinkReturn gst_ffmpegdec_connect (GstPad * pad,
     const GstCaps * caps);
@@ -192,10 +204,14 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
   gst_pad_set_link_function (ffmpegdec->sinkpad, gst_ffmpegdec_connect);
   gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain);
+  gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
+
   ffmpegdec->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
   gst_pad_use_explicit_caps (ffmpegdec->srcpad);
-
-  gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
+  gst_pad_set_event_function (ffmpegdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdec_event));
+  gst_pad_set_query_function (ffmpegdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdec_query));
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
 
   /* some ffmpeg data */
@@ -221,6 +237,45 @@ gst_ffmpegdec_dispose (GObject * object)
   /* clean up remaining allocated data */
   av_free (ffmpegdec->context);
   av_free (ffmpegdec->picture);
+}
+
+static gboolean
+gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
+    GstFormat * fmt, gint64 * value)
+{
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
+  GstPad *peer = GST_PAD_PEER (ffmpegdec->sinkpad);
+  GstFormat bfmt = GST_FORMAT_BYTES;
+
+  if (!peer)
+    return FALSE;
+  else if (gst_pad_query (peer, type, fmt, value))
+    return TRUE;
+  /* ok, do bitrate calc... */
+  else if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
+           *fmt != GST_FORMAT_TIME || ffmpegdec->context->bit_rate == 0 ||
+           !gst_pad_query (peer, type, &bfmt, value))
+    return FALSE;
+
+  if (ffmpegdec->pcache && type == GST_QUERY_POSITION)
+    *value -= GST_BUFFER_SIZE (ffmpegdec->pcache);
+  *value *= GST_SECOND / ffmpegdec->context->bit_rate;
+
+  return TRUE;
+}
+
+static gboolean
+gst_ffmpegdec_event (GstPad * pad, GstEvent * event)
+{
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
+  GstPad *peer = GST_PAD_PEER (ffmpegdec->sinkpad);
+
+  if (!peer)
+    return FALSE;
+  else if (gst_pad_send_event (peer, event))
+    return TRUE;
+  else 
+    return FALSE; /* .. */
 }
 
 static void
@@ -272,9 +327,28 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
     return FALSE;
   }
 
-  /* open a parser if we can - exclude mpeg4 for now... */
-  if (oclass->in_plugin->id != CODEC_ID_MPEG4)
+  /* open a parser if we can - exclude mpeg4, because it is already
+   * framed (divx), mp3 because it doesn't work (?) and mjpeg because
+   * of $(see mpeg4)... */
+  if (oclass->in_plugin->id != CODEC_ID_MPEG4 &&
+      oclass->in_plugin->id != CODEC_ID_MJPEG &&
+      oclass->in_plugin->id != CODEC_ID_MP3)
     ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+
+  switch (oclass->in_plugin->type) {
+    case CODEC_TYPE_VIDEO:
+      ffmpegdec->format.video.width = 0;
+      ffmpegdec->format.video.height = 0;
+      ffmpegdec->format.video.fps = 0;
+      ffmpegdec->format.video.fps_base = 0;
+      break;
+    case CODEC_TYPE_AUDIO:
+      ffmpegdec->format.audio.samplerate = 0;
+      ffmpegdec->format.audio.channels = 0;
+      break;
+    default:
+      break;
+  }
 
   return TRUE;
 }
@@ -400,6 +474,25 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstCaps *caps;
 
+  switch (oclass->in_plugin->type) {
+    case CODEC_TYPE_VIDEO:
+      if (ffmpegdec->format.video.width == ffmpegdec->context->width &&
+          ffmpegdec->format.video.height == ffmpegdec->context->height &&
+          ffmpegdec->format.video.fps == ffmpegdec->context->frame_rate &&
+          ffmpegdec->format.video.fps_base ==
+              ffmpegdec->context->frame_rate_base)
+        return TRUE;
+      break;
+    case CODEC_TYPE_AUDIO:
+      if (ffmpegdec->format.audio.samplerate ==
+              ffmpegdec->context->sample_rate &&
+          ffmpegdec->format.audio.channels == ffmpegdec->context->channels)
+        return TRUE;
+      break;
+    default:
+      break;
+  }
+
   caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
       ffmpegdec->context);
 
@@ -472,12 +565,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   /* parse cache joining */
   if (ffmpegdec->pcache) {
-GST_LOG ("Joining %p[%lld/%d]&&%p[%lld/%d]",
-	 ffmpegdec->pcache, GST_BUFFER_OFFSET (ffmpegdec->pcache),
-	 GST_BUFFER_SIZE (ffmpegdec->pcache), inbuf,
-	 GST_BUFFER_OFFSET (inbuf), GST_BUFFER_SIZE (inbuf));
     inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
-GST_LOG ("done");
     ffmpegdec->pcache = NULL;
     bdata = GST_BUFFER_DATA (inbuf);
     bsize = GST_BUFFER_SIZE (inbuf);
@@ -498,8 +586,7 @@ GST_LOG ("done");
 
   do {
     /* parse, if at all possible */
-    if (ffmpegdec->pctx && ffmpegdec->context->codec_id != CODEC_ID_MP3 && 
-	ffmpegdec->context->codec_id != CODEC_ID_MJPEG) {
+    if (ffmpegdec->pctx) {
       gint res;
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
@@ -606,11 +693,9 @@ GST_LOG ("done");
     if (have_data) {
       GST_DEBUG ("Decoded data, now pushing");
 
-      if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
-        if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
-          gst_buffer_unref (outbuf);
-          return;
-        }
+      if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
+        gst_buffer_unref (outbuf);
+        return;
       }
 
       if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
@@ -626,7 +711,8 @@ GST_LOG ("done");
     }
   } while (bsize > 0);
 
-  if (ffmpegdec->pctx && bsize > 0) {
+  if ((ffmpegdec->pctx || oclass->in_plugin->id == CODEC_ID_MP3) &&
+      bsize > 0) {
     GST_DEBUG ("Keeping %d bytes of data", bsize);
 
     ffmpegdec->pcache = gst_buffer_create_sub (inbuf,

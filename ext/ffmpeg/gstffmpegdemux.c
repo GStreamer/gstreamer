@@ -219,7 +219,7 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   for (n = 0; n < MAX_STREAMS; n++) {
     demux->srcpads[n] = NULL;
     demux->handled[n] = FALSE;
-    demux->last_ts[n] = 0;
+    demux->last_ts[n] = GST_CLOCK_TIME_NONE;
   }
   demux->videopads = 0;
   demux->audiopads = 0;
@@ -240,7 +240,7 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
       demux->srcpads[n] = NULL;
     }
     demux->handled[n] = FALSE;
-    demux->last_ts[n] = 0;
+    demux->last_ts[n] = GST_CLOCK_TIME_NONE;
   }
   demux->videopads = 0;
   demux->audiopads = 0;
@@ -358,44 +358,62 @@ gst_ffmpegdemux_src_query (GstPad * pad,
 {
   GstFFMpegDemux *demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);
   AVStream *stream = gst_ffmpegdemux_stream_from_pad (pad);
-  gboolean res = TRUE;
-
-  if (!stream || (*fmt == GST_FORMAT_DEFAULT &&
-          stream->codec.codec_type != CODEC_TYPE_VIDEO))
-    return FALSE;
+  gboolean res = FALSE;
 
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*fmt) {
         case GST_FORMAT_TIME:
-          *value = stream->duration * (GST_SECOND / AV_TIME_BASE);
+          if (stream) {
+            *value = stream->duration * (GST_SECOND / AV_TIME_BASE);
+            res = TRUE;
+          }
           break;
         case GST_FORMAT_DEFAULT:
-          if (stream->codec_info_nb_frames) {
+          if (stream->codec_info_nb_frames &&
+              stream->codec.codec_type == CODEC_TYPE_VIDEO) {
             *value = stream->codec_info_nb_frames;
-            break;
-          }                     /* else fall-through */
+            res = TRUE;
+          }
+          break;
+        case GST_FORMAT_BYTES:
+          if (demux->videopads + demux->audiopads == 1 &&
+              GST_PAD_PEER (demux->sinkpad) != NULL) {
+            res = gst_pad_query (GST_PAD_PEER (demux->sinkpad),
+                type, fmt, value);
+          }
+          break;
         default:
-          res = FALSE;
           break;
       }
       break;
     case GST_QUERY_POSITION:
       switch (*fmt) {
         case GST_FORMAT_TIME:
-          *value = demux->last_ts[stream->index];
+          if (stream &&
+              GST_CLOCK_TIME_IS_VALID (demux->last_ts[stream->index])) {
+            *value = demux->last_ts[stream->index];
+            res = TRUE;
+          }
           break;
         case GST_FORMAT_DEFAULT:
-          res = gst_pad_convert (pad, GST_FORMAT_TIME,
-              demux->last_ts[stream->index], fmt, value);
+          if (stream && stream->codec.codec_type == CODEC_TYPE_VIDEO &&
+              GST_CLOCK_TIME_IS_VALID (demux->last_ts[stream->index])) {
+            res = gst_pad_convert (pad, GST_FORMAT_TIME,
+                demux->last_ts[stream->index], fmt, value);
+          }
           break;
+        case GST_FORMAT_BYTES:
+          if (demux->videopads + demux->audiopads == 1 &&
+              GST_PAD_PEER (demux->sinkpad) != NULL) {
+            res = gst_pad_query (GST_PAD_PEER (demux->sinkpad),
+                type, fmt, value);
+          }
         default:
-          res = FALSE;
           break;
       }
       break;
     default:
-      res = FALSE;
       break;
   }
 
@@ -629,6 +647,7 @@ gst_ffmpegdemux_loop (GstElement * element)
     if (pkt.pts != AV_NOPTS_VALUE) {
       GST_BUFFER_TIMESTAMP (outbuf) = (gdouble) (pkt.pts +
           stream->start_time) * GST_SECOND / AV_TIME_BASE;
+      demux->last_ts[stream->index] = GST_BUFFER_TIMESTAMP (outbuf);
     }
 
     if (pkt.flags & PKT_FLAG_KEY) {
