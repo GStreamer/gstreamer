@@ -20,7 +20,8 @@
 
 #include "gstudpsrc.h"
 
-#define UDP_DEFAULT_PORT	4951
+#define UDP_DEFAULT_PORT		4951
+#define UDP_DEFAULT_MULTICAST_GROUP	"0.0.0.0"
 
 /* elementfactory information */
 GstElementDetails gst_udpsrc_details = {
@@ -42,7 +43,8 @@ enum {
 enum {
   ARG_0,
   ARG_PORT,
-  ARG_CONTROL
+  ARG_CONTROL,
+  ARG_MULTICAST_GROUP
   /* FILL ME */
 };
 
@@ -119,6 +121,10 @@ gst_udpsrc_class_init (GstUDPSrc *klass)
   g_object_class_install_property (gobject_class, ARG_CONTROL,
     g_param_spec_enum ("control", "control", "The type of control",
                        GST_TYPE_UDPSRC_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MULTICAST_GROUP,
+    g_param_spec_string ("multicast_group", "multicast_group", 
+		         "The Address of multicast group to join",
+                         UDP_DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
@@ -150,6 +156,7 @@ gst_udpsrc_init (GstUDPSrc *udpsrc)
   udpsrc->clock = NULL;
   udpsrc->sock = -1;
   udpsrc->control_sock = -1;
+  udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
 
   udpsrc->first_buf = TRUE;
 }
@@ -288,6 +295,15 @@ gst_udpsrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_PORT:
         udpsrc->port = g_value_get_int (value);
       break;
+    case ARG_MULTICAST_GROUP:
+      g_free(udpsrc->multi_group);
+      
+      if (g_value_get_string (value) == NULL)
+        udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
+      else
+        udpsrc->multi_group = g_strdup (g_value_get_string (value));
+      
+      break;
     case ARG_CONTROL:
         udpsrc->control = g_value_get_enum (value);
       break;
@@ -308,6 +324,9 @@ gst_udpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   switch (prop_id) {
     case ARG_PORT:
       g_value_set_int (value, udpsrc->port);
+      break;
+    case ARG_MULTICAST_GROUP:
+      g_value_set_string (value, udpsrc->multi_group);
       break;
     case ARG_CONTROL:
       g_value_set_enum (value, udpsrc->control);
@@ -338,9 +357,16 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
     return FALSE;
   }
 
+  if (inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr))) {
+    if (src->multi_addr.imr_multiaddr.s_addr) {
+      src->multi_addr.imr_interface.s_addr = INADDR_ANY;
+      setsockopt (src->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &src->multi_addr, sizeof(src->multi_addr));
+    }
+  }
+
   bc_val = 1;
   setsockopt (src->sock, SOL_SOCKET, SO_BROADCAST, &bc_val, sizeof (bc_val));
-  src->myaddr.sin_port = htons (src->port+1);  /* short, network byte order */
+  src->myaddr.sin_port = htons (src->port+1);
   
   switch (src->control) {
     case CONTROL_TCP:

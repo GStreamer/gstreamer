@@ -120,7 +120,8 @@ gst_udpsink_class_init (GstUDPSink *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
-    g_param_spec_string ("host", "host", "The host/IP to send the packets to",
+    g_param_spec_string ("host", "host", 
+			 "The host/IP/Multicast group to send the packets to",
                          UDP_DEFAULT_HOST, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
     g_param_spec_int ("port", "port", "The port to send the packets to",
@@ -377,15 +378,28 @@ gst_udpsink_init_send (GstUDPSink *sink)
 
   /* if its an IP address */
   if (inet_aton (sink->host, &addr)) {
-    sink->theiraddr.sin_addr = 
-		*((struct in_addr *) g_memdup (&addr, sizeof (addr)));
+    /* check if its a multicast address */
+    if ((ntohl (addr.s_addr) & 0xe0000000) == 0xe0000000) {
+	sink->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
+	sink->multi_addr.imr_interface.s_addr = INADDR_ANY;
+       
+	sink->theiraddr.sin_addr = sink->multi_addr.imr_multiaddr;	
+  
+	/* Joining the multicast group */
+	setsockopt (sink->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &sink->multi_addr, sizeof(sink->multi_addr));
+    }
+ 
+    else {
+       sink->theiraddr.sin_addr = 
+		*((struct in_addr *) &addr);	
+    }
   }
  
   /* we dont need to lookup for localhost */
   else if (strcmp (sink->host, UDP_DEFAULT_HOST) == 0 && 
 	   inet_aton ("127.0.0.1", &addr)) {
        sink->theiraddr.sin_addr = 
-		*((struct in_addr *) g_memdup (&addr, sizeof (addr)));
+		*((struct in_addr *) &addr);
   }
 
   /* if its a hostname */

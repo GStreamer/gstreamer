@@ -72,6 +72,7 @@ struct _GstUDPSink {
 
   int sock;
   struct sockaddr_in theiraddr;
+  struct ip_mreq multi_addr;
 
   gint port;
   Gst_UDP_Control control;

@@ -33,6 +33,9 @@ extern "C" {
 #include <sys/types.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <fcntl.h>
 #include "gstudp.h"
 
@@ -66,7 +69,10 @@ struct _GstUDPSrc {
   int sock;
   int control_sock;
   Gst_UDP_Control control;
+  gchar *multi_group;
+
   struct sockaddr_in myaddr;
+  struct ip_mreq multi_addr;
   GstClock *clock;
 
   gboolean first_buf;
