@@ -117,7 +117,11 @@ gst_oss_clock_get_internal_time (GstClock *clock)
     oss_clock->adjust -= diff2 - diff1;
   }
 
-  //g_print ("diff %lld %lld %lld %lld %lld %lld\n", diff1, diff2, time1, time2, diff2 - diff1, oss_clock->adjust);
+  /*
+  g_print ("diff %lld %lld %lld %lld %lld %lld\n", 
+   	     diff1, diff2, time1, time2, diff2 - diff1, oss_clock->adjust);
+	     */
+  
 
   return time2 + oss_clock->adjust;
 }

@@ -222,13 +222,19 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
 {
   GstOssSink *osssink = GST_OSSSINK (data);
   gint delay;
+  gint offset = 0;
 
   if (!osssink->bps)
     return 0;
 
+  /* if we have a start time, use offset */
+  if (osssink->offset >= 0LL) {
+    offset = osssink->offset;
+  }
+
   ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay);
 
-  return osssink->offset + (osssink->handled - delay) * 1000000LL / osssink->bps;
+  return offset + (osssink->handled - delay) * 1000000LL / osssink->bps;
 }
 
 static void 
@@ -467,7 +473,10 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
       if (osssink->clock) {
         /* FIXME, NEW_MEDIA/DISCONT?. Try to get our start point */
         if (osssink->offset == -1LL && buftime != -1LL) {
-	  /* g_print ("%lld  %lld %lld\n", osssink->offset, buftime, gst_clock_get_time (osssink->clock)); */
+           GST_INFO (GST_CAT_PLUGIN_INFO, 
+			   "osssink: clock at offset: %lld, new offset %lld at time %lld\n", 
+			   osssink->offset, buftime, gst_clock_get_time (osssink->clock));
+
 	  osssink->offset = buftime;
 	  osssink->handled = 0;
           gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, buftime);
@@ -483,6 +492,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
           osssink->handled += tosend;
 	} */
 	write (osssink->fd, data, size);
+        osssink->handled += size;
       }
       /* no clock, try to be as fast as possible */
       else {
