@@ -10,7 +10,7 @@ AM_DISABLE_STATIC
 dnl when going to/from release please set the nano (fourth number) right !
 dnl We disable static building for development, for time savings
 AM_DISABLE_STATIC
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 4, 0)
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 4, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
@@ -169,9 +169,10 @@ dnl ==========================================================================
 GST_PLUGIN_LDFLAGS='-module -avoid-version'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
+dnl these are all the gst plugins, compilable without additional libs
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi cdxaparse chart\
-        cutter deinterlace flx goom intfloat law level\
+        cutter deinterlace festival flx goom intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
@@ -373,8 +374,8 @@ GST_CHECK_FEATURE(ESD, [esound plugins], esdsink esdmon, [
 ])
 
 dnl **** festival ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
-GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsrc, [
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
+dnl GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsrc, [
   dnl NOTE: just using local net connection now, add this lib check
   dnl       in the future if needed
   dnl AC_LANG_PUSH(C++)
@@ -386,8 +387,8 @@ GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsrc, [
   dnl GST_CHECK_LIBHEADER(FESTIVAL, Festival, , , festival/festival.h, FESTIVAL_LIBS="-lFestival")
   dnl AC_LANG_POP(C++)
   dnl AC_SUBST(FESTIVAL_LIBS)
-  HAVE_FESTIVAL=yes
-])
+dnl  HAVE_FESTIVAL=yes
+dnl])
 
 dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
@@ -753,6 +754,7 @@ gst/cdxaparse/Makefile
 gst/chart/Makefile
 gst/cutter/Makefile
 gst/deinterlace/Makefile
+gst/festival/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
 gst/intfloat/Makefile
@@ -811,7 +813,7 @@ ext/cdparanoia/Makefile
 ext/dv/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
-ext/festival/Makefile
+ext/ffmpeg/Makefile
 ext/flac/Makefile
 ext/gnomevfs/Makefile
 ext/gsm/Makefile
