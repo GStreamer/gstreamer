@@ -222,19 +222,28 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
 {
   GstOssSink *osssink = GST_OSSSINK (data);
   gint delay;
-  gint offset = 0;
+  GstClockTime res;
 
   if (!osssink->bps)
     return 0;
 
-  /* if we have a start time, use offset */
-  if (osssink->offset >= 0LL) {
-    offset = osssink->offset;
-  }
-
   ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay);
 
-  return offset + (osssink->handled - delay) * 1000000LL / osssink->bps;
+  /* sometimes delay is bigger than the number of bytes sent to the device, which screws
+   * up this calculation, we assume that everything is still in the device then */
+  if (delay > osssink->handled) {
+    res = osssink->offset;
+  }
+  else {
+    res = osssink->offset + (osssink->handled - delay) * 1000000LL / osssink->bps;
+  }
+
+  /*
+  g_print ("from osssink: %lld %lld %d %lld %d\n", res, osssink->offset, delay, osssink->handled,
+		  osssink->bps);
+		  */
+
+  return res;
 }
 
 static void 
@@ -261,7 +270,8 @@ gst_osssink_init (GstOssSink *osssink)
 #endif /* WORDS_BIGENDIAN */  
   /* gst_clock_register (osssink->clock, GST_OBJECT (osssink)); */
   osssink->bufsize = 4096;
-  osssink->offset = -1LL;
+  osssink->bps = 0;
+  osssink->offset = 0LL;
   osssink->handled = 0LL;
   /* 6 buffers per chunk by default */
   osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
@@ -472,12 +482,13 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
       if (osssink->clock) {
         /* FIXME, NEW_MEDIA/DISCONT?. Try to get our start point */
-        if (osssink->offset == -1LL && buftime != -1LL) {
+        if (!osssink->have_offset && buftime != -1LL) {
            GST_INFO (GST_CAT_PLUGIN_INFO, 
 			   "osssink: clock at offset: %lld, new offset %lld at time %lld\n", 
 			   osssink->offset, buftime, gst_clock_get_time (osssink->clock));
 
 	  osssink->offset = buftime;
+	  osssink->have_offset = TRUE;
 	  osssink->handled = 0;
           gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, buftime);
         }
@@ -697,7 +708,8 @@ gst_osssink_change_state (GstElement *element)
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
-      osssink->offset = -1LL;
+      osssink->offset = 0LL;
+      osssink->have_offset = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* gst_clock_adjust (osssink->clock, osssink->offset - gst_clock_get_time (osssink->clock)); */

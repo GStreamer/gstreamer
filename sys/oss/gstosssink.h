@@ -77,6 +77,7 @@ struct _GstOssSink {
   gboolean mute;
   guint bufsize;
   guint bps;
+  gboolean have_offset;
   guint64 offset;
   guint64 handled;
 
