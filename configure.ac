@@ -215,6 +215,12 @@ case "x${target_cpu}" in
   xhppa*)     HAVE_CPU_HPPA=yes
               AC_DEFINE(HAVE_CPU_HPPA, 1, [Define if the target CPU is a HPPA]) ;;
 esac
+# make these available to automake
+AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
 
 dnl Determine endianness
 AC_C_BIGENDIAN
@@ -256,20 +262,32 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
 
-GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$(GTK_VERSION)/loaders"
+# allow customization of pixbuf loader install location
+# when nothing specified, adhere to prefix settings
+# when called without any option with this argument, autodetect
+# when called with a path, set to the given path
 AC_ARG_WITH(gdk-pixbuf-loader-dir, 
    AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
-   	[directory to install the gdk_pixbuf loader]),
-   [if test "x${withval}" != x ; then
+   	[directory to install the gdk_pixbuf loader (none for pkg-config default)]),
+   [
+    if test "x${withval}" != xyes ; then
    	GDK_PIXBUF_LOADER_DIR="${withval}"
+    else
+      GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$GTK_VERSION/loaders"
     fi
-])
+   ],
+   # nothing specified
+   GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
+)
+
+AS_AC_EXPAND(GDK_PIXBUF_LOADER_DIR, $GDK_PIXBUF_LOADER_DIR)
 AC_SUBST(GDK_PIXBUF_LOADER_DIR)
+AC_MSG_NOTICE([Putting GTK+-2 pixbuf loaders in $GDK_PIXBUF_LOADER_DIR])
 
 GDK_PIXBUF_CONFDIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
 AC_ARG_WITH(gdk-pixbuf-conffile, 
-   AC_HELP_STRING([--with-gdk-pixbuf-confdir],
-   	[path to the gdk_pixbuf config directroy]),
+   AC_HELP_STRING([--with-gdk-pixbuf-conf-dir],
+   	[path to the gdk_pixbuf config directory]),
    [if test "x${withval}" != x ; then
    	GDK_PIXBUF_CONFDIR="${withval}"
     fi
@@ -1277,11 +1295,6 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
 
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
@@ -1501,6 +1514,7 @@ gst-libs/gst/play/Makefile
 gst-libs/gst/propertyprobe/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
+gst-libs/gst/tag/Makefile
 gst-libs/gst/tuner/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/xoverlay/Makefile
