@@ -51,9 +51,14 @@ cb_eos (gpointer data)
 static void
 cb_data (gpointer data)
 {
+  static gboolean first = TRUE;
+
   g_print ("Received data\n");
 
-  g_idle_add ((GSourceFunc) cb_quit, NULL);
+  if (first) {
+    first = FALSE;
+    g_idle_add ((GSourceFunc) cb_quit, NULL);
+  }
 }
 #endif
 

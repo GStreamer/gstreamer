@@ -1,5 +1,10 @@
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* testsuite/threads/threadi.c: (cb_data):
+	  Fix buglet in test.
+
+2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* testsuite/threads/Makefile.am:
 	* testsuite/threads/threadi.c: (cb_data), (cb_play), (main):
 	  On Wim's request, split the test in three separately-compiled
