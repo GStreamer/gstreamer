@@ -4,7 +4,6 @@ usr/lib/gst/libgstadder.so
 usr/lib/gst/libgstalaw.so
 usr/lib/gst/libgstaudioscale.so
 usr/lib/gst/libgstauparse.so
-usr/lib/gst/libgstaviaudiodecoder.so
 usr/lib/gst/libgstavidemux.so
 usr/lib/gst/libgstavimux.so
 usr/lib/gst/libgstcdxaparse.so
@@ -51,8 +50,8 @@ usr/lib/gst/libgstvolume.so
 usr/lib/gst/libgstvumeter.so
 usr/lib/gst/libgstwavparse.so
 usr/lib/gst/libgsty4mencode.so
-usr/lib/gst/libv4lelement.so
-usr/lib/gst/libv4lmjpegsink.so
-usr/lib/gst/libv4lmjpegsrc.so
-usr/lib/gst/libv4lsrc.so
-usr/lib/gst/libvcdsrc.so
+usr/lib/gst/libgstv4lelement.so
+usr/lib/gst/libgstv4lmjpegsink.so
+usr/lib/gst/libgstv4lmjpegsrc.so
+usr/lib/gst/libgstv4lsrc.so
+usr/lib/gst/libgstvcdsrc.so

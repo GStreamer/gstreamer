@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace dvd esd festival flac gnomevfs gsm jpeg lame mad mikmod misc mpeg2dec oss sdl sid vorbis x
+PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace dvd esd festival flac gnomevfs gsm jpeg mad mikmod misc mpeg2dec oss sdl sid vorbis x
 
 setup-links:
 	for i in $(PLUGINS); do \
