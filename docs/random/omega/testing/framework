@@ -65,7 +65,7 @@ gst_object_destroy(object);
 
 ##### XML descriptions
 
-<setup name="new object">
+<construct name="new object">
   <variable>
     GstObject *object;
   </variabls>
@@ -95,6 +95,50 @@ gst_object_destroy(object);
       gst_object_destroy(object);
     </action>
   </cleanup>
-</setup>
+</construct>
 
-. . .
+<construct name="set object parent">
+  <variable>
+    GstObject *object;
+  </variable>
+  <variable>
+    GstObject *object;
+  </variable>
+  <precondition>
+    <assert>
+      object->parent == NULL
+    </assert>
+  </precondition>
+  <action>
+    gst_object_set_parent(object,parent);
+  </action>
+  <validation>
+    <assert>
+      object->parent == parent
+    </assert>
+  </validation>
+</construct>
+
+<test name="set object parent">
+  <variable>
+    GstObject *object;
+  <variable>
+  </variable>
+    GstObject *parent;
+  <variable>
+  </variable>
+    GstObject *curparent;
+  </variable>
+  <setup>
+    object = gst_object_new();
+    parent = gst_object_new();
+    gst_object_set_parent(object,parent);
+  </setup>
+  <action>
+    curparent = gst_element_get_parent(object);
+  </action>
+  <validation>
+    curparent == object->parent
+    curparent == parent
+  </validation>
+</test>
