@@ -396,6 +396,17 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                                   "width",      GST_PROPS_INT (e.xconfigure.width),
                                                   "height",     GST_PROPS_INT (e.xconfigure.height),
                                                   "framerate",  GST_PROPS_FLOAT (30)));
+              ximagesink->width = e.xconfigure.width;
+              ximagesink->height = e.xconfigure.height;
+              if ( (ximagesink->ximage) &&
+                  ( (ximagesink->width != ximagesink->ximage->width) ||
+                    (ximagesink->height != ximagesink->ximage->height) ) ) {
+                /* We renew our ximage only if size changed */
+                gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+                
+                ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
+                    ximagesink->width, ximagesink->height);
+              }
             break;
           case MotionNotify:
             /* Mouse pointer moved over our window. We send upstream
