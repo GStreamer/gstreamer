@@ -66,8 +66,7 @@ struct _VorbisFile {
   guint64 	 offset;
   gulong	 blocksize;
 
-  GstCaps 	*metadata;
-  GstCaps 	*streaminfo;
+  GstTagList	*streaminfo;
 };
 
 struct _VorbisFileClass {
@@ -415,97 +414,47 @@ ov_callbacks vorbisfile_ov_callbacks =
   gst_vorbisfile_tell,
 };
 
-#if 0
-/* retrieve the comment field (or tags) and put in metadata GstCaps
- * returns TRUE if caps could be set,
- * FALSE if they couldn't be read somehow */
-static gboolean
-gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
-{
-  OggVorbis_File *vf = &vorbisfile->vf;
-  gchar **ptr;
-  vorbis_comment *vc;
-  GstProps *props = NULL;
-  GstPropsEntry *entry;
-  gchar *name, *value;
-
-  /* clear old one */
-  if (vorbisfile->metadata) {
-    gst_caps_unref (vorbisfile->metadata);
-    vorbisfile->metadata = NULL;
-  }
-
-  /* create props to hold the key/value pairs */
-  props = gst_props_empty_new ();
-
-  vc = ov_comment (vf, link);
-  ptr = vc->user_comments;
-  while (*ptr) {
-    value = strstr (*ptr, "=");
-    if (value) {
-      name = g_strndup (*ptr, value-*ptr);
-      entry = gst_props_entry_new (name, G_TYPE_STRING_TYPE, value+1);
-      gst_props_add_entry (props, (GstPropsEntry *) entry);
-    }
-    ptr++;
-  }
-  vorbisfile->metadata = gst_caps_new ("vorbisfile_metadata",
-		                       "application/x-gst-metadata",
-		                       props);
-
-  g_object_notify (G_OBJECT (vorbisfile), "metadata");
-
-  return TRUE;
-}
-
-/* retrieve logical stream properties and put them in streaminfo GstCaps
- * returns TRUE if caps could be set,
+/* retrieve logical stream properties and put them in streaminfo GstTagList.
+ * returns TRUE if tags could be set,
  * FALSE if they couldn't be read somehow */
 static gboolean
 gst_vorbisfile_update_streaminfo (VorbisFile *vorbisfile, gint link)
 {
   OggVorbis_File *vf = &vorbisfile->vf;
   vorbis_info *vi;
-  GstProps *props = NULL;
-  GstPropsEntry *entry;
+  GstTagList *tag_list;
 
   /* clear old one */
   if (vorbisfile->streaminfo) {
-    gst_caps_unref (vorbisfile->streaminfo);
+    gst_tag_list_free (vorbisfile->streaminfo);
     vorbisfile->streaminfo = NULL;
   }
 
-  /* create props to hold the key/value pairs */
-  props = gst_props_empty_new ();
-
+  tag_list = gst_tag_list_new ();
   vi = ov_info (vf, link);
-  entry = gst_props_entry_new ("version", G_TYPE_INT_TYPE, vi->version);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_upper", G_TYPE_INT_TYPE, 
-		               vi->bitrate_upper);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_nominal", G_TYPE_INT_TYPE, 
-		               vi->bitrate_nominal);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_lower", G_TYPE_INT_TYPE, 
-		               vi->bitrate_lower);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("serial", G_TYPE_INT_TYPE, 
-		               ov_serialnumber (vf, link));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate", G_TYPE_INT_TYPE, 
-		               ov_bitrate (vf, link));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-  vorbisfile->streaminfo = gst_caps_new ("vorbisfile_streaminfo",
-		                         "application/x-gst-streaminfo",
-		                         props);
+  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+			GST_TAG_ENCODER_VERSION,	vi->version,
+			GST_TAG_BITRATE,		ov_bitrate (vf, link),
+			GST_TAG_SERIAL,			ov_serialnumber (vf, link),
+			NULL);
+  if (vi->bitrate_nominal > 0)
+    gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+                      GST_TAG_NOMINAL_BITRATE, vi->bitrate_nominal, NULL);
+  if (vi->bitrate_lower > 0)
+    gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+                      GST_TAG_MINIMUM_BITRATE, vi->bitrate_lower, NULL);
+  if (vi->bitrate_upper > 0)
+    gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+                      GST_TAG_MAXIMUM_BITRATE, vi->bitrate_upper, NULL);
 
-  g_object_notify (G_OBJECT (vorbisfile), "streaminfo");
+  vorbisfile->streaminfo = tag_list;
+
+  gst_element_found_tags (GST_ELEMENT (vorbisfile), tag_list);
 
   return TRUE;
 }
-#endif
+
 
 static gboolean
 gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
@@ -515,6 +464,7 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
 
   /* new logical bitstream */
   vorbisfile->current_link = link;
+  gst_vorbisfile_update_streaminfo (vorbisfile, link);
 
   caps = gst_caps_new_simple ("audio/x-raw-int",    
       "endianness", G_TYPE_INT, G_BYTE_ORDER,

@@ -1,3 +1,24 @@
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/media-info/media-info-priv.c:
+	(deep_notify_callback), (gmi_seek_to_track), (gmi_get_decoder),
+	(gmip_find_type_pre), (gmip_find_type), (gmip_find_stream_post),
+	(gmip_find_stream), (gmip_find_track_metadata),
+	(gmip_find_track_streaminfo_post), (gmip_find_track_streaminfo),
+	(gmip_find_track_format):
+	* gst-libs/gst/media-info/media-info-priv.h:
+	* gst-libs/gst/media-info/media-info-test.c: (main):
+	* gst-libs/gst/media-info/media-info.c: (gst_media_info_init),
+	(gst_media_info_read_idler), (gst_media_info_read):
+	* gst-libs/gst/media-info/media-info.h:
+          register debugging category and use it for debugging
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/vorbisfile.c: (gst_vorbisfile_update_streaminfo),
+	(gst_vorbisfile_new_link):
+          signal streaminfo through tags
+
 2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mplex/gstmplex.cc:
