@@ -462,9 +462,10 @@ gst_play_stop (GstPlay *play)
 
   priv = (GstPlayPrivate *)play->priv;
 
-  gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_PAUSED);
+  // FIXME until state changes are handled properly
+  gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_READY);
   gtk_object_set (GTK_OBJECT (priv->src),"offset",0,NULL);
-  gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_NULL);
+  //gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_NULL);
 
   play->state = GST_PLAY_STOPPED;
 
