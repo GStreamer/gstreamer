@@ -246,7 +246,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstmp1videoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2subt.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
@@ -262,7 +261,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/libgstinterfaces-%{majorminor}.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstswitch.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttagediting.so
-
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiofilter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiofilterexample.so
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
 @USE_ARTSC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstartsdsink.so
@@ -286,7 +286,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
 # Snapshot plugin
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
-%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 %post 
 %{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 
@@ -325,6 +324,7 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/play/gstplay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff*
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiofilter.h
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
