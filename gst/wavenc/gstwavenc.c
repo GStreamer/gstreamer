@@ -155,7 +155,6 @@ gst_wavenc_change_state (GstElement *element)
   
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
       wavenc->setup = FALSE;
       wavenc->flush_header = TRUE;
       break;
