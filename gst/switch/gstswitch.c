@@ -66,6 +66,7 @@ gst_switch_request_new_pad (GstElement *element,
   
   g_return_val_if_fail (GST_IS_SWITCH (element), NULL);
   
+  /* We only provide requested sink pads */
   if (templ->direction != GST_PAD_SINK) {
     g_warning ("gstswitch: requested a non sink pad\n");
     return NULL;
@@ -79,6 +80,9 @@ gst_switch_request_new_pad (GstElement *element,
   
   if (name)
     g_free (name);
+  
+  /* That pad will proxy caps */
+  gst_pad_set_getcaps_function (sinkpad, gst_pad_proxy_getcaps);
   
   gst_element_add_pad (GST_ELEMENT (gstswitch), sinkpad);
   
@@ -234,7 +238,7 @@ gst_switch_init (GstSwitch *gstswitch)
 {
   gstswitch->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (gstswitch), gstswitch->srcpad);
-  
+  gst_pad_set_getcaps_function (gstswitch->srcpad, gst_pad_proxy_getcaps);
   gst_element_set_loop_function (GST_ELEMENT (gstswitch), gst_switch_loop);
   
   gstswitch->sinkpads = NULL;
