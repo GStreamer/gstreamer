@@ -117,8 +117,8 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
 
   filter = GST_PASSTHROUGH (gst_pad_get_parent (pad));
-  g_return_if_fail (filter != NULL);
-  g_return_if_fail (GST_IS_PASSTHROUGH (filter));
+  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (GST_IS_PASSTHROUGH (filter), GST_PAD_CONNECT_REFUSED);
 
   format = gst_caps_get_string(caps, "format");
   
