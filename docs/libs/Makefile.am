@@ -88,7 +88,7 @@ GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)
 
 # If you need to override some of the declarations, place them in this file
 # and uncomment this line.
-#DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
+DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
 
 
 
@@ -113,6 +113,7 @@ EXTRA_DIST = 				\
 	$(HTML_IMAGES)			\
 	$(DOC_MAIN_SGML_FILE)		\
 	$(DOC_MODULE).types		\
+	$(DOC_OVERRIDES)		\
 	$(DOC_MODULE)-sections.txt
 
 DOC_STAMPS = 				\

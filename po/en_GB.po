@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -557,11 +557,6 @@ msgstr "peak of the album"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "There is no element present to handle the stream's mime type %s."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "No file name specified for writing."
@@ -883,6 +878,9 @@ msgstr "Error closing file \"%s\"."
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr "There is no element present to handle the stream's mime type %s."
 
 #~ msgid " iterations (sum %"
 #~ msgstr " iterations (sum %"

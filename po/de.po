@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -595,13 +595,6 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-"Es gibt kein Element, das den MIME-Typ »%s« dieses Datenstroms verarbeiten "
-"kann."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
@@ -924,6 +917,11 @@ msgstr "Fehler beim Schließen der Datei »%s«."
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Es gibt kein Element, das den MIME-Typ »%s« dieses Datenstroms "
+#~ "verarbeiten kann."
 
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""

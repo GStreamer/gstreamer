@@ -1,5 +1,15 @@
 2005-03-29  Andy Wingo  <wingo@pobox.com>
 
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am: Dist the overrides files.
+
+	* check/Makefile.am (clean-local): Remove .libs directories.
+
+	* gst/elements/Makefile.am (EXTRA_DIST): Add all the attic
+	elements to EXTRA_DIST, so po/ files are happy.
+
+	* po/POTFILES.in: Er, remove it here.
+
 	* po/POTFILES: Remove gstspider.c.
 
 	* configure.ac (AC_OUTPUT): Add missing testsuite makefiles.

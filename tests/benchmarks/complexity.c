@@ -97,7 +97,7 @@ main (gint argc, gchar * argv[])
     new_src_list = g_slist_prepend (new_src_list, e);
 
     gst_bin_add (GST_BIN (pipeline), e);
-    if (gst_element_link (src, e) != GST_PAD_LINK_OK)
+    if (!gst_element_link (src, e))
       g_assert_not_reached ();
   }
 

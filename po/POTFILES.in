@@ -4,7 +4,6 @@ gst/gst.c
 gst/gstelement.c
 gst/gsterror.c
 gst/gsttag.c
-gst/autoplug/gstspider.c
 gst/elements/gstfakesink.c
 gst/elements/gstfilesink.c
 gst/elements/gstfilesrc.c

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-12-22 17:44+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -587,12 +587,6 @@ msgstr "cim de l'àlbum"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-"No hi ha cap element present per a gestionar el tipus mime %s del flux."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
@@ -914,6 +908,10 @@ msgstr "S'ha produït un error en carregar %s\n"
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr "S'han carregat %d connectors amb %d %s.\n"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "No hi ha cap element present per a gestionar el tipus mime %s del flux."
 
 #~ msgid ""
 #~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "

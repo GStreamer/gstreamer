@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -568,12 +568,6 @@ msgstr "toppunt van die album"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-"Daar is geen element beskikbaar om die stroom se mime-tipe %s te hanteer nie."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Geen lêernaam om heen te skryf nie."
@@ -895,6 +889,11 @@ msgstr "Fout met toemaak van lêer \"%s\"."
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Daar is geen element beskikbaar om die stroom se mime-tipe %s te hanteer "
+#~ "nie."
 
 #~ msgid " iterations (sum %"
 #~ msgstr " iterasies (som %"

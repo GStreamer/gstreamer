@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -547,11 +547,6 @@ msgstr ""
 #: gst/gsttag.c:229
 msgid ", "
 msgstr ", "
-
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
 
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -565,11 +565,6 @@ msgstr "albüm üst sınırı"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Akımın %s mime türünü işleyebilecek hiç bir öğe yok."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Yazım için hiç bir dosya adı belirtilmedi."
@@ -891,6 +886,9 @@ msgstr "\"%s\" kapatılırken hata."
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr "Akımın %s mime türünü işleyebilecek hiç bir öğe yok."
 
 #~ msgid " iterations (sum %"
 #~ msgstr " tekrarlar (toplam %"

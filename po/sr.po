@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -571,11 +571,6 @@ msgstr "врхунац албума"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Није присутан елемент за баратање током МИМЕ врсте %s."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Није наведено име датотеке за упис."
@@ -899,6 +894,9 @@ msgstr "Грешка при затварању датотеке „%s“."
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr "Није присутан елемент за баратање током МИМЕ врсте %s."
 
 #~ msgid " iterations (sum %"
 #~ msgstr " покушаја (збир %"

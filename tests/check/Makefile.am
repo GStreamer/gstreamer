@@ -14,9 +14,13 @@ $(top_builddir)/tools/gst-register:
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:
 
-# This rule is here so make distcheck works on machines where core
-# dumps have PIDs appended
-CLEANFILES = core.*
+# ths core dumps of some machines have PIDs appended
+CLEANFILES = core.* test-registry.xml
+
+clean-local:
+	for i in find . -name .libs; do \
+	  rm -rf $$i \
+	done
 
 TESTS = $(top_builddir)/tools/gst-register \
 	gst/gstbin	     	\

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2005-02-05 16:35+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -569,11 +569,6 @@ msgstr "âm lượng tối đa bạn muốn cho tập nhạc/ảnh này"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Hiện không có yếu tố có thể quản lý loại mime %s của dòng này."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Chưa ghi rõ tên tập tin để ghi vào."
@@ -898,6 +893,9 @@ msgstr "Gặp lỗi khi tải %s\n"
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr "Mới tải %d trình cầm phít với %d %s.\n"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr "Hiện không có yếu tố có thể quản lý loại mime %s của dòng này."
 
 #~ msgid ""
 #~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "

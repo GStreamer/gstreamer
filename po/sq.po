@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-23 16:24+0100\n"
+"POT-Creation-Date: 2005-03-29 15:32+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -564,11 +564,6 @@ msgstr "kulmi i albumit"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
-
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
@@ -890,6 +885,10 @@ msgstr "Gabim gjatë ngarkimit të %s\n"
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr "U ngarkuan %d plugins me %d %s.\n"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
 
 #~ msgid " iterations (sum %"
 #~ msgstr " përsëritjet (shuma %"

@@ -31,17 +31,22 @@ libgstelements_la_SOURCES =	\
 	gstelements.c		\
 	gsttee.c
 
-# 	gstaggregator.c		\
-# 	gstbufferstore.c	\
-# 	gstfilesink.c		\
-# 	gstfdsink.c		\
-# 	gstfdsrc.c		\
-# 	gstmd5sink.c		\
-# 	$(multifilesrc)		\
-# 	$(pipefilter)		\
-# 	gstshaper.c		\
-# 	gststatistics.c		\
-# 	gsttypefindelement.c
+# FIXME 0.9: mentioned by po/POTFILES.in, so we include them here --
+# this is a short-term hack, really we should just decide the fate of
+# these files above, then this will be unnecessary
+EXTRA_DIST +=			\
+	gstaggregator.c		\
+	gstbufferstore.c	\
+	gstfilesink.c		\
+	gstfdsink.c		\
+	gstfdsrc.c		\
+	gstmd5sink.c		\
+	gstmultifilesrc.c	\
+	gstpipefilter.c		\
+	gstshaper.c		\
+	gststatistics.c		\
+	gsttypefindelement.c
+
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstelements_la_LIBADD = $(GST_OBJ_LIBS)
