@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <book title="GStreamer Library Reference Manual (Core)"
       name="gstreamer"
-      base="/usr/share/doc/gstreamer-devel-0.3.2.1/html/gstreamer"
+      base="/usr/share/doc/gstreamer-devel-0.3.2.2/html/gstreamer"
       link="book1.html">
 
 <chapters>
@@ -58,7 +58,7 @@
         <sub name="GstStaticAutoplugRender" link="gstreamer-gststaticautoplugrender.html"/>
     </sub>
     <sub name="Index" link="gst-index.html">
-        <sub name="Object Hierarchy" link="gst-index.html#AEN14425"/>
+        <sub name="Object Hierarchy" link="gst-index.html#AEN14407"/>
     </sub>
 </chapters>
 
@@ -616,7 +616,7 @@
     <function name="GstXml" link="gstreamer-gstxml.html#GSTXML"/>
     <function name="Gstbin" link="gstreamer-0321-gsttypes.html#GSTBIN"/>
     <function name="N_" link="gstreamer-0321-gst-private.html#N--CAPS"/>
-    <function name="Object Hierarchy" link="gst-index.html#AEN14425"/>
+    <function name="Object Hierarchy" link="gst-index.html#AEN14407"/>
     <function name="TRACE_ENABLE" link="gstreamer-0321-gsttrace.html#TRACE-ENABLE-CAPS"/>
     <function name="_" link="gstreamer-0321-gst-private.html#GETTEXT-MACRO"/>
     <function name="bindtextdomain" link="gstreamer-0321-gst-private.html#BINDTEXTDOMAIN"/>
