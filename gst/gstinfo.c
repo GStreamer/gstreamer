@@ -280,7 +280,9 @@ gst_default_info_handler (gint category, gboolean incore,gchar *file, gchar *fun
   if (element && GST_IS_ELEMENT (element))
     elementname = g_strdup_printf (" \033[04m[%s]\033[00m", GST_OBJECT_NAME (element));
 
+/*
 #ifdef GST_DEBUG_ENABLED
+*/
   #ifdef GST_DEBUG_COLOR
     fprintf(stderr,"\033[01mINFO\033[00m (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
             GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
@@ -289,7 +291,8 @@ gst_default_info_handler (gint category, gboolean incore,gchar *file, gchar *fun
   #else
     fprintf(stderr,"INFO (%5d:%2d)%s%s %s\n",
             pthread_id,cothread_id,location,elementname,string);
-  #endif /* GST_DEBUG_COLOR */
+  #endif // GST_DEBUG_COLOR
+/*
 #else
   #ifdef GST_DEBUG_COLOR
     fprintf(stderr,"\033[01mINFO\033[00m:\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
@@ -297,8 +300,9 @@ gst_default_info_handler (gint category, gboolean incore,gchar *file, gchar *fun
   #else
     fprintf(stderr,"INFO:%s%s %s\n",
             location,elementname,string);
-  #endif /* GST_DEBUG_COLOR */
+  #endif // GST_DEBUG_COLOR
 #endif
+*/
 
   if (location != empty) g_free(location);
   if (elementname != empty) g_free(elementname);
