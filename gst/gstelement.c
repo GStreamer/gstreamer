@@ -860,13 +860,13 @@ gst_element_change_state (GstElement *element)
   if (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING) {
     g_return_val_if_fail(GST_ELEMENT_SCHED(element), GST_STATE_FAILURE);
     if (GST_ELEMENT_PARENT(element))
-      fprintf(stderr,"PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
+      GST_DEBUG(GST_CAT_STATES,"PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
 GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
     GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);
   }
   else if (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_PAUSED) {
     if (GST_ELEMENT_PARENT(element))
-      fprintf(stderr,"PLAYING->PAUSED: element \"%s\" has parent \"%s\" and sched %p\n",
+      GST_DEBUG(GST_CAT_STATES,"PLAYING->PAUSED: element \"%s\" has parent \"%s\" and sched %p\n",
 GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
     GST_SCHEDULE_DISABLE_ELEMENT (element->sched,element);
   }
