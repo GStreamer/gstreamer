@@ -464,7 +464,15 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	gint64 queued;
 	GstClockTimeDiff jitter;
     
-        ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay);
+        if (ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay) < 0) {
+          audio_buf_info info;
+	  if (ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &info) < 0) {
+	    delay = 0;
+	  }
+	  else {
+	    delay = (info.fragstotal * info.fragsize) - info.bytes;	  
+	  }
+	}
 	queued = delay * GST_SECOND / osssink->bps;
 
 	if  (osssink->resync && osssink->sync) {
