@@ -245,7 +245,6 @@ if test "x$HAVE_GTK_22" = "xyes"; then
   GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
   AC_SUBST(GTK_VERSION)
   GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
-  GTK_SYSCONFDIR=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
   GDK_PIXBUF_LIBDIR=`$PKG_CONFIG --variable=libdir gdk-pixbuf-2.0`
   GDK_PIXBUF_PREFIXDIR=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
   AC_SUBST(GTK_BASE_DIR)
@@ -279,20 +278,31 @@ AC_ARG_WITH(gdk-pixbuf-loader-dir,
    # nothing specified
    GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
 )
-
 AS_AC_EXPAND(GDK_PIXBUF_LOADER_DIR, $GDK_PIXBUF_LOADER_DIR)
 AC_SUBST(GDK_PIXBUF_LOADER_DIR)
 AC_MSG_NOTICE([Putting GTK+-2 pixbuf loaders in $GDK_PIXBUF_LOADER_DIR])
 
-GDK_PIXBUF_CONFDIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
-AC_ARG_WITH(gdk-pixbuf-conffile, 
+# allow customization of pixbuf loader configuration file
+# when nothing specified, adhere to prefix settings
+# when called without any option with this argument, autodetect
+# when called with a path, set to the given path
+AC_ARG_WITH(gdk-pixbuf-conf-dir, 
    AC_HELP_STRING([--with-gdk-pixbuf-conf-dir],
-   	[path to the gdk_pixbuf config directory]),
-   [if test "x${withval}" != x ; then
-   	GDK_PIXBUF_CONFDIR="${withval}"
+   	[directory to install the gdk_pixbuf config (none for pkg-config default)]),
+   [
+    if test "x${withval}" != xyes ; then
+      GDK_PIXBUF_CONF_DIR="${withval}"
+    else
+      GDK_PIXBUF_CONF_DIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
     fi
-])
-AC_SUBST(GDK_PIXBUF_CONFDIR)
+   ],
+   # nothing specified
+   GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
+   GDK_PIXBUF_CONF_DIR=${sysconfdir}/gtk-2.0
+)
+AS_AC_EXPAND(GDK_PIXBUF_CONF_DIR, $GDK_PIXBUF_CONF_DIR)
+AC_SUBST(GDK_PIXBUF_CONF_DIR)
+AC_MSG_NOTICE([Putting GTK+-2 pixbuf loader config in $GDK_PIXBUF_CONF_DIR])
 
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
@@ -1514,6 +1524,7 @@ gst-libs/gst/play/Makefile
 gst-libs/gst/propertyprobe/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
+gst-libs/gst/tag/Makefile
 gst-libs/gst/tuner/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/xoverlay/Makefile

@@ -15,13 +15,13 @@ endif
 SUBDIRS = audio colorbalance floatcast \
 		$(GCONF_DIR) idct media-info \
 		mixer navigation play propertyprobe \
-		resample riff tuner video \
+		resample riff tag tuner video \
 		$(X_DIR)
 
 DIST_SUBDIRS = audio colorbalance floatcast \
 		gconf idct media-info \
 		mixer navigation play propertyprobe \
-		resample riff tuner video \
+		resample riff tag tuner video \
 		xoverlay xwindowlistener
 
 
