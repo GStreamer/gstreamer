@@ -46,11 +46,11 @@
 #elif defined (HAVE_CPU_PPC) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
-    __asm__("lwz %%r1,%0" : : "m"(stackpointer))
+    __asm__("lwz r1,%0" : : "m"(stackpointer))
   
 #define GST_ARCH_CALL(target) \
-    __asm__( "mr %%r0,%0\n\t" \
-             "mtlr %%r0\n\t" \
+    __asm__( "mr r0,%0\n\t" \
+             "mtlr r0\n\t" \
              "blrl" : : "r"(target) );
   
 struct minimal_ppc_stackframe {
