@@ -89,7 +89,15 @@ GType gst_mpeg_parse_get_type(void);
 
 gboolean 	gst_mpeg_parse_plugin_init 		(GModule *module, GstPlugin *plugin);
 
+const GstFormat*
+		gst_mpeg_parse_get_src_formats 		(GstPad *pad);
+	
+const GstEventMask*
+		gst_mpeg_parse_get_src_event_masks 	(GstPad *pad);
 gboolean 	gst_mpeg_parse_handle_src_event 	(GstPad *pad, GstEvent *event);
+
+const GstPadQueryType*
+		gst_mpeg_parse_get_src_query_types 	(GstPad *pad);
 gboolean 	gst_mpeg_parse_handle_src_query		(GstPad *pad, GstPadQueryType type,
 		                         		 GstFormat *format, gint64 *value);
 

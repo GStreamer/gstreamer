@@ -162,7 +162,10 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->srcpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->srcpad);
+  gst_pad_set_formats_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_formats);
+  gst_pad_set_event_mask_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_event_masks);
   gst_pad_set_event_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_event);
+  gst_pad_set_query_type_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_query_types);
   gst_pad_set_query_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_query);
 
   gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
@@ -426,6 +429,27 @@ gst_mpeg_parse_loop (GstElement *element)
   }
 }
 
+const GstFormat*
+gst_mpeg_parse_get_src_formats (GstPad *pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_TIME,
+    0 
+  };
+  return formats;
+}
+
+const GstPadQueryType*
+gst_mpeg_parse_get_src_query_types (GstPad *pad)
+{
+  static const GstPadQueryType types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION,
+    0 
+  };
+  return types;
+}
+
 gboolean
 gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type, 
 			         GstFormat *format, gint64 *value)
@@ -486,6 +510,16 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
   }
 
   return res;
+}
+
+const GstEventMask*
+gst_mpeg_parse_get_src_event_masks (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH },
+    { 0, }
+  };
+  return masks;
 }
 
 gboolean
