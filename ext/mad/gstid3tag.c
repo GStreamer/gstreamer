@@ -933,7 +933,6 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
 	  tag->parsed_tags = list;
 	} else {
 	  GST_WARNING_OBJECT (tag, "detected ID3v2 tag, but couldn't parse it");
-	  tag->v2tag_size = 0;
 	}
       }
       /* caps nego and typefinding */
