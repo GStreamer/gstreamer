@@ -82,30 +82,33 @@ typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;
 
 struct _GstFakeSrc {
-  GstElement element;
+  GstElement     element;
 
-  gboolean 	loop_based;
-  gboolean 	eos;
+  gboolean 	 loop_based;
+  gboolean 	 eos;
 
   GstFakeSrcOutputType output;
-  GstFakeSrcDataType data;
-  GstFakeSrcSizeType sizetype;
-  GstFakeSrcFillType filltype;
+  GstFakeSrcDataType   data;
+  GstFakeSrcSizeType   sizetype;
+  GstFakeSrcFillType   filltype;
 
-  guint 	sizemin;
-  guint 	sizemax;
+  guint 	 sizemin;
+  guint 	 sizemax;
   GstBuffer 	*parent;
-  guint 	parentsize;
-  guint 	parentoffset;
-  guint8 	pattern_byte;
+  guint 	 parentsize;
+  guint 	 parentoffset;
+  guint8 	 pattern_byte;
   gchar 	*pattern;
   GList 	*patternlist;
-  gint 		num_buffers;
-  gint 		rt_num_buffers; /* we are going to change this at runtime */
-  guint64 	buffer_count;
-  gboolean 	silent;
-  gboolean 	dump;
-  gboolean 	need_flush;
+  gint64	 segment_start;
+  gint64	 segment_end;
+  gboolean	 segment_loop;
+  gint 		 num_buffers;
+  gint 		 rt_num_buffers; /* we are going to change this at runtime */
+  guint64 	 buffer_count;
+  gboolean 	 silent;
+  gboolean 	 dump;
+  gboolean 	 need_flush;
   GstBufferPool *pool;
 
   gchar		*last_message;

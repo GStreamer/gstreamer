@@ -269,6 +269,8 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   gst_fakesrc_update_functions (fakesrc);
 
   fakesrc->output = FAKESRC_FIRST_LAST_LOOP;
+  fakesrc->segment_start = -1;
+  fakesrc->segment_end = -1;
   fakesrc->num_buffers = -1;
   fakesrc->rt_num_buffers = -1;
   fakesrc->buffer_count = 0;
@@ -312,6 +314,48 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
   return srcpad;
 }
 
+GST_FORMATS_FUNCTION (gst_fakesrc_get_formats,
+  GST_FORMAT_DEFAULT
+)
+
+GST_PAD_QUERY_TYPE_FUNCTION (gst_fakesrc_get_query_types,
+  GST_PAD_QUERY_TOTAL,
+  GST_PAD_QUERY_POSITION,
+  GST_PAD_QUERY_START,
+  GST_PAD_QUERY_SEGMENT_END
+) 
+
+static gboolean
+gst_fakesrc_query (GstPad *pad, GstPadQueryType type,
+	           GstFormat *format, gint64 *value)
+{
+  GstFakeSrc *src = GST_FAKESRC (GST_PAD_PARENT (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+      *value = src->num_buffers;
+      break;
+    case GST_PAD_QUERY_POSITION:
+      *value = src->buffer_count;
+      break;
+    case GST_PAD_QUERY_START:
+      *value = src->segment_start;
+      break;
+    case GST_PAD_QUERY_SEGMENT_END:
+      *value = src->segment_end;
+      break;
+    default:
+      return FALSE;
+  } 
+  return TRUE;
+}
+
+GST_EVENT_MASK_FUNCTION (gst_fakesrc_get_event_mask,
+  { GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH },
+  { GST_EVENT_SEEK_SEGMENT, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP },
+  { GST_EVENT_FLUSH, 0 }
+)
+
 static gboolean
 gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
 {
@@ -327,6 +371,12 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
         break;
       }
       /* else we do a flush too */
+    case GST_EVENT_SEEK_SEGMENT:
+      src->segment_start = GST_EVENT_SEEK_OFFSET (event);
+      src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
+      src->buffer_count = src->segment_start;
+      src->segment_loop = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+      break;
     case GST_EVENT_FLUSH:
       src->need_flush = TRUE;
       break;
@@ -336,18 +386,6 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
   gst_event_unref (event);
 
   return TRUE;
-}
-
-static const GstEventMask*
-gst_fakesrc_get_event_mask (GstPad *pad)
-{
-  static const GstEventMask gst_fakesrc_event_mask[] = {
-    { GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH },
-    { GST_EVENT_FLUSH, 0 },
-    { 0, }
-  };
-
-  return gst_fakesrc_event_mask;
 }
 
 static void
@@ -375,6 +413,9 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
 
     gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
     gst_pad_set_event_mask_function (pad, gst_fakesrc_get_event_mask);
+    gst_pad_set_query_function (pad, gst_fakesrc_query);
+    gst_pad_set_query_type_function (pad, gst_fakesrc_get_query_types);
+    gst_pad_set_formats_function (pad, gst_fakesrc_get_formats);
     pads = g_list_next (pads);
   }
 }
@@ -687,6 +728,16 @@ gst_fakesrc_get(GstPad *pad)
     return GST_BUFFER(gst_event_new (GST_EVENT_FLUSH));
   }
 
+  if (src->buffer_count == src->segment_end) {
+    if (src->segment_loop) {
+      return GST_BUFFER(gst_event_new (GST_EVENT_SEGMENT_DONE));
+    }
+    else {
+      gst_element_set_eos (GST_ELEMENT (src));
+      return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+    }
+  }
+
   if (src->rt_num_buffers == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
@@ -745,35 +796,12 @@ gst_fakesrc_loop(GstElement *element)
     GstPad *pad = GST_PAD (pads->data);
     GstBuffer *buf;
 
-    if (src->rt_num_buffers == 0) {
-      src->eos = TRUE;
-    }
-    else {
-      if (src->rt_num_buffers > 0)
-        src->rt_num_buffers--;
-    }
+    buf = gst_fakesrc_get (pad);
+    gst_pad_push (pad, buf);
 
     if (src->eos) {
-      gst_pad_push(pad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
       return;
     }
-
-    buf = gst_fakesrc_create_buffer (src);
-    GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
-
-    if (!src->silent) {
-      if (src->last_message)
-        g_free (src->last_message);
-
-      src->last_message = g_strdup_printf ("fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
-                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
-
-      g_object_notify (G_OBJECT (src), "last_message");
-    }
-
-    g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-                       buf, pad);
-    gst_pad_push (pad, buf);
 
     pads = g_list_next (pads);
   }
