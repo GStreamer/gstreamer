@@ -1,3 +1,10 @@
+2005-01-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_getcaps):
+	  Set FPS correctly, even for webcams and the like.
+	* sys/v4l/v4l_calls.c: (gst_v4l_set_chan_norm):
+	  Don error on setting while capturing.
+
 2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dv/gstdvdec.c:
