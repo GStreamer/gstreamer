@@ -8,7 +8,7 @@ Copyright: LGPL
 Group: Libraries/Multimedia
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-Requires: libxml >= 1.8.0
+Requires: libxml2 >= 2.4.0
 BuildRequires: nasm => 0.90
 
 %description
