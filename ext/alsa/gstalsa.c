@@ -747,6 +747,7 @@ gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
     }
   }
 
+  gst_caps_do_simplify (ret_caps);
   return ret_caps;
 }
 
@@ -817,8 +818,10 @@ gst_alsa_get_caps (GstPad * pad)
     GST_WARNING_OBJECT (this, "no supported caps found, returning empty caps");
     return gst_caps_new_empty ();
   } else {
-    G_GNUC_UNUSED gchar *str = gst_caps_to_string (ret);
+    G_GNUC_UNUSED gchar *str;
 
+    gst_caps_do_simplify (ret);
+    str = gst_caps_to_string (ret);
     GST_LOG_OBJECT (this, "get_caps returns %s", str);
     g_free (str);
     return ret;
