@@ -52,42 +52,6 @@ called, presumably causing a push out the other side of that element, and
 eventually data gets to the other end.  The stack unrolls, and the
 iteration ends for that Src. 
 
-chained (alternative implementation)
-
-      bin               src               pad1           pad2            plugin
-       !                                              (= pad1->peer)
- gst_bin_iterate
-       !
-       ! (find entry)
-       !
-       ! (find src pad
-       !  of entry element)
-       !
-       ! gst_pad_pull
-       !------------------------------------------------>!
-                                 ?                       !
-		         !<------------------------------!
-                         !  
-                         ! (create buffer)
-			 !
-                         ! gst_pad_push    
-                         !------------------------------>!
-			                                 ! (bufpen filled)
-			(return buffer)			 !
-       !<------------------------------------------------!
-       !
-       ! gst_pad_chain
-       !------------------------------------------------------------------->!
-					                                    !
-					                                    :
-					                              (more chaining)                                
-					                                    :
-       !<-------------------------------------------------------------------!
-       !
-  iteration ends
-       !
-      ---
-       -
 
 
 Cothreaded: 
@@ -106,7 +70,7 @@ again in the next iteration.
 
 
       bin               cothread1         src               pad1           pad2       cothread2      plugin
-       !                 (src)                          (= pad1->peer)                (plugin)
+       !                 (src)                          (= pad2->peer)                (plugin)
  gst_bin_iterate
        !
        ! (first entry)
@@ -190,11 +154,125 @@ again in the next iteration.
        :
 
       
-(alternative implementation): 
+-----------------------------------------------------------------------------------------------
+1b) Simple push-function based with multiple output
+
+Chained: 
+
+Similar to the single output variant, except several chains are spawned
+off, one per push, hanging off whichever pad the buffer is pushed off of. 
+The stack will grow and unwind as many times as buffers are pushed out. 
+
+(current implementation)
+
+      bin               src               pad1           pad2            plugin
+       !                                              (= pad1->peer)
+ gst_bin_iterate
+       !
+       ! (find entry)
+       !
+       ! gst_src_push
+       !---------------->!  
+                         ! (create buffer)
+			 !
+                         ! gst_pad_push    
+			 !---------------->! 
+			                   !
+					   ! pad1->chainfunc (pad1->peer) 
+                                           !------------------------------->!
+					   !                                !
+					   :                                :
+					                              (more chaining)                                
+					   :                                :
+					   !<-------------------------------!
+			 !<----------------!
+                         ! (create buffer)
+			 !
+                         ! gst_pad_push    
+			 !---------------->! 
+			                   !
+					   ! pad1->chainfunc (pad1->peer) 
+                                           !------------------------------->!
+					   !                                !
+					   :                                :
+					                              (more chaining)                                
+					   :                                :
+					   !<-------------------------------!
+			 !<----------------!
+			 :
+		   (more pushes)
+			 :
+      !<-----------------!
+      !
+  iteration ends
+      !
+     ---
+      -
+
+
+Cothreaded: 
+
+Also similar to the single output variant.  When the pull winds its way
+back from the first push, execution returns to the Src's _push function,
+which simply goes off and pushes out another buffer, causing another
+series of context switches.  Eventually the loopfunc wrapper starts over,
+round and round we go. 
+
+
+
+-----------------------------------------------------------------------------------------------
+2) Pull-function based with single output
+
+Similar to a regular filter with a chain function associated with each
+pad, this kind of source doesn't provide a src-wide push function, but
+does provide pullfuncs for its pad.  A pullfunc puts a buffer in the pen
+and exits. 
+
+Chained: 
+
+      bin               src               pad1           pad2            plugin
+       !                                              (= pad1->peer)
+ gst_bin_iterate
+       !
+       ! (find entry)
+       !
+       ! (find src pad
+       !  of entry element)
+       !
+       ! gst_pad_pull
+       !------------------------------------------------>!
+                                 ?                       !
+		         !<------------------------------!
+                         !  
+                         ! (create buffer)
+			 !
+                         ! gst_pad_push    
+                         !------------------------------>!
+			                                 ! (bufpen filled)
+			(return buffer)			 !
+       !<------------------------------------------------!
+       !
+       ! gst_pad_chain
+       !------------------------------------------------------------------->!
+					                                    !
+					                                    :
+					                              (more chaining)                                
+					                                    :
+       !<-------------------------------------------------------------------!
+       !
+  iteration ends
+       !
+      ---
+       -
+
+As usual, is likely to be an entry into a Bin.  The Bin iterate code must
+explicitely pull a buffer and pass it on to the peer. 
+
+Cothreaded: 
 
 
       bin               cothread1         src               pad1           pad2       cothread2      plugin
-       !                 (src)                          (= pad1->peer)                (plugin)
+       !                 (src)                          (= pad2->peer)                (plugin)
  gst_bin_iterate
        !
        ! (first entry)
@@ -236,47 +314,11 @@ again in the next iteration.
 									    ! (bufpen empty)
 			                                       !<-----------!
                                                                !   cothread switch
-                         !<------------------------------------!   
+                                           !-------------------!   
+                         !<----------------!
        !<----------------!                                     
        !
   iteration ends
        !
        :
-
------------------------------------------------------------------------------------------------
-1b) Simple push-function based with multiple output
-
-Chained: 
-
-Similar to the single output variant, except several chains are spawned
-off, one per push, hanging off whichever pad the buffer is pushed off of. 
-The stack will grow and unwind as many times as buffers are pushed out. 
-
-Cothreaded: 
-
-Also similar to the single output variant.  When the pull winds its way
-back from the first push, execution returns to the Src's _push function,
-which simply goes off and pushes out another buffer, causing another
-series of context switches.  Eventually the loopfunc wrapper starts over,
-round and round we go. 
-
-
-
------------------------------------------------------------------------------------------------
-2) Pull-function based with single output
-
-Similar to a regular filter with a chain function associated with each
-pad, this kind of source doesn't provide a src-wide push function, but
-does provide pullfuncs for its pad.  A pullfunc puts a buffer in the pen
-and exits. 
-
-Chained: 
-
-As usual, is likely to be an entry into a Bin.  The Bin iterate code must
-explicitely pull a buffer and pass it on to the peer. 
-
-Cothreaded: 
-
-
----- ok, I'll finish this tomorrow when my brain's working again.... ----
 
