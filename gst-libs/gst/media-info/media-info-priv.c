@@ -395,6 +395,9 @@ gmi_set_mime (GstMediaInfo * info, const char *mime)
   }
   /* get a bunch of elements from the bin */
   priv->source = gst_bin_get_by_name (GST_BIN (priv->pipeline), "source");
+  if (!GST_IS_ELEMENT (priv->source))
+    g_error ("Could not create source element '%s'", priv->source_name);
+
   g_assert (GST_IS_ELEMENT (priv->source));
   g_object_set (G_OBJECT (priv->source), "location", priv->location, NULL);
   priv->decoder = gst_bin_get_by_name (GST_BIN (priv->pipeline), "decoder");
