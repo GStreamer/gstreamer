@@ -182,6 +182,7 @@ fault_setup (void)
 int
 main(int argc, char *argv[])
 {
+  gint i, j;
   /* options */
   gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
@@ -214,6 +215,24 @@ main(int argc, char *argv[])
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
   
   gst_init_with_popt_table (&argc, &argv, options);
+
+  /* FIXpopt: strip short args, too. We do it ourselves for now */
+  j = 1;
+  for (i = 1; i < argc; i++) {
+    if (*(argv[i]) == '-') {
+      if (strlen (argv[i]) == 2) {
+        gchar *c = argv[i];
+        c++;
+        if (*c == 'X' || *c == 'o') {
+	  i++;
+	}
+      }
+    } else {
+      argv[j] = argv[i];
+      j++;
+    }
+  }
+  argc = j;
 
   if (!no_fault)
     fault_setup();
