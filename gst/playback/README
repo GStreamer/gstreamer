@@ -13,7 +13,7 @@ decoderbin:
    - new_media events should be handled.
    - caching of elements.
 
-baseplaybin:
+playbasebin:
 
   A bin with an uri property. It will find the right source element from the registry
   and connect a decoderbin to it. When going to the PAUSED state, it will iterate the
@@ -47,7 +47,7 @@ baseplaybin:
 
 playbin:
   
-   Extends baseplaybin, sets up default audiosink and videosink for first audio/video
+   Extends playbasebin, sets up default audiosink and videosink for first audio/video
    stream detected. implements seeking and querying on the configured sinks.
 
    It also waits for new notifications from playbasebin about any new groups that are
