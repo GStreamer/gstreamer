@@ -87,6 +87,7 @@ struct _QtDemuxStream
   double rate;
   int n_channels;
   guint bytes_per_frame;
+  guint compression;
   guint samples_per_packet;
 };
 
@@ -424,9 +425,10 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "qtdemux",
     "Quicktime stream demuxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);
 
-     static gboolean gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
+static gboolean
+gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
 {
   guint32 remaining;
   GstEvent *event;
@@ -446,7 +448,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
       //g_warning("flush event");
       break;
     case GST_EVENT_DISCONTINUOUS:
-      GST_DEBUG ("discontinuous event\n");
+      GST_DEBUG ("discontinuous event");
       //gst_bytestream_flush_fast(qtdemux->bs, remaining);
       break;
     default:
@@ -571,7 +573,7 @@ gst_qtdemux_loop_header (GstElement * element)
         }
         default:
         {
-          GST_LOG ("unknown %08x '" GST_FOURCC_FORMAT "' at %d\n",
+          GST_LOG ("unknown %08x '" GST_FOURCC_FORMAT "' at %d",
               fourcc, GST_FOURCC_ARGS (fourcc), cur_offset);
           break;
         }
@@ -579,7 +581,7 @@ gst_qtdemux_loop_header (GstElement * element)
       ret = gst_bytestream_seek (qtdemux->bs, cur_offset + length,
           GST_SEEK_METHOD_SET);
       qtdemux->offset = cur_offset + length;
-      GST_DEBUG ("seek returned %d\n", ret);
+      GST_DEBUG ("seek returned %d", ret);
       break;
     }
     case QTDEMUX_STATE_SEEKING_EOS:
@@ -647,13 +649,13 @@ gst_qtdemux_loop_header (GstElement * element)
       cur_offset = gst_bytestream_tell (qtdemux->bs);
       if (offset != cur_offset) {
         GST_DEBUG ("seeking to offset %d", offset);
-        GST_LOG ("seeking to offset %d\n", offset);
+        GST_LOG ("seeking to offset %d", offset);
         ret = gst_bytestream_seek (qtdemux->bs, offset, GST_SEEK_METHOD_SET);
         GST_DEBUG ("seek returned %d", ret);
         return;
       }
 
-      GST_DEBUG ("reading %d bytes\n", size);
+      GST_DEBUG ("reading %d bytes", size);
       buf = NULL;
       do {
         ret = gst_bytestream_read (qtdemux->bs, &buf, size);
@@ -686,7 +688,7 @@ gst_qtdemux_loop_header (GstElement * element)
             stream->samples[stream->sample_index].duration;
         gst_pad_push (stream->pad, GST_DATA (buf));
 
-        GST_DEBUG ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
+        GST_INFO ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
       }
       stream->sample_index++;
       break;
@@ -948,7 +950,7 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length)
 
       uncompressed_length = QTDEMUX_GUINT32_GET (cmvd->data + 8);
       compressed_length = QTDEMUX_GUINT32_GET (cmvd->data + 4) - 12;
-      GST_LOG ("length = %d\n", uncompressed_length);
+      GST_LOG ("length = %d", uncompressed_length);
 
       buf = qtdemux_inflate (cmvd->data + 12, compressed_length,
           uncompressed_length);
@@ -958,7 +960,7 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length)
 
       qtdemux_parse (qtdemux, qtdemux->moov_node, buf, uncompressed_length);
     } else {
-      GST_LOG ("unknown header compression type\n");
+      GST_LOG ("unknown header compression type");
     }
   }
 }
@@ -971,14 +973,14 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
   QtNodeType *type;
   void *end;
 
-  GST_LOG ("qtdemux_parse %p %d\n", buffer, length);
+  GST_LOG ("qtdemux_parse %p %d", buffer, length);
 
   node_length = QTDEMUX_GUINT32_GET (buffer);
   fourcc = QTDEMUX_FOURCC_GET (buffer + 4);
 
   type = qtdemux_type_get (fourcc);
 
-  GST_LOG ("parsing '" GST_FOURCC_FORMAT "', length=%d\n",
+  GST_LOG ("parsing '" GST_FOURCC_FORMAT "', length=%d",
       GST_FOURCC_ARGS (fourcc), node_length);
 
   if (type->flags & QT_CONTAINER) {
@@ -992,7 +994,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
 
       if (buf + 8 >= end) {
         /* FIXME: get annoyed */
-        GST_LOG ("buffer overrun\n");
+        GST_LOG ("buffer overrun");
       }
       len = QTDEMUX_GUINT32_GET (buf);
 
@@ -1009,7 +1011,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       void *buf;
 
       uncompressed_length = QTDEMUX_GUINT32_GET (buffer + 8);
-      GST_LOG ("length = %d\n", uncompressed_length);
+      GST_LOG ("length = %d", uncompressed_length);
 
       buf =
           qtdemux_inflate (buffer + 12, node_length - 12, uncompressed_length);
@@ -1021,7 +1023,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
 
         if (buf + 8 >= end) {
           /* FIXME: get annoyed */
-          GST_LOG ("buffer overrun\n");
+          GST_LOG ("buffer overrun");
         }
         len = QTDEMUX_GUINT32_GET (buf);
 
@@ -1063,7 +1065,7 @@ qtdemux_node_dump_foreach (GNode * node, gpointer data)
   type = qtdemux_type_get (fourcc);
 
   depth = (g_node_depth (node) - 1) * 2;
-  GST_LOG ("%*s'" GST_FOURCC_FORMAT "', [%d], %s\n",
+  GST_LOG ("%*s'" GST_FOURCC_FORMAT "', [%d], %s",
       depth, "", GST_FOURCC_ARGS (fourcc), node_length, type->name);
 
   if (type->dump)
@@ -1082,59 +1084,54 @@ qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node)
 static void
 qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  creation time: %u\n", depth, "",
+  GST_LOG ("%*s  creation time: %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
-  GST_LOG ("%*s  modify time:   %u\n", depth, "",
+  GST_LOG ("%*s  modify time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 16));
-  GST_LOG ("%*s  time scale:    1/%u sec\n", depth, "",
+  GST_LOG ("%*s  time scale:    1/%u sec", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 20));
-  GST_LOG ("%*s  duration:      %u\n", depth, "",
+  GST_LOG ("%*s  duration:      %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 24));
-  GST_LOG ("%*s  pref. rate:    %g\n", depth, "",
-      QTDEMUX_FP32_GET (buffer + 28));
-  GST_LOG ("%*s  pref. volume:  %g\n", depth, "",
-      QTDEMUX_FP16_GET (buffer + 32));
-  GST_LOG ("%*s  preview time:  %u\n", depth, "",
+  GST_LOG ("%*s  pref. rate:    %g", depth, "", QTDEMUX_FP32_GET (buffer + 28));
+  GST_LOG ("%*s  pref. volume:  %g", depth, "", QTDEMUX_FP16_GET (buffer + 32));
+  GST_LOG ("%*s  preview time:  %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 80));
-  GST_LOG ("%*s  preview dur.:  %u\n", depth, "",
+  GST_LOG ("%*s  preview dur.:  %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 84));
-  GST_LOG ("%*s  poster time:   %u\n", depth, "",
+  GST_LOG ("%*s  poster time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 88));
-  GST_LOG ("%*s  select time:   %u\n", depth, "",
+  GST_LOG ("%*s  select time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 92));
-  GST_LOG ("%*s  select dur.:   %u\n", depth, "",
+  GST_LOG ("%*s  select dur.:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 96));
-  GST_LOG ("%*s  current time:  %u\n", depth, "",
+  GST_LOG ("%*s  current time:  %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 100));
-  GST_LOG ("%*s  next track ID: %d\n", depth, "",
+  GST_LOG ("%*s  next track ID: %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 104));
 }
 
 static void
 qtdemux_dump_tkhd (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  creation time: %u\n", depth, "",
+  GST_LOG ("%*s  creation time: %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
-  GST_LOG ("%*s  modify time:   %u\n", depth, "",
+  GST_LOG ("%*s  modify time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 16));
-  GST_LOG ("%*s  track ID:      %u\n", depth, "",
+  GST_LOG ("%*s  track ID:      %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 20));
-  GST_LOG ("%*s  duration:      %u\n", depth, "",
+  GST_LOG ("%*s  duration:      %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 28));
-  GST_LOG ("%*s  layer:         %u\n", depth, "",
+  GST_LOG ("%*s  layer:         %u", depth, "",
       QTDEMUX_GUINT16_GET (buffer + 36));
-  GST_LOG ("%*s  alt group:     %u\n", depth, "",
+  GST_LOG ("%*s  alt group:     %u", depth, "",
       QTDEMUX_GUINT16_GET (buffer + 38));
-  GST_LOG ("%*s  volume:        %g\n", depth, "",
-      QTDEMUX_FP16_GET (buffer + 44));
-  GST_LOG ("%*s  track width:   %g\n", depth, "",
-      QTDEMUX_FP32_GET (buffer + 84));
-  GST_LOG ("%*s  track height:  %g\n", depth, "",
-      QTDEMUX_FP32_GET (buffer + 88));
+  GST_LOG ("%*s  volume:        %g", depth, "", QTDEMUX_FP16_GET (buffer + 44));
+  GST_LOG ("%*s  track width:   %g", depth, "", QTDEMUX_FP32_GET (buffer + 84));
+  GST_LOG ("%*s  track height:  %g", depth, "", QTDEMUX_FP32_GET (buffer + 88));
 
 }
 
@@ -1144,17 +1141,17 @@ qtdemux_dump_elst (GstQTDemux * qtdemux, void *buffer, int depth)
   int i;
   int n;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %u\n", depth, "",
+  GST_LOG ("%*s  n entries:     %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    track dur:     %u\n", depth, "",
+    GST_LOG ("%*s    track dur:     %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + 16 + i * 12));
-    GST_LOG ("%*s    media time:    %u\n", depth, "",
+    GST_LOG ("%*s    media time:    %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + 20 + i * 12));
-    GST_LOG ("%*s    media rate:    %g\n", depth, "",
+    GST_LOG ("%*s    media rate:    %g", depth, "",
         QTDEMUX_FP32_GET (buffer + 24 + i * 12));
   }
 }
@@ -1162,19 +1159,19 @@ qtdemux_dump_elst (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_mdhd (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  creation time: %u\n", depth, "",
+  GST_LOG ("%*s  creation time: %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
-  GST_LOG ("%*s  modify time:   %u\n", depth, "",
+  GST_LOG ("%*s  modify time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 16));
-  GST_LOG ("%*s  time scale:    1/%u sec\n", depth, "",
+  GST_LOG ("%*s  time scale:    1/%u sec", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 20));
-  GST_LOG ("%*s  duration:      %u\n", depth, "",
+  GST_LOG ("%*s  duration:      %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 24));
-  GST_LOG ("%*s  language:      %u\n", depth, "",
+  GST_LOG ("%*s  language:      %u", depth, "",
       QTDEMUX_GUINT16_GET (buffer + 28));
-  GST_LOG ("%*s  quality:       %u\n", depth, "",
+  GST_LOG ("%*s  quality:       %u", depth, "",
       QTDEMUX_GUINT16_GET (buffer + 30));
 
 }
@@ -1182,19 +1179,19 @@ qtdemux_dump_mdhd (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_hdlr (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  type:          " GST_FOURCC_FORMAT "\n", depth, "",
+  GST_LOG ("%*s  type:          " GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 12)));
-  GST_LOG ("%*s  subtype:       " GST_FOURCC_FORMAT "\n", depth, "",
+  GST_LOG ("%*s  subtype:       " GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 16)));
-  GST_LOG ("%*s  manufacturer:  " GST_FOURCC_FORMAT "\n", depth, "",
+  GST_LOG ("%*s  manufacturer:  " GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 20)));
-  GST_LOG ("%*s  flags:         %08x\n", depth, "",
+  GST_LOG ("%*s  flags:         %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 24));
-  GST_LOG ("%*s  flags mask:    %08x\n", depth, "",
+  GST_LOG ("%*s  flags mask:    %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 28));
-  GST_LOG ("%*s  name:          %*s\n", depth, "",
+  GST_LOG ("%*s  name:          %*s", depth, "",
       QTDEMUX_GUINT8_GET (buffer + 32), (char *) (buffer + 33));
 
 }
@@ -1202,9 +1199,9 @@ qtdemux_dump_hdlr (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_vmhd (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  mode/color:    %08x\n", depth, "",
+  GST_LOG ("%*s  mode/color:    %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 16));
 }
 
@@ -1215,16 +1212,16 @@ qtdemux_dump_dref (GstQTDemux * qtdemux, void *buffer, int depth)
   int i;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %u\n", depth, "",
+  GST_LOG ("%*s  n entries:     %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    size:          %u\n", depth, "",
+    GST_LOG ("%*s    size:          %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
-    GST_LOG ("%*s    type:          " GST_FOURCC_FORMAT "\n", depth, "",
+    GST_LOG ("%*s    type:          " GST_FOURCC_FORMAT, depth, "",
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + offset + 4)));
     offset += QTDEMUX_GUINT32_GET (buffer + offset);
   }
@@ -1237,46 +1234,48 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, void *buffer, int depth)
   int n;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %d\n", depth, "",
+  GST_LOG ("%*s  n entries:     %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    size:          %u\n", depth, "",
+    GST_LOG ("%*s    size:          %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
-    GST_LOG ("%*s    type:          " GST_FOURCC_FORMAT "\n", depth, "",
+    GST_LOG ("%*s    type:          " GST_FOURCC_FORMAT, depth, "",
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + offset + 4)));
-    GST_LOG ("%*s    data reference:%d\n", depth, "",
+    GST_LOG ("%*s    data reference:%d", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 14));
 
-    GST_LOG ("%*s    version/rev.:  %08x\n", depth, "",
+    GST_LOG ("%*s    version/rev.:  %08x", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 16));
-    GST_LOG ("%*s    vendor:        " GST_FOURCC_FORMAT "\n", depth, "",
+    GST_LOG ("%*s    vendor:        " GST_FOURCC_FORMAT, depth, "",
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + offset + 20)));
-    GST_LOG ("%*s    temporal qual: %u\n", depth, "",
+    GST_LOG ("%*s    temporal qual: %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 24));
-    GST_LOG ("%*s    spatial qual:  %u\n", depth, "",
+    GST_LOG ("%*s    spatial qual:  %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 28));
-    GST_LOG ("%*s    width:         %u\n", depth, "",
+    GST_LOG ("%*s    width:         %u", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 32));
-    GST_LOG ("%*s    height:        %u\n", depth, "",
+    GST_LOG ("%*s    height:        %u", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 34));
-    GST_LOG ("%*s    horiz. resol:  %g\n", depth, "",
+    GST_LOG ("%*s    horiz. resol:  %g", depth, "",
         QTDEMUX_FP32_GET (buffer + offset + 36));
-    GST_LOG ("%*s    vert. resol.:  %g\n", depth, "",
+    GST_LOG ("%*s    vert. resol.:  %g", depth, "",
         QTDEMUX_FP32_GET (buffer + offset + 40));
-    GST_LOG ("%*s    data size:     %u\n", depth, "",
+    GST_LOG ("%*s    data size:     %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 44));
-    GST_LOG ("%*s    frame count:   %u\n", depth, "",
+    GST_LOG ("%*s    frame count:   %u", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 48));
-    GST_LOG ("%*s    compressor:    %*s\n", depth, "",
+    GST_LOG ("%*s    compressor:    %d %d %d", depth, "",
         QTDEMUX_GUINT8_GET (buffer + offset + 49),
-        (char *) (buffer + offset + 51));
-    GST_LOG ("%*s    depth:         %u\n", depth, "",
+        QTDEMUX_GUINT8_GET (buffer + offset + 50),
+        QTDEMUX_GUINT8_GET (buffer + offset + 51));
+    //(char *) (buffer + offset + 51));
+    GST_LOG ("%*s    depth:         %u", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 82));
-    GST_LOG ("%*s    color table ID:%u\n", depth, "",
+    GST_LOG ("%*s    color table ID:%u", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 84));
 
     offset += QTDEMUX_GUINT32_GET (buffer + offset);
@@ -1290,16 +1289,16 @@ qtdemux_dump_stts (GstQTDemux * qtdemux, void *buffer, int depth)
   int n;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %d\n", depth, "",
+  GST_LOG ("%*s  n entries:     %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    count:         %u\n", depth, "",
+    GST_LOG ("%*s    count:         %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
-    GST_LOG ("%*s    duration:      %u\n", depth, "",
+    GST_LOG ("%*s    duration:      %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 4));
 
     offset += 8;
@@ -1313,14 +1312,14 @@ qtdemux_dump_stss (GstQTDemux * qtdemux, void *buffer, int depth)
   int n;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %d\n", depth, "",
+  GST_LOG ("%*s  n entries:     %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    sample:        %u\n", depth, "",
+    GST_LOG ("%*s    sample:        %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
 
     offset += 4;
@@ -1334,18 +1333,18 @@ qtdemux_dump_stsc (GstQTDemux * qtdemux, void *buffer, int depth)
   int n;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %d\n", depth, "",
+  GST_LOG ("%*s  n entries:     %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    first chunk:   %u\n", depth, "",
+    GST_LOG ("%*s    first chunk:   %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
-    GST_LOG ("%*s    sample per ch: %u\n", depth, "",
+    GST_LOG ("%*s    sample per ch: %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 4));
-    GST_LOG ("%*s    sample desc id:%08x\n", depth, "",
+    GST_LOG ("%*s    sample desc id:%08x", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 8));
 
     offset += 12;
@@ -1360,18 +1359,18 @@ qtdemux_dump_stsz (GstQTDemux * qtdemux, void *buffer, int depth)
   int offset;
   int sample_size;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  sample size:   %d\n", depth, "",
+  GST_LOG ("%*s  sample size:   %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   sample_size = QTDEMUX_GUINT32_GET (buffer + 12);
   if (sample_size == 0) {
-    GST_LOG ("%*s  n entries:     %d\n", depth, "",
+    GST_LOG ("%*s  n entries:     %d", depth, "",
         QTDEMUX_GUINT32_GET (buffer + 16));
     n = QTDEMUX_GUINT32_GET (buffer + 16);
     offset = 20;
     for (i = 0; i < n; i++) {
-      GST_LOG ("%*s    sample size:   %u\n", depth, "",
+      GST_LOG ("%*s    sample size:   %u", depth, "",
           QTDEMUX_GUINT32_GET (buffer + offset));
 
       offset += 4;
@@ -1386,14 +1385,14 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth)
   int n;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %d\n", depth, "",
+  GST_LOG ("%*s  n entries:     %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    chunk offset:  %u\n", depth, "",
+    GST_LOG ("%*s    chunk offset:  %08x", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
 
     offset += 4;
@@ -1407,14 +1406,14 @@ qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
   int n;
   int offset;
 
-  GST_LOG ("%*s  version/flags: %08x\n", depth, "",
+  GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  n entries:     %d\n", depth, "",
+  GST_LOG ("%*s  n entries:     %d", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
   for (i = 0; i < n; i++) {
-    GST_LOG ("%*s    chunk offset:  %" G_GUINT64_FORMAT "\n", depth, "",
+    GST_LOG ("%*s    chunk offset:  %" G_GUINT64_FORMAT, depth, "",
         QTDEMUX_GUINT64_GET (buffer + offset));
 
     offset += 8;
@@ -1424,14 +1423,14 @@ qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_dcom (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  compression type: " GST_FOURCC_FORMAT "\n", depth, "",
+  GST_LOG ("%*s  compression type: " GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 8)));
 }
 
 static void
 qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  length: %d\n", depth, "", QTDEMUX_GUINT32_GET (buffer + 8));
+  GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 8));
 }
 
 
@@ -1485,15 +1484,15 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
   if (mvhd == NULL) {
-    GST_LOG ("No mvhd node found.\n");
+    GST_LOG ("No mvhd node found.");
     return;
   }
 
   qtdemux->timescale = QTDEMUX_GUINT32_GET (mvhd->data + 20);
   qtdemux->duration = QTDEMUX_GUINT32_GET (mvhd->data + 24);
 
-  GST_INFO ("timescale: %d\n", qtdemux->timescale);
-  GST_INFO ("duration: %d\n", qtdemux->duration);
+  GST_INFO ("timescale: %d", qtdemux->timescale);
+  GST_INFO ("duration: %d", qtdemux->duration);
 
   trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
   qtdemux_parse_trak (qtdemux, trak);
@@ -1551,9 +1550,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   hdlr = qtdemux_tree_get_child_by_type (mdia, FOURCC_hdlr);
   g_assert (hdlr);
 
-  GST_LOG ("track type: " GST_FOURCC_FORMAT "\n",
+  GST_LOG ("track type: " GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (hdlr->data + 12)));
-  GST_LOG ("track subtype: " GST_FOURCC_FORMAT "\n",
+  GST_LOG ("track subtype: " GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (hdlr->data + 16)));
 
   stream->subtype = QTDEMUX_FOURCC_GET (hdlr->data + 16);
@@ -1568,75 +1567,89 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   g_assert (stsd);
 
   if (stream->subtype == FOURCC_vide) {
+    guint32 fourcc;
+
     offset = 16;
-    GST_LOG ("st type:          " GST_FOURCC_FORMAT "\n",
+    GST_LOG ("st type:          " GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + offset + 4)));
 
     stream->width = QTDEMUX_GUINT16_GET (stsd->data + offset + 32);
     stream->height = QTDEMUX_GUINT16_GET (stsd->data + offset + 34);
     stream->fps = 0.;           /* this is filled in later */
 
-    GST_LOG ("frame count:   %u\n",
+    GST_LOG ("frame count:   %u",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 48));
 
-    stream->caps = qtdemux_video_caps (qtdemux,
-        QTDEMUX_FOURCC_GET (stsd->data + offset + 4), stsd->data);
-    GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT "\n",
+    fourcc = QTDEMUX_FOURCC_GET (stsd->data + offset + 4);
+    stream->caps = qtdemux_video_caps (qtdemux, fourcc, stsd->data);
+    GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + offset + 4)),
         stream->caps);
   } else if (stream->subtype == FOURCC_soun) {
     int version, samplesize;
+    guint32 fourcc;
 
-    GST_LOG ("st type:          " GST_FOURCC_FORMAT "\n",
+    GST_LOG ("st type:          " GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)));
 
+    fourcc = QTDEMUX_FOURCC_GET (stsd->data + 16 + 4);
+
     offset = 32;
-    GST_LOG ("version/rev:      %08x\n",
+    GST_LOG ("version/rev:      %08x",
         QTDEMUX_GUINT32_GET (stsd->data + offset));
     version = QTDEMUX_GUINT32_GET (stsd->data + offset);
-    GST_LOG ("vendor:           %08x\n",
+    GST_LOG ("vendor:           %08x",
         QTDEMUX_GUINT32_GET (stsd->data + offset + 4));
-    GST_LOG ("n_channels:       %d\n",
+    GST_LOG ("n_channels:       %d",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 8));
     stream->n_channels = QTDEMUX_GUINT16_GET (stsd->data + offset + 8);
-    GST_LOG ("sample_size:      %d\n",
+    GST_LOG ("sample_size:      %d",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 10));
     samplesize = QTDEMUX_GUINT16_GET (stsd->data + offset + 10);
-    GST_LOG ("compression_id:   %d\n",
+    GST_LOG ("compression_id:   %d",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 12));
-    GST_LOG ("packet size:      %d\n",
+    GST_LOG ("packet size:      %d",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 14));
-    GST_LOG ("sample rate:      %g\n",
+    GST_LOG ("sample rate:      %g",
         QTDEMUX_FP32_GET (stsd->data + offset + 16));
     stream->rate = QTDEMUX_FP32_GET (stsd->data + offset + 16);
 
     offset = 52;
     if (version == 0x00010000) {
-      GST_LOG ("samples/packet:   %d\n",
+      GST_LOG ("samples/packet:   %d",
           QTDEMUX_GUINT32_GET (stsd->data + offset));
       stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset);
-      GST_LOG ("bytes/packet:     %d\n",
+      GST_LOG ("bytes/packet:     %d",
           QTDEMUX_GUINT32_GET (stsd->data + offset + 4));
-      GST_LOG ("bytes/frame:      %d\n",
+      GST_LOG ("bytes/frame:      %d",
           QTDEMUX_GUINT32_GET (stsd->data + offset + 8));
       stream->bytes_per_frame = QTDEMUX_GUINT32_GET (stsd->data + offset + 8);
-      GST_LOG ("bytes/sample:     %d\n",
+      GST_LOG ("bytes/sample:     %d",
           QTDEMUX_GUINT32_GET (stsd->data + offset + 12));
+      stream->compression = 1;
       offset = 68;
     } else {
       stream->bytes_per_frame = stream->n_channels * samplesize / 8;
       stream->samples_per_packet = 1;
+      stream->compression = 1;
+
+      /* Yes, these have to be hard-coded */
+      if (fourcc == GST_MAKE_FOURCC ('M', 'A', 'C', '6'))
+        stream->compression = 6;
+      if (fourcc == GST_MAKE_FOURCC ('M', 'A', 'C', '3'))
+        stream->compression = 3;
+      if (fourcc == GST_MAKE_FOURCC ('i', 'm', 'a', '4'))
+        stream->compression = 4;
     }
 
-    stream->caps = qtdemux_audio_caps (qtdemux,
-        QTDEMUX_FOURCC_GET (stsd->data + 16 + 4),
+    stream->caps = qtdemux_audio_caps (qtdemux, fourcc,
         (QTDEMUX_GUINT32_GET (stsd->data) >
             offset) ? stsd->data + offset : NULL);
-    GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT "\n",
+    GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)),
         stream->caps);
   } else {
-    GST_LOG ("unknown subtype\n");
+    GST_INFO ("unknown subtype");
     return;
   }
 
@@ -1722,7 +1735,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     int sample_width;
     guint64 timestamp = 0;
 
-    GST_LOG ("treating chunks as samples\n");
+    GST_LOG ("treating chunks as samples");
 
     /* treat chunks as samples */
     if (stco) {
@@ -1765,7 +1778,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         samples[j].offset = chunk_offset;
         samples[j].size =
             samples_per_chunk * stream->bytes_per_frame /
-            stream->samples_per_packet;
+            stream->samples_per_packet / stream->compression;
         samples[j].duration =
             samples_per_chunk * GST_SECOND / (stream->rate / 2);
         samples[j].timestamp = timestamp;
@@ -1784,7 +1797,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 /*
 done2:
     n_sample_times = QTDEMUX_GUINT32_GET(stts->data + 12);
-    GST_LOG("n_sample_times = %d\n",n_sample_times);
+    GST_LOG("n_sample_times = %d",n_sample_times);
     timestamp = 0;
     index = 0;
     sample_index = 0;
@@ -1809,7 +1822,7 @@ done2:
 done2:
 #if 0
   for (i = 0; i < n_samples; i++) {
-    GST_LOG ("%d: %d %d %d %d %" G_GUINT64_FORMAT "\n", i,
+    GST_LOG ("%d: %d %d %d %d %" G_GUINT64_FORMAT, i,
         samples[i].sample_index, samples[i].chunk,
         samples[i].offset, samples[i].size, samples[i].timestamp);
     if (i > 10)

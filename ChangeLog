@@ -1,3 +1,17 @@
+2004-03-24  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),
+	(gst_qtdemux_loop_header), (qtdemux_parse_moov), (qtdemux_parse),
+	(qtdemux_node_dump_foreach), (qtdemux_dump_mvhd),
+	(qtdemux_dump_tkhd), (qtdemux_dump_elst), (qtdemux_dump_mdhd),
+	(qtdemux_dump_hdlr), (qtdemux_dump_vmhd), (qtdemux_dump_dref),
+	(qtdemux_dump_stsd), (qtdemux_dump_stts), (qtdemux_dump_stss),
+	(qtdemux_dump_stsc), (qtdemux_dump_stsz), (qtdemux_dump_stco),
+	(qtdemux_dump_co64), (qtdemux_dump_dcom), (qtdemux_dump_cmvd),
+	(qtdemux_parse_tree), (qtdemux_parse_trak):  Fix debugging
+	messages.  Divide the chunk size by the compression ratio
+	(needed for MACE audio)
+
 2004-03-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
