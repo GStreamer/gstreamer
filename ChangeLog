@@ -1,5 +1,11 @@
 2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/level/Makefile.am:
+	* gst/level/gstlevel.c: (gst_level_class_init):
+	  clean up marshal generation
+
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/tcp/Makefile.am:
 	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_get_type),
 	(gst_tcpclientsink_class_init), (gst_tcpclientsink_init),
