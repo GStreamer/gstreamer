@@ -1,3 +1,8 @@
+2004-06-12  Zaheer Abbas Merali  <zaheerabbas@merali.org>
+
+	* configure.ac:
+	Added ogg library so that OSX detects libtheora properly
+	
 2004-06-11  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_dec_chain),
