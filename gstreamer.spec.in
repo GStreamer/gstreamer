@@ -292,7 +292,7 @@ Plugins for playing mpeg level 1 encoded movies
 %{prefix}/lib/gst/libmpeg1encoder*
 %{prefix}/lib/gst/libmpegaudio*
 %{prefix}/lib/gst/libmp1*
-%{prefix}/lib/gst/libmpeg_play*
+# this is gone %{prefix}/lib/gst/libmpeg_play*
 
 %package -n gstreamer-mpeg2
 Summary: GStreamer plugins for Mpeg level 2 playback
