@@ -233,8 +233,9 @@ gst_thread_change_state (GstElement *element)
 
   transition = GST_STATE_TRANSITION (element);
 
-  GST_INFO (GST_CAT_THREAD,"thread \"%s\" changing state to %s",
+  GST_INFO (GST_CAT_THREAD,"thread \"%s\" changing state to %s from %s",
                GST_ELEMENT_NAME (GST_ELEMENT (element)),
+	       _gst_print_statename(GST_STATE_PENDING (element)),
 	       _gst_print_statename(GST_STATE_PENDING (element)));
 
   //GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
@@ -306,6 +307,9 @@ gst_thread_change_state (GstElement *element)
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_STARTED);
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
+
+      if (GST_ELEMENT_CLASS (parent_class)->change_state)
+        stateset = GST_ELEMENT_CLASS (parent_class)->change_state (thread);
 
       break;
     default:
