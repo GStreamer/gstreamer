@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ static void		gst_alawenc_chain			(GstPad *pad, GstBuffer *buf);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
 /*
 static GstPadNegotiateReturn
@@ -117,7 +117,7 @@ gst_alawenc_init (GstALawEnc *alawenc)
 {
   alawenc->sinkpad = gst_pad_new_from_template(alawenc_sink_template,"sink");
   alawenc->srcpad = gst_pad_new_from_template(alawenc_src_template,"src");
-  //gst_pad_set_negotiate_function(alawenc->sinkpad, alawenc_negotiate_sink);
+  /*gst_pad_set_negotiate_function(alawenc->sinkpad, alawenc_negotiate_sink);*/
 
   gst_element_add_pad(GST_ELEMENT(alawenc),alawenc->sinkpad);
   gst_pad_set_chain_function(alawenc->sinkpad,gst_alawenc_chain);

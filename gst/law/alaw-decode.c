@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -45,8 +45,7 @@ static void		gst_alawdec_chain			(GstPad *pad, GstBuffer *buf);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };
-//
+/*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 /*
 static GstPadNegotiateReturn
 alawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
@@ -117,7 +116,7 @@ gst_alawdec_init (GstALawDec *alawdec)
 {
   alawdec->sinkpad = gst_pad_new_from_template(alawdec_sink_template,"sink");
   alawdec->srcpad = gst_pad_new_from_template(alawdec_src_template,"src");
-  //gst_pad_set_negotiate_function(alawdec->sinkpad, alawdec_negotiate_sink);
+  /*gst_pad_set_negotiate_function(alawdec->sinkpad, alawdec_negotiate_sink);*/
 
   gst_element_add_pad(GST_ELEMENT(alawdec),alawdec->sinkpad);
   gst_pad_set_chain_function(alawdec->sinkpad,gst_alawdec_chain);

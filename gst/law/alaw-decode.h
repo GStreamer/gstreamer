@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-// #include <gst/meta/audioraw.h>
+/* #include <gst/meta/audioraw.h> */
 
 
 #ifdef __cplusplus
@@ -51,7 +51,7 @@ struct _GstALawDec {
 
   GstPad *sinkpad,*srcpad;
 
-  //MetaAudioRaw meta;
+  /*MetaAudioRaw meta; */
 
 };
 
