@@ -39,15 +39,13 @@
 #include <string.h>		/* memmove */
 
 /* elementfactory information */
-GstElementDetails gst_bpwsinc_details = {
+static GstElementDetails gst_bpwsinc_details = GST_ELEMENT_DETAILS (
   "BPWSinc",
   "Filter/Audio/Effect",
-  "LGPL",
   "Band-Pass Windowed sinc filter",
-  VERSION,
-  "Thomas <thomas@apestaart.org>",
-  "(C) 2002 Steven W. Smith",
-};
+  "Thomas <thomas@apestaart.org>, "
+  "Steven W. Smith"
+);
 
 enum {
   /* FILL ME */
@@ -95,6 +93,7 @@ struct _GstBPWSincClass
     GstElementClass parent_class;
 };
 
+static void gst_bpwsinc_base_init		(gpointer g_class);
 static void gst_bpwsinc_class_init		(GstBPWSincClass * klass);
 static void gst_bpwsinc_init               	(GstBPWSinc * filter);
 
@@ -117,7 +116,9 @@ GType gst_bpwsinc_get_type (void)
 
   if (!bpwsinc_type) {
     static const GTypeInfo bpwsinc_info = {
-      sizeof (GstBPWSincClass), NULL, NULL,
+      sizeof (GstBPWSincClass), 
+      gst_bpwsinc_base_init, 
+      NULL,
       (GClassInitFunc) gst_bpwsinc_class_init, NULL, NULL,
       sizeof (GstBPWSinc), 0,
       (GInstanceInitFunc) gst_bpwsinc_init,
@@ -127,6 +128,18 @@ GType gst_bpwsinc_get_type (void)
 	                                   &bpwsinc_info, 0);
   }
   return bpwsinc_type;
+}
+
+static void
+gst_bpwsinc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  /* register src pads */
+  gst_element_class_add_pad_template (element_class, gst_filter_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_filter_sink_factory ());
+
+  gst_element_class_set_details (element_class, &gst_bpwsinc_details);  
 }
 
 static void
