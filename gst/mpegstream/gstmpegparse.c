@@ -94,6 +94,8 @@ static void gst_mpeg_parse_send_data (GstMPEGParse * mpeg_parse, GstData * data,
 static void gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse,
     GstClockTime time);
 
+static void gst_mpeg_parse_new_pad (GstElement * element, GstPad * pad);
+
 static void gst_mpeg_parse_loop (GstElement * element);
 
 static void gst_mpeg_parse_get_property (GObject * object, guint prop_id,
@@ -172,6 +174,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
 
+  gstelement_class->new_pad = gst_mpeg_parse_new_pad;
   gstelement_class->change_state = gst_mpeg_parse_change_state;
   gstelement_class->set_clock = gst_mpeg_parse_set_clock;
   gstelement_class->get_index = gst_mpeg_parse_get_index;
@@ -198,31 +201,34 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
 static void
 gst_mpeg_parse_init (GstMPEGParse * mpeg_parse)
 {
-  mpeg_parse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
-      "sink");
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (mpeg_parse);
+  GstPadTemplate *templ;
+
+  templ = gst_element_class_get_pad_template (klass, "sink");
+  mpeg_parse->sinkpad = gst_pad_new_from_template (templ, "sink");
   gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->sinkpad);
   gst_pad_set_formats_function (mpeg_parse->sinkpad,
       gst_mpeg_parse_get_src_formats);
   gst_pad_set_convert_function (mpeg_parse->sinkpad,
       gst_mpeg_parse_convert_src);
 
-  mpeg_parse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
-  gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->srcpad);
-  gst_pad_set_formats_function (mpeg_parse->srcpad,
-      gst_mpeg_parse_get_src_formats);
-  gst_pad_set_convert_function (mpeg_parse->srcpad, gst_mpeg_parse_convert_src);
-  gst_pad_set_event_mask_function (mpeg_parse->srcpad,
-      gst_mpeg_parse_get_src_event_masks);
-  gst_pad_set_event_function (mpeg_parse->srcpad,
-      gst_mpeg_parse_handle_src_event);
-  gst_pad_set_query_type_function (mpeg_parse->srcpad,
-      gst_mpeg_parse_get_src_query_types);
-  gst_pad_set_query_function (mpeg_parse->srcpad,
-      gst_mpeg_parse_handle_src_query);
-  gst_pad_use_explicit_caps (mpeg_parse->srcpad);
+  if ((templ = gst_element_class_get_pad_template (klass, "src"))) {
+    mpeg_parse->srcpad = gst_pad_new_from_template (templ, "src");
+    gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->srcpad);
+    gst_pad_set_formats_function (mpeg_parse->srcpad,
+        gst_mpeg_parse_get_src_formats);
+    gst_pad_set_convert_function (mpeg_parse->srcpad,
+        gst_mpeg_parse_convert_src);
+    gst_pad_set_event_mask_function (mpeg_parse->srcpad,
+        gst_mpeg_parse_get_src_event_masks);
+    gst_pad_set_event_function (mpeg_parse->srcpad,
+        gst_mpeg_parse_handle_src_event);
+    gst_pad_set_query_type_function (mpeg_parse->srcpad,
+        gst_mpeg_parse_get_src_query_types);
+    gst_pad_set_query_function (mpeg_parse->srcpad,
+        gst_mpeg_parse_handle_src_query);
+    gst_pad_use_explicit_caps (mpeg_parse->srcpad);
+  }
 
   gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
 
@@ -343,6 +349,31 @@ gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
   }
 }
 
+static void
+gst_mpeg_parse_new_pad (GstElement * element, GstPad * pad)
+{
+  GstMPEGParse *mpeg_parse;
+
+  if (GST_PAD_IS_SINK (pad))
+    return;
+
+  mpeg_parse = GST_MPEG_PARSE (element);
+
+  /* For each new added pad, send a discont so it knows about the current
+   * time. This is required because MPEG allows any sort of order of
+   * packets, including setting base time before defining streams or
+   * even adding streams halfway a stream. */
+  if (!mpeg_parse->scr_pending && !mpeg_parse->do_adjust) {
+    GstEvent *event = gst_event_new_discontinuous (FALSE,
+        GST_FORMAT_TIME,
+        (guint64) MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +
+            mpeg_parse->adjust),
+        GST_FORMAT_UNDEFINED);
+
+    gst_pad_push (pad, GST_DATA (event));
+  }
+}
+
 static gboolean
 gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 {
@@ -419,11 +450,14 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         G_GUINT64_FORMAT " real:%" G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT,
         mpeg_parse->next_scr, mpeg_parse->current_scr + mpeg_parse->adjust,
         mpeg_parse->current_scr, mpeg_parse->adjust);
+
     if (mpeg_parse->do_adjust) {
       mpeg_parse->adjust +=
           (gint64) mpeg_parse->next_scr - (gint64) mpeg_parse->current_scr;
 
       GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
+    } else {
+      mpeg_parse->discont_pending = TRUE;
     }
   }
 

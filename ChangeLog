@@ -1,3 +1,43 @@
+2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_class_init),
+	(dvdreadsrc_init), (dvdreadsrc_dispose), (dvdreadsrc_set_property),
+	(dvdreadsrc_get_property), (_open), (_seek), (_read),
+	(dvdreadsrc_get), (dvdreadsrc_open_file),
+	(dvdreadsrc_change_state):
+	  Fix. Don't do one big huge loop around the whole DVD, that will
+	  cache all data and thus eat sizeof(dvd) (several GB) before we
+	  see something.
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_seek):
+	  Actually NULL'ify event after using it.
+	* gst/matroska/ebml-read.c: (gst_ebml_read_use_event),
+	(gst_ebml_read_handle_event), (gst_ebml_read_element_id),
+	(gst_ebml_read_element_length), (gst_ebml_read_element_data),
+	(gst_ebml_read_seek), (gst_ebml_read_skip):
+	  Handle events.
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_base_init),
+	(gst_dvd_demux_init), (gst_dvd_demux_get_audio_stream),
+	(gst_dvd_demux_get_subpicture_stream), (gst_dvd_demux_plugin_init):
+	  Fix timing (this will probably break if I seek using menus, but
+	  I didn't get there yet). VOBs and normal DVDs should now work.
+	  Add a mpeg2-only pad with high rank so this get autoplugged for
+	  MPEG-2 movies.
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_base_init),
+	(gst_mpeg_demux_class_init), (gst_mpeg_demux_init),
+	(gst_mpeg_demux_new_output_pad), (gst_mpeg_demux_get_video_stream),
+	(gst_mpeg_demux_get_audio_stream),
+	(gst_mpeg_demux_get_private_stream), (gst_mpeg_demux_parse_packet),
+	(gst_mpeg_demux_parse_pes), (gst_mpeg_demux_plugin_init):
+	  Use this as second rank for MPEG-1 and MPEG-2. Still use this for
+	  MPEG-1 but use dvddemux for MPEG-2.
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_class_init),
+	(gst_mpeg_parse_init), (gst_mpeg_parse_new_pad),
+	(gst_mpeg_parse_parse_packhead):
+	  Timing. Only add pad template if it exists. Add sink template from
+	  class and not from ourselves. This means we will always use the
+	  correct sink template even if it is not the one defined in this
+	  file.
+
 2004-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_packet),
