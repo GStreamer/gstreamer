@@ -151,7 +151,13 @@ md5_process_bytes (const void *buffer, size_t len, GstMD5Sink *ctx)
       size_t add = 128 - left_over > len ? len : 128 - left_over;
 
       /* Only put full words in the buffer.  */
-      add -= add % __alignof__ (guint32);
+      /* Forcing alignment here appears to be only an optimization.
+       * The glibc source uses __alignof__, which seems to be a
+       * gratuitous usage of a GCC extension, when sizeof() will
+       * work fine.  (And don't question the sanity of using
+       * sizeof(guint32) instead of 4. */
+      /* add -= add % __alignof__ (guint32); */
+      add -= add % sizeof(guint32);
 
       memcpy (&ctx->buffer[left_over], buffer, add);
       ctx->buflen += add;
