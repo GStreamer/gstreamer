@@ -314,7 +314,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (gst_pad_try_set_caps (space->srcpad, peercaps)) {
       space->type = GST_COLORSPACE_NONE;
       space->disabled = FALSE;
-      return GST_PAD_CONNECT_OK;
+      return GST_PAD_CONNECT_DONE;
     }
   }
   /* then see what the peer has that matches the size */
@@ -335,7 +335,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (colorspace_setup_converter (space, ourcaps, peercaps)) {
       if (gst_pad_try_set_caps (space->srcpad, peercaps)) {
         space->disabled = FALSE;
-        return GST_PAD_CONNECT_OK;
+        return GST_PAD_CONNECT_DONE;
       }
     }
     peercaps = peercaps->next;
