@@ -63,11 +63,8 @@ GType gst_goom_get_type(void);
 static GstElementDetails gst_goom_details = {
   "GOOM: what a GOOM!",
   "Visualization",
-  "LGPL",
   "Takes frames of data and outputs video frames using the GOOM filter",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 /* signals and args */
@@ -111,6 +108,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 
 
 static void		gst_goom_class_init	(GstGOOMClass *klass);
+static void		gst_goom_base_init	(GstGOOMClass *klass);
 static void		gst_goom_init		(GstGOOM *goom);
 static void		gst_goom_dispose	(GObject *object);
 
@@ -132,7 +130,7 @@ gst_goom_get_type (void)
   if (!type) {
     static const GTypeInfo info = {
       sizeof (GstGOOMClass),      
-      NULL,      
+      (GBaseInitFunc) gst_goom_base_init,      
       NULL,      
       (GClassInitFunc) gst_goom_class_init,
       NULL,
@@ -144,6 +142,18 @@ gst_goom_get_type (void)
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstGOOM", &info, 0);
   }
   return type;
+}
+
+static void
+gst_goom_base_init (GstGOOMClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details (element_class, &gst_goom_details);
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (src_template));
 }
 
 static void
@@ -381,26 +391,21 @@ gst_goom_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the goom element */
-  factory = gst_element_factory_new("goom",GST_TYPE_GOOM,
-                                   &gst_goom_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "goom",
+			       GST_RANK_NONE, GST_TYPE_GOOM);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "goom",
-  plugin_init
-};
+  "GOOM visualization filter",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
