@@ -2394,7 +2394,7 @@ gst_pad_get_caps (GstPad *pad)
   if (GST_RPAD_GETCAPSFUNC (realpad)) {
     GstCaps *caps;
 
-    GST_CAT_DEBUG (GST_CAT_CAPS, "using pad get function");
+    GST_CAT_DEBUG (GST_CAT_CAPS, "using pad getcaps function");
     caps = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD (realpad));
 
     if (caps == NULL) {
