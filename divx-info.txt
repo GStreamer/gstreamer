@@ -1,0 +1,26 @@
+        Information gathered from the Internet, MPlayer and Xine
+
+Mail me if there's any bull in there.
+	Bastien Nocera <hadess@hadess.net>
+
+DivX ;) = MS MPEG-4 v3 = Angel Potion = nAVI
+fourcc: MP43, DIV5, DIV6, DIV3, DIV4, AP41
+supported: FFMPEG (all platforms), libavifile (uses FFMPEG), win32 libraries
+
+OpenDivX = ISO MPEG-4 v2 = DivX4
+DIVX, DIV1, MP4S, XVID
+supported: FFMPEG's OpenDivX, Project Mayo's OpenDivX, win32 libraries
+
+MS MPEG-4 v1/v2
+DIV2, MPG4, MP42
+supported: win32 libraries only
+
+3vix
+fourcc: 3IV1
+supported: see http://3ivx.com/download/unix.html
+
+Note
+====
+
+For non-x86 machines, the easiest is to compile a recent libavifile (ie. > 0.6.0). It's the plugin that works best for AVI files under GStreamer.
+
