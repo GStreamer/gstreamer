@@ -433,9 +433,10 @@ testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
+testsuite/dynparams/Makefile
 testsuite/elements/Makefile
 testsuite/plugin/Makefile
-testsuite/dynparams/Makefile
+testsuite/refcounting/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
