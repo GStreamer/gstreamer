@@ -40,12 +40,12 @@ void eos(GstElement *element)
 /*  playing = FALSE; */
 }
 
-G_GNUC_UNUSED static GstCaps*
+G_GNUC_UNUSED static GstCaps2*
 gst_play_type_find (GstBin *bin, GstElement *element)
 {
   GstElement *typefind;
   GstElement *pipeline;
-  GstCaps *caps = NULL;
+  GstCaps2 *caps = NULL;
 
   GST_DEBUG ("GstPipeline: typefind for element \"%s\"",
              GST_ELEMENT_NAME(element));
@@ -238,7 +238,7 @@ create_input_channel (int id, char* location)
   char buffer[20]; 		/* hold the names */
 
 /*  GstAutoplug *autoplug;
-  GstCaps *srccaps; */
+  GstCaps2 *srccaps; */
   GstElement *new_element;  
   GstElement *decoder;
 
@@ -330,7 +330,7 @@ create_input_channel (int id, char* location)
 #endif
  
   new_element = gst_autoplug_to_caps (autoplug, srccaps, 
-  					gst_caps_new ("audio", "audio/raw", NULL), NULL);
+  					gst_caps2_new ("audio/raw", NULL), NULL);
  
   if (!new_element) {
     g_print ("could not autoplug, no suitable codecs found...\n");
