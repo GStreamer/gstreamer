@@ -551,7 +551,7 @@ gst_videoscale_chain (GstPad * pad, GstData * _data)
   outbuf = gst_pad_alloc_buffer (videoscale->srcpad,
       GST_BUFFER_OFFSET_NONE, videoscale->to_buf_size);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  gst_buffer_stamp (outbuf, buf);
 
   g_return_if_fail (videoscale->format);
   GST_LOG_OBJECT (videoscale, "format " GST_FOURCC_FORMAT,

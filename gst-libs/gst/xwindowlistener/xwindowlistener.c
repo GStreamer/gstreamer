@@ -96,6 +96,7 @@ gst_x_window_listener_dispose (GObject * object)
 
   if (xwin->display_name) {
     g_free (xwin->display_name);
+    xwin->display_name = NULL;
   }
 
   if (parent_class->dispose) {

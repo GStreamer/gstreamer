@@ -51,6 +51,7 @@
 static void gst_alsa_class_init (gpointer g_class, gpointer class_data);
 static void gst_alsa_init (GstAlsa * this);
 static void gst_alsa_dispose (GObject * object);
+static void gst_alsa_finalize (GObject * object);
 static void gst_alsa_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_alsa_get_property (GObject * object,
@@ -161,6 +162,7 @@ gst_alsa_class_init (gpointer g_class, gpointer class_data)
     parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   object_class->dispose = gst_alsa_dispose;
+  object_class->finalize = gst_alsa_finalize;
   object_class->get_property = gst_alsa_get_property;
   object_class->set_property = gst_alsa_set_property;
 
@@ -218,12 +220,21 @@ gst_alsa_dispose (GObject * object)
 {
   GstAlsa *this = GST_ALSA (object);
 
-  g_free (this->device);
-
-  if (this->clock)
+  if (this->clock) {
     gst_object_unparent (GST_OBJECT (this->clock));
+    this->clock = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_alsa_finalize (GObject * object)
+{
+  GstAlsa *this = GST_ALSA (object);
+
+  g_free (this->device);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

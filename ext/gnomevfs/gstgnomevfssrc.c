@@ -200,7 +200,7 @@ enum
 static void gst_gnomevfssrc_base_init (gpointer g_class);
 static void gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass);
 static void gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc);
-static void gst_gnomevfssrc_dispose (GObject * object);
+static void gst_gnomevfssrc_finalize (GObject * object);
 
 static void gst_gnomevfssrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -284,7 +284,7 @@ gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass)
       "bytesperread", ARG_BYTESPERREAD, G_PARAM_READWRITE,
       "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
 
-  gobject_class->dispose = gst_gnomevfssrc_dispose;
+  gobject_class->finalize = gst_gnomevfssrc_finalize;
 
   g_object_class_install_property (gobject_class,
       ARG_HANDLE,
@@ -381,7 +381,7 @@ gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc)
 }
 
 static void
-gst_gnomevfssrc_dispose (GObject * object)
+gst_gnomevfssrc_finalize (GObject * object)
 {
   GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (object);
 
@@ -407,7 +407,7 @@ gst_gnomevfssrc_dispose (GObject * object)
   g_mutex_free (src->audiocast_udpdata_mutex);
   g_mutex_free (src->audiocast_queue_mutex);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static guint

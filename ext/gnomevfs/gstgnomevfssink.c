@@ -102,7 +102,7 @@ enum
 static void gst_gnomevfssink_base_init (gpointer g_class);
 static void gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass);
 static void gst_gnomevfssink_init (GstGnomeVFSSink * gnomevfssink);
-static void gst_gnomevfssink_dispose (GObject * obj);
+static void gst_gnomevfssink_finalize (GObject * obj);
 
 static void gst_gnomevfssink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -212,7 +212,7 @@ gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass)
 
   gobject_class->set_property = gst_gnomevfssink_set_property;
   gobject_class->get_property = gst_gnomevfssink_get_property;
-  gobject_class->dispose = gst_gnomevfssink_dispose;
+  gobject_class->finalize = gst_gnomevfssink_finalize;
 
   gstelement_class->change_state = gst_gnomevfssink_change_state;
 
@@ -222,7 +222,7 @@ gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass)
 }
 
 static void
-gst_gnomevfssink_dispose (GObject * obj)
+gst_gnomevfssink_finalize (GObject * obj)
 {
   GstGnomeVFSSink *sink = GST_GNOMEVFSSINK (obj);
 
@@ -235,6 +235,8 @@ gst_gnomevfssink_dispose (GObject * obj)
     g_free (sink->uri_name);
     sink->uri_name = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void

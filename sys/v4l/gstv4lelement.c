@@ -412,6 +412,7 @@ gst_v4lelement_dispose (GObject * object)
 
   if (v4lelement->videodev) {
     g_free (v4lelement->videodev);
+    v4lelement->videodev = NULL;
   }
 
   if (((GObjectClass *) parent_class)->dispose)

@@ -138,7 +138,7 @@ enum
 static void cdparanoia_base_init (gpointer g_class);
 static void cdparanoia_class_init (CDParanoiaClass * klass);
 static void cdparanoia_init (CDParanoia * cdparanoia);
-static void cdparanoia_dispose (GObject * obj);
+static void cdparanoia_finalize (GObject * obj);
 
 static void cdparanoia_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -279,7 +279,7 @@ cdparanoia_class_init (CDParanoiaClass * klass)
 
   gobject_class->set_property = cdparanoia_set_property;
   gobject_class->get_property = cdparanoia_get_property;
-  gobject_class->dispose = cdparanoia_dispose;
+  gobject_class->finalize = cdparanoia_finalize;
 
   gstelement_class->change_state = cdparanoia_change_state;
   gstelement_class->set_index = cdparanoia_set_index;
@@ -324,16 +324,14 @@ cdparanoia_init (CDParanoia * cdparanoia)
 }
 
 static void
-cdparanoia_dispose (GObject * obj)
+cdparanoia_finalize (GObject * obj)
 {
-  CDParanoia *cdparanoia;
-
-  cdparanoia = CDPARANOIA (obj);
+  CDParanoia *cdparanoia = CDPARANOIA (obj);
 
   g_free (cdparanoia->uri);
   cdparanoia->uri = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void

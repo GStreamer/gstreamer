@@ -588,9 +588,12 @@ static void gst_audioscale_dispose (GObject * object)
 
   if (audioscale->gst_resample) {
     g_free (audioscale->gst_resample);
+    audioscale->gst_resample = NULL;
   }
-  if (audioscale->offsets)
+  if (audioscale->offsets) {
     g_free (audioscale->offsets);
+    audioscale->offsets = NULL;
+  }
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
