@@ -1,0 +1,75 @@
+Some notes on use of pthreads in GStreamer
+------------------------------------------
+
+First off, pthreads are HARD.  Remember that.
+
+1) How I learned to debug glibc and pthreads and add debug code to it.
+
+You have to trick your GStreamer test app in running against a modified
+glibc.
+
+I used Red Hat 7.3, downloaded the .src.rpm, installed it, applied the
+patches included, and ran
+  ./configure --prefix=/home/thomas/cvs --with-add-ons
+  make
+  make install
+
+After quite some time this left me with recompiled libc and libpthread
+libraries in /home/thomas/cvs/lib, as well as a new ld-linux.so.2
+
+Now you need to use this new ld-linux.so ld loader to run your app,
+preferably from inside of gdb so you can tell what's going on when it
+crashes.
+
+You can use ld-linux.so.2 to call your binaries:
+  ld-linux.so.2 .libs/thread1
+to run the thread1 program with the new glibc.
+
+If this is a GStreamer app, chances are it might not find some libraries
+it needs that you could safely use from /usr/lib (like, zlib and popt).
+
+Also, you want it to run in gdb, so this is my full line:
+
+LD_LIBRARY_PATH=/usr/lib /home/thomas/cvs/lib/ld-linux.so.2 \
+  /usr/bin/gdb .libs/thread1 
+
+At this point you can start adding debug code to the pthreads implementation
+in your glibc source tree.  Just change, re-run make install, and restart
+the test app in gdb.
+
+Helpful --gst-mask is 0x00200100 to get thread info and scheduling info
+(with mem alloc from cothreads)
+
+2) What GStreamer does with pthreads.
+
+Apps create a thread with gst_thread_new.  This just allocates the GstThread
+structure without actually doing much with it.
+
+When a thread goes from NULL to READY, the gst_thread_change_state function
+creates the actual pthread.
+  - we lock the thread->lock mutex
+  - we create attributes for the pthread
+    - by default the pthread is JOINABLE
+    - we ask the thread's scheduler for a preferred stack size and location
+      (FIXME: if the scheduler doesn't return one, what do we do ?)
+    - we create the pthread with the given attributes
+      - the pthread id is stored in thread->thread_id
+      - the created pthread starts executing gst_thread_main_loop (thread)
+    - the change_state function does a g_cond_wait
+      - this means it unlocks the mutex, waits until thread->cond is set
+        (which happens in gst_thread_main_loop), 
+        then relocks the mutex and resumes execution
+
+From the point of view of the created pthread, here's what happens.
+gst_thread_main_loop (thread) gets called
+  - the thread's mutex gets locked
+  - the thread's scheduler's policy gets examined
+  - the scheduler gets set up (invokes the scheduler object's setup method)
+    FIXME: what are the prereqs of this _setup method ?
+    - basic and fast scheduler both call do_cothread_context_init
+      - basic: this calls cothread_context_init
+        - cothread_context_init
+      - fast: this calls cothread_create (NULL, 0, NULL, NULL))
+
+(FINISHME) 
+(FOLDMEBACKTOREALDOCS)
