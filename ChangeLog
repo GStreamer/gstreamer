@@ -1,3 +1,15 @@
+2004-10-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
+	(gst_ogg_demux_src_event), (gst_ogg_pad_populate),
+	(_read_bos_process), (gst_ogg_demux_iterate), (gst_ogg_pad_new):
+	  Faster seeking.
+	* ext/theora/theoradec.c: (theora_dec_sink_convert):
+	  Time-to-default conversion.
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+	  Don't error on unknown packets, just skip. We should probably
+	  read them if we want to support chained ogg.
+
 2004-10-18  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
