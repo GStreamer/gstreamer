@@ -1,3 +1,9 @@
+2004-06-06  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_handle_event):
+	  forward correctly transformed offset in discont events. Based on
+	  patch by Arwed v. Merkatz. (fixes #142851)
+
 2004-06-06  David Schleef  <ds@schleef.org>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c: that's

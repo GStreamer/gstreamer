@@ -798,7 +798,12 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
           GstEvent *new;
 
           if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
-            value += tag->v1tag_size;
+            if (value > tag->v2tag_size) {
+              value -= tag->v2tag_size;
+            } else {
+              /* FIXME: throw an error here? */
+              value = 0;
+            }
             new =
                 gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, value, 0);
             gst_data_unref (GST_DATA (event));
