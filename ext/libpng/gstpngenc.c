@@ -53,6 +53,8 @@ static void	gst_pngenc_init		(GstPngEnc *pngenc);
 
 static void	gst_pngenc_chain	(GstPad *pad, GstData *_data);
 
+GstPadTemplate *pngenc_src_template, *pngenc_sink_template;
+
 static GstElementClass *parent_class = NULL;
 
 
