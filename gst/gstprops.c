@@ -1528,10 +1528,10 @@ gst_props_copy_on_write (GstProps *props)
  * @props: the props to query
  * @name: the name of the entry to get
  *
- * Get the props entry with the geven name
+ * Get the props entry with the given name
  *
- * Returns: The props entry with the geven name or NULL when
- * the entry was not found.
+ * Returns: The props entry with the given name or NULL if
+ * the entry does not exist.
  */
 const GstPropsEntry*
 gst_props_get_entry (GstProps *props, const gchar *name)
@@ -1539,8 +1539,9 @@ gst_props_get_entry (GstProps *props, const gchar *name)
   GList *lentry;
   GQuark quark;
 
-  g_return_val_if_fail (props != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
+
+  if (props == NULL) return FALSE;
 
   quark = g_quark_from_string (name);
 
