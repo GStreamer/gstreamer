@@ -207,7 +207,7 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 
   va_start (var_args, format1);
 	        
-  while (format1 >= GST_FORMAT_UNDEFINED && count < 8) {
+  while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
 
     GST_EVENT_DISCONT_OFFSET (event, count).format = format1 & GST_SEEK_FORMAT_MASK;
     GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
