@@ -412,7 +412,7 @@ gst_vorbisdec_loop (GstElement * element)
 		outbuf = gst_buffer_new ();
 		GST_BUFFER_DATA (outbuf) = g_malloc (2 * vorbisdec->vi.channels * bout);
 		GST_BUFFER_SIZE (outbuf) = 2 * vorbisdec->vi.channels * bout;
-		GST_BUFFER_TIMESTAMP (outbuf) = vorbisdec->total_out * 1000000LL / vorbisdec->vi.rate;
+		GST_BUFFER_TIMESTAMP (outbuf) = vorbisdec->total_out * GST_SECOND / vorbisdec->vi.rate;
 
 		vorbisdec->total_out += bout;
 

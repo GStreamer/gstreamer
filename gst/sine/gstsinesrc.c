@@ -227,7 +227,7 @@ gst_sinesrc_get(GstPad *pad)
 
   GST_DPMAN_PREPROCESS(src->dpman, src->samples_per_buffer, src->timestamp);
   
-  src->timestamp += (gint64)src->samples_per_buffer * 1000000000LL / (gint64)src->samplerate;
+  src->timestamp += (gint64)src->samples_per_buffer * GST_SECOND / (gint64)src->samplerate;
    
   while(GST_DPMAN_PROCESS(src->dpman, i)) {
 
