@@ -1463,21 +1463,23 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
     GstElementFactory *factory;
     
-    if (!gst_library_load ("gstbytestream")) {
-        gst_info("alsa: could not load support library: 'gstbytestream'\n");
+    if (!gst_library_load ("gstbytestream"))
         return FALSE;
-    }
     
-    factory = gst_element_factory_new ("alsasrc", GST_TYPE_ALSA_SRC, &gst_alsa_src_details);
+    factory = gst_element_factory_new ("alsasrc", GST_TYPE_ALSA_SRC, 
+	                               &gst_alsa_src_details);
     g_return_val_if_fail (factory != NULL, FALSE);
-    gst_element_factory_add_pad_template (factory, gst_alsa_src_pad_factory());
-    gst_element_factory_add_pad_template (factory, gst_alsa_src_request_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_alsa_src_pad_factory ());
+    gst_element_factory_add_pad_template (factory, 
+	                                  gst_alsa_src_request_pad_factory ());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
-    factory = gst_element_factory_new ("alsasink", GST_TYPE_ALSA_SINK, &gst_alsa_sink_details);
+    factory = gst_element_factory_new ("alsasink", GST_TYPE_ALSA_SINK, 
+	                               &gst_alsa_sink_details);
     g_return_val_if_fail (factory != NULL, FALSE);
     gst_element_factory_add_pad_template (factory, gst_alsa_sink_pad_factory());
-    gst_element_factory_add_pad_template (factory, gst_alsa_sink_request_pad_factory());
+    gst_element_factory_add_pad_template (factory, 
+	                                  gst_alsa_sink_request_pad_factory());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
     gst_plugin_set_longname(plugin, "ALSA plugin library");
