@@ -50,12 +50,11 @@ enum {
   ARG_FORMAT,
   ARG_SAMPLERATE,
   ARG_TABLESIZE,
-  ARG_BUFFER_SIZE,
+  ARG_SAMPLES_PER_BUFFER,
   ARG_FREQ,
   ARG_VOLUME,
 };
 
-/* FIXME: this is not core business... */
 GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
   "src",
   GST_PAD_SRC,
@@ -137,8 +136,8 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TABLESIZE,
     g_param_spec_int("tablesize","tablesize","tablesize",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_SIZE,
-    g_param_spec_int("buffersize","buffersize","buffersize",
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SAMPLES_PER_BUFFER,
+    g_param_spec_int("samplesperbuffer","samplesperbuffer","samplesperbuffer",
                      0, G_MAXINT, 1024, G_PARAM_READWRITE)); 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQ,
     g_param_spec_float("freq","freq","freq",
@@ -172,7 +171,7 @@ gst_sinesrc_init (GstSineSrc *src)
   
   src->table_pos = 0.0;
   src->table_size = 1024;
-  src->buffer_size=1024;
+  src->samples_per_buffer=1024;
   src->timestamp=0LL;
   src->bufpool=NULL;
   
@@ -217,7 +216,7 @@ gst_sinesrc_get(GstPad *pad)
   src = GST_SINESRC(gst_pad_get_parent (pad));
 
   if (src->bufpool == NULL) {
-    src->bufpool = gst_buffer_pool_get_default (2 * src->buffer_size, 8);
+    src->bufpool = gst_buffer_pool_get_default (2 * src->samples_per_buffer, 8);
   }
   
   buf = (GstBuffer *) gst_buffer_new_from_pool (src->bufpool, 0, 0);
@@ -226,10 +225,10 @@ gst_sinesrc_get(GstPad *pad)
   samples = (gint16*)GST_BUFFER_DATA(buf);
   GST_BUFFER_DATA(buf) = (gpointer) samples;
   
-  frame_countdown = GST_DPMAN_PREPROCESS(src->dpman, src->buffer_size, src->timestamp);
+  frame_countdown = GST_DPMAN_PREPROCESS(src->dpman, src->samples_per_buffer, src->timestamp);
   
-  src->timestamp += src->buffer_size * 10^9 / src->samplerate;
-    
+  src->timestamp += (gint64)src->samples_per_buffer * 1000000000LL / (gint64)src->samplerate;
+   
   while(GST_DPMAN_PROCESS_COUNTDOWN(src->dpman, frame_countdown, i)) {
 
     src->table_lookup = (gint)(src->table_pos);
@@ -291,8 +290,8 @@ gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       gst_sinesrc_populate_sinetable(src);
       gst_sinesrc_update_table_inc(src);
       break;
-    case ARG_BUFFER_SIZE:
-      src->buffer_size = g_value_get_int (value);
+    case ARG_SAMPLES_PER_BUFFER:
+      src->samples_per_buffer = g_value_get_int (value);
       break;
     case ARG_FREQ:
       gst_dpman_bypass_dparam(src->dpman, "freq");
@@ -326,8 +325,8 @@ gst_sinesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_TABLESIZE:
       g_value_set_int (value, src->table_size);
       break;
-    case ARG_BUFFER_SIZE:
-      g_value_set_int (value, src->buffer_size);
+    case ARG_SAMPLES_PER_BUFFER:
+      g_value_set_int (value, src->samples_per_buffer);
       break;
     case ARG_FREQ:
       g_value_set_float (value, src->freq);

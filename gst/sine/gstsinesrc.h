@@ -74,7 +74,7 @@ struct _GstSineSrc {
   gint format;
   gint samplerate;
 
-  gint buffer_size;
+  gint samples_per_buffer;
   gulong seq;
   
   gint64 timestamp;
