@@ -60,6 +60,12 @@ main (int argc, char *argv[])
 ]]>
 <!-- example-end elementmake.c b -->
     </programlisting>
+<!-- example-begin elementmake.c c -->
+<!--
+  /* Hi Ronald.  Block c is an example of a piece of code that will end up
+   * in the extracted code file, but is not shown in the docbook output */
+-->
+<!-- example-end elementmake.c c -->
     <para> 
 <function>gst_element_factory_make</function> is actually a shorthand
 for a combination of two functions.

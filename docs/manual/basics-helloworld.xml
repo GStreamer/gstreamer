@@ -16,8 +16,9 @@
     </para>
 
     <programlisting>
-/* example-begin helloworld.c */      
-#include &lt;gst/gst.h&gt;
+<!-- example-begin helloworld.c a -->
+<![CDATA[
+#include <gst/gst.h>
 
 int 
 main (int argc, char *argv[]) 
@@ -64,7 +65,8 @@ main (int argc, char *argv[])
 
   exit (0);
 }
-/* example-end helloworld.c */      
+]]>
+<!-- example-end helloworld.c a -->
     </programlisting>
 
     <para>

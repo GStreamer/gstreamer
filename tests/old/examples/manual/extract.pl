@@ -8,9 +8,7 @@
 
 # decodes xml by translating &amp; &lt; &gt; back to what they should be
 # and also ignore
-# <![CDATA[
-# and
-# ]]>
+# <![CDATA[ and ]]> and <!-- and -->
 sub
 xml_decode ($)
 {
@@ -22,6 +20,8 @@ xml_decode ($)
 
   if ($input =~ /<!\[CDATA\[/) { $input = ""; }
   if ($input =~ /]]>/) { $input = ""; }
+  if ($input =~ /<!--/) { $input = ""; }
+  if ($input =~ /-->/) { $input = ""; }
 
   #print "Returning line $input";
   return $input;
@@ -72,7 +72,7 @@ open OUTPUT, ">$output";
 @block_ids = keys %blocks;
 foreach $block_id (sort @block_ids)
 {
-  print "Writing block with id $block_id\n";
+  print "Writing $output block $block_id\n";
   print OUTPUT $blocks{$block_id};
 }
 close OUTPUT;

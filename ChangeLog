@@ -1,5 +1,13 @@
 2004-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/manual/elements-api.xml:
+	* docs/manual/helloworld.xml:
+	* examples/manual/extract.pl:
+	  fix last example.  Add example of adding code blocks that are not
+	  shown in docbook output.
+
+2004-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/manual/dynamic.xml:
 	* docs/manual/elements-api.xml:
 	* docs/manual/gnome.xml:
