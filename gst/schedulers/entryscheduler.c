@@ -631,7 +631,7 @@ schedule_forward (Entry * entry)
     if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED))
       return NULL;
     for (list = element->pads; list; list = g_list_next (list)) {
-      if (GST_PAD_IS_SINK (list->data))
+      if (GST_PAD_IS_SINK (list->data) || !PAD_PRIVATE (list->data))
         continue;
       entry = schedule_forward ((Entry *) PAD_PRIVATE (list->data));
       if (entry)

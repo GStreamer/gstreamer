@@ -59,7 +59,6 @@ extern GType _gst_buffer_type;
 #define GST_BUFFER_MAXSIZE(buf)			(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER(buf)->timestamp)
 #define GST_BUFFER_DURATION(buf)		(GST_BUFFER(buf)->duration)
-#define GST_BUFFER_FORMAT(buf)			(GST_BUFFER(buf)->format)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER(buf)->offset_end)
 #define GST_BUFFER_FREE_DATA_FUNC(buf)          (GST_BUFFER(buf)->free_data)

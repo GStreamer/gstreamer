@@ -1,5 +1,13 @@
 2004-04-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/gstbuffer.h:
+	  remove macro that wouldn't work anymore because struct member has
+	  been removed.
+	* gst/schedulers/entryscheduler.c: (schedule_forward):
+	  fix segfault for unconnected pads
+	
+2004-04-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	reviewed by David Schleef <ds@schleef.org>
 
 	* gst/gstinfo.h:
