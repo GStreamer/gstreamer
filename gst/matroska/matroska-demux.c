@@ -2375,7 +2375,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
     } else {
       gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 32, 64, NULL);
     }
-  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AC3) ||
+  } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AC3,
+          strlen (GST_MATROSKA_CODEC_ID_AUDIO_AC3)) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_DTS)) {
     caps = gst_caps_new_simple ("audio/x-ac3", NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS)) {
@@ -2427,6 +2428,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
         "mpegversion", G_TYPE_INT, mpegversion, NULL);
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
+    g_print ("Codec=%s\n", codec_id);
     return NULL;
   }
 
