@@ -1,5 +1,10 @@
 2004-11-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):
+	  Don't assert (#157853).
+
+2004-11-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event),
 	  Fix bytes/samples confustion.
 	(gst_alsa_sink_mmap), (gst_alsa_sink_loop):

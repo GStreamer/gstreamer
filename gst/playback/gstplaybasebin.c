@@ -1069,15 +1069,11 @@ gst_play_base_bin_change_state (GstElement * element)
 
         group = get_active_group (play_base_bin);
 
-        /* FIXME for now...  The group can be NULL if the setup_source
-         * function somehow returned TRUE but did not commit the group. 
-         * Actually I don't think this can happen but need to recheck. */
-        g_assert (group);
-
         /* check if we found any supported stream... if not, then
          * we detected stream type (or the above would've failed),
          * but linking/decoding failed - plugin probably missing. */
-        for (item = group->streaminfo; item != NULL; item = item->next) {
+        for (item = group ? group->streaminfo : NULL;
+            item != NULL; item = item->next) {
           GstStreamInfo *info = GST_STREAM_INFO (item->data);
 
           if (info->type != GST_STREAM_TYPE_UNKNOWN) {
