@@ -1340,7 +1340,7 @@ plugin_init (GstPlugin * plugin)
       ogg_exts, "OggS", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_SECONDARY,
       mpeg_video_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
       qt_type_find, qt_exts, QT_CAPS, NULL);
