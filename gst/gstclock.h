@@ -176,6 +176,7 @@ gboolean		gst_clock_handle_discont	(GstClock *clock, guint64 time);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 GstClockTime		gst_clock_get_event_time	(GstClock *clock);
+GstClockTime		gst_clock_get_event_time_delay	(GstClock *clock, GstClockTime delay);
 
 
 GstClockID		gst_clock_get_next_id		(GstClock *clock);

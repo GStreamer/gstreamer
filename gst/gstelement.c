@@ -883,6 +883,29 @@ gst_element_wait (GstElement * element, GstClockTime timestamp)
 void
 gst_element_set_time (GstElement * element, GstClockTime time)
 {
+  gst_element_set_time_delay (element, time, 0);
+}
+
+/**
+ * gst_element_set_time_delay:
+ * @element: element to set time on
+ * @time: time to set
+ * @delay: a delay to discount from the given time
+ *
+ * Sets the current time of the element to time - delay. This function can be
+ * used when handling discont events in elements writing to an external buffer,
+ * i. e., an audio sink that writes to a sound card that buffers the sound
+ * before playing it. The delay should be the current buffering delay.
+ *
+ * You can only call this function on an element with a clock in
+ * #GST_STATE_PAUSED or #GST_STATE_PLAYING. You might want to have a look at
+ * gst_element_adjust_time(), if you want to adjust by a difference as that is
+ * more accurate.
+ */
+void
+gst_element_set_time_delay (GstElement * element, GstClockTime time,
+    GstClockTime delay)
+{
   GstClockTime event_time;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -891,10 +914,10 @@ gst_element_set_time (GstElement * element, GstClockTime time)
 
   switch (element->current_state) {
     case GST_STATE_PAUSED:
-      element->base_time = time;
+      element->base_time = time - delay;
       break;
     case GST_STATE_PLAYING:
-      event_time = gst_clock_get_event_time (element->clock);
+      event_time = gst_clock_get_event_time_delay (element->clock, delay);
       GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element,
           "clock time %llu: setting element time to %llu", event_time, time);
       element->base_time = event_time - time;

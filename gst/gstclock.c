@@ -635,19 +635,42 @@ gst_clock_get_time (GstClock * clock)
 GstClockTime
 gst_clock_get_event_time (GstClock * clock)
 {
+  return gst_clock_get_event_time_delay (clock, 0);
+}
+
+/**
+ * gst_clock_get_event_time_delay:
+ * @clock: clock to query
+ * @delay: time before the event actually occurs
+ *
+ * Gets the "event time" of a given clock. An event on the clock happens
+ * whenever this function is called. This ensures that multiple events that
+ * happen shortly after each other are treated as if they happened at the same
+ * time. GStreamer uses to keep state changes of multiple elements in sync.
+ *
+ * When calling this function, the specified delay will be added to the current
+ * time to produce the event time. This can be used for events that are
+ * scheduled to happen at some point in the future.
+ *
+ * Returns: the time of the event
+ */
+GstClockTime
+gst_clock_get_event_time_delay (GstClock * clock, GstClockTime delay)
+{
   GstClockTime time;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_TIME_NONE);
 
   time = gst_clock_get_time (clock);
 
-  if (clock->last_event + clock->max_event_diff >= time) {
+  if (ABS (GST_CLOCK_DIFF (clock->last_event, time + delay)) <
+      clock->max_event_diff) {
     GST_LOG_OBJECT (clock, "reporting last event time %" G_GUINT64_FORMAT,
         clock->last_event);
   } else {
+    clock->last_event = time + delay;
     GST_LOG_OBJECT (clock, "reporting new event time %" G_GUINT64_FORMAT,
         clock->last_event);
-    clock->last_event = time;
   }
 
   return clock->last_event;

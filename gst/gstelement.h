@@ -293,6 +293,8 @@ GstClockReturn		gst_element_clock_wait 		(GstElement *element,
 GstClockTime		gst_element_get_time		(GstElement *element);
 gboolean		gst_element_wait		(GstElement *element, GstClockTime timestamp);
 void			gst_element_set_time		(GstElement *element, GstClockTime time);
+void			gst_element_set_time_delay	(GstElement *element, GstClockTime time, GstClockTime delay);
+
 void			gst_element_adjust_time		(GstElement *element, GstClockTimeDiff diff);
  
 /* indexs */
