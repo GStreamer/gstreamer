@@ -1164,6 +1164,10 @@ gst_xvimagesink_change_state (GstElement * element)
       if (!xvimagesink->xcontext &&
           !(xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink)))
         return GST_STATE_FAILURE;
+      /* call XSynchronize with the current value of synchronous */
+      GST_DEBUG_OBJECT (xvimagesink, "XSynchronize called with %s",
+          xvimagesink->synchronous ? "TRUE" : "FALSE");
+      XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -1641,6 +1645,8 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       xvimagesink->synchronous = g_value_get_boolean (value);
       if (xvimagesink->xcontext) {
         XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
+        GST_DEBUG_OBJECT (xvimagesink, "XSynchronize called with %s",
+            xvimagesink->synchronous ? "TRUE" : "FALSE");
       }
       break;
     default:

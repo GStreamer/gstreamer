@@ -869,6 +869,10 @@ gst_ximagesink_change_state (GstElement * element)
         ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
       if (!ximagesink->xcontext)
         return GST_STATE_FAILURE;
+      /* call XSynchronize with the current value of synchronous */
+      GST_DEBUG_OBJECT (ximagesink, "XSynchronize called with %s",
+          ximagesink->synchronous ? "TRUE" : "FALSE");
+      XSynchronize (ximagesink->xcontext->disp, ximagesink->synchronous);
       break;
     case GST_STATE_READY_TO_PAUSED:
       if (ximagesink->xwindow)
@@ -1269,6 +1273,8 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
     case ARG_SYNCHRONOUS:
       ximagesink->synchronous = g_value_get_boolean (value);
       if (ximagesink->xcontext) {
+        GST_DEBUG_OBJECT (ximagesink, "XSynchronize called with %s",
+            ximagesink->synchronous ? "TRUE" : "FALSE");
         XSynchronize (ximagesink->xcontext->disp, ximagesink->synchronous);
       }
       break;
