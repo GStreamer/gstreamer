@@ -1,3 +1,13 @@
+2004-02-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gstreamer.spec.in:
+          put back RELEASE
+	* gst/Makefile.am:
+          clean up non-disting of built files
+	* testsuite/debug/commandline.c:
+          test fix for option rename
+
 2004-02-26  David Schleef  <ds@schleef.org>
 
 	* configure.ac:  We don't really need glib-2.3.  Also remove

@@ -127,7 +127,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
+%doc AUTHORS COPYING NEWS README TODO RELEASE
+·doc COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
