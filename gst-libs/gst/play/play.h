@@ -90,7 +90,9 @@ gboolean              gst_play_seek_to_time          (GstPlay *play,
                                                       gint64 time_nanos);
 
 GstElement *          gst_play_get_sink_element      (GstPlay *play,
-				                      GstElement *element,
-				                      GstPlaySinkType sink_type);
+                                                      GstElement *element,
+                                                      GstPlaySinkType sink_type);
+
+gdouble               gst_play_get_framerate         (GstPlay *play);
 
 #endif /* __GST_PLAY_H__ */

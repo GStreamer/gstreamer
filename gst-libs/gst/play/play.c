@@ -1127,6 +1127,46 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
 }
 
 /**
+ * gst_play_get_framerate:
+ * @play: a #GstPlay.
+ *
+ * Get the video framerate from @play.
+ *
+ * Returns: a #gdouble indicating video framerate in frame per second.
+ */
+gdouble
+gst_play_get_framerate (GstPlay * play)
+{
+  GstElement *video_element = NULL;
+  GstPad *video_pad = NULL;
+  GstCaps *video_pad_caps = NULL;
+  GstStructure *structure = NULL;
+
+  g_return_val_if_fail (GST_IS_PLAY (play), 0);
+
+  video_element = g_hash_table_lookup (play->priv->elements, "video_sink");
+  if (!GST_IS_ELEMENT (video_element))
+    return 0;
+  video_pad = gst_element_get_pad (video_element, "sink");
+  if (!GST_IS_PAD (video_pad))
+    return 0;
+  video_pad_caps = (GstCaps *) gst_pad_get_negotiated_caps (video_pad);
+  if (!GST_IS_CAPS (video_pad_caps))
+    return 0;
+
+  structure = gst_caps_get_structure (video_pad_caps, 0);
+
+  if (structure) {
+    gdouble value;
+
+    gst_structure_get_double (structure, "framerate", &value);
+    return value;
+  }
+
+  return 0;
+}
+
+/**
  * gst_play_get_sink_element:
  * @play: a #GstPlay.
  * @element: a #GstElement.
@@ -1145,8 +1185,6 @@ gst_play_get_sink_element (GstPlay * play,
   const GList *pads = NULL;
   gboolean has_src, has_correct_type;
 
-  g_return_val_if_fail (play != NULL, NULL);
-  g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_PLAY (play), NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
