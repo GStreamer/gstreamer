@@ -101,7 +101,7 @@ gstmarshal.c: gstmarshal.list
 	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c.tmp
 	mv gstmarshal.c.tmp gstmarshal.c
 
-gstenumtypes.h:
+gstenumtypes.h: $(libgstreamerinclude_HEADERS)
 	glib-mkenums \
 	--fhead "#ifndef __GST_ENUM_TYPES_H__\n#define __GST_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
 	--fprod "/* enumerations from \"@filename@\" */\n" \
@@ -109,7 +109,7 @@ gstenumtypes.h:
 	--ftail "G_END_DECLS\n\n#endif /* __GST_ENUM_TYPES_H__ */" \
 	$(libgstreamerinclude_HEADERS) > gstenumtypes.h
 
-gstenumtypes.c:
+gstenumtypes.c: $(libgstreamerinclude_HEADERS)
 	glib-mkenums \
 	--fhead "#include <gst/gst.h>" \
 	--fprod "\n/* enumerations from \"@filename@\" */" \
