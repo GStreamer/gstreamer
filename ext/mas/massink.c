@@ -49,15 +49,12 @@ enum {
   ARG_HOST,
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-  "sink",					/* the name of the pads */
-  GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "massink_sink8",				/* the name of the caps */
-    "audio/x-raw-int",
-    NULL
-  )
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("audio/x-raw-int")
 );
 
 static void                     gst_massink_base_init           (gpointer g_class);
@@ -68,7 +65,7 @@ static gboolean			gst_massink_open_audio		(GstMassink *sink);
 //static void			gst_massink_close_audio		(GstMassink *sink);
 static GstElementStateReturn	gst_massink_change_state	(GstElement *element);
 static gboolean			gst_massink_sync_parms		(GstMassink *massink);
-static GstPadLinkReturn	gst_massink_sinkconnect		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_massink_sinkconnect		(GstPad *pad, const GstCaps *caps);
 
 static void			gst_massink_chain		(GstPad *pad, GstData *_data);
 
@@ -130,7 +127,7 @@ gst_massink_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (sink_factory));
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &massink_details);
 }
 
@@ -179,7 +176,7 @@ static void
 gst_massink_init(GstMassink *massink)
 {
   massink->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+		  gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(massink), massink->sinkpad);
   gst_pad_set_chain_function(massink->sinkpad, GST_DEBUG_FUNCPTR(gst_massink_chain));
   gst_pad_set_link_function(massink->sinkpad, gst_massink_sinkconnect);
@@ -204,15 +201,12 @@ gst_massink_sync_parms (GstMassink *massink)
 }
 
 static GstPadLinkReturn
-gst_massink_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_massink_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstMassink *massink;
 
   massink = GST_MASSINK (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-  
   if (gst_massink_sync_parms (massink))
     return GST_PAD_LINK_OK;
 

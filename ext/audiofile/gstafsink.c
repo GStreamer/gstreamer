@@ -52,22 +52,19 @@ enum {
 
 /* added a sink factory function to force audio/raw MIME type */
 /* I think the caps can be broader, we need to change that somehow */
-GST_PAD_TEMPLATE_FACTORY (afsink_sink_factory,
+static GstStaticPadTemplate afsink_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (  
-    "audiofile_sink",
-    "audio/x-raw-int",
-        "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",           GST_PROPS_LIST (
-				  GST_PROPS_BOOLEAN (TRUE),
-       				  GST_PROPS_BOOLEAN (FALSE)
-       			    ),
-        "width",            GST_PROPS_INT_RANGE (8, 16),
-        "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (4000, 48000), /*FIXME*/
-        "channels",         GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+     "rate = (int) [ 1, MAX ], "
+     "channels = (int) [ 1, 2 ], "
+     "endianness = (int) BYTE_ORDER, "
+     "width = (int) { 8, 16 }, "
+     "depth = (int) { 8, 16 }, "
+     "signed = (boolean) { true, false }, "
+     "buffer-frames = (int) [ 1, MAX ]"
   )
 );
 
@@ -143,7 +140,8 @@ gst_afsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afsink_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&afsink_sink_factory));
   gst_element_class_set_details (element_class, &afsink_details);
 }
 
@@ -188,7 +186,7 @@ gst_afsink_init (GstAFSink *afsink)
   /* GstPad *pad;   this is now done in the struct */
 
   afsink->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (afsink_sink_factory), "sink");
+      gst_element_get_pad_template (GST_ELEMENT (afsink), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (afsink), afsink->sinkpad);
 
   gst_pad_set_chain_function (afsink->sinkpad, gst_afsink_chain);
@@ -284,7 +282,8 @@ static gboolean
 gst_afsink_open_file (GstAFSink *sink)
 {
   AFfilesetup outfilesetup;
-  GstCaps *caps;
+  const GstCaps *caps;
+  GstStructure *structure;
   int sample_format;			/* audiofile's sample format, look in audiofile.h */
   int byte_order = 0;			/* audiofile's byte order defines */
   
@@ -301,22 +300,18 @@ gst_afsink_open_file (GstAFSink *sink)
 */
 
   /* get the audio parameters */
-  caps = NULL;
   g_return_val_if_fail (GST_IS_PAD (sink->sinkpad), FALSE);
   caps = GST_PAD_CAPS (sink->sinkpad);
   
-  if (caps == NULL)
-  {
-    /* FIXME : Please change this to a better warning method ! */
-    printf ("WARNING: gstafsink chain : Could not get caps of pad !\n");
-  }
-  else
-  {
-    gst_caps_get_int 	 (caps, "channels",   &sink->channels);
-    gst_caps_get_int 	 (caps, "width",      &sink->width);
-    gst_caps_get_int 	 (caps, "rate",       &sink->rate);
-    gst_caps_get_boolean (caps, "signed",     &sink->is_signed);
-    gst_caps_get_int	 (caps, "endianness", &sink->endianness_data);
+  if (caps == NULL) {
+    g_critical ("gstafsink chain : Could not get caps of pad !\n");
+  } else {
+    structure = gst_caps_get_structure (caps, 0);
+    gst_structure_get_int (structure, "channels",   &sink->channels);
+    gst_structure_get_int (structure, "width",      &sink->width);
+    gst_structure_get_int (structure, "rate",       &sink->rate);
+    gst_structure_get_boolean (structure, "signed", &sink->is_signed);
+    gst_structure_get_int (structure, "endianness", &sink->endianness_data);
   }
   GST_DEBUG ("channels %d, width %d, rate %d, signed %s",
   	   		sink->channels, sink->width, sink->rate,

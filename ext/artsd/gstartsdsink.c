@@ -24,6 +24,7 @@
 #include "config.h"
 #endif
 #include "gstartsdsink.h"
+#include <gst/audio/audio.h>
 
 /* elementfactory information */
 static GstElementDetails artsdsink_details = {
@@ -45,31 +46,12 @@ enum {
   ARG_NAME,
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-  "sink",					/* the name of the pads */
-  GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "artsdsink_sink",				/* the name of the caps */
-    "audio/x-raw-int",				/* the mime type of the caps */
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (FALSE),
-      "width",      GST_PROPS_LIST (
-		      GST_PROPS_INT (8),
-		      GST_PROPS_INT (16)
-                    ),
-      "depth",      GST_PROPS_LIST (
-		      GST_PROPS_INT (8),
-		      GST_PROPS_INT (16)
-                    ),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_LIST (
-		      GST_PROPS_INT (1),
-		      GST_PROPS_INT (2)
-		    )
-  )
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
 );
 
 static void                     gst_artsdsink_base_init                 (gpointer g_class);
@@ -80,7 +62,7 @@ static gboolean			gst_artsdsink_open_audio		(GstArtsdsink *sink);
 static void			gst_artsdsink_close_audio		(GstArtsdsink *sink);
 static GstElementStateReturn	gst_artsdsink_change_state		(GstElement *element);
 static gboolean			gst_artsdsink_sync_parms		(GstArtsdsink *artsdsink);
-static GstPadLinkReturn		gst_artsdsink_link			(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_artsdsink_link			(GstPad *pad, const GstCaps *caps);
 static void			gst_artsdsink_chain			(GstPad *pad, GstData *_data);
 
 static void			gst_artsdsink_set_property		(GObject *object, guint prop_id, 
@@ -118,7 +100,8 @@ gst_artsdsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &artsdsink_details);
 }
 
@@ -151,7 +134,7 @@ static void
 gst_artsdsink_init(GstArtsdsink *artsdsink)
 {
   artsdsink->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+      gst_element_get_pad_template (GST_ELEMENT (artsdsink), "sink"), "sink");
   gst_element_add_pad(GST_ELEMENT(artsdsink), artsdsink->sinkpad);
   gst_pad_set_chain_function(artsdsink->sinkpad, gst_artsdsink_chain);
   gst_pad_set_link_function(artsdsink->sinkpad, gst_artsdsink_link);
@@ -175,19 +158,16 @@ gst_artsdsink_sync_parms (GstArtsdsink *artsdsink)
 }
 
 static GstPadLinkReturn
-gst_artsdsink_link (GstPad *pad, GstCaps *caps)
+gst_artsdsink_link (GstPad *pad, const GstCaps *caps)
 {
   GstArtsdsink *artsdsink = GST_ARTSDSINK (gst_pad_get_parent (pad));
+  GstStructure *structure;
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-
-  gst_caps_get (caps,
-		"rate",     &artsdsink->frequency,
-		"depth",    &artsdsink->depth,
-		"signed",   &artsdsink->signd,
-		"channels", &artsdsink->channels,
-		NULL);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "rate", &artsdsink->frequency);
+  gst_structure_get_int (structure, "depth", &artsdsink->depth);
+  gst_structure_get_int (structure, "signed", &artsdsink->signd);
+  gst_structure_get_int (structure, "channels", &artsdsink->channels);
 
   if (gst_artsdsink_sync_parms (artsdsink))
     return GST_PAD_LINK_OK;

@@ -22,6 +22,7 @@
 #endif
 
 #include <gstvideodrop.h>
+#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails videodrop_details = GST_ELEMENT_DETAILS (
@@ -43,45 +44,25 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY(src_template,
+static GstStaticPadTemplate gst_videodrop_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW(
-    "framedropper_yuv",
-    "video/x-raw-yuv",
-      "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-      "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "format",    GST_PROPS_LIST (
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','V')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('U','Y','V','Y'))
-                   )
+  GST_STATIC_CAPS(
+    GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("{ YUY2, I420, YV12, YUYV, UYVY }")
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY(sink_template,
+static GstStaticPadTemplate gst_videodrop_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW(
-    "framedropper_yuv",
-    "video/x-raw-yuv",
-      "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-      "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "format",    GST_PROPS_LIST (
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','V')),
-                     GST_PROPS_FOURCC (GST_MAKE_FOURCC ('U','Y','V','Y'))
-                   )
+  GST_STATIC_CAPS(
+    GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("{ YUY2, I420, YV12, YUYV, UYVY }")
   )
-)
+);
 
 static void	gst_videodrop_base_init		(gpointer g_class);
 static void	gst_videodrop_class_init	(GstVideodropClass *klass);
@@ -137,9 +118,9 @@ gst_videodrop_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &videodrop_details);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (sink_template));
+      gst_static_pad_template_get (&gst_videodrop_sink_template));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (src_template));
+      gst_static_pad_template_get (&gst_videodrop_src_template));
 }
 static void
 gst_videodrop_class_init (GstVideodropClass *klass)
@@ -166,52 +147,27 @@ gst_videodrop_class_init (GstVideodropClass *klass)
                                   min, max)
 
 static GstPadLinkReturn
-gst_videodrop_link (GstPad *pad, GstCaps *caps)
+gst_videodrop_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideodrop *videodrop;
-  GstPadLinkReturn ret;
-  GstCaps *peercaps;
+  GstStructure *structure;
+  gboolean ret;
+  double fps;
 
   videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
 
-  videodrop->inited = FALSE;
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_double (structure, "framerate", &fps);
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
-  gst_caps_get_float (caps, "framerate", &videodrop->from_fps);
-
-  /* calc output fps */
-  peercaps = gst_pad_get_allowed_caps (videodrop->srcpad);
-  if (gst_caps_has_fixed_property (peercaps, "framerate")) {
-    gst_caps_get_float (peercaps, "framerate", &videodrop->to_fps);
+  if (pad == videodrop->srcpad) {
+    videodrop->to_fps = fps;
   } else {
-    gfloat min, max;
-    gst_caps_get_float_range (peercaps, "framerate", &min, &max);
-    if (videodrop->from_fps >= min &&
-        videodrop->from_fps <= max) {
-      videodrop->to_fps = videodrop->from_fps;
-    } else {
-      videodrop->to_fps = max;
-    }
-  }
-  gst_caps_unref (peercaps);
-
-  GST_DEBUG ("%f -> %f fps",
-	     videodrop->from_fps, videodrop->to_fps);
-
-  peercaps = gst_caps_copy (caps);
-
-  peercaps->properties = gst_caps_set (peercaps, "framerate",
-				       GST_PROPS_FLOAT (videodrop->to_fps));
-
-  if ((ret = gst_pad_try_set_caps (videodrop->srcpad, peercaps)) > 0) {
-    videodrop->inited = TRUE;
-    videodrop->total = videodrop->pass = 0;
+    videodrop->from_fps = fps;
   }
 
-  return ret;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -219,16 +175,15 @@ gst_videodrop_init (GstVideodrop *videodrop)
 {
   GST_DEBUG ("gst_videodrop_init");
   videodrop->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template),
-		  "sink");
+      gst_static_pad_template_get (&gst_videodrop_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (videodrop), videodrop->sinkpad);
   gst_pad_set_chain_function (videodrop->sinkpad, gst_videodrop_chain);
   gst_pad_set_link_function (videodrop->sinkpad, gst_videodrop_link);
 
   videodrop->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template),
-		  "src");
+      gst_static_pad_template_get (&gst_videodrop_src_template), "src");
   gst_element_add_pad (GST_ELEMENT(videodrop), videodrop->srcpad);
+  gst_pad_set_link_function (videodrop->srcpad, gst_videodrop_link);
 
   videodrop->inited = FALSE;
   videodrop->total = videodrop->pass = 0;

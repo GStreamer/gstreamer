@@ -13,15 +13,10 @@
     do {
       speed = filter->speed; /* update this, it might have changed */
       
-      if (filter->srcpool) {
-        out = gst_buffer_new_from_pool(filter->srcpool, 0, 0);
-        out_data = (_FORMAT*) GST_BUFFER_DATA(out);
-      } else {
-        out = gst_buffer_new();
-        GST_BUFFER_DATA(out) = (gchar*) g_new(_FORMAT,SPEED_BUFSIZE/sizeof(_FORMAT));
-        GST_BUFFER_SIZE(out) = SPEED_BUFSIZE;
-        out_data = (_FORMAT*) GST_BUFFER_DATA(out);
-      }
+      out = gst_buffer_new();
+      GST_BUFFER_DATA(out) = (gchar*) g_new(_FORMAT,SPEED_BUFSIZE/sizeof(_FORMAT));
+      GST_BUFFER_SIZE(out) = SPEED_BUFSIZE;
+      out_data = (_FORMAT*) GST_BUFFER_DATA(out);
       nout = GST_BUFFER_SIZE(out) / sizeof(_FORMAT);
       GST_BUFFER_TIMESTAMP (out) = timestamp;
       offset += nout;

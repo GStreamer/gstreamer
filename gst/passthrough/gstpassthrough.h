@@ -50,7 +50,6 @@ struct _GstPassthrough {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
-  GstBufferPool *bufpool;
 
   gboolean silent;
 

@@ -107,8 +107,6 @@ struct _GstGLSink {
   
   GstClock *clock;
 
-  /* bufferpool stuff */
-  GstBufferPool *bufferpool;
   GMutex *cache_lock;
   GList *cache;
   
@@ -139,7 +137,6 @@ static void			gst_glsink_set_clock		(GstElement *element, GstClock *clock);
 static GstElementStateReturn	gst_glsink_change_state 	(GstElement *element);
 static GstPadLinkReturn	gst_glsink_sinkconnect	(GstPad *pad, GstCaps *caps);
 static GstCaps *		gst_glsink_getcaps		(GstPad *pad, GstCaps *caps);
-static GstBufferPool*		gst_glsink_get_bufferpool	(GstPad *pad);
 
 static void			gst_glsink_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
@@ -149,13 +146,6 @@ static void			gst_glsink_get_property	(GObject *object, guint prop_id,
 static void			gst_glsink_release_conn	(GstGLSink *sink);
 static void			gst_glsink_append_cache	(GstGLSink *sink, GstImageData *image);
 static gboolean			gst_glsink_set_caps		(GstGLSink *sink, GstCaps *caps);
-/* bufferpool stuff */
-static GstBuffer*		gst_glsink_buffer_new 	(GstBufferPool *pool, 
-								 gint64 location, 
-								 guint size, gpointer user_data);
-static void			gst_glsink_buffer_free	(GstBufferPool *pool, 
-		                                                 GstBuffer *buffer, 
-								 gpointer user_data);
 
 /* prototypes from plugins */
 extern GstImagePlugin* 		get_gl_rgbimage_plugin		(void);
@@ -278,13 +268,6 @@ gst_glsink_init (GstGLSink *sink)
     
   /* create bufferpool and image cache */
   GST_DEBUG ("glsink: creating bufferpool");
-  sink->bufferpool = gst_buffer_pool_new (
-		    NULL,
-		    NULL,
-		    (GstBufferPoolBufferNewFunction)gst_glsink_buffer_new,
-		    NULL,
-		    (GstBufferPoolBufferFreeFunction)gst_glsink_buffer_free,
-		    sink);
   sink->cache_lock = g_mutex_new();
   sink->cache = NULL; 
   
@@ -332,6 +315,7 @@ gst_glsink_append_cache (GstGLSink *sink, GstImageData *image)
   g_mutex_unlock (sink->cache_lock);
 }
 
+#if 0
 /* 
    Create a new buffer to hand up the chain.
    This allows the plugins to make its own decoding buffers
@@ -380,14 +364,7 @@ gst_glsink_buffer_free (GstBufferPool *pool, GstBuffer *buffer, gpointer user_da
 
   gst_buffer_default_free (buffer);
 }
-
-static GstBufferPool*
-gst_glsink_get_bufferpool (GstPad *pad)
-{
-  GstGLSink *sink = GST_GLSINK (gst_pad_get_parent (pad));
-
-  return sink->bufferpool;
-}
+#endif
 
 /* 
    Set the caps that the application desires. 

@@ -66,32 +66,24 @@ enum {
   ARG_SURROUND,
   ARG_SURROUND_DEPTH,
   ARG_SURROUND_DELAY,
-  ARG_OVERSAMP,
-  ARG_METADATA,
-  ARG_STREAMINFO
+  ARG_OVERSAMP
 };
 
-GST_PAD_TEMPLATE_FACTORY (modplug_src_template_factory,
+static GstStaticPadTemplate modplug_src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "modplug_src",
-    "audio/x-raw-int",  
-    GST_AUDIO_INT_PAD_TEMPLATE_PROPS
-  )
-)
+  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+);
 
-GST_PAD_TEMPLATE_FACTORY (modplug_sink_template_factory,
+static GstStaticPadTemplate modplug_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "modplug_sink",
-    "audio/x-mod",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ("audio/x-mod")
+);
 
 enum {
   MODPLUG_STATE_NEED_TUNE = 1,
@@ -111,7 +103,7 @@ static void	gst_modplug_get_property	(GObject *object,
 						 GValue *value,
 						 GParamSpec *pspec );
 static GstPadLinkReturn
-		gst_modplug_srclink		(GstPad *pad, GstCaps *caps);
+		gst_modplug_srclink		(GstPad *pad, const GstCaps *caps);
 static void  	gst_modplug_loop          	(GstElement *element);
 static void	gst_modplug_setup 		(GstModPlug *modplug);
 static const GstFormat *
@@ -156,9 +148,9 @@ gst_modplug_base_init (GstModPlugClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (modplug_sink_template_factory));
+	gst_static_pad_template_get (&modplug_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (modplug_src_template_factory));
+	gst_static_pad_template_get (&modplug_src_template_factory));
   gst_element_class_set_details (element_class, &modplug_details);
 }
 
@@ -221,14 +213,6 @@ gst_modplug_class_init (GstModPlugClass *klass)
     g_param_spec_boolean("noise_reduction", "noise_reduction", "noise_reduction",
                          TRUE, (GParamFlags)G_PARAM_READWRITE ));
 
-  g_object_class_install_property (gobject_class, ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
-
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
-		    
   gobject_class->set_property = gst_modplug_set_property;
   gobject_class->get_property = gst_modplug_get_property;
 
@@ -238,10 +222,10 @@ gst_modplug_class_init (GstModPlugClass *klass)
 static void
 gst_modplug_init (GstModPlug *modplug)
 {  
-  modplug->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (modplug_sink_template_factory), "sink");
+  modplug->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get (&modplug_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT(modplug), modplug->sinkpad);
 
-  modplug->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (modplug_src_template_factory), "src");
+  modplug->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (&modplug_src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT(modplug), modplug->srcpad);
   gst_pad_set_link_function (modplug->srcpad, gst_modplug_srclink);
   
@@ -395,20 +379,18 @@ gst_modplug_src_event (GstPad *pad, GstEvent *event)
   return res;
 }
 
+#if 0
 static GstCaps*
 gst_modplug_get_streaminfo (GstModPlug *modplug)
 {
   GstCaps *caps;
-  GstProps *props;
-  GstPropsEntry *entry;
  
   props = gst_props_empty_new ();
 
-  entry = gst_props_entry_new ("Patterns", GST_PROPS_INT ((gint)modplug->mSoundFile->GetNumPatterns()));
+  entry = gst_props_entry_new ("Patterns", G_TYPE_INT ((gint)modplug->mSoundFile->GetNumPatterns()));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
   
-  caps = gst_caps_new ("mad_streaminfo", "application/x-gst-streaminfo",
-		                   props);
+  caps = gst_caps_new_simple ("application/x-gst-streaminfo", NULL);
   return caps;
 }
 
@@ -434,15 +416,15 @@ gst_modplug_update_metadata (GstModPlug *modplug)
   props = gst_props_empty_new ();
 
   title = modplug->mSoundFile->GetTitle();
-  entry = gst_props_entry_new ("Title", GST_PROPS_STRING (title));
+  entry = gst_props_entry_new ("Title", G_TYPE_STRING (title));
   gst_props_add_entry (props, entry);
 
-  modplug->metadata = gst_caps_new ("modplug_metadata",
-                                    "application/x-gst-metadata",
-                                    props);
+  modplug->metadata = gst_caps_new_simple ("application/x-gst-metadata",
+		  NULL);
 
   g_object_notify (G_OBJECT (modplug), "metadata");
 }
+#endif
 
 
 static GstPadLinkReturn
@@ -464,17 +446,14 @@ modplug_negotiate (GstModPlug *modplug)
   }
     
   if ((ret = gst_pad_try_set_caps (modplug->srcpad, 
-    GST_CAPS_NEW (
-      "modplug_src",
-      "audio/x-raw-int",
-        "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",     	GST_PROPS_BOOLEAN (sign),
-        "width",      	GST_PROPS_INT (modplug->bitsPerSample),
-        "depth",      	GST_PROPS_INT (modplug->bitsPerSample),
-        "rate",       	GST_PROPS_INT (modplug->frequency),
-        "channels",     GST_PROPS_INT (modplug->channel),
-         NULL)
-     )) <= 0) {
+	  gst_caps_new_simple ("audio/x-raw-int",
+	    "endianness",   G_TYPE_INT, G_BYTE_ORDER,
+	    "signed",     	G_TYPE_BOOLEAN, sign,
+	    "width",      	G_TYPE_INT, modplug->bitsPerSample,
+	    "depth",      	G_TYPE_INT, modplug->bitsPerSample,
+	    "rate",       	G_TYPE_INT, modplug->frequency,
+	    "channels",     G_TYPE_INT, modplug->channel,
+	    NULL))) <= 0) {
     return ret;
   }
   
@@ -485,23 +464,20 @@ modplug_negotiate (GstModPlug *modplug)
 
 
 static GstPadLinkReturn
-gst_modplug_srclink (GstPad *pad, GstCaps *caps)
+gst_modplug_srclink (GstPad *pad, const GstCaps *caps)
 {
   GstModPlug *modplug; 
+  GstStructure *structure;
+  gint depth;
 
   modplug = GST_MODPLUG (gst_pad_get_parent (pad));
 
-  if (gst_caps_has_property_typed (caps, "depth", GST_PROPS_INT_TYPE)) {
-    gint depth;
-    gst_caps_get_int (caps, "depth", &depth);
-    modplug->_16bit = (depth == 16);
-  }
-  if (gst_caps_has_property_typed (caps, "channels", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "channels", &modplug->channel);
-  }
-  if (gst_caps_has_property_typed (caps, "rate", GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "rate", &modplug->frequency);
-  }
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "depth", &depth);
+  modplug->_16bit = (depth == 16);
+  gst_structure_get_int (structure, "channels", &modplug->channel);
+  gst_structure_get_int (structure, "rate", &modplug->frequency);
 
   return modplug_negotiate(modplug);
 }
@@ -611,8 +587,8 @@ gst_modplug_loop (GstElement *element)
 
     modplug->audiobuffer = (guchar *) g_malloc (modplug->length);
     
-    gst_modplug_update_metadata (modplug);
-    gst_modplug_update_info (modplug);
+    //gst_modplug_update_metadata (modplug);
+    //gst_modplug_update_info (modplug);
 
     modplug->state = MODPLUG_STATE_PLAY_TUNE;
   }
@@ -691,8 +667,6 @@ gst_modplug_change_state (GstElement *element)
       modplug->bs = gst_bytestream_new (modplug->sinkpad);
       modplug->song_size = 0;
       modplug->state = MODPLUG_STATE_NEED_TUNE;
-      modplug->metadata = NULL;
-      modplug->streaminfo = NULL;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -709,7 +683,6 @@ gst_modplug_change_state (GstElement *element)
       if (modplug->audiobuffer) g_free (modplug->audiobuffer);      
       modplug->buffer_in = NULL;
       modplug->audiobuffer = NULL;
-      gst_caps_unref (modplug->streaminfo);
       modplug->state = MODPLUG_STATE_NEED_TUNE;
       break;
     case GST_STATE_READY_TO_NULL:         
@@ -809,12 +782,6 @@ gst_modplug_get_property (GObject *object, guint id, GValue *value, GParamSpec *
       break;
     case ARG_NOISE_REDUCTION:
       g_value_set_boolean (value, modplug->noise_reduction);
-      break;
-    case ARG_METADATA:
-      g_value_set_boxed (value, modplug->metadata);
-      break;
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, modplug->streaminfo);
       break;
     default:
       break;

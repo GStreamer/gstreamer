@@ -29,7 +29,7 @@ GType gst_iir_get_type (void);
 GType gst_lpwsinc_get_type (void);
 GType gst_bpwsinc_get_type (void);
 
-extern GstPadTemplate *gst_filter_sink_factory ();
-extern GstPadTemplate *gst_filter_src_factory ();
+extern GstStaticPadTemplate gst_filter_sink_template;
+extern GstStaticPadTemplate gst_filter_src_template;
 
 #endif /* __GST_FILTER_H__ */

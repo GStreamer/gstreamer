@@ -44,8 +44,6 @@ struct _GstModPlug {
   GstElement element;
   GstPad *sinkpad, *srcpad;
   guint8 *buffer_in;
-  GstCaps *metadata;
-  GstCaps	*streaminfo;
   GstByteStream *bs;
 
   const gchar *songname;

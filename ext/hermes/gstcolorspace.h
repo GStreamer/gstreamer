@@ -75,13 +75,12 @@ struct _GstColorspace {
 
   GstColorSpaceConverterType type;
   gint width, height;
-  gfloat fps;
+  gdouble fps;
   gint srcbpp, destbpp;
-  gboolean disabled;
+  gboolean passthru;
 
   GstCaps *sinkcaps;
-
-  GstBufferPool *pool;
+  GstCaps *srccaps;
 };
 
 struct _GstColorspaceClass {

@@ -58,27 +58,23 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_templ,
+static GstStaticPadTemplate sink_templ =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "cdxaparse_sink",
-     "video/x-cdxa",
-      NULL
-  )
-)
+  GST_STATIC_CAPS ( "video/x-cdxa" )
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_templ,
+static GstStaticPadTemplate src_templ =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "cdxaparse_src",
-    "video/mpeg",
-      "systemstream",  GST_PROPS_BOOLEAN (TRUE)
+  GST_STATIC_CAPS ( "video/mpeg, "
+      "systemstream = (boolean) TRUE"
   )
-)
+);
 
 static void     gst_cdxa_parse_base_init        (gpointer g_class);
 static void 	gst_cdxa_parse_class_init	(GstCDXAParseClass *klass);
@@ -120,8 +116,10 @@ gst_cdxa_parse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_templ));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
   gst_element_class_set_details (element_class, &gst_cdxa_parse_details);
 }
 
@@ -145,11 +143,11 @@ gst_cdxa_parse_init (GstCDXAParse *cdxa_parse)
   GST_FLAG_SET (cdxa_parse, GST_ELEMENT_EVENT_AWARE);
 				
   cdxa_parse->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_templ), "sink");
+		  gst_static_pad_template_get (&sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (cdxa_parse), cdxa_parse->sinkpad);
 
   cdxa_parse->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_templ), "src");
+		  gst_static_pad_template_get (&src_templ), "src");
   gst_element_add_pad (GST_ELEMENT (cdxa_parse), cdxa_parse->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (cdxa_parse), gst_cdxa_parse_loop);

@@ -53,26 +53,20 @@ enum {
   ARG_CREATE_PADS
 };
 
-GST_PAD_TEMPLATE_FACTORY (sf_src_factory,
+static GstStaticPadTemplate sf_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  gst_caps_new (
-    "sf_src",
-    "audio/x-raw-float",
-    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-  )
+  GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
 );
 
-GST_PAD_TEMPLATE_FACTORY (sf_sink_factory,
+static GstStaticPadTemplate sf_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  gst_caps_new (
-    "sf_sink",
-    "audio/x-raw-float",
-    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-  )
+  GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
 );
 
 #define GST_TYPE_SF_MAJOR_TYPES (gst_sf_major_types_get_type())
@@ -162,7 +156,7 @@ static GstPad*		gst_sf_request_new_pad	(GstElement *element, GstPadTemplate *tem
 static void		gst_sf_release_request_pad (GstElement *element, GstPad *pad);
 static GstElementStateReturn gst_sf_change_state (GstElement *element);
 
-static GstPadLinkReturn gst_sf_link		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_sf_link		(GstPad *pad, const GstCaps *caps);
 
 static void		gst_sf_loop		(GstElement *element);
 
@@ -249,7 +243,7 @@ gst_sfsrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sf_src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sf_src_factory));
   gst_element_class_set_details (element_class, &sfsrc_details);
 }
 
@@ -258,7 +252,7 @@ gst_sfsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sf_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sf_sink_factory));
   gst_element_class_set_details (element_class, &sfsink_details);
 }
 
@@ -530,28 +524,27 @@ gst_sf_release_request_pad (GstElement *element, GstPad *pad)
 }
 
 static GstPadLinkReturn
-gst_sf_link (GstPad *pad, GstCaps *caps)
+gst_sf_link (GstPad *pad, const GstCaps *caps)
 {
   GstSF *this = (GstSF*)GST_OBJECT_PARENT (pad);
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
   
-  if (GST_CAPS_IS_FIXED (caps)) {
-    gst_caps_get_int (caps, "rate", &this->rate);
-    gst_caps_get_int (caps, "buffer-frames", &this->buffer_frames);
+  gst_structure_get_int  (structure, "rate", &this->rate);
+  gst_structure_get_int  (structure, "buffer-frames", &this->buffer_frames);
 
-    INFO_OBJ (this, "linked pad %s:%s with fixed caps, frames=%d, rate=%d",
-              GST_DEBUG_PAD_NAME (pad), this->rate, this->buffer_frames);
+  INFO_OBJ (this, "linked pad %s:%s with fixed caps, frames=%d, rate=%d",
+            GST_DEBUG_PAD_NAME (pad), this->rate, this->buffer_frames);
 
-    if (this->numchannels) {
-      /* we can go ahead and allocate our buffer */
-      if (this->buffer)
-        g_free (this->buffer);
-      this->buffer = g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
-      memset (this->buffer, 0, this->numchannels * this->buffer_frames * sizeof (float));
-    }
-    return GST_PAD_LINK_OK;
+  if (this->numchannels) {
+    /* we can go ahead and allocate our buffer */
+    if (this->buffer)
+      g_free (this->buffer);
+    this->buffer = g_malloc (this->numchannels * this->buffer_frames * sizeof (float));
+    memset (this->buffer, 0, this->numchannels * this->buffer_frames * sizeof (float));
   }
-
-  return GST_PAD_LINK_DELAYED;
+  return GST_PAD_LINK_OK;
 }
 
 static gboolean
@@ -706,8 +699,10 @@ gst_sf_loop (GstElement *element)
           if (!caps)
             caps = gst_caps_copy
               (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (GST_SF_CHANNEL (l)->pad)));
-          gst_caps_set (caps, "rate", GST_PROPS_INT (this->rate), NULL);
-          gst_caps_set (caps, "buffer-frames", GST_PROPS_INT (this->buffer_frames), NULL);
+          gst_caps_set_simple (caps,
+              "rate", G_TYPE_INT, this->rate,
+              "buffer-frames", G_TYPE_INT, this->buffer_frames,
+              NULL);
           if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
             gst_element_error (GST_ELEMENT (this),
                                g_strdup_printf ("Opened file with sample rate %d, but could not set caps",

@@ -39,43 +39,21 @@ static struct _elements_entry _elements[] = {
   { NULL, 0 },
 };
 
-GstPadTemplate*
-gst_filter_src_factory (void)
-{
-  static GstPadTemplate *templ = NULL;
-  if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW (
-  		"src",
-  		GST_PAD_SRC,
-  		GST_PAD_ALWAYS,
-  		gst_caps_new (
-  		  "filter_src",
-  		  "audio/x-raw-float",
-  	          GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-		)
-  	     );
-  }
-  return templ;
-}
+GstStaticPadTemplate gst_filter_src_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ( GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS )
+);
 
-GstPadTemplate*
-gst_filter_sink_factory (void)
-{
-  static GstPadTemplate *templ = NULL;
-  if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW (
-  		"sink",
-  		GST_PAD_SINK,
-  		GST_PAD_ALWAYS,
-  		gst_caps_new (
-  		  "filter_src",
-  		  "audio/x-raw-float",
-  		  GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-		)
-  	     );
-  }
-  return templ;
-}
+GstStaticPadTemplate gst_filter_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ( GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS )
+);
 
 static gboolean
 plugin_init (GstPlugin * plugin)

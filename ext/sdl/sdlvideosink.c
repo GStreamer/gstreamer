@@ -64,7 +64,7 @@ static void     gst_sdlvideosink_destroy      (GstSDLVideoSink      *sdl);
 
 static GstPadLinkReturn
                 gst_sdlvideosink_sinkconnect  (GstPad               *pad,
-                                               GstCaps              *caps);
+                                               const GstCaps       *caps);
 static void     gst_sdlvideosink_chain        (GstPad               *pad,
                                                GstData              *data);
 
@@ -80,7 +80,6 @@ static GstElementStateReturn
                 gst_sdlvideosink_change_state (GstElement           *element);
 
 
-static GstCaps *capslist = NULL;
 static GstPadTemplate *sink_template;
 
 static GstElementClass *parent_class = NULL;
@@ -129,7 +128,7 @@ static void
 gst_sdlvideosink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *caps;
+  GstCaps *capslist;
   gint i;
   gulong format[6] = { GST_MAKE_FOURCC('I','4','2','0'),
                        GST_MAKE_FOURCC('Y','V','1','2'),
@@ -139,23 +138,21 @@ gst_sdlvideosink_base_init (gpointer g_class)
                      };
 
   /* make a list of all available caps */
+  capslist = gst_caps_new_empty();
   for (i = 0; i < 5; i++) {
-    caps = gst_caps_new ("sdlvideosink_caps",
-                         "video/x-raw-yuv",
-                         gst_props_new (
-			   "format", GST_PROPS_FOURCC(format[i]),
-			   "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
-			   "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-			   "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-			   NULL       )
-      );
-    capslist = gst_caps_append(capslist, caps);
+     gst_caps_append_structure (capslist,
+	 gst_structure_new ("video/x-raw-yuv",
+	   "format", GST_TYPE_FOURCC, format[i],
+	   "width",  GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	   "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	   "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+	   NULL));
   }
 
   sink_template = gst_pad_template_new ("sink",
 					GST_PAD_SINK,
 					GST_PAD_ALWAYS,
-					capslist, NULL);
+					capslist);
   
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_set_details (element_class, &gst_sdlvideosink_details);
@@ -194,6 +191,8 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass *klass)
   gstvs_class->set_geometry = gst_sdlvideosink_set_geometry;*/
 }
 
+#if 0
+/* FIXME */
 static GstBuffer *
 gst_sdlvideosink_buffer_new (GstBufferPool *pool,  
 			     gint64         location,
@@ -253,14 +252,13 @@ gst_sdlvideosink_get_bufferpool (GstPad *pad)
 
   return NULL;
 }
+#endif
 
 static void
 gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 {
   GST_VIDEOSINK_PAD (sdlvideosink) = gst_pad_new_from_template (sink_template,
                                                                "sink");
-  gst_pad_set_bufferpool_function (GST_VIDEOSINK_PAD (sdlvideosink),
-                                   gst_sdlvideosink_get_bufferpool);
   gst_element_add_pad (GST_ELEMENT (sdlvideosink),
                        GST_VIDEOSINK_PAD (sdlvideosink));
 
@@ -277,12 +275,13 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 
   sdlvideosink->xwindow_id = 0;
 
-  sdlvideosink->capslist = capslist;
+  //sdlvideosink->capslist = capslist;
 
   sdlvideosink->init = FALSE;
 
   sdlvideosink->lock = g_mutex_new ();
 
+#if 0
   sdlvideosink->bufferpool = gst_buffer_pool_new (
 	    NULL,		/* free */
 	    NULL,		/* copy */
@@ -290,6 +289,7 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 	    NULL,		/* buffer copy, the default is fine */
 	    (GstBufferPoolBufferFreeFunction) gst_sdlvideosink_buffer_free,
 	    sdlvideosink);
+#endif
 
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_EVENT_AWARE);
@@ -509,37 +509,25 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
 
 static GstPadLinkReturn
 gst_sdlvideosink_sinkconnect (GstPad  *pad,
-                              GstCaps *vscapslist)
+                              const GstCaps *vscapslist)
 {
   GstSDLVideoSink *sdlvideosink;
-  GstCaps *caps;
+  guint32 format;
+  GstStructure *structure;
 
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscapslist))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (vscapslist, 0);
+  gst_structure_get_fourcc (structure, "format", &format);
+  sdlvideosink->format =
+    gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, format);
+  gst_structure_get_int (structure, "width", &sdlvideosink->width);
+  gst_structure_get_int (structure, "height", &sdlvideosink->height);
 
-  for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
-  {
-    guint32 format;
+  if (!sdlvideosink->format || !gst_sdlvideosink_create(sdlvideosink))
+    return GST_PAD_LINK_REFUSED;
 
-    gst_caps_get_fourcc_int(caps, "format", &format);
-    sdlvideosink->format =
-	gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, format);
-    gst_caps_get_int(caps, "width", &sdlvideosink->width);
-    gst_caps_get_int(caps, "height", &sdlvideosink->height);
-
-    /* try it out */
-    if (!sdlvideosink->format ||
-	!gst_sdlvideosink_create(sdlvideosink))
-      continue;
-
-    return GST_PAD_LINK_OK;
-  }
-
-  /* if we got here - it's not good */
-  return GST_PAD_LINK_REFUSED;
+  return GST_PAD_LINK_OK;
 }
 
 

@@ -55,17 +55,13 @@ static GstElementDetails gst_qcamsrc_details = GST_ELEMENT_DETAILS (
 #define DEF_PORT		0x378
 #define DEF_AUTOEXP		AE_NONE
 
-GST_PAD_TEMPLATE_FACTORY (gst_qcamsrc_src_factory,
+static GstStaticPadTemplate gst_qcamsrc_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "gstqcam_src",
-    "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420"))
+);
 
 #define GST_TYPE_AUTOEXP_MODE (gst_autoexp_mode_get_type())
 static GType
@@ -151,7 +147,7 @@ gst_qcamsrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_qcamsrc_src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&gst_qcamsrc_src_factory));
   gst_element_class_set_details (element_class, &gst_qcamsrc_details);
 }
 static void
@@ -209,7 +205,7 @@ static void
 gst_qcamsrc_init (GstQCamSrc *qcamsrc)
 {
   qcamsrc->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_qcamsrc_src_factory), "src");
+		  gst_static_pad_template_get (&gst_qcamsrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(qcamsrc),qcamsrc->srcpad);
   gst_pad_set_get_function (qcamsrc->srcpad,gst_qcamsrc_get);
 
@@ -253,14 +249,11 @@ gst_qcamsrc_get (GstPad *pad)
 
   qc_set (qcamsrc->qcam);
   if (!GST_PAD_CAPS (pad)) {
-    gst_pad_try_set_caps (pad, GST_CAPS_NEW (
-			    "qcam_caps",
-			    "video/x-raw-yuv",
-			      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-			      "width",		GST_PROPS_INT (qcamsrc->qcam->width / scale),
-			      "height",		GST_PROPS_INT (qcamsrc->qcam->height / scale),
-			      "framerate",      GST_PROPS_FLOAT (10.) /* bla? */
-			      ));
+    gst_pad_try_set_caps (pad, gst_caps_new_simple("video/x-raw-yuv",
+	  "format",    GST_TYPE_FOURCC, "I420",
+	  "width",     G_TYPE_INT, qcamsrc->qcam->width / scale,
+	  "height",    G_TYPE_INT, qcamsrc->qcam->height / scale,
+	  "framerate", G_TYPE_DOUBLE, 10., NULL));
   }
   scan = qc_scan (qcamsrc->qcam);
 

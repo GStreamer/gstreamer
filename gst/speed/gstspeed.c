@@ -55,49 +55,27 @@ enum {
   ARG_SPEED
 };
 
-static GstPadTemplate*
-speed_sink_factory (void)
-{
-  static GstPadTemplate *template = NULL;
+static GstStaticPadTemplate gst_speed_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+      GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS
+    )
+);
 
-  if (!template) {
-    template = gst_pad_template_new
-      ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_append(gst_caps_new ("sink_int",  "audio/x-raw-int",
-                                    GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-                      gst_caps_new ("sink_float", "audio/x-raw-float",
-                                    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS)),
-      NULL);
-  }
-  return template;
-}
-
-static GstPadTemplate*
-speed_src_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template)
-    template = gst_pad_template_new
-      ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-       gst_caps_append (gst_caps_new ("src_float", "audio/x-raw-float",
-                                      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS),
-                        gst_caps_new ("src_int", "audio/x-raw-int",
-                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS)),
-       NULL);
-
-  return template;
-}
-
-static GstBufferPool*
-speed_sink_get_bufferpool (GstPad *pad)
-{
-  GstSpeed *filter;
-
-  filter = GST_SPEED (gst_pad_get_parent(pad));
-
-  return filter->sinkpool;
-}
+static GstStaticPadTemplate gst_speed_src_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+      GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS
+    )
+);
 
 static void		speed_base_init			(gpointer g_class);
 static void		speed_class_init		(GstSpeedClass *klass);
@@ -106,7 +84,7 @@ static void		speed_init		(GstSpeed *filter);
 static void		speed_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		speed_get_property        (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static gboolean		speed_parse_caps          (GstSpeed *filter, GstCaps *caps);
+static gboolean		speed_parse_caps          (GstSpeed *filter, const GstCaps *caps);
 
 static void		speed_loop              (GstElement *element);
 
@@ -114,7 +92,7 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstPadLinkReturn
-speed_link (GstPad *pad, GstCaps *caps)
+speed_link (GstPad *pad, const GstCaps *caps)
 {
   GstSpeed *filter;
   GstPad *otherpad;
@@ -124,41 +102,41 @@ speed_link (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail (GST_IS_SPEED (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
-  if (GST_CAPS_IS_FIXED (caps)) {
-    if (! speed_parse_caps (filter, caps)) return GST_PAD_LINK_REFUSED;
+  if (! speed_parse_caps (filter, caps)) return GST_PAD_LINK_REFUSED;
 
-    return gst_pad_try_set_caps(otherpad, caps);
-  }
-
-  return GST_PAD_LINK_DELAYED;
+  return gst_pad_try_set_caps(otherpad, caps);
 }
 
 static gboolean
-speed_parse_caps (GstSpeed *filter, GstCaps *caps)
+speed_parse_caps (GstSpeed *filter, const GstCaps *caps)
 {
   const gchar *mimetype;
+  GstStructure *structure;
+  gboolean ret;
 
   g_return_val_if_fail(filter != NULL, FALSE);
   g_return_val_if_fail(caps != NULL, FALSE);
 
-  gst_caps_get_int (caps, "rate", &filter->rate);
-  gst_caps_get_int (caps, "channels", &filter->channels);
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "endianness", &filter->endianness);
-  gst_caps_get_int (caps, "buffer-frames", &filter->buffer_frames);
+  structure = gst_caps_get_structure (caps, 0);
 
-  mimetype = gst_caps_get_mime (caps);
+  ret = gst_structure_get_int (structure, "rate", &filter->rate);
+  ret &= gst_structure_get_int (structure, "channels", &filter->channels);
+  ret &= gst_structure_get_int (structure, "width", &filter->width);
+  ret &= gst_structure_get_int (structure, "endianness", &filter->endianness);
+  ret &= gst_structure_get_int (structure, "buffer-frames", &filter->buffer_frames);
 
-  if (! strncmp(mimetype, "audio/x-raw-int", 15)) {
+  mimetype = gst_structure_get_name (structure);
+
+  if (strcmp(mimetype, "audio/x-raw-int") == 0) {
     filter->format = GST_SPEED_FORMAT_INT;
-    gst_caps_get_int	 (caps, "depth", &filter->depth);
-    gst_caps_get_boolean (caps, "signed", &filter->is_signed);
-  } else if (! strncmp(mimetype, "audio/x-raw-float", 17)) {
+    ret &= gst_structure_get_int (structure, "depth", &filter->depth);
+    ret &= gst_structure_get_boolean (structure, "signed", &filter->is_signed);
+  } else if (strcmp(mimetype, "audio/x-raw-float") == 0) {
     filter->format = GST_SPEED_FORMAT_FLOAT;
   } else  {
     return FALSE;
   }
-  return TRUE;
+  return ret;
 }
 
 
@@ -190,8 +168,10 @@ speed_base_init (gpointer g_class)
 
   gst_element_class_set_details (element_class, &speed_details);
 
-  gst_element_class_add_pad_template (element_class, speed_src_factory ());
-  gst_element_class_add_pad_template (element_class, speed_sink_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_speed_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_speed_sink_template));
 }
 static void
 speed_class_init (GstSpeedClass *klass)
@@ -211,18 +191,17 @@ speed_class_init (GstSpeedClass *klass)
 static void
 speed_init (GstSpeed *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template(speed_sink_factory (), "sink");
+  filter->sinkpad = gst_pad_new_from_template(
+      gst_static_pad_template_get (&gst_speed_sink_template), "sink");
   gst_pad_set_link_function(filter->sinkpad, speed_link);
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
-  gst_pad_set_bufferpool_function (filter->sinkpad, speed_sink_get_bufferpool);
 
-  filter->srcpad = gst_pad_new_from_template(speed_src_factory (), "src");
+  filter->srcpad = gst_pad_new_from_template(
+      gst_static_pad_template_get (&gst_speed_src_template), "src");
   gst_pad_set_link_function(filter->srcpad, speed_link);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
 
   gst_element_set_loop_function(GST_ELEMENT(filter),speed_loop);
-
-  filter->sinkpool = gst_buffer_pool_get_default(SPEED_BUFSIZE, SPEED_NUMBUF);
 }
 
 static void
@@ -235,8 +214,6 @@ speed_loop (GstElement *element)
 
   g_return_if_fail(filter != NULL);
   g_return_if_fail(GST_IS_SPEED(filter));
-
-  filter->srcpool = gst_pad_get_bufferpool(filter->srcpad);
 
   i = j = 0;
   speed = filter->speed;

@@ -60,54 +60,34 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "fameenc_sink_caps",
-    "video/x-raw-yuv",
-      "format",
-	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-      "width",        GST_PROPS_INT_RANGE (16, 4096),
-      "height",       GST_PROPS_INT_RANGE (16, 4096),
-      "framerate",    GST_PROPS_LIST (
-			GST_PROPS_FLOAT (24/1.001),
-			GST_PROPS_FLOAT (24.),
-			GST_PROPS_FLOAT (25.),
-			GST_PROPS_FLOAT (30/1.001),
-			GST_PROPS_FLOAT (30.),
-			GST_PROPS_FLOAT (50.),
-			GST_PROPS_FLOAT (60/1.001),
-			GST_PROPS_FLOAT (60.)
-		      )
+  GST_STATIC_CAPS (
+    "video/x-raw-yuv, "
+    "format = (fourcc) I420, "
+    "width = (int) [ 16, 4096 ], "
+    "height = (int) [ 16, 4096 ], "
+    "framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
+    "  50.0, 59.940060, 60.0 }"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_template_factory,
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "fameenc_src_caps",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_LIST (
-			GST_PROPS_INT (1),
-			GST_PROPS_INT (4)
-		      ),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE),
-      "width",        GST_PROPS_INT_RANGE (16, 4096),
-      "height",       GST_PROPS_INT_RANGE (16, 4096),
-      "framerate",    GST_PROPS_LIST (
-			GST_PROPS_FLOAT (24/1.001),
-			GST_PROPS_FLOAT (24.),
-			GST_PROPS_FLOAT (25.),
-			GST_PROPS_FLOAT (30/1.001),
-			GST_PROPS_FLOAT (30.),
-			GST_PROPS_FLOAT (50.),
-			GST_PROPS_FLOAT (60/1.001),
-			GST_PROPS_FLOAT (60.)
-		      )
+  GST_STATIC_CAPS (
+    "video/mpeg, "
+    "mpegversion = (int) { 1, 4 }, "
+    "systemstream = (boolean) FALSE, "
+    "width = (int) [ 16, 4096 ], "
+    "height = (int) [ 16, 4096 ], "
+    "framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
+    "  50.0, 59.940060, 60.0 }"
   )
 );
 
@@ -205,9 +185,9 @@ gst_fameenc_base_init (GstFameEncClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_template_factory));
+		gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_template_factory));
+		gst_static_pad_template_get (&src_template));
 
   gst_element_class_set_details (element_class, &gst_fameenc_details);
 }
@@ -318,25 +298,24 @@ gst_fameenc_class_init (GstFameEncClass *klass)
 }
 
 static GstPadLinkReturn
-gst_fameenc_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_fameenc_sink_link (GstPad *pad, const GstCaps *caps)
 {
   gint width, height, fps_idx;
-  gfloat fps;
+  gdouble fps;
   GstFameEnc *fameenc;
+  GstStructure *structure;
 
   fameenc = GST_FAMEENC (gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps)) 
-    return GST_PAD_LINK_DELAYED;
 
   if (fameenc->initialized) {
     GST_DEBUG ("error: fameenc encoder already initialized !");
     return GST_PAD_LINK_REFUSED;
   }
 
-  gst_caps_get_int (caps, "width", &width);
-  gst_caps_get_int (caps, "height", &height);
-  gst_caps_get_float (caps, "framerate", &fps);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+  gst_structure_get_double (structure, "framerate", &fps);
   
   /* fameenc requires width and height to be multiples of 16 */
   if (width % 16 != 0 || height % 16 != 0)
@@ -380,13 +359,13 @@ gst_fameenc_init (GstFameEnc *fameenc)
 
   /* create the sink and src pads */
   fameenc->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
+		       gst_static_pad_template_get (&sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (fameenc), fameenc->sinkpad);
   gst_pad_set_chain_function (fameenc->sinkpad, gst_fameenc_chain);
-  gst_pad_set_link_function (fameenc->sinkpad, gst_fameenc_sinkconnect);
+  gst_pad_set_link_function (fameenc->sinkpad, gst_fameenc_sink_link);
 
   fameenc->srcpad = gst_pad_new_from_template (
-                      GST_PAD_TEMPLATE_GET (src_template_factory), "src");
+                      gst_static_pad_template_get (&src_template), "src");
   gst_element_add_pad (GST_ELEMENT (fameenc), fameenc->srcpad);
   /* FIXME: set some more handler functions here */
 

@@ -43,32 +43,30 @@ static GstElementDetails mpeg1videoparse_details = GST_ELEMENT_DETAILS (
   "Wim Taymans <wim.taymans@chello.be>"
 );
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mp1videoparse_src",
-    "video/mpeg",
-      "mpegversion",   GST_PROPS_INT (1),
-      "systemstream",  GST_PROPS_BOOLEAN (FALSE),
-      "width",         GST_PROPS_INT_RANGE (16, 4096),
-      "height",        GST_PROPS_INT_RANGE (16, 4096),
-      "pixel_width",   GST_PROPS_INT_RANGE (1, 255),
-      "pixel_height",  GST_PROPS_INT_RANGE (1, 255),
-      "framerate",     GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+  GST_STATIC_CAPS ("video/mpeg, "
+    "mpegversion = (int) 1, "
+    "systemstream = (boolean) false, "
+    "width = (int) [ 16, 4096 ], "
+    "height = (int) [ 16, 4096 ], "
+    "pixel_width = (int) [ 1, 255 ], "
+    "pixel_height = (int) [ 1, 255 ], "
+    "framerate = (double) [ 0, MAX ]"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mp1videoparse_sink",
-    "video/mpeg",
-      "mpegversion",   GST_PROPS_INT (1),
-      "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS ("video/mpeg, "
+    "mpegversion = (int) 1, "
+    "systemstream = (boolean) false"
   )
 );
 
@@ -124,9 +122,9 @@ gst_mp1videoparse_base_init (Mp1VideoParseClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+		gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+		gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &mpeg1videoparse_details);
 }
 
@@ -146,12 +144,12 @@ static void
 gst_mp1videoparse_init (Mp1VideoParse *mp1videoparse)
 {
   mp1videoparse->sinkpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+	gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->sinkpad);
   gst_pad_set_chain_function(mp1videoparse->sinkpad,gst_mp1videoparse_chain);
 
   mp1videoparse->srcpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET (src_factory), "src");
+	gst_static_pad_template_get (&src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->srcpad);
 
   mp1videoparse->partialbuf = NULL;
@@ -200,17 +198,16 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
     p_w = (asr_table[asr_idx] < 1.0) ? (100 / asr_table[asr_idx]) : 1;
     p_h = (asr_table[asr_idx] > 1.0) ? (100 * asr_table[asr_idx]) : 1;
 
-    caps = GST_CAPS_NEW ("mp1videoparse_src",
-                         "video/mpeg",
-                           "systemstream", GST_PROPS_BOOLEAN (FALSE),
-                           "mpegversion",  GST_PROPS_INT (1),
-                           "width",        GST_PROPS_INT (width),
-                           "height",       GST_PROPS_INT (height),
-                           "framerate",    GST_PROPS_FLOAT (fps_table[fps_idx]),
-                           "pixel_width",  GST_PROPS_INT (p_w),
-                           "pixel_height", GST_PROPS_INT (p_h));
+    caps = gst_caps_new_simple ("video/mpeg",
+	"systemstream", G_TYPE_BOOLEAN, FALSE,
+	"mpegversion",  G_TYPE_INT, 1,
+	"width",        G_TYPE_INT, width,
+	"height",       G_TYPE_INT, height,
+	"framerate",    G_TYPE_DOUBLE, fps_table[fps_idx],
+	"pixel_width",  G_TYPE_INT, p_w,
+	"pixel_height", G_TYPE_INT, p_h, NULL);
 
-    gst_caps_debug (caps, "New mpeg1videoparse caps");
+    GST_DEBUG_CAPS ("New mpeg1videoparse caps", caps);
 
     if (gst_pad_try_set_caps (mp1videoparse->srcpad, caps) <= 0) {
       gst_element_error (GST_ELEMENT (mp1videoparse),

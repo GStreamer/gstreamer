@@ -714,7 +714,7 @@ gst_riff_read_info (GstRiffRead *riff)
   GstRiffLevel *level;
   GList *last;
   gchar *name, *type;
-  GstProps *props;
+  GstCaps *caps;
 
   /* What we're doing here is ugly (oh no!); we look
    * at our LIST tag size and assure that we do not
@@ -726,11 +726,10 @@ gst_riff_read_info (GstRiffRead *riff)
   end = level->start + level->length;
   g_free (level);
 
-  props = gst_props_empty_new ();
+  caps = gst_caps_new_simple ("application/x-gst-metadata", NULL);
 
   while (gst_bytestream_tell (riff->bs) < end) {
     if (!gst_riff_peek_head (riff, &tag, NULL, NULL)) {
-      gst_props_unref (props);
       return FALSE;
     }
 
@@ -813,26 +812,18 @@ gst_riff_read_info (GstRiffRead *riff)
     }
 
     if (type) {
-      GstPropsEntry *entry;
-
       if (!gst_riff_read_ascii (riff, &tag, &name)) {
-        gst_props_unref (props);
         return FALSE;
       }
 
-      entry = gst_props_entry_new (type, GST_PROPS_STRING (name));
-      gst_props_add_entry (props, entry);
+      gst_caps_set_simple (caps, type, G_TYPE_STRING, name, NULL);
     } else {
       gst_riff_read_skip (riff);
     }
   }
 
   /* let the world know about this wonderful thing */
-  gst_props_debug (props);
-  gst_caps_replace_sink (&riff->metadata,
-			 gst_caps_new ("riff_metadata",
-				       "application/x-gst-metadata",
-				       props));
+  gst_caps_replace (&riff->metadata, caps);
   g_object_notify (G_OBJECT (riff), "metadata");
 
   return TRUE;

@@ -59,9 +59,9 @@ struct _GstXvidEnc {
 
   /* xvid handle */
   void *handle;
-  int csp;
-  int width, height;
-  float fps;
+  gint csp;
+  gint width, height;
+  double fps;
 };
 
 struct _GstXvidEncClass {

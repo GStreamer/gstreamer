@@ -50,66 +50,43 @@ G_BEGIN_DECLS
 
 #define GST_AUDIO_DEF_RATE 44100
 
-#define GST_AUDIO_INT_PAD_TEMPLATE_PROPS \
-  gst_props_new (\
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "endianness", GST_PROPS_LIST (\
-                    GST_PROPS_INT (G_LITTLE_ENDIAN),\
-                    GST_PROPS_INT (G_BIG_ENDIAN)\
-                  ),\
-    "width",      GST_PROPS_LIST (\
-                    GST_PROPS_INT (8),\
-                    GST_PROPS_INT (16),\
-                    GST_PROPS_INT (32)\
-                  ),\
-    "depth",      GST_PROPS_INT_RANGE (1, 32),\
-    "signed",     GST_PROPS_LIST (\
-                    GST_PROPS_BOOLEAN (TRUE),\
-                    GST_PROPS_BOOLEAN (FALSE)\
-                  ),\
-    "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    NULL)
+#define GST_AUDIO_INT_PAD_TEMPLATE_CAPS \
+  "audio/x-raw-int, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) [ 1, MAX ], " \
+  "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+  "width = (int) { 8, 16, 32 }, " \
+  "depth = (int) [ 1, 32 ], " \
+  "signed = (boolean) { true, false }, " \
+  "buffer-frames = (int) [ 1, MAX ]"
+
 
 /* "standard" int audio is native order, 16 bit stereo. */
-#define GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_PROPS \
-  gst_props_new (\
-    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "channels",   GST_PROPS_INT (2),\
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER),\
-    "width",      GST_PROPS_INT (16),\
-    "depth",      GST_PROPS_INT (16),\
-    "signed",     GST_PROPS_LIST (\
-                    GST_PROPS_BOOLEAN (TRUE),\
-                    GST_PROPS_BOOLEAN (FALSE)\
-                  ),\
-    "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    NULL)
+#define GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS \
+  "audio/x-raw-int, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) 2, " \
+  "endianness = (int) BYTE_ORDER, " \
+  "width = (int) 16, " \
+  "depth = (int) 16, " \
+  "signed = (boolean) true, " \
+  "buffer-frames = (int) [ 1, MAX]"
 
-#define GST_AUDIO_FLOAT_PAD_TEMPLATE_PROPS \
-  gst_props_new (\
-    "rate",          GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "channels",      GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "endianness",    GST_PROPS_LIST (\
-                       GST_PROPS_INT (G_LITTLE_ENDIAN),\
-                       GST_PROPS_INT (G_BIG_ENDIAN)\
-                     ),\
-    "width",         GST_PROPS_LIST (\
-                       GST_PROPS_INT (32),\
-                       GST_PROPS_INT (64)\
-                     ),\
-    "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    NULL)
+#define GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS \
+  "audio/x-raw-float, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) [ 1, MAX ], " \
+  "endianness = (int) { LITTLE_ENDIAN , BIG_ENDIAN }, " \
+  "width = (int) { 32, 64 }, " \
+  "buffer-frames = (int) [ 1, MAX]"
 
 /* "standard" float audio is native order, 32 bit mono. */
-#define GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS \
-  gst_props_new (\
-    "rate",          GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "channels",      GST_PROPS_INT (1),\
-    "endianness",    GST_PROPS_INT (G_BYTE_ORDER),\
-    "width",         GST_PROPS_INT (32),\
-    "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    NULL)
+#define GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS \
+  "audio/x-raw-float, " \
+  "rate = (int) [ 1, MAX ], " \
+  "channels = (int) 1, " \
+  "endianness = (int) BYTE_ORDER, " \
+  "buffer-frames = (int) [ 1, MAX]"
 
 /*
  * this library defines and implements some helper functions for audio

@@ -50,42 +50,34 @@ enum {
 };
 
 /* added a src factory function to force audio/raw MIME type */
-GST_PAD_TEMPLATE_FACTORY (afparse_src_factory,
+static GstStaticPadTemplate afparse_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (  
-    "audiofile_src",
-    "audio/x-raw-int",
-        "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",           GST_PROPS_LIST (GST_PROPS_BOOLEAN (TRUE), GST_PROPS_BOOLEAN (FALSE)),
-        "width",            GST_PROPS_INT_RANGE (8, 16),
-        "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (1, G_MAXINT),
-        "channels",         GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS (
+  "audio/x-raw-int, "
+  "rate = (int) [ 1, MAX ], "
+  "channels = (int) [ 1, MAX ], "
+  "endianness = (int) BYTE_ORDER, "
+  "width = (int) { 8, 16 }, "
+  "depth = (int) { 8, 16 }, "
+  "signed = (boolean) { true, false }, "
+  "buffer-frames = (int) [ 1, MAX ]"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (afparse_sink_factory,
+static GstStaticPadTemplate afparse_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "afparse_sink_aiff",
-    "audio/x-aiff",
-    NULL
-  ),
-  GST_CAPS_NEW (
-    "afparse_sink_wav",
-    "audio/x-wav",
-    NULL
-  ),
-  GST_CAPS_NEW (
-    "afparse_sink_snd",
-    "audio/x-au",
-    NULL
+  GST_STATIC_CAPS (
+    "audio/x-aiff; "
+    "audio/x-wav; "
+    "audio/x-au"
   )
-)
+);
 
 static void gst_afparse_base_init (gpointer g_class);
 static void gst_afparse_class_init(GstAFParseClass *klass);
@@ -131,8 +123,10 @@ gst_afparse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afparse_src_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afparse_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&afparse_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&afparse_sink_factory));
 
   gst_element_class_set_details (element_class, &afparse_details);
 }
@@ -154,10 +148,12 @@ gst_afparse_class_init (GstAFParseClass *klass)
 static void 
 gst_afparse_init (GstAFParse *afparse) 
 {
-  afparse->srcpad = gst_pad_new_from_template (afparse_src_factory (), "src");
+  afparse->srcpad = gst_pad_new_from_template (
+      gst_element_get_pad_template (GST_ELEMENT (afparse), "src"), "src");
   gst_element_add_pad (GST_ELEMENT (afparse), afparse->srcpad);
 
-  afparse->sinkpad = gst_pad_new_from_template (afparse_sink_factory (), "sink");
+  afparse->sinkpad = gst_pad_new_from_template (
+      gst_element_get_pad_template (GST_ELEMENT (afparse), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (afparse), afparse->sinkpad);
 
   gst_element_set_loop_function (GST_ELEMENT (afparse), gst_afparse_loop);
@@ -191,7 +187,6 @@ gst_afparse_loop(GstElement *element)
 {
   GstAFParse *afparse;
   GstBuffer *buf;
-  GstBufferPool *bufpool;
   gint numframes = 0, frames_to_bytes, frames_per_read, bytes_per_read;
   guint8 *data;
   gboolean bypass_afread = TRUE;
@@ -230,7 +225,6 @@ gst_afparse_loop(GstElement *element)
   frames_per_read = afparse->frames_per_read;
   bytes_per_read = frames_per_read * frames_to_bytes;
   
-  bufpool = gst_buffer_pool_get_default (bytes_per_read, 8);
   afSeekFrame(afparse->file, AF_DEFAULT_TRACK, 0);
 
   if (bypass_afread){
@@ -269,7 +263,7 @@ gst_afparse_loop(GstElement *element)
   }
   else {
     do {
-      buf = gst_buffer_new_from_pool (bufpool, 0, 0);
+      buf = gst_buffer_new_and_alloc (bytes_per_read);
       GST_BUFFER_TIMESTAMP(buf) = afparse->timestamp;
       data = GST_BUFFER_DATA(buf); 
       numframes = afReadFrames (afparse->file, AF_DEFAULT_TRACK, data, frames_per_read);
@@ -290,7 +284,6 @@ gst_afparse_loop(GstElement *element)
     while (TRUE);
   }
   gst_afparse_close_file (afparse);
-  gst_buffer_pool_unref(bufpool);
   
   gst_bytestream_destroy ((GstByteStream*) afparse->vfile->closure);
 
@@ -389,17 +382,15 @@ gst_afparse_open_file (GstAFParse *afparse)
   /* set caps on src */
   /*FIXME: add all the possible formats, especially float ! */ 
   gst_pad_try_set_caps (afparse->srcpad, 
-    GST_CAPS_NEW (
-      "af_src",
-      "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
-      "signed",     GST_PROPS_BOOLEAN (afparse->is_signed),
-      "width",      GST_PROPS_INT (afparse->width),
-      "depth",      GST_PROPS_INT (afparse->width),
-      "rate",       GST_PROPS_INT (afparse->rate),
-      "channels",   GST_PROPS_INT (afparse->channels)
-    )
-  );
+      gst_caps_new_simple (
+        "audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed",     G_TYPE_BOOLEAN, afparse->is_signed,
+        "width",      G_TYPE_INT, afparse->width,
+        "depth",      G_TYPE_INT, afparse->width,
+        "rate",       G_TYPE_INT, afparse->rate,
+        "channels",   G_TYPE_INT, afparse->channels,
+        NULL));
 
   GST_FLAG_SET (afparse, GST_AFPARSE_OPEN);
 

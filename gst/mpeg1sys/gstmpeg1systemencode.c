@@ -49,41 +49,34 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "src_video",
-    "video/mpeg",
-      "systemstream",   GST_PROPS_BOOLEAN (TRUE)
-  )
-)
-GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
+  GST_STATIC_CAPS ("video/mpeg, "
+      "systemstream = (boolean) TRUE")
+);
+static GstStaticPadTemplate video_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "sink_video",
-    "video/mpeg",
-      "mpegversion",   	GST_PROPS_INT (1),
-      "systemstream",   GST_PROPS_BOOLEAN (FALSE)
-      /* we don't care about width/height/framerate */
-  )
-)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) 1, "
+      "systemstream = (boolean) FALSE")
+);
 
-GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
+static GstStaticPadTemplate audio_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "sink_audio",
-    "audio/mpeg",
-      "mpegversion", GST_PROPS_INT (1),
-      "layer", GST_PROPS_INT_RANGE (1, 2)
-      /* "don't care" about samplerate/channels */
+  GST_STATIC_CAPS ("audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) [ 1, 2 ] "
   )
-)
+);
 
 static void	gst_system_encode_class_init		(GstMPEG1SystemEncodeClass *klass);
 static void	gst_system_encode_base_init		(GstMPEG1SystemEncodeClass *klass);
@@ -130,11 +123,11 @@ gst_system_encode_base_init (GstMPEG1SystemEncodeClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+		gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (audio_sink_factory));
+		gst_static_pad_template_get (&audio_sink_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (video_sink_factory));
+		gst_static_pad_template_get (&video_sink_factory));
   gst_element_class_set_details (element_class, &system_encode_details);
 }
 
@@ -159,7 +152,7 @@ static void
 gst_system_encode_init (GstMPEG1SystemEncode *system_encode)
 {
   system_encode->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+		  gst_static_pad_template_get (&src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (system_encode), system_encode->srcpad);
 
   system_encode->video_buffer = mpeg1mux_buffer_new (BUFFER_TYPE_VIDEO, 0xE0);
@@ -197,7 +190,7 @@ gst_system_encode_request_new_pad (GstElement *element, GstPadTemplate *templ, c
   }
   system_encode = GST_SYSTEM_ENCODE (element);
 
-  if (templ == GST_PAD_TEMPLATE_GET (audio_sink_factory)) {
+  if (templ == gst_static_pad_template_get (&audio_sink_factory)) {
     name = g_strdup_printf ("audio_%02d", system_encode->num_audio_pads);
     g_print ("%s\n", name);
     newpad = gst_pad_new_from_template (templ, name);
@@ -207,7 +200,7 @@ gst_system_encode_request_new_pad (GstElement *element, GstPadTemplate *templ, c
     system_encode->num_audio_pads++;
     system_encode->which_streams |= STREAMS_AUDIO;
   }
-  else if (templ == GST_PAD_TEMPLATE_GET (video_sink_factory)) {
+  else if (templ == gst_static_pad_template_get (&video_sink_factory)) {
     name = g_strdup_printf ("video_%02d", system_encode->num_video_pads);
     g_print ("%s\n", name);
     newpad = gst_pad_new_from_template (templ, name);

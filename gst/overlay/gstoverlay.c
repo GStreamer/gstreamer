@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 #include "gstoverlay.h"
+#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails overlay_details = {
@@ -31,61 +32,37 @@ static GstElementDetails overlay_details = {
   "David Schleef <ds@schleef.org>"
 };
 
-GST_PAD_TEMPLATE_FACTORY (overlay_src_factory,
+static GstStaticPadTemplate overlay_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "overlay_src",
-   "video/x-raw-yuv",
-     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (overlay_sink1_factory,
+static GstStaticPadTemplate overlay_sink1_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink1",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "overlay_sink1",
-   "video/x-raw-yuv",
-     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (overlay_sink2_factory,
+static GstStaticPadTemplate overlay_sink2_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink2",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "overlay_sink2",
-   "video/x-raw-yuv",
-     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (overlay_sink3_factory,
+static GstStaticPadTemplate overlay_sink3_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink3",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "overlay_sink2",
-   "video/x-raw-yuv",
-     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
-     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420"))
+);
 
 /* OVERLAY signals and args */
 enum {
@@ -140,13 +117,13 @@ gst_overlay_base_init (GstOverlayClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (overlay_sink1_factory));
+		  gst_static_pad_template_get (&overlay_sink1_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (overlay_sink2_factory));
+		  gst_static_pad_template_get (&overlay_sink2_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (overlay_sink3_factory));
+		  gst_static_pad_template_get (&overlay_sink3_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (overlay_src_factory));
+		  gst_static_pad_template_get (&overlay_src_factory));
   gst_element_class_set_details (element_class, &overlay_details);
 }
 
@@ -175,20 +152,20 @@ static GstCaps *gst_overlay_getcaps(GstPad *pad)
   overlay = GST_OVERLAY (gst_pad_get_parent (pad));
 
   if(overlay->width && overlay->height){
-    caps = GST_CAPS_NEW (
+    caps = GST_STATIC_CAPS (
       "overlay_sink2",
       "video/raw",
-        "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-        "width",	 GST_PROPS_INT (overlay->width),
-        "height",	 GST_PROPS_INT (overlay->height)
+        "format",   GST_TYPE_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+        "width",	 G_TYPE_INT (overlay->width),
+        "height",	 G_TYPE_INT (overlay->height)
      );
   }else{
-    caps = GST_CAPS_NEW (
+    caps = GST_STATIC_CAPS (
       "overlay_sink2",
       "video/raw",
-        "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-        "width",	 GST_PROPS_INT_RANGE (0, 4096),
-        "height",	 GST_PROPS_INT_RANGE (0, 4096)
+        "format",   GST_TYPE_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+        "width",	 G_TYPE_INT_RANGE (0, 4096),
+        "height",	 G_TYPE_INT_RANGE (0, 4096)
      );
   }
 
@@ -197,43 +174,43 @@ static GstCaps *gst_overlay_getcaps(GstPad *pad)
 #endif
 
 static gboolean
-gst_overlay_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_overlay_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstOverlay *overlay;
+  GstStructure *structure;
 
   overlay = GST_OVERLAY (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &overlay->width);
-  gst_caps_get_int (caps, "height", &overlay->height);
-  gst_caps_get_float (caps, "framerate", &overlay->framerate);
+  gst_structure_get_int  (structure, "width", &overlay->width);
+  gst_structure_get_int  (structure, "height", &overlay->height);
+  gst_structure_get_double  (structure, "framerate", &overlay->framerate);
 
   /* forward to the next plugin */
-  return gst_pad_try_set_caps(overlay->srcpad, gst_caps_copy_1(caps));
+  return gst_pad_try_set_caps(overlay->srcpad, caps);
 }
 
 static void 
 gst_overlay_init (GstOverlay *overlay)
 {
   overlay->sinkpad1 = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (overlay_sink1_factory), "sink1");
+		  gst_static_pad_template_get (&overlay_sink1_factory), "sink1");
   gst_pad_set_link_function (overlay->sinkpad1, gst_overlay_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad1);
 
   overlay->sinkpad2 = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (overlay_sink2_factory), "sink2");
+		  gst_static_pad_template_get (&overlay_sink2_factory), "sink2");
   gst_pad_set_link_function (overlay->sinkpad2, gst_overlay_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad2);
 
   overlay->sinkpad3 = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (overlay_sink3_factory), "sink3");
+		  gst_static_pad_template_get (&overlay_sink3_factory), "sink3");
   gst_pad_set_link_function (overlay->sinkpad3, gst_overlay_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad3);
 
   overlay->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (overlay_src_factory), "src");
+		  gst_static_pad_template_get (&overlay_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (overlay), gst_overlay_loop);
@@ -317,22 +294,6 @@ gst_overlay_loop (GstElement *element)
   g_return_if_fail(GST_BUFFER_SIZE(in3) != size);
 
   out = gst_buffer_new_and_alloc (size);
-
-  if (!GST_PAD_CAPS (overlay->srcpad)) {
-    if (!gst_pad_try_set_caps (overlay->srcpad,
-      GST_CAPS_NEW (
-		    "overlay_srccaps",
-		    "video/x-raw-yuv",
-		      "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-		      "width",    GST_PROPS_INT (overlay->width),
-		      "height",   GST_PROPS_INT (overlay->height),
-		      "framerate",GST_PROPS_FLOAT (overlay->framerate)
-		    )))
-    {
-      gst_element_error (element, "cannot set caps");
-      return;
-    }
-  }
 
   gst_overlay_blend_i420 (GST_BUFFER_DATA (out),
       			  GST_BUFFER_DATA (in1), 

@@ -57,7 +57,7 @@ struct _GstOverlay {
   gint 		 border;
   gint 		 depth;
 
-  gfloat	 framerate;
+  gdouble	 framerate;
 };
 
 struct _GstOverlayClass {

@@ -23,6 +23,7 @@
 #endif
 #include "gstswfdec.h"
 #include <string.h>
+#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails gst_swfdec_details = GST_ELEMENT_DETAILS (
@@ -43,50 +44,35 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (video_template_factory,
+static GstStaticPadTemplate video_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "video_00",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "swfdec_videosrc",
-    "video/x-raw-rgb",
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096),
-      "bpp",		GST_PROPS_INT (24),
-      "depth",		GST_PROPS_INT (24),
-      "endianness",	GST_PROPS_INT (G_BIG_ENDIAN),
-      "red_mask",	GST_PROPS_INT (0xff0000),
-      "green_mask",	GST_PROPS_INT (0x00ff00),
-      "blue_mask",	GST_PROPS_INT (0x0000ff),
-      "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
+  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24)
 );
 
-GST_PAD_TEMPLATE_FACTORY (audio_template_factory,
+static GstStaticPadTemplate audio_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "audio_00",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "swfdec_audiosrc",
-    "audio/x-raw-int",
-      "endianness",	GST_PROPS_INT(G_BYTE_ORDER),
-      "signed",		GST_PROPS_BOOLEAN(TRUE),
-      "width",		GST_PROPS_INT(16),
-      "depth",		GST_PROPS_INT(16),
-      "rate",		GST_PROPS_INT(44100),
-      "channels",	GST_PROPS_INT(2)
-  )
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "rate = (int) 44100, "
+    "channels = (int) 2, "
+    "endianness = (int) BYTE_ORDER, "
+    "width = (int) 16, "
+    "depth = (int) 16, "
+    "signed = (boolean) true, "
+    "buffer-frames = (int) [ 1, MAX ]")
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+static GstStaticPadTemplate sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "swfdec_sink",
-    "application/x-shockwave-flash",
-    NULL
-  )
+  GST_STATIC_CAPS ( "application/x-shockwave-flash")
 );
 
 static void	gst_swfdec_base_init		(gpointer g_class);
@@ -148,11 +134,11 @@ gst_swfdec_base_init(gpointer g_class)
   gst_element_class_set_details (element_class, &gst_swfdec_details);
 
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (video_template_factory));
+		  gst_static_pad_template_get (&video_template_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (audio_template_factory));
+		  gst_static_pad_template_get (&audio_template_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (sink_template_factory));
+		  gst_static_pad_template_get (&sink_template_factory));
 }
 static void
 gst_swfdec_class_init(GstSwfdecClass *klass)
@@ -172,33 +158,25 @@ gst_swfdec_class_init(GstSwfdecClass *klass)
   gstelement_class->change_state = gst_swfdec_change_state;
 }
 
-static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad, GstCaps *caps)
+static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad)
 {
   GstSwfdec *swfdec;
-  GstCaps *c;
+  GstCaps *caps;
 
   swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
-  c = GST_CAPS_NEW (
-    "swfdec_videosrc",
-    "video/x-raw-rgb",
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096),
-      "bpp",		GST_PROPS_INT (24),
-      "depth",		GST_PROPS_INT (24),
-      "endianness",	GST_PROPS_INT (G_BIG_ENDIAN),
-      "red_mask",	GST_PROPS_INT (0xff0000),
-      "green_mask",	GST_PROPS_INT (0x00ff00),
-      "blue_mask",	GST_PROPS_INT (0x0000ff),
-      "framerate",	GST_PROPS_FLOAT (swfdec->frame_rate)
-  );
+  caps = gst_caps_copy (gst_pad_template_get_caps (
+      gst_static_pad_template_get (&video_template_factory)));
 
-  if(swfdec->height){
-    gst_caps_set(c,"height",GST_PROPS_INT(swfdec->height));
-    gst_caps_set(c,"width",GST_PROPS_INT(swfdec->width));
+  if (swfdec->height) {
+    gst_caps_set_simple (caps,
+	"framerate", G_TYPE_DOUBLE, swfdec->frame_rate,
+	"height",G_TYPE_INT,swfdec->height,
+	"width",G_TYPE_INT,swfdec->width,
+	NULL);
   }
 
-  return c;
+  return caps;
 }
 
 static void
@@ -244,9 +222,9 @@ gst_swfdec_loop(GstElement *element)
 		swfdec_decoder_get_rate(swfdec->state, &swfdec->rate);
 		swfdec->interval = GST_SECOND / swfdec->rate;
 
-		gst_caps_debug(gst_swfdec_videosrc_getcaps(swfdec->videopad,NULL),"ack");
+		GST_DEBUG_CAPS ("caps", gst_swfdec_videosrc_getcaps(swfdec->videopad));
 		gst_pad_try_set_caps(swfdec->videopad,
-			gst_swfdec_videosrc_getcaps(swfdec->videopad,NULL));
+			gst_swfdec_videosrc_getcaps(swfdec->videopad));
 		return;
 	}
 
@@ -294,11 +272,11 @@ gst_swfdec_init (GstSwfdec *swfdec)
 {
   /* create the sink and src pads */
   swfdec->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
+		  gst_static_pad_template_get (&sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->sinkpad);
 
   swfdec->videopad = gst_pad_new_from_template(
-		GST_PAD_TEMPLATE_GET(video_template_factory),
+		gst_static_pad_template_get (&video_template_factory),
 		"video_00");
   gst_pad_set_query_function (swfdec->videopad,
 		GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
@@ -307,7 +285,7 @@ gst_swfdec_init (GstSwfdec *swfdec)
   gst_element_add_pad(GST_ELEMENT(swfdec), swfdec->videopad);
 
   swfdec->audiopad = gst_pad_new_from_template(
-		GST_PAD_TEMPLATE_GET(audio_template_factory),
+		gst_static_pad_template_get (&audio_template_factory),
 		"audio_00");
   gst_pad_set_query_function (swfdec->audiopad,
 		GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
@@ -563,7 +541,6 @@ gst_swfdec_change_state (GstElement *element)
       //swfdec->decoder->is_sequence_needed = 1;
       //swfdec->decoder->frame_rate_code = 0;
       swfdec->timestamp = 0;
-      swfdec->pool = NULL;
       swfdec->closed = FALSE;
 
       /* reset the initial video state */
@@ -574,19 +551,8 @@ gst_swfdec_change_state (GstElement *element)
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* try to get a bufferpool */
-#if 0
-      swfdec->pool = gst_pad_get_bufferpool (swfdec->videopad);
-      if (swfdec->pool)
-        GST_INFO ( "got pool %p", swfdec->pool);
-#endif
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      /* need to clear things we get from other plugins, since we could be reconnected */
-      if (swfdec->pool) {
-	gst_buffer_pool_unref (swfdec->pool);
-	swfdec->pool = NULL;
-      }
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* if we are not closed by an EOS event do so now, this cen send a few frames but

@@ -24,6 +24,7 @@
 #endif
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include "gstdeinterlace.h"
 
 /* elementfactory information */
@@ -49,33 +50,21 @@ enum {
   ARG_EDGE_DETECT,
 };
 
-GST_PAD_TEMPLATE_FACTORY (deinterlace_src_factory,
+static GstStaticPadTemplate deinterlace_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "deinterlace_src",
-   "video/x-raw-yuv",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-     "width",    GST_PROPS_INT_POSITIVE,
-     "height",   GST_PROPS_INT_POSITIVE,
-     "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS ( GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (deinterlace_sink_factory,
+static GstStaticPadTemplate deinterlace_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "deinterlace_src",
-   "video/x-raw-yuv",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-     "width",    GST_PROPS_INT_POSITIVE,
-     "height",   GST_PROPS_INT_POSITIVE,
-     "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS ( GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
 static GType 		gst_deinterlace_get_type		(void);
 
@@ -120,9 +109,9 @@ gst_deinterlace_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (deinterlace_src_factory));
+		  gst_static_pad_template_get (&deinterlace_src_factory));
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (deinterlace_sink_factory));
+		  gst_static_pad_template_get (&deinterlace_sink_factory));
 
   gst_element_class_set_details (element_class, &deinterlace_details);
 }
@@ -156,17 +145,17 @@ gst_deinterlace_class_init (GstDeInterlaceClass *klass)
 }
 
 static GstPadLinkReturn
-gst_deinterlace_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_deinterlace_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstDeInterlace *filter;
+  GstStructure *structure;
 
   filter = GST_DEINTERLACE(gst_pad_get_parent (pad));
   
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "height", &filter->height);
+  gst_structure_get_int (structure, "width", &filter->width);
+  gst_structure_get_int (structure, "height", &filter->height);
 
   if (filter->picsize != (filter->width*filter->height)) {
     if (filter->src) 
@@ -174,18 +163,20 @@ gst_deinterlace_sinkconnect (GstPad *pad, GstCaps *caps)
     filter->picsize = filter->width*filter->height;
     filter->src = g_malloc(filter->picsize);
   }
-  return gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
+  return gst_pad_try_set_caps (filter->srcpad, caps);
 }
 
 static void
 gst_deinterlace_init (GstDeInterlace *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template(deinterlace_sink_factory (),"sink");
+  filter->sinkpad = gst_pad_new_from_template(
+      gst_static_pad_template_get(&deinterlace_sink_factory),"sink");
   gst_pad_set_chain_function(filter->sinkpad,gst_deinterlace_chain);
   gst_pad_set_link_function(filter->sinkpad,gst_deinterlace_sinkconnect);
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
 
-  filter->srcpad = gst_pad_new_from_template(deinterlace_src_factory (),"src");
+  filter->srcpad = gst_pad_new_from_template(
+      gst_static_pad_template_get(&deinterlace_src_factory),"src");
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
 
   filter->show_deinterlaced_area_only = FALSE;

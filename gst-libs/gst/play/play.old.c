@@ -26,6 +26,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "play.h"
 
 enum
@@ -906,43 +907,38 @@ gst_play_get_sink_element (GstPlay * play,
 	      else
 		{
 		  /* If not a src pad checking caps */
-		  GstCaps *caps;
-		  caps = gst_pad_get_caps (GST_PAD (pads->data));
-		  while (caps)
-		    {
-		      gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
-		      if (g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					      "audio/x-raw-int") == 0)
-			{
-			  has_audio_cap = TRUE;
-			}
-		      if ((g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					      "video/x-raw-yuv") == 0) ||
-			  (g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					       "video/x-raw-rgb") == 0))
-									 
-			{
-			  has_video_cap = TRUE;
-			}
+		  gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
+		  const char *media_type;
 
-		      switch (sink_type)
-			{
-			case GST_PLAY_SINK_TYPE_AUDIO:
-			  if (has_audio_cap)
-			    has_correct_type = TRUE;
-			  break;;
-			case GST_PLAY_SINK_TYPE_VIDEO:
-			  if (has_video_cap)
-			    has_correct_type = TRUE;
-			  break;;
-			case GST_PLAY_SINK_TYPE_ANY:
-			  if ((has_video_cap) || (has_audio_cap))
-			    has_correct_type = TRUE;
-			  break;;
-			default:
-			  has_correct_type = FALSE;
-			}
-		      caps = caps->next;
+		  media_type = gst_structure_get_name (gst_caps_get_structure (
+		      gst_pad_get_caps (GST_PAD (pads->data)), 0));
+		  if (strcmp (media_type, "audio/x-raw-int") == 0)
+		    {
+		      has_audio_cap = TRUE;
+		    }
+		  if ((strcmp (media_type, "video/x-raw-yuv") == 0) ||
+		      (strcmp (media_type, "video/x-raw-rgb") == 0))
+								     
+		    {
+		      has_video_cap = TRUE;
+		    }
+
+		  switch (sink_type)
+		    {
+		    case GST_PLAY_SINK_TYPE_AUDIO:
+		      if (has_audio_cap)
+			has_correct_type = TRUE;
+		      break;;
+		    case GST_PLAY_SINK_TYPE_VIDEO:
+		      if (has_video_cap)
+			has_correct_type = TRUE;
+		      break;;
+		    case GST_PLAY_SINK_TYPE_ANY:
+		      if ((has_video_cap) || (has_audio_cap))
+			has_correct_type = TRUE;
+		      break;;
+		    default:
+		      has_correct_type = FALSE;
 		    }
 		}
 	      pads = g_list_next (pads);

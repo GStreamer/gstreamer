@@ -48,7 +48,7 @@ struct _GstVideoCrop {
 
   /* caps */
   gint		 width, height;
-  gfloat	 fps;
+  gdouble	 fps;
   gint		 crop_left, crop_right, crop_top, crop_bottom;
 };
 
@@ -80,29 +80,21 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (video_crop_src_template_factory,
+static GstStaticPadTemplate gst_video_crop_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "video_crop_src",
-    "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (video_crop_sink_template_factory,
+static GstStaticPadTemplate gst_video_crop_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "video_crop_sink",
-    "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
 
 static void		gst_video_crop_base_init	(gpointer g_class);
@@ -115,7 +107,7 @@ static void		gst_video_crop_get_property	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 
 static GstPadLinkReturn
-			gst_video_crop_sink_connect 	(GstPad *pad, GstCaps *caps);
+			gst_video_crop_sink_link 	(GstPad *pad, const GstCaps *caps);
 static void 		gst_video_crop_chain 		(GstPad *pad, GstData *_data);
 
 static GstElementStateReturn
@@ -155,9 +147,9 @@ gst_video_crop_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_video_crop_details);
 
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (video_crop_sink_template_factory));
+      gst_static_pad_template_get (&gst_video_crop_sink_template));
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (video_crop_src_template_factory));
+      gst_static_pad_template_get (&gst_video_crop_src_template));
 }
 static void
 gst_video_crop_class_init (GstVideoCropClass *klass)
@@ -194,13 +186,13 @@ gst_video_crop_init (GstVideoCrop *video_crop)
 {
   /* create the sink and src pads */
   video_crop->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (video_crop_sink_template_factory), "sink");
+      gst_static_pad_template_get (&gst_video_crop_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (video_crop), video_crop->sinkpad);
-  gst_pad_set_chain_function (video_crop->sinkpad, GST_DEBUG_FUNCPTR (gst_video_crop_chain));
-  gst_pad_set_link_function (video_crop->sinkpad, GST_DEBUG_FUNCPTR (gst_video_crop_sink_connect));
+  gst_pad_set_chain_function (video_crop->sinkpad, gst_video_crop_chain);
+  gst_pad_set_link_function (video_crop->sinkpad, gst_video_crop_sink_link);
 
   video_crop->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (video_crop_src_template_factory), "src");
+      gst_static_pad_template_get (&gst_video_crop_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (video_crop), video_crop->srcpad);
 
   video_crop->crop_right = 0;
@@ -270,19 +262,18 @@ gst_video_crop_get_property (GObject *object, guint prop_id, GValue *value, GPar
 }
 
 static GstPadLinkReturn
-gst_video_crop_sink_connect (GstPad *pad, GstCaps *caps)
+gst_video_crop_sink_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideoCrop *video_crop;
-
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  GstStructure *structure;
+  gboolean ret;
 
   video_crop = GST_VIDEO_CROP (gst_pad_get_parent (pad));
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width",  &video_crop->width);
-  gst_caps_get_int (caps, "height", &video_crop->height);
-  gst_caps_get_float (caps, "framerate", &video_crop->fps);
+  ret = gst_structure_get_int (structure, "width",  &video_crop->width);
+  ret &= gst_structure_get_int (structure, "height", &video_crop->height);
+  ret &= gst_structure_get_double (structure, "framerate", &video_crop->fps);
 
   return GST_PAD_LINK_OK;
 }
@@ -379,22 +370,6 @@ gst_video_crop_chain (GstPad *pad, GstData *_data)
 	(video_crop->crop_left + video_crop->crop_right);
   new_height = video_crop->height -
 	(video_crop->crop_top + video_crop->crop_bottom);
-
-  if (GST_PAD_CAPS (video_crop->srcpad) == NULL) {
-    if (gst_pad_try_set_caps (video_crop->srcpad,
-			       GST_CAPS_NEW (
-				       "video_crop_caps",
-				       "video/x-raw-yuv",
-				        "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-				         "width",   GST_PROPS_INT (new_width),
-				         "height",  GST_PROPS_INT (new_height),
-                                         "framerate", GST_PROPS_FLOAT (video_crop->fps)
-				       )) <= 0)
-    {
-      gst_element_error (GST_ELEMENT (video_crop), "could not negotiate pads");
-      return;
-    }
-  }
 
   outbuf = gst_buffer_new_and_alloc ((new_width * new_height * 3) / 2);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);

@@ -53,7 +53,6 @@ enum _GstPlayOnDemandFormat {
 struct _GstPlayOnDemand {
   GstElement element;
 
-  GstBufferPool *bufpool;
   GstPad   *sinkpad, *srcpad;
   GstClock *clock;
 

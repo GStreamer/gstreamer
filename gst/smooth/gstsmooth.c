@@ -47,29 +47,25 @@ enum {
   ARG_LUM_ONLY
 };
 
-GST_PAD_TEMPLATE_FACTORY (smooth_src_factory,
+static GstStaticPadTemplate gst_smooth_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "smooth_src",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
+  GST_STATIC_CAPS (
+     GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420")
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (smooth_sink_factory,
+static GstStaticPadTemplate gst_smooth_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "smooth_src",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-	     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
+  GST_STATIC_CAPS (
+     GST_VIDEO_YUV_PAD_TEMPLATE_CAPS("I420")
   )
-)
+);
 
 static void	gst_smooth_class_init	(GstSmoothClass *klass);
 static void	gst_smooth_base_init	(GstSmoothClass *klass);
@@ -113,9 +109,9 @@ gst_smooth_base_init (GstSmoothClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (smooth_sink_factory));
+      gst_static_pad_template_get (&gst_smooth_sink_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (smooth_src_factory));
+      gst_static_pad_template_get (&gst_smooth_src_template));
   gst_element_class_set_details (element_class, &smooth_details);
 }
 
@@ -146,17 +142,19 @@ gst_smooth_class_init (GstSmoothClass *klass)
 }
 
 static GstPadLinkReturn
-gst_smooth_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_smooth_link (GstPad *pad, const GstCaps *caps)
 {
   GstSmooth *filter;
+  GstStructure *structure;
+  gboolean ret;
 
   filter = GST_SMOOTH (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", &filter->width);
+  ret &= gst_structure_get_int (structure, "height", &filter->height);
 
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "height", &filter->height);
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
   return gst_pad_try_set_caps (filter->srcpad, caps);
 }
@@ -165,13 +163,14 @@ static void
 gst_smooth_init (GstSmooth *smooth)
 {
   smooth->sinkpad = gst_pad_new_from_template (
-                  GST_PAD_TEMPLATE_GET (smooth_sink_factory), "sink");
-  gst_pad_set_link_function (smooth->sinkpad, gst_smooth_sinkconnect);
+      gst_static_pad_template_get (&gst_smooth_sink_template), "sink");
+  gst_pad_set_link_function (smooth->sinkpad, gst_smooth_link);
   gst_pad_set_chain_function (smooth->sinkpad, gst_smooth_chain);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->sinkpad);
 
   smooth->srcpad = gst_pad_new_from_template (
-                  GST_PAD_TEMPLATE_GET (smooth_src_factory), "src");
+      gst_static_pad_template_get (&gst_smooth_sink_template), "src");
+  gst_pad_set_link_function (smooth->srcpad, gst_smooth_link);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->srcpad);
 
   smooth->active = TRUE;

@@ -34,45 +34,30 @@ GstElementDetails gst_xvidenc_details = {
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
 };
 
-GST_PAD_TEMPLATE_FACTORY(sink_template,
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new(
-    "xvidenc_sink",
-    "video/x-raw-yuv",
-    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-      GST_PROPS_LIST(
-        GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
-        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
-        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
-        GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','Y','U')),
-        GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
-      )
-    )
-  ),
-  gst_caps_new(
-    "xvidenc_sink_rgb24_32",
-    "video/x-raw-rgb",
-    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32
-  ),
-  gst_caps_new(
-    "xvidenc_sink_rgb15_16",
-    "video/x-raw-rgb",
-    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16
+  GST_STATIC_CAPS (
+    GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YUY2, YV12, YVYU, UYVY }") "; "
+    GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32 "; "
+    GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_15_16
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY(src_template,
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW("xvidenc_src",
-               "video/x-xvid",
-                 "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-		 "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
-		 "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT))
-)
+  GST_STATIC_CAPS (
+    "video/x-xvid, "
+    "width = (int) [ 0, MAX ], "
+    "height = (int) [ 0, MAX ], "
+    "framerate = (double) [ 0.0, MAX ]"
+  )
+);
 
 
 /* XvidEnc signals and args */
@@ -93,8 +78,8 @@ static void             gst_xvidenc_class_init   (GstXvidEncClass *klass);
 static void             gst_xvidenc_init         (GstXvidEnc      *xvidenc);
 static void             gst_xvidenc_chain        (GstPad          *pad,
                                                   GstData         *data);
-static GstPadLinkReturn gst_xvidenc_connect      (GstPad          *pad,
-                                                  GstCaps         *vscapslist);
+static GstPadLinkReturn gst_xvidenc_link	 (GstPad          *pad,
+                                                  const GstCaps  *vscapslist);
 
 /* properties */
 static void             gst_xvidenc_set_property (GObject         *object,
@@ -140,8 +125,8 @@ gst_xvidenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&src_template));
   gst_element_class_set_details (element_class, &gst_xvidenc_details);
 }
 
@@ -190,16 +175,16 @@ gst_xvidenc_init (GstXvidEnc *xvidenc)
 {
   /* create the sink pad */
   xvidenc->sinkpad = gst_pad_new_from_template(
-                       GST_PAD_TEMPLATE_GET(sink_template),
+                       gst_static_pad_template_get (&sink_template),
                        "sink");
   gst_element_add_pad(GST_ELEMENT(xvidenc), xvidenc->sinkpad);
 
   gst_pad_set_chain_function(xvidenc->sinkpad, gst_xvidenc_chain);
-  gst_pad_set_link_function(xvidenc->sinkpad, gst_xvidenc_connect);
+  gst_pad_set_link_function(xvidenc->sinkpad, gst_xvidenc_link);
 
   /* create the src pad */
   xvidenc->srcpad = gst_pad_new_from_template(
-                      GST_PAD_TEMPLATE_GET(src_template),
+                      gst_static_pad_template_get (&src_template),
                       "src");
   gst_element_add_pad(GST_ELEMENT(xvidenc), xvidenc->srcpad);
 
@@ -312,11 +297,15 @@ gst_xvidenc_chain (GstPad    *pad,
 
 
 static GstPadLinkReturn
-gst_xvidenc_connect (GstPad  *pad,
-                     GstCaps *vscaps)
+gst_xvidenc_link (GstPad  *pad,
+                  const GstCaps *vscaps)
 {
   GstXvidEnc *xvidenc;
-  GstCaps *caps;
+  GstStructure *structure;
+  gint w,h,d;
+  double fps;
+  guint32 fourcc;
+  gint xvid_cs = -1;
 
   xvidenc = GST_XVIDENC(gst_pad_get_parent (pad));
 
@@ -326,95 +315,81 @@ gst_xvidenc_connect (GstPad  *pad,
     xvidenc->handle = NULL;
   }
 
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED(vscaps))
-    return GST_PAD_LINK_DELAYED;
+  g_return_val_if_fail (gst_caps_get_size (vscaps) == 1, GST_PAD_LINK_REFUSED);
+  structure = gst_caps_get_structure (vscaps, 0);
 
-  for (caps = vscaps; caps != NULL; caps = caps->next)
+  gst_structure_get_int (structure, "width", &w);
+  gst_structure_get_int (structure, "height", &h);
+  gst_structure_get_double (structure, "framerate", &fps);
+  if (gst_structure_has_field_typed (structure, "format", GST_TYPE_FOURCC))
+    gst_structure_get_fourcc (structure, "format", &fourcc);
+  else
+    fourcc = GST_MAKE_FOURCC('R','G','B',' ');
+
+  switch (fourcc)
   {
-    int w,h,d;
-    float fps;
-    guint32 fourcc;
-    gint xvid_cs;
-
-    gst_caps_get_int(caps, "width", &w);
-    gst_caps_get_int(caps, "height", &h);
-    gst_caps_get_float(caps, "framerate", &fps);
-    if (gst_caps_has_property(caps, "format"))
-      gst_caps_get_fourcc_int(caps, "format", &fourcc);
-    else
-      fourcc = GST_MAKE_FOURCC('R','G','B',' ');
-
-    switch (fourcc)
-    {
-      case GST_MAKE_FOURCC('I','4','2','0'):
-      case GST_MAKE_FOURCC('I','Y','U','V'):
-        xvid_cs = XVID_CSP_I420;
-        break;
-      case GST_MAKE_FOURCC('Y','U','Y','2'):
-        xvid_cs = XVID_CSP_YUY2;
-        break;
-      case GST_MAKE_FOURCC('Y','V','1','2'):
-        xvid_cs = XVID_CSP_YV12;
-        break;
-      case GST_MAKE_FOURCC('U','Y','V','Y'):
-        xvid_cs = XVID_CSP_UYVY;
-        break;
-      case GST_MAKE_FOURCC('Y','V','Y','U'):
-        xvid_cs = XVID_CSP_YVYU;
-        break;
-      case GST_MAKE_FOURCC('R','G','B',' '):
-        gst_caps_get_int(caps, "depth", &d);
-        switch (d) {
-          case 15:
-            xvid_cs = XVID_CSP_RGB555;
-            break;
-          case 16:
-            xvid_cs = XVID_CSP_RGB565;
-            break;
-          case 24:
-            xvid_cs = XVID_CSP_RGB24;
-            break;
-          case 32:
-            xvid_cs = XVID_CSP_RGB32;
-            break;
-          default:
-            goto trynext;
-        }
-        break;
-      default:
-        goto trynext;
-    }
-
-    xvidenc->csp = xvid_cs;
-    xvidenc->width = w;
-    xvidenc->height = h;
-    xvidenc->fps = fps;
-
-    if (gst_xvidenc_setup(xvidenc)) {
-      GstPadLinkReturn ret;
-      GstCaps *new_caps;
-
-      new_caps = GST_CAPS_NEW("xvidenc_src_caps",
-                              "video/x-xvid",
-                                 "width",  GST_PROPS_INT(w),
-                                 "height", GST_PROPS_INT(h),
-			         "framerate", GST_PROPS_FLOAT (fps));
-
-      ret = gst_pad_try_set_caps(xvidenc->srcpad, new_caps);
-
-      if (ret <= 0) {
-        if (xvidenc->handle) {
-          xvid_encore(xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
-          xvidenc->handle = NULL;
-        }
+    case GST_MAKE_FOURCC('I','4','2','0'):
+    case GST_MAKE_FOURCC('I','Y','U','V'):
+      xvid_cs = XVID_CSP_I420;
+      break;
+    case GST_MAKE_FOURCC('Y','U','Y','2'):
+      xvid_cs = XVID_CSP_YUY2;
+      break;
+    case GST_MAKE_FOURCC('Y','V','1','2'):
+      xvid_cs = XVID_CSP_YV12;
+      break;
+    case GST_MAKE_FOURCC('U','Y','V','Y'):
+      xvid_cs = XVID_CSP_UYVY;
+      break;
+    case GST_MAKE_FOURCC('Y','V','Y','U'):
+      xvid_cs = XVID_CSP_YVYU;
+      break;
+    case GST_MAKE_FOURCC('R','G','B',' '):
+      gst_structure_get_int(structure, "depth", &d);
+      switch (d) {
+        case 15:
+          xvid_cs = XVID_CSP_RGB555;
+          break;
+        case 16:
+          xvid_cs = XVID_CSP_RGB565;
+          break;
+        case 24:
+          xvid_cs = XVID_CSP_RGB24;
+          break;
+        case 32:
+          xvid_cs = XVID_CSP_RGB32;
+          break;
       }
+      break;
+  }
 
-      return ret;
+  g_return_val_if_fail (xvid_cs != -1, GST_PAD_LINK_REFUSED);
+
+  xvidenc->csp = xvid_cs;
+  xvidenc->width = w;
+  xvidenc->height = h;
+  xvidenc->fps = fps;
+
+  if (gst_xvidenc_setup(xvidenc)) {
+    GstPadLinkReturn ret;
+    GstCaps *new_caps;
+
+    new_caps = gst_caps_new_simple(
+                            "video/x-xvid",
+                            "width",  G_TYPE_INT, w,
+                            "height", G_TYPE_INT, h,
+			    "framerate", G_TYPE_DOUBLE, fps);
+
+    ret = gst_pad_try_set_caps(xvidenc->srcpad, new_caps);
+
+    if (ret <= 0) {
+      if (xvidenc->handle) {
+        xvid_encore(xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
+        xvidenc->handle = NULL;
+      }
     }
 
-trynext:
-    continue;
+    return ret;
   }
 
   /* if we got here - it's not good */

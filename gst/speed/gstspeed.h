@@ -50,7 +50,6 @@ struct _GstSpeed {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
-  GstBufferPool *sinkpool, *srcpool;
 
   gfloat speed;
 

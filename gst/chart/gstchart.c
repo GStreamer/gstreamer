@@ -38,7 +38,6 @@ struct _GstChart {
 
   /* pads */
   GstPad *sinkpad,*srcpad;
-  GstBufferPool *peerpool;
 
   /* the timestamp of the next frame */
   guint64 next_time;
@@ -50,7 +49,7 @@ struct _GstChart {
   gint height;
 
   gint samplerate;
-  gfloat framerate; /* desired frame rate */
+  gdouble framerate; /* desired frame rate */
   gint samples_between_frames; /* number of samples between start of successive frames */
   gint samples_since_last_frame; /* number of samples between start of successive frames */
 };
@@ -81,29 +80,26 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new ("chartsrc",
-		"video/x-raw-rgb",
-		GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_16
-	       )
+  GST_STATIC_CAPS ( GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_16)
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW ("chartsink",
-		"audio/x-raw-int",
-                  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                  "signed",     GST_PROPS_BOOLEAN (TRUE),
-                  "width",      GST_PROPS_INT (16),
-                  "depth",      GST_PROPS_INT (16),
-                  "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-                  "channels",   GST_PROPS_INT (1)
-               )
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "endianness = (int) BYTE_ORDER, "
+    "signed = (boolean) TRUE, "
+    "width = (int) 16, "
+    "depth = (int) 16, "
+    "rate = (int) [ 8000, 96000 ], "
+    "channels = (int) 1")
 );
 
 static void     gst_chart_base_init     (gpointer g_class);
@@ -116,9 +112,9 @@ static void	gst_chart_get_property	(GObject *object, guint prop_id, GValue *valu
 static void	gst_chart_chain		(GstPad *pad, GstData *_data);
 
 static GstPadLinkReturn 
-		gst_chart_sinkconnect 	(GstPad *pad, GstCaps *caps);
+		gst_chart_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 static GstPadLinkReturn 
-		gst_chart_srcconnect 	(GstPad *pad, GstCaps *caps);
+		gst_chart_srcconnect 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -149,8 +145,8 @@ gst_chart_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &gst_chart_details);
 }
 
@@ -174,10 +170,10 @@ gst_chart_init (GstChart *chart)
 {
   /* create the sink and src pads */
   chart->sinkpad = gst_pad_new_from_template (
-			GST_PAD_TEMPLATE_GET (sink_factory),
+			gst_static_pad_template_get (&sink_factory),
 			"sink");
   chart->srcpad = gst_pad_new_from_template (
-			GST_PAD_TEMPLATE_GET (src_factory),
+			gst_static_pad_template_get (&src_factory),
 			"src");
   gst_element_add_pad (GST_ELEMENT (chart), chart->sinkpad);
   gst_element_add_pad (GST_ELEMENT (chart), chart->srcpad);
@@ -187,7 +183,6 @@ gst_chart_init (GstChart *chart)
   gst_pad_set_link_function (chart->sinkpad, gst_chart_srcconnect);
 
   chart->next_time = 0;
-  chart->peerpool = NULL;
 
   /* reset the initial video state */
   chart->bpp = 16;
@@ -202,12 +197,16 @@ gst_chart_init (GstChart *chart)
 }
 
 static GstPadLinkReturn
-gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_chart_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstChart *chart;
+  GstStructure *structure;
+
   chart = GST_CHART (gst_pad_get_parent (pad));
 
-  gst_caps_get_int (caps, "rate", &chart->samplerate);
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "rate", &chart->samplerate);
   chart->samples_between_frames = chart->samplerate / chart->framerate;
 
   GST_DEBUG ("CHART: new sink caps: rate %d",
@@ -218,49 +217,24 @@ gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static GstPadLinkReturn
-gst_chart_srcconnect (GstPad *pad, GstCaps *caps)
+gst_chart_srcconnect (GstPad *pad, const GstCaps*caps)
 {
   GstChart *chart;
+  GstStructure *structure;
+
   chart = GST_CHART (gst_pad_get_parent (pad));
 
-  if (gst_caps_has_property_typed (caps, "framerate",
-				   GST_PROPS_FLOAT_TYPE)) {
-    gst_caps_get_float (caps, "framerate", &chart->framerate);
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_get_double (structure, "framerate", &chart->framerate)) {
     chart->samples_between_frames = chart->samplerate / chart->framerate;
   }
 
-  if (gst_caps_has_property_typed (caps, "width",
-				   GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "width", &chart->width);
-  }
-  if (gst_caps_has_property_typed (caps, "height",
-				   GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "height", &chart->height);
-  }
+  gst_structure_get_int (structure, "width", &chart->width);
+  gst_structure_get_int (structure, "height", &chart->height);
 
   GST_DEBUG ("CHART: new src caps: framerate %f, %dx%d",
 	     chart->framerate, chart->width, chart->height);
-
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    GstPadLinkReturn ret;
-    GstCaps *newcaps;
-    newcaps = GST_CAPS_NEW ("chartsrc",
-			    "video/x-raw-rgb",
-			      "bpp",	    GST_PROPS_INT (chart->bpp),
-			      "depth",	    GST_PROPS_INT (chart->depth),
-			      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-			      "red_mask",   GST_PROPS_INT (R_MASK_16),
-			      "green_mask", GST_PROPS_INT (G_MASK_16),
-			      "blue_mask",  GST_PROPS_INT (B_MASK_16),
-			      "width",	    GST_PROPS_INT (chart->width),
-			      "height",	    GST_PROPS_INT (chart->height),
-			      "framerate",  GST_PROPS_FLOAT (chart->framerate));
-    ret = gst_pad_try_set_caps (chart->srcpad, newcaps);
-    if (ret > 0) {
-      return GST_PAD_LINK_DONE;
-    }
-    return ret;
-  }
 
   return GST_PAD_LINK_OK;
 }
@@ -366,28 +340,6 @@ gst_chart_chain (GstPad *pad, GstData *_data)
 
 	  /* set timestamp */
 	  GST_BUFFER_TIMESTAMP (bufout) = chart->next_time;
-
-          /* Check if we need to renegotiate size. */
-          if (!GST_PAD_CAPS (chart->srcpad)) {
-	    GstCaps *newcaps;
-	    GST_DEBUG ("making new pad");
-	    newcaps = GST_CAPS_NEW ("chartsrc",
-			            "video/x-raw-rgb",
-				      "bpp",	    GST_PROPS_INT (chart->bpp),
-				      "depth",	    GST_PROPS_INT (chart->depth),
-				      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-				      "red_mask",   GST_PROPS_INT (R_MASK_16),
-				      "green_mask", GST_PROPS_INT (G_MASK_16),
-				      "blue_mask",  GST_PROPS_INT (B_MASK_16),
-				      "width",	    GST_PROPS_INT (chart->width),
-				      "height",	    GST_PROPS_INT (chart->height),
-				      "framerate",  GST_PROPS_FLOAT (chart->framerate));
-	    if (gst_pad_try_set_caps (chart->srcpad, newcaps) <= 0) {
-	      gst_element_error (GST_ELEMENT (chart),
-				 "chart: could not negotiate format");
-	      return;
-	    }
-          }
 
 	  GST_DEBUG ("CHART: outputting buffer");
 	  /* output buffer */

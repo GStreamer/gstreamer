@@ -36,36 +36,21 @@ static GstElementDetails snapshot_details = {
   "Jeremy SIMON <jsimon13@yahoo.fr>",
 };
 
-GST_PAD_TEMPLATE_FACTORY (snapshot_src_factory,
+static GstStaticPadTemplate snapshot_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "snapshot_src",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-		   GST_PROPS_LIST (
-                     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-		     GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2"))
-                   )) 
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YUY2 }"))
+);
 
-GST_PAD_TEMPLATE_FACTORY (snapshot_sink_factory,
+static GstStaticPadTemplate snapshot_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-   "snapshot_src",
-   "video/x-raw-yuv",
-     GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-		   GST_PROPS_LIST (
-                     GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-		     GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2"))
-                   )) 
-  )
-)
-
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YUY2 }"))
+);
 
 /* Snapshot signals and args */
 enum {
@@ -133,8 +118,8 @@ gst_snapshot_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (snapshot_sink_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (snapshot_src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&snapshot_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&snapshot_src_factory));
 
   gst_element_class_set_details (element_class, &snapshot_details);
 }
@@ -179,48 +164,43 @@ snapshot_handler(GstElement *element)
 
 
 static gboolean
-gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_snapshot_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstSnapshot *filter;
   GstCaps *from_caps, *to_caps;
-  gfloat fps;
+  gdouble fps;
+  GstStructure *structure;
 
   filter = GST_SNAPSHOT (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "height", &filter->height);
-  gst_caps_get_float (caps, "framerate", &fps);
-  gst_caps_get_fourcc_int (caps, "format", &filter->format);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int  (structure, "width", &filter->width);
+  gst_structure_get_int  (structure, "height", &filter->height);
+  gst_structure_get_double  (structure, "framerate", &fps);
+  gst_structure_get_fourcc  (structure, "format", &filter->format);
   filter->to_bpp = 24;
 
 
-  to_caps = GST_CAPS_NEW (
-    "snapshot_conversion",
-    "video/x-raw-rgb",
-      "width",      GST_PROPS_INT( filter->width ),
-      "height",     GST_PROPS_INT( filter->height ),
-      "red_mask",   GST_PROPS_INT (0x0000FF),
-      "green_mask", GST_PROPS_INT (0x00FF00),
-      "blue_mask",  GST_PROPS_INT (0xFF0000),
-      "bpp",        GST_PROPS_INT( 24 ),
-      "framerate",  GST_PROPS_FLOAT (fps)
-  );
+  to_caps = gst_caps_new_simple ("video/x-raw-rgb",
+      "width",      G_TYPE_INT, filter->width,
+      "height",     G_TYPE_INT, filter->height,
+      "red_mask",   G_TYPE_INT, 0x0000FF,
+      "green_mask", G_TYPE_INT, 0x00FF00,
+      "blue_mask",  G_TYPE_INT, 0xFF0000,
+      "bpp",        G_TYPE_INT, 24,
+      "framerate",  G_TYPE_DOUBLE, fps,
+      NULL);
 
   switch ( filter->format )
   {
     case GST_MAKE_FOURCC('Y','U','Y','2'):
     case GST_MAKE_FOURCC('I','4','2','0'):
-       from_caps = GST_CAPS_NEW (
-         "snapshot_from", 
-         "video/x-raw-yuv",
-         "format",    GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-         "width",     GST_PROPS_INT( filter->width ),
-         "height",    GST_PROPS_INT( filter->height ),
-	 "framerate", GST_PROPS_FLOAT (fps)
-       );
+       from_caps = gst_caps_new_simple ("video/x-raw-yuv",
+         "format",    GST_TYPE_FOURCC, GST_STR_FOURCC ("I420"),
+         "width",     G_TYPE_INT, filter->width,
+         "height",    G_TYPE_INT, filter->height,
+	 "framerate", G_TYPE_DOUBLE, fps,
+	 NULL);
 
        filter->converter = gst_colorspace_yuv2rgb_get_converter ( from_caps, to_caps );
        break;
@@ -246,12 +226,12 @@ gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
 static void
 gst_snapshot_init (GstSnapshot *snapshot)
 {
-  snapshot->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (snapshot_sink_factory), "sink");
+  snapshot->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get (&snapshot_sink_factory), "sink");
   gst_pad_set_link_function (snapshot->sinkpad, gst_snapshot_sinkconnect);
   gst_pad_set_chain_function (snapshot->sinkpad, gst_snapshot_chain);
   gst_element_add_pad (GST_ELEMENT (snapshot), snapshot->sinkpad);
 
-  snapshot->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (snapshot_src_factory), "src");
+  snapshot->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (&snapshot_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (snapshot), snapshot->srcpad);
 
   snapshot->cur_frame = 0;

@@ -105,22 +105,26 @@ static GstColorSpaceYUVTables * gst_colorspace_init_yuv(long depth,
 						long red_mask, long green_mask, long blue_mask);
 
 GstColorSpaceConverter* 
-gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to) 
+gst_colorspace_yuv2rgb_get_converter (const GstCaps *from, const GstCaps *to) 
 {
   guint32 from_space;
   GstColorSpaceConverter *new;
   gint to_bpp;
+  GstStructure *struct_from, *struct_to;
   
   GST_DEBUG ("gst_colorspace_yuv2rgb_get_converter");
 
   new = g_malloc (sizeof (GstColorSpaceConverter));
 
-  gst_caps_get_int (from, "width", &new->width);
-  gst_caps_get_int (from, "height", &new->height);
+  struct_from = gst_caps_get_structure (from, 0);
+  struct_to = gst_caps_get_structure (to, 0);
+
+  gst_structure_get_int (struct_from, "width", &new->width);
+  gst_structure_get_int (struct_from, "height", &new->height);
   new->color_tables = NULL;
 
-  gst_caps_get_fourcc_int (from, "format", &from_space);
-  gst_caps_get_int (to, "bpp", &to_bpp);
+  gst_structure_get_fourcc (struct_from, "format", &from_space);
+  gst_structure_get_int  (struct_to, "bpp", &to_bpp);
 
   /* FIXME we leak new here. */
 
@@ -132,9 +136,9 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
       gint green_mask;
       gint blue_mask;
 
-      gst_caps_get_int (to, "red_mask",   &red_mask);
-      gst_caps_get_int (to, "green_mask", &green_mask);
-      gst_caps_get_int (to, "blue_mask",  &blue_mask);
+      gst_structure_get_int (struct_to, "red_mask",   &red_mask);
+      gst_structure_get_int (struct_to, "green_mask", &green_mask);
+      gst_structure_get_int (struct_to, "blue_mask",  &blue_mask);
 
       GST_INFO ( "red_mask    %08x", red_mask);
       GST_INFO ( "green_mask  %08x", green_mask);

@@ -51,22 +51,19 @@ enum {
 
 /* added a src factory function to force audio/raw MIME type */
 /* I think the caps can be broader, we need to change that somehow */
-GST_PAD_TEMPLATE_FACTORY (afsrc_src_factory,
+static GstStaticPadTemplate afsrc_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (  
-    "audiofile_src",
-    "audio/x-raw-int",
-        "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",           GST_PROPS_LIST (
-				  GST_PROPS_BOOLEAN (TRUE),
-       				  GST_PROPS_BOOLEAN (FALSE)
-       			    ),
-        "width",            GST_PROPS_INT_RANGE (8, 16),
-        "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (4000, 48000), /*FIXME*/
-        "channels",         GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "rate = (int) [ 1, MAX ], "
+    "channels = (int) [ 1, MAX ], "
+    "endianness = (int) BYTE_ORDER, "
+    "width = (int) { 8, 16 }, "
+    "depth = (int) { 8, 16 }, "
+    "signed = (boolean) { true, false }, "
+    "buffer-frames = (int) [ 1, MAX ]"
   )
 );
 
@@ -142,7 +139,8 @@ gst_afsrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afsrc_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&afsrc_src_factory));
   gst_element_class_set_details (element_class, &afsrc_details);
 }
 
@@ -178,7 +176,8 @@ static void
 gst_afsrc_init (GstAFSrc *afsrc) 
 {
   /* no need for a template, caps are set based on file, right ? */
-  afsrc->srcpad = gst_pad_new_from_template (afsrc_src_factory (), "src");
+  afsrc->srcpad = gst_pad_new_from_template (
+      gst_element_get_pad_template (GST_ELEMENT (afsrc), "src"), "src");
   gst_element_add_pad (GST_ELEMENT (afsrc), afsrc->srcpad);
   gst_pad_set_get_function (afsrc->srcpad, gst_afsrc_get);
 
@@ -342,17 +341,14 @@ gst_afsrc_open_file (GstAFSrc *src)
   /* set caps on src */
   /*FIXME: add all the possible formats, especially float ! */ 
   gst_pad_try_set_caps (src->srcpad, 
-		  GST_CAPS_NEW (
-    		    "af_src",
-                    "audio/x-raw-int",
-                      "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
-                      "signed",     GST_PROPS_BOOLEAN (src->is_signed),
-                      "width",      GST_PROPS_INT (src->width),
-                      "depth",      GST_PROPS_INT (src->width),
-                      "rate",       GST_PROPS_INT (src->rate),
-                      "channels",   GST_PROPS_INT (src->channels)
-        	   )
-                 );
+      gst_caps_new_simple ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed",     G_TYPE_BOOLEAN, src->is_signed,
+        "width",      G_TYPE_INT, src->width,
+        "depth",      G_TYPE_INT, src->width,
+        "rate",       G_TYPE_INT, src->rate,
+        "channels",   G_TYPE_INT, src->channels,
+        NULL));
 
   GST_FLAG_SET (src, GST_AFSRC_OPEN);
 

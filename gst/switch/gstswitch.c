@@ -38,11 +38,12 @@ static GstElementDetails gst_switch_details = GST_ELEMENT_DETAILS (
   "Julien Moutte <julien@moutte.net>"
 );
 
-GST_PAD_TEMPLATE_FACTORY (gst_switch_sink_factory,
+static GstStaticPadTemplate gst_switch_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 static GstElementClass *parent_class = NULL;
@@ -249,7 +250,7 @@ gst_switch_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_switch_details);
 
   gst_element_class_add_pad_template (element_class, 
-    GST_PAD_TEMPLATE_GET (gst_switch_sink_factory));
+    gst_static_pad_template_get (&gst_switch_sink_factory));
 }
 
 static void

@@ -44,28 +44,23 @@ enum {
   ARG_0
 };
 
-GST_PAD_TEMPLATE_FACTORY (y4mencode_src_factory,
+static GstStaticPadTemplate y4mencode_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "test_src",
-    "application/x-yuv4mpeg",
-      "y4mversion", GST_PROPS_INT (1)
+  GST_STATIC_CAPS ("application/x-yuv4mpeg, "
+      "y4mversion = (int) 1"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (y4mencode_sink_factory,
+static GstStaticPadTemplate y4mencode_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "test_src",
-    "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"))
+);
 
 static void	gst_y4mencode_base_init		(gpointer g_class);
 static void	gst_y4mencode_class_init	(GstY4mEncodeClass *klass);
@@ -119,9 +114,9 @@ gst_y4mencode_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (y4mencode_src_factory));
+		  gst_static_pad_template_get (&y4mencode_src_factory));
   gst_element_class_add_pad_template (element_class, 
-		  GST_PAD_TEMPLATE_GET (y4mencode_sink_factory));
+		  gst_static_pad_template_get (&y4mencode_sink_factory));
   gst_element_class_set_details (element_class, &y4mencode_details);
 }
 static void
@@ -142,12 +137,12 @@ gst_y4mencode_class_init (GstY4mEncodeClass *klass)
 }
 
 static GstPadLinkReturn
-gst_y4mencode_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_y4mencode_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstY4mEncode *filter;
   gint idx = -1, i;
-  gfloat fps;
-  float framerates[] = {
+  gdouble fps;
+  gdouble framerates[] = {
     00.000,
     23.976, 24.000,              /* 24fps movie */
     25.000,                      /* PAL */
@@ -155,22 +150,22 @@ gst_y4mencode_sinkconnect (GstPad *pad, GstCaps *caps)
     50.000,
     59.940, 60.000
   };
+  GstStructure *structure;
 
   filter = GST_Y4MENCODE (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &filter->width);
-  gst_caps_get_int (caps, "height", &filter->height);
-  gst_caps_get_float (caps, "framerate", &fps);
+  gst_structure_get_int  (structure, "width", &filter->width);
+  gst_structure_get_int  (structure, "height", &filter->height);
+  gst_structure_get_double  (structure, "framerate", &fps);
 
   /* find fps idx */
   for (i = 1; i < 9; i++) {
     if (idx == -1) {
        idx = i;
     } else {
-      gfloat old_diff = fabs(framerates[idx] - fps),
+      gdouble old_diff = fabs(framerates[idx] - fps),
              new_diff = fabs(framerates[i]   - fps);
 
       if (new_diff < old_diff) {
@@ -187,13 +182,13 @@ static void
 gst_y4mencode_init (GstY4mEncode *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (y4mencode_sink_factory), "sink");
+		  gst_static_pad_template_get (&y4mencode_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_y4mencode_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_y4mencode_sinkconnect);
 
   filter->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (y4mencode_src_factory), "src");
+		  gst_static_pad_template_get (&y4mencode_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->init = TRUE;

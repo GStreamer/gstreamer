@@ -25,8 +25,6 @@
 
 #include "gstgsmenc.h"
 
-static GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
-
 /* elementfactory information */
 GstElementDetails gst_gsmenc_details = {
   "GSM audio encoder",
@@ -52,7 +50,7 @@ static void			gst_gsmenc_class_init	(GstGSMEnc *klass);
 static void			gst_gsmenc_init		(GstGSMEnc *gsmenc);
 
 static void			gst_gsmenc_chain	(GstPad *pad,GstData *_data);
-static GstPadLinkReturn	gst_gsmenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_gsmenc_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_gsmenc_signals[LAST_SIGNAL] = { 0 };
@@ -79,45 +77,43 @@ gst_gsmenc_get_type (void)
   return gsmenc_type;
 }
 
-GST_CAPS_FACTORY (gsm_caps_factory,
-  GST_CAPS_NEW (
-    "gsm_gsm",
-    "audio/x-gsm",
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
+static GstStaticPadTemplate gsmenc_src_template =
+GST_STATIC_PAD_TEMPLATE (
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (
+    "audio/x-gsm, "
+      "rate = (int) [ 1000, 48000 ], "
+      "channels = (int) 1"
   )
-)
+);
 
-GST_CAPS_FACTORY (raw_caps_factory,
-  GST_CAPS_NEW (
-    "gsm_raw",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
+static GstStaticPadTemplate gsmenc_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) [ 1000, 48000 ], "
+      "channels = (int) 1"
   )
-)
+);
 
 static void
 gst_gsmenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *gsm_caps;
 
-  raw_caps = GST_CAPS_GET (raw_caps_factory);
-  gsm_caps = GST_CAPS_GET (gsm_caps_factory);
-  
-  gsmenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      raw_caps, NULL);
-  gsmenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     gsm_caps, NULL);
-  gst_element_class_add_pad_template (element_class, gsmenc_sink_template);
-  gst_element_class_add_pad_template (element_class, gsmenc_src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gsmenc_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gsmenc_src_template));
   gst_element_class_set_details (element_class, &gst_gsmenc_details);
 }
   
@@ -143,12 +139,14 @@ static void
 gst_gsmenc_init (GstGSMEnc *gsmenc)
 {
   /* create the sink and src pads */
-  gsmenc->sinkpad = gst_pad_new_from_template (gsmenc_sink_template, "sink");
+  gsmenc->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gsmenc_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
   gst_pad_set_chain_function (gsmenc->sinkpad, gst_gsmenc_chain);
   gst_pad_set_link_function (gsmenc->sinkpad, gst_gsmenc_sinkconnect);
 
-  gsmenc->srcpad = gst_pad_new_from_template (gsmenc_src_template, "src");
+  gsmenc->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gsmenc_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->srcpad);
 
   gsmenc->state = gsm_create ();
@@ -158,22 +156,20 @@ gst_gsmenc_init (GstGSMEnc *gsmenc)
 }
 
 static GstPadLinkReturn
-gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_gsmenc_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstGSMEnc *gsmenc;
+  GstStructure *structure;
 
   gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps)) 
-    return GST_PAD_LINK_DELAYED;
-
-  gst_caps_get_int (caps, "rate", &gsmenc->rate);
-  if (gst_pad_try_set_caps (gsmenc->srcpad, GST_CAPS_NEW (
-                              "gsm_gsm",
-                              "audio/x-gsm",
-                                "rate",     GST_PROPS_INT (gsmenc->rate),
-                                "channels", GST_PROPS_INT (1)
-                               )) > 0)
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int  (structure, "rate", &gsmenc->rate);
+  if (gst_pad_try_set_caps (gsmenc->srcpad,
+        gst_caps_new_simple("audio/x-gsm",
+          "rate",     G_TYPE_INT, gsmenc->rate,
+          "channels", G_TYPE_INT, 1,
+          NULL)) > 0)
   {
     return GST_PAD_LINK_OK;
   }
@@ -195,16 +191,6 @@ gst_gsmenc_chain (GstPad *pad, GstData *_data)
 
   gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
 	      
-  if (!GST_PAD_CAPS (gsmenc->srcpad)) {
-      gst_pad_try_set_caps (gsmenc->srcpad,
-		      GST_CAPS_NEW (
-    			"gsm_enc",
-    			"audio/x-gsm",
-    		 	"rate",     GST_PROPS_INT (gsmenc->rate),
-                        "channels", GST_PROPS_INT (1)
-		      ));
-  }
-  
   data = (gsm_signal*) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
 

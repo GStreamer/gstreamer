@@ -88,26 +88,20 @@ enum {
   ARG_MATRIXPTR,
 };
 
-GST_PAD_TEMPLATE_FACTORY (mixmatrix_sink_factory,
+static GstStaticPadTemplate mixmatrix_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  gst_caps_new (
-    "float_src",
-    "audio/x-raw-float",
-    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-  )
+  GST_STATIC_CAPS ( GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS )
 );
 
-GST_PAD_TEMPLATE_FACTORY (mixmatrix_src_factory,
+static GstStaticPadTemplate mixmatrix_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  gst_caps_new (
-    "float_sink",
-    "audio/x-raw-float",
-    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
-  )
+  GST_STATIC_CAPS ( GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS )
 );
 
 static void	gst_mixmatrix_class_init (GstMixMatrixClass *klass);
@@ -118,11 +112,10 @@ static void	gst_mixmatrix_set_property (GObject *object, guint prop_id, const GV
 static void	gst_mixmatrix_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstPad *	gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *name);
 
-static GstPadLinkReturn gst_mixmatrix_connect (GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_mixmatrix_connect (GstPad *pad, const GstCaps *caps);
 
 static void	gst_mixmatrix_loop (GstElement *element);
 
-static GstPadTemplate	*srctempl, *sinktempl;
 static guint		gst_mixmatrix_signals[LAST_SIGNAL] = { 0 };
 static GstElementClass	*parent_class = NULL;
 
@@ -152,8 +145,10 @@ gst_mixmatrix_base_init (GstMixMatrixClass *klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class, sinktempl);
-  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mixmatrix_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mixmatrix_src_template));
   gst_element_class_set_details (element_class, &mixmatrix_details);
 }
 
@@ -324,24 +319,22 @@ gst_mixmatrix_set_all_caps (GstMixMatrix *mix)
 */
 
 static GstPadLinkReturn
-gst_mixmatrix_connect (GstPad *pad, GstCaps *caps)
+gst_mixmatrix_connect (GstPad *pad, const GstCaps *caps)
 {
   GstMixMatrix *mix = GST_MIXMATRIX(GST_PAD_PARENT(pad));
   gint i;
 
-  if (!GST_CAPS_IS_FIXED(caps) || GST_PAD_IS_SRC (pad)) {
-    return GST_PAD_LINK_DELAYED;
-  }
-
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i]) {
-      if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->srcpads[i], gst_caps_ref (caps)) <= 0) 
+      if (GST_PAD_CAPS(mix->srcpads[i]) == NULL) {
+        if (gst_pad_try_set_caps(mix->srcpads[i], caps) <= 0) {
 	  return GST_PAD_LINK_REFUSED;
+	}
+      }
     }
   }
 
-  mix->caps = caps;
+  mix->caps = gst_caps_copy(caps);
 
   return GST_PAD_LINK_OK;
 }
@@ -368,7 +361,8 @@ gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *templ, const
     if (padnum >= mix->sinkpadalloc)
       mixmatrix_resize(mix, ROUND_UP(padnum,mix->grpsize), mix->sinkpadalloc);
 
-    pad = gst_pad_new_from_template(sinktempl, name);
+    pad = gst_pad_new_from_template(
+      gst_static_pad_template_get (&mixmatrix_sink_template), name);
     GST_PAD_ELEMENT_PRIVATE(pad) = GINT_TO_POINTER(padnum);
     gst_element_add_pad(GST_ELEMENT(mix), pad);
 //    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
@@ -391,7 +385,8 @@ gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *templ, const
     if (padnum >= mix->srcpadalloc)
       mixmatrix_resize(mix, ROUND_UP(padnum,mix->grpsize), mix->srcpadalloc);
 
-    pad = gst_pad_new_from_template(srctempl, name);
+    pad = gst_pad_new_from_template(
+      gst_static_pad_template_get (&mixmatrix_src_template), name);
     GST_PAD_ELEMENT_PRIVATE(pad) = GINT_TO_POINTER(padnum);
     gst_element_add_pad(GST_ELEMENT(mix), pad);
 //    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
@@ -508,9 +503,6 @@ plugin_init (GstPlugin *plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
-
-  sinktempl = mixmatrix_sink_factory ();
-  srctempl = mixmatrix_src_factory ();
 
   return gst_element_register (plugin, "mixmatrix",
 			       GST_RANK_NONE, GST_TYPE_MIXMATRIX);

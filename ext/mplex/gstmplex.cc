@@ -56,63 +56,54 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "src_video",
-    "video/mpeg",
-      "mpegversion",    GST_PROPS_INT_RANGE (1, 2),
-      "systemstream",   GST_PROPS_BOOLEAN (TRUE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2 ], "
+      "systemstream = (boolean) true"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
+static GstStaticPadTemplate video_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "sink_video",
-    "video/mpeg",
-      "mpegversion",    GST_PROPS_INT_RANGE (1, 2),
-      "systemstream",   GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2 ], "
+      "systemstream = (boolean) false"
   )
-)
+);
   
-GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
+static GstStaticPadTemplate audio_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "sink_audio",
-    "audio/mpeg",
-      "mpegversion", GST_PROPS_INT (1),
-      "layer", GST_PROPS_INT_RANGE (1, 3)
+  GST_STATIC_CAPS ("audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) [ 1, 3 ]"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (private_1_sink_factory,
+static GstStaticPadTemplate private_1_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "private_stream_1_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "sink_private1",
-    "audio/x-ac3",
-       NULL
-  )
-)
+  GST_STATIC_CAPS ("audio/x-ac3")
+);
 
-GST_PAD_TEMPLATE_FACTORY (private_2_sink_factory,
+static GstStaticPadTemplate private_2_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "private_stream_2",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "sink_private2",
-    "unknown/unknown",
-       NULL
-  )
-)
+  GST_STATIC_CAPS_ANY
+);
 
 #define GST_TYPE_MPLEX_MUX_FORMAT (gst_mplex_mux_format_get_type())
 static GType
@@ -189,11 +180,11 @@ gst_mplex_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (audio_sink_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (video_sink_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (private_1_sink_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (private_2_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&audio_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&video_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&private_1_sink_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&private_2_sink_factory));
 
   gst_element_class_set_details (element_class, &gst_mplex_details);
 }
@@ -247,7 +238,7 @@ static void
 gst_mplex_init (GstMPlex *mplex) 
 {
   mplex->srcpad = gst_pad_new_from_template (
-  		GST_PAD_TEMPLATE_GET (src_factory), "src");
+  		gst_static_pad_template_get (&src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mplex), mplex->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (mplex), gst_mplex_loop);
@@ -263,20 +254,20 @@ gst_mplex_init (GstMPlex *mplex)
 }
 
 static GstPadLinkReturn
-gst_mplex_video_link (GstPad *pad, GstCaps *caps)
+gst_mplex_video_link (GstPad *pad, const GstCaps *caps)
 {   
   GstMPlex *mplex;
   gint version;
   GstMPlexStream *stream;
+  GstStructure *structure;
   
   mplex = GST_MPLEX (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-
   stream = (GstMPlexStream *) gst_pad_get_element_private (pad);
+
+  structure = gst_caps_get_structure (caps, 0);
   
-  if (!gst_caps_get_int (caps, "mpegversion", &version)){
+  if (!gst_structure_get_int  (structure, "mpegversion", &version)){
     return GST_PAD_LINK_REFUSED;
   }
 

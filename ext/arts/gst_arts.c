@@ -38,36 +38,34 @@ static GstElementDetails gst_arts_details = {
 };
 
 
-GST_PAD_TEMPLATE_FACTORY ( sink_temp,
+static GstStaticPadTemplate sink_temp =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "arts_sample",
-    "audio/x-raw-int",
-    "depth",    GST_PROPS_INT (16),
-    "width",    GST_PROPS_INT (16),
-    "signed",   GST_PROPS_BOOLEAN (TRUE),
-    "channels", GST_PROPS_INT (2),
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
+  GST_STATIC_CAPS ( "audio/x-raw-int, "
+    "depth = (int) 16, "
+    "width = (int) 16, "
+    "signed = (boolean) true, "
+    "channels = (int) 2, "
+    "endianness = (int) byte_order"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY ( src_temp,
+static GstStaticPadTemplate src_temp =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "arts_sample",
-    "audio/x-raw-int",
-    "depth",    GST_PROPS_INT (16),
-    "width",    GST_PROPS_INT (16),
-    "signed",   GST_PROPS_BOOLEAN (TRUE),
-    "channels", GST_PROPS_INT (2),
-    "rate",     GST_PROPS_INT (44100),
-    "endianness", GST_PROPS_INT (G_BYTE_ORDER)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "depth = (int) 16, "
+    "width = (int) 16, "
+    "signed = (boolean) true, "
+    "channels = (int) 2, "
+    "rate = (int) 44100, "
+    "endianness = (int) byte_order"
   )
-)
+);
 
 enum {
   ARG_0,
@@ -112,9 +110,9 @@ gst_arts_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (sink_temp));
+      gst_static_pad_template_get (&sink_temp));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (src_temp));
+      gst_static_pad_template_get (&src_temp));
   gst_element_class_set_details (element_class, &gst_arts_details);
 }
 
@@ -133,10 +131,12 @@ gst_arts_class_init (GstARTSClass *klass)
 static void
 gst_arts_init (GstARTS *arts)
 {
-  arts->sinkpad = gst_pad_new_from_template(GST_PAD_TEMPLATE_GET(sink_temp),"sink");
+  arts->sinkpad = gst_pad_new_from_template(
+      gst_element_get_pad_template (GST_ELEMENT (arts), "sink"), "sink");
   gst_element_add_pad(GST_ELEMENT(arts),arts->sinkpad);
 
-  arts->srcpad = gst_pad_new_from_template(GST_PAD_TEMPLATE_GET(src_temp),"src");
+  arts->srcpad = gst_pad_new_from_template(
+      gst_element_get_pad_template (GST_ELEMENT (arts), "src"), "src");
   gst_element_add_pad(GST_ELEMENT(arts),arts->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (arts), gst_arts_loop);

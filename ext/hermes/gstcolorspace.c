@@ -58,11 +58,7 @@ static void		gst_colorspace_get_property		(GObject *object, guint prop_id,
 								 GValue *value, GParamSpec *pspec);
 
 static GstPadLinkReturn
-			gst_colorspace_sinkconnect		(GstPad *pad, GstCaps *caps);
-static GstPadLinkReturn
-			gst_colorspace_srcconnect 		(GstPad *pad, GstCaps *caps);
-static GstPadLinkReturn
-			gst_colorspace_srcconnect_func 		(GstPad *pad, GstCaps *caps, gboolean newcaps);
+			gst_colorspace_link     		(GstPad *pad, const GstCaps *caps);
 static void		gst_colorspace_chain			(GstPad *pad, GstData *_data);
 static GstElementStateReturn
 			gst_colorspace_change_state 		(GstElement *element);
@@ -77,36 +73,24 @@ static GstPadTemplate *srctempl, *sinktempl;
 static GstElementClass *parent_class = NULL;
 /*static guint gst_colorspace_signals[LAST_SIGNAL] = { 0 }; */
 
-static GstBufferPool* 
-colorspace_get_bufferpool (GstPad *pad)
-{
-  GstColorspace *space;
-
-  space = GST_COLORSPACE (gst_pad_get_parent (pad));
-
-  if (space->type == GST_COLORSPACE_NONE && !space->disabled)
-    return gst_pad_get_bufferpool (space->srcpad);
-  else
-    return NULL;
-}
-
 static gboolean 
 colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *to_caps)
 {
   guint32 from_space, to_space;
+  GstStructure *from_struct;
+  GstStructure *to_struct;
 
   g_return_val_if_fail (to_caps != NULL, FALSE);
   g_return_val_if_fail (from_caps != NULL, FALSE);
 
-  if (gst_caps_has_property (from_caps, "format"))
-    gst_caps_get_fourcc_int (from_caps, "format", &from_space);
-  else
-    from_space = GST_MAKE_FOURCC ('R','G','B',' ');
+  from_struct = gst_caps_get_structure (from_caps, 0);
+  to_struct = gst_caps_get_structure (to_caps, 0);
 
-  if (gst_caps_has_property (to_caps, "format"))
-    gst_caps_get_fourcc_int (to_caps, "format", &to_space);
-  else
-    to_space = GST_MAKE_FOURCC ('R','G','B',' ');
+  from_space = GST_MAKE_FOURCC ('R','G','B',' ');
+  gst_structure_get_fourcc (from_struct, "format", &from_space);
+
+  to_space = GST_MAKE_FOURCC ('R','G','B',' ');
+  gst_structure_get_fourcc (to_struct, "format", &to_space);
 
   GST_INFO ("set up converter for "  GST_FOURCC_FORMAT
 	    " (%08x) to " GST_FOURCC_FORMAT " (%08x)",
@@ -118,7 +102,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
     {
       gint from_bpp;
       
-      gst_caps_get_int (from_caps, "bpp", &from_bpp);
+      gst_structure_get_int (from_struct, "bpp", &from_bpp);
 
       switch (to_space) {
         case GST_MAKE_FOURCC ('R','G','B',' '):
@@ -126,11 +110,11 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
         {
           gint to_bpp;
       
-          gst_caps_get_int (to_caps, "bpp", &to_bpp);
+          gst_structure_get_int (to_struct, "bpp", &to_bpp);
 
-	  gst_caps_get_int (from_caps, "red_mask",   &space->source.r);
-	  gst_caps_get_int (from_caps, "green_mask", &space->source.g);
-	  gst_caps_get_int (from_caps, "blue_mask",  &space->source.b);
+	  gst_structure_get_int (from_struct, "red_mask",   &space->source.r);
+	  gst_structure_get_int (from_struct, "green_mask", &space->source.g);
+	  gst_structure_get_int (from_struct, "blue_mask",  &space->source.b);
 	  space->source.a = 0;
 	  space->srcbpp = space->source.bits = from_bpp;
 	  space->source.indexed = 0;
@@ -141,9 +125,9 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  GST_INFO ( "source blue mask  %08x", space->source.b);
 	  GST_INFO ( "source bpp        %08x", space->srcbpp);
 
-	  gst_caps_get_int (to_caps, "red_mask",   &space->dest.r);
-	  gst_caps_get_int (to_caps, "green_mask", &space->dest.g);
-	  gst_caps_get_int (to_caps, "blue_mask",  &space->dest.b);
+	  gst_structure_get_int (to_struct, "red_mask",   &space->dest.r);
+	  gst_structure_get_int (to_struct, "green_mask", &space->dest.g);
+	  gst_structure_get_int (to_struct, "blue_mask",  &space->dest.b);
 	  space->dest.a = 0;
 	  space->destbpp = space->dest.bits = to_bpp;
 	  space->dest.indexed = 0;
@@ -189,7 +173,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
         case GST_MAKE_FOURCC ('R','G','B',' '):
           GST_INFO ( "colorspace: YUV to RGB");
 
-	  gst_caps_get_int (to_caps, "bpp", &space->destbpp);
+	  gst_structure_get_int (to_struct, "bpp", &space->destbpp);
 	  space->converter = gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
           space->type = GST_COLORSPACE_YUV_RGB;
 	  return TRUE;
@@ -224,7 +208,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
         case GST_MAKE_FOURCC ('R','G','B',' '):
           GST_INFO ( "colorspace: YV12 to RGB");
 
-	  gst_caps_get_int (to_caps, "bpp", &space->destbpp);
+	  gst_structure_get_int (to_struct, "bpp", &space->destbpp);
 	  space->converter = gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
           space->type = GST_COLORSPACE_YUV_RGB;
 	  return TRUE;
@@ -243,163 +227,68 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 }
 
 static GstCaps*
-gst_colorspace_getcaps (GstPad *pad, GstCaps *caps)
+gst_colorspace_getcaps (GstPad *pad)
 {
   GstColorspace *space;
-  GstCaps *result;
   GstCaps *peercaps;
-  GstCaps *ourcaps, *temp;
+  GstCaps *ourcaps;
   
   space = GST_COLORSPACE (gst_pad_get_parent (pad));
 
   /* we can do everything our peer can... */
-  temp = gst_pad_get_allowed_caps (space->srcpad);
-  peercaps = gst_caps_copy (temp);
-  gst_caps_unref (temp);
+  peercaps = gst_pad_get_allowed_caps (space->srcpad);
 
   /* and our own template of course */
-  temp = gst_pad_get_pad_template_caps (pad);
-  ourcaps = gst_caps_copy (temp);
-  gst_caps_unref (temp);
+  ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
   /* merge them together, we prefer the peercaps first */
-  result = gst_caps_prepend (ourcaps, peercaps);
+  gst_caps_append (peercaps, ourcaps);
 
-  return result;
+  return peercaps;
 }
 
 static GstPadLinkReturn
-gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_colorspace_link (GstPad *pad, const GstCaps *caps)
 {
   GstColorspace *space;
-  GstPad *peer;
+  GstPad *otherpad;
+  GstStructure *structure;
 
   space = GST_COLORSPACE (gst_pad_get_parent (pad));
+  otherpad = (pad == space->sinkpad) ? space->srcpad : space->sinkpad;
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
+  structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_get_int (caps, "width", &space->width);
-  gst_caps_get_int (caps, "height", &space->height);
-  gst_caps_get_float (caps, "framerate", &space->fps);
+  gst_structure_get_int (structure, "width", &space->width);
+  gst_structure_get_int (structure, "height", &space->height);
+  gst_structure_get_double (structure, "framerate", &space->fps);
 
   GST_INFO ( "size: %dx%d", space->width, space->height);
 
-  gst_caps_replace_sink (&space->sinkcaps, caps);
-
-  peer = gst_pad_get_peer (pad);
-  if (peer) {
-    GstCaps *allowed = gst_pad_get_allowed_caps (space->srcpad);
-    if (gst_colorspace_srcconnect_func (pad, allowed, FALSE) < 1) {
-      space->sinkcaps = NULL;
-      gst_caps_unref (allowed);
-      return GST_PAD_LINK_REFUSED;
-    }
-    gst_caps_unref (allowed);
+  if (pad == space->sinkpad) {
+    gst_caps_replace (&space->sinkcaps, gst_caps_copy(caps));
+  } else {
+    gst_caps_replace (&space->srccaps, gst_caps_copy(caps));
   }
 
-  return GST_PAD_LINK_OK;
-}
-
-static GstPadLinkReturn
-gst_colorspace_srcconnect (GstPad *pad, GstCaps *caps)
-{
-  return gst_colorspace_srcconnect_func (pad, caps, TRUE);
-}
-
-static GstPadLinkReturn
-gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
-{
-  GstColorspace *space;
-  GstCaps *peercaps;
-  GstCaps *ourcaps, *to_intersect, *try_peercaps;
-  GstPadLinkReturn res = GST_PAD_LINK_REFUSED;
-  
-  space = GST_COLORSPACE (gst_pad_get_parent (pad));
-
-  /* we cannot operate if we didn't get src caps */
-  ourcaps = space->sinkcaps;
-  if (!ourcaps) {
-    if (newcaps)
-      gst_pad_recalc_allowed_caps (space->sinkpad);
-
+#if 0
+  peer = gst_pad_get_peer (otherpad);
+  if (!peer) {
     return GST_PAD_LINK_DELAYED;
   }
+#endif
 
-  /* first see if we can do the format natively by filtering the peer caps 
-   * with our incomming caps */
-  peercaps = gst_caps_intersect (caps, ourcaps); 
-  if (peercaps) {
-    GstCaps *trycaps;
+  if (gst_pad_try_set_caps (otherpad, caps) >= 0) {
+    space->passthru = TRUE;
 
-    trycaps = peercaps;
-    while(trycaps){
-      GstCaps *caps1 = gst_caps_copy_1(trycaps);
-
-      /* see if the peer likes it too, it should as the caps say so.. */
-      if (gst_pad_try_set_caps (space->srcpad, caps1) > 0) {
-	space->type = GST_COLORSPACE_NONE;
-	space->disabled = FALSE;
-	gst_caps_unref (peercaps);
-	peercaps = caps1;
-	res = GST_PAD_LINK_DONE;
-	goto success;
-      }
-      trycaps = trycaps->next;
-    }
-    gst_caps_unref (peercaps);
+    return GST_PAD_LINK_OK;
   }
 
-  to_intersect = gst_caps_append (
-                 GST_CAPS_NEW (
-		   "colorspace_filter",
-		   "video/x-raw-yuv",
-		     "width",     GST_PROPS_INT (space->width),
-		     "height",    GST_PROPS_INT (space->height),
-		     "framerate", GST_PROPS_FLOAT (space->fps)
-		 ), GST_CAPS_NEW (
-		   "colorspace_filter",
-		   "video/x-raw-rgb",
-		     "width",     GST_PROPS_INT (space->width),
-		     "height",    GST_PROPS_INT (space->height),
-		     "framerate", GST_PROPS_FLOAT (space->fps)
-                 ));
-
-  /* then see what the peer has that matches the size */
-  peercaps = gst_caps_intersect (caps, to_intersect);
-  gst_caps_unref (to_intersect);
-
-  /* we are looping over the caps, so we have to get rid of the lists */
-  try_peercaps = gst_caps_normalize (peercaps);
-  gst_caps_unref (peercaps);
-  peercaps = try_peercaps;
-
-  /* loop over all possibilities and select the first one we can convert and
-   * is accepted by the peer */
-  while (peercaps) {
-    GstCaps *peer1 = gst_caps_copy_1(peercaps);
-
-    if (colorspace_setup_converter (space, ourcaps, peer1)) {
-      if (gst_pad_try_set_caps (space->srcpad, peer1) > 0) {
-        space->disabled = FALSE;
-        gst_caps_unref (try_peercaps);
-	res = GST_PAD_LINK_DONE;
-	goto success;
-      }
-    }
-    peercaps = peercaps->next;
+  if (colorspace_setup_converter (space, space->sinkcaps, space->srccaps)) {
+    return GST_PAD_LINK_OK;
   }
-  gst_caps_unref (try_peercaps);
 
-  /* we disable ourself here */
-  space->disabled = TRUE;
-  goto done;
-
-success:
-done:
-
-  return res;
+  return GST_PAD_LINK_REFUSED;
 }
 
 GType
@@ -431,40 +320,22 @@ gst_colorspace_base_init (gpointer g_class)
   GstCaps *caps;
   
   /* create caps for templates */
-  caps = gst_caps_new ("csp_templ_yuv",
-                       "video/x-raw-yuv",
-	               GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-                         GST_PROPS_LIST (
-                           GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
-	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")))));
-  caps = gst_caps_append (caps,
-			  gst_caps_new ("csp_templ_rgb24_32",
-					"video/x-raw-rgb",
-					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32_REVERSE));
-  caps = gst_caps_append (caps,
-			  gst_caps_new ("csp_templ_rgb24_32",
-					"video/x-raw-rgb",
-					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32));
-  caps = gst_caps_append (caps,
-			  gst_caps_new ("csp_templ_rgb15",
-					"video/x-raw-rgb",
-					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15));
-  caps = gst_caps_append (caps,
-			  gst_caps_new ("csp_templ_rgb16",
-					"video/x-raw-rgb",
-					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_16));
+  caps = gst_caps_from_string (
+        GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YV12, YUY2 }") "; "
+        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32_REVERSE "; "
+        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32 "; "
+        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_15 "; "
+        GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_16);
   
   /* build templates */
   srctempl  = gst_pad_template_new ("src",
 				    GST_PAD_SRC,
 				    GST_PAD_ALWAYS,
-				    caps, NULL);
-  gst_caps_ref (caps);
+				    caps);
   sinktempl = gst_pad_template_new ("sink",
 				    GST_PAD_SINK,
 				    GST_PAD_ALWAYS,
-				    caps, NULL);
+				    caps);
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
   gst_element_class_set_details (element_class, &colorspace_details);
@@ -491,22 +362,20 @@ static void
 gst_colorspace_init (GstColorspace *space)
 {
   space->sinkpad = gst_pad_new_from_template (sinktempl, "sink");
-  gst_pad_set_link_function (space->sinkpad, gst_colorspace_sinkconnect);
+  gst_pad_set_link_function (space->sinkpad, gst_colorspace_link);
   gst_pad_set_getcaps_function (space->sinkpad, gst_colorspace_getcaps);
-  gst_pad_set_bufferpool_function (space->sinkpad, colorspace_get_bufferpool);
   gst_pad_set_chain_function(space->sinkpad,gst_colorspace_chain);
   gst_element_add_pad(GST_ELEMENT(space),space->sinkpad);
 
   space->srcpad = gst_pad_new_from_template (srctempl, "src");
   gst_element_add_pad(GST_ELEMENT(space),space->srcpad);
-  gst_pad_set_link_function (space->srcpad, gst_colorspace_srcconnect);
+  gst_pad_set_link_function (space->srcpad, gst_colorspace_link);
 
 #ifdef HAVE_HERMES
   space->h_handle = Hermes_ConverterInstance (0);
 #endif
-  space->pool = NULL;
   space->converter = NULL;
-  space->disabled = TRUE;
+  space->passthru = FALSE;
 }
 
 static void
@@ -516,6 +385,7 @@ gst_colorspace_chain (GstPad *pad,GstData *_data)
   GstColorspace *space;
   gint size;
   GstBuffer *outbuf = NULL;
+  gint dest_bytes, src_bytes;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -526,74 +396,55 @@ gst_colorspace_chain (GstPad *pad,GstData *_data)
   g_return_if_fail (space != NULL);
   g_return_if_fail (GST_IS_COLORSPACE (space));
 
-  if (space->disabled) {
-    gst_buffer_unref (buf);
+  if (space->passthru) {
+    gst_pad_push (space->srcpad, _data);
     return;
   }
 
-  if (space->type == GST_COLORSPACE_NONE) {
-    outbuf = buf;
+  size = space->width * space->height;
+  dest_bytes = ((space->destbpp+7)/8);
+  src_bytes = ((space->srcbpp+7)/8);
+
+  outbuf = gst_buffer_new_and_alloc ((size * space->destbpp)/8);
+
+  if (space->type == GST_COLORSPACE_YUV_RGB) {
+    gst_colorspace_convert (space->converter, GST_BUFFER_DATA (buf), GST_BUFFER_DATA (outbuf));
   }
-  else {
-    gint dest_bytes, src_bytes;
-
-    size = space->width * space->height;
-    dest_bytes = ((space->destbpp+7)/8);
-    src_bytes = ((space->srcbpp+7)/8);
-
-    if (!space->pool)
-      space->pool = gst_pad_get_bufferpool (space->srcpad);
-
-    if (space->pool) {
-      outbuf = gst_buffer_new_from_pool (space->pool, 0, 0);
-    }
-
-    if (!outbuf) {
-      outbuf = gst_buffer_new ();
-
-      GST_BUFFER_SIZE (outbuf) = (size * space->destbpp)/8;
-      GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-    }
-
-    if (space->type == GST_COLORSPACE_YUV_RGB) {
-      gst_colorspace_convert (space->converter, GST_BUFFER_DATA (buf), GST_BUFFER_DATA (outbuf));
-    }
 #ifdef HAVE_HERMES
-    else if (space->type == GST_COLORSPACE_HERMES) {
-      Hermes_ConverterCopy (space->h_handle, 
-		    GST_BUFFER_DATA (buf), 0, 0, space->width, space->height, space->width * src_bytes, 
-	  	    GST_BUFFER_DATA (outbuf), 0, 0, space->width, space->height, space->width * dest_bytes);
-    }
-#endif
-    else if (space->type == GST_COLORSPACE_YUY2_I420) {
-      gst_colorspace_yuy2_to_i420 (GST_BUFFER_DATA (buf),
-		                   GST_BUFFER_DATA (outbuf),
-				   space->width,
-				   space->height);
-    }
-    else if (space->type == GST_COLORSPACE_420_SWAP) {
-      gst_colorspace_i420_to_yv12 (GST_BUFFER_DATA (buf),
-		                   GST_BUFFER_DATA (outbuf),
-				   space->width,
-				   space->height);
-    }
-    else if (space->type == GST_COLORSPACE_RGB32_I420) {
-      gst_colorspace_rgb32_to_i420 (GST_BUFFER_DATA (buf),
-		                   GST_BUFFER_DATA (outbuf),
-				   space->width,
-				   space->height);
-    }
-    else if (space->type == GST_COLORSPACE_RGB32_YV12) {
-      gst_colorspace_rgb32_to_yv12 (GST_BUFFER_DATA (buf),
-		                   GST_BUFFER_DATA (outbuf),
-				   space->width,
-				   space->height);
-    }
-
-    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-
-    gst_buffer_unref (buf);
+  else if (space->type == GST_COLORSPACE_HERMES) {
+    Hermes_ConverterCopy (space->h_handle, 
+                  GST_BUFFER_DATA (buf), 0, 0, space->width, space->height, space->width * src_bytes, 
+                  GST_BUFFER_DATA (outbuf), 0, 0, space->width, space->height, space->width * dest_bytes);
   }
+#endif
+  else if (space->type == GST_COLORSPACE_YUY2_I420) {
+    gst_colorspace_yuy2_to_i420 (GST_BUFFER_DATA (buf),
+                                 GST_BUFFER_DATA (outbuf),
+                                 space->width,
+                                 space->height);
+  }
+  else if (space->type == GST_COLORSPACE_420_SWAP) {
+    gst_colorspace_i420_to_yv12 (GST_BUFFER_DATA (buf),
+                                 GST_BUFFER_DATA (outbuf),
+                                 space->width,
+                                 space->height);
+  }
+  else if (space->type == GST_COLORSPACE_RGB32_I420) {
+    gst_colorspace_rgb32_to_i420 (GST_BUFFER_DATA (buf),
+                                 GST_BUFFER_DATA (outbuf),
+                                 space->width,
+                                 space->height);
+  }
+  else if (space->type == GST_COLORSPACE_RGB32_YV12) {
+    gst_colorspace_rgb32_to_yv12 (GST_BUFFER_DATA (buf),
+                                 GST_BUFFER_DATA (outbuf),
+                                 space->width,
+                                 space->height);
+  }
+
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+  gst_buffer_unref (buf);
   gst_pad_push (space->srcpad, GST_DATA (outbuf));
 }
 
@@ -608,14 +459,10 @@ gst_colorspace_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      if (space->pool)
-	gst_buffer_pool_unref (space->pool);
-      space->pool = NULL;
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_colorspace_converter_destroy (space->converter);
       space->converter = NULL;
-      space->disabled = TRUE;
       space->type = GST_COLORSPACE_NONE;
       gst_caps_replace (&space->sinkcaps, NULL);
       break;

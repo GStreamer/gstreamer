@@ -97,27 +97,28 @@ static GstElementDetails gst_festival_details = GST_ELEMENT_DETAILS (
   "Wim Taymans <wim.taymans@chello.be>"
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+static GstStaticPadTemplate sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "festival_sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "festival_wav",   
-    "text/plain",  
-    NULL
-  )
-)
+  GST_STATIC_CAPS ( "text/plain" )
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_template_factory,
+static GstStaticPadTemplate src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "festival_src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_new (
-    "festival_raw",   
-    "audio/x-raw-int",  
-    GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+  GST_STATIC_CAPS ( "audio/x-raw-int, "
+    "endianness = (int) BYTE_ORDER, "
+    "signed = (boolean) TRUE, "
+    "width = (int) 16, "
+    "depth = (int) 16, "
+    "rate = (int) 16000, "
+    "channels = (int) 1"
   )
-)
+);
 
 /* Festival signals and args */
 enum {
@@ -161,8 +162,10 @@ gst_festival_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   /* register src pads */
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template_factory));
 
   gst_element_class_set_details (element_class, &gst_festival_details);  
 }
@@ -183,12 +186,12 @@ static void
 gst_festival_init (GstFestival *festival) 
 {
   festival->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
+		  gst_static_pad_template_get (&sink_template_factory), "sink");
   gst_pad_set_chain_function (festival->sinkpad, gst_festival_chain);
   gst_element_add_pad (GST_ELEMENT (festival), festival->sinkpad);
 
   festival->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template_factory), "src");
+		  gst_static_pad_template_get (&src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (festival), festival->srcpad);
 
   festival->info = festival_default_info();
@@ -254,19 +257,6 @@ gst_festival_chain (GstPad *pad, GstData *_data)
       GST_BUFFER_DATA (outbuf) = wavefile;
       GST_BUFFER_SIZE (outbuf) = filesize;
       
-      if (!GST_PAD_CAPS (festival->srcpad)) {
-	gst_pad_try_set_caps (festival->srcpad,
-			GST_CAPS_NEW (
-				"festival_src",
-				"audio/x-raw-int",
-       				  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-       				  "signed",     GST_PROPS_BOOLEAN (TRUE),
-       				  "width",      GST_PROPS_INT (16),
-       				  "depth",      GST_PROPS_INT (16),
-       				  "rate",      	GST_PROPS_INT (16000),
-       				  "channels",  	GST_PROPS_INT (1)
-				  ));
-      }
       gst_pad_push (festival->srcpad, GST_DATA (outbuf));
 
       wavefile = NULL;

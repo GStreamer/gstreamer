@@ -89,7 +89,7 @@ static void gst_iir_get_property	(GObject * object, guint prop_id,
 
 static void gst_iir_chain		(GstPad * pad, GstData *_data);
 static GstPadLinkReturn
-       gst_iir_sink_connect 		(GstPad * pad, GstCaps * caps);
+       gst_iir_sink_connect 		(GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_iir_signals[LAST_SIGNAL] = { 0 }; */
@@ -120,8 +120,10 @@ gst_iir_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   /* register src pads */
-  gst_element_class_add_pad_template (element_class, gst_filter_src_factory ());
-  gst_element_class_add_pad_template (element_class, gst_filter_sink_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_filter_src_template));
+  gst_element_class_add_pad_template (element_class,
+    gst_static_pad_template_get (&gst_filter_sink_template));
 
   gst_element_class_set_details (element_class, &gst_iir_details);  
 }
@@ -161,12 +163,14 @@ gst_iir_class_init (GstIIRClass * klass)
 static void
 gst_iir_init (GstIIR * filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (gst_filter_sink_factory (), "sink");
+  filter->sinkpad = gst_pad_new_from_template (
+    gst_static_pad_template_get (&gst_filter_sink_template), "sink");
   gst_pad_set_chain_function (filter->sinkpad, gst_iir_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_iir_sink_connect);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
-  filter->srcpad = gst_pad_new_from_template (gst_filter_src_factory (), "src");
+  filter->srcpad = gst_pad_new_from_template (
+    gst_static_pad_template_get (&gst_filter_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->A = 0.0;
@@ -177,17 +181,14 @@ gst_iir_init (GstIIR * filter)
 }
 
 static GstPadLinkReturn
-gst_iir_sink_connect (GstPad * pad, GstCaps * caps)
+gst_iir_sink_connect (GstPad * pad, const GstCaps * caps)
 {
   GstIIR *filter;
   GstPadLinkReturn set_retval;
   
   filter = GST_IIR (gst_pad_get_parent (pad));
   
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
- 
-  set_retval = gst_pad_try_set_caps(filter->srcpad, gst_caps_ref (caps));  
+  set_retval = gst_pad_try_set_caps(filter->srcpad, caps);  
   if (set_retval > 0) {
     /* connection works, so init the filter */
     /* FIXME: remember to free it */

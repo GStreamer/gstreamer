@@ -26,11 +26,12 @@
 
 /* This is simply a convenience function, nothing more or less */
 
-gfloat
+gdouble
 gst_video_frame_rate (GstPad *pad)
 {
-  gfloat fps = 0.;
+  gdouble fps = 0.;
   GstCaps *caps;
+  GstStructure *structure;
 
   /* get pad caps */
   caps = GST_PAD_CAPS (pad);
@@ -41,15 +42,13 @@ gst_video_frame_rate (GstPad *pad)
     return 0.;
   }
 
-  if (!gst_caps_has_property_typed (caps, "framerate",
-				   GST_PROPS_FLOAT_TYPE)) {
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_double (structure, "framerate", &fps)){
     g_warning ("gstvideo: failed to get framerate property of pad %s:%s",
                GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
 	       GST_PAD_NAME (pad));
     return 0.;
   }
-
-  gst_caps_get_float (caps, "framerate", &fps);
 
   GST_DEBUG ("Framerate request on pad %s:%s: %f",
              GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
@@ -64,8 +63,12 @@ gst_video_get_size (GstPad *pad,
                     gint   *height)
 {
   GstCaps *caps;
+  GstStructure *structure;
+  gboolean ret;
 
   g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (width != NULL, FALSE);
+  g_return_val_if_fail (height != NULL, FALSE);
 
   caps = GST_PAD_CAPS (pad);
 
@@ -76,20 +79,16 @@ gst_video_get_size (GstPad *pad,
     return FALSE;
   }
 
-  if (!gst_caps_has_property_typed (caps, "width",
-				    GST_PROPS_INT_TYPE) ||
-      !gst_caps_has_property_typed (caps, "height",
-				    GST_PROPS_FLOAT_TYPE)) {
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", width);
+  ret &= gst_structure_get_int (structure, "height", height);
+
+  if (!ret) {
     g_warning ("gstvideo: failed to get size properties on pad %s:%s",
                GST_ELEMENT_NAME (gst_pad_get_parent (pad)),
 	       GST_PAD_NAME(pad));
     return FALSE;
   }
-
-  if (width)
-    gst_caps_get_int (caps, "width", width);
-  if (height)
-    gst_caps_get_int (caps, "height", height);
 
   GST_DEBUG ("size request on pad %s:%s: %dx%d",
 	     GST_ELEMENT_NAME (gst_pad_get_parent (pad)),

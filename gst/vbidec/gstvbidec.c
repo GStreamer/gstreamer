@@ -82,26 +82,20 @@ enum {
   ARG_DVD_INPUT
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+static GstStaticPadTemplate gst_vbidec_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "vbidec_sink",
-    "application/octet-stream",
-    NULL
-  )
+  GST_STATIC_CAPS_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (src_template_factory,
+static GstStaticPadTemplate gst_vbidec_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "vbidec_src",
-    "text/plain",
-    NULL
-  )
+  GST_STATIC_CAPS ( "text/plain" )
 );
 
 
@@ -171,8 +165,10 @@ gst_vbidec_base_init (gpointer g_class)
 
   gst_element_class_set_details (element_class, &gst_vbidec_details);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_vbidec_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_vbidec_sink_template));
 }
 static void
 gst_vbidec_class_init(GstVBIDecClass *klass)
@@ -204,12 +200,12 @@ gst_vbidec_init (GstVBIDec *vbidec)
 {
   /* create the sink and src pads */
   vbidec->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
+      gst_static_pad_template_get (&gst_vbidec_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (vbidec), vbidec->sinkpad);
   gst_pad_set_chain_function (vbidec->sinkpad, GST_DEBUG_FUNCPTR (gst_vbidec_chain));
 
   vbidec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template_factory), "src");
+      gst_static_pad_template_get (&gst_vbidec_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (vbidec), vbidec->srcpad);
 
   vbidec->vbiscreen = vbiscreen_new(0, 0, 1.0, 0, (void *)vbidec);

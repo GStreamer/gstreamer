@@ -46,7 +46,7 @@ do {
 
     out = GST_BUFFER (in);
   } else {
-    out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
+    out = gst_buffer_new_and_alloc (GST_POD_BUFPOOL_SIZE);
   }
 
   in = NULL;

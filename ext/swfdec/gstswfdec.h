@@ -51,7 +51,6 @@ struct _GstSwfdec {
   GstPad *sinkpad;
   GstPad *videopad;
   GstPad *audiopad;
-  GstBufferPool *pool;
 
   SwfdecDecoder *state;
   gboolean closed;
