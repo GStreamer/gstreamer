@@ -1,3 +1,9 @@
+2005-02-09  David Schleef  <ds@schleef.org>
+
+	* testsuite/gst-lint: Check for non-statically scoped
+	  parent_class variables.  This won't be a problem once
+	  plugins are loaded with RTLD_LOCAL.
+
 2005-02-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mplex/gstmplexibitstream.cc:

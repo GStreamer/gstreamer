@@ -48,6 +48,7 @@ sub check_explicit_caps();
 sub check_signals();
 sub check_gettext();
 sub check_padtemplate();
+sub check_parent_class();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -78,6 +79,7 @@ foreach $filename (<FIND>) {
 	check_signals();
 	check_gettext();
 	check_padtemplate();
+	check_parent_class();
 
 	# less important stuff
 	check_license();
@@ -548,7 +550,20 @@ sub check_padtemplate()
 {
 	foreach $line (@lines){
 		if ($line =~ /GstStaticPadTemplate/ && !($line =~ /static/)) {
-			print "W: pad template definitions should be static\n"
+			print "W: pad template definitions should be static\n";
+			return;
+		}
+	}
+}
+
+#
+# Check that parent_class is statically scoped
+#
+sub check_parent_class()
+{
+	foreach $line (@lines){
+		if ($line =~ /Gst.*\*\s*parent_class/ && !($line =~ /static/)) {
+			print "E: parent_class definitions should be static\n";
 			return;
 		}
 	}
