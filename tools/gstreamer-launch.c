@@ -150,14 +150,13 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
       gchar * argval;
       gchar * pos = strstr(arg, "=");
       // we have an argument
-      argname = g_strndup(arg, pos - arg);
+      argname = arg;
+      pos[0] = '\0';
       argval = pos+1;
-      DEBUG("attempting to set argument '%s'\n", arg);
+      DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
+            argname,argval,gst_element_get_name(previous));
       gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
       g_free(argname);
-
-      i++;
-      continue;
 
     // element or argument, or beginning of bin or thread
     } else {
@@ -231,11 +230,12 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
           }
         }
       }
+
+      previous = element;
+      if (!GST_IS_BIN(element)) prevelement = element;
     }
 
     i++;
-    previous = element;
-    if (!GST_IS_BIN(element)) prevelement = element;
   }
 
   // ghost all the src pads of the bin
