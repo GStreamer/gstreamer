@@ -22,13 +22,17 @@ tmpl_sources =				\
 	tmpl/audioraw.sgml              \
 	tmpl/cothreads.sgml             \
 	tmpl/gst.sgml                   \
+	tmpl/gstinfo.sgml               \
 	tmpl/gstasyncdisksrc.sgml       \
+	tmpl/gstautoplug.sgml           \
+	tmpl/gstscheduler.sgml          \
+	tmpl/gstprops.sgml              \
+	tmpl/gstcaps.sgml               \
 	tmpl/gstaudiosink.sgml          \
 	tmpl/gstaudiosrc.sgml           \
 	tmpl/gstbin.sgml                \
 	tmpl/gstbuffer.sgml             \
 	tmpl/gstbufferpool.sgml         \
-	tmpl/gstconnection.sgml         \
 	tmpl/gstdisksrc.sgml            \
 	tmpl/gstelement.sgml            \
 	tmpl/gstesdsink.sgml            \
@@ -36,7 +40,6 @@ tmpl_sources =				\
 	tmpl/gstfakesrc.sgml            \
 	tmpl/gstfdsink.sgml             \
 	tmpl/gstfdsrc.sgml              \
-	tmpl/gstfilter.sgml             \
 	tmpl/gsthttpsrc.sgml            \
 	tmpl/gstidentity.sgml           \
 	tmpl/gstlog.sgml                \
@@ -48,8 +51,6 @@ tmpl_sources =				\
 	tmpl/gstqueue.sgml              \
 	tmpl/gstreamer-unused.sgml      \
 	tmpl/gstsinesrc.sgml            \
-	tmpl/gstsink.sgml               \
-	tmpl/gstsrc.sgml                \
 	tmpl/gsttee.sgml                \
 	tmpl/gstthread.sgml             \
 	tmpl/gsttrace.sgml              \

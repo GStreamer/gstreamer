@@ -201,19 +201,19 @@ the stream.
 </para>
 
 
-<!-- ##### MACRO GST_SINESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>
@@ -819,18 +819,18 @@ This macro unsets the given state on the element.
 @obj: Element to unset state of.
 @flag: State to unset, can be any number of bits in guint32.
 
-<!-- ##### STRUCT GstDiskSrc ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_SRC_FLAGS ##### -->
 <para>
 This macro returns the entire set of flags for the object.
 </para>
 
 @obj: GstSrc to return flags for.
+
+<!-- ##### STRUCT GstDiskSrc ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gst_sink_get_type ##### -->
 <para>
@@ -1647,12 +1647,6 @@ Flags for the GstSrc element
 
 @Returns: 
 
-<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_pad_get_type_id ##### -->
 <para>
 
@@ -1660,6 +1654,12 @@ Flags for the GstSrc element
 
 @pad: 
 @Returns: 
+
+<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### SECTION ./tmpl/gstsink.sgml:See_Also ##### -->
 <para>
