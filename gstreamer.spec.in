@@ -206,7 +206,6 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_datadir}/gtk-doc/html/gstreamer/gstschedulerfactory.html
 %{_datadir}/gtk-doc/html/gstreamer/gstscheduler.html
 %{_datadir}/gtk-doc/html/gstreamer/gstthread.html
-%{_datadir}/gtk-doc/html/gstreamer/gsttimecache.html
 %{_datadir}/gtk-doc/html/gstreamer/gsttypefactory.html
 %{_datadir}/gtk-doc/html/gstreamer/gstxml.html
 %{_datadir}/gtk-doc/html/gstreamer/index.sgml
