@@ -64,6 +64,7 @@ typedef struct {
   GstCaps	*caps;
   gst_riff_strh	*strh;
   gint           blockalign, bitrate;
+  gint           width, height;
 
   /* current position (byte, frame, time) */
   guint 	 current_frame;

@@ -884,7 +884,7 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   GstPadTemplate *templ = NULL;
   GstPad *pad;
   avi_stream_context *stream;
-  gint blockalign = 0, bitrate = 0;
+  gint blockalign = 0, bitrate = 0, width = 0, height = 0;
   guint64 *locations = NULL;
   GstTagList *list = gst_tag_list_new ();
   gboolean have_tag = FALSE;
@@ -1003,6 +1003,8 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
         have_tag = TRUE;
         g_free (codec_name);
       }
+      width = strf.vids->width;
+      height = strf.vids->height;
       g_free (strf.vids);
       avi->num_v_streams++;
       break;
@@ -1076,6 +1078,8 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   stream->skip = 0;
   stream->blockalign = blockalign;
   stream->bitrate = bitrate;
+  stream->width = width;
+  stream->height = height;
   stream->indexes = locations;
   gst_pad_set_element_private (pad, stream);
   avi->num_streams++;
@@ -1984,6 +1988,37 @@ gst_avi_demux_handle_seek (GstAviDemux * avi)
   return TRUE;
 }
 
+/*
+ * Invert DIB buffers... Takes existing buffer and
+ * returns either the buffer or a new one (with old
+ * one dereferenced).
+ */
+
+static inline void
+swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
+{
+  memcpy (tmp, d1, bytes);
+  memcpy (d1, d2, bytes);
+  memcpy (d2, tmp, bytes);
+}
+
+static GstBuffer *
+gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
+{
+  buf = gst_buffer_copy_on_write (buf);
+  gint y, h = stream->height, w = stream->width;
+  guint8 *tmp = g_malloc (w);
+
+  for (y = 0; y < h / 2; y++) {
+    swap_line (GST_BUFFER_DATA (buf) + w * y,
+        GST_BUFFER_DATA (buf) + w * (h - 1 - y), tmp, w);
+  }
+
+  g_free (tmp);
+
+  return buf;
+}
+
 static gboolean
 gst_avi_demux_process_next_entry (GstAviDemux * avi)
 {
@@ -2035,6 +2070,9 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         if (!(buf = gst_riff_read_element_data (riff, entry->size, &got))) {
           GST_ERROR ("Failed to read %d bytes of data", entry->size);
           return FALSE;
+        }
+        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
+          buf = gst_avi_demux_invert (stream, buf);
         }
         if (entry->flags & GST_RIFF_IF_KEYFRAME) {
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_KEY_UNIT);
@@ -2125,6 +2163,10 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_buffer_unref (buf);
       } else {
         GstClockTime dur_ts;
+
+        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
+          buf = gst_avi_demux_invert (stream, buf);
+        }
 
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);
