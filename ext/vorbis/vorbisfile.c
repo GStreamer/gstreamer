@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
-#include <gst/bytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 GST_DEBUG_CATEGORY_STATIC (vorbisfile_debug);
 #define GST_CAT_DEFAULT vorbisfile_debug
