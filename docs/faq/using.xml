@@ -56,11 +56,11 @@ You can test this by trying to play a sine tone.  For this, you need to
 connect the sinesrc plug-in to an output plug-in that matches your hardware.
 A (non-complete) list of output plug-ins for audio is
 <itemizedlist>
-<listitem>osssink for OSS output</listitem>
-<listitem>esdsink for ESound output</listitem>
-<listitem>artssink for aRTs output</listitem>
-<listitem>alsasink for ALSA output</listitem>
-<listitem>jacksink for JACK output</listitem>
+<listitem><para>osssink for OSS output</para></listitem>
+<listitem><para>esdsink for ESound output</para></listitem>
+<listitem><para>artssink for aRTs output</para></listitem>
+<listitem><para>alsasink for ALSA output</para></listitem>
+<listitem><para>jacksink for JACK output</para></listitem>
 </itemizedlist>
 First of all, run gst-inspect on the output plug-in you want to use to
 make sure you have it installed.  For example, if you use OSS, run
@@ -136,10 +136,10 @@ information, as we will most likely have to.
         <para>
 When doing a bug report, you should at least describe
 <itemizedlist>
-<listitem>your distribution</listitem>
-<listitem>
-how you installed GStreamer (from cvs, source, packages, which ?)</listitem>
-<listitem>if you installed GStreamer before</listitem>
+<listitem><para>your distribution</para></listitem>
+<listitem><para>
+how you installed GStreamer (from cvs, source, packages, which ?)</para></listitem>
+<listitem><para>if you installed GStreamer before</para></listitem>
 </itemizedlist>
         </para>
         <para>

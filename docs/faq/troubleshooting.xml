@@ -24,11 +24,11 @@ If you're not sure either way, then chances are good that you don't have
 it.  You should get the plug-in and run gst-register to register it.
 How to get the plug-in depends on your distribution.
 <itemizedlist>
-<listitem>if you run GStreamer using packages for your distribution, you
+<listitem><para>if you run GStreamer using packages for your distribution, you
 should check what packages are available for your distribution and see
 if any of the available packages contains the plug-in.
-</listitem>
-<listitem>if you run GStreamer from a source install, there's a good chance
+</para></listitem>
+<listitem><para>if you run GStreamer from a source install, there's a good chance
 the plug-in didn't get built because you are missing an external library.
 When you ran configure, you should have gotten output of what plug-ins are
 going to be built.  You can re-run configure to see if it's there.
@@ -37,13 +37,13 @@ The most likely is that you're missing the library you need for it.
 Check the README file in gst-plugins to see what library you need.
 Make sure to remember to re-run configure after installing the supporting
 library !
-</listitem>
-<listitem>
+</para></listitem>
+<listitem><para>
 if you run GStreamer from CVS, the same logic applies as for a source install.
 Go over the reasons why the plug-in didn't get configured for build.
 Check output of config.log for a clue as to why it doesn't get built if
 you're sure you have the library needed installed in a sane place.
-</listitem>
+</para></listitem>
 </itemizedlist>
 
         </para>
@@ -87,31 +87,31 @@ The second thing you can do is look at the backtrace to get an idea of where
 things are going wrong, or give us an idea of what is going wrong.
 To provide a backtrace, you should
 <orderedlist>
-<listitem>
+<listitem><para>
   run the application in gdb by starting it with
   <programlisting>
     gdb (gst-application)
   </programlisting>
   (If the application is in a source tree instead of installed on the system,
   you might want to put "libtool" before "gdb")
-</listitem>
-<listitem>
+</para></listitem>
+<listitem><para>
   Pass on the command line arguments to the application by typing
   <programlisting>
     set args (the arguments to the application)
   </programlisting>
   at the (gdb) prompt
-</listitem>
-<listitem>
+</para></listitem>
+<listitem><para>
   Type "run" at the (gdb) prompt and wait for the application to
   segfault.  The application will run a lot slower, however.
-</listitem>
-<listitem>
+</para></listitem>
+<listitem><para>
   After the segfault, type "bt" to get a backtrace.  This is a stack of
   function calls detailing the path from main () to where the code is
   currently at.
-</listitem>
-<listitem>
+</para></listitem>
+<listitem><para>
   If the application you're trying to debug contains threads, it is also
   useful to do
   <programlisting>
@@ -120,14 +120,12 @@ To provide a backtrace, you should
   and get backtraces of all of the threads involved, by switching to
   a different thread using "thread (number)" and then again requesting
   a backtrace using "bt".
-</listitem>
-<listitem>
-  <para>
+</para></listitem>
+<listitem><para>
   If you can't or don't want to work out the problem yourself, a copy and paste
   of all this information should be included in your 
   <link linkend="using-bugs-where">bug report</link>.
-  </para>
-</listitem>
+</para></listitem>
 </orderedlist>
         </para>
       </answer>

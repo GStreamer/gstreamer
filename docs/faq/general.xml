@@ -30,17 +30,17 @@ Why is GStreamer written in C ? Why not C++/Objective-C/... ?
 We like C. Aside from "personal preference", there are a number of technical 
 reasons why C is nice in this project:
 <itemizedlist>
-<listitem>C is extremely portable.</listitem>
-<listitem>C is fast.</listitem>
-<listitem>It is easy to make language bindings for libraries written in C.
-</listitem>
-<listitem>The GObject object system provided by GLib implements objects in C, 
+<listitem><para>C is extremely portable.</para></listitem>
+<listitem><para>C is fast.</para></listitem>
+<listitem><para>It is easy to make language bindings for libraries written in C.
+</para></listitem>
+<listitem><para>The GObject object system provided by GLib implements objects in C, 
 in a portable, powerful way. This library provides for introspection and 
 runtime dynamic typing. It is a full OO system, but without the syntactic 
 sugar. If you want sugar, take a look at 
-<ulink url="http://www.5z.com/jirka/gob.html">GOB</ulink>.</listitem>
-<listitem>Use of C integrates nicely with Gtk+ and GNOME. Some people like 
-this a lot, but neither Gtk+ nor GNOME are required by GStreamer.</listitem>
+<ulink url="http://www.5z.com/jirka/gob.html">GOB</ulink>.</para></listitem>
+<listitem><para>Use of C integrates nicely with Gtk+ and GNOME. Some people like 
+this a lot, but neither Gtk+ nor GNOME are required by GStreamer.</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -88,10 +88,10 @@ terms of the libraries we use. As a general rule, GStreamer aims at using
 only LGPL or BSD licensed libraries if available and only use GPL or 
 proprietary libraries where no good LGPL or BSD alternatives are available.
         </para>
+        <para>
 From GStreamer 0.4.2 on, we implemented a license field for all of the plugins,
 and in the future we might have the application enforce a stricter policy
 (much like tainting in the kernel).
-        <para>
         </para>
       </answer>
     </qandaentry>

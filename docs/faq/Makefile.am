@@ -35,3 +35,7 @@ www-faq: gstreamer-faq
 		perl -i -p -e's@href="index\.html@href="index.php@' $$a; \
 		perl -i -p -e's@href="(ar.*)\.html@href="$$1.php@' $$a; \
 	done
+
+check:
+	xmllint -noout -valid $(MAIN)
+

@@ -3,18 +3,25 @@
   <para>
 So you're eager to get started learning about GStreamer.
 There's a few ways you can get started.
-<itemizedlist>
-<listitem>If you want to learn by reading about it, start with
-<xref linkend="title-general" endterm="title-general"/></listitem>
-<listitem>
+    <itemizedlist>
+      <listitem>
+        <para>
+If you want to learn by reading about it, start with
+          <xref linkend="title-general" endterm="title-general"/>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
 If you'd rather learn by trying it out, start with
 <xref linkend="title-getting" endterm="title-getting"/>
-</listitem>
-<listitem>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
 If you want to live on the bleeding edge and develop and use CVS, see
 <xref linkend="title-cvs" endterm="title-cvs"/>
-</listitem>
-</itemizedlist>
+        </para>
+      </listitem>
+    </itemizedlist>
   </para>
 </sect1>
-

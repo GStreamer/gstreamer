@@ -11,12 +11,12 @@
         <para>
 Generally speaking, you have three options, ranging from easy to hard :
 <itemizedlist>
-<item><link linkend="getting-gstreamer-packages">
-distribution-specific packages</link></item>
-<item><link linkend="getting-gstreamer-source">
-source tarballs</link></item>
-<item><link linkend="getting-gstreamer-packages">
-CVS</link></item>
+<listitem><para><link linkend="getting-gstreamer-packages">
+distribution-specific packages</link></para></listitem>
+<listitem><para><link linkend="getting-gstreamer-source">
+source tarballs</link></para></listitem>
+<listitem><para><link linkend="getting-gstreamer-packages">
+CVS</link></para></listitem>
 </itemizedlist>
         </para>
       </answer>

@@ -30,15 +30,16 @@ prefix both aclocal and libtool are installed.
         <para>
 You can do three things to fix this :
 <orderedlist>
-<listitem>install automake in the same prefix as libtool</listitem>
-<listitem>force use of the automake installed in the same prefix as libtool
-by using the --with-automake option</listitem>
-<listitem>figure out what prefix libtool has been installed to and point
-aclocal to the right location by running</listitem>
+<listitem><para>install automake in the same prefix as libtool</para></listitem>
+<listitem><para>force use of the automake installed in the same prefix as libtool
+by using the --with-automake option</para></listitem>
+<listitem><para>figure out what prefix libtool has been installed to and point
+aclocal to the right location by running
 <programlisting>
 export ACLOCAL_FLAGS="-I $(prefix)/share/aclocal"
 </programlisting>
 where you replace prefix with the prefix where libtool was installed.
+</para></listitem>
 </orderedlist>
        </para>
       </answer>

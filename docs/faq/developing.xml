@@ -1,7 +1,7 @@
 <sect1 id="chapter-developing">
   <title id="title-developing">Developing applications with GStreamer</title>
 
-  <qandaset defaultlabel="qandaset-developing">
+  <qandaset>
 
     <qandaentry>
       <question id="developing-compile-programs">
