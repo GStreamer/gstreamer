@@ -1,3 +1,8 @@
+2004-01-09  David Schleef  <ds@schleef.org>
+
+	* ext/librfb/gstrfbsrc.c:  Hacking.  Added actual decoding and
+	mouse pointer events.  It works.
+
 2004-01-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/divx/gstdivxenc.c: (gst_divxenc_init):
