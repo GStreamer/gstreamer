@@ -1,3 +1,10 @@
+2002-11-27  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * ChangeLog: added an entry
+        * gst/gst.*: add gst_init_check which can return TRUE or FALSE
+                     make gst_init_with_popt_table do the same
+                     only initialize once, like GTK does
+
 2002-04-12  Thomas Vander Stichele <thomas@apestaart.org>
 
   	* gst/gst*.[ch]: commited GUAD3C code review comments (marked CR1)

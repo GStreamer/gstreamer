@@ -43,17 +43,21 @@ static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
 static gboolean _gst_use_threads = TRUE;
 
+static gboolean gst_initialized = FALSE;
+/* this will be set in popt callbacks when a problem has been encountered */
+static gboolean _gst_initialization_failure = FALSE;
 extern gint _gst_trace_on;
 
 extern GThreadFunctions gst_thread_dummy_functions;
 
 
-static void 		load_plugin_func 	(gpointer data, gpointer user_data);
-static void		init_popt_callback	(poptContext context, enum poptCallbackReason reason,
-                                                 const struct poptOption *option, const char *arg, void *data);
-static void		init_pre		(void);
-static void		init_post		(void);
-
+static void	load_plugin_func	(gpointer data, gpointer user_data);
+static void	init_popt_callback	(poptContext context,
+		                         enum poptCallbackReason reason,
+                                         const struct poptOption *option,
+					 const char *arg, void *data);
+static gboolean	init_pre		(void);
+static gboolean	init_post		(void);
 
 static GSList *preload_plugins = NULL;
 
@@ -65,8 +69,8 @@ debug_log_handler (const gchar *log_domain,
 		   const gchar *message,
 		   gpointer user_data)
 {
-  g_log_default_handler(log_domain, log_level, message, user_data);
-  g_on_error_query(NULL);
+  g_log_default_handler (log_domain, log_level, message, user_data);
+  g_on_error_query (NULL);
 }
 
 enum {
@@ -89,7 +93,7 @@ enum {
 #endif
 
 /* default scheduler, 'basicomega', can be changed in
- * gstscheduler.c in function gst_scheduler_factory_class_init 
+ * gstscheduler.c in function gst_scheduler_factory_class_init
  */
 static const struct poptOption options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
@@ -116,12 +120,32 @@ static const struct poptOption options[] = {
  * actually performed (via a poptGetContext()), the GStreamer libraries will
  * be initialized.
  *
- * Returns: a pointer to the static GStreamer option table. No free is necessary.
+ * Returns: a pointer to the static GStreamer option table.
+ * No free is necessary.
  */
 const struct poptOption *
 gst_init_get_popt_table (void)
 {
   return options;
+}
+
+/**
+ * gst_init_check:
+ * @argc: pointer to application's argc
+ * @argv: pointer to application's argv
+ *
+ * Initializes the GStreamer library, setting up internal path lists,
+ * registering built-in elements, and loading standard plugins.
+ *
+ * This function will return %FALSE if GStreamer could not be initialized
+ * for some reason.  If you want your program to fail fatally,
+ * use gst_init() instead.
+ */
+
+gboolean
+gst_init_check (int *argc, char **argv[])
+{
+  return gst_init_with_popt_table (argc, argv, NULL);
 }
 
 /**
@@ -131,24 +155,31 @@ gst_init_get_popt_table (void)
  *
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
+ *
+ * This function will terminate your program if it was unable to initialize
+ * GStreamer for some reason.  If you want your program to fall back,
+ * use gst_init_check() instead.
  */
-void 
+void
 gst_init (int *argc, char **argv[])
 {
-  gst_init_with_popt_table (argc, argv, NULL);
+  if (!gst_init_with_popt_table (argc, argv, NULL))
+    g_error ("Could not initialize GStreamer !\n");
 }
+
 /**
  * gst_init_with_popt_table:
  * @argc: pointer to application's argc
  * @argv: pointer to application's argv
  * @popt_options: pointer to a popt table to append
  *
- * Initializes the GStreamer library, parsing the options, 
+ * Initializes the GStreamer library, parsing the options,
  * setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  */
-void
-gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *popt_options)
+gboolean
+gst_init_with_popt_table (int *argc, char **argv[],
+		          const struct poptOption *popt_options)
 {
   poptContext context;
   gint nextopt, i, j, nstrip;
@@ -167,13 +198,20 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
     POPT_TABLEEND
   };
 
+  if (gst_initialized)
+  {
+    GST_DEBUG (GST_CAT_GST_INIT, "already initialized gst\n");
+    return TRUE;
+  }
+
   if (!argc || !argv) {
     if (argc || argv)
       g_warning ("gst_init: Only one of argc or argv was NULL");
-    
-    init_pre();
-    init_post();
-    return;
+
+    if (!init_pre ()) return FALSE;
+    if (!init_post ()) return FALSE;
+    gst_initialized = TRUE;
+    return TRUE;
   }
 
   if (popt_options == NULL) {
@@ -181,18 +219,24 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
   } else {
     options = options_with;
   }
-  context = poptGetContext ("GStreamer", *argc, (const char**)*argv, options, 0);
-  
-  while ((nextopt = poptGetNextOpt (context)) > 0); /* do nothing, it's all callbacks */
-  
+  context = poptGetContext ("GStreamer", *argc, (const char**)*argv,
+		            options, 0);
+
+  while ((nextopt = poptGetNextOpt (context)) > 0)
+  {
+    /* we only check for failures here, actual work is done in callbacks */
+    if (_gst_initialization_failure) return FALSE;
+  }
+
   if (nextopt != -1) {
-    g_print ("Error on option %s: %s.\nRun '%s --help' to see a full list of available command line options.\n",
+    g_print ("Error on option %s: %s.\nRun '%s --help' "
+	     "to see a full list of available command line options.\n",
              poptBadOption (context, 0),
              poptStrerror (nextopt),
              (*argv)[0]);
 
     poptFreeContext (context);
-    exit (1);
+    return FALSE;
   }
   poptFreeContext (context);
 
@@ -211,6 +255,7 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
     nstrip++;
   }
   *argc -= nstrip;
+  return TRUE;
 }
 
 static void 
@@ -278,7 +323,8 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gp
   }
 }
 
-static void
+/* we have no fail cases yet, but maybe in the future */
+static gboolean
 init_pre (void)
 {
   const gchar *homedir;
@@ -321,6 +367,8 @@ init_pre (void)
 #endif
 	  
   g_free (user_reg);
+
+  return TRUE;
 }
 
 static gboolean
@@ -359,8 +407,11 @@ static GstPluginDesc plugin_desc = {
  * - initial output
  * - initializes gst_format
  * - registers a bunch of types for gst_objects
+ *
+ * - we don't have cases yet where this fails, but in the future
+ *   we might and then it's nice to be able to return that
  */
-static void
+static gboolean
 init_post (void)
 {
   GLogLevelFlags llf;
@@ -447,6 +498,8 @@ init_post (void)
   if (_gst_progname == NULL) {
     _gst_progname = g_strdup ("gstprog");
   }
+
+  return TRUE;
 }
 
 static void
@@ -483,9 +536,11 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
   gint val = 0;
   GLogLevelFlags fatal_mask;
 
+  if (gst_initialized)
+    return;
   switch (reason) {
   case POPT_CALLBACK_REASON_PRE:
-    init_pre();
+    if (!init_pre ()) _gst_initialization_failure = TRUE;
     break;
   case POPT_CALLBACK_REASON_OPTION:
     switch (option->val) {
@@ -537,7 +592,8 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     }
     break;
   case POPT_CALLBACK_REASON_POST:
-    init_post();
+    if (!init_post ()) _gst_initialization_failure = TRUE;
+    gst_initialized = TRUE;
     break;
   }
 }

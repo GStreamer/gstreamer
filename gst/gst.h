@@ -62,16 +62,19 @@
 G_BEGIN_DECLS
 
 /* initialize GST */
-void 			 	gst_init		 	(int *argc, char **argv[]);
-void 			 	gst_init_with_popt_table 	(int *argc, char **argv[], 
-								 const struct poptOption *popt_options);
-const struct poptOption*	gst_init_get_popt_table 	(void);
+void		gst_init			(int *argc, char **argv[]);
+gboolean	gst_init_check			(int *argc, char **argv[]);
+gboolean	gst_init_with_popt_table	(int *argc, char **argv[],
+						 const struct poptOption
+						 *popt_options);
+const struct
+poptOption*	gst_init_get_popt_table		(void);
 
-void				gst_use_threads			(gboolean use_threads);
-gboolean			gst_has_threads			(void);
+void		gst_use_threads			(gboolean use_threads);
+gboolean	gst_has_threads			(void);
 
-void 			 	gst_main		 	(void);
-void 			 	gst_main_quit		 	(void);
+void		gst_main			(void);
+void		gst_main_quit			(void);
 
 G_END_DECLS
 
