@@ -1,7 +1,8 @@
-usr/lib/gst/libgstautoplugcache.*
-usr/lib/gst/libgstautoplugger.*
-usr/lib/gst/libgstbasicscheduler.*
-usr/lib/gst/libgstelements.*
-usr/lib/gst/libgststaticautoplug.*
-usr/lib/gst/libgststaticautoplugrender.*
-usr/lib/gst/libgsttypes.*
+usr/lib/gst/libgstautoplugcache.so
+usr/lib/gst/libgstautoplugger.so
+usr/lib/gst/libgstbasicscheduler.so
+usr/lib/gst/libgstelements.so
+usr/lib/gst/libgstspider.so
+usr/lib/gst/libgststaticautoplug.so
+usr/lib/gst/libgststaticautoplugrender.so
+usr/lib/gst/libgsttypes.so

@@ -1,3 +1,65 @@
+gstreamer (0.3.2-2) unstable; urgency=low
+
+  * Rebuild for glib/gtk 1.3.15
+
+ -- David I. Lehn <dlehn@vt.edu>  Sun, 24 Feb 2002 23:48:33 -0500
+
+gstreamer (0.3.2-1) unstable; urgency=low
+
+  * The "I should have started using cvs-buildpacakge long ago" release
+  * New upstream release
+  * Once again stripped CVS dirs from upstream tarball
+  * Add spider autoplugger
+  * Added gst-xmllaunch and man page to -tools
+  * Despite my complaints, upstream is using new lib versioning
+    until they decide API is "stable" enough to provide support.
+    At that point proper versioning will happen.
+    This release lib change:
+       libgst.so.2.0.0 -> libgst-0.3.2.so.0.0.0
+    This release lib package change:
+       libgst2 -> libgst3
+    Hopefully this is mostly transparent.
+
+    Due to a conflict with GNU Smalltalk the next upstream release
+    will be renaming some "gst" to "gstreamer".  This will change
+    the lib to libgstreamer*.  Some header locations will change too
+    so prepare for broken code.
+
+    Plan for next upstream release is to rename packages:
+       libgst3 -> libgstreamer0
+       libgst-dev -> libgstreamer-dev
+  * Plugins now unversioned upstream:
+    * Just .so, no more .so.x.y.z
+    * Drop .la and .a
+    * Fixup a few
+    * Wait and see if anyone even notices...
+  * Add back some docs that escaped via the diff
+  * Fixup some more doc cruft in the diff
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 14 Feb 2002 02:20:48 -0500
+
+gstreamer (0.3.1-4) unstable; urgency=low
+
+  * (Unreleased)
+  * find . -type d -name CVS -exec rm -rf {} \;
+  * Hack upstream tarball to exclude above CVS/ dirs
+  * Rebuild for conversion to cvs-buildpackage management
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed, 13 Feb 2002 18:18:34 -0500
+
+gstreamer (0.3.1-3) unstable; urgency=low
+
+  * Rebuild for glib/gtk 1.3.13
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed,  6 Feb 2002 02:17:23 -0500
+
+gstreamer (0.3.1-2) unstable; urgency=low
+
+  * Upstream fix for proper libxml version in pkg-config
+  * Undo some of the auto docs/*/tmpl breakage
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed, 23 Jan 2002 01:28:12 -0500
+
 gstreamer (0.3.1-1) unstable; urgency=low
 
   * New upstream release
