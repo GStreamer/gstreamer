@@ -1,5 +1,11 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/sidplay/gstsiddec.cc:
+	* gst/modplug/gstmodplug.cc:
+          parenthese NULL because C++ seems angry about it
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/gst-i18n-plugin.h:
           add skeleton i18n stuff, but needs to be further implemented
 
