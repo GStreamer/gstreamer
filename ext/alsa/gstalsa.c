@@ -453,7 +453,7 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ,
   gint channel = 0;
 
   g_return_val_if_fail ((this = GST_ALSA (element)), NULL);
-  g_return_val_if_fail (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING), NULL);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (element, GST_ALSA_RUNNING), NULL);
 
   /* you can't request a pad if the non-request pad already has more than 1 channel */
   g_return_val_if_fail (this->channels > GST_ELEMENT(this)->numpads, NULL);
@@ -514,23 +514,49 @@ gst_alsa_get_format (GstCaps *caps)
                        "width", &width,
                        "depth", &depth,
                        "law", &law,
-                       "endianness", &endianness,
                        "signed", &sign,
                        NULL))
         return SND_PCM_FORMAT_UNKNOWN;
 	
+    /* extract endianness if needed */
+    if (width > 8) {
+      if (!gst_caps_get (caps,
+                         "endianness", &endianness,
+                         NULL))
+        return SND_PCM_FORMAT_UNKNOWN;      
+    } else {
+      endianness = G_BYTE_ORDER;
+    }
+    
     /* find corresponding alsa format */
     switch (law) {
       case 0: return snd_pcm_build_linear_format (depth, width, sign ? 0 : 1, endianness == G_LITTLE_ENDIAN ? 0 : 1);
-      case 1: return SND_PCM_FORMAT_A_LAW;
-      case 2: return SND_PCM_FORMAT_MU_LAW;
+      case 1: 
+        if (width == 8 && depth == 8 && sign == FALSE) {
+          return SND_PCM_FORMAT_MU_LAW;
+        } else {
+          return SND_PCM_FORMAT_UNKNOWN;
+        }
+      case 2: 
+        if (width == 8 && depth == 8 && sign == FALSE) {
+          return SND_PCM_FORMAT_A_LAW;
+        } else {
+          return SND_PCM_FORMAT_UNKNOWN;
+        }
       default: return SND_PCM_FORMAT_UNKNOWN;
     }
   } else if (strncmp (format_name, "float", 5) == 0) {
     gchar *layout;
+    gfloat intercept, slope;
     /* get layout */
-    if (!gst_caps_get_string (caps, "layout", (const gchar **) &layout))
+    if (!gst_caps_get (caps, "layout", &layout,
+                             "intercept", &intercept,
+                             "slope", &slope,
+                             NULL))
       return SND_PCM_FORMAT_UNKNOWN;
+    if (intercept != 0.0f || slope != 1.0f) {
+      return SND_PCM_FORMAT_UNKNOWN;      
+    }
 	/* match layout to format wrt to endianness */
     if (strncmp (layout, "gfloat", 6) == 0) {
       return SND_PCM_FORMAT_FLOAT;
@@ -547,35 +573,42 @@ gst_alsa_get_format (GstCaps *caps)
 static GstProps *
 gst_alsa_get_props (snd_pcm_format_t format)
 {
-  /* int or float */
-  if (snd_pcm_format_linear (format)) {
+  if (format == SND_PCM_FORMAT_A_LAW) {
+    return gst_props_new ("format", GST_PROPS_STRING ("int"),
+                          "law", GST_PROPS_INT(2),
+                          "width", GST_PROPS_INT(8),
+                          "depth", GST_PROPS_INT(8),
+                          "signed", GST_PROPS_BOOLEAN (FALSE),
+                          NULL);
+  } else if (format == SND_PCM_FORMAT_MU_LAW) {
+    return gst_props_new ("format", GST_PROPS_STRING ("int"),
+                          "law", GST_PROPS_INT(1),
+                          "width", GST_PROPS_INT(8),
+                          "depth", GST_PROPS_INT(8),
+                          "signed", GST_PROPS_BOOLEAN (FALSE),
+                          NULL);
+  } else if (snd_pcm_format_linear (format)) {
+    /* int */
     GstProps *props = gst_props_new ("format", GST_PROPS_STRING ("int"),
                           "width", GST_PROPS_INT(snd_pcm_format_physical_width (format)),
                           "depth", GST_PROPS_INT(snd_pcm_format_width (format)),
+                          "law", GST_PROPS_INT(0),
                           "signed", GST_PROPS_BOOLEAN (snd_pcm_format_signed (format) == 1 ? TRUE : FALSE),
                           NULL);
     /* endianness */
-    switch (snd_pcm_format_little_endian (format)) {
-    case 0:
-      gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_BIG_ENDIAN)));
-      break;
-    case 1:
-      gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_LITTLE_ENDIAN)));
-      break;
-    default:
-      break;
-    }
-    /* law */
-    switch (format) {
-    case SND_PCM_FORMAT_A_LAW:
-      gst_props_add_entry (props, gst_props_entry_new ("law", GST_PROPS_INT (1)));
-      break;
-    case SND_PCM_FORMAT_MU_LAW:
-      gst_props_add_entry (props, gst_props_entry_new ("law", GST_PROPS_INT (2)));
-      break;
-    default:
-      gst_props_add_entry (props, gst_props_entry_new ("law", GST_PROPS_INT (0)));
-      break;			
+    if (snd_pcm_format_physical_width (format) > 8) {
+      switch (snd_pcm_format_little_endian (format)) {
+      case 0:
+        gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_BIG_ENDIAN)));
+        break;
+      case 1:
+        gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_LITTLE_ENDIAN)));
+        break;
+      default:
+        g_warning("ALSA: Unknown byte order in sound driver. Continuing by assuming system byte order.");
+        gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_BYTE_ORDER)));
+        break;
+      }
     }
     return props;
   } else if (snd_pcm_format_float (format)) {
@@ -585,6 +618,8 @@ gst_alsa_get_props (snd_pcm_format_t format)
 
     return gst_props_new ("format", GST_PROPS_STRING ("float"),
                           "layout", GST_PROPS_STRING (snd_pcm_format_width (format) == 64 ? "gdouble" : "gfloat"),
+                          "intercept", GST_PROPS_FLOAT (0),
+                          "slope", GST_PROPS_FLOAT (1),
                           NULL);
   }
   return NULL;
@@ -657,11 +692,11 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
       if (!gst_alsa_open_audio (this))
         return GST_PAD_LINK_REFUSED;
 
-    /* FIXME: allow changing the format here, even by retrying caps on other pads */
     format = gst_alsa_get_format (caps);
     GST_DEBUG (GST_CAT_CAPS, "found format %s\n", snd_pcm_format_name (format));
       
-    if (this->format != SND_PCM_FORMAT_UNKNOWN && this->format != format)
+    /* FIXME: allow changing the format here, even by retrying caps on other pads */
+    if (format == SND_PCM_FORMAT_UNKNOWN || (this->format != SND_PCM_FORMAT_UNKNOWN && this->format != format))
       return GST_PAD_LINK_REFUSED;
     if (!gst_caps_get (caps, "rate", &rate,
                              "channels", &channels,
@@ -710,8 +745,8 @@ gst_alsa_change_state (GstElement *element)
   case GST_STATE_READY_TO_PAUSED:
     break;
   case GST_STATE_PAUSED_TO_PLAYING:
-    if (GST_FLAG_IS_SET (element, GST_ALSA_OPEN) == FALSE)
-      if (!gst_alsa_open_audio (this))
+    if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING) == FALSE)
+      if (!gst_alsa_start_audio (this))
         return GST_STATE_FAILURE;
 
   case GST_STATE_PLAYING_TO_PAUSED:
@@ -763,18 +798,18 @@ gst_alsa_sink_loop (GstElement *element)
     }
   }
   
-  while (1) {
-    
-    avail = snd_pcm_avail_update (this->handle);
-    if (avail < 0) {
-      if (avail == -EPIPE) {
-        gst_alsa_xrun_recovery (this);
-        continue;
-      } else {
-        g_warning ("unknown ALSA avail_update return value (%d)", (int) avail);
-        return;
-      }
+restart:
+  
+  avail = snd_pcm_avail_update (this->handle);
+  if (avail < 0) {
+    if (avail == -EPIPE) {
+      gst_alsa_xrun_recovery (this);
+      goto restart;
+    } else {
+      g_warning ("unknown ALSA avail_update return value (%d)", (int) avail);
+      return;
     }
+  }
 
     if (avail > 0) {
       /* check how many bytes we still have in all our bytestreams */
@@ -852,15 +887,14 @@ gst_alsa_sink_loop (GstElement *element)
            * under gdb, or when exiting due to a signal */
           GST_DEBUG (GST_CAT_PLUGIN_INFO, "got interrupted while waiting");
           if (gst_element_interrupt (element))
-            break;
+            return;
           else
-            continue;
+            goto restart;
          }
         g_warning ("error waiting for alsa pcm: (%d: %s)", errno, strerror (errno));
         return;
       }
     }
-  }
 }
 
 static void
