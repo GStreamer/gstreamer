@@ -1320,7 +1320,7 @@ plugin_init (GstPlugin * plugin)
       au_exts, ".snd", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,
       avi_exts, "AVI ");
-  TYPE_FIND_REGISTER_RIFF (plugin, "video/x-cdxa", GST_RANK_SECONDARY,
+  TYPE_FIND_REGISTER_RIFF (plugin, "video/x-cdxa", GST_RANK_PRIMARY,
       cdxa_exts, "CDXA");
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-flac", GST_RANK_PRIMARY,
       flac_exts, "fLaC", 4, GST_TYPE_FIND_MAXIMUM);

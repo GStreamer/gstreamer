@@ -1,3 +1,16 @@
+2004-07-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data):
+	  mp42/mp43 (no caps) exist too.
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_video_caps):
+	  Set pixel_width/height; we've got them in-caps.
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	* gst/wavparse/gstwavparse.c: (plugin_init):
+	  Both are valid primary.
+	* sys/oss/gstossmixer.c:
+	  Remove i18n hack and enable translations.
+
 2004-07-15  Benjamin Otte  <otte@gnome.org>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
