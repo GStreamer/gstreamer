@@ -1,5 +1,10 @@
 2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/qtdemux/qtdemux.c: (plugin_init):
+	  qtdemux requires bytestream
+
+2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_get_caps), (gst_alsa_link):
 	  Fix remaining caps handling errors due to CAPS merge.
 
