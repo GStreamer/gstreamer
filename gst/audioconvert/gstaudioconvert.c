@@ -149,7 +149,21 @@ GST_STATIC_CAPS ( \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 2 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) { 8, 16, 32 }, " \
+    "width = (int) 8, " \
+    "depth = (int) [ 1, 8 ], " \
+    "signed = (boolean) { true, false }; " \
+  "audio/x-raw-int, " \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, 2 ], " \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+    "width = (int) 16, " \
+    "depth = (int) [ 1, 16 ], " \
+    "signed = (boolean) { true, false }; " \
+  "audio/x-raw-int, " \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, 2 ], " \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+    "width = (int) 32, " \
     "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-float, " \
@@ -346,6 +360,10 @@ gst_audio_convert_parse_caps (const GstCaps * gst_caps,
     GST_DEBUG ("could not get some values from structure");
     return FALSE;
   }
+  if (caps->is_int && caps->depth > caps->width) {
+    GST_DEBUG ("width > depth, not allowed - make us advertise correct caps");
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -489,6 +507,10 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
     return copy;
   if (_fixate_caps_to_int (&copy, "depth", ac_caps.is_int ? ac_caps.depth : 16))
     return copy;
+  if (_fixate_caps_to_int (&copy, "endianness",
+          ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER))
+    return copy;
+
 
   gst_caps_free (copy);
   return NULL;

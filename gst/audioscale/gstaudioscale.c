@@ -56,14 +56,24 @@ static GstStaticPadTemplate gst_audioscale_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 8, 16, 24, 32 }, "
+        "depth = (int) [ 1, 32 ], " "signed = (boolean) { true, false }")
     );
 
 static GstStaticPadTemplate gst_audioscale_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 8, 16, 24, 32 }, "
+        "depth = (int) [ 1, 32 ], " "signed = (boolean) { true, false }")
     );
 
 #define GST_TYPE_AUDIOSCALE_METHOD (gst_audioscale_method_get_type())
