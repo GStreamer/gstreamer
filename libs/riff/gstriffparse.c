@@ -118,6 +118,7 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
     }
   }
 
+  if (riff->nextlikely & 0x01) riff->nextlikely++;
 
   DEBUG("gst_riff_parser: next 0x%08x  last 0x%08lx offset %08x\n",riff->nextlikely, last, off);
   /* loop while the next likely chunk header is in this buffer */
@@ -148,7 +149,7 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
     chunk->size = words[1];
     chunk->data = (gchar *)(words+2);
     // we need word alignment
-    if (chunk->size & 0x01) chunk->size++;
+    //if (chunk->size & 0x01) chunk->size++;
     chunk->form = words[2]; /* fill in the form,  might not be valid */
 
 
@@ -186,6 +187,7 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
         }
         g_free(chunk);
       }
+      if (riff->nextlikely & 0x01) riff->nextlikely++;
 
       //riff->chunks = g_list_prepend(riff->chunks,chunk);
     }

@@ -75,3 +75,21 @@ GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname) {
   gtk_object_getv(GTK_OBJECT(object),1,&arg);
   return GTK_WIDGET(GTK_VALUE_OBJECT(arg));
 }
+
+void gst_util_dump_mem(guchar *mem, guint size) {
+  guint i, j;
+
+  i = j =0;
+  while (i<size) {
+    g_print("%02x ", mem[i]);
+    if (j == 16) {
+      g_print("\n");
+      j = 0;
+    }
+    else {
+      j++;
+    }
+    i++;
+  }
+  g_print("\n");
+}
