@@ -1,3 +1,10 @@
+2004-04-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_caps),
+	(gst_v4l2_fourcc_from_structure):
+	  Add Y41B/Y42B YUV formats (see #125732), fix Y41P (was typo'ed to
+	  Y41B somewhere).
+
 2004-04-09  Benjamin Otte  <otte@gnome.org>
 
 	* ext/gnomevfs/gstgnomevfssink.c:

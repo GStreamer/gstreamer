@@ -467,8 +467,6 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
       break;
     }
     case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
-    case V4L2_PIX_FMT_YUV422P: /* 16  YVU422 planar */
-    case V4L2_PIX_FMT_YUV411P: /* 16  YVU411 planar */
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
@@ -481,7 +479,9 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
     case V4L2_PIX_FMT_YUYV:
     case V4L2_PIX_FMT_YVU420:
     case V4L2_PIX_FMT_UYVY:
-    case V4L2_PIX_FMT_Y41P:{
+    case V4L2_PIX_FMT_Y41P:
+    case V4L2_PIX_FMT_YUV422P:
+    case V4L2_PIX_FMT_YUV411P:{
       guint32 fcc = 0;
 
       switch (fourcc) {
@@ -504,7 +504,13 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
           fcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
           break;
         case V4L2_PIX_FMT_Y41P:
+          fcc = GST_MAKE_FOURCC ('Y', '4', '1', 'P');
+          break;
+        case V4L2_PIX_FMT_YUV411P:
           fcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
+          break;
+        case V4L2_PIX_FMT_YUV422P:
+          fcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
           break;
         default:
           g_assert_not_reached ();
@@ -569,12 +575,8 @@ gst_v4l2_fourcc_from_structure (GstStructure * structure)
   guint32 fourcc = 0;
   const gchar *mimetype = gst_structure_get_name (structure);
 
-  if (!strcmp (mimetype, "video/x-raw-yuv") ||
-      !strcmp (mimetype, "video/x-raw-rgb")) {
-    if (!strcmp (mimetype, "video/x-raw-rgb"))
-      fourcc = GST_MAKE_FOURCC ('R', 'G', 'B', ' ');
-    else
-      gst_structure_get_fourcc (structure, "format", &fourcc);
+  if (!strcmp (mimetype, "video/x-raw-yuv")) {
+    gst_structure_get_fourcc (structure, "format", &fourcc);
 
     switch (fourcc) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
@@ -593,35 +595,38 @@ gst_v4l2_fourcc_from_structure (GstStructure * structure)
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
         fourcc = V4L2_PIX_FMT_YVU420;
         break;
-      case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):{
-        gint depth, endianness, r_mask;
-
-        gst_structure_get_int (structure, "depth", &depth);
-        gst_structure_get_int (structure, "endianness", &endianness);
-        gst_structure_get_int (structure, "red_mask", &r_mask);
-
-        switch (depth) {
-          case 8:
-            fourcc = V4L2_PIX_FMT_RGB332;
-            break;
-          case 15:
-            fourcc = (endianness == G_LITTLE_ENDIAN) ?
-                V4L2_PIX_FMT_RGB555 : V4L2_PIX_FMT_RGB555X;
-            break;
-          case 16:
-            fourcc = (endianness == G_LITTLE_ENDIAN) ?
-                V4L2_PIX_FMT_RGB565 : V4L2_PIX_FMT_RGB565X;
-            break;
-          case 24:
-            fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR24 : V4L2_PIX_FMT_RGB24;
-            break;
-          case 32:
-            fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR32 : V4L2_PIX_FMT_RGB32;
-            break;
-        }
-      default:
+      case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
+        fourcc = V4L2_PIX_FMT_YUV411P;
         break;
-      }
+      case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
+        fourcc = V4L2_PIX_FMT_YUV422P;
+        break;
+    }
+  } else if (!strcmp (mimetype, "video/x-raw-rgb")) {
+    gint depth, endianness, r_mask;
+
+    gst_structure_get_int (structure, "depth", &depth);
+    gst_structure_get_int (structure, "endianness", &endianness);
+    gst_structure_get_int (structure, "red_mask", &r_mask);
+
+    switch (depth) {
+      case 8:
+        fourcc = V4L2_PIX_FMT_RGB332;
+        break;
+      case 15:
+        fourcc = (endianness == G_LITTLE_ENDIAN) ?
+            V4L2_PIX_FMT_RGB555 : V4L2_PIX_FMT_RGB555X;
+        break;
+      case 16:
+        fourcc = (endianness == G_LITTLE_ENDIAN) ?
+            V4L2_PIX_FMT_RGB565 : V4L2_PIX_FMT_RGB565X;
+        break;
+      case 24:
+        fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR24 : V4L2_PIX_FMT_RGB24;
+        break;
+      case 32:
+        fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR32 : V4L2_PIX_FMT_RGB32;
+        break;
     }
   } else if (strcmp (mimetype, "video/x-dv") == 0) {
     fourcc = V4L2_PIX_FMT_DV;
