@@ -96,6 +96,7 @@ struct _GstFileIndex {
   gchar                 *location;
   gboolean               is_loaded;
   GSList                *unresolved;
+  gint                   next_id;
   GHashTable		*id_index;
 
   GstIndexEntry         *ret_entry;  // hack to avoid leaking memory
@@ -239,13 +240,17 @@ gst_file_index_get_writer_id  (GstIndex *_index,
       continue;
     }
 
-    //g_warning ("resolve %d %s", *id, writer_string);
-    ii->id = *id;
-    g_hash_table_insert (index->id_index, id, ii);
+    ii->id = *id = ++index->next_id;
+    g_hash_table_insert (index->id_index, &ii->id, ii);
     match = TRUE;
+
+    //g_warning ("resolve %d %s", *id, writer_string);
   }
 
   g_slist_free (pending);
+
+  if (!match)
+    g_warning ("Can't resolve writer '%s'", writer_string);
 
   return match;
 }
@@ -548,7 +553,7 @@ gst_file_index_add_id (GstIndex *index, GstIndexEntry *entry)
     // It would be useful to know the GType of the writer so
     // we can try to cope with changes in the id_desc path.
 
-    g_hash_table_insert (fileindex->id_index, &entry->id, id_index);
+    g_hash_table_insert (fileindex->id_index, &id_index->id, id_index);
   }
 }
 
@@ -650,7 +655,6 @@ gst_file_index_add_association (GstIndex *index, GstIndexEntry *entry)
   gint mx;
   GstIndexAssociation sample;
   gboolean exact;
-  gint fx;
 
   id_index = g_hash_table_lookup (fileindex->id_index, &entry->id);
   if (!id_index)
@@ -691,15 +695,14 @@ gst_file_index_add_association (GstIndex *index, GstIndexEntry *entry)
 
   if (exact) {
     // maybe overwrite instead?
-    g_warning ("ignoring duplicate index association at %lld",
-	       GST_INDEX_ASSOC_VALUE (entry, 0));
+    //    g_warning ("Ignoring duplicate index association at %lld",
+    //	       GST_INDEX_ASSOC_VALUE (entry, 0));
     return;
   }
 
-  // should verify that all formats are ordered XXX
-
   {
     gchar row_data[ARRAY_ROW_SIZE (id_index)];
+    gint fx;
 
     gint32 flags_host = GST_INDEX_ASSOC_FLAGS (entry);
     ARRAY_ROW_FLAGS (row_data) = GINT32_TO_BE (flags_host);
@@ -709,7 +712,7 @@ gst_file_index_add_association (GstIndex *index, GstIndexEntry *entry)
       ARRAY_ROW_VALUE (row_data, fx) = GINT64_TO_BE (val_host);
     }
 
-    g_array_insert_val (id_index->array, mx, row_data);
+    g_array_insert_vals (id_index->array, mx, row_data, 1);
   }
 }
 
@@ -844,8 +847,10 @@ gst_file_index_get_assoc_entry (GstIndex *index,
   if (!fileindex->ret_entry)
     fileindex->ret_entry = g_new0 (GstIndexEntry, 1);
   entry = fileindex->ret_entry;
-  if (entry->data.assoc.assocs)
+  if (entry->data.assoc.assocs) {
     g_free (entry->data.assoc.assocs);
+    entry->data.assoc.assocs = NULL;
+  }
 
   entry->type = GST_INDEX_ENTRY_ASSOCIATION;
 
