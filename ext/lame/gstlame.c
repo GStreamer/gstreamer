@@ -366,7 +366,7 @@ gst_lame_src_link (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
 
   /* we don't do channel conversion */
-  channelcaps = gst_caps_new_simple ("audio/x-raw-int", "chnnels", G_TYPE_INT,
+  channelcaps = gst_caps_new_simple ("audio/x-raw-int", "channels", G_TYPE_INT,
       lame->num_channels, NULL);
   othercaps = gst_caps_intersect (gst_pad_get_pad_template_caps (lame->sinkpad),
       channelcaps);
