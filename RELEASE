@@ -80,6 +80,7 @@ Updates since 0.6.3
        files
      * #119372: [21][0.6.3] [patch] mpeg2 identification bug
      * #116152: [22]modplug doesn't handle state changes properly
+     * #119105: [26][0.6.3/patch] gst-plugins build fails due to warnings and -Werror
 
 GStreamer Homepage
 
@@ -162,3 +163,4 @@ References
   23. http://gstreamer.net/
   24. http://bugzilla.gnome.org/
   25. http://gstreamer.sf.net/
+  26. http://bugzilla.gnome.org/show_bug.cgi?id=119105
