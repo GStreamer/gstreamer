@@ -205,6 +205,9 @@ gst_osssink_class_init (GstOssSinkClass *klass)
   
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_osssink_change_state);
   gstelement_class->query 	 = GST_DEBUG_FUNCPTR (gst_osssink_query);
+  gstelement_class->set_clock 	 = gst_osssink_set_clock;
+  gstelement_class->get_clock 	 = gst_osssink_get_clock;
+  
 }
 
 static void 
@@ -241,9 +244,6 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
   osssink->handled = 0;
 
-  GST_ELEMENT (osssink)->setclockfunc 	 = gst_osssink_set_clock;
-  GST_ELEMENT (osssink)->getclockfunc 	 = gst_osssink_get_clock;
-  
   GST_FLAG_SET (osssink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET (osssink, GST_ELEMENT_EVENT_AWARE);
 }

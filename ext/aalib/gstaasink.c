@@ -72,6 +72,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 static void	gst_aasink_class_init	(GstAASinkClass *klass);
 static void	gst_aasink_init		(GstAASink *aasink);
 
+static void 	gst_aasink_set_clock 	(GstElement *element, GstClock *clock);
 static void	gst_aasink_chain	(GstPad *pad, GstBuffer *buf);
 
 static void	gst_aasink_set_property	(GObject *object, guint prop_id, 
@@ -231,6 +232,7 @@ gst_aasink_class_init (GstAASinkClass *klass)
                    G_TYPE_UINT, G_TYPE_UINT);
 
   gstelement_class->change_state = gst_aasink_change_state;
+  gstelement_class->set_clock    = gst_aasink_set_clock;
 }
 
 static GstPadConnectReturn
@@ -287,7 +289,6 @@ gst_aasink_init (GstAASink *aasink)
   aasink->height = -1;
 
   aasink->clock = NULL;
-  GST_ELEMENT (aasink)->setclockfunc    = gst_aasink_set_clock;
 
   GST_FLAG_SET(aasink, GST_ELEMENT_THREAD_SUGGESTED);
 }

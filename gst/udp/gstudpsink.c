@@ -69,6 +69,8 @@ gst_udpsink_control_get_type(void) {
 static void		gst_udpsink_class_init		(GstUDPSink *klass);
 static void		gst_udpsink_init		(GstUDPSink *udpsink);
 
+static void 		gst_udpsink_set_clock 		(GstElement *element, GstClock *clock);
+
 static void		gst_udpsink_chain		(GstPad *pad,GstBuffer *buf);
 static GstElementStateReturn gst_udpsink_change_state 	(GstElement *element);
 
@@ -130,6 +132,7 @@ gst_udpsink_class_init (GstUDPSink *klass)
   gobject_class->get_property = gst_udpsink_get_property;
 
   gstelement_class->change_state = gst_udpsink_change_state;
+  gstelement_class->set_clock = gst_udpsink_set_clock;
 }
 
 
@@ -244,8 +247,6 @@ gst_udpsink_init (GstUDPSink *udpsink)
   udpsink->control = CONTROL_UDP;
   
   udpsink->clock = NULL;
-
-  GST_ELEMENT (udpsink)->setclockfunc = gst_udpsink_set_clock;
 }
 
 static void
