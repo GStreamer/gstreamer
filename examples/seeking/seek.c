@@ -67,9 +67,9 @@ make_mod_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  decoder = gst_element_factory_make ("modplug", "decoder");
-  audiosink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("modplug", "decoder");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -98,9 +98,9 @@ make_wav_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  decoder = gst_element_factory_make ("wavparse", "decoder");
-  audiosink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("wavparse", "decoder");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -129,9 +129,9 @@ make_flac_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  decoder = gst_element_factory_make ("flacdec", "decoder");
-  audiosink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("flacdec", "decoder");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -160,9 +160,9 @@ make_sid_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  decoder = gst_element_factory_make ("siddec", "decoder");
-  audiosink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("siddec", "decoder");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -191,9 +191,9 @@ make_parse_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  parser = gst_element_factory_make ("mpegparse", "parse");
-  fakesink = gst_element_factory_make ("fakesink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  parser = gst_element_factory_make_or_warn ("mpegparse", "parse");
+  fakesink = gst_element_factory_make_or_warn ("fakesink", "sink");
   g_object_set (G_OBJECT (fakesink), "sync", TRUE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -222,9 +222,9 @@ make_vorbis_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  decoder = gst_element_factory_make ("vorbisfile", "decoder");
-  audiosink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("vorbisfile", "decoder");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -253,10 +253,10 @@ make_mp3_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
-  decoder = gst_element_factory_make ("mad", "dec");
-  queue = gst_element_factory_make ("queue", "queue");
-  osssink = gst_element_factory_make ("osssink", "sink");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("mad", "dec");
+  queue = gst_element_factory_make_or_warn ("queue", "queue");
+  osssink = gst_element_factory_make_or_warn ("osssink", "sink");
 
   audio_thread = gst_thread_new ("a_decoder_thread");
 
@@ -293,10 +293,10 @@ make_avi_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
-  demux = gst_element_factory_make ("avidemux", "demux");
+  demux = gst_element_factory_make_or_warn ("avidemux", "demux");
   seekable_elements = g_list_prepend (seekable_elements, demux);
 
   gst_bin_add (GST_BIN (pipeline), src);
@@ -304,11 +304,11 @@ make_avi_pipeline (const gchar *location)
   gst_element_connect (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
-  a_decoder = gst_element_factory_make ("mad", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   audio_thread = gst_thread_new ("a_decoder_thread");
-  audiosink = gst_element_factory_make ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
-  a_queue = gst_element_factory_make ("queue", "a_queue");
+  a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   gst_element_connect (a_decoder, a_queue);
   gst_element_connect (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
@@ -325,13 +325,13 @@ make_avi_pipeline (const gchar *location)
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
 
   video_bin = gst_bin_new ("v_decoder_bin");
-  //v_decoder = gst_element_factory_make ("identity", "v_dec");
-  v_decoder = gst_element_factory_make ("windec", "v_dec");
+  //v_decoder = gst_element_factory_make_or_warn ("identity", "v_dec");
+  v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
-  videosink = gst_element_factory_make ("xvideosink", "v_sink");
-  //videosink = gst_element_factory_make ("fakesink", "v_sink");
+  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  //videosink = gst_element_factory_make_or_warn ("fakesink", "v_sink");
   //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
-  v_queue = gst_element_factory_make ("queue", "v_queue");
+  v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   g_object_set (G_OBJECT (v_queue), "max_level", 10, NULL);
   gst_element_connect (v_decoder, v_queue);
   gst_element_connect (v_queue, videosink);
@@ -356,16 +356,17 @@ static GstElement*
 make_mpeg_pipeline (const gchar *location) 
 {
   GstElement *pipeline, *audio_bin, *video_bin;
-  GstElement *src, *demux, *a_decoder, *v_decoder, *audiosink, *videosink;
+  GstElement *src, *demux, *a_decoder, *v_decoder, *v_filter;
+  GstElement *audiosink, *videosink;
   GstElement *a_queue, *audio_thread, *v_queue, *video_thread;
   GstPad *seekable;
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make (SOURCE, "src");
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
-  demux = gst_element_factory_make ("mpegdemux", "demux");
+  demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
   g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, demux);
@@ -375,10 +376,10 @@ make_mpeg_pipeline (const gchar *location)
   gst_element_connect (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
-  a_decoder = gst_element_factory_make ("mad", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   audio_thread = gst_thread_new ("a_decoder_thread");
-  a_queue = gst_element_factory_make ("queue", "a_queue");
-  audiosink = gst_element_factory_make ("osssink", "a_sink");
+  a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   gst_element_connect (a_decoder, a_queue);
   gst_element_connect (a_queue, audiosink);
@@ -395,16 +396,14 @@ make_mpeg_pipeline (const gchar *location)
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
 
   video_bin = gst_bin_new ("v_decoder_bin");
-  v_decoder = gst_element_factory_make ("mpeg2dec", "v_dec");
+  v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
-  v_queue = gst_element_factory_make ("queue", "v_queue");
-  videosink = gst_element_factory_make ("xvideosink", "v_sink");
-  gst_element_connect (v_decoder, v_queue);
-  gst_element_connect (v_queue, videosink);
-  gst_bin_add (GST_BIN (video_bin), v_decoder);
-  gst_bin_add (GST_BIN (video_bin), video_thread);
-  gst_bin_add (GST_BIN (video_thread), v_queue);
-  gst_bin_add (GST_BIN (video_thread), videosink);
+  v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
+  v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
+  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  gst_element_connect_many (v_decoder, v_queue, videosink, NULL);
+  gst_bin_add_many (GST_BIN (video_bin), v_decoder, video_thread, NULL);
+  gst_bin_add_many (GST_BIN (video_thread), v_queue, videosink, NULL);
 
   setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
