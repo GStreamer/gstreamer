@@ -1,3 +1,9 @@
+2004-03-13  Benjamin Otte  <otte@gnome.org>
+
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_get):
+	  return taglist correctly from _get function, don't gst_pad_push it.
+	  (fixes #137042)
+
 2004-03-13  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/alsa/gstalsa.c: (gst_alsa_class_probe_devices):
 
