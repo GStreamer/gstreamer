@@ -1,5 +1,10 @@
 2004-12-18  David Schleef  <ds@schleef.org>
 
+	* gst/tta/gstttadec.c: (gst_tta_dec_link): And yet another
+	portability fix.
+
+2004-12-18  David Schleef  <ds@schleef.org>
+
 	* gst/tta/ttadec.h: Disable some header code that isn't used
 	and clearly isn't portable.
 
