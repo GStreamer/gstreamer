@@ -117,6 +117,7 @@ enum
 {
   ARG_0,
   ARG_LOCATION,
+  ARG_DEVICE,
   ARG_GENERIC_DEVICE,
   ARG_DEFAULT_SECTORS,
   ARG_SEARCH_OVERLAP,
@@ -223,8 +224,12 @@ cdparanoia_class_init (CDParanoiaClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
-      g_param_spec_string ("location", "location", "location",
+      g_param_spec_string ("location", "Location",
+          "CD device location (deprecated; use device)",
           NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "CD device location", NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GENERIC_DEVICE,
       g_param_spec_string ("generic_device", "Generic device",
           "Use specified generic scsi device", NULL, G_PARAM_READWRITE));
@@ -342,9 +347,9 @@ cdparanoia_set_property (GObject * object, guint prop_id, const GValue * value,
   src = CDPARANOIA (object);
 
   switch (prop_id) {
+    case ARG_DEVICE:
     case ARG_LOCATION:
-      if (src->device)
-        g_free (src->device);
+      g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
       if (!g_ascii_strcasecmp (g_value_get_string (value), ""))
         src->device = NULL;
@@ -407,6 +412,7 @@ cdparanoia_get_property (GObject * object, guint prop_id, GValue * value,
   src = CDPARANOIA (object);
 
   switch (prop_id) {
+    case ARG_DEVICE:
     case ARG_LOCATION:
       g_value_set_string (value, src->device);
       break;

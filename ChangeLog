@@ -1,3 +1,21 @@
+2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_class_init),
+	(cdparanoia_set_property), (cdparanoia_get_property):
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_class_init),
+	(dvdnavsrc_set_property), (dvdnavsrc_get_property):
+	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_class_init),
+	(dvdreadsrc_init), (dvdreadsrc_set_property),
+	(dvdreadsrc_get_property):
+	* sys/vcd/vcdsrc.c: (gst_vcdsrc_class_init),
+	(gst_vcdsrc_set_property), (gst_vcdsrc_get_property):
+	  Synchronize property names where not yet the case. Devices are
+	  now device=X, other versions are deprecated (but still exist).
+	  Also use g_free() unconditionally.
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(setup_source), (gst_play_base_bin_get_property):
+	  Expose source.
+
 2004-12-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: move GCONF macro outside conditional for the am

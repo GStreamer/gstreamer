@@ -39,6 +39,7 @@ enum
   ARG_NSTREAMS,
   ARG_QUEUE_SIZE,
   ARG_STREAMINFO,
+  ARG_SOURCE
 };
 
 /* signals */
@@ -135,6 +136,9 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_STREAMINFO,
       g_param_spec_pointer ("stream-info", "Stream info", "List of streaminfo",
           G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_SOURCE,
+      g_param_spec_object ("source", "Source", "Source element",
+          GST_TYPE_ELEMENT, G_PARAM_READABLE));
 
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
@@ -907,6 +911,7 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
       gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
+    g_object_notify (G_OBJECT (play_base_bin), "source");
     /* make sure the new element has the same state as the parent */
     if (gst_bin_sync_children_state (GST_BIN (play_base_bin->thread)) ==
         GST_STATE_FAILURE) {
@@ -1121,6 +1126,15 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_STREAMINFO:
       g_value_set_pointer (value,
           (gpointer) gst_play_base_bin_get_streaminfo (play_base_bin));
+      break;
+    case ARG_SOURCE:
+      if (GST_IS_BIN (play_base_bin->source)) {
+        GstElement *kid;
+
+        kid = gst_bin_get_by_name (GST_BIN (play_base_bin->source), "source");
+        g_value_set_object (value, kid);
+      } else
+        g_value_set_object (value, play_base_bin->source);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
