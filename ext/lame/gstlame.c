@@ -630,6 +630,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
   GstBuffer *outbuf;
   gchar *mp3_data = NULL;
   gint mp3_buffer_size, mp3_size = 0;
+  guint mp3_ts = 0;
   gboolean eos = FALSE;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
@@ -681,6 +682,8 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 	       "encoded %d bytes of audio to %d bytes of mp3", 
 	       GST_BUFFER_SIZE (buf), mp3_size);
 
+    mp3_ts = GST_BUFFER_TIMESTAMP (buf);
+
     gst_buffer_unref (buf);
   }
   
@@ -688,6 +691,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = mp3_data;
     GST_BUFFER_SIZE (outbuf) = mp3_size;
+    GST_BUFFER_TIMESTAMP (outbuf) = mp3_ts;
 
     gst_pad_push (lame->srcpad,outbuf);
   }
