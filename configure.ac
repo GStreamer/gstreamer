@@ -1048,7 +1048,7 @@ sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
-ext/a52/Makefile
+ext/a52dec/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
 ext/arts/Makefile
