@@ -83,11 +83,9 @@ GST_CAPS_FACTORY (rawcaps5,
 int 
 main (int argc, char *argv[]) 
 {
-  gboolean testret;
   xmlDocPtr doc;
   xmlNodePtr parent;
   GstCaps *caps;
-  gint i;
 
   gst_init (&argc, &argv);
 
