@@ -1,4 +1,4 @@
-testprogs = converter # enum capsnego converter2
+testprogs = converter compatibility # enum capsnego converter2
 
 TESTS = $(testprogs)
 

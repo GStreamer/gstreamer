@@ -148,30 +148,41 @@ main (int argc, char *argv[])
 
   testret = gst_caps_check_compatibility (mp1parsecaps, rawcaps);
   g_print ("4 <-> 2 == %d (invalid, wrong major type)\n", testret);
-  
+  if (testret != 0) exit (-1);
+
   testret = gst_caps_check_compatibility (mp1parsecaps, sinkcaps);
   g_print ("4 <-> 1 == %d (valid, subset)\n", testret);
+  if (testret != 1) exit (-1);
   
   testret = gst_caps_check_compatibility (sinkcaps, mp1parsecaps);
   g_print ("1 <-> 4 == %d (invalid, superset)\n", testret);
+  if (testret != 0) exit (-1);
 
   testret = gst_caps_check_compatibility (rawcaps, rawcaps2);
   g_print ("2 <-> 3 == %d (invalid, ranges)\n", testret);
+  if (testret != 0) exit (-1);
 
   testret = gst_caps_check_compatibility (rawcaps, rawcaps3);
   g_print ("2 <-> 5 == %d (valid)\n", testret);
+  if (testret != 1) exit (-1);
 
   testret = gst_caps_check_compatibility (rawcaps3, rawcaps);
   g_print ("5 <-> 2 == %d (invalid)\n", testret);
+  if (testret != 0) exit (-1);
 
   testret = gst_caps_check_compatibility (rawcaps2, rawcaps3);
   g_print ("3 <-> 5 == %d (valid)\n", testret);
+  if (testret != 1) exit (-1);
 
   testret = gst_caps_check_compatibility (rawcaps2, rawcaps);
   g_print ("3 <-> 2 == %d (invalid, property missing in source)\n", testret);
+  if (testret != 0) exit (-1);
 
   testret = gst_caps_check_compatibility (rawcaps, rawcaps);
   g_print ("2 <-> 2 == %d (valid, same caps)\n", testret);
-
+  if (testret != 1) exit (-1);
+  
+  g_print ("caps test successful\n");
+  
   return 0;
 }
