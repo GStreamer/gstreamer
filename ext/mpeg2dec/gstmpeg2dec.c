@@ -42,7 +42,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_FRAME_RATE,
+  ARG_STREAMINFO,
   /* FILL ME */
 };
 
@@ -163,9 +163,9 @@ gst_mpeg2dec_class_init(GstMpeg2decClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_RATE,
-    g_param_spec_float ("frame_rate","frame_rate","frame_rate",
-                        0.0, 1000.0, 0.0, G_PARAM_READABLE)); 
+  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
+    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
   
   gobject_class->set_property 	= gst_mpeg2dec_set_property;
   gobject_class->get_property 	= gst_mpeg2dec_get_property;
@@ -202,6 +202,7 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->userdatapad);
 
   /* initialize the mpeg2dec decoder state */
+  mpeg2_accel (MPEG2_ACCEL_DETECT);
   mpeg2dec->decoder = mpeg2_init ();
 
   GST_FLAG_SET (GST_ELEMENT (mpeg2dec), GST_ELEMENT_EVENT_AWARE);
@@ -337,6 +338,34 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 }
 
 static void
+update_streaminfo (GstMpeg2dec *mpeg2dec)
+{
+  GstCaps *caps;
+  GstProps *props;
+  GstPropsEntry *entry;
+  const mpeg2_info_t *info;
+
+  info = mpeg2_info (mpeg2dec->decoder);
+
+  props = gst_props_empty_new ();
+
+  entry = gst_props_entry_new ("framerate", GST_PROPS_FLOAT (GST_SECOND/(float)mpeg2dec->frame_period));
+  gst_props_add_entry (props, entry);
+  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (info->sequence->byte_rate * 8));
+  gst_props_add_entry (props, entry);
+
+  caps = gst_caps_new ("mpeg2dec_streaminfo",
+                       "application/x-gst-streaminfo",
+                        props);
+
+  if (mpeg2dec->streaminfo)
+    gst_caps_unref (mpeg2dec->streaminfo);
+
+  mpeg2dec->streaminfo = caps;
+  g_object_notify (G_OBJECT (mpeg2dec), "streaminfo");
+}
+
+static void
 gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
@@ -415,6 +444,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  return;
 	}
 
+	update_streaminfo (mpeg2dec);
+
 	gst_mpeg2dec_alloc_buffer (mpeg2dec, info);
         break;
       }
@@ -422,12 +453,20 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	GST_DEBUG (0, "sequence repeated");
         break;
       case STATE_GOP:
+        if (info->user_data_len > 0) {
+          if (GST_PAD_IS_USABLE (mpeg2dec->userdatapad)) {
+            GstBuffer *udbuf = gst_buffer_new_and_alloc (info->user_data_len);
+
+            memcpy (GST_BUFFER_DATA (udbuf), info->user_data, info->user_data_len);
+
+            gst_pad_push (mpeg2dec->userdatapad, udbuf);
+          }
+        }
         break;
       case STATE_PICTURE:
       {
 	gboolean key_frame = FALSE;
 
-	
         if (info->current_picture)
 	  key_frame = (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
 
@@ -441,6 +480,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
             mpeg2dec->next_time = pts;
           }
 	}
+	if (!GST_PAD_IS_USABLE (mpeg2dec->srcpad))
+	  mpeg2_skip (mpeg2dec->decoder, 1);
 
 	if (mpeg2dec->index && pts != GST_CLOCK_TIME_NONE) {
           gst_index_add_association (mpeg2dec->index, mpeg2dec->index_id,
@@ -512,7 +553,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	break;
       /* error */
       case STATE_INVALID:
-	gst_element_error (GST_ELEMENT (mpeg2dec), "fatal error");
+	gst_element_error (GST_ELEMENT (mpeg2dec), "decoding error");
 	done = TRUE;
         break;
       default:
@@ -526,17 +567,6 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
      *
      * FIXME: should pass more information such as state the user data is from
      */
-    if (info->user_data_len > 0) {
-      if (GST_PAD_IS_USABLE (mpeg2dec->userdatapad)) {
-        GstBuffer *udbuf = gst_buffer_new_and_alloc (info->user_data_len);
-        memcpy (GST_BUFFER_DATA (udbuf), info->user_data, info->user_data_len);
-        GST_BUFFER_SIZE (udbuf) = info->user_data_len;
-        // FIXME
-        //GST_BUFFER_TIMESTAMP (udbuf) = mpeg2dec->...
-        //...
-        gst_pad_push (mpeg2dec->userdatapad, udbuf);
-      }
-    }
   }
   gst_buffer_unref(buf);
 }
@@ -867,6 +897,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       mpeg2dec->last_PTS = -1;
       mpeg2dec->discont_pending = TRUE;
       mpeg2dec->frame_period = 0;
+      mpeg2dec->streaminfo = NULL;
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -926,7 +957,8 @@ gst_mpeg2dec_get_property (GObject *object, guint prop_id, GValue *value, GParam
   mpeg2dec = GST_MPEG2DEC (object);
 
   switch (prop_id) {
-    case ARG_FRAME_RATE:
+    case ARG_STREAMINFO:
+      g_value_set_boxed (value, mpeg2dec->streaminfo);
       break;
     default:
       break;

@@ -81,6 +81,8 @@ struct _GstMpeg2dec {
   gint64	 total_frames;
   gint64	 frame_period;
 
+  GstCaps	*streaminfo;
+
   GstIndex	*index;
   gint		 index_id;
 };
