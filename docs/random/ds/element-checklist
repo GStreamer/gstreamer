@@ -14,9 +14,14 @@ order, but using "1, also 4-6" is acceptable.
 
 2. Each pad should have a pad template
 
-Add a pad template for pads that don't have one.
+Create and register a pad template to the element class.
 
 
+3. config.h
+
+Make sure that each .c file includes config.h (conditionally on
+HAVE_CONFIG_H).  Make sure that each .h file does _not_ include
+config.h.
 
 
 
