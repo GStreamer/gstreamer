@@ -28,17 +28,14 @@
 
 #include "flac_compat.h"
 
-extern GstPadTemplate *gst_flacdec_src_template, *gst_flacdec_sink_template;
+static GstPadTemplate *src_template, *sink_template;
 
 /* elementfactory information */
 GstElementDetails flacdec_details = {
   "FLAC decoder",
   "Codec/Audio/Decoder",
-  "LGPL",
   "Decodes FLAC lossless audio streams",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
 };
 
 /* FlacDec signals and args */
@@ -49,9 +46,10 @@ enum {
 
 enum {
   ARG_0,
-	ARG_METADATA
+  ARG_METADATA
 };
 
+static void             gst_flacdec_base_init           (gpointer g_class);
 static void 		gst_flacdec_class_init		(FlacDecClass *klass);
 static void 		gst_flacdec_init		(FlacDec *flacdec);
 
@@ -114,7 +112,7 @@ flacdec_get_type(void) {
   if (!flacdec_type) {
     static const GTypeInfo flacdec_info = {
       sizeof(FlacDecClass),
-      NULL,
+      gst_flacdec_base_init,
       NULL,
       (GClassInitFunc)gst_flacdec_class_init,
       NULL,
@@ -126,6 +124,56 @@ flacdec_get_type(void) {
     flacdec_type = g_type_register_static (GST_TYPE_ELEMENT, "FlacDec", &flacdec_info, 0);
   }
   return flacdec_type;
+}
+
+static GstCaps*
+flac_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"flac_flac",
+  	"application/x-flac",
+	/*gst_props_new (
+ 	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+	    NULL)*/ NULL);
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"flac_raw",
+  	"audio/x-raw-int",
+	gst_props_new (
+    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
+    	    "width", 		GST_PROPS_INT (16),
+    	    "depth",    	GST_PROPS_INT (16),
+    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+	    NULL));
+}
+
+static void
+gst_flacdec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *flac_caps;
+
+  raw_caps = raw_caps_factory ();
+  flac_caps = flac_caps_factory ();
+
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+		                              GST_PAD_ALWAYS, 
+					      flac_caps, NULL);
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+		                             GST_PAD_ALWAYS, 
+					     raw_caps, NULL);
+  gst_element_class_add_pad_template (element_class, sink_template);
+  gst_element_class_add_pad_template (element_class, src_template);
+  gst_element_class_set_details (element_class, &flacdec_details);
 }
 
 static void
@@ -152,12 +200,12 @@ gst_flacdec_class_init (FlacDecClass *klass)
 static void 
 gst_flacdec_init (FlacDec *flacdec) 
 {
-  flacdec->sinkpad = gst_pad_new_from_template (gst_flacdec_sink_template, "sink");
+  flacdec->sinkpad = gst_pad_new_from_template (sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->sinkpad);
   gst_pad_set_convert_function (flacdec->sinkpad, NULL);
 
   gst_element_set_loop_function (GST_ELEMENT (flacdec), gst_flacdec_loop);
-  flacdec->srcpad = gst_pad_new_from_template (gst_flacdec_src_template, "src");
+  flacdec->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->srcpad);
   gst_pad_set_formats_function (flacdec->srcpad, gst_flacdec_get_src_formats);
   gst_pad_set_convert_function (flacdec->srcpad, gst_flacdec_convert_src);
