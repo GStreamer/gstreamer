@@ -1,3 +1,8 @@
+2004-01-07  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* sys/oss/gstosssink.c: (gst_osssink_sink_fixate):
+	  Fix for bug shown by poisoning
+
 2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get),
