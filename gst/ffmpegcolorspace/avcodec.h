@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#include "_stdint.h"
 
 #include <sys/types.h> /* size_t */
 
