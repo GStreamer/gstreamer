@@ -1043,7 +1043,8 @@ gst_props_load_thyself (xmlNodePtr parent)
 
       entry = gst_props_load_thyself_func (field);
 
-      props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
+      if (entry) 
+	props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
     }
     field = field->next;
   }

@@ -436,6 +436,8 @@ GstCaps*
 gst_caps_append (GstCaps *caps, GstCaps *capstoadd)
 {
   GstCaps *orig = caps;
+  
+  g_return_val_if_fail (caps != capstoadd, caps);
 
   if (caps == NULL)
     return capstoadd;
@@ -462,6 +464,8 @@ gst_caps_prepend (GstCaps *caps, GstCaps *capstoadd)
 {
   GstCaps *orig = capstoadd;
   
+  g_return_val_if_fail (caps != capstoadd, caps);
+
   if (capstoadd == NULL)
     return caps;
 
@@ -625,6 +629,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
 
       caps->refcount = 1;
       caps->lock = g_mutex_new ();
+      caps->next = NULL;
 	
       while (subfield) {
         if (!strcmp (subfield->name, "name")) {

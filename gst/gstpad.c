@@ -956,6 +956,18 @@ gst_pad_renegotiate_func (GstPad *pad, GstPad *peerpad, GstCaps **newcaps, gint 
 
   do {
     gboolean matchtempl;
+    
+    if (!*newcaps) {
+      if (otherpad->negotiatefunc) {
+        GstRealPad *temp;
+
+        otherpad->negotiatefunc (GST_PAD (otherpad), newcaps, *counter);
+
+        temp = otherpad;
+        otherpad = currentpad;
+        currentpad = temp;
+      }
+    }
 
     matchtempl = gst_caps_check_compatibility (*newcaps, gst_pad_get_padtemplate_caps (GST_PAD (otherpad)));
 
@@ -977,12 +989,12 @@ gst_pad_renegotiate_func (GstPad *pad, GstPad *peerpad, GstCaps **newcaps, gint 
       }
       else {
 	*newcaps = GST_PAD_CAPS (otherpad);
-	gst_caps_ref(*newcaps);
+	if (*newcaps) gst_caps_ref(*newcaps);
       }
     }
     else {
       *newcaps = GST_PAD_CAPS (otherpad);
-      gst_caps_ref(*newcaps);
+      if (*newcaps) gst_caps_ref(*newcaps);
     }
 
     (*counter)++;
@@ -1053,9 +1065,8 @@ gst_pad_renegotiate (GstPad *pad)
             GST_DEBUG_PAD_NAME(pad), GST_DEBUG_PAD_NAME(peerpad));
 
   newcaps = GST_PAD_CAPS (pad);
-  g_assert (newcaps != NULL);
-
-  result = gst_pad_renegotiate_func (pad, GST_PAD (peerpad), &newcaps, &counter);
+  
+  result = gst_pad_renegotiate_func (GST_PAD (currentpad), GST_PAD (otherpad), &newcaps, &counter);
 
   if (result) {
     GST_DEBUG (GST_CAT_ELEMENT_PADS, "pads aggreed on caps :)\n");
