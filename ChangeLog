@@ -1,3 +1,9 @@
+2004-10-01  Christian Schaller <christian@fluendo.com>
+
+	* Patch fra Phil Blundell 
+	* Bug 152341
+	* ext/ivorbis/vorbis.c
+
 2004-10-01  Wim Taymans  <wim@fluendo.com>
 
 	* ext/speex/gstspeexdec.c: (gst_speex_dec_class_init),
