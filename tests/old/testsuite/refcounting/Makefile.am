@@ -1,6 +1,6 @@
 # GstObject is no longer instantiatable in glib2
 # neither is GstElement
-testprogs = bin 
+testprogs = pad
 
 # element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c
