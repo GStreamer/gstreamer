@@ -1008,7 +1008,7 @@ is_xhead (unsigned char *buf)
 
 
 #undef LOG
-//#define LOG
+/*#define LOG*/
 #ifdef LOG
 #define lprintf(x...) g_print(x)
 #else
@@ -1025,23 +1025,18 @@ mpg123_parse_xing_header (struct mad_header *header,
   int xflags, xframes, xbytes, xvbr_scale;
   int abr;
   guint8 xtoc[XING_TOC_LENGTH];
-
-  /* This should be the MPEG Audio version ID 
-   * (version 2.5, 2 or 1) least significant byte, but mad doesn't 
-   * provide that, so assume it's always MPEG 1
-   */
-  int lsf_bit = 1;
+  int lsf_bit = !(header->flags & MAD_FLAG_LSF_EXT);
 
   xframes = xbytes = 0;
 
   /* offset of the Xing header */
   if (lsf_bit) {
-    if (header->mode != MAD_MODE_STEREO)
+    if (header->mode != MAD_MODE_SINGLE_CHANNEL)
       ptr += (32 + 4);
     else
       ptr += (17 + 4);
   } else {
-    if (header->mode != MAD_MODE_STEREO)
+    if (header->mode != MAD_MODE_SINGLE_CHANNEL)
       ptr += (17 + 4);
     else
       ptr += (9 + 4);
