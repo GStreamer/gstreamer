@@ -153,12 +153,14 @@ vorbis_caps_factory (void)
 static GstCaps *
 raw_caps_factory (void)
 {
+  /* lowest sample rate is in vorbis/lib/modes/setup_8.h, 8000 Hz
+   * highest sample rate is in vorbis/lib/modes/setup_44.h, 50000 Hz */
   return
       gst_caps_new_simple ("audio/x-raw-float",
+      "rate", GST_TYPE_INT_RANGE, 8000, 50000,
+      "channels", GST_TYPE_INT_RANGE, 1, 2, NULL,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 32,
-      "rate", GST_TYPE_INT_RANGE, 11025, 48000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+      "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0);
 }
 
 static void
@@ -661,14 +663,20 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
       vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_SET, &ai);
     }
   } else {
+    long min_bitrate, max_bitrate;
+
+    min_bitrate = vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1;
+    max_bitrate = vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1;
+
     if (vorbis_encode_setup_managed (&vorbisenc->vi,
             vorbisenc->channels,
             vorbisenc->frequency,
-            vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1,
-            vorbisenc->bitrate,
-            vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1)) {
+            max_bitrate, vorbisenc->bitrate, min_bitrate) != 0) {
       GST_ERROR_OBJECT (vorbisenc,
-          "vorbisenc: initialisation failed: invalid parameters for bitrate");
+          "vorbis_encode_setup_managed "
+          "(c %d, rate %d, max br %ld, br %ld, min br %ld) failed",
+          vorbisenc->channels, vorbisenc->frequency, max_bitrate,
+          vorbisenc->bitrate, min_bitrate);
       vorbis_info_clear (&vorbisenc->vi);
       return FALSE;
     }
