@@ -28,11 +28,8 @@ static GstElementDetails gst_lame_details =
 {
   "L.A.M.E. mp3 encoder",
   "Codec/Audio/Encoder",
-  "LGPL",
   "High-quality free MP3 encoder",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 2000",
 };
 
 GST_PAD_TEMPLATE_FACTORY (gst_lame_sink_factory,
@@ -188,7 +185,7 @@ enum {
   ARG_METADATA,
 };
 
-
+static void                     gst_lame_base_init      (gpointer g_class);
 static void			gst_lame_class_init	(GstLameClass *klass);
 static void			gst_lame_init		(GstLame *gst_lame);
 
@@ -211,7 +208,7 @@ gst_lame_get_type (void)
   if (!gst_lame_type) {
     static const GTypeInfo gst_lame_info = {
       sizeof (GstLameClass),      
-      NULL,
+      gst_lame_base_init,
       NULL,
       (GClassInitFunc) gst_lame_class_init,
       NULL,
@@ -223,6 +220,16 @@ gst_lame_get_type (void)
     gst_lame_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLame", &gst_lame_info, 0);
   }
   return gst_lame_type;
+}
+
+static void
+gst_lame_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_lame_src_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_lame_sink_factory));
+  gst_element_class_set_details (element_class, &gst_lame_details);
 }
 
 static void
@@ -920,32 +927,22 @@ gst_lame_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the gst_lame element */
-  factory = gst_element_factory_new ("lame", GST_TYPE_LAME,
-                                    &gst_lame_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  /* register the source's padtemplate */
-  gst_element_factory_add_pad_template (factory, 
-  		GST_PAD_TEMPLATE_GET (gst_lame_src_factory));
-
-  /* register the sink's padtemplate */
-  gst_element_factory_add_pad_template (factory, 
-  		GST_PAD_TEMPLATE_GET (gst_lame_sink_factory));
-
-  /* and add the gst_lame element factory to the plugin */
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "lame", GST_RANK_NONE, GST_TYPE_LAME))
+    return FALSE;
+  
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "lame",
-  plugin_init
-};
+  "Encode MP3's with LAME",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
