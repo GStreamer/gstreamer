@@ -277,6 +277,7 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
     // need to set up the cothread now
     if (wrapper_function != NULL) {
       if (element->threadstate == NULL) {
+        // FIXME handle cothread_create returning NULL
         element->threadstate = cothread_create (bin->threadcontext);
         GST_DEBUG (0,"created cothread %p for '%s'\n",element->threadstate,GST_ELEMENT_NAME(element));
       }
