@@ -30,6 +30,10 @@
 // 
 // #define GST_BUFFER_WHERE
 //
+// Then in gdb, you can `call gst_buffer_print_live()' to get a list
+// of allocated GstBuffers and also the file:line where they were
+// allocated.
+//
 
 #include <gst/gstdata.h>
 #include <gst/gstobject.h>
