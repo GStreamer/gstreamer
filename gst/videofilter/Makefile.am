@@ -24,9 +24,9 @@ libgstvideoflip_la_LIBADD =
 libgstvideoflip_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstvideobalance_la_SOURCES = gstvideobalance.c
-libgstvideobalance_la_CFLAGS = $(GST_CFLAGS)
+libgstvideobalance_la_CFLAGS = $(GST_CFLAGS) $(LIBOIL_CFLAGS)
 libgstvideobalance_la_LIBADD = $(top_builddir)/gst-libs/gst/libgstinterfaces-$(GST_MAJORMINOR).la
-libgstvideobalance_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lm
+libgstvideobalance_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBOIL_LIBS) -lm
 
 libgstgamma_la_SOURCES = gstgamma.c
 libgstgamma_la_CFLAGS = $(GST_CFLAGS)

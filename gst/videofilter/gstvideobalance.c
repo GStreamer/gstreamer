@@ -29,6 +29,9 @@
 
 /*#define DEBUG_ENABLED */
 #include <gstvideobalance.h>
+#ifdef HAVE_LIBOIL
+#include <liboil/liboil.h>
+#endif
 #include <string.h>
 #include <math.h>
 
@@ -197,6 +200,10 @@ gst_videobalance_class_init (gpointer g_class, gpointer class_data)
   gobject_class->dispose = gst_videobalance_dispose;
 
   videofilter_class->setup = gst_videobalance_setup;
+
+#ifdef HAVE_LIBOIL
+  oil_init();
+#endif
 }
 
 static void
@@ -480,6 +487,19 @@ gst_videobalance_update_tables_planar411 (GstVideobalance *vb)
   }
 }
 
+#ifndef HAVE_LIBOIL
+void tablelookup_u8 (guint8 *dest, int dstr, guint8 *src, int sstr,
+    guint8 *table, int tstr, int n)
+{
+  int i;
+  for(i=0;i<n;i++){
+    *dest = table[*src * tstr];
+    dest += dstr;
+    src += sstr;
+  }
+}
+#endif
+
 static void gst_videobalance_planar411(GstVideofilter *videofilter,
     void *dest, void *src)
 {
@@ -504,9 +524,8 @@ static void gst_videobalance_planar411(GstVideofilter *videofilter,
     guint8 *csrc = src;
 
     for(y=0;y<height;y++) {
-      for(x=0;x<width;x++) {
-        cdest[y*width + x] = videobalance->tabley[csrc[y*width + x]];
-      }
+      tablelookup_u8 (cdest + y*width, 1, csrc + y*width, 1,
+          videobalance->tabley, 1, width);
     }
   }
 
