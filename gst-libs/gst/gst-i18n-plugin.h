@@ -25,10 +25,6 @@
 
 #include "gettext.h" /* included with gettext distribution and copied */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 #ifndef GETTEXT_PACKAGE
 #error You must define GETTEXT_PACKAGE before including this header.
 #endif
