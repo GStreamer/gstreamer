@@ -590,6 +590,21 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SHOUT_TRUE@%post -n gstreamer-icecast
 @USE_SHOUT_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
+@USE_XVIDEO_TRUE@%package -n gstreamer-videosink
+@USE_XVIDEO_TRUE@Summary: GStreamer Video Sink
+@USE_XVIDEO_TRUE@Group: Libraries/Multimedia
+@USE_XVIDEO_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_XVIDEO_TRUE@Requires: gstreamer-plugin-libs = %{ver}
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%description -n gstreamer-videosink
+@USE_XVIDEO_TRUE@Plugin for X playback
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%files -n gstreamer-videosink
+@USE_XVIDEO_TRUE@%defattr(-, root, root)
+@USE_XVIDEO_TRUE@%{prefix}/lib/gst/libgstvideosink*
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%post -n gstreamer-videosink
+@USE_XVIDEO_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-audio-effects
 Summary: GStreamer audio effects plugin
@@ -795,19 +810,4 @@ Plugin for playback of wav, au and mp3 audio files
 %post -n gstreamer-audio-formats
 %{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
-%package -n gstreamer-videosink
-Summary: GStreamer Video Sink
-Group: Libraries/Multimedia
-Requires: gstreamer-plugins >= %{ver}
-Requires: gstreamer-plugin-libs = %{ver}
-
-%description -n gstreamer-videosink
-Plugin for playback of wav, au and mp3 audio files
-
-%files -n gstreamer-videosink
-%defattr(-, root, root)
-%{prefix}/lib/gst/libvideosink*
-
-%post -n gstreamer-videosink
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
