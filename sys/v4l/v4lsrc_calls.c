@@ -292,8 +292,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     return FALSE;
   }
 
-  gst_element_info(GST_ELEMENT(v4lsrc),
-    "Got %d buffers (\'%s\') of size %d KB",
+  g_message("Got %d buffers (\'%s\') of size %d KB\n",
     v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
     v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
 
@@ -347,7 +346,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
 
   /* Map the buffers */
   GST_V4LELEMENT(v4lsrc)->buffer = mmap(0, v4lsrc->mbuf.size, 
-    PROT_READ, MAP_SHARED, GST_V4LELEMENT(v4lsrc)->video_fd, 0);
+    PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4LELEMENT(v4lsrc)->video_fd, 0);
   if (GST_V4LELEMENT(v4lsrc)->buffer == MAP_FAILED)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),

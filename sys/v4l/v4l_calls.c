@@ -83,7 +83,7 @@ gst_v4l_open (GstV4lElement *v4lelement)
     v4lelement->videodev = g_strdup("/dev/video");
 
   /* open the device */
-  v4lelement->video_fd = open(v4lelement->videodev, O_RDONLY);
+  v4lelement->video_fd = open(v4lelement->videodev, O_RDWR);
   if (!GST_V4L_IS_OPEN(v4lelement))
   {
     gst_element_error(GST_ELEMENT(v4lelement),
@@ -100,8 +100,7 @@ gst_v4l_open (GstV4lElement *v4lelement)
     return FALSE;
   }
 
-  gst_element_info(GST_ELEMENT(v4lelement),
-    "Opened device \'%s\' (\'%s\') successfully",
+  g_message("Opened device \'%s\' (\'%s\') successfully\n",
     v4lelement->vcap.name, v4lelement->videodev);
 
   return TRUE;

@@ -99,8 +99,9 @@ gst_v4lmjpegsink_sync_thread (void *arg)
   }
 
 end:
-  gst_element_info(GST_ELEMENT(v4lmjpegsink),
-    "Sync thread got signalled to exit");
+#ifdef DEBUG
+  fprintf(stderr, "Sync thread got signalled to exit\n");
+#endif
   pthread_exit(NULL);
 }
 
@@ -362,8 +363,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     return FALSE;
   }
 
-  gst_element_info(GST_ELEMENT(v4lmjpegsink),
-    "Got %ld buffers of size %ld KB",
+  g_message("Got %ld buffers of size %ld KB\n",
     v4lmjpegsink->breq.count, v4lmjpegsink->breq.size/1024);
 
   /* Map the buffers */
