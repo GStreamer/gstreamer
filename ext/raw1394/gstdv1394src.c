@@ -40,6 +40,14 @@ enum {
   ARG_DROP_INCOMPLETE,
 };
 
+static GstElementDetails gst_dv1394src_details = {
+  "Firewire (1394) DV Source",
+  "Source/Video",
+  "Source for DV video data from firewire port",
+  "Erik Walthinsen <omega@temple-baptist.com>\n"
+  "Daniel Fischer <dan@f3c.com>",
+};
+
 #if 0
 static GstPadTemplate*
 gst_dv1394src_factory (void)
@@ -69,6 +77,7 @@ gst_dv1394src_factory (void)
 }
 #endif
 
+static void		gst_dv1394src_base_init		(gpointer g_class);
 static void		gst_dv1394src_class_init		(GstDV1394SrcClass *klass);
 static void		gst_dv1394src_init		(GstDV1394Src *filter);
 
@@ -88,7 +97,8 @@ gst_dv1394src_get_type(void) {
 
   if (!gst_dv1394src_type) {
     static const GTypeInfo gst_dv1394src_info = {
-      sizeof(GstDV1394Src),      NULL,
+      sizeof(GstDV1394Src), 
+      gst_dv1394src_base_init,
       NULL,
       (GClassInitFunc)gst_dv1394src_class_init,
       NULL,
@@ -100,6 +110,14 @@ gst_dv1394src_get_type(void) {
     gst_dv1394src_type = g_type_register_static(GST_TYPE_ELEMENT, "DV1394Src", &gst_dv1394src_info, 0);
   }
   return gst_dv1394src_type;
+}
+
+static void
+gst_dv1394src_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_dv1394src_details);
 }
 
 static void
