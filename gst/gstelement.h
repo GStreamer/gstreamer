@@ -160,6 +160,7 @@ struct _GstElementClass {
   void (*pad_removed)		(GstElement *element, GstPad *pad);
   void (*error)			(GstElement *element, GstElement *source, gchar *error);
   void (*eos)			(GstElement *element);
+  void (*deep_notify)		(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);

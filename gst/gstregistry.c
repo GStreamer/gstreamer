@@ -87,6 +87,12 @@ gst_registry_write_get ()
     /* we cannot use the temp dir since the move needs to be on same device */
     gst_reg->tmp_file = g_strdup_printf ("%s.tmp", gst_registry_option);
   }
+  else if (g_getenv ("GST_REGISTRY"))
+  {
+    gst_reg->dir = NULL;
+    gst_reg->file = g_strdup (g_getenv ("GST_REGISTRY"));
+    gst_reg->tmp_file = g_strdup_printf ("%s.tmp", g_getenv ("GST_REGISTRY"));
+  }
   else
   {
     if (gst_registry_use_global ())
@@ -119,6 +125,11 @@ gst_registry_read_get ()
     /* FIXME: maybe parse the dir from file ? */
     gst_reg->local_reg = NULL;
     gst_reg->global_reg = gst_registry_option;
+  } 
+  else if (g_getenv ("GST_REGISTRY"))
+  {
+    gst_reg->local_reg = NULL;
+    gst_reg->global_reg = g_strdup (g_getenv ("GST_REGISTRY"));
   }
   else
   {

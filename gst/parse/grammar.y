@@ -166,5 +166,12 @@ graph_t * _gst_parse_launch (const gchar *str, GError **error)
 
     g_free (dstr);
 
+    /* if the toplevel only contains one bin, make that bin top-level */
+    if (g->elements == NULL && g->bins && g->bins->next == NULL) {
+        g = (graph_t*)g->bins->data;
+        g_free (g->parent);
+        g->parent = NULL;
+    }
+
     return g;
 }

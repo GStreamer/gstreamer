@@ -39,6 +39,7 @@ enum {
   PAD_REMOVED,
   ERROR,
   EOS,
+  DEEP_NOTIFY,
   LAST_SIGNAL
 };
 
@@ -57,6 +58,7 @@ static void			gst_element_set_property	(GObject *object, guint prop_id,
 								 const GValue *value, GParamSpec *pspec);
 static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *value, 
 								 GParamSpec *pspec);
+static void			gst_element_dispatch_properties_changed (GObject * object, guint n_pspecs, GParamSpec **pspecs);
 
 static void 			gst_element_dispose 		(GObject *object);
 
@@ -129,11 +131,21 @@ gst_element_class_init (GstElementClass *klass)
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
                   gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
+  gst_element_signals[DEEP_NOTIFY] =
+    g_signal_new ("deep_notify", G_TYPE_FROM_CLASS (klass), 
+		  G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED | G_SIGNAL_NO_HOOKS,
+		  G_STRUCT_OFFSET (GstElementClass, deep_notify), NULL, NULL,
+		  gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE,
+		  2, G_TYPE_OBJECT, G_TYPE_PARAM);
 
 
   gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_set_property);
   gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_get_property);
+
+  /* see the comments at gst_element_dispatch_properties_changed */
+  gobject_class->dispatch_properties_changed
+    = GST_DEBUG_FUNCPTR (gst_element_dispatch_properties_changed);
+
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_element_dispose);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -191,6 +203,38 @@ gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 
   if (oclass->get_property)
     (oclass->get_property) (object, prop_id, value, pspec);
+}
+
+/* Changing a GObject property of an element will result in "deep_notify"
+ * signals being emitted by the element itself, as well as in each parent
+ * element. This is so that an application can connect a listener to the
+ * top-level bin to catch property-change notifications for all contained
+ * elements. */
+static void
+gst_element_dispatch_properties_changed (GObject     *object,
+                                         guint        n_pspecs,
+                                         GParamSpec **pspecs)
+{
+  GstObject *gst_object;
+  guint i;
+
+  /* do the standard dispatching */
+  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs, pspecs);
+
+  /* now let the parent dispatch those, too */
+  gst_object = GST_OBJECT (object);
+  while (gst_object)
+  {
+    /* need own category? */
+    for (i = 0; i < n_pspecs; i++) {
+      GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object), 
+		    GST_OBJECT_NAME (gst_object), pspecs[i]->name);
+      g_signal_emit (gst_object, gst_element_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name), 
+		     (GstObject *) object, pspecs[i]);
+    }
+
+    gst_object = GST_OBJECT_PARENT (gst_object);
+  }
 }
 
 static GstPad*
@@ -1331,7 +1375,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     if (curpending != state) {
       GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
 	                 "intermediate: setting state from %s to %s",
-			 gst_element_state_get_name (state),
+			 gst_element_state_get_name (GST_STATE (element)),
                          gst_element_state_get_name (curpending));
     }
 
