@@ -1346,9 +1346,12 @@ gst_pad_try_set_caps_func (GstRealPad *pad, const GstCaps2 *caps, gboolean notif
 
   /* first see if we have to check against a filter, we ref the caps here as we're
    * going to unref it later on */
-  if (!(allowed = gst_caps2_copy (GST_RPAD_FILTER (pad)))) {
+  if (GST_RPAD_FILTER (pad)) {
+    allowed = gst_caps2_copy (GST_RPAD_FILTER (pad));
+  } else {
     /* no filter, make sure we check against the padtemplate then */
-    if ((template = gst_pad_get_pad_template (GST_PAD_CAST (pad)))) {
+    template = gst_pad_get_pad_template (GST_PAD_CAST (pad));
+    if (template) {
       allowed = gst_caps2_copy (gst_pad_template_get_caps (template));
     }
   }
@@ -1877,7 +1880,12 @@ gst_pad_get_caps (GstPad *pad)
   }
   GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
 
-  return NULL;
+#if 0
+  g_warning("pad %s:%s (%p) has no pad template\n",
+      GST_DEBUG_PAD_NAME (realpad), realpad);
+#endif
+
+  return gst_caps2_new_any();
 }
 
 /**
@@ -2004,9 +2012,11 @@ gst_pad_get_allowed_caps (GstPad *pad)
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "get allowed caps of %s:%s", 
              GST_DEBUG_PAD_NAME (pad));
 
-  caps = gst_caps2_copy (GST_RPAD_FILTER (realpad));
+  caps = GST_RPAD_FILTER (realpad);
 
-  return caps;
+  if (caps == NULL) return gst_caps2_new_any ();
+
+  return gst_caps2_copy (caps);
 }
 
 /**
@@ -2581,6 +2591,37 @@ name_is_valid (const gchar *name, GstPadPresence presence)
   }
   
   return TRUE;
+}
+
+/**
+ * gst_static_pad_template_get:
+ * @pad_template: the static pad template
+ *
+ * Converts a GstStaticPadTemplate into a GstPadTemplate.
+ *
+ * Returns: a new #GstPadTemplate.
+ */
+GstPadTemplate*
+gst_static_pad_template_get (GstStaticPadTemplate *pad_template)
+{
+  GstPadTemplate *new;
+
+  if (!name_is_valid (pad_template->name_template, pad_template->presence))
+    return NULL;
+
+  new = g_object_new (gst_pad_template_get_type (),
+                      "name", pad_template->name_template,
+                      NULL);
+
+  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) =
+    g_strdup (pad_template->name_template);
+  GST_PAD_TEMPLATE_DIRECTION (new) = pad_template->direction;
+  GST_PAD_TEMPLATE_PRESENCE (new) = pad_template->presence;
+
+  GST_PAD_TEMPLATE_CAPS (new) = gst_caps2_copy (
+      gst_static_caps2_get (&pad_template->static_caps));
+
+  return new;
 }
 
 /**
