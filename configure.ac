@@ -3,13 +3,7 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-dnl only use Wall or Werror if compiler is gcc.
-if test "x$GCC" = "xyes"; then
-   AS_VERSION(gstreamer, GST_VERSION, 0, 4, 2, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
-else
-   AS_VERSION(gstreamer, GST_VERSION, 0, 4, 2, 1, GST_ERROR="", GST_ERROR="")
-fi
-
+AS_VERSION(gstreamer, GST_VERSION, 0, 4, 2, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -177,39 +171,6 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
     AC_MSG_RESULT(yes)
     AC_MSG_WARN(Can't check properly for atomic reference counting.  Assuming OK.)
   ])
-fi
-
-dnl
-dnl Check for functions
-dnl
-AC_MSG_CHECKING(whether $GCC implements __func__)
-AC_CACHE_VAL(have_func,
-[AC_TRY_LINK([#include <stdio.h>],[printf("%s", __func__);],
-have_func=yes,
-have_func=no)])
-AC_MSG_RESULT($have_func)
-if test "$have_func" = yes; then
-       AC_DEFINE(HAVE_FUNC,1,[defined if gcc have HAVE_FUNC)])
-else
-       AC_MSG_CHECKING(whether $GCC implements __PRETTY_FUNCTION__)
-       AC_CACHE_VAL(have_pretty_function,
-       [AC_TRY_LINK([#include <stdio.h>],[printf("%s", __PRETTY_FUNCTION__);],
-       have_pretty_function=yes,
-       have_pretty_function=no)])
-       AC_MSG_RESULT($have_pretty_function)
-       if test "$have_pretty_function" = yes; then
-               AC_DEFINE(HAVE_PRETTY_FUNCTION,1,[defined if gcc have HAVE_PRETTY_FUNCTION)])
-       else
-               AC_MSG_CHECKING(whether $GCC implements __FUNCTION__)
-               AC_CACHE_VAL(have_function,
-               [AC_TRY_LINK([#include <stdio.h>],[printf("%s", __FUNCTION__);],
-               have_function=yes,
-               have_function=no)])
-               AC_MSG_RESULT($have_function)
-               if test "$have_function" = yes; then
-                       AC_DEFINE(HAVE_FUNCTION,1,[defined if gcc have HAVE_FUNCTION)])
-               fi
-       fi
 fi
 
 dnl ######################################################################

@@ -5,10 +5,22 @@
 #include "types.h"
 #include <grammar.tab.h>
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#ifdef DEBUG
+# define PRINT(...) printf(__VAR_ARGS__)
+#else
+#define PRINT(...)
+#endif
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #ifdef DEBUG
 # define PRINT(a...) printf(##a)
 #else
 #define PRINT(a...)
+#endif
+
 #endif
 
 #define CHAR(x) PRINT ("char: %c\n", *yytext); return *yytext;

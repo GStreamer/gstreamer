@@ -58,6 +58,26 @@ struct _GstCaps {
 
 /* factory macros which make it easier for plugins to instantiate */
 
+#ifdef G_HAVE_ISO_VARARGS
+#define GST_CAPS_NEW(name, type, ...)           \
+gst_caps_new (                                  \
+  name,                                         \
+  type,                                         \
+  gst_props_new (                               \
+    __VA_ARGS__,                                \
+    NULL))
+
+#define GST_CAPS_FACTORY(factoryname, ...) 	\
+static GstCaps* 				\
+factoryname (void)                              \
+{                                               \
+  static GstCaps *caps = NULL;			\
+  if (!caps) {                              	\
+    caps = gst_caps_chain (__VA_ARGS_, NULL); 	\
+  }                                             \
+  return caps;                              	\
+}
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define GST_CAPS_NEW(name, type, a...)          \
 gst_caps_new (                                  \
   name,                                         \
@@ -76,6 +96,7 @@ factoryname (void)                              \
   }                                             \
   return caps;                              	\
 }
+#endif
 
 #define GST_CAPS_GET(fact) (fact)()
 
@@ -108,8 +129,13 @@ void		gst_caps_set_type_id			(GstCaps *caps, guint16 type_id);
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);
 
+#ifdef G_HAVE_ISO_VARARGS
+#define		gst_caps_set(caps, ...)			gst_props_set ((caps)->properties, __VA_ARGS__)
+#define		gst_caps_get(caps, ...)			gst_props_get ((caps)->properties, __VA_ARGS__)
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define		gst_caps_set(caps, name, args...)	gst_props_set ((caps)->properties, name, ##args)
 #define		gst_caps_get(caps, name, args...)	gst_props_get ((caps)->properties, name, ##args)
+#endif
 
 #define		gst_caps_get_int(caps,name,res)		gst_props_entry_get_int(gst_props_get_entry((caps)->properties,name),res)
 #define		gst_caps_get_float(caps,name,res)	gst_props_entry_get_float(gst_props_get_entry((caps)->properties,name),res)
