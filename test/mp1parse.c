@@ -9,7 +9,7 @@ void eof(GstSrc *src) {
 }
 
 void mp1parse_info_chain(GstPad *pad,GstBuffer *buf) {
-  g_print("sink : got buffer of size %d\n",GST_BUFFER_SIZE(buf));
+  //g_print("sink : got buffer of size %d\n",GST_BUFFER_SIZE(buf));
   gst_buffer_unref(buf);
 }
 
