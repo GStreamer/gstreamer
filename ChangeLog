@@ -1,3 +1,9 @@
+2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tools/gst-inspect.c: (print_element_info):
+          print numeric version of rank as well, since we added some - 1
+          rank values to elements
+
 2004-04-13  David Schleef  <ds@schleef.org>
 
 	* configure.ac:  Disable various code when compiling for MinGW.

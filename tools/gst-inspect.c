@@ -427,8 +427,9 @@ print_element_info (GstElementFactory * factory)
   g_print ("  Class:\t%s\n", factory->details.klass);
   g_print ("  Description:\t%s\n", factory->details.description);
   g_print ("  Author(s):\t%s\n", factory->details.author);
-  g_print ("  Rank:\t\t%s\n",
-      get_rank_name (GST_PLUGIN_FEATURE (factory)->rank));
+  g_print ("  Rank:\t\t%s (%d)\n",
+      get_rank_name (GST_PLUGIN_FEATURE (factory)->rank),
+      GST_PLUGIN_FEATURE (factory)->rank);
   g_print ("\n");
 
   output_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
