@@ -1,3 +1,8 @@
+2004-06-10  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.c (gst_init_check_with_popt_table): Do not fail on
+	errors, like gtk. It makes it more useful in bindings.
+
 2004-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/random/gdp:

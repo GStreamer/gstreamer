@@ -363,19 +363,21 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   if (gst_debug_env)
     parse_debug_list (gst_debug_env);
 
-  while ((nextopt = poptGetNextOpt (context)) > 0) {
-    /* we only check for failures here, actual work is done in callbacks */
-    if (_gst_initialization_failure)
+  /* Scan until we reach the end (-1), ignoring errors */
+  while ((nextopt = poptGetNextOpt (context)) != -1) {
+
+    /* If an error occurred and it's not an missing options, throw an error
+     * We don't want to show the "unknown option" message, since it'll
+     * might interfere with the applications own command line parsing
+     */
+    if (nextopt < 0 && nextopt != POPT_ERROR_BADOPT) {
+      g_print ("Error on option %s: %s.\nRun '%s --help' "
+          "to see a full list of available command line options.\n",
+          poptBadOption (context, 0), poptStrerror (nextopt), (*argv)[0]);
+
+      poptFreeContext (context);
       return FALSE;
-  }
-
-  if (nextopt != -1) {
-    g_print ("Error on option %s: %s.\nRun '%s --help' "
-        "to see a full list of available command line options.\n",
-        poptBadOption (context, 0), poptStrerror (nextopt), (*argv)[0]);
-
-    poptFreeContext (context);
-    return FALSE;
+    }
   }
 
   *argc = poptStrippedArgv (context, *argc, *argv);
@@ -621,6 +623,7 @@ init_post (void)
     gst_registry_pool_add (_global_registry, 100);
     gst_registry_pool_add (_user_registry, 50);
   } else {
+
     gst_registry_pool_add (_global_registry, 100);
   }
 
