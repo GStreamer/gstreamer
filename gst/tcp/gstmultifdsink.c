@@ -1454,6 +1454,7 @@ gst_multifdsink_close (GstMultiFdSink * this)
     fclass->close (this);
 
   gst_fdset_free (this->fdset);
+  this->fdset = NULL;
 }
 
 static GstElementStateReturn
