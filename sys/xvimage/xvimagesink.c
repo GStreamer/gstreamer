@@ -1140,7 +1140,8 @@ gst_xvimagesink_change_state (GstElement *element)
         gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
-      gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
+      if (xvimagesink->xwindow)
+        gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
       xvimagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
