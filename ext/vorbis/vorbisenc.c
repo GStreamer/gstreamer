@@ -725,6 +725,36 @@ gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
   outbuf = gst_vorbisenc_buffer_from_packet (vorbisenc, packet);
   gst_vorbisenc_push_buffer (vorbisenc, outbuf);
 }
+static void
+gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
+    GstBuffer * buf2, GstBuffer * buf3)
+{
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GValue list = { 0 };
+  GValue value = { 0 };
+
+  /* mark buffers */
+  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_IN_CAPS);
+
+  /* put buffers in a fixed list */
+  g_value_init (&list, GST_TYPE_FIXED_LIST);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_set_boxed (&value, buf1);
+  gst_value_list_append_value (&list, &value);
+  g_value_unset (&value);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_set_boxed (&value, buf2);
+  gst_value_list_append_value (&list, &value);
+  g_value_unset (&value);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_set_boxed (&value, buf3);
+  gst_value_list_append_value (&list, &value);
+  gst_structure_set_value (structure, "streamheader", &list);
+  g_value_unset (&value);
+  g_value_unset (&list);
+}
 
 static void
 gst_vorbisenc_chain (GstPad * pad, GstData * _data)
@@ -789,17 +819,30 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
       ogg_packet header;
       ogg_packet header_comm;
       ogg_packet header_code;
-      GstBuffer *buf;
+      GstBuffer *buf1, *buf2, *buf3;
+      GstCaps *caps;
 
       gst_vorbisenc_set_metadata (vorbisenc);
       vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
           &header_comm, &header_code);
-      buf = gst_vorbisenc_buffer_from_packet (vorbisenc, &header);
-      gst_vorbisenc_push_buffer (vorbisenc, buf);
-      buf = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_comm);
-      gst_vorbisenc_push_buffer (vorbisenc, buf);
-      buf = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_code);
-      gst_vorbisenc_push_buffer (vorbisenc, buf);
+
+      /* create header buffers */
+      buf1 = gst_vorbisenc_buffer_from_packet (vorbisenc, &header);
+      buf2 = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_comm);
+      buf3 = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_code);
+
+      /* mark and put on caps */
+      caps = gst_pad_get_caps (vorbisenc->srcpad);
+      gst_vorbisenc_set_header_on_caps (caps, buf1, buf2, buf3);
+
+      /* negotiate with these caps */
+      GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
+      gst_pad_try_set_caps (vorbisenc->srcpad, caps);
+
+      /* push out buffers */
+      gst_vorbisenc_push_buffer (vorbisenc, buf1);
+      gst_vorbisenc_push_buffer (vorbisenc, buf2);
+      gst_vorbisenc_push_buffer (vorbisenc, buf3);
 
       vorbisenc->header_sent = TRUE;
     }
