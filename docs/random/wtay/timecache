@@ -1,0 +1,133 @@
+1) intro
+--------
+
+For efficient and accurate seeking, a plugin typically needs
+an index of possible seek positions (in time, bytes, samples, ...).
+
+The purpose of GstTimecache is to provide an infrastructure for
+plugins to maintain such an index.
+
+By creating a generic interace to this functionality, it is also
+possible for the application to make use of the generated index.
+possible use cases are: saving/loading of indexes, obtain an 
+overview of the indexed stream (where is sample N, where is
+the keyframe...)
+
+
+This document describes a proposed API for this functionality.
+
+
+2) Requirements
+---------------
+
+Bare minimum:
+
+- store mappings between format1 and format2 (bytes<->time, 
+  samples<->tracks, ...)
+- update the mappings (add/remove/change entries)
+- query the index, locate entries.
+- store arbitrary extra metadata in the timecache (media file,
+  time, author, ...)
+- set/get cache on elements.
+
+Nice to have:
+
+- cache groups with varying certainty that are merged.
+- API to control the indexing process, what gets indexed, how much,
+  ...)
+- Get notification when a new entry is added, together with an
+  option to turn off in-memory caching, this could be used to
+  do direct-to-disk indexing (for large files) insteda of to-memory.
+
+3) use cases
+------------
+
+a) indexing an mpeg systems stream
+
+  - create an empty timecache object
+  - create filesrc ! mpegparse
+  - set timecache on mpegparse
+  - run the pipeline to EOS
+    - mpegparse will create a mapping from SCR to byte offset
+      and add it to the cache.
+  - read/save timecache
+
+b) running an mpeg with a previously created cache
+
+  - create timecache object from saved index
+  - create filesrc ! mpegparse
+  - set the timecache on mpegparse
+  - run the pipeline, seek, ...
+    - mpegparse uses the timecache to do accurate seek to 
+      SCR timestamps.
+  
+c) indexing an mpeg systems stream, SCR, video and audio elementary
+   streams.
+
+  - create an empty timecache object
+  - create filesrc ! mpegdemux
+  - set timecache on mpegdemux
+  - run the pipeline to EOS
+    - mpegparse will create a mappings for: 
+       * SCR to byte offset
+       * PTS + streamid to byte offset
+      and add it to the cache.
+  - read/save timecache
+
+d) complete indexing of mpeg systems streams and audio/video
+   streams.
+
+  - create 3 empty timecaches
+  - create filesrc ! mpegdemux video_%02d! mpeg2dec 
+                     mpegdemux0 audio_%02d! mad
+  - set timecaches on mpegdemux, mpeg2dec, mad
+  - run pipeline to EOS
+    - mpegdemux creates timecache for SCR, PTS + streamid
+    - mpeg2dec creates timecache for frames + I/P/B id
+    - mad creates timecache for mpeg audio headers
+  - read/save timecaches
+  
+  seeking in a fully indexed stream:
+    - seek on timestamp in mpeg2dec
+    - mpeg2dec locates previous I frame in cache, does
+      a timeseek on sinkpad
+    - mpegparse uses the cache to convert the timestamp
+      to an offset, then does a seek on offset
+    - filesrc seeks to offset
+
+4) Entry types
+--------------
+
+ - mapping between formats:
+
+    <padid> <flags> <format> <position>, <format> <position>, ...
+
+ - metadata, streaminfo, other objects:
+
+    <padid> <format> <position>, <keyword> gpointer
+
+    
+5) implementation
+-----------------
+
+We define an abstract base class GstTimeCache with following
+abstract methods:
+
+
+6) cache format example
+-----------------------
+
+We define a binary format for the cache for space/speed reasons.
+It is entirely possible to create alternative implementations.
+
+
+
+
+
+
+
+
+
+
+      
+    
