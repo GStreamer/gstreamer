@@ -284,7 +284,7 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
 #endif /* LADSPA_IS_HINT_HAS_DEFAULT */
 
     klass->control_info[i].def = CLAMP(klass->control_info[i].def,
-      klass->control_info[i].lowerbound, klass->control_info[i].upperbound)
+      klass->control_info[i].lowerbound, klass->control_info[i].upperbound);
     
     if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[current_portnum])) {
       argperms = G_PARAM_READWRITE;
