@@ -86,18 +86,18 @@ struct _GstBinClass {
   GstElementClass parent_class;
 
   /* signals */
-  void 		(*object_added) 	(GstObject *object, GstObject *child);
-  void 		(*object_removed) 	(GstObject *object, GstObject *child);
+  void		(*object_added)		(GstObject *object, GstObject *child);
+  void		(*object_removed)	(GstObject *object, GstObject *child);
 
   /* change the state of elements of the given type */
-  gboolean 	(*change_state_type) 	(GstBin *bin,
-                                 	 GstElementState state,
-                                 	 GtkType type);
+  gboolean	(*change_state_type)	(GstBin *bin,
+					 GstElementState state,
+					 GtkType type);
   /* create a plan for the execution of the bin */
-  void 		(*create_plan) 		(GstBin *bin);
-  void 		(*schedule) 		(GstBin *bin);
+  void		(*create_plan)		(GstBin *bin);
+  void		(*schedule)		(GstBin *bin);
   /* run a full iteration of operation */
-  void		(*iterate) 		(GstBin *bin);
+  void		(*iterate)		(GstBin *bin);
 };
 
 struct __GstBinChain {
@@ -107,22 +107,18 @@ struct __GstBinChain {
   GList *entries;
 
   gboolean need_cothreads;
-};  
+  gboolean need_scheduling;
+};
 
 
-GtkType 	gst_bin_get_type		(void);
+GtkType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
-#define 	gst_bin_destroy(bin) 		gst_object_destroy(GST_OBJECT(bin))
+#define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
 /* add and remove elements from the bin */
-void 		gst_bin_add			(GstBin *bin,
+void		gst_bin_add			(GstBin *bin,
 						 GstElement *element);
-void 		gst_bin_remove			(GstBin *bin,
-						 GstElement *element);
-
-void 		gst_bin_add_eos_provider	(GstBin *bin,
-						 GstElement *element);
-void 		gst_bin_remove_eos_provider	(GstBin *bin,
+void		gst_bin_remove			(GstBin *bin,
 						 GstElement *element);
 
 /* retrieve a single element or the list of children */
@@ -130,16 +126,16 @@ GstElement*	gst_bin_get_by_name		(GstBin *bin,
 						 const gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
-void 		gst_bin_create_plan		(GstBin *bin);
-void 		gst_bin_schedule		(GstBin *bin);
-gboolean 	gst_bin_set_state_type		(GstBin *bin,
+void		gst_bin_create_plan		(GstBin *bin);
+void		gst_bin_schedule		(GstBin *bin);
+gboolean	gst_bin_set_state_type		(GstBin *bin,
 						 GstElementState state,
 						 GtkType type);
 
-void 		gst_bin_iterate			(GstBin *bin);
+void		gst_bin_iterate			(GstBin *bin);
 
 /* hack FIXME */
-void 		gst_bin_use_cothreads		(GstBin *bin,
+void		gst_bin_use_cothreads		(GstBin *bin,
 						 gboolean enabled);
 
 #ifdef __cplusplus
@@ -147,5 +143,5 @@ void 		gst_bin_use_cothreads		(GstBin *bin,
 #endif /* __cplusplus */
 
 
-#endif /* __GST_BIN_H__ */     
+#endif /* __GST_BIN_H__ */
 

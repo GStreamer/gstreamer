@@ -30,7 +30,7 @@
 
 
 
-GstElementDetails gst_bin_details = { 
+GstElementDetails gst_bin_details = {
   "Generic bin",
   "Bin",
   "Simple container object",
@@ -40,19 +40,19 @@ GstElementDetails gst_bin_details = {
 };
 
 
-static void 			gst_bin_real_destroy		(GtkObject *object);
+static void			gst_bin_real_destroy		(GtkObject *object);
 
-static GstElementStateReturn 	gst_bin_change_state		(GstElement *element);
-static GstElementStateReturn 	gst_bin_change_state_norecurse	(GstBin *bin);
-static gboolean 		gst_bin_change_state_type	(GstBin *bin,
-                                          			 GstElementState state,
-                                          			 GtkType type);
+static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
+static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
+static gboolean			gst_bin_change_state_type	(GstBin *bin,
+								 GstElementState state,
+								 GtkType type);
 
-static void 			gst_bin_create_plan_func	(GstBin *bin);
-static void 			gst_bin_iterate_func		(GstBin *bin);
+static void			gst_bin_create_plan_func	(GstBin *bin);
+static void			gst_bin_iterate_func		(GstBin *bin);
 
-static xmlNodePtr 		gst_bin_save_thyself		(GstElement *element, xmlNodePtr parent);
-static void 			gst_bin_restore_thyself		(GstElement *element, xmlNodePtr parent, 
+static xmlNodePtr		gst_bin_save_thyself		(GstElement *element, xmlNodePtr parent);
+static void			gst_bin_restore_thyself		(GstElement *element, xmlNodePtr parent,
 								 GHashTable *elements);
 
 /* Bin signals and args */
@@ -75,7 +75,7 @@ static GstElementClass *parent_class = NULL;
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_bin_get_type (void) 
+gst_bin_get_type (void)
 {
   static GtkType bin_type = 0;
 
@@ -96,7 +96,7 @@ gst_bin_get_type (void)
 }
 
 static void
-gst_bin_class_init (GstBinClass *klass) 
+gst_bin_class_init (GstBinClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
@@ -113,20 +113,20 @@ gst_bin_class_init (GstBinClass *klass)
                     GST_TYPE_ELEMENT);
   gtk_object_class_add_signals (gtkobject_class, gst_bin_signals, LAST_SIGNAL);
 
-  klass->change_state_type = 		gst_bin_change_state_type;
-  klass->create_plan = 			gst_bin_create_plan_func;
-  klass->schedule = 			gst_bin_schedule_func;
-  klass->iterate = 			gst_bin_iterate_func;
+  klass->change_state_type =		gst_bin_change_state_type;
+  klass->create_plan =			gst_bin_create_plan_func;
+  klass->schedule =			gst_bin_schedule_func;
+  klass->iterate =			gst_bin_iterate_func;
 
-  gstelement_class->change_state = 	gst_bin_change_state;
-  gstelement_class->save_thyself = 	gst_bin_save_thyself;
-  gstelement_class->restore_thyself = 	gst_bin_restore_thyself;
+  gstelement_class->change_state =	gst_bin_change_state;
+  gstelement_class->save_thyself =	gst_bin_save_thyself;
+  gstelement_class->restore_thyself =	gst_bin_restore_thyself;
 
-  gtkobject_class->destroy = 		gst_bin_real_destroy;
+  gtkobject_class->destroy =		gst_bin_real_destroy;
 }
 
-static void 
-gst_bin_init (GstBin *bin) 
+static void
+gst_bin_init (GstBin *bin)
 {
   // in general, we prefer to use cothreads for most things
   GST_FLAG_SET (bin, GST_BIN_FLAG_PREFER_COTHREADS);
@@ -148,7 +148,7 @@ gst_bin_init (GstBin *bin)
  * Returns: new bin
  */
 GstElement*
-gst_bin_new (const gchar *name) 
+gst_bin_new (const gchar *name)
 {
   return gst_elementfactory_make ("bin", name);
 }
@@ -161,9 +161,9 @@ gst_bin_new (const gchar *name)
  * Add the given element to the bin.  Set the elements parent, and thus
  * add a reference.
  */
-void 
-gst_bin_add (GstBin *bin, 
-	     GstElement *element) 
+void
+gst_bin_add (GstBin *bin,
+	     GstElement *element)
 {
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
@@ -194,9 +194,9 @@ gst_bin_add (GstBin *bin,
  *
  * Remove the element from its associated bin, unparenting as well.
  */
-void 
+void
 gst_bin_remove (GstBin *bin,
-		GstElement *element) 
+		GstElement *element)
 {
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
@@ -226,8 +226,8 @@ gst_bin_remove (GstBin *bin,
 }
 
 
-static GstElementStateReturn 
-gst_bin_change_state (GstElement *element) 
+static GstElementStateReturn
+gst_bin_change_state (GstElement *element)
 {
   GstBin *bin;
   GList *children;
@@ -271,7 +271,7 @@ gst_bin_change_state (GstElement *element)
 //  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:	  
+    case GST_STATE_NULL_TO_READY:
     {
       GstObject *parent;
 
@@ -290,8 +290,8 @@ gst_bin_change_state (GstElement *element)
 }
 
 
-static GstElementStateReturn 
-gst_bin_change_state_norecurse (GstBin *bin) 
+static GstElementStateReturn
+gst_bin_change_state_norecurse (GstBin *bin)
 {
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
@@ -300,10 +300,10 @@ gst_bin_change_state_norecurse (GstBin *bin)
     return GST_STATE_FAILURE;
 }
 
-static gboolean 
+static gboolean
 gst_bin_change_state_type(GstBin *bin,
                           GstElementState state,
-                          GtkType type) 
+                          GtkType type)
 {
   GList *children;
   GstElement *child;
@@ -344,10 +344,10 @@ gst_bin_change_state_type(GstBin *bin,
  *
  * Returns: indication if the state change was successfull
  */
-gboolean 
+gboolean
 gst_bin_set_state_type (GstBin *bin,
                         GstElementState state,
-                        GtkType type) 
+                        GtkType type)
 {
   GstBinClass *oclass;
 
@@ -364,8 +364,8 @@ gst_bin_set_state_type (GstBin *bin,
   return TRUE;
 }
 
-static void 
-gst_bin_real_destroy (GtkObject *object) 
+static void
+gst_bin_real_destroy (GtkObject *object)
 {
   GstBin *bin = GST_BIN (object);
   GList *children;
@@ -394,7 +394,7 @@ gst_bin_real_destroy (GtkObject *object)
  */
 GstElement*
 gst_bin_get_by_name (GstBin *bin,
-		     const gchar *name) 
+		     const gchar *name)
 {
   GList *children;
   GstElement *child;
@@ -412,7 +412,7 @@ gst_bin_get_by_name (GstBin *bin,
       return child;
     if (GST_IS_BIN (child)) {
       GstElement *res = gst_bin_get_by_name (GST_BIN (child), name);
-      if (res) 
+      if (res)
         return res;
     }
     children = g_list_next (children);
@@ -430,7 +430,7 @@ gst_bin_get_by_name (GstBin *bin,
  * Returns: a GList of elements
  */
 GList*
-gst_bin_get_list (GstBin *bin) 
+gst_bin_get_list (GstBin *bin)
 {
   g_return_val_if_fail (bin != NULL, NULL);
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
@@ -438,9 +438,9 @@ gst_bin_get_list (GstBin *bin)
   return bin->children;
 }
 
-static xmlNodePtr 
-gst_bin_save_thyself (GstElement *element, 
-		      xmlNodePtr parent) 
+static xmlNodePtr
+gst_bin_save_thyself (GstElement *element,
+		      xmlNodePtr parent)
 {
   GstBin *bin = GST_BIN (element);
   xmlNodePtr childlist;
@@ -463,10 +463,10 @@ gst_bin_save_thyself (GstElement *element,
   return childlist;
 }
 
-static void 
-gst_bin_restore_thyself (GstElement *element, 
-		         xmlNodePtr parent, 
-			 GHashTable *elements) 
+static void
+gst_bin_restore_thyself (GstElement *element,
+		         xmlNodePtr parent,
+			 GHashTable *elements)
 {
   GstBin *bin = GST_BIN (element);
   xmlNodePtr field = parent->xmlChildrenNode;
@@ -490,12 +490,12 @@ gst_bin_restore_thyself (GstElement *element,
 
     field = field->next;
   }
-  
+
 }
 
-void 
-gst_bin_use_cothreads (GstBin *bin, 
-		       gboolean enabled) 
+void
+gst_bin_use_cothreads (GstBin *bin,
+		       gboolean enabled)
 {
   g_return_if_fail (GST_IS_BIN (bin));
 
@@ -508,15 +508,15 @@ gst_bin_use_cothreads (GstBin *bin,
  *
  * Iterates over the elements in this bin.
  */
-void 
-gst_bin_iterate (GstBin *bin) 
+void
+gst_bin_iterate (GstBin *bin)
 {
   GstBinClass *oclass;
 
   GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 
   oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
-  
+
   if (oclass->iterate)
     (oclass->iterate) (bin);
 
@@ -529,8 +529,8 @@ gst_bin_iterate (GstBin *bin)
  *
  * Let the bin figure out how to handle its children.
  */
-void 
-gst_bin_create_plan (GstBin *bin) 
+void
+gst_bin_create_plan (GstBin *bin)
 {
   GstBinClass *oclass;
 
@@ -546,8 +546,8 @@ gst_bin_create_plan (GstBin *bin)
  *
  * Let the bin figure out how to handle its children.
  */
-void 
-gst_bin_schedule (GstBin *bin) 
+void
+gst_bin_schedule (GstBin *bin)
 {
   GstBinClass *oclass;
 
@@ -560,11 +560,11 @@ gst_bin_schedule (GstBin *bin)
 typedef struct {
   gulong offset;
   gulong size;
-} region_struct; 
+} region_struct;
 
 
 static void
-gst_bin_create_plan_func (GstBin *bin) 
+gst_bin_create_plan_func (GstBin *bin)
 {
   GstElement *manager;
   GList *elements;
@@ -701,8 +701,8 @@ gst_bin_create_plan_func (GstBin *bin)
   GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 }
 
-static void 
-gst_bin_iterate_func (GstBin *bin) 
+static void
+gst_bin_iterate_func (GstBin *bin)
 {
   GList *chains;
   _GstBinChain *chain;
@@ -711,6 +711,7 @@ gst_bin_iterate_func (GstBin *bin)
   GList *pads;
   GstPad *pad;
   GstBuffer *buf = NULL;
+  gint num_scheduled = 0;
 
   GST_DEBUG_ENTER("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
 
@@ -723,6 +724,8 @@ gst_bin_iterate_func (GstBin *bin)
   while (chains) {
     chain = (_GstBinChain *)(chains->data);
     chains = g_list_next (chains);
+
+    if (!chain->need_scheduling) continue;
 
     if (chain->need_cothreads) {
       // all we really have to do is switch to the first child
@@ -756,7 +759,7 @@ gst_bin_iterate_func (GstBin *bin)
             pad = GST_PAD (pads->data);
             if (GST_RPAD_DIRECTION(pad) == GST_PAD_SRC) {
               GST_DEBUG (0,"calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-              if (GST_REAL_PAD(pad)->getfunc == NULL) 
+              if (GST_REAL_PAD(pad)->getfunc == NULL)
                 fprintf(stderr, "error, no getfunc in \"%s\"\n", gst_element_get_name (entry));
               else
                 buf = (GST_REAL_PAD(pad)->getfunc)(pad);
@@ -767,33 +770,13 @@ gst_bin_iterate_func (GstBin *bin)
         }
       }
     }
+    num_scheduled++;
+  }
+
+  if (!num_scheduled) {
+    gst_element_signal_eos (GST_ELEMENT (bin));
   }
 
   GST_DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
-}
-
-static void
-gst_bin_eos_func (GstBin *bin, GstElement *element)
-{
-  gst_element_signal_eos (GST_ELEMENT (bin));
-}
-
-void
-gst_bin_add_eos_provider (GstBin *bin, GstElement *element) 
-{
-  g_return_if_fail (bin != NULL);
-  g_return_if_fail (GST_IS_BIN (bin));
-  
-  bin->eos_providers = g_list_prepend (bin->eos_providers, element);
-  gtk_signal_connect_object (GTK_OBJECT (element), "eos", gst_bin_eos_func, GTK_OBJECT (bin));
-}
-
-void
-gst_bin_remove_eos_provider (GstBin *bin, GstElement *element) 
-{
-  g_return_if_fail (bin != NULL);
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  bin->eos_providers = g_list_remove (bin->eos_providers, element);
 }
 

@@ -73,8 +73,8 @@ GtkType gst_element_get_type(void) {
   return element_type;
 }
 
-static void 
-gst_element_class_init (GstElementClass *klass) 
+static void
+gst_element_class_init (GstElementClass *klass)
 {
   GtkObjectClass *gtkobject_class;
 
@@ -116,8 +116,8 @@ gst_element_class_init (GstElementClass *klass)
   gtkobject_class->destroy = gst_element_real_destroy;
 }
 
-static void 
-gst_element_init (GstElement *element) 
+static void
+gst_element_init (GstElement *element)
 {
   element->current_state = GST_STATE_NULL;
   element->pending_state = -1;
@@ -137,7 +137,7 @@ gst_element_init (GstElement *element)
  * Returns: new element
  */
 GstElement*
-gst_element_new(void) 
+gst_element_new(void)
 {
   return GST_ELEMENT (gtk_type_new (GST_TYPE_ELEMENT));
 }
@@ -150,8 +150,8 @@ gst_element_new(void)
  * Add a pad (connection point) to the element, setting the parent of the
  * pad to the element (and thus adding a reference).
  */
-void 
-gst_element_add_pad (GstElement *element, GstPad *pad) 
+void
+gst_element_add_pad (GstElement *element, GstPad *pad)
 {
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -184,8 +184,8 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
  * Create a ghost pad from the given pad, and add it to the list of pads
  * for this element.
  */
-void 
-gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name) 
+void
+gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
 {
   GstPad *ghostpad;
 
@@ -216,7 +216,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
  * @pad: ghost pad to remove
  *
  * removes a ghost pad from an element
- * 
+ *
  */
 void
 gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
@@ -240,7 +240,7 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
  * Returns: requested pad if found, otherwise NULL.
  */
 GstPad*
-gst_element_get_pad (GstElement *element, const gchar *name) 
+gst_element_get_pad (GstElement *element, const gchar *name)
 {
   GList *walk;
 
@@ -278,7 +278,7 @@ gst_element_get_pad (GstElement *element, const gchar *name)
  * Returns: GList of pads
  */
 GList*
-gst_element_get_pad_list (GstElement *element) 
+gst_element_get_pad_list (GstElement *element)
 {
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -416,9 +416,9 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
  * child of the parent of the other element.  If they have different
  * parents, the connection fails.
  */
-void 
+void
 gst_element_connect (GstElement *src, const gchar *srcpadname,
-                     GstElement *dest, const gchar *destpadname) 
+                     GstElement *dest, const gchar *destpadname)
 {
   GstPad *srcpad,*destpad;
   GstObject *srcparent,*destparent;
@@ -466,9 +466,9 @@ gst_element_connect (GstElement *src, const gchar *srcpadname,
  *
  * Disconnect the two named pads of the source and destination elements.
  */
-void 
+void
 gst_element_disconnect (GstElement *src, const gchar *srcpadname,
-                        GstElement *dest, const gchar *destpadname) 
+                        GstElement *dest, const gchar *destpadname)
 {
   GstPad *srcpad,*destpad;
 
@@ -503,8 +503,8 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
  * This function is used internally by elements to signal an error
  * condition.  It results in the "error" signal.
  */
-void 
-gst_element_error (GstElement *element, const gchar *error) 
+void
+gst_element_error (GstElement *element, const gchar *error)
 {
   g_error("GstElement: error in element '%s': %s\n", element->name, error);
 
@@ -524,8 +524,8 @@ gst_element_error (GstElement *element, const gchar *error)
  *
  * Returns: whether or not the state was successfully set.
  */
-gint 
-gst_element_set_state (GstElement *element, GstElementState state) 
+gint
+gst_element_set_state (GstElement *element, GstElementState state)
 {
   GstElementClass *oclass;
   GstElementState curpending;
@@ -576,13 +576,13 @@ gst_element_set_state (GstElement *element, GstElementState state)
  * Returns: the factory used for creating this element
  */
 GstElementFactory*
-gst_element_get_factory (GstElement *element) 
+gst_element_get_factory (GstElement *element)
 {
   GstElementClass *oclass;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  
+
   oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
 
   return oclass->elementfactory;
@@ -593,13 +593,13 @@ gst_element_get_factory (GstElement *element)
  * @element: element to change state of
  *
  * Changes the state of the element, but more importantly fires off a signal
- * indicating the new state.  
+ * indicating the new state.
  * The element will have no pending states anymore.
  *
  * Returns: whether or not the state change was successfully set.
  */
-GstElementStateReturn 
-gst_element_change_state (GstElement *element) 
+GstElementStateReturn
+gst_element_change_state (GstElement *element)
 {
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
@@ -623,8 +623,8 @@ gst_element_change_state (GstElement *element)
  * Set the name of the element, getting rid of the old name if there was
  * one.
  */
-void 
-gst_element_set_name (GstElement *element, const gchar *name) 
+void
+gst_element_set_name (GstElement *element, const gchar *name)
 {
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -645,7 +645,7 @@ gst_element_set_name (GstElement *element, const gchar *name)
  * Returns: name of the element
  */
 const gchar*
-gst_element_get_name (GstElement *element) 
+gst_element_get_name (GstElement *element)
 {
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -653,8 +653,8 @@ gst_element_get_name (GstElement *element)
   return element->name;
 }
 
-static void 
-gst_element_real_destroy (GtkObject *object) 
+static void
+gst_element_real_destroy (GtkObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
   GList *pads;
@@ -664,7 +664,7 @@ gst_element_real_destroy (GtkObject *object)
 
   if (element->name)
     g_free (element->name);
-  
+
   pads = element->pads;
   while (pads) {
     pad = GST_PAD (pads->data);
@@ -701,9 +701,9 @@ static gchar *_gst_element_type_names[] = {
  *
  * Returns: the new xml node
  */
-xmlNodePtr 
+xmlNodePtr
 gst_element_save_thyself (GstElement *element,
-		          xmlNodePtr parent) 
+		          xmlNodePtr parent)
 {
   xmlNodePtr self;
   GList *pads;
@@ -730,7 +730,7 @@ gst_element_save_thyself (GstElement *element,
     guint num_args,i;
 
     args = gtk_object_query_args (type, &flags, &num_args);
-    
+
     for (i=0; i<num_args; i++) {
       if ((args[i].type > GTK_TYPE_NONE) &&
           //(args[i].type <= GTK_TYPE_STRING) &&
@@ -814,8 +814,8 @@ gst_element_save_thyself (GstElement *element,
  * Returns: the new element
  */
 GstElement*
-gst_element_load_thyself (xmlNodePtr parent, 
-		          GHashTable *elements) 
+gst_element_load_thyself (xmlNodePtr parent,
+		          GHashTable *elements)
 {
   xmlNodePtr children = parent->xmlChildrenNode;
   GstElement *element;
@@ -844,7 +844,7 @@ gst_element_load_thyself (xmlNodePtr parent,
 
   g_hash_table_insert (elements, g_strdup (gst_element_get_name (element)), element);
 
-  // we have the element now, set the arguments 
+  // we have the element now, set the arguments
   children = parent->xmlChildrenNode;
 
   while (children) {
@@ -879,49 +879,49 @@ gst_element_load_thyself (xmlNodePtr parent,
 	      gint i;
 	      sscanf (value, "%d", &i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_LONG: {
 	      glong i;
 	      sscanf (value, "%ld", &i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_ULONG: {
 	      gulong i;
 	      sscanf (value, "%lu", &i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_BOOL: {
 	      gboolean i = FALSE;
 	      if (!strcmp ("true", value)) i = TRUE;
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_CHAR: {
 	      gchar i;
 	      sscanf (value, "%c", &i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_UCHAR: {
 	      guchar i;
 	      sscanf (value, "%c", &i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_FLOAT: {
 	      gfloat i;
 	      sscanf (value, "%f", &i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             case GTK_TYPE_DOUBLE: {
 	      gdouble i;
 	      sscanf (value, "%g", (float *)&i);
               gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break; 
+	      break;
 	    }
             default:
 	      if (info->type == GST_TYPE_FILENAME) {
@@ -960,9 +960,9 @@ gst_element_load_thyself (xmlNodePtr parent,
  * Sets the manager of the element.  For internal use only, unless you're
  * writing a new bin subclass.
  */
-void 
+void
 gst_element_set_manager (GstElement *element,
-		         GstElement *manager) 
+		         GstElement *manager)
 {
   element->manager = manager;
 }
@@ -976,7 +976,7 @@ gst_element_set_manager (GstElement *element,
  * Returns: Element's manager
  */
 GstElement*
-gst_element_get_manager (GstElement *element) 
+gst_element_get_manager (GstElement *element)
 {
   return element->manager;
 }
@@ -994,9 +994,9 @@ gst_element_get_manager (GstElement *element)
  * exit.  Assuming the loop function itself is the only one who will cause
  * a new loopfunc to be assigned, this should be no problem.
  */
-void 
+void
 gst_element_set_loop_function(GstElement *element,
-                              GstElementLoopFunction loop) 
+                              GstElementLoopFunction loop)
 {
   /* set the loop function */
   element->loopfunc = loop;
@@ -1008,31 +1008,15 @@ gst_element_set_loop_function(GstElement *element,
 /**
  * gst_element_signal_eos:
  * @element: element to trigger the eos signal of
- * 
+ *
  * Throws the eos signal to indicate that the end of the stream is reached.
  */
 void
 gst_element_signal_eos (GstElement *element)
-{  
+{
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[EOS]);
-}
-
-void
-gst_element_announce_eos (GstElement *element, gboolean success)
-{
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"element '%s' announce eos\n", gst_element_get_name (element));
-
-  if (success) {
-    gst_bin_add_eos_provider (GST_BIN (gst_element_get_manager (element)), element);
-  }
-  else {
-    gst_bin_remove_eos_provider (GST_BIN (gst_element_get_manager (element)), element);
-  }
 }
 

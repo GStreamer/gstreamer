@@ -110,12 +110,16 @@ typedef enum {
   /* the element has to be scheduled as a cothread for any sanity */
   GST_ELEMENT_USE_COTHREAD,
 
+  // if this element is in EOS
+  GST_ELEMENT_EOS,
+
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8,
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_COTHREAD_STOPPING))
+#define GST_ELEMENT_IS_EOS(obj)			(GST_FLAG_IS_SET(obj,GST_ELEMENT_EOS))
 
 
 typedef struct _GstElement GstElement;
@@ -215,7 +219,6 @@ void			gst_element_connect		(GstElement *src, const gchar *srcpadname,
 void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
-void			gst_element_announce_eos	(GstElement *element, gboolean success);
 void			gst_element_signal_eos		(GstElement *element);
 
 
