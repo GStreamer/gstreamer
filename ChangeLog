@@ -1,3 +1,13 @@
+2005-02-24  Andy Wingo  <wingo@pobox.com>
+
+	* tests/mass_elements.gnuplot: gnuplot file for the mass_elements
+	benchmark. Run as gnuplot mass_elements.gnuplot > foo.ps, after
+	running bench-mass_elements.scm.
+
+	* tests/bench-mass_elements.scm: New script, runs mass_elements
+	for various numbers of identities, outputting the results to a
+	file. Requires guile 1.6. Just for testing.
+
 2005-02-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/schedulers/fairscheduler.c:
