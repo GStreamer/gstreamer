@@ -224,6 +224,9 @@ GstEvent*	gst_event_new_discontinuous_valist	(gboolean new_media,
 gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);
 
 #define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
+GstEvent*	gst_event_new_filler_stamped	(guint64 time,
+						 guint64 duration);
+guint64		gst_event_filler_get_duration	(GstEvent *event);
 
 /* flush events */
 #define		gst_event_new_flush()		gst_event_new(GST_EVENT_FLUSH)

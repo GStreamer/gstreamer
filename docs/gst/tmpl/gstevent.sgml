@@ -442,6 +442,25 @@ Create a new dummy event that should be ignored
 
 
 
+<!-- ##### FUNCTION gst_event_new_filler_stamped ##### -->
+<para>
+
+</para>
+
+@time: 
+@duration: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_filler_get_duration ##### -->
+<para>
+
+</para>
+
+@event: 
+@Returns: 
+
+
 <!-- ##### MACRO gst_event_new_flush ##### -->
 <para>
 Create a new flush event.

@@ -25,6 +25,7 @@
 #include "gst_private.h"
 #include "gstdata_private.h"
 
+#include "gstclock.h"
 #include "gstinfo.h"
 #include "gstmemchunk.h"
 #include "gstevent.h"
@@ -352,4 +353,73 @@ gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
   GST_EVENT_SEEK_ENDOFFSET (event) = stop;
 
   return event;
+}
+
+/**
+ * gst_event_new_filler_stamped:
+ * @time: timestamp of the filler, in nanoseconds.
+ * @duration: duration of the filler, in nanoseconds.
+ *
+ * Creates "filler" data, which is basically empty data that is used to
+ * synchronize streams if one stream has no data for a while. This is
+ * used to prevent deadlocks.
+ *
+ * Returns: the newly created event.
+ */
+
+GstEvent *
+gst_event_new_filler_stamped (guint64 time, guint64 duration)
+{
+  GstEvent *event = gst_event_new_filler ();
+
+  GST_EVENT_TIMESTAMP (event) = time;
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    GValue value = { 0 };
+
+    event->event_data.structure.structure =
+        gst_structure_new ("application/x-gst-filler", NULL);
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, duration);
+    gst_structure_set_value (event->event_data.structure.structure,
+        "duration", &value);
+    g_value_unset (&value);
+  }
+
+  return event;
+}
+
+/**
+ * gst_event_filler_get_duration:
+ * @event: the event to get the duration from.
+ *
+ * Filler events are used to synchronize streams (and thereby prevent
+ * application deadlocks) if one stream receives no data for a while.
+ * This function gets the duration of a filler event, which is the
+ * amount of time from the start of this event (see GST_EVENT_TIMESTAMP())
+ * that no data is available.
+ *
+ * Returns: duration of the lack of data, or GST_CLOCK_TIME_NONE.
+ */
+
+guint64
+gst_event_filler_get_duration (GstEvent * event)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (event != NULL, GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_FILLER,
+      GST_CLOCK_TIME_NONE);
+
+  /* check the event */
+  if (!event->event_data.structure.structure)
+    return GST_CLOCK_TIME_NONE;
+  value = gst_structure_get_value (event->event_data.structure.structure,
+      "duration");
+  if (!value)
+    return GST_CLOCK_TIME_NONE;
+  g_return_val_if_fail (G_VALUE_TYPE (value) == G_TYPE_UINT64,
+      GST_CLOCK_TIME_NONE);
+
+  /* return */
+  return g_value_get_uint64 (value);
 }

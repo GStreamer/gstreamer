@@ -598,6 +598,8 @@ gst_event_new_discontinuous
 gst_event_new_discontinuous_valist
 gst_event_discont_get_value
 gst_event_new_filler
+gst_event_new_filler_stamped
+gst_event_filler_get_duration
 gst_event_new_flush
 <SUBSECTION Standard>
 GST_EVENT
