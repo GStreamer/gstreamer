@@ -155,7 +155,8 @@ struct _GstAlsaClock {
   GstAlsaClockGetTimeFunc	get_time;
   GstAlsa *			owner;
 
-  GstClockTimeDiff		adjust; 	/* time_of_clock - time_of_element at sync point */
+  GstClockTimeDiff		adjust; 	/* adjustment to real clock (recalculated when stopping) */
+  GstClockTime			start_time;	/* time when the stream started (NONE when stopped) */
 
   GstClockTime			last_unlock;    /* time of last unlock request */
 };
