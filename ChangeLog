@@ -1,3 +1,12 @@
+2005-01-06  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* configure.ac:
+	 don't compile faad plugin if a RC of 2.0 is found
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_process_ext_content_desc):
+	 try to make Solaris compiler happier
+
 2005-01-06  Paul Jack  <pjack@sfaf.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
