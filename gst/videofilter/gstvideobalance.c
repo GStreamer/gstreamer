@@ -65,6 +65,7 @@ static void gst_videobalance_interface_init (GstImplementsInterfaceClass *klass)
 static void gst_videobalance_colorbalance_init (GstColorBalanceClass *iface);
 
 static void gst_videobalance_dispose (GObject *object);
+static void gst_videobalance_update_properties (GstVideobalance *videobalance);
 
 GType
 gst_videobalance_get_type (void)
@@ -275,17 +276,7 @@ gst_videobalance_colorbalance_set_value (GstColorBalance        *balance,
   else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
     vb->contrast = (value + 1000.0) * 2.0 / 2000.0;
   
-  /* Maybe we should narrow values which are around median to trigger passthru
-     more often */
-  if (vb->contrast == 1 && vb->brightness == 0 &&
-      vb->hue == 0 && vb->saturation == 1)
-    {
-      vf->passthru = TRUE;
-    }
-  else
-    {
-      vf->passthru = FALSE;
-    }
+  gst_videobalance_update_properties (vb);
 }
 
 static gint
@@ -321,6 +312,17 @@ gst_videobalance_colorbalance_init (GstColorBalanceClass *iface)
 }
 
 static void
+gst_videobalance_update_properties (GstVideobalance *videobalance)
+{
+  if (videobalance->contrast == 1.0 && videobalance->brightness == 0.0 &&
+      videobalance->hue == 0.0 && videobalance->saturation == 1.0) {
+    GST_VIDEOFILTER (videobalance)->passthru = TRUE;
+  } else {
+    GST_VIDEOFILTER (videobalance)->passthru = FALSE;
+  }
+}
+
+static void
 gst_videobalance_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstVideobalance *src;
@@ -346,6 +348,8 @@ gst_videobalance_set_property (GObject *object, guint prop_id, const GValue *val
     default:
       break;
   }
+
+  gst_videobalance_update_properties (src);
 }
 
 static void
