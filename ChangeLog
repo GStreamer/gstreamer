@@ -1,3 +1,15 @@
+2004-05-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_get_type),
+	(gst_jpegenc_chain):
+        fix DURATION on outgoing buffers
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_sink_event):
+        debug using time formats
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_sink_link):
+        windows with width/height 0 generate X errors, so don't allow them
+
 2004-05-05  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (src_templ),
