@@ -1,5 +1,7 @@
 if BUILD_DOCS
-SUBDIRS_DOCS = docs
+# disabled until it actually works
+# SUBDIRS_DOCS = docs
+SUBDIRS_DOCS =
 else
 SUBDIRS_DOCS =
 endif
@@ -32,8 +34,9 @@ SUBDIRS = 			\
 	po 			\
 	common 			\
 	m4 			\
-	pkgconfig 		\
-	$(SUBDIRS_DOCS)
+	pkgconfig
+# disabled
+#	$(SUBDIRS_DOCS)
 
 DIST_SUBDIRS = 			\
 	gst-libs		\
@@ -45,8 +48,10 @@ DIST_SUBDIRS = 			\
 	po 			\
 	common 			\
 	m4 			\
-	pkgconfig		\
-	docs
+	pkgconfig
+
+# disabled
+#	docs
 
 EXTRA_DIST = \
 	gst-plugins.spec depcomp \
