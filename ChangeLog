@@ -1,3 +1,9 @@
+2004-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tools/gst-compprep.c: (handle_xmlerror), (main):
+	Add a check for the version that introduced SetStructuredError to fix
+	the build on FC1
+
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/msvc71.sln:

@@ -10,12 +10,16 @@ GST_DEBUG_CATEGORY_STATIC (debug_compprep);
 #define GST_CAT_DEFAULT debug_compprep
 #define GST_COMPREG_FILE (GST_CACHE_DIR "/compreg.xml")
 
+#ifdef HAVE_LIBXML2
+#if LIBXML_VERSION >= 20600
 void
 handle_xmlerror (void *userData, xmlErrorPtr error)
 {
   g_print ("Error writing the completion registry: %s, %s\n", GST_COMPREG_FILE,
       error->message);
 }
+#endif
+#endif
 
 int
 main (int argc, char *argv[])
@@ -128,7 +132,9 @@ main (int argc, char *argv[])
   }
 
 #ifdef HAVE_LIBXML2
+#if LIBXML_VERSION >= 20600
   xmlSetStructuredErrorFunc (NULL, handle_xmlerror);
+#endif
   xmlSaveFormatFile (GST_COMPREG_FILE, doc, 1);
 #else
   xmlSaveFile (GST_COMPREG_FILE, doc);
