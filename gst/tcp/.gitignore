@@ -1,2 +1,4 @@
 gsttcp-enumtypes.c
 gsttcp-enumtypes.h
+gsttcp-marshal.c
+gsttcp-marshal.h
