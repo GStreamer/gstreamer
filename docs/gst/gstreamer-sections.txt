@@ -96,7 +96,6 @@ GST_CAT_DEFAULT
 <SUBSECTION>
 GstLogFunction
 gst_debug_log
-gst_debug_logv
 gst_debug_log_default
 gst_debug_add_log_function
 gst_debug_remove_log_function
@@ -200,7 +199,6 @@ GST_SCHEDULER_GET_CLASS
 <SECTION>
 <FILE>gstconfig</FILE>
 GST_DISABLE_ALLOC_TRACE
-GST_DISABLE_AUTOPLUG
 GST_DISABLE_ENUMTYPES
 GST_DISABLE_GST_DEBUG
 GST_DISABLE_INDEX
@@ -209,7 +207,6 @@ GST_DISABLE_LOADSAVE_REGISTRY
 GST_DISABLE_PARSE
 GST_DISABLE_PLUGIN
 GST_DISABLE_TRACE
-GST_DISABLE_TYPEFIND
 GST_DISABLE_URI
 GST_DISABLE_REGISTRY
 </SECTION>
@@ -280,12 +277,9 @@ gst_bin_get_type
 GST_TYPE_BIN
 GST_BIN
 GST_BIN_CLASS
-GST_BIN_CAST
-GST_BIN_CLASS_CAST
 GST_BIN_GET_CLASS
 GST_IS_BIN
 GST_IS_BIN_CLASS
-gst_bin_details
 GST_TYPE_BIN_FLAGS
 gst_bin_flags_get_type
 </SECTION>
@@ -552,7 +546,6 @@ GST_STATE_READY_TO_NULL
 GstElementFlags
 GST_ELEMENT_IS_THREAD_SUGGESTED
 GST_ELEMENT_IS_DECOUPLED
-GST_ELEMENT_IS_EOS
 GST_ELEMENT_IS_EVENT_AWARE
 GST_ELEMENT_PARENT
 GST_ELEMENT_NAME
@@ -568,8 +561,6 @@ GstElementClass
 GST_TYPE_ELEMENT
 GST_ELEMENT
 GST_ELEMENT_CLASS
-GST_ELEMENT_CAST
-GST_ELEMENT_CLASS_CAST
 GST_ELEMENT_GET_CLASS
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
@@ -586,19 +577,11 @@ gst_element_state_return_get_type
 <FILE>gstelementfactory</FILE>
 <TITLE>GstElementFactory</TITLE>
 GstElementDetails
-gst_element_factory_new
 gst_element_factory_find
-gst_element_factory_add_pad_template
 gst_element_factory_can_src_caps
 gst_element_factory_can_sink_caps
 gst_element_factory_create
 gst_element_factory_make
-gst_element_factory_make_or_warn
-gst_element_factory_set_rank
-GST_ELEMENT_RANK_MARGINAL
-GST_ELEMENT_RANK_NONE
-GST_ELEMENT_RANK_PRIMARY
-GST_ELEMENT_RANK_SECONDARY
 <SUBSECTION Standard>
 GstElementFactory
 GstElementFactoryClass
@@ -805,8 +788,6 @@ GST_OBJECT
 GST_OBJECT_CLASS
 GST_IS_OBJECT
 GST_IS_OBJECT_CLASS
-GST_OBJECT_CAST
-GST_OBJECT_CLASS_CAST
 GST_TYPE_OBJECT_FLAGS
 gst_object_flags_get_type
 </SECTION>
@@ -905,7 +886,6 @@ gst_pad_proxy_link
 gst_pad_get_pad_template
 gst_pad_get_pad_template_caps
 gst_pad_get_allowed_caps
-gst_pad_recalc_allowed_caps
 gst_pad_perform_negotiate
 gst_ghost_pad_save_thyself
 gst_pad_select
@@ -951,10 +931,8 @@ GST_RPAD_DIRECTION
 GST_RPAD_CAPS
 GST_RPAD_PEER
 GST_RPAD_CHAINFUNC
-GST_RPAD_FILTER
 GST_RPAD_APPFILTER
 GST_RPAD_GETFUNC
-GST_RPAD_BUFFERPOOLFUNC
 GST_RPAD_CHAINHANDLER
 GST_RPAD_EVENTFUNC
 GST_RPAD_EVENTHANDLER
@@ -977,8 +955,6 @@ GstPadClass
 GST_TYPE_PAD
 GST_PAD
 GST_PAD_CLASS
-GST_PAD_CAST
-GST_PAD_CLASS_CAST
 GST_IS_PAD
 GST_IS_PAD_CLASS
 GST_IS_PAD_FAST
@@ -988,8 +964,6 @@ GstRealPadClass
 GST_TYPE_REAL_PAD
 GST_REAL_PAD
 GST_REAL_PAD_CLASS
-GST_REAL_PAD_CAST
-GST_REAL_PAD_CLASS_CAST
 GST_IS_REAL_PAD
 GST_IS_REAL_PAD_CLASS
 GST_IS_REAL_PAD_FAST
@@ -999,8 +973,6 @@ GstGhostPadClass
 GST_TYPE_GHOST_PAD
 GST_GHOST_PAD
 GST_GHOST_PAD_CLASS
-GST_GHOST_PAD_CAST
-GST_GHOST_PAD_CLASS_CAST
 GST_IS_GHOST_PAD
 GST_IS_GHOST_PAD_CLASS
 GST_IS_GHOST_PAD_FAST
@@ -1043,9 +1015,6 @@ GST_PAD_TEMPLATE_CAPS
 GST_PAD_TEMPLATE_DIRECTION
 GST_PAD_TEMPLATE_NAME_TEMPLATE
 GST_PAD_TEMPLATE_PRESENCE
-GST_PAD_TEMPLATE_NEW
-GST_PAD_TEMPLATE_FACTORY
-GST_PAD_TEMPLATE_GET
 GST_PAD_TEMPLATE_IS_FIXED
 gst_pad_template_new
 gst_pad_template_get_caps
@@ -1076,7 +1045,6 @@ GST_PIPELINE
 GST_PIPELINE_CLASS
 GST_IS_PIPELINE
 GST_IS_PIPELINE_CLASS
-gst_pipeline_details
 </SECTION>
 
 <SECTION>
@@ -1088,19 +1056,13 @@ GstPluginError
 GstPlugin
 GstPluginInitFunc
 GstPluginDesc
-GST_PLUGIN_DESC
-GST_PLUGIN_DESC_DYNAMIC
-GST_PLUGIN_DESC_STATIC
-gst_plugin_new
 gst_plugin_set_name
 gst_plugin_get_name
 gst_plugin_get_longname
-gst_plugin_set_longname
 gst_plugin_get_filename
 gst_plugin_is_loaded
 gst_plugin_get_feature_list
 gst_plugin_find_feature
-gst_plugin_load_plugin
 gst_plugin_unload_plugin
 gst_plugin_add_feature
 gst_plugin_load
@@ -1143,7 +1105,6 @@ GST_THREAD
 GST_THREAD_CLASS
 GST_IS_THREAD
 GST_IS_THREAD_CLASS
-gst_thread_details
 GST_TYPE_THREAD_STATE
 gst_thread_state_get_type
 GST_THREAD_GET_CLASS
@@ -1191,7 +1152,6 @@ GstTypeFindFunction
 gst_type_find_peek
 gst_type_find_suggest
 gst_type_find_get_length
-gst_type_find_factory_register
 </SECTION>
 
 <SECTION>
@@ -1222,7 +1182,6 @@ gst_caps_copy
 gst_caps_copy_1
 gst_caps_append
 gst_caps_replace
-gst_caps_sink
 gst_caps_is_always_compatible
 gst_caps_normalize
 gst_caps_intersect
@@ -1273,21 +1232,13 @@ GST_XML_GET_CLASS
 <SECTION>
 <FILE>gsturi</FILE>
 <TITLE>GstURIHandler</TITLE>
-gst_uri_handler_new
-gst_uri_handler_find
-gst_uri_handler_find_by_uri
-gst_uri_handler_create
-gst_uri_handler_make_by_uri
 <SUBSECTION Standard>
 GstURIHandler
-GstURIHandlerClass
 GST_URI_HANDLER
 GST_IS_URI_HANDLER
 GST_TYPE_URI_HANDLER
 gst_uri_handler_get_type
 GST_URI_HANDLER_CLASS
-GST_IS_URI_HANDLER_CLASS
-GST_URI_HANDLER_GET_CLASS
 GST_TYPE_URI
 gst_uri_get_uri_type
 </SECTION>

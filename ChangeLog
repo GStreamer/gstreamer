@@ -2,15 +2,10 @@
 
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstprops.sgml: removed
-          David removed props code, so let's remove their docs as well.
-          Also, remove all of the old caps code from docs.
-
-2003-12-23  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-        * docs/gst/gstreamer-sections.txt:
         * docs/gst/tmpl/gstreamer-bufferpool.sgml: removed
-          David removed bufferpool code, so let's remove their docs as well.
-
+          David removed props and caps code, so let's remove their docs as well.
+          Removed all no longer existing symbols from gstreamer-sections.txt
+          
 2003-12-22  Colin Walters  <walters@verbum.org>
 
 	* gst/gsttaginterface.c, gst/gsttaginterface.h,
