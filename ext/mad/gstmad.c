@@ -373,7 +373,7 @@ gst_mad_get_formats (GstPad *pad)
 {
   static const GstFormat src_formats[] = {
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     GST_FORMAT_TIME,
     0
   };
@@ -412,8 +412,6 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
           /* multiply by 8 because vbr is in bits/second */
           *dest_value = src_value * 8 * GST_SECOND / mad->vbr_average;
@@ -424,8 +422,6 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
           /* multiply by 8 because vbr is in bits/second */
           *dest_value = src_value * mad->vbr_average / (8 * GST_SECOND);
@@ -456,13 +452,11 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  if (bytes_per_sample == 0)
             return FALSE;
 	  *dest_value = src_value / bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	{
           gint byterate = bytes_per_sample * mad->frame.header.samplerate;
@@ -476,13 +470,11 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
 	  break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  if (mad->frame.header.samplerate == 0)
             return FALSE;
@@ -494,12 +486,10 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  scale = bytes_per_sample;
 	  /* fallthrough */
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * scale * mad->frame.header.samplerate / GST_SECOND;
           break;
         default:
@@ -536,11 +526,8 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-	  /* fallthrough */
 	case GST_FORMAT_BYTES:
-	case GST_FORMAT_UNITS:
+	case GST_FORMAT_DEFAULT:
 	case GST_FORMAT_TIME:
         {
 	  gint64 peer_value;
@@ -581,21 +568,18 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
     }
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-	  /* fall through */
 	default:
 	{
           GstFormat time_format;
 	  gint64 samples;
 
-          time_format = GST_FORMAT_UNITS;
+          time_format = GST_FORMAT_DEFAULT;
 	  res = gst_pad_convert (pad,
 			GST_FORMAT_TIME, mad->base_time,
 			&time_format, &samples);
 	  /* we only know about our samples, convert to requested format */
 	  res &= gst_pad_convert (pad,
-			  GST_FORMAT_UNITS, mad->total_samples + samples,
+			  GST_FORMAT_DEFAULT, mad->total_samples + samples,
 			  format, value);
 	  break;
 	}
@@ -1176,6 +1160,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       guint nsamples;
       gint rate;
       guint64 time_offset;
+      guint64 time_duration;
 
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
@@ -1275,10 +1260,13 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       if (mad->frame.header.samplerate == 0) {
 	g_warning ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
 	time_offset = GST_CLOCK_TIME_NONE;
+	time_duration = GST_CLOCK_TIME_NONE;
       }
       else {
 	time_offset = mad->base_time + (mad->total_samples * GST_SECOND
 					/ mad->frame.header.samplerate);
+	time_duration = (mad->base_time + ((mad->total_samples + nsamples) * GST_SECOND
+					/ mad->frame.header.samplerate)) - time_offset;
       }
 
       if (mad->index) {
@@ -1308,6 +1296,9 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
 	GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
+	GST_BUFFER_DURATION (outbuffer) = time_duration;
+	/* FIXME this is wrong */
+	GST_BUFFER_OFFSET (outbuffer) = mad->total_samples;
 
         /* output sample(s) in 16-bit signed native-endian PCM */
         if (nchannels == 1) {
