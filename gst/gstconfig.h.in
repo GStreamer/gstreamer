@@ -68,12 +68,14 @@
 #endif
 
 #ifdef WIN32
+#define GST_PLUGIN_EXPORT __declspec(dllexport) extern
 #ifdef GST_EXPORTS
 #define GST_EXPORT __declspec(dllexport) extern
 #else
 #define GST_EXPORT __declspec(dllimport) extern
 #endif
-#else
+#else /* not WIN32 */
+#define GST_PLUGIN_EXPORT 
 #define GST_EXPORT extern
 #endif
 

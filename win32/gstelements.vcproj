@@ -40,7 +40,7 @@
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\gettext\lib"
 				IgnoreAllDefaultLibraries="FALSE"
-				ModuleDefinitionFile="gstelements.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gstelements.pdb"
 				TargetMachine="1"/>

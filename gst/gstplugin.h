@@ -81,7 +81,7 @@ struct _GstPlugin {
 };
 
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
-GstPluginDesc gst_plugin_desc = {		      	\
+GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {		      	\
   major,						\
   minor,						\
   name,							\

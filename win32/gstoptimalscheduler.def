@@ -1,6 +1,0 @@
-EXPORTS
-;g_module_check_init
-;g_module_unload
-;gst_plugin_desc
-;plugin_init
-	gst_plugin_desc

@@ -1,3 +1,16 @@
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst/gstplugin.h:
+	* gst/gstconfig.h.in:
+	* win32/gstconfig.h:
+	* win32/gstelements.def:
+	* win32/gstelements.vcproj:
+	* win32/gstoptimalscheduler.def:
+	* win32/gstoptimalscheduler.vcproj:
+	* win32/gstspider.def:
+	* win32/gstspider.vcproj:
+	  remove unused .def files and export symbols using GST_PLUGIN_DEFINE
+    
 2004-07-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -40,7 +40,7 @@
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				IgnoreAllDefaultLibraries="FALSE"
-				ModuleDefinitionFile="gstoptimalscheduler.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gstoptimalscheduler.pdb"
 				TargetMachine="1"/>

@@ -40,7 +40,7 @@
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\gettext\lib"
 				IgnoreAllDefaultLibraries="FALSE"
-				ModuleDefinitionFile="gstspider.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gstspider.pdb"
 				TargetMachine="1"/>
@@ -91,7 +91,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\gettext\lib"
-				ModuleDefinitionFile="gstspider.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
