@@ -21,9 +21,15 @@ the v4lelement 'parent' on the left.
 
 Useful Documentation:
 =====================
-MJPEG/V4L API : ./videodev_mjpeg.h             
+MJPEG/V4L API : ./videodev_mjpeg.h
+
 V4L API       : /usr/include/linux/videodev.h or
-                http://roadrunner.swansea.uk.linux.org/v4l.shtml
-V4L2 API      : http://www.thedirks.org/v4l2/
+                /usr/src/linux/Documentation/video4linux/API.html or
+                http://linux.bytesex.org/v4l2/API.html
+
+V4L2 API      : /usr/include/linux/videodev2.h or
+                http://v4l2spec.bytesex.org/
+
 BSD/Meteor API: /usr/include/machine/ioctl_meteor.h
+
 mjpegtools    : http://www.sourceforge.net/projects/mjpeg
