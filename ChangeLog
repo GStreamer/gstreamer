@@ -1,3 +1,10 @@
+2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_init),
+	(gst_alsa_src_get_time), (gst_alsa_src_loop),
+	(gst_alsa_src_change_state):
+	  return a time that is in sync with the element's processing
+
 2004-06-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init),
