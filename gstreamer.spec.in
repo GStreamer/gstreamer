@@ -127,7 +127,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %post
 /sbin/ldconfig
-%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-register > /dev/null 2> /dev/null
 
 %postun
 /sbin/ldconfig
