@@ -26,7 +26,6 @@ SUBDIRS = $(FFMPEG_DIR)
 DISTFILES = \
 	$(PATCHES) \
 	Tag \
-	ffmpeg/CVS/Tag \
 	ffmpeg/Changelog \
 	ffmpeg/COPYING \
 	ffmpeg/CREDITS \
