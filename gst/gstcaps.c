@@ -661,6 +661,66 @@ gst_caps_get_props (GstCaps *caps)
 }
 
 /**
+ * gst_caps_has_property:
+ * @caps: the caps to query
+ * @name: the name of the property to search for
+ *
+ * Figure out whether this caps contains the requested property.
+ *
+ * Returns: true if the caps contains the property.
+ */
+
+gboolean
+gst_caps_has_property (GstCaps *caps, const gchar *name)
+{
+  GstProps *props = gst_caps_get_props (caps);
+
+  return (props != NULL &&
+	  gst_props_has_property (props, name));
+}
+
+/**
+ * gst_caps_has_property_typed:
+ * @caps: the caps to query
+ * @name: the name of the property to search for
+ * @type: the type of the property to search for
+ *
+ * Figure out whether this caps contains the requested property,
+ * and whether this property is of the requested type.
+ *
+ * Returns: true if the caps contains the typed property.
+ */
+
+gboolean
+gst_caps_has_property_typed (GstCaps *caps, const gchar *name, GstPropsType type)
+{
+  GstProps *props = gst_caps_get_props (caps);
+
+  return (props != NULL &&
+	  gst_props_has_property_typed (props, name, type));
+}
+
+/**
+ * gst_caps_has_fixed_property
+ * @caps: the caps to query
+ * @name: the name of the property to search for
+ *
+ * Figure out whether this caps contains the requested property,
+ * and whether this property is fixed.
+ *
+ * Returns: true if the caps contains the fixed property.
+ */
+
+gboolean
+gst_caps_has_fixed_property (GstCaps *caps, const gchar *name)
+{
+  GstProps *props = gst_caps_get_props (caps);
+
+  return (props != NULL &&
+	  gst_props_has_fixed_property (props, name));
+}
+
+/**
  * gst_caps_next:
  * @caps: the caps to query
  *
