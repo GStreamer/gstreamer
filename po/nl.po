@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2004-01-19 13:11+0100\n"
+"POT-Creation-Date: 2004-01-19 16:18+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -117,6 +117,20 @@ msgstr "Register om te gebruiken"
 msgid "REGISTRY"
 msgstr "REGISTER"
 
+#: gst/gstelement.c:239
+#, c-format
+msgid "ERROR: from element %s: %s.\n"
+msgstr "FOUT: van element %s: %s.\n"
+
+#: gst/gstelement.c:241
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Extra debug-informatie:\n"
+"%s\n"
+
 #: gst/gsterror.c:44
 msgid "GStreamer encountered a general core library error"
 msgstr ""
@@ -131,11 +145,13 @@ msgstr ""
 
 #: gst/gsterror.c:49
 msgid "Internal GStreamer error: code not implemented.  File a bug"
-msgstr "Interne GStreamer-fout: code niet geïmplementeerd.  Stuur een foutrapport"
+msgstr ""
+"Interne GStreamer-fout: code niet geïmplementeerd.  Stuur een foutrapport"
 
 #: gst/gsterror.c:51
 msgid "Internal GStreamer error: state change failed.  File a bug"
-msgstr "Interne GStreamer-fout: toestandsverandering mislukt.  Stuur een foutrapport"
+msgstr ""
+"Interne GStreamer-fout: toestandsverandering mislukt.  Stuur een foutrapport"
 
 #: gst/gsterror.c:53
 msgid "Internal GStreamer error: pad problem.  File a bug"
@@ -151,7 +167,8 @@ msgstr "Interne GStreamer-fout: plannerprobleem.  Stuur een foutrapport"
 
 #: gst/gsterror.c:59
 msgid "Internal GStreamer error: negotiation problem.  File a bug"
-msgstr "Interne GStreamer-fout: onderhandelingsprobleem.  Stuur een foutrapport"
+msgstr ""
+"Interne GStreamer-fout: onderhandelingsprobleem.  Stuur een foutrapport"
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: event problem.  File a bug"
@@ -461,7 +478,6 @@ msgid "replaygain album gain"
 msgstr ""
 
 #: gst/gsttag.c:182
-#, fuzzy
 msgid "album gain in db"
 msgstr ""
 
@@ -738,13 +754,3 @@ msgstr "FOUT: pijplijn wil niet spelen.\n"
 
 #~ msgid "File \"%s\" does not exist"
 #~ msgstr "Bestand \"%s\" bestaat niet"
-
-#~ msgid "ERROR: from element %s: %s.\n"
-#~ msgstr "FOUT: van element %s: %s.\n"
-
-#~ msgid ""
-#~ "Additional debug info:\n"
-#~ "%s\n"
-#~ msgstr ""
-#~ "Extra debug-informatie:\n"
-#~ "%s\n"

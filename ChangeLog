@@ -1,5 +1,11 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/POTFILES.in:
+	* po/nl.po:
+          add gst/gstelement.c
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
         * po/nl.po: updated Dutch translation
 
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
