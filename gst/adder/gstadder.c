@@ -48,7 +48,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (gst_adder_src_template_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_adder_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -76,7 +76,7 @@ GST_PADTEMPLATE_FACTORY (gst_adder_src_template_factory,
   )
 );  
 
-GST_PADTEMPLATE_FACTORY (gst_adder_sink_template_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_adder_sink_template_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -346,6 +346,7 @@ gst_adder_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
       g_value_set_int (value, adder->numsinkpads);
       break;
     default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -483,7 +484,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("adder",GST_TYPE_ADDER,
+  factory = gst_element_factory_new("adder",GST_TYPE_ADDER,
                                    &adder_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
@@ -492,8 +493,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
     return FALSE;
   }
     
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (gst_adder_src_template_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (gst_adder_sink_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_adder_src_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_adder_sink_template_factory));
       
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     

@@ -540,7 +540,7 @@ static gboolean plugin_init(GModule *module, GstPlugin *plugin)
 
 	/* create an elementfactory for the aasink element */
 	factory =
-	    gst_elementfactory_new("gnomevfssrc", GST_TYPE_GNOMEVFSSRC,
+	    gst_element_factory_new("gnomevfssrc", GST_TYPE_GNOMEVFSSRC,
 				   &gst_gnomevfssrc_details);
 	g_return_val_if_fail(factory != NULL, FALSE);
 

@@ -10,11 +10,11 @@ main (int argc, char *argv[])
 
   gst_init(&argc,&argv);
 
-  sink1 = gst_elementfactory_make ("videosink", "videosink");
-  sink2 = gst_elementfactory_make ("osssink", "osssink");
+  sink1 = gst_element_factory_make ("videosink", "videosink");
+  sink2 = gst_element_factory_make ("osssink", "osssink");
 
-  autoplug = gst_autoplugfactory_make ("staticrender");
-  autoplug2 = gst_autoplugfactory_make ("static");
+  autoplug = gst_autoplug_factory_make ("staticrender");
+  autoplug2 = gst_autoplug_factory_make ("static");
   
   element = gst_autoplug_to_renderers (autoplug, 
 		  gst_caps_new ("mp3caps", "audio/mp3", NULL), sink2, NULL);
@@ -80,8 +80,8 @@ main (int argc, char *argv[])
     xmlSaveFile ("autoplug3_6.gst", gst_xml_write (element));
   }
 
-  sink1 = gst_elementfactory_make ("videosink", "videosink");
-  sink2 = gst_elementfactory_make ("osssink", "osssink");
+  sink1 = gst_element_factory_make ("videosink", "videosink");
+  sink2 = gst_element_factory_make ("osssink", "osssink");
   
   element = gst_autoplug_to_renderers (autoplug,
 		  gst_caps_new(

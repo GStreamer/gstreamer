@@ -16,9 +16,9 @@ main (int argc, char *argv[])
 
   gst_init(&argc,&argv);
 
-  osssink = gst_elementfactory_make ("osssink", "osssink");
+  osssink = gst_element_factory_make ("osssink", "osssink");
   g_assert (osssink != NULL);
-  videosink = gst_elementfactory_make ("xvideosink", "videosink");
+  videosink = gst_element_factory_make ("xvideosink", "videosink");
   g_assert (videosink != NULL);
 
   testcaps = gst_caps_new ("test_caps",
@@ -28,7 +28,7 @@ main (int argc, char *argv[])
 			   "systemstream", GST_PROPS_BOOLEAN (TRUE),
 			   NULL));
 
-  autoplugger = gst_autoplugfactory_make ("static");
+  autoplugger = gst_autoplug_factory_make ("static");
 
   g_signal_connect (G_OBJECT (autoplugger), "new_object",
 		    G_CALLBACK (new_object_added), NULL);

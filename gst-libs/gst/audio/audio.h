@@ -31,7 +31,7 @@
  * for example, to make a source pad that can output mono streams of either
  * float or int:
 
-    template = gst_padtemplate_new 
+    template = gst_pad_template_new 
       ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_append(gst_caps_new ("sink_int",  "audio/raw",
                                     GST_AUDIO_INT_PAD_TEMPLATE_PROPS),

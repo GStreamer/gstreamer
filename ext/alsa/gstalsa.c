@@ -162,7 +162,7 @@ gst_alsa_src_pad_factory(void)
     static GstPadTemplate *template = NULL;
     
     if (!template)
-        template = gst_padtemplate_new("src", GST_PAD_SRC, GST_PAD_SOMETIMES, 
+        template = gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_SOMETIMES, 
                                        gst_caps_new("src", "audio/raw", NULL),
                                        NULL);
     
@@ -175,7 +175,7 @@ gst_alsa_src_request_pad_factory(void)
     static GstPadTemplate *template = NULL;
     
     if (!template)
-        template = gst_padtemplate_new("src%d", GST_PAD_SRC, GST_PAD_REQUEST, 
+        template = gst_pad_template_new("src%d", GST_PAD_SRC, GST_PAD_REQUEST, 
                                        gst_caps_new("src", "audio/raw",
                                                     gst_props_new("channels", GST_PROPS_INT(1), NULL)),
                                        NULL);
@@ -189,7 +189,7 @@ gst_alsa_sink_pad_factory(void)
     static GstPadTemplate *template = NULL;
     
     if (!template)
-        template = gst_padtemplate_new("sink", GST_PAD_SINK, GST_PAD_SOMETIMES, 
+        template = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_SOMETIMES, 
                                        gst_caps_new("sink", "audio/raw", NULL),
                                        NULL);
     
@@ -202,7 +202,7 @@ gst_alsa_sink_request_pad_factory(void)
     static GstPadTemplate *template = NULL;
     
     if (!template)
-        template = gst_padtemplate_new("sink%d", GST_PAD_SINK, GST_PAD_REQUEST, 
+        template = gst_pad_template_new("sink%d", GST_PAD_SINK, GST_PAD_REQUEST, 
                                        gst_caps_new("sink-request", "audio/raw",
                                                     gst_props_new("channels", GST_PROPS_INT(1), NULL)),
                                        NULL);
@@ -1415,16 +1415,16 @@ plugin_init (GModule *module, GstPlugin *plugin)
         return FALSE;
     }
     
-    factory = gst_elementfactory_new ("alsasrc", GST_TYPE_ALSA_SRC, &gst_alsa_src_details);
+    factory = gst_element_factory_new ("alsasrc", GST_TYPE_ALSA_SRC, &gst_alsa_src_details);
     g_return_val_if_fail (factory != NULL, FALSE);
-    gst_elementfactory_add_padtemplate (factory, gst_alsa_src_pad_factory());
-    gst_elementfactory_add_padtemplate (factory, gst_alsa_src_request_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_alsa_src_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_alsa_src_request_pad_factory());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
-    factory = gst_elementfactory_new ("alsasink", GST_TYPE_ALSA_SINK, &gst_alsa_sink_details);
+    factory = gst_element_factory_new ("alsasink", GST_TYPE_ALSA_SINK, &gst_alsa_sink_details);
     g_return_val_if_fail (factory != NULL, FALSE);
-    gst_elementfactory_add_padtemplate (factory, gst_alsa_sink_pad_factory());
-    gst_elementfactory_add_padtemplate (factory, gst_alsa_sink_request_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_alsa_sink_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_alsa_sink_request_pad_factory());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
     gst_plugin_set_longname(plugin, "ALSA plugin library");

@@ -616,7 +616,7 @@ plugin_init (GModule   *module,
   GstElementFactory *factory;
 
   /* create an elementfactory for the v4lelement */
-  factory = gst_elementfactory_new("v4lelement", GST_TYPE_V4LELEMENT,
+  factory = gst_element_factory_new("v4lelement", GST_TYPE_V4LELEMENT,
                                    &gst_v4lelement_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

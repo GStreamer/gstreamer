@@ -56,7 +56,7 @@ enum {
 };
 
 /* FIXME: this is not core business... */
-GST_PADTEMPLATE_FACTORY (sinesrc_src_factory,
+GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -158,7 +158,7 @@ gst_sinesrc_init (GstSineSrc *src)
 {
  
   src->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (sinesrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
   
   gst_pad_set_get_function(src->srcpad, gst_sinesrc_get);
@@ -421,11 +421,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("sinesrc",GST_TYPE_SINESRC,
+  factory = gst_element_factory_new("sinesrc",GST_TYPE_SINESRC,
                                    &gst_sinesrc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sinesrc_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sinesrc_src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   

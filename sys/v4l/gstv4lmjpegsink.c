@@ -397,7 +397,7 @@ plugin_init (GModule   *module,
   GstCaps *caps;
 
   /* create an elementfactory for the v4lmjpegsink element */
-  factory = gst_elementfactory_new("v4lmjpegsink",GST_TYPE_V4LMJPEGSINK,
+  factory = gst_element_factory_new("v4lmjpegsink",GST_TYPE_V4LMJPEGSINK,
                                    &gst_v4lmjpegsink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
@@ -410,13 +410,13 @@ plugin_init (GModule   *module,
                       );
   capslist = gst_caps_append(capslist, caps);
 
-  sink_template = gst_padtemplate_new (
+  sink_template = gst_pad_template_new (
 		  "sink",
                   GST_PAD_SINK,
   		  GST_PAD_ALWAYS,
 		  capslist, NULL);
 
-  gst_elementfactory_add_padtemplate (factory, sink_template);
+  gst_element_factory_add_pad_template (factory, sink_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -512,7 +512,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstCaps *caps;
 
   /* create an elementfactory for the v4lmjpegsrcparse element */
-  factory = gst_elementfactory_new("v4lmjpegsrc",GST_TYPE_V4LMJPEGSRC,
+  factory = gst_element_factory_new("v4lmjpegsrc",GST_TYPE_V4LMJPEGSRC,
                                    &gst_v4lmjpegsrc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
@@ -525,13 +525,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
                       );
   capslist = gst_caps_append(capslist, caps);
 
-  src_template = gst_padtemplate_new (
+  src_template = gst_pad_template_new (
 		  "src",
                   GST_PAD_SRC,
   		  GST_PAD_ALWAYS,
 		  capslist, NULL);
 
-  gst_elementfactory_add_padtemplate (factory, src_template);
+  gst_element_factory_add_pad_template (factory, src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -24,7 +24,7 @@
 extern GstElementDetails vorbisenc_details;
 extern GstElementDetails vorbisdec_details;
 
-static GstCaps* 	vorbis_typefind 	(GstBuffer *buf, gpointer private);
+static GstCaps* 	vorbis_type_find 	(GstBuffer *buf, gpointer private);
 
 GstPadTemplate *dec_src_template, *dec_sink_template; 
 GstPadTemplate *enc_src_template, *enc_sink_template;
@@ -77,18 +77,18 @@ static GstTypeDefinition vorbisdefinition = {
   "vorbis_audio/x-ogg",
   "audio/x-ogg",
   ".ogg",
-  vorbis_typefind,
+  vorbis_type_find,
 };
 
 static GstCaps* 
-vorbis_typefind (GstBuffer *buf, gpointer private) 
+vorbis_type_find (GstBuffer *buf, gpointer private) 
 {
   gulong head = GULONG_FROM_BE (*((gulong *)GST_BUFFER_DATA (buf)));
 
   if (head  != 0x4F676753)
     return NULL;
 
-  return gst_caps_new ("vorbis_typefind", "audio/x-ogg", NULL);
+  return gst_caps_new ("vorbis_type_find", "audio/x-ogg", NULL);
 }
 
 
@@ -102,7 +102,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
 
   /* create an elementfactory for the vorbisenc element */
-  enc = gst_elementfactory_new ("vorbisenc", GST_TYPE_VORBISENC,
+  enc = gst_element_factory_new ("vorbisenc", GST_TYPE_VORBISENC,
                                 &vorbisenc_details);
   g_return_val_if_fail (enc != NULL, FALSE);
 
@@ -111,40 +111,40 @@ plugin_init (GModule *module, GstPlugin *plugin)
   vorbis_caps = vorbis_caps_factory ();
 
   /* register sink pads */
-  enc_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  enc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, enc_sink_template);
+  gst_element_factory_add_pad_template (enc, enc_sink_template);
 
   /* register src pads */
-  enc_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  enc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     vorbis_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, enc_src_template);
+  gst_element_factory_add_pad_template (enc, enc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
   /* create an elementfactory for the vorbisdec element */
-  dec = gst_elementfactory_new("vorbisdec",GST_TYPE_VORBISDEC,
+  dec = gst_element_factory_new("vorbisdec",GST_TYPE_VORBISDEC,
                                &vorbisdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
  
   /* register sink pads */
-  dec_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  dec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      vorbis_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, dec_sink_template);
+  gst_element_factory_add_pad_template (dec, dec_sink_template);
 
   raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
   /* register src pads */
-  dec_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  dec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, dec_src_template);
+  gst_element_factory_add_pad_template (dec, dec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 
-  type = gst_typefactory_new (&vorbisdefinition);
+  type = gst_type_factory_new (&vorbisdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;

@@ -56,7 +56,7 @@ sink_template (void)
   static GstPadTemplate *template = NULL;
 
   if (!template) {
-    template = gst_padtemplate_new ("sink",
+    template = gst_pad_template_new ("sink",
 				    GST_PAD_SINK,
 				    GST_PAD_ALWAYS,
 				    gst_caps_new
@@ -72,7 +72,7 @@ src_template (void)
   static GstPadTemplate *template = NULL;
 
   if (!template) {
-    template = gst_padtemplate_new ("src",
+    template = gst_pad_template_new ("src",
 				    GST_PAD_SRC,
 				    GST_PAD_ALWAYS,
 				    gst_caps_new
@@ -199,12 +199,12 @@ gst_audioscale_init (Audioscale *audioscale)
 {
   resample_t *r;
 
-  audioscale->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_template), "sink");
+  audioscale->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->sinkpad);
   gst_pad_set_chain_function(audioscale->sinkpad,gst_audioscale_chain);
   gst_pad_set_connect_function (audioscale->sinkpad, gst_audioscale_sinkconnect);
 
-  audioscale->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (src_template), "src");
+  audioscale->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template), "src");
 
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->srcpad);
 
@@ -314,7 +314,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the audioscale element */
-  factory = gst_elementfactory_new ("audioscale", GST_TYPE_AUDIOSCALE, &audioscale_details);
+  factory = gst_element_factory_new ("audioscale", GST_TYPE_AUDIOSCALE, &audioscale_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

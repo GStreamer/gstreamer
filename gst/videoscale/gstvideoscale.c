@@ -47,7 +47,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_templ,
+GST_PAD_TEMPLATE_FACTORY (sink_templ,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -58,7 +58,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   )
 )
   
-GST_PADTEMPLATE_FACTORY (src_templ,
+GST_PAD_TEMPLATE_FACTORY (src_templ,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -218,14 +218,14 @@ gst_videoscale_init (GstVideoscale *videoscale)
 {
   GST_DEBUG(0,"gst_videoscale_init");
   videoscale->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_templ), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_templ), "sink");
   /*gst_pad_set_negotiate_function(videoscale->sinkpad,videoscale_negotiate_sink); */
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->sinkpad);
   gst_pad_set_chain_function(videoscale->sinkpad,gst_videoscale_chain);
   gst_pad_set_connect_function(videoscale->sinkpad,gst_videoscale_sinkconnect);
 
   videoscale->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_templ), "src");
+		  GST_PAD_TEMPLATE_GET (src_templ), "src");
   /*gst_pad_set_negotiate_function(videoscale->srcpad,videoscale_negotiate_src); */
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->srcpad);
 
@@ -343,12 +343,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the videoscale element */
-  factory = gst_elementfactory_new("videoscale",GST_TYPE_VIDEOSCALE,
+  factory = gst_element_factory_new("videoscale",GST_TYPE_VIDEOSCALE,
                                    &videoscale_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

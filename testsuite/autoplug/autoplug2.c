@@ -19,7 +19,7 @@ main (int argc, char *argv[])
 
   gst_init(&argc,&argv);
 
-  autoplug = gst_autoplugfactory_make ("static");
+  autoplug = gst_autoplug_factory_make ("static");
   
   g_print ("Autoplugging between audio/mp3 and audio/raw ...\n");
   if ((element = autoplug_caps (autoplug, "audio/mp3", "audio/raw")) == NULL)

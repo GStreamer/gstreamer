@@ -63,8 +63,8 @@ int main(int argc,char *argv[]) {
   
   g_print("creating elements\n");
   thread = gst_thread_new("live-example");
-  sinesrc = gst_elementfactory_make("sinesrc","sine-source");
-  osssink = gst_elementfactory_make("osssink","sound-sink");
+  sinesrc = gst_element_factory_make("sinesrc","sine-source");
+  osssink = gst_element_factory_make("osssink","sound-sink");
   gst_bin_add(GST_BIN(thread),sinesrc);
   gst_bin_add(GST_BIN(thread),osssink);
   gst_element_connect(sinesrc,osssink);

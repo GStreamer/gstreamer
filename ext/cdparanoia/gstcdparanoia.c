@@ -44,7 +44,7 @@ static GstElementDetails cdparanoia_details = {
   "(C) 2000",
 };
 
-GST_PADTEMPLATE_FACTORY (cdparanoia_src_factory,
+GST_PAD_TEMPLATE_FACTORY (cdparanoia_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -240,7 +240,7 @@ static void
 cdparanoia_init (CDParanoia *cdparanoia)
 {
   cdparanoia->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (cdparanoia_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (cdparanoia_src_factory), "src");
   gst_pad_set_get_function (cdparanoia->srcpad, cdparanoia_get);
   gst_element_add_pad (GST_ELEMENT (cdparanoia), cdparanoia->srcpad);
 
@@ -635,12 +635,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the cdparanoia element */
-  factory = gst_elementfactory_new ("cdparanoia", GST_TYPE_CDPARANOIA,
+  factory = gst_element_factory_new ("cdparanoia", GST_TYPE_CDPARANOIA,
                                     &cdparanoia_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
   /* register the source's caps */
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (cdparanoia_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (cdparanoia_src_factory));
 
   /* and add the cdparanoia element factory to the plugin */
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
