@@ -36,7 +36,7 @@ typedef enum {
   GST_FORMAT_BUFFERS	= 4,
   GST_FORMAT_PERCENT	= 5,
   /* samples for audio, frames/fields for video */
-  GST_FORMAT_UNIT 	= 6,
+  GST_FORMAT_UNITS 	= 6,
 } GstFormat;
 
 G_END_DECLS
