@@ -934,6 +934,7 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
                 time, NULL);
             gst_pad_push (mad->srcpad, GST_DATA (discont));
           }
+          gst_event_unref (event);
           goto done;
         }
       }
@@ -944,7 +945,6 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
-      gst_event_unref (event);
       break;
     }
     case GST_EVENT_EOS:
