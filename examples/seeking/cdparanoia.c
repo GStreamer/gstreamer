@@ -28,10 +28,10 @@ get_position_info (GstElement * cdparanoia)
 
     if (format == GST_FORMAT_TIME) {
       position /= GST_SECOND;
-      g_print ("%s: %lld:%02lld", definition->nick, position / 60,
-          position % 60);
+      g_print ("%s: %" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT,
+          definition->nick, position / 60, position % 60);
     } else {
-      g_print ("%s: %lld", definition->nick, position);
+      g_print ("%s: %" G_GINT64_FORMAT, definition->nick, position);
     }
 
     formats++;
@@ -73,10 +73,10 @@ get_track_info (GstElement * cdparanoia)
     if (res) {
       if (format == GST_FORMAT_TIME) {
         total /= GST_SECOND;
-        g_print ("%s total: %lld:%02lld\n", definition->nick, total / 60,
-            total % 60);
+        g_print ("%s total: %" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT "\n",
+            definition->nick, total / 60, total % 60);
       } else
-        g_print ("%s total: %lld\n", definition->nick, total);
+        g_print ("%s total: %" G_GINT64_FORMAT "\n", definition->nick, total);
 
       if (format == track_format)
         total_tracks = total;
@@ -112,7 +112,9 @@ get_track_info (GstElement * cdparanoia)
       if (i > 0) {
         gint64 length = time - time_count;
 
-        g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n",
+        g_print ("track %d: %" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT
+            " -> %" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ", length: %"
+            G_GINT64_FORMAT ":%02" G_GINT64_FORMAT "\n",
             i - 1,
             time_count / 60, time_count % 60,
             time / 60, time % 60, length / 60, length % 60);

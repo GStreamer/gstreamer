@@ -137,7 +137,7 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
   }
 
   ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
-  if ((int) ximage->SHMInfo.shmaddr == -1) {
+  if (ximage->SHMInfo.shmaddr == ((void *) -1)) {
     GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
     goto beach;
   }
@@ -214,7 +214,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
     }
 
     ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
-    if ((int) ximage->SHMInfo.shmaddr == -1) {
+    if (ximage->SHMInfo.shmaddr == ((void *) -1)) {
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
           ("Failed to shmat: %s", g_strerror (errno)));
       goto beach;
@@ -277,7 +277,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstXImage * ximage)
 
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
-    if ((int) ximage->SHMInfo.shmaddr != -1) {
+    if (ximage->SHMInfo.shmaddr != ((void *) -1)) {
       XShmDetach (ximagesink->xcontext->disp, &ximage->SHMInfo);
       shmdt (ximage->SHMInfo.shmaddr);
     }
