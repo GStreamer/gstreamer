@@ -25,6 +25,6 @@
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 
-/* 0.4.1 headers had typo: s/gst/get/ */
-#define GST_TYPE_CAPS (_gst_caps_type)
-#define GST_TYPE_PROPS (_gst_props_type)
+void iterate_bin_all(GstBin *bin);
+guint add_iterate_bin(GstBin *bin);
+void remove_iterate_bin(guint id);

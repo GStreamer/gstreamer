@@ -39,6 +39,34 @@
 )
 
 ;;
+;; Accelerate common GstBin iterate loop
+;;
+
+(define-function iterate_bin_all
+  (c-name "iterate_bin_all")
+  (return-type "none")
+  (parameters
+    '("GstBin*" "bin")
+  )
+)
+
+(define-function add_iterate_bin
+  (c-name "add_iterate_bin")
+  (return-type "guint")
+  (parameters
+    '("GstBin*" "bin")
+  )
+)
+
+(define-function remove_iterate_bin
+  (c-name "remove_iterate_bin")
+  (return-type "none")
+  (parameters
+    '("guint" "id")
+  )
+)
+
+;;
 ;; HACK
 ;;
 
