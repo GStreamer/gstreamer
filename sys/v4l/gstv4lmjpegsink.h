@@ -68,6 +68,9 @@ struct _GstV4lMjpegSink {
   pthread_cond_t *cond_queued_frames;
   gint current_frame;
 
+  /* something to get our buffers from */
+  GstBufferPool *bufferpool;
+
   /* width/height/norm of the jpeg stream */
   gint width;
   gint height;

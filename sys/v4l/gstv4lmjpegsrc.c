@@ -86,9 +86,6 @@ static GstBuffer*            gst_v4lmjpegsrc_buffer_new   (GstBufferPool  *pool,
                                                            guint64        location,
                                                            guint          size,
                                                            gpointer       user_data);
-static GstBuffer*            gst_v4lmjpegsrc_buffer_copy  (GstBufferPool  *pool,
-		 				           const GstBuffer *srcbuf,
-                                                           gpointer       user_data);
 static void                  gst_v4lmjpegsrc_buffer_free  (GstBufferPool  *pool,
 							   GstBuffer      *buf,
                                                            gpointer       user_data);
@@ -195,7 +192,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 		  			NULL,
 					NULL,
 					gst_v4lmjpegsrc_buffer_new,
-					gst_v4lmjpegsrc_buffer_copy,
+					NULL,
 					gst_v4lmjpegsrc_buffer_free,
 					v4lmjpegsrc);
 
@@ -553,28 +550,18 @@ gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
                             gpointer      user_data)
 {
   GstBuffer *buffer;
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC(user_data);
+
+  if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)))
+    return NULL;
 
   buffer = gst_buffer_new();
-  if (!buffer) return NULL;
+  if (!buffer)
+    return NULL;
 
   /* TODO: add interlacing info to buffer as metadata */
-
-  return buffer;
-}
-
-
-static GstBuffer*
-gst_v4lmjpegsrc_buffer_copy (GstBufferPool *pool, const GstBuffer *srcbuf, gpointer user_data)
-{
-  GstBuffer *buffer;
-
-  buffer = gst_buffer_new();
-  if (!buffer) return NULL;
-  GST_BUFFER_DATA(buffer) = g_malloc(GST_BUFFER_SIZE(srcbuf));
-  if (!GST_BUFFER_DATA(buffer)) return NULL;
-  GST_BUFFER_SIZE(buffer) = GST_BUFFER_SIZE(srcbuf);
-  memcpy(GST_BUFFER_DATA(buffer), GST_BUFFER_DATA(srcbuf), GST_BUFFER_SIZE(srcbuf));
-  GST_BUFFER_TIMESTAMP(buffer) = GST_BUFFER_TIMESTAMP(srcbuf);
+  GST_BUFFER_MAXSIZE(buffer) = v4lmjpegsrc->breq.size;
+  GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
 
   return buffer;
 }
@@ -586,15 +573,22 @@ gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (user_data);
   int n;
 
+  if (gst_element_get_state(GST_ELEMENT(v4lmjpegsrc)) != GST_STATE_PLAYING)
+    return; /* we've already cleaned up ourselves */
+
   for (n=0;n<v4lmjpegsrc->breq.count;n++)
     if (GST_BUFFER_DATA(buf) == gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, n))
     {
       gst_v4lmjpegsrc_requeue_frame(v4lmjpegsrc, n);
-      return;
+      break;
     }
 
-  gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-    "Couldn't find the buffer");
+  if (n == v4lmjpegsrc->breq.count)
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Couldn't find the buffer");
+
+  /* free the buffer struct et all */
+  gst_buffer_default_free(buf);
 }
 
 

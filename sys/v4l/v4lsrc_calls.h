@@ -41,6 +41,9 @@ gboolean gst_v4lsrc_requeue_frame  (GstV4lSrc *v4lsrc, gint  num);
 gboolean gst_v4lsrc_capture_stop   (GstV4lSrc *v4lsrc);
 gboolean gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc);
 
+/* "the ugliest hack ever, now available at your local mirror" */
+gboolean gst_v4lsrc_try_palette    (GstV4lSrc *v4lsrc, gint palette);
+
 
 #ifdef __cplusplus
 }

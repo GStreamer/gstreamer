@@ -493,3 +493,85 @@ gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc)
 
   return TRUE;
 }
+
+
+/******************************************************
+ * gst_v4lsrc_try_palette():
+ *   try out a palette on the device
+ *   This has to be done before initializing the
+ *   actual capture system, to make sure we don't
+ *   mess up anything. So we need to mini-mmap()
+ *   a buffer here, queue and sync on one buffer,
+ *   and unmap it.
+ *   This is ugly, yes, I know - but it's a major
+ *   design flaw of v4l1 that you don't know in
+ *   advance which formats will be supported...
+ *   This is better than "just assuming that it'll
+ *   work"...
+ * return value: TRUE on success, FALSE on error
+ ******************************************************/
+
+gboolean
+gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
+                        gint       palette)
+{
+  /* so, we need a buffer and some more stuff */
+  int frame = 0;
+  guint8 *buffer;
+  struct video_mbuf vmbuf;
+  struct video_mmap vmmap;
+
+  DEBUG("gonna try out palette format %d (%s)",
+    palette, palette_name[palette]);
+  GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
+  GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc));
+
+  /* let's start by requesting a buffer and mmap()'ing it */
+  if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCGMBUF, &vmbuf) < 0)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error getting buffer information: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+  /* Map the buffers */
+  buffer = mmap(0, vmbuf.size, PROT_READ|PROT_WRITE,
+                MAP_SHARED, GST_V4LELEMENT(v4lsrc)->video_fd, 0);
+  if (buffer == MAP_FAILED)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error mapping our try-out buffer: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+
+  /* now that we have a buffer, let's try out our format */
+  vmmap.width = GST_V4LELEMENT(v4lsrc)->vcap.minwidth;
+  vmmap.height = GST_V4LELEMENT(v4lsrc)->vcap.minheight;
+  vmmap.format = palette;
+  vmmap.frame = frame;
+  if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCMCAPTURE, &vmmap) < 0)
+  {
+    if (errno != EINVAL) /* our format failed! */
+      gst_element_error(GST_ELEMENT(v4lsrc),
+        "Error queueing our try-out buffer: %s",
+        sys_errlist[errno]);
+    munmap(buffer, vmbuf.size);
+    return FALSE;
+  }
+
+  if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &frame) < 0)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error syncing on a buffer (%d): %s",
+      frame, sys_errlist[errno]);
+    munmap(buffer, vmbuf.size);
+    return FALSE;
+  }
+
+  munmap(buffer, vmbuf.size);
+
+  /* if we got here, it worked! woohoo, the format is supported! */
+  return TRUE;
+}
+

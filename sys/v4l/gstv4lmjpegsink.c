@@ -71,6 +71,12 @@ static void                  gst_v4lmjpegsink_get_property (GObject             
 static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement           *element);
 static void		     gst_v4lmjpegsink_set_clock    (GstElement *element, GstClock *clock);
 
+/* bufferpool functions */
+static GstBuffer*            gst_v4lmjpegsink_buffer_new   (GstBufferPool  *pool,
+                                                            guint64        offset,
+                                                            guint          size,
+                                                            gpointer       user_data);
+
 
 static GstCaps *capslist = NULL;
 static GstPadTemplate *sink_template;
@@ -174,6 +180,14 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   v4lmjpegsink->bufsize = 256;
 
   GST_FLAG_SET(v4lmjpegsink, GST_ELEMENT_THREAD_SUGGESTED);
+
+  v4lmjpegsink->bufferpool = gst_buffer_pool_new(
+				  NULL, 
+				  NULL,
+				  gst_v4lmjpegsink_buffer_new,
+				  NULL,
+				  NULL,
+				  v4lmjpegsink);
 }
 
 
@@ -259,24 +273,69 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), NULL);
   }
 
-  /* check size */
-  if (GST_BUFFER_SIZE(buf) > v4lmjpegsink->breq.size)
+  if (GST_BUFFER_POOL(buf) == v4lmjpegsink->bufferpool)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Buffer too big (%d KB), max. buffersize is %d KB",
-      GST_BUFFER_SIZE(buf)/1024, v4lmjpegsink->breq.size/1024);
-    return;
+    num = GPOINTER_TO_INT(GST_BUFFER_POOL_PRIVATE(buf));
+    gst_v4lmjpegsink_play_frame(v4lmjpegsink, num);
   }
+  else
+  {
+    /* check size */
+    if (GST_BUFFER_SIZE(buf) > v4lmjpegsink->breq.size)
+    {
+      gst_element_error(GST_ELEMENT(v4lmjpegsink),
+        "Buffer too big (%d KB), max. buffersize is %d KB",
+        GST_BUFFER_SIZE(buf)/1024, v4lmjpegsink->breq.size/1024);
+      return;
+    }
 
-  /* put JPEG data to the device */
-  gst_v4lmjpegsink_wait_frame(v4lmjpegsink, &num);
-  memcpy(gst_v4lmjpegsink_get_buffer(v4lmjpegsink, num),
-    GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
-  gst_v4lmjpegsink_play_frame(v4lmjpegsink, num);
+    /* put JPEG data to the device */
+    gst_v4lmjpegsink_wait_frame(v4lmjpegsink, &num);
+    memcpy(gst_v4lmjpegsink_get_buffer(v4lmjpegsink, num),
+      GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
+    gst_v4lmjpegsink_play_frame(v4lmjpegsink, num);
+  }
 
   g_signal_emit(G_OBJECT(v4lmjpegsink),gst_v4lmjpegsink_signals[SIGNAL_FRAME_DISPLAYED],0);
 
   gst_buffer_unref(buf);
+}
+
+
+static GstBuffer *
+gst_v4lmjpegsink_buffer_new (GstBufferPool *pool,
+                             guint64        offset,
+                             guint          size,
+                             gpointer       user_data)
+{
+  GstV4lMjpegSink *v4lmjpegsink = GST_V4LMJPEGSINK(user_data);
+  GstBuffer *buffer = NULL;
+  guint8 *data;
+  gint num;
+
+  if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsink)))
+    return NULL;
+  if (v4lmjpegsink->breq.size < size) {
+    GST_DEBUG(GST_CAT_PLUGIN_INFO, "Requested buffer size is too large (%d > %ld)",
+      size, v4lmjpegsink->breq.size);
+    return NULL;
+  }
+  if (!gst_v4lmjpegsink_wait_frame(v4lmjpegsink, &num))
+    return NULL;
+  data = gst_v4lmjpegsink_get_buffer(v4lmjpegsink, num);
+  if (!data)
+    return NULL;
+  buffer = gst_buffer_new();
+  GST_BUFFER_DATA(buffer) = data;
+  GST_BUFFER_MAXSIZE(buffer) = v4lmjpegsink->breq.size;
+  GST_BUFFER_SIZE(buffer) = size;
+  GST_BUFFER_POOL(buffer) = pool;
+  GST_BUFFER_POOL_PRIVATE(buffer) = GINT_TO_POINTER(num);
+
+  /* with this flag set, we don't need our own buffer_free() function */
+  GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
+
+  return buffer;
 }
 
 
