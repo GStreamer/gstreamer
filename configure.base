@@ -401,19 +401,20 @@ if test x$USE_GLIB2 = xyes; then
   LIBGLADE_GNOME_CFLAGS=
   AC_MSG_WARN(libglade disabled for glib2.0)
 else
+  AM_PATH_LIBGLADE(HAVE_LIBGLADE="yes", HAVE_LIBGLADE="no")
   AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
   if test x$LIBGLADE_CONFIG_PATH = xno; then
     AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
     LIBGLADE_GNOME_LIBS=
     LIBGLADE_GNOME_CFLAGS=
   else
-    LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
-    LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
-    AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
-  	        HAVE_LIBGLADE_GNOME="yes",
-	        AC_MSG_WARN(
-      [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
-	     )
+    LIBGLADE_GNOME_LIBS=$LIBGLADE_LIBS
+    LIBGLADE_GNOME_CFLAGS=$LIBGLADE_CFLAGS
+        AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
+                HAVE_LIBGLADE_GNOME="yes"
+                AC_MSG_WARN(
+        [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
+               )
   fi
 fi
 AC_SUBST(LIBGLADE_GNOME_LIBS)
