@@ -969,7 +969,9 @@ AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 
-GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs $GST_ERROR"
+dnl prefer internal headers to already installed ones
+GST_CFLAGS="-I\$(top_srcdir)/gst-libs $GST_CFLAGS $GST_ERROR"
+
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
