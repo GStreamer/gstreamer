@@ -23,6 +23,7 @@
 #include "gstutils.h"
 #include "gstmemchunk.h"
 
+#define GST_IMPLEMENT_INLINES 1
 #define __GST_TRASH_STACK_C__
 #include "gsttrashstack.h"
 
