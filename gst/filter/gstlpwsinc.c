@@ -35,10 +35,10 @@
 #include <math.h>		/* M_PI */
 #include <string.h>		/* memmove */
 
-GstElementDetails gst_wsinc_details = {
-  "WSinc",
+GstElementDetails gst_lpwsinc_details = {
+  "LPWSinc",
   "Filter/Audio/Effect",
-  "Windowed sinc filter",
+  "Low-pass Windowed sinc filter",
   VERSION,
   "Thomas <thomas@apestaart.org>",
   "(C) 2002 Steven W. Smith",
@@ -55,21 +55,21 @@ enum {
   ARG_FREQUENCY,
 };
 
-#define GST_TYPE_WSINC \
-  (gst_wsinc_get_type())
-#define GST_WSINC(obj) \
-      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WSINC,GstWSinc))
-#define GST_WSINC_CLASS(klass) \
-      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstWSinc))
-#define GST_IS_WSINC(obj) \
-      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WSINC))
-#define GST_IS_WSINC_CLASS(obj) \
-      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WSINC))
+#define GST_TYPE_LPWSINC \
+  (gst_lpwsinc_get_type())
+#define GST_LPWSINC(obj) \
+      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LPWSINC,GstLPWSinc))
+#define GST_LPWSINC_CLASS(klass) \
+      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstLPWSinc))
+#define GST_IS_LPWSINC(obj) \
+      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LPWSINC))
+#define GST_IS_LPWSINC_CLASS(obj) \
+      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LPWSINC))
 
-typedef struct _GstWSinc GstWSinc;
-typedef struct _GstWSincClass GstWSincClass;
+typedef struct _GstLPWSinc GstLPWSinc;
+typedef struct _GstLPWSincClass GstLPWSincClass;
 
-struct _GstWSinc
+struct _GstLPWSinc
 {
   GstElement element;
 
@@ -83,47 +83,47 @@ struct _GstWSinc
   double *kernel;
 };
 
-struct _GstWSincClass
+struct _GstLPWSincClass
 {
     GstElementClass parent_class;
 };
 
-static void gst_wsinc_class_init		(GstWSincClass * klass);
-static void gst_wsinc_init               	(GstWSinc * filter);
+static void gst_lpwsinc_class_init		(GstLPWSincClass * klass);
+static void gst_lpwsinc_init               	(GstLPWSinc * filter);
 
-static void gst_wsinc_set_property	(GObject * object, guint prop_id,
+static void gst_lpwsinc_set_property	(GObject * object, guint prop_id,
                                          const GValue * value, 
 					 GParamSpec * pspec);
-static void gst_wsinc_get_property	(GObject * object, guint prop_id,
+static void gst_lpwsinc_get_property	(GObject * object, guint prop_id,
                                          GValue * value, GParamSpec * pspec);
 
-static void gst_wsinc_chain		(GstPad * pad, GstBuffer * buf);
+static void gst_lpwsinc_chain		(GstPad * pad, GstBuffer * buf);
 static GstPadConnectReturn
-       gst_wsinc_sink_connect 		(GstPad * pad, GstCaps * caps);
+       gst_lpwsinc_sink_connect 		(GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
-/*static guint gst_wsinc_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_lpwsinc_signals[LAST_SIGNAL] = { 0 }; */
 
-GType gst_wsinc_get_type (void)
+GType gst_lpwsinc_get_type (void)
 {
-  static GType wsinc_type = 0;
+  static GType lpwsinc_type = 0;
 
-  if (!wsinc_type) {
-    static const GTypeInfo wsinc_info = {
-      sizeof (GstWSincClass), NULL, NULL,
-      (GClassInitFunc) gst_wsinc_class_init, NULL, NULL,
-      sizeof (GstWSinc), 0,
-      (GInstanceInitFunc) gst_wsinc_init,
+  if (!lpwsinc_type) {
+    static const GTypeInfo lpwsinc_info = {
+      sizeof (GstLPWSincClass), NULL, NULL,
+      (GClassInitFunc) gst_lpwsinc_class_init, NULL, NULL,
+      sizeof (GstLPWSinc), 0,
+      (GInstanceInitFunc) gst_lpwsinc_init,
     };
 
-    wsinc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstWSinc", 
-	                                   &wsinc_info, 0);
+    lpwsinc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLPWSinc", 
+	                                   &lpwsinc_info, 0);
   }
-  return wsinc_type;
+  return lpwsinc_type;
 }
 
 static void
-gst_wsinc_class_init (GstWSincClass * klass)
+gst_lpwsinc_class_init (GstLPWSincClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -144,16 +144,16 @@ gst_wsinc_class_init (GstWSincClass * klass)
 	                   1, G_MAXINT, 
 	                   1, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_wsinc_set_property;
-  gobject_class->get_property = gst_wsinc_get_property;
+  gobject_class->set_property = gst_lpwsinc_set_property;
+  gobject_class->get_property = gst_lpwsinc_get_property;
 }
 
 static void
-gst_wsinc_init (GstWSinc * filter)
+gst_lpwsinc_init (GstLPWSinc * filter)
 {
   filter->sinkpad = gst_pad_new_from_template (gst_filter_sink_factory (), "sink");
-  gst_pad_set_chain_function (filter->sinkpad, gst_wsinc_chain);
-  gst_pad_set_connect_function (filter->sinkpad, gst_wsinc_sink_connect);
+  gst_pad_set_chain_function (filter->sinkpad, gst_lpwsinc_chain);
+  gst_pad_set_connect_function (filter->sinkpad, gst_lpwsinc_sink_connect);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_template (gst_filter_src_factory (), "src");
@@ -165,12 +165,12 @@ gst_wsinc_init (GstWSinc * filter)
 }
 
 static GstPadConnectReturn
-gst_wsinc_sink_connect (GstPad * pad, GstCaps * caps)
+gst_lpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
 {
   int i = 0;
   double sum = 0.0;
   int len = 0;
-  GstWSinc *filter = GST_WSINC (gst_pad_get_parent (pad));
+  GstLPWSinc *filter = GST_LPWSINC (gst_pad_get_parent (pad));
 
   g_assert (GST_IS_PAD (pad));
   g_assert (caps != NULL);
@@ -186,7 +186,7 @@ gst_wsinc_sink_connect (GstPad * pad, GstCaps * caps)
     g_print ("DEBUG: initing filter kernel\n");
     len = filter->wing_size;
     GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	       "wsinc: initializing filter kernel of length %d", len * 2 + 1);
+	       "lpwsinc: initializing filter kernel of length %d", len * 2 + 1);
     filter->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
 
     for (i = 0; i <= len * 2; ++i)
@@ -216,9 +216,9 @@ gst_wsinc_sink_connect (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_wsinc_chain (GstPad * pad, GstBuffer * buf)
+gst_lpwsinc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstWSinc *filter;
+  GstLPWSinc *filter;
   gfloat *src;
   gfloat *input;
   gint residue_samples;
@@ -226,7 +226,7 @@ gst_wsinc_chain (GstPad * pad, GstBuffer * buf)
   gint total_samples;
   int i, j;
 
-  filter = GST_WSINC (gst_pad_get_parent (pad));
+  filter = GST_LPWSINC (gst_pad_get_parent (pad));
 
   /* FIXME: out of laziness, we copy the left-over bit from last buffer
    * together with the incoming buffer to a new buffer to make the loop
@@ -265,14 +265,14 @@ gst_wsinc_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static void
-gst_wsinc_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstWSinc *filter;
+  GstLPWSinc *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_WSINC (object));
+  g_return_if_fail (GST_IS_LPWSINC (object));
 
-  filter = GST_WSINC (object);
+  filter = GST_LPWSINC (object);
 
   switch (prop_id) {
     case ARG_LENGTH:
@@ -287,14 +287,14 @@ gst_wsinc_set_property (GObject * object, guint prop_id, const GValue * value, G
 }
 
 static void
-gst_wsinc_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_lpwsinc_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstWSinc *filter;
+  GstLPWSinc *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_WSINC (object));
+  g_return_if_fail (GST_IS_LPWSINC (object));
   
-  filter = GST_WSINC (object);
+  filter = GST_LPWSINC (object);
 
   switch (prop_id) {
     case ARG_LENGTH:

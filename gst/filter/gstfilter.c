@@ -31,8 +31,9 @@ struct _elements_entry {
 };
 
 static struct _elements_entry _elements[] = {
-  { "iir",  gst_iir_get_type,  &gst_iir_details,  NULL },
-  { "wsinc",  gst_wsinc_get_type,  &gst_wsinc_details,  NULL },
+  { "iir",  	gst_iir_get_type,  	&gst_iir_details,  	NULL },
+  { "lpwsinc",  gst_lpwsinc_get_type,	&gst_lpwsinc_details,	NULL },
+  { "bpwsinc",  gst_bpwsinc_get_type,	&gst_bpwsinc_details,	NULL },
   { NULL, 0 },
 };
 
