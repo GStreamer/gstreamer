@@ -18,10 +18,15 @@
  */
 
 #include <string.h>
-#include <libav/avformat.h>
+#include "config.h"
+#ifdef HAVE_FFMPEG_UNINSTALLED
+#include <avformat.h>
+#else
+#include <ffmpeg/avformat.h>
+#endif
 
 #include <gst/gst.h>
-	
+
 typedef struct _GstFFMpegMux GstFFMpegMux;
 
 struct _GstFFMpegMux {

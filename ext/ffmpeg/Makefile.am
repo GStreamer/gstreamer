@@ -11,8 +11,8 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c 		\
 			  gstffmpegprotocol.c 	\
 			  gstffmpegtypes.c 	
 
-libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) -I/opt/src/sourceforge/ffmpeg/ -I/opt/src/sourceforge/ffmpeg/libavcodec/
+libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(FFMPEG_CFLAGS)
 libgstffmpeg_la_LIBADD = 
-libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -L/opt/src/sourceforge/ffmpeg/libavcodec -lavcodec -L/opt/src/sourceforge/ffmpeg/libav -lavformat
+libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(FFMPEG_LIBS)
 
 noinst_HEADERS = 

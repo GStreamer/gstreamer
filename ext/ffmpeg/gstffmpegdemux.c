@@ -18,8 +18,14 @@
  */
 
 #include <string.h>
-#include <libav/avformat.h>
-#include <libav/avi.h>
+#include "config.h"
+#ifdef HAVE_FFMPEG_UNINSTALLED
+#include <avformat.h>
+#include <avi.h>
+#else
+#include <ffmpeg/avformat.h>
+#include <ffmpeg/avi.h>
+#endif
 
 #include <gst/gst.h>
 

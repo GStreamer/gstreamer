@@ -19,7 +19,13 @@
 
 #include <string.h>
 #include <errno.h>
-#include <libav/avformat.h>
+#include "config.h"
+#ifdef HAVE_FFMPEG_UNINSTALLED
+#include <avformat.h>
+#else
+#include <ffmpeg/avformat.h>
+#endif
+
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 

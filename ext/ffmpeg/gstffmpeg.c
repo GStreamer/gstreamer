@@ -21,8 +21,14 @@
  * object definition and other useful things.
  */
 
-#include <libavcodec/avcodec.h>
-#include <libav/avformat.h>
+#include "config.h"
+#ifdef HAVE_FFMPEG_UNINSTALLED
+#include <avcodec.h>
+#include <avformat.h>
+#else
+#include <ffmpeg/avcodec.h>
+#include <ffmpeg/avformat.h>
+#endif
 
 #include <gst/gst.h>
 
