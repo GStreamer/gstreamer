@@ -1,4 +1,4 @@
-Name: 		gstreamer@GST_VERSION_MAJOR@@GST_VERSION_MINOR@
+Name: 		gstreamer
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
 Summary: 	GStreamer streaming media framework runtime.
@@ -95,7 +95,7 @@ with different major/minor versions of GStreamer.
 %configure \
   --enable-debug \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
-  --disable-tests --disable-examples
+  --disable-tests --disable-examples --disable-docs-build
                                                                                 
 make %{?_smp_mflags}
 
@@ -128,7 +128,7 @@ rm -rf $RPM_BUILD_ROOT
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING NEWS README TODO RELEASE
-·doc COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
+%doc COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
@@ -192,9 +192,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
                                                                                 
-%{_datadir}/gstreamer-%{majorminor}/doc
-%{_datadir}/gtk-doc/html/gstreamer-%{majorminor}/*
-%{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}/*
+# %{_datadir}/gstreamer-%{majorminor}/doc
+# %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}/*
+# %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}/*
                                                                                 
 %changelog
 * Thu Feb 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
