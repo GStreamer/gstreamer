@@ -72,7 +72,10 @@ GST_PAD_TEMPLATE_FACTORY (sink_temp,
   GST_CAPS_NEW (
     "dv_dec_sink",
     "video/dv",
-    "format",   GST_PROPS_STRING ("NTSC")
+    "format",   GST_PROPS_LIST (
+	          GST_PROPS_STRING ("PAL"),
+	          GST_PROPS_STRING ("NTSC")
+	       )
   )
 )
 
@@ -280,8 +283,17 @@ gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
-          *value = 0;
+	{
+          guint64 len;
+
+	  len = gst_bytestream_length (dvdec->bs);
+	  if (len != -1 && dvdec->length) {
+            *value = (len * GST_SECOND) / (dvdec->length * 25);
+	  }
+	  else 
+	    return FALSE;
           break;
+	}
         default:
           res = FALSE;
           break;
