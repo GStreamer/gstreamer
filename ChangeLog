@@ -1,3 +1,8 @@
+2004-12-08  David Schleef  <ds@schleef.org>
+
+	* tools/gst-visualise-m.m: Switch to elements that currently
+	exist.
+
 2004-12-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
@@ -10,7 +15,7 @@
 	  Don't set DEFAULT, unsupported - makes length display incorrectly
 	  in some cases.
 
-2004-12-07  Christian Fredrik Kalager Schaller  <set EMAIL_ADDRESS environment variable>
+2004-12-07  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
 
 	Woooho Monoscope is now effectivly LGPL licensed
 
