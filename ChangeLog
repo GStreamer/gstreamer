@@ -1,3 +1,9 @@
+2004-11-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/esd/esdsink.c: (gst_esdsink_init), (gst_esdsink_link):
+	  added two api precondition guards
+      use g_strdup with getenv to fix crash when using ENVVAR
+
 2004-11-01  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/esd/esdsink.c: (gst_esdsink_class_init),
 	(gst_esdsink_finalize):
