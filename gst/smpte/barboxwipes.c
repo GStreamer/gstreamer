@@ -72,6 +72,24 @@ static gint triangles_2t[][2*9] =
 #define WIPE_T2_46	WIPE_T2_45+1
   { 0, 0, 0,  1, 0, 1,  1, 1, 0,
     0, 0, 0,  0, 1, 1,  1, 1, 0 },
+#define WIPE_T2_241	WIPE_T2_46+1
+  { 0, 0, 0,  1, 0, 0,  1, 1, 1,
+    0, 0, 0,  1, 1, 1,  0, 1, 2 },
+#define WIPE_T2_242	WIPE_T2_241+1
+  { 0, 1, 0,  1, 1, 0,  1, 0, 1,
+    0, 1, 0,  1, 0, 1,  0, 0, 2 },
+#define WIPE_T2_243	WIPE_T2_242+1
+  { 1, 1, 0,  0, 1, 0,  0, 0, 1,
+    1, 1, 0,  0, 0, 1,  1, 0, 2 },
+#define WIPE_T2_244	WIPE_T2_243+1
+  { 1, 0, 0,  0, 0, 0,  0, 1, 1,
+    1, 0, 0,  0, 1, 1,  1, 1, 2 },
+#define WIPE_T2_245	WIPE_T2_244+1
+  { 0, 0, 0,  2, 0, 0,  2, 2, 1,   
+    2, 2, 0,  0, 2, 0,  0, 0, 1 },
+#define WIPE_T2_246	WIPE_T2_245+1
+  { 0, 2, 0,  0, 0, 0,  2, 0, 1,   
+    2, 0, 0,  2, 2, 0,  0, 2, 1 },
 };
 
 static gint triangles_3t[][3*9] = 
@@ -92,7 +110,23 @@ static gint triangles_3t[][3*9] =
 #define WIPE_T3_26	3
   { 0, 0, 1,  2, 0, 1,  0, 1, 0,
     2, 0, 1,  0, 1, 0,  2, 2, 1,
-    0, 1, 0,  0, 2, 1,  2, 2, 1 }
+    0, 1, 0,  0, 2, 1,  2, 2, 1 },
+#define WIPE_T3_221	4
+  { 1, 0, 0,  2, 0, 0,  2, 2, 1,   
+    1, 0, 0,  2, 2, 1,  0, 2, 3,
+    1, 0, 0,  0, 2, 3,  0, 0, 4 },
+#define WIPE_T3_222	5
+  { 2, 1, 0,  2, 2, 0,  0, 2, 1,   
+    2, 1, 0,  0, 2, 1,  0, 0, 3,
+    2, 1, 0,  0, 0, 3,  2, 0, 4 },
+#define WIPE_T3_223	6
+  { 1, 2, 0,  0, 2, 0,  0, 0, 1,   
+    1, 2, 0,  0, 0, 1,  2, 0, 3,
+    1, 2, 0,  2, 0, 3,  2, 2, 4 },
+#define WIPE_T3_224	7
+  { 0, 1, 0,  0, 0, 0,  2, 0, 1,   
+    0, 1, 0,  2, 0, 1,  2, 2, 3,
+    0, 1, 0,  2, 2, 3,  0, 2, 4 },
 };
 
 static gint triangles_4t[][4*9] = 
@@ -141,9 +175,112 @@ static gint triangles_4t[][4*9] =
   { 0, 0, 1,  2, 0, 1,  1, 1, 0,   
     0, 0, 1,  1, 1, 0,  0, 2, 1,
     1, 1, 0,  0, 2, 1,  2, 2, 1,
-    2, 0, 1,  1, 1, 0,  2, 2, 1 }
+    2, 0, 1,  1, 1, 0,  2, 2, 1 },
+#define WIPE_T4_231	9
+  { 1, 0, 0,  1, 2, 0,  2, 2, 1,   
+    1, 0, 0,  2, 2, 1,  2, 0, 2,
+    1, 0, 0,  1, 2, 0,  0, 2, 1,
+    1, 0, 0,  0, 2, 1,  0, 0, 2 },
+#define WIPE_T4_232	10
+  { 2, 1, 0,  0, 1, 0,  0, 0, 1,   
+    2, 1, 0,  0, 0, 1,  2, 0, 2,
+    2, 1, 0,  0, 1, 0,  0, 2, 1,
+    2, 1, 0,  0, 2, 1,  2, 2, 2 },
+#define WIPE_T4_233	11
+  { 1, 2, 0,  1, 0, 0,  2, 0, 1,   
+    1, 2, 0,  2, 0, 1,  2, 2, 2,
+    1, 2, 0,  1, 0, 0,  0, 0, 1,
+    1, 2, 0,  0, 0, 1,  0, 2, 2 },
+#define WIPE_T4_234	12
+  { 0, 1, 0,  2, 1, 0,  2, 0, 1,   
+    0, 1, 0,  2, 0, 1,  0, 0, 2,
+    0, 1, 0,  2, 1, 0,  2, 2, 1,
+    0, 1, 0,  2, 2, 1,  0, 2, 2 },
+#define WIPE_T4_225	13
+  { 1, 0, 0,  2, 0, 0,  2, 2, 1,   
+    1, 0, 0,  2, 2, 1,  1, 2, 2,
+    1, 2, 0,  0, 2, 0,  0, 0, 1,
+    1, 2, 0,  0, 0, 1,  1, 0, 2 },
+#define WIPE_T4_226	14
+  { 0, 1, 0,  0, 0, 0,  2, 0, 1,   
+    0, 1, 0,  2, 0, 1,  2, 1, 2,
+    2, 1, 0,  2, 2, 0,  0, 2, 1,
+    2, 1, 0,  0, 2, 1,  0, 1, 2 },
 };
 
+static gint triangles_5t[][5*9] = 
+{
+#define WIPE_T5_201	0
+  { 1, 1, 0,  1, 0, 0,  2, 0, 1,   
+    1, 1, 0,  2, 0, 1,  2, 2, 3,
+    1, 1, 0,  2, 2, 3,  0, 2, 5,
+    1, 1, 0,  0, 2, 5,  0, 0, 7,
+    1, 1, 0,  0, 0, 7,  1, 0, 8 },
+#define WIPE_T5_202	1
+  { 1, 1, 0,  2, 1, 0,  2, 2, 1,   
+    1, 1, 0,  2, 2, 1,  0, 2, 3,
+    1, 1, 0,  0, 2, 3,  0, 0, 5,
+    1, 1, 0,  0, 0, 5,  2, 0, 7,
+    1, 1, 0,  2, 0, 7,  2, 1, 8 },
+#define WIPE_T5_203	2
+  { 1, 1, 0,  1, 2, 0,  0, 2, 1,   
+    1, 1, 0,  0, 2, 1,  0, 0, 3,
+    1, 1, 0,  0, 0, 3,  2, 0, 5,
+    1, 1, 0,  2, 0, 5,  2, 2, 7,
+    1, 1, 0,  2, 2, 7,  1, 2, 8 },
+#define WIPE_T5_204	3
+  { 1, 1, 0,  0, 1, 0,  0, 0, 1,   
+    1, 1, 0,  0, 0, 1,  2, 0, 3,
+    1, 1, 0,  2, 0, 3,  2, 2, 5,
+    1, 1, 0,  2, 2, 5,  0, 2, 7,
+    1, 1, 0,  0, 2, 7,  0, 1, 8 },
+};
+
+static gint triangles_6t[][6*9] = 
+{
+#define WIPE_T6_205	0
+  { 1, 1, 0,  1, 0, 0,  2, 0, 1,   
+    1, 1, 0,  2, 0, 1,  2, 2, 3,
+    1, 1, 0,  2, 2, 3,  1, 2, 4,
+    1, 1, 0,  1, 2, 0,  0, 2, 1,
+    1, 1, 0,  0, 2, 1,  0, 0, 3,
+    1, 1, 0,  0, 0, 3,  1, 0, 4 },
+#define WIPE_T6_206	1
+  { 1, 1, 0,  2, 1, 0,  2, 2, 1,   
+    1, 1, 0,  2, 2, 1,  0, 2, 3,
+    1, 1, 0,  0, 2, 3,  0, 1, 4,
+    1, 1, 0,  0, 1, 0,  0, 0, 1,
+    1, 1, 0,  0, 0, 1,  2, 0, 3,
+    1, 1, 0,  2, 0, 3,  2, 1, 4 },
+#define WIPE_T6_211	2
+  { 1, 1, 0,  1, 0, 0,  2, 0, 1,   
+    1, 1, 0,  2, 0, 1,  2, 2, 3,
+    1, 1, 0,  2, 2, 3,  1, 2, 4,
+    1, 1, 0,  1, 0, 0,  0, 0, 1,
+    1, 1, 0,  0, 0, 1,  0, 2, 3,
+    1, 1, 0,  0, 2, 3,  1, 2, 4 },
+#define WIPE_T6_212	3
+  { 1, 1, 0,  2, 1, 0,  2, 2, 1,   
+    1, 1, 0,  2, 2, 1,  0, 2, 3,
+    1, 1, 0,  0, 2, 3,  0, 1, 4,
+    1, 1, 0,  2, 1, 0,  2, 0, 1,
+    1, 1, 0,  2, 0, 1,  0, 0, 3,
+    1, 1, 0,  0, 0, 3,  0, 1, 4 },
+#define WIPE_T6_227	4
+  { 1, 0, 0,  2, 0, 0,  2, 1, 1,   
+    1, 0, 0,  2, 1, 1,  0, 1, 3,
+    1, 0, 0,  0, 1, 3,  0, 0, 4,
+    1, 2, 0,  2, 2, 0,  2, 1, 1,
+    1, 2, 0,  2, 1, 1,  0, 1, 3,
+    1, 2, 0,  0, 1, 3,  0, 2, 4 },
+#define WIPE_T6_228	5
+  { 0, 1, 0,  0, 0, 0,  1, 0, 1,   
+    0, 1, 0,  1, 0, 1,  1, 2, 3,
+    0, 1, 0,  1, 2, 3,  0, 2, 4,
+    2, 1, 0,  2, 0, 0,  1, 0, 1,
+    2, 1, 0,  1, 0, 1,  1, 2, 3,
+    2, 1, 0,  1, 2, 3,  2, 2, 4 },
+};
 static gint triangles_8t[][8*9] = 
 {
   /* 7 */
@@ -192,6 +329,51 @@ static gint triangles_8t[][8*9] =
     0, 1, 0,  0, 2, 1,  1, 2, 0,
     1, 1, 1,  2, 1, 0,  1, 2, 0,
     2, 1, 0,  1, 2, 0,  2, 2, 1 },
+#define WIPE_T8_207	5
+  { 1, 1, 0,  1, 0, 0,  2, 0, 1,   
+    1, 1, 0,  2, 0, 1,  2, 1, 2,
+    1, 1, 0,  2, 1, 0,  2, 2, 1,
+    1, 1, 0,  2, 2, 1,  1, 2, 2,
+    1, 1, 0,  1, 2, 0,  0, 2, 1,
+    1, 1, 0,  0, 2, 1,  0, 1, 2,
+    1, 1, 0,  0, 1, 0,  0, 0, 1,
+    1, 1, 0,  0, 0, 1,  1, 0, 2 },
+#define WIPE_T8_213	6
+  { 1, 1, 0,  1, 0, 0,  2, 0, 1,   
+    1, 1, 0,  2, 0, 1,  2, 1, 2,
+    1, 1, 0,  1, 2, 0,  2, 2, 1,
+    1, 1, 0,  2, 2, 1,  2, 1, 2,
+    1, 1, 0,  1, 2, 0,  0, 2, 1,
+    1, 1, 0,  0, 2, 1,  0, 1, 2,
+    1, 1, 0,  1, 0, 0,  0, 0, 1,
+    1, 1, 0,  0, 0, 1,  0, 1, 2 },
+#define WIPE_T8_214	7
+  { 1, 1, 0,  2, 1, 0,  2, 0, 1,   
+    1, 1, 0,  2, 0, 1,  1, 0, 2,
+    1, 1, 0,  2, 1, 0,  2, 2, 1,
+    1, 1, 0,  2, 2, 1,  1, 2, 2,
+    1, 1, 0,  0, 1, 0,  0, 2, 1,
+    1, 1, 0,  0, 2, 1,  1, 2, 2,
+    1, 1, 0,  0, 1, 0,  0, 0, 1,
+    1, 1, 0,  0, 0, 1,  1, 0, 2 },
+#define WIPE_T8_235	8
+  { 1, 0, 0,  1, 1, 0,  2, 1, 1,   
+    1, 0, 0,  2, 1, 1,  2, 0, 2,
+    1, 0, 0,  1, 1, 0,  0, 1, 1,
+    1, 0, 0,  0, 1, 1,  0, 0, 2,
+    1, 2, 0,  1, 1, 0,  2, 1, 1,
+    1, 2, 0,  2, 1, 1,  2, 2, 2,
+    1, 2, 0,  1, 1, 0,  0, 1, 1,
+    1, 2, 0,  0, 1, 1,  0, 2, 2 },
+#define WIPE_T8_236	9
+  { 0, 1, 0,  1, 1, 0,  1, 0, 1,   
+    0, 1, 0,  1, 0, 1,  0, 0, 2,
+    0, 1, 0,  1, 1, 0,  1, 2, 1,
+    0, 1, 0,  1, 2, 1,  0, 2, 2,
+    2, 1, 0,  1, 1, 0,  1, 0, 1,
+    2, 1, 0,  1, 0, 1,  2, 0, 2,
+    2, 1, 0,  1, 1, 0,  1, 2, 1,
+    2, 1, 0,  1, 2, 1,  2, 2, 2 },
 };
 
 static gint triangles_16t[][16*9] = 
@@ -292,6 +474,68 @@ static GstWipeConfig wipe_config[] =
   { triangles_4t[WIPE_T4_68],   4,  1, 1, 0 }, /* 68 */
 #define WIPE_CONFIG_101	WIPE_CONFIG_68+1
   { triangles_4t[WIPE_T4_101],  4,  1, 1, 0 }, /* 101 */
+#define WIPE_CONFIG_201	WIPE_CONFIG_101+1
+  { triangles_5t[WIPE_T5_201],  5,  1, 1, 3 }, /* 201 */
+#define WIPE_CONFIG_202	WIPE_CONFIG_201+1
+  { triangles_5t[WIPE_T5_202],  5,  1, 1, 3 }, /* 202 */
+#define WIPE_CONFIG_203	WIPE_CONFIG_202+1
+  { triangles_5t[WIPE_T5_203],  5,  1, 1, 3 }, /* 203 */
+#define WIPE_CONFIG_204	WIPE_CONFIG_203+1
+  { triangles_5t[WIPE_T5_204],  5,  1, 1, 3 }, /* 204 */
+#define WIPE_CONFIG_205	WIPE_CONFIG_204+1
+  { triangles_6t[WIPE_T6_205],  6,  1, 1, 2 }, /* 205 */
+#define WIPE_CONFIG_206	WIPE_CONFIG_205+1
+  { triangles_6t[WIPE_T6_206],  6,  1, 1, 2 }, /* 206 */
+#define WIPE_CONFIG_207	WIPE_CONFIG_206+1
+  { triangles_8t[WIPE_T8_207],  8,  1, 1, 1 }, /* 207 */
+#define WIPE_CONFIG_211	WIPE_CONFIG_207+1
+  { triangles_6t[WIPE_T6_211],  6,  1, 1, 2 }, /* 211 */
+#define WIPE_CONFIG_212	WIPE_CONFIG_211+1
+  { triangles_6t[WIPE_T6_212],  6,  1, 1, 2 }, /* 212 */
+#define WIPE_CONFIG_213	WIPE_CONFIG_212+1
+  { triangles_8t[WIPE_T8_213],  8,  1, 1, 1 }, /* 213 */
+#define WIPE_CONFIG_214	WIPE_CONFIG_213+1
+  { triangles_8t[WIPE_T8_214],  8,  1, 1, 1 }, /* 214 */
+#define WIPE_CONFIG_221	WIPE_CONFIG_214+1
+  { triangles_3t[WIPE_T3_221],  3,  1, 1, 2 }, /* 221 */
+#define WIPE_CONFIG_222	WIPE_CONFIG_221+1
+  { triangles_3t[WIPE_T3_222],  3,  1, 1, 2 }, /* 222 */
+#define WIPE_CONFIG_223	WIPE_CONFIG_222+1
+  { triangles_3t[WIPE_T3_223],  3,  1, 1, 2 }, /* 223 */
+#define WIPE_CONFIG_224	WIPE_CONFIG_223+1
+  { triangles_3t[WIPE_T3_224],  3,  1, 1, 2 }, /* 224 */
+#define WIPE_CONFIG_225	WIPE_CONFIG_224+1
+  { triangles_4t[WIPE_T4_225],  4,  1, 1, 1 }, /* 225 */
+#define WIPE_CONFIG_226	WIPE_CONFIG_225+1
+  { triangles_4t[WIPE_T4_226],  4,  1, 1, 1 }, /* 226 */
+#define WIPE_CONFIG_227	WIPE_CONFIG_226+1
+  { triangles_6t[WIPE_T6_227],  6,  1, 1, 2 }, /* 227 */
+#define WIPE_CONFIG_228	WIPE_CONFIG_227+1
+  { triangles_6t[WIPE_T6_228],  6,  1, 1, 2 }, /* 228 */
+#define WIPE_CONFIG_231	WIPE_CONFIG_228+1
+  { triangles_4t[WIPE_T4_231],  4,  1, 1, 1 }, /* 231 */
+#define WIPE_CONFIG_232	WIPE_CONFIG_231+1
+  { triangles_4t[WIPE_T4_232],  4,  1, 1, 1 }, /* 232 */
+#define WIPE_CONFIG_233	WIPE_CONFIG_232+1
+  { triangles_4t[WIPE_T4_233],  4,  1, 1, 1 }, /* 233 */
+#define WIPE_CONFIG_234	WIPE_CONFIG_233+1
+  { triangles_4t[WIPE_T4_234],  4,  1, 1, 1 }, /* 234 */
+#define WIPE_CONFIG_235	WIPE_CONFIG_234+1
+  { triangles_8t[WIPE_T8_235],  8,  1, 1, 1 }, /* 235 */
+#define WIPE_CONFIG_236	WIPE_CONFIG_235+1
+  { triangles_8t[WIPE_T8_236],  8,  1, 1, 1 }, /* 236 */
+#define WIPE_CONFIG_241	WIPE_CONFIG_236+1
+  { triangles_2t[WIPE_T2_241],  2,  0, 0, 1 }, /* 241 */
+#define WIPE_CONFIG_242	WIPE_CONFIG_241+1
+  { triangles_2t[WIPE_T2_242],  2,  0, 0, 1 }, /* 242 */
+#define WIPE_CONFIG_243	WIPE_CONFIG_242+1
+  { triangles_2t[WIPE_T2_243],  2,  0, 0, 1 }, /* 243 */
+#define WIPE_CONFIG_244	WIPE_CONFIG_243+1
+  { triangles_2t[WIPE_T2_244],  2,  0, 0, 1 }, /* 244 */
+#define WIPE_CONFIG_245	WIPE_CONFIG_244+1
+  { triangles_2t[WIPE_T2_245],  2,  1, 1, 0 }, /* 245 */
+#define WIPE_CONFIG_246	WIPE_CONFIG_245+1
+  { triangles_2t[WIPE_T2_246],  2,  1, 1, 0 }, /* 246 */
 };
 
 static void
@@ -299,8 +543,8 @@ gst_wipe_boxes_draw (GstMask *mask)
 {
   GstWipeConfig *config = mask->user_data;
   gint *impacts = config->objects;
-  gint width = (mask->width >> config->xscale) - 1;
-  gint height = (mask->height >> config->yscale) - 1;
+  gint width = (mask->width >> config->xscale);
+  gint height = (mask->height >> config->yscale);
   gint depth = (1 << mask->bpp) >> config->cscale;
 
   gint i;
@@ -309,14 +553,14 @@ gst_wipe_boxes_draw (GstMask *mask)
     switch (impacts[0]) {
       case BOX_VERTICAL:
         gst_smpte_paint_vbox (mask->data, mask->width, 
-		              impacts[1] * width, impacts[2] * height, impacts[3] * depth,
-		              impacts[4] * width, impacts[5] * height, impacts[6] * depth);
+		          impacts[1] * width, impacts[2] * height, impacts[3] * depth,
+		          impacts[4] * width, impacts[5] * height, impacts[6] * depth);
 	impacts += 7;
         break;
       case BOX_HORIZONTAL:
         gst_smpte_paint_hbox (mask->data, mask->width, 
-		              impacts[1] * width, impacts[2] * height, impacts[3] * depth,
-		              impacts[4] * width, impacts[5] * height, impacts[6] * depth);
+		          impacts[1] * width, impacts[2] * height, impacts[3] * depth,
+		          impacts[4] * width, impacts[5] * height, impacts[6] * depth);
 	impacts += 7;
       default:
         break;
@@ -325,12 +569,40 @@ gst_wipe_boxes_draw (GstMask *mask)
 }
 
 static void
+gst_wipe_triangles_clock_draw (GstMask *mask)
+{
+  GstWipeConfig *config = mask->user_data;
+  gint *impacts = config->objects;
+  gint width = (mask->width >> config->xscale);
+  gint height = (mask->height >> config->yscale);
+  gint depth = (1 << mask->bpp) >> config->cscale;
+  gint i;
+
+  g_print ("width %d %d\n", mask->width, width);
+
+
+  for (i = 0; i < config->nobjects; i++) {
+    gst_smpte_paint_triangle_clock (mask->data, mask->width,
+	                   impacts[0] * width,
+			   impacts[1] * height,
+			   impacts[2] * depth,
+	                   impacts[3] * width,
+			   impacts[4] * height,
+			   impacts[5] * depth,
+	                   impacts[6] * width,
+			   impacts[7] * height,
+			   impacts[8] * depth);
+    impacts += 9;
+  }
+}
+
+static void
 gst_wipe_triangles_draw (GstMask *mask)
 {
   GstWipeConfig *config = mask->user_data;
   gint *impacts = config->objects;
-  gint width = (mask->width >> config->xscale) - 1;
-  gint height = (mask->height >> config->yscale) - 1;
+  gint width = (mask->width >> config->xscale);
+  gint height = (mask->height >> config->yscale);
   gint depth = (1 << mask->bpp) >> config->cscale;
 
   gint i;
@@ -469,6 +741,130 @@ static GstMaskDefinition definitions[] = {
 	"A rectangle expands from the center.", 
 	gst_wipe_triangles_draw, _gst_mask_default_destroy,
 	&wipe_config[WIPE_CONFIG_101] },
+ { 201, "clock_cw12",
+	"A radial hand sweeps clockwise from the twelve o'clock position", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_201] },
+ { 202, "clock_cw3",
+	"A radial hand sweeps clockwise from the three o'clock position", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_202] },
+ { 203, "clock_cw6",
+	"A radial hand sweeps clockwise from the six o'clock position", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_203] },
+ { 204, "clock_cw9",
+	"A radial hand sweeps clockwise from the nine o'clock position", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_204] },
+ { 205, "pinwheel_tbv",
+	"Two radial hands sweep clockwise from the twelve and six o'clock positions", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_205] },
+ { 206, "pinwheel_tbh",
+	"Two radial hands sweep clockwise from the nine and three o'clock positions", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_206] },
+ { 207, "pinwheel_fb",
+	"Four radial hands sweep clockwise", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_207] },
+ { 211, "fan_ct",
+	"A fan unfolds from the top edge, the fan axis at the center", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_211] },
+ { 212, "fan_cr",
+	"A fan unfolds from the right edge, the fan axis at the center", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_212] },
+ { 213, "doublefan_fov",
+	"Two fans, their axes at the center, unfold from the top and bottom", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_213] },
+ { 214, "doublefan_foh",
+	"Two fans, their axes at the center, unfold from the left and right", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_214] },
+ { 221, "singlesweep_cwt",
+	"A radial hand sweeps clockwise from the top edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_221] },
+ { 222, "singlesweep_cwr",
+	"A radial hand sweeps clockwise from the right edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_222] },
+ { 223, "singlesweep_cwb",
+	"A radial hand sweeps clockwise from the bottom edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_223] },
+ { 224, "singlesweep_cwl",
+	"A radial hand sweeps clockwise from the left edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_224] },
+ { 225, "doublesweep_pv",
+	"Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_225] },
+ { 226, "doublesweep_pd",
+	"Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_226] },
+ { 227, "doublesweep_ov",
+	"Two radial hands attached at the top and bottom edges' midpoints sweep from right to left", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_227] },
+ { 228, "doublesweep_oh",
+	"Two radial hands attached at the left and right edges' midpoints sweep from top to bottom", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_228] },
+ { 231, "fan_t",
+	"A fan unfolds from the bottom, the fan axis at the top edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_231] },
+ { 232, "fan_r",
+	"A fan unfolds from the left, the fan axis at the right edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_232] },
+ { 233, "fan_b",
+	"A fan unfolds from the top, the fan axis at the bottom edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_233] },
+ { 234, "fan_l",
+	"A fan unfolds from the right, the fan axis at the left edge's midpoint", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_234] },
+ { 235, "doublefan_fiv",
+	"Two fans, their axes at the top and bottom, unfold from the center", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_235] },
+ { 236, "doublefan_fih",
+	"Two fans, their axes at the left and right, unfold from the center", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_236] },
+ { 241, "singlesweep_cwtl",
+	"A radial hand sweeps clockwise from the upper-left corner", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_241] },
+ { 242, "singlesweep_cwbl",
+	"A radial hand sweeps counter-clockwise from the lower-left corner.", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_242] },
+ { 243, "singlesweep_cwbr",
+	"A radial hand sweeps clockwise from the lower-right corner", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_243] },
+ { 244, "singlesweep_cwtr",
+	"A radial hand sweeps counter-clockwise from the upper-right corner", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_244] },
+ { 245, "doublesweep_pdtl",
+	"Two radial hands attached at the upper-left and lower-right corners sweep down and up", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_245] },
+ { 246, "doublesweep_pdbl",
+	"Two radial hands attached at the lower-left and upper-right corners sweep down and up", 
+	gst_wipe_triangles_clock_draw, _gst_mask_default_destroy,
+	&wipe_config[WIPE_CONFIG_246] },
  { 0, NULL, NULL, NULL }
 };
 

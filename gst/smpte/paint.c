@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <math.h>
 #include "paint.h"
 
 void
@@ -177,10 +178,10 @@ gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
       gint sign = SIGN (e - s);
 
       e += sign;
-
       for (j = s; j != e; j+=sign) {
        dest[j] = (ec * (j - s) + sc * (e - j)) / (e - s);
       }
+
       while (pyr == i) {
         STEP_3D_LINE (dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr, 
 	              xrr, yrr, crr, pxr, pyr, pcr);
@@ -200,5 +201,108 @@ gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
 
     seg_start = y1;
     seg_end = y2;
+  }
+}
+
+
+void 
+draw_line (guint32* dest, gint stride, int x, int y, int x2, int y2, int col) 
+{
+  gboolean yLonger=FALSE;
+  int incrementVal, endVal;
+  gdouble decInc;
+  int shortLen=y2-y;
+  int longLen=x2-x;
+  gdouble j=0.0;
+  int i;
+
+  if (abs(shortLen)>abs(longLen)) {
+    int swap=shortLen;
+    shortLen=longLen;
+    longLen=swap;
+    yLonger=TRUE;
+  }
+
+  endVal=longLen;
+  if (longLen<0) {
+    incrementVal=-1;
+    longLen=-longLen;
+  } 
+  else incrementVal=1;
+   
+  if (longLen==0) decInc=(gdouble)shortLen;
+  else decInc = ((gdouble)shortLen/(gdouble)longLen);
+  
+  if (yLonger) {
+    for (i=0;i!=endVal;i+=incrementVal) {
+      *(dest+(x+(int)j) + (y+i)*stride) = col;
+      j+=decInc;
+    }
+  } else {
+    for (i=0;i!=endVal;i+=incrementVal) {
+      *(dest+(x+i) + (y+(int)j)*stride) = col;
+      j+=decInc;
+    }
+  }
+}
+
+void
+gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
+				 gint x0, gint y0, gint c0,
+				 gint x1, gint y1, gint c1, gint x2, gint y2, gint c2)
+{
+  gint i;
+  gint sign;
+  gfloat angle, angle_s, angle_e;
+
+  if (x1 == x2) {
+    gfloat len1 = sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0));
+
+    sign = SIGN (y2 - y1);
+
+    angle_s = 0.0;
+    angle_e = acos (((x1-x0) * (x2-x0) + (y1-y0) * (y2-y0))/
+		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
+		     sqrt ((x2-x0) * (x2-x0) + (y2-y0) * (y2-y0))));
+
+    for (i=y1; i != y2+sign; i+=sign) {
+      gfloat len2 = sqrt ((x1-x0) * (x1-x0) + (i-y0) * (i-y0));
+      
+      if (y1==i)
+	angle = 0;
+      else
+        angle = acos (((x1-x0) * (x2-x0) + (y1-y0) * (i-y0))/ (len1 * len2));
+
+      angle = angle / angle_e;
+
+      draw_line (dest, stride,
+		    x0, y0, x1, i, 
+		    (c2 * angle + c1 * (1.0-angle)));
+    }
+  }
+  else if (y1 == y2) {
+    gfloat len1 = sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0));
+
+    sign = SIGN (x2 - x1);
+
+    angle_s = 0.0;
+    angle_e = acos (((x1-x0) * (x2-x0) + (y1-y0) * (y2-y0))/
+		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
+		     sqrt ((x2-x0) * (x2-x0) + (y2-y0) * (y2-y0))));
+
+    for (i=x1; i != x2+sign; i+=sign) {
+      gfloat len2 = sqrt ((i-x0) * (i-x0) + (y2-y0) * (y2-y0));
+
+      if (x1==i)
+	angle = 0;
+      else
+        angle = acos (((x1-x0) * (i-x0) + (y1-y0) * (y2-y0)) / (len1 * len2));
+
+      angle = angle / angle_e;
+
+      draw_line (dest, stride,
+		    x0, y0, i, y1, 
+		    (c2 * angle + c1 * (1.0-angle)));
+    }
   }
 }
