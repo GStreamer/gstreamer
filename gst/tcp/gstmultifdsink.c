@@ -598,6 +598,11 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
+  /* free client buffers */
+  g_slist_foreach (client->sending, (GFunc) gst_data_unref, NULL);
+  g_slist_free (client->sending);
+  client->sending = NULL;
+
   /* unlock the mutex before signaling because the signal handler
    * might query some properties */
   g_mutex_unlock (sink->clientslock);

@@ -1,3 +1,14 @@
+2004-08-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstfdset.c: (gst_fdset_free), (gst_fdset_wait):
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
+	(gst_multifdsink_remove_client_link),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write):
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_init_send):
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_init_receive):
+	Fix some memory leaks.
+
 2004-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Patch by: David Schleef

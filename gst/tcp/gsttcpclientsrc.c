@@ -432,6 +432,7 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
   this->server_sin.sin_family = AF_INET;        /* network socket */
   this->server_sin.sin_port = htons (this->port);       /* on port */
   this->server_sin.sin_addr.s_addr = inet_addr (ip);    /* on host ip */
+  g_free (ip);
 
   GST_DEBUG_OBJECT (this, "connecting to server");
   ret = connect (this->sock_fd, (struct sockaddr *) &this->server_sin,

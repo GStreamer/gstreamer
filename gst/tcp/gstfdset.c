@@ -135,6 +135,7 @@ gst_fdset_free (GstFDSet * set)
       break;
     case GST_FDSET_MODE_POLL:
       g_free (set->pollfds);
+      g_mutex_free (set->poll_lock);
       break;
     case GST_FDSET_MODE_EPOLL:
       g_warning ("implement me");
