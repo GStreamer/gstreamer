@@ -603,6 +603,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
          * in this caps definition. */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
             "layout", G_TYPE_STRING, layout, NULL);
+        if (context)
+          gst_caps_set_simple (caps,
+              "block_align", G_TYPE_INT, context->block_align,
+              "bitrate", G_TYPE_INT, context->bit_rate, NULL);
       } while (0);
       break;
 
@@ -649,6 +653,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
          * in this caps definition. */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-dpcm",
             "layout", G_TYPE_STRING, layout, NULL);
+        if (context)
+          gst_caps_set_simple (caps,
+              "block_align", G_TYPE_INT, context->block_align,
+              "bitrate", G_TYPE_INT, context->bit_rate, NULL);
       } while (0);
       break;
 
@@ -682,8 +690,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           mime = g_strdup_printf ("audio/x-gst_ff-%s", codec->name);
           caps = GST_FF_AUD_CAPS_NEW (mime, NULL);
           if (context)
-            gst_caps_set (caps, "block_align", context->block_align,
-                "bitrate", context->bit_rate, NULL);
+            gst_caps_set_simple (caps,
+                "block_align", G_TYPE_INT, context->block_align,
+                "bitrate", G_TYPE_INT, context->bit_rate, NULL);
           g_free (mime);
           break;
         default:
