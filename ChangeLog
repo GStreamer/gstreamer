@@ -1,5 +1,10 @@
 2004-05-03  David Schleef  <ds@schleef.org>
 
+	* testsuite/caps/deserialize.c: (main): Use the srcdir environment variable
+	  to find our source file.
+
+2004-05-03  David Schleef  <ds@schleef.org>
+
 	* configure.ac:  Link plugins with libgstreamer and dependent
 	  libraries
 	* testsuite/caps/Makefile.am:

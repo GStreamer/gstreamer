@@ -14,7 +14,7 @@
 int
 main (int argc, char *argv[])
 {
-  const char *filename;
+  char *filename;
   char *data;
   char **list;
   int i;
@@ -23,9 +23,17 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  filename = "caps_strings";
-  if (argc > 1)
-    filename = argv[1];
+  if (argc > 1) {
+    filename = g_strdup (argv[1]);
+  } else {
+    const char *srcdir = g_getenv ("srcdir");
+
+    if (srcdir) {
+      filename = g_build_filename (srcdir, "caps_strings");
+    } else {
+      filename = g_strdup ("caps_strings");
+    }
+  }
 
   if (!g_file_get_contents (filename, &data, &length, NULL)) {
     abort ();
@@ -34,8 +42,10 @@ main (int argc, char *argv[])
   list = g_strsplit (data, "\n", 0);
 
   for (i = 0; list[i] != NULL; i++) {
-    if (list[i][0] == 0)
+    if (list[i][0] == 0) {
+      g_free (list[i]);
       continue;
+    }
 
     caps = gst_caps_from_string (list[i]);
     if (caps == NULL) {
@@ -68,6 +78,7 @@ main (int argc, char *argv[])
 
   g_free (list);
   g_free (data);
+  g_free (filename);
 
   return 0;
 }
