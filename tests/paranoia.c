@@ -36,7 +36,7 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),queue);
   gst_bin_add(GST_BIN(audio_thread),audiosink);
   gst_bin_add(GST_BIN(pipeline),audio_thread);
-  gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),gst_element_get_pad(audiosink,"sink"));
+  gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),gst_element_get_pad(audiosink,"sink"),"sink");
 
   gst_element_connect(paranoia,"src",queue,"sink");
   gst_element_connect(queue,"src",audio_thread,"sink");

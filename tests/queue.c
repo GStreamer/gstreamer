@@ -29,11 +29,11 @@ fprintf(stderr,"QUEUE: fakesink\n");
 
   gst_bin_add(thr1,src);
   fprintf(stderr,"QUEUE: added src to thr1\n");
-  gst_element_add_ghost_pad(GST_ELEMENT(thr1),gst_element_get_pad(src,"src"));
+  gst_element_add_ghost_pad(GST_ELEMENT(thr1),gst_element_get_pad(src,"src"),"src");
 //  gst_bin_use_cothreads(thr1,TRUE);
   gst_bin_add(thr2,sink);
   fprintf(stderr,"QUEUE: added sink to thr2\n");
-  gst_element_add_ghost_pad(GST_ELEMENT(thr2),gst_element_get_pad(sink,"sink"));
+  gst_element_add_ghost_pad(GST_ELEMENT(thr2),gst_element_get_pad(sink,"sink"),"sink");
 //  gst_bin_use_cothreads(thr2,TRUE);
   fprintf(stderr,"QUEUE: filled in threads\n");
 

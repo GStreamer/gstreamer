@@ -48,8 +48,8 @@ int main(int argc,char *argv[]) {
 	GST_STATE(bin),_gst_print_statename(GST_STATE(bin)));
 
   gst_bin_add(GST_BIN(subbin),filter);
-  gst_element_add_ghost_pad(GST_ELEMENT(bin),gst_element_get_pad(filter,"sink"));
-  gst_element_add_ghost_pad(GST_ELEMENT(bin),gst_element_get_pad(filter,"src"));
+  gst_element_add_ghost_pad(GST_ELEMENT(bin),gst_element_get_pad(filter,"sink"),"sink");
+  gst_element_add_ghost_pad(GST_ELEMENT(bin),gst_element_get_pad(filter,"src"),"src");
 
   gst_bin_add(GST_BIN(bin),src);
   gst_bin_add(GST_BIN(bin),subbin);
