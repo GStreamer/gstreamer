@@ -8,7 +8,7 @@
  * by first setting the output thread to play, then the whole pipeline
  */
 
-static gint handoff_count = 0;
+static volatile gint handoff_count = 0;
 
 /* handoff callback */
 static void

@@ -10,8 +10,8 @@
 #define MAX_IDENTITIES 29
 #define RUNS_PER_IDENTITY 5
 
-gboolean running = FALSE;
-gboolean done = FALSE;
+volatile gboolean running = FALSE;
+volatile gboolean done = FALSE;
 
 static void
 construct_pipeline (GstElement * pipeline, gint identities)

@@ -35,11 +35,12 @@ construct_pipeline (GstElement * pipeline)
   gst_bin_add_many (GST_BIN (thread), identity, sink, NULL);
 
   g_object_set (G_OBJECT (src), "num_buffers", 5, NULL);
-  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  //g_object_set (sink, "signal-handoffs", TRUE, NULL);
 }
 
 void
-change_state (GstElement * element, GstBuffer * buf, GstElement * pipeline)
+change_state (GstElement * element, GstBuffer * buf, GstPad * pad,
+    GstElement * pipeline)
 {
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
@@ -87,6 +88,7 @@ main (gint argc, gchar * argv[])
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
+    g_print ("done ...\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
   if (TESTNUM == 3) {
@@ -117,6 +119,7 @@ main (gint argc, gchar * argv[])
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
+    g_print ("stopping ...\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
 

@@ -36,9 +36,7 @@ extern GPrivate *gst_thread_current;
 typedef enum {
   GST_THREAD_STATE_SPINNING	= GST_BIN_FLAG_LAST,
   GST_THREAD_STATE_REAPING,
-  /* when iterating with mutex locked (special cases)
-     may only be set by thread itself */
-  GST_THREAD_MUTEX_LOCKED,
+  GST_THREAD_STATE_WAITING,
 
   /* padding */
   GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4

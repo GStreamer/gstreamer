@@ -8,8 +8,8 @@
 #define MAX_IDENTITIES 29
 #define RUNS_PER_IDENTITY 5
 
-gboolean running = FALSE;
-gboolean done = FALSE;
+volatile gboolean running = FALSE;
+volatile gboolean done = FALSE;
 
 static void
 construct_pipeline (GstElement * pipeline, gint identities)
@@ -54,8 +54,6 @@ main (gint argc, gchar * argv[])
   int runs = MAX_IDENTITIES * RUNS_PER_IDENTITY;
   int i;
   GstElement *pipeline;
-
-  alarm (10);
 
   g_thread_init (NULL);
   gst_init (&argc, &argv);

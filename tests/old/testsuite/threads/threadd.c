@@ -8,8 +8,10 @@
 #define MAX_IDENTITIES 29
 #define RUNS_PER_IDENTITY 5
 
-gboolean running = FALSE;
-gboolean done = FALSE;
+volatile gboolean running = FALSE;
+
+/* must be volatile, we're going to fool the compiler */
+volatile gboolean done = FALSE;
 
 static void
 construct_pipeline (GstElement * pipeline, gint identities)
@@ -58,8 +60,6 @@ main (gint argc, gchar * argv[])
   int i;
   gulong id;
   GstElement *thread;
-
-  alarm (10);
 
   gst_init (&argc, &argv);
 

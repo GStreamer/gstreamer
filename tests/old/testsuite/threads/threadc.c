@@ -32,7 +32,7 @@ construct_pipeline (GstElement * pipeline, gint identities)
   }
   gst_element_link (identity, sink);
 
-  g_object_set (G_OBJECT (src), "num_buffers", 1, "sizetype", 3, NULL);
+  g_object_set (G_OBJECT (src), "num_buffers", 10, "sizetype", 3, NULL);
 }
 
 void
