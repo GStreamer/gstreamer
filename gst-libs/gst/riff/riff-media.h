@@ -34,13 +34,16 @@ G_BEGIN_DECLS
 
 GstCaps *gst_riff_create_video_caps (guint32             codec_fcc,
 				     gst_riff_strh      *strh,
-				     gst_riff_strf_vids *strf);
+				     gst_riff_strf_vids *strf,
+				     char **codec_name);
 GstCaps *gst_riff_create_audio_caps (guint16             codec_id,
 				     gst_riff_strh      *strh,
-				     gst_riff_strf_auds *strf);
+				     gst_riff_strf_auds *strf,
+				     char **codec_name);
 GstCaps *gst_riff_create_iavs_caps  (guint32             codec_fcc,
 				     gst_riff_strh      *strh,
-				     gst_riff_strf_iavs *strf);
+				     gst_riff_strf_iavs *strf,
+				     char **codec_name);
 
 /*
  * Create template caps (includes all known types).
