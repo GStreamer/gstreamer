@@ -10,3 +10,4 @@ gstmarshal.c
 gstmarshal.h
 gstenumtypes.h
 gstenumtypes.c
+gstconfig.h

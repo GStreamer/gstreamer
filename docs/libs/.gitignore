@@ -1,7 +1,12 @@
 Makefile
 Makefile.in
 html
-sgml
+xml
 gstreamer-libs-unused.txt
+gstreamer-libs-undocumented.txt
 gstreamer-libs-decl.txt
 gstreamer-libs-decl-list.txt
+*.stamp
+gstreamer-libs.args
+gstreamer-libs.hierarchy
+gstreamer-libs.signals
