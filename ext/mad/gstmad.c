@@ -338,7 +338,7 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_UNIT:
+        case GST_FORMAT_UNITS:
 	  if (bytes_per_sample == 0)
             return FALSE;
 	  *dest_value = src_value / bytes_per_sample;
@@ -358,7 +358,7 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNIT:
+    case GST_FORMAT_UNITS:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
@@ -381,7 +381,7 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
 	  scale = bytes_per_sample;
 	  /* fallthrough */
-        case GST_FORMAT_UNIT:
+        case GST_FORMAT_UNITS:
 	  *dest_value = src_value * scale * mad->frame.header.samplerate / GST_SECOND;
           break;
         default:
@@ -413,7 +413,7 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
           *format = GST_FORMAT_TIME;
 	  /* fallthrough */
 	case GST_FORMAT_BYTES:
-	case GST_FORMAT_UNIT:
+	case GST_FORMAT_UNITS:
 	case GST_FORMAT_TIME:
         {
 	  res = FALSE;
@@ -457,13 +457,13 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
           GstFormat time_format;
 	  gint64 samples;
 
-          time_format = GST_FORMAT_UNIT;
+          time_format = GST_FORMAT_UNITS;
 	  res = gst_mad_convert_src (pad,
 			GST_FORMAT_TIME, mad->base_time,
 			&time_format, &samples);
 	  /* we only know about our samples, convert to requested format */
 	  res &= gst_mad_convert_src (pad,
-			  GST_FORMAT_UNIT, mad->total_samples + samples,
+			  GST_FORMAT_UNITS, mad->total_samples + samples,
 			  format, value);
 	  break;
 	}
