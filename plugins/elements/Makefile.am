@@ -23,7 +23,6 @@ libgstelements_la_SOURCES =	\
 	gstpipefilter.c		\
 	gsttee.c		\
 	gstaggregator.c		\
-	gstsinesrc.c		\
 	$(GSTHTTPSRC)
 
 noinst_HEADERS =		\
@@ -38,9 +37,7 @@ noinst_HEADERS =		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
 	gsttee.h		\
-	gstaggregator.h		\
-	gstsinesrc.h
-
+	gstaggregator.h
 CFLAGS += -O2 -Wall
 LDFLAGS += -lm
 

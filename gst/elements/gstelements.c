@@ -32,7 +32,6 @@
 #include "gstfdsrc.h"
 #include "gstmultidisksrc.h"
 #include "gstpipefilter.h"
-#include "gstsinesrc.h"
 #include "gsttee.h"
 #include "gstaggregator.h"
 
@@ -64,7 +63,6 @@ static struct _elements_entry _elements[] = {
   { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,		NULL },
   { "multidisksrc", gst_multidisksrc_get_type,	&gst_multidisksrc_details,	NULL },
   { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,	NULL },
-  { "sinesrc", 	    gst_sinesrc_get_type, 	&gst_sinesrc_details,		gst_sinesrc_factory_init },
   { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
   { "aggregator",   gst_aggregator_get_type, 	&gst_aggregator_details,	gst_aggregator_factory_init },
 
