@@ -1360,6 +1360,7 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   GstOptSchedulerCtx *ctx;
+  GList *pads;
 
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
 
@@ -1370,6 +1371,19 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
   ctx = g_new0 (GstOptSchedulerCtx, 1);
   GST_ELEMENT_SCHED_CONTEXT (element) = ctx;
   ctx->flags = GST_OPT_SCHEDULER_CTX_DISABLED;
+
+  /* set event handler on all pads here so events work unconnected too;
+   * in _link, it can be overruled if need be */
+  /* FIXME: we should also do this when new pads on the element are created;
+     but there are no hooks, so we do it again in _link */
+  pads = gst_element_get_pad_list (element);
+  while (pads) {
+    GstPad *pad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
+
+    if (!GST_IS_REAL_PAD (pad)) continue;
+    GST_RPAD_EVENTHANDLER (pad) = GST_RPAD_EVENTFUNC (pad);
+  }
 
   /* loop based elements *always* end up in their own group. It can eventually
    * be merged with another group when a link is made */
@@ -1541,6 +1555,11 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
         type = GST_OPT_CHAIN_TO_CHAIN;
     }
   }
+ 
+  /* since we can't set event handlers on pad creation after addition, it is
+   * best we set all of them again to the default before linking */
+  GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
+  GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
   
   /* for each link type, perform specific actions */
   switch (type) {
@@ -1556,8 +1575,6 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
         GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
-      GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
-      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically */
@@ -1582,8 +1599,6 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
         GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
-      GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
-      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically, 
@@ -1595,8 +1610,6 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
       GST_INFO (GST_CAT_SCHEDULING, "get to loop based link");
 
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
-      GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
-      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically, 
@@ -1613,9 +1626,8 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
 
       GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_loop_wrapper;
       GST_RPAD_GETHANDLER (srcpad) = gst_opt_scheduler_get_wrapper;
-      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
       /* events on the srcpad have to be intercepted as we might need to
-       * flush the buffer lists */
+       * flush the buffer lists, so override the given eventfunc */
       GST_RPAD_EVENTHANDLER (srcpad) = gst_opt_scheduler_event_wrapper;
 
       group1 = GST_ELEMENT_SCHED_GROUP (element1);
