@@ -11,7 +11,7 @@ static GConfClient *_gst_gconf_client = NULL; /* GConf connection */
 
 /* internal functions */
 
-GConfClient *
+static GConfClient *
 gst_gconf_get_client (void)
 {
   if (!_gst_gconf_client)
@@ -19,9 +19,10 @@ gst_gconf_get_client (void)
 
   return _gst_gconf_client;
 }
+
 /* go through a bin, finding the one pad that is unconnected in the given
  *  * direction, and return that pad */
-GstPad *
+static GstPad *
 gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction)
 {
   GstPad *pad = NULL;
@@ -117,11 +118,12 @@ gst_gconf_render_bin_from_description (const gchar *description)
 GstElement *
 gst_gconf_render_bin_from_key (const gchar *key)
 {
-  GstElement *bin;
+  GstElement *bin = NULL;
   gchar *value;
   
   value = gst_gconf_get_string (key);
-  bin = gst_gconf_render_bin_from_description (value);
+  if (value)
+    bin = gst_gconf_render_bin_from_description (value);
   return bin;
 }
 
@@ -130,6 +132,40 @@ guint		gst_gconf_notify_add		(const gchar *key,
     						 GConfClientNotifyFunc func,
 						 gpointer user_data);
 */
+
+GstElement *
+gst_gconf_get_default_audio_sink (void)
+{
+  GstElement *ret = gst_gconf_render_bin_from_key ("default/audiosink");
+  
+  if (!ret) {
+    ret = gst_element_factory_make ("osssink", NULL);
+  
+    if (!ret)
+      g_warning ("No GConf default audio sink key and osssink doesn't work");
+    else
+      g_warning ("GConf audio sink not found, using osssink");
+  }
+
+  return ret;
+}
+
+GstElement *
+gst_gconf_get_default_video_sink (void)
+{
+  GstElement *ret = gst_gconf_render_bin_from_key ("default/videosink");
+  
+  if (!ret) {
+    ret = gst_element_factory_make ("xvideosink", NULL);
+  
+    if (!ret)
+      g_warning ("No GConf default video sink key and xvideosink doesn't work");
+    else
+      g_warning ("GConf video sink not found, using xvideosink");
+  }
+
+  return ret;
+}
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
