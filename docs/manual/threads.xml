@@ -10,7 +10,8 @@
     To construct a new thread you will perform something like:
   </para>
 
-  <programlisting>
+  <para>
+    <programlisting>
   GstElement *my_thread;
 
   /* create the thread object */
@@ -28,15 +29,15 @@
   /* start playing */
   gst_element_set_state (GST_ELEMENT (my_thread), GST_STATE_PLAYING);
 
-  </programlisting>
-
+    </programlisting>
+  </para>
   <para>
     The above program will create a thread with two elements in it. As soon
     as it is set to the PLAYING state, the thread will start to iterate
     itself. You never need to explicitly iterate a thread.
   </para>
   
-  <sect2>
+  <sect1>
     <title>Constraints placed on the pipeline by the GstThread</title>
     <para>
       Within the pipeline, everything is the same as in any other bin. The
@@ -50,8 +51,8 @@
       itself, but it needs to be present on one side or the other to enable
       inter-thread communication.
     </para>
-  </sect2>
-  <sect2>
+  </sect1>
+  <sect1>
     <title>When would you want to use a thread?</title>
     <para>
       If you are writing a GUI application, making the top-level bin a thread will make your GUI
@@ -61,24 +62,24 @@
       the pipeline, which (for example) could cause pops in the output of the sound card, if it is
       an audio pipeline.
     </para>
-  </sect2>
-  <para> 
+    <para> 
     A thread can be visualised as below
-  </para>
-  <figure float="1" id="sec-threads-img">
-    <title>A thread</title>
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="images/thread.&magic;" format="&magic;" />
-      </imageobject>
-    </mediaobject>  
-  </figure>
+    </para>
+    <figure float="1" id="sec-threads-img">
+      <title>A thread</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/thread.&magic;" format="&magic;" />
+        </imageobject>
+      </mediaobject>  
+    </figure>
 
-  <para> 
+    <para> 
     As an example we show the helloworld program using a thread.
-  </para>
+    </para>
   
-  <programlisting>
+    <para>
+      <programlisting>
 /* example-begin threads.c */
 #include &lt;gst/gst.h&gt;
 
@@ -151,6 +152,7 @@ main (int argc, char *argv[])
   exit (0);
 }
 /* example-end threads.c */
-  </programlisting>
-
+      </programlisting>
+    </para>
+  </sect1>
 </chapter>

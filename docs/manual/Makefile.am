@@ -16,3 +16,7 @@ CSS=base.css
 EXTRA_DIST = $(XML) $(FIGS) $(CSS) magic-png magic-pdf
 
 include $(srcdir)/../manuals.mak
+
+check:
+	xmllint -noout -valid $(MAIN)
+

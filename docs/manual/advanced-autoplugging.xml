@@ -132,7 +132,8 @@
       <classname>GstType</classname>. The definition of a 
       <classname>GstType</classname> is like:
     </para>
-    <programlisting>
+    <para>
+      <programlisting>
 typedef GstCaps (*GstTypeFindFunc) (GstBuffer *buf,gpointer *priv);
  
 typedef struct _GstType GstType;
@@ -145,7 +146,8 @@ struct _GstType {
 
   GstTypeFindFunc typefindfunc; /* typefind function */
 };
-    </programlisting>
+      </programlisting>
+    </para> 
     <para> 
       All operations on <classname>GstType</classname> occur
       via their <classname>guint16 id</classname> numbers, with
@@ -201,10 +203,10 @@ struct _GstType {
       <para> 
         This function will return 0 if the extension was not known.
       </para> 
+      <para>
+        For more information, see <xref linkend="cha-autoplug"/>.
+      </para>
     </sect2>
-    <para>
-      For more information, see <xref linkend="cha-autoplug"/>.
-    </para>
   </sect1>
 
   <sect1>
