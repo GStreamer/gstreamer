@@ -339,6 +339,7 @@ gst_xvimagesink_xwindow_decorate (GstXvImageSink * xvimagesink,
 
   hints_atom = XInternAtom (xvimagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
   if (hints_atom == None) {
+    g_mutex_unlock (xvimagesink->x_lock);
     return FALSE;
   }
 

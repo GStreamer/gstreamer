@@ -320,6 +320,7 @@ gst_ximagesink_xwindow_decorate (GstXImageSink * ximagesink,
 
   hints_atom = XInternAtom (ximagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
   if (hints_atom == None) {
+    g_mutex_unlock (ximagesink->x_lock);
     return FALSE;
   }
 
