@@ -568,8 +568,64 @@ GstCaps *gst_caps_union (const GstCaps *caps1, const GstCaps *caps2)
 
 GstCaps *gst_caps_normalize (const GstCaps *caps)
 {
+  g_critical ("unimplemented");
 
   return NULL;
+}
+
+static gboolean
+simplify_foreach (GQuark field_id, GValue *value, gpointer user_data)
+{
+  GstStructure *s2 = (GstStructure *) user_data;
+  const GValue *v2;
+
+  v2 = gst_structure_id_get_value (s2, field_id);
+  if (v2 == NULL) return FALSE;
+
+  if (gst_value_compare (value, v2) == GST_VALUE_EQUAL) return TRUE;
+  return FALSE;
+}
+
+static gboolean
+gst_caps_structure_simplify (GstStructure *struct1, const GstStructure *struct2)
+{
+  /* FIXME this is just a simple compare.  Better would be to merge
+   * the two structures */
+  if (struct1->name != struct2->name) return FALSE;
+  if (struct1->fields->len != struct2->fields->len) return FALSE;
+
+  return gst_structure_foreach (struct1, simplify_foreach, (void *)struct2);
+}
+
+GstCaps *gst_caps_simplify (const GstCaps *caps)
+{
+  int i;
+  int j;
+  GstCaps *newcaps;
+  GstStructure *structure;
+  GstStructure *struct2;
+
+  if (gst_caps_get_size (caps) < 2) {
+    return gst_caps_copy (caps);
+  }
+
+  newcaps = gst_caps_new_empty ();
+
+  for(i=0;i<gst_caps_get_size (caps);i++){
+    structure = gst_caps_get_structure (caps, i);
+
+    for(j=0;j<gst_caps_get_size (newcaps);j++){
+      struct2 = gst_caps_get_structure (caps, i);
+      if (gst_caps_structure_simplify (struct2, structure)) {
+        break;
+      }
+    }
+    if (j==gst_caps_get_size (newcaps)) {
+      gst_caps_append_structure (newcaps, gst_structure_copy(structure));
+    }
+  }
+
+  return newcaps;
 }
 
 #ifndef GST_DISABLE_LOADSAVE

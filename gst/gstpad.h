@@ -402,6 +402,7 @@ GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 /* capsnego functions */
 G_CONST_RETURN GstCaps*	gst_pad_get_negotiated_caps		(GstPad *pad);
+gboolean	        gst_pad_is_negotiated		        (GstPad *pad);
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
 G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps *caps);

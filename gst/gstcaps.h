@@ -101,6 +101,7 @@ gboolean gst_caps_is_always_compatible (const GstCaps *caps1,
 GstCaps *gst_caps_intersect (const GstCaps *caps1, const GstCaps *caps2);
 GstCaps *gst_caps_union (const GstCaps *caps1, const GstCaps *caps2);
 GstCaps *gst_caps_normalize (const GstCaps *caps);
+GstCaps *gst_caps_simplify (const GstCaps *caps);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr gst_caps_save_thyself (const GstCaps *caps, xmlNodePtr parent);

@@ -211,8 +211,6 @@ GstStructure *gst_structure_copy(GstStructure *structure)
   g_return_val_if_fail(structure != NULL, NULL);
 
   new_structure = gst_structure_empty_new(g_quark_to_string(structure->name));
-  new_structure->fields = g_array_set_size(new_structure->fields,
-      structure->fields->len);
   new_structure->name = structure->name;
 
   for(i=0;i<structure->fields->len;i++){
@@ -225,7 +223,7 @@ GstStructure *gst_structure_copy(GstStructure *structure)
     g_array_append_val(new_structure->fields, new_field);
   }
 
-  return structure;
+  return new_structure;
 }
 
 /**

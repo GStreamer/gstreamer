@@ -1205,6 +1205,8 @@ gst_pad_link_try (GstPadLink *link)
   
   ret = gst_pad_link_negotiate (link); 
   if (ret == GST_PAD_LINK_REFUSED) {
+    oldlink->srcnotify = link->srcnotify;
+    oldlink->sinknotify = link->sinknotify;
     if (oldlink && oldlink->caps && !gst_pad_link_call_link_functions (oldlink))
       g_warning ("pads don't accept old caps. We assume they did though");
     gst_pad_link_free (link);
@@ -1257,6 +1259,7 @@ GstPadLinkReturn
 gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
 {
   GstPadLink *link;
+  GstPadLinkReturn ret;
 
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
@@ -1306,7 +1309,9 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
     link->sinknotify = FALSE;
   }
 
-  return gst_pad_link_try (link);
+  ret = gst_pad_link_try (link);
+
+  return ret;
 }
 
 
@@ -1829,7 +1834,7 @@ _gst_pad_default_fixate_func (GstPad *pad, GstCaps *caps, gpointer unused)
 gboolean
 gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad) 
 {
-  return gst_pad_renegotiate (srcpad) >= 0;
+  return GST_PAD_LINK_SUCCESSFUL (gst_pad_renegotiate (srcpad));
 }
 
 void
@@ -2018,6 +2023,25 @@ GstPadLinkReturn
 gst_pad_proxy_link (GstPad *pad, const GstCaps *caps)
 {
   return gst_pad_try_set_caps (pad, caps);
+}
+
+/**
+ * gst_pad_is_negotiated:
+ * @pad: a #GstPad to get the negotiation status of
+ *
+ * Returns: TRUE if the pad has successfully negotiated caps.
+ */
+gboolean
+gst_pad_is_negotiated (GstPad *pad)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  if (!GST_PAD_REALIZE (pad))
+    return FALSE;
+  if (!GST_RPAD_LINK (pad))
+    return FALSE;
+
+  return (GST_RPAD_LINK (pad)->caps != NULL);
 }
 
 /**

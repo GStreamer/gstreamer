@@ -1,3 +1,18 @@
+2003-12-29  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.c: (gst_caps_normalize), (simplify_foreach),
+	(gst_caps_structure_simplify), (gst_caps_simplify):
+	* gst/gstcaps.h:
+	  Add simplify function
+	* gst/gstpad.c: (gst_pad_link_try), (gst_pad_try_set_caps),
+	(gst_pad_perform_negotiate), (gst_pad_is_negotiated):
+	* gst/gstpad.h:
+	  Copy over srcnotify, sinknotify when calling old pad_link
+	  functions.  Add new is_negotiated() function.
+	* gst/gststructure.c: (gst_structure_copy):
+	  Fix an incredibly stupid bug that should have been noticed
+	  weeks ago.  _copy() returned the argument, not the new copy.
+
 2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstcaps.c: (gst_caps_append):
