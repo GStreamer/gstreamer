@@ -1735,8 +1735,12 @@ gst_alsa_set_hw_params (GstAlsa *this)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Preparing format: %s %dHz, %d channels\n",
-            snd_pcm_format_name (this->format->format), this->format->rate, this->format->channels);
+  if (this->format) {
+    GST_INFO (GST_CAT_PLUGIN_INFO, "Preparing format: %s %dHz, %d channels",
+              snd_pcm_format_name (this->format->format), this->format->rate, this->format->channels);
+  } else {
+    GST_INFO (GST_CAT_PLUGIN_INFO, "Preparing format: (none)");
+  }
 
   snd_pcm_hw_params_alloca (&hw_params);
   ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params),
