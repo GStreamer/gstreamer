@@ -1,3 +1,14 @@
+2004-03-12  David Schleef  <ds@schleef.org>
+
+	* configure.ac: the Hermes library controls hermescolorspace, not
+	colorspace.
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_base_init),
+	(gst_mpeg2dec_init): minor pet peeve: disable code with #ifdef,
+	not /* */
+	* ext/sdl/sdlvideosink.c: Change XID to unsigned long.
+	* ext/sdl/sdlvideosink.h: ditto.
+	* gst/colorspace/gstcolorspace.c: Fix old comments about Hermes
+
 2004-03-12  Benjamin Otte  <otte@gnome.org>
 
 	* gst-libs/gst/xoverlay/xoverlay.c: (gst_x_overlay_set_xwindow_id),
@@ -89,7 +100,7 @@
 2004-03-09  David Schleef  <ds@schleef.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_request_new_pad),
-	(gst_alsa_fixate): Add fixate function.  (bug #135719)
+	(gst_alsa_fixate): Add fixate function.  (bug #136686)
 	* ext/alsa/gstalsa.h:
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_init):
 
