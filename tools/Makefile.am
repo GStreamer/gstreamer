@@ -16,7 +16,7 @@ bin_PROGRAMS = 	gst-launch 	\
 		$(GST_LOADSAVE_SRC) 	\
 		gst-complete
 
-man_MANS = gst-launch.1 gst-register.1 gst-inspect.1 \
+man_MANS = gst-launch.1 gst-register.1 gst-inspect.1 gst-launch-ext.1 \
 	gst-complete.1 gst-compprep.1 gst-xmllaunch.1
 
 gst_launch_LDADD = $(GST_LIBS) #-lefence
