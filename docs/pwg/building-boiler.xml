@@ -323,7 +323,9 @@ GST_STATIC_PAD_TEMPLATE (
 );
     </programlisting>
     <para>
-      Values surrounded by {} are lists, values surrounded by [] are ranges.
+      Values surrounded by curly brackets (<quote>{</quote> and
+      <quote>}</quote>) are lists, values surrounded by square brackets
+      (<quote>[</quote> and <quote>]</quote>) are ranges.
       Multiple sets of types are supported too, and should be separated by
       a semicolon (<quote>;</quote>). Later, in the chapter on pads, we will
       see how to use types to know the exact format of a stream:

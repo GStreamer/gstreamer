@@ -1,3 +1,8 @@
+2004-11-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/building-boiler.xml:
+	  Make description somewhat clearer.
+
 2004-11-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/upload.mak:
