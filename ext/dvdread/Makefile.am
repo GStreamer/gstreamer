@@ -1,14 +1,14 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libdvdsrc.la
+plugin_LTLIBRARIES = libgstdvdsrc.la
 
 ## FIXME: the extra option, what do we do with it ?
 ## AM_CFLAGS = -D_LARGEFILE64_SOURCE $(LIBDVDREADCFLAGS)
 
-libdvdsrc_la_SOURCES = dvdsrc.c
-libdvdsrc_la_CFLAGS = $(GST_CFLAGS)
-libdvdsrc_la_LIBADD = $(GST_LIBS) $(DVDREAD_LIBS)
-libdvdsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstdvdsrc_la_SOURCES = dvdsrc.c
+libgstdvdsrc_la_CFLAGS = $(GST_CFLAGS)
+libgstdvdsrc_la_LIBADD = $(GST_LIBS) $(DVDREAD_LIBS)
+libgstdvdsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
 noinst_HEADERS = dvdsrc.h
 
