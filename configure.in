@@ -36,7 +36,7 @@ AC_PROG_CC
 AC_STDC_HEADERS
 AC_ARG_PROGRAM
 
-AM_DISABLE_STATIC
+dnl AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
@@ -438,6 +438,17 @@ AC_ARG_WITH(configdir,
   no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
   *) GST_CONFIG_DIR="${withval}" ;;
 esac], 
+[:]) dnl Default value
+
+dnl Default value
+GST_WIN32_LIBDIR="/usr/lib/win32"
+AC_ARG_WITH(win32_libdir,
+[  --with-win32-libdir          specify location for win32 DLLs],
+[case "${withval}" in
+  yes) AC_MSG_ERROR(bad value ${withval} for --with-win32-libdir) ;;
+  no) AC_MSG_ERROR(bad value ${withval} for --with-win32-libdir) ;;
+  *) GST_WIN32_LIBDIR="${withval}" ;;
+esac],
 [:]) dnl Default value
 
 

@@ -3,6 +3,7 @@
 #undef PLUGINS_USE_SRCDIR
 
 #undef GST_CONFIG_DIR
+#undef GST_WIN32_LIBDIR
 
 #undef HAVE_CPU_I386
 #undef HAVE_CPU_PPC
