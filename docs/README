@@ -1,0 +1,23 @@
+GTK-DOC stuff
+-------------
+
+* starting files in CVS:
+  - Makefile.am
+  - gstreamer-sections.txt, gstreamer.types.in, gstreamer-docs.sgml
+  - tmpl/
+
+* what is done in the gst dir ?
+
+- headers are scanned based on $(MODULE).types
+  $(MODULE)-scan is created
+  gtkdoc-scan is called with a sourcedir and a module name,
+  where the module name is  $(MODULE)
+  $(MODULE)-sections.txt is created if it doesn't exist yet (it should),
+  as well as $(MODULE)-decl.txt and $(MODULE)-decl-list.txt
+    
+  and .args, .hierarchy and .signals files are created
+  gtkdoc-scan is called 
+
+
+* TODO:
+  why is there gstreamer.types.in and gst-plugins.types.in ?
