@@ -529,6 +529,10 @@ gst_qtdemux_change_state (GstElement * element)
       qtdemux->need_discont = FALSE;
       qtdemux->need_flush = FALSE;
       gst_bytestream_destroy (qtdemux->bs);
+      if (qtdemux->tag_list) {
+        gst_tag_list_free (qtdemux->tag_list);
+        qtdemux->tag_list = NULL;
+      }
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -794,6 +798,8 @@ gst_qtdemux_loop_header (GstElement * element)
 void
 gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
+  gchar *caps;
+
   if (stream->subtype == GST_MAKE_FOURCC ('v', 'i', 'd', 'e')) {
     gchar *name = g_strdup_printf ("video_%02d", qtdemux->n_video_streams);
 
@@ -839,7 +845,9 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   gst_pad_set_formats_function (stream->pad, gst_qtdemux_get_src_formats);
   gst_pad_set_convert_function (stream->pad, gst_qtdemux_src_convert);
 
-  GST_DEBUG ("setting caps %s\n", gst_caps_to_string (stream->caps));
+  caps = gst_caps_to_string (stream->caps);
+  GST_DEBUG ("setting caps %s", caps);
+  g_free (caps);
   gst_pad_set_explicit_caps (stream->pad, stream->caps);
 
   GST_DEBUG ("adding pad %s %p to qtdemux %p",
