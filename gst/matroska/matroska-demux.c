@@ -33,6 +33,9 @@
 #include "matroska-demux.h"
 #include "matroska-ids.h"
 
+GST_DEBUG_CATEGORY (matroskademux_debug);
+#define GST_CAT_DEFAULT matroskademux_debug
+
 enum
 {
   /* FILL ME */
@@ -159,6 +162,9 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
   gstelement_class->change_state = gst_matroska_demux_change_state;
   gstelement_class->send_event = gst_matroska_demux_send_event;
   gstelement_class->set_clock = gst_matroska_demux_set_clock;
+
+  GST_DEBUG_CATEGORY_INIT (matroskademux_debug, "matroskademux", 0,
+      "Matroska demuxer");
 }
 
 static void
@@ -453,6 +459,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 break;
               }
               videocontext->display_width = num;
+              GST_DEBUG ("display_width %" G_GUINT64_FORMAT, num);
               break;
             }
 
@@ -465,6 +472,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 break;
               }
               videocontext->display_height = num;
+              GST_DEBUG ("display_height %" G_GUINT64_FORMAT, num);
               break;
             }
 
@@ -477,6 +485,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 break;
               }
               videocontext->pixel_width = num;
+              GST_DEBUG ("pixel_width %" G_GUINT64_FORMAT, num);
               break;
             }
 
@@ -489,6 +498,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 break;
               }
               videocontext->pixel_height = num;
+              GST_DEBUG ("pixel_height %" G_GUINT64_FORMAT, num);
               break;
             }
 

@@ -29,6 +29,9 @@
 #include "matroska-mux.h"
 #include "matroska-ids.h"
 
+GST_DEBUG_CATEGORY (matroskamux_debug);
+#define GST_CAT_DEFAULT matroskamux_debug
+
 enum
 {
   /* FILL ME */
@@ -204,6 +207,9 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
 
   gstelement_class->change_state = gst_matroska_mux_change_state;
   gstelement_class->request_new_pad = gst_matroska_mux_request_new_pad;
+
+  GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
+      "Matroska muxer");
 }
 
 static void
