@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.2 "Titan Shifting Gears"
+GStreamer: Release notes for GStreamer FFmpeg 0.8.3 "Tiny Piece of Plastic"
         
 
 The GStreamer team is happy to announce a new stable release of the
@@ -21,8 +21,22 @@ Features of this release
 
 Bugs fixed in this release
     
-      * 150449 : ffdemux_mpegts causes internal error: push on pad
-      * 152798 : wmv2/wma2 file fails to play back
+      * 137552 : [ffenc_h263p] segfaults
+      * 138672 : [ffdec_msvc] Horseb~1.avi
+      * 140137 : [ffdec_msmpeg4] Can't play pokem.avi
+      * 148479 : [ffenc_mpeg4] broken
+      * 150495 : [build] gst-ffmpeg build failure on Solaris
+      * 152693 : [PATCH] [build] Compile errors with gcc 2.95
+      * 155212 : crash in gstffmpegdec
+      * 155274 : [ffdec_mp3] ID3 handling by gst-ffmpeg
+      * 155363 : [build] gst-ffmpeg fails to build RPMS from CVS
+      * 156920 : [PATCH][ffmpegdemux] close before forwarding event...
+      * 157702 : [mpeg] file that ffmpeg fails to play correctly
+      * 159319 : castaway.mov looks bad
+      * 159755 : [PATCH] use ffmpeg pixel-aspect-ratio if available
+      * 160318 : [ff[dec|enc]_mjpeg] should support image/jpeg
+      * 161395 : Quicktime Video Causing segfault 
+      * 162215 : resetting rank for mp3demux
 
 Download
 
@@ -52,5 +66,7 @@ Contributors to this release
     
       * Ronald Bultje
       * Thomas Vander Stichele
-      * Iain Holmes
+      * David Schleef
+      * Sebastien Cote
+      * Wim Taymans
  

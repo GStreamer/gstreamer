@@ -1,3 +1,12 @@
+=== release 0.8.3 === 
+
+2004-12-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.8.3 "Tiny Piece of Plastic".
+
 2004-12-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
