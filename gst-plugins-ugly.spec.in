@@ -256,6 +256,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstffmpeg.so
+%{_libdir}/gstreamer-%{majorminor}/libgstxwindowlistener.so.0.0.0
+%{_libdir}/libgstcolorbalance.so
+%{_libdir}/libgsttuner.so
+%{_libdir}/libgstxoverlay.so
+
 
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -308,6 +313,14 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/navigation/navigation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
+%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance.h
+%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalancechannel.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixertrack.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunerchannel.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunernorm.h
+%{_includedir}/gstreamer-%{majorminor}/gst/xoverlay/xoverlay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/xwindowlistener/xwindowlistener.h
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
@@ -826,6 +839,10 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Thu Oct 16 2003 Christian Schaller <Uraeus@gnome.org>
+- Add new colorbalance and tuner and xoverlay stuff
+- Change name of kde-audio-devel to arts-devel
+
 * Sat Sep 27 2003 Christian Schaller <Uraeus@gnome.org>
 - Add majorminor to man page names
 - add navigation lib to package
