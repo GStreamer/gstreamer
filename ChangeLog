@@ -1,3 +1,18 @@
+2004-01-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/audiofile/gstafsink.c: (gst_afsink_init), (gst_afsink_chain),
+	(gst_afsink_handle_event):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_init):
+	* gst/avi/gstavimux.c: (gst_avimux_request_new_pad):
+	* sys/dxr3/dxr3audiosink.c: (dxr3audiosink_init):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_init):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_init):
+	  Fix for instantiate-test (see core). Also remove dead code from
+	  jpegenc (which still needs fixing, but that's lower on my TODO
+	  list...).
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_getcaps):
+	  Never return NULL as caps.
+
 2004-01-07  David Schleef  <ds@schleef.org>
 
 	* configure.ac:

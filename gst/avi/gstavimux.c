@@ -548,7 +548,6 @@ gst_avimux_request_new_pad (GstElement     *element,
   g_signal_connect(newpad, "unlinked",
     G_CALLBACK(gst_avimux_pad_unlink), (gpointer)avimux);
   gst_element_add_pad (element, newpad);
-  gst_pad_set_event_function(newpad, gst_avimux_handle_event);
   gst_pad_set_event_mask_function(newpad, gst_avimux_get_event_masks);
   
   return newpad;

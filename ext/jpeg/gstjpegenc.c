@@ -53,8 +53,6 @@ static void		gst_jpegenc_init	(GstJpegEnc *jpegenc);
 static void		gst_jpegenc_chain	(GstPad *pad, GstData *_data);
 static GstPadLinkReturn	gst_jpegenc_link	(GstPad *pad, const GstCaps *caps);
 
-static GstData	*gst_jpegenc_get	(GstPad *pad);
-
 static void		gst_jpegenc_resync	(GstJpegEnc *jpegenc);
 
 static GstElementClass *parent_class = NULL;
@@ -164,7 +162,6 @@ gst_jpegenc_init (GstJpegEnc *jpegenc)
   gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->sinkpad);
   gst_pad_set_chain_function(jpegenc->sinkpad,gst_jpegenc_chain);
   gst_pad_set_link_function(jpegenc->sinkpad, gst_jpegenc_link);
-  gst_pad_set_get_function(jpegenc->sinkpad,gst_jpegenc_get);
   jpegenc->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->srcpad);
 
@@ -274,31 +271,6 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
 
   jpegenc->buffer = NULL;
   GST_DEBUG ("gst_jpegenc_resync: resync done");
-}
-
-static GstData*
-gst_jpegenc_get (GstPad *pad)
-{
-  GstJpegEnc *jpegenc;
-  GstBuffer *newbuf;
-
-  GST_DEBUG ("gst_jpegenc_chain: pull buffer");
-
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
-
-  if (jpegenc->buffer == NULL || GST_BUFFER_REFCOUNT_VALUE(jpegenc->buffer) != 1) {
-    if (jpegenc->buffer) gst_buffer_unref(jpegenc->buffer);
-    GST_DEBUG ("gst_jpegenc_chain: new buffer");
-    newbuf = jpegenc->buffer = gst_buffer_new();
-    GST_BUFFER_DATA(newbuf) = g_malloc(jpegenc->bufsize);
-    GST_BUFFER_SIZE(newbuf) = jpegenc->bufsize;
-  }
-  gst_buffer_ref(jpegenc->buffer);
-
-  return GST_DATA (jpegenc->buffer);
 }
 
 static void

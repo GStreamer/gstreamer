@@ -743,7 +743,7 @@ gst_v4l2src_getcaps (GstPad  *pad)
 	int min_w, max_w, min_h, max_h;
 
 	if (!GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src))) {
-		return NULL;
+		return gst_caps_new_any ();
 	}
 
 	/* build our own capslist */
