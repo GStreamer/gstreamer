@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "play.h"
+#include <gst/gst-i18n-plugin.h>
 
 #define TICK_INTERVAL_MSEC 200
 
@@ -106,10 +107,10 @@ gst_play_error_plugin (const gchar * element, GError ** error)
 {
   gchar *message;
 
-  message = g_strdup_printf ("The %s element could not be found. "
-      "This element is essential for playback. "
-      "Please install the right plug-in and verify "
-      "that it works by running 'gst-inspect %s'", element, element);
+  message = g_strdup_printf (_("The %s element could not be found. "
+          "This element is essential for playback. "
+          "Please install the right plug-in and verify "
+          "that it works by running 'gst-inspect %s'"), element, element);
   gst_play_error_create (error, message);
   g_free (message);
   return;
@@ -118,9 +119,25 @@ gst_play_error_plugin (const gchar * element, GError ** error)
 #define GST_PLAY_MAKE_OR_ERROR(el, factory, name, error)	\
 G_STMT_START {							\
   el = gst_element_factory_make (factory, name);		\
-  if (!GST_IS_ELEMENT (el))					\
-  {								\
+  if (!GST_IS_ELEMENT (el)) {					\
     gst_play_error_plugin (factory, error);			\
+    return FALSE;						\
+  }								\
+} G_STMT_END
+
+/* Create a colorspace element from the list of acceptable ones;
+ * set error and fail if none found. */
+#define GST_PLAY_MAKE_CS_OR_ERROR(el, name, error)		\
+G_STMT_START {							\
+  el = gst_element_factory_make ("ffmpegcolorspace", name);	\
+  if (!GST_IS_ELEMENT (el))					\
+    el = gst_element_factory_make ("ffcolorspace", name);	\
+  if (!GST_IS_ELEMENT (el))					\
+    el = gst_element_factory_make ("hermescolorspace", name);	\
+  if (!GST_IS_ELEMENT (el)) {					\
+    gst_play_error_create (error,				\
+        _("No usable colorspace element could be found.\n"	\
+        "Please install one and restart."));			\
     return FALSE;						\
   }								\
 } G_STMT_END
@@ -220,19 +237,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     /* identity ! colorspace ! switch  */
     GST_PLAY_MAKE_OR_ERROR (identity, "identity", "identity", error);
     g_hash_table_insert (play->priv->elements, "identity", identity);
-
-    identity_cs = gst_element_factory_make ("ffcolorspace", "identity_cs");
-    if (!GST_IS_ELEMENT (identity_cs)) {
-      identity_cs =
-          gst_element_factory_make ("ffmpegcolorspace", "identity_cs");
-      if (!GST_IS_ELEMENT (identity_cs)) {
-        identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
-        if (!GST_IS_ELEMENT (identity_cs)) {
-          gst_play_error_plugin ("colorspace", error);
-          return FALSE;
-        }
-      }
-    }
+    GST_PLAY_MAKE_CS_OR_ERROR (identity_cs, "identity_cs", error);
     g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
     gst_bin_add_many (GST_BIN (output_bin), identity, identity_cs, NULL);
     if (!gst_element_link (identity, identity_cs))
@@ -264,18 +269,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "vis_element", vis_element);
 
     /* Colorspace conversion */
-    vis_cs = gst_element_factory_make ("ffcolorspace", "vis_cs");
-    if (!GST_IS_ELEMENT (vis_cs)) {
-      vis_cs = gst_element_factory_make ("ffmpegcolorspace", "vis_cs");
-      if (!GST_IS_ELEMENT (vis_cs)) {
-        vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
-        if (!GST_IS_ELEMENT (vis_cs)) {
-          gst_play_error_plugin ("colorspace", error);
-          return FALSE;
-        }
-      }
-    }
-
+    GST_PLAY_MAKE_CS_OR_ERROR (vis_cs, "vis_cs", error);
     g_hash_table_insert (play->priv->elements, "vis_cs", vis_cs);
 
     gst_bin_add_many (GST_BIN (vis_bin), vis_queue, vis_element, vis_cs, NULL);
@@ -299,17 +293,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "video_switch", video_switch);
 
     /* Colorspace conversion */
-    video_cs = gst_element_factory_make ("ffcolorspace", "video_cs");
-    if (!GST_IS_ELEMENT (video_cs)) {
-      video_cs = gst_element_factory_make ("ffmpegcolorspace", "video_cs");
-      if (!GST_IS_ELEMENT (video_cs)) {
-        video_cs = gst_element_factory_make ("colorspace", "video_cs");
-        if (!GST_IS_ELEMENT (video_cs)) {
-          gst_play_error_plugin ("colorspace", error);
-          return FALSE;
-        }
-      }
-    }
+    GST_PLAY_MAKE_CS_OR_ERROR (video_cs, "video_cs", error);
     g_hash_table_insert (play->priv->elements, "video_cs", video_cs);
 
     /* Software colorbalance */
@@ -318,17 +302,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "video_balance", video_balance);
 
     /* Colorspace conversion */
-    balance_cs = gst_element_factory_make ("ffcolorspace", "balance_cs");
-    if (!GST_IS_ELEMENT (balance_cs)) {
-      balance_cs = gst_element_factory_make ("ffmpegcolorspace", "balance_cs");
-      if (!GST_IS_ELEMENT (balance_cs)) {
-        balance_cs = gst_element_factory_make ("colorspace", "balance_cs");
-        if (!GST_IS_ELEMENT (balance_cs)) {
-          gst_play_error_plugin ("colorspace", error);
-          return FALSE;
-        }
-      }
-    }
+    GST_PLAY_MAKE_CS_OR_ERROR (balance_cs, "balance_cs", error);
     g_hash_table_insert (play->priv->elements, "balance_cs", balance_cs);
 
     /* Software scaling of video stream */
