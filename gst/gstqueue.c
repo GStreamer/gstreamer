@@ -41,6 +41,24 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
+#define GST_CAT_DEFAULT (queue_dataflow)
+
+#define STATUS(queue, msg) \
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
+		      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
+		      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
+		      "-%" G_GUINT64_FORMAT " ns, %u elements", \
+		      GST_DEBUG_PAD_NAME (pad), \
+		      queue->cur_level.buffers, \
+		      queue->min_threshold.buffers, \
+		      queue->max_size.buffers, \
+		      queue->cur_level.bytes, \
+		      queue->min_threshold.bytes, \
+		      queue->max_size.bytes, \
+		      queue->cur_level.time, \
+		      queue->min_threshold.time, \
+		      queue->max_size.time, \
+		      queue->queue->length)
 
 static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
@@ -120,7 +138,9 @@ static gboolean gst_queue_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * fmt, gint64 * value);
 
 static GstCaps *gst_queue_getcaps (GstPad * pad);
-static GstPadLinkReturn gst_queue_link (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn
+gst_queue_link_sink (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn gst_queue_link_src (GstPad * pad, const GstCaps * caps);
 static void gst_queue_locked_flush (GstQueue * queue);
 
 static GstElementStateReturn gst_queue_change_state (GstElement * element);
@@ -288,7 +308,7 @@ gst_queue_init (GstQueue * queue)
       GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
   gst_pad_set_link_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_link));
+      GST_DEBUG_FUNCPTR (gst_queue_link_sink));
   gst_pad_set_getcaps_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_active (queue->sinkpad, TRUE);
@@ -298,7 +318,8 @@ gst_queue_init (GstQueue * queue)
       "src");
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
-  gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));
+  gst_pad_set_link_function (queue->srcpad,
+      GST_DEBUG_FUNCPTR (gst_queue_link_src));
   gst_pad_set_getcaps_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad,
@@ -374,7 +395,7 @@ gst_queue_getcaps (GstPad * pad)
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
 
-  if (queue->cur_level.bytes > 0) {
+  if (pad == queue->srcpad && queue->cur_level.bytes > 0) {
     return gst_caps_copy (queue->negotiated_caps);
   }
 
@@ -382,7 +403,45 @@ gst_queue_getcaps (GstPad * pad)
 }
 
 static GstPadLinkReturn
-gst_queue_link (GstPad * pad, const GstCaps * caps)
+gst_queue_link_sink (GstPad * pad, const GstCaps * caps)
+{
+  GstQueue *queue;
+  GstPadLinkReturn link_ret;
+
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+
+  GST_QUEUE_MUTEX_LOCK;
+
+  if (queue->cur_level.bytes > 0) {
+    if (gst_caps_is_equal (caps, queue->negotiated_caps)) {
+      GST_QUEUE_MUTEX_UNLOCK;
+      return GST_PAD_LINK_OK;
+    }
+
+    /* Wait until the queue is empty before attempting the pad
+       negotiation. */
+    STATUS (queue, "waiting for queue to get empty");
+    while (queue->cur_level.bytes > 0) {
+      g_cond_wait (queue->item_del, queue->qlock);
+    }
+    STATUS (queue, "queue is now empty");
+  }
+
+  link_ret = gst_pad_proxy_pad_link (pad, caps);
+
+  if (GST_PAD_LINK_SUCCESSFUL (link_ret)) {
+    /* we store an extra copy of the negotiated caps, just in case
+     * the pads become unnegotiated while we have buffers */
+    gst_caps_replace (&queue->negotiated_caps, gst_caps_copy (caps));
+  }
+
+  GST_QUEUE_MUTEX_UNLOCK;
+
+  return link_ret;
+}
+
+static GstPadLinkReturn
+gst_queue_link_src (GstPad * pad, const GstCaps * caps)
 {
   GstQueue *queue;
   GstPadLinkReturn link_ret;
@@ -464,23 +523,6 @@ gst_queue_handle_pending_events (GstQueue * queue)
   }
   g_mutex_unlock (queue->event_lock);
 }
-
-#define STATUS(queue, msg) \
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
-		      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
-		      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
-		      "-%" G_GUINT64_FORMAT " ns, %u elements", \
-		      GST_DEBUG_PAD_NAME (pad), \
-		      queue->cur_level.buffers, \
-		      queue->min_threshold.buffers, \
-		      queue->max_size.buffers, \
-		      queue->cur_level.bytes, \
-		      queue->min_threshold.bytes, \
-		      queue->max_size.bytes, \
-		      queue->cur_level.time, \
-		      queue->min_threshold.time, \
-		      queue->max_size.time, \
-		      queue->queue->length)
 
 static void
 gst_queue_chain (GstPad * pad, GstData * data)

@@ -326,41 +326,41 @@ gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
     /* set the children's schedule */
     g_list_foreach (GST_BIN (element)->children,
         (GFunc) gst_bin_set_element_sched, sched);
-  }
-  /* otherwise, if it's just a regular old element */
-  else if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
+  } else {
+    /* otherwise, if it's just a regular old element */
     GList *pads;
 
     gst_scheduler_add_element (sched, element);
 
-    /* set the sched pointer in all the pads */
-    pads = element->pads;
-    while (pads) {
-      GstPad *pad;
+    if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
+      /* set the sched pointer in all the pads */
+      pads = element->pads;
+      while (pads) {
+        GstPad *pad;
 
-      pad = GST_PAD (pads->data);
-      pads = g_list_next (pads);
+        pad = GST_PAD (pads->data);
+        pads = g_list_next (pads);
 
-      /* we only operate on real pads */
-      if (!GST_IS_REAL_PAD (pad))
-        continue;
+        /* we only operate on real pads */
+        if (!GST_IS_REAL_PAD (pad))
+          continue;
 
-      /* if the peer element exists and is a candidate */
-      if (GST_PAD_PEER (pad)) {
-        if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
-          GST_CAT_LOG (GST_CAT_SCHEDULING,
-              "peer is in same scheduler, telling scheduler");
+        /* if the peer element exists and is a candidate */
+        if (GST_PAD_PEER (pad)) {
+          if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
+            GST_CAT_LOG (GST_CAT_SCHEDULING,
+                "peer is in same scheduler, telling scheduler");
 
-          if (GST_PAD_IS_SRC (pad))
-            gst_scheduler_pad_link (sched, pad, GST_PAD_PEER (pad));
-          else
-            gst_scheduler_pad_link (sched, GST_PAD_PEER (pad), pad);
+            if (GST_PAD_IS_SRC (pad))
+              gst_scheduler_pad_link (sched, pad, GST_PAD_PEER (pad));
+            else
+              gst_scheduler_pad_link (sched, GST_PAD_PEER (pad), pad);
+          }
         }
       }
     }
   }
 }
-
 
 static void
 gst_bin_unset_element_sched (GstElement * element, GstScheduler * sched)
@@ -391,35 +391,38 @@ gst_bin_unset_element_sched (GstElement * element, GstScheduler * sched)
         (GFunc) gst_bin_unset_element_sched, sched);
 
     gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
-  } else if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
+  } else {
     /* otherwise, if it's just a regular old element */
     GList *pads;
 
-    /* set the sched pointer in all the pads */
-    pads = element->pads;
-    while (pads) {
-      GstPad *pad;
+    if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
+      /* unset the sched pointer in all the pads */
+      pads = element->pads;
+      while (pads) {
+        GstPad *pad;
 
-      pad = GST_PAD (pads->data);
-      pads = g_list_next (pads);
+        pad = GST_PAD (pads->data);
+        pads = g_list_next (pads);
 
-      /* we only operate on real pads */
-      if (!GST_IS_REAL_PAD (pad))
-        continue;
+        /* we only operate on real pads */
+        if (!GST_IS_REAL_PAD (pad))
+          continue;
 
-      /* if the peer element exists and is a candidate */
-      if (GST_PAD_PEER (pad)) {
-        if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
-          GST_CAT_LOG (GST_CAT_SCHEDULING,
-              "peer is in same scheduler, telling scheduler");
+        /* if the peer element exists and is a candidate */
+        if (GST_PAD_PEER (pad)) {
+          if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
+            GST_CAT_LOG (GST_CAT_SCHEDULING,
+                "peer is in same scheduler, telling scheduler");
 
-          if (GST_PAD_IS_SRC (pad))
-            gst_scheduler_pad_unlink (sched, pad, GST_PAD_PEER (pad));
-          else
-            gst_scheduler_pad_unlink (sched, GST_PAD_PEER (pad), pad);
+            if (GST_PAD_IS_SRC (pad))
+              gst_scheduler_pad_unlink (sched, pad, GST_PAD_PEER (pad));
+            else
+              gst_scheduler_pad_unlink (sched, GST_PAD_PEER (pad), pad);
+          }
         }
       }
     }
+
     gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
   }
 }
