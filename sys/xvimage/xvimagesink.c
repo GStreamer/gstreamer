@@ -169,7 +169,7 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
 
   /* To be sure, reset the SHMInfo entry */
-  ximage->SHMInfo.shmaddr = ((void *) -1);
+  xvimage->SHMInfo.shmaddr = ((void *) -1);
 
   /* store whether we succeeded in result and reset error_caught */
   result = !error_caught;
