@@ -1,5 +1,10 @@
 2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_get_caps), (gst_alsa_link):
+	  Fix remaining caps handling errors due to CAPS merge.
+
+2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/faad/gstfaad.c: (gst_faad_base_init), (gst_faad_init),
 	(gst_faad_sinkconnect), (gst_faad_srcgetcaps),
 	(gst_faad_srcconnect): 
