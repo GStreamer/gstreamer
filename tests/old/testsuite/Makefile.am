@@ -1,5 +1,5 @@
 # FIXME : refcounting threads bytestream cleanup
-SUBDIRS = caps plugin elements ## dynparams
+SUBDIRS = caps plugin elements clock ## dynparams
 
 testprogs = test_gst_init
 
@@ -12,4 +12,4 @@ LIBS = $(GST_LIBS)
 CFLAGS = $(GST_CFLAGS)
 
 # FIXME : refcounting threadds
-DIST_SUBDIRS = caps plugin bytestream cleanup elements dynparams
+DIST_SUBDIRS = caps plugin bytestream cleanup elements dynparams clock
