@@ -129,6 +129,7 @@ guint32 _gst_debug_categories = 0x00000000;
 /**
  * gst_default_debug_handler:
  * @category: category of the DEBUG message
+ * @incore: if the debug handler is for core code.
  * @file: the file the DEBUG occurs in
  * @function: the function the DEBUG occurs in
  * @line: the line number in the file
@@ -247,6 +248,7 @@ guint32 _gst_info_categories = 0x00000001;
 /**
  * gst_default_info_handler:
  * @category: category of the INFO message
+ * @incore: if the info handler is for core code.
  * @file: the file the INFO occurs in
  * @function: the function the INFO occurs in
  * @line: the line number in the file

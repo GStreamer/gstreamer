@@ -82,7 +82,6 @@ struct _GstBin {
   gint num_entries;
 
   cothread_context *threadcontext;
-  gboolean use_cothreads;
 };
 
 struct _GstBinClass {
@@ -115,10 +114,6 @@ GtkType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 #define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
-void		gst_bin_set_element_manager	(GstElement *element, GstElement *manager);
-void		gst_bin_add_managed_element	(GstBin *bin, GstElement *element);
-void		gst_bin_remove_managed_element	(GstBin *bin, GstElement *element);
-
 /* add and remove elements from the bin */
 void		gst_bin_add			(GstBin *bin,
 						 GstElement *element);
@@ -137,10 +132,6 @@ gboolean	gst_bin_set_state_type		(GstBin *bin,
 						 GtkType type);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
-
-/* hack FIXME */
-void		gst_bin_use_cothreads		(GstBin *bin,
-						 gboolean enabled);
 
 #ifdef __cplusplus
 }

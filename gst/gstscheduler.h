@@ -126,20 +126,18 @@ struct _GstScheduleChain {
 };
 
 
-void gst_bin_schedule_func(GstBin *bin);
+GtkType			gst_schedule_get_type		(void);
+GstSchedule*		gst_schedule_new		(GstElement *parent);
 
-GtkType		gst_schedule_get_type		(void);
-GstSchedule *	gst_schedule_new		(GstElement *parent);
+void			gst_schedule_add_element	(GstSchedule *sched, GstElement *element);
+void			gst_schedule_remove_element	(GstSchedule *sched, GstElement *element);
+void			gst_schedule_enable_element	(GstSchedule *sched, GstElement *element);
+void			gst_schedule_disable_element	(GstSchedule *sched, GstElement *element);
+void			gst_schedule_pad_connect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+void			gst_schedule_pad_disconnect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+gboolean		gst_schedule_iterate		(GstSchedule *sched);
 
-void	gst_schedule_add_element	(GstSchedule *sched, GstElement *element);
-void	gst_schedule_remove_element	(GstSchedule *sched, GstElement *element);
-void	gst_schedule_enable_element	(GstSchedule *sched, GstElement *element);
-void	gst_schedule_disable_element	(GstSchedule *sched, GstElement *element);
-void	gst_schedule_pad_connect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
-void	gst_schedule_pad_disconnect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
-gboolean	gst_schedule_iterate	(GstSchedule *sched);
-
-void	gst_schedule_show		(GstSchedule *sched);
+void			gst_schedule_show		(GstSchedule *sched);
 
 
 #ifdef __cplusplus   

@@ -53,7 +53,7 @@ struct _cothread_state {
 
   int flags;
   void *sp;
-  jmp_buf jmp;
+  sigjmp_buf jmp;
   /* is this needed any more? */
   void *top_sp;
   void *pc;

@@ -704,6 +704,23 @@ gst_pad_set_parent (GstPad *pad,
 }
 
 /**
+ * gst_pad_get_parent:
+ * @pad: the pad to get the parent from
+ *
+ * Get the parent object of this pad.
+ *
+ * Returns: the parent object
+ */
+GstElement*
+gst_pad_get_parent (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return GST_PAD_PARENT (pad);
+}
+
+/**
  * gst_pad_get_padtemplate:
  * @pad: the pad to get the padtemplate from
  *
@@ -721,22 +738,12 @@ gst_pad_get_padtemplate (GstPad *pad)
 }
 
 /**
- * gst_pad_get_parent:
- * @pad: the pad to get the parent from
+ * gst_pad_set_sched:
+ * @pad: the pad to set the scheduler for
+ * @sched: The scheduler to set
  *
- * Get the parent object of this pad.
- *
- * Returns: the parent object
+ * Set the sceduler for the pad
  */
-GstElement*
-gst_pad_get_parent (GstPad *pad)
-{
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  return GST_PAD_PARENT (pad);
-}
-
 void
 gst_pad_set_sched (GstPad *pad, GstSchedule *sched)
 {
@@ -746,6 +753,14 @@ gst_pad_set_sched (GstPad *pad, GstSchedule *sched)
   GST_RPAD_SCHED(pad) = sched;
 }
 
+/**
+ * gst_pad_get_sched:
+ * @pad: the pad to get the scheduler from
+ *
+ * Get the scheduler of the pad
+ *
+ * Returns: the scheduler of the pad.
+ */
 GstSchedule*
 gst_pad_get_sched (GstPad *pad)
 {
@@ -761,7 +776,7 @@ gst_pad_get_sched (GstPad *pad)
  *
  * Get the real parent object of this pad. If the pad
  * is a ghostpad, the actual owner of the real pad is
- * returned, as opposed to the gst_pad_get_parent.
+ * returned, as opposed to the gst_pad_get_parent().
  *
  * Returns: the parent object
  */

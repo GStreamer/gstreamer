@@ -134,8 +134,6 @@ gst_bin_init (GstBin *bin)
   bin->num_eos_providers = 0;
   bin->chains = NULL;
   bin->eoscond = g_cond_new ();
-// FIXME temporary testing measure
-//  bin->use_cothreads = TRUE;
 }
 
 /**
@@ -644,14 +642,6 @@ gst_bin_restore_thyself (GstObject *object,
   }
 }
 
-void
-gst_bin_use_cothreads (GstBin *bin,
-		       gboolean enabled)
-{
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  bin->use_cothreads = enabled;
-}
 
 /**
  * gst_bin_iterate:

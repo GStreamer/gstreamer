@@ -159,7 +159,8 @@ cothread_create (cothread_context *ctx)
   s->lock = g_mutex_new();
 #endif
 
-  GST_INFO (GST_CAT_COTHREADS,"created cothread #%d: %p at sp:%p", ctx->nthreads, s, s->sp);
+  GST_INFO (GST_CAT_COTHREADS,"created cothread #%d: %p at sp:%p lock:%p", ctx->nthreads, 
+		  s, s->sp, s->lock);
 
   ctx->threads[ctx->nthreads++] = s;
 
@@ -201,7 +202,7 @@ cothread_main(cothread_context *ctx)
 }
 
 /**
- * cothread_current)main:
+ * cothread_current_main:
  *
  * Returns: the #cothread_state of the main (0th) thread in the current pthread
  */
@@ -335,7 +336,7 @@ cothread_switch (cothread_state *thread)
 #ifdef GST_ARCH_PRESETJMP
   GST_ARCH_PRESETJMP();
 #endif
-  enter = setjmp(current->jmp);
+  enter = sigsetjmp(current->jmp, 1);
   if (enter != 0) {
     GST_DEBUG (0,"enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
 		    current->sp, current->top_sp, current->top_sp-current->sp);
@@ -350,7 +351,7 @@ cothread_switch (cothread_state *thread)
   if (thread->flags & COTHREAD_STARTED) {
     GST_DEBUG (0,"in thread \n");
     // switch to it
-    longjmp(thread->jmp,1);
+    siglongjmp(thread->jmp,1);
   } else {
     GST_ARCH_SETUP_STACK(thread->sp);
     GST_ARCH_SET_SP(thread->sp);
@@ -378,7 +379,12 @@ selfswitch:
   return;
 }
 
-
+/**
+ * cothread_lock:
+ * @thread: cothread state to lock
+ *
+ * Locks the cothread state.
+ */
 void
 cothread_lock (cothread_state *thread)
 {
@@ -390,6 +396,14 @@ cothread_lock (cothread_state *thread)
 #endif
 }
 
+/**
+ * cothread_trylock:
+ * @thread: cothread state to try to lock
+ *
+ * Try to lock the cothread state
+ *
+ * Returns: TRUE if the cothread could be locked.
+ */
 gboolean
 cothread_trylock (cothread_state *thread)
 {
@@ -403,6 +417,12 @@ cothread_trylock (cothread_state *thread)
 #endif
 }
 
+/**
+ * cothread_unlock:
+ * @thread: cothread state to unlock
+ *
+ * Unlock the cothread state.
+ */
 void
 cothread_unlock (cothread_state *thread)
 {

@@ -25,6 +25,8 @@
 #include <dirent.h>
 #include <unistd.h>
 
+#undef RTLD_GLOBAL
+
 #include "gst_private.h"
 #include "gstplugin.h"
 #include "gstversion.h"

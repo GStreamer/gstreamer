@@ -152,6 +152,8 @@ gst_object_new (void)
  * @object: GstObject to reference
  *
  * Increments the refence count on the object.
+ *
+ * Returns: A pointer to the object
  */
 GstObject*
 gst_object_ref (GstObject *object)
@@ -370,13 +372,15 @@ gst_object_unparent (GstObject *object)
  * @object: GstObject to reference
  *
  * Increments the refence count on the object.
+ *
+ * Returns: Apointer to the Object
  */
 #ifndef gst_object_ref
-void
+GstObject*
 gst_object_ref (GstObject *object)
 {
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (object != NULL, NULL);
+  g_return_if_fail (GST_IS_OBJECT (object), NULL);
 
 #ifdef HAVE_ATOMIC_H
   g_return_if_fail (atomic_read (&(object->refcount)) > 0);
@@ -387,6 +391,8 @@ gst_object_ref (GstObject *object)
   object->refcount++;
   GST_UNLOCK (object);
 #endif
+
+  return object;
 }
 #endif /* gst_object_ref */
 
