@@ -339,7 +339,7 @@ GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name) {
   g_return_val_if_fail(GST_IS_BIN(bin), NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  g_print("gstbin: lookup element \"%s\" in \"%s\"\n", name, gst_element_get_name(bin));
+  g_print("gstbin: lookup element \"%s\" in \"%s\"\n", name, gst_element_get_name(GST_ELEMENT(bin)));
   children = bin->children;
   while (children) {
     child = GST_ELEMENT(children->data);

@@ -115,10 +115,9 @@ GstElementFactory *element_select_dialog() {
   GList *elements;
   GstElementFactory *element;
   gchar **classes, **class;
-  GSList *classlist;
   GSList *classtree, *treewalk;
   GSList **curlist;
-  struct element_select_classlist *branch;
+  struct element_select_classlist *branch = NULL;
   struct element_select_details details;
 
   /* first create the dialog and associated stuff */

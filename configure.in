@@ -413,6 +413,7 @@ plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
+plugins/mp3decode/types/Makefile
 plugins/mp3decode/xa/Makefile
 plugins/mp3decode/xing/Makefile
 plugins/mp3decode/mpg123/Makefile
@@ -425,6 +426,7 @@ plugins/mpeg2/video/Makefile
 plugins/mpeg2/mpeg2enc/Makefile
 plugins/mpeg2/subtitles/Makefile
 plugins/mpeg1/Makefile
+plugins/mpeg1/mpegtypes/Makefile
 plugins/mpeg1/mpeg_play/Makefile
 plugins/mpeg1/mpegaudio/Makefile
 plugins/mpeg1/parse/Makefile

@@ -37,7 +37,7 @@ static void gst_filter_init(GstFilter *filter);
 
 
 static GstElementClass *parent_class = NULL;
-static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_filter_get_type(void) {

@@ -31,9 +31,9 @@ static void gst_editor_pad_get_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_editor_pad_realize(GstEditorPad *pad);
 
 /* class implementation functions */
-static void gst_editor_pad_update(GnomeCanvasItem *item,double *affine,
-                                      ArtSVP *clip_path,int flags);
-static gint gst_editor_pad_event(GnomeCanvasItem *item,GdkEvent *event);
+//static void gst_editor_pad_update(GnomeCanvasItem *item,double *affine,
+//                                      ArtSVP *clip_path,int flags);
+//static gint gst_editor_pad_event(GnomeCanvasItem *item,GdkEvent *event);
 
 /* events fired by items within self */
 static gint gst_editor_pad_padbox_event(GnomeCanvasItem *item,
@@ -58,7 +58,7 @@ enum {
 };
 
 static GtkObjectClass *parent_class;
-static guint gst_editor_pad_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_editor_pad_signals[LAST_SIGNAL] = { 0 };
 
 GtkType gst_editor_pad_get_type() {
   static GtkType pad_type = 0;
@@ -111,10 +111,10 @@ GstEditorPad *gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
   GstEditorPad *editorpad;
   va_list args;
 
-  g_return_if_fail(parent != NULL);
-  g_return_if_fail(GST_IS_EDITOR_ELEMENT(parent));
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(parent != NULL, NULL);
+  g_return_val_if_fail(GST_IS_EDITOR_ELEMENT(parent), NULL);
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
   editorpad = GST_EDITOR_PAD(gtk_type_new(GST_TYPE_EDITOR_PAD));
   editorpad->pad = pad;
@@ -213,8 +213,6 @@ static void gst_editor_pad_get_arg(GtkObject *object,GtkArg *arg,guint id) {
 }
 
 static void gst_editor_pad_realize(GstEditorPad *pad) {
-  gint i;
-
 //  g_print("realizing editor pad %p\n",pad);
 
   /* we must be attached to an element */
@@ -376,7 +374,7 @@ static gint gst_editor_pad_padbox_event(GnomeCanvasItem *item,
   GstEditorBin *bin;
 
 //  g_print("padbox has event %d\n",event->type);
-  g_return_if_fail(GST_IS_EDITOR_PAD(pad));
+  g_return_val_if_fail(GST_IS_EDITOR_PAD(pad), FALSE);
 
   element = pad->parent;
   bin = element->parent;

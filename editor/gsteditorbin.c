@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 
 #include "gsteditor.h"
+#include "gsteditorcreate.h"
 
 /* signals and args */
 enum {
@@ -34,8 +35,8 @@ enum {
 
 static void gst_editor_bin_class_init(GstEditorBinClass *klass);
 static void gst_editor_bin_init(GstEditorBin *bin);
-static void gst_editor_bin_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_bin_get_arg(GtkObject *object,GtkArg *arg,guint id);
+//static void gst_editor_bin_set_arg(GtkObject *object,GtkArg *arg,guint id);
+//static void gst_editor_bin_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static gint gst_editor_bin_event(GnomeCanvasItem *item,
                                  GdkEvent *event,
@@ -43,6 +44,8 @@ static gint gst_editor_bin_event(GnomeCanvasItem *item,
 static gint gst_editor_bin_button_event(GnomeCanvasItem *item,
                                         GdkEvent *event,
                                         GstEditorElement *element);
+void gst_editor_bin_connection_drag(GstEditorBin *bin,
+                                    gdouble wx,gdouble wy);
 
 static GstEditorElementClass *parent_class = NULL;
 
@@ -88,10 +91,10 @@ GstEditorBin *gst_editor_bin_new(GstEditorBin *parent,GstBin *bin,
   GstEditorBin *editorbin;
   va_list args;
 
-  g_return_if_fail(parent != NULL);
-  g_return_if_fail(GST_IS_EDITOR_BIN(parent));
-  g_return_if_fail(bin != NULL);
-  g_return_if_fail(GST_IS_BIN(bin));
+  g_return_val_if_fail(parent != NULL, NULL);
+  g_return_val_if_fail(GST_IS_EDITOR_BIN(parent), NULL);
+  g_return_val_if_fail(bin != NULL, NULL);
+  g_return_val_if_fail(GST_IS_BIN(bin), NULL);
 
   editorbin = GST_EDITOR_BIN(gtk_type_new(GST_TYPE_EDITOR_BIN));
   GST_EDITOR_ELEMENT(editorbin)->element = GST_ELEMENT(bin);
@@ -150,6 +153,8 @@ static gint gst_editor_bin_event(GnomeCanvasItem *item,
 
   if (GST_EDITOR_ELEMENT_CLASS(parent_class)->event)
     return (*GST_EDITOR_ELEMENT_CLASS(parent_class)->event)(item,event,element);
+ 
+  return TRUE;
 }
 
 
@@ -202,7 +207,7 @@ void gst_editor_bin_connection_drag(GstEditorBin *bin,
   element = GST_EDITOR_ELEMENT(bin);
 
   bx = wx;by = wy;
-  gnome_canvas_item_w2i(GST_EDITOR_ELEMENT(bin)->group,&bx,&by);
+  gnome_canvas_item_w2i(GNOME_CANVAS_ITEM(GST_EDITOR_ELEMENT(bin)->group),&bx,&by);
 
   // first see if we're on top of an interesting pad
   underitem = gnome_canvas_get_item_at(

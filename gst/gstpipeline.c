@@ -18,6 +18,7 @@
  */
 
 #include <gst/gstpipeline.h>
+#include <gst/gstthread.h>
 #include <gst/gstsink.h>
 #include <gst/gstutils.h>
 #include <gst/gsttype.h>
@@ -172,7 +173,8 @@ static void gst_pipeline_pads_autoplug_func(GstElement *src, GstPad *pad, GstEle
   GstPad *sinkpad;
   gboolean connected = FALSE;
 
-  g_print("gstpipeline: autoplug pad connect function type %d\n", pad->type);
+  g_print("gstpipeline: autoplug pad connect function type %d for \"%s\" to \"%s\"\n", pad->type, 
+		  gst_element_get_name(src), gst_element_get_name(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {
@@ -284,7 +286,7 @@ void gst_pipeline_add_sink(GstPipeline *pipeline, GstElement *sink)
   g_return_if_fail(GST_IS_ELEMENT(sink));
 
   pipeline->sinks = g_list_prepend(pipeline->sinks, sink);
-  gst_bin_add(GST_BIN(pipeline), sink);
+  //gst_bin_add(GST_BIN(pipeline), sink);
 }
 
 /**
@@ -299,11 +301,11 @@ void gst_pipeline_add_sink(GstPipeline *pipeline, GstElement *sink)
 gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GList *elements;
   GstElement *element, *srcelement = NULL, *sinkelement= NULL;
-  GList *factories;
+  GList **factories;
   GstElementFactory *factory;
   GList *src_types;
   guint16 src_type = 0, sink_type = 0;
-  gboolean complete = FALSE;
+  guint i, numsinks;
 
   g_return_val_if_fail(pipeline != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PIPELINE(pipeline), FALSE);
@@ -348,6 +350,10 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
   elements = pipeline->sinks;
 
+  numsinks = g_list_length(elements);
+  factories = g_new0(GList *, numsinks);
+
+  i = 0;
   // fase 2, loop over all the sinks.. 
   while (elements) {
     GList *pads;
@@ -362,23 +368,32 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
       if (pad->direction == GST_PAD_SINK) {
 	sink_type = gst_pad_get_type_id(pad);
-        sinkelement = element;
 	break;
       }
 
       pads = g_list_next(pads);
     }
+
+    factories[i] = gst_type_get_sink_to_src(src_type, sink_type);
+    //factories[i] = g_list_append(factories[i], element);
+    i++;
+
     elements = g_list_next(elements);
   }
 
-  factories = gst_type_get_sink_to_src(src_type, sink_type);
+  while (factories[0]) {
+    // fase 3: add common elements 
+    factory = (GstElementFactory *)(factories[0]->data);
 
-  while (factories) {
-    // fase 3: find elements to form a pad
-       
-    factory = (GstElementFactory *)(factories->data);
+    // check to other paths for mathing elements (factories)
+    for (i=1; i<numsinks; i++) {
+      if (factory != (GstElementFactory *)(factories[i]->data))
+	goto differ;
+      factories[i] = g_list_next(factories[i]);
+    }
+    factory = (GstElementFactory *)(factories[0]->data);
 
-    g_print("GstPipeline: factory \"%s\"\n", factory->name);
+    g_print("GstPipeline: common factory \"%s\"\n", factory->name);
 
     element = gst_elementfactory_create(factory, factory->name);
     gst_bin_add(GST_BIN(pipeline), element);
@@ -387,15 +402,88 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
     srcelement = element;
 
-    factories = g_list_next(factories);
-
-    complete = TRUE;
+    factories[0] = g_list_next(factories[0]);
   }
 
-  if (complete) {
-    gst_pipeline_pads_autoplug(srcelement, sinkelement);
-    return TRUE;
+differ:
+  // loop over all the sink elements
+  elements = pipeline->sinks;
+
+  i = 0;
+  while (elements) {
+    GstElement *thesrcelement = srcelement;
+    GstElement *thebin = GST_ELEMENT(pipeline);
+
+    sinkelement = (GstElement *)elements->data;
+
+    while (factories[i] || sinkelement) {
+      // fase 4: add other elements...
+       
+      if (factories[i]) {
+        factory = (GstElementFactory *)(factories[i]->data);
+        g_print("GstPipeline: factory \"%s\"\n", factory->name);
+        element = gst_elementfactory_create(factory, factory->name);
+        factories[i] = g_list_next(factories[i]);
+      }
+      // we have arived to the final sink element
+      else {
+	element = sinkelement;
+	sinkelement = NULL;
+      }
+
+      // this element suggests the use of a thread, so we set one up...
+      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element)) {
+        GstElement *queue;
+        GList *sinkpads;
+        GstPad *srcpad, *sinkpad;
+        g_print("GstPipeline: sugest new thread for \"%s\" %08x\n", element->name, GST_FLAGS(element));
+
+	// create a new queue and add to the previous bin
+        queue = gst_elementfactory_make("queue", g_strconcat("queue_", gst_element_get_name(element), NULL));
+        gst_bin_add(GST_BIN(pipeline), queue);
+
+	// this will be the new bin for all following elements
+        thebin = gst_thread_new("thread");
+
+        srcpad = gst_element_get_pad(queue, "src");
+        sinkpads = gst_element_get_pad_list(element);
+        while (sinkpads) {
+          sinkpad = (GstPad *)sinkpads->data;
+
+	  // FIXME connect matching pads, not just the first one...
+          if (sinkpad->direction == GST_PAD_SINK && 
+	      !GST_PAD_CONNECTED(sinkpad)) {
+	    // the queue has the types of the element it connects
+	    srcpad->type = sinkpad->type;
+            gst_element_get_pad(queue, "sink")->type = sinkpad->type;
+            gst_pad_connect(srcpad, sinkpad);
+            g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", 
+			  srcpad->name, srcpad->type, gst_element_get_name(queue));
+            g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, 
+			  sinkpad->type, gst_element_get_name(element));
+	    break;
+	  }
+          sinkpads = g_list_next(sinkpads);
+        }
+
+        gst_bin_add(GST_BIN(thebin), element);
+        gst_bin_add(GST_BIN(pipeline), thebin);
+        element = queue;
+      }
+      // no thread needed, easy case
+      else {
+        gst_bin_add(GST_BIN(thebin), element);
+      }
+      gst_pipeline_pads_autoplug(thesrcelement, element);
+
+      // this element is now the new source element
+      thesrcelement = element;
+    }
+
+    elements = g_list_next(elements);
+    i++;
   }
+  return TRUE;
   
   g_print("GstPipeline: unable to autoplug pipeline \"%s\"\n", 
 		  gst_element_get_name(GST_ELEMENT(pipeline)));

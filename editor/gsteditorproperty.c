@@ -18,6 +18,7 @@
  */
 
 
+#include <ctype.h>
 #include <gnome.h>
 #include <gst/gst.h>
 
@@ -29,6 +30,8 @@ static void gst_editor_property_class_init(GstEditorPropertyClass *klass);
 static void gst_editor_property_init(GstEditorProperty *property);
 static void gst_editor_property_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_editor_property_get_arg(GtkObject *object,GtkArg *arg,guint id);
+
+static GtkWidget *create_property_entry(GtkArg *arg);
 
 enum {
   ARG_0,
@@ -189,10 +192,10 @@ static gchar *make_readable_name(gchar *name) {
 
   colon = strstr(name, "::");
 
-  if (colon)
-    new = g_strdup(&colon[2]);
-  else
+  if (!colon)
     new = g_strdup(name);
+  else
+    new = g_strdup(&colon[2]);
 
   new = g_strdelimit(new, G_STR_DELIMITERS, ' ');
 
@@ -230,13 +233,13 @@ void gst_editor_property_show(GstEditorProperty *property, GstEditorElement *ele
     else {
       GtkArg *args;
       guint32 *flags;
-      guint num_args, i;
-      gchar *text;
+      guint num_args, i, count;
     
       table = gtk_table_new(1, 2, TRUE);
+      gtk_table_set_row_spacings(GTK_TABLE(table), 2);
       gtk_widget_show(table);
 
-      label = gtk_label_new("Name:");
+      label = gtk_label_new(_("Name:"));
       gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
       gtk_widget_show(label);
       entry = gtk_entry_new();
@@ -248,23 +251,23 @@ void gst_editor_property_show(GstEditorProperty *property, GstEditorElement *ele
       gtk_signal_connect(GTK_OBJECT(entry), "changed", on_name_changed, element);
 
       args = gtk_object_query_args(type, &flags, &num_args);
+      count = 1;
       for (i=0; i<num_args; i++) {
-        if (flags && GTK_ARG_READABLE) {
+        if (flags[i] & GTK_ARG_READABLE) {
           gtk_object_getv(GTK_OBJECT(element->element), 1, &args[i]);
 
-	  label = gtk_label_new(g_strconcat(make_readable_name(args[i].name), ":", NULL));
-	  gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
-	  gtk_widget_show(label);
-	  entry = gtk_entry_new();
-	  if (args[i].type == GTK_TYPE_STRING) {
-	    text = GTK_VALUE_STRING(args[i]);
-	    if (text)
-	      gtk_entry_set_text(GTK_ENTRY(entry), GTK_VALUE_STRING(args[i]));
-	  }
-	  gtk_widget_show(entry);
+	  entry = create_property_entry(&args[i]);
 
-          gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2, GTK_FILL, 0, 0, 0);
-          gtk_table_attach(GTK_TABLE(table), entry, 1, 2, i+1, i+2, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+	  if (entry) {
+	    label = gtk_label_new(g_strconcat(make_readable_name(args[i].name), ":", NULL));
+	    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+	    gtk_widget_show(label);
+
+            gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
+            gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+
+	    count++;
+	  }
         }
       }
       gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, TRUE, 0);
@@ -275,7 +278,79 @@ void gst_editor_property_show(GstEditorProperty *property, GstEditorElement *ele
   }
 }
 
+static void widget_show_toggled(GtkToggleButton *button, GtkArg *arg) {
+  GtkWidget *window;
 
+  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(GTK_VALUE_OBJECT(*arg)));
+
+  gtk_widget_show(window);
+}
+
+static GtkWidget *create_property_entry(GtkArg *arg) {
+  GtkWidget *entry = NULL;
+
+  switch (arg->type) {
+    case GTK_TYPE_STRING: 
+    {
+      gchar *text;
+      entry = gtk_entry_new();
+      text = GTK_VALUE_STRING(*arg);
+      if (text)
+        gtk_entry_set_text(GTK_ENTRY(entry), text);
+      break;
+    }
+    case GTK_TYPE_BOOL:
+    {
+      gboolean toggle;
+      toggle = GTK_VALUE_BOOL(*arg);
+      entry = gtk_toggle_button_new_with_label((toggle? _("Yes"):_("No")));
+      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(entry), toggle);
+      break;
+    }
+    case GTK_TYPE_ULONG:
+    case GTK_TYPE_LONG:
+    case GTK_TYPE_UINT:
+    case GTK_TYPE_INT:
+    {
+      gint value;
+      GtkAdjustment *spinner_adj;
+
+      value = GTK_VALUE_INT(*arg);
+      spinner_adj = (GtkAdjustment *) gtk_adjustment_new(50.0, 0.0, 100.0, 1.0, 5.0, 5.0);
+      entry = gtk_spin_button_new(spinner_adj, 1.0, 0);
+      gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry), (gfloat) value);
+      break;
+    }
+    case GTK_TYPE_FLOAT:
+    case GTK_TYPE_DOUBLE:
+    {
+      gdouble value;
+      GtkAdjustment *spinner_adj;
+
+      value = GTK_VALUE_DOUBLE(*arg);
+      spinner_adj = (GtkAdjustment *) gtk_adjustment_new(50.0, 0.0, 100.0, 0.1, 5.0, 5.0);
+      entry = gtk_spin_button_new(spinner_adj, 1.0, 3);
+      gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry), (gfloat) value);
+      break;
+    }
+    default:
+      g_print("unknown type: %d\n", arg->type);
+      break;
+  }
+  if (!entry) {
+    if (arg->type == GTK_TYPE_WIDGET) 
+    {
+      entry = gtk_toggle_button_new_with_label(_("Show..."));
+      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(entry), FALSE);
+      gtk_signal_connect(GTK_OBJECT(entry), "toggled", widget_show_toggled, arg);
+    }
+  }
+  gtk_widget_show(entry);
+
+  return entry;
+}
 
 
 

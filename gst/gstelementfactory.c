@@ -211,7 +211,7 @@ void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id) 
  */
 xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePtr parent) {
   GList *types;
-  xmlNodePtr subtree;
+  xmlNodePtr subtree, subsubtree;
 
   xmlNewChild(parent,NULL,"name",factory->name);
   xmlNewChild(parent,NULL,"longname", factory->details->longname);
@@ -228,7 +228,8 @@ xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePt
       guint16 typeid = GPOINTER_TO_UINT(types->data);
       GstType *type = gst_type_find_by_id(typeid);
 
-      gst_type_save_thyself(type, subtree);
+      subsubtree = xmlNewChild(subtree,NULL,"type",NULL);
+      gst_type_save_thyself(type, subsubtree);
 
       types = g_list_next(types);
     }
@@ -240,7 +241,8 @@ xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePt
       guint16 typeid = GPOINTER_TO_UINT(types->data);
       GstType *type = gst_type_find_by_id(typeid);
 
-      gst_type_save_thyself(type, subtree);
+      subsubtree = xmlNewChild(subtree,NULL,"type",NULL);
+      gst_type_save_thyself(type, subsubtree);
 
       types = g_list_next(types);
     }
@@ -287,14 +289,26 @@ GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
       factory->details->copyright = g_strdup(xmlNodeGetContent(children));
     }
     if (!strcmp(children->name, "sources")) {
-      guint16 typeid = gst_type_load_thyself(children);
+      xmlNodePtr field = children->childs;
+      while (field) {
+        if (!strcmp(field->name, "type")) {
+          guint16 typeid = gst_type_load_thyself(field);
 
-      gst_type_add_src(typeid, factory);
+          gst_type_add_src(typeid, factory);
+	}
+	field = field->next;
+      }
     }
     if (!strcmp(children->name, "sinks")) {
-      guint16 typeid = gst_type_load_thyself(children);
+      xmlNodePtr field = children->childs;
+      while (field) {
+        if (!strcmp(field->name, "type")) {
+          guint16 typeid = gst_type_load_thyself(field);
 
-      gst_type_add_sink(typeid, factory);
+          gst_type_add_sink(typeid, factory);
+	}
+	field = field->next;
+      }
     }
 
     children = children->next;

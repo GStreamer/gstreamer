@@ -30,7 +30,6 @@ GstEditorElement *gst_editor_create_item(GstEditorBin *bin,
   GstElementFactory *factory;
   GstElement *element;
   GstEditorElement *editorelement;
-  GtkType itemtype;
 
   factory = element_select_dialog();
   if (factory) {

@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 
 #include "gsteditor.h"
+#include "gsteditorcreate.h"
 
 /* signals and args */
 enum {
@@ -46,6 +47,9 @@ static gint gst_editor_canvas_button_release(GtkWidget *widget,
 static gint gst_editor_canvas_event(GnomeCanvasItem *item,
                                     GdkEvent *event,
                                     GstEditorElement *element);
+static void gst_editor_canvas_set_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_editor_canvas_get_arg(GtkObject *object,GtkArg *arg,guint id);
+
 
 //gint gst_editor_canvas_verbose_event(GtkWidget *widget,GdkEvent *event);
 
@@ -72,7 +76,10 @@ GtkType gst_editor_canvas_get_type(void) {
 }
 
 static void gst_editor_canvas_class_init(GstEditorCanvasClass *klass) {
+  GtkObjectClass *object_class;
   GstEditorElementClass *element_class;
+
+  object_class = (GtkObjectClass*)klass;
 
   element_class = (GstEditorElementClass*)klass;
 
@@ -80,6 +87,9 @@ static void gst_editor_canvas_class_init(GstEditorCanvasClass *klass) {
 
   gtk_object_add_arg_type("GstEditorCanvas::canvas",GTK_TYPE_POINTER,
                           GTK_ARG_READABLE,ARG_CANVAS);
+
+  object_class->set_arg = gst_editor_canvas_set_arg;
+  object_class->get_arg = gst_editor_canvas_get_arg;
 
   element_class->realize = gst_editor_canvas_realize;
 }
@@ -90,15 +100,14 @@ static void gst_editor_canvas_init(GstEditorCanvas *editorcanvas) {
 GstEditorCanvas *gst_editor_canvas_new(GstBin *bin,
                                        const gchar *first_arg_name,...) {
   GstEditorCanvas *editorcanvas;
-  GstEditorBin *bin2;
   va_list args;
 
-  g_return_if_fail(bin != NULL);
-  g_return_if_fail(GST_IS_BIN(bin));
+  g_return_val_if_fail(bin != NULL, NULL);
+  g_return_val_if_fail(GST_IS_BIN(bin), NULL);
 
   editorcanvas = GST_EDITOR_CANVAS(gtk_type_new(GST_TYPE_EDITOR_CANVAS));
   GST_EDITOR_ELEMENT(editorcanvas)->element = GST_ELEMENT(bin);
-  GST_EDITOR_ELEMENT(editorcanvas)->parent = editorcanvas;
+  GST_EDITOR_ELEMENT(editorcanvas)->parent = GST_EDITOR_BIN(editorcanvas);
 
   va_start(args,first_arg_name);
   gst_editor_element_construct(GST_EDITOR_ELEMENT(editorcanvas),NULL,
@@ -165,7 +174,7 @@ GtkWidget *gst_editor_canvas_get_canvas(GstEditorCanvas *canvas) {
 static gint gst_editor_canvas_button_release(GtkWidget *widget,
                                              GdkEvent *event,
                                              GstEditorCanvas *canvas) {
-  GstEditorBin *bin = GST_EDITOR_BIN(canvas);
+  //GstEditorBin *bin = GST_EDITOR_BIN(canvas);
   gdouble x,y;
   GstEditorElement *element;
 
@@ -188,7 +197,7 @@ static gint gst_editor_canvas_button_release(GtkWidget *widget,
   gnome_canvas_window_to_world(GNOME_CANVAS(widget),
                                event->button.x,event->button.y,&x,&y);
 //  g_print("calling gst_editor_create_item()\n");
-  if (element = gst_editor_create_item(GST_EDITOR_BIN(canvas),x,y))
+  if ((element = gst_editor_create_item(GST_EDITOR_BIN(canvas),x,y)) != NULL)
     return TRUE;
   return FALSE;
 }

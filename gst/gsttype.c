@@ -73,6 +73,7 @@ guint16 gst_type_register(GstTypeFactory *factory) {
 
   g_return_val_if_fail(factory != NULL, 0);
 
+  g_print("gsttype: type register %s\n", factory->mime);
   id = gst_type_find_by_mime(factory->mime);
   if (!id) {
     type = g_new0(GstType, 1);
@@ -396,37 +397,28 @@ GList *gst_type_get_list() {
 }
 
 xmlNodePtr gst_type_save_thyself(GstType *type, xmlNodePtr parent) {
-  xmlNodePtr tree;
 
-  tree = xmlNewChild(parent, NULL, "type", NULL);
-
-  xmlNewChild(tree, NULL, "mime", type->mime);
+  xmlNewChild(parent, NULL, "mime", type->mime);
   
-  return tree;
+  return parent;
 }
 
 guint16 gst_type_load_thyself(xmlNodePtr parent) {
-  xmlNodePtr children = parent->childs;
+  xmlNodePtr field = parent->childs;
   guint16 typeid = 0;
 
-  while (children) {
-    if (!strcmp(children->name, "type")) {
-      xmlNodePtr field = children->childs;
-      while (field) {
-	if (!strcmp(field->name, "mime")) {
-	  typeid = gst_type_find_by_mime(xmlNodeGetContent(field));
-	  if (!typeid) {
-            GstTypeFactory *factory = g_new0(GstTypeFactory, 1);
+  while (field) {
+    if (!strcmp(field->name, "mime")) {
+      typeid = gst_type_find_by_mime(xmlNodeGetContent(field));
+      if (!typeid) {
+        GstTypeFactory *factory = g_new0(GstTypeFactory, 1);
 
-            factory->mime = g_strdup(xmlNodeGetContent(field));
-	    typeid = gst_type_register(factory);
-	  }
-	  return typeid;
-	}
-	field = field->next;
+        factory->mime = g_strdup(xmlNodeGetContent(field));
+        typeid = gst_type_register(factory);
       }
+      return typeid;
     }
-    children = children->next;
+    field = field->next;
   }
 
   return typeid;

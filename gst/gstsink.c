@@ -38,7 +38,7 @@ static void gst_sink_init(GstSink *sink);
 
 
 static GstElementClass *parent_class = NULL;
-static guint gst_sink_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_sink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_sink_get_type(void) {

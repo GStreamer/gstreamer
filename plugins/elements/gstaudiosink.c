@@ -145,6 +145,7 @@ static void gst_audiosink_init(GstAudioSink *audiosink) {
   gst_clock_register(audiosink->clock, GST_OBJECT(audiosink));
   //audiosink->clocktime = 0LL;
 
+  GST_FLAG_SET(audiosink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
 void gst_audiosink_sync_parms(GstAudioSink *audiosink) {

@@ -597,7 +597,7 @@
       <class>GtkVBox</class>
       <name>vbox3</name>
       <homogeneous>False</homogeneous>
-      <spacing>0</spacing>
+      <spacing>2</spacing>
 
       <widget>
 	<class>GtkScrolledWindow</class>
@@ -696,7 +696,7 @@
 	<rows>5</rows>
 	<columns>2</columns>
 	<homogeneous>False</homogeneous>
-	<row_spacing>0</row_spacing>
+	<row_spacing>2</row_spacing>
 	<column_spacing>0</column_spacing>
 	<child>
 	  <padding>0</padding>

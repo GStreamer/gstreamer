@@ -209,7 +209,9 @@ struct _GstEditorBinClass {
 GtkType gst_editor_bin_get_type();
 GstEditorBin *gst_editor_bin_new(GstEditorBin *parent,GstBin *bin,
                                  const gchar *first_arg_name,...);
-
+void gst_editor_bin_connection_drag(GstEditorBin *bin,
+                                    gdouble wx,gdouble wy);
+void gst_editor_bin_start_banding(GstEditorBin *bin,GstEditorPad *pad);
 
 
 #define GST_TYPE_EDITOR_CANVAS \
@@ -354,6 +356,9 @@ struct _GstEditorConnectionClass {
 };
 
 GtkType gst_editor_connection_get_type();
+GstEditorConnection *gst_editor_connection_new(GstEditorBin *parent,
+                                               GstEditorPad *frompad);
+
 void gst_editor_connection_resize(GstEditorConnection *connection);
 void gst_editor_connection_set_endpoint(GstEditorConnection *connection,
                                         gdouble x,gdouble y);

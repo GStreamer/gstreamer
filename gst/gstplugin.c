@@ -517,10 +517,7 @@ void gst_plugin_load_thyself(xmlNodePtr parent) {
 	}
 	else if (!strcmp(field->name, "type")) {
 	  GstTypeFactory *factory = gst_typefactory_load_thyself(field);
-	  guint16 typeid = gst_type_find_by_mime(factory->mime);
-	  if (!typeid) {
-	    typeid = gst_type_register(factory);
-	  }
+	  gst_type_register(factory);
 	  plugin->types = g_list_prepend(plugin->types, factory);
 	  typecount++;
 	}

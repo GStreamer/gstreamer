@@ -31,10 +31,7 @@ GstTypeFactory _factories[] = {
 
 GstPlugin *plugin_init(GModule *module) {
   GstPlugin *plugin;
-  int i = 0;
-
-  if (gst_plugin_find("gsttypes") != NULL)
-    return NULL;
+  gint i = 0;
 
   plugin = gst_plugin_new("gsttypes");
   g_return_val_if_fail(plugin != NULL,NULL);

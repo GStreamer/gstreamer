@@ -14,9 +14,9 @@ static void gst_editor_connection_destroy(GtkObject *object);
 static void gst_editor_connection_realize(GstEditorConnection *connection);
 
 /* events fired by items within self */
-static gint gst_editor_connection_line_event(GnomeCanvasItem *item,
-                                             GdkEvent *event,
-                                             GstEditorConnection *connection);
+//static gint gst_editor_connection_line_event(GnomeCanvasItem *item,
+//                                             GdkEvent *event,
+//                                             GstEditorConnection *connection);
 
 /* utility functions */
 
@@ -35,7 +35,7 @@ enum {
 };
 
 static GtkObjectClass *parent_class;
-static guint gst_editor_connection_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_editor_connection_signals[LAST_SIGNAL] = { 0 };
 
 GtkType gst_editor_connection_get_type() {
   static GtkType connection_type = 0;
@@ -89,16 +89,16 @@ GstEditorConnection *gst_editor_connection_new(GstEditorBin *parent,
                                                GstEditorPad *frompad) {
   GstEditorConnection *connection;
 
-  g_return_if_fail(parent != NULL);
-  g_return_if_fail(GST_IS_EDITOR_BIN(parent));
-  g_return_if_fail(frompad != NULL);
-  g_return_if_fail(GST_IS_EDITOR_PAD(frompad));
+  g_return_val_if_fail(parent != NULL, NULL);
+  g_return_val_if_fail(GST_IS_EDITOR_BIN(parent), NULL);
+  g_return_val_if_fail(frompad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_EDITOR_PAD(frompad), NULL);
 
   connection = GST_EDITOR_CONNECTION(gtk_type_new(GST_TYPE_EDITOR_CONNECTION));
   connection->frompad = frompad;
   connection->frompad->connection = connection;
   connection->fromsrc = connection->frompad->issrc;
-  connection->parent = parent;
+  connection->parent = GST_EDITOR_ELEMENT(parent);
 
   gst_editor_connection_realize(connection);
 
@@ -212,8 +212,8 @@ void gst_editor_connection_resize(GstEditorConnection *connection) {
        x2,y2: item coords relative to the bin's group
        This means translating the x1,y1 coords into world, then into bin.
     */
-    gnome_canvas_item_i2w(connection->frompad->parent->group,&x1,&y1);
-    gnome_canvas_item_w2i(GST_EDITOR_ELEMENT_GROUP(connection->parent),
+    gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(connection->frompad->parent->group),&x1,&y1);
+    gnome_canvas_item_w2i(GNOME_CANVAS_ITEM(GST_EDITOR_ELEMENT_GROUP(connection->parent)),
                           &x1,&y1);
   } else {
     if (connection->fromsrc) {
@@ -225,11 +225,11 @@ void gst_editor_connection_resize(GstEditorConnection *connection) {
     }
     y1 = connection->frompad->y + (connection->frompad->height / 2);
     y2 = connection->topad->y + (connection->topad->height / 2);
-    gnome_canvas_item_i2w(connection->frompad->parent->group,&x1,&y1);
-    gnome_canvas_item_w2i(GST_EDITOR_ELEMENT_GROUP(connection->parent),
+    gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(connection->frompad->parent->group),&x1,&y1);
+    gnome_canvas_item_w2i(GNOME_CANVAS_ITEM(GST_EDITOR_ELEMENT_GROUP(connection->parent)),
                           &x1,&y1);
-    gnome_canvas_item_i2w(connection->topad->parent->group,&x2,&y2);
-    gnome_canvas_item_w2i(GST_EDITOR_ELEMENT_GROUP(connection->parent),
+    gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(connection->topad->parent->group),&x2,&y2);
+    gnome_canvas_item_w2i(GNOME_CANVAS_ITEM(GST_EDITOR_ELEMENT_GROUP(connection->parent)),
                           &x2,&y2);
   }
 

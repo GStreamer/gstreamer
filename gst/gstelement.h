@@ -76,10 +76,12 @@ static inline char *_gst_print_statename(int state) {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {
-  GST_ELEMENT_MULTI_IN		= (1 << 0),
+  GST_ELEMENT_MULTI_IN		= (1 << 4),
+  GST_ELEMENT_THREAD_SUGGESTED	= (1 << 5),
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
+#define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAGS(obj) & GST_ELEMENT_THREAD_SUGGESTED)
 
 
 typedef struct _GstElement GstElement;

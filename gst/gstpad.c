@@ -438,8 +438,8 @@ static void gst_pad_real_destroy(GtkObject *object) {
  */
 void gst_pad_load_and_connect(xmlNodePtr parent, GstObject *element, GHashTable *elements) {
   xmlNodePtr field = parent->childs;
-  GstPad *pad, *targetpad;
-  guchar *peer;
+  GstPad *pad = NULL, *targetpad;
+  guchar *peer = NULL;
   gchar **split;
   GstElement *target;
 

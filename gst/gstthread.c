@@ -54,7 +54,6 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element);
 static xmlNodePtr gst_thread_save_thyself(GstElement *element,xmlNodePtr parent);
 static void gst_thread_restore_thyself(GstElement *element,xmlNodePtr parent, GHashTable *elements);
 
-static void gst_thread_prepare(GstThread *thread);
 static void gst_thread_signal_thread(GstThread *thread);
 static void gst_thread_create_plan_dummy(GstBin *bin);
 
