@@ -180,6 +180,10 @@ struct minimal_s390_stackframe {
     ((struct minimal_s390_stackframe *)sp)->back_chain = 0;
 
 
+#elif defined(HAVE_MAKECONTEXT)
+
+/* If we have makecontext(), we'll be using that. */
+
 #else
 #error Need to know about this architecture, or have a generic implementation
 #endif
