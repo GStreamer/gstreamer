@@ -238,8 +238,13 @@ static gboolean dvdnavsrc_convert (GstPad * pad,
 static gboolean dvdnavsrc_close (DVDNavSrc * src);
 static gboolean dvdnavsrc_open (DVDNavSrc * src);
 static gboolean dvdnavsrc_is_open (DVDNavSrc * src);
+
+#ifndef GST_DISABLE_GST_DEBUG
 static void dvdnavsrc_print_event (DVDNavSrc * src,
     guint8 * data, int event, int len);
+#else
+#define dvdnavsrc_print_event(src, data, event, len) ((void) 0)
+#endif /* GST_DISABLE_GST_DEBUG */
 static void dvdnavsrc_update_streaminfo (DVDNavSrc * src);
 static void dvdnavsrc_set_domain (DVDNavSrc * src);
 static void dvdnavsrc_update_highlight (DVDNavSrc * src);
@@ -1029,9 +1034,6 @@ dvdnav_get_event_name (int event)
   }
   return "UNKNOWN";
 }
-#else
-#define dvdnav_get_event_name(event) "<unknown>"
-#endif /* GST_DISABLE_GST_DEBUG */
 
 static gchar *
 dvdnav_get_read_domain_name (dvd_read_domain_t domain)
@@ -1053,7 +1055,6 @@ dvdnav_get_read_domain_name (dvd_read_domain_t domain)
   return "UNKNOWN";
 }
 
-#ifndef GST_DISABLE_GST_DEBUG
 static void
 dvdnavsrc_print_event (DVDNavSrc * src, guint8 * data, int event, int len)
 {
@@ -1149,8 +1150,6 @@ dvdnavsrc_print_event (DVDNavSrc * src, guint8 * data, int event, int len)
       break;
   }
 }
-#else
-#define dvdnavsrc_print_event(src, data, event, len) ((void) 0)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 static GstEvent *
