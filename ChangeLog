@@ -1,3 +1,10 @@
+2004-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_get_type),
+	(gst_jpegenc_class_init), (gst_jpegenc_getcaps):
+        fix _getcaps so it only negotiates to its supported format
+
 2004-04-25  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstaudioconvert.c: (_fixate_caps_to_int):
