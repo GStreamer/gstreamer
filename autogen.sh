@@ -28,6 +28,7 @@ version_check ()
   MINOR=$4
   MICRO=$5
 
+  # WRONG is unset as long as we haven't found the version to be wrong
   WRONG=
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
