@@ -407,11 +407,13 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
   GList *pads;
   GstRealPad *realpad;
   GstData *data = NULL;
+  gboolean inf_loop;
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG ("entering src wrapper of element %s", name);
 
   do {
+    inf_loop = TRUE;
     pads = element->pads;
     while (pads) {
 
@@ -421,8 +423,8 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
       realpad = GST_REAL_PAD (pads->data);
 
       pads = g_list_next (pads);
-      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC
-          && GST_PAD_IS_USABLE (realpad)) {
+      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC) {
+        inf_loop = FALSE;
         GST_CAT_DEBUG (debug_dataflow, "calling _getfunc for %s:%s",
             GST_DEBUG_PAD_NAME (realpad));
         g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
@@ -434,7 +436,7 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
         }
       }
     }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element) && !inf_loop);
 
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
 

@@ -1398,6 +1398,9 @@ gst_element_class_set_details (GstElementClass * klass,
  *
  * Retrieves a list of the pad templates associated with @element_class. The
  * list must not be modified by the calling code.
+ * <note>If you use this function in the #GInstanceInitFunc of an object class
+ * that has subclasses, make sure to pass the g_class parameter of the 
+ * #GInstanceInitFunc here.</note>
  *
  * Returns: the #GList of padtemplates.
  */
@@ -1416,6 +1419,9 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
  * @name: the name of the #GstPadTemplate to get.
  *
  * Retrieves a padtemplate from @element_class with the given name.
+ * <note>If you use this function in the #GInstanceInitFunc of an object class
+ * that has subclasses, make sure to pass the g_class parameter of the 
+ * #GInstanceInitFunc here.</note>
  *
  * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
  * No unreferencing is necessary.
