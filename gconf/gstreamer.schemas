@@ -45,14 +45,14 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer/default/visualisation</key>
-      <applyto>/system/gstreamer/default/visualisation</applyto>
+      <key>/schemas/system/gstreamer/default/visualization</key>
+      <applyto>/system/gstreamer/default/visualization</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>goom</default>
       <locale name="C">
-        <short>default GStreamer visualisation plugin</short>
-        <long>GStreamer can put visualisation plugins in a pipeline to transform audio stream in video frames. Default is goom but more visualisation plugins will be ported soon. The visualisation plugin can be a partial pipeline instead of just one element.</long>
+        <short>default GStreamer visualization plugin</short>
+        <long>GStreamer can put visualization plugins in a pipeline to transform audio stream in video frames. Default is goom but more visualization plugins will be ported soon. The visualization plugin can be a partial pipeline instead of just one element.</long>
       </locale>
     </schema>
   </schemalist>
