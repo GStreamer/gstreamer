@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <glib.h>
 
 /*****************************************************************************/
 
@@ -96,7 +97,13 @@ LADSPAPluginSearch(LADSPAPluginSearchCallbackFunction fCallbackFunction) {
   const char * pcLADSPAPath;
   const char * pcStart;
 
-  pcLADSPAPath = getenv("LADSPA_PATH");
+  /* thomasvs: I'm sorry, but I'm going to add glib stuff here.
+  * I'm appending logical values for LADSPA_PATH here
+  */
+
+  pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
+	          getenv("LADSPA_PATH"));
+
   if (!pcLADSPAPath) {
 /*    fprintf(stderr, */
 /*	    "Warning: You do not have a LADSPA_PATH " */

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glib.h>
 
 /*****************************************************************************/
 
@@ -53,7 +54,12 @@ dlopenLADSPA(const char * pcFilename, int iFlag) {
        LD_LIBRARY_PATH, whereas the LADSPA_PATH is the correct place
        to search. */
 
-    pcLADSPAPath = getenv("LADSPA_PATH");
+    /* thomasvs: I'm sorry, but I'm going to add glib stuff here.
+     * I'm appending logical values for LADSPA_PATH here
+     */
+
+    pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
+	getenv("LADSPA_PATH"));
     
     if (pcLADSPAPath) {
 
