@@ -118,19 +118,19 @@ static const struct poptOption gstreamer_options[] = {
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        N_("Print the GStreamer version"), NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG
-  {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("Default debug level from 1 (only error) to 5 (anything) or 0 for no output"), "LEVEL"},
-  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("Colon-seperated list of category_name=level pairs to set specific levels for the individual categories.\nExample:GST_AUTOPLUG=5:GST_ELEMENT_*=3"), "CATEGORIES"},
+  {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("Default debug level from 1 (only error) to 5 (anything) or 0 for no output"), N_("LEVEL")},
+  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("Comma-separated list of category_name:level pairs to set specific levels for the individual categories.\nExample: GST_AUTOPLUG:5,GST_ELEMENT_*:3"), N_("CATEGORIES")},
   {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("Disable color debugging output"), NULL},
   {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  N_("Disable debugging")},
   {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     N_("Print available debug categories and exit"), NULL},
 #endif
   {"gst-disable-cpu-opt",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	  NULL, ARG_DISABLE_CPU_OPT,N_("Disable accelerated CPU instructions"), NULL},
   {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    N_("Enable verbose plugin loading diagnostics"), NULL},
-  {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    N_("'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins"), "PATHS"},
-  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    N_("Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"), "PLUGINS"},
+  {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    N_("path list for loading plugins (separated by '" G_SEARCHPATH_SEPARATOR_S "')"),N_("PATHS")},
+  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    N_("Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"), N_("PLUGINS")},
   {"gst-disable-segtrap",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_SEGTRAP_DISABLE,N_("Disable trapping of segmentation faults during plugin loading"), NULL},
-  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      N_("Scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)"), "SCHEDULER"},
-  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       N_("Registry to use") , "REGISTRY"},
+  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      N_("Scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)"), N_("SCHEDULER")},
+  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       N_("Registry to use") , N_("REGISTRY")},
   POPT_TABLEEND
 };
 
@@ -316,10 +316,10 @@ parse_debug_list (const gchar *list)
 
   g_return_if_fail (list != NULL);
 
-  walk = split = g_strsplit (list, ":", 0);
+  walk = split = g_strsplit (list, ",", 0);
 
   while (walk[0]) {
-    gchar **values = g_strsplit ( walk[0], "=", 2);
+    gchar **values = g_strsplit ( walk[0], ":", 2);
     if (values[0] && values[1]) {
       gint level = 0;
       g_strstrip (values[0]);

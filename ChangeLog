@@ -1,6 +1,9 @@
 2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-        * gst/gst.c: capitalize beginnings of popt options
+        * gst/gst.c:
+          - capitalize beginnings of popt options
+          - fix strings for translation
+          - change gst-debug format from =N1=V1:N2=V2 to =N1:V1,N2:V2
 
 2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
