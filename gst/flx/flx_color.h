@@ -37,7 +37,7 @@ void flx_colorspace_convert(FlxColorSpaceConverter *flxpal, guchar *src, guchar 
 FlxColorSpaceConverter * flx_colorspace_converter_new(gint width, gint height);
 
 void flx_set_palette_vector(FlxColorSpaceConverter *flxpal, guint start, guint num, 
-          guchar *newpal);
+          guchar *newpal, gint scale);
 void flx_set_color(FlxColorSpaceConverter *flxpal, guint colr, guint red, guint green,
-          guint blue);
+          guint blue, gint scale);
 

@@ -98,10 +98,10 @@ static void	gst_flxdec_set_property	(GObject *object, guint prop_id, const GValu
 static void	gst_flxdec_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 
-static void flx_decode_color(GstFlxDec *, guchar *, guchar *);
-static void flx_decode_brun(GstFlxDec *, guchar *, guchar *);
-static void flx_decode_delta_fli(GstFlxDec *, guchar *, guchar *);
-static void flx_decode_delta_flc(GstFlxDec *, guchar *, guchar *);
+static void 	flx_decode_color	(GstFlxDec *, guchar *, guchar *, gint);
+static void 	flx_decode_brun		(GstFlxDec *, guchar *, guchar *);
+static void 	flx_decode_delta_fli	(GstFlxDec *, guchar *, guchar *);
+static void 	flx_decode_delta_flc	(GstFlxDec *, guchar *, guchar *);
 
 #define rndalign(off) ((off) + ((off) % 2))
 
@@ -200,8 +200,12 @@ flx_decode_chunks (GstFlxDec *flxdec , gulong count, gchar *data, gchar *dest)
     switch(hdr->id) 
     {
       case FLX_COLOR64:
+        flx_decode_color(flxdec, data, dest, 2);
+        data += rndalign(hdr->size) - FlxFrameChunkSize;
+        break;
+
       case FLX_COLOR256:
-        flx_decode_color(flxdec, data, dest);
+        flx_decode_color(flxdec, data, dest, 0);
         data += rndalign(hdr->size) - FlxFrameChunkSize;
         break;
 
@@ -240,7 +244,7 @@ flx_decode_chunks (GstFlxDec *flxdec , gulong count, gchar *data, gchar *dest)
 
 
 static void
-flx_decode_color(GstFlxDec *flxdec, guchar *data, guchar *dest)
+flx_decode_color(GstFlxDec *flxdec, guchar *data, guchar *dest, gint scale)
 {
   guint packs, count, indx;
 
@@ -262,7 +266,7 @@ flx_decode_color(GstFlxDec *flxdec, guchar *data, guchar *dest)
       count = 256;
 
     g_print("GstFlxDec: cmap count: %d (indx: %d)\n", count, indx);
-    flx_set_palette_vector(flxdec->converter, indx, count, data);
+    flx_set_palette_vector(flxdec->converter, indx, count, data, scale);
 
     data += (count * 3);
   }
