@@ -4,7 +4,7 @@
 void set_speed (GtkAdjustment *adj, gpointer data)
 {
     GstElement *speed = GST_ELEMENT(data);
-    gtk_object_set(GTK_OBJECT(speed), "speed", adj->value, NULL);
+    g_object_set (speed, "speed", adj->value, NULL);
 }
 
 int main(int argc, char **argv) 
@@ -41,22 +41,15 @@ int main(int argc, char **argv)
     stereo2mono = gst_element_factory_make("stereo2mono", "stereo2mono");
     speed = gst_element_factory_make("speed", "speed");
     osssink = gst_element_factory_make("osssink", "osssink");
-    gtk_object_set(GTK_OBJECT(osssink), "fragment", 0x00180008, NULL);
+    g_object_set(osssink, "fragment", 0x00180008, NULL);
     
     gtk_signal_connect(GTK_OBJECT(gtk_range_get_adjustment(GTK_RANGE(hscale))),
                        "value_changed", G_CALLBACK (set_speed), speed);
     
     pipeline = gst_pipeline_new("app");
-    gst_bin_add(GST_BIN(pipeline), filesrc);
-    gst_bin_add(GST_BIN(pipeline), mad);
-    gst_bin_add(GST_BIN(pipeline), stereo2mono);
-    gst_bin_add(GST_BIN(pipeline), speed);
-    gst_bin_add(GST_BIN(pipeline), osssink);
-    gst_element_connect(filesrc, mad);
-    gst_element_connect(mad, stereo2mono);
-    gst_element_connect(stereo2mono, speed);
-    gst_element_connect(speed, osssink);
-    gtk_object_set(GTK_OBJECT(filesrc), "location", argv[1], NULL);
+    gst_bin_add_many (GST_BIN(pipeline), filesrc, mad, stereo2mono, speed, osssink, NULL);
+    gst_element_connect_many (filesrc, mad, stereo2mono, speed, osssink, NULL);
+    g_object_set(G_OBJECT(filesrc), "location", argv[1], NULL);
     
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
     

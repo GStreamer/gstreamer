@@ -400,7 +400,7 @@ gst_jack_loop (GstElement *element)
 {
     GstJack *this;
     GList *pads;
-    gint len;
+    gint len, peeked_len;
     gchar *peeked;
     gint avail;
     GstEvent *event;
@@ -421,7 +421,9 @@ gst_jack_loop (GstElement *element)
                 if (!pad->bs)
                     pad->bs = gst_bytestream_new (pad->pad);
                 
-                if (gst_bytestream_peek_bytes (pad->bs, (guint8**)&peeked, len) < len) {
+            read:
+                peeked_len = gst_bytestream_peek_bytes (pad->bs, (guint8**)&peeked, len);
+                if (peeked_len < len) {
                     gst_bytestream_get_status(pad->bs, &avail, &event);
                     if (event) {
                         g_warning("got an event on jacksink");
@@ -430,9 +432,12 @@ gst_jack_loop (GstElement *element)
                              * me know when this is needed ;)
                              * also, for sample accuracy etc, we should play avail
                              * bytes, but hey. */
-                            gst_element_set_eos(GST_ELEMENT(this));
-                            gst_event_free(event);
+                            gst_element_set_eos (element);
+                            gst_event_free (event);
+                            gst_element_yield (element); /* shouldn't return */
+                            return;
                         }
+                        goto read;
                     } else {
                         /* the element at the top of the chain did not emit an eos
                          * event. this is a Bug(tm) */
@@ -440,8 +445,9 @@ gst_jack_loop (GstElement *element)
                     }
                 }
                 
-                memcpy (pad->data, peeked, len);
-                gst_bytestream_flush (pad->bs, len);
+                
+                memcpy (pad->data, peeked, peeked_len);
+                gst_bytestream_flush (pad->bs, peeked_len);
             } else {
                 buffer = gst_buffer_new ();
                 GST_BUFFER_DATA (buffer)    = pad->data;
