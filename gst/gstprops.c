@@ -1145,11 +1145,38 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	  }
 	  break;
 	}
+        case GST_PROPS_LIST_ID:
+        {
+          GList *entries = entry2->data.list_data.entries;
+          result = gst_props_alloc_entry ();
+          result->propid = entry1->propid;
+          result->propstype = GST_PROPS_LIST_ID;
+          result->data.list_data.entries = NULL;
+          while (entries) {
+            GstPropsEntry * this = (GstPropsEntry *)entries->data;
+            if (this->propstype != GST_PROPS_INT_ID) {
+              /* no hope, this list doesn't even contain ints! */
+              gst_props_entry_destroy (result);
+              result = NULL;
+              break;
+            }
+            if (this->data.int_data >= entry1->data.int_range_data.min &&
+                this->data.int_data <= entry1->data.int_range_data.max) {
+              result->data.list_data.entries = g_list_append (result->data.list_data.entries,
+                                                              gst_props_entry_copy (this));
+            }
+            entries = g_list_next (entries);
+          }
+          break;
+        }
         case GST_PROPS_INT_ID:
+        {
 	  if (entry1->data.int_range_data.min <= entry2->data.int_data && 
 	      entry1->data.int_range_data.max >= entry2->data.int_data) {
             result = gst_props_entry_copy (entry2);
 	  }
+          break;
+        }
         default:
 	  break;
       }
