@@ -479,7 +479,53 @@ case that we don't take away the running cothread from under the elements.
 In the non-cothread case we can just move the elements to another new group.
 
 
+Interrupt with cothreadless optimal scheduler
+---------------------------------------------
 
+Interrupts are usually performed when a blocking _get based source or
+decoupled element is unlocked for a state change. The idea of the 
+interrupt scheduler call is to return to the main execution stack frame
+ASAP so that the state change can take place. For cothread based
+implementations of the scheduler this is not a problem as one can jump
+to the main cothread context without problems. For non cothread based
+schedulers we need to follow this scheme:
+
+get <-> chain based connection.
+
+ - enter get group scheduler
+   - call _get function on source, this can block internally
+   - app performs state change, element is told to unlock itself
+   - lock inside the get based function unlocks and _get function
+     return GST_EVENT_INTERRUPT
+   - group scheduler notices the event, unrefs it and jumps out of the
+     get_group_scheduler function, a scheduler INTERRUPTED flag is set.
+
+get <-> loop based connection
+
+  - enter loop group scheduler
+    - loop based element does pull on sinkpad
+    - _get blocks
+    - app performs state change, _get is unlocked and returns 
+      GST_EVENT_INTERRUPT.
+    - loop based function receives INTERRUPT event and exits its loop
+      ASAP using gst_element_interrupt.
+
+loop/chain <-> loop based connection
+
+  - when returning from the recursive call to the scheduler, the state
+    of the scheduler is checked, if it was interrupted, a
+    GST_EVENT_INTERRUPTED event is returned to the loop based element.
+  - the loop based element exits its loop ASAP.
+      
+
+This technique will unwind the stack of scheduled groups ASAP and returns
+to the main execution stack frame where the iterate() function can return
+and the state change can take place.
+
+Another alternative could be implemented when the _push and _pull functions
+would return a result code...
+
+ 
 
 
 
