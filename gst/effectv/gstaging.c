@@ -31,6 +31,19 @@
 #define GST_IS_AGINGTV_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AGINGTV))
 
+#define SCRATCH_MAX 20
+typedef struct _scratch
+{
+  gint life;
+  gint x;
+  gint dx;
+  gint init;
+} scratch;
+
+static int dx[8] = { 1, 1, 0, -1, -1, -1,  0, 1};
+static int dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1};
+
+
 typedef struct _GstAgingTV GstAgingTV;
 typedef struct _GstAgingTVClass GstAgingTVClass;
 
@@ -41,9 +54,15 @@ struct _GstAgingTV
   GstPad *sinkpad, *srcpad;
 
   gint width, height;
-  gint map_width, map_height;
-  guint32 *map;
-  gint video_width_margin;
+  gint video_size;
+  gint area_scale;
+  gint aging_mode;
+
+  scratch scratches[SCRATCH_MAX];
+  gint scratch_lines;
+
+  gint dust_interval;
+  gint pits_interval;
 };
 
 struct _GstAgingTVClass
@@ -54,7 +73,7 @@ struct _GstAgingTVClass
 GstElementDetails gst_agingtv_details = {
   "AgingTV",
   "Filter/Effect",
-  "Aply edge detect on video",
+  "Aply aging effect on video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2002",
@@ -73,15 +92,17 @@ enum
   ARG_0,
 };
 
-static void gst_agingtv_class_init (GstAgingTVClass * klass);
-static void gst_agingtv_init (GstAgingTV * filter);
+static void 	gst_agingtv_class_init 		(GstAgingTVClass * klass);
+static void 	gst_agingtv_init 		(GstAgingTV * filter);
 
-static void gst_agingtv_set_property (GObject * object, guint prop_id,
-					   const GValue * value, GParamSpec * pspec);
-static void gst_agingtv_get_property (GObject * object, guint prop_id,
-					   GValue * value, GParamSpec * pspec);
+static void 	aging_mode_switch 		(GstAgingTV *filter);
 
-static void gst_agingtv_chain (GstPad * pad, GstBuffer * buf);
+static void 	gst_agingtv_set_property 	(GObject * object, guint prop_id,
+					  	 const GValue * value, GParamSpec * pspec);
+static void 	gst_agingtv_get_property 	(GObject * object, guint prop_id,
+					  	 GValue * value, GParamSpec * pspec);
+
+static void 	gst_agingtv_chain 		(GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
@@ -135,13 +156,9 @@ gst_agingtv_sinkconnect (GstPad * pad, GstCaps * caps)
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
 
-  filter->map_width = filter->width / 4;
-  filter->map_height = filter->height / 4;
-  filter->video_width_margin = filter->width - filter->map_width * 4;
-
-  g_free (filter->map);
-  filter->map = (guint32 *)g_malloc (filter->map_width * filter->map_height * sizeof(guint32) * 2);
-  bzero(filter->map, filter->map_width * filter->map_height * sizeof(guint32) * 2);
+  filter->video_size = filter->width * filter->height;
+  filter->aging_mode = 0;
+  aging_mode_switch (filter);
 
   if (gst_pad_try_set_caps (filter->srcpad, caps)) {
     return GST_PAD_CONNECT_OK;
@@ -160,8 +177,159 @@ gst_agingtv_init (GstAgingTV * filter)
 
   filter->srcpad = gst_pad_new_from_template (gst_effectv_src_factory (), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+}
 
-  filter->map = NULL;
+
+static unsigned int 
+fastrand (void)
+{
+  static unsigned int fastrand_val;
+
+  return (fastrand_val = fastrand_val * 1103515245 + 12345);
+}
+
+
+static void 
+coloraging (guint32 *src, guint32 *dest, gint video_area)
+{
+  guint32 a, b;
+  gint i;
+
+  for (i = video_area; i; i--) {
+    a = *src++;
+    b = (a & 0xfcfcfc) >> 2;
+    *dest++ = a - b + 0x181818 + ((fastrand () >> 8) & 0x101010);
+  }
+}
+
+
+static void 
+scratching (scratch *scratches, gint scratch_lines, guint32 *dest, gint width, gint height)
+{
+  gint i, y, y1, y2;
+  guint32 *p, a, b;
+  scratch *scratch;
+
+  for (i = 0; i < scratch_lines; i++) {
+    scratch = &scratches[i];
+
+    if (scratch->life) {
+      scratch->x = scratch->x + scratch->dx;
+      
+      if (scratch->x < 0 || scratch->x > width * 256) {
+	scratch->life = 0;
+	break;
+      }
+      p = dest + (scratch->x >> 8);
+      if (scratch->init) {
+	y1 = scratch->init;
+	scratch->init = 0;
+      } else {
+	y1 = 0;
+      }
+      scratch->life--;
+      if (scratch->life) {
+	y2 = height;
+      } else {
+	y2 = fastrand () % height;
+      }
+      for (y = y1; y < y2; y++) {
+	a = *p & 0xfefeff;
+	a += 0x202020;
+	b = a & 0x1010100;
+	*p = a | (b - (b >> 8));
+	p += width;
+      }
+    } else {
+      if ((fastrand () & 0xf0000000) == 0) {
+	scratch->life = 2 + (fastrand () >> 27);
+	scratch->x = fastrand () % (width * 256);
+	scratch->dx = ((int) fastrand ()) >> 23;
+	scratch->init = (fastrand () % (height - 1)) + 1;
+      }
+    }
+  }
+}
+
+static void 
+dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_scale)
+{
+  int i, j;
+  int dnum;
+  int d, len;
+  int x, y;
+
+  if (dust_interval == 0) {
+    if ((fastrand () & 0xf0000000) == 0) {
+      dust_interval = fastrand () >> 29;
+    }
+    return;
+  }
+  dnum = area_scale * 4 + (fastrand() >> 27);
+  
+  for (i = 0; i < dnum; i++) {
+    x = fastrand () % width;
+    y = fastrand () % height;
+    d = fastrand () >> 29;
+    len = fastrand () % area_scale + 5;
+    for (j = 0; j < len; j++) {
+      dest[y * width + x] = 0x101010;
+      y += dy[d];
+      x += dx[d];
+      if (x < 0 || x >= width) break;
+      if (y < 0 || y >= height) break;
+      d = (d + fastrand () % 3 - 1) & 7;
+    }
+  }
+  dust_interval--;
+}
+
+static void 
+pits (guint32 *dest, gint width, gint height, gint area_scale, gint pits_interval)
+{
+  int i, j;
+  int pnum, size, pnumscale;
+  int x, y;
+
+  pnumscale = area_scale * 2;
+  if (pits_interval) {
+    pnum = pnumscale + (fastrand () % pnumscale);
+
+    pits_interval--;
+  } else {
+    pnum = fastrand () % pnumscale;
+
+    if ((fastrand () & 0xf8000000) == 0) {
+      pits_interval = (fastrand () >> 28) + 20;
+    }
+  }
+  for (i = 0; i < pnum; i++) {
+    x = fastrand () % (width - 1);
+    y = fastrand () % (height - 1);
+
+    size = fastrand () >> 28;
+
+    for (j = 0; j < size; j++) {
+      x = x + fastrand () % 3 - 1;
+      y = y + fastrand () % 3 - 1;
+      dest[y * width + x] = 0xc0c0c0;
+    }
+  }
+}
+
+static void 
+aging_mode_switch (GstAgingTV *filter)
+{
+  switch (filter->aging_mode) {
+    default:
+    case 0:
+      filter->scratch_lines = 7;
+	/* Most of the parameters are tuned for 640x480 mode */
+	/* area_scale is set to 10 when screen size is 640x480. */
+      filter->area_scale = filter->width * filter->height / 64 / 480;
+  }
+  if (filter->area_scale <= 0)
+    filter->area_scale = 1;
 }
 
 static void
@@ -176,9 +344,15 @@ gst_agingtv_chain (GstPad * pad, GstBuffer * buf)
   src = (guint32 *) GST_BUFFER_DATA (buf);
 
   outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = (filter->width * filter->height * 4);
+  GST_BUFFER_SIZE (outbuf) = (filter->video_size * sizeof (guint32));
   dest = (guint32 *) GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+  coloraging (src, dest, filter->video_size);
+  scratching (filter->scratches, filter->scratch_lines, dest, filter->width, filter->height);
+  pits (dest, filter->width, filter->height, filter->area_scale, filter->pits_interval);
+  if(filter->area_scale > 1)
+    dusts (dest, filter->width, filter->height, filter->dust_interval, filter->area_scale);
   
   gst_buffer_unref (buf);
 
