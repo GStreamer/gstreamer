@@ -106,6 +106,7 @@ gst_jack_bin_change_state (GstElement *element)
         if (this->client) {
             g_message ("jack: closing client");
             jack_client_close (this->client);
+            this->client = NULL;
         }
         
         if (GST_ELEMENT_CLASS (parent_class)->change_state)
@@ -126,7 +127,6 @@ gst_jack_bin_change_state (GstElement *element)
           jack_on_shutdown (this->client, shutdown, this);
         }
         
-        /* fixme: there are a *lot* of problems here */
         if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
             l = this->src_pads;
             while (l) {
