@@ -242,11 +242,12 @@ gst_lame_class_init (GstLameClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
           8, 320, 128, G_PARAM_READWRITE));
+  /* compression ratio set to 0.0 by default otherwise it overrides the bitrate setting */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_COMPRESSION_RATIO, g_param_spec_float ("compression_ratio",
           "Compression Ratio",
-          "choose bitrate to achive selected compression ratio", 1.0, 200.0,
-          11.0, G_PARAM_READWRITE));
+          "let lame choose bitrate to achieve selected compression ratio", 0.0,
+          200.0, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_enum ("quality", "Quality", "Encoding Quality",
           GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
@@ -451,7 +452,7 @@ gst_lame_init (GstLame * lame)
   lame->initialized = FALSE;
 
   lame->bitrate = 128;          /* lame_get_brate (lame->lgf); => 0/out of range */
-  lame->compression_ratio = 5;  /* lame_get_compression_ratio (lame->lgf); => 0/out of range */
+  lame->compression_ratio = 0.0;        /* lame_get_compression_ratio (lame->lgf); => 0/out of range ... NOTE: 0.0 makes bitrate take precedence */
   lame->quality = 5;            /* lame_get_quality (lame->lgf); => -1/out of range */
   lame->mode = lame_get_mode (lame->lgf);
   lame->force_ms = lame_get_force_ms (lame->lgf);
