@@ -274,8 +274,6 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
   if (GST_IS_EVENT(buf)){
     GstEvent *event = GST_EVENT(buf);
 
-    g_print("got event\n");
-
     switch(GST_EVENT_TYPE(event)){
       case GST_EVENT_EOS:
 	gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
