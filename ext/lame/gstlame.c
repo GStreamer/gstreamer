@@ -362,7 +362,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   */
   gst_caps_debug (gst_pad_get_caps (pad), "original caps on sink pad");
   /* check if the supplied caps of the peer element are compatible with our own      use gst_pad_get_caps because if caps aren't set yet we need the template */
-  if (!gst_caps_check_compatibility (caps, gst_pad_get_caps (pad)))
+  if (!gst_caps_is_always_compatible (caps, gst_pad_get_caps (pad)))
   {
     GST_DEBUG (GST_CAT_CAPS, 
 	       "peer caps (%p) not compatible with caps of pad %s:%s!",
@@ -757,7 +757,11 @@ gst_lame_setup (GstLame *lame)
 {
   GST_DEBUG_ENTER ("(\"%s\")", gst_element_get_name (GST_ELEMENT (lame)));
 
-  g_assert (!lame->initialized);
+  /* check if we're already initialized; if we are, we might want to check
+   * if this initialization is compatible with the previous one */
+  /* FIXME: do this */
+  if (lame->initialized)
+    g_warning ("already initialized");
 
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
