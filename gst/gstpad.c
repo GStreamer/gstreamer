@@ -47,6 +47,7 @@ GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 }G_STMT_END
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
+/* realize and pad and grab the lock of the realized pad. */
 #define GST_PAD_REALIZE_AND_LOCK(pad, realpad, lost_ghostpad) 	\
   GST_LOCK (pad);						\
   realpad = GST_PAD_REALIZE (pad);				\
@@ -336,6 +337,8 @@ gst_pad_custom_new (GType type, const gchar * name, GstPadDirection direction)
  * This function makes a copy of the name so you can safely free the name.
  *
  * Returns: a new #GstPad, or NULL in case of an error.
+ *
+ * MT safe.
  */
 GstPad *
 gst_pad_new (const gchar * name, GstPadDirection direction)
@@ -444,6 +447,7 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 
   old = GST_PAD_IS_ACTIVE (realpad);
 
+  /* if nothing changed, we can just exit */
   if (G_UNLIKELY (old == active))
     goto exit;
 
@@ -544,7 +548,7 @@ lost_ghostpad:
  * reasons stated above.
  *
  * Returns: TRUE if the pad could be blocked. This function can fail
- *   wrong parameters were passed or the pad was already in the 
+ *   if wrong parameters were passed or the pad was already in the 
  *   requested state.
  *
  * MT safe.
@@ -707,7 +711,7 @@ gst_pad_set_loop_function (GstPad * pad, GstPadLoopFunction loop)
  * @chain: the #GstPadChainFunction to set.
  *
  * Sets the given chain function for the pad. The chain function is called to
- * process a #GstData input buffer.
+ * process a #GstBuffer input buffer.
  */
 void
 gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
@@ -1511,7 +1515,9 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
 {
   /* this function would need checks if it weren't static */
 
+  GST_LOCK (pad);
   gst_object_replace ((GstObject **) & pad->padtemplate, (GstObject *) templ);
+  GST_UNLOCK (pad);
 
   if (templ) {
     gst_object_sink (GST_OBJECT (templ));
@@ -1711,6 +1717,7 @@ not_linked_together:
   }
 }
 
+/* should be called with the pad LOCK held */
 static GstCaps *
 gst_real_pad_get_caps_unlocked (GstRealPad * realpad)
 {
@@ -1784,9 +1791,12 @@ done:
   filter = GST_RPAD_APPFILTER (realpad);
 
   if (filter) {
+    GstCaps *temp = result;
+
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "app filter %p %" GST_PTR_FORMAT, filter, filter);
-    result = gst_caps_intersect (result, filter);
+    result = gst_caps_intersect (temp, filter);
+    gst_caps_unref (temp);
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "caps after intersection with app filter %p %" GST_PTR_FORMAT, result,
         result);
@@ -1802,6 +1812,8 @@ done:
  *
  * Returns: the #GstCaps of this pad. This function returns a new caps, so use 
  * gst_caps_unref to get rid of it.
+ *
+ * MT safe.
  */
 GstCaps *
 gst_pad_get_caps (GstPad * pad)
@@ -1870,8 +1882,12 @@ gst_pad_peer_get_caps (GstPad * pad)
   if (G_UNLIKELY (GST_RPAD_IS_IN_GETCAPS (peerpad)))
     goto was_dispatching;
 
-  result = gst_pad_get_caps (GST_PAD_CAST (peerpad));
+  gst_object_ref (GST_OBJECT (peerpad));
   GST_UNLOCK (realpad);
+
+  result = gst_pad_get_caps (GST_PAD_CAST (peerpad));
+
+  gst_object_unref (GST_OBJECT (peerpad));
 
   return result;
 
@@ -2727,8 +2743,7 @@ handle_pad_block (GstRealPad * pad)
  * @pad: a source #GstPad.
  * @buffer: the #GstBuffer to push.
  *
- * Pushes a buffer to the peer of @pad. @pad must be linked. May
- * only be called by @pad's parent.
+ * Pushes a buffer to the peer of @pad. @pad must be linked.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  *
@@ -2837,8 +2852,7 @@ no_function:
  * @offset: The start offset of the buffer
  * @length: The length of the buffer
  *
- * Pulls a buffer from the peer pad. May only be called by @pad's
- * parent.
+ * Pulls a buffer from the peer pad. @pad must be linked.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  *
@@ -2884,16 +2898,19 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   /* ERROR recovery here */
 not_connected:
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "pulling range, but it was not linked");
-  GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
-
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pulling range, but it was not linked");
+    GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
+  }
 no_function:
-  GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-      ("pullrange on pad %s:%s but the peer pad %s:%s has no getrangefunction",
-          GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-  gst_object_unref (GST_OBJECT (peer));
-  return GST_FLOW_ERROR;
+  {
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+        ("pullrange on pad %s:%s but the peer pad %s:%s has no getrangefunction",
+            GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
+    gst_object_unref (GST_OBJECT (peer));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /************************************************************************
@@ -3477,13 +3494,10 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   /* ERROR handling */
 not_linked:
-  result = FALSE;
-  goto error;
-
-error:
-  GST_UNLOCK (pad);
-
-  return result;
+  {
+    GST_UNLOCK (pad);
+    return FALSE;
+  }
 }
 
 /**
@@ -3538,12 +3552,12 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
   /* ERROR handling */
 no_function:
-  g_warning ("pad %s:%s has no event handler, file a bug.",
-      GST_DEBUG_PAD_NAME (rpad));
-  result = FALSE;
-  gst_event_unref (event);
-
-  return result;
+  {
+    g_warning ("pad %s:%s has no event handler, file a bug.",
+        GST_DEBUG_PAD_NAME (rpad));
+    gst_event_unref (event);
+    return FALSE;
+  }
 }
 
 typedef struct

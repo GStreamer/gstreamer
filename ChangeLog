@@ -1,3 +1,108 @@
+2005-01-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_loop),
+	(gst_fakesrc_activate):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_loop), (gst_filesrc_activate):
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
+	(gst_bin_remove_func), (gst_bin_iterate_elements),
+	(bin_element_is_sink), (gst_bin_get_state), (gst_bin_change_state),
+	(gst_bin_get_by_name), (gst_bin_get_by_name_recurse_up):
+	* gst/gstbuffer.c: (gst_buffer_get_type), (gst_buffer_set_caps):
+	* gst/gstbuffer.h:
+	* gst/gstbus.c: (gst_bus_post), (gst_bus_create_watch),
+	(bus_destroy):
+	* gst/gstbus.h:
+	* gst/gstclock.c: (gst_clock_entry_new), (gst_clock_id_ref),
+	(_gst_clock_id_free), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_class_init),
+	(gst_clock_init), (gst_clock_dispose), (gst_clock_get_time),
+	(gst_clock_set_time_adjust), (gst_clock_set_property),
+	(gst_clock_get_property):
+	* gst/gstclock.h:
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_remove_pad), (gst_element_post_message),
+	(gst_element_set_locked_state),
+	(gst_element_sync_state_with_parent), (gst_element_get_state_func),
+	(gst_element_abort_state), (gst_element_commit_state),
+	(gst_element_pads_activate):
+	* gst/gstelement.h:
+	* gst/gstformat.c: (_gst_format_initialize), (gst_format_register),
+	(gst_format_get_by_nick), (gst_format_get_details),
+	(gst_format_iterate_definitions):
+	* gst/gstformat.h:
+	* gst/gstiterator.c: (gst_iterator_new), (gst_list_iterator_next),
+	(gst_list_iterator_free), (gst_iterator_new_list),
+	(gst_iterator_next), (gst_iterator_resync), (filter_next):
+	* gst/gstiterator.h:
+	* gst/gstmemchunk.c: (gst_mem_chunk_alloc), (gst_mem_chunk_alloc0),
+	(gst_mem_chunk_free):
+	* gst/gstmessage.c: (_gst_message_free):
+	* gst/gstmessage.h:
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_init),
+	(gst_object_ref), (gst_object_unref), (gst_object_sink),
+	(gst_object_dispose), (gst_object_dispatch_properties_changed),
+	(gst_object_set_name_default), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_unparent),
+	(gst_object_check_uniqueness), (gst_object_get_path_string):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_set_blocked_async),
+	(gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_unlink),
+	(gst_pad_link_prepare_filtered), (gst_pad_link_filtered),
+	(gst_pad_set_pad_template), (gst_pad_relink_filtered),
+	(gst_real_pad_get_caps_unlocked), (gst_pad_peer_get_caps),
+	(gst_pad_fixate_caps), (gst_pad_accept_caps),
+	(gst_pad_peer_accept_caps), (gst_pad_set_caps),
+	(gst_pad_configure_sink), (gst_pad_configure_src),
+	(gst_pad_realize), (gst_pad_alloc_buffer), (gst_pad_push),
+	(gst_pad_pull_range), (gst_pad_push_event), (gst_pad_send_event):
+	* gst/gstpad.h:
+	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state), (gst_pipeline_get_clock_func),
+	(gst_pipeline_use_clock), (gst_pipeline_auto_clock):
+	* gst/gstpipeline.h:
+	* gst/gstpluginfeature.c: (gst_plugin_feature_get_name),
+	(gst_plugin_feature_set_rank), (gst_plugin_feature_get_rank):
+	* gst/gstpluginfeature.h:
+	* gst/gstprobe.c: (gst_probe_dispatcher_dispatch):
+	* gst/gstquery.c: (_gst_query_type_initialize),
+	(gst_query_type_register), (gst_query_type_get_by_nick),
+	(gst_query_type_get_details), (gst_query_type_iterate_definitions):
+	* gst/gstquery.h:
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_bufferalloc),
+	(gst_queue_loop):
+	* gst/gstsystemclock.c: (gst_system_clock_class_init),
+	(gst_system_clock_init), (gst_system_clock_dispose),
+	(gst_system_clock_async_thread), (gst_system_clock_id_wait),
+	(gst_system_clock_id_wait_async), (gst_system_clock_id_unschedule):
+	* gst/gstsystemclock.h:
+	* gst/gsttask.c: (gst_task_init), (gst_task_dispose),
+	(gst_task_create), (gst_task_get_state), (gst_task_start),
+	(gst_task_stop), (gst_task_pause):
+	* gst/gsttask.h:
+	* gst/gsttrashstack.h:
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_task_init),
+	(gst_thread_scheduler_task_start),
+	(gst_thread_scheduler_task_stop),
+	(gst_thread_scheduler_task_pause), (gst_thread_scheduler_func),
+	(gst_thread_scheduler_create_task):
+	* testsuite/clock/.cvsignore:
+	* testsuite/clock/Makefile.am:
+	* testsuite/clock/clock1.c: (main):
+	* testsuite/clock/clock2.c: (gst_clock_debug), (element_wait),
+	(main):
+	* testsuite/clock/clock3.c: (gst_clock_debug), (ok_callback),
+	(error_callback), (main):
+	Clock fixes. Added async callbacks and clock unscheduling.
+	Threading fixes. Fixed race condition in GstTask and possible
+	deadlock in _pad_get_caps(). Made various subsystems (query,
+	format,..) threadsafe.
+	Lots of cleanups and documentation.
+	
+
 2005-01-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),

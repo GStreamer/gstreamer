@@ -26,6 +26,7 @@
 #include <gst/gstmessage.h>
 
 G_BEGIN_DECLS
+
 /* --- standard type macros --- */
 #define GST_TYPE_BUS              (gst_bus_get_type ())
 #define GST_BUS(bus)              (G_TYPE_CHECK_INSTANCE_CAST ((bus), GST_TYPE_BUS, GstBus))
@@ -34,30 +35,29 @@ G_BEGIN_DECLS
 #define GST_IS_BUS_CLASS(bclass)  (G_TYPE_CHECK_CLASS_TYPE ((bclass), GST_TYPE_BUS))
 #define GST_BUS_GET_CLASS(bus)    (G_TYPE_INSTANCE_GET_CLASS ((bus), GST_TYPE_BUS, GstBusClass))
 #define GST_BUS_CAST(bus)         ((GstBus*)(bus))
-    typedef enum
+
+typedef enum
 {
   GST_BUS_DROP = 0,             /* drop message */
   GST_BUS_PASS = 1,             /* pass message to async queue */
   GST_BUS_ASYNC = 2,            /* pass message to async queue, continue if message is handled */
 } GstBusSyncReply;
 
-typedef GstBusSyncReply (*GstBusSyncHandler) (GstBus * bus,
-    GstMessage * message, gpointer data);
-typedef gboolean (*GstBusHandler) (GstBus * bus, GstMessage * message,
-    gpointer data);
+typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
+typedef gboolean 	(*GstBusHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
 
 struct _GstBus
 {
-  GstObject object;
+  GstObject 	    object;
 
   /*< private > */
-  GAsyncQueue *queue;
+  GAsyncQueue      *queue;
 
   GstBusSyncHandler sync_handler;
-  gpointer sync_handler_data;
+  gpointer 	    sync_handler_data;
 
-  gint control_socket[2];
-  GIOChannel *io_channel;
+  gint 		    control_socket[2];
+  GIOChannel       *io_channel;
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
@@ -71,23 +71,26 @@ struct _GstBusClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_bus_get_type (void);
+GType 			gst_bus_get_type 		(void);
 
-gboolean gst_bus_post (GstBus * bus, GstMessage * message);
+gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 
-gboolean gst_bus_have_pending (GstBus * bus);
-const GstMessage *gst_bus_peek (GstBus * bus);
-GstMessage *gst_bus_pop (GstBus * bus);
+gboolean 		gst_bus_have_pending 		(GstBus * bus);
+const GstMessage *	gst_bus_peek 			(GstBus * bus);
+GstMessage *		gst_bus_pop 			(GstBus * bus);
 
-void gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func,
-    gpointer data);
+void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
+    							 gpointer data);
 
-GSource *gst_bus_create_watch (GstBus * bus);
-guint gst_bus_add_watch_full (GstBus * bus,
-    gint priority,
-    GstBusHandler handler, gpointer user_data, GDestroyNotify notify);
-guint gst_bus_add_watch (GstBus * bus,
-    GstBusHandler handler, gpointer user_data);
+GSource *		gst_bus_create_watch 		(GstBus * bus);
+guint 			gst_bus_add_watch_full 		(GstBus * bus,
+    							 gint priority,
+    							 GstBusHandler handler, 
+							 gpointer user_data, 
+							 GDestroyNotify notify);
+guint 			gst_bus_add_watch 		(GstBus * bus,
+    							 GstBusHandler handler, 
+							 gpointer user_data);
 
 G_END_DECLS
 #endif /* __GST_BUS_H__ */

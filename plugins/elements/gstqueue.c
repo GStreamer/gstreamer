@@ -127,7 +127,7 @@ static void gst_queue_get_property (GObject * object,
 static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
 static GstBuffer *gst_queue_bufferalloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps);
-static gboolean gst_queue_loop (GstPad * pad);
+static void gst_queue_loop (GstPad * pad);
 
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
 
@@ -644,7 +644,7 @@ out_unref:
   return GST_FLOW_OK;
 }
 
-static gboolean
+static void
 gst_queue_loop (GstPad * pad)
 {
   GstQueue *queue;
@@ -697,6 +697,7 @@ restart:
     GST_QUEUE_MUTEX_LOCK;
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
+      gst_task_pause (queue->task);
       result = FALSE;
     }
     GST_QUEUE_MUTEX_UNLOCK;
@@ -711,8 +712,6 @@ restart:
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_del");
   g_cond_signal (queue->item_del);
   GST_QUEUE_MUTEX_UNLOCK;
-
-  return result;
 }
 
 

@@ -96,9 +96,9 @@ _gst_message_free (GstMessage * message)
     gst_object_unref (GST_MESSAGE_SRC (message));
   }
   if (message->lock) {
-    g_mutex_lock (message->lock);
-    g_cond_signal (message->cond);
-    g_mutex_unlock (message->lock);
+    GST_MESSAGE_LOCK (message);
+    GST_MESSAGE_SIGNAL (message);
+    GST_MESSAGE_UNLOCK (message);
   }
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
@@ -137,6 +137,8 @@ gst_message_get_type (void)
  * Allocate a new message of the given type.
  *
  * Returns: A new message.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_message_new (GstMessageType type, GstObject * src)
@@ -171,6 +173,8 @@ gst_message_new (GstMessageType type, GstObject * src)
  * Create a new eos message.
  *
  * Returns: The new eos message.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_message_new_eos (GstObject * src)
@@ -188,6 +192,8 @@ gst_message_new_eos (GstObject * src)
  * Create a new error message.
  *
  * Returns: The new error message.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_message_new_error (GstObject * src, GError * error, gchar * debug)
@@ -207,6 +213,8 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
  * Create a new warning message.
  *
  * Returns: The new warning message.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
@@ -226,6 +234,8 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
  * Create a new tag message.
  *
  * Returns: The new tag message.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_message_new_tag (GstObject * src, GstTagList * tag_list)

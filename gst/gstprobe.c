@@ -30,7 +30,9 @@
  * @callback: the function to call when the probe is triggered
  * @user_data: data passed to the callback function
  *
- * Create a new probe with the specified parameters
+ * Create a new probe with the specified parameters. The single shot
+ * probe will be fired only once. It is the responsability of the
+ * application to free the single probe after it has been fired.
  *
  * Returns: a new #GstProbe.
  */
@@ -221,7 +223,8 @@ gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstData ** data)
     if (probe->single_shot) {
       disp->probes = g_slist_remove (disp->probes, probe);
 
-      gst_probe_destroy (probe);
+      /* do not free the probe here as it cannot be made threadsafe */
+      //gst_probe_destroy (probe);
     }
   }
 

@@ -435,33 +435,28 @@ gst_element_get_index (GstElement * element)
 gboolean
 gst_element_add_pad (GstElement * element, GstPad * pad)
 {
-  GstElement *old_parent;
+  gchar *pad_name;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  /* first check to make sure the pad hasn't already been added to another
-   * element */
-  old_parent = gst_pad_get_parent (pad);
-  if (G_UNLIKELY (old_parent != NULL))
-    goto had_parent;
-
-  GST_LOCK (element);
   /* locking pad to look at the name */
   GST_LOCK (pad);
-  /* then check to see if there's already a pad by that name here */
+  pad_name = g_strdup (GST_PAD_NAME (pad));
+  GST_UNLOCK (pad);
 
-  if (G_UNLIKELY (!gst_object_check_uniqueness (element->pads,
-              GST_PAD_NAME (pad))))
+  /* then check to see if there's already a pad by that name here */
+  GST_LOCK (element);
+  if (G_UNLIKELY (!gst_object_check_uniqueness (element->pads, pad_name)))
     goto name_exists;
+
+  /* try to set the pad's parent */
+  if (G_UNLIKELY (!gst_object_set_parent (GST_OBJECT_CAST (pad),
+              GST_OBJECT_CAST (element))))
+    goto had_parent;
 
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (GST_PAD_NAME (pad)));
-
-  GST_UNLOCK (pad);
-
-  /* set the pad's parent */
-  gst_object_set_parent (GST_OBJECT_CAST (pad), GST_OBJECT_CAST (element));
 
   /* add it to the list */
   switch (gst_pad_get_direction (pad)) {
@@ -474,7 +469,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
       element->numsinkpads++;
       break;
     default:
-      g_assert_not_reached ();
+      /* can happen for ghost pads */
       break;
   }
   element->pads = g_list_prepend (element->pads, pad);
@@ -494,29 +489,23 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
 
   return TRUE;
 
-had_parent:
+name_exists:
   {
-    gchar *parent_name = gst_element_get_name (old_parent);
-
-    gst_object_unref (GST_OBJECT (old_parent));
-    GST_LOCK (pad);
-    GST_LOCK (element);
-    g_critical
-        ("Padname %s:%s already has parent when trying to add to element %s",
-        parent_name, GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+    g_critical ("Padname %s is not unique in element %s, not adding",
+        pad_name, GST_ELEMENT_NAME (element));
     GST_UNLOCK (element);
-    GST_UNLOCK (pad);
-    g_free (parent_name);
+    g_free (pad_name);
     return FALSE;
   }
-
-name_exists:
-  g_critical ("Padname %s is not unique in element %s, not adding\n",
-      GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
-
-  GST_UNLOCK (pad);
-  GST_UNLOCK (element);
-  return FALSE;
+had_parent:
+  {
+    g_critical
+        ("Pad %s already has parent when trying to add to element %s",
+        pad_name, GST_ELEMENT_NAME (element));
+    GST_UNLOCK (element);
+    g_free (pad_name);
+    return FALSE;
+  }
 }
 
 /**
@@ -578,6 +567,8 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   if (G_UNLIKELY (current_parent != element))
     goto not_our_pad;
 
+  gst_object_unref (GST_OBJECT_CAST (current_parent));
+
   /* FIXME, is this redundant with pad disposal? */
   if (GST_IS_REAL_PAD (pad)) {
     GstPad *peer = gst_pad_get_peer (pad);
@@ -591,6 +582,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
         gst_pad_unlink (pad, GST_PAD_CAST (peer));
       else
         gst_pad_unlink (GST_PAD_CAST (peer), pad);
+
       gst_object_unref (GST_OBJECT (peer));
     }
   } else if (GST_IS_GHOST_PAD (pad)) {
@@ -836,6 +828,8 @@ gst_element_get_pad (GstElement * element, const gchar * name)
  * Retrieves an iterattor of @element's pads. 
  *
  * Returns: the #GstIterator of pads.
+ *
+ * MT safe.
  */
 GstIterator *
 gst_element_iterate_pads (GstElement * element)
@@ -1171,6 +1165,8 @@ gst_element_get_query_types (GstElement * element)
  * forwards the query to a random usable sinkpad of this element.
  *
  * Returns: TRUE if the query could be performed.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_query (GstElement * element, GstQueryType type,
@@ -1220,6 +1216,8 @@ gst_element_query (GstElement * element, GstQueryType type,
  * the query will be forwarded to a random sink pad.
  *
  * Returns: An array of #GstFormat elements.
+ *
+ * MT safe.
  */
 const GstFormat *
 gst_element_get_formats (GstElement * element)
@@ -1264,6 +1262,8 @@ gst_element_get_formats (GstElement * element)
  * the query will be forwarded to a random sink pad.
  *
  * Returns: TRUE if the conversion could be performed.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_convert (GstElement * element,
@@ -1330,7 +1330,7 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   GST_LOCK (element);
   bus = element->bus;
 
-  if (bus == NULL) {
+  if (G_UNLIKELY (bus == NULL)) {
     GST_DEBUG ("... but I won't because I have no bus");
     GST_UNLOCK (element);
     gst_data_unref (GST_DATA (message));
@@ -1499,7 +1499,7 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_LOCK (element);
-  old = !!GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  old = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
 
   if (G_UNLIKELY (old == locked_state))
     goto was_ok;
@@ -1546,6 +1546,7 @@ gst_element_sync_state_with_parent (GstElement * element)
       gst_element_state_get_name (GST_STATE (element)),
       GST_ELEMENT_NAME (parent),
       gst_element_state_get_name (GST_STATE (parent)));
+
   if (gst_element_set_state (element, GST_STATE (parent)) == GST_STATE_FAILURE) {
     return FALSE;
   }
@@ -1565,6 +1566,7 @@ gst_element_get_state_func (GstElement * element,
   GST_STATE_LOCK (element);
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
+    /* we have a pending state change, wait for it to complete */
     if (!GST_STATE_TIMED_WAIT (element, timeout)) {
       /* timeout triggered */
       if (state)
@@ -1578,7 +1580,7 @@ gst_element_get_state_func (GstElement * element,
     }
   }
   /* if nothing is pending anymore we can return TRUE and
-   * set the values of the current and panding state */
+   * set the values of the current and pending state */
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
     if (state)
       *state = GST_STATE (element);
@@ -1654,7 +1656,7 @@ gst_element_abort_state (GstElement * element)
 
     GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
-    g_cond_broadcast (GST_STATE_GET_COND (element));
+    GST_STATE_BROADCAST (element);
   }
 }
 
@@ -1690,7 +1692,7 @@ gst_element_commit_state (GstElement * element)
 
     g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
         0, old_state, pending);
-    g_cond_broadcast (GST_STATE_GET_COND (element));
+    GST_STATE_BROADCAST (element);
   }
 }
 
@@ -1798,7 +1800,13 @@ exit:
   return return_val;
 }
 
-/* is called with STATE_LOCK */
+/* is called with STATE_LOCK
+ *
+ * This function activates the pads of a given element. 
+ *
+ * TODO: activates pads from src to sinks?
+ *
+ * */
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
@@ -1817,11 +1825,14 @@ restart:
     gst_object_ref (GST_OBJECT (pad));
     GST_UNLOCK (element);
 
+    /* we only care about real pads */
     if (GST_IS_REAL_PAD (pad)) {
       GstRealPad *peer;
       gboolean pad_loop;
       gboolean delay = FALSE;
 
+      /* see if the pad has a loop function and grab
+       * the peer */
       GST_LOCK (pad);
       pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
       peer = GST_RPAD_PEER (pad);
@@ -1832,13 +1843,18 @@ restart:
       if (peer) {
         gboolean peer_loop;
 
+        /* see if the peer has a loop function */
         peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 
+        /* sinkpads with a loop function are delayed since they
+         * need the srcpad to be active first */
         if (GST_PAD_IS_SINK (pad) && pad_loop) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
               "delaying pad %s", GST_OBJECT_NAME (pad));
           delay = TRUE;
         } else if (GST_PAD_IS_SRC (pad) && peer_loop) {
+          /* If the pad is a source and the peer has a loop function,
+           * we can activate the srcpad and then the loopbased sinkpad */
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
               "%sactivating pad %s", (active ? "" : "(de)"),
               GST_OBJECT_NAME (pad));
@@ -1846,15 +1862,19 @@ restart:
               (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
 
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "activating delayed pad %s", GST_OBJECT_NAME (peer));
+              "%sactivating delayed pad %s", (active ? "" : "(de)"),
+              GST_OBJECT_NAME (peer));
           result &= gst_pad_set_active (GST_PAD (peer),
               (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
 
+          /* set flag here since we don't want the code below to activate
+           * the pad again */
           delay = TRUE;
         }
         gst_object_unref (GST_OBJECT (peer));
       }
 
+      /* all other conditions are just push based pads */
       if (!delay) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
             "%sactivating pad %s", (active ? "" : "(de)"),
@@ -2307,11 +2327,12 @@ gst_element_get_scheduler (GstElement * element)
 
 /**
  * gst_element_create_task:
- * @element: a #GstElement to get the manager of.
+ * @element: a #GstElement to create the task for.
  * @func: the taskfunction to run
  * @data: user data passed to the taskfunction.
  *
- * Creates a new GstTask.
+ * Creates a new GstTask. This function uses the current manager of
+ * the element to instantiate a new task.
  *
  * Returns: the newly created #GstTask.
  *

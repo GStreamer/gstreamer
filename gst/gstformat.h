@@ -27,6 +27,8 @@
 
 #include <glib.h>
 
+#include <gst/gstiterator.h>
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -88,8 +90,7 @@ gboolean	gst_formats_contains		(const GstFormat *formats, GstFormat format);
 /* query for format details */
 G_CONST_RETURN GstFormatDefinition*	
 		gst_format_get_details		(GstFormat format);
-G_CONST_RETURN GList*
-		gst_format_get_definitions 	(void);
+GstIterator* 	gst_format_iterate_definitions 	(void);
 
 G_END_DECLS
 

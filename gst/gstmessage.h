@@ -49,6 +49,13 @@ typedef enum
 #define GST_MESSAGE(message)	((GstMessage*)(message))
 #define GST_IS_MESSAGE(message)	(GST_DATA_TYPE(message) == GST_TYPE_MESSAGE)
 
+#define GST_MESSAGE_GET_LOCK(message)	(GST_MESSAGE(message)->lock)
+#define GST_MESSAGE_LOCK(message)	g_mutex_lock(GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_UNLOCK(message)	g_mutex_unlock(GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_COND(message)	(GST_MESSAGE(message)->cond)
+#define GST_MESSAGE_WAIT(message)	g_cond_wait(GST_MESSAGE_COND(message),GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_SIGNAL(message)	g_cond_signal(GST_MESSAGE_COND(message))
+
 #define GST_MESSAGE_TYPE(message)	(GST_MESSAGE(message)->type)
 #define GST_MESSAGE_TIMESTAMP(message)	(GST_MESSAGE(message)->timestamp)
 #define GST_MESSAGE_SRC(message)	(GST_MESSAGE(message)->src)
@@ -94,10 +101,10 @@ struct _GstMessage
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void _gst_message_initialize (void);
+void 		_gst_message_initialize 	(void);
 
-GType gst_message_get_type (void);
-GstMessage *gst_message_new (GstMessageType type, GstObject * src);
+GType 		gst_message_get_type 		(void);
+GstMessage *	gst_message_new 		(GstMessageType type, GstObject * src);
 
 /* refcounting */
 #define         gst_message_ref(ev)		GST_MESSAGE (gst_data_ref (GST_DATA (ev)))
@@ -106,12 +113,10 @@ GstMessage *gst_message_new (GstMessageType type, GstObject * src);
 /* copy message */
 #define         gst_message_copy(ev)		GST_MESSAGE (gst_data_copy (GST_DATA (ev)))
 
-GstMessage *gst_message_new_eos (GstObject * src);
-GstMessage *gst_message_new_error (GstObject * src, GError * error,
-    gchar * debug);
-GstMessage *gst_message_new_warning (GstObject * src, GError * error,
-    gchar * debug);
-GstMessage *gst_message_new_tag (GstObject * src, GstTagList * tag_list);
+GstMessage *	gst_message_new_eos 		(GstObject * src);
+GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 
 G_END_DECLS
 #endif /* __GST_MESSAGE_H__ */

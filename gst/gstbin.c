@@ -198,6 +198,10 @@ gst_bin_new (const gchar * name)
   return gst_element_factory_make ("bin", name);
 }
 
+/* set the index on all elements in this bin
+ *
+ * MT safe 
+ */
 #ifndef GST_DISABLE_INDEX
 static void
 gst_bin_set_index (GstElement * element, GstIndex * index)
@@ -217,6 +221,10 @@ gst_bin_set_index (GstElement * element, GstIndex * index)
 }
 #endif
 
+/* set the clock on all elements in this bin
+ *
+ * MT safe 
+ */
 static void
 gst_bin_set_clock (GstElement * element, GstClock * clock)
 {
@@ -234,6 +242,10 @@ gst_bin_set_clock (GstElement * element, GstClock * clock)
   GST_UNLOCK (bin);
 }
 
+/* get the clock for this bin by asking all of the children in this bin
+ *
+ * MT safe 
+ */
 static GstClock *
 gst_bin_get_clock (GstElement * element)
 {
@@ -256,6 +268,10 @@ gst_bin_get_clock (GstElement * element)
   return result;
 }
 
+/* set the bus on all of the children in this bin
+ *
+ * MT safe 
+ */
 static void
 gst_bin_set_bus (GstElement * element, GstBus * bus)
 {
@@ -275,6 +291,10 @@ gst_bin_set_bus (GstElement * element, GstBus * bus)
   GST_UNLOCK (bin);
 }
 
+/* set the scheduler on all of the children in this bin
+ *
+ * MT safe 
+ */
 static void
 gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
 {
@@ -294,6 +314,10 @@ gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
   GST_UNLOCK (bin);
 }
 
+/* add an element to this bin
+ *
+ * MT safe 
+ */
 static gboolean
 gst_bin_add_func (GstBin * bin, GstElement * element)
 {
@@ -303,6 +327,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
     goto adding_itself;
 
+  /* get the element name to make sure it is unique in this bin, FIXME, another
+   * thread can change the name after the unlock. */
   GST_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   GST_UNLOCK (element);
@@ -399,11 +425,16 @@ no_function:
   return FALSE;
 }
 
+/* remove an element from the bin
+ *
+ * MT safe
+ */
 static gboolean
 gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
 
+  /* grab element name so we can print it */
   GST_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   GST_UNLOCK (element);
@@ -424,6 +455,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   g_free (elem_name);
 
   gst_element_set_manager (element, NULL);
+  gst_element_set_bus (element, NULL);
+  gst_element_set_scheduler (element, NULL);
 
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to fire a signal. */
@@ -507,6 +540,7 @@ gst_bin_iterate_elements (GstBin * bin)
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   GST_LOCK (bin);
+  /* add ref because the iterator refs the bin */
   gst_object_ref (GST_OBJECT (bin));
   result = gst_iterator_new_list (GST_GET_LOCK (bin),
       &bin->children_cookie,
@@ -521,18 +555,25 @@ gst_bin_iterate_elements (GstBin * bin)
 }
 
 /* returns 0 if the element is a sink, this is made so that
- * we can use this function as a filter */
+ * we can use this function as a filter 
+ *
+ * MT safe
+ */
 static gint
 bin_element_is_sink (GstElement * child, GstBin * bin)
 {
   gint ret = 1;
+
+  /* we lock the child here for the remainder of the function to
+   * get its pads and name safely. */
+  GST_LOCK (child);
 
   /* check if this is a sink element, these are the elements
    * without (linked) source pads. */
   if (child->numsrcpads == 0) {
     /* shortcut */
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-        "adding child %s as sink", gst_element_get_name (child));
+        "adding child %s as sink", GST_OBJECT_NAME (child));
     ret = 0;
   } else {
     /* loop over all pads, try to figure out if this element
@@ -540,26 +581,30 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
     GList *pads;
     gboolean connected_src = FALSE;
 
-    /* FIXME not MT safe */
-    for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
+    pads = child->srcpads;
+    while (pads) {
       GstPad *pad = GST_PAD (pads->data);
 
       if (GST_PAD_IS_LINKED (pad)) {
         connected_src = TRUE;
         break;
       }
+      pads = g_list_next (pads);
     }
+
     if (connected_src) {
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
           "not adding child %s as sink: linked source pads",
-          gst_element_get_name (child));
+          GST_OBJECT_NAME (child));
     } else {
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
           "adding child %s as sink since it has unlinked source pads",
-          gst_element_get_name (child));
+          GST_OBJECT_NAME (child));
       ret = 0;
     }
   }
+  GST_UNLOCK (child);
+
   /* we did not find the element, need to release the ref
    * added by the iterator */
   if (ret == 1)
@@ -595,52 +640,64 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
-static gint
-bin_find_pending_child (GstElement * child, GTimeVal * timeout)
-{
-  gboolean ret;
-
-  ret = gst_element_get_state (GST_ELEMENT (child), NULL, NULL, timeout);
-  /* ret is false if some child is still performing the state change */
-  gst_object_unref (GST_OBJECT (child));
-
-  return (ret == FALSE ? 0 : 1);
-}
-
 /* this functions loops over all children, as soon as one is
- * still performing the state change, FALSE is returned. */
+ * still performing the state change, FALSE is returned.
+ *
+ * MT safe
+ */
 static gboolean
 gst_bin_get_state (GstElement * element, GstElementState * state,
     GstElementState * pending, GTimeVal * timeout)
 {
-  gboolean ret = TRUE;
   GstBin *bin = GST_BIN (element);
-  GstIterator *children;
-  gboolean have_async = FALSE;
-  gpointer child;
+  gboolean ret;
+  GList *children;
+  guint32 children_cookie;
 
   /* we cannot take the state lock yet as we might block when querying
-   * the children, holding the lock too long for no reason */
-  /* FIXME, we can loop the list ourselves instead of creating the
-   * iterator */
-  children = gst_bin_iterate_sinks (bin);
-  child = gst_iterator_find_custom (children, timeout,
-      (GCompareFunc) bin_find_pending_child);
-  gst_iterator_free (children);
-  /* we unreffed the child in the comparefunc */
-  if (child) {
-    have_async = TRUE;
-    ret = FALSE;
-  }
+   * the children, holding the lock too long for no reason. */
 
+  /* next we poll all children for their state to see if one of them
+   * is still busy with its state change. */
+  GST_LOCK (bin);
+restart:
+  ret = TRUE;
+  children = bin->children;
+  children_cookie = bin->children_cookie;
+  while (children) {
+    GstElement *child = GST_ELEMENT_CAST (children->data);
+
+    gst_object_ref (GST_OBJECT_CAST (child));
+    GST_UNLOCK (bin);
+
+    /* ret is false if some child is still performing the state change */
+    ret = gst_element_get_state (child, NULL, NULL, timeout);
+
+    gst_object_unref (GST_OBJECT_CAST (child));
+
+    if (!ret) {
+      /* some child is still busy, return FALSE */
+      goto done;
+    }
+    /* now grab the lock to iterate to the next child */
+    GST_LOCK (bin);
+    if (G_UNLIKELY (children_cookie != bin->children_cookie))
+      /* child added/removed during state change, restart */
+      goto restart;
+
+    children = g_list_next (children);
+  }
+  GST_UNLOCK (bin);
+
+done:
   /* now we can take the state lock */
   GST_STATE_LOCK (bin);
-  if (!have_async) {
+  if (ret) {
     /* no async children, we can commit the state */
     gst_element_commit_state (element);
   }
 
-  /* and report the state */
+  /* and report the state if needed */
   if (state)
     *state = GST_STATE (element);
   if (pending)
@@ -651,7 +708,10 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
   return ret;
 }
 
-/* this function is called with the STATE_LOCK held */
+/* this function is called with the STATE_LOCK held.
+ *
+ * MT safe.
+ */
 static GstElementStateReturn
 gst_bin_change_state (GstElement * element)
 {
@@ -659,9 +719,8 @@ gst_bin_change_state (GstElement * element)
   GstElementStateReturn ret;
   GstElementState old_state, pending;
   gboolean have_async = FALSE;
-  GstIterator *sinks;
-  gboolean done = FALSE;
-
+  GList *children;
+  guint32 children_cookie;
   GQueue *elem_queue;           /* list of elements waiting for a state change */
 
   bin = GST_BIN (element);
@@ -677,44 +736,51 @@ gst_bin_change_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
 
+  /* all elements added to this queue should have their refcount
+   * incremented */
   elem_queue = g_queue_new ();
 
   /* first step, find all sink elements, these are the elements
    * without (linked) source pads. */
-  /* FIXME, we can iterate the list ourselves */
-  sinks = gst_bin_iterate_sinks (bin);
-  while (!done) {
-    gpointer child;
+  GST_LOCK (bin);
+restart:
+  children = bin->children;
+  children_cookie = bin->children_cookie;
+  while (children) {
+    GstElement *child = GST_ELEMENT_CAST (children->data);
 
-    switch (gst_iterator_next (sinks, &child)) {
-      case GST_ITERATOR_OK:
-        /* this also keeps the refcount on the element */
-        g_queue_push_tail (elem_queue, child);
-        break;
-      case GST_ITERATOR_RESYNC:
-        /* undo what we had */
-        g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
-        while (g_queue_pop_head (elem_queue));
-        gst_iterator_resync (sinks);
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
+    gst_object_ref (GST_OBJECT_CAST (child));
+    GST_UNLOCK (bin);
+
+    if (bin_element_is_sink (child, bin) == 0) {
+      /* this also keeps the refcount on the element, note that
+       * the _is_sink function unrefs the element when it is not
+       * a sink. */
+      g_queue_push_tail (elem_queue, child);
     }
+
+    GST_LOCK (bin);
+    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
+      /* undo what we had */
+      g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
+      while (g_queue_pop_head (elem_queue));
+      goto restart;
+    }
+
+    children = g_list_next (children);
   }
-  gst_iterator_free (sinks);
+  GST_UNLOCK (bin);
 
   /* second step, change state of elements in the queue */
   while (!g_queue_is_empty (elem_queue)) {
     GstElement *qelement = g_queue_pop_head (elem_queue);
     GList *pads;
+    gboolean locked;
 
     /* queue all elements connected to the sinkpads of this element */
-    /* FIXME, not MT safe !! */
-    for (pads = qelement->sinkpads; pads; pads = g_list_next (pads)) {
+    GST_LOCK (qelement);
+    pads = qelement->sinkpads;
+    while (pads) {
       GstPad *pad = GST_PAD (pads->data);
       GstPad *peer;
 
@@ -730,9 +796,10 @@ gst_bin_change_state (GstElement * element)
 
         if (peer_elem) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "adding element %s to queue", gst_element_get_name (peer_elem));
+              "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
 
-          /* is reffed before pushing on the queue */
+          /* was reffed before pushing on the queue by the 
+           * gst_object_get_parent() call we used to get the element. */
           g_queue_push_tail (elem_queue, peer_elem);
         }
         gst_object_unref (GST_OBJECT (peer));
@@ -740,11 +807,14 @@ gst_bin_change_state (GstElement * element)
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
             "pad %s:%s does not have a peer", GST_DEBUG_PAD_NAME (pad));
       }
+      pads = g_list_next (pads);
     }
+    /* peel off the locked flag and release the element lock */
+    locked = GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE);
+    GST_UNLOCK (qelement);
 
-    if (GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE))
+    if (G_UNLIKELY (locked))
       goto next_element;
-
 
     qelement->base_time = element->base_time;
     ret = gst_element_set_state (qelement, pending);
@@ -853,6 +923,7 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
   GST_CAT_INFO (GST_CAT_PARENTAGE, "[%s]: looking up child element %s",
       GST_ELEMENT_NAME (bin), name);
 
+  /* we recursively lock all elements, this might be a bit too much.. */
   GST_LOCK (bin);
   for (children = bin->children; children; children = g_list_next (children)) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
@@ -861,6 +932,7 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
     GST_LOCK (child);
     eq = strcmp (GST_ELEMENT_NAME (child), name) == 0;
     GST_UNLOCK (child);
+
     if (eq) {
       result = child;
       break;

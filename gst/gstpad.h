@@ -132,7 +132,7 @@ typedef enum {
 typedef gboolean		(*GstPadActivateFunction) 	(GstPad *pad, GstActivateMode mode);
 
 /* data passing */
-typedef gboolean		(*GstPadLoopFunction) 		(GstPad *pad);
+typedef void			(*GstPadLoopFunction) 		(GstPad *pad);
 typedef GstFlowReturn		(*GstPadChainFunction) 		(GstPad *pad, GstBuffer *buffer);
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset, 
 		                                                 guint length, GstBuffer **buffer);

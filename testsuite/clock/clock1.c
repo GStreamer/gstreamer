@@ -43,13 +43,12 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), src, id, sink, NULL);
   gst_element_link_many (src, id, sink, NULL);
 
-  clock = gst_bin_get_clock (GST_BIN (pipeline));
+  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
   g_assert (clock != NULL);
   gst_clock_debug (clock);
   gst_clock_debug (clock);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipeline));
   gst_clock_debug (clock);
   gst_clock_debug (clock);
   gst_clock_debug (clock);

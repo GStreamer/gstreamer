@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstquery.h: GstQuery API declaration
  *
@@ -25,6 +26,8 @@
 #define __GST_QUERY_H__
 
 #include <glib.h>
+
+#include <gst/gstiterator.h>
 
 G_BEGIN_DECLS
 
@@ -87,8 +90,8 @@ gboolean        	gst_query_types_contains       (const GstQueryType *types, GstQ
 
 /* query for query details */
 G_CONST_RETURN GstQueryTypeDefinition*      
-                	gst_query_type_get_details     (GstQueryType type);
-G_CONST_RETURN GList*   gst_query_type_get_definitions (void);
+                	gst_query_type_get_details         (GstQueryType type);
+GstIterator*            gst_query_type_iterate_definitions (void);
 
 G_END_DECLS
 

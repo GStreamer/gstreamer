@@ -189,7 +189,7 @@ static void gst_fakesrc_set_clock (GstElement * element, GstClock * clock);
 
 static GstElementStateReturn gst_fakesrc_change_state (GstElement * element);
 
-static gboolean gst_fakesrc_loop (GstPad * pad);
+static void gst_fakesrc_loop (GstPad * pad);
 
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -778,13 +778,12 @@ gst_fakesrc_create_buffer (GstFakeSrc * src)
   return buf;
 }
 
-static gboolean
+static void
 gst_fakesrc_loop (GstPad * pad)
 {
   GstFakeSrc *src;
   GstBuffer *buf;
   GstClockTime time;
-  gboolean result = TRUE;
 
   src = GST_FAKESRC (GST_OBJECT_PARENT (pad));
 
@@ -799,14 +798,14 @@ gst_fakesrc_loop (GstPad * pad)
       gst_pad_push_event (pad, gst_event_new (GST_EVENT_SEGMENT_DONE));
     } else {
       gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-      result = FALSE;
+      gst_task_pause (src->task);
       goto done;
     }
   }
 
   if (src->rt_num_buffers == 0) {
     gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    result = FALSE;
+    gst_task_pause (src->task);
     goto done;
   } else {
     if (src->rt_num_buffers > 0)
@@ -816,7 +815,7 @@ gst_fakesrc_loop (GstPad * pad)
   if (src->eos) {
     GST_INFO ("fakesrc is setting eos on pad");
     gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    result = FALSE;
+    gst_task_pause (src->task);
     goto done;
   }
 
@@ -860,8 +859,6 @@ gst_fakesrc_loop (GstPad * pad)
 
 done:
   GST_STREAM_UNLOCK (pad);
-
-  return result;
 }
 
 #if 0

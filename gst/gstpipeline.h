@@ -48,18 +48,21 @@ typedef enum {
 struct _GstPipeline {
   GstBin 	 bin;
 
+  /*< public >*/ /* with LOCK */
   GstClock      *fixed_clock;	/* fixed clock if any */
   GstClockTime   start_time;
   GstClockTime   stream_time;
 
   GList		*eosed;		/* list of elements that posted EOS */
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPipelineClass {
   GstBinClass parent_class;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

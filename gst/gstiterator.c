@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
  *
- * gstiterator.h: Base class for iterating lists.
+ * gstiterator.h: Base class for iterating datastructures.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,6 +37,22 @@ gst_iterator_init (GstIterator * it,
   it->free = free;
 }
 
+/**
+ * gst_iterator_new:
+ * @size: the size of the iterator structure
+ * @lock: pointer to a #GMutex.
+ * @master_cookie: pointer to a guint32 to protect the iterated object.
+ * @next: function to get next item
+ * @resync: function to resync the iterator
+ * @free: function to free the iterator
+ *
+ * Create a new iterator. This function is mainly used for objects
+ * implementing the next/resync/free function to iterate a data structure.
+ * 
+ * Returns: the new #GstIterator.
+ *
+ * MT safe.
+ */
 GstIterator *
 gst_iterator_new (guint size,
     GMutex * lock,
@@ -102,6 +118,22 @@ gst_list_iterator_free (GstListIterator * it)
   g_free (it);
 }
 
+/**
+ * gst_iterator_new_list:
+ * @lock: pointer to a #GMutex protecting the list.
+ * @master_cookie: pointer to a guint32 to protect the list.
+ * @list: pointer to the list
+ * @owner: object owning the list
+ * @ref: function to ref each item
+ * @unref: function to unref each item
+ * @free: function to free the owner of the list
+ *
+ * Create a new iterator designed for iterating @list. 
+ * 
+ * Returns: the new #GstIterator for @list.
+ *
+ * MT safe.
+ */
 GstIterator *
 gst_iterator_new_list (GMutex * lock,
     guint32 * master_cookie,
@@ -130,6 +162,17 @@ gst_iterator_new_list (GMutex * lock,
   return GST_ITERATOR (result);
 }
 
+/**
+ * gst_iterator_next:
+ * @it: The #GstIterator to iterate
+ * @elem: pointer to hold next element
+ *
+ * Get the next item from the iterator.
+ * 
+ * Returns: The result of the iteration.
+ *
+ * MT safe.
+ */
 GstIteratorResult
 gst_iterator_next (GstIterator * it, gpointer * elem)
 {
@@ -138,9 +181,9 @@ gst_iterator_next (GstIterator * it, gpointer * elem)
   g_return_val_if_fail (it != NULL, GST_ITERATOR_ERROR);
   g_return_val_if_fail (elem != NULL, GST_ITERATOR_ERROR);
 
-  if (it->lock)
+  if (G_LIKELY (it->lock))
     g_mutex_lock (it->lock);
-  if (*it->master_cookie != it->cookie) {
+  if (G_UNLIKELY (*it->master_cookie != it->cookie)) {
     result = GST_ITERATOR_RESYNC;
     goto done;
   }
@@ -148,25 +191,42 @@ gst_iterator_next (GstIterator * it, gpointer * elem)
   result = it->next (it, elem);
 
 done:
-  if (it->lock)
+  if (G_LIKELY (it->lock))
     g_mutex_unlock (it->lock);
 
   return result;
 }
 
+/**
+ * gst_iterator_resync:
+ * @it: The #GstIterator to resync
+ *
+ * Resync the iterator. this function is mostly called
+ * after #gst_iterator_next() returned #GST_ITERATOR_RESYNC.
+ * 
+ * MT safe.
+ */
 void
 gst_iterator_resync (GstIterator * it)
 {
   g_return_if_fail (it != NULL);
 
-  if (it->lock)
+  if (G_LIKELY (it->lock))
     g_mutex_lock (it->lock);
   it->resync (it);
   it->cookie = *it->master_cookie;
-  if (it->lock)
+  if (G_LIKELY (it->lock))
     g_mutex_unlock (it->lock);
 }
 
+/**
+ * gst_iterator_free:
+ * @it: The #GstIterator to free
+ *
+ * Free the iterator. 
+ * 
+ * MT safe.
+ */
 void
 gst_iterator_free (GstIterator * it)
 {
@@ -189,6 +249,9 @@ typedef struct _GstIteratorFilter
 
 } GstIteratorFilter;
 
+/* this function can iterate in 3 modes:
+ * filter, foreach and find_custom.
+ */
 static GstIteratorResult
 filter_next (GstIteratorFilter * it, gpointer * elem)
 {
@@ -197,16 +260,16 @@ filter_next (GstIteratorFilter * it, gpointer * elem)
 
   *elem = NULL;
 
-  if (it->found)
+  if (G_UNLIKELY (it->found))
     return GST_ITERATOR_DONE;
 
-  while (!done) {
+  while (G_LIKELY (!done)) {
     gpointer item;
 
     result = gst_iterator_next (it->slave, &item);
     switch (result) {
       case GST_ITERATOR_OK:
-        if (GST_ITERATOR (it)->lock)
+        if (G_LIKELY (GST_ITERATOR (it)->lock))
           g_mutex_unlock (GST_ITERATOR (it)->lock);
         if (it->compare) {
           if (it->func (item, it->user_data) == 0) {
@@ -218,7 +281,7 @@ filter_next (GstIteratorFilter * it, gpointer * elem)
         } else {
           it->func (item, it->user_data);
         }
-        if (GST_ITERATOR (it)->lock)
+        if (G_LIKELY (GST_ITERATOR (it)->lock))
           g_mutex_lock (GST_ITERATOR (it)->lock);
         break;
       case GST_ITERATOR_RESYNC:
@@ -254,6 +317,23 @@ filter_free (GstIteratorFilter * it)
   g_free (it);
 }
 
+/**
+ * gst_iterator_filter:
+ * @it: The #GstIterator to filter
+ * @user_data: user data passed to the compare function
+ * @func: the compare function to select elements
+ *
+ * Create a new iterator from an existing iterator. The new iterator
+ * will only return those elements that match the given compare function.
+ * The GCompareFunc should return 0 for elements that should be included
+ * in the iterator.
+ *
+ * When this iterator is freed, @it will also be freed.
+ *
+ * Returns: a new #GstIterator.
+ * 
+ * MT safe.
+ */
 GstIterator *
 gst_iterator_filter (GstIterator * it, gpointer user_data, GCompareFunc func)
 {
@@ -278,6 +358,17 @@ gst_iterator_filter (GstIterator * it, gpointer user_data, GCompareFunc func)
   return GST_ITERATOR (result);
 }
 
+/**
+ * gst_iterator_foreach:
+ * @it: The #GstIterator to iterate
+ * @function: the function to call for each element.
+ * @user_data: user data passed to the function
+ *
+ * Iterate over all element of @it and call the given function for
+ * each element.
+ *
+ * MT safe.
+ */
 void
 gst_iterator_foreach (GstIterator * it, GFunc function, gpointer user_data)
 {
@@ -303,6 +394,20 @@ gst_iterator_foreach (GstIterator * it, GFunc function, gpointer user_data)
   gst_iterator_free (GST_ITERATOR (&filter));
 }
 
+/**
+ * gst_iterator_find_custom:
+ * @it: The #GstIterator to iterate
+ * @user_data: user data passed to the compare function
+ * @func: the compare function to use
+ *
+ * Find the first element in @it that matches the compare function.
+ * The compare function should return 0 when the element is found.
+ *
+ * Returns: The element in the iterator that matches the compare
+ * function or NULL when no element matched.
+ *
+ * MT safe.
+ */
 gpointer
 gst_iterator_find_custom (GstIterator * it, gpointer user_data,
     GCompareFunc func)

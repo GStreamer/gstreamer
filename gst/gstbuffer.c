@@ -28,7 +28,7 @@
 #include "gstmemchunk.h"
 #include "gstinfo.h"
 
-GType _gst_buffer_type;
+GType _gst_buffer_type = 0;
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE  */
@@ -60,7 +60,7 @@ _gst_buffer_initialize (void)
 GType
 gst_buffer_get_type (void)
 {
-  if (_gst_buffer_type == 0) {
+  if (G_UNLIKELY (_gst_buffer_type == 0)) {
     _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
         (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
   }
@@ -88,6 +88,8 @@ _gst_buffer_sub_free (GstBuffer * buffer)
  *
  * Frees the memory associated with the buffer including the buffer data,
  * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
+ * 
+ * MT safe.
  */
 void
 gst_buffer_default_free (GstBuffer * buffer)
@@ -121,6 +123,8 @@ gst_buffer_default_free (GstBuffer * buffer)
  * is increased.
  *
  * Returns: the new #GstBuffer.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_default_copy (GstBuffer * buffer)
@@ -194,6 +198,8 @@ gst_buffer_free_chunk (GstBuffer * buffer)
  * Creates a newly allocated buffer without any data.
  *
  * Returns: the new #GstBuffer.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_new (void)
@@ -231,6 +237,8 @@ gst_buffer_new (void)
  * Creates a newly allocated buffer with data of the given size.
  *
  * Returns: the new #GstBuffer.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_new_and_alloc (guint size)
@@ -255,9 +263,14 @@ gst_buffer_new_and_alloc (guint size)
  * is not media type attached to this buffer or when the media
  * type is the same as the previous received buffer.
  *
+ * This function does not increment the refcount of the caps. The
+ * caps pointer will therefore remain valid until the buffer is 
+ * unreffed.
+ *
  * Returns: the #GstCaps, or NULL if there was an error or there
  * were no caps on this buffer.
  */
+/* FIXME can we make this threadsafe without a lock on the buffer? */
 GstCaps *
 gst_buffer_get_caps (GstBuffer * buffer)
 {
@@ -275,21 +288,26 @@ gst_buffer_get_caps (GstBuffer * buffer)
  * be increased and any previous caps on the buffer will be
  * unreffed.
  */
+/* FIXME can we make this threadsafe without a lock on the buffer? */
 void
 gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 {
+  GstCaps *oldcaps;
+
   g_return_if_fail (buffer != NULL);
 
-  /* unref old caps if any */
-  if (GST_BUFFER_CAPS (buffer)) {
-    gst_caps_unref (GST_BUFFER_CAPS (buffer));
-  }
+  /* get old caps */
+  oldcaps = GST_BUFFER_CAPS (buffer);
   /* ref new caps if any */
   if (caps)
     caps = gst_caps_ref (caps);
-
   /* set caps */
   GST_BUFFER_CAPS (buffer) = caps;
+
+  /* unref old caps if any */
+  if (oldcaps) {
+    gst_caps_unref (oldcaps);
+  }
 }
 
 /**
@@ -305,6 +323,8 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
  * The duration field of the new buffer are set to GST_CLOCK_TIME_NONE.
  *
  * Returns: the new #GstBuffer, or NULL if there was an error.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
@@ -381,6 +401,8 @@ gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
  * is created without copying the data.
  *
  * Returns: the new #GstBuffer that's the concatenation of the source buffers.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
@@ -403,6 +425,8 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
  *
  * Returns: TRUE if the buffers are contiguous, 
  * FALSE if a copy would be required.
+ * 
+ * MT safe.
  */
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
@@ -437,6 +461,8 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
  * Returns: the new #GstBuffer that spans the two source buffers.
+ * 
+ * MT safe.
  */
 GstBuffer *
 gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,

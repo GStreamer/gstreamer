@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2004 Wim Taymans <wim@fluendo.com>
  *
  * gstclock.c: Clock subsystem for maintaining time sync
  *
@@ -47,9 +48,6 @@ enum
 
 static GstMemChunk *_gst_clock_entries_chunk;
 
-void gst_clock_id_unlock (GstClockID id);
-
-
 static void gst_clock_class_init (GstClockClass * klass);
 static void gst_clock_init (GstClock * clock);
 static void gst_clock_dispose (GObject * object);
@@ -75,14 +73,72 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "created entry %p", entry);
 
+  gst_atomic_int_init (&entry->refcount, 1);
   entry->clock = clock;
   entry->time = time;
   entry->interval = interval;
   entry->type = type;
-  entry->status = GST_CLOCK_ENTRY_OK;
+  entry->status = GST_CLOCK_BUSY;
 
   return (GstClockID) entry;
+}
+
+/**
+ * gst_clock_id_ref:
+ * @id: The clockid to ref
+ *
+ * Increase the refcount of the given clockid.
+ *
+ * Returns: The same #GstClockID with increased refcount.
+ *
+ * MT safe.
+ */
+GstClockID
+gst_clock_id_ref (GstClockID id)
+{
+  g_return_val_if_fail (id != NULL, NULL);
+
+  gst_atomic_int_inc (&((GstClockEntry *) id)->refcount);
+
+  return id;
+}
+
+static void
+_gst_clock_id_free (GstClockID id)
+{
+  g_return_if_fail (id != NULL);
+
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "freed entry %p", id);
+
+#ifndef GST_DISABLE_TRACE
+  gst_alloc_trace_free (_gst_clock_entry_trace, id);
+#endif
+  gst_mem_chunk_free (_gst_clock_entries_chunk, id);
+}
+
+/**
+ * gst_clock_id_unref:
+ * @id: The clockid to unref
+ *
+ * Unref the given clockid. When the refcount reaches 0 the
+ * #GstClockID will be freed.
+ *
+ * MT safe.
+ */
+void
+gst_clock_id_unref (GstClockID id)
+{
+  gint zero;
+
+  g_return_if_fail (id != NULL);
+
+  zero = gst_atomic_int_dec_and_test (&((GstClockEntry *) id)->refcount);
+  /* if we ended up with the refcount at zero, free the id */
+  if (zero) {
+    _gst_clock_id_free (id);
+  }
 }
 
 /**
@@ -91,9 +147,12 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
  * @time: the requested time
  *
  * Get an ID from the given clock to trigger a single shot 
- * notification at the requested time.
+ * notification at the requested time. The single shot id should be
+ * unreffed after usage.
  *
  * Returns: An id that can be used to request the time notification.
+ *
+ * MT safe.
  */
 GstClockID
 gst_clock_new_single_shot_id (GstClock * clock, GstClockTime time)
@@ -112,9 +171,12 @@ gst_clock_new_single_shot_id (GstClock * clock, GstClockTime time)
  *
  * Get an ID from the given clock to trigger a periodic notification.
  * The periodeic notifications will be start at time start_time and
- * will then be fired with the given interval.
+ * will then be fired with the given interval. The id should be unreffed
+ * after usage.
  *
  * Returns: An id that can be used to request the time notification.
+ *
+ * MT safe.
  */
 GstClockID
 gst_clock_new_periodic_id (GstClock * clock, GstClockTime start_time,
@@ -129,12 +191,37 @@ gst_clock_new_periodic_id (GstClock * clock, GstClockTime start_time,
 }
 
 /**
+ * gst_clock_id_compare_func
+ * @id1: A clockid
+ * @id2: A clockid to compare with
+ *
+ * Compares the two GstClockID instances. This function can be used
+ * as a GCompareFunc when sorting ids.
+ *
+ * Returns: negative value if a < b; zero if a = b; positive value if a > b
+ *
+ * MT safe.
+ */
+gint
+gst_clock_id_compare_func (gconstpointer id1, gconstpointer id2)
+{
+  GstClockEntry *entry1, *entry2;
+
+  entry1 = (GstClockEntry *) id1;
+  entry2 = (GstClockEntry *) id2;
+
+  return GST_CLOCK_ENTRY_TIME (entry1) - GST_CLOCK_ENTRY_TIME (entry2);
+}
+
+/**
  * gst_clock_id_get_time
  * @id: The clockid to query
  *
  * Get the time of the clock ID
  *
- * Returns: the time of the given clock id
+ * Returns: the time of the given clock id.
+ *
+ * MT safe.
  */
 GstClockTime
 gst_clock_id_get_time (GstClockID id)
@@ -151,16 +238,18 @@ gst_clock_id_get_time (GstClockID id)
  * @jitter: A pointer that will contain the jitter
  *
  * Perform a blocking wait on the given ID. The jitter arg can be
- * NULL
+ * NULL.
  *
  * Returns: the result of the blocking wait.
+ *
+ * MT safe.
  */
 GstClockReturn
 gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
 {
   GstClockEntry *entry;
   GstClock *clock;
-  GstClockReturn res = GST_CLOCK_UNSUPPORTED;
+  GstClockReturn res;
   GstClockTime requested;
   GstClockClass *cclass;
 
@@ -169,43 +258,38 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
-  if (!GST_CLOCK_TIME_IS_VALID (requested)) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _TIMEOUT");
-    return GST_CLOCK_TIMEOUT;
-  }
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
+    goto invalid_time;
 
   clock = GST_CLOCK_ENTRY_CLOCK (entry);
   cclass = GST_CLOCK_GET_CLASS (clock);
 
-  if (cclass->wait) {
-    GstClockTime now;
+  if (G_LIKELY (cclass->wait)) {
 
-    GST_LOCK (clock);
-    clock->entries = g_list_prepend (clock->entries, entry);
-    GST_UNLOCK (clock);
-
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on clock");
-    do {
-      res = cclass->wait (clock, entry);
-    }
-    while (res == GST_CLOCK_ENTRY_RESTART);
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "done waiting");
-
-    GST_LOCK (clock);
-    clock->entries = g_list_remove (clock->entries, entry);
-    GST_UNLOCK (clock);
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on clock entry %p", id);
+    res = cclass->wait (clock, entry);
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "done waiting entry %p", id);
 
     if (jitter) {
-      now = gst_clock_get_time (clock);
+      GstClockTime now = gst_clock_get_time (clock);
+
       *jitter = now - requested;
     }
 
     if (clock->stats) {
       gst_clock_update_stats (clock);
     }
+  } else {
+    res = GST_CLOCK_UNSUPPORTED;
   }
-
   return res;
+
+  /* ERRORS */
+invalid_time:
+  {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _BADTIME");
+    return GST_CLOCK_BADTIME;
+  }
 }
 
 /**
@@ -215,9 +299,14 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
  * @user_data: User data passed in the calback
  *
  * Register a callback on the given clockid with the given
- * function and user_data.
+ * function and user_data. When passing an id with an invalid
+ * time to this function, the callback will be called immediatly
+ * with  a time set to GST_CLOCK_TIME_NONE. The callback will
+ * be called when the time of the id has been reached.
  *
  * Returns: the result of the non blocking wait.
+ *
+ * MT safe.
  */
 GstClockReturn
 gst_clock_id_wait_async (GstClockID id,
@@ -225,19 +314,19 @@ gst_clock_id_wait_async (GstClockID id,
 {
   GstClockEntry *entry;
   GstClock *clock;
-  GstClockReturn res = GST_CLOCK_UNSUPPORTED;
+  GstClockReturn res;
   GstClockClass *cclass;
+  GstClockTime requested;
 
   g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
   g_return_val_if_fail (func != NULL, GST_CLOCK_ERROR);
 
   entry = (GstClockEntry *) id;
-  clock = entry->clock;
+  requested = GST_CLOCK_ENTRY_TIME (entry);
+  clock = GST_CLOCK_ENTRY_CLOCK (entry);
 
-  if (!GST_CLOCK_TIME_IS_VALID (GST_CLOCK_ENTRY_TIME (entry))) {
-    (func) (clock, GST_CLOCK_TIME_NONE, id, user_data);
-    return GST_CLOCK_TIMEOUT;
-  }
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
+    goto invalid_time;
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
@@ -246,26 +335,28 @@ gst_clock_id_wait_async (GstClockID id,
     entry->user_data = user_data;
 
     res = cclass->wait_async (clock, entry);
+  } else {
+    res = GST_CLOCK_UNSUPPORTED;
   }
-
   return res;
-}
 
-#if 0
-static void
-gst_clock_reschedule_func (GstClockEntry * entry)
-{
-  entry->status = GST_CLOCK_ENTRY_OK;
-
-  gst_clock_id_unlock ((GstClockID) entry);
+  /* ERRORS */
+invalid_time:
+  {
+    (func) (clock, GST_CLOCK_TIME_NONE, id, user_data);
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _BADTIME");
+    return GST_CLOCK_BADTIME;
+  }
 }
-#endif
 
 /**
  * gst_clock_id_unschedule:
  * @id: The id to unschedule
  *
- * Cancel an outstanding async notification request with the given ID.
+ * Cancel an outstanding request with the given ID. This can either
+ * be an outstanding async notification or a pending sync notification.
+ *
+ * MT safe.
  */
 void
 gst_clock_id_unschedule (GstClockID id)
@@ -283,47 +374,6 @@ gst_clock_id_unschedule (GstClockID id)
 
   if (cclass->unschedule)
     cclass->unschedule (clock, entry);
-}
-
-/**
- * gst_clock_id_free:
- * @id: The clockid to free
- *
- * Free the resources held by the given id
- */
-void
-gst_clock_id_free (GstClockID id)
-{
-  g_return_if_fail (id != NULL);
-
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_gst_clock_entry_trace, id);
-#endif
-  gst_mem_chunk_free (_gst_clock_entries_chunk, id);
-}
-
-/**
- * gst_clock_id_unlock:
- * @id: The clockid to unlock
- *
- * Unlock the givan ClockID.
- */
-void
-gst_clock_id_unlock (GstClockID id)
-{
-  GstClockEntry *entry;
-  GstClock *clock;
-  GstClockClass *cclass;
-
-  g_return_if_fail (id != NULL);
-
-  entry = (GstClockEntry *) id;
-  clock = entry->clock;
-
-  cclass = GST_CLOCK_GET_CLASS (clock);
-
-  if (cclass->unlock)
-    cclass->unlock (clock, entry);
 }
 
 
@@ -384,15 +434,6 @@ gst_clock_class_init (GstClockClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATS,
       g_param_spec_boolean ("stats", "Stats", "Enable clock stats",
           FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DIFF,
-      g_param_spec_int64 ("max-diff", "Max diff",
-          "The maximum amount of time to wait in nanoseconds", 0, G_MAXINT64,
-          DEFAULT_MAX_DIFF, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EVENT_DIFF,
-      g_param_spec_uint64 ("event-diff", "event diff",
-          "The amount of time that may elapse until 2 events are treated as happening at different times",
-          0, G_MAXUINT64, DEFAULT_EVENT_DIFF,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -401,6 +442,7 @@ gst_clock_init (GstClock * clock)
   clock->adjust = 0;
   clock->last_time = 0;
   clock->entries = NULL;
+  clock->entries_changed = g_cond_new ();
   clock->flags = 0;
   clock->stats = FALSE;
 }
@@ -408,7 +450,9 @@ gst_clock_init (GstClock * clock)
 static void
 gst_clock_dispose (GObject * object)
 {
-  //GstClock *clock = GST_CLOCK (object);
+  GstClock *clock = GST_CLOCK (object);
+
+  g_cond_free (clock->entries_changed);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -469,27 +513,36 @@ gst_clock_get_resolution (GstClock * clock)
  * Gets the current time of the given clock. The time is always
  * monotonically increasing.
  *
- * Returns: the time of the clock.
+ * Returns: the time of the clock. Or GST_CLOCK_TIME_NONE when
+ * giving wrong input.
+ *
+ * MT safe.
  */
 GstClockTime
 gst_clock_get_time (GstClock * clock)
 {
-  GstClockTime ret = G_GINT64_CONSTANT (0);
+  GstClockTime ret;
   GstClockClass *cclass;
 
-  g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
+  g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_TIME_NONE);
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (cclass->get_internal_time) {
-    ret = cclass->get_internal_time (clock) + clock->adjust;
+    ret = cclass->get_internal_time (clock);
+  } else {
+    ret = G_GINT64_CONSTANT (0);
   }
+
   /* make sure the time is increasing, else return last_time */
+  GST_LOCK (clock);
+  ret += clock->adjust;
   if ((gint64) ret < (gint64) clock->last_time) {
     ret = clock->last_time;
   } else {
     clock->last_time = ret;
   }
+  GST_UNLOCK (clock);
 
   return ret;
 }
@@ -504,36 +557,17 @@ gst_clock_get_time (GstClock * clock)
  * moves it backwards. Note that _get_time() always returns 
  * increasing values so when you move the clock backwards, _get_time()
  * will report the previous value until the clock catches up.
+ *
+ * MT safe.
  */
 void
 gst_clock_set_time_adjust (GstClock * clock, GstClockTime adjust)
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
 
-  clock->adjust = adjust;
-}
-
-/**
- * gst_clock_get_next_id
- * @clock: The clock to query
- *
- * Get the clockid of the next event.
- *
- * Returns: a clockid or NULL is no event is pending.
- */
-GstClockID
-gst_clock_get_next_id (GstClock * clock)
-{
-  GstClockEntry *entry = NULL;
-
-  g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
-
   GST_LOCK (clock);
-  if (clock->entries)
-    entry = GST_CLOCK_ENTRY (clock->entries->data);
+  clock->adjust = adjust;
   GST_UNLOCK (clock);
-
-  return (GstClockID *) entry;
 }
 
 static void
@@ -554,10 +588,6 @@ gst_clock_set_property (GObject * object, guint prop_id,
       clock->stats = g_value_get_boolean (value);
       g_object_notify (object, "stats");
       break;
-    case ARG_MAX_DIFF:
-      break;
-    case ARG_EVENT_DIFF:
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -575,10 +605,6 @@ gst_clock_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_STATS:
       g_value_set_boolean (value, clock->stats);
-      break;
-    case ARG_MAX_DIFF:
-      break;
-    case ARG_EVENT_DIFF:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

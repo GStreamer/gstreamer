@@ -881,7 +881,7 @@ gst_filesrc_close_file (GstFileSrc * src)
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
 
-static gboolean
+static void
 gst_filesrc_loop (GstElement * element)
 {
   GstFileSrc *filesrc;
@@ -892,14 +892,13 @@ gst_filesrc_loop (GstElement * element)
 
   result = gst_filesrc_get (filesrc->srcpad, &buffer);
   if (result != GST_FLOW_OK) {
-    return FALSE;
+    gst_task_stop (filesrc->task);
+    return;
   }
   result = gst_pad_push (filesrc->srcpad, buffer);
   if (result != GST_FLOW_OK) {
-    return FALSE;
+    gst_task_stop (filesrc->task);
   }
-
-  return TRUE;
 }
 
 

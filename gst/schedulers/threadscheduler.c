@@ -76,30 +76,14 @@ struct _GstThreadSchedulerClass
 typedef struct _GstThreadSchedulerTask GstThreadSchedulerTask;
 typedef struct _GstThreadSchedulerTaskClass GstThreadSchedulerTaskClass;
 
-typedef enum
-{
-  STATE_STOPPED,
-  STATE_STARTED,
-  STATE_PAUSED
-} TaskState;
-
-
 struct _GstThreadSchedulerTask
 {
   GstTask task;
-
-  TaskState state;
-  GMutex *lock;
-  GCond *cond;
-
-  GstTaskFunction func;
-  gpointer data;
 };
 
 struct _GstThreadSchedulerTaskClass
 {
   GstTaskClass parent_class;
-
 };
 
 static void gst_thread_scheduler_task_class_init (gpointer g_class,
@@ -148,9 +132,7 @@ gst_thread_scheduler_task_class_init (gpointer klass, gpointer class_data)
 static void
 gst_thread_scheduler_task_init (GstThreadSchedulerTask * task)
 {
-  task->state = STATE_STOPPED;
-  task->lock = g_mutex_new ();
-  task->cond = g_cond_new ();
+  GST_TASK (task)->state = GST_TASK_STOPPED;
 }
 
 static gboolean
@@ -158,17 +140,23 @@ gst_thread_scheduler_task_start (GstTask * task)
 {
   GstThreadSchedulerTask *ttask = GST_THREAD_SCHEDULER_TASK (task);
   GstThreadScheduler *tsched =
-      GST_THREAD_SCHEDULER (gst_object_get_parent (GST_OBJECT (task)));
+      GST_THREAD_SCHEDULER (GST_OBJECT_PARENT (GST_OBJECT (task)));
+  GstTaskState old;
 
-  g_mutex_lock (ttask->lock);
-  if (ttask->state == STATE_STOPPED) {
-    ttask->state = STATE_STARTED;
-    g_thread_pool_push (tsched->pool, task, NULL);
-  } else {
-    ttask->state = STATE_STARTED;
-    g_cond_signal (ttask->cond);
+  GST_LOCK (ttask);
+  old = GST_TASK_CAST (ttask)->state;
+  GST_TASK_CAST (ttask)->state = GST_TASK_STARTED;
+  switch (old) {
+    case GST_TASK_STOPPED:
+      g_thread_pool_push (tsched->pool, task, NULL);
+      break;
+    case GST_TASK_PAUSED:
+      GST_TASK_SIGNAL (ttask);
+      break;
+    case GST_TASK_STARTED:
+      break;
   }
-  g_mutex_unlock (ttask->lock);
+  GST_UNLOCK (ttask);
 
   return TRUE;
 }
@@ -177,13 +165,22 @@ static gboolean
 gst_thread_scheduler_task_stop (GstTask * task)
 {
   GstThreadSchedulerTask *ttask = GST_THREAD_SCHEDULER_TASK (task);
+  GstTaskState old;
 
-  g_mutex_lock (ttask->lock);
-  if (ttask->state != STATE_STOPPED) {
-    ttask->state = STATE_STOPPED;
-    g_cond_signal (ttask->cond);
+  GST_LOCK (ttask);
+  old = GST_TASK_CAST (ttask)->state;
+  GST_TASK_CAST (ttask)->state = GST_TASK_STOPPED;
+  switch (old) {
+    case GST_TASK_STOPPED:
+      break;
+    case GST_TASK_PAUSED:
+      GST_TASK_SIGNAL (ttask);
+      break;
+    case GST_TASK_STARTED:
+      break;
   }
-  g_mutex_unlock (ttask->lock);
+  GST_UNLOCK (ttask);
+
   return TRUE;
 }
 
@@ -191,12 +188,24 @@ static gboolean
 gst_thread_scheduler_task_pause (GstTask * task)
 {
   GstThreadSchedulerTask *ttask = GST_THREAD_SCHEDULER_TASK (task);
+  GstThreadScheduler *tsched =
+      GST_THREAD_SCHEDULER (GST_OBJECT_PARENT (GST_OBJECT (task)));
+  GstTaskState old;
 
-  g_mutex_lock (ttask->lock);
-  if (ttask->state != STATE_PAUSED) {
-    ttask->state = STATE_PAUSED;
+  GST_LOCK (ttask);
+  old = GST_TASK_CAST (ttask)->state;
+  GST_TASK_CAST (ttask)->state = GST_TASK_PAUSED;
+  switch (old) {
+    case GST_TASK_STOPPED:
+      g_thread_pool_push (tsched->pool, task, NULL);
+      break;
+    case GST_TASK_PAUSED:
+      break;
+    case GST_TASK_STARTED:
+      break;
   }
-  g_mutex_unlock (ttask->lock);
+  GST_UNLOCK (ttask);
+
   return TRUE;
 }
 
@@ -253,32 +262,35 @@ gst_thread_scheduler_class_init (gpointer klass, gpointer class_data)
 }
 
 static void
-gst_thread_scheduler_func (GstThreadSchedulerTask * task,
+gst_thread_scheduler_func (GstThreadSchedulerTask * ttask,
     GstThreadScheduler * sched)
 {
-  gboolean res;
+  GstTask *task = GST_TASK (ttask);
 
   gst_object_ref (GST_OBJECT (task));
+
   GST_DEBUG_OBJECT (sched, "Entering task %p, thread %p", task,
       g_thread_self ());
-  g_mutex_lock (task->lock);
-  while (G_LIKELY (task->state != STATE_STOPPED)) {
-    if (task->state == STATE_PAUSED) {
-      g_cond_wait (task->cond, task->lock);
-      if (task->state == STATE_STOPPED)
-        break;
-    }
-    g_mutex_unlock (task->lock);
 
-    res = task->func (task->data);
-
-    g_mutex_lock (task->lock);
-    if (G_UNLIKELY (!res)) {
-      task->state = STATE_STOPPED;
+  GST_LOCK (task);
+  while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
+    while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
+      GST_TASK_SIGNAL (task);
+      GST_TASK_WAIT (task);
+      if (task->state == GST_TASK_STOPPED)
+        goto done;
     }
+    GST_UNLOCK (task);
+
+    task->func (task->data);
+
+    GST_LOCK (task);
   }
-  g_mutex_unlock (task->lock);
+done:
+  GST_UNLOCK (task);
+
   GST_DEBUG_OBJECT (sched, "Exit task %p, thread %p", task, g_thread_self ());
+
   gst_object_unref (GST_OBJECT (task));
 }
 
@@ -299,12 +311,12 @@ gst_thread_scheduler_create_task (GstScheduler * sched, GstTaskFunction func,
       GST_THREAD_SCHEDULER_TASK (g_object_new (GST_TYPE_THREAD_SCHEDULER_TASK,
           NULL));
   gst_object_set_parent (GST_OBJECT (task), GST_OBJECT (sched));
-  task->func = func;
-  task->data = data;
+  GST_TASK_CAST (task)->func = func;
+  GST_TASK_CAST (task)->data = data;
 
   GST_DEBUG_OBJECT (sched, "Created task %p", task);
 
-  return GST_TASK (task);
+  return GST_TASK_CAST (task);
 }
 
 static void

@@ -27,10 +27,10 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_ITERATOR_DONE		= 0,
-  GST_ITERATOR_OK		= 1,
-  GST_ITERATOR_RESYNC		= 2,
-  GST_ITERATOR_ERROR		= 3,
+  GST_ITERATOR_DONE		= 0, /* no more items in the iterator */
+  GST_ITERATOR_OK		= 1, /* item retrieved */
+  GST_ITERATOR_RESYNC		= 2, /* datastructures changed while iterating */
+  GST_ITERATOR_ERROR		= 3, /* some error happened */
 } GstIteratorResult;
 
 typedef struct _GstIterator GstIterator;
@@ -59,6 +59,7 @@ struct _GstIterator {
 				   iterator was created */
 };
 	
+/* creating iterators */
 GstIterator* 		gst_iterator_new		(guint size, 
 							 GMutex *lock, 
 							 guint32 *master_cookie,
@@ -74,10 +75,12 @@ GstIterator* 		gst_iterator_new_list		(GMutex *lock,
   							 GstIteratorUnrefFunction unref,
   							 GstIteratorDisposeFunction free);
 
+/* using iterators */
 GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *result);
 void			gst_iterator_resync		(GstIterator *it);
 void			gst_iterator_free		(GstIterator *it);
 
+/* special functions that operate on iterators */
 void 			gst_iterator_foreach 		(GstIterator *it, GFunc function, 
 							 gpointer user_data);
 gpointer 		gst_iterator_find_custom 	(GstIterator *it, gpointer user_data,

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstobject.c: Fundamental class used for all of GStreamer
  *
@@ -33,6 +34,15 @@
 #define DEBUG_REFCOUNT
 #define REFCOUNT_HACK
 
+/* Refcount hack: since glib is not threadsafe, the glib refcounter can be
+ * screwed up and the object can be freed unexpectedly. We use an evil hack
+ * to work around this problem. We set the glib refcount to a high value so
+ * that glib will never unref the object under realistic circumstances. Then
+ * we use our own atomic refcounting to do proper MT safe refcounting.
+ *
+ * A proper fix is of course to make the glib refcounting threadsafe which is
+ * planned.
+ */
 #ifdef REFCOUNT_HACK
 #define PATCH_REFCOUNT(obj)    ((GObject*)(obj))->ref_count = 100000;
 #define PATCH_REFCOUNT1(obj)    ((GObject*)(obj))->ref_count = 1;
@@ -196,9 +206,7 @@ gst_object_init (GstObject * object)
   object->parent = NULL;
   object->name = NULL;
   gst_atomic_int_init (&(object)->refcount, 1);
-#ifdef REFCOUNT_HACK
   PATCH_REFCOUNT (object);
-#endif
 
   object->flags = 0;
   GST_FLAG_SET (object, GST_OBJECT_FLOATING);
@@ -568,12 +576,13 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
   }
 }
 
-static void
+static gboolean
 gst_object_set_name_default (GstObject * object)
 {
   gint count;
   gchar *name, *tmp;
   const gchar *type_name;
+  gboolean result;
 
   type_name = G_OBJECT_TYPE_NAME (object);
 
@@ -599,8 +608,10 @@ gst_object_set_name_default (GstObject * object)
   name = g_ascii_strdown (tmp, strlen (tmp));
   g_free (tmp);
 
-  gst_object_set_name (object, name);
+  result = gst_object_set_name (object, name);
   g_free (name);
+
+  return result;
 }
 
 /**
@@ -613,32 +624,41 @@ gst_object_set_name_default (GstObject * object)
  * This function makes a copy of the provided name, so the caller
  * retains ownership of the name it sent.
  *
- * Returns: TRUE if the name could be set.
+ * Returns: TRUE if the name could be set. Objects that have
+ * a parent cannot be renamed.
  *
  * MT safe.  This function grabs and releases the object's LOCK.
  */
 gboolean
 gst_object_set_name (GstObject * object, const gchar * name)
 {
+  gboolean result;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
   GST_LOCK (object);
 
   /* parented objects cannot be renamed */
-  if (object->parent != NULL) {
-    GST_UNLOCK (object);
-    return FALSE;
-  }
+  if (G_UNLIKELY (object->parent != NULL))
+    goto had_parent;
 
   if (name != NULL) {
     g_free (object->name);
     object->name = g_strdup (name);
     GST_UNLOCK (object);
+    result = TRUE;
   } else {
     GST_UNLOCK (object);
-    gst_object_set_name_default (object);
+    result = gst_object_set_name_default (object);
   }
-  return TRUE;
+  return result;
+
+  /* error */
+had_parent:
+  {
+    GST_UNLOCK (object);
+    return FALSE;
+  }
 }
 
 /**
@@ -676,7 +696,6 @@ gst_object_get_name (GstObject * object)
  * Sets the name prefix of the object.
  * This function makes a copy of the provided name prefix, so the caller
  * retains ownership of the name prefix it sent.
- *
  *
  * MT safe.  This function grabs and releases the object's LOCK.
  */
@@ -858,15 +877,18 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 
   for (; list; list = g_list_next (list)) {
     GstObject *child;
+    gboolean eq;
 
     child = GST_OBJECT (list->data);
+
     GST_LOCK (child);
-    if (strcmp (GST_OBJECT_NAME (child), name) == 0) {
-      GST_UNLOCK (child);
+    eq = strcmp (GST_OBJECT_NAME (child), name) == 0;
+    GST_UNLOCK (child);
+
+    if (G_UNLIKELY (eq)) {
       result = FALSE;
       break;
     }
-    GST_UNLOCK (child);
   }
   return result;
 }

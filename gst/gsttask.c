@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gsttask.c: Streaming tasks
  *
@@ -26,7 +26,7 @@
 #include "gsttask.h"
 
 static void gst_task_class_init (GstTaskClass * klass);
-static void gst_task_init (GstTask * sched);
+static void gst_task_init (GstTask * task);
 static void gst_task_dispose (GObject * object);
 
 static GstObjectClass *parent_class = NULL;
@@ -70,8 +70,10 @@ gst_task_class_init (GstTaskClass * klass)
 }
 
 static void
-gst_task_init (GstTask * sched)
+gst_task_init (GstTask * task)
 {
+  task->cond = g_cond_new ();
+  task->state = GST_TASK_STOPPED;
 }
 
 static void
@@ -79,19 +81,73 @@ gst_task_dispose (GObject * object)
 {
   GstTask *task = GST_TASK (object);
 
-  /* thse lists should all be NULL */
   GST_DEBUG ("task %p dispose", task);
+
+  g_cond_free (task->cond);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+/**
+ * gst_task_create:
+ * @func: The #GstTaskFunction to use
+ * @data: User data to pass to @func
+ *
+ * Create a new Task that will repeadedly call the provided @func
+ * with @data as a parameter. Typically the task will run in
+ * a new thread.
+ *
+ * Returns: A new #GstTask.
+ *
+ * MT safe.
+ */
+GstTask *
+gst_task_create (GstTaskFunction func, gpointer data)
+{
+  return NULL;
+}
+
+/**
+ * gst_task_get_state:
+ * @task: The #GstTask to query
+ *
+ * Get the current state of the task.
+ *
+ * Returns: The #GstTaskState of the task
+ *
+ * MT safe.
+ */
+GstTaskState
+gst_task_get_state (GstTask * task)
+{
+  GstTaskState result;
+
+  g_return_val_if_fail (GST_IS_TASK (task), GST_TASK_STOPPED);
+
+  GST_LOCK (task);
+  result = task->state;
+  GST_UNLOCK (task);
+
+  return result;
+}
+
+/**
+ * gst_task_start:
+ * @task: The #GstTask to start
+ *
+ * Starts @task.
+ *
+ * Returns: TRUE if the task could be started.
+ *
+ * MT safe.
+ */
 gboolean
 gst_task_start (GstTask * task)
 {
   GstTaskClass *tclass;
   gboolean result = FALSE;
 
-  g_return_val_if_fail (GST_IS_TASK (task), result);
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
   tclass = GST_TASK_GET_CLASS (task);
 
@@ -101,13 +157,23 @@ gst_task_start (GstTask * task)
   return result;
 }
 
+/**
+ * gst_task_stop:
+ * @task: The #GstTask to stop
+ *
+ * Stops @task.
+ *
+ * Returns: TRUE if the task could be stopped.
+ *
+ * MT safe.
+ */
 gboolean
 gst_task_stop (GstTask * task)
 {
   GstTaskClass *tclass;
   gboolean result = FALSE;
 
-  g_return_val_if_fail (GST_IS_TASK (task), result);
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
   tclass = GST_TASK_GET_CLASS (task);
 
@@ -117,13 +183,23 @@ gst_task_stop (GstTask * task)
   return result;
 }
 
+/**
+ * gst_task_pause:
+ * @task: The #GstTask to pause
+ *
+ * Pauses @task.
+ *
+ * Returns: TRUE if the task could be paused.
+ *
+ * MT safe.
+ */
 gboolean
 gst_task_pause (GstTask * task)
 {
   GstTaskClass *tclass;
   gboolean result = FALSE;
 
-  g_return_val_if_fail (GST_IS_TASK (task), result);
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
   tclass = GST_TASK_GET_CLASS (task);
 

@@ -209,6 +209,7 @@ is_eos (GstPipeline * pipeline)
   return result;
 }
 
+/* FIXME, make me threadsafe */
 static GstBusSyncReply
 pipeline_bus_handler (GstBus * bus, GstMessage * message,
     GstPipeline * pipeline)
@@ -224,8 +225,10 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:
       if (GST_MESSAGE_SRC (message) != GST_OBJECT (pipeline)) {
+        GST_LOCK (bus);
         pipeline->eosed =
             g_list_prepend (pipeline->eosed, GST_MESSAGE_SRC (message));
+        GST_UNLOCK (bus);
         if (is_eos (pipeline)) {
           posteos = TRUE;
         }
@@ -257,6 +260,8 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
  * Create a new pipeline with the given name.
  *
  * Returns: newly created GstPipeline
+ *
+ * MT safe.
  */
 GstElement *
 gst_pipeline_new (const gchar * name)
@@ -264,6 +269,7 @@ gst_pipeline_new (const gchar * name)
   return gst_element_factory_make ("pipeline", name);
 }
 
+/* MT safe */
 static GstElementStateReturn
 gst_pipeline_change_state (GstElement * element)
 {
@@ -276,14 +282,18 @@ gst_pipeline_change_state (GstElement * element)
       gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
       break;
     case GST_STATE_READY_TO_PAUSED:
-      gst_element_set_clock (element, gst_element_get_clock (element));
+    {
+      GstClock *clock;
+
+      clock = gst_element_get_clock (element);
+      gst_element_set_clock (element, clock);
       pipeline->eosed = NULL;
       break;
+    }
     case GST_STATE_PAUSED_TO_PLAYING:
       if (element->clock) {
         /* we set time slightly ahead because of context switches */
-        pipeline->start_time =
-            gst_clock_get_time (element->clock) + 10 * GST_MSECOND;
+        pipeline->start_time = gst_clock_get_time (element->clock);     // + 10*GST_MSECOND;
         element->base_time = pipeline->start_time - pipeline->stream_time;
       }
       GST_DEBUG ("stream_time=%" G_GUINT64_FORMAT ", start_time=%"
@@ -335,6 +345,8 @@ gst_pipeline_change_state (GstElement * element)
  * Gets the #GstScheduler of this pipeline.
  *
  * Returns: a GstScheduler.
+ *
+ * MT safe.
  */
 GstScheduler *
 gst_pipeline_get_scheduler (GstPipeline * pipeline)
@@ -349,6 +361,8 @@ gst_pipeline_get_scheduler (GstPipeline * pipeline)
  * Gets the #GstBus of this pipeline.
  *
  * Returns: a GstBus
+ *
+ * MT safe.
  */
 GstBus *
 gst_pipeline_get_bus (GstPipeline * pipeline)
@@ -363,12 +377,16 @@ gst_pipeline_get_clock_func (GstElement * element)
   GstPipeline *pipeline = GST_PIPELINE (element);
 
   /* if we have a fixed clock, use that one */
+  GST_LOCK (pipeline);
   if (GST_FLAG_IS_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK)) {
     clock = pipeline->fixed_clock;
+    gst_object_ref (GST_OBJECT (clock));
+    GST_UNLOCK (pipeline);
 
     GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)",
         clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
   } else {
+    GST_UNLOCK (pipeline);
     clock =
         GST_ELEMENT_CLASS (parent_class)->get_clock (GST_ELEMENT (pipeline));
     /* no clock, use a system clock */
@@ -413,16 +431,20 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
  * Force the pipeline to use the given clock. The pipeline will
  * always use the given clock even if new clock providers are added
  * to this pipeline.
+ *
+ * MT safe.
  */
 void
 gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 {
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
+  GST_LOCK (pipeline);
   GST_FLAG_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
   gst_object_replace ((GstObject **) & pipeline->fixed_clock,
       (GstObject *) clock);
+  GST_LOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)", clock,
       (clock ? GST_OBJECT_NAME (clock) : "nil"));
@@ -435,6 +457,8 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
  *
  * Set the clock for the pipeline. The clock will be distributed
  * to all the elements managed by the pipeline.
+ *
+ * MT safe.
  */
 void
 gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
@@ -450,6 +474,8 @@ gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
  * @pipeline: the pipeline
  *
  * Let the pipeline select a clock automatically.
+ *
+ * MT safe.
  */
 void
 gst_pipeline_auto_clock (GstPipeline * pipeline)
@@ -459,7 +485,9 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
 
   GST_FLAG_UNSET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
+  GST_LOCK (pipeline);
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
+  GST_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using automatic clock");
 }
