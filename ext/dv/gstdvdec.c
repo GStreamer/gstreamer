@@ -271,12 +271,13 @@ gst_dvdec_loop (GstElement *element)
   gint outframe_pitches[3];
   gboolean PAL;
   gint height;
+  guint32 length, got_bytes;
 
   dvdec = GST_DVDEC (element);
 
   /* first read enough bytes to parse the header */
-  inframe = gst_bytestream_peek_bytes (dvdec->bs, header_size);
-  if (!inframe) {
+  got_bytes = gst_bytestream_peek_bytes (dvdec->bs, &inframe, header_size);
+  if (got_bytes < header_size) {
     gst_dvdec_handle_event (dvdec);
     return;
   }
@@ -285,10 +286,11 @@ gst_dvdec_loop (GstElement *element)
   PAL = dv_system_50_fields (dvdec->decoder);
 
   height = (PAL ? PAL_HEIGHT : NTSC_HEIGHT);
+  length = (PAL ? PAL_BUFFER : NTSC_BUFFER);
 
   /* then read the read data */
-  buf = gst_bytestream_read (dvdec->bs, (PAL ? PAL_BUFFER : NTSC_BUFFER));
-  if (!buf) {
+  got_bytes = gst_bytestream_read (dvdec->bs, &buf, length);
+  if (got_bytes < length) {
     gst_dvdec_handle_event (dvdec);
     return;
   }

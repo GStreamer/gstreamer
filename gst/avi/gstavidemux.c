@@ -276,10 +276,11 @@ static gboolean
 gst_avi_demux_avih (GstAviDemux *avi_demux)
 {
   gst_riff_avih *avih;
+  guint32       got_bytes;
   GstByteStream *bs = avi_demux->bs;
 
-  avih = (gst_riff_avih *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_avih));
-  if (avih) {
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&avih, sizeof (gst_riff_avih));
+  if (got_bytes == sizeof (gst_riff_avih)) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux: avih tag found");
     GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  us_frame    %d", GUINT32_FROM_LE (avih->us_frame));
     GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  max_bps     %d", GUINT32_FROM_LE (avih->max_bps));
@@ -310,9 +311,10 @@ gst_avi_demux_strh (GstAviDemux *avi_demux)
 {
   gst_riff_strh *strh;
   GstByteStream *bs = avi_demux->bs;
+  guint32       got_bytes;
 
-  strh = (gst_riff_strh *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strh));
-  if (strh) {
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&strh, sizeof (gst_riff_strh));
+  if (got_bytes == sizeof (gst_riff_strh)) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux: strh tag found");
     GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  type        0x%08x (%s)", 
   		  GUINT32_FROM_LE (strh->type), gst_riff_id_to_fourcc (strh->type));
@@ -361,8 +363,9 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
   GstPad *srcpad;
   GstByteStream *bs = avi_demux->bs;
   GstCaps *newcaps = NULL, *capslist = NULL;
+  guint32       got_bytes;
 
-  strf = (gst_riff_strf_vids *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strf_vids));
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&strf, sizeof (gst_riff_strf_vids));
 
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux: strf tag found in context vids");
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  size        %d", GUINT32_FROM_LE (strf->size));
@@ -446,8 +449,9 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
   GstPad *srcpad;
   GstByteStream *bs = avi_demux->bs;
   GstCaps *newcaps = NULL, *capslist = NULL;
+  guint32       got_bytes;
 
-  strf = (gst_riff_strf_auds *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strf_auds));
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&strf, sizeof (gst_riff_strf_auds));
 
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux: strf tag found in context auds");
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  format      %d", GUINT16_FROM_LE (strf->format));
@@ -515,8 +519,9 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   GstPad *srcpad;
   GstByteStream *bs = avi_demux->bs;
   GstCaps *newcaps = NULL, *capslist = NULL;
+  guint32       got_bytes;
 
-  strf = (gst_riff_strf_iavs *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_strf_iavs));
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&strf, sizeof (gst_riff_strf_iavs));
 
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux: strf tag found in context iavs");
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  DVAAuxSrc   %08x", GUINT32_FROM_LE (strf->DVAAuxSrc));
@@ -566,19 +571,20 @@ gst_avidemux_parse_index (GstAviDemux *avi_demux,
 {
   GstBuffer *buf;
   gulong index_size;
+  guint32 got_bytes;
 
   if (!gst_bytestream_seek (avi_demux->bs, GST_SEEK_BYTEOFFSET_SET, filepos + offset)) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not seek to index");
     return;
   }
-  buf = gst_bytestream_read (avi_demux->bs, 8);
-  while (!buf) {
+  got_bytes = gst_bytestream_read (avi_demux->bs, &buf, 8);
+  while (got_bytes < 8) {
     guint32 remaining;
     GstEvent *event;
   
     gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
 
-    buf = gst_bytestream_read (avi_demux->bs, 8);
+    got_bytes = gst_bytestream_read (avi_demux->bs, &buf, 8);
   }
 		  
   if (GST_BUFFER_OFFSET (buf) != filepos + offset || GST_BUFFER_SIZE (buf) != 8) {
@@ -594,7 +600,7 @@ gst_avidemux_parse_index (GstAviDemux *avi_demux,
   index_size = GUINT32_FROM_LE(*(guint32 *)(GST_BUFFER_DATA (buf) + 4));
   gst_buffer_unref (buf);
 
-  buf = gst_bytestream_read (avi_demux->bs, index_size);
+  got_bytes = gst_bytestream_read (avi_demux->bs, &buf, index_size);
 
   avi_demux->index_size = index_size/sizeof(gst_riff_index_entry);
 
@@ -648,10 +654,11 @@ gst_avidemux_read_chunk (GstAviDemux *avi_demux, guint32 *id, guint32 *size)
 {
   gst_riff_chunk *chunk;
   GstByteStream *bs = avi_demux->bs;
+  guint32       got_bytes;
 
   do {
-    chunk = (gst_riff_chunk *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_chunk));
-    if (chunk) {
+    got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&chunk, sizeof (gst_riff_chunk));
+    if (got_bytes == sizeof (gst_riff_chunk)) {
       *id =   GUINT32_FROM_LE (chunk->id);
       *size = GUINT32_FROM_LE (chunk->size);
 
@@ -697,9 +704,10 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
       guint32 datashowed;
       guint32 subchunksize = 0;	/* size of a read subchunk             */
       gchar *formtype;
+      guint32       got_bytes;
 
-      formtype = gst_bytestream_peek_bytes (bs, sizeof (guint32));
-      if (!formtype)
+      got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&formtype, sizeof (guint32));
+      if (got_bytes < sizeof(guint32))
 	return FALSE;
 
       switch (GUINT32_FROM_LE (*((guint32*)formtype))) {
@@ -775,9 +783,10 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 
       if (GST_PAD_IS_CONNECTED (avi_demux->video_pad[0])) {
 	GstBuffer *buf;
+        guint32   got_bytes;
 
 	if (*chunksize) {
-          buf = gst_bytestream_peek (bs, *chunksize);
+          got_bytes = gst_bytestream_peek (bs, &buf, *chunksize);
 
           GST_BUFFER_TIMESTAMP (buf) = avi_demux->next_time;
 
@@ -810,9 +819,10 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 
       if (GST_PAD_IS_CONNECTED (avi_demux->audio_pad[0])) {
 	GstBuffer *buf;
+        guint32   got_bytes;
 
 	if (*chunksize) {
-          buf = gst_bytestream_peek (bs, *chunksize);
+          got_bytes = gst_bytestream_peek (bs, &buf, *chunksize);
 
           GST_BUFFER_TIMESTAMP (buf) = -1LL;
 
