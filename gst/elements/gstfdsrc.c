@@ -25,6 +25,10 @@
 #endif
 #include "gst/gst_private.h"
 
+#ifndef HAVE_WIN32
+#include <sys/time.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

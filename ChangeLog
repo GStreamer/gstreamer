@@ -1,3 +1,10 @@
+2005-03-10  Jean de Largentaye  <jlargentaye@gmail.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstfdsrc.c:
+	  Fix cygwin compile error (#169732).
+
 2005-03-10  Jan Schmidt,,,  <thaytan@mad.scientist.com>
 	* gst/registries/gstlibxmlregistry.c: (load_plugin), (load_paths):
 	  g_free allocated GstPlugins, since they're not GstObjects.
