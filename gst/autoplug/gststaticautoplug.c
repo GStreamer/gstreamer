@@ -201,7 +201,12 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
     pads = g_list_next (pads);
 
     if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (templ), info->endcap)) {
-      gst_element_add_ghost_pad (info->result, pad, g_strdup_printf("src_%02d", info->i));
+      gchar *name;
+
+      name = g_strdup_printf ("src_%02d", info->i);
+      gst_element_add_ghost_pad (info->result, pad, name);
+      g_free (name);
+      
       GST_DEBUG (0,"gstpipeline: new dynamic pad %s", GST_PAD_NAME (pad));
       break;
     }
@@ -460,7 +465,12 @@ differ:
 	pads = g_list_next (pads);
 
 	if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (templ), endcap)) {
-          gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
+	  gchar *name;
+
+	  name = g_strdup_printf ("src_%02d", i);
+          gst_element_add_ghost_pad (result, pad, name);
+	  g_free (name);
+	  
 	  have_pad = TRUE;
 	  break;
 	}

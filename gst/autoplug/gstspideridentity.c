@@ -362,6 +362,7 @@ static void
 gst_spider_identity_start_type_finding (GstSpiderIdentity *ident)
 {
   GstElement* typefind;
+  gchar *name;
   gboolean restart = FALSE;
   
   GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding", GST_ELEMENT_NAME(ident));
@@ -372,7 +373,10 @@ gst_spider_identity_start_type_finding (GstSpiderIdentity *ident)
   }
   
   /* create and connect typefind object */
-  typefind = gst_element_factory_make ("typefind", g_strdup_printf("%s%s", "typefind", GST_ELEMENT_NAME(ident)));
+  name = g_strdup_printf ("%s%s", "typefind", GST_ELEMENT_NAME(ident));
+  typefind = gst_element_factory_make ("typefind", name);
+  g_free (name);
+  
   g_signal_connect (G_OBJECT (typefind), "have_type",
                     G_CALLBACK (callback_type_find_have_type), ident);
   gst_bin_add (GST_BIN (GST_ELEMENT_PARENT (ident)), typefind);

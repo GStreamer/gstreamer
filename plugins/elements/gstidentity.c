@@ -193,6 +193,7 @@ gst_identity_init (GstIdentity *identity)
   identity->drop_probability = 0.0;
   identity->silent = FALSE;
   identity->dump = FALSE;
+  identity->last_message = NULL;
 }
 
 static void 
@@ -218,6 +219,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat)(1.0*rand()/(RAND_MAX)) < identity->drop_probability) {
+      if (identity->last_message != NULL) {
+	g_free (identity->last_message);
+      }
       identity->last_message = g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %llu)",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
       g_object_notify (G_OBJECT (identity), "last-message");
@@ -231,6 +235,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
 
   for (i = identity->duplicate; i; i--) {
     if (!identity->silent)
+      if (identity->last_message != NULL) {
+	g_free (identity->last_message);
+      }
       identity->last_message = g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %llu)",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
     g_object_notify (G_OBJECT (identity), "last-message");

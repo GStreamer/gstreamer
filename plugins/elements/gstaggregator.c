@@ -174,6 +174,8 @@ gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ, cons
   name = g_strdup_printf ("sink%d",aggregator->numsinkpads);
   
   sinkpad = gst_pad_new_from_template (templ, name);
+  g_free (name);
+  
   gst_pad_set_chain_function (sinkpad, gst_aggregator_chain);
   gst_element_add_pad (GST_ELEMENT (aggregator), sinkpad);
   

@@ -24,9 +24,15 @@ make_bin (gint count)
 {
   GstElement *bin;
   GstElement *src;
+  char *name;
 
-  bin = gst_bin_new (g_strdup_printf ("bin%d", count));
-  src = gst_element_factory_make ("fakesrc", g_strdup_printf ("fakesrc%d", count));
+  name = g_strdup_printf ("bin%d", count);
+  bin = gst_bin_new (name);
+  g_free (name);
+
+  name = g_strdup_printf ("fakesrc%d", count);
+  src = gst_element_factory_make ("fakesrc", name);
+  g_free (name);
 
   gst_bin_add (GST_BIN (bin), src);
 

@@ -182,6 +182,8 @@ gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ, const 
   name = g_strdup_printf ("sink%d", GST_ELEMENT (fakesink)->numsinkpads);
 
   sinkpad = gst_pad_new_from_template (templ, name);
+  g_free (name);
+  
   gst_element_add_pad (GST_ELEMENT (fakesink), sinkpad);
 
   return sinkpad;

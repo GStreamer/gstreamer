@@ -2001,13 +2001,16 @@ gst_pad_save_thyself (GstObject *object, xmlNodePtr parent)
 
   xmlNewChild (parent, NULL, "name", GST_PAD_NAME (realpad));
   if (GST_RPAD_PEER (realpad) != NULL) {
+    gchar *content;
+    
     peer = GST_PAD (GST_RPAD_PEER (realpad));
     /* first check to see if the peer's parent's parent is the same */
     /* we just save it off */
-    xmlNewChild (parent, NULL, "peer", 
-	         g_strdup_printf ("%s.%s",
-                                  GST_OBJECT_NAME (GST_PAD_PARENT (peer)), 
-				  GST_PAD_NAME (peer)));
+    content = g_strdup_printf ("%s.%s",
+			       GST_OBJECT_NAME (GST_PAD_PARENT (peer)),
+			       GST_PAD_NAME (peer));
+    xmlNewChild (parent, NULL, "peer", content);
+    g_free (content);
   } else
     xmlNewChild (parent, NULL, "peer", "");
 

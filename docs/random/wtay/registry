@@ -17,8 +17,9 @@ Requirements
 
 user/system registry
 --------------------
-
-first query the user registry, then fall back to system registry.
+There are two be two registries on the system. One system registry and one user registry.
+The user registry should be queried first, then if that doesn't exist or don't contain any 
+plugins able to handle the mediatype it should fall back to system registry.
 
 model:
 ------

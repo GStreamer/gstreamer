@@ -2339,6 +2339,7 @@ gst_element_save_thyself (GstObject *object,
     spec = specs[i];
     if (spec->flags & G_PARAM_READABLE) {
       xmlNodePtr param;
+      char *contents;
       
       g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (spec));
       
@@ -2347,15 +2348,16 @@ gst_element_save_thyself (GstObject *object,
       xmlNewChild (param, NULL, "name", spec->name);
       
       if (G_IS_PARAM_SPEC_STRING (spec))
-        xmlNewChild (param, NULL, "value", g_value_dup_string (&value));
+	contents = g_value_dup_string (&value);
       else if (G_IS_PARAM_SPEC_ENUM (spec))
-        xmlNewChild (param, NULL, "value", 
-	             g_strdup_printf ("%d", g_value_get_enum (&value)));
+	contents = g_strdup_printf ("%d", g_value_get_enum (&value));
       else if (G_IS_PARAM_SPEC_INT64 (spec))
-        xmlNewChild (param, NULL, "value", 
-	             g_strdup_printf ("%lld", g_value_get_int64 (&value)));
+	contents = g_strdup_printf ("%lld", g_value_get_int64 (&value));
       else
-        xmlNewChild (param, NULL, "value", g_strdup_value_contents (&value));
+	contents = g_strdup_value_contents (&value);
+      
+      xmlNewChild (param, NULL, "value", contents);
+      g_free (contents);
       
       g_value_unset(&value);
     }
@@ -2556,7 +2558,8 @@ gst_element_state_get_name (GstElementState state)
     case GST_STATE_READY: return "\033[01;31mREADY\033[00m";break;
     case GST_STATE_PLAYING: return "\033[01;32mPLAYING\033[00m";break;
     case GST_STATE_PAUSED: return "\033[01;33mPAUSED\033[00m";break;
-    default: 
+    default:
+      /* This is a memory leak */
       return g_strdup_printf ("\033[01;37;41mUNKNOWN!\033[00m(%d)", state);
 #else
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;
