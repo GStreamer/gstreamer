@@ -10,7 +10,7 @@ AM_DISABLE_STATIC
 dnl when going to/from release please set the nano (fourth number) right !
 dnl We disable static building for development, for time savings
 AM_DISABLE_STATIC
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 2)
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 3, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
@@ -426,19 +426,13 @@ GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
 
-dnl *** lame ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
-GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame")
+dnl *** Jack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
+GST_CHECK_FEATURE(JACK, Jack, jack, [
+  PKG_CHECK_MODULES(JACK, jack, HAVE_JACK="yes", HAVE_JACK="no")
+  AC_SUBST(JACK_CFLAGS)
+  AC_SUBST(JACK_LIBS)
 ])
-AC_SUBST(LAME_LIBS)
-
-
-dnl FIXME : check if these CPP flags can be dealt with otherwise
-dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
-dnl CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
-dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
-dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
@@ -448,6 +442,19 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   JPEG_LIBS="-ljpeg"
   AC_SUBST(JPEG_LIBS)
 ])
+
+dnl *** lame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
+GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
+GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame")
+])
+AC_SUBST(LAME_LIBS)
+
+dnl FIXME : check if these CPP flags can be dealt with otherwise
+dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
+dnl CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
+dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
+dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -780,6 +787,7 @@ ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
 ext/http/Makefile
+ext/jack/Makefile
 ext/jpeg/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile
