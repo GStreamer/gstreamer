@@ -1,0 +1,4 @@
+2001-12-20 Thomas Vander Stichele  <thomas@apestaart.org>
+
+	* opened gst-plugins module
+	* starting with sys plugins

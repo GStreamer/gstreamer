@@ -1,0 +1,11 @@
+gst-plugins
+
+plugins for GStreamer
+
+* to develop against uninstalled GStreamer core :
+  add path to gstreamer-uninstalled.pc to PKG_CONFIG_PATH
+
+* to register plugins in source tree
+  run gstreamer-register --gst-plugin-path=.
+
+
