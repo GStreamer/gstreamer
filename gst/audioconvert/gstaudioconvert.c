@@ -661,6 +661,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
     /* float2int */
     gfloat *in;
     gint32 *out;
+    float temp;
 
     /* should just give the same buffer, unless it's not writable -- float is
      * already 32 bits */
@@ -669,8 +670,8 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
     in = (gfloat *) GST_BUFFER_DATA (buf);
     out = (gint32 *) GST_BUFFER_DATA (ret);
     for (i = buf->size / sizeof (float); i > 0; i--) {
-      *in *= 2147483647.0f + .5;
-      *out = (gint32) CLAMP ((gint64) * in, -2147483648ll, 2147483647ll);
+      temp = *in * 2147483647.0f + .5;
+      *out = (gint32) CLAMP ((gint64) temp, -2147483648ll, 2147483647ll);
       out++;
       in++;
     }
