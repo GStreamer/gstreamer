@@ -80,7 +80,7 @@ g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamS
 {
   gchar *arg_fullname;
  
-  arg_fullname = g_strdup_printf("%s::%s",gtk_type_name(oclass->type),pspec->shortname);
+  arg_fullname = g_strdup_printf("%s::%s",gtk_type_name(oclass->type),pspec->name);
 fprintf(stderr,"installing arg \"%s\" into class \"%s\"\n",arg_fullname,"");
   gtk_object_add_arg_type(arg_fullname,pspec->value_type,pspec->flags,property_id);
   g_free(pspec);
@@ -98,7 +98,7 @@ fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
   spec = g_new0(GParamSpec,1);
 
   if (info) {
-    spec->shortname = name;
+    spec->name = name;
     spec->value_type = info->type;
     spec->flags = info->arg_flags;
   } else {
@@ -112,7 +112,7 @@ GParamSpec *
 g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_BOOL;
   spec->flags = flags;
 
@@ -123,7 +123,7 @@ GParamSpec *
 g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = e;
   spec->flags = flags;
 
@@ -134,7 +134,7 @@ GParamSpec *
 g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_INT;
   spec->flags = flags;
 
@@ -145,7 +145,7 @@ GParamSpec *
 g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_UINT;
   spec->flags = flags;
 
@@ -156,7 +156,7 @@ GParamSpec *
 g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_LONG;
   spec->flags = flags;
 
@@ -167,7 +167,7 @@ GParamSpec *
 g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_ULONG;
   spec->flags = flags;
 
@@ -178,7 +178,7 @@ GParamSpec *
 g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_FLOAT;
   spec->flags = flags;
 
@@ -189,7 +189,7 @@ GParamSpec *
 g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_DOUBLE;
   spec->flags = flags;
 
@@ -200,7 +200,7 @@ GParamSpec *
 g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_POINTER;
   spec->flags = flags;
 
@@ -211,7 +211,7 @@ GParamSpec *
 g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
-  spec->shortname = name;
+  spec->name = name;
   spec->value_type = GTK_TYPE_STRING;
   spec->flags = flags;
 
