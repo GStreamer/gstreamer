@@ -97,6 +97,7 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_CAPS_NEW (
     "wavparse_mpeg",
     "audio/mpeg",
+      "mpegversion",       GST_PROPS_INT (1),
       "rate",              GST_PROPS_INT_RANGE (8000, 48000),
       "channels",          GST_PROPS_INT_RANGE (1, 2),
       "layer",             GST_PROPS_INT_RANGE (1, 3)
@@ -640,21 +641,21 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
       }
 			
       caps = GST_CAPS_NEW ("parsewav_src",
-													 mime,
-													 "rate", GST_PROPS_INT (wavparse->rate),
-													 "channels", GST_PROPS_INT (wavparse->channels)
+			   mime,
+			     "rate", GST_PROPS_INT (wavparse->rate),
+			     "channels", GST_PROPS_INT (wavparse->channels)
 				);
     }
 			
     case GST_RIFF_WAVE_FORMAT_PCM:
       caps = GST_CAPS_NEW ("parsewav_src",
-													 "audio/x-raw-int",
-													 "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN),
-													 "signed", GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
-													 "width", GST_PROPS_INT (wavparse->width),
-													 "depth", GST_PROPS_INT (wavparse->width),
-													 "rate", GST_PROPS_INT (wavparse->rate),
-													 "channels", GST_PROPS_INT (wavparse->channels)
+			   "audio/x-raw-int",
+			     "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN),
+			     "signed", GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
+			     "width", GST_PROPS_INT (wavparse->width),
+			     "depth", GST_PROPS_INT (wavparse->width),
+			     "rate", GST_PROPS_INT (wavparse->rate),
+			     "channels", GST_PROPS_INT (wavparse->channels)
 				);
       break;
 			
@@ -663,10 +664,11 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
       int layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
 			
       caps = GST_CAPS_NEW ("parsewav_src",
-													 "audio/mpeg",
-													 "layer", GST_PROPS_INT (layer),
-													 "rate", GST_PROPS_INT (wavparse->rate),
-													 "channels", GST_PROPS_INT (wavparse->channels)
+			   "audio/mpeg",
+			     "mpegversion", GST_PROPS_INT (1),
+			     "layer", GST_PROPS_INT (layer),
+			     "rate", GST_PROPS_INT (wavparse->rate),
+			     "channels", GST_PROPS_INT (wavparse->channels)
 				);
     }
       break;

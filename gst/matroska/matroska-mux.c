@@ -416,7 +416,7 @@ gst_matroska_mux_audio_pad_link (GstPad  *pad,
     audiocontext->bitdepth = 16;
 
     if (!strcmp (mimetype, "audio/mpeg")) {
-      gint mpegversion = 1;
+      gint mpegversion = 0;
 
       gst_caps_get_int (caps, "mpegversion", &mpegversion);
       switch (mpegversion) {

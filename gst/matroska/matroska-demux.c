@@ -200,7 +200,7 @@ gst_matroska_demux_init (GstMatroskaDemux *demux)
   gint i;
 
   GST_FLAG_SET (GST_OBJECT (demux), GST_ELEMENT_EVENT_AWARE);
-				
+
   demux->sinkpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
@@ -2389,7 +2389,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
     caps = GST_CAPS_NEW ("matroskademux_mpeg1-l1",
 			 "audio/mpeg",
 			   "mpegversion",  GST_PROPS_INT (1),
-			   "systemstream", GST_PROPS_BOOLEAN (FALSE),
 			   "layer",        GST_PROPS_INT (layer));
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE) ||
 	     !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE)) {
@@ -2496,8 +2495,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
 
     caps = GST_CAPS_NEW ("matroska_demux_aac_mpeg2",
 			 "audio/mpeg",
-			   "mpegversion",  GST_PROPS_INT (mpegversion),
-			   "systemstream", GST_PROPS_BOOLEAN (FALSE));
+			   "mpegversion",  GST_PROPS_INT (mpegversion));
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps",
 		 codec_id);
