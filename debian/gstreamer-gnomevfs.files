@@ -1,2 +1,2 @@
-usr/lib/gst/libgstgnomevfssrc.*
-usr/lib/gst/libgstgnomevfssink.*
+usr/lib/gst/libgstgnomevfssrc.so
+usr/lib/gst/libgstgnomevfssink.so

@@ -1,3 +1,62 @@
+gst-plugins (0.3.3-1) unstable; urgency=low
+
+  * New upstream version
+  * SDL fixed upstream, remove patch
+  * Require libid3tag for mad support
+  * Remove xvideosink from gstreamer-x package in favor of videosink
+    Needed to be removed due to symbol conflicts with videosink
+  * Sync with upstream changes:
+    * Added videosink to gstreamer-x package
+    * parseau renamed to auparse in -misc
+    * Added various plugins to -misc: goom, monoscope, modplug, ...
+  * Note: new upstream scripts gst-launch-ext and gst-visualise not
+    packaged yet
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 21 Mar 2002 02:06:21 -0500
+
+gst-plugins (0.3.2-3) unstable; urgency=low
+
+  * Rebuild for glib/gtk 1.3.15
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 25 Feb 2002 00:06:51 -0500
+
+gst-plugins (0.3.2-2) unstable; urgency=low
+
+  * Build against liblinc1 and newer gnomevfs
+
+ -- David I. Lehn <dlehn@vt.edu>  Sun, 17 Feb 2002 15:52:57 -0500
+
+gst-plugins (0.3.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Many diffs merged upstream
+  * Unversioned plugins upstream, just packaging .so (no .la, .a)
+  * Added cdxa plugin to -misc
+  * Various plugins in -misc moved around and merged upstream
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 15 Feb 2002 21:54:27 -0500
+
+gst-plugins (0.3.1-4) unstable; urgency=low
+
+  * Rebuild for glib/gtk 1.3.13
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed,  6 Feb 2002 02:16:16 -0500
+
+gst-plugins (0.3.1-3) unstable; urgency=low
+
+  * Fix arts symbol problem (add -lartsflow -lartsflow_idl)
+  * Replace m4/gst-sdl.m4 with Debian's sdl.m4
+  * Use SDL_LIBS_FOR_PLUGINS instead of SDL_LIBS
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed, 23 Jan 2002 12:37:00 -0500
+
+gst-plugins (0.3.1-2) unstable; urgency=low
+
+  * Rebuild against fixed gstreamer.pc in libgst-dev 0.3.1-2
+    Should just link to libxml2 now rather than v1 and v2
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed, 23 Jan 2002 02:29:49 -0500
+
 gst-plugins (0.3.1-1) unstable; urgency=low
 
   * Upstream split plugins into new package

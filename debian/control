@@ -2,7 +2,7 @@ Source: gst-plugins
 Section: libs
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), libgst2 (>= 0.3.1), gstreamer-lib-core-dev (>= 0.3.1), xlibs-dev (>= 4.1.0), xlibs-pic (>= 4.1.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.3-dev (>= 1.3.12), libgtk1.3-dev (>= 1.3.12), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0rc3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.14.1b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnome-vfs-dev (>= 1.0.3), libsdl1.2-dev (>= 1.2.2), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20011207), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0.2), libmpeg2-0-dev (>= 0.2.0), libmpeg2dec0-dev (>= 0.2.0), pkg-config (>= 0.8.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), liba52-0-dev (>= 0.7.2), libdvdread2 (>= 0.9.1), lame-dev (>= 3.89), liblame0 (>= 3.89)
+Build-Depends: debhelper (>= 3.0.0), libgstreamer-dev (>= 0.3.3), gstreamer-lib-core-dev (>= 0.3.3), xlibs-dev (>= 4.1.0), xlibs-pic (>= 4.1.0), libxml2-dev (>= 2.4.16), zlib1g-dev (>= 1:1.1.4), libghttp-dev (>= 1.0.6), libglib1.3-dev (>= 1.3.15), libgtk1.3-dev (>= 1.3.15), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0rc3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.14.1b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnomevfs2-dev (>= 1.9.7), libsdl1.2-dev (>= 1.2.3), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20011207), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0.2), libmpeg2-0-dev (>= 0.2.0), libmpeg2dec0-dev (>= 0.2.0), pkg-config (>= 0.10.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), liba52-0-dev (>= 0.7.2), libdvdread2 (>= 0.9.1), lame-dev (>= 3.91), liblame0 (>= 3.91), libid3tag0-dev (>= 0.14.2b)
 Standards-Version: 3.5.6
 
 Package: gstreamer-all
@@ -38,7 +38,7 @@ Description: Development files for various GStreamer library plugins
 Package: gstreamer-a52dec
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-lib-core, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-lib-core, gstreamer-runtime (>= 0.3.3)
 Description: ATSC A/52 audio decoder plugin for GStreamer
  ATSC A/52 audio decoder plugin for GStreamer
  Uses liba52.
@@ -48,7 +48,7 @@ Description: ATSC A/52 audio decoder plugin for GStreamer
 Package: gstreamer-aa
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: AA-lib plugin for GStreamer
  AA-lib plugin for GStreamer
  .
@@ -57,7 +57,7 @@ Description: AA-lib plugin for GStreamer
 Package: gstreamer-alsa
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-lib-core, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-lib-core, gstreamer-runtime (>= 0.3.3)
 Description: ALSA plugin for GStreamer
  ALSA plugin for GStreamer
  .
@@ -66,7 +66,7 @@ Description: ALSA plugin for GStreamer
 Package: gstreamer-arts
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: aRts plugin for GStreamer
  Analog Realtime Synthesizer (aRts) plugin for GStreamer
  .
@@ -75,7 +75,7 @@ Description: aRts plugin for GStreamer
 Package: gstreamer-artsd
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: aRtsd plugin for GStreamer
  Analog Realtime Synthesizer daemon (aRtsd) plugin for GStreamer
  .
@@ -84,14 +84,14 @@ Description: aRtsd plugin for GStreamer
 Package: gstreamer-audiofile
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-lib-misc, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-lib-misc, gstreamer-runtime (>= 0.3.3)
 Description: AudioFile plugin for GStreamer
  AudioFile plugin for GStreamer
 
 Package: gstreamer-avifile
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: avifile plugin for GStreamer
  avifile plugin for GStreamer
  .
@@ -100,7 +100,7 @@ Description: avifile plugin for GStreamer
 Package: gstreamer-cdparanoia
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: cdparanoia plugin for GStreamer
  cdparanoia plugin for GStreamer
  .
@@ -109,35 +109,35 @@ Description: cdparanoia plugin for GStreamer
 Package: gstreamer-colorspace
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: colorspace conversion plugin for GStreamer
  colorspace conversion plugin for GStreamer
 
 Package: gstreamer-dvd
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: DVD plugin for GStreamer
  DVD plugin for GStreamer based on libdvdread.
 
 Package: gstreamer-esd
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: Enlightened Sound Daemon plugin for GStreamer
  Enlightened Sound Daemon plugin for GStreamer
 
 Package: gstreamer-festival
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: Festival speech synthesis plugin for GStreamer
  Festival speech synthesis plugin for GStreamer
 
 Package: gstreamer-flac
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: FLAC plugin for GStreamer
  Free Lossless Audio Codec (FLAC) plugin for GStreamer
  .
@@ -146,28 +146,28 @@ Description: FLAC plugin for GStreamer
 Package: gstreamer-gnomevfs
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: Gnome VFS plugin for GStreamer
  Gnome VFS plugin for GStreamer
 
 Package: gstreamer-gsm
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: gsm plugin for GStreamer
  gsm plugin for GStreamer
 
 Package: gstreamer-jpeg
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: jpeg plugin for GStreamer
  jpeg plugin for GStreamer
 
 Package: gstreamer-lame
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: LAME plugin for GStreamer
  LAME plugin for GStreamer
  .
@@ -179,7 +179,7 @@ Description: LAME plugin for GStreamer
 Package: gstreamer-mad
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: MAD MPEG audio decoder plugin for GStreamer
  MAD MPEG audio decoder plugin for GStreamer
  .
@@ -188,7 +188,7 @@ Description: MAD MPEG audio decoder plugin for GStreamer
 Package: gstreamer-mikmod
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: MikMod decoder plugin for GStreamer
  MikMod decoder plugin for GStreamer.
  MikMod is able to decode the IT, XM, S3M, MTM, 669, STM, ULT, FAR,
@@ -199,7 +199,7 @@ Description: MikMod decoder plugin for GStreamer
 Package: gstreamer-misc
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-lib-core, gstreamer-lib-misc, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-lib-core, gstreamer-lib-misc, gstreamer-runtime (>= 0.3.3)
 Description: Collection of various GStreamer plugins
  Collection of various GStreamer plugins
  .
@@ -208,7 +208,7 @@ Description: Collection of various GStreamer plugins
 Package: gstreamer-mpeg2dec
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: MPEG1 and MPEG2 video decoder plugin for GStreamer
  MPEG1 and MPEG2 video decoder plugin for GStreamer
  Uses libmpeg2
@@ -218,14 +218,14 @@ Description: MPEG1 and MPEG2 video decoder plugin for GStreamer
 Package: gstreamer-oss
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: OSS plugin for GStreamer
  OSS plugin for GStreamer
 
 Package: gstreamer-sdl
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: SDL videosink plugin for GStreamer
  SDL videosink plugin for GStreamer
  .
@@ -234,7 +234,7 @@ Description: SDL videosink plugin for GStreamer
 Package: gstreamer-sid
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: C64 SID decoder plugin for GStreamer
  C64 SID decoder plugin for GStreamer.
  Capable of playing music written for C64 SID chip (MOS 6581) and
@@ -246,7 +246,7 @@ Description: C64 SID decoder plugin for GStreamer
 Package: gstreamer-vorbis
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: Vorbis plugin for GStreamer
  Vorbis plugin for GStreamer
  .
@@ -255,7 +255,7 @@ Description: Vorbis plugin for GStreamer
 Package: gstreamer-x
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.1)
+Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: X videosink plugin for GStreamer
  X videosink plugin for GStreamer
  .

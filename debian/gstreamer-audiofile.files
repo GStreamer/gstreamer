@@ -1,2 +1,2 @@
-usr/lib/gst/libafsrc.*
-usr/lib/gst/libafsink.*
+usr/lib/gst/libafsrc.so
+usr/lib/gst/libafsink.so
