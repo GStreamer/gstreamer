@@ -276,11 +276,6 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   gboolean res = TRUE;
   GstMad *mad;
 
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
   mad = GST_MAD (gst_pad_get_parent (pad));
 
   if (mad->vbr_average == 0)
@@ -325,11 +320,6 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   guint scale = 1;
   gint bytes_per_sample;
   GstMad *mad;
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return res;
-  }
 
   mad = GST_MAD (gst_pad_get_parent (pad));
   
@@ -430,11 +420,11 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
               GstFormat conv_format;
 	      /* convert to TIME */
               conv_format = GST_FORMAT_TIME;
-	      res = gst_mad_convert_sink (pad,
+	      res = gst_pad_convert (mad->sinkpad,
 				peer_format, peer_value,
 				&conv_format, value);
 	      /* and to final format */
-	      res &= gst_mad_convert_src (pad,
+	      res &= gst_pad_convert (pad,
 			GST_FORMAT_TIME, *value,
 			format, value);
 	    }
@@ -458,11 +448,11 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
 	  gint64 samples;
 
           time_format = GST_FORMAT_UNITS;
-	  res = gst_mad_convert_src (pad,
+	  res = gst_pad_convert (pad,
 			GST_FORMAT_TIME, mad->base_time,
 			&time_format, &samples);
 	  /* we only know about our samples, convert to requested format */
-	  res &= gst_mad_convert_src (pad,
+	  res &= gst_pad_convert (pad,
 			  GST_FORMAT_UNITS, mad->total_samples + samples,
 			  format, value);
 	  break;
@@ -497,7 +487,7 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       format = GST_FORMAT_TIME;
 
       /* first bring the src_format to TIME */
-      if (!gst_mad_convert_src (pad,
+      if (!gst_pad_convert (pad,
     		GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
     		&format, &src_offset))
       {
@@ -519,7 +509,7 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
 	format = formats[i];
 
         /* try to convert requested format to one we can seek with on the sinkpad */
-        if (gst_mad_convert_sink (pad, GST_FORMAT_TIME, src_offset, &format, &desired_offset)) 
+        if (gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, src_offset, &format, &desired_offset)) 
         {
           GstEvent *seek_event;
 
@@ -693,7 +683,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
 	    /* see how long the input bytes take */
 	    format = GST_FORMAT_TIME;
-	    if (!gst_mad_convert_sink (pad,
+	    if (!gst_pad_convert (pad,
 			GST_EVENT_DISCONT_OFFSET (event, i).format, value,
 			&format, &time))
 	    {
