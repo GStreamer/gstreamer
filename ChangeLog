@@ -1,5 +1,11 @@
 2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstevent.c: (_gst_event_copy):
+	  Reference source object when copying events, since it'll be
+	  dereferenced on event dereferencing as well.
+
+2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstevent.sgml:
 	* gst/gstevent.c: (gst_event_new_filler_stamped),

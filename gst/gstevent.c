@@ -69,6 +69,9 @@ _gst_event_copy (GstEvent * event)
 #endif
 
   memcpy (copy, event, sizeof (GstEvent));
+  if (GST_EVENT_SRC (copy)) {
+    gst_object_ref (GST_EVENT_SRC (copy));
+  }
 
   /* FIXME copy/ref additional fields */
   switch (GST_EVENT_TYPE (event)) {
