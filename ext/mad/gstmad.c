@@ -1000,7 +1000,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   gboolean new_pts = FALSE;
 
   mad = GST_MAD (gst_pad_get_parent (pad));
-  g_assert (GST_IS_MAD (mad));
+  g_return_if_fail (GST_IS_MAD (mad));
 
   /* handle events */
   if (GST_IS_EVENT (buffer))
