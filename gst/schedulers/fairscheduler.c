@@ -783,7 +783,10 @@ gst_fair_scheduler_reset (GstScheduler * sched)
   g_timer_stop (fsched->iter_timer);
   {
     gulong msecs;
+
+#ifndef GST_DISABLE_GST_DEBUG
     double elapsed = g_timer_elapsed (fsched->iter_timer, &msecs);
+#endif
 
     GST_INFO_OBJECT (fsched,
         "%u iterations in %0.3fs, %.0f iterations/sec.",
@@ -855,7 +858,9 @@ gst_fair_scheduler_add_element (GstScheduler * sched, GstElement * element)
 static void
 gst_fair_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstFairScheduler *fsched = GST_FAIR_SCHEDULER (sched);
+#endif
   GstFairSchedulerPrivElem *priv = ELEM_PRIVATE (element);
 
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
@@ -998,7 +1003,9 @@ static void
 gst_fair_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad,
     GstPad * sinkpad)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstFairScheduler *fsched = GST_FAIR_SCHEDULER (sched);
+#endif
   GstFairSchedulerPrivLink *priv;
   GstElement *src_parent, *sink_parent;
 
@@ -1051,7 +1058,9 @@ static GstElementStateReturn
 gst_fair_scheduler_state_transition (GstScheduler * sched,
     GstElement * element, gint transition)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstFairScheduler *fsched = GST_FAIR_SCHEDULER (sched);
+#endif
   gint old_state, new_state;
 
   GST_DEBUG_OBJECT (sched, "Element %s changing from %s to %s",
@@ -1111,7 +1120,9 @@ static void
 gst_fair_scheduler_scheduling_change (GstScheduler * sched,
     GstElement * element)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstFairScheduler *fsched = GST_FAIR_SCHEDULER (sched);
+#endif
 
   GST_WARNING_OBJECT (fsched, "operation not implemented");
 }

@@ -1,3 +1,8 @@
+2005-02-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/schedulers/fairscheduler.c:
+	  compile with debug disabled
+
 2005-02-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
