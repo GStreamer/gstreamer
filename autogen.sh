@@ -6,6 +6,8 @@ package=GStreamer
 srcfile=gst/gstobject.h
 #DEBUG=defined
 
+CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir'
+
 for i in $@; do
     if test "$i" = "--autogen-noconfigure"; then
         NOCONFIGURE=defined
@@ -58,7 +60,6 @@ version_check ()
   test -z "$NOCHECK" && {
       echo -n "+ checking for $1 >= $VERSION ... "
   } || {
-      echo "+ NOT checking for $1 >= $VERSION, as requested ..."
       return 0
   }
   
@@ -119,6 +120,14 @@ if test "$ac_version" = "2.52d"; then
 fi
 
 
+if test -z "$*"; then
+	echo "This autogen script will automatically run ./configure as:"
+        echo "./configure $CONFIGURE_OPT"
+        echo "To pass any other options, please specify them on the $0"
+        echo "command line."
+        echo
+fi
+
 version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
 version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
@@ -132,11 +141,6 @@ test -f $srcfile || {
 	echo "You must run this script in the top-level $package directory"
 	exit 1
 }
-
-if test -z "$*"; then
-	echo "I am going to run ./configure with no arguments - if you wish "
-        echo "to pass any to it, please specify them on the $0 command line."
-fi
 
 echo "+ creating acinclude.m4"
 cat m4/*.m4 > acinclude.m4
@@ -178,7 +182,13 @@ automake -a -c || {
 	exit 1
 }
 
-CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
+echo
+echo "+ running autogen.sh in gst/cothreads..."
+pushd gst/cothreads > /dev/null
+echo
+./autogen.sh --autogen-noconfigure --autogen-nocheck
+popd > /dev/null
+echo
 
 test -n "$NOCONFIGURE" && {
     echo "skipping configure stage for package $package, as requested."

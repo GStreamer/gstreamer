@@ -145,12 +145,12 @@ aclocal $ACLOCAL_FLAGS || {
 }
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
-echo "+ running libtoolize ..."
-libtoolize --copy --force || {
-	echo
-	echo "libtoolize failed"
-	exit 1
-}
+#echo "+ running libtoolize ..."
+#libtoolize --copy --force || {
+#	echo
+#	echo "libtoolize failed"
+#	exit 1
+#}
 
 echo "+ running autoheader ... "
 autoheader || {

@@ -244,9 +244,9 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   # if we've gotten this far, the user has specifically asked that glib2 be
   # used. if we have no glib2, that is an error.
   if test "x$HAVE_GLIB2" = "xno"; then
-    AC_MSG_ERROR(no glib2 found)
+    AC_MSG_ERROR(no glib2 found, try --disable-glib2)
   fi
-], disabled, [
+], enabled, [
   AC_DEFINE(USE_GLIB2)
   GST_EXT_CFLAGS="$GST_EXT_CFLAGS -DUSE_GLIB2"
 ])
@@ -286,7 +286,7 @@ if test x$USE_GLIB2 = xno; then
   LIBXML_PKG=', libxml >= 1.8.1'
   AC_PATH_PROG(XML_CONFIG, xml-config, no)
   if test x$XML_CONFIG = xno; then
-    AC_MSG_ERROR(Couldn't find $LIBXML_PKG)
+    AC_MSG_ERROR(Couldn't find xml-config -- Need version 1.8.1 or better of libxml)
   fi
   XML_LIBS="`xml-config --libs`"
   XML_CFLAGS="`xml-config --cflags`"
@@ -295,10 +295,12 @@ if test x$USE_GLIB2 = xno; then
     $XML_LIBS)
 else
   LIBXML_PKG=', libxml-2.0'
-  PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
-  AC_PATH_PROG(XML_CONFIG, xml-config, no)
-  AC_DEFINE(HAVE_LIBXML2)
-  GST_EXT_CFLAGS="$GST_EXT_CFLAGS -DHAVE_LIBXML2"
+  PKG_CHECK_MODULES(XML, libxml-2.0, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
+  if test "x$HAVE_LIBXML2" = "xyes"; then
+    AC_DEFINE(HAVE_LIBXML2)
+  else
+    AC_ERROR(Need libxml2 for glib2 builds)
+  fi
 fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
@@ -331,8 +333,10 @@ dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
 
+dnl FIXME: simplify all this down using a few m4 macros
+
 AC_ARG_ENABLE(libmmx,
-[  --enable-libmmx              use libmmx, if available],
+AC_HELP_STRING([--enable-libmmx][use libmmx, if available]),
 [case "${enableval}" in
   yes) USE_LIBMMX=$HAVE_LIBMMX ;;
   no)  USE_LIBMMX=no ;;
@@ -341,7 +345,7 @@ esac],
 [USE_LIBMMX=$HAVE_LIBMMX]) dnl Default value
 
 AC_ARG_ENABLE(atomic,
-[  --enable-atomic              use atomic reference counting header],
+AC_HELP_STRING([--enable-atomic][use atomic reference counting header]),
 [case "${enableval}" in
   yes) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
   noset) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
@@ -351,7 +355,7 @@ esac],
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
 AC_ARG_ENABLE(plugin-builddir,
-[  --enable-plugin-builddir     allow tests/demos to use non-installed plugins ],
+AC_HELP_STRING([--enable-plugin-builddir][allow tests/demos to use non-installed plugins]),
 [case "${enableval}" in
   yes) PLUGINS_USE_BUILDDIR=yes ;;
   no)  PLUGINS_USE_BUILDDIR=no ;;
@@ -360,28 +364,28 @@ esac],
 [PLUGINS_USE_BUILDDIR=no]) dnl Default value
 
 AC_ARG_ENABLE(debug,
-[  --enable-debug               compile with -g debugging info],
+AC_HELP_STRING([--disable-debug][disable addition of -g debugging info]),
 [case "${enableval}" in
   yes) USE_DEBUG=yes ;;
   no)  USE_DEBUG=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
 esac], 
-[USE_DEBUG=no]) dnl Default value
+[USE_DEBUG=yes]) dnl Default value
 
 AC_ARG_ENABLE(DEBUG,
-[  --enable-DEBUG               compiles in a large number of debugging messages],
+AC_HELP_STRING([--disable-DEBUG][disables compilation of debugging messages]),
 [case "${enableval}" in
   yes) ENABLE_DEBUG=yes ;;
   no)  ENABLE_DEBUG=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-DEBUG) ;;
 esac], 
-[ENABLE_DEBUG=no]) dnl Default value
+[ENABLE_DEBUG=yes]) dnl Default value
 if test x$ENABLE_DEBUG = xyes; then
   AC_DEFINE(GST_DEBUG_ENABLED, 1, [Define if DEBUG statements should be compiled in])
 fi
 
 AC_ARG_ENABLE(INFO,
-[  --disable-INFO               disables compilation of informational messages],
+AC_HELP_STRING([--disable-INFO][disables compilation of informational messages]),
 [case "${enableval}" in
   yes) ENABLE_INFO=yes ;;
   no)  ENABLE_INFO=no ;;
@@ -393,7 +397,7 @@ if test x$ENABLE_INFO = xyes; then
 fi
 
 AC_ARG_ENABLE(debug-color,
-[  --disable-debug-color        disables color output of DEBUG and INFO output],
+AC_HELP_STRING([--disable-debug-color][disables color output of DEBUG and INFO output]),
 [case "${enableval}" in
   yes) ENABLE_DEBUG_COLOR=yes ;;
   no)  ENABLE_DEBUG_COLOR=no ;;
@@ -405,7 +409,7 @@ if test "x$ENABLE_DEBUG_COLOR" = xyes; then
 fi
 
 AC_ARG_ENABLE(profiling,
-[  --enable-profiling           adds -pg to compiler commandline, for profiling],
+AC_HELP_STRING([--enable-profiling][adds -pg to compiler commandline, for profiling]),
 [case "${enableval}" in
   yes) USE_PROFILING=yes ;;
   no)  UES_PROFILING=no ;;
@@ -420,7 +424,7 @@ else
   GST_CONFIG_DIR=/etc/gstreamer
 fi
 AC_ARG_WITH(configdir,
-[  --with-configdir             specify path to use for configdir],
+AC_HELP_STRING([--with-configdir][specify path to use for plugin and command completion registries]),
 [case "${withval}" in
   yes) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
   no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
@@ -429,7 +433,7 @@ esac],
 [:]) dnl Default value
 
 AC_ARG_ENABLE(docs-build,
-[  --enable-docs-build          enable building of documentation],
+AC_HELP_STRING([--enable-docs-build][enable building of documentation]),
 [case "${enableval}" in
   yes) if $HAVE_GTK_DOC; then BUILD_DOCS=yes; else AC_MSG_ERROR([you don't have gtk-doc, so don't use --docs-build]); fi; ;;
   no)  BUILD_DOCS=no ;;
@@ -437,18 +441,19 @@ AC_ARG_ENABLE(docs-build,
 esac], 
 [BUILD_DOCS=no]) dnl Default value
 
-AC_ARG_ENABLE(plugin-docs,
-[  --enable-plugin-docs         enable the building of plugin documentation
-                               (this is currently broken, so off by default)],
-[case "${enableval}" in
-  yes) BUILD_PLUGIN_DOCS=yes ;;
-  no)  BUILD_PLUGIN_DOCS=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-docs) ;;
-esac], 
-[BUILD_PLUGIN_DOCS=no]) dnl Default value
+dnl AC_ARG_ENABLE(plugin-docs,
+dnl [  --enable-plugin-docs         enable the building of plugin documentation
+dnl                                (this is currently broken, so off by default)],
+dnl [case "${enableval}" in
+dnl   yes) BUILD_PLUGIN_DOCS=yes ;;
+dnl   no)  BUILD_PLUGIN_DOCS=no ;;
+dnl   *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-docs) ;;
+dnl esac], 
+dnl [BUILD_PLUGIN_DOCS=no]) dnl Default value
+BUILD_PLUGIN_DOCS=no
 
 AC_ARG_ENABLE(tests,
-[  --disable-tests              disable building test apps],
+AC_HELP_STRING([--disable-tests][disable building test apps]),
 [case "${enableval}" in
   yes) BUILD_TESTS=yes ;;
   no)  BUILD_TESTS=no ;;
@@ -457,7 +462,7 @@ esac],
 [BUILD_TESTS=yes]) dnl Default value
 
 AC_ARG_ENABLE(examples,
-[  --disable-examples           disable building examples],
+AC_HELP_STRING([--disable-examples][disable building examples]),
 [case "${enableval}" in
   yes) BUILD_EXAMPLES=yes ;;
   no)  BUILD_EXAMPLES=no ;;
@@ -467,28 +472,6 @@ esac],
 
 dnl Next, check for the optional components:
 dnl ========================================
-
-
-AC_DEFUN(GST_SUBSYSTEM_DISABLE,
-[dnl
-dnl Add a subsystem --disable flag and all the necessary symbols and substitions
-dnl
-AC_ARG_ENABLE(translit([$1], A-Z, a-z), 
-[  ]builtin(format, --disable-%-17s  disable %s, translit([$1], A-Z, a-z), $2),
-[ case "${enableval}" in
-    yes) GST_DISABLE_[$1]=no ;;
-    no) GST_DISABLE_[$1]=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit([$1], A-Z, a-z)) ;;
-  esac],
-[GST_DISABLE_[$1]=no]) dnl Default value
-if test x$GST_DISABLE_[$1] = xyes; then
-  AC_DEFINE(GST_DISABLE_[$1], 1, [Disable $2])
-  GST_DISABLE_[$1]_DEFINE=-DGST_DISABLE_[$1]
-fi
-AM_CONDITIONAL(GST_DISABLE_[$1], test x$GST_DISABLE_[$1] = xyes)
-AC_SUBST(GST_DISABLE_[$1]_DEFINE)
-GST_SUBSYSTEM_DISABLE_DEFINES="$GST_SUBSYTEM_DISABLE_DEFINES $GST_DISABLE_[$1]_DEFINE"
-])
 
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
@@ -617,6 +600,8 @@ GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include -I\$(top_srcdir)"
 AC_SUBST(GST_CFLAGS, "$GST_EXT_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$GST_EXT_LIBS $GST_INT_LIBS")
 
+AC_CONFIG_SUBDIRS(gst/cothreads)
+
 dnl ##################################################
 dnl # Prepare informative messages to display at end #
 dnl ##################################################
@@ -631,7 +616,8 @@ This option is for development purposes only: binaries built with
 it should be used with code in the build tree only.  To build an
 installable version, use ./configure without the --enable-plugin-builddir
 option.  Note that the autogen.sh script supplies the plugin builddir
-option automatically - it cannot be used to configure installable builds.
+option automatically -- run ./autogen.sh --disable-plugin-buildddir to make
+an installable build.
 
 "
 fi

@@ -53,7 +53,7 @@ endif
 EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gobject2gtk.c gobject2gtk.h gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
 SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS) schedulers
-DIST_SUBDIRS = types elements autoplug schedulers
+DIST_SUBDIRS = types elements autoplug schedulers cothreads
 
 libgst_la_SOURCES =		\
 	cothreads.c		\

@@ -157,3 +157,26 @@ AC_DEFUN(GST_CHECK_LIBHEADER,
   AC_SUBST(HAVE_[$1])
 ]
 )
+
+dnl
+dnl Add a subsystem --disable flag and all the necessary symbols and substitions
+dnl
+dnl GST_SUBSYSTEM_DISABLE(SYSNAME, [subsystem name])
+dnl
+AC_DEFUN(GST_SUBSYSTEM_DISABLE,
+[AC_ARG_ENABLE(translit([$1], A-Z, a-z), 
+[  ]builtin(format, --disable-%-17s  disable %s, translit([$1], A-Z, a-z), $2),
+[ case "${enableval}" in
+    yes) GST_DISABLE_[$1]=no ;;
+    no) GST_DISABLE_[$1]=yes ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit([$1], A-Z, a-z)) ;;
+  esac],
+[GST_DISABLE_[$1]=no]) dnl Default value
+if test x$GST_DISABLE_[$1] = xyes; then
+  AC_DEFINE(GST_DISABLE_[$1], 1, [Disable $2])
+  GST_DISABLE_[$1]_DEFINE=-DGST_DISABLE_[$1]
+fi
+AM_CONDITIONAL(GST_DISABLE_[$1], test x$GST_DISABLE_[$1] = xyes)
+AC_SUBST(GST_DISABLE_[$1]_DEFINE)
+GST_SUBSYSTEM_DISABLE_DEFINES="$GST_SUBSYTEM_DISABLE_DEFINES $GST_DISABLE_[$1]_DEFINE"
+])
