@@ -73,14 +73,20 @@ htmlinst:
 	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
 	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
 	    $(INSTALL_DATA) $(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
-	    for a in $(png_files); do $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; done \
+	    for a in "x" $(png_files); do \
+	    if [ "x$$a" != "xx" ] ; then \
+	    $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
+	    fi; done \
 	else \
 	    if [ -r $(srcdir)/$(manualname)/$(htmlname) ] ; then \
 	        echo "Installing $(srcdir)/$(manualname)" ; \
 	        $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
 		$(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
 	        $(INSTALL_DATA) $(srcdir)/$(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
-		for a in $(png_files); do $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; done \
+		for a in "x" $(png_files); do \
+		if [ "x$$a" != "xx" ] ; then \
+		$(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
+		fi; done \
 	    else \
 	        echo "NOT installing HTML documentation: not present, and can't generate" ; \
 	    fi \
