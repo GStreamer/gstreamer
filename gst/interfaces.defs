@@ -40,7 +40,7 @@
   (return-type "GType")
 )
 
-(define-method list_channels
+(define-method list_colorbalance_channels
   (of-object "GstColorBalance")
   (c-name "gst_color_balance_list_channels")
   (return-type "const-GList*")
@@ -478,6 +478,11 @@
   (parent "GstObject")
   (c-name "GstColorBalanceChannel")
   (gtype-id "GST_TYPE_COLOR_BALANCE_CHANNEL")
+  (fields
+    '("gchar*" "label")
+    '("gint" "min_value")
+    '("gint" "max_value")
+  )
 )
 
 (define-interface Mixer

@@ -125,3 +125,23 @@ _wrap_gst_mixer_list_tracks(PyGObject *self)
 		
     return py_list;
 }
+%%
+override gst_color_balance_list_channels noargs
+static PyObject *
+_wrap_gst_color_balance_list_channels(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+
+    list = gst_color_balance_list_channels(GST_COLOR_BALANCE(self->obj));
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+        GstColorBalanceChannel *channel = (GstColorBalanceChannel*)l->data;
+        PyObject *py_channel = pygobject_new(G_OBJECT(channel));
+        PyList_Append(py_list, py_channel);
+        Py_DECREF(py_channel);
+    }
+
+    return py_list;
+}

@@ -1,5 +1,11 @@
 2004-11-29  Johan Dahlin  <johan@gnome.org>
 
+	* gst/interfaces.defs: 
+	* gst/interfaces.override (_wrap_gst_color_balance_list_channels): 
+	Apply patch from Zaheer Abbas Merali to implement this method. Not
+	that it's not .list_channels() due to conflict with a method of
+	the same name in the GstTuner interface
+
 	* gst/gstmodule.c: 
 	* gst/gst.override: Apply patch from Brian Warner to throw a link
 	error when element and pad linking fails.
