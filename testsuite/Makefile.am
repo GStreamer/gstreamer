@@ -1,8 +1,11 @@
 SUBDIRS=
 DIST_SUBDIRS=
 
+GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
+
 $(TESTS):
-	$(GST_TOOLS_DIR)/gst-register --gst-plugin-path=$(top_builddir)
+	@echo -e '\nrunning gst-register...\n'
+	$(GST_TOOLS_DIR)/gst-register --gst-mask=0 --gst-plugin-path=$(GST_PLUGIN_PATH)
 
 TESTS=$(GST_TOOLS_DIR)/gst-compprep
 
