@@ -25,11 +25,9 @@
 
 #undef HAVE_RDTSC
 
-#undef HAVE_GDK_PIXBUF
 #undef HAVE_LIBGHTTP
 #undef HAVE_LIBMMX
 #undef HAVE_LIBXV
-#undef HAVE_LIBAUDIOFILE
 #undef HAVE_OSS
 #undef HAVE_XAUDIO
 #undef HAVE_CSSAUTH

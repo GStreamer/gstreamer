@@ -359,6 +359,32 @@ dnl *** Define the conditional as appropriate
 AM_CONDITIONAL(USE_[$1], test x$USE_[$1] = xyes)
 ])
 
+dnl Use a -config program which accepts --cflags and --libs parameters
+dnl to set *_CFLAGS and *_LIBS and check existence of a feature.
+dnl Richard Boulton <richard-alsa@tartarus.org>
+dnl Last modification: 26/06/2001
+dnl GST_CHECK_CONFIGPROG(FEATURE-NAME, CONFIG-PROG-FILENAME)
+dnl
+dnl This check was written for GStreamer: it should be renamed and checked
+dnl for portability if you decide to use it elsewhere.
+dnl
+AC_DEFUN(GST_CHECK_CONFIGPROG,
+[
+  AC_PATH_PROG([$1]_CONFIG, [$2], no)
+  if test x$[$1]_CONFIG = xno; then
+    [$1]_LIBS=
+    [$1]_CFLAGS=
+    HAVE_[$1]=no
+  else
+    [$1]_LIBS=`[$2] --libs`
+    [$1]_CFLAGS=`[$2] --cflags`
+    HAVE_[$1]=yes
+  fi
+  AC_SUBST([$1]_LIBS)
+  AC_SUBST([$1]_CFLAGS)
+])
+
+
 dnl Perform a check for existence of ARTSC
 dnl Richard Boulton <richard-alsa@tartarus.org>
 dnl Last modification: 26/06/2001
