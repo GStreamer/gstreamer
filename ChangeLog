@@ -1,5 +1,13 @@
 2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* gst-libs/gst/play/play.c: (gst_play_set_location),
+	(gst_play_set_data_src), (gst_play_set_video_sink),
+	(gst_play_set_audio_sink), (gst_play_set_visualization),
+	(gst_play_connect_visualization), (gst_play_get_framerate):
+	  use a macro to look up elements from hash table
+
+2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup),
 	(gst_play_get_length_callback), (gst_play_set_location),
 	(gst_play_seek_to_time), (gst_play_set_data_src),
