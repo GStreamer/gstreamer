@@ -287,7 +287,14 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
       }
       if (codec_name)
-        *codec_name = g_strdup ("Mcrosoft RLE");
+        *codec_name = g_strdup ("Microsoft RLE");
+      break;
+
+    case GST_MAKE_FOURCC ('X', 'x', 'a', 'n'):
+      caps = gst_caps_new_simple ("video/x-xan",
+          "wcversion", G_TYPE_INT, 4, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Xan Wing Commander 4");
       break;
 
     default:
@@ -567,6 +574,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
     GST_MAKE_FOURCC ('R', 'L', 'E', ' '),
     GST_MAKE_FOURCC ('D', 'I', 'B', ' '),
+    GST_MAKE_FOURCC ('X', 'x', 'a', 'n'),
     /* FILL ME */
     0
   };

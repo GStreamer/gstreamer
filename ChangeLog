@@ -3,6 +3,15 @@
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_video_caps_with_data),
 	(gst_riff_create_video_template_caps):
+	  Add wing commander format mimetype/fourccs.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_massage_index):
+	  Don't crash if some value is 0.
+
+2004-10-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_video_template_caps):
 	  Add DIB fourcc (raw, palettized 8-bit RGB).
 	* gst-libs/gst/riff/riff-read.c:
 	(gst_riff_read_strf_vids_with_data):
