@@ -537,7 +537,7 @@ gst_filesrc_get (GstPad *pad)
     region.offset = src->curoffset;
     region.size = readsize;
     map = g_tree_search (src->map_regions,
-			 (GSearchFunc) gst_filesrc_search_region_match,
+			 (GCompareFunc) gst_filesrc_search_region_match,
 			 &region);
 
     // if we found an exact match, subbuffer it
