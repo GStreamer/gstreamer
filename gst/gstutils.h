@@ -78,7 +78,7 @@ type_as_function ## _get_type (void)						\
       (GInstanceInitFunc) type_as_function ## _init				\
     };										\
     object_type = g_type_register_static (parent_type_macro, #type,		\
-	&object_info, 0);							\
+	&object_info, (GTypeFlags) 0);							\
     additional_initializations (object_type);					\
   }										\
   return object_type;								\

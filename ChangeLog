@@ -1,3 +1,10 @@
+2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstthread.c:
+	  fix docs
+	* gst/gstutils.h:
+	  fix GST_BOILERPLATE_FULL to not throw casting errors on C++
+
 2004-03-30  Benjamin Otte  <otte@gnome.org>
 
 	* gst/elements/gstbufferstore.c: (gst_buffer_store_get_buffer):

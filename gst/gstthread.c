@@ -299,7 +299,7 @@ gst_thread_new (const gchar * name)
 /**
  * gst_thread_get_current:
  *
- * Create a new thread with the given name.
+ * Gets the current GstThread.
  *
  * Returns: The current GstThread or NULL if you are not running inside a 
  *          #GstThread.
