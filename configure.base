@@ -1244,8 +1244,8 @@ gstreamer.pc
 gstreamer-uninstalled.pc
 SUBSTFOR configure.in:gstreamer.spec])
 SUBSTFOR configure.in:AC_OUTPUT_COMMANDS([chmod +x gstreamer-config;
-SUBSTFOR configure.in:echo "$infomessages"])
+SUBSTFOR configure.in:echo "$infomessages"], infomessages="$infomessages")
 SUBSTFOR configure.ac:gstreamer.spec,
 SUBSTFOR configure.ac:chmod +x gstreamer-config
-SUBSTFOR configure.ac:echo "$infomessages"
+SUBSTFOR configure.ac:echo "$infomessages", infomessages="$infomessages"
 SUBSTFOR configure.ac:)
