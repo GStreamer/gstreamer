@@ -1337,7 +1337,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
 
   g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_factory));
