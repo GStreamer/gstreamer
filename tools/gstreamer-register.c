@@ -178,6 +178,7 @@ static void save_registry(const char *destfile,
 int main(int argc,char *argv[]) 
 {
     xmlDocPtr doc;
+    xmlNodePtr node;
 
     /* Mode of the file we're saving the repository to; */
     mode_t newmode;
@@ -194,13 +195,13 @@ int main(int argc,char *argv[])
         anyway. */
     unlink(GLOBAL_REGISTRY_FILE);
 
-    /* Init gst /*
+    /* Init gst */
     _gst_plugin_spew = TRUE;
     _gst_warn_old_registry = FALSE;
     gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
     gst_init(&argc,&argv);
 
-    /* Check args /*
+    /* Check args */
     if (argc != 1) usage(argv[0]);
 
     /* Check that directory for config exists */
@@ -208,7 +209,8 @@ int main(int argc,char *argv[])
     
     /* Read the plugins */
     doc = xmlNewDoc("1.0");
-    doc->xmlRootNode = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
+    node = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
+    xmlDocSetRootElement (doc, node);
     gst_plugin_save_thyself(doc->xmlRootNode);
 
     /* Save the registry to a tmp file. */
