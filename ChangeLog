@@ -1,3 +1,12 @@
+=== release 0.8.8 ===
+
+2004-12-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Releasing 0.8.8, "I'll Take Care Of You"
+
 2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
@@ -313,7 +322,7 @@
 2004-12-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/programs.xml:
-      Added more gst-launch examples.
+	  Added more gst-launch examples.
 
 2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -379,7 +388,7 @@
 	Reverted to 1.110 until this makes the testsuite and various
 	apps work.
 
-2004-12-01  Christian Fredrik Kalager Schaller christian@fluendo.com 
+2004-12-01  Christian Fredrik Kalager Schaller <christian@fluendo.com>
 
 	* docs/upload.mak: fix included CVS conflict strings
 
@@ -477,7 +486,7 @@
 2004-11-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/appendix-checklist.xml:
-	  Add some random notes on thinks to check when writing an element.
+	  Add some random notes on things to check when writing an element.
 	  This list can be extended as people see fit.
 
 2004-11-23  Martin Soto  <martinsoto@users.sourceforge.net>

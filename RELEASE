@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.7 "A Cruise"
+GStreamer: Release notes for GStreamer 0.8.8 "I'll Take Care Of You"
         
 
 The GStreamer team is happy to announce a new release
@@ -22,8 +22,39 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * important thread fix for playback
-      * typefind fix
+      * Threading fixes
+      * Opt scheduler fixes
+      * Documentation updates
+      * New translation: Norwegian Bokmaal (Kjartan Maraas)
+      * New translation: Italian (Luca Ferretti)
+      * New scheduler: fair
+
+Bugs fixed in this release
+    
+      * 144804 : opt scheduler breaks on playing a pipeline
+      * 148787 : clocks are not distributed correctly
+      * 149936 : [PATCH] [build] GStreamer without registry support do not...
+      * 150051 : fakesrc needs a data rate parameter that timestamps the d...
+      * 151605 : impossible to play .mpg or avi files with gst-launch-ext
+      * 153882 : [PATCH] The win32 version of gstenumtypes is not up to date
+      * 154061 : optimal scheduler doesn't get freed
+      * 156063 : infinite loop and 100% CPU with some MP3
+      * 156179 : gstreamer typefind plugin information from gst-inspect is...
+      * 157127 : Cleanup of issues reported by sparse
+      * 157263 : use G_SIGNAL_TYPE_STATIC_SCOPE for GstBuffers in handoff ...
+      * 158018 : gstreamer typefind stalls on these JPEG files
+      * 158162 : opt deadlock
+      * 158163 : [api] Problem querying on ghostpads
+      * 159852 : [PATCH] [api] g_signal_emit thread safety issues
+      * 160019 : segfault when error occurs playback of uri containing per...
+      * 160220 : gst_pad_set_explicit_caps of a NULL caps doesn't work
+
+API changed in this release
+     
+
+- API additions:
+    
+* A new function, gst_plugin_get_version, has been added.
 
 Download
 
@@ -58,5 +89,24 @@ GNOME applications including sound-juicer, totem and RhythmBox.
   
 Contributors to this release
     
+      * Benjamin Otte
+      * Christian Schaller
+      * Christophe Fergeau
+      * Daniel Gazard
+      * David Schleef
+      * Edward Hervey
+      * Johan Dahlin
+      * Luca Ferretti
+      * Kjartan Maraas
+      * Martin Soto
+      * Matt Kraai
+      * Ronald Bultje
+      * Sebastien Cote
+      * Stefan Kost
+      * Stephane Loeuillet
+      * Steve Lhomme
+      * Thomas Vander Stichele
+      * William Jon McCann
       * Wim Taymans
+      * Zaheer Abbas Merali
  
