@@ -53,7 +53,7 @@ gst_play_audio_setup (GstPlay *play, GError **error)
 		return FALSE;
 	}
 
-	/* creating audio_sink from osssink (?) */
+	/* creating fake audio_sink */
 	play->audio_sink = gst_element_factory_make ("fakesink", "fake_audio");
 	if (play->audio_sink == NULL)
 	{
@@ -61,10 +61,6 @@ gst_play_audio_setup (GstPlay *play, GError **error)
 		return FALSE;
 	}
 	
-	g_signal_connect (
-			G_OBJECT (play->audio_sink), "eos",
-			G_CALLBACK (callback_audio_sink_eos), play);
-
 	gst_bin_add_many (
 			GST_BIN (play->pipeline), play->volume,
 			play->audio_sink, NULL);
@@ -126,10 +122,6 @@ gst_play_audiot_setup (GstPlay *play, GError **error)
 		return FALSE;
 	}
 	
-	g_signal_connect (
-			G_OBJECT (play->audio_sink), "eos",
-			G_CALLBACK (callback_audio_sink_eos), play);
-
 	gst_bin_add_many (
 			GST_BIN (play->pipeline), play->volume,
 			play->audio_sink, NULL);
@@ -166,6 +158,13 @@ gst_play_audiot_set_audio (GstPlay *play, GstElement *audio_sink)
 	gst_bin_add (GST_BIN (play->pipeline), play->audio_sink);
 	gst_element_connect (play->volume, play->audio_sink);
 
+	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
+	
+	if (play->audio_sink_element != NULL) {
+		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
+				  G_CALLBACK (callback_audio_sink_eos), play);
+	}
+	
 	return TRUE;
 }
 
@@ -174,10 +173,10 @@ static gboolean
 gst_play_audiot_set_auto (GstPlay *play, GstElement *autoplugger)
 {
 
-	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
 	
-	if (play->autoplugger){
+	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger before creating a new one */
 		gst_element_disconnect (play->autoplugger, play->volume);
 		gst_element_disconnect (play->autoplugger, play->source);
@@ -251,12 +250,12 @@ gst_play_audioht_setup (GstPlay *play, GError **error)
 
 	/* create audiosink. */
 	play->audio_sink = gst_element_factory_make ("fakesink", "play_audio");
-	if (!play->audio_sink)
-		g_warning ("You need the fakesink element to use this program.\n");
-
-	g_signal_connect (G_OBJECT (play->audio_sink), "eos",
-			  G_CALLBACK (callback_audio_sink_eos), play);
-
+	if (play->audio_sink == NULL)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
+	
 	gst_bin_add_many (
 				GST_BIN (audio_thread), audio_queue, play->volume,
 				play->audio_sink, NULL);
@@ -303,6 +302,13 @@ gst_play_audioht_set_audio (GstPlay *play, GstElement *audio_sink)
 	gst_bin_add (GST_BIN (audio_thread), play->audio_sink);
 	gst_element_connect (play->volume, play->audio_sink);
 
+	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
+	
+	if (play->audio_sink_element != NULL) {
+		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
+				  G_CALLBACK (callback_audio_sink_eos), play);
+	}
+	
 	return TRUE;
 }
 
@@ -317,7 +323,7 @@ gst_play_audioht_set_auto (GstPlay *play, GstElement *autoplugger)
 
 	audio_thread = g_hash_table_lookup(play->other_elements, "audio_thread");
 
-	if (play->autoplugger){
+	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger before creating a new one */
 		gst_element_disconnect (play->autoplugger, audio_thread);
 		gst_element_disconnect (play->autoplugger, play->source);
@@ -488,7 +494,8 @@ gst_play_video_setup (GstPlay *play, GError **error)
 
 
 static gboolean
-gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger){
+gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
+{
 
 	GstElement *audio_bin, *video_bin, *work_thread;
 
@@ -499,7 +506,7 @@ gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger){
 	video_bin = g_hash_table_lookup(play->other_elements, "video_bin");
 	work_thread = g_hash_table_lookup(play->other_elements, "work_thread");
 
-	if (play->autoplugger){
+	if (play->autoplugger) {
 		/* we need to remove the existing autoplugger before creating a new one */
 		gst_element_disconnect (play->autoplugger, audio_bin);
 		gst_element_disconnect (play->autoplugger, play->source);
@@ -531,7 +538,7 @@ gst_play_video_set_video (GstPlay *play, GstElement *video_sink)
 	video_bin = g_hash_table_lookup(play->other_elements, "video_bin");
 	video_mate = g_hash_table_lookup(play->other_elements, "colorspace");
 
-	if (play->video_sink){
+	if (play->video_sink) {
 		gst_element_disconnect (video_mate, play->video_sink);
 		gst_bin_remove (GST_BIN (video_bin), play->video_sink);
 	}
@@ -541,7 +548,7 @@ gst_play_video_set_video (GstPlay *play, GstElement *video_sink)
 
 	play->video_sink_element = gst_play_get_sink_element (play, video_sink);
 
-	if (play->video_sink_element != NULL){
+	if (play->video_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->video_sink_element), "have_xid",
 				  G_CALLBACK (callback_video_have_xid), play);
 		g_signal_connect (G_OBJECT (play->video_sink_element), "have_size",
@@ -574,8 +581,8 @@ gst_play_video_set_audio (GstPlay *play, GstElement *audio_sink)
 
 	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
 
-	if (play->audio_sink_element != NULL){
-		g_signal_connect (G_OBJECT (play->audio_sink), "eos",
+	if (play->audio_sink_element != NULL) {
+		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
 				  G_CALLBACK (callback_audio_sink_eos), play);
 	}
 
@@ -633,17 +640,15 @@ gst_play_videots_setup (GstPlay *play, GError **error)
 		return FALSE;
 	}
 
-	/* create audiosink.
-	FIXME : Should use gconf to choose the right one */
-	play->audio_sink = gst_element_factory_make ("osssink", "play_audio");
+	/* creating audio_sink element */
+	play->audio_sink = gst_element_factory_make ("fakesink", "fake_audio");
 	if (!play->audio_sink)
-		g_warning ("You need the osssink element to use this program.\n");
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
+	play->audio_sink_element = NULL;
 	
-	g_object_set (G_OBJECT (play->audio_sink), "fragment", 0x00180008, NULL);
-	g_signal_connect (
-			G_OBJECT (play->audio_sink), "eos",
-			G_CALLBACK (callback_audio_sink_eos), play);
-
 	audio_queue = gst_element_factory_make ("queue", "audio_queue");
 	if (!audio_queue)
 	{
@@ -728,7 +733,8 @@ gst_play_videots_setup (GstPlay *play, GError **error)
 
 
 static gboolean
-gst_play_videots_set_auto (GstPlay *play, GstElement *autoplugger){
+gst_play_videots_set_auto (GstPlay *play, GstElement *autoplugger)
+{
 
 	GstElement *audio_bin, *auto_identity, *work_thread;
 
@@ -739,8 +745,9 @@ gst_play_videots_set_auto (GstPlay *play, GstElement *autoplugger){
 	auto_identity = g_hash_table_lookup(play->other_elements, "auto_identity");
 	work_thread = g_hash_table_lookup(play->other_elements, "work_thread");
 
-	if (play->autoplugger){
-		/* we need to remove the existing autoplugger before creating a new one */
+	if (play->autoplugger) {
+		/* we need to remove the existing autoplugger 
+		 * before creating a new one */
 		gst_element_disconnect (play->autoplugger, audio_bin);
 		gst_element_disconnect (play->autoplugger, play->source);
 		gst_element_disconnect (play->autoplugger, auto_identity);
@@ -765,12 +772,12 @@ gst_play_videots_set_video (GstPlay *play, GstElement *video_sink)
 {
 	GstElement *video_mate;
 	
-	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
 	
-	video_mate = g_hash_table_lookup(play->other_elements, "video_queue");
+	video_mate = g_hash_table_lookup (play->other_elements, "video_queue");
 
-	if (play->video_sink){
+	if (play->video_sink) {
 		gst_element_disconnect (video_mate, play->video_sink);
 		gst_bin_remove (GST_BIN (play->pipeline), play->video_sink);
 	}
@@ -787,7 +794,7 @@ gst_play_videots_set_audio (GstPlay *play, GstElement *audio_sink)
 {
 	GstElement *audio_bin;
 	
-	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
 	
 	audio_bin = g_hash_table_lookup(play->other_elements, "audio_bin");
@@ -802,6 +809,12 @@ gst_play_videots_set_audio (GstPlay *play, GstElement *audio_sink)
 	gst_bin_add (GST_BIN (audio_bin), play->audio_sink);
 	gst_element_connect (play->volume, play->audio_sink);
 
+	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
+	
+	if (play->audio_sink_element != NULL) {
+		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
+				  G_CALLBACK (callback_audio_sink_eos), play);
+	}
 
 	return TRUE;
 }
