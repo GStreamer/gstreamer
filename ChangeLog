@@ -1,3 +1,12 @@
+2004-11-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/goom/gstgoom.c: (gst_goom_class_init), (gst_goom_init),
+	(gst_goom_dispose), (gst_goom_sinkconnect), (gst_goom_chain),
+	(gst_goom_change_state), (plugin_init):
+	Use the bytestream adapter so goom doesn't depend on the input
+	buffer size.
+	Add a debug category
+
 2004-11-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
