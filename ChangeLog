@@ -1,5 +1,10 @@
 2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+          bump nano to 2, first prerelease
+
+2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/alsa/Makefile.am:
           these are user test apps, not automatic testsuite tests
 
