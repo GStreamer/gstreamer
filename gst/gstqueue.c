@@ -661,11 +661,11 @@ restart:
             GstScheduler *sched;
 
             GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
-            GST_QUEUE_MUTEX_UNLOCK;
             sched = gst_pad_get_scheduler (queue->sinkpad);
             if (!sched || gst_scheduler_interrupt (sched, GST_ELEMENT (queue))) {
               goto ignore_interrupt;
             }
+            GST_QUEUE_MUTEX_UNLOCK;
             /* if we got here because we were unlocked after a
              * flush, we don't need to add the buffer to the
              * queue again */

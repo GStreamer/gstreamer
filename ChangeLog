@@ -1,3 +1,8 @@
+2005-03-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_chain):
+	  Fix double unlock (#169073).
+
 2005-03-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_locked_flush), (gst_queue_chain),
