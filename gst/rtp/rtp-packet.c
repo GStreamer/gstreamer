@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-/* On Panther, netinet/in.h doesn't define in_addr_t */
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <glib.h>

@@ -718,7 +718,7 @@ gst_avi_demux_stream_avih (GstAviDemux *avi,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_avih)) {
     g_warning ("Too small avih (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), sizeof (gst_riff_avih));
+	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_avih));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -965,7 +965,7 @@ gst_avi_demux_stream_odml (GstAviDemux *avi)
           return FALSE;
         if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_dmlh)) {
           g_warning ("DMLH entry is too small (%d bytes, %d needed)",
-		     GST_BUFFER_SIZE (buf), sizeof (gst_riff_dmlh));
+		     GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_dmlh));
           gst_buffer_unref (buf);
           break;
         }
