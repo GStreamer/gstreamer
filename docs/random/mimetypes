@@ -339,8 +339,76 @@ TODO: how to distinguish MJPEG-A/B (Quicktime) and lossless JPEG?
 TODO: divx4/divx5/xvid/3ivx/mpeg-4 - how to make them overlap? (all
       ISO MPEG-4 compatible)
 
-Audio codecs
-------------
+3c) Audio Codecs
+----------------
+for convenience, the two-byte hexcodes (as are being used for identification
+in AVI files) are also given
+
+Preface - (optional) properties for all audio formats:
+  'rate' = X (int) <- sampling rate
+  'channels' = X (int) <- number of audio channels
+
+1 - Raw Audio (integer format)
+  mimetype: audio/x-raw-int
+  properties: 'width' = X (INT) <- memory bits per sample
+              'depth' = X (INT) <- used bits per sample
+              'signed' = X (BOOLEAN)
+              'endianness' = 1234/4321 (INT)
+
+2 - Raw Audio (floating point format)
+  mimetype: audio/x-raw-float
+  properties: 'depth' = X (INT) <- 32=float, 64=double
+              'endianness' = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN!
+              'buffer-frames' = (INT)
+  With regards to the signal: 0.0 represents no signal, +/- 1.0 is 0 dB.
+
+3 - Alaw Raw Audio
+  mimetype: audio/x-alaw
+
+4 - Mulaw Raw Audio
+  mimetype: audio/x-mulaw
+
+5 - MPEG-1 layer 1/2/3 audio
+  mimetype: audio/mpeg
+  properties: 'mpegversion' = 1 (INT)
+              'layer' = 1/2/3 (INT)
+
+6 - Ogg/Vorbis
+  mimetype: audio/x-vorbis
+
+7 - Windows Media Audio 1 and 2 (WMA)
+  mimetype: audio/x-wma
+  properties: 'wmaversion' = 1/2 (INT)
+
+8 - AC3
+  mimetype: audio/x-ac3
+
+9 - FLAC (Free Lossless Audio Codec)
+  mimetype: audio/x-flac
+
+10 - MACE 3/6 (Quicktime audio)
+  mimetype: audio/x-mace
+  properties: 'maceversion' = 3/6 (INT)
+
+11 - MPEG-4 AAC
+  mimetype: audio/mpeg
+  properties: 'mpegversion' = 4 (INT)
+
+12 - (IMA) ADPCM (Quicktime/WAV/Microsoft/4XM)
+  mimetype: audio/x-adpcm
+  properties: 'layout' = "quicktime"/"wav"/"microsoft"/"4xm" (STRING)
+
+  Note: the difference between each of these is the number of
+        samples packaed together per channel. For WAV, for
+        example, each sample is 4 bit, and 8 samples are packed
+        together per channel in the bytestream. For the others,
+        refer to technical documentation.
+        We probably want to distinguish these differently, but
+        I don't know how, yet.
+
+13 - RealAudio (Real)
+  mimetype: audio/x-pn-realaudio
+  properties: 'bitrate' = 14400/28800 (INT)
 
 For convenience, the two-byte hexcodes (as used for identification in AVI files)
 are also given.

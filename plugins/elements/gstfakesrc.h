@@ -102,6 +102,7 @@ struct _GstFakeSrc {
   gint 		 rt_num_buffers; /* we are going to change this at runtime */
   guint64 	 buffer_count;
   gboolean 	 silent;
+  gboolean 	 signal_handoffs;
   gboolean 	 dump;
   gboolean 	 need_flush;
   GstBufferPool *pool;

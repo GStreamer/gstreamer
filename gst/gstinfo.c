@@ -873,10 +873,10 @@ gst_debug_get_all_categories (void)
 /*** FUNCTION POINTERS ********************************************************/
 
 GHashTable *__gst_function_pointers = NULL;
-gchar *_gst_debug_nameof_funcptr (void *ptr) G_GNUC_NO_INSTRUMENT;
+const gchar *_gst_debug_nameof_funcptr (void *ptr) G_GNUC_NO_INSTRUMENT;
 
 /* This function MUST NOT return NULL */
-gchar *
+const gchar *
 _gst_debug_nameof_funcptr (void *ptr)
 {
   gchar *ptrname;
@@ -885,15 +885,21 @@ _gst_debug_nameof_funcptr (void *ptr)
 #endif
 
   if (__gst_function_pointers && (ptrname = g_hash_table_lookup(__gst_function_pointers,ptr))) {
-    return g_strdup(ptrname);
-  } else
+    return ptrname;
+  }
+  /* we need to create an entry in the hash table for this one so we don't leak
+   * the name */
 #ifdef HAVE_DLADDR
   if (dladdr(ptr,&dlinfo) && dlinfo.dli_sname) {
-    return g_strdup(dlinfo.dli_sname);
+    gchar *name = g_strdup (dlinfo.dli_sname);
+    _gst_debug_register_funcptr (ptr, name);
+    return name;
   } else
 #endif
   {
-    return g_strdup_printf("%p",ptr);
+    gchar *name = g_strdup_printf ("%p", ptr);
+    _gst_debug_register_funcptr (ptr, name);
+    return name;
   }
 }
 

@@ -180,6 +180,7 @@ main (int argc, char *argv[])
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_assert (sink);
+  g_object_set (sink, "signal-handoff", TRUE, NULL);
   g_signal_connect (G_OBJECT (sink), "handoff", G_CALLBACK (handoff), NULL);
 
   bs = gst_element_factory_make ("bstest", "bs");

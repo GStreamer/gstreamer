@@ -209,8 +209,9 @@ get_type_for_mime (const gchar *mime)
      definition.typefindfunc = NULL;
 
      factory = gst_type_factory_new (&definition);
-
      typeid = gst_type_register (factory);
+
+     g_free (definition.mime);
   }
   return typeid;
 }

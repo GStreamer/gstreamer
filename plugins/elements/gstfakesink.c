@@ -55,6 +55,7 @@ enum {
   ARG_SILENT,
   ARG_DUMP,
   ARG_SYNC,
+  ARG_SIGNAL_HANDOFFS,
   ARG_LAST_MESSAGE,
 };
 
@@ -150,6 +151,9 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "Sync on the clock",
                           FALSE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_HANDOFFS,
+    g_param_spec_boolean ("signal-handoffs", "Signal handoffs", "Send a signal before unreffing the buffer",
+                          FALSE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "Silent", "Don't produce last_message events",
                           FALSE, G_PARAM_READWRITE)); 
@@ -185,6 +189,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
   fakesink->sync = FALSE;
   fakesink->last_message = NULL;
   fakesink->state_error = FAKESINK_STATE_ERROR_NONE;
+  fakesink->signal_handoffs = FALSE;
 
   GST_FLAG_SET (fakesink, GST_ELEMENT_EVENT_AWARE);
 }
@@ -246,6 +251,9 @@ gst_fakesink_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_SYNC:
       sink->sync = g_value_get_boolean (value);
       break;
+    case ARG_SIGNAL_HANDOFFS:
+      sink->signal_handoffs = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -277,6 +285,9 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
     case ARG_SYNC:
       g_value_set_boolean (value, sink->sync);
       break;
+    case ARG_SIGNAL_HANDOFFS:
+      g_value_set_boolean (value, sink->signal_handoffs);
+      break;
     case ARG_LAST_MESSAGE:
       g_value_set_string (value, sink->last_message);
       break;
@@ -295,7 +306,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
+  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
@@ -345,7 +356,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
     g_object_notify (G_OBJECT (fakesink), "last_message");
   }
 
-  g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf, pad);
+  if (fakesink->signal_handoffs)
+    g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf, pad);
 
   if (fakesink->dump) {
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
@@ -383,6 +395,8 @@ gst_fakesink_change_state (GstElement *element)
     case GST_STATE_READY_TO_NULL:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_NULL)
 	goto error;
+      g_free (fakesink->last_message);
+      fakesink->last_message = NULL;
       break;
   }
 

@@ -61,6 +61,7 @@ struct _GstFakeSink {
   gboolean 	 silent;
   gboolean 	 dump;
   gboolean 	 sync;
+  gboolean 	 signal_handoffs;
   GstClock 	*clock;
   GstFakeSinkStateError state_error;
 

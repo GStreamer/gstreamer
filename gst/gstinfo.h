@@ -379,7 +379,7 @@ extern gboolean			__gst_debug_enabled;
 /********** function pointer stuff **********/
 void* 		_gst_debug_register_funcptr	(void *			ptr,
 						 gchar *		ptrname);
-gchar*		_gst_debug_nameof_funcptr 	(void *			ptr);
+const gchar*	_gst_debug_nameof_funcptr 	(void *			ptr);
 
 #define GST_DEBUG_FUNCPTR(ptr) (_gst_debug_register_funcptr((void *)(ptr), #ptr) , ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)

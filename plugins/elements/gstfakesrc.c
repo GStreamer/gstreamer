@@ -69,6 +69,7 @@ enum {
   ARG_PATTERN,
   ARG_NUM_BUFFERS,
   ARG_EOS,
+  ARG_SIGNAL_HANDOFFS,
   ARG_SILENT,
   ARG_DUMP,
   ARG_PARENTSIZE,
@@ -250,6 +251,9 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "Silent", "Don't produce last_message events",
                           FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_HANDOFFS,
+    g_param_spec_boolean ("signal-handoffs", "Signal handoffs", "Send a signal before pushing the buffer",
+                          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
     g_param_spec_boolean ("dump", "Dump", "Dump produced bytes to stdout",
                           FALSE, G_PARAM_READWRITE));
@@ -286,6 +290,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->rt_num_buffers = -1;
   fakesrc->buffer_count = 0;
   fakesrc->silent = FALSE;
+  fakesrc->signal_handoffs = FALSE;
   fakesrc->dump = FALSE;
   fakesrc->pattern_byte = 0x00;
   fakesrc->need_flush = FALSE;
@@ -514,6 +519,9 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_SILENT:
       src->silent = g_value_get_boolean (value);
       break;
+    case ARG_SIGNAL_HANDOFFS:
+      src->signal_handoffs = g_value_get_boolean (value);
+      break;
     case ARG_DUMP:
       src->dump = g_value_get_boolean (value);
       break;
@@ -571,6 +579,9 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, src->silent);
+      break;
+    case ARG_SIGNAL_HANDOFFS:
+      g_value_set_boolean (value, src->signal_handoffs);
       break;
     case ARG_DUMP:
       g_value_set_boolean (value, src->dump);
@@ -731,7 +742,7 @@ gst_fakesrc_get(GstPad *pad)
 
   g_return_val_if_fail (pad != NULL, NULL);
 
-  src = GST_FAKESRC (gst_pad_get_parent (pad));
+  src = GST_FAKESRC (GST_OBJECT_PARENT (pad));
 
   g_return_val_if_fail (GST_IS_FAKESRC (src), NULL);
 
@@ -777,10 +788,12 @@ gst_fakesrc_get(GstPad *pad)
     g_object_notify (G_OBJECT (src), "last_message");
   }
 
-  GST_LOG_OBJECT (src, "pre handoff emit");
-  g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
+  if (src->signal_handoffs) {
+    GST_LOG_OBJECT (src, "pre handoff emit");
+    g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                    buf, pad);
-  GST_LOG_OBJECT (src, "post handoff emit");
+    GST_LOG_OBJECT (src, "post handoff emit");
+  }
 
   return buf;
 }

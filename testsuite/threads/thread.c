@@ -35,6 +35,7 @@ construct_pipeline (GstElement *pipeline)
   gst_bin_add_many (GST_BIN (thread), identity, sink, NULL);
 
   g_object_set (G_OBJECT (src), "num_buffers", 5, NULL);
+  g_object_set (sink, "signal-handoff", TRUE, NULL);
 }
 
 void
