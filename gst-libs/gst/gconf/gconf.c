@@ -108,10 +108,12 @@ gst_gconf_render_bin_from_description (const gchar *description)
   }
 
   /* find pads and ghost them if necessary */
-  if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SRC)))
+  if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SRC))){
     gst_element_add_ghost_pad (bin, pad, "src");
-  if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SINK)))
+  }
+  if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SINK))){
     gst_element_add_ghost_pad (bin, pad, "sink");
+  }
   return bin;
 }
 
@@ -121,13 +123,10 @@ GstElement *
 gst_gconf_render_bin_from_key (const gchar *key)
 {
   GstElement *bin;
-  gchar *description;
-  gchar *value = NULL;
+  gchar *value;
   
   value = gst_gconf_get_string (key);
-  description = g_strdup_printf ("bin.( %s )", value);
-  bin = gst_gconf_render_bin_from_description (description);
-  g_free (description);
+  bin = gst_gconf_render_bin_from_description (value);
   return bin;
 }
 
