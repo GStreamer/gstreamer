@@ -87,7 +87,7 @@ static void gst_queue_class_init(GstQueueClass *klass) {
   gtk_object_add_arg_type("GstQueue::level", GTK_TYPE_INT,
                           GTK_ARG_READABLE, ARG_LEVEL);
   gtk_object_add_arg_type("GstQueue::max_level", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_LEVEL);
+                          GTK_ARG_READWRITE, ARG_MAX_LEVEL);
 
   gstconnection_class->push = gst_queue_push;
 
@@ -136,7 +136,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   /* we have to lock the queue since we span threads */
   
   GST_LOCK(queue);
-	//g_print("queue: chain %d\n", queue->level_buffers);
+  //g_print("queue: chain %d\n", queue->level_buffers);
 
   if (queue->level_buffers >= queue->max_buffers) {
 	  //g_print("queue: waiting %d\n", queue->level_buffers);

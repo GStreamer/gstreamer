@@ -142,7 +142,7 @@ static void gst_asyncdisksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch(id) {
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
-      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN));
 
       if (src->filename) g_free(src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -215,12 +215,13 @@ void gst_asyncdisksrc_push(GstSrc *src) {
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
-  buf = GST_BUFFER(gst_buffer_new());
+  buf = gst_buffer_new();
   g_return_if_fail(buf != NULL);
 
   /* simply set the buffer to point to the correct region of the file */
   GST_BUFFER_DATA(buf) = asyncdisksrc->map + asyncdisksrc->curoffset;
   GST_BUFFER_OFFSET(buf) = asyncdisksrc->curoffset;
+  GST_BUFFER_FLAG_SET(buf, GST_BUFFER_DONTFREE);
 
   if ((asyncdisksrc->curoffset + asyncdisksrc->bytes_per_read) >
       asyncdisksrc->size) {
@@ -229,6 +230,8 @@ void gst_asyncdisksrc_push(GstSrc *src) {
   } else
     GST_BUFFER_SIZE(buf) = asyncdisksrc->bytes_per_read;
   asyncdisksrc->curoffset += GST_BUFFER_SIZE(buf);
+
+  //gst_buffer_ref(buf);
 
   /* we're done, push the buffer off now */
   gst_pad_push(asyncdisksrc->srcpad,buf);
@@ -265,6 +268,7 @@ void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,gulong size) {
   /* simply set the buffer to point to the correct region of the file */
   GST_BUFFER_DATA(buf) = asyncdisksrc->map + offset;
   GST_BUFFER_OFFSET(buf) = asyncdisksrc->curoffset;
+  GST_BUFFER_FLAG_SET(buf, GST_BUFFER_DONTFREE);
 
   if ((offset + size) > asyncdisksrc->size) {
     GST_BUFFER_SIZE(buf) = asyncdisksrc->size - offset;
@@ -293,6 +297,7 @@ static gboolean gst_asyncdisksrc_open_file(GstAsyncDiskSrc *src) {
     lseek(src->fd,0,SEEK_SET);
     /* map the file into memory */
     src->map = mmap(NULL,src->size,PROT_READ,MAP_SHARED,src->fd,0);
+    madvise(src->map,src->size,2);
     /* collapse state if that failed */
     if (src->map == NULL) {
       close(src->fd);

@@ -15,7 +15,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
 
-	GtkWidget *appwindow;
+  GtkWidget *appwindow;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
 
@@ -49,6 +49,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
+    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -63,7 +64,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_print("setting to PLAYING state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
-	//} else if (0) {
+  //} else if (0) {
 
     gst_plugin_load("mp1videoparse");
     gst_plugin_load("mpeg_play");
@@ -71,34 +72,35 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
-    decode = gst_elementfactory_make("mpeg_play","decode_video");
+    decode_video = gst_elementfactory_make("mpeg_play","decode_video");
     g_return_if_fail(decode_video != NULL);
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
-		appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
-		gnome_app_set_contents(GNOME_APP(appwindow),
-										gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
+    appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
+    gnome_app_set_contents(GNOME_APP(appwindow),
+      	        gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
 		gtk_widget_show_all(appwindow);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
     g_return_if_fail(video_thread != NULL);
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode));
+    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(show));
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
                               gst_element_get_pad(parse_video,"sink"));
     gst_pad_connect(gst_element_get_pad(parse_video,"src"),
-                    gst_element_get_pad(decode,"sink"));
-    gst_pad_connect(gst_element_get_pad(decode,"src"),
+                    gst_element_get_pad(decode_video,"sink"));
+    gst_pad_connect(gst_element_get_pad(decode_video,"src"),
                     gst_element_get_pad(show,"sink"));
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
+    gtk_object_set(GTK_OBJECT(video_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
     gst_pad_connect(pad,
@@ -130,6 +132,7 @@ int main(int argc,char *argv[]) {
   pipeline = gst_pipeline_new("pipeline");
   g_return_if_fail(pipeline != NULL);
 
+  //src = gst_elementfactory_make("asyncdisksrc","src");
   src = gst_elementfactory_make("disksrc","src");
   g_return_if_fail(src != NULL);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
@@ -157,18 +160,18 @@ int main(int argc,char *argv[]) {
 
   g_print("about to enter loop\n");
 
-	while (1) {
-	  gst_src_push(GST_SRC(src));
-	}
-	// this does not work due to multithreading
-	/*
-	g_idle_add(idle_func,src);
+  while (1) {
+    gst_src_push(GST_SRC(src));
+  }
+  // this does not work due to multithreading
+  /*
+  g_idle_add(idle_func,src);
 
-	gtk_main();
-	*/
+  gtk_main();
+  */
 }
 
 gboolean idle_func(gpointer data) {
-	gst_src_push(GST_SRC(data));
-	return TRUE;
+  gst_src_push(GST_SRC(data));
+  return TRUE;
 }

@@ -24,6 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
+#include <gst/gstclock.h>
 
 
 #ifdef __cplusplus
@@ -53,8 +54,11 @@ struct _GstAudioSink {
 
   GstPad *sinkpad;
 
+  GstClockTime clocktime;
+  GstClock *clock;
   /* soundcard state */
   int fd;
+  int caps; /* the capabilities */
   gint format;
   gint channels;
   gint frequency;

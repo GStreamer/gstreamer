@@ -339,7 +339,7 @@ gboolean gst_element_change_state(GstElement *element,
 //  g_print(", is now %08lx\n",GST_STATE(element));
   gtk_signal_emit(GTK_OBJECT(element),gst_element_signals[STATE_CHANGE],
                   state);
-	return TRUE;
+  return TRUE;
 }
 
 /**

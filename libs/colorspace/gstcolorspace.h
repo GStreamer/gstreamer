@@ -21,7 +21,7 @@
 #ifndef __GST_COLORSPACE_H__
 #define __GST_COLORSPACE_H__
 
-
+#include <gdk/gdk.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstplugin.h>
 
@@ -35,7 +35,8 @@ typedef enum {
   GST_COLORSPACE_RGB24,                   // RGB
   GST_COLORSPACE_BGR24,                   // RGB
   GST_COLORSPACE_RGB32,
-#define GST_COLORSPACE_RGB_LAST GST_COLORSPACE_RGB32
+  GST_COLORSPACE_BGR32,
+#define GST_COLORSPACE_RGB_LAST GST_COLORSPACE_BGR32
 
 #define GST_COLORSPACE_YUV_FIRST GST_COLORSPACE_YUV420
   GST_COLORSPACE_YUV420,                  // YUV 
@@ -52,6 +53,7 @@ struct _GstColorSpaceParameters {
   guint width;
   guint height;
   gchar *outbuf;
+  GdkVisual *visual;
 };
 
 

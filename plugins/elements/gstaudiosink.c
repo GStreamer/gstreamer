@@ -126,12 +126,16 @@ static void gst_audiosink_init(GstAudioSink *audiosink) {
   gst_pad_set_chain_function(audiosink->sinkpad,gst_audiosink_chain);
 
   audiosink->fd = -1;
+  audiosink->clock = gst_clock_get_system();
+  gst_clock_register(audiosink->clock, GST_OBJECT(audiosink));
+  audiosink->clocktime = 0LL;
 
   gst_element_set_state(GST_ELEMENT(audiosink),GST_STATE_COMPLETE);
 }
 
 void gst_audiosink_sync_parms(GstAudioSink *audiosink) {
   audio_buf_info ospace;
+  int frag;
 
   g_return_if_fail(audiosink != NULL);
   g_return_if_fail(GST_IS_AUDIOSINK(audiosink));
@@ -142,12 +146,15 @@ void gst_audiosink_sync_parms(GstAudioSink *audiosink) {
   ioctl(audiosink->fd,SNDCTL_DSP_SETFMT,&audiosink->format);
   ioctl(audiosink->fd,SNDCTL_DSP_CHANNELS,&audiosink->channels);
   ioctl(audiosink->fd,SNDCTL_DSP_SPEED,&audiosink->frequency);
+  ioctl(audiosink->fd,SNDCTL_DSP_GETBLKSIZE, &frag);
 
   ioctl(audiosink->fd,SNDCTL_DSP_GETOSPACE,&ospace);
 
-  g_print("setting sound card to %dKHz %d bit %s (%d bytes buffer)\n",
+  g_print("audiosink: setting sound card to %dKHz %d bit %s (%d bytes buffer, %d fragment)\n",
           audiosink->frequency,audiosink->format,
-          (audiosink->channels == 2) ? "stereo" : "mono",ospace.bytes);
+          (audiosink->channels == 2) ? "stereo" : "mono",ospace.bytes, frag);
+
+
 }
 
 GstElement *gst_audiosink_new(gchar *name) {
@@ -159,6 +166,7 @@ GstElement *gst_audiosink_new(gchar *name) {
 void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
   GstAudioSink *audiosink;
   MetaAudioRaw *meta;
+  count_info info;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -179,7 +187,7 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
       audiosink->channels = meta->channels;
       audiosink->frequency = meta->frequency;
       gst_audiosink_sync_parms(audiosink);
-      g_print("sound device set to format %d, %d channels, %dHz\n",
+      g_print("audiosink: sound device set to format %d, %d channels, %dHz\n",
               audiosink->format,audiosink->channels,audiosink->frequency);
     }
   }
@@ -189,9 +197,18 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
   if (GST_BUFFER_DATA(buf) != NULL) {
     gst_trace_add_entry(NULL,0,buf,"audiosink: writing to soundcard");
     //g_print("audiosink: writing to soundcard\n");
-    if (audiosink->fd > 2)
+    if (audiosink->fd > 2) {
+      if (audiosink->clocktime == 0LL) 
+	      gst_clock_wait(audiosink->clock, audiosink->clocktime, GST_OBJECT(audiosink));
+      ioctl(audiosink->fd,SNDCTL_DSP_GETOPTR,&info);
+      audiosink->clocktime = (info.bytes*1000000LL)/(audiosink->frequency*audiosink->channels);
+      //g_print("audiosink: bytes sent %d time %llu\n", info.bytes, audiosink->clocktime);
+      gst_clock_set(audiosink->clock, audiosink->clocktime);
       write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+      //audiosink->clocktime +=  (1000000LL*GST_BUFFER_SIZE(buf)/(audiosink->channels*
+//		              (audiosink->format/8)*(audiosink->frequency)));
     //g_print("audiosink: writing to soundcard ok\n");
+    }
   }
 
   //g_print("a unref\n");
@@ -229,7 +246,7 @@ void gst_audiosink_set_frequency(GstAudioSink *audiosink,gint frequency) {
 static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {
   g_return_val_if_fail(sink->fd == -1, FALSE);
 
-  g_print("attempting to open sound device\n");
+  g_print("audiosink: attempting to open sound device\n");
 
   /* first try to open the sound card */
   sink->fd = open("/dev/dsp",O_RDWR);
@@ -241,7 +258,16 @@ static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {
     sink->channels = 2; /* stereo */
     sink->frequency = 44100;
     gst_audiosink_sync_parms(sink);
-    g_print("opened audio\n");
+    ioctl(sink->fd,SNDCTL_DSP_GETCAPS,&sink->caps);
+
+    g_print("audiosink: Capabilities\n");
+    if (sink->caps & DSP_CAP_DUPLEX)   g_print("audiosink:   Full duplex\n");
+    if (sink->caps & DSP_CAP_REALTIME) g_print("audiosink:   Realtime\n");
+    if (sink->caps & DSP_CAP_BATCH)    g_print("audiosink:   Batch\n");
+    if (sink->caps & DSP_CAP_COPROC)   g_print("audiosink:   Has coprocessor\n");
+    if (sink->caps & DSP_CAP_TRIGGER)  g_print("audiosink:   Trigger\n");
+    if (sink->caps & DSP_CAP_MMAP)     g_print("audiosink:   Direct access\n");
+    g_print("audiosink: opened audio\n");
     return TRUE;
   }
 
@@ -253,7 +279,7 @@ static void gst_audiosink_close_audio(GstAudioSink *sink) {
 
   close(sink->fd);
   sink->fd = -1;
-  g_print("closed sound device\n");
+  g_print("audiosink: closed sound device\n");
 }
 
 static gboolean gst_audiosink_start(GstElement *element,

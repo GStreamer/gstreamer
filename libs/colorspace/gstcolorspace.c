@@ -58,8 +58,6 @@ GstColorSpaceConverter gst_colorspace_get_converter(GstColorSpace srcspace, GstC
       //return gst_colorspace_yuv2yuv_get_converter(srcspace, destspace);
     }
   }
-  else {
-    return NULL;
-  }
+  g_print("gst_colorspace: conversion not implemented\n");
   return NULL;
 }

@@ -23,11 +23,14 @@
 #include <gstcolorspace.h>
 
 static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_rgb_to_rgb_identity(GstBuffer *src, GstColorSpaceParameters *params);
 
 GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace src, GstColorSpace dest) {
   switch(src) {
     case GST_COLORSPACE_RGB24:
       switch(dest) {
+        case GST_COLORSPACE_RGB24:
+          return gst_colorspace_rgb_to_rgb_identity;
         case GST_COLORSPACE_BGR24:
           return gst_colorspace_rgb24_to_bgr24;
 	default:
@@ -38,6 +41,8 @@ GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace src, G
       switch(dest) {
         case GST_COLORSPACE_RGB24:
           return gst_colorspace_rgb24_to_bgr24;
+        case GST_COLORSPACE_BGR24:
+          return gst_colorspace_rgb_to_rgb_identity;
 	default:
 	  break;
       }
@@ -45,7 +50,12 @@ GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace src, G
     default:
       break;
   }
+  g_print("gst_colorspace: conversion not supported\n");
   return NULL;
+}
+
+static GstBuffer *gst_colorspace_rgb_to_rgb_identity(GstBuffer *src, GstColorSpaceParameters *params) {
+  return src;
 }
 
 static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params) {
@@ -55,8 +65,15 @@ static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpacePar
 
   DEBUG("gst_colorspace_rgb24_to_bgr24 %d\n", GST_BUFFER_SIZE(src));
 
-  data = GST_BUFFER_DATA(src);
   size = GST_BUFFER_SIZE(src)/3;
+
+  if (params != NULL && params->outbuf != NULL) {
+    data = params->outbuf;
+    DEBUG("gst_colorspace: to buffer %p\n", data);
+  }
+  else {
+    data = GST_BUFFER_DATA(src);
+  }
 
   while (size--) {
     temp = data[0];
