@@ -1,5 +1,19 @@
 2004-02-22  Benjamin Otte  <otte@gnome.org>
 
+	* ext/xine/Makefile.am:
+	* ext/xine/gstxine.h:
+	* ext/xine/xine.c: (plugin_init):
+	* ext/xine/xineinput.c:
+	  add input plugin wrapper. Playback from files, http, mms and cdda
+	  works.
+	* ext/xine/xineaudiodec.c: (gst_xine_audio_dec_chain):
+	  remove leftover G_GNUC_UNUSED
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_stream),
+	(gst_asf_demux_identify_guid):
+	  improve debugging output
+
+2004-02-22  Benjamin Otte  <otte@gnome.org>
+
 	reported by: Padraig O'Briain <padraig.obriain@sun.com>
 
 	* autogen.sh:
