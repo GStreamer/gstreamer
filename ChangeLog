@@ -1,3 +1,10 @@
+2004-07-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_chain):
+	  no point in doing any chaining if the pad we want to push from
+	  isn't usable.
+
 2004-07-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-media.c:
