@@ -506,7 +506,7 @@ gst_alsa_change_state(GstElement *element)
 
     return GST_STATE_SUCCESS;
 }
-
+/* defined but not used
 static gboolean
 gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
 {
@@ -571,13 +571,13 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
                         format = SND_PCM_FORMAT_U32_BE;
                 }
             }
-        } else if (law == 1) { /* mu law */
+        } else if (law == 1) { *//* mu law *//*
             if (width == depth && width == 8 && sign == FALSE) {
                 format = SND_PCM_FORMAT_MU_LAW;
             } else {
                 return FALSE;
             }
-        } else if (law == 2) { /* a law, ug. */
+        } else if (law == 2) { *//* a law, ug. *//*
             if (width == depth && width == 8 && sign == FALSE) {
                 format = SND_PCM_FORMAT_A_LAW;
             }
@@ -593,8 +593,8 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
             format = SND_PCM_FORMAT_FLOAT;
         } else {
             return FALSE;
-            /* if you need float64, chat w/ me on irc.gstreamer.net and i'll tell you what needs to
-             * be done. i'm 'wingo'. */
+            *//* if you need float64, chat w/ me on irc.gstreamer.net and i'll tell you what needs to
+             * be done. i'm 'wingo'. *//*
         }
     } else {
         return FALSE;
@@ -611,7 +611,7 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
     
     return TRUE;
 }
-
+*/
 /* caps are so painful sometimes. */
 static GstCaps*
 gst_alsa_caps (GstAlsa *this)
