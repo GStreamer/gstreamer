@@ -160,8 +160,8 @@ gst_flxdec_class_init (GstFlxDecClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = NULL;  
-  gobject_class->get_property = NULL;
+  gobject_class->set_property = gst_flxdec_set_property;  
+  gobject_class->get_property = gst_flxdec_get_property;
 
   gstelement_class->change_state = gst_flxdec_change_state;
 }
