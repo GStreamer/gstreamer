@@ -38,41 +38,41 @@ typedef struct _GstMad GstMad;
 typedef struct _GstMadClass GstMadClass;
 
 struct _GstMad {
-  GstElement 	 element;
+  GstElement	 element;
 
   /* pads */
-  GstPad 	*sinkpad, *srcpad;
+  GstPad	*sinkpad, *srcpad;
 
   /* state */
   struct mad_stream stream;
   struct mad_frame frame;
   struct mad_synth synth;
-  guchar 	*tempbuffer;
-  glong 	 tempsize;
-  gboolean	 need_sync;
-  guint64	 base_time;
-  guint64	 framestamp;	/* timestamp-like, but counted in frames */
-  guint64	 total_samples; /* the number of samples since the sync point */
+  guchar	*tempbuffer;
+  glong		tempsize;	/* used to keep track of partial buffers */
+  gboolean	need_sync;
+  guint64	base_time;
+  guint64	framestamp;	/* timestamp-like, but counted in frames */
+  guint64	total_samples;  /* the number of samples since the sync point */
 
-  gboolean	 restart;
+  gboolean	restart;
 
   /* info */
   struct mad_header header;
-  gboolean	 new_header;
-  gboolean	 can_seek;
-  guint		 framecount;
-  gint		 vbr_average; /* average bitrate */
-  guint64	 vbr_rate; /* average * framecount */
+  gboolean	new_header;
+  gboolean	can_seek;
+  guint		framecount;
+  gint		vbr_average; /* average bitrate */
+  guint64	vbr_rate; /* average * framecount */
 
-  gboolean	 half;
-  gboolean	 ignore_crc;
+  gboolean	half;
+  gboolean	ignore_crc;
 
   GstCaps	*metadata;
   GstCaps	*streaminfo;
 
   /* negotiated format */
-  gint		 rate;
-  gint		 channels;
+  gint		rate;
+  gint		channels;
 };
 
 struct _GstMadClass {
@@ -136,33 +136,36 @@ GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
 )
 
 
-static void 		gst_mad_class_init	(GstMadClass *klass);
-static void 		gst_mad_init		(GstMad *mad);
-static void 		gst_mad_dispose 	(GObject *object);
+static void		gst_mad_class_init	(GstMadClass *klass);
+static void		gst_mad_init		(GstMad *mad);
+static void		gst_mad_dispose 	(GObject *object);
 
 static void		gst_mad_set_property	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
 static void		gst_mad_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static gboolean 	gst_mad_src_event 	(GstPad *pad, GstEvent *event);
-static const GstFormat* gst_mad_get_formats 	(GstPad *pad);
-static const GstEventMask* 
-			gst_mad_get_event_masks (GstPad *pad);
-static const GstQueryType* 
-			gst_mad_get_query_types (GstPad *pad);
+static gboolean	gst_mad_src_event	(GstPad *pad, GstEvent *event);
+static const GstFormat*
+		gst_mad_get_formats	(GstPad *pad);
+static const GstEventMask*
+		gst_mad_get_event_masks (GstPad *pad);
+static const GstQueryType*
+		gst_mad_get_query_types (GstPad *pad);
 
-static gboolean 	gst_mad_src_query 	(GstPad *pad, GstQueryType type,
-		  				 GstFormat *format, gint64 *value);
-static gboolean 	gst_mad_convert_sink 	(GstPad *pad, GstFormat src_format, gint64 src_value, 
-		     				 GstFormat *dest_format, gint64 *dest_value);
-static gboolean 	gst_mad_convert_src 	(GstPad *pad, GstFormat src_format, gint64 src_value, 
-		     				 GstFormat *dest_format, gint64 *dest_value);
+static gboolean	gst_mad_src_query	(GstPad *pad, GstQueryType type,
+					 GstFormat *format, gint64 *value);
+static gboolean	gst_mad_convert_sink	(GstPad *pad, GstFormat src_format,
+		                         gint64 src_value, GstFormat
+					 *dest_format, gint64 *dest_value);
+static gboolean	gst_mad_convert_src	(GstPad *pad, GstFormat src_format,
+					 gint64 src_value, GstFormat
+					 *dest_format, gint64 *dest_value);
 
-static void 		gst_mad_chain 		(GstPad *pad, GstBuffer *buffer);
+static void	gst_mad_chain		(GstPad *pad, GstBuffer *buffer);
 
 static GstElementStateReturn
-			gst_mad_change_state (GstElement *element);
+		gst_mad_change_state (GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
@@ -175,15 +178,15 @@ gst_mad_get_type (void)
 
   if (!mad_type) {
     static const GTypeInfo mad_info = {
-      sizeof(GstMadClass),      
+      sizeof (GstMadClass),
       NULL,
       NULL,
-      (GClassInitFunc)gst_mad_class_init,
+      (GClassInitFunc) gst_mad_class_init,
       NULL,
       NULL,
-      sizeof(GstMad),
+      sizeof (GstMad),
       0,
-      (GInstanceInitFunc)gst_mad_init,
+      (GInstanceInitFunc) gst_mad_init,
     };
     mad_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMad", &mad_info, 0);
   }
@@ -258,10 +261,11 @@ gst_mad_class_init (GstMadClass *klass)
   gobject_class->dispose = gst_mad_dispose;
 
   gstelement_class->change_state = gst_mad_change_state;
-  
+
   /* init properties */
   /* currently, string representations are used, we might want to change that */
-  /* FIXME: descriptions need to be more technical, default values and ranges need to be selected right */
+  /* FIXME: descriptions need to be more technical,
+   * default values and ranges need to be selected right */
   g_object_class_install_property (gobject_class, ARG_HALF,
     g_param_spec_boolean ("half", "Half", "Generate PCM at 1/2 sample rate",
 		          FALSE, G_PARAM_READWRITE));
@@ -343,7 +347,7 @@ gst_mad_get_formats (GstPad *pad)
     GST_FORMAT_TIME,
     0
   };
-  
+
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
@@ -359,7 +363,7 @@ gst_mad_get_event_masks (GstPad *pad)
 }
 
 static gboolean
-gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value, 
+gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
 		      GstFormat *dest_format, gint64 *dest_value)
 {
   gboolean res = TRUE;
@@ -369,7 +373,7 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
 
   if (mad->vbr_average == 0)
     return FALSE;
-  
+
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
@@ -402,7 +406,7 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value, 
+gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 		     GstFormat *dest_format, gint64 *dest_value)
 {
   gboolean res = TRUE;
@@ -411,9 +415,9 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   GstMad *mad;
 
   mad = GST_MAD (gst_pad_get_parent (pad));
-  
+
   bytes_per_sample = MAD_NCHANNELS (&mad->frame.header) << 1;
-  
+
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
@@ -490,7 +494,7 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 {
   gboolean res = TRUE;
   GstMad *mad;
- 
+
   mad = GST_MAD (gst_pad_get_parent (pad));
 
   switch (type) {
@@ -517,7 +521,7 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 
 	    /* do the probe */
             if (gst_pad_query (GST_PAD_PEER (mad->sinkpad), GST_QUERY_TOTAL,
-			       &peer_format, &peer_value)) 
+			       &peer_format, &peer_value))
 	    {
               GstFormat conv_format;
 	      /* convert to TIME */
@@ -574,7 +578,7 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
 {
   gboolean res = TRUE;
   GstMad *mad;
-	    
+
   mad = GST_MAD (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -592,13 +596,13 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       gboolean flush;
       GstFormat format;
       const GstFormat *peer_formats;
-	  
+
       format = GST_FORMAT_TIME;
 
       /* first bring the src_format to TIME */
       if (!gst_pad_convert (pad,
-    		GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
-    		&format, &src_offset))
+		GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+		&format, &src_offset))
       {
 	/* didn't work, probably unsupported seek format then */
         res = FALSE;
@@ -607,7 +611,7 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
 
       /* shave off the flush flag, we'll need it later */
       flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-      
+
       /* assume the worst */
       res = FALSE;
 
@@ -616,16 +620,18 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       /* while we did not exhaust our seek formats without result */
       while (peer_formats && *peer_formats && !res) {
         gint64 desired_offset;
-	
+
 	format = *peer_formats;
 
         /* try to convert requested format to one we can seek with on the sinkpad */
-        if (gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, src_offset, &format, &desired_offset)) 
+        if (gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, src_offset,
+			     &format, &desired_offset))
         {
           GstEvent *seek_event;
 
 	  /* conversion succeeded, create the seek */
-          seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush, desired_offset);
+          seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush,
+			                   desired_offset);
 	  /* do the seek */
           if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
 	    /* seek worked, we're done, loop will exit */
@@ -650,7 +656,7 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
   return res;
 }
 
-static inline signed int 
+static inline signed int
 scale (mad_fixed_t sample)
 {
   /* round */
@@ -668,13 +674,13 @@ scale (mad_fixed_t sample)
 
 /* do we need this function? */
 static void
-gst_mad_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_mad_set_property (GObject *object, guint prop_id,
+		      const GValue *value, GParamSpec *pspec)
 {
   GstMad *mad;
-	    
-  /* it's not null if we got it, but it might not be ours */
+
   g_return_if_fail (GST_IS_MAD (object));
-	      
+
   mad = GST_MAD (object);
 
   switch (prop_id) {
@@ -690,13 +696,13 @@ gst_mad_set_property (GObject *object, guint prop_id, const GValue *value, GPara
   }
 }
 static void
-gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_mad_get_property (GObject *object, guint prop_id,
+		      GValue *value, GParamSpec *pspec)
 {
   GstMad *mad;
-	    
-  /* it's not null if we got it, but it might not be ours */
+
   g_return_if_fail (GST_IS_MAD (object));
-	      
+
   mad = GST_MAD (object);
 
   switch (prop_id) {
@@ -759,14 +765,14 @@ gst_mad_update_info (GstMad *mad)
   struct mad_header *header = &mad->frame.header;
   gboolean changed = FALSE;
 
-#define CHECK_HEADER(h1,str) 					\
+#define CHECK_HEADER(h1,str)					\
 G_STMT_START{							\
   if (mad->header.h1 != header->h1 || mad->new_header) {	\
     mad->header.h1 = header->h1;				\
      changed = TRUE;						\
   };								\
 } G_STMT_END
-  
+
   /* update average bitrate */
   if (mad->new_header) {
     mad->framecount = 1;
@@ -778,8 +784,8 @@ G_STMT_START{							\
   }
   mad->vbr_average = (gint) (mad->vbr_rate / mad->framecount);
 
-  CHECK_HEADER (layer, 	    "layer");
-  CHECK_HEADER (mode, 	    "mode");
+  CHECK_HEADER (layer,	    "layer");
+  CHECK_HEADER (mode,	    "mode");
   CHECK_HEADER (emphasis,   "emphasis");
 
   if (header->bitrate != mad->header.bitrate || mad->new_header) {
@@ -794,12 +800,12 @@ G_STMT_START{							\
     mad->streaminfo = gst_mad_get_streaminfo (mad);
     g_object_notify (G_OBJECT (mad), "streaminfo");
   }
-  
 #undef CHECK_HEADER
+
 }
 
 /* gracefuly ripped from madplay */
-static GstCaps* 
+static GstCaps*
 id3_to_caps(struct id3_tag const *tag)
 {
   unsigned int i;
@@ -923,7 +929,7 @@ id3_to_caps(struct id3_tag const *tag)
 		       props);
   if (0) {
 fail:
-    g_warning("mad: could not parse ID3 tag");
+    g_warning ("mad: could not parse ID3 tag");
 
     return NULL;
   }
@@ -1010,6 +1016,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     gst_mad_handle_event (pad, buffer);
     return;
   }
+
+  /* handle timestamps */
   if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
     /* if there is nothing queued (partial buffer), we prepare to set the
      * timestamp on the next buffer */
@@ -1024,11 +1032,12 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     }
   }
 
-  /* end of new bit */
+  /* handle data */
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  /* process the incoming buffer in chunks of maximum MDLEN bytes */
+  /* process the incoming buffer in chunks of maximum MAD_BUFFER_MDLEN bytes;
+   * this is the upper limit on processable chunk sizes set by mad */
   while (size > 0)
   {
     gint tocopy;
@@ -1036,15 +1045,17 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
     tocopy = MIN (MAD_BUFFER_MDLEN, size);
 
+    /* append the chunk to process to our internal temporary buffer */
     memcpy (mad->tempbuffer + mad->tempsize, data, tocopy);
     mad->tempsize += tocopy;
 
+    /* update our incoming buffer's parameters to reflect this */
     size -= tocopy;
     data += tocopy;
 
     mad_input_buffer = mad->tempbuffer;
 
-    /* if we have data we can try to proceed */
+    /* while we have data we can consume it */
     while (mad->tempsize >= 0) {
       gint consumed;
       guint nchannels;
@@ -1102,8 +1113,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       nchannels = MAD_NCHANNELS (&mad->frame.header);
-      nsamples  = MAD_NSBSAMPLES (&mad->frame.header) * 
-         (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);  
+      nsamples  = MAD_NSBSAMPLES (&mad->frame.header) *
+         (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
 
 #if MAD_VERSION_MINOR <= 12
       rate = mad->header.sfreq;
@@ -1117,17 +1128,17 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       gst_mad_update_info (mad);
 
       if (mad->channels != nchannels || mad->rate != rate) {
-        if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) 
+        if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
 	  rate >>=1;
 
 	/* we set the caps even when the pad is not connected so they
 	 * can be gotten for streaminfo */
         if (gst_pad_try_set_caps (mad->srcpad,
-  	    gst_caps_new (
-  	      "mad_src",
+	    gst_caps_new (
+	      "mad_src",
               "audio/raw",
               gst_props_new (
-    	        "format",   GST_PROPS_STRING ("int"),
+	        "format",   GST_PROPS_STRING ("int"),
                 "law",         GST_PROPS_INT (0),
                 "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
                 "signed",      GST_PROPS_BOOLEAN (TRUE),
@@ -1135,10 +1146,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
                 "depth",       GST_PROPS_INT (16),
                 "rate",        GST_PROPS_INT (rate),
                 "channels",    GST_PROPS_INT (nchannels),
-                NULL))) <= 0) 
+                NULL))) <= 0)
 	{
 	  gst_buffer_unref (buffer);
-          gst_element_error (GST_ELEMENT (mad), 
+          gst_element_error (GST_ELEMENT (mad),
 			     "could not set caps on source pad, aborting...");
 	  return;
         }
@@ -1162,8 +1173,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	  g_warning ("mad->frame.header.samplerate is 0 !");
         }
         else {
-          GST_BUFFER_TIMESTAMP (outbuffer) = mad->base_time + 
-			 mad->total_samples * GST_SECOND / mad->frame.header.samplerate;
+	  guint64 increase;
+	  increase = mad->total_samples * GST_SECOND
+			                / mad->frame.header.samplerate;
+	  GST_BUFFER_TIMESTAMP (outbuffer) = mad->base_time + increase;
         }
 
         /* output sample(s) in 16-bit signed native-endian PCM */
@@ -1186,7 +1199,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
       mad->total_samples += nsamples;
 
-      /* we have a queued timestamp on the incomming buffer that we should
+      /* we have a queued timestamp on the incoming buffer that we should
        * use for the next frame */
       if (new_pts) {
 	new_pts = FALSE;
@@ -1280,9 +1293,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new ("mad", GST_TYPE_MAD, &gst_mad_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_element_factory_add_pad_template (factory, 
+  gst_element_factory_add_pad_template (factory,
 		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, 
+  gst_element_factory_add_pad_template (factory,
 		  GST_PAD_TEMPLATE_GET (mad_src_template_factory));
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
