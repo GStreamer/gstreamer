@@ -523,7 +523,6 @@ cdparanoia_get (GstPad *pad)
   /* update current sector and stop things if appropriate */
   src->cur_sector++;
 
-  g_print ("cur: %ld end: %d\n", src->cur_sector, src->end_sector);
   if (src->cur_sector == src->end_sector) {
     GST_DEBUG (0,"setting EOS");
     gst_element_set_eos(GST_ELEMENT(src));
