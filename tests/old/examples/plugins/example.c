@@ -235,7 +235,7 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
   /* If we are supposed to be doing something, here's where it happens. */
   if (example->active) {
     /* In this example we're going to copy the buffer to another one, 
-     * so we need to allocate a new buffer first.
+     * so we need to allocate a new buffer first. */
     outbuf = gst_buffer_new();
 
     /* We need to copy the size and offset of the buffer at a minimum. */
