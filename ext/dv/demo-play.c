@@ -51,11 +51,11 @@ main (int argc,char *argv[])
 /*  gst_bin_add(GST_BIN(bin),GST_ELEMENT(cspace)); */
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(videosink));
 
-  gst_element_connect(src,"src",dvdec,"sink");
-/*  gst_element_connect(cspace,"src",videosink,"sink"); */
-/*  gst_element_connect(dvdec,"video",cspace,"sink"); */
-  gst_element_connect(dvdec,"video",deint,"sink");
-  gst_element_connect(deint,"src",videosink,"sink");
+  gst_element_link(src,"src",dvdec,"sink");
+/*  gst_element_link(cspace,"src",videosink,"sink"); */
+/*  gst_element_link(dvdec,"video",cspace,"sink"); */
+  gst_element_link(dvdec,"video",deint,"sink");
+  gst_element_link(deint,"src",videosink,"sink");
 
   appwindow = gnome_app_new("Videotest","Videotest");
 
