@@ -417,9 +417,11 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
             mp3parse->in_flush = FALSE;
           }
           GST_BUFFER_TIMESTAMP (outbuf) = last_ts;
-          GST_BUFFER_DURATION (outbuf) =
-              8 * (GST_SECOND / 1000) * GST_BUFFER_SIZE (outbuf) /
-              mp3parse->bit_rate;
+          if (mp3parse->layer == 1) {
+            GST_BUFFER_DURATION (outbuf) = 384 * GST_SECOND / mp3parse->rate;
+          } else {
+            GST_BUFFER_DURATION (outbuf) = 1152 * GST_SECOND / mp3parse->rate;
+          }
 
           if (GST_PAD_CAPS (mp3parse->srcpad) != NULL) {
             gst_pad_push (mp3parse->srcpad, GST_DATA (outbuf));
