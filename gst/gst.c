@@ -41,8 +41,12 @@ gboolean _gst_registry_auto_load = TRUE;
 static GstRegistry *_global_registry;
 static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
+static gboolean _nothreads = FALSE;
 
 extern gint _gst_trace_on;
+
+extern GThreadFunctions gst_thread_dummy_functions;
+
 
 static void 		load_plugin_func 	(gpointer data, gpointer user_data);
 static void		init_popt_callback	(poptContext context, enum poptCallbackReason reason,
@@ -76,6 +80,7 @@ enum {
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
   ARG_SCHEDULER,
+  ARG_NOTHREADS,
   ARG_REGISTRY
 };
 
@@ -95,6 +100,7 @@ static const struct poptOption options[] = {
   {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
   {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
   {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      "scheduler to use ('standard' is the default)", "SCHEDULER"},
+  {"gst-nothreads",      NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_NOTHREADS,      "use NOPs for all threading and locking operations", NULL},
   {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       "registry to use" , "REGISTRY"},
   POPT_TABLEEND
 };
@@ -271,9 +277,6 @@ init_pre (void)
   const gchar *homedir;
   gchar *user_reg;
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-  
   g_type_init();
 
   _global_registry = gst_xml_registry_new ("global_registry", GLOBAL_REGISTRY_FILE);
@@ -334,12 +337,19 @@ init_post (void)
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
 #endif
+
+  if (!g_thread_supported ()) {
+    if (_nothreads)
+      g_thread_init (&gst_thread_dummy_functions);
+    else
+      g_thread_init (NULL);
+  }
   
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler(g_log_domain_gstreamer, llf, debug_log_handler, NULL);
   
-  GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library version %s",
-            GST_VERSION);
+  GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library version %s %s",
+            GST_VERSION, _nothreads?"(no threads)":"");
   
   gst_object_get_type ();
   gst_pad_get_type ();
@@ -482,6 +492,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     case ARG_SCHEDULER:
       gst_scheduler_factory_set_default_name (arg);
       break;
+    case ARG_NOTHREADS:
+      _nothreads = TRUE;
+      break;
     case ARG_REGISTRY:
       g_object_set (G_OBJECT (_user_registry), "location", arg, NULL);
       _gst_registry_fixed = TRUE;
@@ -496,6 +509,13 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     break;
   }
 }
+
+gboolean
+gst_with_threads (void)
+{
+  return !_nothreads;
+}
+
 
 static GSList *mainloops = NULL;
 

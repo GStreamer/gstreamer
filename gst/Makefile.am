@@ -74,6 +74,7 @@ libgstreamer_la_SOURCES =		\
 	gstscheduler.c		\
 	gstsystemclock.c	\
 	gstthread.c		\
+	gstthreaddummy.c	\
 	$(GST_TRACE_SRC)	\
 	gsttype.c		\
 	$(GST_TYPEFIND_SRC)	\

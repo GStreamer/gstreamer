@@ -25,6 +25,7 @@
 /* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
+#include "gst.h"
 #include "gstthread.h"
 #include "gstscheduler.h"
 #include "gstqueue.h"
@@ -246,7 +247,8 @@ gst_thread_change_state (GstElement * element)
   void *stack;
   glong stacksize;
 
-  g_return_val_if_fail (GST_IS_THREAD (element), FALSE);
+  g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (gst_with_threads (), GST_STATE_FAILURE);
 
   thread = GST_THREAD (element);
 
