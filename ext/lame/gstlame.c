@@ -692,7 +692,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
         mp3_data = g_malloc (mp3_buffer_size);
 	
         mp3_size = lame_encode_flush_nogap (lame->lgf, mp3_data, mp3_buffer_size);
-	gst_event_free (GST_EVENT (buf));
+	gst_event_unref (GST_EVENT (buf));
         break;	
       default:
 	gst_pad_event_default (pad, GST_EVENT (buf));
