@@ -519,7 +519,8 @@ GST_CHECK_FEATURE(LIBMIKMOD, [mikmod plugin], mikmod, [
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2")
+  GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2 -lmpeg2dec")
+  AC_SUBST(MPEG2DEC_LIBS)
 ])
 
 dnl *** quicktime ***
@@ -863,19 +864,6 @@ if test "x$HAVE_LIBDVDREAD" = xyes; then
   AC_DEFINE(HAVE_LIBDVDREAD)
 fi
 
-dnl FIXME: I think these can go
-if test "x$HAVE_LINUX_CDROM" = xyes; then
-  AC_DEFINE(HAVE_LINUX_CDROM)
-fi
-
-if test "x$HAVE_LINUX_VIDEODEV" = xyes; then
-  AC_DEFINE(HAVE_LINUX_VIDEODEV)
-fi
-
-if test "x$HAVE_MPEG2DEC" = xyes; then
-  AC_DEFINE(HAVE_MPEG2DEC)
-fi
-
 if test "x$HAVE_A52DEC" = xyes; then
   AC_DEFINE(HAVE_A52DEC)
 fi
@@ -907,8 +895,6 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
-AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
-AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDVDREAD,     test "x$HAVE_LIBDVDREAD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
@@ -929,7 +915,6 @@ AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
-AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
 AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 dnl thomas : the next line gives errors, this is how it is in CVS
@@ -1104,6 +1089,7 @@ gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/resample/Makefile
+gst-libs/gst/riff/Makefile
 gst-plugins.spec
 )
 

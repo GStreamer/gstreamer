@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <libs/riff/gstriff.h>
+#include <gst/riff/riff.h>
 
 
 #ifdef __cplusplus

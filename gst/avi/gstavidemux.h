@@ -24,8 +24,8 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <libs/riff/gstriff.h>
-#include <libs/bytestream/gstbytestream.h>
+#include <gst/riff/riff.h>
+#include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
 extern "C" {
