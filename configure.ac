@@ -741,6 +741,14 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
+dnl *** swfdec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
+GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
+  PKG_CHECK_MODULES(SWFDEC, libswfdec, HAVE_SWFDEC="yes", HAVE_SWFDEC="no")
+  AC_SUBST(SWFDEC_CFLAGS)
+  AC_SUBST(SWFDEC_LIBS)
+])
+
 dnl *** tarkin ***
 dnl for now the sources are included in the plug-in
 dnl and should be moved to ext-libs/ perhaps
@@ -1019,6 +1027,7 @@ ext/sdl/Makefile
 ext/shout/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
+ext/swfdec/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
 ext/xmms/Makefile
