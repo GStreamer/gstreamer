@@ -3,38 +3,29 @@ import os
 import sys
 import unittest
 
-devloc = os.path.join('..', 'gst', '.libs')
-if os.path.exists(devloc):
-   sys.path.insert(0, devloc)
+# Don't insert before .
+sys.path.insert(1, os.path.join('..', 'gst'))
+
+import ltihooks
 
 # Load GST and make sure we load it from the current build
-
 sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
 
-# We're importing _gst, since we don't have access to __init__.py
-# during distcheck where builddir != srcdir
-import _gst as gst
-
-# Put the fake module in sys.modules, otherwise the C modules
-# Can't find the classes accordingly
-sys.modules['gst'] = gst
+path = os.path.abspath(os.path.join('..', 'gst'))
+import gst
+assert gst.__path__ != path, 'bad path'
 
 try:
-    import interfaces
-    gst.interfaces = interfaces
-    sys.modules['gst.interfaces'] = interfaces
+   import gst.interfaces
+   assert os.path.basename(gst.interfaces.__file__) != path, 'bad path'
 except ImportError:
-    pass
+   pass
 
 try:
-    import play
-    gst.play = play
-    sys.modules['gst.play'] = play
+   import gst.play
+   assert os.path.basename(gst.play.__file__) != path, 'bad path'
 except ImportError:
-    pass
+   pass
+   
 
-assert sys.modules.has_key('_gst')
-assert os.path.basename(sys.modules['_gst'].__file__), \
-       os.path.join('..', 'gst', 'libs')
 
-del devloc, sys, os, dl

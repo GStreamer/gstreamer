@@ -14,7 +14,8 @@ class ElementTest(unittest.TestCase):
 
     def testGoodConstructor(self):
         element = gst.Element(self.name, self.alias)
-        assert element
+        assert element is not None, 'element is None'
+        assert isinstance(element, gst.Element)
         assert element.get_name() == self.alias
         
 class FakeSinkTest(ElementTest):

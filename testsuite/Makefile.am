@@ -2,7 +2,7 @@ tests =  \
 	common.py \
 	element.py \
 	interface.py \
-	pipeline.py 
+	pipeline.py
 
 check-local:
 	@PYTHONPATH=$(top_builddir) $(PYTHON) $(srcdir)/runtests.py

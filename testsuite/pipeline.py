@@ -1,9 +1,26 @@
 from common import gst, unittest
 
-class PipelineTest(unittest.TestCase):
+class PipelineConstructor(unittest.TestCase):
+    def testBadConstruct(self):
+        self.assertRaises(TypeError, gst.Pipeline)
+        self.assertRaises(TypeError, gst.Pipeline, None)
+
+    def testGoodConstructor(self):
+        name = 'test-pipeline'
+        pipeline = gst.Pipeline(name)
+        assert pipeline is not None, 'pipeline is None'
+        assert isinstance(pipeline, gst.Pipeline), 'pipeline is not a GstPipline'
+        assert pipeline.get_name() == name, 'pipelines name is wrong'
+        
+class ThreadConstructor(unittest.TestCase):
+    def testCreate(self):
+        thread = gst.Thread('test-thread')
+        assert thread is not None, 'thread is None'
+        assert isinstance(thread, gst.Thread)
+        
+class Pipeline(unittest.TestCase):
     def setUp(self):
         self.pipeline = gst.Pipeline('test-pipeline')
-
         source = gst.Element('fakesrc', 'source')
         source.set_property('num-buffers', 5)
         sink = gst.Element('fakesink', 'sink')

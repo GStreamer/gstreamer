@@ -1,9 +1,20 @@
 2004-04-16  Johan Dahlin  <johan@gnome.org>
 
+	* testsuite/pipeline.py (PipelineConstructor.testGoodConstructor)
+	(PipelineConstructor.testBadConstruct)
+	(ThreadConstructor.testCreate): New tests
+
+	* testsuite/element.py (ElementTest.testGoodConstructor): Add
+	isinstance(element, gst.Element) test
+
+	* testsuite/common.py: Clean up, use ltihooks
+
 	* gst/gst.override (_wrap_gst_element_tp_new): New, just pointing
 	to _wrap_gst_element_factory_make
 	(_wrap_gst_element_tp_new): Stub, return 1  so tp_new can be used.
-
+	(init) Assign tp_new for pipeline and thread to PyType_GenericNew
+	for now.
+	
 	* gst/gst.defs (element_factory_make): Remove is-constructor-of
 	GstElement.
 

@@ -1058,3 +1058,10 @@ _wrap_gst_element_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
 	return _wrap_gst_element_factory_make(NULL, args, kwargs);
 }
+%%
+init
+/* This is due to a bug in PyGTK 2.3.91, should be removed when we can require
+ * a newer version.
+ */
+PyGstPipeline_Type.tp_new = PyType_GenericNew;
+PyGstThread_Type.tp_new = PyType_GenericNew;
