@@ -25,6 +25,8 @@ main(int argc, char *argv[])
 
   gst_parse_launch (cmdline, GST_BIN (pipeline));
 
+  xmlSaveFile("gstreamer-launch.gst",gst_xml_write(pipeline));
+
   fprintf(stderr,"RUNNING pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
