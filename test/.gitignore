@@ -5,9 +5,7 @@ Makefile.in
 *.la
 .deps
 .libs
-
 *.xml
-
 basic
 m
 types
@@ -35,4 +33,10 @@ ac3play
 dvdcat
 fake
 cobin
+<<<<<<< .cvsignore
+videotest
 mp1parse
+aviparse
+=======
+mp1parse
+>>>>>>> 1.2

@@ -55,6 +55,9 @@ void _gst_plugin_initialize() {
   /* the catch-all plugins directory */
   _gst_plugin_paths = g_list_prepend(_gst_plugin_paths,
                                      PLUGINS_SRCDIR "/plugins");
+  /* the libreary directory */
+  _gst_plugin_paths = g_list_prepend(_gst_plugin_paths,
+                                     PLUGINS_SRCDIR "/libs");
   /* location libgstelements.so */
   _gst_plugin_paths = g_list_prepend(_gst_plugin_paths,
                                      PLUGINS_SRCDIR "/gst/elements");

@@ -294,11 +294,12 @@ gst/types/Makefile
 gst/meta/Makefile
 gst/elements/Makefile
 gst/xml/Makefile
+libs/Makefile
+libs/riff/Makefile
 plugins/Makefile
 plugins/au/Makefile
 plugins/wav/Makefile
-plugins/riff/Makefile
-plugins/riff/avi/Makefile
+plugins/avi/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/xa/Makefile
 plugins/mp3decode/xing/Makefile
