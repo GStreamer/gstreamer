@@ -1,4 +1,4 @@
-testprogs = tee fake
+testprogs = tee fake name
 
 TESTS = $(testprogs)
 
