@@ -9,6 +9,7 @@ Q: How do I add/mark strings to be translated ?
 A: - Use N_(...) to mark for translation.
    - Use _(...) to get a translated string
    - run "make gstreamer-0.7.pot-update" to update the .pot file
+     and check if your new strings got added
 
 Q: How do I add a language ?
 A: - copy gstreamer-0.7.pot to your new language.po
@@ -24,4 +25,6 @@ A: - run make language.po-update to update your .po file
    - run make install from the .po dir (so the updated strings get installed
      and will be used in the lib/app) and test if the new strings are
      translated
+     (To check, you need to export LANG=ll_LL.  Make sure you add the last
+      bit; ie. for Dutch you need export LANG=nl_NL)
    - commit

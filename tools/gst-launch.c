@@ -7,7 +7,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <locale.h>
+#include <locale.h> /* for LC_ALL */
+#include "gst/gst-i18n-app.h"
 
 #include <gst/gst.h>
 
@@ -56,7 +57,7 @@ idle_func (gpointer data)
 
   if (!busy || caught_intr || (max_iterations>0 && iterations>=max_iterations)) {
     gst_main_quit ();
-    g_print ("execution ended after %" G_GUINT64_FORMAT " iterations (sum %" G_GUINT64_FORMAT " ns, average %" G_GUINT64_FORMAT " ns, min %" G_GUINT64_FORMAT " ns, max %" G_GUINT64_FORMAT " ns)\n", 
+    g_print (_("Execution ended after %" G_GUINT64_FORMAT " iterations (sum %" G_GUINT64_FORMAT " ns, average %" G_GUINT64_FORMAT " ns, min %" G_GUINT64_FORMAT " ns, max %" G_GUINT64_FORMAT " ns).\n"),
 		    iterations, sum, sum/iterations, min, max);
   }
 
@@ -65,7 +66,7 @@ idle_func (gpointer data)
 
 #ifndef GST_DISABLE_LOADSAVE
 static GstElement*
-xmllaunch_parse_cmdline (const gchar **argv) 
+xmllaunch_parse_cmdline (const gchar **argv)
 {
   GstElement *pipeline = NULL, *e;
   GstXML *xml;
@@ -76,7 +77,7 @@ xmllaunch_parse_cmdline (const gchar **argv)
   gint i = 0;
   
   if (!(arg = argv[0])) {
-    g_print ("usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n");
+    g_print (_("Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"));
     exit (1);
   }
   
@@ -84,18 +85,18 @@ xmllaunch_parse_cmdline (const gchar **argv)
   err = gst_xml_parse_file(xml, arg, NULL);
   
   if (err != TRUE) {
-    fprintf (stderr, "ERROR: parse of xml file '%s' failed\n", arg);
+    fprintf (stderr, _("ERROR: parse of xml file '%s' failed.\n"), arg);
     exit (1);
   }
   
   l = gst_xml_get_topelements (xml);
   if (!l) {
-    fprintf (stderr, "ERROR: no toplevel pipeline element in file '%s'\n", arg);
+    fprintf (stderr, _("ERROR: no toplevel pipeline element in file '%s'.\n"), arg);
     exit (1);
   }
     
   if (l->next)
-    g_warning ("only one toplevel element is supported at this time");
+    fprintf (stderr,  _("WARNING: only one toplevel element is supported at this time."));
   
   pipeline = GST_ELEMENT (l->data);
   
@@ -105,7 +106,7 @@ xmllaunch_parse_cmdline (const gchar **argv)
     value = strchr (element, '=');
     
     if (!(element < property && property < value)) {
-      fprintf (stderr, "ERROR: could not parse command line argument %d: %s", i, element);
+      fprintf (stderr, _("ERROR: could not parse command line argument %d: %s"), i, element);
       g_free (element);
       exit (1);
     }
@@ -115,7 +116,7 @@ xmllaunch_parse_cmdline (const gchar **argv)
     
     e = gst_bin_get_by_name (GST_BIN (pipeline), element);
     if (!e) {
-      g_warning ("element named '%s' not found", element);
+      fprintf (stderr, _("WARNING: element named '%s' not found."), element);
     } else {
       gst_util_set_object_arg (G_OBJECT (e), property, value);
     }
@@ -250,16 +251,17 @@ print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
 static void
 found_tag (GObject *pipeline, GstElement *source, GstTagList *tags)
 {
-  g_print ("FOUND TAG      : element \"%s\"\n", GST_STR_NULL (GST_ELEMENT_NAME (source)));
+  g_print (_("FOUND TAG      : found by element \"%s\".\n"),
+           GST_STR_NULL (GST_ELEMENT_NAME (source)));
   gst_tag_list_foreach (tags, print_tag, NULL);
 }
 
 /* we only use sighandler here because the registers are not important */
-static void 
+static void
 sigint_handler_sighandler (int signum)
 {
-  g_print ("Caught interrupt\n");
-  
+  g_print ("Caught interrupt.\n");
+
   sigint_restore();
 
   caught_intr = TRUE;
@@ -292,11 +294,11 @@ play_handler (int signum)
 {
   switch (signum) {
     case SIGUSR1:
-      g_print ("Caught SIGUSR1 - Play request\n");
+      g_print ("Caught SIGUSR1 - Play request.\n");
       gst_element_set_state (pipeline, GST_STATE_PLAYING);
       break;
     case SIGUSR2:
-      g_print ("Caught SIGUSR2 - Stop request\n");
+      g_print ("Caught SIGUSR2 - Stop request.\n");
       gst_element_set_state (pipeline, GST_STATE_NULL);
       break;
   }
@@ -326,21 +328,21 @@ main(int argc, char *argv[])
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
     {"tags",	't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &tags,   0,
-     "output tags (also known as metadata)", NULL},
+     N_("Output tags (also known as metadata)"), NULL},
     {"verbose",	'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
-     "output status information and property notifications", NULL},
+     N_("Output status information and property notifications"), NULL},
     {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
-     "do not output status information of TYPE", "TYPE1,TYPE2,..."},
+     N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
 #ifndef GST_DISABLE_LOADSAVE
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
-     "save xml representation of pipeline to FILE and exit", "FILE"},
+     N_("Save xml representation of pipeline to FILE and exit"), N_("FILE")},
 #endif
     {"no-fault", 'f', POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
-     "Do not install a fault handler", NULL},
+     N_("Do not install a fault handler"), NULL},
     {"trace",   'T',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
-     "print alloc trace if enabled at compile time", NULL},
+     N_("Print alloc trace (if enabled at compile time)"), NULL},
     {"iterations",'i',POPT_ARG_INT|POPT_ARGFLAG_STRIP,    &max_iterations,   0,
-     "number of times to iterate pipeline", NULL},
+     N_("Number of times to iterate pipeline"), NULL},
     POPT_TABLEEND
   };
 
@@ -351,9 +353,11 @@ main(int argc, char *argv[])
   free (malloc (8)); /* -lefence */
 
   setlocale(LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
 
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
-  
+
   gst_init_with_popt_table (&argc, &argv, options);
 
   /* FIXpopt: strip short args, too. We do it ourselves for now */
@@ -382,7 +386,7 @@ main(int argc, char *argv[])
   
   if (trace) {
     if (!gst_alloc_trace_available()) {
-      g_warning ("trace not available (recompile with trace enabled)");
+      g_warning ("Trace not available (recompile with trace enabled).");
     }
     gst_alloc_trace_print_all ();
   }
@@ -403,14 +407,16 @@ main(int argc, char *argv[])
 
   if (!pipeline) {
     if (error) {
-      fprintf(stderr, "ERROR: pipeline could not be constructed: %s\n", error->message);
+      fprintf(stderr, _("ERROR: pipeline could not be constructed: %s\n"),
+              error->message);
       g_error_free (error);
     } else {
-      fprintf(stderr, "ERROR: pipeline could not be constructed\n");
+      fprintf(stderr, _("ERROR: pipeline could not be constructed.\n"));
     }
     exit(1);
   } else if (error) {
-    fprintf(stderr, "WARNING: erroneous pipeline: %s\n         Trying to run anyway\n", error->message);
+    fprintf(stderr, _("WARNING: erroneous pipeline: %s\n"), error->message);
+    fprintf(stderr, _("         Trying to run anyway.\n"));
     g_error_free (error);
   }
   
@@ -434,16 +440,16 @@ main(int argc, char *argv[])
     if (!GST_IS_BIN (pipeline)) {
       GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
       if (real_pipeline == NULL) {
-        fprintf(stderr, "ERROR: The pipeline element wasn't found.\n");
+        fprintf(stderr, _("ERROR: the 'pipeline' element wasn't found.\n"));
         exit(1);
       }
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
 
-    fprintf(stderr,"RUNNING pipeline\n");
+    fprintf(stderr, _("RUNNING pipeline ...\n"));
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
-      fprintf(stderr,"pipeline doesn't want to play\n");
+      fprintf(stderr, _("ERROR: pipeline doesn't want to play.\n"));
       res = -1;
       goto end;
     }
@@ -454,9 +460,9 @@ main(int argc, char *argv[])
         g_idle_add (idle_func, pipeline);
         gst_main ();
     } else {
-        g_print ("waiting for the state change...\n");
+        g_print ("Waiting for the state change... ");
         gst_element_wait_state_change (pipeline);
-        g_print ("got the state change...\n");
+        g_print ("got the state change.\n");
     }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);

@@ -1,5 +1,13 @@
 2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/POTFILES.in: adding gst-launch
+	* po/nl.po: updated translation, all 99 strings translated
+	* tools/gst-launch.c: (idle_func), (xmllaunch_parse_cmdline),
+	(found_tag), (sigint_handler_sighandler), (play_handler), (main):
+          fix strings for translation
+
+2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
         * gst/gst.c:
           - capitalize beginnings of popt options
           - fix strings for translation

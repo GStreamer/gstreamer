@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.7 0.7.0.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2004-01-13 12:03+0100\n"
+"POT-Creation-Date: 2004-01-13 14:29+0100\n"
 "PO-Revision-Date: 2003-10-08 15:36-0700\n"
 "Last-Translator: David Schleef <ds@schleef.org>\n"
 "Language-Team: Gnome Translators <i18n@gnome.org>\n"
@@ -15,74 +15,100 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:117
+#: gst/gst.c:118
 msgid "Print the GStreamer version"
 msgstr "druck die GStreamer Version"
 
-#: gst/gst.c:118
+#: gst/gst.c:119
 msgid "Make all warnings fatal"
 msgstr "macht alle Achtunge toedlich"
 
-#: gst/gst.c:120
+#: gst/gst.c:121
 msgid ""
-"default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 
 #: gst/gst.c:121
-msgid ""
-"colon-seperated list of category_name=level pairs to set specific levels for "
-"the individual categories.\n"
-"Example:GST_AUTOPLUG=5:GST_ELEMENT_*=3"
+msgid "LEVEL"
 msgstr ""
 
 #: gst/gst.c:122
-msgid "disable color debugging output"
-msgstr "abschalt Farbe in Fehlersucheausgabe"
-
-#: gst/gst.c:123
-msgid "disable debugging"
-msgstr "abschalt die Fehlersuche"
-
-#: gst/gst.c:124
-msgid "print available debug categories and exit"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories.\n"
+"Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 
-#: gst/gst.c:126
-msgid "Disable accelerated CPU instructions"
+#: gst/gst.c:122
+msgid "CATEGORIES"
+msgstr ""
+
+#: gst/gst.c:123
+#, fuzzy
+msgid "Disable color debugging output"
+msgstr "abschalt Farbe in Fehlersucheausgabe"
+
+#: gst/gst.c:124
+#, fuzzy
+msgid "Disable debugging"
+msgstr "abschalt die Fehlersuche"
+
+#: gst/gst.c:125
+msgid "Print available debug categories and exit"
 msgstr ""
 
 #: gst/gst.c:127
-msgid "enable verbose plugin loading diagnostics"
+msgid "Disable accelerated CPU instructions"
 msgstr ""
 
 #: gst/gst.c:128
-msgid "'"
-msgstr ""
-
-#: gst/gst.c:128
-msgid "'--separated path list for loading plugins"
+msgid "Enable verbose plugin loading diagnostics"
 msgstr ""
 
 #: gst/gst.c:129
+msgid "path list for loading plugins (separated by '"
+msgstr ""
+
+#: gst/gst.c:129
+msgid "')"
+msgstr ""
+
+#: gst/gst.c:129
+msgid "PATHS"
+msgstr ""
+
+#: gst/gst.c:130
 msgid ""
-"comma-separated list of plugins to preload in addition to the list stored in "
+"Comma-separated list of plugins to preload in addition to the list stored in "
 "env variable GST_PLUGIN_PATH"
 msgstr ""
 
 #: gst/gst.c:130
-msgid "disable trapping of segmentation faults during plugin loading"
+msgid "PLUGINS"
 msgstr ""
 
 #: gst/gst.c:131
-msgid "scheduler to use ('"
+msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 
-#: gst/gst.c:131
+#: gst/gst.c:132
+msgid "Scheduler to use ('"
+msgstr ""
+
+#: gst/gst.c:132
 msgid "' is the default)"
 msgstr ""
 
 #: gst/gst.c:132
-msgid "registry to use"
+msgid "SCHEDULER"
+msgstr ""
+
+#: gst/gst.c:133
+msgid "Registry to use"
+msgstr ""
+
+#: gst/gst.c:133
+msgid "REGISTRY"
 msgstr ""
 
 #: gst/gsttag.c:61
@@ -275,6 +301,129 @@ msgstr ""
 
 #: gst/elements/gsttypefindelement.c:158
 msgid "maximum"
+msgstr ""
+
+#: tools/gst-launch.c:60
+msgid "Execution ended after %"
+msgstr ""
+
+#: tools/gst-launch.c:60
+msgid " iterations (sum %"
+msgstr ""
+
+#: tools/gst-launch.c:60
+msgid " ns, average %"
+msgstr ""
+
+#: tools/gst-launch.c:60
+msgid " ns, min %"
+msgstr ""
+
+#: tools/gst-launch.c:60
+msgid " ns, max %"
+msgstr ""
+
+#: tools/gst-launch.c:60
+msgid " ns).\n"
+msgstr ""
+
+#: tools/gst-launch.c:80
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr ""
+
+#: tools/gst-launch.c:88
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr ""
+
+#: tools/gst-launch.c:94
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr ""
+
+#: tools/gst-launch.c:99
+msgid "WARNING: only one toplevel element is supported at this time."
+msgstr ""
+
+#: tools/gst-launch.c:109
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s"
+msgstr ""
+
+#: tools/gst-launch.c:119
+#, c-format
+msgid "WARNING: element named '%s' not found."
+msgstr ""
+
+#: tools/gst-launch.c:254
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr ""
+
+#: tools/gst-launch.c:331
+msgid "Output tags (also known as metadata)"
+msgstr ""
+
+#: tools/gst-launch.c:333
+msgid "Output status information and property notifications"
+msgstr ""
+
+#: tools/gst-launch.c:335
+msgid "Do not output status information of TYPE"
+msgstr ""
+
+#: tools/gst-launch.c:335
+msgid "TYPE1,TYPE2,..."
+msgstr ""
+
+#: tools/gst-launch.c:338
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr ""
+
+#: tools/gst-launch.c:338
+msgid "FILE"
+msgstr ""
+
+#: tools/gst-launch.c:341
+msgid "Do not install a fault handler"
+msgstr ""
+
+#: tools/gst-launch.c:343
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr ""
+
+#: tools/gst-launch.c:345
+msgid "Number of times to iterate pipeline"
+msgstr ""
+
+#: tools/gst-launch.c:410
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s\n"
+msgstr ""
+
+#: tools/gst-launch.c:414
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr ""
+
+#: tools/gst-launch.c:418
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr ""
+
+#: tools/gst-launch.c:419
+msgid "         Trying to run anyway.\n"
+msgstr ""
+
+#: tools/gst-launch.c:443
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr ""
+
+#: tools/gst-launch.c:450
+msgid "RUNNING pipeline ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:452
+msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr ""
 
 #~ msgid "This is a test\n"
