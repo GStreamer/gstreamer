@@ -152,13 +152,6 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @arg1: 
 @arg2: 
 
-<!-- ##### MACRO GST_TYPE_ELEMENT ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_NUM_STATES ##### -->
 <para>
 The maximun number of states.

@@ -23,10 +23,3 @@ describes URI types
 @GST_URI_SINK: 
 @GST_URI_SRC: 
 
-<!-- ##### MACRO GST_TYPE_URI ##### -->
-<para>
-
-</para>
-
-
-

@@ -282,10 +282,10 @@ Copies the given buffer using the copy function of the parent GstData structure.
 
 <!-- ##### MACRO gst_buffer_is_writable ##### -->
 <para>
-
+Tests if you can safely write data into a buffer's data array.
 </para>
 
-@buf: 
+@buf: a #GstBuffer to check
 
 
 <!-- ##### MACRO gst_buffer_copy_on_write ##### -->

@@ -72,13 +72,6 @@ Is emitted when the parent of an object is unset.
 The name of the object
 </para>
 
-<!-- ##### MACRO GST_TYPE_OBJECT ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM GstObjectFlags ##### -->
 <para>
 Flags for an object

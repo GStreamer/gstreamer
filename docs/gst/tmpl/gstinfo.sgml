@@ -135,27 +135,6 @@ categories to make them stand out in debugging output.
 @GST_DEBUG_BOLD: Make the output bold.
 @GST_DEBUG_UNDERLINE: Underline the output.
 
-<!-- ##### MACRO GST_DEBUG_FG_MASK ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_DEBUG_BG_MASK ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_DEBUG_FORMAT_MASK ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GstDebugCategory ##### -->
 <para>
 This is the struct that describes the categories. Once initialized with

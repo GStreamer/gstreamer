@@ -21,13 +21,6 @@ and the element property that can handle a given URI.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_URI_HANDLER ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_URI_TYPE_IS_VALID ##### -->
 <para>
 

@@ -20,13 +20,6 @@ List of tags and values used to describe media metadata
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_TAG_LIST ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM GstTagMergeMode ##### -->
 <para>
 

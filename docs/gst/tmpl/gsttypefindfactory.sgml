@@ -73,13 +73,6 @@ Object that stores information about a typefind function
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_TYPE_FIND_FACTORY ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gst_type_find_factory_get_list ##### -->
 <para>
 

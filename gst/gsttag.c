@@ -355,7 +355,7 @@ gst_tag_get_nick (const gchar * tag)
  * Returns the human-readable description of this tag, You must not change or 
  * free this string.
  *
- * Return the human-readable description of this tag
+ * Returns: the human-readable description of this tag
  */
 const gchar *
 gst_tag_get_description (const gchar * tag)

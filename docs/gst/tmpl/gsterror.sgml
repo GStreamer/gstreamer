@@ -84,13 +84,6 @@ Categorized error messages
 @GST_STREAM_ERROR_FORMAT: 
 @GST_STREAM_ERROR_NUM_ERRORS: 
 
-<!-- ##### MACRO GST_TYPE_G_ERROR ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_LIBRARY_ERROR ##### -->
 <para>
 

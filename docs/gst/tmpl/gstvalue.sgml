@@ -16,13 +16,14 @@ GValue implementations specific to GStreamer
 
 <!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
-
+will transform four characters into a host-endiannness guint32 fourcc:
+<code>guint32 fourcc = GST_MAKE_FOURCC ('M','J','P','G');</code>
 </para>
 
-@a: 
-@b: 
-@c: 
-@d: 
+@a: the first component
+@b: the second component
+@c: the third component
+@d: the fourth component
 
 
 <!-- ##### MACRO GST_STR_FOURCC ##### -->
@@ -35,17 +36,21 @@ GValue implementations specific to GStreamer
 
 <!-- ##### MACRO GST_FOURCC_FORMAT ##### -->
 <para>
-
+Can be used to properly output a fourcc (a guint32) value in a
+printf()-style text message.
+<code>printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));</code>
 </para>
 
 
 
 <!-- ##### MACRO GST_FOURCC_ARGS ##### -->
 <para>
-
+Can be used to properly output a fourcc (a guint32) value in a
+printf()-style text message.
+<code>printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));</code>
 </para>
 
-@fourcc: 
+@fourcc: the fourcc value to print
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
@@ -102,48 +107,6 @@ GValue implementations specific to GStreamer
 </para>
 
 @x: 
-
-
-<!-- ##### MACRO GST_TYPE_FOURCC ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_TYPE_INT_RANGE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_TYPE_DOUBLE_RANGE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_TYPE_LIST ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_TYPE_FIXED_LIST ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_TYPE_FRACTION ##### -->
-<para>
-
-</para>
-
 
 
 <!-- ##### MACRO GST_VALUE_LESS_THAN ##### -->

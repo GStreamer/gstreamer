@@ -34,13 +34,6 @@ Is emited when a new entry is added to the index.
 
 </para>
 
-<!-- ##### MACRO GST_TYPE_INDEX_ENTRY ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GstIndexEntry ##### -->
 <para>
 The basic element of an index.

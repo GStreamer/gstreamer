@@ -54,13 +54,6 @@ so that the autopluggers can select a plugin more appropriatly
 #GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
 </para>
 
-<!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GstElementFactory ##### -->
 <para>
 

@@ -83,18 +83,20 @@ The result of a pad link.
 
 <!-- ##### MACRO GST_PAD_LINK_FAILED ##### -->
 <para>
-
+Macro to test if the given #GstPadLinkReturn value indicates a
+failed negotiation step (REFUSED/DELAYED).
 </para>
 
-@ret: 
+@ret: the #GstPadLinkReturn value
 
 
 <!-- ##### MACRO GST_PAD_LINK_SUCCESSFUL ##### -->
 <para>
-
+Macro to test if the given #GstPadLinkReturn value indicates a
+successfull negotiation step (OK/DONE).
 </para>
 
-@ret: 
+@ret: the #GstPadLinkReturn value
 
 
 <!-- ##### MACRO GST_PAD_QUERY_TYPE_FUNCTION ##### -->
@@ -437,13 +439,6 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: a #GstPad to check.
-
-
-<!-- ##### MACRO GST_TYPE_PAD_TEMPLATE ##### -->
-<para>
-
-</para>
-
 
 
 <!-- ##### ENUM GstPadPresence ##### -->

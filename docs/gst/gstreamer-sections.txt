@@ -258,6 +258,8 @@ gst_clock_get_type
 <SECTION>
 <FILE>gstcompat</FILE>
 <TITLE>GstCompat</TITLE>
+<SUBSECTION Standard>
+GST_PAD_IS_CONNECTED
 gst_element_connect
 gst_element_connect_pads
 gst_element_connect_many
@@ -277,8 +279,8 @@ GST_PAD_CONNECT_DONE
 GstPadConnectReturn
 GstPadConnectFunction
 gst_info
-<SUBSECTION Standard>
-GST_PAD_IS_CONNECTED
+<SUBSECTION Private>
+
 </SECTION>
 
 <SECTION>
@@ -314,7 +316,6 @@ GST_DATA_TYPE
 GST_DATA_FLAGS
 GST_DATA_FLAG_SHIFT
 GST_DATA_FLAG_UNSET
-GST_TYPE_DATA
 GstData
 GstDataFreeFunction
 GstDataCopyFunction
@@ -333,6 +334,7 @@ gst_data_ref
 gst_data_ref_by_count
 gst_data_unref
 <SUBSECTION Standard>
+GST_TYPE_DATA
 GST_DATA_FLAG_SET
 GST_DATA_FLAG_IS_SET
 <SUBSECTION Private>
@@ -343,7 +345,6 @@ gst_data_get_type
 <FILE>gstelement</FILE>
 <TITLE>GstElement</TITLE>
 GstElement
-GST_TYPE_ELEMENT
 GST_NUM_STATES
 GST_STATE
 GST_STATE_PENDING
@@ -459,6 +460,7 @@ GST_IS_ELEMENT
 GST_ELEMENT_CLASS
 GST_IS_ELEMENT_CLASS
 GST_ELEMENT_GET_CLASS
+GST_TYPE_ELEMENT
 <SUBSECTION Private>
 gst_element_get_type
 </SECTION>
@@ -475,7 +477,6 @@ GST_IS_ELEMENT_DETAILS
 <SECTION>
 <FILE>gstelementfactory</FILE>
 <TITLE>GstElementFactory</TITLE>
-GST_TYPE_ELEMENT_FACTORY
 GstElementFactory
 gst_element_register
 gst_element_factory_find
@@ -498,6 +499,7 @@ GST_ELEMENT_FACTORY
 GST_IS_ELEMENT_FACTORY
 GST_ELEMENT_FACTORY_CLASS
 GST_IS_ELEMENT_FACTORY_CLASS
+GST_TYPE_ELEMENT_FACTORY
 <SUBSECTION Private>
 gst_element_factory_get_type
 </SECTION>
@@ -505,6 +507,7 @@ gst_element_factory_get_type
 <SECTION>
 <FILE>gstenumtypes</FILE>
 <TITLE>GstEnumTypes</TITLE>
+<SUBSECTION Standard>
 GST_TYPE_ALLOC_TRACE_FLAGS
 GST_TYPE_ASSOC_FLAGS
 GST_TYPE_BIN_FLAGS
@@ -543,6 +546,7 @@ GST_TYPE_REGISTRY_FLAGS
 GST_TYPE_REGISTRY_RETURN
 GST_TYPE_RESOURCE_ERROR
 GST_TYPE_RESULT
+GST_TYPE_RANK
 GST_TYPE_SCHEDULER_FLAGS
 GST_TYPE_SCHEDULER_STATE
 GST_TYPE_SEEK_ACCURACY
@@ -592,6 +596,7 @@ gst_registry_flags_get_type
 gst_registry_return_get_type
 gst_resource_error_get_type
 gst_result_get_type
+gst_rank_get_type
 gst_scheduler_flags_get_type
 gst_scheduler_state_get_type
 gst_seek_accuracy_get_type
@@ -611,7 +616,6 @@ GstCoreError
 GstLibraryError
 GstResourceError
 GstStreamError
-GST_TYPE_G_ERROR
 GST_LIBRARY_ERROR
 GST_RESOURCE_ERROR
 GST_CORE_ERROR
@@ -622,6 +626,8 @@ gst_stream_error_quark
 gst_core_error_quark
 gst_resource_error_quark
 gst_library_error_quark
+<SUBSECTION Standard>
+GST_TYPE_G_ERROR
 <SUBSECTION Private>
 gst_g_error_get_type
 </SECTION>
@@ -629,7 +635,6 @@ gst_g_error_get_type
 <SECTION>
 <FILE>gstevent</FILE>
 <TITLE>GstEvent</TITLE>
-GST_TYPE_EVENT
 GstEvent
 GstEventType
 GST_EVENT_ANY
@@ -678,6 +683,7 @@ gst_event_new_flush
 <SUBSECTION Standard>
 GST_EVENT
 GST_IS_EVENT
+GST_TYPE_EVENT
 <SUBSECTION Private>
 gst_event_get_type
 </SECTION>
@@ -717,6 +723,7 @@ GST_GHOST_PAD
 GST_IS_GHOST_PAD
 GST_GHOST_PAD_CLASS
 GST_IS_GHOST_PAD_CLASS
+GST_TYPE_GHOST_PAD
 <SUBSECTION Private>
 gst_ghost_pad_get_type
 </SECTION>
@@ -725,7 +732,6 @@ gst_ghost_pad_get_type
 <FILE>gstindex</FILE>
 <TITLE>GstIndex</TITLE>
 GstIndex
-GST_TYPE_INDEX_ENTRY
 GstIndexEntry
 GstIndexGroup
 GstIndexCertainty
@@ -775,6 +781,7 @@ GST_TYPE_INDEX
 GST_INDEX_CLASS
 GST_IS_INDEX_CLASS
 GST_INDEX_GET_CLASS
+GST_TYPE_INDEX_ENTRY
 <SUBSECTION Private>
 gst_index_get_type
 </SECTION>
@@ -782,7 +789,6 @@ gst_index_get_type
 <SECTION>
 <FILE>gstindexfactory</FILE>
 <TITLE>GstIndexFactory</TITLE>
-GST_TYPE_INDEX_FACTORY
 GstIndexFactory
 gst_index_factory_new
 gst_index_factory_destroy
@@ -796,6 +802,7 @@ GST_IS_INDEX_FACTORY
 GST_INDEX_FACTORY_CLASS
 GST_IS_INDEX_FACTORY_CLASS
 GST_INDEX_FACTORY_GET_CLASS
+GST_TYPE_INDEX_FACTORY
 <SUBSECTION Private>
 gst_index_factory_get_type
 </SECTION>
@@ -806,9 +813,6 @@ gst_index_factory_get_type
 GstDebugLevel
 GST_LEVEL_DEFAULT
 GstDebugColorFlags
-GST_DEBUG_FG_MASK
-GST_DEBUG_BG_MASK
-GST_DEBUG_FORMAT_MASK
 GstDebugCategory
 GST_STR_NULL
 GST_DEBUG_PAD_NAME
@@ -874,12 +878,15 @@ gst_debug_category_unset_threshold_for_name
 gst_debug_print_stack_trace
 GST_TIME_FORMAT
 GST_TIME_ARGS
+<SUBSECTION Private>
+GST_DEBUG_FG_MASK
+GST_DEBUG_BG_MASK
+GST_DEBUG_FORMAT_MASK
 </SECTION>
 
 <SECTION>
 <FILE>gstimplementsinterface</FILE>
 <TITLE>GstImplementsInterface</TITLE>
-GST_TYPE_IMPLEMENTS_INTERFACE
 GstImplementsInterface
 GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST
 GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE
@@ -893,6 +900,7 @@ GST_IMPLEMENTS_INTERFACE_CLASS
 GST_IS_IMPLEMENTS_INTERFACE
 GST_IS_IMPLEMENTS_INTERFACE_CLASS
 GST_IMPLEMENTS_INTERFACE_GET_CLASS
+GST_TYPE_IMPLEMENTS_INTERFACE
 <SUBSECTION Private>
 gst_implements_interface_get_type
 </SECTION>
@@ -920,7 +928,6 @@ gst_mem_chunk_free
 <FILE>gstobject</FILE>
 <TITLE>GstObject</TITLE>
 GstObject
-GST_TYPE_OBJECT
 GstObjectFlags
 GST_FLAGS
 GST_FLAG_IS_SET
@@ -957,6 +964,7 @@ GST_IS_OBJECT
 GST_OBJECT_CLASS
 GST_IS_OBJECT_CLASS
 GST_OBJECT_GET_CLASS
+GST_TYPE_OBJECT
 <SUBSECTION Private>
 gst_object_get_type
 xmlNodePtr
@@ -1006,7 +1014,6 @@ GST_PAD_IS_USABLE
 GST_PAD_CAN_PULL
 GST_PAD_IS_SRC
 GST_PAD_IS_SINK
-GST_TYPE_PAD_TEMPLATE
 GstPadPresence
 gst_pad_new
 gst_pad_new_from_template
@@ -1102,6 +1109,7 @@ GST_PAD
 GST_IS_PAD
 GST_PAD_CLASS
 GST_IS_PAD_CLASS
+GST_TYPE_PAD
 <SUBSECTION Private>
 gst_pad_get_type
 </SECTION>
@@ -1111,8 +1119,6 @@ gst_pad_get_type
 <TITLE>GstPadTemplate</TITLE>
 GstPadTemplate
 GstStaticPadTemplate
-GST_TYPE_PAD
-GST_TYPE_GHOST_PAD
 GST_IS_GHOST_PAD_FAST
 GST_IS_PAD_FAST
 GST_PAD_TEMPLATE_NAME_TEMPLATE
@@ -1132,6 +1138,7 @@ GST_IS_PAD_TEMPLATE
 GST_PAD_TEMPLATE_CLASS
 GST_IS_PAD_TEMPLATE_CLASS
 GST_STATIC_PAD_TEMPLATE
+GST_TYPE_PAD_TEMPLATE
 <SUBSECTION Private>
 gst_pad_template_get_type
 </SECTION>
@@ -1155,10 +1162,10 @@ gst_pipeline_new
 GstPipelineClass
 GST_PIPELINE
 GST_IS_PIPELINE
-GST_TYPE_PIPELINE
 GST_PIPELINE_CLASS
 GST_IS_PIPELINE_CLASS
 GST_PIPELINE_GET_CLASS
+GST_TYPE_PIPELINE
 <SUBSECTION Private>
 gst_pipeline_get_type
 </SECTION>
@@ -1177,7 +1184,6 @@ GST_PLUGIN_DEFINE
 GST_PLUGIN_DEFINE_STATIC
 GST_LICENSE_UNKNOWN
 GstPluginFilter
-GST_TYPE_PLUGIN
 gst_plugin_get_name
 gst_plugin_get_description
 gst_plugin_get_filename
@@ -1199,6 +1205,7 @@ gst_plugin_load
 gst_library_load
 <SUBSECTION Standard>
 GST_PLUGIN
+GST_TYPE_PLUGIN
 <SUBSECTION Private>
 gst_plugin_get_type
 </SECTION>
@@ -1221,10 +1228,10 @@ gst_plugin_feature_get_name
 GstPluginFeatureClass
 GST_PLUGIN_FEATURE
 GST_IS_PLUGIN_FEATURE
-GST_TYPE_PLUGIN_FEATURE
 GST_PLUGIN_FEATURE_CLASS
 GST_IS_PLUGIN_FEATURE_CLASS
 GST_PLUGIN_FEATURE_GET_CLASS
+GST_TYPE_PLUGIN_FEATURE
 <SUBSECTION Private>
 gst_plugin_feature_get_type
 </SECTION>
@@ -1270,9 +1277,9 @@ GstQueueSize
 GstQueueClass
 GST_QUEUE
 GST_IS_QUEUE
-GST_TYPE_QUEUE
 GST_QUEUE_CLASS
 GST_IS_QUEUE_CLASS
+GST_TYPE_QUEUE
 <SUBSECTION Private>
 gst_queue_get_type
 </SECTION>
@@ -1282,7 +1289,6 @@ gst_queue_get_type
 <FILE>gstrealpad</FILE>
 <TITLE>GstRealPad</TITLE>
 GstRealPad
-GST_TYPE_REAL_PAD
 GST_IS_REAL_PAD_FAST
 GST_RPAD_DIRECTION
 GST_RPAD_CAPS
@@ -1313,6 +1319,7 @@ GST_REAL_PAD
 GST_IS_REAL_PAD
 GST_REAL_PAD_CLASS
 GST_IS_REAL_PAD_CLASS
+GST_TYPE_REAL_PAD
 <SUBSECTION Private>
 gst_real_pad_get_type
 </SECTION>
@@ -1353,10 +1360,10 @@ gst_registry_update_plugin
 GstRegistryClass
 GST_REGISTRY
 GST_IS_REGISTRY
-GST_TYPE_REGISTRY
 GST_REGISTRY_CLASS
 GST_IS_REGISTRY_CLASS
 GST_REGISTRY_GET_CLASS
+GST_TYPE_REGISTRY
 <SUBSECTION Private>
 gst_registry_get_type
 </SECTION>
@@ -1414,10 +1421,10 @@ GST_SCHEDULER_DEFAULT_NAME
 GstSchedulerClass
 GST_SCHEDULER
 GST_IS_SCHEDULER
-GST_TYPE_SCHEDULER
 GST_SCHEDULER_CLASS
 GST_IS_SCHEDULER_CLASS
 GST_SCHEDULER_GET_CLASS
+GST_TYPE_SCHEDULER
 <SUBSECTION Private>
 gst_scheduler_get_type
 </SECTION>
@@ -1426,7 +1433,6 @@ gst_scheduler_get_type
 <FILE>gstschedulerfactory</FILE>
 <TITLE>GstSchedulerFactory</TITLE>
 GstSchedulerFactory
-GST_TYPE_SCHEDULER_FACTORY
 gst_scheduler_register
 gst_scheduler_factory_new
 gst_scheduler_factory_destroy
@@ -1442,6 +1448,7 @@ GST_IS_SCHEDULER_FACTORY
 GST_SCHEDULER_FACTORY_CLASS
 GST_IS_SCHEDULER_FACTORY_CLASS
 GST_SCHEDULER_FACTORY_GET_CLASS
+GST_TYPE_SCHEDULER_FACTORY
 <SUBSECTION Private>
 gst_scheduler_factory_get_type
 </SECTION>
@@ -1449,7 +1456,6 @@ gst_scheduler_factory_get_type
 <SECTION>
 <FILE>gststructure</FILE>
 <TITLE>GstStructure</TITLE>
-GST_TYPE_STRUCTURE
 GstStructure
 GstStructureForeachFunc
 gst_structure_empty_new
@@ -1486,6 +1492,7 @@ gst_structure_from_string
 <SUBSECTION Standard>
 GST_STRUCTURE
 GST_IS_STRUCTURE
+GST_TYPE_STRUCTURE
 <SUBSECTION Private>
 gst_structure_get_type
 </SECTION>
@@ -1494,7 +1501,6 @@ gst_structure_get_type
 <FILE>gstsystemclock</FILE>
 <TITLE>GstSystemClock</TITLE>
 GstSystemClock
-GST_TYPE_SYSTEM_CLOCK
 gst_system_clock_obtain
 <SUBSECTION Standard>
 GstSystemClockClass
@@ -1504,13 +1510,13 @@ gst_system_clock_get_type
 GST_SYSTEM_CLOCK_CLASS
 GST_IS_SYSTEM_CLOCK_CLASS
 GST_SYSTEM_CLOCK_GET_CLASS
+GST_TYPE_SYSTEM_CLOCK
 </SECTION>
 
 <SECTION>
 <FILE>gsttaglist</FILE>
 <TITLE>GstTagList</TITLE>
 GstTagList
-GST_TYPE_TAG_LIST
 GstTagMergeMode
 GstTagFlag
 GstTagForeachFunc
@@ -1606,6 +1612,7 @@ GST_TAG_LIST
 GST_IS_TAG_LIST
 GST_TAG_FLAG_IS_VALID
 GST_TAG_MODE_IS_VALID
+GST_TYPE_TAG_LIST
 <SUBSECTION Private>
 gst_tag_list_get_type
 </SECTION>
@@ -1615,7 +1622,6 @@ gst_tag_list_get_type
 <TITLE>GstTagSetter</TITLE>
 GstTagSetter
 GstTagSetterIFace
-GST_TYPE_TAG_SETTER
 gst_tag_setter_merge
 gst_tag_setter_add
 gst_tag_setter_add_values
@@ -1629,6 +1635,7 @@ GST_TAG_SETTER
 GST_IS_TAG_SETTER
 GST_TAG_SETTER_CLASS
 GST_TAG_SETTER_GET_IFACE
+GST_TYPE_TAG_SETTER
 <SUBSECTION Private>
 gst_tag_setter_get_type
 </SECTION>
@@ -1637,7 +1644,6 @@ gst_tag_setter_get_type
 <FILE>gstthread</FILE>
 <TITLE>GstThread</TITLE>
 GstThread
-GST_TYPE_THREAD
 gst_thread_current
 GstThreadState
 gst_thread_new
@@ -1650,6 +1656,7 @@ GST_IS_THREAD
 GST_THREAD_CLASS
 GST_IS_THREAD_CLASS
 GST_THREAD_GET_CLASS
+GST_TYPE_THREAD
 <SUBSECTION Private>
 gst_thread_get_type
 </SECTION>
@@ -1712,7 +1719,6 @@ gst_type_find_register
 <FILE>gsttypefindfactory</FILE>
 <TITLE>GstTypeFindFactory</TITLE>
 GstTypeFindFactory
-GST_TYPE_TYPE_FIND_FACTORY
 gst_type_find_factory_get_list
 gst_type_find_factory_get_extensions
 gst_type_find_factory_get_caps
@@ -1724,6 +1730,7 @@ GST_IS_TYPE_FIND_FACTORY
 GST_TYPE_FIND_FACTORY_CLASS
 GST_IS_TYPE_FIND_FACTORY_CLASS
 GST_TYPE_FIND_FACTORY_GET_CLASS
+GST_TYPE_TYPE_FIND_FACTORY
 <SUBSECTION Private>
 gst_type_find_factory_get_type
 </SECTION>
@@ -1734,10 +1741,7 @@ gst_type_find_factory_get_type
 GstElementState
 GstElementStateReturn
 GstResult
-GST_RANK_PRIMARY
-GST_RANK_SECONDARY
-GST_RANK_MARGINAL
-GST_RANK_NONE
+GstRank
 GST_PADDING
 GST_PADDING_INIT
 <SUBSECTION Standard>
@@ -1747,7 +1751,6 @@ GST_PADDING_INIT
 <FILE>gsturihandler</FILE>
 <TITLE>GstUriHandler</TITLE>
 GstURIHandler
-GST_TYPE_URI_HANDLER
 GST_URI_TYPE_IS_VALID
 gst_uri_protocol_is_valid
 gst_uri_is_valid
@@ -1766,6 +1769,7 @@ GST_URI_HANDLER
 GST_IS_URI_HANDLER
 GST_URI_HANDLER_CLASS
 GST_URI_HANDLER_GET_INTERFACE
+GST_TYPE_URI_HANDLER
 <SUBSECTION Private>
 gst_uri_handler_get_type
 </SECTION>
@@ -1774,6 +1778,7 @@ gst_uri_handler_get_type
 <FILE>gsturitype</FILE>
 <TITLE>GstUriType</TITLE>
 GstURIType
+<SUBSECTION Standard>
 GST_TYPE_URI
 <SUBSECTION Private>
 gst_uri_get_uri_type
@@ -1822,12 +1827,6 @@ GST_VALUE_HOLDS_LIST
 GST_VALUE_HOLDS_FIXED_LIST
 GST_VALUE_HOLDS_CAPS
 GST_VALUE_HOLDS_FRACTION
-GST_TYPE_FOURCC
-GST_TYPE_INT_RANGE
-GST_TYPE_DOUBLE_RANGE
-GST_TYPE_LIST
-GST_TYPE_FIXED_LIST
-GST_TYPE_FRACTION
 GST_VALUE_LESS_THAN
 GST_VALUE_EQUAL
 GST_VALUE_GREATER_THAN
@@ -1874,6 +1873,13 @@ gst_value_register_subtract_func
 gst_value_intersect
 gst_value_can_intersect
 gst_value_register_intersect_func
+<SUBSECTION Standard>
+GST_TYPE_FOURCC
+GST_TYPE_INT_RANGE
+GST_TYPE_DOUBLE_RANGE
+GST_TYPE_LIST
+GST_TYPE_FIXED_LIST
+GST_TYPE_FRACTION
 </SECTION>
 
 <SECTION>
@@ -1902,10 +1908,10 @@ gst_xml_make_element
 GstXMLClass
 GST_XML
 GST_IS_XML
-GST_TYPE_XML
 GST_XML_CLASS
 GST_IS_XML_CLASS
 GST_XML_GET_CLASS
+GST_TYPE_XML
 <SUBSECTION Private>
 gst_xml_get_type
 </SECTION>

@@ -37,13 +37,6 @@ Use gst_scheduler_factory_destroy() to remove the factory from the global list.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gst_scheduler_register ##### -->
 <para>
 

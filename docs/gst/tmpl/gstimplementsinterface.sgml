@@ -14,13 +14,6 @@ Core interface implemented by #GstElements that allows runtime querying of inter
 
 </para>
 
-<!-- ##### MACRO GST_TYPE_IMPLEMENTS_INTERFACE ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GstImplementsInterface ##### -->
 <para>
 

@@ -105,7 +105,7 @@ struct _GstDebugCategory {
 
 /********** some convenience macros for debugging **********/
 
-/* This is needed in printf's if a char* might be NULL. Solaris crashes then */
+/* This is needed in printf's if a char* might be NULL. Solaris crashes then. */
 #define GST_STR_NULL(str) ((str) ? (str) : "(NULL)")
 
 /* easier debugging for pad names */
@@ -114,8 +114,7 @@ struct _GstDebugCategory {
   GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \
   "''", GST_OBJECT_NAME (pad)
 
-/* You might want to define GST_FUNCTION in apps' configure script */
-
+/* You might want to define GST_FUNCTION in apps' configure script. */
 #ifndef GST_FUNCTION
 #if defined (__GNUC__)
 #  define GST_FUNCTION     ((const char*) (__PRETTY_FUNCTION__))

@@ -16,37 +16,43 @@ Structure describing sets of media formats
 
 <!-- ##### MACRO GST_CAPS_FLAGS_ANY ##### -->
 <para>
-
+Flags that this caps has no specific content, but can contain anything.
 </para>
 
 
 
 <!-- ##### MACRO GST_CAPS_ANY ##### -->
 <para>
-
+Means that the element/pad can output 'anything'. Useful for elements
+that output unknown media, such as filesrc.
 </para>
 
 
 
 <!-- ##### MACRO GST_CAPS_NONE ##### -->
 <para>
-
+The opposite of GST_CAPS_ANY: it means that the pad/element outputs an
+undefined media type that can not be detected.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATIC_CAPS_ANY ##### -->
 <para>
-
+Creates a static caps that matches anything. This can be used in pad
+templates.
 </para>
 
+@Returns: a new #GstCaps instance
 
 
 <!-- ##### MACRO GST_STATIC_CAPS_NONE ##### -->
 <para>
-
+Creates a static caps that matches nothing. This can be used in pad
+templates.
 </para>
 
+@Returns: a new #GstCaps instance
 
 
 <!-- ##### MACRO GST_CAPS_IS_SIMPLE ##### -->
@@ -76,10 +82,12 @@ Structure describing sets of media formats
 
 <!-- ##### MACRO GST_STATIC_CAPS ##### -->
 <para>
-
+Creates a static caps from an input string. This can be used in pad
+templates.
 </para>
 
-@string: 
+@string: the string describing the caps.
+@Returns: a new #GstCaps instance
 
 
 <!-- ##### MACRO GST_STATIC_CAPS_PREFERRED ##### -->

@@ -57,13 +57,6 @@ Unset the given flag
 @flag: The flag to unset
 
 
-<!-- ##### MACRO GST_TYPE_DATA ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GstData ##### -->
 <para>
 The base structure

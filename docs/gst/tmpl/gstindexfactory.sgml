@@ -14,13 +14,6 @@ GstIndexFactory is used to dynamically create GstIndex implementations.
 #GstIndex
 </para>
 
-<!-- ##### MACRO GST_TYPE_INDEX_FACTORY ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GstIndexFactory ##### -->
 <para>
 The GstIndexFactory object

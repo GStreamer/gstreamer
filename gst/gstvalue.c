@@ -1974,7 +1974,7 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
 
 /* intersection */
 
-/*
+/**
  * gst_value_can_intersect:
  * @value1:
  * @value2:
@@ -2183,7 +2183,7 @@ gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
   g_array_append_val (gst_value_subtract_funcs, info);
 }
 
-/*
+/**
  * gst_value_register:
  * @table:
  *
@@ -2194,7 +2194,7 @@ gst_value_register (const GstValueTable * table)
   g_array_append_val (gst_value_table, *table);
 }
 
-/*
+/**
  * gst_value_init_and_copy:
  * @dest:
  * @src:
@@ -2207,7 +2207,7 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
   g_value_copy (src, dest);
 }
 
-/*
+/**
  * gst_value_serialize:
  * @value: a #GValue to serialize
  *
@@ -2253,7 +2253,7 @@ gst_value_serialize (const GValue * value)
   return s;
 }
 
-/*
+/**
  * gst_value_deserialize:
  * @dest: #GValue to fill with contents of deserialization
  * @src: string to deserialize
@@ -2291,11 +2291,16 @@ gst_value_deserialize (GValue * dest, const gchar * src)
   return FALSE;
 }
 
-/*
+/**
  * gst_type_is_fixed:
- * @type:
+ * @type: the #GType to check
  *
- * Returns:
+ * Tests if the given GType, if available in a GstStructure (or any other
+ * container) will contain a "fixed" (which means: one possible value) or
+ * an "unfixed" (which means: multiple possible values, such as data lists
+ * or data ranges) value.
+ *
+ * Returns: true if the type is "fixed".
  */
 gboolean
 gst_type_is_fixed (GType type)
