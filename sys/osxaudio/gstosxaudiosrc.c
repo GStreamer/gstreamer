@@ -138,7 +138,7 @@ gst_osxaudiosrc_init (GstOsxAudioSrc * osxaudiosrc)
 static void
 gst_osxaudiosrc_dispose (GObject * object)
 {
-  GstOsxAudioSrc *osxaudiosrc = (GstOsxAudioSrc *) object;
+  /* GstOsxAudioSrc *osxaudiosrc = (GstOsxAudioSrc *) object; */
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -154,7 +154,8 @@ gst_osxaudiosrc_get (GstPad * pad)
 
   buf = gst_buffer_new_and_alloc ((GST_OSXAUDIOELEMENT (src))->buffer_len);
 
-  readbytes = read_buffer (src, (char *) GST_BUFFER_DATA (buf));
+  readbytes =
+      read_buffer (GST_OSXAUDIOELEMENT (src), (char *) GST_BUFFER_DATA (buf));
 
   if (readbytes < 0) {
     gst_buffer_unref (buf);

@@ -155,7 +155,7 @@ gst_osxaudioelement_init (GstOsxAudioElement * osxaudio)
 static void
 gst_osxaudioelement_dispose (GObject * object)
 {
-  GstOsxAudioElement *osxaudio = (GstOsxAudioElement *) object;
+  /* GstOsxAudioElement *osxaudio = (GstOsxAudioElement *) object; */
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -269,7 +269,6 @@ outputAudioDeviceIOProc (AudioDeviceID inDevice, const AudioTimeStamp * inNow,
 static gboolean
 gst_osxaudioelement_open_audio (GstOsxAudioElement * osxaudio, gboolean input)
 {
-  gint caps;
   int i;
   OSErr status;
 
@@ -386,7 +385,6 @@ gst_osxaudioelement_get_property (GObject * object,
   OSStatus status;
   int nDevices;
   UInt32 propertySize;
-  int deviceid;
   AudioDeviceID *devids;
   int i;
 

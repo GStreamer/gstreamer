@@ -96,7 +96,7 @@ gst_osxaudiosink_get_type (void)
 static void
 gst_osxaudiosink_dispose (GObject * object)
 {
-  GstOsxAudioSink *osxaudiosink = (GstOsxAudioSink *) object;
+  /* GstOsxAudioSink *osxaudiosink = (GstOsxAudioSink *) object; */
 
   /*gst_object_unparent (GST_OBJECT (osxaudiosink->provided_clock)); */
 
@@ -158,7 +158,6 @@ gst_osxaudiosink_chain (GstPad * pad, GstData * _data)
   guchar *data;
   guint to_write;
   gint amount_written;
-  gint delay;
 
   /* this has to be an audio buffer */
   osxaudiosink = GST_OSXAUDIOSINK (gst_pad_get_parent (pad));

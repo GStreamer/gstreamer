@@ -7,6 +7,28 @@
 	Added configurable boundary specifier, added the value as a
 	caps field as well.
 
+2004-06-02  Zaheer Abbas Merali <zaheerabbas@merali.org>
+
+	* gst/tcp/gsttcp.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversrc.c:
+	  - portability fix, to compile on OSX
+            (fixes #143146)
+
+	* sys/osxaudio/gstosxaudioelement.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	  - compilation warnings on OSX
+            (fixes #143153)
+
+2004-06-02  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* ext/vorbis/vorbisdec.c : sign warning fixes
+
+	* gst-libs/gst/mixer/mixertrack.c : forgoten include
+	  to define newly used G_MAXINT32, bad owen, bad
+
 2004-06-01  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/flac/gstflactag.c: strip ending framing bit from vorbiscomment
