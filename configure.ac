@@ -377,7 +377,7 @@ AC_MSG_NOTICE(Checking for plugin libraries)
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
 GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, , a52dec/a52.h, A52DEC_LIBS="-la52")
+GST_CHECK_LIBHEADER(A52DEC, a52, a52_init,-lm, a52dec/a52.h, A52DEC_LIBS="-la52")
 ])
 
 dnl *** aalib ***
