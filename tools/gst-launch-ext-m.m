@@ -111,6 +111,7 @@ read_config ($0);
   "m2v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
   "m4a", "qtdemux .audio_00 ! { queue ! faad ! $cfg{AUDIOSINK} }",
   "mod", "modplug !  $cfg{AUDIOSINK}",
+  "mpc", "musepackdec ! $cfg{AUDIOSINK}",
   "mp2", "mad ! $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
   "mp4", "decodebin name=d { d. ! queue ! ffmpegcolorspace ! videoscale ! $cfg{VIDEOSINK} } { d. ! queue ! audioconvert ! audioscale ! $cfg{AUDIOSINK} }",
