@@ -1,3 +1,14 @@
+2005-02-04  Andy Wingo  <wingo@pobox.com>
+
+	* gst/audioconvert/bufferframesconvert.c
+	(buffer_frames_convert_fixate): New function, fixates to 256
+	frames per buffer by default. (Much better than 1.)
+	(buffer_frames_convert_init): Set the fixate function for both src
+	and sink pad.
+	(buffer_frames_convert_link): After success setting nonfixed caps,
+	get the negotiated caps so we can know how many buffer-frames it
+	will be. No idea how this worked at all before.
+
 2005-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),

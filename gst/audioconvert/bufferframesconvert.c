@@ -93,6 +93,8 @@ static GstElementStateReturn buffer_frames_convert_change_state (GstElement *
 static GstCaps *buffer_frames_convert_getcaps (GstPad * pad);
 static GstPadLinkReturn buffer_frames_convert_link (GstPad * pad,
     const GstCaps * caps);
+static GstCaps *buffer_frames_convert_fixate (GstPad * pad,
+    const GstCaps * caps);
 
 static void buffer_frames_convert_chain (GstPad * sinkpad, GstData * _data);
 
@@ -154,12 +156,14 @@ buffer_frames_convert_init (BufferFramesConvert * this)
   gst_pad_set_link_function (this->sinkpad, buffer_frames_convert_link);
   gst_pad_set_getcaps_function (this->sinkpad, buffer_frames_convert_getcaps);
   gst_pad_set_chain_function (this->sinkpad, buffer_frames_convert_chain);
+  gst_pad_set_fixate_function (this->sinkpad, buffer_frames_convert_fixate);
 
   this->srcpad = gst_pad_new_from_template
       (gst_static_pad_template_get (&src_static_template), "src");
   gst_element_add_pad (GST_ELEMENT (this), this->srcpad);
   gst_pad_set_link_function (this->srcpad, buffer_frames_convert_link);
   gst_pad_set_getcaps_function (this->srcpad, buffer_frames_convert_getcaps);
+  gst_pad_set_fixate_function (this->sinkpad, buffer_frames_convert_fixate);
 
   this->in_buffer_samples = -1;
   this->out_buffer_samples = -1;
@@ -216,6 +220,26 @@ buffer_frames_convert_getcaps (GstPad * pad)
   return ret;
 }
 
+static GstCaps *
+buffer_frames_convert_fixate (GstPad * pad, const GstCaps * caps)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+
+  newcaps = gst_caps_new_full (gst_structure_copy (gst_caps_get_structure
+          (caps, 0)), NULL);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure,
+          "buffer-frames", 256)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+
+  return NULL;
+}
+
 static GstPadLinkReturn
 buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
 {
@@ -244,6 +268,8 @@ buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
   ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
   if (GST_PAD_LINK_FAILED (ret))
     return ret;
+  gst_caps_free (othercaps);
+  othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
 
   /* it's ok, let's record our data */
   sinkstructure =
