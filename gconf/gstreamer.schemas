@@ -1,0 +1,26 @@
+<gconfschemafile>
+   <schemalist>
+      <schema>
+        <key>/schemas/apps/gstreamer/default/audiosink</key>
+        <applyto>/apps/gstreamer/default/audiosink</applyto>
+        <owner>gstreamer</owner>
+        <type>string</type>
+        <default>osssink</default>
+        <locale name="C">
+        <short>default GStreamer audiosink</short>
+        <long>GStreamer can play audio using any number of output plugins.  Some possible choices are osssink, esdsink and alsasink.</long>
+        </locale>
+      </schema>
+      <schema>
+        <key>/schemas/apps/gstreamer/default/videosink</key>
+        <applyto>/apps/gstreamer/default/videosink</applyto>
+        <owner>gstreamer</owner>
+        <type>string</type>
+        <default>videosink</default>
+        <locale name="C">
+        <short>default GStreamer videosink</short>
+        <long>GStreamer can play video using any number of output plugins.  Some possible choices are videosink, sdlvideosink and aasink.</long>
+        </locale>
+      </schema>
+    </schemalist>
+</gconfschemafile>
