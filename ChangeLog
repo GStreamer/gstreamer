@@ -1,3 +1,14 @@
+2004-05-08  Benjamin Otte  <otte@gnome.org>
+
+	* gst/level/gstlevel.c: (gst_level_link), (gst_level_chain),
+	(gst_level_change_state), (gst_level_init):
+	* gst/level/gstlevel.h:
+	  figure out if we're initialized directly instead of keeping a
+	  variable that's wrong in 90% of cases
+	  don't initialize pads and then leak them and use a new unitialized
+	  pad. (fixes #142084)
+	  these were bugs so n00bish I didn't find them for an hour :/
+
 2004-05-08 Iain <iain@prettypeople.org>
 
 	* gst/wavparse/gstwavparse.[ch]: Rewrote to use RiffRead instead.
