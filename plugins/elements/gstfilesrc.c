@@ -128,6 +128,7 @@ static void		gst_filesrc_set_property	(GObject *object, guint prop_id,
 static void		gst_filesrc_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
+static gboolean		gst_filesrc_check_filesize	(GstFileSrc *src); 
 static GstData *	gst_filesrc_get			(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstQueryType type,
@@ -506,8 +507,10 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
   /* check to see if we're going to overflow the end of the file */
   if (readend > src->filelen) {
-    readsize = src->filelen - src->curoffset;
-    readend = src->curoffset + readsize;
+    if (!gst_filesrc_check_filesize (src) || readend > src->filelen) {
+      readsize = src->filelen - src->curoffset;
+      readend = src->curoffset + readsize;
+    }
   }
 
   GST_LOG ("attempting to read %08lx, %08lx, %08lx, %08lx", 
@@ -626,7 +629,9 @@ gst_filesrc_get_read (GstFileSrc *src)
 
   readsize = src->block_size;
   if (src->curoffset + readsize > src->filelen) {
-    readsize = src->filelen - src->curoffset;
+    if (!gst_filesrc_check_filesize (src) || src->curoffset + readsize > src->filelen) {
+      readsize = src->filelen - src->curoffset;
+    }
   }
 
   buf = gst_buffer_new_and_alloc (readsize);
@@ -675,11 +680,14 @@ gst_filesrc_get (GstPad *pad)
   }
 
   /* check for EOF */
+  g_assert (src->curoffset <= src->filelen);
   if (src->curoffset == src->filelen) {
-    GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
-               src->curoffset, src->filelen);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    if (!gst_filesrc_check_filesize (src) || src->curoffset >= src->filelen) {
+      GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
+		src->curoffset, src->filelen);
+      gst_element_set_eos (GST_ELEMENT (src));
+      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    }
   }
 
   if (src->using_mmap){
@@ -689,6 +697,22 @@ gst_filesrc_get (GstPad *pad)
   }
 }
 
+/* TRUE if the filesize of the file was updated */
+static gboolean
+gst_filesrc_check_filesize (GstFileSrc *src)
+{
+  struct stat stat_results;
+  
+  g_return_val_if_fail (GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
+
+  fstat(src->fd, &stat_results);
+  GST_DEBUG_OBJECT (src, "checked filesize on %s (was %"G_GUINT64_FORMAT", is %"G_GUINT64_FORMAT")", 
+	  src->filename, src->filelen, (guint64) stat_results.st_size);
+  if (src->filelen == (guint64) stat_results.st_size)
+    return FALSE;
+  src->filelen = stat_results.st_size;
+  return TRUE;
+}
 /* open the file and mmap it, necessary to go to READY state */
 static gboolean 
 gst_filesrc_open_file (GstFileSrc *src)
@@ -799,6 +823,7 @@ gst_filesrc_srcpad_query (GstPad *pad, GstQueryType type,
       if (*format != GST_FORMAT_BYTES) {
 	return FALSE;
       }
+      gst_filesrc_check_filesize (src);
       *value = src->filelen;
       break;
     case GST_QUERY_POSITION:
@@ -842,20 +867,25 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
-          if (offset > src->filelen) 
-	    goto error;
+          if (offset > src->filelen && (!gst_filesrc_check_filesize (src) || offset > src->filelen)) {
+	      goto error;
+	  }
           src->curoffset = offset;
           GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_CUR:
           if (offset + src->curoffset > src->filelen) 
-	    goto error;
+	    if (!gst_filesrc_check_filesize (src) || offset + src->curoffset > src->filelen)
+	      goto error;
           src->curoffset += offset;
           GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_END:
-          if (ABS (offset) > src->filelen) 
+          if (ABS (offset) > src->filelen) {
+	    if (!gst_filesrc_check_filesize (src) || ABS (offset) > src->filelen)
+	      goto error;
 	    goto error;
+	  }
           src->curoffset = src->filelen - ABS (offset);
           GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
