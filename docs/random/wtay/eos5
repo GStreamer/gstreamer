@@ -1,0 +1,73 @@
+
+case 1) 
+
+(--------------------------------------------------)
+! bin                                              !
+! (--------)         (--------)         (--------) !
+! ! fakesrc!         !identity!         !fakesink! !
+! !   1   src ----- sink  1  src ---- sink   1   ! !
+! (--------)         (--------)         (--------) !
+!                                                  !
+! (--------)         (--------)         (--------) !
+! !fakesrc !         !identity!         !fakesink! !
+! !   2   src ----- sink  2  src ---- sink   2   ! !
+! (--------)         (--------)         (--------) !
+(--------------------------------------------------)
+
+  just two scheduled chains in a single bin.
+
+.scheduling.
+  
+  we have two chains here fs1-i1-fsk1 and fs2-i2-fsk2
+  fakesrc1 will output 1 buffer, fakesrc2 3 buffers
+
+.eos.
+
+  fs1 will return a NULL buffer on EOS. the scheduler 
+  detects the NULL buffer and puts chain1 in EOS so that it
+  doesn't get scheduled again. The scheduler fires the EOS
+  signal for all the elements in the chain and puts the fs1
+  element in the READY state. 
+
+  the same procedure happens for chain2. At that point, the bin 
+  has no chains to schedule and so it fires EOS.
+
+
+case 2) 
+
+(---------------------------------------------------)
+! bin                                               !
+! (--------)         (--------)         (---------) !
+! ! disksrc!         ! mpg123 !         !audiosink! !
+! !   1   src ----- sink  1  src ---- sink   1    ! !
+! (--------)         (--------)         (---------) !
+!                                                   !
+! (--------)         (--------)         (---------) !
+! !disksrc !         ! mpg123 !         !audiosink! !
+! !   2   src ----- sink  2  src ---- sink   2    ! !
+! (--------)         (--------)         (---------) !
+(---------------------------------------------------)
+
+  same as case 1, an mp3 mixer where the mixing is performed
+  in hardware (in the audiosink).
+  we want to show how the EOS state can be undone.
+
+.scheduling.
+  
+  we have two chains here ds1-mpg1-ask1 and ds2-mpg2-ask2
+  the song in chain1 is about to end, chain2 has just begun
+  playing a song.
+
+.eos.
+
+  fs1 will return a NULL buffer on EOS. the scheduler 
+  detects the NULL buffer and puts chain1 in EOS so that it
+  doesn't get scheduled again. The scheduler fires the EOS
+  signal for all the elements in the chain and puts the fs1
+  element in the READY state.
+
+  the app sets the new location for the disksrc. The element is
+  put in the PLAYING state, the chain is marked !EOS so that
+  it will be scheduled again.
+ 
+
