@@ -24,28 +24,28 @@ EXAMPLES = \
 	init popt queue threads $(GST_LOADSAVE_SRC)
 
 dynamic.c: $(top_srcdir)/docs/manual/dynamic.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/dynamic.xml
 
 elementmake.c elementget.c: $(top_srcdir)/docs/manual/elements-api.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/elements-api.xml
 
 gnome.c: $(top_srcdir)/docs/manual/gnome.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/gnome.xml
 
 helloworld.c: $(top_srcdir)/docs/manual/helloworld.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/helloworld.xml
 
 init.c popt.c: $(top_srcdir)/docs/manual/init-api.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/init-api.xml
 
 queue.c: $(top_srcdir)/docs/manual/queues.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/queues.xml
 
 threads.c: $(top_srcdir)/docs/manual/threads.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/threads.xml
 
 xml-mp3.c: $(top_srcdir)/docs/manual/xml.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/xml.xml 
 
 # we use some of the examples as testsuite apps, to verify that
 # they actually run

@@ -1,3 +1,8 @@
+2004-10-13  David Schleef  <ds@schleef.org>
+
+	* examples/manual/Makefile.am: $< isn't portable in Makefile
+	rules.
+
 2004-10-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/gstobject.sgml:
