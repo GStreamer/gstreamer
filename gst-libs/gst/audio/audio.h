@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Library       <2001> Thomas Vander Stichele <thomas@apestaart.org>
  *
