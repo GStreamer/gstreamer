@@ -3,7 +3,7 @@ tests_failing = element bin element_pad pad
 else
 tests_failing =
 endif
-tests_working = mainloop
+tests_working = mainloop sched
 
 element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c
