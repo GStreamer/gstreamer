@@ -2275,15 +2275,28 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
   GList *connected, *c;
   GstOptSchedulerGroup *new_group = NULL;
   GstOptSchedulerChain *chain;
+  gint len;
+
+  if (GST_ELEMENT_IS_DECOUPLED (element)) {
+    /* the element is decoupled and is therefore not in the group */
+    return NULL;
+  }
 
   GST_LOG ("migrate connected elements to new group");
   connected = element_get_reachables (element, group, brokenpad);
   GST_LOG ("elements to move to new group:");
   g_list_foreach (connected, (GFunc) debug_element, NULL);
 
-  if (g_list_length (connected) == 1) {
+  len = g_list_length (connected);
+
+  if (len == 0) {
+    g_warning ("(internal error) found lost element %s",
+        gst_element_get_name (element));
+    return NULL;
+  } else if (len == 1) {
     remove_from_group (group, GST_ELEMENT (connected->data));
     GST_LOG ("not migrating to new group as the group is empty");
+    g_list_free (connected);
     return NULL;
   }
 
