@@ -36,10 +36,6 @@ enum {
 
 static void     gst_riff_read_class_init   (GstRiffReadClass *klass);
 static void     gst_riff_read_init         (GstRiffRead *riff);
-static void     gst_riff_read_get_property (GObject     *object,
-					    guint        prop_id, 	
-					    GValue      *value,
-					    GParamSpec  *pspec);
 
 static GstElementStateReturn
 		gst_riff_read_change_state (GstElement  *element);
@@ -75,17 +71,10 @@ gst_riff_read_get_type (void)
 static void
 gst_riff_read_class_init (GstRiffReadClass *klass) 
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-
-  g_object_class_install_property (gobject_class, ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
-  gobject_class->get_property = gst_riff_read_get_property;
-
   gstelement_class->change_state = gst_riff_read_change_state;
 }
 
@@ -95,25 +84,6 @@ gst_riff_read_init (GstRiffRead *riff)
   riff->sinkpad = NULL;
   riff->bs = NULL;
   riff->level = NULL;
-  riff->metadata = NULL;
-}
-
-static void
-gst_riff_read_get_property (GObject    *object,
-			    guint       prop_id, 	
-			    GValue     *value,
-			    GParamSpec *pspec)
-{
-  GstRiffRead *riff = GST_RIFF_READ (object);
-
-  switch (prop_id) {
-    case ARG_METADATA:
-      g_value_set_boxed (value, riff->metadata);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstElementStateReturn
@@ -128,7 +98,6 @@ gst_riff_read_change_state (GstElement *element)
       riff->bs = gst_bytestream_new (riff->sinkpad);
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_caps_replace (&riff->metadata, NULL);
       gst_bytestream_destroy (riff->bs);
       while (riff->level) {
         GstRiffLevel *level = riff->level->data;

@@ -53,9 +53,6 @@ typedef struct _GstRiffRead {
   GstByteStream *bs;
 
   GList *level;
-
-  /* metadata */
-  GstCaps *metadata;
 } GstRiffRead;
 
 typedef struct _GstRiffReadClass {
