@@ -884,8 +884,13 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
          [[ "$DVDNAV_MICRO" -lt "7" ]]; then
       AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
       HAVE_DVDNAV="no"
-      fi
     fi
+  fi
+  dnl now check for dvdread/nav_print.h - see #133002
+  AC_CHECK_HEADER(dvdread/nav_print.h, , [
+      AC_MSG_WARN([header dvdread/nav_print.h from dvdread missing])
+      HAVE_DVDNAV="no"
+  ])
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
 ])
 
@@ -1162,6 +1167,14 @@ GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
 ])
 AC_SUBST(LAME_LIBS)
 
+dnl *** libcaca ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
+GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
+  GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
+  AC_SUBST(LIBCACA_CFLAGS)
+  AC_SUBST(LIBCACA_LIBS)
+])
+
 dnl *** libcolorspace ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LCS, true)
 GST_CHECK_FEATURE(LCS, Lcs, lcs, [
@@ -1176,14 +1189,6 @@ GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
   PKG_CHECK_MODULES(LIBDV, libdv >= 0.100, HAVE_LIBDV="yes", HAVE_LIBDV="no")
   AC_SUBST(LIBDV_CFLAGS)
   AC_SUBST(LIBDV_LIBS)
-])
-
-dnl *** libcaca ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
-GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
-  GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
-  AC_SUBST(LIBCACA_CFLAGS)
-  AC_SUBST(LIBCACA_LIBS)
 ])
 
 dnl *** libfame ***
