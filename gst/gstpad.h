@@ -96,8 +96,6 @@ typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, void *event);
 
 typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
-typedef void 		(*GstPadQoSFunction) 		(GstPad *pad, glong qos_message);
-typedef gboolean 	(*GstPadEOSFunction) 		(GstPad *pad);
 typedef GstPadNegotiateReturn (*GstPadNegotiateFunction) 	(GstPad *pad, GstCaps **caps, gpointer *data);
 typedef void 		(*GstPadNewCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstBufferPool*	(*GstPadBufferPoolFunction) 	(GstPad *pad);
@@ -154,8 +152,6 @@ struct _GstRealPad {
 
   GstPadGetRegionFunction 	getregionfunc;
   GstPadPullRegionFunction 	pullregionfunc;
-  GstPadQoSFunction 		qosfunc;
-  GstPadEOSFunction 		eosfunc;
 
   GstPadNegotiateFunction 	negotiatefunc;
   GstPadNewCapsFunction 	newcapsfunc;
@@ -210,8 +206,6 @@ struct _GstGhostPadClass {
 
 #define GST_RPAD_GETREGIONFUNC(pad)	(((GstRealPad *)(pad))->getregionfunc)
 #define GST_RPAD_PULLREGIONFUNC(pad)	(((GstRealPad *)(pad))->pullregionfunc)
-#define GST_RPAD_QOSFUNC(pad)		(((GstRealPad *)(pad))->qosfunc)
-#define GST_RPAD_EOSFUNC(pad)		(((GstRealPad *)(pad))->eosfunc)
 
 #define GST_RPAD_NEGOTIATEFUNC(pad)	(((GstRealPad *)(pad))->negotiatefunc)
 #define GST_RPAD_NEWCAPSFUNC(pad)	(((GstRealPad *)(pad))->newcapsfunc)
@@ -309,8 +303,6 @@ void			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
 void			gst_pad_set_event_function	(GstPad *pad, GstPadEventFunction event);
 
 void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getregion);
-void			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
-void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
 
 void			gst_pad_set_negotiate_function	(GstPad *pad, GstPadNegotiateFunction nego);
 void			gst_pad_set_newcaps_function	(GstPad *pad, GstPadNewCapsFunction newcaps);
@@ -373,7 +365,7 @@ NULL )
 #endif
 
 #if 1
-gboolean			gst_pad_event			(GstPad *pad, void *event);
+gboolean		gst_pad_event			(GstPad *pad, void *event);
 #else
 #define gst_pad_event(pad,event) G_STMT_START{ \
   ( (((GstRealPad *)(pad))->peer->eventhandler) ? \
@@ -386,12 +378,6 @@ FALSE )
 GstBuffer*		gst_pad_peek			(GstPad *pad);
 GstPad*			gst_pad_select			(GList *padlist);
 GstPad*			gst_pad_selectv			(GstPad *pad, ...);
-
-#define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
-gboolean		gst_pad_set_eos			(GstPad *pad);
-
-gboolean		gst_pad_eos_func		(GstPad *pad);
-void			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
 void			gst_pad_load_and_connect	(xmlNodePtr self, GstObject *parent);
 

@@ -73,7 +73,6 @@ static void			gst_queue_init		(GstQueue *queue);
 static void			gst_queue_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void			gst_queue_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static gboolean			gst_queue_handle_eos	(GstPad *pad);
 static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data);
 static GstPadNegotiateReturn	gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
 static void			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
@@ -162,7 +161,6 @@ gst_queue_init (GstQueue *queue)
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
-  gst_pad_set_eos_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_handle_eos));
   gst_pad_set_negotiate_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_handle_negotiate_sink));
   gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_get_bufferpool));
 
@@ -215,13 +213,13 @@ gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
 }
 
 static gboolean
-gst_queue_handle_eos (GstPad *pad)
+gst_queue_handle_event (GstPad *pad)
 {
   GstQueue *queue;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  GST_DEBUG (GST_CAT_DATAFLOW,"%s received eos\n", GST_ELEMENT_NAME (queue));
+  GST_DEBUG (GST_CAT_DATAFLOW,"%s received event\n", GST_ELEMENT_NAME (queue));
 
   GST_LOCK (queue);
   GST_DEBUG (GST_CAT_DATAFLOW,"%s has %d buffers left\n", GST_ELEMENT_NAME (queue),
@@ -373,7 +371,6 @@ gst_queue_get (GstPad *pad)
     if (GST_FLAG_IS_SET (queue->sinkpad, GST_PAD_EOS)) {
       GST_DEBUG (GST_CAT_DATAFLOW, "%s U released lock\n", name);
       GST_UNLOCK(queue);
-      gst_pad_set_eos (queue->srcpad);
       // this return NULL shouldn't hurt anything...
       return NULL;
     }

@@ -203,7 +203,6 @@ gst_fdsrc_get(GstPad *pad)
   /* read it in from the file */
   readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
   if (readbytes == 0) {
-    gst_element_signal_eos(GST_ELEMENT(src));
     return NULL;
   }
 

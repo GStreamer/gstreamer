@@ -64,7 +64,7 @@ static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GVal
 
 static GstBuffer*		gst_pipefilter_get		(GstPad *pad);
 static void 			gst_pipefilter_chain		(GstPad *pad, GstBuffer *buf);
-static gboolean 		gst_pipefilter_handle_eos 	(GstPad *pad);
+static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, void *event);
 
 static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
 
@@ -121,7 +121,7 @@ gst_pipefilter_init (GstPipefilter *pipefilter)
   pipefilter->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (pipefilter), pipefilter->sinkpad);
   gst_pad_set_chain_function (pipefilter->sinkpad, gst_pipefilter_chain);
-  gst_pad_set_eos_function (pipefilter->sinkpad, gst_pipefilter_handle_eos);
+  gst_pad_set_event_function (pipefilter->sinkpad, gst_pipefilter_handle_event);
 
   pipefilter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (pipefilter), pipefilter->srcpad);
@@ -134,13 +134,13 @@ gst_pipefilter_init (GstPipefilter *pipefilter)
 }
 
 static gboolean
-gst_pipefilter_handle_eos (GstPad *pad)
+gst_pipefilter_handle_event (GstPad *pad, void *event)
 {
   GstPipefilter *pipefilter;
 
   pipefilter = GST_PIPEFILTER (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0,"pipefilter: %s received eos\n", GST_ELEMENT_NAME (pipefilter));
+  GST_DEBUG (0,"pipefilter: %s received event\n", GST_ELEMENT_NAME (pipefilter));
   if (close (pipefilter->fdin[1]) < 0)
     perror("close");
   if (close (pipefilter->fdout[0]) < 0)
@@ -180,7 +180,7 @@ gst_pipefilter_get (GstPad *pad)
   }
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes == 0) {
-    gst_pad_set_eos (pad);
+    gst_pad_event (pad, (void*)GST_EVENT_EOS);
     return NULL;
   }
 

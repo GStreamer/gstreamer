@@ -193,8 +193,6 @@ gst_real_pad_init (GstRealPad *pad)
   pad->chainfunc = NULL;
   pad->getfunc = NULL;
   pad->getregionfunc = NULL;
-  pad->qosfunc = NULL;
-  pad->eosfunc = GST_DEBUG_FUNCPTR(gst_pad_eos_func);
 
   pad->chainhandler = GST_DEBUG_FUNCPTR(gst_pad_push_func);
   pad->gethandler = NULL;
@@ -421,44 +419,6 @@ gst_pad_set_getregion_function (GstPad *pad,
 }
 
 /**
- * gst_pad_set_qos_function:
- * @pad: the pad to set the qos function for
- * @qos: the qos function
- *
- * Set the given qos function for the pad.
- */
-void
-gst_pad_set_qos_function (GstPad *pad,
-		          GstPadQoSFunction qos)
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_QOSFUNC(pad) = qos;
-  GST_DEBUG (GST_CAT_PADS,"qosfunc for %s:%s set to %s\n",
-             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(qos));
-}
-
-/**
- * gst_pad_set_eos_function:
- * @pad: the pad to set the eos function for
- * @eos: the eos function
- *
- * Set the given EOS function for the pad.
- */
-void
-gst_pad_set_eos_function (GstPad *pad,
-		          GstPadEOSFunction eos)
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_EOSFUNC(pad) = eos;
-  GST_DEBUG (GST_CAT_PADS,"eosfunc for %s:%s set to %s\n",
-             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(eos));
-}
-
-/**
  * gst_pad_set_negotiate_function:
  * @pad: the pad to set the negotiate function for
  * @nego: the negotiate function
@@ -527,42 +487,6 @@ gst_pad_push_func(GstPad *pad, GstBuffer *buf)
   }
 }
 
-
-/**
- * gst_pad_handle_qos:
- * @pad: the pad to handle the QoS message
- * @qos_message: the QoS message to handle
- *
- * Pass the qos message downstream.
- */
-void
-gst_pad_handle_qos(GstPad *pad,
-	           glong qos_message)
-{
-  GstElement *element;
-  GList *pads;
-  GstPad *target_pad;
-
-  GST_DEBUG (GST_CAT_PADS,"gst_pad_handle_qos(\"%s\",%08ld)\n", GST_OBJECT_NAME (GST_PAD_PARENT (pad)),qos_message);
-
-  if (GST_RPAD_QOSFUNC(pad)) {
-    (GST_RPAD_QOSFUNC(pad)) (pad,qos_message);
-  } else {
-    element = GST_ELEMENT (GST_PAD_PARENT(GST_RPAD_PEER(pad)));
-
-    pads = element->pads;
-    GST_DEBUG (GST_CAT_PADS,"gst_pad_handle_qos recurse(\"%s\",%08ld)\n", GST_ELEMENT_NAME (element), qos_message);
-    while (pads) {
-      target_pad = GST_PAD (pads->data);
-      if (GST_RPAD_DIRECTION(target_pad) == GST_PAD_SINK) {
-        gst_pad_handle_qos (target_pad, qos_message);
-      }
-      pads = g_list_next (pads);
-    }
-  }
-
-  return;
-}
 
 /**
  * gst_pad_disconnect:
@@ -1613,8 +1537,11 @@ gst_pad_peek (GstPad *pad)
 GstPad*
 gst_pad_select (GList *padlist)
 {
-  // FIXME implement me
-  return NULL;
+  GstPad *pad;
+
+  pad = gst_schedule_pad_select (gst_pad_get_sched (GST_PAD (padlist->data)), padlist);
+
+  return pad;
 }
 
 /**
@@ -1876,75 +1803,6 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
   return factory;
 }
 
-
-gboolean
-gst_pad_eos_func(GstPad *pad)
-{
-  GstElement *element;
-  GList *pads;
-  GstPad *srcpad;
-  gboolean result = TRUE, success;
-
-  g_return_val_if_fail (pad != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_REAL_PAD(pad), FALSE);	// NOTE the restriction
-
-  GST_INFO (GST_CAT_PADS,"attempting to set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
-
-  element = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (pad)));
-//  g_return_val_if_fail (element != NULL, FALSE);
-//  g_return_val_if_fail (GST_IS_ELEMENT(element), FALSE);
-
-  pads = gst_element_get_pad_list(element);
-  while (pads) {
-    srcpad = GST_PAD(pads->data);
-    pads = g_list_next(pads);
-
-    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC) {
-      result = gst_pad_eos(GST_REAL_PAD(srcpad));
-      if (result == FALSE) success = FALSE;
-    }
-  }
-
-  if (result == FALSE) return FALSE;
-
-  GST_INFO (GST_CAT_PADS,"set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
-  GST_FLAG_SET (pad, GST_PAD_EOS);
-
-  gst_element_set_state (GST_ELEMENT(GST_PAD_PARENT(pad)), GST_STATE_READY);
-
-  return TRUE;
-}
-
-/**
- * gst_pad_set_eos:
- * @pad: the pad to set to eos
- *
- * Sets the given pad to the EOS state.
- *
- * Returns: TRUE if it succeeded
- */
-gboolean
-gst_pad_set_eos(GstPad *pad)
-{
-  g_return_val_if_fail (pad != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_REAL_PAD(pad), FALSE);		// NOTE the restriction
-  g_return_val_if_fail (GST_PAD_CONNECTED(pad), FALSE);
-
-  GST_INFO (GST_CAT_PADS,"attempting to set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
-
-  if (!gst_pad_eos(GST_REAL_PAD(pad))) {
-    return FALSE;
-  }
-
-  GST_INFO (GST_CAT_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
-  GST_FLAG_SET (pad, GST_PAD_EOS);
-
-  gst_element_set_state (GST_ELEMENT(GST_PAD_PARENT(pad)), GST_STATE_READY);
-
-  gst_element_signal_eos (GST_ELEMENT (GST_PAD_PARENT (pad)));
-
-  return TRUE;
-}
 
 /**
  * gst_pad_set_element_private:

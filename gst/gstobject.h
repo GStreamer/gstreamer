@@ -143,7 +143,7 @@ void		gst_object_set_name		(GstObject *object, const gchar *name);
 const gchar*	gst_object_get_name		(GstObject *object);
 
 /* parentage routines */
-void		gst_object_set_parent		(GstObject *object,GstObject *parent);
+void		gst_object_set_parent		(GstObject *object, GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 
