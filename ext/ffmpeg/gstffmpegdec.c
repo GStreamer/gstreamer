@@ -454,8 +454,8 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     details->description = g_strdup_printf("FFMPEG %s decoder",
 					   in_plugin->name);
     details->version = g_strdup(VERSION);
-    details->author = g_strdup("The FFMPEG crew\n"
-				"Wim Taymans <wim.taymans@chello.be>\n"
+    details->author = g_strdup("The FFMPEG crew, "
+				"Wim Taymans <wim.taymans@chello.be>, "
 				"Ronald Bultje <rbultje@ronald.bitfreak.net>");
     details->copyright = g_strdup("(c) 2001-2003");
 
