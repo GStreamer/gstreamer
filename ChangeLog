@@ -1,3 +1,15 @@
+2005-02-22  Luca Ognibene  <luogni@tin.it>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_link):
+	  Don't leak caps string (fixes #168134)
+
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_class_init),
+	(gst_jpegenc_init), (gst_jpegenc_finalize),
+	(gst_jpegenc_change_state):
+	  Don't leak line buffers and context struct (fixes #168133).
+
 2005-02-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
