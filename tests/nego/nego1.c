@@ -30,7 +30,7 @@ main(int argc,char *argv[])
   gst_pad_set_negotiate_function (sinkpad, negotiate);
 
  /* fill in our desired caps */
-  new = gst_caps_new_with_props (
+  new = gst_caps_new (
           "src_caps",                       /* name */
           "audio/raw",                      /* mime */
           gst_props_new (
@@ -44,11 +44,11 @@ main(int argc,char *argv[])
 
   gst_pad_set_caps (srcpad, new);
 
-  new = gst_caps_new_with_props (
+  new = gst_caps_new (
           "src_caps",                       /* name */
           "video/raw",                      /* mime */
           gst_props_new (
-            "format",   GST_PROPS_FOURCC ('Y','U','Y','V'),
+            "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','V')),
             NULL
           )
         );
