@@ -236,6 +236,16 @@ AC_HELP_STRING([--enable-atomic],[use atomic reference counting header]),
 esac], 
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
+AC_ARG_ENABLE(fast-stack-trash,
+AC_HELP_STRING([--enable-fast-stack-trash],[use fast memory allocator (i586 or above)]),
+[case "${enableval}" in
+  yes) USE_FAST_STACK_TRASH=yes;;
+  noset) USE_FAST_STACK_TRASH=no;;
+  no)  USE_FAST_STACK_TRASH=no;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-atomic) ;;
+esac], 
+[USE_FAST_STACK_TRASH=yes]) dnl Default value
+
 AC_ARG_ENABLE(plugin-builddir,
 AC_HELP_STRING([--enable-plugin-builddir],[allow tests/demos to use non-installed plugins]),
 [case "${enableval}" in
@@ -356,6 +366,10 @@ fi
 
 if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
+fi
+
+if test "x$USE_FAST_STACK_TRASH" = xyes; then
+  AC_DEFINE(USE_FAST_STACK_TRASH, 1, [Define if we should use i586 optimized stack functions])
 fi
 
 dnl test if we have pthread_attr_setstack; if not use the older calls
