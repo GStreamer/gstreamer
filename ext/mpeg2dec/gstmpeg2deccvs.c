@@ -190,7 +190,8 @@ gst_mpeg2dec_dispose (GObject *object)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (object);
 
-  mpeg2_close (mpeg2dec->decoder);
+  if (!mpeg2dec->closed) 
+    mpeg2_close (mpeg2dec->decoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
