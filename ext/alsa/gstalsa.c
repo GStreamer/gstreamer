@@ -697,8 +697,8 @@ sink_restart:
           return;
         }
         samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (sink->buf[i]));
-        if (!GST_BUFFER_TIMESTAMP_IS_VALID (sink->buf[i]) || 
-	     /* difference between them is < GST_ALSA_DEVIATION */
+        if ((!GST_BUFFER_TIMESTAMP_IS_VALID (sink->buf[i])) || 
+	     /* difference between expected and current is < GST_ALSA_DEVIATION */
 	    ((this->transmitted + gst_alsa_timestamp_to_samples (this, this->max_discont) >= samplestamp) &&
 	     (this->transmitted <= gst_alsa_timestamp_to_samples (this, this->max_discont) + samplestamp))) {
 no_difference:
@@ -723,14 +723,16 @@ no_difference:
 	  }
 	  sink->behaviour[i] = 1;
 	} else if (gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp) >= sink->buf[i]->size) {
-	  g_printerr ("Skipping %lu samples to resync (complete buffer)\n", gst_alsa_bytes_to_samples (this, sink->buf[i]->size));
+	  g_printerr ("Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld\n", 
+	              gst_alsa_bytes_to_samples (this, sink->buf[i]->size), this->transmitted, samplestamp);	              
 	  /* this buffer is way behind */
 	  gst_buffer_unref (sink->buf[i]);
 	  sink->buf[i] = NULL;
 	  continue;
 	} else if (this->transmitted > samplestamp) {
 	  gint difference = gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp);	
-	  g_printerr ("Skipping %lu samples to resync\n", (gulong) this->transmitted - samplestamp);
+	  g_printerr ("Skipping %lu samples to resync: sample %ld expected, but got %ld\n",
+		      (gulong) this->transmitted - samplestamp, this->transmitted, samplestamp);
 	  /* this buffer is only a bit behind */
           sink->size[i] = sink->buf[i]->size - difference;
           sink->data[i] = sink->buf[i]->data + difference;
@@ -1093,8 +1095,8 @@ gst_alsa_src_change_state (GstElement *element)
     g_assert_not_reached();
   }
 
-  if (GST_ELEMENT_CLASS (sink_parent_class)->change_state)
-    return GST_ELEMENT_CLASS (sink_parent_class)->change_state (element);
+  if (GST_ELEMENT_CLASS (src_parent_class)->change_state)
+    return GST_ELEMENT_CLASS (src_parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
 }
@@ -2144,7 +2146,7 @@ gst_alsa_timestamp_to_samples (GstAlsa *this, GstClockTime time)
 static inline GstClockTime
 gst_alsa_samples_to_timestamp (GstAlsa *this, snd_pcm_uframes_t samples)
 {
-  return (GstClockTime) ((samples * GST_SECOND + GST_SECOND / 2)/ this->format->rate);
+  return (GstClockTime) (samples * GST_SECOND / this->format->rate);
 }
 
 static inline snd_pcm_uframes_t
