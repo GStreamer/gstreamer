@@ -1,3 +1,37 @@
+2004-08-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/Makefile.am:
+	* gst/tcp/gstfdset.c: (gst_fdset_mode_get_type), (nearest_pow),
+	(ensure_size), (gst_fdset_new), (gst_fdset_free),
+	(gst_fdset_set_mode), (gst_fdset_get_mode), (gst_fdset_add_fd),
+	(gst_fdset_remove_fd), (gst_fdset_fd_ctl_write),
+	(gst_fdset_fd_ctl_read), (gst_fdset_fd_has_closed),
+	(gst_fdset_fd_has_error), (gst_fdset_fd_can_read),
+	(gst_fdset_fd_can_write), (gst_fdset_wait):
+	* gst/tcp/gstfdset.h:
+	* gst/tcp/gstmultifdsink.c: (gst_unit_type_get_type),
+	(gst_multifdsink_class_init), (gst_multifdsink_init),
+	(gst_multifdsink_add), (gst_multifdsink_remove),
+	(gst_multifdsink_clear), (gst_multifdsink_get_stats),
+	(gst_multifdsink_remove_client_link),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_client_queue_data),
+	(gst_multifdsink_client_queue_caps),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_set_property),
+	(gst_multifdsink_get_property), (gst_multifdsink_init_send),
+	(gst_multifdsink_close):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init),
+	(gst_tcpserversink_init), (gst_tcpserversink_handle_server_read),
+	(gst_tcpserversink_handle_wait), (gst_tcpserversink_init_send),
+	(gst_tcpserversink_close):
+	* gst/tcp/gsttcpserversink.h:
+	Abstracted away the select call, implemented poll (yes we ran into
+	the 1024 limit in production).
+
 2004-08-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gsttcp.c:
