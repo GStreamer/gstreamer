@@ -365,14 +365,6 @@ if test x$HAVE_ALSA = xno; then
   ALSA_LIBS=
 fi
 
-GST_CHECK_FEATURE(JACK, [jack audio connection kit], jack, [
-  PKG_CHECK_MODULES(JACK, jack,
-    HAVE_JACK=yes,HAVE_JACK=no)
-  AC_SUBST(JACK_LIBS)
-  AC_SUBST(JACK_CFLAGS)
-])
-dnl AC_SUBST(USE_JACK)
-
 dnl Check for libaudiofile
 GST_CHECK_FEATURE(LIBAUDIOFILE, [use gdk pixbuf], afsink afsrc, [
   GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
@@ -1212,7 +1204,6 @@ plugins/avi/winaudio/Makefile
 plugins/flx/Makefile
 plugins/festival/Makefile
 plugins/flac/Makefile
-plugins/jack/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
