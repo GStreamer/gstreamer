@@ -366,15 +366,16 @@ stop_typefinding (GstTypeFindElement *typefind)
   if (push_cached_buffers) {
     GstBuffer *buffer;
     guint size = gst_buffer_store_get_size (typefind->store, 0);
-    if (size && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
-      gst_pad_push (typefind->src, GST_DATA (buffer));
-    } else {
-      size = 0;
-    }
+
     GST_LOG_OBJECT (typefind, "seeking back to current position %u", size);
     if (!gst_pad_send_event (GST_PAD_PEER (typefind->sink), 
 			     gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, size))) {
       GST_WARNING_OBJECT (typefind, "could not seek to required position %u, hope for the best", size);
+    }
+    if (size && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
+      gst_pad_push (typefind->src, GST_DATA (buffer));
+    } else {
+      size = 0;
     }
   }
   gst_buffer_store_clear (typefind->store);
