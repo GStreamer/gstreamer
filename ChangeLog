@@ -1,3 +1,9 @@
+2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l/gstv4lelement.c: (gst_v4l_iface_supported):
+	* sys/v4l2/gstv4l2element.c: (gst_v4l2_iface_supported):
+	  g_assert() can be a macro, don't use #ifdef inside it.
+
 2004-12-19  Edward Hervey  <bilboed@bilboed.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
