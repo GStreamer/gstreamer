@@ -28,9 +28,9 @@
 static GMutex *_default_pool_lock;
 static GHashTable *_default_pools;
 
-static GstBuffer* gst_buffer_pool_default_buffer_create (GstBufferPool *pool, gint64 location, gint size, gpointer user_data);
-static void gst_buffer_pool_default_buffer_destroy (GstBufferPool *pool, GstBuffer *buffer, gpointer user_data);
-static void gst_buffer_pool_default_pool_destroy_hook (GstBufferPool *pool, gpointer user_data);
+static GstBuffer* gst_buffer_pool_default_buffer_new (GstBufferPool *pool, gint64 location, gint size, gpointer user_data);
+static void gst_buffer_pool_default_buffer_free (GstBuffer *buffer);
+static void gst_buffer_pool_default_destroy_hook (GstBufferPool *pool, gpointer user_data);
 
 typedef struct _GstBufferPoolDefault GstBufferPoolDefault;
 
@@ -155,7 +155,7 @@ gst_buffer_pool_unref (GstBufferPool *pool)
 }
 
 /**
- * gst_buffer_pool_set_buffer_create_function:
+ * gst_buffer_pool_set_buffer_new_function:
  * @pool: the pool to set the buffer create function for
  * @create: the create function
  *
@@ -163,12 +163,12 @@ gst_buffer_pool_unref (GstBufferPool *pool)
  * from this pool.
  */
 void 
-gst_buffer_pool_set_buffer_create_function (GstBufferPool *pool, 
-                                            GstBufferPoolBufferCreateFunction create)
+gst_buffer_pool_set_buffer_new_function (GstBufferPool *pool, 
+                                         GstBufferPoolBufferNewFunction create)
 {
   g_return_if_fail (pool != NULL);
-
-  pool->new_buffer = create;
+  
+  pool->buffer_new = create;
 }
 
 /**
@@ -180,12 +180,12 @@ gst_buffer_pool_set_buffer_create_function (GstBufferPool *pool,
  * from this pool.
  */
 void 
-gst_buffer_pool_set_buffer_destroy_function (GstBufferPool *pool, 
-                                             GstBufferPoolBufferDestroyFunction destroy)
+gst_buffer_pool_set_buffer_free_function (GstBufferPool *pool, 
+                                          GstBufferFreeFunc destroy)
 {
   g_return_if_fail (pool != NULL);
-
-  pool->destroy_buffer = destroy;
+  
+  pool->buffer_free = destroy;
 }
 
 /**
@@ -198,11 +198,11 @@ gst_buffer_pool_set_buffer_destroy_function (GstBufferPool *pool,
  */
 void 
 gst_buffer_pool_set_pool_destroy_hook (GstBufferPool *pool, 
-                                       GstBufferPoolPoolDestroyHook destroy)
+                                       GstBufferPoolDestroyHook destroy)
 {
   g_return_if_fail (pool != NULL);
-
-  pool->destroy_pool_hook = destroy;
+  
+  pool->destroy_hook = destroy;
 }
 
 /**
@@ -250,15 +250,14 @@ gst_buffer_pool_destroy (GstBufferPool *pool)
 {
   g_return_if_fail (pool != NULL);
   
-  if (pool->destroy_pool_hook)
-    pool->destroy_pool_hook (pool, pool->user_data);
+  if (pool->destroy_hook)
+    pool->destroy_hook (pool, pool->user_data);
   
   g_free(pool);
 }
 
 /**
  * gst_buffer_pool_get_default:
- * @oldpool: instance of GstBufferPool which is no longer required (or NULL if it doesn't exist)
  * @buffer_size: the number of bytes this buffer will store
  * @pool_size: the default number of buffers to be preallocated
  *
@@ -270,7 +269,7 @@ gst_buffer_pool_destroy (GstBufferPool *pool)
  * Returns: an instance of GstBufferPool
  */
 GstBufferPool*
-gst_buffer_pool_get_default (GstBufferPool *oldpool, guint buffer_size, guint pool_size)
+gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
 {
   GstBufferPool *pool;
   GMemChunk *data_chunk;
@@ -287,24 +286,17 @@ gst_buffer_pool_get_default (GstBufferPool *oldpool, guint buffer_size, guint po
   g_mutex_unlock (_default_pool_lock);
 
   if (pool != NULL){
-    if (oldpool != pool){
-      gst_buffer_pool_ref(pool);
-
-      if (oldpool != NULL){
-        gst_buffer_pool_unref(oldpool);
-      }
-    }
+    gst_buffer_pool_ref(pool);
     return pool;
   }
   
-
   data_chunk = g_mem_chunk_new ("GstBufferPoolDefault", real_buffer_size, 
     real_buffer_size * pool_size, G_ALLOC_AND_FREE);
     
   pool = gst_buffer_pool_new();
-  gst_buffer_pool_set_buffer_create_function (pool, gst_buffer_pool_default_buffer_create);
-  gst_buffer_pool_set_buffer_destroy_function (pool, gst_buffer_pool_default_buffer_destroy);
-  gst_buffer_pool_set_pool_destroy_hook (pool, gst_buffer_pool_default_pool_destroy_hook);
+  gst_buffer_pool_set_buffer_new_function (pool, gst_buffer_pool_default_buffer_new);
+  gst_buffer_pool_set_buffer_free_function (pool, gst_buffer_pool_default_buffer_free);
+  gst_buffer_pool_set_destroy_hook (pool, gst_buffer_pool_default_destroy_hook);
   
   def = g_new0 (GstBufferPoolDefault, 1);
   def->size = buffer_size;
@@ -317,15 +309,12 @@ gst_buffer_pool_get_default (GstBufferPool *oldpool, guint buffer_size, guint po
   
   GST_DEBUG(GST_CAT_BUFFER,"new buffer pool %p bytes:%d size:%d\n", pool, real_buffer_size, pool_size);
   
-  if (oldpool != NULL){
-    gst_buffer_pool_unref(oldpool);
-  }
   return pool;
 }
 
 static GstBuffer* 
-gst_buffer_pool_default_buffer_create (GstBufferPool *pool, gint64 location /*unused*/,
-                                       gint size /*unused*/, gpointer user_data)
+gst_buffer_pool_default_buffer_new (GstBufferPool *pool, gint64 location /*unused*/,
+                                    gint size /*unused*/, gpointer user_data)
 {
   GstBuffer *buffer;
   GstBufferPoolDefault *def = (GstBufferPoolDefault*) user_data;
@@ -347,29 +336,30 @@ gst_buffer_pool_default_buffer_create (GstBufferPool *pool, gint64 location /*un
 }
 
 static void
-gst_buffer_pool_default_buffer_destroy (GstBufferPool *pool, GstBuffer *buffer, gpointer user_data)
+gst_buffer_pool_default_buffer_free (GstBuffer *buffer)
 {
-  GstBufferPoolDefault *def = (GstBufferPoolDefault*) user_data;
+  GstBufferPool *pool = buffer->pool;
+  GstBufferPoolDefault *def = (GstBufferPoolDefault*) pool->user_data;
   GMemChunk *data_chunk = def->mem_chunk;
   gpointer data = GST_BUFFER_DATA(buffer);
-
+  
   g_mutex_lock (pool->lock);
   g_mem_chunk_free (data_chunk,data);
   g_mutex_unlock (pool->lock);
 
   buffer->pool = NULL;
   gst_buffer_pool_unref(pool);
-  gst_buffer_destroy (buffer);
 }
 
 static void
-gst_buffer_pool_default_pool_destroy_hook (GstBufferPool *pool, gpointer user_data) 
+gst_buffer_pool_default_destroy_hook (GstBufferPool *pool, gpointer user_data) 
 {
   GstBufferPoolDefault *def = (GstBufferPoolDefault*) user_data;
   GMemChunk *data_chunk = def->mem_chunk;
   
   GST_DEBUG(GST_CAT_BUFFER,"destroying default buffer pool %p\n", pool);
   
+  g_mutex_free (pool->lock);
   g_mem_chunk_reset(data_chunk);
   g_free(data_chunk);
   g_free(def);

@@ -95,10 +95,12 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 location, gint size)
   GstBuffer *buffer;
 
   g_return_val_if_fail (pool != NULL, NULL);
-  g_return_val_if_fail (pool->new_buffer != NULL, NULL);
+  g_return_val_if_fail (pool->buffer_new != NULL, NULL);
   
-  buffer = pool->new_buffer (pool, location, size, pool->user_data);
+  buffer = pool->buffer_new (pool, location, size, pool->user_data);
   buffer->pool = pool;
+  buffer->free = pool->buffer_free;
+  buffer->pool_private = pool->user_data;
   
   return buffer;
 }
@@ -228,15 +230,8 @@ void gst_buffer_destroy (GstBuffer *buffer)
 
   g_return_if_fail (buffer != NULL);
   
-  if (buffer->pool) {
-    GST_INFO (GST_CAT_BUFFER,"calling %sbuffer %p\'s pool destroy function", (buffer->parent?"sub":""),buffer);
-    buffer->pool->destroy_buffer(buffer->pool, buffer,
-                                 buffer->pool->user_data);
-    return;
-  }
-  
   GST_INFO (GST_CAT_BUFFER,"freeing %sbuffer %p", (buffer->parent?"sub":""),buffer);
-
+  
   // free the data only if there is some, DONTFREE isn't set, and not sub
   if (GST_BUFFER_DATA (buffer) &&
       !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
