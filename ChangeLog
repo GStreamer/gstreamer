@@ -1,3 +1,8 @@
+2004-12-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/programs.xml:
+      Added more gst-launch examples.
+
 2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_handle_src_query):
