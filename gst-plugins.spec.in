@@ -1127,6 +1127,7 @@ Plug-in for playback of wav, au and mod audio files as well as mp3 type.
 %{_libdir}/gst/libgstauparse.so
 %{_libdir}/gst/libgstmp3types.so
 %{_libdir}/gst/libgstmodplug.so
+%{_libdir}/gst/libgstwavenc.so
 
 %post -n gstreamer-audio-formats
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1430,6 +1431,8 @@ Plug-in for demuxing Quicktime movies
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Thu Oct 24 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Added wavenc to audio formats package
 * Sat Oct 20 2002 Christian Scchaller <Uraeus@linuxrising.org>
 - Removed all .la files
 - added separate non-openquicktime demuxer plugin
