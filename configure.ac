@@ -921,8 +921,6 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
-dnl testsuite/autoplug/Makefile
-dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
 gstreamer-libs.pc
@@ -1045,6 +1043,9 @@ examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
 examples/Makefile
+testsuite/autoplug/Makefile
+testsuite/spider/Makefile
+testsuite/Makefile
 tools/Makefile
 gconf/Makefile
 )
