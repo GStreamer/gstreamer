@@ -602,9 +602,6 @@ gst_osselement_sync_parms (GstOssElement * oss)
   GST_INFO
       ("osselement: setting sound card to %dHz %d format %s (%08x fragment)",
       oss->rate, oss->format, (oss->channels == 2) ? "stereo" : "mono", frag);
-  g_print
-      ("osselement: setting sound card to %dHz %d format %s (%08x fragment)\n",
-      oss->rate, oss->format, (oss->channels == 2) ? "stereo" : "mono", frag);
 
   if (frag)
     ioctl (oss->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
