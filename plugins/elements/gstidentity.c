@@ -43,6 +43,7 @@ enum {
 enum {
   ARG_0,
   ARG_LOOP_BASED,
+  ARG_SLEEP_TIME,
 };
 
 
@@ -89,6 +90,8 @@ gst_identity_class_init (GstIdentityClass *klass)
 
   gtk_object_add_arg_type ("GstIdentity::loop_based", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_LOOP_BASED);
+  gtk_object_add_arg_type ("GstIdentity::sleep_time", GTK_TYPE_UINT,
+                           GTK_ARG_READWRITE, ARG_SLEEP_TIME);
 
   gtkobject_class->set_arg = gst_identity_set_arg;  
   gtkobject_class->get_arg = gst_identity_get_arg;
@@ -105,6 +108,7 @@ gst_identity_init (GstIdentity *identity)
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
 
   identity->loop_based = FALSE;
+  identity->sleep_time = 10000;
 }
 
 static void 
@@ -120,6 +124,8 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   g_print("(%s:%s)i ",GST_DEBUG_PAD_NAME(pad));
   
   gst_pad_push (identity->srcpad, buf);
+
+  usleep (identity->sleep_time);
 }
 
 static void 
@@ -138,6 +144,8 @@ gst_identity_loop (GstElement *element)
     g_print("(%s:%s)i ",GST_DEBUG_PAD_NAME(identity->sinkpad));
 
     gst_pad_push (identity->srcpad, buf);
+
+    usleep (identity->sleep_time);
 
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
 }
@@ -164,6 +172,9 @@ gst_identity_set_arg (GtkObject *object, GtkArg *arg, guint id)
         gst_element_set_loop_function (GST_ELEMENT (identity), NULL);
       }
       break;
+    case ARG_SLEEP_TIME:
+      identity->sleep_time = GTK_VALUE_UINT (*arg);
+      break;
     default:
       break;
   }
@@ -180,6 +191,9 @@ static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_LOOP_BASED:
       GTK_VALUE_BOOL (*arg) = identity->loop_based;
+      break;
+    case ARG_SLEEP_TIME:
+      GTK_VALUE_UINT (*arg) = identity->sleep_time;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

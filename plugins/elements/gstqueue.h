@@ -71,6 +71,7 @@ struct _GstQueue {
   GCond *emptycond;
   GMutex *fulllock;	/* used when the queue is full */
   GCond *fullcond;
+  GTimeVal *timeval;	/* the timeout for the queue locking */
 };
 
 struct _GstQueueClass {

@@ -58,6 +58,8 @@ struct _GstIdentity {
   GstPad *srcpad;
 
   gboolean loop_based;
+
+  guint sleep_time;
 };
 
 struct _GstIdentityClass {

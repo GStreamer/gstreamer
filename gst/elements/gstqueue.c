@@ -53,6 +53,7 @@ enum {
   ARG_LEVEL,
   ARG_MAX_LEVEL,
   ARG_BLOCK,
+  ARG_TIMEOUT,
 };
 
 
@@ -110,6 +111,8 @@ gst_queue_class_init (GstQueueClass *klass)
                            GTK_ARG_READWRITE, ARG_MAX_LEVEL);
   gtk_object_add_arg_type ("GstQueue::block", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_BLOCK);
+  gtk_object_add_arg_type ("GstQueue::timeout", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_TIMEOUT);
 
   gtkobject_class->set_arg = gst_queue_set_arg;  
   gtkobject_class->get_arg = gst_queue_get_arg;
@@ -163,6 +166,7 @@ gst_queue_flush (GstQueue *queue)
   
   queue->queue = NULL;
   queue->level_buffers = 0;
+  queue->timeval = NULL;
 }
 
 static void 
@@ -197,7 +201,7 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
     STATUS("%s: O\n");
     g_mutex_lock (queue->fulllock);
     GST_UNLOCK (queue);
-    g_cond_wait (queue->fullcond, queue->fulllock);
+    g_cond_timed_wait (queue->fullcond, queue->fulllock, queue->timeval);
     GST_LOCK (queue);
     g_mutex_unlock (queue->fulllock);
     STATUS("%s: O+\n");
@@ -253,7 +257,7 @@ gst_queue_get (GstPad *pad)
     STATUS("queue: %s U released lock\n");
     GST_UNLOCK (queue);
     g_mutex_lock (queue->emptylock);
-    g_cond_wait (queue->emptycond, queue->emptylock);
+    g_cond_timed_wait (queue->emptycond, queue->emptylock, queue->timeval);
     g_mutex_unlock (queue->emptylock);
     GST_LOCK (queue);
 //    STATUS("queue: %s U- getting lock\n");
@@ -327,6 +331,8 @@ gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_BLOCK:
       queue->block = GTK_VALUE_BOOL (*arg);
       break;
+    case ARG_TIMEOUT:
+      break;
     default:
       break;
   }
@@ -351,6 +357,8 @@ gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_BLOCK:
       GTK_VALUE_BOOL (*arg) = queue->block;
+      break;
+    case ARG_TIMEOUT:
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
