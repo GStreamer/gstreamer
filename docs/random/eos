@@ -137,7 +137,7 @@ case 4)
 case 5) 
 
  (--------)         (--------)         (--------) 
- ! disksrc!         !  mad   !         !disksink! 
+ ! disksrc!         !  mad   !         !filesink! 
  !       src ----- sink     src ---- sink       ! 
  (--------)         (--------)         (--------)
 
@@ -155,14 +155,14 @@ case 5)
   src pad.
   the parent already has mad in the list of EOS providers so it does not
   get added twice.
-  mad finally fires the EOS signal.  This time, disksink returns false on
+  mad finally fires the EOS signal.  This time, filesink returns false on
   the eos request.  the parent removes mad as an EOS provider. 
   
-  disksink was responsible for the EOS delay and gets added to the bin
+  filesink was responsible for the EOS delay and gets added to the bin
   as a possible EOS provider.
-  When disksink has written all of it's data and closed the output file,
+  When filesink has written all of it's data and closed the output file,
   it fires EOS.
-  The parent already has disksink in the list of EOS providers so it does
+  The parent already has filesink in the list of EOS providers so it does
   not get added twice.
   The parent removes the EOS provider 
   from its list, and since the list is empty, the parent fires EOS.
@@ -172,7 +172,7 @@ case 6)
  (--------)         (--------)         (--------) 
  !disksrc1!         !  mad1  !         ! mixer  ! 
  !       src ----- sink     src ---- sink1      !        (--------)
- (--------)         (--------)         !        !        !disksink!
+ (--------)         (--------)         !        !        !filesink!
                                        !       src ---- sink      !
  (--------)         (--------)         !        !        (--------)
  !disksrc2!         !  mad2  !         !        ! 
@@ -201,8 +201,8 @@ case 6)
   realizing all of it's sources have reached eos, it sends out the final
   buffer and fires EOS.
 
-  At this point, disksink will return false, mixer will be removed as an
-  eos provider, and disksink will write out it's final buffer and close
+  At this point, filesink will return false, mixer will be removed as an
+  eos provider, and filesink will write out it's final buffer and close
   the file on disk.  At this point, it fires eos, and since it's the last
   eos provider, the parent can fire eos.
 

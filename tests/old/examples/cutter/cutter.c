@@ -1,7 +1,7 @@
 /*
  * cutter.c - cut audio into pieces based on silence  - thomas@apestaart.org
  * 
- * construct a simple pipeline osssrc ! cutter ! disksink
+ * construct a simple pipeline osssrc ! cutter ! filesink
  * pause when necessary, change output
  *
  * Latest change : 	03/06/2001
@@ -26,7 +26,7 @@ GstElement *audiosrc;
 GstElement *queue;
 GstElement *thread;
 GstElement *cutter;
-GstElement *disksink;
+GstElement *filesink;
 GstElement *encoder;
 char buffer[255];
 
@@ -36,8 +36,8 @@ void
 cut_start (GstElement * element)
 {
   g_print ("\nDEBUG: main: cut start\n");
-  /* we should pause the pipeline, unlink cutter and disksink
-   * create a new disksink to a real file, relink, and set to play
+  /* we should pause the pipeline, unlink cutter and filesink
+   * create a new filesink to a real file, relink, and set to play
    */
   g_print ("DEBUG: cut_start: main_bin pausing\n");
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
@@ -56,8 +56,8 @@ cut_start (GstElement * element)
         ct->tm_sec);
   }
   g_print ("DEBUG: cut_start: setting new location to %s\n", buffer);
-  g_object_set (G_OBJECT (disksink), "location", buffer, NULL);
-  g_object_set (G_OBJECT (disksink), "type", 4, NULL);
+  g_object_set (G_OBJECT (filesink), "location", buffer, NULL);
+  g_object_set (G_OBJECT (filesink), "type", 4, NULL);
 
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
   ++id;
@@ -76,14 +76,14 @@ void
 cut_stop (GstElement * element)
 {
   g_print ("\nDEBUG: main: cut stop\n");
-  /* we should pause the pipeline, unlink disksink, create a fake disksink,
+  /* we should pause the pipeline, unlink filesink, create a fake filesink,
    * link to pipeline, and set to play
    */
   g_print ("DEBUG: cut_stop: main_bin paused\n");
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
 
   g_print ("DEBUG: cut_stop: setting new location\n");
-  g_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
+  g_object_set (G_OBJECT (filesink), "location", "/dev/null", NULL);
 
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
   g_print ("stop_cut_signal done\n");
@@ -138,10 +138,10 @@ main (int argc, char *argv[])
   if (!(encoder = gst_element_factory_make ("passthrough", "encoder")))
     g_error ("Could not create 'passthrough' element !\n");
 
-  if (!(disksink = gst_element_factory_make ("afsink", "disk_sink")))
+  if (!(filesink = gst_element_factory_make ("afsink", "disk_sink")))
     g_error ("Could not create 'afsink' element !\n");
 
-  g_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
+  g_object_set (G_OBJECT (filesink), "location", "/dev/null", NULL);
 
   thread = gst_thread_new ("thread");
   g_assert (thread != NULL);
@@ -157,9 +157,9 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (main_bin), audiosrc);
   gst_bin_add (GST_BIN (thread), queue);
 
-  gst_bin_add_many (GST_BIN (thread), cutter, encoder, disksink, NULL);
+  gst_bin_add_many (GST_BIN (thread), cutter, encoder, filesink, NULL);
 
-  gst_element_link_many (audiosrc, queue, cutter, encoder, disksink, NULL);
+  gst_element_link_many (audiosrc, queue, cutter, encoder, filesink, NULL);
   gst_bin_add (GST_BIN (main_bin), thread);
 
   /* set signal handlers */
@@ -196,7 +196,7 @@ main (int argc, char *argv[])
 
   gst_element_set_state (main_bin, GST_STATE_NULL);
 
-  gst_object_unref (GST_OBJECT (disksink));
+  gst_object_unref (GST_OBJECT (filesink));
   gst_object_unref (GST_OBJECT (main_bin));
 
   exit (0);

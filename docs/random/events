@@ -247,15 +247,15 @@ not important for the example.
     time with the help of the previous length information supplied by the filesrc. It will then
     issue another INFO event with that informations. This one will be send downstream and vertical.
     
-* ... ! avimux ! disksink
+* ... ! avimux ! filesink
 
   This example is showing a more exotic way of using events. The reader should be aware that AVI
   files have a limited filesize. Only 4 GB are allowed. We now show what happens when the avimux
   encoder hits that limit.
   - When the internal counter of avimux shows that it is approaching the filesize limit, the 
-    avimux element pushes a buffer containig the footer to the disksink.
+    avimux element pushes a buffer containig the footer to the filesink.
   - After that it issues a DISCONTINUOUS event of the type DISCONT_NEW indicating a new stream.
-    The disksink will close the file and reopen a new one.
+    The filesink will close the file and reopen a new one.
   - The avimux plugin resets its internal size counter and restarts sending data to the new file.
 
 * filesrc ! gunzip ! mikmod ! osssink
@@ -283,7 +283,7 @@ Open Questions
 Open questions are issues that should probably be solved by events but can not be solved
 currently.
 
-* A disksink needs to be able to inform elements of a restricted file size. Simply closing
+* A filesink needs to be able to inform elements of a restricted file size. Simply closing
   the file and opening a new one might not work because elements might need to supply a 
   footer. (eg avimux)
 

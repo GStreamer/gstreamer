@@ -6,7 +6,7 @@
 typedef struct 
 {
   GstElement *pipe;
-  GstElement *disksink;
+  GstElement *filesink;
   GstElement *audiosink;
   
   char *location;
