@@ -444,7 +444,12 @@ gst_vorbisfile_loop (GstElement *element)
     }
 
     vorbisfile->may_eos = TRUE;
-    GST_BUFFER_TIMESTAMP (outbuf) = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+    if (vorbisfile->vf.seekable) {
+      GST_BUFFER_TIMESTAMP (outbuf) = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+    }
+    else {
+      GST_BUFFER_TIMESTAMP (outbuf) = 0;
+    }
   
     gst_pad_push (vorbisfile->srcpad, outbuf);
   }
@@ -515,6 +520,9 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      if (!vorbisfile->vf.seekable)
+        return FALSE;
+
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_TIME:
 	  vorbisfile->seek_pending = TRUE;
