@@ -1,3 +1,9 @@
+2004-08-29  Ronald S. Bultje  <Ronald S. Bultje <rbultje@ronald.bitfreak.net>>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
+	  Add switches (simple boolean on/off).
+
 2004-08-27  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glimagesink.c: (gst_glimagesink_ximage_put),
