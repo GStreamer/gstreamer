@@ -33,7 +33,7 @@ if os.path.exists(devloc):
    sys.path.append(devloc)
 
 sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
-del devloc, sys, os
+del devloc, sys, os, dl
 
 from _gst import *
 

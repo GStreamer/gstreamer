@@ -1,6 +1,12 @@
 2004-03-17  Johan Dahlin  <johan@gnome.org>
 
-	* Makefile.am (DIST_SUBDIRS): Remove PLAYDIR.
+	* gst/gst.defs: Remove unused functions.
+
+	* gst/gst.override: Ditto
+
+	* gst/__init__.py (devloc): delete dl
+
+	* Makefile.am (DIST_SUBDIRS): Remove PLAYDIR
 
 2004-03-16  Johan Dahlin  <johan@gnome.org>
 
