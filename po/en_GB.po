@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-05 14:22+0200\n"
+"POT-Creation-Date: 2004-06-26 10:16+0200\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -590,7 +590,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" isn't a regular file."
 
-#: gst/elements/gstidentity.c:191
+#: gst/elements/gstidentity.c:265
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
@@ -677,6 +677,11 @@ msgstr "could not link sink element for URI \"%s\""
 #: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
+
+#: tools/gst-inspect.c:1115
+#, fuzzy
+msgid "Print all elements"
+msgstr "no element \"%s\""
 
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
@@ -806,6 +811,42 @@ msgstr "RUNNING pipeline ...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: pipeline doesn't want to play.\n"
+
+#: tools/gst-register.c:49
+#, c-format
+msgid "Added plugin %s with %d %s.\n"
+msgstr ""
+
+#: tools/gst-register.c:51 tools/gst-register.c:163
+msgid "feature"
+msgid_plural "features"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-register.c:108
+#, c-format
+msgid "Added path   %s to %s \n"
+msgstr ""
+
+#: tools/gst-register.c:123
+#, c-format
+msgid "Rebuilding %s (%s) ...\n"
+msgstr ""
+
+#: tools/gst-register.c:128
+#, c-format
+msgid "Trying to load %s ...\n"
+msgstr ""
+
+#: tools/gst-register.c:130
+#, fuzzy, c-format
+msgid "Error loading %s\n"
+msgstr "Error closing file \"%s\"."
+
+#: tools/gst-register.c:162
+#, c-format
+msgid "Loaded %d plugins with %d %s.\n"
+msgstr ""
 
 #~ msgid "Show plugin details"
 #~ msgstr "Show plugin details"

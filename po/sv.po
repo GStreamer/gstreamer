@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-05 14:22+0200\n"
+"POT-Creation-Date: 2004-06-26 10:16+0200\n"
 "PO-Revision-Date: 2004-03-20 18:41+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -606,7 +606,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ingen vanlig fil."
 
-#: gst/elements/gstidentity.c:191
+#: gst/elements/gstidentity.c:265
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
@@ -696,6 +696,11 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 #: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
+
+#: tools/gst-inspect.c:1115
+#, fuzzy
+msgid "Print all elements"
+msgstr "inget \"%s\"-element"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: tools/gst-launch.c:91
@@ -833,6 +838,43 @@ msgstr "KÖR rörledning...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
+
+#: tools/gst-register.c:49
+#, c-format
+msgid "Added plugin %s with %d %s.\n"
+msgstr ""
+
+#: tools/gst-register.c:51 tools/gst-register.c:163
+#, fuzzy
+msgid "feature"
+msgid_plural "features"
+msgstr[0] "Satir"
+msgstr[1] "Satir"
+
+#: tools/gst-register.c:108
+#, c-format
+msgid "Added path   %s to %s \n"
+msgstr ""
+
+#: tools/gst-register.c:123
+#, c-format
+msgid "Rebuilding %s (%s) ...\n"
+msgstr ""
+
+#: tools/gst-register.c:128
+#, c-format
+msgid "Trying to load %s ...\n"
+msgstr ""
+
+#: tools/gst-register.c:130
+#, fuzzy, c-format
+msgid "Error loading %s\n"
+msgstr "Fel vid sparande av \"%s\""
+
+#: tools/gst-register.c:162
+#, c-format
+msgid "Loaded %d plugins with %d %s.\n"
+msgstr ""
 
 #~ msgid "Show plugin details"
 #~ msgstr "Visa detaljer för insticksmodul"
@@ -1366,9 +1408,6 @@ msgstr "FEL: rörledningen vill inte spela.\n"
 
 #~ msgid "Porn Groove"
 #~ msgstr "Porn Groove"
-
-#~ msgid "Satire"
-#~ msgstr "Satir"
 
 #~ msgid "Slow Jam"
 #~ msgstr "Slow Jam"
@@ -2623,9 +2662,6 @@ msgstr "FEL: rörledningen vill inte spela.\n"
 
 #~ msgid "Overwrite"
 #~ msgstr "Skriv över"
-
-#~ msgid "Error saving '%s'"
-#~ msgstr "Fel vid sparande av \"%s\""
 
 #~ msgid ""
 #~ "<b>Do you want to save the changes you made to \"%s\"?</b>\n"

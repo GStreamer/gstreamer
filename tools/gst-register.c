@@ -37,6 +37,8 @@
 #include <errno.h>
 #include <locale.h>
 
+#include "gst/gst-i18n-app.h"
+
 static gint num_features = 0;
 static gint num_plugins = 0;
 
@@ -44,8 +46,9 @@ static void
 plugin_added_func (GstRegistry * registry, GstPlugin * plugin,
     gpointer user_data)
 {
-  g_print ("added plugin %s with %d feature(s)\n", plugin->desc.name,
-      plugin->numfeatures);
+  g_print (_("Added plugin %s with %d %s.\n"), plugin->desc.name,
+      plugin->numfeatures,
+      ngettext ("feature", "features", plugin->numfeatures));
 
   num_features += plugin->numfeatures;
   num_plugins++;
@@ -80,7 +83,11 @@ main (int argc, char *argv[])
   GList *registries;
   GList *path_spill = NULL;     /* used for path spill from failing registries */
 
-  setlocale (LC_ALL, "");
+#ifdef GETTEXT_PACKAGE
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  textdomain (GETTEXT_PACKAGE);
+#endif
 
   /* Init gst */
   _gst_registry_auto_load = FALSE;
@@ -102,7 +109,7 @@ main (int argc, char *argv[])
        * since they're spilled they probably weren't loaded correctly
        * so we should give a lower priority registry the chance to do them */
       for (iter = path_spill; iter; iter = iter->next) {
-        g_print ("added path   %s to %s \n",
+        g_print (_("Added path   %s to %s \n"),
             (const char *) iter->data, registry->name);
         gst_registry_add_path (registry, (const gchar *) iter->data);
       }
@@ -117,14 +124,14 @@ main (int argc, char *argv[])
       char *location;
 
       g_object_get (registry, "location", &location, NULL);
-      g_print ("rebuilding %s (%s)\n", registry->name, location);
+      g_print (_("Rebuilding %s (%s) ...\n"), registry->name, location);
       g_free (location);
       gst_registry_rebuild (registry);
       gst_registry_save (registry);
     } else {
-      g_print ("trying to load %s\n", registry->name);
+      g_print (_("Trying to load %s ...\n"), registry->name);
       if (!gst_registry_load (registry)) {
-        g_print ("error loading %s\n", registry->name);
+        g_print (_("Error loading %s\n"), registry->name);
         /* move over paths from this registry to the next one */
         path_spill = g_list_concat (path_spill,
             gst_registry_get_path_list (registry));
@@ -156,7 +163,8 @@ main (int argc, char *argv[])
     registries = g_list_next (registries);
   }
 
-  g_print ("loaded %d plugins with %d features\n", num_plugins, num_features);
+  g_print (_("Loaded %d plugins with %d %s.\n"), num_plugins, num_features,
+      ngettext ("feature", "features", num_features));
 
   return (0);
 }

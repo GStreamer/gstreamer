@@ -1,5 +1,20 @@
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/POTFILES.in:
+	* po/af.po:
+	* po/az.po:
+	* po/en_GB.po:
+	* po/fr.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* tools/gst-register.c: (plugin_added_func), (main):
+	  i18n-ize -register, fix plural
+
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/elements/gstidentity.c: (gst_identity_class_init),
 	(gst_identity_init), (gst_identity_chain),
 	(gst_identity_set_property), (gst_identity_get_property):

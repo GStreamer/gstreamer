@@ -7,13 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-05 14:22+0200\n"
+"POT-Creation-Date: 2004-06-26 10:16+0200\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: gst/gst.c:160
 msgid "Print the GStreamer version"
@@ -600,7 +601,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "Bestand \"%s\" is geen gewoon bestand."
 
-#: gst/elements/gstidentity.c:191
+#: gst/elements/gstidentity.c:265
 msgid "Failed after iterations as requested."
 msgstr "Fout na iteraties zoals gevraagd."
 
@@ -687,6 +688,11 @@ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 #: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
+
+#: tools/gst-inspect.c:1115
+#, fuzzy
+msgid "Print all elements"
+msgstr "geen element \"%s\""
 
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
@@ -819,6 +825,42 @@ msgstr "BEZIG met pijplijn ...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
+
+#: tools/gst-register.c:49
+#, c-format
+msgid "Added plugin %s with %d %s.\n"
+msgstr "Plugin %s toegevoegd met %d %s.\n"
+
+#: tools/gst-register.c:51 tools/gst-register.c:163
+msgid "feature"
+msgid_plural "features"
+msgstr[0] "eigenschap"
+msgstr[1] "eigenschappen"
+
+#: tools/gst-register.c:108
+#, c-format
+msgid "Added path   %s to %s \n"
+msgstr "Pad %s toegevoegd aan %s \n"
+
+#: tools/gst-register.c:123
+#, c-format
+msgid "Rebuilding %s (%s) ...\n"
+msgstr "%s (%s) aan het herbouwen ...\n"
+
+#: tools/gst-register.c:128
+#, c-format
+msgid "Trying to load %s ...\n"
+msgstr "Aan het proberen %s te laden ...\n"
+
+#: tools/gst-register.c:130
+#, fuzzy, c-format
+msgid "Error loading %s\n"
+msgstr "Fout bij het laden van \"%s\"."
+
+#: tools/gst-register.c:162
+#, c-format
+msgid "Loaded %d plugins with %d %s.\n"
+msgstr "%d plugins geladen met %d %s.\n"
 
 #~ msgid "Show plugin details"
 #~ msgstr "Toon details van plugins"

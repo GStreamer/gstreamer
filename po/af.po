@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-05 14:22+0200\n"
+"POT-Creation-Date: 2004-06-26 10:16+0200\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -603,7 +603,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "Lêer \"%s\" is nie 'n gewone lêer nie."
 
-#: gst/elements/gstidentity.c:191
+#: gst/elements/gstidentity.c:265
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
@@ -690,6 +690,11 @@ msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 #: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
+
+#: tools/gst-inspect.c:1115
+#, fuzzy
+msgid "Print all elements"
+msgstr "geen element \"%s\""
 
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
@@ -819,6 +824,42 @@ msgstr "LOOP pyplyn ...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pyplyn wil nie speel nie.\n"
+
+#: tools/gst-register.c:49
+#, c-format
+msgid "Added plugin %s with %d %s.\n"
+msgstr ""
+
+#: tools/gst-register.c:51 tools/gst-register.c:163
+msgid "feature"
+msgid_plural "features"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-register.c:108
+#, c-format
+msgid "Added path   %s to %s \n"
+msgstr ""
+
+#: tools/gst-register.c:123
+#, c-format
+msgid "Rebuilding %s (%s) ...\n"
+msgstr ""
+
+#: tools/gst-register.c:128
+#, c-format
+msgid "Trying to load %s ...\n"
+msgstr ""
+
+#: tools/gst-register.c:130
+#, fuzzy, c-format
+msgid "Error loading %s\n"
+msgstr "Fout met toemaak van lêer \"%s\"."
+
+#: tools/gst-register.c:162
+#, c-format
+msgid "Loaded %d plugins with %d %s.\n"
+msgstr ""
 
 #~ msgid "Show plugin details"
 #~ msgstr "Vertoon details van inproppe"
