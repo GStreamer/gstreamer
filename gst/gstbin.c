@@ -147,11 +147,17 @@ void gst_bin_add(GstBin *bin,GstElement *element) {
   bin->numchildren++;
   gst_object_set_parent(GST_OBJECT(element),GST_OBJECT(bin));
 
-  if (GST_STATE_IS_SET(element,GST_STATE_COMPLETE)) {
-    if (!GST_STATE_IS_SET(bin,GST_STATE_COMPLETE))
+  /* FIXME: this isn't right, the bin should be complete whether or not
+     the children are, I think. */
+//  if (GST_STATE_IS_SET(element,GST_STATE_COMPLETE)) {
+    if (!GST_STATE_IS_SET(bin,GST_STATE_COMPLETE)) {
+      g_print("GstBin: adding complete element - ");
       gst_bin_change_state_norecurse(GST_ELEMENT(bin),GST_STATE_COMPLETE);
-  } else
-    gst_bin_change_state_norecurse(GST_ELEMENT(bin),~GST_STATE_COMPLETE);
+    }
+//  } else {
+//    g_print("GstBin: adding element - ");
+//  gst_bin_change_state_norecurse(GST_ELEMENT(bin),~GST_STATE_COMPLETE);
+//  }
 
   gtk_signal_emit(GTK_OBJECT(bin),gst_bin_signals[OBJECT_ADDED],element);
 }
