@@ -1,5 +1,10 @@
 2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstqueue.c: (gst_queue_handle_src_query):
+	  Check for availability again.
+
+2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/gstcaps.c: (gst_caps_compare_structures):
 	  Simple caps go first. This has the nice side-effect of fixing an
 	  obscure warning.

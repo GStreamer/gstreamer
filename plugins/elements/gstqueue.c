@@ -913,6 +913,8 @@ gst_queue_handle_src_query (GstPad * pad,
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   gboolean res;
 
+  if (!GST_PAD_PEER (queue->sinkpad))
+    return FALSE;
   res = gst_pad_query (GST_PAD_PEER (queue->sinkpad), type, fmt, value);
   if (!res)
     return FALSE;
