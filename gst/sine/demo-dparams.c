@@ -13,14 +13,14 @@ static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
 }
 
 static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
-  gfloat value;
+  gdouble value;
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
   value = exp(adj->value);
   
   g_print("setting value to %f\n", value);  
-  g_object_set(G_OBJECT(dparam), "value_float", value, NULL);
+  g_object_set(G_OBJECT(dparam), "value_double", value, NULL);
 }
 
 static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
@@ -28,7 +28,7 @@ static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
   g_print("setting value to %f\n", adj->value);  
-  g_object_set(G_OBJECT(dparam), "value_float", (gfloat)adj->value, NULL);
+  g_object_set(G_OBJECT(dparam), "value_double", (gdouble)adj->value, NULL);
 
 }
 
@@ -75,7 +75,7 @@ int main(int argc,char *argv[]) {
 
   /***** set up the dparams *****/
 
-  freq = gst_dpsmooth_new(G_TYPE_FLOAT);
+  freq = gst_dpsmooth_new(G_TYPE_DOUBLE);
   
   g_object_set(G_OBJECT(freq), "update_period", 2000000LL, NULL);
   
@@ -83,7 +83,7 @@ int main(int argc,char *argv[]) {
   * param can change.  This says that in 50ms *
   * the value can change by a maximum of one semitone *
   * (the log of one semitone is 0.693) */
-  g_object_set(G_OBJECT(freq), "slope_delta_float", 0.693F, NULL);
+  g_object_set(G_OBJECT(freq), "slope_delta_double", 0.693, NULL);
   g_object_set(G_OBJECT(freq), "slope_time", 50000000LL, NULL);
   
   dpman = gst_dpman_get_manager (sinesrc);
@@ -91,23 +91,22 @@ int main(int argc,char *argv[]) {
   gst_dpman_set_mode(dpman, "asynchronous");
   
   spec = (GParamSpecFloat*)gst_dpman_get_param_spec (dpman, "freq");
-  freq_adj = (GtkAdjustment*)gtk_adjustment_new((gfloat)log(spec->default_value), 
-                                                (gfloat)log(spec->minimum),
-                                                (gfloat)log(spec->maximum), 0.1, 0.01, 0.01);
+  freq_adj = (GtkAdjustment*)gtk_adjustment_new(log(spec->default_value), 
+      log(spec->minimum), log(spec->maximum), 0.1, 0.01, 0.01);
 
 
   freq_slider = gtk_vscale_new(freq_adj);
   gtk_scale_set_digits(GTK_SCALE(freq_slider), 2);
   gtk_box_pack_start(GTK_BOX(hbox),freq_slider,TRUE,TRUE,0);
 
-  volume = gst_dpsmooth_new(G_TYPE_FLOAT);
+  volume = gst_dpsmooth_new(G_TYPE_DOUBLE);
   
   g_object_set(G_OBJECT(volume), "update_period", 2000000LL, NULL);
   
   /* this defines the maximum slope that this *
   * param can change.  This says that in 50ms *
   * the value can change from 0.0 to 1.0 */
-  g_object_set(G_OBJECT(volume), "slope_delta_float", 0.1F, NULL);
+  g_object_set(G_OBJECT(volume), "slope_delta_double", 0.1, NULL);
   g_object_set(G_OBJECT(volume), "slope_time", 50000000LL, NULL); 
   
   dpman = gst_dpman_get_manager (volfilter);
