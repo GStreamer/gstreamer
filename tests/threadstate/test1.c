@@ -23,6 +23,7 @@ typedef struct
 {
   GMutex *mutex;
   GCond  *cond;
+  gint    var;
 } ThreadInfo;
 
 static void*
@@ -39,6 +40,7 @@ thread_loop (void *arg)
 
   g_print ("thread: wait ACK\n");
   g_cond_wait (info->cond, info->mutex);
+  info->var = 1;
   g_print ("thread: signal\n");
   g_cond_signal (info->cond);
   g_print ("thread: unlock\n");
@@ -58,10 +60,10 @@ main (gint argc, gchar *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-
   info = g_new (ThreadInfo, 1);
   info->mutex = g_mutex_new ();
   info->cond = g_cond_new ();
+  info->var = 0;
   
   g_print ("main: lock\n");
   g_mutex_lock (info->mutex);
@@ -74,6 +76,7 @@ main (gint argc, gchar *argv[])
   if (error != NULL) {
     g_print ("Unable to start thread: %s\n", error->message);
     g_error_free (error);
+    g_free (info);
     return -1;
   }
 
@@ -84,11 +87,17 @@ main (gint argc, gchar *argv[])
   g_cond_signal (info->cond);
   g_print ("main: wait\n");
   g_cond_wait (info->cond, info->mutex);
-  g_print ("main: unlock\n");
+  g_print ("main: var == %d\n", info->var);
+  if (info->var != 1) 
+    g_print ("main: !!error!! expected var == 1, got %d\n", info->var);
   g_mutex_unlock (info->mutex);
 
   g_print ("main: join\n");
   g_thread_join (thread);
+
+  g_mutex_free (info->mutex);
+  g_cond_free (info->cond);
+  g_free (info);
 
   return 0;
 }
