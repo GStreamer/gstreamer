@@ -47,12 +47,7 @@ dnl
 #include <stdlib.h>
 #include <string.h>
 #include <tremor/codec.h>
-
-int main ()
-{
-}
-
-],, no_ivorbis=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
+],,, no_ivorbis=yes)
        CFLAGS="$ac_save_CFLAGS"
        LIBS="$ac_save_LIBS"
   fi
