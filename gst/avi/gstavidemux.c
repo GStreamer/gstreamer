@@ -100,6 +100,9 @@ static void 	gst_avi_demux_init		(GstAviDemux *avi_demux);
 
 static void 	gst_avi_demux_loop 		(GstElement *element);
 
+static GstElementStateReturn
+		gst_avi_demux_change_state 	(GstElement *element);
+
 static void     gst_avi_demux_get_property      (GObject *object, guint prop_id, 	
 						 GValue *value, GParamSpec *pspec);
 
@@ -151,6 +154,8 @@ gst_avi_demux_class_init (GstAviDemuxClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
   gobject_class->get_property = gst_avi_demux_get_property;
+  
+  gstelement_class->change_state = gst_avi_demux_change_state;
 }
 
 static void 
@@ -468,14 +473,6 @@ gst_avidemux_forall_pads (GstAviDemux *avi_demux, GFunc func, gpointer user_data
   }
 }
 
-static void
-gst_avidemux_queue_event_func (GstPad *pad, gpointer user_data)
-{
-  GstEventType type = GPOINTER_TO_INT (user_data);
-
-  gst_pad_push (pad, GST_BUFFER (gst_event_new (type)));
-}
-
 static gboolean
 gst_avidemux_handle_event (GstAviDemux *avi_demux)
 {
@@ -489,9 +486,7 @@ gst_avidemux_handle_event (GstAviDemux *avi_demux)
 
   switch (type) {
     case GST_EVENT_EOS:
-      gst_element_set_state (GST_ELEMENT (avi_demux), GST_STATE_PAUSED);
-      g_warning ("eos event\n");
-      gst_avidemux_forall_pads (avi_demux, (GFunc) gst_avidemux_queue_event_func, GINT_TO_POINTER (GST_EVENT_EOS));
+      gst_pad_event_default (avi_demux->sinkpad, event);
       break;
     case GST_EVENT_SEEK:
       g_warning ("seek event\n");
@@ -679,16 +674,39 @@ gst_avi_demux_loop (GstElement *element)
 
   avi_demux = GST_AVI_DEMUX (element);
 
-  avi_demux->bs = gst_bytestream_new (avi_demux->sinkpad);
+  /* this is basically an infinite loop */
+  if (!gst_avidemux_process_chunk (avi_demux, 0, GST_RIFF_TAG_RIFF, 0, &chunksize)) {
+    gst_element_error (element, "This doesn't appear to be an AVI file");
+  }
+}
 
-  do {
-    if (!gst_avidemux_process_chunk (avi_demux, 0, GST_RIFF_TAG_RIFF, 0, &chunksize)) {
-      GST_INFO (GST_CAT_PLUGIN_INFO, "sorry, isn't AVI");
+static GstElementStateReturn
+gst_avi_demux_change_state (GstElement *element)
+{
+  GstAviDemux *avi_demux = GST_AVI_DEMUX (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
       break;
-    }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
+    case GST_STATE_READY_TO_PAUSED:
+      avi_demux->bs = gst_bytestream_new (avi_demux->sinkpad);
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_bytestream_destroy (avi_demux->bs);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
 
-  gst_bytestream_destroy (avi_demux->bs);
+  parent_class->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 static void
