@@ -351,7 +351,9 @@ gst_sinesrc_get (GstPad * pad)
       gst_element_wait (GST_ELEMENT (src), GST_BUFFER_TIMESTAMP (buf));
     }
   }
+  /* offset is the number of samples */
   GST_BUFFER_OFFSET (buf) = src->offset;
+  GST_BUFFER_OFFSET_END (buf) = src->offset + src->samples_per_buffer;
   GST_BUFFER_DURATION (buf) = tdiff;
 
   samples = (gint16 *) GST_BUFFER_DATA (buf);
@@ -359,7 +361,7 @@ gst_sinesrc_get (GstPad * pad)
   GST_DPMAN_PREPROCESS (src->dpman, src->samples_per_buffer, src->timestamp);
 
   src->timestamp += tdiff;
-  src->offset += GST_BUFFER_SIZE (buf);
+  src->offset += src->samples_per_buffer;
 
   while (GST_DPMAN_PROCESS (src->dpman, i)) {
 #if 0
