@@ -1,5 +1,11 @@
 2004-05-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain):
+	First process the events before deciding that negotiation
+	was not performed.
+
+2004-05-06  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/Makefile.am:
 	* ext/theora/theora.c: (plugin_init):
 	* ext/theora/theoradec.c: (theora_dec_change_state):
