@@ -1,5 +1,5 @@
-# thomas : removed refcounting for now until it is fixed
-SUBDIRS = capsnego plugin bytestream threads
+# FIXME : refcounting threads
+SUBDIRS = capsnego plugin bytestream
 
 testprogs = test_gst_init
 
