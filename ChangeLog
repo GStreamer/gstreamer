@@ -1,3 +1,12 @@
+2004-06-11  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init),
+	(gst_ogg_mux_init), (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_get_headers), (gst_ogg_mux_set_header_on_caps),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_loop),
+	(gst_ogg_mux_get_property), (gst_ogg_mux_set_property):
+	Added property to set the maximum delay of a page.
+
 2004-06-10  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init),
