@@ -8,8 +8,7 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c 		\
 			  gstffmpegdemux.c 	\
 			  gstffmpegenc.c 	\
 			  gstffmpegmux.c 	\
-			  gstffmpegprotocol.c 	\
-			  gstffmpegtypes.c
+			  gstffmpegprotocol.c
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) \
 	-I $(top_builddir)/gst-libs/ext/ffmpeg/ffmpeg/libavcodec \
