@@ -209,7 +209,7 @@ dnl ====================================
 dnl === GLib 2 ===
 dnl Minimum required version of GLib2
 dnl required for compilation without warnings
-GLIB2_REQ="2.3"
+GLIB2_REQ="2.2"
 AC_SUBST(GLIB2_REQ)
 
 dnl Check for glib2
@@ -438,16 +438,6 @@ fi
 if test "x$USE_POISONING" = xyes; then
   AC_DEFINE(USE_POISONING, 1, [Define if we should poison deallocated memory])
 fi
-
-dnl test if we have pthread_attr_setstack; if not use the older calls
-AC_CHECK_LIB(pthread, pthread_attr_setstack, 
-   AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACK, 1, 
-             [Defined if libpthread has pthread_attr_setstack ()]))
-
-dnl test if we have posix_memalign; FreeBSD doesn't
-AC_CHECK_FUNC(posix_memalign,
-   AC_DEFINE(HAVE_POSIX_MEMALIGN, 1,
-             [Defined if we have posix_memalign ()]))
 
 dnl test for sigaction()
 AC_CHECK_FUNC(sigaction,

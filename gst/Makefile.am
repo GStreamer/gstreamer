@@ -74,7 +74,6 @@ DIST_SUBDIRS = autoplug elements parse registries schedulers indexers
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gst.c			\
-	gstmarshal.c		\
 	$(GST_ENUMTYPES_SRC)	\
 	gstobject.c		\
 	gstatomic.c		\
@@ -121,6 +120,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
 
+nodist_libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
+	gstmarshal.c
 
 BUILT_SOURCES = gstversion.h gstconfig.h gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC) 
 CLEANFILES = gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC)
@@ -184,13 +185,12 @@ gst_headers =			\
 	gstparse.h		\
 	gstxml.h
 
-built_headers =			\
+libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)
+nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 	gstconfig.h		\
 	gstversion.h		\
 	gstmarshal.h		\
 	gstenumtypes.h
-
-libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers) $(built_headers)
 
 noinst_HEADERS = 		\
 	gettext.h		\

@@ -1,3 +1,10 @@
+2004-02-26  David Schleef  <ds@schleef.org>
+
+	* configure.ac:  We don't really need glib-2.3.  Also remove
+	some unneeded checks for library functions.
+	* gst/Makefile.am:  Instead, we need to not dist files created
+	by glib-genmarshal.
+
 2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
