@@ -44,11 +44,31 @@ Get a list of all elements. These elements will be used in autoplugging
 
 <!-- ##### FUNCTION gst_autoplug_caps ##### -->
 <para>
-Perform autoplugging between the two given caps.
+
 </para>
 
-@srccaps: the source capability structure
-@sinkcaps: the sink capability structure
-@Returns: th GList of elements that convert srccaps into sinkcaps.
+@srccaps: 
+@sinkcaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplug_pads ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplug_caps_list ##### -->
+<para>
+
+</para>
+
+@srccaps: 
+@sinkcaps: 
+@Returns: 
 
 

@@ -95,6 +95,16 @@ Create a boolean property
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_props_register_count ##### -->
+<para>
+
+</para>
+
+@factory: 
+@counter: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_props_new ##### -->
 <para>
 

@@ -469,20 +469,13 @@ gst_pad_connect (GstPad *srcpad,
   g_return_if_fail((srcpad->direction == GST_PAD_SRC) &&
                    (sinkpad->direction == GST_PAD_SINK));
  
-  /* chack pad compatibility */
-  if (srcpad->caps && sinkpad->caps) {
-    if (!gst_caps_check_compatibility (srcpad->caps, sinkpad->caps)) {
-      g_warning ("gstpad: connecting incompatible pads (%s:%s) and (%s:%s)\n",
-		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-    }
-    else {
-      DEBUG ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
-		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-    }
+  if (!gst_pad_check_compatibility (srcpad, sinkpad)) {
+    g_warning ("gstpad: connecting incompatible pads (%s:%s) and (%s:%s)\n",
+                       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   }
   else {
-    DEBUG ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
-		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+    DEBUG ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
+                       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   }
 
   /* first set peers */
@@ -610,6 +603,7 @@ gst_pad_set_caps_list (GstPad *pad,
 
   pad->caps = caps;
 }
+
 /**
  * gst_pad_get_caps_list:
  * @pad: the pad to get the capabilities from
@@ -625,6 +619,70 @@ gst_pad_get_caps_list (GstPad *pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   return pad->caps;
+}
+
+/**
+ * gst_pad_get_caps_by_name:
+ * @pad: the pad to get the capabilities from
+ * @name: the name of the capability to get
+ *
+ * get the capabilities  with the given name from this pad
+ *
+ * Returns: a capability or NULL if not found
+ */
+GstCaps * 
+gst_pad_get_caps_by_name (GstPad *pad, gchar *name) 
+{
+  GList *caps;
+  
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  caps = pad->caps;
+
+  while (caps) {
+    GstCaps *cap = (GstCaps *)caps->data;
+
+    if (!strcmp (cap->name, name))
+      return cap;
+
+    caps = g_list_next (caps);
+  }
+  
+  return NULL;
+}
+
+/**
+ * gst_pad_check_compatibility:
+ * @srcpad: the srcpad to check
+ * @sinkpad: the sinkpad to check against
+ *
+ * check if two pads have compatible capabilities
+ *
+ * Returns: TRUE if they are compatible ot the capabilities
+ * could not be checked
+ */
+gboolean  
+gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad) 
+{
+  g_return_val_if_fail (srcpad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
+  g_return_val_if_fail (sinkpad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
+
+  if (srcpad->caps && sinkpad->caps) {
+    if (!gst_caps_list_check_compatibility (srcpad->caps, sinkpad->caps)) {
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
+  }
+  else {
+    DEBUG ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
+		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+    return TRUE;
+  }
 }
 
 /**

@@ -197,6 +197,8 @@ gst_elementfactory_find
 gst_elementfactory_get_list
 gst_elementfactory_can_src_caps
 gst_elementfactory_can_sink_caps
+gst_elementfactory_can_src_caps_list
+gst_elementfactory_can_sink_caps_list
 gst_elementfactory_create
 gst_elementfactory_make
 gst_elementfactory_save_thyself
@@ -305,8 +307,10 @@ gst_pad_set_chain_function
 gst_pad_set_get_function
 gst_pad_set_getregion_function
 gst_pad_set_qos_function
-gst_pad_set_caps
-gst_pad_get_caps
+gst_pad_set_caps_list
+gst_pad_get_caps_list
+gst_pad_get_caps_by_name
+gst_pad_check_compatibility
 gst_pad_set_name
 gst_pad_get_name
 gst_pad_set_parent
@@ -331,6 +335,8 @@ GST_PAD_FACTORY_SOMETIMES
 GST_PAD_FACTORY_ALWAYS
 GST_PAD_FACTORY_SINK
 GST_PAD_FACTORY_SRC
+GST_PAD_FACTORY_CAPS
+
 
 GstPadPresence
 GstPadTemplate
@@ -385,6 +391,8 @@ GST_AUTOPLUG_MAX_COST
 GstAutoplugCostFunction
 GstAutoplugListFunction
 gst_autoplug_caps
+gst_autoplug_pads
+gst_autoplug_caps_list
 <SUBSECTION Standard>
 GstAutoplug
 GST_AUTOPLUG
@@ -496,9 +504,11 @@ GstCapsFactory[]
 gst_caps_new
 gst_caps_new_with_props
 gst_caps_register
+gst_caps_register_count
 gst_caps_set_props
 gst_caps_get_props
 gst_caps_check_compatibility
+gst_caps_list_check_compatibility
 gst_caps_save_thyself
 gst_caps_load_thyself
 <SUBSECTION Standard>
@@ -517,6 +527,7 @@ GST_PROPS_FOURCC
 GST_PROPS_FOURCC_INT
 GST_PROPS_BOOLEAN
 gst_props_register
+gst_props_register_count
 gst_props_new
 gst_props_merge
 gst_props_check_compatibility
@@ -532,6 +543,7 @@ GST_PROPS_INT_ID
 GST_PROPS_INT_RANGE_ID
 GST_PROPS_FOURCC_ID
 GST_PROPS_BOOL_ID
+GST_PROPS_LAST_ID
 </SECTION>
 
 <SECTION>

@@ -20,6 +20,7 @@ a mime-type and a set of properties.
 
 </para>
 
+@name: 
 @id: the typeid of the capability
 @properties: the properties of the capability
 
@@ -40,6 +41,7 @@ a mime-type and a set of properties.
 
 </para>
 
+@name: 
 @mime: 
 @Returns: 
 
@@ -49,6 +51,7 @@ a mime-type and a set of properties.
 
 </para>
 
+@name: 
 @mime: 
 @props: 
 @Returns: 
@@ -61,6 +64,18 @@ a mime-type and a set of properties.
 
 @factory: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_register_count ##### -->
+<para>
+
+</para>
+
+@factory: 
+@counter: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@count: 
 
 
 <!-- ##### FUNCTION gst_caps_set_props ##### -->
@@ -93,6 +108,16 @@ a mime-type and a set of properties.
 <!-- # Unused Parameters # -->
 @caps1: 
 @caps2: 
+
+
+<!-- ##### FUNCTION gst_caps_list_check_compatibility ##### -->
+<para>
+
+</para>
+
+@fromcaps: 
+@tocaps: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->

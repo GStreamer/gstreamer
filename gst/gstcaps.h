@@ -45,7 +45,7 @@ void 		_gst_caps_initialize			(void);
 GstCaps*	gst_caps_new				(gchar *name, gchar *mime);
 GstCaps*	gst_caps_new_with_props			(gchar *name, gchar *mime, GstProps *props);
 GstCaps*	gst_caps_register			(GstCapsFactory *factory);
-GstCaps*	gst_caps_register_count			(GstCapsFactory *factory, guint *count);
+GstCaps*	gst_caps_register_count			(GstCapsFactory *factory, guint *counter);
 
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);

@@ -197,7 +197,7 @@ Destroy the pad
 @qos: 
 
 
-<!-- ##### FUNCTION gst_pad_set_caps ##### -->
+<!-- ##### FUNCTION gst_pad_set_caps_list ##### -->
 <para>
 
 </para>
@@ -206,12 +206,32 @@ Destroy the pad
 @caps: 
 
 
-<!-- ##### FUNCTION gst_pad_get_caps ##### -->
+<!-- ##### FUNCTION gst_pad_get_caps_list ##### -->
 <para>
 
 </para>
 
 @pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_caps_by_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_check_compatibility ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
 @Returns: 
 
 
@@ -413,6 +433,14 @@ Indicates a sinkpad for the padfactory.
 Indicates a srcpad for the padfactory.
 </para>
 
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_CAPS ##### -->
+<para>
+Starts the declaration of a the capabilities for this padtemplate
+</para>
+
+@a...: a capability factory
 
 
 <!-- ##### ENUM GstPadPresence ##### -->

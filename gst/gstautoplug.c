@@ -143,6 +143,16 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
     return GST_AUTOPLUG_MAX_COST;
 }
 
+/**
+ * gst_autoplug_caps:
+ * @srccaps: the source caps
+ * @sinkcaps: the sink caps
+ *
+ * Perform autoplugging between the two given caps.
+ *
+ * Returns: a list of elementfactories that can connect
+ * the two caps
+ */
 GList*
 gst_autoplug_caps (GstCaps *srccaps, GstCaps *sinkcaps) 
 {
@@ -159,6 +169,16 @@ gst_autoplug_caps (GstCaps *srccaps, GstCaps *sinkcaps)
 			    &caps);
 }
 
+/**
+ * gst_autoplug_caps_list:
+ * @srccaps: the source caps list
+ * @sinkcaps: the sink caps list
+ *
+ * Perform autoplugging between the two given caps lists.
+ *
+ * Returns: a list of elementfactories that can connect
+ * the two caps lists
+ */
 GList*
 gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps) 
 {
@@ -175,6 +195,16 @@ gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps)
 			    &caps);
 }
 
+/**
+ * gst_autoplug_pads:
+ * @srcpad: the source pad
+ * @sinkpad: the sink pad
+ *
+ * Perform autoplugging between the two given pads
+ *
+ * Returns: a list of elementfactories that can connect
+ * the two pads
+ */
 GList*
 gst_autoplug_pads (GstPad *srcpad, GstPad *sinkpad) 
 {

@@ -432,6 +432,26 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_elementfactory_can_src_caps_list ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_can_sink_caps_list ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_elementfactory_create ##### -->
 <para>
 
