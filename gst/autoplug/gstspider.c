@@ -211,6 +211,7 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   gst_bin_add (GST_BIN (element), GST_ELEMENT (identity));
   
   returnpad = gst_element_add_ghost_pad (element, returnpad, padname);
+  g_free (padname);
   gst_spider_link_new (identity);
   GST_DEBUG ("successuflly created requested pad %s:%s", GST_DEBUG_PAD_NAME (returnpad));
   
@@ -588,6 +589,8 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   gboolean result = TRUE;
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
   GstElement *startelement = conn->current;
+  GstCaps *caps1;
+  GstCaps *caps2;
 
   g_assert ((GstElement *) GST_OBJECT_PARENT (srcpad) == conn->current);
   GST_DEBUG ("trying to plug from %s:%s to %s", 
@@ -603,7 +606,11 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   }
       
   /* find a path from src to sink */
-  plugpath = gst_autoplug_sp (gst_pad_get_caps (srcpad), gst_pad_get_caps (conn->src->sink), spider->factories);
+  caps1 = gst_pad_get_caps (srcpad);
+  caps2 = gst_pad_get_caps (conn->src->sink);
+  plugpath = gst_autoplug_sp (caps1, caps2, spider->factories);
+  gst_caps_free (caps1);
+  gst_caps_free (caps2);
   
   /* prints out the path that was found for plugging */
   /* g_print ("found path from %s to %s:\n", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));

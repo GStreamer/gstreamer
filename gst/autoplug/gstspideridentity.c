@@ -236,7 +236,7 @@ gst_spider_identity_link (GstPad *pad, const GstCaps *caps)
   if (GST_PAD_PEER (otherpad) == NULL)
     return GST_PAD_LINK_DELAYED;
 
-  return gst_pad_try_set_caps (otherpad, gst_caps_copy (caps));
+  return gst_pad_try_set_caps (otherpad, caps);
 }
 
 static GstCaps*
