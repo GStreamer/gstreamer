@@ -217,7 +217,7 @@ gst_gconf_get_default_audio_sink (void)
  * gst_gconf_get_default_video_sink:
  *
  * Render video output bin from GStreamer GConf key : "default/videosink".
- * If key is invalid xvideosink is used as default output plugin.
+ * If key is invalid ximagesink is used as default output plugin.
  *
  * Returns: a #GstElement containing the video output bin, or NULL if
  * everything failed.
