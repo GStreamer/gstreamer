@@ -556,6 +556,9 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
       else
         g_value_set_boolean (value, FALSE);
       break;
+    case ARG_SYNC: 
+      g_value_set_boolean (value, mpeg_parse->sync);
+      break;
     default: 
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
