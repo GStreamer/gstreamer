@@ -1016,15 +1016,15 @@ gst_ladspa_get(GstPad *pad)
   GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
   num_processed = 0;
 
-  /* update timestamp */  
-  ladspa->timestamp += num_to_process * 10^9 / ladspa->samplerate;
-
   /* split up processing of the buffer into chunks so that dparams can
    * be updated when required.
    * In many cases the buffer will be processed in one chunk anyway.
    */
   while(GST_DPMAN_PROCESS(ladspa->dpman, num_processed)) {
     num_to_process = GST_DPMAN_FRAMES_TO_PROCESS(ladspa->dpman);
+
+    /* update timestamp */  
+    ladspa->timestamp += num_to_process * GST_SECOND / ladspa->samplerate;
 
     desc->connect_port(ladspa->handle,oclass->srcpad_portnums[0],data);  
     desc->run(ladspa->handle, num_to_process);
