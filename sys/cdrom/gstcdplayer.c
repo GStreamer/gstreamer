@@ -109,20 +109,14 @@ static void cdplayer_class_init(CDPlayerClass *klass)
 
 static void cdplayer_init(CDPlayer *cdp)
 {
-	GstScheduler *scheduler;
-
 	cdp->device = g_strdup("/dev/cdrom");
 	cdp->num_tracks = -1;
 	cdp->start_track = 1;
 
 	cdp->paused = FALSE;
 
+	GST_FLAG_SET(cdp,GST_BIN_FLAG_MANAGER);
 	GST_FLAG_SET(cdp,GST_BIN_SELF_SCHEDULABLE);
-
-	scheduler = gst_scheduler_factory_make(NULL,GST_ELEMENT(cdp));
-	g_return_if_fail(scheduler != NULL);
-
-	gst_scheduler_setup(scheduler);
 
 	return;
 }
@@ -257,11 +251,8 @@ static GstElementStateReturn cdplayer_change_state(GstElement *element)
 			break;
 	}
 
-	GST_STATE(element) = GST_STATE_PENDING(element);
-	GST_STATE_PENDING(element) = GST_STATE_VOID_PENDING;
-
 	if (GST_ELEMENT_CLASS(parent_class)->change_state) {
-		return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+		GST_ELEMENT_CLASS(parent_class)->change_state(element);
 	}
 
 	return GST_STATE_SUCCESS;
