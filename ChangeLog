@@ -1,3 +1,10 @@
+2004-01-03  Thomas Canty <tommydal@optushome.com.au>
+
+	reviewed by: Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_dispose):
+	  Correct logic of dispose function (see #129306).
+
 2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_pes):
