@@ -1,19 +1,6 @@
 #include <gst/gst.h>
 
 static GList* 
-autoplug_factories (gchar *factory1, gchar *factory2) 
-{
-  GstElementFactory *mp3parse, *audiosink;
-  mp3parse = gst_elementfactory_find ("mpeg1parse");
-  g_assert (mp3parse != NULL);
-
-  audiosink = gst_elementfactory_find ("videosink");
-  g_assert (audiosink != NULL);
-
-  return gst_autoplug_factories (mp3parse, audiosink);
-}
-
-static GList* 
 autoplug_caps (gchar *mime1, gchar *mime2) 
 {
   GstCaps *caps1, *caps2;
@@ -44,12 +31,29 @@ int main(int argc,char *argv[])
 
   gst_init(&argc,&argv);
 
-  factories = autoplug_factories ("mpeg1parse", "videosink");
-  dump_factories (factories);
-
   factories = autoplug_caps ("audio/mp3", "audio/raw");
   dump_factories (factories);
 
   factories = autoplug_caps ("video/mpeg", "audio/raw");
+  dump_factories (factories);
+
+  factories = gst_autoplug_caps (
+		  gst_caps_new_with_props(
+			  "video/mpeg",
+			  gst_props_new ( 
+			      "mpegversion",  GST_PROPS_INT (1),
+			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
+			      NULL)),
+		  gst_caps_new("audio/raw"));
+  dump_factories (factories);
+
+  factories = gst_autoplug_caps (
+		  gst_caps_new_with_props(
+			  "video/mpeg",
+			  gst_props_new ( 
+			      "mpegversion",  GST_PROPS_INT (1),
+			      "systemstream", GST_PROPS_BOOLEAN (FALSE),
+			      NULL)),
+		  gst_caps_new("video/raw"));
   dump_factories (factories);
 }
