@@ -536,11 +536,6 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
           gint64 desired_offset = GST_EVENT_SEEK_OFFSET (event);
           guint32 flags;
 
-          /* no seek on audio yet */
-          if (stream->strh->type == GST_RIFF_FCC_auds) {
-            res = FALSE;
-            goto done;
-          }
           GST_DEBUG_OBJECT (avi, "seeking to %" G_GINT64_FORMAT,
               desired_offset);
 
@@ -585,7 +580,6 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-done:
   gst_event_unref (event);
 
   return res;
