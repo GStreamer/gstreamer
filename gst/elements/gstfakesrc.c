@@ -142,7 +142,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->numsrcpads = 1;
 
   // create our first output pad
-  pad = gst_pad_new("src1",GST_PAD_SRC);
+  pad = gst_pad_new("src",GST_PAD_SRC);
   gst_pad_set_get_function(pad,gst_fakesrc_get);
   gst_element_add_pad(GST_ELEMENT(fakesrc),pad);
   fakesrc->srcpads = g_slist_append(NULL,pad);
@@ -189,10 +189,10 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       new_numsrcs = GTK_VALUE_INT (*arg);
       if (new_numsrcs > src->numsrcpads) {
         while (src->numsrcpads != new_numsrcs) {
-          src->numsrcpads++;
           pad = gst_pad_new(g_strdup_printf("src%d",src->numsrcpads),GST_PAD_SRC);
           gst_element_add_pad(GST_ELEMENT(src),pad);
           src->srcpads = g_slist_append(src->srcpads,pad);
+          src->numsrcpads++;
         }
         gst_fakesrc_update_functions (src);
       }
