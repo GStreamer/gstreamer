@@ -117,7 +117,7 @@ get_audio_encoder_bin (void)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audio_enc, *video_enc;
+  GstElement *filesrc, *audio_enc, *video_enc;
   GstElement *muxthread_video, *muxer, *fdsink_video;
   GstElement *muxthread_audio, *fdsink_audio;
   GstElement *bin;
@@ -141,13 +141,13 @@ int main(int argc,char *argv[])
   g_assert(bin != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_assert(filesrc != NULL);
+  gtk_object_set(GTK_OBJECT(filesrc),"location", argv[1],NULL);
 
-  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (bin), filesrc);
 
-  srccaps = gst_play_typefind (GST_BIN (bin), disksrc);
+  srccaps = gst_play_typefind (GST_BIN (bin), filesrc);
 
   if (!srccaps) {
     g_print ("could not autoplug, unknown media type...\n");
@@ -171,17 +171,17 @@ int main(int argc,char *argv[])
     exit (-1);
   }
 
-  gst_object_ref (GST_OBJECT (disksrc));
-  gst_bin_remove (GST_BIN (bin), disksrc);
+  gst_object_ref (GST_OBJECT (filesrc));
+  gst_bin_remove (GST_BIN (bin), filesrc);
   gst_object_destroy (GST_OBJECT (bin));
 
-  // FIXME hack, reparent the disksrc so the scheduler doesn't break
+  // FIXME hack, reparent the filesrc so the scheduler doesn't break
   bin = gst_pipeline_new("pipeline");
 
-  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (bin), filesrc);
   gst_bin_add (GST_BIN (bin), new_element);
 
-  gst_element_connect (disksrc, "src", new_element, "sink");
+  gst_element_connect (filesrc, "src", new_element, "sink");
 
   muxer = gst_elementfactory_make ("system_encode", "muxer");
   g_assert (muxer != NULL);

@@ -10,7 +10,7 @@ void set_speed (GtkAdjustment *adj, gpointer data)
 int main(int argc, char **argv) 
 {
     GtkWidget *window, *vbox, *hscale, *button;
-    GstElement *disksrc, *mad, *stereo2mono, *speed, *osssink, *pipeline;
+    GstElement *filesrc, *mad, *stereo2mono, *speed, *osssink, *pipeline;
     
     gst_init (&argc, &argv);
     gtk_init (&argc, &argv);
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     gtk_signal_connect(GTK_OBJECT(button), "clicked", gtk_main_quit, NULL);
     gtk_widget_show(button);
     
-    disksrc = gst_elementfactory_make("filesrc", "filesrc");
+    filesrc = gst_elementfactory_make("filesrc", "filesrc");
     mad = gst_elementfactory_make("mad", "mad");
     stereo2mono = gst_elementfactory_make("stereo2mono", "stereo2mono");
     speed = gst_elementfactory_make("speed", "speed");
@@ -47,16 +47,16 @@ int main(int argc, char **argv)
                        "value_changed", set_speed, speed);
     
     pipeline = gst_pipeline_new("app");
-    gst_bin_add(GST_BIN(pipeline), disksrc);
+    gst_bin_add(GST_BIN(pipeline), filesrc);
     gst_bin_add(GST_BIN(pipeline), mad);
     gst_bin_add(GST_BIN(pipeline), stereo2mono);
     gst_bin_add(GST_BIN(pipeline), speed);
     gst_bin_add(GST_BIN(pipeline), osssink);
-    gst_element_connect(disksrc, "src", mad, "sink");
+    gst_element_connect(filesrc, "src", mad, "sink");
     gst_element_connect(mad, "src", stereo2mono, "sink");
     gst_element_connect(stereo2mono, "src", speed, "sink");
     gst_element_connect(speed, "src", osssink, "sink");
-    gtk_object_set(GTK_OBJECT(disksrc), "location", argv[1], NULL);
+    gtk_object_set(GTK_OBJECT(filesrc), "location", argv[1], NULL);
     
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
     

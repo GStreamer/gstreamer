@@ -34,7 +34,7 @@ int main(int argc,char *argv[]) {
   /* then the decode thread, source, and decoder */
   decodethread = gst_thread_new("decodethread");
 
-  srcfactory = gst_elementfactory_find("disksrc");
+  srcfactory = gst_elementfactory_find("filesrc");
   src = gst_elementfactory_create(srcfactory,"src");
   g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   gst_bin_add(GST_BIN(decodethread),GST_ELEMENT(src));

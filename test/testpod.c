@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 {
   guint channels;
   GtkWidget *window, *vbox, *play_button, *reset_button, *quit_button;
-  GstElement *disksrc, *mad, *stereo2mono, *pod, *osssink, *pipeline;
+  GstElement *filesrc, *mad, *stereo2mono, *pod, *osssink, *pipeline;
     
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
@@ -25,23 +25,23 @@ int main(int argc, char **argv)
     exit(-1);
   }
     
-  disksrc = gst_elementfactory_make("disksrc", "disksrc");
+  filesrc = gst_elementfactory_make("filesrc", "filesrc");
   mad = gst_elementfactory_make("mad", "mad");
   pod = gst_elementfactory_make("playondemand", "playondemand");
   osssink = gst_elementfactory_make("osssink", "osssink");
 
-  gtk_object_set(GTK_OBJECT(disksrc), "location", argv[1], NULL);
+  gtk_object_set(GTK_OBJECT(filesrc), "location", argv[1], NULL);
   gtk_object_set(GTK_OBJECT(osssink), "fragment", 0x00180008, NULL);
-  gtk_object_get(GTK_OBJECT(disksrc), "channels", &channels, NULL);
+  gtk_object_get(GTK_OBJECT(osssink), "channels", &channels, NULL);
 
   pipeline = gst_pipeline_new("app");
 
-  gst_bin_add(GST_BIN(pipeline), disksrc);
+  gst_bin_add(GST_BIN(pipeline), filesrc);
   gst_bin_add(GST_BIN(pipeline), mad);
   gst_bin_add(GST_BIN(pipeline), pod);
   gst_bin_add(GST_BIN(pipeline), osssink);
 
-  gst_element_connect(disksrc, "src", mad, "sink");
+  gst_element_connect(filesrc, "src", mad, "sink");
   gst_element_connect(pod, "src", osssink, "sink");
 
   if (channels != 2) {

@@ -1,6 +1,8 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 
+/* FIXME: WTF does this do? */
+
 static guint64 max = 0, min = -1, total = 0;
 static guint count = 0;
 static guint print_del = 1;

@@ -35,7 +35,7 @@ main (int argc,char *argv[])
   if (argc == 1) {
     src = gst_elementfactory_make ("dv1394src", "src");
   } else {
-    src = gst_elementfactory_make ("disksrc", "src");
+    src = gst_elementfactory_make ("filesrc", "src");
     gtk_object_set(GTK_OBJECT(src),"location",argv[1],"bytesperread",480,NULL);
   }
   dvdec = gst_elementfactory_make ("dvdec", "decoder");
