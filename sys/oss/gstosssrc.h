@@ -58,7 +58,8 @@ struct _GstOssSrc {
 
   gboolean	 need_eos; /* Do we need to emit an EOS? */
   
-  /* blocking */
+  /* blocking.
+   * curoffset is in *samples*. */
   gulong 	 curoffset;
   gulong 	 buffersize;
 
