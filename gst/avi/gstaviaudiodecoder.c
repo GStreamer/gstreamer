@@ -177,6 +177,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new ("aviaudiodecoder",GST_TYPE_AVI_AUDIO_DECODER,
                                     &gst_avi_audio_decoder_details);
   g_return_val_if_fail (factory != NULL, FALSE);
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));

@@ -86,6 +86,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   dec = gst_element_factory_new("jpegdec",GST_TYPE_JPEGDEC,
                                    &gst_jpegdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
+  gst_element_factory_set_rank (dec, GST_ELEMENT_RANK_PRIMARY);
  
   /* register sink pads */
   jpegdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 

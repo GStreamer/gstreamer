@@ -66,6 +66,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   mulawdec_factory = gst_element_factory_new("mulawdec",GST_TYPE_MULAWDEC,
 					    &mulawdec_details);
   g_return_val_if_fail(mulawdec_factory != NULL, FALSE);
+  gst_element_factory_set_rank (mulawdec_factory, GST_ELEMENT_RANK_PRIMARY);
 
   mulaw_caps = mulaw_factory ();
   linear_caps = linear_factory ();

@@ -66,6 +66,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   alawdec_factory = gst_element_factory_new("alawdec",GST_TYPE_ALAWDEC,
 					    &alawdec_details);
   g_return_val_if_fail(alawdec_factory != NULL, FALSE);
+  gst_element_factory_set_rank (alawdec_factory, GST_ELEMENT_RANK_PRIMARY);
 
   alaw_caps = alaw_factory ();
   linear_caps = linear_factory ();
