@@ -1998,7 +1998,6 @@ ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
-gst-libs/gst/cache/Makefile
 gst-libs/gst/colorbalance/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/gconf/Makefile
