@@ -1,3 +1,8 @@
+2004-11-08  Christian Fredrik Kalager Schaller  <christian@fluendo.com>
+
+	* gst/schedulers/Makefile.am: fix disted build fair by including .h file
+	* gstreamer.spec.in: add fair
+
 2004-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gstfakesink.c: (gst_fakesink_class_init):

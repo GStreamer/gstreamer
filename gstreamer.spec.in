@@ -137,6 +137,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfairgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
