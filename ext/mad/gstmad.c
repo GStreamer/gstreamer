@@ -1246,7 +1246,15 @@ gst_mad_chain (GstPad * pad, GstData * _data)
     gint tocopy;
     guchar *mad_input_buffer;   /* convenience pointer to tempbuffer */
 
-    tocopy = MIN (MAD_BUFFER_MDLEN, size);
+    tocopy =
+        MIN (MAD_BUFFER_MDLEN, MIN (size,
+            MAD_BUFFER_MDLEN * 3 - mad->tempsize));
+    if (tocopy == 0) {
+      GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL),
+          ("mad claims to need more data than %u bytes, we don't have that much",
+              MAD_BUFFER_MDLEN * 3));
+      return;
+    }
 
     /* append the chunk to process to our internal temporary buffer */
     GST_LOG ("tempbuffer size %d, copying %d bytes from incoming buffer",
@@ -1287,9 +1295,14 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
         /* not enough data, need to wait for next buffer? */
         if (mad->stream.error == MAD_ERROR_BUFLEN) {
-          GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
-              mad->tempsize);
-          break;
+          if (mad->stream.next_frame == mad_input_buffer) {
+            GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
+                mad->tempsize);
+            break;
+          } else {
+            GST_LOG ("sync error, flushing unneeded data");
+            goto next;
+          }
         }
         /* we are in an error state */
         mad->in_error = TRUE;
