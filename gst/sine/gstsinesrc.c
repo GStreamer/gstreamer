@@ -136,10 +136,10 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
 		     */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SAMPLERATE,
     g_param_spec_int ("samplerate","Sample Rate","Sample Rate (in Hz)",
-                      1, G_MAXINT, 0, G_PARAM_READWRITE));
+                      8000, 48000, 44100, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TABLESIZE,
     g_param_spec_int ("tablesize", "tablesize", "tablesize",
-                      1, G_MAXINT, 0, G_PARAM_READWRITE));
+                      1, G_MAXINT, 1024, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), 
 		                   ARG_SAMPLES_PER_BUFFER,
     g_param_spec_int ("samplesperbuffer", "Samples per buffer", 
