@@ -28,11 +28,11 @@ struct _GstMediaPlay {
 	
 	GstStatusArea *status;
 	
-	// the slider
+	/* the slider */
 	GtkAdjustment *adjustment;
 	GtkWidget *slider;
 
-	// the playlist
+	/* the playlist */
 	GtkWidget *playlist_window;
 	GtkWidget *playlist_clist;
 
