@@ -35,7 +35,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifdef TESTING
 #include <errno.h>
 #endif
-#include <sys/io.h>
+#include <asm/io.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
