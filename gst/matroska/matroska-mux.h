@@ -103,6 +103,11 @@ typedef struct _GstMatroskaMux {
 		 tracks_pos,
 		 duration_pos;
   guint64        segment_master;
+
+  /* current cluster */
+  guint64        cluster,
+                 cluster_time,
+                 cluster_pos;
 } GstMatroskaMux;
 
 typedef struct _GstMatroskaMuxClass {

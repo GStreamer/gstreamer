@@ -323,6 +323,11 @@ gst_matroska_mux_reset (GstElement * element)
   }
   /* arbitrary size, 10 should be enough in most cases */
   used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint32), 10);
+
+  /* reset cluster */
+  mux->cluster = 0;
+  mux->cluster_time = 0;
+  mux->cluster_pos = 0;
 }
 
 static GstPadLinkReturn
@@ -831,6 +836,11 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   guint64 duration = 0;
   gint i;
 
+  /* finish last cluster */
+  if (mux->cluster) {
+    gst_ebml_write_master_finish (ebml, mux->cluster);
+  }
+
   /* cues */
   if (mux->index != NULL) {
     guint n;
@@ -964,6 +974,27 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
   buf = mux->sink[i].buffer;
   mux->sink[i].buffer = NULL;
 
+  if (mux->cluster) {
+    /* start a new cluster every two seconds */
+    if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)) {
+      gst_ebml_write_master_finish (ebml, mux->cluster);
+      mux->cluster_pos = ebml->pos;
+      mux->cluster =
+          gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
+          GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
+      mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+    }
+  } else {
+    /* first cluster */
+    mux->cluster_pos = ebml->pos;
+    mux->cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
+        GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
+    mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+  }
+  cluster = mux->cluster;
+
   /* update duration of this track */
   if (GST_BUFFER_DURATION_IS_VALID (buf))
     mux->sink[i].duration += GST_BUFFER_DURATION (buf);
@@ -983,7 +1014,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
     }
     idx = &mux->index[mux->num_indexes++];
 
-    idx->pos = ebml->pos;
+    idx->pos = mux->cluster_pos;
     idx->time = GST_BUFFER_TIMESTAMP (buf);
     idx->track = mux->sink[i].track->num;
   } else if ((mux->sink[i].track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
@@ -996,25 +1027,23 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
     }
     idx = &mux->index[mux->num_indexes++];
 
-    idx->pos = ebml->pos;
+    idx->pos = mux->cluster_pos;
     idx->time = GST_BUFFER_TIMESTAMP (buf);
     idx->track = mux->sink[i].track->num;
   }
 
-  /* write one cluster with one blockgroup with one block with
+  /* write one blockgroup with one block with
    * one slice (*breath*).
-   * FIXME: lacing, multiple frames/cluster, etc. */
-  cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
-  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-      GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
+   * FIXME: lacing, etc. */
   blockgroup = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_BLOCKGROUP);
   gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
       GST_BUFFER_SIZE (buf) + 4);
   hdr = gst_buffer_new_and_alloc (4);
   /* track num - FIXME: what if num >= 0x80 (unlikely)? */
   GST_BUFFER_DATA (hdr)[0] = mux->sink[i].track->num | 0x80;
-  /* time relative to clustertime - we don't use this yet */
-  *(guint16 *) & GST_BUFFER_DATA (hdr)[1] = GUINT16_TO_BE (0);
+  /* time relative to clustertime */
+  *(guint16 *) & GST_BUFFER_DATA (hdr)[1] = GUINT16_TO_BE (
+      (GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time) / mux->time_scale);
   /* flags - no lacing (yet) */
   GST_BUFFER_DATA (hdr)[3] = 0;
   gst_ebml_write_buffer (ebml, hdr);
@@ -1028,7 +1057,6 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
     }
   }
   gst_ebml_write_master_finish (ebml, blockgroup);
-  gst_ebml_write_master_finish (ebml, cluster);
 }
 
 static void
