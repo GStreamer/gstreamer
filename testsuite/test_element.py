@@ -114,7 +114,7 @@ class FakeSinkTest(ElementTest):
 
     def testStateChangeReadyNull(self):
         self.checkStateChange(gst.STATE_READY, gst.STATE_NULL)
-        
+
 class NonExistentTest(ElementTest):
     name = 'this-element-does-not-exist'
     alias = 'no-alias'
@@ -146,5 +146,15 @@ class ElementName(unittest.TestCase):
         assert get_name(-1) == 'UNKNOWN!'
         self.assertRaises(TypeError, get_name, '')
         
+class QueryTest(unittest.TestCase):
+    def setUp(self):
+        self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
+        self.element = self.pipeline.get_by_name('source')
+        
+    def testQuery(self):
+        assert self.element.query(gst.QUERY_TOTAL, gst.FORMAT_BYTES) == -1
+        assert self.element.query(gst.QUERY_POSITION, gst.FORMAT_BYTES) == 0
+        assert self.element.query(gst.QUERY_POSITION, gst.FORMAT_TIME) == 0
+
 if __name__ == "__main__":
     unittest.main()

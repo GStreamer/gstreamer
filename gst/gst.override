@@ -204,7 +204,12 @@ _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 	value = 0;
 	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
-	return Py_BuildValue("(bL)", ret, value);
+	if (!ret) {
+		PyErr_SetString(PyExc_RuntimeError, "query could not be performed");
+		return NULL;
+	}
+	
+	return PyInt_FromLong(value);
 }
 %%
 override gst_pad_convert kwargs
@@ -222,7 +227,12 @@ _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	src_value = PyLong_AsLongLong(src_value_obj);
 	dest_value = 0;
 	ret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value, &dest_format, &dest_value);
-	return Py_BuildValue("(bL)", ret, dest_value);
+	if (!ret) {
+		PyErr_SetString(PyExc_RuntimeError, "conversion could not be performed");
+		return NULL;
+	}
+	
+	return PyInt_FromLong(dest_value);
 }
 %%
 override gst_element_convert kwargs
@@ -240,7 +250,12 @@ _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	src_value = PyLong_AsLongLong(src_value_obj);
 	dest_value = 0;
 	ret = gst_element_convert(GST_ELEMENT(self->obj), src_format, src_value, &dest_format, &dest_value);
-	return Py_BuildValue("(bL)", ret, dest_value);
+	if (!ret) {
+		PyErr_SetString(PyExc_RuntimeError, "conversion could not be performed");
+		return NULL;
+	}
+	
+	return PyInt_FromLong(dest_value);
 }
 %%
 override gst_element_link_many args

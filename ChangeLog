@@ -1,5 +1,10 @@
 2004-07-13  Johan Dahlin  <johan@gnome.org>
 
+	* testsuite/element.py (QueryTest.testQuery): Another small test
+
+	* gst/gst.override (_wrap_gst_element_query): Ditto
+	(_wrap_gst_pad_convert): Ditto
+
 	* testsuite/event.py (EventFileSrcTest.setUp): Start the pipeline,
 	so we don't get warnings when sending events
 	(EventTest.setUp): Ditto.
