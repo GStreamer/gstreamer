@@ -159,7 +159,7 @@ scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	fi
 	if test "x$(top_srcdir)" != "x$(top_builddir)";			\
 	then								\
-	  export BUILT_OPTIONS="--source-dir=$(top_builddir)/gst-libs";	\
+	  export BUILT_OPTIONS="--source-dir=$(top_builddir)/libs/gst";	\
 	fi;								\
 	gtkdoc-scan							\
 		$(SCAN_OPTIONS) $(EXTRA_HFILES)				\
