@@ -191,7 +191,8 @@ gst_stream_info_dispose (GObject * object)
   stream_info = GST_STREAM_INFO (object);
 
   if (stream_info->object) {
-    if (GST_PAD_REALIZE (stream_info->object)) {
+    if (GST_PAD_REALIZE (stream_info->object) && gst_pad_get_parent ((GstPad *)
+            GST_PAD_REALIZE (stream_info->object))) {
       g_signal_handlers_disconnect_by_func (gst_pad_get_parent ((GstPad *)
               GST_PAD_REALIZE (stream_info->object)),
           G_CALLBACK (stream_info_change_state), stream_info);
