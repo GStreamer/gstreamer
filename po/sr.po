@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-27 14:17+0200\n"
+"POT-Creation-Date: 2004-10-06 18:20+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,12 +16,12 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
@@ -36,31 +36,36 @@ msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
 # Виртуелни Систем Датотека
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#: ext/gnomevfs/gstgnomevfssrc.c:1156
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради читања."
 
-#: ext/gnomevfs/gstgnomevfssink.c:344
+#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#, fuzzy
+msgid "No filename given."
+msgstr "Име датотеке није задато."
+
+#: ext/gnomevfs/gstgnomevfssink.c:428
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
-#: ext/gnomevfs/gstgnomevfssink.c:351
+#: ext/gnomevfs/gstgnomevfssink.c:435
 #, fuzzy
 msgid "No filename given"
 msgstr "Име датотеке није задато."
 
-#: ext/gnomevfs/gstgnomevfssink.c:377
+#: ext/gnomevfs/gstgnomevfssink.c:463
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
 
-#: ext/sndfile/gstsf.c:582
+#: ext/sndfile/gstsf.c:579
 msgid "No filename specified."
 msgstr "Име датотеке није задато."
 
-#: ext/sndfile/gstsf.c:835
+#: ext/sndfile/gstsf.c:832
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
@@ -83,32 +88,32 @@ msgid ""
 "Please install one and restart."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:298
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:343
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Не могу да подесим звучни уређај „%s“."
 
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:422
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Не могу да отворим радио уређај '%s'"
 
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Не могу да затворим управљачки уређај „%s“."
