@@ -1,3 +1,10 @@
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/alsa/gstalsa.h:
+	  I assume Ronald forgot to commit the change to have cardname
+          as a struct member.  Expect some public spanking at the next
+          opportunity.
+
 2004-03-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_get_property),

@@ -104,7 +104,8 @@ typedef enum
   GST_ALSA_CAPS_RESUME,
   GST_ALSA_CAPS_SYNC_START
       /* add more */
-} GstAlsaPcmCaps;
+}
+GstAlsaPcmCaps;
 
 #define GST_ALSA_CAPS_IS_SET(obj, flag) (GST_ALSA (obj)->pcm_caps & (1<<(flag)))
 #define GST_ALSA_CAPS_SET(obj, flag, set) G_STMT_START{  \
@@ -126,7 +127,8 @@ typedef struct
   snd_pcm_format_t format;
   guint rate;
   gint channels;
-} GstAlsaFormat;
+}
+GstAlsaFormat;
 
 struct _GstAlsa
 {
@@ -136,6 +138,7 @@ struct _GstAlsa
   GstPad *pad[GST_ALSA_MAX_TRACKS];
 
   gchar *device;
+  gchar *cardname;
   snd_pcm_t *handle;
   snd_pcm_info_t *info;
   guint pcm_caps;		/* capabilities of the pcm device, see GstAlsaPcmCaps */
