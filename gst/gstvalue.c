@@ -2298,8 +2298,8 @@ gst_type_is_fixed (GType type)
 /* Finds the greatest common divisor.
  * Returns 1 if none other found.
  * This is Euclid's algorithm. */
-static guint
-gst_greatest_common_divisor (gint64 a, gint64 b)
+static gint
+gst_greatest_common_divisor (gint a, gint b)
 {
   while (b != 0) {
     int temp = a;
@@ -2308,9 +2308,7 @@ gst_greatest_common_divisor (gint64 a, gint64 b)
     b = temp % b;
   }
 
-  g_return_val_if_fail (a < G_MAXINT, 1);
-  g_return_val_if_fail (a > G_MININT, 1);
-  return ABS ((gint) a);
+  return ABS (a);
 }
 
 static void
@@ -2341,8 +2339,8 @@ static gchar *
 gst_value_lcopy_fraction (const GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  guint32 *numerator = collect_values[0].v_pointer;
-  guint32 *denominator = collect_values[1].v_pointer;
+  gint *numerator = collect_values[0].v_pointer;
+  gint *denominator = collect_values[1].v_pointer;
 
   if (!numerator)
     return g_strdup_printf ("numerator for `%s' passed as NULL",
@@ -2370,9 +2368,12 @@ gst_value_lcopy_fraction (const GValue * value, guint n_collect_values,
 void
 gst_value_set_fraction (GValue * value, gint numerator, gint denominator)
 {
+  gint gcd = 0;
+
   g_return_if_fail (GST_VALUE_HOLDS_FRACTION (value));
   g_return_if_fail (denominator != 0);
-  gint gcd = 0;
+  g_return_if_fail (denominator >= -G_MAXINT);
+  g_return_if_fail (numerator >= -G_MAXINT);
 
   /* normalize sign */
   if (denominator < 0) {
@@ -2437,10 +2438,7 @@ gboolean
 gst_value_fraction_multiply (GValue * product, const GValue * factor1,
     const GValue * factor2)
 {
-  gint64 n, d;
-  guint gcd;
-
-  gint n1, n2, d1, d2;
+  gint gcd, n1, n2, d1, d2;
 
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor1), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor2), FALSE);
@@ -2450,19 +2448,17 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
   d1 = factor1->data[1].v_int;
   d2 = factor2->data[1].v_int;
 
-  n = n1 * n2;
-  d = d1 * d2;
+  gcd = gst_greatest_common_divisor (n1, d2);
+  n1 /= gcd;
+  d2 /= gcd;
+  gcd = gst_greatest_common_divisor (n2, d1);
+  n2 /= gcd;
+  d1 /= gcd;
 
-  gcd = gst_greatest_common_divisor (n, d);
-  n /= gcd;
-  d /= gcd;
+  g_return_val_if_fail (n1 == 0 || G_MAXINT / ABS (n1) >= ABS (n2), FALSE);
+  g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (d2), FALSE);
 
-  g_return_val_if_fail (n < G_MAXINT, FALSE);
-  g_return_val_if_fail (n > G_MININT, FALSE);
-  g_return_val_if_fail (d < G_MAXINT, FALSE);
-  g_return_val_if_fail (d > G_MININT, FALSE);
-
-  gst_value_set_fraction (product, n, d);
+  gst_value_set_fraction (product, n1 * n2, d1 * d2);
 
   return TRUE;
 }

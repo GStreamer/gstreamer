@@ -5,4 +5,6 @@ Makefile.in
 *.la
 .deps
 .libs
+
 locked
+parent

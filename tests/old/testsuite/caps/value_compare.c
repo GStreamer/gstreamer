@@ -72,7 +72,7 @@ test1 (void)
   g_value_unset (&value1);
   g_value_unset (&value2);
 
-  /* comparing 10/100 with 20/2000 */
+  /* comparing 10/100 with 200/2000 */
   g_value_init (&value1, GST_TYPE_FRACTION);
   gst_value_set_fraction (&value1, 10, 100);
   g_value_init (&value2, GST_TYPE_FRACTION);

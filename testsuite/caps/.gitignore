@@ -13,12 +13,16 @@ app_fixate
 audioscale
 caps
 compatibility
-erathostenes
+deserialize
+eratosthenes
 filtercaps
 fixed
+fraction-multiply-and-zero
 intersect2
 intersection
 normalisation
+random
+renegotiate
 union
 simplify
 sets

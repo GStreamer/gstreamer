@@ -38,6 +38,7 @@ faketest
 events
 lat
 mass_elements
+spidey_bench
 *.bb
 *.bbg
 *.da

@@ -1,3 +1,27 @@
+2004-07-16  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstvalue.c: (gst_greatest_common_divisor):
+	  use ints and return ints, fractions only use ints, too, so this
+	  avoids accidently casting multiplications to unsigned
+	(gst_value_lcopy_fraction): it's ints, not uint32
+	(gst_value_set_fraction): disallow minint, multiplying and negation
+	  are broken with it
+	(gst_value_fraction_multiply): fix to make large numbers work and get
+	rid of the assumption that the multiplication of two ints fits an
+	int64 - dunno if that's true for all systems
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/fraction-multiply-and-zero.c:
+	(check_multiplication), (check_equal), (zero_test), (main):
+	  add tests for all the stuff above
+	* testsuite/caps/value_compare.c: (test1):
+	  fix comment
+	* tests/.cvsignore:
+	* testsuite/caps/.cvsignore:
+	* testsuite/debug/.cvsignore:
+	* testsuite/dlopen/.cvsignore:
+	* testsuite/states/.cvsignore:
+	  get up to date
+
 2004-07-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* docs/manual/bins-api.xml:
