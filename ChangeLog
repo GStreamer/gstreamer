@@ -1,3 +1,13 @@
+2004-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_class_init), (gst_dvdec_init),
+	(gst_dvdec_video_getcaps), (gst_dvdec_video_link),
+	(gst_dvdec_push), (gst_dvdec_loop), (gst_dvdec_change_state),
+	(gst_dvdec_set_property), (gst_dvdec_get_property):
+	* ext/dv/gstdvdec.h:
+	Implement drop_factor property to lower the framerate with
+	a factor.
+
 2004-06-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/colorbalance/Makefile.am:
