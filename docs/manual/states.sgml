@@ -69,6 +69,12 @@
       an audio device. Some more complex elements might have a non trivial action to perform in 
       the READY state such as connecting to a media server using a CORBA connection.
     </para>
+    <note>
+      <para> 
+        You can also go from the NULL to PLAYING state directly without going through the READY
+	state. this is a shortcut, the framework will internally go through the READY state for you.
+      </para> 
+    </note>
   </sect1>
 
   <sect1 id="sec-states-playing">

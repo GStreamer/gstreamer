@@ -4,6 +4,7 @@
 <!ENTITY GOALS SYSTEM "goals.sgml">
 
 <!ENTITY ELEMENTS SYSTEM "elements.sgml">
+<!ENTITY PADS SYSTEM "pads.sgml">
 <!ENTITY CONNECTIONS SYSTEM "connections.sgml">
 <!ENTITY BINS SYSTEM "bins.sgml">
 <!ENTITY BUFFERS SYSTEM "buffers.sgml">
@@ -96,6 +97,8 @@
 
 <!-- ############ Basic concepts - chapter ############# -->
       &ELEMENTS;
+
+      &PADS;
 
       &CONNECTIONS;
 

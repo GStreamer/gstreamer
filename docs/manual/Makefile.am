@@ -6,6 +6,7 @@ sgml_files = gstreamer-manual.sgml \
              bins.sgml \
              buffers.sgml \
              components.sgml \
+             pads.sgml \
              connections.sgml \
              cothreads.sgml \
              dynamic.sgml \
@@ -27,6 +28,7 @@ sgml_files = gstreamer-manual.sgml \
              xml.sgml
 
 fig_files =  bin-element.fig \
+	     bin-element-ghost.fig \
              connected-elements.fig \
              filter-element-multi.fig \
              filter-element.fig \
@@ -39,6 +41,7 @@ fig_files =  bin-element.fig \
              thread.fig
 
 eps_files =  images/bin-element.eps \
+             images/bin-element-ghost.eps \
              images/connected-elements.eps \
              images/filter-element-multi.eps \
              images/filter-element.eps \
@@ -51,6 +54,7 @@ eps_files =  images/bin-element.eps \
              images/thread.eps
 
 png_files =  images/bin-element.png \
+             images/bin-element-ghost.png \
              images/connected-elements.png \
              images/filter-element-multi.png \
              images/filter-element.png \

@@ -13,25 +13,27 @@
       This means that a lot of functions you are going to use operate on this object.
     </para>
     <para> 
-      We will first describe the three most important types of elements that you are 
-      going to use. They are the Source, Filter and Sink elements.
+      You will see that those elements have pads. These are the elements 
+      connections with the 'outside' world. Depending on the number and direction of
+      the pads, we can see three types of elements: source, filter and sink element.
     </para>
     <para> 
-      You will also see that those elements have pads. These are the elements 
-      connections with the 'outside' world.
+      These three types are all the same GstElement object, they just differ in how
+      the pads are.
     </para>
+
     <sect2 id="sec-elements-src">
-      <title>GStreamer source elements (<classname>GstSrc</classname>)</title>
+      <title>GStreamer source elements</title>
       <para>
         This element will generate data that will be used by the pipeline. It is
 	typically a file or an audio source.
       </para>
       <para>
-        Below you see how we will visualize the <classname>GstSrc</classname> element.
+        Below you see how we will visualize the element.
 	We always draw a src pad to the right of the element.
       </para>
       <figure float="1" id="sec-element-srcimg">
-        <title>Visualisation of a <classname>GstSrc</classname> element</title>
+        <title>Visualisation of a source element</title>
         <graphic fileref="images/src-element" format="png"></graphic>
       </figure>
       <para>
@@ -39,10 +41,10 @@
 	this in the figure because it only has a src pad. A src pad can only 
 	generate buffers.
       </para>
-
     </sect2>
+
     <sect2 id="sec-elements-filter">
-      <title>GStreamer filter elements (<classname>GstFilter</classname>)</title>
+      <title>GStreamer filter elements</title>
       <para>
         Filter elements both have an input and an output pad. They operate on data
 	they receive in the sink pad and send the result to the src pad.
@@ -56,7 +58,7 @@
 	streams) and one output pad. 
       </para> 
       <figure float="1" id="sec-element-filterimg">
-        <title>Visualisation of a <classname>GstFilter</classname> element</title>
+        <title>Visualisation of a filter element</title>
         <graphic fileref="images/filter-element" format="png"></graphic>
       </figure>
       <para>
@@ -65,7 +67,7 @@
 	of the element.
       </para> 
       <figure float="1" id="sec-element-multifilterimg">
-        <title>Visualisation of a <classname>GstFilter</classname> element with
+        <title>Visualisation of a filter element with
 	  more than one output pad</title>
         <graphic fileref="images/filter-element-multi" format="png"></graphic>
       </figure>
@@ -79,17 +81,16 @@
     </sect2>
   
     <sect2 id="sec-elements-sink">
-      <title>GStreamer sink elements (<classname>GstSink</classname>)</title>
+      <title>GStreamer sink elements</title>
       <para> 
         This element accepts data but will not generate any new data. A sink element 
 	is typically a file on disk, a soundcard, a display,... It is presented as
 	below:
       </para> 
       <figure float="1" id="sec-element-sinkimg">
-        <title>Visualisation of a <classname>GstSink</classname> element</title>
+        <title>Visualisation of a sink element</title>
         <graphic fileref="images/sink-element" format="png"></graphic>
       </figure>
     </sect2>
-
   </sect1>
 </chapter>

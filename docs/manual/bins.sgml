@@ -2,7 +2,7 @@
   <title>Bins</title>
   <para> 
     A Bin is a container element. You can add elements to a bin. Since a bin is 
-    an element itself, it can also be added to another bin.
+    an <classname>GstElement</classname> itself, it can also be added to another bin.
   </para>
   <para> 
     Bins allow you to combine connected elements into one logical element. You do
@@ -12,7 +12,8 @@
   </para>
   <para> 
     The bin will also manage the elements contained in it. It will figure out how
-    the data will flow in the bin and generate an optimal plan for that data flow.
+    the data will flow in the bin and generate an optimal plan for that data flow. Plan
+    generation is one of the most complicated procedures in GStreamer.
   </para>
 
   <figure float="1" id="sec-bin-img">
@@ -62,5 +63,30 @@
       // stop
       gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_NULL);
     </programlisting>
+
+    Custom bins can be created with a plugin or an XML description.
   </para>
+
+  <sect1 id="sec-bin-ghostpads">
+    <title>Ghostpads</title>
+    <para>
+      You can see from figure ... how a bin has no pads of its own. This is where Ghostpads
+      come into play. 
+    </para>
+    <para>
+      A ghostpad is a pad from some element in the bin that has been promoted to the bin.
+      This way, the bin also has a pad. The bin becomes just another element with a pad and
+      you can then use the bin just like any other element. 
+    </para>
+    
+    <figure float="1" id="sec-bin-ghost-img">
+      <title>Visualisation of a <classname>GstBin</classname> element with a ghostpad</title>
+      <graphic fileref="images/bin-element-ghost" format="png"></graphic>
+    </figure>
+    <para>
+      Above is a representation of a ghostpad. the sinkpad of element one is now also a pad
+      of the bin.
+    </para>
+  </sect1>
+
 </chapter>

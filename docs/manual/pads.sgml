@@ -1,0 +1,121 @@
+<chapter id="cha-pads">
+  <title>GstPad</title>
+  <para>
+    As we have seen in the previous chapter (GstElement), the pads are the elements
+    connections with the outside world. 
+  </para>
+  <para>
+    The specific type of media that the element can handle will be exposed by the pads.
+    The description of this media type is done with capabilities (<classname>GstCaps</classname>)
+  </para>
+
+  <sect1 id="sec-pads-description">
+    <title>Capabilities of a GstPad</title>
+    <para> 
+      Since the pads play a very important role in how the element is viewed by the
+      outside world, a mechanism is implemented to describe the pad by using capabilities.
+    </para>
+    <para> 
+      We will briefly describe what capabilities are, enough for you to get a basic understanding
+      of the concepts. You will find more information on how to create capabilities in the 
+      filter-writer-guide.
+    </para>
+
+    <sect2 id="sec-pads-caps">
+      <title>What is a capability</title>
+      <para> 
+        A capability is attached to a pad in order to describe what type of media the pad
+	can handle.
+      </para>
+      <para> 
+        A capability is named and consists of a MIME type and a set of properties. Its data 
+	structure is:
+      </para>
+      <programlisting>
+struct _GstCaps {
+  gchar *name;                  /* the name of this caps */
+
+  guint16 id;                   /* type id (major type) */
+
+  GstProps *properties;         /* properties for this capability */
+};
+      </programlisting>
+      <para> 
+        Below is a dump of the capabilities of the element mpg123, as shown by 
+	<command>gstreamer-inspect</command>.    
+	You can see two pads: sink and src. Both pads have capability information attached to them.
+      </para>
+      <para> 
+	The sink pad (input pad) is called 'sink' and takes data of MIME type 'audio/mp3'. It also has
+	three properties: layer, bitrate and framed.
+      </para>
+      <para> 
+	The src pad (output pad) is called 'src' and outputs data of MIME type 'audio/raw'. It also has
+	four properties: format, depth, rate and channels.
+      </para>
+      <programlisting>
+Pads:
+  SINK: 'sink'
+    ....
+      Capabilities:
+      'mpg123_sink':
+       MIME type: 'audio/mp3':
+        layer: Integer range: 1 - 3
+        bitrate: Integer range: 8 - 320
+        framed: Boolean: TRUE
+
+  SRC: 'src'
+    ....
+    Capabilities:
+    'mpg123_src':
+     MIME type: 'audio/raw':
+      format: Integer: 16
+      depth: Integer: 16
+      rate: Integer range: 11025 - 48000
+      channels: List:
+        Integer: 1
+        Integer: 2
+      </programlisting>
+    </sect2>
+    <sect2 id="sec-pads-props">
+      <title>What are properties</title>
+      <para> 
+        Properties are used to describe extra information for the capabilities. The properties
+	basically exist of a key (a string) and a value. There are different possibile value types
+	that can be used:
+      </para> 
+
+      <itemizedlist>
+        <listitem>
+          <para>
+            An integer value: the property has this exact value. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            An integer range value. The property denotes a range of possible values. In the case
+	    of the mpg123 element: the src pad has a property rate that can go from 11025 to 48000.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    A boolean value.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    a fourcc value: this is a value that is commonly used to describe an encoding for video,
+	    as used be the AVI specification.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    A list value: the property can take any value from a list.
+          </para>
+        </listitem>
+      </itemizedlist>
+
+    </sect2>
+
+  </sect1>
+</chapter>

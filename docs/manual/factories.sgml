@@ -36,8 +36,8 @@
       an MP3 decoder element.
     </para>
     <para>
-      We have to introduce the concept of MIME types added to the source and
-      sink pads.
+      We have to introduce the concept of MIME types  and capabilities 
+      added to the source and sink pads.
     </para>
   </sect1>
 
@@ -51,7 +51,7 @@
     </para> 
     <para> 
       A MIME (Multipurpose Internet Mail Extension) types are a set of
-      string that donote a certain type of data. examples include:
+      string that denote a certain type of data. examples include:
       <itemizedlist>
         <listitem>
           <para>
@@ -110,9 +110,8 @@
   <sect1>
     <title>GStreamer types</title>
     <para> 
-      GStreamer assigns a unique number to all registered MIME types. It 
-      also maintains a list of all elements that either uses this type
-      as a source or as a sink. GStreamer also keeps a reference to
+      GStreamer assigns a unique number to all registered MIME types.
+      GStreamer also keeps a reference to
       a function that can be used to determine if a given buffer is of
       the given MIME type.
     </para>
@@ -126,7 +125,7 @@
       <classname>GstType</classname> is like:
     </para>
     <programlisting>
-typedef gboolean (*GstTypeFindFunc) (GstBuffer *buf,gpointer *priv);
+typedef GstCaps (*GstTypeFindFunc) (GstBuffer *buf,gpointer *priv);
  
 typedef struct _GstType GstType;
 
@@ -137,9 +136,6 @@ struct _GstType {
   gchar *exts;                  /* space-delimited list of extensions */
 
   GstTypeFindFunc typefindfunc; /* typefind function */
-
-  GList *srcs;                  /* list of src objects for this type */
-  GList *sinks;                 /* list of sink objects for type */
 };
     </programlisting>
     <para> 

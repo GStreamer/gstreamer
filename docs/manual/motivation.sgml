@@ -56,6 +56,10 @@
 	creation of binary only codecs. No company is willing to port their
 	code to all the different plugin mechanisms.
       </para> 
+      <para> 
+        While GStreamer also uses it own plugin system it offers a very rich
+	framework for the plugin.
+      </para> 
     </sect2>
 
     <sect2 id="sec-motivation-network">

@@ -59,7 +59,7 @@
   <programlisting>
 #include &lt;gst/gst.h&gt;
 
-/* eos will be called when the src element has an end os stream */
+/* eos will be called when the src element has an end of stream */
 void eos(GstSrc *src, gpointer data) 
 {
   GstThread *thread = GST_THREAD(data);

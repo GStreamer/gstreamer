@@ -18,12 +18,18 @@
       <itemizedlist>
         <listitem>
 	  <para>
-	    The application programmer who wants to build a media pipeline.
+	    The application programmer who wants to build a media pipeline. 
+	    The programmer can use an extensive set of powerfull tools to create
+	    media pipelines without writing a single line of code. Performing 
+	    complex media manipulations becomes very easy.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    The plugin programmer.
+	    The plugin programmer. Plugin programmers are provided a clean and
+	    simple API to create self contained plugins. An extensive debugging
+	    and tracing mechanism has been integrated. GStreamer also comes with
+	    an extensive set of real-life plugins that serve as an example too.
 	  </para>
         </listitem>
       </itemizedlist>
@@ -36,7 +42,11 @@
 	with GTK+ will be confortable with GStreamer.
       </para> 
       <para>
-        GStreamer uses the mechanisems of signals and object arguments. 
+        GStreamer uses the mechanism of signals and object arguments. 
+      </para> 
+      <para>
+        All objects can be queried at runtime for their various properties and
+	capabilities.
       </para> 
     </sect2>
   
@@ -57,6 +67,11 @@
         plugins are shared libraries that are loaded at runtime. since all the
 	properties of the plugin can be set using the GtkObject arguments, there
 	is no need to have any header files installed for the plugins.
+      </para> 
+      <para> 
+        Special care has been taking into making the plugin completely self 
+	contained. This is in the operations, specification of the capabilities
+	of the plugin and properties.
       </para> 
     </sect2>
 
@@ -101,6 +116,13 @@
         <listitem>
 	  <para>
 	    HW acceleration is possible by writing a specialized plugin.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    Uses a plugin registry with the specifications of the plugins so 
+	    that the plugin loading can be delayed until the plugin is actually
+	    used.
 	  </para>
         </listitem>
       </itemizedlist>
