@@ -1,1 +1,4 @@
 thread
+*.bb
+*.bbg
+*.da

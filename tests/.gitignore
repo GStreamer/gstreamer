@@ -37,3 +37,6 @@ paramunits
 faketest
 events
 lat
+*.bb
+*.bbg
+*.da

@@ -24,3 +24,6 @@ xml
 xmlTest.gst
 README
 
+*.bb
+*.bbg
+*.da

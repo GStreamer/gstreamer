@@ -23,3 +23,6 @@ gst-launch.1
 gst-md5sum.1
 gst-register.1
 gst-xmllaunch.1
+*.bb
+*.bbg
+*.da

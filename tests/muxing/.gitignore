@@ -8,3 +8,6 @@ Makefile.in
 *.xml
 *.gst
 case1
+*.bb
+*.bbg
+*.da

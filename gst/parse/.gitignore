@@ -5,3 +5,6 @@ grammar.tab.h
 lex.yy.c
 parse.c
 lex._gst_parse_yy.c
+*.bb
+*.bbg
+*.da

@@ -1,2 +1,5 @@
 retag
 transcode
+*.bb
+*.bbg
+*.da

@@ -11,3 +11,6 @@ gstmarshal.h
 gstenumtypes.h
 gstenumtypes.c
 gstconfig.h
+*.bb
+*.bbg
+*.da

@@ -8,3 +8,6 @@ Makefile.in
 test-registry.xml 
 elementstest-registry.xml
 threadstest-registry.xml
+*.bb
+*.bbg
+*.da

@@ -1,3 +1,47 @@
+2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* examples/cutter/.cvsignore:
+	* examples/helloworld/.cvsignore:
+	* examples/launch/.cvsignore:
+	* examples/manual/.cvsignore:
+	* examples/mixer/.cvsignore:
+	* examples/pingpong/.cvsignore:
+	* examples/plugins/.cvsignore:
+	* examples/queue/.cvsignore:
+	* examples/queue2/.cvsignore:
+	* examples/queue3/.cvsignore:
+	* examples/queue4/.cvsignore:
+	* examples/retag/.cvsignore:
+	* examples/thread/.cvsignore:
+	* examples/typefind/.cvsignore:
+	* examples/xml/.cvsignore:
+	* gst/.cvsignore:
+	* gst/autoplug/.cvsignore:
+	* gst/elements/.cvsignore:
+	* gst/indexers/.cvsignore:
+	* gst/parse/.cvsignore:
+	* gst/registries/.cvsignore:
+	* gst/schedulers/.cvsignore:
+	* libs/gst/bytestream/.cvsignore:
+	* libs/gst/control/.cvsignore:
+	* libs/gst/getbits/.cvsignore:
+	* tests/.cvsignore:
+	* tests/bufspeed/.cvsignore:
+	* tests/instantiate/.cvsignore:
+	* tests/memchunk/.cvsignore:
+	* tests/muxing/.cvsignore:
+	* tests/sched/.cvsignore:
+	* tests/seeking/.cvsignore:
+	* tests/threadstate/.cvsignore:
+	* testsuite/.cvsignore:
+	* testsuite/caps/.cvsignore:
+	* testsuite/cleanup/.cvsignore:
+	* testsuite/dynparams/.cvsignore:
+	* testsuite/plugin/.cvsignore:
+	* tools/.cvsignore:
+	  update - this is huge, because it includes *.bb, *.bbg and *.da files
+	  which are generated for gcov.
+
 2004-01-11  David Schleef,,,  <set EMAIL_ADDRESS environment variable>
 
 	* gst/gststructure.c: (gst_strtoi), (gst_value_from_string): Add

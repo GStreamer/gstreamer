@@ -1,2 +1,5 @@
 autoplugtest
 spidertest
+*.bb
+*.bbg
+*.da

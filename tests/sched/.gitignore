@@ -13,3 +13,6 @@ interrupt1
 interrupt2
 interrupt3
 sched-stress
+*.bb
+*.bbg
+*.da

@@ -1,1 +1,4 @@
 typefind
+*.bb
+*.bbg
+*.da

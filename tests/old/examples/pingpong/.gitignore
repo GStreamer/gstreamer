@@ -7,3 +7,6 @@ Makefile.in
 .libs
 
 pingpong
+*.bb
+*.bbg
+*.da

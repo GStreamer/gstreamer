@@ -13,3 +13,6 @@ threadstate2
 threadstate3
 threadstate4
 threadstate5
+*.bb
+*.bbg
+*.da

@@ -7,3 +7,6 @@ Makefile.in
 .libs
 
 seeking1
+*.bb
+*.bbg
+*.da

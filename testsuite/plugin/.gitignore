@@ -11,3 +11,6 @@ loading
 registry
 static
 static2
+*.bb
+*.bbg
+*.da

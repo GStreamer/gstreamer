@@ -1,2 +1,5 @@
 gmemchunktest
 gstmemchunktest
+*.bb
+*.bbg
+*.da

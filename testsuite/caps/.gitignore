@@ -3,9 +3,14 @@ Makefile.in
 *.o
 *.lo
 *.la
+*.bb
+*.bbg
+*.da
 .deps
 .libs
 
+app_fixate
+caps
 compatibility
 intersection
 normalisation
@@ -13,3 +18,5 @@ union
 fixed
 string-conversions
 intersect2
+value_compare
+value_intersect

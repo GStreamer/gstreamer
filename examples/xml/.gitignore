@@ -1,3 +1,6 @@
 createxml
 runxml
 xmlTest.gst
+*.bb
+*.bbg
+*.da

@@ -1,1 +1,10 @@
 test-registry.xml
+*.bb
+*.bbg
+*.da
+
+cleanup1
+cleanup2
+cleanup3
+cleanup4
+cleanup5
