@@ -280,9 +280,15 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
 
     /* prevent dup names */
     for (item = mixer->tracklist; item != NULL; item = item->next) {
+      snd_mixer_elem_t *temp;
+
+      if (GST_IS_ALSA_MIXER_OPTIONS (item->data))
+        temp = GST_ALSA_MIXER_OPTIONS (item->data)->element;
+      else
+        temp = GST_ALSA_MIXER_TRACK (item->data)->element;
+
       if (!strcmp (snd_mixer_selem_get_name (element),
-              snd_mixer_selem_get_name (GST_ALSA_MIXER_TRACK (item->data)->
-                  element)))
+              snd_mixer_selem_get_name (element)))
         samename++;
     }
 
