@@ -31,80 +31,36 @@ gst_factories_at_most_templates(GList *factories, GstPadDirection dir, guint max
   return ret;
 }
 
-/* 1:1 copy of gstpropsprivate.h, needed for INFO events */
-
-#define GST_PROPS_ENTRY_IS_VARIABLE(a)  (((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_ID)
-
-typedef struct _GstPropsEntry GstPropsEntry;
-
-struct _GstPropsEntry {
-  GQuark    propid;
-  GstPropsId propstype;    
-
-  union {
-    /* flat values */
-    gboolean bool_data;
-    guint32  fourcc_data;
-    gint     int_data;
-    gfloat   float_data;
-
-    /* structured values */
-    struct {
-      GList *entries;
-    } list_data;
-    struct {
-      gchar *string;
-    } string_data;
-    struct {
-      gint min;
-      gint max;
-    } int_range_data;
-    struct {
-      gfloat min;
-      gfloat max;
-    } float_range_data;
-  } data;
-};
-
-/* end gstpropsprivate.h */
-
-/* property output, stolen from gst-launch */
-static void 
-print_props (gpointer data, gpointer user_data)
+static void
+property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
 {
-  GstPropsEntry *entry = (GstPropsEntry *)data;
-  GstElement *element = GST_ELEMENT (user_data);
-
-  g_print ("%s: %s: ", gst_element_get_name (element), 
-      g_quark_to_string (entry->propid));
-  switch (entry->propstype) {
-    case GST_PROPS_INT_ID:
-      g_print ("%d\n", entry->data.int_data);
-      break;
-    case GST_PROPS_STRING_ID:
-      g_print ("%s\n", entry->data.string_data.string);
-      break;
-    case GST_PROPS_FLOAT_ID:
-      g_print ("%f\n", entry->data.float_data);
-      break;
-    default:
-      g_print ("unknown\n");
+  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  gchar *str = 0;
+  
+  if (pspec->flags & G_PARAM_READABLE) {
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
+    if (G_IS_PARAM_SPEC_STRING (pspec))
+      str = g_value_dup_string (&value);
+    else if (G_IS_PARAM_SPEC_ENUM (pspec))
+      str = g_strdup_printf ("%d", g_value_get_enum (&value));
+    else if (G_IS_PARAM_SPEC_INT64 (pspec))
+      str = g_strdup_printf ("%lld", g_value_get_int64 (&value));
+    else
+      str = g_strdup_value_contents (&value);
+      
+    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
+    g_value_unset(&value);
+  } else {
+    g_warning ("Parameter not readable. What's up with that?");
   }
 }
 
-static void 
-event_func (GstElement *element, GstEvent *event)
+static void
+error_callback (GObject *object, GstObject *orig, gchar *error)
 {
-  GstProps *props;
-
-  if (event == NULL)
-    return;
-  
-  if (GST_EVENT_TYPE (event) == GST_EVENT_INFO) {
-    props = GST_EVENT_INFO_PROPS (event);
-
-    g_list_foreach (props->properties, print_props, GST_EVENT_SRC (event));
-  }
+  g_print ("ERROR: %s: %s\n", GST_OBJECT_NAME (orig), error);
 }
 
 /**
@@ -128,8 +84,9 @@ int main(int argc,char *argv[])
 
   /* create a new bin to hold the elements */
   bin = gst_pipeline_new("pipeline");
-  g_signal_connect (G_OBJECT (bin), "event", G_CALLBACK (event_func), NULL);
- 
+  g_signal_connect (bin, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  g_signal_connect (bin, "error", G_CALLBACK (error_callback), NULL);
+   
   /* create a disk reader */
   filesrc = gst_elementfactory_make("filesrc", "disk_source");
   g_object_set(G_OBJECT(filesrc),"location", argv[1], NULL);
