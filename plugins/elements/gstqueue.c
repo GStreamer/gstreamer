@@ -379,6 +379,7 @@ gst_queue_finalize (GObject * object)
     GstQueueEventResponse *er = g_queue_pop_head (queue->events);
 
     gst_event_unref (er->event);
+    g_free (er);
   }
   g_mutex_unlock (queue->event_lock);
   g_mutex_free (queue->event_lock);
@@ -508,6 +509,7 @@ gst_queue_handle_pending_events (GstQueue * queue)
   g_mutex_lock (queue->event_lock);
   while (!g_queue_is_empty (queue->events)) {
     GstQueueEventResponse *er;
+    gboolean need_response;
 
     er = g_queue_pop_head (queue->events);
 
@@ -522,9 +524,17 @@ gst_queue_handle_pending_events (GstQueue * queue)
       break;
     }
     g_mutex_unlock (queue->event_lock);
+
+    need_response =
+        GST_DATA_FLAG_IS_SET (GST_DATA (er->event),
+        GST_EVENT_COMMON_FLAG_NEED_RESPONSE);
     er->ret = gst_pad_event_default (queue->srcpad, er->event);
-    er->handled = TRUE;
-    g_cond_signal (queue->event_done);
+    if (need_response) {
+      er->handled = TRUE;
+      g_cond_signal (queue->event_done);
+    } else {
+      g_free (er);
+    }
     g_mutex_lock (queue->event_lock);
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "event sent");
   }
@@ -901,28 +911,42 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   gboolean res;
+  GstQueueEventResponse *er = NULL;
 
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
       event, GST_EVENT_TYPE (event));
   GST_QUEUE_MUTEX_LOCK;
 
   if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
-    GstQueueEventResponse er;
+    gboolean need_response =
+        GST_DATA_FLAG_IS_SET (GST_DATA (event),
+        GST_EVENT_COMMON_FLAG_NEED_RESPONSE);
+
+    er = g_new (GstQueueEventResponse, 1);
 
     /* push the event to the queue and wait for upstream consumption */
-    er.event = event;
-    er.handled = FALSE;
+    er->event = event;
+    er->handled = FALSE;
+
     g_mutex_lock (queue->event_lock);
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "putting event %p (%d) on internal queue", event,
         GST_EVENT_TYPE (event));
-    g_queue_push_tail (queue->events, &er);
+    g_queue_push_tail (queue->events, er);
     g_mutex_unlock (queue->event_lock);
+
+    if (!need_response) {
+      /* Leave for upstream to delete */
+      er = NULL;
+      res = TRUE;
+      goto handled;
+    }
+
     GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
         "Preparing for loop for event handler");
     /* see the chain function on why this is here - it prevents a deadlock */
     g_cond_signal (queue->item_del);
-    while (!er.handled) {
+    while (!er->handled) {
       GTimeVal timeout;
 
       g_get_current_time (&timeout);
@@ -930,10 +954,10 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
       GST_LOG_OBJECT (queue, "doing g_cond_wait using qlock from thread %p",
           g_thread_self ());
       if (!g_cond_timed_wait (queue->event_done, queue->qlock, &timeout) &&
-          !er.handled) {
+          !er->handled) {
         GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
             "timeout in upstream event handling, dropping event %p (%d)",
-            er.event, GST_EVENT_TYPE (er.event));
+            er->event, GST_EVENT_TYPE (er->event));
         g_mutex_lock (queue->event_lock);
         /* since this queue is for src events (ie upstream), this thread is
          * the only one that is pushing stuff on it, so we're sure that
@@ -942,13 +966,13 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
          * the list. */
         g_queue_pop_tail (queue->events);
         g_mutex_unlock (queue->event_lock);
-        gst_event_unref (er.event);
+        gst_event_unref (er->event);
         res = FALSE;
         goto handled;
       }
     }
     GST_CAT_WARNING_OBJECT (queue_dataflow, queue, "Event handled");
-    res = er.ret;
+    res = er->ret;
   } else {
     res = gst_pad_event_default (pad, event);
 
@@ -969,6 +993,9 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
   }
 handled:
   GST_QUEUE_MUTEX_UNLOCK;
+
+  if (er)
+    g_free (er);
 
   return res;
 }

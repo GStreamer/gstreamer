@@ -156,6 +156,14 @@ Event flags are used when querying for supported events
 @GST_EVENT_FLAG_NONE: no value
 @GST_RATE_FLAG_NEGATIVE: indicates negative rates are supported
 
+<!-- ##### ENUM GstEventCommonFlag ##### -->
+<para>
+
+</para>
+
+@GST_EVENT_COMMON_FLAG_NEED_RESPONSE: 
+@GST_EVENT_COMMON_FLAG_LAST: 
+
 <!-- ##### MACRO GST_EVENT_MASK_FUNCTION ##### -->
 <para>
 A convenience macro to create event mask functions

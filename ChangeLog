@@ -1,3 +1,17 @@
+2005-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstevent.sgml:
+	* gst/gstevent.c: (gst_event_new):
+	* gst/gstevent.h:
+	Add GST_EVENT_COMMON_FLAG_NEED_RESPONSE flag (TRUE by default)
+	to indicate whether a reply is expected to an upstream event.
+
+	* gst/gstqueue.c: (gst_queue_finalize),
+	(gst_queue_handle_pending_events), (gst_queue_handle_src_event):
+	If GST_EVENT_COMMON_FLAG_NEED_RESPONSE is not set, just queue the
+	event without blocking on a reply.
+
 2005-03-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/gst/Makefile.am:
@@ -60,20 +74,6 @@
 	  Better debug message when setting explicit caps on an unlinked pad.
 	  Return INTERRUPT event if the peer is unlinked when restarting
 	  during a pad_pull.
-
-2005-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
-
-	* docs/gst/gstreamer-sections.txt:
-	* docs/gst/tmpl/gstevent.sgml:
-	* gst/gstevent.c: (gst_event_new):
-	* gst/gstevent.h:
-	Add GST_EVENT_COMMON_FLAG_NEED_RESPONSE flag (TRUE by default)
-	to indicate whether a reply is expected to an upstream event.
-
-	* gst/gstqueue.c: (gst_queue_finalize),
-	(gst_queue_handle_pending_events), (gst_queue_handle_src_event):
-	If GST_EVENT_COMMON_FLAG_NEED_RESPONSE is not set, just queue the
-	event without blocking on a reply.
 
 2005-03-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 

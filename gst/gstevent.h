@@ -141,6 +141,18 @@ typedef struct
   gint64	value;
 } GstFormatValue;
 
+/* FIXME: 0.9 - having GstEventCommonFlag and GstEventFlag is unneeded duplication, 
+ * but for now I have to because the GstEventFlag enum above is not suitable.
+ */
+typedef enum {
+  /* Indicates that a result flag is not required. This is most important
+   * when the event travels upstream through a queue */
+  GST_EVENT_COMMON_FLAG_NEED_RESPONSE = GST_DATA_FLAG_LAST,
+
+  /* padding value for future expansion */
+  GST_EVENT_COMMON_FLAG_LAST = GST_DATA_FLAG_LAST + 16
+} GstEventCommonFlag;
+
 #define GST_EVENT_SEEK_TYPE(event)		(GST_EVENT(event)->event_data.seek.type)
 #define GST_EVENT_SEEK_FORMAT(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_FORMAT_MASK)
 #define GST_EVENT_SEEK_METHOD(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_METHOD_MASK)

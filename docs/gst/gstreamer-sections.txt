@@ -573,6 +573,7 @@ GST_SEEK_FORMAT_MASK
 GST_SEEK_METHOD_MASK
 GST_SEEK_FLAGS_MASK
 GstEventFlag
+GstEventCommonFlag
 GST_EVENT_MASK_FUNCTION
 GstSeekType
 GstSeekAccuracy
@@ -613,9 +614,11 @@ GST_TYPE_EVENT_FLAG
 GST_TYPE_EVENT_TYPE
 GST_TYPE_SEEK_ACCURACY
 GST_TYPE_SEEK_TYPE
+GST_TYPE_EVENT_COMMON_FLAG
 <SUBSECTION Private>
 gst_event_get_type
 gst_event_flag_get_type
+gst_event_common_flag_get_type
 gst_event_type_get_type
 gst_seek_accuracy_get_type
 gst_seek_type_get_type
