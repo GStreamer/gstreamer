@@ -18,34 +18,16 @@ int main(int argc,char *argv[]) {
   gst_bin_add(thread,src);
   fprintf(stderr,"ADDING sink\n");
   gst_bin_add(thread,sink);
-  fprintf(stderr,"ADDING thread\n");
-  gst_bin_add(pipeline,GST_ELEMENT(thread));
-
-//  gst_element_add_ghost_pad(GST_ELEMENT(thread),gst_element_get_pad(sink,"sink"),"sink");
-
   fprintf(stderr,"CONNECTING src to sink\n");
   gst_element_connect (src, "src", sink, "sink");
 
-  fprintf(stderr,"\nSWITCHING to READY:\n");
-  gst_element_set_state (thread, GST_STATE_READY);
-  fprintf(stderr,"\nPIPELINE sched:\n");
-  gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
-  fprintf(stderr,"\nTHREAD sched:\n");
-  gst_schedule_show(GST_ELEMENT_SCHED(thread));
+  fprintf(stderr,"ADDING thread\n");
+  gst_bin_add(pipeline,GST_ELEMENT(thread));
 
-  fprintf(stderr,"\nSWITCHING to PLAYING:\n");
-  gst_element_set_state (thread, GST_STATE_PLAYING);
-  gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
-  gst_schedule_show(GST_ELEMENT_SCHED(thread));
-
-fprintf(stderr,"sleeping...\n");
-sleep(1);
-fprintf(stderr,"done sleeping...\n");
-
-  fprintf(stderr,"\nSWITCHING to READY:\n");
-  gst_element_set_state (thread, GST_STATE_READY);
-  gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
-  gst_schedule_show(GST_ELEMENT_SCHED(thread));
-
-sleep(1);
+  while (1) {
+    fprintf(stderr,"\nSWITCHING to PLAYING:\n");
+    gst_element_set_state (thread, GST_STATE_PLAYING);
+    fprintf(stderr,"\nSWITCHING to PAUSED:\n");
+    gst_element_set_state (thread, GST_STATE_PAUSED);
+  }
 }
