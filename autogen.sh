@@ -26,10 +26,10 @@ autogen_options $@
 
 echo -n "+ check for build tools"
 if test ! -z $NOCHECK; then echo " skipped"; else  echo; fi
-version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
-version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
-version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
-version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
+version_check "autoconf" "$AUTOCONF" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
+version_check "automake" "$AUTOMAKE" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
+version_check "libtool" "" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
+version_check "pkg-config" "" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
 autoconf_2.52d_check || DIE=1
 
@@ -56,8 +56,8 @@ tool_run "autoheader"
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
 echo timestamp > stamp-h.in 2> /dev/null
 
-tool_run "autoconf"
-tool_run "automake" "-a -c"
+tool_run "$autoconf"
+tool_run "$automake" "-a -c"
 
 # if enable exists, add an -enable option for each of the lines in that file
 if test -f enable; then
