@@ -17,8 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*#define DEBUG */
-
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,6 +26,11 @@
 #include <string.h>
 #include <errno.h>
 #include "v4l_calls.h"
+
+#define DEBUG(format, args...) \
+	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+		GST_ELEMENT(v4lelement), \
+		"V4L-overlay: " format, ##args)
 
 
 /******************************************************
@@ -42,10 +45,7 @@ gst_v4l_set_overlay (GstV4lElement *v4lelement,
 {
   gchar *buff;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_set_overlay(), display = \'%s\'\n", display);
-#endif
-
+  DEBUG("setting display to '%s'", display);
   GST_V4L_CHECK_NOT_OPEN(v4lelement);
 
   /* start v4l-conf */
@@ -104,11 +104,8 @@ gst_v4l_set_window (GstV4lElement *v4lelement,
                     gint x,        gint y,
                     gint w,        gint h)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_set_window(), position (x,y/wxh) = %d,%d/%dx%d\n",
+  DEBUG("setting video window to position (x,y/wxh) = %d,%d/%dx%d",
     x, y, w, h);
-#endif
-
   GST_V4L_CHECK_OVERLAY(v4lelement);
 
   v4lelement->vwin.clipcount = 0;
@@ -133,10 +130,7 @@ gst_v4l_set_clips (GstV4lElement     *v4lelement,
                    struct video_clip *clips,
                    gint               num_clips)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_set_clips()\n");
-#endif
-
+  DEBUG("setting video window clips");
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_OVERLAY(v4lelement);
 
@@ -167,11 +161,7 @@ gst_v4l_enable_overlay (GstV4lElement *v4lelement,
 {
   gint doit = enable?1:0;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_enable_overlay(), enable = %s\n",
-    enable?"true":"false");
-#endif
-
+  DEBUG("%s overlay", enable?"enabling":"disabling");
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_OVERLAY(v4lelement);
 

@@ -34,7 +34,7 @@
 #define DEBUG(format, args...) \
 	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
 		GST_ELEMENT(v4lmjpegsrc), \
-		"V4LMJPEGSRC: " format "\n", ##args)
+		"V4LMJPEGSRC: " format, ##args)
 
 
 char *input_name[] = { "Composite", "S-Video", "TV-Tuner", "Autodetect" };

@@ -39,7 +39,7 @@
 #define DEBUG(format, args...) \
 	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
 		GST_ELEMENT(v4lsrc), \
-		"V4LSRC: " format "\n", ##args)
+		"V4LSRC: " format, ##args)
 
 /* palette names */
 char *palette_name[] = {

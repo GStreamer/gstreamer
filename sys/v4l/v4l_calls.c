@@ -29,7 +29,7 @@
 #define DEBUG(format, args...) \
 	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
 		GST_ELEMENT(v4lelement), \
-		"V4L: " format "\n", ##args)
+		"V4L: " format, ##args)
 
 
 char *picture_name[] = { "Hue", "Brightness", "Contrast", "Saturation", NULL };
