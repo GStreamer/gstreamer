@@ -75,15 +75,24 @@ typedef enum
   GST_RECOVER_POLICY_RESYNC_KEYFRAME,
 } GstRecoverPolicy;
 
+typedef enum
+{
+  GST_CLIENT_STATUS_OK,
+  GST_CLIENT_STATUS_CLOSED,
+  GST_CLIENT_STATUS_REMOVED,
+  GST_CLIENT_STATUS_SLOW,
+  GST_CLIENT_STATUS_ERROR,
+} GstClientStatus;
+
 /* structure for a client
  *  */
 typedef struct {
   int fd;
   gint bufpos;                  /* position of this client in the global queue */
 
-  gboolean bad;
+  GstClientStatus status;
 
-  GList *sending;               /* the buffers we need to send */
+  GSList *sending;              /* the buffers we need to send */
   gint bufoffset;               /* offset in the first buffer */
 
   gboolean discont;
@@ -120,7 +129,7 @@ struct _GstMultiFdSink {
 
   int control_sock[2];	/* sockets for controlling the select call */
 
-  GList *streamheader; /* GList of GstBuffers to use as streamheader */
+  GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   GstTCPProtocolType protocol;
   guint mtu;
 

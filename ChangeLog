@@ -1,3 +1,19 @@
+2004-08-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
+	(gst_multifdsink_remove), (gst_multifdsink_clear),
+	(gst_multifdsink_remove_client_link),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_client_queue_data),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients),
+	(gst_multifdsink_chain), (gst_multifdsink_close):
+	* gst/tcp/gstmultifdsink.h:
+	Added more debugging info. Changed the way clients are 
+	removed from the lists. Fixed a bug where a bad file descriptor
+	could cause many clients to be removed.
+
 2004-08-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/videotestsrc/gstvideotestsrc.c: (generate_capslist):
