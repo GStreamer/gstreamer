@@ -1,1 +1,4 @@
 gstaudiofilterexample.c
+libgstaudio_la-multichannel-enumtypes.lo
+multichannel-enumtypes.c
+multichannel-enumtypes.h
