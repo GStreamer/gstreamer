@@ -34,15 +34,11 @@ EXAMPLES = \
 	init \
 	popt \
 	query \
-	queue \
 	threads \
+	typefind \
 	playbin \
 	decodebin \
 	$(GST_LOADSAVE_SRC)
-
-dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ \
-		$(top_srcdir)/docs/manual/advanced-autoplugging.xml
 
 elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c: $(top_srcdir)/docs/manual/basics-elements.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
@@ -72,9 +68,13 @@ query.c: $(top_srcdir)/docs/manual/advanced-position.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/advanced-position.xml
 
-queue.c threads.c: $(top_srcdir)/docs/manual/advanced-threads.xml
+threads.c: $(top_srcdir)/docs/manual/advanced-threads.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/advanced-threads.xml
+
+typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/advanced-autoplugging.xml
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \

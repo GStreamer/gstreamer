@@ -2,295 +2,249 @@
   <title>Threads</title>
   <para> 
     GStreamer has support for multithreading through the use of
-    the <ulink type="http" url="../../gstreamer/html/GstThread.html"><classname>
-    GstThread</classname></ulink> object. This object is in fact
-    a special <ulink type="http" url="../../gstreamer/html/GstBin.html"><classname>
-    GstBin</classname></ulink> that will become a thread when started.
-  </para>
-
-  <para> 
-    To construct a new thread you will perform something like:
-  </para>
-
-  <para>
-    <programlisting>
-  GstElement *my_thread;
-
-  /* create the thread object */
-  my_thread = gst_thread_new ("my_thread");
-  /* you could have used gst_element_factory_make ("thread", "my_thread"); */
-  g_return_if_fail (my_thread != NULL);
-
-  /* add some plugins */
-  gst_bin_add (GST_BIN (my_thread), GST_ELEMENT (funky_src));
-  gst_bin_add (GST_BIN (my_thread), GST_ELEMENT (cool_effect));
-
-  /* link the elements here... */
-  ...
-  
-  /* start playing */
-  gst_element_set_state (GST_ELEMENT (my_thread), GST_STATE_PLAYING);
-
-    </programlisting>
+    the <ulink type="http"
+    url="&URLAPI;GstThread.html"><classname>GstThread</classname></ulink>
+    object. This object is in fact a special <ulink type="http"
+    url="&URLAPI;GstBin.html"><classname>GstBin</classname></ulink>
+    that will start a new thread (using Glib's
+    <classname>GThread</classname> system) when started.
   </para>
   <para>
-    The above program will create a thread with two elements in it. As soon
-    as it is set to the PLAYING state, the thread will start to iterate
-    itself. You never need to explicitly iterate a thread.
+    To create a new thread, you can simply use <function>gst_thread_new
+    ()</function>. From then on, you can use it similar to how you would
+    use a <classname>GstBin</classname>. You can add elements to it,
+    change state and so on. The largest difference between a thread and
+    other bins is that the thread does not require iteration. Once set to
+    the <classname>GST_STATE_PLAYING</classname> state, it will iterate
+    its contained children elements automatically.
   </para>
-  
+  <para>
+    <xref linkend="section-threads-img"/> shows how a thread can be
+    visualised.
+  </para>
+  <figure float="1" id="section-threads-img">
+    <title>A thread</title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/thread.&image;" format="&IMAGE;"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+  <sect1 id="section-threads-uses">
+    <title>When would you want to use a thread?</title>
+    <para>
+      There are several reasons to use threads. However, there's also some
+      reasons to limit the use of threads as much as possible. We will go
+      into the drawbacks of threading in &GStreamer; in the next section.
+      Let's first list some situations where threads can be useful:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Data buffering, for example when dealing with network streams or
+          when recording data from a live stream such as a video or audio
+          card. Short hickups elsewhere in the pipeline will not cause data
+          loss. See <xref linkend="section-queues-img"/> for a visualization
+          of this idea.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Synchronizing output devices, e.g. when playing a stream containing
+          both video and audio data. By using threads for both outputs, they
+          will run independently and their synchronization will be better.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Data pre-rolls. You can use threads and queues (thread boundaries)
+          to cache a few seconds of data before playing. By using this
+          approach, the whole pipeline will already be setup and data will
+          already be decoded. When activating the rest of the pipeline, the
+          switch from PAUSED to PLAYING will be instant.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <figure float="1" id="section-queues-img">
+      <title>a two-threaded decoder with a queue</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/queue.&image;" format="&IMAGE;"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+    <para>
+      Above, we've mentioned the <quote>queue</quote> element several times
+      now. A queue is a thread boundary element. It does so by using a
+      classic provider/receiver model as learned in threading classes at
+      universities all around the world. By doing this, it acts both as a
+      means to make data throughput between threads threadsafe, and it can
+      also act as a buffer. Queues have several <classname>GObject</classname>
+      properties to be configured for specific uses. For example, you can set
+      lower and upper tresholds for the element. If there's less data than
+      the lower treshold (default: disabled), it will block output. If
+      there's more data than the upper treshold, it will block input or
+      (if configured to do so) drop data.
+    </para>
+  </sect1>
+
   <sect1 id="section-threads-constraints">
     <title>Constraints placed on the pipeline by the GstThread</title>
     <para>
       Within the pipeline, everything is the same as in any other bin. The
       difference lies at the thread boundary, at the link between the
-      thread and the outside world (containing bin).  Since GStreamer is
+      thread and the outside world (containing bin). Since &GStreamer; is
       fundamentally buffer-oriented rather than byte-oriented, the natural
       solution to this problem is an element that can "buffer" the buffers
       between the threads, in a thread-safe fashion. This element is the
-      queue, described more fully in <xref linkend="section-queue"/>. It doesn't
-      matter if the queue is placed in the containing bin or in the thread
-      itself, but it needs to be present on one side or the other to enable
-      inter-thread communication.
+      <quote>queue</quote> element. A queue should be placed in between any
+      two elements whose pads are linked together while the elements live in
+      different threads. It doesn't matter if the queue is placed in the
+      containing bin or in the thread itself, but it needs to be present
+      on one side or the other to enable inter-thread communication.
+    </para>
+    <para>
+      If you are writing a GUI application, making the top-level bin a
+      thread will make your GUI more responsive. If it were a pipeline
+      instead, it would have to be iterated by your application's event
+      loop, which increases the latency between events (say, keyboard
+      presses) and responses from the GUI. In addition, any slight hang
+      in the GUI would delay iteration of the pipeline, which (for example)
+      could cause pops in the output of the sound card, if it is an audio
+      pipeline.
+    </para>
+    <para>
+      A problem with using threads is, however, thread contexts. If you
+      connect to a signal that is emitted inside a thread, then the signal
+      handler for this thread <emphasis>will be executed in that same
+      thread</emphasis>! This is very important to remember, because many
+      graphical toolkits can not run multi-threaded. Gtk+, for example,
+      only allows threaded access to UI objects if you explicitely use
+      mutexes. Not doing so will result in random crashes and X errors.
+      A solution many people use is to place an idle handler in the signal
+      handler, and have the actual signal emission code be executed in the
+      idle handler, which will be executed from the mainloop.
+    </para>
+    <para>
+      Generally, if you use threads, you will encounter some problems. Don't
+      hesistate to ask us for help in case of problems.
     </para>
   </sect1>
-  <sect1 id="section-threads-when">
-    <title>When would you want to use a thread?</title>
-    <para>
-      If you are writing a GUI application, making the top-level bin a thread will make your GUI
-      more responsive. If it were a pipeline instead, it would have to be iterated by your
-      application's event loop, which increases the latency between events (say, keyboard presses)
-      and responses from the GUI. In addition, any slight hang in the GUI would delay iteration of
-      the pipeline, which (for example) could cause pops in the output of the sound card, if it is
-      an audio pipeline.
-    </para>
-    <para> 
-    <xref linkend="section-threads-img"/> shows how a thread can be visualised.
-    </para>
-    <figure float="1" id="section-threads-img">
-      <title>A thread</title>
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/thread.&image;" format="&IMAGE;" />
-        </imageobject>
-      </mediaobject>  
-    </figure>
 
+  <sect1 id="section-threads-example">
+    <title>A threaded example application</title>
     <para> 
-    As an example we show the helloworld program using a thread.
+      As an example we show the helloworld program that we coded in
+      <xref linkend="chapter-helloworld"/> using a thread. Note that
+      the whole application lives in a thread (as opposed to half
+      of the application living in a thread and the other half being
+      another thread or a pipeline). Therefore, it does not need a
+      queue element in this specific case.
     </para>
   
-    <para>
-      <programlisting>
-<!-- example-begin threads.c -->
+    <programlisting><!-- example-begin threads.c -->
 #include &lt;gst/gst.h&gt;
 
-/* we set this to TRUE right before gst_main (), but there could still
-   be a race condition between setting it and entering the function */
-gboolean can_quit = FALSE;
+GstElement *thread, *source, *decodebin, *audiosink;
 
-/* eos will be called when the src element has an end of stream */
-void 
-eos (GstElement *src, gpointer data) 
+static gboolean
+idle_eos (gpointer data)
 {
-  GstThread *thread = GST_THREAD (data);
-  g_print ("have eos, quitting\n");
-
-  /* stop the bin */
-  gst_element_set_state (GST_ELEMENT (thread), GST_STATE_NULL);
-
-  while (!can_quit) /* waste cycles */ ;
+  g_print ("Have idle-func in thread %p\n", g_thread_self ());
   gst_main_quit ();
+
+  /* do this function only once */
+  return FALSE;
 }
 
-int 
-main (int argc, char *argv[]) 
+/*
+ * EOS will be called when the src element has an end of stream.
+ * Note that this function will be called in the thread context.
+ * We will place an idle handler to the function that really
+ * quits the application.
+ */
+static void
+cb_eos (GstElement *thread,
+	gpointer    data) 
 {
-  GstElement *filesrc, *demuxer, *decoder, *converter, *audiosink;
-  GstElement *thread;
+  g_print ("Have eos in thread %p\n", g_thread_self ());
+  g_idle_add ((GSourceFunc) idle_eos, NULL);
+}
 
-  if (argc &lt; 2) {
-    g_print ("usage: %s &lt;Ogg/Vorbis filename&gt;\n", argv[0]);
-    exit (-1);
-  }
+/*
+ * On error, too, you'll want to forward signals to the main
+ * thread, especially when using GUI applications.
+ */
 
+static void
+cb_error (GstElement *thread,
+	  GstElement *source,
+	  GError     *error,
+	  gchar      *debug,
+	  gpointer    data)
+{
+  g_print ("Error in thread %p: %s\n", g_thread_self (), error->message);
+  g_idle_add ((GSourceFunc) idle_eos, NULL);
+}
+
+/*
+ * Link new pad from decodebin to audiosink.
+ * Contains no further error checking.
+ */
+
+static void
+cb_newpad (GstElement *decodebin,
+	   GstPad     *pad,
+	   gboolean    last,
+	   gpointer    data)
+{
+  gst_pad_link (pad, gst_element_get_pad (audiosink, "sink"));
+  gst_bin_add (GST_BIN (thread), audiosink);
+  gst_bin_sync_children_state (GST_BIN (thread));
+}
+
+gint 
+main (gint   argc,
+      gchar *argv[]) 
+{
+  /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
 
+  /* make sure we have a filename argument */
+  if (argc != 2) {
+    g_print ("usage: %s &lt;Ogg/Vorbis filename&gt;\n", argv[0]);
+    return -1;
+  }
+
   /* create a new thread to hold the elements */
   thread = gst_thread_new ("thread");
-  g_assert (thread != NULL);
+  g_signal_connect (thread, "eos", G_CALLBACK (cb_eos), NULL);
+  g_signal_connect (thread, "error", G_CALLBACK (cb_error), NULL);
 
-  /* create a disk reader */
-  filesrc = gst_element_factory_make ("filesrc", "disk_source");
-  g_assert (filesrc != NULL);
-  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
-  g_signal_connect (G_OBJECT (filesrc), "eos",
-                     G_CALLBACK (eos), thread);
+  /* create elements */
+  source = gst_element_factory_make ("filesrc", "source");
+  g_object_set (G_OBJECT (source), "location", argv[1], NULL);
+  decodebin = gst_element_factory_make ("decodebin", "decoder");
+  g_signal_connect (decodebin, "new-decoded-pad",
+		    G_CALLBACK (cb_newpad), NULL);
+  audiosink = gst_element_factory_make ("alsasink", "audiosink");
 
-  /* create an ogg demuxer */
-  demuxer = gst_element_factory_make ("oggdemux", "demuxer");
-  g_assert (demuxer != NULL);
-
-  /* create a vorbis decoder */
-  decoder = gst_element_factory_make ("vorbisdec", "decoder");
-  g_assert (decoder != NULL);
-
-  /* create an audio converter */
-  converter = gst_element_factory_make ("audioconvert", "converter");
-  g_assert (decoder != NULL);
-
-  /* and an audio sink */
-  audiosink = gst_element_factory_make ("osssink", "play_audio");
-  g_assert (audiosink != NULL);
-
-  /* add objects to the thread */
-  gst_bin_add_many (GST_BIN (thread), filesrc, demuxer, decoder, converter, audiosink, NULL);
-  /* link them in the logical order */
-  gst_element_link_many (filesrc, demuxer, decoder, converter, audiosink, NULL);
-
-  /* start playing */
+  /* setup */
+  gst_bin_add_many (GST_BIN (thread), source, decodebin, NULL);
+  gst_element_link (source, decodebin);
+  gst_element_set_state (audiosink, GST_STATE_PAUSED);
   gst_element_set_state (thread, GST_STATE_PLAYING);
 
-  /* do whatever you want here, the thread will be playing */
-  g_print ("thread is playing\n");
-  
-  can_quit = TRUE;
+  /* no need to iterate. We can now use a mainloop */
   gst_main ();
 
+  /* unset */
+  gst_element_set_state (thread, GST_STATE_NULL);
   gst_object_unref (GST_OBJECT (thread));
-
-  exit (0);
-}
-<!-- example-end threads.c -->
-      </programlisting>
-    </para>
-  </sect1>
-
-  <sect1 id="section-queue">
-    <title>Queue</title>
-  <para> 
-    A queue is a filter element.
-    Queues can be used to link two elements in such way that the data can 
-    be buffered.
-  </para>
-  <para> 
-    A buffer that is sinked to a Queue will not automatically be pushed to the
-    next linked element but will be buffered. It will be pushed to the next
-    element as soon as a gst_pad_pull () is called on the queue's source pad.
-  </para>
-  <para> 
-    Queues are mostly used in conjunction with a thread bin to
-    provide an external link for the thread's elements. You could have one
-    thread feeding buffers into a queue and another
-    thread repeatedly pulling on the queue to feed its 
-    internal elements.
-  </para>
-
-  <para> 
-    Below is a figure of a two-threaded decoder. We have one thread (the main execution
-    thread) reading the data from a file, and another thread decoding the data.
-  </para>
-  <figure float="1" id="section-queues-img">
-    <title>a two-threaded decoder with a queue</title>
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="images/queue.&image;" format="&IMAGE;" />
-      </imageobject>
-    </mediaobject>  
-  </figure>
-
-  <para> 
-    The standard <application>GStreamer</application> queue implementation has some
-    properties that can be changed using the g_objet_set () method. To set the 
-    maximum number of buffers that can be queued to 30, do:
-  </para>
-  <programlisting>
-  g_object_set (G_OBJECT (queue), "max_level", 30, NULL);
-  </programlisting>
-
-  <para> 
-    The following MP3 player shows you how to create the above pipeline
-    using a thread and a queue.
-  </para>
-
-  <programlisting>
-<!-- example-begin queue.c -->
-#include &lt;stdlib.h&gt;
-#include &lt;gst/gst.h&gt;
-
-gboolean playing;
-
-/* eos will be called when the src element has an end of stream */
-void 
-eos (GstElement *element, gpointer data) 
-{
-  g_print ("have eos, quitting\n");
-
-  playing = FALSE;
-}
-
-int 
-main (int argc, char *argv[]) 
-{
-  GstElement *filesrc, *audiosink, *queue, *decode;
-  GstElement *bin;
-  GstElement *thread;
-
-  gst_init (&amp;argc,&amp;argv);
-
-  if (argc != 2) {
-    g_print ("usage: %s &lt;mp3 filename&gt;\n", argv[0]);
-    exit (-1);
-  }
-
-  /* create a new thread to hold the elements */
-  thread = gst_thread_new ("thread");
-  g_assert (thread != NULL);
-
-  /* create a new bin to hold the elements */
-  bin = gst_bin_new ("bin");
-  g_assert (bin != NULL);
-
-  /* create a disk reader */
-  filesrc = gst_element_factory_make ("filesrc", "disk_source");
-  g_assert (filesrc != NULL);
-  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
-  g_signal_connect (G_OBJECT (filesrc), "eos",
-                    G_CALLBACK (eos), thread);
-
-  queue = gst_element_factory_make ("queue", "queue");
-  g_assert (queue != NULL);
-
-  /* and an audio sink */
-  audiosink = gst_element_factory_make ("osssink", "play_audio");
-  g_assert (audiosink != NULL);
-
-  decode = gst_element_factory_make ("mad", "decode");
-
-  /* add objects to the main bin */
-  gst_bin_add_many (GST_BIN (thread), decode, audiosink, NULL);
-
-  gst_bin_add_many (GST_BIN (bin), filesrc, queue, thread, NULL);
-
-  
-  gst_element_link (filesrc, queue);
-  gst_element_link_many (queue, decode, audiosink, NULL);
-
-  /* start playing */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
-
-  playing = TRUE;
-
-  while (playing) {
-    gst_bin_iterate (GST_BIN (bin));
-  }
-
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
 
   return 0;
 }
-<!-- example-end queue.c -->
-  </programlisting>
-
+    <!-- example-end threads.c --></programlisting>
   </sect1>
 </chapter>

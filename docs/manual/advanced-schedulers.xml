@@ -1,140 +1,152 @@
 <chapter id="chapter-scheduler">
   <title>Scheduling</title>
-  <para> 
+  <para>
+    By now, you've seen several example applications. All of them would set
+    up a pipeline and call <function>gst_bin_iterate ()</function> to start
+    media processing. You might have started wondering what happens during
+    pipeline iteration. This whole process of media processing is called
+    scheduling. Scheduling is considered one of the most complex parts of
+    &GStreamer;. Here, we will do no more than give a global overview of
+    scheduling, most of which will be purely informative. It might help in
+    understanding the underlying parts of &GStreamer;.
+  </para>
+  <para>
     The scheduler is responsible for managing the plugins at runtime. Its
     main responsibilities are:
     <itemizedlist>
       <listitem>
         <para>
-	  Preparing the plugins so they can be scheduled. 
+          Managing data throughput between pads and elements in a pipeline.
+          This might sometimes imply temporary data storage between elements.
         </para>
       </listitem>
       <listitem>
         <para>
-	  Monitoring state changes and enabling/disabling the element in the
+          Calling functions in elements that do the actual data processing.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  Monitoring state changes and enabling/disabling elements in the
 	  chain.
         </para>
       </listitem>
       <listitem>
         <para>
-	  Choosing an element as the entry point for the pipeline.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
 	  Selecting and distributing the global clock.
+          <!-- FIXME: is this still true? -->
         </para>
       </listitem>
     </itemizedlist>
   </para>
-  <para> 
+  <para>
     The scheduler is a pluggable component; this means that alternative
-    schedulers can be written and plugged into GStreamer. The default scheduler
-    uses cothreads to schedule the plugins in a pipeline. Cothreads are fast
-    and lightweight user-space threads.
-  </para>
-  <para> 
-    There is usually no need to interact with the scheduler directly, however
-    in some cases it is feasible to set a specific clock or force a specific
-    plugin as the entry point in the pipeline.
+    schedulers can be written and plugged into GStreamer. There is usually
+    no need for interaction in the process of choosing the scheduler, though.
+    The default scheduler in &GStreamer; is called <quote>opt</quote>. Some
+    of the concepts discussed here are specific to opt.
   </para>
 
-  <sect1 id="section-chain-based">
-    <title>Chain-based elements</title>
+  <sect1 id="section-scheduler-manage">
+    <title>Managing elements and data throughput</title>
     <para>
-      Chain based elements receive a buffer of data and are supposed
-      to handle the data and perform a gst_pad_push.
+      To understand some specifics of scheduling, it is important to know
+      how elements work internally. Largely, there are four types of elements:
+      <function>_chain ()</function>-based elements, <function>_loop
+      ()</function>-based elements, <function>_get ()</function>-based
+      elements and decoupled elements. Each of those have a set of features
+      and limitations that are important for how they are scheduled.
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          <function>_chain ()</function>-based elements are elements that
+          have a <function>_chain ()</function>-function defined for each of
+          their sinkpads. Those functions will receive data whenever input
+          data is available. In those functions, the element can
+          <emphasis>push</emphasis> data over its source pad(s) to peer
+          elements. <function>_chain ()</function>-based elements cannot
+          <emphasis>pull</emphasis> additional data from their sinkpad(s).
+          Most elements in &GStreamer; are <function>_chain
+          ()</function>-based.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <function>_loop ()</function>-based elements are elements that have
+          a <function>_loop ()</function>-function defined for the whole
+          element. Inside this function, the element can pull buffers from
+          its sink pad(s) and push data over its source pad(s) as it sees fit.
+          Such elements usually require specific control over their input.
+          Muxers and demuxers are usually <function>_loop ()</function>-based.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <function>_get ()</function>-based elements are elements with only
+          source pads. For each source pad, a <function>_get
+          ()</function>-function is defined, which is called whenever the peer
+          element needs additional input data. Most source elements are, in
+          fact, <function>_get ()</function>-based. Such an element cannot
+          actively push data.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Decoupled elements are elements whose source pads are
+          <function>_get ()</function>-based and whose sink pads are
+          <function>_chain ()</function>-based. The <function>_chain
+          ()</function>-function cannot push data over its source pad(s),
+          however. One such element is the <quote>queue</quote> element,
+          which is a thread boundary element. Since only one side of such
+          elements are interesting for one particular scheduler, we can
+          safely handle those elements as if they were either
+          <function>_get ()</function>- or <function>_chain
+          ()</function>-based. Therefore, we will further omit this type
+          of elements in the discussion.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      Obviously, the type of elements that are linked together have
+      implications for how the elements will be scheduled. If a get-based
+      element is linked to a loop-based element and the loop-based element
+      requests data from its sinkpad, we can just call the get-function and
+      be done with it. However, if two loop-based elements are linked to
+      each other, it's a lot more complicated. Similarly, a loop-based
+      element linked to a chain-based element is a lot easier than two
+      loop-based elements linked to each other.
     </para>
     <para>
-      The basic main function of a chain-based element is like:
-    </para>
-    <programlisting>
-static void 
-chain_function (GstPad *pad, GstBuffer *buffer)
-{
-  GstBuffer *outbuffer;
-
-  ....
-  // process the buffer, create a new outbuffer
-  ...
-
-  gst_pad_push (srcpad, outbuffer);
-}
-    </programlisting>
-    <para>
-      Chain based function are mainly used for elements that have a one to one
-      relation between their input and output behaviour. An example of such an 
-      element can be a simple video blur filter. The filter takes a buffer in, performs
-      the blur operation on it and sends out the resulting buffer. 
+      The default &GStreamer; scheduler, <quote>opt</quote>, uses a concept
+      of chains and groups. A group is a series of elements that can that
+      do not require any context switches or intermediate data stores to
+      be executed. In practice, this implies zero or one loop-based elements,
+      one get-based element (at the beginning) and an infinite amount of
+      chain-based elements. If there is a loop-based element, then the
+      scheduler will simply call this elements loop-function to iterate.
+      If there is no loop-based element, then data will be pulled from the
+      get-based element and will be pushed over the chain-based elements.
     </para>
     <para>
-      Another element, for example, is a volume filter. The filter takes audio samples as
-      input, performs the volume effect and sends out the resulting buffer.
-    </para>
-
-  </sect1>
-
-  <sect1 id="section-loop-based">
-    <title>Loop-based elements</title>
-    <para>
-     As opposed to chain-based elements, loop-based elements enter an 
-     infinite loop that looks like this:
-
-    <programlisting>
-  GstBuffer *buffer, *outbuffer;
- 
-  while (1) {
-    buffer = gst_pad_pull (sinkpad);
-    ...
-    // process buffer, create outbuffer
-    while (!done) {
-      ....
-      // optionally request another buffer
-      buffer = gst_pad_pull (sinkpad);
-      ....
-    }
-    ...
-    gst_pad_push (srcpad, outbuffer);
-  }
-    </programlisting>
-
-     The loop-based elements request a buffer whenever they need one.
-    </para>
-
-    <para>
-      When the request for a buffer cannot be immediately satisfied, the control
-      will be given to the source element of the loop-based element until it
-      performs a push on its source pad. At that time the control is handed
-      back to the loop-based element, etc... The execution trace can get
-      fairly complex using cothreads when there are multiple input/output
-      pads for the loop-based element. Cothread switches are performed within
-      the call to gst_pad_pull and gst_pad_push; from the perspective of
-      the loop-based element, it just "appears" that gst_pad_push (or _pull)
-      might take a long time to return.
+      A chain is a series of groups that depend on each other for data.
+      For example, two linked loop-based elements would end up in different
+      groups, but in the same chain. Whenever the first loop-based element
+      pushes data over its source pad, the data will be temporarily stored
+      inside the scheduler until the loop-function returns. When it's done,
+      the loop-function of the second element will be called to process this
+      data. If it pulls data from its sinkpad while no data is available,
+      the scheduler will <quote>emulate</quote> a get-function and, in this
+      function, iterate the first group until data is available.
     </para>
     <para>
-      Loop based elements are mainly used for the more complex elements
-      that need a specific amount of data before they can start to produce
-      output. An example of such an element is the MPEG video decoder. The
-      element will pull a buffer, perform some decoding on it and optionally
-      request more buffers to decode, and when a complete video frame has
-      been decoded, a buffer is sent out. For example, any plugin using the
-      bytestream library will need to be loop-based.
-    </para>
-    <para>
-      There is no problem in putting cothreaded elements into a <ulink
-      type="http" url="../../gstreamer/html/GstThread.html"><classname>GstThread
-      </classname></ulink> to
-      create even more complex pipelines with both user and kernel space threads.
-    </para>
-
-  </sect1>
-
-  <sect1 id="section-opt">
-    <title>The optimal scheduler</title>
-
-    <para>
-      Explain opt a bit, chains, groups, and how it affects execution.
+      The above is roughly how scheduling works in &GStreamer;. This has
+      some implications for ideal pipeline design. An pipeline would
+      ideally contain at most one loop-based element, so that all data
+      processing is immediate and no data is stored inside the scheduler
+      during group switches. You would think that this decreases overhead
+      significantly. In practice, this is not so bad, however. It's something
+      to keep in the back of your mind, nothing more.
     </para>
   </sect1>
 </chapter>
