@@ -382,10 +382,10 @@ gst_thread_change_state (GstElement *element)
             //
             //FIXME also make this more efficient by keeping list of managed queues
             THR_DEBUG("waking queue \"%s\"\n",GST_ELEMENT_NAME(e));
-            GST_LOCK(e);
-            g_cond_signal((GST_QUEUE(e)->emptycond));
-            g_cond_signal((GST_QUEUE(e)->fullcond));
-            GST_UNLOCK(e);
+            //GST_LOCK(e);
+            g_cond_signal((GST_QUEUE(e)->not_empty));
+            g_cond_signal((GST_QUEUE(e)->not_full));
+            //GST_UNLOCK(e);
           }
           else
           {
@@ -417,10 +417,10 @@ gst_thread_change_state (GstElement *element)
               if (GST_ELEMENT_SCHED(peerelement) != GST_ELEMENT_SCHED(thread))
               {
                 THR_DEBUG("  element \"%s\" has pad cross sched boundary\n",GST_ELEMENT_NAME(e));
-                GST_LOCK(peerelement);
-                g_cond_signal(GST_QUEUE(peerelement)->emptycond);
-                g_cond_signal(GST_QUEUE(peerelement)->fullcond);
-                GST_UNLOCK(peerelement);
+                //GST_LOCK(peerelement);
+                g_cond_signal(GST_QUEUE(peerelement)->not_empty);
+                g_cond_signal(GST_QUEUE(peerelement)->not_full);
+                //GST_UNLOCK(peerelement);
               }
             }
           }

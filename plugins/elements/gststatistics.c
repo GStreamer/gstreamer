@@ -37,7 +37,6 @@ GstElementDetails gst_statistics_details = {
 /* Statistics signals and args */
 enum {
   SIGNAL_UPDATE,
-  /* FILL ME */
   LAST_SIGNAL
 };
 
@@ -66,7 +65,7 @@ static void gst_statistics_reset		(GstStatistics *statistics);
 static void gst_statistics_print		(GstStatistics *statistics);
 
 static GstElementClass *parent_class = NULL;
-static guint gst_statistics_signals[LAST_SIGNAL] = { 0 };
+static guint gst_statistics_signals[LAST_SIGNAL] = { 0, };
 
 static stats zero_stats = { 0, };
 
@@ -131,7 +130,7 @@ gst_statistics_class_init (GstStatisticsClass *klass)
   gst_statistics_signals[SIGNAL_UPDATE] =
     g_signal_new ("update", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstStatisticsClass, update), NULL, NULL,
-                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 0);
+                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_statistics_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_statistics_get_property);
@@ -283,10 +282,12 @@ gst_statistics_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_IS_EVENT(buf)) {
     GstEvent *event = GST_EVENT (buf);
-    gst_element_set_state (GST_ELEMENT (statistics), GST_STATE_PAUSED);
     statistics->stats.events += 1;
-    if (statistics->update_on_eos && (GST_EVENT_TYPE(event) == GST_EVENT_EOS)) {
-      update = TRUE;
+    if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
+      gst_element_set_state (GST_ELEMENT (statistics), GST_STATE_PAUSED);
+      if (statistics->update_on_eos) {
+        update = TRUE;
+      }
     }
     if (statistics->update_freq.events) {
       statistics->update_count.events += 1;
@@ -317,7 +318,9 @@ gst_statistics_chain (GstPad *pad, GstBuffer *buf)
 
   if (update) {
     if (statistics->update) {
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, statistics, "pre update emit\n");
       g_signal_emit (G_OBJECT (statistics), gst_statistics_signals[SIGNAL_UPDATE], 0);
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, statistics, "post update emit\n");
     }
     if (!statistics->silent) {
       gst_statistics_print(statistics);

@@ -679,8 +679,10 @@ gst_fakesrc_get(GstPad *pad)
     g_print("fakesrc: get      ******* (%s:%s)> (%d bytes, %llu) \n",
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "pre handoff emit\n");
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                    buf, pad);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "post handoff emit\n");
 
   return buf;
 }

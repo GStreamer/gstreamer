@@ -257,7 +257,7 @@ struct _GstGhostPadClass {
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
 
 /* Generic */
-#define GST_PAD_REALIZE(pad) (GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
+#define GST_PAD_REALIZE(pad)	(GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
 #define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
 #define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE(pad))
 #define GST_PAD_PEER(pad)		GST_RPAD_PEER(GST_PAD_REALIZE(pad))

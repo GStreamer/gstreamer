@@ -75,9 +75,12 @@ struct _GstQueue {
 
   gint leaky;		/* whether the queue is leaky, and if so at which end */
 
-//  GMutex *lock;	(optimization?)
-  GCond *emptycond;
-  GCond *fullcond;
+  GMutex *qlock;	/* lock for queue (vs object lock) */
+  /* we are single reader and single writer queue */
+  gboolean reader;	/* reader waiting on empty queue */
+  gboolean writer;	/* writer waiting on full queue */
+  GCond *not_empty;	/* signals buffers now available for reading */
+  GCond *not_full;	/* signals space now available for writing */
 
   GTimeVal *timeval;	/* the timeout for the queue locking */
 };
