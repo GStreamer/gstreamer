@@ -292,6 +292,24 @@ gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
   }
 }
 
+static void gst_bin_schedule_cleanup(GstBin *bin) {
+  GList *chains;
+  _GstBinChain *chain;
+
+  chains = bin->chains;
+  while (chains) {
+    chain = (_GstBinChain *)(chains->data);
+    chains = g_list_next(chains);
+
+    g_list_free(chain->elements);
+    g_list_free(chain->entries);
+
+    g_free(chain);
+  }
+
+  g_list_free(bin->chains);
+}
+
 void gst_bin_schedule_func(GstBin *bin) {
 //  GstElement *manager;
   GList *elements;
@@ -307,6 +325,8 @@ void gst_bin_schedule_func(GstBin *bin) {
 
   DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
   DEBUG_ENTER_STRING;
+
+  gst_bin_schedule_cleanup(bin);
 
   // next we have to find all the separate scheduling chains
   DEBUG("\nattempting to find scheduling chains...\n");

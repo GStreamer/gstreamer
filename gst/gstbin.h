@@ -102,8 +102,6 @@ struct __GstBinChain {
   GList *entries;
 
   gboolean need_cothreads;
-
-  GstElement *entry;
 };  
 
 

@@ -551,12 +551,6 @@ gst_bin_create_plan_func (GstBin *bin)
   const gchar *elementname;
   GSList *pending = NULL;
   GstBin *pending_bin;
-//  GList *pads;
-//  GstPad *pad;
-//  GstElement *peer_manager;
-//  cothread_func wrapper_function;
-//  _GstBinChain *chain;
-//  GList *chains;
 
   DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
   DEBUG_ENTER_STRING;
@@ -639,9 +633,6 @@ gst_bin_create_plan_func (GstBin *bin)
   g_list_free (bin->managed_elements);
   bin->managed_elements = NULL;
   bin->num_managed_elements = 0;
-  g_list_free (bin->entries);
-  bin->entries = NULL;
-  bin->num_entries = 0;
 
   // find all the managed children
   // here we pull off the trick of walking an entire arbitrary tree without recursion
