@@ -93,6 +93,9 @@ struct _GstLame {
   gboolean emphasis;
 
   lame_global_flags *lgf;
+
+  /* time tracker */
+  guint64 last_ts;
 };
 
 struct _GstLameClass {

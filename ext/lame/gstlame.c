@@ -630,7 +630,6 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
   GstBuffer *outbuf;
   gchar *mp3_data = NULL;
   gint mp3_buffer_size, mp3_size = 0;
-  guint mp3_ts = 0;
   gboolean eos = FALSE;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
@@ -682,7 +681,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 	       "encoded %d bytes of audio to %d bytes of mp3", 
 	       GST_BUFFER_SIZE (buf), mp3_size);
 
-    mp3_ts = GST_BUFFER_TIMESTAMP (buf);
+    lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
 
     gst_buffer_unref (buf);
   }
@@ -691,7 +690,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = mp3_data;
     GST_BUFFER_SIZE (outbuf) = mp3_size;
-    GST_BUFFER_TIMESTAMP (outbuf) = mp3_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = lame->last_ts;
 
     gst_pad_push (lame->srcpad,outbuf);
   }
@@ -784,6 +783,9 @@ gst_lame_change_state (GstElement *element)
   GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
 
   switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_READY_TO_PAUSED:
+      lame->last_ts = 0;
+      break;
     case GST_STATE_READY_TO_NULL:
       if (lame->initialized) {
         lame_close (lame->lgf);
