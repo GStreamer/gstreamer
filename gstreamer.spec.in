@@ -18,6 +18,7 @@ Requires: 	libxml2 >= %_libxml2
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2 >= %_libxml2
 BuildRequires: 	nasm => 0.90
+BuildRequires: 	bison
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
