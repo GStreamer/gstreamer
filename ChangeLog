@@ -1,3 +1,9 @@
+2004-06-03  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* gst/tcp/gsttcp.c: (gst_tcp_socket_write):
+	  don't get a signal for EPIPE on socket writes
+	  (somebody check if this works on other platforms)
+
 2004-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/alsa/gstalsaclock.c: (gst_alsa_clock_get_type):
