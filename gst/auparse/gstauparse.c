@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gstauparse.h>
+#include "gstauparse.h"
 #include <gst/audio/audio.h>
 
 /* elementfactory information */
