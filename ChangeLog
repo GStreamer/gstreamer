@@ -1,5 +1,10 @@
 2004-11-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_loop):
+	  Don't forget bass if it's there. Else left channel is silent...
+
+2004-11-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_loop),
 	(gst_a52dec_change_state):
 	  Don't do sample adjusting anymore, we use float audio now.
