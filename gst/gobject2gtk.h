@@ -55,6 +55,7 @@
 #define g_cclosure_marshal_VOID__UINT_POINTER	gtk_marshal_NONE__UINT_POINTER
 
 #define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER_POINTER
+#define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
 
 
 // args
