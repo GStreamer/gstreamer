@@ -91,6 +91,7 @@ struct _GstQueue {
 
   GTimeVal *timeval;	/* the timeout for the queue locking */
   GQueue *events;	/* upstream events get decoupled here */
+  GMutex *event_lock;	/* lock when handling the events queue */
 
   GstCaps *negotiated_caps;
 

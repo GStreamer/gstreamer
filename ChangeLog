@@ -1,3 +1,12 @@
+2004-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstqueue.c:
+	* gst/gstqueue.h:
+	  fix removing from the wrong queue on event timeout
+	  fix disposing of the event queue by casting correctly
+	  add mutexes for handling the event queue
+	  someone was sleeping when fixing queue last time around :)
+
 2004-06-10  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.c (gst_init_check_with_popt_table): Do not fail on
