@@ -56,7 +56,7 @@ main (gint argc, gchar *argv[])
   num_threads = atoi (argv[1]);
   num_allocs = atoi (argv[2]);
 
-  _chunks = gst_mem_chunk_new ("test", 32, 32 * 4, G_ALLOC_AND_FREE);
+  _chunks = gst_mem_chunk_new ("test", 32, 32 * 16, G_ALLOC_AND_FREE);
 
   for(t=0; t < num_threads; t++) {
     rc = pthread_create (&threads[t], NULL, run_test, (void *)t);
@@ -68,6 +68,12 @@ main (gint argc, gchar *argv[])
   }
   printf ("main(): Created %d threads.\n", t);
 
-  pthread_exit (NULL);
+  for(t=0; t < num_threads; t++) {
+    pthread_join (threads[t], NULL);
+  }
   g_mem_chunk_info();
+
+  gst_mem_chunk_destroy (_chunks);
+
+  return 0;
 }
