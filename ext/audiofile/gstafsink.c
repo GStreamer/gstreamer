@@ -260,8 +260,8 @@ gst_afsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   }
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_afsink_plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   
@@ -275,14 +275,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "afsink",
-  plugin_init
-};
 
 /* this is where we open the audiofile */
 static gboolean

@@ -180,7 +180,7 @@ gst_afparse_loop(GstElement *element)
   GstAFParse *afparse;
   GstBuffer *buf;
   GstBufferPool *bufpool;
-  gint numframes, frames_to_bytes, frames_per_read, bytes_per_read;
+  gint numframes = 0, frames_to_bytes, frames_per_read, bytes_per_read;
   guint8 *data;
   gboolean bypass_afread = TRUE;
   GstByteStream *bs;
@@ -315,8 +315,8 @@ gst_afparse_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   }
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_afparse_plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   
@@ -342,14 +342,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
   return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "afparse",
-  plugin_init
-};
 
 /* this is where we open the audiofile */
 static gboolean
@@ -483,7 +475,7 @@ static long
 gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative)
 {
   GstByteStream *bs = (GstByteStream*)vfile->closure;
-  GstSeekType type;
+  GstSeekType method;
   guint64 current_offset = gst_bytestream_tell(bs);
 
   if (!is_relative){
@@ -492,16 +484,15 @@ gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative)
       return offset;
     }
 
-    type = GST_SEEK_BYTEOFFSET_SET;
+    method = GST_SEEK_METHOD_SET;
   }
   else {
     if (offset == 0) return current_offset;
-    type = GST_SEEK_BYTEOFFSET_CUR; 
+    method = GST_SEEK_METHOD_CUR; 
   }
-
-  g_print("doing seek to %d, current offset %lld\n", (gint)offset, current_offset);  
-  if (gst_bytestream_seek(bs, type, (gint64)offset)){
-
+  
+  if (gst_bytestream_seek(bs, (gint64)offset, method)){
+    g_print("doing seek to %d\n", (gint)offset);
     return offset;
   }
   return 0;

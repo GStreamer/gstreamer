@@ -95,6 +95,8 @@ struct _GstAFParseClass {
   void (*handoff) (GstElement *element,GstPad *pad);
 };
 
+gboolean 	gst_afparse_plugin_init 	(GModule *module, GstPlugin *plugin);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

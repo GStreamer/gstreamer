@@ -94,8 +94,10 @@ struct _GstAFSrcClass {
   void (*handoff) (GstElement *element,GstPad *pad);
 };
 
-GType gst_afsrc_get_type(void);
-/*gboolean gst_afsrc_factory_init (GstElementFactory *factory);*/
+GType 		gst_afsrc_get_type	(void);
+gboolean        gst_afsrc_plugin_init  (GModule *module, GstPlugin *plugin);
+
+
 
 
 #ifdef __cplusplus

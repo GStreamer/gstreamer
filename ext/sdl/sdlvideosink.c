@@ -190,6 +190,7 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
   GST_ELEMENT (sdlvideosink)->setclockfunc    = gst_sdlvideosink_set_clock;
 
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_THREAD_SUGGESTED);
+  GST_FLAG_SET(sdlvideosink, GST_ELEMENT_EVENT_AWARE);
 }
 
 
@@ -399,7 +400,7 @@ static void
 gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstSDLVideoSink *sdlvideosink;
-  SDL_Event event;
+  SDL_Event sdl_event;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -407,24 +408,42 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
-  while (SDL_PollEvent(&event))
+  while (SDL_PollEvent(&sdl_event))
   {
-    switch(event.type)
+    switch(sdl_event.type)
     {
       case SDL_VIDEORESIZE:
         /* create a SDL window of the size requested by the user */
-        sdlvideosink->window_width = event.resize.w;
-        sdlvideosink->window_height = event.resize.h;
+        sdlvideosink->window_width = sdl_event.resize.w;
+        sdlvideosink->window_height = sdl_event.resize.h;
         gst_sdlvideosink_create(sdlvideosink, FALSE);
         break;
     }
   }
 
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+    gint64 offset;
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+	offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+	g_print ("sdl discont %lld\n", offset);
+	gst_clock_handle_discont (sdlvideosink->clock, (guint64) GST_EVENT_DISCONT_OFFSET (event, 0).value);
+	break;
+      default:
+	gst_pad_event_default (pad, event);
+	break;
+    }
+    gst_event_free (event);
+    return;
+  }
+
+  GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
   if (sdlvideosink->clock) {
     gst_element_clock_wait (GST_ELEMENT (sdlvideosink),
-		  sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
+		  sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf), NULL);
   }
 
   if (!gst_sdlvideosink_lock(sdlvideosink))

@@ -53,7 +53,7 @@ typedef struct _GstAFSink GstAFSink;
 typedef struct _GstAFSinkClass GstAFSinkClass;
 
 typedef enum {
-  GST_AFSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+  GST_AFSINK_OPEN       = GST_ELEMENT_FLAG_LAST,
 
   GST_AFSINK_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
 } GstAFSinkFlags;
@@ -88,8 +88,9 @@ struct _GstAFSinkClass {
   void (*handoff) (GstElement *element,GstPad *pad);
 };
 
-GType gst_afsink_get_type(void);
-/*gboolean gst_afsink_factory_init (GstElementFactory *factory); */
+GType 		gst_afsink_get_type	(void);
+gboolean 	gst_afsink_plugin_init 	(GModule *module, GstPlugin *plugin);
+
 
 
 #ifdef __cplusplus
