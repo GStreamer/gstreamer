@@ -1,0 +1,7 @@
+- Restructure CVS
+  - Move gstreamer/ to gstreamer-0.1.0/
+  - Re-import entire project into gstreamer/
+
+- Convert to GObject
+
+- Get editor working better
