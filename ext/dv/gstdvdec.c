@@ -260,9 +260,9 @@ gst_dvdec_class_init (GstDVDecClass *klass)
 static void
 gst_dvdec_destroy (GObject *object)
 {
-	GstDVDec *dvdec = GST_DVDEC(object);
+  GstDVDec *dvdec = GST_DVDEC (object);
 
-	dv_decoder_free(dvdec->decoder);
+  dv_decoder_free (dvdec->decoder);
 }
 
 /* This function is responsible for initializing a specific instance of
