@@ -31,36 +31,53 @@ static GstTypeDefinition mp3type_definitions[] = {
 static GstCaps* 
 mp3_type_find(GstBuffer *buf, gpointer private) 
 {
-  gchar *data;
+  guint8 *data;
+  gint size;
   gulong head;
   GstCaps *caps;
 
-  data = GST_BUFFER_DATA(buf);
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
   GST_DEBUG (0,"mp3typefind: typefind");
- 
-  /* check for ID3 Tag first and forward ID3 length */
-  if (!memcmp (data, "ID3", 3))
-  {
-    guint32 skip;
-    /* ignore next 3 bytes */
-    data += 6;
-    /* if you want that thing faster, do it */
-    skip = GUINT32_FROM_BE(*((guint32 *)data));
-    skip = (((skip & 0x7f000000) >> 3) |
-	    ((skip & 0x007f0000) >> 2) |
-	    ((skip & 0x00007f00) >> 1) |
-	    ((skip & 0x0000007f) >> 0)) + 4;
-    GST_DEBUG (0, "mp3typefind: detected ID3 Tag with %u bytes", skip + 6);
-    /* return if buffer is not big enough */
-    if (GST_BUFFER_SIZE (buf) < skip + 10)
-    {
-      GST_DEBUG (0, "mp3typefind: buffer too small (%d) to go on typefinding", skip + 6);
-      return NULL;
-    }
-    data += skip;
+
+  /* gracefully ripped from libid3 */
+  if (size >= 3 &&
+      data[0] == 'T' && data[1] == 'A' && data[2] == 'G') {
+    /* ID V1 tags */
+    data += 128;
+
+    GST_DEBUG (0, "mp3typefind: detected ID3 Tag V1");
   }
-  
+  else {
+    if (size >= 10 &&
+        (data[0] == 'I' && data[1] == 'D' && data[2] == '3') &&
+        data[3] < 0xff && data[4] < 0xff &&
+        data[6] < 0x80 && data[7] < 0x80 && data[8] < 0x80 && data[9] < 0x80)
+    {
+      guint32 skip = 0;
+
+      skip = (skip << 7) | (data[6] & 0x7f);
+      skip = (skip << 7) | (data[7] & 0x7f);
+      skip = (skip << 7) | (data[8] & 0x7f);
+      skip = (skip << 7) | (data[9] & 0x7f);
+
+      if (data[0] == 'I') {
+	/* ID3V2 */
+	/* footer present? */
+	if (data[5] & 0x10)
+          skip += 10;
+
+	skip += 10;
+      }
+
+      GST_DEBUG (0, "mp3typefind: detected ID3 Tag V2 with %u bytes", skip);
+
+      /* we currently accept a valid ID3 tag as an mp3 as some ID3 tags have invalid
+       * offsets so the next check might fail */
+      goto done;
+    }
+  }
   /* now with the right postion, do typefinding */
   head = GULONG_FROM_BE(*((gulong *)data));
   if ((head & 0xffe00000) != 0xffe00000)
@@ -74,8 +91,8 @@ mp3_type_find(GstBuffer *buf, gpointer private)
   if (((head >> 10) & 0x3) == 0x3)
     return NULL;
 
+done:
   caps = gst_caps_new ("mp3_type_find", "audio/mp3", NULL);
-  /* gst_caps_set(caps,"layer",GST_PROPS_INT(4-((head>>17)&0x3))); */
 
   return caps;
 }
