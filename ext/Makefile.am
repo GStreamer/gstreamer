@@ -64,11 +64,11 @@ else
 ESD_DIR=
 endif
 
-## if USE_FESTIVAL
-## FESTIVAL_DIR=festival
-## else
+if USE_FESTIVAL
+FESTIVAL_DIR=festival
+else
 FESTIVAL_DIR=
-## endif
+endif
 
 if USE_GSM
 GSM_DIR=gsm
