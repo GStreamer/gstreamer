@@ -34,6 +34,10 @@
 
 pthread_key_t _cothread_key = -1;
 
+/* Disablig this define allows you to shut off a few checks in
+ * cothread_switch.  This likely will speed things up fractionally */
+#define COTHREAD_PARANOID
+
 /**
  * cothread_create:
  * @ctx: the cothread context
@@ -220,25 +224,20 @@ cothread_switch (cothread_state *thread)
   cothread_context *ctx;
   cothread_state *current;
   int enter;
-//  int i;
 
-  if (thread == NULL) {
-    g_print("cothread: there's no thread, strange...\n");
-    return;
-  }
-
+#ifdef COTHREAD_PARANOID
+  if (thread == NULL) goto nothread;
+#endif
   ctx = thread->ctx;
+#ifdef COTHREAD_PARANOID
+  if (ctx == NULL) goto nocontext;
+#endif
 
   current = ctx->threads[ctx->current];
-  if (current == NULL) {
-    g_print("cothread: there's no current thread, help!\n");
-    exit(2);
-  }
-
-  if (current == thread) {
-    g_print("cothread: trying to switch to same thread, legal but not necessary\n");
-    return;
-  }
+#ifdef COTHREAD_PARANOID
+  if (current == NULL) goto nocurrent;
+#endif
+  if (current == thread) goto selfswitch;
 
   // find the number of the thread to switch to
   ctx->current = thread->threadnum;
@@ -271,4 +270,21 @@ cothread_switch (cothread_state *thread)
     DEBUG("cothread: exit thread \n");
     ctx->current = 0;
   }
+
+  return;
+
+#ifdef COTHREAD_PARANOID
+nothread:
+  g_print("cothread: there's no thread, strange...\n");
+  return;
+nocontext:
+  g_print("cothread: there's no context, help!\n");
+  exit(2);
+nocurrent:
+  g_print("cothread: there's no current thread, help!\n");
+  exit(2);
+#endif /* COTHREAD_PARANOID */
+selfswitch:
+  g_print("cothread: trying to switch to same thread, legal but not necessary\n");
+  return;
 }
