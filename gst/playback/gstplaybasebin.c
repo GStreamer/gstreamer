@@ -403,6 +403,10 @@ setup_source (GstPlayBaseBin * play_base_bin)
       gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
+    if (gst_bin_sync_children_state (GST_BIN (play_base_bin->thread)) ==
+        GST_STATE_FAILURE) {
+      return FALSE;
+    }
   }
 
   /* now see if the source element emits raw audio/video all by itself,
@@ -670,6 +674,12 @@ gst_play_base_bin_change_state (GstElement * element)
          * because one stream was unrecognized. */
         g_signal_connect (play_base_bin->thread, "error",
             G_CALLBACK (gst_play_base_bin_error), play_base_bin);
+      } else {
+        /* in case of no preroll, we might have streaminfo already... */
+        g_list_foreach (play_base_bin->streaminfo,
+            (GFunc) g_object_unref, NULL);
+        g_list_free (play_base_bin->streaminfo);
+        play_base_bin->streaminfo = NULL;
       }
       break;
     }

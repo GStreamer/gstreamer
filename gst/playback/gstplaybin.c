@@ -527,6 +527,8 @@ gst_play_bin_change_state (GstElement * element)
   transition = GST_STATE_TRANSITION (element);
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  if (ret == GST_STATE_FAILURE)
+    return ret;
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
