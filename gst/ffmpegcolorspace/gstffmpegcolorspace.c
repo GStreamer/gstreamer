@@ -406,5 +406,5 @@ gst_ffmpegcolorspace_register (GstPlugin * plugin)
 
   avcodec_init ();
   return gst_element_register (plugin, "ffmpegcolorspace",
-      GST_RANK_NONE, GST_TYPE_FFMPEGCOLORSPACE);
+      GST_RANK_PRIMARY, GST_TYPE_FFMPEGCOLORSPACE);
 }
