@@ -15,6 +15,12 @@
 	* gst/gstelement.h:
 	  make GST_ELEMENT_ERROR do a GST_ERROR_OBJECT
 
+2004-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_error_full):
+	* gst/gstelement.h:
+          GST_ELEMENT_ERROR in enum -> _IN_ERROR
+
 2004-01-29  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_get),

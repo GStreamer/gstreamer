@@ -19,7 +19,7 @@ DOC_URL=$(DOC_SERVER):$(DOC_BASE)
 
 
 upload: $(FORMATS)
-	@if test "x$$GST_PLUGINS_VERSION_NANO" = x0; then \
+	@if test "x$(GST_VERSION_NANO)" = x0; then \
             export DOCVERSION=$(VERSION); \
         else export DOCVERSION=head; \
         fi; \

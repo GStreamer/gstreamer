@@ -852,7 +852,7 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_SCHEDULER_PRIVATE1: 
 @GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_LOCKED_STATE: 
-@GST_ELEMENT_ERROR: 
+@GST_ELEMENT_IN_ERROR: 
 @GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
@@ -971,6 +971,7 @@ Is triggered whenever an error occured.
 @gstelement: the object which received the signal.
 @arg1: the error message
 @arg2: 
+@:
 @:
 @:
 @:
