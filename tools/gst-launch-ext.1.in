@@ -26,11 +26,12 @@ the defaults for audio and video output sinks.
 Here is an example .gst file that implements the same defaults as hard-coded
 in the script :
 
-AUDIOSINK = "osssink";
-VIDEOSINK = "colorspace ! xvideosink";
+AUDIOSINK = osssink
+VIDEOSINK = ffmpegcolorspace ! xvimagesink
 
-You can change osssink to any of esdsink, alsasink, jacksink (if you have
-the plug-in), and you can change xvideosink to aasink or sdlvideosink.
+You can change osssink to esdsink or alsasink (if you have
+the plug-in), and you can change xvimagesink to ximagesink, aasink
+or sdlvideosink.
 
 Other plug-ins might be used as well if GStreamer has them.
 
