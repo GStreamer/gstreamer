@@ -283,12 +283,18 @@ gst_xml_registry_get_property (GObject * object, guint prop_id,
  * so this function returns the last time *anything* changed to this path
  */
 static time_t
-get_time (const char *path)
+get_time (const char *path, gboolean * is_dir)
 {
   struct stat statbuf;
 
-  if (stat (path, &statbuf))
+  if (stat (path, &statbuf)) {
+    *is_dir = FALSE;
     return 0;
+  }
+
+  if (is_dir)
+    *is_dir = S_ISDIR (statbuf.st_mode);
+
   if (statbuf.st_mtime > statbuf.st_ctime)
     return statbuf.st_mtime;
   return statbuf.st_ctime;
@@ -408,9 +414,10 @@ plugin_times_older_than_recurse (gchar * path, time_t regtime)
 {
   DIR *dir;
   struct dirent *dirent;
+  gboolean is_dir;
   gchar *pluginname;
 
-  time_t pathtime = get_time (path);
+  time_t pathtime = get_time (path, &is_dir);
 
   if (pathtime > regtime) {
     GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
@@ -418,6 +425,9 @@ plugin_times_older_than_recurse (gchar * path, time_t regtime)
         path, (long) pathtime, (long) regtime);
     return FALSE;
   }
+
+  if (!is_dir)
+    return TRUE;
 
   dir = opendir (path);
   if (dir) {
@@ -490,7 +500,7 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
     /* at this point we know it exists */
     g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_READABLE, FALSE);
 
-    if (!plugin_times_older_than (paths, get_time (registry->location))) {
+    if (!plugin_times_older_than (paths, get_time (registry->location, NULL))) {
       if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
         GST_CAT_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
 
@@ -498,7 +508,8 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
 
         gst_registry_save (gst_registry);
 
-        if (!plugin_times_older_than (paths, get_time (registry->location))) {
+        if (!plugin_times_older_than (paths, get_time (registry->location,
+                    NULL))) {
           GST_CAT_INFO (GST_CAT_GST_INIT,
               "Registry still out of date, something is wrong...");
           return FALSE;

@@ -1,3 +1,10 @@
+2004-03-29  Colin Walters  <walters@redhat.com>
+
+	* gst/registries/gstxmlregistry.c (get_time)
+	(plugin_times_older_than_recurse):
+	Use the result of stat to determine whether a path is a file,
+	so we don't attempt to opendir() files.
+
 2004-03-29  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstpad.c: (gst_pad_set_explicit_caps):
