@@ -1118,6 +1118,7 @@ tests/sched/Makefile
 tests/eos/Makefile
 testsuite/Makefile
 testsuite/capsnego/Makefile
+testsuite/refcounting/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
