@@ -608,7 +608,6 @@ gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
-  GstRealPad *temppad;
   gboolean negotiated = FALSE;
 
   /* generic checks */
@@ -624,7 +623,7 @@ gst_pad_connect (GstPad *srcpad,
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
 
-  if ((realsrc != srcpad) || (realsink != sinkpad))
+  if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad))
     GST_INFO (GST_CAT_PADS, "*actually* connecting %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME(realsrc), GST_DEBUG_PAD_NAME(realsink));
 

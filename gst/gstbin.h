@@ -96,9 +96,6 @@ struct _GstBinClass {
   gboolean	(*change_state_type)	(GstBin *bin,
 					 GstElementState state,
 					 GtkType type);
-  /* create a plan for the execution of the bin */
-  void		(*create_plan)		(GstBin *bin);
-  void		(*schedule)		(GstBin *bin);
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
 };
@@ -135,8 +132,6 @@ GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin,
 						 const gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
-void		gst_bin_create_plan		(GstBin *bin);
-void		gst_bin_schedule		(GstBin *bin);
 gboolean	gst_bin_set_state_type		(GstBin *bin,
 						 GstElementState state,
 						 GtkType type);
