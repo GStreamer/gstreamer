@@ -31,6 +31,7 @@ enum {
 	STREAM_LENGTH,
 	TIME_TICK,
 	HAVE_XID,
+	HAVE_VIS_XID,
 	HAVE_VIDEO_SIZE,
 	LAST_SIGNAL,
 };
@@ -315,6 +316,10 @@ gst_play_idle_signal (GstPlay *play)
 		g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_XID], 0,
 		               signal->signal_data.video_xid.xid);
 		break;
+	case HAVE_VIS_XID:
+		g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIS_XID], 0,
+		               signal->signal_data.video_xid.xid);
+		break;
 	case HAVE_VIDEO_SIZE:
 		g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIDEO_SIZE], 0, 
 		               signal->signal_data.video_size.width, signal->signal_data.video_size.height);
@@ -360,6 +365,22 @@ callback_video_have_xid (	GstElement *element,
 	
 	signal = g_new0(GstPlaySignal, 1);
 	signal->signal_id = HAVE_XID;
+	signal->signal_data.video_xid.xid = xid;
+	
+	g_async_queue_push(play->signal_queue, signal);
+	
+	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
+}
+
+static void
+callback_video_have_vis_xid (	GstElement *element,
+								gint xid,
+								GstPlay *play)
+{
+	GstPlaySignal *signal;
+	
+	signal = g_new0(GstPlaySignal, 1);
+	signal->signal_id = HAVE_VIS_XID;
 	signal->signal_data.video_xid.xid = xid;
 	
 	g_async_queue_push(play->signal_queue, signal);
@@ -593,6 +614,16 @@ gst_play_class_init (GstPlayClass *klass)
 			      gst_marshal_VOID__INT,
 			      G_TYPE_NONE, 1, 
 			      G_TYPE_INT);
+				  
+	gst_play_signals [HAVE_VIS_XID] = 
+		g_signal_new ("have_vis_xid", 
+			      G_TYPE_FROM_CLASS (klass), 
+			      G_SIGNAL_RUN_FIRST,
+			      G_STRUCT_OFFSET (GstPlayClass, have_vis_xid), 
+			      NULL, NULL,
+			      gst_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, 
+			      G_TYPE_INT);
 
 	gst_play_signals [HAVE_VIDEO_SIZE] = 
 		g_signal_new ("have_video_size", 
@@ -709,9 +740,14 @@ gst_play_seek_to_time (	GstPlay *play,
 void
 gst_play_need_new_video_window (GstPlay *play)
 {
+	g_return_if_fail (play != NULL);
 	g_return_if_fail (GST_IS_PLAY (play));
 	if (GST_IS_ELEMENT(play->video_sink_element)){
 		g_object_set(	G_OBJECT(play->video_sink_element),
+						"need_new_window", TRUE, NULL);
+	}
+	if (GST_IS_ELEMENT(play->visualisation_sink_element)){
+		g_object_set(	G_OBJECT(play->visualisation_sink_element),
 						"need_new_window", TRUE, NULL);
 	}
 }
@@ -1143,6 +1179,14 @@ gst_play_new (	GstPlayPipeType pipe_type,
 			play->set_autoplugger = gst_play_video_set_auto;
 			play->set_video_sink = gst_play_video_set_video;
 			play->set_audio_sink = gst_play_video_set_audio;
+			break;
+		case GST_PLAY_PIPE_VIDEO_VISUALISATION:
+			play->setup_pipeline = gst_play_video_vis_setup;
+			play->teardown_pipeline = NULL;
+			play->set_data_src = gst_play_video_set_data_src;
+			play->set_autoplugger = gst_play_video_set_auto;
+			play->set_video_sink = gst_play_video_vis_set_video;
+			play->set_audio_sink = gst_play_video_vis_set_audio;
 			break;
 		case GST_PLAY_PIPE_AUDIO:
 			/* we can reuse the threaded set functions */

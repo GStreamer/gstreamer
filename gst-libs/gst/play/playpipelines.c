@@ -401,7 +401,7 @@ gst_play_audioht_set_auto (	GstPlay *play,
 
 /*
  * GST_PLAY_PIPE_VIDEO
- * { gnomevfssrc ! spider ! { queue ! volume ! osssink }
+ * { gnomevfssrc ! spider ! { queue ! volume ! (audiosink) }
  * spider0.src2 ! { queue ! colorspace ! (videosink) } }
  */
 
@@ -571,6 +571,7 @@ gst_play_video_set_auto (	GstPlay *play,
 
 	GstElement *audio_bin, *video_bin, *work_thread;
 
+	g_return_val_if_fail (play != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
 
@@ -680,6 +681,513 @@ gst_play_video_set_audio (	GstPlay *play,
 				  G_CALLBACK (callback_audio_sink_eos), play);
 	}
 
+	return TRUE;
+}
+
+/*
+ * GST_PLAY_PIPE_VIDEO_VISUALISATION
+ * { gnomevfssrc ! spider ! { queue ! volume ! (audiosink) }
+ * spider0.src2 ! { queue ! colorspace ! (videosink) } }
+ */
+
+static gboolean 
+gst_play_video_vis_setup (	GstPlay *play,
+							GError **error)
+{
+	
+	GstElement *work_thread, *tee_element;
+	GstPad *tee_vis_pad, *tee_audio_pad, *vis_video_thread_pad;
+	GstElement *vis_audio_thread, *vis_video_thread;
+	GstElement *vis_audio_queue, *vis_video_queue;
+	GstElement *vis_colorspace, *vis_audio_sink, *vis_video_sink;
+	GstElement *video_queue, *video_bin, *colorspace;
+	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	
+	/* creating pipeline */	
+	play->pipeline = gst_pipeline_new ("main_pipeline");
+	g_return_val_if_fail (GST_IS_PIPELINE (play->pipeline), FALSE);
+
+	/* creating work thread */
+	work_thread = gst_thread_new ("work_thread");
+	g_return_val_if_fail (GST_IS_THREAD (work_thread), FALSE);
+	g_hash_table_insert(play->other_elements, "work_thread", work_thread);
+	
+	gst_bin_add (GST_BIN (play->pipeline), work_thread);
+
+	/* create source element */
+	play->source = gst_element_factory_make ("gnomevfssrc", "source");
+	if (!play->source)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_GNOMEVFSSRC, error);
+		return FALSE;
+	}	
+	gst_bin_add (GST_BIN (work_thread), play->source);
+	
+	/* BEGIN VIS STUFF */
+
+	/* Creating here the audio vis bin */
+	
+	play->audio_sink = gst_element_factory_make ( "bin", "audio_bin");
+	if (!play->audio_sink)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_THREAD, error);
+		return FALSE;
+	}
+	g_hash_table_insert(	play->other_elements,
+							"audio_bin",
+							play->audio_sink);
+		
+	play->volume = gst_element_factory_make ("volume", "audio_volume");
+	if (!play->volume)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_VOLUME, error);
+		return FALSE;
+	}
+	g_hash_table_insert (	play->other_elements,
+							"audio_volume",
+							play->volume);
+		
+	tee_element = gst_element_factory_make ("tee", "audio_tee");
+	g_return_val_if_fail(GST_IS_ELEMENT(tee_element), FALSE);
+	g_hash_table_insert(	play->other_elements,
+							"vis_tee",
+							play->audio_sink);
+								
+	tee_vis_pad = gst_element_get_request_pad (tee_element, "src%d");
+	tee_audio_pad = gst_element_get_request_pad (tee_element, "src%d");
+	g_hash_table_insert(	play->other_elements,
+							"tee_vis_pad",
+							tee_vis_pad);
+	g_hash_table_insert(	play->other_elements,
+							"tee_audio_pad",
+							tee_audio_pad);
+	
+	gst_bin_add_many (	GST_BIN (play->audio_sink),
+						play->volume, tee_element, NULL);
+	gst_element_link_many (play->volume, tee_element, NULL);
+	gst_element_add_ghost_pad (	play->audio_sink,
+								gst_element_get_pad (play->volume, "sink"),
+								"sink");
+
+	/* Creating audio part of the visualisation bin
+		{ queue ! volume ! (audiosink) }
+	*/
+	
+	vis_audio_thread = gst_thread_new ("vis_audio_thread");
+	if (!vis_audio_thread)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_THREAD, error);
+		return FALSE;
+	}
+	g_hash_table_insert(	play->other_elements,
+							"vis_audio_thread",
+							vis_audio_thread);
+	
+	vis_audio_queue = gst_element_factory_make ("queue", "vis_audio_queue");
+	if (!vis_audio_queue)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_QUEUE, error);
+		return FALSE;
+	}	
+	g_hash_table_insert (	play->other_elements,
+							"vis_audio_queue",
+							vis_audio_queue);
+		
+	vis_audio_sink = gst_element_factory_make ("fakesink", "vis_audio_sink");
+	if (!vis_audio_sink)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
+	g_hash_table_insert (	play->other_elements,
+							"vis_audio_sink",
+							vis_audio_sink);
+	play->audio_sink_element = NULL;
+
+	gst_bin_add_many (	GST_BIN (vis_audio_thread), vis_audio_queue,
+						vis_audio_sink, NULL);
+	
+	gst_element_link_many (	vis_audio_queue, vis_audio_sink, NULL);
+	
+	/* setting up iterate functions */	
+	gst_bin_set_pre_iterate_function (
+		GST_BIN (vis_audio_thread), 
+		(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
+		play->audio_bin_mutex);
+	gst_bin_set_post_iterate_function (
+		GST_BIN (vis_audio_thread), 
+		(GstBinPrePostIterateFunction) callback_bin_post_iterate, 
+		play->audio_bin_mutex);
+	
+	gst_bin_add ( GST_BIN(play->audio_sink), vis_audio_thread);
+	
+	gst_pad_link (	tee_audio_pad,
+					gst_element_add_ghost_pad (
+						vis_audio_thread, 
+						gst_element_get_pad (vis_audio_queue, "sink"),
+						"sink"));
+	
+	/* Creating video part of the visualisation bin
+		{ queue ! (visualisation) ! colorspace ! (videosink) }
+	*/
+	
+	vis_video_thread = gst_thread_new ("vis_video_thread");
+	if (!vis_video_thread)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_THREAD, error);
+		return FALSE;
+	}
+	g_hash_table_insert (	play->other_elements,
+							"vis_video_thread",
+							vis_video_thread);
+	
+	vis_video_queue = gst_element_factory_make ("queue", "vis_video_queue");
+	if (!vis_video_queue)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_QUEUE, error);
+		return FALSE;
+	}	
+	g_hash_table_insert (	play->other_elements,
+							"vis_video_queue",
+							vis_video_queue);
+	
+	vis_colorspace = gst_element_factory_make ("colorspace", "vis_colorspace");
+	if (!vis_colorspace)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_COLORSPACE, error);
+		return FALSE;
+	}
+	g_hash_table_insert (	play->other_elements,
+							"vis_colorspace",
+							vis_colorspace);
+	
+	vis_video_sink = gst_element_factory_make ("fakesink", "vis_video_sink");
+	if (!vis_video_sink)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
+	g_hash_table_insert (	play->other_elements,
+							"vis_video_sink",
+							vis_video_sink);
+	play->video_sink_element = NULL;
+	
+	gst_bin_add_many (	GST_BIN (vis_video_thread), vis_video_queue,
+						vis_colorspace, vis_video_sink, NULL);
+	
+	/* Not linking now as we miss too much stuff */
+
+	/* setting up iterate functions
+	gst_bin_set_pre_iterate_function (
+		GST_BIN (vis_video_thread), 
+		(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
+		play->video_bin_mutex);
+	gst_bin_set_post_iterate_function (
+		GST_BIN (vis_video_thread), 
+		(GstBinPrePostIterateFunction) callback_bin_post_iterate, 
+		play->video_bin_mutex);*/
+
+	vis_video_thread_pad = gst_element_add_ghost_pad (
+								vis_video_thread, 
+								gst_element_get_pad (vis_video_queue, "sink"),
+								"sink");
+
+	g_hash_table_insert(	play->other_elements,
+							"vis_video_thread_pad",
+							vis_video_thread_pad);
+	
+	gst_bin_add (GST_BIN(play->audio_sink), vis_video_thread);
+
+	/* END VIS STUFF */
+
+	gst_bin_add (GST_BIN (work_thread), play->audio_sink);
+
+	/* create video elements */
+	play->video_sink = gst_element_factory_make ("fakesink", "fake_show");
+	if (!play->video_sink)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
+	play->video_sink_element = NULL;
+
+	video_queue = gst_element_factory_make ("queue", "video_queue");
+	if (!video_queue)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_QUEUE, error);
+		return FALSE;
+	}
+	g_hash_table_insert (play->other_elements, "video_queue", video_queue);
+
+	colorspace = gst_element_factory_make ("colorspace", "colorspace");
+	if (!colorspace)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_COLORSPACE, error);
+		return FALSE;
+	}
+	g_hash_table_insert (play->other_elements, "colorspace", colorspace);
+
+	video_bin = gst_thread_new ("video_thread");
+	if (!video_bin)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_THREAD, error);
+		return FALSE;
+	}
+	g_hash_table_insert (play->other_elements, "video_bin", video_bin);
+
+	/* adding all that stuff to bin */
+	gst_bin_add_many (GST_BIN (video_bin), video_queue, colorspace, 
+			play->video_sink, NULL);
+	
+	gst_element_link_many (video_queue, colorspace,
+			play->video_sink, NULL);
+	
+	/* setting up iterate functions 
+	gst_bin_set_pre_iterate_function (
+			GST_BIN (video_bin), 
+			(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
+			play->video_bin_mutex);
+	gst_bin_set_post_iterate_function (
+			GST_BIN (video_bin), 
+			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
+			play->video_bin_mutex);*/
+	
+	gst_element_add_ghost_pad (
+			video_bin, gst_element_get_pad (video_queue, "sink"),
+			"sink");
+			
+	gst_bin_add (GST_BIN (work_thread), video_bin);
+
+	return TRUE;
+}
+
+static gboolean
+gst_play_video_vis_set_audio (	GstPlay *play,
+							GstElement *audio_sink)
+{
+	GstElement *audio_bin, *vis_audio_sink, *vis_audio_queue;
+	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (audio_sink != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
+	
+	audio_bin = g_hash_table_lookup (	play->other_elements,
+										"vis_audio_thread");
+	vis_audio_sink = g_hash_table_lookup (	play->other_elements,
+											"vis_audio_sink");
+	vis_audio_queue = g_hash_table_lookup (	play->other_elements,
+											"vis_audio_queue");
+	
+	if (vis_audio_sink)
+	{
+		gst_element_unlink (vis_audio_queue, vis_audio_sink);
+		gst_bin_remove (GST_BIN (audio_bin), vis_audio_sink);
+	}
+
+	gst_bin_add (GST_BIN (audio_bin), audio_sink);
+	gst_element_link (vis_audio_queue, audio_sink);
+
+	g_hash_table_replace(	play->other_elements,
+							"vis_audio_sink",
+							audio_sink);
+	
+	play->audio_sink_element = gst_play_get_sink_element (
+										play,
+										audio_sink,
+										GST_PLAY_SINK_TYPE_AUDIO);
+
+	if (play->audio_sink_element != NULL) {
+		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
+				  G_CALLBACK (callback_audio_sink_eos), play);
+	}
+
+	return TRUE;
+}
+
+static gboolean
+gst_play_video_vis_set_video (	GstPlay *play,
+								GstElement *video_sink)
+{
+	GstElement *video_mate, *video_bin;
+	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (video_sink != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
+
+	video_bin = g_hash_table_lookup(play->other_elements, "video_bin");
+	video_mate = g_hash_table_lookup(play->other_elements, "colorspace");
+
+	if (play->video_sink) {
+		gst_element_unlink (video_mate, play->video_sink);
+		gst_bin_remove (GST_BIN (video_bin), play->video_sink);
+	}
+	play->video_sink = video_sink;
+	gst_bin_add (GST_BIN (video_bin), play->video_sink);
+	gst_element_link (video_mate, play->video_sink);
+
+	play->video_sink_element = gst_play_get_sink_element (
+											play,
+											video_sink,
+											GST_PLAY_SINK_TYPE_VIDEO);
+
+	if (play->video_sink_element != NULL) {
+		g_signal_connect (	G_OBJECT (play->video_sink_element),
+							"have_xid",
+				  			G_CALLBACK (callback_video_have_xid),
+							play);
+		g_signal_connect (	G_OBJECT (play->video_sink_element),
+							"have_size",
+				  			G_CALLBACK (callback_video_have_size),
+							play);
+		g_object_set(	G_OBJECT(play->video_sink_element),
+						"need_new_window",
+						TRUE,
+						"toplevel",
+						FALSE, NULL);
+	}
+	return TRUE;
+}
+
+/**
+ * gst_play_set_visualisation_video_sink:
+ * @play: a #GstPlay.
+ * @video_sink: a #GstElement.
+ *
+ * Set @video_sink as the visualisation video sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_set_visualisation_video_sink (	GstPlay *play,
+										GstElement *video_sink)
+{
+	GstElement *video_mate, *video_bin, *vis_video_sink;
+	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (video_sink != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
+
+	video_bin = g_hash_table_lookup(play->other_elements, "vis_video_thread");
+	video_mate = g_hash_table_lookup(play->other_elements, "vis_colorspace");
+	vis_video_sink = g_hash_table_lookup(	play->other_elements,
+											"vis_video_sink");
+	
+	if (vis_video_sink) {
+		gst_element_unlink (video_mate, vis_video_sink);
+		gst_bin_remove (GST_BIN (video_bin), vis_video_sink);
+	}
+	
+	gst_bin_add (GST_BIN (video_bin), video_sink);
+	gst_element_link (video_mate, video_sink);
+	
+	g_hash_table_replace(	play->other_elements,
+							"vis_video_sink",
+							video_sink);
+	
+	play->visualisation_sink_element = gst_play_get_sink_element (
+											play,
+											video_sink,
+											GST_PLAY_SINK_TYPE_VIDEO);
+
+	if (play->visualisation_sink_element != NULL) {
+		g_signal_connect (	G_OBJECT (play->visualisation_sink_element),
+							"have_xid",
+				  			G_CALLBACK (callback_video_have_vis_xid),
+							play);
+		/*g_signal_connect (	G_OBJECT (play->visualisation_sink_element),
+							"have_size",
+				  			G_CALLBACK (callback_video_have_vis_size),
+							play);*/
+		g_object_set(	G_OBJECT(play->visualisation_sink_element),
+						"need_new_window",
+						TRUE,
+						"toplevel",
+						FALSE, NULL);
+	}
+	return TRUE;
+}
+
+/**
+ * gst_play_set_visualisation_element:
+ * @play: a #GstPlay.
+ * @element: a #GstElement.
+ *
+ * Set @video_sink as the video sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_set_visualisation_element (	GstPlay *play,
+										GstElement *element)
+{
+	GstElement *video_queue, *video_colorspace;
+	GstElement *vis_element, *vis_video_bin;
+	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (element != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+	vis_video_bin = g_hash_table_lookup (	play->other_elements,
+											"vis_video_thread");
+	video_queue = g_hash_table_lookup (	play->other_elements,
+										"vis_video_queue");
+	video_colorspace = g_hash_table_lookup (	play->other_elements,
+											"vis_colorspace");
+	vis_element = g_hash_table_lookup (	play->other_elements,
+											"vis_element");
+	if (vis_element) {
+		gst_element_unlink (video_queue, vis_element);
+		gst_element_unlink (vis_element, video_colorspace);
+		gst_bin_remove (GST_BIN (vis_video_bin), vis_element);
+	}
+	
+	gst_bin_add (GST_BIN (vis_video_bin), element);
+	gst_element_link_many (video_queue, element, video_colorspace, NULL);
+	
+	g_hash_table_replace(	play->other_elements,
+							"vis_element",
+							element);
+	
+	return TRUE;
+}
+
+/**
+ * gst_play_connect_visualisation:
+ * @play: a #GstPlay.
+ * @connect: a #gboolean indicating wether or not
+ * visualisation should be connected.
+ *
+ * Connect or disconnect visualisation bin in @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_connect_visualisation (	GstPlay *play,
+									gboolean connect)
+{
+	GstPad *tee_vis_pad, *vis_video_thread_pad;
+	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	
+	tee_vis_pad = g_hash_table_lookup(	play->other_elements,
+											"tee_vis_pad");
+	vis_video_thread_pad = g_hash_table_lookup(	play->other_elements,
+												"vis_video_thread_pad");
+	
+	if (connect) {
+		gst_pad_link (tee_vis_pad, vis_video_thread_pad);
+	}
+	else {
+		gst_pad_unlink (tee_vis_pad, vis_video_thread_pad);
+	}
+	
 	return TRUE;
 }
 
