@@ -267,6 +267,7 @@ rm -rf $RPM_BUILD_ROOT
 
 # Docs
 %{_datadir}/locale
+%{_datadir}/gtk-doc/html
 
 %post
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
