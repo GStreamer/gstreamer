@@ -11,13 +11,19 @@ else
 V4L_SUBDS=
 endif
 
+if USE_VCD
+VCD_SUBDS=vcd
+else
+VCD_SUBDS=
+endif
+
 if USE_VGA
 VGA_SUBDS=vga
 else
 VGA_SUBDS=
 endif
 
-SUBDIRS=$(OSS_SUBDS) qcam $(V4L_SUBDS) vcd $(VGA_SUBDS) xvideo
+SUBDIRS=$(OSS_SUBDS) qcam $(V4L_SUBDS) $(VCD_SUBDS) $(VGA_SUBDS) xvideo
 
 DIST_SUBDIRS=oss qcam v4l vcd vga xvideo
 
