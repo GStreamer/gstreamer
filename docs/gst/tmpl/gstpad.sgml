@@ -258,12 +258,15 @@ The signature of the internal pad connection function
 The different supported query types
 </para>
 
+@GST_PAD_QUERY_NONE: 
 @GST_PAD_QUERY_TOTAL: Query the total stream time
 @GST_PAD_QUERY_POSITION: Query the current stream position
 @GST_PAD_QUERY_LATENCY: Query the latency on the pad
 @GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing and current
                        processing.
+@GST_PAD_QUERY_START: 
 @GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently executing segment
+@GST_PAD_QUERY_RATE: 
 
 <!-- ##### USER_FUNCTION GstPadQueryFunction ##### -->
 <para>
@@ -912,9 +915,11 @@ Destroy the pad.
 @caps: 
 @filter: 
 @appfilter: 
+@getcapsfunc: 
 @direction: 
 @sched: 
 @sched_private: 
+@connectfunc: 
 @peer: 
 @bufpen: 
 @chainfunc: 
@@ -923,13 +928,14 @@ Destroy the pad.
 @gethandler: 
 @eventfunc: 
 @eventhandler: 
+@eventmaskfunc: 
+@ghostpads: 
 @convertfunc: 
 @queryfunc: 
+@formatsfunc: 
+@querytypefunc: 
 @intconnfunc: 
-@getcapsfunc: 
-@connectfunc: 
 @bufferpoolfunc: 
-@ghostpads: 
 
 <!-- ##### MACRO GST_RPAD_SCHED ##### -->
 <para>

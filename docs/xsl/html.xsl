@@ -15,4 +15,6 @@
 <!-- <xsl:include href="admon.xsl"/> -->
 <xsl:include href="css.xsl"/>
 
+<xsl:param name="generate.component.toc" select="0"/>
+
 </xsl:stylesheet>

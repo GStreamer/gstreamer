@@ -467,8 +467,7 @@ GstIdentity
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Long_Description ##### -->
 <para>
-MD5 Sink can be used to automate regression tests on media pipelines by
-computing a hash on the resulting buffers.
+
 </para>
 
 
@@ -479,7 +478,7 @@ computing a hash on the resulting buffers.
 
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Short_Description ##### -->
-Compute a hash on buffer data.
+
 
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
@@ -5293,6 +5292,16 @@ must be defined to activate the tracing functionality.
 
 @element: 
 @manager: 
+
+<!-- ##### FUNCTION gst_bin_set_state_type ##### -->
+<para>
+
+</para>
+
+@bin: 
+@state: 
+@type: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_buffer_add_meta ##### -->
 <para>

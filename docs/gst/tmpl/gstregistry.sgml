@@ -32,6 +32,7 @@ The registry holds the available plugins in the system.
 
 @GST_REGISTRY_READABLE: 
 @GST_REGISTRY_WRITABLE: 
+@GST_REGISTRY_EXISTS: 
 @GST_REGISTRY_REMOTE: 
 @GST_REGISTRY_DELAYED_LOADING: 
 

@@ -504,6 +504,7 @@ docs/manual/Makefile
 docs/fwg/Makefile
 docs/xsl/Makefile
 docs/devhelp/Makefile
+docs/devhelp/html2xml.py
 stamp.h
 gstreamer.pc
 gstreamer-uninstalled.pc

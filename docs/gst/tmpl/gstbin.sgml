@@ -151,17 +151,6 @@ Free the memory allocated by this bin
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_bin_set_state_type ##### -->
-<para>
-
-</para>
-
-@bin: 
-@state: 
-@type: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_bin_iterate ##### -->
 <para>
 

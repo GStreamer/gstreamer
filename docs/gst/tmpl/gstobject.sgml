@@ -297,6 +297,14 @@ this signal to insert custom XML tags into the core XML.
 @gstobject: the object which received the signal.
 @arg1: the new parent
 
+<!-- ##### SIGNAL GstObject::parent-unset ##### -->
+<para>
+
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: 
+
 <!-- ##### ARG GstObject:name ##### -->
 <para>
 The name of the object

@@ -458,6 +458,8 @@ gst_parse_launchv (const gchar **argv, GError **error)
   const gchar **argvp, *arg;
   gchar *tmp;
 
+  g_return_val_if_fail (argv != NULL, NULL);
+
   /* let's give it a nice size. */
   str = g_string_sized_new (1024);
 
