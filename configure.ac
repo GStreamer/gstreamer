@@ -1425,12 +1425,24 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
-dnl *** speex 1.0 only, not 1.1 ***
+dnl *** speex 1.0.x or >= 1.1.5 (1.1.4 and earlier were not API/ABI compatible ***
 dnl speex_jitter.h is 1.1 only
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
 GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
   GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, [
-    AC_CHECK_HEADER(speex_jitter.h, HAVE_SPEEX="no", [
+    AC_CHECK_HEADER(speex_jitter.h, [
+      dnl speex 1.1.x :
+      GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex.h, [
+        dnl speex 1.1.5 or + :
+        HAVE_SPEEX="yes"
+        SPEEX_LIBS="-lspeex"
+        AC_SUBST(SPEEX_CFLAGS)
+        AC_SUBST(SPEEX_LIBS)
+      ],[
+        HAVE_SPEEX="no"
+      ])
+    ], [
+      dnl speex 1.0.x :
       HAVE_SPEEX="yes"
       SPEEX_LIBS="-lspeex"
       AC_SUBST(SPEEX_CFLAGS)
