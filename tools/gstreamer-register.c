@@ -101,14 +101,17 @@ int main(int argc,char *argv[])
 {
     xmlDocPtr doc;
 
+    // Init gst
+    _gst_plugin_spew = TRUE;
+    gst_init(&argc,&argv);
+
+    // Check args
     if (argc != 1) usage(argv[0]);
 
     // Check that directory for config exists
     check_dir(GLOBAL_REGISTRY_DIR);
     
     // Read the plugins
-    _gst_plugin_spew = TRUE;
-    gst_init(&argc,&argv);
     doc = xmlNewDoc("1.0");
     doc->root = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
     gst_plugin_save_thyself(doc->root);

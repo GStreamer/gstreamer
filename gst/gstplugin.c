@@ -47,6 +47,8 @@ gint _gst_libraries_seqno;
 /* whether or not to spew library load issues */
 gboolean _gst_plugin_spew = FALSE;
 
+static gboolean plugin_times_older_than(time_t regtime);
+static time_t get_time(const char * path);
 
 void 
 _gst_plugin_initialize (void) 
@@ -81,12 +83,70 @@ _gst_plugin_initialize (void)
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
-  if (!doc || strcmp (doc->root->name, "GST-PluginRegistry")) {
+  if (!doc || strcmp (doc->root->name, "GST-PluginRegistry") ||
+      !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) {
     g_warning ("gstplugin: registry needs rebuild\n");
     gst_plugin_load_all ();
     return;
   }
   gst_plugin_load_thyself (doc->root);
+}
+
+static time_t
+get_time(const char * path)
+{
+  struct stat statbuf;
+  if (stat(path, &statbuf)) return 0;
+  if (statbuf.st_mtime > statbuf.st_ctime) return statbuf.st_mtime;
+  return statbuf.st_ctime;
+}
+
+static gboolean
+plugin_times_older_than_recurse(gchar *path, time_t regtime)
+{
+  DIR *dir;
+  struct dirent *dirent;
+
+  time_t pathtime = get_time(path);
+
+  if (pathtime > regtime) {
+    GST_INFO (GST_CAT_PLUGIN_LOADING,
+	       "time for %s was %ld; more recent than registry time of %ld\n",
+	       path, (long)pathtime, (long)regtime);
+    return FALSE;
+  }
+  
+  dir = opendir(path);
+  if (dir) {
+    while ((dirent = readdir(dir))) {
+      /* don't want to recurse in place or backwards */
+      if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
+	if (!plugin_times_older_than_recurse(
+	  g_strjoin("/",path,dirent->d_name,NULL), regtime))
+	    return FALSE;
+      }
+    }
+    closedir(dir);
+  }
+  return TRUE;
+}
+
+static gboolean
+plugin_times_older_than(time_t regtime)
+{
+  // return true iff regtime is more recent than the times of all the files
+  // in the plugin dirs.
+  GList *path;
+  path = _gst_plugin_paths;
+  while (path != NULL) {
+    GST_DEBUG (GST_CAT_PLUGIN_LOADING,
+	       "comparing plugin times from %s with %ld\n",
+	       (gchar *)path->data, (long) regtime);
+    if(!plugin_times_older_than_recurse(path->data, regtime))
+	return FALSE;
+    path = g_list_next(path);
+  }
+  return TRUE;
 }
 
 static gboolean 
