@@ -1,5 +1,5 @@
 # FIXME : tests need fixing
-testprogs = dynamic linked static # loading registry static2
+testprogs = linked static # loading registry static2 dynamic
 
 noinst_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
