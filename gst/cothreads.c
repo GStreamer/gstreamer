@@ -127,9 +127,11 @@ cothread_context_init (void)
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
   /* set this thread's context pointer */
-  GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to %p",
-	    ctx);
+  GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to %p in thread %p",
+	    ctx,g_thread_self());
   g_static_private_set (&_cothread_ctx_key, ctx, NULL);
+
+  g_assert(ctx == cothread_get_current_context());
 
   /* clear the cothread data */
   memset (ctx->cothreads, 0, sizeof (ctx->cothreads));
@@ -177,6 +179,7 @@ cothread_context_free (cothread_context *ctx)
 
   g_return_if_fail (ctx != NULL);
   g_assert (ctx->thread == g_thread_self());
+  g_assert (ctx->current == 0);
 
   GST_INFO (GST_CAT_COTHREADS, "free cothread context");
 
@@ -187,6 +190,8 @@ cothread_context_free (cothread_context *ctx)
   }
   g_hash_table_destroy (ctx->data);
   /* make sure we free the private key for cothread context */
+  GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to NULL in thread %p",
+	g_thread_self());
   g_static_private_set (&_cothread_ctx_key, NULL, NULL);
   g_free (ctx);
 }
@@ -329,9 +334,13 @@ cothread_destroy (cothread_state *cothread)
   cothreadnum = cothread->cothreadnum;
   ctx = cothread->ctx;
   g_assert (ctx->thread == g_thread_self());
+  g_assert (ctx == cothread_get_current_context());
 
   GST_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %d", 
             cothreadnum, cothread, ctx->current);
+
+  /* cothread 0 needs to be destroyed specially */
+  g_assert(cothreadnum != 0);
 
   /* we have to unlock here because we might be switched out 
    * with the lock held */
@@ -442,6 +451,8 @@ cothread_stop (cothread_state * thread)
 cothread_state *
 cothread_main (cothread_context * ctx)
 {
+  g_assert (ctx->thread == g_thread_self());
+
   GST_DEBUG (GST_CAT_COTHREADS, "returning %p, the 0th cothread", 
              ctx->cothreads[0]);
   return ctx->cothreads[0];
@@ -491,6 +502,15 @@ cothread_stub (void)
 
   while (TRUE) {
     thread->func (thread->argc, thread->argv);
+
+    GST_DEBUG (GST_CAT_COTHREADS, "cothread[%d] thread->func exited",ctx->current);
+
+    GST_DEBUG (GST_CAT_COTHREADS, "sp=%p",CURRENT_STACK_FRAME);
+    GST_DEBUG (GST_CAT_COTHREADS, "ctx=%p current=%p",ctx,cothread_get_current_context());
+    g_assert(ctx == cothread_get_current_context());
+
+    g_assert(ctx->current != 0);
+
     /* we do this to avoid ever returning, we just switch to 0th thread */
     cothread_switch (cothread_main (ctx));
   }
