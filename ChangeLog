@@ -1,3 +1,32 @@
+2004-09-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/gstmad.c: (gst_mad_check_caps_reset),
+	(gst_mad_change_state):
+	  Allow for mp3 rate/channels changes. However, only very
+	  conservatively. Reason that we *have* to enable this is smiply
+	  because the mad find_sync() function is not good enough, it will
+	  regularly sync on random data as valid frames and therefore make
+	  us provide random caps as *final* caps of the stream. The best fix
+	  I could think of is to simply require several of the same stream
+	  changes in a row before we change caps.
+	  The actual testcase that works now is #
+	* ext/ogg/Makefile.am:
+	* ext/ogg/gstogg.c: (plugin_init):
+	* ext/ogg/gstogmparse.c:
+	  OGM support (video only for now; I need an audio sample file).
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_base_init),
+	(gst_asf_demux_process_stream), (gst_asf_demux_video_caps),
+	(gst_asf_demux_add_video_stream):
+	  WMV extradata.
+	* gst/playback/gstplaybasebin.c: (unknown_type):
+	  Don't error out on single unknown-types after all. It's wrong.
+	  If we found type of video and audio but not of a subtitle stream,
+	  it will still error out (which is unwanted). Will find a better fix
+	  later on.
+	* gst/typefind/gsttypefindfunctions.c: (ogmvideo_type_find),
+	(ogmaudio_type_find), (plugin_init):
+	  OGM support.
+
 2004-09-20  Johan Dahlin  <johan@gnome.org>
 
 	* ext/jpeg/gstjpegdec.c (gst_jpegdec_chain): Allocate the buffer
