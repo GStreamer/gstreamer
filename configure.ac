@@ -412,19 +412,30 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
 dnl *** avifile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
 GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
-  if test "x$HAVE_CXX" != "xyes"; then
-    AC_MSG_WARN(No C++ compiler found, not compiling avifile plug-ins)
-    HAVE_AVIFILE="no"
-  else
-    dnl check for libstdc++
-    AC_CHECK_LIB(stdc++, cout,
-      [AS_AVIFILE(0.7.0)],
-      [
-        AC_MSG_WARN(You need libstdc++ to compile with avifile)
-        HAVE_AVIFILE="no"
-      ]
-    )
+  if test "x$no_x" = "xyes"; then
+    AC_MSG_WARN([No X libraries found, avifile test might fail compilation])
   fi
+  if test "x$HAVE_CXX" != "xyes"; then
+    AC_MSG_WARN([No C++ compiler found, avifile test will fail compilation])
+  fi
+  AC_CHECK_LIB(stdc++, cout,,
+               [AC_MSG_WARN([no libstdc++ found, avifile test will fail])]
+              )
+  AS_AVIFILE(0.7.0)
+
+dnl   if test "x$HAVE_CXX" != "xyes"; then
+dnl     HAVE_AVIFILE="no"
+dnl   else
+dnl     dnl check for libstdc++
+dnl     AC_CHECK_LIB(stdc++, cout,
+dnl       dnl check for X LIBS
+dnl       [AS_AVIFILE(0.7.0)],
+dnl       [
+dnl         AC_MSG_WARN(You need libstdc++ to compile with avifile)
+dnl         HAVE_AVIFILE="no"
+dnl       ]
+dnl     )
+dnl   fi
 ])
 
 dnl *** CDParanoia ***
