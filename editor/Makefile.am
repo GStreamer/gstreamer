@@ -26,11 +26,12 @@ libgsteditorincludedir = $(includedir)/gst
 libgsteditorinclude_HEADERS =	\
 	gsteditor.h
 
-
 bin_PROGRAMS = gsteditor
 gsteditor_SOURCES = editor.c
 gsteditor_LDFLAGS = libgsteditor.la
 
+gladedir = $(datadir)/gsteditor
+glade_DATA = editor.glade editorelement.glade
 
 noinst_HEADERS =		\
 	gsteditorproject.h	\
@@ -40,6 +41,8 @@ noinst_HEADERS =		\
 	gsteditorimage.h	\
 	gsteditorcreate.h
 
-CFLAGS = -O2 -Wall
+CFLAGS = -O2 -Wall -DDATADIR="\"$(gladedir)/\""
 
-EXTRA_DIST = editor.glade editorelement.glade
+SUBDIRS = pixmaps
+
+EXTRA_DIST = $(glade_DATA) 

@@ -70,6 +70,7 @@ struct _GstFakeSrc {
   GstFakeSrcOutputType output;
   gchar *patern;
   GList *paternlist;
+  gint num_buffers;
 };
 
 struct _GstFakeSrcClass {

@@ -1102,5 +1102,7 @@ gst_pad_set_eos(GstPad *pad)
   GST_INFO (GST_CAT_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
 
+  gst_element_signal_eos (GST_ELEMENT (pad->parent));
+
   return TRUE;
 }

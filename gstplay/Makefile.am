@@ -46,7 +46,6 @@ else
 xvlibs=
 endif
 
-gstmediaplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
-          $(top_builddir)/plugins/videosink/gdkxvimage.lo ${xvlibs} -lXxf86vm
-
+gstmediaplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
+       
 

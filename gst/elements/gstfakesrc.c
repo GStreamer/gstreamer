@@ -47,6 +47,7 @@ enum {
   ARG_LOOP_BASED,
   ARG_OUTPUT,
   ARG_PATERN,
+  ARG_NUM_BUFFERS,
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -120,6 +121,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                            GTK_ARG_READWRITE, ARG_OUTPUT);
   gtk_object_add_arg_type ("GstFakeSrc::patern", GTK_TYPE_STRING,
                            GTK_ARG_READWRITE, ARG_PATERN);
+  gtk_object_add_arg_type ("GstFakeSrc::num_buffers", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_NUM_BUFFERS);
 
   gtkobject_class->set_arg = gst_fakesrc_set_arg;
   gtkobject_class->get_arg = gst_fakesrc_get_arg;
@@ -148,6 +151,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->srcpads = g_slist_append(NULL,pad);
 
   fakesrc->loop_based = FALSE;
+  fakesrc->num_buffers = -1;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
 }
@@ -204,6 +208,9 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_PATERN:
       break;
+    case ARG_NUM_BUFFERS:
+      src->num_buffers = GTK_VALUE_INT (*arg);
+      break;
     default:
       break;
   }
@@ -232,6 +239,9 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_PATERN:
       GTK_VALUE_STRING (*arg) = src->patern;
       break;
+    case ARG_NUM_BUFFERS:
+      GTK_VALUE_INT (*arg) = src->num_buffers;
+      break;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
@@ -256,6 +266,15 @@ gst_fakesrc_get(GstPad *pad)
   g_return_val_if_fail(pad != NULL, NULL);
   src = GST_FAKESRC(gst_pad_get_parent(pad));
   g_return_val_if_fail(GST_IS_FAKESRC(src), NULL);
+
+  if (src->num_buffers == 0) {
+    gst_pad_set_eos (pad);
+    return NULL;
+  }
+  else {
+    if (src->num_buffers > 0)
+      src->num_buffers--;
+  }
 
   g_print("(%s:%s)> ",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();

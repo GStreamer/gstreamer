@@ -546,6 +546,7 @@ test/xml/Makefile
 test/bindings/Makefile
 tests/Makefile
 tests/sched/Makefile
+tests/eos/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
@@ -558,6 +559,7 @@ examples/queue4/Makefile
 examples/thread/Makefile
 examples/xml/Makefile
 editor/Makefile
+editor/pixmaps/Makefile
 tools/Makefile
 docs/Makefile
 docs/gst/Makefile

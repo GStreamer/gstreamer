@@ -21,6 +21,9 @@
 #include <gnome.h>
 #include <gst/gst.h>
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "gsteditorimage.h"
 
 GHashTable *_gst_editor_images;
@@ -50,12 +53,20 @@ struct _image_entry _image_types[TYPES_SIZE] = {
   {GST_EDITOR_IMAGE_TEE, gst_tee_get_type },
 };
 
-GstEditorImage *gst_editor_image_get(GstEditorImageType type) {
-
+GstEditorImage*
+gst_editor_image_get(GstEditorImageType type) 
+{
+  struct stat statbuf;
   GstEditorImage *new = g_new0(GstEditorImage, 1);
 
-  new->pixmap = gdk_pixmap_colormap_create_from_xpm(NULL, gdk_colormap_get_system(), &new->bitmap, NULL,
+  if (stat (_gst_editor_image_name[type], &statbuf) == 0) {
+    new->pixmap = gdk_pixmap_colormap_create_from_xpm(NULL, gdk_colormap_get_system(), &new->bitmap, NULL,
 		  _gst_editor_image_name[type]);
+  }
+  else {
+    new->pixmap = gdk_pixmap_colormap_create_from_xpm(NULL, gdk_colormap_get_system(), &new->bitmap, NULL,
+		  g_strconcat (DATADIR, _gst_editor_image_name[type], NULL));
+  }
 
   return new;
 }

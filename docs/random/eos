@@ -116,7 +116,7 @@ case 4)
   fakesrc detects the end of stream. It just sent the last buffer
   and sets the srcpad to EOS with gst_pad_eos ().
 
-  the eos handler returns false because queue2 return false on the
+  the eos handler returns false because queue2 returns false on the
   eos request. the parent removes fakesrc as an EOS provider.
 
   queue2 was responisble for the EOS delay and so it gets added to the bin 

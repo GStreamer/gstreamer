@@ -21,6 +21,9 @@
 #include <gnome.h>
 #include <gst/gst.h>
 
+#include <sys/stat.h>
+#include <unistd.h>
+  
 #include "gsteditorpalette.h"
 #include "gsteditorimage.h"
 
@@ -148,6 +151,7 @@ gst_editor_palette_new()
   GtkWidget *palette_window;
   connect_struct data;
   GModule *symbols;
+  struct stat statbuf;
 
   palette = GST_EDITOR_PALETTE(gtk_type_new(GST_TYPE_EDITOR_PALETTE));
 
@@ -156,7 +160,14 @@ gst_editor_palette_new()
   data.palette = palette;
   data.symbols = symbols;
 
-  palette->xml = glade_xml_new("editor.glade", "palette_window");
+  if (stat(DATADIR"editor.glade", &statbuf) == 0) {
+    palette->xml = glade_xml_new(DATADIR"editor.glade", "palette_window");
+  }
+  else {
+    palette->xml = glade_xml_new ("editor.glade", "palette_window");
+  }
+  g_assert (palette->xml != NULL);
+      
   glade_xml_signal_autoconnect_full (palette->xml, gst_editor_palette_connect_func, &data);
 
   palette_window = glade_xml_get_widget(palette->xml, "palette_window");

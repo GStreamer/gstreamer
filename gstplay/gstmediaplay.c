@@ -5,6 +5,9 @@
 
 #include <config.h>
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <gnome.h>
 #include "gstmediaplay.h"
 #include "callbacks.h"
@@ -120,13 +123,15 @@ gst_media_play_init(GstMediaPlay *mplay)
 {
   GModule *symbols;
   connect_struct data;
+  struct stat statbuf;
 
-  g_print("using %s\n", DATADIR"gstmediaplay.glade");
+
   /* load the interface */
-  mplay->xml = glade_xml_new (DATADIR"gstmediaplay.glade", "gstplay");
-  //mplay->xml = glade_xml_new ("/usr/local/share/gstplay/gstplay.glade", "gstplay");
-  if (mplay->xml == NULL) {
-    glade_xml_new ("gstmediaplay.glade", "gstplay");
+  if (stat(DATADIR"gstmediaplay.glade", &statbuf) == 0) {
+    mplay->xml = glade_xml_new (DATADIR"gstmediaplay.glade", "gstplay");
+  }
+  else {
+    mplay->xml = glade_xml_new ("gstmediaplay.glade", "gstplay");
   }
   g_assert (mplay->xml != NULL);
 

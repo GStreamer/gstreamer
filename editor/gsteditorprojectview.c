@@ -21,6 +21,9 @@
 #include <gnome.h>
 #include <gst/gst.h>
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <glade/glade.h>
 #include "gsteditorproject.h"
 #include "gsteditorpalette.h"
@@ -257,6 +260,7 @@ gst_editor_project_view_new (GstEditorProject *project)
   GModule *symbols;
   GstEditorPalette *palette;
   GList *elements;
+  struct stat statbuf;
 
   view = GST_EDITOR_PROJECT_VIEW(gtk_type_new(GST_TYPE_EDITOR_PROJECT_VIEW));
 
@@ -267,7 +271,17 @@ gst_editor_project_view_new (GstEditorProject *project)
   data.view = view;
   data.symbols = symbols;
 
-  view->xml = glade_xml_new("editor.glade", "main_project_window");
+
+  if (stat(DATADIR"editor.glade", &statbuf) == 0) {
+    g_print ("loading from %s\n", DATADIR"editor.glade");
+    view->xml = glade_xml_new(DATADIR"editor.glade", "main_project_window");
+  }
+  else {
+    g_print ("loading from %s\n", "editor.glade");
+    view->xml = glade_xml_new ("editor.glade", "main_project_window");
+  }
+  g_assert (view->xml != NULL);
+
   glade_xml_signal_autoconnect_full (view->xml, gst_editor_project_connect_func, &data);
 
   main_window = glade_xml_get_widget(view->xml, "main_project_window");

@@ -23,6 +23,9 @@
 #include <gst/gst.h>
 #include <gst/gstpropsprivate.h>
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "gsteditorproperty.h"
 #include "gsteditorimage.h"
 
@@ -142,6 +145,7 @@ gst_editor_property_new (void)
   GtkWidget *property_window;
   connect_struct data;
   GModule *symbols;
+  struct stat statbuf;
 
   property = GST_EDITOR_PROPERTY(gtk_type_new(GST_TYPE_EDITOR_PROPERTY));
 
@@ -150,7 +154,14 @@ gst_editor_property_new (void)
   data.property = property;
   data.symbols = symbols;
 
-  property->xml = glade_xml_new("editor.glade", "property_window");
+  if (stat (DATADIR"editor.glade", &statbuf) == 0) {
+    property->xml = glade_xml_new(DATADIR"editor.glade", "property_window");
+  }
+  else {
+    property->xml = glade_xml_new ("editor.glade", "property_window");
+  }
+  g_assert (property->xml != NULL);
+
   glade_xml_signal_autoconnect_full (property->xml, gst_editor_property_connect_func, &data);
 
   property_window = glade_xml_get_widget(property->xml, "property_window");
