@@ -6,39 +6,50 @@ The connection between Elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-#GstElement are connected to each other via "pads", which are extremely light-weight generic 
-connections. After two pad are retrieved from an element with gst_element_get_pad(), the pads
-can be connected with gst_pad_connect().
+A #GstElement is connected to other elements via "pads", which are extremely 
+light-weight generic connections. 
+After two pad are retrieved from an element with gst_element_get_pad(), 
+the pads can be connected with gst_pad_connect().
 </para>
 <para>
-Pads are typically created from a #GstPadTemplate with gst_pad_new_from_template().
+Pads are typically created from a #GstPadTemplate with 
+gst_pad_new_from_template().
 </para>
 <para>
-Pad have #GstCaps attached to it to describe the media type they
-are capable of dealing with. gst_pad_get_caps() and gst_pad_set_caps() are used to
+Pads have #GstCaps attached to it to describe the media type they
+are capable of dealing with. 
+gst_pad_get_caps() and gst_pad_set_caps() are used to
 manipulate the caps of the pads. 
-Pads created from a padtemplate cannot set capabilities that are incompatible with
-the padtemplates capabilities.
+Pads created from a pad template cannot set capabilities that are 
+incompatible with the pad templates capabilities.
 </para>
 <para>
-Pads without padtemplates can be created with gst_pad_new() which takes a direction and
-a name as an argument.
+Pads without pad templates can be created with gst_pad_new(),
+which takes a direction and a name as an argument.  If the name is NULL,
+then a guaranteed unique name will be assigned to it.
 </para>
 <para>
 gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
 </para>
 <para>
-GstElements creating a pad will typicilally use the various gst_pad_set_*_function() calls
-to register callbacks for various events on the pads.
+A #GstElement creating a pad will typically use the various 
+gst_pad_set_*_function() calls to register callbacks for various events 
+on the pads.
 </para>
 <para>
-GstElements will use gst_pad_push() and gst_pad_pull() to push out or pull a buffer in. The
-gst_pad_pullregion() function can be used to request for a buffer with a specific offset (in
-time or in bytes). gst_pad_select() and gst_pad_selectv() are use by plugins to wait on a set
-of pads for a new #GstBuffer or #GstEvent.
+GstElements will use gst_pad_push() and gst_pad_pull() to push out 
+or pull in a buffer. 
+The gst_pad_pullregion() function can be used to request for a buffer 
+with a specific offset (in time or in bytes). 
+gst_pad_select() and gst_pad_selectv() are used by plugins to wait for the
+first incoming buffer or event on any of the given set of pads.
 </para>
 <para>
-To send an event on a pad, use gst_pad_send_event().
+To send a #GstEvent on a pad, use gst_pad_send_event().
+</para>
+
+<para>
+Last reviewed on September 1st, 2002 (0.4.0.1)
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -48,99 +59,108 @@ To send an event on a pad, use gst_pad_send_event().
 
 <!-- ##### MACRO GST_PAD_NAME ##### -->
 <para>
-Get the name of the pad.
+Gets the name of the pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the name of.
+@Returns: the pad's name.
 
 
 <!-- ##### MACRO GST_PAD_ELEMENT_PRIVATE ##### -->
 <para>
-Get the private data set by the element that owns the pad.
+Gets the private data set by the element that owns the pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the private data of.
+#Returns: a gpointer to the private data.
 
 
 <!-- ##### MACRO GST_PAD_PARENT ##### -->
 <para>
-Get the parent element of this pad.
+Gets the parent element of this pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the parent of.
+@Returns: the parent #GstElement of this pad.
 
 
 <!-- ##### MACRO GST_PAD_PAD_TEMPLATE ##### -->
 <para>
-Get the padtemplate that was used to create this pad. NULL if no padtemplate
-was used.
+Gets the pad template that was used to create this pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the pad template of.
+#Returns: the #GstPadTemplate used to create the pad, or NULL if none was
+used.
 
 
 <!-- ##### MACRO GST_PAD_REALIZE ##### -->
 <para>
-Return the real pad of this pad.
+Returns the real pad of this pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to realize.
+@Returns: the actual #GstPad.
 
 
 <!-- ##### MACRO GST_PAD_DIRECTION ##### -->
 <para>
-Get the pad direction.
+Gets the pad's direction.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the direction of.
+@Returns: the #GstPadDirection of the pad.
 
 
 <!-- ##### MACRO GST_PAD_CAPS ##### -->
 <para>
-Get the capabilities of a pad.
+Gets the capabilities of a pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the capabilities of.
+@Returns: the #GstCaps of the pad.
 
 
 <!-- ##### MACRO GST_PAD_PEER ##### -->
 <para>
-Get the peerpad of this pad.
+Gets the peer pad of this pad.  The peer pad is the pad on to which the parent
+element is connected through this pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to get the peer pad of.
+@Returns: the peer #GstPad.
 
 
 <!-- ##### MACRO GST_PAD_CAN_PULL ##### -->
 <para>
-Can this pad be used to pull a buffer.
+Checks if buffers can be pulled from this buffer.
 </para>
 
-@pad: the pad to check
+@pad: a #GstPad to check on if a buffer can be pulled from it.
 
 
 <!-- ##### MACRO GST_PAD_IS_SINK ##### -->
 <para>
-Check if the pad is a sinkpad.
+Checks if the pad is a sink pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to check.
 
 
 <!-- ##### MACRO GST_PAD_IS_SRC ##### -->
 <para>
-Check if the pad is a srcpad.
+Checks if the pad is a source pad.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to check.
 
 
 <!-- ##### MACRO GST_PAD_IS_CONNECTED ##### -->
 <para>
-Checks if the pad is connected
+Checks if the pad is connected.
 </para>
 
-@pad: the pad to query
+@pad: a #GstPad to check.
 
 
 <!-- ##### STRUCT GstPad ##### -->
@@ -151,41 +171,41 @@ Checks if the pad is connected
 
 <!-- ##### USER_FUNCTION GstPadChainFunction ##### -->
 <para>
-The function that will be called when chaining buffers.
+A function that will be called when chaining buffers.
 </para>
 
-@pad: the pad that performed the chain
-@buf: the buffer that is chained
+@pad: the #GstPad that performed the chain.
+@buf: the #GstBuffer that is chained.
 
 
 <!-- ##### USER_FUNCTION GstPadGetFunction ##### -->
 <para>
-The function that will be called when pulling a buffer.
+A function that will be called when pulling a buffer.
 </para>
 
-@pad: the pad to get a buffer from
-@Returns: a #GstBuffer
+@pad: the #GstPad to get a buffer from.
+@Returns: the #GstBuffer pulled.
 
 
 <!-- ##### USER_FUNCTION GstPadBufferPoolFunction ##### -->
 <para>
-The function that will be called when a bufferpool is requested
+A function that will be called when a buffer pool is requested
 from this pad.
 </para>
 
-@pad: the pad with the bufferpool
-@Returns: the GstBufferPool associated with this pad.
+@pad: the #GstPad to which the buffer pool is associated.
+@Returns: the #GstBufferPool associated with this pad.
 
 
 <!-- ##### USER_FUNCTION GstPadGetCapsFunction ##### -->
 <para>
-Return the caps of the specified pad. By default this function
-will return the pad template caps but can optionally be overridden.
+Returns the capabilities of the specified pad. By default this function
+will return the pad template capabilities, but can optionally be overridden.
 </para>
 
-@pad: The pad to get the caps of
-@caps: The peer caps, can be used to filter the caps.
-@Returns: The caps of the pad.
+@pad: the #GstPad to get the capabilities of.
+@caps: the peer's #GstCaps, can be used to filter the capabilities.
+@Returns: the #GstCaps of the pad.
 
 
 <!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
@@ -193,8 +213,8 @@ will return the pad template caps but can optionally be overridden.
 Function signature to handle an event for the pad.
 </para>
 
-@pad: The pad to handle the event
-@event: The event to handle
+@pad: the #GstPad to handle the event.
+@event: the #GstEvent to handle.
 @Returns: TRUE if the pad could handle the event.
 
 
@@ -203,8 +223,8 @@ Function signature to handle an event for the pad.
 Function signature to handle a new connection on the pad.
 </para>
 
-@pad: The pad that is connected.
-@caps: The peer caps.
+@pad: the #GstPad that is connected.
+@caps: the peer's #GstCaps.
 @Returns: the result of the connection with the specified caps.
 
 
@@ -213,90 +233,91 @@ Function signature to handle a new connection on the pad.
 The result of a pad connection.
 </para>
 
-@GST_PAD_CONNECT_REFUSED: The connectino was refused
-@GST_PAD_CONNECT_DELAYED: The connection was delayed, probably because the
-                          element needs more specific pad caps.
-@GST_PAD_CONNECT_OK: The connection succeeded.
-@GST_PAD_CONNECT_DONE: The connection succeeded, any more attempts are not needed.
+@GST_PAD_CONNECT_REFUSED: the connection was refused.
+@GST_PAD_CONNECT_DELAYED: the connection was delayed, probably because the
+                          element needs more specific pad capabilitiess.
+@GST_PAD_CONNECT_OK:      the connection succeeded.
+@GST_PAD_CONNECT_DONE:    the connection succeeded, 
+                          any more attempts are not needed.
 
 <!-- ##### USER_FUNCTION GstPadConvertFunction ##### -->
 <para>
 The signature of a convert function. 
 </para>
 
-@pad: The pad to perform the convert on
-@src_format: The source format of the conversion
-@src_value: The source value of the conversion
-@dest_format: a pointer to the destination format
-@dest_value: a pointer to the destination value
+@pad: the #GstPad to perform the convert on.
+@src_format: the source #GstFormat of the conversion.
+@src_value: the source value of the conversion.
+@dest_format: a pointer to the destination #GstFormat.
+@dest_value: a pointer to the destination value.
 @Returns: TRUE if the conversion could be performed.
 
 
 <!-- ##### USER_FUNCTION GstPadDispatcherFunction ##### -->
 <para>
-The dispatcher function is called for all internally connected pads, see 
+A dispatcher function is called for all internally connected pads, see 
 gst_pad_dispatcher().
 </para>
-
-@pad: The pad that is dispatched
-@data: User data
+@pad: the #GstPad that is dispatched.
+@data: the gpointer to optional user data.
 @Returns: TRUE if the dispatching procedure has to be stopped.
 
 
 <!-- ##### USER_FUNCTION GstPadIntConnFunction ##### -->
 <para>
-The signature of the internal pad connection function
+The signature of the internal pad connection function.
 </para>
 
-@pad: The pad to query
-@Returns: a Glist of pads that connect to the requested pad internally to the
-          parent element. g_list_free() after use.
-
+@pad: The #GstPad to query.
+@Returns: a newly allocated #GList of pads that are connected to 
+          the given pad on the inside of the parent element.  
+          The caller must call g_list_free() on it after use.
 
 <!-- ##### ENUM GstPadQueryType ##### -->
 <para>
-The different supported query types
+The different supported query types.
 </para>
 
 @GST_PAD_QUERY_NONE: 
-@GST_PAD_QUERY_TOTAL: Query the total stream time
-@GST_PAD_QUERY_POSITION: Query the current stream position
-@GST_PAD_QUERY_LATENCY: Query the latency on the pad
-@GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing and current
-                       processing.
 @GST_PAD_QUERY_START: 
-@GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently executing segment
+@GST_PAD_QUERY_TOTAL: Query the total stream time.
+@GST_PAD_QUERY_POSITION: Query the current stream position.
+@GST_PAD_QUERY_LATENCY: Query the latency on the pad.
+@GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing 
+                       and current processing.
+@GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently 
+                            executing segment.
 @GST_PAD_QUERY_RATE: 
 
 <!-- ##### USER_FUNCTION GstPadQueryFunction ##### -->
 <para>
-The signature of query function
+The signature of the query function.
 </para>
 
-@pad: The pad to query
-@type: The query type
-@format: a pointer to the target format
-@value: a pointer to the target value
-@Returns: TRUE if the query could be performed
+@pad: the #GstPad to query.
+@type: the #GstPadQueryType.
+@format: a pointer to the target #GstFormat.
+@value: a pointer to the target value.
+@Returns: TRUE if the query could be performed.
 
 
 <!-- ##### ENUM GstPadDirection ##### -->
 <para>
-The direction this pad is.
+The direction of a pad.
 </para>
 
-@GST_PAD_UNKNOWN: direction is unknown
-@GST_PAD_SRC: this is a source pad
-@GST_PAD_SINK: this is a sink pad
+@GST_PAD_UNKNOWN: direction is unknown.
+@GST_PAD_SRC: the pad is a source pad.
+@GST_PAD_SINK: the pad is a sink pad.
 
 <!-- ##### ENUM GstPadFlags ##### -->
 <para>
 Flags for the pad.
 </para>
 
-@GST_PAD_DISABLED: the pad is disabled
-@GST_PAD_EOS: the pad is in end of stream state
-@GST_PAD_FLAG_LAST: subclasses can use this number to enumerate their flags
+@GST_PAD_DISABLED: the pad is disabled.
+@GST_PAD_EOS: the pad is in end of stream state.
+@GST_PAD_FLAG_LAST: subclasses can use this number to enumerate their flags.
 
 <!-- ##### FUNCTION gst_pad_new ##### -->
 <para>
