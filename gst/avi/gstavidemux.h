@@ -76,7 +76,7 @@ typedef struct
   guint32	av_bps;
 
   guint64	total_bytes;
-  gint32	total_frames;
+  guint32	total_frames;
 
   guint32	skip;
 
