@@ -93,31 +93,31 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (mp1parsecaps), GST_CAPS_GET (rawcaps));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (mp1parsecaps), GST_CAPS_GET (rawcaps));
   g_print ("4 <-> 2 == %d (invalid, wrong major type)\n", testret);
   
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (mp1parsecaps), GST_CAPS_GET (sinkcaps));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (mp1parsecaps), GST_CAPS_GET (sinkcaps));
   g_print ("4 <-> 1 == %d (valid, subset)\n", testret);
   
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (sinkcaps), GST_CAPS_GET (mp1parsecaps));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (sinkcaps), GST_CAPS_GET (mp1parsecaps));
   g_print ("1 <-> 4 == %d (invalid, superset)\n", testret);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps2));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps2));
   g_print ("2 <-> 3 == %d (invalid, ranges)\n", testret);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps3));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps3));
   g_print ("2 <-> 5 == %d (valid)\n", testret);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (rawcaps3), GST_CAPS_GET (rawcaps));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps3), GST_CAPS_GET (rawcaps));
   g_print ("5 <-> 2 == %d (invalid)\n", testret);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (rawcaps2), GST_CAPS_GET (rawcaps3));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps2), GST_CAPS_GET (rawcaps3));
   g_print ("3 <-> 5 == %d (valid)\n", testret);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (rawcaps2), GST_CAPS_GET (rawcaps));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps2), GST_CAPS_GET (rawcaps));
   g_print ("3 <-> 2 == %d (invalid, property missing in source)\n", testret);
 
-  testret = gst_caps_check_compatibility (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps));
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps));
   g_print ("2 <-> 2 == %d (valid, same caps)\n", testret);
 
   return 0;
