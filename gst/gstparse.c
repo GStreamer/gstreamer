@@ -341,7 +341,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	if (!element) {
 #ifndef GST_DISABLE_REGISTRY
 	  fprintf (stderr,
-		   "Couldn't create a '%s', no such element or need to run gstreamer-register?\n",
+		   "Couldn't create a '%s', no such element or need to run gst-register?\n",
 		   arg);
 #else
 	  fprintf (stderr, "Couldn't create a '%s', no such element or need to load pluginn?\n",
