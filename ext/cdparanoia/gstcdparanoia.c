@@ -734,22 +734,23 @@ cdparanoia_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
 	case GST_STATE_NULL_TO_READY:
-		break;
-	case GST_STATE_READY_TO_PAUSED:
 		if (!cdparanoia_open (CDPARANOIA (element))) {
 			g_warning ("cdparanoia: failed opening cd");
 			return GST_STATE_FAILURE;
 		}
 		cdparanoia->seq = 0;
 		break;
+	case GST_STATE_READY_TO_PAUSED:
+		break;
 	case GST_STATE_PAUSED_TO_PLAYING:
 		break;
 	case GST_STATE_PLAYING_TO_PAUSED:
 		break;
 	case GST_STATE_PAUSED_TO_READY:
-		cdparanoia_close (CDPARANOIA (element));
+	        /* FIXME: Need code here to reset element to start of cd */
 		break;
 	case GST_STATE_READY_TO_NULL:
+		cdparanoia_close (CDPARANOIA (element));
 		break;
 	default:
 		break;
