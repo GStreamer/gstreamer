@@ -109,15 +109,19 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 static gboolean
 gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 {
+#ifndef HAVE_XSHM
+  return FALSE;
+#else
   GstXvImage *xvimage = NULL;
   int (*handler) (Display *, XErrorEvent *);
+  gboolean result = FALSE;
 
   g_return_val_if_fail (xcontext != NULL, FALSE);
 
-#ifdef HAVE_XSHM
   xvimage = g_new0 (GstXvImage, 1);
 
   /* Setting an error handler to catch failure */
+  error_caught = FALSE;
   handler = XSetErrorHandler (gst_xvimagesink_handle_xerror);
 
   xvimage->size = (xcontext->bpp / 8);
@@ -125,6 +129,8 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   /* Trying to create a 1x1 picture */
   xvimage->xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
       xcontext->im_format, NULL, 1, 1, &xvimage->SHMInfo);
+  if (!xvimage->xvimage)
+    goto out;
 
   xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
       IPC_CREAT | 0777);
@@ -134,32 +140,29 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 
   XShmAttach (xcontext->disp, &xvimage->SHMInfo);
 
-  error_caught = FALSE;
-
   XSync (xcontext->disp, 0);
 
-  XSetErrorHandler (handler);
-
-  if (error_caught) {           /* Failed, detaching shared memory, destroying image and telling we can't
-                                   use XShm */
+  if (error_caught) {
+    /* Failed, detaching shared memory, destroying image and telling we can't
+       use XShm */
     error_caught = FALSE;
-    XFree (xvimage->xvimage);
     shmdt (xvimage->SHMInfo.shmaddr);
     shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-    g_free (xvimage);
     XSync (xcontext->disp, FALSE);
-    return FALSE;
   } else {
     XShmDetach (xcontext->disp, &xvimage->SHMInfo);
-    XFree (xvimage->xvimage);
     shmdt (xvimage->SHMInfo.shmaddr);
     shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-    g_free (xvimage);
-    XSync (xcontext->disp, FALSE);
+    result = TRUE;
   }
+out:
+  XSetErrorHandler (handler);
+  if (xvimage->xvimage)
+    XFree (xvimage->xvimage);
+  g_free (xvimage);
+  XSync (xcontext->disp, FALSE);
+  return result;
 #endif /* HAVE_XSHM */
-
-  return TRUE;
 }
 
 /* This function handles GstXvImage creation depending on XShm availability */
@@ -212,7 +215,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
         xvimagesink->xcontext->im_format,
         xvimage->data, xvimage->width, xvimage->height);
 
-    xvimage->data = g_malloc (xvimage->xvimage->data_size);
+    xvimage->xvimage->data = g_malloc (xvimage->xvimage->data_size);
 
     XSync (xvimagesink->xcontext->disp, FALSE);
   }
@@ -261,8 +264,10 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
   } else
 #endif /* HAVE_XSHM */
   {
-    if (xvimage->xvimage)
+    if (xvimage->xvimage) {
+      g_free (xvimage->xvimage->data);
       XFree (xvimage->xvimage);
+    }
   }
 
   XSync (xvimagesink->xcontext->disp, FALSE);
