@@ -34,7 +34,7 @@ GHashTable *__gst_function_pointers = NULL;
 /***** INFO system *****/
 GstInfoHandler _gst_info_handler = gst_default_info_handler;
 //guint32 _gst_info_categories = 0xffffffff;
-guint32 _gst_info_categories = 0x00000000;
+guint32 _gst_info_categories = 0x00000001;
 
 static gchar *_gst_info_category_strings[] = {
   "GST_INIT",
@@ -67,101 +67,52 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
                            gint line, gchar *debug_string,
                            void *element, gchar *string)
 {
-  if (element) {
-    if (debug_string)
-      fprintf(stderr,"INFO:%s:%d%s: [%s] %s\n",
-              function,line,debug_string,gst_element_get_name(element),string);
-     else
-      fprintf(stderr,"INFO:%s:%d: [%s] %s\n",
-              function,line,gst_element_get_name(element),string);
-  } else {
-    if (debug_string)
-      fprintf(stderr,"INFO:%s:%d%s: %s\n",
-              function,line,debug_string,string);
-    else
-      fprintf(stderr,"INFO:%s:%d: %s\n",
-              function,line,string);
-  }
+  gchar *empty = "";
+  gchar *elementname = empty,*location = empty;
+
+  if (debug_string == NULL) debug_string = "";
+  if (category != GST_INFO_GST_INIT)
+    location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
+  if (element && GST_IS_ELEMENT (element))
+    elementname = g_strdup_printf (" [%s]",gst_element_get_name (element));
+
+  fprintf(stderr,"INFO:%s%s %s\n",location,elementname,string);
+
+  if (location != empty) g_free(location);
+  if (elementname != empty) g_free(elementname);
 
   g_free(string);
 }
 
+void
+gst_info_set_categories (guint32 categories) {
+  _gst_info_categories = categories;
+}
+
+guint32
+gst_info_get_categories () {
+  return _gst_info_categories;
+}
+
+const gchar *
+gst_info_get_category_name (gint category) {
+  return _gst_info_category_strings[category];
+}
+
+void
+gst_info_enable_category (gint category) {
+  _gst_info_categories |= (1 << category);
+}
+
+void
+gst_info_disable_category (gint category) {
+  _gst_info_categories &= ~ (1 << category);
+}
+
+
 
 /***** ERROR system *****/
 GstErrorHandler _gst_error_handler = gst_default_error_handler;
-
-/*
-gchar *gst_object_get_path_string(GstObject *object) {
-  GSList *parentage = NULL;
-  GSList *parents;
-  void *parent;
-  gchar *prevpath, *path = "";
-  const char *component;
-  gchar *separator = "";
-  gboolean free_component;
-
-  parentage = g_slist_prepend (NULL, object);
-
-  // first walk the object hierarchy to build a list of the parents
-  do {
-    if (GST_IS_OBJECT(object)) {
-      if (GST_IS_PAD(object)) {
-        parent = GST_PAD(object)->parent;
-//      } else if (GST_IS_ELEMENT(object)) {
-//        parent = gst_element_get_parent(GST_ELEMENT(object));
-      } else {
-        parent = gst_object_get_parent (object);
-      }
-    } else {
-      parentage = g_slist_prepend (parentage, NULL);
-      parent = NULL;
-    }
-
-    if (parent != NULL) {
-      parentage = g_slist_prepend (parentage, parent);
-    }
-
-    object = parent;
-  } while (object != NULL);
-
-  // then walk the parent list and print them out
-  parents = parentage;
-  while (parents) {
-    if (GST_IS_OBJECT(parents->data)) {
-      if (GST_IS_PAD(parents->data)) {
-        component = gst_pad_get_name(GST_PAD(parents->data));
-        separator = ".";
-        free_component = FALSE;
-      } else if (GST_IS_ELEMENT(parents->data)) {
-        component = gst_element_get_name(GST_ELEMENT(parents->data));
-        separator = "/";
-        free_component = FALSE;
-      } else {
-//        component = g_strdup_printf("a %s",gtk_type_name(gtk_identifier_get_type(parents->data)));
-        component = g_strdup_printf("unknown%p",parents->data);
-        separator = "/";
-        free_component = TRUE;
-      }
-    } else {
-      component = g_strdup_printf("%p",parents->data);
-      separator = "/";
-      free_component = TRUE;
-    }
-
-    prevpath = path;
-    path = g_strjoin(separator,prevpath,component,NULL);
-    g_free(prevpath);
-    if (free_component)
-      g_free((gchar *)component);
-
-    parents = g_slist_next(parents);
-  }
-
-  g_slist_free(parentage);
-
-  return path;
-}
-*/
 
 void
 gst_default_error_handler (gchar *file, gchar *function,

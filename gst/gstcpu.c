@@ -37,29 +37,39 @@ void gst_cpuid_i386(int,long *,long *,long *,long *);
 #define gst_cpuid(o,a,b,c,d) (void)(a);(void)(b);(void)(c);
 #endif
 
+static gchar *stringcat (gchar *a,gchar *b) {
+  gchar *c;
+  if (a) {
+    c = g_strconcat(a,b);
+    g_free(a);
+  } else
+    c = g_strdup(b);
+  return c;
+}
+
 void 
 _gst_cpu_initialize (void) 
 {
+  gchar *featurelist = NULL;
+
   long eax=0, ebx=0, ecx=0, edx=0;
 
   gst_cpuid(1, &eax, &ebx, &ecx, &edx);
 
-  g_print("CPU features : ");
-
   if (edx & (1<<23)) {
     _gst_cpu_flags |= GST_CPU_FLAG_MMX;
-    g_print("MMX ");
+    featurelist = stringcat(featurelist,"MMX ");
   }
   if (edx & (1<<25)) {
     _gst_cpu_flags |= GST_CPU_FLAG_SSE;
-    g_print("SSE ");
+    featurelist = stringcat(featurelist,"SSE ");
   }
 
   if (!_gst_cpu_flags) {
-    g_print("NONE");
+    featurelist = stringcat(featurelist,"NONE");
   }
-  g_print("\n");
 
+  INFO(GST_INFO_GST_INIT, "CPU features: %s",featurelist);
 }
 
 GstCPUFlags 

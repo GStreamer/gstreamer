@@ -96,7 +96,7 @@ GstPlugin *plugin_init (GModule *module)
     i++;
   }
 
-  INFO (0,"gstelements: loaded %d standard elements", i);
+//  INFO (GST_INFO_PLUGIN_LOAD,"gstelements: loaded %d standard elements", i);
 
   return plugin;
 }

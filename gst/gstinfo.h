@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstdebug.h: Debugging helper macros
+ * gstinfo.h: 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -192,6 +192,12 @@ extern guint32 _gst_info_categories;
                       element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
+
+void		gst_info_set_categories		(guint32 categories);
+guint32		gst_info_get_categories		();
+const gchar *	gst_info_get_category_name	(gint category);
+void		gst_info_enable_category	(gint category);
+void		gst_info_disable_category	(gint category);
 
 enum {
   GST_INFO_GST_INIT = 0,	// Library initialization
