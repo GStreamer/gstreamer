@@ -638,23 +638,23 @@ GST_CHECK_FEATURE(HERMES, [Hermes library], colorspace, [
 ], AC_SUBST(HERMES_LIBS))
 
 dnl *** http ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_HTTP, true)
-GST_CHECK_FEATURE(HTTP, [http plug-ins], gsthttpsrc, [
-  dnl FIXME: need to check for header
-  GHTTP_LIBS=
-  GST_HTTPSRC_GET_TYPE=
-  if test x$USE_GLIB2 = xyes; then
-    AC_MSG_WARN(ghttp disabled for glib2.0)
-  else
-    AC_CHECK_LIB(ghttp, ghttp_request_new,
-      [HTTP_LIBS="-lghttp"
-       GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
-       HAVE_HTTP=yes
-      ], :, $LIBS)
-  fi
-  AC_SUBST(HTTP_LIBS)
-  AC_SUBST(GST_HTTPSRC_GET_TYPE)
-])
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_HTTP, true)
+dnl GST_CHECK_FEATURE(HTTP, [http plug-ins], gsthttpsrc, [
+dnl  dnl FIXME: need to check for header
+dnl  GHTTP_LIBS=
+dnl  GST_HTTPSRC_GET_TYPE=
+dnl  if test x$USE_GLIB2 = xyes; then
+dnl    AC_MSG_WARN(ghttp disabled for glib2.0)
+dnl  else
+dnl    AC_CHECK_LIB(ghttp, ghttp_request_new,
+dnl      [HTTP_LIBS="-lghttp"
+dnl       GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
+dnl       HAVE_HTTP=yes
+dnl      ], :, $LIBS)
+dnl  fi
+dnl  AC_SUBST(HTTP_LIBS)
+dnl  AC_SUBST(GST_HTTPSRC_GET_TYPE)
+dnl ])
 
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
@@ -1170,7 +1170,7 @@ ext/flac/Makefile
 ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
-ext/http/Makefile
+dnl ext/http/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
 ext/ladspa/Makefile
