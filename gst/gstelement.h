@@ -128,6 +128,7 @@ struct _GstElement {
   GstElementSetClockFunction setclockfunc;
   GstElementGetClockFunction getclockfunc;
   GstClock		*clock;
+  GstClockTime		 base_time;
 
   /* element pads */
   guint16 		numpads;
@@ -160,7 +161,6 @@ struct _GstElementClass {
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*error)		(GstElement *element, GstElement *source, gchar *error);
   void (*eos)		(GstElement *element);
-  void (*deep_notify)	(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -182,8 +182,8 @@ void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplat
 void                    gst_element_class_install_std_props	(GstElementClass *klass,
 								 const gchar      *first_name, ...);
 
-void			gst_element_default_deep_notify		(GObject *object, GstObject *orig, 
-								 GParamSpec *pspec, gchar **excluded_props);
+#define 		gst_element_default_deep_notify 	gst_object_default_deep_notify
+
 void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
 
 GType			gst_element_get_type		(void);

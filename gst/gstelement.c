@@ -41,7 +41,6 @@ enum {
   PAD_REMOVED,
   ERROR,
   EOS,
-  DEEP_NOTIFY,
   LAST_SIGNAL
 };
 
@@ -60,7 +59,6 @@ static void			gst_element_real_set_property	(GObject *object, guint prop_id,
 								 const GValue *value, GParamSpec *pspec);
 static void			gst_element_real_get_property	(GObject *object, guint prop_id, GValue *value, 
 								 GParamSpec *pspec);
-static void			gst_element_dispatch_properties_changed (GObject * object, guint n_pspecs, GParamSpec **pspecs);
 
 static void 			gst_element_dispose 		(GObject *object);
 
@@ -137,20 +135,9 @@ gst_element_class_init (GstElementClass *klass)
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
                   gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_element_signals[DEEP_NOTIFY] =
-    g_signal_new ("deep_notify", G_TYPE_FROM_CLASS (klass), 
-		  G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED | G_SIGNAL_NO_HOOKS,
-		  G_STRUCT_OFFSET (GstElementClass, deep_notify), NULL, NULL,
-		  gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE,
-		  2, G_TYPE_OBJECT, G_TYPE_PARAM);
-
 
   gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_real_set_property);
   gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_real_get_property);
-
-  /* see the comments at gst_element_dispatch_properties_changed */
-  gobject_class->dispatch_properties_changed
-    = GST_DEBUG_FUNCPTR (gst_element_dispatch_properties_changed);
 
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_element_dispose);
 
@@ -212,87 +199,6 @@ gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GP
 
   if (oclass->get_property)
     (oclass->get_property) (object, prop_id, value, pspec);
-}
-
-/* Changing a GObject property of an element will result in "deep_notify"
- * signals being emitted by the element itself, as well as in each parent
- * element. This is so that an application can connect a listener to the
- * top-level bin to catch property-change notifications for all contained
- * elements. */
-static void
-gst_element_dispatch_properties_changed (GObject     *object,
-                                         guint        n_pspecs,
-                                         GParamSpec **pspecs)
-{
-  GstObject *gst_object;
-  guint i;
-
-  /* do the standard dispatching */
-  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs, pspecs);
-
-  /* now let the parent dispatch those, too */
-  gst_object = GST_OBJECT_PARENT (object);
-  while (gst_object) {
-    /* need own category? */
-    for (i = 0; i < n_pspecs; i++) {
-      GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object), 
-		    GST_OBJECT_NAME (gst_object), pspecs[i]->name);
-      g_signal_emit (gst_object, gst_element_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name), 
-		     (GstObject *) object, pspecs[i]);
-    }
-
-    gst_object = GST_OBJECT_PARENT (gst_object);
-  }
-}
-
-/** 
- * gst_element_default_deep_notify:
- * @object: the #GObject that signalled the notify.
- * @orig: a #GstObject that initiated the notify.
- * @pspec: a #GParamSpec of the property.
- * @excluded_props: a set of user-specified properties to exclude.
- *
- * Adds a default deep_notify signal callback to an
- * element. The user data should contain a pointer to an array of
- * strings that should be excluded from the notify.
- * The default handler will print the new value of the property 
- * using g_print.
- */
-void
-gst_element_default_deep_notify (GObject *object, GstObject *orig, 
-                                 GParamSpec *pspec, gchar **excluded_props)
-{
-  GValue value = { 0, }; /* the important thing is that value.type = 0 */
-  gchar *str = 0;
-
-  if (pspec->flags & G_PARAM_READABLE) {
-    /* let's not print these out for excluded properties... */
-    while (excluded_props != NULL && *excluded_props != NULL) {
-      if (strcmp (pspec->name, *excluded_props) == 0)
-        return;
-      excluded_props++;
-    }
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-
-    if (G_IS_PARAM_SPEC_ENUM (pspec)) {
-      GEnumValue *enum_value;
-      enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
-      g_value_get_enum (&value));
-
-      str = g_strdup_printf ("%s (%d)", enum_value->value_nick, 
-	                                enum_value->value);
-    }
-    else {
-      str = g_strdup_value_contents (&value);
-    }
-    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
-    g_free (str);
-    g_value_unset (&value);
-  } else {
-    g_warning ("Parameter %s not readable in %s.", 
-	       pspec->name, GST_OBJECT_NAME (orig));
-  }
 }
 
 /** 
@@ -1085,11 +991,10 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  if ((pad = gst_element_get_static_pad (element, name)))
-    return pad;
-  
-  pad = gst_element_get_request_pad (element, name);
-  
+  pad = gst_element_get_static_pad (element, name);
+  if (!pad) 
+    pad = gst_element_get_request_pad (element, name);
+
   return pad;
 }
 
@@ -2201,20 +2106,13 @@ gst_element_change_state (GstElement *element)
       break;
   }
 
-  /* tell the scheduler if we have one */
-  if (element->sched) {
-    if (gst_scheduler_state_transition (element->sched, element, 
-	                                old_transition) != GST_STATE_SUCCESS) {
-      goto failure;
-    }
-  }
-
   parent = GST_ELEMENT_PARENT (element);
 
   GST_DEBUG_ELEMENT (GST_CAT_STATES, element,
                      "signaling state change from %s to %s",
                      gst_element_state_get_name (old_state),
                      gst_element_state_get_name (GST_STATE (element)));
+
   g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
 		 0, old_state, GST_STATE (element));
 
@@ -2224,10 +2122,19 @@ gst_element_change_state (GstElement *element)
 	                        GST_STATE (element), element);
   }
 
+
   /* signal the state change in case somebody is waiting for us */
   g_mutex_lock (element->state_mutex);
   g_cond_signal (element->state_cond);
   g_mutex_unlock (element->state_mutex);
+
+  /* tell the scheduler if we have one */
+  if (element->sched) {
+    if (gst_scheduler_state_transition (element->sched, element, 
+	                                old_transition) != GST_STATE_SUCCESS) {
+      goto failure;
+    }
+  }
 
   return GST_STATE_SUCCESS;
 

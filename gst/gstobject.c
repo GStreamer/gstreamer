@@ -32,6 +32,7 @@ enum {
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   OBJECT_SAVED,
 #endif
+  DEEP_NOTIFY,
   LAST_SIGNAL
 };
 
@@ -66,6 +67,9 @@ static void 		gst_object_set_property 	(GObject * object, guint prop_id, const G
 		                                    	 GParamSpec * pspec);
 static void 		gst_object_get_property 	(GObject * object, guint prop_id, GValue * value,
 		                                    	 GParamSpec * pspec);
+static void 		gst_object_dispatch_properties_changed (GObject     *object,
+                                       			 guint        n_pspecs,
+                                       			 GParamSpec **pspecs);
 
 static void 		gst_object_dispose 		(GObject *object);
 static void 		gst_object_finalize 		(GObject *object);
@@ -133,10 +137,20 @@ gst_object_class_init (GstObjectClass *klass)
   
   klass->restore_thyself = gst_object_real_restore_thyself;
 #endif
+  gst_object_signals[DEEP_NOTIFY] =
+    g_signal_new ("deep_notify", G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (GstObjectClass, deep_notify), NULL, NULL,
+                  gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE,
+                  2, G_TYPE_OBJECT, G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
 
   klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
+    /* see the comments at gst_element_dispatch_properties_changed */
+
+  gobject_class->dispatch_properties_changed
+	        = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
@@ -263,6 +277,87 @@ gst_object_finalize (GObject *object)
   g_mutex_free (gstobject->lock);
 
   parent_class->finalize (object);
+}
+
+/* Changing a GObject property of an element will result in "deep_notify"
+ * signals being emitted by the element itself, as well as in each parent
+ * element. This is so that an application can connect a listener to the
+ * top-level bin to catch property-change notifications for all contained
+ * elements. */
+static void
+gst_object_dispatch_properties_changed (GObject     *object,
+                                        guint        n_pspecs,
+                                        GParamSpec **pspecs)
+{
+  GstObject *gst_object;
+  guint i;
+
+  /* do the standard dispatching */
+  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs, pspecs);
+
+  /* now let the parent dispatch those, too */
+  gst_object = GST_OBJECT_PARENT (object);
+  while (gst_object) {
+    /* need own category? */
+    for (i = 0; i < n_pspecs; i++) {
+      GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object),
+                 GST_OBJECT_NAME (gst_object), pspecs[i]->name);
+      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name),
+                     (GstObject *) object, pspecs[i]);
+    }
+
+    gst_object = GST_OBJECT_PARENT (gst_object);
+  }
+}
+
+/** 
+ * gst_object_default_deep_notify:
+ * @object: the #GObject that signalled the notify.
+ * @orig: a #GstObject that initiated the notify.
+ * @pspec: a #GParamSpec of the property.
+ * @excluded_props: a set of user-specified properties to exclude.
+ *
+ * Adds a default deep_notify signal callback to an
+ * element. The user data should contain a pointer to an array of
+ * strings that should be excluded from the notify.
+ * The default handler will print the new value of the property 
+ * using g_print.
+ */
+void
+gst_object_default_deep_notify (GObject *object, GstObject *orig,
+                                GParamSpec *pspec, gchar **excluded_props)
+{
+  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  gchar *str = 0;
+
+  if (pspec->flags & G_PARAM_READABLE) {
+    /* let's not print these out for excluded properties... */
+    while (excluded_props != NULL && *excluded_props != NULL) {
+      if (strcmp (pspec->name, *excluded_props) == 0)
+        return;
+      excluded_props++;
+    }
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
+
+    if (G_IS_PARAM_SPEC_ENUM (pspec)) {
+      GEnumValue *enum_value;
+      enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
+      g_value_get_enum (&value));
+
+      str = g_strdup_printf ("%s (%d)", enum_value->value_nick,
+                                        enum_value->value);
+    }
+    else {
+      str = g_strdup_value_contents (&value);
+    }
+    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
+    g_value_unset (&value);
+  } else {
+    g_warning ("Parameter %s not readable in %s.",
+               pspec->name, GST_OBJECT_NAME (orig));
+  }
 }
 
 static void

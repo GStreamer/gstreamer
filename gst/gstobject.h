@@ -92,6 +92,7 @@ struct _GstObjectClass {
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
 #endif
+  void 		(*deep_notify)   	(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
@@ -131,6 +132,9 @@ const gchar*	gst_object_get_name		(GstObject *object);
 void		gst_object_set_parent		(GstObject *object, GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
+
+void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig, 
+		                                 GParamSpec *pspec, gchar **excluded_props);
 
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
