@@ -399,6 +399,7 @@ testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/elements/Makefile
 testsuite/plugin/Makefile
+testsuite/dynparams/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
