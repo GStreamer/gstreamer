@@ -1,7 +1,7 @@
 
-                   GStreamer "Mother Theresa" 0.6.3 released
+                        GStreamer "Moo" 0.6.4 released
 
-   The  GStreamer  team  is  proud  to announce an updated version in the
+   The  GStreamer  team  is  proud  to  announce  a  new  version  in the
    ABI-stable 0.6.x series.
 
    At  this  point  in  time  GStreamer  is fully functional for creating
@@ -10,16 +10,14 @@
    nautilus-media.
 
    The  video part is known to be somewhat less functional than the audio
-   part,  but  applications  such as [3]gst-player works very well, and a
-   port of [4]Totem is in progress in GNOME CVS.
+   part, but applications such as [3]gst-player work very well.
 
    We  will  also be releasing a development 0.7 release series, in which
-   we  will  work  on  such  things  as the remaining issues, such as the
-   interactivity  support  which is needed for DVD menus and SWF (Flash).
-   This  means  developers working on apps needing these services can use
-   the  0.7  series  for development and then enable 0.6 support as these
-   additions  optionally  get  backported to 0.6 once they are stable and
-   work well.
+   we  will  work  on  the  remaining  issues,  such as the interactivity
+   support  which  is  needed  for  DVD menus and SWF (Flash). This means
+   developers  working  on  apps  needing  these services can use the 0.7
+   series  for development and then enable 0.6 support as these additions
+   optionally get backported to 0.6 once they are stable and work well.
 
    The  GStreamer  applications we ship all check for both gstreamer-0.6,
    gstreamer-libs-0.6  and  gstreamer-play-0.6; if those aren't found the
@@ -28,7 +26,7 @@
 
    We are starting to have a really nice collection of applications under
    development using GStreamer. If you are looking for something specific
-   check out our [5]applications status page.
+   check out our [4]applications status page.
 
 Features
 
@@ -39,7 +37,7 @@ Features
        optional)
      * Python Language bindings
      * Good documentation
-     * Will be widely deployed through bundling with GNOME 2.2
+     * Widely deployed through bundling with GNOME 2.2/2.4
      * Design catering also for applications needing low-latency
      * Highly portable, already running on most mainstream CPU's
      * Modular  design and use of 3rd party best of breed libraries means
@@ -51,45 +49,67 @@ Features
      * Compiles with both GCC and Forte compilers
      * Tested to run on Linux, FreeBSD and Solaris
 
-Updates since 0.6.3
+Updates since 0.6.4
 
      * gstreamer (core)
-
-     * #104829:  [6][0.6.3]  crash when removing plugin without rerunning
-       gst-register
-     * #113280: [7][0.6.3] Atomic sparc code needs testing
-     * #117786: [8][0.6.3] Can't play files on a read-only NTFS drive
-     * #118067: [9][0.6.3] build failure with debugging disabled
-     * #118619: [10]please update the online docs
-     * #119393: [11]backport m68k fix
-     * #117837: [12]docs/libs doesn't build properly
-     * #120741: [13][PATCH] xml registry typefinding is recursive and can
-       lead t
-     * #116146:   [14]opt   scheduler   doesn't   set  event  handler  on
-       unconnected src p
-
-     gst-plugins
-     * #94113: [15][0.6.3] spider doesn't detect type of mp3 stream
-     * #115965: [16]dvdnavsrc plug-in isn't updated against 0.1.9
-     * #114948: [17]make install fails at gst-libs/ext/ffmpeg
-     * #114976:  [18][0.6.3/patch]  videotestsrc  and  xvideosink  do not
-       reset their
-     * #116416:  [19]vorbis  metadata:  use  fields  compatible with most
-       players
-     * #116420:  [20]lame  metadata:  write id3 v1 and v2 tags in encoded
-       files
-     * #119372: [21][0.6.3] [patch] mpeg2 identification bug
-     * #116152: [22]modplug doesn't handle state changes properly
-     * #119105: [26][0.6.3/patch] gst-plugins build fails due to warnings and -Werror
+          + #119456:   [5][PATCH]  assertion  `GST_IS_SCHEDULER  (sched)'
+            failed
+          + #90471:  [6][0.6.x/patch]  Autoplug  functions only available
+            with varargs
+          + #114252:  [7][PATCH]  opt scheduler: implement unlinking pads
+            in different
+          + #115005: [8][PATCH] Fails to compile on OpenBSD
+          + #119155: [9]rhythmbox head fails to play a second song in the
+            playlist.
+          + #119770: [10]FreeBSD names libtool 1.4 libtool14
+          + #120345: [11][PATCH] backport of --gst-disable-cpu-opt
+          + #120785:  [12][PATCH]  bison  and yacc generated files aren't
+            disted
+          + #120960: [13]Failed to compile gstreamer 0.6.3 with gcc 3.3.1
+          + #121311: [14][PATCH] Compilation Error
+          + #122272:  [15][PATCH] [0.6.4] GST_CAPS_IS_FIXED is broken, as
+            well as prop
+          + #123137:  [16][PATCH] Compilation fails when size_t is not an
+            unsigned int
+          + #123518: [17][PATCH] opt shouldn't add groups to run queue if
+            they're alr
+          + #123542: [18]inactive pads should be able to push a buffer if
+            their peer
+          + #124124: [19]docbook docs don't build properly
+          + #122059: [20]gst-md5sink needs a way to handle threads
+          + #123417: [21][PATCH] fix popt default scheduler description
+          + #123517: [22]more opt scheduler debug info
+     * gst-plugins
+          + #116077: [23][PATCH] sinesrc has problems in waveform
+          + #121165: [24]Compilation errors due to invalid -Wall option
+          + #121174:  [25]Compiler  error in gst-libs/gst/riff/riffutil.c
+            #define and v
+          + #121175: [26]Compiler error in
+            gst-libs/gst/media-info/media-info.c with
+          + #121184: [27][PATCH] ffmpeg requires gcc on x86 (at least)
+          + #121872:    [28]gst-plugins    fails   to   compile   against
+            libmpeg2-0.3.2_pre20030
+          + #122458:  [29]Adding  a  visualisation  video  size signal to
+            libgstplay
+          + #122481: [30][PATCH] wavenc is somehow broken
+          + #123306: [31]Add error messages to cdparanoia plugin
+          + #123896:  [32]xvideosink  does  too little parameter checking
+            and uses wrong
+          + #123939: [33]libgstplay : small fixes
+          + #123946: [34][PATCH] mpeg2dec-0.3.2-cvs run failure
+          + #121143:  [35][PATCH]  FLAC  files with id3 tags fail to play
+            (can't find me
+          + #122031: [36]mpeg2dec plugin breaks against 0.3.2 cvs
+          + #123516: [37]adder unrefs the bufferpool wrongly
 
 GStreamer Homepage
 
    More  details on these features can be found on the project's website,
-   [23]http://gstreamer.net/.
+   [38]http://gstreamer.net/.
 
 Support and Bugs
 
-   We  use [24]Gnome's Bugzilla for bug reports and feature requests. The
+   We  use [39]Gnome's Bugzilla for bug reports and feature requests. The
    "product  name"  is  GStreamer  (capital  G).  Please do the following
    before writing a bug report :
 gst-feedback &> feedback 2>&1
@@ -99,7 +119,7 @@ gst-feedback &> feedback 2>&1
 
 Developers
 
-   GStreamer  is [25]hosted on SourceForge. All code is in CVS and can be
+   GStreamer  is [40]hosted on SourceForge. All code is in CVS and can be
    checked  out  from  there.  Interested developers of the core library,
    plug-ins,  and  applications  should  subscribe to the gstreamer-devel
    list.  If  there  is  sufficient interest we will create more lists as
@@ -114,53 +134,62 @@ Contributors to this release
 
   Patches to the core of GStreamer
 
-     * Wim Taymans <wim.taymans(AT)chello.be>
-     * Thomas Vander Stichele <thomas(AT)apestaart.org>
-     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
-     * Benjamin Otte <in7y118(AT)public.uni-hamburg.de>
-     * David Schleef <ds(AT)schleef.org>
-     * David I. Lehn <dlehn(AT)vt.edu>
-     * Hidetoshi Tajima <hidetoshi.tajima(AT)sun.com>
-     * Joshua N Pritikin <vishnu(AT)pobox.com>
-     * Christophe Fergeau <teuf(AT)users.sourceforge.net>
+     * Brett Kosinski
+     * David Schleef
+     * Thomas Vander Stichele
+     * Jerry Talkington
 
   Plugins and Sample Applications
 
-     * Julien MOUTTE <jmoutte(AT)electronic-group.com>
-     * Zeeshan Ali Khattak <zak147(AT)yahoo.com>
-     * Jérémy Simon <jsimon13(AT)yahoo.fr>
-     * Ross Burton <r.burton(AT)180sw.com>
-     * Martin Janzen <janzen(AT)pixelmetrix.com>
+     * Damien Carbery
+     * Ronald Bultje
+     * Julien Moutte
+     * JÃ©rÃ©my Simon
+     * Ross Burton
 
   Misc
 
-     * Christian Fredrik Kalager Schaller <Uraeus(AT)gnome.org>
+     * Christian Fredrik Kalager Schaller
 
 References
 
    1. http://www.rhythmbox.org/
    2. http://mail.gnome.org/archives/gnome-announce-list/2003-April/msg00046.html
    3. http://gstreamer.net/releases/gst-player/0.5.0/
-   4. http://www.hadess.net/totem.php3
-   5. http://www.gstreamer.net/status/?category=2
-   6. http://bugzilla.gnome.org/show_bug.cgi?id=104829
-   7. http://bugzilla.gnome.org/show_bug.cgi?id=113280
-   8. http://bugzilla.gnome.org/show_bug.cgi?id=117786
-   9. http://bugzilla.gnome.org/show_bug.cgi?id=118067
-  10. http://bugzilla.gnome.org/show_bug.cgi?id=118619
-  11. http://bugzilla.gnome.org/show_bug.cgi?id=119393
-  12. http://bugzilla.gnome.org/show_bug.cgi?id=117837
-  13. http://bugzilla.gnome.org/show_bug.cgi?id=120741
-  14. http://bugzilla.gnome.org/show_bug.cgi?id=116146
-  15. http://bugzilla.gnome.org/show_bug.cgi?id=94113
-  16. http://bugzilla.gnome.org/show_bug.cgi?id=115965
-  17. http://bugzilla.gnome.org/show_bug.cgi?id=114948
-  18. http://bugzilla.gnome.org/show_bug.cgi?id=114976
-  19. http://bugzilla.gnome.org/show_bug.cgi?id=116416
-  20. http://bugzilla.gnome.org/show_bug.cgi?id=116420
-  21. http://bugzilla.gnome.org/show_bug.cgi?id=119372
-  22. http://bugzilla.gnome.org/show_bug.cgi?id=116152
-  23. http://gstreamer.net/
-  24. http://bugzilla.gnome.org/
-  25. http://gstreamer.sf.net/
-  26. http://bugzilla.gnome.org/show_bug.cgi?id=119105
+   4. http://www.gstreamer.net/status/?category=2
+   5. http://bugzilla.gnome.org/show_bug.cgi?id=119456
+   6. http://bugzilla.gnome.org/show_bug.cgi?id=90471
+   7. http://bugzilla.gnome.org/show_bug.cgi?id=114252
+   8. http://bugzilla.gnome.org/show_bug.cgi?id=115005
+   9. http://bugzilla.gnome.org/show_bug.cgi?id=119155
+  10. http://bugzilla.gnome.org/show_bug.cgi?id=119770
+  11. http://bugzilla.gnome.org/show_bug.cgi?id=120345
+  12. http://bugzilla.gnome.org/show_bug.cgi?id=120785
+  13. http://bugzilla.gnome.org/show_bug.cgi?id=120960
+  14. http://bugzilla.gnome.org/show_bug.cgi?id=121311
+  15. http://bugzilla.gnome.org/show_bug.cgi?id=122272
+  16. http://bugzilla.gnome.org/show_bug.cgi?id=123137
+  17. http://bugzilla.gnome.org/show_bug.cgi?id=123518
+  18. http://bugzilla.gnome.org/show_bug.cgi?id=123542
+  19. http://bugzilla.gnome.org/show_bug.cgi?id=124124
+  20. http://bugzilla.gnome.org/show_bug.cgi?id=122059
+  21. http://bugzilla.gnome.org/show_bug.cgi?id=123417
+  22. http://bugzilla.gnome.org/show_bug.cgi?id=123517
+  23. http://bugzilla.gnome.org/show_bug.cgi?id=116077
+  24. http://bugzilla.gnome.org/show_bug.cgi?id=121165
+  25. http://bugzilla.gnome.org/show_bug.cgi?id=121174
+  26. http://bugzilla.gnome.org/show_bug.cgi?id=121175
+  27. http://bugzilla.gnome.org/show_bug.cgi?id=121184
+  28. http://bugzilla.gnome.org/show_bug.cgi?id=121872
+  29. http://bugzilla.gnome.org/show_bug.cgi?id=122458
+  30. http://bugzilla.gnome.org/show_bug.cgi?id=122481
+  31. http://bugzilla.gnome.org/show_bug.cgi?id=123306
+  32. http://bugzilla.gnome.org/show_bug.cgi?id=123896
+  33. http://bugzilla.gnome.org/show_bug.cgi?id=123939
+  34. http://bugzilla.gnome.org/show_bug.cgi?id=123946
+  35. http://bugzilla.gnome.org/show_bug.cgi?id=121143
+  36. http://bugzilla.gnome.org/show_bug.cgi?id=122031
+  37. http://bugzilla.gnome.org/show_bug.cgi?id=123516
+  38. http://gstreamer.net/
+  39. http://bugzilla.gnome.org/
+  40. http://gstreamer.sf.net/
