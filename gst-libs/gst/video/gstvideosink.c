@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include "gstvideosink.h"
+#include "videosink.h"
 
 static GstElementClass *parent_class = NULL;
 
