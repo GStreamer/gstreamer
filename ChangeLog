@@ -1,5 +1,15 @@
 2004-04-16  Johan Dahlin  <johan@gnome.org>
 
+	* configure.ac (PYGTK_CODEGEN): Use built in code generator again
+	and don't require 2.3.91, 2.0.0 should do fine (FC1 ok, RH9 isn't)
+
+	* TODO: Update
+
+	* gst/interfaces.override, gst/play.override: Add typedef for
+	python < 2.3
+
+	* codegen/codegen.py: Readd :/
+
 	* testsuite/pipeline.py (PipelineConstructor.testGoodConstructor)
 	(PipelineConstructor.testBadConstruct)
 	(ThreadConstructor.testCreate): New tests

@@ -34,6 +34,9 @@ headers
 #include <gst/tuner/tuner.h>
 #include <gst/xwindowlistener/xwindowlistener.h>
 
+#if PY_VERSION_HEX < 0x02030000
+  typedef destructor freefunc;
+#endif
 %%
 modulename gst.interfaces
 %%
