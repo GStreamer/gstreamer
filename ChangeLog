@@ -1,5 +1,8 @@
 2004-03-12  Johan Dahlin  <johan@gnome.org>
 
+	* configure.ac: PyGtk 1.99.14 should be okay (Shipped with RH9),
+	AC_SUBST GStreamer and PyGTK flags
+
 	* Makefile.am (PLAYDIR): Disable for now
 
 	* configure.ac: Build against 0.8

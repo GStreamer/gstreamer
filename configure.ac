@@ -53,6 +53,8 @@ dnl check for GStreamer
 GST_MAJORMINOR=0.8
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
+AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_LDFLAGS)
 
 dnl Give error and exit if we don't have GStreamer
 if test "x$HAVE_GSTREAMER" = "xno"; then
@@ -62,6 +64,7 @@ AC_SUBST(GST_MAJORMINOR)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
+AC_SUBST(PYGTK_CFLAGS)
 
 AC_MSG_CHECKING(for pygtk defs)
 PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
