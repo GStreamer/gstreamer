@@ -20,6 +20,7 @@
 */
 
 #include <stdlib.h>
+#include <sys/time.h>
 #include "gstalsa.h"
 
 static GstElementDetails gst_alsa_sink_details = {  
@@ -69,6 +70,7 @@ static void gst_alsa_close_audio(GstAlsa *this);
 
 static gboolean gst_alsa_set_params(GstAlsa *this);
 static void gst_alsa_loop (GstElement *element);
+static void gst_alsa_xrun_recovery (GstAlsa *this);
 static gboolean gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames);
 static gboolean gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames);
 
@@ -79,6 +81,13 @@ static void gst_alsa_sink_silence_on_channel (GstAlsa *this, guint32 chn, guint3
 static void memset_interleave (char *dst, char val, unsigned int bytes, 
                                unsigned int unit_bytes, 
                                unsigned int skip_bytes);
+
+/* #define _DEBUG */
+#ifdef _DEBUG
+#define DEBUG(text, args...) g_message(text, ##args)
+#else
+#define DEBUG(text, args...)
+#endif
 
 
 enum {
@@ -785,7 +794,7 @@ gst_alsa_connect(GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_DELAYED;
 }
 
-/* shamelessly stolen from pbd's audioengine. thanks, paul! */
+/* shamelessly stolen from pbd's audioengine and jack alsa_driver. thanks, paul! */
 static void
 gst_alsa_loop (GstElement *element)
 {
@@ -833,11 +842,12 @@ gst_alsa_loop (GstElement *element)
         xrun_detected = FALSE;
         
         this->avail = snd_pcm_avail_update (this->handle);
-//        g_print ("snd_pcm_avail_update() = %d\n", (int)this->avail);
+        DEBUG ("snd_pcm_avail_update() = %d", (int)this->avail);
         
         if (this->avail < 0) {
             if (this->avail == -EPIPE) {
-                xrun_detected = TRUE;
+                gst_alsa_xrun_recovery (this);
+                this->avail = 0;
             } else {
                 g_warning("unknown ALSA avail_update return value (%d)",
                           (int)this->avail);
@@ -848,12 +858,8 @@ gst_alsa_loop (GstElement *element)
         /* round down to nearest period_frames avail */
         this->avail -= this->avail % this->period_frames;
 
-//        g_print ("snd_pcm_avail_update(), rounded down = %d\n", (int)this->avail);
+        DEBUG ("snd_pcm_avail_update(), rounded down = %d", (int)this->avail);
 
-        /* pretty sophisticated eh? */
-        if (xrun_detected)
-            g_warning ("xrun detected"); 
-        
         /* we need to loop here because the available bytes might not be
          * contiguous */
         while (this->avail) {
@@ -1025,6 +1031,36 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
     return TRUE;
 }
 
+static void
+gst_alsa_xrun_recovery (GstAlsa *this)
+{
+    snd_pcm_status_t *status;
+    int res;
+
+    snd_pcm_status_alloca(&status);
+
+    if (this->stream == SND_PCM_STREAM_CAPTURE) {
+        if ((res = snd_pcm_status(this->handle, status)) < 0) {
+            g_warning ("status error: %s", snd_strerror(res));
+        }
+    } else {
+        if ((res = snd_pcm_status(this->handle, status)) < 0) {
+            g_warning ("status error: %s", snd_strerror(res));
+        }
+    }
+    
+    if (snd_pcm_status_get_state(status) == SND_PCM_STATE_XRUN) {
+        struct timeval now, diff, tstamp;
+        gettimeofday(&now, 0);
+        snd_pcm_status_get_trigger_tstamp(status, &tstamp);
+        timersub(&now, &tstamp, &diff);
+        g_warning("alsa: xrun of at least %.3f msecs", diff.tv_sec * 1000 + diff.tv_usec / 1000.0);
+    }
+    
+    gst_alsa_stop_audio (this);
+    gst_alsa_start_audio (this);
+}	
+
 /* taken more or less from pbd's audioengine code */
 static gboolean
 gst_alsa_set_params (GstAlsa *this)
@@ -1144,7 +1180,7 @@ gst_alsa_set_params (GstAlsa *this)
         return FALSE;
     }
     
-    ret = snd_pcm_sw_params_set_stop_threshold (this->handle, sw_param, ~0U);
+    ret = snd_pcm_sw_params_set_stop_threshold (this->handle, sw_param, this->buffer_frames);
     if (ret < 0) {
         g_warning("could not set stop mode: %s", snd_strerror(ret));
         return FALSE;

@@ -157,37 +157,43 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
       gst_caps_get_int     (caps, "endianness", &adder->endianness);
       gst_caps_get_boolean (caps, "signed",     &adder->is_signed);
       gst_caps_get_int     (caps, "channels",   &adder->channels);
+      gst_caps_get_int     (caps, "rate",	&adder->rate);
     } else if (strcmp (format, "float") == 0) {
       adder->format     = GST_ADDER_FORMAT_FLOAT;
       gst_caps_get_string  (caps, "layout",    &adder->layout);
       gst_caps_get_float   (caps, "intercept", &adder->intercept);
       gst_caps_get_float   (caps, "slope",     &adder->slope);
       gst_caps_get_int     (caps, "channels",  &adder->channels);
+      gst_caps_get_int     (caps, "rate",	&adder->rate);
     }
   } else {
     /* otherwise, a previously-connected pad has set all the values. we should
        barf if some of the attempted new values don't match. */
     if (strcmp (format, "int") == 0) {
-      gint width, channels;
+      gint width, channels, rate;
       gboolean is_signed;
 
       gst_caps_get_int     (caps, "width",     &width);
       gst_caps_get_int     (caps, "channels",  &channels);
       gst_caps_get_boolean (caps, "signed",    &is_signed);
+      gst_caps_get_int     (caps, "rate",      &rate);
 
       if ((adder->format != GST_ADDER_FORMAT_INT) ||
           (adder->width  != width) ||
           (adder->channels != channels) ||
-          (adder->is_signed != is_signed)) {
+          (adder->is_signed != is_signed) ||
+          (adder->rate != rate)) {
         return FALSE;
       }
     } else if (strcmp (format, "float") == 0) {
-      gint channels;
+      gint channels, rate;
 
       gst_caps_get_int     (caps, "channels",  &channels);
+      gst_caps_get_int     (caps, "rate",      &rate);
 
       if ((adder->format != GST_ADDER_FORMAT_FLOAT) ||
-          (adder->channels != channels)) {
+          (adder->channels != channels) ||
+          (adder->rate != rate)) {
         return FALSE;
       }
     } else {
@@ -377,6 +383,8 @@ gst_adder_loop (GstElement *element)
   guint8    *raw_in;
   guint32    waiting;
   guint32    got_bytes;
+  gint64     timestamp = 0;
+  gint64     offset = 0;
   register guint i;
 
   g_return_if_fail (element != NULL);
@@ -473,6 +481,13 @@ gst_adder_loop (GstElement *element)
       
       inputs = g_slist_next (inputs);
     }
+
+    GST_BUFFER_TIMESTAMP (buf_out) = timestamp;
+    if (adder->format == GST_ADDER_FORMAT_FLOAT)
+      offset += GST_BUFFER_SIZE (buf_out) / sizeof (gfloat) / adder->channels;
+    else
+      offset += GST_BUFFER_SIZE (buf_out) * 8 / adder->width / adder->channels;
+    timestamp = offset * GST_SECOND / adder->rate;
 
     /* send it out */
 
