@@ -22,17 +22,17 @@
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *bin, *disksrc, *parse, *decoder, *audiosink;
+  GstElement *pipeline, *disksrc, *parse, *decoder, *audiosink;
 
   gst_init(&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: &percnt;s &lt;filename&gt;n", argv[0]);
+    g_print ("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
     exit (-1);
   }
 
-  /* create a new bin to hold the elements */
-  bin = gst_bin_new ("bin");
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_pipeline_new ("pipeline");
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make ("disksrc", "disk_source");
@@ -46,10 +46,10 @@ main (int argc, char *argv[])
   audiosink = gst_elementfactory_make ("audiosink", "play_audio");
 
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (bin), disksrc);
-  gst_bin_add (GST_BIN (bin), parse);
-  gst_bin_add (GST_BIN (bin), decoder);
-  gst_bin_add (GST_BIN (bin), audiosink);
+  gst_bin_add (GST_BIN (pipeline), disksrc);
+  gst_bin_add (GST_BIN (pipeline), parse);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
 
   /* connect src to sink */
   gst_pad_connect (gst_element_get_pad (disksrc, "src"),
@@ -60,18 +60,19 @@ main (int argc, char *argv[])
                    gst_element_get_pad (audiosink, "sink"));
 
   /* start playing */
-  gst_element_set_state (bin, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (bin)));
+  while (gst_bin_iterate (GST_BIN (pipeline)));
 
-  /* stop the bin */
-  gst_element_set_state (bin, GST_STATE_NULL);
+  /* stop the pipeline */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_object_destroy (GST_OBJECT (audiosink));
-  gst_object_destroy (GST_OBJECT (parse));
-  gst_object_destroy (GST_OBJECT (decoder));
-  gst_object_destroy (GST_OBJECT (disksrc));
-  gst_object_destroy (GST_OBJECT (bin));
+  /* we don't need a reference to these objects anymore */
+  gst_object_unref (GST_OBJECT (audiosink));
+  gst_object_unref (GST_OBJECT (parse));
+  gst_object_unref (GST_OBJECT (decoder));
+  gst_object_unref (GST_OBJECT (disksrc));
+  gst_object_unref (GST_OBJECT (pipeline));
 
   exit (0);
 }
@@ -102,26 +103,26 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We are going to create 4 elements and one bin. Since all objects are
+      We are going to create 4 elements and one pipeline. Since all objects are
       in fact elements, we can define them as:
     </para>
     <programlisting>
   ...
-  GstElement *bin, *disksrc, *parse, *decoder, *audiosink;
+  GstElement *pipeline, *disksrc, *parse, *decoder, *audiosink;
   ...
     </programlisting>
 
     <para>
-      Next, we are going to create an empty bin. As you have seen in the basic
-      introduction, this bin will hold and manage all the elements we are 
+      Next, we are going to create an empty pipeline. As you have seen in the basic
+      introduction, this pipeline will hold and manage all the elements we are 
       going to stuff into it.
     </para>
     <programlisting>
-  /* create a new bin to hold the elements */
-  bin = gst_bin_new ("bin");
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_pipeline_new ("pipeline");
     </programlisting>
     <para>
-      We use the standard constructor for a bin: gst_bin_new ("name").
+      We use the standard constructor for a pipeline: gst_pipeline_new ("name").
     </para>
 
     <para>
@@ -158,7 +159,7 @@ main (int argc, char *argv[])
       identify the element you need and a second argument: how you want
       to name the element. The name of the element is something you can
       choose yourself and might be used to retrieve the element from a
-      bin.
+      bin/pipeline.
     </para>
 
     <para>
@@ -171,14 +172,14 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We then add the elements to the bin.
+      We then add the elements to the pipeline.
     </para>
     <programlisting>
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (bin), disksrc);
-  gst_bin_add (GST_BIN (bin), parse);
-  gst_bin_add (GST_BIN (bin), decoder);
-  gst_bin_add (GST_BIN (bin), audiosink);
+  gst_bin_add (GST_BIN (pipeline), disksrc);
+  gst_bin_add (GST_BIN (pipeline), parse);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
     </programlisting>
 
     <para>
@@ -205,46 +206,46 @@ main (int argc, char *argv[])
 
     <para>
      Everything is now set up to start the streaming. We use the following
-     statements to change the state of the bin:
+     statements to change the state of the pipeline:
     </para>
     <programlisting>
   /* start playing */
-  gst_element_set_state (bin, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
     </programlisting>
     <note>
       <para>
-        <application>GStreamer</application> will take care of the READY state for you when going from
-	NULL to PLAYING.
+        <application>GStreamer</application> will take care of the READY and PAUSED state for y
+	ou when going from NULL to PLAYING.
       </para>
     </note>
 
     <para>
       Since we do not use threads, nothing will happen yet. We manually have to
-      call gst_bin_iterate() to execute one iteration of the bin. 
+      call gst_bin_iterate() to execute one iteration of the pipeline. 
     </para>
     <programlisting>
-  while (gst_bin_iterate (GST_BIN (bin)));
+  while (gst_bin_iterate (GST_BIN (pipeline)));
     </programlisting>
     <para>
       The gst_bin_iterate() function will return TRUE as long as something interesting
-      happended inside the bin. When the end-of-file has been reached the _iterate 
+      happended inside the pipeline. When the end-of-file has been reached the _iterate 
       function will return FALSE and we can end the loop.
     </para>
     <programlisting>
-  /* stop the bin */
-  gst_element_set_state (bin, GST_STATE_NULL);
+  /* stop the pipeline */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_object_destroy (GST_OBJECT (audiosink));
-  gst_object_destroy (GST_OBJECT (decoder));
-  gst_object_destroy (GST_OBJECT (disksrc));
-  gst_object_destroy (GST_OBJECT (bin));
+  gst_object_unref (GST_OBJECT (audiosink));
+  gst_object_unref (GST_OBJECT (decoder));
+  gst_object_unref (GST_OBJECT (disksrc));
+  gst_object_unref (GST_OBJECT (pipeline));
 
   exit (0);
     </programlisting>
     <note>
       <para>
-        don't forget to set the state of the bin to NULL. This will free
+        don't forget to set the state of the pipeline to NULL. This will free
         all of the resources held by the elements.
       </para>
     </note>

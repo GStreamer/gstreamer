@@ -23,12 +23,12 @@
         </listitem>
         <listitem>
           <para>
-	    PLAYING: The element is doing something.
+  	    PAUSED: The element is paused for a period of time.
           </para>
         </listitem>
         <listitem>
           <para>
-  	    PAUSED: The element is paused for a period of time.
+	    PLAYING: The element is doing something.
           </para>
         </listitem>
       </itemizedlist>
@@ -36,10 +36,8 @@
 
     <para> 
       All elements start with the NULL state. The elements will go throught the following state changes:
-      <figure float="1" id="sec-state-img">
-        <title>The different states of a <classname>GstElement</classname> and the state transitions</title>
-        <graphic fileref="images/state-diagram" format="png"></graphic>
-      </figure>
+      NULL -&gt; READY -&gt; PAUSED -&gt; PLAYING. Remember when going from PLAYING to READY GStreamer 
+      will internally go throught the intermediate states.
     </para>
     <para> 
       The state of an element can be changed with the following code:
@@ -62,11 +60,6 @@
       <colspec colwidth="8*">
     <tbody>
       <row>
-        <entry><literal>GST_STATE_NONE_PENDING</literal></entry>
-        <entry>The element is in the desired state.
-        </entry>
-      </row>
-      <row>
         <entry><literal>GST_STATE_NULL</literal></entry>
         <entry>Reset the state of an element.
         </entry>
@@ -77,13 +70,13 @@
         </entry>
       </row>
       <row>
-        <entry><literal>GST_STATE_PLAYING</literal></entry>
-        <entry>means there really is data flowing through the graph.
+        <entry><literal>GST_STATE_PAUSED</literal></entry>
+        <entry>temporary stops the data flow.
         </entry>
       </row>
       <row>
-        <entry><literal>GST_STATE_PAUSED</literal></entry>
-        <entry>temporary stops the data flow.
+        <entry><literal>GST_STATE_PLAYING</literal></entry>
+        <entry>means there really is data flowing through the graph.
         </entry>
       </row>
     </tbody>
@@ -121,7 +114,8 @@
     <note>
       <para> 
         You can also go from the NULL to PLAYING state directly without going through the READY
-	state. this is a shortcut, the framework will internally go through the READY state for you.
+	state. this is a shortcut, the framework will internally go through the READY and the 
+	PAUSED state for you.
       </para> 
     </note>
   </sect1>

@@ -197,10 +197,13 @@ main(int argc, char *argv[])
       <programlisting>
 struct _GstCaps {
   gchar *name;                  /* the name of this caps */
-
   guint16 id;                   /* type id (major type) */
 
+  guint refcount; 		/* caps are refcounted */
+
   GstProps *properties;         /* properties for this capability */
+
+  GstCaps *next;		/* caps can be chained together */
 };
       </programlisting>
       <para> 
@@ -317,26 +320,139 @@ Pads:
     <sect2 id="sec-pads-caps-get">
       <title>Getting the capabilities of a pad</title>
       <para> 
-        A pad can have a GList of capabilities attached to it. You can get the capabilities list
+        A pad can have a chain of capabilities attached to it. You can get the capabilities chain
 	with:
       </para>
     <programlisting>
- GList *caps;
+ GstCaps *caps;
     ...
- caps = gst_pad_get_caps_list (pad);
+ caps = gst_pad_get_caps (pad);
 
  g_print ("pad name &percnt;s\n", gst_pad_get_name (pad));
  
  while (caps) {
-   GstCaps *cap = (GstCaps *) caps-&gt;data;
-
-   g_print (" Capability name &percnt;s, MIME type\n", gst_caps_get_name (cap), 
-                                                gst_caps_get_mime (cap));
+   g_print (" Capability name &percnt;s, MIME type &percnt;s\n", 
+   				gst_caps_get_name (cap), 
+                                gst_caps_get_mime (cap));
    
-   caps = g_list_next (caps);
+   caps = caps-&gt;next;
  }
     ...
     </programlisting>
+    </sect2>
+    <sect2 id="sec-pads-caps-create">
+      <title>Creating capabilities structures</title>
+      <para> 
+        While the capabilities are mainly used inside the plugin to describe the media type of the
+	pads, the application programmer also has to have basic understanding of caps in order to
+	interface with the plugins, specially when using the autopluggers.
+      </para>
+      <para> 
+        As we said, a capability has a name, a mime-type and some properties. The signature of the 
+	function to create a new <classname>GstCaps *</classname> structure is like:
+    <programlisting>
+GstCaps*    gst_caps_new (const gchar *name, const gchar *mime, GstProps *props);
+    </programlisting>
+      </para>
+      <para>
+        You can therefore create a new capability with no properties like this:
+    <programlisting>
+  GstCaps *newcaps;
+  
+  newcaps = gst_caps_new ("my_caps", "audio/wav", NULL);
+    </programlisting>
+      </para>
+      <para>
+        <classname>GstProps</classname> basically consist of a set of key-value pairs
+	and are created with a function with this signature:
+    <programlisting>
+GstProps*     gst_props_new   (const gchar *firstname, ...);
+    </programlisting>
+      </para>
+      <para>
+        The keys are given as strings and the values are given with a set of macros:
+        <itemizedlist>
+          <listitem>
+            <para>
+              GST_PROPS_INT(a): An integer value
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              GST_PROPS_FLOAT(a): A floating point value
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              GST_PROPS_FOURCC(a): A fourcc value
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              GST_PROPS_BOOLEAN(a): A boolean value
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              GST_PROPS_STRING(a): A string value
+            </para>
+          </listitem>
+        </itemizedlist>
+        The values can also be specified as ranges with:
+        <itemizedlist>
+          <listitem>
+            <para>
+              GST_PROPS_INT_RANGE(a,b): An integer ragne from a to b
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              GST_PROPS_FLOAT_RANGE(a,b): A float ragne from a to b
+            </para>
+          </listitem>
+        </itemizedlist>
+        All of the above values can be given with a list too using:
+        <itemizedlist>
+          <listitem>
+            <para>
+              GST_PROPS_LIST(a,...): A list of property values.
+            </para>
+          </listitem>
+        </itemizedlist>
+      </para>
+      <para>
+        A more complex capability with properties is created like this:
+        <programlisting>
+  GstCaps *newcaps;
+  
+  newcaps = gst_caps_new ("my_caps", 
+                          "audio/wav", 
+  			  gst_props_new (
+			    "bitrate", GST_PROPS_INT_RANGE (11025,22050),
+			    "depth",   GST_PROPS_INT (16),
+			    "signed",  GST_PROPS_LIST (
+			     		 GST_PROPS_BOOLEAN (TRUE),
+			     		 GST_PROPS_BOOLEAN (FALSE)
+				       ),
+			    NULL
+			  );
+        </programlisting>
+	Optionally the convenient shortcut macro can be used. The above complex 
+	capability can be created with:
+        <programlisting>
+  GstCaps *newcaps;
+  
+  newcaps = GST_CAPS_NEW ("my_caps", 
+                          "audio/wav", 
+			    "bitrate", GST_PROPS_INT_RANGE (11025,22050),
+			    "depth",   GST_PROPS_INT (16),
+			    "signed",  GST_PROPS_LIST (
+			     		 GST_PROPS_BOOLEAN (TRUE),
+			     		 GST_PROPS_BOOLEAN (FALSE)
+				       )
+			  );
+        </programlisting>
+      </para>
     </sect2>
 
   </sect1>

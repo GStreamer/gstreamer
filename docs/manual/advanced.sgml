@@ -220,7 +220,7 @@ struct _GstType {
       <note>
         <para>
 	  As you can see, there might be a multitude of elements that
-	  are able to operate on video/raw types. some might include:
+	  are able to operate on audio/raw types. some might include:
           <itemizedlist>
             <listitem>
               <para>
@@ -274,7 +274,7 @@ struct _GstType {
     <title>creating elements with the factory</title>
     <para>
       In the previous section we described how you could obtain
-      an element factory using MIME types. One the factory has been
+      an element factory using MIME types. Once the factory has been
       obtained, you can create an element using:
     </para>
     <programlisting>

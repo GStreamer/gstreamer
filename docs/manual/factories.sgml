@@ -229,7 +229,7 @@ struct _GstType {
       <note>
         <para>
 	  As you can see, there might be a multitude of elements that
-	  are able to operate on video/raw types. some might include:
+	  are able to operate on audio/raw types. some might include:
           <itemizedlist>
             <listitem>
               <para>
