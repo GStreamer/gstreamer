@@ -89,7 +89,8 @@ enum {
   GST_CAT_NEGOTIATION,		// Caps Negotiation stuff
   GST_CAT_REFCOUNTING,		// Ref Counting stuff
   GST_CAT_EVENT,		// Event system
-
+  GST_CAT_PARAMS,		// Dynamic parameters
+  
   GST_CAT_MAX_CATEGORY = 31
 };
 
