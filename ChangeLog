@@ -1,3 +1,8 @@
+2004-02-11  David Schleef  <ds@schleef.org>
+
+	* docs/gst/Makefile.am: Call gst_init() in built gstreamer-scan.
+	* gst/gstatomic_impl.h: Disable sparc implementation.
+
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-element-check.m4:

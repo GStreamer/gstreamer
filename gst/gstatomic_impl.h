@@ -211,7 +211,8 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** Sun SPARC *****/
-#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__)
+#elif 0 && defined(HAVE_CPU_SPARC) && defined(__GNUC__)
+/* allegedly broken again */
 
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
 
