@@ -1,5 +1,8 @@
 # rewritten by Thomas to be more simple and working
 
+# SF username
+USERNAME ?= thomasvs
+
 ### These are all generic; we set all the variables we need
 
 # intermediary build path
@@ -165,7 +168,14 @@ check-local:
 	xmllint -noout -valid $(MAIN)
 
 ### this is a website upload target
+
 upload: html ps pdf
 	export RSYNC_RSH=ssh
-	rsync -arv $(DOC).ps $(DOC).pdf html thomasvs@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$(VERSION)/$(DOC)
+	if test "x$$GST_PLUGINS_VERSION_NANO" = x0; then \
+            export DOCVERSION=$(VERSION); \
+        else export DOCVERSION=cvs; \
+        fi; \
+	echo $$DOCVERSION; \
+	ssh $(USERNAME)@shell.sf.net mkdir -p /home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION/$(DOC); \
+	rsync -arv $(DOC).ps $(DOC).pdf html $(USERNAME)@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION/$(DOC)
 
