@@ -59,12 +59,15 @@ struct _GstQueue {
   GList *tail;		/* have to keep track of this myself */
 
   gint level_buffers;	/* number of buffers queued here */
+  gint max_buffers;	/* maximum number of buffers queued here */
   gint level_bytes;	/* number of bytes queued here */
   gint size_buffers;	/* size of queue in buffers */
   gint size_bytes;	/* size of queue in bytes */
 
-  GMutex *waiterlock;	/* used when the queue is empty */
-  GCond *waitercond;
+  GMutex *emptylock;	/* used when the queue is empty */
+  GCond *emptycond;
+  GMutex *fulllock;	/* used when the queue is full */
+  GCond *fullcond;
 };
 
 struct _GstQueueClass {
