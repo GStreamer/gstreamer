@@ -396,6 +396,7 @@ GST_PLUGINS_ALL="\
 	passthrough \
 	playback \
 	playondemand \
+	games \
 	qtdemux \
 	realmedia \
 	rtjpeg \
@@ -1937,6 +1938,7 @@ gst/festival/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
+gst/games/Makefile
 gst/goom/Makefile
 gst/interleave/Makefile
 gst/law/Makefile
