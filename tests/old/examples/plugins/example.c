@@ -47,8 +47,8 @@ static GstPadFactory sink_factory = {
   GST_PAD_FACTORY_CAPS(
   "example_sink",					/* the name of the caps */
      "unknown/unknown",					/* the mime type of the caps */
-     "something",  	GST_PROPS_INT (1),		/* a property */
-     "foo", 		GST_PROPS_BOOLEAN (TRUE)	/* another property */
+     "something",	GST_PROPS_INT (1),		/* a property */
+     "foo",		GST_PROPS_BOOLEAN (TRUE)	/* another property */
   ),
   NULL
 };
@@ -65,13 +65,13 @@ static GstPadFactory src_factory = {
 };
 
 
-static void 	gst_example_class_init		(GstExampleClass *klass);
-static void 	gst_example_init		(GstExample *example);
+static void	gst_example_class_init		(GstExampleClass *klass);
+static void	gst_example_init		(GstExample *example);
 
-static void 	gst_example_chain 		(GstPad *pad, GstBuffer *buf);
+static void	gst_example_chain		(GstPad *pad, GstBuffer *buf);
 
-static void 	gst_example_set_arg		(GtkObject *object,GtkArg *arg,guint id);
-static void 	gst_example_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void	gst_example_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void	gst_example_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 
 GstPadTemplate *src_template, *sink_template;
 
@@ -79,7 +79,7 @@ static GstElementClass *parent_class = NULL;
 //static guint gst_example_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_example_get_type(void) 
+gst_example_get_type(void)
 {
   static GtkType example_type = 0;
 
@@ -99,8 +99,8 @@ gst_example_get_type(void)
   return example_type;
 }
 
-static void 
-gst_example_class_init (GstExampleClass *klass) 
+static void
+gst_example_class_init (GstExampleClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
@@ -113,12 +113,12 @@ gst_example_class_init (GstExampleClass *klass)
   gtk_object_add_arg_type("GstExample::active", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_ACTIVE);
 
-  gtkobject_class->set_arg = gst_example_set_arg;  
+  gtkobject_class->set_arg = gst_example_set_arg;
   gtkobject_class->get_arg = gst_example_get_arg;
 }
 
-static void 
-gst_example_init(GstExample *example) 
+static void
+gst_example_init(GstExample *example)
 {
   example->sinkpad = gst_pad_new_from_template (sink_template, "sink");
   gst_element_add_pad(GST_ELEMENT(example),example->sinkpad);
@@ -130,8 +130,8 @@ gst_example_init(GstExample *example)
   example->active = FALSE;
 }
 
-static void 
-gst_example_chain (GstPad *pad, GstBuffer *buf) 
+static void
+gst_example_chain (GstPad *pad, GstBuffer *buf)
 {
   GstExample *example;
 
@@ -152,8 +152,8 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
   gst_pad_push(example->srcpad,buf);
 }
 
-static void 
-gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id) 
+static void
+gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
 {
   GstExample *example;
 
@@ -171,8 +171,8 @@ gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
   }
 }
 
-static void 
-gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id) 
+static void
+gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
 {
   GstExample *example;
 
@@ -191,7 +191,7 @@ gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
 }
 
 GstPlugin*
-plugin_init (GModule *module) 
+plugin_init (GModule *module)
 {
   GstPlugin *plugin;
   GstElementFactory *factory;

@@ -121,7 +121,7 @@ gst_xml_write (GstElement *element)
   xmlNewGlobalNs (doc, "http://gstreamer.net/gst-core/1.0/", "gst");
   ns = xmlNewNs (doc->xmlRootNode, "http://gstreamer.net/gst-core/1.0/", "gst");
 
-  doc->xmlRootNode = xmlNewDocNode (doc, ns, "GST-Pipeline", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, ns, "gstreamer", NULL);
 
   elementnode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
 
@@ -146,7 +146,7 @@ gst_xml_real_parse (GstXML *xml, xmlDocPtr doc, const guchar *root)
     g_warning("gstxml: document of wrong type, core namespace not found\n");
     return FALSE;
   }
-  if (strcmp(cur->name, "GST-Pipeline")) {
+  if (strcmp(cur->name, "gstreamer")) {
     g_warning("gstxml: XML file is in wrong format\n");
     return FALSE;
   }

@@ -30,6 +30,7 @@ extern "C" {
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstExample GstExample;
+
 struct _GstExample {
   GstElement element;
 
