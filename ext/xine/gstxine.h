@@ -75,6 +75,7 @@ guint32		gst_xine_get_format_for_caps	(const GstCaps *caps);
 
 /* init functions for the plugins */
 
+gboolean	gst_xine_audio_sink_init_plugin	(GstPlugin *plugin);
 gboolean	gst_xine_audio_dec_init_plugin	(GstPlugin *plugin);
 gboolean	gst_xine_input_init_plugin	(GstPlugin *plugin);
   

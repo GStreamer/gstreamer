@@ -154,7 +154,8 @@ static gboolean
 plugin_init (GstPlugin *plugin)
 {
   if (!gst_xine_input_init_plugin (plugin) ||
-      !gst_xine_audio_dec_init_plugin (plugin))
+      !gst_xine_audio_dec_init_plugin (plugin) ||
+      !gst_xine_audio_sink_init_plugin (plugin))
     return FALSE;
 
   return TRUE;

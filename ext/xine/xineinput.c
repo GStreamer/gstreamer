@@ -110,6 +110,8 @@ gst_xine_input_dispose (GObject *object)
 
   g_free (xine->location);
   xine->location = NULL;
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static void
@@ -273,7 +275,7 @@ gst_xine_input_subclass_init (gpointer g_class, gpointer class_data)
   g_free (details.description);
   
   /* FIXME: this is pretty hackish, anyone knows a better idea (xine doesn't) */
-  if (strcmp (input->get_description (input), "CD") == 0) {
+  if (strcmp (input->get_identifier (input), "cdda") == 0) {
     gst_element_class_add_pad_template (element_class, 
         gst_static_pad_template_get (&cdda_template));
   } else {
