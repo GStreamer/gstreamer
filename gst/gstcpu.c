@@ -40,7 +40,7 @@ void gst_cpuid_i386(int,long *,long *,long *,long *);
 static gchar *stringcat (gchar *a,gchar *b) {
   gchar *c;
   if (a) {
-    c = g_strconcat(a,b);
+    c = g_strconcat(a,b,NULL);
     g_free(a);
   } else
     c = g_strdup(b);
