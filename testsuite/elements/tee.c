@@ -147,7 +147,6 @@ main (int argc, char *argv[])
   g_print ("Removing first sink\n");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
   gst_pad_unlink (tee_src1, gst_element_get_pad (sink1, "sink"));
-  gst_pad_destroy (tee_src1);
   gst_bin_remove (GST_BIN (pipeline), sink1);
 
   /* only second fakesink linked, iterate */
@@ -166,4 +165,3 @@ main (int argc, char *argv[])
   g_print ("Done !\n");
   return 0;
 }
-

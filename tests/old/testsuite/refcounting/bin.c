@@ -72,7 +72,7 @@ add_remove_test2 (void)
   g_assert (!GST_OBJECT_FLOATING (element));
   g_assert (!GST_OBJECT_DESTROYED (element));
 
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (GST_OBJECT_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
 
@@ -92,7 +92,7 @@ add_remove_test3 (void)
   gst_bin_add (GST_BIN (bin), element);
   g_assert (!GST_OBJECT_FLOATING (element));
 
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (gst_bin_get_by_name (GST_BIN (bin), "test1") == NULL);
 
   gst_object_unref (GST_OBJECT (bin));
@@ -116,9 +116,9 @@ add_remove_test4 (void)
   gst_bin_add (GST_BIN (bin), bin2);
   g_assert (!GST_OBJECT_FLOATING (bin2));
 
-  gst_object_destroy (GST_OBJECT (bin2));
+  gst_object_unref (GST_OBJECT (bin2));
   g_assert (gst_bin_get_by_name (GST_BIN (bin), "testbin") == NULL);
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (gst_bin_get_by_name (GST_BIN (bin), "test1") == NULL);
 
   gst_object_unref (GST_OBJECT (bin));
@@ -170,14 +170,14 @@ main (int argc, gchar *argv[])
 
   bin = gst_bin_new ("somebin");
   g_assert (!GST_OBJECT_DESTROYED (bin));
-  gst_object_destroy (GST_OBJECT (bin));
+  gst_object_unref (GST_OBJECT (bin));
   g_assert (GST_OBJECT_DESTROYED (bin));
   gst_object_unref (GST_OBJECT (bin));
   g_print ("create/destroy/unref new bin %ld\n", vmsize()-usage1);
   
   for (i=0; i<iters;i++) {
     bin = gst_bin_new ("somebin");
-    gst_object_destroy (GST_OBJECT (bin));
+    gst_object_unref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
   }
   g_print ("create/destroy/unref %d bin %ld\n", iters, vmsize()-usage1);
@@ -198,7 +198,7 @@ main (int argc, gchar *argv[])
 
   bin = gst_bin_new ("somebin");
   gst_object_ref (GST_OBJECT (bin));
-  gst_object_destroy (GST_OBJECT (bin));
+  gst_object_unref (GST_OBJECT (bin));
   gst_object_unref (GST_OBJECT (bin));
   gst_object_unref (GST_OBJECT (bin));
   g_print ("craete/ref/destroy/unref/unref new bin %ld\n", vmsize()-usage1);
@@ -206,7 +206,7 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters;i++) {
     bin = gst_bin_new ("somebin");
     gst_object_ref (GST_OBJECT (bin));
-    gst_object_destroy (GST_OBJECT (bin));
+    gst_object_unref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
   }
@@ -216,7 +216,7 @@ main (int argc, gchar *argv[])
     bin = gst_bin_new ("somebin");
     gst_object_ref (GST_OBJECT (bin));
     gst_element_set_name (bin, "testing123");
-    gst_object_destroy (GST_OBJECT (bin));
+    gst_object_unref (GST_OBJECT (bin));
     gst_element_set_name (bin, "testing123");
     gst_object_unref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));

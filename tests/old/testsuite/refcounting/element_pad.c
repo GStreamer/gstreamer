@@ -57,7 +57,7 @@ main (int argc, gchar *argv[])
     gst_element_link_pads (element, "sink", element2, "src");
     g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
     g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element, "sink")));
-    gst_object_destroy (GST_OBJECT (element));
+    gst_object_unref (GST_OBJECT (element));
     g_assert (GST_OBJECT_DESTROYED (element));
     g_assert (!GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
     gst_object_unref (GST_OBJECT (element2));
@@ -92,7 +92,7 @@ main (int argc, gchar *argv[])
 
   element = gst_element_factory_make ("fakesink", NULL);;
   pad = gst_element_get_pad (element, "sink");
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (GST_OBJECT_DESTROYED (element));
   g_assert (gst_element_get_pad (element, "sink") == NULL);
   gst_object_unref (GST_OBJECT (element));
@@ -102,7 +102,7 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters/2; i++) {
     element = gst_element_factory_make ("fakesink", NULL);;
     pad = gst_element_get_pad (element, "sink");
-    gst_object_destroy (GST_OBJECT (element));
+    gst_object_unref (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
   g_print ("pad destroy/removal loop %d %ld\n", iters/2, vmsize()-usage1);
@@ -110,7 +110,7 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters/2; i++) {
     element = gst_element_factory_make ("fakesink", NULL);;
     pad = gst_element_get_pad (element, "sink");
-    gst_object_destroy (GST_OBJECT (pad));
+    gst_object_unref (GST_OBJECT (pad));
     g_assert (gst_element_get_pad (element, "sink") == NULL);
     gst_object_unref (GST_OBJECT (element));
   }

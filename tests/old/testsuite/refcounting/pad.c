@@ -50,14 +50,14 @@ main (int argc, gchar *argv[])
 
   pad = gst_pad_new ("padname", GST_PAD_SINK);
   g_assert (!GST_OBJECT_DESTROYED (pad));
-  gst_object_destroy (GST_OBJECT (pad));
+  gst_object_unref (GST_OBJECT (pad));
   g_assert (GST_OBJECT_DESTROYED (pad));
   gst_object_unref (GST_OBJECT (pad));
   g_print ("create/destroy/unref pad %ld\n", vmsize()-usage1);
   
   for (i=0; i<iters;i++) {
     pad = gst_pad_new ("padname", GST_PAD_SINK);
-    gst_object_destroy (GST_OBJECT (pad));
+    gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/destroy/unref %d pads %ld\n", iters, vmsize()-usage1);
@@ -78,7 +78,7 @@ main (int argc, gchar *argv[])
 
   pad = gst_pad_new ("padname", GST_PAD_SINK);
   gst_object_ref (GST_OBJECT (pad));
-  gst_object_destroy (GST_OBJECT (pad));
+  gst_object_unref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
   g_print ("create/ref/destroy/unref/unref pad %ld\n", vmsize()-usage1);
@@ -86,7 +86,7 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters;i++) {
     pad = gst_pad_new ("padname", GST_PAD_SINK);
     gst_object_ref (GST_OBJECT (pad));
-    gst_object_destroy (GST_OBJECT (pad));
+    gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
   }
@@ -96,7 +96,7 @@ main (int argc, gchar *argv[])
     pad = gst_pad_new ("padname", GST_PAD_SINK);
     gst_object_ref (GST_OBJECT (pad));
     gst_pad_set_name (pad, "testing123");
-    gst_object_destroy (GST_OBJECT (pad));
+    gst_object_unref (GST_OBJECT (pad));
     gst_pad_set_name (pad, "testing123");
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));

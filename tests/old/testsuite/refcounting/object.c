@@ -49,14 +49,14 @@ main (int argc, gchar *argv[])
 
   object = gst_object_new ();
   g_assert (!GST_OBJECT_DESTROYED (object));
-  gst_object_destroy (object);
+  gst_object_unref (object);
   g_assert (GST_OBJECT_DESTROYED (object));
   gst_object_unref (object);
   g_print ("create/destroy/unref new object %ld\n", vmsize()-usage1);
   
   for (i=0; i<iters;i++) {
     object = gst_object_new ();
-    gst_object_destroy (object);
+    gst_object_unref (object);
     gst_object_unref (object);
   }
   g_print ("destroy/unref %d object %ld\n", iters, vmsize()-usage1);
@@ -77,7 +77,7 @@ main (int argc, gchar *argv[])
 
   object = gst_object_new ();
   gst_object_ref (object);
-  gst_object_destroy (object);
+  gst_object_unref (object);
   gst_object_unref (object);
   gst_object_unref (object);
   g_print ("create/ref/destroy/unref/unref new object %ld\n", vmsize()-usage1);
@@ -85,7 +85,7 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters;i++) {
     object = gst_object_new ();
     gst_object_ref (object);
-    gst_object_destroy (object);
+    gst_object_unref (object);
     gst_object_unref (object);
     gst_object_unref (object);
   }
@@ -95,7 +95,7 @@ main (int argc, gchar *argv[])
     object = gst_object_new ();
     gst_object_ref (object);
     gst_object_set_name (object, "testing123");
-    gst_object_destroy (object);
+    gst_object_unref (object);
     gst_object_set_name (object, "testing123");
     gst_object_unref (object);
     gst_object_unref (object);
@@ -133,7 +133,7 @@ main (int argc, gchar *argv[])
   g_assert (!GST_OBJECT_FLOATING (object));
   g_assert (gst_object_get_parent (object) == object2);
 
-  gst_object_destroy (object);
+  gst_object_unref (object);
   g_assert (GST_OBJECT_DESTROYED (object));
   g_assert (!GST_OBJECT_FLOATING (object));
   g_assert (gst_object_get_parent (object) == NULL);

@@ -76,7 +76,7 @@ add_remove_test2 (void)
   g_assert (!GST_OBJECT_FLOATING (element));
   g_assert (!GST_OBJECT_DESTROYED (element));
 
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (GST_OBJECT_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
 
@@ -96,7 +96,7 @@ add_remove_test3 (void)
   gst_bin_add (GST_BIN (thread), element);
   g_assert (!GST_OBJECT_FLOATING (element));
 
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (gst_bin_get_by_name (GST_BIN (thread), "test1") == NULL);
 
   gst_object_unref (GST_OBJECT (thread));
@@ -120,9 +120,9 @@ add_remove_test4 (void)
   gst_bin_add (GST_BIN (thread), thread2);
   g_assert (!GST_OBJECT_FLOATING (thread2));
 
-  gst_object_destroy (GST_OBJECT (thread2));
+  gst_object_unref (GST_OBJECT (thread2));
   g_assert (gst_bin_get_by_name (GST_BIN (thread), "testthread") == NULL);
-  gst_object_destroy (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (element));
   g_assert (gst_bin_get_by_name (GST_BIN (thread), "test1") == NULL);
 
   gst_object_unref (GST_OBJECT (thread));
@@ -174,14 +174,14 @@ main (int argc, gchar *argv[])
 
   thread = gst_thread_new ("somethread");
   g_assert (!GST_OBJECT_DESTROYED (thread));
-  gst_object_destroy (GST_OBJECT (thread));
+  gst_object_unref (GST_OBJECT (thread));
   g_assert (GST_OBJECT_DESTROYED (thread));
   gst_object_unref (GST_OBJECT (thread));
   g_print ("create/destroy/unref new thread %ld\n", vmsize()-usage1);
   
   for (i=0; i<iters;i++) {
     thread = gst_thread_new ("somethread");
-    gst_object_destroy (GST_OBJECT (thread));
+    gst_object_unref (GST_OBJECT (thread));
     gst_object_unref (GST_OBJECT (thread));
   }
   g_print ("create/destroy/unref %d thread %ld\n", iters, vmsize()-usage1);
@@ -202,7 +202,7 @@ main (int argc, gchar *argv[])
 
   thread = gst_thread_new ("somethread");
   gst_object_ref (GST_OBJECT (thread));
-  gst_object_destroy (GST_OBJECT (thread));
+  gst_object_unref (GST_OBJECT (thread));
   gst_object_unref (GST_OBJECT (thread));
   gst_object_unref (GST_OBJECT (thread));
   g_print ("craete/ref/destroy/unref/unref new thread %ld\n", vmsize()-usage1);
@@ -210,7 +210,7 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters;i++) {
     thread = gst_thread_new ("somethread");
     gst_object_ref (GST_OBJECT (thread));
-    gst_object_destroy (GST_OBJECT (thread));
+    gst_object_unref (GST_OBJECT (thread));
     gst_object_unref (GST_OBJECT (thread));
     gst_object_unref (GST_OBJECT (thread));
   }
@@ -220,7 +220,7 @@ main (int argc, gchar *argv[])
     thread = gst_thread_new ("somethread");
     gst_object_ref (GST_OBJECT (thread));
     gst_element_set_name (thread, "testing123");
-    gst_object_destroy (GST_OBJECT (thread));
+    gst_object_unref (GST_OBJECT (thread));
     gst_element_set_name (thread, "testing123");
     gst_object_unref (GST_OBJECT (thread));
     gst_object_unref (GST_OBJECT (thread));

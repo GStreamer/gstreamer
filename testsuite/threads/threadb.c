@@ -38,7 +38,10 @@ state_changed (GstElement *el, gint arg1, gint arg2, gpointer user_data)
 	   gst_element_state_get_name (state));
   if (state == GST_STATE_PLAYING) running = TRUE;
   /* if we move from PLAYING to PAUSED, we're done */
-  if (state == GST_STATE_PAUSED && running) gst_main_quit ();
+  if (state == GST_STATE_PAUSED && running) {
+    running = FALSE;
+    gst_main_quit ();
+  }
 }
 
 int
@@ -76,4 +79,3 @@ main (gint argc, gchar *argv[])
 
   return 0;
 }
-
