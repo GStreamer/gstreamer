@@ -1,0 +1,451 @@
+<?xml version="1.0"?>
+<GTK-Interface>
+
+<project>
+  <name>Gstplay</name>
+  <program_name>gstplay</program_name>
+  <directory></directory>
+  <source_directory>src</source_directory>
+  <pixmaps_directory>pixmaps</pixmaps_directory>
+  <language>C</language>
+  <gnome_support>True</gnome_support>
+  <gettext_support>True</gettext_support>
+  <output_main_file>False</output_main_file>
+  <output_support_files>False</output_support_files>
+  <output_build_files>False</output_build_files>
+</project>
+
+<widget>
+  <class>GnomeApp</class>
+  <name>gstplay</name>
+  <signal>
+    <name>delete_event</name>
+    <handler>on_gstplay_delete_event</handler>
+    <last_modification_time>Sun, 06 Aug 2000 11:30:22 GMT</last_modification_time>
+  </signal>
+  <signal>
+    <name>destroy</name>
+    <handler>on_gstplay_destroy</handler>
+    <last_modification_time>Sun, 06 Aug 2000 11:34:58 GMT</last_modification_time>
+  </signal>
+  <title>Gstplay</title>
+  <type>GTK_WINDOW_TOPLEVEL</type>
+  <position>GTK_WIN_POS_CENTER</position>
+  <modal>False</modal>
+  <allow_shrink>True</allow_shrink>
+  <allow_grow>True</allow_grow>
+  <auto_shrink>True</auto_shrink>
+  <enable_layout_config>True</enable_layout_config>
+
+  <widget>
+    <class>GnomeDock</class>
+    <child_name>GnomeApp:dock</child_name>
+    <name>dock1</name>
+    <allow_floating>False</allow_floating>
+    <child>
+      <padding>0</padding>
+      <expand>True</expand>
+      <fill>True</fill>
+    </child>
+
+    <widget>
+      <class>GnomeDockItem</class>
+      <name>dockitem1</name>
+      <border_width>2</border_width>
+      <placement>GNOME_DOCK_TOP</placement>
+      <band>0</band>
+      <position>0</position>
+      <offset>0</offset>
+      <locked>False</locked>
+      <exclusive>True</exclusive>
+      <never_floating>False</never_floating>
+      <never_vertical>True</never_vertical>
+      <never_horizontal>False</never_horizontal>
+      <shadow_type>GTK_SHADOW_OUT</shadow_type>
+
+      <widget>
+	<class>GtkMenuBar</class>
+	<name>menubar1</name>
+	<shadow_type>GTK_SHADOW_NONE</shadow_type>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>file1</name>
+	  <stock_item>GNOMEUIINFO_MENU_FILE_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>file1_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>open1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_open2_activate</handler>
+		<last_modification_time>Thu, 27 Jul 2000 19:35:00 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_OPEN_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>save1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_save1_activate</handler>
+		<last_modification_time>Thu, 27 Jul 2000 19:35:00 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_SAVE_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>save_as1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_save_as1_activate</handler>
+		<last_modification_time>Thu, 27 Jul 2000 19:35:00 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_SAVE_AS_ITEM</stock_item>
+	    </widget>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>separator1</name>
+	      <right_justify>False</right_justify>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>exit_menu</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_exit_menu_activate</handler>
+		<last_modification_time>Sun, 06 Aug 2000 13:41:10 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_EXIT_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>view1</name>
+	  <stock_item>GNOMEUIINFO_MENU_VIEW_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>view1_menu</name>
+
+	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>media1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_media2_activate</handler>
+		<last_modification_time>Thu, 27 Jul 2000 19:37:03 GMT</last_modification_time>
+	      </signal>
+	      <label>_Media...</label>
+	      <right_justify>False</right_justify>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>settings1</name>
+	  <stock_item>GNOMEUIINFO_MENU_SETTINGS_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>settings1_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>preferences1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_preferences1_activate</handler>
+		<last_modification_time>Thu, 27 Jul 2000 19:35:00 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_PREFERENCES_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>play1</name>
+	  <label>_Play</label>
+	  <right_justify>False</right_justify>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>play1_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>play1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_toggle_play_toggled</handler>
+		<last_modification_time>Sun, 06 Aug 2000 13:29:59 GMT</last_modification_time>
+	      </signal>
+	      <label>_Play</label>
+	      <right_justify>False</right_justify>
+	      <icon>play.xpm</icon>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>pause1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_toggle_pause_toggled</handler>
+		<last_modification_time>Sun, 06 Aug 2000 13:30:13 GMT</last_modification_time>
+	      </signal>
+	      <label>P_ause</label>
+	      <right_justify>False</right_justify>
+	      <icon>pause.xpm</icon>
+	    </widget>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>stop1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_toggle_stop_toggled</handler>
+		<last_modification_time>Sun, 06 Aug 2000 13:30:25 GMT</last_modification_time>
+	      </signal>
+	      <label>_Stop</label>
+	      <right_justify>False</right_justify>
+	      <icon>stop.xpm</icon>
+	    </widget>
+	  </widget>
+	</widget>
+
+	<widget>
+	  <class>GtkMenuItem</class>
+	  <name>help1</name>
+	  <stock_item>GNOMEUIINFO_MENU_HELP_TREE</stock_item>
+
+	  <widget>
+	    <class>GtkMenu</class>
+	    <name>help1_menu</name>
+
+	    <widget>
+	      <class>GtkPixmapMenuItem</class>
+	      <name>about1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_about_activate</handler>
+		<last_modification_time>Sun, 06 Aug 2000 11:54:17 GMT</last_modification_time>
+	      </signal>
+	      <stock_item>GNOMEUIINFO_MENU_ABOUT_ITEM</stock_item>
+	    </widget>
+	  </widget>
+	</widget>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GnomeDockItem</class>
+      <name>dockitem3</name>
+      <border_width>2</border_width>
+      <placement>GNOME_DOCK_BOTTOM</placement>
+      <band>0</band>
+      <position>0</position>
+      <offset>0</offset>
+      <locked>True</locked>
+      <exclusive>True</exclusive>
+      <never_floating>True</never_floating>
+      <never_vertical>True</never_vertical>
+      <never_horizontal>True</never_horizontal>
+      <shadow_type>GTK_SHADOW_NONE</shadow_type>
+
+      <widget>
+	<class>GtkHScale</class>
+	<name>slider</name>
+	<can_focus>True</can_focus>
+	<draw_value>False</draw_value>
+	<value_pos>GTK_POS_LEFT</value_pos>
+	<digits>1</digits>
+	<policy>GTK_UPDATE_CONTINUOUS</policy>
+	<value>0</value>
+	<lower>0</lower>
+	<upper>110</upper>
+	<step>1</step>
+	<page>10</page>
+	<page_size>10</page_size>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GnomeDockItem</class>
+      <name>dockitem2</name>
+      <border_width>1</border_width>
+      <placement>GNOME_DOCK_BOTTOM</placement>
+      <band>1</band>
+      <position>0</position>
+      <offset>0</offset>
+      <locked>False</locked>
+      <exclusive>True</exclusive>
+      <never_floating>False</never_floating>
+      <never_vertical>False</never_vertical>
+      <never_horizontal>False</never_horizontal>
+      <shadow_type>GTK_SHADOW_OUT</shadow_type>
+
+      <widget>
+	<class>GtkToolbar</class>
+	<name>toolbar1</name>
+	<border_width>3</border_width>
+	<orientation>GTK_ORIENTATION_HORIZONTAL</orientation>
+	<type>GTK_TOOLBAR_ICONS</type>
+	<space_size>0</space_size>
+	<space_style>GTK_TOOLBAR_SPACE_LINE</space_style>
+	<relief>GTK_RELIEF_NONE</relief>
+	<tooltips>True</tooltips>
+
+	<widget>
+	  <class>GtkToggleButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>toggle_play</name>
+	  <tooltip>Play</tooltip>
+	  <signal>
+	    <name>toggled</name>
+	    <handler>on_toggle_play_toggled</handler>
+	    <last_modification_time>Sun, 06 Aug 2000 13:17:46 GMT</last_modification_time>
+	  </signal>
+	  <label>Play</label>
+	  <icon>play.xpm</icon>
+	  <active>False</active>
+	</widget>
+
+	<widget>
+	  <class>GtkToggleButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>toggle_pause</name>
+	  <tooltip>Pause</tooltip>
+	  <signal>
+	    <name>toggled</name>
+	    <handler>on_toggle_pause_toggled</handler>
+	    <last_modification_time>Sun, 06 Aug 2000 13:17:57 GMT</last_modification_time>
+	  </signal>
+	  <label>Pause</label>
+	  <icon>pause.xpm</icon>
+	  <active>False</active>
+	</widget>
+
+	<widget>
+	  <class>GtkToggleButton</class>
+	  <child_name>Toolbar:button</child_name>
+	  <name>toggle_stop</name>
+	  <tooltip>Stop</tooltip>
+	  <signal>
+	    <name>toggled</name>
+	    <handler>on_toggle_stop_toggled</handler>
+	    <last_modification_time>Sun, 06 Aug 2000 13:18:07 GMT</last_modification_time>
+	  </signal>
+	  <label>Stop</label>
+	  <icon>stop.xpm</icon>
+	  <active>False</active>
+	</widget>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GnomeDockItem</class>
+      <name>dockitem4</name>
+      <placement>GNOME_DOCK_BOTTOM</placement>
+      <band>2</band>
+      <position>0</position>
+      <offset>0</offset>
+      <locked>True</locked>
+      <exclusive>True</exclusive>
+      <never_floating>False</never_floating>
+      <never_vertical>False</never_vertical>
+      <never_horizontal>False</never_horizontal>
+      <shadow_type>GTK_SHADOW_OUT</shadow_type>
+
+      <widget>
+	<class>GtkDrawingArea</class>
+	<name>status_area</name>
+	<height>21</height>
+	<signal>
+	  <name>configure_event</name>
+	  <handler>on_drawingarea1_configure_event</handler>
+	  <last_modification_time>Sun, 06 Aug 2000 11:27:09 GMT</last_modification_time>
+	</signal>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>Placeholder</class>
+      <child_name>GnomeDock:contents</child_name>
+    </widget>
+  </widget>
+</widget>
+
+<widget>
+  <class>GnomeAbout</class>
+  <name>about</name>
+  <modal>True</modal>
+  <copyright>(C) 1999-2000 Erik Walthinsen</copyright>
+  <authors>Erik Walthinsen, main programmer
+Wim Taymans, plugin hacker
+</authors>
+  <comments>A generice media player for the gstreamer streaming media framework.</comments>
+</widget>
+
+<widget>
+  <class>GtkFileSelection</class>
+  <name>fileselection1</name>
+  <border_width>10</border_width>
+  <title>Select File</title>
+  <type>GTK_WINDOW_TOPLEVEL</type>
+  <position>GTK_WIN_POS_NONE</position>
+  <modal>True</modal>
+  <allow_shrink>False</allow_shrink>
+  <allow_grow>True</allow_grow>
+  <auto_shrink>False</auto_shrink>
+  <show_file_op_buttons>True</show_file_op_buttons>
+
+  <widget>
+    <class>GtkButton</class>
+    <child_name>FileSel:ok_button</child_name>
+    <name>ok_button1</name>
+    <can_default>True</can_default>
+    <can_focus>True</can_focus>
+    <signal>
+      <name>clicked</name>
+      <handler>on_ok_button1_clicked</handler>
+      <data>fileselection1</data>
+      <last_modification_time>Sun, 06 Aug 2000 15:56:49 GMT</last_modification_time>
+    </signal>
+    <signal>
+      <name>clicked</name>
+      <handler>gtk_widget_hide</handler>
+      <object>fileselection1</object>
+      <last_modification_time>Sun, 06 Aug 2000 15:55:52 GMT</last_modification_time>
+    </signal>
+    <stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
+  </widget>
+
+  <widget>
+    <class>GtkButton</class>
+    <child_name>FileSel:cancel_button</child_name>
+    <name>cancel_button1</name>
+    <can_default>True</can_default>
+    <can_focus>True</can_focus>
+    <signal>
+      <name>clicked</name>
+      <handler>gtk_widget_hide</handler>
+      <object>fileselection1</object>
+      <last_modification_time>Sun, 06 Aug 2000 15:53:48 GMT</last_modification_time>
+    </signal>
+    <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
+  </widget>
+</widget>
+
+</GTK-Interface>
