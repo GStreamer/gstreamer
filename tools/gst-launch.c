@@ -52,6 +52,7 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
     gchar *str;
     g_object_get (orig, pspec->name, &str, NULL);
     g_print ("%s: %s = \"%s\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
   } else if (G_IS_PARAM_SPEC_CHAR (pspec)) {
     gchar str;
     g_object_get (orig, pspec->name, &str, NULL);
