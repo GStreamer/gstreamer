@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -96,7 +96,7 @@ class DVDPlayer(object):
 
    def build_video_thread(self):
       # ***** pre-construct the video thread *****
-      self.v_thread = gst_thread_new('v_thread')
+      self.v_thread = Thread('v_thread')
       assert self.v_thread
 
       self.v_queue = gst_element_factory_make('queue','v_queue')
@@ -148,7 +148,7 @@ class DVDPlayer(object):
 
    def build_audio_thread(self):
       # ***** pre-construct the audio thread *****
-      self.a_thread = gst_thread_new('a_thread')
+      self.a_thread = Thread('a_thread')
       assert self.a_thread
 
       self.a_queue = gst_element_factory_make('queue','a_queue')
@@ -171,7 +171,7 @@ class DVDPlayer(object):
 
    def build(self):
       # ***** construct the main pipeline *****
-      self.pipeline = gst_pipeline_new('pipeline')
+      self.pipeline = Pipeline('pipeline')
       assert self.pipeline
 
       self.src = gst_element_factory_make('dvdreadsrc','src');

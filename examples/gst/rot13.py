@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn

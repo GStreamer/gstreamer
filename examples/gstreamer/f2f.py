@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -30,16 +30,16 @@ def handoff(sender, *args):
 def main():
    # create a new bin to hold the elements
    #gst_debug_set_categories(-1)
-   bin = gst_pipeline_new ('pipeline')
+   bin = Pipeline('pipeline')
    assert bin
 
-   src = gst_element_factory_make ('fakesrc', 'src')
+   src = gst_element_factory_make('fakesrc', 'src')
    assert src
    GObject.connect(src, 'handoff', handoff)
    src.set_property('silent', 1)
    src.set_property('num_buffers', 10)
 
-   sink = gst_element_factory_make ('fakesink', 'sink')
+   sink = gst_element_factory_make('fakesink', 'sink')
    assert sink
    GObject.connect(sink, 'handoff', handoff)
    src.set_property('silent', 1)

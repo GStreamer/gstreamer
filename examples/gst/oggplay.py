@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -33,7 +33,7 @@ def main():
       return -1
 
    # create a new bin to hold the elements
-   bin = gst_pipeline_new ('pipeline')
+   bin = Pipeline('pipeline')
 
    # create a disk reader
    filesrc = gst_element_factory_make ('filesrc', 'disk_source');

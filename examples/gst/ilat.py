@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -32,14 +32,14 @@ def update(sender, *args):
 
 def build(filters, b):
    # create a new bin to hold the elements
-   bin = gst_pipeline_new ('pipeline')
+   bin = Pipeline('pipeline')
 
-   src = gst_element_factory_make ('fakesrc', 'source');
+   src = gst_element_factory_make('fakesrc', 'source');
    assert src
    src.set_property('silent', 1)
    src.set_property('num_buffers', b)
 
-   sink = gst_element_factory_make ('fakesink', 'sink')
+   sink = gst_element_factory_make('fakesink', 'sink')
    assert sink
    sink.set_property('silent', 1)
 

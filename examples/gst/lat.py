@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -95,7 +95,7 @@ def simple(argv):
    if len(argv) == 2:
       gst_schedulerfactory_set_default_name (argv[1])
 
-   pipeline = gst_pipeline_new('pipeline')
+   pipeline = Pipeline('pipeline')
    assert pipeline
 
    src = fakesrc()
@@ -116,10 +116,10 @@ def queue(argv):
    if len(arv) == 2:
       gst_schedulerfactory_set_default_name (argv[1])
 
-   pipeline = gst_pipeline_new('pipeline')
+   pipeline = Pipeline('pipeline')
    assert pipeline
 
-   src_thr = gst_thread_new('src_thread')
+   src_thr = Thread('src_thread')
    assert src_thr
 
    src = fakesrc()
@@ -140,7 +140,7 @@ def queue(argv):
    pipeline.add(sink_q)
    last.get_pad('src').connect(sink_q.get_pad('sink'))
 
-   sink_thr = gst_thread_new('sink_thread')
+   sink_thr = Thread('sink_thread')
    assert sink_thr
 
    sink = fakesink()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -29,12 +29,12 @@ from cp import filter
 class Identity(Element):
    def __init__(self):
       self.__gobject_init__()
-      self.sinkpad = gst_pad_new('sink', PAD_SINK)
+      self.sinkpad = Pad('sink', PAD_SINK)
       self.add_pad(self.sinkpad)
       self.sinkpad.set_chain_function(self.chain)
       self.sinkpad.set_connect_function(self.pad_connect)
 
-      self.srcpad = gst_pad_new('src', PAD_SRC)
+      self.srcpad = Pad('src', PAD_SRC)
       self.add_pad(self.srcpad)
       self.srcpad.set_connect_function(self.pad_connect)
 
@@ -53,7 +53,7 @@ gobject.type_register(Identity)
 
 def main():
    "A GStreamer Python subclassing example of an identity filter"
-   gst_debug_set_categories(0)
+   gst_debug_set_categories(0L)
 
    identity = Identity()
    identity.set_name('identity')
