@@ -1,3 +1,12 @@
+2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_peek),
+	(gst_ffmpegdata_read), (gst_ffmpegdata_seek):
+	  Some "seeking" hacks, and separate peek from read (read = peek +
+	  flush) so seek can use peek as well to workaround typefind. With
+	  this, I'm able to play several of the gaming format movies in
+	  Totem.
+
 2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/Makefile.am:

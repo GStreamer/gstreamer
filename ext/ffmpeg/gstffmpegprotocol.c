@@ -90,7 +90,7 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
 }
 
 static int
-gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
+gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 {
   GstByteStream *bs;
   guint32 total, request;
@@ -159,9 +159,25 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
   } while ((!info->eos && total != request) || have_event);
 
   memcpy (buf, data, total);
-  gst_bytestream_flush_fast (bs, total);
 
   return total;
+}
+
+static int
+gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
+{
+  gint res;
+  GstByteStream *bs;
+  GstProtocolInfo *info;
+
+  info = (GstProtocolInfo *) h->priv_data;
+  bs = info->bs;
+  res = gst_ffmpegdata_peek (h, buf, size);
+  if (res > 0) {
+    gst_bytestream_flush_fast (bs, res);
+  }
+
+  return res;
 }
 
 static int
@@ -195,19 +211,18 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 
   /* get data (typefind hack) */
   if (gst_bytestream_tell (info->bs) != gst_bytestream_length (info->bs)) {
-    //gchar buf;
-    //gst_ffmpegdata_read (h, &buf, 1);
-    //peek!!!!! not read = data loss if not seekable
+    gchar buf;
+    gst_ffmpegdata_peek (h, &buf, 1);
   }
 
   /* hack in ffmpeg to get filesize... */
   if (whence == SEEK_END && pos == -1)
     return gst_bytestream_length (info->bs) - 1;
+  else if (whence == SEEK_END && pos == 0)
+    return gst_bytestream_length (info->bs);
   /* another hack to get the current position... */
   else if (whence == SEEK_CUR && pos == 0)
     return gst_bytestream_tell (info->bs);
-  //else
-    //g_assert (pos >= 0);
 
   switch (whence) {
     case SEEK_SET:
