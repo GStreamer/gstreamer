@@ -331,7 +331,6 @@ gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
   GstPad *pad;
 
   pad = gst_pad_new_from_template (temp, name);
-  gst_element_add_pad (GST_ELEMENT (mpeg_demux), pad);
 
   gst_pad_set_formats_function (pad, gst_mpeg_demux_get_src_formats);
   gst_pad_set_convert_function (pad, gst_mpeg_parse_convert_src);
@@ -340,6 +339,8 @@ gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
   gst_pad_set_query_type_function (pad, gst_mpeg_parse_get_src_query_types);
   gst_pad_set_query_function (pad, gst_mpeg_parse_handle_src_query);
   gst_pad_use_explicit_caps (pad);
+
+  gst_element_add_pad (GST_ELEMENT (mpeg_demux), pad);
 
   return pad;
 }
@@ -714,6 +715,7 @@ done:
 
   /* calculate the amount of real data in this packet */
   datalen = packet_length - headerlen + 2;
+
   GST_DEBUG_OBJECT (mpeg_demux, "headerlen is %d, datalen is %d",
       headerlen, datalen);
 
