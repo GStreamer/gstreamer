@@ -259,7 +259,7 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GstEvent *event;
   GstBuffer *outbuf;
 
-  event = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0);
+  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, 0);
   gst_pad_push (wavenc->srcpad, GST_DATA (event));
 
   outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
@@ -628,7 +628,7 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
           wavenc->flush_header = TRUE;
           gst_wavenc_setup (wavenc);
         }
-        gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
+        gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
       }
     } else {
       gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
