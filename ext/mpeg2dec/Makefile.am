@@ -11,7 +11,7 @@ endif
 libgstmpeg2dec_la_SOURCES = gstmpeg2dec.c
 libgstmpeg2dec_la_CFLAGS = $(GST_CFLAGS) $(MPEG2DEC_CFLAGS) $(ARCHFLAGS) $(FOMIT_FRAME_POINTER) -ffast-math
 libgstmpeg2dec_la_LIBADD = $(GST_LIBS) $(MPEG2DEC_LIBS)
-libgstmpeg2dec_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstmpeg2dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 #
 # Use the following if you use mpeg2dec from CVS

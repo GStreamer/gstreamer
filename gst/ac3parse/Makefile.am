@@ -8,6 +8,6 @@ noinst_HEADERS = gstac3parse.h
 
 libgstac3parse_la_CFLAGS = -O3 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math $(GST_CFLAGS)
 libgstac3parse_la_LIBADD = $(GST_LIBS)
-libgstac3parse_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstac3parse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 EXTRA_DIST = README

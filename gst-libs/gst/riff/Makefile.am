@@ -9,4 +9,4 @@ libgstriffinclude_HEADERS = riff.h
 
 libgstriff_la_LIBADD = $(GST_LIBS)
 libgstriff_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math
-libgstriff_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstriff_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
