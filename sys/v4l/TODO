@@ -1,6 +1,8 @@
 TODO list (short term):
 =======================
 * v4lsrc/v4lmjpegsrc/v4l2src: fix interlacing (not handled at all...)
+* fix v4l*src ! spider ! colorspace ! xvideosink
+   - first sets to PLAYING, then (re-)triggers capsnego - that breaks
 
 TODO list (long term):
 ======================
