@@ -1,5 +1,0 @@
-etc/gconf/schemas/gstreamer.schemas
-usr/include/gst-plugins-*/gst/gconf
-usr/lib/libgstgconf-*.so.*
-usr/lib/libgstgconf.{la,so}
-usr/lib/pkgconfig

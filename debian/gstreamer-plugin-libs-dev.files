@@ -1,6 +1,0 @@
-usr/include/gst-plugins-*/gst/audio
-usr/include/gst-plugins-*/gst/idct
-usr/include/gst-plugins-*/gst/resample
-usr/include/gst-plugins-*/gst/riff
-usr/include/gst-plugins-*/gst/floatcast
-usr/lib/pkgconfig
