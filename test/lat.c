@@ -1,24 +1,8 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 
-__inline__ void lat_read_tsc(guint64 *dst) {
-//#ifdef HAVE_RDTS
-/*
-  __asm__ __volatile__
-    ("rdtsc"
-     : "=a" (*(guint32 *)dst), "=d" (*(((guint32 *)dst) + 1))
-     :
-     : "eax", "edx");
-*/
-  __asm__ __volatile__
-    ("rdtsc"
-     : "=a" (*(guint32 *)dst), "=d" (*(((guint32 *)dst) + 1))
-     :
-     );
-//#else
-//  *dst = 0;
-//#endif
-}
+#define rdtscll(result) \
+        __asm__ __volatile__("rdtsc" : "=A" (result) : /* No inputs */ )
 
 static guint64 max = 0, min = -1, total = 0;
 static guint count = 0;
@@ -28,7 +12,7 @@ static guint mhz = 0;
 
 void handoff_src(GstElement *src, GstBuffer *buf, gpointer user_data) {
   guint64 start;
-  lat_read_tsc(&start);
+  rdtscll(start);
   GST_BUFFER_TIMESTAMP(buf) = start;
 }
 
@@ -36,7 +20,7 @@ void handoff_sink(GstElement *sink, GstBuffer *buf, gpointer user_data) {
   guint64 end, d, avg;
   guint avg_ns;
 
-  lat_read_tsc(&end);
+  rdtscll(end);
   d = end - GST_BUFFER_TIMESTAMP(buf);
   if (d > max) max = d;
   if (d < min) min = d;
