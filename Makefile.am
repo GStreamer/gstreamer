@@ -45,7 +45,7 @@ man_MANS = gstreamer-config.1
 
 EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
-	     configure.base autogen.sh depcomp \
+	     configure.ac autogen.sh depcomp \
 	     LICENSE REQUIREMENTS ABOUT-NLS $(man_MANS) \
 	     idiottest.mak
 

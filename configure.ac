@@ -92,14 +92,37 @@ export PKG_CONFIG_PATH
 dnl Check for pkgconfig
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
 
-dnl check for gtkdoc
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
+dnl from the gtk-doc debian package
+##################################################
+# Check for gtk-doc.
+##################################################
+
+AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
+
+if test "x$with_html_dir" = "x" ; then
+  HTML_DIR='${datadir}/gtk-doc/html'
+else
+  HTML_DIR=$with_html_dir
+fi
+
+AC_SUBST(HTML_DIR)
+
+AC_CHECK_PROG(HAVE_GTKDOC, gtkdoc-mkdb, true, false)
+
+gtk_doc_min_version=0.6
+if $HAVE_GTKDOC ; then 
+    gtk_doc_version=`gtkdoc-mkdb --version`
+    AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
+    if perl <<EOF ; then
+      exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
+            ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
+EOF
+      AC_MSG_RESULT(yes)
+   else
+      AC_MSG_RESULT(no)
+      HAVE_GTKDOC=false
+   fi
+fi
 
 dnl check for docbook tools
 AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
