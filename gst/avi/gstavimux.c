@@ -1062,7 +1062,9 @@ gst_avimux_stop_file (GstAviMux *avimux)
       if (avimux->audio_time) {
         avimux->auds_hdr.rate = (GST_SECOND * avimux->audio_size) / avimux->audio_time;
       } else {
-        gst_element_error (GST_ELEMENT (avimux), "Audio stream available, but no audio data transferred (or data with invalid timestamps). Resulting AVI will be corrupt");
+        gst_element_gerror(GST_ELEMENT (avimux), GST_ERROR_UNKNOWN,
+          g_strdup ("unconverted error, file a bug"),
+          g_strdup ("Audio stream availablebut no audio data transferred (or data with invalid timestamps). Resulting AVI will be corrupt"));
         avimux->auds_hdr.rate = 0;
       }
       avimux->auds.av_bps = avimux->auds_hdr.rate * avimux->auds_hdr.scale;
