@@ -125,7 +125,7 @@ Container formats
     MIME type: application/ogg
     Properties:
     Parser: oggdemux
-    Formatter:
+    Formatter: oggmux
 
 9 - Matroska
     MIME type: video/x-mkv
@@ -142,7 +142,7 @@ Container formats
 11 - AU audio (Sun)
      MIME type: audio/x-au
      Properties:
-     Parser: auparse
+     Parser: auparse, ffdemux_au
      Formatter:
 
 12 - Mod audio
@@ -256,11 +256,11 @@ framerate = 0 - MAXFLOAT (FLOAT)
     Encoder:
     Decoder: dvdec
 
-9 - Windows Media Video 1 and 2 (WMV)
+9 - Windows Media Video 1, 2 and 3 (WMV)
     MIME type: video/x-wmv
-    Properties: wmvversion = 1/2 (INT)
+    Properties: wmvversion = 1/2/3 (INT)
     Encoder:
-    Decoder: ffdec_wmv1, ffdec_wmv2
+    Decoder: ffdec_wmv1, ffdec_wmv2, none
 
 10 - XviD (xvid.org)
      MIME type: video/x-xvid
@@ -375,11 +375,11 @@ channels = 1 - MAXINT (INT, number of audio channels)
     Encoder: vorbisenc
     Decoder: vorbisdec
 
-5 - Windows Media Audio 1 and 2 (WMA)
+5 - Windows Media Audio 1,2 and 9 (WMA)
     MIME type: audio/x-wma
-    Properties: wmaversion = 1/2 (INT)
+    Properties: wmaversion = 1/2/9 (INT)
     Encoder:
-    Decoder: ffdec_wmav1, ffdec_wmav2
+    Decoder: ffdec_wmav1, ffdec_wmav2, none
 
 6 - AC3
     MIME type: audio/x-ac3
@@ -407,7 +407,7 @@ channels = 1 - MAXINT (INT, number of audio channels)
 
 10 - (IMA) ADPCM (Quicktime/WAV/Microsoft/4XM)
      MIME type: audio/x-adpcm
-     Properties: layout = "quicktime"/"wav"/"microsoft"/"4xm" (STRING)
+     Properties: layout = "quicktime"/"wav"/"microsoft"/"4xm"/"g721"/"g722"/"g723_3"/"g723_5" (STRING)
      Encoder:
      Decoder:
 
