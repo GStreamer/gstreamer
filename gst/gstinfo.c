@@ -480,13 +480,14 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
   guint removals = 0;
   g_static_mutex_lock (&__log_func_mutex);
   new = __log_functions;
-  while ((found = g_slist_find_custom (new, func, 
-                                       gst_debug_compare_log_function_by_func))) {
-    g_free (found->data);
-    if (removals == 0) {
+  while ((found = g_slist_find_custom (new, data, func))) {
+    if (new == __log_functions) {
       new = g_slist_copy (new);
+      continue;
     }
-    new = g_slist_delete_link (new, found);
+    g_free (found->data);
+    new = g_slist_remove_link (new, found);
+    g_slist_free_1 (found);
     removals++;
   }
   /* FIXME: We leak the old list here. See _add_log_function for why. */
