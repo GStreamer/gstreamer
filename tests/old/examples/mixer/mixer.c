@@ -330,7 +330,7 @@ create_input_channel (int id, char* location)
 #endif
  
   new_element = gst_autoplug_to_caps (autoplug, srccaps, 
-  					gst_caps_new ("audio", "audio/raw", NULL), NULL);
+  					gst_caps_new ("audio/raw", NULL), NULL);
  
   if (!new_element) {
     g_print ("could not autoplug, no suitable codecs found...\n");

@@ -1211,7 +1211,7 @@ gst_element_class_add_pad_template (GstElementClass *klass,
  * <note>This function is for use in _base_init functions only.</note>
  */
 void                    
-gst_element_class_set_details (GstElementClass *klass, GstElementDetails *details)
+gst_element_class_set_details (GstElementClass *klass, const GstElementDetails *details)
 {
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (GST_IS_ELEMENT_DETAILS (details));
@@ -1429,7 +1429,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
  */
 GstPad*
 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
-                                         GstCaps *filtercaps)
+                                         const GstCaps *filtercaps)
 {
   const GList *pads;
   GstPadTemplate *templ;
@@ -1462,14 +1462,15 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   /* requesting is a little crazy, we need a template. Let's create one */
   if (filtercaps != NULL) {
     templcaps = gst_caps_intersect (filtercaps, (GstCaps *) GST_RPAD_CAPS (pad));
+    /* FIXME */
     if (templcaps == NULL)
       return NULL;
   } else {
-    templcaps = gst_pad_get_caps (pad);
+    templcaps = gst_caps_copy (gst_pad_get_caps (pad));
   }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
-                               GST_PAD_ALWAYS, templcaps, NULL);
+                               GST_PAD_ALWAYS, templcaps);
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (GST_OBJECT (templ)); /* this will take care of the caps too */
 
@@ -1477,7 +1478,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
      have caps on their source padtemplates (spider) can link... */
   if (!foundpad && !filtercaps) {
     templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
-                                 GST_PAD_ALWAYS, NULL, NULL);
+                                 GST_PAD_ALWAYS, gst_caps_new_any());
     foundpad = gst_element_request_compatible_pad (element, templ);
     gst_object_unref (GST_OBJECT (templ));
   }
@@ -1521,7 +1522,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 gboolean
 gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
                                 GstElement *dest, const gchar *destpadname,
-                                GstCaps *filtercaps)
+                                const GstCaps *filtercaps)
 {
   const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
@@ -1697,7 +1698,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
  */
 gboolean
 gst_element_link_filtered (GstElement *src, GstElement *dest,
-			      GstCaps *filtercaps)
+			      const GstCaps *filtercaps)
 {
   return gst_element_link_pads_filtered (src, NULL, dest, NULL, filtercaps);
 }

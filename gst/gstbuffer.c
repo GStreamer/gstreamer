@@ -27,7 +27,6 @@
 #include "gstbuffer.h"
 #include "gstmemchunk.h"
 #include "gstinfo.h"
-#include "gstbufferpool-default.h"
 
 GType _gst_buffer_type;
 GType _gst_buffer_pool_type;
@@ -37,7 +36,6 @@ GType _gst_buffer_pool_type;
 #include "gsttrace.h"
 
 static GstAllocTrace *_gst_buffer_trace;
-static GstAllocTrace *_gst_buffer_pool_trace;
 #endif
 
 static GstMemChunk *chunk;
@@ -55,7 +53,6 @@ _gst_buffer_initialize (void)
 
 #ifndef GST_DISABLE_TRACE
   _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
-  _gst_buffer_pool_trace = gst_alloc_trace_register (GST_BUFFER_POOL_TRACE_NAME);
 #endif
 
   chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), 
@@ -68,16 +65,6 @@ GType
 gst_buffer_get_type (void)
 {
   return _gst_buffer_type;
-}
-
-static void
-_gst_buffer_free_to_pool (GstBuffer *buffer)
-{
-  GstBufferPool *pool = buffer->pool;
-
-  pool->buffer_free (pool, buffer, pool->user_data);
-
-  gst_data_unref (GST_DATA (pool));
 }
 
 static void
@@ -125,12 +112,25 @@ gst_buffer_default_free (GstBuffer *buffer)
 #endif
 }
 
-static GstBuffer*
-_gst_buffer_copy_from_pool (GstBuffer *buffer)
+/**
+ * gst_buffer_stamp:
+ * @dest: buffer to stamp
+ * @src: buffer to stamp from
+ *
+ * Copies additional information (timestamps and offsets) from one buffer to
+ * the other.
+ */
+void
+gst_buffer_stamp (GstBuffer *dest, const GstBuffer *src)
 {
-  return buffer->pool->buffer_copy (buffer->pool, buffer, buffer->pool->user_data);
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
+  
+  GST_BUFFER_TIMESTAMP (dest) 	 = GST_BUFFER_TIMESTAMP (src);
+  GST_BUFFER_DURATION (dest) 	 = GST_BUFFER_DURATION (src);
+  GST_BUFFER_OFFSET (dest) 	 = GST_BUFFER_OFFSET (src);
+  GST_BUFFER_OFFSET_END (dest) 	 = GST_BUFFER_OFFSET_END (src);
 }
-
 /**
  * gst_buffer_default_copy:
  * @buffer: a #GstBuffer to make a copy of.
@@ -164,10 +164,8 @@ gst_buffer_default_copy (GstBuffer *buffer)
                                              GST_BUFFER_SIZE (buffer));
   GST_BUFFER_SIZE (copy)  	 = GST_BUFFER_SIZE (buffer);
   GST_BUFFER_MAXSIZE (copy) 	 = GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_TIMESTAMP (copy) 	 = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (copy) 	 = GST_BUFFER_DURATION (buffer);
-  GST_BUFFER_OFFSET (copy) 	 = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_OFFSET_END (copy) 	 = GST_BUFFER_OFFSET_END (buffer);
+
+  gst_buffer_stamp (copy, buffer);
   GST_BUFFER_BUFFERPOOL (copy)   = NULL;
   GST_BUFFER_POOL_PRIVATE (copy) = NULL;
 
@@ -232,42 +230,6 @@ gst_buffer_new_and_alloc (guint size)
   GST_BUFFER_MAXSIZE (newbuf) = size;
 
   return newbuf;
-}
-
-/**
- * gst_buffer_new_from_pool:
- * @pool: a #GstBufferPool to use.
- * @offset: the offset of the new buffer.
- * @size: the size of the new buffer.
- *
- * Creates a newly allocated buffer using the specified buffer pool, 
- * offset and size.
- *
- * Returns: the new #GstBuffer, or NULL if there was an error.
- */
-GstBuffer*
-gst_buffer_new_from_pool (GstBufferPool *pool, 
-		          guint64 offset, guint size)
-{
-  GstBuffer *buffer;
-  
-  g_return_val_if_fail (pool != NULL, NULL);
-
-  gst_data_ref (GST_DATA (pool));
-
-  buffer = pool->buffer_new (pool, offset, size, pool->user_data);
-  if (!buffer)
-    return NULL;
-
-  GST_BUFFER_BUFFERPOOL (buffer) = pool;
-
-  /* override the buffer refcount functions with those from the pool (if any) */
-  if (pool->buffer_free)
-    GST_DATA (buffer)->free = (GstDataFreeFunction)_gst_buffer_free_to_pool;
-  if (pool->buffer_copy)
-    GST_DATA (buffer)->copy = (GstDataCopyFunction)_gst_buffer_copy_from_pool;
-
-  return buffer;
 }
 
 /**
@@ -478,135 +440,3 @@ gst_buffer_pool_get_type (void)
   return _gst_buffer_pool_type;
 }
 
-/**
- * gst_buffer_pool_default_free:
- * @pool: a #GstBufferPool to free.
- *
- * Frees the memory associated with the bufferpool.
- */
-void
-gst_buffer_pool_default_free (GstBufferPool *pool)
-{
-  g_return_if_fail (pool != NULL);
-
-  _GST_DATA_DISPOSE (GST_DATA (pool));
-  g_free (pool);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_gst_buffer_pool_trace, pool);
-#endif
-}
-
-/** 
- * gst_buffer_pool_new:
- * @free: the #GstDataFreeFunction to free the buffer pool.
- * @copy: the #GstDataCopyFunction to copy the buffer pool.
- * @buffer_new: the #GstBufferPoolBufferNewFunction to create a new buffer 
- *              from this pool
- * @buffer_copy: the #GstBufferPoolBufferCopyFunction to copy a buffer
- *               from this pool
- * @buffer_free: the #GstBufferPoolBufferFreeFunction to free a buffer 
- *               in this pool
- * @user_data: the user data gpointer passed to buffer_* functions.
- *
- * Creates a new buffer pool with the given functions.
- *
- * Returns: a new #GstBufferPool, or NULL on error.
- */
-GstBufferPool*	
-gst_buffer_pool_new (GstDataFreeFunction free,
-		     GstDataCopyFunction copy,
-                     GstBufferPoolBufferNewFunction buffer_new,
-                     GstBufferPoolBufferCopyFunction buffer_copy,
-                     GstBufferPoolBufferFreeFunction buffer_free,
-		     gpointer user_data)
-{
-  GstBufferPool *pool;
-
-  /* we need at least a buffer_new function */
-  g_return_val_if_fail (buffer_new != NULL, NULL);
-
-  pool = g_new0 (GstBufferPool, 1);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_buffer_pool_trace, pool);
-#endif
-
-  GST_CAT_DEBUG (GST_CAT_BUFFER, "allocating new buffer pool %p\n", pool);
-        
-  /* init data struct */
-  _GST_DATA_INIT (GST_DATA (pool), 
-		  _gst_buffer_pool_type,
-		  0,
-		  (free ? free : (GstDataFreeFunction) gst_buffer_pool_default_free),
-		  copy);
-	    
-  /* set functions */
-  pool->buffer_new = buffer_new;
-  pool->buffer_copy = buffer_copy;
-  pool->buffer_free = buffer_free;
-  pool->user_data = user_data;
-		    
-  return pool;
-}
-
-/**
- * gst_buffer_pool_is_active:
- * @pool: the #GstBufferPool to query.
- *
- * Queries if the given buffer pool is active.
- *
- * Returns: TRUE if the pool is active.
- */
-gboolean
-gst_buffer_pool_is_active (GstBufferPool *pool)
-{
-  g_return_val_if_fail (pool != NULL, FALSE);
-
-  return pool->active;
-}
-
-/**
- * gst_buffer_pool_set_active:
- * @pool: a #GstBufferPool to set the activity status on.
- * @active: the new status of the pool.
- *
- * Sets the given pool to the active or inactive state depending on the
- * active parameter.
- */
-void
-gst_buffer_pool_set_active (GstBufferPool *pool, gboolean active)
-{
-  g_return_if_fail (pool != NULL);
-
-  pool->active = active;
-}
-
-/**
- * gst_buffer_pool_set_user_data:
- * @pool: the #GstBufferPool to set the user data for.
- * @user_data: the user_data to set on the buffer pool.
- *
- * Sets the given user data on the buffer pool.
- */
-void
-gst_buffer_pool_set_user_data (GstBufferPool *pool, gpointer user_data)
-{
-  g_return_if_fail (pool != NULL);
-
-  pool->user_data = user_data;
-}
-
-/**
- * gst_buffer_pool_get_user_data:
- * @pool: the #GstBufferPool to get the user data for.
- *
- * Gets the user data of the buffer pool.
- * 
- * Returns: the user data associated with this buffer pool.
- */
-gpointer
-gst_buffer_pool_get_user_data (GstBufferPool *pool)
-{
-  g_return_val_if_fail (pool != NULL, NULL);
-
-  return pool->user_data;
-}

@@ -65,11 +65,12 @@ enum {
 };
 
 /* generic templates */
-GST_PAD_TEMPLATE_FACTORY (spider_src_factory,
+static GstStaticPadTemplate spider_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src_%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  NULL      /* no caps */
+  GST_STATIC_CAPS_ANY
 );
 
 /* standard GObject stuff */
@@ -152,7 +153,8 @@ gst_spider_class_init (GstSpiderClass *klass)
   gobject_class->get_property = gst_spider_get_property;
   gobject_class->dispose = gst_spider_dispose;
 
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&spider_src_factory));
   gst_element_class_set_details (gstelement_class, &gst_spider_details);
   
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_request_new_pad);

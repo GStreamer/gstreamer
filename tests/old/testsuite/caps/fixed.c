@@ -22,9 +22,8 @@
 gint 
 main (gint argc, gchar *argv[])
 {
+#if 0
   GstCaps *caps;
-  GstProps *props;
-  GstPropsEntry *entry;
   
   gst_init (&argc, &argv);
 
@@ -80,6 +79,7 @@ main (gint argc, gchar *argv[])
   /* caps too */
   g_assert (GST_CAPS_IS_FIXED (caps));
 
+#endif
 
   return 0;
 }

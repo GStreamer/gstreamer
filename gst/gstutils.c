@@ -265,7 +265,6 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
  */
 
 #include "gstpad.h"
-#include "gstprops.h"
 
 static void
 string_append_indent (GString * str, gint count)
@@ -276,6 +275,7 @@ string_append_indent (GString * str, gint count)
     g_string_append_c (str, ' ');
 }
 
+#if 0
 static void
 gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
 {
@@ -371,6 +371,7 @@ gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
     }
   }
 }
+#endif
 
 /**
  * gst_print_pad_caps:
@@ -395,20 +396,11 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
     g_string_printf (buf, "%s:%s has no capabilities", GST_DEBUG_PAD_NAME (pad));
   }
   else {
-    gint capx = 0;
+    char *s;
 
-    while (caps) {
-      string_append_indent (buf, indent);
-      g_string_append_printf (buf, "Cap[%d]: %s\n", capx++, caps->name);
-
-      string_append_indent (buf, indent + 2);
-      g_string_append_printf (buf, "MIME type: %s\n", gst_caps_get_mime (caps));
-
-      if (caps->properties)
-	gst_print_props (buf, indent + 4, caps->properties->properties, TRUE);
-
-      caps = caps->next;
-    }
+    s = gst_caps_to_string(caps);
+    g_string_append(buf, s);
+    g_free(s);
   }
 }
 

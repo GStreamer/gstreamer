@@ -58,7 +58,7 @@ g_list_free_list_and_elements (GList *list)
  * Returns: TRUE, if both caps intersect.
  */
 gboolean
-gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
+gst_autoplug_caps_intersect (const GstCaps *src, const GstCaps *sink)
 {
   GstCaps *caps;
 
@@ -74,7 +74,7 @@ gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
     return FALSE;
   
   /* hurrah, we can link, now remove the intersection */
-  gst_caps_unref (caps);
+  gst_caps_free (caps);
   return TRUE;
 }
 
@@ -88,7 +88,7 @@ gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
  * Returns: #GstPadTemplate that can connect to the given caps
  */
 GstPadTemplate *
-gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
+gst_autoplug_can_connect_src (GstElementFactory *fac, const GstCaps *src)
 {
   GList *templs;
   
@@ -117,7 +117,7 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
  * Returns: #GstPadTemplate that can connect to the given caps
  */
 GstPadTemplate *
-gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
+gst_autoplug_can_connect_sink (GstElementFactory *fac, const GstCaps *sink)
 {
   GList *templs;
   
@@ -331,7 +331,7 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
  * to get the shortest path.
  */
 GList *
-gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
+gst_autoplug_sp (const GstCaps *srccaps, const GstCaps *sinkcaps, GList *factories)
 {
   GList *factory_nodes = NULL;
   guint curcost = GST_AUTOPLUG_MAX_COST; /* below this cost, there is no path */
@@ -340,11 +340,9 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   g_return_val_if_fail (srccaps != NULL, NULL);
   g_return_val_if_fail (sinkcaps != NULL, NULL);
   
-  GST_INFO ("attempting to autoplug via shortest path from %s to %s", 
-	    gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
+  GST_INFO ("attempting to autoplug via shortest path from %s to %s",
+		  gst_caps_to_string(srccaps), gst_caps_to_string(sinkcaps));
 
-  gst_caps_debug (srccaps, "source caps");
-  gst_caps_debug (sinkcaps, "sink caps");
   /* wrap all factories as GstAutoplugNode 
    * initialize the cost */
   while (factories)

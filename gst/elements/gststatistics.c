@@ -151,23 +151,12 @@ gst_statistics_class_init (GstStatisticsClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_statistics_get_property);
 }
 
-static GstBufferPool*
-gst_statistics_get_bufferpool (GstPad *pad)
-{
-  GstStatistics *statistics;
-
-  statistics = GST_STATISTICS (gst_pad_get_parent (pad));
-
-  return gst_pad_get_bufferpool (statistics->srcpad);
-}
-
 static void 
 gst_statistics_init (GstStatistics *statistics) 
 {
   statistics->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (statistics), statistics->sinkpad);
   gst_pad_set_chain_function (statistics->sinkpad, GST_DEBUG_FUNCPTR (gst_statistics_chain));
-  gst_pad_set_bufferpool_function (statistics->sinkpad, GST_DEBUG_FUNCPTR (gst_statistics_get_bufferpool));
   
   statistics->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (statistics), statistics->srcpad);

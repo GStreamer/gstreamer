@@ -502,7 +502,7 @@ gst_element_factory_get_uri_protocols (GstElementFactory *factory)
  */
 gboolean
 gst_element_factory_can_src_caps (GstElementFactory *factory,
-		                 GstCaps *caps)
+		                 const GstCaps *caps)
 {
   GList *templates;
 
@@ -534,7 +534,7 @@ gst_element_factory_can_src_caps (GstElementFactory *factory,
  */
 gboolean
 gst_element_factory_can_sink_caps (GstElementFactory *factory,
-		                  GstCaps *caps)
+		                  const GstCaps *caps)
 {
   GList *templates;
 

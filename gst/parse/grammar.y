@@ -336,7 +336,7 @@ gst_parse_free_link (link_t *link)
   g_slist_foreach (link->sink_pads, (GFunc) gst_parse_strfree, NULL);
   g_slist_free (link->src_pads);
   g_slist_free (link->sink_pads);
-  gst_caps_unref (link->caps);
+  if (link->caps) gst_caps_free (link->caps);
   gst_parse_link_free (link);  
 }
 static void
@@ -396,7 +396,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
-    gst_caps_unref (link->caps);
+    if (link->caps) gst_caps_free (link->caps);
     if (!gst_element_is_locked_state (src))
       gst_parse_element_lock (link->sink, FALSE);
     g_free (link);
@@ -423,7 +423,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
       data->sink_pad = g_strdup (sink_pad);
-      data->caps = gst_caps_ref (caps);
+      data->caps = gst_caps_copy (caps);
       data->signal_id = g_signal_connect (G_OBJECT (src), "new_pad", 
 					  G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
@@ -596,8 +596,6 @@ link:		linkpart LINK linkpart	      { $$ = $1;
 						  if (!$$->caps)
 						    ERROR (GST_PARSE_ERROR_LINK, "could not parse caps \"%s\"", $2);
 						  gst_parse_strfree ($2);
-						  gst_caps_ref($$->caps);
-						  gst_caps_sink($$->caps);
 						}
 						$$->sink_name = $3->src_name;
 						$$->sink_pads = $3->src_pads;

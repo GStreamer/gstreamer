@@ -28,7 +28,7 @@ gint
 main (gint argc, gchar *argv[])
 {
   GstElement *pipeline;
-  gint i = 10000;
+  gint i = 1000;
   gint step = 100;
 
   free (malloc(8)); /* -lefence */

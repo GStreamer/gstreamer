@@ -13,7 +13,6 @@
  */
 
 #include <gst/gst.h>
-#include <gst/gstprops.h>
 #include <property.h>
 
 GstElement *
@@ -45,7 +44,7 @@ main (int argc, char *argv[])
   GstPad *tee_src1, *tee_src2;
   GstCaps *src_caps = NULL;
   GstCaps *sink_caps = NULL;
-  GstProps *props = NULL;
+  GstStructure *structure = NULL;
   GstPad *pad = NULL;
 
   /* init */
@@ -100,46 +99,41 @@ main (int argc, char *argv[])
 
   /* now we try setting caps on the src pad */
   /* FIXME: should we set to pause here ? */
-  src_caps = GST_CAPS_NEW (
-      "input audio",
-      "audio/raw",
-        "format", GST_PROPS_STRING ("int"),
-	"rate", GST_PROPS_INT (44100)
-	);
+  src_caps = gst_caps_from_string ("audio/raw, format=(s)\"int\", "
+      "rate=(i)44100");
+
   g_assert (src_caps != NULL);
   g_print ("Setting caps on fakesrc's src pad\n");
   pad = gst_element_get_pad (src, "src");
-  if ((gst_pad_try_set_caps (pad, src_caps)) <= 0)
-  {
+  if ((gst_pad_try_set_caps (pad, src_caps)) <= 0) {
     g_print ("Could not set caps !\n");
   }
 
   /* now iterate and see if it proxies caps ok */
   gst_bin_iterate (GST_BIN (pipeline));
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink1, "sink"));
-  props = gst_caps_get_props (sink_caps);
-  if (! (gst_props_has_property (props, "rate")))
-  {
+  if (sink_caps && gst_caps_is_fixed (sink_caps)) {
+    structure = gst_caps_get_structure (sink_caps, 0);
+  }else {
+    structure = NULL;
+    g_print ("sink_caps is not fixed\n");
+  }
+  if (structure == NULL || !(gst_structure_has_field (structure, "rate"))) {
     g_print ("Hm, rate has not been propagated to sink1.\n"); 
     return 1;
-  }
-  else
-  {
+  } else {
     int rate;
-    gst_props_get (props, "rate", &rate, NULL);
+    gst_structure_get_int (structure, "rate", &rate);
     g_print ("Rate of pad on sink1 : %d\n", rate);
   }
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
-  props = gst_caps_get_props (sink_caps);
-  if (! (gst_props_has_property (props, "rate")))
-  {
+  structure = gst_caps_get_structure (sink_caps, 0);
+  if (structure != NULL && ! (gst_structure_has_field (structure, "rate"))) {
     g_print ("Hm, rate has not been propagated to sink2.\n"); 
     return 1;
-  }
-  else
-  {
+  } else {
     int rate;
-    gst_props_get (props, "rate", &rate, NULL);
+    gst_structure_get_int (structure, "rate", &rate);
     g_print ("Rate of pad on sink2 : %d\n", rate);
   }
    

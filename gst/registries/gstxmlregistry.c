@@ -833,33 +833,18 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext *context, const gchar *t
       registry->presence = GST_PAD_REQUEST;
     }
   }
-  return TRUE;
-}
+  else if (!strncmp (tag, "caps", 4)) {
+    char *s;
 
-static gboolean
-gst_xml_registry_parse_capscomp (GMarkupParseContext *context, const gchar *tag, const gchar *text,
-                                 gsize text_len, GstXMLRegistry *registry, GError **error)
-{
-  if (!strcmp (tag, "name")) {
-    registry->caps_name = g_strndup (text, text_len);
-  }
-  else if (!strcmp (tag, "type")) {
-    registry->caps_mime = g_strndup (text, text_len);
+    s = g_strndup (text, text_len);
+    registry->caps = gst_caps_from_string (s);
+    if (registry->caps == NULL) {
+      g_critical ("Could not parse caps: %d %*s\n", text_len, text_len, text);
+    }
+    g_free(s);
+    return TRUE;
   }
   return TRUE;
-}
-
-static gint
-find_index_for (const gchar *name, const gchar **attribute_names)
-{
-  gint i=0;
-  
-  while (attribute_names[i]) {
-    if (!strcmp (attribute_names[i], name))
-      return i;
-    i++;
-  }
-  return -1;
 }
 
 static void
@@ -937,125 +922,6 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	xmlregistry->caps = NULL;
       }
       break;
-    case GST_XML_REGISTRY_PADTEMPLATE:
-      if (!strncmp (element_name, "caps", 4)) {
-	xmlregistry->state = GST_XML_REGISTRY_CAPS;
-	xmlregistry->parser = NULL;
-      }
-      break;
-    case GST_XML_REGISTRY_CAPS:
-      if (!strncmp (element_name, "capscomp", 8)) {
-	xmlregistry->state = GST_XML_REGISTRY_CAPSCOMP;
-	xmlregistry->parser = gst_xml_registry_parse_capscomp;
-      }
-      break;
-    case GST_XML_REGISTRY_CAPSCOMP:
-      if (!strncmp (element_name, "properties", 10)) {
-	xmlregistry->state = GST_XML_REGISTRY_PROPERTIES;
-	xmlregistry->parser = NULL;
-	xmlregistry->props = gst_props_empty_new ();
-      }
-      break;
-    case GST_XML_REGISTRY_PROPERTIES:
-    {
-      gint name_index;
-      GstPropsEntry *entry = NULL;
-
-      name_index = find_index_for ("name", attribute_names);
-      if (name_index < 0)
-	break;
-
-      if (!strncmp (element_name, "list", 4)) {
-	xmlregistry->in_list = TRUE;
-	xmlregistry->list_name = g_strdup (attribute_values[name_index]);
-      }
-
-      if (!strncmp (element_name, "int", 3)) {
-	gint value;
-        gint index;
-
-	if ((index = find_index_for ("value", attribute_names)) < 0) 
-          break;
-	sscanf (attribute_values[index], "%d", &value);
-
-	entry = gst_props_entry_new (attribute_values[name_index], 
-		                     GST_PROPS_INT (value));
-      }
-      else if (!strncmp (element_name, "range", 5)) {
-	gint min, max;
-        gint min_idx, max_idx;
-
-	if ((min_idx = find_index_for ("min", attribute_names)) < 0) 
-          break;
-	if ((max_idx = find_index_for ("max", attribute_names)) < 0) 
-          break;
-	sscanf (attribute_values[min_idx], "%d", &min);
-	sscanf (attribute_values[max_idx], "%d", &max);
-
-	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_INT_RANGE (min, max));
-      }
-      else if (!strncmp (element_name, "float", 5)) {
-	gfloat value;
-        gint index;
-
-	if ((index = find_index_for ("value", attribute_names)) < 0) 
-          break;
-	sscanf (attribute_values[index], "%f", &value);
-	
-	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_FLOAT (value));
-      }
-      else if (!strncmp (element_name, "floatrange", 10)) {
-	gfloat min, max;
-        gint min_idx, max_idx;
-
-	if ((min_idx = find_index_for ("min", attribute_names)) < 0) 
-          break;
-	if ((max_idx = find_index_for ("max", attribute_names)) < 0) 
-          break;
-	sscanf (attribute_values[min_idx], "%f", &min);
-	sscanf (attribute_values[max_idx], "%f", &max);
-
-	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_FLOAT_RANGE (min, max));
-      }
-      else if (!strncmp (element_name, "boolean", 7)) {
-	gboolean value = TRUE;
-        gint index;
-
-	if ((index = find_index_for ("value", attribute_names)) < 0) 
-          break;
-	if (!strcmp (attribute_values[index], "false")) 
-          value = FALSE;
-
-	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_BOOLEAN (value));
-      }
-      else if (!strncmp (element_name, "fourcc", 6)) {
-	guint32 value;
-        gint index;
-
-	if ((index = find_index_for ("hexvalue", attribute_names)) < 0) 
-          break;
-	sscanf (attribute_values[index], "%08x", &value);
-
-	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_FOURCC (value));
-      }
-      else if (!strncmp (element_name, "string", 6)) {
-        gint index;
-
-	if ((index = find_index_for ("value", attribute_names)) < 0) 
-          break;
-
-        entry = gst_props_entry_new (attribute_values[name_index], 
-				     GST_PROPS_STRING (attribute_values[index]));
-      }
-      /* add property to list or parent */
-      if (entry) {
-        if (xmlregistry->in_list)
-          xmlregistry->entry_list = g_list_prepend (xmlregistry->entry_list, entry);
-        else
-          gst_props_add_entry (xmlregistry->props, entry);
-      }
-      break;
-    }
     default:
       break;
   }
@@ -1100,7 +966,7 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
         template = gst_pad_template_new (xmlregistry->name_template,
 					 xmlregistry->direction,
 					 xmlregistry->presence,
-					 xmlregistry->caps, NULL);
+					 xmlregistry->caps);
 
 	g_free (xmlregistry->name_template);
 	xmlregistry->name_template = NULL;
@@ -1110,49 +976,6 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
 					      template);
 	xmlregistry->state = GST_XML_REGISTRY_FEATURE;
 	xmlregistry->parser = gst_xml_registry_parse_element_factory;
-      }
-      break;
-    case GST_XML_REGISTRY_CAPS:
-      if (!strcmp (element_name, "caps")) {
-	xmlregistry->state = GST_XML_REGISTRY_PADTEMPLATE;
-	xmlregistry->parser = gst_xml_registry_parse_padtemplate;
-      }
-      break;
-    case GST_XML_REGISTRY_CAPSCOMP:
-      if (!strcmp (element_name, "capscomp")) {
-	GstCaps *caps;
-	
-	xmlregistry->state = GST_XML_REGISTRY_CAPS;
-	xmlregistry->parser = gst_xml_registry_parse_padtemplate;
-
-	caps = gst_caps_new (xmlregistry->caps_name, xmlregistry->caps_mime, xmlregistry->props);
-	g_free (xmlregistry->caps_mime);
-	g_free (xmlregistry->caps_name);
-
-	xmlregistry->caps = gst_caps_append (xmlregistry->caps, caps);
-	xmlregistry->props = NULL;
-      }
-      break;
-    case GST_XML_REGISTRY_PROPERTIES:
-      if (!strncmp (element_name, "list", 4)) {
-	GstPropsEntry *entry;
-	
-	xmlregistry->entry_list = g_list_reverse (xmlregistry->entry_list);
-	
-        entry = gst_props_entry_new (xmlregistry->list_name, 
-			             GST_PROPS_GLIST (xmlregistry->entry_list));
-
-        gst_props_add_entry (xmlregistry->props, entry);
-	g_list_free (xmlregistry->entry_list);
-	g_free (xmlregistry->list_name);
-
-	xmlregistry->entry_list = NULL;
-	xmlregistry->list_name = NULL;
-	xmlregistry->in_list = FALSE;
-      }
-      else if (!strcmp (element_name, "properties")) {
-	xmlregistry->state = GST_XML_REGISTRY_CAPSCOMP;
-	xmlregistry->parser = NULL;
       }
       break;
     default:
@@ -1276,119 +1099,10 @@ G_STMT_START{ 							\
 
 
 static gboolean
-gst_xml_registry_save_props_func (GstPropsEntry *entry, 
-                                  GstXMLRegistry *xmlregistry)
+gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps *caps)
 {
-  const gchar *name;
-
-  name = gst_props_entry_get_name (entry);
-
-  switch (gst_props_entry_get_props_type (entry)) {
-    case GST_PROPS_INT_TYPE:
-    {
-      gint value;
-      gst_props_entry_get_int (entry, &value);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<int name=\"%s\" value=\"%d\"/>\n", name, value);
-      break;
-    }
-    case GST_PROPS_INT_RANGE_TYPE:
-    {
-      gint min, max;
-      gst_props_entry_get_int_range (entry, &min, &max);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<range name=\"%s\" min=\"%d\" max=\"%d\"/>\n", name, min, max);
-      break;
-    }
-    case GST_PROPS_FLOAT_TYPE:
-    {
-      gfloat value;
-      gst_props_entry_get_float (entry, &value);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<float name=\"%s\" value=\"%f\"/>\n", name, value);
-      break;
-    }
-    case GST_PROPS_FLOAT_RANGE_TYPE:
-    {
-      gfloat min, max;
-      gst_props_entry_get_float_range (entry, &min, &max);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<floatrange name=\"%s\" min=\"%f\" max=\"%f\"/>\n", name, min, max);
-      break;
-    }
-    case GST_PROPS_FOURCC_TYPE:
-    {
-      guint32 fourcc;
-      gst_props_entry_get_fourcc_int (entry, &fourcc);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<!-- "GST_FOURCC_FORMAT" -->\n", 
-				      GST_FOURCC_ARGS (fourcc));
-      CLASS (xmlregistry)->save_func (xmlregistry, "<fourcc name=\"%s\" hexvalue=\"%08x\"/>\n", name, fourcc);
-      break;
-    }
-    case GST_PROPS_BOOLEAN_TYPE:
-    {
-      gboolean value;
-      gst_props_entry_get_boolean (entry, &value);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<boolean name=\"%s\" value=\"%s\"/>\n", name, (value ? "true" : "false"));
-      break;
-    }
-    case GST_PROPS_STRING_TYPE:
-    {
-      const gchar *value;
-      gst_props_entry_get_string (entry, &value);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<string name=\"%s\" value=\"%s\"/>\n", name, value);
-      break;
-    }
-    default:
-      g_warning ("trying to save unknown property type %d", gst_props_entry_get_props_type (entry));
-      return FALSE;
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_xml_registry_save_props (GstXMLRegistry *xmlregistry, GstProps *props)
-{
-  GList *proplist;
-
-  proplist = props->properties;
-
-  while (proplist) {
-    GstPropsEntry *entry = (GstPropsEntry *) proplist->data;
-
-    switch (gst_props_entry_get_props_type (entry)) {
-      case GST_PROPS_LIST_TYPE: 
-      {
-	const GList *list;
-
-	gst_props_entry_get_list (entry, &list);
-	
-        CLASS (xmlregistry)->save_func (xmlregistry, "<list name=\"%s\">\n", gst_props_entry_get_name (entry));
-        g_list_foreach ((GList *)list, (GFunc) gst_xml_registry_save_props_func, xmlregistry);
-        CLASS (xmlregistry)->save_func (xmlregistry, "</list>\n");
-       	break;
-      }
-      default:
-   	gst_xml_registry_save_props_func (entry, xmlregistry);
-       	break;
-    }
-    proplist = g_list_next (proplist);
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, GstCaps *caps)
-{
-  while (caps) {
-    CLASS (xmlregistry)->save_func (xmlregistry, "<capscomp>\n");
-    PUT_ESCAPED ("name", caps->name);
-    PUT_ESCAPED ("type", gst_caps_get_mime (caps));
-
-    if (caps->properties) {
-      CLASS (xmlregistry)->save_func (xmlregistry, "<properties>\n");
-      gst_xml_registry_save_props (xmlregistry, caps->properties);
-      CLASS (xmlregistry)->save_func (xmlregistry, "</properties>\n");
-    }
-    CLASS (xmlregistry)->save_func (xmlregistry, "</capscomp>\n");
-    caps = caps->next;
-  }
+  char *s = gst_caps_to_string (caps);
+  PUT_ESCAPED ("caps", s);
   return TRUE;
 }
 
@@ -1417,9 +1131,7 @@ gst_xml_registry_save_pad_template (GstXMLRegistry *xmlregistry, GstPadTemplate 
   CLASS (xmlregistry)->save_func (xmlregistry, "<presence>%s</presence>\n", presence);
 
   if (GST_PAD_TEMPLATE_CAPS (template)) {
-    CLASS (xmlregistry)->save_func (xmlregistry, "<caps>\n");
     gst_xml_registry_save_caps (xmlregistry, GST_PAD_TEMPLATE_CAPS (template));
-    CLASS (xmlregistry)->save_func (xmlregistry, "</caps>\n");
   }
   return TRUE;
 }
@@ -1476,12 +1188,9 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
     gint i = 0;
-    /* FIXME 
     if (factory->caps) {
-      CLASS (xmlregistry)->save_func (xmlregistry, "<caps>\n");
       gst_xml_registry_save_caps (xmlregistry, factory->caps);
-      CLASS (xmlregistry)->save_func (xmlregistry, "</caps>\n");
-    } */
+    }
     if (factory->extensions) {
       while (factory->extensions[i]) {
         PUT_ESCAPED ("extension", factory->extensions[i]);

@@ -1,6 +1,4 @@
 
-#define GST_PLUGIN_STATIC 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -12,7 +10,7 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
+GST_PLUGIN_DEFINE_STATIC (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "testplugin",
@@ -30,7 +28,7 @@ plugin2_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
+GST_PLUGIN_DEFINE_STATIC (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "testplugin2",

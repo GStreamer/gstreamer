@@ -57,31 +57,25 @@ enum {
  * can have.  They can be quite complex, but for this example plugin
  * they are rather simple.
  */
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
-  "sink",			/* The name of the pad */
+GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE (
+  "sink",		/* The name of the pad */
   GST_PAD_SINK,		/* Direction of the pad */
   GST_PAD_ALWAYS,	/* The pad exists for every instance */
-  GST_CAPS_NEW (
-    "example_sink",				/* The name of the caps */
-    "unknown/unknown",				/* The overall MIME/type */
-      "foo",	GST_PROPS_INT (1),		/* An integer property */
-      "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
-      "baz",	GST_PROPS_LIST (		/* A list of values for */
-		  GST_PROPS_INT (1),
-		  GST_PROPS_INT (3)
-		)
+  GST_STATIC_CAPS (
+    "unknown/unknown, "	/* The MIME media type */
+    "foo:int=1, "	/* an integer property */
+    "bar:boolean=true, " /* a boolean property */
+    "baz:int={ 1, 3 }"	/* a list of values */
   )
 );
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "example_src",
-    "unknown/unknown",
-    NULL
+  GST_STATIC_CAPS (
+    "unknown/unknown"
   )
 );
 
@@ -189,8 +183,10 @@ gst_example_class_init (GstExampleClass *klass)
   /* The pad templates can be easily generated from the factories above,
    * and then added to the list of padtemplates for the class.
    */
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
 }
 
 /* This function is responsible for initializing a specific instance of
@@ -203,7 +199,7 @@ gst_example_init(GstExample *example)
    * We will use the template constructed by the factory.
    */
   example->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+		  gst_static_pad_template_get (&sink_template), "sink");
   /* Setting the chain function allows us to supply the function that will
    * actually be performing the work.  Without this, the element would do
    * nothing, with undefined results (assertion failures and such).
@@ -220,7 +216,7 @@ gst_example_init(GstExample *example)
    * they only produce them.
    */
   example->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+		  gst_static_pad_template_get (&src_template), "src");
   gst_element_add_pad(GST_ELEMENT(example),example->srcpad);
 
   /* Initialization of element's private variables. */

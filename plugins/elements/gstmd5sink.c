@@ -54,11 +54,11 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (md5_sink_factory,
+GstStaticPadTemplate md5_sink_template = GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 /* GObject stuff */
@@ -412,8 +412,10 @@ gst_md5sink_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (gstelement_class, &gst_md5sink_details);
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (md5_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&md5_sink_template));
 }
+
 static void
 gst_md5sink_class_init (GstMD5SinkClass *klass) 
 {
@@ -438,7 +440,8 @@ static void
 gst_md5sink_init (GstMD5Sink *md5sink) 
 {
   GstPad *pad;
-  pad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (md5_sink_factory), "sink");
+  pad = gst_pad_new_from_template (gst_static_pad_template_get (
+	&md5_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (md5sink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_md5sink_chain));
 

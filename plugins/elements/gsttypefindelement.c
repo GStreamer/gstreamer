@@ -54,17 +54,18 @@ GstElementDetails gst_type_find_element_details = GST_ELEMENT_DETAILS (
 );
 
 /* generic templates */
-GST_PAD_TEMPLATE_FACTORY (type_find_element_sink_factory,
+GstStaticPadTemplate type_find_element_sink_template = GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
-GST_PAD_TEMPLATE_FACTORY (type_find_element_src_factory,
+
+GstStaticPadTemplate type_find_element_src_template = GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 /* TypeFind signals and args */
@@ -183,7 +184,7 @@ gst_type_find_element_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_CAPS,
 	  g_param_spec_boxed ("caps", _("caps"), _("detected capabilities in stream"),
-	  GST_TYPE_CAPS, G_PARAM_READABLE));
+	  gst_caps_get_type(), G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
 	  g_param_spec_uint ("minimum", _("minimum"), "minimum probability required to accept caps",
 	  GST_TYPE_FIND_MINIMUM, GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM, G_PARAM_READWRITE));
@@ -195,7 +196,7 @@ gst_type_find_element_class_init (gpointer g_class, gpointer class_data)
 	  G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
           gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
-          G_TYPE_UINT, GST_TYPE_CAPS);
+          G_TYPE_UINT, gst_caps_get_type());
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }
@@ -206,13 +207,13 @@ gst_type_find_element_init (GTypeInstance *instance, gpointer g_class)
   
   /* sinkpad */
   typefind->sink = gst_pad_new_from_template (
-		GST_PAD_TEMPLATE_GET (type_find_element_sink_factory), "sink");
+      gst_static_pad_template_get (&type_find_element_sink_template), "sink");
   gst_pad_set_chain_function (typefind->sink,
 			      gst_type_find_element_chain);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
   /* srcpad */
   typefind->src = gst_pad_new_from_template (
-		GST_PAD_TEMPLATE_GET (type_find_element_src_factory), "src");
+      gst_static_pad_template_get (&type_find_element_src_template), "src");
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
   gst_pad_set_event_mask_function (typefind->src, gst_type_find_element_src_event_mask);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);
@@ -332,7 +333,7 @@ free_entry (TypeFindEntry *entry)
   free_entry_buffers (entry);
   
   if (entry->caps)
-    gst_caps_unref (entry->caps);
+    gst_caps_free (entry->caps);
   g_free (entry);
 }
 static void
@@ -472,7 +473,7 @@ find_peek (gpointer data, gint64 offset, guint size)
   }
 }
 static void
-find_suggest (gpointer data, guint probability, GstCaps *caps)
+find_suggest (gpointer data, guint probability, const GstCaps *caps)
 {
   gchar *str;
   TypeFindEntry *entry = (TypeFindEntry *) data;
@@ -483,7 +484,7 @@ find_suggest (gpointer data, guint probability, GstCaps *caps)
   g_free (str);
   if (((gint) probability) > entry->probability) {
     entry->probability = probability;
-    gst_caps_replace (&entry->caps, caps);
+    gst_caps_replace (&entry->caps, gst_caps_copy (caps));
   }
 }
 static gint
@@ -565,7 +566,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	  GstCaps *found_caps = entry->caps;
 	  guint probability = entry->probability;
 	  
-	  gst_caps_ref (found_caps);
+	  found_caps = gst_caps_copy (found_caps);
 	  GST_INFO_OBJECT (typefind, "'%s' returned %u/%u probability, using it NOW", 
 		  GST_PLUGIN_FEATURE_NAME (entry->factory), probability, typefind->max_probability);
 	  while (walk) {
@@ -580,7 +581,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	  typefind->possibilities = NULL;
 	  g_list_free (typefind->possibilities); 
 	  g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0, probability, found_caps);
-	  gst_caps_unref (found_caps);
+	  gst_caps_free (found_caps);
 	} else {
 	  typefind->possibilities = g_list_prepend (typefind->possibilities, entry);
 	}

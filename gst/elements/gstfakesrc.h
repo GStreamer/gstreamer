@@ -43,7 +43,6 @@ typedef enum {
 typedef enum {
   FAKESRC_DATA_ALLOCATE = 1,
   FAKESRC_DATA_SUBBUFFER,
-  FAKESRC_DATA_BUFFERPOOL
 } GstFakeSrcDataType;
 
 typedef enum {
@@ -103,7 +102,6 @@ struct _GstFakeSrc {
   gboolean 	 signal_handoffs;
   gboolean 	 dump;
   gboolean 	 need_flush;
-  GstBufferPool *pool;
 
   gchar		*last_message;
 };

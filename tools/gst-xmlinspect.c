@@ -46,140 +46,16 @@ G_STMT_START{                                                   \
 #endif
 
 static void
-print_prop (GstPropsEntry *prop, gint pfx)
+print_caps (const GstCaps *caps, gint pfx)
 {
-  GstPropsType type;
+  char *s;
 
-  type = gst_props_entry_get_props_type (prop);
-
-  switch (type) {
-    case GST_PROPS_INT_TYPE:
-    {
-      gint val;
-      gst_props_entry_get_int (prop, &val);
-      PUT_STRING (pfx, "<int name=\"%s\" value=\"%d\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_INT_RANGE_TYPE:
-    {
-      gint min, max;
-      gst_props_entry_get_int_range (prop, &min, &max);
-      PUT_STRING (pfx, "<range name=\"%s\" min=\"%d\" max=\"%d\"/>",
-                      gst_props_entry_get_name (prop), min, max);
-      break;
-    }
-    case GST_PROPS_FLOAT_TYPE:
-    {
-      gfloat val;
-      gst_props_entry_get_float (prop, &val);
-      PUT_STRING (pfx, "<float name=\"%s\" value=\"%f\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_FLOAT_RANGE_TYPE:
-    {
-      gfloat min, max;
-      gst_props_entry_get_float_range (prop, &min, &max);
-      PUT_STRING (pfx, "<floatrange name=\"%s\" min=\"%f\" max=\"%f\"/>",
-                      gst_props_entry_get_name (prop), min, max);
-      break;
-    }
-    case GST_PROPS_BOOLEAN_TYPE:
-    {
-      gboolean val;
-      gst_props_entry_get_boolean (prop, &val);
-      PUT_STRING (pfx, "<boolean name=\"%s\" value=\"%s\"/>",
-                      gst_props_entry_get_name (prop), val ? "true" : "false");
-      break;
-    }
-    case GST_PROPS_STRING_TYPE:
-    {
-      const gchar *val;
-      gst_props_entry_get_string (prop, &val);
-      PUT_STRING (pfx, "<string name=\"%s\" value=\"%s\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_FOURCC_TYPE:
-    {
-      guint32 val;
-      gst_props_entry_get_fourcc_int (prop, &val);
-      PUT_STRING (pfx, "<!--%c%c%c%c-->",
-             (gchar)( val        & 0xff),
-             (gchar)((val >> 8)  & 0xff),
-             (gchar)((val >> 16) & 0xff),
-             (gchar)((val >> 24) & 0xff));
-      PUT_STRING (pfx, "<fourcc name=\"%s\" hexvalue=\"%08x\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_LIST_TYPE:
-    {
-      const GList *list;
-
-      gst_props_entry_get_list (prop, &list);
-      PUT_STRING (pfx, "<list name=\"%s\">", gst_props_entry_get_name (prop));
-      while (list) {
-        GstPropsEntry *listentry;
-
-        listentry = (GstPropsEntry*) (list->data);
-        print_prop (listentry, pfx + 1);
-
-        list = g_list_next (list);
-      }
-      PUT_END_TAG (pfx, "list");
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-static void
-print_props (GstProps *properties, gint pfx)
-{
-  GList *props;
-  GstPropsEntry *prop;
-
-  props = properties->properties;
-
-  if (!props)
-    return;
-
-  PUT_START_TAG (pfx, "properties");
-
-  while (props) {
-    prop = (GstPropsEntry*) (props->data);
-    props = g_list_next (props);
-
-    print_prop (prop, pfx + 1);
-  }
-  PUT_END_TAG (pfx, "properties");
-}
-
-static void
-print_caps (GstCaps *caps, gint pfx)
-{
   if (!caps)
     return;
 
-  PUT_START_TAG (pfx, "capscomp");
-
-  while (caps) {
-    PUT_START_TAG (pfx + 1, "caps");
-    PUT_ESCAPED (pfx + 2, "name", caps->name);
-
-    PUT_ESCAPED (pfx + 2, "type", gst_caps_get_mime (caps));
-
-    if (caps->properties) {
-      print_props(caps->properties, pfx + 2);
-    }
-    PUT_END_TAG (pfx + 1, "caps");
-
-    caps = caps->next;
-  }
-  PUT_END_TAG (pfx, "capscomp");
+  s = gst_caps_to_string (caps);
+  PUT_ESCAPED (pfx, "caps", s);
+  g_free(s);
 }
 
 static void
@@ -768,9 +644,9 @@ print_element_info (GstElementFactory *factory)
         PUT_STRING (4, "<intlink-function function=\"%s\"/>",
                 GST_DEBUG_FUNCPTR_NAME(realpad->intlinkfunc));
 
-      if (realpad->bufferpoolfunc)
-        PUT_STRING (4, "<bufferpool-function function=\"%s\"/>",
-                GST_DEBUG_FUNCPTR_NAME(realpad->bufferpoolfunc));
+      if (realpad->bufferallocfunc)
+        PUT_STRING (4, "<bufferalloc-function function=\"%s\"/>",
+                GST_DEBUG_FUNCPTR_NAME(realpad->bufferallocfunc));
       PUT_END_TAG (3, "implementation");
 
       if (realpad->caps) {

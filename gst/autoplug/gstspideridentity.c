@@ -41,18 +41,20 @@ static GstElementDetails gst_spider_identity_details = GST_ELEMENT_DETAILS (
 /* generic templates 
  * delete me when meging with spider.c
  */
-GST_PAD_TEMPLATE_FACTORY (spider_src_factory,
+static GstStaticPadTemplate spider_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  NULL      /* no caps */
+  GST_STATIC_CAPS_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (spider_sink_factory,
+static GstStaticPadTemplate spider_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  NULL      /* no caps */
+  GST_STATIC_CAPS_ANY
 );
 
 /* SpiderIdentity signals and args */
@@ -73,8 +75,8 @@ static void			gst_spider_identity_init		(GstSpiderIdentity *spider_identity);
 /* functions set in pads, elements and stuff */
 static void			gst_spider_identity_chain		(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn	gst_spider_identity_change_state	(GstElement *element);
-static GstPadLinkReturn		gst_spider_identity_link		(GstPad *pad, GstCaps *caps);
-static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_spider_identity_link		(GstPad *pad, const GstCaps *caps);
+static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad);
 /* loop functions */
 static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
 static void                     gst_spider_identity_src_loop		(GstSpiderIdentity *ident);
@@ -121,35 +123,28 @@ gst_spider_identity_class_init (GstSpiderIdentityClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
   /* add our two pad templates */
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_src_factory));
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&spider_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&spider_sink_factory));
   gst_element_class_set_details (gstelement_class, &gst_spider_identity_details);
   
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_spider_identity_change_state);
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_identity_request_new_pad);
 }
 
-static GstBufferPool*
-gst_spider_identity_get_bufferpool (GstPad *pad)
-{
-  GstSpiderIdentity *ident;
-
-  ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
-
-  return gst_pad_get_bufferpool (ident->src);
-}
-
 static void 
 gst_spider_identity_init (GstSpiderIdentity *ident) 
 {
   /* sink */
-  ident->sink = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (spider_sink_factory), "sink");
+  ident->sink = gst_pad_new_from_template (
+      gst_static_pad_template_get (&spider_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
   gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
-  gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
   /* src */
-  ident->src = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (spider_src_factory), "src");
+  ident->src = gst_pad_new_from_template (
+      gst_static_pad_template_get (&spider_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (ident), ident->src);
   gst_pad_set_link_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
@@ -227,7 +222,7 @@ gst_spider_identity_new_sink (gchar *name)
 
 /* shamelessly stolen from gstqueue.c to get proxy links */
 static GstPadLinkReturn
-gst_spider_identity_link (GstPad *pad, GstCaps *caps)
+gst_spider_identity_link (GstPad *pad, const GstCaps *caps)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -244,20 +239,24 @@ gst_spider_identity_link (GstPad *pad, GstCaps *caps)
 }
 
 static GstCaps*
-gst_spider_identity_getcaps (GstPad *pad, GstCaps *caps)
+gst_spider_identity_getcaps (GstPad *pad)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
+  GstPad *peer;
 
   if (pad == spider_identity->src) 
     otherpad = spider_identity->sink;
   else
     otherpad = spider_identity->src;
 
-  if (otherpad != NULL)
-    return gst_pad_get_allowed_caps (otherpad);
-  
-  return NULL;
+  if (otherpad != NULL) {
+    peer = GST_PAD_PEER (otherpad);
+
+    if (peer)
+      return gst_pad_get_caps (peer);
+  }
+  return gst_caps_new_any ();
 }
 
 GstPad*
@@ -282,7 +281,6 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
       gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
       gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
-      gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
       return ident->sink;
     case GST_PAD_SRC:
       /* src */
@@ -431,7 +429,7 @@ spider_find_peek (gpointer data, gint64 offset, guint size)
   }
 }
 static void
-spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
+spider_find_suggest (gpointer data, guint probability, const GstCaps *caps)
 {
   SpiderTypeFind *find = (SpiderTypeFind *) data;
   G_GNUC_UNUSED gchar *caps_str;
@@ -440,7 +438,7 @@ spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
   GST_INFO ("suggest %u, %s", probability, caps_str);
   g_free (caps_str);
   if (probability > find->best_probability) {
-    gst_caps_replace (&find->caps, caps);
+    gst_caps_replace (&find->caps, gst_caps_copy (caps));
     find->best_probability = probability;
   }
 }
@@ -462,8 +460,8 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   
   find.buffer = GST_BUFFER (data);
   /* maybe there are already valid caps now? */
-  if ((find.caps = gst_pad_get_caps (ident->sink)) != NULL) {
-    gst_caps_ref (find.caps); /* it's unrefed later below */
+  find.caps = gst_pad_get_caps (ident->sink);
+  if (find.caps != NULL) {
     goto plug;
   }
   
@@ -503,7 +501,7 @@ plug:
   GST_INFO ("typefind function found caps"); 
   g_assert (gst_pad_try_set_caps (ident->src, find.caps) > 0);
   gst_caps_debug (find.caps, "spider starting caps");
-  gst_caps_unref (find.caps);
+  gst_caps_free (find.caps);
   if (type_list)
     g_list_free (type_list);
 

@@ -56,11 +56,11 @@ enum {
   ARG_LAST_MESSAGE,
 };
 
-GST_PAD_TEMPLATE_FACTORY (fakesink_sink_factory,
+GstStaticPadTemplate fakesink_sink_template = GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 #define GST_TYPE_FAKESINK_STATE_ERROR (gst_fakesink_state_error_get_type())
@@ -135,8 +135,10 @@ gst_fakesink_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class); 
   
   gst_element_class_set_details (gstelement_class, &gst_fakesink_details);
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (fakesink_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fakesink_sink_template));
 }
+
 static void
 gst_fakesink_class_init (GstFakeSinkClass *klass) 
 {

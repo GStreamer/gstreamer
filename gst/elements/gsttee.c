@@ -53,11 +53,11 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (tee_src_factory,
+GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_CAPS_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 static void	gst_tee_base_init	(gpointer g_class);
@@ -106,7 +106,8 @@ gst_tee_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (gstelement_class, &gst_tee_details);
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (tee_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&tee_src_template));
 }
 static void
 gst_tee_class_init (GstTeeClass *klass) 
@@ -137,24 +138,18 @@ gst_tee_class_init (GstTeeClass *klass)
 }
 
 static GstPadLinkReturn 
-gst_tee_sinklink (GstPad *pad, GstCaps *caps) 
+gst_tee_sinklink (GstPad *pad, const GstCaps *caps) 
 {
   GstTee *tee;
   const GList *pads;
   GstPadLinkReturn set_retval;
-  GstCaps *caps1;
   
   GST_DEBUG ( "gst_tee_sinklink caps=%s", gst_caps_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
+  if (!gst_caps_is_fixed (caps)) {
     return GST_PAD_LINK_DELAYED;
-  }
-
-  if (GST_CAPS_IS_CHAINED (caps)) {
-    caps1 = gst_caps_copy_1(caps);
-    caps = caps1;
   }
 
   /* go through all the src pads */
@@ -175,7 +170,7 @@ gst_tee_sinklink (GstPad *pad, GstCaps *caps)
 }
 
 static GstPadLinkReturn 
-gst_tee_srclink (GstPad *pad, GstCaps *caps) 
+gst_tee_srclink (GstPad *pad, const GstCaps *caps) 
 {
   GstTee *tee;
 
@@ -187,9 +182,9 @@ gst_tee_srclink (GstPad *pad, GstCaps *caps)
 }
 
 static GstCaps* 
-gst_tee_getcaps (GstPad *pad, GstCaps *filter) 
+gst_tee_getcaps (GstPad *pad)
 {
-  GstCaps *caps = NULL;
+  GstCaps *caps = GST_CAPS_ANY;
   GstTee *tee;
   const GList *pads;
 
@@ -202,7 +197,7 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
   while (pads) {
     GstPad *srcpad = GST_PAD (pads->data);
     GstPad *peer;
-    GstCaps *peercaps;
+    const GstCaps *peercaps;
     GstCaps *newcaps;
 
     pads = g_list_next (pads);
@@ -214,8 +209,7 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
 
     peercaps = gst_pad_get_caps (peer);
     newcaps = gst_caps_intersect (caps, peercaps);
-    gst_caps_unref (caps);
-    gst_caps_sink (peercaps);
+    gst_caps_free (caps);
     caps = newcaps;
   }
 

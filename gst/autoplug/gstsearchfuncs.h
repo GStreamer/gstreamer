@@ -40,9 +40,9 @@ struct _GstAutoplugNode {
 };
 
 /* helper functions */
-gboolean				gst_autoplug_caps_intersect		(GstCaps *src, GstCaps *sink);
-GstPadTemplate * 			gst_autoplug_can_connect_src            (GstElementFactory *fac, GstCaps *src);
-GstPadTemplate * 			gst_autoplug_can_connect_sink           (GstElementFactory *fac, GstCaps *sink);
+gboolean				gst_autoplug_caps_intersect		(const GstCaps *src, const GstCaps *sink);
+GstPadTemplate * 			gst_autoplug_can_connect_src            (GstElementFactory *fac, const GstCaps *src);
+GstPadTemplate * 			gst_autoplug_can_connect_sink           (GstElementFactory *fac, const GstCaps *sink);
 GstPadTemplate *                    	gst_autoplug_can_match                  (GstElementFactory *src, GstElementFactory *dest);
 gboolean                            	gst_autoplug_factory_has_direction      (GstElementFactory *fac, GstPadDirection dir);
 #define gst_autoplug_factory_has_sink(fac) gst_autoplug_factory_has_direction((fac), GST_PAD_SINK)
@@ -59,6 +59,6 @@ GList *					gst_autoplug_factories_filters_with_sink_caps(GList *factories);
 GList *                             	gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, guint maxtemplates);
 
 /* shortest path algorithm */
-GList *                             	gst_autoplug_sp                         (GstCaps *src_caps, GstCaps *sink_caps, GList *factories);
+GList *                             	gst_autoplug_sp                         (const GstCaps *src_caps, const GstCaps *sink_caps, GList *factories);
 
 #endif /* __GST_SEARCHFUNCS_H__ */

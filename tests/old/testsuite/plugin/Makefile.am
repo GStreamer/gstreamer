@@ -1,3 +1,4 @@
+
 include ../Rules
 
 plugin_LTLIBRARIES = libtestplugin.la libtestplugin2.la
@@ -15,5 +16,5 @@ libtestplugin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 linked_LIBS = libtestplugin.la libtestplugin2.la
 
-static_SOURCES = static.c testplugin_s.c testplugin2_s.c
+static_SOURCES = static.c
 

@@ -52,7 +52,7 @@ typedef enum {
   GST_XML_REGISTRY_FEATURE,
   GST_XML_REGISTRY_PADTEMPLATE,
   GST_XML_REGISTRY_CAPS,
-  GST_XML_REGISTRY_CAPSCOMP,
+  GST_XML_REGISTRY_STRUCTURE,
   GST_XML_REGISTRY_PROPERTIES
 } GstXMLRegistryState;
 
@@ -103,8 +103,9 @@ struct _GstXMLRegistry {
   GstCaps		*caps;
 
   gchar			*caps_name;
-  gchar			*caps_mime;
-  GstProps		*props;
+  gchar			*structure_name;
+  //gchar			*caps_mime;
+  //GstProps		*props;
 
   gboolean		 in_list;
   GList			*entry_list;

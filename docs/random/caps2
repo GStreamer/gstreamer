@@ -1,0 +1,231 @@
+
+The new caps code uses the type name GstCaps2 and the function
+names gst_caps2_*().  Before the CAPS branch is merged, there
+will be a global change from caps2 to caps.  Since GstCaps is
+no longer defined, it no longer compiles, thus highlighting
+exactly what needs to be changed in an element.
+
+
+
+Pad Templates:
+
+Old style:
+
+  GST_PAD_TEMPLATE_FACTORY (fakesrc_src_factory,
+    "src%d",
+    GST_PAD_SRC,
+    GST_PAD_REQUEST,
+    GST_CAPS_ANY
+  );
+
+New style:
+
+  GstStaticPadTemplate fakesrc_src_template = GST_STATIC_PAD_TEMPLATE (
+    "src%d",
+    GST_PAD_SRC,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS2_ANY
+  );
+
+The old style defined a function called fakesrc_src_factory(), which,
+when called, returns a pad template.  The new style defines a
+GstStaticPadTemplate, which can be converted to a GstPadTemplate
+by the function gst_static_pad_template_get().  The 4th argument
+is also different -- previously it would call the GST_CAPS_NEW()
+function.  Now it is a GstStaticCaps.
+
+Not every pad template can be converted to a GstStaticPadTemplate,
+particularly those which create caps from another source at runtime,
+such as videotestsrc.
+
+Caps:
+
+Old style:
+
+  GST_CAPS_NEW (
+    "sinesrc_src",
+    "audio/x-raw-int",
+      "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",         GST_PROPS_BOOLEAN (TRUE),
+      "width",          GST_PROPS_INT (16),
+      "depth",          GST_PROPS_INT (16),
+      "rate",           GST_PROPS_INT_RANGE (8000, 48000),
+      "channels",       GST_PROPS_INT (1)
+  )
+
+New style:
+
+  GST_STATIC_CAPS2 ( "audio/x-raw-int, "
+      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) [ 8000, 48000 ], "
+      "channels = (int) 1"
+  )
+
+The old style calls a function that creates a GstCaps.  The new style
+stores a string in a GstStaticCaps2, and this string is converted to
+a caps in the function gst_static_caps2_get().
+
+Note that the old caps name is no longer used.
+
+Old style:
+
+  caps = GST_CAPS_NEW ("videotestsrc_filter",
+                       "video/x-raw-rgb",
+                       "bpp", GST_PROPS_INT(format->bitspp),
+                       "endianness", GST_PROPS_INT(endianness),
+                       "depth", GST_PROPS_INT(format->depth),
+                       "red_mask", GST_PROPS_INT(format->red_mask),
+                       "green_mask", GST_PROPS_INT(format->green_mask),
+                       "blue_mask", GST_PROPS_INT(format->blue_mask));
+
+New style:
+
+  caps = gst_caps2_new_simple("video/x-raw-rgb",
+        "bpp", G_TYPE_INT, format->bitspp,
+        "endianness", G_TYPE_INT, endianness,
+        "depth", G_TYPE_INT, format->depth,
+        "red_mask", G_TYPE_INT, format->red_mask,
+        "green_mask", G_TYPE_INT, format->green_mask,
+        "blue_mask", G_TYPE_INT, format->blue_mask);
+
+Not everything can be converted in this way, especially lists and
+ranges.
+
+
+IMPLEMENTATION
+
+Pad Capabilities (caps) are mathematical sets that represent all the
+possible stream types that a pad can use.  These general sets are
+represented by unions of simpler sets known as caps structures.  Each
+caps structure has a media type (e.g., "audio/mpeg") and a number of
+properties.  Each property has a name and a GValue.  In normal
+circumstances, the GValue will have the types int, boolean, string,
+fourcc, and double.  Simple sets are constructed by using GValues
+that are lists of other GValues, or the special types that represent
+int ranges and double ranges.
+
+A "fixed" caps represents exactly one media format.  This means that
+the caps is a union of exactly one caps structure, and each property
+in the caps structure is a simple type, i.e., no ranges or lists.
+
+There are two special caps values, "ANY" which represents the union
+of all stream types, and "EMPTY", which represents the set of no
+stream types.  The ANY caps is often used on generic elements that
+handle any type of data (e.g., filesrc and filesink).  The EMPTY
+caps is the return value of gst_caps_intersect(), when the two
+given caps do not intersect.  In many cases, using EMPTY is invalid.
+
+
+CAPS NEGOTIATION
+
+Elements provide information to the core about what stream formats
+they understand in four ways: the caps in the pad templates, the
+caps returned by a pad's getcaps function, accepting/denying
+a given caps in the pad link function, and a new fixate function.
+
+The pad template caps should be the union of caps a pad supports
+in any potential situation.  Simultaneously, these caps should be
+as specific as possible, since it is used to decide which elements
+to attempt for autoplugging, without having to load the element.
+The pad template caps are generally detemined at compile time, but
+might be actually computed at run-time from other information.
+
+The getcaps() function returns the caps supported by a given pad,
+in the context of the element's state, its link to other elements,
+and the devices or files it has opened.  These caps must be a
+subset of the pad template caps.  In the NULL state with no links,
+the getcaps function should ideally return the same caps as the
+pad template.  In rare circumstances, an object property can affect
+the caps returned by getcaps, but this is discouraged.  For most
+filters, the caps returned by getcaps is directly affected by the
+allowed caps on other pads.  For demuxers and decoders, the caps
+returned by the srcpad's getcaps function is directly related to
+the stream data.  Again, getcaps should return the most specific
+caps it reasonably can, since this helps with autoplugging.
+
+The pad link function is the last step in negotiating caps.  The
+core calls the pad link function with a fixed caps, meaning that
+the stream format is precisely defined, with the caps having one
+structure, with no fields that are ranges or lists.
+
+There is also a new pad function "fixate", which is used to help
+choose a fixed caps from a non-fixed caps.  This is called in
+situations where normal negotiation cannot decide on a fixed caps.
+You should almost never implement a fixate function, please ask
+me if it is appropriate for your case.  Fixate functions are called
+iteratively on the pads until a fixed caps is found.  Fixate functions
+are called with a const caps, and should return a caps that is a
+strict subset of the given caps.  That is, the function should
+create a caps that is "more fixed" than previously, but does not
+have to return fixed caps.  If the fixate function can't provide
+more fixed caps, it should return NULL.
+
+
+
+Checklist for getcaps:
+
+ - The getcaps function prototype no longer has the caps parameter.
+   Remove it.
+
+ - The returned caps is owned by the caller.  Make sure you don't
+   keep a pointer to the caps.
+ 
+ - Make sure that the getcaps function can be called safely in each
+   element state (NULL, READY, PAUSED, PLAYING), and for any element
+   configuration (properties, links, devices/files opened or not,
+   error state, etc.)
+
+ - Make sure that the returned caps do not depend on the caps that
+   indicate the stream type that the pad is currently using.
+
+Checklist for pad_link:
+
+ - The pad link function prototypes uses a const GstCaps *.
+
+ - Pad link functions are called with fixed caps.  There's no need
+   to check for this.  This means that you can assume that the caps
+   is not ANY or EMPTY, and that there is exactly one structure in
+   the caps, and that all the properties in the caps
+
+ - Pad link functions are called with caps that are a subset of the
+   most recent return value of the pad's getcaps function.  Generally,
+   the getcaps function was called immediately prior to calling the
+   src_link function.  For 0.8, you can assume that nothing has changed
+   in your element that would cause a change to the return value of
+   getcaps.
+
+ - the return value GST_PAD_LINK_OK should be used when the caps are
+   acceptable, and you've extracted all the necessary information from
+   the caps and set the element's internal state appropriately.
+
+ - the return value GST_PAD_LINK_REFUSED should be used when the caps
+   are unacceptable for whatever reason.
+
+ - the return value GST_PAD_LINK_DELAYED should be used when the
+   element is in a state where it can't determine whether the caps
+   are acceptable or not.  This is often used if the element needs
+   to open a device or process data before determining acceptable
+   caps.
+
+ - the pad_link function must not call gst_caps_try_set_caps() on
+   the pad that was specified as a parameter.
+
+ - the pad_link function may (and often should) call
+   gst_caps_try_set_caps() on pads that are not specified as the
+   pad parameter.
+ 
+Checklist for fixate:
+
+ - Make sure you actually should be using a fixate function.  Fixate
+   functions are reasonable for non-fixed primary sources, such as
+   videotestsrc, v4lsrc, and osssrc.
+
+ - The user_data parameter is mainly used for user-provided fixate
+   function.  It should be ignored in element fixate functions.
+
+
+
+
