@@ -58,6 +58,7 @@ typedef enum {
 #define GST_RIFF_TAG_vedt MAKE_FOUR_CC('v','e','d','t')
 #define GST_RIFF_TAG_JUNK MAKE_FOUR_CC('J','U','N','K')
 #define GST_RIFF_TAG_idx1 MAKE_FOUR_CC('i','d','x','1')
+#define GST_RIFF_TAG_dmlh MAKE_FOUR_CC('d','m','l','h')
 /* WAV stuff */
 #define GST_RIFF_TAG_fmt  MAKE_FOUR_CC('f','m','t',' ')
 #define GST_RIFF_TAG_data MAKE_FOUR_CC('d','a','t','a')
@@ -339,6 +340,10 @@ struct _gst_riff_index_entry {
   guint32 size;
 };
 
+struct _gst_riff_dmlh {
+  guint32 totalframes;
+};
+
 typedef struct _gst_riff_riff 		gst_riff_riff;
 typedef struct _gst_riff_list 		gst_riff_list;
 typedef struct _gst_riff_chunk 		gst_riff_chunk;
@@ -349,6 +354,7 @@ typedef struct _gst_riff_strh 		gst_riff_strh;
 typedef struct _gst_riff_strf_vids 	gst_riff_strf_vids;
 typedef struct _gst_riff_strf_auds 	gst_riff_strf_auds;
 typedef struct _gst_riff_strf_iavs 	gst_riff_strf_iavs;
+typedef struct _gst_riff_dmlh           gst_riff_dmlh;
 typedef struct _GstRiff 		GstRiff;
 typedef struct _GstRiffChunk 		GstRiffChunk;
 
