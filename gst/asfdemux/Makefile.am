@@ -7,4 +7,4 @@ libgstasfdemux_la_CFLAGS = $(GST_CFLAGS)
 libgstasfdemux_la_LIBADD =
 libgstasfdemux_la_LDFLAGS = $(GST_LIBS)
 
-noinst_HEADERS = gstasfdemux.h
+noinst_HEADERS = gstasfdemux.h asfheaders.h
