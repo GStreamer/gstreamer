@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+
+# launch a gst-launch pipeline for the supplied media file
+# use the extension to determine the gst-launch pipeline
+# make use of default output sinks
+
+### packages
+
+use File::Basename;
+
+### defaults
+my $VIDEOSINK = "xvideosink";
+my $AUDIOSINK = "osssink";
+my $GST_CVS_PATH = "~/gst/cvs";
+
+my %pipes = ( 
+  "mp3", "mad ! $AUDIOSINK",
+  "ogg", "vorbisdec ! $AUDIOSINK",
+  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $VIDEOSINK } audio_00! { queue ! mad ! $AUDIOSINK }",
+  "avi", "avidemux video_00! { queue ! windec ! $VIDEOSINK }",
+  "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $VIDEOSINK }",
+
+);
+
+sub extension
+{
+  my $path = shift;
+  my $ext = (fileparse ($path, '\..*'))[2];
+  $ext =~ s/^\.//;
+  return $ext;
+}
+
+### main
+
+my $file = shift @ARGV or die "Please give a file name !";
+
+my $ext = extension ($file);
+
+if ($pipe = $pipes{$ext})
+{
+  $command = "$GST_CVS_PATH/gstreamer/tools/gst-launch filesrc location=\"$file\" ! $pipe";
+  print "Running $command\n";
+  system ($command);
+}
+else
+{
+  print "No suitable pipe found for extension $ext.\n";
+}
