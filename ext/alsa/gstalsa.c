@@ -852,9 +852,11 @@ gst_alsa_rates_probe (snd_pcm_t * device_handle,
 {
   unsigned int common_rates[] =
       { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 88200,
-    96000, 192000, 0
+    96000, 192000, 0, 0, 0
   };
-  unsigned int uncommon_rates[] = { 12345, 0 }; /* this dummy sample rate should only be supported by a software device */
+  /* this dummy sample rate should only be supported by a software device.
+   * you need two, because one could be dmix... */
+  unsigned int uncommon_rates[] = { 12345, 45678, 0 };
 
   int ret;
   int dir;
@@ -871,13 +873,16 @@ gst_alsa_rates_probe (snd_pcm_t * device_handle,
       max_rate >
       GST_ALSA_MAX_RATE ? GST_ALSA_MAX_RATE : (max_rate +
       GST_ALSA_DIR_MAX (dir));
-
+  common_rates[12] = min_rate;
+  if (min_rate != max_rate)
+    common_rates[13] = max_rate;
 
   ret =
       gst_alsa_check_sample_rates (device_handle, hw_params, uncommon_rates,
       supported_rates);
   if (ret) {
-    /* Uncommon sample rates supported, it is certainly a "software"/dummy device */
+    /* Uncommon sample rates supported, it is certainly a
+     * "software"/dummy device */
     g_value_unset (supported_rates);
     g_value_init (supported_rates, GST_TYPE_INT_RANGE);
 
@@ -905,8 +910,9 @@ gst_alsa_rates_probe (snd_pcm_t * device_handle,
         g_value_set_int (supported_rates, min_rate);
       }
     } else {
-      /* No sample rate supported ?! WTF */
-      return 0;
+      GST_WARNING ("No supported samplerates found for %d-%d range",
+          min_rate, max_rate);
+      gst_value_set_int_range (supported_rates, min_rate, max_rate);
     }
   }
 
