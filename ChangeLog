@@ -1,5 +1,11 @@
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/play/play.c: (gst_play_tick_callback),
+	(gst_play_state_change), (gst_play_seek_to_time):
+        block the tick callback for 0.5 secs after doing a seek
+
+2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/play/play.c: (gst_play_new):
           check for GError
 
