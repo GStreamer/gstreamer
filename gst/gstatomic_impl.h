@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 1999, 2003 Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -211,7 +211,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** Sun SPARC *****/
-#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__) && 0
+#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__)
 
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
 
@@ -248,19 +248,22 @@ gst_atomic_int_read (GstAtomicInt *aint)
 GST_INLINE_FUNC void 
 gst_atomic_int_add (GstAtomicInt *aint, gint val)
 {
-  register volatile int *ptr asm ("g1");
-  register int increment asm ("g2");
+  volatile int increment, *ptr;
+  char lock;
 
-  ptr = &aint->counter;
-  increment = val;
+  ptr = &(aint->counter);
 
-  __asm__ __volatile__(
-    "mov    %%o7, %%g4\n\t"
-    "call   ___atomic_add\n\t"
-    " add   %%o7, 8, %%o7\n"
-      : "=&r" (increment)
-      : "0" (increment), "r" (ptr)
-      : "g3", "g4", "g7", "memory", "cc");
+ __asm__ __volatile__("1: ldstub [%[ptr] + 3], %[lock]\n"
+		      "\torcc %[lock], 0, %%g0\n"
+		      "\tbne 1b\n" /* go back until we have the lock */
+		      "\tld [%[ptr]], %[inc]\n"
+		      "\tsra %[inc], 8, %[inc]\n"
+		      "\tadd %[inc], %[val], %[inc]\n"
+		      "\tsll %[inc], 8, %[lock]\n"
+		      "\tst %[lock],[%[ptr]]\n" /* Release the lock */
+		      : [inc] "=&r" (increment), [lock] "=r" (lock)
+		      : "0" (increment), [ptr] "r" (ptr), [val] "r" (val)
+		      );
 }
 
 GST_INLINE_FUNC void
@@ -272,19 +275,22 @@ gst_atomic_int_inc (GstAtomicInt *aint)
 GST_INLINE_FUNC gboolean
 gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 {
-  register volatile int *ptr asm ("g1");
-  register int increment asm ("g2");
+  volatile int increment, *ptr;
+  char lock;
 
   ptr = &aint->counter;
-  increment = 1;
 
-  __asm__ __volatile__(
-    "mov    %%o7, %%g4\n\t"
-    "call   ___atomic_sub\n\t"
-    " add   %%o7, 8, %%o7\n"
-      : "=&r" (increment)
-      : "0" (increment), "r" (ptr)
-      : "g3", "g4", "g7", "memory", "cc");
+  __asm__ __volatile__("1: ldstub [%[ptr] + 3], %[lock]\n"
+		       "\torcc %[lock], 0, %%g0\n"
+		       "\tbne 1b\n" /* go back until we have the lock */
+		       "\tld [%[ptr]], %[inc]\n"
+		       "\tsra %[inc], 8, %[inc]\n"
+		       "\tsub %[inc], 1, %[inc]\n"
+		       "\tsll %[inc], 8, %[lock]\n"
+		       "\tst %[lock],[%[ptr]]\n" /* Release the lock */
+		       : [inc] "=&r" (increment), [lock] "=r" (lock)
+		       : "0" (increment), [ptr] "r" (ptr)
+		       );
 
   return increment == 0;
 }
