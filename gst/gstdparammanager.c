@@ -604,24 +604,34 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 					switch (G_VALUE_TYPE(dpwrap->value)){
 						case G_TYPE_CHAR:
 							*(gchar*)dpwrap->update_data = g_value_get_char(dpwrap->value);
+							break;
 						case G_TYPE_UCHAR:
 							*(guchar*)dpwrap->update_data = g_value_get_uchar(dpwrap->value);
+							break;
 						case G_TYPE_BOOLEAN:
 							*(gboolean*)dpwrap->update_data = g_value_get_boolean(dpwrap->value);
+							break;
 						case G_TYPE_INT:
 							*(gint*)dpwrap->update_data = g_value_get_int(dpwrap->value);
+							break;
 						case G_TYPE_UINT:
 							*(guint*)dpwrap->update_data = g_value_get_uint(dpwrap->value);
+							break;
 						case G_TYPE_LONG:
 							*(glong*)dpwrap->update_data = g_value_get_long(dpwrap->value);
+							break;
 						case G_TYPE_ULONG:
 							*(gulong*)dpwrap->update_data = g_value_get_ulong(dpwrap->value);
+							break;
 						case G_TYPE_FLOAT:
 							*(gfloat*)dpwrap->update_data = g_value_get_float(dpwrap->value);
+							break;
 						case G_TYPE_DOUBLE:
 							*(gdouble*)dpwrap->update_data = g_value_get_double(dpwrap->value);
+							break;
 						case G_TYPE_POINTER:
 							*(gpointer*)dpwrap->update_data = g_value_get_pointer(dpwrap->value);
+							break;
 						default:
 							break;
 					}
@@ -643,51 +653,61 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 							*(gchar*)dpwrap->update_data = g_value_get_char(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gchar*)dpwrap->update_data)[x] = *(gchar*)dpwrap->update_data;
+							break;
 						case G_TYPE_UCHAR:
 							(guchar*)dpwrap->update_data = g_new(guchar, frames);
 							*(guchar*)dpwrap->update_data = g_value_get_uchar(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((guchar*)dpwrap->update_data)[x] = *(guchar*)dpwrap->update_data;
+							break;
 						case G_TYPE_BOOLEAN:
 							(gboolean*)dpwrap->update_data = g_new(gboolean, frames);
 							*(gboolean*)dpwrap->update_data = g_value_get_boolean(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gboolean*)dpwrap->update_data)[x] = *(gboolean*)dpwrap->update_data;
+							break;
 						case G_TYPE_INT:
 							(gint*)dpwrap->update_data = g_new(gint, frames);
 							*(gint*)dpwrap->update_data = g_value_get_int(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gint*)dpwrap->update_data)[x] = *(gint*)dpwrap->update_data;
+							break;
 						case G_TYPE_UINT:
 							(guint*)dpwrap->update_data = g_new(guint, frames);
 							*(guint*)dpwrap->update_data = g_value_get_uint(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((guint*)dpwrap->update_data)[x] = *(guint*)dpwrap->update_data;
+							break;
 						case G_TYPE_LONG:
 							(glong*)dpwrap->update_data = g_new(glong, frames);
 							*(glong*)dpwrap->update_data = g_value_get_long(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((glong*)dpwrap->update_data)[x] = *(glong*)dpwrap->update_data;
+							break;
 						case G_TYPE_ULONG:
 							(gulong*)dpwrap->update_data = g_new(gulong, frames);
 							*(gulong*)dpwrap->update_data = g_value_get_ulong(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gulong*)dpwrap->update_data)[x] = *(gulong*)dpwrap->update_data;
+							break;
 						case G_TYPE_FLOAT:
 							(gfloat*)dpwrap->update_data = g_new(gfloat, frames);
 							*(gfloat*)dpwrap->update_data = g_value_get_float(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gfloat*)dpwrap->update_data)[x] = *(gfloat*)dpwrap->update_data;
+							break;
 						case G_TYPE_DOUBLE:
 							(gdouble*)dpwrap->update_data = g_new(gdouble, frames);
 							*(gdouble*)dpwrap->update_data = g_value_get_double(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gdouble*)dpwrap->update_data)[x] = *(gdouble*)dpwrap->update_data;
+							break;
 						case G_TYPE_POINTER:
 							(gpointer*)dpwrap->update_data = g_new(gpointer, frames);
 							*(gpointer*)dpwrap->update_data = g_value_get_pointer(dpwrap->value);
 							for (x = 1 ; x < frames ; x++)
 								((gpointer*)dpwrap->update_data)[x] = *(gpointer*)dpwrap->update_data;
+							break;
 						default:
 							break;
 					}
