@@ -1,6 +1,7 @@
-2004-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
-	* tools/gst-compprep.c: (handle_xmlerror), (main):
-	  Make an error that baffled me a bit clearer
+2004-06-11  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/config.h:
+	  enable NLS under Windows
 
 2004-06-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
