@@ -48,6 +48,8 @@ struct _GstNavigationtest {
 
   double x;
   double y;
+
+  GSList *clicks;
 };
 
 struct _GstNavigationtestClass {
