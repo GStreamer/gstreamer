@@ -156,7 +156,6 @@ void			gst_registry_pool_remove	(GstRegistry *registry);
 
 void			gst_registry_pool_add_plugin	(GstPlugin *plugin);
 
-void			gst_registry_pool_add		(GstRegistry *registry, guint priority);
 void			gst_registry_pool_load_all	(void);
 
 GList*			gst_registry_pool_plugin_list	(void);
