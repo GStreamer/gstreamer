@@ -880,8 +880,8 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext * context,
     g_assert (registry->caps == NULL);
     registry->caps = gst_caps_from_string (s);
     if (registry->caps == NULL) {
-      g_critical ("Could not parse caps: length %d, content: %*s\n", text_len,
-          text_len, text);
+      g_critical ("Could not parse caps: length %d, content: %*s\n",
+          (int) text_len, (int) text_len, text);
     }
     g_free (s);
     return TRUE;

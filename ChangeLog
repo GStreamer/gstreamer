@@ -1,3 +1,9 @@
+2004-05-22  David Schleef  <ds@schleef.org>
+
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_parse_padtemplate): Fix warning on OS X.
+	(bug #142957)
+
 2004-05-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
