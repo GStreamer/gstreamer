@@ -1,3 +1,24 @@
+2004-07-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dvdnav/README:
+	  Update the README to use dvddemux
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_getcaps):
+	  Ensure getcaps returns a subset of the template caps
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_base_init),
+	(gst_mpeg2subt_init):
+	  Ensure getcaps returns a subset of the template caps
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_class_init),
+	(gst_dvd_demux_init), (gst_dvd_demux_get_video_stream),
+	(gst_dvd_demux_get_subpicture_stream),
+	(gst_dvd_demux_send_subbuffer), (gst_dvd_demux_set_cur_subpicture):
+	* gst/mpegstream/gstdvddemux.h:
+	  Set the explicit caps on the current_video pad before pushing
+	  anything
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_get_video_stream),
+	(gst_mpeg_demux_get_audio_stream):
+	  Free caps used to gst_pad_set_explicit_caps, which takes a const
+	  GstCaps *
+
 2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: update GStreamer requirement to 0.8.4 because of
