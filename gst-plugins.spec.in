@@ -268,10 +268,10 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpegaudio*
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp1*
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpegstream*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2play*
+# @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2play*
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2enc*
 @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2subt*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp2videoparse*
+# @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp2videoparse*
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -323,7 +323,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%files -n gstreamer-quicktime
 @USE_OPENQUICKTIME_TRUE@%defattr(-, root, root)
-@USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libquicktime*
+@USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libopenquicktime*
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%post -n gstreamer-quicktime
 @USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -355,7 +355,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%files -n gstreamer-alsa
 @USE_ALSA_TRUE@%defattr(-, root, root)
-@USE_ALSA_TRUE@%{prefix}/lib/gst/libalsa*
+@USE_ALSA_TRUE@%{prefix}/lib/gst/libgstalsa*
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
 @USE_ALSA_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -542,21 +542,6 @@ Plugin for accessing a Quickcam source
 %post -n gstreamer-qcam
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
-%package -n gstreamer-bstest
-Summary: GStreamer BS test package
-Group: Libraries/Multimedia
-Requires: %{name} = %{ver}
-
-%description -n gstreamer-bstest
-Plugin for ByteStream testing of GStreamer
-
-%files -n gstreamer-bstest
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstbstest*
-
-%post -n gstreamer-bstest
-%{prefix}/bin/gstreamer-register --gst-mask=0
-
 %package -n gstreamer-au
 Summary: GStreamer au audiofile plugin
 Group: Libraries/Multimedia
@@ -628,9 +613,9 @@ and better.
 
 %files -n gstreamer-mp3
 %defattr(-, root, root)
-%{prefix}/lib/gst/libmpg123*
-%{prefix}/lib/gst/libmp3parse*
-%{prefix}/lib/gst/libmp3types*
+%{prefix}/lib/gst/libgstmpg123*
+%{prefix}/lib/gst/libgstmp3parse*
+%{prefix}/lib/gst/libgstmp3types*
 
 %post -n  gstreamer-mp3
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -775,7 +760,7 @@ Plugins for various effects
 %{prefix}/lib/gst/libgstidct*
 %{prefix}/lib/gst/libgstriff*
 %{prefix}/lib/gst/libgstjpeg*
-%{prefix}/lib/gst/libgstintfloatconvert*
+%{prefix}/lib/gst/libgstintfloat*
 %{prefix}/lib/gst/libgstlevel*
 %{prefix}/lib/gst/libgstmedian*
 %{prefix}/lib/gst/libgstmono2stereo*
@@ -783,17 +768,24 @@ Plugins for various effects
 %{prefix}/lib/gst/libgstpassthrough*
 %{prefix}/lib/gst/libgstrtjpe*
 %{prefix}/lib/gst/libgststereo*
-%{prefix}/lib/gst/libgstputbits*
 %{prefix}/lib/gst/libgstvol*
-%{prefix}/lib/gst/libgstparsewav*
-%{prefix}/lib/gst/libgststaticautoplug*
 %{prefix}/lib/gst/libgsttypes*
-%{prefix}/lib/gst/libgstbasicscheduler*
-%{prefix}/lib/gst/libgstbytestream*
-%{prefix}/lib/gst/libgstcontrol*
 %{prefix}/lib/gst/libgstplayondemand*
 %{prefix}/lib/gst/libgstspeed*
 
 %post -n gstreamer-misc
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
+%package -n gstreamer-wav
+Summary: Gstreamer wav audio format plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+%description -n gstreamer-wav
+Plugin for playback of wav audio files
+
+%files -n gstreamer-wav
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstwavparse*
+
+%post -n gstreamer-colorspace
+@%{prefix}/bin/gstreamer-register --gst-mask=0
