@@ -1,3 +1,10 @@
+2004-04-15  David Schleef  <ds@schleef.org>
+
+	* gst/gstinfo.c: (_gst_debug_init): Change some internal
+	symbol names to not conflict with new gstinfo.h symbols.
+	* gst/gstinfo.h: Add inline functions for all those crazy
+	compilers that don't know how to handle variadic macros (MSVC).
+
 2004-04-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bump nano to 1

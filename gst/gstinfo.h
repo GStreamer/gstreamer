@@ -136,19 +136,7 @@ typedef void (*GstLogFunction)	(GstDebugCategory *	category,
 				 GstDebugMessage *    	message,
 				 gpointer		data);
 
-/* Disable this subsystem if no varargs macro can be found. 
-   Use a trick so the core builds the functions nonetheless if it wasn't
-   explicitly disabled. */
-#if !defined(G_HAVE_ISO_VARARGS) && !defined(G_HAVE_GNUC_VARARGS)
-#define __GST_DISABLE_GST_DEBUG
-#endif
-#ifdef GST_DISABLE_GST_DEBUG
-#ifndef __GST_DISABLE_GST_DEBUG
-#define __GST_DISABLE_GST_DEBUG
-#endif
-#endif
-
-#ifndef __GST_DISABLE_GST_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
 
 void		_gst_debug_init			(void);
 
@@ -288,6 +276,7 @@ gchar *		gst_debug_construct_term_color	(guint colorinfo);
 extern GstDebugCategory *	GST_CAT_DEFAULT;
 /* this symbol may not be used */
 extern gboolean			__gst_debug_enabled;
+
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{			\
   if (__gst_debug_enabled) {				\
@@ -295,14 +284,35 @@ extern gboolean			__gst_debug_enabled;
   }										\
 }G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
+#ifdef G_HAVE_GNUC_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{			\
   if (__gst_debug_enabled) {				\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__, (GObject *) (object), ##args ); \
   }										\
 }G_STMT_END
-#endif /* G_HAVE_ISO_VARARGS */
+#else /* no variadic macros, use inline */
+static inline void
+GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
+    GstDebugLevel level, gpointer object, const char *format, va_list varargs)
+{
+  gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
+      varargs);
+}
 
-#ifndef GST_DEBUG_ENABLE_DEPRECATED
+static inline void
+GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
+    gpointer object, const char *format, ...)
+{
+  if (__gst_debug_enabled) {
+    va_list varargs;
+
+    va_start (varargs, format);
+    GST_CAT_LEVEL_LOG_valist (cat, level, object, format, varargs);
+    va_end (varargs);
+  }
+}
+#endif
+#endif /* G_HAVE_ISO_VARARGS */
 
 #ifdef G_HAVE_ISO_VARARGS
 
@@ -330,7 +340,8 @@ extern gboolean			__gst_debug_enabled;
 #define GST_DEBUG(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   NULL, __VA_ARGS__)
 #define GST_LOG(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     NULL, __VA_ARGS__)
 
-#else /* G_HAVE_GNUC_VARARGS */
+#else
+#ifdef G_HAVE_GNUC_VARARGS
 
 #define GST_CAT_ERROR_OBJECT(cat,obj,args...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_ERROR,   obj,  ##args )
 #define GST_CAT_WARNING_OBJECT(cat,obj,args...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_WARNING, obj,  ##args )
@@ -356,33 +367,224 @@ extern gboolean			__gst_debug_enabled;
 #define GST_DEBUG(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   NULL, ##args )
 #define GST_LOG(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     NULL, ##args )
 
-#endif /* G_HAVE_ISO_VARARGS */
+#else
+/* no variadic macros, use inline */
+static inline void
+GST_CAT_ERROR_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+  va_list varargs;
 
-#else /* GST_DEBUG_ENABLE_DEPRECATED */
-/* This is a workaround so the old debugging stuff of GStreamer 0.6 works.
-   This is undocumented and will go when 0.8 comes out. */
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_ERROR, obj, format, varargs);
+  va_end (varargs);
+}
 
-#ifdef G_HAVE_ISO_VARARGS
-#  define GST_INFO(cat,...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    NULL, __VA_ARGS__)
-#  define GST_DEBUG(cat,...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   NULL, __VA_ARGS__)
-#  define GST_INFO_ELEMENT(cat,obj,...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    obj, __VA_ARGS__)
-#  define GST_DEBUG_ELEMENT(cat,obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   obj, __VA_ARGS__)
-#  define GST_DEBUG_ENTER(...)			GST_DEBUG ("entering: " __VA_ARGS__ )
-#  define GST_DEBUG_LEAVE(...)			GST_DEBUG ("leaving: "  __VA_ARGS__ )
-#  define GST_INFO_ENTER(...)			GST_INFO ("entering: " __VA_ARGS__ )
-#  define GST_INFO_LEAVE(...)			GST_INFO ("leaving: "  __VA_ARGS__ )
-#else /* G_HAVE_GNUC_VARARGS */
-#  define GST_INFO(cat,args...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    NULL, ##args )
-#  define GST_DEBUG(cat,args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   NULL, ##args )
-#  define GST_INFO_ELEMENT(cat,obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    obj, ##args )
-#  define GST_DEBUG_ELEMENT(cat,obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   obj, ##args )
-#  define GST_DEBUG_ENTER(args...)		GST_DEBUG ("entering: " ##args )
-#  define GST_DEBUG_LEAVE(args...)		GST_DEBUG ("leaving: "  ##args )
-#  define GST_INFO_ENTER(args...)		GST_INFO ("entering: " ##args )
-#  define GST_INFO_LEAVE(args...)		GST_INFO ("leaving: "  ##args )
-#endif /* G_HAVE_ISO_VARARGS */
+static inline void
+GST_CAT_WARNING_OBJECT (GstDebugCategory * cat, gpointer obj,
+    const char *format, ...)
+{
+  va_list varargs;
 
-#endif /* !GST_DEBUG_ENABLE_DEPRECATED */
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_WARNING, obj, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_INFO_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_INFO, obj, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_DEBUG_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_DEBUG, obj, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_LOG_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_LOG, obj, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_ERROR (GstDebugCategory * cat, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_ERROR, NULL, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_WARNING (GstDebugCategory * cat, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_WARNING, NULL, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_INFO (GstDebugCategory * cat, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_INFO, NULL, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_DEBUG (GstDebugCategory * cat, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_DEBUG, NULL, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_LOG (GstDebugCategory * cat, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_LOG, NULL, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_ERROR_OBJECT (gpointer obj, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_ERROR, obj, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_WARNING_OBJECT (gpointer obj, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING, obj, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_INFO_OBJECT (gpointer obj, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_INFO, obj, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_DEBUG_OBJECT (gpointer obj, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, obj, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_LOG_OBJECT (gpointer obj, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_LOG, obj, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_ERROR (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_ERROR, NULL, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_WARNING (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING, NULL, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_INFO (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_INFO, NULL, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_DEBUG (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, NULL, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_LOG (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_LOG, NULL,
+      format, varargs);
+  va_end (varargs);
+}
+#endif
+#endif
 
 
 /********** function pointer stuff **********/
@@ -466,16 +668,8 @@ G_CONST_RETURN gchar*
 #define GST_DEBUG(...)					/* NOP */
 #define GST_LOG(...)					/* NOP */
 
-#ifdef GST_DEBUG_ENABLE_DEPRECATED
-#define GST_INFO_ELEMENT(cat,obj,...) /* NOP */
-#define GST_DEBUG_ELEMENT(cat,obj,...) /* NOP */
-#define GST_DEBUG_ENTER(...) /* NOP */
-#define GST_DEBUG_LEAVE(...) /* NOP */
-#define GST_INFO_ENTER(...) /* NOP */
-#define GST_INFO_LEAVE(...) /* NOP */
-#endif /* GST_DEBUG_ENABLE_DEPRECATED */
-
-#else /* !G_HAVE_ISO_VARARGS */
+#else
+#ifdef G_HAVE_GNUC_VARARGS
 
 #define GST_CAT_LEVEL_LOG(cat,level,args...)		/* NOP */
 
@@ -503,16 +697,113 @@ G_CONST_RETURN gchar*
 #define GST_DEBUG(args...)				/* NOP */
 #define GST_LOG(args...)				/* NOP */
 
-#ifdef GST_DEBUG_ENABLE_DEPRECATED
-#define GST_INFO_ELEMENT(cat,obj,args...) /* NOP */
-#define GST_DEBUG_ELEMENT(cat,obj,args...) /* NOP */
-#define GST_DEBUG_ENTER(args...) /* NOP */
-#define GST_DEBUG_LEAVE(args...) /* NOP */
-#define GST_INFO_ENTER(args...) /* NOP */
-#define GST_INFO_LEAVE(args...) /* NOP */
-#endif /* GST_DEBUG_ENABLE_DEPRECATED */
+#else
+static inline void
+GST_CAT_ERROR_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+}
 
-#endif /* G_HAVE_ISO_VARARGS */
+static inline void
+GST_CAT_WARNING_OBJECT (GstDebugCategory * cat, gpointer obj,
+    const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_INFO_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+}
+
+static inline void
+GST_CAT_DEBUG_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+}
+
+static inline void
+GST_CAT_LOG_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+}
+
+static inline void
+GST_CAT_ERROR (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_WARNING (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_INFO (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_DEBUG (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_LOG (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_ERROR_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
+GST_WARNING_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
+GST_INFO_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
+GST_DEBUG_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
+GST_LOG_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
+GST_ERROR (const char *format, ...)
+{
+}
+
+static inline void
+GST_WARNING (const char *format, ...)
+{
+}
+
+static inline void
+GST_INFO (const char *format, ...)
+{
+}
+
+static inline void
+GST_DEBUG (const char *format, ...)
+{
+}
+
+static inline void
+GST_LOG (const char *format, ...)
+{
+}
+#endif
+#endif
 
 #define GST_DEBUG_FUNCPTR(ptr) (ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) (g_strdup_printf ("%p", ptr))

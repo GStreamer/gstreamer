@@ -47,7 +47,8 @@
 #include <valgrind/valgrind.h>
 #endif
 
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEBUG);
+/* underscore is to prevent conflict with GST_CAT_DEBUG define */
+GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
 
 #if 0
 #if defined __sgi__
@@ -213,7 +214,7 @@ _gst_debug_init (void)
   /* do NOT use a single debug function before this line has been run */
   GST_CAT_DEFAULT = _gst_debug_category_new ("default",
       GST_DEBUG_UNDERLINE, NULL);
-  GST_CAT_DEBUG = _gst_debug_category_new ("GST_DEBUG",
+  _GST_CAT_DEBUG = _gst_debug_category_new ("GST_DEBUG",
       GST_DEBUG_BOLD | GST_DEBUG_FG_YELLOW, "debugging subsystem");
 
   gst_debug_add_log_function (gst_debug_log_default, NULL);
@@ -284,7 +285,7 @@ _gst_debug_init (void)
 }
 
 /* we can't do this further above, because we initialize the GST_CAT_DEFAULT struct */
-#define GST_CAT_DEFAULT GST_CAT_DEBUG
+#define GST_CAT_DEFAULT _GST_CAT_DEBUG
 
 /**
  * gst_debug_log:
