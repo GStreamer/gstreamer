@@ -400,6 +400,8 @@ static void gst_videomixer_base_init (gpointer g_class);
 static void gst_videomixer_class_init (GstVideoMixerClass * klass);
 static void gst_videomixer_init (GstVideoMixer * videomixer);
 
+static GstCaps *gst_videomixer_getcaps (GstPad * pad);
+
 static void gst_videomixer_loop (GstElement * element);
 static gboolean gst_videomixer_handle_src_event (GstPad * pad,
     GstEvent * event);
@@ -485,6 +487,7 @@ gst_videomixer_init (GstVideoMixer * mix)
   mix->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
+  gst_pad_set_getcaps_function (GST_PAD (mix->srcpad), gst_videomixer_getcaps);
   gst_pad_set_event_function (mix->srcpad, gst_videomixer_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
@@ -498,6 +501,35 @@ gst_videomixer_init (GstVideoMixer * mix)
   mix->out_height = 0;
 
   gst_element_set_loop_function (GST_ELEMENT (mix), gst_videomixer_loop);
+}
+
+static GstCaps *
+gst_videomixer_getcaps (GstPad * pad)
+{
+  GstVideoMixer *mix;
+  GstCaps *caps;
+  GstPadTemplate *src_pad_template;
+  GstStructure *structure;
+
+
+  mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
+  src_pad_template = gst_static_pad_template_get (&src_factory);
+  caps = gst_caps_copy (gst_pad_template_get_caps (src_pad_template));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (mix->out_width != 0) {
+    gst_structure_set (structure, "width", G_TYPE_INT, mix->out_width, NULL);
+  }
+  if (mix->out_height != 0) {
+    gst_structure_set (structure, "height", G_TYPE_INT, mix->out_height, NULL);
+  }
+  if (mix->in_framerate != 0) {
+    gst_structure_set (structure,
+        "framerate", G_TYPE_DOUBLE, mix->in_framerate, NULL);
+  }
+
+  return caps;
 }
 
 static GstPad *
