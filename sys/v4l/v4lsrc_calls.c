@@ -497,7 +497,7 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
 
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &frame) < 0)
   {
-    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SYNC, NULL, GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SYNC, (NULL), GST_ERROR_SYSTEM);
     munmap(buffer, vmbuf.size);
     return FALSE;
   }
