@@ -1,3 +1,15 @@
+2004-03-14  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	* gst-libs/gst/gconf/Makefile.am:
+	* pkgconfig/Makefile.am:
+	  move gstreamer-gconf pkgconfig files to pkgconfig/ dir. Make sure
+	  they get rebuilt properly
+	* configure.ac:
+	  when checking for vorbis, try pkgconfig first.
+	* gst/modplug/gstmodplug.cc:
+	  add fixate function
+
 2004-03-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
