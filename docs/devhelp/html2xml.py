@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 import formatter
 import htmllib
 import os

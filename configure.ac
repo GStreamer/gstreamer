@@ -515,7 +515,6 @@ examples/xml/Makefile
 tools/Makefile
 docs/Makefile
 docs/devhelp/Makefile
-docs/devhelp/html2xml.py
 docs/faq/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
