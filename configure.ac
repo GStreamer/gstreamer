@@ -7,8 +7,8 @@ AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
-GST_VERSION_MINOR=2
-GST_VERSION_MICRO=990
+GST_VERSION_MINOR=3
+GST_VERSION_MICRO=09
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
@@ -319,56 +319,76 @@ dnl ==========================================================================
 
 
 dnl Next, check for the optional libraries:
-dnl =======================================
+dnl These are all libraries used in building plugins
+dnl ================================================
+dnl let's try and sort them alphabetically, shall we ?
 
 
-dnl ***** ESound *****
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
-GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
-  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
-])
-
-dnl Check for artsc
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
-
-dnl Check for arts
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
-
-dnl Check for xmms
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
-GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
-  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
-], disabled)
-
-dnl Check for alsa
+dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
   AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
-if test x$HAVE_ALSA = xno; then
-  unset USE_ALSA
-  ALSA_CFLAGS=
-  ALSA_LIBS=
-fi
 
-dnl Check for libaudiofile
+dnl *** arts ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
+GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
+
+dnl *** artsc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
+GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
+
+dnl *** audiofile ***
+dnl this check uses the GST_CHECK_CONFIGPROG macro
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBAUDIOFILE, true)
-GST_CHECK_FEATURE(LIBAUDIOFILE, [use gdk pixbuf], afsink afsrc, [
+GST_CHECK_FEATURE(LIBAUDIOFILE, [audiofile], afsink afsrc, [
 translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
 translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
 GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
 ])
 
+dnl *** avifile ***
+dnl this check uses the GST_CHECK_CONFIGPROG macro
+translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
+GST_CHECK_FEATURE(AVIFILE, [avifile], FIXME windec winenc wincodec, [
+translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
+translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
+GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
+])
+
+
+dnl **** ESound ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
+GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
+  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+])
+
+dnl *** Gnome VFS ***
+dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
+translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
+GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
+translit(dnm, m, l) AC_SUBST(GNOME_VFS_LIBS)
+translit(dnm, m, l) AC_SUBST(GNOME_VFS_CFLAGS)
+GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
+])
+
+dnl *** xmms ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
+GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
+  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
+], disabled)
+
 dnl Check for libgdk-pixbuf
 dnl FIXME: not sure that this is still used anywhere.
-translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
-GST_CHECK_FEATURE(GDK_PIXBUF, [use gdk pixbuf], , [
-translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_LIBS)
-translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_CFLAGS)
-GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
-])
+dnl DELETEME
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
+dnl GST_CHECK_FEATURE(GDK_PIXBUF, [use gdk pixbuf], , [
+dnl translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_LIBS)
+dnl translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_CFLAGS)
+dnl GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
+dnl ])
+dnl 
+
 
 if test x$USE_GLIB2 = xyes; then
   dnl we don't support gnome/gtk with glib2.0 yet
@@ -421,42 +441,6 @@ else
   AC_SUBST(LIBGLADE_GNOME_LIBS)
   AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 fi
-
-dnl Check for Gnome VFS
-HAVE_GNOME_VFS="no"
-if test x$USE_GLIB2 = xyes; then
-  VFS_LIBS=
-  VFS_CFLAGS=
-  AC_MSG_WARN(Gnome-VFS disabled for glib2.0)
-else
-  AC_MSG_CHECKING(for Gnome VFS)
-  if gnome-config --libs vfs > /dev/null 2>&1; then
-	HAVE_GNOME_VFS="yes"
-	AC_MSG_RESULT(found)
-        VFS_LIBS="`gnome-config --libs vfs`"
-        VFS_CFLAGS="`gnome-config --cflags vfs`"
-  else
-	AC_MSG_WARN(Did not find Gnome-VFS installed)
-        VFS_LIBS=
-        VFS_CFLAGS=
-  fi
-fi
-AC_SUBST(VFS_LIBS)
-AC_SUBST(VFS_CFLAGS)
-
-dnl Check for Avifile
-HAVE_AVIFILE="no"
-AC_MSG_CHECKING(for Avifile)
-if avifile-config --libs > /dev/null 2>&1; then
-        HAVE_AVIFILE="yes"
-        AC_MSG_RESULT(found)
-else
-        AC_MSG_WARN(Did not find Avifile installed)
-fi
-AVIFILE_LIBS="`avifile-config --libs`"
-AVIFILE_CFLAGS="`avifile-config --cflags`"
-AC_SUBST(AVIFILE_LIBS)
-AC_SUBST(AVIFILE_CFLAGS)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -528,14 +512,16 @@ AC_CHECK_LIB(mad, mad_decoder_finish,
 )
 
 dnl Check for libmikmod
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
-GST_CHECK_FEATURE(LIBMIKMOD, [mikmod plugin], mikmod, [
-    AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes, HAVE_LIBMIKMOD=no)])
+AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes,
+  AC_MSG_WARN(***** NOTE: These plugins won't be built: mikmod)
+  HAVE_LIBMIKMOD=no
+)
 
 dnl Check for libvorbis
-translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
-GST_CHECK_FEATURE(VORBIS, [vorbis plugins], vorbisdec vorbisenc, [
-    AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)])
+AM_PATH_VORBIS(HAVE_VORBIS=yes,
+  AC_MSG_WARN(***** NOTE: These plugins won't be built: vorbisdec vorbisenc)
+  HAVE_VORBIS=no
+)
 
 dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
@@ -642,9 +628,11 @@ CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
 AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
-translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
-GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
-    AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)])
+dnl Check for aalib
+AM_PATH_AALIB( , HAVE_AALIB=yes,
+  AC_MSG_WARN(***** NOTE: These plugins won't be built: aasink)
+  HAVE_AALIB=no
+)
 
 dnl AC_MSG_CHECKING(aalib)
 dnl AC_CHECK_LIB(aa, aa_init, HAVE_AALIB=yes, HAVE_AALIB=no, )
@@ -1285,3 +1273,6 @@ gstreamer.spec,
 chmod +x gstreamer-config
 echo "$infomessages", infomessages="$infomessages"
 )
+
+echo -e "configure: *** Plugins that will be built : \n$GST_PLUGINS_YES"
+echo -e "configure: *** Plugins that will not be built : \n$GST_PLUGINS_NO"
