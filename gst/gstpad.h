@@ -137,7 +137,7 @@ typedef GstBuffer*		(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType typ
 								 guint64 offset, guint64 len);
 typedef GstPadConnectReturn	(*GstPadConnectFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
-typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
+typedef void			(*GstPadBufferPoolNotifyFunction) (GstPad *pad);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -195,7 +195,10 @@ struct _GstRealPad {
 
   GstPadGetCapsFunction 	getcapsfunc;
   GstPadConnectFunction 	connectfunc;
-  GstPadBufferPoolFunction 	bufferpoolfunc;
+  
+  GstBufferPool	*		bufferpool;	  /* sink pads manage their own pools, src pads
+						     get the peer's pool upon connecting */
+  GstPadBufferPoolNotifyFunction bufferpoolnotify; /* called, when a new bufferpool was set */
 
   GList *ghostpads;
 };
@@ -252,7 +255,8 @@ struct _GstGhostPadClass {
 
 #define GST_RPAD_CONNECTFUNC(pad)	(((GstRealPad *)(pad))->connectfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
-#define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
+#define GST_RPAD_BUFFERPOOLNOTIFY(pad)	(((GstRealPad *)(pad))->bufferpoolnotify)
+#define GST_RPAD_BUFFERPOOL(pad)	(((GstRealPad *)(pad))->bufferpool)
 
 #define GST_RPAD_REGIONTYPE(pad)	(((GstRealPad *)(pad))->regiontype)
 #define GST_RPAD_OFFSET(pad)		(((GstRealPad *)(pad))->offset)
@@ -354,7 +358,6 @@ void			gst_pad_set_getregion_function		(GstPad *pad, GstPadGetRegionFunction get
 
 void			gst_pad_set_connect_function		(GstPad *pad, GstPadConnectFunction connect);
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
-void			gst_pad_set_bufferpool_function		(GstPad *pad, GstPadBufferPoolFunction bufpool);
 
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
 GstCaps*		gst_pad_get_padtemplate_caps		(GstPad *pad);
@@ -383,6 +386,8 @@ GstPadTemplate*		gst_pad_get_padtemplate			(GstPad *pad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
+void			gst_pad_set_bufferpool			(GstPad *pad, GstBufferPool *pool);
+void			gst_pad_set_bufferpool_notify_function	(GstPad *pad, GstPadBufferPoolNotifyFunction bufpool);
 GstBufferPool *		gst_pad_get_bufferpool			(GstPad *pad);
 GstBuffer *		gst_pad_new_buffer			(GstPad *pad, guint size);
 

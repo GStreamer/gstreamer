@@ -118,7 +118,7 @@ struct _GstBufferPool {
 };
 
 
-/* initialization */
+/*< private >*/
 void		_gst_buffer_initialize		(void);
 
 /* allocation */

@@ -54,13 +54,21 @@ enum {
 };
 
 
-static void gst_identity_class_init	(GstIdentityClass *klass);
-static void gst_identity_init		(GstIdentity *identity);
+static void	gst_identity_class_init		(GstIdentityClass *klass);
+static void	gst_identity_init		(GstIdentity *identity);
 
-static void gst_identity_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_identity_set_property	(GObject *object, 
+						 guint prop_id, 
+						 const GValue *value, 
+						 GParamSpec *pspec);
+static void	gst_identity_get_property	(GObject *object, 
+						 guint prop_id, 
+						 GValue *value, 
+						 GParamSpec *pspec);
 
-static void gst_identity_chain		(GstPad *pad, GstData *buf);
+static void	gst_identity_bufferpool_notify	(GstPad *pad);
+static void	gst_identity_chain		(GstPad *pad, 
+						 GstData *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
@@ -127,14 +135,14 @@ gst_identity_class_init (GstIdentityClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
 
-static GstBufferPool*
-gst_identity_get_bufferpool (GstPad *pad)
+static void
+gst_identity_bufferpool_notify (GstPad *pad)
 {
   GstIdentity *identity;
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
-  return gst_pad_get_bufferpool (identity->srcpad);
+  gst_pad_set_bufferpool (identity->sinkpad, gst_pad_get_bufferpool (pad));
 }
 
 static GstPadConnectReturn
@@ -161,12 +169,12 @@ gst_identity_init (GstIdentity *identity)
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad, GST_DEBUG_FUNCPTR (gst_identity_chain));
-  gst_pad_set_bufferpool_function (identity->sinkpad, gst_identity_get_bufferpool);
   gst_pad_set_connect_function (identity->sinkpad, gst_identity_connect);
   
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
   gst_pad_set_connect_function (identity->srcpad, gst_identity_connect);
+  gst_pad_set_bufferpool_notifyfunction (identity->srcpad, gst_identity_bufferpool_notify);
 
   identity->loop_based = FALSE;
   identity->sleep_time = 0;

@@ -212,12 +212,14 @@ gst_real_pad_init (GstRealPad *pad)
   pad->gethandler = NULL;
   pad->pullregionfunc = NULL;
 
-  pad->bufferpoolfunc = NULL;
   pad->ghostpads = NULL;
   pad->caps = NULL;
 
   pad->connectfunc = NULL;
   pad->getcapsfunc = NULL;
+  
+  pad->bufferpoolnotify = NULL;
+  pad->bufferpool = NULL;
   
   pad->eventfunc = gst_pad_event_default;
   pad->eventhandler = NULL;
@@ -479,21 +481,109 @@ gst_pad_set_getcaps_function (GstPad *pad,
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getcaps));
 }
 /**
- * gst_pad_set_bufferpool_function:
- * @pad: the pad to set the bufferpool function for
- * @bufpool: the bufferpool function
+ * gst_pad_set_bufferpool:
+ * @pad: the pad to set the bufferpool notify function for
+ * @pool: the bufferpool notify function
  *
- * Set the given bufferpool function for the pad.
+ * Set the given bufferpool for the pad.
+ * Users will only want to call this on sink pads. Source pads
+ * have the same bufferpool as their peer. This is tken care of
+ * automatically.
  */
 void
-gst_pad_set_bufferpool_function (GstPad *pad,
-		                 GstPadBufferPoolFunction bufpool)
+gst_pad_set_bufferpool (GstPad *pad, GstBufferPool *pool)
+{
+  GstPad *peer;
+  
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  if (pool == GST_RPAD_BUFFERPOOL (pad))
+    return;
+
+  peer = GST_PAD_PEER (pad);
+  
+  switch (GST_RPAD_DIRECTION (pad))
+  {
+    case GST_PAD_SRC:
+      /* this will only be called by the connect funtion */
+      /* make sure we're using the right pool */
+      if (peer)
+      {
+	g_return_if_fail (pool == GST_RPAD_BUFFERPOOL (peer));
+      } else {
+	g_return_if_fail (pool == NULL);
+      }
+      /* set pad and call notify function */
+      GST_RPAD_BUFFERPOOL (pad) = pool;
+      if (GST_RPAD_BUFFERPOOLNOTIFY (pad))
+	GST_RPAD_BUFFERPOOLNOTIFY (pad) (pad);
+      break;
+    case GST_PAD_SINK:
+      /* set pad and call notify function */
+      GST_RPAD_BUFFERPOOL (pad) = pool;
+      if (GST_RPAD_BUFFERPOOLNOTIFY (pad))
+	GST_RPAD_BUFFERPOOLNOTIFY (pad) (pad);
+      /* set pad on peer if any */
+      if (peer)
+        gst_pad_set_bufferpool (peer, pool);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+/**
+ * gst_pad_get_bufferpool:
+ * @pad: the pad to get the bufferpool from
+ *
+ * Get the bufferpool of the peer pad of the given
+ * pad.
+ *
+ * Returns: The GstBufferPool or NULL.
+ */
+GstBufferPool*          
+gst_pad_get_bufferpool (GstPad *pad)
+{
+  GstRealPad *real;
+
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+   
+  g_return_val_if_fail ((real = GST_PAD_REALIZE (pad)) != NULL, NULL);
+
+  return GST_RPAD_BUFFERPOOL (real);
+}
+/**
+ * gst_pad_new_buffer:
+ * @pad: the pad to get the buffer from
+ * @size: the requested size of the buffer
+ *
+ * Creates a new buffer using the bufferpool of the given
+ * pad.
+ * See #gst_buffer_new.
+ *
+ * Returns: The new buffer or NULL on error.
+ */
+GstBuffer *
+gst_pad_new_buffer (GstPad *pad, guint size)
+{
+  return gst_buffer_new (GST_RPAD_BUFFERPOOL (pad), size);
+}
+/**
+ * gst_pad_set_bufferpool_notify_function:
+ * @pad: the pad to set the bufferpool notify function for
+ * @bufpool: the bufferpool notify function
+ *
+ * Set the given bufferpool notify function for the pad.
+ */
+void
+gst_pad_set_bufferpool_notify_function (GstPad *pad, GstPadBufferPoolNotifyFunction bufpool)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_BUFFERPOOLFUNC (pad) = bufpool;
-  GST_DEBUG (GST_CAT_PADS, "bufferpoolfunc for %s:%s set to %s\n",
+  GST_RPAD_BUFFERPOOLNOTIFY (pad) = bufpool;
+  GST_DEBUG (GST_CAT_PADS, "bufferpoolnotifyfunc for %s:%s set to %s\n",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (bufpool));
 }
 
@@ -563,6 +653,9 @@ gst_pad_disconnect (GstPad *srcpad,
     GST_RPAD_FILTER (realsrc) = NULL;
   }
 
+  /* clear the bufferpool of the src */
+  gst_pad_set_bufferpool (GST_PAD (realsrc), NULL);
+  
   /* now tell the scheduler */
   if (GST_PAD_PARENT (realsrc)->sched)
     gst_scheduler_pad_disconnect (GST_PAD_PARENT (realsrc)->sched, (GstPad *)realsrc, (GstPad *)realsink);
@@ -731,16 +824,19 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
     return FALSE;
   }
-
-  /* fire off a signal to each of the pads telling them that they've been connected */
-  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_CONNECTED], 0, realsink);
-  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_CONNECTED], 0, realsrc);
+  
+  /* connect the bufferpool of the sink to the pool of the source */
+  gst_pad_set_bufferpool (GST_PAD (realsrc), GST_RPAD_BUFFERPOOL (realsink));
 
   /* now tell the scheduler(s) */
   if (realsrc->sched)
     gst_scheduler_pad_connect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
   else if (realsink->sched)
     gst_scheduler_pad_connect (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
+
+  /* fire off a signal to each of the pads telling them that they've been connected */
+  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_CONNECTED], 0, realsink);
+  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_CONNECTED], 0, realsrc);
 
   GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
@@ -1504,7 +1600,7 @@ gst_pad_get_allowed_caps (GstPad *pad)
 }
 
 /**
- * gst_pad_recac_allowed_caps:
+ * gst_pad_recalc_allowed_caps:
  * @pad: the pad to recaculate the caps of
  *
  * Attempt to reconnect the pad to its peer through its filter, set with gst_pad_[re]connect_filtered.
@@ -1529,56 +1625,6 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
   return TRUE;
 }
 
-/**
- * gst_pad_get_bufferpool:
- * @pad: the pad to get the bufferpool from
- *
- * Get the bufferpool of the peer pad of the given
- * pad.
- *
- * Returns: The GstBufferPool or NULL.
- */
-GstBufferPool*          
-gst_pad_get_bufferpool (GstPad *pad)
-{
-  GstRealPad *peer;
-
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-   
-  peer = GST_RPAD_PEER (pad);
-
-  if (!peer)
-    return NULL;
-
-  GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
-
-  if (peer->bufferpoolfunc) {
-    GST_DEBUG (GST_CAT_PADS, "calling bufferpoolfunc &%s (@%p) of peer pad %s:%s\n",
-      GST_DEBUG_FUNCPTR_NAME (peer->bufferpoolfunc), &peer->bufferpoolfunc, GST_DEBUG_PAD_NAME (((GstPad*) peer)));
-    return (peer->bufferpoolfunc) (((GstPad*) peer));
-  } else {
-    GST_DEBUG (GST_CAT_PADS, "no bufferpoolfunc for peer pad %s:%s at %p\n",
-		    GST_DEBUG_PAD_NAME (((GstPad*) peer)), &peer->bufferpoolfunc);
-    return NULL;
-  }
-}
-/**
- * gst_pad_new_buffer:
- * @pad: the pad to get the buffer from
- * @size: the requested size of the buffer
- *
- * Creates a new buffer using the bufferpool of the given
- * pad.
- * See #gst_buffer_new.
- *
- * Returns: The new buffer or NULL on error.
- */
-GstBuffer *
-gst_pad_new_buffer (GstPad *pad, guint size)
-{
-  return gst_buffer_new (gst_pad_get_bufferpool (pad), size);
-}
 
 static void
 gst_real_pad_dispose (GObject *object)
