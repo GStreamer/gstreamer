@@ -104,15 +104,16 @@ print_lbs_info (struct probe_context *context, gint stream)
     gboolean res;
     GstFormat format;
 
-    if (*formats == context->ls_format) {
-      formats++;
+    format = *formats;
+    formats++;
+
+    if (format == context->ls_format) {
       continue;
     }
 
-    definition = gst_format_get_details (*formats);
+    definition = gst_format_get_details (format);
 
     /* get start and end position of this stream */
-    format = *formats;
     res = gst_pad_convert  (context->pad, 
 		            context->ls_format, stream,
 		            &format, &value_start);
@@ -124,7 +125,7 @@ print_lbs_info (struct probe_context *context, gint stream)
       /* substract to get the length */
       value_end -= value_start;
 
-      if (*formats == GST_FORMAT_TIME) {
+      if (format == GST_FORMAT_TIME) {
 	value_end /= (GST_SECOND/100);
         g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick, 
 			value_end/6000, (value_end/100)%60, (value_end%100));
@@ -136,7 +137,6 @@ print_lbs_info (struct probe_context *context, gint stream)
     else
       g_print ("    could not get logical stream %s\n", definition->nick);
 
-    formats++;
   }
 }
 
@@ -228,11 +228,12 @@ collect_stream_properties (struct probe_context *context)
     GstFormat format;
     
     format = *formats;
+    formats++;
 
     res = gst_pad_query (context->pad, GST_PAD_QUERY_TOTAL, 
 		         &format, &value);
 
-    definition = gst_format_get_details (*formats);
+    definition = gst_format_get_details (format);
 
     if (res) {
       if (format == GST_FORMAT_TIME) {
@@ -246,7 +247,6 @@ collect_stream_properties (struct probe_context *context)
         g_print ("  total %s: %lld\n", definition->nick, value);
       }
     }
-    formats++;
   }
 
   if (context->total_ls == -1) {
@@ -280,6 +280,7 @@ main (int argc, char **argv)
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   vorbisfile = gst_element_factory_make ("vorbisfile", "vorbisfile");
+  //vorbisfile = gst_element_factory_make ("mad", "vorbisfile");
   g_assert (vorbisfile);
 
   gst_bin_add (GST_BIN (pipeline), filesrc);
