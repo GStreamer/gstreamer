@@ -105,7 +105,7 @@ dist-hook:
 distclean-local:
 	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
-libgstreamerincludedir = $(includedir)/gstreamer
+libgstreamerincludedir = $(includedir)/gst
 libgstreamerinclude_HEADERS =		\
 	gst.h			\
 	gstconfig.h		\
