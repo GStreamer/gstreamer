@@ -1,0 +1,3 @@
+gstreamer-doc: zero-byte-file-in-doc-directory usr/share/doc/gstreamer-doc/gst-plugin-writers-guide/base.css
+gstreamer-doc: zero-byte-file-in-doc-directory usr/share/doc/gstreamer-doc/gstreamer-manual/base.css
+

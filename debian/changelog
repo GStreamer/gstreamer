@@ -1,3 +1,31 @@
+gstreamer (0.3.4-1) unstable; urgency=low
+
+  * New upstream
+  * libgstreamer0.3.3 -> libgstreamer0.3.4
+  * Conflict and Replace libgstreamer0.3.3 so upgrades work
+    This shouldn't be required because plugins know what version they were
+    compiled with.  Apparently this doesn't yet work properly.
+  * Add bison and flex to Build-Depends
+  * Add libgstfastscheduler.so to -core
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 15 Apr 2002 01:13:00 -0400
+
+gstreamer (0.3.3-3) unstable; urgency=low
+
+  * Add libgstreamer-dev dependencies on libpopt-dev and libglib2.0-dev
+  * CVS fix for GstElement NEW_PAD and PAD_REMOVED g_signal_new parameters
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 29 Mar 2002 03:04:22 -0500
+
+gstreamer (0.3.3-2) unstable; urgency=low
+
+  * Depend on and rebuld for glib 2.0
+  * Remove libgtk from Build-Depends
+  * Move gs from Build-Depends to Build-Depends-Indep
+  * Added lintian overrides for base.css zero length files
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 22 Mar 2002 19:29:24 -0500
+
 gstreamer (0.3.3-1) unstable; urgency=low
 
   * New upstream

@@ -101,6 +101,9 @@ install: build
 	-cp -r docs/fwg/gst-plugin-writers-guide \
 	   docs/manual/gstreamer-manual \
 	   debian/gstreamer/usr/share/doc/gstreamer-doc
+	# -doc lintian overrides
+	mkdir -p debian/gstreamer-doc/usr/share/lintian/overrides/
+	cp -a debian/gstreamer-doc.lintian debian/gstreamer-doc/usr/share/lintian/overrides/gstreamer-doc
 
 	dh_movefiles --sourcedir=debian/gstreamer
 
@@ -166,7 +169,7 @@ binary-arch: build install
 	dh_makeshlibs
 	dh_installdeb
 #	dh_perl
-	dh_shlibdeps -l`pwd`/debian/libgstreamer0.3.3/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgstreamer0.3.4/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
