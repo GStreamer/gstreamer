@@ -2,12 +2,12 @@
 #include <gst/gst.h>
 #include "mixer.h"
 
-#define DEBUG
+//#define DEBUG
 
 /* function prototypes */
 
-input_pipe_t*	create_input_pipe (int id, char* location);
-void			destroy_input_pipe (input_pipe_t *pipe);
+input_channel_t*	create_input_channel (int id, char* location);
+void				destroy_input_channel (input_channel_t *pipe);
 
 
 gboolean playing;
@@ -24,10 +24,55 @@ void eos(GstElement *element)
   playing = FALSE;
 }
 
+static void
+gst_play_have_type (GstElement *sink, GstElement *sink2, gpointer data)
+{
+  GST_DEBUG (0,"GstPipeline: play have type %p\n", (gboolean *)data);
+ 
+  *(gboolean *)data = TRUE;
+}
+
+static GstCaps*
+gst_play_typefind (GstBin *bin, GstElement *element)
+{
+  gboolean found = FALSE;
+  GstElement *typefind;
+  GstCaps *caps = NULL;
+
+  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n",
+             GST_ELEMENT_NAME(element), &found);
+ 
+  typefind = gst_elementfactory_make ("typefind", "typefind");
+  g_return_val_if_fail (typefind != NULL, FALSE);
+
+  gtk_signal_connect (GTK_OBJECT (typefind), "have_type",  
+                      GTK_SIGNAL_FUNC (gst_play_have_type), &found);
+ 
+  gst_pad_connect (gst_element_get_pad (element, "src"),
+                   gst_element_get_pad (typefind, "sink"));
+  gst_bin_add (bin, typefind);
+  
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+  
+  // push a buffer... the have_type signal handler will set the found flag
+  gst_bin_iterate (bin);
+  
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+
+  caps = gst_pad_get_caps (gst_element_get_pad (element, "src"));
+
+  gst_pad_disconnect (gst_element_get_pad (element, "src"),
+                      gst_element_get_pad (typefind, "sink"));
+  gst_bin_remove (bin, typefind);
+  gst_object_unref (GST_OBJECT (typefind));
+                   
+  return caps;
+}
+
 int main(int argc,char *argv[]) 
 {
-  input_pipe_t *channel_in1;
-  input_pipe_t *channel_in2;
+  input_channel_t *channel_in1;
+  input_channel_t *channel_in2;
   
   GstElement *main_bin;
   GstElement *adder;
@@ -44,8 +89,8 @@ int main(int argc,char *argv[])
 
   /* create input channels */
 
-  channel_in1 = create_input_pipe (1, argv[1]);
-  channel_in2 = create_input_pipe (2, argv[2]);
+  channel_in1 = create_input_channel (1, argv[1]);
+  channel_in2 = create_input_channel (2, argv[2]);
 
 
   /* create adder */
@@ -102,8 +147,8 @@ int main(int argc,char *argv[])
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
 
-  destroy_input_pipe (channel_in1);
-  destroy_input_pipe (channel_in2);
+  destroy_input_channel (channel_in1);
+  destroy_input_channel (channel_in2);
   
   gst_object_destroy(GST_OBJECT(audiosink));
 
@@ -112,92 +157,139 @@ int main(int argc,char *argv[])
   exit(0);
 }
 
-input_pipe_t*
-create_input_pipe (int id, char* location)
+input_channel_t*
+create_input_channel (int id, char* location)
 {
-  /* create an input pipeline, reading from location
-   * return a pointer to the pipe
+  /* create an input channel, reading from location
+   * return a pointer to the channel
    * return NULL if failed
    */
 
-  input_pipe_t *pipe;
+  input_channel_t *channel;
+  
   char buffer[20]; 		/* hold the names */
 
+  GstAutoplug *autoplug;
+  GstCaps *srccaps;
+  GstElement *new_element;  
 
 #ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating pipe with id %d for file %s\n",
+  printf ("DEBUG : c_i_p : creating channel with id %d for file %s\n",
   		  id, location);
 #endif
   
-  /* allocate pipe */
+  /* allocate channel */
 
-  pipe = (input_pipe_t *) malloc (sizeof (input_pipe_t));
-  if (pipe == NULL)
+  channel = (input_channel_t *) malloc (sizeof (input_channel_t));
+  if (channel == NULL)
   {
-    printf ("create_input_pipe : could not allocate memory for pipe !\n");
+    printf ("create_input_channel : could not allocate memory for channel !\n");
     return NULL;
   }
 
-  /* create pipe */
+  /* create channel */
 
-  pipe->pipe = gst_bin_new ("pipeline");
-     
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : creating pipeline\n");
+#endif
+
+  channel->pipe = gst_bin_new ("pipeline");
+  g_assert(channel->pipe != NULL);    
+    
   /* create elements */
 
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : creating disksrc\n");
+#endif
+
   sprintf (buffer, "disksrc%d", id);
-  pipe->disksrc = gst_elementfactory_make ("disksrc", buffer);
-  gtk_object_set(GTK_OBJECT(pipe->disksrc),"location", location, NULL);
+  channel->disksrc = gst_elementfactory_make ("disksrc", buffer);
+  g_assert(channel->disksrc != NULL);    
+  
+  gtk_object_set(GTK_OBJECT(channel->disksrc),"location", location, NULL);
+
+  /* add disksrc to the bin before autoplug */
+  gst_bin_add(GST_BIN(channel->pipe), channel->disksrc);
+
 /*  gtk_signal_connect(GTK_OBJECT(disksrc1),"eos",
                      GTK_SIGNAL_FUNC(eos),NULL);
 */
-  sprintf (buffer, "decoder%d", id);
-  pipe->decoder = gst_elementfactory_make("mad", buffer);
-  sprintf (buffer, "volume%d", id);
-  pipe->volenv = gst_elementfactory_make("volenv", buffer);
 
-  gst_bin_add(GST_BIN(pipe->pipe), pipe->disksrc);
-  gst_bin_add(GST_BIN(pipe->pipe), pipe->decoder);
-  gst_bin_add(GST_BIN(pipe->pipe), pipe->volenv);
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : creating volume envelope\n");
+#endif
 
-  /* connect elements */
+  sprintf (buffer, "volenv%d", id);
+  channel->volenv = gst_elementfactory_make ("volenv", buffer);
+  g_assert(channel->volenv != NULL);    
 
-  gst_pad_connect(gst_element_get_pad(pipe->disksrc,"src"),
-                  gst_element_get_pad(pipe->decoder,"sink"));
-  gst_pad_connect(gst_element_get_pad(pipe->decoder,"src"),
-                  gst_element_get_pad(pipe->volenv,"sink"));
+  /* autoplug the pipe */
 
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : getting srccaps\n");
+#endif
+
+  srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->disksrc);
+
+  if (!srccaps) {
+    g_print ("could not autoplug, unknown media type...\n");
+    exit (-1);
+  }
+
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : creating autoplug\n");
+#endif
+
+  autoplug = gst_autoplugfactory_make ("static");
+  g_assert (autoplug != NULL);
+
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : autoplugging\n");
+#endif
+ 
+  new_element = gst_autoplug_to_caps (autoplug, srccaps, 
+  					gst_caps_new ("audio", "audio/raw", NULL), NULL);
+ 
+  if (!new_element) {
+    g_print ("could not autoplug, no suitable codecs found...\n");
+    exit (-1);
+  }
+  
+  gst_bin_add(GST_BIN(channel->pipe), channel->volenv);
+  gst_bin_add (GST_BIN (channel->pipe), new_element);
+  
+  gst_element_connect (channel->disksrc, "src", new_element, "sink");
+  gst_element_connect (new_element, "src_00", channel->volenv, "sink");
+  
   /* add a ghost pad */
   sprintf (buffer, "channel%d", id);
-  gst_element_add_ghost_pad (pipe->pipe, 
-                             gst_element_get_pad (pipe->volenv, "src"), buffer);
+  gst_element_add_ghost_pad (channel->pipe,
+                             gst_element_get_pad (channel->volenv, "src"), buffer);
 
+   
 #ifdef DEBUG
   printf ("DEBUG : c_i_p : end function\n");
 #endif
 
-  return pipe;
+  return channel;
 }
 
 void
-destroy_input_pipe (input_pipe_t *pipe)
+destroy_input_channel (input_channel_t *channel)
 {
   /* 
-   * destroy an input pipeline
+   * destroy an input channel
    */
    
 #ifdef DEBUG
   printf ("DEBUG : d_i_p : start\n");
 #endif
-  
+
   /* destroy elements */
 
-  gst_object_destroy (GST_OBJECT (pipe->disksrc));
-  gst_object_destroy (GST_OBJECT (pipe->decoder));
-  gst_object_destroy (GST_OBJECT (pipe->volenv));
+  gst_object_destroy (GST_OBJECT (channel->pipe));
 
-  gst_object_destroy (GST_OBJECT (pipe->pipe));
-
-  free (pipe);
+  free (channel);
 }
 
 

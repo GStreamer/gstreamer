@@ -5,9 +5,8 @@
 
 typedef struct 
 {
-  GstElement *pipe;
+  GstElement *pipe, *disksrc, *volenv;
   
-  GstElement *disksrc;
-  GstElement *decoder;
-  GstElement *volenv;
-} input_pipe_t;
+  char *location;
+  int channel_id;
+} input_channel_t;
