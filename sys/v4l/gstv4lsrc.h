@@ -1,5 +1,5 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* G-Streamer BT8x8/V4L frame grabber plugin
+ * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,22 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_V4LSRC_H__
 #define __GST_V4LSRC_H__
 
-
-#include <config.h>
-#include <gst/gst.h>
-
-#include <linux/videodev.h>
-
-#include "grab.h"
+#include <gstv4lelement.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 
 #define GST_TYPE_V4LSRC \
   (gst_v4lsrc_get_type())
@@ -45,46 +37,36 @@ extern "C" {
 #define GST_IS_V4LSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LSRC))
 
-// NOTE: per-element flags start with 16 for now
-typedef enum {
-  GST_V4LSRC_OPEN            = GST_ELEMENT_FLAG_LAST,
-
-  GST_V4LSRC_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
-} GstV4lSrcFlags;
-
 typedef struct _GstV4lSrc GstV4lSrc;
 typedef struct _GstV4lSrcClass GstV4lSrcClass;
 
 struct _GstV4lSrc {
-  GstElement element;
+  GstV4lElement v4lelement;
 
   /* pads */
   GstPad *srcpad;
 
-  /* video device */
-  struct GRABBER *grabber;
+  /* bufferpool for the buffers we're gonna use */
+  GstBufferPool *bufferpool;
+
+  /* whether we need to reset the GstPad */
   gboolean init;
 
+  /* capture/buffer info */
+  struct video_mmap mmap;
+  struct video_mbuf mbuf;
+  gint sync_frame;
+  gboolean *frame_queued;
+  guint buffer_size;
+
+  /* caching values */
   gint width;
   gint height;
-  guint16 format;
-  guint32 buffer_size;
-  gulong tune;
-  gboolean tuned;
-  gint input;
-  gint norm;
-  gint volume;
-  gboolean mute;
-  gint audio_mode;
-  gint color;
-  gint bright;
-  gint hue;
-  gint contrast;
-  gchar *device;
+  gint palette;
 };
 
 struct _GstV4lSrcClass {
-  GstElementClass parent_class;
+  GstV4lElementClass parent_class;
 };
 
 GType gst_v4lsrc_get_type(void);
@@ -92,6 +74,5 @@ GType gst_v4lsrc_get_type(void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 
 #endif /* __GST_V4LSRC_H__ */

@@ -1,0 +1,5 @@
+* v4lmjpegsrc: integrate input/norm autodetection
+* v4lmjpegsink: build
+* v4lsrc: threaded sync()
+* v4lsrc: threaded wait-for-sync()-until-queue()
+* BSD-src: build (based on Bt848/Bt878/Meteor API)
