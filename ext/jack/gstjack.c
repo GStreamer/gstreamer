@@ -471,6 +471,7 @@ gst_jack_loop (GstElement *element)
                 GST_BUFFER_DATA (buffer)    = pad->data;
                 GST_BUFFER_SIZE (buffer)    = len;
                 GST_BUFFER_MAXSIZE (buffer) = len;
+		GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
                 
                 gst_pad_push (pad->pad, buffer);
             }
