@@ -11,14 +11,12 @@ do {
   while (! filter->eos && in != NULL && GST_IS_EVENT (in)) {
     GstEvent *event = GST_EVENT (in);
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-      gst_event_unref (event);
-      gst_data_free (in);
+      gst_data_unref (in);
       in = NULL;
       filter->eos = TRUE;
     } else if ((GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) ||
                (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH)) {
-      gst_event_unref (event);
-      gst_data_free (in);
+      gst_data_unref (in);
       in = NULL;
       filter->eos = FALSE;
       filter->write = 0;
