@@ -32,6 +32,7 @@
 #if HAVE_LIBGHTTP
 #include <gsthttpsrc.h>
 #endif /* HAVE_LIBGHTTP */
+#include <gstpipefilter.h>
 #include <gstqueue.h>
 #include <gstsinesrc.h>
 
@@ -55,6 +56,7 @@ struct _elements_entry _elements[] = {
 #if HAVE_LIBGHTTP
   { "httpsrc", gst_httpsrc_get_type, &gst_httpsrc_details },
 #endif /* HAVE_LIBGHTTP */
+  { "pipefilter", gst_pipefilter_get_type, &gst_pipefilter_details },
   { "queue", gst_queue_get_type, &gst_queue_details },
   { "sinesrc", gst_sinesrc_get_type, &gst_sinesrc_details },
   { NULL, 0 },

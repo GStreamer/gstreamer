@@ -67,7 +67,8 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     smooth = gst_elementfactory_make("smooth","smooth");
     //smooth = gst_elementfactory_make("median","median");
     g_return_if_fail(smooth != NULL);
-    //gtk_object_set(GTK_OBJECT(smooth),"filtersize",9,NULL);
+    gtk_object_set(GTK_OBJECT(smooth),"filtersize",2,NULL);
+    gtk_object_set(GTK_OBJECT(smooth),"tolerance",4,NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);
     fd = open(outfile,O_CREAT|O_RDWR|O_TRUNC);
@@ -92,6 +93,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
                               gst_element_get_pad(smooth,"sink"));
+                              //gst_element_get_pad(encode,"sink"));
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");

@@ -361,6 +361,7 @@ plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
 plugins/videosink/Makefile
 plugins/videoscale/Makefile
+plugins/audioscale/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/cobin/Makefile

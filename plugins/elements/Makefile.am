@@ -21,6 +21,7 @@ libgstelements_la_SOURCES =	\
 	gstaudiosink.c		\
 	gstaudiosrc.c		\
 	gstfdsink.c		\
+	gstpipefilter.c		\
 	gstqueue.c		\
 	gstsinesrc.c
 
@@ -35,6 +36,7 @@ noinst_HEADERS =		\
 	gstaudiosink.h		\
 	gstaudiosrc.h		\
 	gstfdsink.h		\
+	gstpipefilter.h		\
 	gstqueue.h		\
 	gstsinesrc.h
 

@@ -6,6 +6,7 @@
 #include <gst/gst.h>
 
 int fd;
+int audiofd;
 char *outfile;
 
 void eof(GstSrc *src) {
@@ -17,15 +18,15 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *encode;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
-  GstElement *videoscale;
-  GstElement *fdsink;
-  GstElementFactory *fdsinkfactory;
+  GstElement *videoscale, *audio_encode;
+  GstElement *fdsink, *audiofdsink;
+  GstElementFactory *fdsinkfactory, *audiofdsinkfactory;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
 
   // connect to audio pad
-  if (0) {
-  //if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
+  //if (0) {
+  if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
     gst_plugin_load("ac3parse");
     gst_plugin_load("ac3dec");
     // construct internal pipeline elements
@@ -33,15 +34,23 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
-    play = gst_elementfactory_make("audiosink","play_audio");
-    g_return_if_fail(play != NULL);
+    audio_encode = gst_elementfactory_make("pipefilter","audio_encode");
+    g_return_if_fail(audio_encode != NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
     g_return_if_fail(audio_thread != NULL);
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(play));
+    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_encode));
+
+    audiofd = open("/opt2/audio.mp3",O_CREAT|O_RDWR|O_TRUNC);
+    audiofdsinkfactory = gst_elementfactory_find("fdsink");
+    g_return_if_fail(audiofdsinkfactory != NULL);
+    audiofdsink = gst_elementfactory_create(audiofdsinkfactory,"fdsink");
+    g_return_if_fail(audiofdsink != NULL);
+    gtk_object_set(GTK_OBJECT(audiofdsink),"fd",audiofd,NULL);
+    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audiofdsink));
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -49,7 +58,9 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
                     gst_element_get_pad(decode,"sink"));
     gst_pad_connect(gst_element_get_pad(decode,"src"),
-                    gst_element_get_pad(play,"sink"));
+                    gst_element_get_pad(audio_encode,"sink"));
+    gst_pad_connect(gst_element_get_pad(audio_encode,"src"),
+                    gst_element_get_pad(audiofdsink,"sink"));
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
@@ -124,6 +135,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(decode_video != NULL);
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
+    gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 224,NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
     g_return_if_fail(encode != NULL);
