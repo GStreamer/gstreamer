@@ -432,14 +432,6 @@ GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
 
-dnl *** libcolorspace ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LCS, true)
-GST_CHECK_FEATURE(LCS, Lcs, lcs, [
-  PKG_CHECK_MODULES(LCS, lcs, HAVE_LCS="yes", HAVE_LCS="no")
-  AC_SUBST(LCS_CFLAGS)
-  AC_SUBST(LCS_LIBS)
-])
-
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
 GST_CHECK_FEATURE(JACK, Jack, jack, [
@@ -463,6 +455,14 @@ GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
 GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, HAVE_LAME="yes" LAME_LIBS="-lmp3lame")
 ])
 AC_SUBST(LAME_LIBS)
+
+dnl *** libcolorspace ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LCS, true)
+GST_CHECK_FEATURE(LCS, Lcs, lcs, [
+  PKG_CHECK_MODULES(LCS, lcs, HAVE_LCS="yes", HAVE_LCS="no")
+  AC_SUBST(LCS_CFLAGS)
+  AC_SUBST(LCS_LIBS)
+])
 
 dnl FIXME : check if these CPP flags can be dealt with otherwise
 dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
