@@ -1,3 +1,11 @@
+2001-12-06  Arik Devens  <arik@gnome.org>
+
+	* gstmediaplay.c (fullscreen_key_press_event): Added a case for
+	the q key to switch out of fullscreen.
+	(gst_media_play_init): Added signal connect for catching key
+	events.
+	(window_key_press_event): On space pause / play the media.
+
 2001-12-04  Arik Devens  <arik@gnome.org>
 
 	This is a minor update on a few things while i work on getting the
