@@ -56,6 +56,16 @@ GST_STATIC_PAD_TEMPLATE (
   )
 );
 
+enum {
+  ARG_0,
+  ARG_CONTRAST,
+  ARG_BRIGHTNESS,
+  ARG_HUE,
+  ARG_SATURATION,
+  ARG_DISPLAY
+  /* FILL ME */
+};
+
 static GstVideoSinkClass *parent_class = NULL;
 
 /* ============================================================= */
@@ -541,7 +551,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
   
   g_mutex_lock (xvimagesink->x_lock);
   
-  xcontext->disp = XOpenDisplay (NULL);
+  xcontext->disp = XOpenDisplay (xvimagesink->display_name);
   
   if (!xcontext->disp)
     {
@@ -1310,12 +1320,148 @@ gst_xvimagesink_colorbalance_init (GstColorBalanceClass *iface)
 /* =========================================== */
 
 static void
+gst_xvimagesink_set_property (GObject *object, guint prop_id,
+                              const GValue *value, GParamSpec *pspec)
+{
+  GstXvImageSink *xvimagesink;
+  
+  g_return_if_fail (GST_IS_XVIMAGESINK (object));
+  
+  xvimagesink = GST_XVIMAGESINK (object);
+  
+  switch (prop_id)
+    {
+      case ARG_HUE:
+        g_mutex_lock (xvimagesink->x_lock);
+        XvSetPortAttribute (xvimagesink->xcontext->disp,
+                            xvimagesink->xcontext->xv_port_id,
+                            XInternAtom (xvimagesink->xcontext->disp,
+                                         "XV_HUE", 1),
+                            g_value_get_int (value));
+        g_mutex_unlock (xvimagesink->x_lock);
+        break;
+      case ARG_CONTRAST:
+        g_mutex_lock (xvimagesink->x_lock);
+        XvSetPortAttribute (xvimagesink->xcontext->disp,
+                            xvimagesink->xcontext->xv_port_id,
+                            XInternAtom (xvimagesink->xcontext->disp,
+                                         "XV_CONTRAST", 1),
+                            g_value_get_int (value));
+        g_mutex_unlock (xvimagesink->x_lock);
+        break;
+      case ARG_BRIGHTNESS:
+        g_mutex_lock (xvimagesink->x_lock);
+        XvSetPortAttribute (xvimagesink->xcontext->disp,
+                            xvimagesink->xcontext->xv_port_id,
+                            XInternAtom (xvimagesink->xcontext->disp,
+                                         "XV_BRIGHTNESS", 1),
+                            g_value_get_int (value));
+        g_mutex_unlock (xvimagesink->x_lock);
+        break;
+      case ARG_SATURATION:
+        g_mutex_lock (xvimagesink->x_lock);
+        XvSetPortAttribute (xvimagesink->xcontext->disp,
+                            xvimagesink->xcontext->xv_port_id,
+                            XInternAtom (xvimagesink->xcontext->disp,
+                                         "XV_SATURATION", 1),
+                            g_value_get_int (value));
+        g_mutex_unlock (xvimagesink->x_lock);
+        break;
+      case ARG_DISPLAY:
+        xvimagesink->display_name = g_strdup (g_value_get_string (value));
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gst_xvimagesink_get_property (GObject *object, guint prop_id,
+                             GValue *value, GParamSpec *pspec)
+{
+  GstXvImageSink *xvimagesink;
+  
+  g_return_if_fail (GST_IS_XVIMAGESINK (object));
+  
+  xvimagesink = GST_XVIMAGESINK (object);
+  
+  switch (prop_id)
+    {
+      case ARG_HUE:
+        {
+          gint l_value;
+          g_mutex_lock (xvimagesink->x_lock);
+          XvGetPortAttribute (xvimagesink->xcontext->disp,
+                              xvimagesink->xcontext->xv_port_id,
+                              XInternAtom (xvimagesink->xcontext->disp,
+                                           "XV_HUE", 1),
+                              &l_value);
+          g_mutex_unlock (xvimagesink->x_lock);
+          g_value_set_int (value, l_value);
+        }
+        break;
+      case ARG_CONTRAST:
+        {
+          gint l_value;
+          g_mutex_lock (xvimagesink->x_lock);
+          XvGetPortAttribute (xvimagesink->xcontext->disp,
+                              xvimagesink->xcontext->xv_port_id,
+                              XInternAtom (xvimagesink->xcontext->disp,
+                                           "XV_CONTRAST", 1),
+                              &l_value);
+          g_mutex_unlock (xvimagesink->x_lock);
+          g_value_set_int (value, l_value);
+        }
+        break;
+      case ARG_BRIGHTNESS:
+        {
+          gint l_value;
+          g_mutex_lock (xvimagesink->x_lock);
+          XvGetPortAttribute (xvimagesink->xcontext->disp,
+                              xvimagesink->xcontext->xv_port_id,
+                              XInternAtom (xvimagesink->xcontext->disp,
+                                           "XV_BRIGHTNESS", 1),
+                              &l_value);
+          g_mutex_unlock (xvimagesink->x_lock);
+          g_value_set_int (value, l_value);
+        }
+        break;
+      case ARG_SATURATION:
+        {
+          gint l_value;
+          g_mutex_lock (xvimagesink->x_lock);
+          XvGetPortAttribute (xvimagesink->xcontext->disp,
+                              xvimagesink->xcontext->xv_port_id,
+                              XInternAtom (xvimagesink->xcontext->disp,
+                                           "XV_SATURATION", 1),
+                              &l_value);
+          g_mutex_unlock (xvimagesink->x_lock);
+          g_value_set_int (value, l_value);
+        }
+        break;
+      case ARG_DISPLAY:
+        g_value_set_string (value, g_strdup (xvimagesink->display_name));
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
 gst_xvimagesink_dispose (GObject *object)
 {
   GstXvImageSink *xvimagesink;
 
   xvimagesink = GST_XVIMAGESINK (object);
 
+  if (xvimagesink->display_name)
+    {
+      g_free (xvimagesink->display_name);
+      xvimagesink->display_name = NULL;
+    }
+    
   if (xvimagesink->xvimage)
     {
       gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
@@ -1361,6 +1507,7 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
   gst_pad_set_bufferalloc_function (GST_VIDEOSINK_PAD (xvimagesink),
                                     gst_xvimagesink_buffer_alloc);
   
+  xvimagesink->display_name = NULL;
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;
@@ -1400,7 +1547,25 @@ gst_xvimagesink_class_init (GstXvImageSinkClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_VIDEOSINK);
 
+  g_object_class_install_property (gobject_class, ARG_CONTRAST,
+    g_param_spec_double ("contrast", "Contrast", "contrast",
+                           -1000, 2, 1, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_BRIGHTNESS,
+    g_param_spec_double ("brightness", "Brightness", "brightness",
+                         -1, 1, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_HUE,
+    g_param_spec_double ("hue", "Hue", "hue",
+                         -1, 1, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SATURATION,
+    g_param_spec_double ("saturation", "Saturation", "saturation",
+                         0, 2, 1, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DISPLAY,
+    g_param_spec_string ("display", "Display", "X Display name",
+                         NULL, G_PARAM_READWRITE));
+  
   gobject_class->dispose = gst_xvimagesink_dispose;
+  gobject_class->set_property = gst_xvimagesink_set_property;
+  gobject_class->get_property = gst_xvimagesink_get_property;
   
   gstelement_class->change_state = gst_xvimagesink_change_state;
 }

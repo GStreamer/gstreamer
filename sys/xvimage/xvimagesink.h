@@ -122,6 +122,8 @@ struct _GstXvImageSink {
   /* Our element stuff */
   GstVideoSink videosink;
   
+  char *display_name;
+  
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXvImage *xvimage;

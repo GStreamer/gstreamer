@@ -49,6 +49,12 @@ GST_STATIC_PAD_TEMPLATE (
     "height = (int) [ 0, MAX ]")
 );
 
+enum {
+  ARG_0,
+  ARG_DISPLAY
+  /* FILL ME */
+};
+
 static GstVideoSinkClass *parent_class = NULL;
 
 /* ============================================================= */
@@ -434,7 +440,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   
   g_mutex_lock (ximagesink->x_lock);
   
-  xcontext->disp = XOpenDisplay (NULL);
+  xcontext->disp = XOpenDisplay (ximagesink->display_name);
   
   if (!xcontext->disp)
     {
@@ -1068,12 +1074,60 @@ gst_ximagesink_xoverlay_init (GstXOverlayClass *iface)
 /* =========================================== */
 
 static void
+gst_ximagesink_set_property (GObject *object, guint prop_id,
+                             const GValue *value, GParamSpec *pspec)
+{
+  GstXImageSink *ximagesink;
+  
+  g_return_if_fail (GST_IS_XIMAGESINK (object));
+  
+  ximagesink = GST_XIMAGESINK (object);
+  
+  switch (prop_id)
+    {
+      case ARG_DISPLAY:
+        ximagesink->display_name = g_strdup (g_value_get_string (value));
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gst_ximagesink_get_property (GObject *object, guint prop_id,
+                             GValue *value, GParamSpec *pspec)
+{
+  GstXImageSink *ximagesink;
+  
+  g_return_if_fail (GST_IS_XIMAGESINK (object));
+  
+  ximagesink = GST_XIMAGESINK (object);
+  
+  switch (prop_id)
+    {
+      case ARG_DISPLAY:
+        g_value_set_string (value, g_strdup (ximagesink->display_name));
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
 gst_ximagesink_dispose (GObject *object)
 {
   GstXImageSink *ximagesink;
 
   ximagesink = GST_XIMAGESINK (object);
 
+  if (ximagesink->display_name)
+    {
+      g_free (ximagesink->display_name);
+      ximagesink->display_name = NULL;
+    }
+    
   if (ximagesink->ximage)
     {
       gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
@@ -1119,6 +1173,7 @@ gst_ximagesink_init (GstXImageSink *ximagesink)
   gst_pad_set_bufferalloc_function (GST_VIDEOSINK_PAD (ximagesink),
                                     gst_ximagesink_buffer_alloc);
   
+  ximagesink->display_name = NULL;
   ximagesink->xcontext = NULL;
   ximagesink->xwindow = NULL;
   ximagesink->ximage = NULL;
@@ -1158,7 +1213,13 @@ gst_ximagesink_class_init (GstXImageSinkClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_VIDEOSINK);
 
+  g_object_class_install_property (gobject_class, ARG_DISPLAY,
+    g_param_spec_string ("display", "Display", "X Display name",
+                         NULL, G_PARAM_READWRITE));
+  
   gobject_class->dispose = gst_ximagesink_dispose;
+  gobject_class->set_property = gst_ximagesink_set_property;
+  gobject_class->get_property = gst_ximagesink_get_property;
   
   gstelement_class->change_state = gst_ximagesink_change_state;
 }
