@@ -49,6 +49,16 @@ enum {
   ARG_MAXFILESIZE,
 };
 
+GST_EVENT_MASK_FUNCTION (gst_filesink_get_event_mask,
+  { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
+                    GST_SEEK_METHOD_SET |
+                    GST_SEEK_METHOD_END |
+                    GST_SEEK_FLAG_FLUSH },
+  { GST_EVENT_FLUSH, 0 },
+  { GST_EVENT_DISCONTINUOUS, 0 },
+  { GST_EVENT_NEW_MEDIA, 0 }
+)
+
 
 static void	gst_filesink_class_init		(GstFileSinkClass *klass);
 static void	gst_filesink_init		(GstFileSink *filesink);
@@ -119,23 +129,6 @@ gst_filesink_class_init (GstFileSinkClass *klass)
   gobject_class->get_property = gst_filesink_get_property;
 
   gstelement_class->change_state = gst_filesink_change_state;
-}
-
-static const GstEventMask*
-gst_filesink_get_event_mask (GstPad *pad)
-{
-  static GstEventMask gst_filesink_event_mask[] = {
-    { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
-                      GST_SEEK_METHOD_SET |
-                      GST_SEEK_METHOD_END |
-                      GST_SEEK_FLAG_FLUSH },
-    { GST_EVENT_FLUSH, 0 },
-    { GST_EVENT_DISCONTINUOUS, 0 },
-    { GST_EVENT_NEW_MEDIA, 0 },
-    { 0, }
-  };
-
-  return gst_filesink_event_mask;
 }
 
 static void 

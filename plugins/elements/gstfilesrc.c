@@ -98,6 +98,24 @@ enum {
   ARG_TOUCH,
 };
 
+GST_EVENT_MASK_FUNCTION (gst_filesrc_get_event_mask,
+  { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | 
+	  	    GST_SEEK_METHOD_SET | 
+		    GST_SEEK_METHOD_END | 
+		    GST_SEEK_FLAG_FLUSH },
+  { GST_EVENT_FLUSH, 0 },
+  { GST_EVENT_SIZE, 0 }
+)
+
+GST_PAD_QUERY_TYPE_FUNCTION (gst_filesrc_get_query_types,
+  GST_PAD_QUERY_TOTAL,
+  GST_PAD_QUERY_POSITION
+)
+
+GST_FORMATS_FUNCTION (gst_filesrc_get_formats,
+  GST_FORMAT_BYTES
+)
+
 static void		gst_filesrc_class_init		(GstFileSrcClass *klass);
 static void		gst_filesrc_init		(GstFileSrc *filesrc);
 static void 		gst_filesrc_dispose 		(GObject *object);
@@ -108,7 +126,6 @@ static void		gst_filesrc_get_property	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_filesrc_get			(GstPad *pad);
-static const GstFormat* gst_filesrc_get_formats 	(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
 		         				 GstFormat *format, gint64 *value);
@@ -180,34 +197,6 @@ gst_filesrc_bufcmp (gconstpointer a, gconstpointer b)
   else if (GST_BUFFER_SIZE(a) > GST_BUFFER_SIZE(b)) return -1;
   else if (GST_BUFFER_SIZE(a) < GST_BUFFER_SIZE(b)) return 1;
   else return 0;
-}
-
-static const GstEventMask*
-gst_filesrc_get_event_mask (GstPad *pad)
-{
-  static GstEventMask gst_filesrc_event_mask[] = {
-    { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | 
-	  	      GST_SEEK_METHOD_SET | 
-		      GST_SEEK_METHOD_END | 
-		      GST_SEEK_FLAG_FLUSH },
-    { GST_EVENT_FLUSH, 0 },
-    { GST_EVENT_SIZE, 0 },
-    { 0, }
-  };
-
-  return gst_filesrc_event_mask;
-}
-
-static const GstPadQueryType*
-gst_filesrc_get_query_types (GstPad *pad)
-{
-  static GstPadQueryType gst_filesrc_query_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
-    0
-  };
-
-  return gst_filesrc_query_types;
 }
 
 static void
@@ -710,17 +699,6 @@ gst_filesrc_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-static const GstFormat*
-gst_filesrc_get_formats (GstPad *pad)
-{
-  static const GstFormat gst_filesrc_formats[] = {
-    GST_FORMAT_BYTES,
-    0
-  };
-
-  return gst_filesrc_formats;
 }
 
 static gboolean
