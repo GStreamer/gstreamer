@@ -24,6 +24,13 @@
 
 extern GstPadTemplate *alawenc_src_template, *alawenc_sink_template;
 
+/* elementfactory information */
+static GstElementDetails alawenc_details = {
+  "PCM to A Law conversion",
+  "Codec/Audio/Encoder",
+  "Convert 16bit PCM to 8bit A law",
+  "Zaheer Merali <zaheer@bellworldwide.net>"
+};
 
 /* Stereo signals and args */
 enum {
@@ -36,6 +43,7 @@ enum {
 };
 
 static void		gst_alawenc_class_init		(GstALawEncClass *klass);
+static void		gst_alawenc_base_init		(GstALawEncClass *klass);
 static void		gst_alawenc_init			(GstALawEnc *alawenc);
 
 static void		gst_alawenc_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -143,7 +151,8 @@ gst_alawenc_get_type(void) {
 
   if (!alawenc_type) {
     static const GTypeInfo alawenc_info = {
-      sizeof(GstALawEncClass),      NULL,
+      sizeof(GstALawEncClass),
+      (GBaseInitFunc)gst_alawenc_base_init,
       NULL,
       (GClassInitFunc)gst_alawenc_class_init,
       NULL,
@@ -155,6 +164,16 @@ gst_alawenc_get_type(void) {
     alawenc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstALawEnc", &alawenc_info, 0);
   }
   return alawenc_type;
+}
+
+static void
+gst_alawenc_base_init (GstALawEncClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, alawenc_src_template);
+  gst_element_class_add_pad_template (element_class, alawenc_sink_template);
+  gst_element_class_set_details (element_class, &alawenc_details);
 }
 
 static void

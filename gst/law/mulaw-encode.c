@@ -23,6 +23,13 @@
 
 extern GstPadTemplate *mulawenc_src_template, *mulawenc_sink_template;
 
+/* elementfactory information */
+static GstElementDetails mulawenc_details = {
+  "PCM to Mu Law conversion",
+  "Codec/Audio/Encoder",
+  "Convert 16bit PCM to 8bit mu law",
+  "Zaheer Merali <zaheer@bellworldwide.net>"
+};
 
 /* Stereo signals and args */
 enum {
@@ -35,6 +42,7 @@ enum {
 };
 
 static void		gst_mulawenc_class_init		(GstMuLawEncClass *klass);
+static void		gst_mulawenc_base_init		(GstMuLawEncClass *klass);
 static void		gst_mulawenc_init			(GstMuLawEnc *mulawenc);
 
 static void		gst_mulawenc_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -81,7 +89,8 @@ gst_mulawenc_get_type(void) {
 
   if (!mulawenc_type) {
     static const GTypeInfo mulawenc_info = {
-      sizeof(GstMuLawEncClass),      NULL,
+      sizeof(GstMuLawEncClass),
+      (GBaseInitFunc)gst_mulawenc_base_init,
       NULL,
       (GClassInitFunc)gst_mulawenc_class_init,
       NULL,
@@ -93,6 +102,16 @@ gst_mulawenc_get_type(void) {
     mulawenc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMuLawEnc", &mulawenc_info, 0);
   }
   return mulawenc_type;
+}
+
+static void
+gst_mulawenc_base_init (GstMuLawEncClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, mulawenc_src_template);
+  gst_element_class_add_pad_template (element_class, mulawenc_sink_template);
+  gst_element_class_set_details (element_class, &mulawenc_details);
 }
 
 static void
