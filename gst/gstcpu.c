@@ -31,11 +31,12 @@ static guint32 _gst_cpu_flags = 0;
 #ifdef HAVE_CPU_I386
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_i386
 void gst_cpuid_i386 (int, unsigned long *, unsigned long *, unsigned long *, unsigned long *);
+gboolean _gst_cpu_initialize_i386 (gulong *flags, GString *featurelist);
 #else
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_none
+gboolean _gst_cpu_initialize_none (gulong *flags, GString *featurelist);
 #endif
 
-gboolean _gst_cpu_initialize_i386 (gulong *flags, GString *featurelist);
 
 void
 _gst_cpu_initialize (gboolean opt)
@@ -59,6 +60,7 @@ _gst_cpu_initialize_none (gulong *flags, GString *featurelist)
   return FALSE;
 }
 
+#ifdef HAVE_CPU_I386
 gboolean
 _gst_cpu_initialize_i386 (gulong *flags, GString *featurelist)
 {
@@ -102,6 +104,7 @@ _gst_cpu_initialize_i386 (gulong *flags, GString *featurelist)
     return TRUE;
   return FALSE;
 }
+#endif
 
 GstCPUFlags
 gst_cpu_get_flags (void)
