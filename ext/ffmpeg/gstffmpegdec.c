@@ -235,8 +235,11 @@ gst_ffmpegdec_connect (GstPad  *pad,
   gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
 				caps, ffmpegdec->context);
 
-  /* we dont send complete frames */
-  if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED)
+  /* we dont send complete frames - FIXME: we need a 'framed' property
+   * in caps */
+  if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED &&
+      (ffmpegdec->context->codec_id == CODEC_ID_MPEG1VIDEO ||
+       ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO))
     ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
 
   /* do *not* draw edges */

@@ -1,3 +1,11 @@
+2004-03-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect):
+	  Fix B-frame DivX5/XviD display by removing the truncated flag when
+	  not needed.
+	* gst-libs/ext/ffmpeg/patch/autotools.diff:
+	  Remove link to libavcodec - it causes symbol conflicts (why?).
+
 2004-02-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* HACKING:
