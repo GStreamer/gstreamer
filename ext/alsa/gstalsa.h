@@ -156,7 +156,6 @@ struct _GstAlsa {
 
   /* clocking */
   GstAlsaClock *		clock;		/* our provided clock */
-  GstClockTime			clock_base;
   snd_pcm_uframes_t		played; 	/* samples transmitted since last sync 
 						   This thing actually is our master clock.
 						   We will event insert silent samples or

@@ -1203,8 +1203,6 @@ gst_alsa_pcm_wait (GstAlsa * this)
 inline gboolean
 gst_alsa_start (GstAlsa * this)
 {
-  GstClockTime elemnow;
-
   GST_DEBUG ("Setting state to RUNNING");
 
   switch (snd_pcm_state (this->handle)) {
@@ -1215,13 +1213,7 @@ gst_alsa_start (GstAlsa * this)
       ERROR_CHECK (snd_pcm_prepare (this->handle), "error preparing: %s");
     case SND_PCM_STATE_SUSPENDED:
     case SND_PCM_STATE_PREPARED:
-      /* The strategy to recover the timestamps from the xrun is to take the
-       * current element time and pretend we just sent all the samples up to
-       * that time. This will result in an offset discontinuity in the next
-       * buffer along with the correct timestamp on that buffer, we only
-       * update the capture timestamps */
-      elemnow = gst_element_get_time (GST_ELEMENT (this));
-      this->captured = gst_alsa_timestamp_to_samples (this, elemnow);
+      this->captured = 0;
       ERROR_CHECK (snd_pcm_start (this->handle), "error starting playback: %s");
       break;
     case SND_PCM_STATE_PAUSED:
@@ -1254,6 +1246,11 @@ gst_alsa_xrun_recovery (GstAlsa * this)
     GST_ERROR_OBJECT (this, "status error: %s", snd_strerror (err));
 
   if (snd_pcm_status_get_state (status) == SND_PCM_STATE_XRUN) {
+    struct timeval now, diff, tstamp;
+
+    gettimeofday (&now, 0);
+    snd_pcm_status_get_trigger_tstamp (status, &tstamp);
+    timersub (&now, &tstamp, &diff);
 
     /* if we're allowed to recover, ... */
     if (this->autorecover) {
@@ -1269,8 +1266,12 @@ gst_alsa_xrun_recovery (GstAlsa * this)
     }
 
     /* prepare the device again */
-    if ((err = snd_pcm_prepare (this->handle)) < 0) {
-      GST_ERROR_OBJECT (this, "prepare error: %s", snd_strerror (err));
+    if ((err = snd_pcm_drop (this->handle)) < 0) {
+      GST_ERROR_OBJECT (this, "drop error: %s", snd_strerror (err));
+      return FALSE;
+    }
+    if ((err = snd_pcm_drain (this->handle)) < 0) {
+      GST_ERROR_OBJECT (this, "drop error: %s", snd_strerror (err));
       return FALSE;
     }
     if (!gst_alsa_start (this)) {
@@ -1278,8 +1279,10 @@ gst_alsa_xrun_recovery (GstAlsa * this)
           ("Error starting audio after xrun"));
       return FALSE;
     }
-    GST_DEBUG_OBJECT (this, "XRun!!!! pretending we captured %lld samples",
-        this->captured);
+
+    GST_DEBUG_OBJECT (this, "XRun!!!! of at least %.3f msecs, "
+        "pretending we captured %lld samples",
+        diff.tv_sec * 1000 + diff.tv_usec / 1000.0, this->captured);
   } else {
     if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
       GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),

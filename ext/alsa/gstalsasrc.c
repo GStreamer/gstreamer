@@ -363,13 +363,6 @@ gst_alsa_src_loop (GstElement * element)
       return;
     }
   }
-  if (this->clock_base == GST_CLOCK_TIME_NONE) {
-    GstClockTime now;
-
-    now = gst_element_get_time (element);
-    this->clock_base = gst_alsa_src_get_time (this);
-    this->captured = gst_alsa_timestamp_to_samples (this, now);
-  }
 
   /* the cast to long is explicitly needed;
    * with avail = -32 and period_size = 100, avail < period_size is false */
@@ -393,8 +386,18 @@ gst_alsa_src_loop (GstElement * element)
 
   {
     gint outsize;
-    GstClockTime outtime, outdur, outreal, outideal;
-    gint64 diff;
+    GstClockTime outtime, outdur, outreal, outideal, startalsa, outalsa;
+    gint64 diff, offset;
+    snd_pcm_status_t *status;
+    struct timeval tstamp;
+    int err;
+
+    snd_pcm_status_alloca (&status);
+
+    if ((err = snd_pcm_status (this->handle, status)) < 0)
+      GST_ERROR_OBJECT (this, "status error: %s", snd_strerror (err));
+
+    offset = this->captured;
 
     /* duration of buffer is just the time of the samples */
     outdur = gst_alsa_samples_to_timestamp (this, copied);
@@ -403,19 +406,25 @@ gst_alsa_src_loop (GstElement * element)
      * what is now in the buffer */
     outreal = gst_element_get_time (GST_ELEMENT (this)) - outdur;
     /* ideal time is counting samples */
-    outideal = gst_alsa_samples_to_timestamp (this, this->captured);
+    outideal = gst_alsa_samples_to_timestamp (this, offset);
+
+    snd_pcm_status_get_trigger_tstamp (status, &tstamp);
+    startalsa = GST_TIMEVAL_TO_TIME (tstamp) - element->base_time;
+    outalsa = startalsa + outideal;
 
     outsize = gst_alsa_samples_to_bytes (this, copied);
     outtime = GST_CLOCK_TIME_NONE;
 
     if (GST_ELEMENT_CLOCK (this)) {
       if (GST_CLOCK (GST_ALSA (this)->clock) == GST_ELEMENT_CLOCK (this)) {
-        outtime = outideal;
+        outtime = outalsa;
         diff = outideal - outreal;
         GST_DEBUG_OBJECT (this, "ideal %lld, real %lld, diff %lld\n", outideal,
             outreal, diff);
+        offset = gst_alsa_timestamp_to_samples (this, outtime);
       } else {
         outtime = outreal;
+        offset = gst_alsa_timestamp_to_samples (this, outtime);
       }
     }
 
@@ -430,8 +439,8 @@ gst_alsa_src_loop (GstElement * element)
 
       GST_BUFFER_TIMESTAMP (src->buf[i]) = outtime;
       GST_BUFFER_DURATION (src->buf[i]) = outdur;
-      GST_BUFFER_OFFSET (src->buf[i]) = this->captured;
-      GST_BUFFER_OFFSET_END (src->buf[i]) = this->captured + copied;
+      GST_BUFFER_OFFSET (src->buf[i]) = offset;
+      GST_BUFFER_OFFSET_END (src->buf[i]) = offset + copied;
 
       buf = src->buf[i];
       src->buf[i] = NULL;
