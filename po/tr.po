@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-26 10:16+0200\n"
+"POT-Creation-Date: 2004-07-15 22:30+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -108,12 +108,12 @@ msgstr "eklenti yüklemek için yol listesi (' ile ayırılmış"
 msgid "Scheduler to use (default is '%s')"
 msgstr "Kullanılacak zamanlandırıcı ('"
 
-#: gst/gstelement.c:258
+#: gst/gstelement.c:261
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "HATA: %s öğesinden: %s\n"
 
-#: gst/gstelement.c:260
+#: gst/gstelement.c:263
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -555,7 +555,7 @@ msgstr "albüm üst sınırı"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:447
+#: gst/autoplug/gstspider.c:458
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "Akımın %s mime türünü işleyebilecek hiç bir öğe yok."
@@ -580,26 +580,26 @@ msgstr "\"%s\" kapatılırken hata."
 msgid "Error while writing to file \"%s\"."
 msgstr "\"%s\" dosyası yazılırken hata."
 
-#: gst/elements/gstfilesrc.c:751 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
 msgid "No file name specified for reading."
 msgstr "Okuma için hiç bir dosya adı belirtilmedi."
 
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" dosyası okuma için açılamadı."
 
-#: gst/elements/gstfilesrc.c:777
+#: gst/elements/gstfilesrc.c:780
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:783
+#: gst/elements/gstfilesrc.c:786
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "\"%s\" dosyası düzenli bir dosya değil."
 
-#: gst/elements/gstidentity.c:265
+#: gst/elements/gstidentity.c:267
 msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
 
@@ -654,36 +654,36 @@ msgstr "\"%s\" öğesi yok"
 msgid "could not parse caps \"%s\""
 msgstr "\"%s\" kabiliyetleri ayrıştırılamadı"
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:631 gst/parse/grammar.y:647
-#: gst/parse/grammar.y:705
+#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
+#: gst/parse/grammar.y:700
 msgid "link without source element"
 msgstr "kaynak öğesi olmayan bağ"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:628 gst/parse/grammar.y:714
+#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
 msgid "link without sink element"
 msgstr "'sink' öğesi olmayan bağ"
 
-#: gst/parse/grammar.y:665
+#: gst/parse/grammar.y:660
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "\"%s\" URI'si için kaynak öğesi yok"
 
-#: gst/parse/grammar.y:675
+#: gst/parse/grammar.y:670
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "\"%s\" URI'sini belirtilene bağlayacak öğe yok:"
 
-#: gst/parse/grammar.y:683
+#: gst/parse/grammar.y:678
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "\"%s\" URI'si için 'sink' öğesi yok"
 
-#: gst/parse/grammar.y:687
+#: gst/parse/grammar.y:682
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 
-#: gst/parse/grammar.y:699
+#: gst/parse/grammar.y:694
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
@@ -826,42 +826,42 @@ msgstr "HATA: boruhattı çalmak istemiyor.\n"
 msgid "Added plugin %s with %d %s.\n"
 msgstr ""
 
-#: tools/gst-register.c:51 tools/gst-register.c:163
+#: tools/gst-register.c:51 tools/gst-register.c:167
 msgid "feature"
 msgid_plural "features"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-register.c:108
+#: tools/gst-register.c:112
 #, c-format
 msgid "Added path   %s to %s \n"
 msgstr ""
 
-#: tools/gst-register.c:123
+#: tools/gst-register.c:127
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
 msgstr ""
 
-#: tools/gst-register.c:128
+#: tools/gst-register.c:132
 #, c-format
 msgid "Trying to load %s ...\n"
 msgstr ""
 
-#: tools/gst-register.c:130
+#: tools/gst-register.c:134
 #, fuzzy, c-format
 msgid "Error loading %s\n"
 msgstr "\"%s\" kapatılırken hata."
 
-#: tools/gst-register.c:162
+#: tools/gst-register.c:166
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
-#~ msgid "Show plugin details"
-#~ msgstr "Eklenti detaylarını göster"
+#~ msgid "')"
+#~ msgstr "')"
 
-#~ msgid "Show scheduler details"
-#~ msgstr "Zamanlandırıcı detaylarını göster"
+#~ msgid "' is the default)"
+#~ msgstr "' ön tanımlı olanı)"
 
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
@@ -869,8 +869,8 @@ msgstr ""
 #~ "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde "
 #~ "dönüştürülemedi"
 
-#~ msgid "')"
-#~ msgstr "')"
+#~ msgid "Show plugin details"
+#~ msgstr "Eklenti detaylarını göster"
 
-#~ msgid "' is the default)"
-#~ msgstr "' ön tanımlı olanı)"
+#~ msgid "Show scheduler details"
+#~ msgstr "Zamanlandırıcı detaylarını göster"

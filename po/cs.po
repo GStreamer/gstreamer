@@ -8,14 +8,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-05 14:22+0200\n"
+"POT-Creation-Date: 2004-07-15 22:30+0200\n"
 "PO-Revision-Date: 2004-07-06 02:29+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
+"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: gst/gst.c:160
 msgid "Print the GStreamer version"
@@ -30,16 +31,23 @@ msgid "Print available debug categories and exit"
 msgstr "Vypsat dostupné kategorie ladění a skončit"
 
 #: gst/gst.c:169
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Implicitní úroveň ladění od 1 (jen chyby) do 5 (vše) nebo 0 pro žádný výstup"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Implicitní úroveň ladění od 1 (jen chyby) do 5 (vše) nebo 0 pro žádný výstup"
 
 #: gst/gst.c:171
 msgid "LEVEL"
 msgstr "ÚROVEŇ"
 
 #: gst/gst.c:173
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Čárkami oddělený seznam dvojic název_kategorie:úroveň pro nastavení konkrétních úrovní pro jednotlivé kategorie. Příklad: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Čárkami oddělený seznam dvojic název_kategorie:úroveň pro nastavení "
+"konkrétních úrovní pro jednotlivé kategorie. Příklad: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
 
 #: gst/gst.c:176
 msgid "LIST"
@@ -66,8 +74,12 @@ msgid "PATHS"
 msgstr "CESTY"
 
 #: gst/gst.c:191
-msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
-msgstr "Čárkami oddělený seznam modulů, které přednačíst kromě seznamu uloženém v proměnné prostředí GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"envronment variable GST_PLUGIN_PATH"
+msgstr ""
+"Čárkami oddělený seznam modulů, které přednačíst kromě seznamu uloženém v "
+"proměnné prostředí GST_PLUGIN_PATH"
 
 #: gst/gst.c:193
 msgid "PLUGINS"
@@ -99,12 +111,12 @@ msgstr "seznam cest pro načítání modulů (oddělený '%s')"
 msgid "Scheduler to use (default is '%s')"
 msgstr "Plánovač, který používat (implicitní je '%s')"
 
-#: gst/gstelement.c:258
+#: gst/gstelement.c:261
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "CHYBA: od eleemntu %s: %s\n"
 
-#: gst/gstelement.c:260
+#: gst/gstelement.c:263
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -118,8 +130,12 @@ msgid "GStreamer encountered a general core library error."
 msgstr "V GStreamer došlo k obecné chybě hlavní knihovny."
 
 #: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Vývojáři GStreamer byli příliš líní na to, aby této chybě přiřadili kód. Ohlaste prosím tuto chybu."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please file a bug."
+msgstr ""
+"Vývojáři GStreamer byli příliš líní na to, aby této chybě přiřadili kód. "
+"Ohlaste prosím tuto chybu."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
@@ -219,7 +235,8 @@ msgstr "Nemohu získat/změnit nastavení zdroje."
 
 #: gst/gsterror.c:148
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Element neimplementuje obsluhu tohoto proudu. Ohlaste prosím tuto chybu."
+msgstr ""
+"Element neimplementuje obsluhu tohoto proudu. Ohlaste prosím tuto chybu."
 
 #: gst/gsterror.c:150
 msgid "Could not determine type of stream."
@@ -535,7 +552,7 @@ msgstr "vrchol alba"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:447
+#: gst/autoplug/gstspider.c:458
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "Není přítomen žádý element pro obsloužení proudu s typem mime %s."
@@ -560,26 +577,26 @@ msgstr "Chyba při zavírání souboru \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru \"%s\"."
 
-#: gst/elements/gstfilesrc.c:751 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
 msgid "No file name specified for reading."
 msgstr "Nezadán název souboru pro čtení."
 
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nemohu otevřít soubor \"%s\" pro čtení."
 
-#: gst/elements/gstfilesrc.c:777
+#: gst/elements/gstfilesrc.c:780
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" je adresář."
 
-#: gst/elements/gstfilesrc.c:783
+#: gst/elements/gstfilesrc.c:786
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Soubor \"%s\" je socket."
 
-#: gst/elements/gstidentity.c:191
+#: gst/elements/gstidentity.c:267
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
@@ -634,38 +651,43 @@ msgstr "element \"%s\" neexistuje"
 msgid "could not parse caps \"%s\""
 msgstr "nemohu zpracovat schopnosti \"%s\""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:631 gst/parse/grammar.y:647
-#: gst/parse/grammar.y:705
+#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
+#: gst/parse/grammar.y:700
 msgid "link without source element"
 msgstr "propojení bez elementu zdroje"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:628 gst/parse/grammar.y:714
+#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
 msgid "link without sink element"
 msgstr "propojení bez elementu spotřebiče"
 
-#: gst/parse/grammar.y:665
+#: gst/parse/grammar.y:660
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "neexistuje element zdroje pro URI \"%s\""
 
-#: gst/parse/grammar.y:675
+#: gst/parse/grammar.y:670
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "neexistuje element, ke kterému připojit URI \"%s\""
 
-#: gst/parse/grammar.y:683
+#: gst/parse/grammar.y:678
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "neexistuje element spotřebiče pro URI \"%s\""
 
-#: gst/parse/grammar.y:687
+#: gst/parse/grammar.y:682
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 
-#: gst/parse/grammar.y:699
+#: gst/parse/grammar.y:694
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
+
+#: tools/gst-inspect.c:1115
+#, fuzzy
+msgid "Print all elements"
+msgstr "element \"%s\" neexistuje"
 
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
@@ -693,7 +715,8 @@ msgstr " ns).\n"
 
 #: tools/gst-launch.c:114
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Použití: gst-xmllaunch <soubor.xml> [ element.vlastnost=hodnota ... ]\n"
+msgstr ""
+"Použití: gst-xmllaunch <soubor.xml> [ element.vlastnost=hodnota ... ]\n"
 
 #: tools/gst-launch.c:122
 #, c-format
@@ -708,7 +731,8 @@ msgstr "CHYBA: v souboru '%s' není element nejvyšší úrovně pipeline.\n"
 #: tools/gst-launch.c:135
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
-msgstr "VAROVÁNÍ: v současné době je podporován jen jeden element nejvyšší úrovně."
+msgstr ""
+"VAROVÁNÍ: v současné době je podporován jen jeden element nejvyšší úrovně."
 
 #: tools/gst-launch.c:146
 #, c-format
@@ -796,3 +820,39 @@ msgstr "SPOUŠTÍM rouru ...\n"
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "chyba: roura nechce hrát.\n"
+
+#: tools/gst-register.c:49
+#, c-format
+msgid "Added plugin %s with %d %s.\n"
+msgstr ""
+
+#: tools/gst-register.c:51 tools/gst-register.c:167
+msgid "feature"
+msgid_plural "features"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-register.c:112
+#, c-format
+msgid "Added path   %s to %s \n"
+msgstr ""
+
+#: tools/gst-register.c:127
+#, c-format
+msgid "Rebuilding %s (%s) ...\n"
+msgstr ""
+
+#: tools/gst-register.c:132
+#, c-format
+msgid "Trying to load %s ...\n"
+msgstr ""
+
+#: tools/gst-register.c:134
+#, fuzzy, c-format
+msgid "Error loading %s\n"
+msgstr "Chyba při zavírání souboru \"%s\"."
+
+#: tools/gst-register.c:166
+#, c-format
+msgid "Loaded %d plugins with %d %s.\n"
+msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-26 10:16+0200\n"
+"POT-Creation-Date: 2004-07-15 22:30+0200\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -114,14 +114,14 @@ msgstr "liste de chemins pour le chargement des plugins (séparés par '"
 msgid "Scheduler to use (default is '%s')"
 msgstr "Planificateur a utiliser ('"
 
-#: gst/gstelement.c:258
+#: gst/gstelement.c:261
 #, fuzzy, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr ""
 "ERREUR: impossible d'interpreter l'argument de la ligne de commande numero %"
 "d: %s.\n"
 
-#: gst/gstelement.c:260
+#: gst/gstelement.c:263
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -580,7 +580,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:447
+#: gst/autoplug/gstspider.c:458
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
@@ -606,27 +606,27 @@ msgstr ""
 msgid "Error while writing to file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:751 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
 #, fuzzy
 msgid "No file name specified for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesrc.c:777
+#: gst/elements/gstfilesrc.c:780
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:783
+#: gst/elements/gstfilesrc.c:786
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr ""
 
-#: gst/elements/gstidentity.c:265
+#: gst/elements/gstidentity.c:267
 msgid "Failed after iterations as requested."
 msgstr ""
 
@@ -682,36 +682,36 @@ msgstr "pas d'element \"%s\""
 msgid "could not parse caps \"%s\""
 msgstr "impossible d'interpreter les capacités \"%s\""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:631 gst/parse/grammar.y:647
-#: gst/parse/grammar.y:705
+#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
+#: gst/parse/grammar.y:700
 msgid "link without source element"
 msgstr "lien sans element source"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:628 gst/parse/grammar.y:714
+#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
 msgid "link without sink element"
 msgstr "lien sans element destination"
 
-#: gst/parse/grammar.y:665
+#: gst/parse/grammar.y:660
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "pas d'element source pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:675
+#: gst/parse/grammar.y:670
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "pas d'element avec lequel lier l'URI \"%s\""
 
-#: gst/parse/grammar.y:683
+#: gst/parse/grammar.y:678
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "pas d'element destination pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:687
+#: gst/parse/grammar.y:682
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "impossible de lier un element destination pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:699
+#: gst/parse/grammar.y:694
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
@@ -860,48 +860,48 @@ msgstr "ERREUR: le tube refuse de s'executer.\n"
 msgid "Added plugin %s with %d %s.\n"
 msgstr ""
 
-#: tools/gst-register.c:51 tools/gst-register.c:163
+#: tools/gst-register.c:51 tools/gst-register.c:167
 msgid "feature"
 msgid_plural "features"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-register.c:108
+#: tools/gst-register.c:112
 #, c-format
 msgid "Added path   %s to %s \n"
 msgstr ""
 
-#: tools/gst-register.c:123
+#: tools/gst-register.c:127
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
 msgstr ""
 
-#: tools/gst-register.c:128
+#: tools/gst-register.c:132
 #, c-format
 msgid "Trying to load %s ...\n"
 msgstr ""
 
-#: tools/gst-register.c:130
+#: tools/gst-register.c:134
 #, c-format
 msgid "Error loading %s\n"
 msgstr ""
 
-#: tools/gst-register.c:162
+#: tools/gst-register.c:166
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "impossible de convertir \"%s\" de manière a correspondre avec la "
-#~ "proprieté \"%s\" dans l'element \"%s\" "
 
 #~ msgid "')"
 #~ msgstr "')"
 
 #~ msgid "' is the default)"
 #~ msgstr "' est la valeur par defaut)"
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "impossible de convertir \"%s\" de manière a correspondre avec la "
+#~ "proprieté \"%s\" dans l'element \"%s\" "
 
 #~ msgid "CATEGORIES"
 #~ msgstr "CATEGORIES"

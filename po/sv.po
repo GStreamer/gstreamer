@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.0\n"
+"Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-26 10:16+0200\n"
-"PO-Revision-Date: 2004-03-20 18:41+0100\n"
+"POT-Creation-Date: 2004-07-15 22:30+0200\n"
+"PO-Revision-Date: 2004-07-03 00:02+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -72,7 +72,6 @@ msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
 #: gst/gst.c:191
-#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "envronment variable GST_PLUGIN_PATH"
@@ -101,24 +100,22 @@ msgstr "Register att använda"
 msgid "REGISTRY"
 msgstr "REGISTER"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: gst/gst.c:214
-#, fuzzy, c-format
+#, c-format
 msgid "path list for loading plugins (separated by '%s')"
-msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \""
+msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \"%s\")"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: gst/gst.c:218
-#, fuzzy, c-format
+#, c-format
 msgid "Scheduler to use (default is '%s')"
-msgstr "Schemaläggare att använda (\""
+msgstr "Schemaläggare att använda (standardvärdet är \"%s\")"
 
-#: gst/gstelement.c:258
+#: gst/gstelement.c:261
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEL: från element %s: %s\n"
 
-#: gst/gstelement.c:260
+#: gst/gstelement.c:263
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -561,7 +558,7 @@ msgstr "toppen för albumet"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:447
+#: gst/autoplug/gstspider.c:458
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
@@ -587,26 +584,26 @@ msgstr "Fel vid stängning av filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: gst/elements/gstfilesrc.c:751 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/elements/gstfilesrc.c:777
+#: gst/elements/gstfilesrc.c:780
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr ""
+msgstr "\"%s\" är en katalog."
 
-#: gst/elements/gstfilesrc.c:783
-#, fuzzy, c-format
+#: gst/elements/gstfilesrc.c:786
+#, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Filen \"%s\" är ingen vanlig fil."
+msgstr "Filen \"%s\" är ett uttag."
 
-#: gst/elements/gstidentity.c:265
+#: gst/elements/gstidentity.c:267
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
@@ -664,36 +661,36 @@ msgstr "inget \"%s\"-element"
 msgid "could not parse caps \"%s\""
 msgstr "kunde inte tolka förmågorna \"%s\""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:631 gst/parse/grammar.y:647
-#: gst/parse/grammar.y:705
+#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
+#: gst/parse/grammar.y:700
 msgid "link without source element"
 msgstr "länk utan källelement"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:628 gst/parse/grammar.y:714
+#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
 msgid "link without sink element"
 msgstr "länk utan utgångselement"
 
-#: gst/parse/grammar.y:665
+#: gst/parse/grammar.y:660
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "inget källelement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:675
+#: gst/parse/grammar.y:670
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "inget element att länka URI:n \"%s\" till"
 
-#: gst/parse/grammar.y:683
+#: gst/parse/grammar.y:678
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "inget utgångselement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:687
+#: gst/parse/grammar.y:682
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 
-#: gst/parse/grammar.y:699
+#: gst/parse/grammar.y:694
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
@@ -844,49 +841,44 @@ msgstr "FEL: rörledningen vill inte spela.\n"
 msgid "Added plugin %s with %d %s.\n"
 msgstr ""
 
-#: tools/gst-register.c:51 tools/gst-register.c:163
+#: tools/gst-register.c:51 tools/gst-register.c:167
 #, fuzzy
 msgid "feature"
 msgid_plural "features"
 msgstr[0] "Satir"
 msgstr[1] "Satir"
 
-#: tools/gst-register.c:108
+#: tools/gst-register.c:112
 #, c-format
 msgid "Added path   %s to %s \n"
 msgstr ""
 
-#: tools/gst-register.c:123
+#: tools/gst-register.c:127
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
 msgstr ""
 
-#: tools/gst-register.c:128
+#: tools/gst-register.c:132
 #, c-format
 msgid "Trying to load %s ...\n"
 msgstr ""
 
-#: tools/gst-register.c:130
+#: tools/gst-register.c:134
 #, fuzzy, c-format
 msgid "Error loading %s\n"
 msgstr "Fel vid sparande av \"%s\""
 
-#: tools/gst-register.c:162
+#: tools/gst-register.c:166
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
-#~ msgid "Show plugin details"
-#~ msgstr "Visa detaljer för insticksmodul"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Visa detaljer för schemaläggare"
-
 #~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ "Comma-separated list of plugins to preload in addition to the list stored "
+#~ "in environment variable GST_PLUGIN_PATH"
 #~ msgstr ""
-#~ "kunde inte konvertera \"%s\" så att det passar egenskapen \"%s\" i "
-#~ "elementet \"%s\""
+#~ "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
+#~ "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #~ msgid "')"
@@ -895,6 +887,18 @@ msgstr ""
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #~ msgid "' is the default)"
 #~ msgstr "\" är standardalternativet)"
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "kunde inte konvertera \"%s\" så att det passar egenskapen \"%s\" i "
+#~ "elementet \"%s\""
+
+#~ msgid "Show plugin details"
+#~ msgstr "Visa detaljer för insticksmodul"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Visa detaljer för schemaläggare"
 
 #~ msgid "Internal GStreamer error: capabilities problem.  File a bug."
 #~ msgstr "Internt GStreamer-fel: förmågeproblem. Skicka en felrapport."
