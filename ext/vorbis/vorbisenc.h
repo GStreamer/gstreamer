@@ -67,6 +67,8 @@ struct _VorbisEnc {
   gint bitrate;
   gint channels;
   gint frequency;
+
+  gboolean setup;
 };
 
 struct _VorbisEncClass {

@@ -22,7 +22,6 @@
 
 #include <vorbisdec.h>
 
-static void gst_vorbisdec_loop (GstElement * element);
 
 extern GstPadTemplate *dec_src_template, *dec_sink_template;
 
@@ -50,12 +49,12 @@ enum
   ARG_0,
 };
 
-static void gst_vorbisdec_class_init (VorbisDecClass * klass);
-static void gst_vorbisdec_init (VorbisDec * vorbisdec);
+static void 	gst_vorbisdec_class_init 	(VorbisDecClass *klass);
+static void 	gst_vorbisdec_init 		(VorbisDec *vorbisdec);
 
+static void 	gst_vorbisdec_loop 		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-
 /*static guint gst_vorbisdec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
