@@ -1,3 +1,8 @@
+2004-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/theora/Makefile.am:
+	  fix makefile.  Fixes #151462.
+
 2004-08-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstfdset.c: (gst_fdset_free), (gst_fdset_wait):
