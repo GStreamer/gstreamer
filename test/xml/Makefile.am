@@ -1,6 +1,0 @@
-noinst_PROGRAMS = readreg createreg
-
-LDADD = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
-
-EXTRA_DIST = README
