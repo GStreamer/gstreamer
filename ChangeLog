@@ -1,3 +1,7 @@
+2004-07-30  David Schleef  <ds@schleef.org>
+
+	* testsuite/multifilesink/Makefile.am: Fix unused variable.
+
 2004-07-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
