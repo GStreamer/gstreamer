@@ -1,3 +1,7 @@
+2005-01-26  Amaury Jacquot  <sxpert@esitcom.org>
+	* ext/cairo/gsttextoverlay.c: include  string.h and strings.h to fix
+	build failure on amd64
+
 2005-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstid3tag.c: (mad_id3_parse_latin1_string),
