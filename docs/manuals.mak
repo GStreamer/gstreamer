@@ -165,8 +165,8 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 	@cat $< | pngtopnm | pnmtops -noturn > $@ 2> /dev/null
 
 # make sure xml validates properly
-#check-local:
-#	xmllint -noout -valid $(srcdir)/$(MAIN)
+check-local: $(BUILDDIR)/$(MAIN)
+	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
 
 ### this is a website upload target
 
