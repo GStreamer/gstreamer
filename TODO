@@ -8,8 +8,6 @@
 
 * check GST_* in configure.ac, there is too much in it
 
-* decide where to put the control lib
-
 * work on spec file :
   add plugins with AC stuff (maybe from bits ?)
   write script that builds rpm's one from one
