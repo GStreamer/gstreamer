@@ -411,7 +411,7 @@ GST_PLUGINS_ALL="\
 	synaesthesia \
 	tags \
 	tcp \
-  tta \
+	tta \
 	typefind \
 	udp \
 	vbidec \
@@ -688,6 +688,7 @@ GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
     AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
 #include <sys/types.h>
 #define _LINUX_TIME_H
+#define __user
 #include <linux/videodev.h>
     ])
   fi
@@ -706,6 +707,7 @@ GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
 #include <sys/types.h>
 #include <linux/types.h>
 #define _LINUX_TIME_H
+#define __user
 #include <linux/videodev2.h>
 #if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
 #error too early v4l2 version or no v4l2 at all
@@ -727,6 +729,7 @@ return 0;
 #include <sys/types.h>
 #include <linux/types.h>
 #define _LINUX_TIME_H
+#define __user
 #include <linux/videodev2.h>
     ],[
 struct v4l2_buffer buf;
@@ -1437,8 +1440,6 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_CHECK_HEADER([musepack/mpc_dec.h], [
     HAVE_MUSEPACK="yes"
     MUSEPACK_LIBS="-lmusepack"
-    MUSEPACK_CFLAGS=
-    AC_SUBST(MUSEPACK_CFLAGS)
     AC_SUBST(MUSEPACK_LIBS)
     ], [HAVE_MUSEPACK="no"])
   AC_LANG_C
