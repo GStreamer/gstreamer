@@ -10,17 +10,23 @@ main (int argc,char *argv[])
 {
   GstElement *bin;
   GstElement *src;
+  GstElement *effect;
   GstElement *audiosink;
 
   gst_init(&argc,&argv);
 
   bin = gst_bin_new("bin");
 
-  //src = gst_elementfactory_make("XMMS_INPUT_mpeg_layer_1/2/3_player_1.2.4", "xmms_plugin");
+  src = gst_elementfactory_make("XMMS_INPUT_mpeg_layer_1/2/3_player_1.2.4", "xmms_plugin");
   //src = gst_elementfactory_make("XMMS_INPUT_oggvorbis_player_0.1", "xmms_plugin");
-  src = gst_elementfactory_make("XMMS_INPUT_mikmod_player_1.2.4", "xmms_plugin");
+  //src = gst_elementfactory_make("XMMS_INPUT_mikmod_player_1.2.4", "xmms_plugin");
   //src = gst_elementfactory_make("XMMS_INPUT_tone_generator_1.2.4", "xmms_plugin");
   g_return_val_if_fail(src != NULL, -1);
+
+  //effect = gst_elementfactory_make("XMMS_EFFECT_voice_removal_plugin_1.2.4", "xmms_effect");
+  effect = gst_elementfactory_make("XMMS_EFFECT_extra_stereo_plugin_1.2.4", "xmms_effect");
+  //effect = gst_elementfactory_make("XMMS_EFFECT_echo_plugin_1.2.4", "xmms_effect");
+  g_return_val_if_fail(effect != NULL, -1);
 
   gtk_object_set (GTK_OBJECT (src), "location", argv[1], NULL);
   //gtk_object_set (GTK_OBJECT (src), "filename", "tone://1000", NULL);
@@ -29,9 +35,12 @@ main (int argc,char *argv[])
   g_return_val_if_fail(audiosink != NULL, -1);
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
+  gst_bin_add(GST_BIN(bin),GST_ELEMENT(effect));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(audiosink));
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
+                  gst_element_get_pad(effect,"sink"));
+  gst_pad_connect(gst_element_get_pad(effect,"src"),
                   gst_element_get_pad(audiosink,"sink"));
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
