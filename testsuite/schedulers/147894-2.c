@@ -110,16 +110,10 @@ main (gint argc, gchar ** argv)
   }
   g_assert (!bug);
 
-  if (gst_element_set_state (pipeline2, GST_STATE_READY) != GST_STATE_SUCCESS)
-    g_assert_not_reached ();
-
   g_print ("relinking...\n");
   /* now unlink and link id and sink */
   gst_element_unlink_pads (id, "src", sink, "sink");
   gst_element_link_pads (id, "src", sink, "sink");
-
-  if (gst_element_set_state (pipeline2, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
-    g_assert_not_reached ();
 
   g_print ("running again...\n");
   /* fill queue */

@@ -134,7 +134,6 @@ main (gint argc, gchar ** argv)
 
   g_print ("cleaning up...\n");
   gst_object_unref (GST_OBJECT (pipeline));
-  gst_object_unref (GST_OBJECT (id));
   src = id = sink = pipeline = NULL;
 
   g_print ("done.\n");
