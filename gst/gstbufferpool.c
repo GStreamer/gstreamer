@@ -83,7 +83,7 @@ gst_buffer_pool_ref (GstBufferPool *pool)
 #else
   g_return_if_fail (pool->refcount > 0);
   GST_BUFFER_POOL_LOCK (pool);
-  buffer->refcount++;
+  pool->refcount++;
   GST_BUFFER_POOL_UNLOCK (pool);
 #endif
 }
