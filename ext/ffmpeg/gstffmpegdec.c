@@ -240,11 +240,10 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
 			  AVFrame        *picture)
 {
   GstBuffer *buf = NULL;
-  gint hor_chr_dec = 0, ver_chr_dec = 0, bpp = 0;
+  gint hor_chr_dec = -1, ver_chr_dec = -1;
   gint width, height;
   gint alignment;
   gulong bufsize = 0;
-  void *base;
 
   /* set alignment */
   if (context->codec_id == CODEC_ID_SVQ1) {
@@ -259,46 +258,31 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
+      bufsize = avpicture_get_size (context->pix_fmt,
+				    width, height);
+
+      /* find out whether we are planar or packed */
       switch (context->pix_fmt) {
         case PIX_FMT_YUV420P:
-          bpp = 12;
-	  hor_chr_dec = ver_chr_dec = 2;
+        case PIX_FMT_YUV422P:
+        case PIX_FMT_YUV444P:
+        case PIX_FMT_YUV410P:
+        case PIX_FMT_YUV411P:
+          avcodec_get_chroma_sub_sample (context->pix_fmt,
+					 &hor_chr_dec, &ver_chr_dec);
           break;
         case PIX_FMT_YUV422:
-          bpp = 16;
-          break;
-        case PIX_FMT_YUV422P:
-          bpp = 16;
-          hor_chr_dec = 2; ver_chr_dec = 1;
-          break;
         case PIX_FMT_RGB24:
         case PIX_FMT_BGR24:
-          bpp = 24;
-          break;
-        case PIX_FMT_YUV444P:
-          bpp = 24;
-          hor_chr_dec = ver_chr_dec = 1;
-          break;
         case PIX_FMT_RGBA32:
-          bpp = 32;
-          break;
-        case PIX_FMT_YUV410P:
-          bpp = 9;
-          hor_chr_dec = ver_chr_dec = 4;
-          break;
-        case PIX_FMT_YUV411P:
-          bpp = 12;
-          hor_chr_dec = 4; ver_chr_dec = 1;
-          break;
         case PIX_FMT_RGB565:
         case PIX_FMT_RGB555:
-          bpp = 16;
+          /* not planar */
           break;
         default:
           g_assert (0);
           break;
       }
-      bufsize = width * height * bpp / 8;
       break;
 
     case CODEC_TYPE_AUDIO:
@@ -314,23 +298,19 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
   buf = gst_buffer_new_and_alloc (bufsize);
 
   /* set up planes */
-  base = GST_BUFFER_DATA (buf);
-  if (hor_chr_dec > 0 && ver_chr_dec > 0) {
+  picture->data[0] = GST_BUFFER_DATA (buf);
+  if (hor_chr_dec >= 0 && ver_chr_dec >= 0) {
     picture->linesize[0] = width;
-    picture->data[0] = base;
+    picture->linesize[1] = width >> hor_chr_dec;
+    picture->linesize[2] = width >> hor_chr_dec;
 
-    base += width * height;
-    picture->linesize[1] = picture->linesize[0] / hor_chr_dec;
-    picture->data[1] = base;
-
-    base += (width * height) / (ver_chr_dec * hor_chr_dec);
-    picture->linesize[2] = picture->linesize[1];
-    picture->data[2] = base;
+    picture->data[1] = picture->data[0] + (width * height);
+    picture->data[2] = picture->data[1] +
+			 ((width * height) >> (ver_chr_dec + hor_chr_dec));
   } else {
     picture->linesize[0] = GST_BUFFER_MAXSIZE (buf) / height;
-    picture->data[0] = base;
-
     picture->linesize[1] = picture->linesize[2] = 0;
+
     picture->data[1] = picture->data[2] = NULL;
   }
   picture->linesize[3] = 0;
