@@ -345,10 +345,17 @@ theora_dec_sink_convert (GstPad * pad,
         case GST_FORMAT_DEFAULT:
         {
           guint ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+          guint rest;
 
+          /* framecount */
           *dest_value = src_value * dec->info.fps_numerator /
               (GST_SECOND * dec->info.fps_denominator);
+
+          /* funny way of calculating granulepos in theora */
+          rest = *dest_value / dec->info.keyframe_frequency_force;
+          *dest_value -= rest;
           *dest_value <<= ilog;
+          *dest_value += rest;
           break;
         }
         default:
@@ -532,15 +539,11 @@ theora_dec_chain (GstPad * pad, GstData * data)
     offset_end = GST_BUFFER_OFFSET_END (buf);
     if (offset_end != -1) {
       dec->granulepos = offset_end;
-      /* granulepos to time */
-      outtime = GST_SECOND * theora_granule_time (&dec->state, dec->granulepos);
-    } else {
-      GstFormat time_format = GST_FORMAT_TIME;
-
-      /* framenumber to time */
-      theora_dec_src_convert (dec->srcpad, GST_FORMAT_DEFAULT,
-          dec->packetno - 3, &time_format, &outtime);
     }
+
+    /* granulepos to time */
+    outtime = GST_SECOND * theora_granule_time (&dec->state, dec->granulepos);
+    dec->granulepos++;
   } else {
     /* we don't know yet */
     outtime = -1;

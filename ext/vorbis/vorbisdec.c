@@ -113,7 +113,7 @@ vorbis_dec_get_formats (GstPad * pad)
     0
   };
   static GstFormat sink_formats[] = {
-    GST_FORMAT_BYTES,
+    /*GST_FORMAT_BYTES, */
     GST_FORMAT_TIME,
     GST_FORMAT_DEFAULT,         /* granulepos or samples */
     0
@@ -153,6 +153,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec)
       (&vorbis_dec_sink_factory), "sink");
   gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
   gst_pad_set_formats_function (dec->sinkpad, vorbis_dec_get_formats);
+  gst_pad_set_convert_function (dec->sinkpad, vorbis_dec_convert);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
@@ -182,6 +183,10 @@ vorbis_dec_convert (GstPad * pad,
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   if (dec->packetno < 1)
+    return FALSE;
+
+  if (dec->sinkpad == pad &&
+      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
     return FALSE;
 
   switch (src_format) {
@@ -366,6 +371,9 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
   packet.bytes = GST_BUFFER_SIZE (buf);
   packet.granulepos = GST_BUFFER_OFFSET_END (buf);
   packet.packetno = vd->packetno++;
+
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
+    vd->granulepos = GST_BUFFER_OFFSET_END (buf);;
 
   /* 
    * FIXME. Is there anyway to know that this is the last packet and
