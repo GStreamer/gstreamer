@@ -63,6 +63,7 @@ typedef struct _GstMatroskaDemux {
   GstMatroskaTrackContext *src[GST_MATROSKA_DEMUX_MAX_STREAMS];
   guint          num_streams,
                  num_v_streams, num_a_streams, num_t_streams;
+  GstClock	*clock;
 
   /* metadata */
   GstCaps       *metadata,
@@ -73,6 +74,13 @@ typedef struct _GstMatroskaDemux {
   /* state */
   GstMatroskaDemuxState state;
   guint          level_up;
+
+  /* did we parse metadata/cues already? */
+  gboolean       metadata_parsed,
+		 index_parsed;
+
+  /* start-of-segment */
+  guint64        segment_start;
 
   /* a cue (index) table */
   GstMatroskaIndex *index;
