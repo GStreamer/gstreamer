@@ -226,7 +226,7 @@ gst_rtpgsmenc_chain (GstPad * pad, GstBuffer * buf)
   memcpy (GST_BUFFER_DATA (outbuf), packet->data, rtp_packet_get_packet_len (packet));
   memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len(packet), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
-  GST_DEBUG (0,"gst_rtpgsmenc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  GST_DEBUG ("gst_rtpgsmenc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
   gst_pad_push (rtpgsmenc->srcpad, outbuf);
 
   ++rtpgsmenc->seq;
@@ -276,7 +276,7 @@ gst_rtpgsmenc_change_state (GstElement * element)
 
   rtpgsmenc = GST_RTP_GSM_ENC (element);
 
-  GST_DEBUG (0, "state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   switch (GST_STATE_TRANSITION (element)) {

@@ -205,7 +205,7 @@ gst_rtpgsmparse_chain (GstPad * pad, GstBuffer * buf)
 
   memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet), GST_BUFFER_SIZE (outbuf));
         
-  GST_DEBUG (0,"gst_rtpgsmparse_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  GST_DEBUG ("gst_rtpgsmparse_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
 
 /* FIXME: According to RFC 1890, this is required, right? */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -264,7 +264,7 @@ gst_rtpgsmparse_change_state (GstElement * element)
 
   rtpgsmparse = GST_RTP_GSM_PARSE (element);
 
-  GST_DEBUG (0, "state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
