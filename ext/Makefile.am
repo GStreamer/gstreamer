@@ -71,9 +71,9 @@ FLAC_DIR=
 endif
 
 if USE_GNOME_VFS
-GNOME_VFS_DIR=gnomevfs
+GNOMEVFS_DIR=gnomevfs
 else
-GNOME_VFS_DIR=
+GNOMEVFS_DIR=
 endif
 
 if USE_HERMES
