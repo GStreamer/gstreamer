@@ -432,9 +432,10 @@ gst_sdlvideosink_set_property (GObject *object, guint prop_id, const GValue *val
     case ARG_XID:
       sdlvideosink->window_id = g_value_get_int(value);
       break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
-
-  sdlvideosink = GST_SDLVIDEOSINK (object);
 }
 
 
@@ -461,7 +462,7 @@ gst_sdlvideosink_get_property (GObject *object, guint prop_id, GValue *value, GP
       g_value_set_int (value, sdlvideosink->frame_time/1000000);
       break;
     default:
-      /*G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);*/
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
