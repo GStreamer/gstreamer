@@ -1,3 +1,20 @@
+2004-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_get_type):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_get_type),
+	(gst_jpegenc_getcaps):
+          move format setting to inner loop
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_getcaps):
+          use GST_PAD_CAPS if available so that we use already negotiated
+          caps
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse_moov), (qtdemux_parse):
+          extra debugging
+	* sys/qcam/qcam-Linux.c: (qc_lock_wait), (qc_unlock):
+	* sys/qcam/qcam-os.c: (qc_lock_wait), (qc_unlock):
+          move hardcoded path to DEFINE
+
 2004-04-28  David Schleef  <ds@schleef.org>
 
 	* gst/speed/gstspeed.c: (speed_parse_caps):  Fix caps parsing.
