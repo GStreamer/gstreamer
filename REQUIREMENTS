@@ -10,6 +10,8 @@ Required libraries:
 glib v1.2.0 or better
 gtk+ v1.2.0 or better
 libxml          (also called gnome-xml, available from http://xmlsoft.org/)
+libHermes	(for gstplay)
+			http://www.clanlib.org/hermes/
 
 These libraries are all central parts of gnome, and are available from the
 ftp.gnome.org or its mirrors, amongst other places.
@@ -19,17 +21,43 @@ Optional libraries:
 gdk_pixbuf
 libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
 libglade	(for gstplay, gsteditor)
-libHermes	(for gstplay)
 
 libghttp	(for httpsrc)
+			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
 libXv		(for videosink)
 libxaudio	(for xa mp3 decoder)
+			http://www.xaudio.com/
 libvorbis	(for vorbisenc, vorbisdec)
+			http://www.xiph.org/ogg/vorbis/index.html
 libcdparanoia	(for cdparanoia ripper)
+			http://www.xiph.org/paranoia/index.html
 liblame		(for lame mp3 encoder)
+			http://www.mp3dev.org/mp3/
 libshout	(for the shoutcast plugin)
+			http://www.icecast.org
 libasound	(for the alsa src/sink plugin)
-librtp		(for the rtp sink plugin)
+			http://alsa-project.org/
+librtp		(for the rtp sink plugin, shipped with Gnome-O-Phone)
+			http://sourceforge.net/projects/gphone
+aalib		(for the aa sink plugin)
+			http://aa-project.sourceforge.net/aalib/
+aRts		(for the arts plugin wrapper, and the artsd sink)
+			http://www.arts-project.org/
+raw1394/linux1394	(for the dv plugin)
+			http://linux1394.sourceforge.net/
+decss		(for the dvdsrc)
+			huh, I don't know, sorry (FIXME)
+libesound	(for the esd sink)
+gnome-vfs	(for the gnome-vfs src)
+libgsm		(for the gsm plugin)
+			http://kbs.cs.tu-berlin.de/~jutta/toast.html
+sdl		(for the sdl sink)
+			http://www.libsdl.org
+xmms		(for the xmms plugins wrapper)
+			http://www.xmms.org
+mpeg2dec/ac3dec	(for mpeg2 related plugins and dvd playback)
+			http://linuxvideo.org/mpeg2dec/
+			and http://linuxvideo.org/ac3dec/
 
 for AVI playback you might want to get the windows libraries from
 http://divx.euro.ru/ and put the .dll files in /usr/lib/win32/
