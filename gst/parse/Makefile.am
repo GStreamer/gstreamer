@@ -21,5 +21,5 @@ lex._gst_parse_yy.c: parse.l
 ## this is so make install without a previous make can work, because
 ## this dir needs gstmarshal.h generated
 ../gstmarshal.h:
-	cd .. && make gstmarshal.h
+	cd .. && $(MAKE) gstmarshal.h
 
