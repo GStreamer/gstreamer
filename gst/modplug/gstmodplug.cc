@@ -118,6 +118,7 @@ static void	gst_modplug_get_property	(GObject *object,
 						 GParamSpec *pspec );
 static GstPadLinkReturn
 		gst_modplug_srclink		(GstPad *pad, const GstCaps *caps);
+static GstCaps *gst_modplug_fixate		(GstPad *pad, const GstCaps *caps);
 static void  	gst_modplug_loop          	(GstElement *element);
 static void	gst_modplug_setup 		(GstModPlug *modplug);
 static const GstFormat *
@@ -240,13 +241,13 @@ gst_modplug_init (GstModPlug *modplug)
   gst_element_add_pad (GST_ELEMENT(modplug), modplug->sinkpad);
 
   modplug->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (&modplug_src_template_factory), "src");
-  gst_element_add_pad (GST_ELEMENT(modplug), modplug->srcpad);
   gst_pad_set_link_function (modplug->srcpad, gst_modplug_srclink);
-  
+  gst_pad_set_fixate_function (modplug->srcpad, gst_modplug_fixate);
   gst_pad_set_event_function (modplug->srcpad, (GstPadEventFunction)GST_DEBUG_FUNCPTR(gst_modplug_src_event));
   gst_pad_set_query_function (modplug->srcpad, gst_modplug_src_query);
   gst_pad_set_query_type_function (modplug->srcpad,  (GstPadQueryTypeFunction) GST_DEBUG_FUNCPTR (gst_modplug_get_query_types));
   gst_pad_set_formats_function (modplug->srcpad, (GstPadFormatsFunction)GST_DEBUG_FUNCPTR (gst_modplug_get_formats));
+  gst_element_add_pad (GST_ELEMENT(modplug), modplug->srcpad);
   
   gst_element_set_loop_function (GST_ELEMENT (modplug), gst_modplug_loop);      
   
@@ -460,6 +461,24 @@ gst_modplug_srclink (GstPad *pad, const GstCaps *caps)
   gst_modplug_setup (modplug);
 
   return GST_PAD_LINK_OK;
+}
+
+static GstCaps *
+gst_modplug_fixate (GstPad *pad, const GstCaps *caps)
+{
+  if (gst_caps_is_simple (caps)) {
+    GstCaps *copy;
+    GstStructure *structure;
+    
+    copy = gst_caps_copy (caps);
+    structure = gst_caps_get_structure (copy, 0);
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100))
+      return copy;
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2))
+      return copy;
+    gst_caps_free (copy); 
+  }
+  return NULL;
 }
 
 static void

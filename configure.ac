@@ -1334,11 +1334,16 @@ dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
 GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
-  XIPH_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
-  AS_SCRUB_INCLUDE(VORBIS_CFLAGS)
+  PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0, [
+    HAVE_VORBIS="yes"
+  ], [
+    XIPH_PATH_VORBIS(HAVE_VORBIS="yes", HAVE_VORBIS="no")
+    AS_SCRUB_INCLUDE(VORBIS_CFLAGS)
+  ])
 ])
 if test "x$HAVE_VORBIS" = "xyes"; then
   ac_cflags_save="$CFLAGS"
+  dnl FIXME: does this work on non-gcc? -- Company
   CFLAGS="-Wall -Werror"
   AC_COMPILE_IFELSE(
     AC_LANG_PROGRAM([
@@ -1567,14 +1572,14 @@ dnl #########################
 
 AC_CONFIG_FILES(
 Makefile
+pkgconfig/gstreamer-gconf.pc
+pkgconfig/gstreamer-gconf-uninstalled.pc
+pkgconfig/gstreamer-interfaces.pc
+pkgconfig/gstreamer-interfaces-uninstalled.pc
 pkgconfig/gstreamer-libs.pc
 pkgconfig/gstreamer-libs-uninstalled.pc
 pkgconfig/gstreamer-play.pc
 pkgconfig/gstreamer-play-uninstalled.pc
-pkgconfig/gstreamer-interfaces.pc
-pkgconfig/gstreamer-interfaces-uninstalled.pc
-gst-libs/gst/gconf/gstreamer-gconf.pc
-gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc
 gst-plugins.spec
 gst/Makefile
 gst/ac3parse/Makefile

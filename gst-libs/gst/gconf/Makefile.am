@@ -18,5 +18,3 @@ test_gconf_LDADD = $(GST_LIBS) $(GCONF_LIBS) libgstgconf-@GST_MAJORMINOR@.la
 libgstgconf_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(GCONF_LIBS)
 libgstgconf_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS) $(DIR_CFLAGS)
 libgstgconf_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
-
-EXTRA_DIST = gstreamer-gconf.pc.in gstreamer-gconf-uninstalled.pc.in
