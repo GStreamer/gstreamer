@@ -1,5 +1,10 @@
 2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* ext/lame/gstlame.c: (gst_lame_src_getcaps), (gst_lame_init):
+	added getcaps function so samplerate doesntget fixated to silly values
+
+2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* ext/lame/gstlame.c: (gst_lame_src_link):
 	revert previous fix
 
