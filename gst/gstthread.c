@@ -166,7 +166,7 @@ gst_thread_dispose (GObject *object)
 
   GST_DEBUG (GST_CAT_THREAD, "Disposing of thread");
   pthread_attr_getstack (&thread->attr, &stack,  (size_t *) &stacksize);
-  GST_DEBUG (GST_CAT_THREAD, "undng posix_memalign at %p of size %ld\n",
+  GST_DEBUG (GST_CAT_THREAD, "undoing posix_memalign at %p of size %ld",
             stack, stacksize);
   free (stack);
  

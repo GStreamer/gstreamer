@@ -500,10 +500,10 @@ cothread_stackquery (void **stack, glong* stacksize)
     *stacksize = 0;
     return FALSE;
   }
-  GST_DEBUG (GST_CAT_THREAD, "have  posix_memalign at %p of size %d\n",
+  GST_DEBUG (GST_CAT_THREAD, "have  posix_memalign at %p of size %d",
            (void *) *stack, STACK_SIZE);
   GST_DEBUG (GST_CAT_COTHREADS, 
-             "Got new cothread stack from %p to %p (size %ld)\n",
+             "Got new cothread stack from %p to %p (size %ld)",
              *stack, *stack + STACK_SIZE - 1, (long) STACK_SIZE);
   *stacksize = STACK_SIZE;
   return TRUE;
