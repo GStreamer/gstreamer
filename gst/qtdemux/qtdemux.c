@@ -353,6 +353,8 @@ static void gst_qtdemux_loop_header (GstElement *element)
       case GST_MAKE_FOURCC('m','d','a','t'):
       case GST_MAKE_FOURCC('f','r','e','e'):
       case GST_MAKE_FOURCC('w','i','d','e'):
+      case GST_MAKE_FOURCC('P','I','C','T'):
+      case GST_MAKE_FOURCC('p','n','o','t'):
         break;
       case GST_MAKE_FOURCC('m','o','o','v'):
       {
@@ -1520,19 +1522,19 @@ static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
   switch(fourcc){
     case GST_MAKE_FOURCC('j','p','e','g'):
       /* JPEG */
-      return GST_CAPS_NEW("jpeg_caps","video/x-jpeg",
+      return GST_CAPS_NEW("jpeg_caps","image/jpeg",
           "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
           "width", GST_PROPS_INT_RANGE (16, 4096),
           "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('m','j','p','a'):
       /* Motion-JPEG (format A) */
-      return GST_CAPS_NEW("mjpa_caps","video/x-jpeg",
+      return GST_CAPS_NEW("mjpa_caps","image/jpeg",
           "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
           "width", GST_PROPS_INT_RANGE (16, 4096),
           "height", GST_PROPS_INT_RANGE (16, 4096));
     case GST_MAKE_FOURCC('m','j','p','b'):
       /* Motion-JPEG (format B) */
-      return GST_CAPS_NEW("mjpb_caps","video/x-jpeg",
+      return GST_CAPS_NEW("mjpb_caps","image/jpeg",
           "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
           "width", GST_PROPS_INT_RANGE (16, 4096),
           "height", GST_PROPS_INT_RANGE (16, 4096));
