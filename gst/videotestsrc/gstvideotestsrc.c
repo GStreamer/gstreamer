@@ -251,8 +251,8 @@ gst_videotestsrc_src_link (GstPad * pad, const GstCaps * caps)
 
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
-  GST_DEBUG_OBJECT (videotestsrc, "size %dx%d", videotestsrc->width,
-      videotestsrc->height);
+  GST_DEBUG_OBJECT (videotestsrc, "size %dx%d, %f fps", videotestsrc->width,
+      videotestsrc->height, videotestsrc->rate);
 
   return GST_PAD_LINK_OK;
 }
@@ -284,6 +284,7 @@ gst_videotestsrc_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       videotestsrc->timestamp_offset = 0;
+      videotestsrc->running_time = 0;
       videotestsrc->n_frames = 0;
       break;
     case GST_STATE_READY_TO_NULL:
@@ -411,8 +412,7 @@ gst_videotestsrc_src_query (GstPad * pad,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_TIME:
-          *value =
-              videotestsrc->n_frames * GST_SECOND / (double) videotestsrc->rate;
+          *value = videotestsrc->running_time;
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:       /* frames */
@@ -447,6 +447,7 @@ gst_videotestsrc_handle_src_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
   GstVideotestsrc *videotestsrc;
   gint64 new_n_frames;
+  GstClockTime new_running_time;
 
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -457,8 +458,11 @@ gst_videotestsrc_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
+      /* since we don't do bookkeeping, we just assign a useful meaning
+       * to the time/frame relation after seeking based on current fps */
       switch (GST_EVENT_SEEK_FORMAT (event)) {
         case GST_FORMAT_TIME:
+          new_running_time = GST_EVENT_SEEK_OFFSET (event);
           new_n_frames =
               GST_EVENT_SEEK_OFFSET (event) * (double) videotestsrc->rate /
               GST_SECOND;
@@ -467,6 +471,8 @@ gst_videotestsrc_handle_src_event (GstPad * pad, GstEvent * event)
           break;
         case GST_FORMAT_DEFAULT:
           new_n_frames = GST_EVENT_SEEK_OFFSET (event);
+          new_running_time = GST_EVENT_SEEK_OFFSET (event) /
+              (double) videotestsrc->rate * GST_SECOND;
           videotestsrc->segment_start_frame = -1;
           videotestsrc->segment_end_frame = -1;
           break;
@@ -576,16 +582,16 @@ gst_videotestsrc_get (GstPad * pad)
       videotestsrc->width, videotestsrc->height);
 
   GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
-      (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
-  videotestsrc->n_frames++;
+      videotestsrc->running_time;
+  GST_BUFFER_DURATION (buf) = GST_SECOND / (double) videotestsrc->rate;
   if (videotestsrc->sync) {
     /* FIXME this is not correct if we do QoS */
     if (videotestsrc->clock) {
       gst_element_wait (GST_ELEMENT (videotestsrc), GST_BUFFER_TIMESTAMP (buf));
     }
   }
-  GST_BUFFER_DURATION (buf) = GST_SECOND / (double) videotestsrc->rate;
-
+  videotestsrc->n_frames++;
+  videotestsrc->running_time += GST_BUFFER_DURATION (buf);
   return GST_DATA (buf);
 }
 
