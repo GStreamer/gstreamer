@@ -70,7 +70,7 @@ gstutils
 @type: 
 @type_as_function: 
 @parent_type: 
-@parent_type_macro:
+@parent_type_macro: 
 @additional_initializations: 
 
 
@@ -104,5 +104,131 @@ gstutils
 @name: 
 @args: 
 @def_return: 
+
+
+<!-- ##### MACRO GST_HAVE_UNALIGNED_ACCESS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_READ_UINT8 ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_READ_UINT16_LE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_READ_UINT16_BE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_READ_UINT32_LE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_READ_UINT32_BE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_READ_UINT64_LE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_READ_UINT64_BE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT8 ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT16_LE ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT16_BE ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT32_LE ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT32_BE ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT64_LE ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
+
+
+<!-- ##### MACRO GST_WRITE_UINT64_BE ##### -->
+<para>
+
+</para>
+
+@data: 
+@num: 
 
 

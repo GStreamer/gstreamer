@@ -243,6 +243,12 @@ case "$host" in
 esac
 
 GST_UNALIGNED_ACCESS()
+if test x${as_cv_unaligned_access} = xyes ; then
+  GST_HAVE_UNALIGNED_ACCESS_DEFINE="#define GST_HAVE_UNALIGNED_ACCESS 1"
+else
+  GST_HAVE_UNALIGNED_ACCESS_DEFINE="#define GST_HAVE_UNALIGNED_ACCESS 0"
+fi
+AC_SUBST(GST_HAVE_UNALIGNED_ACCESS_DEFINE)
 
 dnl Check for essential libraries first:
 dnl ====================================
@@ -577,6 +583,7 @@ AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
+#GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* \$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 

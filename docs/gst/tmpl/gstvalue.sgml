@@ -230,6 +230,15 @@ GValue implementations specific to GStreamer
 </para>
 
 
+<!-- ##### FUNCTION gst_type_is_fixed ##### -->
+<para>
+
+</para>
+
+@type: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_value_register ##### -->
 <para>
 

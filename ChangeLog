@@ -1,3 +1,25 @@
+2004-04-19  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add test for allowing unaligned access.  Add define
+	to put in gstconfig.h.
+	* docs/gst/gstreamer-sections.txt: New symbols
+	* docs/gst/tmpl/gstcompat.sgml: Check in changes made by gtkdoc
+	* docs/gst/tmpl/gstfilesrc.sgml:
+	* docs/gst/tmpl/gstparse.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	* gst/gstconfig.h.in: Add GST_HAVE_UNALIGNED_ACCESS
+	* gst/gstutils.h: Add macros for unaligned memory access.  Useful
+	on most !i386/!powerpc architectures.  From Daniel Gazard
+	<daniel.gazard@free.fr>.  (bug #140156)
+	* po/af.po: Check in changes made by gettext.
+	* po/az.po:
+	* po/fr.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+
 2004-04-20  Benjamin Otte  <otte@gnome.org>
 
 	* gst/schedulers/entryscheduler.c: 

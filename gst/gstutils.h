@@ -102,6 +102,127 @@ type_as_function ## _get_type (void)						\
 	((parent_class_cast(parent_class)->name != NULL) ?			\
 	 parent_class_cast(parent_class)->name args : def_return)
 
+/* Define possibly unaligned memory access method whether the type of
+ * architecture. */
+#if GST_HAVE_UNALIGNED_ACCESS
+
+#define _GST_GET(__data, __size, __end) \
+    (GUINT##__size##_FROM_##__end (* ((guint##__size *) (__data))))
+
+#define GST_READ_UINT64_BE(data)	_GST_GET (data, 64, BE)
+#define GST_READ_UINT64_LE(data)	_GST_GET (data, 64, LE)
+#define GST_READ_UINT32_BE(data)	_GST_GET (data, 32, BE)
+#define GST_READ_UINT32_LE(data)        _GST_GET (data, 32, LE)
+#define GST_READ_UINT16_BE(data)        _GST_GET (data, 16, BE)
+#define GST_READ_UINT16_LE(data)        _GST_GET (data, 16, LE)
+#define GST_READ_UINT8(data) 		(* ((guint8 *) (data)))
+
+#define _GST_PUT(__data, __size, __end, __num) \
+    ((* (guint##__size *) (__data)) = GUINT##__size##_TO_##__end (__num))
+
+#define GST_WRITE_UINT64_BE(data, num)	_GST_PUT(data, 64, BE, num)
+#define GST_WRITE_UINT64_LE(data, num)  _GST_PUT(data, 64, LE, num)
+#define GST_WRITE_UINT32_BE(data, num)  _GST_PUT(data, 32, BE, num)
+#define GST_WRITE_UINT32_LE(data, num)  _GST_PUT(data, 32, LE, num)
+#define GST_WRITE_UINT16_BE(data, num)  _GST_PUT(data, 16, BE, num)
+#define GST_WRITE_UINT16_LE(data, num)  _GST_PUT(data, 16, LE, num)
+#define GST_WRITE_UINT8(data, num) 	((* (guint8 *) (data)) = (num))
+
+#else /* GST_HAVE_UNALIGNED_ACCESS */
+
+#define _GST_GET(__data, __idx, __size, __shift) \
+    (((guint##__size) (((guint8 *) (__data))[__idx])) << __shift)
+
+#define GST_READ_UINT64_BE(data)	(_GST_GET (data, 0, 64, 56) | \
+					 _GST_GET (data, 1, 64, 48) | \
+					 _GST_GET (data, 2, 64, 40) | \
+					 _GST_GET (data, 3, 64, 32) | \
+					 _GST_GET (data, 4, 64, 24) | \
+					 _GST_GET (data, 5, 64, 16) | \
+					 _GST_GET (data, 6, 64,  8) | \
+					 _GST_GET (data, 7, 64,  0))
+
+#define GST_READ_UINT64_LE(data)	(_GST_GET (data, 7, 64, 56) | \
+					 _GST_GET (data, 6, 64, 48) | \
+					 _GST_GET (data, 5, 64, 40) | \
+					 _GST_GET (data, 4, 64, 32) | \
+					 _GST_GET (data, 3, 64, 24) | \
+					 _GST_GET (data, 2, 64, 16) | \
+					 _GST_GET (data, 1, 64,  8) | \
+					 _GST_GET (data, 0, 64,  0))
+
+#define GST_READ_UINT32_BE(data)	(_GST_GET (data, 0, 32, 24) | \
+					 _GST_GET (data, 1, 32, 16) | \
+					 _GST_GET (data, 2, 32,  8) | \
+					 _GST_GET (data, 3, 32,  0))
+
+#define GST_READ_UINT32_LE(data)	(_GST_GET (data, 3, 32, 24) | \
+					 _GST_GET (data, 2, 32, 16) | \
+					 _GST_GET (data, 1, 32,  8) | \
+					 _GST_GET (data, 0, 32,  0))
+
+#define GST_READ_UINT16_BE(data)	(_GST_GET (data, 0, 16,  8) | \
+					 _GST_GET (data, 1, 16,  0))
+
+#define GST_READ_UINT16_LE(data)	(_GST_GET (data, 1, 16,  8) | \
+					 _GST_GET (data, 0, 16,  0))
+
+#define GST_READ_UINT8(data)		(_GST_GET (data, 0,  8,  0))
+
+#define _GST_PUT(__data, __idx, __size, __shift, __num) \
+    (((guint8 *) (__data))[__idx] = (((guint##size) __num) >> __shift) & 0xff)
+
+#define GST_WRITE_UINT64_BE(data, num)	do { \
+					  _GST_PUT (data, 0, 64, 56, num); \
+					  _GST_PUT (data, 1, 64, 48, num); \
+					  _GST_PUT (data, 2, 64, 40, num); \
+					  _GST_PUT (data, 3, 64, 32, num); \
+					  _GST_PUT (data, 4, 64, 24, num); \
+					  _GST_PUT (data, 5, 64, 16, num); \
+					  _GST_PUT (data, 6, 64,  8, num); \
+					  _GST_PUT (data, 7, 64,  0, num); \
+					} while (0)
+
+#define GST_WRITE_UINT64_LE(data, num)	do { \
+					  _GST_PUT (data, 0, 64,  0, num); \
+					  _GST_PUT (data, 1, 64,  8, num); \
+					  _GST_PUT (data, 2, 64, 16, num); \
+					  _GST_PUT (data, 3, 64, 24, num); \
+					  _GST_PUT (data, 4, 64, 32, num); \
+					  _GST_PUT (data, 5, 64, 40, num); \
+					  _GST_PUT (data, 6, 64, 48, num); \
+					  _GST_PUT (data, 7, 64, 56, num); \
+					} while (0)
+
+#define GST_WRITE_UINT32_BE(data, num)	do { \
+					  _GST_PUT (data, 0, 32, 24, num); \
+					  _GST_PUT (data, 1, 32, 16, num); \
+					  _GST_PUT (data, 2, 32,  8, num); \
+					  _GST_PUT (data, 3, 32,  0, num); \
+					} while (0)
+
+#define GST_WRITE_UINT32_LE(data, num)	do { \
+					  _GST_PUT (data, 0, 32,  0, num); \
+					  _GST_PUT (data, 1, 32,  8, num); \
+					  _GST_PUT (data, 2, 32, 16, num); \
+					  _GST_PUT (data, 3, 32, 24, num); \
+					} while (0)
+
+#define GST_WRITE_UINT16_BE(data, num)	do { \
+					  _GST_PUT (data, 0, 16,  8, num); \
+					  _GST_PUT (data, 1, 16,  0, num); \
+					} while (0)
+
+#define GST_WRITE_UINT16_LE(data, num)	do { \
+					  _GST_PUT (data, 0, 16,  0, num); \
+					  _GST_PUT (data, 1, 16,  8, num); \
+					} while (0)
+
+#define GST_WRITE_UINT8(data, num)	do { \
+					  _GST_PUT (data, 0,  8,  0, num); \
+					} while (0)
+
+#endif /* GST_HAVE_UNALIGNED_ACCESS */
 
 G_END_DECLS
 

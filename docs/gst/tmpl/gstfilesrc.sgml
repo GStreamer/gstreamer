@@ -33,7 +33,7 @@ and subbuffers.
 @using_mmap: 
 @mapbuf: 
 @mapsize: 
-@seek_happened: 
+@need_discont: 
 @need_flush: 
 
 <!-- ##### ENUM GstFileSrcFlags ##### -->

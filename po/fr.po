@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-14 18:56+0200\n"
+"POT-Creation-Date: 2004-04-16 20:18-0700\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -585,38 +585,38 @@ msgstr ", "
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:254
+#: gst/elements/gstfilesink.c:257
 #, fuzzy
 msgid "No file name specified for writing."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesink.c:261
+#: gst/elements/gstfilesink.c:264
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:280
+#: gst/elements/gstfilesink.c:283
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
-#: gst/elements/gstfilesink.c:428
+#: gst/elements/gstfilesink.c:349 gst/elements/gstfilesink.c:380
+#: gst/elements/gstfilesink.c:432
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:721 gst/elements/gstmultifilesrc.c:247
+#: gst/elements/gstfilesrc.c:719 gst/elements/gstmultifilesrc.c:247
 #, fuzzy
 msgid "No file name specified for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesrc.c:735 gst/elements/gstmultifilesrc.c:255
+#: gst/elements/gstfilesrc.c:733 gst/elements/gstmultifilesrc.c:255
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesrc.c:746
+#: gst/elements/gstfilesrc.c:744
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr ""
@@ -766,6 +766,7 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERREUR: pas d'element tube de plus haut niveau dans le fichier '%s'.\n"
 
 #: tools/gst-launch.c:123
+#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr ""
 "AVERTISSEMENT: actuellement seul un element tube de plus haut niveau est "
@@ -831,6 +832,7 @@ msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERREUR: le tube n'a pas pu etre construit: %s.\n"
 
 #: tools/gst-launch.c:442
+#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERREUR: le tube n'a pas pu etre construit.\n"
 
@@ -840,18 +842,22 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVERTISSEMENT: tube erroné: %s\n"
 
 #: tools/gst-launch.c:447
+#, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Tentative d'execution malgrè tout.\n"
 
 #: tools/gst-launch.c:475
+#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERREUR: l'element 'tube' est introuvable.\n"
 
 #: tools/gst-launch.c:482
+#, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "EXECUTION du tube en cours ...\n"
 
 #: tools/gst-launch.c:485
+#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERREUR: le tube refuse de s'executer.\n"
 

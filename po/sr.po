@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-14 18:56+0200\n"
+"POT-Creation-Date: 2004-04-16 20:18-0700\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -566,36 +566,36 @@ msgstr ", "
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "Није присутан елемент за баратање током МИМЕ врсте %s."
 
-#: gst/elements/gstfilesink.c:254
+#: gst/elements/gstfilesink.c:257
 msgid "No file name specified for writing."
 msgstr "Није наведено име датотеке за упис."
 
-#: gst/elements/gstfilesink.c:261
+#: gst/elements/gstfilesink.c:264
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#: gst/elements/gstfilesink.c:280
+#: gst/elements/gstfilesink.c:283
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
-#: gst/elements/gstfilesink.c:428
+#: gst/elements/gstfilesink.c:349 gst/elements/gstfilesink.c:380
+#: gst/elements/gstfilesink.c:432
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при упису у датотеку „%s“."
 
-#: gst/elements/gstfilesrc.c:721 gst/elements/gstmultifilesrc.c:247
+#: gst/elements/gstfilesrc.c:719 gst/elements/gstmultifilesrc.c:247
 msgid "No file name specified for reading."
 msgstr "Није наведено име датотеке за читање."
 
-#: gst/elements/gstfilesrc.c:735 gst/elements/gstmultifilesrc.c:255
+#: gst/elements/gstfilesrc.c:733 gst/elements/gstmultifilesrc.c:255
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: gst/elements/gstfilesrc.c:746
+#: gst/elements/gstfilesrc.c:744
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr "Датотека „%s“ није обична датотека."
@@ -744,6 +744,7 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
 
 #: tools/gst-launch.c:123
+#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
 
@@ -804,6 +805,7 @@ msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: не могу да саставим цевовод: %s.\n"
 
 #: tools/gst-launch.c:442
+#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: не могу да саставим цевовод.\n"
 
@@ -813,18 +815,22 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "УПОЗОРЕЊЕ: неисправан цевовод: %s\n"
 
 #: tools/gst-launch.c:447
+#, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Ипак покушавам да покренем.\n"
 
 #: tools/gst-launch.c:475
+#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: елемент „pipeline“ није нађен.\n"
 
 #: tools/gst-launch.c:482
+#, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
 
 #: tools/gst-launch.c:485
+#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 

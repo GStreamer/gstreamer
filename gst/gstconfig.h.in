@@ -56,6 +56,9 @@
 /* printf extension format */
 @GST_PRINTF_EXTENSION_FORMAT_DEFINE@
 
+/* whether or not the CPU supports unaligned access */
+@GST_HAVE_UNALIGNED_ACCESS_DEFINE@
+
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
 
 #if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
