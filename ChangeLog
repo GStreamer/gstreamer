@@ -133,7 +133,6 @@
 
 	* lots of build fixes for 0.3.0 release
 
->>>>>>> 1.3.2.2
 2001-08-15 23:43  cael
 
 	* gstplay/: ChangeLog, gstmediaplay.c, gstplay.c: Added hacky check
