@@ -2,7 +2,7 @@ filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstelements.la
 
-if HAVE_LIBGHTTP
+if USE_LIBGHTTP
 GSTHTTPSRC=gsthttpsrc.c
 else
 GSTHTTPSRC=
