@@ -1,6 +1,7 @@
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
+#               2004 Johan Dahlin
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -20,13 +21,38 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 #
 
-import argtypes
+from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, matcher
 
-arg = argtypes.UInt64Arg()
-argtypes.matcher.register('GstClockTime', arg)
+class GstDataPtrArg(ArgType):
+    normal = ('    if (!pygst_data_from_pyobject(py_%(name)s, &%(name)s))\n'
+              '        return NULL;\n')
+    null =   ('    if (py_%(name)s == Py_None)\n'
+              '        %(name)s = NULL;\n'
+              '    else if (pyst_data_from_pyobject(py_%(name)s, &%(name)s_rect))\n'
+              '        %(name)s = &%(name)s_rect;\n'
+              '    else\n'
+              '            return NULL;\n')
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        if pnull:
+            info.varlist.add('GstData', pname + '_data')
+            info.varlist.add('GstData', '*' + pname)
+            info.varlist.add('PyObject', '*py_' + pname + ' = Py_None')
+            info.add_parselist('O', ['&py_' + pname], [pname])
+            info.arglist.append(pname)
+            info.codebefore.append(self.null % {'name':  pname})
+        else:
+            info.varlist.add('GstData', pname)
+            info.varlist.add('PyObject', '*py_' + pname)
+            info.add_parselist('O', ['&py_' + pname], [pname])
+            info.arglist.append('&' + pname)
+            info.codebefore.append(self.normal % {'name':  pname})
 
-arg = argtypes.Int64Arg()
-argtypes.matcher.register('GstClockTimeDiff', arg)
+arg = GstDataPtrArg()
+matcher.register('GstData*', arg)
+matcher.register('GstClockTime', UInt64Arg())
+matcher.register('GstClockTimeDiff', Int64Arg())
 
-arg = argtypes.PointerArg('gpointer', 'G_TYPE_POINTER')
-argtypes.matcher.register('GstClockID', arg)
+arg = PointerArg('gpointer', 'G_TYPE_POINTER')
+matcher.register('GstClockID', arg)
+
+del arg

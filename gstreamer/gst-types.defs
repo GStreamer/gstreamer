@@ -1,0 +1,848 @@
+;; -*- scheme -*-
+
+; object definitions ...
+(define-object Object
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstObject")
+  (gtype-id "GST_TYPE_OBJECT")
+)
+
+(define-object Index
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstIndex")
+  (gtype-id "GST_TYPE_INDEX")
+)
+
+(define-object Element
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstElement")
+  (gtype-id "GST_TYPE_ELEMENT")
+)
+
+(define-object Bin
+  (in-module "Gst")
+  (parent "GstElement")
+  (c-name "GstBin")
+  (gtype-id "GST_TYPE_BIN")
+)
+
+(define-object Clock
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstClock")
+  (gtype-id "GST_TYPE_CLOCK")
+)
+
+(define-object Pad
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstPad")
+  (gtype-id "GST_TYPE_PAD")
+)
+
+(define-object GhostPad
+  (in-module "Gst")
+  (parent "GstPad")
+  (c-name "GstGhostPad")
+  (gtype-id "GST_TYPE_GHOST_PAD")
+)
+
+(define-object PadTemplate
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstPadTemplate")
+  (gtype-id "GST_TYPE_PAD_TEMPLATE")
+)
+
+(define-object Pipeline
+  (in-module "Gst")
+  (parent "GstBin")
+  (c-name "GstPipeline")
+  (gtype-id "GST_TYPE_PIPELINE")
+)
+
+(define-object PluginFeature
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstPluginFeature")
+  (gtype-id "GST_TYPE_PLUGIN_FEATURE")
+)
+
+(define-object IndexFactory
+  (in-module "Gst")
+  (parent "GstPluginFeature")
+  (c-name "GstIndexFactory")
+  (gtype-id "GST_TYPE_INDEX_FACTORY")
+)
+
+(define-object ElementFactory
+  (in-module "Gst")
+  (parent "GstPluginFeature")
+  (c-name "GstElementFactory")
+  (gtype-id "GST_TYPE_ELEMENT_FACTORY")
+)
+
+(define-object Queue
+  (in-module "Gst")
+  (parent "GstElement")
+  (c-name "GstQueue")
+  (gtype-id "GST_TYPE_QUEUE")
+)
+
+(define-object RealPad
+  (in-module "Gst")
+  (parent "GstPad")
+  (c-name "GstRealPad")
+  (gtype-id "GST_TYPE_REAL_PAD")
+)
+
+(define-object Registry
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstRegistry")
+  (gtype-id "GST_TYPE_REGISTRY")
+)
+
+(define-object Scheduler
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstScheduler")
+  (gtype-id "GST_TYPE_SCHEDULER")
+)
+
+(define-object SchedulerFactory
+  (in-module "Gst")
+  (parent "GstPluginFeature")
+  (c-name "GstSchedulerFactory")
+  (gtype-id "GST_TYPE_SCHEDULER_FACTORY")
+)
+
+(define-object SystemClock
+  (in-module "Gst")
+  (parent "GstClock")
+  (c-name "GstSystemClock")
+  (gtype-id "GST_TYPE_SYSTEM_CLOCK")
+)
+
+(define-object Thread
+  (in-module "Gst")
+  (parent "GstBin")
+  (c-name "GstThread")
+  (gtype-id "GST_TYPE_THREAD")
+)
+
+(define-object TypeFindFactory
+  (in-module "Gst")
+  (parent "GstPluginFeature")
+  (c-name "GstTypeFindFactory")
+  (gtype-id "GST_TYPE_TYPE_FIND_FACTORY")
+)
+
+(define-object XML
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstXML")
+  (gtype-id "GST_TYPE_XML")
+)
+
+;;
+;; Boxed types
+;;
+
+(define-boxed Buffer
+  (in-module "Gst")
+  (c-name "GstBuffer")
+  (gtype-id "GST_TYPE_BUFFER")
+  (copy-func "gst_buffer_copy")
+  (release-func "gst_buffer_free")
+)
+
+(define-boxed Caps
+  (in-module "Gst")
+  (c-name "GstCaps")
+  (gtype-id "GST_TYPE_CAPS")
+)
+
+;(define-boxed Data
+;  (in-module "Gst")
+;  (c-name "GstData")
+;  (gtype-id "GST_TYPE_DATA")
+;  (copy-func "gst_data_copy")
+;  (release-func "gst_data_free")
+;)
+
+(define-boxed Event
+  (in-module "Gst")
+  (c-name "GstEvent")
+  (gtype-id "GST_TYPE_EVENT")
+  (copy-func "gst_event_copy")
+  (release-func "gst_event_free")
+)
+
+
+;;
+;; 0.7 Boxed types
+;;
+
+(define-boxed Structure
+  (in-module "Gst")
+  (c-name "GstStructure")
+  (gtype-id "GST_TYPE_STRUCTURE")
+)
+
+(define-boxed TagList
+  (in-module "Gst")
+  (c-name "GstTagList")
+  (gtype-id "GST_TYPE_TAG_LIST")
+)
+
+
+;; Enumerations and flags ...
+
+(define-enum BinFlags
+  (in-module "Gst")
+  (c-name "GstBinFlags")
+  (gtype-id "GST_TYPE_BIN_FLAGS")
+  (values
+    '("flag-manager" "GST_BIN_FLAG_MANAGER")
+    '("self-schedulable" "GST_BIN_SELF_SCHEDULABLE")
+    '("flag-prefer-cothreads" "GST_BIN_FLAG_PREFER_COTHREADS")
+    '("flag-fixed-clock" "GST_BIN_FLAG_FIXED_CLOCK")
+    '("flag-last" "GST_BIN_FLAG_LAST")
+  )
+)
+
+(define-enum BufferFlag
+  (in-module "Gst")
+  (c-name "GstBufferFlag")
+  (gtype-id "GST_TYPE_BUFFER_FLAG")
+  (values
+    '("readonly" "GST_BUFFER_READONLY")
+    '("subbuffer" "GST_BUFFER_SUBBUFFER")
+    '("original" "GST_BUFFER_ORIGINAL")
+    '("dontfree" "GST_BUFFER_DONTFREE")
+    '("key-unit" "GST_BUFFER_KEY_UNIT")
+    '("dontkeep" "GST_BUFFER_DONTKEEP")
+    '("flag-last" "GST_BUFFER_FLAG_LAST")
+  )
+)
+
+(define-enum ClockEntryStatus
+  (in-module "Gst")
+  (c-name "GstClockEntryStatus")
+  (gtype-id "GST_TYPE_CLOCK_ENTRY_STATUS")
+  (values
+    '("ok" "GST_CLOCK_ENTRY_OK")
+    '("early" "GST_CLOCK_ENTRY_EARLY")
+    '("restart" "GST_CLOCK_ENTRY_RESTART")
+  )
+)
+
+(define-enum ClockEntryType
+  (in-module "Gst")
+  (c-name "GstClockEntryType")
+  (gtype-id "GST_TYPE_CLOCK_ENTRY_TYPE")
+  (values
+    '("single" "GST_CLOCK_ENTRY_SINGLE")
+    '("periodic" "GST_CLOCK_ENTRY_PERIODIC")
+  )
+)
+
+(define-enum ClockReturn
+  (in-module "Gst")
+  (c-name "GstClockReturn")
+  (gtype-id "GST_TYPE_CLOCK_RETURN")
+  (values
+    '("stopped" "GST_CLOCK_STOPPED")
+    '("timeout" "GST_CLOCK_TIMEOUT")
+    '("early" "GST_CLOCK_EARLY")
+    '("error" "GST_CLOCK_ERROR")
+    '("unsupported" "GST_CLOCK_UNSUPPORTED")
+  )
+)
+
+(define-flags ClockFlags
+  (in-module "Gst")
+  (c-name "GstClockFlags")
+  (gtype-id "GST_TYPE_CLOCK_FLAGS")
+  (values
+    '("do-single-sync" "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC")
+    '("do-single-async" "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC")
+    '("do-periodic-sync" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC")
+    '("do-periodic-async" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC")
+    '("set-resolution" "GST_CLOCK_FLAG_CAN_SET_RESOLUTION")
+    '("set-speed" "GST_CLOCK_FLAG_CAN_SET_SPEED")
+  )
+)
+
+(define-flags CPUFlags
+  (in-module "Gst")
+  (c-name "GstCPUFlags")
+  (gtype-id "GST_TYPE_CPU_FLAGS")
+  (values
+    '("mmx" "GST_CPU_FLAG_MMX")
+    '("sse" "GST_CPU_FLAG_SSE")
+    '("mmxext" "GST_CPU_FLAG_MMXEXT")
+    '("3dnow" "GST_CPU_FLAG_3DNOW")
+  )
+)
+
+(define-enum DataFlags
+  (in-module "Gst")
+  (c-name "GstDataFlags")
+  (gtype-id "GST_TYPE_DATA_FLAGS")
+  (values
+    '("readonly" "GST_DATA_READONLY")
+    '("flag-last" "GST_DATA_FLAG_LAST")
+  )
+)
+
+(define-enum ElementFlags
+  (in-module "Gst")
+  (c-name "GstElementFlags")
+  (gtype-id "GST_TYPE_ELEMENT_FLAGS")
+  (values
+    '("complex" "GST_ELEMENT_COMPLEX")
+    '("decoupled" "GST_ELEMENT_DECOUPLED")
+    '("thread-suggested" "GST_ELEMENT_THREAD_SUGGESTED")
+    '("infinite-loop" "GST_ELEMENT_INFINITE_LOOP")
+    '("new-loopfunc" "GST_ELEMENT_NEW_LOOPFUNC")
+    '("event-aware" "GST_ELEMENT_EVENT_AWARE")
+    '("use-threadsafe-properties" "GST_ELEMENT_USE_THREADSAFE_PROPERTIES")
+    '("scheduler-private1" "GST_ELEMENT_SCHEDULER_PRIVATE1")
+    '("scheduler-private2" "GST_ELEMENT_SCHEDULER_PRIVATE2")
+    '("locked-state" "GST_ELEMENT_LOCKED_STATE")
+    '("in-error" "GST_ELEMENT_IN_ERROR")
+    '("flag-last" "GST_ELEMENT_FLAG_LAST")
+  )
+)
+
+(define-enum CoreError
+  (in-module "Gst")
+  (c-name "GstCoreError")
+  (gtype-id "GST_TYPE_CORE_ERROR")
+  (values
+    '("failed" "GST_CORE_ERROR_FAILED")
+    '("too-lazy" "GST_CORE_ERROR_TOO_LAZY")
+    '("not-implemented" "GST_CORE_ERROR_NOT_IMPLEMENTED")
+    '("state-change" "GST_CORE_ERROR_STATE_CHANGE")
+    '("pad" "GST_CORE_ERROR_PAD")
+    '("thread" "GST_CORE_ERROR_THREAD")
+    '("scheduler" "GST_CORE_ERROR_SCHEDULER")
+    '("negotiation" "GST_CORE_ERROR_NEGOTIATION")
+    '("event" "GST_CORE_ERROR_EVENT")
+    '("seek" "GST_CORE_ERROR_SEEK")
+    '("caps" "GST_CORE_ERROR_CAPS")
+    '("tag" "GST_CORE_ERROR_TAG")
+    '("num-errors" "GST_CORE_ERROR_NUM_ERRORS")
+  )
+)
+
+(define-enum LibraryError
+  (in-module "Gst")
+  (c-name "GstLibraryError")
+  (gtype-id "GST_TYPE_LIBRARY_ERROR")
+  (values
+    '("failed" "GST_LIBRARY_ERROR_FAILED")
+    '("too-lazy" "GST_LIBRARY_ERROR_TOO_LAZY")
+    '("init" "GST_LIBRARY_ERROR_INIT")
+    '("shutdown" "GST_LIBRARY_ERROR_SHUTDOWN")
+    '("settings" "GST_LIBRARY_ERROR_SETTINGS")
+    '("encode" "GST_LIBRARY_ERROR_ENCODE")
+    '("num-errors" "GST_LIBRARY_ERROR_NUM_ERRORS")
+  )
+)
+
+(define-enum ResourceError
+  (in-module "Gst")
+  (c-name "GstResourceError")
+  (gtype-id "GST_TYPE_RESOURCE_ERROR")
+  (values
+    '("failed" "GST_RESOURCE_ERROR_FAILED")
+    '("too-lazy" "GST_RESOURCE_ERROR_TOO_LAZY")
+    '("not-found" "GST_RESOURCE_ERROR_NOT_FOUND")
+    '("busy" "GST_RESOURCE_ERROR_BUSY")
+    '("open-read" "GST_RESOURCE_ERROR_OPEN_READ")
+    '("open-write" "GST_RESOURCE_ERROR_OPEN_WRITE")
+    '("open-read-write" "GST_RESOURCE_ERROR_OPEN_READ_WRITE")
+    '("close" "GST_RESOURCE_ERROR_CLOSE")
+    '("read" "GST_RESOURCE_ERROR_READ")
+    '("write" "GST_RESOURCE_ERROR_WRITE")
+    '("seek" "GST_RESOURCE_ERROR_SEEK")
+    '("sync" "GST_RESOURCE_ERROR_SYNC")
+    '("settings" "GST_RESOURCE_ERROR_SETTINGS")
+    '("num-errors" "GST_RESOURCE_ERROR_NUM_ERRORS")
+  )
+)
+
+(define-enum StreamError
+  (in-module "Gst")
+  (c-name "GstStreamError")
+  (gtype-id "GST_TYPE_STREAM_ERROR")
+  (values
+    '("failed" "GST_STREAM_ERROR_FAILED")
+    '("too-lazy" "GST_STREAM_ERROR_TOO_LAZY")
+    '("not-implemented" "GST_STREAM_ERROR_NOT_IMPLEMENTED")
+    '("type-not-found" "GST_STREAM_ERROR_TYPE_NOT_FOUND")
+    '("wrong-type" "GST_STREAM_ERROR_WRONG_TYPE")
+    '("codec-not-found" "GST_STREAM_ERROR_CODEC_NOT_FOUND")
+    '("decode" "GST_STREAM_ERROR_DECODE")
+    '("encode" "GST_STREAM_ERROR_ENCODE")
+    '("demux" "GST_STREAM_ERROR_DEMUX")
+    '("mux" "GST_STREAM_ERROR_MUX")
+    '("format" "GST_STREAM_ERROR_FORMAT")
+    '("num-errors" "GST_STREAM_ERROR_NUM_ERRORS")
+  )
+)
+
+(define-enum EventType
+  (in-module "Gst")
+  (c-name "GstEventType")
+  (gtype-id "GST_TYPE_EVENT_TYPE")
+  (values
+    '("unknown" "GST_EVENT_UNKNOWN")
+    '("eos" "GST_EVENT_EOS")
+    '("flush" "GST_EVENT_FLUSH")
+    '("empty" "GST_EVENT_EMPTY")
+    '("discontinuous" "GST_EVENT_DISCONTINUOUS")
+    '("qos" "GST_EVENT_QOS")
+    '("seek" "GST_EVENT_SEEK")
+    '("seek-segment" "GST_EVENT_SEEK_SEGMENT")
+    '("segment-done" "GST_EVENT_SEGMENT_DONE")
+    '("size" "GST_EVENT_SIZE")
+    '("rate" "GST_EVENT_RATE")
+    '("filler" "GST_EVENT_FILLER")
+    '("ts-offset" "GST_EVENT_TS_OFFSET")
+    '("interrupt" "GST_EVENT_INTERRUPT")
+    '("navigation" "GST_EVENT_NAVIGATION")
+    '("tag" "GST_EVENT_TAG")
+  )
+)
+
+(define-flags EventFlag
+  (in-module "Gst")
+  (c-name "GstEventFlag")
+  (gtype-id "GST_TYPE_EVENT_FLAG")
+  (values
+    '("event-flag-none" "GST_EVENT_FLAG_NONE")
+    '("rate-flag-negative" "GST_RATE_FLAG_NEGATIVE")
+  )
+)
+
+(define-flags SeekType
+  (in-module "Gst")
+  (c-name "GstSeekType")
+  (gtype-id "GST_TYPE_SEEK_TYPE")
+  (values
+    '("method-cur" "GST_SEEK_METHOD_CUR")
+    '("method-set" "GST_SEEK_METHOD_SET")
+    '("method-end" "GST_SEEK_METHOD_END")
+    '("flag-flush" "GST_SEEK_FLAG_FLUSH")
+    '("flag-accurate" "GST_SEEK_FLAG_ACCURATE")
+    '("flag-key-unit" "GST_SEEK_FLAG_KEY_UNIT")
+    '("flag-segment-loop" "GST_SEEK_FLAG_SEGMENT_LOOP")
+  )
+)
+
+(define-enum SeekAccuracy
+  (in-module "Gst")
+  (c-name "GstSeekAccuracy")
+  (gtype-id "GST_TYPE_SEEK_ACCURACY")
+  (values
+    '("certain" "GST_SEEK_CERTAIN")
+    '("fuzzy" "GST_SEEK_FUZZY")
+  )
+)
+
+(define-enum Format
+  (in-module "Gst")
+  (c-name "GstFormat")
+  (gtype-id "GST_TYPE_FORMAT")
+  (values
+    '("undefined" "GST_FORMAT_UNDEFINED")
+    '("default" "GST_FORMAT_DEFAULT")
+    '("bytes" "GST_FORMAT_BYTES")
+    '("time" "GST_FORMAT_TIME")
+    '("buffers" "GST_FORMAT_BUFFERS")
+    '("percent" "GST_FORMAT_PERCENT")
+  )
+)
+
+(define-enum IndexCertainty
+  (in-module "Gst")
+  (c-name "GstIndexCertainty")
+  (gtype-id "GST_TYPE_INDEX_CERTAINTY")
+  (values
+    '("unknown" "GST_INDEX_UNKNOWN")
+    '("certain" "GST_INDEX_CERTAIN")
+    '("fuzzy" "GST_INDEX_FUZZY")
+  )
+)
+
+(define-enum IndexEntryType
+  (in-module "Gst")
+  (c-name "GstIndexEntryType")
+  (gtype-id "GST_TYPE_INDEX_ENTRY_TYPE")
+  (values
+    '("id" "GST_INDEX_ENTRY_ID")
+    '("association" "GST_INDEX_ENTRY_ASSOCIATION")
+    '("object" "GST_INDEX_ENTRY_OBJECT")
+    '("format" "GST_INDEX_ENTRY_FORMAT")
+  )
+)
+
+(define-enum IndexLookupMethod
+  (in-module "Gst")
+  (c-name "GstIndexLookupMethod")
+  (gtype-id "GST_TYPE_INDEX_LOOKUP_METHOD")
+  (values
+    '("exact" "GST_INDEX_LOOKUP_EXACT")
+    '("before" "GST_INDEX_LOOKUP_BEFORE")
+    '("after" "GST_INDEX_LOOKUP_AFTER")
+  )
+)
+
+(define-flags AssocFlags
+  (in-module "Gst")
+  (c-name "GstAssocFlags")
+  (gtype-id "GST_TYPE_ASSOC_FLAGS")
+  (values
+    '("none" "GST_ASSOCIATION_FLAG_NONE")
+    '("key-unit" "GST_ASSOCIATION_FLAG_KEY_UNIT")
+    '("last" "GST_ASSOCIATION_FLAG_LAST")
+  )
+)
+
+(define-enum IndexResolverMethod
+  (in-module "Gst")
+  (c-name "GstIndexResolverMethod")
+  (gtype-id "GST_TYPE_INDEX_RESOLVER_METHOD")
+  (values
+    '("custom" "GST_INDEX_RESOLVER_CUSTOM")
+    '("gtype" "GST_INDEX_RESOLVER_GTYPE")
+    '("path" "GST_INDEX_RESOLVER_PATH")
+  )
+)
+
+(define-enum IndexFlags
+  (in-module "Gst")
+  (c-name "GstIndexFlags")
+  (gtype-id "GST_TYPE_INDEX_FLAGS")
+  (values
+    '("writable" "GST_INDEX_WRITABLE")
+    '("readable" "GST_INDEX_READABLE")
+    '("flag-last" "GST_INDEX_FLAG_LAST")
+  )
+)
+
+(define-enum DebugLevel
+  (in-module "Gst")
+  (c-name "GstDebugLevel")
+  (gtype-id "GST_TYPE_DEBUG_LEVEL")
+  (values
+    '("none" "GST_LEVEL_NONE")
+    '("error" "GST_LEVEL_ERROR")
+    '("warning" "GST_LEVEL_WARNING")
+    '("info" "GST_LEVEL_INFO")
+    '("debug" "GST_LEVEL_DEBUG")
+    '("log" "GST_LEVEL_LOG")
+    '("count" "GST_LEVEL_COUNT")
+  )
+)
+
+(define-enum DebugColorFlags
+  (in-module "Gst")
+  (c-name "GstDebugColorFlags")
+  (gtype-id "GST_TYPE_DEBUG_COLOR_FLAGS")
+  (values
+    '("fg-black" "GST_DEBUG_FG_BLACK")
+    '("fg-red" "GST_DEBUG_FG_RED")
+    '("fg-green" "GST_DEBUG_FG_GREEN")
+    '("fg-yellow" "GST_DEBUG_FG_YELLOW")
+    '("fg-blue" "GST_DEBUG_FG_BLUE")
+    '("fg-magenta" "GST_DEBUG_FG_MAGENTA")
+    '("fg-cyan" "GST_DEBUG_FG_CYAN")
+    '("fg-white" "GST_DEBUG_FG_WHITE")
+    '("bg-black" "GST_DEBUG_BG_BLACK")
+    '("bg-red" "GST_DEBUG_BG_RED")
+    '("bg-green" "GST_DEBUG_BG_GREEN")
+    '("bg-yellow" "GST_DEBUG_BG_YELLOW")
+    '("bg-blue" "GST_DEBUG_BG_BLUE")
+    '("bg-magenta" "GST_DEBUG_BG_MAGENTA")
+    '("bg-cyan" "GST_DEBUG_BG_CYAN")
+    '("bg-white" "GST_DEBUG_BG_WHITE")
+    '("bold" "GST_DEBUG_BOLD")
+    '("underline" "GST_DEBUG_UNDERLINE")
+  )
+)
+
+(define-enum ObjectFlags
+  (in-module "Gst")
+  (c-name "GstObjectFlags")
+  (gtype-id "GST_TYPE_OBJECT_FLAGS")
+  (values
+    '("destroyed" "GST_DESTROYED")
+    '("floating" "GST_FLOATING")
+    '("object-flag-last" "GST_OBJECT_FLAG_LAST")
+  )
+)
+
+(define-enum PadLinkReturn
+  (in-module "Gst")
+  (c-name "GstPadLinkReturn")
+  (gtype-id "GST_TYPE_PAD_LINK_RETURN")
+  (values
+    '("refused" "GST_PAD_LINK_REFUSED")
+    '("delayed" "GST_PAD_LINK_DELAYED")
+    '("ok" "GST_PAD_LINK_OK")
+    '("done" "GST_PAD_LINK_DONE")
+  )
+)
+
+(define-enum PadDirection
+  (in-module "Gst")
+  (c-name "GstPadDirection")
+  (gtype-id "GST_TYPE_PAD_DIRECTION")
+  (values
+    '("unknown" "GST_PAD_UNKNOWN")
+    '("src" "GST_PAD_SRC")
+    '("sink" "GST_PAD_SINK")
+  )
+)
+
+(define-enum PadFlags
+  (in-module "Gst")
+  (c-name "GstPadFlags")
+  (gtype-id "GST_TYPE_PAD_FLAGS")
+  (values
+    '("disabled" "GST_PAD_DISABLED")
+    '("negotiating" "GST_PAD_NEGOTIATING")
+    '("flag-last" "GST_PAD_FLAG_LAST")
+  )
+)
+
+(define-enum PadPresence
+  (in-module "Gst")
+  (c-name "GstPadPresence")
+  (gtype-id "GST_TYPE_PAD_PRESENCE")
+  (values
+    '("always" "GST_PAD_ALWAYS")
+    '("sometimes" "GST_PAD_SOMETIMES")
+    '("request" "GST_PAD_REQUEST")
+  )
+)
+
+(define-enum PadTemplateFlags
+  (in-module "Gst")
+  (c-name "GstPadTemplateFlags")
+  (gtype-id "GST_TYPE_PAD_TEMPLATE_FLAGS")
+  (values
+    '("ixed" "GST_PAD_TEMPLATE_FIXED")
+    '("lag-last" "GST_PAD_TEMPLATE_FLAG_LAST")
+  )
+)
+
+(define-enum ParseError
+  (in-module "Gst")
+  (c-name "GstParseError")
+  (gtype-id "GST_TYPE_PARSE_ERROR")
+  (values
+    '("syntax" "GST_PARSE_ERROR_SYNTAX")
+    '("no-such-element" "GST_PARSE_ERROR_NO_SUCH_ELEMENT")
+    '("no-such-property" "GST_PARSE_ERROR_NO_SUCH_PROPERTY")
+    '("link" "GST_PARSE_ERROR_LINK")
+    '("could-not-set-property" "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY")
+    '("empty-bin" "GST_PARSE_ERROR_EMPTY_BIN")
+    '("empty" "GST_PARSE_ERROR_EMPTY")
+  )
+)
+
+(define-enum PluginError
+  (in-module "Gst")
+  (c-name "GstPluginError")
+  (gtype-id "GST_TYPE_PLUGIN_ERROR")
+  (values
+    '("module" "GST_PLUGIN_ERROR_MODULE")
+    '("dependencies" "GST_PLUGIN_ERROR_DEPENDENCIES")
+    '("name-mismatch" "GST_PLUGIN_ERROR_NAME_MISMATCH")
+  )
+)
+
+(define-enum QueryType
+  (in-module "Gst")
+  (c-name "GstQueryType")
+  (gtype-id "GST_TYPE_QUERY_TYPE")
+  (values
+    '("none" "GST_QUERY_NONE")
+    '("total" "GST_QUERY_TOTAL")
+    '("position" "GST_QUERY_POSITION")
+    '("latency" "GST_QUERY_LATENCY")
+    '("jitter" "GST_QUERY_JITTER")
+    '("start" "GST_QUERY_START")
+    '("segment-end" "GST_QUERY_SEGMENT_END")
+    '("rate" "GST_QUERY_RATE")
+  )
+)
+
+(define-flags RegistryReturn
+  (in-module "Gst")
+  (c-name "GstRegistryReturn")
+  (gtype-id "GST_TYPE_REGISTRY_RETURN")
+  (values
+    '("ok" "GST_REGISTRY_OK")
+    '("load-error" "GST_REGISTRY_LOAD_ERROR")
+    '("save-error" "GST_REGISTRY_SAVE_ERROR")
+    '("plugin-load-error" "GST_REGISTRY_PLUGIN_LOAD_ERROR")
+    '("plugin-signature-error" "GST_REGISTRY_PLUGIN_SIGNATURE_ERROR")
+  )
+)
+
+(define-flags RegistryFlags
+  (in-module "Gst")
+  (c-name "GstRegistryFlags")
+  (gtype-id "GST_TYPE_REGISTRY_FLAGS")
+  (values
+    '("readable" "GST_REGISTRY_READABLE")
+    '("writable" "GST_REGISTRY_WRITABLE")
+    '("exists" "GST_REGISTRY_EXISTS")
+    '("remote" "GST_REGISTRY_REMOTE")
+    '("delayed-loading" "GST_REGISTRY_DELAYED_LOADING")
+  )
+)
+
+(define-enum SchedulerFlags
+  (in-module "Gst")
+  (c-name "GstSchedulerFlags")
+  (gtype-id "GST_TYPE_SCHEDULER_FLAGS")
+  (values
+    '("fixed-clock" "GST_SCHEDULER_FLAG_FIXED_CLOCK")
+    '("last" "GST_SCHEDULER_FLAG_LAST")
+  )
+)
+
+(define-enum SchedulerState
+  (in-module "Gst")
+  (c-name "GstSchedulerState")
+  (gtype-id "GST_TYPE_SCHEDULER_STATE")
+  (values
+    '("none" "GST_SCHEDULER_STATE_NONE")
+    '("running" "GST_SCHEDULER_STATE_RUNNING")
+    '("stopped" "GST_SCHEDULER_STATE_STOPPED")
+    '("error" "GST_SCHEDULER_STATE_ERROR")
+  )
+)
+
+(define-enum TagMergeMode
+  (in-module "Gst")
+  (c-name "GstTagMergeMode")
+  (gtype-id "GST_TYPE_TAG_MERGE_MODE")
+  (values
+    '("undefined" "GST_TAG_MERGE_UNDEFINED")
+    '("replace-all" "GST_TAG_MERGE_REPLACE_ALL")
+    '("replace" "GST_TAG_MERGE_REPLACE")
+    '("append" "GST_TAG_MERGE_APPEND")
+    '("prepend" "GST_TAG_MERGE_PREPEND")
+    '("keep" "GST_TAG_MERGE_KEEP")
+    '("keep-all" "GST_TAG_MERGE_KEEP_ALL")
+    '("count" "GST_TAG_MERGE_COUNT")
+  )
+)
+
+(define-enum TagFlag
+  (in-module "Gst")
+  (c-name "GstTagFlag")
+  (gtype-id "GST_TYPE_TAG_FLAG")
+  (values
+    '("undefined" "GST_TAG_FLAG_UNDEFINED")
+    '("meta" "GST_TAG_FLAG_META")
+    '("encoded" "GST_TAG_FLAG_ENCODED")
+    '("decoded" "GST_TAG_FLAG_DECODED")
+    '("count" "GST_TAG_FLAG_COUNT")
+  )
+)
+
+(define-enum ThreadState
+  (in-module "Gst")
+  (c-name "GstThreadState")
+  (gtype-id "GST_TYPE_THREAD_STATE")
+  (values
+    '("state-spinning" "GST_THREAD_STATE_SPINNING")
+    '("state-reaping" "GST_THREAD_STATE_REAPING")
+    '("mutex-locked" "GST_THREAD_MUTEX_LOCKED")
+    '("flag-last" "GST_THREAD_FLAG_LAST")
+  )
+)
+
+(define-flags AllocTraceFlags
+  (in-module "Gst")
+  (c-name "GstAllocTraceFlags")
+  (gtype-id "GST_TYPE_ALLOC_TRACE_FLAGS")
+  (values
+    '("live" "GST_ALLOC_TRACE_LIVE")
+    '("mem-live" "GST_ALLOC_TRACE_MEM_LIVE")
+  )
+)
+
+(define-enum TypeFindProbability
+  (in-module "Gst")
+  (c-name "GstTypeFindProbability")
+  (gtype-id "GST_TYPE_TYPE_FIND_PROBABILITY")
+  (values
+    '("minimum" "GST_TYPE_FIND_MINIMUM")
+    '("possible" "GST_TYPE_FIND_POSSIBLE")
+    '("likely" "GST_TYPE_FIND_LIKELY")
+    '("nearly-certain" "GST_TYPE_FIND_NEARLY_CERTAIN")
+    '("maximum" "GST_TYPE_FIND_MAXIMUM")
+  )
+)
+
+(define-flags ElementState
+  (in-module "Gst")
+  (c-name "GstElementState")
+  (gtype-id "GST_TYPE_ELEMENT_STATE")
+  (values
+    '("void-pending" "GST_STATE_VOID_PENDING")
+    '("null" "GST_STATE_NULL")
+    '("ready" "GST_STATE_READY")
+    '("paused" "GST_STATE_PAUSED")
+    '("playing" "GST_STATE_PLAYING")
+  )
+)
+
+(define-enum ElementStateReturn
+  (in-module "Gst")
+  (c-name "GstElementStateReturn")
+  (gtype-id "GST_TYPE_ELEMENT_STATE_RETURN")
+  (values
+    '("failure" "GST_STATE_FAILURE")
+    '("success" "GST_STATE_SUCCESS")
+    '("async" "GST_STATE_ASYNC")
+  )
+)
+
+(define-enum Result
+  (in-module "Gst")
+  (c-name "GstResult")
+  (gtype-id "GST_TYPE_RESULT")
+  (values
+    '("ok" "GST_RESULT_OK")
+    '("nok" "GST_RESULT_NOK")
+    '("not-impl" "GST_RESULT_NOT_IMPL")
+  )
+)
+
+(define-enum URIType
+  (in-module "Gst")
+  (c-name "GstURIType")
+  (gtype-id "GST_TYPE_URI_TYPE")
+  (values
+    '("unknown" "GST_URI_UNKNOWN")
+    '("sink" "GST_URI_SINK")
+    '("src" "GST_URI_SRC")
+  )
+)
+
+

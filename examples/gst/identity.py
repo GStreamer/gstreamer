@@ -47,6 +47,7 @@ class Identity(gst.Element):
 
    def chain(self, pad, buf):
       self.srcpad.push(buf)
+      
 gobject.type_register(Identity)
 
 def filter(element):

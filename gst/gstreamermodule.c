@@ -28,10 +28,10 @@
 #include <pygobject.h>
 #include <gst/gst.h>
 
-void pygstreamer_register_classes (PyObject *d);
-void pygstreamer_add_constants(PyObject *module, const gchar *strip_prefix);
+void pygst_register_classes (PyObject *d);
+void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
 		
-extern PyMethodDef pygstreamer_functions[];
+extern PyMethodDef pygst_functions[];
 
 DL_EXPORT(void)
 init_gst (void)
@@ -61,7 +61,7 @@ init_gst (void)
                     g_free (argv[i]);
                 g_free (argv);
             }
-            PyErr_SetString (PyExc_RuntimeError, "can't initialize module gstreamer");
+            PyErr_SetString (PyExc_RuntimeError, "can't initialize module gst");
         }
         if (argv != NULL) {
             PySys_SetArgv (argc, argv);
@@ -70,13 +70,13 @@ init_gst (void)
             g_free (argv);
         }
 
-	m = Py_InitModule ("gst._gst", pygstreamer_functions);
+	m = Py_InitModule ("gst._gst", pygst_functions);
 	d = PyModule_GetDict (m);
 
-	pygstreamer_register_classes (d);
-	pygstreamer_add_constants (m, "GST_");
+	pygst_register_classes (d);
+	pygst_add_constants (m, "GST_");
 	
 	if (PyErr_Occurred ()) {
-		Py_FatalError ("can't initialize module gstreamer");
+		Py_FatalError ("can't initialize module gst");
 	}
 }

@@ -1,3 +1,15 @@
+2004-02-25  Johan Dahlin  <johan@gnome.org>
+
+	* gstreamer/gstreamer.override: 
+	* gstreamer/gstreamermodule.c: Rename some more things to gst
+
+	* gstreamer/arg-types.py: Clean up and add GstData handling
+
+	* gstreamer/gstreamer.defs: 
+	* gstreamer/gst-types.defs: Split out types to a separate defs
+
+	* gstreamer/gst-types.c: New file to handle custom GstData conversions.
+
 2004-02-24  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* gstreamer/0.7.override:

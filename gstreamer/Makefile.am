@@ -37,7 +37,9 @@ endif
 pygstexec_LTLIBRARIES = _gstmodule.la
 _gstmodule_la_SOURCES = \
 	gstreamermodule.c \
-	common.c common.h \
+	gst-types.c \
+	common.c \
+	common.h \
 	$(VERSOURCES)
 _gstmodule_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
 _gstmodule_la_LIBADD = $(GST_LIBS)
@@ -55,10 +57,8 @@ GST_INCLUDES=$(filter-out $(GST_EXCLUDE_INCLUDES),$(wildcard $(GST_INCLUDEDIR)/g
 gstreamer.c: $(srcdir)/$(MODULE).defs $(srcdir)/arg-types.py $(srcdir)/$(MODULE).override
 	$(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \
+	        --register $(srcdir)/gst-types.defs \
 		--override $(srcdir)/$(MODULE).override \
-		--prefix py$(MODULE) $(MODULE).defs > gen-$(MODULE).c \
+		--prefix pygst $(MODULE).defs > gen-$(MODULE).c \
 	&& cp gen-$(MODULE).c $(MODULE).c \
 	&& rm -f gen-$(MODULE).c
-
-#		--register $(PYGTK_DEFSDIR)/gtk-types.defs
-#		--register $(top_srcdir)/blah/blah-types.defs
