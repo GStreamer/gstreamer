@@ -218,6 +218,7 @@ struct _GstElementClass {
 		  				 GstFormat *format, gint64 *value);
 
   /* change the element state */
+  GstElementStateReturn	(*initiate_state_change)(GstElement *element, GstElementState state);
   GstElementStateReturn (*change_state)		(GstElement *element);
 
   /* request/release pads */
@@ -232,7 +233,7 @@ struct _GstElementClass {
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);

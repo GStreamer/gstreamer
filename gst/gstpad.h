@@ -400,6 +400,7 @@ void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 gboolean                gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 void			gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
+gboolean		gst_pad_is_linked			(GstPad *pad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 

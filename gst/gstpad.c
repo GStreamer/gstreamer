@@ -953,6 +953,22 @@ gst_pad_unlink (GstPad *srcpad,
   gst_object_unref (GST_OBJECT (realsink));
 }
 
+/**
+ * gst_pad_is_linked:
+ * @pad: pad to check
+ *
+ * Checks if a given pad is linked to another pad or not.
+ *
+ * Returns: TRUE if the pad is linked.
+ */
+gboolean
+gst_pad_is_linked (GstPad *pad)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  return GST_PAD_PEER (pad) != NULL;
+}
+
 struct _GstPadLink {
   GType type;
 
