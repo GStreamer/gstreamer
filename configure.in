@@ -344,13 +344,17 @@ AC_DEFINE(HAVE_LIBXV),
 HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
 LIBS=${xvsave_LIBS}
 
+dnl Check for OSS audio
+AC_CHECK_HEADER(sys/soundcard.h,
+  AC_DEFINE(HAVE_OSS) 
+  HAVE_OSS=yes, []
+)
 
 dnl Check for xaudio
-AC_CHECK_HEADER(xaudio/decoder.h,[
+AC_CHECK_HEADER(xaudio/decoder.h,
   AC_DEFINE(HAVE_XAUDIO) 
-  HAVE_XAUDIO="yes", []
-])
-
+  HAVE_XAUDIO=yes, []
+)
 
 dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
@@ -407,6 +411,17 @@ else
   HAVE_CSSAUTH="no"
 fi
 
+dnl Check for linux/cdrom.h
+AC_CHECK_HEADER(linux/cdrom.h,
+  AC_DEFINE(HAVE_LINUX_CDROM) 
+  HAVE_LINUX_CDROM=yes, []
+)
+
+dnl Check for linux/videodev.h
+AC_CHECK_HEADER(linux/videodev.h,
+  AC_DEFINE(HAVE_LINUX_VIDEODEV) 
+  HAVE_LINUX_VIDEODEV=yes, []
+)
 
 
 dnl ######################################################################
@@ -616,7 +631,10 @@ AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
+AM_CONDITIONAL(HAVE_OSS,            test "x$HAVE_OSS" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
+AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
+AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
 AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
