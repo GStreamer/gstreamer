@@ -24,10 +24,7 @@
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include <gst/gstconfig.h>
 
 #ifdef USE_GLIB2
 #include <glib-object.h>	// note that this gets wrapped in __GST_OBJECT_H__ 
@@ -36,14 +33,12 @@
 #include <gst/gobject2gtk.h>
 #endif
 
-#include <gst/gsttrace.h>
-#include <parser.h>
-
-#include <gst/gsttypes.h>
-
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
 #endif
+
+#include <gst/gsttrace.h>
+#include <gst/gsttypes.h>
 
 // FIXME
 #include "gstlog.h"
@@ -107,13 +102,17 @@ struct _GstObjectClass {
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
+#ifndef GST_DISABLE_LOADSAVE
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
+#endif
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
 
+#ifndef GST_DISABLE_LOADSAVE
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
+#endif
 };
 
 #define GST_FLAGS(obj)			(GST_OBJECT (obj)->flags)
@@ -153,6 +152,7 @@ xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 void		gst_object_restore_thyself		(GstObject *object, xmlNodePtr parent);
 #else
 #pragma GCC poison gst_object_save_thyself
+#pragma GCC poison gst_object_restore_thyself
 #endif
 
 /* refcounting */

@@ -24,14 +24,7 @@
 #ifndef __GST_PAD_H__
 #define __GST_PAD_H__
 
-#include <parser.h> // NOTE: This is xml-config's fault
-
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
+#include <gst/gstconfig.h>
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
@@ -424,7 +417,9 @@ GstBuffer*		gst_pad_peek			(GstPad *pad);
 GstPad*			gst_pad_select			(GList *padlist);
 GstPad*			gst_pad_selectv			(GstPad *pad, ...);
 
+#ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_connect	(xmlNodePtr self, GstObject *parent);
+#endif
 
 
 /* ghostpads */
@@ -441,8 +436,10 @@ GstPadTemplate*		gst_padtemplate_new		(gchar *name_template,
 GstCaps*		gst_padtemplate_get_caps	(GstPadTemplate *templ);
 GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
+#ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
+#endif
 
 
 #ifdef __cplusplus

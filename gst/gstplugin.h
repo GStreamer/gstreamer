@@ -24,15 +24,9 @@
 #ifndef __GST_PLUGIN_H__
 #define __GST_PLUGIN_H__
 
-#include <gmodule.h>
-#include <parser.h> // NOTE: this is xml-config's fault
+#include <gst/gstconfig.h>
 
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
+#include <gmodule.h>
 
 #include <gst/gstpluginfeature.h>
 

@@ -160,6 +160,7 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	gstconfig.h		\
 	$(GST_OBJECT_MODEL_HDR)	\
 	gstobject.h		\
 	gsttypes.h		\

@@ -24,14 +24,7 @@
 #ifndef __GST_ELEMENT_H__
 #define __GST_ELEMENT_H__
 
-#include <parser.h> // NOTE: this is xml-config's fault
-
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
+#include <gst/gstconfig.h>
 
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
@@ -234,8 +227,10 @@ void			gst_element_error		(GstElement *element, const gchar *error);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
+#ifndef GST_DISABLE_LOADSAVE
 /* XML write and read */
 GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
+#endif
 
 
 /*

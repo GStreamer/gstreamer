@@ -444,8 +444,6 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   }
 
   // if the two buffers have the same parent and are adjacent
-//  if ((buf1->parent == buf2->parent) &&
-//      ((buf1->data + buf1->size) == buf2->data)) {
   if (gst_buffer_is_span_fast(buf1,buf2)) {
     // we simply create a subbuffer of the common parent
     newbuf = gst_buffer_create_sub (buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
