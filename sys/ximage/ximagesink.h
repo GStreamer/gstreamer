@@ -22,6 +22,9 @@
 
 #include <gst/gst.h>
 
+/* FIXME : We should have a configure test for shm support */
+#define USE_SHM
+
 #ifdef USE_SHM
 #include <sys/ipc.h>
 #include <sys/shm.h>

@@ -73,6 +73,29 @@ gst_ximagesink_interface_init (GstInterfaceClass *klass)
   klass->supported = gst_ximagesink_interface_supported;
 }
 
+static void
+gst_ximagesink_navigation_send_event (GstNavigation *navigation, GstCaps *caps)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
+  GstEvent *event;
+
+  event = gst_event_new (GST_EVENT_NAVIGATION);
+  /*GST_EVENT_TIMESTAMP (event) = 0;*/
+  event->event_data.caps.caps = caps;
+
+  /* FIXME 
+   * Obviously, the pointer x,y coordinates need to be adjusted by the
+   * window size and relation to the bounding window. */
+
+  gst_pad_send_event (gst_pad_get_peer (ximagesink->sinkpad), event);
+}
+
+static void
+gst_ximagesink_navigation_init (GstNavigationInterface *iface)
+{
+  iface->send_event = gst_ximagesink_navigation_send_event;
+}
+
 /* X11 stuff */
 
 static GstXImage *
@@ -853,12 +876,12 @@ gst_ximagesink_get_type (void)
         NULL,
         NULL,
       };
-      /*static const GInterfaceInfo navigation_info = {
-`       (GInterfaceInitFunc) gst_ximagesink_navigation_init,
+      static const GInterfaceInfo navigation_info = {
+        (GInterfaceInitFunc) gst_ximagesink_navigation_init,
         NULL,
         NULL,
       };
-      static const GInterfaceInfo xoverlay_info = {
+      /*static const GInterfaceInfo xoverlay_info = {
         (GInterfaceInitFunc) gst_ximagesink_xoverlay_init,
         NULL,
         NULL,
@@ -871,9 +894,9 @@ gst_ximagesink_get_type (void)
       
       g_type_add_interface_static (ximagesink_type, GST_TYPE_INTERFACE,
         &iface_info);
-      /*g_type_add_interface_static (xvimagesink_type, GST_TYPE_NAVIGATION,
+      g_type_add_interface_static (ximagesink_type, GST_TYPE_NAVIGATION,
         &navigation_info);
-      g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
+      /*g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
         &xoverlay_info);*/
     }
     
