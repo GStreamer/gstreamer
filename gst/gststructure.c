@@ -298,15 +298,15 @@ void gst_structure_set_name(GstStructure *structure, const gchar *name)
 void gst_structure_id_set_value(GstStructure *structure, GQuark field,
     const GValue *value)
 {
-  GstStructureField field = { 0, { 0, } };
+  GstStructureField gsfield = { 0, { 0, } };
 
   g_return_if_fail(structure != NULL);
   g_return_if_fail(G_IS_VALUE(value));
 
-  field.name = fieldname;
-  gst_value_init_and_copy (&field.value, value);
+  gsfield.name = field;
+  gst_value_init_and_copy (&gsfield.value, value);
 
-  gst_structure_set_field(structure, &field);
+  gst_structure_set_field(structure, &gsfield);
 }
 
 /**
@@ -323,10 +323,10 @@ void gst_structure_set_value(GstStructure *structure, const gchar *fieldname,
     const GValue *value)
 {
   g_return_if_fail(structure != NULL);
-  g_return_if_fail(field != NULL);
+  g_return_if_fail(fieldname != NULL);
   g_return_if_fail(G_IS_VALUE(value));
 
-  gst_structure_id_set_value(structure, g_quark_from_string(field), value);
+  gst_structure_id_set_value(structure, g_quark_from_string(fieldname), value);
 }
 
 /**
@@ -542,14 +542,14 @@ gst_structure_get_value(const GstStructure *structure, const gchar *fieldname)
 const GValue *
 gst_structure_id_get_value(const GstStructure *structure, GQuark field)
 {
-  GstStructureField *field;
+  GstStructureField *gsfield;
 
   g_return_val_if_fail(structure != NULL, NULL);
 
-  field = gst_structure_id_get_field(structure, id);
-  if(field == NULL) return NULL;
+  gsfield = gst_structure_id_get_field(structure, field);
+  if(gsfield == NULL) return NULL;
 
-  return &field->value;
+  return &gsfield->value;
 }
 
 /**
