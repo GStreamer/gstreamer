@@ -352,6 +352,7 @@ SUBDIRS=\
 	$(SPEEX_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
+	$(IVORBIS_DIR) \
 	$(VORBIS_DIR) \
 	$(XVID_DIR)
 
