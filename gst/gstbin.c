@@ -906,7 +906,7 @@ gst_bin_get_list (GstBin * bin)
  * Returns: An element inside the bin implementing the interface.
  */
 GstElement *
-gst_bin_get_by_interface (GstBin *bin, const GType interface)
+gst_bin_get_by_interface (GstBin *bin, GType interface)
 {
   GList *walk;
   
@@ -942,7 +942,7 @@ gst_bin_get_by_interface (GstBin *bin, const GType interface)
  * Returns: An element inside the bin implementing the interface.
  */
 GList *
-gst_bin_get_all_by_interface (GstBin *bin, const GType interface)
+gst_bin_get_all_by_interface (GstBin *bin, GType interface)
 {
   GList *walk, *ret = NULL;
     

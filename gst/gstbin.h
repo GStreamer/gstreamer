@@ -103,8 +103,8 @@ GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
 GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin, const gchar *name);
 G_CONST_RETURN GList*
 		gst_bin_get_list		(GstBin *bin);
-GstElement*	gst_bin_get_by_interface	(GstBin *bin, const GType interface);
-GList *		gst_bin_get_all_by_interface	(GstBin *bin, const GType interface);
+GstElement*	gst_bin_get_by_interface	(GstBin *bin, GType interface);
+GList *		gst_bin_get_all_by_interface	(GstBin *bin, GType interface);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
 

@@ -13,12 +13,12 @@ else
 GST_DEBUG_DIRS = debug
 endif
 
-SUBDIRS = bins bytestream cleanup dynparams \
+SUBDIRS = bins bytestream cleanup dynparams ghostpads \
 	caps plugin elements clock refcounting tags threads \
 	indexers debug $(GST_PARSE_DIRS) $(GST_DEBUG_DIRS)
 
 DIST_SUBDIRS = bins bytestream caps cleanup clock dynparams elements indexers \
-		plugin refcounting tags threads parse debug
+		plugin refcounting tags threads parse debug ghostpads
 
 tests_pass = test_gst_init
 tests_fail = 

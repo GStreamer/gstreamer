@@ -22,6 +22,7 @@
 #endif
 #include <string.h>
 
+#include <gobject/gvaluecollector.h>
 #include <gst/gst.h>
 
 #define CAPS_POISON(caps) G_STMT_START{ \
@@ -46,6 +47,14 @@ static void _gst_caps_value_init (GValue *value);
 static void _gst_caps_value_free (GValue *value);
 static void _gst_caps_value_copy (const GValue *src, GValue *dest);
 static gpointer _gst_caps_value_peek_pointer (const GValue *value);
+static gchar* _gst_caps_collect_value (GValue      *value,
+                                       guint        n_collect_values,
+                                       GTypeCValue *collect_values,
+                                       guint        collect_flags);
+static gchar* _gst_caps_lcopy_value (const GValue *value,
+                                     guint         n_collect_values,
+                                     GTypeCValue  *collect_values,
+                                     guint         collect_flags);
 static gboolean _gst_caps_from_string_inplace (GstCaps *caps,
     const gchar *string);
 
@@ -59,10 +68,10 @@ void _gst_caps_initialize (void)
     _gst_caps_value_free,
     _gst_caps_value_copy,
     _gst_caps_value_peek_pointer,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    "p",
+    _gst_caps_collect_value,
+    "p",
+    _gst_caps_lcopy_value,
   };
   static const GTypeInfo caps2_info = {
     0,
@@ -1134,7 +1143,7 @@ static void _gst_caps_transform_to_string (const GValue *src_value,
 
 static void _gst_caps_value_init (GValue *value)
 {
-  value->data[0].v_pointer = gst_caps_new_empty();
+  value->data[0].v_pointer = NULL;
 }
 
 static void _gst_caps_value_free (GValue *value)
@@ -1157,6 +1166,49 @@ static void _gst_caps_value_copy (const GValue *src, GValue *dest)
 static gpointer _gst_caps_value_peek_pointer (const GValue *value)
 {
   return value->data[0].v_pointer;
+}
+
+/* adapted from gboxed.c */
+static gchar*
+_gst_caps_collect_value (GValue      *value,
+                         guint        n_collect_values,
+                         GTypeCValue *collect_values,
+                         guint        collect_flags)
+{
+  if (!collect_values[0].v_pointer)
+    value->data[0].v_pointer = NULL;
+  else
+    if (collect_flags & G_VALUE_NOCOPY_CONTENTS)
+      {
+        value->data[0].v_pointer = collect_values[0].v_pointer;
+        value->data[1].v_uint = G_VALUE_NOCOPY_CONTENTS;
+      }
+    else
+      value->data[0].v_pointer = gst_caps_copy (collect_values[0].v_pointer);
+
+  return NULL;
+}
+
+static gchar*
+_gst_caps_lcopy_value (const GValue *value,
+                       guint         n_collect_values,
+                       GTypeCValue  *collect_values,
+                       guint         collect_flags)
+{
+  GstCaps **boxed_p = collect_values[0].v_pointer;
+
+  if (!boxed_p)
+    return g_strdup_printf ("value location for `%s' passed as NULL",
+                            G_VALUE_TYPE_NAME (value));
+
+  if (!value->data[0].v_pointer)
+    *boxed_p = NULL;
+  else if (collect_flags & G_VALUE_NOCOPY_CONTENTS)
+    *boxed_p = value->data[0].v_pointer;
+  else
+    *boxed_p = gst_caps_copy (value->data[0].v_pointer);
+
+  return NULL;
 }
 
 /* fixate utility functions */

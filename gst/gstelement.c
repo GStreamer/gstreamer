@@ -1056,7 +1056,8 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_PAD (pad));
 
-  /* first check to make sure the pad's parent is already set */
+  /* first check to make sure the pad hasn't already been added to another
+   * element */
   g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
 
   /* then check to see if there's already a pad by that name here */
@@ -1070,10 +1071,18 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   /* add it to the list */
   element->pads = g_list_append (element->pads, pad);
   element->numpads++;
-  if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+
+  switch (gst_pad_get_direction (pad)) {
+  case GST_PAD_SRC:
     element->numsrcpads++;
-  else
+    break;
+  case GST_PAD_SINK:
     element->numsinkpads++;
+    break;
+  default:
+    /* can happen for ghost pads */
+    break;
+  }
 
   /* activate element when we are playing */
   if (GST_STATE (element) == GST_STATE_PLAYING)
@@ -1081,6 +1090,36 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
+}
+
+/**
+ * gst_element_add_ghost_pad:
+ * @element: a #GstElement to add the ghost pad to.
+ * @pad: the #GstPad from which the new ghost pad will be created.
+ * @name: the name of the new ghost pad, or NULL to assign a unique name
+ * automatically.
+ *
+ * Creates a ghost pad from the given pad, and adds it to the list of pads
+ * for this element.
+ * 
+ * Returns: the added ghost #GstPad, or NULL on error.
+ */
+GstPad *
+gst_element_add_ghost_pad (GstElement *element, GstPad *pad, const gchar *name)
+{
+  GstPad *ghostpad;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  /* then check to see if there's already a pad by that name here */
+  g_return_val_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE, NULL);
+
+  ghostpad = gst_ghost_pad_new (name, pad);
+
+  gst_element_add_pad (element, ghostpad);
+	
+  return ghostpad;
 }
 
 /**
@@ -1100,22 +1139,29 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 
   g_return_if_fail (GST_PAD_PARENT (pad) == element);
 
-  /* check to see if the pad is still linked */
-  /* FIXME: what if someone calls _remove_pad instead of 
-    _remove_ghost_pad? */
   if (GST_IS_REAL_PAD (pad)) {
+    /* unlink if necessary */
     if (GST_RPAD_PEER (pad) != NULL) {
       gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
     }
+  } else if (GST_IS_GHOST_PAD (pad)) {
+    g_object_set (pad, "real-pad", NULL, NULL);
   }
   
   /* remove it from the list */
   element->pads = g_list_remove (element->pads, pad);
   element->numpads--;
-  if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+  switch (gst_pad_get_direction (pad)) {
+  case GST_PAD_SRC:
     element->numsrcpads--;
-  else
+    break;
+  case GST_PAD_SINK:
     element->numsinkpads--;
+    break;
+  default:
+    /* can happen for ghost pads */
+    break;
+  }
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
@@ -1123,56 +1169,12 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 }
 
 /**
- * gst_element_add_ghost_pad:
- * @element: a #GstElement to add the ghost pad to.
- * @pad: the #GstPad from which the new ghost pad will be created.
- * @name: the name of the new ghost pad.
- *
- * Creates a ghost pad from the given pad, and adds it to the list of pads
- * for this element.
- * 
- * Returns: the added ghost #GstPad, or NULL, if no ghost pad was created.
- */
-GstPad *
-gst_element_add_ghost_pad (GstElement *element, GstPad *pad, const gchar *name)
-{
-  GstPad *ghostpad;
-
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  /* then check to see if there's already a pad by that name here */
-  g_return_val_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE, NULL);
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, 
-             "creating new ghost pad called %s, from pad %s:%s",
-             name, GST_DEBUG_PAD_NAME(pad));
-  ghostpad = gst_ghost_pad_new (name, pad);
-
-  /* add it to the list */
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,"adding ghost pad %s to element %s",
-            name, GST_ELEMENT_NAME (element));
-  element->pads = g_list_append (element->pads, ghostpad);
-  element->numpads++;
-  /* set the parent of the ghostpad */
-  gst_object_set_parent (GST_OBJECT (ghostpad), GST_OBJECT (element));
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,"added ghostpad %s:%s",GST_DEBUG_PAD_NAME(ghostpad));
-
-  /* emit the NEW_GHOST_PAD signal */
-  g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, ghostpad);
-	
-  return ghostpad;
-}
-
-/**
  * gst_element_remove_ghost_pad:
  * @element: a #GstElement to remove the ghost pad from.
  * @pad: ghost #GstPad to remove.
  *
- * Removes a ghost pad from an element.
+ * Removes a ghost pad from an element. Deprecated, use gst_element_remove_pad
+ * instead.
  */
 void
 gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
@@ -1180,15 +1182,10 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_GHOST_PAD (pad));
 
-  /* FIXME this is redundant?
-   * wingo 10-july-2001: I don't think so, you have to actually remove the pad
-   * from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
-   * the real pad's ghost pad list
-   */
-  gst_object_ref (GST_OBJECT (pad));
+  g_warning ("gst_element_remove_ghost_pad is deprecated.\n"
+             "Use gst_element_remove_pad instead.");
+
   gst_element_remove_pad (element, pad);
-  gst_pad_remove_ghost_pad (GST_PAD (GST_PAD_REALIZE (pad)), pad);
-  gst_object_unref (GST_OBJECT (pad));
 }
 
 

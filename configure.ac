@@ -642,6 +642,7 @@ testsuite/clock/Makefile
 testsuite/debug/Makefile
 testsuite/dynparams/Makefile
 testsuite/elements/Makefile
+testsuite/ghostpads/Makefile
 testsuite/indexers/Makefile
 testsuite/parse/Makefile
 testsuite/plugin/Makefile
