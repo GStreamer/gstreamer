@@ -131,6 +131,9 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  gst_caps_get_int (from_caps, "red_mask",   &space->source.r);
 	  gst_caps_get_int (from_caps, "green_mask", &space->source.g);
 	  gst_caps_get_int (from_caps, "blue_mask",  &space->source.b);
+	  space->source.r = GINT_TO_BE (space->source.r);
+	  space->source.g = GINT_TO_BE (space->source.g);
+	  space->source.b = GINT_TO_BE (space->source.b);
 	  space->source.a = 0;
 	  space->srcbpp = space->source.bits = from_bpp;
 	  space->source.indexed = 0;
@@ -144,6 +147,9 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  gst_caps_get_int (to_caps, "red_mask",   &space->dest.r);
 	  gst_caps_get_int (to_caps, "green_mask", &space->dest.g);
 	  gst_caps_get_int (to_caps, "blue_mask",  &space->dest.b);
+	  space->dest.r = 0x0000FF; //GINT_TO_BE (space->dest.r);
+	  space->dest.g = 0x00FF00; //GINT_TO_BE (space->dest.g);
+	  space->dest.b = 0xFF0000; //GINT_TO_BE (space->dest.b);
 	  space->dest.a = 0;
 	  space->destbpp = space->dest.bits = to_bpp;
 	  space->dest.indexed = 0;
