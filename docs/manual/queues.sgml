@@ -1,20 +1,20 @@
 <chapter id="cha-queues">
   <title>Queues</title>
   <para> 
-    A <classname>GstQueue</classname> is an implementation of a <classname>GstConnection</classname>.
+    A <classname>GstQueue</classname> is a filter element.
     Queues can be used to connect two elements in such way that the data can 
     be buffered.
   </para>
   <para> 
     A buffer that is sinked to a Queue will not automatically be pushed to the
     next connected element but will be buffered. It will be pushed to the next
-    element as soon as gst_connection_push() is called.
+    element as soon as gst_connection_push () is called.
   </para>
   <para> 
     Queues are mostly used in conjunction with a <classname>GstThread</classname> to
     provide an external connection for the thread elements. You could have one
     thread feeding buffers into a <classname>GstQueue</classname> and another
-    thread repeadedly calling gst_connection_push() on the queue to feed its 
+    thread repeadedly calling gst_connection_push () on the queue to feed its 
     internal elements.
   </para>
 

@@ -42,7 +42,7 @@
   </sect1>
 
   <sect1>
-    <title>MIME Types</title>
+    <title>more on MIME Types</title>
     <para> 
       GStreamer uses MIME types to indentify the different types of data
       that can be handled by the elements. They are the high level
@@ -76,6 +76,10 @@
       different elements and what type of data they expect and emit.
       This allows for very dynamic and extensible element creation as we
       will see.
+    </para> 
+    <para> 
+      As we have seen in the previous chapter, the MIME types are added
+      to the Capability structure of a pad.
     </para> 
 
     <para>

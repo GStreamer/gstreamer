@@ -44,7 +44,8 @@
       The basic main function of a chain-based element is like:
     </para>
     <programlisting>
-static void chain_function (GstPad *pad, GstBuffer *buffer)
+static void 
+chain_function (GstPad *pad, GstBuffer *buffer)
 {
   GstBuffer *outbuffer;
 
@@ -55,6 +56,16 @@ static void chain_function (GstPad *pad, GstBuffer *buffer)
   gst_pad_push (srcpad, outbuffer);
 }
     </programlisting>
+    <para>
+      Chain based function are mainly used for elements that have a one to one
+      relation between their input and output behaviour. An example of such an 
+      element can be a simple video blur filter. The filter takes a buffer in, performs
+      the blur operation on it and sends out the resulting buffer. 
+    </para>
+    <para>
+      Another element, for example, is a volume filter. The filter takes audio samples as
+      input, performs the volume effect and sends out the resulting buffer.
+    </para>
 
   </sect1>
 
@@ -71,6 +82,12 @@ static void chain_function (GstPad *pad, GstBuffer *buffer)
     buffer = gst_pad_pull (sinkpad);
     ...
     // process buffer, create outbuffer
+    while (!done) {
+      ....
+      // optionally request another buffer
+      buffer = gst_pad_pull (sinkpad);
+      ....
+    }
     ...
     gst_pad_push (srcpad, outbuffer);
   }
@@ -86,6 +103,13 @@ static void chain_function (GstPad *pad, GstBuffer *buffer)
       to the loop-based element, etc... The the execution trace can get fairly
       complex using cothreads when there are multiple input/output pads for the
       loop-based element.
+    </para>
+    <para>
+      Loop based elements are mainly used for the more complex elements that need a
+      specific amount of data before they can start to produce output. An example
+      of such an element is the mpeg video decoder. the element will pull a buffer,
+      performs some decoding on it and optionally requests more buffers to decode, when
+      a complete video frame has been decoded, a buffer is send out.
     </para>
     <para>
       There is no problem in putting cothreaded elements into a 

@@ -104,6 +104,88 @@ gstreamer-launch disksrc redpill.vob ! css-descramble ! private_stream_1.0 ! \
   </sect1>
 
   <sect1>
+    <title><command>gstreamer-inspect</command></title>
+    <para> 
+      This is a tool to query a plugin or an element about its properties.
+    </para> 
+    <para> 
+      To query the information about the element mpg123, you would specify:
+    </para> 
+
+    <screen>
+gstreamer-inspect mpg123
+    </screen>
+
+    <para> 
+      Below is the output of a query for the audiosink element:
+    </para> 
+
+    <screen>
+Factory Details:
+  Long name:	Audio Sink (OSS)
+  Class:	Sink/Audio
+  Description:	Output to a sound card via OSS
+  Version:	0.1.0
+  Author(s):	Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+  Copyright:	(C) 1999
+
+Pad Templates:
+  SINK template: 'sink'
+    Exists: Always
+    Capabilities:
+      'audiosink_sink':
+        MIME type: 'audio/raw':
+        format: Integer: 16
+        depth: List:
+          Integer: 8
+          Integer: 16
+        rate: Integer range: 8000 - 48000
+        channels: Integer range: 1 - 2
+
+Element Flags:
+  GST_ELEMENT_THREADSUGGESTED
+  no flags set
+
+Element Implementation:
+  No loopfunc(), must be chain-based or not configured yet
+  Has change_state() function
+
+Pads:
+  SINK: 'sink'
+    Implementation:
+      Has chainfunc(): 0x4001cde8
+      Has default eosfunc() gst_pad_eos_func()
+    Pad Template: 'sink'
+    Capabilities:
+      'audiosink_sink':
+        MIME type: 'audio/raw':
+        format: Integer: 16
+        depth: List:
+          Integer: 8
+          Integer: 16
+        rate: Integer range: 8000 - 48000
+        channels: Integer range: 1 - 2
+
+Element Arguments:
+  GstAudioSink::mute: Boolean
+  GstAudioSink::format: Enum (default 16)
+    (8): 	8 Bits
+    (16): 	16 Bits
+  GstAudioSink::channels: Enum (default 2)
+    (1): 	Mono
+    (2): 	Stereo
+  GstAudioSink::frequency: Integer
+    </screen>
+
+    <para> 
+      To query the information about a plugin, you would do:
+    </para> 
+
+    <screen>
+gstreamer-inspect gstelements
+    </screen>
+  </sect1>
+  <sect1>
     <title><command>gstmediaplay</command></title>
     <para> 
       A sample media player.

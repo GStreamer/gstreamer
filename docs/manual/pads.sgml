@@ -116,6 +116,26 @@ Pads:
       </itemizedlist>
 
     </sect2>
+    <sect2 id="sec-pads-caps-use">
+      <title>What are the capabilities used for?</title>
+      <para> 
+        Capabilities describe in great detail the type of media that is handled by the pads.
+	They are mostly used for:
+      </para> 
+      <itemizedlist>
+        <listitem>
+          <para>
+            Autoplugging: automatically finding plugins for a set of capabilities
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Compatibility detection: when two pads are connected, <application>GStreamer</application>
+	    can verify if the two pads are talking about the same media types.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
 
   </sect1>
 </chapter>

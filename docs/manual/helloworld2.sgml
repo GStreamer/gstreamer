@@ -7,7 +7,7 @@
   </para>
   <para> 
     In this chapter we will introduce you to autoplugging. Using the MIME
-    types of the elements GStreamer can automatically create a pipeline
+    types of the elements <application>GStreamer</application> can automatically create a pipeline
     for you.
   </para>
 
@@ -26,63 +26,63 @@
 static gboolean playing;
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstSrc *src) 
+void 
+eos (GstSrc *src) 
 {
-  g_print("have eos, quitting\n");
+  g_print ("have eos, quitting\n");
 
   playing = FALSE;
 }
 
-int main(int argc,char *argv[]) 
+int 
+main (int argc, char *argv[]) 
 {
   GstElement *disksrc, *audiosink;
   GstElement *pipeline;
 
   if (argc != 2) {
-    g_print("usage: %s &lt;filename&gt;\n", argv[0]);
-    exit(-1);
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    exit (-1);
   }
 
-  gst_init(&amp;argc,&amp;argv);
+  gst_init (&amp;argc, &amp;argv);
 
   /* create a new bin to hold the elements */
-  pipeline = gst_pipeline_new("pipeline");
+  pipeline = gst_pipeline_new ("pipeline");
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
-  gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
-                     GTK_SIGNAL_FUNC(eos),NULL);
+  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
+  gtk_object_set (GTK_OBJECT (disksrc), "location", argv[1], NULL);
+  gtk_signal_connect (GTK_OBJECT (disksrc), "eos",
+                      GTK_SIGNAL_FUNC (eos), NULL);
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
+  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
 
   /* add objects to the main pipeline */
-  gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
-  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
+  gst_pipeline_add_src (GST_PIPELINE (pipeline), disksrc);
+  gst_pipeline_add_sink (GST_PIPELINE (pipeline), audiosink);
 
-  if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
-    g_print("unable to handle stream\n");
-    exit(-1);
+  if (!gst_pipeline_autoplug (GST_PIPELINE (pipeline))) {
+    g_print ("unable to handle stream\n");
+    exit (-1);
   }
 
-  /* make it ready */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_READY);
   /* start playing */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   playing = TRUE;
 
   while (playing) {
-    gst_bin_iterate(GST_BIN(pipeline));
+    gst_bin_iterate (GST_BIN (pipeline));
   }
 
   /* stop the bin */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
-  gst_pipeline_destroy(pipeline);
+  gst_pipeline_destroy (pipeline);
 
-  exit(0);
+  exit (0);
 }
 
     </programlisting>
@@ -99,9 +99,9 @@ int main(int argc,char *argv[])
     <programlisting>
 
   ...
-  if (!gst_pipeline_autoplug(pipeline)) {
-    g_print("unable to handle stream\n");
-    exit(-1);
+  if (!gst_pipeline_autoplug (pipeline)) {
+    g_print ("unable to handle stream\n");
+    exit (-1);
   }
   ...
 
@@ -147,7 +147,7 @@ int main(int argc,char *argv[])
 
     <para>
       If you really want, you can use the GSteamer components to do the 
-      autoplugging yourself. 
+      autoplugging yourself. We will cover this topic in the dynamic pipeline chapter.
     </para>
 
     <para>
@@ -165,9 +165,9 @@ int main(int argc,char *argv[])
     </programlisting>
     <para>
       You can also try to use an AVI or MPEG file as its input. Using autoplugging,
-      GStreamer will automatically figure out how to handle the stream. Remember that
-      only the audio part will be played because we have only added an audiosink to
-      the pipeline.
+      <application>GStreamer</application> will automatically figure out how to 
+      handle the stream. Remember that only the audio part will be played because 
+      we have only added an audiosink to the pipeline.
     </para>
     <programlisting>
       ./helloworld2 mymovie.mpeg
