@@ -1,4 +1,4 @@
-<chapter id="cha-advanced-request">
+<chapter id="chapter-advanced-request">
   <title>Request and Sometimes pads</title>
   <para>
     Until now, we've only dealt with pads that are always available. However,
@@ -11,7 +11,7 @@
     they should be disposed.
   </para>
 
-  <sect1 id="sect1-reqpad-sometimes" xreflabel="Sometimes pads">
+  <sect1 id="section-reqpad-sometimes" xreflabel="Sometimes pads">
     <title>Sometimes pads</title>
     <para>
       A <quote>sometimes</quote> pad is a pad that is created under certain
@@ -196,7 +196,7 @@ gst_my_filter_loopfunc (GstElement *element)
     </para>
   </sect1>
 
-  <sect1 id="sect1-reqpad-request" xreflabel="Request pads">
+  <sect1 id="section-reqpad-request" xreflabel="Request pads">
     <title>Request pads</title>
     <para>
       <quote>Request</quote> pads are similar to sometimes pads, except that
@@ -261,7 +261,7 @@ gst_my_filter_request_new_pad (GstElement     *element,
     </programlisting>
     <para>
       The <function>_loop ()</function> function is the same as the one given
-      previously in <xref linkend="sect1-loopfn-multiinput"/>.
+      previously in <xref linkend="section-loopfn-multiinput"/>.
     </para>
   </sect1>
 </chapter>

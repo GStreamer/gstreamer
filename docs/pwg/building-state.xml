@@ -1,4 +1,4 @@
-<chapter id="cha-statemanage-states">
+<chapter id="chapter-statemanage-states">
   <title>
     What are states?
   </title>
@@ -54,7 +54,7 @@
     reverse transition (<classname>GST_STATE_PLAYING_TO_PAUSED</classname>).
   </para>
 
-  <sect1 id="sect1-statemanage-filters">
+  <sect1 id="section-statemanage-filters">
   <title>
     Mangaging filter state
   </title>

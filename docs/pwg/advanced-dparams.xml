@@ -1,7 +1,7 @@
 
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-dparams">
+<chapter id="chapter-dparams">
   <title>Supporting Dynamic Parameters</title>
   <para>
     Sometimes object properties are not powerful enough to control the
@@ -14,7 +14,7 @@
     as an abbreviation for "Dynamic Parameters".
   </para>
 
-  <sect1 id="sect-dparams-compare">
+  <sect1 id="section-dparams-compare">
     <title>Comparing Dynamic Parameters with GObject Properties</title>
     <para>
       Your first exposure to dparams may be to convert an existing element from
@@ -57,7 +57,7 @@
     </informaltable>
   </sect1>
 
-<sect1 id="sect-dparam-start">
+<sect1 id="section-dparam-start">
   <title>Getting Started</title>
 
   <para>
@@ -123,7 +123,7 @@
   </programlisting>
 </sect1>
 
-<sect1 id="sect-dparam-define">
+<sect1 id="section-dparam-define">
   <title>Defining Parameter Specificiations</title>
   <para>
     You can define the dparams you need anywhere within your element but will
@@ -197,7 +197,7 @@
       </listitem>
     </itemizedlist>
   </para>
-  <sect2 id="sect-dparam-direct">
+  <sect2 id="section-dparam-direct">
     <title>Direct Method</title>
     <para>
       This method is the simplest and has the lowest overhead for parameters
@@ -236,7 +236,7 @@
       element knowing that it will always contain the correct value to use.
     </para>
   </sect2>
-  <sect2 id="sect-dparam-callback">
+  <sect2 id="section-dparam-callback">
     <title>Callback Method</title>
     <para>
       This should be used if the you have other values to calculate whenever a
@@ -305,7 +305,7 @@ gst_example_update_volume(GValue *value, gpointer data)
       will always contain the correct value.
     </para>
   </sect2>
-  <sect2 id="sect-dparam-array">
+  <sect2 id="section-dparam-array">
     <title>Array Method</title>
     <para>
       This method is quite different from the other two. It could be thought of
@@ -340,7 +340,7 @@ gst_example_update_volume(GValue *value, gpointer data)
   </sect2>
 </sect1>
 
-<sect1 id="cha-dparam-loop">
+<sect1 id="chapter-dparam-loop">
   <title>The Data Processing Loop</title>
   <para>
     This is the most critical aspect of the dparams subsystem as it relates to
@@ -439,7 +439,7 @@ example_chain (GstPad *pad, GstBuffer *buf)
     <filename>GST_DPMAN_PREPROCESS</filename> depending on the mode that the
     dparam manager is running in (see below).
   </para>
-  <sect2 id="sect-dparam-modes">
+  <sect2 id="section-dparam-modes">
     <title>DParam Manager Modes</title>
     <para>
       A brief explanation of dparam manager modes might be useful here even
@@ -490,7 +490,7 @@ example_chain (GstPad *pad, GstBuffer *buf)
       parameter updates
     </para>
   </sect2>
-  <sect2 id="sect-dparam-audio-video">
+  <sect2 id="section-dparam-audio-video">
     <title>DParam Manager Modes</title>
     <para>
       All of the explanation so far has presumed that the buffer contains audio

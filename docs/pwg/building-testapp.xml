@@ -1,6 +1,6 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-building-testapp">
+<chapter id="chapter-building-testapp">
   <title>Building a Test Application</title>
   <para>
     Often, you will want to test your newly written plugin in an as small

@@ -1,4 +1,4 @@
-<chapter id="cha-building-filterfactory">
+<chapter id="chapter-building-filterfactory">
   <title>Creating a Filter with a Filter Factory</title>
     <para>
       A plan for the future is to create a FilterFactory, to make the process of      making a new filter a simple process of specifying a few details, and

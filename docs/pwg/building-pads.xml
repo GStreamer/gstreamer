@@ -1,7 +1,7 @@
 
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-building-pads">
+<chapter id="chapter-building-pads">
   <title>Specifying the pads</title>
   <para>
     As explained before, pads are the port through which data goes in and out
@@ -56,13 +56,13 @@ gst_my_filter_init (GstMyFilter *filter)
 }
   </programlisting>
 
-  <sect1 id="sect-pads-linkfn" xreflabel="The link function">
+  <sect1 id="section-pads-linkfn" xreflabel="The link function">
   <title>The link function</title>
   <para>
     The <function>_link ()</function> is called during caps negotiation. This
     is the process where the linked pads decide on the streamtype that will
     transfer between them. A full list of type-definitions can be found in
-    <xref linkend="cha-building-types"/>. A <function>_link ()</function>
+    <xref linkend="chapter-building-types"/>. A <function>_link ()</function>
     receives a pointer to a <classname>GstCaps</classname> struct that
     defines the proposed streamtype, and can respond with either
     <quote>yes</quote> (<classname>GST_PAD_LINK_OK</classname>),
@@ -130,7 +130,7 @@ gst_my_filter_link (GstPad        *pad,
   </para>
   </sect1>
 
-  <sect1 id="sect-pads-getcapsfn" xreflabel="The getcaps function">
+  <sect1 id="section-pads-getcapsfn" xreflabel="The getcaps function">
   <title>The getcaps function</title>
   <para>
     The <function>_getcaps ()</function> funtion is used to request the list
@@ -177,7 +177,7 @@ gst_my_filter_getcaps (GstPad *pad)
   </programlisting>
   </sect1>
 
-  <sect1 id="sect-pads-explicitcaps" xreflabel="Explicit caps">
+  <sect1 id="section-pads-explicitcaps" xreflabel="Explicit caps">
   <title>Explicit caps</title>
   <para>
     Obviously, many elements will not need this complex mechanism, because they

@@ -1,12 +1,12 @@
 
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-intro-preface" xreflabel="Preface">
+<chapter id="chapter-intro-preface" xreflabel="Preface">
   <title>Preface</title>
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-preface-who" xreflabel="Who Should Read This Guide?">
+  <sect1 id="section-preface-who" xreflabel="Who Should Read This Guide?">
     <title>Who Should Read This Guide?</title>
     <para>
       This guide explains how to write new modules for &GStreamer;. The guide is
@@ -52,7 +52,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-preface-reading" xreflabel="Preliminary Reading">
+  <sect1 id="section-preface-reading" xreflabel="Preliminary Reading">
     <title>Preliminary Reading</title>
     <para>
       This guide assumes that you are somewhat familiar with the basic workings
@@ -75,7 +75,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-preface-structure" xreflabel="Structure of This Guide">
+  <sect1 id="section-preface-structure" xreflabel="Structure of This Guide">
     <title>Structure of This Guide</title>
     <para>
       To help you navigate through this guide, it is divided into several large
@@ -93,12 +93,12 @@
         <para>
           This part covers all the basic steps you generally need to perform to
           build a plugin. The discussion begins by giving examples of generating
-          the basic structures with <xref linkend="cha-building-boiler"/>. Then
+          the basic structures with <xref linkend="chapter-building-boiler"/>. Then
           you will learn how to write the code to get a basic filter plugin
           working: These steps include chapters on <xref
-          linkend="cha-building-types"/>, <xref linkend="cha-building-pads"/>,
-          <xref linkend="cha-building-chainfn"/>, and <!-- <xref
-          linkend="cha-building-state"/>--> (WRITEME: building state).
+          linkend="chapter-building-types"/>, <xref linkend="chapter-building-pads"/>,
+          <xref linkend="chapter-building-chainfn"/>, and <!-- <xref
+          linkend="chapter-building-state"/>--> (WRITEME: building state).
         </para>
         <para>
           After you have finished the first steps, you will be able to create a
@@ -106,10 +106,10 @@
           functionality you need. To provide some standard functionality, you
           will learn how to add more features to a new plugin. These features
           are described in the chapters on 
-          <!--FIXME: WRITEME <xref linkend="cha-building-props"/> -->
+          <!--FIXME: WRITEME <xref linkend="chapter-building-props"/> -->
           (WRITEME)
-          and <xref linkend="cha-building-signals"/>. Finally, you will see in
-          <!--<xref linkend="cha-building-testapp"/>-->(WRITEME) 
+          and <xref linkend="chapter-building-signals"/>. Finally, you will see in
+          <!--<xref linkend="chapter-building-testapp"/>-->(WRITEME) 
           how to write a short test
           application to try out your new plugin.
         </para>
@@ -124,11 +124,11 @@
           functional audio or video filter plugin with some nice features.
           However, &GStreamer; offers more for plugin writers. This part of the
           guide includes chapters on more advanced topics, such as <xref
-          linkend="cha-advanced-request"/>, <!-- <xref
-          linkend="cha-advanced-clock"/>, <xref
-          linkend="cha-advanced-scheduling"/>, <xref
-          linkend="cha-advanced-dparams"/>, and <xref
-          linkend="cha-advanced-midi"/>-->. Since these features are more advanced,
+          linkend="chapter-advanced-request"/>, <!-- <xref
+          linkend="chapter-advanced-clock"/>, <xref
+          linkend="chapter-advanced-scheduling"/>, <xref
+          linkend="chapter-advanced-dparams"/>, and <xref
+          linkend="chapter-advanced-midi"/>-->. Since these features are more advanced,
           the chapters can basically be read in any order, as you find that your
           plugins require these features.
         </para>
@@ -144,10 +144,10 @@
           the concepts apply equally to other plugin types, including sources,
           sinks, and autopluggers. This part of the guide presents the issues
           that arise when working on these more specialized plugin types. The
-          part includes chapters on <xref linkend="cha-other-source"/>, <xref
-          linkend="cha-other-sink"/>, <!-- FIXME: WRITEME 
-          <xref linkend="cha-other-scheduler"/>,--> and
-          <xref linkend="cha-other-autoplugger"/>.
+          part includes chapters on <xref linkend="chapter-other-source"/>, <xref
+          linkend="chapter-other-sink"/>, <!-- FIXME: WRITEME 
+          <xref linkend="chapter-other-scheduler"/>,--> and
+          <xref linkend="chapter-other-autoplugger"/>.
         </para>
       </listitem>
       <listitem>
@@ -159,9 +159,9 @@
           The appendices contain some information that stubbornly refuses to fit
           cleanly in other sections of the guide. This information includes
           <!-- FIXME: WRITEME
-          <xref linkend="cha-appendix-checklist"/>--> (WRITEME) and 
+          <xref linkend="chapter-appendix-checklist"/>--> (WRITEME) and 
           <!-- <xref
-          linkend="cha-appendix-python"/>.--> FIXME: organize better.
+          linkend="chapter-appendix-python"/>.--> FIXME: organize better.
         </para>
       </listitem>
     </itemizedlist>
@@ -169,9 +169,9 @@
     <para>
       The remainder of this introductory part of the guide presents a short
       overview of the basic concepts involved in &GStreamer; plugin development.
-      Topics covered include <xref linkend="sect1-basics-elements"/>, <xref
-      linkend="sect1-basics-pads"/>, <xref linkend="sect1-basics-data"/> and
-      <xref linkend="sect1-basics-types"/>. If you are already familiar with
+      Topics covered include <xref linkend="section-basics-elements"/>, <xref
+      linkend="section-basics-pads"/>, <xref linkend="section-basics-data"/> and
+      <xref linkend="section-basics-types"/>. If you are already familiar with
       this information, you can use this short overview to refresh your memory,
       or you can skip to <xref linkend="part-building"/>.
     </para>

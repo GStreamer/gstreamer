@@ -1,4 +1,4 @@
-<chapter id="cha-checklist-element">
+<chapter id="chapter-checklist-element">
   <title>
     Things to check when writing an element
   </title>
@@ -8,14 +8,14 @@
   This function should also be called from _init.
   </para>
 </chapter>
-<chapter id="cha-checklist-filter">
+<chapter id="chapter-checklist-filter">
   <title>
     Things to check when writing a filter
   </title>
   <para>
   </para>
 </chapter>
-<chapter id="cha-checklist-srcsink">
+<chapter id="chapter-checklist-srcsink">
   <title>
     Things to check when writing a source or sink
   </title>

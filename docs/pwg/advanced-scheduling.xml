@@ -1,4 +1,4 @@
-<chapter id="cha-loopbased-sched">
+<chapter id="chapter-loopbased-sched">
   <title>How scheduling works</title>
   <para>
     Scheduling is, in short, a method for making sure that every element gets
@@ -22,7 +22,7 @@
     element (a <classname>DECOUPLED</classname> element) in between them.
   </para>
 
-  <sect1 id="sect1-sched-basic" xreflabel="The Basic Scheduler">
+  <sect1 id="section-sched-basic" xreflabel="The Basic Scheduler">
   <title>The Basic Scheduler</title>
   <para>
     The <emphasis>basic</emphasis> scheduler assumes that each element is its
@@ -55,7 +55,7 @@
   </para>
   </sect1>
 
-  <sect1 id="sect1-sched-opt" xreflabel="The Optimal Scheduler">
+  <sect1 id="section-sched-opt" xreflabel="The Optimal Scheduler">
   <title>The Optimal Scheduler</title>
   <para>
     The <emphasis>optimal</emphasis> scheduler takes advantage of the fact that
@@ -86,7 +86,7 @@
   </sect1>
 </chapter>
 
-<chapter id="cha-loopbased-loopfn">
+<chapter id="chapter-loopbased-loopfn">
   <title>How a loopfunc works</title>
   <para>
     A <function>_loop ()</function> function is a function that is called by
@@ -139,7 +139,7 @@ gst_my_filter_loopfunc (GstElement *element)
     introduction to the concept.
   </para>
 
-  <sect1 id="sect1-loopfn-multiinput" xreflabel="Multi-Input Elements">
+  <sect1 id="section-loopfn-multiinput" xreflabel="Multi-Input Elements">
     <title>Multi-Input Elements</title>
     <para>
       Elements with multiple sink pads need to take manual control over their
@@ -256,7 +256,7 @@ gst_my_filter_loopfunc (GstElement *element)
     </para>
   </sect1>
 
-  <sect1 id="sect1-loopfn-bytestream" xreflabel="The Bytestream Object">
+  <sect1 id="section-loopfn-bytestream" xreflabel="The Bytestream Object">
     <title>The Bytestream Object</title>
     <para>
       A second type of elements that wants to be loop-based, are the so-called
@@ -271,7 +271,7 @@ gst_my_filter_loopfunc (GstElement *element)
       Bytestream-using elements are ususally stream parsers or demuxers. For
       now, we will take a parser as an example. Demuxers require some more
       magic that will be dealt with later in this guide:
-      <xref linkend="cha-advanced-request"/>. The goal of this parser will be
+      <xref linkend="chapter-advanced-request"/>. The goal of this parser will be
       to parse a text-file and to push each line of text as a separate buffer
       over its source pad.
     </para>
@@ -357,14 +357,14 @@ gst_my_filter_change_state (GstElement *element)
     </para>
   </sect1>
 
-  <sect1 id="sect-loopbased-secnd">
+  <sect1 id="section-loopbased-secnd">
     <title>Adding a second output</title>
     <para>
       Identity is now a tee
     </para>
   </sect1>
 
-  <sect1 id="sect-loopbased-modappl">
+  <sect1 id="section-loopbased-modappl">
     <title>Modifying the test application</title>
     <para>
       WRITEME

@@ -1,6 +1,6 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-building-args" xreflabel="Adding Arguments">
+<chapter id="chapter-building-args" xreflabel="Adding Arguments">
   <title>Adding Arguments</title>
   <para>
     The primary and most important way of controlling how an element behaves,

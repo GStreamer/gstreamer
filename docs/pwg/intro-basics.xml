@@ -1,6 +1,6 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-intro-basics" xreflabel="Basic Concepts">
+<chapter id="chapter-intro-basics" xreflabel="Basic Concepts">
   <title>Basic Concepts</title>
   <para>
     This chapter of the guide introduces the basic concepts of &GStreamer;.
@@ -12,7 +12,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-basics-elements" xreflabel="Elements and Plugins">
+  <sect1 id="section-basics-elements" xreflabel="Elements and Plugins">
     <title>Elements and Plugins</title>
     <para>
       Elements are at the core of &GStreamer;. In the context of plugin
@@ -64,7 +64,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-basics-pads" xreflabel="Pads">
+  <sect1 id="section-basics-pads" xreflabel="Pads">
     <title>Pads</title>
     <para>
       <emphasis>Pads</emphasis> are used to negotiate links and data flow
@@ -103,7 +103,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-basics-data" xreflabel="Data, Buffers and Events">
+  <sect1 id="section-basics-data" xreflabel="Data, Buffers and Events">
     <title>Data, Buffers and Events</title>
     <para>
       All streams of data in &GStreamer; are chopped up into chunks that are
@@ -230,7 +230,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-basics-types" xreflabel="Types and Properties">
+  <sect1 id="section-basics-types" xreflabel="Types and Properties">
     <title>Mimetypes and Properties</title>
     <para>
       &GStreamer; uses a type system to ensure that the data passed between
@@ -251,7 +251,7 @@
         &GStreamer;. The table contains the name ("mime type") and a
         description of the type, the properties associated with the type, and
         the meaning of each property. A full list of supported types is
-        included in <xref linkend="sect1-types-definitions"/>.
+        included in <xref linkend="section-types-definitions"/>.
       </para>
 
       <table frame="all" id="table-basictypes" xreflabel="Table of Basic Types">

@@ -1,4 +1,4 @@
-<chapter id="cha-advanced-tagging">
+<chapter id="chapter-advanced-tagging">
   <title>Tagging (Metadata and Streaminfo)</title>
   <para>
     Tags are pieces of information stored in a stream that are not the content
@@ -37,14 +37,14 @@
     element supporting both can be used in a tag editor for quick tag changing.
   </para>
 
-  <sect1 id="sect-tagging-read" xreflabel="Reading Tags from Streams">
+  <sect1 id="section-tagging-read" xreflabel="Reading Tags from Streams">
     <title>Reading Tags from Streams</title>
     <para>
       WRITEME
     </para>
   </sect1>
 
-  <sect1 id="sect-tagging-write" xreflabel="Writing Tags to Streams">
+  <sect1 id="section-tagging-write" xreflabel="Writing Tags to Streams">
     <title>Writing Tags to Streams</title>
     <para>
       WRITEME

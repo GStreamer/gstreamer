@@ -1,5 +1,33 @@
 2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/pwg/advanced-clock.xml:
+	* docs/pwg/advanced-dparams.xml:
+	* docs/pwg/advanced-events.xml:
+	* docs/pwg/advanced-interfaces.xml:
+	* docs/pwg/advanced-midi.xml:
+	* docs/pwg/advanced-request.xml:
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/advanced-types.xml:
+	* docs/pwg/appendix-checklist.xml:
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-chainfn.xml:
+	* docs/pwg/building-filterfactory.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/building-props.xml:
+	* docs/pwg/building-signals.xml:
+	* docs/pwg/building-state.xml:
+	* docs/pwg/building-testapp.xml:
+	* docs/pwg/intro-basics.xml:
+	* docs/pwg/intro-preface.xml:
+	* docs/pwg/other-autoplugger.xml:
+	* docs/pwg/other-sink.xml:
+	* docs/pwg/other-source.xml:
+	* docs/pwg/titlepage.xml:
+          fix up id's
+
+2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/95NonPath:
 	* docs/HACKING:
 	* docs/README:

@@ -1,7 +1,7 @@
-<chapter id="cha-advanced-interfaces">
+<chapter id="chapter-advanced-interfaces">
   <title>Interfaces</title>
   <para>
-    Previously, in the chapter <xref linkend="cha-building-args"/>, we have
+    Previously, in the chapter <xref linkend="chapter-building-args"/>, we have
     introduced the concept of GObject properties of controlling an element's
     behaviour. This is a very powerful, but has two big disadvantage: firstly,
     it is too generic, and secondly, it isn't dynamic.
@@ -47,7 +47,7 @@
     commandline (<filename>gst-launch</filename>).
   </para>
 
-  <sect1 id="sect1-iface-general" xreflabel="How to Implement Interfaces">
+  <sect1 id="section-iface-general" xreflabel="How to Implement Interfaces">
     <title>How to Implement Interfaces</title>
     <para>
       Implementing interfaces is intiated in the <function>_get_type ()</function>
@@ -64,7 +64,7 @@
       wanting to support. The example below explains how to add support for a
       simple interface with no further dependencies. For a small explanation
       on <classname>GstImplementsInterface</classname>, see the next section
-      about the mixer interface: <xref linkend="sect1-iface-mixer"/>.
+      about the mixer interface: <xref linkend="section-iface-mixer"/>.
     </para>
     <programlisting>
 static void	gst_my_filter_some_interface_init	(GstSomeInterface *iface);
@@ -112,7 +112,7 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
     </programlisting>
   </sect1>
 
-  <sect1 id="sect1-iface-mixer" xreflabel="Mixer Interface">
+  <sect1 id="section-iface-mixer" xreflabel="Mixer Interface">
     <title>Mixer Interface</title>
     <para>
       The goal of the mixer interface is to provide a simple yet powerful API
@@ -269,26 +269,26 @@ gst_my_filter_mixer_interface_init (GstMixerClass *iface)
     </programlisting>
   </sect1>
 
-  <sect1 id="sect1-iface-tuner" xreflabel="Tuner Interface">
+  <sect1 id="section-iface-tuner" xreflabel="Tuner Interface">
     <title>Tuner Interface</title>
     <para>
       WRITEME
     </para>
   </sect1>
 
-  <sect1 id="sect1-iface-colorbalance" xreflabel="Color Balance Interface">
+  <sect1 id="section-iface-colorbalance" xreflabel="Color Balance Interface">
     <title>Color Balance Interface</title>
     <para>
       WRITEME
     </para>
   </sect1>
 
-  <sect1 id="sect1-iface-propprobe" xreflabel="Property Probe Interface">
+  <sect1 id="section-iface-propprobe" xreflabel="Property Probe Interface">
     <title>Property Probe Interface</title>
     <para>
       Property probing is a generic solution to the problem that properties'
       value lists in an enumeration are static. We've shown enumerations in
-      <xref linkend="cha-building-args"/>. Property probing tries to accomplish
+      <xref linkend="chapter-building-args"/>. Property probing tries to accomplish
       a goal similar to enumeration lists: to have a limited, explicit list of
       allowed values for a property. There are two differences between
       enumeration lists and probing. Firstly, enumerations only allow strings
@@ -447,21 +447,21 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
     </para>
   </sect1>
 
-  <sect1 id="sect1-iface-profile" xreflabel="Profile Interface">
+  <sect1 id="section-iface-profile" xreflabel="Profile Interface">
     <title>Profile Interface</title>
     <para>
       WRITEME
     </para>
   </sect1>
                                                                                 
-  <sect1 id="sect1-iface-xoverlay" xreflabel="X Overlay Interface">
+  <sect1 id="section-iface-xoverlay" xreflabel="X Overlay Interface">
     <title>X Overlay Interface</title>
     <para>
       WRITEME
     </para>
   </sect1>
 
-  <sect1 id="sect1-iface-navigation" xreflabel="Navigation Interface">
+  <sect1 id="section-iface-navigation" xreflabel="Navigation Interface">
     <title>Navigation Interface</title>
     <para>
       WRITEME

@@ -1,6 +1,6 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-building-types">
+<chapter id="chapter-building-types">
   <title>Types and Properties</title>
   <para>
     There is a very large set of possible types that may be used to pass data
@@ -56,11 +56,11 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-types-test" xreflabel="Building a Simple Format for Testing">
+  <sect1 id="section-types-test" xreflabel="Building a Simple Format for Testing">
     <title>Building a Simple Format for Testing</title>
     <para>
       If you need a new format that has not yet been defined in our <xref
-      linkend="sect1-types-definitions"/>, you will want to have some general
+      linkend="section-types-definitions"/>, you will want to have some general
       guidelines on mimetype naming, properties and such. A mimetype would
       ideally be one defined by IANA; else, it should be in the form
       type/x-name, where type is the sort of data this mimetype handles (audio,
@@ -83,7 +83,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-types-typefind" xreflabel="Typefind Functions and Autoplugging">
+  <sect1 id="section-types-typefind" xreflabel="Typefind Functions and Autoplugging">
     <title>Typefind Functions and Autoplugging</title>
     <para>
       WRITEME
@@ -92,7 +92,7 @@
 
   <!-- ############ sect1 ############# -->
                                                                                 
-  <sect1 id="sect1-types-definitions" xreflabel="List of Defined Types">
+  <sect1 id="section-types-definitions" xreflabel="List of Defined Types">
     <title>List of Defined Types</title>
       <para>
         Below is a list of all the defined types in &GStreamer;. They are split

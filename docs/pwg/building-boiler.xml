@@ -1,6 +1,6 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="cha-building-boiler" xreflabel="Constructing the Boilerplate">
+<chapter id="chapter-building-boiler" xreflabel="Constructing the Boilerplate">
   <title>Constructing the Boilerplate</title>
   <para>
     In this chapter you will learn how to construct the bare minimum code for a
@@ -14,7 +14,7 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-source" xreflabel="Getting the GStreamer Plugin Templates">
+  <sect1 id="section-boiler-source" xreflabel="Getting the GStreamer Plugin Templates">
     <title>Getting the GStreamer Plugin Templates</title>
     <para>
       There are currently two ways to develop a new plugin for &GStreamer;: You
@@ -62,7 +62,7 @@ U gst-template/gst-app/src/Makefile.am
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-project-stamp" xreflabel="Using the Project Stamp">
+  <sect1 id="section-boiler-project-stamp" xreflabel="Using the Project Stamp">
     <title>Using the Project Stamp</title>
     <para>
       The first thing to do when making a new element is to specify some basic
@@ -115,7 +115,7 @@ U gst-template/gst-app/src/Makefile.am
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-examine">
+  <sect1 id="section-boiler-examine">
     <title>Examining the Basic Code</title>
     <para>
       First we will examine the code you would be likely to place in a header
@@ -167,7 +167,7 @@ U gst-template/gst-app/src/Makefile.am
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-details">
+  <sect1 id="section-boiler-details">
     <title>GstElementDetails</title>
     <para>
       The GstElementDetails structure gives a heirarchical type for the element,
@@ -222,7 +222,7 @@ gst_my_filter_base_init (GstMyFilterClass *klass)
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-padtemplates">
+  <sect1 id="section-boiler-padtemplates">
     <title>GstStaticPadTemplate</title>
     <para>
       A GstStaticPadTemplate is a description of a pad that the element will
@@ -317,13 +317,13 @@ GST_STATIC_PAD_TEMPLATE (
       Multiple sets of types are supported too, and should be separated by
       a semicolon (<quote>;</quote>). Later, in the chapter on pads, we will
       see how to use types to know the exact format of a stream:
-      <xref linkend="cha-building-pads"/>.
+      <xref linkend="chapter-building-pads"/>.
     </para>
   </sect1>
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-constructors">
+  <sect1 id="section-boiler-constructors">
     <title>Constructor Functions</title>
     <para>
       Each element has three functions which are used for construction of an
@@ -339,7 +339,7 @@ GST_STATIC_PAD_TEMPLATE (
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-plugininit">
+  <sect1 id="section-boiler-plugininit">
     <title>The plugin_init function</title>
     <para>
       Once we have written code defining all the parts of the plugin, we need to
