@@ -94,10 +94,21 @@ _wrap_gst_bin_iterate(PyGObject *self)
 {
 	int ret;
 
+/* XXX: Find out which one is the most correct */
+#if 1	
         pyg_begin_allow_threads;
-    
+
 	ret = gst_bin_iterate(GST_BIN(self->obj));
+	
         pyg_end_allow_threads;
+
+#else
+	PyGILState_STATE state;
+	
+        state = pyg_gil_state_ensure();
+	ret = gst_bin_iterate(GST_BIN(self->obj));
+	pyg_gil_state_release(state);
+#endif	
 	return PyInt_FromLong(ret);
 }
 %%
