@@ -1,0 +1,50 @@
+GStreamer for Debian
+----------------------
+This package contains the GStreamer plugin distribution.
+
+More information can be found at http://gstreamer.net/
+
+GStreamer plugins are split into a number of packages:
+
+pseudo package:
+
+   gstreamer-all      depends on all the packages below
+
+plugins without external dependencies:
+
+   gstreamer-misc     many independent plugins
+
+plugins with external dependencies:
+
+   gstreamer-a52dec
+   gstreamer-aa
+   gstreamer-alsa
+   gstreamer-arts
+   gstreamer-artsd
+   gstreamer-audiofile
+   gstreamer-avifile
+   gstreamer-cdparanoia
+   gstreamer-colorspace
+   gstreamer-dvd
+   gstreamer-esd
+   gstreamer-festival
+   gstreamer-flac
+   gstreamer-gnomevfs
+   gstreamer-gsm
+   gstreamer-jpeg
+   gstreamer-lame
+   gstreamer-mad
+   gstreamer-mikmod
+   gstreamer-mpeg2dec
+   gstreamer-oss
+   gstreamer-sdl
+   gstreamer-sid
+   gstreamer-vorbis
+   gstreamer-x
+
+library plugins:
+
+   gstreamer-lib-misc      various libs
+   gstreamer-lib-misc-dev  headers for -lib-misc libs
+
+David I. Lehn <dlehn@vt.edu>  Fri, 19 Jan 2001 19:13:06 -0500

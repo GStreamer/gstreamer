@@ -1,0 +1,4 @@
+usr/lib/gst/libgstaudio.*
+usr/lib/gst/libgstidct.*
+usr/lib/gst/libgstriff.*
+usr/lib/gst/libgstresample.*
