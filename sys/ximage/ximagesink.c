@@ -400,11 +400,35 @@ gst_ximagesink_xwindow_clear (GstXImageSink *ximagesink, GstXWindow *xwindow)
 }
 
 static void
+gst_ximagesink_xwindow_update_geometry (GstXImageSink *ximagesink,
+                                        GstXWindow *xwindow)
+{
+  XWindowAttributes attr;
+  
+  g_return_if_fail (xwindow != NULL);
+  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  
+  /* Update the window geometry */
+  g_mutex_lock (ximagesink->x_lock);
+  XGetWindowAttributes (ximagesink->xcontext->disp,
+                        ximagesink->xwindow->win, &attr);
+  g_mutex_unlock (ximagesink->x_lock);
+  
+  ximagesink->xwindow->width = attr.width;
+  ximagesink->xwindow->height = attr.height;
+}
+
+static void
 gst_ximagesink_renegotiate_size (GstXImageSink *ximagesink)
 {
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   if (!ximagesink->xwindow)
+    return;
+  
+  gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
+  
+  if (ximagesink->sw_scaling_failed)
     return;
   
   if (ximagesink->xwindow->width <= 1 || ximagesink->xwindow->height <= 1)
@@ -454,6 +478,10 @@ gst_ximagesink_renegotiate_size (GstXImageSink *ximagesink)
                                              GST_VIDEOSINK_HEIGHT (ximagesink));
             }
         }
+      else
+        {
+          ximagesink->sw_scaling_failed = TRUE;
+        }
     }
 }
 
@@ -466,46 +494,11 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
 {
   XEvent e;
   guint pointer_x = 0, pointer_y = 0;
-  gboolean pointer_moved = FALSE, window_configured = FALSE;
+  gboolean pointer_moved = FALSE;
   
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
-  /* First we get all structure modification events. Only the last one is 
-     interesting */
-  g_mutex_lock (ximagesink->x_lock);
-  while (XCheckWindowEvent (ximagesink->xcontext->disp,
-                            ximagesink->xwindow->win,
-                            StructureNotifyMask, &e))
-    {
-      g_mutex_unlock (ximagesink->x_lock);
-      
-      switch (e.type)
-        {
-          case ConfigureNotify:
-            /* We ignore configure events from external window. Renegotiation
-               will only happen if the application tell us to do so through
-               gst_x_overlay_expose */
-            if (ximagesink->xwindow->internal)
-              {
-                ximagesink->xwindow->width = e.xconfigure.width;
-                ximagesink->xwindow->height = e.xconfigure.height;
-                window_configured = TRUE;
-              }
-            break;
-          default:
-            break;
-        }
-        
-      g_mutex_lock (ximagesink->x_lock);
-    }
-  g_mutex_unlock (ximagesink->x_lock);
-  
-  if (window_configured)
-    {
-      GST_DEBUG ("ximagesink window geometry is : %d,%d",
-                 ximagesink->xwindow->width, ximagesink->xwindow->height);
-      gst_ximagesink_renegotiate_size (ximagesink);
-    }
+  gst_ximagesink_renegotiate_size (ximagesink);
   
   /* Then we get all pointer motion events, only the last position is
      interesting. */
@@ -881,6 +874,7 @@ gst_ximagesink_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       ximagesink->framerate = 0;
+      ximagesink->sw_scaling_failed = FALSE;
       GST_VIDEOSINK_WIDTH (ximagesink) = 0;
       GST_VIDEOSINK_HEIGHT (ximagesink) = 0;
       break;
@@ -1249,27 +1243,17 @@ gst_ximagesink_get_desired_size (GstXOverlay *overlay,
 static void
 gst_ximagesink_expose (GstXOverlay *overlay)
 {
-  XWindowAttributes attr;
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
   
   if (!ximagesink->xwindow)
     return;
   
+  gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
+  
   /* We don't act on internal window from outside that could cause some thread
      race with the video sink own thread checking for configure event */
   if (ximagesink->xwindow->internal)
     return;
-  
-  /* Update the window geometry */
-  g_mutex_lock (ximagesink->x_lock);
-  XGetWindowAttributes (ximagesink->xcontext->disp,
-                        ximagesink->xwindow->win, &attr);
-  g_mutex_unlock (ximagesink->x_lock);
-  
-  ximagesink->xwindow->width = attr.width;
-  ximagesink->xwindow->height = attr.height;
-  
-  gst_ximagesink_renegotiate_size (ximagesink);
   
   gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
   
@@ -1397,6 +1381,9 @@ gst_ximagesink_init (GstXImageSink *ximagesink)
   
   ximagesink->image_pool = NULL;
   ximagesink->pool_lock = g_mutex_new ();
+  
+  ximagesink->sw_scaling_failed = FALSE;
+  ximagesink->synchronous = FALSE;
 
   GST_FLAG_SET(ximagesink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET(ximagesink, GST_ELEMENT_EVENT_AWARE);

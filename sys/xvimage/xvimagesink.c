@@ -1766,6 +1766,8 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
   xvimagesink->image_pool = NULL;
   xvimagesink->pool_lock = g_mutex_new ();
 
+  xvimagesink->synchronous = FALSE;
+
   GST_FLAG_SET(xvimagesink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET(xvimagesink, GST_ELEMENT_EVENT_AWARE);
 }

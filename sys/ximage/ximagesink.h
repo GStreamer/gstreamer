@@ -125,6 +125,7 @@ struct _GstXImageSink {
   GSList *image_pool;
   
   gboolean synchronous;
+  gboolean sw_scaling_failed;
 };
 
 struct _GstXImageSinkClass {
