@@ -42,9 +42,10 @@ _ref {_identifier}"."{_identifier}?
 _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
 
 /* links */
-_capschar ("\\".)|([^[:space:]\;!\.\,\(\)\]\[])
+_mimechar ([[:alnum:]-])
+_mimetype ({_mimechar}+"/"{_mimechar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
+_capschar ("\\".)|([^[:space:]\;!\,\(\)\]\[])
 _capsstring {_capschar}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
-_mimetype ({_capschar}+"/"{_capschar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
 _caps {_mimetype}(","[^!]|{_capsstring})*
 _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!")|("!")
 
