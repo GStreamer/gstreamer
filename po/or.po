@@ -2,13 +2,13 @@
 # Copyright (C) 2004, Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-0.8.3 package.
 # Gora Mohanty <gora_mohanty@yahoo.co.in>, 2004.
-# $Id: or.po,v 1.1 2004/10/06 09:16:19 thomasvs Exp $
+# $Id: or.po,v 1.2 2004/10/06 17:02:14 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:20+0200\n"
+"POT-Creation-Date: 2004-11-12 19:06+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,54 +16,107 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "ଅନୁଚ୍ଚ ସ୍ବର"
+
+#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "ଉଚ୍ଚ ସ୍ବର"
+
+#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "ପି.ସି.ଏମ."
+
+#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "ସିନ୍ଥେସାଇଜର"
+
+#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "ଲାଇନ-ଇନ"
+
+#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "ସି.ଡି."
+
+#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#: ext/alsa/gstalsamixertrack.c:91
+#, fuzzy
+msgid "PC Speaker"
+msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
+
+#: ext/alsa/gstalsamixertrack.c:92
+msgid "Playback"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:93
+msgid "Capture"
+msgstr ""
+
+#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/audiofile/gstafsrc.c:318
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "discid"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
 msgid "Could not open CD device for reading."
 msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1156
+#: ext/gnomevfs/gstgnomevfssrc.c:1157
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#: ext/gnomevfs/gstgnomevfssrc.c:1165
 #, fuzzy
 msgid "No filename given."
 msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ"
 
-#: ext/gnomevfs/gstgnomevfssink.c:428
+#: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:435
+#: ext/gnomevfs/gstgnomevfssink.c:439
 msgid "No filename given"
 msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ"
 
-#: ext/gnomevfs/gstgnomevfssink.c:463
+#: ext/gnomevfs/gstgnomevfssink.c:467
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:585
 msgid "No filename specified."
 msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ ନାହିଁ."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:838
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
@@ -90,32 +143,32 @@ msgstr ""
 "କୌଣସି ବ୍ଯବହାରଯୋଗ୍ଯ ରଙ୍ଗକ୍ଷେତ୍ର ଉପାଦାନ ମିଳିଲା ନାହିଁ.\n"
 "ଦୟା କରି ଗୋଟିଏ ଉପାଦାନ ସ୍ଥାପିତ କରି ପୁନଃପ୍ରାରମ୍ଭ କରନ୍ତୁ."
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ରକୁ %d ହର୍ଜରେ ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
@@ -130,7 +183,7 @@ msgstr "\"%s\" ଭିଡିଓ ଯନ୍ତ୍ର ଲେଖିବା ପାଇ�
 msgid "Could not close video device \"%s\"."
 msgstr "\"%s\" ଭିଡିଓ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
@@ -168,37 +221,9 @@ msgstr "ଆପଣଙ୍କର ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ରର ଠିକ
 msgid "Volume"
 msgstr "ପ୍ରବଳତା"
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "ଅନୁଚ୍ଚ ସ୍ବର"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "ଉଚ୍ଚ ସ୍ବର"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "ସିନ୍ଥେସାଇଜର"
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "ପି.ସି.ଏମ."
-
 #: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "ଲାଇନ-ଇନ"
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "ମାଇକ୍ରୋଫୋନ୍"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "ସି.ଡି."
 
 #: sys/oss/gstossmixer.c:116
 msgid "Mixer"
@@ -268,7 +293,7 @@ msgstr "ପ୍ରଦର୍ଶିକା"
 msgid "No device specified."
 msgstr "କୌଣସି ଯନ୍ତ୍ର ଉଲ୍ଲେଖିତ କରାଯାଇ ନାହିଁ."
 
-#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
@@ -281,17 +306,17 @@ msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇ ନାହିଁ."
 msgid "Device is open."
 msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇଚ୍ଛି."
 
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/v4l2_calls.c:414
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2src_calls.c:256
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2src_calls.c:265
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."

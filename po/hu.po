@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:20+0200\n"
+"POT-Creation-Date: 2004-11-12 19:06+0100\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -14,54 +14,107 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Basszus"
+
+#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Magas"
+
+#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "PCM"
+
+#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Szintet."
+
+#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Vonalbemenet"
+
+#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "CD"
+
+#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: ext/alsa/gstalsamixertrack.c:91
+#, fuzzy
+msgid "PC Speaker"
+msgstr "Hangszóró"
+
+#: ext/alsa/gstalsamixertrack.c:92
+msgid "Playback"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:93
+msgid "Capture"
+msgstr ""
+
+#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/audiofile/gstafsrc.c:318
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" fájlt."
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "discid"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1156
+#: ext/gnomevfs/gstgnomevfssrc.c:1157
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" vfs-fájlt."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#: ext/gnomevfs/gstgnomevfssrc.c:1165
 #, fuzzy
 msgid "No filename given."
 msgstr "Nincs fájlnév megadva"
 
-#: ext/gnomevfs/gstgnomevfssink.c:428
+#: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vfs-fájlt: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:435
+#: ext/gnomevfs/gstgnomevfssink.c:439
 msgid "No filename given"
 msgstr "Nincs fájlnév megadva"
 
-#: ext/gnomevfs/gstgnomevfssink.c:463
+#: ext/gnomevfs/gstgnomevfssink.c:467
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:585
 msgid "No filename specified."
 msgstr "Nincs fájlnév megadva."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:838
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nem lehet írni a(z) \"%s\" fájlba."
@@ -84,32 +137,32 @@ msgid ""
 "Please install one and restart."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" audioeszközt."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vezérlőeszközt."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Nem lehet beállítani a(z) \"%s\" audioeszközt."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Nem lehet beállítani a(z) \"%s\" audioeszközt %d Hz-re."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Nem lehet lezárni a(z) \"%s\" audioeszközt."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Nem lehet lezárni a(z) \"%s\" vezérlőeszközt."
@@ -124,7 +177,7 @@ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" videoeszközt."
 msgid "Could not close video device \"%s\"."
 msgstr "Nem lehet lezárni a(z) \"%s\" videoeszközt."
 
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Nem lehet írni a(z) \"%s\" eszközre."
@@ -164,37 +217,9 @@ msgstr "Az Ön OSS-eszközét nem lehet megfelelően ellenőrizni"
 msgid "Volume"
 msgstr "Hangerő"
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Basszus"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Magas"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Szintet."
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "PCM"
-
 #: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Hangszóró"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "Vonalbemenet"
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "Mikrofon"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "CD"
 
 #: sys/oss/gstossmixer.c:116
 msgid "Mixer"
@@ -264,7 +289,7 @@ msgstr "Monitor"
 msgid "No device specified."
 msgstr "Nincs megadva eszköz."
 
-#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni a(z) \"%s\" eszközt."
@@ -277,17 +302,17 @@ msgstr "Az eszköz nincs nyitva."
 msgid "Device is open."
 msgstr "Az eszköz nyitva van."
 
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/v4l2_calls.c:414
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "A(z) \"%s\" eszköz nem rögzítőeszköz."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2src_calls.c:256
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr "Nem lehet puffereket szerezni a(z) \"%s\" eszköztől."
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2src_calls.c:265
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Nem lehet elég puffert szerezni a(z) \"%s\" eszköztől."
