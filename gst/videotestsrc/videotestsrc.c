@@ -593,7 +593,6 @@ gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h)
   paintinfo pi;
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
-  struct vts_color_struct color;
 
   p->width = w;
   p->height = h;
@@ -604,10 +603,10 @@ gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h)
   fourcc->paint_setup (p, dest);
   p->paint_hline = fourcc->paint_hline;
 
-  color = vts_colors[COLOR_BLACK];
+  p->color = vts_colors + COLOR_BLACK;
 
-  for (i = 0; i < w; i++) {
-    p->paint_hline (p, i, 0, w);
+  for (i = 0; i < h; i++) {
+    p->paint_hline (p, 0, i, w);
   }
 }
 

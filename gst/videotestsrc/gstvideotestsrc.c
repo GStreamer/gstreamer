@@ -52,6 +52,7 @@ enum
   ARG_HEIGHT,
   ARG_FOURCC,
   ARG_RATE,
+  ARG_TYPE,
   /* FILL ME */
 };
 
@@ -59,6 +60,7 @@ static void gst_videotestsrc_class_init (GstVideotestsrcClass * klass);
 static void gst_videotestsrc_init (GstVideotestsrc * videotestsrc);
 static GstElementStateReturn gst_videotestsrc_change_state (GstElement * element);
 
+static void gst_videotestsrc_set_pattern (GstVideotestsrc *src, int pattern_type);
 static void gst_videotestsrc_set_property (GObject * object, guint prop_id,
 					   const GValue * value, GParamSpec * pspec);
 static void gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
@@ -77,7 +79,7 @@ videotestsrc_src_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("ack","video/raw",
+    GstCaps *caps = GST_CAPS_NEW("src","video/raw",
 			"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
 			"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
 
@@ -111,6 +113,25 @@ gst_videotestsrc_get_type (void)
   return videotestsrc_type;
 }
 
+#define GST_TYPE_VIDEOTESTSRC_PATTERN (gst_videotestsrc_pattern_get_type ())
+static GType
+gst_videotestsrc_pattern_get_type (void)
+{
+  static GType videotestsrc_pattern_type = 0;
+  static GEnumValue pattern_types[] = {
+    { GST_VIDEOTESTSRC_SMPTE, "smpte", "SMPTE 100% color bars" },
+    { GST_VIDEOTESTSRC_SNOW,  "snow",  "Random (television snow)" },
+    { GST_VIDEOTESTSRC_BLACK, "black", "0% Black" },
+    { 0, NULL, NULL },
+  };
+
+  if (!videotestsrc_pattern_type){
+    videotestsrc_pattern_type = g_enum_register_static("GstVideotestsrcPattern",
+		    pattern_types);
+  }
+  return videotestsrc_pattern_type;
+}
+
 static void
 gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
 {
@@ -132,6 +153,9 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
       g_param_spec_int ("rate", "Rate", "Frame rate",
         1, 100, 30, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
+      g_param_spec_enum ("pattern", "Pattern", "Type of test pattern to generate",
+        GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -160,8 +184,6 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   gst_caps_get_int (caps, "width", &videotestsrc->width);
   gst_caps_get_int (caps, "height", &videotestsrc->height);
 
-  videotestsrc->make_image = gst_videotestsrc_smpte;
-  videotestsrc->make_image = gst_videotestsrc_black;
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
   GST_DEBUG (0, "size %d x %d", videotestsrc->width, videotestsrc->height);
@@ -258,6 +280,7 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   videotestsrc->interval = GST_SECOND / videotestsrc->rate;
 
   videotestsrc->pool = NULL;
+  gst_videotestsrc_set_pattern(videotestsrc, GST_VIDEOTESTSRC_SMPTE);
 }
 
 
@@ -300,6 +323,27 @@ gst_videotestsrc_get (GstPad * pad)
 }
 
 static void
+gst_videotestsrc_set_pattern (GstVideotestsrc *src, int pattern_type)
+{
+  src->type = pattern_type;
+
+  g_print("setting pattern to %d\n",pattern_type);
+  switch(pattern_type){
+    case GST_VIDEOTESTSRC_SMPTE:
+      src->make_image = gst_videotestsrc_smpte;
+      break;
+    case GST_VIDEOTESTSRC_SNOW:
+      src->make_image = gst_videotestsrc_snow;
+      break;
+    case GST_VIDEOTESTSRC_BLACK:
+      src->make_image = gst_videotestsrc_black;
+      break;
+    default:
+      g_assert_not_reached();
+  }
+}
+
+static void
 gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 			       GParamSpec * pspec)
 {
@@ -324,6 +368,9 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
     case ARG_RATE:
       src->rate = g_value_get_int (value);
       src->interval = GST_SECOND/src->rate;
+      break;
+    case ARG_TYPE:
+      gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
       break;
     default:
       break;
@@ -352,6 +399,9 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
       break;
     case ARG_RATE:
       g_value_set_int (value, src->rate);
+      break;
+    case ARG_TYPE:
+      g_value_set_enum (value, src->type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
