@@ -5,6 +5,9 @@ class StructureTest(unittest.TestCase):
     def setUp(self):
         self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5.0')
 
+    #def foo(self):
+    #    gst.structure_from_string("foo")
+        
     def testName(self):
         assert self.struct.get_name() == 'video/x-raw-yuv'
         self.struct.set_name('foobar')

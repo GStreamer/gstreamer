@@ -396,6 +396,7 @@ _wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
         len = PyTuple_Size(args);
         self->gtype = GST_TYPE_CAPS;
 	self->free_on_dealloc = FALSE;
+	
         if (len == 0) {
 		self->boxed = gst_caps_new_empty();
 	} else if (len == 1) {
@@ -761,7 +762,6 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 	const char *key;
 	GstStructure* structure;
 	GValue value = { 0, };
-	GType gtype;
 
 	structure = (GstStructure*)self->obj;
 	key = PyString_AsString(py_key);

@@ -34,18 +34,22 @@ class CapsTest(unittest.TestCase):
 
     def testCapsConstructFromStructures(self):
         struct1 = gst.structure_from_string('video/x-raw-yuv,width=10')
-        struct2 = gst.structure_from_string('video/x-raw-rgb,width=20')
+        struct2 = gst.structure_from_string('video/x-raw-rgb,height=20.0')
         caps = gst.Caps(struct1, struct2)
 	assert isinstance(caps, gst.Caps)
         assert len(caps) == 2
-	assert isinstance(caps[0], gst.Structure)
-	assert isinstance(caps[1], gst.Structure)
-        assert caps[0].get_name() == 'video/x-raw-yuv'
-        assert caps[1].get_name() == 'video/x-raw-rgb'
-	assert isinstance(caps[0]['width'], int)
-	assert isinstance(caps[1]['width'], int)
-        assert caps[0]['width'] == 10
-        assert caps[1]['width'] == 20
+        struct = caps[0]
+	assert isinstance(struct, gst.Structure), struct
+        assert struct.get_name() == 'video/x-raw-yuv', struct.get_name()
+        assert struct.has_key('width')
+	assert isinstance(struct['width'], int)
+        assert struct['width'] == 10
+        struct = caps[1]
+	assert isinstance(struct, gst.Structure), struct
+        assert struct.get_name() == 'video/x-raw-rgb', struct.get_name()
+        assert struct.has_key('height')
+	assert isinstance(struct['height'], float)
+        assert struct['height'] == 20.0
 
     def testCapsStructureChange(self):
 	'test if changing the structure of the caps works by reference'
@@ -56,5 +60,16 @@ class CapsTest(unittest.TestCase):
 	structure = self.caps[0]
 	assert structure['width'] == 5.0
 
+    def testCapsBadConstructor(self):
+        struct = gst.structure_from_string('video/x-raw-yuv,width=10')
+        self.assertRaises(TypeError, gst.Caps, None)
+        self.assertRaises(TypeError, gst.Caps, 1)
+        self.assertRaises(TypeError, gst.Caps, 2.0)
+        self.assertRaises(TypeError, gst.Caps, object)
+        self.assertRaises(TypeError, gst.Caps, 1, 2, 3)
+        
+        # This causes segfault!
+        #self.assertRaises(TypeError, gst.Caps, struct, 10, None)
+        
 if __name__ == "__main__":
     unittest.main()
