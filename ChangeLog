@@ -1,3 +1,11 @@
+2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* docs/random/omega/caps2:
+	* testsuite/caps/caps_strings:
+	  replace framerate aproximations by their real value
+	  (24000/1001, 30000/1001, 60000/1001)
+	  Partially fixes bug #164049
+
 2005-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/Makefile.am:

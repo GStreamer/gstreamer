@@ -251,7 +251,7 @@ In this case, the typefind function will find the following:
     "bitrate",      GST_CAPS_INT (36864),
     "width",        GST_CAPS_INT (720),
     "height",       GST_CAPS_INT (480),
-    "framerate",    GST_CAPS_FLOAT (29.97003),
+    "framerate",    GST_CAPS_FLOAT (29.97002997),
     "chromaformat", GST_CAPS_INT (1),		[GST_CAPS_STRING ("4:2:0") ?]
     NULL
   };
@@ -282,7 +282,7 @@ looks like the following:
                  ),
     "width",     GST_CAPS_INT (720),
     "height",    GST_CAPS_INT (480),
-    "framerate", GST_CAPS_FLOAT (29.97003),
+    "framerate", GST_CAPS_FLOAT (29.97002997),
     NULL
   };
 
