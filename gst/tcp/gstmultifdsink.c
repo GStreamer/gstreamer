@@ -92,7 +92,7 @@ gst_recover_policy_get_type (void)
   static GType recover_policy_type = 0;
   static GEnumValue recover_policy[] = {
     {GST_RECOVER_POLICY_NONE, "GST_RECOVER_POLICY_NONE",
-          "Do not try to recover"},
+        "Do not try to recover"},
     {GST_RECOVER_POLICY_RESYNC_START, "GST_RECOVER_POLICY_RESYNC_START",
         "Resync client to most recent buffer"},
     {GST_RECOVER_POLICY_RESYNC_SOFT, "GST_RECOVER_POLICY_RESYNC_SOFT",
@@ -384,7 +384,7 @@ gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
   GST_BUFFER_DATA (buf) = data;
   GST_BUFFER_SIZE (buf) = len;
 
-  GST_DEBUG_OBJECT (sink, "Queueing data of length %d for fd %d",
+  GST_LOG_OBJECT (sink, "Queueing data of length %d for fd %d",
       len, client->fd);
   client->sending = g_list_append (client->sending, buf);
 
