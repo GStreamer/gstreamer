@@ -1,5 +1,13 @@
 2005-03-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* gst/gstconfig.h.in:
+	* gst/indexers/gstindexers.c: (plugin_init):
+	* gst/registries/gstxmlregistry.h:
+	  Fix libxml-less compilation (--disable-loadsave).
+
+2005-03-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/registries/Makefile.am:
 	* gst/registries/gstlibxmlregistry.c: (gst_xml_registry_get_type),
 	(gst_xml_registry_class_init), (gst_xml_registry_init),

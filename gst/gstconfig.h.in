@@ -61,10 +61,11 @@
 
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
 
-#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
+#if (! defined(GST_DISABLE_LOADSAVE) )
 # include <libxml/parser.h>
 #else
-# define GST_DISABLE_LOADSAVE_REGISTRY
+/* misnomer but we cannot rename symbols */
+# define GST_DISABLE_LOADSAVE_REGISTRY 
 #endif
 
 #ifdef WIN32

@@ -30,7 +30,9 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
   res &= gst_mem_index_plugin_init (plugin);
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   res &= gst_file_index_plugin_init (plugin);
+#endif
 
   return res;
 }

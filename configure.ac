@@ -275,9 +275,9 @@ AC_SUBST(GLIB_ONLY_CFLAGS)
 AC_SUBST(GLIB_ONLY_LIBS)
   
 dnl === libxml 2 ===
-if test "x$GST_DISABLE_LOADSAVE" = "xyes" && test "x$GST_DISABLE_REGISTRY" = "xyes"
+if test "x$GST_DISABLE_LOADSAVE" = "xyes"
 then
-  AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
+  AC_MSG_NOTICE([Load/save is disabled, not checking for libxml2])
 else
   dnl check for libxml2 with minimum req version
   GST_LIBXML2_CHECK(2.4.9)

@@ -25,6 +25,7 @@
 #define __GST_XML_REGISTRY_H__
 
 #include <gst/gstregistry.h>
+#include <stdio.h>
 
 G_BEGIN_DECLS
 
