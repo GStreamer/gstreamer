@@ -148,7 +148,7 @@
 	      </signal>
 	      <label>_Extended</label>
 	      <active>False</active>
-	      <always_show_toggle>False</always_show_toggle>
+	      <always_show_toggle>True</always_show_toggle>
 	    </widget>
 
 	    <widget>
@@ -443,6 +443,7 @@ Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:55:52 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
+    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 
   <widget>
@@ -458,6 +459,7 @@ Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:53:48 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
+    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 </widget>
 
