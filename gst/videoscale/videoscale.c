@@ -778,18 +778,20 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest from %p to %p, destination width %d",
+      src, dest, dw);
 
 
   ypos = 0;
-  yinc = (sh << 16) / dh;
+  yinc = (sh << 16) / dh;       /* 16 bit fixed point arithmetic */
   xinc = (sw << 16) / dw;
 
-  for (y = dh; y; y--) {
+  /* go over all destination lines */
+  for (y = dh; y; y--) {        /* faster than 0 .. dh */
 
-    if (ypos >= 0x10000) {
-      src += (ypos >> 16) * sw * 2;
-      ypos &= 0xffff;
+    if (ypos >= 0x10000) {      /* ypos >= 1 ? */
+      src += (ypos >> 16) * sw * 2;     /* go down round(ypos) src lines */
+      ypos &= 0xffff;           /* ypos %= 1 */
     }
 
     xpos = 0;
@@ -797,17 +799,18 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
     srcp = src;
     destp = dest;
 
+    /* go over all destination pixels for each line */
     for (x = dw; x; x--) {
-      if (xpos >= 0x10000) {
-        srcp += (xpos >> 16) * 2;
-        xpos &= 0xffff;
+      if (xpos >= 0x10000) {    /* xpos >= 1 ? */
+        srcp += (xpos >> 16) * 2;       /* go right round(xpos) src pixels */
+        xpos &= 0xffff;         /* xpos %= 1 */
       }
       destp[0] = srcp[0];
       destp[1] = srcp[1];
-      destp += 2;
+      destp += 2;               /* go right one destination pixel */
       xpos += xinc;
     }
-    dest += dw * 2;
+    dest += dw * 2;             /* go down one destination line */
 
     ypos += yinc;
   }
