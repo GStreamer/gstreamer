@@ -765,19 +765,19 @@ gst_xvimagesink_change_state (GstElement *element)
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  
+
   return GST_STATE_SUCCESS;
 }
 
 static void
 gst_xvimagesink_chain (GstPad *pad, GstData *data)
 {
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   GstXvImageSink *xvimagesink;
-  
+
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (data != NULL);
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
     
