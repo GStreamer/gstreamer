@@ -1,3 +1,26 @@
+2004-01-09  Julien MOUTTE <julien@moutte.net>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain):
+	Implementing gst_pad_alloc_buffer to use optimized buffer allocation.
+	* gst-libs/gst/xoverlay/xoverlay.c:
+	(gst_x_overlay_got_desired_size): Updating doc for the xid being 0.
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_chain):
+	Implementing gst_pad_alloc_buffer to use optimized buffer allocation.
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_get):
+	Implementing gst_pad_alloc_buffer to use optimized buffer allocation.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain),
+	(gst_ximagesink_buffer_free), (gst_ximagesink_buffer_alloc),
+	(gst_ximagesink_set_xwindow_id), (gst_ximagesink_init): Implementing
+	the bufferalloc_function to replace bufferpools, fixing the XOverlay
+	interface implementation to handle xid being 0 and fix some bugs
+	triggered by Benjamin's testcase.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain),
+	(gst_xvimagesink_buffer_free), (gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_set_xwindow_id), (gst_xvimagesink_init): Implementing
+	the bufferalloc_function to replace bufferpools, fixing the XOverlay
+	interface implementation to handle xid being 0 and fix some bugs
+	triggered by Benjamin's testcase.
+
 2004-01-09  David Schleef  <ds@schleef.org>
 
 	* ext/librfb/gstrfbsrc.c:  Hacking.  Added actual decoding and
@@ -39,7 +62,7 @@
 	* gst/videodrop/gstvideodrop.c: (gst_videodrop_getcaps),
 	(gst_videodrop_link), (gst_videodrop_init): Fix negotiation.
 
-2004-01-08  Julien MOUTTE,,,  <julien@moutte.net>
+2004-01-08  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents): A
 	configure event is not emiting the desired size signal. That fixes
@@ -87,7 +110,7 @@
 
 	* gst/modplug/gstmodplug.cc: fix element description
 
-2004-01-07  Julien MOUTTE,,,  <julien@moutte.net>
+2004-01-07  Julien MOUTTE  <julien@moutte.net>
 
 	* examples/gstplay/player.c: (got_time_tick), (got_stream_length),
 	(got_video_size): Adding some new lines in g_print calls.
