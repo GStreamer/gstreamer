@@ -1,3 +1,21 @@
+2004-11-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/README:
+	* gst/playback/gstplaybasebin.c: (group_destroy), (group_is_muted),
+	(add_stream), (unknown_type), (add_element_stream), (no_more_pads),
+	(probe_triggered), (preroll_unlinked), (new_decoded_pad),
+	(gst_play_base_bin_change_state), (gst_play_base_bin_found_tag):
+	* gst/playback/gstplaybin.c: (gen_vis_element), (remove_sinks),
+	(setup_sinks):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_set_mute),
+	(gst_stream_info_is_mute), (gst_stream_info_set_property):
+	* gst/playback/gststreaminfo.h:
+	Updated README.
+	Only switch groups if all streams have muted (EOSed).
+	Send Tags in sync with the stream playback instead of in
+	the playback/preroll phase.
+	Some cleanups, free the fakesrc elements.
+
 2004-11-09  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_get_caps_internal):
