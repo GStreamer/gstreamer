@@ -111,7 +111,12 @@ class DefsParser(IncludeParser):
                       not func.is_constructor_of, self.functions)
 
     def ifdef(self, *args):
-	if args[1] in self.defines:
-	    for arg in args[2:]:
+	if args[0] in self.defines:
+	    for arg in args[1:]:
+		self.handle(arg)
+
+    def ifndef(self, *args):
+	if args[0] not in self.defines:
+	    for arg in args[1:]:
 		self.handle(arg)
 

@@ -1,7 +1,6 @@
 import sys, os, string
 import getopt, traceback, keyword
 import defsparser, argtypes, override
-from override import class2cname
 
 def exc_info():
     #traceback.print_exc()
@@ -190,11 +189,8 @@ class Wrapper:
             if slot[:6] == 'tp_as_':
                 slotfunc = '&' + slotfunc
             if self.overrides.slot_is_overriden(slotname):
-                lineno, filename = self.overrides.getstartline(slotname)
-                self.fp.setline(lineno, filename)
-                self.fp.write(self.overrides.slot_override(slotname))
-                self.fp.resetline()
-                self.fp.write('\n\n')
+                data = self.overrides.slot_override(slotname)
+                self.write_function(slotname, data)
                 substdict[slot] = slotfunc
             else:
                 substdict[slot] = '0'
@@ -274,14 +270,11 @@ class Wrapper:
         initfunc = '0'
         constructor = self.parser.find_constructor(self.objinfo,self.overrides)
         if constructor:
+            funcname = constructor.c_name
             try:
-                if self.overrides.is_overriden(constructor.c_name):
-                    lineno, filename = self.overrides.getstartline(
-                        constructor.c_name)
-                    self.fp.setline(lineno, filename)
-                    self.fp.write(self.overrides.override(constructor.c_name))
-                    self.fp.resetline()
-                    self.fp.write('\n\n')
+                if self.overrides.is_overriden(funcname):
+                    data = self.overrides.override(funcname)
+                    self.write_function(funcname, data)
                 else:
                     # write constructor from template ...
                     code = self.write_function_wrapper(constructor,
@@ -289,7 +282,7 @@ class Wrapper:
                         handle_return=0, is_method=0, kwargs_needed=1,
                         substdict=self.get_initial_constructor_substdict(constructor))[0]
                     self.fp.write(code)
-                initfunc = '_wrap_' + constructor.c_name
+                initfunc = '_wrap_' + funcname
             except:
                 sys.stderr.write('Could not write constructor for %s: %s\n' 
                                  % (self.objinfo.c_name, exc_info()))
@@ -306,26 +299,36 @@ class Wrapper:
             initfunc = 'pygobject_no_constructor'
         return initfunc
 
+    def get_methflags(self, funcname):
+        if self.overrides.wants_kwargs(funcname):
+            return 'METH_VARARGS|METH_KEYWORDS'
+        elif self.overrides.wants_noargs(funcname):
+            return 'METH_NOARGS'
+        else:
+            return 'METH_VARARGS'
+
+    def write_function(self, funcname, data):
+        lineno, filename = self.overrides.getstartline(funcname)
+        self.fp.setline(lineno, filename)
+        self.fp.write(data)
+        self.fp.resetline()
+        self.fp.write('\n\n')
+        
     def write_methods(self):
         methods = []
         klass = self.objinfo.c_name
         # First, get methods from the defs files
         for meth in self.parser.find_methods(self.objinfo):
-            if self.overrides.is_ignored(meth.c_name):
+            method_name = meth.c_name
+            if self.overrides.is_ignored(method_name):
                 continue
             try:
-                methflags = 'METH_VARARGS'
-                if self.overrides.is_overriden(meth.c_name):
-                    if not self.overrides.is_already_included(meth.c_name):
-                        lineno, filename = self.overrides.getstartline(meth.c_name)
-                        self.fp.setline(lineno, filename)
-                        self.fp.write(self.overrides.override(meth.c_name))
-                        self.fp.resetline()
-                        self.fp.write('\n\n')
-                    if self.overrides.wants_kwargs(meth.c_name):
-                        methflags = methflags + '|METH_KEYWORDS'
-                    elif self.overrides.wants_noargs(meth.c_name):
-                        methflags = 'METH_NOARGS'
+                if self.overrides.is_overriden(method_name):
+                    if not self.overrides.is_already_included(method_name):
+                        data = self.overrides.override(method_name)
+                        self.write_function(method_name, data) 
+
+                    methflags = self.get_methflags(method_name)
                 else:
                     # write constructor from template ...
                     code, methflags = self.write_function_wrapper(meth,
@@ -334,30 +337,22 @@ class Wrapper:
                     self.fp.write(code)
                 methods.append(self.methdef_tmpl %
                                { 'name':  fixname(meth.name),
-                                 'cname': '_wrap_' + meth.c_name,
+                                 'cname': '_wrap_' + method_name,
                                  'flags': methflags})
             except:
                 sys.stderr.write('Could not write method %s.%s: %s\n'
-                                % (klass, meth.name, exc_info()))
+                                % (klass, method_name, exc_info()))
 
         # Now try to see if there are any defined in the override
         for method_name in self.overrides.get_defines_for(klass):
-            c_name = class2cname(klass, method_name)
+            c_name = override.class2cname(klass, method_name)
             if self.overrides.is_already_included(method_name):
                 continue
 
             try:
-                methflags = 'METH_VARARGS'
-                lineno, filename = self.overrides.getstartline(method_name)
-                self.fp.setline(lineno, filename)
-                self.fp.write(self.overrides.define(klass, method_name))
-                self.fp.resetline()
-                self.fp.write('\n\n')
-
-                if self.overrides.wants_kwargs(method_name):
-                    methflags = methflags + '|METH_KEYWORDS'
-                elif self.overrides.wants_noargs(method_name):
-                    methflags = 'METH_NOARGS'
+                data = self.overrides.define(klass, method_name)
+                self.write_function(method_name, data) 
+                self.get_methflags(method_name)
 
                 methods.append(self.methdef_tmpl %
                                { 'name':  method_name,
@@ -392,12 +387,9 @@ class Wrapper:
             gettername = '0'
             settername = '0'
             attrname = self.objinfo.c_name + '.' + fname
-            if self.overrides.attr_is_overriden(attrname):
-                lineno, filename = self.overrides.getstartline(attrname)
+            if self.overrides.attr_is_overriden(attrname): 
                 code = self.overrides.attr_override(attrname)
-                self.fp.setline(lineno, filename)
-                self.fp.write(code)
-                self.fp.resetline()
+                self.write_function(attrname, code)
                 if string.find(code, getterprefix + fname) >= 0:
                     gettername = getterprefix + fname
                 if string.find(code, setterprefix + fname) >= 0:
@@ -435,22 +427,18 @@ class Wrapper:
     def write_functions(self, prefix):
         self.fp.write('\n/* ----------- functions ----------- */\n\n')
         functions = []
+            
         # First, get methods from the defs files
         for func in self.parser.find_functions():
-            if self.overrides.is_ignored(func.c_name):
+            funcname = func.c_name
+            if self.overrides.is_ignored(funcname):
                 continue
             try:
-                methflags = 'METH_VARARGS'
-                if self.overrides.is_overriden(func.c_name):
-                    lineno, filename = self.overrides.getstartline(func.c_name)
-                    self.fp.setline(lineno, filename)
-                    self.fp.write(self.overrides.override(func.c_name))
-                    self.fp.resetline()
-                    self.fp.write('\n\n')
-                    if self.overrides.wants_kwargs(func.c_name):
-                        methflags = methflags + '|METH_KEYWORDS'
-                    elif self.overrides.wants_noargs(func.c_name):
-                        methflags = 'METH_NOARGS'
+                if self.overrides.is_overriden(funcname):
+                    data = self.overrides.override(funcname)
+                    self.write_function(funcname, data)
+
+                    methflags = self.get_methflags(funcname)
                 else:
                     # write constructor from template ...
                     code, methflags = self.write_function_wrapper(func,
@@ -458,33 +446,25 @@ class Wrapper:
                     self.fp.write(code)
                 functions.append(self.methdef_tmpl %
                                  { 'name':  func.name,
-                                   'cname': '_wrap_' + func.c_name,
+                                   'cname': '_wrap_' + funcname,
                                    'flags': methflags })
             except:
                 sys.stderr.write('Could not write function %s: %s\n'
                                  % (func.name, exc_info()))
 
         # Now try to see if there are any defined in the override
-        for func in self.overrides.get_functions():
+        for funcname in self.overrides.get_functions():
             try:
-                methflags = 'METH_VARARGS'
-                lineno, filename = self.overrides.getstartline(func)
-                self.fp.setline(lineno, filename)
-                self.fp.write(self.overrides.function(func))
-                self.fp.resetline()
-                self.fp.write('\n\n')
-                if self.overrides.wants_kwargs(func):
-                    methflags = methflags + '|METH_KEYWORDS'
-                elif self.overrides.wants_noargs(func):
-                    methflags = 'METH_NOARGS'
-
+                data = self.overrides.function(funcname)
+                self.write_function(funcname)
+                methflags = self.get_methflags(funcname)
                 functions.append(self.methdef_tmpl %
-                                 { 'name':  func,
-                                   'cname': '_wrap_' + func,
+                                 { 'name':  funcname,
+                                   'cname': '_wrap_' + funcname,
                                    'flags': methflags })
             except:
                 sys.stderr.write('Could not write function %s: %s\n'
-                                 % (func, exc_info()))
+                                 % (funcname, exc_info()))
                 
         # write the PyMethodDef structure
         functions.append('    { NULL, NULL, 0 }\n')
@@ -556,18 +536,49 @@ class GObjectWrapper(Wrapper):
         return substdict
 
 class GInterfaceWrapper(GObjectWrapper):
+    constructor_tmpl = \
+        'static int\n' \
+        '_wrap_%(funcname)s(PyGObject *self, PyObject *args)\n' \
+        '{\n' \
+        '    PyGObject *obj;\n' \
+        '    if (!PyArg_ParseTuple(args, "O:%(typename)s.__init__", &obj))\n' \
+        '        return -1;\n' \
+        '    if (!pygobject_check(obj, &PyGObject_Type)) {\n' \
+        '        PyErr_SetString(PyExc_TypeError, "first arg must be a gobject.GObject subclass");\n' \
+        '        return -1;\n' \
+        '    }\n' \
+        '    if (!G_TYPE_CHECK_INSTANCE_TYPE(obj->obj, %(typecode)s)) {\n' \
+        '        PyErr_SetString(PyExc_TypeError, "first arg must implement the %(typename)s interface");\n' \
+        '        return -1;\n' \
+        '    }\n' \
+        '    self->obj = G_OBJECT(obj->obj);\n' \
+        '    return 0;\n' \
+        '}\n\n'
+        
     def get_initial_class_substdict(self):
-        return { 'tp_basicsize'      : 'PyObject',
-                 'tp_weaklistoffset' : '0',
-                 'tp_dictoffset'     : '0'}
-
+        return { 'tp_basicsize'      : 'PyGObject',
+                 'tp_weaklistoffset' : 'offsetof(PyGObject, weakreflist)',
+                 'tp_dictoffset'     : 'offsetof(PyGObject, inst_dict)' }
     def write_constructor(self):
-        # interfaces have no constructors ...
-        return '0'
+        try:
+            # write constructor from template ...
+            funcname = override.class2cname(self.objinfo.c_name)
+            code = self.constructor_tmpl % { 'typecode' : self.objinfo.typecode,
+                                             'typename' : self.objinfo.c_name,
+                                             'funcname' : funcname }
+            self.fp.write(code)
+            initfunc = '_wrap_' + funcname
+        except:
+            sys.stderr.write('Could not write constructor for %s: %s\n' 
+                             % (self.objinfo.c_name, exc_info()))
+            self.fp.write(self.noconstructor)
+            self.overrides.no_constructor_written = 1
+            initfunc = 'pygobject_no_constructor'
+        return initfunc
     def write_getsets(self):
         # interfaces have no fields ...
         return '0'
-
+    
 class GBoxedWrapper(Wrapper):
     constructor_tmpl = \
         'static int\n' \
@@ -610,6 +621,7 @@ class GBoxedWrapper(Wrapper):
     def get_initial_constructor_substdict(self, constructor):
         substdict = Wrapper.get_initial_constructor_substdict(self, constructor)
         substdict['typecode'] = self.objinfo.typecode
+        
         return substdict
 
 class GPointerWrapper(GBoxedWrapper):
@@ -654,6 +666,41 @@ class GPointerWrapper(GBoxedWrapper):
         substdict['typecode'] = self.objinfo.typecode
         return substdict
 
+def write_headers(data, fp):
+    fp.write('/* -- THIS FILE IS GENERATE - DO NOT EDIT */')
+    fp.write('/* -*- Mode: C; c-basic-offset: 4 -*- */\n\n')
+    fp.write('#include <Python.h>\n\n\n')
+    fp.write(data)
+    fp.resetline()
+    fp.write('\n\n')
+    
+def write_imports(overrides, fp):
+    fp.write('/* ---------- types from other modules ---------- */\n')
+    for module, pyname, cname in overrides.get_imports():
+        fp.write('static PyTypeObject *_%s;\n' % cname)
+        fp.write('#define %s (*_%s)\n' % (cname, cname))
+    fp.write('\n\n')
+    
+def write_type_declarations(parser, fp):
+    fp.write('/* ---------- forward type declarations ---------- */\n')
+    for obj in parser.boxes:
+        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
+    for obj in parser.objects:
+        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
+    for interface in parser.interfaces:
+        fp.write('PyTypeObject Py' + interface.c_name + '_Type;\n')
+    fp.write('\n')
+
+def write_classes(parser, overrides, fp):
+    for klass, items in ((GBoxedWrapper, parser.boxes),
+                         (GPointerWrapper, parser.pointers),
+                         (GObjectWrapper, parser.objects),
+                         (GInterfaceWrapper, parser.interfaces)):
+        for item in items:
+            instance = klass(parser, item, overrides, fp)
+            instance.write_class()
+            fp.write('\n')
+
 def write_enums(parser, prefix, fp=sys.stdout):
     if not parser.enums:
         return
@@ -673,48 +720,7 @@ def write_enums(parser, prefix, fp=sys.stdout):
                          % (enum.typecode,))
     fp.write('}\n\n')
 
-def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
-    fp.write('/* -*- Mode: C; c-basic-offset: 4 -*- */\n\n')
-    fp.write('#include <Python.h>\n\n\n')
-    fp.write(overrides.get_headers())
-    fp.resetline()
-    fp.write('\n\n')
-    fp.write('/* ---------- types from other modules ---------- */\n')
-    for module, pyname, cname in overrides.get_imports():
-        fp.write('static PyTypeObject *_%s;\n' % cname)
-        fp.write('#define %s (*_%s)\n' % (cname, cname))
-    fp.write('\n\n')
-    fp.write('/* ---------- forward type declarations ---------- */\n')
-    for obj in parser.boxes:
-        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
-    for obj in parser.objects:
-        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
-    for interface in parser.interfaces:
-        fp.write('PyTypeObject Py' + interface.c_name + '_Type;\n')
-    fp.write('\n')
-    
-    for boxed in parser.boxes:
-        wrapper = GBoxedWrapper(parser, boxed, overrides, fp)
-        wrapper.write_class()
-        fp.write('\n')
-    for pointer in parser.pointers:
-        wrapper = GPointerWrapper(parser, pointer, overrides, fp)
-        wrapper.write_class()
-        fp.write('\n')
-    for obj in parser.objects:
-        wrapper = GObjectWrapper(parser, obj, overrides, fp)
-        wrapper.write_class()
-        fp.write('\n')
-    for interface in parser.interfaces:
-        wrapper = GInterfaceWrapper(parser, interface, overrides, fp)
-        wrapper.write_class()
-        fp.write('\n')
-
-    wrapper = Wrapper(parser, None, overrides, fp)
-    wrapper.write_functions(prefix)
-
-    write_enums(parser, prefix, fp)
-
+def write_extension_init(overrides, prefix, fp): 
     fp.write('/* intialise stuff extension classes */\n')
     fp.write('void\n' + prefix + '_register_classes(PyObject *d)\n{\n')
     imports = overrides.get_imports()[:]
@@ -743,6 +749,7 @@ def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
     fp.write(overrides.get_init() + '\n')
     fp.resetline()
 
+def write_registers(parser, fp):
     for boxed in parser.boxes:
         fp.write('    pyg_register_boxed(d, "' + boxed.name +
                  '", ' + boxed.typecode + ', &Py' + boxed.c_name + '_Type);\n')
@@ -753,6 +760,7 @@ def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
         fp.write('    pyg_register_interface(d, "' + interface.name +
                  '", '+ interface.typecode + ', &Py' + interface.c_name +
                  '_Type);\n')
+
     objects = parser.objects[:]
     pos = 0
     while pos < len(objects):
@@ -781,6 +789,19 @@ def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
                      '_Type, NULL);\n')
     fp.write('}\n')
 
+def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
+    write_headers(overrides.get_headers(), fp)
+    write_imports(overrides, fp)
+    write_type_declarations(parser, fp)
+    write_classes(parser, overrides, fp)
+
+    wrapper = Wrapper(parser, None, overrides, fp)
+    wrapper.write_functions(prefix)
+
+    write_enums(parser, prefix, fp)
+    write_extension_init(overrides, prefix, fp)
+    write_registers(parser, fp)
+
 def register_types(parser):
     for boxed in parser.boxes:
         argtypes.matcher.register_boxed(boxed.c_name, boxed.typecode)
@@ -796,12 +817,13 @@ def register_types(parser):
 	else:
 	    argtypes.matcher.register_enum(enum.c_name, enum.typecode)
 
-def main():
+usage = 'usage: codegen.py [-o overridesfile] [-p prefix] defsfile'
+def main(argv):
     o = override.Overrides()
     prefix = 'pygtk'
     outfilename = None
     errorfilename = None
-    opts, args = getopt.getopt(sys.argv[1:], "o:p:r:t:D:",
+    opts, args = getopt.getopt(argv[1:], "o:p:r:t:D:",
                         ["override=", "prefix=", "register=", "outfilename=",
                          "load-types=", "errorfilename="])
     defines = {} # -Dkey[=val] options
@@ -830,9 +852,8 @@ def main():
 	    except IndexError:
 		defines[nameval[0]] = None
     if len(args) < 1:
-        sys.stderr.write(
-            'usage: codegen.py [-o overridesfile] [-p prefix] defsfile\n')
-        sys.exit(1)
+        print >> sys.stderr, usage
+        return 1
     if errorfilename:
         sys.stderr = open(errorfilename, "w")
     p = defsparser.DefsParser(args[0], defines)
@@ -843,4 +864,4 @@ def main():
     write_source(p, o, prefix, FileOutput(sys.stdout, outfilename))
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv))

@@ -10,14 +10,17 @@ import re
 import string
 import sys
 
-def class2cname(klass, method):
+def class2cname(klass, method=''):
     c_name = ''
     for c in klass:
         if c.isupper():
             c_name += '_' + c.lower()
         else:
             c_name += c
-    return c_name[1:] + '_'  + method
+    if method:
+        return c_name[1:] + '_'  + method
+    else:
+        return c_name[1:]
     
 import_pat = re.compile(r'\s*import\s+(\S+)\.([^\s.]+)\s+as\s+(\S+)')
 

@@ -107,11 +107,17 @@ def parse_file(fp, doc_dict):
 	    if match:
 		param = match.group(1)
 		desc = match.group(2)
-		cur_doc.add_param(param, desc)
+                if param == 'returns':
+                    cur_doc.ret = desc
+                else:
+                    cur_doc.add_param(param, desc)
 	    else:
 		# must be continuation
 		try:
-		    cur_doc.append_to_last_param(line)
+                    if param == 'returns':
+                        cur_doc.append_return(line)
+                    else:
+                        cur_doc.append_to_last_param(line)
 		except:
 		    sys.stderr.write('something weird while reading param\n')
 	line = fp.readline()
