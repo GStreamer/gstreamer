@@ -41,10 +41,8 @@ static GstCaps*
 raw_caps_factory (void)
 { 
   return gst_caps_new ("monkey_raw", 
-                       "audio/raw",
+                       "audio/x-raw-int",
                        gst_props_new (
-                         "format",      GST_PROPS_STRING ("int"),
-                         "law",         GST_PROPS_INT (0),
                          "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
                          "signed",      GST_PROPS_BOOLEAN (TRUE),
                          "width",       GST_PROPS_INT (16),

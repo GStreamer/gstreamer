@@ -55,21 +55,16 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "mpeg2dec_src",
-    "video/raw",
-      "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+    "video/x-raw-yuv",
+      "format",       GST_PROPS_LIST (
+	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))
+		      ),
       "width",        GST_PROPS_INT_RANGE (16, 4096),
       "height",       GST_PROPS_INT_RANGE (16, 4096),
       "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
-      "pixel_height", GST_PROPS_INT_RANGE (1, 255)
-  ),
-  GST_CAPS_NEW (
-    "mpeg2dec_src",
-    "video/raw",
-      "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-      "width",        GST_PROPS_INT_RANGE (16, 4096),
-      "height",       GST_PROPS_INT_RANGE (16, 4096),
-      "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
-      "pixel_height", GST_PROPS_INT_RANGE (1, 255)
+      "pixel_height", GST_PROPS_INT_RANGE (1, 255),
+      "framerate",    GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 );
 
@@ -91,6 +86,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   GST_CAPS_NEW (
     "mpeg2dec_sink",
     "video/mpeg",
+      /* width/height/framerate not needed */
       "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
       "systemstream", GST_PROPS_BOOLEAN (FALSE)
   )
@@ -316,18 +312,19 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
   if (!allowed) {
     allowed = GST_CAPS_NEW (
                 "mpeg2dec_negotiate",
-                "video/raw",
+                "video/x-raw-yuv",
                	  "format",        GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
 	      );
   }
 
   to_intersect = GST_CAPS_NEW (
                    "mpeg2dec_negotiate",
-                      "video/raw",
+                      "video/x-raw-yuv",
                       "width",        GST_PROPS_INT (mpeg2dec->width),
  	              "height",       GST_PROPS_INT (mpeg2dec->height),
                       "pixel_width",  GST_PROPS_INT (mpeg2dec->pixel_width),
- 	              "pixel_height", GST_PROPS_INT (mpeg2dec->pixel_height)
+ 	              "pixel_height", GST_PROPS_INT (mpeg2dec->pixel_height),
+		      "framerate",    GST_PROPS_FLOAT (1. * GST_SECOND / mpeg2dec->frame_period)
                  );
 
   /* try to fix our height */

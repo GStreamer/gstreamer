@@ -38,7 +38,7 @@ static GstCaps* sid_typefind (GstBuffer *buf, gpointer priv);
 /* typefactory for 'sid' */
 static GstTypeDefinition siddefinition = {
   "siddec_audio/sid",
-  "audio/sid",
+  "audio/x-sid",
   ".sid",
   sid_typefind,
 };
@@ -72,7 +72,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "siddecoder_sink",
-    "audio/sid",
+    "audio/x-sid",
     NULL
   )
 )
@@ -83,9 +83,7 @@ GST_PAD_TEMPLATE_FACTORY (src_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "src_audio",
-    "audio/raw",
-      "format",       GST_PROPS_STRING ("int"),
-        "law",        GST_PROPS_INT (0),            
+    "audio/x-raw-int",
         "endianness", GST_PROPS_INT (G_BYTE_ORDER),
 	"signed",     GST_PROPS_LIST (
 	                GST_PROPS_BOOLEAN (TRUE),
@@ -196,7 +194,7 @@ sid_typefind (GstBuffer *buf, gpointer priv)
   if (strncmp ((const char *)data, "PSID", 4))
     return NULL;
 
-  newcaps = gst_caps_new ("sid_typefind","audio/sid", NULL);
+  newcaps = gst_caps_new ("sid_typefind","audio/x-sid", NULL);
 
   return newcaps;
 }
@@ -371,9 +369,7 @@ siddec_negotiate (GstSidDec *siddec)
     if (!gst_pad_try_set_caps (siddec->srcpad, 
       GST_CAPS_NEW (
         "siddec_src",
-        "audio/raw",
-          "format",       GST_PROPS_STRING ("int"),
-            "law",        GST_PROPS_INT (0),            
+        "audio/x-raw-int",
             "endianness", GST_PROPS_INT (G_BYTE_ORDER),
             "signed",     GST_PROPS_BOOLEAN (sign),
             "width",      GST_PROPS_INT (siddec->config->bitsPerSample),

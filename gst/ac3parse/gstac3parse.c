@@ -95,49 +95,44 @@ enum {
   /* FILL ME */
 };
 
-static GstPadTemplate*
-src_factory (void) 
-{
-  return 
-    gst_pad_template_new (
-  	"src",
-  	GST_PAD_SRC,
-  	GST_PAD_ALWAYS,
-  	gst_caps_new (
-  	  "ac3parse_src",
-    	  "audio/ac3",
-	  gst_props_new (
-    	    "framed",   GST_PROPS_BOOLEAN (TRUE),
-	    NULL)),
-	NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW ("ac3parse_src",
+		"audio/ac3",
+		  "channels", GST_PROPS_INT_RANGE (1, 6),
+		  "rate",     GST_PROPS_INT_RANGE (32000, 48000)
+	       )
+);
 
-static GstPadTemplate*
-sink_factory (void) 
-{
-  return 
-    gst_pad_template_new (
-  	"sink",
-  	GST_PAD_SINK,
-  	GST_PAD_ALWAYS,
-  	gst_caps_new (
-  	  "ac3parse_sink",
-    	  "audio/ac3",
-	  gst_props_new (
-    	    "framed",   GST_PROPS_BOOLEAN (FALSE),
-	    NULL)),
-	NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW ("ac3parse_sink",
+		"audio/x-ac3",
+		  NULL
+	       )
+);
 
-static void	gst_ac3parse_class_init	(GstAc3ParseClass *klass);
-static void	gst_ac3parse_init	(GstAc3Parse *ac3parse);
+static void	gst_ac3parse_class_init	  (GstAc3ParseClass *klass);
+static void	gst_ac3parse_init	  (GstAc3Parse  *ac3parse);
 
-static void	gst_ac3parse_chain	(GstPad *pad,GstBuffer *buf);
+static void	gst_ac3parse_chain	  (GstPad       *pad,
+					   GstBuffer    *buf);
 
-static void	gst_ac3parse_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_ac3parse_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_ac3parse_set_property (GObject      *object,
+					   guint         prop_id,
+					   const GValue *value,
+					   GParamSpec   *pspec);
+static void	gst_ac3parse_get_property (GObject      *object,
+					   guint         prop_id,
+					   GValue       *value,
+					   GParamSpec   *pspec);
 
-static GstPadTemplate *src_template, *sink_template;
+static GstElementStateReturn
+		gst_ac3parse_change_state (GstElement   *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_ac3parse_signals[LAST_SIGNAL] = { 0 };*/
@@ -181,20 +176,25 @@ gst_ac3parse_class_init (GstAc3ParseClass *klass)
   gobject_class->set_property = gst_ac3parse_set_property;
   gobject_class->get_property = gst_ac3parse_get_property;
 
+  gstelement_class->change_state = gst_ac3parse_change_state;
 }
 
 static void
 gst_ac3parse_init (GstAc3Parse *ac3parse)
 {
-  ac3parse->sinkpad = gst_pad_new_from_template (sink_template, "sink");
+  ac3parse->sinkpad = gst_pad_new_from_template (
+	GST_PAD_TEMPLATE_GET(sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->sinkpad);
   gst_pad_set_chain_function (ac3parse->sinkpad, gst_ac3parse_chain);
 
-  ac3parse->srcpad = gst_pad_new_from_template (src_template, "src");
+  ac3parse->srcpad = gst_pad_new_from_template (
+	GST_PAD_TEMPLATE_GET(src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->srcpad);
 
   ac3parse->partialbuf = NULL;
   ac3parse->skip = 0;
+
+  ac3parse->sample_rate = ac3parse->channels = -1;
 }
 
 static void
@@ -203,9 +203,11 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
   GstAc3Parse *ac3parse;
   guchar *data;
   glong size,offset = 0;
-  unsigned short header;
+  guint16 header;
+  guint8 channeldata, acmod, mask;
   GstBuffer *outbuf = NULL;
   gint bpf;
+  guint sample_rate = -1, channels = -1;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -229,14 +231,20 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA(ac3parse->partialbuf);
   size = GST_BUFFER_SIZE(ac3parse->partialbuf);
 
-  /* while we still have bytes left -2 for the header */
-  while (offset < size-2) {
+  /* we're searching for at least 7 bytes. first the
+   * syncinfo, where 2 bytes are for the syncword
+   * (header ID, 0x0b77), 2 bytes crc1 (checksum) and 1 byte
+   * fscod+fmrsizecod (framerate/bitrate) and then the
+   * bitstreaminfo bsid (version), bsmod (data type) and
+   * acmod (channel info, 3 bits). Then some "maybe"
+   * bits, and then the LFE indicator (subwoofer bit) */
+  while (offset < size-6) {
     int skipped = 0;
 
     GST_DEBUG ("ac3parse: offset %ld, size %ld ",offset, size);
 
     /* search for a possible start byte */
-    for (;((data[offset] != 0x0b) && (offset < size));offset++) skipped++ ;
+    for (;((data[offset] != 0x0b) && (offset < size-6));offset++) skipped++ ;
     if (skipped) {
       fprintf(stderr, "ac3parse: **** now at %ld skipped %d bytes (FIXME?)\n",offset,skipped);
     }
@@ -249,15 +257,91 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
 /*      g_print("AC3PARSE: found sync at %d\n",offset); */
       /* get the bits we're interested in */
       rate = (data[offset+4] >> 6) & 0x3;
+      switch (rate) {
+        case 0x0: /* 00b */
+          sample_rate = 48000;
+          break;
+        case 0x1: /* 01b */
+          sample_rate = 44100;
+          break;
+        case 0x2: /* 10b */
+          sample_rate = 32000;
+          break;
+        case 0x3: /* 11b */
+        default:
+          /* reserved. if this happens, we're screwed */
+          g_assert (0);
+          break;
+      }
       fsize = data[offset+4] & 0x3f;
       /* calculate the bpf of the frame */
       bpf = frmsizecod_tbl[fsize].frm_size[rate] * 2;
+      /* calculate number of channels */
+      channeldata = data[offset+6]; /* skip bsid/bsmod */
+      acmod = (channeldata >> 5) & 0x7;
+      switch (acmod) {
+        case 0x1: /* 001b = 1 channel */
+          channels = 1;
+          break;
+        case 0x0: /* 000b = 2 independent channels*/
+        case 0x2: /* 010b = 2x front (stereo) */
+          channels = 2;
+          break;
+        case 0x3: /* 011b = 3 front */
+        case 0x4: /* 100b = 2 front, 1 rear */
+          channels = 3;
+          break;
+        case 0x5: /* 101b = 3 front, 1 rear */
+        case 0x6: /* 110b = 2 front, 2 rear */
+          channels = 4;
+          break;
+        case 0x7: /* 111b = 3 front, 2 rear */
+          channels = 5;
+          break;
+        default:
+          /* whaaaaaaaaaaaaaa!!!!!!!!!!! */
+          g_assert (0);
+      }
+      /* fetch LFE bit (subwoofer) */
+      mask = 0x10;
+      if (acmod & 0x1 && acmod != 0x1) /* 3 front speakers? */
+        mask >>= 2;
+      if (acmod & 0x4) /* surround channel? */
+        mask >>= 2;
+      if (acmod == 0x2) /* 2/0 mode? */
+        mask >>= 2;
+      if (channeldata & mask) /* LFE: do we have a subwoofer channel? */
+        channels++;
       /* if we don't have the whole frame... */
       if ((size - offset) < bpf) {
 	GST_DEBUG ("ac3parse: partial buffer needed %ld < %d ",size-offset, bpf);
 	break;
       } else {
-	outbuf = gst_buffer_create_sub(ac3parse->partialbuf,offset,bpf);
+        gboolean need_capsnego = FALSE;
+
+	outbuf = gst_buffer_create_sub (ac3parse->partialbuf,offset,bpf);
+
+        /* make sure our properties still match */
+        if (channels > 0 && ac3parse->channels != channels) {
+          ac3parse->channels = channels;
+          need_capsnego = TRUE;
+        }
+        if (sample_rate > 0 && ac3parse->sample_rate != sample_rate) {
+          ac3parse->sample_rate = sample_rate;
+          need_capsnego = TRUE;
+        }
+        if (need_capsnego) {
+          GstCaps *newcaps;
+          newcaps = GST_CAPS_NEW ("ac3parse_src",
+				  "audio/x-ac3",
+				    "channels", GST_PROPS_INT (channels),
+				    "rate",     GST_PROPS_INT (sample_rate));
+          if (gst_pad_try_set_caps (ac3parse->srcpad, newcaps) <= 0) {
+            gst_element_error (GST_ELEMENT (ac3parse),
+			       "Ac3parse: failed to negotiate format with next element");
+            return;
+          }
+        }
 
 	offset += bpf;
 	if (ac3parse->skip == 0 && GST_PAD_IS_LINKED(ac3parse->srcpad)) {
@@ -323,6 +407,24 @@ gst_ac3parse_get_property (GObject *object, guint prop_id, GValue *value, GParam
   }
 }
 
+static GstElementStateReturn
+gst_ac3parse_change_state (GstElement *element)
+{
+  GstAc3Parse *ac3parse = GST_AC3PARSE(element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      /* reset stream info */
+      ac3parse->channels = ac3parse->sample_rate = -1;
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
@@ -334,11 +436,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
 
-  src_template = src_factory ();
-  gst_element_factory_add_pad_template (factory, src_template);
-
-  sink_template = sink_factory ();
-  gst_element_factory_add_pad_template (factory, sink_template);
+  gst_element_factory_add_pad_template (factory,
+	GST_PAD_TEMPLATE_GET(src_factory));
+  gst_element_factory_add_pad_template (factory,
+	GST_PAD_TEMPLATE_GET(sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

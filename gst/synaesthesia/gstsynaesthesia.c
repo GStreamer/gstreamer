@@ -46,7 +46,7 @@ struct _GstSynaesthesia {
   gint16 datain[2][512];
 
   /* video state */
-  gint fps;
+  gfloat fps;
   gint width;
   gint height;
   gboolean first_buffer;
@@ -90,8 +90,7 @@ GST_PAD_TEMPLATE_FACTORY (src_template,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "synaesthesiasrc",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+    "video/x-raw-rgb",
       "bpp",		GST_PROPS_INT (32),
       "depth",		GST_PROPS_INT (32),
       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
@@ -99,7 +98,8 @@ GST_PAD_TEMPLATE_FACTORY (src_template,
       "green_mask", 	GST_PROPS_INT (0xff00),
       "blue_mask",  	GST_PROPS_INT (0xff),
       "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096)
+      "height",		GST_PROPS_INT_RANGE (16, 4096),
+      "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 )
 
@@ -109,10 +109,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
   GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
     "synaesthesiasink",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
+    "audio/x-raw-int",				/* the mime type of the caps */
        /* Properties follow: */
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_BOOLEAN (TRUE),
       "width",      GST_PROPS_INT (16),
@@ -181,8 +179,8 @@ gst_synaesthesia_class_init(GstSynaesthesiaClass *klass)
     g_param_spec_int ("height","Height","The height",
                        1, 2048, 320, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
-    g_param_spec_int ("fps","FPS","Frames per second",
-                       1, 100, 25, G_PARAM_READWRITE));
+    g_param_spec_float ("fps","FPS","Frames per second",
+                       0., G_MAXFLOAT, 25., G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_synaesthesia_set_property;
   gobject_class->get_property = gst_synaesthesia_get_property;
@@ -209,7 +207,7 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
   /* reset the initial video state */
   synaesthesia->width = 320;
   synaesthesia->height = 200;
-  synaesthesia->fps = 25; /* desired frame rate */
+  synaesthesia->fps = 25.; /* desired frame rate */
 
 }
 
@@ -291,7 +289,8 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 		       "green_mask", 	GST_PROPS_INT (0x00ff00), 
 		       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
 		       "width", 	GST_PROPS_INT (synaesthesia->width), 
-		       "height", 	GST_PROPS_INT (synaesthesia->height)
+		       "height", 	GST_PROPS_INT (synaesthesia->height),
+                       "framerate",	GST_PROPS_FLOAT (synaesthesia->fps)
 		   );
 
     if (gst_pad_try_set_caps (synaesthesia->srcpad, caps) <= 0) {
@@ -334,7 +333,7 @@ gst_synaesthesia_set_property (GObject *object, guint prop_id, const GValue *val
       synaesthesia->height = g_value_get_int (value);
       break;
     case ARG_FPS:
-      synaesthesia->fps = g_value_get_int (value);
+      synaesthesia->fps = g_value_get_float (value);
       break;
     default:
       break;
@@ -358,7 +357,7 @@ gst_synaesthesia_get_property (GObject *object, guint prop_id, GValue *value, GP
       g_value_set_int (value, synaesthesia->height);
       break;
     case ARG_FPS:
-      g_value_set_int (value, synaesthesia->fps);
+      g_value_set_float (value, synaesthesia->fps);
       break;
     default:
       break;

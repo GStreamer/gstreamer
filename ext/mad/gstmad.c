@@ -120,9 +120,7 @@ GST_PAD_TEMPLATE_FACTORY (mad_src_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "mad_src",
-    "audio/raw",
-      "format",   GST_PROPS_STRING ("int"),
-      "law",         GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
       "signed",      GST_PROPS_BOOLEAN (TRUE),
       "width",       GST_PROPS_INT (16),
@@ -138,8 +136,9 @@ GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "mad_sink",
-    "audio/x-mp3",
-    NULL
+    "audio/mpeg",
+      /* we don't need channel/rate ... */
+      "layer", GST_PROPS_INT_RANGE (1, 3)
   )
 )
 
@@ -1236,10 +1235,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         if (gst_pad_try_set_caps (mad->srcpad,
 	    gst_caps_new (
 	      "mad_src",
-              "audio/raw",
+              "audio/x-raw-int",
               gst_props_new (
-	        "format",   GST_PROPS_STRING ("int"),
-                "law",         GST_PROPS_INT (0),
                 "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
                 "signed",      GST_PROPS_BOOLEAN (TRUE),
                 "width",       GST_PROPS_INT (16),

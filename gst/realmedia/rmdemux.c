@@ -91,8 +91,8 @@ static GstCaps* realmedia_type_find (GstBuffer *buf, gpointer private);
 
 static GstTypeDefinition realmediadefinition = {
   "rmdemux_video/realmedia",
-  "application/vnd.rn-realmedia", 
-  ".ram",
+  "video/x-pn-realvideo", 
+  ".ram .rm .ra",
   realmedia_type_find,
 };
 
@@ -110,7 +110,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "rmdemux_sink",
-     "application/vnd.rn-realmedia", 
+     "video/x-pn-realvideo", 
      NULL
   )
 )

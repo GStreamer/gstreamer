@@ -86,13 +86,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "a52dec_sink",
-    "audio/a52",
+    "audio/x-ac3",
      NULL
-  ), 
-  GST_CAPS_NEW (
-    "ac3dec_sink", 
-    "audio/ac3", 
-    NULL
   )
 );
 
@@ -102,9 +97,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "a52dec_src",
-      "audio/raw",
-       "format", 	GST_PROPS_STRING ("int"),
-       "law", 		GST_PROPS_INT (0),
+      "audio/x-raw-int",
        "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
        "signed", 	GST_PROPS_BOOLEAN (TRUE),
        "width",	 	GST_PROPS_INT (16),
@@ -372,9 +365,7 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 
   if (gst_pad_try_set_caps (pad, 
 		  GST_CAPS_NEW ("a52dec_src_caps",
-			        "audio/raw",
-				  "format", 	GST_PROPS_STRING ("int"),
-				  "law", 	GST_PROPS_INT (0),
+			        "audio/x-raw-int",
 				  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
 				  "signed", 	GST_PROPS_BOOLEAN (TRUE),
 				  "width", 	GST_PROPS_INT (16),

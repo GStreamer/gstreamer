@@ -67,8 +67,8 @@ GST_PAD_TEMPLATE_FACTORY (audio_factory,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "mpeg_demux_audio",
-    "audio/x-mp3",
-    NULL
+    "audio/mpeg",
+      NULL
   )
 );
 
@@ -103,8 +103,8 @@ GST_PAD_TEMPLATE_FACTORY (private1_factory,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "mpeg_demux_private1",
-    "audio/a52",
-    NULL
+    "audio/x-ac3",
+      NULL
   )
 );
 
@@ -112,11 +112,7 @@ GST_PAD_TEMPLATE_FACTORY (private2_factory,
   "private_stream_2",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_private2",
-    "unknown/unknown",
-    NULL
-  )
+  NULL
 );
 
 GST_PAD_TEMPLATE_FACTORY (pcm_factory,
@@ -125,9 +121,7 @@ GST_PAD_TEMPLATE_FACTORY (pcm_factory,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "mpeg_demux_pcm",
-    "audio/raw",
-      "format",            GST_PROPS_STRING ("int"),
-       "law",              GST_PROPS_INT (0),
+    "audio/x-raw-int",
        "endianness",       GST_PROPS_INT (G_BIG_ENDIAN),
        "signed",           GST_PROPS_BOOLEAN (TRUE),
        "width",            GST_PROPS_LIST (
@@ -152,11 +146,7 @@ GST_PAD_TEMPLATE_FACTORY (subtitle_factory,
   "subtitle_stream_%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_subtitle",
-    "video/mpeg",
-    NULL
-  )
+  NULL /* FIXME! */
 );
 
 static void 		gst_mpeg_demux_class_init	(GstMPEGDemuxClass *klass);
@@ -1000,9 +990,7 @@ gst_mpeg_demux_lpcm_set_caps (GstPad *pad, guint8 sample_info)
 
   caps = GST_CAPS_NEW (
           "mpeg_demux_pcm",
-          "audio/raw",
-            "format",            GST_PROPS_STRING ("int"),
-             "law",              GST_PROPS_INT (0),
+          "audio/x-raw-int",
              "endianness",       GST_PROPS_INT (G_BIG_ENDIAN),
              "signed",           GST_PROPS_BOOLEAN (TRUE),
              "width",            GST_PROPS_INT (width),

@@ -156,111 +156,13 @@ asf_wm_type_find (GstBuffer *buf, gpointer private)
 }
 
 GST_PAD_TEMPLATE_FACTORY (sink_factory,
-			  "sink",
-			  GST_PAD_SINK,
-			  GST_PAD_ALWAYS,
-			  GST_CAPS_NEW ("asf_asf_demux_sink",
-					"video/x-ms-asf",
-					"asfversion", GST_PROPS_INT_RANGE (1, 1)
-					),
-                          GST_CAPS_NEW ("asf_wma_demux_sink",
-					"video/x-ms-wma",
-					"asfversion", GST_PROPS_INT_RANGE (1, 1)
-					),
-			  GST_CAPS_NEW ("asf_wax_demux_sink",
-					"video/x-ms-wax",
-					"asfversion", GST_PROPS_INT_RANGE (1, 1)
-					),
-			  GST_CAPS_NEW ("asf_wmv_demux_sink",
-					"video/x-ms-wmv",
-					"asfversion", GST_PROPS_INT_RANGE (1, 1)
-					),
-			  GST_CAPS_NEW ("asf_wvx_demux_sink",
-					"video/x-ms-wvx",
-					"asfversion", GST_PROPS_INT_RANGE (1, 1)
-					),
-			  GST_CAPS_NEW ("asf_wm_demux_sink",
-					"video/x-ms-wm",
-					"asfversion", GST_PROPS_INT_RANGE (1, 1)
-					)
-			  );
-			  			  
-GST_PAD_TEMPLATE_FACTORY (audio_factory,
-			  "audio_%02d",
-			  GST_PAD_SRC,
-			  GST_PAD_SOMETIMES,
-			  GST_CAPS_NEW ("asf_demux_audio",
-					"video/avi",
-					"format",  GST_PROPS_STRING ("strf_auds")
-					),
-			  GST_CAPS_NEW (
-					"asfdemux_src_audio",
-					"audio/raw",
-					"format",           GST_PROPS_STRING ("int"),
-					"law",              GST_PROPS_INT (0),
-					"endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-					"signed",           GST_PROPS_LIST (
-      			    GST_PROPS_BOOLEAN (TRUE),
-      			    GST_PROPS_BOOLEAN (FALSE)
-			    ),
-					"width",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			    ),
-					"depth",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			    ),
-					"rate",             GST_PROPS_INT_RANGE (11025, 44100),
-					"channels",         GST_PROPS_INT_RANGE (1, 2)
-					),
-			  GST_CAPS_NEW (
-					"asfdemux_src_audio",
-					"audio/x-mp3",
-					NULL
-					),
-			  GST_CAPS_NEW (
-					"asfdemux_src_audio",
-					"audio/a52",
-					NULL
-					),
-			  GST_CAPS_NEW (
-					"asfdemux_src_audio",
-					"application/x-ogg",
-					NULL
-					)			  
-			  );
-
-GST_PAD_TEMPLATE_FACTORY (video_factory,
-			  "video_%02d",
-			  GST_PAD_SRC,
-			  GST_PAD_SOMETIMES,
-			  GST_CAPS_NEW ("asf_demux_src_video",
-					"video/avi",
-					"format",  GST_PROPS_LIST (
-					     GST_PROPS_STRING ("strf_vids")
-					     ),
-					"width",   GST_PROPS_INT_RANGE (16, 4096),
-					"height",  GST_PROPS_INT_RANGE (16, 4096),
-					NULL
-					),
-			  GST_CAPS_NEW (
-					"asf_demux_src_video",
-					"video/raw",
-					"format",  GST_PROPS_LIST (
-                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
-                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('I','4','2','0'))
-		   ),
-					"width",          GST_PROPS_INT_RANGE (16, 4096),
-					"height",         GST_PROPS_INT_RANGE (16, 4096)
-					),
-			  GST_CAPS_NEW (
-					"asf_demux_src_video",
-					"video/jpeg",
-					"width",   GST_PROPS_INT_RANGE (16, 4096),
-					"height",  GST_PROPS_INT_RANGE (16, 4096)
-					)
-			  );
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW ("asf_asf_demux_sink",
+		"video/x-asf",
+		  NULL)
+);
 			  
 static void 	gst_asf_demux_class_init	(GstASFDemuxClass *klass);
 static void 	gst_asf_demux_init		(GstASFDemux *asf_demux);
@@ -301,6 +203,7 @@ static gboolean            gst_asf_demux_setup_pad        (GstASFDemux *asf_demu
 
 static GstElementStateReturn gst_asf_demux_change_state   (GstElement *element);
 
+static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
 
 GType
@@ -1377,94 +1280,149 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
  * Stream and pad setup code
  */
 
+#define GST_ASF_AUD_CAPS_NEW(name, mimetype, props...)			\
+	(audio != NULL) ?						\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT (			\
+				    GUINT32_FROM_LE (audio->byte_rate)), \
+		      "channels", GST_PROPS_INT (			\
+				    GUINT16_FROM_LE (audio->channels)),	\
+		      ##props)						\
+	:								\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
+		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
+		      ##props)
+
+static GstCaps *
+gst_asf_demux_audio_caps (guint16 codec_id,
+			  asf_stream_audio *audio)
+{
+  GstCaps *caps = NULL;
+
+  switch (codec_id) {
+    case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_mp3",
+				   "audio/mpeg",
+				     "layer", GST_PROPS_INT (3));
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_mp12",
+				   "audio/mpeg",
+				     "layer", GST_PROPS_INT (2));
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */ {
+      GstPropsEntry *width, *depth, *signedness;
+
+      if (audio != NULL) {
+        gint ba = GUINT16_FROM_LE (audio->block_align);
+        gint ch = GUINT16_FROM_LE (audio->channels);
+        gint ws = GUINT16_FROM_LE (audio->word_size);
+        width = gst_props_entry_new ("width",
+				     GST_PROPS_INT (ba * 8 / ch));
+        depth = gst_props_entry_new ("depth",
+				     GST_PROPS_INT (ws));
+        signedness = gst_props_entry_new ("signedness",
+					  GST_PROPS_BOOLEAN (ws != 8));
+      } else {
+        signedness = gst_props_entry_new ("signed",
+					  GST_PROPS_LIST (
+					    GST_PROPS_BOOLEAN (TRUE),
+					    GST_PROPS_BOOLEAN (FALSE)));
+        width = gst_props_entry_new ("width",
+				     GST_PROPS_LIST (
+				       GST_PROPS_INT (8),
+				       GST_PROPS_INT (16)));
+        depth = gst_props_entry_new ("depth",
+				     GST_PROPS_LIST (
+				       GST_PROPS_INT (8),
+				       GST_PROPS_INT (16)));
+      }
+
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_pcm",
+				   "audio/x-raw-int",
+				     "endianness",
+				       GST_PROPS_INT (G_LITTLE_ENDIAN));
+      gst_props_add_entry (caps->properties, width);
+      gst_props_add_entry (caps->properties, depth);
+      gst_props_add_entry (caps->properties, signedness);
+    }
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* vorbis mode 1 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* vorbis mode 2 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* vorbis mode 3 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* vorbis mode 1+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* vorbis mode 2+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* vorbis mode 3+ */
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_vorbis",
+				   "audio/x-vorbis",
+				     NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_A52:
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_ac3",
+				   "audio/x-ac3",
+				     NULL);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav1",
+				   "audio/x-wma",
+				     "wmaversion", GST_PROPS_INT (1));
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav2",
+				   "audio/x-wma",
+				     "wmaversion", GST_PROPS_INT (2));
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_WMAV9:
+      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav9",
+				   "audio/x-wma",
+				     "wmaversion", GST_PROPS_INT (9));
+      break;
+
+    default:
+      g_warning ("asfdemux: unkown audio format 0x%04x",
+		 codec_id);
+      break;
+  }
+
+  return caps;
+}
+
 static gboolean 
 gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
 				asf_stream_audio *audio,
 				guint16 id) 
 {
   GstPad         *src_pad;  
-  GstCaps        *new_caps = NULL;
-  GstCaps        *caps_list = NULL;
+  GstCaps        *caps;
   gchar          *name = NULL;
-  GstPadTemplate *new_template = NULL; 
   guint16         size_left = 0;
 
   size_left = GUINT16_FROM_LE(audio->size);
 
   /* Create the audio pad */
   name = g_strdup_printf ("audio_%02d", asf_demux->num_audio_streams);
-  new_template = GST_PAD_TEMPLATE_GET (audio_factory);
-  src_pad =  gst_pad_new_from_template (
-                GST_PAD_TEMPLATE_GET (audio_factory), name);
+  src_pad = gst_pad_new_from_template (audiosrctempl, name);
+  g_free (name);
 
   /* Now set up the standard propertis from the header info */
-  caps_list = gst_caps_append(NULL, GST_CAPS_NEW (
- 		  "asf_demux_audio_src",
-		  "video/avi",
-		  "format",    	GST_PROPS_STRING ("strf_auds"),
-		  "fmt", 	GST_PROPS_INT (GUINT16_FROM_LE (audio->codec_tag)),
-		  "channels", 	GST_PROPS_INT (GUINT16_FROM_LE (audio->channels)),
-		  "rate", 	GST_PROPS_INT (GUINT32_FROM_LE (audio->sample_rate)),
-		  "av_bps",	GST_PROPS_INT (GUINT32_FROM_LE (audio->byte_rate)),
-		  "blockalign",	GST_PROPS_INT (GUINT16_FROM_LE (audio->block_align)),
-		  "size",	GST_PROPS_INT (GUINT16_FROM_LE (audio->word_size))
-		  ));  
-  
-  /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_auds) */
-  switch (GUINT16_FROM_LE(audio->codec_tag)) {
-  case GST_RIFF_WAVE_FORMAT_MPEGL3:
-  case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp3 */
-    new_caps = gst_caps_new ("asf_demux_audio_src",
-			     "audio/x-mp3",
-			     NULL);
-    break;
-  case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */
-    new_caps = gst_caps_new ("asf_demux_audio_src",
-			     "audio/raw",
-			     gst_props_new (
-                                "format",     GST_PROPS_STRING ("int"),
-                                "law",        GST_PROPS_INT (0),
-                                "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                                "signed",     GST_PROPS_BOOLEAN ((GUINT16_FROM_LE (audio->word_size) != 8)),
-                                "width",      GST_PROPS_INT ((GUINT16_FROM_LE (audio->block_align)*8) /
-                                                              GUINT16_FROM_LE (audio->channels)),
-                                "depth",      GST_PROPS_INT (GUINT16_FROM_LE (audio->word_size)),
-                                "rate",       GST_PROPS_INT (GUINT32_FROM_LE (audio->byte_rate)),
-                                "channels",   GST_PROPS_INT (GUINT16_FROM_LE (audio->channels)),
-                                NULL
-                              ));
-    break;
-  case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
-  case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
-  case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
-  case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
-  case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
-  case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
-    new_caps = gst_caps_new ("asf_demux_audio_src",
-			     "application/x-ogg",
-			     NULL);
-    break;
-  case GST_RIFF_WAVE_FORMAT_A52:
-    new_caps = gst_caps_new ("asf_demux_audio_src",
-			     "audio/a52",
-			     NULL);
-    break;
-  case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
-  case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
-  case GST_RIFF_WAVE_FORMAT_WMAV9:
-    new_caps = gst_caps_new ("asf_demux_audio_src",
-			     "unknown/unknown",
-			     NULL);
-    break;
-  default:
-    g_warning ("asfdemux: unkown audio format %d", GUINT16_FROM_LE(audio->codec_tag));
-    break;
-  }  
-  
-  if (new_caps) caps_list = gst_caps_append(caps_list, new_caps);
+  caps = gst_asf_demux_audio_caps (GUINT16_FROM_LE(audio->codec_tag),
+				   audio);
 
-  GST_INFO ( "Adding audio stream %u codec %u (0x%x)", asf_demux->num_video_streams, GUINT16_FROM_LE(audio->codec_tag), GUINT16_FROM_LE(audio->codec_tag));
-  
+  GST_INFO ("Adding audio stream %u codec %u (0x%x)",
+	    asf_demux->num_video_streams,
+	    GUINT16_FROM_LE(audio->codec_tag),
+	    GUINT16_FROM_LE(audio->codec_tag));
+
    asf_demux->num_audio_streams++;
 
    /* Swallow up any left over data */
@@ -1473,82 +1431,125 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
      gst_bytestream_flush (asf_demux->bs, size_left);
    }
   
-  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps_list, id);
+  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
+}
+
+#define GST_ASF_VID_CAPS_NEW(name, mimetype, props...)		\
+	(video != NULL) ?					\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT (width),		\
+		      "height", GST_PROPS_INT (height),		\
+		      "framerate", GST_PROPS_FLOAT (0),/* FIXME */ \
+		      ##props)					\
+	:							\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT_RANGE (16, 4096),	\
+		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
+		      "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT), \
+		      ##props)
+
+static GstCaps *
+gst_asf_demux_video_caps (guint32 codec_fcc,
+			  asf_stream_video_format *video)
+{
+  GstCaps *caps = NULL;
+  gint width = 0, height = 0;
+  
+  if (video != NULL) {
+    width = GUINT32_FROM_LE (video->width);
+    height = GUINT32_FROM_LE (video->height);
+  }
+
+  switch (codec_fcc) {
+    case GST_MAKE_FOURCC('I','4','2','0'):
+    case GST_MAKE_FOURCC('Y','U','Y','2'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_raw",
+				   "video/x-raw-yuv",
+				     "format", GST_PROPS_FOURCC (codec_fcc));
+      break;
+
+    case GST_MAKE_FOURCC('M','J','P','G'):
+    case GST_MAKE_FOURCC('J','P','E','G'):
+    case GST_MAKE_FOURCC('P','I','X','L'):
+    case GST_MAKE_FOURCC('V','I','X','L'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_jpeg",
+				   "video/x-jpeg",
+				     NULL);
+      break;
+
+    case GST_MAKE_FOURCC('D','V','S','D'):
+    case GST_MAKE_FOURCC('d','v','s','d'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_dv",
+				   "video/x-dv",
+				     "systemstream", GST_PROPS_BOOLEAN (FALSE));
+      break;
+
+    case GST_MAKE_FOURCC('W','M','V','1'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_wmv1",
+				   "video/x-wmv",
+				     "wmvversion", GST_PROPS_INT (1));
+      break;
+
+    case GST_MAKE_FOURCC('W','M','V','2'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_wmv2",
+				   "video/x-wmv",
+				     "wmvversion", GST_PROPS_INT (2));
+      break;
+
+    case GST_MAKE_FOURCC('M','P','G','4'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_msmpeg41",
+				   "video/x-msmpeg",
+				     "msmpegversion", GST_PROPS_INT (41));
+      break;
+
+    case GST_MAKE_FOURCC('M','P','4','2'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_msmpeg42",
+				   "video/x-msmpeg",
+				     "msmpegversion", GST_PROPS_INT (42));
+      break;
+
+    case GST_MAKE_FOURCC('M','P','4','3'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_msmpeg43",
+				   "video/x-msmpeg",
+				     "msmpegversion", GST_PROPS_INT (43));
+      break;
+
+    default:
+      g_warning ("asfdemux: unkown video format " GST_FOURCC_FORMAT "(0x%08x)",
+		 GST_FOURCC_ARGS(codec_fcc), codec_fcc);
+      break;
+  }
+
+  return caps;
 }
 
 static gboolean
 gst_asf_demux_add_video_stream (GstASFDemux *asf_demux,
-				asf_stream_video_format *video_format,
+				asf_stream_video_format *video,
 				guint16 id) {
   GstPad         *src_pad;  
-  GstCaps        *new_caps = NULL;
-  GstCaps        *caps_list = NULL;
+  GstCaps        *caps;
   gchar          *name = NULL;
-  GstPadTemplate *new_template = NULL; 
   
   /* Create the audio pad */
   name = g_strdup_printf ("video_%02d", asf_demux->num_video_streams);
-  new_template = GST_PAD_TEMPLATE_GET (video_factory);
-  src_pad =  gst_pad_new_from_template (
-		GST_PAD_TEMPLATE_GET (video_factory), name);
-  
+  src_pad = gst_pad_new_from_template (videosrctempl, name);
+  g_free (name);
 
-  caps_list = gst_caps_append(NULL, GST_CAPS_NEW (
-      "asf_demux_video_src",
-      "video/avi",
-      "format",    GST_PROPS_STRING ("strf_vids"),
-      "size", GST_PROPS_INT (GUINT32_FROM_LE (video_format->size)),
-      "width",GST_PROPS_INT (GUINT32_FROM_LE (video_format->width)),
-      "height", 	GST_PROPS_INT (GUINT32_FROM_LE (video_format->height)),
-      "planes", 	GST_PROPS_INT (GUINT16_FROM_LE (video_format->planes)),
-      "bit_cnt", 	GST_PROPS_INT (GUINT16_FROM_LE (video_format->depth)),
-      "compression", GST_PROPS_FOURCC (GUINT32_FROM_LE (video_format->tag)),
-      "image_size", GST_PROPS_INT (GUINT32_FROM_LE (video_format->image_size)),
-      "xpels_meter", GST_PROPS_INT (GUINT32_FROM_LE (video_format->xpels_meter)),
-      "ypels_meter", GST_PROPS_INT (GUINT32_FROM_LE (video_format->ypels_meter)),
-      "num_colors", GST_PROPS_INT (GUINT32_FROM_LE (video_format->num_colors)),
-      "imp_colors", GST_PROPS_INT (GUINT32_FROM_LE (video_format->imp_colors))
-      ));
-  
   /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_vids) */
-  switch (GUINT32_FROM_LE(video_format->tag)) {
-  case GST_MAKE_FOURCC('I','4','2','0'):
-  case GST_MAKE_FOURCC('Y','U','Y','2'):
-    new_caps = GST_CAPS_NEW (
-			    "asf_demux_video_src",
-			    "video/raw",
-			    "format",  GST_PROPS_FOURCC(GUINT32_FROM_LE(video_format->tag)),
-			    "width",   GST_PROPS_INT(video_format->width),
-			    "height",  GST_PROPS_INT(video_format->height)
-			    );
-    break;
-  case GST_MAKE_FOURCC('M','J','P','G'):
-    new_caps = GST_CAPS_NEW (
-			    "asf_demux_video_src",
-			    "video/jpeg",
-			    "width",   GST_PROPS_INT(video_format->width),
-			    "height",  GST_PROPS_INT(video_format->height)
-			    );
-    break;
-  case GST_MAKE_FOURCC('d','v','s','d'):
-    new_caps = GST_CAPS_NEW (
-			    "asf_demux_video_src",
-			    "video/dv",
-			    "format",  GST_PROPS_STRING("NTSC"), /* FIXME??? */
-			    "width",   GST_PROPS_INT(video_format->width),
-			    "height",  GST_PROPS_INT(video_format->height)
-			    );
-    break;
-  }
+  caps = gst_asf_demux_video_caps (GUINT32_FROM_LE(video->tag),
+				   video);
 
-  if (new_caps) caps_list = gst_caps_append(caps_list, new_caps);
-
-  GST_INFO ( "Adding video stream %u", asf_demux->num_video_streams);
-
+  GST_INFO ("Adding video stream %u codec " GST_FOURCC_FORMAT " (0x%08x)",
+	    asf_demux->num_video_streams,
+	    GST_FOURCC_ARGS(GUINT32_FROM_LE(video->tag)),
+	    GUINT32_FROM_LE(video->tag));
   
   asf_demux->num_video_streams++;
   
-  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps_list, id);
+  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
 }
 
 
@@ -1576,7 +1577,8 @@ gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
 
   gst_pad_set_element_private (src_pad, stream);
 
-  GST_INFO ( "Adding pad for stream %u", asf_demux->num_streams);
+  GST_INFO ("Adding pad for stream %u",
+	    asf_demux->num_streams);
 
   asf_demux->num_streams++;
   
@@ -1593,6 +1595,30 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   gint i = 0;
+  GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
+  guint32 vid_list[] = {
+    GST_MAKE_FOURCC('I','4','2','0'),
+    GST_MAKE_FOURCC('Y','U','Y','2'),
+    GST_MAKE_FOURCC('M','J','P','G'),
+    GST_MAKE_FOURCC('D','V','S','D'),
+    GST_MAKE_FOURCC('W','M','V','1'),
+    GST_MAKE_FOURCC('W','M','V','2'),
+    GST_MAKE_FOURCC('M','P','G','4'),
+    GST_MAKE_FOURCC('M','P','4','2'),
+    GST_MAKE_FOURCC('M','P','4','3'),
+    0 /* end */
+  };
+  gint aud_list[] = {
+    GST_RIFF_WAVE_FORMAT_MPEGL3,
+    GST_RIFF_WAVE_FORMAT_MPEGL12,
+    GST_RIFF_WAVE_FORMAT_PCM,
+    GST_RIFF_WAVE_FORMAT_VORBIS1,
+    GST_RIFF_WAVE_FORMAT_A52,
+    GST_RIFF_WAVE_FORMAT_DIVX_WMAV1,
+    GST_RIFF_WAVE_FORMAT_DIVX_WMAV2,
+    GST_RIFF_WAVE_FORMAT_WMAV9,
+    -1 /* end */
+  };
 
   /* this filter needs bytestream */
   if (!gst_library_load ("gstbytestream")) {
@@ -1615,9 +1641,26 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
+  for (i = 0; aud_list[i] != -1; i++) {
+    temp = gst_asf_demux_audio_caps (aud_list[i], NULL);
+    audcaps = gst_caps_append (audcaps, temp);
+  }
+  audiosrctempl = gst_pad_template_new ("audio_%02d",
+					GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					audcaps, NULL);
+  for (i = 0; vid_list[i] != 0; i++) {
+    temp = gst_asf_demux_video_caps (vid_list[i], NULL);
+    vidcaps = gst_caps_append (vidcaps, temp);
+  }
+  videosrctempl = gst_pad_template_new ("video_%02d",
+					GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					vidcaps, NULL);
+  gst_element_factory_add_pad_template (factory, audiosrctempl);
+  gst_element_factory_add_pad_template (factory, videosrctempl);
+  gst_element_factory_add_pad_template (factory,
+	GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -77,8 +77,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
     "mpeg_parse_src",
     "video/mpeg",
       "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-      "parsed",       GST_PROPS_BOOLEAN (TRUE)
+      "systemstream", GST_PROPS_BOOLEAN (TRUE)
   )
 );
 

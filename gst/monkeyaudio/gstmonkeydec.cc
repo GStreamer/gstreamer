@@ -397,15 +397,13 @@ gst_monkeydec_loop (GstElement *element)
     gst_pad_try_set_caps (monkeydec->srcpad,
 		    GST_CAPS_NEW (
 		      "monkeydec_caps",
-		      "audio/raw",
-		      "format", 	GST_PROPS_STRING ("int"),
-          "law",         GST_PROPS_INT (0),
-          "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
-          "signed",      GST_PROPS_BOOLEAN (TRUE),
-          "width",       GST_PROPS_INT (monkeydec->depth),
-          "depth",       GST_PROPS_INT (monkeydec->depth),
-          "rate",     	GST_PROPS_INT (monkeydec->frequency),
-          "channels", 	GST_PROPS_INT (monkeydec->channels)
+		      "audio/x-raw-int",
+		      "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
+		      "signed",      GST_PROPS_BOOLEAN (TRUE),
+		      "width",       GST_PROPS_INT (monkeydec->depth),
+		      "depth",       GST_PROPS_INT (monkeydec->depth),
+		      "rate",     	GST_PROPS_INT (monkeydec->frequency),
+		      "channels", 	GST_PROPS_INT (monkeydec->channels)
 		    ));
 		  }
 
