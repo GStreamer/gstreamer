@@ -1,3 +1,8 @@
+2004-01-16  David Schleef  <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect): Fix use of
+	already-freed caps.
+
 2994-01-16  Christian Schaller <Uraeus@gnome.org>
 
 	* Update spec for new colorspace plugin and libcaca plugin
