@@ -1,5 +1,16 @@
 2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* sys/xvimage/xvimagesink.c:
+	(gst_xvimagesink_calculate_pixel_aspect_ratio),
+	(gst_xvimagesink_xcontext_clear), (gst_xvimagesink_sink_link),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
+	* sys/xvimage/xvimagesink.h:
+	  apply similar PAR fixes as to ximagesink
+
+2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch from: Benjamin Otte
 
 	* ext/lame/gstlame.c: (gst_lame_src_link), (gst_lame_init):
