@@ -5,3 +5,30 @@ that will provide the various codec and other functionality.  The
 interface hopefully is generic enough for various companies (ahem, Apple)
 to release binary codecs for Linux, until such time as they get a clue and
 release the source.
+
+
+Developer note:  When building from CVS sources, you will need to run
+autogen.sh to generate the build system files.
+
+Unfortunately, there is a bug in automake which causes it to use a large
+amount of memory when generating plugins/Makefile.in.  The following patch,
+which you may wish to apply to automake (version 1.4), fixes this problem.
+Alternatively, ensure that you have at least 128Mb of memory on your system,
+and be prepared to wait a little while when running automake (or autogen.sh).
+
+
+@@ -2383,8 +2383,8 @@
+ 	# to all possible directories, and use it.  If DIST_SUBDIRS is
+ 	# defined, just use it.
+ 	local ($dist_subdir_name);
+-	if (&variable_conditions ('SUBDIRS')
+-	    || &variable_defined ('DIST_SUBDIRS'))
++	if (&variable_defined ('DIST_SUBDIRS')
++	    || &variable_conditions ('SUBDIRS'))
+ 	{
+ 	    $dist_subdir_name = 'DIST_SUBDIRS';
+ 	    if (! &variable_defined ('DIST_SUBDIRS'))
+
+
+The automake developers have been notified of this problem, and supplied with
+an equivalent patch against CVS head.
