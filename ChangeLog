@@ -1,3 +1,12 @@
+2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get),
+	(gst_v4lmjpegsrc_buffer_free):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_palette_to_caps),
+	(gst_v4lsrc_srcconnect), (gst_v4lsrc_getcaps), (gst_v4lsrc_get),
+	(gst_v4lsrc_buffer_free):
+	  Fix for removed bufferpools.
+
 2004-01-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_loop):
