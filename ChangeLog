@@ -1,3 +1,8 @@
+2004-09-20  Johan Dahlin  <johan@gnome.org>
+
+	* ext/jpeg/gstjpegdec.c (gst_jpegdec_chain): Allocate the buffer
+	after setting caps.
+
 2004-09-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_init), (gst_wavenc_chain):
