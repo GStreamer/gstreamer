@@ -134,6 +134,8 @@ cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h
 
 ##### Other built sources #####
 
+BUILT_SOURCES = gstmarshal.h gstmarshal.c
+
 # Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst_marshal gstmarshal.list > gstmarshal.h
