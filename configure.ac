@@ -20,8 +20,6 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
-AC_PROG_CXX
-AC_PROG_CXXCPP
 AC_ISC_POSIX
 
 dnl We disable static building for development, for time savings
