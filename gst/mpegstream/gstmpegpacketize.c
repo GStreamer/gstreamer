@@ -59,24 +59,24 @@ parse_packhead (GstMPEGPacketize * packetize)
   guint8 *buf;
   GstBuffer *outbuf;
 
-  GST_DEBUG (0, "packetize: in parse_packhead\n");
+  GST_DEBUG (0, "packetize: in parse_packhead");
 
   buf = gst_bytestream_peek_bytes (packetize->bs, length);
   if (!buf) return NULL;
   buf += 4;
 
-  GST_DEBUG (0, "code %02x\n", *buf);
+  GST_DEBUG (0, "code %02x", *buf);
 
   /* start parsing the stream */
   if ((*buf & 0xf0) == 0x40) {
-    GST_DEBUG (0, "packetize::parse_packhead setting mpeg2\n");
+    GST_DEBUG (0, "packetize::parse_packhead setting mpeg2");
     packetize->MPEG2 = TRUE;
     length += 2;
     buf = gst_bytestream_peek_bytes (packetize->bs, length);
     if (!buf) return NULL;
   }
   else {
-    GST_DEBUG (0, "packetize::parse_packhead setting mpeg1\n");
+    GST_DEBUG (0, "packetize::parse_packhead setting mpeg1");
     packetize->MPEG2 = FALSE;
   }
 
@@ -94,14 +94,14 @@ parse_generic (GstMPEGPacketize *packetize)
   guchar *buf;
   GstBuffer *outbuf;
 
-  GST_DEBUG (0, "packetize: in parse_syshead\n");
+  GST_DEBUG (0, "packetize: in parse_syshead");
 
   buf = gst_bytestream_peek_bytes (bs, 2 + 4);
   if (!buf) return NULL;
   buf += 4;
 
   length = GUINT16_FROM_BE (*(guint16 *) buf);
-  GST_DEBUG (0, "packetize: header_length %d\n", length);
+  GST_DEBUG (0, "packetize: header_length %d", length);
 
   outbuf = gst_bytestream_read (packetize->bs, 2 + length + 4);
   if (!outbuf) return NULL;
@@ -126,12 +126,12 @@ parse_chunk (GstMPEGPacketize *packetize)
 
   code = GUINT32_FROM_BE (*((guint32 *)(buf+offset)));
 
-  GST_DEBUG (0, "code = %08x\n", code);
+  GST_DEBUG (0, "code = %08x", code);
 
   while ((code & 0xffffff00) != 0x100L) {
     code = (code << 8) | buf[offset++];
     
-    GST_DEBUG (0, "  code = %08x\n", code);
+    GST_DEBUG (0, "  code = %08x", code);
 
     if ((offset % chunksize) == 0) {
       buf = gst_bytestream_peek_bytes (bs, offset + chunksize);
@@ -163,12 +163,12 @@ find_start_code (GstMPEGPacketize *packetize)
 
   code = GUINT32_FROM_BE (*((guint32 *)(buf)));
 
-  GST_DEBUG (0, "code = %08x\n", code);
+  GST_DEBUG (0, "code = %08x", code);
 
   while ((code & 0xffffff00) != 0x100L) {
     code = (code << 8) | buf[offset++];
     
-    GST_DEBUG (0, "  code = %08x\n", code);
+    GST_DEBUG (0, "  code = %08x", code);
     /* g_print ("  code = %08x\n", code); */
 
     if (offset == chunksize) {
@@ -198,7 +198,7 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
     if (!find_start_code (packetize))
       got_event = TRUE;
     else {
-      GST_DEBUG (0, "packetize: have chunk 0x%02X\n", packetize->id);
+      GST_DEBUG (0, "packetize: have chunk 0x%02X", packetize->id);
       if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
         switch (packetize->id) {
           case PACK_START_CODE:

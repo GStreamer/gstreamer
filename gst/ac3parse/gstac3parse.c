@@ -209,7 +209,7 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
 /*  g_return_if_fail(GST_IS_BUFFER(buf)); */
 
   ac3parse = GST_AC3PARSE(GST_OBJECT_PARENT (pad));
-  GST_DEBUG (0,"ac3parse: received buffer of %d bytes\n", GST_BUFFER_SIZE (buf));
+  GST_DEBUG (0,"ac3parse: received buffer of %d bytes", GST_BUFFER_SIZE (buf));
 
   /* deal with partial frame from previous buffer */
   if (ac3parse->partialbuf) {
@@ -229,7 +229,7 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
   while (offset < size-2) {
     int skipped = 0;
 
-    GST_DEBUG (0,"ac3parse: offset %ld, size %ld \n",offset, size);
+    GST_DEBUG (0,"ac3parse: offset %ld, size %ld ",offset, size);
 
     /* search for a possible start byte */
     for (;((data[offset] != 0x0b) && (offset < size));offset++) skipped++ ;
@@ -250,18 +250,18 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
       bpf = frmsizecod_tbl[fsize].frm_size[rate] * 2;
       /* if we don't have the whole frame... */
       if ((size - offset) < bpf) {
-	GST_DEBUG (0,"ac3parse: partial buffer needed %ld < %d \n",size-offset, bpf);
+	GST_DEBUG (0,"ac3parse: partial buffer needed %ld < %d ",size-offset, bpf);
 	break;
       } else {
 	outbuf = gst_buffer_create_sub(ac3parse->partialbuf,offset,bpf);
 
 	offset += bpf;
 	if (ac3parse->skip == 0 && GST_PAD_IS_CONNECTED(ac3parse->srcpad)) {
-	  GST_DEBUG (0,"ac3parse: pushing buffer of %d bytes\n",GST_BUFFER_SIZE(outbuf));
+	  GST_DEBUG (0,"ac3parse: pushing buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
           gst_pad_push(ac3parse->srcpad,outbuf);
 	}
 	else {
-	  GST_DEBUG (0,"ac3parse: skipping buffer of %d bytes\n",GST_BUFFER_SIZE(outbuf));
+	  GST_DEBUG (0,"ac3parse: skipping buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
           gst_buffer_unref(outbuf);
 	  ac3parse->skip--;
 	}
@@ -275,7 +275,7 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
   /* bytes left not in a partial block, copy them over. */
   if (size-offset > 0) {
     gint remainder = (size - offset);
-    GST_DEBUG (0,"ac3parse: partial buffer needed %d for trailing bytes\n",remainder);
+    GST_DEBUG (0,"ac3parse: partial buffer needed %d for trailing bytes",remainder);
 
     outbuf = gst_buffer_create_sub(ac3parse->partialbuf,offset,remainder);
     gst_buffer_unref(ac3parse->partialbuf);

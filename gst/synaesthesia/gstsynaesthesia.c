@@ -230,15 +230,15 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0, "Synaesthesia: chainfunc called\n");
+  GST_DEBUG (0, "Synaesthesia: chainfunc called");
 
   samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
 
-  GST_DEBUG (0, "input buffer has %d samples\n", samples_in);
+  GST_DEBUG (0, "input buffer has %d samples", samples_in);
 
   /* FIXME: should really select the first 1024 samples after the timestamp. */
   if (GST_BUFFER_TIMESTAMP (bufin) < synaesthesia->next_time || samples_in < 1024) {
-    GST_DEBUG (0, "timestamp is %llu: want >= %llu\n", GST_BUFFER_TIMESTAMP (bufin), synaesthesia->next_time);
+    GST_DEBUG (0, "timestamp is %llu: want >= %llu", GST_BUFFER_TIMESTAMP (bufin), synaesthesia->next_time);
     gst_buffer_unref (bufin);
     return;
   }
@@ -254,7 +254,7 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 
     synaesthesia_init (synaesthesia->width, synaesthesia->height);
 	
-    GST_DEBUG (0, "making new pad\n");
+    GST_DEBUG (0, "making new pad");
 
     caps = GST_CAPS_NEW (
 		     "synaesthesiasrc",
@@ -289,7 +289,7 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 
   gst_buffer_unref (bufin);
 
-  GST_DEBUG (0, "Synaesthesia: exiting chainfunc\n");
+  GST_DEBUG (0, "Synaesthesia: exiting chainfunc");
 
 }
 

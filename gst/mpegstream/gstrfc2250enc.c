@@ -219,7 +219,7 @@ gst_rfc2250_enc_loop (GstElement *element)
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer = GST_BUFFER (data);
 
-    GST_DEBUG (0, "rfc2250enc: have chunk 0x%02X\n", id);
+    GST_DEBUG (0, "rfc2250enc: have chunk 0x%02X", id);
 
     switch (id) {
       case SEQUENCE_START_CODE:

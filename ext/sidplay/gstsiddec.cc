@@ -239,7 +239,7 @@ sid_typefind (GstBuffer *buf, gpointer priv)
   guchar *data = GST_BUFFER_DATA (buf);
   GstCaps *newcaps;
 
-  GST_DEBUG (0,"sid_demux: typefind\n");
+  GST_DEBUG (0,"sid_demux: typefind");
 
   if (strncmp ((const char *)data, "PSID", 4))
     return NULL;

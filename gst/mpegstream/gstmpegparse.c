@@ -185,7 +185,7 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data)
     GST_BUFFER_TIMESTAMP (data) = mpeg_parse->next_ts;
     gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
     mpeg_parse->next_ts += ((size * 1000000.0) / (mpeg_parse->bit_rate));
-    GST_DEBUG (0, "mpeg_parse: next_ts %lld\n", mpeg_parse->next_ts);
+    GST_DEBUG (0, "mpeg_parse: next_ts %lld", mpeg_parse->next_ts);
 
   }
 }
@@ -198,7 +198,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint32 scr1, scr2;
   guint32 new_rate;
 
-  GST_DEBUG (0, "mpeg_parse: in parse_packhead\n");
+  GST_DEBUG (0, "mpeg_parse: in parse_packhead");
 
   buf = GST_BUFFER_DATA (buffer);
   buf += 4;
@@ -229,7 +229,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     new_rate *= 400;
   }
 
-  GST_DEBUG (0, "mpeg_parse: SCR is %llu\n", scr);
+  GST_DEBUG (0, "mpeg_parse: SCR is %llu", scr);
   mpeg_parse->next_ts = (scr*100)/9;
 
   if (mpeg_parse->bit_rate != new_rate) {
@@ -238,7 +238,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     g_object_notify (G_OBJECT (mpeg_parse), "bitrate");
   }
 
-  GST_DEBUG (0, "mpeg_parse: stream is %1.3fMbs\n",
+  GST_DEBUG (0, "mpeg_parse: stream is %1.3fMbs",
 	     (mpeg_parse->bit_rate) / 1000000.0);
 
   return TRUE;
@@ -260,7 +260,7 @@ gst_mpeg_parse_loop (GstElement *element)
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer = GST_BUFFER (data);
 
-    GST_DEBUG (0, "mpeg2demux: have chunk 0x%02X\n", id);
+    GST_DEBUG (0, "mpeg2demux: have chunk 0x%02X", id);
 
     switch (id) {
       case 0xba:

@@ -242,7 +242,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 
   mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0,"mp3parse: received buffer of %d bytes\n",GST_BUFFER_SIZE(buf));
+  GST_DEBUG (0,"mp3parse: received buffer of %d bytes",GST_BUFFER_SIZE(buf));
 
   last_ts = GST_BUFFER_TIMESTAMP(buf);
 
@@ -273,12 +273,12 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
   while (offset < size-4) {
     int skipped = 0;
 
-    GST_DEBUG (0,"mp3parse: offset %ld, size %ld \n",offset, size);
+    GST_DEBUG (0,"mp3parse: offset %ld, size %ld ",offset, size);
 
     /* search for a possible start byte */
     for (;((data[offset] != 0xff) && (offset < size));offset++) skipped++;
     if (skipped && !mp3parse->in_flush) {
-      GST_DEBUG (0,"mp3parse: **** now at %ld skipped %d bytes\n",offset,skipped);
+      GST_DEBUG (0,"mp3parse: **** now at %ld skipped %d bytes",offset,skipped);
     }
     /* construct the header word */
     header = GULONG_FROM_BE(*((gulong *)(data+offset)));
@@ -305,12 +305,12 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
         if ((size-offset)<(bpf+4)) { if (mp3parse->in_flush) break; } /* wait until we have the the entire current frame as well as the next frame header */
 
         header2 = GULONG_FROM_BE(*((gulong *)(data+offset+bpf)));
-        GST_DEBUG(0,"mp3parse: header=%08lX, header2=%08lX, bpf=%d\n", header, header2, bpf );
+        GST_DEBUG(0,"mp3parse: header=%08lX, header2=%08lX, bpf=%d", header, header2, bpf );
 
         #define HDRMASK ~( (0xF<<12)/*bitrate*/ | (1<<9)/*padding*/ | (3<<4)/*mode extension*/ ) /* mask the bits which are allowed to differ between frames */
 
         if ( (header2&HDRMASK) != (header&HDRMASK) ) { /* require 2 matching headers in a row */
-           GST_DEBUG(0,"mp3parse: next header doesn't match (header=%08lX, header2=%08lX, bpf=%d)\n", header, header2, bpf );
+           GST_DEBUG(0,"mp3parse: next header doesn't match (header=%08lX, header2=%08lX, bpf=%d)", header, header2, bpf );
            offset++; /* This frame is invalid.  Start looking for a valid frame at the next position in the stream */
            continue;
         }
@@ -319,7 +319,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 
       /* if we don't have the whole frame... */
       if ((size - offset) < bpf) {
-        GST_DEBUG (0,"mp3parse: partial buffer needed %ld < %d \n",(size-offset), bpf);
+        GST_DEBUG (0,"mp3parse: partial buffer needed %ld < %d ",(size-offset), bpf);
 	break;
       } else {
 
@@ -327,7 +327,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 
         offset += bpf;
 	if (mp3parse->skip == 0) {
-          GST_DEBUG (0,"mp3parse: pushing buffer of %d bytes\n",GST_BUFFER_SIZE(outbuf));
+          GST_DEBUG (0,"mp3parse: pushing buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
 	  if (mp3parse->in_flush) {
 	    /* FIXME do some sort of flush event */
 	    mp3parse->in_flush = FALSE;
@@ -336,21 +336,21 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
           gst_pad_push(mp3parse->srcpad,outbuf);
 	}
 	else {
-          GST_DEBUG (0,"mp3parse: skipping buffer of %d bytes\n",GST_BUFFER_SIZE(outbuf));
+          GST_DEBUG (0,"mp3parse: skipping buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
           gst_buffer_unref(outbuf);
 	  mp3parse->skip--;
 	}
       }
     } else {
       offset++;
-      if (!mp3parse->in_flush) GST_DEBUG (0,"mp3parse: *** wrong header, skipping byte (FIXME?)\n");
+      if (!mp3parse->in_flush) GST_DEBUG (0,"mp3parse: *** wrong header, skipping byte (FIXME?)");
     }
   }
   /* if we have processed this block and there are still */
   /* bytes left not in a partial block, copy them over. */
   if (size-offset > 0) {
     glong remainder = (size - offset);
-    GST_DEBUG (0,"mp3parse: partial buffer needed %ld for trailing bytes\n",remainder);
+    GST_DEBUG (0,"mp3parse: partial buffer needed %ld for trailing bytes",remainder);
 
     outbuf = gst_buffer_create_sub(mp3parse->partialbuf,offset,remainder);
     gst_buffer_unref(mp3parse->partialbuf);
@@ -408,28 +408,28 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
 static gboolean
 head_check (unsigned long head)
 {
-  GST_DEBUG (0,"checking mp3 header 0x%08lx\n",head);
+  GST_DEBUG (0,"checking mp3 header 0x%08lx",head);
   /* if it's not a valid sync */
   if ((head & 0xffe00000) != 0xffe00000) {
-    GST_DEBUG (0,"invalid sync\n");return FALSE; }
+    GST_DEBUG (0,"invalid sync");return FALSE; }
   /* if it's an invalid MPEG version */
   if (((head >> 19) & 3) == 0x1) {
-    GST_DEBUG (0,"invalid MPEG version\n");return FALSE; }
+    GST_DEBUG (0,"invalid MPEG version");return FALSE; }
   /* if it's an invalid layer */
   if (!((head >> 17) & 3)) {
-    GST_DEBUG (0,"invalid layer\n");return FALSE; }
+    GST_DEBUG (0,"invalid layer");return FALSE; }
   /* if it's an invalid bitrate */
   if (((head >> 12) & 0xf) == 0x0) {
-    GST_DEBUG (0,"invalid bitrate\n");return FALSE; }
+    GST_DEBUG (0,"invalid bitrate");return FALSE; }
   if (((head >> 12) & 0xf) == 0xf) {
-    GST_DEBUG (0,"invalid bitrate\n");return FALSE; }
+    GST_DEBUG (0,"invalid bitrate");return FALSE; }
   /* if it's an invalid samplerate */
   if (((head >> 10) & 0x3) == 0x3) {
-    GST_DEBUG (0,"invalid samplerate\n");return FALSE; }
+    GST_DEBUG (0,"invalid samplerate");return FALSE; }
   if ((head & 0xffff0000) == 0xfffe0000) { 
-    GST_DEBUG (0,"invalid sync\n");return FALSE; }
+    GST_DEBUG (0,"invalid sync");return FALSE; }
   if (head & 0x00000002) {
-        GST_DEBUG (0,"invalid emphasis\n");return FALSE; }
+        GST_DEBUG (0,"invalid emphasis");return FALSE; }
 
   return TRUE;
 }

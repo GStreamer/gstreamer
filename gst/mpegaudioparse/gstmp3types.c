@@ -37,7 +37,7 @@ mp3_typefind(GstBuffer *buf, gpointer private)
 
   data = GST_BUFFER_DATA(buf);
 
-  GST_DEBUG (0,"mp3typefind: typefind\n");
+  GST_DEBUG (0,"mp3typefind: typefind");
  
   /* check for ID3 Tag first and forward ID3 length */
   if (!memcmp (data, "ID3", 3))
@@ -51,11 +51,11 @@ mp3_typefind(GstBuffer *buf, gpointer private)
 	    ((skip & 0x007f0000) >> 2) |
 	    ((skip & 0x00007f00) >> 1) |
 	    ((skip & 0x0000007f) >> 0)) + 4;
-    GST_DEBUG (0, "mp3typefind: detected ID3 Tag with %u bytes\n", skip + 6);
+    GST_DEBUG (0, "mp3typefind: detected ID3 Tag with %u bytes", skip + 6);
     /* return if buffer is not big enough */
     if (GST_BUFFER_SIZE (buf) < skip + 10)
     {
-      GST_DEBUG (0, "mp3typefind: buffer too small (%d) to go on typefinding\n", skip + 6);
+      GST_DEBUG (0, "mp3typefind: buffer too small (%d) to go on typefinding", skip + 6);
       return NULL;
     }
     data += skip;

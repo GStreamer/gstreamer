@@ -742,7 +742,7 @@ dvdsrc_change_state (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_DVDSRC (element), GST_STATE_FAILURE);
 
-  GST_DEBUG (0,"gstdisksrc: state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"gstdisksrc: state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {

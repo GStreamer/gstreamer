@@ -223,7 +223,7 @@ gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
 
   GST_BUFFER_TIMESTAMP (_frame->buffer) = pts;
 
-  GST_DEBUG (0, "out: %lld %d %lld\n", GST_BUFFER_TIMESTAMP (_frame->buffer),
+  GST_DEBUG (0, "out: %lld %d %lld", GST_BUFFER_TIMESTAMP (_frame->buffer),
 		  mpeg2dec->decoder->frame_rate_code,
                   (long long)(1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code]));
 
@@ -438,7 +438,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   guint num_frames;
   gint64 pts;
 
-  GST_DEBUG (0, "MPEG2DEC: chain called\n");
+  GST_DEBUG (0, "MPEG2DEC: chain called");
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *ev = GST_EVENT (buf);
