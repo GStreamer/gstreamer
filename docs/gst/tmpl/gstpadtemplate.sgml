@@ -151,14 +151,6 @@ Get the padtemplate of the factory created with GST_PAD_TEMPLATE_FACTORY()
 @fact: the factory name to get the padtemplate from.
 
 
-<!-- ##### MACRO GST_PAD_TEMPLATE_FIXED ##### -->
-<para>
-Get the flag indicating the properties are fixed from the template.
-</para>
-
-@templ: the template to query
-
-
 <!-- ##### MACRO GST_PAD_TEMPLATE_IS_FIXED ##### -->
 <para>
 Check if the properties of the padtemplate are fixed

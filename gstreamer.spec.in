@@ -7,7 +7,7 @@ Group: 		System Environment/Libraries
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source: 	http://gstreamer.net/releases/%{version}/src/%{name}-%{version}.tar.gz
+Source: 	http://gstreamer.net/src/gstreamer/gstreamer-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %define		majorminor	@GST_MAJORMINOR@
@@ -17,14 +17,13 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: 	glib2 >= %_glib2
 Requires: 	libxml2 >= %_libxml2
 Requires:	popt > 1.6
-Prereq:		%{name}-tools >= %{version}
+
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
 BuildRequires: 	flex
-BuildRequires: 	gtk-doc >= 0.7
-BuildRequires: 	libxslt
-BuildRequires:	ghostscript
+BuildRequires: 	m4
+BuildRequires: 	gtk-doc >= 1.1
 BuildRequires: 	gcc
 BuildRequires: 	zlib-devel
 BuildRequires:  popt > 1.6
@@ -32,14 +31,16 @@ Prereq:		/sbin/ldconfig
 
 ### documentation requirements
 BuildRequires:  python2
-BuildRequires:  docbook-style-dsssl docbook-dtd31-sgml
-BuildRequires:	transfig xfig
-BuildRequires:	ghostscript
-BuildRequires:	xmlto
-# we want xmltex.fmt generated
-BuildRequires:	jadetex
-BuildRequires:	tetex-dvips
+BuildRequires:  openjade
+BuildRequires:  jadetex
+BuildRequires: 	libxslt
+BuildRequires:  docbook-style-dsssl
+BuildRequires:  docbook-style-xsl
+BuildRequires:  docbook-utils
+BuildRequires:	transfig
+BuildRequires:	xfig
 BuildRequires:	netpbm-progs
+BuildRequires:	ghostscript
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -68,12 +69,11 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
-%package tools
+%package -n gstreamer-tools
 Summary: 	tools for GStreamer streaming media framework.
 Group: 		Applications/Multimedia
-Requires:	%{name}
 
-%description tools
+%description -n gstreamer-tools
 GStreamer is a streaming-media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
@@ -86,159 +86,88 @@ gst-register and gst-launch.  It is split off to allow parallel-installability
 in the future.
 
 %prep
-%setup -q
+%setup -n gstreamer-%{version}
 
 %build
 %configure \
   --enable-debug \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
-  --disable-tests --disable-examples \
-  --enable-docs-build --with-html-dir=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
-
+  --disable-tests --disable-examples
+                                                                                
 make %{?_smp_mflags}
-
-%install  
+                                                                                
+%install
 rm -rf $RPM_BUILD_ROOT
 
-%makeinstall
-# Clean out files that should not be part of the rpm. 
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
-rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.la
-rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.a
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+# build documentation to a different location so it doesn't end up in
+# a gstreamer-devel-(version) dir and doesn't get deleted by %doc scripts
+%makeinstall docdir=$RPM_BUILD_ROOT%{_datadir}/gstreamer-%{majorminor}/doc
 
-# Copy built docbook docs to gstreamer-devel docs dir
-for a in faq manual pwg; do
-  mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-devel-%{version}/$a
-  cp -p docs/$a/$a.ps $RPM_BUILD_ROOT%{_docdir}/%{name}-devel-%{version}/$a
-  cp -p docs/$a/$a.pdf $RPM_BUILD_ROOT%{_docdir}/%{name}-devel-%{version}/$a
-  cp -pr docs/$a/html $RPM_BUILD_ROOT%{_docdir}/%{name}-devel-%{version}/$a
-done
+# Clean out files that should not be part of the rpm.
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+# Create empty cache directory
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{major}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
 /sbin/ldconfig
-env DISPLAY= %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-
+%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+                                                                                
 %postun
 /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
+%defattr(-, root, root, -)
+%doc AUTHORS COPYING README TODO COPYING.LIB REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
+%{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache.so
+%{_libdir}/gstreamer-%{majorminor}/libgstautoplugger.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbasicwingo*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoptwingo*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstelements*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstputbits*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstspider*.so
+%{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttypes.so
+%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbytestream.so
+%{_bindir}/gst-xmlinspect-%{majorminor}
+%{_bindir}/gst-complete-%{majorminor}
+%{_bindir}/gst-compprep-%{majorminor}
+%{_bindir}/gst-feedback-%{majorminor}
+%{_bindir}/gst-inspect-%{majorminor}
+%{_bindir}/gst-launch-%{majorminor}
+%{_bindir}/gst-md5sum-%{majorminor}
+%{_bindir}/gst-register-%{majorminor}
+%{_bindir}/gst-xmllaunch-%{majorminor}
+%{_bindir}/gst-typefind-%{majorminor}
+%{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
+%{_mandir}/man1/gst-complete-%{majorminor}.*
+%{_mandir}/man1/gst-compprep-%{majorminor}.*
+%{_mandir}/man1/gst-feedback-%{majorminor}.*
+%{_mandir}/man1/gst-inspect-%{majorminor}.*
+%{_mandir}/man1/gst-launch-%{majorminor}.*
+%{_mandir}/man1/gst-md5sum-%{majorminor}.*
+%{_mandir}/man1/gst-register-%{majorminor}.*
+%{_mandir}/man1/gst-typefind-%{majorminor}.*
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
-%{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstautoplugger*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbasicwingo*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstoptwingoscheduler*.so
-%{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler.so
-%{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler.so
-%{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgsttypes*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbytestream*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstputbits*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
 
-%files devel
-%defattr(-,root,root,-)
-%{_docdir}/%{name}-devel-%{version}/faq
-%{_docdir}/%{name}-devel-%{version}/manual
-%{_docdir}/%{name}-devel-%{version}/pwg
-%dir %{_includedir}/%{name}-%{majorminor}
-%dir %{_includedir}/%{name}-%{majorminor}/gst
-%{_includedir}/%{name}-%{majorminor}/gst/*.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/control
-%{_includedir}/%{name}-%{majorminor}/gst/control/*.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/bytestream
-%{_includedir}/%{name}-%{majorminor}/gst/bytestream/bytestream.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/getbits
-%{_includedir}/%{name}-%{majorminor}/gst/getbits/getbits.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/putbits
-%{_includedir}/%{name}-%{majorminor}/gst/putbits/putbits.h
-%{_libdir}/libgstreamer-%{majorminor}.so
-%{_libdir}/libgstcontrol-%{majorminor}.so
-%{_libdir}/libgstreamer-%{majorminor}.a
-%{_libdir}/libgstcontrol-%{majorminor}.a
-%{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
-%{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
-## we specify the API docs as regular files since %docs doesn't fail when
-#  files aren't found anymore for RPM >= 4
-#  we list all of the files we really need to trap incomplete doc builds
-#  then we catch the rest with *, you can safely ignore the errors from this
-## gstreamer API
-%dir %{_datadir}/gtk-doc/html/%{name}-%{majorminor}
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/%{name}-%{majorminor}.devhelp
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-cothreads.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstatomic.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstmemchunk.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-support.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-Gst.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstAutoplug.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstAutoplugFactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstBin.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstBuffer.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstBufferPool.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstCaps.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstClock.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstCpu.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstData.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstElement.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstElementFactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstEvent.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstFormat.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstIndex.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstIndexFactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstInfo.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstObject.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstPad.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstPadTemplate.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstParse.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstPipeline.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstPlugin.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstPluginFeature.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstProbe.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstProps.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstquery.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstRegistry.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstScheduler.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstSchedulerFactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstSystemClock.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstThread.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstType.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstTypeFactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-GstUtils.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/GstXML.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/element-types.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/index.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/index.sgml
-## gstreamer-libs API
-%dir %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-%{majorminor}.devhelp
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstgetbits.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstputbits.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstidct.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstcontrol.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/index.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/index.sgml
-## this catches all of the rest of the docs we might have forgotten
-%{_datadir}/gtk-doc/html/*
-
-%files tools
-%defattr(-,root,root,-)
+%files -n gstreamer-tools
+%defattr(-, root, root, -)
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-feedback
@@ -247,19 +176,36 @@ env DISPLAY= %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 %{_bindir}/gst-md5sum
 %{_bindir}/gst-register
 %{_bindir}/gst-typefind
+%{_bindir}/gst-xmlinspect
 %{_bindir}/gst-xmllaunch
-%{_mandir}/man1/gst-complete.*
-%{_mandir}/man1/gst-compprep.*
-%{_mandir}/man1/gst-feedback.*
-%{_mandir}/man1/gst-inspect.*
-%{_mandir}/man1/gst-launch.*
-%{_mandir}/man1/gst-md5sum.*
-%{_mandir}/man1/gst-register.*
-%{_mandir}/man1/gst-typefind.*
-%{_mandir}/man1/gst-xmllaunch.*
+                                                                                
+%files devel
+%defattr(-, root, root, -)
+%dir %{_includedir}/gstreamer-%{majorminor}
+%dir %{_includedir}/gstreamer-%{majorminor}/gst
+%{_includedir}/gstreamer-%{majorminor}/gst/*.h
+%dir %{_includedir}/gstreamer-%{majorminor}/gst/control
+%{_includedir}/gstreamer-%{majorminor}/gst/control/*.h
+%dir %{_includedir}/gstreamer-%{majorminor}/gst/getbits
+%{_includedir}/gstreamer-%{majorminor}/gst/getbits/getbits.h
+%dir %{_includedir}/gstreamer-%{majorminor}/gst/putbits
+%{_includedir}/gstreamer-%{majorminor}/gst/putbits/putbits.h
+%{_includedir}/gstreamer-%{majorminor}/gst/bytestream/bytestream.h
+%{_libdir}/libgstreamer-%{majorminor}.so
+%{_libdir}/libgstcontrol-%{majorminor}.so
+%{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
+%{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
+                                                                                
+%{_datadir}/gstreamer-%{majorminor}/doc
+%{_datadir}/gtk-doc/html/gstreamer-%{majorminor}/*
+%{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}/*
 
 
 %changelog
+* Thu Feb 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- updated spec file for 0.6.5 release
+
 * Fri Oct 10 2003 Thomas Vander Stichele <thomas at apestaart dot org>
 - added dependencies for docs build
 

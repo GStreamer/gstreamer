@@ -35,7 +35,7 @@ DIST_SUBDIRS = include libs gst tools tests testsuite examples docs pkgconfig
 
 EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
-	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
+	     REQUIREMENTS DOCBUILDING DEVEL \
 	     idiottest.mak common
 
 dist-hook:

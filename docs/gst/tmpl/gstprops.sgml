@@ -21,7 +21,7 @@ The props structure
 </para>
 
 @refcount: a refcount for this struct
-@fixed: indicates that this props has no lists or ranges
+@flags: 
 @properties: the properties
 
 <!-- ##### ENUM GstPropsType ##### -->
@@ -251,6 +251,7 @@ An entry hols one key/value pair.
 </para>
 
 @props: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_props_unref ##### -->
@@ -259,6 +260,7 @@ An entry hols one key/value pair.
 </para>
 
 @props: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_props_check_compatibility ##### -->
@@ -320,16 +322,6 @@ An entry hols one key/value pair.
 @props: 
 @first_name: 
 @Varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_props_has_property ##### -->
-<para>
-
-</para>
-
-@props: 
-@name: 
 @Returns: 
 
 
@@ -427,6 +419,15 @@ An entry hols one key/value pair.
 
 @entry: 
 @Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_type ##### -->
+<para>
+
+</para>
+
+@entry: 
 @Returns: 
 
 

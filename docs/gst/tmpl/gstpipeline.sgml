@@ -36,11 +36,3 @@ The pipeline object
 @Returns: 
 
 
-<!-- ##### MACRO gst_pipeline_destroy ##### -->
-<para>
-Destroys the pipeline.
-</para>
-
-@pipeline: #GstPipeline to destroy
-
-

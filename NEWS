@@ -1,2 +1,41 @@
-2001-12-12
-	* GStreamer 0.3.0 released, "Most Eventful Ever"
+   The  GStreamer  team  is  proud  to  announce  a  new  release  in the
+   ABI-stable 0.6.x series.
+
+   This  release  is  a  service  release,  fixing some small outstanding
+   issues  and  using  the same code for the unversioned binaries so that
+   parallel installability of the 0.6.x with future series is fixed.
+
+Features of this release
+
+     * Provides versioned and unversioned binaries
+     * Documentation fixes
+
+Download
+
+   You  find  source  releases of gstreamer in the [13]gstreamer download
+   directory.
+
+GStreamer Homepage
+
+   More    details    can    be   found   on   the   project's   website,
+   [14]http://gstreamer.net.local.
+
+Support and Bugs
+
+   We use Gnome's bugzilla for [15]bug reports and feature requests.
+
+Developers
+
+   CVS is hosted on cvs.freedesktop.org. You can [16]browse the gstreamer
+   repository.  All  code  is  in  CVS and can be checked out from there.
+   Interested  developers of the core library, plug-ins, and applications
+   should  subscribe  to the gstreamer-devel list. If there is sufficient
+   interest we will create more lists as necessary.
+
+References
+
+   Visible links
+  14. http://gstreamer.net/
+  15. http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+  16. http://freedesktop.org/cgi-bin/viewcvs.cgi/gstreamer//gstreamer/
+

@@ -3,36 +3,37 @@
                   "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
 <!ENTITY % image-entities SYSTEM "image.entities">
 %image-entities;
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
 
 <!ENTITY TITLEPAGE            SYSTEM "titlepage.xml">
 
-<!ENTITY INTRO_PREFACE        SYSTEM "intro_preface.xml">
-<!ENTITY INTRO_BASICS         SYSTEM "intro_basics.xml">
+<!ENTITY INTRO_PREFACE        SYSTEM "intro-preface.xml">
+<!ENTITY INTRO_BASICS         SYSTEM "intro-basics.xml">
 
-<!ENTITY BUILDING_BOILER      SYSTEM "building_boiler.xml">
-<!ENTITY BUILDING_PADS        SYSTEM "building_pads.xml">
-<!ENTITY BUILDING_CHAINFN     SYSTEM "building_chainfn.xml">
-<!ENTITY BUILDING_STATE       SYSTEM "building_state.xml">
-<!ENTITY BUILDING_PROPS       SYSTEM "building_props.xml">
-<!ENTITY BUILDING_SIGNALS     SYSTEM "building_signals.xml">
-<!ENTITY BUILDING_TESTAPP     SYSTEM "building_testapp.xml">
+<!ENTITY BUILDING_BOILER      SYSTEM "building-boiler.xml">
+<!ENTITY BUILDING_PADS        SYSTEM "building-pads.xml">
+<!ENTITY BUILDING_CHAINFN     SYSTEM "building-chainfn.xml">
+<!ENTITY BUILDING_STATE       SYSTEM "building-state.xml">
+<!ENTITY BUILDING_PROPS       SYSTEM "building-props.xml">
+<!ENTITY BUILDING_SIGNALS     SYSTEM "building-signals.xml">
+<!ENTITY BUILDING_TESTAPP     SYSTEM "building-testapp.xml">
 
-<!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced_scheduling.xml">
-<!ENTITY ADVANCED_TYPES       SYSTEM "advanced_types.xml">
-<!ENTITY ADVANCED_REQUEST     SYSTEM "advanced_request.xml">
-<!ENTITY ADVANCED_CLOCK       SYSTEM "advanced_clock.xml">
-<!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced_dparams.xml">
-<!ENTITY ADVANCED_MIDI        SYSTEM "advanced_midi.xml">
+<!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
+<!ENTITY ADVANCED_TYPES       SYSTEM "advanced-types.xml">
+<!ENTITY ADVANCED_REQUEST     SYSTEM "advanced-request.xml">
+<!ENTITY ADVANCED_CLOCK       SYSTEM "advanced-clock.xml">
+<!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced-dparams.xml">
+<!ENTITY ADVANCED_MIDI        SYSTEM "advanced-midi.xml">
 
-<!ENTITY OTHER_SOURCE         SYSTEM "other_source.xml">
-<!ENTITY OTHER_SINK           SYSTEM "other_sink.xml">
-<!ENTITY OTHER_AUTOPLUGGER    SYSTEM "other_autoplugger.xml">
+<!ENTITY OTHER_SOURCE         SYSTEM "other-source.xml">
+<!ENTITY OTHER_SINK           SYSTEM "other-sink.xml">
+<!ENTITY OTHER_AUTOPLUGGER    SYSTEM "other-autoplugger.xml">
 
-<!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix_checklist.xml">
-<!ENTITY APPENDIX_PYTHON      SYSTEM "appendix_python.xml">
+<!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix-checklist.xml">
+<!ENTITY APPENDIX_PYTHON      SYSTEM "appendix-python.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
-<!ENTITY GstVersion   "0.4.2.2">
 <!ENTITY GstAppDevMan "<emphasis>GStreamer Application Development Manual</emphasis>">
 <!ENTITY GstLibRef    "<emphasis>GStreamer Library Reference</emphasis>">
 ]>
@@ -56,7 +57,7 @@
       </para>
       <para>
         This guide is intended to help you understand the &GStreamer; framework
-        (version &GstVersion;) so you can develop new plugins to extend the
+        (version &GST_VERSION;) so you can develop new plugins to extend the
         existing functionality. The guide addresses most issues by following the
         development of an example plugin - an audio filter plugin -
         written in C. However, the later parts of the guide also present some

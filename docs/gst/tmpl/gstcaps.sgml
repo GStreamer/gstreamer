@@ -169,8 +169,8 @@ The gstcaps structure
 
 @name: the name of the capability, for the application
 @id: the typeid of the capability
+@flags: 
 @refcount: a refcounter for this caps structure
-@fixed: a boolean indicating that this caps structure is fixed
 @properties: the properties of the capability
 @next: a pointer to the next caps.
 

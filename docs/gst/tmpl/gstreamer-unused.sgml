@@ -1783,6 +1783,13 @@ A flag indicating that SSE instructions are supported.
 </para>
 
 
+<!-- ##### MACRO GST_DATA_IS_READONLY ##### -->
+<para>
+Query if the GstData is READONLY
+</para>
+
+@data: The data to query
+
 <!-- ##### MACRO GST_DATA_REFCOUNT_READ ##### -->
 <para>
 Read the current refcount value into the specified value
@@ -2728,6 +2735,13 @@ Is this pad linked.
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_FIXED ##### -->
+<para>
+Get the flag indicating the properties are fixed from the template.
+</para>
+
+@templ: the template to query
 
 <!-- ##### MACRO GST_PIPELINE ##### -->
 <para>
@@ -7214,6 +7228,13 @@ must be defined to activate the tracing functionality.
 
 @bin: 
 
+<!-- ##### MACRO gst_bin_destroy ##### -->
+<para>
+Free the memory allocated by this bin
+</para>
+
+@bin: the bin to free
+
 <!-- ##### VARIABLE gst_bin_details ##### -->
 <para>
 
@@ -7323,6 +7344,14 @@ must be defined to activate the tracing functionality.
 @buffer: 
 @Returns: 
 
+<!-- ##### MACRO gst_buffer_needs_copy_on_write ##### -->
+<para>
+Queries if a copy needs to be ade of the buffer in order to safely write
+to its data.
+</para>
+
+@buf: The buffer to query.
+
 <!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
 <para>
 
@@ -7337,6 +7366,14 @@ must be defined to activate the tracing functionality.
 
 @pool: 
 @buffer: 
+
+<!-- ##### MACRO gst_buffer_pool_needs_copy_on_write ##### -->
+<para>
+Checks if a copy needs to be made of the bufferpool before it can
+safely be modified.
+</para>
+
+@pool: The pool to query
 
 <!-- ##### FUNCTION gst_buffer_pool_new_buffer ##### -->
 <para>
@@ -7840,6 +7877,14 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
+<!-- ##### FUNCTION gst_data_needs_copy_on_write ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
 <para>
 
@@ -7870,6 +7915,15 @@ must be defined to activate the tracing functionality.
 @klass: 
 @first_name: 
 @Varargs: 
+
+<!-- ##### MACRO gst_element_destroy ##### -->
+<para>
+Destroys the element (without taking the refcount into account).
+An application programmer should use #gst_object_unref instead to dispose
+of an element he doesn't need anymore.
+</para>
+
+@element: a #GstElement to destroy
 
 <!-- ##### FUNCTION gst_element_factory_add_sink ##### -->
 <para>
@@ -8578,6 +8632,13 @@ Create new meta data.
 
 @meta: 
 
+<!-- ##### FUNCTION gst_object_destroy ##### -->
+<para>
+
+</para>
+
+@object: the object
+
 <!-- ##### FUNCTION gst_object_flags_get_type ##### -->
 <para>
 
@@ -8606,6 +8667,13 @@ Create new meta data.
 
 @pad: 
 @parent: 
+
+<!-- ##### MACRO gst_pad_destroy ##### -->
+<para>
+Destroy the pad.
+</para>
+
+@pad: the pad to destroy
 
 <!-- ##### FUNCTION gst_pad_direction_get_type ##### -->
 <para>
@@ -8958,6 +9026,13 @@ Call the EOS function of the pad
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO gst_pipeline_destroy ##### -->
+<para>
+Destroys the pipeline.
+</para>
+
+@pipeline: #GstPipeline to destroy
 
 <!-- ##### VARIABLE gst_pipeline_details ##### -->
 <para>
@@ -9362,6 +9437,13 @@ Call the EOS function of the pad
 </para>
 
 @sched: 
+
+<!-- ##### MACRO gst_scheduler_destroy ##### -->
+<para>
+Destroy the scheduler
+</para>
+
+@sched: The scheduler to destroy.
 
 <!-- ##### FUNCTION gst_scheduler_disable_element ##### -->
 <para>

@@ -25,6 +25,7 @@ A structure that contains an integer that can be modified
 atomically.
 </para>
 
+@counter: 
 @lock: 
 
 <!-- ##### FUNCTION gst_atomic_int_init ##### -->

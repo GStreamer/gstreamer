@@ -71,16 +71,6 @@ The element object
 </para>
 
 
-<!-- ##### MACRO gst_element_destroy ##### -->
-<para>
-Destroys the element (without taking the refcount into account).
-An application programmer should use #gst_object_unref instead to dispose
-of an element he doesn't need anymore.
-</para>
-
-@element: a #GstElement to destroy
-
-
 <!-- ##### MACRO gst_element_get_name ##### -->
 <para>
 Gets the name of the element.

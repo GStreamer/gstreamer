@@ -4,6 +4,12 @@
 # DOC_MODULE=gstreamer-@GST_MAJORMINOR@
 DOC_MODULE=gstreamer
 
+# for upload.mak
+DOC=gstreamer
+FORMATS=html
+html: html-build.stamp
+sinclude $(srcdir)/../upload.mak
+
 # generated basefiles
 #basefiles = \
 #		gstreamer-@GST_MAJORMINOR@.types \
@@ -71,7 +77,7 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_CFLAGS)
+GTKDOC_CFLAGS = $(GST_CFLAGS) -I$(top_builddir)
 GTKDOC_LIBS = $(GST_LIBS) $(SCANOBJ_DEPS)
 
 GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
@@ -113,6 +119,7 @@ DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
 SCANOBJ_FILES = 		\
 	$(DOC_MODULE).args 	\
 	$(DOC_MODULE).hierarchy \
+	$(DOC_MODULE)-scan.o	\
 	$(DOC_MODULE).signals
 
 if HAVE_GTK_DOC
@@ -125,15 +132,17 @@ all-local: html-build.stamp
 scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	@echo '*** Scanning header files ***'
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
+	    if test x"$(srcdir)" != x. ; then \
+	        cp $(srcdir)/$(DOC_MODULE).types . ; \
+	    fi ; \
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) ; \
 	else \
 	    cd $(srcdir) ; \
 	    for i in $(SCANOBJ_FILES) ; do \
                test -f $$i || touch $$i ; \
 	    done \
 	fi
-	cd $(srcdir) && \
-	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
@@ -143,7 +152,11 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 
 tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
 	@echo '*** Rebuilding template files ***'
-	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE)
+	if test x"$(srcdir)" != x. ; then \
+	    cp $(srcdir)/$(DOC_MODULE)-decl.txt . ; \
+	    cp $(srcdir)/$(DOC_MODULE)-sections.txt . ; \
+	fi
+	gtkdoc-mktmpl --module=$(DOC_MODULE)
 	touch tmpl-build.stamp
 
 tmpl.stamp: tmpl-build.stamp
@@ -153,7 +166,6 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB)
 	@echo '*** Building SGML ***'
-	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
 	touch sgml-build.stamp
 
@@ -167,11 +179,12 @@ sgml.stamp: sgml-build.stamp
 # use bytes; in gtkdoc-fixxref
 html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo '*** Building HTML ***'
-	test -d $(srcdir)/html || mkdir $(srcdir)/html
-	cd $(srcdir)/html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
-	test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
+	test -d html || mkdir html
+	cd html && gtkdoc-mkhtml $(DOC_MODULE) $(srcdir)/../$(DOC_MAIN_SGML_FILE)
+	test "x$(HTML_IMAGES)" = "x" || for i in "" $(HTML_IMAGES) ; do \
+	    if test "$$i" != ""; then cp $(srcdir)/$$i html ; fi; done
 	@echo '-- Fixing Crossreferences' 
-	cd $(srcdir) && LANG=C && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
+	LANG=C && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	touch html-build.stamp
 endif
 
@@ -180,34 +193,82 @@ clean-local:
 	rm -rf xml html
 
 maintainer-clean-local: clean
-	cd $(srcdir) && rm -rf xml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
+	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
 
+# company: don't delete .sgml and -sections.txt as they're in CVS
 # FIXME : thomas added all sgml files and some other things to make
 # make distcheck work
 distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
-	rm -rf $(DOC_MODULE)-*.txt
-	rm -rf tmpl/*.sgml
+	rm -rf $(DOC_MODULE)-decl.txt
+	rm -rf $(DOC_MODULE)-undocumented.txt
+	rm -rf $(DOC_MODULE)-unused.txt
+	rm -rf tmpl/*.sgml.bak
 	rm -f $(DOC_MODULE).hierarchy
 	rm -f *.stamp || true
+	if test x"$(srcdir)" != x. ; then \
+	    rm -f $(DOC_MODULE)-docs.sgml ; \
+	    rm -f $(DOC_MODULE).types ; \
+	    rm -f $(DOC_MODULE).interfaces ; \
+	    rm -f $(DOC_MODULE).prerequisites ; \
+	    rm -f $(DOC_MODULE)-sections.txt ; \
+	    rm -rf tmpl/*.sgml ; \
+	fi
+	rm -rf *.o
 
 # thomas: make docs parallel installable; devhelp requires majorminor too
+if DOC_HTML
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
-	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
-	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
+	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR) 
+	(installfiles=`echo ./html/*.html`; \
+	if test "$$installfiles" = './html/*.html'; \
 	then echo '-- Nothing to install' ; \
 	else \
 	  for i in $$installfiles; do \
 	    echo '-- Installing '$$i ; \
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
 	  done; \
+	  pngfiles=`echo ./html/*.png`; \
+	  if test "$$pngfiles" != './html/*.png'; then \
+	    for i in $$pngfiles; do \
+	      echo '-- Installing '$$i ; \
+	      $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
+	    done; \
+	  fi; \
 	  echo '-- Installing $(srcdir)/html/$(DOC_MODULE).devhelp' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/$(DOC_MODULE).devhelp \
 	    $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
-	fi)
+	fi) 
+uninstall-local:
+	(installfiles=`echo ./html/*.html`; \
+	if test "$$installfiles" = './html/*.html'; \
+	then echo '-- Nothing to uninstall' ; \
+	else \
+	  for i in $$installfiles; do \
+	    rmfile=`basename $$i` ; \
+	    echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/'$$rmfile ; \
+	    rm -f $(DESTDIR)$(TARGET_DIR)/$$rmfile; \
+	  done; \
+	  pngfiles=`echo ./html/*.png`; \
+	  if test "$$pngfiles" != './html/*.png'; then \
+	    for i in $$pngfiles; do \
+	      rmfile=`basename $$i` ; \
+	      echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/'$$rmfile ; \
+	      rm -f $(DESTDIR)$(TARGET_DIR)/$$rmfile; \
+	    done; \
+	  fi; \
+	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE).devhelp' ; \
+	  rm -f $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
+	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/index.sgml' ; \
+	  rm -f $(DESTDIR)$(TARGET_DIR)/index.sgml; \
+	fi) 
+	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR); fi
+else
+install-data-local:
+uninstall-local:
+endif
 
 #
 # Require gtk-doc when making dist
@@ -225,15 +286,13 @@ dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/xml
 	mkdir $(distdir)/html
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
-	-cp $(srcdir)/xml/*.xml $(distdir)/xml
+	-cp $(srcdir)/sgml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
-	-cp $(srcdir)/html/*.png $(distdir)/html
-	-cp $(srcdir)/html/*.devhelp $(distdir)/html
 
 	images=$(HTML_IMAGES) ;    	      \
-	for i in $$images ; do		      \
-	  cp $(srcdir)/$$i $(distdir)/html ;  \
+	for i in "" $$images ; do		      \
+	  if test "$$i" != ""; then cp $(srcdir)/$$i $(distdir)/html ; fi; \
 	done
 
 .PHONY : dist-hook-local

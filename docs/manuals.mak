@@ -1,5 +1,8 @@
 # rewritten by Thomas to be more simple and working
 
+# SF username
+USERNAME ?= thomasvs
+
 ### These are all generic; we set all the variables we need
 
 # intermediary build path
@@ -82,16 +85,18 @@ debug:
 	@echo "PDF_DAT:  '$(PDF_DAT)'"
 
 # a rule to copy all of the source for docs into $(builddir)/build
-$(BUILDDIR)/$(DOC).xml: $(XML) $(CSS)
+$(BUILDDIR)/$(MAIN): $(XML) $(CSS)
 	@-mkdir -p $(BUILDDIR)
 	@for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done
 	@for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done
+	@cp ../version.entities $(BUILDDIR)
 
-html/index.html: $(BUILDDIR)/$(DOC).xml $(PNG_BUILT) $(FIG_SRC)
+html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
+	@make check-local
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
-	@cp $(srcdir)/../image-png $(BUILDDIR)/image.entities
-	@cd $(BUILDDIR) && xmlto html -o ../html $(DOC).xml
+	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
+	@cd $(BUILDDIR) && docbook2html -o ../html -V '%use-id-as-filename%' $(MAIN)
 	@test "x$(CSS)" != "x" && \
           echo "Copying .css files: $(CSS)" && \
           cp $(srcdir)/$(CSS) html
@@ -100,22 +105,25 @@ html/index.html: $(BUILDDIR)/$(DOC).xml $(PNG_BUILT) $(FIG_SRC)
 	  mkdir -p html/images && \
           cp $(PNG_BUILT) html/images || true
 
-$(DOC).ps: $(BUILDDIR)/$(DOC).xml $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
+$(DOC).ps: $(BUILDDIR)/$(MAIN) $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
+	@make check-local
 	@echo "*** Generating PS output ***"
-	@cp $(srcdir)/../image-eps $(BUILDDIR)/image.entities
-	@export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(DOC).xml
+	@cp -f $(srcdir)/../image-eps $(BUILDDIR)/image.entities
+	cd $(BUILDDIR) && docbook2ps -o .. $(MAIN)
+#	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
 
 $(DOC).pdf: $(DOC).ps
+	@make check-local
 	@echo "*** Generating PDF output ***"
 	@ps2pdf $(DOC).ps
 
-#$(DOC).pdf: $(DOC).xml $(PDF) $(FIG_SRC)
+#$(DOC).pdf: $(MAIN) $(PDF) $(FIG_SRC)
 #	@echo "*** Generating PDF output ***"
-#	@cp $(srcdir)/../image-pdf image.entities
-#	@LC_PAPER=$(PAPER_LOCALE) && xmlto pdf $(DOC).xml
+#	@cp -f $(srcdir)/../image-pdf image.entities
+#	@export LC_PAPER=$(PAPER_LOCALE) && xmlto pdf $(MAIN)
 #	@rm image.entities
 
-clean:
+clean-local:
 	-$(RM) -r $(BUILDDIR)
 	-$(RM) -r html
 	-$(RM) $(DOC).ps
@@ -160,11 +168,6 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 	@cat $< | pngtopnm | pnmtops -noturn > $@ 2> /dev/null
 
 # make sure xml validates properly
-check-local:
-	xmllint -noout -valid $(MAIN)
-
-### this is a website upload target
-upload: html ps pdf
-	export RSYNC_RSH=ssh
-	rsync -arv $(DOC).ps $(DOC).pdf html thomasvs@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$(VERSION)/$(DOC)
-
+check-local: $(BUILDDIR)/$(MAIN)
+	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
+	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)

@@ -1,3 +1,27 @@
+=== gstreamer 0.6.5 ===
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS: GStreamer 0.6.5 "EOS" released
+	* Makefile.am:
+	* common/m4/gst-arch.m4:
+          integrate RH patch
+	* common/m4/gst-doc.m4:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/faq/Makefile.am:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/manual/Makefile.am:
+	* docs/manuals.mak:
+	* docs/pwg/Makefile.am:
+          update docs build
+	* docs/pwg/pwg.xml:
+	* gstreamer.spec.in:
+          update spec file
+	* tools/Makefile.am:
+          update tools installation
+
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/Makefile.am:

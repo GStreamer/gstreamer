@@ -347,15 +347,6 @@ Copies the given buffer using the copy function of the parent GstData structure.
 @Returns: a new #GstBuffer copy of the buffer.
 
 
-<!-- ##### MACRO gst_buffer_needs_copy_on_write ##### -->
-<para>
-Queries if a copy needs to be ade of the buffer in order to safely write
-to its data.
-</para>
-
-@buf: The buffer to query.
-
-
 <!-- ##### MACRO gst_buffer_copy_on_write ##### -->
 <para>
 This function returns a buffer that is safe to write to.
