@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 7, 2, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer, GST_VERSION, 0, 7, 3, 1, GST_CVS="no", GST_CVS="yes")
 
 if test x$program_suffix = xNONE ; then
   program_suffix=-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
@@ -26,7 +26,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST, 4, 0, 0)
+AS_LIBTOOL(GST, 5, 0, 0)
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
