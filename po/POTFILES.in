@@ -1,0 +1,3 @@
+# Files from the GStreamer distribution which have already been
+# marked to allow runtime translations of messages
+gst/gst.c
