@@ -1159,6 +1159,7 @@ ext/sdl/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile
 gst-libs/audio/Makefile
+gst-plugins.spec
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
