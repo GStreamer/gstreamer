@@ -235,6 +235,7 @@ gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value)
         case GTK_TYPE_STRING:
           gtk_object_set (GTK_OBJECT (object), name, value, NULL);
           break;
+        case GTK_TYPE_ENUM: 
         case GTK_TYPE_INT: {
           gint i;
           sscanf (value, "%d", &i);
@@ -284,7 +285,12 @@ gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value)
 	  break;
 	}
         default:
-	  if (info->type == GST_TYPE_FILENAME) {
+	  if (GTK_FUNDAMENTAL_TYPE(info->type) == GTK_TYPE_ENUM) {
+            gint i;
+            sscanf (value, "%d", &i);
+            gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  }
+	  else if (info->type == GST_TYPE_FILENAME) {
             gtk_object_set (GTK_OBJECT (object), name, value, NULL);
 	  }
 	  break;
