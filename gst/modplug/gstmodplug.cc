@@ -80,7 +80,7 @@ GST_PAD_TEMPLATE_FACTORY (modplug_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  GST_CAPS_NEW ( /* use16bit = TRUE */
     "modplug_src",
     "audio/raw",  
       "format",      GST_PROPS_STRING ("int"),
@@ -89,6 +89,18 @@ GST_PAD_TEMPLATE_FACTORY (modplug_src_template_factory,
       "signed",      GST_PROPS_BOOLEAN (TRUE),
       "width",       GST_PROPS_INT (16),
       "depth",       GST_PROPS_INT (16), 
+      "rate",        GST_PROPS_INT_RANGE (11025, 44100),
+      "channels",    GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW ( /* use16bit = FALSE */
+    "modplug_src",
+    "audio/raw",  
+      "format",      GST_PROPS_STRING ("int"),
+      "law",         GST_PROPS_INT (0),
+      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",      GST_PROPS_BOOLEAN (FALSE),
+      "width",       GST_PROPS_INT (8),
+      "depth",       GST_PROPS_INT (8), 
       "rate",        GST_PROPS_INT_RANGE (11025, 44100),
       "channels",    GST_PROPS_INT_RANGE (1, 2)
   )
@@ -544,15 +556,19 @@ gst_modplug_update_metadata (GstModPlug *modplug)
 static gboolean
 modplug_negotiate (GstModPlug *modplug)
 {
+  gboolean sign;
   modplug->length = 1152 * modplug->channel;
   
   if (modplug->_16bit)
   {
     modplug->length *= 2;
     modplug->bitsPerSample = 16;
+    sign = TRUE;
   }
-  else
+  else {
     modplug->bitsPerSample = 8;
+    sign = FALSE;
+  }
     
   if (!GST_PAD_CAPS (modplug->srcpad)) {
     if (!gst_pad_try_set_caps (modplug->srcpad, 
@@ -562,7 +578,7 @@ modplug_negotiate (GstModPlug *modplug)
           "format",       	GST_PROPS_STRING ("int"),
             "law",        	GST_PROPS_INT (0),            
             "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
-            "signed",     	GST_PROPS_BOOLEAN (TRUE),
+            "signed",     	GST_PROPS_BOOLEAN (sign),
             "width",      	GST_PROPS_INT (modplug->bitsPerSample),
             "depth",      	GST_PROPS_INT (modplug->bitsPerSample),
             "rate",       	GST_PROPS_INT (modplug->frequency),
