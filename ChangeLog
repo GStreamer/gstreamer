@@ -1,5 +1,10 @@
 2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/dvdread/dvdreadsrc.c: (get_next_cell_for):
+	  Fix compile warnings on Solaris 10 buildbot
+
+2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dvdread/dvdreadsrc.c: (_read):
 	  Don't read beyond the last cell in a chapter (fixes 
 	  invalid memory access)
