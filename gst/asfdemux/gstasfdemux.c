@@ -725,7 +725,6 @@ IsVBR
 
             /* get rid of tags with empty value */
             if (strlen (value)) {
-              have_tags = TRUE;
               g_value_init (&tag_value, G_TYPE_STRING);
               g_value_set_string (&tag_value, value);
             }
@@ -733,16 +732,19 @@ IsVBR
 
           /* 0003 = DWORD */
           if (datatype == 3) {
-            have_tags = TRUE;
             g_value_init (&tag_value, G_TYPE_INT);
             g_value_set_int (&tag_value, GUINT32_FROM_LE ((guint32) * value));
           }
 
-          gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND, tags[tag],
-              &tag_value, NULL);
+          if (G_IS_VALUE (&tag_value)) {
+            gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND, tags[tag],
+                &tag_value, NULL);
 
-          g_value_unset (&tag_value);
-        };
+            g_value_unset (&tag_value);
+
+            have_tags = TRUE;
+          }
+        }
         j++;
       }
     }
