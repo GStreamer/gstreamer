@@ -152,7 +152,7 @@ gst_mulawenc_base_init (GstMuLawEncClass * klass)
     "PCM to Mu Law conversion",
     "Codec/Encoder/Audio",
     "Convert 16bit PCM to 8bit mu law",
-    "Zaheer Merali <zaheer@bellworldwide.net>"
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
   };
 
   gst_element_class_add_pad_template (element_class, mulawenc_src_template);

@@ -35,7 +35,7 @@ static GstElementDetails gst_osxaudiosink_details =
 GST_ELEMENT_DETAILS ("Audio Sink (Mac OS X)",
     "Sink/Audio",
     "Output to a Mac OS X CoreAudio Sound Device",
-    "Zaheer Abbas Merali <zaheerabbas at merali.org>");
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
 static void gst_osxaudiosink_base_init (gpointer g_class);
 static void gst_osxaudiosink_class_init (GstOsxAudioSinkClass * klass);

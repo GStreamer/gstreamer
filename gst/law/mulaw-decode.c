@@ -153,7 +153,7 @@ gst_mulawdec_base_init (GstMuLawDecClass * klass)
     "Mu Law to PCM conversion",
     "Codec/Decoder/Audio",
     "Convert 8bit mu law to 16bit PCM",
-    "Zaheer Merali <zaheer@bellworldwide.net>"
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
   };
 
   gst_element_class_add_pad_template (element_class, mulawdec_src_template);

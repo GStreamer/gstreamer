@@ -19,7 +19,7 @@
 /* Element-Checklist-Version: 5 */
 
 /* 2001/04/03 - Updated parseau to use caps nego
- *              Zaheer Merali <zaheer@grid9.net
+ *              Zaheer Abbas Merali <zaheerabbas at merali dot org>
  */
 
 #ifdef HAVE_CONFIG_H

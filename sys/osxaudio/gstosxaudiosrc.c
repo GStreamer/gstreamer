@@ -38,7 +38,7 @@ static GstElementDetails gst_osxaudiosrc_details =
 GST_ELEMENT_DETAILS ("Audio Source (Mac OS X)",
     "Source/Audio",
     "Read from the sound card",
-    "Zaheer Abbas Merali <zaheerabbas at merali.org>");
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
 
 /* Osxaudiosrc signals and args */

@@ -176,7 +176,7 @@ gst_alawdec_base_init (GstALawDecClass * klass)
     "A Law to PCM conversion",
     "Codec/Decoder/Audio",
     "Convert 8bit A law to 16bit PCM",
-    "Zaheer Merali <zaheer@bellworldwide.net>"
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
   };
 
   gst_element_class_add_pad_template (element_class, alawdec_src_template);

@@ -218,7 +218,7 @@ gst_alawenc_base_init (GstALawEncClass * klass)
     "PCM to A Law conversion",
     "Codec/Encoder/Audio",
     "Convert 16bit PCM to 8bit A law",
-    "Zaheer Merali <zaheer@bellworldwide.net>"
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
   };
 
   gst_element_class_add_pad_template (element_class, alawenc_src_template);

@@ -44,7 +44,7 @@ static GstElementDetails gst_osxaudioelement_details =
 GST_ELEMENT_DETAILS ("Audio Mixer (OSX)",
     "Generic/Audio",
     "Mac OS X audio mixer element",
-    "Zaheer Abbas Merali <zaheerabbas at merali.org>");
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
 static void gst_osxaudioelement_base_init (GstOsxAudioElementClass * klass);
 static void gst_osxaudioelement_class_init (GstOsxAudioElementClass * klass);

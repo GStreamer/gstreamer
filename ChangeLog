@@ -5697,24 +5697,24 @@
 	Add property to make videorate silent.
 	Add property to prefer new frames over old ones.
 
-2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/osxvideo/Makefile.am:
         Workaround so that the osxvideo .so file gets linked with the
         Cocoa, OpenGL and QuickTime frameworks
 
-2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/osxaudio/Makefile.am:
         Workaround so that the osxaudio .so file gets linked with the
         CoreAudio framework
  
-2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
 	Whoops, my fault...fixed build issues
 
-2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
         Add objective-c support if running in Darwin/Mac OS X
@@ -5866,13 +5866,13 @@
 	(gst_videorate_change_state), (plugin_init):
 	Added a video timestamp corrector.
 
-2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	fixed a potential leak with previous commit
 	
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
 
-2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
 	Added missing refcount, fixes bug #144425
@@ -5986,7 +5986,7 @@
 	* configure.ac:
 	  add a header check for a dvdread header in dvdnav.  Fixes #133002
 
-2004-06-12  Zaheer Abbas Merali  <zaheerabbas@merali.org>
+2004-06-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_init_send):
 	* gst/tcp/gsttcpclientsink.h:
@@ -6001,7 +6001,7 @@
 	Modified the tcp plugins so they are portable (IPv4,IPv6, any future 
         version of IP)
 
-2004-06-12  Zaheer Abbas Merali  <zaheerabbas@merali.org>
+2004-06-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
 	Added ogg library so that OSX detects libtheora properly
@@ -6406,7 +6406,7 @@
 	Added configurable boundary specifier, added the value as a
 	caps field as well.
 
-2004-06-02  Zaheer Abbas Merali <zaheerabbas@merali.org>
+2004-06-02  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/tcp/gsttcp.c:
 	* gst/tcp/gsttcpclientsrc.c:
@@ -6675,7 +6675,7 @@
 	  add rules to build shout2send (was removed by accident
 	  when this module was no more marked experimental/broken)
 
-2004-05-24  Zaheer Abbas Merali <zaheerabbas@merali.org>
+2004-05-24  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/shout2/gstshout2.c:
 	* ext/shout2/gstshout2.h:
@@ -6751,7 +6751,7 @@
 
 2004-05-20  David Schleef  <ds@schleef.org>
 
-	* sys/osxaudio/Makefile.am:  New OS X audio plugin by Zaheer Merali
+	* sys/osxaudio/Makefile.am:  New OS X audio plugin by Zaheer Abbas Merali
 	* sys/osxaudio/gstosxaudio.c:
 	* sys/osxaudio/gstosxaudioelement.c:
 	* sys/osxaudio/gstosxaudioelement.h:
@@ -7181,7 +7181,7 @@
 	(gst_shout2send_base_init), (gst_shout2send_init),
 	(gst_shout2send_connect), (gst_shout2send_change_state):
 	* ext/shout2/gstshout2.h:
-	  make this work again. Based on a patch by Zaheer Merali (fixes
+	  make this work again. Based on a patch by Zaheer Abbas Merali (fixes
 	  #142262)
 	* ext/theora/theora.c: (plugin_init):
 	  don't set rank on encoders
@@ -7836,7 +7836,7 @@
 	  rifflib, I'm not going to fix wavparse - too much work. All this
 	  fixes #104878.
 
-2004-04-22  Zaheer Abbas Merali <zaheerabbas@merali.org>
+2004-04-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
 
