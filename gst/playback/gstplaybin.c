@@ -285,6 +285,7 @@ gen_video_element (GstPlayBin * play_bin)
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   scale = gst_element_factory_make ("videoscale", "vscale");
   if (play_bin->video_sink) {
+    gst_object_ref (GST_OBJECT (play_bin->video_sink));
     sink = play_bin->video_sink;
   } else {
     sink = gst_element_factory_make ("ximagesink", "sink");
@@ -311,15 +312,18 @@ gen_audio_element (GstPlayBin * play_bin)
   GstElement *conv;
   GstElement *sink;
   GstElement *volume;
+  GstElement *scale;
 
   element = gst_bin_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "aconv");
+  scale = gst_element_factory_make ("audioscale", "ascale");
 
   volume = gst_element_factory_make ("volume", "volume");
   g_object_set (G_OBJECT (volume), "volume", play_bin->volume, NULL);
   play_bin->volume_element = volume;
 
   if (play_bin->audio_sink) {
+    gst_object_ref (GST_OBJECT (play_bin->audio_sink));
     sink = play_bin->audio_sink;
   } else {
     sink = gst_element_factory_make ("osssink", "sink");
@@ -328,10 +332,12 @@ gen_audio_element (GstPlayBin * play_bin)
   play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
 
   gst_bin_add (GST_BIN (element), conv);
+  gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), volume);
   gst_bin_add (GST_BIN (element), sink);
 
-  gst_element_link_pads (conv, "src", volume, "sink");
+  gst_element_link_pads (conv, "src", scale, "sink");
+  gst_element_link_pads (scale, "src", volume, "sink");
   gst_element_link_pads (volume, "src", sink, "sink");
 
   gst_element_add_ghost_pad (element,

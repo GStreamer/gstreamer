@@ -817,6 +817,12 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
     }
   }
 
+  /* update object's par with calculated one if not set yet */
+  if (!ximagesink->par) {
+    ximagesink->par = g_new0 (GValue, 1);
+    gst_value_init_and_copy (ximagesink->par, xcontext->par);
+    GST_DEBUG_OBJECT (ximagesink, "set calculated PAR on object's PAR");
+  }
   xcontext->caps = gst_caps_new_simple ("video/x-raw-rgb",
       "bpp", G_TYPE_INT, xcontext->bpp,
       "depth", G_TYPE_INT, xcontext->depth,
@@ -850,6 +856,8 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
 
   gst_caps_free (ximagesink->xcontext->caps);
   g_free (ximagesink->xcontext->par);
+  g_free (ximagesink->par);
+  ximagesink->par = NULL;
 
   g_mutex_lock (ximagesink->x_lock);
 
@@ -1015,12 +1023,6 @@ gst_ximagesink_change_state (GstElement * element)
         ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
       if (!ximagesink->xcontext)
         return GST_STATE_FAILURE;
-      /* update object's par with calculated one if not set yet */
-      if (!ximagesink->par) {
-        ximagesink->par = g_new0 (GValue, 1);
-        gst_value_init_and_copy (ximagesink->par, ximagesink->xcontext->par);
-        GST_DEBUG_OBJECT (ximagesink, "set calculated PAR on object's PAR");
-      }
       /* call XSynchronize with the current value of synchronous */
       GST_DEBUG_OBJECT (ximagesink, "XSynchronize called with %s",
           ximagesink->synchronous ? "TRUE" : "FALSE");
@@ -1059,8 +1061,6 @@ gst_ximagesink_change_state (GstElement * element)
         gst_ximagesink_xcontext_clear (ximagesink);
         ximagesink->xcontext = NULL;
       }
-      g_free (ximagesink->par);
-      ximagesink->par = NULL;
       break;
   }
 
