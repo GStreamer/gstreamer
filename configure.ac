@@ -489,23 +489,27 @@ dnl		;;
 ])
 
 dnl Check for X11
-AC_PATH_XTRA
-if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-  AC_MSG_NOTICE([cannot find X11, the build system needs fixage])
-  HAVE_X="no"
-else
-  dnl this is much more than we want
-  X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
-  dnl AC_PATH_XTRA only defines the path needed to find the X libs, not the libs
-  dnl therefore we add them here
-  X_LIBS="$X_LIBS -lX11"
-  AC_SUBST(X_CFLAGS)
-  AC_SUBST(X_LIBS)
-  HAVE_X="yes";
-fi
-AC_SUBST(HAVE_X)
-AM_CONDITIONAL(USE_X, test "-DX_DISPLAY_MISSING" != "$X_CFLAGS")
-
+translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
+GST_CHECK_FEATURE(X, [X libraries and plugins],
+                  [ximagesink], [
+  AC_PATH_XTRA
+  if test "x$X_CFLAGS" == "x" -o "$X_CFLAGS" == "-DX_DISPLAY_MISSING"
+  then
+    AC_MSG_NOTICE([cannot find X11 development files])
+    HAVE_X="no"
+  else
+    dnl this is much more than we want
+    X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
+    dnl AC_PATH_XTRA only defines the path needed to find the X libs, not the libs
+    dnl therefore we add them here
+    X_LIBS="$X_LIBS -lX11"
+    AC_SUBST(X_CFLAGS)
+    AC_SUBST(X_LIBS)
+    HAVE_X="yes"
+  fi
+  AC_SUBST(HAVE_X)
+])
+  
 dnl *** XVideo ***
 dnl Look for the PIC library first, Debian requires it.
 dnl Check debian-devel archives for gory details.
