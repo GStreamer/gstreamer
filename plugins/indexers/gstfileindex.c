@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2003 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2003 Joshua N Pritikin <jpritikin@pobox.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -253,6 +254,20 @@ gst_file_index_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+struct fi_find_writer_context {
+  const gchar *writer_string;
+  GstFileIndexId *ii;
+};
+
+void
+_fi_find_writer (gpointer key, gpointer val, gpointer data)
+{
+  struct fi_find_writer_context *cx = data;
+  GstFileIndexId *ii = val;
+  if (strcmp (ii->id_desc, cx->writer_string) == 0)
+    cx->ii = ii;
+}
+
 static gboolean
 gst_file_index_get_writer_id  (GstIndex *_index, 
 			       gint *id, gchar *writer_string)
@@ -290,9 +305,21 @@ gst_file_index_get_writer_id  (GstIndex *_index,
 
   g_slist_free (pending);
 
-  if (!match)
-    GST_CAT_WARNING_OBJECT (DC, index, "Can't resolve writer '%s'",
+  if (!match) {
+    struct fi_find_writer_context cx;
+    cx.writer_string = writer_string;
+    cx.ii = NULL;
+    g_hash_table_foreach (index->id_index, _fi_find_writer, &cx);
+
+    if (cx.ii) {
+      match = TRUE;
+      GST_CAT_DEBUG_OBJECT (DC, index, "Resolved writer '%s' again",
 			    writer_string);
+    }
+    else
+      GST_CAT_WARNING_OBJECT (DC, index, "Can't resolve writer '%s'",
+			      writer_string);
+  }
 
   return match;
 }
@@ -970,7 +997,7 @@ gst_file_index_plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstIndexFactory *factory;
 
-  GST_DEBUG_CATEGORY_INIT(DC, "fileindex", 0, NULL);
+  GST_DEBUG_CATEGORY_INIT(DC, "GST_FILEINDEX", 0, NULL);
   gst_plugin_set_longname (plugin, "A file index");
 
   factory = gst_index_factory_new ("fileindex",
