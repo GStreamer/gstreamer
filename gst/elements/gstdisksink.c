@@ -22,8 +22,9 @@
 
 
 #include <gst/gst.h>
+#include <errno.h>
 #include "gstdisksink.h"
-
+#include <string.h>
 
 GstElementDetails gst_disksink_details = {
   "Disk Sink",
@@ -45,6 +46,7 @@ enum {
 enum {
   ARG_0,
   ARG_LOCATION,
+  ARG_MAXFILESIZE,
 };
 
 
@@ -59,6 +61,7 @@ static void	gst_disksink_get_property	(GObject *object, guint prop_id,
 static gboolean gst_disksink_open_file 		(GstDiskSink *sink);
 static void 	gst_disksink_close_file 	(GstDiskSink *sink);
 
+static gboolean gst_disksink_handle_event       (GstPad *pad, GstEvent *event);
 static void	gst_disksink_chain		(GstPad *pad,GstBuffer *buf);
 
 static GstElementStateReturn gst_disksink_change_state (GstElement *element);
@@ -103,6 +106,10 @@ gst_disksink_class_init (GstDiskSinkClass *klass)
 	  "location", ARG_LOCATION, G_PARAM_READWRITE,
 	  NULL);
 
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAXFILESIZE,
+    g_param_spec_int("maxfilesize","MaxFileSize","Maximum Size Per File",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+
   gst_disksink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstDiskSinkClass, handoff), NULL, NULL,
@@ -118,12 +125,38 @@ static void
 gst_disksink_init (GstDiskSink *disksink) 
 {
   GstPad *pad;
+
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (disksink), pad);
   gst_pad_set_chain_function (pad, gst_disksink_chain);
 
+  GST_FLAG_SET (GST_ELEMENT(disksink), GST_ELEMENT_EVENT_AWARE);
+  gst_pad_set_event_function(pad, gst_disksink_handle_event);
+
   disksink->filename = NULL;
   disksink->file = NULL;
+  disksink->filenum = 0;
+
+  disksink->maxfilesize = -1;
+}
+
+static char *
+gst_disksink_getcurrentfilename (GstDiskSink *disksink)
+{
+  g_return_val_if_fail(disksink != NULL, NULL);
+  g_return_val_if_fail(GST_IS_DISKSINK(disksink), NULL);
+  g_return_val_if_fail(disksink->filename != NULL, NULL);
+  g_return_val_if_fail(disksink->filenum >= 0, NULL);
+
+  if (!strstr(disksink->filename, "%"))
+  {
+    if (!disksink->filenum)
+      return g_strdup(disksink->filename);
+    else
+      return NULL;
+  }
+
+  return g_strdup_printf(disksink->filename, disksink->filenum);
 }
 
 static void
@@ -150,6 +183,9 @@ gst_disksink_set_property (GObject *object, guint prop_id, const GValue *value, 
       }
  
       break;
+    case ARG_MAXFILESIZE:
+      sink->maxfilesize = g_value_get_int(value);
+      break;
     default:
       break;
   }
@@ -167,7 +203,10 @@ gst_disksink_get_property (GObject *object, guint prop_id, GValue *value, GParam
   
   switch (prop_id) {
     case ARG_LOCATION:
-      g_value_set_string (value, sink->filename);
+      g_value_set_string (value, gst_disksink_getcurrentfilename(sink));
+      break;
+    case ARG_MAXFILESIZE:
+      g_value_set_int (value, sink->maxfilesize);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -181,14 +220,22 @@ gst_disksink_open_file (GstDiskSink *sink)
   g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_DISKSINK_OPEN), FALSE);
 
   /* open the file */
-  sink->file = fopen (sink->filename, "w");
+  if (!gst_disksink_getcurrentfilename(sink))
+  {
+    gst_element_error(GST_ELEMENT(sink), "Out of files");
+    return FALSE;
+  }
+  sink->file = fopen (gst_disksink_getcurrentfilename(sink), "w");
   if (sink->file == NULL) {
     perror ("open");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("Error opening file \"",
+      gst_disksink_getcurrentfilename(sink), "\": ", sys_errlist[errno], NULL));
     return FALSE;
   } 
 
   GST_FLAG_SET (sink, GST_DISKSINK_OPEN);
+
+  sink->data_written = 0;
 
   return TRUE;
 }
@@ -201,11 +248,67 @@ gst_disksink_close_file (GstDiskSink *sink)
   if (fclose (sink->file) != 0)
   {
     perror ("close");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("closing file \"", sink->filename, "\"", NULL));
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("Error closing file \"",
+      gst_disksink_getcurrentfilename(sink), "\": ", sys_errlist[errno], NULL));
   }
   else {
     GST_FLAG_UNSET (sink, GST_DISKSINK_OPEN);
   }
+}
+
+/* handle events (search) */
+static gboolean
+gst_disksink_handle_event (GstPad *pad, GstEvent *event)
+{
+  GstEventType type;
+  GstDiskSink *disksink;
+
+  disksink = GST_DISKSINK (gst_pad_get_parent (pad));
+
+  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+
+  switch (type) {
+    case GST_EVENT_SEEK:
+      /* we need to seek */
+      if (GST_EVENT_SEEK_FLUSH(event))
+        if (fflush(disksink->file))
+          gst_element_error(GST_ELEMENT(disksink),
+            "Error flushing the buffer cache of file \'%s\' to disk: %s",
+            gst_disksink_getcurrentfilename(disksink), sys_errlist[errno]);
+      switch (GST_EVENT_SEEK_TYPE(event))
+      {
+        case GST_SEEK_BYTEOFFSET_SET:
+          fseek(disksink->file, GST_EVENT_SEEK_OFFSET(event), SEEK_SET);
+          break;
+        case GST_SEEK_BYTEOFFSET_CUR:
+          fseek(disksink->file, GST_EVENT_SEEK_OFFSET(event), SEEK_CUR);
+          break;
+        case GST_SEEK_BYTEOFFSET_END:
+          fseek(disksink->file, GST_EVENT_SEEK_OFFSET(event), SEEK_END);
+          break;
+        default:
+          g_warning("Any other then byte-offset seeking is not supported!\n");
+          break;
+      }
+      break;
+    case GST_EVENT_NEW_MEDIA:
+      /* we need to open a new file! */
+      gst_disksink_close_file(disksink);
+      disksink->filenum++;
+      if (!gst_disksink_open_file(disksink)) return FALSE;
+      break;
+    case GST_EVENT_FLUSH:
+      if (fflush(disksink->file))
+        gst_element_error(GST_ELEMENT(disksink),
+          "Error flushing the buffer cache of file \'%s\' to disk: %s",
+          gst_disksink_getcurrentfilename(disksink), sys_errlist[errno]);
+      break;
+    default:
+      g_warning("Unhandled event %d\n", type);
+      break;
+  }
+
+  return TRUE;
 }
 
 /**
@@ -227,6 +330,30 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
 
   disksink = GST_DISKSINK (gst_pad_get_parent (pad));
 
+  if (GST_IS_EVENT(buf))
+  {
+    gst_disksink_handle_event(pad, GST_EVENT(buf));
+    return;
+  }
+
+  if (disksink->maxfilesize > 0)
+  {
+    if ((disksink->data_written + GST_BUFFER_SIZE(buf))/(1024*1024) > disksink->maxfilesize)
+    {
+      GstEvent *event;
+      event = gst_event_new(GST_EVENT_NEW_MEDIA);
+      gst_pad_send_event(pad, event);
+
+      /* if the event wasn't handled, we probably need to open a new file ourselves */
+      if (disksink->data_written)
+      {
+        gst_disksink_close_file(disksink);
+        disksink->filenum++;
+        if (!gst_disksink_open_file(disksink)) return;
+      }
+    }
+  }
+
   if (GST_FLAG_IS_SET (disksink, GST_DISKSINK_OPEN))
   {
     bytes_written = fwrite (GST_BUFFER_DATA (buf), 1, GST_BUFFER_SIZE (buf), disksink->file);
@@ -236,6 +363,7 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
       		  GST_BUFFER_SIZE (buf), bytes_written);
     }
   }
+  disksink->data_written += GST_BUFFER_SIZE(buf);
   gst_buffer_unref (buf);
 
   g_signal_emit (G_OBJECT (disksink), gst_disksink_signals[SIGNAL_HANDOFF], 0,

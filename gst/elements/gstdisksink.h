@@ -62,6 +62,11 @@ struct _GstDiskSink {
 
   gchar *filename;
   FILE *file;
+
+  gint filenum;
+
+  guint64 data_written;
+  gint maxfilesize;
 };
 
 struct _GstDiskSinkClass {

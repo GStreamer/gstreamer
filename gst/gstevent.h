@@ -42,6 +42,7 @@ typedef enum {
   GST_EVENT_EMPTY,
   GST_EVENT_SEEK,
   GST_EVENT_DISCONTINUOUS,
+  GST_EVENT_NEW_MEDIA,
   /* vertical events */
   GST_EVENT_INFO,
   GST_EVENT_ERROR,
