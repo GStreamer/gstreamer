@@ -7,15 +7,16 @@ endif
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 else
-GST_LOADSAVE_SRC = gst-compprep gst-xmllaunch
+GST_LOADSAVE_SRC = gst-compprep gst-xmllaunch gst-complete
 endif
 
 bin_PROGRAMS = 	gst-launch 		\
 		$(GST_REGISTRY_SRC) 	\
 		gst-inspect 		\
+                gst-typefind            \
 		$(GST_LOADSAVE_SRC) 	\
-		gst-md5sum 		\
-		gst-complete
+		gst-md5sum
+
 bin_SCRIPTS = gst-feedback
 
 man_MANS = gst-launch.1 gst-md5sum.1 gst-register.1 gst-inspect.1 \
@@ -28,6 +29,10 @@ gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
 
 gst_md5sum_LDADD = $(GST_LIBS) #-lefence
 gst_md5sum_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+
+gst_typefind_LDADD = $(GST_LIBS) #-lefence
+gst_typefind_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
 	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 if !GST_DISABLE_REGISTRY
