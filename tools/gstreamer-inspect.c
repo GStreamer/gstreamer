@@ -27,8 +27,8 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
       break;
     case GST_PROPS_FOURCC_ID_NUM:
       printf("FourCC: %c%c%c%c\n",
-             prop->data.fourcc_data>>24 & 0xff,prop->data.fourcc_data>>16 & 0xff,
-             prop->data.fourcc_data>>8 & 0xff,prop->data.fourcc_data & 0xff);
+             prop->data.fourcc_data & 0xff,prop->data.fourcc_data>>8 & 0xff,
+             prop->data.fourcc_data>>16 & 0xff,prop->data.fourcc_data>>24 & 0xff);
       break;
     case GST_PROPS_LIST_ID_NUM:
       printf("List:\n");
@@ -256,6 +256,19 @@ gint print_element_info(GstElementFactory *factory) {
       default:
         if (args[i].type == GST_TYPE_FILENAME)
           printf("Filename");
+        else if (GTK_FUNDAMENTAL_TYPE (args[i].type) == GTK_TYPE_ENUM) {
+          GtkEnumValue *values;
+	  guint j = 0;
+
+          printf("Enum (default %d)", GTK_VALUE_ENUM (args[i]));
+	  values = gtk_type_enum_get_values (args[i].type);
+	  while (values[j].value_name) {
+            printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
+	    j++; 
+	  }
+	}
+        else if (args[i].type == GTK_TYPE_WIDGET)
+          printf("GtkWidget");
         else
           printf("unknown");
         break;
