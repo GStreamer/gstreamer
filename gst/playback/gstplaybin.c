@@ -359,15 +359,11 @@ gst_play_bin_change_state (GstElement * element)
       setup_sinks (play_bin);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      break;
     case GST_STATE_PAUSED_TO_READY:
-      break;
     case GST_STATE_READY_TO_NULL:
       break;
     default:
-      g_assert_not_reached ();
       break;
   }
 

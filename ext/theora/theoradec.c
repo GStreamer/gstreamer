@@ -486,7 +486,6 @@ theora_dec_change_state (GstElement * element)
     case GST_STATE_READY_TO_NULL:
       break;
     default:
-      g_assert_not_reached ();
       break;
   }
 

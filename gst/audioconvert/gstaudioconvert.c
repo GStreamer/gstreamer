@@ -253,6 +253,7 @@ gst_audio_convert_chain (GstPad * pad, GstData * data)
     gst_pad_event_default (pad, GST_EVENT (buf));
     return;
   }
+  g_return_if_fail (GST_IS_BUFFER (buf));
 
   if (!gst_pad_is_negotiated (this->sink)) {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
@@ -549,6 +550,8 @@ static GstBuffer *
 gst_audio_convert_get_buffer (GstBuffer * buf, guint size)
 {
   GstBuffer *ret;
+
+  g_assert (GST_IS_BUFFER (buf));
 
   GST_LOG
       ("new buffer of size %u requested. Current is: data: %p - size: %u - maxsize: %u",

@@ -391,9 +391,9 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     switch (GST_PAD_TEMPLATE_PRESENCE (templ)) {
       case GST_PAD_ALWAYS:
       {
-        GstPad *pad =
-            gst_element_get_pad (element,
+        GstPad *pad = gst_element_get_pad (element,
             GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
+
         if (pad) {
           to_connect = g_list_prepend (to_connect, pad);
         }
@@ -401,9 +401,9 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
       }
       case GST_PAD_SOMETIMES:
       {
-        GstPad *pad =
-            gst_element_get_pad (element,
+        GstPad *pad = gst_element_get_pad (element,
             GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
+
         if (pad) {
           to_connect = g_list_prepend (to_connect, pad);
         } else {
@@ -493,19 +493,13 @@ gst_decode_bin_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      break;
     case GST_STATE_READY_TO_PAUSED:
-      break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      break;
     case GST_STATE_PAUSED_TO_READY:
-      break;
     case GST_STATE_READY_TO_NULL:
       break;
     default:
-      g_assert_not_reached ();
       break;
   }
 

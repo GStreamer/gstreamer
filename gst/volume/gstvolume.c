@@ -446,12 +446,15 @@ volume_chain_int16 (GstPad * pad, GstData * _data)
   gint16 *data;
   gint i, num_samples;
 
+  g_return_if_fail (_data);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
   filter = GST_VOLUME (GST_OBJECT_PARENT (pad));
   g_return_if_fail (GST_IS_VOLUME (filter));
 
+  GST_LOG_OBJECT (filter, "processing incoming buffer with refcount %d",
+      GST_BUFFER_REFCOUNT_VALUE (buf));
   out_buf = gst_buffer_copy_on_write (buf);
 
   data = (gint16 *) GST_BUFFER_DATA (out_buf);
@@ -484,7 +487,6 @@ volume_chain_int16 (GstPad * pad, GstData * _data)
   }
 
   gst_pad_push (filter->srcpad, GST_DATA (out_buf));
-
 }
 
 static void

@@ -332,10 +332,14 @@ gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
       }
       gst_event_unref (event);
       new_event = gst_event_new (GST_EVENT_NAVIGATION);
+      GST_DEBUG_OBJECT (videoscale, "creating new NAVIGATION event %p",
+          new_event);
       new_event->event_data.structure.structure = structure;
       return gst_pad_event_default (pad, new_event);
       break;
     default:
+      GST_DEBUG_OBJECT (videoscale, "passing on non-NAVIGATION event %p",
+          event);
       return gst_pad_event_default (pad, event);
       break;
   }

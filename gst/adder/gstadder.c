@@ -497,15 +497,10 @@ gst_adder_change_state (GstElement * element)
       adder->offset = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      break;
     case GST_STATE_PAUSED_TO_READY:
-      break;
     case GST_STATE_READY_TO_NULL:
-      break;
     default:
-      g_assert_not_reached ();
       break;
   }
 

@@ -548,7 +548,7 @@ gst_alsa_sink_change_state (GstElement * element)
     case GST_STATE_READY_TO_NULL:
       break;
     default:
-      g_assert_not_reached ();
+      break;
   }
 
   if (GST_ELEMENT_CLASS (sink_parent_class)->change_state)

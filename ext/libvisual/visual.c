@@ -339,7 +339,7 @@ gst_visual_change_state (GstElement * element)
       visual->actor = NULL;
       break;
     default:
-      g_assert_not_reached ();
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

@@ -430,7 +430,6 @@ gst_play_base_bin_change_state (GstElement * element)
       gst_object_unref (GST_OBJECT (play_base_bin->thread));
       break;
     default:
-      g_assert_not_reached ();
       break;
   }
 
