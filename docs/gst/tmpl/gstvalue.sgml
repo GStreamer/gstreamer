@@ -17,7 +17,11 @@ GValue implementations specific to GStreamer
 <!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
 will transform four characters into a host-endiannness guint32 fourcc:
-<code>guint32 fourcc = GST_MAKE_FOURCC ('M','J','P','G');</code>
+<informalexample>
+<programlisting>
+guint32 fourcc = GST_MAKE_FOURCC ('M','J','P','G');
+</programlisting>
+</informalexample>
 </para>
 
 @a: the first component
@@ -28,17 +32,27 @@ will transform four characters into a host-endiannness guint32 fourcc:
 
 <!-- ##### MACRO GST_STR_FOURCC ##### -->
 <para>
-
+Creates a fourcc from an input string. The input string should consisnt
+of at least four characters (this is not checked for!).
+<informalexample>
+<programlisting>
+guint32 fourcc = GST_STR_FOURCC("MJPG");
+</programlisting>
+</informalexample>
 </para>
 
-@f: 
+@f: a string with four characters
 
 
 <!-- ##### MACRO GST_FOURCC_FORMAT ##### -->
 <para>
 Can be used to properly output a fourcc (a guint32) value in a
 printf()-style text message.
-<code>printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));</code>
+<informalexample>
+<programlisting>
+printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
+</programlisting>
+</informalexample>
 </para>
 
 
@@ -47,7 +61,11 @@ printf()-style text message.
 <para>
 Can be used to properly output a fourcc (a guint32) value in a
 printf()-style text message.
-<code>printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));</code>
+<informalexample>
+<programlisting>
+printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
+</programlisting>
+</informalexample>
 </para>
 
 @fourcc: the fourcc value to print
@@ -55,84 +73,88 @@ printf()-style text message.
 
 <!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
 <para>
-
+Checks if the give GValue contains a FOURCC value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_INT_RANGE ##### -->
 <para>
-
+Checks if the give GValue contains a INT_RANGE value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_DOUBLE_RANGE ##### -->
 <para>
-
+Checks if the give GValue contains a DOUBLE_RANGE value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_LIST ##### -->
 <para>
-
+Checks if the give GValue contains a LIST value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_FIXED_LIST ##### -->
 <para>
-
+Checks if the give GValue contains a FIXED_LIST value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
 <para>
-
+Checks if the give GValue contains a CAPS value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_FRACTION ##### -->
 <para>
-
+Checks if the give GValue contains a FRACTION value.
 </para>
 
-@x: 
+@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_LESS_THAN ##### -->
 <para>
-
+Indicates that the first value provided to a comparison function
+(gst_value_compare()) is lesser than the second one.
 </para>
 
 
 
 <!-- ##### MACRO GST_VALUE_EQUAL ##### -->
 <para>
-
+Indicates that the first value provided to a comparison function
+(gst_value_compare()) is equal to the second one.
 </para>
 
 
 
 <!-- ##### MACRO GST_VALUE_GREATER_THAN ##### -->
 <para>
-
+Indicates that the first value provided to a comparison function
+(gst_value_compare()) is greater than the second one.
 </para>
 
 
 
 <!-- ##### MACRO GST_VALUE_UNORDERED ##### -->
 <para>
-
+Indicates that the comparison function (gst_value_compare()) can not
+determine a order for the two provided values.
 </para>
 
 
@@ -144,7 +166,8 @@ printf()-style text message.
 
 @value1: 
 @value2: 
-@Returns: 
+@Returns: one of GST_VALUE_LESS_THAN, GST_VALUE_EQUAL,
+GST_VALUE_GREATER_THAN or GST_VALUE_UNORDERED
 
 
 <!-- ##### USER_FUNCTION GstValueSerializeFunc ##### -->

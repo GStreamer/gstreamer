@@ -409,17 +409,24 @@ load_plugin_func (gpointer data, gpointer user_data)
 {
   GstPlugin *plugin;
   const gchar *filename;
+  GError *err = NULL;
 
   filename = (const gchar *) data;
 
-  plugin = gst_plugin_load_file (filename, NULL);
+  plugin = gst_plugin_load_file (filename, &err);
 
   if (plugin) {
     GST_INFO ("Loaded plugin: \"%s\"", filename);
 
     gst_registry_pool_add_plugin (plugin);
   } else {
-    GST_WARNING ("Failed to load plugin: \"%s\"", filename);
+    if (err) {
+      /* Report error to user, and free error */
+      GST_ERROR ("Failed to load plugin: %s\n", err->message);
+      g_error_free (err);
+    } else {
+      GST_WARNING ("Failed to load plugin: \"%s\"", filename);
+    }
   }
 
   g_free (data);

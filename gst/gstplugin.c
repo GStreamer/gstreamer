@@ -32,6 +32,7 @@
 #include <unistd.h>
 #endif
 #include <signal.h>
+#include <errno.h>
 
 #include "gst_private.h"
 
@@ -324,7 +325,8 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
   if (stat (filename, &file_status)) {
     g_set_error (error,
         GST_PLUGIN_ERROR,
-        GST_PLUGIN_ERROR_MODULE, "Problem opening file %s\n", filename);
+        GST_PLUGIN_ERROR_MODULE, "Problem accessing file %s: %s\n", filename,
+        strerror (errno));
     return FALSE;
   }
 
@@ -348,6 +350,7 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
     return FALSE;
   }
   /* it's a plugin */
+  GST_INFO ("looks like a gst plugin \"%s\"", filename);
   g_module_close (module);
   return TRUE;
 }
