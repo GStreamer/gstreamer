@@ -349,16 +349,17 @@ gst_adder_loop (GstElement * element)
 
     inputs = inputs->next;
 
-    GST_LOG ("  looking into channel %p", input);
+    GST_LOG_OBJECT (adder, "  looking into channel %p", input);
 
     if (!GST_PAD_IS_USABLE (input->sinkpad)) {
-      GST_LOG ("    adder ignoring pad %s:%s",
+      GST_LOG_OBJECT (adder, "    adder ignoring pad %s:%s",
           GST_DEBUG_PAD_NAME (input->sinkpad));
       continue;
     }
 
     /* Get data from the bytestream of each input channel. We need to check for
        events before passing on the data to the output buffer. */
+  repeat:
     got_bytes = gst_bytestream_peek_bytes (input->bytestream, &raw_in,
         GST_BUFFER_SIZE (buf_out));
 
@@ -388,7 +389,8 @@ gst_adder_loop (GstElement * element)
               return;
             }
           default:
-            break;
+            GST_LOG_OBJECT (adder, "pulling again after event");
+            goto repeat;
         }
       }
     } else {

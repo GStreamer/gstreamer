@@ -1,3 +1,8 @@
+2005-01-12  Benjamin Otte  <otte@gnome.org>
+
+	* gst/adder/gstadder.c: (gst_adder_loop):
+	  fix adder a bit so it doesn't screw up with events as much anymore
+
 2005-01-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_link),
