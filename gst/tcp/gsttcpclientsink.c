@@ -56,6 +56,7 @@ enum
 static void gst_tcpclientsink_base_init (gpointer g_class);
 static void gst_tcpclientsink_class_init (GstTCPClientSink * klass);
 static void gst_tcpclientsink_init (GstTCPClientSink * tcpclientsink);
+static void gst_tcpclientsink_finalize (GObject * gobject);
 
 static void gst_tcpclientsink_set_clock (GstElement * element,
     GstClock * clock);
@@ -132,6 +133,7 @@ gst_tcpclientsink_class_init (GstTCPClientSink * klass)
           G_PARAM_READWRITE));
   gobject_class->set_property = gst_tcpclientsink_set_property;
   gobject_class->get_property = gst_tcpclientsink_get_property;
+  gobject_class->finalize = gst_tcpclientsink_finalize;
 
   gstelement_class->change_state = gst_tcpclientsink_change_state;
   gstelement_class->set_clock = gst_tcpclientsink_set_clock;
@@ -167,6 +169,14 @@ gst_tcpclientsink_init (GstTCPClientSink * this)
   GST_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
 
   this->clock = NULL;
+}
+
+static void
+gst_tcpclientsink_finalize (GObject * gobject)
+{
+  GstTCPClientSink *this = GST_TCPCLIENTSINK (gobject);
+
+  g_free (this->host);
 }
 
 static void

@@ -67,6 +67,7 @@ enum
 static void gst_tcpclientsrc_base_init (gpointer g_class);
 static void gst_tcpclientsrc_class_init (GstTCPClientSrc * klass);
 static void gst_tcpclientsrc_init (GstTCPClientSrc * tcpclientsrc);
+static void gst_tcpclientsrc_finalize (GObject * gobject);
 
 static GstCaps *gst_tcpclientsrc_getcaps (GstPad * pad);
 
@@ -144,6 +145,7 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
 
   gobject_class->set_property = gst_tcpclientsrc_set_property;
   gobject_class->get_property = gst_tcpclientsrc_get_property;
+  gobject_class->finalize = gst_tcpclientsrc_finalize;
 
   gstelement_class->change_state = gst_tcpclientsrc_change_state;
   gstelement_class->set_clock = gst_tcpclientsrc_set_clock;
@@ -180,6 +182,14 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this)
   this->caps = NULL;
 
   GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
+}
+
+static void
+gst_tcpclientsrc_finalize (GObject * gobject)
+{
+  GstTCPClientSrc *this = GST_TCPCLIENTSRC (gobject);
+
+  g_free (this->host);
 }
 
 static GstCaps *

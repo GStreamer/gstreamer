@@ -55,6 +55,7 @@ enum
 static void gst_tcpserversink_base_init (gpointer g_class);
 static void gst_tcpserversink_class_init (GstTCPServerSink * klass);
 static void gst_tcpserversink_init (GstTCPServerSink * tcpserversink);
+static void gst_tcpserversink_finalize (GObject * gobject);
 
 static gboolean gst_tcpserversink_handle_wait (GstMultiFdSink * sink,
     GstFDSet * set);
@@ -127,6 +128,7 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
 
   gobject_class->set_property = gst_tcpserversink_set_property;
   gobject_class->get_property = gst_tcpserversink_get_property;
+  gobject_class->finalize = gst_tcpserversink_finalize;
 
   gstmultifdsink_class->init = gst_tcpserversink_init_send;
   gstmultifdsink_class->wait = gst_tcpserversink_handle_wait;
@@ -142,8 +144,17 @@ gst_tcpserversink_init (GstTCPServerSink * this)
   this->server_port = TCP_DEFAULT_PORT;
   /* should support as minimum 576 for IPV4 and 1500 for IPV6 */
   /* this->mtu = 1500; */
+  this->host = g_strdup (TCP_DEFAULT_HOST);
 
   this->server_sock.fd = -1;
+}
+
+static void
+gst_tcpserversink_finalize (GObject * gobject)
+{
+  GstTCPServerSink *this = GST_TCPSERVERSINK (gobject);
+
+  g_free (this->host);
 }
 
 /* handle a read request on the server,

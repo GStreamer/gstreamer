@@ -63,6 +63,7 @@ enum
 static void gst_tcpserversrc_base_init (gpointer g_class);
 static void gst_tcpserversrc_class_init (GstTCPServerSrc * klass);
 static void gst_tcpserversrc_init (GstTCPServerSrc * tcpserversrc);
+static void gst_tcpserversrc_finalize (GObject * gobject);
 
 static GstData *gst_tcpserversrc_get (GstPad * pad);
 static GstElementStateReturn gst_tcpserversrc_change_state (GstElement *
@@ -137,6 +138,7 @@ gst_tcpserversrc_class_init (GstTCPServerSrc * klass)
 
   gobject_class->set_property = gst_tcpserversrc_set_property;
   gobject_class->get_property = gst_tcpserversrc_get_property;
+  gobject_class->finalize = gst_tcpserversrc_finalize;
 
   gstelement_class->change_state = gst_tcpserversrc_change_state;
   gstelement_class->set_clock = gst_tcpserversrc_set_clock;
@@ -164,7 +166,7 @@ gst_tcpserversrc_init (GstTCPServerSrc * this)
   gst_pad_set_get_function (this->srcpad, gst_tcpserversrc_get);
 
   this->server_port = TCP_DEFAULT_PORT;
-  this->host = TCP_DEFAULT_HOST;
+  this->host = g_strdup (TCP_DEFAULT_HOST);
   this->clock = NULL;
   this->server_sock_fd = -1;
   this->client_sock_fd = -1;
@@ -172,6 +174,14 @@ gst_tcpserversrc_init (GstTCPServerSrc * this)
   this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
 
   GST_FLAG_UNSET (this, GST_TCPSERVERSRC_OPEN);
+}
+
+static void
+gst_tcpserversrc_finalize (GObject * gobject)
+{
+  GstTCPServerSrc *this = GST_TCPSERVERSRC (gobject);
+
+  g_free (this->host);
 }
 
 /* read the gdp caps packet from the socket */
