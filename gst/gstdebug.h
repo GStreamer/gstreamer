@@ -103,7 +103,8 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
 #define DEBUG_ENTER_STRING DEBUG_ENTER("%s",_debug_string)
 #define DEBUG_LEAVE(format, args...) \
   if (_debug_string != NULL) g_free(_debug_string),\
-fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
+    fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
+#define DEBUG_LEAVE_STRING DEBUG_LEAVE("%s",_debug_string)
 #else
 #define DEBUG(format, args...)
 #define DEBUG_ENTER(format, args...)

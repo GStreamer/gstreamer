@@ -144,6 +144,8 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_PAD (pad));
 
   /* set the pad's parent */
+  DEBUG("setting parent of pad '%s'(%p) to '%s'(%p)\n",
+        gst_pad_get_name(pad),pad,gst_element_get_name(element),element);
   gst_pad_set_parent (pad,GST_OBJECT (element));
 
   /* add it to the list */

@@ -117,8 +117,8 @@ static void
 gst_queue_init (GstQueue *queue) 
 {
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
   gst_pad_set_chain_function (queue->sinkpad, gst_queue_chain);
+  gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_pull_function (queue->srcpad, gst_queue_pull);
