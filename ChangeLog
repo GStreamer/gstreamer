@@ -1,3 +1,8 @@
+2004-10-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_massage_index):
+	  There was something wrong with the index massaging.
+
 2004-10-04  Wim Taymans  <wim@fluendo.com>
 
 	* ext/jpeg/gstjpeg.c: (smoke_type_find), (plugin_init):
