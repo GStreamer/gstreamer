@@ -88,7 +88,7 @@ extern unsigned long gst_getbits_nBitMask[];
 
 #define gst_getbits_newbuf(gb, buffer)					\
 {									\
-  (gb)->longptr = (unsigned long *)buffer;				\
+  (gb)->longptr = (unsigned long *)(buffer);				\
   (gb)->bits = 0;							\
   (gb)->dword = swab32(*(gb)->longptr);					\
 }
@@ -126,12 +126,12 @@ extern unsigned long gst_getbits_nBitMask[];
     (gb)->longptr++,                                                 	\
     ((gb)->bits ? (                                        		\
       ((gb)->dword |=                                              	\
-	 (*(gb)->longptr >> (2 - (gb)->bits)))           		\
+	 (swab32(*(gb)->longptr) >> (2 - (gb)->bits)))           		\
     )									\
     : 0									\
-    ),                                                                \
+    ),(                                                                \
     ((gb)->temp = (((gb)->dword & 0xc0000000) >> 30)),                 	\
-    ((gb)->dword = swab32(*(gb)->longptr) << (gb)->bits)    		\
+    ((gb)->dword = swab32(*(gb)->longptr) << (gb)->bits))    		\
   )									\
   : (                                                                   \
       ((gb)->temp = (((gb)->dword & 0xc0000000) >> 30)),                \
@@ -144,23 +144,23 @@ extern unsigned long gst_getbits_nBitMask[];
 
 #define gst_getbitsX(gb, num, mask, shift)	                     	\
 (                                                                       \
-  (gb)->bits += num,                                          		\
+  (gb)->bits += (num),                                         		\
                                                                         \
   ((gb)->bits & 0x20 ? (						\
     (gb)->bits -= 32,                                         		\
     (gb)->longptr++,                                                 	\
     ((gb)->bits ? (                                        		\
         ((gb)->dword |= (swab32(*(gb)->longptr) >>             		\
-        (num - (gb)->bits)))                                   		\
+        ((num) - (gb)->bits)))                                 		\
       )									\
       :0								\
       ),                                                                \
-      ((gb)->temp = (((gb)->dword & mask) >> shift)),                  	\
+      ((gb)->temp = (((gb)->dword & (mask)) >> (shift))),              	\
       ((gb)->dword = swab32(*(gb)->longptr) << (gb)->bits)    		\
     )									\
   : (                                                                   \
       ((gb)->temp = (((gb)->dword & mask) >> shift)),                   \
-      ((gb)->dword <<= num)                                          	\
+      ((gb)->dword <<= (num))                                          	\
     )									\
   ),                                                                    \
   debug("getbits%-2d: %04lx %08lx %lu %p\n", num, (gb)->temp, (gb)->dword, mask, (gb)->longptr)	\
@@ -189,7 +189,7 @@ extern unsigned long gst_getbits_nBitMask[];
 #define gst_getbits22(gb) gst_getbitsX(gb, 22, 0xfffffc00UL, 10)
 #define gst_getbits32(gb) gst_getbitsX(gb, 32, 0xffffffffUL,  0)
 
-#define gst_getbitsn(gb,num) gst_getbitsX(gb, (num), (num ? ((0xffffffffUL) << (32-num)):0), (32-(num)))
+#define gst_getbitsn(gb,num) gst_getbitsX(gb, (num), ((num) ? ((0xffffffffUL) << (32-(num))):0), (32-(num)))
 
 #define gst_showbits32(gb)        	                      		\
 (                                                                       \
@@ -270,6 +270,7 @@ extern unsigned long gst_getbits_nBitMask[];
   else {                                                              	\
     (gb)->dword <<= num;                                      		\
   }                                                                   	\
+  debug2("flushbits%-2d: %08lx %p\n", num, (gb)->dword, (gb)->longptr);	\
 }
 
 #define gst_backbits24(gb)                                            	\
