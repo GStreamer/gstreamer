@@ -130,4 +130,12 @@ will show all the plugins available and the elements they contain.
 
 shows more info about the plugin/element.
 
+gst-xmlinspect
+=================
+
+Dump properties of plugins and elements in an xml format. You can 
+transform the xml to something else with an appropriate stylesheet.
+
+ ./gst-xmlinspect <elementname> | xsltproc xml2text.xsl -
+
 
