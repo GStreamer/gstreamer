@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstmikmod.h"
 
 #include <gst/audio/audio.h>
@@ -406,7 +409,7 @@ GstMikMod *mikmod;
 
   mikmod = GST_MIKMOD (element);
 
-  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
 
   if (GST_STATE_PENDING (element) == GST_STATE_READY) 
   {

@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 #include "gstspeexdec.h"
@@ -87,7 +90,7 @@ gst_speexdec_class_init (GstSpeexDec *klass)
 static void
 gst_speexdec_init (GstSpeexDec *speexdec)
 {
-  GST_DEBUG (0,"gst_speexdec_init: initializing");
+  GST_DEBUG ("gst_speexdec_init: initializing");
 
   /* create the sink and src pads */
   speexdec->sinkpad = gst_pad_new_from_template (speexdec_sink_template, "sink");

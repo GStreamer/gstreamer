@@ -968,8 +968,6 @@ dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
 
-GST_DEBUGINFO
-
 AC_ARG_ENABLE(libmmx,
   AC_HELP_STRING([--enable-libmmx],[use libmmx, if available]),
 [case "${enableval}" in

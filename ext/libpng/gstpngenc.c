@@ -16,6 +16,9 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <gst/gst.h>
 #include "gstpngenc.h"
@@ -198,7 +201,7 @@ gst_pngenc_chain (GstPad *pad, GstBuffer *buf)
   /* non-0 return is from a longjmp inside of libpng */
   if (setjmp (pngenc->png_struct_ptr->jmpbuf) != 0)
   {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "returning from longjmp");
+    GST_DEBUG ("returning from longjmp");
     png_destroy_write_struct (&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
     return;
   }

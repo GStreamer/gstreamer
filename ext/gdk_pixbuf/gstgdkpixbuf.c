@@ -20,6 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string.h>

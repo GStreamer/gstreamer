@@ -10,6 +10,9 @@
  * 270 degrees.  The amount of rotation for each square is chosen at random.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <gst/gst.h>
 #include "gsteffectv.h"

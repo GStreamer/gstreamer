@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 #include "flx_fmt.h"
@@ -471,7 +474,7 @@ gst_flxdec_loop (GstElement *element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_FLXDEC(element));
 
-  GST_DEBUG (0, "entering loop function");
+  GST_DEBUG ("entering loop function");
   
   flxdec = GST_FLXDEC(element);
 

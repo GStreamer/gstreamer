@@ -20,6 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -322,7 +325,7 @@ gst_osssrc_get (GstPad *pad)
 
   src = GST_OSSSRC(gst_pad_get_parent (pad));
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from the soundcard");
+  GST_DEBUG ("attempting to read something from the soundcard");
 
   if (src->need_eos) {
     src->need_eos = FALSE;
@@ -368,7 +371,7 @@ gst_osssrc_get (GstPad *pad)
 
   src->curoffset += readbytes;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %" G_GINT64_FORMAT, 
+  GST_DEBUG ("pushed buffer from soundcard of %ld bytes, timestamp %" G_GINT64_FORMAT, 
 		  readbytes, GST_BUFFER_TIMESTAMP (buf));
 
   return buf;
@@ -426,7 +429,7 @@ gst_osssrc_change_state (GstElement *element)
 {
   GstOssSrc *osssrc = GST_OSSSRC (element);
   
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: state change");
+  GST_DEBUG ("osssrc: state change");
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:

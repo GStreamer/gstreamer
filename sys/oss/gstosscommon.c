@@ -47,24 +47,24 @@ gst_ossformat_get (gint law, gint endianness, gboolean sign, gint width, gint de
       if (sign == TRUE) {
         if (endianness == G_LITTLE_ENDIAN) {
 	  *format = AFMT_S16_LE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	  GST_DEBUG (
 	             "16 bit signed LE, no law (%d)", *format);
 	}
         else if (endianness == G_BIG_ENDIAN) {
 	  *format = AFMT_S16_BE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	  GST_DEBUG (
 	             "16 bit signed BE, no law (%d)", *format);
 	}
       }
       else {
         if (endianness == G_LITTLE_ENDIAN) {
 	  *format = AFMT_U16_LE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	  GST_DEBUG (
 	             "16 bit unsigned LE, no law (%d)", *format);
 	}
         else if (endianness == G_BIG_ENDIAN) {
 	  *format = AFMT_U16_BE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	  GST_DEBUG (
 	             "16 bit unsigned BE, no law (%d)", *format);
 	}
       }
@@ -73,23 +73,23 @@ gst_ossformat_get (gint law, gint endianness, gboolean sign, gint width, gint de
     else if (width == 8) {
       if (sign == TRUE) {
 	*format = AFMT_S8;
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	GST_DEBUG (
 	           "8 bit signed, no law (%d)", *format);
       }
       else {
         *format = AFMT_U8;
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	GST_DEBUG (
 	           "8 bit unsigned, no law (%d)", *format);
       }
       *bps = 1;
     }
   } else if (law == 1) {
     *format = AFMT_MU_LAW;
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+    GST_DEBUG (
 	       "mu law (%d)", *format);
   } else if (law == 2) {
     *format = AFMT_A_LAW;
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+    GST_DEBUG (
 	       "a law (%d)", *format);
   } else {
     g_critical ("unknown law");
@@ -147,7 +147,7 @@ gst_osscommon_parse_caps (GstOssCommon *common, GstCaps *caps)
   if (!gst_ossformat_get (common->law, common->endianness, common->sign, 
                           common->width, common->depth, &format, &bps))
   { 
-     GST_DEBUG (GST_CAT_PLUGIN_INFO, "could not get format");
+     GST_DEBUG ("could not get format");
      return FALSE;
   }
 
@@ -216,7 +216,7 @@ gst_osscommon_sync_parms (GstOssCommon *common)
   else
     frag = 0x7FFF0000 | common->fragment;
   
-  GST_INFO (GST_CAT_PLUGIN_INFO, 
+  GST_INFO ( 
             "common: setting sound card to %dHz %d format %s (%08x fragment)",
             common->rate, common->format,
             (common->channels == 2) ? "stereo" : "mono", frag);
@@ -250,7 +250,7 @@ gst_osscommon_sync_parms (GstOssCommon *common)
   }
   common->fragment = space.fragstotal << 16 | frag_ln;
 	  
-  GST_INFO (GST_CAT_PLUGIN_INFO, 
+  GST_INFO ( 
             "common: set sound card to %dHz, %d format, %s "
 	    "(%d bytes buffer, %08x fragment)",
             common->rate, common->format,
@@ -258,7 +258,7 @@ gst_osscommon_sync_parms (GstOssCommon *common)
 	    space.bytes, common->fragment);
 
   common->fragment_time = (GST_SECOND * common->fragment_size) / common->bps;
-  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %" G_GUINT64_FORMAT "\n", 
+  GST_INFO ( "fragment time %u %" G_GUINT64_FORMAT "\n", 
             common->bps, common->fragment_time);
 
   if (target_format   != common->format   ||
@@ -278,7 +278,7 @@ gst_osscommon_open_audio (GstOssCommon *common, GstOssOpenMode mode, gchar **err
   gint caps;
   g_return_val_if_fail (common->fd == -1, FALSE);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "common: attempting to open sound device");
+  GST_INFO ( "common: attempting to open sound device");
 
   /* first try to open the sound card */
   if (mode == GST_OSSCOMMON_WRITE) {
@@ -336,41 +336,41 @@ gst_osscommon_open_audio (GstOssCommon *common, GstOssOpenMode mode, gchar **err
   /* set card state */
   ioctl (common->fd, SNDCTL_DSP_GETCAPS, &caps);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon: Capabilities %08x", caps);
+  GST_INFO ( "osscommon: Capabilities %08x", caps);
 
-  if (caps & DSP_CAP_DUPLEX)	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Full duplex");
-  if (caps & DSP_CAP_REALTIME) 	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Realtime");
-  if (caps & DSP_CAP_BATCH)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Batch");
-  if (caps & DSP_CAP_COPROC)   	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Has coprocessor");
-  if (caps & DSP_CAP_TRIGGER)  	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Trigger");
-  if (caps & DSP_CAP_MMAP)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Direct access");
+  if (caps & DSP_CAP_DUPLEX)	GST_INFO ( "osscommon:   Full duplex");
+  if (caps & DSP_CAP_REALTIME) 	GST_INFO ( "osscommon:   Realtime");
+  if (caps & DSP_CAP_BATCH)    	GST_INFO ( "osscommon:   Batch");
+  if (caps & DSP_CAP_COPROC)   	GST_INFO ( "osscommon:   Has coprocessor");
+  if (caps & DSP_CAP_TRIGGER)  	GST_INFO ( "osscommon:   Trigger");
+  if (caps & DSP_CAP_MMAP)     	GST_INFO ( "osscommon:   Direct access");
 
 #ifdef DSP_CAP_MULTI
-  if (caps & DSP_CAP_MULTI)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Multiple open");
+  if (caps & DSP_CAP_MULTI)    	GST_INFO ( "osscommon:   Multiple open");
 #endif /* DSP_CAP_MULTI */
 
 #ifdef DSP_CAP_BIND
-  if (caps & DSP_CAP_BIND)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   Channel binding");
+  if (caps & DSP_CAP_BIND)     	GST_INFO ( "osscommon:   Channel binding");
 #endif /* DSP_CAP_BIND */
 
   ioctl(common->fd, SNDCTL_DSP_GETFMTS, &caps);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon: Formats %08x", caps);
-  if (caps & AFMT_MU_LAW)  	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   MU_LAW");
-  if (caps & AFMT_A_LAW)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   A_LAW");
-  if (caps & AFMT_IMA_ADPCM)   	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   IMA_ADPCM");
-  if (caps & AFMT_U8)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   U8");
-  if (caps & AFMT_S16_LE)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   S16_LE");
-  if (caps & AFMT_S16_BE)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   S16_BE");
-  if (caps & AFMT_S8)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   S8");
-  if (caps & AFMT_U16_LE)       GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   U16_LE");
-  if (caps & AFMT_U16_BE)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   U16_BE");
-  if (caps & AFMT_MPEG)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   MPEG");
+  GST_INFO ( "osscommon: Formats %08x", caps);
+  if (caps & AFMT_MU_LAW)  	GST_INFO ( "osscommon:   MU_LAW");
+  if (caps & AFMT_A_LAW)    	GST_INFO ( "osscommon:   A_LAW");
+  if (caps & AFMT_IMA_ADPCM)   	GST_INFO ( "osscommon:   IMA_ADPCM");
+  if (caps & AFMT_U8)    	GST_INFO ( "osscommon:   U8");
+  if (caps & AFMT_S16_LE)    	GST_INFO ( "osscommon:   S16_LE");
+  if (caps & AFMT_S16_BE)    	GST_INFO ( "osscommon:   S16_BE");
+  if (caps & AFMT_S8)    	GST_INFO ( "osscommon:   S8");
+  if (caps & AFMT_U16_LE)       GST_INFO ( "osscommon:   U16_LE");
+  if (caps & AFMT_U16_BE)    	GST_INFO ( "osscommon:   U16_BE");
+  if (caps & AFMT_MPEG)    	GST_INFO ( "osscommon:   MPEG");
 #ifdef AFMT_AC3
-  if (caps & AFMT_AC3)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osscommon:   AC3");
+  if (caps & AFMT_AC3)    	GST_INFO ( "osscommon:   AC3");
 #endif
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, 
+  GST_INFO ( 
 		   "osscommon: opened audio (%s) with fd=%d", common->device, common->fd);
 
   common->caps = caps;

@@ -74,7 +74,7 @@ videoflip_find_by_caps(GstCaps *caps)
 {
   int i;
 
-  GST_DEBUG (0,"finding %p",caps);
+  GST_DEBUG ("finding %p",caps);
 
   g_return_val_if_fail(caps != NULL, NULL);
 
@@ -121,13 +121,13 @@ gst_videoflip_setup (GstVideoflip *videoflip)
       break;
   }
 
-  GST_DEBUG (0,"format=%p \"%s\" from %dx%d to %dx%d",
+  GST_DEBUG ("format=%p \"%s\" from %dx%d to %dx%d",
 		videoflip->format, videoflip->format->fourcc,
 		videoflip->from_width, videoflip->from_height,
 		videoflip->to_width, videoflip->to_height);
 
   if(videoflip->method == GST_VIDEOFLIP_METHOD_IDENTITY){
-    GST_DEBUG (0,"videoflip: using passthru");
+    GST_DEBUG ("videoflip: using passthru");
     videoflip->passthru = TRUE;
     videoflip->inited = TRUE;
     return;
@@ -149,7 +149,7 @@ gst_videoflip_planar411 (GstVideoflip *scale, unsigned char *dest, unsigned char
   int dw = scale->to_width;
   int dh = scale->to_height;
 
-  GST_DEBUG (0,"videoflip: scaling planar 4:1:1 %dx%d to %dx%d", sw, sh, dw, dh);
+  GST_DEBUG ("videoflip: scaling planar 4:1:1 %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoflip_flip(scale, dest, src, sw, sh, dw, dh);
 

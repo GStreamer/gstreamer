@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include "gstrtpL16enc.h"
 
@@ -195,7 +198,7 @@ gst_rtpL16enc_chain (GstPad * pad, GstBuffer * buf)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG (GST_CAT_EVENT, "discont"); 
+	GST_DEBUG ("discont"); 
         rtpL16enc->next_time = 0;
         gst_pad_event_default (pad, event);
 	return;
@@ -238,7 +241,7 @@ gst_rtpL16enc_chain (GstPad * pad, GstBuffer * buf)
   memcpy (GST_BUFFER_DATA (outbuf), packet->data, rtp_packet_get_packet_len (packet));
   memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len(packet), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
-  GST_DEBUG (0,"gst_rtpL16enc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  GST_DEBUG ("gst_rtpL16enc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
   gst_pad_push (rtpL16enc->srcpad, outbuf);
 
   ++rtpL16enc->seq;
@@ -288,7 +291,7 @@ gst_rtpL16enc_change_state (GstElement * element)
 
   rtpL16enc = GST_RTP_L16_ENC (element);
 
-  GST_DEBUG (0, "state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   switch (GST_STATE_TRANSITION (element)) {

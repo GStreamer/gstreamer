@@ -19,6 +19,9 @@
 
 
 /*#define DEBUG_ENABLED */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gstvideoflip.h>
 #include <videoflip.h>
 
@@ -188,7 +191,7 @@ gst_videoflip_sink_getcaps (GstPad *pad, GstCaps *caps)
   GstCaps *sizecaps;
   int i;
 
-  GST_DEBUG(0,"gst_videoflip_src_link");
+  GST_DEBUG ("gst_videoflip_src_link");
   videoflip = GST_VIDEOFLIP (gst_pad_get_parent (pad));
   
   /* get list of peer's caps */
@@ -229,7 +232,7 @@ gst_videoflip_src_link (GstPad *pad, GstCaps *caps)
   GstPadLinkReturn ret;
   GstCaps *peercaps;
 
-  GST_DEBUG(0,"gst_videoflip_src_link");
+  GST_DEBUG ("gst_videoflip_src_link");
   videoflip = GST_VIDEOFLIP (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
@@ -244,7 +247,7 @@ gst_videoflip_src_link (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "width", &videoflip->to_width);
   gst_caps_get_int (caps, "height", &videoflip->to_height);
 
-  GST_DEBUG(0,"width %d height %d",videoflip->to_width,videoflip->to_height);
+  GST_DEBUG ("width %d height %d",videoflip->to_width,videoflip->to_height);
 
   peercaps = gst_caps_copy(caps);
 
@@ -273,7 +276,7 @@ gst_videoflip_sink_link (GstPad *pad, GstCaps *caps)
   GstPadLinkReturn ret;
   GstCaps *peercaps;
 
-  GST_DEBUG(0,"gst_videoflip_src_link");
+  GST_DEBUG ("gst_videoflip_src_link");
   videoflip = GST_VIDEOFLIP (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
@@ -312,7 +315,7 @@ gst_videoflip_sink_link (GstPad *pad, GstCaps *caps)
 static void
 gst_videoflip_init (GstVideoflip *videoflip)
 {
-  GST_DEBUG(0,"gst_videoflip_init");
+  GST_DEBUG ("gst_videoflip_init");
   videoflip->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (gst_videoflip_sink_template_factory),
 		  "sink");
@@ -341,7 +344,7 @@ gst_videoflip_chain (GstPad *pad, GstBuffer *buf)
   gulong size;
   GstBuffer *outbuf;
 
-  GST_DEBUG (0,"gst_videoflip_chain");
+  GST_DEBUG ("gst_videoflip_chain");
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -358,10 +361,10 @@ gst_videoflip_chain (GstPad *pad, GstBuffer *buf)
     return;
   }
 
-  GST_DEBUG (0,"gst_videoflip_chain: got buffer of %ld bytes in '%s'",size,
+  GST_DEBUG ("gst_videoflip_chain: got buffer of %ld bytes in '%s'",size,
 		              GST_OBJECT_NAME (videoflip));
  
-  GST_DEBUG(0,"size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
+  GST_DEBUG ("size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
 	size,
 	videoflip->from_width, videoflip->from_height,
 	videoflip->to_width, videoflip->to_height,
@@ -377,12 +380,12 @@ gst_videoflip_chain (GstPad *pad, GstBuffer *buf)
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
   g_return_if_fail(videoflip->format);
-  GST_DEBUG (0,"format %s",videoflip->format->fourcc);
+  GST_DEBUG ("format %s",videoflip->format->fourcc);
   g_return_if_fail(videoflip->format->scale);
 
   videoflip->format->scale(videoflip, GST_BUFFER_DATA(outbuf), data);
 
-  GST_DEBUG (0,"gst_videoflip_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
+  GST_DEBUG ("gst_videoflip_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
 	              GST_OBJECT_NAME (videoflip));
 
   gst_pad_push(videoflip->srcpad, outbuf);
@@ -399,7 +402,7 @@ gst_videoflip_set_property (GObject *object, guint prop_id, const GValue *value,
   g_return_if_fail(GST_IS_VIDEOFLIP(object));
   src = GST_VIDEOFLIP(object);
 
-  GST_DEBUG(0,"gst_videoflip_set_property");
+  GST_DEBUG ("gst_videoflip_set_property");
   switch (prop_id) {
     case ARG_METHOD:
       src->method = g_value_get_enum (value);

@@ -25,6 +25,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 
 #include <stdlib.h>
@@ -308,7 +311,7 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
   if (!GST_CAPS_IS_FIXED (vscaps))
     return GST_PAD_LINK_DELAYED;
 
-  GST_DEBUG (0, "avimux: sinkconnect triggered on %s", gst_pad_get_name (pad));
+  GST_DEBUG ("avimux: sinkconnect triggered on %s", gst_pad_get_name (pad));
 
   for (caps = vscaps; caps != NULL; caps = vscaps = vscaps->next)
   {
@@ -438,7 +441,7 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
 	  gst_caps_has_property(caps, "layer"))
         gst_caps_get_int(caps, "layer", &layer);
       else
-        GST_DEBUG(GST_CAT_PLUGIN_INFO,
+        GST_DEBUG (
                   "No layer specified, assuming layer 3");
 
       /* we don't need to do anything here, compressed mp3 contains it all */
@@ -497,7 +500,7 @@ gst_avimux_pad_link (GstPad   *pad,
     return;
   }
 
-  GST_DEBUG(GST_CAT_PLUGIN_INFO, "pad '%s' connected", padname);
+  GST_DEBUG ("pad '%s' connected", padname);
 }
 
 static void
@@ -524,7 +527,7 @@ gst_avimux_pad_unlink (GstPad   *pad,
     return;
   }
 
-  GST_DEBUG(GST_CAT_PLUGIN_INFO, "pad '%s' unlinked", padname);
+  GST_DEBUG ("pad '%s' unlinked", padname);
 }
 
 static GstPad*

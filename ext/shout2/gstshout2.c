@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstshout2.h"
 #include <stdlib.h>
 #include <string.h>
@@ -390,7 +393,7 @@ gst_shout2send_change_state (GstElement *element)
 
   shout2send = GST_SHOUT2SEND(element);
 
-  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   switch (GST_STATE_TRANSITION (element)) {

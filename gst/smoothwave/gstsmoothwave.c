@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 #include "gstsmoothwave.h"
@@ -125,12 +128,12 @@ gst_smoothwave_init (GstSmoothWave *smoothwave)
 /*  gtk_widget_set_default_colormap (gdk_rgb_get_cmap()); */
 /*  gtk_widget_set_default_visual (gdk_rgb_get_visual()); */
 
-/*  GST_DEBUG (0,"creating palette"); */
+/*  GST_DEBUG ("creating palette"); */
   for (i=0;i<256;i++)
     palette[i] = (i << 16) || (i << 8);
-/*  GST_DEBUG (0,"creating cmap"); */
+/*  GST_DEBUG ("creating cmap"); */
   smoothwave->cmap = gdk_rgb_cmap_new(palette,256);
-/*  GST_DEBUG (0,"created cmap"); */
+/*  GST_DEBUG ("created cmap"); */
 /*  gtk_widget_set_default_colormap (smoothwave->cmap); */
 
   smoothwave->image = gtk_drawing_area_new();
@@ -176,7 +179,7 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
 
   qheight = smoothwave->height/4;
 
-/*  GST_DEBUG (0,"traversing %d",smoothwave->width); */
+/*  GST_DEBUG ("traversing %d",smoothwave->width); */
   for (i=0;i<MAX(smoothwave->width,samplecount);i++) {
     gint16 y1 = (gint32)(samples[i*2] * qheight) / 32768 +
                 qheight;
@@ -195,8 +198,8 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
       ptr++;
   }
 
-/*  GST_DEBUG (0,"drawing"); */
-/*  GST_DEBUG (0,"gdk_draw_indexed_image(%p,%p,%d,%d,%d,%d,%s,%p,%d,%p);",
+/*  GST_DEBUG ("drawing"); */
+/*  GST_DEBUG ("gdk_draw_indexed_image(%p,%p,%d,%d,%d,%d,%s,%p,%d,%p);",
         smoothwave->image->window,
 	smoothwave->image->style->fg_gc[GTK_STATE_NORMAL],
 	0,0,smoothwave->width,smoothwave->height,

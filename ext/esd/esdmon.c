@@ -20,8 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <esd.h>
+#include <unistd.h>
 
 #define GST_TYPE_ESDMON \
   (gst_esdmon_get_type())
@@ -278,7 +282,7 @@ gst_esdmon_get (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   esdmon = GST_ESDMON(gst_pad_get_parent (pad));
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from esdmon");
+  GST_DEBUG ("attempting to read something from esdmon");
 
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
@@ -324,7 +328,7 @@ gst_esdmon_get (GstPad *pad)
   if (esdmon->depth == 16) readsamples /= 2;
   esdmon->samples_since_basetime += readsamples;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from esdmon of %ld bytes, timestamp %" G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
+  GST_DEBUG ("pushed buffer from esdmon of %ld bytes, timestamp %" G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
   return buf;
 }
 
@@ -442,21 +446,21 @@ gst_esdmon_open_audio (GstEsdmon *src)
   if (src->depth == 16) esdformat |= ESD_BITS16;
   else if (src->depth == 8) esdformat |= ESD_BITS8;
   else {
-    GST_DEBUG (0, "esdmon: invalid bit depth (%d)", src->depth);
+    GST_DEBUG ("esdmon: invalid bit depth (%d)", src->depth);
     return FALSE;
   }
 
   if (src->channels == 2) esdformat |= ESD_STEREO;
   else if (src->channels == 1) esdformat |= ESD_MONO;
   else {
-    GST_DEBUG (0, "esdmon: invalid number of channels (%d)", src->channels);
+    GST_DEBUG ("esdmon: invalid number of channels (%d)", src->channels);
     return FALSE;
   }
 
-  GST_DEBUG (0, "esdmon: attempting to open connection to esound server");
+  GST_DEBUG ("esdmon: attempting to open connection to esound server");
   src->fd = esd_monitor_stream(esdformat, src->frequency, src->host, connname);
   if ( src->fd < 0 ) {
-    GST_DEBUG (0, "esdmon: can't open connection to esound server");
+    GST_DEBUG ("esdmon: can't open connection to esound server");
     return FALSE;
   }
 
@@ -475,7 +479,7 @@ gst_esdmon_close_audio (GstEsdmon *src)
 
   GST_FLAG_UNSET (src, GST_ESDMON_OPEN);
 
-  GST_DEBUG (0, "esdmon: closed sound device");
+  GST_DEBUG ("esdmon: closed sound device");
 }
 
 static GstElementStateReturn

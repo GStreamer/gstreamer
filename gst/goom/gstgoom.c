@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 #include <gst/gst.h>
 
@@ -297,7 +300,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0, "GOOM: chainfunc called");
+  GST_DEBUG ("GOOM: chainfunc called");
 
   if (GST_IS_EVENT (bufin)) {
     GstEvent *event = GST_EVENT (bufin);
@@ -335,7 +338,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   samples_in = GST_BUFFER_SIZE (bufin) / (sizeof (gint16) * goom->channels);
 
-  GST_DEBUG (0, "input buffer has %d samples", samples_in);
+  GST_DEBUG ("input buffer has %d samples", samples_in);
 
   if (GST_BUFFER_TIMESTAMP (bufin) < goom->next_time || samples_in < 512) {
     goto done;
@@ -368,7 +371,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 done:
   gst_buffer_unref (bufin);
 
-  GST_DEBUG (0, "GOOM: exiting chainfunc");
+  GST_DEBUG ("GOOM: exiting chainfunc");
 }
 
 static GstElementStateReturn

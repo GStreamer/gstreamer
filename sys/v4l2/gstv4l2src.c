@@ -430,7 +430,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32        fourcc,
 		break;
 	}
 	default:
-		GST_DEBUG(GST_CAT_PLUGIN_INFO,
+		GST_DEBUG (
 			  "Unknown fourcc 0x%08x " GST_FOURCC_FORMAT ", trying default",
 			  fourcc, GST_FOURCC_ARGS(fourcc));
 

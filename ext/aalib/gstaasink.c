@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 
 #include <string.h>
@@ -246,7 +249,7 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
 
   /* FIXME aasink->format is never set */
 
-  GST_DEBUG (0, "aasink: setting %08lx (" GST_FOURCC_FORMAT ")",
+  GST_DEBUG ("aasink: setting %08lx (" GST_FOURCC_FORMAT ")",
 		 aasink->format, GST_FOURCC_ARGS(aasink->format));
   
   g_signal_emit( G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
@@ -346,7 +349,7 @@ gst_aasink_chain (GstPad *pad, GstBuffer *buf)
   		    aa_imgwidth (aasink->context),	/* dw */
   		    aa_imgheight (aasink->context));	/* dh */
 
-  GST_DEBUG (0,"videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
 
   if (aasink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (aasink->clock, GST_BUFFER_TIMESTAMP(buf));

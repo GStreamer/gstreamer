@@ -18,7 +18,12 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstudpsrc.h"
+#include <unistd.h>
 
 #define UDP_DEFAULT_PORT		4951
 #define UDP_DEFAULT_MULTICAST_GROUP	"0.0.0.0"

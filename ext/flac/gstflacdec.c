@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <sys/soundcard.h>
 
@@ -211,7 +214,7 @@ gst_flacdec_update_metadata (FlacDec *flacdec, const FLAC__StreamMetadata *metad
   
   number_of_comments = metadata->data.vorbis_comment.num_comments;
   value = NULL;
-  GST_DEBUG (GST_CAT_CAPS, "%d tag(s) found",  number_of_comments);
+  GST_DEBUG ("%d tag(s) found",  number_of_comments);
   for (cursor = 0; cursor < number_of_comments; cursor++)
   {			
     str_ptr = metadata->data.vorbis_comment.comments[cursor].entry;
@@ -225,7 +228,7 @@ gst_flacdec_update_metadata (FlacDec *flacdec, const FLAC__StreamMetadata *metad
       entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value);
       gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-      GST_DEBUG (GST_CAT_CAPS, "%s : %s", name, value);
+      GST_DEBUG ("%s : %s", name, value);
 
       g_free (name);
       g_free (value);
@@ -286,7 +289,7 @@ gst_flacdec_error_callback (const FLAC__SeekableStreamDecoder *decoder,
       break;
   }
 
-  GST_DEBUG (0, error);
+  GST_DEBUG (error);
 				  
   gst_element_error (GST_ELEMENT (flacdec), error);
 }
@@ -299,7 +302,7 @@ gst_flacdec_seek (const FLAC__SeekableStreamDecoder *decoder,
 
   flacdec = GST_FLACDEC (client_data);
 
-  GST_DEBUG (0, "seek %" G_GINT64_FORMAT, position);
+  GST_DEBUG ("seek %" G_GINT64_FORMAT, position);
   if (!gst_bytestream_seek (flacdec->bs, position, GST_SEEK_METHOD_SET)) {
     return FLAC__SEEKABLE_STREAM_DECODER_SEEK_STATUS_ERROR;
   }
@@ -318,7 +321,7 @@ gst_flacdec_tell (const FLAC__SeekableStreamDecoder *decoder,
   if (*position == -1)
     return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
 
-  GST_DEBUG (0, "tell %" G_GINT64_FORMAT, *position);
+  GST_DEBUG ("tell %" G_GINT64_FORMAT, *position);
 
   return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_OK;
 }
@@ -335,7 +338,7 @@ gst_flacdec_length (const FLAC__SeekableStreamDecoder *decoder,
   if (*length == -1)
     return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
 
-  GST_DEBUG (0, "length %" G_GINT64_FORMAT, *length);
+  GST_DEBUG ("length %" G_GINT64_FORMAT, *length);
 
   return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_OK;
 }
@@ -347,7 +350,7 @@ gst_flacdec_eof (const FLAC__SeekableStreamDecoder *decoder,
   FlacDec *flacdec;
 
   flacdec = GST_FLACDEC (client_data);
-  GST_DEBUG (0, "eof %d", flacdec->eos);
+  GST_DEBUG ("eof %d", flacdec->eos);
 
   return flacdec->eos;
 }
@@ -375,7 +378,7 @@ gst_flacdec_read (const FLAC__SeekableStreamDecoder *decoder,
 
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_EOS:
-          GST_DEBUG (0, "eos");
+          GST_DEBUG ("eos");
           flacdec->eos = TRUE; 
 	  gst_event_unref (event);
           if (avail == 0) {
@@ -383,7 +386,7 @@ gst_flacdec_read (const FLAC__SeekableStreamDecoder *decoder,
           }
           break;
         case GST_EVENT_DISCONTINUOUS:
-          GST_DEBUG (0, "discont");
+          GST_DEBUG ("discont");
 
 	  /* we are not yet sending the discont, we'll do that in the next write operation */
 	  flacdec->need_discont = TRUE;
@@ -435,7 +438,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder *decoder,
       }
 
       if (GST_PAD_IS_USABLE (flacdec->srcpad)) {
-        GST_DEBUG (0, "send discont");
+        GST_DEBUG ("send discont");
 
         format = GST_FORMAT_TIME;
         gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT,
@@ -516,39 +519,39 @@ gst_flacdec_loop (GstElement *element)
 
   flacdec = GST_FLACDEC (element);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: entering loop");
+  GST_DEBUG ("flacdec: entering loop");
   if (flacdec->init) {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: initializing decoder");
+    GST_DEBUG ("flacdec: initializing decoder");
     FLAC__seekable_stream_decoder_init (flacdec->decoder);
     /* FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder); */
     flacdec->init = FALSE;
   }
 
   if (flacdec->seek_pending) {
-    GST_DEBUG (GST_CAT_EVENT, "perform seek to sample %" G_GINT64_FORMAT, 
+    GST_DEBUG ("perform seek to sample %" G_GINT64_FORMAT, 
 		              flacdec->seek_value);
 
     if (FLAC__seekable_stream_decoder_seek_absolute (flacdec->decoder, 
 			                             flacdec->seek_value)) 
     {
       flacdec->total_samples = flacdec->seek_value;
-      GST_DEBUG (GST_CAT_EVENT, "seek done");
+      GST_DEBUG ("seek done");
     }
     else {
-      GST_DEBUG (GST_CAT_EVENT, "seek failed");
+      GST_DEBUG ("seek failed");
     }
     flacdec->seek_pending = FALSE;
   }
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: processing single");
+  GST_DEBUG ("flacdec: processing single");
   res = FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: checking for EOS");
+  GST_DEBUG ("flacdec: checking for EOS");
   if (FLAC__seekable_stream_decoder_get_state (flacdec->decoder) == 
 		  FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM) 
   {
     GstEvent *event;
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: sending EOS event");
+    GST_DEBUG ("flacdec: sending EOS event");
     FLAC__seekable_stream_decoder_finish(flacdec->decoder);
     flacdec->init = TRUE;
 
@@ -558,7 +561,7 @@ gst_flacdec_loop (GstElement *element)
     }
     gst_element_set_eos (element);
   }
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: _loop end");
+  GST_DEBUG ("flacdec: _loop end");
 }
 
 GST_PAD_FORMATS_FUNCTION (gst_flacdec_get_src_formats,

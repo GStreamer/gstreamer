@@ -226,32 +226,32 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
             if( p[3] & 0x80 ) {
               // PAL
               dv1394src->frameSize = PAL_FRAMESIZE;
-              GST_DEBUG(0,"PAL data");
+              GST_DEBUG ("PAL data");
               if (gst_pad_try_set_caps (dv1394src->srcpad, 
                         GST_CAPS_NEW ( "dv1394src", "video/dv",
                                       "format", GST_PROPS_STRING("PAL"),
                                       NULL)
               ) <= 0) {
-                GST_ERROR(GST_ELEMENT(dv1394src), "Could not set source caps for PAL");
+		gst_element_error (GST_ELEMENT(dv1394src), "Could not set source caps for PAL");
                 return 0;
               }
             } else {
               // NTSC (untested)
               dv1394src->frameSize = NTSC_FRAMESIZE;
-              GST_DEBUG(0,"NTSC data [untested] - please report success/failure to <dan@f3c.com>");
+              GST_DEBUG ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
               if (gst_pad_try_set_caps (dv1394src->srcpad, 
                         GST_CAPS_NEW ( "dv1394src", "video/dv",
                                       "format", GST_PROPS_STRING ("NTSC"),
                                       NULL)
               ) <= 0) {
-                GST_ERROR(GST_ELEMENT(dv1394src), "Could not set source caps for NTSC");
+                gst_element_error (GST_ELEMENT(dv1394src), "Could not set source caps for NTSC");
                 return 0;
               }
             }
 
             dv1394src->pool = gst_buffer_pool_get_default( dv1394src->frameSize, N_BUFFERS_IN_POOL );
             if (dv1394src->pool == NULL) {
-              GST_ERROR(GST_ELEMENT(dv1394src), "gst_buffer_pool_get_default returned NULL");
+              gst_element_error (GST_ELEMENT(dv1394src), "gst_buffer_pool_get_default returned NULL");
             }
           }
   
@@ -259,7 +259,7 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
           if( !dv1394src->drop_incomplete || dv1394src->bytesInFrame == dv1394src->frameSize ) { 
             dv1394src->buf = dv1394src->frame;
           } else {
-            GST_INFO_ELEMENT(GST_CAT_PLUGIN_INFO, GST_ELEMENT(dv1394src), "incomplete frame dropped"); 
+            GST_INFO_OBJECT (GST_ELEMENT(dv1394src), "incomplete frame dropped"); 
           }
           dv1394src->frame = NULL;
 
@@ -310,7 +310,7 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
 static
 int gst_dv1394src_bus_reset(raw1394handle_t handle,
 		            unsigned int generation) {
-  GST_INFO_ELEMENT(0,GST_DV1394SRC(raw1394_get_userdata(handle)),"have bus reset");
+  GST_INFO_OBJECT (GST_DV1394SRC(raw1394_get_userdata(handle)),"have bus reset");
   return 0;
 }
 
@@ -337,31 +337,31 @@ gst_dv1394src_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if ((dv1394src->handle = raw1394_new_handle()) == NULL) {
-        GST_INFO_ELEMENT(0,dv1394src,"can't get raw1394 handle");
+        GST_INFO_OBJECT (dv1394src,"can't get raw1394 handle");
         return GST_STATE_FAILURE;
       }
       raw1394_set_userdata(dv1394src->handle,dv1394src);
       dv1394src->numcards = raw1394_get_port_info(dv1394src->handle,dv1394src->pinfo,16);
       if (dv1394src->numcards == 0) {
-        GST_INFO_ELEMENT(0,dv1394src,"no cards available for raw1394");
+        GST_INFO_OBJECT (dv1394src,"no cards available for raw1394");
         return GST_STATE_FAILURE;
       }
       if (dv1394src->pinfo[dv1394src->card].nodes <= 1) {
-        GST_INFO_ELEMENT(0,dv1394src,"there are no nodes on the 1394 bus");
+        GST_INFO_OBJECT (dv1394src,"there are no nodes on the 1394 bus");
         return GST_STATE_FAILURE;
       }
       if (raw1394_set_port(dv1394src->handle,dv1394src->port) < 0) {
-        GST_INFO_ELEMENT(0,dv1394src,"can't set 1394 port %d",dv1394src->port);
+        GST_INFO_OBJECT (dv1394src,"can't set 1394 port %d",dv1394src->port);
         return GST_STATE_FAILURE;
       }
       raw1394_set_iso_handler(dv1394src->handle,dv1394src->channel,gst_dv1394src_iso_receive);
       raw1394_set_bus_reset_handler(dv1394src->handle,gst_dv1394src_bus_reset);
       dv1394src->started = FALSE;
-      GST_DEBUG(0,"successfully opened up 1394 connection");
+      GST_DEBUG ("successfully opened up 1394 connection");
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (raw1394_start_iso_rcv(dv1394src->handle,dv1394src->channel) < 0) {
-        GST_INFO_ELEMENT(0,dv1394src,"can't start 1394 iso receive");
+        GST_INFO_OBJECT (dv1394src,"can't start 1394 iso receive");
         return GST_STATE_FAILURE;
       }
       break;

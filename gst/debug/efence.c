@@ -19,6 +19,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 
 #include <string.h>
@@ -200,7 +203,7 @@ gst_efence_chain (GstPad *pad, GstBuffer *buffer)
   GstBuffer *copy;
   void *ptr;
 
-  GST_DEBUG(0, "gst_efence_chain");
+  GST_DEBUG ("gst_efence_chain");
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buffer != NULL);
@@ -322,7 +325,7 @@ GstBuffer *gst_fenced_buffer_new(void)
   GST_BUFFER_BUFFERPOOL (newbuf)   = NULL;
   GST_BUFFER_POOL_PRIVATE (newbuf) = NULL;
 
-  GST_DEBUG(0, "new buffer=%p", newbuf);
+  GST_DEBUG ("new buffer=%p", newbuf);
 
   return newbuf;
 }
@@ -331,7 +334,7 @@ void gst_fenced_buffer_default_free (GstBuffer *buffer)
 {
   GstFencedBuffer *fenced_buffer;
 
-  GST_DEBUG(0, "free buffer=%p", buffer);
+  GST_DEBUG ("free buffer=%p", buffer);
 
   g_return_if_fail (buffer != NULL);
 
@@ -340,11 +343,11 @@ void gst_fenced_buffer_default_free (GstBuffer *buffer)
   /* free our data */
   if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
       GST_BUFFER_DATA (buffer)) {
-    GST_DEBUG(0, "free region %p %d", fenced_buffer->region,
+    GST_DEBUG ("free region %p %d", fenced_buffer->region,
 	fenced_buffer->length);
     munmap(fenced_buffer->region, fenced_buffer->length);
   }else{
-    GST_DEBUG(0, "not freeing region %p %d %p", fenced_buffer->region,
+    GST_DEBUG ("not freeing region %p %d %p", fenced_buffer->region,
 	GST_BUFFER_FLAGS(buffer), GST_BUFFER_DATA(buffer));
   }
 
@@ -392,7 +395,7 @@ void *gst_fenced_buffer_alloc(GstBuffer *buffer, unsigned int length,
   GstFencedBuffer *fenced_buffer = (GstFencedBuffer *) buffer;
   int page_size;
 
-  GST_DEBUG(0, "buffer=%p length=%d fence_top=%d", buffer, length, fence_top);
+  GST_DEBUG ("buffer=%p length=%d fence_top=%d", buffer, length, fence_top);
 
   if(length==0)return NULL;
 
@@ -418,7 +421,7 @@ void *gst_fenced_buffer_alloc(GstBuffer *buffer, unsigned int length,
   fenced_buffer->region = region;
   fenced_buffer->length = alloc_size;
 
-  GST_DEBUG(0, "new region %p %d", fenced_buffer->region,
+  GST_DEBUG ("new region %p %d", fenced_buffer->region,
       fenced_buffer->length);
   
   if(fence_top){

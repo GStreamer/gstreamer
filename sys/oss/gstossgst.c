@@ -21,6 +21,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -173,7 +176,7 @@ gst_ossgst_format_to_caps (gint format, gint stereo, gint rate)
   gint width = 16;
   gboolean supported = TRUE;
 
-  GST_DEBUG (0, "have format 0x%08x %d %d", format, stereo, rate); 
+  GST_DEBUG ("have format 0x%08x %d %d", format, stereo, rate); 
 
   switch (format) {
     case AFMT_MU_LAW:
@@ -342,7 +345,7 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
   pipe(ossgst->fdin);
   pipe(ossgst->fdout);
 
-  GST_DEBUG (0, "about to fork");
+  GST_DEBUG ("about to fork");
 
   if((ossgst->childpid = fork()) == -1)
   {
@@ -350,13 +353,13 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
     gst_element_error(GST_ELEMENT(ossgst),"forking");
     return FALSE;
   }
-  GST_DEBUG (0,"forked %d", ossgst->childpid);
+  GST_DEBUG ("forked %d", ossgst->childpid);
 
   if(ossgst->childpid == 0)
   {
     gchar **args;
 
-    GST_DEBUG (0, "fork command %d", ossgst->childpid);
+    GST_DEBUG ("fork command %d", ossgst->childpid);
 
     ld_preload = getenv ("LD_PRELOAD");
 

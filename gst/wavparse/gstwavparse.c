@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 #include <gstwavparse.h>
@@ -233,7 +236,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
 
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
-  GST_DEBUG (0, "gst_wavparse_chain: got buffer in '%s'",
+  GST_DEBUG ("gst_wavparse_chain: got buffer in '%s'",
           gst_object_get_name (GST_OBJECT (wavparse)));
 
   size = GST_BUFFER_SIZE (buf);
@@ -298,7 +301,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   }
 
   if (wavparse->state == GST_WAVPARSE_OTHER) {
-    GST_DEBUG (0, "we're in unknown territory here, not passing on");
+    GST_DEBUG ("we're in unknown territory here, not passing on");
     return;
   }
 
@@ -311,7 +314,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   if (wavparse->state == GST_WAVPARSE_UNKNOWN) {
     gint retval;
 
-    GST_DEBUG (0, "GstWavParse: checking for RIFF format");
+    GST_DEBUG ("GstWavParse: checking for RIFF format");
 
     /* create a new RIFF parser */
     wavparse->riff = gst_riff_new ();
@@ -320,13 +323,13 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     retval = gst_riff_next_buffer (wavparse->riff, buf, 0);
     buffer_riffed = TRUE;
     if (retval < 0) {
-      GST_DEBUG (0, "sorry, isn't RIFF");
+      GST_DEBUG ("sorry, isn't RIFF");
       return;
     }
 
     /* this has to be a file of form WAVE for us to deal with it */
     if (wavparse->riff->form != gst_riff_fourcc_to_id ("WAVE")) {
-      GST_DEBUG (0, "sorry, isn't WAVE");
+      GST_DEBUG ("sorry, isn't WAVE");
       return;
     }
 
@@ -339,7 +342,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     GstRiffChunk *fmt;
     GstWavParseFormat *format;
 
-    GST_DEBUG (0, "GstWavParse: looking for fmt chunk");
+    GST_DEBUG ("GstWavParse: looking for fmt chunk");
 
     /* there's a good possibility we may not have parsed this buffer */
     if (buffer_riffed == FALSE) {
@@ -417,7 +420,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
         return;
       }
 
-      GST_DEBUG (0, "frequency %d, channels %d",
+      GST_DEBUG ("frequency %d, channels %d",
 		 wavparse->rate, wavparse->channels);
 
       /* we're now looking for the data chunk */
@@ -434,7 +437,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     GstBuffer *newbuf;
     GstRiffChunk *datachunk;
 
-    GST_DEBUG (0, "GstWavParse: looking for data chunk");
+    GST_DEBUG ("GstWavParse: looking for data chunk");
 
     /* again, we might need to parse the buffer */
     if (buffer_riffed == FALSE) {
@@ -447,7 +450,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     if (datachunk != NULL) {
       gulong subsize;
 
-      GST_DEBUG (0, "data begins at %ld", datachunk->offset);
+      GST_DEBUG ("data begins at %ld", datachunk->offset);
 
       wavparse->datastart = datachunk->offset;
 
@@ -456,7 +459,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
       /* now we construct a new buffer for the remainder */
       subsize = size - datachunk->offset;
-      GST_DEBUG (0, "sending last %ld bytes along as audio", subsize);
+      GST_DEBUG ("sending last %ld bytes along as audio", subsize);
 
       newbuf = gst_buffer_create_sub (buf, datachunk->offset, subsize);
       gst_buffer_unref (buf);
@@ -510,7 +513,7 @@ gst_wavparse_pad_convert (GstPad *pad,
   
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
-    GST_DEBUG (0, "bytes_per_sample is 0, probably an mp3 - channels %d,  width %d\n",
+    GST_DEBUG ("bytes_per_sample is 0, probably an mp3 - channels %d,  width %d\n",
 	          wavparse->channels, wavparse->width);
     return FALSE;
   }
@@ -519,7 +522,7 @@ gst_wavparse_pad_convert (GstPad *pad,
     g_warning ("byterate is 0, internal error\n");
     return FALSE;
   }
-  GST_DEBUG (0, "bytes per sample: %d\n", bytes_per_sample);
+  GST_DEBUG ("bytes per sample: %d\n", bytes_per_sample);
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -589,7 +592,7 @@ gst_wavparse_pad_query (GstPad *pad, GstQueryType type,
     g_warning ("Could not query sink pad's peer\n");
     return FALSE;
   }
-  GST_DEBUG (0, "pad_query done, value %" G_GINT64_FORMAT "\n", *value);
+  GST_DEBUG ("pad_query done, value %" G_GINT64_FORMAT "\n", *value);
   return TRUE;
 }
 
@@ -610,7 +613,7 @@ gst_wavparse_srcpad_event (GstPad *pad, GstEvent *event)
   GstWavParse *wavparse = GST_WAVPARSE (GST_PAD_PARENT (pad));
   gboolean res = FALSE;
 
-  GST_DEBUG(0, "event %d", GST_EVENT_TYPE (event));
+  GST_DEBUG ("event %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:

@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 /*#define DEBUG_ENABLED*/
@@ -88,38 +91,38 @@ gst_jpegdec_class_init (GstJpegDec *klass)
 static void
 gst_jpegdec_init_source (j_decompress_ptr cinfo)
 {
-  GST_DEBUG (0,"gst_jpegdec_chain: init_source");
+  GST_DEBUG ("gst_jpegdec_chain: init_source");
 }
 static gboolean
 gst_jpegdec_fill_input_buffer (j_decompress_ptr cinfo)
 {
-  GST_DEBUG (0,"gst_jpegdec_chain: fill_input_buffer");
+  GST_DEBUG ("gst_jpegdec_chain: fill_input_buffer");
   return TRUE;
 }
 
 static void
 gst_jpegdec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
 {
-  GST_DEBUG (0,"gst_jpegdec_chain: skip_input_data");
+  GST_DEBUG ("gst_jpegdec_chain: skip_input_data");
 }
 
 static gboolean
 gst_jpegdec_resync_to_restart (j_decompress_ptr cinfo, gint desired)
 {
-  GST_DEBUG (0,"gst_jpegdec_chain: resync_to_start");
+  GST_DEBUG ("gst_jpegdec_chain: resync_to_start");
   return TRUE;
 }
 
 static void
 gst_jpegdec_term_source (j_decompress_ptr cinfo)
 {
-  GST_DEBUG (0,"gst_jpegdec_chain: term_source");
+  GST_DEBUG ("gst_jpegdec_chain: term_source");
 }
 
 static void
 gst_jpegdec_init (GstJpegDec *jpegdec)
 {
-  GST_DEBUG (0,"gst_jpegdec_init: initializing");
+  GST_DEBUG ("gst_jpegdec_init: initializing");
   /* create the sink and src pads */
   jpegdec->sinkpad = gst_pad_new_from_template (jpegdec_sink_template, "sink");
   gst_element_add_pad(GST_ELEMENT(jpegdec),jpegdec->sinkpad);
@@ -265,7 +268,7 @@ static void guarantee_huff_tables(j_decompress_ptr dinfo)
        (dinfo->dc_huff_tbl_ptrs[1] == NULL) &&
        (dinfo->ac_huff_tbl_ptrs[0] == NULL) &&
        (dinfo->ac_huff_tbl_ptrs[1] == NULL) ) {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,
+    GST_DEBUG (
 	       "Generating standard Huffman tables for this frame.");
     std_huff_tables(dinfo);
   }
@@ -298,14 +301,14 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
 
   data = (guchar *)GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
-  GST_DEBUG (0,"gst_jpegdec_chain: got buffer of %ld bytes in '%s'",size,
+  GST_DEBUG ("gst_jpegdec_chain: got buffer of %ld bytes in '%s'",size,
           GST_OBJECT_NAME (jpegdec));
 
   jpegdec->jsrc.next_input_byte = data;
   jpegdec->jsrc.bytes_in_buffer = size;
 		                  
 
-  GST_DEBUG (0,"gst_jpegdec_chain: reading header %08lx", *(gulong *)data);
+  GST_DEBUG ("gst_jpegdec_chain: reading header %08lx", *(gulong *)data);
   jpeg_read_header(&jpegdec->cinfo, TRUE);
 
   r_h = jpegdec->cinfo.cur_comp_info[0]->h_samp_factor;
@@ -320,12 +323,12 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
   jpegdec->cinfo.out_color_space = JCS_YCbCr;
   jpegdec->cinfo.dct_method = JDCT_IFAST;
   jpegdec->cinfo.raw_data_out = TRUE;
-  GST_DEBUG (0,"gst_jpegdec_chain: starting decompress");
+  GST_DEBUG ("gst_jpegdec_chain: starting decompress");
   guarantee_huff_tables(&jpegdec->cinfo);
   jpeg_start_decompress(&jpegdec->cinfo);
   width = jpegdec->cinfo.output_width;
   height = jpegdec->cinfo.output_height;
-  GST_DEBUG (0,"gst_jpegdec_chain: width %d, height %d", width, height);
+  GST_DEBUG ("gst_jpegdec_chain: width %d, height %d", width, height);
 
   outbuf = gst_buffer_new();
   outsize = GST_BUFFER_SIZE(outbuf) = width*height +
@@ -356,7 +359,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
 
   width2 = width >> 1;
 
-  GST_DEBUG (0,"gst_jpegdec_chain: decompressing %u", jpegdec->cinfo.rec_outbuf_height);
+  GST_DEBUG ("gst_jpegdec_chain: decompressing %u", jpegdec->cinfo.rec_outbuf_height);
   for (i = 0; i < height; i += r_v*DCTSIZE) {
     for (j=0, k=0; j< (r_v*DCTSIZE); j += r_v, k++) {
       jpegdec->line[0][j]   = base[0]; base[0] += width;
@@ -373,10 +376,10 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
     jpeg_read_raw_data(&jpegdec->cinfo, jpegdec->line, r_v*DCTSIZE);
   }
 
-  GST_DEBUG (0,"gst_jpegdec_chain: decompressing finished");
+  GST_DEBUG ("gst_jpegdec_chain: decompressing finished");
   jpeg_finish_decompress(&jpegdec->cinfo);
 
-  GST_DEBUG (0,"gst_jpegdec_chain: sending buffer");
+  GST_DEBUG ("gst_jpegdec_chain: sending buffer");
   gst_pad_push(jpegdec->srcpad, outbuf);
 
   gst_buffer_unref(buf);

@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include "gstcutter.h"
@@ -222,7 +225,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   if (!filter->have_caps) gst_cutter_get_caps (pad, filter);
 
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
-  GST_DEBUG (GST_CAT_PLUGIN_INFO,
+  GST_DEBUG (
              "length of prerec buffer: %.3f sec",
              filter->pre_run_length);
 
@@ -248,7 +251,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   /* if RMS below threshold, add buffer length to silent run length count
    * if not, reset
    */
-  GST_DEBUG (GST_CAT_PLUGIN_INFO,
+  GST_DEBUG (
              "buffer stats: ms %f, RMS %f, audio length %f",
 	     ms, RMS, gst_audio_length (filter->srcpad, buf));
   if (RMS < filter->threshold_level)
@@ -279,7 +282,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
 /*      g_print ("DEBUG: cutter: start from here, turning on out\n"); */
       /* first of all, flush current buffer */
       g_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_START], 0);
-      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
 		 "flushing buffer of length %.3f",
 		 filter->pre_run_length);
       while (filter->pre_buffer)
@@ -289,7 +292,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
         gst_pad_push (filter->srcpad, prebuf);
 	++count;
       }
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "flushed %d buffers", count);
+      GST_DEBUG ("flushed %d buffers", count);
       filter->pre_run_length = 0.0;
     }
   }
@@ -345,7 +348,7 @@ gst_cutter_set_property (GObject *object, guint prop_id,
     case ARG_THRESHOLD:
 	/* set the level */
       filter->threshold_level = g_value_get_double (value);
-      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
 		 "DEBUG: set threshold level to %f",
 		 filter->threshold_level);
       break;
@@ -355,7 +358,7 @@ gst_cutter_set_property (GObject *object, guint prop_id,
        * values in dB < 0 result in values between 0 and 1
        */
       filter->threshold_level = pow (10, g_value_get_double (value) / 20);
-      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
                  "DEBUG: set threshold level to %f",
 		 filter->threshold_level);
       break;

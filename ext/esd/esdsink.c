@@ -20,8 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "esdsink.h"
 #include <esd.h>
+#include <unistd.h>
 
 /* elementfactory information */
 static GstElementDetails esdsink_details = {
@@ -197,7 +201,7 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_BUFFER_DATA (buf) != NULL) {
     if (!esdsink->mute && esdsink->fd >= 0) {
-      GST_DEBUG (0, "esdsink: fd=%d data=%p size=%d",
+      GST_DEBUG ("esdsink: fd=%d data=%p size=%d",
 		 esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       write (esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
@@ -288,21 +292,21 @@ gst_esdsink_open_audio (GstEsdsink *sink)
   if (sink->depth == 16) esdformat |= ESD_BITS16;
   else if (sink->depth == 8) esdformat |= ESD_BITS8;
   else {
-    GST_DEBUG (0, "esdsink: invalid bit depth (%d)", sink->depth);
+    GST_DEBUG ("esdsink: invalid bit depth (%d)", sink->depth);
     return FALSE;
   }
 
   if (sink->channels == 2) esdformat |= ESD_STEREO;
   else if (sink->channels == 1) esdformat |= ESD_MONO;
   else {
-    GST_DEBUG (0, "esdsink: invalid number of channels (%d)", sink->channels);
+    GST_DEBUG ("esdsink: invalid number of channels (%d)", sink->channels);
     return FALSE;
   }
 
-  GST_DEBUG (0, "esdsink: attempting to open connection to esound server");
+  GST_DEBUG ("esdsink: attempting to open connection to esound server");
   sink->fd = esd_play_stream_fallback(esdformat, sink->frequency, sink->host, connname);
   if ( sink->fd < 0 ) {
-    GST_DEBUG (0, "esdsink: can't open connection to esound server");
+    GST_DEBUG ("esdsink: can't open connection to esound server");
     return FALSE;
   }
 
@@ -318,7 +322,7 @@ gst_esdsink_close_audio (GstEsdsink *sink)
   close(sink->fd);
   sink->fd = -1;
 
-  GST_DEBUG (0, "esdsink: closed sound device");
+  GST_DEBUG ("esdsink: closed sound device");
 }
 
 static GstElementStateReturn

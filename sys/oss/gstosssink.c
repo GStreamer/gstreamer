@@ -20,11 +20,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 #include <errno.h>
+#include <unistd.h>
 
-#include <gstosssink.h>
+#include "gstosssink.h"
 
 /* elementfactory information */
 static GstElementDetails gst_osssink_details = {  
@@ -634,7 +638,7 @@ gst_osssink_change_state (GstElement *element)
         gst_osscommon_close_audio (&osssink->common);
         GST_FLAG_UNSET (osssink, GST_OSSSINK_OPEN);
 
-        GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: closed sound device");
+        GST_INFO ( "osssink: closed sound device");
       }
       break;
   }
