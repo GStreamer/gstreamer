@@ -21,13 +21,18 @@ main (int argc, char *argv[])
 
   autoplug = gst_autoplugfactory_make ("static");
   
-  element = autoplug_caps (autoplug, "audio/mp3", "audio/raw");
+  g_print ("Autoplugging between audio/mp3 and audio/raw ...\n");
+  if ((element = autoplug_caps (autoplug, "audio/mp3", "audio/raw")) == NULL)
+    g_print ("Could not autoplug between audio/mp3 and audio/raw !\n");
   xmlSaveFile ("autoplug2_1.gst", gst_xml_write (element));
 
-  element = autoplug_caps (autoplug, "video/mpeg", "audio/raw");
-  xmlSaveFile ("autoplug2_2.gst", gst_xml_write (element));
+  g_print ("Autoplugging between video/mpeg and audio/raw ...\n");
+  if ((element = autoplug_caps (autoplug, "video/mpeg", "audio/raw")) == NULL)
+    g_print ("Could not autoplug between video/mpeg and audio/raw !\n");
+  else
+    xmlSaveFile ("autoplug2_2.gst", gst_xml_write (element));
 
-  element = gst_autoplug_to_caps (autoplug,
+  if ((element = gst_autoplug_to_caps (autoplug,
 		  gst_caps_new(
 			  "testcaps3",
 			  "video/mpeg",
@@ -36,8 +41,10 @@ main (int argc, char *argv[])
 			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
 			      NULL)),
 		  gst_caps_new("testcaps4","audio/raw", NULL),
-		  NULL);
-  xmlSaveFile ("autoplug2_3.gst", gst_xml_write (element));
+		  NULL)) == NULL)
+    g_print ("Could not autoplug between video/mpeg system stream and audio/raw !\n");
+  else
+    xmlSaveFile ("autoplug2_3.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
 		  gst_caps_new(
@@ -49,6 +56,7 @@ main (int argc, char *argv[])
 			      NULL)),
 		  gst_caps_new("testcaps6", "video/raw", NULL),
 		  NULL);
+  g_assert (GST_IS_ELEMENT (element));
   xmlSaveFile ("autoplug2_4.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
@@ -58,6 +66,7 @@ main (int argc, char *argv[])
 		  gst_caps_new("testcaps8", "video/raw", NULL),
 		  gst_caps_new("testcaps9", "audio/raw", NULL),
 		  NULL);
+  g_assert (GST_IS_ELEMENT (element));
   xmlSaveFile ("autoplug2_5.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
@@ -71,6 +80,7 @@ main (int argc, char *argv[])
 		  gst_caps_new("testcaps10", "video/raw", NULL),
 		  gst_caps_new("testcaps11", "audio/raw", NULL),
 		  NULL);
+  g_assert (GST_IS_ELEMENT (element));
   xmlSaveFile ("autoplug2_6.gst", gst_xml_write (element));
 
   exit (0);

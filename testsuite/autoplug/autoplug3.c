@@ -7,7 +7,7 @@ main (int argc, char *argv[])
   GstElement *element;
   GstElement *sink;
   GstElement *pipeline;
-  GstElement *disksrc;
+  GstElement *filesrc;
 
   gst_init(&argc,&argv);
 
@@ -30,15 +30,15 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new ("main_pipeline");
   g_assert (pipeline != NULL);
 
-  disksrc = gst_elementfactory_make ("disksrc", "disk_reader");
-  g_assert (disksrc != NULL);
+  filesrc = gst_elementfactory_make ("filesrc", "disk_reader");
+  g_assert (filesrc != NULL);
 
-  gst_bin_add (GST_BIN (pipeline), disksrc);
+  gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), element);
 
-  gst_element_connect (disksrc, "src", element, "sink");
+  gst_element_connect (filesrc, "src", element, "sink");
 
-  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

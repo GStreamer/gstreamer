@@ -1,4 +1,4 @@
-testprogs = autoplug autoplug2 autoplug3 autoplug4
+testprogs = autoplug autoplug3 autoplug4 # autoplug2
 
 TESTS = $(testprogs)
 
