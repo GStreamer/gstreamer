@@ -389,7 +389,7 @@ gst_libfame_set_property (GObject *object, guint prop_id,
       break;
     case ARG_PATTERN:
       if (src->pattern) g_free (src->pattern);
-      src->pattern = (gchar *) g_value_get_string (value);
+      src->pattern = g_strdup (g_value_get_string (value));
       g_warning ("setting pattern to %s\n", src->pattern);
       break;
     default:
