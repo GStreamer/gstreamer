@@ -57,6 +57,9 @@ typedef enum {
 #define GST_CAPS_IS_FLOATING(caps)	(GST_CAPS_FLAG_IS_SET ((caps), GST_CAPS_FLOATING))
 #define GST_CAPS_IS_CHAINED(caps)  	(GST_CAPS_NEXT (caps) != NULL)
 
+#define GST_CAPS_NONE			NULL
+#define GST_CAPS_ANY			(gst_caps_get_any())
+
 struct _GstCaps {
   /* --- public --- */
   gchar 	*name;			/* the name of this caps */
@@ -124,6 +127,7 @@ void		_gst_caps_initialize			(void);
 GType		gst_caps_get_type			(void);
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
 GstCaps*	gst_caps_new_id				(const gchar *name, const guint16 id, GstProps *props);
+GstCaps*	gst_caps_get_any			(void);
 /* replace pointer to caps, doing proper refcounting */
 void		gst_caps_replace			(GstCaps **oldcaps, GstCaps *newcaps);
 void		gst_caps_replace_sink			(GstCaps **oldcaps, GstCaps *newcaps);

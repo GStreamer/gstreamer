@@ -270,6 +270,31 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
 }
 
 /**
+ * gst_caps_get_any:
+ *
+ * Return a copy of the caps that represents any capability.
+ *
+ * Returns: the ANY capability
+ */
+GstCaps*
+gst_caps_get_any (void)
+{
+#if 0
+  static GstCaps *caps;
+
+  if (!caps){
+    caps = GST_CAPS_NEW ("gst_caps_any", "*", NULL);
+    gst_caps_ref(caps);
+    gst_caps_sink(caps);
+  }
+
+  return gst_caps_ref(caps);
+#else
+  return NULL;
+#endif
+}
+
+/**
  * gst_caps_replace:
  * @oldcaps: the caps to take replace
  * @newcaps: the caps to take replace 
