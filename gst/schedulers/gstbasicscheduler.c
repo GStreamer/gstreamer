@@ -116,6 +116,13 @@ gst_basic_scheduler_init (GstScheduler *scheduler)
 static void
 gst_basic_scheduler_dispose (GObject *object)
 {
+  GstScheduler *sched = GST_SCHEDULER (object);
+  cothread_context *ctx;
+
+  ctx = GST_BIN (GST_SCHED_PARENT (sched))->threadcontext;
+
+  cothread_free (ctx);
+  
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
