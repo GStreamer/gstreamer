@@ -170,7 +170,7 @@ make_flac_pipeline (const gchar *location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("flacdec", "decoder");
   audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
-  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -554,7 +554,6 @@ static seek_format seek_formats[] =
 {
   { "tim",  GST_FORMAT_TIME    },
   { "byt",  GST_FORMAT_BYTES   },
-  { "unt",  GST_FORMAT_UNITS   },
   { "buf",  GST_FORMAT_BUFFERS },
   { "def",  GST_FORMAT_DEFAULT },
   { NULL, 0 }, 
