@@ -255,26 +255,25 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
 
+GDK_PIXBUF_LOADER_DIR="\$(libdir)/gtk-2.0/\$(GTK_VERSION)"
 AC_ARG_WITH(gdk-pixbuf-loader-dir, 
    AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
    	[directory to install the gdk_pixbuf loader]),
    [if test "x${withval}" != x ; then
-   	GDK_PIXBUF_LOADER_DIR=${withval}
-    else
-   	GDK_PIXBUF_LOADER_DIR="\$(libdir)/gtk-2.0/\$(GTK_VERSION)"
+   	GDK_PIXBUF_LOADER_DIR="${withval}"
     fi
 ])
+AC_SUBST(GDK_PIXBUF_LOADER_DIR)
 
 GDK_PIXBUF_CONFFILE="\$(sysconfdir)/gtk-2.0/gdk-pixbuf.loaders"
 AC_ARG_WITH(gdk-pixbuf-conffile, 
    AC_HELP_STRING([--with-gdk-pixbuf-conffile],
    	[path to the gdk_pixbuf config file]),
    [if test "x${withval}" != x ; then
-   	GDK_PIXBUF_CONFFILE=${withval}
-    else
-   	GDK_PIXBUF_CONFFILE="\$(sysconfdir)/gtk-2.0/gdk-pixbuf.loaders"
+   	GDK_PIXBUF_CONFFILE="${withval}"
     fi
 ])
+AC_SUBST(GDK_PIXBUF_CONFFILE)
 
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
