@@ -51,7 +51,7 @@ au_type_find (GstBuffer *buf, gpointer private)
     return NULL;
 
   if (*head == 0x2e736e64 || *head == 0x646e732e)
-    new = gst_caps_new ("au_type_find", "audio/au", NULL);
+    new = gst_caps_new ("au_type_find", "audio/x-au", NULL);
 
   return new;
 }
