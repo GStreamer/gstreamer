@@ -1,5 +1,29 @@
 2004-01-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/advanced_interfaces.xml:
+	* docs/pwg/pwg.xml:
+	  Add as a placeholder for future filling-in.
+	* docs/pwg/basics_autoplugging.xml:
+	* docs/pwg/basics_buffers.xml:
+	* docs/pwg/basics_elements.xml:
+	* docs/pwg/basics_events.xml:
+	* docs/pwg/basics_plugins.xml:
+	* docs/pwg/basics_types.xml:
+	  Remove, because unused (this is all in intro_basics.xml).
+	* docs/pwg/building_signals.xml:
+	  Short intro to signals + reference to GObject docs - we really
+	  shouldn't go into these sort of things to deply because we don't
+	  use them that extensively anyway.
+	* docs/pwg/building_state.xml:
+	  Explanation of states. Benjamin, please check.
+	* docs/pwg/building_testapp.xml:
+	  Put everything in one page - putting only a few lines of content
+	  per page doesn't really make sense.
+
+	  Time to get into the advanced topics. ;).
+
+2004-01-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced_types.xml:
 	  Finish documenting the current state of mimetypes.
 	* docs/pwg/building_boiler.xml:

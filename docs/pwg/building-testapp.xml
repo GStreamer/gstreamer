@@ -14,8 +14,6 @@
     Manual</ulink>.
   </para>
 
-  <sect1 id="cha-testapp-init" xreflabel="Initialization">
-    <title>Initialization</title>
     <para>
       At the start, you need to initialize the &GStreamer; core library by
       calling <function>gst_init ()</function>. You can alternatively call
@@ -23,10 +21,7 @@
       a pointer to popt tables. You can then use libpopt to handle the
       given argument table, and this will finish the &GStreamer; intialization.
     </para>
-  </sect1>
 
-  <sect1 id="cha-testapp-inst" xreflabel="Instantiating the plugins">
-    <title>Instantiating the plugins</title>
     <para>
       You can create elements using <function>gst_element_factory_make ()</function>,
       where the first argument is the element type that you want to create,
@@ -43,20 +38,14 @@
       (indeed, an eletric fence memory debugger wrapper element) to check
       for memory errors.
     </para>
-  </sect1>
 
-  <sect1 id="cha-testapp-link" xreflabel="Linking the plugins">
-    <title>Linking the plugins</title>
     <para>
       During linking, your test application can use fixation or filtered caps
       as a way to drive a specific type of data to or from your element. This
       is a very simple and effective way of checking multiple types of input
       and output in your element.
     </para>
-  </sect1>
 
-  <sect1 id="cha-testapp-running" xreflabel="Running the pipeline">
-    <title>Running the pipeline</title>
     <para>
       Running the pipeline happens through the <function>gst_bin_iterate ()</function>
       function. Note that during running, you should connect to at least the
@@ -65,10 +54,7 @@
       you should add events into the pipeline and make sure your plugin handles
       these correctly (with respect to clocking, internal caching, etc.).
     </para>
-  </sect1>
 
-  <sect1 id="cha-testapp-cleanup" xreflabel="Cleaning up the memory">
-    <title>Cleaning up the memory</title>
     <para>
       Never forget to clean up memory in your plugin or your test application.
       When going to the NULL state, your element should clean up allocated
@@ -76,10 +62,7 @@
       possible support libraries. Your application should <function>unref ()</function>
       the pipeline and make sure it doesn't crash.
     </para>
-  </sect1>
 
-  <sect1 id="cha-testapp-all" xreflabel="Summary">
-    <title>Summary</title>
     <programlisting>
 #include &lt;gst/gst.h&gt;
 
@@ -117,5 +100,4 @@ main (gint   arcg,
   return 0;
 }
     </programlisting>
-  </sect1>
 </chapter>

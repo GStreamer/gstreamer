@@ -3,6 +3,55 @@
     What are states?
   </title>
   <para>
+    A state describes whether the element instance is initialized, whether it
+    is ready to transfer data and whether it is currently handling data. There
+    are four states defined in &GStreamer;: <classname>GST_STATE_NULL</classname>,
+    <classname>GST_STATE_READY</classname>, <classname>GST_STATE_PAUSED</classname>
+    and <classname>GST_STATE_PLAYING</classname>.
+  </para>
+  <para>
+    <classname>GST_STATE_NULL</classname> (from now on referred to as
+    <quote>NULL</quote>) is the default state of an element. In this state, it
+    has not allocated any runtime resources, it has not loaded any runtime
+    libraries and it can obviously not handle data.
+  </para>
+  <para>
+    <classname>GST_STATE_READY</classname> (from now on referred to as
+    <quote>READY</quote>) is the next state that an element can be in. In the
+    READY state, an element has all default resources (runtime-libraries,
+    runtime-memory) allocated. However, it has not yet allocated or defined
+    anything that is stream-specific. When going from NULL to READY state
+    (<classname>GST_STATE_NULL_TO_READY</classname>), an element should
+    allocate any non-stream-specific resources and should load runtime-loadable
+    libraries (if any). When going the other way around (from READY to NULL,
+    <classname>GST_STATE_READY_TO_NULL</classname>), an element should unload
+    these libraries and free all allocated resources. Examples of such
+    resources are hardware devices. Note that files are generally streams,
+    and these should thus be considered as stream-specific resources; therefore,
+    they should <emphasis>not</emphasis> be allocated in this state.
+  </para>
+  <para>
+    <classname>GST_STATE_PAUSED</classname> (from now on referred to as
+    <quote>PAUSED</quote>) is a state in which an element is by all means able
+    to handle data; the only 'but' here is that it doesn't actually handle
+    any data. When going from the READY state into the PAUSED state
+    (<classname>GST_STATE_READY_TO_PAUSED</classname>), the element will
+    usually not do anything at all: all stream-specific info is generally
+    handled in the <function>_link ()</function>, which is called during caps
+    negotiation. Exceptions to this rule are, for example, files: these are
+    considered stream-specific data (since one file is one stream), and should
+    thus be opened in this state change. When going from the PAUSED back to
+    READY (<classname>GST_STATE_PAUSED_TO_READY</classname>), all
+    stream-specific data should be discarded.
+  </para>
+  <para>
+    <classname>GST_STATE_PLAYING</classname> (from now on referred to as
+    <quote>PLAYING</quote>) is the highest state that an element can be in. It
+    is similar to PAUSED, except that now, data is actually passing over the
+    pipeline. The transition from PAUSED to PLAYING
+    (<classname>GST_STATE_PAUSED_TO_PLAYING</classname>) should be as small
+    as possible and would ideally cause no delay at all. The same goes for the
+    reverse transition (<classname>GST_STATE_PLAYING_TO_PAUSED</classname>).
   </para>
 </chapter>
 <chapter id="cha-statemanage-filters">
@@ -10,5 +59,44 @@
     Mangaging filter state
   </title>
   <para>
+    An element can be notified of state changes through a virtual function
+    pointer. Inside this function, the element can initialize any sort of
+    specific data needed by the element, and it can optionally fail to
+    go from one state to another.
   </para>
+  <programlisting>
+static GstElementStateReturn
+		gst_my_filter_change_state	(GstElement *element);
+
+static void
+gst_my_filter_class_init (GstMyFilterClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  element_class->change_state = gst_my_filter_change_state;
+}
+
+static GstElementStateReturn
+gst_my_filter_change_state (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (!gst_my_filter_allocate_memory (filter))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_READY_TO_NULL:
+      gst_my_filter_free_memory (filter);
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+  </programlisting>
 </chapter>

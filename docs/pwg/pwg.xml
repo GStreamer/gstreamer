@@ -24,6 +24,7 @@
 <!ENTITY ADVANCED_CLOCK       SYSTEM "advanced_clock.xml">
 <!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced_dparams.xml">
 <!ENTITY ADVANCED_MIDI        SYSTEM "advanced_midi.xml">
+<!ENTITY ADVANCED_INTERFACES  SYSTEM "advanced_interfaces.xml">
 
 <!ENTITY OTHER_SOURCE         SYSTEM "other_source.xml">
 <!ENTITY OTHER_SINK           SYSTEM "other_sink.xml">
@@ -124,6 +125,7 @@
     &ADVANCED_CLOCK;
     &ADVANCED_DPARAMS;
     &ADVANCED_MIDI;
+    &ADVANCED_INTERFACES;
   </part>
 
   <!-- ############ part ############# -->
