@@ -2,7 +2,7 @@ AC_INIT
 AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gstreamer, GST_VERSION, 0, 3, 2, 1)
+AS_VERSION(gstreamer, GST_VERSION, 0, 3, 2, 2)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST, 0, 0, 0, yes)
 
