@@ -671,7 +671,12 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
       },
 };
 
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define GEN_MASK(x) ((1<<(x))-1)
+#define ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) & ~GEN_MASK(x))
+#define ROUND_UP_2(x) ROUND_UP_X (x, 1)
+#define ROUND_UP_4(x) ROUND_UP_X (x, 2)
+#define ROUND_UP_8(x) ROUND_UP_X (x, 3)
+#define DIV_ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) >> (x))
 
 int
 gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
@@ -682,8 +687,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
   PixFmtInfo *pinfo;
 
   pinfo = &pix_fmt_info[pix_fmt];
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
+
   switch (pix_fmt) {
     case PIX_FMT_YUV420P:
     case PIX_FMT_YUV422P:
@@ -694,10 +698,11 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_YUVJ422P:
     case PIX_FMT_YUVJ444P:
       stride = ROUND_UP_4 (width);
-      size = stride * height;
-      w2 = (width + (1 << pinfo->x_chroma_shift) - 1) >> pinfo->x_chroma_shift;
+      h2 = ROUND_UP_X (height, pinfo->y_chroma_shift);
+      size = stride * h2;
+      w2 = DIV_ROUND_UP_X (width, pinfo->x_chroma_shift);
       stride2 = ROUND_UP_4 (w2);
-      h2 = (height + (1 << pinfo->y_chroma_shift) - 1) >> pinfo->y_chroma_shift;
+      h2 = DIV_ROUND_UP_X (height, pinfo->y_chroma_shift);
       size2 = stride2 * h2;
       picture->data[0] = ptr;
       picture->data[1] = picture->data[0] + size;
@@ -736,6 +741,8 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       return size;
     case PIX_FMT_UYVY411:
       /* FIXME, probably not the right stride */
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;

@@ -760,6 +760,10 @@ yuv422p_to_yuv422 (AVPicture * dst, const AVPicture * src,
       cb++;
       cr++;
     }
+    if (w) {
+      p[0] = lum[0];
+      p[1] = cb[0];
+    }
     p1 += dst->linesize[0];
     lum1 += src->linesize[0];
     cb1 += src->linesize[1];
@@ -866,11 +870,36 @@ yuv420p_to_yuv422 (AVPicture * dst, const AVPicture * src,
       *line2++ = *lum2++;
       *line1++ = *line2++ = *cr1++;
     }
+    /* odd width */
+    if (w) {
+      *line1++ = *lum1++;
+      *line2++ = *lum2++;
+      *line1++ = *line2++ = *cb1++;
+    }
 
     linesrc += dst->linesize[0] * 2;
     lumsrc += src->linesize[0] * 2;
     cb2 += src->linesize[1];
     cr2 += src->linesize[2];
+  }
+  /* odd height */
+  if (h) {
+    line1 = linesrc;
+    lum1 = lumsrc;
+    cb1 = cb2;
+    cr1 = cr2;
+
+    for (w = width / 2; w--;) {
+      *line1++ = *lum1++;
+      *line1++ = *cb1++;
+      *line1++ = *lum1++;
+      *line1++ = *cr1++;
+    }
+    /* odd width */
+    if (w) {
+      *line1++ = *lum1++;
+      *line1++ = *cb1++;
+    }
   }
 }
 
@@ -1938,11 +1967,14 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
     img_copy_plane (dst->data[0], dst->linesize[0],
         src->data[0], src->linesize[0], dst_width, dst_height);
 
+#define GEN_MASK(x) ((1<<(x))-1)
+#define DIV_ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) >> (x))
+
     for (i = 1; i <= 2; i++)
       resize_func (dst->data[i], dst->linesize[i],
           src->data[i], src->linesize[i],
-          dst_width >> dst_pix->x_chroma_shift,
-          dst_height >> dst_pix->y_chroma_shift);
+          DIV_ROUND_UP_X (dst_width, dst_pix->x_chroma_shift),
+          DIV_ROUND_UP_X (dst_height, dst_pix->y_chroma_shift));
     /* if yuv color space conversion is needed, we do it here on
        the destination image */
     if (dst_pix->color_type != src_pix->color_type) {
