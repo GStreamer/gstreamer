@@ -124,6 +124,7 @@ gst_faad_init (GstFaad * faad)
   faad->handle = NULL;
   faad->samplerate = -1;
   faad->channels = -1;
+  faad->tempbuf = NULL;
 
   GST_FLAG_SET (faad, GST_ELEMENT_EVENT_AWARE);
 
@@ -152,7 +153,6 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
   GstBuffer *buf;
 
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-    GstPadLinkReturn ret;
     gulong samplerate;
     guchar channels;
 
@@ -165,11 +165,12 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
     faad->samplerate = samplerate;
     faad->channels = channels;
 
-    ret = gst_pad_renegotiate (faad->srcpad);
-    if (ret == GST_PAD_LINK_DELAYED)
-      ret = GST_PAD_LINK_OK;
+    if (faad->tempbuf) {
+      gst_buffer_unref (faad->tempbuf);
+      faad->tempbuf = NULL;
+    }
 
-    return ret;
+    return GST_PAD_LINK_OK;
   }
 
   /* if there's no decoderspecificdata, it's all fine. We cannot know
@@ -326,6 +327,8 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 static void
 gst_faad_chain (GstPad * pad, GstData * data)
 {
+  guint input_size;
+  guchar *input_data;
   GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
   GstBuffer *buf, *outbuf;
   faacDecFrameInfo info;
@@ -336,6 +339,20 @@ gst_faad_chain (GstPad * pad, GstData * data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
+        if (faad->tempbuf != NULL) {
+          /* Try to decode the remaining data */
+          out = faacDecDecode (faad->handle, &info,
+              GST_BUFFER_DATA (faad->tempbuf), GST_BUFFER_SIZE (faad->tempbuf));
+          gst_buffer_unref (faad->tempbuf);
+          faad->tempbuf = NULL;
+          if (out && !info.error && info.samples > 0) {
+            outbuf = gst_buffer_new_and_alloc (info.samples * faad->bps);
+            /* ugh */
+            memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
+
+            gst_pad_push (faad->srcpad, GST_DATA (outbuf));
+          }
+        }
         gst_element_set_eos (GST_ELEMENT (faad));
         gst_pad_push (faad->srcpad, data);
         return;
@@ -356,6 +373,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
         GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate, &channels);
     faad->samplerate = samplerate;
     faad->channels = channels;
+
     ret = gst_pad_renegotiate (faad->srcpad);
     if (GST_PAD_LINK_FAILED (ret)) {
       GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
@@ -364,42 +382,66 @@ gst_faad_chain (GstPad * pad, GstData * data)
     }
   }
 
-  out = faacDecDecode (faad->handle, &info,
-      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-  if (info.error) {
-    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-        ("Failed to decode buffer: %s", faacDecGetErrorMessage (info.error)));
-    gst_buffer_unref (buf);
-    return;
+  /* Use the leftovers */
+  if (faad->tempbuf) {
+    buf = gst_buffer_join (faad->tempbuf, buf);
+    faad->tempbuf = NULL;
   }
 
-  if (info.samplerate != faad->samplerate || info.channels != faad->channels) {
-    GstPadLinkReturn ret;
+  input_data = GST_BUFFER_DATA (buf);
+  input_size = GST_BUFFER_SIZE (buf);
+  info.bytesconsumed = input_size;
+  while (input_size > (faad->channels * FAAD_MIN_STREAMSIZE)
+      && info.bytesconsumed > 0) {
+    out = faacDecDecode (faad->handle, &info, input_data, input_size);
+    if (info.error) {
+      GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+          ("Failed to decode buffer: %s", faacDecGetErrorMessage (info.error)));
+      break;
+    }
 
-    faad->samplerate = info.samplerate;
-    faad->channels = info.channels;
-    ret = gst_pad_renegotiate (faad->srcpad);
-    if (GST_PAD_LINK_FAILED (ret)) {
-      GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
-      gst_buffer_unref (buf);
-      return;
+    input_size -= info.bytesconsumed;
+    input_data += info.bytesconsumed;
+
+    if (out) {
+
+      if (info.samplerate != faad->samplerate
+          || info.channels != faad->channels) {
+        GstPadLinkReturn ret;
+
+        faad->samplerate = info.samplerate;
+        faad->channels = info.channels;
+        ret = gst_pad_renegotiate (faad->srcpad);
+        if (GST_PAD_LINK_FAILED (ret)) {
+          GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
+          break;
+        }
+      }
+
+      if (info.samples > 0) {
+        outbuf = gst_buffer_new_and_alloc (info.samples * faad->bps);
+        /* ugh */
+        memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
+        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+        GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+
+        gst_pad_push (faad->srcpad, GST_DATA (outbuf));
+      }
+    }
+  };
+
+  /* Keep the leftovers */
+  if (input_size > 0) {
+    if (input_size < GST_BUFFER_SIZE (buf))
+      faad->tempbuf = gst_buffer_create_sub (buf,
+          GST_BUFFER_SIZE (buf) - input_size, input_size);
+    else {
+      faad->tempbuf = buf;
+      gst_buffer_ref (buf);
     }
   }
-
-  if (info.samples == 0) {
-    gst_buffer_unref (buf);
-    return;
-  }
-
-  /* FIXME: did it handle the whole buffer? */
-  outbuf = gst_buffer_new_and_alloc (info.samples * faad->bps);
-  /* ugh */
-  memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
   gst_buffer_unref (buf);
-  gst_pad_push (faad->srcpad, GST_DATA (outbuf));
 }
 
 static GstElementStateReturn
@@ -416,6 +458,7 @@ gst_faad_change_state (GstElement * element)
 
         conf = faacDecGetCurrentConfiguration (faad->handle);
         conf->defObjectType = LC;
+        conf->dontUpSampleImplicitSBR = 1;
         faacDecSetConfiguration (faad->handle, conf);
       }
       break;
@@ -426,6 +469,10 @@ gst_faad_change_state (GstElement * element)
     case GST_STATE_READY_TO_NULL:
       faacDecClose (faad->handle);
       faad->handle = NULL;
+      if (faad->tempbuf) {
+        gst_buffer_unref (faad->tempbuf);
+        faad->tempbuf = NULL;
+      }
       break;
     default:
       break;

@@ -47,6 +47,9 @@ typedef struct _GstFaad {
        channels,
        bps;
 
+  /* used to keep input leftovers */
+  GstBuffer *tempbuf;
+
   /* FAAD object */
   faacDecHandle handle;
 } GstFaad;
