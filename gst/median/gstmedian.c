@@ -28,11 +28,8 @@
 static GstElementDetails median_details = {
   "Median effect",
   "Filter/Video",
-  "LGPL",
   "Apply a median filter to an image",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 GST_PAD_TEMPLATE_FACTORY (median_src_factory,
@@ -77,6 +74,7 @@ enum {
 
 static GType 	gst_median_get_type 	(void);
 static void	gst_median_class_init	(GstMedianClass *klass);
+static void	gst_median_base_init	(GstMedianClass *klass);
 static void	gst_median_init		(GstMedian *median);
 
 static void	median_5		(unsigned char *src, unsigned char *dest, int height, int width);
@@ -96,7 +94,10 @@ gst_median_get_type (void)
 
   if (!median_type) {
     static const GTypeInfo median_info = {
-      sizeof(GstMedianClass),      NULL,      NULL,      (GClassInitFunc)gst_median_class_init,
+      sizeof(GstMedianClass),
+      (GBaseInitFunc)gst_median_base_init,
+      NULL,
+      (GClassInitFunc)gst_median_class_init,
       NULL,
       NULL,
       sizeof(GstMedian),
@@ -106,6 +107,18 @@ gst_median_get_type (void)
     median_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMedian", &median_info, 0);
   }
   return median_type;
+}
+
+static void
+gst_median_base_init (GstMedianClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (median_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (median_src_factory));
+  gst_element_class_set_details (element_class, &median_details);
 }
 
 static void
@@ -385,26 +398,21 @@ gst_median_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("median",GST_TYPE_MEDIAN,
-                                   &median_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (median_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (median_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "median",
+			       GST_RANK_NONE, GST_TYPE_MEDIAN);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "median",
-  plugin_init
-};
-
+  "Video median filter",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
