@@ -44,6 +44,9 @@ extern gboolean _gst_plugin_spew;
 static void 		load_plugin_func 	(gpointer data, gpointer user_data);
 static void		init_popt_callback	(poptContext context, enum poptCallbackReason reason,
                                                  const struct poptOption *option, const char *arg, void *data);
+static void		init_pre		(void);
+static void		init_post		(void);
+
 
 static GSList *preload_plugins = NULL;
 
@@ -116,9 +119,19 @@ gst_init (int *argc, char **argv[])
 {
   poptContext context;
   gint nextopt, i, j, nstrip;
-  const struct poptOption *options = gst_init_get_popt_table ();
+  const struct poptOption *options;
   gchar **temp;
 
+  if (!argc || !argv) {
+    if (argc || argv)
+      g_warning ("gst_init: Only one of arg or argv was NULL");
+    
+    init_pre();
+    init_post();
+    return;
+  }
+
+  options = gst_init_get_popt_table ();
   context = poptGetContext ("GStreamer", *argc, (const char**)*argv, options, 0);
   
   while ((nextopt = poptGetNextOpt (context)) > 0); /* do nothing, it's all callbacks */
@@ -208,6 +221,15 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator)
       }
     }
   }
+}
+
+static void
+init_pre (void)
+{
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
+  
+  g_type_init();
 }
 
 static void
@@ -324,10 +346,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
 
   switch (reason) {
   case POPT_CALLBACK_REASON_PRE:
-    if (!g_thread_supported ())
-      g_thread_init (NULL);
-    
-    g_type_init();
+    init_pre();
     break;
   case POPT_CALLBACK_REASON_OPTION:
     switch (option->val) {
