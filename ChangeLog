@@ -1,3 +1,13 @@
+2004-04-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/mad/gstmad.c: (gst_mad_handle_event),
+	(gst_mad_check_caps_reset), (gst_mad_chain),
+	(gst_mad_change_state):
+          only set explicit caps if they haven't been set before for
+          this stream.  MPEG-audio sample rate/channels aren't allowed
+          to change in-stream.
+          Fixes #139382
+
 2004-04-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_base_init),
