@@ -187,14 +187,12 @@ int
 main(int argc, char *argv[])
 {
   /* options */
-  gboolean silent = TRUE;
+  gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
-    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   0,
-     "do not output status information", NULL},
-    {"verbose", 'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   1,
+    {"verbose", 'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
      "report various status information", NULL},
     {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
      "do not output status information of TYPE", "TYPE1,TYPE2,..."},
@@ -235,8 +233,7 @@ main(int argc, char *argv[])
     exit(1);
   }
   
-  if (!silent)
-  {
+  if (verbose) {
     gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
     g_signal_connect (pipeline, "deep_notify", G_CALLBACK (gst_element_default_deep_notify), exclude_list);
   }
