@@ -109,6 +109,7 @@ static void     	dvdnavsrc_loop		(GstElement *element);
 //static void		dvdnavsrc_event (GstPad *pad, GstEvent *event);
 static gboolean     	dvdnavsrc_close		(DVDNavSrc *src);
 static gboolean     	dvdnavsrc_open		(DVDNavSrc *src);
+static void             dvdnavsrc_print_event   (DVDNavSrc *src, guint8 *data, int event, int len);
 
 static GstElementStateReturn 	dvdnavsrc_change_state 	(GstElement *element);
 
@@ -153,7 +154,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
                         NULL, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TITLE,
     g_param_spec_int("title","title","title",
-                     1,99,1,G_PARAM_READWRITE));
+                     0,99,1,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHAPTER,
     g_param_spec_int("chapter","chapter","chapter",
                      1,999,1,G_PARAM_READWRITE));
@@ -179,8 +180,8 @@ dvdnavsrc_init (DVDNavSrc *dvdnavsrc)
 
   dvdnavsrc->location = g_strdup("/dev/dvd");
   dvdnavsrc->new_seek = FALSE;
-  dvdnavsrc->title = 1;
-  dvdnavsrc->chapter = 1;
+  dvdnavsrc->title = 0;
+  dvdnavsrc->chapter = 0;
   dvdnavsrc->angle = 1;
 }
 
@@ -284,6 +285,9 @@ dvdnavsrc_tca_seek(DVDNavSrc *src, int title, int chapter, int angle)
   g_return_val_if_fail (src->dvdnav != NULL, FALSE);
   g_return_val_if_fail (dvdnavsrc_is_open (src), FALSE);
 
+  /* Dont try to seek to track 0 - First Play program chain */
+  g_return_val_if_fail (src->title > 0, FALSE);
+
   fprintf (stderr, "dvdnav: seeking to %d/%d/%d\n", title, chapter, angle);
   /**
    * Make sure our title number is valid.
@@ -318,7 +322,7 @@ dvdnavsrc_tca_seek(DVDNavSrc *src, int title, int chapter, int angle)
     return FALSE;
   }
   fprintf (stderr, "There are %d chapters in this title.\n", programs);
-  if (chapter < 1 || chapter > programs) {
+  if (chapter < 0 || chapter > programs) {
     fprintf (stderr, "Invalid chapter %d\n", chapter);
     dvdnavsrc_close (src);
     return FALSE;
@@ -341,9 +345,16 @@ dvdnavsrc_tca_seek(DVDNavSrc *src, int title, int chapter, int angle)
   /**
    * We've got enough info, time to open the title set data.
    */
-  if (dvdnav_part_play (src->dvdnav, title, chapter) != DVDNAV_STATUS_OK) {
-    fprintf (stderr, "dvdnav_part_play error: %s\n", dvdnav_err_to_string(src->dvdnav));
-    return FALSE;
+  if (src->chapter == 0) {
+    if (dvdnav_title_play (src->dvdnav, title) != DVDNAV_STATUS_OK) {
+      fprintf (stderr, "dvdnav_title_play error: %s\n", dvdnav_err_to_string(src->dvdnav));
+      return FALSE;
+    }
+  } else {
+    if (dvdnav_part_play (src->dvdnav, title, chapter) != DVDNAV_STATUS_OK) {
+      fprintf (stderr, "dvdnav_part_play error: %s\n", dvdnav_err_to_string(src->dvdnav));
+      return FALSE;
+    }
   }
   if (dvdnav_angle_change (src->dvdnav, angle) != DVDNAV_STATUS_OK) {
     fprintf (stderr, "dvdnav_angle_change error: %s\n", dvdnav_err_to_string(src->dvdnav));
@@ -371,7 +382,6 @@ dvdnavsrc_event (GstPad *pad, GstElement *element)
 }
 */
 
-#if 0
 static gchar *
 dvdnav_get_event_name(int event)
 {
@@ -392,7 +402,6 @@ dvdnav_get_event_name(int event)
   }
   return "UNKNOWN";
 }
-#endif
 
 static gchar *
 dvdnav_get_read_domain_name(dvd_read_domain_t domain)
@@ -407,7 +416,92 @@ dvdnav_get_read_domain_name(dvd_read_domain_t domain)
 }
 
 static void
-dvdnavsrc_loop (GstElement *element) 
+dvdnavsrc_print_event (DVDNavSrc *src, guint8 *data, int event, int len)
+{
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_DVDNAVSRC (src));
+
+  fprintf (stderr, "dvdnavsrc (%p): event: %s\n", src, dvdnav_get_event_name(event));
+  switch (event) {
+    case DVDNAV_BLOCK_OK:
+      break;
+    case DVDNAV_NOP:
+      break;
+    case DVDNAV_STILL_FRAME:
+      {
+        dvdnav_still_event_t *event = (dvdnav_still_event_t *)data;
+        fprintf (stderr, "  still frame: %d seconds\n", event->length);
+      }
+      break;
+    case DVDNAV_SPU_STREAM_CHANGE:
+      {
+        dvdnav_spu_stream_change_event_t * event = (dvdnav_spu_stream_change_event_t *)data;
+        fprintf (stderr, "  physical_wide: %d\n", event->physical_wide);
+        fprintf (stderr, "  physical_letterbox: %d\n", event->physical_letterbox);
+        fprintf (stderr, "  physical_pan_scan: %d\n", event->physical_pan_scan);
+        fprintf (stderr, "  logical: %d\n", event->logical);
+      }
+      break;
+    case DVDNAV_AUDIO_STREAM_CHANGE:
+      {
+        dvdnav_audio_stream_change_event_t * event = (dvdnav_audio_stream_change_event_t *)data;
+        fprintf (stderr, "  physical: %d\n", event->physical);
+        fprintf (stderr, "  logical: %d\n", event->logical);
+      }
+      break;
+    case DVDNAV_VTS_CHANGE:
+      {
+        dvdnav_vts_change_event_t *event = (dvdnav_vts_change_event_t *)data;
+        fprintf (stderr, "  old_vtsN: %d\n", event->old_vtsN);
+        fprintf (stderr, "  old_domain: %s\n", dvdnav_get_read_domain_name(event->old_domain));
+        fprintf (stderr, "  new_vtsN: %d\n", event->new_vtsN);
+        fprintf (stderr, "  new_domain: %s\n", dvdnav_get_read_domain_name(event->new_domain));
+      }
+      break;
+    case DVDNAV_CELL_CHANGE:
+      {
+        dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *)data;
+        fprintf (stderr, "  old_cell: %p\n", event->old_cell);
+        fprintf (stderr, "  new_cell: %p\n", event->new_cell);
+      }
+      break;
+    case DVDNAV_NAV_PACKET:
+      {
+        dvdnav_nav_packet_event_t *event = (dvdnav_nav_packet_event_t *)data;
+        fprintf (stderr, "  pci: %p\n", event->pci);
+        fprintf (stderr, "  dsi: %p\n", event->dsi);
+      }
+      break;
+    case DVDNAV_STOP:
+      break;
+    case DVDNAV_HIGHLIGHT:
+      {
+        dvdnav_highlight_event_t *event = (dvdnav_highlight_event_t *)data;
+        fprintf (stderr, "  display: %s\n", 
+            event->display == 0 ? "hide" : (event->display == 1 ? "show" : "unknown")
+            );
+        if (event->display == 1) {
+          fprintf (stderr, "  palette: %08x\n", event->palette);
+          fprintf (stderr, "  coords (%u, %u) - (%u, %u)\n", event->sx, event->sy, event->ex, event->ey);
+          fprintf (stderr, "  pts: %u\n", event->pts);
+          fprintf (stderr, "  button: %u\n", event->buttonN);
+        }
+      }
+      break;
+    case DVDNAV_SPU_CLUT_CHANGE:
+      break;
+    case DVDNAV_SEEK_DONE:
+      break;
+    case DVDNAV_HOP_CHANNEL:
+      break;
+    default:
+      fprintf (stderr, "  event id: %d\n", event);
+      break;
+  }
+}
+
+static void
+dvdnavsrc_loop (GstElement *element)
 {
   DVDNavSrc *src;
   int done;
@@ -447,62 +541,30 @@ dvdnavsrc_loop (GstElement *element)
         gst_pad_push (src->srcpad, buf);
         break;
       case DVDNAV_NOP:
-        printf("dvdnav: received NOP event\n");
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_STILL_FRAME:
         /* FIXME: we should pause for event->length seconds before dvdnav_still_skip */
-        {
-          dvdnav_still_event_t *event = (dvdnav_still_event_t *)data;
-          fprintf (stderr, "dvdnav: still frame: %d seconds\n", event->length);
-          if (dvdnav_still_skip (src->dvdnav) != DVDNAV_STATUS_OK) {
-            fprintf (stderr, "dvdnav_still_skip error: %s\n", dvdnav_err_to_string(src->dvdnav));
-            /* FIXME: close the stream??? */
-          }
+        dvdnavsrc_print_event (src, data, event, len);
+        if (dvdnav_still_skip (src->dvdnav) != DVDNAV_STATUS_OK) {
+          fprintf (stderr, "dvdnav_still_skip error: %s\n", dvdnav_err_to_string(src->dvdnav));
+          /* FIXME: close the stream??? */
         }
         break;
       case DVDNAV_SPU_STREAM_CHANGE:
-        {
-          dvdnav_spu_stream_change_event_t * event = (dvdnav_spu_stream_change_event_t *)data;
-          fprintf (stderr, "dvdnav: spu_stream_change:\n");
-          fprintf (stderr, "  physical_wide: %d\n", event->physical_wide);
-          fprintf (stderr, "  physical_letterbox: %d\n", event->physical_letterbox);
-          fprintf (stderr, "  physical_pan_scan: %d\n", event->physical_pan_scan);
-          fprintf (stderr, "  logical: %d\n", event->logical);
-        }
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_AUDIO_STREAM_CHANGE:
-        {
-          dvdnav_audio_stream_change_event_t * event = (dvdnav_audio_stream_change_event_t *)data;
-          fprintf (stderr, "dvdnav: audio_stream_change:\n");
-          fprintf (stderr, "  physical: %d\n", event->physical);
-          fprintf (stderr, "  logical: %d\n", event->logical);
-        }
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_VTS_CHANGE:
-        {
-          dvdnav_vts_change_event_t *event = (dvdnav_vts_change_event_t *)data;
-          fprintf (stderr, "dvdnav: vts_change\n");
-          fprintf (stderr, "  old_vtsN: %d\n", event->old_vtsN);
-          fprintf (stderr, "  old_domain: %s\n", dvdnav_get_read_domain_name(event->old_domain));
-          fprintf (stderr, "  new_vtsN: %d\n", event->new_vtsN);
-          fprintf (stderr, "  new_domain: %s\n", dvdnav_get_read_domain_name(event->new_domain));
-        }
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_CELL_CHANGE:
-        {
-          dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *)data;
-          fprintf (stderr, "dvdnav: cell_change:\n");
-          fprintf (stderr, "  old_cell: %p\n", event->old_cell);
-          fprintf (stderr, "  new_cell: %p\n", event->new_cell);
-        }
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_NAV_PACKET:
-        {
-          dvdnav_nav_packet_event_t *event = (dvdnav_nav_packet_event_t *)data;
-          fprintf (stderr, "dvdnav: nav_packet:\n");
-          fprintf (stderr, "  pci: %p\n", event->pci);
-          fprintf (stderr, "  dsi: %p\n", event->dsi);
-        }
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_STOP:
         done = 1;
@@ -510,33 +572,21 @@ dvdnavsrc_loop (GstElement *element)
         dvdnavsrc_close(src);
         break;
       case DVDNAV_HIGHLIGHT:
-        {
-          dvdnav_highlight_event_t *event = (dvdnav_highlight_event_t *)data;
-          fprintf (stderr, "dvdnav: highlight:\n");
-          fprintf (stderr, "  display: %s\n", 
-              event->display == 0 ? "hide" : (event->display == 1 ? "show" : "unknown")
-              );
-          if (event->display == 1) {
-            fprintf (stderr, "  palette: %08x\n", event->palette);
-            fprintf (stderr, "  coords (%d, %d) - (%d, %d)\n", event->sx, event->sy, event->ex, event->ey);
-            fprintf (stderr, "  pts: %d\n", event->pts);
-            fprintf (stderr, "  button: %d\n", event->buttonN);
-          }
-        }
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_SPU_CLUT_CHANGE:
         /* ignore the change events. I'm dont know what I'm meant to do with them */
         /* and there's no struct for it */
-        fprintf (stderr, "dvdnav: spu_clut_change\n");
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_SEEK_DONE:
-        fprintf (stderr, "dvdnav: seek_done\n");
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       case DVDNAV_HOP_CHANNEL:
-        fprintf (stderr, "dvdnav: hop_channel\n");
+        dvdnavsrc_print_event (src, data, event, len);
         break;
       default:
-        fprintf (stderr, "dvdnavsrc event: %d\n", event);
+        dvdnavsrc_print_event (src, data, event, len);
         break;
     }
   }
@@ -598,11 +648,46 @@ dvdnavsrc_open (DVDNavSrc *src)
 
   GST_FLAG_SET (src, DVDNAVSRC_OPEN);
 
-  if (!dvdnavsrc_tca_seek(src,
-      src->title,
-      src->chapter,
-      src->angle))
-    return FALSE;
+  /* Read the first block before seeking to force a libdvdnav internal
+   * call to vm_start, otherwise it ignores our seek position.
+   * This happens because vm_start sets the domain to the first-play (FP)
+   * domain, overriding any other title that has been set.
+   * Track/chapter setting used to work, but libdvdnav has delayed the call
+   * to vm_start from _open, to _get_block.
+   * FIXME: But, doing it this way has problems too, as there is no way to
+   * get back to the FP domain.
+   * Maybe we could title==0 to mean FP domain, and not do this read & seek.
+   * If title subsequently gets set to 0, we would need to dvdnav_close
+   * followed by dvdnav_open to get back to the FP domain.
+   * Since we dont currently support seeking by setting the title/chapter/angle
+   * after opening, we'll forget about close/open for now, and just do the
+   * title==0 thing.
+   */
+
+  if (src->title > 0) {
+    unsigned char buf[2048];
+    int event, buflen = sizeof(buf);
+    fprintf(stderr, "+XXX\n");
+    if (dvdnav_get_next_block(src->dvdnav, buf, &event, &buflen) != DVDNAV_STATUS_OK) {
+      fprintf(stderr, "pre seek dvdnav_get_next_block error: %s\n", dvdnav_err_to_string(src->dvdnav));
+      return FALSE;
+    }
+    dvdnavsrc_print_event (src, buf, event, buflen);
+    /*
+    while (dvdnav_get_next_block(src->dvdnav, buf, &event, &buflen) == DVDNAV_STATUS_OK) {
+      if (event != DVDNAV_BLOCK_OK)
+        dvdnavsrc_print_event (src, buf, event, buflen);
+    }
+    */
+    fprintf(stderr, "pre seek dvdnav_get_next_block error: %s\n", dvdnav_err_to_string(src->dvdnav));
+    fprintf(stderr, "-XXX\n");
+
+    if (!dvdnavsrc_tca_seek(src,
+        src->title,
+        src->chapter,
+        src->angle))
+      return FALSE;
+  }
   
   return TRUE;
 }
