@@ -241,7 +241,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 static GList*
 gst_autoplug_elementfactory_get_list (gpointer data)
 {
-  return gst_elementfactory_get_list ();
+  return (GList *) gst_elementfactory_get_list ();
 }
 
 typedef struct {
