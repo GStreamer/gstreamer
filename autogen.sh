@@ -5,6 +5,14 @@ DIE=0
 package=gstreamer-plugins
 srcfile=gst/law/alaw.c
 
+# a quick cvs co if necessary to alleviate the pain - may remove this
+# when developers get a clue ;)
+if test ! -d common; 
+then 
+  echo "+ getting common/ from cvs"
+  cvs co common 
+fi
+
 # source helper functions
 if test ! -e common/gst-autogen.sh;
 then
@@ -65,10 +73,6 @@ if test -f disable; then
     CONFIGURE_OPT="$CONFIGURE_OPT --disable-$a"
   done
 fi
-
-# a quick cvs co if necessary to alleviate the pain - may remove this
-# when developers get a clue ;)
-if test ! -d common; then cvs co common; fi
 
 test -n "$NOCONFIGURE" && {
     echo "+ skipping configure stage for package $package, as requested."
