@@ -68,26 +68,22 @@ G_BEGIN_DECLS
                     GST_PROPS_BOOLEAN (TRUE),\
                     GST_PROPS_BOOLEAN (FALSE)\
                   ),\
+    "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
     NULL)
 
-#define GST_AUDIO_INT_MONO_PAD_TEMPLATE_PROPS \
+/* "standard" int audio is native order, 16 bit stereo. */
+#define GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_PROPS \
   gst_props_new (\
     "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),\
-    "channels",   GST_PROPS_INT (1),\
-    "endianness", GST_PROPS_LIST (\
-                    GST_PROPS_INT (G_LITTLE_ENDIAN),\
-                    GST_PROPS_INT (G_BIG_ENDIAN)\
-                  ),\
-    "width",      GST_PROPS_LIST (\
-                    GST_PROPS_INT (8),\
-                    GST_PROPS_INT (16),\
-                    GST_PROPS_INT (32)\
-                  ),\
-    "depth",      GST_PROPS_INT_RANGE (1, 32),\
+    "channels",   GST_PROPS_INT (2),\
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER),\
+    "width",      GST_PROPS_INT (16),\
+    "depth",      GST_PROPS_INT (16),\
     "signed",     GST_PROPS_LIST (\
                     GST_PROPS_BOOLEAN (TRUE),\
                     GST_PROPS_BOOLEAN (FALSE)\
                   ),\
+    "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
     NULL)
 
 #define GST_AUDIO_FLOAT_PAD_TEMPLATE_PROPS \
@@ -105,6 +101,7 @@ G_BEGIN_DECLS
     "buffer-frames", GST_PROPS_INT_RANGE (1, G_MAXINT),\
     NULL)
 
+/* "standard" float audio is native order, 32 bit mono. */
 #define GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS \
   gst_props_new (\
     "rate",          GST_PROPS_INT_RANGE (1, G_MAXINT),\
