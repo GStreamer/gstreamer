@@ -13,6 +13,7 @@
 #define G_TYPE_CHECK_CLASS_TYPE			GTK_CHECK_CLASS_TYPE
 #define G_TYPE_FROM_CLASS(klass)		(((GtkObjectClass *)(klass))->type)
 #define G_OBJECT_GET_CLASS(object)		(GTK_OBJECT(object)->klass)
+#define G_OBJECT_TYPE				GTK_OBJECT_TYPE
 #define G_OBJECT_CLASS_TYPE(gclass)		(gclass->type)
 
 // types
@@ -155,6 +156,14 @@ gtk_signal_connect((GtkObject *)object,name,func,func_data)
 #define \
 g_signal_emit_by_name(object,name,data,self) \
 gtk_signal_emit_by_name ((GtkObject *)object,name,data,self)
+
+#define \
+g_signal_handler_has_pending(object,name,data,may_block) \
+gtk_signal_handler_pending ((GtkObject *)object,name,may_block)
+
+#define g_signal_lookup			gtk_signal_lookup
+#define g_signal_handler_block		gtk_signal_handler_block
+#define g_signal_handler_unblock	gtk_signal_handler_unblock
 
 
 

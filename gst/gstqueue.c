@@ -439,12 +439,11 @@ gst_queue_change_state (GstElement *element)
     gst_queue_flush (queue);
   }
 
-/* FIXME FIXME FIXME FIXME FIXME!!!!
   // if we haven't failed already, give the parent class a chance to ;-)
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
   {
     gboolean valid_handler = FALSE;
-    guint state_change_id = gtk_signal_lookup("state_change", G_OBJECT_TYPE(element));
+    guint state_change_id = g_signal_lookup("state_change", G_OBJECT_TYPE(element));
 
     // determine whether we need to block the parent (element) class'
     // STATE_CHANGE signal so we can UNLOCK before returning.  we block
@@ -455,23 +454,22 @@ gst_queue_change_state (GstElement *element)
     // if element change_state() emits other signals, they need to be blocked
     // as well.
     if (state_change_id &&
-        gtk_signal_handler_pending(G_OBJECT(element), state_change_id, FALSE))
+        g_signal_handler_has_pending(G_OBJECT(element), state_change_id, 0, FALSE))
       valid_handler = TRUE;
     if (valid_handler)
-      gtk_signal_handler_block(G_OBJECT(element), state_change_id);
+      g_signal_handler_block(G_OBJECT(element), state_change_id);
 
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
     if (valid_handler)
-      gtk_signal_handler_unblock(G_OBJECT(element), state_change_id);
+      g_signal_handler_unblock(G_OBJECT(element), state_change_id);
 
     // UNLOCK, *then* emit signal (if there's one there)
     GST_UNLOCK(queue);
     if (valid_handler)
-      gtk_signal_emit(G_OBJECT (element), state_change_id, GST_STATE(element));
+      g_signal_emit(G_OBJECT (element), state_change_id, 0, GST_STATE(element));
   }
   else
-*/
   {
     ret = GST_STATE_SUCCESS;
     GST_UNLOCK(queue);
