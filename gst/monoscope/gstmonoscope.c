@@ -85,24 +85,35 @@ enum
   /* FILL ME */
 };
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
         "bpp = (int) 32, "
-        "depth = (int) 24, " "endianness = (int) BIG_ENDIAN, "
-#if G_BYTE_ORDER == G_BIG_ENDIAN
+        "depth = (int) 24, "
+        "endianness = (int) BIG_ENDIAN, "
         "red_mask = (int) " GST_VIDEO_BYTE2_MASK_32 ", "
         "green_mask = (int) " GST_VIDEO_BYTE3_MASK_32 ", "
         "blue_mask = (int) " GST_VIDEO_BYTE4_MASK_32 ", "
-#else
-        "red_mask = (int) " GST_VIDEO_BYTE3_MASK_32 ", "
-        "green_mask = (int) " GST_VIDEO_BYTE2_MASK_32 ", "
-        "blue_mask = (int) " GST_VIDEO_BYTE1_MASK_32 ", "
-#endif
         "width = (int)256, "
         "height = (int)128, " "framerate = " GST_VIDEO_FPS_RANGE)
     );
+#else
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-rgb, "
+        "bpp = (int) 32, "
+        "depth = (int) 24, "
+        "endianness = (int) BIG_ENDIAN, "
+        "red_mask = (int) " GST_VIDEO_BYTE3_MASK_32 ", "
+        "green_mask = (int) " GST_VIDEO_BYTE2_MASK_32 ", "
+        "blue_mask = (int) " GST_VIDEO_BYTE1_MASK_32 ", "
+        "width = (int)256, "
+        "height = (int)128, " "framerate = " GST_VIDEO_FPS_RANGE)
+    );
+#endif
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
