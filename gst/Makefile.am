@@ -11,12 +11,11 @@ GSTOBJECT_INCLUDES =	\
 if HAVE_CPU_I386
 GSTARCH_SRCS = gstcpuid_i386.s
 else
-if HAVE_CPU_PPC
-GSTARCH_SRCS = 
-else
 GSTARCH_SRCS = 
 endif
-endif
+
+EXTRA_libgst_la_SOURCES =	\
+	gstcpuid_i386.s
 
 libgst_la_SOURCES =	\
 	gst.c		\

@@ -1,8 +1,20 @@
+
+if HAVE_LIBMMX
+GSTIDCTARCH_SRCS = mmxidct.S mmx32idct.c
+else
+GSTIDCTARCH_SRCS =
+endif
+
 filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstidct.la
 
-libgstidct_la_SOURCES = fastintidct.c floatidct.c gstidct.c intidct.c mmxidct.S mmx32idct.c
+libgstidct_la_SOURCES = \
+        fastintidct.c \
+	floatidct.c \
+	gstidct.c \
+	intidct.c \
+	$(GSTIDCTARCH_SRCS)
 
 libgstidctincludedir = $(includedir)/gst/libs/gstidct
 libgstidctinclude_HEADERS = gstidct.h

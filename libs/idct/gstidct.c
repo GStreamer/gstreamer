@@ -38,7 +38,7 @@ GstIDCT *gst_idct_new(GstIDCTMethod method)
       method = GST_IDCT_MMX;
     }
     else
-#endif
+#endif /* HAVE_LIBMMX */
     {
       method = GST_IDCT_FAST_INT;
     }
@@ -61,6 +61,7 @@ GstIDCT *gst_idct_new(GstIDCTMethod method)
 		gst_idct_init_float_idct();
 		new->convert = gst_idct_float_idct;
 		break;
+#ifdef HAVE_LIBMMX
 	 case GST_IDCT_MMX:
 		g_print("GstIDCT: using MMX_idct\n");
 		new->convert = gst_idct_mmx_idct;
@@ -71,6 +72,7 @@ GstIDCT *gst_idct_new(GstIDCTMethod method)
 		new->convert = gst_idct_mmx32_idct;
 		new->need_transpose = TRUE;
 		break;
+#endif /* HAVE_LIBMMX */
 	 default:
 		g_print("GstIDCT: method not supported\n");
 		g_free(new);
