@@ -584,6 +584,8 @@ gst_thread_main_loop (void *arg)
       while (status && GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
         g_mutex_unlock (thread->lock);
         status = gst_bin_iterate (GST_BIN (thread));
+        if (!status)
+          GST_DEBUG_OBJECT (thread, "iterate returned false");
         if (GST_FLAG_IS_SET (thread, GST_THREAD_MUTEX_LOCKED)) {
           GST_FLAG_UNSET (thread, GST_THREAD_MUTEX_LOCKED);
         } else {

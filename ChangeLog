@@ -1,3 +1,10 @@
+2004-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_get_compatible_pad_template),
+	(gst_element_get_compatible_pad_filtered):
+	* gst/gstthread.c: (gst_thread_main_loop):
+	  more debugging
+
 2004-07-02  David Schleef  <ds@schleef.org>
 
 	* gst/gstinfo.h: wrap #pragmas in #ifdefs for the correct compiler

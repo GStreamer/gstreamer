@@ -1580,7 +1580,8 @@ gst_element_get_compatible_pad_template (GstElement * element,
   padlist = gst_element_get_pad_template_list (element);
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "Looking for a suitable pad template...");
+      "Looking for a suitable pad template in %s out of %d templates...",
+      GST_ELEMENT_NAME (element), g_list_length (padlist));
 
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate *) padlist->data;
@@ -1591,6 +1592,8 @@ gst_element_get_compatible_pad_template (GstElement * element,
      * Check direction (must be opposite)
      * Check caps
      */
+    GST_CAT_LOG (GST_CAT_CAPS,
+        "checking pad template %s", padtempl->name_template);
     if (padtempl->direction != compattempl->direction) {
       GST_CAT_DEBUG (GST_CAT_CAPS,
           "compatible direction: found %s pad template \"%s\"",
@@ -1612,6 +1615,11 @@ gst_element_get_compatible_pad_template (GstElement * element,
 
     padlist = g_list_next (padlist);
   }
+  if (newtempl)
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+        "Returning new pad template %p", newtempl);
+  else
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "No compatible pad template found");
 
   return newtempl;
 }
@@ -1716,8 +1724,8 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "finding pad in %s compatible with %s:%s", GST_ELEMENT_NAME (element),
-      GST_DEBUG_PAD_NAME (pad));
+      "finding pad in %s compatible with %s:%s and filter %" GST_PTR_FORMAT,
+      GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad), filtercaps);
 
   /* let's use the real pad */
   pad = (GstPad *) GST_PAD_REALIZE (pad);
@@ -1729,8 +1737,12 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
   while (pads) {
     GstPad *current = GST_PAD (pads->data);
 
+    GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examing pad %s:%s",
+        GST_DEBUG_PAD_NAME (current));
     if (GST_PAD_PEER (current) == NULL &&
         gst_pad_can_link_filtered (pad, current, filtercaps)) {
+      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+          "found existing unlinked pad %s:%s", GST_DEBUG_PAD_NAME (current));
       return current;
     }
     pads = g_list_next (pads);
@@ -1752,13 +1764,15 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (GST_OBJECT (templ));
 
-  if (foundpad)
+  if (foundpad) {
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+        "found existing request pad %s:%s", GST_DEBUG_PAD_NAME (foundpad));
     return foundpad;
+  }
 
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element,
       "Could not find a compatible pad to link to %s:%s",
       GST_DEBUG_PAD_NAME (pad));
-
   return NULL;
 }
 
