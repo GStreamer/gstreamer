@@ -1,7 +1,8 @@
 
 plugin_LTLIBRARIES = libgstlevel.la
 
-libgstlevel_la_SOURCES = gstlevel.c gstlevel-marshal.c
+libgstlevel_la_SOURCES = gstlevel.c
+nodist_libgstlevel_la_SOURCES = gstlevel-marshal.c gstlevel-marshal.h
 libgstlevel_la_CFLAGS = $(GST_CFLAGS)
 libgstlevel_la_LIBADD =
 libgstlevel_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -39,9 +40,4 @@ gstlevel-marshal.c: gstlevel-marshal.list
 	glib-genmarshal --body --prefix=gstlevel_cclosure_marshal $(srcdir)/gstlevel-marshal.list >> gstlevel-marshal.c.tmp
 	mv gstlevel-marshal.c.tmp gstlevel-marshal.c
                                                                                 
-# Don't want the generated marshal files in the dist
-dist-hook:
-	rm -f $(distdir)/gstlevel-marshal.c
-	rm -f $(distdir)/gstlevel-marshal.h
-
 EXTRA_DIST = README
