@@ -324,8 +324,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MPEG2DEC_TRUE@Group: Libraries/Multimedia
 @USE_MPEG2DEC_TRUE@Requires: gstreamer >= %{ver}
 @USE_MPEG2DEC_TRUE@Requires: mpeg2dec => 0.2.0
-@USE_MPEG2DEC_TRUE@Requires: gst-plugins => %{ver}
-@USE_MPEG2DEC_TRUE@Requires: gst-plugin-libs => %{ver}
+@USE_MPEG2DEC_TRUE@Requires: gstreamer-plugin-libs => %{ver}
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2
 @USE_MPEG2DEC_TRUE@
@@ -381,22 +380,22 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SDL_TRUE@%post -n gstreamer-sdl
 @USE_SDL_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
-@USE_OPENQUICKTIME_TRUE@%package -n gstreamer-quicktime
-@USE_OPENQUICKTIME_TRUE@Summary: GStreamer Quicktime video Plugin
+@USE_OPENQUICKTIME_TRUE@%package -n gstreamer-openquicktime
+@USE_OPENQUICKTIME_TRUE@Summary: GStreamer OpenQuicktime video Plugin
 @USE_OPENQUICKTIME_TRUE@Group: Libraries/Multimedia
 @USE_OPENQUICKTIME_TRUE@Requires: gstreamer >= %{ver}
 @USE_OPENQUICKTIME_TRUE@Requires: OpenQuicktime = 20010429
 @USE_OPENQUICKTIME_TRUE@
-@USE_OPENQUICKTIME_TRUE@%description -n gstreamer-quicktime
-@USE_OPENQUICKTIME_TRUE@Plugin which uses the OpenQucktime library
+@USE_OPENQUICKTIME_TRUE@%description -n gstreamer-openquicktime
+@USE_OPENQUICKTIME_TRUE@Plugin which uses the OpenQuicktime library
 @USE_OPENQUICKTIME_TRUE@from 3ivx to play Quicktime movies.
-@USE_OPENQUICKTIME_TRUE@(http://openquicktime.sourceforge.net)
+@USE_OPENQUICKTIME_TRUE@(http://openquicktime.sourceforge.net/)
 @USE_OPENQUICKTIME_TRUE@
-@USE_OPENQUICKTIME_TRUE@%files -n gstreamer-quicktime
+@USE_OPENQUICKTIME_TRUE@%files -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%defattr(-, root, root)
 @USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libopenquicktime*
 @USE_OPENQUICKTIME_TRUE@
-@USE_OPENQUICKTIME_TRUE@%post -n gstreamer-quicktime
+@USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
 # Video 4 Linux
