@@ -176,17 +176,17 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
     g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   GST_TYPE_CAPS2);
   gst_real_pad_signals[REAL_LINKED] =
     g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   GST_TYPE_PAD);
   gst_real_pad_signals[REAL_UNLINKED] =
     g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   GST_TYPE_PAD);
 
 /*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
@@ -410,8 +410,8 @@ gst_pad_set_active (GstPad *pad, gboolean active)
 	       GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_SET (realpad, GST_PAD_DISABLED);
   }
-  if (old != active)
-    g_object_notify (G_OBJECT (realpad), "active");
+  
+  g_object_notify (G_OBJECT (realpad), "active");
 }
 
 /**
@@ -1797,12 +1797,12 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
   }
 
   /* calculate the new caps here */
-  srccaps = gst_caps2_copy (gst_pad_get_caps (GST_PAD (realsrc)));
+  srccaps = gst_pad_get_caps (GST_PAD (realsrc));
   GST_CAT_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
              GST_DEBUG_PAD_NAME (realsrc));
   gst_caps2_debug (srccaps, 
                   "src caps, awaiting negotiation, before applying filter");
-  sinkcaps = gst_caps2_copy (gst_pad_get_caps (GST_PAD (realsink)));
+  sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
   GST_CAT_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
              GST_DEBUG_PAD_NAME (realsink));
   gst_caps2_debug (sinkcaps, 
@@ -1963,9 +1963,8 @@ gst_pad_proxy_link (GstPad *pad, const GstCaps2 *caps)
  *
  * Gets the capabilities of this pad.
  *
- * Returns: the #GstCaps2 of this pad. This function potentially
- * returns a floating caps, so use gst_caps2_free to get rid of
- * it.
+ * Returns: the #GstCaps2 of this pad. This function returns a new caps, so use 
+ * gst_caps2_free to get rid of it.
  */
 GstCaps2*
 gst_pad_get_caps (GstPad *pad)
@@ -2672,8 +2671,8 @@ gst_pad_template_class_init (GstPadTemplateClass *klass)
   gst_pad_template_signals[TEMPL_PAD_CREATED] =
     g_signal_new ("pad_created", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), 
-		  NULL, NULL, gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
+		  NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                  GST_TYPE_PAD);
 
   gobject_class->dispose = gst_pad_template_dispose;
 
