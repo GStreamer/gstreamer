@@ -226,6 +226,12 @@ else
 MPLEX_DIR=
 endif
 
+if USE_MAS
+MAS_DIR=mas
+else
+MAS_DIR=
+endif
+
 if USE_MUSICBRAINZ
 MUSICBRAINZ_DIR=musicbrainz
 else
@@ -381,6 +387,7 @@ SUBDIRS=\
 	$(LIBRFB_DIR) \
 	$(LIBVISUAL_DIR) \
 	$(MAD_DIR) \
+	$(MAS_DIR) \
 	$(MIKMOD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(MPEG2ENC_DIR) \
@@ -444,6 +451,7 @@ DIST_SUBDIRS=\
 	mpeg2dec \
 	mpeg2enc \
 	mplex \
+	mas \
 	musicbrainz \
 	nas \
 	ogg \
