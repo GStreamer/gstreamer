@@ -23,18 +23,19 @@
 #endif
 #include "qtdemux.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
-#define QTDEMUX_GUINT32_GET(a) GUINT32_FROM_BE(*(guint32 *)(a))
-#define QTDEMUX_GUINT16_GET(a) GUINT16_FROM_BE(*(guint16 *)(a))
+#define QTDEMUX_GUINT32_GET(a)	(GST_READ_UINT32_BE(a))
+#define QTDEMUX_GUINT16_GET(a)	(GST_READ_UINT16_BE(a))
 #define QTDEMUX_GUINT8_GET(a) (*(guint8 *)(a))
-#define QTDEMUX_FP32_GET(a) (GUINT32_FROM_BE(*(guint16 *)(a))/65536.0)
-#define QTDEMUX_FP16_GET(a) (GUINT16_FROM_BE(*(guint16 *)(a))/256.0)
-#define QTDEMUX_FOURCC_GET(a) GUINT32_FROM_LE(*(guint32 *)(a))
+#define QTDEMUX_FP32_GET(a)	((GST_READ_UINT32_BE(a))/65536.0)
+#define QTDEMUX_FP16_GET(a)	((GST_READ_UINT16_BE(a))/256.0)
+#define QTDEMUX_FOURCC_GET(a)	(GST_READ_UINT32_LE(a))
 
 #define QTDEMUX_GUINT64_GET(a) ((((guint64)QTDEMUX_GUINT32_GET(a))<<32)|QTDEMUX_GUINT32_GET(((void *)a)+4))
 
@@ -522,9 +523,9 @@ gst_qtdemux_loop_header (GstElement * element)
         }
       } while (1);
 
-      length = GUINT32_FROM_BE (*(guint32 *) data);
+      length = GST_READ_UINT32_BE (data);
       GST_DEBUG ("length %08x", length);
-      fourcc = GUINT32_FROM_LE (*(guint32 *) (data + 4));
+      fourcc = GST_READ_UINT32_LE (data + 4);
       GST_DEBUG ("fourcc " GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
 
       if (length == 0) {
@@ -533,9 +534,9 @@ gst_qtdemux_loop_header (GstElement * element)
       if (length == 1) {
         guint32 length1, length2;
 
-        length1 = GUINT32_FROM_BE (*(guint32 *) (data + 8));
+        length1 = GST_READ_UINT32_BE (data + 8);
         GST_DEBUG ("length1 %08x", length1);
-        length2 = GUINT32_FROM_BE (*(guint32 *) (data + 12));
+        length2 = GST_READ_UINT32_BE (data + 12);
         GST_DEBUG ("length2 %08x", length2);
 
         length = length2;
@@ -1125,8 +1126,8 @@ qtdemux_node_dump_foreach (GNode * node, gpointer data)
   QtNodeType *type;
   int depth;
 
-  node_length = GUINT32_FROM_BE (*(guint32 *) buffer);
-  fourcc = GUINT32_FROM_LE (*(guint32 *) (buffer + 4));
+  node_length = GST_READ_UINT32_BE (buffer);
+  fourcc = GST_READ_UINT32_LE (buffer + 4);
 
   type = qtdemux_type_get (fourcc);
 
@@ -1518,7 +1519,7 @@ qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
       child = g_node_next_sibling (child)) {
     buffer = child->data;
 
-    child_fourcc = GUINT32_FROM_LE (*(guint32 *) (buffer + 4));
+    child_fourcc = GST_READ_UINT32_LE (buffer + 4);
 
     if (child_fourcc == fourcc) {
       return child;
@@ -1538,7 +1539,7 @@ qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
       child = g_node_next_sibling (child)) {
     buffer = child->data;
 
-    child_fourcc = GUINT32_FROM_LE (*(guint32 *) (buffer + 4));
+    child_fourcc = GST_READ_UINT32_LE (buffer + 4);
 
     if (child_fourcc == fourcc) {
       return child;
