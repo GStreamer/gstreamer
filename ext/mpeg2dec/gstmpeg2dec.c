@@ -149,6 +149,7 @@ static void gst_mpeg2dec_class_init (GstMpeg2decClass * klass);
 static void gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec);
 
 static void gst_mpeg2dec_dispose (GObject * object);
+static void gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec);
 
 static void gst_mpeg2dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -317,6 +318,7 @@ gst_mpeg2dec_open_decoder (GstMpeg2dec * mpeg2dec)
   mpeg2dec->decoder = mpeg2_init ();
   mpeg2dec->closed = FALSE;
   mpeg2dec->have_fbuf = FALSE;
+  mpeg2_custom_fbuf (mpeg2dec->decoder, 1);
 }
 
 static void
@@ -329,6 +331,20 @@ gst_mpeg2dec_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+static void
+gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
+{
+  /* reset the initial video state */
+  mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
+  mpeg2dec->width = -1;
+  mpeg2dec->height = -1;
+  mpeg2dec->segment_start = 0;
+  mpeg2dec->segment_end = -1;
+  mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
+  mpeg2dec->frame_period = 0;
+  gst_mpeg2dec_open_decoder (mpeg2dec);
+  mpeg2dec->need_sequence = TRUE;
+}
 static void
 gst_mpeg2dec_set_index (GstElement * element, GstIndex * index)
 {
@@ -398,6 +414,8 @@ free_all_buffers (GstMpeg2dec * mpeg2dec)
 
   for (i = 0; i < GST_MPEG2DEC_NUM_BUFS; i++) {
     if (mpeg2dec->buffers[i] != NULL) {
+      GST_DEBUG_OBJECT (mpeg2dec, "free_all Releasing %p at slot %d",
+          mpeg2dec->buffers[i], i);
       gst_buffer_unref (mpeg2dec->buffers[i]);
       mpeg2dec->buffers[i] = NULL;
     }
@@ -518,8 +536,13 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset)
   }
 
   if (!put_buffer (mpeg2dec, outbuf)) {
+#if 0
     GST_ELEMENT_ERROR (mpeg2dec, LIBRARY, TOO_LAZY, (NULL),
         ("No free slot. libmpeg2 did not discard buffers."));
+#else
+    GST_WARNING_OBJECT (mpeg2dec,
+        "No free slot. libmpeg2 did not discard buffers.");
+#endif
     return NULL;
   }
 
@@ -624,13 +647,11 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     return FALSE;
   }
 
-  if (!mpeg2dec->have_fbuf) {
-    /* alloc 2 buffers */
-    if (!gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset) ||
-        !gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset))
-      return FALSE;
-    mpeg2dec->have_fbuf = TRUE;
-  }
+  free_all_buffers (mpeg2dec);
+  if (!gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset) ||
+      !gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset) ||
+      !gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset))
+    return FALSE;
 
   mpeg2dec->need_sequence = FALSE;
 
@@ -848,22 +869,36 @@ gst_mpeg2dec_flush_decoder (GstMpeg2dec * mpeg2dec)
     do {
       state = mpeg2_parse (mpeg2dec->decoder);
       switch (state) {
+        case STATE_SEQUENCE:
+          if (!handle_sequence (mpeg2dec, info)) {
+            gst_mpeg2dec_close_decoder (mpeg2dec);
+            gst_mpeg2dec_open_decoder (mpeg2dec);
+            state = -1;
+          }
+          break;
         case STATE_PICTURE:
+          if (!handle_picture (mpeg2dec, info)) {
+            gst_mpeg2dec_close_decoder (mpeg2dec);
+            gst_mpeg2dec_open_decoder (mpeg2dec);
+            state = -1;
+            break;
+          }
           mpeg2_skip (mpeg2dec->decoder, 1);
           break;
         case STATE_END:
 #if MPEG2_RELEASE >= MPEG2_VERSION (0, 4, 0)
         case STATE_INVALID_END:
 #endif
+          // mpeg2dec->need_sequence = TRUE;
         case STATE_SLICE:
-          if (info->discard_fbuf && info->discard_fbuf->id) {
+          if (info->discard_fbuf) {
             if (free_buffer (mpeg2dec, GST_BUFFER (info->discard_fbuf->id))) {
               GST_DEBUG_OBJECT (mpeg2dec, "Discarded buffer %p",
                   info->discard_fbuf->id);
             } else {
               GST_ELEMENT_ERROR (mpeg2dec, LIBRARY, TOO_LAZY, (NULL),
-                  ("libmpeg2 reported invalid buffer %p",
-                      info->discard_fbuf->id));
+                  ("libmpeg2 reported invalid buffer %p, fbuf: %p",
+                      info->discard_fbuf->id, info->discard_fbuf));
             }
           }
           break;
@@ -880,6 +915,13 @@ gst_mpeg2dec_flush_decoder (GstMpeg2dec * mpeg2dec)
       }
     }
     while (state != STATE_BUFFER && state != -1);
+
+#if MPEG2_RELEASE >= MPEG2_VERSION(0,4,0)
+    GST_DEBUG_OBJECT (mpeg2dec, "resetting mpeg2 stream decoder");
+    /* 0 starts at next picture, 1 at next sequence header */
+    mpeg2_reset (mpeg2dec->decoder, 0);
+#endif
+
   }
 }
 
@@ -915,8 +957,13 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
               GST_TIME_ARGS (mpeg2dec->next_time));
         }
 
-        mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
-        gst_mpeg2dec_flush_decoder (mpeg2dec);
+        if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+          gst_mpeg2dec_reset (mpeg2dec);
+        } else {
+          mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
+          gst_mpeg2dec_flush_decoder (mpeg2dec);
+        }
+
         gst_pad_event_default (pad, event);
         return;
       }
@@ -979,7 +1026,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
     switch (state) {
       case STATE_SEQUENCE:
         if (!handle_sequence (mpeg2dec, info)) {
-          gst_mpeg2dec_flush_decoder (mpeg2dec);
           goto exit;
         }
 
@@ -999,7 +1045,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
       case STATE_PICTURE:
       {
         if (!handle_picture (mpeg2dec, info)) {
-          gst_mpeg2dec_flush_decoder (mpeg2dec);
           goto exit;
         }
         break;
@@ -1018,11 +1063,8 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
         mpeg2dec->need_sequence = TRUE;
       case STATE_SLICE:
         if (!handle_slice (mpeg2dec, info)) {
-          gst_mpeg2dec_flush_decoder (mpeg2dec);
           goto exit;
         }
-        if (state != STATE_SLICE)
-          gst_mpeg2dec_flush_decoder (mpeg2dec);
 
         break;
       case STATE_BUFFER:
@@ -1033,11 +1075,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
         /* error */
       case STATE_INVALID:
         GST_WARNING_OBJECT (mpeg2dec, "Decoding error");
-        /*
-         * We need to close the decoder here, according to docs
-         */
-        gst_mpeg2dec_close_decoder (mpeg2dec);
-        gst_mpeg2dec_open_decoder (mpeg2dec);
         goto exit;
 
         break;
@@ -1061,7 +1098,16 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
     }
 #endif
   }
+  gst_buffer_unref (buf);
+  return;
+
 exit:
+  /*
+   * Close and reopen the decoder, because
+   * something went pretty wrong
+   */
+  gst_mpeg2dec_close_decoder (mpeg2dec);
+  gst_mpeg2dec_open_decoder (mpeg2dec);
   gst_buffer_unref (buf);
 }
 
@@ -1331,8 +1377,9 @@ index_seek (GstPad * pad, GstEvent * event)
         /* do the seek */
         if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
           /* seek worked, we're done, loop will exit */
-          gst_mpeg2dec_flush_decoder (mpeg2dec);
+#if 0
           mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
+#endif
           return TRUE;
         }
       }
@@ -1390,7 +1437,9 @@ normal_seek (GstPad * pad, GstEvent * event)
       /* do the seekk */
       if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
         /* seek worked, we're done, loop will exit */
+#if 0
         mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
+#endif
         res = TRUE;
         break;
       }
@@ -1461,16 +1510,7 @@ gst_mpeg2dec_change_state (GstElement * element)
     {
       mpeg2dec->next_time = 0;
 
-      /* reset the initial video state */
-      mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
-      mpeg2dec->width = -1;
-      mpeg2dec->height = -1;
-      mpeg2dec->segment_start = 0;
-      mpeg2dec->segment_end = -1;
-      mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
-      mpeg2dec->frame_period = 0;
-      gst_mpeg2dec_open_decoder (mpeg2dec);
-      mpeg2dec->need_sequence = TRUE;
+      gst_mpeg2dec_reset (mpeg2dec);
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -1478,7 +1518,6 @@ gst_mpeg2dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_mpeg2dec_flush_decoder (mpeg2dec);
       gst_mpeg2dec_close_decoder (mpeg2dec);
       break;
     case GST_STATE_READY_TO_NULL:

@@ -1,3 +1,11 @@
+2005-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_open_decoder),
+	(gst_mpeg2dec_reset), (free_all_buffers),
+	(gst_mpeg2dec_alloc_buffer), (handle_sequence):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  The libmpeg2 user-allocated buffer management is awkward, 
+	  to say the least. Hopefully this fixes things.
+
 2005-02-04  Andy Wingo  <wingo@pobox.com>
 
 	* gst/audioconvert/bufferframesconvert.c
