@@ -1,3 +1,45 @@
+2005-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Add dvdlpcmdec 
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_reset),
+	(free_all_buffers), (gst_mpeg2dec_alloc_buffer):
+	  Don't push buffers if the src pad isn't negotiated yet.
+	  
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_buffer_to_default_format),
+	(gst_audio_convert_buffer_from_default_format):
+	  Add support for 24-bit width.
+
+	* gst/dvdlpcmdec/.cvsignore:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_get_type),
+	(gst_dvdlpcmdec_base_init), (gst_dvdlpcmdec_class_init),
+	(gst_dvdlpcm_reset), (gst_dvdlpcmdec_init), (gst_dvdlpcmdec_link),
+	(gst_dvdlpcmdec_chain), (gst_dvdlpcmdec_change_state),
+	(plugin_init):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	  New decoder for rearranging DVD LPCM into our audio/x-raw-int
+	  format. Needs support for the channels maps if someone can find 
+	  a DVD LPCM track with > 2 channels.
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_handle_dvd_event),
+	(gst_dvd_demux_send_discont), (gst_dvd_demux_handle_discont),
+	(gst_dvd_demux_get_audio_stream), (gst_dvd_demux_process_private):
+	* gst/mpegstream/gstdvddemux.h:
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_discont),
+	(gst_mpeg_demux_new_output_pad), (gst_mpeg_demux_init_stream),
+	(gst_mpeg_demux_send_subbuffer), (gst_mpeg_demux_handle_src_query):
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_reset),
+	(gst_mpeg_parse_parse_packhead), (gst_mpeg_parse_loop),
+	(gst_mpeg_parse_get_rate), (gst_mpeg_parse_convert_src),
+	(gst_mpeg_parse_handle_src_query),
+	(gst_mpeg_parse_handle_src_event):
+          Use audio/x-dvd-lpcm for LPCM output.
+	  Add DTS output.
+
 2005-02-08  Gergely Nagy  <algernon@bonehunter.rulez.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
