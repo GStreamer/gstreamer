@@ -34,6 +34,7 @@
 #include "gstpipefilter.h"
 #include "gsttee.h"
 #include "gstaggregator.h"
+#include "gststatistics.h"
 
 #if HAVE_LIBGHTTP
 #include <gsthttpsrc.h>
@@ -64,6 +65,7 @@ static struct _elements_entry _elements[] = {
   { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,	NULL },
   { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
   { "aggregator",   gst_aggregator_get_type, 	&gst_aggregator_details,	gst_aggregator_factory_init },
+  { "statistics",   gst_statistics_get_type, 	&gst_statistics_details,	NULL },
 
 #if HAVE_LIBGHTTP
   { "httpsrc",	    gst_httpsrc_get_type,	&gst_httpsrc_details,      NULL },
