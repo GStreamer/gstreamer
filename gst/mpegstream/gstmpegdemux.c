@@ -58,7 +58,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 );
 
 GST_PAD_TEMPLATE_FACTORY (audio_factory,
-  "audio_[1-32]",
+  "audio_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
@@ -69,7 +69,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_factory,
 );
 
 GST_PAD_TEMPLATE_FACTORY (video_mpeg1_factory,
-  "video_[0-15]",
+  "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
@@ -81,7 +81,7 @@ GST_PAD_TEMPLATE_FACTORY (video_mpeg1_factory,
 );
 
 GST_PAD_TEMPLATE_FACTORY (video_mpeg2_factory,
-  "video_[0-15]",
+  "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
@@ -94,7 +94,7 @@ GST_PAD_TEMPLATE_FACTORY (video_mpeg2_factory,
 
 
 GST_PAD_TEMPLATE_FACTORY (private1_factory,
-  "private_stream_1.[0-7]",
+  "private_stream_1.%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
@@ -116,7 +116,7 @@ GST_PAD_TEMPLATE_FACTORY (private2_factory,
 );
 
 GST_PAD_TEMPLATE_FACTORY (subtitle_factory,
-  "subtitle_stream_[0-15]",
+  "subtitle_stream_%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
