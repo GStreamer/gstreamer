@@ -246,7 +246,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
     granulepos = dec->granulepos;
   } else {
     /* query peer in default format */
-    if (!dec->sinkpad ||
+    if (!dec->sinkpad || !GST_PAD_PEER (dec->sinkpad) ||
         !gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format,
             &granulepos))
       return FALSE;

@@ -1,3 +1,8 @@
+2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
+	  Check for pad availability before doing a query on it.
+
 2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dv/gstdvdec.c:
