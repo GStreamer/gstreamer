@@ -205,7 +205,7 @@ GST_PLUGINS_ALL="\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         passthrough playondemand rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
-        synaesthesia udp videoscale volenv volume vumeter wavparse y4m goom"
+        synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
 
 AC_SUBST(GST_PLUGINS_ALL)
 
@@ -487,6 +487,17 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
   JPEG_LIBS="-ljpeg"
   AC_SUBST(JPEG_LIBS)
+])
+
+dnl *** jpeg-mmx ***
+AC_ARG_WITH(jpeg-mmx-path, [ --with-jpeg-mmx-path, path to mmx accelerated jpeg lib])
+translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG_MMX, true)
+GST_CHECK_FEATURE(JPEG_MMX, [jpeg-mmx], jpegmmxenc jpegmmxdec, [
+   AC_CHECK_LIB(jpeg-mmx, jpeg_start_compress, HAVE_JPEG_MMX="yes", HAVE_JPEG_MMX="no", "-L$with_jpeg_mmx_path")
+   JPEG_MMX_LIBS="-L$with_jpeg_mmx_path -ljpeg-mmx"
+   JPEG_MMX_CFLAGS="-I$with_jpeg_mmx_path"
+   AC_SUBST(JPEG_MMX_LIBS)
+   AC_SUBST(JPEG_MMX_CFLAGS)
 ])
 
 dnl *** mad ***
@@ -783,7 +794,6 @@ gst/volume/Makefile
 gst/vumeter/Makefile
 gst/wavparse/Makefile
 gst/y4m/Makefile
-gst/goom/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
