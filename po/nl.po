@@ -1,16 +1,16 @@
-# GStreamer plugins translated strings
-# Copyright (C) 2003,2004 GStreamer core team
-# This file is distributed under the same license as the GStreamer package.
-# Thomas Vander Stichele <thomas@apestaart.org>, 2004.
-#
+# Dutch translation of gst-plugins.
+# Copyright (C) 2004 Free Software Foundation, Inc.
+# Elros Cyriatan <cyriatan@fastmail.fm>, 2004.
+# 
+# 
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins\n"
+"Project-Id-Version: gst-plugins 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-03-16 00:32+0100\n"
-"PO-Revision-Date: 2004-02-02 23:08+0100\n"
-"Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
-"Language-Team: Dutch <nl@li.org>\n"
+"PO-Revision-Date: 2004-03-31 00:40+0200\n"
+"Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
+"Language-Team: Dutch <vertaling@nl.linux.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,40 +18,40 @@ msgstr ""
 #: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kon bestand \"%s\" niet openen voor schrijven."
+msgstr "Kon \"%s\" niet openen om te schrijven."
 
 #: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:372
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Kon bestand \"%s\" niet sluiten."
+msgstr "Fout bij sluiten bestand \"%s\"."
 
 #: ext/audiofile/gstafsrc.c:319
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kon bestand \"%s\" niet openen voor lezen."
+msgstr "Kon \"%s\" niet openen om te lezen."
 
 #: ext/cdparanoia/gstcdparanoia.c:643 ext/cdparanoia/gstcdparanoia.c:659
 msgid "Could not open CD device for reading."
-msgstr "Kon CD-apparaat niet openen voor lezen."
+msgstr "Kon het CD-apparaat niet openen om te lezen."
 
 #: ext/gnomevfs/gstgnomevfssrc.c:1054 ext/gnomevfs/gstgnomevfssrc.c:1077
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Kon vfs-bestand \"%s\" niet openen voor lezen."
+msgstr "Kon het VFS-bestand \"%s\" niet openen om te lezen."
 
 #: ext/gnomevfs/gstgnomevfssink.c:293
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing."
-msgstr "Kon vfs-bestand \"%s\" niet openen voor schrijven."
+msgstr "Kon het VFS-bestand \"%s\" niet openen om te schrijven."
 
 #: ext/gnomevfs/gstgnomevfssink.c:318
 #, c-format
 msgid "Could not close vfs file \"%s\"."
-msgstr "Kon vfs-bestand \"%s\" niet sluiten."
+msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
 
 #: ext/sndfile/gstsf.c:579
 msgid "No filename specified."
-msgstr "Geen bestandsnaam gegeven."
+msgstr "Geen bestandsnaam opgegeven."
 
 #: ext/sndfile/gstsf.c:832
 #, c-format
@@ -60,47 +60,47 @@ msgstr "Kon niet schrijven naar bestand \"%s\"."
 
 #: gst/avi/gstavimux.c:1051
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Geen of foutief invoergeluid, AVI zal corrupt zijn."
+msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
 #: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
-msgstr "Kon audio-apparaat \"%s\" niet openen voor schrijven."
+msgstr "Kon geluidsapparaat \"%s\" niet openen om te schrijven."
 
 #: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
-msgstr "Kon controle-apparaat \"%s\" niet openen voor schrijven."
+msgstr "Kon instelapparaat \"%s\" niet openen om te schrijven."
 
 #: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
-msgstr "Kon audio-apparaat \"%s\" niet configureren."
+msgstr "Kon geluidsapparaat \"%s\" niet configureren."
 
 #: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Kon audio-apparaat \"%s\" niet instellen op %d Hz."
+msgstr "Kon geluidsapparaat \"%s\" niet instellen op %d Hz."
 
 #: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
-msgstr "Kon audio-apparaat \"%s\" niet sluiten."
+msgstr "Kon geluidsapparaat \"%s\" niet sluiten."
 
 #: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
 #, c-format
 msgid "Could not close control device \"%s\"."
-msgstr "Kon controle-apparaat \"%s\" niet sluiten."
+msgstr "Kon instelapparaat \"%s\" niet sluiten."
 
 #: sys/dxr3/dxr3videosink.c:270
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
-msgstr "Kon video-apparaat \"%s\" niet openen voor schrijven."
+msgstr "Kon videoapparaat \"%s\" niet openen om te schrijven."
 
 #: sys/dxr3/dxr3videosink.c:300
 #, c-format
 msgid "Could not close video device \"%s\"."
-msgstr "Kon video-apparaat \"%s\" niet sluiten."
+msgstr "Kon videoapparaat \"%s\" niet sluiten."
 
 #: sys/dxr3/dxr3videosink.c:452 sys/v4l2/v4l2src_calls.c:123
 #, c-format
@@ -115,8 +115,7 @@ msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."
 #: sys/oss/gstosselement.c:707 sys/oss/gstosselement.c:711
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
-msgstr ""
-"Kon geen toegang krijgen tot apparaat \"%s\", controleer de permissies."
+msgstr "Kon geen toegang krijgen tot apparaat \"%s\", controleer de toegangsrechten."
 
 #: sys/oss/gstosselement.c:718
 #, c-format
@@ -126,28 +125,28 @@ msgstr "Apparaat \"%s\" bestaat niet."
 #: sys/oss/gstosselement.c:725
 #, c-format
 msgid "Could not open device \"%s\" for writing."
-msgstr "Kon apparaat \"%s\" niet openen voor schrijven."
+msgstr "Kon apparaat \"%s\" niet openen om te schrijven."
 
 #: sys/oss/gstosselement.c:729
 #, c-format
 msgid "Could not open device \"%s\" for reading."
-msgstr "Kon apparaat \"%s\" niet openen voor lezen."
+msgstr "Kon apparaat \"%s\" niet openen om te lezen."
 
 #: sys/oss/gstossmixer.c:83
 msgid "Volume"
-msgstr "Volume"
+msgstr "Geluidssterkte"
 
 #: sys/oss/gstossmixer.c:84
 msgid "Bass"
-msgstr "Lage Tonen"
+msgstr "Lage tonen"
 
 #: sys/oss/gstossmixer.c:85
 msgid "Treble"
-msgstr "Hoge Tonen"
+msgstr "Hoge tonen"
 
 #: sys/oss/gstossmixer.c:86
 msgid "Synth"
-msgstr "Synthesizer"
+msgstr "Synth"
 
 #: sys/oss/gstossmixer.c:87
 msgid "PCM"
@@ -159,7 +158,7 @@ msgstr "Luidspreker"
 
 #: sys/oss/gstossmixer.c:89
 msgid "Line-in"
-msgstr "Lijningang"
+msgstr "Lijn-in"
 
 #: sys/oss/gstossmixer.c:90
 msgid "Microphone"
@@ -171,7 +170,7 @@ msgstr "CD"
 
 #: sys/oss/gstossmixer.c:92
 msgid "Mixer"
-msgstr "Mixer"
+msgstr "Mengpaneel"
 
 #: sys/oss/gstossmixer.c:93
 msgid "PCM-2"
@@ -183,43 +182,43 @@ msgstr "Opname"
 
 #: sys/oss/gstossmixer.c:95
 msgid "In-gain"
-msgstr "Invoer-volume"
+msgstr "Versterking-in"
 
 #: sys/oss/gstossmixer.c:96
 msgid "Out-gain"
-msgstr "Uitvoer-volume"
+msgstr "Versterking-uit"
 
 #: sys/oss/gstossmixer.c:97
 msgid "Line-1"
-msgstr "Lijningang 1"
+msgstr "Lijn-1"
 
 #: sys/oss/gstossmixer.c:98
 msgid "Line-2"
-msgstr "Lijningang 2"
+msgstr "Lijn-2"
 
 #: sys/oss/gstossmixer.c:99
 msgid "Line-3"
-msgstr "Lijningang 3"
+msgstr "Lijn-3"
 
 #: sys/oss/gstossmixer.c:100
 msgid "Digital-1"
-msgstr "Digitaal 1"
+msgstr "Digitaal-1"
 
 #: sys/oss/gstossmixer.c:101
 msgid "Digital-2"
-msgstr "Digitaal 2"
+msgstr "Digitaal-2"
 
 #: sys/oss/gstossmixer.c:102
 msgid "Digital-3"
-msgstr "Digitaal 3"
+msgstr "Digitaal-3"
 
 #: sys/oss/gstossmixer.c:103
 msgid "Phone-in"
-msgstr "Telefoon-ingang"
+msgstr "Telefoon-in"
 
 #: sys/oss/gstossmixer.c:104
 msgid "Phone-out"
-msgstr "Koptelefoon-uitgang"
+msgstr "Telefoon-uit"
 
 #: sys/oss/gstossmixer.c:105
 msgid "Video"
@@ -231,11 +230,11 @@ msgstr "Radio"
 
 #: sys/oss/gstossmixer.c:107
 msgid "Monitor"
-msgstr "Monitor"
+msgstr "Bijhouden"
 
 #: sys/v4l/v4l_calls.c:114
 msgid "No device specified."
-msgstr "Geen apparaat gegeven."
+msgstr "Geen apparaat opgegeven."
 
 #: sys/v4l/v4l_calls.c:122 sys/v4l2/v4l2_calls.c:395
 #, c-format
@@ -244,23 +243,23 @@ msgstr "Kon apparaat \"%s\" niet openen voor lezen en schrijven."
 
 #: sys/v4l/v4l_calls.h:47
 msgid "Device is not open."
-msgstr "Apparaat is niet open."
+msgstr "Apparaat is niet geopend."
 
 #: sys/v4l/v4l_calls.h:56
 msgid "Device is open."
-msgstr "Apparaat is open."
+msgstr "Apparaat is geopend."
 
 #: sys/v4l2/v4l2_calls.c:409
 #, c-format
 msgid "Device \"%s\" is not a capture device."
-msgstr "Apparaat \"%s\" is geen opname-apparaat."
+msgstr "Apparaat \"%s\" is niet een opvangapparaat."
 
 #: sys/v4l2/v4l2src_calls.c:255
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
-msgstr "Kon geen buffers lezen van apparaat \"%s\"."
+msgstr "Kon geen buffers opvragen van apparaat \"%s\"."
 
 #: sys/v4l2/v4l2src_calls.c:264
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
-msgstr "Kon niet genoeg buffers lezen van apparaat \"%s\"."
+msgstr "Kon niet voldoende buffers opvragen van apparaat \"%s\"."
