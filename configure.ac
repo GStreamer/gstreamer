@@ -1842,8 +1842,8 @@ gst/videodrop/Makefile
 gst/videofilter/Makefile
 gst/videoflip/Makefile
 gst/videomixer/Makefile
-gst/videoscale/Makefile
 gst/videorate/Makefile
+gst/videoscale/Makefile
 gst/videotestsrc/Makefile
 gst/volenv/Makefile
 gst/volume/Makefile
