@@ -8,4 +8,6 @@ endif
 SUBDIRS = $(GNOME_SUBDS) \
           helloworld helloworld2 \
           queue queue2 queue3 queue4 \
-          launch thread xml plugins typefind mixer
+          launch thread xml typefind mixer
+
+DIST_SUBDIRS = autoplug plugins

@@ -32,12 +32,12 @@ int main(int argc,char *argv[])
   //thread = gst_thread_new("thread");
   thread = gst_elementfactory_make("thread", "thread");
   g_assert(thread != NULL);
-  gtk_signal_connect (GTK_OBJECT (thread), "object_saved", object_saved, g_strdup ("decoder thread"));
+  g_signal_connectc (G_OBJECT (thread), "object_saved", object_saved, g_strdup ("decoder thread"), FALSE);
 
   thread2 = gst_elementfactory_make("thread", "thread2");
   //thread2 = gst_thread_new("thread2");
   g_assert(thread2 != NULL);
-  gtk_signal_connect (GTK_OBJECT (thread2), "object_saved", object_saved, g_strdup ("render thread"));
+  g_signal_connectc (G_OBJECT (thread2), "object_saved", object_saved, g_strdup ("render thread"), FALSE);
 
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");
@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
 
   queue = gst_elementfactory_make("queue", "queue");
   queue2 = gst_elementfactory_make("queue", "queue2");

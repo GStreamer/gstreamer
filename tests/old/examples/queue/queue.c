@@ -25,7 +25,7 @@ int main(int argc,char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
 
   parse = gst_elementfactory_make("mp3parse", "parse");
   decode = gst_elementfactory_make("mpg123", "decode");

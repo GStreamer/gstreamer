@@ -35,9 +35,9 @@ int main(int argc,char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
-  gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
-                     GTK_SIGNAL_FUNC(eos), thread);
+  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
+  g_signal_connectc(G_OBJECT(disksrc),"eos",
+                     G_CALLBACK(eos), thread, FALSE);
 
   queue = gst_elementfactory_make("queue", "queue");
 

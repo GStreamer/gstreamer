@@ -34,7 +34,7 @@ main(int argc, char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
 
   typefind = gst_elementfactory_make("typefind", "typefind");
   g_assert(typefind != NULL);
@@ -43,8 +43,8 @@ main(int argc, char *argv[])
   gst_bin_add(GST_BIN(bin), disksrc);
   gst_bin_add(GST_BIN(bin), typefind);
 
-  gtk_signal_connect (GTK_OBJECT (typefind), "have_type", 
-		  type_found, NULL);
+  g_signal_connectc (G_OBJECT (typefind), "have_type", 
+		  type_found, NULL, FALSE);
 
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(typefind,"sink"));

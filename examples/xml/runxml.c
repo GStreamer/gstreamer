@@ -35,7 +35,7 @@ int main(int argc,char *argv[])
 
   xml = gst_xml_new ();
 
-  gtk_signal_connect (GTK_OBJECT (xml), "object_loaded", xml_loaded, xml);
+  g_signal_connectc (G_OBJECT (xml), "object_loaded", xml_loaded, xml, FALSE);
 
   ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
   g_assert (ret == TRUE);
