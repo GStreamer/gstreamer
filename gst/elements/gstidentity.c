@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstidentity.c: 
  *
@@ -101,6 +102,8 @@ static GstElementStateReturn gst_identity_change_state (GstElement * element);
 
 static gboolean gst_identity_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_identity_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_identity_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer);
 static void gst_identity_set_clock (GstElement * element, GstClock * clock);
 
 
@@ -211,6 +214,8 @@ gst_identity_init (GstIdentity * identity)
   identity->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
+  gst_pad_set_getrange_function (identity->srcpad,
+      GST_DEBUG_FUNCPTR (gst_identity_getrange));
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
 
   identity->loop_based = DEFAULT_LOOP_BASED;
@@ -240,7 +245,7 @@ gst_identity_event (GstPad * pad, GstEvent * event)
 {
   GstIdentity *identity;
 
-  identity = GST_IDENTITY (gst_pad_get_parent (pad));
+  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
 
   if (!identity->silent) {
     g_free (identity->last_message);
@@ -255,6 +260,17 @@ gst_identity_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
+gst_identity_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer)
+{
+  GstIdentity *identity;
+
+  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
+
+  return gst_pad_pull_range (identity->sinkpad, offset, length, buffer);
+}
+
+static GstFlowReturn
 gst_identity_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *buf = GST_BUFFER (buffer);
@@ -266,7 +282,7 @@ gst_identity_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
-  identity = GST_IDENTITY (gst_pad_get_parent (pad));
+  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
 
   /* see if we need to do perfect stream checking */
   /* invalid timestamp drops us out of check.  FIXME: maybe warn ? */
@@ -373,26 +389,6 @@ gst_identity_chain (GstPad * pad, GstBuffer * buffer)
   }
   return result;
 }
-
-#if 0
-static void
-gst_identity_loop (GstElement * element)
-{
-  GstIdentity *identity;
-  GstBuffer *buf;
-  GstFlowReturn ret;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_IDENTITY (element));
-
-  identity = GST_IDENTITY (element);
-
-  ret = gst_pad_pull (identity->sinkpad, &buf);
-  if (ret == GST_FLOW_OK) {
-    gst_identity_chain (identity->sinkpad, buf);
-  }
-}
-#endif
 
 static void
 gst_identity_set_property (GObject * object, guint prop_id,

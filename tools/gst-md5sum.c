@@ -7,45 +7,31 @@
 #include <gst/gst.h>
 #include <locale.h>
 
-static guint64 iterations = 0;
-static guint64 sum = 0;
-static guint64 min = G_MAXINT64;
-static guint64 max = 0;
-static GstClock *s_clock;
+static GMainLoop *loop;
 
-gboolean
-idle_func (gpointer data)
+static gboolean
+message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
-  gboolean busy;
-  GTimeVal tfthen, tfnow;
-  GstClockTimeDiff diff;
-
-  if (s_clock) {
-    //g_print ("%lld\n", gst_clock_get_time (s_clock));
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_EOS:
+      if (g_main_loop_is_running (loop))
+        g_main_loop_quit (loop);
+      break;
+    case GST_MESSAGE_ERROR:
+      gst_object_default_error (GST_MESSAGE_SRC (message),
+          GST_MESSAGE_ERROR_GERROR (message),
+          GST_MESSAGE_ERROR_DEBUG (message));
+      if (g_main_loop_is_running (loop))
+        g_main_loop_quit (loop);
+      break;
+    default:
+      break;
   }
+  gst_message_unref (message);
 
-  g_get_current_time (&tfthen);
-  //busy = gst_bin_iterate (GST_BIN (data));
-  busy = FALSE;
-  iterations++;
-  g_get_current_time (&tfnow);
-
-  diff = GST_TIMEVAL_TO_TIME (tfnow) - GST_TIMEVAL_TO_TIME (tfthen);
-
-  sum += diff;
-  min = MIN (min, diff);
-  max = MAX (max, diff);
-
-  if (!busy) {
-    //gst_main_quit ();
-    /*
-       g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
-       iterations, sum, sum/iterations, min, max);
-     */
-  }
-
-  return busy;
+  return TRUE;
 }
+
 
 int
 main (int argc, char *argv[])
@@ -121,12 +107,16 @@ main (int argc, char *argv[])
   //g_signal_connect (pipeline, "error",
   //    G_CALLBACK (gst_object_default_error), NULL);
 
+  loop = g_main_loop_new (NULL, FALSE);
+  gst_bus_add_watch (gst_element_get_bus (GST_ELEMENT (pipeline)),
+      (GstBusHandler) message_received, pipeline);
+
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
     g_warning ("pipeline doesn't want to play\n");
     return 0;
   }
 
-  gst_main ();
+  g_main_loop_run (loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

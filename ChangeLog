@@ -1,5 +1,13 @@
 2005-01-26  Wim Taymans  <wim@fluendo.com>
 
+	* gst/elements/gstidentity.c: (gst_identity_init),
+	(gst_identity_event), (gst_identity_getrange),
+	(gst_identity_chain):
+	* tools/gst-md5sum.c: (message_received), (main):
+	Fix md5sum by implementing the mainloop.
+
+2005-01-26  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-scheduling.txt:
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_activate):
 	* gst/elements/gstidentity.c: (gst_identity_chain):
