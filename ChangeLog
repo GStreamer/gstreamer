@@ -1,3 +1,11 @@
+2004-12-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_get_caps), (gst_alsa_close_audio):
+	* ext/alsa/gstalsa.h:
+	  refactor big chunks of the core caps negotiation code to make it
+	  a lot faster, because people claim it's really slow
+	  (actually, just cache the getcaps when the device is opened)
+
 2004-12-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_init),
