@@ -585,6 +585,7 @@ init_post (void)
   _gst_format_initialize ();
   _gst_query_type_initialize ();
   gst_object_get_type ();
+  gst_probe_get_type ();
   gst_pad_get_type ();
   gst_real_pad_get_type ();
   gst_ghost_pad_get_type ();

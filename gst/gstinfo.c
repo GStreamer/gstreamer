@@ -157,6 +157,7 @@ GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
 GstDebugCategory *GST_CAT_SEEK = NULL;
 GstDebugCategory *GST_CAT_SIGNAL = NULL;
+GstDebugCategory *GST_CAT_PROBE = NULL;
 
 /* FIXME: export this? */
 gboolean
@@ -273,8 +274,6 @@ _gst_debug_init (void)
 
   GST_CAT_EVENT = _gst_debug_category_new ("GST_EVENT",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, NULL);
-  GST_CAT_SIGNAL = _gst_debug_category_new ("GST_SIGNAL",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PARAMS = _gst_debug_category_new ("GST_PARAMS",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLACK | GST_DEBUG_BG_YELLOW, NULL);
   GST_CAT_CALL_TRACE = _gst_debug_category_new ("GST_CALL_TRACE",
@@ -282,6 +281,11 @@ _gst_debug_init (void)
   /* FIXME: fold back to GST_CAT_EVENT in 0.9 */
   GST_CAT_SEEK = _gst_debug_category_new ("GST_SEEK",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, "plugins reacting to seek events");
+  GST_CAT_SIGNAL = _gst_debug_category_new ("GST_SIGNAL",
+      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
+  GST_CAT_PROBE = _gst_debug_category_new ("GST_PROBE",
+      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "pad probes");
+
 
   /* print out the valgrind message if we're in valgrind */
   __gst_in_valgrind ();

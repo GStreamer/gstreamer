@@ -23,9 +23,6 @@
 #include "gst_private.h"
 #include "gstprobe.h"
 
-GST_DEBUG_CATEGORY_STATIC (debug_probe);
-#define GST_CAT_DEFAULT debug_probe
-
 static GstProbe *
 _gst_probe_copy (const GstProbe * src)
 {
@@ -40,8 +37,6 @@ gst_probe_get_type (void)
   if (!gst_probe_type) {
     gst_probe_type = g_boxed_type_register_static ("GstProbe",
         (GBoxedCopyFunc) _gst_probe_copy, (GBoxedFreeFunc) gst_probe_destroy);
-    GST_DEBUG_CATEGORY_INIT (debug_probe, "GST_PROBE",
-        GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "pad probes");
   }
 
   return gst_probe_type;
@@ -72,7 +67,7 @@ gst_probe_new (gboolean single_shot,
   probe->callback = callback;
   probe->user_data = user_data;
 
-  GST_DEBUG ("created probe %p", probe);
+  GST_CAT_DEBUG (GST_CAT_PROBE, "created probe %p", probe);
 
   return probe;
 }
@@ -111,7 +106,7 @@ gst_probe_perform (GstProbe * probe, GstData ** data)
 
   g_return_val_if_fail (probe, res);
 
-  GST_DEBUG ("performing probe %p", probe);
+  GST_CAT_DEBUG (GST_CAT_PROBE, "performing probe %p", probe);
 
   if (probe->callback)
     res = probe->callback (probe, data, probe->user_data);
@@ -203,7 +198,8 @@ gst_probe_dispatcher_add_probe (GstProbeDispatcher * disp, GstProbe * probe)
   g_return_if_fail (disp);
   g_return_if_fail (probe);
 
-  GST_DEBUG ("adding probe %p to dispatcher %p", probe, disp);
+  GST_CAT_DEBUG (GST_CAT_PROBE, "adding probe %p to dispatcher %p", probe,
+      disp);
 
   disp->probes = g_slist_prepend (disp->probes, probe);
 }
@@ -221,7 +217,8 @@ gst_probe_dispatcher_remove_probe (GstProbeDispatcher * disp, GstProbe * probe)
   g_return_if_fail (disp);
   g_return_if_fail (probe);
 
-  GST_DEBUG ("removing probe %p from dispatcher %p", probe, disp);
+  GST_CAT_DEBUG (GST_CAT_PROBE, "removing probe %p from dispatcher %p",
+      probe, disp);
 
   disp->probes = g_slist_remove (disp->probes, probe);
 }
@@ -243,7 +240,8 @@ gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstData ** data)
 
   g_return_val_if_fail (disp, res);
 
-  GST_DEBUG ("dispatching data %p on dispatcher %p", *data, disp);
+  GST_CAT_DEBUG (GST_CAT_PROBE, "dispatching data %p on dispatcher %p",
+      *data, disp);
 
   walk = disp->probes;
   while (walk) {

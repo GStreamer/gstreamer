@@ -72,6 +72,7 @@ extern GstDebugCategory *GST_CAT_EVENT;
 extern GstDebugCategory *GST_CAT_PARAMS;
 extern GstDebugCategory *GST_CAT_CALL_TRACE;
 extern GstDebugCategory *GST_CAT_SIGNAL;
+extern GstDebugCategory *GST_CAT_PROBE;
 
 #else
 
@@ -103,6 +104,7 @@ extern GstDebugCategory *GST_CAT_SIGNAL;
 #define GST_CAT_PARAMS           NULL
 #define GST_CAT_CALL_TRACE       NULL
 #define GST_CAT_SIGNAL           NULL
+#define GST_CAT_PROBE            NULL
 
 #endif
 
