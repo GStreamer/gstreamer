@@ -133,6 +133,14 @@ GStreamer support libraries header files.
 @USE_A52DEC_TRUE@%defattr(-, root, root)
 @USE_A52DEC_TRUE@%{_libdir}/gst/libgsta52dec.so
 @USE_A52DEC_TRUE@%{_libdir}/gst/libgstac3parse.so
+@USE_A52DEC_TRUE@
+@USE_A52DEC_TRUE@%post -n gstreamer-a52dec
+@USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_A52DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_A52DEC_TRUE@
+@USE_A52DEC_TRUE@%postun -n gstreamer-a52dec
+@USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_A52DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### AALIB ###
 @USE_AALIB_TRUE@%package -n gstreamer-aalib
@@ -148,6 +156,14 @@ GStreamer support libraries header files.
 @USE_AALIB_TRUE@%files -n gstreamer-aalib
 @USE_AALIB_TRUE@%defattr(-, root, root)
 @USE_AALIB_TRUE@%{_libdir}/gst/libgstaasink.so
+@USE_AALIB_TRUE@
+@USE_AALIB_TRUE@%post -n gstreamer-aalib
+@USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@
+@USE_AALIB_TRUE@%postun -n gstreamer-aalib
+@USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ALSA ###
 @USE_ALSA_TRUE@%package -n gstreamer-alsa
@@ -163,6 +179,14 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@%defattr(-, root, root)
 @USE_ALSA_TRUE@%{_libdir}/gst/libgstalsa.so
 @USE_ALSA_TRUE@%{_mandir}/man1/gstalsa*
+@USE_ALSA_TRUE@
+@USE_ALSA_TRUE@%post -n gstreamer-alsa
+@USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ALSA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ALSA_TRUE@
+@USE_ALSA_TRUE@%postun -n gstreamer-alsa
+@USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ALSA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ARTS WRAPPER ###
 @USE_ARTS_TRUE@%package -n gstreamer-arts
@@ -179,6 +203,14 @@ GStreamer support libraries header files.
 @USE_ARTS_TRUE@%files -n gstreamer-arts
 @USE_ARTS_TRUE@%defattr(-, root, root)
 @USE_ARTS_TRUE@%{_libdir}/gst/libgstarts.so
+@USE_ARTS_TRUE@
+@USE_ARTS_TRUE@%post -n gstreamer-arts
+@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ARTS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ARTS_TRUE@
+@USE_ARTS_TRUE@%postun -n gstreamer-arts
+@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ARTS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ARTSD SOUND SERVER ###
 @USE_ARTSC_TRUE@%package -n gstreamer-artsd
@@ -192,6 +224,14 @@ GStreamer support libraries header files.
 @USE_ARTSC_TRUE@%files -n gstreamer-artsd
 @USE_ARTSC_TRUE@%defattr(-, root, root)
 @USE_ARTSC_TRUE@%{_libdir}/gst/libgstartsdsink.so
+@USE_ARTSC_TRUE@
+@USE_ARTSC_TRUE@%post -n gstreamer-artsd
+@USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ARTSC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ARTSC_TRUE@
+@USE_ARTSC_TRUE@%postun -n gstreamer-artsd
+@USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ARTSC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### AUDIOFILE ###
 @USE_AUDIOFILE_TRUE@%package -n gstreamer-audiofile
@@ -207,6 +247,14 @@ GStreamer support libraries header files.
 @USE_AUDIOFILE_TRUE@%files -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%defattr(-, root, root)
 @USE_AUDIOFILE_TRUE@%{_libdir}/gst/libgstaudiofile.so
+@USE_AUDIOFILE_TRUE@
+@USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
+@USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_AUDIOFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AUDIOFILE_TRUE@
+@USE_AUDIOFILE_TRUE@%postun -n  gstreamer-audiofile
+@USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_AUDIOFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### AVIFILE ###
 @USE_AVIFILE_TRUE@%package -n gstreamer-avi
@@ -225,6 +273,14 @@ GStreamer support libraries header files.
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavidemux.so
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavimux.so
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstwincodec.so
+@USE_AVIFILE_TRUE@
+@USE_AVIFILE_TRUE@%post -n gstreamer-avi
+@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_AVIFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AVIFILE_TRUE@
+@USE_AVIFILE_TRUE@%postun -n gstreamer-avi
+@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_AVIFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### CDPARANOIA ###
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
@@ -240,6 +296,14 @@ GStreamer support libraries header files.
 @USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%defattr(-, root, root)
 @USE_CDPARANOIA_TRUE@%{_libdir}/gst/libgstcdparanoia.so
+@USE_CDPARANOIA_TRUE@
+@USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
+@USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_CDPARANOIA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_CDPARANOIA_TRUE@
+@USE_CDPARANOIA_TRUE@%postun -n gstreamer-cdparanoia
+@USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_CDPARANOIA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### DVDREAD ###
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvdread
@@ -256,6 +320,14 @@ GStreamer support libraries header files.
 @USE_DVDREAD_TRUE@%files -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%defattr(-, root, root)
 @USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdreadsrc.so
+@USE_DVDREAD_TRUE@
+@USE_DVDREAD_TRUE@%post -n gstreamer-libdvdread
+@USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_DVDREAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DVDREAD_TRUE@
+@USE_DVDREAD_TRUE@%postun -n gstreamer-libdvdread
+@USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_DVDREAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ## DXR3 ###
 @USE_DXR3_TRUE@%package -n gstreamer-dxr3
@@ -273,6 +345,14 @@ GStreamer support libraries header files.
 @USE_DXR3_TRUE@%files -n gstreamer-dxr3
 @USE_DXR3_TRUE@%defattr(-, root, root)
 @USE_DXR3_TRUE@%{_libdir}/gst/libgstdxr3.so
+@USE_DXR3_TRUE@
+@USE_DXR3_TRUE@%post -n gstreamer-dxr3
+@USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_DXR3_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DXR3_TRUE@
+@USE_DXR3_TRUE@%postun -n gstreamer-dxr3
+@USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_DXR3_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ESD ###
 @USE_ESD_TRUE@%package -n gstreamer-esound
@@ -290,14 +370,22 @@ GStreamer support libraries header files.
 @USE_ESD_TRUE@%defattr(-, root, root)
 @USE_ESD_TRUE@%{_libdir}/gst/libgstesdmon.so
 @USE_ESD_TRUE@%{_libdir}/gst/libgstesdsink.so
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@%post -n gstreamer-esound
+@USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ESD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@%postun -n gstreamer-esound
+@USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_ESD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### FLAC ###
 @USE_FLAC_TRUE@%package -n gstreamer-flac
 @USE_FLAC_TRUE@Summary:       GStreamer plug-in for FLAC lossless audio.
 @USE_FLAC_TRUE@Group:         Libraries/Multimedia
 @USE_FLAC_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_FLAC_TRUE@Requires:      flac >= 1.0.0
-@USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.0
+@USE_FLAC_TRUE@Requires:      flac >= 1.0.3
+@USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%description -n gstreamer-flac
 @USE_FLAC_TRUE@Plug-in for the free FLAC lossless audio format.
@@ -305,6 +393,14 @@ GStreamer support libraries header files.
 @USE_FLAC_TRUE@%files -n gstreamer-flac
 @USE_FLAC_TRUE@%defattr(-, root, root)
 @USE_FLAC_TRUE@%{_libdir}/gst/libgstflac.so
+@USE_FLAC_TRUE@
+@USE_FLAC_TRUE@%post -n gstreamer-flac
+@USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_FLAC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_FLAC_TRUE@
+@USE_FLAC_TRUE@%postun -n gstreamer-flac
+@USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_FLAC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### GNOME VFS 2 ###
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
@@ -321,6 +417,14 @@ GStreamer support libraries header files.
 @USE_GNOME_VFS_TRUE@%defattr(-, root, root)
 @USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfssrc.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfssink.so
+@USE_GNOME_VFS_TRUE@
+@USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
+@USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_GNOME_VFS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_GNOME_VFS_TRUE@
+@USE_GNOME_VFS_TRUE@%postun -n gstreamer-gnomevfs
+@USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_GNOME_VFS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### GSM ###
 @USE_GSM_TRUE@%package -n gstreamer-gsm
@@ -336,6 +440,14 @@ GStreamer support libraries header files.
 @USE_GSM_TRUE@%files -n gstreamer-gsm
 @USE_GSM_TRUE@%defattr(-, root, root)
 @USE_GSM_TRUE@%{_libdir}/gst/libgstgsm.so
+@USE_GSM_TRUE@
+@USE_GSM_TRUE@%post -n gstreamer-gsm
+@USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_GSM_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_GSM_TRUE@
+@USE_GSM_TRUE@%postun -n gstreamer-gsm
+@USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_GSM_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### HERMES ###
 @USE_HERMES_TRUE@%package -n gstreamer-colorspace
@@ -350,6 +462,14 @@ GStreamer support libraries header files.
 @USE_HERMES_TRUE@%files -n gstreamer-colorspace
 @USE_HERMES_TRUE@%defattr(-, root, root)
 @USE_HERMES_TRUE@%{_libdir}/gst/libgstcolorspace.so
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%post -n gstreamer-colorspace
+@USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%postun -n gstreamer-colorspace
+@USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### HTTP ###
 @USE_HTTP_TRUE@%package -n gstreamer-httpsrc
@@ -366,6 +486,14 @@ GStreamer support libraries header files.
 @USE_HTTP_TRUE@%files -n gstreamer-httpsrc
 @USE_HTTP_TRUE@%defattr(-, root, root)
 @USE_HTTP_TRUE@%{_libdir}/gst/libgsthttpsrc.so
+@USE_HTTP_TRUE@
+@USE_HTTP_TRUE@%post -n gstreamer-httpsrc
+@USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_HTTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HTTP_TRUE@
+@USE_HTTP_TRUE@%postun -n gstreamer-httpsrc
+@USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_HTTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 #### JACK AUDIO CONNECTION KIT ###
 @USE_JACK_TRUE@%package -n gstreamer-jack
@@ -380,6 +508,14 @@ GStreamer support libraries header files.
 @USE_JACK_TRUE@%files -n gstreamer-jack
 @USE_JACK_TRUE@%defattr(-, root, root)
 @USE_JACK_TRUE@%{_libdir}/gst/libgstjack.so
+@USE_JACK_TRUE@
+@USE_JACK_TRUE@%post -n gstreamer-jack
+@USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_JACK_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_JACK_TRUE@
+@USE_JACK_TRUE@%postun -n gstreamer-jack
+@USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_JACK_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### JPEG ###
 @USE_JPEG_TRUE@%package -n gstreamer-jpeg
@@ -395,6 +531,14 @@ GStreamer support libraries header files.
 @USE_JPEG_TRUE@%files -n gstreamer-jpeg
 @USE_JPEG_TRUE@%defattr(-, root, root)
 @USE_JPEG_TRUE@%{_libdir}/gst/libgstjpeg.so
+@USE_JPEG_TRUE@
+@USE_JPEG_TRUE@%post -n gstreamer-jpeg
+@USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_JPEG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_JPEG_TRUE@
+@USE_JPEG_TRUE@%postun -n gstreamer-jpeg
+@USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_JPEG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### LADSPA ###
 @USE_LADSPA_TRUE@%package -n gstreamer-ladspa
@@ -412,6 +556,14 @@ GStreamer support libraries header files.
 @USE_LADSPA_TRUE@%files -n gstreamer-ladspa
 @USE_LADSPA_TRUE@%defattr(-, root, root)
 @USE_LADSPA_TRUE@%{_libdir}/gst/libgstladspa.so
+@USE_LADSPA_TRUE@
+@USE_LADSPA_TRUE@%post -n gstreamer-ladspa
+@USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LADSPA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LADSPA_TRUE@
+@USE_LADSPA_TRUE@%postun -n gstreamer-ladspa
+@USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LADSPA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### LAME ###
 @USE_LAME_TRUE@%package -n gstreamer-lame
@@ -427,6 +579,14 @@ GStreamer support libraries header files.
 @USE_LAME_TRUE@%files -n gstreamer-lame
 @USE_LAME_TRUE@%defattr(-, root, root)
 @USE_LAME_TRUE@%{_libdir}/gst/libgstlame.so
+@USE_LAME_TRUE@
+@USE_LAME_TRUE@%post -n gstreamer-lame
+@USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LAME_TRUE@
+@USE_LAME_TRUE@%postun -n gstreamer-lame
+@USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### LIBDV ###
 @USE_LIBDV_TRUE@%package -n gstreamer-dv
@@ -442,6 +602,15 @@ GStreamer support libraries header files.
 @USE_LIBDV_TRUE@%files -n gstreamer-dv
 @USE_LIBDV_TRUE@%defattr(-, root, root)
 @USE_LIBDV_TRUE@%{_libdir}/gst/libgstdvdec.so
+@USE_LIBDV_TRUE@
+@USE_LIBDV_TRUE@%post -n gstreamer-dv
+@USE_LIBDV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBDV_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBDV_TRUE@
+@USE_LIBDV_TRUE@%postun -n gstreamer-dv
+@USE_LIBDV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBDV_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 
 ### LIBFAME ###
 @USE_LIBFAME_TRUE@%package -n gstreamer-libfame
@@ -457,12 +626,21 @@ GStreamer support libraries header files.
 @USE_LIBFAME_TRUE@%files -n gstreamer-libfame
 @USE_LIBFAME_TRUE@%defattr(-, root, root)
 @USE_LIBFAME_TRUE@%{_libdir}/gst/libgstlibfame.so
+@USE_LIBFAME_TRUE@
+@USE_LIBFAME_TRUE@%post -n gstreamer-libfame
+@USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBFAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBFAME_TRUE@
+@USE_LIBFAME_TRUE@%postun -n gstreamer-libfame
+@USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBFAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
 @USE_MAD_TRUE@Summary:       GStreamer plug-in using MAD for mp3 decoding.
 @USE_MAD_TRUE@Group:         Libraries/Multimedia
 @USE_MAD_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_MAD_TRUE@Requires:      gstreamer-audio-formats
 @USE_MAD_TRUE@Requires:      mad >= 0.13.0
 @USE_MAD_TRUE@BuildRequires: mad-devel >= 0.13.0
 @USE_MAD_TRUE@
@@ -472,6 +650,14 @@ GStreamer support libraries header files.
 @USE_MAD_TRUE@%files -n gstreamer-mad
 @USE_MAD_TRUE@%defattr(-, root, root)  
 @USE_MAD_TRUE@%{_libdir}/gst/libgstmad.so
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%post -n gstreamer-mad
+@USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%postun -n gstreamer-mad
+@USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MIKMOD ###
 @USE_MIKMOD_TRUE@%package -n gstreamer-mikmod
@@ -487,6 +673,14 @@ GStreamer support libraries header files.
 @USE_MIKMOD_TRUE@%files -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%defattr(-, root, root)
 @USE_MIKMOD_TRUE@%{_libdir}/gst/libgstmikmod.so
+@USE_MIKMOD_TRUE@
+@USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
+@USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MIKMOD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MIKMOD_TRUE@
+@USE_MIKMOD_TRUE@%postun -n gstreamer-mikmod
+@USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MIKMOD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MJPEGTOOLS ###
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
@@ -503,6 +697,14 @@ GStreamer support libraries header files.
 @USE_MJPEGTOOLS_TRUE@%defattr(-, root, root)
 @USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmxenc.so
 @USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmxdec.so
+@USE_MJPEGTOOLS_TRUE@
+@USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
+@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MJPEGTOOLS_TRUE@
+@USE_MJPEGTOOLS_TRUE@%postun -n gstreamer-jpegmmx
+@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MPEG2DEC ###
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg
@@ -531,6 +733,14 @@ GStreamer support libraries header files.
 @USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2dec.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2subt.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2types.so
+@USE_MPEG2DEC_TRUE@
+@USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
+@USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MPEG2DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MPEG2DEC_TRUE@
+@USE_MPEG2DEC_TRUE@%postun -n  gstreamer-mpeg
+@USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_MPEG2DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### OPENQUICKTIME ###
 @USE_OPENQUICKTIME_TRUE@%package -n gstreamer-openquicktime
@@ -550,6 +760,14 @@ GStreamer support libraries header files.
 @USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimedemux.so
 @USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimetypes.so
 @USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimedecoder.so
+@USE_OPENQUICKTIME_TRUE@
+@USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
+@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_OPENQUICKTIME_TRUE@
+@USE_OPENQUICKTIME_TRUE@%postun -n gstreamer-openquicktime
+@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### OSS ###
 @USE_OSS_TRUE@%package -n gstreamer-oss
@@ -567,6 +785,14 @@ GStreamer support libraries header files.
 @USE_OSS_TRUE@%defattr(-, root, root)
 @USE_OSS_TRUE@%{_libdir}/gst/libgstossaudio.so
 # @USE_OSS_TRUE@%{_libdir}/gst/libgstosshelper*
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@%post -n gstreamer-oss
+@USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_OSS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@%postun -n gstreamer-oss
+@USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_OSS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### RAW1394 ###
 @USE_RAW1394_TRUE@%package -n gstreamer-raw1394
@@ -582,6 +808,14 @@ GStreamer support libraries header files.
 @USE_RAW1394_TRUE@%files -n gstreamer-raw1394
 @USE_RAW1394_TRUE@%defattr(-, root, root)
 @USE_RAW1394_TRUE@%{_libdir}/gst/libgst1394.so
+@USE_RAW1394_TRUE@
+@USE_RAW1394_TRUE@%post -n gstreamer-raw1394
+@USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_RAW1394_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_RAW1394_TRUE@
+@USE_RAW1394_TRUE@%postun -n gstreamer-raw1394
+@USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_RAW1394_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### RTP ###
 @USE_RTP_TRUE@%package -n gstreamer-rtp
@@ -596,6 +830,14 @@ GStreamer support libraries header files.
 @USE_RTP_TRUE@%files -n gstreamer-rtp
 @USE_RTP_TRUE@%defattr(-, root, root)
 @USE_RTP_TRUE@%{_libdir}/gst/libgstrtp.so
+@USE_RTP_TRUE@
+@USE_RTP_TRUE@%post -n gstreamer-rtp
+@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_RTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_RTP_TRUE@
+@USE_RTP_TRUE@%postun -n gstreamer-rtp
+@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_RTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SIDPLAY ###
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
@@ -611,6 +853,14 @@ GStreamer support libraries header files.
 @USE_SIDPLAY_TRUE@%files -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%defattr(-, root, root)
 @USE_SIDPLAY_TRUE@%{_libdir}/gst/libgstsid.so
+@USE_SIDPLAY_TRUE@
+@USE_SIDPLAY_TRUE@%post -n gstreamer-sid
+@USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SIDPLAY_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SIDPLAY_TRUE@
+@USE_SIDPLAY_TRUE@%postun -n gstreamer-sid
+@USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SIDPLAY_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SDL ###
 @USE_SDL_TRUE@%package -n gstreamer-SDL
@@ -632,6 +882,14 @@ GStreamer support libraries header files.
 @USE_SDL_TRUE@%files -n gstreamer-SDL
 @USE_SDL_TRUE@%defattr(-, root, root)
 @USE_SDL_TRUE@%{_libdir}/gst/libgstsdlvideosink.so
+@USE_SDL_TRUE@
+@USE_SDL_TRUE@%post -n gstreamer-SDL
+@USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SDL_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SDL_TRUE@
+@USE_SDL_TRUE@%postun -n gstreamer-SDL
+@USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SDL_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SHOUT ###
 @USE_SHOUT_TRUE@%package -n gstreamer-icecast
@@ -647,6 +905,14 @@ GStreamer support libraries header files.
 @USE_SHOUT_TRUE@%files -n gstreamer-icecast
 @USE_SHOUT_TRUE@%defattr(-, root, root)
 @USE_SHOUT_TRUE@%{_libdir}/gst/libgstshout.so
+@USE_SHOUT_TRUE@
+@USE_SHOUT_TRUE@%post -n gstreamer-icecast
+@USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SHOUT_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SHOUT_TRUE@
+@USE_SHOUT_TRUE@%postun -n gstreamer-icecast
+@USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SHOUT_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### VORBIS ###
 @USE_VORBIS_TRUE@%package -n gstreamer-vorbis
@@ -664,6 +930,14 @@ GStreamer support libraries header files.
 @USE_VORBIS_TRUE@%files -n gstreamer-vorbis  
 @USE_VORBIS_TRUE@%defattr(-, root, root)
 @USE_VORBIS_TRUE@%{_libdir}/gst/libgstvorbis.so
+@USE_VORBIS_TRUE@
+@USE_VORBIS_TRUE@%post -n gstreamer-vorbis
+@USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_VORBIS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_VORBIS_TRUE@
+@USE_VORBIS_TRUE@%postun -n gstreamer-vorbis
+@USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_VORBIS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### VIDEO 4 LINUX ###
 @USE_V4L_TRUE@%package -n gstreamer-v4l
@@ -681,6 +955,14 @@ GStreamer support libraries header files.
 @USE_V4L_TRUE@%{_libdir}/gst/libgstv4lsrc.so
 @USE_V4L_TRUE@%{_libdir}/gst/libgstv4lmjpegsrc.so
 @USE_V4L_TRUE@%{_libdir}/gst/libgstv4lmjpegsink.so
+@USE_V4L_TRUE@
+@USE_V4L_TRUE@%post -n gstreamer-v4l
+@USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_V4L_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_V4L_TRUE@
+@USE_V4L_TRUE@%postun -n gstreamer-v4l
+@USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_V4L_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### VIDEO 4 LINUX 2 ###
 @USE_V4L2_TRUE@%package -n gstreamer-v4l2
@@ -696,6 +978,15 @@ GStreamer support libraries header files.
 @USE_V4L2_TRUE@%defattr(-, root, root)
 @USE_V4L2_TRUE@%{_libdir}/gst/libgstv4l2element.so
 @USE_V4L2_TRUE@%{_libdir}/gst/libgstv4l2src.so
+@USE_V4L2_TRUE@
+@USE_V4L2_TRUE@%post -n gstreamer-v4l2
+@USE_V4L2_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_V4L2_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_V4L2_TRUE@
+@USE_V4L2_TRUE@%postun -n gstreamer-v4l2
+@USE_V4L2_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_V4L2_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 
 ### XVIDEO ###
 @USE_XVIDEO_TRUE@%package -n gstreamer-xvideosink
@@ -708,7 +999,15 @@ GStreamer support libraries header files.
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%files -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
-@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstxvideosink.so
+@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstxvideosink*
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
+@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%postun -n gstreamer-xvideosink
+@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 @USE_XVIDEO_TRUE@%package -n gstreamer-videosink
 @USE_XVIDEO_TRUE@Summary:       GStreamer Video Sink
@@ -723,6 +1022,14 @@ GStreamer support libraries header files.
 @USE_XVIDEO_TRUE@%files -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
 @USE_XVIDEO_TRUE@%{_libdir}/gst/libgstvideosink.so
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%post -n gstreamer-videosink
+@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@
+@USE_XVIDEO_TRUE@%postun -n gstreamer-videosink
+@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### packages without external dependencies ###
 
@@ -762,6 +1069,14 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 %{_libdir}/gst/libgstfilter.so
 %{_libdir}/gst/libmixmatrix.so
 
+%post -n gstreamer-audio-effects
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-audio-effects
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### audio-formats ###
 %package -n gstreamer-audio-formats
 Summary: 	GStreamer audio format plug-ins.
@@ -779,6 +1094,14 @@ Plug-in for playback of wav, au and mod audio files as well as mp3 type.
 %{_libdir}/gst/libgstmp3types.so
 %{_libdir}/gst/libgstmodplug.so
 
+%post -n gstreamer-audio-formats
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-audio-formats
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### festival ###
 %package -n gstreamer-festival
 Summary: 	GStreamer plug-in for text-to-speech support using a festival server.
@@ -791,6 +1114,14 @@ Plug-in for text-to-speech using the festival server.
 %files -n gstreamer-festival
 %defattr(-, root, root)
 %{_libdir}/gst/libgstfestival.so
+
+%post -n gstreamer-festival
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-festival
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### flx ###
 %package -n gstreamer-flx
@@ -805,6 +1136,14 @@ Plug-in for playing FLI/FLX animations under GStreamer.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstflxdec.so
 
+%post -n gstreamer-flx
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-flx
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### qcam ###
 %package -n gstreamer-qcam
 Summary: 	GStreamer QuickCam plug-in.
@@ -817,6 +1156,14 @@ Plug-in for accessing a Quickcam video source.
 %files -n gstreamer-qcam
 %defattr(-, root, root)
 %{_libdir}/gst/libgstqcam.so
+
+%post -n gstreamer-qcam
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-qcam
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### udp ###
 %package -n gstreamer-udp
@@ -831,6 +1178,14 @@ Plug-ins for UDP transport under GStreamer.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstudp.so
 
+%post -n gstreamer-udp
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-udp
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### vcd ###
 %package -n gstreamer-vcd
 Summary: 	GStreamer Video CD plug-in.
@@ -844,6 +1199,14 @@ Video CD parsing and playback plug-in for GStreamer.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstvcdsrc.so
 %{_libdir}/gst/libgstcdxaparse.so
+
+%post -n gstreamer-vcd
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-vcd
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### video-effects ###
 %package -n gstreamer-video-effects
@@ -863,6 +1226,14 @@ plug-ins.
 %{_libdir}/gst/libgstdeinterlace.so
 %{_libdir}/gst/libgstmedian.so
 %{_libdir}/gst/libgstrtjpeg.so
+
+%post -n gstreamer-video-effects
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-video-effects
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### visualisation ###
 %package -n gstreamer-visualisation
@@ -885,6 +1256,14 @@ and vumeter.
 %{_libdir}/gst/libgstmonoscope.so
 %{_libdir}/gst/libgstsynaesthesia.so
 
+%post -n gstreamer-visualisation
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-visualisation
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### yuv4mjpeg ###
 %package -n gstreamer-yuv4mjpeg
 Summary: 	GStreamer plug-in for YUV to MJPEG conversion.
@@ -899,6 +1278,14 @@ processed with the lavtools from mjpegtools.
 %files -n gstreamer-yuv4mjpeg
 %defattr(-, root, root)
 %{_libdir}/gst/libgsty4menc.so
+
+%post -n gstreamer-yuv4mjpeg
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-yuv4mjpeg
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 # package supporting GConf
 @USE_GCONF_TRUE@%package -n gstreamer-GConf
@@ -922,6 +1309,14 @@ processed with the lavtools from mjpegtools.
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Fri Sep 20 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added gst-compprep calls
+
+* Wed Sep 18 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- add gst-register calls everywhere again since auto-reregister doesn't work
+- added gstreamer-audio-formats to mad's requires since it needs the typefind
+  to work properly
+
 * Mon Sep 9 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Added v4l2 plugin
 * Thu Aug 27 2002 Christian Schaller <Uraeus@linuxrising.org>
