@@ -796,7 +796,7 @@ esac],
 [USE_PROFILING=no]) dnl Default value
 
 dnl Default value
-GST_CONFIG_DIR="${sysconfdir}/gstreamer"
+GST_CONFIG_DIR=${sysconfdir}/gstreamer
 AC_ARG_WITH(configdir,
 [  --with-configdir             specify path to use for configdir],
 [case "${withval}" in
@@ -1041,7 +1041,7 @@ dnl # Set up some more defines #
 dnl ############################
 
 dnl Set location of configuration dir.
-AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
+dnl AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
 AC_SUBST(GST_CONFIG_DIR)
 
 dnl Set location of windows dll dir.

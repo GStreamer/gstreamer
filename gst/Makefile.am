@@ -181,7 +181,7 @@ noinst_HEADERS = 	\
 	gstsparc.h	\
 	gstpropsprivate.h
 
-CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE
+CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""@sysconfdir@/gstreamer"\"
 LIBS = $(LIBGST_LIBS)
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
