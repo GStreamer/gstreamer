@@ -1,3 +1,9 @@
+2004-11-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_get_caps):
+	  Don't omit the last (which incase of dmix is the only :) )
+	  channel count. Don't set channels if <= 2.
+
 2004-11-26  Christophe Fergeau  <teuf@gnome.org>
 
 	* gst/playback/gstplaybin.c: (gen_video_element),
