@@ -123,6 +123,9 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 static void		gst_goom_class_init	(GstGOOMClass *klass);
 static void		gst_goom_init		(GstGOOM *goom);
 
+static GstElementStateReturn
+			gst_goom_change_state 	(GstElement *element);
+
 static void		gst_goom_set_property	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
 static void		gst_goom_get_property	(GObject *object, guint prop_id, 
@@ -180,6 +183,8 @@ gst_goom_class_init(GstGOOMClass *klass)
 
   gobject_class->set_property = gst_goom_set_property;
   gobject_class->get_property = gst_goom_get_property;
+
+  gstelement_class->change_state = gst_goom_change_state;
 }
 
 static void
@@ -196,15 +201,9 @@ gst_goom_init (GstGOOM *goom)
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
   gst_pad_set_link_function (goom->sinkpad, gst_goom_sinkconnect);
 
-  goom->next_time = 0;
-  goom->peerpool = NULL;
-
-  /* reset the initial video state */
-  goom->first_buffer = TRUE;
   goom->width = 320;
   goom->height = 200;
   goom->fps = 25; /* desired frame rate */
-
 }
 
 static GstPadLinkReturn
@@ -290,6 +289,34 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   GST_DEBUG (0, "GOOM: exiting chainfunc");
 
+}
+
+static GstElementStateReturn
+gst_goom_change_state (GstElement *element)
+{ 
+  GstGOOM *goom = GST_GOOM (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break; 
+    case GST_STATE_READY_TO_PAUSED:
+      goom->next_time = 0;
+      goom->peerpool = NULL;
+      /* reset the initial video state */
+      goom->first_buffer = TRUE;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 static void
