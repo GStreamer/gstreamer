@@ -105,6 +105,8 @@ typedef unsigned char byte;
 #define PREDICTOR1(x, k)	((long)((((uint64)x << k) - x) >> k))
 #define DEC(x)			(((x)&1)?(++(x)>>1):(-(x)>>1))
 
+#if 0
+/* This doesn't compile on non-gcc compilers */
 typedef struct {
     unsigned long TTAid;
     unsigned short AudioFormat;
@@ -114,6 +116,7 @@ typedef struct {
     unsigned long DataLength;
     unsigned long CRC32;
 } __ATTRIBUTE_PACKED__ tta_hdr;
+#endif
 
 typedef struct {
 	unsigned long k0;
