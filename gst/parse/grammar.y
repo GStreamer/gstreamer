@@ -815,7 +815,7 @@ _gst_parse_launch (const gchar *str, GError **error)
 #endif
 
   if (yyparse (&g) != 0) {
-    SET_ERROR (error, GST_PARSE_ERROR_SYNTAX, "Unrecoverable syntax error while parsing pipeline");
+    SET_ERROR (error, GST_PARSE_ERROR_SYNTAX, "Unrecoverable syntax error while parsing pipeline %s", str);
     
     goto error1;
   }
