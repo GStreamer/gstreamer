@@ -214,21 +214,21 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 1, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Windows Media Video 7");
+        *codec_name = g_strdup ("Microsoft Windows Media 7 (WMV1)");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '2'):
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 2, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Windows Media Video 8");
+        *codec_name = g_strdup ("Microsoft Windows Media 8 (WMV2)");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '3'):
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 3, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Windows Media Video 9");
+        *codec_name = g_strdup ("Microsoft Windows Media 9 (WMV3)");
       break;
 
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
