@@ -239,7 +239,6 @@ static GstPadLinkReturn
 gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstAASink *aasink;
-  gulong print_format;
 
   aasink = GST_AASINK (gst_pad_get_parent (pad));
 
@@ -249,9 +248,10 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "width", &aasink->width);
   gst_caps_get_int (caps, "height", &aasink->height);
 
-  print_format = GULONG_FROM_LE (aasink->format);
+  /* FIXME aasink->format is never set */
 
-  GST_DEBUG (0, "aasink: setting %08lx (%4.4s)", aasink->format, (gchar*)&print_format);
+  GST_DEBUG (0, "aasink: setting %08lx (" GST_FOURCC_FORMAT ")",
+		 aasink->format, GST_FOURCC_ARGS(aasink->format));
   
   g_signal_emit( G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
 		 aasink->width, aasink->height);
