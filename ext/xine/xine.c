@@ -153,7 +153,11 @@ gst_buffer_to_xine_buffer (buf_element_t *ret, GstBuffer *buffer)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  return gst_xine_audio_dec_init_plugin (plugin);
+  if (!gst_xine_input_init_plugin (plugin) ||
+      !gst_xine_audio_dec_init_plugin (plugin))
+    return FALSE;
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (

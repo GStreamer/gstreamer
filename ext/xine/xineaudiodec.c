@@ -286,7 +286,7 @@ gst_xine_audio_dec_event (GstXineAudioDec *xine, GstEvent *event)
 static void
 gst_xine_audio_dec_chain (GstPad *pad, GstData *in)
 {
-  G_GNUC_UNUSED buf_element_t buffer = { 0, };
+  buf_element_t buffer = { 0, };
   GstXineAudioDec *xine = GST_XINE_AUDIO_DEC (gst_object_get_parent (GST_OBJECT (pad)));
 
   if (GST_IS_EVENT (in)) {
