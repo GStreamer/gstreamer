@@ -1,3 +1,14 @@
+gst-plugins (0.4.0.2-cvs20020919-1) unstable; urgency=low
+
+  * CVS snapshot, release branch
+  * gstreamer-gconf.files: libgstgconf.so moved to /usr/lib
+  * added control.in, build-deps, and mk.control script.  Edit control.in
+    and/or build-deps, and run 'debian/rules debian/control' from toplevel
+    directory to recreate debian/control.  This should make it a lot
+    easier to diff build dependencies.
+
+ -- David Schleef <ds@schleef.org>  Thu, 19 Sep 2002 15:18:41 -0700
+
 gst-plugins (0.4.0-4) unstable; urgency=low
 
   * Fixes from CVS for gstgnomevfssrc.c and endian issue in vorbisfile.c
