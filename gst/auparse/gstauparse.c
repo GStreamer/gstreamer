@@ -213,11 +213,11 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
       /* Do not trust size, could be set to -1 : unknown */
       auparse->size = GST_READ_UINT32_LE (head);
       head++;
-      auparse->encoding = GST_READ_UINT32_LE (*head);
+      auparse->encoding = GST_READ_UINT32_LE (head);
       head++;
-      auparse->frequency = GST_READ_UINT32_LE (*head);
+      auparse->frequency = GST_READ_UINT32_LE (head);
       head++;
-      auparse->channels = GST_READ_UINT32_LE (*head);
+      auparse->channels = GST_READ_UINT32_LE (head);
       head++;
 
     } else {
