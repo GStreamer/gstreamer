@@ -756,16 +756,21 @@ gst_caps_is_always_compatible (GstCaps *fromcaps, GstCaps *tocaps)
 
   while (fromcaps) {
     GstCaps *destcaps = tocaps;
+    /* assume caps is incompatible */
+    gboolean compat = FALSE;
 
-    while (destcaps) {
-      if (gst_caps_check_compatibility_func (fromcaps, destcaps))
-	return TRUE;
-
+    while (destcaps && !compat) {
+      if (gst_caps_check_compatibility_func (fromcaps, destcaps)) {
+	compat = TRUE;
+      }
       destcaps =  destcaps->next;
     }
+    if (!compat)
+      return FALSE;
+
     fromcaps =  fromcaps->next;
   }
-  return FALSE;
+  return TRUE;
 }
 
 static GstCaps*
