@@ -24,17 +24,22 @@
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
-#include <glib-object.h>
-#include <gst/gsttrace.h>
-#include <parser.h>
-
-#include <gst/gstmarshal.h>
-
-#include <gst/gsttypes.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+
+#ifdef USE_GLIB2
+#include <glib-object.h>
+#include <gst/gstmarshal.h>
+#else
+#include <gobject2gtk.h>
+#endif
+
+#include <gst/gsttrace.h>
+#include <parser.h>
+
+#include <gst/gsttypes.h>
 
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
@@ -143,12 +148,12 @@ gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 
 /* refcounting */
-GstObject *	gst_object_ref			(GstObject *object);		
-void 		gst_object_unref		(GstObject *object);		
-void 		gst_object_sink			(GstObject *object);		
+GstObject *	gst_object_ref			(GstObject *object);
+void 		gst_object_unref		(GstObject *object);
+void 		gst_object_sink			(GstObject *object);
 
 /* destroying an object */
-void 		gst_object_destroy		(GstObject *object);		
+void 		gst_object_destroy		(GstObject *object);
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);

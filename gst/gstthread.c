@@ -61,7 +61,7 @@ enum {
 static void			gst_thread_class_init		(GstThreadClass *klass);
 static void			gst_thread_init			(GstThread *thread);
 
-static void 			gst_thread_real_destroy 	(GObject *gtk_object);
+static void 			gst_thread_real_destroy 	(GObject *object);
 
 static void			gst_thread_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void			gst_thread_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -114,10 +114,6 @@ gst_thread_class_init (GstThreadClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BIN);
 
-/*
-  gtk_object_add_arg_type ("GstThread::create_thread", G_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_CREATE_THREAD);
-*/
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CREATE_THREAD,
     g_param_spec_boolean("create_thread", "Create Thread", "Whether to create a thread.",
                          TRUE,G_PARAM_READWRITE));
@@ -161,9 +157,9 @@ gst_thread_init (GstThread *thread)
 }
 
 static void
-gst_thread_real_destroy (GObject *gtk_object)
+gst_thread_real_destroy (GObject *object)
 {
-  GstThread *thread = GST_THREAD (gtk_object);
+  GstThread *thread = GST_THREAD (object);
 
   GST_DEBUG (GST_CAT_REFCOUNTING,"destroy()\n");
 
@@ -172,7 +168,7 @@ gst_thread_real_destroy (GObject *gtk_object)
 
 // FIXME!
 //  if (G_OBJECT_CLASS (parent_class)->destroy)
-//    G_OBJECT_CLASS (parent_class)->destroy (gtk_object);
+//    G_OBJECT_CLASS (parent_class)->destroy (object);
 
   gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));

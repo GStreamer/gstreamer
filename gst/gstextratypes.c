@@ -22,7 +22,8 @@
 
 #include "gst_private.h"
 
-#include "gstextratypes.h"
+#include <gst/gstobject.h>
+#include <gst/gstextratypes.h>
 
 GType 
 gst_extra_get_filename_type (void) 

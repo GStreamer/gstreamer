@@ -53,9 +53,9 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
 
-static void 		gst_object_real_destroy 	(GObject *gtk_object);
-static void 		gst_object_shutdown 		(GObject *gtk_object);
-static void 		gst_object_finalize 		(GObject *gtk_object);
+static void 		gst_object_real_destroy 	(GObject *object);
+static void 		gst_object_shutdown 		(GObject *object);
+static void 		gst_object_finalize 		(GObject *object);
 
 static GObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
@@ -220,7 +220,7 @@ gst_object_shutdown (GObject *object)
 {
   GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown '%s'\n",GST_OBJECT_NAME(object));
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
-  parent_class->shutdown (G_OBJECT (object));
+  parent_class->shutdown (object);
 }
 
 /* finilize is called when the object has to free its resources */
@@ -237,20 +237,20 @@ gst_object_real_destroy (GObject *g_object)
 
 /* finilize is called when the object has to free its resources */
 static void
-gst_object_finalize (GObject *gtk_object)
+gst_object_finalize (GObject *object)
 {
-  GstObject *object;
+  GstObject *gstobject;
 
-  object = GST_OBJECT (gtk_object);
+  gstobject = GST_OBJECT (object);
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "finalize '%s'\n",GST_OBJECT_NAME(object));
 
-  if (object->name != NULL)
-    g_free (object->name);
+  if (gstobject->name != NULL)
+    g_free (gstobject->name);
 
-  g_mutex_free (object->lock);
+  g_mutex_free (gstobject->lock);
 
-  parent_class->finalize (gtk_object);
+  parent_class->finalize (object);
 }
 
 /**

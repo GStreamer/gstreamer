@@ -199,9 +199,8 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       argname = arg;
       pos[0] = '\0';
       argval = pos+1;
-      DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
+      GST_DEBUG(0,"attempting to set argument '%s' to '%s' on element '%s'\n",
             argname,argval,GST_ELEMENT_NAME(previous));
-      //gtk_object_set(G_OBJECT(previous),argname,argval,NULL);
       gst_util_set_object_arg (G_OBJECT(previous), argname, argval);
       g_free(argname);
 

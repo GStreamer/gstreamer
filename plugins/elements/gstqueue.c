@@ -137,14 +137,6 @@ gst_queue_class_init (GstQueueClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-/*
-  gtk_object_add_arg_type ("GstQueue::leaky", GST_TYPE_QUEUE_LEAKY,
-                           GTK_ARG_READWRITE, ARG_LEAKY);
-  gtk_object_add_arg_type ("GstQueue::level", G_TYPE_INT,
-                           GTK_ARG_READABLE, ARG_LEVEL);
-  gtk_object_add_arg_type ("GstQueue::max_level", G_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_MAX_LEVEL);
-*/
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LEAKY,
     g_param_spec_enum("leaky","Leaky","Where the queue leaks, if at all.",
                       GST_TYPE_QUEUE_LEAKY,GST_QUEUE_NO_LEAK,G_PARAM_READWRITE));

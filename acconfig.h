@@ -8,6 +8,8 @@
 #undef HAVE_LC_MESSAGES
 #undef HAVE_STPCPY
 
+#undef USE_GLIB2
+
 #undef PLUGINS_DIR
 #undef PLUGINS_SRCDIR
 #undef PLUGINS_USE_SRCDIR

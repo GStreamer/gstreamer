@@ -169,11 +169,58 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 
-PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0, , AC_MSG_ERROR(Cannot find glib-2.0))
-CORE_LIBS="$GLIB_LIBS"
-CORE_CFLAGS="$GLIB_CFLAGS"
-AC_SUBST(GLIB_LIBS)
-AC_SUBST(GLIB_CFLAGS)
+AC_ARG_ENABLE(glib2,
+[  --enable-glib2            enable the use of glib-2.0 and GObject if available],
+[ case "${enableval}" in
+	yes) USE_GLIB2=yes ;;
+	no) USE_GLIB2=no ;;
+	*) AC_MSG_ERROR(bad value ${enableval} for --enable-glib2) ;;
+	esac],
+[:])
+HAVE_OBJECT_MODEL=no
+
+if test x$USE_GLIB2 = xyes; then
+  AC_MSG_CHECKING(glib-2.0)
+  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
+    HAVE_GLIB2=yes,HAVE_GLIB2=yes)
+
+  if test x$HAVE_GLIB2 = xyes; then
+    CORE_LIBS="$GLIB2_LIBS"
+    CORE_CFLAGS="$GLIB2_CFLAGS"
+    AC_SUBST(GLIB2_LIBS)
+    AC_SUBST(GLIB2_CFLAGS)
+
+    AC_DEFINE(USE_GLIB2)
+
+    HAVE_OBJECT_MODEL=yes
+  else
+    USE_GLIB2=no
+
+    HAVE_OBJECT_MODEL=no
+  fi
+fi
+
+AM_CONDITIONAL(USE_GLIB2, test "x$USE_GLIB2" = "xyes")
+AC_SUBST(USE_GLIB2)
+
+if test x$HAVE_OBJECT_MODEL = xno; then
+  dnl Check for glib
+  AM_PATH_GLIB(1.2.0,,
+              AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
+              glib gmodule gthread)
+  dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
+  CORE_LIBS="$GLIB_LIBS"
+  CORE_CFLAGS="$GLIB_CFLAGS"
+
+  dnl Check for gtk
+  AM_PATH_GTK(1.2.0,,
+              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
+  dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
+  CORE_LIBS="$CORE_LIBS $GTK_LIBS"
+  CORE_CFLAGS="$CORE_CFLAGS $GTK_CFLAGS"
+
+  HAVE_OBJECT_MODEL=yes
+fi
 
 
 dnl Check for libxml
