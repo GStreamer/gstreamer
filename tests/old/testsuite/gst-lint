@@ -1,0 +1,244 @@
+#!/usr/bin/perl -w 
+# vi: set ts=4:
+#
+
+#
+# GStreamer developers:  please add comments on any tests you think
+# are dumb or have too many false positives.
+#
+
+#
+# Future ideas:
+# - spell check comments
+# - check each function for at least one assertion (?)
+# - run indent and compare the results
+# - check parameters that init/set/get have consistent types
+# - check for config.h in exported headers
+# - check for gst_caps_set() without check for writeability
+#
+
+#
+# Random "other" testing ideas
+# - load each plugin individually
+#
+
+sub check_copyright();
+sub check_license();
+sub check_buffer_alloc();
+sub check_bad_includes();
+sub check_c99_comments();
+sub check_carriage_returns();
+sub check_printf_lld();
+sub check_glibisms();
+sub check_indentation();
+sub check_gst_props_set();
+sub check_deprecated();
+
+open FIND, "find . -name \"*.[ch]\" -print|";
+
+foreach $filename (<FIND>) {
+	chomp $filename;
+	open FILE, "$filename";
+	@lines = <FILE>;
+
+	print "I: $filename\n";
+
+	check_copyright();
+	check_license();
+
+	check_buffer_alloc();
+	check_bad_includes();
+	check_c99_comments();
+	check_carriage_returns();
+	check_printf_lld();
+	check_glibisms();
+	#check_indentation();
+	check_gst_props_set();
+	check_deprecated();
+}
+
+#
+# Every source file must have a copyright block
+#
+sub check_copyright()
+{
+	if (! grep { /copyright/i; } @lines) {
+		print "E: no copyright block\n";
+	}
+}
+
+#
+# Every source file should have a license statement
+#
+sub check_license()
+{
+	if (grep { /Lesser General Public License/; } @lines) {
+		print "I: license is LGPL\n";
+	} elsif (grep { /Library General Public License/; } @lines) {
+		print "I: license is LGPL\n";
+		print "W: copyright header uses \"Library\" LGPL\n";
+	} elsif (grep { /General Public License/; } @lines) {
+		print "I: license is GPL\n";
+	} else {
+		print "E: unknown license or no copyright block\n";
+	}
+}
+
+#
+# Suggest usage of gst_buffer_new_and_alloc()
+#
+sub check_buffer_alloc()
+{
+	my $n = 0;
+	my $lineno = 1;
+
+	foreach $line (@lines){
+		if($line =~ /gst_buffer_new/){
+			$n=5;
+		}
+		if($n>0 && $line =~ /malloc/){
+			print "W: ($lineno) gst_buffer_new() followed by malloc(), suggest gst_buffer_new_and_alloc()\n";
+			return;
+		}
+		$n--;
+		$lineno++;
+	}
+}
+
+sub check_bad_includes()
+{
+	#
+	# malloc.h is non-standard (and probably not what is indended)
+	#
+	if (grep { /^#include\s+<malloc.h>/; } @lines) {
+		print "E: bad header: malloc.h\n"
+	}
+
+	#
+	# config.h should be wrapped
+	#
+	if (grep { /^#include\s+["<]config.h[">]/; } @lines) {
+		if(!grep { /^#ifdef HAVE_CONFIG_H/; } @lines) {
+			print "E: #include <config.h> not surrounded by #ifdef HAVE_CONFIG_H\n"
+		}
+	}
+
+	#
+	# Prefer "G_BEGIN_DECLS" to 'extern "C" {'
+	#
+	if($filename =~ /\.h$/){
+		if (grep { /extern\s*\"C\"\s*/; } @lines) {
+			print "W: extern \"C\" { should be changed to G_BEGIN_DECLS,G_END_DECLS\n";
+		}elsif (!grep { /G_BEGIN_DECLS/; } @lines) {
+			print "E: header doesn't use G_BEGIN_DECLS\n";
+		}
+	}
+}
+
+#
+# Prefer c89-style comments
+#
+sub check_c99_comments()
+{
+	if (grep { /\/\//; } @lines) {
+		print "W: //-style comments should be converted to /* */\n"
+	}
+}
+
+#
+# DOS end-of-line characters are just wrong
+#
+sub check_carriage_returns()
+{
+	if (grep { /\r/; } @lines) {
+		print "E: source has carriage returns (DOS-style files)\n"
+	}
+}
+
+#
+# Many uses of %lld are wrong.  This could have a lot of false-positives
+#
+sub check_printf_lld()
+{
+	if (grep { /\".*\%\d*ll[du].*\"/; } @lines) {
+		print "W: Possible \%lld or \%llu in printf format\n"
+	}
+}
+
+#
+# Glib functions are preferred
+#
+sub check_glibisms()
+{
+	if (grep { /\bcalloc\s*\(/; } @lines) {
+		print "E: use g_malloc0() instead of calloc()\n"
+	}
+	if (grep { /\bfree\s*\(/; } @lines) {
+		print "E: use g_free() instead of free()\n"
+	}
+	if (grep { /\bmalloc\s*\(/; } @lines) {
+		print "E: use g_malloc() instead of malloc()\n"
+	}
+	if (grep { /\bprintf\s*\(/; } @lines) {
+		print "E: use g_print() instead of printf()\n"
+	}
+	if (grep { /\brealloc\s*\(/; } @lines) {
+		print "E: use g_realloc() instead of realloc()\n"
+	}
+}
+
+#
+# I don't think that indentation necessarily needs to be fixed, since
+# it causes problems with patching and cvs annotate.
+#
+# This takes forever and isn't very useful
+#
+sub check_indentation()
+{
+	my $changed_lines;
+	my $percent;
+
+	`indent -br -bad -cbi0 -cli2 -bls -l80 -ut -ce $filename -o .check_plugin.tmp`;
+	$changed_lines = `diff $filename .check_plugin.tmp | grep '^>' | wc -l`;
+	`rm -f .check_plugin.tmp`;
+
+	$percent = int(100 * $changed_lines / $#lines);
+
+	if($percent < 10){
+		print "I: indent changed $percent % of the lines\n";
+	}elsif($percent <20){
+		print "W: indent changed $percent % of the lines\n";
+	}else{
+		print "E: indent changed $percent % of the lines\n";
+	}
+}
+
+
+#
+# gst_props_set() returns a value that should never be ignored
+# may have false positives
+#
+sub check_gst_props_set()
+{
+	if (grep { /^\s+gst_props_set\s*\(/; } @lines) {
+		print "E: return value of gst_props_set() possibly ignored\n";
+	}
+}
+
+#
+# Check for some deprecated stuff (that _shouldn't_ be around anymore)
+#
+sub check_deprecated()
+{
+	#
+	# Check for old GST_DEBUG() usage
+	# (none found)
+	#
+	if (grep { /GST_DEBUG\s*\(\s+\d/; } @lines) {
+		print "E: old-style GST_DEBUG()\n";
+	}
+	if (grep { /GST_INFO\s*\(\s+\d/; } @lines) {
+		print "E: old-style GST_DEBUG()\n";
+	}
+}
+
