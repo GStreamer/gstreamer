@@ -25,7 +25,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-#include <gsm/gsm.h>
+#include <gsm.h>
 
 #ifdef __cplusplus
 extern "C" {
