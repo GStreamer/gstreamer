@@ -545,7 +545,7 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   return FALSE;
 }
 
-#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 /**
  * gst_caps_save_thyself:
  * @caps: a capabilty to save
@@ -629,4 +629,4 @@ gst_caps_load_thyself (xmlNodePtr parent)
   return result;
 }
 
-#endif /* (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) ) */
+#endif /* GST_DISABLE_LOADSAVE_REGISTRY */

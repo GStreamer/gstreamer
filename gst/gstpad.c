@@ -1399,7 +1399,7 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 
   return self;
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 #ifndef gst_pad_push
 /**

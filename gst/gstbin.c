@@ -112,18 +112,18 @@ gst_bin_class_init (GstBinClass *klass)
                     gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_ELEMENT);
 
-  klass->change_state_type =		gst_bin_change_state_type;
-  klass->iterate =			gst_bin_iterate_func;
+  klass->change_state_type =		GST_DEBUG_FUNCPTR (gst_bin_change_state_type);
+  klass->iterate =			GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 
 #ifndef GST_DISABLE_LOADSAVE
-  gstobject_class->save_thyself =	gst_bin_save_thyself;
-  gstobject_class->restore_thyself =	gst_bin_restore_thyself;
+  gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR (gst_bin_save_thyself);
+  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR (gst_bin_restore_thyself);
 #endif
 
-  gstelement_class->change_state =	gst_bin_change_state;
+  gstelement_class->change_state =	GST_DEBUG_FUNCPTR (gst_bin_change_state);
 
 // FIXME
-//  gobject_class->destroy =		gst_bin_real_destroy;
+//  gobject_class->destroy =		GST_DEBUG_FUNCPTR (gst_bin_real_destroy);
 }
 
 static void
@@ -647,7 +647,7 @@ gst_bin_restore_thyself (GstObject *object,
     field = field->next;
   }
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 
 /**

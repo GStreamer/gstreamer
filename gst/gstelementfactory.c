@@ -31,7 +31,7 @@ static void 			gst_elementfactory_init 		(GstElementFactory *factory);
 #ifndef GST_DISABLE_REGISTRY
 static void 			gst_elementfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
 static xmlNodePtr 		gst_elementfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
-#endif /* GST_DISABLE_REGISTRY */
+#endif
 
 static void 			gst_elementfactory_unload_thyself 	(GstPluginFeature *feature);
 
@@ -80,7 +80,7 @@ gst_elementfactory_class_init (GstElementFactoryClass *klass)
 #ifndef GST_DISABLE_REGISTRY
   gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_save_thyself);
   gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_restore_thyself);
-#endif /* GST_DISABLE_REGISTRY */
+#endif
 
   gstpluginfeature_class->unload_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_unload_thyself);
 

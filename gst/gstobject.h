@@ -102,14 +102,14 @@ struct _GstObjectClass {
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
 #endif
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 #endif
@@ -147,7 +147,7 @@ void		gst_object_unparent		(GstObject *object);
 
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr parent);
 #else
@@ -170,7 +170,7 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 gpointer	func,
 						 gpointer	func_data);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 void		gst_class_signal_emit_by_name	(GstObject	*object,
 		                                 const gchar	*name,
 						 xmlNodePtr self);

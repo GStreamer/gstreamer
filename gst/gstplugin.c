@@ -105,7 +105,7 @@ _gst_plugin_initialize (void)
   gst_plugin_load_thyself (doc->xmlRootNode);
 
   xmlFreeDoc (doc);
-#endif // GST_DISABLE_REGISTRY
+#endif /* GST_DISABLE_REGISTRY */
 }
 
 void
@@ -845,7 +845,7 @@ gst_plugin_load_thyself (xmlNodePtr parent)
   }
   GST_INFO (GST_CAT_PLUGIN_LOADING, "added %d features ", featurecount);
 }
-#endif // GST_DISABLE_REGISTRY
+#endif /* GST_DISABLE_REGISTRY */
 
 
 /**

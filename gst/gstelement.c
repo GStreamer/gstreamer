@@ -1203,7 +1203,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
   return element;
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 /**
  * gst_element_set_sched:

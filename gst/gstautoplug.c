@@ -170,7 +170,7 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
 static void 		gst_autoplugfactory_class_init 		(GstAutoplugFactoryClass *klass);
 static void 		gst_autoplugfactory_init 		(GstAutoplugFactory *factory);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr 	gst_autoplugfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
 static void 		gst_autoplugfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
 #endif
@@ -214,7 +214,7 @@ gst_autoplugfactory_class_init (GstAutoplugFactoryClass *klass)
 
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_REGISTRY
   gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplugfactory_save_thyself);
   gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplugfactory_restore_thyself);
 #endif
@@ -366,7 +366,7 @@ gst_autoplugfactory_make (const gchar *name)
   return gst_autoplugfactory_create (factory);;
 }
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
 gst_autoplugfactory_save_thyself (GstObject *object, xmlNodePtr parent)
 {
@@ -413,4 +413,4 @@ gst_autoplugfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
     children = children->next;
   }
 }
-#endif
+#endif /* GST_DISABLE_REGISTRY */
