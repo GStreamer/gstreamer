@@ -1,7 +1,17 @@
+2004-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init),
+	(gst_cacasink_sinkconnect), (gst_cacasink_init),
+	(gst_cacasink_chain), (gst_cacasink_open), (gst_cacasink_close):
+          init/end library during state transition, not object
+          creation/disposal.  get rid of custom dispose handler.
+         
+
 2004-04-12  Christian Schaller <Uraeus@gnome.org>
 
 	* sys/oss/gstosselement.c: s/lstat/stat/ from freeBSD, since it can 
 	be a symlink
+
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_data):
