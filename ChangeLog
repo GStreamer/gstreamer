@@ -1,5 +1,12 @@
 2004-05-02  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
+	* docs/gst/tmpl/gstpipeline.sgml :
+	* docs/manual/elements-api.xml :
+		doc fix by Patrick Guimond (Protector) from devel ML
+		reviewed by ronald
+
+2004-05-02  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
 	* docs/gst/Makefile.am :
 	* docs/libs/Makefile.am :
 		apply a patch from Arwed v. Merkatz so that gtk-doc

@@ -52,7 +52,7 @@
  GstElement *element;
 
   ...
- gst_element_unref (element);
+ gst_object_unref (GST_OBJECT (element));
     </programlisting>
   </sect1>
   <sect1 id="section-elements-properties">

@@ -13,7 +13,7 @@ functions, like 'Play'.
 </para>
 <para>
 gst_pipeline_new() is used to create a pipeline. when you are done with 
-the pipeline, use gst_element_unref() to free its resources.
+the pipeline, use gst_object_unref() to free its resources.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
