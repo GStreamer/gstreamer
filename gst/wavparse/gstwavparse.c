@@ -243,8 +243,10 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     /* we can't go beyond the max length */
     maxsize = wavparse->riff_nextlikely - GST_BUFFER_OFFSET (buf);
 
-    /* if we're expected to see a new chunk in this buffer */
-    if (maxsize < size) {
+    if (maxsize == 0) {
+      return;
+    } else if (maxsize < size) {
+      /* if we're expected to see a new chunk in this buffer */
       GstBuffer *newbuf;
 
       newbuf = gst_buffer_create_sub (buf, 0, maxsize);
@@ -267,7 +269,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 		       &GST_BUFFER_TIMESTAMP (buf));
 
       if (wavparse->need_discont) {
-        if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+        if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
           gst_pad_push (wavparse->srcpad, 
 	                GST_BUFFER (gst_event_new_discontinuous (FALSE,
       			      GST_FORMAT_BYTES, wavparse->offset,
@@ -282,9 +284,9 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
         wavparse->need_discont = FALSE;
       }
       gst_pad_push (wavparse->srcpad, buf);
-    }
-    else
+    } else {
       gst_buffer_unref (buf);
+    }
 
     wavparse->offset += size;
 
