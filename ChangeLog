@@ -1,3 +1,9 @@
+2004-10-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/oggvorbisenc.c:
+	* ext/vorbis/vorbisdec.c:
+	  fix template sample rate
+
 2004-10-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mad/gstmad.c: (gst_mad_check_caps_reset), (gst_mad_chain):
