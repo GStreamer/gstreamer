@@ -1295,6 +1295,28 @@ Plug-in for playing FLI/FLX animations under GStreamer.
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 ### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+### asf ###
+%package -n gstreamer-asf
+Summary:        GStreamer plug-in for asf video format.
+Group:          Libraries/Multimedia
+Requires:       gstreamer-plugins = %{version}
+Requires:       gstreamer-colorspace = %{version}
+%description -n gstreamer-asf
+Plug-in for playing ASF movies under GStreamer.
+                                                                                
+%files -n gstreamer-asf
+%defattr(-, root, root)
+%{_libdir}/gstreamer-%{majorminor}/libgstasf*
+                                                                                
+%post -n gstreamer-asf
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+                                                                                
+%postun -n gstreamer-asf
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+
 ### qcam ###
 %package -n gstreamer-qcam
 Summary: 	GStreamer QuickCam plug-in.
