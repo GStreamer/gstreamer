@@ -23,6 +23,7 @@
 #define __GST_MIXER_H__
 
 #include <gst/gst.h>
+#include <gst/mixer/mixertrack.h>
 
 G_BEGIN_DECLS
 
@@ -38,34 +39,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MIXER))
 #define GST_MIXER_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerClass))
-
-/* In this interface, a `track' is a unit of recording or playback, pretty much
- * equivalent to what comes in or goes out through a GstPad. Each track can have
- * one or more `channels', which are logical parts of the track. A `stereo
- * track', then, would be one stream with two channels, while a `mono track'
- * would be a stream with a single channel. More complex examples are possible
- * as well ; for example, professional audio hardware might handle audio tracks
- * with 8 or 16 channels each.
- *
- * All these are audio terms. I don't know exactly what this would translate to
- * for video, but a track might be an entire video stream, and a channel might
- * be the information for one of the colors in the stream.
- */
-
-#define GST_MIXER_TRACK_INPUT  (1<<0)
-#define GST_MIXER_TRACK_OUTPUT (1<<1)
-#define GST_MIXER_TRACK_MUTE   (1<<2)
-#define GST_MIXER_TRACK_RECORD (1<<3)
-
-typedef struct _GstMixerTrack {
-  gchar *label;
-  gint   num_channels,
-         flags,
-	 min_volume, max_volume;
-} GstMixerTrack;
-
-#define GST_MIXER_TRACK_HAS_FLAG(track, flag) \
-  ((track)->flags & flag)
 
 typedef struct _GstMixer GstMixer;
 
