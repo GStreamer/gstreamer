@@ -480,6 +480,7 @@ dnl # Make the output files #
 dnl #########################
 
 dnl libs/ext/Makefile
+dnl tests/bufspeed/Makefile
 dnl nothing there yet !
 AC_OUTPUT(
 Makefile
@@ -501,7 +502,6 @@ libs/gst/putbits/Makefile
 libs/gst/control/Makefile
 libs/ext/Makefile
 tests/Makefile
-tests/bufspeed/Makefile
 tests/memchunk/Makefile
 tests/muxing/Makefile
 tests/seeking/Makefile
