@@ -66,6 +66,10 @@ static void 		gst_object_get_property 	(GObject * object, guint prop_id, GValue 
 static void 		gst_object_dispose 		(GObject *object);
 static void 		gst_object_finalize 		(GObject *object);
 
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+static void		gst_object_real_restore_thyself (GstObject *object, xmlNodePtr self);
+#endif
+
 static GObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
@@ -117,11 +121,13 @@ gst_object_class_init (GstObjectClass *klass)
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
+  
+  klass->restore_thyself = gst_object_real_restore_thyself;
 #endif
 
   klass->path_string_separator = "/";
-/* FIXME!!! */
-/*  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL)); */
+
+  klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
@@ -495,22 +501,35 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
 /**
  * gst_object_restore_thyself:
  * @object: GstObject to load into
- * @parent: The parent XML node to load the object from
+ * @self: The XML node to load the object from
  *
  * Restores the given object with the data from the parent XML node.
  */
 void
-gst_object_restore_thyself (GstObject *object, xmlNodePtr parent)
+gst_object_restore_thyself (GstObject *object, xmlNodePtr self)
 {
   GstObjectClass *oclass;
 
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (parent != NULL);
+  g_return_if_fail (self != NULL);
 
-  oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
+  oclass = (GstObjectClass *) G_OBJECT_GET_CLASS(object);
   if (oclass->restore_thyself)
-    oclass->restore_thyself (object, parent);
+    oclass->restore_thyself (object, self);
+}
+
+static void
+gst_object_real_restore_thyself (GstObject *object, xmlNodePtr self)
+{
+  GstObjectClass *oclass;
+
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (self != NULL);
+  
+/* FIXME: the signalobject stuff doesn't work
+ *  gst_class_signal_emit_by_name (object, "object_loaded", self); */
 }
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 

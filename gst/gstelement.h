@@ -226,12 +226,6 @@ void                    gst_element_install_std_props   (GstElementClass *klass,
 							 const char      *first_name, ...);
 
 
-#ifndef GST_DISABLE_LOADSAVE
-/* XML write and read */
-GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
-#endif
-
-
 /*
  *
  * factories stuff

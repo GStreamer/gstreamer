@@ -717,8 +717,13 @@ gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
       childlist = field->xmlChildrenNode;
       while (childlist) {
 	if (!strcmp (childlist->name, "element")) {
-	  GstElement *element = gst_element_restore_thyself (childlist, GST_OBJECT (bin));
-
+	  GstElement *element = gst_xml_make_element (childlist, GST_OBJECT (bin));
+          
+          /* it had to be parented to find the pads, now we ref and unparent so
+           * we can add it to the bin */
+          gst_object_ref (GST_OBJECT (element));
+          gst_object_unparent (GST_OBJECT (element));
+          
 	  gst_bin_add (bin, element);
 	}
 	childlist = childlist->next;

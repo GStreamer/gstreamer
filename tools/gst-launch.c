@@ -141,7 +141,7 @@ main(int argc, char *argv[])
 
 #ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {
-    xmlSaveFile (savefile, gst_xml_write (pipeline));
+    gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
   }
 #endif
   if (run_pipeline) {

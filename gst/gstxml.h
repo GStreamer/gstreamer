@@ -82,6 +82,8 @@ gboolean	gst_xml_parse_memory	(GstXML *xml, guchar *buffer, guint size, const gc
 GstElement*	gst_xml_get_element	(GstXML *xml, const guchar *name);
 GList*		gst_xml_get_topelements (GstXML *xml);
 
+GstElement*	gst_xml_make_element	(xmlNodePtr cur, GstObject *parent);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

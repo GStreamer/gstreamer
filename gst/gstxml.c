@@ -113,11 +113,11 @@ gst_xml_write (GstElement *element)
   xmlNsPtr ns;
 
   doc = xmlNewDoc ("1.0");
-  xmlNewGlobalNs (doc, "http://gstreamer.net/gst-core/1.0/", "gst");
+
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "gstreamer", NULL);
+  
   ns = xmlNewNs (doc->xmlRootNode, "http://gstreamer.net/gst-core/1.0/", "gst");
-
-  doc->xmlRootNode = xmlNewDocNode (doc, ns, "gstreamer", NULL);
-
+  
   elementnode = xmlNewChild (doc->xmlRootNode, ns, "element", NULL);
 
   gst_object_save_thyself (GST_OBJECT (element), elementnode);
@@ -228,7 +228,7 @@ gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
     if (!strcmp(field->name, "element") && (field->ns == xml->ns)) {
       GstElement *element;
 
-      element = gst_element_restore_thyself(field, NULL);
+      element = gst_xml_make_element (field, NULL);
 
       xml->topelements = g_list_prepend (xml->topelements, element);
     }
@@ -362,4 +362,50 @@ gst_xml_get_element (GstXML *xml, const guchar *name)
     topelements = g_list_next (topelements);
   }
   return NULL;
+}
+
+/**
+ * gst_xml_make_element:
+ * @cur: the xml node
+ * @parent: the parent of this object when it's loaded
+ *
+ * Load the element from the XML description
+ *
+ * Returns: the new element
+ */
+GstElement*
+gst_xml_make_element (xmlNodePtr cur, GstObject *parent)
+{
+  xmlNodePtr children = cur->xmlChildrenNode;
+  GstElement *element;
+  GstObjectClass *oclass;
+  guchar *name = NULL;
+  guchar *type = NULL;
+
+  /* first get the needed tags to construct the element */
+  while (children) {
+    if (!strcmp (children->name, "name")) {
+      name = xmlNodeGetContent (children);
+    } else if (!strcmp (children->name, "type")) {
+      type = xmlNodeGetContent (children);
+    }
+    children = children->next;
+  }
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (type != NULL, NULL);
+
+  GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"", name, type);
+
+  element = gst_elementfactory_make (type, name);
+
+  g_return_val_if_fail (element != NULL, NULL);
+
+  /* ne need to set the parent on this object bacause the pads */
+  /* will go through the hierarchy to connect to thier peers */
+  if (parent)
+    gst_object_set_parent (GST_OBJECT (element), parent);
+  
+  gst_object_restore_thyself (GST_OBJECT (element), cur);
+  
+  return element;
 }

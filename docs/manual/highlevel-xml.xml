@@ -17,9 +17,9 @@
     <title>Turning GstElements into XML</title>
 
     <para>
-      We create a simple pipeline and save it to disk with gst_xml_write (). The following
-      code constructs an mp3 player pipeline with two threads and finaly writes it to disk.
-      use this program with one argument: the mp3 file on disk.
+      We create a simple pipeline and write it to stdout with gst_xml_write_file (). The following
+      code constructs an mp3 player pipeline with two threads and then writes out the XML both to
+      stdout and to a file. Use this program with one argument: the mp3 file on disk.
     </para>
 
     <programlisting>
@@ -31,7 +31,7 @@ gboolean playing;
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *filesrc, *audiosink, *queue, *queue2, *parse, *decode;
+  GstElement *filesrc, *osssink, *queue, *queue2, *parse, *decode;
   GstElement *bin;
   GstElement *thread, *thread2;
 
@@ -61,40 +61,40 @@ main (int argc, char *argv[])
   queue2 = gst_elementfactory_make ("queue", "queue2");
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
-  g_assert (audiosink != NULL);
+  osssink = gst_elementfactory_make ("osssink", "play_audio");
+  g_assert (osssink != NULL);
 
-  parse = gst_elementfactory_make ("mp3parse", "parse");
-  decode = gst_elementfactory_make ("mpg123", "decode");
+  decode = gst_elementfactory_make ("mad", "decode");
+  g_assert (decode != NULL);
 
   /* add objects to the main bin */
   gst_bin_add (GST_BIN (bin), filesrc);
   gst_bin_add (GST_BIN (bin), queue);
 
-  gst_bin_add (GST_BIN (thread), parse);
   gst_bin_add (GST_BIN (thread), decode);
   gst_bin_add (GST_BIN (thread), queue2);
 
-  gst_bin_add (GST_BIN (thread2), audiosink);
+  gst_bin_add (GST_BIN (thread2), osssink);
   
   gst_pad_connect (gst_element_get_pad (filesrc,"src"),
                    gst_element_get_pad (queue,"sink"));
 
   gst_pad_connect (gst_element_get_pad (queue,"src"),
-                   gst_element_get_pad (parse,"sink"));
-  gst_pad_connect (gst_element_get_pad (parse,"src"),
                    gst_element_get_pad (decode,"sink"));
   gst_pad_connect (gst_element_get_pad (decode,"src"),
                    gst_element_get_pad (queue2,"sink"));
 
   gst_pad_connect (gst_element_get_pad (queue2,"src"),
-                   gst_element_get_pad (audiosink,"sink"));
+                   gst_element_get_pad (osssink,"sink"));
 
   gst_bin_add (GST_BIN (bin), thread);
   gst_bin_add (GST_BIN (bin), thread2);
 
-  // write the bin to disk
-  xmlSaveFile ("xmlTest.gst", gst_xml_write (GST_ELEMENT (bin)));
+  /* write the bin to stdout */
+  gst_xml_write_file (GST_ELEMENT (bin), stdout);
+
+  /* write the bin to a file */
+  gst_xml_write_file (GST_ELEMENT (bin), fopen ("xmlTest.gst", "w"));
 
   exit (0);
 }
@@ -103,12 +103,12 @@ main (int argc, char *argv[])
       The most important line is:
     </para>
     <programlisting>
-  xmlSaveFile ("xmlTest.gst", gst_xml_write (GST_ELEMENT (bin)));
+  gst_xml_write_file (GST_ELEMENT (bin), stdout);
     </programlisting>
     <para>
-      gst_xml_write () will turn the given element into and xmlDocPtr that 
-      can be saved with the xmlSaveFile () function found in the gnome-xml 
-      package. The result is an XML file named xmlTest.gst.
+      gst_xml_write_file () will turn the given element into an xmlDocPtr that 
+      is then formatted and saved to a file. To save to disk, pass the result
+      of a fopen(2) as the second argument.
     </para>
     <para>
       The complete element hierarchy will be saved along with the inter element

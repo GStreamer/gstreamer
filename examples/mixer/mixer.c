@@ -182,7 +182,7 @@ int main(int argc,char *argv[])
     env_register_cp (channel_in->volenv,  num_channels * 10.0      , 1.0 / num_channels); /* to end level */
 
 #ifndef GST_DISABLE_LOADSAVE
-    xmlSaveFile("mixer.xml", gst_xml_write(GST_ELEMENT(main_bin)));
+    gst_xml_write_file (GST_ELEMENT (main_bin), fopen ("mixer.xml", "w"));
 #endif
 
     /* start playing */
@@ -358,7 +358,7 @@ create_input_channel (int id, char* location)
   
 #endif  
 #ifndef GST_DISABLE_LOADSAVE
-  xmlSaveFile ("mixer.gst", gst_xml_write (new_element));
+  gst_xml_write_file (GST_ELEMENT (new_element), fopen ("mixer.gst", "w"));
 #endif  
 
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);

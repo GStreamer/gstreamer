@@ -565,7 +565,7 @@ gst_queue_set_property (GObject *object, guint prop_id, const GValue *value, GPa
 
   switch (prop_id) {
     case ARG_LEAKY:
-      queue->leaky = g_value_get_int (value);
+      queue->leaky = g_value_get_enum (value);
       break;
     case ARG_MAX_LEVEL:
       queue->size_buffers = g_value_get_int (value);
@@ -591,7 +591,7 @@ gst_queue_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 
   switch (prop_id) {
     case ARG_LEAKY:
-      g_value_set_int (value, queue->leaky);
+      g_value_set_enum (value, queue->leaky);
       break;
     case ARG_LEVEL:
       g_value_set_int (value, queue->level_buffers);

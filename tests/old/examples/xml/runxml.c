@@ -29,27 +29,27 @@ xml_loaded (GstXML *xml, GstObject *object, xmlNodePtr self, gpointer data)
 int main(int argc,char *argv[])
 {
   GstXML *xml;
-  GstElement *bin;
+  GstElement *pipeline;
   gboolean ret;
 
   gst_init(&argc,&argv);
 
   xml = gst_xml_new ();
 
-  g_signal_connect (G_OBJECT (xml), "object_loaded",
-		    G_CALLBACK (xml_loaded), xml);
+//  g_signal_connect (G_OBJECT (xml), "object_loaded",
+//		    G_CALLBACK (xml_loaded), xml);
 
   ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
   g_assert (ret == TRUE);
 
-  bin = gst_xml_get_element(xml, "bin");
-  g_assert (bin != NULL);
+  pipeline = gst_xml_get_element(xml, "pipeline");
+  g_assert (pipeline != NULL);
 
-  gst_element_set_state(bin, GST_STATE_PLAYING);
+  gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate(GST_BIN(bin)));
+  while (gst_bin_iterate(GST_BIN(pipeline)));
 
-  gst_element_set_state(bin, GST_STATE_NULL);
+  gst_element_set_state(pipeline, GST_STATE_NULL);
 
   exit(0);
 }

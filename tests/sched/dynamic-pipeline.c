@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
     gst_element_connect(fakesrc, "src", fakesink2, "sink");
     
     // show the pipeline state
-    xmlDocDump(stdout, gst_xml_write(pipe2));
+    gst_xml_write_file (GST_ELEMENT (pipe2), stdout);
     
     // try to iterate the pipeline
     gst_element_set_state(pipe2, GST_STATE_PLAYING);

@@ -65,7 +65,7 @@ static void 			gst_element_send_event_func 	(GstElement *element, GstEvent *even
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
-GstElement* 			gst_element_restore_thyself 	(xmlNodePtr self, GstObject *parent);
+static void			gst_element_restore_thyself 	(GstObject *parent, xmlNodePtr self);
 #endif
 
 GType _gst_element_type = 0;
@@ -1094,9 +1094,11 @@ gst_element_save_thyself (GstObject *object,
 {
   GList *pads;
   GstElementClass *oclass;
-  /* FIXME : this is needed for glib2 */
-  /* GType type; */
+  GParamSpec **specs, *spec;
+  gint nspecs, i;
+  GValue value = { 0, };
   GstElement *element;
+  gchar *str;
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
 
@@ -1113,74 +1115,36 @@ gst_element_save_thyself (GstObject *object,
     xmlNewChild (parent, NULL, "version", factory->details->version);
   }
 
+/* FIXME: what is this? */  
 /*  if (element->manager) */
 /*    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager)); */
 
-/* FIXME FIXME FIXME! */
-  /* output all args to the element */
-  /*
-  type = G_OBJECT_TYPE (element);
-  while (type != G_TYPE_INVALID) {
-    GtkArg *args;
-    guint32 *flags;
-    guint num_args,i;
-
-    args = gtk_object_query_args (type, &flags, &num_args);
-
-    for (i=0; i<num_args; i++) {
-      if ((args[i].type > G_TYPE_NONE) &&
-          (flags[i] & GTK_ARG_READABLE)) {
-        xmlNodePtr arg;
-        gtk_object_getv (G_OBJECT (element), 1, &args[i]);
-        arg = xmlNewChild (parent, NULL, "arg", NULL);
-        xmlNewChild (arg, NULL, "name", args[i].name);
-        switch (args[i].type) {
-          case G_TYPE_CHAR:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%c", G_VALUE_CHAR (args[i])));
-            break;
-          case G_TYPE_UCHAR:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%d", G_VALUE_UCHAR (args[i])));
-            break;
-          case G_TYPE_BOOLEAN:
-            xmlNewChild (arg, NULL, "value",
-                        G_VALUE_BOOL (args[i]) ? "true" : "false");
-            break;
-          case G_TYPE_INT:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%d", G_VALUE_INT (args[i])));
-            break;
-          case G_TYPE_LONG:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%ld", G_VALUE_LONG (args[i])));
-            break;
-          case G_TYPE_ULONG:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%lu", G_VALUE_ULONG (args[i])));
-            break;
-          case G_TYPE_FLOAT:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%f", G_VALUE_FLOAT (args[i])));
-            break;
-          case G_TYPE_DOUBLE:
-            xmlNewChild (arg, NULL, "value",
-                         g_strdup_printf ("%g", G_VALUE_DOUBLE (args[i])));
-            break;
-          case G_TYPE_STRING:
-            xmlNewChild (arg, NULL, "value", G_VALUE_STRING (args[i]));
-            break;
-	  default:
-	    if (args[i].type == GST_TYPE_FILENAME) {
-              xmlNewChild (arg, NULL, "value", G_VALUE_STRING (args[i]));
-	    }
-	    break;
-        }
-      }
+#ifdef USE_GLIB2
+  /* params */
+  specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &nspecs);
+  
+  for (i=0; i<nspecs; i++) {
+    spec = specs[i];
+    if (spec->flags & G_PARAM_READABLE) {
+      xmlNodePtr param;
+      
+      g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (spec));
+      
+      g_object_get_property (G_OBJECT (element), spec->name, &value);
+      param = xmlNewChild (parent, NULL, "param", NULL);
+      xmlNewChild (param, NULL, "name", spec->name);
+      
+      if (G_IS_PARAM_SPEC_STRING (spec))
+        xmlNewChild (param, NULL, "value", g_value_dup_string (&value));
+      else if (G_IS_PARAM_SPEC_ENUM (spec))
+        xmlNewChild (param, NULL, "value", g_strdup_printf ("%d", g_value_get_enum (&value)));
+      else
+        xmlNewChild (param, NULL, "value", g_strdup_value_contents (&value));
+      
+      g_value_unset(&value);
     }
-    type = gtk_type_parent (type);
   }
-*/
+#endif
 
   pads = GST_ELEMENT_PADS (element);
 
@@ -1197,53 +1161,21 @@ gst_element_save_thyself (GstObject *object,
   return parent;
 }
 
-/**
- * gst_element_restore_thyself:
- * @self: the xml node
- * @parent: the parent of this object when it's loaded
- *
- * Load the element from the XML description
- *
- * Returns: the new element
- */
-GstElement*
-gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
+static void
+gst_element_restore_thyself (GstObject *object, xmlNodePtr self)
 {
-  xmlNodePtr children = self->xmlChildrenNode;
+  xmlNodePtr children;
   GstElement *element;
-  GstObjectClass *oclass;
   guchar *name = NULL;
   guchar *value = NULL;
-  guchar *type = NULL;
 
-  /* first get the needed tags to construct the element */
-  while (children) {
-    if (!strcmp (children->name, "name")) {
-      name = xmlNodeGetContent (children);
-    } else if (!strcmp (children->name, "type")) {
-      type = xmlNodeGetContent (children);
-    }
-    children = children->next;
-  }
-  g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (type != NULL, NULL);
+  element = GST_ELEMENT (object);
+  g_return_if_fail (element != NULL);
 
-  GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"", name, type);
-
-  element = gst_elementfactory_make (type, name);
-
-  g_return_val_if_fail (element != NULL, NULL);
-
-  /* ne need to set the parent on this object bacause the pads */
-  /* will go through the hierarchy to connect to thier peers */
-  if (parent)
-    gst_object_set_parent (GST_OBJECT (element), parent);
-
-  /* we have the element now, set the arguments */
+  /* parameters */
   children = self->xmlChildrenNode;
-
   while (children) {
-    if (!strcmp (children->name, "arg")) {
+    if (!strcmp (children->name, "param")) {
       xmlNodePtr child = children->xmlChildrenNode;
 
       while (child) {
@@ -1255,13 +1187,14 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 	}
         child = child->next;
       }
+      /* FIXME: can this just be g_object_set ? */
       gst_util_set_object_arg ((GObject *)G_OBJECT (element), name, value);
     }
     children = children->next;
   }
-  /* we have the element now, set the pads */
+  
+  /* pads */
   children = self->xmlChildrenNode;
-
   while (children) {
     if (!strcmp (children->name, "pad")) {
       gst_pad_load_and_connect (children, GST_OBJECT (element));
@@ -1269,16 +1202,8 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
     children = children->next;
   }
 
-  oclass = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS(element));
-  if (oclass->restore_thyself)
-    (oclass->restore_thyself) (GST_OBJECT (element), self);
-
-  if (parent)
-    gst_object_unparent (GST_OBJECT (element));
-
-  gst_class_signal_emit_by_name (GST_OBJECT (element), "object_loaded", self);
-
-  return element;
+  if (GST_OBJECT_CLASS(parent_class)->restore_thyself)
+    (GST_OBJECT_CLASS(parent_class)->restore_thyself) (object, self);
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
@@ -1560,4 +1485,3 @@ gst_element_install_std_props (GstElementClass * klass, const char *first_name, 
 
   va_end (args);
 }
-
