@@ -1098,6 +1098,13 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
       buffer =
           gst_buffer_create_sub (tag->buffer, tag->v2tag_size,
           GST_BUFFER_SIZE (tag->buffer) - tag->v2tag_size);
+      /* the offsets will be corrected further down, we just copy them */
+      if (GST_BUFFER_OFFSET_IS_VALID (tag->buffer))
+        GST_BUFFER_OFFSET (buffer) =
+            GST_BUFFER_OFFSET (tag->buffer) + tag->v2tag_size;
+      if (GST_BUFFER_OFFSET_END_IS_VALID (tag->buffer))
+        GST_BUFFER_OFFSET_END (buffer) =
+            GST_BUFFER_OFFSET_END (tag->buffer) + tag->v2tag_size;
       gst_data_unref (GST_DATA (tag->buffer));
       tag->buffer = NULL;
       if (tag->found_caps == NULL)
@@ -1155,23 +1162,29 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
         gst_element_set_eos (GST_ELEMENT (tag));
         gst_pad_push (tag->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
       } else {
-        if (buffer->offset >= tag->v1tag_offset) {
-          gst_data_unref (GST_DATA (buffer));
-          return;
-        } else if (buffer->offset + buffer->size > tag->v1tag_offset) {
-          GstBuffer *sub = gst_buffer_create_sub (buffer, 0,
-              buffer->size - 128);
+        if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
+          if (buffer->offset >= tag->v1tag_offset) {
+            gst_data_unref (GST_DATA (buffer));
+            return;
+          } else if (buffer->offset + buffer->size > tag->v1tag_offset) {
+            GstBuffer *sub = gst_buffer_create_sub (buffer, 0,
+                buffer->size - 128);
 
-          gst_data_unref (GST_DATA (buffer));
-          buffer = sub;
+            gst_data_unref (GST_DATA (buffer));
+            buffer = sub;
+          }
         }
         if (tag->v2tag_size) {
           GstBuffer *sub =
               gst_buffer_create_sub (buffer, 0, GST_BUFFER_SIZE (buffer));
-          GST_BUFFER_OFFSET (sub) =
-              GST_BUFFER_OFFSET (buffer) - tag->v2tag_size;
-          GST_BUFFER_OFFSET_END (sub) =
-              GST_BUFFER_OFFSET_END (buffer) - tag->v2tag_size;
+          if (GST_BUFFER_OFFSET_IS_VALID (buffer))
+            GST_BUFFER_OFFSET (sub) =
+                GST_BUFFER_OFFSET (buffer) - tag->v2tag_size +
+                tag->v2tag_size_new;
+          if (GST_BUFFER_OFFSET_END_IS_VALID (buffer))
+            GST_BUFFER_OFFSET_END (sub) =
+                GST_BUFFER_OFFSET_END (buffer) - tag->v2tag_size +
+                tag->v2tag_size_new;
           gst_data_unref (GST_DATA (buffer));
           buffer = sub;
         }
