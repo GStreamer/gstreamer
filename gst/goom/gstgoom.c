@@ -36,7 +36,6 @@ struct _GstGOOM {
 
   /* pads */
   GstPad *sinkpad,*srcpad;
-  GstBufferPool *peerpool;
 
   /* the timestamp of the next frame */
   guint64 next_time;
@@ -46,7 +45,8 @@ struct _GstGOOM {
   gint fps;
   gint width;
   gint height;
-  gboolean first_buffer;
+  gint channels;
+  gboolean srcnegotiated;
 };
 
 struct _GstGOOMClass {
@@ -115,13 +115,14 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
       "width",      GST_PROPS_INT (16),
       "depth",      GST_PROPS_INT (16),
       "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT (2)
+      "channels",   GST_PROPS_INT_RANGE (1, 2)
   )
 )
 
 
 static void		gst_goom_class_init	(GstGOOMClass *klass);
 static void		gst_goom_init		(GstGOOM *goom);
+static void		gst_goom_dispose	(GObject *object);
 
 static GstElementStateReturn
 			gst_goom_change_state 	(GstElement *element);
@@ -133,8 +134,8 @@ static void		gst_goom_get_property	(GObject *object, guint prop_id,
 
 static void		gst_goom_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstPadLinkReturn 
-			gst_goom_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_goom_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_goom_srcconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -181,8 +182,9 @@ gst_goom_class_init(GstGOOMClass *klass)
     g_param_spec_int ("fps","FPS","Frames per second",
                        1, 100, 25, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_goom_set_property;
-  gobject_class->get_property = gst_goom_get_property;
+  gobject_class->dispose	= gst_goom_dispose;
+  gobject_class->set_property 	= gst_goom_set_property;
+  gobject_class->get_property 	= gst_goom_get_property;
 
   gstelement_class->change_state = gst_goom_change_state;
 }
@@ -203,9 +205,22 @@ gst_goom_init (GstGOOM *goom)
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
   gst_pad_set_link_function (goom->sinkpad, gst_goom_sinkconnect);
 
+  gst_pad_set_link_function (goom->srcpad, gst_goom_srcconnect);
+
   goom->width = 320;
   goom->height = 200;
   goom->fps = 25; /* desired frame rate */
+  goom->channels = 0;
+  /* set to something */
+  goom_init (50, 50);
+}
+
+static void
+gst_goom_dispose (GObject *object)
+{
+  goom_close ();
+  
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstPadLinkReturn
@@ -218,7 +233,57 @@ gst_goom_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   }
 
+  gst_caps_get_int (caps, "channels", &goom->channels);
+
   return GST_PAD_LINK_OK;
+}
+
+static GstPadLinkReturn
+gst_goom_srcconnect (GstPad *pad, GstCaps *caps)
+{
+  GstGOOM *goom;
+  goom = GST_GOOM (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps)) {
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  gst_caps_get_int (caps, "width", &goom->width);
+  gst_caps_get_int (caps, "height", &goom->height);
+
+  goom_set_resolution (goom->width, goom->height);
+  goom->srcnegotiated = TRUE;
+
+  return GST_PAD_LINK_OK;
+}
+
+static gboolean
+gst_goom_negotiate_default (GstGOOM *goom)
+{
+  GstCaps *caps;
+
+  caps = GST_CAPS_NEW (
+	     "goomsrc",
+	     "video/raw",
+	       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
+	       "bpp", 		GST_PROPS_INT (32), 
+	       "depth", 	GST_PROPS_INT (32), 
+	       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
+	       "red_mask", 	GST_PROPS_INT (0xff0000), 
+	       "green_mask", 	GST_PROPS_INT (0x00ff00), 
+	       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
+	       "width", 	GST_PROPS_INT (goom->width), 
+	       "height", 	GST_PROPS_INT (goom->height)
+	   );
+
+  if (gst_pad_try_set_caps (goom->srcpad, caps) <= 0) {
+    return FALSE;
+  }
+
+  goom_set_resolution (goom->width, goom->height);
+  goom->srcnegotiated = TRUE;
+
+  return TRUE;
 }
 
 static void
@@ -253,47 +318,41 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
     return;
   }
 
-  samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
+  if (goom->channels == 0) {
+    gst_element_error (GST_ELEMENT (goom), "sink format not negotiated");
+    goto done;
+  }
+
+  if (!GST_PAD_IS_USABLE (goom->srcpad))
+    goto done;
+
+  if (!goom->srcnegotiated) {
+    if (!gst_goom_negotiate_default (goom)) {
+      gst_element_error (GST_ELEMENT (goom), "could not negotiate src format");
+      goto done;
+    }
+  }
+
+  samples_in = GST_BUFFER_SIZE (bufin) / (sizeof (gint16) * goom->channels);
 
   GST_DEBUG (0, "input buffer has %d samples", samples_in);
 
-  if (GST_BUFFER_TIMESTAMP (bufin) < goom->next_time || samples_in < 1024) {
-    gst_buffer_unref (bufin);
-    return;
+  if (GST_BUFFER_TIMESTAMP (bufin) < goom->next_time || samples_in < 512) {
+    goto done;
   }
 
   data = (gint16 *) GST_BUFFER_DATA (bufin);
-  for (i=0; i < 512; i++) {
-    goom->datain[0][i] = *data++;
-    goom->datain[1][i] = *data++;
-  }
-
-  if (goom->first_buffer) {
-    GstCaps *caps;
-
-    goom_init (goom->width, goom->height);
-	
-    GST_DEBUG (0, "making new pad");
-
-    caps = GST_CAPS_NEW (
-		     "goomsrc",
-		     "video/raw",
-		       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
-		       "bpp", 		GST_PROPS_INT (32), 
-		       "depth", 	GST_PROPS_INT (32), 
-		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
-		       "red_mask", 	GST_PROPS_INT (0xff0000), 
-		       "green_mask", 	GST_PROPS_INT (0x00ff00), 
-		       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
-		       "width", 	GST_PROPS_INT (goom->width), 
-		       "height", 	GST_PROPS_INT (goom->height)
-		   );
-
-    if (gst_pad_try_set_caps (goom->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (goom), "could not set caps");
-      return;
+  if (goom->channels == 2) {
+    for (i=0; i < 512; i++) {
+      goom->datain[0][i] = *data++;
+      goom->datain[1][i] = *data++;
     }
-    goom->first_buffer = FALSE;
+  }
+  else {
+    for (i=0; i < 512; i++) {
+      goom->datain[0][i] = *data;
+      goom->datain[1][i] = *data++;
+    }
   }
 
   bufout = gst_buffer_new ();
@@ -306,10 +365,10 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   gst_pad_push (goom->srcpad, bufout);
 
+done:
   gst_buffer_unref (bufin);
 
   GST_DEBUG (0, "GOOM: exiting chainfunc");
-
 }
 
 static GstElementStateReturn
@@ -324,9 +383,8 @@ gst_goom_change_state (GstElement *element)
       break; 
     case GST_STATE_READY_TO_PAUSED:
       goom->next_time = 0;
-      goom->peerpool = NULL;
-      /* reset the initial video state */
-      goom->first_buffer = TRUE;
+      goom->srcnegotiated = FALSE;
+      goom->channels = 0;
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;
