@@ -186,7 +186,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl these are all the gst plugins, compilable without additional libs
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi cdxaparse chart\
-        cutter deinterlace effectv festival flx goom intfloat law level\
+        cutter deinterlace effectv festival filter flx goom intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
@@ -785,6 +785,7 @@ gst/cutter/Makefile
 gst/deinterlace/Makefile
 gst/effectv/Makefile
 gst/festival/Makefile
+gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
 gst/intfloat/Makefile
