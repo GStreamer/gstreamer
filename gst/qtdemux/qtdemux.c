@@ -104,7 +104,7 @@ gst_qtdemux_details =
   "(C) 2003",
 };
 
-static GstCaps* quicktime_type_find (GstBuffer *buf, gpointer private);
+static GstCaps* quicktime_type_find (GstByteStream *bs, gpointer private);
 
 static GstTypeDefinition quicktimedefinition = {
   "qtdemux_video/quicktime",
@@ -187,24 +187,29 @@ gst_qtdemux_init (GstQTDemux *qtdemux)
 }
 
 static GstCaps*
-quicktime_type_find (GstBuffer *buf, gpointer private)
+quicktime_type_find (GstByteStream *bs, gpointer private)
 {
-  gchar *data = GST_BUFFER_DATA (buf);
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
-  g_return_val_if_fail (data != NULL, NULL);
-  
-  if(GST_BUFFER_SIZE(buf) < 8){
-    return NULL;
+  if (gst_bytestream_peek (bs, &buf, 8) == 8) {
+    gchar *data = GST_BUFFER_DATA (buf);
+
+    if (!strncmp (&data[4], "wide", 4) ||
+        !strncmp (&data[4], "moov", 4) ||
+        !strncmp (&data[4], "mdat", 4) ||
+        !strncmp (&data[4], "free", 4)) {
+      new = GST_CAPS_NEW ("quicktime_type_find",
+			  "video/quicktime",
+			    NULL);
+    }
   }
-  if (strncmp (&data[4], "wide", 4)==0 ||
-      strncmp (&data[4], "moov", 4)==0 ||
-      strncmp (&data[4], "mdat", 4)==0 ||
-      strncmp (&data[4], "free", 4)==0) {
-    return gst_caps_new ("quicktime_type_find",
-		         "video/quicktime", 
-			 NULL);
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
   }
-  return NULL;
+
+  return new;
 }
 
 static gboolean
@@ -221,9 +226,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
     0,
   };
   gint i;
-
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   factory = gst_element_factory_new ("qtdemux", GST_TYPE_QTDEMUX,
                                      &gst_qtdemux_details);

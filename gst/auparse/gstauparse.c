@@ -42,16 +42,23 @@ static GstElementDetails gst_auparse_details = {
 };
 
 static GstCaps*
-au_type_find (GstBuffer *buf, gpointer private)
+au_type_find (GstByteStream *bs, gpointer private)
 {
+  GstBuffer *buf = NULL;
   GstCaps *new = NULL;
-  gulong *head = (gulong *) GST_BUFFER_DATA (buf);
 
-  if (GST_BUFFER_SIZE (buf) < 4)
-    return NULL;
+  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
+    guint32 head = * (guint32 *) GST_BUFFER_DATA (buf);
+    if (head == 0x2e736e64 || head == 0x646e732e) {
+      new = gst_caps_new ("au_type_find",
+			  "audio/x-au",
+			    NULL);
+    }
+  }
 
-  if (*head == 0x2e736e64 || *head == 0x646e732e)
-    new = gst_caps_new ("au_type_find", "audio/x-au", NULL);
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
 
   return new;
 }

@@ -38,7 +38,7 @@ static GstElementDetails gst_avi_demux_details = {
   "(C) 1999",
 };
 
-static GstCaps* avi_type_find (GstBuffer *buf, gpointer private);
+static GstCaps* avi_type_find (GstByteStream *bs, gpointer private);
 
 /* typefactory for 'avi' */
 static GstTypeDefinition avidefinition = {
@@ -173,25 +173,29 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
 }
 
 static GstCaps*
-avi_type_find (GstBuffer *buf,
-              gpointer private)
+avi_type_find (GstByteStream *bs,
+               gpointer       private)
 {
-  gchar *data = GST_BUFFER_DATA (buf);
-  GstCaps *new;
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
   GST_DEBUG ("avi_demux: typefind");
 
-  if (GST_BUFFER_SIZE (buf) < 12)
-    return NULL;
+  if (gst_bytestream_peek (bs, &buf, 12) == 12) {
+    guint32 head1 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[0]),
+	    head2 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[2]);
 
-  if (GUINT32_FROM_LE (((guint32 *)data)[0]) != GST_RIFF_TAG_RIFF)
-    return NULL;
-  if (GUINT32_FROM_LE (((guint32 *)data)[2]) != GST_RIFF_RIFF_AVI)
-    return NULL;
+    if (head1 == GST_RIFF_TAG_RIFF && head2 == GST_RIFF_RIFF_AVI) {
+      new = GST_CAPS_NEW ("avi_type_find",
+			  "video/avi", 
+			    NULL);
+    }
+  }
 
-  new = GST_CAPS_NEW ("avi_type_find",
-		      "video/avi", 
-		        NULL);
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
   return new;
 }
 
@@ -1960,10 +1964,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
     GST_RIFF_WAVE_FORMAT_MULAW,
     -1 /* end */
   };
-
-  /* this filter needs the riff parser */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   if (!gst_library_load ("gstriff"))
     return FALSE;

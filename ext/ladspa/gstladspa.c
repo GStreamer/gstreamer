@@ -993,9 +993,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   LADSPAPluginSearch(ladspa_describe_plugin);
 
-  if (! gst_library_load ("gstbytestream"))
-    return FALSE;
-  
   /* initialize dparam support library */
   gst_control_init(NULL,NULL);
   

@@ -31,7 +31,8 @@ static void		gst_wavparse_init		(GstWavParse *wavparse);
 static GstElementStateReturn
 			gst_wavparse_change_state 	(GstElement *element);
 
-static GstCaps*		wav_type_find			(GstBuffer *buf, gpointer private);
+static GstCaps*		wav_type_find			(GstByteStream *bs,
+							 gpointer private);
 
 static const GstFormat*	gst_wavparse_get_formats	(GstPad *pad);
 static const GstQueryType *
@@ -213,15 +214,27 @@ gst_wavparse_init (GstWavParse *wavparse)
 }
 
 static GstCaps*
-wav_type_find (GstBuffer *buf, gpointer private)
+wav_type_find (GstByteStream *bs, gpointer private)
 {
-  gchar *data = GST_BUFFER_DATA (buf);
+  GstCaps *new = NULL;
+  GstBuffer *buf = NULL;
 
-  if (GST_BUFFER_SIZE (buf) < 12) return NULL;
-  if (strncmp (&data[0], "RIFF", 4)) return NULL;
-  if (strncmp (&data[8], "WAVE", 4)) return NULL;
+  if (gst_bytestream_peek (bs, &buf, 12) == 12) {
+    gchar *data = GST_BUFFER_DATA (buf);
 
-  return gst_caps_new ("wav_type_find", "audio/x-wav", NULL);
+    if (!strncmp (&data[0], "RIFF", 4) &&
+        !strncmp (&data[8], "WAVE", 4)) {
+      new = GST_CAPS_NEW ("wav_type_find",
+			  "audio/x-wav",
+			    NULL);
+    }
+  }
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return new;
 }
 
 static void wav_new_chunk_callback(GstRiffChunk *chunk, gpointer data)

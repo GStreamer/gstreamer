@@ -26,7 +26,7 @@
 extern GstElementDetails flacenc_details;
 extern GstElementDetails flacdec_details;
 
-static GstCaps* 	flac_type_find 	(GstBuffer *buf, gpointer private);
+static GstCaps* 	flac_type_find 	(GstByteStream *bs, gpointer private);
 
 GstPadTemplate *gst_flacdec_src_template, *gst_flacdec_sink_template; 
 GstPadTemplate *gst_flacenc_src_template, *gst_flacenc_sink_template;
@@ -70,37 +70,26 @@ static GstTypeDefinition flacdefinition = {
 
 
 static GstCaps* 
-flac_type_find (GstBuffer *buf, gpointer private) 
+flac_type_find (GstByteStream *bs, gpointer private) 
 {
-  gint offset;
-  guint8 *data;
-  gint size;
-  guint32 head;
-  
-  if (GST_BUFFER_SIZE (buf) < 4)
-    return NULL;
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
-  
-  head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
+  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
+    guint32 head = GUINT32_FROM_BE (*((guint32 *) GST_BUFFER_DATA (buf)));
 
-  if (head  == 0x664C6143)
-    return gst_caps_new ("flac_type_find", "application/x-flac", NULL);
-  else {
-    /* checks for existance of flac identification header in case
-     * there's an ID3 tag */
-    for (offset = 0; offset < size-4; offset++) {
-      if (data[offset]   == 'f' && 
-          data[offset+1] == 'L' && 
-          data[offset+2] == 'a' &&
-          data[offset+3] == 'C' ) {
-        return gst_caps_new ("flac_type_find", "application/x-flac", NULL);
-      }
+    if (head  == 0x664C6143) {
+      new = GST_CAPS_NEW ("flac_type_find",
+			  "application/x-flac",
+			    NULL);
     }
   }
 
-  return NULL;
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return new;
 }
 
 
@@ -110,10 +99,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *enc, *dec;
   GstTypeFactory *type;
   GstCaps *raw_caps, *flac_caps;
-
-  /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   gst_plugin_set_longname (plugin, "The FLAC Lossless compressor Codec");
 

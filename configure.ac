@@ -262,7 +262,7 @@ GST_PLUGINS_ALL="\
 	ac3parse adder audioscale auparse avi \
 	asfdemux audioconvert cdxaparse chart \
 	cutter debug deinterlace effectv festival \
-	filter flx goom intfloat law level median mixmatrix \
+	filter flx goom id3 intfloat law level median mixmatrix \
 	mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub \
 	mpegaudio mpegaudioparse mpegstream mpegtypes \
         monoscope oneton overlay passthrough playondemand qtdemux \
@@ -1180,6 +1180,7 @@ gst/festival/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
+gst/id3/Makefile
 gst/intfloat/Makefile
 gst/law/Makefile
 gst/level/Makefile

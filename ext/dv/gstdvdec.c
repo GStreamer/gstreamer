@@ -159,30 +159,34 @@ GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
 
 /* typefind stuff */
 static GstCaps*
-dv_type_find (GstBuffer *buf, gpointer private)
+dv_type_find (GstByteStream *bs, gpointer private)
 {
-  guint32 head;
+  GstBuffer *buf = NULL;
   GstCaps *new = NULL;
 
-  if (GST_BUFFER_SIZE (buf) < 5)
-    return NULL;
+  if (gst_bytestream_peek (bs, &buf, 5) == 5) {
+    guint32 head = GUINT32_FROM_BE (*((guint32 *) GST_BUFFER_DATA (buf)));
 
-  head = GUINT32_FROM_BE(*((guint32 *)GST_BUFFER_DATA(buf)));
+    /* check for DIF  and DV flag */
+    if ((head & 0xffffff00) == 0x1f070000 &&
+        !(GST_BUFFER_DATA (buf)[4] & 0x01)) {
+      gchar *format;
 
-  /* check for DIF  and DV flag */
-  if ((head & 0xffffff00) == 0x1f070000 && !(GST_BUFFER_DATA(buf)[4] & 0x01)) {
-    gchar *format;
-
-    if ((head & 0x000000ff) & 0x80)
-      format = "PAL";
-    else
-      format = "NTSC";
+      if ((head & 0x000000ff) & 0x80)
+        format = "PAL";
+      else
+        format = "NTSC";
     
-    new = GST_CAPS_NEW ("dv_type_find",
-                        "video/x-dv",
-                          "systemstream", GST_PROPS_BOOLEAN (TRUE)
-		       );
+      new = GST_CAPS_NEW ("dv_type_find",
+                          "video/x-dv",
+                          "systemstream", GST_PROPS_BOOLEAN (TRUE));
+    }
   }
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
   return new;
 }
 
@@ -1001,9 +1005,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
-
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GType identifier,
