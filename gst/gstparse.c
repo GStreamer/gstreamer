@@ -231,7 +231,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
         element = gst_elementfactory_make(arg,ptr);
         g_free(ptr);
         if (!element) {
-          fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstraemer-register?\n",arg);
+          fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstreamer-register?\n",arg);
 //          exit(-1);
         }
         GST_DEBUG(0,"CREATED element %s\n",GST_ELEMENT_NAME(element));
