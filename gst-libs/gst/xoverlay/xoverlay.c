@@ -27,6 +27,7 @@
 
 enum {
   HAVE_XWINDOW_ID,
+  DESIRED_SIZE,
   LAST_SIGNAL
 };
 
@@ -62,6 +63,10 @@ gst_x_overlay_get_type (void)
   return gst_x_overlay_type;
 }
 
+/* FIXME: evil hack, we should figure out our marshal handling in this interfaces some day */
+extern void gst_marshal_VOID__INT_INT (GClosure *closure, GValue *return_value, guint n_param_values,
+    const GValue *param_values, gpointer invocation_hint, gpointer marshal_data);
+
 static void
 gst_x_overlay_base_init (gpointer g_class)
 {
@@ -75,8 +80,15 @@ gst_x_overlay_base_init (gpointer g_class)
                       GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (GstXOverlayClass, have_xwindow_id),
                       NULL, NULL,
-                      g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-		      G_TYPE_POINTER);
+                      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1,
+		      G_TYPE_INT);
+      gst_x_overlay_signals[DESIRED_SIZE] =
+        g_signal_new ("desired_size_changed",
+                      GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
+                      G_STRUCT_OFFSET (GstXOverlayClass, desired_size),
+                      NULL, NULL,
+                      gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
+		      G_TYPE_INT, G_TYPE_INT);
       
       initialized = TRUE;
     }
@@ -119,5 +131,55 @@ gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
   g_return_if_fail (GST_IS_X_OVERLAY (overlay));
   
   g_signal_emit (G_OBJECT (overlay),
-                 gst_x_overlay_signals[HAVE_XWINDOW_ID], 0, xwindow_id);
+                 gst_x_overlay_signals[HAVE_XWINDOW_ID], 0, (gint) xwindow_id);
 }
+
+/**
+ * gst_x_overlay_get_desired_size:
+ * @overlay: a #GstXOverlay which got a XWindow.
+ * @width: pointer to a gint taking the width or NULL.
+ * @height: pointer to a gint taking the height or NULL.
+ *
+ * Gets the desired size of the overlay. If the overlay doesn't know its desired
+ * size, width and height are set to 0.
+ */
+void
+gst_x_overlay_get_desired_size (GstXOverlay *overlay, guint *width, guint *height)
+{
+  guint width_tmp, height_tmp;
+  GstXOverlayClass *klass;
+  
+  g_return_if_fail (G_TYPE_CHECK_INSTANCE_TYPE ((overlay), GST_TYPE_X_OVERLAY));
+  
+  klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  if (klass->get_desired_size && GST_IS_X_OVERLAY (overlay)) {
+    /* this ensures that elements don't need to check width and height for NULL 
+       but apps may use NULL */
+    klass->get_desired_size (overlay, width ? width : &width_tmp, height ? height : &height_tmp);
+  } else {
+    if (width)
+      *width = 0;
+    if (height)
+      *height = 0;
+  }
+}
+
+/**
+ * gst_x_overlay_got_desired_size:
+ * @overlay: a #GstXOverlay which changed its desired size.
+ * @width: The new desired width
+ * @height: The new desired height
+ *
+ * This will fire a "desired_size_changed" signal.
+ *
+ * This function should be used by video overlay developpers.
+ */
+void
+gst_x_overlay_got_desired_size (GstXOverlay *overlay, guint width, guint height)
+{
+  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+  
+  g_signal_emit (G_OBJECT (overlay),
+                 gst_x_overlay_signals[DESIRED_SIZE], 0, width, height);
+}
+
