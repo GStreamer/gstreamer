@@ -712,7 +712,8 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
       GstEvent *seek_event;
 
       /* conversion succeeded, create the seek */
-      seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush,
+      seek_event =
+          gst_event_new_seek (format | GST_EVENT_SEEK_METHOD (event) | flush,
           desired_offset);
       /* do the seek */
       if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
