@@ -212,7 +212,7 @@ gst_audiosink_sync_parms (GstAudioSink *audiosink)
 
   if (audiosink->fd == -1) return;
 
-  ioctl (audiosink->fd,SNDCTL_DSP_RESET, 0);
+  ioctl (audiosink->fd, SNDCTL_DSP_RESET, 0);
 
   ioctl (audiosink->fd, SNDCTL_DSP_SETFMT, &audiosink->format);
   ioctl (audiosink->fd, SNDCTL_DSP_CHANNELS, &audiosink->channels);
@@ -273,7 +273,7 @@ gst_audiosink_chain (GstPad *pad, GstBuffer *buf)
   if (GST_BUFFER_DATA (buf) != NULL) {
     gst_trace_add_entry(NULL, 0, buf, "audiosink: writing to soundcard");
     //g_print("audiosink: writing to soundcard\n");
-    if (audiosink->fd > 2) {
+    if (audiosink->fd >= 0) {
       if (!audiosink->mute) {
         gst_clock_wait (audiosink->clock, GST_BUFFER_TIMESTAMP (buf), GST_OBJECT (audiosink));
         ioctl (audiosink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
@@ -357,7 +357,7 @@ gst_audiosink_open_audio (GstAudioSink *sink)
   sink->fd = open("/dev/dsp", O_WRONLY);
 
   /* if we have it, set the default parameters and go have fun */
-  if (sink->fd > 0) {
+  if (sink->fd >= 0) {
     /* set card state */
     sink->format = AFMT_S16_LE;
     sink->channels = 2; /* stereo */
