@@ -20,13 +20,12 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-#include <gst/gst.h>
-#include <string.h>
-#ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+
+#include <gst/gst.h>
+#include <gst/audio/audio.h>
+#include <string.h>
 
 #if 0
 static void
@@ -46,31 +45,59 @@ print_caps (GstCaps *caps)
 
 /*** DEFINITIONS **************************************************************/
 
-#define GST_TYPE_AUDIO_CONVERT		(gst_audio_convert_get_type())
-#define GST_AUDIO_CONVERT(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_CONVERT,GstAudioConvert))
-#define GST_AUDIO_CONVERT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_CONVERT,GstAudioConvert))
-#define GST_IS_AUDIO_CONVERT(obj)	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CONVERT))
-#define GST_IS_AUDIO_CONVERT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_CONVERT))
+#define GST_TYPE_AUDIO_CONVERT          (gst_audio_convert_get_type())
+#define GST_AUDIO_CONVERT(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_CONVERT,GstAudioConvert))
+#define GST_AUDIO_CONVERT_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_CONVERT,GstAudioConvert))
+#define GST_IS_AUDIO_CONVERT(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CONVERT))
+#define GST_IS_AUDIO_CONVERT_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_CONVERT))
 
 typedef struct _GstAudioConvert GstAudioConvert;
+typedef struct _GstAudioConvertCaps GstAudioConvertCaps;
 typedef struct _GstAudioConvertClass GstAudioConvertClass;
 
+/* this struct is a handy way of passing around all the caps info ... */
+struct _GstAudioConvertCaps {
+  /* general caps */
+  gint     endianness;
+  gint     width;
+  gint     rate;
+  gint     channels;
+
+  gboolean is_float; /* true iff a pad is carrying float data */
+
+  /* int audio caps */
+  gint     depth;
+  gboolean is_signed;
+
+  /* float audio caps */
+  guint    buffer_frames;
+};
+
 struct _GstAudioConvert {
-  GstElement	element;
+  GstElement element;
+
   /* pads */
-  GstPad *	sink;
-  GstPad *	src;
+  GstPad * sink;
+  GstPad * src;
+
   /* properties */
-  gboolean	aggressive;
+  gboolean aggressive;
+  guint    min_rate, max_rate, rate_steps;
+
   /* caps: 0 = sink, 1 = src, so always convert from 0 to 1 */
-  gboolean	caps_set[2];
-  gint		law[2];
-  gint		endian[2];
-  gint		sign[2];
-  gint		depth[2];	/* in BITS */
-  gint		width[2];	/* in BYTES */
-  gint		rate[2];
-  gint		channels[2];
+  gboolean caps_set[2];
+  GstAudioConvertCaps caps[2];
+
+  gint                law[2];
+  gint                endian[2];
+  gint                sign[2];
+  gint                depth[2];        /* in BITS */
+  gint                width[2];        /* in BYTES */
+  gint                rate[2];
+  gint                channels[2];
+
+  /* conversion functions */
+  GstBuffer * (* convert_internal) (GstAudioConvert *this, GstBuffer *buf);
 };
 
 struct _GstAudioConvertClass {
@@ -78,46 +105,41 @@ struct _GstAudioConvertClass {
 };
 
 /* type functions */
-static GType		gst_audio_convert_get_type		(void);
-static void		gst_audio_convert_class_init		(GstAudioConvertClass *klass);
-static void		gst_audio_convert_init			(GstAudioConvert *audio_convert);
-static void		gst_audio_convert_set_property		(GObject *object, 
-								 guint prop_id,
-								 const GValue *value,
-								 GParamSpec *pspec);
-static void		gst_audio_convert_get_property		(GObject *object,
-								 guint prop_id,
-								 GValue *value,
-								 GParamSpec *pspec);
-/* gstreamer functions */	
-static void		gst_audio_convert_chain			(GstPad *pad,
-								 GstBuffer *buf);
-static GstPadLinkReturn	gst_audio_convert_link			(GstPad *pad,
-								 GstCaps *caps);
-static GstElementStateReturn gst_audio_convert_change_state	(GstElement *element);
+static GType gst_audio_convert_get_type     (void);
+static void  gst_audio_convert_class_init   (GstAudioConvertClass *klass);
+static void  gst_audio_convert_init         (GstAudioConvert *audio_convert);
+static void  gst_audio_convert_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void  gst_audio_convert_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+
+/* gstreamer functions */
+static void                  gst_audio_convert_chain        (GstPad *pad, GstBuffer *buf);
+static GstPadLinkReturn      gst_audio_convert_link         (GstPad *pad, GstCaps *caps);
+static GstElementStateReturn gst_audio_convert_change_state (GstElement *element);
+
 /* actual work */
-static gboolean		gst_audio_convert_set_caps		(GstPad *pad);
-static GstBuffer *	gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, 
-								 GstBuffer *buf);
-static GstBuffer *	gst_audio_convert_buffer_from_default_format (GstAudioConvert *this, 
-								 GstBuffer *buf);
-static GstBuffer *	gst_audio_convert_channels		(GstAudioConvert *this, 
-								 GstBuffer *buf);
+static gboolean    gst_audio_convert_set_caps (GstPad *pad);
 
+static GstBuffer * gst_audio_convert_buffer_to_default_format   (GstAudioConvert *this, GstBuffer *buf);
+static GstBuffer * gst_audio_convert_buffer_from_default_format (GstAudioConvert *this, GstBuffer *buf);
 
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_audio_convert_signals[LAST_SIGNAL] = { 0 }; */
+static GstBuffer * gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf);
 
 /* AudioConvert signals and args */
 enum {
   /* FILL ME */
   LAST_SIGNAL
 };
+
 enum {
   ARG_0,
   ARG_AGGRESSIVE,
+  ARG_MIN_RATE,
+  ARG_MAX_RATE,
+  ARG_RATE_STEPS
 };
+
+static GstElementClass *parent_class = NULL;
+/*static guint gst_audio_convert_signals[LAST_SIGNAL] = { 0 }; */
 
 /*** GSTREAMER PROTOTYPES *****************************************************/
 
@@ -125,55 +147,33 @@ GST_PAD_TEMPLATE_FACTORY (audio_convert_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "audio_convert_src",
-    "audio/x-raw-int",
-      "endianness",	GST_PROPS_LIST (
-				GST_PROPS_INT (G_LITTLE_ENDIAN),
-				GST_PROPS_INT (G_BIG_ENDIAN)
-			),
-      "signed",		GST_PROPS_LIST (
-				GST_PROPS_BOOLEAN (FALSE),
-				GST_PROPS_BOOLEAN (TRUE)
-			),
-      "depth",		GST_PROPS_INT_RANGE (1, 32),
-      "width",		GST_PROPS_LIST (
-				GST_PROPS_INT (8),
-				GST_PROPS_INT (16),
-				GST_PROPS_INT (24),
-				GST_PROPS_INT (32)
-			),
-      "rate",		GST_PROPS_INT_RANGE (8000, 192000),
-      "channels",	GST_PROPS_INT_RANGE (1, 2)
+  gst_caps_append (
+    gst_caps_new (
+      "audio_convert_src_int",
+      "audio/x-raw-int",
+      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
+    gst_caps_new (
+      "audio_convert_src_float",
+      "audio/x-raw-float",
+      GST_AUDIO_FLOAT_PAD_TEMPLATE_PROPS)
   )
 )
+
 GST_PAD_TEMPLATE_FACTORY (audio_convert_sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "audio_convert_sink",
-    "audio/x-raw-int",
-      "endianness",	GST_PROPS_LIST (
-				GST_PROPS_INT (G_LITTLE_ENDIAN),
-				GST_PROPS_INT (G_BIG_ENDIAN)
-			),
-      "signed",		GST_PROPS_LIST (
-				GST_PROPS_BOOLEAN (FALSE),
-				GST_PROPS_BOOLEAN (TRUE)
-			),
-      "depth",		GST_PROPS_INT_RANGE (1, 32),
-      "width",		GST_PROPS_LIST (
-				GST_PROPS_INT (8),
-				GST_PROPS_INT (16),
-				GST_PROPS_INT (24),
-				GST_PROPS_INT (32)
-			),
-      "rate",		GST_PROPS_INT_RANGE (8000, 192000),
-      "channels",	GST_PROPS_INT_RANGE (1, 2)
+  gst_caps_append (
+    gst_caps_new (
+      "audio_convert_sink_int",
+      "audio/x-raw-int",
+      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
+    gst_caps_new (
+      "audio_convert_sink_float",
+      "audio/x-raw-float",
+      GST_AUDIO_FLOAT_PAD_TEMPLATE_PROPS)
   )
 )
-
 
 /*** TYPE FUNCTIONS ***********************************************************/
 
@@ -192,7 +192,9 @@ gst_audio_convert_get_type(void) {
       0,
       (GInstanceInitFunc)gst_audio_convert_init,
     };
-    audio_convert_type = g_type_register_static(GST_TYPE_ELEMENT, "GstAudioConvert", &audio_convert_info, 0);
+    audio_convert_type = g_type_register_static(GST_TYPE_ELEMENT,
+                                                "GstAudioConvert",
+                                                &audio_convert_info, 0);
   }
   return audio_convert_type;
 }
@@ -208,15 +210,32 @@ gst_audio_convert_class_init (GstAudioConvertClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_AGGRESSIVE,
-    g_param_spec_boolean("aggressive","aggressive mode","if true, tries any possible format before giving up",
-                         FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
   gobject_class->set_property = gst_audio_convert_set_property;
   gobject_class->get_property = gst_audio_convert_get_property;
 
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_AGGRESSIVE,
+    g_param_spec_boolean("aggressive", "aggressive mode",
+                         "if true, tries any possible format before giving up",
+                         FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MIN_RATE,
+    g_param_spec_uint("min-rate", "minimum rate allowed",
+                      "defines the lower bound for the audio rate",
+                      0, G_MAXUINT, 8000, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAX_RATE,
+    g_param_spec_uint("max-rate", "maximum rate allowed",
+                      "defines the upper bound for the audio rate",
+                      0, G_MAXUINT, 192000, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE_STEPS,
+    g_param_spec_uint("rate-steps", "rate search steps",
+                      "the number of steps used for searching between min and max rates",
+                      0, G_MAXUINT, 32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_audio_convert_change_state;
 }
+
 static void
 gst_audio_convert_init (GstAudioConvert *this)
 {
@@ -225,6 +244,7 @@ gst_audio_convert_init (GstAudioConvert *this)
                audio_convert_sink_template_factory), "sink");
   gst_pad_set_link_function (this->sink, gst_audio_convert_link);
   gst_element_add_pad (GST_ELEMENT(this), this->sink);
+
   /* srcpad */
   this->src = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (
               audio_convert_src_template_factory), "src");
@@ -232,9 +252,10 @@ gst_audio_convert_init (GstAudioConvert *this)
   gst_element_add_pad (GST_ELEMENT(this), this->src);
 
   gst_pad_set_chain_function(this->sink, gst_audio_convert_chain);
-  gst_pad_set_chain_function(this->sink, gst_audio_convert_chain);
+
   /* clear important variables */
   this->caps_set[0] = this->caps_set[1] = FALSE;
+  this->convert_internal = NULL;
 }
 static void
 gst_audio_convert_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -248,6 +269,15 @@ gst_audio_convert_set_property (GObject *object, guint prop_id, const GValue *va
   switch (prop_id) {
     case ARG_AGGRESSIVE:
       audio_convert->aggressive = g_value_get_boolean (value);
+      break;
+    case ARG_MIN_RATE:
+      audio_convert->min_rate = g_value_get_uint (value);
+      break;
+    case ARG_MAX_RATE:
+      audio_convert->max_rate = g_value_get_uint (value);
+      break;
+    case ARG_RATE_STEPS:
+      audio_convert->rate_steps = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -267,6 +297,15 @@ gst_audio_convert_get_property (GObject *object, guint prop_id, GValue *value, G
   switch (prop_id) {
     case ARG_AGGRESSIVE:
       g_value_set_boolean (value, audio_convert->aggressive);
+      break;
+    case ARG_MIN_RATE:
+      g_value_set_uint (value, audio_convert->min_rate);
+      break;
+    case ARG_MAX_RATE:
+      g_value_set_uint (value, audio_convert->max_rate);
+      break;
+    case ARG_RATE_STEPS:
+      g_value_set_uint (value, audio_convert->rate_steps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -295,15 +334,18 @@ gst_audio_convert_chain (GstPad *pad, GstBuffer *buf)
 
   if (!this->caps_set[1]) {
     if (!gst_audio_convert_set_caps (this->src)) {
-      gst_element_error (GST_ELEMENT (this), "AudioConvert: could not set caps on pad %s", 
+      gst_element_error (GST_ELEMENT (this),
+                         "AudioConvert: could not set caps on pad %s",
                          GST_PAD_NAME(this->src));
       return;
     }
   }
 
+  g_assert(this->caps_set[0] && this->caps_set[1]);
+
   /**
    * Theory of operation:
-   * - convert the format (endianness, signedness, width, depth) to 
+   * - convert the format (endianness, signedness, width, depth) to
    *   (G_BYTE_ORDER, TRUE, 32, 32)
    * - convert rate and channels
    * - convert back to output format
@@ -317,6 +359,7 @@ gst_audio_convert_chain (GstPad *pad, GstBuffer *buf)
 
   gst_pad_push (this->src, buf);
 }
+
 static GstPadLinkReturn
 gst_audio_convert_link (GstPad *pad, GstCaps *caps)
 {
@@ -328,39 +371,33 @@ gst_audio_convert_link (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail(GST_IS_PAD(pad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail(GST_IS_AUDIO_CONVERT(GST_OBJECT_PARENT (pad)), GST_PAD_LINK_REFUSED);
   this = GST_AUDIO_CONVERT(GST_OBJECT_PARENT (pad));
-  
+
   /* could we do better? */
-  if (!GST_CAPS_IS_FIXED (caps))
+  if (!GST_CAPS_IS_FIXED (caps)) return GST_PAD_LINK_DELAYED;
+
+  nr = (pad == this->sink) ? 0 : (pad == this->src) ? 1 : -1;
+  g_assert (nr > -1);
+
+  if (! gst_caps_get (caps,
+                      "channels", &channels,
+                      "signed", &sign,
+                      "depth", &depth,
+                      "width", &width,
+                      "rate", &rate, NULL))
     return GST_PAD_LINK_DELAYED;
 
-  if (pad == this->sink) {
-   nr = 0;
-  } else if (pad == this->src) {
-   nr = 1;
-  } else {
-   g_assert_not_reached ();
-  }
-
-  if (!gst_caps_get (caps, "rate", &rate,
-                           "channels", &channels,
-  			   "signed", &sign,
-  			   "depth", &depth,
-  			   "width", &width,
-                           NULL
-     ))
-    return GST_PAD_LINK_DELAYED;
   if (!gst_caps_get_int (caps, "endianness", &endianness)) {
     if (width == 1) {
-      endianness = G_BYTE_ORDER;  
+      endianness = G_BYTE_ORDER;
     } else {
       return GST_PAD_LINK_DELAYED;
     }
   }
-  /* we cannot yet convert this, so check */
-  if (this->caps_set[1 - nr]) {
-    if (rate != this->rate[1 - nr])
-      return GST_PAD_LINK_REFUSED;
-  }
+  /* we can't convert rate changes yet */
+  if ((this->caps_set[1 - nr]) &&
+      (rate != this->rate[1 - nr]))
+    return GST_PAD_LINK_REFUSED;
+
   this->caps_set[nr] = TRUE;
   this->rate[nr] = rate;
   this->channels[nr] = channels;
@@ -371,6 +408,7 @@ gst_audio_convert_link (GstPad *pad, GstCaps *caps)
 
   return GST_PAD_LINK_OK;
 }
+
 static GstElementStateReturn
 gst_audio_convert_change_state (GstElement *element)
 {
@@ -379,6 +417,7 @@ gst_audio_convert_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
       this->caps_set[0] = this->caps_set[1] = FALSE;
+      this->convert_internal = NULL;
       break;
     default:
       break;
@@ -400,23 +439,23 @@ make_caps (gint endianness, gboolean sign, gint depth, gint width, gint rate, gi
     return GST_CAPS_NEW (
       "audio_convert_caps",
       "audio/x-raw-int",
-        "signed",	GST_PROPS_BOOLEAN (sign),
-        "depth",	GST_PROPS_INT (depth),
-        "width",	GST_PROPS_INT (width * 8),
-        "rate",		GST_PROPS_INT (rate),
-        "channels",	GST_PROPS_INT (channels)
-    );  
+        "signed",        GST_PROPS_BOOLEAN (sign),
+        "depth",        GST_PROPS_INT (depth),
+        "width",        GST_PROPS_INT (width * 8),
+        "rate",                GST_PROPS_INT (rate),
+        "channels",        GST_PROPS_INT (channels)
+    );
   } else {
     return GST_CAPS_NEW (
       "audio_convert_caps",
       "audio/x-raw-int",
-        "endianness",	GST_PROPS_INT (endianness),
-        "signed",	GST_PROPS_BOOLEAN (sign),
-        "depth",	GST_PROPS_INT (depth),
-        "width",	GST_PROPS_INT (width * 8),
-        "rate",		GST_PROPS_INT (rate),
-        "channels",	GST_PROPS_INT (channels)
-    );  
+        "endianness",        GST_PROPS_INT (endianness),
+        "signed",        GST_PROPS_BOOLEAN (sign),
+        "depth",        GST_PROPS_INT (depth),
+        "width",        GST_PROPS_INT (width * 8),
+        "rate",                GST_PROPS_INT (rate),
+        "channels",        GST_PROPS_INT (channels)
+    );
   }
 }
 static gboolean
@@ -430,69 +469,58 @@ gst_audio_convert_set_caps (GstPad *pad)
   gboolean sign;
 
   this = GST_AUDIO_CONVERT (GST_PAD_PARENT (pad));
-  nr = this->src == pad ? 1 : this->sink == pad ? 0 : -1;
+  nr = (this->src == pad) ? 1 : (this->sink == pad) ? 0 : -1;
   g_assert (nr > -1);
 
   /* try 1:1 first */
   caps = make_caps (this->endian[1 - nr], this->sign[1 - nr], this->depth[1 - nr], 
                     this->width[1 - nr], this->rate[1 - nr], this->channels[1 - nr]);
   ret = gst_pad_try_set_caps (pad, caps);
-  if (ret == GST_PAD_LINK_DONE || ret == GST_PAD_LINK_OK)
-    goto success;
- 
+  if (ret == GST_PAD_LINK_DONE || ret == GST_PAD_LINK_OK) goto success;
+
   /* now do some iterating, this is gonna be fun */
   /* stereo is most important */
   channels = 2;
   while (channels > 0) {
-  
+
     /* endianness comes second */
     endianness = 0;
     do {
-      if (endianness == G_BIG_ENDIAN)
-	break;
+      if (endianness == G_BIG_ENDIAN) break;
       endianness = endianness == 0 ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-      
+
       /* signedness */
       sign = TRUE;
       do {
-	sign = !sign;
+        sign = !sign;
 
-      	/* depth */
-        for (width = 4; width >= 1; width--) { 
-	
-	  /* width */
-	  for (depth = width * 8; depth >= 1; depth -= this->aggressive ? 1 : 8) {
+        /* width */
+        for (width = 4; width >= 1; width--) {
 
-	    /* rate - not supported yet*/
+          /* depth */
+          for (depth = width * 8; depth >= 1; depth -= this->aggressive ? 1 : 8) {
 
-	    caps = make_caps (endianness, sign, depth, 
-                              width, this->rate[1 - nr], channels);
-            ret = gst_pad_try_set_caps (pad, caps);
-            if (ret == GST_PAD_LINK_DONE || ret == GST_PAD_LINK_OK) {
-              goto success;
-            }
-    
-    	  }
+            /* rate - not supported yet*/
 
-	}
-
+              caps = make_caps (endianness, sign, depth, width, this->rate[1 - nr], channels);
+              ret = gst_pad_try_set_caps (pad, caps);
+              if (ret == GST_PAD_LINK_DONE || ret == GST_PAD_LINK_OK)
+                goto success;
+          }
+        }
       } while (sign != TRUE);
-
     } while TRUE;
-  
     channels--;
   }
-  
-  
-  goto fail;  
-fail:
+
   return FALSE;
 
-success:
+ success:
   g_assert (gst_audio_convert_link (pad, caps) == GST_PAD_LINK_OK);
-  return TRUE;  
+  return TRUE;
 }
-/* return a writable buffer of size which ideally is the same as before 
+
+/* return a writable buffer of size which ideally is the same as before
    - You must unref the new buffer
    - The size of the old buffer is undefined after this operation */
 static GstBuffer*
@@ -513,19 +541,22 @@ gst_audio_convert_get_buffer (GstBuffer *buf, guint size)
     return ret;
   }
 }
+
 static inline guint8 GUINT8_IDENTITY (guint8 x) { return x; }
 static inline guint8 GINT8_IDENTITY (gint8 x) { return x; }
+
 #define CONVERT_TO(to, from, type, sign, endianness, LE_FUNC, BE_FUNC) G_STMT_START{\
-  type value;									\
-  memcpy (&value, from, sizeof (type));						\
-  from -= sizeof (type);							\
-  value = (endianness == G_LITTLE_ENDIAN) ? LE_FUNC (value) : BE_FUNC (value);	\
-  if (sign) {									\
-    to = value;									\
-  } else {									\
-    to = (gint64) value - (1 << (sizeof (type) * 8 - 1));			\
-  }										\
+  type value;                                                                  \
+  memcpy (&value, from, sizeof (type));                                        \
+  from -= sizeof (type);                                                       \
+  value = (endianness == G_LITTLE_ENDIAN) ? LE_FUNC (value) : BE_FUNC (value); \
+  if (sign) {                                                                  \
+    to = value;                                                                \
+  } else {                                                                     \
+    to = (gint64) value - (1 << (sizeof (type) * 8 - 1));                      \
+  }                                                                            \
 }G_STMT_END;
+
 static GstBuffer*
 gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *buf)
 {
@@ -536,72 +567,40 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
   gint32 *dest;
   guint8 *src;
 
-  if (this->width[0] == 4 && this->depth[0] == 32 && 
+  if (this->width[0] == 4 && this->depth[0] == 32 &&
       this->endian[0] == G_BYTE_ORDER && this->sign[0] == TRUE)
     return buf;
-  
+
   ret = gst_audio_convert_get_buffer (buf, buf->size * 4 / this->width[0]);
-  
+
   count = ret->size / 4;
   src = buf->data + (count - 1) * this->width[0];
   dest = (gint32 *) ret->data;
   for (i = count - 1; i >= 0; i--) {
     switch (this->width[0]) {
-      case 1:
-	if (this->sign[0]) {
- 	  CONVERT_TO (cur, src, gint8, this->sign[0], this->endian[0], GINT8_IDENTITY, GINT8_IDENTITY);
-	} else {
-	  CONVERT_TO (cur, src, guint16, this->sign[0], this->endian[0], GUINT8_IDENTITY, GUINT8_IDENTITY);
-	}
-        break;
-      case 2:
-	if (this->sign[0]) {
-	  CONVERT_TO (cur, src, gint16, this->sign[0], this->endian[0], GINT16_FROM_LE, GINT16_FROM_BE);
-	} else {
-	  CONVERT_TO (cur, src, guint16, this->sign[0], this->endian[0], GUINT16_FROM_LE, GUINT16_FROM_BE);
-	}
-        break;
-      case 3:
-	if (this->sign[0]) {
-	  gint32 value;
-	  if (this->endian[0] == G_BIG_ENDIAN) {
-	    gpointer p = &value;
-	    p++;
-	    memcpy (p, src, 3);	  
-	    value = GINT32_FROM_BE (value);
-	  } else if (this->endian[0] == G_LITTLE_ENDIAN) {
-	    memcpy (&value, src, 3);
-	    value = GINT32_FROM_LE (value);
-	  } else {
-	    g_assert_not_reached();
-	  }
-	  cur = value;
-	} else {
-	  guint32 value;
-	  if (this->endian[0] == G_BIG_ENDIAN) {
-	    gpointer p = &value;
-	    p++;
-	    memcpy (p, src, 3);	  
-	    value = GUINT32_FROM_BE (value);
-	  } else if (this->endian[0] == G_LITTLE_ENDIAN) {
-	    memcpy (&value, src, 3);
-	    value = GUINT32_FROM_LE (value);
-	  } else {
-	    g_assert_not_reached();
-	  }
-	  cur = (gint64) value - (1 << 23);
-	}
-        src -= 3;
-        break;      
-      case 4:
-	if (this->sign[0]) {
-	  CONVERT_TO (cur, src, gint32, this->sign[0], this->endian[0], GINT32_FROM_LE, GINT32_FROM_BE);
-	} else {
-	  CONVERT_TO (cur, src, guint32, this->sign[0], this->endian[0], GUINT32_FROM_LE, GUINT32_FROM_BE);
-	}
-        break;
-      default:
-        g_assert_not_reached ();
+    case 1:
+    if (this->sign[0]) {
+      CONVERT_TO (cur, src, gint8, this->sign[0], this->endian[0], GINT8_IDENTITY, GINT8_IDENTITY);
+    } else {
+      CONVERT_TO (cur, src, guint16, this->sign[0], this->endian[0], GUINT8_IDENTITY, GUINT8_IDENTITY);
+    }
+    break;
+    case 2:
+    if (this->sign[0]) {
+      CONVERT_TO (cur, src, gint16, this->sign[0], this->endian[0], GINT16_FROM_LE, GINT16_FROM_BE);
+    } else {
+      CONVERT_TO (cur, src, guint16, this->sign[0], this->endian[0], GUINT16_FROM_LE, GUINT16_FROM_BE);
+    }
+    break;
+    case 4:
+    if (this->sign[0]) {
+      CONVERT_TO (cur, src, gint32, this->sign[0], this->endian[0], GINT32_FROM_LE, GINT32_FROM_BE);
+    } else {
+      CONVERT_TO (cur, src, guint32, this->sign[0], this->endian[0], GUINT32_FROM_LE, GUINT32_FROM_BE);
+    }
+    break;
+    default:
+    g_assert_not_reached ();
     }
     cur = cur * ((gint64) 1 << (32 - this->depth[0]));
     cur = CLAMP (cur, -((gint64)1 << 32), (gint64) 0x7FFFFFFF);
@@ -612,25 +611,27 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
   gst_buffer_unref (buf);
   return ret;
 }
-#define POPULATE(format, be_func, le_func) G_STMT_START{			\
-  format val;									\
-  format* p = (format *) dest;							\
-  int_value >>= (32 - this->depth[1]);						\
-  val = (format) int_value;							\
-  switch (this->endian[1]) {							\
-    case G_LITTLE_ENDIAN:							\
-      val = le_func (val);							\
-      break;									\
-    case G_BIG_ENDIAN:								\
-      val = be_func (val);							\
-      break;									\
-    default:									\
-      g_assert_not_reached ();							\
-  };										\
-  *p = val;									\
-  p ++;										\
-  dest = (guint8 *) p;								\
+
+#define POPULATE(format, be_func, le_func) G_STMT_START{                       \
+  format val;                                                                  \
+  format* p = (format *) dest;                                                 \
+  int_value >>= (32 - this->depth[1]);                                         \
+  val = (format) int_value;                                                    \
+  switch (this->endian[1]) {                                                   \
+    case G_LITTLE_ENDIAN:                                                      \
+      val = le_func (val);                                                     \
+      break;                                                                   \
+    case G_BIG_ENDIAN:                                                         \
+      val = be_func (val);                                                     \
+      break;                                                                   \
+    default:                                                                   \
+      g_assert_not_reached ();                                                 \
+  };                                                                           \
+  *p = val;                                                                    \
+  p ++;                                                                        \
+  dest = (guint8 *) p;                                                         \
 }G_STMT_END
+
 static GstBuffer *
 gst_audio_convert_buffer_from_default_format (GstAudioConvert *this, GstBuffer *buf)
 {
@@ -639,89 +640,51 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert *this, GstBuffer *
   guint count, i;
   gint32 *src;
 
-  if (this->width[1] == 4 && this->depth[1] == 32 && 
+  if (this->width[1] == 4 && this->depth[1] == 32 &&
       this->endian[1] == G_BYTE_ORDER && this->sign[1] == TRUE)
     return buf;
-  
+
   ret = gst_audio_convert_get_buffer (buf, buf->size * this->width[1] / 4);
-  
+
   dest = ret->data;
-  src = (gint32 *) buf->data;  
-  
+  src = (gint32 *) buf->data;
+
   count = ret->size / this->width[1];
-  
+
   for (i = 0; i < count; i++) {
     gint32 int_value = *src;
     src++;
     switch (this->width[1]) {
-      case 1:
-        if (this->sign[1]) {
-          POPULATE (gint8, GINT8_IDENTITY, GINT8_IDENTITY);
-        } else {
-          POPULATE (guint8, GUINT8_IDENTITY, GUINT8_IDENTITY);
-        }
-        break;
-      case 2:
-        if (this->sign[1]) {
-          POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
-        } else {
-          POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
-        }
-        break;
-      case 3:
-        if (this->sign[1]) {
-	  gpointer p;
-          gint32 val = (gint32) int_value;
-          switch (this->endian[1]) {
-            case G_LITTLE_ENDIAN:
-              val = GINT32_TO_LE (val);
-              break;
-            case G_BIG_ENDIAN:
-              val = GINT32_TO_BE (val);
-              break;
-            default:
-              g_assert_not_reached ();
-          };
-	  p = &val;
-	  if (this->endian[1] == G_BIG_ENDIAN)
-	    p++;
-          memcpy (dest, p, 3);
-	  dest += 3;
-	} else {
-	  gpointer p;
-          guint32 val = (guint32) int_value;
-          switch (this->endian[1]) {
-            case G_LITTLE_ENDIAN:
-              val = GUINT32_TO_LE (val);
-              break;
-            case G_BIG_ENDIAN:
-              val = GUINT32_TO_BE (val);
-              break;
-            default:
-              g_assert_not_reached ();
-          };
-	  p = &val;
-	  if (this->endian[1] == G_BIG_ENDIAN)
-	    p++;
-          memcpy (dest, p, 3);
-	  dest += 3;
-        }	    
-        break;
-      case 4:
-        if (this->sign[1]) {
-          POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
-        } else {
-          POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
-        }
-        break;
-      default:
-        g_assert_not_reached ();
+    case 1:
+    if (this->sign[1]) {
+      POPULATE (gint8, GINT8_IDENTITY, GINT8_IDENTITY);
+    } else {
+      POPULATE (guint8, GUINT8_IDENTITY, GUINT8_IDENTITY);
+    }
+    break;
+    case 2:
+    if (this->sign[1]) {
+      POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
+    } else {
+      POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
+    }
+    break;
+    case 4:
+    if (this->sign[1]) {
+      POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
+    } else {
+      POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
+    }
+    break;
+    default:
+    g_assert_not_reached ();
     }
   }
-  
+
   gst_buffer_unref(buf);
   return ret;
 }
+
 static GstBuffer *
 gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf)
 {
@@ -736,7 +699,7 @@ gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf)
   count = ret->size / 4 / this->channels[1];
   src = (guint32 *) buf->data;
   dest = (guint32 *) ret->data;
-  
+
   if (this->channels[0] > this->channels[1]) {
     for (i = 0; i < count; i++) {
       *dest = *src >> 1;
@@ -776,13 +739,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                     &audio_convert_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (audio_convert_src_template_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (audio_convert_sink_template_factory));
+  gst_element_factory_add_pad_template (factory,
+                  GST_PAD_TEMPLATE_GET (audio_convert_src_template_factory));
+  gst_element_factory_add_pad_template (factory,
+                  GST_PAD_TEMPLATE_GET (audio_convert_sink_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  
+
   return TRUE;
 }
 
