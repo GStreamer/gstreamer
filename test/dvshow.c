@@ -32,14 +32,16 @@ main (int argc,char *argv[])
   bin = gst_bin_new("bin");
 
   if (argc == 1) {
-    src = gst_elementfactory_make ("gst1394src", "src");
+    src = gst_elementfactory_make ("dv1394src", "src");
   } else {
     src = gst_elementfactory_make ("disksrc", "src");
     gtk_object_set(GTK_OBJECT(src),"location",argv[1],"bytesperread",480,NULL);
   }
   dvdec = gst_elementfactory_make ("dvdec", "decoder");
+  if (!dvdec) fprintf(stderr,"no dvdec\n"),exit(1);
 //  cspace = gst_elementfactory_make ("colorspace", "cspace");
   videosink = gst_elementfactory_make ("xvideosink", "videosink");
+  if (!videosink) fprintf(stderr,"no dvdec\n"),exit(1);
   gtk_object_set(GTK_OBJECT(videosink),"width",720,"height",480,NULL);
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
