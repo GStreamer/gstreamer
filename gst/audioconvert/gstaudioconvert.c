@@ -589,16 +589,17 @@ gst_audio_convert_get_buffer (GstBuffer *buf, guint size)
 static inline guint8 GUINT8_IDENTITY (guint8 x) { return x; }
 static inline guint8 GINT8_IDENTITY (gint8 x) { return x; }
 
-#define CONVERT_TO(to, from, type, sign, endianness, LE_FUNC, BE_FUNC) G_STMT_START{\
-  type value;                                                                  \
-  memcpy (&value, from, sizeof (type));                                        \
-  from -= sizeof (type);                                                       \
-  value = (endianness == G_LITTLE_ENDIAN) ? LE_FUNC (value) : BE_FUNC (value); \
-  if (sign) {                                                                  \
-    to = value;                                                                \
-  } else {                                                                     \
-    to = (gint64) value - (1 << (sizeof (type) * 8 - 1));                      \
-  }                                                                            \
+#define CONVERT_TO(to, from, type, sign, endianness, LE_FUNC, BE_FUNC)		\
+G_STMT_START{									\
+  type value;									\
+  memcpy (&value, from, sizeof (type));						\
+  from -= sizeof (type);							\
+  value = (endianness == G_LITTLE_ENDIAN) ? LE_FUNC (value) : BE_FUNC (value);	\
+  if (sign) {									\
+    to = value;									\
+  } else {									\
+    to = (gint64) value - (1 << (sizeof (type) * 8 - 1));			\
+  }										\
 }G_STMT_END;
 
 static GstBuffer*
@@ -680,7 +681,11 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
   format val;									\
   format* p = (format *) dest;							\
   int_value >>= (32 - this->srccaps.depth);					\
-  val = (format) int_value;							\
+  if (this->srccaps.sign) {							\
+    val = (format) int_value;							\
+  } else {									\
+    val = (format) int_value + (1 << (this->srccaps.depth - 1));		\
+  }										\
   switch (this->srccaps.endianness) {						\
     case G_LITTLE_ENDIAN:                                                      \
       val = le_func (val);                                                     \
@@ -753,21 +758,21 @@ gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf)
 {
   GstBuffer *ret;
   gint i, count;
-  guint32 *src, *dest;
+  gint32 *src, *dest;
 
   if (this->sinkcaps.channels == this->srccaps.channels)
     return buf;
 
   count = GST_BUFFER_SIZE (buf) / 4 / this->sinkcaps.channels;
   ret = gst_audio_convert_get_buffer (buf, count * 4 * this->srccaps.channels);
-  src = (guint32 *) GST_BUFFER_DATA (buf);
-  dest = (guint32 *) GST_BUFFER_DATA (ret);
+  src = (gint32 *) GST_BUFFER_DATA (buf);
+  dest = (gint32 *) GST_BUFFER_DATA (ret);
 
   if (this->sinkcaps.channels > this->srccaps.channels) {
     for (i = 0; i < count; i++) {
       *dest = *src >> 1;
       src++;
-      *dest += (*src + 1) >> 1;
+      *dest += (*src >> 1) + (*src & 1);
       src++;
       dest++;
     }
