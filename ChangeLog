@@ -1,3 +1,10 @@
+2004-09-28  Christian Schaller <christian@fluendo.com>
+
+	* configure.ac:
+	Remove kioslave plugin. Markey is brewing a new working one
+	* ext/Makefile.am: Remove kioslave plugin
+	* ext/kio: remove
+
 2004-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
