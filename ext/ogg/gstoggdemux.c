@@ -614,12 +614,10 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;
-            );
+            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;);
       }
       GST_DEBUG_OBJECT (ogg,
           "initiating seeking to format %d, offset %" G_GUINT64_FORMAT, format,
@@ -694,8 +692,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -777,13 +774,12 @@ gst_ogg_demux_position (GstOggDemux * ogg)
 static void
 gst_ogg_pad_populate (GstOggDemux * ogg, GstOggPad * pad, ogg_page * page)
 {
-  gint64 start, end;
+  gint64 start, end, granpos = ogg_page_granulepos (page);
 
-  if (pad->start > ogg_page_granulepos (page) && ogg_page_granulepos (page) > 0) {
-    pad->start = ogg_page_granulepos (page);
-  }
-  if (pad->length < ogg_page_granulepos (page))
-    pad->length = ogg_page_granulepos (page);
+  if (pad->start > granpos && granpos > 0)
+    pad->start = granpos;
+  if (pad->length < granpos && granpos > 0)
+    pad->length = granpos;
   if (pad->pages < ogg_page_pageno (page))
     pad->pages = ogg_page_pageno (page);
   end = gst_ogg_demux_position (ogg);
@@ -981,8 +977,7 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
-      );
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -1111,8 +1106,7 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset);
-        );
+        endpos = MIN (endpos, pad->start_offset););
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
