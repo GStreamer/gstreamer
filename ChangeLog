@@ -1,3 +1,9 @@
+2004-06-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_open_audio):
+          improve error messages on open
+
+
 2004-06-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay):
