@@ -5,6 +5,7 @@ Makefile.in
 *.la
 .deps
 .libs
-gstmediaplay.glade.bak
+*.bak
+*~
 gstmediaplay
 gstplay
