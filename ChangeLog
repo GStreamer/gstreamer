@@ -1,3 +1,11 @@
+2004-02-02  Jon Trowbridge  <trow@gnu.org>
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	Fix memory leaks:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+
 2004-02-02  David Schleef  <ds@schleef.org>
 
 	code cleanup.  Change bzero() to memset().  Remove duplicate ; at ends
