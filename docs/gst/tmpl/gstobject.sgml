@@ -79,13 +79,6 @@ The name of the object
 
 
 
-<!-- ##### MACRO xmlNodePtr ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM GstObjectFlags ##### -->
 <para>
 Flags for an object

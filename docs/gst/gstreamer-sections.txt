@@ -610,6 +610,7 @@ GST_IS_OBJECT_CLASS
 GST_OBJECT_GET_CLASS
 <SUBSECTION Private>
 gst_object_get_type
+xmlNodePtr
 </SECTION>
 
 <SECTION>
