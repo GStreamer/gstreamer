@@ -2871,8 +2871,8 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s",
 		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
 
-  if (GST_RPAD_EVENTFUNC (rpad))
-    success = GST_RPAD_EVENTFUNC (rpad) (GST_PAD_CAST (rpad), event);
+  if (GST_RPAD_EVENTHANDLER (rpad))
+    success = GST_RPAD_EVENTHANDLER (rpad) (GST_PAD_CAST (rpad), event);
   else {
     GST_DEBUG (GST_CAT_EVENT, "there's no event function for pad %s:%s", 
 	       GST_DEBUG_PAD_NAME (rpad));

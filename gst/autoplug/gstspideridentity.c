@@ -190,6 +190,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if ((ident->src != NULL) && (GST_PAD_PEER (ident->src) != NULL)) {
     /* g_print("pushing buffer %p (refcount %d - buffersize %d) to pad %s:%s\n", buf, GST_BUFFER_REFCOUNT (buf), GST_BUFFER_SIZE (buf), GST_DEBUG_PAD_NAME (ident->src)); */
+    GST_DEBUG (0, "push %p %lld", buf, GST_BUFFER_OFFSET (buf));
     gst_pad_push (ident->src, buf);
   } else if (GST_IS_BUFFER (buf)) {
     gst_buffer_unref (buf);
@@ -401,7 +402,6 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
     gst_spider_identity_dumb_loop (ident);
     return;
   }
-
   gst_element_interrupt (GST_ELEMENT (ident));
 }
 /* This loop function is only needed when typefinding.
@@ -525,7 +525,7 @@ gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
   gboolean res = TRUE;
   GstSpiderIdentity *ident;
 
-  GST_DEBUG (0, "spider_identity src_event\n");
+  GST_DEBUG (0, "spider_identity src_event");
 
   ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
 

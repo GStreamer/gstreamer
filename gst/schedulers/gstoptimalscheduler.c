@@ -922,6 +922,48 @@ gst_opt_scheduler_chain_wrapper (GstPad *sinkpad, GstBuffer *buffer)
   }
 }
 
+static void
+clear_queued (GstData *data, gpointer user_data)
+{
+  gst_data_unref (data);
+}
+
+static gboolean
+gst_opt_scheduler_event_wrapper (GstPad *srcpad, GstEvent *event)
+{
+  gboolean flush;
+
+  GST_INFO (GST_CAT_SCHEDULING, "intercepting event %d on pad %s:%s", 
+		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (srcpad));
+  
+  /* figure out if this is a flush event */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      flush = TRUE;
+      break;
+    case GST_EVENT_SEEK:
+    case GST_EVENT_SEEK_SEGMENT:
+      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+      break;
+    default:
+      flush = FALSE;
+      break;
+  }
+
+  if (flush) {
+    GST_INFO (GST_CAT_SCHEDULING, "event is flush");
+    GList *buflist = GST_PAD_BUFLIST (srcpad);
+
+    if (buflist) {
+      GST_INFO (GST_CAT_SCHEDULING, "need to clear some buffers");
+      g_list_foreach (buflist, (GFunc) clear_queued, NULL);
+      g_list_free (buflist);
+      GST_PAD_BUFLIST (srcpad) = NULL;
+    }
+  }
+  return GST_RPAD_EVENTFUNC (srcpad) (srcpad, event);
+}
+
 /* setup the scheduler context for a group. The right schedule function
  * is selected based on the group type and cothreads are created if 
  * needed */
@@ -1352,6 +1394,8 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
         GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
+      GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
+      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically */
@@ -1376,6 +1420,8 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
         GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
+      GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
+      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically, 
@@ -1387,6 +1433,8 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
       GST_INFO (GST_CAT_SCHEDULING, "get to loop based link");
 
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
+      GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
+      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically, 
@@ -1403,6 +1451,10 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
 
       GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_loop_wrapper;
       GST_RPAD_GETHANDLER (srcpad) = gst_opt_scheduler_get_wrapper;
+      GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
+      /* events on the srcpad have to be intercepted as we might need to
+       * flush the buffer lists */
+      GST_RPAD_EVENTHANDLER (srcpad) = gst_opt_scheduler_event_wrapper;
 
       group1 = GST_ELEMENT_SCHED_GROUP (element1);
       group2 = GST_ELEMENT_SCHED_GROUP (element2);
