@@ -108,11 +108,12 @@ do_cothread_context_init (void)
 static void
 do_cothread_context_destroy (cothread_context *context)
 {
-  g_assert (g_thread_self() != context->main->thread);
+  g_assert (g_thread_self() == context->main->thread);
   
   while (context->cothreads) {
     do_cothread_destroy ((cothread *) context->cothreads->data);
   }
+  g_mutex_unlock (context->mutex);
   g_mutex_free (context->mutex);
   
   g_free (context);
@@ -120,7 +121,7 @@ do_cothread_context_destroy (cothread_context *context)
 static void
 die (cothread *to_die) {
   g_cond_free (to_die->cond);
-  g_slist_remove (to_die->context->cothreads, to_die);
+  to_die->context->cothreads = g_slist_remove (to_die->context->cothreads, to_die);
   g_free (to_die);
   g_thread_exit (to_die);
   /* don't unlock the mutex here, the thread waiting for us to die is gonna take it */
@@ -165,7 +166,7 @@ cothread_create (cothread_context *context, cothread_func func, int argc, char *
   return ret;
 
 out2:
-  g_slist_remove (context->cothreads, ret);
+  context->cothreads = g_slist_remove (context->cothreads, ret);
   g_free (ret);
 out1:
   return NULL;
