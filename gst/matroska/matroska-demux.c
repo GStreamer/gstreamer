@@ -2462,6 +2462,11 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext * videocontext,
     for (i = 0; i < gst_caps_get_size (caps); i++) {
       structure = gst_caps_get_structure (caps, i);
       if (videocontext != NULL) {
+        GST_DEBUG ("video size %dx%d, target display size %dx%d (any unit)",
+            videocontext->pixel_width,
+            videocontext->pixel_height,
+            videocontext->display_width, videocontext->display_height);
+        /* pixel width and height are the w and h of the video in pixels */
         if (videocontext->pixel_width > 0 && videocontext->pixel_height > 0) {
           gint w = videocontext->pixel_width;
           gint h = videocontext->pixel_height;
@@ -2475,18 +2480,15 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext * videocontext,
         }
 
         if (videocontext->display_width > 0 && videocontext->display_height > 0) {
-          gint w =
-              100 * videocontext->display_width / videocontext->pixel_width;
-          gint h =
-              100 * videocontext->display_height / videocontext->pixel_height;
+          int n, d;
 
-          gst_structure_set (structure,
-              "pixel_width", G_TYPE_INT, w,
-              "pixel_height", G_TYPE_INT, h, NULL);
-        } else {
-          gst_structure_set (structure,
-              "pixel_width", G_TYPE_INT, 1,
-              "pixel_height", G_TYPE_INT, 1, NULL);
+          /* calculate the pixel aspect ratio using the display and pixel w/h */
+          n = videocontext->display_width * videocontext->pixel_height;
+          d = videocontext->display_height * videocontext->pixel_width;
+          GST_DEBUG ("setting PAR to %d/%d", n, d);
+          gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              videocontext->display_width * videocontext->pixel_height,
+              videocontext->display_height * videocontext->pixel_width, NULL);
         }
 
         if (context->default_duration > 0) {
@@ -2503,8 +2505,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext * videocontext,
         gst_structure_set (structure,
             "width", GST_TYPE_INT_RANGE, 16, 4096,
             "height", GST_TYPE_INT_RANGE, 16, 4096,
-            "pixel_width", GST_TYPE_INT_RANGE, 0, 255,
-            "pixel_height", GST_TYPE_INT_RANGE, 0, 255,
             "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
       }
     }
