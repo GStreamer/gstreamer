@@ -86,6 +86,7 @@ static gboolean gst_v4lsrc_src_query (GstPad * pad,
 /* buffer functions */
 static GstPadLinkReturn gst_v4lsrc_srcconnect (GstPad * pad,
     const GstCaps * caps);
+static GstCaps *gst_v4lsrc_fixate (GstPad * pad, const GstCaps * caps);
 static GstCaps *gst_v4lsrc_getcaps (GstPad * pad);
 static GstData *gst_v4lsrc_get (GstPad * pad);
 
@@ -214,6 +215,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
 
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);
   gst_pad_set_getcaps_function (v4lsrc->srcpad, gst_v4lsrc_getcaps);
+  gst_pad_set_fixate_function (v4lsrc->srcpad, gst_v4lsrc_fixate);
   gst_pad_set_link_function (v4lsrc->srcpad, gst_v4lsrc_srcconnect);
   gst_pad_set_convert_function (v4lsrc->srcpad, gst_v4lsrc_src_convert);
   gst_pad_set_formats_function (v4lsrc->srcpad, gst_v4lsrc_get_formats);
@@ -575,6 +577,37 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
   return GST_PAD_LINK_OK;
 }
 
+static GstCaps *
+gst_v4lsrc_fixate (GstPad * pad, const GstCaps * caps)
+{
+  GstStructure *structure;
+  GstCaps *newcaps;
+  GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+  struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
+
+  if (gst_caps_get_size (caps) > 1)
+    return NULL;
+
+  if (!vcap) {
+    GST_DEBUG_OBJECT (v4lsrc, "don't have device caps, cannot fixate");
+    return NULL;
+  }
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+  GST_DEBUG_OBJECT (v4lsrc, "device reported w: %d-%d, h: %d-%d",
+      vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width",
+          vcap->maxwidth)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height",
+          vcap->maxheight)) {
+    return newcaps;
+  }
+  gst_caps_free (newcaps);
+  return NULL;
+}
 
 static GstCaps *
 gst_v4lsrc_getcaps (GstPad * pad)
@@ -595,10 +628,12 @@ gst_v4lsrc_getcaps (GstPad * pad)
     one = gst_v4lsrc_palette_to_caps (GPOINTER_TO_INT (item->data));
     if (!one)
       g_print ("Palette %d gave no caps\n", GPOINTER_TO_INT (item->data));
-    gst_caps_set_simple (one,
-        "width", GST_TYPE_INT_RANGE, vcap->minwidth, vcap->maxwidth,
-        "height", GST_TYPE_INT_RANGE, vcap->minheight, vcap->maxheight,
-        "framerate", G_TYPE_DOUBLE, gst_v4lsrc_get_fps (v4lsrc), NULL);
+    GST_DEBUG_OBJECT (v4lsrc, "Device reports w: %d-%d, h: %d-%d",
+        vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight);
+    gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
+        vcap->maxwidth, "height", GST_TYPE_INT_RANGE, vcap->minheight,
+        vcap->maxheight, "framerate", G_TYPE_DOUBLE,
+        gst_v4lsrc_get_fps (v4lsrc), NULL);
     gst_caps_append (list, one);
   }
 
