@@ -44,6 +44,15 @@ can be made with <option>{}</option>.
 
 </para>
 
+<!-- ##### ENUM GstParseErrors ##### -->
+<para>
+
+</para>
+
+@GST_PARSE_ERROR_SYNTAX: 
+@GST_PARSE_ERROR_CREATING_ELEMENT: 
+@GST_PARSE_ERROR_NOSUCH_ELEMENT: 
+
 <!-- ##### FUNCTION gst_parse_launch ##### -->
 <para>
 

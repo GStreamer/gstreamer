@@ -16,10 +16,7 @@ libgstgetbitsinclude_HEADERS = gstgetbits.h
 
 noinst_HEADERS = gstgetbits.h gstgetbits_inl.h
 
-check_PROGRAMS = gbtest
-
-gbtest_SOURCES = gbtest.c
-gbtest_LDADD = libgstgetbits.la $(GST_LIBS)
+# check_PROGRAMS = gbtest
 
 libgstgetbits_la_LIBADD = $(GST_LIBS)
 libgstgetbits_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math

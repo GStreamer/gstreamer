@@ -154,7 +154,7 @@ main (int argc, char *argv[])
 
   g_print ("The wild goose chase...\n");
 
-  /* result FIXME = */ gst_pad_connect (srcconvpad, sinkconvpad);
+  result = gst_pad_try_connect (srcconvpad, sinkconvpad);
   g_print ("pad connect 1: %d\n", result);
   overall &= (result == TRUE);
 

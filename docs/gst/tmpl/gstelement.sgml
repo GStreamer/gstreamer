@@ -53,6 +53,13 @@ can return after a state change.
 @GST_STATE_SUCCESS: the element successfully changed its state
 @GST_STATE_ASYNC: the element will asynchronously change its state as soon as possible
 
+<!-- ##### MACRO GST_NUM_STATES ##### -->
+<para>
+The maximun number of states.
+</para>
+
+
+
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
 This macro returns the current state of the element.
@@ -132,7 +139,7 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_NEW_LOOPFUNC: 
 @GST_ELEMENT_COTHREAD_STOPPING: 
 @GST_ELEMENT_USE_COTHREAD: 
-@GST_ELEMENT_EOS: 
+@GST_ELEMENT_EVENT_AWARE: 
 @GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
@@ -154,6 +161,14 @@ Queries whether the cothread holding this element needs to be stopped.
 <!-- ##### MACRO GST_ELEMENT_IS_EOS ##### -->
 <para>
 Query wether this element is in the End Of Stream state.
+</para>
+
+@obj: The element to query
+
+
+<!-- ##### MACRO GST_ELEMENT_IS_EVENT_AWARE ##### -->
+<para>
+Query wether this element can handle events.
 </para>
 
 @obj: The element to query
@@ -436,6 +451,14 @@ instead.
 @elem: 
 
 
+<!-- ##### FUNCTION gst_element_wait_state_change ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
 <!-- ##### FUNCTION gst_element_statename ##### -->
 <para>
 
@@ -488,6 +511,7 @@ Is trigered whenever the state of an element changes
 
 @gstelement: the object which received the signal.
 @arg1: the new state of the object
+@arg2: 
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->
 <para>
@@ -504,23 +528,6 @@ Is trigered whenever a new pad is added to an element
 
 @gstelement: the object which received the signal.
 @arg1: The pad that was removed.
-
-<!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
-<para>
-
-Is trigered whenever a new ghost pad is added to an element
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new ghost pad that was added
-
-<!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: The ghost pad that was removed.
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>

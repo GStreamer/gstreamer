@@ -256,6 +256,9 @@ void
 gst_bin_add (GstBin *bin,
 	     GstElement *element)
 {
+  gint state_idx = 0;
+  GstElementState state;
+
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (element != NULL);
@@ -279,6 +282,11 @@ gst_bin_add (GstBin *bin,
 
   bin->children = g_list_append (bin->children, element);
   bin->numchildren++;
+
+  // bump our internal state counter
+  state = GST_STATE (element);
+  while (state>>=1) state_idx++;
+  bin->child_states[state_idx]++;
 
   ///// now we have to deal with manager stuff
   // we can only do this if there's a scheduler:
@@ -306,6 +314,9 @@ void
 gst_bin_remove (GstBin *bin,
 		GstElement *element)
 {
+  gint state_idx = 0;
+  GstElementState state;
+
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (element != NULL);
@@ -331,6 +342,11 @@ gst_bin_remove (GstBin *bin,
   // now remove the element from the list of elements
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
+
+  // bump our internal state counter
+  state = GST_STATE (element);
+  while (state>>=1) state_idx++;
+  bin->child_states[state_idx]--;
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removed child %s", GST_ELEMENT_NAME (element));
 
@@ -711,7 +727,7 @@ gst_bin_iterate (GstBin *bin)
   if (oclass->iterate)
     running = (oclass->iterate) (bin);
 
-  GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
+  GST_DEBUG_LEAVE("(\"%s\") %d",GST_ELEMENT_NAME (bin), running);
 
   if (!running) {
     if (GST_STATE (bin) == GST_STATE_PLAYING && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {

@@ -10,6 +10,8 @@
 static void gst_media_play_class_init	    (GstMediaPlayClass *klass);
 static void gst_media_play_init		    (GstMediaPlay *play);
 
+static int  window_key_press_event          (GtkWidget *widget, GdkEventKey *event, GstMediaPlay *mplay);
+
 static void gst_media_play_set_arg	    (GtkObject *object, GtkArg *arg, guint id);
 static void gst_media_play_get_arg	    (GtkObject *object, GtkArg *arg, guint id);
 
@@ -160,6 +162,9 @@ gst_media_play_init (GstMediaPlay *mplay)
 	mplay->window = glade_xml_get_widget (mplay->xml, "gstplay");
 	g_assert (mplay->window != NULL);
 
+	gtk_signal_connect (GTK_OBJECT (mplay->window), "key_press_event",
+			    (GtkSignalFunc) window_key_press_event, mplay);
+
 	gtk_drag_dest_set (mplay->window,
 			   GTK_DEST_DEFAULT_ALL,
 			   target_table, 1,
@@ -199,6 +204,44 @@ gst_media_play_init (GstMediaPlay *mplay)
 	glade_xml_signal_autoconnect_full (mplay->xml, gst_media_play_connect_func, &data);
 
 	mplay->last_time = 0;
+}
+
+static int
+window_key_press_event (GtkWidget *widget,
+			GdkEventKey *event,
+			GstMediaPlay *mplay)
+{
+	guint state;
+
+	state = event->state;
+
+	switch (event->keyval) {
+	case GDK_space:
+		if (mplay->play->state == GST_PLAY_PLAYING)
+		{
+			gdk_threads_leave ();
+			gst_play_pause (mplay->play);
+			gdk_threads_enter ();
+			update_buttons (mplay, GST_PLAY_STATE(mplay->play));
+		} 
+		else if (mplay->play->state == GST_PLAY_PAUSED)
+		{
+			gdk_threads_leave ();
+			gst_play_play (mplay->play);
+			gdk_threads_enter ();
+			update_buttons (mplay, GST_PLAY_STATE(mplay->play));
+		}
+		break;
+	case GDK_m:
+		gst_media_play_set_fullscreen (mplay);
+		break;
+	case GDK_Return:
+		if (state & GDK_MOD1_MASK)
+			gst_media_play_set_fullscreen (mplay);
+		break;
+	}
+
+	return TRUE;
 }
 
 GstMediaPlay *
@@ -491,6 +534,9 @@ fullscreen_key_press_event (GtkWidget *widget,
 {
 	switch (event->keyval) {
 	case GDK_Escape:
+		gst_media_play_set_fullscreen (mplay);
+		break;
+	case GDK_q:
 		gst_media_play_set_fullscreen (mplay);
 		break;
 	}

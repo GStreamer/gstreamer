@@ -1,151 +1,102 @@
-#!/bin/sh
+#!/bin/bash
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
 package=GStreamer
 srcfile=gst/gstobject.h
+#DEBUG=defined
+if test "x$1" = "x-d"; then echo "+ debug output enabled"; DEBUG=defined; fi
 
-(autoconf --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have autoconf installed to compile $package."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/"
-	DIE=1
-}
-
-(automake --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have automake installed to compile $package."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/"
-	DIE=1
-}
-automakevermin=`(automake --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "1 4")|sort -n|head -n 1`
-automakevergood=`(automake --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "1 4f")|sort -n|head -n 1`
-if test "x$automakevermin" != "x1 4"; then
-# version is less than 1.4, the minimum suitable version
-	echo
-	echo "You must have automake version 1.4 or greater installed."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/"
-	DIE=1
-else
-if test "x$automakevergood" != "x1 4f"; then
-echo -n "Checking for patched automake..."
-# version is less than 1.4f, the version with the patch applied
-# check that patch is applied
-cat > autogen.patch.tmp <<EOF
---- 1
-+++ 2
-@@ -2383,8 +2383,8 @@
- 	# to all possible directories, and use it.  If DIST_SUBDIRS is
- 	# defined, just use it.
- 	local (\$dist_subdir_name);
--	if (&variable_defined ('DIST_SUBDIRS')
--	    || &variable_conditions ('SUBDIRS'))
-+	if (&variable_conditions ('SUBDIRS')
-+	    || &variable_defined ('DIST_SUBDIRS'))
- 	{
- 	    \$dist_subdir_name = 'DIST_SUBDIRS';
- 	    if (! &variable_defined ('DIST_SUBDIRS'))
-EOF
-  if patch -s -f --dry-run `which automake` <autogen.patch.tmp >/dev/null 2>&1;
+debug ()
+# print out a debug message if DEBUG is a defined variable
+{
+  if test ! -z "$DEBUG"
   then
-    # Patch succeeded: appropriately patched.
-    echo " found."
-  else
-    # Patch failed: either unpatched or incompatibly patched.
-    if patch -R -s -f --dry-run `which automake` <autogen.patch.tmp >/dev/null 2>&1;
-    then
-      # Reversed patch succeeded: not patched.
-      echo " not found."
-      echo
-      echo "Detected automake version 1.4 (or near) without patch."
-      echo "Your version of automake needs a patch applied in order to operate correctly."
-      echo
-      patchedfile="`pwd`/automake"
-      if test -e $patchedfile; then 
-	PATCHED=0
-      else
-        echo "making a patched version..."
-        patch -R -s -f `which automake` <autogen.patch.tmp -o $patchedfile;
-	chmod +x $patchedfile;
-	PATCHED=1
+    echo "DEBUG: $1"
+  fi
+}
+
+version_check ()
+# check the version of a package
+# first argument : package name (executable)
+# second argument : source download url
+# rest of arguments : major, minor, micro version
+{
+  PACKAGE=$1
+  URL=$2
+  MAJOR=$3
+  MINOR=$4
+  MICRO=$5
+
+
+  debug "major $MAJOR minor $MINOR micro $MICRO"
+  VERSION=$MAJOR
+  if test ! -z "$MINOR"; then VERSION=$VERSION.$MINOR; else MINOR=0; fi
+  if test ! -z "$MICRO"; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
+
+  debug "major $MAJOR minor $MINOR micro $MICRO"
+  echo -n "+ checking for $1 > $VERSION ... "
+  ($PACKAGE --version) < /dev/null > /dev/null 2>&1 || 
+  {
+	echo
+	echo "You must have $PACKAGE installed to compile $package."
+	echo "Download the appropriate package for your distribution,"
+	echo "or get the source tarball at $URL"
+	return 1
+  }
+  # the following line is carefully crafted sed magic
+  pkg_version=`$PACKAGE --version|head -n 1|sed 's/^[a-zA-z\.\ ()]*//;s/ .*$//'`
+  debug "pkg_version $pkg_version"
+  pkg_major=`echo $pkg_version | cut -d. -f1`
+  pkg_minor=`echo $pkg_version | cut -d. -f2`
+  pkg_micro=`echo $pkg_version | cut -d. -f3`
+  test -z "$pkg_minor" && pkg_minor=0
+  test -z "$pkg_micro" && pkg_micro=0
+
+  debug "found major $pkg_major minor $pkg_minor micro $pkg_micro"
+
+  #start checking the version
+  debug "version check"
+
+  if [ ! "$pkg_major" \> "$MAJOR" ]; then
+    debug "$pkg_major <= $MAJOR"
+    if [ "$pkg_major" \< "$MAJOR" ]; then
+      WRONG=1
+    elif [ ! "$pkg_minor" \> "$MINOR" ]; then
+      if [ "$pkg_minor" \< "$MINOR" ]; then
+        WRONG=1
+      elif [ "$pkg_micro" \< "$MICRO" ]; then
+	WRONG=1
       fi
-      echo
-      echo "***************************************************************************"
-      if test -e $patchedfile; then 
-	if test "x$PATCHED" == "x1"; then
-	  echo "A patched version of automake is available at:"
-	  echo "$patchedfile"
-	  echo "You should put this in an appropriate place, or modify \$PATH, so that it is"
-	  echo "used in preference to this installed version of automake."
-	fi
-      fi
-      echo "It is not safe to perform the build without a patched automake."
-      echo "Read the README file for an explanation."
-      echo "***************************************************************************"
-      echo
-      DIE=1
-    else
-      # Reversed patch failed: incompatibly patched.
-      echo
-      echo
-      echo "Unable to check whether automake is appropriately patched."
-      echo "Your version of automake may need to have a patch applied."
-      echo "Read the README file for more explanation."
-      echo
     fi
   fi
-rm autogen.patch.tmp
-fi
-fi
 
-
-(pkg-config --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have pkg-config installed to compile $package."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at:"
-	echo "http://www.freedesktop.org/software/pkgconfig/"
-	DIE=1
+  if test ! -z "$WRONG"; then
+    echo "- found $pkg_version, not ok !"
+    echo
+    echo "You must have $PACKAGE $VERSION or greater to compile $package."
+    echo "Get the latest version from $URL"
+    return 1
+  else
+    echo "- found $pkg_version, ok."
+  fi
 }
 
-
-(libtool --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have libtool installed to compile $package."
-	echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-	DIE=1
-}
-
-libtool_version=`libtool --version | sed 's/^.* \([0-9a-z\.]*\) .*$/\1/'`
-libtool_major=`echo $libtool_version | cut -d. -f1`
-libtool_minor=`echo $libtool_version | cut -d. -f2`
-libtool_micro=`echo $libtool_version | cut -d. -f3`
-if [ x$libtool_micro = x ]; then
-	libtool_micro=0
+# autoconf 2.52d has a weird issue involving a yes:no error
+# so don't allow it's use
+ac_version=`autoconf --version|head -n 1|sed 's/^[a-zA-z\.\ ()]*//;s/ .*$//'`
+if test "$ac_version" = "2.52d"; then
+  echo "autoconf 2.52d has an issue with our current build."
+  echo "We don't know who's to blame however.  So until we do, get a"
+  echo "regular version.  RPM's of a working version are on the gstreamer site."
+  exit 1
 fi
-if [ $libtool_major -le 1 ]; then
-	if [ $libtool_major -lt 1 ]; then
-		echo
-		echo "You must have libtool 1.3.5 or greater to compile $package."
-		echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-		DIE=1
-	elif [ $libtool_minor -le 3 ]; then
-		if [ $libtool_minor -lt 3 ]; then
-			echo
-			echo "You must have libtool 1.3.5 or greater to compile $package."
-			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-			DIE=1
-		elif [ $libtool_micro -lt 5 ]; then
-			echo
-			echo "You must have libtool 1.3.5 or greater to compile $package."
-			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-			DIE=1
-		fi
-	fi
-fi
+
+
+version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
+version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
+version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
+version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 7 0 || DIE=1
 
 if test "$DIE" -eq 1; then
 	exit 1
@@ -161,27 +112,29 @@ if test -z "$*"; then
         echo "to pass any to it, please specify them on the $0 command line."
 fi
 
-
-# Generate configure.in and configure.ac
-./makeconfigure <configure.base > configure.in configure.in
-./makeconfigure <configure.base > configure.ac configure.ac
-
+# FIXME : why does libtoolize keep complaining about aclocal ?
+echo "+ running libtoolize ..."
 libtoolize --copy --force
+
+echo "+ running aclocal ..."
 aclocal $ACLOCAL_FLAGS || {
 	echo
 	echo "aclocal failed - check that all needed development files are present on system"
 	exit 1
 }
+echo "+ running autoheader ... "
 autoheader || {
 	echo
 	echo "autoheader failed"
 	exit 1
 }
+echo "+ running autoconf ... "
 autoconf || {
 	echo
 	echo "autoconf failed"
 	#exit 1
 }
+echo "+ running automake ... "
 automake --add-missing || {
 	echo
 	echo "automake failed"
@@ -189,11 +142,12 @@ automake --add-missing || {
 }
 
 # now remove the cache, because it can be considered dangerous in this case
+echo "+ removing config.cache ... "
 rm -f config.cache
 
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 
-echo
+echo "+ running configure ... "
 echo "./configure default flags: $CONFIGURE_OPT"
 echo "using: $CONFIGURE_OPT $@"
 echo

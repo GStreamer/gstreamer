@@ -670,6 +670,15 @@ Destroy the pad.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_pad_event_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+
+
 <!-- ##### FUNCTION gst_pad_set_event_function ##### -->
 <para>
 

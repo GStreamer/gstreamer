@@ -9,10 +9,10 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code (if it contains documentation).
 DOC_SOURCE_DIR=$(top_srcdir)/gst
 
-# thomas
+# FIXME :
 # there's something wrong with gstreamer-sections.txt not being in the dist
-# maybe it doesn't resolve
-EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt $(DOC_MAIN_SGML_FILE)
+# maybe it doesn't resolve; we're adding it below for now
+EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 HTML_DIR=$(datadir)/gstreamer/html
 
@@ -91,7 +91,9 @@ scanobj: $(srcdir)/$(DOC_MODULE).types
 	gtkdoc-scanobj --module=$(DOC_MODULE) 
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 
+# FIXME: this is nasty, we shouldn't have to do this, HELP
 tmpl: scanobj gstreamer-decl.txt
+	if test ! -e gstreamer-sections.txt; then cp $(top_srcdir)/docs/gst/gstreamer-sections.txt .; fi
 	gtkdoc-mktmpl --module=$(DOC_MODULE)
 
 sgml: tmpl
@@ -104,8 +106,14 @@ html: sgml
 clean-local:
 	rm -rf *~ *.bak *.signals *-unused.txt *.args *.o *.lo .libs sgml html
 
+# FIXME : thomas added all sgml files and some other things to make
+# make distcheck work
 distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
+	rm -rf gstreamer-*.txt
+	rm -rf tmpl/*.sgml
+	rm gstreamer.hierarchy
+	rm *.stamp	
 
 install-data-local: html/book1.html
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)

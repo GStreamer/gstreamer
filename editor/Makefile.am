@@ -1,4 +1,3 @@
-
 lib_LTLIBRARIES = libgsteditor.la
 
 libgsteditor_la_SOURCES =	\
@@ -26,6 +25,7 @@ libgsteditorinclude_HEADERS =	\
 
 bin_PROGRAMS = gsteditor
 gsteditor_SOURCES = editor.c
+
 gsteditor_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS)
 gsteditor_LDADD = $(GST_LIBS) $(GNOME_LIBS) $(LIBGLADE_GNOME_LIBS) libgsteditor.la
 

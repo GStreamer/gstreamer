@@ -1453,6 +1453,87 @@ Get the QoS function of the real pad.
 
 @pad: the real pad to query.
 
+<!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
+<para>
+Fast macro to add an element to the scheduler.
+</para>
+
+@sched: The scheduler to add the element to.
+@element: The element to add to the scheduler.
+
+<!-- ##### MACRO GST_SCHEDULE_DISABLE_ELEMENT ##### -->
+<para>
+Fast macro to disable the element.
+</para>
+
+@sched: The scheduler.
+@element: The element to disable.
+
+<!-- ##### MACRO GST_SCHEDULE_ENABLE_ELEMENT ##### -->
+<para>
+Fast macro to enable the element in the scheduler.
+</para>
+
+@sched: The scheduler.
+@element: The element to activate.
+
+<!-- ##### MACRO GST_SCHEDULE_ITERATE ##### -->
+<para>
+Fast macro to perform one iteration of the scheduler.
+</para>
+
+@sched: The scheduler to iterate.
+
+<!-- ##### MACRO GST_SCHEDULE_LOCK_ELEMENT ##### -->
+<para>
+Fast macro to lock a given element.
+</para>
+
+@sched: The scheduler.
+@element: The element to lock.
+
+<!-- ##### MACRO GST_SCHEDULE_PAD_CONNECT ##### -->
+<para>
+Fast macro to connect two pads.
+</para>
+
+@sched: The scheduler.
+@srcpad: The source pad.
+@sinkpad: The sink pad.
+
+<!-- ##### MACRO GST_SCHEDULE_PAD_DISCONNECT ##### -->
+<para>
+Fast macro to disconnect two pads.
+</para>
+
+@sched: The scheduler.
+@srcpad: The source pad.
+@sinkpad: The sink pad.
+
+<!-- ##### MACRO GST_SCHEDULE_REMOVE_ELEMENT ##### -->
+<para>
+Fast macro to remove an element from the scheduler.
+</para>
+
+@sched: The scheduler to remove the element from.
+@element: The element to remove from the scheduler.
+
+<!-- ##### MACRO GST_SCHEDULE_SAFETY ##### -->
+<para>
+Handy macro to check for a non NULL scheduler. The next block of statements
+will only be axecuted if the scheduler is not NULL.
+</para>
+
+@sched: the scheduler to query.
+
+<!-- ##### MACRO GST_SCHEDULE_UNLOCK_ELEMENT ##### -->
+<para>
+Fast macro to unlock a given element.
+</para>
+
+@sched: The scheduler.
+@element: The element to unlock.
+
 <!-- ##### MACRO GST_SHOW_INFO ##### -->
 <para>
 
@@ -2417,6 +2498,23 @@ Get the size of the file.
 </para>
 
 
+<!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: The ghost pad that was removed.
+
+<!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
+<para>
+
+Is trigered whenever a new ghost pad is added to an element
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new ghost pad that was added
+
 <!-- ##### STRUCT GstElementClass ##### -->
 <para>
 
@@ -2628,6 +2726,14 @@ The function that will be called when a QoS message is sent.
 @pad: the pad that sent the QoS message
 @qos_message: the message
 
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: 
+
 <!-- ##### STRUCT GstPipelineClass ##### -->
 <para>
 
@@ -2693,6 +2799,19 @@ Specify wether the queue blocks or not.
 
 </para>
 
+
+<!-- ##### STRUCT GstScheduleChain ##### -->
+<para>
+
+</para>
+
+@sched: 
+@disabled: 
+@elements: 
+@num_elements: 
+@entry: 
+@cothreaded_elements: 
+@schedule: 
 
 <!-- ##### STRUCT GstSineSrc ##### -->
 <para>
@@ -2804,6 +2923,13 @@ Flags for the GstSrc element
 
 <!-- ##### STRUCT GstTeeClass ##### -->
 <para>
+
+</para>
+
+
+<!-- ##### ARG GstThread:create-thread ##### -->
+<para>
+TRUE if the thread should be created.
 
 </para>
 
@@ -4787,6 +4913,95 @@ Call the EOS function of the pad
 </para>
 
 @connection: 
+
+<!-- ##### FUNCTION gst_schedule_add_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_disable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_enable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_iterate ##### -->
+<para>
+
+</para>
+
+@sched: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_schedule_new ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_schedule_pad_connect ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+<!-- ##### FUNCTION gst_schedule_pad_disconnect ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+<!-- ##### FUNCTION gst_schedule_pad_select ##### -->
+<para>
+
+</para>
+
+@sched: 
+@padlist: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_schedule_remove_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_show ##### -->
+<para>
+
+</para>
+
+@sched: 
+
+<!-- ##### FUNCTION gst_schedulerfactory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
 <para>

@@ -1,10 +1,8 @@
 dnl Note: this file is generated from configure.base by autogen.sh
-SUBSTFOR configure.ac:AC_INIT
-SUBSTFOR configure.ac:AC_CONFIG_SRCDIR([gst/gstobject.h])
-SUBSTFOR configure.in:AC_INIT(gst/gstobject.h)
+AC_INIT
+AC_CONFIG_SRCDIR([gst/gstobject.h])
 
-SUBSTFOR configure.ac:AC_CANONICAL_TARGET([])
-SUBSTFOR configure.in:AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET([])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -58,8 +56,7 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
-SUBSTFOR configure.ac:AC_HEADER_STDC([])
-SUBSTFOR configure.in:AC_STDC_HEADERS
+AC_HEADER_STDC([])
 
 dnl This is used for the -config script...
 builddir=`pwd`
@@ -298,9 +295,7 @@ AC_SUBST(ARTS_CFLAGS)
 AC_SUBST(ARTS_MCOPFLAGS)
 
 dnl Now check if it exists
-SUBSTFOR configure.ac:AC_LANG_PUSH(C++)
-SUBSTFOR configure.in:AC_LANG_SAVE
-SUBSTFOR configure.in:AC_LANG_CPLUSPLUS
+AC_LANG_PUSH(C++)
 HAVE_ARTS=yes
 dnl FIXME: Can't get this test to pass, so commented it out.  Rely on header check.
 dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
@@ -309,8 +304,7 @@ dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
 dnl FIXME: ensure only suitable flags result from artsc-config --cflags
 AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
 
-SUBSTFOR configure.ac:AC_LANG_POP(C++)
-SUBSTFOR configure.in:AC_LANG_RESTORE
+AC_LANG_POP(C++)
 dnl Check for the idl generator
 AC_CHECK_PROG(HAVE_MCOPIDL, mcopidl, yes, no)
 if test x$HAVE_MCOPIDL = xno; then
@@ -1089,9 +1083,8 @@ dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
 dnl wtay fix this: testsuite/threads/Makefile
-SUBSTFOR configure.ac:AC_OUTPUT(
-SUBSTFOR configure.ac:Makefile
-SUBSTFOR configure.in:AC_OUTPUT([Makefile
+AC_OUTPUT(
+Makefile
 include/Makefile
 gst/Makefile
 gst/gstversion.h
@@ -1259,10 +1252,7 @@ stamp.h
 gstreamer-config
 gstreamer.pc
 gstreamer-uninstalled.pc
-SUBSTFOR configure.in:gstreamer.spec])
-SUBSTFOR configure.in:AC_OUTPUT_COMMANDS([chmod +x gstreamer-config;
-SUBSTFOR configure.in:echo "$infomessages"], infomessages="$infomessages")
-SUBSTFOR configure.ac:gstreamer.spec,
-SUBSTFOR configure.ac:chmod +x gstreamer-config
-SUBSTFOR configure.ac:echo "$infomessages", infomessages="$infomessages"
-SUBSTFOR configure.ac:)
+gstreamer.spec,
+chmod +x gstreamer-config
+echo "$infomessages", infomessages="$infomessages"
+)
