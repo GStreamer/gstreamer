@@ -38,5 +38,4 @@
 
 #endif /* FLAC_VERSION < 0x010003 */
 
-#endif
-
+#endif /* _FLAC_COMPAT_H_ */
