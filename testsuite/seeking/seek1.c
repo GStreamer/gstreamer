@@ -58,6 +58,37 @@ setup_dynamic_connection (GstElement *element, const gchar *padname, GstPad *tar
 }
 
 static GstElement*
+make_sid_pipeline (const gchar *location) 
+{
+  GstElement *pipeline;
+  GstElement *src, *decoder, *audiosink;
+  GstPad *seekable;
+  
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make (SOURCE, "src");
+  decoder = gst_element_factory_make ("siddec", "decoder");
+  audiosink = gst_element_factory_make ("osssink", "sink");
+  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
+
+  gst_element_connect (src, decoder);
+  gst_element_connect (decoder, audiosink);
+
+  seekable = gst_element_get_pad (decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement*
 make_parse_pipeline (const gchar *location) 
 {
   GstElement *pipeline;
@@ -295,7 +326,7 @@ format_value (GtkScale *scale,
 
   real = value * duration / 100;
   seconds = (gint64) real / GST_SECOND;
-  subseconds = (gint64) real / (GST_SECOND / 10);
+  subseconds = (gint64) real / (GST_SECOND / 100);
 
   return g_strdup_printf ("%02lld:%02lld:%02lld",
                           seconds/60, 
@@ -553,6 +584,8 @@ main (int argc, char **argv)
     pipeline = make_parse_pipeline (argv[2]);
   else if (atoi (argv[1]) == 4) 
     pipeline = make_vorbis_pipeline (argv[2]);
+  else if (atoi (argv[1]) == 5) 
+    pipeline = make_sid_pipeline (argv[2]);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
