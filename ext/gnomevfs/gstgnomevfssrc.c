@@ -99,6 +99,7 @@ struct _GstGnomeVFSSrc {
 	/* icecast/audiocast metadata extraction handling */
 	gboolean iradio_mode;
 	gboolean http_callbacks_pushed;
+	gboolean seekable;
 
 	gint icy_metaint;
 	GnomeVFSFileSize icy_count;
@@ -165,6 +166,7 @@ enum {
 	ARG_IRADIO_GENRE,
 	ARG_IRADIO_URL,
 	ARG_IRADIO_TITLE,
+	ARG_SEEKABLE,
 };
 
 GType gst_gnomevfssrc_get_type(void);
@@ -276,6 +278,13 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 							      "Name of currently playing song",
 							      NULL,
 							      G_PARAM_READABLE));
+	g_object_class_install_property (gobject_class,
+					 ARG_SEEKABLE,
+					 g_param_spec_boolean ("seekable",
+							       "seekable",
+							       "TRUE is stream is seekable",
+							       FALSE,
+							       G_PARAM_READABLE));
 
 	gstelement_class->set_property = gst_gnomevfssrc_set_property;
 	gstelement_class->get_property = gst_gnomevfssrc_get_property;
@@ -307,6 +316,8 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 	gnomevfssrc->in_first_get = TRUE;
 
 	gnomevfssrc->icy_metaint = 0;
+
+	gnomevfssrc->seekable = FALSE;
 
 	gnomevfssrc->iradio_mode = FALSE;
 	gnomevfssrc->http_callbacks_pushed = FALSE;
@@ -440,6 +451,9 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 		g_mutex_lock(src->audiocast_udpdata_mutex);
 		g_value_set_string (value, src->iradio_title);
 		g_mutex_unlock(src->audiocast_udpdata_mutex);
+		break;
+	case ARG_SEEKABLE:
+		g_value_set_boolean (value, src->seekable);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1063,6 +1077,13 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	GST_DEBUG ("open result: %s", gnome_vfs_result_to_string (result));
 
 	src->in_first_get = TRUE;
+
+	if(gnome_vfs_seek(src->handle, GNOME_VFS_SEEK_CURRENT, 0)
+	    == GNOME_VFS_OK){
+		src->seekable = TRUE;
+	}else{
+		src->seekable = FALSE;
+	}
 
 	GST_FLAG_SET(src, GST_GNOMEVFSSRC_OPEN);
 
