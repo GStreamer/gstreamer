@@ -16,9 +16,12 @@ should print out the same checksum as
 
 	md5sum music.mp3
 
+If the pipeline contains an md5sink element, gst-md5sum will query it
+for the md5sum at the end of pipeline iteration.
+
+If it doesn't contain an md5sink element, gst-md5sum will automatically
+connect an md5sink to the right hand side of the given pipeline.
 The pipeline should be incomplete, that is, a final sink element
-should be omitted, so that gst\-md5sum can connect the pipeline to
-an md5sink element.
 
 See the man page for gst\-launch or the GStreamer docuementation for 
 more information on how to create a PARTIAL\-PIPELINE\-DESCRIPTION.
