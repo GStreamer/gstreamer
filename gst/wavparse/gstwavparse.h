@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_PARSEWAV_H__
-#define __GST_PARSEWAV_H__
+#ifndef __GST_WAVPARSE_H__
+#define __GST_WAVPARSE_H__
 
 
 #include <config.h>
@@ -32,28 +32,28 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_PARSEWAV \
-  (gst_parsewav_get_type())
-#define GST_PARSEWAV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PARSEWAV,GstParseWav))
-#define GST_PARSEWAV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PARSEWAV,GstParseWav))
-#define GST_IS_PARSEWAV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PARSEWAV))
-#define GST_IS_PARSEWAV_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PARSEWAV))
+#define GST_TYPE_WAVPARSE \
+  (gst_wavparse_get_type())
+#define GST_WAVPARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WAVPARSE,GstWavParse))
+#define GST_WAVPARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WAVPARSE,GstWavParse))
+#define GST_IS_WAVPARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPARSE))
+#define GST_IS_WAVPARSE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPARSE))
 
 
-#define GST_PARSEWAV_UNKNOWN	0	/* initialized state */
-#define GST_PARSEWAV_CHUNK_FMT	1	/* searching for fmt */
-#define GST_PARSEWAV_CHUNK_DATA	2	/* searching for data */
-#define GST_PARSEWAV_DATA	3	/* in data region */
-#define GST_PARSEWAV_OTHER	4	/* in unknown region */
+#define GST_WAVPARSE_UNKNOWN	0	/* initialized state */
+#define GST_WAVPARSE_CHUNK_FMT	1	/* searching for fmt */
+#define GST_WAVPARSE_CHUNK_DATA	2	/* searching for data */
+#define GST_WAVPARSE_DATA	3	/* in data region */
+#define GST_WAVPARSE_OTHER	4	/* in unknown region */
 
-typedef struct _GstParseWav GstParseWav;
-typedef struct _GstParseWavClass GstParseWavClass;
+typedef struct _GstWavParse GstWavParse;
+typedef struct _GstWavParseClass GstWavParseClass;
 
-struct _GstParseWav {
+struct _GstWavParse {
   GstElement element;
 
   /* pads */
@@ -74,15 +74,15 @@ struct _GstParseWav {
 
 };
 
-struct _GstParseWavClass {
+struct _GstWavParseClass {
   GstElementClass parent_class;
 };
 
-GType gst_parsewav_get_type(void);
+GType gst_wavparse_get_type(void);
 
-typedef struct _GstParseWavFormat GstParseWavFormat;
+typedef struct _GstWavParseFormat GstWavParseFormat;
 
-struct _GstParseWavFormat {
+struct _GstWavParseFormat {
   gint16 wFormatTag;
   guint16 wChannels;
   guint32 dwSamplesPerSec;
