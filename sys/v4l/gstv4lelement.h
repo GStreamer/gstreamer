@@ -60,6 +60,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstV4lElement GstV4lElement;
 typedef struct _GstV4lElementClass GstV4lElementClass;
+typedef struct _GstV4lXv GstV4lXv;
 
 struct _GstV4lElement {
   GstElement element;
@@ -88,11 +89,8 @@ struct _GstV4lElement {
   GList *channels;
 
   /* X-overlay */
-  GstXWindowListener *overlay;
-  XID xwindow_id;
-
-  /* caching values */
-  gchar *display;
+  GstV4lXv *xv;
+  gulong xwindow_id;
 };
 
 struct _GstV4lElementClass {

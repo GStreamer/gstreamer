@@ -32,7 +32,9 @@
 #include <string.h>
 #include "v4l_calls.h"
 #include "gstv4ltuner.h"
+#ifdef HAVE_XVIDEO
 #include "gstv4lxoverlay.h"
+#endif
 #include "gstv4lcolorbalance.h"
 
 #include <gst/propertyprobe/propertyprobe.h>
@@ -295,11 +297,13 @@ gst_v4lelement_get_type (void)
       NULL,
       NULL,
     };
+#ifdef HAVE_XVIDEO
     static const GInterfaceInfo v4l_xoverlay_info = {
       (GInterfaceInitFunc) gst_v4l_xoverlay_interface_init,
       NULL,
       NULL,
     };
+#endif
     static const GInterfaceInfo v4l_colorbalance_info = {
       (GInterfaceInitFunc) gst_v4l_color_balance_interface_init,
       NULL,
@@ -318,8 +322,10 @@ gst_v4lelement_get_type (void)
         GST_TYPE_IMPLEMENTS_INTERFACE, &v4liface_info);
     g_type_add_interface_static (v4lelement_type,
         GST_TYPE_TUNER, &v4l_tuner_info);
+#ifdef HAVE_XVIDEO
     g_type_add_interface_static (v4lelement_type,
         GST_TYPE_X_OVERLAY, &v4l_xoverlay_info);
+#endif
     g_type_add_interface_static (v4lelement_type,
         GST_TYPE_COLOR_BALANCE, &v4l_colorbalance_info);
     g_type_add_interface_static (v4lelement_type,
@@ -390,13 +396,12 @@ gst_v4lelement_init (GstV4lElement * v4lelement)
   v4lelement->video_fd = -1;
   v4lelement->buffer = NULL;
   v4lelement->videodev = g_strdup ("/dev/video0");
-  v4lelement->display = g_strdup (g_getenv ("DISPLAY"));
 
   v4lelement->norms = NULL;
   v4lelement->channels = NULL;
   v4lelement->colors = NULL;
 
-  v4lelement->overlay = gst_v4l_xoverlay_new (v4lelement);
+  v4lelement->xwindow_id = 0;
 }
 
 
@@ -404,12 +409,6 @@ static void
 gst_v4lelement_dispose (GObject * object)
 {
   GstV4lElement *v4lelement = GST_V4LELEMENT (object);
-
-  gst_v4l_xoverlay_free (v4lelement);
-
-  if (v4lelement->display) {
-    g_free (v4lelement->display);
-  }
 
   if (v4lelement->videodev) {
     g_free (v4lelement->videodev);
@@ -497,19 +496,21 @@ gst_v4lelement_change_state (GstElement * element)
    */
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      gst_v4l_set_overlay (v4lelement);
-
       if (!gst_v4l_open (v4lelement))
         return GST_STATE_FAILURE;
 
+#ifdef HAVE_XVIDEO
       gst_v4l_xoverlay_open (v4lelement);
+#endif
 
       g_signal_emit (G_OBJECT (v4lelement),
           gst_v4lelement_signals[SIGNAL_OPEN], 0, v4lelement->videodev);
       break;
 
     case GST_STATE_READY_TO_NULL:
+#ifdef HAVE_XVIDEO
       gst_v4l_xoverlay_close (v4lelement);
+#endif
 
       if (!gst_v4l_close (v4lelement))
         return GST_STATE_FAILURE;
