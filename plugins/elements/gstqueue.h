@@ -78,6 +78,7 @@ struct _GstQueue {
                          * A value of -1 will block forever. */
   gboolean may_deadlock; /* it the queue should fail on possible deadlocks */
   gboolean interrupt;
+  gboolean flush;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
   /* we are single reader and single writer queue */
