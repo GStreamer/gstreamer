@@ -369,10 +369,11 @@ gst_mpeg2subt_chain_subtitle (GstPad *pad, GstData *_data)
 
   /* deal with partial frame from previous buffer */
   if (mpeg2subt->partialbuf) {
-
-    mpeg2subt->partialbuf = gst_buffer_merge(mpeg2subt->partialbuf, buf);
-    /* and the one we received.. */
+    GstBuffer *merge;
+    merge = gst_buffer_merge(mpeg2subt->partialbuf, buf);
+    gst_buffer_unref (mpeg2subt->partialbuf);
     gst_buffer_unref(buf);
+    mpeg2subt->partialbuf = merge;
   }
   else {
     mpeg2subt->partialbuf = buf;

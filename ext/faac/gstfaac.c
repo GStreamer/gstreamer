@@ -471,9 +471,13 @@ gst_faac_chain (GstPad  *pad,
     /* do we have enough data for one frame? */
     if (in_size / faac->bps < faac->samples) {
       if (in_size > size) {
+	GstBuffer *merge;
         /* this is panic! we got a buffer, but still don't have enough
          * data. Merge them and retry in the next cycle... */
-        faac->cache = gst_buffer_merge (faac->cache, inbuf);
+        merge = gst_buffer_merge (faac->cache, inbuf);
+	gst_buffer_unref (faac->cache);
+	gst_buffer_unref (inbuf);
+	faac->cache = merge;
       } else if (in_size == size) {
         /* this shouldn't happen, but still... */
         faac->cache = inbuf;
@@ -495,11 +499,15 @@ gst_faac_chain (GstPad  *pad,
 
     /* create the frame */
     if (in_size > size) {
+      GstBuffer *merge;
       /* merge */
       subbuf = gst_buffer_create_sub (inbuf, 0, frame_size - (in_size - size));
       GST_BUFFER_DURATION (subbuf) =
 	GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      subbuf = gst_buffer_merge (faac->cache, subbuf);
+      merge = gst_buffer_merge (faac->cache, subbuf);
+      gst_buffer_unref (faac->cache);
+      gst_buffer_unref (subbuf);
+      subbuf = merge;
       faac->cache = NULL;
     } else {
       subbuf = gst_buffer_create_sub (inbuf, size - in_size, frame_size);
