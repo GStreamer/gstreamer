@@ -218,6 +218,24 @@ AC_SUBST(GDK_PIXBUF_LIBS)
 AC_SUBST(GDK_PIXBUF_CFLAGS)
 
 
+dnl Check for libgnome
+AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
+if test x$GNOME_CONFIG = xno; then
+  AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
+  GNOME_LIBS=
+  GNOME_CFLAGS=
+  HAVE_GNOME=no
+else
+  GNOME_LIBS=`gnome-config --libs gnome gnomeui`
+  GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
+  GHTTP_LIBS=`gnome-config --libs gnome gnomeui`
+  GHTTP_CFLAGS=`gnome-config --cflags gnome gnomeui`
+  HAVE_GNOME=yes
+fi
+AC_SUBST(GNOME_LIBS)
+AC_SUBST(GNOME_CFLAGS)
+AC_SUBST(GHTTP_LIBS)
+
 dnl Check for libghttp
 dnl FIXME: need to check for header
 AC_CHECK_LIB(ghttp, ghttp_request_new,
@@ -231,24 +249,7 @@ AC_CHECK_LIB(ghttp, ghttp_request_new,
    HAVE_LIBGHTTP=no
   ],
   $LIBS)
-AC_SUBST(GHTTP_LIBS)
 AC_SUBST(GST_HTTPSRC_GET_TYPE)
-
-
-dnl Check for libgnome
-AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
-if test x$GNOME_CONFIG = xno; then
-  AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
-  GNOME_LIBS=
-  GNOME_CFLAGS=
-  HAVE_GNOME=no
-else
-  GNOME_LIBS=`gnome-config --libs gnome gnomeui`
-  GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
-  HAVE_GNOME=yes
-fi
-AC_SUBST(GNOME_LIBS)
-AC_SUBST(GNOME_CFLAGS)
 
 
 dnl Check for libglade
@@ -759,6 +760,7 @@ test/bindings/Makefile
 tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
+testsuite/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
