@@ -27,3 +27,4 @@ libgstfaststandardscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la:
 	cd $(top_builddir)/libs/ext/cothreads/cothreads && make
 
+EXTRA_DIST = cothreads_compat.h
