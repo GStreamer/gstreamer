@@ -1,3 +1,2 @@
 SUBDIRS = \
-	gst \
-	gstplay
+	gst

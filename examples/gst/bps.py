@@ -82,7 +82,9 @@ class BPS(object):
         print '%s:' % (method,),
         self.method = method
         
+	print self.pipeline.get_state()
         self.pipeline.set_state(gst.STATE_PLAYING)
+	print self.pipeline.get_state()
 
         if method == 'py':
             self.start = time.time()
