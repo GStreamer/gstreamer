@@ -214,23 +214,6 @@ Gets the offset in the source file of this buffer.
 @buf: a #GstBuffer to get offset of.
 
 
-<!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
-<para>
-Gets the bufferpool for this buffer.
-</para>
-
-@buf: a #GstBuffer to get the bufferpool of.
-@Returns: the #GstBufferPool of this buffer.
-
-
-<!-- ##### MACRO GST_BUFFER_POOL_PRIVATE ##### -->
-<para>
-Gets the bufferpool private data.
-</para>
-
-@buf: a #GstBuffer to get bufferpool's private data of.
-
-
 <!-- ##### ENUM GstBufferFlag ##### -->
 <para>
 A set of buffer flags used to describe properties of a #GstBuffer.
@@ -242,12 +225,9 @@ A set of buffer flags used to describe properties of a #GstBuffer.
 @GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer.
 @GST_BUFFER_DONTFREE: do not try to free the data when this buffer is 
                       unreferenced.
-@GST_BUFFER_DISCONTINUOUS: the buffer is the first one after a discontinuity 
-                          in the stream.
 @GST_BUFFER_KEY_UNIT: the buffer holds a key unit, a unit that can be 
                       decoded independently of other buffers.
-@GST_BUFFER_PREROLL: the buffer should be decoded but not rendered, it is 
-                     mainly used to resynchronise the stream.
+@GST_BUFFER_DONTKEEP: 
 @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
 
 <!-- ##### STRUCT GstBuffer ##### -->
@@ -263,8 +243,8 @@ The basic structure of a buffer.
 @duration: 
 @offset: 
 @offset_end: 
-@pool: 
-@pool_private: 
+@free_data: 
+@buffer_private: 
 @_gst_reserved: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->

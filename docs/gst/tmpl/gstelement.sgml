@@ -379,11 +379,17 @@ Sets the name of the element, getting rid of the old name if there was one.
 @element: 
 
 
-<!-- ##### FUNCTION gst_element_error ##### -->
+<!-- ##### MACRO gst_element_error ##### -->
 <para>
 
 </para>
 
+@el: 
+@domain: 
+@code: 
+@message: 
+@debug: 
+<!-- # Unused Parameters # -->
 @element: 
 @error: 
 @Varargs: 
@@ -746,6 +752,7 @@ notifications to stdout.
 @object: 
 @orig: 
 @error: 
+@debug: 
 
 
 <!-- ##### ENUM GstElementState ##### -->
@@ -980,6 +987,7 @@ Is triggered whenever an error occured.
 @gstelement: the object which received the signal.
 @arg1: the error message
 @arg2: 
+@: 
 
 <!-- ##### SIGNAL GstElement::found-tag ##### -->
 <para>

@@ -90,14 +90,6 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 
 
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_init_with_popt_table ##### -->
 <para>
 

@@ -1,5 +1,16 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gst.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+          sync latest API changes to docs
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstpluginfeature.c:
           fix doc snippet
 	* tools/gst-inspect.c: (print_element_list):

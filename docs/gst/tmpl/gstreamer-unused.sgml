@@ -1757,6 +1757,14 @@ Get the value of a #GstAtomicSwap
 
 @klass: 
 
+<!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
+<para>
+Gets the bufferpool for this buffer.
+</para>
+
+@buf: a #GstBuffer to get the bufferpool of.
+@Returns: the #GstBufferPool of this buffer.
+
 <!-- ##### MACRO GST_BUFFER_LOCK ##### -->
 <para>
 Obtains a lock on the object, making serialization possible.
@@ -1784,6 +1792,13 @@ Unlock the given bufferpool.
 </para>
 
 @pool: the bufferpool to unlock.
+
+<!-- ##### MACRO GST_BUFFER_POOL_PRIVATE ##### -->
+<para>
+Gets the bufferpool private data.
+</para>
+
+@buf: a #GstBuffer to get bufferpool's private data of.
 
 <!-- ##### MACRO GST_BUFFER_POOL_UNLOCK ##### -->
 <para>
@@ -8917,6 +8932,13 @@ of an element he doesn't need anymore.
 @...: 
 @format: 
 @args...: 
+
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_link_get_type ##### -->
 <para>

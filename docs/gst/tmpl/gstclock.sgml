@@ -402,6 +402,11 @@ The GstClock object
 @id: 
 
 
+<!-- ##### ARG GstClock:event-diff ##### -->
+<para>
+
+</para>
+
 <!-- ##### ARG GstClock:max-diff ##### -->
 <para>
 Maximum allowed diff for clock sync requests against the real time.
