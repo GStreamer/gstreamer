@@ -1,3 +1,16 @@
+2004-03-30  Benjamin Otte  <otte@gnome.org>
+
+	* gst/elements/gstbufferstore.c: (gst_buffer_store_get_buffer):
+	  set the offset of the buffer to the requested offset
+	* gst/elements/gsttypefind.c: (stop_typefinding):
+	  revert patch 1.18 (which I unfortunately don't know the reason for).
+	  This is needed to allow downstream elements to seek. Otherwise
+	  typefind might overwrite a previous seek by downstream elements.
+	  This lead to errors with id3tag and typefind on some mp3s.
+	* gst/schedulers/entryscheduler.c: (COTHREADS_TYPE),
+	(gst_entry_scheduler_iterate):
+	  be more verbose when debugging
+
 2004-03-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstcaps.c: (gst_caps_from_string_inplace):

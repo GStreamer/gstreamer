@@ -368,6 +368,7 @@ gst_buffer_store_get_buffer (GstBufferStore * store, guint64 offset, guint size)
       }
       /* uh, the requested data spans some buffers */
       ret = gst_buffer_new_and_alloc (size);
+      GST_BUFFER_OFFSET (ret) = offset;
       GST_LOG_OBJECT (store, "created buffer %p for offset %" G_GUINT64_FORMAT
           " and size %u, will fill with data now", ret, offset, size);
       data = GST_BUFFER_DATA (ret);

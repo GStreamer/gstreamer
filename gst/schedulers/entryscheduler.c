@@ -1026,6 +1026,9 @@ gst_entry_scheduler_iterate (GstScheduler * scheduler)
     gst_entry_scheduler_show (scheduler);
 #endif
     return GST_SCHEDULER_STATE_ERROR;
+  } else if (ret == GST_SCHEDULER_STATE_STOPPED) {
+    GST_INFO_OBJECT (sched, "done iterating returning STOPPED");
+    return GST_SCHEDULER_STATE_STOPPED;
   } else {
     return ret;
   }
