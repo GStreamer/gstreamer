@@ -112,7 +112,7 @@ gst_id3demux_bin_base_init (GstId3DemuxBinClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   static GstElementDetails gst_id3demux_bin_details =
       GST_ELEMENT_DETAILS ("ID3-demux bin",
-      "Generic/Bin",
+      "Codec/Demuxer/Audio",
       "Manages typefinding for an ID3 demuxer",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
