@@ -418,14 +418,17 @@ gst_vorbisfile_loop (GstElement *element)
   if (vorbisfile->need_discont) {
     GstEvent *discont;
 
-    /* get stream stats */
-    samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
+    vorbisfile->need_discont = FALSE;
 
-    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
+    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
+      /* get stream stats */
+      samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
+
+      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
 		    				  GST_FORMAT_UNITS, samples, NULL); 
 
-    vorbisfile->need_discont = FALSE;
-    gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
+      gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
+    }
   }
 
   if (ret == 0) {
@@ -433,7 +436,8 @@ gst_vorbisfile_loop (GstElement *element)
     //ov_clear (&vorbisfile->vf);
     vorbisfile->restart = TRUE;
     gst_buffer_unref (outbuf);
-    gst_pad_push (vorbisfile->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) 
+      gst_pad_push (vorbisfile->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
     gst_element_set_eos (element);
     return;
   }
@@ -469,12 +473,10 @@ gst_vorbisfile_loop (GstElement *element)
       vorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
     }
   
-    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
+    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) 
       gst_pad_push (vorbisfile->srcpad, outbuf);
-    }
-    else {
+    else
       gst_buffer_unref (outbuf);
-    }
   }
 }
 
