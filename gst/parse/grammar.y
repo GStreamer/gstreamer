@@ -423,7 +423,11 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
       data->sink_pad = g_strdup (sink_pad);
-      data->caps = gst_caps_copy (caps);
+      if (caps) {
+      	data->caps = gst_caps_copy (caps);
+      } else {
+      	data->caps = NULL;
+      }
       data->signal_id = g_signal_connect (G_OBJECT (src), "new_pad", 
 					  G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
