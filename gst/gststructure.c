@@ -823,9 +823,9 @@ gst_structure_get_fourcc(const GstStructure *structure, const gchar *fieldname,
   field = gst_structure_get_field(structure, fieldname);
 
   if(field == NULL) return FALSE;
-  if(!G_VALUE_HOLDS_UINT(&field->value))return FALSE;
+  if(!GST_VALUE_HOLDS_FOURCC(&field->value))return FALSE;
 
-  *value = g_value_get_uint(&field->value);
+  *value = gst_value_get_fourcc (&field->value);
 
   return TRUE;
 }
