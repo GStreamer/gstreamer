@@ -1,2 +1,5 @@
 Makefile.in
 Makefile
+*.pyc
+*.pyo
+*.swp
