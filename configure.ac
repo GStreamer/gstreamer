@@ -515,6 +515,7 @@ dnl ############################
 
 dnl set license and copyright notice
 AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
+
 dnl package name in plugins
 AC_ARG_WITH(package-name,
 AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
@@ -523,9 +524,19 @@ AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
   no) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
   *) GST_PACKAGE="${withval}" ;;
 esac], 
-[GST_PACKAGE="GStreamer"]) dnl Default value
+[
+if test "x$GST_CVS" = "xyes"
+then
+  dnl nano >= 1
+  GST_PACKAGE="GStreamer CVS/prerelease"
+else
+  GST_PACKAGE="GStreamer source release"
+fi
+]
+) dnl Default value
 AC_MSG_NOTICE(Using $GST_PACKAGE as package name)
 AC_DEFINE_UNQUOTED(GST_PACKAGE, "$GST_PACKAGE", [package name in plugins])
+
 dnl package origin URL
 AC_ARG_WITH(package-origin,
 AC_HELP_STRING([--with-package-origin],[specify package origin URL to use in plugins]),
@@ -534,7 +545,7 @@ AC_HELP_STRING([--with-package-origin],[specify package origin URL to use in plu
   no) AC_MSG_ERROR(bad value ${withval} for --with-package-origin) ;;
   *) GST_ORIGIN="${withval}" ;;
 esac], 
-[GST_ORIGIN="http://gstreamer.net/"]) dnl Default value
+[GST_ORIGIN="http://gstreamer.freedesktop.org/"]) dnl Default value
 AC_MSG_NOTICE(Using $GST_ORIGIN as package origin)
 AC_DEFINE_UNQUOTED(GST_ORIGIN, "$GST_ORIGIN", [package origin])
 

@@ -205,7 +205,6 @@ print_factory_details_info (GstElementFactory * factory)
       get_rank_name (GST_PLUGIN_FEATURE (factory)->rank),
       GST_PLUGIN_FEATURE (factory)->rank);
   n_print ("\n");
-
 }
 
 static void
@@ -943,14 +942,6 @@ print_element_list (gboolean print_all)
 static void
 print_plugin_info (GstPlugin * plugin)
 {
-  GList *features;
-  gint num_features = 0;
-  gint num_elements = 0;
-  gint num_types = 0;
-  gint num_schedulers = 0;
-  gint num_indexes = 0;
-  gint num_other = 0;
-
   n_print ("Plugin Details:\n");
   n_print ("  Name:\t\t%s\n", plugin->desc.name);
   n_print ("  Description:\t%s\n", plugin->desc.description);
@@ -960,6 +951,18 @@ print_plugin_info (GstPlugin * plugin)
   n_print ("  Package:\t%s\n", plugin->desc.package);
   n_print ("  Origin URL:\t%s\n", plugin->desc.origin);
   n_print ("\n");
+}
+
+static void
+print_plugin_features (GstPlugin * plugin)
+{
+  GList *features;
+  gint num_features = 0;
+  gint num_elements = 0;
+  gint num_types = 0;
+  gint num_schedulers = 0;
+  gint num_indexes = 0;
+  gint num_other = 0;
 
   features = gst_plugin_get_feature_list (plugin);
 
@@ -1086,6 +1089,11 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
     _name = "";
 
   print_factory_details_info (factory);
+  if (GST_PLUGIN_FEATURE (factory)->manager) {
+    GstPlugin *plugin = (GstPlugin *) GST_PLUGIN_FEATURE (factory)->manager;
+
+    print_plugin_info (plugin);
+  }
 
   print_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
 
@@ -1155,6 +1163,7 @@ main (int argc, char *argv[])
       /* if there is such a plugin, print out info */
       if (plugin) {
         print_plugin_info (plugin);
+        print_plugin_features (plugin);
       } else {
         g_print ("No such element or plugin '%s'\n", arg);
         return -1;

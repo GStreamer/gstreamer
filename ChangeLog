@@ -1,5 +1,13 @@
 2004-08-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  fix GST_ORIGIN
+	  set GST_PACKAGE to source, and distinguish between release and other
+	* tools/gst-inspect.c:
+	  print out plugin an element factory is part of so we see this info
+
+2004-08-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstbuffer.sgml:
 	* docs/gst/tmpl/gstschedulerfactory.sgml:
