@@ -1,4 +1,30 @@
-This is GStreamer 0.8.8.
+This is GStreamer 0.8.9.
+
+Changes since 0.8.8:
+
+      * Probe fixes
+      * Thread and queue fixes fixes
+      * Documentation updates
+      * Important GstBin state change fix - see #166371 if you subclass
+
+Bugs fixed since 0.8.8:
+
+      * 94464 : [threads] gst_scheduler_add_scheduler() doesn't ref passe...
+      * 123775 : [PATCH] [api] setting state on element should force highe...
+      * 142588 : [threads] if all elements have been removed from a bin, s...
+      * 150546 : [api] Error for calling gst_pad_push in a get function is...
+      * 162276 : [build] gstregistry.h and gstxmlregistry.c don't build wi...
+      * 163234 : [PATCH] plugin loading isn't thread-safe
+      * 163383 : [PATCH] ogm plugins won't register
+      * 163801 : [PATCH] mem leak in xml registry loading
+      * 164062 : [PATCH] tee capsnego is broken
+      * 164261 : [PATCH] GST parsing doesn't recognise urls without a file...
+      * 165272 : [PATCH] Problem compiling gstreamer 0.8.8
+      * 165365 : [PATCH] gst_string_wrap() segfaults on NULL strings
+      * 165922 : add locking in opt
+      * 166269 : Typo in current .po file msgid string
+      * 166362 : data discarded by probes is leaked
+      * 166371 : GstBin derived classes not notified of state change
 
 Changes since 0.8.7:
 

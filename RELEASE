@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.8 "I'll Take Care Of You"
+GStreamer: Release notes for GStreamer 0.8.9 "Like Eating Glass"
         
 
 The GStreamer team is happy to announce a new release
@@ -22,39 +22,30 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * Threading fixes
-      * Opt scheduler fixes
+      * Probe fixes
+      * Thread and queue fixes fixes
       * Documentation updates
-      * New translation: Norwegian Bokmaal (Kjartan Maraas)
-      * New translation: Italian (Luca Ferretti)
-      * New scheduler: fair
+      * New translation added: Vietnamese (Clytie Siddall)
+      * Important GstBin state change fix - see #166371 if you subclass
 
 Bugs fixed in this release
     
-      * 144804 : opt scheduler breaks on playing a pipeline
-      * 148787 : clocks are not distributed correctly
-      * 149936 : [PATCH] [build] GStreamer without registry support do not...
-      * 150051 : fakesrc needs a data rate parameter that timestamps the d...
-      * 151605 : impossible to play .mpg or avi files with gst-launch-ext
-      * 153882 : [PATCH] The win32 version of gstenumtypes is not up to date
-      * 154061 : optimal scheduler doesn't get freed
-      * 156063 : infinite loop and 100% CPU with some MP3
-      * 156179 : gstreamer typefind plugin information from gst-inspect is...
-      * 157127 : Cleanup of issues reported by sparse
-      * 157263 : use G_SIGNAL_TYPE_STATIC_SCOPE for GstBuffers in handoff ...
-      * 158018 : gstreamer typefind stalls on these JPEG files
-      * 158162 : opt deadlock
-      * 158163 : [api] Problem querying on ghostpads
-      * 159852 : [PATCH] [api] g_signal_emit thread safety issues
-      * 160019 : segfault when error occurs playback of uri containing per...
-      * 160220 : gst_pad_set_explicit_caps of a NULL caps doesn't work
-
-API changed in this release
-     
-
-- API additions:
-    
-* A new function, gst_plugin_get_version, has been added.
+      * 94464 : [threads] gst_scheduler_add_scheduler() doesn't ref passe...
+      * 123775 : [PATCH] [api] setting state on element should force highe...
+      * 142588 : [threads] if all elements have been removed from a bin, s...
+      * 150546 : [api] Error for calling gst_pad_push in a get function is...
+      * 162276 : [build] gstregistry.h and gstxmlregistry.c don't build wi...
+      * 163234 : [PATCH] plugin loading isn't thread-safe
+      * 163383 : [PATCH] ogm plugins won't register
+      * 163801 : [PATCH] mem leak in xml registry loading
+      * 164062 : [PATCH] tee capsnego is broken
+      * 164261 : [PATCH] GST parsing doesn't recognise urls without a file...
+      * 165272 : [PATCH] Problem compiling gstreamer 0.8.8
+      * 165365 : [PATCH] gst_string_wrap() segfaults on NULL strings
+      * 165922 : add locking in opt
+      * 166269 : Typo in current .po file msgid string
+      * 166362 : data discarded by probes is leaked
+      * 166371 : GstBin derived classes not notified of state change
 
 Download
 
@@ -89,24 +80,20 @@ GNOME applications including sound-juicer, totem and RhythmBox.
   
 Contributors to this release
     
+      * Andy Wingo
       * Benjamin Otte
-      * Christian Schaller
-      * Christophe Fergeau
-      * Daniel Gazard
+      * Clytie Siddall
       * David Schleef
       * Edward Hervey
-      * Johan Dahlin
-      * Luca Ferretti
-      * Kjartan Maraas
-      * Martin Soto
-      * Matt Kraai
+      * Jan Schmidt
+      * Luca Ognibene
       * Ronald Bultje
       * Sebastien Cote
       * Stefan Kost
       * Stephane Loeuillet
-      * Steve Lhomme
+      * Stephane Wirtel
       * Thomas Vander Stichele
-      * William Jon McCann
+      * Tim-Philipp Müller
+      * Vincent Torri
       * Wim Taymans
-      * Zaheer Abbas Merali
  
