@@ -8,7 +8,10 @@ tests_pass = \
 	union \
 	string-conversions \
 	fixed \
-	intersect2
+	intersect2 \
+	caps \
+	value_compare \
+	value_intersect
 
 tests_fail =
 
@@ -27,4 +30,6 @@ fixed_LDADD = $(GST_LIBS)
 fixed_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 intersect2_LDADD = $(GST_LIBS) 
 intersect2_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
+
+
 
