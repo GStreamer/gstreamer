@@ -208,7 +208,7 @@ gst_tag_from_id3_tag (const gchar * id3_tag)
   g_return_val_if_fail (id3_tag != NULL, NULL);
 
   while (tag_matches[i].gstreamer_tag != NULL) {
-    if (strcmp (id3_tag, tag_matches[i].original_tag) == 0) {
+    if (strncmp (id3_tag, tag_matches[i].original_tag, 5) == 0) {
       break;
     }
     i++;
@@ -239,34 +239,76 @@ gst_tag_to_id3_tag (const gchar * gst_tag)
   }
   return NULL;
 }
-static void
-gst_tag_extract (GstTagList * list, const gchar * tag, const gchar * start,
-    const guint size)
-{
-  gsize bytes_read;
-  gchar *conv;
 
-  /* FIXME: better charset detection? */
+static void
+gst_tag_extract_id3v1_string (GstTagList * list, const gchar * tag,
+    const gchar * start, const guint size)
+{
+  const gchar *env;
+  gsize bytes_read;
+  gchar *utf8;
+
+  /* Should we try the charsets specified
+   * via environment variables FIRST ? */
   if (g_utf8_validate (start, size, NULL)) {
-    conv = g_strchomp (g_strndup (start, size));
-  } else {
-    conv = g_locale_to_utf8 (start, size, &bytes_read, NULL, NULL);
-    if (bytes_read != size) {
-      g_free (conv);
-      conv =
-          g_convert (start, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL,
-          NULL);
-      if (bytes_read != size) {
-        g_free (conv);
-        return;
+    utf8 = g_strndup (start, size);
+    goto beach;
+  }
+
+  env = g_getenv ("GST_ID3V1_TAG_ENCODING");
+  if (!env || *env == '\0')
+    env = g_getenv ("GST_ID3_TAG_ENCODING");
+  if (!env || *env == '\0')
+    env = g_getenv ("GST_TAG_ENCODING");
+
+  /* Try charsets specified via the environment */
+  if (env && *env != '\0') {
+    gchar **c, **csets;
+
+    csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
+
+    for (c = csets; c && *c; ++c) {
+      if ((utf8 =
+              g_convert (start, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
+        if (bytes_read == size) {
+          g_strfreev (csets);
+          goto beach;
+        }
+        g_free (utf8);
+        utf8 = NULL;
       }
     }
-    conv = g_strchomp (conv);
   }
-  if (conv[0] != '\0') {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, tag, conv, NULL);
+
+  /* Try current locale (if not UTF-8) */
+  if (!g_get_charset (&env)) {
+    if ((utf8 = g_locale_to_utf8 (start, size, &bytes_read, NULL, NULL))) {
+      if (bytes_read == size) {
+        goto beach;
+      }
+      g_free (utf8);
+      utf8 = NULL;
+    }
   }
-  g_free (conv);
+
+  /* Try ISO-8859-1 */
+  utf8 =
+      g_convert (start, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
+  if (utf8 != NULL && bytes_read == size) {
+    goto beach;
+  }
+
+  g_free (utf8);
+  return;
+
+beach:
+
+  g_strchomp (utf8);
+  if (utf8 && utf8[0] != '\0') {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, tag, utf8, NULL);
+  }
+
+  g_free (utf8);
 }
 
 /**
@@ -290,9 +332,9 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
   if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G')
     return NULL;
   list = gst_tag_list_new ();
-  gst_tag_extract (list, GST_TAG_TITLE, &data[3], 30);
-  gst_tag_extract (list, GST_TAG_ARTIST, &data[33], 30);
-  gst_tag_extract (list, GST_TAG_ALBUM, &data[63], 30);
+  gst_tag_extract_id3v1_string (list, GST_TAG_TITLE, &data[3], 30);
+  gst_tag_extract_id3v1_string (list, GST_TAG_ARTIST, &data[33], 30);
+  gst_tag_extract_id3v1_string (list, GST_TAG_ALBUM, &data[63], 30);
   ystr = g_strndup (&data[93], 4);
   year = strtoul (ystr, NULL, 10);
   g_free (ystr);
@@ -304,11 +346,11 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, year, NULL);
   }
   if (data[125] == 0) {
-    gst_tag_extract (list, GST_TAG_COMMENT, &data[97], 28);
+    gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, &data[97], 28);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER,
         (guint) data[126], NULL);
   } else {
-    gst_tag_extract (list, GST_TAG_COMMENT, &data[97], 30);
+    gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, &data[97], 30);
   }
   if (data[127] < gst_tag_id3_genre_count ()) {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
