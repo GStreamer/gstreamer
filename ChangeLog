@@ -1,4 +1,13 @@
+2002-03-24  David I. Lehn  <dlehn@vt.edu>
+
+	* examples/gstreamer/: add cp.py oggplay.py f2f.py
+
+	* gstreamer/gstreamermodule.c: strip GST_ prefix
+
+	* gstreamer/__init__.py: find libtool lib hack
+
 2002-03-23  David I. Lehn  <dlehn@vt.edu>
 
 	* stole binding framework from gnome-python && gconf
+
 	* adapted to gstreamer
