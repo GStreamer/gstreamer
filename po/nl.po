@@ -560,7 +560,7 @@ msgstr "Fout bij het schrijven naar bestand \"%s\"."
 msgid "No file specified for reading."
 msgstr "Geen bestandsnaam gegeven om te lezen."
 
-#: gst/elements/gstfilesrc.c:696 gst/elements/gstmultidisksrc.c:244
+#: gst/elements/gstfilesrc.c:696 gst/elements/gstmultifilesrc.c:244
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen om te lezen."

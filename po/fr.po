@@ -573,7 +573,7 @@ msgstr ""
 msgid "No file specified for reading."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:745 gst/elements/gstmultidisksrc.c:244
+#: gst/elements/gstfilesrc.c:745 gst/elements/gstmultifilesrc.c:244
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Echoué a déterminer le type du flux"
