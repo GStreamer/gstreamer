@@ -1380,65 +1380,70 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
   GST_LOG ("I'm now going to cut large chunks into smaller pieces");
 
   /* cut chunks in small (seekable) pieces */
-  for (one = list; one != NULL; one = one->next) {
-    entry = one->data;
-
-    if (entry->stream_nr >= avi->num_streams)
+  for (i = 0; i < avi->num_streams; i++) {
+    if (avi->stream[i].total_frames != 1)
       continue;
+
+    for (one = list; one != NULL; one = one->next) {
+      entry = one->data;
+
+      if (entry->stream_nr != i)
+        continue;
 
 #define MAX_DURATION (GST_SECOND / 2)
 
-    /* check for max duration of a single buffer. I suppose that
-     * the allocation of index entries could be improved. */
-    stream = &avi->stream[entry->stream_nr];
-    if (entry->dur > MAX_DURATION && stream->strh->type == GST_RIFF_FCC_auds) {
-      guint32 ideal_size = stream->bitrate / 10;
-      gst_avi_index_entry *entries;
-      gint old_size, num_added;
-      GList *one2;
+      /* check for max duration of a single buffer. I suppose that
+       * the allocation of index entries could be improved. */
+      stream = &avi->stream[entry->stream_nr];
+      if (entry->dur > MAX_DURATION && stream->strh->type == GST_RIFF_FCC_auds) {
+        guint32 ideal_size = stream->bitrate / 10;
+        gst_avi_index_entry *entries;
+        gint old_size, num_added;
+        GList *one2;
 
-      /* copy index */
-      old_size = entry->size;
-      num_added = (entry->size - 1) / ideal_size;
-      avi->index_size += num_added;
-      entries = g_malloc (sizeof (gst_avi_index_entry) * num_added);
-      alloc_list = g_list_prepend (alloc_list, entries);
-      for (one2 = one->next; one2 != NULL; one2 = one2->next) {
-        gst_avi_index_entry *entry2 = one2->data;
+        /* copy index */
+        old_size = entry->size;
+        num_added = (entry->size - 1) / ideal_size;
+        avi->index_size += num_added;
+        entries = g_malloc (sizeof (gst_avi_index_entry) * num_added);
+        alloc_list = g_list_prepend (alloc_list, entries);
+        for (one2 = one->next; one2 != NULL; one2 = one2->next) {
+          gst_avi_index_entry *entry2 = one2->data;
 
-        entry2->index_nr += num_added;
-        if (entry2->stream_nr == entry->stream_nr)
-          entry2->frames_before += num_added;
-      }
-
-      /* new sized index chunks */
-      for (i = 0; i < num_added + 1; i++) {
-        gst_avi_index_entry *entry2;
-
-        if (i == 0) {
-          entry2 = entry;
-        } else {
-          entry2 = &entries[i - 1];
-          list = g_list_insert_before (list, one->next, entry2);
-          entry = one->data;
-          one = one->next;
-          memcpy (entry2, entry, sizeof (gst_avi_index_entry));
+          entry2->index_nr += num_added;
+          if (entry2->stream_nr == entry->stream_nr)
+            entry2->frames_before += num_added;
         }
 
-        if (old_size >= ideal_size) {
-          entry2->size = ideal_size;
-          old_size -= ideal_size;
-        } else {
-          entry2->size = old_size;
-        }
+        /* new sized index chunks */
+        for (i = 0; i < num_added + 1; i++) {
+          gst_avi_index_entry *entry2;
 
-        entry2->dur = GST_SECOND * entry2->size / stream->bitrate;
-        if (i != 0) {
-          entry2->index_nr++;
-          entry2->ts += entry->dur;
-          entry2->offset += entry->size;
-          entry2->bytes_before += entry->size;
-          entry2->frames_before++;
+          if (i == 0) {
+            entry2 = entry;
+          } else {
+            entry2 = &entries[i - 1];
+            list = g_list_insert_before (list, one->next, entry2);
+            entry = one->data;
+            one = one->next;
+            memcpy (entry2, entry, sizeof (gst_avi_index_entry));
+          }
+
+          if (old_size >= ideal_size) {
+            entry2->size = ideal_size;
+            old_size -= ideal_size;
+          } else {
+            entry2->size = old_size;
+          }
+
+          entry2->dur = GST_SECOND * entry2->size / stream->bitrate;
+          if (i != 0) {
+            entry2->index_nr++;
+            entry2->ts += entry->dur;
+            entry2->offset += entry->size;
+            entry2->bytes_before += entry->size;
+            entry2->frames_before++;
+          }
         }
       }
     }
