@@ -201,6 +201,36 @@ gst_tcpclientsrc_getcaps (GstPad * pad)
   return caps;
 }
 
+/* close the socket and associated resources
+ * unset OPEN flag
+ * used both to recover from errors and go to NULL state */
+static void
+gst_tcpclientsrc_close (GstTCPClientSrc * this)
+{
+  GST_DEBUG_OBJECT (this, "closing socket");
+  if (this->sock_fd != -1) {
+    close (this->sock_fd);
+    this->sock_fd = -1;
+  }
+  this->caps_received = FALSE;
+  if (this->caps) {
+    gst_caps_free (this->caps);
+    this->caps = NULL;
+  }
+  GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
+}
+
+/* close socket and related items and return an EOS GstData
+ * called from _get */
+static GstData *
+gst_tcpclientsrc_eos (GstTCPClientSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "going to EOS");
+  gst_element_set_eos (GST_ELEMENT (src));
+  gst_tcpclientsrc_close (src);
+  return GST_DATA (gst_event_new (GST_EVENT_EOS));
+}
+
 static GstData *
 gst_tcpclientsrc_get (GstPad * pad)
 {
@@ -214,14 +244,18 @@ gst_tcpclientsrc_get (GstPad * pad)
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
   src = GST_TCPCLIENTSRC (GST_OBJECT_PARENT (pad));
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN), NULL);
+  if (!GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN)) {
+    GST_DEBUG_OBJECT (src, "connection to server closed, cannot give data");
+    return NULL;
+  }
+  GST_LOG_OBJECT (src, "asked for a buffer");
 
   /* try to negotiate here */
   if (!gst_pad_is_negotiated (pad)) {
     if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (pad))) {
       GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), GST_ERROR_SYSTEM);
       gst_buffer_unref (buf);
-      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+      return gst_tcpclientsrc_eos (src);
     }
   }
 
@@ -252,7 +286,7 @@ gst_tcpclientsrc_get (GstPad * pad)
       if (ret <= 0) {
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
             ("select failed: %s", g_strerror (errno)));
-        return GST_DATA (gst_event_new (GST_EVENT_EOS));
+        return gst_tcpclientsrc_eos (src);
       }
 
       /* ask how much is available for reading on the socket */
@@ -260,19 +294,24 @@ gst_tcpclientsrc_get (GstPad * pad)
       if (ret < 0) {
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
             ("ioctl failed: %s", g_strerror (errno)));
-        return GST_DATA (gst_event_new (GST_EVENT_EOS));
+        return gst_tcpclientsrc_eos (src);
       }
       GST_LOG_OBJECT (src, "ioctl says %d bytes available", readsize);
       buf = gst_buffer_new_and_alloc (readsize);
       break;
     case GST_TCP_PROTOCOL_TYPE_GDP:
       if (!(data = gst_tcp_gdp_read_header (GST_ELEMENT (src), src->sock_fd))) {
-        GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-            ("Could not read data header through GDP"));
-        return GST_DATA (gst_event_new (GST_EVENT_EOS));
+        return gst_tcpclientsrc_eos (src);
       }
-      if (GST_IS_EVENT (data))
+      if (GST_IS_EVENT (data)) {
+        /* if we got back an EOS event, then we should go into eos ourselves */
+        if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
+          gst_event_unref (data);
+          return gst_tcpclientsrc_eos (src);
+        }
         return data;
+      }
+
       buf = GST_BUFFER (data);
 
       GST_LOG_OBJECT (src, "Going to read data from socket into buffer %p",
@@ -285,20 +324,19 @@ gst_tcpclientsrc_get (GstPad * pad)
       break;
   }
 
-  GST_LOG_OBJECT (src, "Reading %d bytes", readsize);
+  GST_LOG_OBJECT (src, "Reading %d bytes into buffer", readsize);
   ret = gst_tcp_socket_read (src->sock_fd, GST_BUFFER_DATA (buf), readsize);
   if (ret < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     gst_buffer_unref (buf);
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return gst_tcpclientsrc_eos (src);
   }
 
   /* if we read 0 bytes, and we're blocking, we hit eos */
   if (ret == 0) {
-    GST_DEBUG ("blocking read returns 0, EOS");
+    GST_DEBUG_OBJECT (src, "blocking read returns 0, EOS");
     gst_buffer_unref (buf);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return gst_tcpclientsrc_eos (src);
   }
 
   readsize = ret;
@@ -360,6 +398,10 @@ gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_HOST:
+      if (!g_value_get_string (value)) {
+        g_warning ("host property cannot be NULL");
+        break;
+      }
       g_free (tcpclientsrc->host);
       tcpclientsrc->host = g_strdup (g_value_get_string (value));
       break;
@@ -418,11 +460,14 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
   }
   GST_DEBUG_OBJECT (this, "opened receiving client socket with fd %d",
       this->sock_fd);
+  GST_FLAG_SET (this, GST_TCPCLIENTSRC_OPEN);
 
   /* look up name if we need to */
   ip = gst_tcp_host_to_ip (GST_ELEMENT (this), this->host);
-  if (!ip)
+  if (!ip) {
+    gst_tcpclientsrc_close (this);
     return FALSE;
+  }
   GST_DEBUG_OBJECT (this, "IP address for host %s is %s", this->host, ip);
 
   /* connect to server */
@@ -437,6 +482,7 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
       sizeof (this->server_sin));
 
   if (ret) {
+    gst_tcpclientsrc_close (this);
     switch (errno) {
       case ECONNREFUSED:
         GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ,
@@ -455,7 +501,6 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
 
   this->send_discont = TRUE;
   this->buffer_after_discont = NULL;
-  GST_FLAG_SET (this, GST_TCPCLIENTSRC_OPEN);
 
   /* get the caps if we're using GDP */
   if (this->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
@@ -465,11 +510,13 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
 
       GST_DEBUG_OBJECT (this, "getting caps through GDP");
       if (!(caps = gst_tcp_gdp_read_caps (GST_ELEMENT (this), this->sock_fd))) {
+        gst_tcpclientsrc_close (this);
         GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
             ("Could not read caps through GDP"));
         return FALSE;
       }
       if (!GST_IS_CAPS (caps)) {
+        gst_tcpclientsrc_close (this);
         GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
             ("Could not read caps through GDP"));
         return FALSE;
@@ -483,34 +530,21 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
   return TRUE;
 }
 
-static void
-gst_tcpclientsrc_close (GstTCPClientSrc * this)
-{
-  if (this->sock_fd != -1) {
-    close (this->sock_fd);
-    this->sock_fd = -1;
-  }
-  this->caps_received = FALSE;
-  if (this->caps) {
-    gst_caps_free (this->caps);
-    this->caps = NULL;
-  }
-  GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
-}
-
 static GstElementStateReturn
 gst_tcpclientsrc_change_state (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_TCPCLIENTSRC (element), GST_STATE_FAILURE);
 
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_TCPCLIENTSRC_OPEN))
-      gst_tcpclientsrc_close (GST_TCPCLIENTSRC (element));
-  } else {
-    if (!GST_FLAG_IS_SET (element, GST_TCPCLIENTSRC_OPEN)) {
-      if (!gst_tcpclientsrc_init_receive (GST_TCPCLIENTSRC (element)))
-        return GST_STATE_FAILURE;
-    }
+  /* if open and going to NULL, close it */
+  if (GST_FLAG_IS_SET (element, GST_TCPCLIENTSRC_OPEN) &&
+      GST_STATE_PENDING (element) == GST_STATE_NULL) {
+    gst_tcpclientsrc_close (GST_TCPCLIENTSRC (element));
+  }
+  /* if closed and going to a state higher than NULL, open it */
+  if (!GST_FLAG_IS_SET (element, GST_TCPCLIENTSRC_OPEN) &&
+      GST_STATE_PENDING (element) > GST_STATE_NULL) {
+    if (!gst_tcpclientsrc_init_receive (GST_TCPCLIENTSRC (element)))
+      return GST_STATE_FAILURE;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

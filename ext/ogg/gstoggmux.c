@@ -1013,6 +1013,11 @@ gst_ogg_mux_loop (GstElement * element)
     pad->prev_delta = delta_unit;
 
     /* swap the packet in */
+    if (packet.e_o_s == 1)
+      GST_DEBUG_OBJECT (pad, "swapping in EOS packet");
+    if (packet.b_o_s == 1)
+      GST_DEBUG_OBJECT (pad, "swapping in BOS packet");
+
     ogg_stream_packetin (&pad->stream, &packet);
 
     /* don't need the old buffer anymore */

@@ -85,12 +85,12 @@ enum
   LAST_SIGNAL
 };
 
-/* this is really arbitrary choosen */
+/* this is really arbitrarily chosen */
 #define DEFAULT_PROTOCOL		 GST_TCP_PROTOCOL_TYPE_NONE
 #define DEFAULT_MODE			 GST_FDSET_MODE_POLL
 #define DEFAULT_BUFFERS_MAX		-1
 #define DEFAULT_BUFFERS_SOFT_MAX	-1
-#define DEFAULT_UNIT_TYPE	 	GST_UNIT_TYPE_BUFFERS
+#define DEFAULT_UNIT_TYPE		GST_UNIT_TYPE_BUFFERS
 #define DEFAULT_UNITS_MAX		-1
 #define DEFAULT_UNITS_SOFT_MAX		-1
 #define DEFAULT_RECOVER_POLICY		 GST_RECOVER_POLICY_NONE
@@ -948,6 +948,8 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
   /* if we have streamheader buffers, and haven't sent them to this client
    * yet, send them out one by one */
   if (!client->streamheader_sent) {
+    GST_DEBUG_OBJECT (sink, "[fd %5d] Sending streamheader, %d buffers", fd,
+        g_slist_length (sink->streamheader));
     if (sink->streamheader) {
       GSList *l;
 
@@ -1458,6 +1460,18 @@ gst_multifdsink_chain (GstPad * pad, GstData * _data)
     return;
   }
 
+  GST_LOG_OBJECT (sink, "received buffer %p", buf);
+  /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
+   * it means we're getting new streamheader buffers, and we should clear
+   * the old ones */
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS) &&
+      sink->previous_buffer_in_caps == FALSE) {
+    GST_DEBUG_OBJECT (sink,
+        "receiving new IN_CAPS buffers, clearing old streamheader");
+    g_slist_foreach (sink->streamheader, (GFunc) gst_data_unref, NULL);
+    g_slist_free (sink->streamheader);
+    sink->streamheader = NULL;
+  }
   /* if the incoming buffer is marked as IN CAPS, then we assume for now
    * it's a streamheader that needs to be sent to each new client, so we
    * put it on our internal list of streamheader buffers.
@@ -1465,6 +1479,7 @@ gst_multifdsink_chain (GstPad * pad, GstData * _data)
    * non IN_CAPS buffers so we properly keep track of clients that got
    * streamheaders. */
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS)) {
+    sink->previous_buffer_in_caps = TRUE;
     GST_DEBUG_OBJECT (sink,
         "appending IN_CAPS buffer with length %d to streamheader",
         GST_BUFFER_SIZE (buf));
@@ -1472,6 +1487,7 @@ gst_multifdsink_chain (GstPad * pad, GstData * _data)
     return;
   }
 
+  sink->previous_buffer_in_caps = FALSE;
   /* queue the buffer */
   gst_multifdsink_queue_buffer (sink, buf);
 

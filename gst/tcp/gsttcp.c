@@ -45,7 +45,8 @@ GST_DEBUG_CATEGORY_EXTERN (tcp_debug);
 
 /* resolve host to IP address, throwing errors if it fails */
 /* host can already be an IP address */
-/* returns a newly allocated gchar * with the dotted ip address */
+/* returns a newly allocated gchar * with the dotted ip address,
+   or NULL, in which case it already fired an error. */
 gchar *
 gst_tcp_host_to_ip (GstElement * element, const gchar * host)
 {
@@ -140,9 +141,20 @@ gst_tcp_socket_read (int socket, void *buf, size_t count)
   return bytes_read;
 }
 
+/* close the socket and reset the fd.  Used to clean up after errors. */
+void
+gst_tcp_socket_close (int *socket)
+{
+  close (*socket);
+  *socket = -1;
+}
+
 /* read the gdp buffer header from the given socket
- * returns a GstData,
- * representing the new GstBuffer to read data into, or an EOS event
+ * returns:
+ * - a GstData representing a GstBuffer in which data should be read
+ * - a GstData representing a GstEvent
+ * - NULL, indicating a connection close or an error, to be handled with
+ *         EOS
  */
 GstData *
 gst_tcp_gdp_read_header (GstElement * this, int socket)
@@ -160,10 +172,9 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   ret = gst_tcp_socket_read (socket, header, readsize);
   /* if we read 0 bytes, and we're blocking, we hit eos */
   if (ret == 0) {
-    GST_DEBUG ("blocking read returns 0, EOS");
+    GST_DEBUG ("blocking read returns 0, returning NULL");
     g_free (header);
-    gst_element_set_eos (GST_ELEMENT (this));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return NULL;
   }
   if (ret < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);

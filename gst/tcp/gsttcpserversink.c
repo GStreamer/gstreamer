@@ -218,6 +218,10 @@ gst_tcpserversink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_HOST:
+      if (!g_value_get_string (value)) {
+        g_warning ("host property cannot be NULL");
+        break;
+      }
       g_free (sink->host);
       sink->host = g_strdup (g_value_get_string (value));
       break;
@@ -273,6 +277,7 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
   /* make address reusable */
   if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_REUSEADDR, &ret,
           sizeof (int)) < 0) {
+    gst_tcp_socket_close (&this->server_sock.fd);
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
@@ -280,6 +285,7 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
   /* keep connection alive; avoids SIGPIPE during write */
   if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_KEEPALIVE, &ret,
           sizeof (int)) < 0) {
+    gst_tcp_socket_close (&this->server_sock.fd);
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
@@ -297,6 +303,7 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
       sizeof (this->server_sin));
 
   if (ret) {
+    gst_tcp_socket_close (&this->server_sock.fd);
     switch (errno) {
       default:
         GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
@@ -313,6 +320,7 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
   GST_DEBUG_OBJECT (this, "listening on server socket %d with queue of %d",
       this->server_sock.fd, TCP_BACKLOG);
   if (listen (this->server_sock.fd, TCP_BACKLOG) == -1) {
+    gst_tcp_socket_close (&this->server_sock.fd);
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Could not listen on server socket: %s", g_strerror (errno)));
     return FALSE;

@@ -251,6 +251,10 @@ gst_tcpclientsink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_HOST:
+      if (!g_value_get_string (value)) {
+        g_warning ("host property cannot be NULL");
+        break;
+      }
       g_free (tcpclientsink->host);
       tcpclientsink->host = g_strdup (g_value_get_string (value));
       break;
@@ -317,8 +321,10 @@ gst_tcpclientsink_init_send (GstTCPClientSink * this)
 
   /* look up name if we need to */
   ip = gst_tcp_host_to_ip (GST_ELEMENT (this), this->host);
-  if (!ip)
+  if (!ip) {
+    gst_tcp_socket_close (&this->sock_fd);
     return FALSE;
+  }
   GST_DEBUG_OBJECT (this, "IP address for host %s is %s", this->host, ip);
 
   /* connect to server */
@@ -333,6 +339,7 @@ gst_tcpclientsink_init_send (GstTCPClientSink * this)
       sizeof (this->server_sin));
 
   if (ret) {
+    gst_tcp_socket_close (&this->sock_fd);
     switch (errno) {
       case ECONNREFUSED:
         GST_ELEMENT_ERROR (this, RESOURCE, OPEN_WRITE,

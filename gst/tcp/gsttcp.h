@@ -44,6 +44,8 @@ gchar * gst_tcp_host_to_ip (GstElement *element, const gchar *host);
 gint gst_tcp_socket_write (int socket, const void *buf, size_t count);
 gint gst_tcp_socket_read (int socket, void *buf, size_t count);
 
+void gst_tcp_socket_close (int *socket);
+
 GstData * gst_tcp_gdp_read_header (GstElement *this, int socket);
 GstCaps * gst_tcp_gdp_read_caps (GstElement *this, int socket);
 

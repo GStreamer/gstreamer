@@ -115,7 +115,7 @@ typedef struct {
   guint64 last_activity_time;
   guint64 dropped_buffers;
   guint64 avg_queue_size;
-  
+
 } GstTCPClient;
 
 struct _GstMultiFdSink {
@@ -130,13 +130,15 @@ struct _GstMultiFdSink {
   GMutex *clientslock;	/* lock to protect the clients list */
   GList *clients;	/* list of clients we are serving */
   GHashTable *fd_hash;  /* index on fd to client */
-  
+
   GstFDSetMode mode;
   GstFDSet *fdset;
 
   GstFD control_sock[2];/* sockets for controlling the select call */
 
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
+  gboolean previous_buffer_in_caps;
+
   GstTCPProtocolType protocol;
   guint mtu;
 

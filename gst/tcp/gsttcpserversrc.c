@@ -409,6 +409,10 @@ gst_tcpserversrc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_HOST:
+      if (!g_value_get_string (value)) {
+        g_warning ("host property cannot be NULL");
+        break;
+      }
       g_free (tcpserversrc->host);
       tcpserversrc->host = g_strdup (g_value_get_string (value));
       break;
@@ -483,8 +487,10 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
   if (this->host) {
     gchar *host = gst_tcp_host_to_ip (GST_ELEMENT (this), this->host);
 
-    if (!host)
+    if (!host) {
+      gst_tcp_socket_close (&this->server_sock_fd);
       return FALSE;
+    }
 
     this->server_sin.sin_addr.s_addr = inet_addr (host);
     g_free (host);
@@ -497,6 +503,7 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
       sizeof (this->server_sin));
 
   if (ret) {
+    gst_tcp_socket_close (&this->server_sock_fd);
     switch (errno) {
       default:
         GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
@@ -509,6 +516,7 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
   GST_DEBUG_OBJECT (this, "listening on server socket %d with queue of %d",
       this->server_sock_fd, TCP_BACKLOG);
   if (listen (this->server_sock_fd, TCP_BACKLOG) == -1) {
+    gst_tcp_socket_close (&this->server_sock_fd);
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Could not listen on server socket: %s", g_strerror (errno)));
     return FALSE;
@@ -521,6 +529,7 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
       accept (this->server_sock_fd, (struct sockaddr *) &this->client_sin,
       &this->client_sin_len);
   if (this->client_sock_fd == -1) {
+    gst_tcp_socket_close (&this->server_sock_fd);
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Could not accept client on server socket: %s", g_strerror (errno)));
     return FALSE;
