@@ -661,8 +661,12 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 
     /* create the glib type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
+      g_free (type_name);
       return FALSE;
+    }
+
+    g_free (type_name);
 
     g_hash_table_insert (enc_global_plugins, 
 		         GINT_TO_POINTER (type), 
