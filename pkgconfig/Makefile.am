@@ -23,3 +23,5 @@ EXTRA_DIST = \
 	gstreamer-uninstalled.pc.in \
 	gstreamer-control.pc.in \
 	gstreamer-control-uninstalled.pc.in
+
+CLEANFILES = $(pcfiles) $(pcfiles_uninstalled)
