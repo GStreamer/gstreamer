@@ -480,8 +480,10 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
       GstCaps *caps;
 
+      GST_DEBUG (0, "trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
 
+	gst_caps_debug (caps, "spider typefind caps");
         /* pause the autoplugger */
         if (gst_element_get_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident))) == GST_STATE_PLAYING) {
           gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PAUSED);
