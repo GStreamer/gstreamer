@@ -435,6 +435,7 @@ dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
   GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, , cdda_interface.h, CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
+  AC_SUBST(CDPARANOIA_LIBS)
 ])
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
@@ -914,7 +915,6 @@ AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
 AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
-AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
 AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
@@ -1083,6 +1083,7 @@ ext/aalib/Makefile
 ext/alsa/Makefile
 ext/audiofile/Makefile
 ext/avifile/Makefile
+ext/cdparanoia/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
 ext/lame/Makefile
