@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstmpegparse.h"
 #include "gstmpegdemux.h"
 #include "gstrfc2250enc.h"
