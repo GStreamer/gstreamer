@@ -41,7 +41,7 @@ struct _GstValueTable {
   GstValueSerializeFunc serialize;
   GstValueDeserializeFunc unserialize;
 
-  void *_gst_paddding [GST_PADDING];
+  void *_gst_reserved [GST_PADDING];
 };
 
 
