@@ -37,7 +37,11 @@
 
 typedef struct _GstCaps GstCaps;
 typedef gpointer GstCapsFactoryEntry;
+#ifdef __cplusplus
+typedef GstCapsFactoryEntry * GstCapsFactory;
+#else // C++ was unable to compile with this
 typedef GstCapsFactoryEntry GstCapsFactory[];
+#endif
 
 struct _GstCaps {
   gchar *name;			/* the name of this caps */
@@ -62,7 +66,7 @@ const gchar*	gst_caps_get_mime			(GstCaps *caps);
 void 		gst_caps_set_mime			(GstCaps *caps, const gchar *mime);
 
 guint16 	gst_caps_get_type_id			(GstCaps *caps);
-void 		gst_caps_set_type_id			(GstCaps *caps, guint16 typeid);
+void 		gst_caps_set_type_id			(GstCaps *caps, guint16 /*typeid*/);
 
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);

@@ -26,6 +26,10 @@
 
 #include <gtk/gtk.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 gint 		gst_util_get_int_arg		(GtkObject *object, guchar *argname);
 gboolean	gst_util_get_bool_arg		(GtkObject *object, guchar *argname);
 glong 		gst_util_get_long_arg		(GtkObject *object, guchar *argname);
@@ -36,5 +40,9 @@ gpointer 	gst_util_get_pointer_arg	(GtkObject *object, guchar *argname);
 GtkWidget*	gst_util_get_widget_arg		(GtkObject *object, guchar *argname);
 
 void 		gst_util_dump_mem		(guchar *mem, guint size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __GST_UTILS_H__ */
