@@ -1,3 +1,8 @@
+2004-02-09  Julien MOUTTE <julien@moutte.net>
+
+	* libs/gst/bytestream/bytestream.c: (gst_bytestream_peek): We should
+	not shout that loud when len is 0. Just return 0 silently.
+
 2004-02-09  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstdata.c: (gst_data_ref): Adding a categorized debug on data_ref

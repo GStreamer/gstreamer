@@ -253,7 +253,9 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
 
   g_return_val_if_fail (bs != NULL, 0);
   g_return_val_if_fail (buf != NULL, 0);
-  g_return_val_if_fail (len > 0, 0);
+  
+  if (len == 0)
+    return 0;
 
   GST_DEBUG ("peek: asking for %d bytes", len);
 
