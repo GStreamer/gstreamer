@@ -97,6 +97,7 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
       XShmAttach (ximagesink->xcontext->disp, &ximage->SHMInfo);
     }
   else
+#endif /* HAVE_XSHM */
     {
       ximage->data = g_malloc (ximage->size);
       
@@ -108,17 +109,6 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
                                      ximagesink->xcontext->bpp,
                                      ximage->width * (ximagesink->xcontext->bpp / 8));
     }
-#else
-  ximage->data = g_malloc (ximage->size);
-    
-  ximage->ximage = XCreateImage (ximagesink->xcontext->disp,
-                                 ximagesink->xcontext->visual, 
-                                 ximagesink->xcontext->depth,
-                                 ZPixmap, 0, ximage->data, 
-                                 ximage->width, ximage->height,
-                                 ximagesink->xcontext->bpp,
-                                 ximage->width * (ximagesink->xcontext->bpp / 8));
-#endif /* HAVE_XSHM */
   
   if (ximage->ximage)
     {
@@ -321,11 +311,11 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                 r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink),
                                           GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
                                                        "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
-                                                       "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
-                                                       "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
-                                                       "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
-                                                       "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
-                                                       "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
+                                                       //"depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
+                                                       "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+                                                       "red_mask",   GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->red_mask)),
+                                                       "green_mask", GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->green_mask)),
+                                                       "blue_mask",  GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->blue_mask)),
                                                        "width",      GST_PROPS_INT (e.xconfigure.width),
                                                        "height",     GST_PROPS_INT (e.xconfigure.height),
                                                        "framerate",  GST_PROPS_FLOAT (ximagesink->framerate)));
@@ -450,7 +440,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     
   XFree (px_formats);
     
-  xcontext->endianness = (ImageByteOrder (xcontext->disp) == LSBFirst) ? G_LITTLE_ENDIAN:G_BIG_ENDIAN;
+  xcontext->endianness = (ImageByteOrder (xcontext->disp) == LSBFirst) ? G_BIG_ENDIAN:G_BIG_ENDIAN;
   
 #ifdef HAVE_XSHM
   /* Search for XShm extension support */
@@ -466,25 +456,18 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     }
 #endif /* HAVE_XSHM */
   
-  if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24)
-    {
-      xcontext->endianness = G_BIG_ENDIAN;
-      xcontext->visual->red_mask = GUINT32_SWAP_LE_BE (xcontext->visual->red_mask);
-      xcontext->visual->green_mask = GUINT32_SWAP_LE_BE (xcontext->visual->green_mask);
-      xcontext->visual->blue_mask = GUINT32_SWAP_LE_BE (xcontext->visual->blue_mask);
-    }
-    
   xcontext->caps = GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
       "bpp",        GST_PROPS_INT (xcontext->bpp),
-      "depth",      GST_PROPS_INT (xcontext->depth),
-      "endianness", GST_PROPS_INT (xcontext->endianness),
-      "red_mask",   GST_PROPS_INT (xcontext->visual->red_mask),
-      "green_mask", GST_PROPS_INT (xcontext->visual->green_mask),
-      "blue_mask",  GST_PROPS_INT (xcontext->visual->blue_mask),
+      //"depth",      GST_PROPS_INT (xcontext->depth),
+      "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+      "red_mask",   GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->red_mask)),
+      "green_mask", GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->green_mask)),
+      "blue_mask",  GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->blue_mask)),
       "width",      GST_PROPS_INT_RANGE (0, G_MAXINT),
       "height",     GST_PROPS_INT_RANGE (0, G_MAXINT),
       "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
  
+  g_print ("%s\n", gst_caps_to_string (xcontext->caps));
   g_mutex_unlock (ximagesink->x_lock);
   
   /* We make this caps non floating. This way we keep it during our whole life */
@@ -535,6 +518,8 @@ static GstPadLinkReturn
 gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstXImageSink *ximagesink;
+  gint check;
+  G_GNUC_UNUSED gchar *str;
 
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
 
@@ -546,9 +531,28 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!ximagesink->xcontext)
     return GST_PAD_LINK_DELAYED;
   
+  str = gst_caps_to_string(ximagesink->xcontext->caps);
+  g_print ("%s\n", str);
   GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps),
-             gst_caps_to_string(ximagesink->xcontext->caps));
-  
+             str);
+  g_free (str);
+  if (!gst_caps_get_int (caps, "blue_mask", &check) ||
+      check != GINT_FROM_BE (ximagesink->xcontext->visual->blue_mask))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_int (caps, "green_mask", &check) ||
+      check != GINT_FROM_BE (ximagesink->xcontext->visual->green_mask))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_int (caps, "red_mask", &check) ||
+      check != GINT_FROM_BE (ximagesink->xcontext->visual->red_mask))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_int (caps, "bpp", &check) ||
+      check != ximagesink->xcontext->bpp)
+    return GST_PAD_LINK_REFUSED;
+  /* disable, because bpp check is enough
+  if (!gst_caps_get_int (caps, "depth", &check) ||
+      check != ximagesink->xcontext->depth)
+    return GST_PAD_LINK_REFUSED;
+    */
   if (!gst_caps_get_int (caps, "width", &(GST_VIDEOSINK_WIDTH (ximagesink))))
     return GST_PAD_LINK_REFUSED;
   if (!gst_caps_get_int (caps, "height", &(GST_VIDEOSINK_HEIGHT (ximagesink))))
