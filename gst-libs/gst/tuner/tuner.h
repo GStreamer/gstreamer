@@ -106,7 +106,7 @@ gint		gst_tuner_signal_strength	(GstTuner        *tuner,
 /* helper functions */
 GstTunerNorm *	gst_tuner_find_norm_by_name	(GstTuner	 *tuner,
 						 gchar		 *norm);
-GstTunerChannel * gst_tuner_find_channel_by_name(GstTuner	 *tuner,
+GstTunerChannel *gst_tuner_find_channel_by_name (GstTuner	 *tuner,
 						 gchar		 *channel);
 
 /* trigger signals */
