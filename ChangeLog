@@ -1,3 +1,8 @@
+2005-01-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
+	  Fix typo (intiate -> initiate).
+
 2005-01-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/random/bbb/streamselection:

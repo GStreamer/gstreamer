@@ -288,7 +288,7 @@ init_factories (void)
       (which we've seen before in <xref linkend="section-pads-dynamic"/>),
       we will listen for newly created source pads and handle those, too.
       The following code replaces the <function>cb_type_found</function>
-      from the previous section with a function to intiate autoplugging,
+      from the previous section with a function to initiate autoplugging,
       which will continue with the above approach.
     </para>
     <programlisting><!-- example-begin dynamic.c c -->
