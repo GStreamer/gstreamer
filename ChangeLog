@@ -1,3 +1,18 @@
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/ext/ffmpeg/.pc/autotools/.pc:
+	* gst-libs/ext/ffmpeg/.pc/no-imlib/configure.ac:
+	* gst-libs/ext/ffmpeg/.pc/noinst-programs/Makefile.am:
+	* gst-libs/ext/ffmpeg/autogen.sh:
+	* gst-libs/ext/ffmpeg/configure:
+	* gst-libs/ext/ffmpeg/configure.ac:
+	* gst-libs/ext/ffmpeg/doc/.cvsignore:
+	* gst-libs/ext/ffmpeg/libavcodec/i386/.cvsignore:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+	* gst-libs/ext/ffmpeg/patches/no-imlib.patch:
+          fixing Makefile.am omission in autotools patch
+          fix noinst-programs.patch
+
 2004-03-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
