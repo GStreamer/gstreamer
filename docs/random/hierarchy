@@ -7,7 +7,7 @@ better layout for it now. Some things to consider:
 
  - Elements have a klass member in the factory that is used to
    denote the functional type of the element. For example, the
-   mp3 encoder has a klass of Filter/Encoder/Audio
+   mp3 encoder has a klass of Codec/Encoder/Audio
    
  - The plugins can be grouped together by the media type they
    operate on or by the way they work (decoder/encoder)

@@ -103,7 +103,7 @@ Container formats
     Parser: asfdemux
     Formatter: asfmux
 
-5 - WAV (PCM)
+5 - WAV (Microsoft RIFF/WAV)
     MIME type: audio/x-wav
     Properties:
     Parser: wavparse
