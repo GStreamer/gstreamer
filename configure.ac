@@ -1090,7 +1090,10 @@ GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
 GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
- AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
+  dnl sdlvideosink depends on the xoverlay interface, which depends on X
+  if test x$HAVE_X = xyes; then
+    AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
+  fi
 ])
 
 dnl *** shout ***
