@@ -138,7 +138,8 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
 {
   gboolean found = FALSE;
   GstElement *typefind;
-  guint16 type_id = 0;
+  GstCaps *caps = NULL;
+  guint type_id = 0;
 
   g_print("GstPipeline: typefind for element \"%s\" %p\n", 
 		  gst_element_get_name(element), &found);
@@ -155,7 +156,6 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   gst_bin_add (GST_BIN (pipeline), typefind);
 
   gst_bin_create_plan (GST_BIN (pipeline));
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   // keep pushing buffers... the have_type signal handler will set the found flag
@@ -166,11 +166,11 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
   if (found) {
-    GstType *type;
-    type_id = gst_util_get_int_arg (GTK_OBJECT (typefind), "type");
-    type = gst_type_find_by_id (type_id);
+    caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
     
-    gst_pad_set_caps (gst_element_get_pad (element, "src"), gst_caps_new (type->mime));
+    gst_pad_set_caps (gst_element_get_pad (element, "src"), caps);
+
+    type_id = caps->id;
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -196,16 +196,38 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 
     // if we have a match, connect the pads
     if (sinkpad->direction == GST_PAD_SINK && 
-        !GST_PAD_CONNECTED(sinkpad) &&
-	gst_caps_check_compatibility (pad->caps, sinkpad->caps)) 
+        !GST_PAD_CONNECTED(sinkpad)) 
     {
-      gst_pad_connect(pad, sinkpad);
-      g_print("gstpipeline: autoconnect pad \"%s\" in element %s <-> ", pad->name, 
+      if (gst_caps_check_compatibility (pad->caps, sinkpad->caps)) {
+        gst_pad_connect(pad, sinkpad);
+        g_print("gstpipeline: autoconnect pad \"%s\" in element %s <-> ", pad->name, 
 		       gst_element_get_name(src));
-      g_print("pad \"%s\" in element %s\n", sinkpad->name,  
+        g_print("pad \"%s\" in element %s\n", sinkpad->name,  
 		      gst_element_get_name(sink));
-      connected = TRUE;
-      break;
+        connected = TRUE;
+        break;
+      }
+      else {
+	GList *factories;
+        g_print("gstpipeline: not compatible, find intermediate element\n");
+
+	factories = gst_type_get_sink_to_src (pad->caps->id, sinkpad->caps->id);
+
+	while (factories) {
+          GstElementFactory *factory = (GstElementFactory *)factories->data;
+          GstElement *element = gst_elementfactory_create (factory, factory->name);
+
+	  g_print ("gstpipeline: trying element \"%s\"\n", element->name);
+
+	  if (gst_pipeline_pads_autoplug_func (src, pad, element)) {
+	    if (gst_pipeline_pads_autoplug_func (element, gst_element_get_pad (element, "src"), sink)) {
+	      gst_bin_add (gst_object_get_parent (GST_OBJECT(sink)), element);
+              return TRUE;
+	    }
+	  }
+	  factories = g_list_next (factories);
+	}
+      }
     }
     sinkpads = g_list_next(sinkpads);
   }

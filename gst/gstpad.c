@@ -626,6 +626,8 @@ gst_pad_connect (GstPad *srcpad,
     else
       g_print ("gstpad: connecting compatible pads\n");
   }
+  else
+    g_print ("gstpad: could not check capabilities of pads\n");
 
   /* first set peers */
   srcpad->peer = sinkpad;

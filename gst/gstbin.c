@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GST_DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
 
 #include "gstbin.h"
 #include "gstdebug.h"
@@ -592,7 +592,6 @@ gst_bin_src_wrapper (int argc,char *argv[])
   return 0;
 }
 
-/*
 static void 
 gst_bin_pullregionfunc_proxy (GstPad *pad, 
 				gulong offset, 

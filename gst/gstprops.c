@@ -103,12 +103,14 @@ gst_props_register (GstPropsFactory factory)
   
   g_return_val_if_fail (factory != NULL, NULL);
 
+  tag = factory[i++];
+
+  if (!tag) return NULL;
+
   props = g_new0 (GstProps, 1);
   g_return_val_if_fail (props != NULL, NULL);
 
   props->properties = NULL;
-
-  tag = factory[i++];
   
   while (tag) {
     GQuark quark;

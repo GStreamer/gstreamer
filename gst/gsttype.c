@@ -50,7 +50,7 @@ struct _gst_type_node
 
 typedef struct _gst_type_node gst_type_node;
 
-static gboolean 	gst_type_typefind_dummy		(GstBuffer *buffer, gpointer priv);
+static GstCaps* 	gst_type_typefind_dummy		(GstBuffer *buffer, gpointer priv);
 
 /* we keep a (spase) matrix in the hashtable like:
  *
@@ -538,6 +538,14 @@ gst_type_find_cost (gint src, gint dest)
   return MAX_COST;
 }
 
+static GList* 
+gst_type_find_identity (gint typeid) 
+{
+  GstType *type = gst_type_find_by_id (typeid);
+
+  return (GList *)g_hash_table_lookup (type->converters, GUINT_TO_POINTER (typeid));
+}
+
 /**
  * gst_type_get_sink_to_src:
  * @sinkid: the id of the sink
@@ -558,7 +566,7 @@ gst_type_get_sink_to_src (guint16 sinkid, guint16 srcid)
   g_print ("gsttype: find %d to %d\n", srcid, sinkid);
   if (sinkid == srcid) {
     //FIXME return an identity element
-    return NULL;
+    return gst_type_find_identity (sinkid);
   }
   else {
     rgnNodes = g_malloc (sizeof (gst_type_node) * _gst_maxtype);
@@ -680,7 +688,7 @@ gst_typefactory_save_thyself (GstTypeFactory *factory, xmlNodePtr parent)
   return parent;
 }
 
-static gboolean 
+static GstCaps * 
 gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
 {
   GstType *type = (GstType *)priv;
@@ -700,7 +708,8 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
     GstTypeFindFunc func = (GstTypeFindFunc) funcs->data;
 
     if (func) {
-       if (func (buffer, type)) return TRUE;
+       GstCaps *res = func (buffer, type);
+       if (res) return res;
     }
 
     funcs = g_slist_next (funcs);

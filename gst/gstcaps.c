@@ -22,6 +22,7 @@
 #include "gstcaps.h"
 #include "gsttype.h"
 
+#include "gstpropsprivate.h"
 void 
 _gst_caps_initialize (void) 
 {
@@ -62,6 +63,7 @@ gst_caps_new (gchar *mime)
   
   caps = g_new0 (GstCaps, 1);
   caps->id = get_type_for_mime (mime);
+  caps->properties = NULL;
   
   return caps;
 }
@@ -118,10 +120,22 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   if (fromcaps->id != tocaps->id)
     return FALSE;
 
-  if (fromcaps->properties && tocaps->properties) {
-    return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
+  if (tocaps->properties) {
+    GstPropsEntry *entry = (GstPropsEntry *)tocaps->properties;
+
+    if (fromcaps->properties) {
+      return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
+    }
+    else {
+      g_print ("gstcaps: no source caps\n");
+      return FALSE;
+    }
   }
-  else return TRUE;
+  else {
+    // assume it accepts everything
+    g_print ("gstcaps: no caps\n");
+    return TRUE;
+  }
 }
 
 

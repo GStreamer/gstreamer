@@ -27,7 +27,7 @@
 
 
 /* type of function used to check a stream for equality with type */
-typedef gboolean (*GstTypeFindFunc) (GstBuffer *buf,gpointer priv);
+typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf,gpointer priv);
 
 typedef struct _GstType GstType;
 typedef struct _GstTypeFactory GstTypeFactory;
