@@ -1,3 +1,9 @@
+2004-08-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/lame/gstlame.c: (gst_lame_vbrmode_get_type),
+	(gst_lame_preset_get_type), (gst_lame_class_init):
+	describe the enum values for vbr mode and presets more verbosely
+
 2004-08-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_mode_get_type),
