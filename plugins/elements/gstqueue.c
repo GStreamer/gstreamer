@@ -251,7 +251,7 @@ gst_queue_dispose (GObject *object)
 {
   GstQueue *queue = GST_QUEUE (object);
 
-  gst_queue_locked_flush (queue);
+  gst_element_set_state (GST_ELEMENT (queue), GST_STATE_NULL);
 
   g_mutex_free (queue->qlock);
   g_cond_free (queue->not_empty);
