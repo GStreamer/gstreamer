@@ -281,7 +281,7 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
       break;
     case ARG_FILTERLEN:
       r->filter_length = g_value_get_int (value);
-      g_print ("new filter length %d\n", r->filter_length);
+      GST_DEBUG_ELEMENT (0, GST_ELEMENT(src), "new filter length %d\n", r->filter_length);
       break;
     case ARG_METHOD:
       r->method = g_value_get_enum (value);

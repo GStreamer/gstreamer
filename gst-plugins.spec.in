@@ -126,7 +126,7 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/video/video.h
 %{_includedir}/gst-plugins-%{version}/gst/play/play.h
 %{_libdir}/libgstplay.so
-%{_libdir}/libgstplay.a
+#%{_libdir}/libgstplay.a
 %{_datadir}/aclocal/gst-element-check.m4
 %{_libdir}/pkgconfig/gstreamer-libs.pc
 %{_libdir}/pkgconfig/gstreamer-play.pc
@@ -151,11 +151,11 @@ GStreamer support libraries header files.
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%post -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_A52DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_A52DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%postun -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_A52DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_A52DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### AALIB ###
 @USE_AALIB_TRUE@%package -n gstreamer-aalib
@@ -174,11 +174,11 @@ GStreamer support libraries header files.
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%post -n gstreamer-aalib
 @USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AALIB_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%postun -n gstreamer-aalib
 @USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AALIB_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AALIB_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ALSA ###
 @USE_ALSA_TRUE@%package -n gstreamer-alsa
@@ -197,11 +197,11 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
 @USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ALSA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ALSA_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%postun -n gstreamer-alsa
 @USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ALSA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ALSA_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ARTS WRAPPER ###
 @USE_ARTS_TRUE@%package -n gstreamer-arts
@@ -221,11 +221,11 @@ GStreamer support libraries header files.
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%post -n gstreamer-arts
 @USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ARTS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ARTS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%postun -n gstreamer-arts
 @USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ARTS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ARTS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ARTSD SOUND SERVER ###
 @USE_ARTSC_TRUE@%package -n gstreamer-artsd
@@ -242,11 +242,11 @@ GStreamer support libraries header files.
 @USE_ARTSC_TRUE@
 @USE_ARTSC_TRUE@%post -n gstreamer-artsd
 @USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ARTSC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ARTSC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_ARTSC_TRUE@
 @USE_ARTSC_TRUE@%postun -n gstreamer-artsd
 @USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ARTSC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ARTSC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SWFDEC FLASH PLUGIN ###
 @USE_SWFDEC_TRUE@%package -n gstreamer-swfdec
@@ -264,11 +264,11 @@ GStreamer support libraries header files.
 @USE_SWFDEC_TRUE@
 @USE_SWFDEC_TRUE@%post -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SWFDEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SWFDEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_SWFDEC_TRUE@
 @USE_SWFDEC_TRUE@%postun -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SWFDEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SWFDEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 
 ### AUDIOFILE ###
@@ -288,11 +288,11 @@ GStreamer support libraries header files.
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AUDIOFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AUDIOFILE_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%postun -n  gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AUDIOFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AUDIOFILE_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### AVI ###
 %package -n gstreamer-avi
@@ -311,11 +311,11 @@ Plug-ins for playback of AVI format media files.
 
 %post -n gstreamer-avi
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-avi
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### Windec ###
 @USE_AVIFILE_TRUE@%package -n gstreamer-windec
@@ -335,11 +335,11 @@ Plug-ins for playback of AVI format media files.
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%post -n gstreamer-windec
 @USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AVIFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AVIFILE_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%postun -n gstreamer-windec
 @USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AVIFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_AVIFILE_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### CDPARANOIA ###
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
@@ -358,11 +358,11 @@ Plug-ins for playback of AVI format media files.
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_CDPARANOIA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_CDPARANOIA_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%postun -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_CDPARANOIA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_CDPARANOIA_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### DVDREAD ###
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvdread
@@ -374,21 +374,43 @@ Plug-ins for playback of AVI format media files.
 @USE_DVDREAD_TRUE@Obsoletes:     gstreamer-libdvd
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%description -n gstreamer-libdvdread
-@USE_DVDREAD_TRUE@Plug-in for reading DVDs using libdvdread and libdvdnav 
-@USE_DVDREAD_TRUE@under GStreamer.
+@USE_DVDREAD_TRUE@Plug-in for reading DVDs using libdvdread under GStreamer.
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%files -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%defattr(-, root, root)
 @USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdreadsrc.so
-@USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdnavsrc.so
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%post -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_DVDREAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DVDREAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%postun -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_DVDREAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DVDREAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+### DVDNAV ###
+@USE_DVDNAV_TRUE@%package -n gstreamer-libdvdnav
+@USE_DVDNAV_TRUE@Summary:       GStreamer plug-in for DVD playback.
+@USE_DVDNAV_TRUE@Group:         Libraries/Multimedia
+@USE_DVDNAV_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_DVDNAV_TRUE@Requires:      libdvdnav >= 0.1.3
+@USE_DVDNAV_TRUE@BuildRequires: libdvdnav-devel >= 0.1.3
+@USE_DVDNAV_TRUE@Obsoletes:     gstreamer-libdvd
+@USE_DVDNAV_TRUE@
+@USE_DVDNAV_TRUE@%description -n gstreamer-libdvdnav
+@USE_DVDNAV_TRUE@Plug-in for reading DVDs using libdvdnav  under GStreamer.
+@USE_DVDNAV_TRUE@
+@USE_DVDNAV_TRUE@%files -n gstreamer-libdvdnav
+@USE_DVDNAV_TRUE@%defattr(-, root, root)
+@USE_DVDNAV_TRUE@%{_libdir}/gst/libgstdvdnavsrc.so
+@USE_DVDNAV_TRUE@
+@USE_DVDNAV_TRUE@%post -n gstreamer-libdvdnav
+@USE_DVDNAV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_DVDNAV_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DVDNAV_TRUE@
+@USE_DVDNAV_TRUE@%postun -n gstreamer-libdvdnav
+@USE_DVDNAV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_DVDNAV_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ## DXR3 ###
 @USE_DXR3_TRUE@%package -n gstreamer-dxr3
@@ -409,11 +431,11 @@ Plug-ins for playback of AVI format media files.
 @USE_DXR3_TRUE@
 @USE_DXR3_TRUE@%post -n gstreamer-dxr3
 @USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_DXR3_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DXR3_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_DXR3_TRUE@
 @USE_DXR3_TRUE@%postun -n gstreamer-dxr3
 @USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_DXR3_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_DXR3_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### ESD ###
 @USE_ESD_TRUE@%package -n gstreamer-esound
@@ -434,11 +456,11 @@ Plug-ins for playback of AVI format media files.
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%post -n gstreamer-esound
 @USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ESD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ESD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%postun -n gstreamer-esound
 @USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_ESD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_ESD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### FLAC ###
 @USE_FLAC_TRUE@%package -n gstreamer-flac
@@ -457,11 +479,11 @@ Plug-ins for playback of AVI format media files.
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%post -n gstreamer-flac
 @USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_FLAC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_FLAC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%postun -n gstreamer-flac
 @USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_FLAC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_FLAC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### GNOME VFS 2 ###
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
@@ -481,11 +503,11 @@ Plug-ins for playback of AVI format media files.
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_GNOME_VFS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_GNOME_VFS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%postun -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_GNOME_VFS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_GNOME_VFS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### GSM ###
 @USE_GSM_TRUE@%package -n gstreamer-gsm
@@ -504,11 +526,11 @@ Plug-ins for playback of AVI format media files.
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%post -n gstreamer-gsm
 @USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_GSM_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_GSM_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%postun -n gstreamer-gsm
 @USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_GSM_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_GSM_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### HERMES ###
 @USE_HERMES_TRUE@%package -n gstreamer-colorspace
@@ -526,11 +548,11 @@ Plug-ins for playback of AVI format media files.
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-colorspace
 @USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_HERMES_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%postun -n gstreamer-colorspace
 @USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_HERMES_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### HTTP ###
 @USE_HTTP_TRUE@%package -n gstreamer-httpsrc
@@ -550,11 +572,11 @@ Plug-ins for playback of AVI format media files.
 @USE_HTTP_TRUE@
 @USE_HTTP_TRUE@%post -n gstreamer-httpsrc
 @USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_HTTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HTTP_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_HTTP_TRUE@
 @USE_HTTP_TRUE@%postun -n gstreamer-httpsrc
 @USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_HTTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HTTP_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 #### JACK AUDIO CONNECTION KIT ###
 @USE_JACK_TRUE@%package -n gstreamer-jack
@@ -572,11 +594,11 @@ Plug-ins for playback of AVI format media files.
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@%post -n gstreamer-jack
 @USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_JACK_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_JACK_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@%postun -n gstreamer-jack
 @USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_JACK_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_JACK_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### JPEG ###
 @USE_JPEG_TRUE@%package -n gstreamer-jpeg
@@ -595,11 +617,11 @@ Plug-ins for playback of AVI format media files.
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%post -n gstreamer-jpeg
 @USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_JPEG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_JPEG_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%postun -n gstreamer-jpeg
 @USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_JPEG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_JPEG_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### LADSPA ###
 @USE_LADSPA_TRUE@%package -n gstreamer-ladspa
@@ -620,11 +642,11 @@ Plug-ins for playback of AVI format media files.
 @USE_LADSPA_TRUE@
 @USE_LADSPA_TRUE@%post -n gstreamer-ladspa
 @USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LADSPA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LADSPA_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_LADSPA_TRUE@
 @USE_LADSPA_TRUE@%postun -n gstreamer-ladspa
 @USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LADSPA_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LADSPA_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### LAME ###
 @USE_LAME_TRUE@%package -n gstreamer-lame
@@ -643,11 +665,11 @@ Plug-ins for playback of AVI format media files.
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%post -n gstreamer-lame
 @USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LAME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%postun -n gstreamer-lame
 @USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LAME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### LIBDV ###
 @USE_LIBDV_TRUE@%package -n gstreamer-dv
@@ -666,11 +688,11 @@ Plug-ins for playback of AVI format media files.
 @USE_LIBDV_TRUE@
 @USE_LIBDV_TRUE@%post -n gstreamer-dv
 @USE_LIBDV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LIBDV_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBDV_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_LIBDV_TRUE@
 @USE_LIBDV_TRUE@%postun -n gstreamer-dv
 @USE_LIBDV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LIBDV_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBDV_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 
 ### LIBFAME ###
@@ -690,11 +712,11 @@ Plug-ins for playback of AVI format media files.
 @USE_LIBFAME_TRUE@
 @USE_LIBFAME_TRUE@%post -n gstreamer-libfame
 @USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LIBFAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBFAME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_LIBFAME_TRUE@
 @USE_LIBFAME_TRUE@%postun -n gstreamer-libfame
 @USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LIBFAME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBFAME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
@@ -714,11 +736,11 @@ Plug-ins for playback of AVI format media files.
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%post -n gstreamer-mad
 @USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%postun -n gstreamer-mad
 @USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MAD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MIKMOD ###
 @USE_MIKMOD_TRUE@%package -n gstreamer-mikmod
@@ -737,11 +759,11 @@ Plug-ins for playback of AVI format media files.
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MIKMOD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MIKMOD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%postun -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MIKMOD_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MIKMOD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MJPEGTOOLS ###
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
@@ -761,11 +783,11 @@ Plug-ins for playback of AVI format media files.
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MJPEGTOOLS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%postun -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MJPEGTOOLS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### MPEG2DEC ###
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg
@@ -797,11 +819,11 @@ Plug-ins for playback of AVI format media files.
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MPEG2DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MPEG2DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%postun -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_MPEG2DEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_MPEG2DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### OPENQUICKTIME ###
 @USE_OPENQUICKTIME_TRUE@%package -n gstreamer-openquicktime
@@ -824,11 +846,11 @@ Plug-ins for playback of AVI format media files.
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_OPENQUICKTIME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%postun -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_OPENQUICKTIME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### OSS ###
 @USE_OSS_TRUE@%package -n gstreamer-oss
@@ -849,11 +871,11 @@ Plug-ins for playback of AVI format media files.
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%post -n gstreamer-oss
 @USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_OSS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_OSS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%postun -n gstreamer-oss
 @USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_OSS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_OSS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### RAW1394 ###
 @USE_RAW1394_TRUE@%package -n gstreamer-raw1394
@@ -872,11 +894,11 @@ Plug-ins for playback of AVI format media files.
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%post -n gstreamer-raw1394
 @USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_RAW1394_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_RAW1394_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%postun -n gstreamer-raw1394
 @USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_RAW1394_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_RAW1394_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### RTP ###
 @USE_RTP_TRUE@%package -n gstreamer-rtp
@@ -894,11 +916,11 @@ Plug-ins for playback of AVI format media files.
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%post -n gstreamer-rtp
 @USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_RTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_RTP_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%postun -n gstreamer-rtp
 @USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_RTP_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_RTP_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SIDPLAY ###
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
@@ -917,11 +939,11 @@ Plug-ins for playback of AVI format media files.
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%post -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SIDPLAY_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SIDPLAY_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%postun -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SIDPLAY_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SIDPLAY_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SDL ###
 @USE_SDL_TRUE@%package -n gstreamer-SDL
@@ -946,11 +968,11 @@ Plug-ins for playback of AVI format media files.
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%post -n gstreamer-SDL
 @USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SDL_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SDL_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%postun -n gstreamer-SDL
 @USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SDL_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SDL_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SHOUT ###
 @USE_SHOUT_TRUE@%package -n gstreamer-icecast
@@ -969,11 +991,11 @@ Plug-ins for playback of AVI format media files.
 @USE_SHOUT_TRUE@
 @USE_SHOUT_TRUE@%post -n gstreamer-icecast
 @USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SHOUT_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SHOUT_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_SHOUT_TRUE@
 @USE_SHOUT_TRUE@%postun -n gstreamer-icecast
 @USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_SHOUT_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SHOUT_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### VORBIS ###
 @USE_VORBIS_TRUE@%package -n gstreamer-vorbis
@@ -994,11 +1016,11 @@ Plug-ins for playback of AVI format media files.
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%post -n gstreamer-vorbis
 @USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_VORBIS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_VORBIS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%postun -n gstreamer-vorbis
 @USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_VORBIS_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_VORBIS_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### VIDEO 4 LINUX ###
 @USE_V4L_TRUE@%package -n gstreamer-v4l
@@ -1019,11 +1041,11 @@ Plug-ins for playback of AVI format media files.
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%post -n gstreamer-v4l
 @USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_V4L_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_V4L_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%postun -n gstreamer-v4l
 @USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_V4L_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_V4L_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### VIDEO 4 LINUX 2 ###
 @USE_V4L2_TRUE@%package -n gstreamer-v4l2
@@ -1042,11 +1064,11 @@ Plug-ins for playback of AVI format media files.
 @USE_V4L2_TRUE@
 @USE_V4L2_TRUE@%post -n gstreamer-v4l2
 @USE_V4L2_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_V4L2_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_V4L2_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_V4L2_TRUE@
 @USE_V4L2_TRUE@%postun -n gstreamer-v4l2
 @USE_V4L2_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_V4L2_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_V4L2_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 
 ### XVIDEO ###
@@ -1064,11 +1086,11 @@ Plug-ins for playback of AVI format media files.
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%postun -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 @USE_XVIDEO_TRUE@%package -n gstreamer-videosink
 @USE_XVIDEO_TRUE@Summary:       GStreamer Video Sink
@@ -1086,11 +1108,11 @@ Plug-ins for playback of AVI format media files.
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%post -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%postun -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_XVIDEO_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVIDEO_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### packages without external dependencies ###
 
@@ -1132,11 +1154,11 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 
 %post -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### audio-formats ###
 %package -n gstreamer-audio-formats
@@ -1158,11 +1180,11 @@ Plug-in for playback of wav, au and mod audio files as well as mp3 type.
 
 %post -n gstreamer-audio-formats
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-audio-formats
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### festival ###
 %package -n gstreamer-festival
@@ -1179,11 +1201,11 @@ Plug-in for text-to-speech using the festival server.
 
 %post -n gstreamer-festival
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-festival
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### flx ###
 %package -n gstreamer-flx
@@ -1200,11 +1222,11 @@ Plug-in for playing FLI/FLX animations under GStreamer.
 
 %post -n gstreamer-flx
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-flx
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### qcam ###
 %package -n gstreamer-qcam
@@ -1221,11 +1243,11 @@ Plug-in for accessing a Quickcam video source.
 
 %post -n gstreamer-qcam
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-qcam
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### udp ###
 %package -n gstreamer-udp
@@ -1242,11 +1264,11 @@ Plug-ins for UDP transport under GStreamer.
 
 %post -n gstreamer-udp
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-udp
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### vcd ###
 %package -n gstreamer-vcd
@@ -1264,11 +1286,11 @@ Video CD parsing and playback plug-in for GStreamer.
 
 %post -n gstreamer-vcd
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-vcd
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### video-effects ###
 %package -n gstreamer-video-effects
@@ -1290,14 +1312,15 @@ plug-ins.
 %{_libdir}/gst/libgstrtjpeg.so
 %{_libdir}/gst/libgstvideocrop.so
 %{_libdir}/gst/libgstvideoscale.so
+%{_libdir}/gst/libgstsmpte.so
 
 %post -n gstreamer-video-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-video-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### visualisation ###
 %package -n gstreamer-visualisation
@@ -1322,11 +1345,11 @@ and vumeter.
 
 %post -n gstreamer-visualisation
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-visualisation
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### yuv4mjpeg ###
 %package -n gstreamer-yuv4mjpeg
@@ -1345,11 +1368,11 @@ processed with the lavtools from mjpegtools.
 
 %post -n gstreamer-yuv4mjpeg
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-yuv4mjpeg
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 # cdplayer
 %package -n gstreamer-cdplayer
@@ -1366,11 +1389,11 @@ Lets you get sound from audio cd's using GStreamer
 
 %post -n gstreamer-cdplayer
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-cdplayer
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 # Videotest plugin
 %package -n gstreamer-videotest
@@ -1387,32 +1410,35 @@ This plugin provides a videotest plugin. This plugin can be used to generate a v
 
 %post -n gstreamer-videotest
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-videotest
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 # Snapshot plugin
-@USE_LIBPNG_TRUE@%package -n gstreamer-snapshot
-@USE_LIBPNG_TRUE@Summary:        GStreamer plug-in for grabbing images from videostreams
-@USE_LIBPNG_TRUE@Group:          Libraries/Multimedia
-@USE_LIBPNG_TRUE@Requires:       gstreamer-plugins = %{version}
-@USE_LIBPNG_TRUE@
-@USE_LIBPNG_TRUE@%description -n gstreamer-snapshot
-@USE_LIBPNG_TRUE@This plugin grabs images from videostreams and saves them as PNG format images.
-@USE_LIBPNG_TRUE@
-@USE_LIBPNG_TRUE@%files -n gstreamer-snapshot
-@USE_LIBPNG_TRUE@%defattr(-, root, root)
-@USE_LIBPNG_TRUE@%{_libdir}/gst/libgstsnapshot.so
-@USE_LIBPNG_TRUE@
-@USE_LIBPNG_TRUE@%post -n gstreamer-snapshot
-@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LIBPNG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
-@USE_LIBPNG_TRUE@
-@USE_LIBPNG_TRUE@%postun -n gstreamer-snapshot
-@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_LIBPNG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%package -n gstreamer-snapshot
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Summary:        GStreamer plug-in for grabbing images from videostreams
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Group:          Libraries/Multimedia
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:       gstreamer-plugins = %{version}
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%description -n gstreamer-snapshot
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@This plugin grabs images from videostreams and saves them as PNG format images.
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:	libpng
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:	gstreamer-colorspace = %{version}
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@BuildRequires:	libpng-devel
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%files -n gstreamer-snapshot
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%defattr(-, root, root)
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_libdir}/gst/libgstsnapshot.so
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%post -n gstreamer-snapshot
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%postun -n gstreamer-snapshot
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 # Dependency free Quicktime demuxer
 %package -n gstreamer-quicktime
@@ -1429,11 +1455,11 @@ Plug-in for demuxing Quicktime movies
 
 %post -n gstreamer-quicktime
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 %postun -n gstreamer-quicktime
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 # package supporting GConf
 @USE_GCONF_TRUE@%package -n gstreamer-GConf
@@ -1479,6 +1505,14 @@ This package contains a basic audio and video playback library.
 
 #
 %changelog
+* Fri Nov 01 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- don't use compprep until ABI issues can be fixed
+
+* Wed Oct 30 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- added smpte plugin
+- split out dvdnavread package
+- fixed snapshot deps and added hermes conditionals
+
 * Tue Oct 29 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - added -play package, libs, and .pc files
 
