@@ -206,12 +206,12 @@ main (int   argc,
   /* create element, method #2 */
   factory = gst_element_factory_find ("fakesrc");
   if (!factory) {
-    g_print ("Failed to find fctory of type 'fakesrc'\n");
+    g_print ("Failed to find factory of type 'fakesrc'\n");
     return -1;
   }
   element = gst_element_factory_create (factory, "source");
   if (!element) {
-    g_print ("Failed to create element, even though it's factory exists!\n");
+    g_print ("Failed to create element, even though its factory exists!\n");
     return -1;
   }
 

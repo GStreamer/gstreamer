@@ -1,3 +1,8 @@
+2005-02-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/basics-elements.xml:
+	  Fix two typos.
+
 2005-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (remove_decoupled),
