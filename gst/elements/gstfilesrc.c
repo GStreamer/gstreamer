@@ -290,7 +290,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
         src->mapsize = g_value_get_ulong (value);
         g_object_notify (G_OBJECT (src), "mmapsize");
       } else {
-        GST_INFO (0, "invalid mapsize, must a multiple of pagesize, which is %d\n", 
+        GST_INFO (0, "invalid mapsize, must a multiple of pagesize, which is %d", 
 	          src->pagesize);
       }
       break;
@@ -358,7 +358,7 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 #endif
   /* now unmap the memory */
   munmap (GST_BUFFER_DATA (buf), GST_BUFFER_MAXSIZE (buf));
-  GST_DEBUG (0, "unmapped region %08llx+%08llx at %p\n", 
+  GST_DEBUG (0, "unmapped region %08llx+%08llx at %p", 
 		  GST_BUFFER_OFFSET (buf), GST_BUFFER_MAXSIZE (buf), 
 		  GST_BUFFER_DATA (buf));
 
@@ -388,7 +388,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
  	     size, src->fd, offset, strerror (errno));
     return NULL;
   }
-  GST_DEBUG (0, "mapped region %08llx+%08x from file into memory at %p\n", 
+  GST_DEBUG (0, "mapped region %08llx+%08x from file into memory at %p", 
 		  offset, size, mmapregion);
 
   /* time to allocate a new mapbuf */
@@ -491,7 +491,7 @@ gst_filesrc_get (GstPad *pad)
     GstEvent *event;
 
     src->seek_happened = FALSE;
-    GST_DEBUG (GST_CAT_EVENT, "filesrc sending discont\n");
+    GST_DEBUG (GST_CAT_EVENT, "filesrc sending discont");
     event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
     GST_EVENT_DISCONT_NEW_MEDIA (event) = FALSE;
     src->need_flush = FALSE;
@@ -500,13 +500,13 @@ gst_filesrc_get (GstPad *pad)
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
-    GST_DEBUG (GST_CAT_EVENT, "filesrc sending flush\n");
+    GST_DEBUG (GST_CAT_EVENT, "filesrc sending flush");
     return GST_BUFFER (gst_event_new_flush ());
   }
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
-    GST_DEBUG (0, "filesrc eos %lld %lld\n", src->curoffset, src->filelen);
+    GST_DEBUG (0, "filesrc eos %lld %lld", src->curoffset, src->filelen);
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
