@@ -245,7 +245,7 @@ GstPad*			gst_element_get_compatible_request_pad (GstElement *element, GstPadTem
 GstPad*			gst_element_get_compatible_static_pad (GstElement *element, GstPadTemplate *templ);
 */
 
-GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const guchar *name);
+GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_template_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 

@@ -56,7 +56,7 @@ GstTrace *_gst_trace_default = NULL;
 gint _gst_trace_on = 1;
 
 GstTrace *
-gst_trace_new (guchar * filename, gint size)
+gst_trace_new (gchar * filename, gint size)
 {
   GstTrace *trace = g_malloc (sizeof (GstTrace));
 

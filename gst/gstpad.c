@@ -1880,7 +1880,7 @@ gst_pad_load_and_connect (xmlNodePtr self,
 {
   xmlNodePtr field = self->xmlChildrenNode;
   GstPad *pad = NULL, *targetpad;
-  guchar *peer = NULL;
+  gchar *peer = NULL;
   gchar **split;
   GstElement *target;
   GstObject *grandparent;

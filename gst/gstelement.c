@@ -1252,7 +1252,7 @@ gst_element_get_pad_template_list (GstElement *element)
  * Returns: the padtemplate with the given name. No unreferencing is necessary.
  */
 GstPadTemplate*
-gst_element_get_pad_template (GstElement *element, const guchar *name)
+gst_element_get_pad_template (GstElement *element, const gchar *name)
 {
   GList *padlist;
 
@@ -2333,8 +2333,8 @@ gst_element_restore_thyself (GstObject *object, xmlNodePtr self)
 {
   xmlNodePtr children;
   GstElement *element;
-  guchar *name = NULL;
-  guchar *value = NULL;
+  gchar *name = NULL;
+  gchar *value = NULL;
 
   element = GST_ELEMENT (object);
   g_return_if_fail (element != NULL);

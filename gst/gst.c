@@ -434,12 +434,12 @@ init_post (void)
 #ifndef GST_DISABLE_TRACE
   _gst_trace_on = 0;
   if (_gst_trace_on) {
-    gst_trace = gst_trace_new ("gst.trace",1024);
+    gst_trace = gst_trace_new ("gst.trace", 1024);
     gst_trace_set_default (gst_trace);
   }
 #endif /* GST_DISABLE_TRACE */
   if (_gst_progname == NULL) {
-    _gst_progname = g_strdup("gstprog");
+    _gst_progname = g_strdup ("gstprog");
   }
 }
 
