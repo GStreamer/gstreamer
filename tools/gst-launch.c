@@ -182,6 +182,7 @@ main(int argc, char *argv[])
 {
   /* options */
   gboolean silent = FALSE;
+  gboolean no_fault = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
@@ -191,6 +192,8 @@ main(int argc, char *argv[])
      "do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
      "save xml representation of pipeline to FILE and exit", "FILE"},
+    {"no_fault", 'f',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
+     "Do not install a fault handler", NULL},
     POPT_TABLEEND
   };
 
@@ -201,7 +204,8 @@ main(int argc, char *argv[])
 
   free (malloc (8)); /* -lefence */
 
-  fault_setup();
+  if (!no_fault)
+    fault_setup();
 
   gst_init_with_popt_table (&argc, &argv, options);
   
