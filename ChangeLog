@@ -1,3 +1,8 @@
+2005-02-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/oss/gstosselement.c: (gst_osselement_class_probe_devices):
+	  Kick the hell out of gcc for not warning me about a symbol conflict.
+
 2005-02-22  Luca Ognibene  <luogni@tin.it>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
