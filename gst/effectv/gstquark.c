@@ -68,7 +68,7 @@ struct _GstQuarkTVClass
 /* elementfactory information */
 static GstElementDetails gst_quarktv_details = GST_ELEMENT_DETAILS (
   "QuarkTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "Motion dissolver",
   "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>"
 );

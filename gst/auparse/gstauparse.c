@@ -32,7 +32,7 @@
 /* elementfactory information */
 static GstElementDetails gst_auparse_details = GST_ELEMENT_DETAILS (
   ".au parser",
-  "Codec/Parser",
+  "Codec/Parser/Audio",
   "Parse an .au file into raw audio",
   "Erik Walthinsen <omega@cse.ogi.edu>"
 );

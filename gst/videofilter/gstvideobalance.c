@@ -90,7 +90,7 @@ gst_videobalance_base_init (gpointer g_class)
 {
   static GstElementDetails videobalance_details = GST_ELEMENT_DETAILS (
     "Video Balance Control",
-    "Filter/Video",
+    "Filter/Effect/Video",
     "Adjusts brightness, contrast, hue, saturation on a video stream",
     "David Schleef <ds@schleef.org>"
   );

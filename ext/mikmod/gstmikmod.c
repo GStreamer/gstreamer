@@ -28,7 +28,7 @@
 /* elementfactory information */
 GstElementDetails mikmod_details = {
   "MikMod",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Module decoder based on libmikmod",
   "Jeremy SIMON <jsimon13@yahoo.fr>",
 };

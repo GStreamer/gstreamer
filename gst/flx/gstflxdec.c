@@ -31,7 +31,7 @@
 /* flx element information */
 static GstElementDetails flxdec_details = {
   "FLX Decoder",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "FLX decoder",
   "Sepp Wijnands <mrrazz@garbage-coderz.net>"
 };

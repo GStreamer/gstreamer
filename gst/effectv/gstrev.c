@@ -87,7 +87,7 @@ struct _GstRevTVClass
 /* elementfactory information */
 static GstElementDetails gst_revtv_details = GST_ELEMENT_DETAILS (
   "RevTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "A video waveform monitor for each line of video processed",
   "Wim Taymans <wim.taymans@chello.be>"
 );

@@ -31,9 +31,9 @@ static GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails gst_jpegdec_details = {
-  "jpeg image decoder",
-  "Codec/Image",
-  ".jpeg",
+  "JPEG image decoder",
+  "Codec/Decoder/Image",
+  "Decode images from JPEG format",
   "Wim Taymans <wim.taymans@tvd.be>",
 };
 

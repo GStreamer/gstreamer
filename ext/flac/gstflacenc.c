@@ -33,7 +33,7 @@ static GstPadTemplate *src_template, *sink_template;
 /* elementfactory information */
 GstElementDetails flacenc_details = {
   "FLAC encoder",
-  "Codec/Audio/Encoder",
+  "Codec/Encoder/Audio",
   "Encodes audio with the FLAC lossless audio encoder",
   "Wim Taymans <wim.taymans@chello.be>",
 };

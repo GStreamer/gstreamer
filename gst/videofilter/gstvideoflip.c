@@ -112,7 +112,7 @@ gst_videoflip_base_init (gpointer g_class)
 {
   static GstElementDetails videoflip_details = GST_ELEMENT_DETAILS (
     "Video Flipper",
-    "Filter/Video",
+    "Filter/Effect/Video",
     "Flips and rotates video",
     "David Schleef <ds@schleef.org>"
   );

@@ -68,7 +68,7 @@ struct _GstDiceTVClass
 /* elementfactory information */
 static GstElementDetails gst_dicetv_details = GST_ELEMENT_DETAILS (
   "DiceTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "'Dices' the screen up into many small squares",
   "Wim Taymans <wim.taymans@chello.be>"
 );

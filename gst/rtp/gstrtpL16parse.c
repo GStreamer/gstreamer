@@ -9,7 +9,7 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more 
+ * Library General Public License for more
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,7 +22,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_L16parse_details = {
   "RTP packet parser",
-  "Codec/Network",
+  "Codec/Parser/Network",
   "Extracts raw audio from RTP packets",
   "Zeeshan Ali <zak147@yahoo.com>"
 };

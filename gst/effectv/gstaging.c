@@ -81,7 +81,7 @@ struct _GstAgingTVClass
 /* elementfactory information */
 static GstElementDetails gst_agingtv_details = GST_ELEMENT_DETAILS (
   "AgingTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "Apply aging effect on video",
   "Wim Taymans <wim.taymans@chello.be>"
 );

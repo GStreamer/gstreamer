@@ -37,7 +37,7 @@
  */
 static GstElementDetails dvdec_details = GST_ELEMENT_DETAILS (
   "DV (smpte314) decoder plugin",
-  "Codec/Video/Decoder",
+  "Codec/Decoder/Video",
   "Uses libdv to decode DV video (libdv.sourceforge.net)",
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
   "Wim Taymans <wim.taymans@tvd.be>"

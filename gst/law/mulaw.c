@@ -7,7 +7,7 @@
 static GstCaps*
 mulaw_factory (void)
 {
-  return 
+  return
     gst_caps_new (
   	"test_src",
     	"audio/x-mulaw",
@@ -23,7 +23,7 @@ mulaw_factory (void)
 static GstCaps*
 linear_factory (void)
 {
-  return 
+  return
     gst_caps_new (
   	"test_sink",
     	"audio/x-raw-int",
@@ -37,7 +37,7 @@ linear_factory (void)
 	    NULL));
 }
 
-GstPadTemplate *mulawenc_src_template, *mulawenc_sink_template; 
+GstPadTemplate *mulawenc_src_template, *mulawenc_sink_template;
 GstPadTemplate *mulawdec_src_template, *mulawdec_sink_template;
 
 static gboolean
@@ -47,7 +47,7 @@ plugin_init (GstPlugin *plugin)
 
   mulaw_caps = mulaw_factory ();
   linear_caps = linear_factory ();
- 
+
   mulawenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 		   		               mulaw_caps, NULL);
   mulawenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -57,7 +57,7 @@ plugin_init (GstPlugin *plugin)
 		  				linear_caps, NULL);
   mulawdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 		   				mulaw_caps, NULL);
-  
+
   if (!gst_element_register (plugin, "mulawenc",
 			     GST_RANK_NONE, GST_TYPE_MULAWENC) ||
       !gst_element_register (plugin, "mulawdec",

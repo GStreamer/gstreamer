@@ -27,7 +27,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtpgsmenc_details = {
   "RTP GSM Audio Encoder",
-  "Codec/Network",
+  "Codec/Encoder/Network",
   "Encodes GSM audio into an RTP packet",
   "Zeeshan Ali <zak147@yahoo.com>"
 };

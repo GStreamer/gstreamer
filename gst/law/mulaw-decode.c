@@ -29,7 +29,7 @@ extern GstPadTemplate *mulawdec_src_template, *mulawdec_sink_template;
 /* elementfactory information */
 static GstElementDetails mulawdec_details = {
   "Mu Law to PCM conversion",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Convert 8bit mu law to 16bit PCM",
   "Zaheer Merali <zaheer@bellworldwide.net>"
 };

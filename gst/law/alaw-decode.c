@@ -30,7 +30,7 @@ extern GstPadTemplate *alawdec_src_template, *alawdec_sink_template;
 /* elementfactory information */
 static GstElementDetails alawdec_details = {
   "A Law to PCM conversion",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Convert 8bit A law to 16bit PCM",
   "Zaheer Merali <zaheer@bellworldwide.net>"
 };

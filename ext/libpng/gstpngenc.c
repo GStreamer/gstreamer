@@ -29,7 +29,7 @@
 
 GstElementDetails gst_pngenc_details = {
   "PNG encoder",
-  "Codec/Image",
+  "Codec/Encoder/Image",
   "Encode a video frame to a .png image",
   "Jeremy SIMON <jsimon13@yahoo.fr>",
 };

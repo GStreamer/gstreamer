@@ -31,7 +31,7 @@
 /* elementfactory information */
 static GstElementDetails level_details = {
   "Level",
-  "Filter/Audio/Analysis",
+  "Filter/Analyzer/Audio",
   "RMS/Peak/Decaying Peak Level signaller for audio/raw",
   "Thomas <thomas@apestaart.org>"
 };

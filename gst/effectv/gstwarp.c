@@ -75,7 +75,7 @@ struct _GstWarpTVClass
 /* elementfactory information */
 static GstElementDetails gst_warptv_details = GST_ELEMENT_DETAILS (
   "WarpTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "WarpTV does realtime goo'ing of the video input",
   "Sam Lantinga <slouken@devolution.com>"
 );

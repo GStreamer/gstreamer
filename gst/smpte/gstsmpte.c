@@ -28,7 +28,7 @@
 /* elementfactory information */
 static GstElementDetails smpte_details = {
   "SMPTE transitions",
-  "Filter/Video",
+  "Filter/Editor/Video",
   "Apply the standard SMPTE transitions on video images",
   "Wim Taymans <wim.taymans@chello.be>"
 };

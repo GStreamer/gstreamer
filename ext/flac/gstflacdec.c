@@ -33,7 +33,7 @@ static GstPadTemplate *src_template, *sink_template;
 /* elementfactory information */
 GstElementDetails flacdec_details = {
   "FLAC decoder",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Decodes FLAC lossless audio streams",
   "Wim Taymans <wim.taymans@chello.be>",
 };

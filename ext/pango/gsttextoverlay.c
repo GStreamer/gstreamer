@@ -12,7 +12,7 @@
 
 static GstElementDetails textoverlay_details = {
     "Text Overlay",
-    "Filter/Video",
+    "Filter/Editor/Video",
     "Adds text strings on top of a video buffer",
     "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>"
 };

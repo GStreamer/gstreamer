@@ -41,7 +41,7 @@
 /* elementfactory information */
 static GstElementDetails gst_bpwsinc_details = GST_ELEMENT_DETAILS (
   "BPWSinc",
-  "Filter/Audio/Effect",
+  "Filter/Effect/Audio",
   "Band-Pass Windowed sinc filter",
   "Thomas <thomas@apestaart.org>, "
   "Steven W. Smith"

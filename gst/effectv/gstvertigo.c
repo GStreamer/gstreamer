@@ -71,7 +71,7 @@ struct _GstVertigoTVClass
 /* elementfactory information */
 static GstElementDetails gst_vertigotv_details = GST_ELEMENT_DETAILS (
   "VertigoTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "A loopback alpha blending effector with rotating and scaling",
   "Wim Taymans <wim.taymans@chello.be>"
 );

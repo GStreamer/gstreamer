@@ -62,7 +62,7 @@ struct _GstEdgeTVClass
 /* elementfactory information */
 static GstElementDetails gst_edgetv_details = GST_ELEMENT_DETAILS (
   "EdgeTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "Apply edge detect on video",
   "Wim Taymans <wim.taymans@chello.be>"
 );

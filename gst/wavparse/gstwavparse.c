@@ -54,8 +54,8 @@ static void             gst_wavparse_get_property       (GObject *object, guint 
 
 /* elementfactory information */
 static GstElementDetails gst_wavparse_details = GST_ELEMENT_DETAILS (
-  ".wav parser",
-  "Codec/Parser",
+  ".wav demuxer",
+  "Codec/Demuxer",
   "Parse a .wav file into raw audio",
   "Erik Walthinsen <omega@cse.ogi.edu>"
 );

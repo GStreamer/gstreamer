@@ -69,7 +69,7 @@ struct _GstShagadelicTVClass
 /* elementfactory information */
 static GstElementDetails gst_shagadelictv_details = GST_ELEMENT_DETAILS (
   "ShagadelicTV",
-  "Filter/Video/Effect",
+  "Filter/Effect/Video",
   "Oh behave, ShagedelicTV makes images shagadelic!",
   "Wim Taymans <wim.taymans@chello.be>"
 );
