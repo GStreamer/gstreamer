@@ -100,7 +100,7 @@ static void check_dir(const char * dirname) {
     }
 }
 
-static void save_registry(const char *destfile) {
+static void save_registry(const char *destfile, xmlDocPtr * doc) {
 #if 0
     FILE *fp;
 
@@ -112,14 +112,14 @@ static void save_registry(const char *destfile) {
 
     // FIXME: no way to check success of xmlDocDump, which is why
     // this piece of code is ifdefed out.
-    xmlDocDump(fp, doc);
+    xmlDocDump(fp, *doc);
 
     if (!fclose(fp)) {
 	g_print("Cannot close `%s' having saved new registry.", destfile);
 	error_perm();
     }
 #else
-    if (xmlSaveFile(destfile, doc) <= 0) {
+    if (xmlSaveFile(destfile, *doc) <= 0) {
 	g_print("Cannot save new registry to `%s'", destfile);
 	error_perm();
     }
@@ -147,7 +147,7 @@ int main(int argc,char *argv[])
     gst_plugin_save_thyself(doc->root);
 
     // Save the registry to a tmp file.
-    save_registry(GLOBAL_REGISTRY_FILE_TMP);
+    save_registry(GLOBAL_REGISTRY_FILE_TMP, &doc);
 
     // Make the tmp file live.
     move_file(GLOBAL_REGISTRY_FILE_TMP, GLOBAL_REGISTRY_FILE);
