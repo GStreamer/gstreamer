@@ -33,7 +33,7 @@ G_BEGIN_DECLS
 #if defined (GST_CAN_INLINE) || defined (__GST_ATOMIC_C__)
   
 /***** Intel x86 *****/
-#if defined (HAVE_CPU_I386)
+#if defined (HAVE_CPU_I386) && defined(__GNUC__)
 
 #ifdef GST_CONFIG_NO_SMP
 #define SMP_LOCK ""
@@ -78,7 +78,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** PowerPC *****/
-#elif defined (HAVE_CPU_PPC)
+#elif defined (HAVE_CPU_PPC) && defined(__GNUC__)
 
 #ifdef GST_CONFIG_NO_SMP
 #define SMP_SYNC        ""
@@ -154,7 +154,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** DEC[/Compaq/HP?/Intel?] Alpha *****/
-#elif defined(HAVE_CPU_ALPHA)
+#elif defined(HAVE_CPU_ALPHA) && defined(__GNUC__)
 
 GST_INLINE_FUNC void 	gst_atomic_int_init 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
@@ -206,7 +206,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** Sun SPARC *****/
-#elif defined(HAVE_CPU_SPARC)
+#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__)
 
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
 
@@ -285,7 +285,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** MIPS *****/
-#elif defined(HAVE_CPU_MIPS)
+#elif defined(HAVE_CPU_MIPS) && defined(__GNUC__)
 
 GST_INLINE_FUNC void 	gst_atomic_int_init 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
@@ -336,7 +336,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** S/390 *****/
-#elif defined(HAVE_CPU_S390)
+#elif defined(HAVE_CPU_S390) && defined(__GNUC__)
 
 GST_INLINE_FUNC void 	gst_atomic_int_init 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 

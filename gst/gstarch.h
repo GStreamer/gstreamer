@@ -30,7 +30,7 @@
 
 
 /***** Intel x86 *****/
-#if defined(HAVE_CPU_I386)
+#if defined(HAVE_CPU_I386) && defined(__GNUC__)
 #define GST_ARCH_SET_SP(stackpointer) \
   __asm__( "movl %0, %%esp\n" : : "r"(stackpointer) );
 
@@ -43,7 +43,7 @@
 
 
 /***** PowerPC *****/
-#elif defined (HAVE_CPU_PPC)
+#elif defined (HAVE_CPU_PPC) && defined(__GNUC__)
 
 /* should bring this in line with others and use an "r" */
 #define GST_ARCH_SET_SP(stackpointer) \
@@ -68,7 +68,7 @@ struct minimal_ppc_stackframe {
 
 
 /***** DEC[/Compaq/HP?/Intel?] Alpha *****/
-#elif defined(HAVE_CPU_ALPHA)
+#elif defined(HAVE_CPU_ALPHA) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__("bis $31,%0,$30" : : "r"(stackpointer));
@@ -94,7 +94,7 @@ struct minimal_stackframe {
 
 
 /***** ARM *****/
-#elif defined(HAVE_CPU_ARM)
+#elif defined(HAVE_CPU_ARM) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__( "mov sp, %0" : : "r"(stackpointer));
@@ -110,7 +110,7 @@ struct minimal_stackframe {
 
 
 /***** Sun SPARC *****/
-#elif defined(HAVE_CPU_SPARC)
+#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__( "ta 3\n\t" \
@@ -131,7 +131,7 @@ struct minimal_stackframe {
 
 
 /***** MIPS *****/
-#elif defined(HAVE_CPU_MIPS)
+#elif defined(HAVE_CPU_MIPS) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__("lw $sp,0(%0)\n\t" : : "r"(stackpointer));
@@ -146,7 +146,7 @@ struct minimal_stackframe {
 
 
 /***** HP-PA *****/
-#elif defined(HAVE_CPU_HPPA)
+#elif defined(HAVE_CPU_HPPA) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__("copy %0,%%sp\n\t" : : "r"(stackpointer));
@@ -160,7 +160,7 @@ struct minimal_stackframe {
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
 /***** S/390 *****/
-#elif defined(HAVE_CPU_S390)
+#elif defined(HAVE_CPU_S390) && defined(__GNUC__)
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__("lr 15,%0" : : "r"(stackpointer))
