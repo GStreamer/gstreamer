@@ -231,7 +231,7 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
  * Returns: requested pad if found, otherwise NULL.
  */
 GstPad*
-gst_element_get_pad (GstElement *element, gchar *name) 
+gst_element_get_pad (GstElement *element, const gchar *name) 
 {
   GList *walk;
 
@@ -315,8 +315,8 @@ gst_element_get_padtemplate_list (GstElement *element)
  * parents, the connection fails.
  */
 void 
-gst_element_connect (GstElement *src, gchar *srcpadname,
-                     GstElement *dest, gchar *destpadname) 
+gst_element_connect (GstElement *src, const gchar *srcpadname,
+                     GstElement *dest, const gchar *destpadname) 
 {
   GstPad *srcpad,*destpad;
   GstObject *srcparent,*destparent;
@@ -356,6 +356,44 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
 }
 
 /**
+ * gst_element_disconnect:
+ * @src: element containing source pad
+ * @srcpadname: name of pad in source element
+ * @dest: element containing destination pad
+ * @destpadname: name of pad in destination element
+ *
+ * Disconnect the two named pads of the source and destination elements.
+ */
+void 
+gst_element_disconnect (GstElement *src, const gchar *srcpadname,
+                        GstElement *dest, const gchar *destpadname) 
+{
+  GstPad *srcpad,*destpad;
+
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_ELEMENT(src));
+  g_return_if_fail (srcpadname != NULL);
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (GST_IS_ELEMENT(dest));
+  g_return_if_fail (destpadname != NULL);
+
+  /* obtain the pads requested */
+  srcpad = gst_element_get_pad (src, srcpadname);
+  if (srcpad == NULL) {
+    GST_ERROR(src,"source element has no pad \"%s\"",srcpadname);
+    return;
+  }
+  destpad = gst_element_get_pad (dest, destpadname);
+  if (srcpad == NULL) {
+    GST_ERROR(dest,"destination element has no pad \"%s\"",destpadname);
+    return;
+  }
+
+  /* we're satisified they can be disconnected, let's do it */
+  gst_pad_disconnect(srcpad,destpad);
+}
+
+/**
  * gst_element_error:
  * @element: Element with the error
  * @error: String describing the error
@@ -364,7 +402,7 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
  * condition.  It results in the "error" signal.
  */
 void 
-gst_element_error (GstElement *element, gchar *error) 
+gst_element_error (GstElement *element, const gchar *error) 
 {
   g_error("GstElement: error in element '%s': %s\n", element->name, error);
 
@@ -484,7 +522,7 @@ gst_element_change_state (GstElement *element)
  * one.
  */
 void 
-gst_element_set_name (GstElement *element, gchar *name) 
+gst_element_set_name (GstElement *element, const gchar *name) 
 {
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));

@@ -97,7 +97,7 @@ gst_type_register (GstTypeFactory *factory)
 }
 
 static 
-guint16 gst_type_find_by_mime_func (gchar *mime) 
+guint16 gst_type_find_by_mime_func (const gchar *mime) 
 {
   GList *walk;
   GstType *type;
@@ -143,7 +143,7 @@ guint16 gst_type_find_by_mime_func (gchar *mime)
  * Returns: the type id
  */
 guint16 
-gst_type_find_by_mime (gchar *mime) 
+gst_type_find_by_mime (const gchar *mime) 
 {
   return gst_type_find_by_mime_func (mime);
 }
@@ -157,7 +157,7 @@ gst_type_find_by_mime (gchar *mime)
  * Returns: the type id
  */
 guint16 
-gst_type_find_by_ext (gchar *ext) 
+gst_type_find_by_ext (const gchar *ext) 
 {
   //FIXME
   g_warning ("gsttype: find_by_ext not implemented");

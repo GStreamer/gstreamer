@@ -18,7 +18,6 @@
 <!ENTITY QUEUES SYSTEM "queues.sgml">
 <!ENTITY COTHREADS SYSTEM "cothreads.sgml">
 <!ENTITY DYNAMIC SYSTEM "dynamic.sgml">
-<!ENTITY GHOSTPADS SYSTEM "ghostpads.sgml">
 <!ENTITY TYPEDETECTION SYSTEM "typedetection.sgml">
 <!ENTITY UTILITY SYSTEM "utility.sgml">
 
@@ -98,6 +97,8 @@
 <!-- ############ Basic concepts - chapter ############# -->
       &ELEMENTS;
 
+      &PLUGINS;
+
       &PADS;
 
       &CONNECTIONS;
@@ -107,6 +108,7 @@
       &BUFFERS;
 
       &STATES;
+
   </part>
 <!-- ############ Building Apps - part ############# -->
 
@@ -151,8 +153,6 @@
 
       &DYNAMIC;
 
-      &GHOSTPADS;
-
       &TYPEDETECTION;
 
       &UTILITY;
@@ -173,19 +173,6 @@
       &XML;
   </part>
 
-<!-- ############ XML in GStreamer - part ############# -->
-
-  <part id="plugins"><title>plugin development in <application>GStreamer</application></title>
-
-    <partintro>
-      <para>
-        In this part we will describe how you can create a new plugin
-	to be used in <application>GStreamer</application>.
-      </para>      
-    </partintro>
-
-      &PLUGINS;
-  </part>
 
 <!-- ############ Appendices - part ############# -->
 

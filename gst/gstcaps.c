@@ -35,7 +35,7 @@ _gst_caps_initialize (void)
 }
 
 static guint16
-get_type_for_mime (gchar *mime)
+get_type_for_mime (const gchar *mime)
 {
   guint16 typeid;
 
@@ -62,7 +62,7 @@ get_type_for_mime (gchar *mime)
  * Returns: a new capability
  */
 GstCaps*
-gst_caps_new (gchar *name, gchar *mime)
+gst_caps_new (const gchar *name, const gchar *mime)
 {
   GstCaps *caps;
 
@@ -88,7 +88,7 @@ gst_caps_new (gchar *name, gchar *mime)
  * Returns: a new capability
  */
 GstCaps*
-gst_caps_new_with_props (gchar *name, gchar *mime, GstProps *props)
+gst_caps_new_with_props (const gchar *name, const gchar *mime, GstProps *props)
 {
   GstCaps *caps;
   
@@ -154,6 +154,110 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
   *counter += 2;
 
   return caps;
+}
+
+/**
+ * gst_caps_get_name:
+ * @caps: the caps to get the name from
+ *
+ * get the name of a GstCaps structure
+ *
+ * Returns: The name of the caps
+ */
+const gchar*    
+gst_caps_get_name (GstCaps *caps)
+{
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  return (const gchar *)caps->name;
+}
+
+/**
+ * gst_caps_set_name:
+ * @caps: the caps to set the name to 
+ * @name: the name to set
+ *
+ * set the name of a caps
+ */
+void
+gst_caps_set_name (GstCaps *caps, const gchar *name)
+{
+  g_return_if_fail (caps != NULL);
+ 
+  if (caps->name)
+    g_free (caps->name);
+
+  caps->name = g_strdup (name);
+}
+
+/**
+ * gst_caps_get_mime:
+ * @caps: the caps to get the mime type from
+ *
+ * get the mime type of the caps as a string
+ *
+ * Returns: The mime type of the caps
+ */
+const gchar*    
+gst_caps_get_mime (GstCaps *caps)
+{
+  GstType *type;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  type = gst_type_find_by_id (caps->id);
+
+  if (type) 
+    return type->mime;
+  else 
+    return "unknown/unknown";
+}
+
+/**
+ * gst_caps_set_mime:
+ * @caps: the caps to set the mime type to
+ * @mime: the mime type to attach to the caps
+ *
+ * set the mime type of the caps as a string
+ */
+void
+gst_caps_set_mime (GstCaps *caps, const gchar *mime)
+{
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (mime != NULL);
+
+  caps->id = get_type_for_mime (mime);
+}
+
+/**
+ * gst_caps_get_type_id:
+ * @caps: the caps to get the type id from
+ *
+ * get the type id of the caps
+ *
+ * Returns: The type id of the caps
+ */
+guint16         
+gst_caps_get_type_id (GstCaps *caps)
+{
+  g_return_val_if_fail (caps != NULL, 0);
+
+  return caps->id;
+}
+
+/**
+ * gst_caps_set_type_id:
+ * @caps: the caps to set the type id to
+ * @typeid: the type id to set 
+ *
+ * set the type id of the caps
+ */
+void
+gst_caps_set_type_id (GstCaps *caps, guint16 typeid)
+{
+  g_return_if_fail (caps != NULL);
+
+  caps->id = typeid;
 }
 
 /**

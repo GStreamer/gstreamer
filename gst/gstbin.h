@@ -109,7 +109,7 @@ struct __GstBinChain {
 
 
 GtkType 	gst_bin_get_type		(void);
-GstElement*	gst_bin_new			(gchar *name);
+GstElement*	gst_bin_new			(const gchar *name);
 #define 	gst_bin_destroy(bin) 		gst_object_destroy(GST_OBJECT(bin))
 
 /* add and remove elements from the bin */
@@ -120,7 +120,7 @@ void 		gst_bin_remove			(GstBin *bin,
 
 /* retrieve a single element or the list of children */
 GstElement*	gst_bin_get_by_name		(GstBin *bin,
-						 gchar *name);
+						 const gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
 void 		gst_bin_create_plan		(GstBin *bin);

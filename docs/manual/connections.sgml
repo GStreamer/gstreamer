@@ -21,4 +21,41 @@
     audiocard. We will use this simple graph to construct an mpeg player later
     in this manual.
   </para>
+  <para> 
+    You can connect two pads with:
+  </para>
+  <programlisting>
+ GstPad *srcpad, *sinkpad;
+
+ srcpad = gst_element_get_pad (element1, "src");
+ sinpad = gst_element_get_pad (element2, "sink");
+
+ // connect them
+ gst_pad_connect (srcpad, sinkpad);
+   ....
+ // and disconnect them
+ gst_pad_disconnect (srcpad, sinkpad);
+
+ </programlisting>
+  <para> 
+    A convenient shortcut for the above code is done with the gst_element_connect ()
+    function:
+  </para>
+  <programlisting>
+
+ // connect them
+ gst_element_connect (element1, "src", element2, "sink");
+   ....
+ // and disconnect them
+ gst_element_disconnect (element1, "src", element2, "sink");
+
+ </programlisting>
+  <para> 
+    You can query if a pad is connected with GST_PAD_IS_CONNECTED (pad). 
+  </para>
+  <para> 
+    To query for the <classname>GstPad</classname> this srcpad is connected to, use 
+    gst_pad_get_peer (srcpad).
+  </para>
+
 </chapter>

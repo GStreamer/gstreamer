@@ -61,7 +61,7 @@ gst_elementfactory_destroy (GstElementFactory *elementfactory)
  * Returns: #GstElementFactory if found, NULL otherwise
  */
 GstElementFactory*
-gst_elementfactory_find (gchar *name) 
+gst_elementfactory_find (const gchar *name) 
 {
   GList *walk;
   GstElementFactory *factory;
@@ -107,7 +107,7 @@ gst_elementfactory_get_list (void)
  * Returns: new elementfactory
  */
 GstElementFactory*
-gst_elementfactory_new (gchar *name, GtkType type,
+gst_elementfactory_new (const gchar *name, GtkType type,
                         GstElementDetails *details) 
 {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
@@ -138,7 +138,7 @@ gst_elementfactory_new (gchar *name, GtkType type,
  */
 GstElement *
 gst_elementfactory_create (GstElementFactory *factory,
-                           gchar *name) 
+                           const gchar *name) 
 {
   GstElement *element;
   GstElementClass *oclass;
@@ -184,7 +184,7 @@ gst_elementfactory_create (GstElementFactory *factory,
  * Returns: new #GstElement
  */
 GstElement*
-gst_elementfactory_make (gchar *factoryname, gchar *name) 
+gst_elementfactory_make (const gchar *factoryname, const gchar *name) 
 {
   GstElementFactory *factory;
   GstElement *element;

@@ -9,6 +9,55 @@
     The description of this media type is done with capabilities (<classname>GstCaps</classname>)
   </para>
 
+  <sect1 id="sec-pads-get">
+    <title>Getting pads from an element</title>
+    <para> 
+      Once you have created an element, you can get one of its pads with:
+    </para>
+    <programlisting>
+ GstPad *srcpad;
+    ...
+ srcpad = gst_element_get_pad (element, "src");
+    ...
+    </programlisting>
+    <para> 
+      This function will get the pad named "src" from the given element. 
+    </para>
+    <para> 
+      Alternatively, you can also request a GList of pads from the element. The following
+      code example will print the names of all the pads of an element.
+    </para>
+    <programlisting>
+ GList *pads;
+    ...
+ pads = gst_element_get_pad_list (element);
+ while (pads) {
+   GstPad *pad = GST_PAD (pads-&gt;data);
+
+   g_print ("pad name %s\n", gst_pad_get_name (pad));
+   
+   pads = g_list_next (pads);
+ }
+    ...
+    </programlisting>
+    <sect2 id="sec-pads-functions">
+      <title>Usefull pad functions</title>
+      <para> 
+        You can get the name of a pad with gst_pad_get_name () and set its name with
+	get_pad_set_name();
+      </para> 
+      <para> 
+        gst_pad_get_direction (GstPad *pad) can be used to query if the pad is a sink 
+	or a src pad. Remember a src pad is a pad that can output data and a sink pad is 
+	one that accepts data.
+      </para> 
+      <para> 
+        You can get the parent of the pad, this is the element that this pad belongs to,
+	with get_pad_set_parent(GstPad *pad). This function will return a pointer to a
+	GstObject.
+      </para> 
+    </sect2>
+  </sect1>
   <sect1 id="sec-pads-description">
     <title>Capabilities of a GstPad</title>
     <para> 
@@ -135,6 +184,30 @@ Pads:
           </para>
         </listitem>
       </itemizedlist>
+    </sect2>
+    <sect2 id="sec-pads-caps-get">
+      <title>Getting the capabilities of a pad</title>
+      <para> 
+        A pad can have a GList of capabilities attached to it. You can get the capabilities list
+	with:
+      </para>
+    <programlisting>
+ GList *caps;
+    ...
+ caps = gst_pad_get_caps_list (pad);
+
+ g_print ("pad name %s\n", gst_pad_get_name (pad));
+ 
+ while (caps) {
+   GstCaps *cap = (GstCaps *) caps-&gt;data;
+
+   g_print (" Capability name %s, MIME type\n", gst_caps_get_name (cap), 
+                                                gst_caps_get_mime (cap));
+   
+   caps = g_list_next (caps);
+ }
+    ...
+    </programlisting>
     </sect2>
 
   </sect1>

@@ -145,7 +145,7 @@ gst_bin_init (GstBin *bin)
  * Returns: new bin
  */
 GstElement*
-gst_bin_new (gchar *name) 
+gst_bin_new (const gchar *name) 
 {
   return gst_elementfactory_make ("bin", name);
 }
@@ -391,7 +391,7 @@ gst_bin_real_destroy (GtkObject *object)
  */
 GstElement*
 gst_bin_get_by_name (GstBin *bin,
-		     gchar *name) 
+		     const gchar *name) 
 {
   GList *children;
   GstElement *child;

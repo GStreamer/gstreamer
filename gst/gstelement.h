@@ -183,21 +183,23 @@ GstElement*		gst_element_new			(void);
 void 			gst_element_set_loop_function	(GstElement *element,
                                    			 GstElementLoopFunction loop);
 
-void 			gst_element_set_name		(GstElement *element, gchar *name);
+void 			gst_element_set_name		(GstElement *element, const gchar *name);
 const gchar*		gst_element_get_name		(GstElement *element);
 
 void 			gst_element_set_manager		(GstElement *element, GstElement *manager);
 GstElement*		gst_element_get_manager		(GstElement *element);
 
 void 			gst_element_add_pad		(GstElement *element, GstPad *pad);
-GstPad*			gst_element_get_pad		(GstElement *element, gchar *name);
+GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);
 void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad);
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
-void 			gst_element_connect		(GstElement *src, gchar *srcpadname,
-                         				 GstElement *dest, gchar *destpadname);
+void 			gst_element_connect		(GstElement *src, const gchar *srcpadname,
+                         				 GstElement *dest, const gchar *destpadname);
+void 			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
+                         				 GstElement *dest, const gchar *destpadname);
 
 void			gst_element_signal_eos		(GstElement *element);
 
@@ -205,7 +207,7 @@ void			gst_element_signal_eos		(GstElement *element);
 /* called by the app to set the state of the element */
 gint 			gst_element_set_state		(GstElement *element, GstElementState state);
 
-void 			gst_element_error		(GstElement *element, gchar *error);
+void 			gst_element_error		(GstElement *element, const gchar *error);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
@@ -219,14 +221,14 @@ GstElement*		gst_element_load_thyself	(xmlNodePtr parent, GHashTable *elements);
  * factories stuff
  *
  **/
-GstElementFactory*	gst_elementfactory_new			(gchar *name,GtkType type,
+GstElementFactory*	gst_elementfactory_new			(const gchar *name,GtkType type,
                                           			 GstElementDetails *details);
 void 			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 
 void 			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory, 
 							 	 GstPadTemplate *temp);
 
-GstElementFactory*	gst_elementfactory_find			(gchar *name);
+GstElementFactory*	gst_elementfactory_find			(const gchar *name);
 GList*			gst_elementfactory_get_list		(void);
 
 gboolean		gst_elementfactory_can_src_caps 	(GstElementFactory *factory,
@@ -239,9 +241,9 @@ gboolean		gst_elementfactory_can_sink_caps_list 	(GstElementFactory *factory,
 							 	 GList *caps);
 
 GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
-                                      				 gchar *name);
+                                      				 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
-GstElement*		gst_elementfactory_make			(gchar *factoryname, gchar *name);
+GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
 
 xmlNodePtr 		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent); 
 GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);

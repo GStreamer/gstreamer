@@ -138,7 +138,7 @@ main (int argc, char *argv[])
   bin = gst_bin_new ("bin");
     </programlisting>
     <para>
-      We use the standard constructor for a bin: gst_bin_new ("
+      We use the standard constructor for a bin: gst_bin_new ("name").
     </para>
 
     <para>

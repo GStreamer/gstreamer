@@ -319,6 +319,17 @@ circumstances.
 @destpadname: 
 
 
+<!-- ##### FUNCTION gst_element_disconnect ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
+
+
 <!-- ##### FUNCTION gst_element_set_state ##### -->
 <para>
 
@@ -500,4 +511,45 @@ circumstances.
 @parent: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GstElement::state-change ##### -->
+<para>
+Is trigered whenever the state of an element changes
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new state of the object
+
+<!-- ##### SIGNAL GstElement::new-pad ##### -->
+<para>
+Is trigered whenever a new pad is added to an element
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new pad that was added
+
+<!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
+<para>
+
+Is trigered whenever a new ghost pad is added to an element
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new ghost pad that was added
+
+<!-- ##### SIGNAL GstElement::error ##### -->
+<para>
+Is trigered whenever an error occured
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the error message
+
+<!-- ##### SIGNAL GstElement::eos ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
 

@@ -58,8 +58,8 @@ void 		_gst_type_initialize		(void);
 guint16 	gst_type_register		(GstTypeFactory *factory);
 
 /* look up a type by mime or extension */
-guint16 	gst_type_find_by_mime		(gchar *mime);
-guint16 	gst_type_find_by_ext		(gchar *ext);
+guint16 	gst_type_find_by_mime		(const gchar *mime);
+guint16 	gst_type_find_by_ext		(const gchar *ext);
 
 /* get GstType by id */
 GstType*	gst_type_find_by_id		(guint16 id);

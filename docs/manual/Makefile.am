@@ -12,7 +12,6 @@ sgml_files = gstreamer-manual.sgml \
              dynamic.sgml \
              elements.sgml \
              factories.sgml \
-             ghostpads.sgml \
              goals.sgml \
              helloworld.sgml \
              helloworld2.sgml \

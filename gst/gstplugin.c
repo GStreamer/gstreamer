@@ -158,7 +158,7 @@ gst_plugin_load_all(void)
  * Returns: whether the library was loaded or not
  */
 gboolean 
-gst_library_load (gchar *name) 
+gst_library_load (const gchar *name) 
 {
   gboolean res;
   GList *libraries = _gst_libraries;
@@ -173,7 +173,7 @@ gst_library_load (gchar *name)
   res = gst_plugin_load(name);
 
   if (res) {
-    _gst_libraries = g_list_prepend(_gst_libraries, name);
+    _gst_libraries = g_list_prepend(_gst_libraries, g_strdup (name));
   }
 
   return res;
@@ -205,7 +205,7 @@ gst_plugin_remove (GstPlugin *plugin)
  * Returns: whether the plugin was loaded or not
  */
 gboolean 
-gst_plugin_load (gchar *name) 
+gst_plugin_load (const gchar *name) 
 {
   GList *path;
   gchar *libspath;
@@ -244,7 +244,7 @@ gst_plugin_load (gchar *name)
  * Returns: whether or not the plugin loaded
  */
 gboolean 
-gst_plugin_load_absolute (gchar *name) 
+gst_plugin_load_absolute (const gchar *name) 
 {
   GModule *module;
   GstPluginInitFunc initfunc;
@@ -295,7 +295,7 @@ gst_plugin_load_absolute (gchar *name)
  * Returns: new plugin
  */
 GstPlugin*
-gst_plugin_new (gchar *name) 
+gst_plugin_new (const gchar *name) 
 {
   GstPlugin *plugin;
 
@@ -317,6 +317,40 @@ gst_plugin_new (gchar *name)
 }
 
 /**
+ * gst_plugin_get_name:
+ * @plugin: plugin to get the name of
+ *
+ * Get the short name of the plugin
+ *
+ * Returns: the name of the plugin
+ */
+const gchar*
+gst_plugin_get_name (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->name;
+}
+
+/**
+ * gst_plugin_set_name:
+ * @plugin: plugin to set name of
+ * @name: new name
+ *
+ * Sets the name (should be short) of the plugin.
+ */
+void
+gst_plugin_set_name (GstPlugin *plugin, const gchar *name)
+{
+  g_return_if_fail (plugin != NULL);
+
+  if (plugin->name)
+    g_free (plugin->name);
+
+  plugin->name = g_strdup (name);
+}
+
+/**
  * gst_plugin_set_longname:
  * @plugin: plugin to set long name of
  * @longname: new long name
@@ -324,13 +358,64 @@ gst_plugin_new (gchar *name)
  * Sets the long name (should be descriptive) of the plugin.
  */
 void 
-gst_plugin_set_longname (GstPlugin *plugin, gchar *longname) 
+gst_plugin_set_longname (GstPlugin *plugin, const gchar *longname) 
 {
   g_return_if_fail(plugin != NULL);
 
-  if (plugin->longname) g_free(plugin->longname);
+  if (plugin->longname) 
+    g_free(plugin->longname);
+
   plugin->longname = g_strdup(longname);
 }
+
+/**
+ * gst_plugin_get_longname:
+ * @plugin: plugin to get long name of
+ *
+ * Get the long descriptive name of the plugin
+ *
+ * Returns: the long name of the plugin
+ */
+const gchar*
+gst_plugin_get_longname (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->longname;
+}
+
+/**
+ * gst_plugin_get_filename:
+ * @plugin: plugin to get the filename of
+ *
+ * get the filename of the plugin
+ *
+ * Returns: the filename of the plugin
+ */
+const gchar*
+gst_plugin_get_filename (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->filename;
+}
+
+/**
+ * gst_plugin_is_loaded:
+ * @plugin: plugin to query
+ *
+ * queries if the plugin is loaded into memory
+ *
+ * Returns: TRUE is loaded, FALSE otherwise
+ */
+gboolean
+gst_plugin_is_loaded (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, FALSE);
+
+  return plugin->loaded;
+}
+
 
 /**
  * gst_plugin_find:
@@ -369,7 +454,7 @@ gst_plugin_find (const gchar *name)
  * Returns: @GstElementFactory if found, NULL if not
  */
 GstElementFactory*
-gst_plugin_find_elementfactory (gchar *name) 
+gst_plugin_find_elementfactory (const gchar *name) 
 {
   GList *plugins, *factories;
   GstElementFactory *factory;
@@ -400,7 +485,7 @@ gst_plugin_find_elementfactory (gchar *name)
  * Returns: @GstElementFactory if loaded, NULL if not
  */
 GstElementFactory*
-gst_plugin_load_elementfactory (gchar *name) 
+gst_plugin_load_elementfactory (const gchar *name) 
 {
   GList *plugins, *factories;
   GstElementFactory *factory = NULL;
@@ -447,7 +532,7 @@ gst_plugin_load_elementfactory (gchar *name)
  * Load a registered typefactory by mime type.
  */
 void 
-gst_plugin_load_typefactory (gchar *mime) 
+gst_plugin_load_typefactory (const gchar *mime) 
 {
   GList *plugins, *factories;
   GstTypeFactory *factory;
@@ -649,9 +734,34 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 }
 
 
+/**
+ * gst_plugin_get_factory_list:
+ * @plugin: the plugin to get the factories from
+ *
+ * get a list of all the factories that this plugin provides
+ *
+ * Returns: a GList of factories
+ */
 GList*
 gst_plugin_get_factory_list (GstPlugin *plugin)
 {
+  g_return_val_if_fail (plugin != NULL, NULL);
+
   return plugin->elements;
 }
 
+/**
+ * gst_plugin_get_type_list:
+ * @plugin: the plugin to get the typefactories from
+ *
+ * get a list of all the typefactories that this plugin provides
+ *
+ * Returns: a GList of factories
+ */
+GList*
+gst_plugin_get_type_list (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->types;
+}

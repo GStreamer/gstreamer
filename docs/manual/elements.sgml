@@ -93,4 +93,53 @@
       </figure>
     </sect2>
   </sect1>
+  <sect1 id="sec-elements-create">
+    <title>Creating a GstElement</title>
+    <para> 
+      GstElements are created from factories. To create an element, one has to get
+      access the a <classname>GstElementFactory</classname> using a unique factoryname.
+    </para> 
+    <para> 
+      The following code example is used to get a factory that can be used to create the 
+      mpg123 element, an mp3 decoder.
+    </para> 
+    <programlisting>
+ GstElementFactory *factory;
+
+ factory = gst_elementfactory_find ("mpg123");
+    </programlisting>
+    <para> 
+      Once you have the handle to the elementfactory, you can create a real element with
+      the following code fragment:
+    </para> 
+    <programlisting>
+ GstElement *element;
+
+ element = gst_elementfactory_create (factory, "decoder");
+    </programlisting>
+    <para> 
+      gst_elementfactory_create () will use the elementfactory to create an element with the
+      given name. The name of the element is something you can use later on to lookup the
+      element in a bin, for example.
+    </para> 
+    <para> 
+      A simple shortcut exists for creating an element from a factory. The following example
+      creates an element, named "decoder" from the elementfactory named "mpg123". This 
+      convenient function is most widly used to create an element.
+    </para> 
+    <programlisting>
+ GstElement *element;
+
+ element = gst_elementfactory_make ("mpg123", "decoder");
+    </programlisting>
+    <para> 
+      An element can be destroyed with:  
+    </para> 
+    <programlisting>
+ GstElement *element;
+
+  ...
+ gst_element_destroy (element);
+    </programlisting>
+  </sect1>
 </chapter>

@@ -78,6 +78,60 @@ a mime-type and a set of properties.
 @count: 
 
 
+<!-- ##### FUNCTION gst_caps_get_name ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_mime ##### -->
+<para>
+
+</para>
+
+@caps: 
+@mime: 
+
+
+<!-- ##### FUNCTION gst_caps_set_type_id ##### -->
+<para>
+
+</para>
+
+@caps: 
+@typeid: 
+
+
+<!-- ##### FUNCTION gst_caps_get_type_id ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_get_mime ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_name ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
+
+
 <!-- ##### FUNCTION gst_caps_set_props ##### -->
 <para>
 

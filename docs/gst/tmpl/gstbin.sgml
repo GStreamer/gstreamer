@@ -121,3 +121,12 @@ Flags for a bin
 @bin: 
 
 
+<!-- ##### SIGNAL GstBin::object-added ##### -->
+<para>
+is signaled whenever a new <classname>GstElement</classname> is added to the <classname>GstBin</classname>
+
+</para>
+
+@gstbin: the object which received the signal.
+@arg1: the element that was added
+

@@ -15,3 +15,16 @@ the detected mime type of the stream. It is used in autoplugging.
 
 </para>
 
+<!-- ##### SIGNAL GstTypeFind::have-type ##### -->
+<para>
+The signal to indicate the mime type was detected.
+</para>
+
+@gsttypefind: the object which received the signal.
+@arg1: The mime type that was detected
+
+<!-- ##### ARG GstTypeFind:caps ##### -->
+<para>
+
+</para>
+

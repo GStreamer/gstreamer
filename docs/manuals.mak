@@ -15,6 +15,7 @@ $(manualname)/$(htmlname): $(sgml_files) $(png_files)
 else
 $(manualname)/$(htmlname): $(sgml_files)
 endif
+
 if HAVE_DB2HTML
 	db2html $(manualname).sgml
 else

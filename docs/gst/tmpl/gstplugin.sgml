@@ -54,6 +54,33 @@ by the loader at statup.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_set_name ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_name ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_longname ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_set_longname ##### -->
 <para>
 
@@ -61,6 +88,24 @@ by the loader at statup.
 
 @plugin: 
 @longname: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_filename ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_is_loaded ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_plugin_load_all ##### -->
@@ -129,6 +174,24 @@ by the loader at statup.
 
 </para>
 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_factory_list ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_type_list ##### -->
+<para>
+
+</para>
+
+@plugin: 
 @Returns: 
 
 

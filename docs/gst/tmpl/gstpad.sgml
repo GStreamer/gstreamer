@@ -382,13 +382,14 @@ Destroy the pad
 @size: 
 
 
-<!-- ##### FUNCTION gst_pad_handle_qos ##### -->
+<!-- ##### FUNCTION gst_pad_select ##### -->
 <para>
 
 </para>
 
-@pad: 
-@qos_message: 
+@nextpad: 
+@Varargs: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_set_eos ##### -->
@@ -398,6 +399,24 @@ Destroy the pad
 
 @pad: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_eos_func ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_handle_qos ##### -->
+<para>
+
+</para>
+
+@pad: 
+@qos_message: 
 
 
 <!-- ##### MACRO gst_pad_eos ##### -->
@@ -536,4 +555,9 @@ Indicates when this pad will become available
 @parent: 
 @Returns: 
 
+
+<!-- ##### ARG GstPad:active ##### -->
+<para>
+Indicates this pad is active
+</para>
 
