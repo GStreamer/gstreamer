@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-17 16:11+0100\n"
+"POT-Creation-Date: 2005-02-08 10:47+0100\n"
 "PO-Revision-Date: 2004-08-03 10:53+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -71,9 +71,10 @@ msgid "PATHS"
 msgstr "ШЛЯХИ"
 
 #: gst/gst.c:191
+#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
-"envronment variable GST_PLUGIN_PATH"
+"environment variable GST_PLUGIN_PATH"
 msgstr ""
 "Перелік розділених комою назв модулів, додаткових до переліку, що "
 "зберігається у змінній оточення GST_PLUGIN_PATH"
@@ -108,12 +109,12 @@ msgstr "перелік шляхів у яких шукаються модулі 
 msgid "Scheduler to use (default is '%s')"
 msgstr "Планувальник, що використовується (типовий '%s')"
 
-#: gst/gstelement.c:261
+#: gst/gstelement.c:312
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ПОМИЛКА: у елементі %s: %s\n"
 
-#: gst/gstelement.c:263
+#: gst/gstelement.c:314
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -183,7 +184,7 @@ msgstr ""
 msgid "Internal GStreamer error: tag problem.  File a bug."
 msgstr "Внутрішня помилка GStreamer: помилка тегу. Напишіть про помилку."
 
-#: gst/gsterror.c:93 gst/gsterror.c:113 gst/gsterror.c:143
+#: gst/gsterror.c:93
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer перехопив загальну помилку основної бібліотеки підтримки."
 
@@ -194,6 +195,11 @@ msgstr "Не вдається ініціалізувати бібліотеку 
 #: gst/gsterror.c:98 gst/gsterror.c:99
 msgid "Could not close supporting library."
 msgstr "Не вдається закрити бібліотеку підтримки."
+
+#: gst/gsterror.c:113
+#, fuzzy
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer перехопив загальну помилку основної бібліотеки."
 
 #: gst/gsterror.c:117
 msgid "Resource not found."
@@ -238,6 +244,11 @@ msgstr "Не вдається синхронізуватись з ресурсо
 #: gst/gsterror.c:129
 msgid "Could not get/set settings from/on resource."
 msgstr "Не вдається отримати/встановити параметри з/у ресурсі."
+
+#: gst/gsterror.c:143
+#, fuzzy
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer перехопив загальну помилку основної бібліотеки."
 
 #: gst/gsterror.c:148
 msgid "Element doesn't implement handling of this stream. Please file a bug."
@@ -579,8 +590,8 @@ msgstr "Не вдається відкрити файл \"%s\" для запис
 msgid "Error closing file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
-#: gst/elements/gstfilesink.c:452
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
+#: gst/elements/gstfilesink.c:453
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
@@ -698,116 +709,116 @@ msgstr "порожній канал не допускається"
 msgid "Print all elements"
 msgstr "немає елементу \"%s\""
 
-#: tools/gst-launch.c:107
+#: tools/gst-launch.c:114
 #, c-format
 msgid ""
 "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
 "max %s ns).\n"
 msgstr ""
 
-#: tools/gst-launch.c:134
+#: tools/gst-launch.c:141
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
 "Використання: gst-xmllaunch <file.xml> [ елемент.властивість=значення ... ]\n"
 
-#: tools/gst-launch.c:142
+#: tools/gst-launch.c:149
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ПОМИЛКА: помилка при аналізі xml файлу \"%s\".\n"
 
-#: tools/gst-launch.c:148
+#: tools/gst-launch.c:155
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:162
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
 
-#: tools/gst-launch.c:166
+#: tools/gst-launch.c:173
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ПОМИЛКА: не вдається проаналізувати аргумент командного рядка %d: %s.\n"
 
-#: tools/gst-launch.c:177
+#: tools/gst-launch.c:184
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
 
-#: tools/gst-launch.c:316
+#: tools/gst-launch.c:327
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
 
-#: tools/gst-launch.c:403
+#: tools/gst-launch.c:412
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести теги (також відомі як метадані)"
 
-#: tools/gst-launch.c:405
+#: tools/gst-launch.c:414
 msgid "Output status information and property notifications"
 msgstr "Вивести інформацію про статус та сповіщення властивостей"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:416
 msgid "Do not output status information of TYPE"
 msgstr "Не виводити інформацію про статус типу ТИП"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:416
 msgid "TYPE1,TYPE2,..."
 msgstr "ТИП1,ТИП2,..."
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Зберегти xml представлення каналу у файл ФАЙЛ та завершитись"
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:413
+#: tools/gst-launch.c:422
 msgid "Do not install a fault handler"
 msgstr "Не встановлювати обробник збоїв"
 
-#: tools/gst-launch.c:415
+#: tools/gst-launch.c:424
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вивести трасу розподілу (якщо ввімкнено при компіляції)"
 
-#: tools/gst-launch.c:417
+#: tools/gst-launch.c:426
 msgid "Number of times to iterate pipeline"
 msgstr "Кількість ітерацій каналу"
 
-#: tools/gst-launch.c:487
+#: tools/gst-launch.c:496
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований: %s.\n"
 
-#: tools/gst-launch.c:491
+#: tools/gst-launch.c:500
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований.\n"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:504
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: помилковий канал: %s\n"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:505
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Спроба запуститись у будь-якому разі.\n"
 
-#: tools/gst-launch.c:523
+#: tools/gst-launch.c:532
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
-#: tools/gst-launch.c:530
+#: tools/gst-launch.c:539
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:542
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"

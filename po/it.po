@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-17 16:11+0100\n"
+"POT-Creation-Date: 2005-02-08 10:47+0100\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -174,9 +174,10 @@ msgid "PATHS"
 msgstr "PERCORSI"
 
 #: gst/gst.c:191
+#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
-"envronment variable GST_PLUGIN_PATH"
+"environment variable GST_PLUGIN_PATH"
 msgstr ""
 "Elenco separato da virgole dei plugin da pre-caricare in aggiunta all'elenco "
 "memorizzato nella variabile d'ambiente GST_PLUGIN_PATH"
@@ -211,12 +212,12 @@ msgstr "elenco dei percorsi per caricare i plugin (separati da '%s')"
 msgid "Scheduler to use (default is '%s')"
 msgstr "Scheduler da usare (predefinito è '%s')"
 
-#: gst/gstelement.c:261
+#: gst/gstelement.c:312
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERRORE: dall'elemento %s: %s\n"
 
-#: gst/gstelement.c:263
+#: gst/gstelement.c:314
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -281,7 +282,7 @@ msgstr "Errore interno di GStreamer: problema di caps. Notificare un bug."
 msgid "Internal GStreamer error: tag problem.  File a bug."
 msgstr "Errore interno di GStreamer: problema di tag. Notificare un bug."
 
-#: gst/gsterror.c:93 gst/gsterror.c:113 gst/gsterror.c:143
+#: gst/gsterror.c:93
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer ha incontrato un errore generale nelle librerie di supporto."
 
@@ -292,6 +293,11 @@ msgstr "Impossibile inizializzare la libreria di supporto."
 #: gst/gsterror.c:98 gst/gsterror.c:99
 msgid "Could not close supporting library."
 msgstr "Impossibile chiudere la libreria di supporto."
+
+#: gst/gsterror.c:113
+#, fuzzy
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
 
 #: gst/gsterror.c:117
 msgid "Resource not found."
@@ -336,6 +342,11 @@ msgstr "Impossibile effettuare una sincronizzazione sulla risorsa."
 #: gst/gsterror.c:129
 msgid "Could not get/set settings from/on resource."
 msgstr "Impossibile impostare o ottenere le impostazioni dalla risorsa."
+
+#: gst/gsterror.c:143
+#, fuzzy
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
 
 #: gst/gsterror.c:148
 msgid "Element doesn't implement handling of this stream. Please file a bug."
@@ -684,8 +695,8 @@ msgstr "Impossibile aprire il file «%s» in scrittura."
 msgid "Error closing file \"%s\"."
 msgstr "Errore nel chiudere il file «%s»."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
-#: gst/elements/gstfilesink.c:452
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
+#: gst/elements/gstfilesink.c:453
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Errore durante la scrittura sul file «%s»."
@@ -801,7 +812,7 @@ msgstr "pipeline vuota non consentito"
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
 
-#: tools/gst-launch.c:107
+#: tools/gst-launch.c:114
 #, c-format
 msgid ""
 "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
@@ -810,108 +821,108 @@ msgstr ""
 "Eseuzione terminata dopo %s iterazioni (somma %s ns, media %s ns, min %s ns, "
 "max %s ns).\n"
 
-#: tools/gst-launch.c:134
+#: tools/gst-launch.c:141
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Uso: gst-xmllaunch <FILE.XML> [ ELEMENTO.PROPRIETA=VALORE ... ]\n"
 
-#: tools/gst-launch.c:142
+#: tools/gst-launch.c:149
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ERRORE: analisi del file xml «%s» fallita.\n"
 
-#: tools/gst-launch.c:148
+#: tools/gst-launch.c:155
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERRORE: nessun elemento pipeline toplevel nel file «%s».\n"
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:162
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "AVVISO: al momento è supportato sono un elemento toplevel."
 
-#: tools/gst-launch.c:166
+#: tools/gst-launch.c:173
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ERRORE: impossibile analizzare l'argomento %d della riga di comando: %s.\n"
 
-#: tools/gst-launch.c:177
+#: tools/gst-launch.c:184
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVVISO: elemento di nome «%s» non trovato.\n"
 
-#: tools/gst-launch.c:316
+#: tools/gst-launch.c:327
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG TROVATO    : trovato dall'elemento «%s».\n"
 
-#: tools/gst-launch.c:403
+#: tools/gst-launch.c:412
 msgid "Output tags (also known as metadata)"
 msgstr "Stampa i tag (anche noti come metadati)"
 
-#: tools/gst-launch.c:405
+#: tools/gst-launch.c:414
 msgid "Output status information and property notifications"
 msgstr "Stampa informazioni di stato e notifiche delle proprietà"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:416
 msgid "Do not output status information of TYPE"
 msgstr "Non fornisce informazioni di stato per TIPO"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:416
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPO1,TIPO2,..."
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Salva su FILE una rappresentazione xml della pipeline ed esce"
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 msgid "FILE"
 msgstr "FILE"
 
-#: tools/gst-launch.c:413
+#: tools/gst-launch.c:422
 msgid "Do not install a fault handler"
 msgstr "Non installa un gestore di fault"
 
-#: tools/gst-launch.c:415
+#: tools/gst-launch.c:424
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Stampa traccia di alloc (se abilitato in compilazione)"
 
-#: tools/gst-launch.c:417
+#: tools/gst-launch.c:426
 msgid "Number of times to iterate pipeline"
 msgstr "Numero di iterazioni della pipeline"
 
-#: tools/gst-launch.c:487
+#: tools/gst-launch.c:496
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERRORE: impossibile costruire la pipeline: %s.\n"
 
-#: tools/gst-launch.c:491
+#: tools/gst-launch.c:500
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERRORE: impossibile costruire la pipeline.\n"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:504
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVVISO: pipeline errata: %s.\n"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:505
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Tentata esecuzione in ogni caso.\n"
 
-#: tools/gst-launch.c:523
+#: tools/gst-launch.c:532
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERRORE: l'elemento «pipeline» non è stato trovato.\n"
 
-#: tools/gst-launch.c:530
+#: tools/gst-launch.c:539
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:542
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERRORE: la pipeline non vuole riprodurre.\n"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-17 16:11+0100\n"
+"POT-Creation-Date: 2005-02-08 10:47+0100\n"
 "PO-Revision-Date: 2004-12-22 17:44+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -29,16 +29,24 @@ msgid "Print available debug categories and exit"
 msgstr "Imprimeix les categories de depuració disponibles i surt"
 
 #: gst/gst.c:169
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Nivell de depuració per defecte des de 1 (només errors) a 5 (tot) o 0 per a cap sortida"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Nivell de depuració per defecte des de 1 (només errors) a 5 (tot) o 0 per a "
+"cap sortida"
 
 #: gst/gst.c:171
 msgid "LEVEL"
 msgstr "NIVELL"
 
 #: gst/gst.c:173
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Llista separada per comes de parelles nom_categoria:nivell per a establir nivells específics per a les categories individuals. Per exemple: GST_AUTOPLUG:5, GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Llista separada per comes de parelles nom_categoria:nivell per a establir "
+"nivells específics per a les categories individuals. Per exemple: "
+"GST_AUTOPLUG:5, GST_ELEMENT_*:3"
 
 #: gst/gst.c:176
 msgid "LIST"
@@ -65,8 +73,13 @@ msgid "PATHS"
 msgstr "CAMINS"
 
 #: gst/gst.c:191
-msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
-msgstr "Llista separada per comes de connectors a precarregar a més de la llista emmagatzemada en la variable d'entorn GST_PLUGIN_PATH"
+#, fuzzy
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Llista separada per comes de connectors a precarregar a més de la llista "
+"emmagatzemada en la variable d'entorn GST_PLUGIN_PATH"
 
 #: gst/gst.c:193
 msgid "PLUGINS"
@@ -74,7 +87,9 @@ msgstr "CONNECTORS"
 
 #: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Inhabilita la captura de violacions de segment durant la càrrega de connectors"
+msgstr ""
+"Inhabilita la captura de violacions de segment durant la càrrega de "
+"connectors"
 
 #: gst/gst.c:199
 msgid "SCHEDULER"
@@ -98,12 +113,12 @@ msgstr "llista de camins per a carregar connectors (separats per «%s»)"
 msgid "Scheduler to use (default is '%s')"
 msgstr "Planificador a utilitzar (per defecte és «%s»)"
 
-#: gst/gstelement.c:261
+#: gst/gstelement.c:312
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERROR: des de l'element %s: %s\n"
 
-#: gst/gstelement.c:263
+#: gst/gstelement.c:314
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -117,50 +132,74 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ha trobat un error general de la biblioteca principal."
 
 #: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Els desenvolupadors de GStreamers han sigut tan vagues que no han assignat un codi d'error per a aquest error. Si us plau, envieu un informe d'error."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please file a bug."
+msgstr ""
+"Els desenvolupadors de GStreamers han sigut tan vagues que no han assignat "
+"un codi d'error per a aquest error. Si us plau, envieu un informe d'error."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: codi no implementat. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: codi no implementat. Envieu un "
+"informe d'error."
 
 #: gst/gsterror.c:63
 msgid "Internal GStreamer error: state change failed.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: ha fallat el canvi d'estat. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: ha fallat el canvi d'estat. "
+"Envieu un informe d'error."
 
 #: gst/gsterror.c:65
 msgid "Internal GStreamer error: pad problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema de separació. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema de separació. Envieu un "
+"informe d'error."
 
 #: gst/gsterror.c:67
 msgid "Internal GStreamer error: thread problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema de fils. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema de fils. Envieu un "
+"informe d'error."
 
 #: gst/gsterror.c:69
 msgid "Internal GStreamer error: scheduler problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema del planificador. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema del planificador. Envieu "
+"un informe d'error."
 
 #: gst/gsterror.c:71
 msgid "Internal GStreamer error: negotiation problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema de negociació. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema de negociació. Envieu un "
+"informe d'error."
 
 #: gst/gsterror.c:73
 msgid "Internal GStreamer error: event problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema d'esdeveniment. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema d'esdeveniment. Envieu "
+"un informe d'error."
 
 #: gst/gsterror.c:75
 msgid "Internal GStreamer error: seek problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema de cerca. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema de cerca. Envieu un "
+"informe d'error."
 
 #: gst/gsterror.c:77
 msgid "Internal GStreamer error: caps problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema de capacitats. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema de capacitats. Envieu un "
+"informe d'error."
 
 #: gst/gsterror.c:79
 msgid "Internal GStreamer error: tag problem.  File a bug."
-msgstr "S'ha produït un error intern de GStreamer: problema d'etiqueta. Envieu un informe d'error."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema d'etiqueta. Envieu un "
+"informe d'error."
 
-#: gst/gsterror.c:93 gst/gsterror.c:113 gst/gsterror.c:143
+#: gst/gsterror.c:93
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer ha trobat un error general de la biblioteca de suport."
 
@@ -171,6 +210,11 @@ msgstr "No s'ha pogut inicialitzar la biblioteca de suport."
 #: gst/gsterror.c:98 gst/gsterror.c:99
 msgid "Could not close supporting library."
 msgstr "No s'ha pogut tancar la biblioteca de suport."
+
+#: gst/gsterror.c:113
+#, fuzzy
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer ha trobat un error general de la biblioteca principal."
 
 #: gst/gsterror.c:117
 msgid "Resource not found."
@@ -216,9 +260,15 @@ msgstr "No s'ha pogut sincronitzar al recurs."
 msgid "Could not get/set settings from/on resource."
 msgstr "No s'ha pogut obtenir/establir els paràmetres des del/al recurs."
 
+#: gst/gsterror.c:143
+#, fuzzy
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer ha trobat un error general de la biblioteca principal."
+
 #: gst/gsterror.c:148
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "L'element no implementa la gestió d'aquest flux. Envieu un informe d'error."
+msgstr ""
+"L'element no implementa la gestió d'aquest flux. Envieu un informe d'error."
 
 #: gst/gsterror.c:150
 msgid "Could not determine type of stream."
@@ -226,7 +276,8 @@ msgstr "No s'ha pogut determinar el tipus de flux."
 
 #: gst/gsterror.c:152
 msgid "The stream is of a different type than handled by this element."
-msgstr "El flux és d'un tipus diferent del qual és gestionat per aquest element."
+msgstr ""
+"El flux és d'un tipus diferent del qual és gestionat per aquest element."
 
 #: gst/gsterror.c:154
 msgid "There is no codec present that can handle the stream's type."
@@ -260,7 +311,8 @@ msgstr "No hi ha cap missatge d'error per al domini %s."
 #: gst/gsterror.c:215
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "No s'ha trobat cap missatge d'error estàndard per al domini %s i el codi %d."
+msgstr ""
+"No s'ha trobat cap missatge d'error estàndard per al domini %s i el codi %d."
 
 #: gst/gsttag.c:83
 msgid "title"
@@ -372,7 +424,8 @@ msgstr "ISRC"
 
 #: gst/gsttag.c:138
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "International Standard Recording Code - vegeu http://www.ifpi.org/isrc/"
+msgstr ""
+"International Standard Recording Code - vegeu http://www.ifpi.org/isrc/"
 
 #: gst/gsttag.c:140
 msgid "organization"
@@ -537,7 +590,8 @@ msgstr ", "
 #: gst/autoplug/gstspider.c:466
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
-msgstr "No hi ha cap element present per a gestionar el tipus mime %s del flux."
+msgstr ""
+"No hi ha cap element present per a gestionar el tipus mime %s del flux."
 
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
@@ -553,8 +607,8 @@ msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
 msgid "Error closing file \"%s\"."
 msgstr "S'ha produït un error en tancar el fitxer «%s»."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
-#: gst/elements/gstfilesink.c:452
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
+#: gst/elements/gstfilesink.c:453
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
@@ -670,112 +724,117 @@ msgstr "no es permet un conducte buit"
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 
-#: tools/gst-launch.c:107
+#: tools/gst-launch.c:114
 #, c-format
-msgid "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, max %s ns).\n"
-msgstr "L'execució ha finalitzat després de %s iteracions (suma %s ns, mitja %s ns, mín %s, màx %s).\n"
+msgid ""
+"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+"max %s ns).\n"
+msgstr ""
+"L'execució ha finalitzat després de %s iteracions (suma %s ns, mitja %s ns, "
+"mín %s, màx %s).\n"
 
-#: tools/gst-launch.c:134
+#: tools/gst-launch.c:141
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Forma d'ús: gst-xmllaunch <file.xml> [ element.propietat=valor ... ]\n"
 
-#: tools/gst-launch.c:142
+#: tools/gst-launch.c:149
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ERROR: l'anàlisi del fitxer xml «%s» ha fallat.\n"
 
-#: tools/gst-launch.c:148
+#: tools/gst-launch.c:155
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERROR: no hi ha cap conducte de nivell superior en el fitxer «%s».\n"
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:162
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "AVÍS: només es gestiona un element de primer nivell ara mateix."
 
-#: tools/gst-launch.c:166
+#: tools/gst-launch.c:173
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ERROR: no s'ha pogut analitzar l'argument de la línia d'ordres %d: %s.\n"
+msgstr ""
+"ERROR: no s'ha pogut analitzar l'argument de la línia d'ordres %d: %s.\n"
 
-#: tools/gst-launch.c:177
+#: tools/gst-launch.c:184
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVÍS: no s'ha trobat l'element anomenat «%s».\n"
 
-#: tools/gst-launch.c:316
+#: tools/gst-launch.c:327
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
 
-#: tools/gst-launch.c:403
+#: tools/gst-launch.c:412
 msgid "Output tags (also known as metadata)"
 msgstr "Mostra els marcadors (també coneguts com metadades)"
 
-#: tools/gst-launch.c:405
+#: tools/gst-launch.c:414
 msgid "Output status information and property notifications"
 msgstr "Mostra la informació d'estat i notificacions de propietats"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:416
 msgid "Do not output status information of TYPE"
 msgstr "No mostres informació d'estat de TIPUS"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:416
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPUS1,TIPUS2,..."
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Desa la representació xml del conducte a FITXER i surt"
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 msgid "FILE"
 msgstr "FITXER"
 
-#: tools/gst-launch.c:413
+#: tools/gst-launch.c:422
 msgid "Do not install a fault handler"
 msgstr "No instal·les un gestor de fallades"
 
-#: tools/gst-launch.c:415
+#: tools/gst-launch.c:424
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"
 
-#: tools/gst-launch.c:417
+#: tools/gst-launch.c:426
 msgid "Number of times to iterate pipeline"
 msgstr "Nombre de vegades a iterar el conducte"
 
-#: tools/gst-launch.c:487
+#: tools/gst-launch.c:496
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: no s'ha pogut construir el conducte: %s.\n"
 
-#: tools/gst-launch.c:491
+#: tools/gst-launch.c:500
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERROR: no s'ha pogut construir el conducte.\n"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:504
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVÍS: el conducte és erroni: %s\n"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:505
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         S'està intentant executar tot i així.\n"
 
-#: tools/gst-launch.c:523
+#: tools/gst-launch.c:532
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: l'element «conducte» no s'ha trobat.\n"
 
-#: tools/gst-launch.c:530
+#: tools/gst-launch.c:539
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "S'ESTÀ EXECUTANT el conducte ...\n"
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:542
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: el conducte no vol reproduir-se.\n"
