@@ -142,11 +142,50 @@ gst_tee_sinklink (GstPad *pad, GstCaps *caps)
     if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC || !GST_PAD_IS_USABLE (outpad))
       continue;
 
-    if ((set_retval = gst_pad_try_set_caps (outpad, caps)) <= 0) {
+    if ((set_retval = gst_pad_proxy_link (outpad, caps)) <= 0) {
       return set_retval;
     }
   }
   return GST_PAD_LINK_OK;
+}
+
+static GstPadLinkReturn 
+gst_tee_srclink (GstPad *pad, GstCaps *caps) 
+{
+  GstTee *tee;
+
+  tee = GST_TEE (gst_pad_get_parent (pad));
+
+  return gst_pad_proxy_link (tee->sinkpad, caps);
+}
+
+static GstCaps* 
+gst_tee_sinkgetcaps (GstPad *pad, GstCaps *filter) 
+{
+  GstCaps *caps = NULL;
+  GstTee *tee;
+  const GList *pads;
+
+  tee = GST_TEE (gst_pad_get_parent (pad));
+
+  pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+
+  while (pads) {
+    GstPad *srcpad = GST_PAD_CAST (pads->data);
+    GstCaps *peercaps;
+
+    pads = g_list_next (pads);
+
+    if (!GST_PAD_IS_SRC (srcpad))
+      continue;
+
+    peercaps = gst_pad_get_caps (srcpad);
+    caps = gst_caps_intersect (caps, peercaps);
+    gst_caps_unref (caps);
+    gst_caps_unref (peercaps);
+  }
+
+  return caps;
 }
 
 static void 
@@ -156,6 +195,7 @@ gst_tee_init (GstTee *tee)
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_link_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_sinklink));
+  gst_pad_set_getcaps_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_sinkgetcaps));
 
   tee->silent = FALSE;
   tee->last_message = NULL;
@@ -213,6 +253,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
+  gst_pad_set_link_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_srclink));
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 
