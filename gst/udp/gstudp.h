@@ -22,14 +22,21 @@
 #define __GST_UDP_H__
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
+#endif				/* __cplusplus */
+
+  typedef enum
+  {
+    CONTROL_ZERO,
+    CONTROL_NONE,
+    CONTROL_UDP,
+    CONTROL_TCP
+  } Gst_UDP_Control;
+
+#ifdef __cplusplus
+}
 #endif /* __cplusplus */
 
-typedef enum {
-  CONTROL_ZERO,
-  CONTROL_NONE,
-  CONTROL_UDP,
-  CONTROL_TCP
-} Gst_UDP_Control;
+#endif /* __GST_UDP_H__ */
 
-#endif
