@@ -10,8 +10,8 @@ static GstPropsFactory mpeg2dec_sink_props = {
 
 static GstPropsFactory mpeg2dec_src_props = {
   "fourcc",	GST_PROPS_LIST (
-                        GST_PROPS_FOURCC ('Y','V','1','2'),
-			GST_PROPS_FOURCC_INT (0x56595559)
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2'))
 			),
   "width",	GST_PROPS_INT_RANGE (16, 4096),
   "height",	GST_PROPS_INT_RANGE (16, 4096),
@@ -51,8 +51,8 @@ int main(int argc,char *argv[])
 		      gst_props_new ("framed", GST_PROPS_BOOLEAN (TRUE),
 		                     "mpegtest", GST_PROPS_BOOLEAN (FALSE),
 		                     "hello", GST_PROPS_LIST (
-					     GST_PROPS_FOURCC_INT (0X5555),
-					     GST_PROPS_FOURCC_INT (0X6666)
+                        		     GST_PROPS_FOURCC (GST_MAKE_FOURCC (0,0,0x55,0x55)),
+                        		     GST_PROPS_FOURCC (GST_MAKE_FOURCC (0,0,0x66,0x66))
 					     ),
 			             NULL));
   }
@@ -61,7 +61,7 @@ int main(int argc,char *argv[])
   gst_props_save_thyself (testprops, parent);
 
   sinkprops = gst_props_set (sinkprops, "mpegtype", GST_PROPS_INT (1));
-  sinkprops = gst_props_set (sinkprops, "foobar", GST_PROPS_FOURCC_INT (0x56565656));
+  sinkprops = gst_props_set (sinkprops, "foobar", GST_PROPS_FOURCC (GST_MAKE_FOURCC (0x56, 0x56,0x56,0x56)));
 
   g_print ("%08lx\n", gst_props_get_fourcc_int (sinkprops, "foobar"));
   g_print ("%d\n", gst_props_get_int (sinkprops, "mpegtype"));

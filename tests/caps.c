@@ -23,8 +23,8 @@ static GstCapsFactory mpeg2dec_src_caps = {
   "mpeg2dec_src",
   "video/raw",
   "fourcc", 	GST_PROPS_LIST (
-                        GST_PROPS_FOURCC ('Y','V','1','2'), 
- 			GST_PROPS_FOURCC_INT (0x56595559)
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')), 
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2'))
 			),
   "width",	GST_PROPS_INT_RANGE (16, 4096),
   "height",	GST_PROPS_INT_RANGE (16, 4096),
@@ -35,7 +35,7 @@ static GstCapsFactory raw_sink_caps = {
   "raw_sink_caps",
   "video/raw",
   "fourcc", 	GST_PROPS_LIST (
-                        GST_PROPS_FOURCC_INT (0x32315659)
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')) 
 			),
   "height",	GST_PROPS_INT_RANGE (16, 256),
   NULL
@@ -45,8 +45,8 @@ static GstCapsFactory raw2_sink_caps = {
   "raw2_sink_caps",
   "video/raw",
   "fourcc", 	GST_PROPS_LIST (
-                        GST_PROPS_FOURCC_INT (0x32315659),
-                        GST_PROPS_FOURCC ('Y','U','Y','V') 
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+                        GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','V')) 
 			),
   "height",	GST_PROPS_INT_RANGE (16, 4096),
   NULL
