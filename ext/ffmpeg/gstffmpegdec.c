@@ -122,6 +122,10 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
 
   params = g_hash_table_lookup (global_plugins,
 		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+  if (!params)
+    params = g_hash_table_lookup (global_plugins,
+		GINT_TO_POINTER (0));
+  g_assert (params);
 
   /* construct the element details struct */
   details = g_new0 (GstElementDetails, 1);
@@ -495,15 +499,19 @@ gst_ffmpegdec_register (GstPlugin *plugin)
       goto next;
     }
 
+    params = g_new0 (GstFFMpegDecClassParams, 1);
+    params->in_plugin = in_plugin;
+    params->srccaps = srccaps;
+    params->sinkcaps = sinkcaps;
+    g_hash_table_insert (global_plugins, 
+		         GINT_TO_POINTER (0), 
+			 (gpointer) params);
+    
     /* create the gtype now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
     if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type))
       return FALSE;
 
-    params = g_new0 (GstFFMpegDecClassParams, 1);
-    params->in_plugin = in_plugin;
-    params->srccaps = srccaps;
-    params->sinkcaps = sinkcaps;
     g_hash_table_insert (global_plugins, 
 		         GINT_TO_POINTER (type), 
 			 (gpointer) params);
@@ -511,6 +519,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 next:
     in_plugin = in_plugin->next;
   }
+  g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }

@@ -120,6 +120,10 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
 
   params = g_hash_table_lookup (global_plugins,
 		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+  if (!params)
+    params = g_hash_table_lookup (global_plugins,
+		GINT_TO_POINTER (0));
+  g_assert (params);
 
   /* construct the element details struct */
   details = g_new0 (GstElementDetails, 1);
@@ -506,11 +510,6 @@ gst_ffmpegmux_register (GstPlugin *plugin)
       goto next;
     }
 
-    /* create the type now */
-    type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
-      return FALSE;
-
     /* create a cache for these properties */
     params = g_new0 (GstFFMpegMuxClassParams, 1);
     params->in_plugin = in_plugin;
@@ -519,12 +518,22 @@ gst_ffmpegmux_register (GstPlugin *plugin)
     params->audiosinkcaps = audiosinkcaps;
 
     g_hash_table_insert (global_plugins, 
+		         GINT_TO_POINTER (0), 
+			 (gpointer) params);
+
+    /* create the type now */
+    type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
+    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+      return FALSE;
+
+    g_hash_table_insert (global_plugins, 
 		         GINT_TO_POINTER (type), 
 			 (gpointer) params);
 
 next:
     in_plugin = in_plugin->next;
   }
+  g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }

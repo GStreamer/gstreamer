@@ -152,6 +152,12 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass *klass)
 
   params = g_hash_table_lookup (enc_global_plugins,
 		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+  /* HACK: if we don't have a GType yet, our params are stored at position 0 */
+  if (!params) {
+    params = g_hash_table_lookup (enc_global_plugins,
+		  GINT_TO_POINTER (0));
+  }
+  g_assert (params);
 
   /* construct the element details struct */
   details = g_new0 (GstElementDetails, 1);
@@ -551,15 +557,19 @@ gst_ffmpegenc_register (GstPlugin *plugin)
       goto next;
     }
 
-    /* create the glib type now */
-    type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
-      return FALSE;
-
     params = g_new0 (GstFFMpegEncClassParams, 1);
     params->in_plugin = in_plugin;
     params->srccaps = srccaps;
     params->sinkcaps = sinkcaps;
+
+    g_hash_table_insert (enc_global_plugins, 
+		         GINT_TO_POINTER (0), 
+			 (gpointer) params);
+
+    /* create the glib type now */
+    type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
+    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+      return FALSE;
 
     g_hash_table_insert (enc_global_plugins, 
 		         GINT_TO_POINTER (type), 
@@ -568,6 +578,7 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 next:
     in_plugin = in_plugin->next;
   }
+  g_hash_table_remove (enc_global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }

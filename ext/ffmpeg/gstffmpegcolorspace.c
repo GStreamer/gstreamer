@@ -498,7 +498,6 @@ gboolean
 gst_ffmpegcsp_register (GstPlugin *plugin)
 {
   GstCaps *caps;
-  GstPadTemplate *srctempl, *sinktempl;
 
   /* template caps */
   caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
@@ -508,7 +507,7 @@ gst_ffmpegcsp_register (GstPlugin *plugin)
 				    GST_PAD_SRC,
 				    GST_PAD_ALWAYS,
 				    caps, NULL);
-  gst_caps_ref (caps);
+  gst_caps_ref (caps); /* FIXME: pad_template_new refs the caps, doesn't it? */
   sinktempl = gst_pad_template_new ("sink",
 				    GST_PAD_SINK,
 				    GST_PAD_ALWAYS,
