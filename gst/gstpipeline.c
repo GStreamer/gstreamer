@@ -107,7 +107,7 @@ gst_pipeline_init (GstPipeline *pipeline)
  * Returns: newly created GstPipeline
  */
 GstElement*
-gst_pipeline_new (guchar *name)
+gst_pipeline_new (const guchar *name)
 {
   return gst_elementfactory_make ("pipeline", name);
 }
