@@ -1,5 +1,11 @@
 2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_add_stream):
+	  Fix two memleaks.
+
+2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/faad/gstfaad.c: (gst_faad_srcgetcaps):
 	  Argh...
 
