@@ -70,7 +70,7 @@ main (int argc, char *argv[])
   
   gst_element_set_state (pipeline, GST_STATE_READY);
   g_print ("Setting caps on fakesrc's src pad\n");
-  if (! (gst_pad_try_set_caps (gst_element_get_pad (src, "src"), caps)))
+  if (gst_pad_try_set_caps (gst_element_get_pad (src, "src"), caps) <= 0)
      g_print ("Could not set caps !\n");
 	  
   /* request first pad from tee and connect */
