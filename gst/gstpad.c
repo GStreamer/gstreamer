@@ -3247,8 +3247,13 @@ gst_pad_push (GstPad * pad, GstData * data)
   g_return_if_fail (data != NULL);
 
   DEBUG_DATA (pad, data, "gst_pad_push");
-  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), &data))
+
+  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), &data)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "not pushing data %p, blocked by probe", data);
+    gst_data_unref (data);
     return;
+  }
 
   if (!GST_PAD_IS_LINKED (pad)) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -3279,13 +3284,17 @@ gst_pad_push (GstPad * pad, GstData * data)
 
     if (peer->chainhandler) {
       if (data) {
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data)) {
+          GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+              "not pushing data %p, blocked by probe", data);
+          gst_data_unref (data);
+          return;
+        }
+
         GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
             "calling chainhandler &%s of peer pad %s:%s",
             GST_DEBUG_FUNCPTR_NAME (peer->chainhandler),
             GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
-          return;
-
         (peer->chainhandler) (GST_PAD (peer), data);
         return;
       } else {
@@ -3368,8 +3377,12 @@ gst_pad_pull (GstPad * pad)
           }
         }
         GST_DEBUG ("calling gst_probe_dispatcher_dispatch on data %p", data);
-        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data)) {
+          GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+              "not returning pulled data %p, blocked by probe", data);
+          gst_data_unref (data);
           goto restart;
+        }
         DEBUG_DATA (pad, data, "gst_pad_pull returned");
         return data;
       }
