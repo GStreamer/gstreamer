@@ -164,23 +164,22 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %defattr(-, root, root, -)
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
+%{_bindir}/gst-feedback
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-md5sum
 %{_bindir}/gst-register
-%{_bindir}/gst-feedback
-%{_bindir}/gst-xmllaunch
 %{_bindir}/gst-typefind
-%{_mandir}/man1/gst-feedback.*
-%{_mandir}/man1/gst-xmllaunch.*
+%{_bindir}/gst-xmllaunch
 %{_mandir}/man1/gst-complete.*
 %{_mandir}/man1/gst-compprep.*
+%{_mandir}/man1/gst-feedback.*
 %{_mandir}/man1/gst-inspect.*
 %{_mandir}/man1/gst-launch.*
 %{_mandir}/man1/gst-md5sum.*
 %{_mandir}/man1/gst-register.*
 %{_mandir}/man1/gst-typefind.*
-
+%{_mandir}/man1/gst-xmllaunch.*
 
 %files devel
 %defattr(-, root, root, -)
@@ -267,6 +266,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Tue Jun 10 2003 Thomas Vander Stichele <thomas at apestaart dot org>
+- added gst-typefind
+
 * Mon May 19 2003 Thomas Vander Stichele <thomas at apestaart dot org>
 - defattr fixes
 
