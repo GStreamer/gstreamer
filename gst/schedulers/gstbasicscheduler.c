@@ -632,6 +632,8 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
     /* need to set up the cothread now */
     if (wrapper_function != NULL) {
       if (GST_ELEMENT_THREADSTATE (element) == NULL) {
+	GST_DEBUG (GST_CAT_SCHEDULING, "about to create a cothread, wrapper function for '%s' is &%s",
+		   GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
 	do_cothread_create (GST_ELEMENT_THREADSTATE (element), chain->sched->context, 
 			    wrapper_function, 0, (char **) element);
 	if (GST_ELEMENT_THREADSTATE (element) == NULL) {
@@ -644,6 +646,8 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 		   GST_ELEMENT_NAME (element));
       } else {
 	/* set the cothread wrapper function */
+	GST_DEBUG (GST_CAT_SCHEDULING, "about to set the wrapper function for '%s' to &%s",
+		   GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
 	do_cothread_setfunc (GST_ELEMENT_THREADSTATE (element), chain->sched->context, 
 			     wrapper_function, 0, (char **) element);
 	GST_DEBUG (GST_CAT_SCHEDULING, "set wrapper function for '%s' to &%s",
