@@ -1,3 +1,18 @@
+2004-07-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  bump nano for prerelease
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	  updates
+
 2004-07-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
