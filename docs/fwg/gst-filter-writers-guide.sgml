@@ -1,53 +1,37 @@
 <!DOCTYPE book PUBLIC "-//GNOME//DTD DocBook PNG Variant V1.0//EN" "" [ 
+<!ENTITY TITLEPAGE SYSTEM "titlepage.sgml">
+
 <!ENTITY INTRO SYSTEM "intro.sgml">
+<!ENTITY ELEMENTPADS SYSTEM "elementpads.sgml">
+<!ENTITY BUFFERS SYSTEM "buffers.sgml">
 <!ENTITY CHAINVSLOOP SYSTEM "chainvsloop.sgml">
+<!ENTITY SCHEDULING SYSTEM "scheduling.sgml">
+<!ENTITY TYPING SYSTEM "typing.sgml">
 ]>
 
 <book id="index">
-  <bookinfo>
-    
-    <authorgroup>
-      <author>
-	<firstname>Richard</firstname>
-	<surname>Boulton</surname>
-	<authorblurb>
-	  <para>
-	    <email>richard-gst@tartarus.org</email>
-	  </para>
-	</authorblurb>
-      </author>
-    </authorgroup>
-
-    <legalnotice>
-      <para>
-	This material may be distributed only subject to the terms and
-        conditions set forth in the Open Publication License, v1.0 or later (the
-        latest version is presently available at <ulink url="
-        http://www.opencontent.org/openpub/"
-        type="http">http://www.opencontent.org/openpub/</ulink> )
-      </para>
-    </legalnotice>
-
-    <title><application>GStreamer</application> Filter Writer's Guide</title>
-
-  </bookinfo>
+  &TITLEPAGE;
       
 <!-- ############# Overview - part ############### -->
 
   <part id="overview"><title>Overview</title>
     <partintro>
-      <para> 
-	This book describes how to extend the capabilities of
-	<application>GStreamer</application> by creating a new filter.  The
-	reader should be familiar with the basic workings of
-	<application>GStreamer</application>.  For a gentle introduction to
-	GStreamer, you may wish to read the <emphasis>FIXME</emphasis> Since
-	<application>GStreamer</application> adheres to the GTK+ programming
-	model, the reader is also assumed to understand the basics of GTK+.
+      <para>
+	This document describes how to extend the capabilities of
+	<application>GStreamer</application> by creating new plugins.
+      </para>
+      <para>
+	It first describes the concepts required and the ways in which
+	<application>GStreamer</application> can be extended. It then goes
+	through a worked example of how to write a simple filter (for data
+	processing), and how to test and debug it.  More advanced concepts are
+	then introduced, with worked examples of each.  Next, writing source
+	and sink elements (for performing input and output) is discussed.
+	Finally, checklists of things to be sure to do when extending
+	<application>GStreamer</application> are presented.
       </para>
     </partintro>
 
-<!-- ############ Introduction - chapter ############# -->
       &INTRO;
   </part>
 
@@ -55,15 +39,114 @@
 
   <part id="basic-concepts"><title>Basic concepts</title>
     <partintro>
-      <para> 
-        We will first describe the concepts it is neccessary to understand
-	before building a filter.
+      <para>
+	Filters are at the core of what GStreamer is.  Without filters, 
+	GStreamer is just a bunch of pipe fittings with nothing to 
+	connect.  A large number of filters (known as elements) ship with 
+	GStreamer, but they are only capable of so much.  If you wish to 
+	extend it beyond these standard capabilities, you must write 
+	filters.
+      </para>
+
+      <para>
+	A filter may be constructed in several different ways, but all must 
+	conform to the same basic rules.  A simple filter may be built
+	with the FilterFactory, where the only code that need be written 
+	is the actual filter code.  A more complex filter may need to be 
+	written out fully for complete access to the features and 
+	performance possible with GStreamer.  This guide will explain all 
+	the steps necessary for both methods.
       </para>
     </partintro>
 
-<!-- ############ Basic concepts - chapter ############# -->
+      &ELEMENTPADS;
+
+      &BUFFERS;
+
       &CHAINVSLOOP;
+
+      &SCHEDULING;
+
+      &TYPING;
+
   </part>
 
 <!-- ############ Building A Filter - part ############# -->
 </book>
+
+
+
+GStreamer Filter Writer's Guide
+===============================
+
+Outline:
+
+Basic concepts
+	Chain vs loop elements
+	Scheduling
+	Buffers
+	Typing and Properties
+	Metadata
+Building our first filter
+	Constructing the boilerplate
+		Doing it the easy way with FilterFactory
+		  (NOTE: FilterFactory doesn't exist yet)
+		Doing it the hard way with G[tk]Object
+	An identity filter
+		Building an object with pads
+		Attaching functions
+		The chain function
+	The plugin_init function
+		Registering the types
+		Registering the filter
+Building a simple test application
+	Initialization
+	Instantiating the plugins
+	  (NOTE: we really should have a debugging Sink)
+	Connecting them
+	Running the pipeline
+Loop-based Elements
+	How scheduling works, aka pushing and pulling
+	How a loopfunc works, aka pulling and pushing
+	Adding a second output
+		Identity is now a tee
+		Modifying the test application
+Types and Properties
+	Building a simple format for testing
+	A simple MIME type
+	Type properties
+	Typefind functions and autopluggin
+Buffers and Metadata
+	Anatomy of a Buffer
+	Refcounts and mutability
+	Metadata
+		How Properties work efficiently
+		Metadata mutability
+		  (FIXME: this is an unsolved problem)
+Sources and Sinks
+	Writing a source
+		Pull vs loop based
+		Region pulling
+		  (NOTE: somewhere explain how filters use this)
+	Writing a sink
+		Gee, that was easy
+State management
+	What are states?
+	Mangaging filter state
+Checklist
+	Things to check when writing a filter
+	Things to check when writing a source or sink
+
+
+
+=====
+
+Omega: a chain-based element has chain functions on each sink pad, the
+	connected source pad may directly call (i.e. on the stack) the chain
+	function
+Omega: each chain function is responsible for doing something useful,
+	generally processing the buffer and pushing out the other end
+Omega: a loop-based element has a single function attatched to the element
+	(not tha pads) that spins in a loop calling gst_pad_pull(sinkpad),
+	do stuff, gst_pad_push(srcpad)
+

@@ -1,0 +1,56 @@
+<chapter id="cha-intro">
+  <title>Introduction</title>
+  <para>
+    <application>GStreamer</application> is a framework for creating
+    streaming media applications.  It is extremely powerful and versatile,
+    and this versatility stems in part from its modularity, and its ability
+    to incorporate new modules seamlessly into its framework.
+  </para>
+
+  <sect1 id="sec-intro-doicare">
+    <title>Do I care?</title>
+    <para>
+      This guide explains how to write new modules for GStreamer.  It is
+      relevant to:
+      <itemizedlist>
+        <listitem>
+	  Anyone who wants to add support for new input and output
+          devices, often called sources and sinks.  For example,
+	  adding the ability to write to a new video output system
+	  could be done by writing an appropriate sink plugin.
+        </listitem>
+        <listitem>
+	  Anyone who wants to add support for new ways of processing
+	  data in GStreamer, often called
+	  filters.  For example, a new data format converter could be
+	  created.
+        </listitem>
+	<listitem>
+	  Anyone who wants to extend GStreamer in
+	  any way: you need to have an understanding of how the plugin system
+	  works before you can understand the constraints it places on the
+	  rest of the code.  And you might be surprised at how much can be
+	  done with plugins.
+        </listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      This guide is not relevant to you if you only want to use the existing
+      functionality of GStreamer, or use an application which uses GStreamer.
+      You lot can go away.  Shoo...  (You might find the <emphasis>GStreamer
+      Application Development Manual</emphasis> helpful though.)
+    </para>
+  </sect1>
+
+  <sect1 id="sec-intro-reading">
+    <title>Preliminary reading</title>
+    <para>
+	The reader should be familiar with the basic workings of
+	<application>GStreamer</application>.  For a gentle introduction to
+	GStreamer, you may wish to read the <emphasis>GStreamer Application
+	Development Manual</emphasis>.  Since
+	<application>GStreamer</application> adheres to the GTK+ programming
+	model, the reader is also assumed to understand the basics of GTK+.
+    </para>
+  </sect1>
+</chapter>
