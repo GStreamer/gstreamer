@@ -1,5 +1,11 @@
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/manual/manual.xml:
+	* docs/manual/win32.xml:
+	  add chapter on win32 building.  fixes #142422
+
+2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Sebastien Cote <sc5 at hermes.usherb.ca>
 
 	* gst/autoplug/gstspider.c: (gst_spider_init),

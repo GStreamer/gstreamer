@@ -34,8 +34,8 @@ available in your system PATH.</para>
 <note>
 <title>Notes</title>
 
-<para>you can find Win32 versions of these libraries on <ulink url="http://gettext.sourceforge.net/">http://gettext.sourceforge.net/</ulink> and
-<ulink url="http://gnuwin32.sourceforge.net/">http://gnuwin32.sourceforge.net/</ulink> (you will need the Binaries and Developer files for each package).</para>
+<para>you can find Win32 versions of these libraries on <ulink url="http://gnuwin32.sourceforge.net/">http://gnuwin32.sourceforge.net/</ulink> 
+You will need the Binaries and Developer files for each package.</para>
 
 <para>GLib can be found on <ulink url="ftp://ftp.gtk.org/pub/gtk/v2.4/" type="ftp">ftp://ftp.gtk.org/pub/gtk/v2.4/</ulink> and should be compiled from the 
 sources</para>

@@ -52,6 +52,7 @@
 <!ENTITY PROGRAMS SYSTEM "programs.xml">
 <!ENTITY COMPONENTS SYSTEM "components.xml">
 <!ENTITY GNOME SYSTEM "gnome.xml">
+<!ENTITY WIN32 SYSTEM "win32.xml">
 <!ENTITY QUOTES SYSTEM "quotes.xml">
 ]>
 
@@ -277,6 +278,8 @@
       &COMPONENTS;
 
       &GNOME;
+
+      &WIN32;
 
       &QUOTES;
 
