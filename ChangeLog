@@ -1,5 +1,39 @@
 2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_channels), (gst_a52dec_push),
+	(gst_a52dec_reneg), (gst_a52dec_loop), (plugin_init):
+	* ext/alsa/gstalsa.c: (gst_alsa_get_caps):
+	* ext/alsa/gstalsaplugin.c: (plugin_init):
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_channels),
+	(gst_dtsdec_renegotiate), (gst_dtsdec_loop), (plugin_init):
+	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_chanpos_from_gst),
+	(gst_faad_chanpos_to_gst), (gst_faad_sinkconnect),
+	(gst_faad_srcgetcaps), (gst_faad_srcconnect), (gst_faad_chain),
+	(gst_faad_change_state), (plugin_init):
+	* ext/faad/gstfaad.h:
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/audio.c: (plugin_init):
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions),
+	(gst_audio_get_channel_positions),
+	(gst_audio_set_channel_positions),
+	(gst_audio_set_structure_channel_positions_list),
+	(add_list_to_struct), (gst_audio_set_caps_channel_positions_list),
+	(gst_audio_fixate_channel_positions):
+	* gst-libs/gst/audio/multichannel.h:
+	* gst-libs/gst/audio/testchannels.c: (main):
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_class_init), (gst_audio_convert_init),
+	(gst_audio_convert_dispose), (gst_audio_convert_getcaps),
+	(gst_audio_convert_parse_caps), (gst_audio_convert_link),
+	(gst_audio_convert_fixate), (gst_audio_convert_channels):
+	* gst/audioconvert/plugin.c: (plugin_init):
+	  Surround sound support.
+
+2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_push):
 	  Fix position for discont if we're close as well. Nitpicking, but
 	  saves a few milliseconds of extra waiting or skipping.

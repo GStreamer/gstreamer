@@ -24,6 +24,7 @@
 #include "vorbisdec.h"
 #include <string.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/multichannel.h>
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
 #define GST_CAT_DEFAULT vorbisdec_debug
@@ -53,7 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "rate = (int) [ 8000, 50000 ], "
-        "channels = (int) [ 1, 2 ], " "endianness = (int) BYTE_ORDER, "
+        "channels = (int) [ 1, 6 ], " "endianness = (int) BYTE_ORDER, "
 /* no ifdef in macros, please
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
       "layout = \"sequential\", "
@@ -431,6 +432,7 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
       gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
     } else if (packet.packetno == 2) {
       GstCaps *caps;
+      const GstAudioChannelPosition *pos = NULL;
 
       /* done */
       vorbis_synthesis_init (&vd->vd, &vd->vi);
@@ -440,6 +442,63 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
           "channels", G_TYPE_INT, vd->vi.channels,
           "endianness", G_TYPE_INT, G_BYTE_ORDER,
           "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0, NULL);
+      switch (vd->vi.channels) {
+        case 1:
+        case 2:
+          /* nothing */
+          break;
+        case 3:{
+          static GstAudioChannelPosition pos3[] = {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+          };
+          pos = pos3;
+          break;
+        }
+        case 4:{
+          static GstAudioChannelPosition pos4[] = {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
+          };
+          pos = pos4;
+          break;
+        }
+        case 5:{
+          static GstAudioChannelPosition pos5[] = {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
+          };
+          pos = pos5;
+          break;
+        }
+        case 6:{
+          static GstAudioChannelPosition pos6[] = {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_LFE
+          };
+          pos = pos6;
+          break;
+        }
+        default:
+          gst_data_unref (data);
+          gst_caps_free (caps);
+          GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
+              ("Unsupported channel count %d", vd->vi.channels));
+          return;
+      }
+      if (pos) {
+        gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+      }
       if (!gst_pad_set_explicit_caps (vd->srcpad, caps)) {
         gst_caps_free (caps);
         return;

@@ -37,6 +37,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/multichannel.h>
 #include <string.h>
 #include "plugin.h"
 
@@ -64,6 +65,7 @@ struct _GstAudioConvertCaps
   gint width;
   gint rate;
   gint channels;
+  GstAudioChannelPosition *pos;
 
   /* int audio caps */
   gboolean sign;
@@ -104,6 +106,7 @@ static GstElementDetails audio_convert_details = {
 static void gst_audio_convert_base_init (gpointer g_class);
 static void gst_audio_convert_class_init (GstAudioConvertClass * klass);
 static void gst_audio_convert_init (GstAudioConvert * audio_convert);
+static void gst_audio_convert_dispose (GObject * obj);
 
 /* gstreamer functions */
 static void gst_audio_convert_chain (GstPad * pad, GstData * _data);
@@ -147,32 +150,34 @@ GST_BOILERPLATE_FULL (GstAudioConvert, gst_audio_convert, GstElement,
 GST_STATIC_CAPS ( \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 2 ], " \
+    "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 8, " \
     "depth = (int) [ 1, 8 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 2 ], " \
+    "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 16, " \
     "depth = (int) [ 1, 16 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 2 ], " \
+    "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 32, " \
     "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 2 ], " \
+    "channels = (int) [ 1, 8 ], " \
     "endianness = (int) BYTE_ORDER, " \
     "width = (int) 32, " \
     "buffer-frames = (int) [ 0, MAX ]" \
 )
+
+static GstAudioChannelPosition *supported_positions;
 
 static GstStaticPadTemplate gst_audio_convert_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -204,8 +209,16 @@ static void
 gst_audio_convert_class_init (GstAudioConvertClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  gint i;
 
   gstelement_class->change_state = gst_audio_convert_change_state;
+  gobject_class->dispose = gst_audio_convert_dispose;
+
+  supported_positions = g_new0 (GstAudioChannelPosition,
+      GST_AUDIO_CHANNEL_POSITION_NUM);
+  for (i = 0; i < GST_AUDIO_CHANNEL_POSITION_NUM; i++)
+    supported_positions[i] = i;
 }
 
 static void
@@ -233,6 +246,24 @@ gst_audio_convert_init (GstAudioConvert * this)
 
   /* clear important variables */
   this->convert_internal = NULL;
+  this->sinkcaps.pos = NULL;
+  this->srccaps.pos = NULL;
+}
+
+static void
+gst_audio_convert_dispose (GObject * obj)
+{
+  GstAudioConvert *this = GST_AUDIO_CONVERT (obj);
+
+  if (this->sinkcaps.pos) {
+    g_free (this->sinkcaps.pos);
+    this->sinkcaps.pos = NULL;
+  }
+
+  if (this->srccaps.pos) {
+    g_free (this->srccaps.pos);
+    this->srccaps.pos = NULL;
+  }
 }
 
 /*** GSTREAMER FUNCTIONS ******************************************************/
@@ -310,6 +341,7 @@ gst_audio_convert_getcaps (GstPad * pad)
   for (i = size - 1; i >= 0; i--) {
     structure = gst_caps_get_structure (othercaps, i);
     gst_structure_remove_field (structure, "channels");
+    gst_structure_remove_field (structure, "channel-positions");
     gst_structure_remove_field (structure, "endianness");
     gst_structure_remove_field (structure, "width");
     gst_structure_remove_field (structure, "depth");
@@ -332,6 +364,10 @@ gst_audio_convert_getcaps (GstPad * pad)
   caps = gst_caps_intersect (othercaps, templcaps);
   gst_caps_free (othercaps);
 
+  /* Get the channel positions in as well. */
+  gst_audio_set_caps_channel_positions_list (caps, supported_positions,
+      GST_AUDIO_CHANNEL_POSITION_NUM);
+
   return caps;
 }
 
@@ -344,10 +380,17 @@ gst_audio_convert_parse_caps (const GstCaps * gst_caps,
   g_return_val_if_fail (gst_caps_is_fixed (gst_caps), FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
 
+  /* cleanup old */
+  if (caps->pos) {
+    g_free (caps->pos);
+    caps->pos = NULL;
+  }
+
   caps->endianness = G_BYTE_ORDER;
   caps->is_int =
       (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0);
   if (!gst_structure_get_int (structure, "channels", &caps->channels)
+      || !(caps->pos = gst_audio_get_channel_positions (structure))
       || !gst_structure_get_int (structure, "width", &caps->width)
       || !gst_structure_get_int (structure, "rate", &caps->rate)
       || (caps->is_int
@@ -359,10 +402,14 @@ gst_audio_convert_parse_caps (const GstCaps * gst_caps,
           && !gst_structure_get_int (structure, "buffer-frames",
               &caps->buffer_frames))) {
     GST_DEBUG ("could not get some values from structure");
+    g_free (caps->pos);
+    caps->pos = NULL;
     return FALSE;
   }
   if (caps->is_int && caps->depth > caps->width) {
     GST_DEBUG ("width > depth, not allowed - make us advertise correct caps");
+    g_free (caps->pos);
+    caps->pos = NULL;
     return FALSE;
   }
   return TRUE;
@@ -386,6 +433,7 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
   otherpad = (pad == this->src ? this->sink : this->src);
 
+  ac_caps.pos = NULL;
   if (!gst_audio_convert_parse_caps (caps, &ac_caps))
     return GST_PAD_LINK_REFUSED;
 
@@ -406,11 +454,14 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
     }
   }
   if (this->sink == pad) {
+    g_free (this->sinkcaps.pos);
     this->sinkcaps = ac_caps;
   } else {
+    g_free (this->srccaps.pos);
     this->srccaps = ac_caps;
   }
   GST_LOG_OBJECT (this, "trying to set caps to %" GST_PTR_FORMAT, othercaps);
+
   ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
   gst_caps_free (othercaps);
   if (ret < GST_PAD_LINK_OK)
@@ -419,18 +470,24 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   /* woohoo, got it */
   othercaps = (GstCaps *) gst_pad_get_negotiated_caps (otherpad);
   if (othercaps) {
+    other_ac_caps.pos = NULL;
+
     if (!gst_audio_convert_parse_caps (othercaps, &other_ac_caps)) {
       g_critical ("internal negotiation error");
       return GST_PAD_LINK_REFUSED;
     }
   } else {
     other_ac_caps = ac_caps;
+    other_ac_caps.pos = g_memdup (ac_caps.pos,
+        ac_caps.channels * sizeof (GstAudioChannelPosition));
   }
 
   if (this->sink == pad) {
+    g_free (this->srccaps.pos);
     this->srccaps = other_ac_caps;
     this->sinkcaps = ac_caps;
   } else {
+    g_free (this->sinkcaps.pos);
     this->srccaps = ac_caps;
     this->sinkcaps = other_ac_caps;
   }
@@ -489,6 +546,7 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
 static GstCaps *
 gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
 {
+  const GValue *pos_val;
   GstAudioConvert *this =
       GST_AUDIO_CONVERT (gst_object_get_parent (GST_OBJECT (pad)));
   GstPad *otherpad = (pad == this->sink ? this->src : this->sink);
@@ -508,15 +566,63 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
     try.endianness = ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER;
   }
 
-  if (_fixate_caps_to_int (&copy, "channels", try.channels))
+  if (_fixate_caps_to_int (&copy, "channels", try.channels)) {
+    int n;
+
+    if (try.channels > 2) {
+      /* make sure we have a channelpositions structure or array here */
+      GstStructure *str;
+
+      for (n = 0; n < gst_caps_get_size (copy); n++) {
+        str = gst_caps_get_structure (copy, n);
+        if (!gst_structure_get_value (str, "channel-positions")) {
+          /* first try otherpad's positions, else anything */
+          if (ac_caps.pos != NULL) {
+            gst_audio_set_channel_positions (str, ac_caps.pos);
+          } else {
+            gst_audio_set_structure_channel_positions_list (str,
+                supported_positions, GST_AUDIO_CHANNEL_POSITION_NUM);
+            /* FIXME: fixate (else we'll be less fixed than we used to) */
+          }
+        }
+      }
+    } else {
+      /* make sure we don't */
+      for (n = 0; n < gst_caps_get_size (copy); n++) {
+        gst_structure_remove_field (gst_caps_get_structure (copy, n),
+            "channel-positions");
+      }
+    }
     return copy;
+  }
   if (_fixate_caps_to_int (&copy, "width", try.width))
     return copy;
   if (_fixate_caps_to_int (&copy, "depth", try.depth))
     return copy;
   if (_fixate_caps_to_int (&copy, "endianness", try.endianness))
     return copy;
+  if ((pos_val = gst_structure_get_value (gst_caps_get_structure (copy, 0),
+              "channel-positions")) != NULL) {
+    GstAudioChannelPosition *pos;
+    const GValue *pos_val_entry;
+    gint i;
 
+    for (i = 0; i < gst_value_list_get_size (pos_val); i++) {
+      pos_val_entry = gst_value_list_get_value (pos_val, i);
+      if (G_VALUE_TYPE (pos_val_entry) == GST_TYPE_LIST) {
+        /* unfixed */
+        pos =
+            gst_audio_fixate_channel_positions (gst_caps_get_structure (copy,
+                0));
+        if (pos) {
+          gst_audio_set_channel_positions (gst_caps_get_structure (copy, 0),
+              pos);
+          g_free (pos);
+          return copy;
+        }
+      }
+    }
+  }
 
   gst_caps_free (copy);
   return NULL;
@@ -786,28 +892,135 @@ static GstBuffer *
 gst_audio_convert_channels (GstAudioConvert * this, GstBuffer * buf)
 {
   GstBuffer *ret;
-  gint i, count;
+  gint c, i, count, ci, co;
   gint32 *src, *dest;
 
-  if (this->sinkcaps.channels == this->srccaps.channels)
-    return buf;
+  /* Conversions from one-channel to compatible two-channel configs */
+  struct
+  {
+    GstAudioChannelPosition pos1[2];
+    GstAudioChannelPosition pos2[1];
+  } conv[] = {
+    /* front: mono <-> stereo */
+    { {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}},
+        /* front center: 2 <-> 1 */
+    { {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}},
+        /* rear: 2 <-> 1 */
+    { {
+    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+    GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, { {
+    GST_AUDIO_CHANNEL_POSITION_INVALID}}
+  };
+  gboolean set[8] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
+
+  if (this->sinkcaps.channels == this->srccaps.channels) {
+    for (i = 0; i < this->sinkcaps.channels; i++) {
+      if (this->sinkcaps.pos[i] != this->srccaps.pos[i])
+        break;
+    }
+    if (i == this->sinkcaps.channels)
+      return buf;
+  }
 
   count = GST_BUFFER_SIZE (buf) / 4 / this->sinkcaps.channels;
   ret = gst_audio_convert_get_buffer (buf, count * 4 * this->srccaps.channels);
+
+  /* conversions from compatible (but not the same) channel schemes. This
+   * goes two ways: if the sink has both pos1[0,1] and src has pos2[0] or
+   * if the src has both pos1[0,1] and sink has pos2[0], then we do the
+   * conversion. We hereby assume that the existance of pos1[0,1] and
+   * pos2[0] are mututally exclusive. There are no checks for that,
+   * unfortunately. This shouldn't lead to issues (like crashes or so),
+   * though. */
+  for (c = 0; conv[c].pos1[0] != GST_AUDIO_CHANNEL_POSITION_INVALID; c++) {
+    gint pos1_0 = -1, pos1_1 = -1, pos2_0 = -1, n;
+
+    /* Try to go from the given 2 channels to the given 1 channel */
+    for (n = 0; n < this->sinkcaps.channels; n++) {
+      if (this->sinkcaps.pos[n] == conv[c].pos1[0])
+        pos1_0 = n;
+      else if (this->sinkcaps.pos[n] == conv[c].pos1[1])
+        pos1_1 = n;
+    }
+    for (n = 0; n < this->srccaps.channels; n++) {
+      if (this->srccaps.pos[n] == conv[c].pos2[0])
+        pos2_0 = n;
+    }
+
+    if (pos1_0 != -1 && pos1_1 != -1 && pos2_0 != -1) {
+      src = (gint32 *) GST_BUFFER_DATA (buf);
+      dest = (gint32 *) GST_BUFFER_DATA (ret);
+
+      for (i = 0; i < count; i++) {
+        dest[pos2_0] = (src[pos1_0] >> 1) + (src[pos1_1] >> 1) +
+            ((src[pos1_0] & 1) & (src[pos1_1] & 1));
+        src += this->sinkcaps.channels;
+        dest += this->srccaps.channels;
+      }
+      set[pos2_0] = TRUE;
+    }
+
+    /* Try to go from the given 1 channel to the given 2 channels */
+    pos1_0 = -1;
+    pos1_1 = -1;
+    pos2_0 = -1;
+
+    for (n = 0; n < this->srccaps.channels; n++) {
+      if (this->srccaps.pos[n] == conv[c].pos1[0])
+        pos1_0 = n;
+      else if (this->srccaps.pos[n] == conv[c].pos1[1])
+        pos1_1 = n;
+    }
+    for (n = 0; n < this->sinkcaps.channels; n++) {
+      if (this->sinkcaps.pos[n] == conv[c].pos2[0])
+        pos2_0 = n;
+    }
+
+    if (pos1_0 != -1 && pos1_1 != -1 && pos2_0 != -1) {
+      src = (gint32 *) GST_BUFFER_DATA (buf);
+      dest = (gint32 *) GST_BUFFER_DATA (ret);
+
+      for (i = 0; i < count; i++) {
+        dest[pos1_0] = dest[pos1_1] = src[pos2_0];
+        src += this->sinkcaps.channels;
+        dest += this->srccaps.channels;
+      }
+      set[pos1_0] = set[pos1_1] = TRUE;
+    }
+  }
+
+  /* reset data pointers */
   src = (gint32 *) GST_BUFFER_DATA (buf);
   dest = (gint32 *) GST_BUFFER_DATA (ret);
 
-  if (this->sinkcaps.channels > this->srccaps.channels) {
-    for (i = 0; i < count; i++) {
-      *dest = *src >> 1;
-      src++;
-      *dest += (*src >> 1) + (*src & 1);
-      src++;
-      dest++;
+  /* Apart from the compatible channel assignments, we can also have
+   * same channel assignments. This is much simpler, we simply copy
+   * the value from source to dest! */
+  for (co = 0; co < this->srccaps.channels; co++) {
+    /* find a channel in input with same position */
+    for (ci = 0; ci < this->sinkcaps.channels; ci++) {
+      if (this->sinkcaps.pos[ci] == this->srccaps.pos[co]) {
+        for (i = 0; i < count; i++) {
+          dest[i * this->srccaps.channels + co] =
+              src[i * this->sinkcaps.channels + ci];
+        }
+        set[co] = TRUE;
+        break;
+      }
     }
-  } else {
-    for (i = count - 1; i >= 0; i--) {
-      dest[2 * i] = dest[2 * i + 1] = src[i];
+
+    /* if not found, then silence */
+    if (ci == this->sinkcaps.channels && !set[co]) {
+      for (i = 0; i < count; i++) {
+        dest[i * this->srccaps.channels + co] = 0;
+      }
     }
   }
 

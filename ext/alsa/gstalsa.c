@@ -26,6 +26,7 @@
 #include <sys/time.h>
 
 #include "gst/gst-i18n-plugin.h"
+#include <gst/audio/multichannel.h>
 #include "gst/propertyprobe/propertyprobe.h"
 #include "gstalsa.h"
 #include "gstalsaclock.h"
@@ -853,14 +854,55 @@ gst_alsa_get_caps (GstPad * pad)
 
       /* we can never use a format we can't set caps for */
       if (caps != NULL) {
+        gint n;
+
         g_assert (gst_caps_get_size (caps) == 1);
         add_channels (gst_caps_get_structure (caps, 0), min_rate, max_rate,
             min_channels, max_channels);
-        if (ret) {
-          gst_caps_append (ret, caps);
-        } else {
-          ret = caps;
+
+        /* channel configuration */
+        for (n = min_channels; n < max_channels; n++) {
+          if (snd_pcm_hw_params_test_channels (this->handle, hw_params, n) == 0) {
+            GstStructure *str;
+            GstAudioChannelPosition pos[8] = {
+              GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+              GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+              GST_AUDIO_CHANNEL_POSITION_LFE,
+              GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT
+            };
+
+            switch (n) {
+              case 1:
+                pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+                break;
+              case 2:
+              case 4:
+              case 6:
+              case 8:
+                /* keep above */
+                break;
+              default:
+                /* unsupported */
+                pos[0] = GST_AUDIO_CHANNEL_POSITION_INVALID;
+                break;
+            }
+
+            if (pos[0] != GST_AUDIO_CHANNEL_POSITION_INVALID) {
+              str = gst_structure_copy (gst_caps_get_structure (caps, 0));
+              gst_structure_set (str, "channels", G_TYPE_INT, n, NULL);
+              gst_audio_set_channel_positions (str, pos);
+              if (!ret) {
+                ret = gst_caps_new_empty ();
+              }
+              gst_caps_append_structure (ret, str);
+            }
+          }
         }
+        gst_caps_free (caps);
       }
     }
   }

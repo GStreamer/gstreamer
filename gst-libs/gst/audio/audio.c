@@ -22,6 +22,7 @@
 #endif
 
 #include "audio.h"
+#include "multichannel-enumtypes.h"
 
 #include <gst/gststructure.h>
 
@@ -267,6 +268,8 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_audio_channel_position_get_type ();
+
   return TRUE;
 }
 

@@ -56,6 +56,9 @@ plugin_init (GstPlugin * plugin)
 {
   int err;
 
+  if (!gst_library_load ("gstaudio"))
+    return FALSE;
+
   if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
           GST_TYPE_ALSA_MIXER))
     return FALSE;
