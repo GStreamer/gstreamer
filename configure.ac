@@ -304,18 +304,6 @@ AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
-dnl Check for libgdk-pixbuf
-dnl FIXME: not sure that this is still used anywhere.
-dnl DELETEME
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
-dnl GST_CHECK_FEATURE(GDK_PIXBUF, [use gdk pixbuf], , [
-dnl translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_LIBS)
-dnl translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_CFLAGS)
-dnl GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
-dnl ])
-dnl 
-
-
 if test x$USE_GLIB2 = xyes; then
   dnl we don't support gnome/gtk with glib2.0 yet
   GNOME_LIBS=
@@ -329,25 +317,6 @@ fi
 AC_SUBST(GNOME_LIBS)
 AC_SUBST(GNOME_CFLAGS)
 AC_SUBST(HAVE_GNOME)
-
-dnl Check for libghttp
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
-GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
-  dnl FIXME: need to check for header
-  GHTTP_LIBS=
-  GST_HTTPSRC_GET_TYPE=
-  if test x$USE_GLIB2 = xyes; then
-    AC_MSG_WARN(ghttp disabled for glib2.0)
-  else
-    AC_CHECK_LIB(ghttp, ghttp_request_new,
-      [GHTTP_LIBS="-lghttp"
-       GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
-       HAVE_LIBGHTTP=yes
-      ], :, $LIBS)
-  fi
-  AC_SUBST(GHTTP_LIBS)
-  AC_SUBST(GST_HTTPSRC_GET_TYPE)
-])
 
 dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
@@ -398,29 +367,6 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
     AC_MSG_WARN(Can't check properly for atomic reference counting.  Assuming OK.)
   ])
 fi
-
-
-dnl Check for X11 extensions
-AC_PATH_XTRA
-if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-  AC_MSG_ERROR(can not find X11)
-fi
-AC_SUBST(X_CFLAGS)
-AC_SUBST(X_PRE_LIBS)
-AC_SUBST(X_EXTRA_LIBS)
-AC_SUBST(X_LIBS)
-
-
-dnl Check for the Xv library
-xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension,
-  HAVE_LIBXV=yes,
-  HAVE_LIBXV=no,
-  $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS
-)
-LIBS=${xvsave_LIBS}
-AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
-AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
 
 dnl ######################################################################
@@ -825,8 +771,3 @@ gstreamer-uninstalled.pc
 gstreamer.spec,
 echo "$infomessages", infomessages="$infomessages"
 )
-
-echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
-echo
-echo -e "configure: *** Plugins that will not be built : $GST_PLUGINS_NO"
-echo
