@@ -84,6 +84,11 @@ static GstStaticPadTemplate src_template_factory =
         "audio/x-adpcm, "
         "layout = (string) microsoft, "
         "block_align = (int) [ 1, 8192 ], "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-adpcm, "
+        "layout = (string) dvi, "
+        "block_align = (int) [ 1, 8192 ], "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -213,6 +218,7 @@ gst_wavparse_create_sourcepad (GstWavParse * wavparse)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&src_template_factory), "src");
   gst_pad_use_explicit_caps (wavparse->srcpad);
+  /*gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad); */
   /*gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad); */
   gst_pad_set_formats_function (wavparse->srcpad, gst_wavparse_get_formats);
   gst_pad_set_convert_function (wavparse->srcpad, gst_wavparse_pad_convert);
@@ -664,6 +670,14 @@ gst_wavparse_parse_fmt (GstWavParse * wavparse, guint size)
             "channels", G_TYPE_INT, wavparse->channels, NULL);
         break;
 
+      case GST_RIFF_WAVE_FORMAT_DVI_ADPCM:
+        caps = gst_caps_new_simple ("audio/x-adpcm",
+            "layout", G_TYPE_STRING, "dvi",
+            "block_align", G_TYPE_INT, wavparse->bps,
+            "rate", G_TYPE_INT, wavparse->rate,
+            "channels", G_TYPE_INT, wavparse->channels, NULL);
+        break;
+
       case GST_RIFF_WAVE_FORMAT_MPEGL12:
       case GST_RIFF_WAVE_FORMAT_MPEGL3:{
         int layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
@@ -717,8 +731,9 @@ gst_wavparse_handle_sink_event (GstWavParse * wavparse)
       break;
 
     default:
-      g_warning ("Wavparse: Unhandled event %d", type);
-      break;
+      GST_WARNING ("Wavparse: Unhandled event %d", type);
+      gst_pad_event_default (wavparse->sinkpad, event);
+      goto done;
   }
 
   gst_event_unref (event);
@@ -834,6 +849,7 @@ gst_wavparse_loop (GstElement * element)
 
         chunk.type = GUINT32_FROM_LE (temp_chunk->type);
         skipsize = sizeof (gst_riff_list);
+        chunk.size -= 4;        /* size is including list type, which we flush */
         break;
 
       case GST_RIFF_TAG_cue:
@@ -901,6 +917,7 @@ gst_wavparse_loop (GstElement * element)
               //flush = 0;
               break;
           }
+          break;
 
         default:
           GST_DEBUG ("  *****  unknown chunkid %08x", chunk.id);
