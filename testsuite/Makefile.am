@@ -1,4 +1,5 @@
-SUBDIRS = refcounting capsnego plugin bytestream
+# thomas : removed refcounting for now until it is fixed
+SUBDIRS = capsnego plugin bytestream
 
 testprogs = test_gst_init
 
