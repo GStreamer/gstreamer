@@ -651,10 +651,10 @@ GStreamer support libraries header files.
 @USE_VORBIS_TRUE@Summary:       GStreamer plug-in for encoding and decoding Ogg Vorbis audio files.
 @USE_VORBIS_TRUE@Group:         Libraries/Multimedia
 @USE_VORBIS_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_VORBIS_TRUE@Requires:      libogg >= 1.0beta4
-@USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0beta4
-@USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0beta4
-@USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0beta4
+@USE_VORBIS_TRUE@Requires:      libogg >= 1.0
+@USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0
+@USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0
+@USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%description -n gstreamer-vorbis
 @USE_VORBIS_TRUE@Plug-ins for creating and playing Ogg Vorbis audio files.
