@@ -237,17 +237,18 @@ gst_rfc2250_enc_loop (GstElement *element)
 	enc->flags |= ENC_HAVE_PIC;
 	break;
       case EXT_START_CODE:
-	break;
-      case SLICE_MIN_START_CODE ... SLICE_MAX_START_CODE:
-	enc->flags |= ENC_HAVE_DATA;
-	gst_rfc2250_enc_add_slice (enc, buffer);
-	buffer = NULL;
-	break;
       case USER_START_CODE:
       case SEQUENCE_ERROR_START_CODE:
       case SEQUENCE_END_START_CODE:
 	break;
       default:
+        /* do this here because of the long range */
+        if (id >= SLICE_MIN_START_CODE && id <= SLICE_MAX_START_CODE) {
+	  enc->flags |= ENC_HAVE_DATA;
+	  gst_rfc2250_enc_add_slice (enc, buffer);
+	  buffer = NULL;
+	  break;
+	}
 	break;
 
     }
