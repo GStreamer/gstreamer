@@ -1,5 +1,13 @@
 2004-03-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/oss/gstosssink.c: (gst_osssink_chain):
+	  And another caller that couldn't handle delay < 0 (unsigned
+	  integer overflow). Video now continues playing on an audio
+	  buffer underrun, and the clock continues working. Audio still
+	  stalls.
+
+2004-03-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/oss/gstosssink.c: (gst_osssink_get_delay),
 	(gst_osssink_get_time):
 	  get_delay() may return values lower than 0. In those cases, we
