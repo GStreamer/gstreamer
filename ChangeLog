@@ -1,5 +1,11 @@
 2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/advanced_dparams.xml:
+	* docs/pwg/advanced_scheduling.xml:
+	  Change index layout slightly.
+
+2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced_clock.xml:
 	* docs/pwg/advanced_interfaces.xml:
 	* docs/pwg/advanced_midi.xml:

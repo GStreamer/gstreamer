@@ -356,18 +356,19 @@ gst_my_filter_change_state (GstElement *element)
       usable version of bytestream, too.
     </para>
   </sect1>
-</chapter>
 
-<chapter id="cha-loopbased-secnd">
-  <title>Adding a second output</title>
-  <para>
-    Identity is now a tee
-  </para>
-</chapter>
+  <sect1 id="sect-loopbased-secnd">
+    <title>Adding a second output</title>
+    <para>
+      Identity is now a tee
+    </para>
+  </sect1>
 
-<chapter id="cha-loopbased-modappl">
-  <title>Modifying the test application</title>
-  <para>
-  </para>
+  <sect1 id="sect-loopbased-modappl">
+    <title>Modifying the test application</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
 </chapter>
 
