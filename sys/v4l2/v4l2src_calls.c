@@ -101,6 +101,7 @@ gst_v4l2src_clear_format_list (GstV4l2Src * v4l2src)
 {
   g_slist_foreach (v4l2src->formats, (GFunc) g_free, NULL);
   g_slist_free (v4l2src->formats);
+  v4l2src->formats = NULL;
 
   return TRUE;
 }
