@@ -107,8 +107,8 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
                     G_TYPE_POINTER);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATIONS,
-    g_param_spec_string("locations","locations","locations",
-                        NULL, G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_pointer("locations","locations","locations",
+                        G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_multidisksrc_set_property;
   gobject_class->get_property = gst_multidisksrc_get_property;
