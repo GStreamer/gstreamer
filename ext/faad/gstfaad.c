@@ -282,11 +282,17 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
   const GValue *value;
   GstBuffer *buf;
 
+  /* Assume raw stream */
+  faad->packetised = FALSE;
+
   if ((value = gst_structure_get_value (str, "codec_data"))) {
     gulong samplerate;
     guchar channels;
 
+    /* We have codec data, means packetised stream */
+    faad->packetised = TRUE;
     buf = g_value_get_boxed (value);
+
     /* someone forgot that char can be unsigned when writing the API */
     if ((gint8) faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),
             GST_BUFFER_SIZE (buf), &samplerate, &channels) < 0)
@@ -540,12 +546,14 @@ static void
 gst_faad_chain (GstPad * pad, GstData * data)
 {
   guint input_size;
+  guint skip_bytes = 0;
   guchar *input_data;
   GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
   GstBuffer *buf, *outbuf;
   faacDecFrameInfo *info;
   guint64 next_ts;
   void *out;
+  gboolean run_loop = TRUE;
 
   if (GST_IS_EVENT (data)) {
     GstEvent *event = GST_EVENT (data);
@@ -579,12 +587,20 @@ gst_faad_chain (GstPad * pad, GstData * data)
   if (!faad->init) {
     gulong samplerate;
     guchar channels;
+    glong init_res;
 
-    faacDecInit (faad->handle,
+    init_res = faacDecInit (faad->handle,
         GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate, &channels);
+    if (init_res < 0) {
+      GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+          ("Failed to init decoder from stream"));
+      return;
+    }
+    skip_bytes = init_res;
     faad->init = TRUE;
 
     /* store for renegotiation later on */
+    /* FIXME: that's moot, info will get zeroed in DecDecode() */
     info->samplerate = samplerate;
     info->channels = channels;
   } else {
@@ -595,9 +611,26 @@ gst_faad_chain (GstPad * pad, GstData * data)
   /* decode cycle */
   input_data = GST_BUFFER_DATA (buf);
   input_size = GST_BUFFER_SIZE (buf);
-  info->bytesconsumed = input_size;
-  while (input_size >= FAAD_MIN_STREAMSIZE && info->bytesconsumed > 0) {
-    out = faacDecDecode (faad->handle, info, input_data, input_size);
+  info->bytesconsumed = input_size - skip_bytes;
+
+  if (!faad->packetised) {
+    /* We must check that ourselves for raw stream */
+    run_loop = (input_size >= FAAD_MIN_STREAMSIZE);
+  }
+
+  while ((input_size > 0) && run_loop) {
+
+    if (faad->packetised) {
+      /* Only one packet per buffer, no matter how much is really consumed */
+      run_loop = FALSE;
+    } else {
+      if (input_size < FAAD_MIN_STREAMSIZE || info->bytesconsumed <= 0) {
+        break;
+      }
+    }
+
+    out = faacDecDecode (faad->handle, info, input_data + skip_bytes,
+        input_size - skip_bytes);
     if (info->error) {
       GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
           ("Failed to decode buffer: %s",
@@ -662,8 +695,8 @@ gst_faad_chain (GstPad * pad, GstData * data)
     }
   }
 
-  /* Keep the leftovers */
-  if (input_size > 0) {
+  /* Keep the leftovers in raw stream */
+  if (input_size > 0 && !faad->packetised) {
     if (input_size < GST_BUFFER_SIZE (buf)) {
       faad->tempbuf = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - input_size, input_size);

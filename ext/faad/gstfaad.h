@@ -57,6 +57,7 @@ typedef struct _GstFaad {
   /* FAAD channel setup */
   guchar *channel_positions;
   gboolean need_channel_setup;
+  gboolean packetised; /* We must differentiate between raw and packetised streams */
 } GstFaad;
 
 typedef struct _GstFaadClass {
