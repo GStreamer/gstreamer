@@ -1,13 +1,15 @@
 if USE_GCONF
-GCONF_DIR=gconf
+GCONF_DIR = gconf
 else
-GCONF_DIR=
+GCONF_DIR =
 endif
 
 if USE_X
-X_DIR=xwindowlistener xoverlay
+X_DIR = xwindowlistener xoverlay
+X_INTERFACE_LIBS = xoverlay/libgstxoverlay.la
 else
-X_DIR=
+X_DIR =
+X_INTERFACE_LIBS =
 endif
 
 SUBDIRS = audio colorbalance floatcast \
@@ -33,7 +35,7 @@ libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = \
 	navigation/libgstnavigation.la \
 	propertyprobe/libgstpropertyprobe.la \
 	tuner/libgsttuner.la \
-	xoverlay/libgstxoverlay.la \
+        $(X_INTERFACE_LIBS) \
 	$(GST_LIBS)
 
 libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
