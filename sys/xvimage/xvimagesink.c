@@ -325,6 +325,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstXvImage * xvimage)
 {
   g_return_if_fail (xvimage != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  g_return_if_fail (xvimagesink->xwindow != NULL);
 
   /* Store a reference to the last image we put */
   if (xvimagesink->cur_image != xvimage)
@@ -1214,6 +1215,8 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
   if (!ret)
     return GST_PAD_LINK_REFUSED;
 
+  g_mutex_lock (xvimagesink->stream_lock);
+
   xvimagesink->video_width = video_width;
   xvimagesink->video_height = video_height;
   if (!gst_structure_get_fourcc (structure, "format", &im_format)) {
@@ -1222,6 +1225,7 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
         gst_caps_copy (caps));
   }
   if (im_format == 0) {
+    g_mutex_unlock (xvimagesink->stream_lock);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -1311,6 +1315,8 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
 
   xvimagesink->xcontext->im_format = im_format;
 
+  g_mutex_unlock (xvimagesink->stream_lock);
+
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (xvimagesink),
       GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
 
@@ -1339,7 +1345,9 @@ gst_xvimagesink_change_state (GstElement * element)
       /* call XSynchronize with the current value of synchronous */
       GST_DEBUG_OBJECT (xvimagesink, "XSynchronize called with %s",
           xvimagesink->synchronous ? "TRUE" : "FALSE");
+      g_mutex_lock (xvimagesink->x_lock);
       XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
+      g_mutex_unlock (xvimagesink->x_lock);
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -1350,13 +1358,19 @@ gst_xvimagesink_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      g_mutex_lock (xvimagesink->stream_lock);
       if (xvimagesink->xwindow)
         gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
       xvimagesink->framerate = 0;
       GST_VIDEOSINK_WIDTH (xvimagesink) = 0;
       GST_VIDEOSINK_HEIGHT (xvimagesink) = 0;
+      g_mutex_unlock (xvimagesink->stream_lock);
       break;
     case GST_STATE_READY_TO_NULL:
+      /* We are cleaning our resources here, yes i know chain is not running
+         but the interface can be called to set a window from a different thread
+         and that would crash */
+      g_mutex_lock (xvimagesink->stream_lock);
       if (xvimagesink->xvimage) {
         gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
         xvimagesink->xvimage = NULL;
@@ -1374,6 +1388,7 @@ gst_xvimagesink_change_state (GstElement * element)
         gst_xvimagesink_xcontext_clear (xvimagesink);
         xvimagesink->xcontext = NULL;
       }
+      g_mutex_unlock (xvimagesink->stream_lock);
       break;
   }
 
@@ -1398,6 +1413,8 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
     gst_pad_event_default (pad, GST_EVENT (data));
     return;
   }
+
+  g_mutex_lock (xvimagesink->stream_lock);
 
   buf = GST_BUFFER (data);
   /* update time */
@@ -1427,6 +1444,7 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
         gst_buffer_unref (buf);
         GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
             ("Failed creating an XvImage in xvimagesink chain function."));
+        g_mutex_unlock (xvimagesink->stream_lock);
         return;
       }
     }
@@ -1445,6 +1463,8 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
   gst_buffer_unref (buf);
 
   gst_xvimagesink_handle_xevents (xvimagesink, pad);
+
+  g_mutex_unlock (xvimagesink->stream_lock);
 }
 
 /* Buffer management */
@@ -1461,8 +1481,8 @@ gst_xvimagesink_buffer_free (GstBuffer * buffer)
   xvimagesink = xvimage->xvimagesink;
 
   /* If our geometry changed we can't reuse that image. */
-  if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
-      (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)))
+  if ((xvimage->width != xvimagesink->video_width) ||
+      (xvimage->height != xvimagesink->video_height))
     gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
   else {
     /* In that case we can reuse the image and add it to our image pool. */
@@ -1496,8 +1516,8 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
           xvimagesink->image_pool);
 
       /* We check for geometry or image format changes */
-      if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
-          (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)) ||
+      if ((xvimage->width != xvimagesink->video_width) ||
+          (xvimage->height != xvimagesink->video_height) ||
           (xvimage->im_format != xvimagesink->xcontext->im_format)) {
         /* This image is unusable. Destroying... */
         gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
@@ -1605,6 +1625,11 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 
   gst_xvimagesink_update_colorbalance (xvimagesink);
 
+  /* We acquire the stream lock while setting this window in the element.
+     We are basically cleaning tons of stuff replacing the old window, putting
+     images while we do that would surely crash */
+  g_mutex_lock (xvimagesink->stream_lock);
+
   /* Clear image pool as the images are unusable anyway */
   gst_xvimagesink_imagepool_clear (xvimagesink);
 
@@ -1652,6 +1677,8 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 
   if (xwindow)
     xvimagesink->xwindow = xwindow;
+
+  g_mutex_unlock (xvimagesink->stream_lock);
 }
 
 static void
@@ -1673,6 +1700,10 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
   if (!xvimagesink->xwindow)
     return;
 
+  /* We don't want chain to iterate while we do that. We might act on random
+     cur_image and different geometry */
+  g_mutex_lock (xvimagesink->stream_lock);
+
   /* Update the window geometry */
   g_mutex_lock (xvimagesink->x_lock);
   XGetWindowAttributes (xvimagesink->xcontext->disp,
@@ -1685,6 +1716,8 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
   if (xvimagesink->cur_image) {
     gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->cur_image);
   }
+
+  g_mutex_unlock (xvimagesink->stream_lock);
 }
 
 static void
@@ -1820,9 +1853,11 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_SYNCHRONOUS:
       xvimagesink->synchronous = g_value_get_boolean (value);
       if (xvimagesink->xcontext) {
+        g_mutex_lock (xvimagesink->x_lock);
         XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
         GST_DEBUG_OBJECT (xvimagesink, "XSynchronize called with %s",
             xvimagesink->synchronous ? "TRUE" : "FALSE");
+        g_mutex_unlock (xvimagesink->x_lock);
       }
       break;
     case ARG_PIXEL_ASPECT_RATIO:
@@ -1905,6 +1940,10 @@ gst_xvimagesink_finalize (GObject * object)
     g_mutex_free (xvimagesink->x_lock);
     xvimagesink->x_lock = NULL;
   }
+  if (xvimagesink->stream_lock) {
+    g_mutex_free (xvimagesink->stream_lock);
+    xvimagesink->stream_lock = NULL;
+  }
   if (xvimagesink->pool_lock) {
     g_mutex_free (xvimagesink->pool_lock);
     xvimagesink->pool_lock = NULL;
@@ -1949,6 +1988,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->video_height = 0;
 
   xvimagesink->x_lock = g_mutex_new ();
+  xvimagesink->stream_lock = g_mutex_new ();
 
   xvimagesink->image_pool = NULL;
   xvimagesink->pool_lock = g_mutex_new ();

@@ -142,6 +142,7 @@ struct _GstXvImageSink {
   gboolean cb_changed;
 
   GMutex *x_lock;
+  GMutex *stream_lock;
 
   guint video_width, video_height;     /* size of incoming video;
                                         * used as the size for XvImage */
