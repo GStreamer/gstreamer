@@ -25,6 +25,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
+#include <pthread.h>
 #include "v4lmjpegsink_calls.h"
 
 /* On some systems MAP_FAILED seems to be missing */
