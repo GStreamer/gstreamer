@@ -1186,6 +1186,7 @@ gst_plugin_get_license
 gst_plugin_get_package
 gst_plugin_get_origin
 gst_plugin_get_module
+gst_plugin_get_version
 gst_plugin_is_loaded
 gst_plugin_feature_filter
 gst_plugin_list_feature_filter
