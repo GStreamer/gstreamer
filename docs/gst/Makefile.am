@@ -129,7 +129,6 @@ scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	    if test x"$(srcdir)" != x. ; then \
 	        cp $(srcdir)/$(DOC_MODULE).types . ; \
 	    fi ; \
-	    ls ; \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) ; \
 	else \
 	    cd $(srcdir) ; \
