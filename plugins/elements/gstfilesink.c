@@ -29,6 +29,9 @@
 #include <errno.h>
 #include "gstfilesink.h"
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 GST_DEBUG_CATEGORY (gst_filesink_debug);
 #define GST_CAT_DEFAULT gst_filesink_debug
@@ -56,15 +59,6 @@ enum {
   ARG_LOCATION
 };
 
-GST_PAD_EVENT_MASK_FUNCTION (gst_filesink_get_event_mask,
-  { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
-                    GST_SEEK_METHOD_SET |
-                    GST_SEEK_METHOD_END |
-                    GST_SEEK_FLAG_FLUSH },
-  { GST_EVENT_FLUSH, 0 },
-  { GST_EVENT_DISCONTINUOUS, 0 }
-)
-
 GST_PAD_QUERY_TYPE_FUNCTION (gst_filesink_get_query_types,
   GST_QUERY_TOTAL,
   GST_QUERY_POSITION
@@ -85,6 +79,9 @@ static void	gst_filesink_get_property	(GObject *object, guint prop_id,
 
 static gboolean gst_filesink_open_file 		(GstFileSink *sink);
 static void 	gst_filesink_close_file 	(GstFileSink *sink);
+
+static const GstEventMask *
+		gst_filesink_get_event_mask	(GstPad *pad);
 
 static gboolean gst_filesink_handle_event       (GstPad *pad, GstEvent *event);
 static gboolean	gst_filesink_pad_query		(GstPad *pad, GstQueryType type,
@@ -291,6 +288,37 @@ gst_filesink_pad_query (GstPad *pad, GstQueryType type,
   return TRUE;
 }
 
+/* supported events */
+static const GstEventMask *
+gst_filesink_get_event_mask (GstPad *pad)
+{
+  GstFileSink *filesink = GST_FILESINK (gst_pad_get_parent (pad));
+  struct stat filestat;
+  static const GstEventMask seek_masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
+                      GST_SEEK_METHOD_SET |
+                      GST_SEEK_METHOD_END |
+                      GST_SEEK_FLAG_FLUSH },
+    { GST_EVENT_FLUSH, 0 },
+    { GST_EVENT_DISCONTINUOUS, 0 },
+    { 0, 0 }
+  }, noseek_masks[] = {
+    { GST_EVENT_FLUSH, 0 },
+    { 0, 0 }
+  }, *selected = seek_masks;
+
+  if (filesink->file != NULL) {
+    if (fstat (fileno (filesink->file), &filestat) == 0) {
+      if (S_ISFIFO (filestat.st_mode) ||
+	  S_ISSOCK (filestat.st_mode)) {
+        selected = noseek_masks;
+      }
+    }
+  }
+
+  return selected;
+}
+
 /* handle events (search) */
 static gboolean
 gst_filesink_handle_event (GstPad *pad, GstEvent *event)
@@ -390,7 +418,7 @@ gst_filesink_chain (GstPad *pad, GstBuffer *buf)
     guint bytes_written = 0, back_pending = 0;
     if (ftell(filesink->file) < filesink->data_written)
       back_pending = filesink->data_written - ftell(filesink->file);
-    do {
+    while (bytes_written < GST_BUFFER_SIZE (buf)) {
       size_t wrote = fwrite (GST_BUFFER_DATA (buf) + bytes_written, 1,
 			     GST_BUFFER_SIZE (buf) - bytes_written,
 			     filesink->file);
@@ -402,7 +430,7 @@ gst_filesink_chain (GstPad *pad, GstBuffer *buf)
 	break;
       }
       bytes_written += wrote;
-    } while (bytes_written < GST_BUFFER_SIZE (buf));
+    }
 
     filesink->data_written += bytes_written - back_pending;
   }
