@@ -314,6 +314,7 @@ gst_basic_scheduler_loopfunc_wrapper (int argc, char **argv)
 static int
 gst_basic_scheduler_chain_wrapper (int argc, char **argv)
 {
+  GSList *already_iterated = NULL;
   GstElement *element = GST_ELEMENT_CAST (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
@@ -323,39 +324,47 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
 
   gst_object_ref (GST_OBJECT (element));
   do {
-    GList *pads = element->pads;
+    GList *pads;
+    do {
+      pads = element->pads;
 
-    while (pads) {
-      GstPad *pad = GST_PAD (pads->data);
-      GstRealPad *realpad;
+      while (pads) {
+	GstPad *pad = GST_PAD (pads->data);
+	GstRealPad *realpad;
 
-      pads = g_list_next (pads);
-      if (!GST_IS_REAL_PAD (pad))
-	continue;
+	if (!GST_IS_REAL_PAD (pad))
+	  continue;
 
-      realpad = GST_REAL_PAD_CAST (pad);
+	realpad = GST_REAL_PAD (pad);
 
-      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && 
-	  GST_PAD_IS_LINKED (realpad)) {
-	GstData *data;
+	if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && 
+	    GST_PAD_IS_LINKED (realpad) && 
+	    g_slist_find (already_iterated, pad) == NULL) {
+	  GstData *data;
 
-	GST_CAT_DEBUG (debug_dataflow, "pulling data from %s:%s", name, 
+	  GST_CAT_DEBUG (debug_dataflow, "pulling data from %s:%s", name, 
 	           GST_PAD_NAME (pad));
-	data = gst_pad_pull (pad);
-	if (data) {
-	  if (GST_IS_EVENT (data) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
-	    gst_pad_send_event (pad, GST_EVENT (data));
+	  data = gst_pad_pull (pad);
+	  if (data) {
+	    if (GST_IS_EVENT (data) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
+	      gst_pad_send_event (pad, GST_EVENT (data));
+	    }
+	    else {
+	      GST_CAT_DEBUG (debug_dataflow, "calling chain function of %s:%s %p", 
+			name, GST_PAD_NAME (pad), data);
+	      GST_RPAD_CHAINFUNC (realpad) (pad, data);
+	      GST_CAT_DEBUG (debug_dataflow, 
+			"calling chain function of element %s done", name);
+	    }
 	  }
-	  else {
-	    GST_CAT_DEBUG (debug_dataflow, "calling chain function of %s:%s %p", 
-		       name, GST_PAD_NAME (pad), data);
-	    GST_RPAD_CHAINFUNC (realpad) (pad, data);
-	    GST_CAT_DEBUG (debug_dataflow, 
-		       "calling chain function of element %s done", name);
-	  }
+	  already_iterated = g_slist_prepend (already_iterated, pad);
+	  break;
 	}
+	pads = g_list_next (pads);
       }
-    }
+    } while (pads != NULL);
+    g_slist_free (already_iterated);
+    already_iterated = NULL;
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
