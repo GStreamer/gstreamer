@@ -22,6 +22,8 @@
 int
 main (int argc, char *argv[])
 {
+  gst_init (&argc, &argv);
+
   printf ("Default video sink : %s\n",
       gst_gconf_get_string ("default/videosink"));
   printf ("Default audio sink : %s\n",
