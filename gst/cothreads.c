@@ -175,8 +175,7 @@ cothread_create (cothread_context *ctx)
 {
   cothread_state *cothread;
   void *sp;
-  void *mmaped = 0;
-  guchar *stack_end;
+  unsigned long stack_top;
   gint slot = 0;
 
   g_return_val_if_fail (ctx != NULL, NULL);
@@ -204,32 +203,16 @@ cothread_create (cothread_context *ctx)
    *       could use casts to uintptr_t from inttypes.h
    *       if only all platforms had inttypes.h
    */
-  /* FIXME: a little explanation on what this REALLY means would be nice ;) */
-  stack_end = (guchar *) ((gulong) sp & ~(STACK_SIZE - 1));
+  /* stack_top is the address of th first byte past our stack segment. */
+  /* FIXME: an assumption is made that the stack segment is STACK_SIZE
+   * aligned. */
+  stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
+  GST_DEBUG(GST_CAT_COTHREADS, "stack top is %lu", stack_top);
 
   /* cothread stack space of the thread is mapped in reverse, with cothread 0
    * stack space at the top */
-  cothread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
-  GST_DEBUG (GST_CAT_COTHREADS, 
-             "mmap   cothread slot stack from %p to %p (size 0x%lx)", 
-	     cothread, cothread + COTHREAD_STACKSIZE, 
-	     (long) COTHREAD_STACKSIZE);
-
-  GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
-  /* the mmap is used to reserve part of the stack
-   * ie. we state explicitly that we are going to use it */
-  mmaped = mmap ((void *) cothread, COTHREAD_STACKSIZE,
-	          PROT_READ | PROT_WRITE | PROT_EXEC, 
-		  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
-  if (mmaped == MAP_FAILED) {
-    perror ("mmap'ing cothread stack space");
-    return NULL;
-  }
-  if (mmaped != cothread) {
-    g_warning ("could not mmap requested memory for cothread");
-    return NULL;
-  }
+  cothread = (cothread_state *) (stack_top - (slot + 1) * COTHREAD_STACKSIZE);
+  GST_DEBUG(GST_CAT_COTHREADS, "cothread pointer is %p", cothread);
 
   cothread->magic_number = COTHREAD_MAGIC_NUMBER;
   GST_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
