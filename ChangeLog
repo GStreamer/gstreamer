@@ -1,3 +1,23 @@
+2004-02-18  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* gstinterfaces/0.7.c:
+	* gstinterfaces/0.7.h:
+	* gstinterfaces/0.7.override:
+	* gstinterfaces/__init__.py:
+	* gstinterfaces/arg-types.py:
+	* gstinterfaces/common.c:
+	* gstinterfaces/common.h:
+	* gstinterfaces/common.override:
+	* gstinterfaces/gstinterfacesmodule.c:
+	* gstplay/0.7.c:
+	* gstplay/0.7.h:
+	* gstplay/0.7.override:
+	* gstplay/__init__.py:
+	* gstplay/arg-types.py:
+	* gstplay/common.c:
+	* gstplay/common.h:
+	* gstplay/common.override:
+
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* acinclude.m4:
