@@ -932,6 +932,66 @@ fail:
 }
 
 static void
+gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
+{
+  GstEvent *event = GST_EVENT (buffer);
+  GstMad *mad = GST_MAD (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event))
+  {
+    case GST_EVENT_DISCONTINUOUS:
+    {
+      gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
+      gint i;
+
+      for (i = 0; i < n; i++)
+      {
+        if (gst_pad_handles_format (pad,
+			            GST_EVENT_DISCONT_OFFSET(event, i).format))
+        {
+          gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
+          gint64 time;
+          GstFormat format;
+          GstEvent *discont;
+
+          /* see how long the input bytes take */
+          format = GST_FORMAT_TIME;
+          if (!gst_pad_convert (pad,
+		                GST_EVENT_DISCONT_OFFSET (event, i).format,
+				value, &format, &time))
+          {
+            time = 0;
+          }
+
+          /* for now, this is the best we can do. Let's hope a real timestamp
+           * arrives with the next buffer */
+          mad->base_time = time;
+
+          gst_event_unref (event);
+
+          if (GST_PAD_IS_USABLE (mad->srcpad))
+	  {
+            discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+			                           time, NULL);
+            gst_pad_push (mad->srcpad, GST_BUFFER (discont));
+          }
+          break;
+        }
+      }
+      mad->total_samples = 0;
+      mad->tempsize = 0;
+      /* we don't need to restart when we get here */
+      mad->restart = FALSE;
+      break;
+    }
+    default:
+      gst_pad_event_default (pad, event);
+      break;
+  }
+  return;
+}
+
+static void
 gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 {
   GstMad *mad;
@@ -941,58 +1001,12 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
   mad = GST_MAD (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buffer)) {
-    GstEvent *event = GST_EVENT (buffer);
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-      {
-	gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
-	gint i;
-
-	for (i=0; i<n; i++) {
-	  if (gst_pad_handles_format (pad, GST_EVENT_DISCONT_OFFSET(event,i).format))
-	  {
-            gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
-	    gint64 time;
-	    GstFormat format;
-            GstEvent *discont;
-
-	    /* see how long the input bytes take */
-	    format = GST_FORMAT_TIME;
-	    if (!gst_pad_convert (pad,
-			GST_EVENT_DISCONT_OFFSET (event, i).format, value,
-			&format, &time))
-	    {
-	      time = 0;
-	    }
-
-	    /* for now, this is the best we can do. Let's hope a real timestamp
-	     * arrives with the next buffer */
-	    mad->base_time = time;
-
-            gst_event_unref (event);
-
-	    if (GST_PAD_IS_USABLE (mad->srcpad)) {
-	      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
-              gst_pad_push (mad->srcpad, GST_BUFFER (discont));
-	    }
-	    break;
-	  }
-	}
-        mad->total_samples = 0;
-        mad->tempsize = 0;
-	/* we don't need to restart when we get here */
-        mad->restart = FALSE;
-	break;
-      }
-      default:
-	gst_pad_event_default (pad, event);
-	break;
-    }
+  /* handle events */
+  if (GST_IS_EVENT (buffer))
+  {
+    gst_mad_handle_event (pad, buffer);
     return;
   }
-
   if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
     /* if there is nothing queued (partial buffer), we prepare to set the
      * timestamp on the next buffer */
@@ -1011,13 +1025,14 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  while (size > 0) {
+  /* process the incoming buffer in chunks of maximum MDLEN bytes */
+  while (size > 0)
+  {
     gint tocopy;
     guchar *mad_input_buffer;
 
-    /* cut the buffer in MDLEN pieces */
     tocopy = MIN (MAD_BUFFER_MDLEN, size);
-	  
+
     memcpy (mad->tempbuffer + mad->tempsize, data, tocopy);
     mad->tempsize += tocopy;
 
@@ -1039,31 +1054,34 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	/* not enough data, need to wait for next buffer? */
 	if (mad->stream.error == MAD_ERROR_BUFLEN) {
 	  break;
-	} 
+	}
         if (!MAD_RECOVERABLE (mad->stream.error)) {
           gst_element_error (GST_ELEMENT (mad), "fatal error decoding stream");
           return;
         }
 	else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
+	  /* lost sync, force a resync */
 	  signed long tagsize;
 
 	  tagsize = id3_tag_query (mad->stream.this_frame,
 	                          mad->stream.bufend - mad->stream.this_frame);
 
 	  if (tagsize > mad->tempsize) {
-            GST_INFO (GST_CAT_PLUGIN_INFO, "mad: got partial id3 tag in buffer, skipping");
+            GST_INFO (GST_CAT_PLUGIN_INFO,
+		      "mad: got partial id3 tag in buffer, skipping");
 	  }
 	  else if (tagsize > 0) {
 	    struct id3_tag *tag;
 	    id3_byte_t const *data;
 
-            GST_INFO (GST_CAT_PLUGIN_INFO, "mad: got ID3 tag size %ld", tagsize);
+            GST_INFO (GST_CAT_PLUGIN_INFO,
+		      "mad: got ID3 tag size %ld", tagsize);
 
 	    data = mad->stream.this_frame;
-	  
+
 	    /* mad has moved the pointer to the next frame over the start of the
-	     * id3 tags, so we need to flush one byte less n the tagsize */
-	    mad_stream_skip(&mad->stream, tagsize-1);
+	     * id3 tags, so we need to flush one byte less than the tagsize */
+	    mad_stream_skip (&mad->stream, tagsize - 1);
 
 	    tag = id3_tag_parse (data, tagsize);
 	    if (tag) {
