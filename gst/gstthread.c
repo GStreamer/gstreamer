@@ -348,6 +348,7 @@ gst_thread_main_loop (void *arg)
       if (!gst_bin_iterate (GST_BIN (thread))) {
 	g_mutex_lock(thread->lock);
 	GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+	GST_DEBUG(0,"sync: removed spinning state due to failed iteration\n");
 	g_mutex_unlock(thread->lock);
       }
     }
