@@ -102,6 +102,7 @@ gst_vorbisdec_init (VorbisDec * vorbisdec)
 
   ogg_sync_init (&vorbisdec->oy);	/* Now we can read pages */
   vorbisdec->convsize = 4096;
+  vorbisdec->total_out = 0;
 }
 
 static GstBuffer *
@@ -363,9 +364,13 @@ gst_vorbisdec_loop (GstElement * element)
 		int clipflag = 0;
 		int bout = (samples < vorbisdec->convsize ? samples : vorbisdec->convsize);
 
+
 		outbuf = gst_buffer_new ();
 		GST_BUFFER_DATA (outbuf) = g_malloc (2 * vi.channels * bout);
 		GST_BUFFER_SIZE (outbuf) = 2 * vi.channels * bout;
+		GST_BUFFER_TIMESTAMP (outbuf) = vorbisdec->total_out * 1000000LL / vi.rate;
+
+		vorbisdec->total_out += bout;
 
 		/* convert doubles to 16 bit signed ints (host order) and
 		   interleave */

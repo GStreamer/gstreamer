@@ -65,6 +65,7 @@ struct _VorbisDec {
 
   gboolean eos;
   int16_t convsize;
+  guint64 total_out;
 };
 
 struct _VorbisDecClass {
