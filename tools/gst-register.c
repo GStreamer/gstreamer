@@ -48,6 +48,27 @@ plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
   num_plugins++;
 }
 
+static void
+spawn_all_in_dir(const char *dirname)
+{
+  char *argv[2] = { NULL, NULL };
+  GDir *dir;
+  const char *file;
+
+  /* g_print("spawning all in %s\n", dirname); */
+
+  dir = g_dir_open (dirname, 0, NULL);
+  if (dir == NULL) return;
+
+  while( (file = g_dir_read_name (dir)) ){
+    argv[0] = g_build_filename(dirname, file);
+    g_print("running %s\n",argv[0]);
+    g_spawn_sync (NULL, argv, NULL, G_SPAWN_FILE_AND_ARGV_ZERO, NULL, NULL, NULL, NULL, NULL, NULL);
+    g_free(argv[0]);
+  }
+  g_dir_close(dir);
+}
+
 int main (int argc,char *argv[])
 {
   GList *registries;
@@ -101,6 +122,21 @@ int main (int argc,char *argv[])
 	g_assert (path_spill != NULL);
       }
     }
+
+    {
+      GList *dir_list;
+      GList *iter;
+      char *dir;
+
+      dir_list = gst_registry_get_path_list(registry);
+      for(iter = dir_list; iter; iter = iter->next) {
+        dir = g_build_filename((const char *)iter->data, "scripts");
+	spawn_all_in_dir(dir);
+	g_free(dir);
+      }
+      g_list_free(dir_list);
+    }
+
     registries = g_list_next (registries);
   }
 
@@ -108,3 +144,4 @@ int main (int argc,char *argv[])
 
   return (0);
 }
+
