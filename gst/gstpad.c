@@ -2597,7 +2597,7 @@ gst_pad_is_negotiated (GstPad * pad)
 {
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  if (!GST_PAD_REALIZE (pad))
+  if (!(pad = (GstPad *) GST_PAD_REALIZE (pad)))
     return FALSE;
   if (!GST_RPAD_LINK (pad))
     return FALSE;
@@ -2619,7 +2619,7 @@ gst_pad_get_negotiated_caps (GstPad * pad)
 {
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  if (!GST_PAD_REALIZE (pad))
+  if (!(pad = (GstPad *) GST_PAD_REALIZE (pad)))
     return NULL;
   if (!GST_RPAD_LINK (pad))
     return NULL;

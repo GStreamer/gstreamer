@@ -1,3 +1,11 @@
+2004-12-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpad.c: (gst_pad_is_negotiated),
+	(gst_pad_get_negotiated_caps):
+	  GST_RPAD_* will only operate on a RealPad (it casts the pointer,
+	  it doesn't actually check the contents), so be sure to hand it
+	  a RealPad else we'll crash.
+
 2004-12-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
