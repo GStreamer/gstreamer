@@ -11,4 +11,4 @@ LIBS += $(GST_LIBS)
 CFLAGS += $(GST_CFLAGS)
 
 
-DIST_SUBDIRS = refcounting capsnego bytestream
+DIST_SUBDIRS = refcounting capsnego plugin bytestream
