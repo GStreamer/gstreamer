@@ -1,0 +1,843 @@
+# GStreamer translated strings
+# Copyright (C) 2003,2004 GStreamer core team
+# This file is distributed under the same license as the GStreamer package.
+# Thomas Vander Stichele <thomas@apestaart.org>, 2004.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GStreamer\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-03-09 16:16+0100\n"
+"PO-Revision-Date: 2004-01-13 12:03+0100\n"
+"Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
+"Language-Team: Dutch <nl@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: gst/gst.c:120
+msgid "Print the GStreamer version"
+msgstr "Druk de GStreamer versie af"
+
+#: gst/gst.c:121
+msgid "Make all warnings fatal"
+msgstr "Maak alle waarschuwingen fataal"
+
+#: gst/gst.c:124
+msgid "Print available debug categories and exit"
+msgstr "Druk beschikbare debug-categorieën af en stop"
+
+#: gst/gst.c:125
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
+"uitvoer"
+
+#: gst/gst.c:125
+msgid "LEVEL"
+msgstr "NIVEAU"
+
+#: gst/gst.c:126
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Lijst van categorie_naam=niveau paren, gescheiden door dubbele punten, om "
+"specifieke niveau's in te stellen voor de individuele categorieën.Voorbeeld:"
+"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+#: gst/gst.c:126
+msgid "LIST"
+msgstr ""
+
+#: gst/gst.c:127
+msgid "Disable colored debugging output"
+msgstr "Zet kleuren af in debug-uitvoer"
+
+#: gst/gst.c:128
+msgid "Disable debugging"
+msgstr "Zet debugging af"
+
+#: gst/gst.c:131
+msgid "Disable accelerated CPU instructions"
+msgstr "Schakel versnelde CPU-instructies uit"
+
+#: gst/gst.c:132
+msgid "Enable verbose plugin loading diagnostics"
+msgstr "Schakel uitgebreide diagnostiek aan voor het laden van plugins"
+
+#: gst/gst.c:133
+msgid "path list for loading plugins (separated by '"
+msgstr "padlijst om plugins te laden (gescheiden door '"
+
+#: gst/gst.c:133
+msgid "')"
+msgstr ")"
+
+#: gst/gst.c:133
+msgid "PATHS"
+msgstr "PADEN"
+
+#: gst/gst.c:134
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"env variable GST_PLUGIN_PATH"
+msgstr ""
+"Lijst van plugins, gescheiden door komma's, om eerste te laden bovenop de "
+"lijst volgens omgevingsvariable GST_PLUGIN_PATH"
+
+#: gst/gst.c:134
+msgid "PLUGINS"
+msgstr "PLUGINS"
+
+#: gst/gst.c:135
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr ""
+"Schakel het opvangen van segmentatiefouten uit tijdens laden van plugins"
+
+#: gst/gst.c:136
+msgid "Scheduler to use ('"
+msgstr "Planner om te gebruiken ('"
+
+#: gst/gst.c:136
+msgid "' is the default)"
+msgstr "' is de voorkeursplanner)"
+
+#: gst/gst.c:136
+msgid "SCHEDULER"
+msgstr "PLANNER"
+
+#: gst/gst.c:137
+msgid "Registry to use"
+msgstr "Register om te gebruiken"
+
+#: gst/gst.c:137
+msgid "REGISTRY"
+msgstr "REGISTER"
+
+#: gst/gstelement.c:242
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "FOUT: van element %s: %s\n"
+
+#: gst/gstelement.c:244
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Extra debug-informatie:\n"
+"%s\n"
+
+#: gst/gsterror.c:56
+msgid "GStreamer encountered a general core library error."
+msgstr "GStreamer kreeg een algemene fout van de kernbibliotheek."
+
+#: gst/gsterror.c:58 gst/gsterror.c:94 gst/gsterror.c:116 gst/gsterror.c:154
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please file a bug."
+msgstr ""
+"GStreamer ontwikkelaars waren te lui om een foutcode te geven aan deze fout. "
+"Stuur een foutrapport."
+
+#: gst/gsterror.c:61
+msgid "Internal GStreamer error: code not implemented.  File a bug."
+msgstr ""
+"Interne GStreamer-fout: code niet geïmplementeerd.  Stuur een foutrapport."
+
+#: gst/gsterror.c:63
+msgid "Internal GStreamer error: state change failed.  File a bug."
+msgstr ""
+"Interne GStreamer-fout: toestandsverandering mislukt.  Stuur een foutrapport."
+
+#: gst/gsterror.c:65
+msgid "Internal GStreamer error: pad problem.  File a bug."
+msgstr "Interne GStreamer-fout: padprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:67
+msgid "Internal GStreamer error: thread problem.  File a bug."
+msgstr "Interne GStreamer-fout: threadprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:69
+msgid "Internal GStreamer error: scheduler problem.  File a bug."
+msgstr "Interne GStreamer-fout: plannerprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:71
+msgid "Internal GStreamer error: negotiation problem.  File a bug."
+msgstr ""
+"Interne GStreamer-fout: onderhandelingsprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:73
+msgid "Internal GStreamer error: event problem.  File a bug."
+msgstr "Interne GStreamer-fout: eventprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:75
+msgid "Internal GStreamer error: seek problem.  File a bug."
+msgstr "Interne GStreamer-fout: zoekprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:77
+msgid "Internal GStreamer error: caps problem.  File a bug."
+msgstr "Interne GStreamer-fout: capsprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:79
+msgid "Internal GStreamer error: tag problem.  File a bug."
+msgstr "Interne GStreamer-fout: tagprobleem.  Stuur een foutrapport."
+
+#: gst/gsterror.c:92 gst/gsterror.c:114 gst/gsterror.c:152
+msgid "GStreamer encountered a general supporting library error."
+msgstr "GStreamer kreeg een algemene fout van een ondersteunende bibliotheek."
+
+#: gst/gsterror.c:97
+msgid "Could not initialize supporting library."
+msgstr "Kon ondersteunende bibliotheek niet initialiseren."
+
+#: gst/gsterror.c:99 gst/gsterror.c:101
+msgid "Could not close supporting library."
+msgstr "Kon ondersteunende bibliotheek niet sluiten."
+
+#: gst/gsterror.c:119
+msgid "Resource not found."
+msgstr "Bron niet gevonden."
+
+#: gst/gsterror.c:121
+msgid "Resource busy or not available."
+msgstr "Bron bezet of niet beschikbaar."
+
+#: gst/gsterror.c:123
+msgid "Could not open resource for reading."
+msgstr "Kon bron niet openen om te lezen."
+
+#: gst/gsterror.c:125
+msgid "Could not open resource for writing."
+msgstr "Kon bron niet openen om te schrijven."
+
+#: gst/gsterror.c:127
+msgid "Could not open resource for reading and writing."
+msgstr "Kon bron niet openen om te lezen en schrijven."
+
+#: gst/gsterror.c:129
+msgid "Could not close resource."
+msgstr "Kon bron niet sluiten."
+
+#: gst/gsterror.c:131
+msgid "Could not read from resource."
+msgstr "Kon niet lezen van bron."
+
+#: gst/gsterror.c:133
+msgid "Could not write to resource."
+msgstr "Kon niet schrijven naar bron."
+
+#: gst/gsterror.c:135
+msgid "Could not perform seek on resource."
+msgstr "Kon de bron niet spoelen."
+
+#: gst/gsterror.c:137
+msgid "Could not synchronize on resource."
+msgstr "Kon niet synchroniseren op de bron."
+
+#: gst/gsterror.c:139
+msgid "Could not get/set settings from/on resource."
+msgstr "Kon geen instellingen lezen/schrijven van/naar bron."
+
+#: gst/gsterror.c:157
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr "Element ondersteunt deze stroom niet.  Stuur een foutrapport."
+
+#: gst/gsterror.c:160
+msgid "Could not determine type of stream."
+msgstr "Kon het type van de stroom niet herkennen."
+
+#: gst/gsterror.c:162
+msgid "The stream is of a different type than handled by this element."
+msgstr "De stroom is van een ander type dan dit element kan verwerken."
+
+#: gst/gsterror.c:164
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Er is geen codec aanwezig die dit type stroom kan verwerken."
+
+#: gst/gsterror.c:166
+msgid "Could not decode stream."
+msgstr "Kon de stroom niet decoderen."
+
+#: gst/gsterror.c:168
+msgid "Could not encode stream."
+msgstr "Kon de stroom niet coderen."
+
+#: gst/gsterror.c:170
+msgid "Could not demultiplex stream."
+msgstr "Kon de stroom niet demultiplexen."
+
+#: gst/gsterror.c:172
+msgid "Could not multiplex stream."
+msgstr "Kon de stroom niet multiplexen."
+
+#: gst/gsterror.c:174
+msgid "Stream is of the wrong format."
+msgstr "Stroom is van het verkeerde formaat."
+
+#: gst/gsterror.c:221
+#, c-format
+msgid "No error message for domain %s."
+msgstr "Geen foutboodschap voor domein %s."
+
+#: gst/gsterror.c:226
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "Geen standaard foutboodschap voor domein %s en code %d."
+
+#: gst/gsttag.c:81
+msgid "title"
+msgstr "titel"
+
+#: gst/gsttag.c:82
+msgid "commonly used title"
+msgstr "vaak gebruikte titel"
+
+#: gst/gsttag.c:86
+msgid "artist"
+msgstr "artiest"
+
+#: gst/gsttag.c:87
+msgid "person(s) responsible for the recording"
+msgstr "perso(o)n(en) die de opname gemaakt hebben"
+
+#: gst/gsttag.c:91
+msgid "album"
+msgstr "album"
+
+#: gst/gsttag.c:92
+msgid "album containing this data"
+msgstr "album waarop dit stuk staat"
+
+#: gst/gsttag.c:96
+msgid "date"
+msgstr "datum"
+
+#: gst/gsttag.c:97
+msgid "date the data was created (in Julian calendar days)"
+msgstr "datum waarop het stuk gemaakt is (in Juliaanse kalenderdagen)"
+
+#: gst/gsttag.c:101
+msgid "genre"
+msgstr "genre"
+
+#: gst/gsttag.c:102
+msgid "genre this data belongs to"
+msgstr "genre van het stuk"
+
+#: gst/gsttag.c:106
+msgid "comment"
+msgstr "commentaar"
+
+#: gst/gsttag.c:107
+msgid "free text commenting the data"
+msgstr "vrij te kiezen commentaartekst die het stuk beschrijft"
+
+#: gst/gsttag.c:111
+msgid "track number"
+msgstr "nummer"
+
+#: gst/gsttag.c:112
+msgid "track number inside a collection"
+msgstr "nummer van het stuk op een verzameling"
+
+#: gst/gsttag.c:116
+msgid "track count"
+msgstr "aantal nummers"
+
+#: gst/gsttag.c:117
+msgid "count of tracks inside collection this track belongs to"
+msgstr "aantal nummers van de verzameling waarop dit stuk staat"
+
+#: gst/gsttag.c:121
+msgid "disc number"
+msgstr "disc nummer"
+
+#: gst/gsttag.c:122
+msgid "disc number inside a collection"
+msgstr "nummer van de disc in een verzameling"
+
+#: gst/gsttag.c:126
+msgid "disc count"
+msgstr "aantal discs"
+
+#: gst/gsttag.c:127
+msgid "count of discs inside collection this disc belongs to"
+msgstr "aantal discs in de verzameling waartoe deze disc behoort"
+
+#: gst/gsttag.c:131
+msgid "location"
+msgstr "locatie"
+
+#: gst/gsttag.c:132
+msgid "original location of file as a URI"
+msgstr "originele locatie van bestand als een URI"
+
+#: gst/gsttag.c:136
+msgid "description"
+msgstr "omschrijving"
+
+#: gst/gsttag.c:137
+msgid "short text describing the content of the data"
+msgstr "korte tekst die de inhoud van het stuk omschrijft"
+
+#: gst/gsttag.c:141
+msgid "version"
+msgstr "versie"
+
+#: gst/gsttag.c:142
+msgid "version of this data"
+msgstr "versie van dit stuk"
+
+#: gst/gsttag.c:146
+msgid "ISRC"
+msgstr "ISRC"
+
+#: gst/gsttag.c:147
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
+"Internationale Standaard Recording Code - zie http://www.ifpi.org/isrc/"
+
+#: gst/gsttag.c:151 gst/gsttag.c:152
+msgid "organization"
+msgstr "organizatie"
+
+#: gst/gsttag.c:156
+msgid "copyright"
+msgstr "copyright"
+
+#: gst/gsttag.c:157
+msgid "copyright notice of the data"
+msgstr "copyright-notitie van het stuk"
+
+#: gst/gsttag.c:161
+msgid "contact"
+msgstr "contact"
+
+#: gst/gsttag.c:162
+msgid "contact information"
+msgstr "contactinformatie"
+
+#: gst/gsttag.c:166
+msgid "license"
+msgstr "licentie"
+
+#: gst/gsttag.c:167
+msgid "license of data"
+msgstr "licentie van het stuk"
+
+#: gst/gsttag.c:171
+msgid "performer"
+msgstr "uitvoerder"
+
+#: gst/gsttag.c:172
+msgid "person(s) performing"
+msgstr "perso(o)n(en) die het stuk uitvoeren"
+
+#: gst/gsttag.c:176
+msgid "duration"
+msgstr "duur"
+
+#: gst/gsttag.c:177
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "lengte in GStreamer tijdseenheden (nanoseconden)"
+
+#: gst/gsttag.c:181
+msgid "codec"
+msgstr "codec"
+
+#: gst/gsttag.c:182
+msgid "codec the data is stored in"
+msgstr "codec waarin het stuk is opgeslagen"
+
+#: gst/gsttag.c:186
+msgid "video codec"
+msgstr "video codec"
+
+#: gst/gsttag.c:187
+msgid "codec the video data is stored in"
+msgstr "codec waarin het stuk is opgeslagen"
+
+#: gst/gsttag.c:191
+msgid "audio codec"
+msgstr "audio codec"
+
+#: gst/gsttag.c:192
+msgid "codec the audio data is stored in"
+msgstr "codec waarin de audio-data is opgeslagen"
+
+#: gst/gsttag.c:196
+msgid "bitrate"
+msgstr "bitsnelheid"
+
+#: gst/gsttag.c:197
+msgid "exact or average bitrate in bits/s"
+msgstr "exacte of gemiddelde bitsnelheid in bits/s"
+
+#: gst/gsttag.c:201
+msgid "nominal bitrate"
+msgstr "nominale bitsnelheid"
+
+#: gst/gsttag.c:202
+msgid "nominal bitrate in bits/s"
+msgstr "nominale bitsnelheid in bits per seconde"
+
+#: gst/gsttag.c:206
+msgid "minimum bitrate"
+msgstr "minimum bitsnelheid"
+
+#: gst/gsttag.c:207
+msgid "minimum bitrate in bits/s"
+msgstr "minimum bitsnelheid in bits per seconde"
+
+#: gst/gsttag.c:211
+msgid "maximum bitrate"
+msgstr "maximum bitsnelheid"
+
+#: gst/gsttag.c:212
+msgid "maximum bitrate in bits/s"
+msgstr "maximum bitsnelheid in bits per seconde"
+
+#: gst/gsttag.c:216
+msgid "encoder"
+msgstr "encoder"
+
+#: gst/gsttag.c:217
+msgid "encoder used to encode this stream"
+msgstr "encoder gebruikt om deze stroom te encoderen"
+
+#: gst/gsttag.c:221
+msgid "encoder version"
+msgstr "encoder versie"
+
+#: gst/gsttag.c:222
+msgid "version of the encoder used to encode this stream"
+msgstr "versie van de encoder gebruikt om deze stroom te encoderen"
+
+#: gst/gsttag.c:226
+msgid "serial"
+msgstr "volgnummer"
+
+#: gst/gsttag.c:227
+msgid "serial number of track"
+msgstr "volgnummer van dit nummer"
+
+#: gst/gsttag.c:231
+msgid "replaygain track gain"
+msgstr ""
+
+#: gst/gsttag.c:232
+msgid "track gain in db"
+msgstr ""
+
+#: gst/gsttag.c:236
+msgid "replaygain track peak"
+msgstr ""
+
+#: gst/gsttag.c:237
+msgid "peak of the track"
+msgstr ""
+
+#: gst/gsttag.c:241
+msgid "replaygain album gain"
+msgstr ""
+
+#: gst/gsttag.c:242
+msgid "album gain in db"
+msgstr ""
+
+#: gst/gsttag.c:246
+msgid "replaygain album peak"
+msgstr ""
+
+#: gst/gsttag.c:247
+msgid "peak of the album"
+msgstr ""
+
+#: gst/gsttag.c:285
+msgid ", "
+msgstr ", "
+
+#: gst/autoplug/gstspider.c:419
+#, c-format
+msgid "There is no element present to handle the stream's mime type %s."
+msgstr ""
+"Er is geen element aanwezig die het mime-type %s van de stroom kan verwerken."
+
+#: gst/elements/gstfilesink.c:248
+msgid "No file name specified for writing."
+msgstr "Geen bestandsnaam gegeven om te schrijven."
+
+#: gst/elements/gstfilesink.c:255
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kon bestand \"%s\" niet openen om te schrijven."
+
+#: gst/elements/gstfilesink.c:275
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Fout bij het sluiten van bestand \"%s\"."
+
+#: gst/elements/gstfilesink.c:342 gst/elements/gstfilesink.c:374
+#: gst/elements/gstfilesink.c:426
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Fout bij het schrijven naar bestand \"%s\"."
+
+#: gst/elements/gstfilesrc.c:676 gst/elements/gstmultifilesrc.c:242
+msgid "No file name specified for reading."
+msgstr "Geen bestandsnaam gegeven om te lezen."
+
+#: gst/elements/gstfilesrc.c:691 gst/elements/gstmultifilesrc.c:250
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kon bestand \"%s\" niet openen om te lezen."
+
+#: gst/elements/gstfilesrc.c:702
+#, c-format
+msgid "File \"%s\" isn't a regular file."
+msgstr "Bestand \"%s\" is geen gewoon bestand."
+
+#: gst/elements/gstidentity.c:171
+msgid "Failed after iterations as requested."
+msgstr "Fout na iteraties zoals gevraagd."
+
+#: gst/elements/gsttypefind.c:149
+msgid "caps"
+msgstr "mogelijkheden"
+
+#: gst/elements/gsttypefind.c:149
+msgid "detected capabilities in stream"
+msgstr "gedetecteerde mogelijkheden in stroom"
+
+#: gst/elements/gsttypefind.c:152
+msgid "minimum"
+msgstr "minimum"
+
+#: gst/elements/gsttypefind.c:155
+msgid "maximum"
+msgstr "maximum"
+
+#: gst/parse/grammar.y:170
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "lege ton \"%s\", niet toegelaten"
+
+#: gst/parse/grammar.y:175
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr "geen ton \"%s\", overgeslagen"
+
+#: gst/parse/grammar.y:319
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "geen eigenschap \"%s\" in element \"%s\""
+
+#: gst/parse/grammar.y:332
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
+
+#: gst/parse/grammar.y:337
+#, c-format
+msgid ""
+"could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+msgstr ""
+"kon \"%s\" niet omzetten zodat het in eigenschap \"%s\" in element \"%s\" "
+"past"
+
+#: gst/parse/grammar.y:525
+#, c-format
+msgid "could not link %s to %s"
+msgstr "kon %s niet verbinden met %s"
+
+#: gst/parse/grammar.y:570
+#, c-format
+msgid "no element \"%s\""
+msgstr "geen element \"%s\""
+
+#: gst/parse/grammar.y:621
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "kon mogelijkheden \"%s\" niet verwerken"
+
+#: gst/parse/grammar.y:643 gst/parse/grammar.y:697 gst/parse/grammar.y:713
+#: gst/parse/grammar.y:771
+msgid "link without source element"
+msgstr "verbinding zonder bronelement"
+
+#: gst/parse/grammar.y:649 gst/parse/grammar.y:694 gst/parse/grammar.y:780
+msgid "link without sink element"
+msgstr "verbinding zonder doelelement"
+
+#: gst/parse/grammar.y:731
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "geen bronelement voor URI \"%s\""
+
+#: gst/parse/grammar.y:741
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "geen element om URI \"%s\" mee te verbinden"
+
+#: gst/parse/grammar.y:749
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "geen doelelement voor URI \"%s\""
+
+#: gst/parse/grammar.y:753
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr "kon doelelement niet verbinden voor URI \"%s\""
+
+#: gst/parse/grammar.y:765
+msgid "empty pipeline not allowed"
+msgstr "lege pijplijn niet toegelaten"
+
+#: tools/gst-inspect.c:917
+msgid "Show plugin details"
+msgstr "Toon details van plugins"
+
+#: tools/gst-inspect.c:919
+msgid "Show scheduler details"
+msgstr "Toon details van planner"
+
+#: tools/gst-launch.c:79
+msgid "Execution ended after %"
+msgstr "Uitvoering beëindigd na %"
+
+#: tools/gst-launch.c:79
+msgid " iterations (sum %"
+msgstr "iteraties (som %"
+
+#: tools/gst-launch.c:79
+msgid " ns, average %"
+msgstr "ns, gemiddeld %"
+
+#: tools/gst-launch.c:79
+msgid " ns, min %"
+msgstr "ns, min %"
+
+#: tools/gst-launch.c:79
+msgid " ns, max %"
+msgstr "ns, max %"
+
+#: tools/gst-launch.c:79
+msgid " ns).\n"
+msgstr "ns).\n"
+
+#: tools/gst-launch.c:99
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr ""
+"Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
+
+#: tools/gst-launch.c:107
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
+
+#: tools/gst-launch.c:113
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
+
+#: tools/gst-launch.c:118
+msgid "WARNING: only one toplevel element is supported at this time."
+msgstr ""
+"WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
+"moment."
+
+#: tools/gst-launch.c:128
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr "FOUT: versta argument %d op commandoregel niet: %s.\n"
+
+#: tools/gst-launch.c:138
+#, c-format
+msgid "WARNING: element named '%s' not found.\n"
+msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
+
+#: tools/gst-launch.c:273
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+
+#: tools/gst-launch.c:350
+msgid "Output tags (also known as metadata)"
+msgstr "Druk tags (ofte metadata) af"
+
+#: tools/gst-launch.c:352
+msgid "Output status information and property notifications"
+msgstr "Druk statusinformatie en eigenschapsnotificatie af"
+
+#: tools/gst-launch.c:354
+msgid "Do not output status information of TYPE"
+msgstr "Druk statusinformatie van type TYPE niet af"
+
+#: tools/gst-launch.c:354
+msgid "TYPE1,TYPE2,..."
+msgstr "TYPE1,TYPE2,..."
+
+#: tools/gst-launch.c:357
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr "Bewaar xml-representatie van pijplijn in BESTAND en stop"
+
+#: tools/gst-launch.c:357
+msgid "FILE"
+msgstr "BESTAND"
+
+#: tools/gst-launch.c:360
+msgid "Do not install a fault handler"
+msgstr "Installeer geen foutafhandelaar"
+
+#: tools/gst-launch.c:362
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr "Druk allocatiespoor af indien aangezet tijdens compileren"
+
+#: tools/gst-launch.c:364
+msgid "Number of times to iterate pipeline"
+msgstr "Aantal keren om de pijplijn te herhalen"
+
+#: tools/gst-launch.c:429
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
+
+#: tools/gst-launch.c:433
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
+
+#: tools/gst-launch.c:437
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "WAARSCHUWING: foutieve pijplijn: %s\n"
+
+#: tools/gst-launch.c:438
+msgid "         Trying to run anyway.\n"
+msgstr "              Probeer toch uit te voeren.\n"
+
+#: tools/gst-launch.c:462
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
+
+#: tools/gst-launch.c:469
+msgid "RUNNING pipeline ...\n"
+msgstr "BEZIG met pijplijn ...\n"
+
+#: tools/gst-launch.c:471
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "FOUT: pijplijn wil niet spelen.\n"
+
+#~ msgid "CATEGORIES"
+#~ msgstr "CATEGORIEEN"
+
+#~ msgid "No filename specified."
+#~ msgstr "Geen bestandsnaam gegeven."
+
+#~ msgid "application"
+#~ msgstr "applicatie"
+
+#~ msgid "application that wrote the stream"
+#~ msgstr "applicatie die de stroom geschreven heeft"
