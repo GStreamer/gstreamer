@@ -28,6 +28,12 @@ have_type (GstElement *element, GstCaps *caps, GstCaps **private_caps)
   else if (strstr (mime, "x-ogg")) {
     decoder = gst_element_factory_make ("vorbisfile", "decoder");
   }
+  else if (strstr (mime, "x-wav")) {
+    decoder = gst_element_factory_make ("wavparse", "decoder");
+  }
+  else if (strstr (mime, "x-flac")) {
+    decoder = gst_element_factory_make ("flacdec", "decoder");
+  }
   else {
     g_print ("mime type %s not handled in this program, exiting.\n", mime);
     g_free (mime);
