@@ -20,7 +20,7 @@
  * Much of the code in this file is taken from the Linux kernel. 
  * The code is relicensed under the LGPL with the kind permission of
  * Linus Torvalds,Ralf Baechle and Alan Cox
- * /
+ */
 
 #ifndef __GST_ATOMIC_IMPL_H__
 #define __GST_ATOMIC_IMPL_H__
