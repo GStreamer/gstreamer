@@ -50,9 +50,10 @@ struct _cothread_state {
   char **argv;
 
   int flags;
-  int *sp;
-  int *top_sp;
-  int *pc;
+  void *sp;
+  // is this needed any more?
+  void *top_sp;
+  void *pc;
   jmp_buf jmp;
 };
 

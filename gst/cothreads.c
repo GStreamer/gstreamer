@@ -123,6 +123,7 @@ cothread_create (cothread_context *ctx)
   s->threadnum = ctx->nthreads;
   s->flags = 0;
   s->sp = ((int *)s + COTHREAD_STACKSIZE);
+  // is this needed anymore?
   s->top_sp = s->sp;
 
   GST_INFO (GST_CAT_COTHREADS,"created cothread #%d: %p at sp:%p", ctx->nthreads, s, s->sp);
@@ -267,7 +268,6 @@ cothread_switch (cothread_state *thread)
   ctx->current = thread->threadnum;
 
   /* save the current stack pointer, frame pointer, and pc */
-//  GET_SP(current->sp);
   enter = setjmp(current->jmp);
   if (enter != 0) {
     GST_DEBUG (0,"enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
@@ -282,14 +282,13 @@ cothread_switch (cothread_state *thread)
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
     GST_DEBUG (0,"in thread \n");
-//    SET_SP(thread->sp);
     // switch to it
     longjmp(thread->jmp,1);
   } else {
-    SETUP_STACK(thread->sp);
-    SET_SP(thread->sp);
+    GST_ARCH_SETUP_STACK(thread->sp);
+    GST_ARCH_SET_SP(thread->sp);
     // start it
-    CALL(cothread_stub);
+    GST_ARCH_CALL(cothread_stub);
     GST_DEBUG (0,"exit thread \n");
     ctx->current = 0;
   }

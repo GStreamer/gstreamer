@@ -104,6 +104,7 @@ noinst_HEADERS = 	\
 	gsti386.h	\
 	gstppc.h	\
 	gstalpha.h	\
+	gstarm.h	\
 	gstpropsprivate.h
 
 CFLAGS = $(LIBGST_CFLAGS)
