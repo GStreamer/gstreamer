@@ -71,7 +71,7 @@ struct _cothread_context
  * (ie. private) for each thread.  The key itself is shared among threads,
  * so it only needs to be initialized once.
  */
-static GPrivate *_cothread_ctx_key;
+static GStaticPrivate _cothread_ctx_key = G_STATIC_PRIVATE_INIT;
 
 /*
  * This should only after context init, since we do checking.
@@ -81,7 +81,7 @@ cothread_get_current_context (void)
 {
   cothread_context *ctx;
 
-  ctx = g_private_get (_cothread_ctx_key);
+  ctx = g_static_private_get (&_cothread_ctx_key);
   g_assert(ctx);
 
 #ifdef COTHREAD_PARANOID
@@ -106,7 +106,7 @@ cothread_context_init (void)
 
   /* if there already is a cotread context for this thread,
    * just return it */
-  ctx = g_private_get (_cothread_ctx_key);
+  ctx = g_static_private_get (&_cothread_ctx_key);
   if (ctx) {
     GST_INFO (GST_CAT_COTHREADS, 
 	      "returning private _cothread_ctx_key %p", ctx);
@@ -126,17 +126,19 @@ cothread_context_init (void)
 
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
+#if 0
   /* initialize the cothread key (for GThread space) if not done yet */
   /* FIXME this should be done in cothread_init() */
   if (_cothread_ctx_key == NULL) {
     _cothread_ctx_key = g_private_new (NULL);
     g_assert (_cothread_ctx_key);
   }
+#endif
 
   /* set this thread's context pointer */
   GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to %p",
 	    ctx);
-  g_private_set (_cothread_ctx_key, ctx);
+  g_static_private_set (&_cothread_ctx_key, ctx, NULL);
 
   /* clear the cothread data */
   memset (ctx->cothreads, 0, sizeof (ctx->cothreads));
@@ -195,7 +197,7 @@ cothread_context_free (cothread_context *ctx)
   }
   g_hash_table_destroy (ctx->data);
   /* make sure we free the private key for cothread context */
-  g_private_set (_cothread_ctx_key, NULL);
+  g_static_private_set (&_cothread_ctx_key, NULL, NULL);
   g_free (ctx);
 }
 
