@@ -1,0 +1,22 @@
+
+This is a list of things to check in elements.
+
+
+
+1. Add a "Element-Checklist-Version: 1" comment
+
+This comment is to indicate which items on this checklist have been
+checked, so that future checkers can skip things that you've already
+carefully checked.  This number should obviously be updated whenever
+you do additional checks.  Ideally, you should not do checks out of
+order, but using "1, also 4-6" is acceptable.
+
+
+2. Each pad should have a pad template
+
+Add a pad template for pads that don't have one.
+
+
+
+
+
