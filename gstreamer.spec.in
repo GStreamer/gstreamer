@@ -15,6 +15,7 @@ BuildRoot: /var/tmp/%{name}-%{ver}-root
 Docdir: %{prefix}/doc
 Prefix: %prefix
 Requires: libxml >= 1.8.0
+Requires: Hermes >= 
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -32,12 +33,10 @@ plugins.
 %{prefix}/bin/gstreamer-inspect
 %{prefix}/bin/gstreamer-launch
 %{prefix}/bin/gstreamer-register
-%{prefix}/bin/gstreamer-guilaunch 
 %{prefix}/lib/lib*.so*
 %{prefix}/lib/gst/libadder*
 %{prefix}/lib/gst/libalaw*
 %{prefix}/lib/gst/libgstaudio*
-%{prefix}/lib/gst/libcolorspace*
 %{prefix}/lib/gst/libgstautoplug*
 %{prefix}/lib/gst/libgstelements*
 %{prefix}/lib/gst/libgstgetbits*
@@ -55,8 +54,6 @@ plugins.
 %{prefix}/lib/gst/libsystem_*
 %{prefix}/lib/gst/libgstputbits*
 %{prefix}/lib/gst/libvol*
-%{prefix}/lib/gst/libxvideosink*
-%{prefix}/lib/gst/libgstparsewav*
 %{prefix}/lib/gst/libgststaticautoplug*
 %{prefix}/lib/gst/libgsttypes*
 %{prefix}/lib/gst/libgstbasicscheduler*
@@ -214,6 +211,7 @@ Element for text-to-speech using the festival server.
 Summary: Gstreamer plugin for FLAC lossless audio format
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
+Requires: flac => 1.0
 
 %description -n gstreamer-flac
 Plugin for the free FLAC lossless audio format. 
@@ -251,6 +249,7 @@ of GStreamer. geditor is development tool for graphically creating applications 
 %{prefix}/bin/gstmediaplay
 %{prefix}/share/gsteditor/*
 %{prefix}/share/gstmediaplay/*
+%{prefix}/bin/gstreamer-guilaunch
 
 %package -n gstreamer-gnomevfs
 Summary: GStreamer plugins for GNOME VFS input and output
@@ -363,6 +362,7 @@ Summary: Gstreamer plugin for outputing to SDL
 Group: Libraries/Multimedia
 Requires: SDL >= 1.2.0
 Requires: %{name} = %{ver}
+Requires: gstreamer-colorspace = %{ver}
 BuildRequires: SDL-devel >= 1.2.0
 
 %description -n gstreamer-sdl
@@ -387,19 +387,20 @@ from OpenSound.
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstoss*
 
-%package -n gstreamer-ac3dec
-Summary: Gstreamer plugin for VOB playback
-Group: Libraries/Multimedia
-Requires: ac3dec >= 0.6.2
-Requires: %{name} = %{ver}
+# Comment out ac3dec as it has been replaced by ac52dec
 
-%description -n gstreamer-ac3dec
-Plugin for the free AC-3 stream decoder from Linuxvideo.
-(http://linuxvideo.org/ac3dec/)
+# %package -n gstreamer-ac3dec
+# Summary: Gstreamer plugin for VOB playback
+# Group: Libraries/Multimedia
+# Requires: ac3dec >= 0.6.2
+# Requires: %{name} = %{ver}
+# URL: http://linuxvideo.org/ac3dec/
+# %description -n gstreamer-ac3dec
+# Plugin for the free AC-3 stream decoder from Linuxvideo.
 
-%files -n gstreamer-ac3dec
-%defattr(-, root, root)
-%{prefix}/lib/gst/libac3*
+# %files -n gstreamer-ac3dec
+# %defattr(-, root, root)
+# %{prefix}/lib/gst/libac3*
 
 %package -n gstreamer-ladspa
 Summary: Gstreamer wrapper for LADSPA plugins
@@ -414,7 +415,7 @@ Requires: %{name} = %{ver}
 Plugin which wraps LADSPA plugins for use by GStreamer applications.
 
 %package -n gstreamer-mad
-Summary: Gstreamer MAD mp3 decoder library
+Summary: Plugin using MAD for mp3 decoding 
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 Requires: mad >= 0.13.0
@@ -425,6 +426,19 @@ Plugin for playback of mp3 songs using the very good MAD library
 %files -n gstreamer-mad
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstmad*
+
+%package -n gstreamer-mp3encode
+Summary: Plugin for mp3 encoding library
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+Requires: lame >= 3.89
+
+%description -n gstreamer-mp3encode
+Plugin for encoding mp3 songs using the lame library
+
+%files -n gstreamer-mp3encode
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstlame*
 
 %package -n gstreamer-quicktime
 Summary: GStreamer Quicktime video Plugin
@@ -480,9 +494,12 @@ Video CD playback plugin
 %package -n gstreamer-alsa
 Summary: GStreamer plugins for the ALSA sound architecture
 Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
 
 %description -n gstreamer-alsa
 Input and output plugin for the ALSA soundcard driver architecture.
+It requires that the ALSA sound driver system is installed from
+(http://www.alsa-project.org)
 
 %files -n gstreamer-alsa
 %defattr(-, root, root)
@@ -491,6 +508,8 @@ Input and output plugin for the ALSA soundcard driver architecture.
 %package -n gstreamer-libdvd
 Summary: GStreamer plugins for DVD playback
 Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+Requires: libdvd => 0.9.0
 
 %description -n gstreamer-libdvd
 Input and output plugin for the ALSA soundcard driver architecture.
@@ -515,6 +534,7 @@ Plugin for playback of the SUN au audio format.
 Summary: GStreamer VOB decoder plugin
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
+Requires: a52dec => 0.7.0
 
 %description -n gstreamer-a52dec
 Plugin for decoding of VOB files
@@ -539,6 +559,7 @@ Plugin for ByteStream testing of GStreamer
 Summary: GStreamer Mikmod plugin
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
+Requires: mikmod => 3.1.0
 
 %description -n gstreamer-mikmod
 Plugin for playback of module files supported by mikmod under GStreamer
@@ -619,6 +640,21 @@ Library for resampling of sound
 %defattr(-, root, root)
 %{prefix}/lib/gst/libresample*
 
+%package -n gstreamer-colorspace
+Summary: GStreame colorspace plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+Requires: Hermes => 1.3.0
+
+%description -n gstreamer-colorspace
+Plugin for conversion of colorspace in video. 
+This plugin is needed for most video playback,
+this plugin is based on the Hermes library.
+
+%files -n gstreamer-colorspace
+%defattr(-, root, root)
+%{prefix}/lib/gst/libcolorspace*
+
 %package -n gstreamer-rtp
 Summary: GStreamer RTP plugin
 Group: Libraries/Multimedia
@@ -632,7 +668,40 @@ Library for transfering data with the RTP protocol
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstrtp*
 
+%package -n gstreamer-xfreevideo
+Summary: GStreamer Xfree Xv plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+Requires: XFree86 => 4.1.0
+Requires: gstreamer-colorspace = %{ver}
+
+%description -n gstreamer-xfreevideo
+Plugin for playback of video using XFree Xvideo support
+
+%files -n gstreamer-xfreevideo
+%defattr(-, root, root)
+%{prefix}/lib/gst/libxvideosink*
+
+%package -n gstreamer-wav
+Summary: GStreamer wav audio plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-wav
+Plugin for playback of wav audio files
+
+%files -n gstreamer-wav
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstparsewav*
+
+
 %changelog
+* Sat Dec 15 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Splitt of more plugins from the core and put them into their own modules
+- Includes colorspace, xfree and wav
+- Improved package Require lines
+- Added mp3encode (lame based) to the SPEC
+
 * Wed Dec 12 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Thomas merged mpeg plugins into one
 * Sat Dec 08 2001 Christian Schaller <Uraeus@linuxrising.org>
@@ -805,6 +874,19 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-rtp
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-colorspace
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-xfreevideo
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-wav
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+
+%post -n gstreamer-mp3encode
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %postun
