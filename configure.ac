@@ -800,7 +800,7 @@ GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   AC_MSG_CHECKING([Checking for FAAD >= 2])
   AC_TRY_COMPILE([
 #include <faad.h>
-#if !defined(FAAD2_VERSION)
+#if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
 #error Not faad2
 #endif
   ], [ return 0; ],
