@@ -334,9 +334,6 @@ theora_enc_chain (GstPad * pad, GstData * data)
     theora_encode_tables (&enc->state, &op);
     buf3 = theora_buffer_from_packet (enc, &op);
 
-    /* create caps */
-    caps = gst_caps_new_simple ("video/x-theora", NULL);
-
     /* mark buffers and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
     theora_set_header_on_caps (caps, buf1, buf2, buf3);
@@ -348,7 +345,6 @@ theora_enc_chain (GstPad * pad, GstData * data)
       gst_data_unref (data);
       return;
     }
-    gst_caps_free (caps);
 
     /* push out the header buffers */
     theora_push_buffer (enc, buf1);

@@ -377,8 +377,8 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
   GstData *data = NULL;
 
   while (data == NULL) {
-    GST_LOG ("muxer: pulling %s:%s", GST_DEBUG_PAD_NAME (pad->pad));
     data = gst_pad_pull (pad->pad);
+    GST_DEBUG ("muxer: pulled %s:%s %p", GST_DEBUG_PAD_NAME (pad->pad), data);
     /* if it's an event, handle it */
     if (GST_IS_EVENT (data)) {
       GstEventType type;
@@ -409,12 +409,12 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
       if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
         /* and we have one */
         if (incaps) {
-          GST_LOG ("muxer: got incaps buffer in control state, ignoring");
+          GST_DEBUG ("muxer: got incaps buffer in control state, ignoring");
           /* just ignore */
           gst_buffer_unref (buf);
           data = NULL;
         } else {
-          GST_LOG
+          GST_DEBUG
               ("muxer: got data buffer in control state, switching to data mode");
           /* this is a data buffer so switch to data state */
           pad->state = GST_OGG_PAD_STATE_DATA;
@@ -568,6 +568,7 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
           if (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER) {
             GstBuffer *buf = g_value_peek_pointer (bufval);
 
+            gst_buffer_ref (buf);
             res = g_list_append (res, buf);
           }
         }
@@ -739,6 +740,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
         }
       }
     }
+    g_list_free (pad->headers);
+    pad->headers = NULL;
   }
   /* hbufs holds all buffers for the headers now */
 
@@ -757,8 +760,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     if (GST_PAD_IS_USABLE (mux->srcpad)) {
       gst_pad_push (mux->srcpad, GST_DATA (buf));
+    } else {
+      gst_buffer_unref (buf);
     }
   }
+  g_list_free (hbufs);
 }
 
 /* basic idea:
