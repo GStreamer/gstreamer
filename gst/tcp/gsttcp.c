@@ -116,14 +116,15 @@ gst_tcp_socket_read (int socket, void *buf, size_t count)
     ssize_t ret = read (socket, buf + bytes_read,
         count - bytes_read);
 
-    if (ret <= 0) {
+    if (ret < 0)
+      GST_WARNING ("error while reading: %s", g_strerror (errno));
+    if (ret <= 0)
       return bytes_read;
-    }
     bytes_read += ret;
   }
 
   if (bytes_read < 0)
-    GST_DEBUG ("error while reading");
+    GST_WARNING ("error while reading: %s", g_strerror (errno));
   else
     GST_DEBUG ("read %d bytes succesfully", bytes_read);
   return bytes_read;
