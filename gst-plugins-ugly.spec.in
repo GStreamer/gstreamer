@@ -787,5 +787,5 @@ Plugin for playback of wav audio files
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstwavparse*
 
-%post -n gstreamer-colorspace
+%post -n gstreamer-wav
 @%{prefix}/bin/gstreamer-register --gst-mask=0
