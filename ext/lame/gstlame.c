@@ -356,7 +356,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_debug (caps);
   GST_INFO (GST_CAT_CAPS, "dumping caps of own pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
   */
-  gst_caps_debug (gst_pad_get_caps (pad));
+  gst_caps_debug (gst_pad_get_caps (pad), "original caps on sink pad");
   /* check if the supplied caps of the peer element are compatible with our own      use gst_pad_get_caps because if caps aren't set yet we need the template */
   if (!gst_caps_check_compatibility (caps, gst_pad_get_caps (pad)))
   {
