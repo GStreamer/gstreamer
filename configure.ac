@@ -84,9 +84,11 @@ esac],
 [EXPERIMENTAL=no]) dnl Default value
 
 if test "x$EXPERIMENTAL" = "$xyes"; then
-  USE_FLACLIB="no"
-else
+  AC_MSG_WARN(building experimental plugins)
   USE_FLACLIB="yes"
+else
+  AC_MSG_NOTICE(not building experimental plugins)
+  USE_FLACLIB="no"
 fi
 
 dnl broken plugins; stuff that doesn't seem to build at the moment
@@ -98,15 +100,15 @@ AC_ARG_ENABLE(broken,
 esac], 
 [BROKEN=no]) dnl Default value
 
-AM_CONDITIONAL(PLUGINS_EXP, test "$broken-plugins" = "$xyes")
-
 if test "x$broken-plugins" = "$xyes"; then
+  AC_MSG_WARN(building broken plugins)
   USE_ARTS="yes"
   USE_ARTSC="yes"
   USE_LIBGSM="yes"
   USE_FLACLIB="yes"
   USE_LIBAVIFILE="yes"
 else
+  AC_MSG_NOTICE(not building broken plugins)
   USE_ARTS="no"
   USE_ARTSC="no"
   USE_LIBGSM="no"
