@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-#include <mpc_dec.h>
+#include <musepack/mpc_dec.h>
 #include "gstmusepackreader.h"
 
 G_BEGIN_DECLS
