@@ -693,7 +693,8 @@ gst_bin_child_state_change (GstBin * bin, GstElementState oldstate,
   g_return_if_fail (GST_IS_ELEMENT (child));
 
   GST_CAT_LOG (GST_CAT_STATES, "child %s changed state in bin %s from %s to %s",
-      GST_ELEMENT_NAME (child), GST_ELEMENT_NAME (bin),
+      GST_ELEMENT_NAME (child) ? GST_ELEMENT_NAME (child) : "(null)",
+      GST_ELEMENT_NAME (bin) ? GST_ELEMENT_NAME (bin) : "(null)",
       gst_element_state_get_name (oldstate),
       gst_element_state_get_name (newstate));
 

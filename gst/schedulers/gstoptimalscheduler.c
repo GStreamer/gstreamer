@@ -1553,13 +1553,15 @@ gst_opt_scheduler_state_transition (GstScheduler * sched, GstElement * element,
   GstOptSchedulerGroup *group;
   GstElementStateReturn res = GST_STATE_SUCCESS;
 
-  GST_DEBUG ("element \"%s\" state change (%04x)", GST_ELEMENT_NAME (element),
+  GST_DEBUG ("element \"%s\" state change (%04x)",
+      GST_ELEMENT_NAME (element) ? GST_ELEMENT_NAME (element) : "(null)",
       transition);
 
   /* we check the state of the managing pipeline here */
   if (GST_IS_BIN (element)) {
     if (GST_SCHEDULER_PARENT (sched) == element) {
-      GST_LOG ("parent \"%s\" changed state", GST_ELEMENT_NAME (element));
+      GST_LOG ("parent \"%s\" changed state",
+          GST_ELEMENT_NAME (element) ? GST_ELEMENT_NAME (element) : "(null)");
 
       switch (transition) {
         case GST_STATE_PLAYING_TO_PAUSED:
