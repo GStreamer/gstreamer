@@ -767,7 +767,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
   case ASF_STREAM_VIDEO:
     gst_asf_demux_read_object_header_rest (asf_demux, &ptr, 11);
     video_object = (asf_stream_video *)ptr;
-    size = GUINT16_FROM_BE(video_object->size) - 40; /* Byte order gets 
+    size = GUINT16_FROM_LE(video_object->size) - 40; /* Byte order gets 
 						      * offset by single 
 						      * byte */
     GST_INFO ( "Object is a video stream with %u bytes of additional data.", size);
@@ -1556,6 +1556,14 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
       caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_msmpeg43",
 				   "video/x-msmpeg",
 				     "msmpegversion", GST_PROPS_INT (43));
+      break;
+
+    case GST_MAKE_FOURCC('D','I','V','3'):
+    case GST_MAKE_FOURCC('D','I','V','4'):
+    case GST_MAKE_FOURCC('D','I','V','5'):
+      caps = GST_ASF_VID_CAPS_NEW ("asf_demux_video_src_div345",
+				   "video/x-divx",
+				     "divxversion", GST_PROPS_INT (3));
       break;
 
     default:

@@ -43,6 +43,7 @@ enum {
   ASF_OBJ_CONCEAL_NONE,
   ASF_OBJ_COMMENT,
   ASF_OBJ_CODEC_COMMENT,
+  ASF_OBJ_CODEC_COMMENT1,
   ASF_OBJ_INDEX,
   ASF_OBJ_HEAD1,
   ASF_OBJ_HEAD2,
@@ -148,7 +149,9 @@ struct _asf_stream_video {
   guint32 height;
   guint8  unknown;
   guint16 size;
-};
+} __attribute__ ((__packed__));
+/* the packed attribute is needed to prevent this thing
+ * from expanding 'unknown' to 16 bits */
 
 typedef struct _asf_stream_video asf_stream_video;
 
@@ -238,7 +241,7 @@ static ASFGuidHash asf_object_guids[] = {
   { ASF_OBJ_CONCEAL_NONE,     { 0x20fb5700, 0x11cf5b55, 0x8000FDa8, 0x2B445C5f }},
   { ASF_OBJ_COMMENT,          { 0x75b22633, 0x11cf668e, 0xAA00D9a6, 0x6Cce6200 }},
   { ASF_OBJ_CODEC_COMMENT,    { 0x86D15240, 0x11D0311D, 0xA000A4A3, 0xF64803C9 }},
-  { ASF_OBJ_CODEC_COMMENT,    { 0x86d15241, 0x11d0311d, 0xA000A4a3, 0xF64803c9 }},
+  { ASF_OBJ_CODEC_COMMENT1,   { 0x86d15241, 0x11d0311d, 0xA000A4a3, 0xF64803c9 }},
   { ASF_OBJ_INDEX,            { 0x33000890, 0x11cfe5b1, 0xA000F489, 0xCB4903c9 }},
   { ASF_OBJ_HEAD1,            { 0x5fbf03b5, 0x11cfa92e, 0xC000E38e, 0x6553200c }},
   { ASF_OBJ_HEAD2,            { 0xabd3d211, 0x11cfa9ba, 0xC000E68e, 0x6553200c }},
