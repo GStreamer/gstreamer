@@ -1,4 +1,3 @@
 debian/gstreamer/usr/share/man/man1/gst-complete.1
-debian/gstreamer/usr/share/man/man1/gst-guilaunch.1
 debian/gstreamer/usr/share/man/man1/gst-inspect.1
 debian/gstreamer/usr/share/man/man1/gst-launch.1

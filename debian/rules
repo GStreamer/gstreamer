@@ -28,6 +28,7 @@ configure-stamp:
 		--sysconfdir=/etc \
 		--with-configdir=/etc/gstreamer \
 		--with-win32-libdir=/usr/lib/win32 \
+		--enable-glib2 \
 		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \
