@@ -205,10 +205,11 @@ gst_identity_loop (GstElement *element)
 /* THIS IS THE BYTE BASED ONE*/
   do {
     for (i=0;i<identity->count;i++) {
+      guint8 *data;
       buf = gst_buffer_new();
       /* note that this is dangerous, as it does *NOT* refcount the data, it can go away!!! */
-      GST_BUFFER_DATA(buf) = gst_bytestream_peek_bytes(identity->bs,identity->byte_size);
-      GST_BUFFER_SIZE(buf) = identity->byte_size;
+      GST_BUFFER_SIZE(buf) = gst_bytestream_peek_bytes(identity->bs, &data, identity->byte_size);
+      GST_BUFFER_DATA(buf) = data;
       GST_BUFFER_FLAG_SET(buf,GST_BUFFER_DONTFREE);
       gst_pad_push(identity->srcpad,buf);
       gst_bytestream_flush(identity->bs,identity->byte_size);

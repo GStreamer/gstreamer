@@ -57,6 +57,7 @@ gst_bytestream_new (GstPad * pad)
   bs->headbufavail = 0;
   bs->listavail = 0;
   bs->assembled = NULL;
+  bs->offset = 0LL;
 
   return bs;
 }
@@ -118,7 +119,7 @@ gst_bytestream_destroy (GstByteStream * bs)
 static gboolean
 gst_bytestream_get_next_buf (GstByteStream * bs)
 {
-  GstBuffer *nextbuf, *lastbuf;
+  GstBuffer *nextbuf, *lastbuf, *headbuf;
   GSList *end;
 
   g_assert (!bs->event);
@@ -182,6 +183,12 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
     bs->headbufavail = GST_BUFFER_SIZE (nextbuf);
   }
 
+  /* a zero offset is a indication that we might need to set the timestamp */ 
+  if (bs->offset == 0LL){
+    headbuf = GST_BUFFER (bs->buflist->data);
+    bs->offset = GST_BUFFER_OFFSET(headbuf);
+  }
+  
   return TRUE;
 }
 
@@ -199,21 +206,31 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
 }
 
 
-GstBuffer *
-gst_bytestream_peek (GstByteStream * bs, guint32 len)
+guint32
+gst_bytestream_peek (GstByteStream * bs, GstBuffer **buf, guint32 len)
 {
   GstBuffer *headbuf, *retbuf = NULL;
 
-  g_return_val_if_fail (bs != NULL, NULL);
-  g_return_val_if_fail (len > 0, NULL);
+  g_return_val_if_fail (bs != NULL, 0);
+  g_return_val_if_fail (len > 0, 0);
 
   bs_print ("peek: asking for %d bytes\n", len);
 
   /* make sure we have enough */
   bs_print ("peek: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len))
-      return NULL;
+    if (!gst_bytestream_fill_bytes (bs, len)){
+      /* we must have an event coming up */
+      if (bs->listavail > 0){
+        /* we have some data left, len will be shrunk to the amount of data available */
+        len = bs->listavail;
+      }
+      else {
+        /* there is no data */
+        *buf = retbuf;
+        return 0;
+      }
+    }
     bs_print ("peek: there are now %d bytes in the list\n", bs->listavail);
   }
   bs_status (bs);
@@ -241,17 +258,17 @@ gst_bytestream_peek (GstByteStream * bs, guint32 len)
       GST_BUFFER_OFFSET (retbuf) = GST_BUFFER_OFFSET (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
   }
 
-  return retbuf;
+  *buf = retbuf;
+  return len;
 }
 
-guint8 *
-gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
+guint32
+gst_bytestream_peek_bytes (GstByteStream * bs, guint8** data, guint32 len)
 {
   GstBuffer *headbuf;
-  guint8 *data = NULL;
 
-  g_return_val_if_fail (bs != NULL, NULL);
-  g_return_val_if_fail (len > 0, NULL);
+  g_return_val_if_fail (bs != NULL, 0);
+  g_return_val_if_fail (len > 0, 0);
 
   bs_print ("peek_bytes: asking for %d bytes\n", len);
   if (bs->assembled) {
@@ -262,8 +279,18 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
   /* make sure we have enough */
   bs_print ("peek_bytes: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len))
-      return NULL;
+    if (!gst_bytestream_fill_bytes (bs, len)){
+      /* we must have an event coming up */
+      if (bs->listavail > 0){
+        /* we have some data left, len will be shrunk to the amount of data available */
+        len = bs->listavail;
+      }
+      else {
+        /* there is no data */
+        *data = NULL;
+        return 0;
+      }
+    }
     bs_print ("peek_bytes: there are now %d bytes in the list\n", bs->listavail);
   }
   bs_status (bs);
@@ -276,19 +303,19 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
   if (len <= bs->headbufavail) {
     bs_print ("peek_bytes: there are enough bytes in headbuf (need %d, have %d)\n", len, bs->headbufavail);
     /* create a sub-buffer of the headbuf */
-    data = GST_BUFFER_DATA (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
+    *data = GST_BUFFER_DATA (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
 
     /* otherwise we need to figure out how to assemble one */
   }
   else {
     bs_print ("peek_bytes: current buffer is not big enough for len %d\n", len);
 
-    data = gst_bytestream_assemble (bs, len);
-    bs->assembled = data;
+    *data = gst_bytestream_assemble (bs, len);
+    bs->assembled = *data;
     bs->assembled_len = len;
   }
 
-  return data;
+  return len;
 }
 
 guint8 *
@@ -356,6 +383,9 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
     bs->assembled = NULL;
   }
 
+  /* update the byte offset */
+  bs->offset += len;
+
   /* repeat until we've flushed enough data */
   while (len > 0) {
     headbuf = GST_BUFFER (bs->buflist->data);
@@ -402,16 +432,27 @@ gboolean
 gst_bytestream_seek (GstByteStream *bs, GstSeekType type, gint64 offset)
 {
   GstRealPad *peer = GST_RPAD_PEER (bs->pad);
+  guint32 waiting;
+  GstEvent *event = NULL;
+  GstBuffer *headbuf;
 
   if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (type, offset, TRUE))) {
-    GstBuffer *nextbuf;
     
     gst_bytestream_flush_fast (bs, bs->listavail);
-    
-    do {
-      nextbuf = gst_pad_pull (bs->pad);
+
+    while (!gst_bytestream_get_next_buf(bs)) {
+      gst_bytestream_get_status(bs, &waiting, &event);
+
+      /* it is valid for a seek to cause eos, so lets say it succeeded */
+      if (GST_EVENT_TYPE(event) == GST_EVENT_EOS){
+        bs->offset = 0LL;
+        return TRUE;
+      }
     }
-    while (!GST_IS_EVENT (nextbuf));
+
+    headbuf = GST_BUFFER (bs->buflist->data);
+    /* we have a new offset */
+    bs->offset = GST_BUFFER_OFFSET(headbuf);
     
     return TRUE;
   }
@@ -421,19 +462,22 @@ gst_bytestream_seek (GstByteStream *bs, GstSeekType type, gint64 offset)
 guint64
 gst_bytestream_tell (GstByteStream *bs)
 {
-  return 0;
+  g_return_val_if_fail (bs != NULL, 0);
+  return bs->offset;
 }
 
-GstBuffer *
-gst_bytestream_read (GstByteStream * bs, guint32 len)
+guint32
+gst_bytestream_read (GstByteStream * bs, GstBuffer** buf, guint32 len)
 {
-  GstBuffer *buf = gst_bytestream_peek (bs, len);
-  if (!buf)
-    return NULL;
+  guint32 len_peeked;
+  
+  len_peeked = gst_bytestream_peek (bs, buf, len);
+  if (len_peeked == 0)
+    return 0;
 
-  gst_bytestream_flush_fast (bs, len);
+  gst_bytestream_flush_fast (bs, len_peeked);
 
-  return buf;
+  return len_peeked;
 }
 
 

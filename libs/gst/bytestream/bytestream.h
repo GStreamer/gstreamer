@@ -40,16 +40,19 @@ struct _GstByteStream {
   /* we keep state of assembled pieces */
   guint8	*assembled;
   guint32	assembled_len;
+
+  /* this is needed for gst_bytestream_tell */
+  guint64	offset;
 };
 
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
-GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint32 len);
+guint32			gst_bytestream_read		(GstByteStream *bs, GstBuffer** buf, guint32 len);
 guint64			gst_bytestream_tell		(GstByteStream *bs);
 gboolean		gst_bytestream_seek		(GstByteStream *bs, GstSeekType type, gint64 offset);
-GstBuffer*		gst_bytestream_peek		(GstByteStream *bs, guint32 len);
-guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
+guint32			gst_bytestream_peek		(GstByteStream *bs, GstBuffer** buf, guint32 len);
+guint32			gst_bytestream_peek_bytes	(GstByteStream *bs, guint8** data, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
 void                    gst_bytestream_flush_fast       (GstByteStream *bs, guint32 len);
 void                    gst_bytestream_get_status	(GstByteStream *bs, guint32 *avail_out, GstEvent **event_out);
