@@ -72,10 +72,10 @@ struct _GstOssSrc {
   gint frequency;
 
   /* blocking */
+  guint64 basetime;
+  guint64 samples_since_basetime;
   gulong curoffset;
   gulong bytes_per_read;
-
-  gulong seq;
 };
 
 struct _GstOssSrcClass {

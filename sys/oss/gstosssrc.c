@@ -174,7 +174,8 @@ gst_osssrc_init (GstOssSrc *osssrc)
   
   osssrc->bytes_per_read = 4096;
   osssrc->curoffset = 0;
-  osssrc->seq = 0;
+  osssrc->basetime = 0;
+  osssrc->samples_since_basetime = 0;
 }
 
 static GstBuffer *
@@ -183,6 +184,7 @@ gst_osssrc_get (GstPad *pad)
   GstOssSrc *src;
   GstBuffer *buf;
   glong readbytes;
+  glong readsamples;
 
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_OSSSRC(gst_pad_get_parent (pad));
@@ -224,10 +226,15 @@ gst_osssrc_get (GstPad *pad)
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
-  
-  src->curoffset += readbytes;
+  GST_BUFFER_TIMESTAMP (buf) = src->basetime +
+	  src->samples_since_basetime * 1000000LL / src->frequency;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes\n", readbytes);
+  src->curoffset += readbytes;
+  readsamples = readbytes / src->channels;
+  if (src->format == 16) readsamples /= 2;
+  src->samples_since_basetime += readsamples;
+
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %lld\n", readbytes, GST_BUFFER_TIMESTAMP (buf));
   return buf;
 }
 
@@ -252,6 +259,10 @@ gst_osssrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
       src->channels = g_value_get_int (value);
       break;
     case ARG_FREQUENCY:
+      /* Preserve the timestamps */
+      src->basetime = src->samples_since_basetime * 1000000LL / src->frequency;
+      src->samples_since_basetime = 0;
+
       src->frequency = g_value_get_int (value);
       break;
     case ARG_CUROFFSET:
