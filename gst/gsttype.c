@@ -98,7 +98,6 @@ gst_type_register (GstTypeFactory *factory)
     type->id = 		_gst_maxtype++;
     type->mime = 	factory->mime;
     type->exts = 	factory->exts;
-    //type->typefindfunc = factory->typefindfunc;
     type->srcs =	NULL;
     type->sinks = 	NULL;
     type->converters = 	g_hash_table_new (NULL, NULL);
@@ -113,11 +112,9 @@ gst_type_register (GstTypeFactory *factory)
     /* FIXME: do extension merging here, not that easy */
 
     /* if there is no existing typefind function, try to use new one  */
-    /*
-    if ((type->typefindfunc == gst_type_typefind_dummy || 
-         type->typefindfunc == NULL) && factory->typefindfunc)
-      type->typefindfunc = factory->typefindfunc;
-      */
+  }
+  if (factory->typefindfunc) {
+    type->typefindfuncs = g_slist_prepend (type->typefindfuncs, factory->typefindfunc);
   }
 
   return id;
@@ -558,6 +555,7 @@ gst_type_get_sink_to_src (guint16 sinkid, guint16 srcid)
   GList *queue = NULL;
   gint iNode, iDist, iPrev, i, iCost;
 
+  g_print ("gsttype: find %d to %d\n", srcid, sinkid);
   if (sinkid == srcid) {
     //FIXME return an identity element
     return NULL;
@@ -648,6 +646,7 @@ gst_type_load_thyself (xmlNodePtr parent)
         GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);
 
         factory->mime = g_strdup (xmlNodeGetContent (field));
+        factory->typefindfunc = gst_type_typefind_dummy;
         typeid = gst_type_register (factory);
       }
       return typeid;
@@ -686,6 +685,8 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
 {
   GstType *type = (GstType *)priv;
   guint16 typeid;
+  GSList *funcs;
+
   g_print ("gsttype: need to load typefind function\n");
 
   type->typefindfuncs = NULL;
@@ -693,11 +694,17 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
   typeid = gst_type_find_by_mime (type->mime);
   type = gst_type_find_by_id (typeid);
 
-  /*
-  if (type->typefindfunc) {
-    return type->typefindfunc (buffer, type);
+  funcs = type->typefindfuncs;
+
+  while (funcs) {
+    GstTypeFindFunc func = (GstTypeFindFunc) funcs->data;
+
+    if (func) {
+       if (func (buffer, type)) return TRUE;
+    }
+
+    funcs = g_slist_next (funcs);
   }
-  */
 
   return FALSE;
 }
@@ -726,7 +733,7 @@ gst_typefactory_load_thyself (xmlNodePtr parent)
       factory->exts = g_strdup (xmlNodeGetContent (field));
     }
     else if (!strcmp (field->name, "typefind")) {
-      //factory->typefindfunc = gst_type_typefind_dummy;
+      factory->typefindfunc = gst_type_typefind_dummy;
     }
     field = field->next;
   }

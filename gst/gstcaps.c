@@ -118,7 +118,10 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   if (fromcaps->id != tocaps->id)
     return FALSE;
 
-  return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
+  if (fromcaps->properties && tocaps->properties) {
+    return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
+  }
+  else return TRUE;
 }
 
 

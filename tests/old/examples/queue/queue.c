@@ -47,6 +47,8 @@ int main(int argc,char *argv[])
   audiosink = gst_elementfactory_make("audiosink", "play_audio");
   g_assert(audiosink != NULL);
 
+  gst_bin_use_cothreads (GST_BIN (bin), TRUE);
+
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(bin), disksrc);
   gst_bin_add(GST_BIN(bin), parse);

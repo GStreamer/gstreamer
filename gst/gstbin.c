@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 
 #include "gstbin.h"
 #include "gstdebug.h"
@@ -772,6 +772,7 @@ GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->pullfunc);
             if (!pad->pullregionfunc)
               pad->pullregionfunc = gst_bin_pullregionfunc_proxy;
           }
+	  //pad->threadstate = element->threadstate;
         }
         pads = g_list_next (pads);
       }

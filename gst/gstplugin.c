@@ -496,6 +496,7 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
 
 //  g_print("adding factory to plugin\n");
   plugin->types = g_list_prepend (plugin->types, factory);
+  gst_type_register (factory);
 }
 
 /**

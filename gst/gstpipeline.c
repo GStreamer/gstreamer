@@ -166,8 +166,11 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
   if (found) {
+    GstType *type;
     type_id = gst_util_get_int_arg (GTK_OBJECT (typefind), "type");
-    //gst_pad_add_type_id (gst_element_get_pad (element, "src"), type_id);
+    type = gst_type_find_by_id (type_id);
+    
+    gst_pad_set_caps (gst_element_get_pad (element, "src"), gst_caps_new (type->mime));
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -224,7 +227,8 @@ gst_pipeline_pads_autoplug (GstElement *src, GstElement *sink)
   while (srcpads && !connected) {
     GstPad *srcpad = (GstPad *)srcpads->data;
 
-    connected = gst_pipeline_pads_autoplug_func (src, srcpad, sink);
+    if (srcpad->direction == GST_PAD_SRC) 
+      connected = gst_pipeline_pads_autoplug_func (src, srcpad, sink);
 
     srcpads = g_list_next(srcpads);
   }
@@ -369,18 +373,14 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
       pad = (GstPad *)pads->data;
 
       if (pad->direction == GST_PAD_SINK) {
-	      /*
-        GList *types = gst_pad_get_type_ids(pad);
-        if (types) {
-          sink_type = GPOINTER_TO_INT (types->data);
+        GstCaps *caps = gst_pad_get_caps (pad);
+        if (caps) {
+          sink_type = caps->id;
 	  break;
         }
 	else
-	*/
 	  sink_type = 0;
-
       }
-      g_print ("type %d\n", sink_type);
 
       pads = g_list_next(pads);
     }
@@ -471,20 +471,16 @@ differ:
         while (sinkpads) {
           sinkpad = (GstPad *)sinkpads->data;
 
-	  /*
 	  // FIXME connect matching pads, not just the first one...
           if (sinkpad->direction == GST_PAD_SINK && 
 	      !GST_PAD_CONNECTED(sinkpad)) {
-	    guint16 sinktype = 0; 
-            GList *types = gst_pad_get_type_ids(sinkpad);
-            if (types) 
-              sinktype = GPOINTER_TO_INT (types->data);
+            GstCaps *caps = gst_pad_get_caps (sinkpad);
+
 	    // the queue has the type of the elements it connects
-	    gst_pad_set_type_id (srcpad, sinktype);
-            gst_pad_set_type_id (gst_element_get_pad(queue, "sink"), sinktype);
+	    gst_pad_set_caps (srcpad, caps);
+            gst_pad_set_caps (gst_element_get_pad(queue, "sink"), caps);
 	    break;
 	  }
-	  */
           sinkpads = g_list_next(sinkpads);
         }
         gst_pipeline_pads_autoplug(thesrcelement, queue);

@@ -53,9 +53,6 @@ int main(int argc,char *argv[])
   gst_pad_connect(gst_element_get_pad(queue,"src"),
                   gst_element_get_pad(audiosink,"sink"));
 
-  gst_pad_set_type_id(gst_element_get_pad(queue, "sink"),
-  	gst_pad_get_type_id(gst_element_get_pad(audiosink, "sink")));
-
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("cannot autoplug pipeline\n");
     exit(-1);
