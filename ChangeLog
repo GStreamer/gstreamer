@@ -1,3 +1,10 @@
+2004-02-11  kost@imn.htwk-leipzig.de
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	* gst/gstclock.c: (gst_clock_entry_new): fixes structure
+	initialisation of clock (bug #134128)
+
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

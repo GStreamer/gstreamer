@@ -76,7 +76,7 @@ gst_clock_entry_new (GstClock *clock, GstClockTime time,
 
   entry->clock = clock;
   entry->time = time;
-  entry->interval = time;
+  entry->interval = interval;
   entry->type = type;
   entry->status = GST_CLOCK_ENTRY_OK;
 
