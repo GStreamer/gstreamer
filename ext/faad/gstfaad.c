@@ -25,14 +25,13 @@
 
 #include "gstfaad.h"
 
-GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, "
-        "systemstream = (bool) FALSE, " "mpegversion = { (int) 2, (int) 4 }")
+    GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) { 2, 4 }")
     );
 
-GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -92,12 +91,11 @@ gst_faad_get_type (void)
 static void
 gst_faad_base_init (GstFaadClass * klass)
 {
-  GstElementDetails gst_faad_details = {
-    "Free AAC Decoder (FAAD)",
-    "Codec/Decoder/Audio",
-    "Free MPEG-2/4 AAC decoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  };
+  static GstElementDetails gst_faad_details =
+      GST_ELEMENT_DETAILS ("Free AAC Decoder (FAAD)",
+      "Codec/Decoder/Audio",
+      "Free MPEG-2/4 AAC decoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
