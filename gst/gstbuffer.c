@@ -409,7 +409,8 @@ gst_buffer_copy (GstBuffer *buffer)
 gboolean
 gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
 {
-  return ((buf1->parent == buf2->parent) &&
+  return (buf1->parent && buf2->parent && 
+	  (buf1->parent == buf2->parent) &&
           ((buf1->data + buf1->size) == buf2->data));
 }
 
@@ -450,26 +451,29 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 //      ((buf1->data + buf1->size) == buf2->data)) {
   if (gst_buffer_is_span_fast(buf1,buf2)) {
     // we simply create a subbuffer of the common parent
-    return gst_buffer_create_sub(buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
+    newbuf =  gst_buffer_create_sub(buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
+    // FIXME unref buf1 and buf2 here?
   }
+  else {
+    // otherwise we simply have to brute-force copy the buffers
+    newbuf = gst_buffer_new();
 
-  // otherwise we simply have to brute-force copy the buffers
-  newbuf = gst_buffer_new();
+    // put in new size
+    newbuf->size = len;
+    // allocate space for the copy
+    newbuf->data = (guchar *)g_malloc(len);
+    // copy the first buffer's data across
+    memcpy(newbuf->data, buf1->data + offset, buf1->size - offset);
+    // copy the second buffer's data across
+    memcpy(newbuf->data + (buf1->size - offset), buf2->data, len - (buf1->size - offset));
 
-  // put in new size
-  newbuf->size = len;
-  // allocate space for the copy
-  newbuf->data = (guchar *)g_malloc(len);
-  // copy the first buffer's data across
-  memcpy(newbuf->data, buf1->data + offset, buf1->size - offset);
-  // copy the second buffer's data across
-  memcpy(newbuf->data + offset, buf2->data, len - (buf1->size - offset));
+    if (newbuf->offset != -1)
+      newbuf->offset = buf1->offset + offset;
+    newbuf->timestamp = buf1->timestamp;
+    if (buf2->maxage > buf1->maxage) newbuf->maxage = buf2->maxage;
+    else newbuf->maxage = buf1->maxage;
 
-  if (newbuf->offset != -1)
-    newbuf->offset = buf1->offset + offset;
-  newbuf->timestamp = buf1->timestamp;
-  if (buf2->maxage > buf1->maxage) newbuf->maxage = buf2->maxage;
-  else newbuf->maxage = buf1->maxage;
+  }
 
   return newbuf;
 }
