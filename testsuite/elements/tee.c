@@ -13,7 +13,6 @@
  */
 
 #include <gst/gst.h>
-#include "events.h"
 
 GstElement *
 element_create (char *name, char *element)
@@ -52,7 +51,6 @@ main (int argc, char *argv[])
   /* create */
   g_print ("Creating pipeline\n");
   pipeline = gst_pipeline_new ("pipeline");
-  g_signal_connect (G_OBJECT (pipeline), "event", G_CALLBACK (event_func), NULL);
 
   g_print ("Creating elements\n");
   if (!(tee = element_create ("tee", "tee"))) return 1;
