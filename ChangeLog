@@ -1,3 +1,8 @@
+2004-08-16  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/GStreamer.vcproj:
+	  temporary local files are .gmo not .mo
+
 2004-08-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bump nano to cvs

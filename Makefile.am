@@ -45,7 +45,8 @@ DIST_SUBDIRS = \
 	pkgconfig \
 	po \
 	common \
-	docs
+	docs \
+	win32
 
 win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
 

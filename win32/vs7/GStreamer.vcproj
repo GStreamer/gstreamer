@@ -60,9 +60,9 @@
 mkdir c:\gstreamer
 mkdir c:\gstreamer\bin
 copy /Y $(TargetPath) c:\gstreamer\bin
-for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do msgfmt -o ..\po\%%i.mo ..\po\%%i.po
+for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do msgfmt -o ..\po\%%i.gmo ..\po\%%i.po
 for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do mkdir c:\gstreamer\locale\%%i
-for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.mo c:\gstreamer\locale\%%i\gstreamer-0.8.mo"/>
+for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\gstreamer\locale\%%i\gstreamer-0.8.mo"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -140,9 +140,9 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 mkdir c:\gstreamer
 mkdir c:\gstreamer\bin
 copy /Y $(TargetPath) c:\gstreamer\bin
-for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do msgfmt -o ..\po\%%i.mo ..\po\%%i.po
+for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do msgfmt -o ..\po\%%i.gmo ..\po\%%i.po
 for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do mkdir c:\gstreamer\locale\%%i
-for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.mo c:\gstreamer\locale\%%i\gstreamer-0.8.mo"/>
+for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\gstreamer\locale\%%i\gstreamer-0.8.mo"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
