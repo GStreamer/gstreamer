@@ -39,6 +39,8 @@
 GST_DEBUG_CATEGORY_STATIC (dvdnavsrc_debug);
 #define GST_CAT_DEFAULT (dvdnavsrc_debug)
 
+/* Size of a DVD sector, used for sector-byte format conversions */
+#define DVD_SECTOR_SIZE 2048
 
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ CLOCK_BASE * 10000
@@ -96,7 +98,7 @@ typedef enum
 DVDNavSrcPauseMode;
 
 /* Interval of time to sleep during pauses. */
-#define DVDNAVSRC_PAUSE_INTERVAL (GST_SECOND / 5)
+#define DVDNAVSRC_PAUSE_INTERVAL (GST_SECOND / 20)
 
 /* The DVD domain types. */
 typedef enum
@@ -229,6 +231,9 @@ static const GstFormat *dvdnavsrc_get_formats (GstPad * pad);
 static gboolean dvdnavsrc_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 static const GstQueryType *dvdnavsrc_get_query_types (GstPad * pad);
+static gboolean dvdnavsrc_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value);
 
 static gboolean dvdnavsrc_close (DVDNavSrc * src);
 static gboolean dvdnavsrc_open (DVDNavSrc * src);
@@ -361,7 +366,7 @@ dvdnavsrc_init (DVDNavSrc * src)
 
   gst_pad_set_event_function (src->srcpad, dvdnavsrc_event);
   gst_pad_set_event_mask_function (src->srcpad, dvdnavsrc_get_event_mask);
-  /*gst_pad_set_convert_function (src->srcpad, dvdnavsrc_convert); */
+  gst_pad_set_convert_function (src->srcpad, dvdnavsrc_convert);
   gst_pad_set_query_function (src->srcpad, dvdnavsrc_query);
   gst_pad_set_query_type_function (src->srcpad, dvdnavsrc_get_query_types);
   gst_pad_set_formats_function (src->srcpad, dvdnavsrc_get_formats);
@@ -809,7 +814,7 @@ dvdnavsrc_set_domain (DVDNavSrc * src)
 static void
 dvdnavsrc_update_highlight (DVDNavSrc * src)
 {
-  int button;
+  int button = 0;
   pci_t *pci;
   dvdnav_highlight_area_t area;
   GstEvent *event;
@@ -817,8 +822,13 @@ dvdnavsrc_update_highlight (DVDNavSrc * src)
   DVDNAV_CALL (dvdnav_get_current_highlight, (src->dvdnav, &button), src);
 
   pci = dvdnav_get_current_nav_pci (src->dvdnav);
-  if (button > pci->hli.hl_gi.btn_ns) {
+  if ((button > pci->hli.hl_gi.btn_ns) || (button < 0)) {
     /* button is out of the range of possible buttons. */
+    button = 0;
+  }
+
+  if (!pci->hli.hl_gi.hli_ss) {
+    /* Not in menu */
     button = 0;
   }
 
@@ -856,6 +866,7 @@ dvdnavsrc_update_highlight (DVDNavSrc * src)
 
     src->button = button;
 
+    GST_DEBUG ("Sending dvd-spu-highlight for button %d", button);
     gst_pad_push (src->srcpad, GST_DATA (event));
   }
 }
@@ -1307,13 +1318,14 @@ dvdnavsrc_loop (GstElement * element)
 
           /* We just saw a still frame. Start a pause now. */
           if (info->length == 0xff) {
-            GST_INFO_OBJECT (src, "starting unlimed pause");
+            GST_INFO_OBJECT (src, "starting unlimited pause");
             src->pause_mode = DVDNAVSRC_PAUSE_UNLIMITED;
           } else {
-            GST_INFO_OBJECT (src, "starting limited pause: %d seconds",
-                info->length);
             src->pause_mode = DVDNAVSRC_PAUSE_LIMITED;
             src->pause_end = current_time + info->length * GST_SECOND;
+            GST_INFO_OBJECT (src,
+                "starting limited pause: %d seconds at %llu until %llu",
+                info->length, current_time, src->pause_end);
           }
 
           /* For the moment, send the first empty event to let
@@ -1328,6 +1340,8 @@ dvdnavsrc_loop (GstElement * element)
 
         if (src->pause_mode == DVDNAVSRC_PAUSE_UNLIMITED ||
             current_time < src->pause_end) {
+          GstEvent *event;
+
           /* We are in pause mode. Make this element sleep for a
              fraction of a second. */
           if (current_time + DVDNAVSRC_PAUSE_INTERVAL > src->pause_end) {
@@ -1336,10 +1350,13 @@ dvdnavsrc_loop (GstElement * element)
             gst_element_wait (GST_ELEMENT (src),
                 current_time + DVDNAVSRC_PAUSE_INTERVAL);
           }
-
           /* Send an empty event to keep the pipeline going. */
           /* FIXME: Use an interrupt/filler event here. */
-          send_data = GST_DATA (gst_event_new (GST_EVENT_EMPTY));
+          event = gst_event_new (GST_EVENT_EMPTY);
+          send_data = GST_DATA (event);
+          GST_EVENT_TIMESTAMP (event) =
+              gst_element_get_time (GST_ELEMENT (src));
+
           break;
         } else {
           /* We reached the end of the pause. */
@@ -1595,12 +1612,7 @@ dvdnavsrc_get_event_mask (GstPad * pad)
   static const GstEventMask masks[] = {
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET |
           GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
-    /*
-       {GST_EVENT_SEEK_SEGMENT, GST_SEEK_METHOD_SET | 
-       GST_SEEK_METHOD_CUR | 
-       GST_SEEK_METHOD_END | 
-       GST_SEEK_FLAG_FLUSH },
-     */
+    {GST_EVENT_FLUSH, 0},
     {GST_EVENT_NAVIGATION, GST_EVENT_FLAG_NONE},
     {0,}
   };
@@ -1629,6 +1641,8 @@ dvdnav_handle_navigation_event (DVDNavSrc * src, GstEvent * event)
 
     dvdnav_mouse_select (src->dvdnav,
         dvdnav_get_current_nav_pci (src->dvdnav), (int) x, (int) y);
+
+    dvdnavsrc_update_highlight (src);
   } else if (strcmp (event_type, "mouse-button-release") == 0) {
     double x, y;
 
@@ -1667,6 +1681,24 @@ dvdnavsrc_event (GstPad * pad, GstEvent * event)
       offset = GST_EVENT_SEEK_OFFSET (event);
 
       switch (format) {
+        case GST_FORMAT_BYTES:
+          switch (GST_EVENT_SEEK_METHOD (event)) {
+            case GST_SEEK_METHOD_SET:
+              origin = SEEK_SET;
+              break;
+            case GST_SEEK_METHOD_CUR:
+              origin = SEEK_CUR;
+              break;
+            case GST_SEEK_METHOD_END:
+              origin = SEEK_END;
+              break;
+            default:
+              goto error;
+          }
+          if (dvdnav_sector_search (src->dvdnav, (offset / DVD_SECTOR_SIZE),
+                  origin) != DVDNAV_STATUS_OK) {
+            goto error;
+          }
         default:
           if (format == sector_format) {
             switch (GST_EVENT_SEEK_METHOD (event)) {
@@ -1770,6 +1802,7 @@ dvdnavsrc_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_NAVIGATION:
       res = dvdnav_handle_navigation_event (src, event);
+      break;
     case GST_EVENT_FLUSH:
       src->need_flush = TRUE;
       break;
@@ -1791,9 +1824,9 @@ dvdnavsrc_get_formats (GstPad * pad)
 {
   int i;
   static GstFormat formats[] = {
+    GST_FORMAT_BYTES,
     /*
        GST_FORMAT_TIME,
-       GST_FORMAT_BYTES,
        GST_FORMAT_DEFAULT,
      */
     0,                          /* filled later */
@@ -1817,7 +1850,6 @@ dvdnavsrc_get_formats (GstPad * pad)
   return formats;
 }
 
-#if 0
 static gboolean
 dvdnavsrc_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
@@ -1831,97 +1863,20 @@ dvdnavsrc_convert (GstPad * pad,
     return FALSE;
 
   switch (src_format) {
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          src_value <<= 2;      /* 4 bytes per sample */
-        case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * 44100 / GST_SECOND;
-          break;
-        default:
-          if (*dest_format == track_format || *dest_format == sector_format) {
-            gint sector =
-                (src_value * 44100) / ((CD_FRAMESIZE_RAW >> 2) * GST_SECOND);
-
-            if (*dest_format == sector_format) {
-              *dest_value = sector;
-            } else {
-              *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
-            }
-          } else
-            return FALSE;
-          break;
-      }
-      break;
     case GST_FORMAT_BYTES:
-      src_value >>= 2;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * 4;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / 44100;
-          break;
-        default:
-          if (*dest_format == track_format || *dest_format == sector_format) {
-            gint sector = src_value / (CD_FRAMESIZE_RAW >> 2);
-
-            if (*dest_format == track_format) {
-              *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
-            } else {
-              *dest_value = sector;
-            }
-          } else
-            return FALSE;
-          break;
-      }
-      break;
-    default:
-    {
-      gint sector;
-
-      if (src_format == track_format) {
-        /* some sanity checks */
-        if (src_value < 0 || src_value > src->d->tracks)
-          return FALSE;
-
-        sector = cdda_track_firstsector (src->d, src_value + 1);
-      } else if (src_format == sector_format) {
-        sector = src_value;
+      if (*dest_format == sector_format) {
+        *dest_value = src_value / DVD_SECTOR_SIZE;
       } else
         return FALSE;
-
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = ((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100;
-          break;
-        case GST_FORMAT_BYTES:
-          sector <<= 2;
-        case GST_FORMAT_DEFAULT:
-          *dest_value = (CD_FRAMESIZE_RAW >> 2) * sector;
-          break;
-        default:
-          if (*dest_format == sector_format) {
-            *dest_value = sector;
-          } else if (*dest_format == track_format) {
-            /* if we go past the last sector, make sure to report the
-               last track */
-            if (sector > src->last_sector)
-              *dest_value = cdda_sector_gettrack (src->d, src->last_sector);
-            else
-              *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
-          } else
-            return FALSE;
-          break;
-      }
-      break;
-    }
+    default:
+      if ((src_format == sector_format) && (*dest_format == GST_FORMAT_BYTES)) {
+        *dest_value = src_value * DVD_SECTOR_SIZE;
+      } else
+        return FALSE;
   }
 
   return TRUE;
 }
-#endif
 
 static const GstQueryType *
 dvdnavsrc_get_query_types (GstPad * pad)
@@ -1959,6 +1914,11 @@ dvdnavsrc_query (GstPad * pad, GstQueryType type,
           res = FALSE;
         }
         *value = len;
+      } else if (*format == GST_FORMAT_BYTES) {
+        if (dvdnav_get_position (src->dvdnav, &pos, &len) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = len * DVD_SECTOR_SIZE;
       } else if (*format == title_format) {
         if (dvdnav_get_number_of_titles (src->dvdnav, &titles)
             != DVDNAV_STATUS_OK) {

@@ -62,6 +62,9 @@ struct _GstA52Dec {
 
   GstClockTime	last_ts;
   GstClockTime	current_ts;
+
+  GstClockTime last_timestamp;
+  GstClockTimeDiff last_diff;
 };
 
 struct _GstA52DecClass {

@@ -902,7 +902,7 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
         GST_BUFFER_OFFSET (buffer), GST_FORMAT_TIME, timestamp, 0);
   }
 
-  if (!GST_PAD_IS_USABLE (outstream->pad)) {
+  if (!GST_PAD_IS_USABLE (outstream->pad) || (size == 0)) {
     return;
   }
 

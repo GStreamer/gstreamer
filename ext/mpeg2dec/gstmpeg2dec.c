@@ -40,6 +40,8 @@ typedef gint mpeg2_state_t;
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
+GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
+#define GST_CAT_DEFAULT (mpeg2dec_debug)
 
 /* elementfactory information */
 static GstElementDetails gst_mpeg2dec_details = {
@@ -148,6 +150,10 @@ gst_mpeg2dec_get_type (void)
         g_type_register_static (GST_TYPE_ELEMENT, "GstMpeg2dec", &mpeg2dec_info,
         0);
   }
+
+  GST_DEBUG_CATEGORY_INIT (mpeg2dec_debug, "mpeg2dec", 0,
+      "MPEG2 decoder element");
+
   return mpeg2dec_type;
 }
 
@@ -318,6 +324,8 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
   }
 
   gst_buffer_ref (outbuf);
+
+  mpeg2_custom_fbuf (mpeg2dec->decoder, 1);
   mpeg2_set_buf (mpeg2dec->decoder, buf, outbuf);
 
   picture = info->current_picture;
@@ -471,6 +479,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
           gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
         }
       default:
+        GST_DEBUG ("Got event of type %d on sink pad", GST_EVENT_TYPE (event));
         gst_pad_event_default (pad, event);
         return;
     }
@@ -496,17 +505,17 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
     mpeg2_pts (mpeg2dec->decoder, mpeg_pts);
 #endif
   } else {
-    GST_DEBUG ("no pts");
+    GST_LOG ("no pts");
   }
 
-  GST_DEBUG ("calling _buffer");
+  GST_LOG ("calling mpeg2_buffer");
   mpeg2_buffer (mpeg2dec->decoder, data, end);
-  GST_DEBUG ("calling _buffer done");
+  GST_LOG ("calling mpeg2_buffer done");
 
   while (!done) {
     gboolean slice = FALSE;
 
-    GST_DEBUG ("calling parse");
+    GST_LOG ("calling parse");
     state = mpeg2_parse (mpeg2dec->decoder);
     GST_DEBUG ("parse state %d", state);
     switch (state) {
@@ -644,7 +653,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
           mpeg2dec->next_time +=
               (mpeg2dec->frame_period * picture->nb_fields) >> 1;
 
-
           GST_DEBUG ("picture: %s %s fields:%d off:%" G_GINT64_FORMAT " ts:%"
               G_GINT64_FORMAT,
               (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff " : "    "),
@@ -659,7 +667,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
                 GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf), 0);
           }
 
-
           if (picture->flags & PIC_FLAG_SKIP ||
               !GST_PAD_IS_USABLE (mpeg2dec->srcpad) ||
               mpeg2dec->discont_state != MPEG2DEC_DISC_NONE ||
@@ -670,7 +677,10 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
             GST_BUFFER_DURATION (outbuf) = mpeg2dec->frame_period;
             gst_pad_push (mpeg2dec->srcpad, GST_DATA (outbuf));
           }
+        } else if (info->display_fbuf && !info->display_fbuf->id) {
+          GST_WARNING ("Got a frame from libmpeg2, but it has no buffer");
         }
+
         if (info->discard_fbuf && info->discard_fbuf->id) {
           gst_buffer_unref ((GstBuffer *) info->discard_fbuf->id);
         }

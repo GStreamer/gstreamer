@@ -672,7 +672,7 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
         headerlen += 1;
         datalen -= 1;
       } else {
-        GST_ERROR_OBJECT (dvd_demux,
+        GST_WARNING_OBJECT (dvd_demux,
             "unknown DVD (private 1) id 0x%02x", ps_id_code);
       }
       break;
@@ -696,8 +696,8 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
           break;
 
         default:
-          GST_ERROR_OBJECT (dvd_demux,
-              "unknown DVD (private 1) id 0x%02x", ps_id_code);
+          GST_WARNING_OBJECT (dvd_demux,
+              "unknown DVD (private 2) id 0x%02x", ps_id_code);
           break;
       }
       break;
@@ -780,7 +780,7 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
       break;
   }
 
-  if (outpad != NULL && cur_nr == outstream->number) {
+  if (outpad != NULL && cur_nr == outstream->number && (size > 0)) {
     GstBuffer *outbuf;
 
     /* We have a packet of the current stream. Send it to the

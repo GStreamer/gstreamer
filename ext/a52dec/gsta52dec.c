@@ -39,6 +39,8 @@ static GstElementDetails gst_a52dec_details = {
   "David I. Lehn <dlehn@users.sourceforge.net>",
 };
 
+GST_DEBUG_CATEGORY_STATIC (a52dec_debug);
+#define GST_CAT_DEFAULT (a52dec_debug)
 
 /* A52Dec signals and args */
 enum
@@ -109,6 +111,9 @@ gst_a52dec_get_type (void)
 
     a52dec_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstA52Dec", &a52dec_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (a52dec_debug, "a52dec", 0,
+        "AC3/A52 software decoder");
   }
   return a52dec_type;
 }
@@ -161,6 +166,7 @@ gst_a52dec_init (GstA52Dec * a52dec)
   gst_pad_use_explicit_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
+  GST_FLAG_SET (GST_ELEMENT (a52dec), GST_ELEMENT_EVENT_AWARE);
   a52dec->dynamic_range_compression = FALSE;
 }
 
@@ -307,7 +313,7 @@ gst_a52dec_channels (int flags)
 
 static int
 gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples,
-    gint64 timestamp)
+    GstClockTime timestamp)
 {
   GstBuffer *buf;
   int chans;
@@ -369,34 +375,32 @@ gst_a52dec_handle_event (GstA52Dec * a52dec)
     return;
   }
 
+  GST_LOG ("Handling event of type %d timestamp %llu", GST_EVENT_TYPE (event),
+      GST_EVENT_TIMESTAMP (event));
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_FLUSH:
       gst_bytestream_flush_fast (a52dec->bs, remaining);
+      break;
     default:
-      gst_pad_event_default (a52dec->sinkpad, event);
       break;
   }
+  gst_pad_event_default (a52dec->sinkpad, event);
 }
 
-#if 0
 static void
 gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
 {
-  GstProps *props;
-  GstPropsEntry *entry;
+  GstTagList *taglist;
 
-  props = gst_props_empty_new ();
+  taglist = gst_tag_list_new ();
 
-  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (a52dec->bit_rate));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+      GST_TAG_BITRATE, (guint) a52dec->bit_rate, NULL);
 
-  gst_caps_unref (a52dec->streaminfo);
-
-  a52dec->streaminfo = gst_caps_new ("a52dec_streaminfo",
-      "application/x-gst-streaminfo", props);
-  g_object_notify (G_OBJECT (a52dec), "streaminfo");
+  gst_element_found_tags_for_pad (GST_ELEMENT (a52dec),
+      GST_PAD (a52dec->srcpad), a52dec->current_ts, taglist);
 }
-#endif
 
 static void
 gst_a52dec_loop (GstElement * element)
@@ -408,27 +412,31 @@ gst_a52dec_loop (GstElement * element)
   GstBuffer *buf;
   guint32 got_bytes;
   gboolean need_reneg;
-  GstClockTime timestamp;
+  GstClockTime timestamp = 0;
 
   a52dec = GST_A52DEC (element);
 
   /* find and read header */
-  while (1) {
-    got_bytes = gst_bytestream_peek_bytes (a52dec->bs, &data, 7);
-    if (got_bytes < 7) {
-      gst_a52dec_handle_event (a52dec);
-      return;
-    }
-    length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
-    if (length == 0) {
-      /* slide window to next 7 bytesa */
-      gst_bytestream_flush_fast (a52dec->bs, 1);
-    } else
-      break;
+  do {
+    gint skipped_bytes = 0;
 
-    /* FIXME this can potentially be an infinite loop, we might
-     * have to insert a yield operation here */
+    while (skipped_bytes < 3840) {
+      got_bytes = gst_bytestream_peek_bytes (a52dec->bs, &data, 7);
+      if (got_bytes < 7) {
+        gst_a52dec_handle_event (a52dec);
+        return;
+      }
+      length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
+      if (length == 0) {
+        /* slide window to next 7 bytesa */
+        gst_bytestream_flush_fast (a52dec->bs, 1);
+        skipped_bytes++;
+        GST_LOG ("Skipped");
+      } else
+        break;
+    }
   }
+  while (0);
 
   need_reneg = FALSE;
 
@@ -441,6 +449,7 @@ gst_a52dec_loop (GstElement * element)
 
   if (bit_rate != a52dec->bit_rate) {
     a52dec->bit_rate = bit_rate;
+    gst_a52dec_update_streaminfo (a52dec);
   }
 
   /* read the header + rest of frame */
@@ -451,10 +460,12 @@ gst_a52dec_loop (GstElement * element)
   }
   data = GST_BUFFER_DATA (buf);
   timestamp = gst_bytestream_get_timestamp (a52dec->bs);
-  if (timestamp == a52dec->last_ts) {
-    timestamp = a52dec->current_ts;
-  } else {
-    a52dec->last_ts = timestamp;
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    if (timestamp == a52dec->last_ts) {
+      timestamp = a52dec->current_ts;
+    } else {
+      a52dec->last_ts = timestamp;
+    }
   }
 
   /* process */
@@ -462,7 +473,7 @@ gst_a52dec_loop (GstElement * element)
   a52dec->level = 1;
 
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
-    g_warning ("a52dec: a52_frame error\n");
+    GST_WARNING ("a52_frame error");
     goto end;
   }
 
@@ -486,17 +497,21 @@ gst_a52dec_loop (GstElement * element)
 
   for (i = 0; i < 6; i++) {
     if (a52_block (a52dec->state)) {
-      g_warning ("a52dec a52_block error %d\n", i);
+      GST_WARNING ("a52_block error %d", i);
       continue;
     }
     /* push on */
+
     if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels,
             a52dec->samples, timestamp)) {
-      g_warning ("a52dec push error\n");
+      GST_WARNING ("a52dec push error");
     } else {
-      timestamp += sizeof (int16_t) * 256 * GST_SECOND / a52dec->sample_rate;
+
+      if (i % 2)
+        timestamp += 256 * GST_SECOND / a52dec->sample_rate;
     }
   }
+
   a52dec->current_ts = timestamp;
 
 end:
@@ -507,13 +522,23 @@ static GstElementStateReturn
 gst_a52dec_change_state (GstElement * element)
 {
   GstA52Dec *a52dec = GST_A52DEC (element);
+  GstCPUFlags cpuflags;
+  uint32_t a52_cpuflags = 0;
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      a52dec->bs = gst_bytestream_new (a52dec->sinkpad);
+      cpuflags = gst_cpu_get_flags ();
+      if (cpuflags & GST_CPU_FLAG_MMX)
+        a52_cpuflags |= MM_ACCEL_X86_MMX;
+      if (cpuflags & GST_CPU_FLAG_3DNOW)
+        a52_cpuflags |= MM_ACCEL_X86_3DNOW;
+      if (cpuflags & GST_CPU_FLAG_MMXEXT)
+        a52_cpuflags |= MM_ACCEL_X86_MMXEXT;
+
+      a52dec->state = a52_init (a52_cpuflags);
       break;
     case GST_STATE_READY_TO_PAUSED:
-      a52dec->bs = gst_bytestream_new (a52dec->sinkpad);
-      a52dec->state = a52_init (0);     /* mm_accel()); */
       a52dec->samples = a52_samples (a52dec->state);
       a52dec->bit_rate = -1;
       a52dec->sample_rate = -1;
@@ -523,8 +548,11 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->using_channels = A52_CHANNEL;
       a52dec->level = 1;
       a52dec->bias = 384;
-      a52dec->last_ts = -1;
+      a52dec->last_ts = 0;
       a52dec->current_ts = 0;
+      a52dec->last_timestamp = 0;
+      a52dec->last_diff = 0;
+
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -534,10 +562,10 @@ gst_a52dec_change_state (GstElement * element)
       gst_bytestream_destroy (a52dec->bs);
       a52dec->bs = NULL;
       a52dec->samples = NULL;
-      a52_free (a52dec->state);
-      a52dec->state = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
+      a52_free (a52dec->state);
+      a52dec->state = NULL;
       break;
     default:
       break;
