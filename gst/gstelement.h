@@ -228,7 +228,8 @@ void                    gst_element_class_install_std_props	(GstElementClass *kl
 
 #define 		gst_element_default_deep_notify 	gst_object_default_deep_notify
 
-void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
+void 			gst_element_default_error		(GObject *object, GstObject *orig, 
+								 GError *error, gchar *detailed);
 
 GType			gst_element_get_type		(void);
 

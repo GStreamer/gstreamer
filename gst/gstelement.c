@@ -207,10 +207,11 @@ gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GP
  * using g_print.
  */
 void
-gst_element_default_error (GObject *object, GstObject *orig, gchar *error)
+gst_element_default_error (GObject *object, GstObject *orig, GError* error, gchar *detailed)
 { 
   gchar *name = gst_object_get_path_string (orig);
-  g_print ("ERROR: %s: %s\n", name, error);
+  g_print ("ERROR: %s: %s\n", name, error->message);
+  g_print ("       %s\n", detailed);
   g_free (name);
 } 
 
