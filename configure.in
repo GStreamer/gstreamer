@@ -412,8 +412,6 @@ if test "x$USE_PROFILING" = xyes; then
   CFLAGS="$CFLAGS -pg"
 fi
 
-CFLAGS="$CFLAGS -O6"
-
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -439,13 +437,14 @@ AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 
+dnl CC="kgcc"
+CFLAGS="$CFLAGS -O6"
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
-
 
 dnl #############################
 dnl # Configure the subpackages #
@@ -510,6 +509,7 @@ plugins/mpeg1video/parse/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
+plugins/filters/ladspa/Makefile
 plugins/effects/Makefile
 plugins/effects/stereo/Makefile
 plugins/effects/volume/Makefile
@@ -536,6 +536,8 @@ test/xml/Makefile
 test/bindings/Makefile
 test/cothreads/Makefile
 tests/Makefile
+tests/sched/Makefile
+examples/Makefile
 editor/Makefile
 tools/Makefile
 docs/Makefile
