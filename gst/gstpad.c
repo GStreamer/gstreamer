@@ -533,13 +533,13 @@ gst_pad_disconnect (GstPad *srcpad,
   GST_RPAD_PEER(realsrc) = NULL;
   GST_RPAD_PEER(realsink) = NULL;
 
+  // now tell the scheduler
+  if (realsrc->sched)
+    gst_scheduler_pad_disconnect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+
   /* fire off a signal to each of the pads telling them that they've been disconnected */
   g_signal_emit(G_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsink);
   g_signal_emit(G_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsrc);
-
-  /* now tell the scheduler */
-  if (realsrc->sched)
-    gst_scheduler_pad_connect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -853,7 +853,7 @@ gst_pad_set_caps (GstPad *pad,
   if (!gst_caps_check_compatibility (caps, gst_pad_get_padtemplate_caps (pad))) {
     g_warning ("pad %s:%s tried to set caps incompatible with its padtemplate\n",
 		    GST_DEBUG_PAD_NAME (pad));
-    /* return FALSE; */
+    return FALSE;
   }
   
   oldcaps = GST_PAD_CAPS (pad);

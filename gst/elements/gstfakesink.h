@@ -54,8 +54,6 @@ typedef struct _GstFakeSinkClass GstFakeSinkClass;
 struct _GstFakeSink {
   GstElement element;
 
-  GSList *sinkpads;
-  gint numsinkpads;
   gboolean silent;
   gboolean dump;
 };

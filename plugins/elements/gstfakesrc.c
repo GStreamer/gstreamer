@@ -256,18 +256,15 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
 {
   GstPad *pad;
 
-  // set the default number of 
-  fakesrc->numsrcpads = 1;
-
   // create our first output pad
   pad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (fakesrc), pad);
-  fakesrc->srcpads = g_slist_append (NULL, pad);
 
   fakesrc->loop_based = FALSE;
   gst_fakesrc_update_functions (fakesrc);
 
   fakesrc->num_buffers = -1;
+  fakesrc->rt_num_buffers = -1;
   fakesrc->buffer_count = 0;
   fakesrc->silent = FALSE;
   fakesrc->dump = FALSE;
@@ -298,13 +295,10 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
 
   fakesrc = GST_FAKESRC (element);
 
-  name = g_strdup_printf ("src%d", fakesrc->numsrcpads);
+  name = g_strdup_printf ("src%d", GST_ELEMENT (fakesrc)->numsrcpads);
 
   srcpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (fakesrc), srcpad);
-
-  fakesrc->srcpads = g_slist_prepend (fakesrc->srcpads, srcpad);
-  fakesrc->numsrcpads++;
 
   return srcpad;
 }
@@ -340,7 +334,7 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
 static void
 gst_fakesrc_update_functions (GstFakeSrc *src)
 {
-  GSList *pads;
+  GList *pads;
 
   if (src->loop_based) {
     gst_element_set_loop_function (GST_ELEMENT (src), GST_DEBUG_FUNCPTR (gst_fakesrc_loop));
@@ -349,7 +343,7 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
     gst_element_set_loop_function (GST_ELEMENT (src), NULL);
   }
 
-  pads = src->srcpads;
+  pads = GST_ELEMENT (src)->pads;
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
 
@@ -361,7 +355,7 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
     }
 
     gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
-    pads = g_slist_next (pads);
+    pads = g_list_next (pads);
   }
 }
 
@@ -456,7 +450,7 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
    
   switch (prop_id) {
     case ARG_NUM_SOURCES:
-      g_value_set_int (value, src->numsrcpads);
+      g_value_set_int (value, GST_ELEMENT (src)->numsrcpads);
       break;
     case ARG_LOOP_BASED:
       g_value_set_boolean (value, src->loop_based);
@@ -656,14 +650,14 @@ gst_fakesrc_get(GstPad *pad)
     return GST_BUFFER(gst_event_new (GST_EVENT_FLUSH));
   }
 
-  if (src->num_buffers == 0) {
+  if (src->rt_num_buffers == 0) {
     g_print("fakesrc: sending EOS\n");
     gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
   else {
-    if (src->num_buffers > 0)
-      src->num_buffers--;
+    if (src->rt_num_buffers > 0)
+      src->rt_num_buffers--;
   }
 
   if (src->eos) {
@@ -704,20 +698,20 @@ gst_fakesrc_loop(GstElement *element)
   src = GST_FAKESRC (element);
 
   do {
-    GSList *pads;
+    GList *pads;
 
-    pads = src->srcpads;
+    pads = GST_ELEMENT (src)->pads;
 
     while (pads) {
       GstPad *pad = GST_PAD (pads->data);
       GstBuffer *buf;
 
-      if (src->num_buffers == 0) {
+      if (src->rt_num_buffers == 0) {
 	src->eos = TRUE;
       }
       else {
-        if (src->num_buffers > 0)
-          src->num_buffers--;
+        if (src->rt_num_buffers > 0)
+          src->rt_num_buffers--;
       }
 
       if (src->eos) {
@@ -737,7 +731,7 @@ gst_fakesrc_loop(GstElement *element)
                        buf, pad);
       gst_pad_push (pad, buf);
 
-      pads = g_slist_next (pads);
+      pads = g_list_next (pads);
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
@@ -751,14 +745,30 @@ gst_fakesrc_change_state (GstElement *element)
 
   fakesrc = GST_FAKESRC (element);
 
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_NULL_TO_READY:
+      fakesrc->buffer_count = 0;
+      fakesrc->pattern_byte = 0x00;
+      fakesrc->need_flush = FALSE;
+      fakesrc->eos = FALSE;
+      fakesrc->rt_num_buffers = fakesrc->num_buffers;
+      if (fakesrc->parent) {
+        gst_buffer_unref (fakesrc->parent);
+        fakesrc->parent = NULL;
+      }
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      g_asset_not_reached ();
+      break;
+  }
+
   if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    fakesrc->buffer_count = 0;
-    fakesrc->pattern_byte = 0x00;
-    fakesrc->need_flush = FALSE;
-    if (fakesrc->parent) {
-      gst_buffer_unref (fakesrc->parent);
-      fakesrc->parent = NULL;
-    }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

@@ -327,7 +327,9 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
+  //gst_object_ref (GST_OBJECT (pad));
   gst_object_unparent (GST_OBJECT (pad));
+  //gst_object_unref (GST_OBJECT (pad));
 }
 
 /**
@@ -970,22 +972,19 @@ static void
 gst_element_dispose (GObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
-  GList *pads;
+  GList *pads, *test;
   GstPad *pad;
+  gint i;
   
   GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose\n");
 
-  if (GST_IS_BIN (GST_OBJECT_PARENT (element)))
-    gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
-
-
+  /* first we break all our connections with the ouside */
   if (element->pads) {
     GList *orig;
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      /* the gst_object_unparent will do the unreffing */
-      gst_element_remove_pad(element, pad);
+      gst_object_destroy (GST_OBJECT (pad));
       pads = g_list_next (pads);
     }
     g_list_free (orig);
@@ -995,6 +994,7 @@ gst_element_dispose (GObject *object)
 
   element->numsrcpads = 0;
   element->numsinkpads = 0;
+  element->numpads = 0;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

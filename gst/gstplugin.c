@@ -63,6 +63,7 @@ _gst_plugin_initialize (void)
 {
 #ifndef GST_DISABLE_REGISTRY
   xmlDocPtr doc;
+  xmlNodePtr root;
 #endif
 
   main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);

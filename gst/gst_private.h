@@ -27,25 +27,26 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 
-/***** until we have gettext set up properly, don't even try this
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(String) dgettext(PACKAGE,String)
-#ifdef gettext_noop
-#define N_(String) gettext_noop(String)
-#else // gettext_noop 
-#define N_(String) (String)
-#endif // gettext_noop 
-#else // ENABLE_NLS 
-#define _(String) (String)
-#define N_(String) (String)
-#define textdomain(String) (String)
-#define gettext(String) (String)
-#define dgettext(Domain,String) (String)
-#define dcgettext(Domain,String,Type) (String)
-#define bindtextdomain(Domain,Directory) (Domain)
-#endif // ENABLE_NLS 
-*****/
+/***** until we have gettext set up properly, don't even try this*/
+#if 0
+# ifdef ENABLE_NLS
+#  include <libintl.h>
+#  define _(String) dgettext(PACKAGE,String)
+#  ifdef gettext_noop
+#   define N_(String) gettext_noop(String)
+#  else /* gettext_noop */
+#   define N_(String) (String)
+#  endif /* gettext_noop */
+# else /* ENABLE_NLS */
+#  define _(String) (String)
+#  define N_(String) (String)
+#  define textdomain(String) (String)
+#  define gettext(String) (String)
+#  define dgettext(Domain,String) (String)
+#  define dcgettext(Domain,String,Type) (String)
+#  define bindtextdomain(Domain,Directory) (Domain)
+# endif /* ENABLE_NLS */
+#endif
 
 #endif /* HAVE_CONFIG_H */
 

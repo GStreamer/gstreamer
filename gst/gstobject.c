@@ -218,9 +218,7 @@ gst_object_destroy (GstObject *object)
     /* need to hold a reference count around all class method
      * invocations.
      */
-    gst_object_ref (object);
-    G_OBJECT_GET_CLASS (object)->dispose (G_OBJECT (object));
-    gst_object_unref (object);
+    g_object_run_dispose (G_OBJECT (object));
   }
 }
 
@@ -238,11 +236,11 @@ gst_object_dispose (GObject *object)
 static void
 gst_object_finalize (GObject *object)
 {
-  GstObject *gstobject;
-
-  gstobject = GST_OBJECT (object);
+  GstObject *gstobject = GST_OBJECT (object);
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "finalize '%s'\n",GST_OBJECT_NAME(object));
+
+  g_signal_handlers_destroy (object);
 
   if (gstobject->name != NULL)
     g_free (gstobject->name);

@@ -20,16 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstpipeline.h"
-#include "gstthread.h"
-#include "gstutils.h"
-#include "gsttype.h"
-#include "gstautoplug.h"
 #include "gstscheduler.h"
-
 
 GstElementDetails gst_pipeline_details = {
   "Pipeline object",
@@ -54,6 +48,8 @@ enum {
 
 static void			gst_pipeline_class_init		(GstPipelineClass *klass);
 static void			gst_pipeline_init		(GstPipeline *pipeline);
+
+static void                     gst_pipeline_dispose         	(GObject *object);
 
 static GstElementStateReturn	gst_pipeline_change_state	(GstElement *element);
 
@@ -85,13 +81,17 @@ gst_pipeline_get_type (void) {
 static void
 gst_pipeline_class_init (GstPipelineClass *klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  gobject_class = (GObjectClass *)klass;
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref (gst_bin_get_type ());
 
-  gstelement_class->change_state = gst_pipeline_change_state;
+  gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
+
+  gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
 }
 
 static void
@@ -101,9 +101,22 @@ gst_pipeline_init (GstPipeline *pipeline)
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
   GST_ELEMENT_SCHED (pipeline) = gst_schedulerfactory_make ("basic", GST_ELEMENT (pipeline));
+
+  gst_object_ref (GST_OBJECT (GST_ELEMENT_SCHED (pipeline)));
+  gst_object_sink (GST_OBJECT (GST_ELEMENT_SCHED (pipeline)));
+
   GST_DEBUG (GST_CAT_PIPELINE, "pipeline's scheduler is %p\n", GST_ELEMENT_SCHED (pipeline));
 }
 
+static void
+gst_pipeline_dispose (GObject *object)
+{
+  GstPipeline *pipeline = GST_PIPELINE (object);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (pipeline)));
+}
 
 /**
  * gst_pipeline_new:
