@@ -743,10 +743,28 @@ static gboolean
 gst_xml_registry_parse_autoplug_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                          gsize text_len, GstXMLRegistry *registry, GError **error)
 {
-  //GstAutoplugFactory *factory = GST_AUTOPLUG_FACTORY (registry->current_feature);
+  GstAutoplugFactory *factory = GST_AUTOPLUG_FACTORY (registry->current_feature);
 
   if (!strcmp (tag, "name")) {
     registry->current_feature->name = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "longdesc")) {
+    factory->longdesc = g_strndup (text, text_len);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_xml_registry_parse_cache_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
+                                      gsize text_len, GstXMLRegistry *registry, GError **error)
+{
+  GstCacheFactory *factory = GST_CACHE_FACTORY (registry->current_feature);
+
+  if (!strcmp (tag, "name")) {
+    registry->current_feature->name = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "longdesc")) {
+    factory->longdesc = g_strndup (text, text_len);
   }
   return TRUE;
 }
@@ -864,6 +882,11 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	  }
 	  else if (GST_IS_AUTOPLUG_FACTORY (feature))
 	    xmlregistry->parser = gst_xml_registry_parse_autoplug_factory;
+	  else if (GST_IS_CACHE_FACTORY (feature))
+	    xmlregistry->parser = gst_xml_registry_parse_cache_factory;
+	  else {
+            g_warning ("unkown feature type");
+	  }
 	}
       }
       break;
@@ -1384,6 +1407,9 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   }
   else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_AUTOPLUG_FACTORY (feature)->longdesc);
+  }
+  else if (GST_IS_CACHE_FACTORY (feature)) {
+    PUT_ESCAPED ("longdesc", GST_CACHE_FACTORY (feature)->longdesc);
   }
   return TRUE;
 }
