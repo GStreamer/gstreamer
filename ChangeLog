@@ -1,3 +1,10 @@
+2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/faad/gstfaad.c: (gst_faad_base_init), (gst_faad_init),
+	(gst_faad_sinkconnect), (gst_faad_srcgetcaps),
+	(gst_faad_srcconnect): 
+	  Port to new caps system.
+
 2003-12-21  Julien MOUTTE  <julien@moutte.net>
 
 	* examples/gstplay/player.c: (got_time_tick), (got_stream_length),
