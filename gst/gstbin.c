@@ -381,10 +381,11 @@ gst_bin_child_state_change (GstBin *bin, GstElementState old, GstElementState ne
 
   for (i = GST_NUM_STATES - 1; i >= 0; i--) {
     if (bin->child_states[i] != 0) {
-      if (GST_STATE (bin) != (1 << i)) {
+      gint state = (1 << i);
+      if (GST_STATE (bin) != state) {
 	GST_INFO (GST_CAT_STATES, "bin %s need state change to %s",
-		  GST_ELEMENT_NAME (bin), gst_element_statename (1 << i));
-	GST_STATE_PENDING (bin) = (1 << i);
+		  GST_ELEMENT_NAME (bin), gst_element_statename (state));
+	GST_STATE_PENDING (bin) = state;
 	gst_bin_change_state_norecurse (bin);
       }
       break;

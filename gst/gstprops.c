@@ -590,7 +590,28 @@ gst_props_copy_on_write (GstProps *props)
     gst_props_unref (props);
   }
 
-  return props;
+  return new;
+}
+
+static GstPropsEntry*
+gst_props_get_entry_func (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  g_return_val_if_fail (props != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+    thisentry = (GstPropsEntry *)lentry->data;
+    return thisentry;
+  }
+  return NULL;
 }
 
 /**
@@ -605,24 +626,13 @@ gst_props_copy_on_write (GstProps *props)
 gint
 gst_props_get_int (GstProps *props, const gchar *name)
 {
-  GList *lentry;
-  GQuark quark;
-  
-  g_return_val_if_fail (props != NULL, 0);
-  g_return_val_if_fail (name != NULL, 0);
+  GstPropsEntry *thisentry;
 
-  quark = g_quark_from_string (name);
+  thisentry = gst_props_get_entry_func (props, name);
 
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
-
-  if (lentry) {
-    GstPropsEntry *thisentry;
-
-    thisentry = (GstPropsEntry *)lentry->data;
-
+  if (thisentry) {
     return thisentry->data.int_data;
   }
-  
   return 0;
 }
 
@@ -638,21 +648,13 @@ gst_props_get_int (GstProps *props, const gchar *name)
 gfloat
 gst_props_get_float (GstProps *props, const gchar *name)
 {
-  GList *lentry;
-  GQuark quark;
-  
-  quark = g_quark_from_string (name);
+  GstPropsEntry *thisentry;
 
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+  thisentry = gst_props_get_entry_func (props, name);
 
-  if (lentry) {
-    GstPropsEntry *thisentry;
-
-    thisentry = (GstPropsEntry *)lentry->data;
-
+  if (thisentry) {
     return thisentry->data.float_data;
   }
-  
   return 0.0F;
 }
 
@@ -668,24 +670,13 @@ gst_props_get_float (GstProps *props, const gchar *name)
 gulong
 gst_props_get_fourcc_int (GstProps *props, const gchar *name)
 {
-  GList *lentry;
-  GQuark quark;
-  
-  g_return_val_if_fail (props != NULL, 0);
-  g_return_val_if_fail (name != NULL, 0);
+  GstPropsEntry *thisentry;
 
-  quark = g_quark_from_string (name);
+  thisentry = gst_props_get_entry_func (props, name);
 
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
-
-  if (lentry) {
-    GstPropsEntry *thisentry;
-
-    thisentry = (GstPropsEntry *)lentry->data;
-
+  if (thisentry) {
     return thisentry->data.fourcc_data;
   }
-  
   return 0;
 }
 
@@ -701,24 +692,13 @@ gst_props_get_fourcc_int (GstProps *props, const gchar *name)
 gboolean
 gst_props_get_boolean (GstProps *props, const gchar *name)
 {
-  GList *lentry;
-  GQuark quark;
-  
-  g_return_val_if_fail (props != NULL, FALSE);
-  g_return_val_if_fail (name != NULL, FALSE);
+  GstPropsEntry *thisentry;
 
-  quark = g_quark_from_string (name);
+  thisentry = gst_props_get_entry_func (props, name);
 
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
-
-  if (lentry) {
-    GstPropsEntry *thisentry;
-
-    thisentry = (GstPropsEntry *)lentry->data;
-
+  if (thisentry) {
     return thisentry->data.bool_data;
   }
-  
   return 0;
 }
 
@@ -734,24 +714,13 @@ gst_props_get_boolean (GstProps *props, const gchar *name)
 const gchar*
 gst_props_get_string (GstProps *props, const gchar *name)
 {
-  GList *lentry;
-  GQuark quark;
-  
-  g_return_val_if_fail (props != NULL, NULL);
-  g_return_val_if_fail (name != NULL, NULL);
+  GstPropsEntry *thisentry;
 
-  quark = g_quark_from_string (name);
+  thisentry = gst_props_get_entry_func (props, name);
 
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
-
-  if (lentry) {
-    GstPropsEntry *thisentry;
-
-    thisentry = (GstPropsEntry *)lentry->data;
-
+  if (thisentry) {
     return thisentry->data.string_data.string;
   }
-  
   return NULL;
 }
 
@@ -973,7 +942,7 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     }
 
     if (!gst_props_entry_check_compatibility (entry1, entry2)) {
-	compatible = FALSE;
+	compatible = FALSE; 
 	GST_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible: \n",
 		   g_quark_to_string (entry1->propid));
 	gst_props_debug_entry (entry1);

@@ -199,6 +199,16 @@ load_plugin_func (gpointer data, gpointer user_data)
   g_free (data);
 }
 
+static void 
+parse_number (gchar *number, guint32 *val)
+{
+  /* handle either 0xHEX or dec */
+  if (*(number+1) == 'x') {
+    sscanf (number+2, "%08x", val);
+  } else {
+    sscanf (number, "%d", val);
+  }
+}
 
 /* returns FALSE if the program can be aborted */
 static gboolean
@@ -219,13 +229,7 @@ gst_init_check (int     *argc,
       if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
 	guint32 val;
 
-        /* handle either 0xHEX or dec */
-        if (*((*argv)[i]+17) == 'x') {
-          sscanf ((*argv)[i]+18, "%08x", &val);
-        } else {
-          sscanf ((*argv)[i]+16, "%d", &val);
-        }
-
+	parse_number ((*argv)[i]+16, &val);
 	gst_info_set_categories (val);
 
 	(*argv)[i] = NULL;
@@ -233,13 +237,7 @@ gst_init_check (int     *argc,
       else if (!strncmp ("--gst-debug-mask=", (*argv)[i], 17)) {
 	guint32 val;
 
-        /* handle either 0xHEX or dec */
-        if (*((*argv)[i]+18) == 'x') {
-          sscanf ((*argv)[i]+19, "%08x", &val);
-        } else {
-          sscanf ((*argv)[i]+17, "%d", &val);
-        }
-
+	parse_number ((*argv)[i]+17, &val);
 	gst_debug_set_categories (val);
 
 	(*argv)[i] = NULL;
@@ -247,13 +245,7 @@ gst_init_check (int     *argc,
       else if (!strncmp ("--gst-mask=", (*argv)[i], 11)) {
 	guint32 val;
 
-        /* handle either 0xHEX or dec */
-        if (*((*argv)[i]+12) == 'x') {
-          sscanf ((*argv)[i]+13, "%08x", &val);
-        } else {
-          sscanf ((*argv)[i]+11, "%d", &val);
-        }
-
+	parse_number ((*argv)[i]+11, &val);
 	gst_debug_set_categories (val);
 	gst_info_set_categories (val);
 

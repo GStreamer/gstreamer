@@ -102,20 +102,20 @@ gst_object_class_init (GstObjectClass *klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
     g_param_spec_string ("name", "Name", "The name of the object",
                          NULL, G_PARAM_READWRITE));
 
   gst_object_signals[PARENT_SET] =
-    g_signal_new("parent_set", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("parent_set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-                  g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
+                  g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_object_signals[OBJECT_SAVED] =
-    g_signal_new("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("object_saved", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
-                  g_cclosure_marshal_VOID__POINTER,G_TYPE_NONE,1,
+                  g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
 #endif
 
