@@ -872,4 +872,8 @@
   )
 )
 
-
+(define-interface URIHandler
+   (in-module "Gst")
+   (c-name "GstURIHandler")
+   (gtype-id "GST_TYPE_URI_HANDLER")
+)
